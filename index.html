@@ -11,28 +11,36 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8dfcf}
 .stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#e8dfcf}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
+
+/* 泥土路：中景主体 */
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
 .road-track{display:flex;height:100%}
 .road-tile{height:100%;width:auto;display:block;flex:none;margin-right:-1px}
 
-.rear-layer{bottom:205px;height:180px;z-index:2}
-.front-layer{bottom:48px;height:190px;z-index:6}
-.prop-track{width:3000px;height:100%;position:absolute;left:0;top:0}
-.prop{position:absolute;bottom:0;transform-origin:50% 100%;will-change:transform}
+/* 两组道具都压在道路带内部，只用 z-index 区分人物前后 */
+.rear-layer{bottom:2.5vh;height:300px;z-index:4}
+.front-layer{bottom:2.5vh;height:300px;z-index:6}
+.prop-track{width:5000px;height:100%;position:absolute;left:0;top:0}
+.prop{position:absolute;transform-origin:50% 78%;will-change:transform}
 .prop img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
-.sway-a{animation:swayA 4.8s ease-in-out infinite}
-.sway-b{animation:swayB 5.7s ease-in-out infinite}
-.sway-c{animation:swayC 6.4s ease-in-out infinite}
-.static{animation:none}
-@keyframes swayA{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1.3deg)}}
-@keyframes swayB{0%,100%{transform:rotate(.7deg)}50%{transform:rotate(-1.2deg)}}
-@keyframes swayC{0%,100%{transform:rotate(-.45deg)}50%{transform:rotate(.8deg)}}
 
+/* 草花有明显但克制的纸片摆动；不同周期和相位避免同步 */
+.sway-a{animation:swayA 3.9s ease-in-out infinite}
+.sway-b{animation:swayB 4.8s ease-in-out infinite}
+.sway-c{animation:swayC 5.6s ease-in-out infinite}
+.sway-d{animation:swayD 4.3s ease-in-out infinite}
+.static{animation:none}
+@keyframes swayA{0%,100%{transform:rotate(-2.2deg)}50%{transform:rotate(2.8deg)}}
+@keyframes swayB{0%,100%{transform:rotate(1.8deg)}50%{transform:rotate(-3.1deg)}}
+@keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2.2deg)}}
+@keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
+
+/* 人物仍走在路面中央 */
 .actor{position:absolute;left:35%;bottom:132px;width:170px;z-index:5;transform:translateX(-50%);pointer-events:none}
 .walker{position:relative;z-index:2;display:block;width:100%;height:auto;transform-origin:52% 96%;will-change:transform;animation:walk-cycle .82s ease-in-out infinite}
-.foot-shadow{position:absolute;z-index:1;left:53%;bottom:-3px;width:68px;height:15px;border-radius:50%;
-background:radial-gradient(ellipse at center,rgba(55,42,29,.34) 0%,rgba(55,42,29,.22) 38%,rgba(55,42,29,.08) 62%,rgba(55,42,29,0) 78%);
-filter:blur(1.8px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-out infinite}
+.foot-shadow{position:absolute;z-index:1;left:53%;bottom:6px;width:76px;height:17px;border-radius:50%;
+background:radial-gradient(ellipse at center,rgba(49,37,25,.42) 0%,rgba(49,37,25,.27) 38%,rgba(49,37,25,.10) 61%,rgba(49,37,25,0) 79%);
+filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-out infinite}
 @keyframes walk-cycle{
 0%,100%{transform:translate3d(0,0,0) rotate(-.16deg)}
 25%{transform:translate3d(.3px,-1.8px,0) rotate(.04deg)}
@@ -40,23 +48,30 @@ filter:blur(1.8px);transform:translateX(-50%);animation:shadow-cycle .82s ease-i
 75%{transform:translate3d(.3px,-1.45px,0) rotate(-.04deg)}
 }
 @keyframes shadow-cycle{
-0%,50%,100%{transform:translateX(-50%) scaleX(1.03);opacity:.84}
-25%,75%{transform:translateX(-50%) scaleX(.91);opacity:.56}
+0%,50%,100%{transform:translateX(-50%) scaleX(1.05);opacity:.90}
+25%,75%{transform:translateX(-50%) scaleX(.90);opacity:.60}
 }
+
+/* 桌面：路后根部在道路偏上，路前根部在道路偏下 */
+.rear-layer .prop{bottom:112px}
+.front-layer .prop{bottom:58px}
 
 @media(max-width:800px){
   .road-layer{bottom:2vh;height:220px}
-  .rear-layer{bottom:148px;height:145px}
-  .front-layer{bottom:38px;height:145px}
+  .rear-layer,.front-layer{bottom:2vh;height:220px}
+  .rear-layer .prop{bottom:78px}
+  .front-layer .prop{bottom:38px}
   .actor{left:34%;bottom:104px;width:148px}
-  .foot-shadow{width:58px;height:12px;bottom:-2px}
+  .foot-shadow{width:64px;height:14px;bottom:5px}
+
+  /* 手机上的道具更小，保证真正在道路带里 */
+  .rear-layer .prop{scale:.82}
+  .front-layer .prop{scale:.88}
 }
 </style>
 </head>
 <body>
 <main class="stage" aria-label="Paperchalk World">
-  <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
-
   <div class="world-layer road-layer">
     <div class="track road-track" id="roadTrack">
       <img class="road-tile" id="roadTile" src="./assets/road.webp?v=road-r3" alt="">
@@ -65,6 +80,8 @@ filter:blur(1.8px);transform:translateX(-50%);animation:shadow-cycle .82s ease-i
       <img class="road-tile" src="./assets/road.webp?v=road-r3" alt="">
     </div>
   </div>
+
+  <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
 
   <div class="actor">
     <div class="foot-shadow" aria-hidden="true"></div>
@@ -76,41 +93,44 @@ filter:blur(1.8px);transform:translateX(-50%);animation:shadow-cycle .82s ease-i
 
 <script>
 const ASSET={
-  grassRock:'./assets/props/grass-rock.webp?v=1',
-  rocksGrass:'./assets/props/rocks-grass.webp?v=1',
-  softGrass:'./assets/props/soft-grass.webp?v=1'
+  grassRock:'./assets/props/grass-rock.webp?v=2',
+  rocksGrass:'./assets/props/rocks-grass.webp?v=2',
+  softGrass:'./assets/props/soft-grass.webp?v=2'
 };
 
+/* 全部都是道路中景。rear=路面偏后，front=路面偏前。 */
 const rear=[
-  {a:'softGrass',x:80,w:105,c:'sway-a',f:0},
-  {a:'grassRock',x:310,w:125,c:'sway-c',f:1},
-  {a:'softGrass',x:590,w:95,c:'sway-b',f:1},
-  {a:'rocksGrass',x:820,w:135,c:'static',f:0},
-  {a:'softGrass',x:1120,w:100,c:'sway-a',f:0},
-  {a:'grassRock',x:1380,w:118,c:'sway-b',f:0},
-  {a:'rocksGrass',x:1680,w:128,c:'static',f:1},
-  {a:'softGrass',x:1960,w:96,c:'sway-c',f:1}
+  {a:'softGrass', x:  60,w:105,c:'sway-a',f:0},
+  {a:'grassRock', x: 285,w:120,c:'sway-c',f:1},
+  {a:'softGrass', x: 545,w: 90,c:'sway-b',f:1},
+  {a:'rocksGrass',x: 785,w:125,c:'static',f:0},
+  {a:'softGrass', x:1055,w: 94,c:'sway-d',f:0},
+  {a:'grassRock', x:1305,w:112,c:'sway-b',f:0},
+  {a:'rocksGrass',x:1585,w:120,c:'static',f:1},
+  {a:'softGrass', x:1840,w: 90,c:'sway-c',f:1},
+  {a:'grassRock', x:2070,w:116,c:'sway-a',f:0}
 ];
 const front=[
-  {a:'grassRock',x:45,w:120,c:'sway-b',f:0},
-  {a:'softGrass',x:280,w:92,c:'sway-a',f:1},
-  {a:'rocksGrass',x:520,w:145,c:'static',f:0},
-  {a:'grassRock',x:840,w:115,c:'sway-c',f:1},
-  {a:'softGrass',x:1100,w:95,c:'sway-b',f:0},
-  {a:'rocksGrass',x:1360,w:132,c:'static',f:1},
-  {a:'grassRock',x:1660,w:118,c:'sway-a',f:0},
-  {a:'softGrass',x:1940,w:90,c:'sway-c',f:1}
+  {a:'grassRock', x:  25,w:115,c:'sway-b',f:0},
+  {a:'softGrass', x: 235,w: 86,c:'sway-a',f:1},
+  {a:'rocksGrass',x: 460,w:130,c:'static',f:0},
+  {a:'grassRock', x: 735,w:108,c:'sway-c',f:1},
+  {a:'softGrass', x: 980,w: 88,c:'sway-d',f:0},
+  {a:'rocksGrass',x:1225,w:122,c:'static',f:1},
+  {a:'grassRock', x:1500,w:112,c:'sway-a',f:0},
+  {a:'softGrass', x:1740,w: 84,c:'sway-c',f:1},
+  {a:'grassRock', x:1980,w:105,c:'sway-b',f:1}
 ];
 
 function buildProps(id,data){
  const root=document.getElementById(id);
- for(let rep=0;rep<2;rep++){
+ for(let rep=0;rep<3;rep++){
   data.forEach((p,i)=>{
     const el=document.createElement('div');
     el.className='prop '+p.c;
     el.style.left=(rep*2200+p.x)+'px';
     el.style.width=p.w+'px';
-    el.style.animationDelay=(-((i*.47+rep*.31)%3.2))+'s';
+    el.style.animationDelay=(-((i*.61+rep*.37)%4.1))+'s';
     const img=document.createElement('img');
     img.src=ASSET[p.a];
     if(p.f) img.style.transform='scaleX(-1)';
@@ -127,14 +147,18 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 let last=performance.now(),roadX=0,rearX=0,frontX=0,roadW=1200;
+
 function refreshRoadW(){const w=roadTile.getBoundingClientRect().width;if(w>0)roadW=w-1}
-roadTile.addEventListener('load',refreshRoadW); addEventListener('resize',refreshRoadW); refreshRoadW();
+roadTile.addEventListener('load',refreshRoadW);
+addEventListener('resize',refreshRoadW);
+refreshRoadW();
 
 function frame(now){
  const dt=Math.min((now-last)/1000,.05); last=now;
+ /* 三层都属于同一中景，速度差只留很小一点，避免道具像漂浮 */
  roadX=(roadX+28*dt)%roadW;
- rearX=(rearX+23*dt)%2200;
- frontX=(frontX+32*dt)%2200;
+ rearX=(rearX+26.5*dt)%2200;
+ frontX=(frontX+29.5*dt)%2200;
  roadTrack.style.transform='translate3d('+(-roadX)+'px,0,0)';
  rearTrack.style.transform='translate3d('+(-rearX)+'px,0,0)';
  frontTrack.style.transform='translate3d('+(-frontX)+'px,0,0)';
