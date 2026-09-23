@@ -3,87 +3,39 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#e7decc">
+<meta name="theme-color" content="#e8dfcf">
 <title>Paperchalk World</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e7decc}
-body{font-family:"Noto Serif SC","Songti SC",serif}
-.stage{
-  position:relative;width:100vw;height:100vh;overflow:hidden;
-  background:radial-gradient(circle at 50% 30%,rgba(255,255,255,.18),transparent 48%),#e7decc
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8dfcf}
+.stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#e8dfcf}
+.road-layer{position:absolute;left:0;right:0;bottom:0;height:348px;overflow:hidden;z-index:1}
+.road-track{position:absolute;left:0;bottom:0;height:348px;display:flex;will-change:transform}
+.road-tile{height:348px;width:auto;display:block;flex:none;margin-right:-1px}
+.character-layer{
+  position:absolute;left:35%;bottom:220px;width:170px;z-index:2;
+  transform:translateX(-50%);transform-origin:50% 100%;
+  animation:walk .82s ease-in-out infinite;will-change:transform
 }
-.paper{
-  position:absolute;inset:0;pointer-events:none;opacity:.045;
-  background:repeating-linear-gradient(13deg,rgba(255,255,255,.12) 0 1px,transparent 1px 8px),
-             repeating-linear-gradient(-17deg,rgba(65,45,25,.04) 0 1px,transparent 1px 9px)
+.character-layer img{display:block;width:100%;height:auto}
+@keyframes walk{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-.12deg)}
+  25%{transform:translateX(-50%) translateY(-1.4px) rotate(.05deg)}
+  50%{transform:translateX(-50%) translateY(-.2px) rotate(.14deg)}
+  75%{transform:translateX(-50%) translateY(-1.1px) rotate(-.04deg)}
 }
-.road-window{
-  position:absolute;left:0;right:0;bottom:7.5vh;height:170px;
-  overflow:hidden;z-index:1
-}
-.road-track{
-  position:absolute;left:0;top:-170px;height:510px;
-  display:flex;align-items:flex-start;
-  will-change:transform
-}
-.road-tile{
-  display:block;flex:0 0 auto;height:510px;width:auto;
-  margin-right:-2px;
-  filter:contrast(1.32) saturate(1.14) brightness(.93)
-}
-.walker-wrap{
-  position:absolute;
-  left:34%;
-  bottom:calc(7.5vh + 158px);
-  width:155px;
-  z-index:3;
-  transform:translateX(-50%);
-  transform-origin:50% 100%
-}
-.walker{
-  display:block;width:100%;height:auto;
-  image-rendering:auto;
-  transform-origin:50% 94%;
-  filter:contrast(1.04) saturate(1.03) drop-shadow(2px 3px 1px rgba(65,43,24,.10));
-  animation:cute-step .78s ease-in-out infinite
-}
-.shadow{
-  position:absolute;left:50%;bottom:-2px;width:43%;height:6px;
-  transform:translateX(-50%);
-  border-radius:50%;background:rgba(62,43,26,.13);filter:blur(2.5px);
-  animation:shadow-step .78s ease-in-out infinite
-}
-.caption{
-  position:absolute;left:50%;bottom:3.4vh;transform:translateX(-50%);
-  color:rgba(62,48,34,.42);font-size:12px;letter-spacing:.18em;white-space:nowrap
-}
-@keyframes cute-step{
-  0%,100%{transform:translate3d(0,0,0) rotate(-.18deg)}
-  25%{transform:translate3d(.3px,-1.7px,0) rotate(.08deg)}
-  50%{transform:translate3d(.7px,-.2px,0) rotate(.22deg)}
-  75%{transform:translate3d(.3px,-1.4px,0) rotate(-.06deg)}
-}
-@keyframes shadow-step{
-  0%,50%,100%{transform:translateX(-50%) scaleX(1);opacity:.55}
-  25%,75%{transform:translateX(-50%) scaleX(.96);opacity:.47}
-}
-@media(max-width:760px){
-  .road-window{height:145px;bottom:7vh}
-  .road-track{height:435px;top:-145px}
-  .road-tile{height:435px}
-  .walker-wrap{left:31%;width:138px;bottom:calc(7vh + 135px)}
-  .caption{bottom:3vh}
+@media(max-width:800px){
+  .road-layer,.road-track{height:285px}
+  .road-tile{height:285px}
+  .character-layer{left:32%;bottom:181px;width:145px}
 }
 </style>
 </head>
 <body>
-<main class="stage" aria-label="Paperchalk World road walk preview">
-  <div class="paper"></div>
-
-  <div class="road-window">
+<main class="stage" aria-label="Paperchalk World">
+  <div class="road-layer">
     <div class="road-track" id="roadTrack">
-      <img class="road-tile" id="roadTileA" src="data:image/webp;base64,UklGRmISAABXRUJQVlA4WAoAAAAQAAAAfwEANwAAQUxQSIAMAAABCgvw/5+T
+      <img class="road-tile" id="roadTile" src="data:image/webp;base64,UklGRmISAABXRUJQVlA4WAoAAAAQAAAAfwEANwAAQUxQSIAMAAABCgvw/5+T
 m+0/fS4Xp4zVXGrbtm3zage1bTes3YudURGnsa3O8C5udre7+5/Z3xf/4LG+
 iAhIbhtJkjpnTqvkcFX3ZM58QP6rYUXyWYrVfO8EKgRCBpB7dQaR8uCZPpAj
 GFfBQU8exi8h2U3lP9eMgQIPc33YBOGxY3+F9nBPQqFOTsa2PMCF4SlHwwYR
@@ -685,10 +637,8 @@ WtQ/wiAAApAfkUQ4AAsqAAAA
 " alt="">
     </div>
   </div>
-
-  <div class="walker-wrap">
-    <div class="shadow"></div>
-    <img class="walker" src="data:image/webp;base64,UklGRuAWAABXRUJQVlA4WAoAAAAQAAAAdwAAngAAQUxQSMkIAAABoERtmyHJ
+  <div class="character-layer">
+    <img src="data:image/webp;base64,UklGRuAWAABXRUJQVlA4WAoAAAAQAAAAdwAAngAAQUxQSMkIAAABoERtmyHJ
 +iIjVTXT1eNr27Zt27Zt27Y1ura9s2170KhURHyL7qpKRO0jYgJgQc95jYpk
 xgmeh+7pjq69RMXWjVpXEOhpTGW7xhiypwsIGdxDrbVpRVJrjpGipa1EMPIu
 Ng071hqthRBW8nEFI+Y5fa555xp2LABhp/N0kkubn86/+FhA2OgC5pS2JPnW
@@ -819,36 +769,25 @@ kveHoTUh/qO4t3EcqTxmWAYd3RrgSSZqiEeQoDCFtzxeijv2Hj2W20tqAn4x
 MvgHu3NTRBZZDzrKlpzfCpadWivJGsIGi2BuYmZoMO3rrqbWzb5sQ3PAWqW8
 2Jv68/ljmlahhPT+Bo8ULIKykOHnPgG+Z+exFAJxZ2LAM2oLfOP8l3f/+gtH
 uwNdEo/SdyP6AfTOAAA=
-" alt="行走中的旅行者">
+" alt="旅行者">
   </div>
-
-  <div class="caption">沿旧驿道前行</div>
 </main>
-
 <script>
 const track=document.getElementById('roadTrack');
-const tile=document.getElementById('roadTileA');
-let last=performance.now();
-let x=0;
-let tileWidth=1760;
-
-function refreshWidth(){
-  const w=tile.getBoundingClientRect().width;
-  if(w>0) tileWidth=w-2;
-}
-tile.addEventListener('load',refreshWidth);
-window.addEventListener('resize',refreshWidth);
-refreshWidth();
-
-function tick(now){
+const tile=document.getElementById('roadTile');
+let last=performance.now(),offset=0,tileWidth=1200;
+function updateWidth(){const w=tile.getBoundingClientRect().width;if(w>0)tileWidth=w-1}
+tile.addEventListener('load',updateWidth);
+addEventListener('resize',updateWidth);
+updateWidth();
+function frame(now){
   const dt=Math.min((now-last)/1000,.05);
   last=now;
-  x += 46*dt;
-  if(x>=tileWidth) x-=tileWidth;
-  track.style.transform='translate3d('+(-x)+'px,0,0)';
-  requestAnimationFrame(tick);
+  offset=(offset+32*dt)%tileWidth;
+  track.style.transform='translate3d('+(-offset)+'px,0,0)';
+  requestAnimationFrame(frame);
 }
-requestAnimationFrame(tick);
+requestAnimationFrame(frame);
 </script>
 </body>
 </html>
