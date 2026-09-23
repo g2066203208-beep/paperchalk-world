@@ -9,108 +9,136 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8dfcf}
 .stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#e8dfcf}
+.world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
+.track{position:absolute;left:0;top:0;height:100%;will-change:transform}
+.road-layer{bottom:2.5vh;height:300px;z-index:3}
+.road-track{display:flex;height:100%}
+.road-tile{height:100%;width:auto;display:block;flex:none;margin-right:-1px}
 
-/* Layer 1: one repeating dirt-road strip */
-.road-layer{position:absolute;left:0;right:0;bottom:0;height:348px;overflow:hidden;z-index:1}
-.road-track{position:absolute;left:0;bottom:0;height:348px;display:flex;will-change:transform}
-.road-tile{height:348px;width:auto;display:block;flex:none;margin-right:-1px}
+.rear-layer{bottom:205px;height:180px;z-index:2}
+.front-layer{bottom:48px;height:190px;z-index:6}
+.prop-track{width:3000px;height:100%;position:absolute;left:0;top:0}
+.prop{position:absolute;bottom:0;transform-origin:50% 100%;will-change:transform}
+.prop img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.sway-a{animation:swayA 4.8s ease-in-out infinite}
+.sway-b{animation:swayB 5.7s ease-in-out infinite}
+.sway-c{animation:swayC 6.4s ease-in-out infinite}
+.static{animation:none}
+@keyframes swayA{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(1.3deg)}}
+@keyframes swayB{0%,100%{transform:rotate(.7deg)}50%{transform:rotate(-1.2deg)}}
+@keyframes swayC{0%,100%{transform:rotate(-.45deg)}50%{transform:rotate(.8deg)}}
 
-/* Layer 2: one fixed paper character, feet anchored to road surface */
-.actor{
-  position:absolute;
-  left:35%;
-  bottom:218px;
-  width:170px;
-  z-index:2;
-  transform:translateX(-50%);
-  pointer-events:none;
-}
-.walker{
-  position:relative;
-  z-index:2;
-  display:block;
-  width:100%;
-  height:auto;
-  transform-origin:52% 96%;
-  will-change:transform;
-  animation:walk-cycle .78s ease-in-out infinite;
-}
-.foot-shadow{
-  position:absolute;
-  z-index:1;
-  left:52%;
-  bottom:-5px;
-  width:62px;
-  height:13px;
-  border-radius:50%;
-  background:radial-gradient(ellipse at center,
-    rgba(65,45,30,.28) 0%,
-    rgba(65,45,30,.18) 42%,
-    rgba(65,45,30,.07) 62%,
-    rgba(65,45,30,0) 76%);
-  filter:blur(1.6px);
-  transform:translateX(-50%) scaleX(1);
-  transform-origin:center;
-  will-change:transform,opacity;
-  animation:shadow-cycle .78s ease-in-out infinite;
-}
-
+.actor{position:absolute;left:35%;bottom:132px;width:170px;z-index:5;transform:translateX(-50%);pointer-events:none}
+.walker{position:relative;z-index:2;display:block;width:100%;height:auto;transform-origin:52% 96%;will-change:transform;animation:walk-cycle .82s ease-in-out infinite}
+.foot-shadow{position:absolute;z-index:1;left:53%;bottom:-3px;width:68px;height:15px;border-radius:50%;
+background:radial-gradient(ellipse at center,rgba(55,42,29,.34) 0%,rgba(55,42,29,.22) 38%,rgba(55,42,29,.08) 62%,rgba(55,42,29,0) 78%);
+filter:blur(1.8px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-out infinite}
 @keyframes walk-cycle{
-  0%,100%{transform:translate3d(0,0,0) rotate(-.18deg)}
-  25%{transform:translate3d(.5px,-2.0px,0) rotate(.06deg)}
-  50%{transform:translate3d(.9px,-.35px,0) rotate(.18deg)}
-  75%{transform:translate3d(.4px,-1.7px,0) rotate(-.05deg)}
+0%,100%{transform:translate3d(0,0,0) rotate(-.16deg)}
+25%{transform:translate3d(.3px,-1.8px,0) rotate(.04deg)}
+50%{transform:translate3d(.7px,-.25px,0) rotate(.16deg)}
+75%{transform:translate3d(.3px,-1.45px,0) rotate(-.04deg)}
 }
 @keyframes shadow-cycle{
-  0%,50%,100%{transform:translateX(-50%) scaleX(1.04);opacity:.82}
-  25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.53}
+0%,50%,100%{transform:translateX(-50%) scaleX(1.03);opacity:.84}
+25%,75%{transform:translateX(-50%) scaleX(.91);opacity:.56}
 }
 
 @media(max-width:800px){
-  .road-layer,.road-track{height:285px}
-  .road-tile{height:285px}
-  .actor{left:32%;bottom:179px;width:145px}
-  .foot-shadow{width:53px;height:11px;bottom:-4px}
+  .road-layer{bottom:2vh;height:220px}
+  .rear-layer{bottom:148px;height:145px}
+  .front-layer{bottom:38px;height:145px}
+  .actor{left:34%;bottom:104px;width:148px}
+  .foot-shadow{width:58px;height:12px;bottom:-2px}
 }
 </style>
 </head>
 <body>
 <main class="stage" aria-label="Paperchalk World">
-  <div class="road-layer">
-    <div class="road-track" id="roadTrack">
-      <img class="road-tile" id="roadTile" src="./assets/road.webp?v=road-1200x348-r2" alt="">
-      <img class="road-tile" src="./assets/road.webp?v=road-1200x348-r2" alt="">
-      <img class="road-tile" src="./assets/road.webp?v=road-1200x348-r2" alt="">
+  <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
+
+  <div class="world-layer road-layer">
+    <div class="track road-track" id="roadTrack">
+      <img class="road-tile" id="roadTile" src="./assets/road.webp?v=road-r3" alt="">
+      <img class="road-tile" src="./assets/road.webp?v=road-r3" alt="">
+      <img class="road-tile" src="./assets/road.webp?v=road-r3" alt="">
+      <img class="road-tile" src="./assets/road.webp?v=road-r3" alt="">
     </div>
   </div>
 
   <div class="actor">
     <div class="foot-shadow" aria-hidden="true"></div>
-    <img class="walker" src="./assets/traveler.webp?v=traveler-279x320-r2" alt="旅行者">
+    <img class="walker" src="./assets/traveler.webp?v=traveler-r3" alt="旅行者">
   </div>
+
+  <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
 </main>
 
 <script>
-const track=document.getElementById('roadTrack');
-const tile=document.getElementById('roadTile');
-let last=performance.now();
-let offset=0;
-let tileWidth=1200;
+const ASSET={
+  grassRock:'./assets/props/grass-rock.webp?v=1',
+  rocksGrass:'./assets/props/rocks-grass.webp?v=1',
+  softGrass:'./assets/props/soft-grass.webp?v=1'
+};
 
-function updateWidth(){
-  const w=tile.getBoundingClientRect().width;
-  if(w>0) tileWidth=w-1;
+const rear=[
+  {a:'softGrass',x:80,w:105,c:'sway-a',f:0},
+  {a:'grassRock',x:310,w:125,c:'sway-c',f:1},
+  {a:'softGrass',x:590,w:95,c:'sway-b',f:1},
+  {a:'rocksGrass',x:820,w:135,c:'static',f:0},
+  {a:'softGrass',x:1120,w:100,c:'sway-a',f:0},
+  {a:'grassRock',x:1380,w:118,c:'sway-b',f:0},
+  {a:'rocksGrass',x:1680,w:128,c:'static',f:1},
+  {a:'softGrass',x:1960,w:96,c:'sway-c',f:1}
+];
+const front=[
+  {a:'grassRock',x:45,w:120,c:'sway-b',f:0},
+  {a:'softGrass',x:280,w:92,c:'sway-a',f:1},
+  {a:'rocksGrass',x:520,w:145,c:'static',f:0},
+  {a:'grassRock',x:840,w:115,c:'sway-c',f:1},
+  {a:'softGrass',x:1100,w:95,c:'sway-b',f:0},
+  {a:'rocksGrass',x:1360,w:132,c:'static',f:1},
+  {a:'grassRock',x:1660,w:118,c:'sway-a',f:0},
+  {a:'softGrass',x:1940,w:90,c:'sway-c',f:1}
+];
+
+function buildProps(id,data){
+ const root=document.getElementById(id);
+ for(let rep=0;rep<2;rep++){
+  data.forEach((p,i)=>{
+    const el=document.createElement('div');
+    el.className='prop '+p.c;
+    el.style.left=(rep*2200+p.x)+'px';
+    el.style.width=p.w+'px';
+    el.style.animationDelay=(-((i*.47+rep*.31)%3.2))+'s';
+    const img=document.createElement('img');
+    img.src=ASSET[p.a];
+    if(p.f) img.style.transform='scaleX(-1)';
+    el.appendChild(img);
+    root.appendChild(el);
+  });
+ }
 }
-tile.addEventListener('load',updateWidth);
-window.addEventListener('resize',updateWidth);
-updateWidth();
+buildProps('rearTrack',rear);
+buildProps('frontTrack',front);
+
+const roadTrack=document.getElementById('roadTrack');
+const roadTile=document.getElementById('roadTile');
+const rearTrack=document.getElementById('rearTrack');
+const frontTrack=document.getElementById('frontTrack');
+let last=performance.now(),roadX=0,rearX=0,frontX=0,roadW=1200;
+function refreshRoadW(){const w=roadTile.getBoundingClientRect().width;if(w>0)roadW=w-1}
+roadTile.addEventListener('load',refreshRoadW); addEventListener('resize',refreshRoadW); refreshRoadW();
 
 function frame(now){
-  const dt=Math.min((now-last)/1000,.05);
-  last=now;
-  offset=(offset+32*dt)%tileWidth;
-  track.style.transform='translate3d('+(-offset)+'px,0,0)';
-  requestAnimationFrame(frame);
+ const dt=Math.min((now-last)/1000,.05); last=now;
+ roadX=(roadX+28*dt)%roadW;
+ rearX=(rearX+23*dt)%2200;
+ frontX=(frontX+32*dt)%2200;
+ roadTrack.style.transform='translate3d('+(-roadX)+'px,0,0)';
+ rearTrack.style.transform='translate3d('+(-rearX)+'px,0,0)';
+ frontTrack.style.transform='translate3d('+(-frontX)+'px,0,0)';
+ requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 </script>
