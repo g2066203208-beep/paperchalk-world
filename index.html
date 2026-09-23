@@ -3,28 +3,36 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#e8dfcf">
+<meta name="theme-color" content="#28251f">
 <title>Paperchalk World</title>
 <style>
+:root{
+  --ink:#3f392f;
+  --ink-soft:#716858;
+  --paper:#e9dfca;
+  --paper-deep:#d9c9a9;
+  --line:#8b7654;
+  --dark:#29261f;
+}
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8dfcf}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#28251f}
+body{font-family:"Noto Serif SC","Songti SC","STSong",serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
+button,input{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* ---------- WORLD ---------- */
 .stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#e8dfcf}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
-
-/* 泥土路：中景主体 */
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
 .road-track{display:flex;height:100%}
 .road-tile{height:100%;width:auto;display:block;flex:none;margin-right:-1px}
-
-/* 两组道具都压在道路带内部，只用 z-index 区分人物前后 */
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .prop-track{width:5000px;height:100%;position:absolute;left:0;top:0}
 .prop{position:absolute;transform-origin:50% 78%;will-change:transform}
 .prop img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
-
-/* 草花有明显但克制的纸片摆动；不同周期和相位避免同步 */
 .sway-a{animation:swayA 3.9s ease-in-out infinite}
 .sway-b{animation:swayB 4.8s ease-in-out infinite}
 .sway-c{animation:swayC 5.6s ease-in-out infinite}
@@ -34,8 +42,6 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e8dfcf}
 @keyframes swayB{0%,100%{transform:rotate(1.8deg)}50%{transform:rotate(-3.1deg)}}
 @keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2.2deg)}}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
-
-/* 人物仍走在路面中央 */
 .actor{position:absolute;left:35%;bottom:132px;width:170px;z-index:5;transform:translateX(-50%);pointer-events:none}
 .walker{position:relative;z-index:2;display:block;width:100%;height:auto;transform-origin:52% 96%;will-change:transform;animation:walk-cycle .82s ease-in-out infinite}
 .foot-shadow{position:absolute;z-index:1;left:53%;bottom:6px;width:76px;height:17px;border-radius:50%;
@@ -51,10 +57,100 @@ filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-
 0%,50%,100%{transform:translateX(-50%) scaleX(1.05);opacity:.90}
 25%,75%{transform:translateX(-50%) scaleX(.90);opacity:.60}
 }
-
-/* 桌面：路后根部在道路偏上，路前根部在道路偏下 */
 .rear-layer .prop{bottom:112px}
 .front-layer .prop{bottom:58px}
+
+/* tiny in-world menu tab */
+.world-menu-btn{
+  position:absolute;z-index:30;top:max(12px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));
+  width:46px;height:38px;border:0;background:rgba(239,227,203,.86);color:#4c4336;
+  box-shadow:0 2px 9px rgba(44,35,25,.16);border-radius:5px;
+  font-size:22px;line-height:38px;padding:0;
+}
+
+/* ---------- UI BOARD ---------- */
+.ui-shell{
+  position:fixed;inset:0;z-index:100;background:#28251f;
+  display:flex;align-items:stretch;justify-content:center;
+  transition:opacity .28s ease;
+}
+.ui-shell.is-hidden{opacity:0;pointer-events:none}
+.ui-board{
+  position:relative;width:min(100%,1180px);height:100%;
+  background:
+    radial-gradient(circle at 18% 18%,rgba(255,255,255,.28),transparent 28%),
+    radial-gradient(circle at 78% 72%,rgba(104,80,43,.07),transparent 34%),
+    linear-gradient(100deg,#eadfc8,#e2d2b4 52%,#eadfc8);
+  overflow:hidden;
+  box-shadow:0 0 36px rgba(0,0,0,.45);
+}
+.ui-shell.board-enter .ui-board{animation:boardIn .46s cubic-bezier(.21,.8,.31,1)}
+@keyframes boardIn{from{transform:translateY(-104%)}to{transform:translateY(0)}}
+.ui-board::before{
+  content:"";position:absolute;inset:0;opacity:.18;pointer-events:none;
+  background:
+    repeating-linear-gradient(8deg,rgba(84,65,39,.10) 0 1px,transparent 1px 7px),
+    repeating-linear-gradient(-11deg,rgba(255,255,255,.18) 0 1px,transparent 1px 9px);
+}
+.ui-board::after{
+  content:"";position:absolute;inset:12px;border:1px solid rgba(92,72,44,.22);pointer-events:none
+}
+.ui-page{position:absolute;inset:0;display:none}
+.ui-page.active{display:block}
+.menu-layout{
+  position:relative;z-index:2;height:100%;display:grid;
+  grid-template-columns:minmax(300px,44%) 1fr;
+}
+.brand{
+  padding:8vh 5vw 5vh;display:flex;flex-direction:column;justify-content:space-between;
+}
+.brand-mark{font-size:clamp(13px,1.25vw,17px);letter-spacing:.42em;color:#7d6e57}
+.brand h1{margin:0;font-weight:500;line-height:.93;font-size:clamp(52px,8vw,112px);letter-spacing:-.06em;color:#494033}
+.brand h1 span{display:block;font-size:.24em;letter-spacing:.34em;margin-top:20px;color:#786a55}
+.brand-foot{font-size:13px;letter-spacing:.14em;color:#8b7b65}
+.menu-panel{
+  display:flex;align-items:center;justify-content:center;padding:6vh 5vw;
+}
+.menu-stack{width:min(420px,90%);display:flex;flex-direction:column;gap:10px}
+.menu-btn{
+  width:100%;border:0;border-bottom:1px solid rgba(89,70,46,.28);
+  background:transparent;color:#514739;text-align:left;padding:15px 14px 13px;
+  font-size:clamp(18px,2vw,24px);letter-spacing:.12em;position:relative;
+}
+.menu-btn::after{content:"›";position:absolute;right:12px;opacity:.38}
+.menu-btn:active,.menu-btn:hover{background:rgba(91,71,45,.06)}
+.menu-btn.secondary{font-size:15px;color:#776b5a}
+.menu-btn.secondary::after{display:none}
+.profile-note{font-size:13px;color:#80735f;padding:8px 14px 3px;min-height:28px}
+
+/* auth */
+.auth-wrap{position:relative;z-index:2;height:100%;display:flex;align-items:center;justify-content:center;padding:26px}
+.auth-card{width:min(520px,92vw);padding:34px 38px;background:rgba(243,233,212,.48);border:1px solid rgba(90,70,46,.22);box-shadow:0 12px 40px rgba(76,58,36,.08)}
+.auth-title{font-size:31px;letter-spacing:.16em;margin:0 0 8px;font-weight:500}
+.auth-sub{font-size:13px;color:#81735e;margin:0 0 25px;line-height:1.6}
+.tabs{display:flex;border-bottom:1px solid rgba(88,69,45,.23);margin-bottom:20px}
+.tab{border:0;background:none;padding:10px 18px;color:#8b7b65;font-size:15px}
+.tab.active{color:#443c31;border-bottom:2px solid #6e5d45}
+.field{margin:14px 0}
+.field label{display:block;font-size:12px;color:#766956;margin-bottom:7px;letter-spacing:.08em}
+.field input{
+  width:100%;height:44px;border:1px solid rgba(84,67,45,.25);background:rgba(255,250,239,.62);
+  color:#3f382e;padding:0 13px;outline:none;border-radius:2px;
+}
+.field input:focus{border-color:#8c7654;background:rgba(255,250,239,.85)}
+.auth-actions{display:flex;gap:10px;margin-top:22px}
+.paper-btn{
+  min-width:120px;border:1px solid rgba(78,61,41,.34);background:#4d4538;color:#f1e7d2;
+  padding:11px 18px;border-radius:2px;letter-spacing:.12em
+}
+.paper-btn.ghost{background:transparent;color:#5e5343}
+.auth-msg{min-height:22px;margin-top:13px;font-size:13px;color:#8b4c42}
+.back-link{position:absolute;top:24px;left:28px;border:0;background:none;color:#6c604f;font-size:16px;padding:8px}
+
+/* settings */
+.settings-list{display:grid;gap:15px;margin-top:22px}
+.setting-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(89,70,46,.18);padding:12px 0}
+.setting-row select{background:rgba(255,250,239,.65);border:1px solid rgba(84,67,45,.25);padding:7px 10px;color:#4e4437}
 
 @media(max-width:800px){
   .road-layer{bottom:2vh;height:220px}
@@ -63,15 +159,28 @@ filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-
   .front-layer .prop{bottom:38px}
   .actor{left:34%;bottom:104px;width:148px}
   .foot-shadow{width:64px;height:14px;bottom:5px}
-
-  /* 手机上的道具更小，保证真正在道路带里 */
   .rear-layer .prop{scale:.82}
   .front-layer .prop{scale:.88}
+  .menu-layout{grid-template-columns:42% 58%}
+  .brand{padding:8vh 4vw 4vh}
+  .menu-panel{padding:5vh 4vw}
+  .menu-btn{padding:11px 10px 10px;font-size:17px}
+  .brand h1{font-size:clamp(44px,9vw,72px)}
+  .auth-card{padding:24px 28px}
+}
+@media(max-height:520px){
+  .brand{padding-top:6vh}
+  .menu-stack{gap:4px}
+  .menu-btn{padding-top:9px;padding-bottom:9px}
+  .auth-card{padding:18px 28px}
+  .field{margin:9px 0}
+  .field input{height:38px}
 }
 </style>
 </head>
 <body>
-<main class="stage" aria-label="Paperchalk World">
+
+<main id="world" class="stage" aria-label="Paperchalk World">
   <div class="world-layer road-layer">
     <div class="track road-track" id="roadTrack">
       <img class="road-tile" id="roadTile" src="./assets/road.webp?v=road-r3" alt="">
@@ -80,48 +189,125 @@ filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-
       <img class="road-tile" src="./assets/road.webp?v=road-r3" alt="">
     </div>
   </div>
-
   <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
-
   <div class="actor">
     <div class="foot-shadow" aria-hidden="true"></div>
     <img class="walker" src="./assets/traveler.webp?v=traveler-r3" alt="旅行者">
   </div>
-
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
+  <button id="worldMenuBtn" class="world-menu-btn" aria-label="主菜单">≡</button>
 </main>
 
+<section id="uiShell" class="ui-shell">
+  <div class="ui-board">
+
+    <section id="pageMenu" class="ui-page active">
+      <div class="menu-layout">
+        <div class="brand">
+          <div class="brand-mark">PAPERCHALK WORLD</div>
+          <h1>纸境<span>一段仍在继续的旅途</span></h1>
+          <div class="brand-foot">WORLD BUILD 0.2 · 横版世界框架</div>
+        </div>
+        <div class="menu-panel">
+          <div class="menu-stack">
+            <div id="profileNote" class="profile-note"></div>
+            <button id="continueBtn" class="menu-btn">继续游戏</button>
+            <button id="enterBtn" class="menu-btn">进入世界</button>
+            <button id="authBtn" class="menu-btn">登录 / 注册</button>
+            <button id="settingsBtn" class="menu-btn secondary">设置</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pageAuth" class="ui-page">
+      <button class="back-link" data-back="menu">← 返回</button>
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <h2 class="auth-title">旅人身份</h2>
+          <p class="auth-sub">当前为开发版账号系统，账号保存在本机。正式联网账号将在服务器接入后迁移。</p>
+          <div class="tabs">
+            <button id="tabLogin" class="tab active">登录</button>
+            <button id="tabRegister" class="tab">注册</button>
+          </div>
+
+          <form id="loginForm">
+            <div class="field">
+              <label>账号</label>
+              <input id="loginUser" autocomplete="username" maxlength="24" required>
+            </div>
+            <div class="field">
+              <label>密码</label>
+              <input id="loginPass" type="password" autocomplete="current-password" maxlength="64" required>
+            </div>
+            <div class="auth-actions">
+              <button class="paper-btn" type="submit">登录并进入</button>
+              <button class="paper-btn ghost" type="button" data-back="menu">取消</button>
+            </div>
+          </form>
+
+          <form id="registerForm" class="hidden">
+            <div class="field">
+              <label>账号</label>
+              <input id="regUser" autocomplete="username" maxlength="24" required>
+            </div>
+            <div class="field">
+              <label>旅人名称</label>
+              <input id="regName" maxlength="16" placeholder="游戏内显示名称" required>
+            </div>
+            <div class="field">
+              <label>密码</label>
+              <input id="regPass" type="password" autocomplete="new-password" minlength="4" maxlength="64" required>
+            </div>
+            <div class="auth-actions">
+              <button class="paper-btn" type="submit">创建并进入</button>
+              <button class="paper-btn ghost" type="button" data-back="menu">取消</button>
+            </div>
+          </form>
+          <div id="authMsg" class="auth-msg"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pageSettings" class="ui-page">
+      <button class="back-link" data-back="menu">← 返回</button>
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <h2 class="auth-title">设置</h2>
+          <p class="auth-sub">先保留最基础的游戏设置，后续再接音效、语言、画面和控制选项。</p>
+          <div class="settings-list">
+            <div class="setting-row"><span>界面语言</span><span>简体中文</span></div>
+            <div class="setting-row"><span>世界时间</span><span>1 秒 = 1 分钟</span></div>
+            <div class="setting-row"><span>横屏模式</span><span>开启</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</section>
+
 <script>
+/* -------------------- WORLD -------------------- */
 const ASSET={
   grassRock:'./assets/props/grass-rock.webp?v=2',
   rocksGrass:'./assets/props/rocks-grass.webp?v=2',
   softGrass:'./assets/props/soft-grass.webp?v=2'
 };
-
-/* 全部都是道路中景。rear=路面偏后，front=路面偏前。 */
 const rear=[
-  {a:'softGrass', x:  60,w:105,c:'sway-a',f:0},
-  {a:'grassRock', x: 285,w:120,c:'sway-c',f:1},
-  {a:'softGrass', x: 545,w: 90,c:'sway-b',f:1},
-  {a:'rocksGrass',x: 785,w:125,c:'static',f:0},
-  {a:'softGrass', x:1055,w: 94,c:'sway-d',f:0},
-  {a:'grassRock', x:1305,w:112,c:'sway-b',f:0},
-  {a:'rocksGrass',x:1585,w:120,c:'static',f:1},
-  {a:'softGrass', x:1840,w: 90,c:'sway-c',f:1},
-  {a:'grassRock', x:2070,w:116,c:'sway-a',f:0}
+  {a:'softGrass',x:60,w:105,c:'sway-a',f:0},{a:'grassRock',x:285,w:120,c:'sway-c',f:1},
+  {a:'softGrass',x:545,w:90,c:'sway-b',f:1},{a:'rocksGrass',x:785,w:125,c:'static',f:0},
+  {a:'softGrass',x:1055,w:94,c:'sway-d',f:0},{a:'grassRock',x:1305,w:112,c:'sway-b',f:0},
+  {a:'rocksGrass',x:1585,w:120,c:'static',f:1},{a:'softGrass',x:1840,w:90,c:'sway-c',f:1},
+  {a:'grassRock',x:2070,w:116,c:'sway-a',f:0}
 ];
 const front=[
-  {a:'grassRock', x:  25,w:115,c:'sway-b',f:0},
-  {a:'softGrass', x: 235,w: 86,c:'sway-a',f:1},
-  {a:'rocksGrass',x: 460,w:130,c:'static',f:0},
-  {a:'grassRock', x: 735,w:108,c:'sway-c',f:1},
-  {a:'softGrass', x: 980,w: 88,c:'sway-d',f:0},
-  {a:'rocksGrass',x:1225,w:122,c:'static',f:1},
-  {a:'grassRock', x:1500,w:112,c:'sway-a',f:0},
-  {a:'softGrass', x:1740,w: 84,c:'sway-c',f:1},
-  {a:'grassRock', x:1980,w:105,c:'sway-b',f:1}
+  {a:'grassRock',x:25,w:115,c:'sway-b',f:0},{a:'softGrass',x:235,w:86,c:'sway-a',f:1},
+  {a:'rocksGrass',x:460,w:130,c:'static',f:0},{a:'grassRock',x:735,w:108,c:'sway-c',f:1},
+  {a:'softGrass',x:980,w:88,c:'sway-d',f:0},{a:'rocksGrass',x:1225,w:122,c:'static',f:1},
+  {a:'grassRock',x:1500,w:112,c:'sway-a',f:0},{a:'softGrass',x:1740,w:84,c:'sway-c',f:1},
+  {a:'grassRock',x:1980,w:105,c:'sway-b',f:1}
 ];
-
 function buildProps(id,data){
  const root=document.getElementById(id);
  for(let rep=0;rep<3;rep++){
@@ -147,15 +333,12 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 let last=performance.now(),roadX=0,rearX=0,frontX=0,roadW=1200;
-
 function refreshRoadW(){const w=roadTile.getBoundingClientRect().width;if(w>0)roadW=w-1}
 roadTile.addEventListener('load',refreshRoadW);
 addEventListener('resize',refreshRoadW);
 refreshRoadW();
-
 function frame(now){
- const dt=Math.min((now-last)/1000,.05); last=now;
- /* 三层都属于同一中景，速度差只留很小一点，避免道具像漂浮 */
+ const dt=Math.min((now-last)/1000,.05);last=now;
  roadX=(roadX+28*dt)%roadW;
  rearX=(rearX+26.5*dt)%2200;
  frontX=(frontX+29.5*dt)%2200;
@@ -165,6 +348,144 @@ function frame(now){
  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+/* -------------------- MENU / LOCAL ACCOUNT -------------------- */
+const uiShell=document.getElementById('uiShell');
+const pages={
+  menu:document.getElementById('pageMenu'),
+  auth:document.getElementById('pageAuth'),
+  settings:document.getElementById('pageSettings')
+};
+const profileNote=document.getElementById('profileNote');
+const continueBtn=document.getElementById('continueBtn');
+const enterBtn=document.getElementById('enterBtn');
+const authBtn=document.getElementById('authBtn');
+const authMsg=document.getElementById('authMsg');
+
+const KEY_USERS='paperchalk.localUsers.v1';
+const KEY_SESSION='paperchalk.session.v1';
+const KEY_SAVE='paperchalk.save.v1';
+
+function getUsers(){
+  try{return JSON.parse(localStorage.getItem(KEY_USERS)||'{}')}catch{return{}}
+}
+function getSession(){
+  try{return JSON.parse(localStorage.getItem(KEY_SESSION)||'null')}catch{return null}
+}
+function setSession(s){localStorage.setItem(KEY_SESSION,JSON.stringify(s))}
+async function hashText(text){
+  if(window.crypto&&crypto.subtle){
+    const data=new TextEncoder().encode(text);
+    const digest=await crypto.subtle.digest('SHA-256',data);
+    return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  let h=2166136261;
+  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}
+  return (h>>>0).toString(16);
+}
+function showPage(name){
+  Object.values(pages).forEach(p=>p.classList.remove('active'));
+  pages[name].classList.add('active');
+  authMsg.textContent='';
+}
+function refreshMenu(){
+  const session=getSession();
+  const hasSave=!!localStorage.getItem(KEY_SAVE);
+  profileNote.textContent=session?'当前旅人：'+session.displayName:'尚未登录';
+  continueBtn.style.display=(session&&hasSave)?'block':'none';
+  enterBtn.textContent=session?'进入世界':'开始游戏';
+  authBtn.textContent=session?'切换账号 / 退出':'登录 / 注册';
+}
+function openUI(fromWorld=false){
+  refreshMenu();
+  showPage('menu');
+  uiShell.classList.remove('is-hidden');
+  if(fromWorld){
+    uiShell.classList.remove('board-enter');
+    void uiShell.offsetWidth;
+    uiShell.classList.add('board-enter');
+  }
+}
+function enterWorld(){
+  const session=getSession();
+  if(!session){showPage('auth');return}
+  if(!localStorage.getItem(KEY_SAVE)){
+    localStorage.setItem(KEY_SAVE,JSON.stringify({
+      account:session.account,
+      location:'A村',
+      createdAt:Date.now(),
+      worldMinutes:0
+    }));
+  }
+  uiShell.classList.add('is-hidden');
+  uiShell.classList.remove('board-enter');
+}
+document.getElementById('worldMenuBtn').addEventListener('click',()=>openUI(true));
+continueBtn.addEventListener('click',enterWorld);
+enterBtn.addEventListener('click',enterWorld);
+settingsBtn.addEventListener('click',()=>showPage('settings'));
+document.querySelectorAll('[data-back="menu"]').forEach(b=>b.addEventListener('click',()=>showPage('menu')));
+
+authBtn.addEventListener('click',()=>{
+  const session=getSession();
+  if(session){
+    localStorage.removeItem(KEY_SESSION);
+    refreshMenu();
+    showPage('auth');
+  }else{
+    showPage('auth');
+  }
+});
+
+const tabLogin=document.getElementById('tabLogin');
+const tabRegister=document.getElementById('tabRegister');
+const loginForm=document.getElementById('loginForm');
+const registerForm=document.getElementById('registerForm');
+function setAuthTab(mode){
+  const isLogin=mode==='login';
+  tabLogin.classList.toggle('active',isLogin);
+  tabRegister.classList.toggle('active',!isLogin);
+  loginForm.classList.toggle('hidden',!isLogin);
+  registerForm.classList.toggle('hidden',isLogin);
+  authMsg.textContent='';
+}
+tabLogin.addEventListener('click',()=>setAuthTab('login'));
+tabRegister.addEventListener('click',()=>setAuthTab('register'));
+
+registerForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const account=document.getElementById('regUser').value.trim().toLowerCase();
+  const displayName=document.getElementById('regName').value.trim();
+  const pass=document.getElementById('regPass').value;
+  if(!/^[a-z0-9_\-]{3,24}$/i.test(account)){
+    authMsg.textContent='账号需为 3–24 位字母、数字、_ 或 -';return;
+  }
+  if(displayName.length<1){authMsg.textContent='请输入旅人名称';return}
+  const users=getUsers();
+  if(users[account]){authMsg.textContent='这个账号已存在';return}
+  users[account]={displayName,passwordHash:await hashText(pass),createdAt:Date.now()};
+  localStorage.setItem(KEY_USERS,JSON.stringify(users));
+  setSession({account,displayName});
+  refreshMenu();
+  enterWorld();
+});
+
+loginForm.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const account=document.getElementById('loginUser').value.trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value;
+  const users=getUsers();
+  const user=users[account];
+  if(!user){authMsg.textContent='未找到这个本机账号';return}
+  if(user.passwordHash!==await hashText(pass)){authMsg.textContent='密码不正确';return}
+  setSession({account,displayName:user.displayName});
+  refreshMenu();
+  enterWorld();
+});
+
+/* first launch always lands on main menu, no prologue */
+refreshMenu();
+openUI(false);
 </script>
 </body>
 </html>
