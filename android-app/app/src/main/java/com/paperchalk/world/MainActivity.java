@@ -25,27 +25,23 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Use the oldest broadly-compatible fullscreen path first.
         getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
         );
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        );
+        hideSystemBars();
 
         try {
-            webView = new WebView(getApplicationContext());
+            webView = new WebView(this);
             webView.setBackgroundColor(Color.rgb(232, 223, 207));
 
             WebSettings settings = webView.getSettings();
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
-            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
+            // Always fetch the newest GitHub Pages build.
+            settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
             settings.setMediaPlaybackRequiresUserGesture(false);
             settings.setSupportZoom(false);
             settings.setBuiltInZoomControls(false);
@@ -56,15 +52,16 @@ public class MainActivity extends Activity {
             webView.setWebViewClient(new WebViewClient());
             webView.setWebChromeClient(new WebChromeClient());
 
+            // Clear HTTP/cache files only. localStorage remains intact for game/session data.
+            webView.clearCache(true);
+            webView.clearHistory();
+
             setContentView(webView);
 
-            if (savedInstanceState != null) {
-                webView.restoreState(savedInstanceState);
-            } else {
-                webView.loadUrl(GAME_URL);
-            }
+            // A unique query string prevents stale index.html from being reused by WebView/CDN.
+            webView.loadUrl(GAME_URL + "?app=" + System.currentTimeMillis());
+
         } catch (Throwable t) {
-            // Never silently crash: show the exact launch failure on screen.
             TextView error = new TextView(this);
             error.setTextColor(Color.WHITE);
             error.setBackgroundColor(Color.rgb(35, 31, 25));
@@ -81,14 +78,18 @@ public class MainActivity extends Activity {
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    private void hideSystemBars() {
         getWindow().getDecorView().setSystemUiVisibility(
                 View.SYSTEM_UI_FLAG_FULLSCREEN
                         | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         );
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        hideSystemBars();
         if (webView != null) webView.onResume();
     }
 
@@ -96,12 +97,6 @@ public class MainActivity extends Activity {
     protected void onPause() {
         if (webView != null) webView.onPause();
         super.onPause();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        if (webView != null) webView.saveState(outState);
-        super.onSaveInstanceState(outState);
     }
 
     @Override
