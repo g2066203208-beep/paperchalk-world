@@ -1,0 +1,27 @@
+name: Web Game Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "tests/web-smoke.js"
+      - ".github/workflows/web-smoke.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "tests/web-smoke.js"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test menu, login and movement wiring
+        run: node tests/web-smoke.js
