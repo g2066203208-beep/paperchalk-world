@@ -15,9 +15,10 @@ const requiredIds = [
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
-  "entityTrack","enemy","enemyHealthFill","jumpBtn","attackBtn",
+  "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice",
+  "entityTrack","enemy","enemy2","enemyHealthFill","enemy2HealthFill","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
-  "debugHitboxBtn","debugRangeBtn","debugAiBtn",
+  "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
 ];
 
@@ -50,6 +51,19 @@ assert(game.includes("INVENTORY_CAPACITY=20"), "20-slot inventory missing");
 assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missing");
 assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
 assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
+assert(game.includes("window.PaperchalkMap"), "Map API missing");
+assert(game.includes("const MAP_WIDTH=6000"), "Finite 6000px map missing");
+assert(game.includes("const MAP_TERRAIN=["), "Terrain data missing");
+assert(game.includes("const MAP_OBJECTS=["), "Map object data missing");
+assert(game.includes("const ENEMY_SPAWNS=["), "Enemy spawn data missing");
+assert(game.includes("function movePlayerHorizontal"), "Terrain horizontal collision missing");
+assert(game.includes("function updatePlayerVertical"), "Platform vertical collision missing");
+assert(game.includes("function updateCamera"), "Camera follow missing");
+assert(game.includes("function breakMapObject"), "Breakable object logic missing");
+assert(game.includes("function collectPickup"), "Pickup logic missing");
+assert(game.includes("playerWorldX"), "Player world coordinate missing");
+assert(game.includes("save.playerWorldX=playerWorldX"), "Player map position persistence missing");
+assert(game.includes("save.mapState="), "Map-state persistence missing");
 assert(game.includes("function jumpPlayer"), "Jump mechanic missing");
 assert(game.includes("function startPlayerAttack"), "Player attack missing");
 assert(game.includes("function updateCombat"), "Realtime combat update missing");
@@ -63,6 +77,10 @@ assert(game.includes("dist<=700"), "Enemy chase radius missing");
 assert(html.includes('data-debug-action="hitboxes"'), "Hitbox debug panel button missing");
 assert(html.includes('data-debug-action="attackRange"'), "Attack range debug panel button missing");
 assert(html.includes('data-debug-action="enemyAI"'), "Enemy AI debug panel button missing");
+assert(html.includes('data-debug-action="mapColliders"'), "Terrain collider debug button missing");
+assert(html.includes('data-debug-action="spawnZones"'), "Enemy spawn-zone debug button missing");
+assert(html.includes('data-debug-action="cameraDebug"'), "Camera debug button missing");
+assert(html.includes('data-debug-action="teleportStart"'), "Map teleport debug controls missing");
 assert(!game.includes("e.code==='F2'"), "Debug panel must not depend on F2 hotkey");
 assert(!game.includes("e.code==='F3'"), "Hitbox debug must live inside debug panel, not F3");
 assert(html.includes("assets/enemies/rag-drifter.svg"), "Enemy art missing");
