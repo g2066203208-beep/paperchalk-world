@@ -1333,7 +1333,6 @@ function buildMapVisuals(){
     mapDebugTrack.appendChild(dbg);
   });
 }
-buildMapVisuals();
 
 function spritePosition(index){
   const col=index%3,row=Math.floor(index/3);
@@ -1432,6 +1431,8 @@ const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
 const playerAttackDebug=document.getElementById('playerAttackDebug');
 const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
 const enemyAttackDebug=document.getElementById('enemyAttackDebug');
+
+buildMapVisuals();
 
 const PLAYER_MAX_HP=10;
 let playerHp=PLAYER_MAX_HP;
