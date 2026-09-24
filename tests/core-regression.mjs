@@ -129,7 +129,7 @@ try{
   check('Settings persist',settings?.timeScale===2&&settings?.preferLandscape===false,JSON.stringify(settings));
 
   // Switch to B, which must not inherit A.
-  await page.locator('[data-back="menu"]').click();
+  await page.locator('#pageSettings [data-back="menu"]').click();
   await page.waitForTimeout(800);
   await page.locator('#authBtn').click();
   await page.waitForTimeout(800);
