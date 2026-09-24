@@ -42,20 +42,33 @@ button{cursor:pointer}
 @keyframes swayB{0%,100%{transform:rotate(1.8deg)}50%{transform:rotate(-3.1deg)}}
 @keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2.2deg)}}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
-.actor{position:absolute;left:35%;bottom:132px;width:170px;z-index:5;transform:translateX(-50%);pointer-events:none}
-.walker{position:relative;z-index:2;display:block;width:100%;height:auto;transform-origin:52% 96%;will-change:transform;animation:walk-cycle .82s ease-in-out infinite}
-.foot-shadow{position:absolute;z-index:1;left:53%;bottom:6px;width:76px;height:17px;border-radius:50%;
-background:radial-gradient(ellipse at center,rgba(49,37,25,.42) 0%,rgba(49,37,25,.27) 38%,rgba(49,37,25,.10) 61%,rgba(49,37,25,0) 79%);
-filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-out infinite}
+.actor{
+  --facing:1;
+  position:absolute;left:35%;bottom:132px;width:170px;z-index:5;
+  transform:translateX(-50%);pointer-events:none;will-change:left;
+}
+.actor.facing-left{--facing:-1}
+.walker{
+  position:relative;z-index:2;display:block;width:100%;height:auto;
+  transform-origin:52% 96%;will-change:transform;
+  transform:scaleX(var(--facing));
+}
+.actor.is-moving .walker{animation:walk-cycle .62s ease-in-out infinite}
+.foot-shadow{
+  position:absolute;z-index:1;left:53%;bottom:6px;width:76px;height:17px;border-radius:50%;
+  background:radial-gradient(ellipse at center,rgba(49,37,25,.42) 0%,rgba(49,37,25,.27) 38%,rgba(49,37,25,.10) 61%,rgba(49,37,25,0) 79%);
+  filter:blur(2px);transform:translateX(-50%);opacity:.72;
+}
+.actor.is-moving .foot-shadow{animation:shadow-cycle .62s ease-in-out infinite}
 @keyframes walk-cycle{
-0%,100%{transform:translate3d(0,0,0) rotate(-.16deg)}
-25%{transform:translate3d(.3px,-1.8px,0) rotate(.04deg)}
-50%{transform:translate3d(.7px,-.25px,0) rotate(.16deg)}
-75%{transform:translate3d(.3px,-1.45px,0) rotate(-.04deg)}
+  0%,100%{transform:translate3d(0,0,0) rotate(-.8deg) scaleX(var(--facing))}
+  25%{transform:translate3d(.5px,-2.2px,0) rotate(.3deg) scaleX(var(--facing))}
+  50%{transform:translate3d(1px,-.35px,0) rotate(.8deg) scaleX(var(--facing))}
+  75%{transform:translate3d(.5px,-1.8px,0) rotate(-.2deg) scaleX(var(--facing))}
 }
 @keyframes shadow-cycle{
-0%,50%,100%{transform:translateX(-50%) scaleX(1.05);opacity:.90}
-25%,75%{transform:translateX(-50%) scaleX(.90);opacity:.60}
+  0%,50%,100%{transform:translateX(-50%) scaleX(1.06);opacity:.88}
+  25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.52}
 }
 .rear-layer .prop{bottom:112px}
 .front-layer .prop{bottom:58px}
@@ -66,6 +79,42 @@ filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-
   width:46px;height:38px;border:0;background:rgba(239,227,203,.86);color:#4c4336;
   box-shadow:0 2px 9px rgba(44,35,25,.16);border-radius:5px;
   font-size:22px;line-height:38px;padding:0;
+}
+
+
+/* responsive movement controls */
+.touch-controls{
+  position:absolute;z-index:28;left:0;right:0;bottom:max(15px,env(safe-area-inset-bottom));
+  display:none;justify-content:space-between;align-items:flex-end;
+  padding:0 max(18px,env(safe-area-inset-left)) 0 max(18px,env(safe-area-inset-right));
+  pointer-events:none;
+}
+.move-btn{
+  pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;
+  width:70px;height:60px;border:0;padding:0;
+  color:#4d4437;background:rgba(232,217,185,.88);
+  font-size:32px;line-height:60px;text-align:center;
+  clip-path:polygon(7% 0,95% 5%,100% 84%,91% 100%,5% 94%,0 12%);
+  filter:drop-shadow(4px 5px 0 rgba(61,47,30,.14));
+  transition:translate .08s ease,filter .08s ease,background .08s ease;
+}
+.move-btn[data-dir="left"]{transform:rotate(-1.5deg)}
+.move-btn[data-dir="right"]{transform:rotate(1.2deg)}
+.move-btn.is-pressed{
+  translate:2px 3px;background:rgba(244,231,201,.96);
+  filter:drop-shadow(1px 2px 0 rgba(61,47,30,.17));
+}
+.desktop-control-hint{
+  position:absolute;z-index:27;left:18px;bottom:18px;display:none;
+  padding:7px 12px;background:rgba(225,209,175,.78);color:#675a48;font-size:12px;letter-spacing:.08em;
+  clip-path:polygon(2% 4%,98% 0,100% 90%,95% 100%,1% 96%,0 9%);
+  filter:drop-shadow(2px 3px 0 rgba(61,47,30,.08));pointer-events:none;
+}
+@media (hover:none), (pointer:coarse){
+  .touch-controls{display:flex}
+}
+@media (hover:hover) and (pointer:fine){
+  .desktop-control-hint{display:block}
 }
 
 /* ---------- CUT-PAPER UI ---------- */
@@ -256,6 +305,7 @@ filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-
   .front-layer .prop{bottom:38px}
   .actor{left:34%;bottom:104px;width:148px}
   .foot-shadow{width:64px;height:14px;bottom:5px}
+  .move-btn{width:64px;height:55px;line-height:55px;font-size:29px}
   .rear-layer .prop{scale:.82}
   .front-layer .prop{scale:.88}
   .menu-layout{grid-template-columns:42% 58%}
@@ -293,6 +343,11 @@ filter:blur(2px);transform:translateX(-50%);animation:shadow-cycle .82s ease-in-
   </div>
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <button id="worldMenuBtn" class="world-menu-btn" aria-label="主菜单">≡</button>
+  <div id="desktopControlHint" class="desktop-control-hint">A / D　或　← / →</div>
+  <div id="touchControls" class="touch-controls" aria-label="移动控制">
+    <button id="moveLeftBtn" class="move-btn" data-dir="left" aria-label="向左移动">←</button>
+    <button id="moveRightBtn" class="move-btn" data-dir="right" aria-label="向右移动">→</button>
+  </div>
 </main>
 
 <section id="uiShell" class="ui-shell">
@@ -429,22 +484,120 @@ const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
-let last=performance.now(),roadX=0,rearX=0,frontX=0,roadW=1200;
-function refreshRoadW(){const w=roadTile.getBoundingClientRect().width;if(w>0)roadW=w-1}
+const actorEl=document.querySelector('.actor');
+const moveLeftBtn=document.getElementById('moveLeftBtn');
+const moveRightBtn=document.getElementById('moveRightBtn');
+
+let last=performance.now();
+let roadW=1200;
+let worldX=0;
+let actorX=Math.round(innerWidth*.35);
+let keyboardLeft=false,keyboardRight=false,touchLeft=false,touchRight=false;
+let facing=1;
+
+function refreshRoadW(){
+  const w=roadTile.getBoundingClientRect().width;
+  if(w>0)roadW=w-1;
+  actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,actorX));
+  actorEl.style.left=actorX+'px';
+}
 roadTile.addEventListener('load',refreshRoadW);
 addEventListener('resize',refreshRoadW);
 refreshRoadW();
+
+function posMod(v,m){return ((v%m)+m)%m}
+function worldInteractive(){
+  const shell=document.getElementById('uiShell');
+  return !!shell && shell.classList.contains('is-hidden');
+}
+function movementDir(){
+  const left=keyboardLeft||touchLeft;
+  const right=keyboardRight||touchRight;
+  if(left===right)return 0;
+  return left?-1:1;
+}
+function setFacing(dir){
+  if(!dir)return;
+  facing=dir;
+  actorEl.classList.toggle('facing-left',dir<0);
+}
+function renderWorld(){
+  const roadOffset=posMod(worldX,roadW);
+  const rearOffset=posMod(worldX*.97,2200);
+  const frontOffset=posMod(worldX*1.03,2200);
+  roadTrack.style.transform='translate3d('+(-roadOffset)+'px,0,0)';
+  rearTrack.style.transform='translate3d('+(-rearOffset)+'px,0,0)';
+  frontTrack.style.transform='translate3d('+(-frontOffset)+'px,0,0)';
+  actorEl.style.left=actorX+'px';
+}
 function frame(now){
- const dt=Math.min((now-last)/1000,.05);last=now;
- roadX=(roadX+28*dt)%roadW;
- rearX=(rearX+26.5*dt)%2200;
- frontX=(frontX+29.5*dt)%2200;
- roadTrack.style.transform='translate3d('+(-roadX)+'px,0,0)';
- rearTrack.style.transform='translate3d('+(-rearX)+'px,0,0)';
- frontTrack.style.transform='translate3d('+(-frontX)+'px,0,0)';
- requestAnimationFrame(frame);
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  const dir=worldInteractive()?movementDir():0;
+  const moving=dir!==0;
+  actorEl.classList.toggle('is-moving',moving);
+
+  if(moving){
+    setFacing(dir);
+    const speed=Math.max(145,Math.min(235,innerWidth*.18));
+    let dx=dir*speed*dt;
+    const leftFollow=innerWidth*.30;
+    const rightFollow=innerWidth*.56;
+
+    if(dir>0){
+      const room=Math.max(0,rightFollow-actorX);
+      const actorStep=Math.min(dx,room);
+      actorX+=actorStep;
+      dx-=actorStep;
+      worldX+=dx;
+    }else{
+      const room=Math.max(0,actorX-leftFollow);
+      const actorStep=Math.max(dx,-room);
+      actorX+=actorStep;
+      dx-=actorStep;
+      worldX+=dx;
+    }
+  }
+  renderWorld();
+  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+function isEditableTarget(target){
+  return target instanceof HTMLElement &&
+    (target.matches('input,textarea,select,[contenteditable="true"]'));
+}
+addEventListener('keydown',e=>{
+  if(isEditableTarget(e.target)||!worldInteractive())return;
+  if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
+  if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
+});
+addEventListener('keyup',e=>{
+  if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
+  if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
+});
+addEventListener('blur',()=>{
+  keyboardLeft=keyboardRight=touchLeft=touchRight=false;
+  moveLeftBtn.classList.remove('is-pressed');
+  moveRightBtn.classList.remove('is-pressed');
+});
+
+function bindMoveButton(btn,side){
+  const set=v=>{
+    if(side==='left')touchLeft=v;else touchRight=v;
+    btn.classList.toggle('is-pressed',v);
+  };
+  btn.addEventListener('pointerdown',e=>{
+    e.preventDefault();
+    set(true);
+    try{btn.setPointerCapture(e.pointerId)}catch{}
+  });
+  const stop=e=>{e.preventDefault();set(false)};
+  btn.addEventListener('pointerup',stop);
+  btn.addEventListener('pointercancel',stop);
+  btn.addEventListener('lostpointercapture',()=>set(false));
+}
+bindMoveButton(moveLeftBtn,'left');
+bindMoveButton(moveRightBtn,'right');
 
 /* -------------------- MENU / LOCAL ACCOUNT -------------------- */
 const uiShell=document.getElementById('uiShell');
@@ -493,7 +646,28 @@ function refreshMenu(){
   enterBtn.textContent=session?'进入世界':'开始游戏';
   authBtn.textContent=session?'切换账号 / 退出':'登录 / 注册';
 }
+function saveWorldState(){
+  const session=getSession();
+  if(!session)return;
+  let save={};
+  try{save=JSON.parse(localStorage.getItem(KEY_SAVE)||'{}')}catch{}
+  save.account=session.account;
+  save.location=save.location||'A村';
+  save.worldX=worldX;
+  save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
+  save.updatedAt=Date.now();
+  localStorage.setItem(KEY_SAVE,JSON.stringify(save));
+}
+function loadWorldState(){
+  try{
+    const save=JSON.parse(localStorage.getItem(KEY_SAVE)||'{}');
+    if(Number.isFinite(save.worldX))worldX=save.worldX;
+    if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
+  }catch{}
+  renderWorld();
+}
 function openUI(fromWorld=false){
+  if(fromWorld)saveWorldState();
   refreshMenu();
   showPage('menu');
   uiShell.classList.remove('is-hidden');
@@ -511,9 +685,13 @@ function enterWorld(){
       account:session.account,
       location:'A村',
       createdAt:Date.now(),
-      worldMinutes:0
+      worldMinutes:0,
+      worldX:0,
+      actorRatio:.35
     }));
   }
+  loadWorldState();
+  keyboardLeft=keyboardRight=touchLeft=touchRight=false;
   uiShell.classList.add('is-hidden');
   uiShell.classList.remove('board-enter');
 }
@@ -579,6 +757,9 @@ loginForm.addEventListener('submit',async e=>{
   refreshMenu();
   enterWorld();
 });
+
+addEventListener('pagehide',saveWorldState);
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&worldInteractive())saveWorldState()});
 
 /* first launch always lands on main menu, no prologue */
 refreshMenu();
