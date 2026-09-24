@@ -1451,7 +1451,8 @@ let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
 let playerY=0,playerVy=0,playerGrounded=true;
-let playerAttackTimer=0,playerAttackCooldown=0,playerAttackHit=false,playerInvuln=0;
+let playerAttackTimer=0,playerAttackCooldown=0,playerInvuln=0;
+const playerAttackHits=new Set();
 const GRAVITY=1850,JUMP_SPEED=650;
 const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
@@ -1762,125 +1763,270 @@ window.PaperchalkDebug={
 };
 
 function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
-function playerWorldPos(){return {x:worldX+actorX,y:playerY}}
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function playerWorldPos(){return {x:playerWorldX,y:playerY}}
 function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:PLAYER_HURT.h}}
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
-function getEnemyHurtbox(){return{x:enemy.x-31,y:10,w:62,h:108}}
-function getEnemyAttackBox(){return enemy.facing>0?{x:enemy.x+20,y:24,w:74,h:72}:{x:enemy.x-94,y:24,w:74,h:72}}
-function jumpPlayer(force=false){if((!force&&!worldInteractive())||!playerGrounded)return false;playerVy=JUMP_SPEED;playerGrounded=false;actorEl.classList.add('is-jumping');return true}
-function startPlayerAttack(force=false){if((!force&&!worldInteractive())||playerAttackCooldown>0||playerAttackTimer>0)return false;playerAttackTimer=.30;playerAttackCooldown=.38;playerAttackHit=false;actorEl.classList.add('is-attacking');return true}
+function activeSolidRects(){
+  const terrain=MAP_TERRAIN.map(t=>({...t}));
+  const objects=MAP_OBJECTS.filter(o=>o.solid&&!mapState.broken.has(o.id)).map(o=>({...o}));
+  return terrain.concat(objects);
+}
+function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
+function movePlayerHorizontal(dx){
+  if(!dx)return 0;
+  const oldX=playerWorldX;
+  let nextX=clamp(oldX+dx,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
+  const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
+  for(const r of activeSolidRects()){
+    const vertical=proposed.y<r.y+r.h-1&&proposed.y+proposed.h>r.y+1;
+    if(!vertical)continue;
+    if(dx>0&&oldBody.x+oldBody.w<=r.x+2&&proposed.x+proposed.w>r.x)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
+    if(dx<0&&oldBody.x>=r.x+r.w-2&&proposed.x<r.x+r.w)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
+  }
+  playerWorldX=clamp(nextX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  return playerWorldX-oldX;
+}
+function supportAt(x,y,tolerance=3){
+  let support=Math.abs(y)<=tolerance?0:null;
+  for(const r of activeSolidRects()){
+    const top=r.y+r.h;
+    if(horizontalOverlapAt(x,PLAYER_BODY.halfW-3,r)&&Math.abs(y-top)<=tolerance){
+      if(support===null||top>support)support=top;
+    }
+  }
+  return support;
+}
+function updatePlayerVertical(dt,interactive){
+  if(!interactive)return;
+  if(playerGrounded){
+    const support=supportAt(playerWorldX,playerY,4);
+    if(support===null){playerGrounded=false;playerVy=0}
+    else{playerY=support;return}
+  }
+  const oldY=playerY;
+  playerVy-=GRAVITY*dt;
+  let nextY=playerY+playerVy*dt;
+  const solids=activeSolidRects();
+  if(playerVy<=0){
+    let landing=null;
+    for(const r of solids){
+      const top=r.y+r.h;
+      if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
+      if(oldY>=top-2&&nextY<=top){
+        if(landing===null||top>landing)landing=top;
+      }
+    }
+    if(oldY>=0&&nextY<=0)landing=Math.max(0,landing??0);
+    if(landing!==null){
+      playerY=landing;playerVy=0;playerGrounded=true;actorEl.classList.remove('is-jumping');return;
+    }
+  }else{
+    const oldHead=oldY+PLAYER_BODY.h;
+    const nextHead=nextY+PLAYER_BODY.h;
+    for(const r of solids){
+      if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
+      if(oldHead<=r.y+2&&nextHead>=r.y){
+        nextY=r.y-PLAYER_BODY.h;playerVy=0;break;
+      }
+    }
+  }
+  playerY=Math.max(-80,nextY);
+  if(playerY<-60)teleportTo(MAP_SPAWN_X,{notice:'跌落后回到村口'});
+}
+function updateCamera(){
+  const maxCamera=Math.max(0,MAP_WIDTH-innerWidth);
+  const followX=innerWidth*.42;
+  worldX=clamp(playerWorldX-followX,0,maxCamera);
+  actorX=playerWorldX-worldX;
+}
+function jumpPlayer(force=false){
+  if((!force&&!worldInteractive())||!playerGrounded)return false;
+  playerVy=JUMP_SPEED;playerGrounded=false;actorEl.classList.add('is-jumping');return true;
+}
+function startPlayerAttack(force=false){
+  if((!force&&!worldInteractive())||playerAttackCooldown>0||playerAttackTimer>0)return false;
+  playerAttackTimer=.30;playerAttackCooldown=.38;playerAttackHits.clear();actorEl.classList.add('is-attacking');return true;
+}
 function debugJump(){return jumpPlayer(true)}
 function debugAttack(){return startPlayerAttack(true)}
-function damageEnemy(amount=1){
-  if(!enemy.alive||enemy.hitstun>0)return false;
-  enemy.hp=Math.max(0,enemy.hp-amount);enemy.hitstun=.22;enemyEl.classList.add('is-hit');
-  setTimeout(()=>enemyEl.classList.remove('is-hit'),220);
-  enemyHealthFill.style.width=(enemy.hp/ENEMY_MAX_HP*100)+'%';
-  enemy.x+=facing*34;
-  if(enemy.hp<=0){enemy.alive=false;enemy.state='dead';enemyEl.classList.add('is-dead')}
-  return true;
+function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
+function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
+function setEnemyVisual(e){
+  e.el.style.left=e.x+'px';
+  e.el.style.setProperty('--enemy-facing',e.facing);
+  e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%';
+  e.el.classList.toggle('is-dead',!e.alive);
+}
+function resetEnemyState(e,spawn){
+  e.x=spawn.x;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
+  e.hp=ENEMY_MAX_HP;e.alive=true;e.facing=-1;e.state='patrol';e.attackTimer=0;e.attackCooldown=.7;e.hitstun=0;e.spawned=true;
+  e.account=typeof getSession==='function'?(getSession()?.account||null):null;e.patrolDir=-1;
+  e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');setEnemyVisual(e);
+}
+function resetMapEnemies(){
+  resetEnemyState(enemy,ENEMY_SPAWNS[0]);
+  resetEnemyState(enemy2,ENEMY_SPAWNS[1]);
 }
 function resetEnemy(offset=360){
-  const playerWorldX=worldX+actorX;
-  enemy.x=playerWorldX+offset;
-  enemy.spawnX=enemy.x;
-  enemy.hp=ENEMY_MAX_HP;enemy.alive=true;enemy.state='patrol';
-  enemy.attackTimer=0;enemy.attackCooldown=.7;enemy.hitstun=0;enemy.spawned=true;
-  enemy.account=typeof getSession==='function'?(getSession()?.account||null):null;
-  enemy.patrolDir=-1;
-  enemyEl.classList.remove('is-dead','is-hit','is-attacking','is-moving');
-  enemyHealthFill.style.width='100%';
+  const x=clamp(playerWorldX+offset,80,MAP_WIDTH-80);
+  resetEnemyState(enemy,{x,patrolMin:Math.max(40,x-125),patrolMax:Math.min(MAP_WIDTH-40,x+125)});
   renderWorld();
 }
-function placeEnemyNear(distance=210){
-  resetEnemy(distance);
-  enemy.attackCooldown=.55;
-  renderWorld();
+function placeEnemyNear(distance=210){resetEnemy(distance);enemy.attackCooldown=.55;renderWorld()}
+function damageEnemy(e,amount=1,knockDir=facing){
+  if(!e.alive||e.hitstun>0)return false;
+  e.hp=Math.max(0,e.hp-amount);e.hitstun=.22;e.el.classList.add('is-hit');
+  setTimeout(()=>e.el.classList.remove('is-hit'),220);
+  e.x=clamp(e.x+knockDir*34,40,MAP_WIDTH-40);
+  if(e.hp<=0){e.alive=false;e.state='dead';e.el.classList.remove('is-moving','is-attacking');e.el.classList.add('is-dead')}
+  setEnemyVisual(e);return true;
 }
-function updateCombat(dt,interactive){
-  if(!enemy.spawned){
-    if(interactive)resetEnemy(360);
-    else return;
+function enemyCanMove(e,dx){
+  const old={x:e.x-31,y:0,w:62,h:108};
+  const next={x:e.x+dx-31,y:0,w:62,h:108};
+  for(const r of activeSolidRects()){
+    const vertical=next.y<r.y+r.h-1&&next.y+next.h>r.y+1;
+    if(!vertical)continue;
+    if(dx>0&&old.x+old.w<=r.x+2&&next.x+next.w>r.x)return false;
+    if(dx<0&&old.x>=r.x+r.w-2&&next.x<r.x+r.w)return false;
   }
-  if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
-  if(playerInvuln>0)playerInvuln=Math.max(0,playerInvuln-dt);
-  if(playerAttackTimer>0){
-    playerAttackTimer=Math.max(0,playerAttackTimer-dt);
-    if(playerAttackTimer<=0)actorEl.classList.remove('is-attacking');
-    else if(!playerAttackHit&&playerAttackTimer<.22&&playerAttackTimer>.08&&enemy.alive&&rectsOverlap(getPlayerAttackBox(),getEnemyHurtbox())){
-      playerAttackHit=damageEnemy(1);
-    }
-  }
-  if(!playerGrounded){
-    playerVy-=GRAVITY*dt;playerY+=playerVy*dt;
-    if(playerY<=0){playerY=0;playerVy=0;playerGrounded=true;actorEl.classList.remove('is-jumping')}
-  }
-  if(!interactive||!enemy.alive)return;
-  enemy.attackCooldown=Math.max(0,enemy.attackCooldown-dt);enemy.hitstun=Math.max(0,enemy.hitstun-dt);
-  if(enemy.hitstun>0)return;
-  if(!enemyAiEnabled){enemy.state='frozen';enemyEl.classList.remove('is-moving','is-attacking');return}
-  const px=worldX+actorX,dx=px-enemy.x,dist=Math.abs(dx);
-  enemy.facing=dx>=0?1:-1;enemyEl.style.setProperty('--enemy-facing',enemy.facing);
-  if(enemy.attackTimer>0){
-    enemy.state='attack';
-    enemy.attackTimer=Math.max(0,enemy.attackTimer-dt);
-    if(enemy.attackTimer<=0){enemyEl.classList.remove('is-attacking');enemy.attackCooldown=.9}
-    else if(enemy.attackTimer<.20&&enemy.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(),getPlayerHurtbox())){
+  return true;
+}
+function moveEnemy(e,dx){
+  if(enemyCanMove(e,dx)){e.x=clamp(e.x+dx,35,MAP_WIDTH-35);return true}
+  return false;
+}
+function updateEnemy(e,dt,interactive){
+  if(!e.spawned||!e.alive)return;
+  e.attackCooldown=Math.max(0,e.attackCooldown-dt);e.hitstun=Math.max(0,e.hitstun-dt);
+  if(!interactive||e.hitstun>0)return;
+  if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
+  const dx=playerWorldX-e.x,dist=Math.abs(dx);
+  e.facing=dx>=0?1:-1;e.el.style.setProperty('--enemy-facing',e.facing);
+  if(e.attackTimer>0){
+    e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
+    if(e.attackTimer<=0){e.el.classList.remove('is-attacking');e.attackCooldown=.9}
+    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
       damagePlayer(1);playerInvuln=.72;actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
-  }else if(dist<84&&enemy.attackCooldown<=0){
-    enemy.state='attack';enemy.attackTimer=.34;enemyEl.classList.remove('is-moving');enemyEl.classList.add('is-attacking');
+  }else if(dist<84&&e.attackCooldown<=0){
+    e.state='attack';e.attackTimer=.34;e.el.classList.remove('is-moving');e.el.classList.add('is-attacking');
   }else if(dist<=700&&dist>74){
-    enemy.state='chase';enemyEl.classList.add('is-moving');
-    enemy.x+=Math.sign(dx)*Math.min(118*dt,Math.max(0,dist-72));
-  }else if(dist>700){
-    enemy.state='patrol';enemyEl.classList.add('is-moving');
-    const patrolRadius=125;
-    if(enemy.x<=enemy.spawnX-patrolRadius)enemy.patrolDir=1;
-    if(enemy.x>=enemy.spawnX+patrolRadius)enemy.patrolDir=-1;
-    enemy.facing=enemy.patrolDir;enemyEl.style.setProperty('--enemy-facing',enemy.facing);
-    enemy.x+=enemy.patrolDir*48*dt;
+    e.state='chase';e.el.classList.add('is-moving');
+    const step=Math.sign(dx)*Math.min(118*dt,Math.max(0,dist-72));
+    if(!moveEnemy(e,step)){e.state='blocked';e.el.classList.remove('is-moving')}
   }else{
-    enemy.state='idle';enemyEl.classList.remove('is-moving');
+    e.state='patrol';e.el.classList.add('is-moving');
+    if(e.x<=e.patrolMin)e.patrolDir=1;
+    if(e.x>=e.patrolMax)e.patrolDir=-1;
+    e.facing=e.patrolDir;e.el.style.setProperty('--enemy-facing',e.facing);
+    if(!moveEnemy(e,e.patrolDir*48*dt))e.patrolDir*=-1;
   }
 }
+function breakMapObject(id){
+  const obj=MAP_OBJECTS.find(o=>o.id===id&&o.breakable);
+  if(!obj||mapState.broken.has(id))return false;
+  mapState.broken.add(id);
+  const el=mapObjectTrack.querySelector('[data-map-id="'+id+'"]');if(el)el.classList.add('is-broken');
+  const dbg=mapDebugTrack.querySelector('[data-debug-for="'+id+'"]');if(dbg)dbg.style.display='none';
+  const dependent=MAP_PICKUPS.filter(p=>p.requiresBroken===id);
+  dependent.forEach(p=>{const pe=mapObjectTrack.querySelector('[data-pickup-id="'+p.id+'"]');if(pe)pe.classList.remove('is-collected')});
+  showMapNotice('木箱被打碎了');
+  saveWorldState();return true;
+}
+function addInventoryItem(item){
+  const stack=inventoryItems.find(v=>v&&v.id===item.id);
+  if(stack){stack.count=(stack.count||1)+(item.count||1);renderInventory();return true}
+  const slot=inventoryItems.findIndex(v=>!v);
+  if(slot<0){showMapNotice('背包已满');return false}
+  inventoryItems[slot]={...item};renderInventory();return true;
+}
+function collectPickup(p){
+  if(mapState.collected.has(p.id))return false;
+  const item=p.type==='herb'?{id:'rough-herb',name:'粗纸药草',desc:'揉碎后能恢复 2 点生命。',count:1,weight:.1,consumable:true,action:'heal',heal:2}:null;
+  if(!item||!addInventoryItem(item))return false;
+  mapState.collected.add(p.id);
+  const el=mapObjectTrack.querySelector('[data-pickup-id="'+p.id+'"]');if(el)el.classList.add('is-collected');
+  showMapNotice('拾取：'+item.name);saveWorldState();return true;
+}
+function updateMapInteractions(){
+  for(const p of MAP_PICKUPS){
+    if(mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken)))continue;
+    if(Math.abs(playerWorldX-p.x)<42&&Math.abs(playerY-p.y)<70)collectPickup(p);
+  }
+  if(playerWorldX>=MAP_EXIT_X&&!mapState.exitReached){
+    mapState.exitReached=true;showMapNotice('已到达 A村外道路出口 · 下一地区尚未开放',2600);saveWorldState();
+  }
+}
+function teleportTo(x,{notice='已传送'}={}){
+  playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerY=0;playerVy=0;playerGrounded=true;actorEl.classList.remove('is-jumping');
+  updateCamera();renderWorld();if(notice)showMapNotice(notice);return playerWorldX;
+}
+function updateCombat(dt,interactive){
+  if(!enemies.every(e=>e.spawned)){if(interactive)resetMapEnemies();else return}
+  if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
+  if(playerInvuln>0)playerInvuln=Math.max(0,playerInvuln-dt);
+  if(playerAttackTimer>0&&interactive){
+    playerAttackTimer=Math.max(0,playerAttackTimer-dt);
+    if(playerAttackTimer<=0)actorEl.classList.remove('is-attacking');
+    else if(playerAttackTimer<.22&&playerAttackTimer>.08){
+      const attackBox=getPlayerAttackBox();
+      for(const e of enemies){
+        if(e.alive&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
+          if(damageEnemy(e,1,facing))playerAttackHits.add(e.id);
+        }
+      }
+      for(const o of MAP_OBJECTS){
+        if(o.breakable&&!mapState.broken.has(o.id)&&rectsOverlap(attackBox,{x:o.x,y:o.y,w:o.w,h:o.h}))breakMapObject(o.id);
+      }
+    }
+  }
+  for(const e of enemies)updateEnemy(e,dt,interactive);
+}
+function nearestLivingEnemy(){
+  let best=null,bestD=Infinity;
+  for(const e of enemies){if(!e.alive)continue;const d=Math.abs(playerWorldX-e.x);if(d<bestD){best=e;bestD=d}}
+  return best;
+}
 function debugRect(el,r){
-  if(!r){el.style.width='0';return}
-  el.style.left=(r.x-worldX)+'px';el.style.bottom=(112+r.y)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
+  if(!r){
+    el.hidden=true;el.style.width='0';el.style.height='0';return;
+  }
+  el.hidden=false;
+  el.style.left=(r.x-worldX)+'px';el.style.bottom=(MAP_GROUND_SCREEN_Y+r.y)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
 }
 function renderCombatDebug(){
   const playerAttackActive=playerAttackTimer>0&&playerAttackTimer<.22&&playerAttackTimer>.08;
+  const target=nearestLivingEnemy();
   debugRect(playerHurtboxDebug,getPlayerHurtbox());
   debugRect(playerAttackDebug,(showAttackRange||playerAttackActive)?getPlayerAttackBox():null);
   playerAttackDebug.classList.toggle('is-preview',showAttackRange&&!playerAttackActive);
   playerAttackDebug.classList.toggle('is-active-box',playerAttackActive);
-  debugRect(enemyHurtboxDebug,enemy.alive?getEnemyHurtbox():null);
-  debugRect(enemyAttackDebug,enemy.attackTimer>0&&enemy.attackTimer<.20&&enemy.attackTimer>.08?getEnemyAttackBox():null);
+  debugRect(enemyHurtboxDebug,target?getEnemyHurtbox(target):null);
+  debugRect(enemyAttackDebug,target&&target.attackTimer>0&&target.attackTimer<.20&&target.attackTimer>.08?getEnemyAttackBox(target):null);
 }
-function toggleHitboxes(force){
-  showHitboxes=typeof force==='boolean'?force:!showHitboxes;
-  worldEl.classList.toggle('show-hitboxes',showHitboxes);
-  renderCombatDebug();updateCombatDebugButtons();
-  return showHitboxes;
-}
-function toggleAttackRange(force){
-  showAttackRange=typeof force==='boolean'?force:!showAttackRange;
-  worldEl.classList.toggle('show-attack-range',showAttackRange);
-  renderCombatDebug();updateCombatDebugButtons();
-  return showAttackRange;
-}
-function toggleEnemyAi(force){
-  enemyAiEnabled=typeof force==='boolean'?force:!enemyAiEnabled;
-  if(!enemyAiEnabled)enemyEl.classList.remove('is-moving','is-attacking');
-  updateCombatDebugButtons();
-  return enemyAiEnabled;
-}
+function toggleHitboxes(force){showHitboxes=typeof force==='boolean'?force:!showHitboxes;worldEl.classList.toggle('show-hitboxes',showHitboxes);renderCombatDebug();updateCombatDebugButtons();return showHitboxes}
+function toggleAttackRange(force){showAttackRange=typeof force==='boolean'?force:!showAttackRange;worldEl.classList.toggle('show-attack-range',showAttackRange);renderCombatDebug();updateCombatDebugButtons();return showAttackRange}
+function toggleEnemyAi(force){enemyAiEnabled=typeof force==='boolean'?force:!enemyAiEnabled;if(!enemyAiEnabled)enemies.forEach(e=>e.el.classList.remove('is-moving','is-attacking'));updateCombatDebugButtons();return enemyAiEnabled}
+function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?force:!showMapColliders;worldEl.classList.toggle('show-map-colliders',showMapColliders);updateCombatDebugButtons();return showMapColliders}
+function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
+function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
+window.PaperchalkMap={
+  width:MAP_WIDTH,spawnX:MAP_SPAWN_X,exitX:MAP_EXIT_X,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,enemySpawns:ENEMY_SPAWNS,
+  teleport:teleportTo,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
+  get playerX(){return playerWorldX},
+  get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
+};
 window.PaperchalkCombat={
-  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,placeEnemyNear,
+  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,placeEnemyNear,resetMapEnemies,
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
   get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
-  get player(){return {y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}},
-  get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange}}
+  get enemies(){return enemies.map(e=>({id:e.id,x:e.x,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
+  get player(){return {x:playerWorldX,y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}},
+  get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
 function refreshRoadW(){
