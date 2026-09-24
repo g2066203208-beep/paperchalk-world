@@ -29,6 +29,8 @@ button{cursor:pointer}
 .road-tile{height:100%;width:auto;display:block;flex:none;margin-right:-1px}
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
+.entity-layer{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}
+.entity-track{position:absolute;left:0;top:0;width:1px;height:100%;will-change:transform}
 .prop-track{width:5000px;height:100%;position:absolute;left:0;top:0}
 .prop{
   position:absolute;
@@ -90,7 +92,7 @@ button{cursor:pointer}
 }
 .enemy{
   --enemy-facing:-1;position:absolute;z-index:5;bottom:112px;width:112px;height:132px;
-  transform:translateX(-50%);pointer-events:none;will-change:left,bottom,transform,opacity;
+  transform:translateX(-50%);pointer-events:none;will-change:left,transform,opacity;
 }
 .enemy img{width:100%;height:100%;object-fit:contain;transform:scaleX(var(--enemy-facing));transform-origin:50% 92%;filter:drop-shadow(2px 5px 0 rgba(48,36,25,.14))}
 .enemy.is-moving img{animation:enemy-bob .48s ease-in-out infinite}
@@ -108,10 +110,19 @@ button{cursor:pointer}
 @media (hover:none),(pointer:coarse){.combat-controls{display:flex}}
 .combat-debug-box{position:absolute;z-index:60;display:none;pointer-events:none;box-sizing:border-box;border:2px solid}
 .stage.show-hitboxes .combat-debug-box{display:block}
+.stage.show-attack-range #playerAttackDebug{display:block}
 #playerHurtboxDebug{border-color:#39c5bb;background:rgba(57,197,187,.10)}
-#playerAttackDebug{border-color:#ff9b42;background:rgba(255,155,66,.16)}
+#playerAttackDebug{border-color:#ff9b42;background:rgba(255,155,66,.12)}
+#playerAttackDebug.is-preview{border-style:dashed;opacity:.72}
+#playerAttackDebug.is-active-box{border-style:solid;background:rgba(255,155,66,.28);box-shadow:0 0 0 2px rgba(255,255,255,.16) inset}
 #enemyHurtboxDebug{border-color:#a971ff;background:rgba(169,113,255,.10)}
-#enemyAttackDebug{border-color:#ff4f64;background:rgba(255,79,100,.16)}
+#enemyAttackDebug{border-color:#ff4f64;background:rgba(255,79,100,.20)}
+.debug-combat-actions{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px;
+}
+.debug-legend{margin:-2px 0 10px;padding:7px 8px;border:1px dashed rgba(84,65,43,.28);font-size:11px;line-height:1.45;color:#675743}
+.debug-legend span{display:inline-block;margin-right:9px}
+.debug-dot{display:inline-block;width:9px;height:9px;margin-right:3px;vertical-align:-1px;border:2px solid currentColor}
 .rear-layer .prop{bottom:128px}
 .front-layer .prop{bottom:96px}
 
@@ -932,9 +943,13 @@ button{cursor:pointer}
     <div class="foot-shadow" aria-hidden="true"></div>
     <img class="walker" src="./assets/traveler.webp?v=traveler-r3" alt="旅行者">
   </div>
-  <div id="enemy" class="enemy" aria-label="纸境游荡者">
-    <div class="enemy-health"><div id="enemyHealthFill" class="enemy-health-fill"></div></div>
-    <img src="./assets/enemies/rag-drifter.svg?v=1" alt="敌人">
+  <div class="entity-layer" aria-hidden="true">
+    <div id="entityTrack" class="entity-track">
+      <div id="enemy" class="enemy" aria-label="纸境游荡者">
+        <div class="enemy-health"><div id="enemyHealthFill" class="enemy-health-fill"></div></div>
+        <img src="./assets/enemies/rag-drifter.svg?v=1" alt="敌人">
+      </div>
+    </div>
   </div>
   <div id="playerHurtboxDebug" class="combat-debug-box"></div>
   <div id="playerAttackDebug" class="combat-debug-box"></div>
@@ -967,20 +982,34 @@ button{cursor:pointer}
       <button class="debug-action" type="button" data-debug-action="zero">0 HP</button>
       <button class="debug-action" type="button" data-debug-action="full">满血</button>
     </div>
+    <div class="debug-combat-actions" aria-label="战斗调试">
+      <button id="debugHitboxBtn" class="debug-action" type="button" data-debug-action="hitboxes">碰撞箱：关</button>
+      <button id="debugRangeBtn" class="debug-action" type="button" data-debug-action="attackRange">攻击范围：关</button>
+      <button id="debugAiBtn" class="debug-action" type="button" data-debug-action="enemyAI">敌人AI：开</button>
+      <button class="debug-action" type="button" data-debug-action="enemyNear">敌人靠近</button>
+      <button class="debug-action" type="button" data-debug-action="enemyReset">重置敌人</button>
+      <button class="debug-action" type="button" data-debug-action="attackTest">测试攻击</button>
+    </div>
+    <div class="debug-legend" aria-label="碰撞箱颜色说明">
+      <span style="color:#249b92"><i class="debug-dot"></i>玩家身体</span>
+      <span style="color:#d77a22"><i class="debug-dot"></i>玩家攻击</span>
+      <span style="color:#8854d0"><i class="debug-dot"></i>敌人身体</span>
+      <span style="color:#d7374d"><i class="debug-dot"></i>敌人攻击</span>
+    </div>
     <form id="debugCommandForm" class="debug-command-form">
       <input id="debugCommandInput" class="debug-command-input" type="text"
              autocomplete="off" spellcheck="false" placeholder="输入：hp 5 / hp -1 / help">
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">快捷命令：hp、hp 5、hp -1、hp +1、hp max、damage 2、heal 2、time 60、pos、resetpos、save、clear</div>
+    <div class="debug-help">调试功能全部集中在这里。也可输入：hp、enemy reset、enemy near、hitbox、range、ai、attack、jump、pos、save、clear</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
     <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
   </div>
-  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　F3 碰撞箱</div>
+  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　碰撞调试请点右上角「调试」</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -1211,6 +1240,10 @@ const debugStatus=document.getElementById('debugStatus');
 const debugCommandForm=document.getElementById('debugCommandForm');
 const debugCommandInput=document.getElementById('debugCommandInput');
 const debugOutput=document.getElementById('debugOutput');
+const debugHitboxBtn=document.getElementById('debugHitboxBtn');
+const debugRangeBtn=document.getElementById('debugRangeBtn');
+const debugAiBtn=document.getElementById('debugAiBtn');
+const entityTrack=document.getElementById('entityTrack');
 const enemyEl=document.getElementById('enemy');
 const enemyHealthFill=document.getElementById('enemyHealthFill');
 const jumpBtn=document.getElementById('jumpBtn');
@@ -1242,8 +1275,14 @@ const GRAVITY=1850,JUMP_SPEED=650;
 const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
-const enemy={x:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null};
+const enemy={
+  x:0,spawnX:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
+  attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,
+  patrolDir:-1
+};
 let showHitboxes=false;
+let showAttackRange=false;
+let enemyAiEnabled=true;
 
 function clampPlayerHp(value){
   const n=Number(value);
@@ -1348,7 +1387,14 @@ function updateDebugStatus(){
     '<span>worldX <b>'+worldX.toFixed(1)+'</b></span>'+
     '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
     '<span>敌人 <b>'+(enemy.alive?enemy.hp+'/'+ENEMY_MAX_HP:'击倒')+'</b></span>'+
+    '<span>敌人状态 <b>'+enemy.state+'</b></span>'+
+    '<span>敌距 <b>'+(enemy.spawned?Math.round(Math.abs((worldX+actorX)-enemy.x)):'--')+'</b></span>'+
     '<span>碰撞箱 <b>'+(showHitboxes?'开':'关')+'</b></span>';
+}
+function updateCombatDebugButtons(){
+  debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
+  debugRangeBtn.textContent='攻击范围：'+(showAttackRange?'开':'关');
+  debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
 }
 function writeDebugOutput(message){
   debugOutput.textContent=String(message);
@@ -1362,6 +1408,8 @@ function openDebugPanel(){
   debugPanel.setAttribute('aria-hidden','false');
   debugToggleBtn.setAttribute('aria-expanded','true');
   updateDebugStatus();
+  updateCombatDebugButtons();
+  renderCombatDebug();
   return true;
 }
 function closeDebugPanel({focus=true}={}){
@@ -1397,9 +1445,12 @@ function runDebugCommand(rawCommand){
       'resetpos        世界位置回到 0',
       'save            立即保存',
       'enemy reset      重置敌人',
+      'enemy near       把敌人放到玩家附近',
       'hitbox           开/关碰撞箱',
-      'jump             跳跃',
-      'attack           攻击',
+      'range            开/关攻击范围预览',
+      'ai               开/关敌人AI',
+      'jump             跳跃测试',
+      'attack           攻击测试',
       'clear           清空输出'
     ].join('\n');
   }
@@ -1451,10 +1502,16 @@ function runDebugCommand(rawCommand){
   if(cmd==='save'){
     return saveWorldState()?'存档已写入。':'当前没有登录账号，无法保存。';
   }
-  if(cmd==='enemy'&&String(arg||'').toLowerCase()==='reset'){resetEnemy();return '敌人已重置。'}
+  if(cmd==='enemy'){
+    const sub=String(arg||'reset').toLowerCase();
+    if(sub==='near'){placeEnemyNear();return '敌人已放到玩家前方。'}
+    resetEnemy();return '敌人已重置到地图前方。';
+  }
   if(cmd==='hitbox')return '碰撞箱 -> '+(toggleHitboxes()?'开启':'关闭');
-  if(cmd==='jump'){jumpPlayer();return 'jump'}
-  if(cmd==='attack'){startPlayerAttack();return 'attack'}
+  if(cmd==='range')return '攻击范围预览 -> '+(toggleAttackRange()?'开启':'关闭');
+  if(cmd==='ai')return '敌人AI -> '+(toggleEnemyAi()?'开启':'暂停');
+  if(cmd==='jump'){debugJump();return 'jump'}
+  if(cmd==='attack'){debugAttack();return 'attack'}
   if(cmd==='clear'){
     debugOutput.textContent='';
     return '';
@@ -1482,17 +1539,30 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
     else if(action==='damage3')damagePlayer(3);
     else if(action==='zero')setPlayerHp(0);
     else if(action==='full')setPlayerHp(PLAYER_MAX_HP);
+    else if(action==='hitboxes'){
+      writeDebugOutput('碰撞箱 -> '+(toggleHitboxes()?'开启':'关闭'));
+      updateDebugStatus();updateCombatDebugButtons();return;
+    }else if(action==='attackRange'){
+      writeDebugOutput('攻击范围预览 -> '+(toggleAttackRange()?'开启':'关闭'));
+      updateDebugStatus();updateCombatDebugButtons();return;
+    }else if(action==='enemyAI'){
+      writeDebugOutput('敌人AI -> '+(toggleEnemyAi()?'开启':'暂停'));
+      updateDebugStatus();updateCombatDebugButtons();return;
+    }else if(action==='enemyNear'){
+      placeEnemyNear();writeDebugOutput('敌人已放到玩家前方 210px。');
+      updateDebugStatus();return;
+    }else if(action==='enemyReset'){
+      resetEnemy();writeDebugOutput('敌人已重置到地图前方。');
+      updateDebugStatus();return;
+    }else if(action==='attackTest'){
+      debugAttack();writeDebugOutput('执行一次攻击测试。');
+      updateDebugStatus();return;
+    }
     updateDebugStatus();
     writeDebugOutput('HP -> '+playerHp+' / '+PLAYER_MAX_HP);
   });
 });
 addEventListener('keydown',e=>{
-  if(e.code==='F2' && document.getElementById('uiShell').classList.contains('is-hidden')){
-    e.preventDefault();
-    toggleDebugPanel();
-    if(debugIsOpen())debugCommandInput.focus();
-    return;
-  }
   if(e.code==='Escape'&&debugIsOpen()){
     e.preventDefault();
     closeDebugPanel();
@@ -1511,8 +1581,10 @@ function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
 function getEnemyHurtbox(){return{x:enemy.x-31,y:10,w:62,h:108}}
 function getEnemyAttackBox(){return enemy.facing>0?{x:enemy.x+20,y:24,w:74,h:72}:{x:enemy.x-94,y:24,w:74,h:72}}
-function jumpPlayer(){if(!worldInteractive()||!playerGrounded)return false;playerVy=JUMP_SPEED;playerGrounded=false;actorEl.classList.add('is-jumping');return true}
-function startPlayerAttack(){if(!worldInteractive()||playerAttackCooldown>0||playerAttackTimer>0)return false;playerAttackTimer=.30;playerAttackCooldown=.38;playerAttackHit=false;actorEl.classList.add('is-attacking');return true}
+function jumpPlayer(force=false){if((!force&&!worldInteractive())||!playerGrounded)return false;playerVy=JUMP_SPEED;playerGrounded=false;actorEl.classList.add('is-jumping');return true}
+function startPlayerAttack(force=false){if((!force&&!worldInteractive())||playerAttackCooldown>0||playerAttackTimer>0)return false;playerAttackTimer=.30;playerAttackCooldown=.38;playerAttackHit=false;actorEl.classList.add('is-attacking');return true}
+function debugJump(){return jumpPlayer(true)}
+function debugAttack(){return startPlayerAttack(true)}
 function damageEnemy(amount=1){
   if(!enemy.alive||enemy.hitstun>0)return false;
   enemy.hp=Math.max(0,enemy.hp-amount);enemy.hitstun=.22;enemyEl.classList.add('is-hit');
@@ -1522,13 +1594,26 @@ function damageEnemy(amount=1){
   if(enemy.hp<=0){enemy.alive=false;enemy.state='dead';enemyEl.classList.add('is-dead')}
   return true;
 }
-function resetEnemy(offset=520){
-  enemy.x=worldX+actorX+offset;enemy.hp=ENEMY_MAX_HP;enemy.alive=true;enemy.state='idle';enemy.attackTimer=0;enemy.attackCooldown=.7;enemy.hitstun=0;enemy.spawned=true;enemy.account=typeof getSession==='function'?(getSession()?.account||null):null;
-  enemyEl.classList.remove('is-dead','is-hit','is-attacking','is-moving');enemyHealthFill.style.width='100%';
+function resetEnemy(offset=360){
+  const playerWorldX=worldX+actorX;
+  enemy.x=playerWorldX+offset;
+  enemy.spawnX=enemy.x;
+  enemy.hp=ENEMY_MAX_HP;enemy.alive=true;enemy.state='patrol';
+  enemy.attackTimer=0;enemy.attackCooldown=.7;enemy.hitstun=0;enemy.spawned=true;
+  enemy.account=typeof getSession==='function'?(getSession()?.account||null):null;
+  enemy.patrolDir=-1;
+  enemyEl.classList.remove('is-dead','is-hit','is-attacking','is-moving');
+  enemyHealthFill.style.width='100%';
+  renderWorld();
+}
+function placeEnemyNear(distance=210){
+  resetEnemy(distance);
+  enemy.attackCooldown=.55;
+  renderWorld();
 }
 function updateCombat(dt,interactive){
   if(!enemy.spawned){
-    if(interactive)resetEnemy(520);
+    if(interactive)resetEnemy(360);
     else return;
   }
   if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
@@ -1547,38 +1632,69 @@ function updateCombat(dt,interactive){
   if(!interactive||!enemy.alive)return;
   enemy.attackCooldown=Math.max(0,enemy.attackCooldown-dt);enemy.hitstun=Math.max(0,enemy.hitstun-dt);
   if(enemy.hitstun>0)return;
-  const px=worldX+actorX,dx=px-enemy.x,dist=Math.abs(dx);enemy.facing=dx>=0?1:-1;enemyEl.style.setProperty('--enemy-facing',enemy.facing);
+  if(!enemyAiEnabled){enemy.state='frozen';enemyEl.classList.remove('is-moving','is-attacking');return}
+  const px=worldX+actorX,dx=px-enemy.x,dist=Math.abs(dx);
+  enemy.facing=dx>=0?1:-1;enemyEl.style.setProperty('--enemy-facing',enemy.facing);
   if(enemy.attackTimer>0){
+    enemy.state='attack';
     enemy.attackTimer=Math.max(0,enemy.attackTimer-dt);
     if(enemy.attackTimer<=0){enemyEl.classList.remove('is-attacking');enemy.attackCooldown=.9}
     else if(enemy.attackTimer<.20&&enemy.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(),getPlayerHurtbox())){
       damagePlayer(1);playerInvuln=.72;actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
-  }else if(dist<82&&enemy.attackCooldown<=0){
-    enemy.attackTimer=.34;enemyEl.classList.remove('is-moving');enemyEl.classList.add('is-attacking');
-  }else if(dist<430&&dist>72){
-    enemy.state='chase';enemyEl.classList.add('is-moving');enemy.x+=Math.sign(dx)*Math.min(112*dt,Math.max(0,dist-70));
-  }else enemyEl.classList.remove('is-moving');
+  }else if(dist<84&&enemy.attackCooldown<=0){
+    enemy.state='attack';enemy.attackTimer=.34;enemyEl.classList.remove('is-moving');enemyEl.classList.add('is-attacking');
+  }else if(dist<=700&&dist>74){
+    enemy.state='chase';enemyEl.classList.add('is-moving');
+    enemy.x+=Math.sign(dx)*Math.min(118*dt,Math.max(0,dist-72));
+  }else if(dist>700){
+    enemy.state='patrol';enemyEl.classList.add('is-moving');
+    const patrolRadius=125;
+    if(enemy.x<=enemy.spawnX-patrolRadius)enemy.patrolDir=1;
+    if(enemy.x>=enemy.spawnX+patrolRadius)enemy.patrolDir=-1;
+    enemy.facing=enemy.patrolDir;enemyEl.style.setProperty('--enemy-facing',enemy.facing);
+    enemy.x+=enemy.patrolDir*48*dt;
+  }else{
+    enemy.state='idle';enemyEl.classList.remove('is-moving');
+  }
 }
 function debugRect(el,r){
   if(!r){el.style.width='0';return}
   el.style.left=(r.x-worldX)+'px';el.style.bottom=(112+r.y)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
 }
 function renderCombatDebug(){
+  const playerAttackActive=playerAttackTimer>0&&playerAttackTimer<.22&&playerAttackTimer>.08;
   debugRect(playerHurtboxDebug,getPlayerHurtbox());
-  debugRect(playerAttackDebug,playerAttackTimer>0&&playerAttackTimer<.22&&playerAttackTimer>.08?getPlayerAttackBox():null);
+  debugRect(playerAttackDebug,(showAttackRange||playerAttackActive)?getPlayerAttackBox():null);
+  playerAttackDebug.classList.toggle('is-preview',showAttackRange&&!playerAttackActive);
+  playerAttackDebug.classList.toggle('is-active-box',playerAttackActive);
   debugRect(enemyHurtboxDebug,enemy.alive?getEnemyHurtbox():null);
   debugRect(enemyAttackDebug,enemy.attackTimer>0&&enemy.attackTimer<.20&&enemy.attackTimer>.08?getEnemyAttackBox():null);
 }
 function toggleHitboxes(force){
   showHitboxes=typeof force==='boolean'?force:!showHitboxes;
   worldEl.classList.toggle('show-hitboxes',showHitboxes);
+  renderCombatDebug();updateCombatDebugButtons();
   return showHitboxes;
 }
+function toggleAttackRange(force){
+  showAttackRange=typeof force==='boolean'?force:!showAttackRange;
+  worldEl.classList.toggle('show-attack-range',showAttackRange);
+  renderCombatDebug();updateCombatDebugButtons();
+  return showAttackRange;
+}
+function toggleEnemyAi(force){
+  enemyAiEnabled=typeof force==='boolean'?force:!enemyAiEnabled;
+  if(!enemyAiEnabled)enemyEl.classList.remove('is-moving','is-attacking');
+  updateCombatDebugButtons();
+  return enemyAiEnabled;
+}
 window.PaperchalkCombat={
-  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,toggleHitboxes,
-  get enemy(){return {x:enemy.x,hp:enemy.hp,alive:enemy.alive,state:enemy.state}},
-  get player(){return {y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}}
+  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,placeEnemyNear,
+  toggleHitboxes,toggleAttackRange,toggleEnemyAi,
+  get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
+  get player(){return {y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}},
+  get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange}}
 };
 
 function refreshRoadW(){
@@ -1587,8 +1703,6 @@ function refreshRoadW(){
   actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,actorX));
   actorEl.style.left=actorX+'px';
   actorEl.style.bottom=(112+playerY)+'px';
-  enemyEl.style.left=(enemy.x-worldX)+'px';
-  enemyEl.style.bottom='112px';
   renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
@@ -1619,7 +1733,11 @@ function renderWorld(){
   roadTrack.style.transform='translate3d('+(-roadOffset)+'px,0,0)';
   rearTrack.style.transform='translate3d('+(-rearOffset)+'px,0,0)';
   frontTrack.style.transform='translate3d('+(-frontOffset)+'px,0,0)';
+  entityTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
   actorEl.style.left=actorX+'px';
+  actorEl.style.bottom=(112+playerY)+'px';
+  if(enemy.spawned)enemyEl.style.left=enemy.x+'px';
+  renderCombatDebug();
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
@@ -1674,7 +1792,6 @@ addEventListener('keydown',e=>{
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){jumpPlayer();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
-  if(e.code==='F3'){toggleHitboxes();e.preventDefault()}
 });
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
@@ -2206,7 +2323,7 @@ function enterWorld(){
   if(!session){showPage('auth');return}
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
-  if(!enemy.spawned||!enemy.alive||enemy.account!==session.account)resetEnemy(520);
+  if(!enemy.spawned||!enemy.alive||enemy.account!==session.account)resetEnemy(360);
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());

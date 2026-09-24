@@ -15,8 +15,9 @@ const requiredIds = [
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
-  "enemy","enemyHealthFill","jumpBtn","attackBtn",
+  "entityTrack","enemy","enemyHealthFill","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
+  "debugHitboxBtn","debugRangeBtn","debugAiBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
 ];
 
@@ -56,7 +57,14 @@ assert(game.includes("function rectsOverlap"), "AABB overlap function missing");
 assert(game.includes("getPlayerAttackBox"), "Player attack hitbox missing");
 assert(game.includes("getEnemyHurtbox"), "Enemy hurtbox missing");
 assert(game.includes("KeyJ"), "Keyboard attack key missing");
-assert(game.includes("F3"), "Hitbox debug hotkey missing");
+assert(game.includes("entityTrack.style.transform"), "World entity track transform missing");
+assert(game.includes("enemy.state='patrol'"), "Enemy patrol state missing");
+assert(game.includes("dist<=700"), "Enemy chase radius missing");
+assert(html.includes('data-debug-action="hitboxes"'), "Hitbox debug panel button missing");
+assert(html.includes('data-debug-action="attackRange"'), "Attack range debug panel button missing");
+assert(html.includes('data-debug-action="enemyAI"'), "Enemy AI debug panel button missing");
+assert(!game.includes("e.code==='F2'"), "Debug panel must not depend on F2 hotkey");
+assert(!game.includes("e.code==='F3'"), "Hitbox debug must live inside debug panel, not F3");
 assert(html.includes("assets/enemies/rag-drifter.svg"), "Enemy art missing");
 assert(fs.existsSync("assets/enemies/rag-drifter.svg"), "Enemy SVG asset missing");
 assert(html.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
