@@ -1545,7 +1545,7 @@ function areaAt(x,y){
   }
   return best;
 }
-function regionNameAt(x,y=typeof playerY==='number'?playerY:MAP_SPAWN_Y){return areaAt(x,y)?.name||'纸境荒野'}
+function regionNameAt(x,y=MAP_SPAWN_Y){return areaAt(x,y)?.name||'纸境荒野'}
 
 const ROUTE_ENDPOINT_PAD=150;
 const FORK_LANE_LEVELS=[142,72,0];
