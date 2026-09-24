@@ -101,10 +101,22 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
+        if (webView == null) {
             moveTaskToBack(true);
+            return;
         }
+
+        // Let the game close its backpack/menu layers before leaving the app.
+        webView.evaluateJavascript(
+                "(function(){try{return !!(window.PaperchalkHandleBack && window.PaperchalkHandleBack());}catch(e){return false;}})()",
+                handled -> {
+                    if ("true".equals(handled)) return;
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                    } else {
+                        moveTaskToBack(true);
+                    }
+                }
+        );
     }
 }

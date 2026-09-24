@@ -3,8 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#28251f">
-<title>Paperchalk World</title>
+<meta name="theme-color" content="#28251f">\n<link rel="icon" href="data:,">\n<title>Paperchalk World</title>
 <style>
 :root{
   --ink:#3f392f;
@@ -326,6 +325,20 @@ button{cursor:pointer}
   color:#54493a;
 }
 .setting-row:nth-child(even){transform:rotate(.25deg)}
+.setting-row select{
+  max-width:58%;border:0;border-bottom:1px solid rgba(77,64,48,.35);
+  background:rgba(245,235,213,.55);color:#4f4639;padding:5px 8px;border-radius:4px;
+}
+.setting-row input[type="checkbox"]{width:20px;height:20px;accent-color:#6e604c}
+.settings-status{position:relative;z-index:2;min-height:20px;margin-top:10px;text-align:center;color:#665948;font-size:12px}
+.orientation-hint{
+  position:fixed;inset:0;z-index:170;display:none;align-items:center;justify-content:center;
+  text-align:center;background:rgba(39,36,30,.96);color:#efe5d0;font-size:24px;letter-spacing:.12em;
+}
+.orientation-hint span{font-size:13px;letter-spacing:.08em;color:#cdbf9f}
+@media (orientation:portrait) and (max-width:800px) and (pointer:coarse){
+  body.prefer-landscape .orientation-hint{display:flex}
+}
 
 /* in-world UI itself is also a paper tab */
 .world-menu-btn{
@@ -722,6 +735,10 @@ button{cursor:pointer}
   </div>
 </main>
 
+<div id="orientationHint" class="orientation-hint" role="status" aria-live="polite">
+  <div>请横屏游玩<br><span>旋转设备后继续</span></div>
+</div>
+
 <section id="backpackOverlay" class="inventory-overlay" aria-hidden="true">
   <div id="backpackFrame" class="inventory-shell" role="dialog" aria-modal="true" aria-label="背包">
     <img class="inventory-art" src="./assets/ui/backpack-ui-v2.png?v=2" alt="背包">
@@ -821,12 +838,27 @@ button{cursor:pointer}
       <div class="auth-wrap">
         <div class="auth-card">
           <h2 class="auth-title">设置</h2>
-          <p class="auth-sub">先保留最基础的游戏设置，后续再接音效、语言、画面和控制选项。</p>
+          <p class="auth-sub">这些设置会保存在当前设备。世界时间只在实际游玩时推进。</p>
           <div class="settings-list">
-            <div class="setting-row"><span>界面语言</span><span>简体中文</span></div>
-            <div class="setting-row"><span>世界时间</span><span>1 秒 = 1 分钟</span></div>
-            <div class="setting-row"><span>横屏模式</span><span>开启</span></div>
+            <label class="setting-row" for="settingLanguage"><span>界面语言</span>
+              <select id="settingLanguage" aria-label="界面语言">
+                <option value="zh-CN">简体中文</option>
+              </select>
+            </label>
+            <label class="setting-row" for="settingTimeScale"><span>世界时间</span>
+              <select id="settingTimeScale" aria-label="世界时间速度">
+                <option value="0">暂停</option>
+                <option value="0.5">1 秒 = 0.5 分钟</option>
+                <option value="1">1 秒 = 1 分钟</option>
+                <option value="2">1 秒 = 2 分钟</option>
+                <option value="5">1 秒 = 5 分钟</option>
+              </select>
+            </label>
+            <label class="setting-row setting-toggle" for="settingLandscape"><span>网页横屏优先</span>
+              <input id="settingLandscape" type="checkbox" aria-label="网页横屏优先">
+            </label>
           </div>
+          <div id="settingsStatus" class="settings-status" role="status" aria-live="polite"></div>
         </div>
       </div>
     </section>
@@ -910,10 +942,17 @@ const inventoryItemWeight=document.getElementById('inventoryItemWeight');
 const inventoryItemCount=document.getElementById('inventoryItemCount');
 const inventoryUse=document.getElementById('inventoryUse');
 const inventoryDrop=document.getElementById('inventoryDrop');
+const worldEl=document.getElementById('world');
+const settingLanguage=document.getElementById('settingLanguage');
+const settingTimeScale=document.getElementById('settingTimeScale');
+const settingLandscape=document.getElementById('settingLandscape');
+const settingsStatus=document.getElementById('settingsStatus');
 
 let last=performance.now();
 let roadW=1200;
 let worldX=0;
+let worldMinutes=0;
+let worldTimeScale=1;
 let actorX=Math.round(innerWidth*.35);
 let keyboardLeft=false,keyboardRight=false;
 let joystickAxis=0;
@@ -958,7 +997,9 @@ function renderWorld(){
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
-  const axis=worldInteractive()?movementAxis():0;
+  const interactive=worldInteractive();
+  if(interactive && worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  const axis=interactive?movementAxis():0;
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
   actorEl.classList.toggle('is-moving',moving);
@@ -1094,9 +1135,11 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
   const center={x:innerWidth*.5,y:innerHeight*.5};
   const ballSize=Math.max(54,Math.min(84,innerWidth*.062));
   const unfoldSize=Math.max(150,Math.min(290,innerWidth*.20));
+  let flight=null,unfold=null,targetAnim=null;
 
   paperFxBall.getAnimations().forEach(a=>a.cancel());
   paperFxUnfold.getAnimations().forEach(a=>a.cancel());
+  if(targetEl)targetEl.getAnimations().forEach(a=>a.cancel());
   paperFxBall.style.opacity='1';
   paperFxUnfold.style.opacity='0';
   setPaperFxAt(paperFxBall,origin.x,origin.y,ballSize);
@@ -1107,18 +1150,19 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
   const arc=-Math.min(74,Math.max(24,Math.abs(dx)*.09+24));
 
   try{
-    const flight=paperFxBall.animate([
+    flight=paperFxBall.animate([
       {transform:'translate(0,0) scale(.68) rotate(-10deg)',opacity:0},
       {offset:.12,transform:'translate(0,0) scale(.92) rotate(-4deg)',opacity:1},
       {offset:.56,transform:'translate('+(dx*.55)+'px,'+(dy*.55+arc)+'px) scale(1.03) rotate(145deg)',opacity:1},
       {transform:'translate('+dx+'px,'+dy+'px) scale(.82) rotate(310deg)',opacity:1}
     ],{duration:330,easing:'cubic-bezier(.22,.72,.22,1)',fill:'forwards'});
     await flight.finished;
+    flight.cancel();
+    flight=null;
 
     paperFxBall.style.opacity='0';
     revealFn();
 
-    let targetAnim=null;
     if(targetEl && typeof targetEl.animate==='function'){
       targetEl.classList.add('paper-ui-transitioning');
       targetAnim=targetEl.animate([
@@ -1129,7 +1173,7 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
     }
 
     paperFxUnfold.style.opacity='1';
-    const unfold=paperFxUnfold.animate([
+    unfold=paperFxUnfold.animate([
       {transform:'scale(.18,.13) rotate(-13deg)',opacity:0},
       {offset:.22,transform:'scale(.48,.40) rotate(-7deg)',opacity:1},
       {offset:.72,transform:'scale(1.05,.96) rotate(1.6deg)',opacity:1},
@@ -1137,12 +1181,16 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
     ],{duration:270,easing:'cubic-bezier(.18,.78,.22,1)',fill:'forwards'});
 
     await Promise.allSettled([unfold.finished,targetAnim?targetAnim.finished:Promise.resolve()]);
-    if(targetEl)targetEl.classList.remove('paper-ui-transitioning');
   }catch(err){
     console.warn('PAPER_UI_TRANSITION_FALLBACK',err);
     revealFn();
-    if(targetEl)targetEl.classList.remove('paper-ui-transitioning');
   }finally{
+    try{flight?.cancel()}catch{}
+    try{unfold?.cancel()}catch{}
+    try{targetAnim?.cancel()}catch{}
+    if(targetEl)targetEl.classList.remove('paper-ui-transitioning');
+    paperFxBall.getAnimations().forEach(a=>a.cancel());
+    paperFxUnfold.getAnimations().forEach(a=>a.cancel());
     paperFxBall.style.opacity='0';
     paperFxUnfold.style.opacity='0';
     paperUIBusy=false;
@@ -1155,6 +1203,39 @@ const INVENTORY_CAPACITY=20;
 const inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
 let inventorySelected=-1;
 let backpackClosing=false;
+let lastBackpackTrigger=null;
+
+function normalizeInventory(raw){
+  const source=Array.isArray(raw)?raw:[];
+  return Array.from({length:INVENTORY_CAPACITY},(_,i)=>{
+    const item=source[i];
+    if(!item||typeof item!=='object')return null;
+    const copy={...item};
+    copy.count=Math.max(1,Math.floor(Number(copy.count)||1));
+    copy.weight=Math.max(0,Number(copy.weight)||0);
+    return copy;
+  });
+}
+function setInventoryFromSave(raw){
+  inventoryItems.splice(0,INVENTORY_CAPACITY,...normalizeInventory(raw));
+  inventorySelected=-1;
+  renderInventory();
+}
+function inventorySnapshot(){
+  return inventoryItems.map(item=>item?{...item}:null);
+}
+function setInventoryMessage(message){
+  inventoryItemDesc.textContent=message||'';
+}
+function decrementInventoryItem(index,amount=1){
+  const item=inventoryItems[index];
+  if(!item)return false;
+  const left=Math.max(0,(Number(item.count)||1)-amount);
+  if(left<=0)inventoryItems[index]=null;
+  else item.count=left;
+  if(!inventoryItems[index])inventorySelected=-1;
+  return true;
+}
 
 for(let i=0;i<INVENTORY_CAPACITY;i++){
   const slot=document.createElement('button');
@@ -1182,20 +1263,21 @@ function renderInventoryDetail(){
     inventoryDrop.disabled=true;
     return;
   }
-  inventoryPreviewImage.style.display='block';
-  inventoryPreviewImage.src=item.icon||'';
+  inventoryPreviewImage.style.display=item.icon?'block':'none';
+  if(item.icon)inventoryPreviewImage.src=item.icon;
+  else inventoryPreviewImage.removeAttribute('src');
   inventoryItemName.textContent=item.name||'未命名物品';
   inventoryItemDesc.textContent=item.desc||'';
   inventoryItemWeight.textContent=Number(item.weight||0).toFixed(1);
   inventoryItemCount.textContent=String(item.count||1);
-  inventoryUse.disabled=false;
+  inventoryUse.disabled=!(item.consumable===true||item.usable===true||item.action==='consume');
   inventoryDrop.disabled=false;
 }
 function renderInventory(){
   [...backpackSlots.children].forEach((slot,i)=>{
     const item=inventoryItems[i];
     slot.classList.toggle('is-selected',i===inventorySelected);
-    slot.setAttribute('aria-label','背包格 '+(i+1)+(item?'：'+item.name:'：空'));
+    slot.setAttribute('aria-label','背包格 '+(i+1)+(item?'：'+(item.name||'物品'):'：空'));
     slot.innerHTML='';
     if(item){
       if(item.icon){
@@ -1212,39 +1294,93 @@ function renderInventory(){
   });
   renderInventoryDetail();
 }
+function backpackFocusables(){
+  return [...backpackFrame.querySelectorAll('button:not(:disabled),[href],input:not(:disabled),select:not(:disabled),[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.hidden&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).display!=='none');
+}
 function revealBackpack(){
   backpackOverlay.classList.add('is-open');
   backpackOverlay.setAttribute('aria-hidden','false');
+  worldEl.setAttribute('inert','');
 }
 function openBackpack(triggerEl=backpackBtn){
   const shell=document.getElementById('uiShell');
   if(!shell.classList.contains('is-hidden')||backpackClosing||backpackOverlay.classList.contains('is-open'))return;
   keyboardLeft=keyboardRight=false;
   resetJoystick();
+  lastBackpackTrigger=triggerEl;
   renderInventory();
-  paperUIFrom(triggerEl,revealBackpack,backpackFrame);
+  paperUIFrom(triggerEl,revealBackpack,backpackFrame).then(()=>{
+    if(backpackOverlay.classList.contains('is-open'))backpackClose.focus({preventScroll:true});
+  });
 }
 function closeBackpack(immediate=false){
   if(!backpackOverlay.classList.contains('is-open'))return;
   backpackClosing=true;
   backpackOverlay.classList.remove('is-open');
   backpackOverlay.setAttribute('aria-hidden','true');
+  if(document.getElementById('uiShell').classList.contains('is-hidden'))worldEl.removeAttribute('inert');
   backpackClosing=false;
+  const restore=lastBackpackTrigger;
+  lastBackpackTrigger=null;
+  if(!immediate&&restore&&typeof restore.focus==='function')restore.focus({preventScroll:true});
 }
+inventoryUse.addEventListener('click',()=>{
+  const item=inventorySelected>=0?inventoryItems[inventorySelected]:null;
+  if(!item)return;
+  if(!(item.consumable===true||item.usable===true||item.action==='consume')){
+    setInventoryMessage('这个物品目前不能直接使用');
+    return;
+  }
+  const name=item.name||'物品';
+  if(item.consumable===true||item.action==='consume'){
+    decrementInventoryItem(inventorySelected,1);
+    saveWorldState();
+    renderInventory();
+    if(inventorySelected>=0)setInventoryMessage('已使用 '+name);
+  }else{
+    item.lastUsedAt=Date.now();
+    saveWorldState();
+    setInventoryMessage('已使用 '+name);
+  }
+});
+inventoryDrop.addEventListener('click',()=>{
+  const item=inventorySelected>=0?inventoryItems[inventorySelected]:null;
+  if(!item)return;
+  const name=item.name||'物品';
+  decrementInventoryItem(inventorySelected,1);
+  saveWorldState();
+  renderInventory();
+  if(inventorySelected>=0)setInventoryMessage('已丢弃 1 个 '+name);
+});
 backpackBtn.addEventListener('click',e=>openBackpack(e.currentTarget));
 backpackClose.addEventListener('click',()=>closeBackpack(false));
 backpackOverlay.addEventListener('pointerdown',e=>{
   if(e.target===backpackOverlay)closeBackpack(false);
 });
 addEventListener('keydown',e=>{
+  if(backpackOverlay.classList.contains('is-open')){
+    if(e.code==='Escape'){
+      e.preventDefault();
+      closeBackpack(false);
+      return;
+    }
+    if(e.key==='Tab'){
+      const focusable=backpackFocusables();
+      if(focusable.length){
+        const first=focusable[0],lastFocusable=focusable[focusable.length-1];
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();lastFocusable.focus()}
+        else if(!e.shiftKey&&document.activeElement===lastFocusable){e.preventDefault();first.focus()}
+        else if(!backpackFrame.contains(document.activeElement)){e.preventDefault();first.focus()}
+      }
+      return;
+    }
+  }
   if(isEditableTarget(e.target))return;
   const shell=document.getElementById('uiShell');
   if(e.code==='KeyB' && shell.classList.contains('is-hidden')){
     e.preventDefault();
     backpackOverlay.classList.contains('is-open')?closeBackpack(false):openBackpack(backpackBtn);
-  }else if(e.code==='Escape' && backpackOverlay.classList.contains('is-open')){
-    e.preventDefault();
-    closeBackpack(false);
   }
 });
 renderInventory();
@@ -1265,7 +1401,9 @@ const authMsg=document.getElementById('authMsg');
 
 const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
-const KEY_SAVE='paperchalk.save.v1';
+const KEY_SAVE_LEGACY='paperchalk.save.v1';
+const KEY_SAVE_PREFIX='paperchalk.save.v2.';
+const KEY_SETTINGS='paperchalk.settings.v1';
 
 const memoryStore={};
 function storageGet(key){
@@ -1285,6 +1423,74 @@ function getSession(){
   try{return JSON.parse(storageGet(KEY_SESSION)||'null')}catch{return null}
 }
 function setSession(v){return storageSet(KEY_SESSION,JSON.stringify(v))}
+function accountSaveKey(account){
+  return KEY_SAVE_PREFIX+encodeURIComponent(String(account||''));
+}
+function defaultSave(session){
+  return {
+    account:session.account,
+    location:'A村',
+    createdAt:Date.now(),
+    worldMinutes:0,
+    worldX:0,
+    actorRatio:.35,
+    inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
+  };
+}
+function readSaveForSession(session=getSession()){
+  if(!session||!session.account)return null;
+  const key=accountSaveKey(session.account);
+  let raw=storageGet(key);
+
+  // One-time compatible migration from the original shared save.
+  if(!raw){
+    try{
+      const legacy=JSON.parse(storageGet(KEY_SAVE_LEGACY)||'null');
+      if(legacy&&legacy.account===session.account){
+        storageSet(key,JSON.stringify(legacy));
+        raw=JSON.stringify(legacy);
+      }
+    }catch{}
+  }
+  if(!raw)return null;
+  try{
+    const save=JSON.parse(raw);
+    return save&&save.account===session.account?save:null;
+  }catch{return null}
+}
+function writeSaveForSession(session,save){
+  if(!session||!session.account)return false;
+  save.account=session.account;
+  return storageSet(accountSaveKey(session.account),JSON.stringify(save));
+}
+function getSettings(){
+  const defaults={language:'zh-CN',timeScale:1,preferLandscape:true};
+  try{
+    const parsed=JSON.parse(storageGet(KEY_SETTINGS)||'{}');
+    return {...defaults,...parsed};
+  }catch{return defaults}
+}
+function applySettings(settings=getSettings()){
+  const scale=Number(settings.timeScale);
+  worldTimeScale=Number.isFinite(scale)?Math.max(0,Math.min(20,scale)):1;
+  document.documentElement.lang=settings.language==='zh-CN'?'zh-CN':'zh-CN';
+  document.body.classList.toggle('prefer-landscape',settings.preferLandscape!==false);
+  settingLanguage.value='zh-CN';
+  settingTimeScale.value=String(worldTimeScale);
+  settingLandscape.checked=settings.preferLandscape!==false;
+}
+function saveSettingsFromUI(){
+  const settings={
+    language:settingLanguage.value||'zh-CN',
+    timeScale:Number(settingTimeScale.value)||0,
+    preferLandscape:settingLandscape.checked
+  };
+  storageSet(KEY_SETTINGS,JSON.stringify(settings));
+  applySettings(settings);
+  settingsStatus.textContent='设置已保存';
+  clearTimeout(saveSettingsFromUI._timer);
+  saveSettingsFromUI._timer=setTimeout(()=>{settingsStatus.textContent=''},1200);
+}
 function hashText(text){
   // Synchronous local-only hash for maximum Android WebView compatibility.
   // This is a prototype local account system, not server authentication.
@@ -1298,13 +1504,20 @@ function hashText(text){
   return (h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0');
 }
 function showPage(name){
-  Object.values(pages).forEach(p=>p.classList.remove('active'));
+  Object.values(pages).forEach(p=>{
+    p.getAnimations().forEach(a=>a.cancel());
+    p.classList.remove('active');
+  });
   pages[name].classList.add('active');
   authMsg.textContent='';
+  if(name==='settings'){
+    applySettings();
+    settingsStatus.textContent='';
+  }
 }
 function refreshMenu(){
   const session=getSession();
-  const hasSave=!!storageGet(KEY_SAVE);
+  const hasSave=!!readSaveForSession(session);
   profileNote.textContent=session?'当前旅人：'+session.displayName:'尚未登录';
   continueBtn.style.display=(session&&hasSave)?'block':'none';
   enterBtn.textContent=session?'进入世界':'开始游戏';
@@ -1312,22 +1525,24 @@ function refreshMenu(){
 }
 function saveWorldState(){
   const session=getSession();
-  if(!session)return;
-  let save={};
-  try{save=JSON.parse(storageGet(KEY_SAVE)||'{}')}catch{}
-  save.account=session.account;
+  if(!session)return false;
+  const save=readSaveForSession(session)||defaultSave(session);
   save.location=save.location||'A村';
   save.worldX=worldX;
+  save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
+  save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
-  storageSet(KEY_SAVE,JSON.stringify(save));
+  return writeSaveForSession(session,save);
 }
 function loadWorldState(){
-  try{
-    const save=JSON.parse(storageGet(KEY_SAVE)||'{}');
-    if(Number.isFinite(save.worldX))worldX=save.worldX;
-    if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
-  }catch{}
+  const session=getSession();
+  if(!session)return;
+  const save=readSaveForSession(session)||defaultSave(session);
+  worldX=Number.isFinite(save.worldX)?save.worldX:0;
+  worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:0;
+  if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
+  setInventoryFromSave(save.inventory);
   renderWorld();
 }
 function openUI(fromWorld=false){
@@ -1335,6 +1550,9 @@ function openUI(fromWorld=false){
   if(fromWorld)saveWorldState();
   keyboardLeft=keyboardRight=false;
   resetJoystick();
+  uiShell.getAnimations().forEach(a=>a.cancel());
+  uiShell.removeAttribute('inert');
+  worldEl.setAttribute('inert','');
   refreshMenu();
   showPage('menu');
   uiShell.classList.remove('is-hidden');
@@ -1344,21 +1562,16 @@ function enterWorld(){
   closeBackpack(true);
   const session=getSession();
   if(!session){showPage('auth');return}
-  if(!storageGet(KEY_SAVE)){
-    storageSet(KEY_SAVE,JSON.stringify({
-      account:session.account,
-      location:'A村',
-      createdAt:Date.now(),
-      worldMinutes:0,
-      worldX:0,
-      actorRatio:.35
-    }));
-  }
+  if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
   keyboardLeft=keyboardRight=false;
   resetJoystick();
+  uiShell.getAnimations().forEach(a=>a.cancel());
   uiShell.classList.add('is-hidden');
   uiShell.classList.remove('board-enter');
+  uiShell.setAttribute('inert','');
+  worldEl.removeAttribute('inert');
+  backpackBtn.focus({preventScroll:true});
 }
 document.getElementById('worldMenuBtn').addEventListener('click',e=>{
   paperUIFrom(e.currentTarget,()=>openUI(true),uiShell);
@@ -1377,12 +1590,21 @@ authBtn.addEventListener('click',e=>{
   paperUIFrom(trigger,()=>{
     const session=getSession();
     if(session){
+      saveWorldState();
       storageRemove(KEY_SESSION);
+      setInventoryFromSave([]);
+      worldX=0;
+      worldMinutes=0;
       refreshMenu();
     }
     showPage('auth');
   },pages.auth);
 });
+
+settingLanguage.addEventListener('change',saveSettingsFromUI);
+settingTimeScale.addEventListener('change',saveSettingsFromUI);
+settingLandscape.addEventListener('change',saveSettingsFromUI);
+applySettings();
 
 const tabLogin=document.getElementById('tabLogin');
 const tabRegister=document.getElementById('tabRegister');
@@ -1445,6 +1667,23 @@ registerForm.addEventListener('submit',e=>{
     authMsg.textContent='注册失败：'+(err&&err.message?err.message:'未知错误');
   }
 });
+
+window.PaperchalkHandleBack=function(){
+  if(backpackOverlay.classList.contains('is-open')){
+    closeBackpack(false);
+    return true;
+  }
+  if(uiShell.classList.contains('is-hidden')){
+    openUI(true);
+    return true;
+  }
+  if(!pages.menu.classList.contains('active')){
+    showPage('menu');
+    refreshMenu();
+    return true;
+  }
+  return false;
+};
 
 loginForm.addEventListener('submit',e=>{
   e.preventDefault();
