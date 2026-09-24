@@ -24,7 +24,14 @@ button{cursor:pointer}
 .hidden{display:none!important}
 
 /* ---------- WORLD ---------- */
-.stage{position:fixed;left:0;top:0;width:var(--app-width,100vw);height:var(--app-height,100dvh);min-height:0;overflow:hidden;background:#e8dfcf;touch-action:none;contain:layout paint size}
+.stage{position:fixed;left:0;top:0;width:var(--app-width,100vw);height:var(--app-height,100dvh);min-height:0;overflow:hidden;background:#e8dfcf;touch-action:none;contain:layout paint size;
+  --terrain-top:#c9aa72;--terrain-mid:#98734a;--terrain-deep:#705337;--terrain-edge:#6e543a;--rock-light:#908579;--rock-dark:#655f59;--rock-edge:#554f49}
+.stage[data-biome="forest"]{background:#dcd9bd;--terrain-top:#9c9b68;--terrain-mid:#74764d;--terrain-deep:#51563e;--terrain-edge:#596044;--rock-light:#7e8175;--rock-dark:#575c55}
+.stage[data-biome="river"]{background:#ded9c7;--terrain-top:#b6a875;--terrain-mid:#867653;--terrain-deep:#665941;--terrain-edge:#6e6148;--rock-light:#8b8980;--rock-dark:#62625d}
+.stage[data-biome="mountain"],.stage[data-biome="highland"]{background:#ded8c7;--terrain-top:#b39a6a;--terrain-mid:#846d4f;--terrain-deep:#635343;--terrain-edge:#675a4b;--rock-light:#888079;--rock-dark:#5d5956}
+.stage[data-biome="cave"]{background:#cfc9bd;--terrain-top:#96866f;--terrain-mid:#6f6254;--terrain-deep:#4f4944;--terrain-edge:#514a45;--rock-light:#77736f;--rock-dark:#4d4b4b}
+.stage[data-biome="marsh"]{background:#d5d5bd;--terrain-top:#9b9667;--terrain-mid:#716d4e;--terrain-deep:#505444;--terrain-edge:#5a5f49;--rock-light:#7d8176;--rock-dark:#555b55}
+.stage[data-biome="ruins"],.stage[data-biome="shrine"]{background:#ded4c2;--terrain-top:#b29a72;--terrain-mid:#7d6853;--terrain-deep:#5e5148;--terrain-edge:#66584c}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
@@ -37,14 +44,14 @@ button{cursor:pointer}
 .terrain-piece,.map-object,.map-landmark,.pickup{position:absolute;pointer-events:none}
 .terrain-piece{bottom:112px;box-sizing:border-box}
 .terrain-piece.platform{
-  background:linear-gradient(180deg,#c9aa72 0 14%,#98734a 15% 30%,#705337 31% 100%);
-  border:3px solid #6e543a;border-radius:10px 14px 8px 12px;
+  background:linear-gradient(180deg,var(--terrain-top,#c9aa72) 0 14%,var(--terrain-mid,#98734a) 15% 30%,var(--terrain-deep,#705337) 31% 100%);
+  border:3px solid var(--terrain-edge,#6e543a);border-radius:10px 14px 8px 12px;
   box-shadow:inset 0 5px 0 rgba(245,226,181,.45),0 5px 0 rgba(68,51,34,.12);
   clip-path:polygon(1% 7%,8% 2%,18% 5%,27% 1%,39% 4%,49% 0,62% 4%,75% 1%,86% 5%,99% 2%,100% 93%,93% 98%,80% 95%,68% 99%,55% 96%,42% 100%,30% 96%,17% 99%,5% 95%,0 88%);
 }
 .terrain-piece.rock{
-  background:linear-gradient(145deg,#908579,#655f59);
-  border:3px solid #554f49;border-radius:47% 40% 28% 35%;
+  background:linear-gradient(145deg,var(--rock-light,#908579),var(--rock-dark,#655f59));
+  border:3px solid var(--rock-edge,#554f49);border-radius:47% 40% 28% 35%;
   box-shadow:inset 8px 8px 0 rgba(225,212,188,.16),0 5px 0 rgba(51,43,34,.14);
   clip-path:polygon(9% 78%,3% 50%,19% 21%,41% 6%,66% 10%,92% 35%,98% 72%,82% 94%,48% 98%,22% 93%);
 }
@@ -68,6 +75,20 @@ button{cursor:pointer}
 .map-landmark.sign{bottom:112px;width:112px;height:94px;color:#51422f;font:700 13px/1.25 "Noto Serif SC",serif;text-align:center}
 .map-landmark.sign:before{content:"";position:absolute;left:52px;bottom:0;width:10px;height:62px;background:#6d4d32}
 .map-landmark.sign span{position:absolute;left:0;top:3px;width:100%;padding:10px 7px;background:#d8c08d;border:3px solid #735a39;transform:rotate(-2deg);clip-path:polygon(2% 8%,96% 0,100% 86%,91% 98%,4% 92%,0 19%)}
+.junction-marker{position:absolute;bottom:112px;width:150px;height:116px;pointer-events:none;color:#51422f}
+.junction-marker::before{content:"";position:absolute;left:70px;bottom:0;width:10px;height:82px;background:#6b4e33;transform:rotate(1deg)}
+.junction-marker .junction-board{position:absolute;left:5px;top:3px;width:140px;padding:8px 8px 9px;background:#d8c08d;border:3px solid #735a39;text-align:center;font:800 12px/1.25 "Noto Serif SC",serif;clip-path:polygon(2% 7%,97% 0,100% 88%,93% 100%,3% 94%,0 15%)}
+.junction-marker .junction-count{display:block;margin-top:2px;font:700 10px/1.2 system-ui,sans-serif;opacity:.66}
+.junction-panel{position:absolute;z-index:66;left:50%;bottom:max(74px,calc(env(safe-area-inset-bottom) + 66px));width:min(560px,92vw);transform:translate(-50%,12px);padding:14px 16px 15px;background:rgba(233,218,185,.97);border:1px solid rgba(79,60,39,.36);box-shadow:6px 8px 0 rgba(49,37,25,.16),0 12px 28px rgba(34,27,20,.18);clip-path:polygon(1% 3%,98% 0,100% 94%,96% 100%,2% 97%,0 7%);opacity:0;visibility:hidden;pointer-events:none;transition:.14s}
+.junction-panel.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0)}
+.junction-panel-title{font:800 16px/1.2 "Noto Serif SC",serif;color:#4c4031;margin-bottom:4px;text-align:center}
+.junction-panel-sub{text-align:center;color:#74624d;font-size:11px;margin-bottom:9px}
+.junction-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.junction-option{min-width:0;min-height:46px;padding:7px 10px;border:1px solid rgba(82,62,40,.28);background:rgba(249,239,216,.72);color:#514432;border-radius:4px;font-weight:800;font-size:12px;text-align:left}
+.junction-option span{display:block;font-size:10px;font-weight:600;color:#7a6852;margin-top:2px}
+.junction-cancel{display:block;margin:8px auto 0;height:28px;padding:0 14px;border:0;background:rgba(91,70,46,.12);color:#665541;border-radius:3px;font-size:11px}
+.stage.junction-open .combat-controls,.stage.junction-open .joystick-zone{opacity:.22;pointer-events:none}
+@media(max-width:700px),(max-height:500px){.junction-panel{bottom:max(62px,calc(env(safe-area-inset-bottom) + 56px));padding:10px 11px}.junction-options{grid-template-columns:1fr 1fr}.junction-option{min-height:40px;padding:5px 8px}.junction-panel-title{font-size:14px}}
 .map-exit{bottom:112px;width:110px;height:150px;border-left:10px solid #6b4e33}
 .map-exit:before{content:"→ 下一地区";position:absolute;left:6px;top:12px;width:100px;padding:9px;background:#d5bd8b;border:3px solid #6b4e33;color:#51422f;font-weight:800}
 .pickup{bottom:144px;width:34px;height:34px;border-radius:50%;background:#7d9a60;border:3px solid #f0dfbb;box-shadow:0 3px 0 rgba(54,42,29,.18);animation:pickupFloat 1.4s ease-in-out infinite}
@@ -1225,6 +1246,13 @@ button{cursor:pointer}
     <div class="debug-help">调试都在这里：血量、战斗、地形 collider、敌人出生区、Camera、地图传送。命令：map / tp 3000 / enemy reset / hitbox / range / ai / pos / save</div>
   </section>
 
+  <section id="junctionPanel" class="junction-panel" aria-hidden="true">
+    <div id="junctionPanelTitle" class="junction-panel-title">岔路口</div>
+    <div id="junctionPanelSub" class="junction-panel-sub">选择下一条道路</div>
+    <div id="junctionOptions" class="junction-options"></div>
+    <button id="junctionCancel" class="junction-cancel" type="button">暂不选择</button>
+  </section>
+
   <div class="combat-controls" aria-label="战斗操作">
     <button id="interactBtn" class="combat-btn" type="button" aria-label="交谈">聊</button>
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
@@ -1406,13 +1434,56 @@ const MAP_SPAWN_X=460;
 const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
 let MAP_GROUND_SCREEN_Y=112;
 const PLAYER_BODY={halfW:27,h:108};
-const WORLD_ZONE_NAMES=['A村外道路','风草坡','浅石谷','旧林边','纸丘原','风车荒径','灰岩坳','长草台地','枯溪岸','北野坡','旧驿道','雾松地'];
-function worldZoneIndexAt(x){return clamp(Math.floor(Math.max(0,x)/WORLD_ZONE_WIDTH),0,WORLD_ZONE_COUNT-1)}
-function regionNameAt(x){
-  const i=worldZoneIndexAt(x);
-  const base=WORLD_ZONE_NAMES[i%WORLD_ZONE_NAMES.length];
-  return i<WORLD_ZONE_NAMES.length?base:(base+' · '+(i+1));
-}
+const WORLD_NODES=[
+  {id:'village',name:'A村',x:170,y:650,kind:'village'},
+  {id:'meadowFork',name:'风草岔口',x:450,y:640,kind:'junction'},
+  {id:'forestGate',name:'旧林入口',x:720,y:350,kind:'forest'},
+  {id:'riverbank',name:'枯溪岸',x:740,y:900,kind:'river'},
+  {id:'stonePass',name:'浅石谷',x:1010,y:620,kind:'mountain'},
+  {id:'oldRuins',name:'古纸遗迹',x:1240,y:170,kind:'ruins'},
+  {id:'windmill',name:'风车丘',x:1320,y:430,kind:'windmill'},
+  {id:'caveMouth',name:'回声洞口',x:1070,y:1020,kind:'cave'},
+  {id:'marsh',name:'雾泽',x:1450,y:960,kind:'marsh'},
+  {id:'highland',name:'长草台地',x:1650,y:620,kind:'highland'},
+  {id:'brokenBridge',name:'断桥',x:1840,y:900,kind:'bridge'},
+  {id:'pineRidge',name:'雾松岭',x:1890,y:330,kind:'forest'},
+  {id:'northCamp',name:'北野营地',x:2220,y:160,kind:'camp'},
+  {id:'tower',name:'旧塔原',x:2230,y:590,kind:'tower'},
+  {id:'sunkenCity',name:'沉纸城',x:2230,y:1020,kind:'ruins'},
+  {id:'farShrine',name:'远岬祭坛',x:2540,y:560,kind:'shrine'}
+];
+const WORLD_ROUTES=[
+  {id:'village-road',name:'A村外道路',from:'village',to:'meadowFork',biome:'meadow',bend:0},
+  {id:'wind-grass-slope',name:'风草坡',from:'meadowFork',to:'forestGate',biome:'meadow',bend:-38},
+  {id:'shallow-creek-road',name:'浅溪旧道',from:'meadowFork',to:'riverbank',biome:'river',bend:42},
+  {id:'old-forest-edge',name:'旧林边',from:'forestGate',to:'stonePass',biome:'forest',bend:36},
+  {id:'dry-creek-bank',name:'枯溪岸',from:'riverbank',to:'stonePass',biome:'river',bend:-28},
+  {id:'canopy-road',name:'林冠古道',from:'forestGate',to:'oldRuins',biome:'forest',bend:-46},
+  {id:'ruin-high-slope',name:'遗迹高坡',from:'oldRuins',to:'windmill',biome:'ruins',bend:24},
+  {id:'shallow-stone-valley',name:'浅石谷',from:'stonePass',to:'windmill',biome:'mountain',bend:-18},
+  {id:'lower-rock-fork',name:'下岩岔路',from:'stonePass',to:'caveMouth',biome:'cave',bend:52},
+  {id:'echo-cave-way',name:'回声洞道',from:'caveMouth',to:'marsh',biome:'cave',bend:-24},
+  {id:'reed-lowland',name:'芦苇低地',from:'riverbank',to:'marsh',biome:'marsh',bend:38},
+  {id:'windmill-waste-road',name:'风车荒径',from:'windmill',to:'highland',biome:'meadow',bend:18},
+  {id:'mist-marsh-boardwalk',name:'雾泽栈道',from:'marsh',to:'highland',biome:'marsh',bend:-30},
+  {id:'north-wind-slope',name:'北风坡',from:'windmill',to:'pineRidge',biome:'highland',bend:-52},
+  {id:'long-grass-tableland',name:'长草台地',from:'highland',to:'pineRidge',biome:'highland',bend:-18},
+  {id:'broken-bridge-road',name:'断桥旧道',from:'highland',to:'brokenBridge',biome:'river',bend:34},
+  {id:'mist-pine-ridge',name:'雾松岭',from:'pineRidge',to:'northCamp',biome:'forest',bend:-24},
+  {id:'old-post-road',name:'旧驿道',from:'pineRidge',to:'tower',biome:'ruins',bend:32},
+  {id:'sunken-city-waterway',name:'沉城水路',from:'brokenBridge',to:'sunkenCity',biome:'marsh',bend:26},
+  {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
+];
+const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
+WORLD_ROUTES.forEach((r,i)=>r.index=i);
+function worldZoneIndexAt(x){return Math.max(0,Math.min(WORLD_ROUTES.length-1,Math.floor(Math.max(0,x)/WORLD_ZONE_WIDTH)))}
+function routeForWorldX(x){return WORLD_ROUTES[worldZoneIndexAt(x)]}
+function regionNameAt(x){return routeForWorldX(x)?.name||'未知道路'}
+function routeBaseX(routeIndex){return routeIndex*WORLD_ZONE_WIDTH}
+function routeLocalX(x){const i=worldZoneIndexAt(x);return x-routeBaseX(i)}
+function routesAtNode(nodeId){return WORLD_ROUTES.filter(r=>r.from===nodeId||r.to===nodeId)}
+function otherNodeOfRoute(route,nodeId){return WORLD_NODE_BY_ID.get(route.from===nodeId?route.to:route.from)}
+function nodeDegree(nodeId){return routesAtNode(nodeId).length}
 const MAP_TERRAIN=[
   {id:'rock-1',kind:'rock',x:1120,y:0,w:104,h:70},
   {id:'platform-1',kind:'platform',x:1540,y:0,w:360,h:72},
@@ -1476,7 +1547,7 @@ for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
     {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
   );
 }
-const mapState={broken:new Set(),collected:new Set(),exitReached:false};
+const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 
 const rear=[
@@ -1560,6 +1631,24 @@ function buildMapVisuals(){
     el.className='map-npc';el.dataset.npcId=n.id;el.style.left=n.x+'px';
     el.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name">'+n.name+'</div><div class="map-npc-prompt">E / 聊</div>';
     mapLandmarkTrack.appendChild(el);
+  });
+  WORLD_ROUTES.forEach((route,i)=>{
+    const base=routeBaseX(i);
+    [
+      {nodeId:route.from,x:base+88,side:'from'},
+      {nodeId:route.to,x:base+WORLD_ZONE_WIDTH-238,side:'to'}
+    ].forEach(mark=>{
+      const node=WORLD_NODE_BY_ID.get(mark.nodeId);
+      if(!node)return;
+      const degree=nodeDegree(node.id);
+      const el=document.createElement('div');
+      el.className='junction-marker';
+      el.dataset.nodeId=node.id;
+      el.dataset.side=mark.side;
+      el.style.left=mark.x+'px';
+      el.innerHTML='<div class="junction-board">'+node.name+'<span class="junction-count">'+(degree>2?'岔路 · '+degree+' 条道路':degree===1?'道路尽头':'道路连接点')+'</span></div>';
+      mapLandmarkTrack.appendChild(el);
+    });
   });
   ENEMY_SPAWNS.forEach(s=>{
     const dbg=document.createElement('div');
@@ -1678,6 +1767,11 @@ const enemy2HealthFill=document.getElementById('enemy2HealthFill');
 const interactBtn=document.getElementById('interactBtn');
 const jumpBtn=document.getElementById('jumpBtn');
 const attackBtn=document.getElementById('attackBtn');
+const junctionPanel=document.getElementById('junctionPanel');
+const junctionPanelTitle=document.getElementById('junctionPanelTitle');
+const junctionPanelSub=document.getElementById('junctionPanelSub');
+const junctionOptions=document.getElementById('junctionOptions');
+const junctionCancel=document.getElementById('junctionCancel');
 const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
 const playerAttackDebug=document.getElementById('playerAttackDebug');
 const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
@@ -2097,6 +2191,93 @@ window.PaperchalkDebug={
   run:executeDebugCommand
 };
 
+const ROUTE_ENDPOINT_PAD=150;
+let routeTransitionBusy=false;
+let currentJunctionNodeId=null;
+
+function directionLabelFromNode(nodeId,route){
+  const here=WORLD_NODE_BY_ID.get(nodeId);
+  const there=otherNodeOfRoute(route,nodeId);
+  if(!here||!there)return '前往';
+  const dx=there.x-here.x,dy=there.y-here.y;
+  if(Math.abs(dy)>Math.abs(dx)*.62)return dy<0?'北上':'南下';
+  return dx>=0?'东行':'西行';
+}
+function closeJunction(){
+  junctionPanel.classList.remove('is-open');
+  junctionPanel.setAttribute('aria-hidden','true');
+  worldEl.classList.remove('junction-open');
+  currentJunctionNodeId=null;
+}
+function arriveOnRoute(route,nodeId){
+  const entersFrom=route.from===nodeId;
+  const base=routeBaseX(route.index);
+  playerWorldX=entersFrom?base+ROUTE_ENDPOINT_PAD+22:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD-22;
+  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;
+  setFacing(entersFrom?1:-1);
+  mapState.visitedRoutes.add(route.index);
+  mapState.visitedNodes.add(nodeId);
+  const other=otherNodeOfRoute(route,nodeId);if(other)mapState.visitedNodes.add(other.id);
+  updateMapInteractions._zone=route.index;
+  applyCurrentRouteTheme(true);
+  updateCamera();renderWorld();
+  saveWorldState();
+  worldEl.animate([{transform:'translateX(0)',filter:'blur(0)'},{transform:'translateX('+(entersFrom?-10:10)+'px)',filter:'blur(.7px)'},{transform:'translateX(0)',filter:'blur(0)'}],{duration:240,easing:'ease-out'});
+  showMapNotice(route.name+' · '+directionLabelFromNode(nodeId,route),1100);
+  routeTransitionBusy=false;
+}
+function chooseRouteFromNode(routeIndex,nodeId=currentJunctionNodeId){
+  if(routeTransitionBusy)return false;
+  const route=WORLD_ROUTES[Number(routeIndex)];
+  if(!route||!(route.from===nodeId||route.to===nodeId))return false;
+  routeTransitionBusy=true;
+  closeJunction();
+  arriveOnRoute(route,nodeId);
+  return true;
+}
+function openJunction(nodeId,currentRouteIndex){
+  const node=WORLD_NODE_BY_ID.get(nodeId);if(!node)return false;
+  const options=routesAtNode(nodeId).filter(r=>r.index!==currentRouteIndex);
+  if(options.length===0){showMapNotice(node.name+' · 这里是道路尽头',1400);return false}
+  if(options.length===1){chooseRouteFromNode(options[0].index,nodeId);return true}
+  currentJunctionNodeId=nodeId;
+  keyboardLeft=keyboardRight=false;resetJoystick();
+  junctionPanelTitle.textContent=node.name;
+  junctionPanelSub.textContent='这里有 '+options.length+' 条去路 · 选择方向';
+  junctionOptions.innerHTML='';
+  options.forEach((route,i)=>{
+    const target=otherNodeOfRoute(route,nodeId);
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='junction-option';
+    btn.dataset.routeIndex=String(route.index);
+    btn.innerHTML=(i+1)+' · '+directionLabelFromNode(nodeId,route)+'　'+(target?.name||route.name)+'<span>'+route.name+' · '+route.biome+'</span>';
+    btn.addEventListener('click',()=>chooseRouteFromNode(route.index,nodeId));
+    junctionOptions.appendChild(btn);
+  });
+  junctionPanel.classList.add('is-open');
+  junctionPanel.setAttribute('aria-hidden','false');
+  worldEl.classList.add('junction-open');
+  return true;
+}
+function routeBoundaryInfo(x=playerWorldX){
+  const route=routeForWorldX(x),base=routeBaseX(route.index);
+  return {route,base,left:base+ROUTE_ENDPOINT_PAD,right:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD};
+}
+function tryLeaveCurrentRoute(side){
+  if(routeTransitionBusy||junctionPanel.classList.contains('is-open'))return true;
+  const {route}=routeBoundaryInfo();
+  const nodeId=side==='left'?route.from:route.to;
+  mapState.visitedNodes.add(nodeId);
+  return openJunction(nodeId,route.index);
+}
+junctionCancel.addEventListener('click',closeJunction);
+addEventListener('keydown',e=>{
+  if(!junctionPanel.classList.contains('is-open'))return;
+  if(e.code==='Escape'){e.preventDefault();closeJunction();return}
+  const n=Number(e.key);
+  if(n>=1&&n<=junctionOptions.children.length){e.preventDefault();junctionOptions.children[n-1].click()}
+});
+
 function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function playerWorldPos(){return {x:playerWorldX,y:playerY}}
@@ -2112,7 +2293,19 @@ function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&ce
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
-  let nextX=clamp(oldX+dx,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  const bounds=routeBoundaryInfo(oldX);
+  const requested=oldX+dx;
+  if(requested<bounds.left&&dx<0){
+    playerWorldX=bounds.left;
+    tryLeaveCurrentRoute('left');
+    return playerWorldX-oldX;
+  }
+  if(requested>bounds.right&&dx>0){
+    playerWorldX=bounds.right;
+    tryLeaveCurrentRoute('right');
+    return playerWorldX-oldX;
+  }
+  let nextX=clamp(requested,bounds.left,bounds.right);
   const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
   const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
   for(const r of activeSolidRects()){
@@ -2134,7 +2327,7 @@ function movePlayerHorizontal(dx){
     if(hitRight)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
     if(hitLeft)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
   }
-  playerWorldX=clamp(nextX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerWorldX=clamp(nextX,bounds.left,bounds.right);
   return playerWorldX-oldX;
 }
 function supportAt(x,y,tolerance=3){
@@ -2199,7 +2392,18 @@ function updatePlayerVertical(dt,interactive){
   playerY=Math.max(-80,nextY);
   if(playerY<-60)teleportTo(MAP_SPAWN_X,{notice:'跌落后回到村口'});
 }
+let lastAppliedRouteIndex=-1;
+function applyCurrentRouteTheme(force=false){
+  const route=routeForWorldX(playerWorldX);
+  if(!route)return;
+  if(force||route.index!==lastAppliedRouteIndex){
+    lastAppliedRouteIndex=route.index;
+    worldEl.dataset.biome=route.biome||'meadow';
+    mapState.visitedRoutes.add(route.index);
+  }
+}
 function updateCamera(){
+  applyCurrentRouteTheme();
   const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
   const maxCamera=Math.max(0,MAP_WIDTH-viewW);
   const followX=viewW*.42;
@@ -2417,7 +2621,7 @@ function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?for
 function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
 function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
 window.PaperchalkMap={
-  width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
+  width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
   get playerX(){return playerWorldX},
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
@@ -2476,6 +2680,7 @@ function worldInteractive(){
     && shell.classList.contains('is-hidden')
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
+    && !junctionPanel.classList.contains('is-open')
     && !debugIsOpen();
 }
 function movementAxis(){
@@ -3133,7 +3338,7 @@ function defaultSave(session){
     playerY:0,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
-    mapState:{broken:[],collected:[],exitReached:false},
+    mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
@@ -3234,7 +3439,7 @@ function saveWorldState(){
   save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.playerHp=playerHp;
-  save.mapState={broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached};
+  save.mapState={broken:[...mapState.broken],collected:[...mapState.collected],visitedRoutes:[...mapState.visitedRoutes],visitedNodes:[...mapState.visitedNodes],exitReached:mapState.exitReached};
   save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
@@ -3257,6 +3462,8 @@ function loadWorldState(){
   const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
   mapState.broken=new Set(Array.isArray(savedMap.broken)?savedMap.broken:[]);
   mapState.collected=new Set(Array.isArray(savedMap.collected)?savedMap.collected:[]);
+  mapState.visitedRoutes=new Set(Array.isArray(savedMap.visitedRoutes)?savedMap.visitedRoutes:[worldZoneIndexAt(playerWorldX)]);
+  mapState.visitedNodes=new Set(Array.isArray(savedMap.visitedNodes)?savedMap.visitedNodes:['village']);
   mapState.exitReached=!!savedMap.exitReached;
   buildMapVisuals();
 
@@ -3267,6 +3474,7 @@ function loadWorldState(){
 }
 function openUI(fromWorld=false){
   closeDebugPanel({focus:false});
+  closeJunction();
   closeWorldMap(true);
   closeBackpack(true);
   if(fromWorld)saveWorldState();
@@ -3282,6 +3490,7 @@ function openUI(fromWorld=false){
 }
 function enterWorld(){
   closeDebugPanel({focus:false});
+  closeJunction();
   closeWorldMap(true);
   closeBackpack(true);
   const session=getSession();
@@ -3319,7 +3528,7 @@ authBtn.addEventListener('click',e=>{
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
       worldX=0;playerWorldX=MAP_SPAWN_X;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
-      mapState.broken.clear();mapState.collected.clear();mapState.exitReached=false;buildMapVisuals();
+      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;
@@ -3398,6 +3607,10 @@ registerForm.addEventListener('submit',e=>{
 });
 
 window.PaperchalkHandleBack=function(){
+  if(junctionPanel.classList.contains('is-open')){
+    closeJunction();
+    return true;
+  }
   if(debugIsOpen()){
     closeDebugPanel({focus:false});
     return true;
