@@ -1957,7 +1957,18 @@ const MAP_PICKUPS=[
   {id:'herb-crate',x:2434,y:28,type:'herb',requiresBroken:'crate-1'}
 ];
 const MAP_NPCS=[
-  {id:'npc-old-crafter',x:760,name:'村口老匠',text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。'}
+  {
+    id:'npc-old-crafter',x:760,name:'村口老匠',portrait:'crafter',
+    text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。',
+    dialogue:{
+      opening:'回来啦，旅人。今晚的风把纸边吹得很响……你还准备继续往前走吗？',
+      choices:[
+        {text:'我想知道前面的路。',reply:'沿旧土坡往东，路会越来越荒。别只看脚下，纸境的远景有时也会告诉你哪里不对劲。'},
+        {text:'这里一直都是这样安静吗？',reply:'安静？只是舞台还没轮到它开口。等灯暗下来，你会听见很多白天听不见的声音。'},
+        {text:'我只是来打个招呼。',reply:'那也很好。赶路的人若连招呼都忘了，走得再远也只是在赶路。'}
+      ]
+    }
+  }
 ];
 const ENEMY_SPAWNS=[
   {id:'enemy-1',x:2140,patrolMin:2010,patrolMax:2290},
@@ -2316,6 +2327,15 @@ const mapDebugTrack=document.getElementById('mapDebugTrack');
 const mapNotice=document.getElementById('mapNotice');
 const paperBackdrop=document.getElementById('paperBackdrop');
 const paperClock=document.getElementById('paperClock');
+const dialogueStage=document.getElementById('dialogueStage');
+const dialoguePlayerPortrait=document.getElementById('dialoguePlayerPortrait');
+const dialogueNpcPortrait=document.getElementById('dialogueNpcPortrait');
+const dialoguePlayerName=document.getElementById('dialoguePlayerName');
+const dialogueNpcName=document.getElementById('dialogueNpcName');
+const dialoguePlayerBubble=document.getElementById('dialoguePlayerBubble');
+const dialogueNpcBubble=document.getElementById('dialogueNpcBubble');
+const dialogueChoices=document.getElementById('dialogueChoices');
+const dialogueSkip=document.getElementById('dialogueSkip');
 const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
@@ -3323,6 +3343,141 @@ function collectPickup(p){
   const el=mapObjectTrack.querySelector('[data-pickup-id="'+p.id+'"]');if(el)el.classList.add('is-collected');
   showMapNotice('拾取：'+item.name);saveWorldState();return true;
 }
+let dialogueState={
+  open:false,closing:false,npc:null,phase:'',choiceIndex:-1
+};
+let dialogueCloseTimer=0;
+
+function dialogueIsOpen(){return dialogueState.open||dialogueState.closing}
+function playerDialogueName(){
+  const session=typeof getSession==='function'?getSession():null;
+  return session?.displayName||'旅人';
+}
+function setDialogueBubble(side,text,{continueHint=true}={}){
+  const mine=side==='player'?dialoguePlayerBubble:dialogueNpcBubble;
+  const other=side==='player'?dialogueNpcBubble:dialoguePlayerBubble;
+  other.classList.remove('is-visible');
+  other.textContent='';
+  mine.innerHTML='';
+  const span=document.createElement('span');
+  span.textContent=text;
+  mine.appendChild(span);
+  if(continueHint){
+    const small=document.createElement('small');
+    small.textContent='轻触继续';
+    mine.appendChild(small);
+  }
+  mine.classList.add('is-visible');
+}
+function clearDialogueBubbles(){
+  dialoguePlayerBubble.classList.remove('is-visible');
+  dialogueNpcBubble.classList.remove('is-visible');
+  dialoguePlayerBubble.textContent='';
+  dialogueNpcBubble.textContent='';
+}
+function showDialogueOpening(){
+  const npc=dialogueState.npc;
+  if(!npc)return;
+  dialogueState.phase='opening';
+  dialogueStage.classList.remove('is-choice');
+  dialogueChoices.innerHTML='';
+  setDialogueBubble('npc',npc.dialogue?.opening||npc.text||'……');
+}
+function showDialogueChoices(){
+  const npc=dialogueState.npc;
+  const choices=npc?.dialogue?.choices||[];
+  if(!choices.length){closeDialogue();return}
+  dialogueState.phase='choice';
+  clearDialogueBubbles();
+  dialogueChoices.innerHTML='';
+  const positions=['pos-top','pos-left','pos-right'];
+  choices.slice(0,3).forEach((choice,index)=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='dialogue-choice '+positions[index];
+    btn.dataset.choiceIndex=String(index);
+    btn.textContent=choice.text;
+    btn.addEventListener('click',()=>selectDialogueChoice(index));
+    dialogueChoices.appendChild(btn);
+  });
+  dialogueStage.classList.add('is-choice');
+}
+function selectDialogueChoice(index){
+  const npc=dialogueState.npc;
+  const choice=npc?.dialogue?.choices?.[index];
+  if(!choice||dialogueState.phase!=='choice')return false;
+  dialogueState.choiceIndex=index;
+  dialogueState.phase='player-line';
+  dialogueStage.classList.remove('is-choice');
+  dialogueChoices.innerHTML='';
+  setDialogueBubble('player',choice.text);
+  return true;
+}
+function advanceDialogue(){
+  if(!dialogueState.open||dialogueState.closing)return false;
+  const npc=dialogueState.npc;
+  if(dialogueState.phase==='opening'){
+    showDialogueChoices();
+    return true;
+  }
+  if(dialogueState.phase==='player-line'){
+    const choice=npc?.dialogue?.choices?.[dialogueState.choiceIndex];
+    dialogueState.phase='npc-reply';
+    setDialogueBubble('npc',choice?.reply||'嗯。');
+    return true;
+  }
+  if(dialogueState.phase==='npc-reply'){
+    closeDialogue();
+    return true;
+  }
+  return false;
+}
+function openDialogue(npc){
+  if(!npc||dialogueIsOpen())return false;
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
+  closeDebugPanel({focus:false});
+  clearTimeout(dialogueCloseTimer);
+  dialogueState={open:true,closing:false,npc,phase:'',choiceIndex:-1};
+  dialoguePlayerName.textContent=playerDialogueName();
+  dialogueNpcName.textContent=npc.name||'旅人';
+  dialogueStage.classList.remove('is-closing','is-choice');
+  dialogueStage.classList.add('is-open');
+  dialogueStage.setAttribute('aria-hidden','false');
+  worldEl.classList.add('dialogue-active');
+  showDialogueOpening();
+  return true;
+}
+function closeDialogue({immediate=false}={}){
+  if(!dialogueIsOpen())return false;
+  clearTimeout(dialogueCloseTimer);
+  if(immediate){
+    dialogueStage.classList.remove('is-open','is-choice','is-closing');
+    dialogueStage.setAttribute('aria-hidden','true');
+    worldEl.classList.remove('dialogue-active');
+    clearDialogueBubbles();
+    dialogueChoices.innerHTML='';
+    dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
+    return true;
+  }
+  if(dialogueState.closing)return true;
+  dialogueState.closing=true;dialogueState.open=false;
+  dialogueStage.classList.remove('is-choice');
+  dialogueStage.classList.add('is-closing');
+  clearDialogueBubbles();
+  dialogueChoices.innerHTML='';
+  dialogueCloseTimer=setTimeout(()=>{
+    dialogueStage.classList.remove('is-open','is-closing');
+    dialogueStage.setAttribute('aria-hidden','true');
+    worldEl.classList.remove('dialogue-active');
+    dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
+  },480);
+  return true;
+}
+dialoguePlayerBubble.addEventListener('click',advanceDialogue);
+dialogueNpcBubble.addEventListener('click',advanceDialogue);
+dialogueSkip.addEventListener('click',()=>closeDialogue());
+
 function nearbyNpc(maxDistance=92){
   let best=null,bestD=Infinity;
   for(const n of MAP_NPCS){
@@ -3346,7 +3501,7 @@ function updateNpcPrompt(){
 function interactWithNpc(){
   const npc=nearbyNpc();
   if(!npc){showMapNotice('附近没有可以交谈的人');return false}
-  showMapNotice(npc.name+'：'+npc.text,3600);return true;
+  return openDialogue(npc);
 }
 function updateMapInteractions(){
   updateNpcPrompt();
@@ -3422,6 +3577,14 @@ function toggleEnemyAi(force){enemyAiEnabled=typeof force==='boolean'?force:!ene
 function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?force:!showMapColliders;if(showMapColliders)ensureMapDebugVisuals();worldEl.classList.toggle('show-map-colliders',showMapColliders);updateCombatDebugButtons();return showMapColliders}
 function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;if(showSpawnZones)ensureMapDebugVisuals();worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
 function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
+window.PaperchalkDialogue={
+  openById(id){const npc=MAP_NPCS.find(n=>n.id===id);return npc?openDialogue(npc):false},
+  close:closeDialogue,
+  advance:advanceDialogue,
+  choose:selectDialogueChoice,
+  get state(){return {...dialogueState,npc:dialogueState.npc?.id||null}}
+};
+
 window.PaperchalkMap={
   width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
@@ -3503,6 +3666,7 @@ function worldInteractive(){
     && uiShell.classList.contains('is-hidden')
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
+    && !dialogueIsOpen()
     && !debugIsOpen();
 }
 function movementAxis(){
@@ -3648,6 +3812,19 @@ function isEditableTarget(target){
     (target.matches('input,textarea,select,[contenteditable="true"]'));
 }
 addEventListener('keydown',e=>{
+  if(dialogueIsOpen()){
+    if(e.code==='Escape'){e.preventDefault();closeDialogue();return}
+    if(dialogueState.phase==='choice'&&['Digit1','Digit2','Digit3','Numpad1','Numpad2','Numpad3'].includes(e.code)){
+      e.preventDefault();
+      const index=Number(e.code.slice(-1))-1;
+      selectDialogueChoice(index);
+      return;
+    }
+    if((e.code==='Space'||e.code==='Enter')&&dialogueState.phase!=='choice'){
+      e.preventDefault();advanceDialogue();return;
+    }
+    return;
+  }
   if(isEditableTarget(e.target)||!worldInteractive())return;
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
@@ -4573,6 +4750,10 @@ registerForm.addEventListener('submit',e=>{
 });
 
 window.PaperchalkHandleBack=function(){
+  if(dialogueIsOpen()){
+    closeDialogue();
+    return true;
+  }
   if(debugIsOpen()){
     closeDebugPanel({focus:false});
     return true;
