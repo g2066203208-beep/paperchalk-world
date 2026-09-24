@@ -1,0 +1,67 @@
+name: Browser Audit
+
+on:
+  push:
+    branches:
+      - audit/browser-audit-20260924
+    paths:
+      - "tests/browser-audit.mjs"
+      - ".github/workflows/browser-audit.yml"
+      - "index.html"
+      - "assets/**"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install browser driver library
+        run: npm install --no-save playwright-core
+
+      - name: Detect Chrome
+        id: chrome
+        shell: bash
+        run: |
+          CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
+          if [ -z "$CHROME_PATH" ]; then
+            echo "No system Chrome/Chromium found"
+            exit 1
+          fi
+          echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
+          "$CHROME_PATH" --version
+
+      - name: Start local web server
+        shell: bash
+        run: |
+          python3 -m http.server 8080 > /tmp/paperchalk-http.log 2>&1 &
+          echo $! > /tmp/paperchalk-http.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:8080/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/paperchalk-http.log
+          exit 1
+
+      - name: Run real browser audit
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: node tests/browser-audit.mjs
+
+      - name: Upload browser audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperchalk-browser-audit
+          path: audit-artifacts
+          if-no-files-found: warn
