@@ -32,7 +32,10 @@ button{cursor:pointer}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .prop-track{width:5000px;height:100%;position:absolute;left:0;top:0}
 .prop{position:absolute;transform-origin:50% 78%;will-change:transform}
-.prop img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.prop img{
+  display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;
+  filter:saturate(.86) contrast(.96) brightness(.99);
+}
 .sway-a{animation:swayA 3.9s ease-in-out infinite}
 .sway-b{animation:swayB 4.8s ease-in-out infinite}
 .sway-c{animation:swayC 5.6s ease-in-out infinite}
@@ -44,7 +47,7 @@ button{cursor:pointer}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
   --facing:1;
-  position:absolute;left:35%;bottom:132px;width:170px;z-index:5;
+  position:absolute;left:35%;bottom:102px;width:132px;z-index:5;
   transform:translateX(-50%);pointer-events:none;will-change:left;
 }
 .actor.facing-left{--facing:-1}
@@ -331,7 +334,7 @@ button{cursor:pointer}
   .rear-layer,.front-layer{bottom:2vh;height:220px}
   .rear-layer .prop{bottom:78px}
   .front-layer .prop{bottom:38px}
-  .actor{left:34%;bottom:104px;width:148px}
+  .actor{left:34%;bottom:78px;width:112px}
   .foot-shadow{width:64px;height:14px;bottom:5px}
   .rear-layer .prop{scale:.82}
   .front-layer .prop{scale:.88}
@@ -388,7 +391,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.3 · 动态摇杆</div>
+          <div class="brand-foot">WORLD BUILD 0.4 · 统一笔触试装</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
@@ -509,6 +512,19 @@ function buildProps(id,data){
 }
 buildProps('rearTrack',rear);
 buildProps('frontTrack',front);
+
+/* Unified-brush art preview: load as an independent game asset.
+   If it fails, the playable fallback assets remain in place. */
+fetch('./assets/midground/unified-grass-01.b64?v=1',{cache:'no-store'})
+  .then(r=>{if(!r.ok)throw new Error('midground preview '+r.status);return r.text()})
+  .then(b64=>{
+    const src='data:image/webp;base64,'+b64.trim();
+    document.querySelectorAll('.prop img').forEach((img,i)=>{
+      img.src=src;
+      img.style.transform=(i%3===1)?'scaleX(-1)':'none';
+    });
+  })
+  .catch(err=>console.warn('MIDGROUND_PREVIEW_FALLBACK',err));
 
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
