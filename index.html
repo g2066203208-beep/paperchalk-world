@@ -2071,7 +2071,11 @@ async function loadMidgroundAtlas(){
     document.documentElement.dataset.midground='failed';
   }
 }
-loadMidgroundAtlas();
+if('requestIdleCallback' in window){
+  requestIdleCallback(()=>loadMidgroundAtlas(),{timeout:1400});
+}else{
+  setTimeout(()=>loadMidgroundAtlas(),220);
+}
 
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
@@ -2433,6 +2437,16 @@ window.PaperchalkHealth={
 };
 
 let debugLastUiUpdate=0;
+let perfWindowStart=performance.now(),perfFrameCount=0,perfFps=60,perfFrameMs=16.7;
+function sampleFramePerf(now){
+  perfFrameCount++;
+  const span=now-perfWindowStart;
+  if(span>=1000){
+    perfFps=Math.round(perfFrameCount*1000/span);
+    perfFrameMs=span/perfFrameCount;
+    perfFrameCount=0;perfWindowStart=now;
+  }
+}
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
@@ -2448,7 +2462,9 @@ function updateDebugStatus(){
     '<span>敌人 <b>'+alive+' / '+enemies.length+'</b></span>'+
     '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
-    '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>';
+    '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
+    '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
+    '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>';
 }
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
@@ -2686,7 +2702,8 @@ window.PaperchalkDebug={
   open:openDebugPanel,
   close:closeDebugPanel,
   toggle:toggleDebugPanel,
-  run:executeDebugCommand
+  run:executeDebugCommand,
+  perf(){return {fps:perfFps,frameMs:perfFrameMs,roadTiles:roadTrack.children.length,propNodes:rearTrack.children.length+frontTrack.children.length,visualOriginX}}
 };
 
 let routeTransitionBusy=false;
@@ -3104,7 +3121,8 @@ function teleportTo(x,{notice='已传送'}={}){
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
-  updateCamera();renderWorld();if(notice)showMapNotice(notice);return playerWorldX;
+  lastInteractionX=NaN;lastInteractionY=NaN;
+  updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
 }
 function updateCombat(dt,interactive){
   if(!enemies.every(e=>e.spawned)){if(interactive)resetMapEnemies();else return}
@@ -3218,9 +3236,9 @@ function handleViewportChange(){
   refreshRoadW();
   if(groundChanged){
     clearTimeout(viewportRebuildTimer);
-    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld();if(worldMapOverlay.classList.contains('is-open'))drawWorldMap()},70);
+    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld(true);if(worldMapOverlay.classList.contains('is-open'))drawWorldMap()},70);
   }else{
-    renderWorld();
+    renderWorld(true);
     if(worldMapOverlay.classList.contains('is-open'))drawWorldMap();
   }
 }
@@ -3257,6 +3275,7 @@ function updateVisualWindow(force=false){
   if(!force&&next===visualOriginX)return false;
   visualOriginX=next;
   buildMapVisuals();
+  if(showMapColliders||showSpawnZones)ensureMapDebugVisuals();
   mapTrack.style.width=VISUAL_WINDOW_SPAN+'px';
   entityTrack.style.width=VISUAL_WINDOW_SPAN+'px';
   enemies.forEach(e=>{e._renderX=null;e._visible=null});
@@ -3292,18 +3311,25 @@ function renderWorld(force=false){
   renderCombatDebug();
 }
 let lastInteractionTick=0;
+let lastInteractionX=NaN,lastInteractionY=NaN;
 let combatAccumulator=0;
+let lastCombatProbe=0,nearbyCombatCached=false;
 let lastMovingState=false;
 let lastWalkDuration='';
-function hasNearbyCombat(){
+function hasNearbyCombat(now){
   if(playerAttackTimer>0||playerAttackCooldown>0||playerInvuln>0)return true;
-  for(const e of enemies){
-    if(e.spawned&&e.alive&&Math.abs(playerWorldX-e.x)<1700)return true;
+  if(now-lastCombatProbe>=120){
+    lastCombatProbe=now;
+    nearbyCombatCached=false;
+    for(const e of enemies){
+      if(e.spawned&&e.alive&&Math.abs(playerWorldX-e.x)<1700){nearbyCombatCached=true;break}
+    }
   }
-  return false;
+  return nearbyCombatCached;
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
+  sampleFramePerf(now);
   if(document.hidden){requestAnimationFrame(frame);return}
 
   if(debugIsOpen()&&now-debugLastUiUpdate>250){
@@ -3311,10 +3337,14 @@ function frame(now){
     debugLastUiUpdate=now;
   }
   const interactive=worldInteractive();
-  if(interactive&&worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  if(!interactive){
+    requestAnimationFrame(frame);
+    return;
+  }
+  if(worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
   updateDayNightVisuals();
 
-  const axis=interactive?movementAxis():0;
+  const axis=movementAxis();
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
   if(moving!==lastMovingState){
@@ -3337,11 +3367,11 @@ function frame(now){
     playerDynamic=true;
   }
 
-  if(interactive&&playerDynamic)updatePlayerVertical(dt,true);
-  updateCamera();
+  if(playerDynamic)updatePlayerVertical(dt,true);
+  if(playerDynamic)updateCamera();
 
   let combatTick=false;
-  if(interactive&&hasNearbyCombat()){
+  if(hasNearbyCombat(now)){
     combatAccumulator+=dt;
     if(combatAccumulator>=1/30){
       const step=Math.min(combatAccumulator,.066);
@@ -3353,8 +3383,10 @@ function frame(now){
     combatAccumulator=0;
   }
 
-  if(interactive&&now-lastInteractionTick>=80){
+  const interactionMoved=!Number.isFinite(lastInteractionX)||Math.abs(playerWorldX-lastInteractionX)>8||Math.abs(playerY-lastInteractionY)>8;
+  if(interactionMoved&&now-lastInteractionTick>=80){
     lastInteractionTick=now;
+    lastInteractionX=playerWorldX;lastInteractionY=playerY;
     updateMapInteractions();
   }
 
