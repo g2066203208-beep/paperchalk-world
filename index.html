@@ -1457,11 +1457,13 @@ button{cursor:pointer}
 
 <script>
 /* -------------------- WORLD -------------------- */
-const WORLD_ZONE_WIDTH=6000;
+const WORLD_ZONE_WIDTH=1200; // legacy compatibility only; gameplay no longer uses strip zones
 const WORLD_ZONE_COUNT=20;
-const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT; // 120000px continuous world, no region loading screens
-const MAP_SPAWN_X=460;
-const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
+const MAP_WIDTH=24000;
+const MAP_HEIGHT=6200;
+const MAP_SPAWN_X=820;
+const MAP_SPAWN_Y=2200;
+const MAP_EXIT_X=MAP_WIDTH-520;
 let MAP_GROUND_SCREEN_Y=112;
 const PLAYER_BODY={halfW:27,h:108};
 const WORLD_NODES=[
@@ -1514,6 +1516,36 @@ function routeLocalX(x){const i=worldZoneIndexAt(x);return x-routeBaseX(i)}
 function routesAtNode(nodeId){return WORLD_ROUTES.filter(r=>r.from===nodeId||r.to===nodeId)}
 function otherNodeOfRoute(route,nodeId){return WORLD_NODE_BY_ID.get(route.from===nodeId?route.to:route.from)}
 function nodeDegree(nodeId){return routesAtNode(nodeId).length}
+
+/* TRUE 2D METROIDVANIA WORLD
+   x/y here are the same coordinates used by gameplay, camera and the large map. */
+const WORLD_AREAS_2D=[
+  {id:'village',name:'A村与风草原',biome:'meadow',x:0,y:1850,w:4300,h:900,labelX:1500,labelY:2460},
+  {id:'forest',name:'旧林上层',biome:'forest',x:3000,y:2450,w:7800,h:1250,labelX:6500,labelY:3350},
+  {id:'valley',name:'浅石谷',biome:'mountain',x:4100,y:1850,w:6900,h:900,labelX:7700,labelY:2440},
+  {id:'river',name:'枯溪河岸',biome:'river',x:5000,y:900,w:8500,h:1050,labelX:8700,labelY:1640},
+  {id:'caves',name:'回声洞群',biome:'cave',x:9000,y:250,w:7600,h:1050,labelX:12400,labelY:870},
+  {id:'ruins',name:'古纸遗迹',biome:'ruins',x:9800,y:3350,w:5700,h:1300,labelX:12400,labelY:4080},
+  {id:'highland',name:'长草台地',biome:'highland',x:8800,y:2500,w:7800,h:1000,labelX:12700,labelY:3090},
+  {id:'tower',name:'旧塔竖井',biome:'ruins',x:14500,y:500,w:2800,h:4300,labelX:15800,labelY:2780},
+  {id:'pine',name:'雾松岭',biome:'forest',x:16500,y:3500,w:6000,h:1200,labelX:19300,labelY:4200},
+  {id:'sunken',name:'沉纸城',biome:'marsh',x:16000,y:850,w:6700,h:1250,labelX:19300,labelY:1570},
+  {id:'cape',name:'远岬祭坛',biome:'shrine',x:21000,y:2150,w:3000,h:1500,labelX:22500,labelY:3040}
+];
+const WORLD_AREA_BY_ID=new Map(WORLD_AREAS_2D.map(a=>[a.id,a]));
+function areaAt(x,y){
+  const hits=WORLD_AREAS_2D.filter(a=>x>=a.x&&x<=a.x+a.w&&y>=a.y&&y<=a.y+a.h);
+  if(hits.length)return hits.sort((a,b)=>(a.w*a.h)-(b.w*b.h))[0];
+  let best=WORLD_AREAS_2D[0],bestD=Infinity;
+  for(const a of WORLD_AREAS_2D){
+    const cx=clamp(x,a.x,a.x+a.w),cy=clamp(y,a.y,a.y+a.h);
+    const d=(x-cx)*(x-cx)+(y-cy)*(y-cy);
+    if(d<bestD){bestD=d;best=a}
+  }
+  return best;
+}
+function regionNameAt(x,y=typeof playerY==='number'?playerY:MAP_SPAWN_Y){return areaAt(x,y)?.name||'纸境荒野'}
+
 const ROUTE_ENDPOINT_PAD=150;
 const FORK_LANE_LEVELS=[142,72,0];
 function forkAssignments(routeIndex,nodeId){
@@ -1619,27 +1651,155 @@ for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
     {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
   );
 }
+/* Discard the old route-strip geometry. All following geometry lives in one real XY plane. */
+MAP_TERRAIN.length=0;
+MAP_OBJECTS.length=0;
+MAP_LANDMARKS.length=0;
+MAP_PICKUPS.length=0;
+MAP_NPCS.length=0;
+ENEMY_SPAWNS.length=0;
+
+function addFloor(id,x,w,top,thickness=120,kind='platform',extra={}){
+  MAP_TERRAIN.push({id,kind,x,y:top-thickness,w,h:thickness,...extra});
+}
+function addOneWay(id,x,w,top,h=16){
+  MAP_TERRAIN.push({id,kind:'platform',x,y:top-h,w,h,oneWay:true});
+}
+function addSteps(prefix,startX,startTop,count,dx,dy,w=250){
+  for(let i=0;i<count;i++)addOneWay(prefix+'-'+i,startX+i*dx,w,startTop+i*dy);
+}
+
+/* Main west-to-east ground spine. */
+addFloor('village-floor',0,4300,2200,180);
+addFloor('valley-floor-a',4200,2500,2200,180);
+addFloor('valley-floor-b',6900,2200,2140,180);
+addFloor('valley-floor-c',9300,1750,2280,180);
+
+/* Upper forest: reachable physically by climbing, not by route teleport. */
+addSteps('forest-rise',3150,2320,7,360,125,300);
+addFloor('forest-upper-a',5450,2700,3100,150);
+addFloor('forest-upper-b',8250,2500,3180,150);
+addSteps('forest-to-ruins',10000,3260,5,330,125,270);
+
+/* Ancient ruins and upper loop. */
+addFloor('ruins-floor-a',11200,2400,3860,170);
+addFloor('ruins-floor-b',13700,1750,3980,170);
+addOneWay('ruins-balcony-a',11820,620,4200);
+addOneWay('ruins-balcony-b',13020,760,4380);
+
+/* Highland middle path. */
+addSteps('valley-to-highland',8500,2300,6,330,125,280);
+addFloor('highland-floor-a',10200,3000,3040,160);
+addFloor('highland-floor-b',13350,2900,2960,160);
+
+/* River descent creates a true lower branch and reconnects later. */
+addSteps('river-descent-a',5150,2070,6,360,-120,300);
+addFloor('river-floor-a',6400,3400,1450,160);
+addFloor('river-floor-b',9950,3200,1510,160);
+addOneWay('river-island-a',7600,520,1710);
+addOneWay('river-island-b',8900,620,1810);
+
+/* Cave network below the river. */
+addSteps('cave-descent',10800,1390,7,300,-115,240);
+addFloor('cave-floor-a',11600,2600,650,170);
+addFloor('cave-floor-b',14350,2200,720,170);
+addOneWay('cave-ledge-a',12500,520,940);
+addOneWay('cave-ledge-b',13600,480,1080);
+
+/* Central tower / shaft: a vertical hub linking cave, river, highland and ruins. */
+addFloor('tower-base',15380,1550,760,180);
+for(let i=0;i<15;i++){
+  const left=i%2===0;
+  addOneWay('tower-step-'+i, left?15150:16030,720,980+i*235,18);
+}
+addFloor('tower-mid-link',14550,2100,2960,150);
+addFloor('tower-top-link',14550,2350,4110,150);
+
+/* East upper ridge. */
+addSteps('ridge-rise',16500,3110,6,330,125,280);
+addFloor('pine-floor-a',17700,2500,3980,170);
+addFloor('pine-floor-b',20300,2200,4070,170);
+
+/* Lower sunken city and the second large loop. */
+addFloor('sunken-floor-a',16300,2800,1240,180);
+addFloor('sunken-floor-b',19200,3300,1320,180);
+addOneWay('sunken-roof-a',17000,700,1580);
+addOneWay('sunken-roof-b',18500,800,1730);
+addSteps('tower-to-sunken',16600,980,5,330,85,250);
+
+/* Far cape reconnects upper/lower paths through a long climb. */
+addSteps('cape-climb',21100,1450,9,300,145,260);
+addFloor('cape-floor',22400,1600,2820,170);
+addOneWay('shrine-platform',23100,620,3230);
+
+/* Traversal rocks and optional stepping platforms. */
+[
+  ['rock-village',2700,2200,120,75],['rock-valley',6100,2200,140,85],
+  ['rock-forest',7200,3100,135,78],['rock-river',9200,1450,125,72],
+  ['rock-highland',12400,3040,150,90],['rock-pine',19600,3980,145,88]
+].forEach(([id,x,top,w,h])=>MAP_TERRAIN.push({id,kind:'rock',x,y:top-h,w,h}));
+
+/* Objects are placed at the same real XY coordinates shown on the large map. */
+[
+  ['tree-west-1','tree',3500,2200,96,190],['tree-forest-1','tree',6050,3100,96,190],
+  ['tree-forest-2','tree',7600,3100,96,190],['tree-pine-1','tree',18400,3980,96,190],
+  ['tree-pine-2','tree',20500,4070,96,190],['ruin-1','ruin',12050,3860,128,120],
+  ['ruin-2','ruin',13950,3980,128,120],['cave-mouth','cave-mouth',11250,650,158,126],
+  ['windmill-main','windmill',13200,3040,126,180],['bridge-east','bridge-post',20300,1320,150,78],
+  ['shrine-east','shrine',23150,2820,140,134],['reed-river-1','reed',7300,1450,120,66],
+  ['reed-river-2','reed',10100,1510,120,66],['reed-city','reed',18400,1320,120,66]
+].forEach(([id,kind,x,y,w,h])=>MAP_OBJECTS.push({id,kind,x,y,w,h,solid:false}));
+MAP_OBJECTS.push(
+  {id:'crate-village',kind:'crate',x:2380,y:2200,w:82,h:82,solid:true,breakable:true},
+  {id:'crate-cave',kind:'crate',x:13100,y:650,w:82,h:82,solid:true,breakable:true},
+  {id:'crate-city',kind:'crate',x:18700,y:1320,w:82,h:82,solid:true,breakable:true}
+);
+
+/* Landmarks label physical places; no branch selection UI exists. */
+[
+  ['lm-village',700,2200,'A村'],
+  ['lm-forest',5900,3100,'旧林上层'],
+  ['lm-valley',6500,2200,'浅石谷'],
+  ['lm-river',7600,1450,'枯溪河岸'],
+  ['lm-cave',12100,650,'回声洞群'],
+  ['lm-ruins',12100,3860,'古纸遗迹'],
+  ['lm-highland',11600,3040,'长草台地'],
+  ['lm-tower',15550,2960,'旧塔竖井'],
+  ['lm-pine',18800,3980,'雾松岭'],
+  ['lm-sunken',17800,1240,'沉纸城'],
+  ['lm-cape',22700,2820,'远岬祭坛']
+].forEach(([id,x,y,text])=>MAP_LANDMARKS.push({id,kind:'sign',x,y,text}));
+
+MAP_PICKUPS.push(
+  {id:'herb-village',x:3320,y:2200,type:'herb'},
+  {id:'herb-forest',x:7050,y:3100,type:'herb'},
+  {id:'herb-river',x:8450,y:1450,type:'herb'},
+  {id:'herb-cave',x:12800,y:650,type:'herb'},
+  {id:'herb-ruins',x:12600,y:3860,type:'herb'},
+  {id:'herb-city',x:18000,y:1320,type:'herb'},
+  {id:'herb-crate-village',x:2420,y:2228,type:'herb',requiresBroken:'crate-village'}
+);
+MAP_NPCS.push(
+  {id:'npc-old-crafter',x:1080,y:2200,name:'村口老匠',text:'这片世界上下相通。森林在上，河岸在下，旧塔能把地下与山脊重新连起来。'}
+);
+
+/* Enemies also occupy the same XY world. */
+[
+  ['enemy-1',3600,2200,3400,3950],
+  ['enemy-2',6900,2200,6700,7300],
+  ['enemy-forest',8500,3180,8300,9000],
+  ['enemy-river',9700,1450,9400,10200],
+  ['enemy-cave',13700,650,13400,14100],
+  ['enemy-highland',12700,3040,12400,13200],
+  ['enemy-ruins',13600,3980,13300,14100],
+  ['enemy-pine',19400,3980,19100,19900],
+  ['enemy-city',20100,1320,19800,20600],
+  ['enemy-cape',23100,2820,22800,23500]
+].forEach(([id,x,y,patrolMin,patrolMax])=>ENEMY_SPAWNS.push({id,x,y,patrolMin,patrolMax}));
+
 const FORK_SOLIDS=[];
-WORLD_ROUTES.forEach((route,i)=>{
-  const base=routeBaseX(i);
-  [
-    {nodeId:route.from,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
-    {nodeId:route.to,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
-  ].forEach(endpoint=>{
-    const assignments=forkAssignments(i,endpoint.nodeId);
-    if(assignments.length<=1)return;
-    assignments.filter(a=>a.laneY===72).forEach((a,laneIndex)=>{
-      const w=540;
-      const x=endpoint.side==='left'?endpoint.boundary-18:endpoint.boundary-w+18;
-      FORK_SOLIDS.push({
-        id:'fork-shelf-'+i+'-'+endpoint.side+'-'+laneIndex,
-        kind:'platform',x,y:a.laneY-12,w,h:12,oneWay:true,fork:true
-      });
-    });
-  });
-});
-MAP_TERRAIN.push(...FORK_SOLIDS);
-const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
+
+const mapState={broken:new Set(),collected:new Set(),visitedAreas:new Set(['village']),visitedRoutes:new Set(),visitedNodes:new Set(),exitReached:false};
 let mapNoticeTimer=null;
 
 const rear=[
