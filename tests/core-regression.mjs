@@ -81,8 +81,26 @@ try{
   let s=await state(page);
   check('A enters a fresh world',Math.abs(s.worldX)<1,'worldX='+s.worldX);
 
-  // Realtime combat foundation: jump, AABB debug boxes and melee hit.
-  await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(220));
+  // Realtime combat foundation: map entity, visible AI movement, jump and panel-only debugging.
+  const enemyParent=await page.locator('#enemy').evaluate(el=>el.parentElement?.id);
+  check('Enemy is mounted on the scrolling world entity track',enemyParent==='entityTrack','parent='+enemyParent);
+
+  await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(360));
+  const enemyMoveBefore=await page.evaluate(()=>({
+    enemy:window.PaperchalkCombat.enemy,
+    left:document.getElementById('enemy').getBoundingClientRect().left
+  }));
+  await page.waitForTimeout(360);
+  const enemyMoveAfter=await page.evaluate(()=>({
+    enemy:window.PaperchalkCombat.enemy,
+    left:document.getElementById('enemy').getBoundingClientRect().left
+  }));
+  check('Enemy AI visibly moves toward the player',
+    enemyMoveAfter.enemy.x<enemyMoveBefore.enemy.x-15 &&
+    enemyMoveAfter.left<enemyMoveBefore.left-15 &&
+    enemyMoveAfter.enemy.state==='chase',
+    JSON.stringify({enemyMoveBefore,enemyMoveAfter}));
+
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
   await page.waitForTimeout(140);
   const jumpAir=await page.evaluate(()=>window.PaperchalkCombat.player);
@@ -91,25 +109,54 @@ try{
   const jumpLanded=await page.evaluate(()=>window.PaperchalkCombat.player);
   check('Jump returns to ground',jumpLanded.grounded&&Math.abs(jumpLanded.y)<1,JSON.stringify(jumpLanded));
 
-  const hitboxesOn=await page.evaluate(()=>window.PaperchalkCombat.toggleHitboxes(true));
+  await page.locator('#debugToggleBtn').click();
+  await page.waitForTimeout(80);
+  await page.locator('[data-debug-action="hitboxes"]').click();
+  await page.locator('[data-debug-action="attackRange"]').click();
+  await page.waitForTimeout(80);
+  const combatDebug=await page.evaluate(()=>({
+    debug:window.PaperchalkCombat.debug,
+    hitboxClass:document.getElementById('world').classList.contains('show-hitboxes'),
+    rangeClass:document.getElementById('world').classList.contains('show-attack-range'),
+    hurtDisplay:getComputedStyle(document.getElementById('playerHurtboxDebug')).display,
+    attackDisplay:getComputedStyle(document.getElementById('playerAttackDebug')).display,
+    attackWidth:document.getElementById('playerAttackDebug').getBoundingClientRect().width,
+    preview:document.getElementById('playerAttackDebug').classList.contains('is-preview')
+  }));
+  check('Debug panel enables collision boxes and persistent attack-range preview',
+    combatDebug.debug.hitboxes===true&&combatDebug.debug.attackRange===true&&
+    combatDebug.hitboxClass&&combatDebug.rangeClass&&combatDebug.hurtDisplay!=='none'&&
+    combatDebug.attackDisplay!=='none'&&combatDebug.attackWidth>80&&combatDebug.preview,
+    JSON.stringify(combatDebug));
+
+  await page.locator('[data-debug-action="enemyNear"]').click();
   await page.waitForTimeout(60);
-  check('Collision box debug overlay can be enabled',
-    hitboxesOn===true &&
-    await page.locator('#world').evaluate(el=>el.classList.contains('show-hitboxes')) &&
-    await page.locator('#playerHurtboxDebug').evaluate(el=>getComputedStyle(el).display!=='none'),
-    'hitboxes enabled');
+  const nearEnemy=await page.evaluate(()=>({
+    enemy:window.PaperchalkCombat.enemy,
+    playerX:window.eval('worldX+actorX')
+  }));
+  check('Debug panel can place enemy at a reachable map position',
+    Math.abs((nearEnemy.enemy.x-nearEnemy.playerX)-210)<2,
+    JSON.stringify(nearEnemy));
+
+  await page.locator('[data-debug-action="attackRange"]').click();
+  await page.locator('[data-debug-action="hitboxes"]').click();
+  await page.locator('#debugCloseBtn').click();
+  await page.waitForTimeout(80);
 
   await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(68));
   const enemyBefore=await page.evaluate(()=>window.PaperchalkCombat.enemy);
-  await page.evaluate(()=>window.PaperchalkCombat.attack());
+  await page.keyboard.press('KeyJ');
   await page.waitForTimeout(190);
   const enemyAfter=await page.evaluate(()=>window.PaperchalkCombat.enemy);
-  check('Melee attack hitbox damages nearby enemy exactly once',
+  check('Gameplay attack hitbox damages nearby enemy exactly once',
     enemyBefore.hp===3&&enemyAfter.hp===2,
     JSON.stringify({enemyBefore,enemyAfter}));
+
+  // Keep later persistence tests isolated from realtime enemy attacks.
   await page.evaluate(()=>{
-    window.PaperchalkCombat.toggleHitboxes(false);
     window.PaperchalkCombat.resetEnemy(1400);
+    window.PaperchalkCombat.toggleEnemyAi(false);
   });
 
   const healthInitial=await healthState(page);
@@ -194,6 +241,13 @@ try{
   const moved=await state(page);
   check('Movement works',moved.worldX>0||moved.actorX>s.actorX,JSON.stringify(moved));
   check('World time advances',moved.worldMinutes>1,'worldMinutes='+moved.worldMinutes);
+  const entityMapSync=await page.evaluate(()=>({
+    worldX:window.eval('worldX'),
+    transform:document.getElementById('entityTrack').style.transform
+  }));
+  check('World entity track scrolls with map coordinates',
+    entityMapSync.transform.includes(String(-entityMapSync.worldX)) || Math.abs(entityMapSync.worldX)<0.01,
+    JSON.stringify(entityMapSync));
 
   // Open menu from world: paper effects must clean themselves up.
   await page.locator('#worldMenuBtn').click();
@@ -225,6 +279,7 @@ try{
   await page.waitForTimeout(250);
   await page.locator('#continueBtn').click();
   await page.waitForTimeout(450);
+  await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const healthReloaded=await healthState(page);
   check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
   await page.locator('#backpackBtn').click();
@@ -282,6 +337,7 @@ try{
   await page.locator('#regPass').fill('test5678');
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForTimeout(450);
+  await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const bState=await state(page);
   const saveB=await save(page,'audit_b');
   check('B gets a fresh independent save',Math.abs(bState.worldX)<1&&saveB?.account==='audit_b',
@@ -301,6 +357,7 @@ try{
   await page.locator('#loginPass').fill('test1234');
   await page.locator('#loginForm button[type=submit]').click();
   await page.waitForTimeout(450);
+  await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const aReturn=await state(page);
   const aReturnInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
   check('A restores its own position',Math.abs(aReturn.worldX-saveA.worldX)<5,
@@ -321,9 +378,9 @@ try{
     backClosed===true && !(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open'))),
     'handled='+backClosed);
 
-  await page.keyboard.press('F2');
+  await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(100);
-  check('F2 opens debug panel',
+  check('Visible debug button opens the debug panel',
     await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')),
     'open='+await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')));
   const backClosedDebug=await page.evaluate(()=>window.PaperchalkHandleBack());
