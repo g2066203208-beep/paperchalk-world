@@ -6,6 +6,7 @@ on:
       - audit/browser-audit-20260924
     paths:
       - "tests/browser-audit.mjs"
+      - "tests/browser-visual-audit.mjs"
       - ".github/workflows/browser-audit.yml"
       - "index.html"
       - "assets/**"
@@ -53,15 +54,28 @@ jobs:
           cat /tmp/paperchalk-http.log
           exit 1
 
-      - name: Run real browser audit
+      - name: Run functional browser audit
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/browser-audit.mjs
 
-      - name: Upload browser audit evidence
+      - name: Run stable visual browser audit
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: node tests/browser-visual-audit.mjs
+
+      - name: Upload functional audit evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: paperchalk-browser-audit
           path: audit-artifacts
+          if-no-files-found: warn
+
+      - name: Upload visual audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperchalk-visual-audit
+          path: visual-audit-artifacts
           if-no-files-found: warn
