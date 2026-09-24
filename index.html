@@ -2168,8 +2168,6 @@ window.PaperchalkTheater={
   get clock(){return formatWorldClock()},
   get phase(){return worldTimeName()}
 };
-updateDayNightVisuals(true);
-
 const PLAYER_MAX_HP=10;
 let playerHp=PLAYER_MAX_HP;
 let healthPieces=[];
@@ -2184,6 +2182,7 @@ let orientationRouteIndex=0;
 let currentRouteOrientation=1;
 let worldMinutes=0;
 let worldTimeScale=1;
+updateDayNightVisuals(true);
 let actorX=Math.round(innerWidth*.35);
 let keyboardLeft=false,keyboardRight=false;
 let joystickAxis=0;
