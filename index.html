@@ -765,10 +765,116 @@ button{cursor:pointer}
 .backpack-open-btn img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .backpack-open-btn:active{transform:translate(1px,2px) rotate(-1deg)}
 
+/* ---------- WORLD MAP ---------- */
+.world-map-btn{
+  position:absolute;z-index:32;
+  top:max(146px,calc(env(safe-area-inset-top) + 140px));
+  right:max(18px,env(safe-area-inset-right));
+  width:72px;height:40px;padding:0 8px;border:1px solid rgba(78,60,39,.38);
+  background:rgba(232,215,181,.95);color:#524636;
+  font:800 14px/38px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  letter-spacing:.12em;border-radius:5px;
+  box-shadow:3px 4px 0 rgba(54,40,27,.12);
+  clip-path:polygon(3% 4%,98% 0,100% 91%,94% 100%,2% 96%,0 10%);
+}
+.world-map-btn::before{content:"◇";margin-right:5px;font-size:12px}
+.world-map-btn:active{transform:translate(1px,2px)}
+
+.world-map-overlay{
+  position:fixed;inset:0;z-index:90;
+  display:flex;align-items:center;justify-content:center;
+  padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right))
+          max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+  background:rgba(34,30,24,.58);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .16s ease,visibility .16s ease;
+}
+.world-map-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.world-map-paper{
+  position:relative;width:min(96vw,1240px);height:min(92dvh,820px);
+  max-height:calc(var(--app-height,100dvh) - 18px);
+  display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(circle at 22% 18%,rgba(255,255,255,.34),transparent 25%),
+    repeating-linear-gradient(9deg,rgba(90,67,39,.055) 0 1px,transparent 1px 8px),
+    #e3d2ad;
+  border:2px solid rgba(83,64,42,.34);
+  box-shadow:0 18px 40px rgba(20,16,12,.34),7px 9px 0 rgba(64,47,28,.15);
+  clip-path:polygon(.5% 1.5%,5% .4%,11% 1.1%,17% .2%,24% 1.3%,31% .4%,39% 1.1%,47% .2%,55% 1.2%,63% .4%,71% 1.1%,79% .2%,87% 1.2%,95% .4%,99.5% 1.4%,100% 98%,93% 99.4%,84% 98.7%,75% 99.5%,66% 98.6%,57% 99.5%,48% 98.8%,39% 99.6%,30% 98.7%,20% 99.4%,10% 98.6%,0 99%);
+}
+.world-map-head{
+  flex:none;min-height:62px;display:flex;align-items:center;gap:14px;
+  padding:10px 18px 8px;border-bottom:1px dashed rgba(81,62,40,.30);
+}
+.world-map-title{font-size:clamp(19px,2.4vw,28px);font-weight:800;letter-spacing:.15em;color:#4d4132}
+.world-map-location{min-width:0;flex:1;color:#71614d;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.world-map-close{
+  flex:none;width:42px;height:38px;border:0;background:rgba(103,80,52,.14);color:#514332;
+  border-radius:4px;font-size:24px;line-height:38px
+}
+.world-map-toolbar{
+  flex:none;display:flex;align-items:center;gap:7px;min-height:44px;padding:6px 16px;
+  border-bottom:1px solid rgba(85,65,42,.16);overflow-x:auto;
+}
+.world-map-tool{
+  flex:none;height:31px;padding:0 12px;border:1px solid rgba(79,60,39,.28);
+  background:rgba(247,236,211,.62);color:#594b39;border-radius:4px;
+  font:700 12px/29px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+}
+.world-map-zoom-label{flex:none;min-width:46px;text-align:center;font:700 11px/30px ui-monospace,monospace;color:#675642}
+.world-map-legend{margin-left:auto;display:flex;gap:10px;align-items:center;white-space:nowrap;font-size:11px;color:#6d5d49}
+.world-map-legend i{display:inline-block;width:9px;height:9px;margin-right:3px;border-radius:50%;vertical-align:-1px}
+.world-map-legend .lg-player{background:#3f3024;box-shadow:0 0 0 2px #f5e8ca}
+.world-map-legend .lg-enemy{background:#8b3c32}
+.world-map-legend .lg-pickup{background:#6f8452}
+.world-map-scroll{
+  position:relative;flex:1;min-height:0;overflow:auto;
+  padding:18px 18px 24px;
+  overscroll-behavior:contain;
+  touch-action:pan-x pan-y;
+  scrollbar-width:thin;
+}
+.world-map-canvas{
+  display:block;max-width:none;height:auto;
+  background:#dcc79e;border:1px solid rgba(84,64,42,.22);
+  box-shadow:inset 0 0 30px rgba(96,72,43,.11);
+  border-radius:5px;
+}
+.world-map-tip{
+  flex:none;padding:7px 16px 9px;text-align:center;
+  color:#75644f;font-size:11px;border-top:1px dashed rgba(82,63,41,.20);
+}
+@media(max-width:900px),(max-height:560px){
+  .backpack-open-btn{
+    top:max(62px,calc(env(safe-area-inset-top) + 56px))!important;
+    width:58px!important;height:48px!important
+  }
+  .world-map-btn{
+    top:max(113px,calc(env(safe-area-inset-top) + 107px));
+    right:max(10px,env(safe-area-inset-right));
+    width:62px;height:34px;font-size:12px;line-height:32px
+  }
+  .debug-toggle-btn{
+    top:max(151px,calc(env(safe-area-inset-top) + 145px))!important
+  }
+  .debug-panel{
+    top:max(188px,calc(env(safe-area-inset-top) + 182px))!important;
+    max-height:calc(var(--app-height,100dvh) - 198px)!important
+  }
+  .world-map-paper{width:98vw;height:calc(var(--app-height,100dvh) - 10px);max-height:none}
+  .world-map-head{min-height:48px;padding:6px 12px}
+  .world-map-title{font-size:18px}
+  .world-map-toolbar{min-height:38px;padding:4px 10px}
+  .world-map-tool{height:29px;line-height:27px;padding:0 10px}
+  .world-map-scroll{padding:10px}
+  .world-map-tip{padding:5px 10px 6px}
+  .world-map-legend{display:none}
+}
+
 /* ---------- IN-GAME DEBUG PANEL ---------- */
 .debug-toggle-btn{
   position:absolute;z-index:32;
-  top:max(148px,calc(env(safe-area-inset-top) + 142px));
+  top:max(194px,calc(env(safe-area-inset-top) + 188px));
   right:max(18px,env(safe-area-inset-right));
   min-width:68px;height:34px;padding:0 11px;
   border:1px dashed rgba(81,63,42,.52);
@@ -783,7 +889,7 @@ button{cursor:pointer}
 
 .debug-panel{
   position:absolute;z-index:70;
-  top:max(190px,calc(env(safe-area-inset-top) + 182px));
+  top:max(234px,calc(env(safe-area-inset-top) + 228px));
   right:max(18px,env(safe-area-inset-right));
   width:min(360px,calc(100vw - 36px));
   max-height:min(560px,calc(100vh - 210px));
@@ -1071,6 +1177,7 @@ button{cursor:pointer}
   <button id="backpackBtn" class="backpack-open-btn" aria-label="打开背包">
     <img src="./assets/ui/inventory-v2/bag-icon.png?v=2" alt="">
   </button>
+  <button id="worldMapBtn" class="world-map-btn" type="button" aria-label="打开大地图">地图</button>
 
   <button id="debugToggleBtn" class="debug-toggle-btn"
           aria-controls="debugPanel" aria-expanded="false">调试</button>
@@ -1132,6 +1239,32 @@ button{cursor:pointer}
     </div>
   </div>
 </main>
+
+<section id="worldMapOverlay" class="world-map-overlay" aria-hidden="true">
+  <div id="worldMapPaper" class="world-map-paper" role="dialog" aria-modal="true" aria-label="大世界地图">
+    <header class="world-map-head">
+      <div class="world-map-title">大世界地图</div>
+      <div id="worldMapLocation" class="world-map-location">当前位置</div>
+      <button id="worldMapClose" class="world-map-close" type="button" aria-label="关闭地图">×</button>
+    </header>
+    <div class="world-map-toolbar">
+      <button id="worldMapZoomOut" class="world-map-tool" type="button" aria-label="缩小地图">－</button>
+      <div id="worldMapZoomLabel" class="world-map-zoom-label">100%</div>
+      <button id="worldMapZoomIn" class="world-map-tool" type="button" aria-label="放大地图">＋</button>
+      <button id="worldMapFit" class="world-map-tool" type="button">全图</button>
+      <button id="worldMapLocate" class="world-map-tool" type="button">定位我</button>
+      <div class="world-map-legend" aria-label="地图图例">
+        <span><i class="lg-player"></i>你</span>
+        <span><i class="lg-enemy"></i>敌人</span>
+        <span><i class="lg-pickup"></i>采集</span>
+      </div>
+    </div>
+    <div id="worldMapScroll" class="world-map-scroll">
+      <canvas id="worldMapCanvas" class="world-map-canvas" width="4400" height="520" aria-label="纸境连续大世界地图"></canvas>
+    </div>
+    <div class="world-map-tip">手指拖动查看世界 · 地图不会切换场景 · M 键可快速打开</div>
+  </div>
+</section>
 
 <div id="orientationHint" class="orientation-hint" role="status" aria-live="polite">
   <div>请横屏游玩<br><span>旋转设备后继续</span></div>
@@ -1491,6 +1624,18 @@ const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
+const worldMapBtn=document.getElementById('worldMapBtn');
+const worldMapOverlay=document.getElementById('worldMapOverlay');
+const worldMapPaper=document.getElementById('worldMapPaper');
+const worldMapClose=document.getElementById('worldMapClose');
+const worldMapScroll=document.getElementById('worldMapScroll');
+const worldMapCanvas=document.getElementById('worldMapCanvas');
+const worldMapLocation=document.getElementById('worldMapLocation');
+const worldMapZoomOut=document.getElementById('worldMapZoomOut');
+const worldMapZoomIn=document.getElementById('worldMapZoomIn');
+const worldMapFit=document.getElementById('worldMapFit');
+const worldMapLocate=document.getElementById('worldMapLocate');
+const worldMapZoomLabel=document.getElementById('worldMapZoomLabel');
 const backpackOverlay=document.getElementById('backpackOverlay');
 const paperFxLayer=document.getElementById('paperFxLayer');
 const paperFxBall=document.getElementById('paperFxBall');
@@ -2311,8 +2456,11 @@ function handleViewportChange(){
   refreshRoadW();
   if(groundChanged){
     clearTimeout(viewportRebuildTimer);
-    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld()},70);
-  }else renderWorld();
+    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld();if(worldMapOverlay.classList.contains('is-open'))drawWorldMap()},70);
+  }else{
+    renderWorld();
+    if(worldMapOverlay.classList.contains('is-open'))drawWorldMap();
+  }
 }
 addEventListener('resize',handleViewportChange,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(handleViewportChange,80),{passive:true});
@@ -2327,6 +2475,7 @@ function worldInteractive(){
   return !!shell
     && shell.classList.contains('is-hidden')
     && !backpackOverlay.classList.contains('is-open')
+    && !worldMapOverlay.classList.contains('is-open')
     && !debugIsOpen();
 }
 function movementAxis(){
@@ -2552,6 +2701,197 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
   }
 }
 window.PaperUITransition={openFrom:paperUIFrom};
+
+/* -------------------- SEAMLESS WORLD MAP -------------------- */
+const WORLD_MAP_BASE_W=WORLD_ZONE_COUNT*220;
+const WORLD_MAP_BASE_H=520;
+let worldMapZoom=1;
+let worldMapLastTrigger=null;
+
+function worldMapRoadY(mapX){
+  const zoneW=WORLD_MAP_BASE_W/WORLD_ZONE_COUNT;
+  const wave=Math.sin(mapX*.0067)*23+Math.sin(mapX*.0021+1.1)*18;
+  const local=((mapX%zoneW)+zoneW)%zoneW;
+  const zoneLift=Math.sin((local/zoneW)*Math.PI)*8;
+  return WORLD_MAP_BASE_H*.57+wave-zoneLift;
+}
+function worldToMapX(x){return clamp(x/MAP_WIDTH*WORLD_MAP_BASE_W,0,WORLD_MAP_BASE_W)}
+function mapPointForWorldX(x){const mx=worldToMapX(x);return{x:mx,y:worldMapRoadY(mx)}}
+
+function drawWorldMap(){
+  const canvas=worldMapCanvas;
+  const ctx=canvas.getContext('2d');
+  if(!ctx)return;
+  canvas.width=WORLD_MAP_BASE_W;
+  canvas.height=WORLD_MAP_BASE_H;
+  ctx.clearRect(0,0,WORLD_MAP_BASE_W,WORLD_MAP_BASE_H);
+
+  const zonePx=WORLD_MAP_BASE_W/WORLD_ZONE_COUNT;
+  for(let zone=0;zone<WORLD_ZONE_COUNT;zone++){
+    const x=zone*zonePx;
+    ctx.fillStyle=zone%2?'#dcc79e':'#e3d1ad';
+    ctx.fillRect(x,0,zonePx,WORLD_MAP_BASE_H);
+    ctx.strokeStyle='rgba(89,68,43,.24)';
+    ctx.setLineDash([5,7]);
+    ctx.beginPath();ctx.moveTo(x+.5,18);ctx.lineTo(x+.5,WORLD_MAP_BASE_H-18);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#695742';
+    ctx.font='700 15px "Noto Serif SC","Songti SC",serif';
+    ctx.textAlign='center';
+    ctx.fillText(regionNameAt(zone*WORLD_ZONE_WIDTH+100),x+zonePx*.5,42);
+    ctx.fillStyle='rgba(94,73,46,.55)';
+    ctx.font='11px system-ui,sans-serif';
+    ctx.fillText('区域 '+String(zone+1).padStart(2,'0'),x+zonePx*.5,60);
+  }
+  ctx.strokeStyle='rgba(75,55,35,.48)';
+  ctx.lineWidth=34;ctx.lineCap='round';ctx.lineJoin='round';
+  ctx.beginPath();
+  for(let x=0;x<=WORLD_MAP_BASE_W;x+=12){
+    const y=worldMapRoadY(x);
+    if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle='#b7925c';ctx.lineWidth=27;
+  ctx.stroke();
+
+  for(const t of MAP_TERRAIN){
+    const p=mapPointForWorldX(t.x+t.w*.5);
+    ctx.fillStyle=t.kind==='rock'?'#766d61':'#8d6a44';
+    ctx.beginPath();
+    if(t.kind==='rock'){
+      ctx.moveTo(p.x-9,p.y-18);ctx.lineTo(p.x-2,p.y-31);ctx.lineTo(p.x+10,p.y-17);ctx.closePath();
+    }else{
+      ctx.roundRect(p.x-12,p.y-26,24,10,3);
+    }
+    ctx.fill();
+  }
+
+  for(const o of MAP_OBJECTS){
+    if(o.breakable&&mapState.broken.has(o.id))continue;
+    const p=mapPointForWorldX(o.x+o.w*.5);
+    if(o.kind==='tree'){
+      ctx.fillStyle='#596546';ctx.beginPath();ctx.arc(p.x,p.y-28,7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#6a4d34';ctx.fillRect(p.x-1.5,p.y-24,3,10);
+    }else{
+      ctx.fillStyle='#8a5d3b';ctx.fillRect(p.x-5,p.y-20,10,10);
+    }
+  }
+
+  for(const lm of MAP_LANDMARKS){
+    const p=mapPointForWorldX(lm.x);
+    ctx.strokeStyle='#675038';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(p.x,p.y-14);ctx.lineTo(p.x,p.y-34);ctx.stroke();
+    ctx.fillStyle='#d1b47d';ctx.fillRect(p.x-9,p.y-39,18,9);
+  }
+
+  for(const pickup of MAP_PICKUPS){
+    if(mapState.collected.has(pickup.id))continue;
+    if(pickup.requiresBroken&&!mapState.broken.has(pickup.requiresBroken))continue;
+    const p=mapPointForWorldX(pickup.x);
+    ctx.fillStyle='#6f8452';
+    ctx.beginPath();ctx.arc(p.x,p.y+20,4.5,0,Math.PI*2);ctx.fill();
+  }
+
+  for(let i=0;i<ENEMY_SPAWNS.length;i++){
+    const spawn=ENEMY_SPAWNS[i];
+    const live=enemies[i];
+    if(live&&live.spawned&&!live.alive)continue;
+    const x=live&&live.spawned?live.x:spawn.x;
+    const p=mapPointForWorldX(x);
+    ctx.fillStyle='#8b3c32';
+    ctx.beginPath();ctx.moveTo(p.x,p.y+9);ctx.lineTo(p.x-5,p.y+18);ctx.lineTo(p.x+5,p.y+18);ctx.closePath();ctx.fill();
+  }
+
+  const player=mapPointForWorldX(playerWorldX);
+  ctx.strokeStyle='#f4e7c8';ctx.lineWidth=5;
+  ctx.fillStyle='#3f3024';
+  ctx.beginPath();ctx.arc(player.x,player.y-3,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#3f3024';
+  ctx.beginPath();ctx.moveTo(player.x,player.y+5);ctx.lineTo(player.x-6,player.y+17);ctx.lineTo(player.x+6,player.y+17);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#44382b';
+  ctx.font='800 13px system-ui,sans-serif';ctx.textAlign='center';
+  ctx.fillText('你在这里',player.x,player.y-18);
+
+  worldMapLocation.textContent='当前位置：'+regionNameAt(playerWorldX)+' · '+Math.round(playerWorldX)+' / '+MAP_WIDTH;
+  applyWorldMapZoom(false);
+}
+function applyWorldMapZoom(preserveCenter=true){
+  const oldW=parseFloat(worldMapCanvas.style.width)||WORLD_MAP_BASE_W;
+  const oldCenter=(worldMapScroll.scrollLeft+worldMapScroll.clientWidth*.5)/Math.max(1,oldW);
+  const cssW=WORLD_MAP_BASE_W*worldMapZoom;
+  const cssH=WORLD_MAP_BASE_H*worldMapZoom;
+  worldMapCanvas.style.width=cssW+'px';
+  worldMapCanvas.style.height=cssH+'px';
+  worldMapZoomLabel.textContent=Math.round(worldMapZoom*100)+'%';
+  if(preserveCenter)requestAnimationFrame(()=>{
+    worldMapScroll.scrollLeft=oldCenter*cssW-worldMapScroll.clientWidth*.5;
+  });
+}
+function locatePlayerOnWorldMap({minimumZoom=.82}={}){
+  if(worldMapZoom<minimumZoom){worldMapZoom=minimumZoom;applyWorldMapZoom(false)}
+  requestAnimationFrame(()=>{
+    const px=worldToMapX(playerWorldX)*worldMapZoom;
+    const py=worldMapRoadY(worldToMapX(playerWorldX))*worldMapZoom;
+    worldMapScroll.scrollTo({
+      left:Math.max(0,px-worldMapScroll.clientWidth*.5),
+      top:Math.max(0,py-worldMapScroll.clientHeight*.52),
+      behavior:'smooth'
+    });
+  });
+}
+function fitWholeWorldMap(){
+  const available=Math.max(280,worldMapScroll.clientWidth-8);
+  worldMapZoom=clamp(available/WORLD_MAP_BASE_W,.18,1);
+  applyWorldMapZoom(false);
+  requestAnimationFrame(()=>worldMapScroll.scrollTo({left:0,top:0,behavior:'smooth'}));
+}
+function revealWorldMap(){
+  drawWorldMap();
+  worldMapOverlay.classList.add('is-open');
+  worldMapOverlay.setAttribute('aria-hidden','false');
+  worldEl.setAttribute('inert','');
+  locatePlayerOnWorldMap();
+}
+function openWorldMap(triggerEl=worldMapBtn){
+  const shell=document.getElementById('uiShell');
+  if(!shell.classList.contains('is-hidden')||worldMapOverlay.classList.contains('is-open'))return false;
+  closeDebugPanel({focus:false});
+  closeBackpack(true);
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
+  worldMapLastTrigger=triggerEl;
+  paperUIFrom(triggerEl,revealWorldMap,worldMapPaper);
+  return true;
+}
+function closeWorldMap(immediate=false){
+  if(!worldMapOverlay.classList.contains('is-open'))return false;
+  worldMapOverlay.classList.remove('is-open');
+  worldMapOverlay.setAttribute('aria-hidden','true');
+  if(document.getElementById('uiShell').classList.contains('is-hidden')&&!backpackOverlay.classList.contains('is-open'))worldEl.removeAttribute('inert');
+  const restore=worldMapLastTrigger;worldMapLastTrigger=null;
+  if(!immediate&&restore&&typeof restore.focus==='function')restore.focus({preventScroll:true});
+  return true;
+}
+worldMapBtn.addEventListener('click',e=>openWorldMap(e.currentTarget));
+worldMapClose.addEventListener('click',()=>closeWorldMap(false));
+worldMapOverlay.addEventListener('pointerdown',e=>{if(e.target===worldMapOverlay)closeWorldMap(false)});
+worldMapZoomIn.addEventListener('click',()=>{worldMapZoom=clamp(worldMapZoom+.18,.18,1.8);applyWorldMapZoom()});
+worldMapZoomOut.addEventListener('click',()=>{worldMapZoom=clamp(worldMapZoom-.18,.18,1.8);applyWorldMapZoom()});
+worldMapFit.addEventListener('click',fitWholeWorldMap);
+worldMapLocate.addEventListener('click',()=>locatePlayerOnWorldMap({minimumZoom:.82}));
+addEventListener('keydown',e=>{
+  if(isEditableTarget(e.target))return;
+  if(e.code==='KeyM'&&document.getElementById('uiShell').classList.contains('is-hidden')){
+    e.preventDefault();
+    worldMapOverlay.classList.contains('is-open')?closeWorldMap(false):openWorldMap(worldMapBtn);
+  }else if(e.code==='Escape'&&worldMapOverlay.classList.contains('is-open')){
+    e.preventDefault();closeWorldMap(false);
+  }
+});
+window.PaperchalkWorldMap={
+  open:openWorldMap,close:closeWorldMap,locate:locatePlayerOnWorldMap,fit:fitWholeWorldMap,redraw:drawWorldMap,
+  get zoom(){return worldMapZoom}
+};
 
 /* inventory */
 const INVENTORY_CAPACITY=20;
@@ -2927,6 +3267,7 @@ function loadWorldState(){
 }
 function openUI(fromWorld=false){
   closeDebugPanel({focus:false});
+  closeWorldMap(true);
   closeBackpack(true);
   if(fromWorld)saveWorldState();
   keyboardLeft=keyboardRight=false;
@@ -2941,6 +3282,7 @@ function openUI(fromWorld=false){
 }
 function enterWorld(){
   closeDebugPanel({focus:false});
+  closeWorldMap(true);
   closeBackpack(true);
   const session=getSession();
   if(!session){showPage('auth');return}
@@ -3058,6 +3400,10 @@ registerForm.addEventListener('submit',e=>{
 window.PaperchalkHandleBack=function(){
   if(debugIsOpen()){
     closeDebugPanel({focus:false});
+    return true;
+  }
+  if(worldMapOverlay.classList.contains('is-open')){
+    closeWorldMap(false);
     return true;
   }
   if(backpackOverlay.classList.contains('is-open')){
