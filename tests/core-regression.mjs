@@ -245,9 +245,10 @@ try{
     worldX:window.eval('worldX'),
     transform:document.getElementById('entityTrack').style.transform
   }));
+  const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]);
   check('World entity track scrolls with map coordinates',
-    entityMapSync.transform.includes(String(-entityMapSync.worldX)) || Math.abs(entityMapSync.worldX)<0.01,
-    JSON.stringify(entityMapSync));
+    Number.isFinite(entityTranslateX)&&Math.abs(entityTranslateX+entityMapSync.worldX)<0.5,
+    JSON.stringify({...entityMapSync,entityTranslateX}));
 
   // Open menu from world: paper effects must clean themselves up.
   await page.locator('#worldMenuBtn').click();
