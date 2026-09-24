@@ -45,6 +45,7 @@ button{cursor:pointer}
   --stars-alpha:0;
   --sun-alpha:1;
   --moon-alpha:0;
+  --footlight-alpha:0;
   --sun-x:50%;
   --sun-y:20%;
   --moon-x:78%;
@@ -129,6 +130,17 @@ button{cursor:pointer}
 }
 .paper-wing.left{left:-4%;transform-origin:left center;transform:rotateY(64deg)}
 .paper-wing.right{right:-4%;transform-origin:right center;transform:rotateY(-64deg) scaleX(-1)}
+.paper-footlights{
+  position:absolute;z-index:19;left:0;right:0;bottom:-10px;height:78px;pointer-events:none;
+  opacity:var(--footlight-alpha);transition:opacity .7s linear;
+  background:
+    radial-gradient(ellipse at 12% 100%,rgba(244,192,109,.42) 0 5%,transparent 23%),
+    radial-gradient(ellipse at 32% 100%,rgba(244,192,109,.38) 0 5%,transparent 23%),
+    radial-gradient(ellipse at 52% 100%,rgba(244,192,109,.40) 0 5%,transparent 23%),
+    radial-gradient(ellipse at 72% 100%,rgba(244,192,109,.38) 0 5%,transparent 23%),
+    radial-gradient(ellipse at 92% 100%,rgba(244,192,109,.42) 0 5%,transparent 23%);
+  filter:blur(.2px)
+}
 .rear-layer{
   transform-origin:50% 100%;transform-style:preserve-3d;
   transform:rotateX(-3deg) translateZ(-42px);
@@ -1337,6 +1349,7 @@ button{cursor:pointer}
   <div class="paper-stage-floor" aria-hidden="true"></div>
   <div class="paper-wing left" aria-hidden="true"></div>
   <div class="paper-wing right" aria-hidden="true"></div>
+  <div class="paper-footlights" aria-hidden="true"></div>
   <div id="dayNightTint" class="day-night-tint" aria-hidden="true"></div>
   <div id="paperClock" class="paper-clock" aria-label="世界时间">06:00</div>
   <div class="world-layer road-layer">
@@ -1438,7 +1451,7 @@ button{cursor:pointer}
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">调试都在这里：血量、战斗、地形 collider、敌人出生区、Camera、地图传送。命令：map / tp 3000 / enemy reset / hitbox / range / ai / pos / save</div>
+    <div class="debug-help">调试都在这里：血量、战斗、地形、Camera、地图、日夜与纸片舞台。命令：time 18:30 / stage / map / tp 3000 / enemy reset / hitbox / range / ai / pos / save</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
@@ -2139,6 +2152,8 @@ function updateDayNightVisuals(force=false){
   worldEl.style.setProperty('--stars-alpha',state.stars.toFixed(3));
   worldEl.style.setProperty('--sun-alpha',state.sun.toFixed(3));
   worldEl.style.setProperty('--moon-alpha',state.moon.toFixed(3));
+  worldEl.style.setProperty('--footlight-alpha',clamp(state.night*.82+state.warm*.18,0,.52).toFixed(3));
+  worldEl.style.setProperty('--paper-shadow','rgba(34,28,24,'+(0.13+state.night*.22).toFixed(3)+')');
   worldEl.style.setProperty('--sun-x',sun.x.toFixed(2)+'%');
   worldEl.style.setProperty('--sun-y',sun.y.toFixed(2)+'%');
   worldEl.style.setProperty('--moon-x',moon.x.toFixed(2)+'%');
