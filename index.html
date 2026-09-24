@@ -595,16 +595,18 @@ button{cursor:pointer}
 }
 .inventory-grid{
   position:absolute;z-index:5;
-  left:6.35%;top:26.6%;width:51.55%;height:54.2%;
+  /* Calibrated directly against the 1448x1086 approved artwork.
+     Slot outer bounds: x 97..856, y 292..898; gaps: 12px / 13px. */
+  left:6.698895%;top:26.887661%;width:52.417127%;height:55.801105%;
   display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);
-  column-gap:1.15%;row-gap:1.6%;
+  column-gap:1.581028%;row-gap:2.145215%;
 }
 .inventory-slot{
   position:relative;min-width:0;min-height:0;
   border:0;background:transparent;padding:0;
 }
 .inventory-slot:active{background:rgba(79,65,48,.05);transform:scale(.98)}
-.inventory-slot.is-selected{box-shadow:inset 0 0 0 4px rgba(74,113,133,.35);border-radius:18%}
+.inventory-slot.is-selected{box-shadow:none}
 .inventory-slot .item-icon{
   position:absolute;inset:14%;width:72%;height:72%;object-fit:contain;pointer-events:none;
 }
@@ -631,9 +633,9 @@ button{cursor:pointer}
   pointer-events:none;
 }
 .inventory-meta-live{
-  position:absolute;z-index:5;left:64.0%;top:75.0%;width:29.0%;
-  display:flex;justify-content:space-between;color:#5f5141;
-  font-size:clamp(10px,1vw,16px);pointer-events:none;
+  /* The approved artwork already contains the empty-state “重量 0.0 / 数量 0”.
+     Keep the live layer hidden until the detail panel is redrawn as a text-free asset. */
+  display:none!important;
 }
 .inventory-use-hot,.inventory-drop-hot{
   position:absolute;z-index:6;top:80.3%;height:10.2%;
@@ -666,7 +668,7 @@ button{cursor:pointer}
 @media(max-width:900px),(max-height:560px){
   .backpack-open-btn{width:62px;height:52px;top:max(66px,calc(env(safe-area-inset-top) + 60px))}
   .inventory-shell{height:min(96vh,1018px)}
-  .inventory-slot.is-selected{box-shadow:inset 0 0 0 2px rgba(74,113,133,.35)}
+  .inventory-slot.is-selected{box-shadow:none}
 }
 
 </style>
@@ -728,7 +730,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.8 · 高清整板背包</div>
+          <div class="brand-foot">WORLD BUILD 0.8.1 · 背包格精确校准</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
