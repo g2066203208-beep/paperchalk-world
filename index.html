@@ -53,13 +53,13 @@ button{cursor:pointer}
   transform-origin:52% 96%;will-change:transform;
   transform:scaleX(var(--facing));
 }
-.actor.is-moving .walker{animation:walk-cycle .62s ease-in-out infinite}
+.actor.is-moving .walker{animation:walk-cycle var(--walk-duration,.62s) ease-in-out infinite}
 .foot-shadow{
   position:absolute;z-index:1;left:53%;bottom:6px;width:76px;height:17px;border-radius:50%;
   background:radial-gradient(ellipse at center,rgba(49,37,25,.42) 0%,rgba(49,37,25,.27) 38%,rgba(49,37,25,.10) 61%,rgba(49,37,25,0) 79%);
   filter:blur(2px);transform:translateX(-50%);opacity:.72;
 }
-.actor.is-moving .foot-shadow{animation:shadow-cycle .62s ease-in-out infinite}
+.actor.is-moving .foot-shadow{animation:shadow-cycle var(--walk-duration,.62s) ease-in-out infinite}
 @keyframes walk-cycle{
   0%,100%{transform:translate3d(0,0,0) rotate(-.8deg) scaleX(var(--facing))}
   25%{transform:translate3d(.5px,-2.2px,0) rotate(.3deg) scaleX(var(--facing))}
@@ -83,26 +83,53 @@ button{cursor:pointer}
 
 
 /* responsive movement controls */
-.touch-controls{
-  position:absolute;z-index:28;left:0;right:0;bottom:max(15px,env(safe-area-inset-bottom));
-  display:none;justify-content:space-between;align-items:flex-end;
-  padding:0 max(18px,env(safe-area-inset-left)) 0 max(18px,env(safe-area-inset-right));
+.joystick-zone{
+  position:absolute;z-index:28;left:0;bottom:0;width:56%;height:66%;
+  display:none;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.joystick{
+  --joy-x:0px;--joy-y:0px;
+  position:absolute;left:50%;top:50%;width:118px;height:118px;
+  transform:translate(-50%,-50%);
+  opacity:0;pointer-events:none;
+  transition:opacity .10s ease;
+}
+.joystick.is-active{opacity:1}
+.joystick-base{
+  position:absolute;inset:0;
+  border-radius:48% 52% 46% 54% / 53% 47% 55% 45%;
+  background:rgba(218,200,163,.48);
+  border:2px solid rgba(91,70,44,.32);
+  box-shadow:
+    inset 0 0 0 7px rgba(243,230,199,.16),
+    4px 6px 0 rgba(67,50,30,.08);
+  transform:rotate(-2deg);
+}
+.joystick-base::before{
+  content:"";position:absolute;inset:15px;
+  border:1px dashed rgba(88,67,42,.24);
+  border-radius:52% 48% 55% 45% / 47% 53% 46% 54%;
+}
+.joystick-knob{
+  position:absolute;left:50%;top:50%;width:58px;height:58px;
+  margin-left:-29px;margin-top:-29px;
+  transform:translate(var(--joy-x),var(--joy-y)) rotate(1.5deg);
+  border-radius:47% 53% 51% 49% / 54% 46% 52% 48%;
+  background:rgba(235,220,187,.94);
+  border:2px solid rgba(80,61,39,.34);
+  box-shadow:4px 5px 0 rgba(61,47,30,.13),inset 0 0 0 5px rgba(255,247,226,.22);
+  will-change:transform;
+}
+.joystick-knob::after{
+  content:"";position:absolute;inset:17px;border-radius:50%;
+  background:rgba(96,74,47,.25);
+}
+.joystick-hint{
+  position:absolute;left:18px;bottom:max(12px,env(safe-area-inset-bottom));
+  display:none;color:#6d604d;font-size:11px;letter-spacing:.08em;
+  background:rgba(224,207,171,.55);padding:5px 9px;
+  clip-path:polygon(3% 0,98% 5%,100% 88%,95% 100%,1% 95%,0 9%);
   pointer-events:none;
-}
-.move-btn{
-  pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;
-  width:70px;height:60px;border:0;padding:0;
-  color:#4d4437;background:rgba(232,217,185,.88);
-  font-size:32px;line-height:60px;text-align:center;
-  clip-path:polygon(7% 0,95% 5%,100% 84%,91% 100%,5% 94%,0 12%);
-  filter:drop-shadow(4px 5px 0 rgba(61,47,30,.14));
-  transition:translate .08s ease,filter .08s ease,background .08s ease;
-}
-.move-btn[data-dir="left"]{transform:rotate(-1.5deg)}
-.move-btn[data-dir="right"]{transform:rotate(1.2deg)}
-.move-btn.is-pressed{
-  translate:2px 3px;background:rgba(244,231,201,.96);
-  filter:drop-shadow(1px 2px 0 rgba(61,47,30,.17));
 }
 .desktop-control-hint{
   position:absolute;z-index:27;left:18px;bottom:18px;display:none;
@@ -111,7 +138,8 @@ button{cursor:pointer}
   filter:drop-shadow(2px 3px 0 rgba(61,47,30,.08));pointer-events:none;
 }
 @media (hover:none), (pointer:coarse){
-  .touch-controls{display:flex}
+  .joystick-zone{display:block}
+  .joystick-hint{display:block}
 }
 @media (hover:hover) and (pointer:fine){
   .desktop-control-hint{display:block}
@@ -305,7 +333,6 @@ button{cursor:pointer}
   .front-layer .prop{bottom:38px}
   .actor{left:34%;bottom:104px;width:148px}
   .foot-shadow{width:64px;height:14px;bottom:5px}
-  .move-btn{width:64px;height:55px;line-height:55px;font-size:29px}
   .rear-layer .prop{scale:.82}
   .front-layer .prop{scale:.88}
   .menu-layout{grid-template-columns:42% 58%}
@@ -344,9 +371,12 @@ button{cursor:pointer}
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <button id="worldMenuBtn" class="world-menu-btn" aria-label="主菜单">≡</button>
   <div id="desktopControlHint" class="desktop-control-hint">A / D　或　← / →</div>
-  <div id="touchControls" class="touch-controls" aria-label="移动控制">
-    <button id="moveLeftBtn" class="move-btn" data-dir="left" aria-label="向左移动">←</button>
-    <button id="moveRightBtn" class="move-btn" data-dir="right" aria-label="向右移动">→</button>
+  <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
+  <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
+    <div id="joystick" class="joystick" aria-hidden="true">
+      <div class="joystick-base"></div>
+      <div class="joystick-knob"></div>
+    </div>
   </div>
 </main>
 
@@ -358,7 +388,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.2 · 横版世界框架</div>
+          <div class="brand-foot">WORLD BUILD 0.3 · 动态摇杆</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
@@ -485,14 +515,17 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const actorEl=document.querySelector('.actor');
-const moveLeftBtn=document.getElementById('moveLeftBtn');
-const moveRightBtn=document.getElementById('moveRightBtn');
+const joystickZone=document.getElementById('joystickZone');
+const joystickEl=document.getElementById('joystick');
 
 let last=performance.now();
 let roadW=1200;
 let worldX=0;
 let actorX=Math.round(innerWidth*.35);
-let keyboardLeft=false,keyboardRight=false,touchLeft=false,touchRight=false;
+let keyboardLeft=false,keyboardRight=false;
+let joystickAxis=0;
+let joystickPointer=null;
+let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
 
 function refreshRoadW(){
@@ -510,11 +543,9 @@ function worldInteractive(){
   const shell=document.getElementById('uiShell');
   return !!shell && shell.classList.contains('is-hidden');
 }
-function movementDir(){
-  const left=keyboardLeft||touchLeft;
-  const right=keyboardRight||touchRight;
-  if(left===right)return 0;
-  return left?-1:1;
+function movementAxis(){
+  if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
+  return joystickAxis;
 }
 function setFacing(dir){
   if(!dir)return;
@@ -532,13 +563,17 @@ function renderWorld(){
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
-  const dir=worldInteractive()?movementDir():0;
-  const moving=dir!==0;
+  const axis=worldInteractive()?movementAxis():0;
+  const magnitude=Math.abs(axis);
+  const moving=magnitude>.02;
   actorEl.classList.toggle('is-moving',moving);
 
   if(moving){
+    const dir=Math.sign(axis);
     setFacing(dir);
-    const speed=Math.max(145,Math.min(235,innerWidth*.18));
+    const maxSpeed=Math.max(155,Math.min(250,innerWidth*.19));
+    const speed=maxSpeed*magnitude;
+    actorEl.style.setProperty('--walk-duration',(0.90-0.34*magnitude).toFixed(2)+'s');
     let dx=dir*speed*dt;
     const leftFollow=innerWidth*.30;
     const rightFollow=innerWidth*.56;
@@ -575,29 +610,67 @@ addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
 });
+function resetJoystick(){
+  joystickAxis=0;
+  joystickPointer=null;
+  joystickEl.classList.remove('is-active');
+  joystickEl.style.setProperty('--joy-x','0px');
+  joystickEl.style.setProperty('--joy-y','0px');
+}
 addEventListener('blur',()=>{
-  keyboardLeft=keyboardRight=touchLeft=touchRight=false;
-  moveLeftBtn.classList.remove('is-pressed');
-  moveRightBtn.classList.remove('is-pressed');
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
 });
 
-function bindMoveButton(btn,side){
-  const set=v=>{
-    if(side==='left')touchLeft=v;else touchRight=v;
-    btn.classList.toggle('is-pressed',v);
-  };
-  btn.addEventListener('pointerdown',e=>{
-    e.preventDefault();
-    set(true);
-    try{btn.setPointerCapture(e.pointerId)}catch{}
-  });
-  const stop=e=>{e.preventDefault();set(false)};
-  btn.addEventListener('pointerup',stop);
-  btn.addEventListener('pointercancel',stop);
-  btn.addEventListener('lostpointercapture',()=>set(false));
+const JOY_RADIUS=39;
+const JOY_DEADZONE=.14;
+
+function updateJoystick(clientX,clientY){
+  let dx=clientX-joystickOriginX;
+  let dy=clientY-joystickOriginY;
+  const distance=Math.hypot(dx,dy);
+  if(distance>JOY_RADIUS){
+    const scale=JOY_RADIUS/distance;
+    dx*=scale;dy*=scale;
+  }
+  joystickEl.style.setProperty('--joy-x',dx.toFixed(1)+'px');
+  joystickEl.style.setProperty('--joy-y',dy.toFixed(1)+'px');
+
+  const raw=dx/JOY_RADIUS;
+  const a=Math.abs(raw);
+  joystickAxis=a<=JOY_DEADZONE?0:Math.sign(raw)*Math.min(1,(a-JOY_DEADZONE)/(1-JOY_DEADZONE));
 }
-bindMoveButton(moveLeftBtn,'left');
-bindMoveButton(moveRightBtn,'right');
+joystickZone.addEventListener('pointerdown',e=>{
+  if(!worldInteractive()||joystickPointer!==null)return;
+  e.preventDefault();
+  joystickPointer=e.pointerId;
+
+  const rect=joystickZone.getBoundingClientRect();
+  const pad=62;
+  joystickOriginX=Math.max(rect.left+pad,Math.min(rect.right-pad,e.clientX));
+  joystickOriginY=Math.max(rect.top+pad,Math.min(rect.bottom-pad,e.clientY));
+
+  joystickEl.style.left=(joystickOriginX-rect.left)+'px';
+  joystickEl.style.top=(joystickOriginY-rect.top)+'px';
+  joystickEl.classList.add('is-active');
+  try{joystickZone.setPointerCapture(e.pointerId)}catch{}
+  updateJoystick(e.clientX,e.clientY);
+});
+joystickZone.addEventListener('pointermove',e=>{
+  if(e.pointerId!==joystickPointer)return;
+  e.preventDefault();
+  updateJoystick(e.clientX,e.clientY);
+});
+function endJoystick(e){
+  if(e.pointerId!==joystickPointer)return;
+  e.preventDefault();
+  resetJoystick();
+}
+joystickZone.addEventListener('pointerup',endJoystick);
+joystickZone.addEventListener('pointercancel',endJoystick);
+joystickZone.addEventListener('lostpointercapture',e=>{
+  if(e.pointerId===joystickPointer)resetJoystick();
+});
 
 /* -------------------- MENU / LOCAL ACCOUNT -------------------- */
 const uiShell=document.getElementById('uiShell');
@@ -682,6 +755,8 @@ function loadWorldState(){
 }
 function openUI(fromWorld=false){
   if(fromWorld)saveWorldState();
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
   refreshMenu();
   showPage('menu');
   uiShell.classList.remove('is-hidden');
@@ -705,7 +780,8 @@ function enterWorld(){
     }));
   }
   loadWorldState();
-  keyboardLeft=keyboardRight=touchLeft=touchRight=false;
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
   uiShell.classList.add('is-hidden');
   uiShell.classList.remove('board-enter');
 }
