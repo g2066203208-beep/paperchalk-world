@@ -15,22 +15,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download approved backpack UI
+      - name: Download approved backpack UI v2
         run: |
           mkdir -p assets/ui
           curl -fL --retry 3 --retry-delay 2 \
-            "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/d40950ecd5b2909caab71dac968aec956d28948d53c7c1c0656d104ba3a41973.png" \
-            -o assets/ui/backpack-ui-v1.png
-          file assets/ui/backpack-ui-v1.png
-          test "$(stat -c%s assets/ui/backpack-ui-v1.png)" -gt 1000000
+            "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/2fd972bd7bae028934699e818797a2f60920856791f105833ee247c8f4b12beb.png" \
+            -o assets/ui/backpack-ui-v2.png
+          file assets/ui/backpack-ui-v2.png
+          test "$(stat -c%s assets/ui/backpack-ui-v2.png)" -gt 1000000
       - name: Commit asset
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/ui/backpack-ui-v1.png
+          git add assets/ui/backpack-ui-v2.png
           if git diff --cached --quiet; then
             echo "Asset already current."
           else
-            git commit -m "Add approved paper-cut backpack UI asset"
+            git commit -m "Add simplified high-resolution backpack UI v2"
             git push
           fi
