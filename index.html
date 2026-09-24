@@ -1299,6 +1299,7 @@ function buildMapVisuals(){
       dbg.className='map-debug-rect collider';
       dbg.dataset.debugFor=o.id;
       Object.assign(dbg.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
+      if(mapState.broken.has(o.id))dbg.style.display='none';
       mapDebugTrack.appendChild(dbg);
     }
   });
@@ -1762,7 +1763,7 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       placeEnemyNear();writeDebugOutput('敌人已放到玩家前方 210px。');
       updateDebugStatus();return;
     }else if(action==='enemyReset'){
-      resetEnemy();writeDebugOutput('敌人已重置到地图前方。');
+      resetMapEnemies();writeDebugOutput('两处地图敌人已按出生区重置。');
       updateDebugStatus();return;
     }else if(action==='attackTest'){
       debugAttack();writeDebugOutput('执行一次攻击测试。');
@@ -2029,7 +2030,7 @@ function updateCombat(dt,interactive){
 }
 function nearestLivingEnemy(){
   let best=null,bestD=Infinity;
-  for(const e of enemies){if(!e.alive)continue;const d=Math.abs(playerWorldX-e.x);if(d<bestD){best=e;bestD=d}}
+  for(const e of enemies){if(!e.spawned||!e.alive)continue;const d=Math.abs(playerWorldX-e.x);if(d<bestD){best=e;bestD=d}}
   return best;
 }
 function debugRect(el,r){
