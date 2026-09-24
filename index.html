@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#28251f">\n<link rel="icon" href="data:,">\n<title>Paperchalk World</title>
 <style>
 :root{
@@ -14,14 +14,14 @@
   --dark:#29261f;
 }
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#28251f}
+html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#28251f;overscroll-behavior:none}\nbody{position:fixed;inset:0;touch-action:none}
 body{font-family:"Noto Serif SC","Songti SC","STSong",serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
 button,input{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 
 /* ---------- WORLD ---------- */
-.stage{position:relative;width:100vw;height:100vh;overflow:hidden;background:#e8dfcf}
+.stage{position:relative;width:100%;height:var(--app-height,100dvh);min-height:var(--app-height,100dvh);overflow:hidden;background:#e8dfcf}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
@@ -30,7 +30,7 @@ button{cursor:pointer}
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
-.map-track{position:absolute;left:0;top:0;height:100%;width:6000px;will-change:transform}
+.map-track{position:absolute;left:0;top:0;height:100%;width:var(--world-width,6000px);will-change:transform}
 .terrain-piece,.map-object,.map-landmark,.pickup{position:absolute;pointer-events:none}
 .terrain-piece{bottom:112px;box-sizing:border-box}
 .terrain-piece.platform{
@@ -74,8 +74,8 @@ button{cursor:pointer}
 .map-notice{position:absolute;z-index:35;left:50%;top:74px;transform:translate(-50%,-12px);padding:8px 16px;background:rgba(226,208,167,.94);border:1px solid rgba(83,64,42,.35);border-radius:4px;color:#574936;font-weight:800;opacity:0;pointer-events:none;transition:.2s}
 .map-notice.is-show{opacity:1;transform:translate(-50%,0)}
 .entity-layer{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}
-.entity-track{position:absolute;left:0;top:0;width:6000px;height:100%;will-change:transform}
-.prop-track{width:6000px;height:100%;position:absolute;left:0;top:0}
+.entity-track{position:absolute;left:0;top:0;width:var(--world-width,6000px);height:100%;will-change:transform}
+.prop-track{width:var(--world-width,6000px);height:100%;position:absolute;left:0;top:0}
 .prop{
   position:absolute;
   aspect-ratio:120/108;
@@ -976,6 +976,41 @@ button{cursor:pointer}
   .paper-fx-layer{display:none}
 }
 
+
+/* ---------- MOBILE VIEWPORT + WORLD FIT R4 ---------- */
+:root{--app-height:100dvh;--app-width:100vw;--world-width:6000px}
+.ui-shell,.inventory-overlay,.orientation-hint,.paper-fx-layer{height:var(--app-height,100dvh);min-height:var(--app-height,100dvh)}
+/* Portrait is supported: never block gameplay with a rotate-device wall. */
+@media (orientation:portrait) and (max-width:800px) and (pointer:coarse){
+  body.prefer-landscape .orientation-hint{display:none!important}
+  .menu-layout{grid-template-columns:1fr!important;grid-template-rows:minmax(190px,40%) 1fr!important}
+  .brand{width:min(86vw,430px)!important;padding:21% 11% 9%!important}
+  .brand h1{font-size:clamp(38px,13vw,64px)!important}
+  .menu-panel{padding:0 6vw 5vh!important;align-items:flex-start!important;justify-content:center!important}
+  .menu-stack{width:min(88vw,390px)!important;gap:7px!important}
+  .menu-btn{min-height:52px!important;font-size:16px!important}
+  .auth-wrap{padding:56px 4vw 16px!important;align-items:flex-start!important}
+  .auth-card{width:min(92vw,430px)!important;min-height:0!important;max-height:calc(var(--app-height,100dvh) - 74px)!important;overflow:auto!important;padding:58px 36px 30px!important}
+  .back-link{top:max(12px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important}
+}
+@media (pointer:coarse){
+  .combat-controls{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));gap:8px}
+  .combat-btn{width:clamp(52px,14vw,64px);height:clamp(48px,12vw,58px);font-size:14px}
+  .joystick-zone{width:60%;height:72%}
+  .joystick-hint{left:max(10px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom))}
+  .inventory-shell{width:min(96vw,calc(var(--app-height,100dvh) * 1.28));height:auto!important;max-height:94dvh}
+}
+@media (max-height:430px) and (pointer:coarse){
+  .player-health-hud{transform:scale(.56)!important}
+  .world-menu-btn{width:50px!important;height:43px!important}
+  .backpack-open-btn{width:55px!important;height:45px!important;top:max(55px,calc(env(safe-area-inset-top) + 50px))!important}
+  .debug-toggle-btn{top:max(98px,calc(env(safe-area-inset-top) + 92px))!important}
+  .combat-btn{width:52px;height:46px;font-size:13px}
+  .joystick{transform:translate(-50%,-50%) scale(.86)!important}
+  .joystick-hint{display:none!important}
+  .map-notice{top:max(50px,calc(env(safe-area-inset-top) + 42px))}
+}
+
 </style>
 </head>
 <body>
@@ -1058,7 +1093,7 @@ button{cursor:pointer}
       <button id="debugCameraBtn" class="debug-action" type="button" data-debug-action="cameraDebug">Camera：关</button>
       <button class="debug-action" type="button" data-debug-action="teleportStart">传送村口</button>
       <button class="debug-action" type="button" data-debug-action="teleportMid">传送中段</button>
-      <button class="debug-action" type="button" data-debug-action="teleportEnd">传送出口</button>
+      <button class="debug-action" type="button" data-debug-action="teleportEnd">传送远方</button>
     </div>
     <div class="debug-legend" aria-label="碰撞箱颜色说明">
       <span style="color:#249b92"><i class="debug-dot"></i>玩家身体</span>
@@ -1223,40 +1258,72 @@ button{cursor:pointer}
 
 <script>
 /* -------------------- WORLD -------------------- */
-const MAP_WIDTH=6000;
+const WORLD_ZONE_WIDTH=6000;
+const WORLD_ZONE_COUNT=20;
+const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT; // 120000px continuous world, no region loading screens
 const MAP_SPAWN_X=460;
-const MAP_EXIT_X=5740;
-const MAP_GROUND_SCREEN_Y=112;
+const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
+let MAP_GROUND_SCREEN_Y=112;
 const PLAYER_BODY={halfW:27,h:108};
+const WORLD_ZONE_NAMES=['A村外道路','风草坡','浅石谷','旧林边','纸丘原','风车荒径','灰岩坳','长草台地','枯溪岸','北野坡','旧驿道','雾松地'];
+function worldZoneIndexAt(x){return clamp(Math.floor(Math.max(0,x)/WORLD_ZONE_WIDTH),0,WORLD_ZONE_COUNT-1)}
+function regionNameAt(x){
+  const i=worldZoneIndexAt(x);
+  const base=WORLD_ZONE_NAMES[i%WORLD_ZONE_NAMES.length];
+  return i<WORLD_ZONE_NAMES.length?base:(base+' · '+(i+1));
+}
 const MAP_TERRAIN=[
   {id:'rock-1',kind:'rock',x:1120,y:0,w:104,h:70},
   {id:'platform-1',kind:'platform',x:1540,y:0,w:360,h:72},
-  {id:'platform-2',kind:'platform',x:2920,y:0,w:330,h:116},
-  {id:'rock-2',kind:'rock',x:3720,y:0,w:138,h:84},
-  {id:'platform-3',kind:'platform',x:4280,y:0,w:380,h:146},
+  {id:'platform-2',kind:'platform',x:2920,y:0,w:330,h:104},
+  {id:'rock-2',kind:'rock',x:3720,y:0,w:138,h:80},
+  {id:'platform-3',kind:'platform',x:4280,y:0,w:380,h:126},
   {id:'rock-3',kind:'rock',x:5140,y:0,w:126,h:62}
 ];
 const MAP_OBJECTS=[
   {id:'crate-1',kind:'crate',x:2390,y:0,w:88,h:88,solid:true,breakable:true},
-  {id:'tree-1',kind:'tree',x:4980,y:0,w:96,h:190,solid:true}
+  /* Trees remain visible world props, but never form an unavoidable 190px movement wall. */
+  {id:'tree-1',kind:'tree',x:4980,y:0,w:96,h:190,solid:false}
 ];
 const MAP_LANDMARKS=[
   {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
   {id:'sign-combat',kind:'sign',x:1440,text:'前方有游荡者'},
-  {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'},
-  {id:'exit',kind:'exit',x:5740,text:'下一地区'}
+  {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'}
 ];
 const MAP_PICKUPS=[
-  {id:'herb-1',x:3330,y:118,type:'herb'},
+  {id:'herb-1',x:3330,y:108,type:'herb'},
   {id:'herb-crate',x:2434,y:28,type:'herb',requiresBroken:'crate-1'}
 ];
 const MAP_NPCS=[
-  {id:'npc-old-crafter',x:760,name:'村口老匠',text:'前面的土坡和石头不好走。跳起来越过障碍，再看准时机出手。'}
+  {id:'npc-old-crafter',x:760,name:'村口老匠',text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。'}
 ];
 const ENEMY_SPAWNS=[
   {id:'enemy-1',x:2140,patrolMin:2010,patrolMax:2290},
   {id:'enemy-2',x:4780,patrolMin:4680,patrolMax:4920}
 ];
+
+/* Deterministic continuation: every 6000px is authored into the same coordinate space.
+   Nothing is fetched or swapped while crossing a zone boundary. */
+for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
+  const base=zone*WORLD_ZONE_WIDTH;
+  const variant=zone%5;
+  MAP_LANDMARKS.push({id:'zone-sign-'+zone,kind:'sign',x:base+180,text:regionNameAt(base+180)});
+  MAP_TERRAIN.push(
+    {id:'zone-rock-a-'+zone,kind:'rock',x:base+820+variant*35,y:0,w:96+variant*8,h:54+variant*6},
+    {id:'zone-platform-a-'+zone,kind:'platform',x:base+1640-variant*30,y:0,w:300+variant*18,h:76+variant*8},
+    {id:'zone-platform-b-'+zone,kind:'platform',x:base+3180+variant*22,y:0,w:340-variant*12,h:92+variant*7},
+    {id:'zone-rock-b-'+zone,kind:'rock',x:base+4070-variant*26,y:0,w:118+variant*5,h:60+variant*5},
+    {id:'zone-platform-c-'+zone,kind:'platform',x:base+4860+variant*18,y:0,w:315+variant*14,h:104+variant*6}
+  );
+  MAP_OBJECTS.push(
+    {id:'zone-tree-'+zone,kind:'tree',x:base+1160+variant*24,y:0,w:96,h:190,solid:false},
+    {id:'zone-crate-'+zone,kind:'crate',x:base+2700+variant*34,y:0,w:82,h:82,solid:true,breakable:true}
+  );
+  MAP_PICKUPS.push(
+    {id:'zone-herb-'+zone,x:base+3660+variant*17,y:104,type:'herb'},
+    {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
+  );
+}
 const mapState={broken:new Set(),collected:new Set(),exitReached:false};
 let mapNoticeTimer=null;
 
@@ -1357,7 +1424,9 @@ function spritePosition(index){
 }
 function buildProps(id,data){
   const root=document.getElementById(id);
-  for(let rep=0;rep<3;rep++){
+  root.style.width=MAP_WIDTH+'px';
+  const repeats=Math.ceil(MAP_WIDTH/2200)+1;
+  for(let rep=0;rep<repeats;rep++){
     data.forEach((p,i)=>{
       const el=document.createElement('div');
       el.className='prop '+p.c;
@@ -1450,6 +1519,24 @@ const playerAttackDebug=document.getElementById('playerAttackDebug');
 const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
 const enemyAttackDebug=document.getElementById('enemyAttackDebug');
 
+function syncViewportMetrics(){
+  const vv=window.visualViewport;
+  const viewH=Math.max(240,Math.round(vv?.height||innerHeight||720));
+  const viewW=Math.max(280,Math.round(vv?.width||innerWidth||1280));
+  document.documentElement.style.setProperty('--app-height',viewH+'px');
+  document.documentElement.style.setProperty('--app-width',viewW+'px');
+  document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
+  const nextGround=clamp(Math.round(viewH*.30),78,112);
+  const changed=nextGround!==MAP_GROUND_SCREEN_Y;
+  MAP_GROUND_SCREEN_Y=nextGround;
+  return changed;
+}
+function applyWorldDimensions(){
+  const width=MAP_WIDTH+'px';
+  [mapTrack,entityTrack,rearTrack,frontTrack].forEach(el=>{if(el)el.style.width=width});
+}
+syncViewportMetrics();
+applyWorldDimensions();
 buildMapVisuals();
 
 const PLAYER_MAX_HP=10;
@@ -1470,9 +1557,11 @@ let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
 let playerY=0,playerVy=0,playerGrounded=true;
+let coyoteTimer=0,jumpBufferTimer=0;
 let playerAttackTimer=0,playerAttackCooldown=0,playerInvuln=0;
 const playerAttackHits=new Set();
-const GRAVITY=1850,JUMP_SPEED=650;
+const GRAVITY=1850,JUMP_SPEED=820;
+const COYOTE_TIME=.12,JUMP_BUFFER_TIME=.14,AUTO_MANTLE_WINDOW=72;
 const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
@@ -1711,7 +1800,7 @@ function runDebugCommand(rawCommand){
     return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
   }
   if(cmd==='map'){
-    return 'A村外道路 '+MAP_WIDTH+'px | broken='+[...mapState.broken].join(',')+' | collected='+[...mapState.collected].join(',')+' | exit='+(mapState.exitReached?'reached':'not reached');
+    return '连续世界 '+MAP_WIDTH+'px | 区域='+regionNameAt(playerWorldX)+' | zone='+worldZoneIndexAt(playerWorldX)+' | broken='+[...mapState.broken].join(',')+' | collected='+[...mapState.collected].join(',');
   }
   if(cmd==='tp'||cmd==='teleport'){
     const x=Number(arg);
@@ -1801,7 +1890,7 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       teleportTo(3000,{notice:'传送：地图中段'});writeDebugOutput('playerX -> '+playerWorldX);
       updateDebugStatus();return;
     }else if(action==='teleportEnd'){
-      teleportTo(5600,{notice:'传送：出口附近'});writeDebugOutput('playerX -> '+playerWorldX);
+      teleportTo(MAP_WIDTH-1200,{notice:'传送：大世界远端'});writeDebugOutput('playerX -> '+playerWorldX);
       updateDebugStatus();return;
     }
     updateDebugStatus();
@@ -1841,8 +1930,21 @@ function movePlayerHorizontal(dx){
   for(const r of activeSolidRects()){
     const vertical=proposed.y<r.y+r.h-1&&proposed.y+proposed.h>r.y+1;
     if(!vertical)continue;
-    if(dx>0&&oldBody.x+oldBody.w<=r.x+2&&proposed.x+proposed.w>r.x)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
-    if(dx<0&&oldBody.x>=r.x+r.w-2&&proposed.x<r.x+r.w)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
+    const hitRight=dx>0&&oldBody.x+oldBody.w<=r.x+2&&proposed.x+proposed.w>r.x;
+    const hitLeft=dx<0&&oldBody.x>=r.x+r.w-2&&proposed.x<r.x+r.w;
+    if(!hitRight&&!hitLeft)continue;
+
+    /* Forgiving ledge assist: while rising, reaching the upper lip snaps onto it.
+       This prevents mobile players from getting hard-stuck on otherwise reachable terrain. */
+    const top=r.y+r.h;
+    const riseToTop=top-playerY;
+    if(!playerGrounded&&playerVy>0&&riseToTop>0&&riseToTop<=AUTO_MANTLE_WINDOW){
+      playerY=top;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;
+      actorEl.classList.remove('is-jumping');
+      continue;
+    }
+    if(hitRight)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
+    if(hitLeft)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
   }
   playerWorldX=clamp(nextX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   return playerWorldX-oldX;
@@ -1857,10 +1959,23 @@ function supportAt(x,y,tolerance=3){
   }
   return support;
 }
+function performJump(){
+  playerVy=JUMP_SPEED;
+  playerGrounded=false;
+  coyoteTimer=0;
+  jumpBufferTimer=0;
+  actorEl.classList.add('is-jumping');
+}
 function updatePlayerVertical(dt,interactive){
   if(!interactive)return;
+  jumpBufferTimer=Math.max(0,jumpBufferTimer-dt);
+  if(playerGrounded)coyoteTimer=COYOTE_TIME;
+  else coyoteTimer=Math.max(0,coyoteTimer-dt);
+
+  if(jumpBufferTimer>0&&(playerGrounded||coyoteTimer>0))performJump();
+
   if(playerGrounded){
-    const support=supportAt(playerWorldX,playerY,4);
+    const support=supportAt(playerWorldX,playerY,5);
     if(support===null){playerGrounded=false;playerVy=0}
     else{playerY=support;return}
   }
@@ -1879,7 +1994,9 @@ function updatePlayerVertical(dt,interactive){
     }
     if(oldY>=0&&nextY<=0)landing=Math.max(0,landing??0);
     if(landing!==null){
-      playerY=landing;playerVy=0;playerGrounded=true;actorEl.classList.remove('is-jumping');return;
+      playerY=landing;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;actorEl.classList.remove('is-jumping');
+      if(jumpBufferTimer>0)performJump();
+      return;
     }
   }else{
     const oldHead=oldY+PLAYER_BODY.h;
@@ -1895,14 +2012,17 @@ function updatePlayerVertical(dt,interactive){
   if(playerY<-60)teleportTo(MAP_SPAWN_X,{notice:'跌落后回到村口'});
 }
 function updateCamera(){
-  const maxCamera=Math.max(0,MAP_WIDTH-innerWidth);
-  const followX=innerWidth*.42;
+  const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
+  const maxCamera=Math.max(0,MAP_WIDTH-viewW);
+  const followX=viewW*.42;
   worldX=clamp(playerWorldX-followX,0,maxCamera);
   actorX=playerWorldX-worldX;
 }
 function jumpPlayer(force=false){
-  if((!force&&!worldInteractive())||!playerGrounded)return false;
-  playerVy=JUMP_SPEED;playerGrounded=false;actorEl.classList.add('is-jumping');return true;
+  if(!force&&!worldInteractive())return false;
+  jumpBufferTimer=JUMP_BUFFER_TIME;
+  if(force||playerGrounded||coyoteTimer>0){performJump();return true}
+  return true;
 }
 function startPlayerAttack(force=false){
   if((!force&&!worldInteractive())||playerAttackCooldown>0||playerAttackTimer>0)return false;
@@ -2036,13 +2156,16 @@ function updateMapInteractions(){
     if(mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken)))continue;
     if(Math.abs(playerWorldX-p.x)<42&&Math.abs(playerY-p.y)<70)collectPickup(p);
   }
-  if(playerWorldX>=MAP_EXIT_X&&!mapState.exitReached){
-    mapState.exitReached=true;showMapNotice('已到达 A村外道路出口 · 下一地区尚未开放',2600);saveWorldState();
+  const zone=worldZoneIndexAt(playerWorldX);
+  if(updateMapInteractions._zone!==zone){
+    updateMapInteractions._zone=zone;
+    if(zone>0)showMapNotice('进入 · '+regionNameAt(playerWorldX),1200);
   }
 }
 function teleportTo(x,{notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  playerY=0;playerVy=0;playerGrounded=true;actorEl.classList.remove('is-jumping');
+  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
+  updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
   updateCamera();renderWorld();if(notice)showMapNotice(notice);return playerWorldX;
 }
 function updateCombat(dt,interactive){
@@ -2095,7 +2218,7 @@ function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?for
 function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
 function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
 window.PaperchalkMap={
-  width:MAP_WIDTH,spawnX:MAP_SPAWN_X,exitX:MAP_EXIT_X,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
+  width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
   get playerX(){return playerWorldX},
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
@@ -2128,7 +2251,18 @@ function refreshRoadW(){
   renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
-addEventListener('resize',()=>{refreshRoadW();renderWorld()});
+let viewportRebuildTimer=0;
+function handleViewportChange(){
+  const groundChanged=syncViewportMetrics();
+  refreshRoadW();
+  if(groundChanged){
+    clearTimeout(viewportRebuildTimer);
+    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld()},70);
+  }else renderWorld();
+}
+addEventListener('resize',handleViewportChange,{passive:true});
+window.visualViewport?.addEventListener('resize',handleViewportChange,{passive:true});
+window.visualViewport?.addEventListener('scroll',handleViewportChange,{passive:true});
 refreshRoadW();
 
 function posMod(v,m){return ((v%m)+m)%m}
@@ -2176,7 +2310,8 @@ function frame(now){
   if(moving){
     const dir=Math.sign(axis);
     setFacing(dir);
-    const maxSpeed=Math.max(155,Math.min(250,innerWidth*.19));
+    const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
+    const maxSpeed=Math.max(170,Math.min(260,viewW*.22));
     const speed=maxSpeed*magnitude;
     actorEl.style.setProperty('--walk-duration',(0.90-0.34*magnitude).toFixed(2)+'s');
     movePlayerHorizontal(dir*speed*dt);
@@ -2696,7 +2831,7 @@ function saveWorldState(){
   const session=getSession();
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
-  save.location='A村外道路';
+  save.location=regionNameAt(playerWorldX);
   save.worldX=worldX;
   save.playerWorldX=playerWorldX;
   save.playerY=playerY;
@@ -2718,6 +2853,7 @@ function loadWorldState(){
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
   playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
   playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
   if(!playerGrounded){playerY=0;playerGrounded=true}
@@ -2784,7 +2920,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;playerWorldX=MAP_SPAWN_X;playerY=0;playerVy=0;playerGrounded=true;
+      worldX=0;playerWorldX=MAP_SPAWN_X;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.exitReached=false;buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
