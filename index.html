@@ -1309,6 +1309,17 @@ const ENEMY_SPAWNS=[
   {id:'enemy-1',x:2140,patrolMin:2010,patrolMax:2290},
   {id:'enemy-2',x:4780,patrolMin:4680,patrolMax:4920}
 ];
+for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
+  const base=zone*WORLD_ZONE_WIDTH;
+  const offset=1750+(zone%4)*720;
+  const x=base+offset;
+  ENEMY_SPAWNS.push({
+    id:'enemy-zone-'+zone,
+    x,
+    patrolMin:x-170-(zone%3)*20,
+    patrolMax:x+170+(zone%2)*30
+  });
+}
 
 /* Deterministic continuation: every 6000px is authored into the same coordinate space.
    Nothing is fetched or swapped while crossing a zone boundary. */
@@ -1584,6 +1595,25 @@ function createEnemyState(id,el,healthEl){
 const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
 const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
 const enemies=[enemy,enemy2];
+
+for(let i=2;i<ENEMY_SPAWNS.length;i++){
+  const spawn=ENEMY_SPAWNS[i];
+  const el=document.createElement('div');
+  el.className='enemy';
+  el.setAttribute('aria-label','纸境游荡者 '+(i+1));
+  const health=document.createElement('div');
+  health.className='enemy-health';
+  const fill=document.createElement('div');
+  fill.className='enemy-health-fill';
+  health.appendChild(fill);
+  const img=document.createElement('img');
+  img.src='./assets/enemies/rag-drifter.svg?v=1';
+  img.alt='敌人';
+  el.appendChild(health);
+  el.appendChild(img);
+  entityTrack.appendChild(el);
+  enemies.push(createEnemyState(spawn.id,el,fill));
+}
 let showHitboxes=false;
 let showAttackRange=false;
 let enemyAiEnabled=true;
@@ -1760,7 +1790,7 @@ function runDebugCommand(rawCommand){
       'tp 3000         传送到地图 X=3000',
       'resetpos        回到村口出生点',
       'save            立即保存',
-      'enemy reset      重置两处地图敌人',
+      'enemy reset      重置全地图敌人',
       'enemy near       把一号敌人放到附近',
       'hitbox           开/关战斗碰撞箱',
       'range            开/关攻击范围预览',
@@ -1831,7 +1861,7 @@ function runDebugCommand(rawCommand){
   if(cmd==='enemy'){
     const sub=String(arg||'reset').toLowerCase();
     if(sub==='near'){placeEnemyNear();return '一号敌人已放到玩家前方。'}
-    resetMapEnemies();return '两处地图敌人已按出生区重置。';
+    resetMapEnemies();return '全地图敌人已按各区域出生区重置。';
   }
   if(cmd==='hitbox')return '碰撞箱 -> '+(toggleHitboxes()?'开启':'关闭');
   if(cmd==='range')return '攻击范围预览 -> '+(toggleAttackRange()?'开启':'关闭');
@@ -1881,7 +1911,7 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       placeEnemyNear();writeDebugOutput('敌人已放到玩家前方 210px。');
       updateDebugStatus();return;
     }else if(action==='enemyReset'){
-      resetMapEnemies();writeDebugOutput('两处地图敌人已按出生区重置。');
+      resetMapEnemies();writeDebugOutput('全地图敌人已按各区域出生区重置。');
       updateDebugStatus();return;
     }else if(action==='attackTest'){
       debugAttack();writeDebugOutput('执行一次攻击测试。');
@@ -2046,6 +2076,10 @@ function debugAttack(){return startPlayerAttack(true)}
 function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
 function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
 function setEnemyVisual(e){
+  const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
+  const visible=e.x>=worldX-320&&e.x<=worldX+viewW+320;
+  e.el.style.display=visible?'':'none';
+  if(!visible)return;
   e.el.style.left=e.x+'px';
   e.el.style.setProperty('--enemy-facing',e.facing);
   e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%';
@@ -2058,8 +2092,10 @@ function resetEnemyState(e,spawn){
   e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');setEnemyVisual(e);
 }
 function resetMapEnemies(){
-  resetEnemyState(enemy,ENEMY_SPAWNS[0]);
-  resetEnemyState(enemy2,ENEMY_SPAWNS[1]);
+  enemies.forEach((e,i)=>{
+    const spawn=ENEMY_SPAWNS[i];
+    if(spawn)resetEnemyState(e,spawn);
+  });
 }
 function resetEnemy(offset=360){
   const x=clamp(playerWorldX+offset,80,MAP_WIDTH-80);
@@ -2096,6 +2132,11 @@ function updateEnemy(e,dt,interactive){
   if(!interactive||e.hitstun>0)return;
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
   const dx=playerWorldX-e.x,dist=Math.abs(dx);
+  if(dist>1650){
+    e.state='sleep';
+    e.el.classList.remove('is-moving','is-attacking');
+    return;
+  }
   e.facing=dx>=0?1:-1;e.el.style.setProperty('--enemy-facing',e.facing);
   if(e.attackTimer>0){
     e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
