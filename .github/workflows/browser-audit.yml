@@ -26,8 +26,12 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install browser driver library
-        run: npm install --no-save playwright-core
+      - name: Install browser driver library and CJK fonts
+        run: |
+          npm install --no-save playwright-core
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
 
       - name: Detect Chrome
         id: chrome
