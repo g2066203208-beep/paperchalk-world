@@ -1377,6 +1377,10 @@ button{cursor:pointer}
 .dialogue-stage.is-open .dialogue-portrait.player{left:4%}
 .dialogue-stage.is-open .dialogue-portrait.npc{right:4%}
 .dialogue-stage.is-open .dialogue-portrait{opacity:1}
+.dialogue-stage.speaker-player:not(.is-choice) .dialogue-portrait.player{transform:translateY(-8px) scale(1.025)}
+.dialogue-stage.speaker-player:not(.is-choice) .dialogue-portrait.npc{opacity:.68;transform:translateY(5px) scale(.97)}
+.dialogue-stage.speaker-npc:not(.is-choice) .dialogue-portrait.npc{transform:translateY(-8px) scale(1.025)}
+.dialogue-stage.speaker-npc:not(.is-choice) .dialogue-portrait.player{opacity:.68;transform:translateY(5px) scale(.97)}
 .dialogue-stick{
   position:absolute;z-index:0;left:50%;bottom:-22%;width:16px;height:72%;
   transform:translateX(-50%) rotate(calc(var(--portrait-side) * -1.7deg));
@@ -3354,6 +3358,8 @@ function playerDialogueName(){
   return session?.displayName||'旅人';
 }
 function setDialogueBubble(side,text,{continueHint=true}={}){
+  dialogueStage.classList.toggle('speaker-player',side==='player');
+  dialogueStage.classList.toggle('speaker-npc',side==='npc');
   const mine=side==='player'?dialoguePlayerBubble:dialogueNpcBubble;
   const other=side==='player'?dialogueNpcBubble:dialoguePlayerBubble;
   other.classList.remove('is-visible');
@@ -3441,7 +3447,8 @@ function openDialogue(npc){
   dialogueState={open:true,closing:false,npc,phase:'',choiceIndex:-1};
   dialoguePlayerName.textContent=playerDialogueName();
   dialogueNpcName.textContent=npc.name||'旅人';
-  dialogueStage.classList.remove('is-closing','is-choice');
+  dialogueStage.classList.remove('is-closing','is-choice','speaker-player','speaker-npc');
+  dialogueStage.dataset.portrait=npc.portrait||'paper';
   dialogueStage.classList.add('is-open');
   dialogueStage.setAttribute('aria-hidden','false');
   worldEl.classList.add('dialogue-active');
@@ -3452,7 +3459,7 @@ function closeDialogue({immediate=false}={}){
   if(!dialogueIsOpen())return false;
   clearTimeout(dialogueCloseTimer);
   if(immediate){
-    dialogueStage.classList.remove('is-open','is-choice','is-closing');
+    dialogueStage.classList.remove('is-open','is-choice','is-closing','speaker-player','speaker-npc');
     dialogueStage.setAttribute('aria-hidden','true');
     worldEl.classList.remove('dialogue-active');
     clearDialogueBubbles();
@@ -3467,7 +3474,7 @@ function closeDialogue({immediate=false}={}){
   clearDialogueBubbles();
   dialogueChoices.innerHTML='';
   dialogueCloseTimer=setTimeout(()=>{
-    dialogueStage.classList.remove('is-open','is-closing');
+    dialogueStage.classList.remove('is-open','is-closing','speaker-player','speaker-npc');
     dialogueStage.setAttribute('aria-hidden','true');
     worldEl.classList.remove('dialogue-active');
     dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
