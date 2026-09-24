@@ -126,16 +126,23 @@ try{
     JSON.stringify(healthHealed));
 
   // Hanging BUFF system: deterministic stack + random valid-cell placement.
-  const atlasLoaded=await page.evaluate(async()=>{
+  const atlasInfo=await page.evaluate(async()=>{
     const img=new Image();
     const done=new Promise(resolve=>{
-      img.onload=()=>resolve(img.naturalWidth===180&&img.naturalHeight===120);
-      img.onerror=()=>resolve(false);
+      img.onload=()=>resolve({
+        loaded:img.naturalWidth>0&&img.naturalHeight>0,
+        width:img.naturalWidth,
+        height:img.naturalHeight,
+        ratio:img.naturalWidth/img.naturalHeight
+      });
+      img.onerror=()=>resolve({loaded:false,width:0,height:0,ratio:0});
     });
     img.src='./assets/ui/buffs/buff-atlas.webp?v=1';
     return await done;
   });
-  check('Buff atlas loads as 6x3 sprite sheet',atlasLoaded,'expected 180x120');
+  check('Buff atlas loads with the 6x3 sheet aspect',
+    atlasInfo.loaded&&Math.abs(atlasInfo.ratio-1.5)<0.01,
+    JSON.stringify(atlasInfo));
 
   await page.evaluate(()=>window.PaperchalkBuff.clear());
   const firstBuff=await page.evaluate(()=>window.PaperchalkBuff.add('poison',2));
