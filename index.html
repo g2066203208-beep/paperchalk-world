@@ -66,6 +66,23 @@ button{cursor:pointer}
 .map-object.tree{bottom:112px;width:96px;height:190px}
 .map-object.tree:before{content:"";position:absolute;left:39px;bottom:0;width:25px;height:112px;background:#735239;border:3px solid #523b2c;border-radius:45% 55% 25% 30%;transform:rotate(2deg)}
 .map-object.tree:after{content:"";position:absolute;left:2px;top:0;width:92px;height:100px;background:#66744d;border:4px solid #4d593b;border-radius:48% 42% 54% 38%;clip-path:polygon(47% 0,60% 16%,80% 9%,83% 30%,100% 42%,84% 58%,91% 79%,68% 78%,56% 100%,40% 82%,16% 91%,17% 69%,0 55%,15% 37%,12% 17%,35% 19%)}
+.map-object.reed{bottom:112px;width:120px;height:66px}
+.map-object.reed:before,.map-object.reed:after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:62px;background:repeating-linear-gradient(77deg,transparent 0 8px,#697153 9px 13px,transparent 14px 20px);transform:skewX(-5deg);opacity:.9}
+.map-object.reed:after{transform:scaleX(-1) skewX(-8deg);opacity:.65}
+.map-object.ruin{bottom:112px;width:128px;height:120px;border-bottom:10px solid #786a5d}
+.map-object.ruin:before{content:"";position:absolute;left:13px;bottom:6px;width:25px;height:87px;background:#8e8377;border:3px solid #665e57;box-shadow:51px 21px 0 -3px #84796f,51px 21px 0 0 #665e57}
+.map-object.ruin:after{content:"";position:absolute;left:5px;bottom:82px;width:93px;height:18px;background:#95887a;border:3px solid #665e57;transform:rotate(-3deg)}
+.map-object.cave-mouth{bottom:112px;width:158px;height:126px;background:#6b6760;border:5px solid #514e4a;border-radius:70px 70px 12px 12px;clip-path:polygon(8% 100%,3% 62%,18% 24%,40% 6%,66% 8%,91% 35%,98% 100%)}
+.map-object.cave-mouth:after{content:"";position:absolute;left:38px;right:38px;bottom:0;height:88px;background:#353535;border-radius:48px 48px 0 0}
+.map-object.windmill{bottom:112px;width:126px;height:180px}
+.map-object.windmill:before{content:"";position:absolute;left:48px;bottom:0;width:30px;height:112px;background:#aa8a61;border:4px solid #6b553d;clip-path:polygon(30% 0,70% 0,100% 100%,0 100%)}
+.map-object.windmill:after{content:"✣";position:absolute;left:14px;top:0;width:98px;height:98px;color:#6e604e;font:88px/98px serif;text-align:center;transform:rotate(12deg)}
+.map-object.shrine{bottom:112px;width:140px;height:134px;border-top:15px solid #7d4e40}
+.map-object.shrine:before,.map-object.shrine:after{content:"";position:absolute;top:9px;width:13px;height:120px;background:#855646}
+.map-object.shrine:before{left:22px}.map-object.shrine:after{right:22px}
+.map-object.bridge-post{bottom:112px;width:150px;height:78px;border-bottom:10px solid #8d6c48}
+.map-object.bridge-post:before{content:"";position:absolute;left:15px;bottom:0;width:12px;height:70px;background:#715139;box-shadow:105px 0 0 #715139}
+.map-object.bridge-post:after{content:"";position:absolute;left:12px;right:12px;bottom:42px;height:8px;background:#a47b4d;transform:rotate(-2deg)}
 .map-npc{position:absolute;bottom:112px;width:70px;height:124px;pointer-events:none}
 .map-npc-body{position:absolute;left:15px;bottom:0;width:42px;height:92px;background:#7c6752;border:3px solid #594735;border-radius:42% 46% 24% 28%;clip-path:polygon(18% 6%,78% 2%,96% 36%,86% 96%,52% 100%,10% 92%,2% 38%)}
 .map-npc-head{position:absolute;left:21px;top:0;width:33px;height:34px;border-radius:48%;background:#d4b88e;border:3px solid #66513a}
@@ -1271,7 +1288,7 @@ button{cursor:pointer}
 <section id="worldMapOverlay" class="world-map-overlay" aria-hidden="true">
   <div id="worldMapPaper" class="world-map-paper" role="dialog" aria-modal="true" aria-label="大世界地图">
     <header class="world-map-head">
-      <div class="world-map-title">大世界地图</div>
+      <div class="world-map-title">纸境世界网络</div>
       <div id="worldMapLocation" class="world-map-location">当前位置</div>
       <button id="worldMapClose" class="world-map-close" type="button" aria-label="关闭地图">×</button>
     </header>
@@ -1288,9 +1305,9 @@ button{cursor:pointer}
       </div>
     </div>
     <div id="worldMapScroll" class="world-map-scroll">
-      <canvas id="worldMapCanvas" class="world-map-canvas" width="4400" height="520" aria-label="纸境连续大世界地图"></canvas>
+      <canvas id="worldMapCanvas" class="world-map-canvas" width="2700" height="1200" aria-label="纸境网络式大世界地图"></canvas>
     </div>
-    <div class="world-map-tip">手指拖动查看世界 · 地图不会切换场景 · M 键可快速打开</div>
+    <div class="world-map-tip">节点是地点 · 线是可实际行走的横版道路 · 岔路、环路与死胡同和游戏场景完全对应</div>
   </div>
 </section>
 
@@ -1542,6 +1559,33 @@ for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
     {id:'zone-tree-'+zone,kind:'tree',x:base+1160+variant*24,y:0,w:96,h:190,solid:false},
     {id:'zone-crate-'+zone,kind:'crate',x:base+2700+variant*34,y:0,w:82,h:82,solid:true,breakable:true}
   );
+  const route=WORLD_ROUTES[zone];
+  if(route?.biome==='forest'){
+    MAP_OBJECTS.push(
+      {id:'forest-tree-a-'+zone,kind:'tree',x:base+2050,y:0,w:96,h:190,solid:false},
+      {id:'forest-tree-b-'+zone,kind:'tree',x:base+4450,y:0,w:96,h:190,solid:false}
+    );
+  }else if(route?.biome==='river'||route?.biome==='marsh'){
+    MAP_OBJECTS.push(
+      {id:'reed-a-'+zone,kind:'reed',x:base+1760,y:0,w:120,h:66,solid:false},
+      {id:'reed-b-'+zone,kind:'reed',x:base+4380,y:0,w:120,h:66,solid:false}
+    );
+    if(route.id==='broken-bridge-road')MAP_OBJECTS.push({id:'bridge-'+zone,kind:'bridge-post',x:base+3550,y:0,w:150,h:78,solid:false});
+  }else if(route?.biome==='ruins'){
+    MAP_OBJECTS.push(
+      {id:'ruin-a-'+zone,kind:'ruin',x:base+1880,y:0,w:128,h:120,solid:false},
+      {id:'ruin-b-'+zone,kind:'ruin',x:base+4300,y:0,w:128,h:120,solid:false}
+    );
+  }else if(route?.biome==='cave'){
+    MAP_OBJECTS.push({id:'cave-mouth-'+zone,kind:'cave-mouth',x:base+3360,y:0,w:158,h:126,solid:false});
+  }else if(route?.biome==='mountain'||route?.biome==='highland'){
+    MAP_TERRAIN.push(
+      {id:'ridge-rock-a-'+zone,kind:'rock',x:base+2200,y:0,w:116,h:76},
+      {id:'ridge-rock-b-'+zone,kind:'rock',x:base+4580,y:0,w:126,h:82}
+    );
+  }
+  if(route?.id==='windmill-waste-road')MAP_OBJECTS.push({id:'windmill-'+zone,kind:'windmill',x:base+3600,y:0,w:126,h:180,solid:false});
+  if(route?.biome==='shrine')MAP_OBJECTS.push({id:'shrine-'+zone,kind:'shrine',x:base+4020,y:0,w:140,h:134,solid:false});
   MAP_PICKUPS.push(
     {id:'zone-herb-'+zone,x:base+3660+variant*17,y:104,type:'herb'},
     {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
@@ -2907,117 +2951,167 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
 }
 window.PaperUITransition={openFrom:paperUIFrom};
 
-/* -------------------- SEAMLESS WORLD MAP -------------------- */
-const WORLD_MAP_BASE_W=WORLD_ZONE_COUNT*220;
-const WORLD_MAP_BASE_H=520;
+/* -------------------- NETWORK WORLD MAP -------------------- */
+const WORLD_MAP_BASE_W=2700;
+const WORLD_MAP_BASE_H=1200;
 let worldMapZoom=1;
 let worldMapLastTrigger=null;
 
-function worldMapRoadY(mapX){
-  const zoneW=WORLD_MAP_BASE_W/WORLD_ZONE_COUNT;
-  const wave=Math.sin(mapX*.0067)*23+Math.sin(mapX*.0021+1.1)*18;
-  const local=((mapX%zoneW)+zoneW)%zoneW;
-  const zoneLift=Math.sin((local/zoneW)*Math.PI)*8;
-  return WORLD_MAP_BASE_H*.57+wave-zoneLift;
+function routeControlPoint(route){
+  const a=WORLD_NODE_BY_ID.get(route.from),b=WORLD_NODE_BY_ID.get(route.to);
+  const mx=(a.x+b.x)*.5,my=(a.y+b.y)*.5;
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy));
+  return {x:mx+(-dy/len)*(route.bend||0),y:my+(dx/len)*(route.bend||0)};
 }
-function worldToMapX(x){return clamp(x/MAP_WIDTH*WORLD_MAP_BASE_W,0,WORLD_MAP_BASE_W)}
-function mapPointForWorldX(x){const mx=worldToMapX(x);return{x:mx,y:worldMapRoadY(mx)}}
+function routePoint(route,t){
+  const a=WORLD_NODE_BY_ID.get(route.from),b=WORLD_NODE_BY_ID.get(route.to),c=routeControlPoint(route);
+  const u=1-clamp(t,0,1),tt=clamp(t,0,1);
+  return {
+    x:u*u*a.x+2*u*tt*c.x+tt*tt*b.x,
+    y:u*u*a.y+2*u*tt*c.y+tt*tt*b.y
+  };
+}
+function routeProgressForWorldX(x){
+  const route=routeForWorldX(x);
+  const local=routeLocalX(x);
+  return {route,t:clamp((local-ROUTE_ENDPOINT_PAD)/(WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD*2),0,1)};
+}
+function mapPointForWorldX(x){
+  const p=routeProgressForWorldX(x);
+  return routePoint(p.route,p.t);
+}
+function traceRoute(ctx,route){
+  const a=WORLD_NODE_BY_ID.get(route.from),b=WORLD_NODE_BY_ID.get(route.to),c=routeControlPoint(route);
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(c.x,c.y,b.x,b.y);
+}
+function drawMapForest(ctx,x,y,scale=1){
+  ctx.save();ctx.translate(x,y);ctx.fillStyle='rgba(74,91,61,.32)';
+  for(let i=0;i<10;i++){
+    const px=((i*37)%126)-63,py=((i*53)%88)-44;
+    ctx.beginPath();ctx.moveTo(px,py-24*scale);ctx.lineTo(px-15*scale,py+12*scale);ctx.lineTo(px+15*scale,py+12*scale);ctx.closePath();ctx.fill();
+  }
+  ctx.restore();
+}
+function drawMapMountains(ctx,x,y){
+  ctx.save();ctx.translate(x,y);ctx.fillStyle='rgba(99,91,82,.25)';
+  [[-66,20,58],[-10,-4,76],[56,18,54]].forEach(([px,py,h])=>{ctx.beginPath();ctx.moveTo(px,py-h);ctx.lineTo(px-h*.55,py+16);ctx.lineTo(px+h*.55,py+16);ctx.closePath();ctx.fill()});
+  ctx.restore();
+}
+function drawMapBackdrop(ctx){
+  ctx.fillStyle='#dfcda7';ctx.fillRect(0,0,WORLD_MAP_BASE_W,WORLD_MAP_BASE_H);
+  ctx.strokeStyle='rgba(91,68,42,.07)';ctx.lineWidth=1;
+  for(let y=55;y<WORLD_MAP_BASE_H;y+=74){
+    ctx.beginPath();
+    for(let x=0;x<=WORLD_MAP_BASE_W;x+=24){
+      const yy=y+Math.sin(x*.012+y*.02)*8;
+      if(x===0)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);
+    }
+    ctx.stroke();
+  }
+  // Southern river/wetland band.
+  ctx.strokeStyle='rgba(103,126,120,.28)';ctx.lineWidth=76;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(600,910);ctx.bezierCurveTo(1030,1090,1510,900,1810,930);ctx.bezierCurveTo(2100,960,2330,1080,2570,1030);ctx.stroke();
+  ctx.strokeStyle='rgba(234,224,195,.42)';ctx.lineWidth=3;ctx.setLineDash([12,16]);ctx.stroke();ctx.setLineDash([]);
+  drawMapForest(ctx,720,330,1);drawMapForest(ctx,1875,300,1.15);
+  drawMapMountains(ctx,1010,630);drawMapMountains(ctx,1650,630);
+  ctx.fillStyle='rgba(112,128,83,.18)';ctx.beginPath();ctx.ellipse(1450,960,180,100,-.15,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='rgba(111,95,79,.15)';ctx.fillRect(1160,105,170,120);ctx.fillRect(2140,960,180,100);
+}
+function drawNodeIcon(ctx,node,visited){
+  const degree=nodeDegree(node.id);
+  ctx.save();ctx.translate(node.x,node.y);
+  ctx.globalAlpha=visited?1:.62;
+  ctx.fillStyle=visited?'#514231':'#81745f';
+  ctx.strokeStyle='#ead8b4';ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(0,0,degree>2?15:11,0,Math.PI*2);ctx.fill();ctx.stroke();
 
+  ctx.strokeStyle='#5a4936';ctx.fillStyle='#7a674e';ctx.lineWidth=3;
+  if(node.kind==='village'){
+    ctx.fillRect(-18,-34,36,24);ctx.beginPath();ctx.moveTo(-22,-34);ctx.lineTo(0,-52);ctx.lineTo(22,-34);ctx.closePath();ctx.fill();
+  }else if(node.kind==='forest'){
+    ctx.fillStyle='#596b4c';ctx.beginPath();ctx.moveTo(0,-52);ctx.lineTo(-20,-18);ctx.lineTo(20,-18);ctx.closePath();ctx.fill();
+  }else if(node.kind==='mountain'||node.kind==='highland'){
+    ctx.fillStyle='#777169';ctx.beginPath();ctx.moveTo(0,-55);ctx.lineTo(-25,-16);ctx.lineTo(27,-16);ctx.closePath();ctx.fill();
+  }else if(node.kind==='cave'){
+    ctx.strokeStyle='#625b52';ctx.lineWidth=9;ctx.beginPath();ctx.arc(0,-28,20,Math.PI,0);ctx.stroke();
+  }else if(node.kind==='windmill'){
+    ctx.font='42px serif';ctx.textAlign='center';ctx.fillStyle='#665743';ctx.fillText('✣',0,-20);
+  }else if(node.kind==='ruins'||node.kind==='tower'||node.kind==='shrine'){
+    ctx.fillStyle='#77685b';ctx.fillRect(-16,-50,9,31);ctx.fillRect(7,-44,9,25);ctx.fillRect(-20,-52,40,7);
+  }else if(node.kind==='bridge'){
+    ctx.strokeStyle='#765d42';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-26,-24);ctx.lineTo(26,-24);ctx.stroke();
+  }else if(node.kind==='marsh'||node.kind==='river'){
+    ctx.strokeStyle='#65755e';ctx.lineWidth=3;for(let i=-14;i<=14;i+=7){ctx.beginPath();ctx.moveTo(i,-18);ctx.lineTo(i-4,-45);ctx.stroke()}
+  }else{
+    ctx.fillStyle='#78664e';ctx.fillRect(-14,-41,28,20);
+  }
+  ctx.restore();
+}
 function drawWorldMap(){
   const canvas=worldMapCanvas;
   const ctx=canvas.getContext('2d');
   if(!ctx)return;
-  canvas.width=WORLD_MAP_BASE_W;
-  canvas.height=WORLD_MAP_BASE_H;
+  canvas.width=WORLD_MAP_BASE_W;canvas.height=WORLD_MAP_BASE_H;
   ctx.clearRect(0,0,WORLD_MAP_BASE_W,WORLD_MAP_BASE_H);
+  drawMapBackdrop(ctx);
 
-  const zonePx=WORLD_MAP_BASE_W/WORLD_ZONE_COUNT;
-  for(let zone=0;zone<WORLD_ZONE_COUNT;zone++){
-    const x=zone*zonePx;
-    ctx.fillStyle=zone%2?'#dcc79e':'#e3d1ad';
-    ctx.fillRect(x,0,zonePx,WORLD_MAP_BASE_H);
-    ctx.strokeStyle='rgba(89,68,43,.24)';
-    ctx.setLineDash([5,7]);
-    ctx.beginPath();ctx.moveTo(x+.5,18);ctx.lineTo(x+.5,WORLD_MAP_BASE_H-18);ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle='#695742';
-    ctx.font='700 15px "Noto Serif SC","Songti SC",serif';
-    ctx.textAlign='center';
-    ctx.fillText(regionNameAt(zone*WORLD_ZONE_WIDTH+100),x+zonePx*.5,42);
-    ctx.fillStyle='rgba(94,73,46,.55)';
-    ctx.font='11px system-ui,sans-serif';
-    ctx.fillText('区域 '+String(zone+1).padStart(2,'0'),x+zonePx*.5,60);
-  }
-  ctx.strokeStyle='rgba(75,55,35,.48)';
-  ctx.lineWidth=34;ctx.lineCap='round';ctx.lineJoin='round';
-  ctx.beginPath();
-  for(let x=0;x<=WORLD_MAP_BASE_W;x+=12){
-    const y=worldMapRoadY(x);
-    if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
-  }
-  ctx.stroke();
-  ctx.strokeStyle='#b7925c';ctx.lineWidth=27;
-  ctx.stroke();
+  // Draw the whole topology first. Unvisited roads stay visible but faint/dashed.
+  for(const route of WORLD_ROUTES){
+    const visited=mapState.visitedRoutes.has(route.index);
+    traceRoute(ctx,route);
+    ctx.strokeStyle=visited?'rgba(80,61,39,.56)':'rgba(95,79,59,.22)';
+    ctx.lineWidth=visited?18:11;ctx.lineCap='round';
+    ctx.setLineDash(visited?[]:[12,12]);ctx.stroke();
+    traceRoute(ctx,route);
+    ctx.strokeStyle=visited?'#b18d59':'rgba(186,160,116,.42)';
+    ctx.lineWidth=visited?11:6;ctx.setLineDash(visited?[]:[9,13]);ctx.stroke();ctx.setLineDash([]);
 
-  for(const t of MAP_TERRAIN){
-    const p=mapPointForWorldX(t.x+t.w*.5);
-    ctx.fillStyle=t.kind==='rock'?'#766d61':'#8d6a44';
-    ctx.beginPath();
-    if(t.kind==='rock'){
-      ctx.moveTo(p.x-9,p.y-18);ctx.lineTo(p.x-2,p.y-31);ctx.lineTo(p.x+10,p.y-17);ctx.closePath();
-    }else{
-      ctx.rect(p.x-12,p.y-26,24,10);
-    }
-    ctx.fill();
+    const mid=routePoint(route,.5);
+    ctx.save();ctx.translate(mid.x,mid.y);ctx.rotate(Math.atan2(WORLD_NODE_BY_ID.get(route.to).y-WORLD_NODE_BY_ID.get(route.from).y,WORLD_NODE_BY_ID.get(route.to).x-WORLD_NODE_BY_ID.get(route.from).x));
+    ctx.fillStyle=visited?'rgba(232,216,181,.94)':'rgba(232,216,181,.66)';
+    ctx.fillRect(-48,-11,96,22);
+    ctx.fillStyle='#5e4f3d';ctx.font='700 10px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(route.name,0,0);
+    ctx.restore();
   }
 
-  for(const o of MAP_OBJECTS){
-    if(o.breakable&&mapState.broken.has(o.id))continue;
-    const p=mapPointForWorldX(o.x+o.w*.5);
-    if(o.kind==='tree'){
-      ctx.fillStyle='#596546';ctx.beginPath();ctx.arc(p.x,p.y-28,7,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#6a4d34';ctx.fillRect(p.x-1.5,p.y-24,3,10);
-    }else{
-      ctx.fillStyle='#8a5d3b';ctx.fillRect(p.x-5,p.y-20,10,10);
+  // World nodes and junction names.
+  for(const node of WORLD_NODES){
+    const visited=mapState.visitedNodes.has(node.id)||routesAtNode(node.id).some(r=>mapState.visitedRoutes.has(r.index));
+    drawNodeIcon(ctx,node,visited);
+    ctx.fillStyle=visited?'#4d4031':'rgba(83,70,54,.58)';
+    ctx.font=(nodeDegree(node.id)>2?'800 15px':'700 13px')+' "Noto Serif SC","Songti SC",serif';
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(node.name,node.x,node.y+21);
+    if(nodeDegree(node.id)>2){
+      ctx.fillStyle='rgba(91,73,51,.62)';ctx.font='700 10px system-ui,sans-serif';
+      ctx.fillText(nodeDegree(node.id)+' 路岔口',node.x,node.y+40);
     }
   }
 
-  for(const lm of MAP_LANDMARKS){
-    const p=mapPointForWorldX(lm.x);
-    ctx.strokeStyle='#675038';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(p.x,p.y-14);ctx.lineTo(p.x,p.y-34);ctx.stroke();
-    ctx.fillStyle='#d1b47d';ctx.fillRect(p.x-9,p.y-39,18,9);
-  }
-
-  for(const pickup of MAP_PICKUPS){
-    if(mapState.collected.has(pickup.id))continue;
-    if(pickup.requiresBroken&&!mapState.broken.has(pickup.requiresBroken))continue;
-    const p=mapPointForWorldX(pickup.x);
-    ctx.fillStyle='#6f8452';
-    ctx.beginPath();ctx.arc(p.x,p.y+20,4.5,0,Math.PI*2);ctx.fill();
-  }
-
+  // Known enemies and pickups are plotted on their actual route positions.
   for(let i=0;i<ENEMY_SPAWNS.length;i++){
-    const spawn=ENEMY_SPAWNS[i];
-    const live=enemies[i];
-    if(live&&live.spawned&&!live.alive)continue;
-    const x=live&&live.spawned?live.x:spawn.x;
-    const p=mapPointForWorldX(x);
-    ctx.fillStyle='#8b3c32';
-    ctx.beginPath();ctx.moveTo(p.x,p.y+9);ctx.lineTo(p.x-5,p.y+18);ctx.lineTo(p.x+5,p.y+18);ctx.closePath();ctx.fill();
+    const spawn=ENEMY_SPAWNS[i],route=routeForWorldX(spawn.x);
+    if(!mapState.visitedRoutes.has(route.index))continue;
+    const live=enemies[i];if(live&&live.spawned&&!live.alive)continue;
+    const p=mapPointForWorldX(live&&live.spawned?live.x:spawn.x);
+    ctx.fillStyle='#8b3c32';ctx.beginPath();ctx.moveTo(p.x,p.y-8);ctx.lineTo(p.x-6,p.y+3);ctx.lineTo(p.x+6,p.y+3);ctx.closePath();ctx.fill();
+  }
+  for(const pickup of MAP_PICKUPS){
+    const route=routeForWorldX(pickup.x);
+    if(!mapState.visitedRoutes.has(route.index)||mapState.collected.has(pickup.id))continue;
+    if(pickup.requiresBroken&&!mapState.broken.has(pickup.requiresBroken))continue;
+    const p=mapPointForWorldX(pickup.x);ctx.fillStyle='#6f8452';ctx.beginPath();ctx.arc(p.x,p.y+10,5,0,Math.PI*2);ctx.fill();
   }
 
   const player=mapPointForWorldX(playerWorldX);
-  ctx.strokeStyle='#f4e7c8';ctx.lineWidth=5;
-  ctx.fillStyle='#3f3024';
-  ctx.beginPath();ctx.arc(player.x,player.y-3,8,0,Math.PI*2);ctx.fill();ctx.stroke();
-  ctx.fillStyle='#3f3024';
-  ctx.beginPath();ctx.moveTo(player.x,player.y+5);ctx.lineTo(player.x-6,player.y+17);ctx.lineTo(player.x+6,player.y+17);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#44382b';
-  ctx.font='800 13px system-ui,sans-serif';ctx.textAlign='center';
-  ctx.fillText('你在这里',player.x,player.y-18);
+  ctx.strokeStyle='#f6e8c8';ctx.lineWidth=6;ctx.fillStyle='#3f3024';
+  ctx.beginPath();ctx.arc(player.x,player.y,10,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#44382b';ctx.font='800 13px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('你在这里',player.x,player.y-16);
 
-  worldMapLocation.textContent='当前位置：'+regionNameAt(playerWorldX)+' · '+Math.round(playerWorldX)+' / '+MAP_WIDTH;
+  const progress=routeProgressForWorldX(playerWorldX);
+  const from=WORLD_NODE_BY_ID.get(progress.route.from),to=WORLD_NODE_BY_ID.get(progress.route.to);
+  worldMapLocation.textContent='当前位置：'+progress.route.name+' · '+from.name+' → '+to.name+' · '+Math.round(progress.t*100)+'%';
   applyWorldMapZoom(false);
 }
 function applyWorldMapZoom(preserveCenter=true){
@@ -3032,11 +3126,11 @@ function applyWorldMapZoom(preserveCenter=true){
     worldMapScroll.scrollLeft=oldCenter*cssW-worldMapScroll.clientWidth*.5;
   });
 }
-function locatePlayerOnWorldMap({minimumZoom=.82}={}){
+function locatePlayerOnWorldMap({minimumZoom=.70}={}){
   if(worldMapZoom<minimumZoom){worldMapZoom=minimumZoom;applyWorldMapZoom(false)}
   requestAnimationFrame(()=>{
-    const px=worldToMapX(playerWorldX)*worldMapZoom;
-    const py=worldMapRoadY(worldToMapX(playerWorldX))*worldMapZoom;
+    const p=mapPointForWorldX(playerWorldX);
+    const px=p.x*worldMapZoom,py=p.y*worldMapZoom;
     worldMapScroll.scrollTo({
       left:Math.max(0,px-worldMapScroll.clientWidth*.5),
       top:Math.max(0,py-worldMapScroll.clientHeight*.52),
@@ -3045,8 +3139,9 @@ function locatePlayerOnWorldMap({minimumZoom=.82}={}){
   });
 }
 function fitWholeWorldMap(){
-  const available=Math.max(280,worldMapScroll.clientWidth-8);
-  worldMapZoom=clamp(available/WORLD_MAP_BASE_W,.18,1);
+  const availableW=Math.max(280,worldMapScroll.clientWidth-8);
+  const availableH=Math.max(180,worldMapScroll.clientHeight-8);
+  worldMapZoom=clamp(Math.min(availableW/WORLD_MAP_BASE_W,availableH/WORLD_MAP_BASE_H),.18,1);
   applyWorldMapZoom(false);
   requestAnimationFrame(()=>worldMapScroll.scrollTo({left:0,top:0,behavior:'smooth'}));
 }
