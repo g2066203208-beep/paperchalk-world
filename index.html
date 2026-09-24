@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
-<meta name="theme-color" content="#28251f">\n<link rel="icon" href="data:,">\n<title>Paperchalk World</title>
+<meta name="theme-color" content="#28251f">
+<link rel="icon" href="data:,">
+<title>Paperchalk World</title>
 <style>
 :root{
   --ink:#3f392f;
@@ -14,14 +16,15 @@
   --dark:#29261f;
 }
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#28251f;overscroll-behavior:none}\nbody{position:fixed;inset:0}
+html,body{margin:0;width:100%;height:100%;min-height:100%;overflow:hidden;background:#28251f;overscroll-behavior:none}
+body{position:fixed;inset:0}
 body{font-family:"Noto Serif SC","Songti SC","STSong",serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
 button,input{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 
 /* ---------- WORLD ---------- */
-.stage{position:relative;width:100%;height:var(--app-height,100dvh);min-height:var(--app-height,100dvh);overflow:hidden;background:#e8dfcf;touch-action:none}
+.stage{position:fixed;left:0;top:0;width:var(--app-width,100vw);height:var(--app-height,100dvh);min-height:0;overflow:hidden;background:#e8dfcf;touch-action:none;contain:layout paint size}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
@@ -978,7 +981,7 @@ button{cursor:pointer}
 
 
 /* ---------- MOBILE VIEWPORT + WORLD FIT R4 ---------- */
-:root{--app-height:100dvh;--app-width:100vw;--world-width:6000px}
+:root{--app-height:100dvh;--app-width:100vw;--world-width:6000px;--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
 .ui-shell,.inventory-overlay,.orientation-hint,.paper-fx-layer{height:var(--app-height,100dvh);min-height:var(--app-height,100dvh)}
 /* Portrait is supported: never block gameplay with a rotate-device wall. */
 @media (orientation:portrait) and (max-width:800px) and (pointer:coarse){
@@ -994,11 +997,16 @@ button{cursor:pointer}
   .back-link{top:max(12px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important}
 }
 @media (pointer:coarse){
-  .combat-controls{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));gap:8px}
-  .combat-btn{width:clamp(52px,14vw,64px);height:clamp(48px,12vw,58px);font-size:14px}
+  .combat-controls{
+    right:max(10px,env(safe-area-inset-right));
+    bottom:max(12px,calc(env(safe-area-inset-bottom) + 4px));
+    gap:8px;
+    align-items:flex-end
+  }
+  .combat-btn{width:clamp(52px,14vw,64px);height:clamp(48px,12vw,58px);font-size:14px;flex:none}
   .joystick-zone{width:60%;height:72%}
   .joystick-hint{left:max(10px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom))}
-  .inventory-shell{width:min(96vw,calc(var(--app-height,100dvh) * 1.28));height:auto!important;max-height:94dvh}
+  .inventory-shell{width:min(96vw,calc(var(--app-height,100dvh) * 1.28));height:auto!important;max-height:calc(var(--app-height,100dvh) - 12px)}
 }
 @media (max-height:430px) and (pointer:coarse){
   .player-health-hud{transform:scale(.56)!important}
@@ -1521,12 +1529,16 @@ const enemyAttackDebug=document.getElementById('enemyAttackDebug');
 
 function syncViewportMetrics(){
   const vv=window.visualViewport;
-  const viewH=Math.max(240,Math.round(vv?.height||innerHeight||720));
-  const viewW=Math.max(280,Math.round(vv?.width||innerWidth||1280));
+  const rawH=Number(vv?.height)||Number(innerHeight)||720;
+  const rawW=Number(vv?.width)||Number(innerWidth)||1280;
+  const layoutH=Number(document.documentElement.clientHeight)||rawH;
+  const layoutW=Number(document.documentElement.clientWidth)||rawW;
+  const viewH=Math.max(180,Math.round(Math.min(rawH,layoutH)));
+  const viewW=Math.max(280,Math.round(Math.min(rawW,layoutW)));
   document.documentElement.style.setProperty('--app-height',viewH+'px');
   document.documentElement.style.setProperty('--app-width',viewW+'px');
   document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
-  const nextGround=clamp(Math.round(viewH*.30),78,112);
+  const nextGround=clamp(Math.round(viewH*.30),72,112);
   const changed=nextGround!==MAP_GROUND_SCREEN_Y;
   MAP_GROUND_SCREEN_Y=nextGround;
   return changed;
@@ -2262,6 +2274,8 @@ function handleViewportChange(){
   }else renderWorld();
 }
 addEventListener('resize',handleViewportChange,{passive:true});
+addEventListener('orientationchange',()=>setTimeout(handleViewportChange,80),{passive:true});
+addEventListener('pageshow',()=>{handleViewportChange();setTimeout(handleViewportChange,120)},{passive:true});
 window.visualViewport?.addEventListener('resize',handleViewportChange,{passive:true});
 window.visualViewport?.addEventListener('scroll',handleViewportChange,{passive:true});
 refreshRoadW();
