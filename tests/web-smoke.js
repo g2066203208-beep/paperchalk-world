@@ -15,6 +15,8 @@ const requiredIds = [
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
+  "enemy","enemyHealthFill","jumpBtn","attackBtn",
+  "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
 ];
 
@@ -46,6 +48,17 @@ assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
 assert(game.includes("INVENTORY_CAPACITY=20"), "20-slot inventory missing");
 assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missing");
 assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
+assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
+assert(game.includes("function jumpPlayer"), "Jump mechanic missing");
+assert(game.includes("function startPlayerAttack"), "Player attack missing");
+assert(game.includes("function updateCombat"), "Realtime combat update missing");
+assert(game.includes("function rectsOverlap"), "AABB overlap function missing");
+assert(game.includes("getPlayerAttackBox"), "Player attack hitbox missing");
+assert(game.includes("getEnemyHurtbox"), "Enemy hurtbox missing");
+assert(game.includes("KeyJ"), "Keyboard attack key missing");
+assert(game.includes("F3"), "Hitbox debug hotkey missing");
+assert(html.includes("assets/enemies/rag-drifter.svg"), "Enemy art missing");
+assert(fs.existsSync("assets/enemies/rag-drifter.svg"), "Enemy SVG asset missing");
 assert(html.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
 assert(game.includes("order*45"), "Staggered heal timing missing");
 assert(game.includes("window.PaperchalkDebug"), "In-game debug API missing");
