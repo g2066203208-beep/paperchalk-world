@@ -1216,6 +1216,40 @@ button{cursor:pointer}
 
 <script>
 /* -------------------- WORLD -------------------- */
+const MAP_WIDTH=6000;
+const MAP_SPAWN_X=460;
+const MAP_EXIT_X=5740;
+const MAP_GROUND_SCREEN_Y=112;
+const PLAYER_BODY={halfW:27,h:108};
+const MAP_TERRAIN=[
+  {id:'rock-1',kind:'rock',x:1120,y:0,w:104,h:70},
+  {id:'platform-1',kind:'platform',x:1540,y:0,w:360,h:72},
+  {id:'platform-2',kind:'platform',x:2920,y:0,w:330,h:116},
+  {id:'rock-2',kind:'rock',x:3720,y:0,w:138,h:84},
+  {id:'platform-3',kind:'platform',x:4280,y:0,w:380,h:146},
+  {id:'rock-3',kind:'rock',x:5140,y:0,w:126,h:62}
+];
+const MAP_OBJECTS=[
+  {id:'crate-1',kind:'crate',x:2390,y:0,w:88,h:88,solid:true,breakable:true},
+  {id:'tree-1',kind:'tree',x:4980,y:0,w:96,h:190,solid:true}
+];
+const MAP_LANDMARKS=[
+  {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
+  {id:'sign-combat',kind:'sign',x:1440,text:'前方有游荡者'},
+  {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'},
+  {id:'exit',kind:'exit',x:5740,text:'下一地区'}
+];
+const MAP_PICKUPS=[
+  {id:'herb-1',x:3330,y:118,type:'herb'},
+  {id:'herb-crate',x:2434,y:28,type:'herb',requiresBroken:'crate-1'}
+];
+const ENEMY_SPAWNS=[
+  {id:'enemy-1',x:1760,patrolMin:1620,patrolMax:1980},
+  {id:'enemy-2',x:4070,patrolMin:3900,patrolMax:4230}
+];
+const mapState={broken:new Set(),collected:new Set(),exitReached:false};
+let mapNoticeTimer=null;
+
 const rear=[
   {s:0,x:120,w:108,c:'sway-a'},
   {s:2,x:560,w:116,c:'static'},
@@ -1229,6 +1263,77 @@ const front=[
   {s:5,x:1270,w:98,c:'sway-a'},
   {s:1,x:1740,w:94,c:'sway-c'}
 ];
+
+function showMapNotice(message,duration=1600){
+  mapNotice.textContent=message;
+  mapNotice.classList.add('is-show');
+  clearTimeout(mapNoticeTimer);
+  mapNoticeTimer=setTimeout(()=>mapNotice.classList.remove('is-show'),duration);
+}
+function buildMapVisuals(){
+  terrainTrack.innerHTML='';
+  mapObjectTrack.innerHTML='';
+  mapLandmarkTrack.innerHTML='';
+  mapDebugTrack.innerHTML='';
+  MAP_TERRAIN.forEach(t=>{
+    const el=document.createElement('div');
+    el.className='terrain-piece '+t.kind;
+    el.dataset.mapId=t.id;
+    Object.assign(el.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
+    terrainTrack.appendChild(el);
+    const dbg=document.createElement('div');
+    dbg.className='map-debug-rect collider';
+    dbg.dataset.debugFor=t.id;
+    Object.assign(dbg.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
+    mapDebugTrack.appendChild(dbg);
+  });
+  MAP_OBJECTS.forEach(o=>{
+    const el=document.createElement('div');
+    el.className='map-object '+o.kind;
+    el.dataset.mapId=o.id;
+    Object.assign(el.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
+    if(mapState.broken.has(o.id))el.classList.add('is-broken');
+    mapObjectTrack.appendChild(el);
+    if(o.solid){
+      const dbg=document.createElement('div');
+      dbg.className='map-debug-rect collider';
+      dbg.dataset.debugFor=o.id;
+      Object.assign(dbg.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
+      mapDebugTrack.appendChild(dbg);
+    }
+  });
+  MAP_LANDMARKS.forEach(m=>{
+    const el=document.createElement('div');
+    el.dataset.mapId=m.id;
+    if(m.kind==='exit'){
+      el.className='map-landmark map-exit';
+      el.style.left=m.x+'px';
+    }else{
+      el.className='map-landmark sign';
+      el.style.left=m.x+'px';
+      const span=document.createElement('span');span.textContent=m.text;el.appendChild(span);
+    }
+    mapLandmarkTrack.appendChild(el);
+  });
+  MAP_PICKUPS.forEach(p=>{
+    const el=document.createElement('div');
+    el.className='pickup';
+    el.dataset.pickupId=p.id;
+    el.style.left=p.x+'px';
+    el.style.bottom=(MAP_GROUND_SCREEN_Y+p.y)+'px';
+    const hidden=mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken));
+    if(hidden)el.classList.add('is-collected');
+    mapObjectTrack.appendChild(el);
+  });
+  ENEMY_SPAWNS.forEach(s=>{
+    const dbg=document.createElement('div');
+    dbg.className='map-debug-rect spawn';
+    dbg.dataset.debugFor='spawn-'+s.id;
+    Object.assign(dbg.style,{left:s.patrolMin+'px',bottom:MAP_GROUND_SCREEN_Y+'px',width:(s.patrolMax-s.patrolMin)+'px',height:'142px'});
+    mapDebugTrack.appendChild(dbg);
+  });
+}
+buildMapVisuals();
 
 function spritePosition(index){
   const col=index%3,row=Math.floor(index/3);
@@ -1272,6 +1377,12 @@ const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
+const mapTrack=document.getElementById('mapTrack');
+const terrainTrack=document.getElementById('terrainTrack');
+const mapObjectTrack=document.getElementById('mapObjectTrack');
+const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
+const mapDebugTrack=document.getElementById('mapDebugTrack');
+const mapNotice=document.getElementById('mapNotice');
 const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
@@ -1307,9 +1418,14 @@ const debugOutput=document.getElementById('debugOutput');
 const debugHitboxBtn=document.getElementById('debugHitboxBtn');
 const debugRangeBtn=document.getElementById('debugRangeBtn');
 const debugAiBtn=document.getElementById('debugAiBtn');
+const debugMapColliderBtn=document.getElementById('debugMapColliderBtn');
+const debugSpawnBtn=document.getElementById('debugSpawnBtn');
+const debugCameraBtn=document.getElementById('debugCameraBtn');
 const entityTrack=document.getElementById('entityTrack');
 const enemyEl=document.getElementById('enemy');
 const enemyHealthFill=document.getElementById('enemyHealthFill');
+const enemy2El=document.getElementById('enemy2');
+const enemy2HealthFill=document.getElementById('enemy2HealthFill');
 const jumpBtn=document.getElementById('jumpBtn');
 const attackBtn=document.getElementById('attackBtn');
 const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
@@ -1324,7 +1440,8 @@ const healthAnimationTimers=new WeakMap();
 
 let last=performance.now();
 let roadW=1200;
-let worldX=0;
+let worldX=0; // camera X in map coordinates
+let playerWorldX=MAP_SPAWN_X;
 let worldMinutes=0;
 let worldTimeScale=1;
 let actorX=Math.round(innerWidth*.35);
@@ -1339,14 +1456,19 @@ const GRAVITY=1850,JUMP_SPEED=650;
 const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
-const enemy={
-  x:0,spawnX:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
-  attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,
-  patrolDir:-1
-};
+function createEnemyState(id,el,healthEl){
+  return {id,el,healthEl,x:0,spawnX:0,patrolMin:0,patrolMax:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
+    attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,patrolDir:-1};
+}
+const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
+const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
+const enemies=[enemy,enemy2];
 let showHitboxes=false;
 let showAttackRange=false;
 let enemyAiEnabled=true;
+let showMapColliders=false;
+let showSpawnZones=false;
+let showCameraDebug=false;
 
 function clampPlayerHp(value){
   const n=Number(value);
