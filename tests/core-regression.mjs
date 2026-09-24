@@ -27,8 +27,12 @@ const browser=await chromium.launch({
   args:['--no-sandbox','--disable-dev-shm-usage']
 });
 const page=await browser.newPage({viewport:{width:1440,height:900}});
-page.on('pageerror',e=>result.errors.push(String(e)));
-page.on('console',m=>{if(m.type()==='error')result.errors.push(m.text())});
+page.on('pageerror',e=>result.errors.push('PAGEERROR '+String(e)));
+page.on('response',r=>{if(r.status()>=400)result.errors.push('HTTP '+r.status()+' '+r.url())});
+page.on('requestfailed',r=>result.errors.push('REQUEST_FAILED '+r.url()+' '+JSON.stringify(r.failure())));
+page.on('console',m=>{
+  if(m.type()==='error'&&!m.text().startsWith('Failed to load resource:'))result.errors.push('CONSOLE '+m.text());
+});
 
 try{
   await page.goto('http://127.0.0.1:8080/index.html?core-regression=1',{waitUntil:'networkidle'});
