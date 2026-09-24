@@ -1668,6 +1668,23 @@ registerForm.addEventListener('submit',e=>{
   }
 });
 
+window.PaperchalkHandleBack=function(){
+  if(backpackOverlay.classList.contains('is-open')){
+    closeBackpack(false);
+    return true;
+  }
+  if(uiShell.classList.contains('is-hidden')){
+    openUI(true);
+    return true;
+  }
+  if(!pages.menu.classList.contains('active')){
+    showPage('menu');
+    refreshMenu();
+    return true;
+  }
+  return false;
+};
+
 loginForm.addEventListener('submit',e=>{
   e.preventDefault();
   authMsg.textContent='';
