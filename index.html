@@ -1915,9 +1915,10 @@ function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function playerWorldPos(){return {x:playerWorldX,y:playerY}}
 function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:PLAYER_HURT.h}}
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
-function activeSolidRects(){
-  const terrain=MAP_TERRAIN.map(t=>({...t}));
-  const objects=MAP_OBJECTS.filter(o=>o.solid&&!mapState.broken.has(o.id)).map(o=>({...o}));
+function activeSolidRects(centerX=playerWorldX,radius=900){
+  const minX=centerX-radius,maxX=centerX+radius;
+  const terrain=MAP_TERRAIN.filter(t=>t.x+t.w>minX&&t.x<maxX);
+  const objects=MAP_OBJECTS.filter(o=>o.solid&&!mapState.broken.has(o.id)&&o.x+o.w>minX&&o.x<maxX);
   return terrain.concat(objects);
 }
 function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
@@ -2065,7 +2066,7 @@ function damageEnemy(e,amount=1,knockDir=facing){
 function enemyCanMove(e,dx){
   const old={x:e.x-31,y:0,w:62,h:108};
   const next={x:e.x+dx-31,y:0,w:62,h:108};
-  for(const r of activeSolidRects()){
+  for(const r of activeSolidRects(e.x,520)){
     const vertical=next.y<r.y+r.h-1&&next.y+next.h>r.y+1;
     if(!vertical)continue;
     if(dx>0&&old.x+old.w<=r.x+2&&next.x+next.w>r.x)return false;
