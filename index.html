@@ -183,6 +183,11 @@ button{cursor:pointer}
 @media(prefers-reduced-motion:reduce){
   .stage.scene-folding .paper-backdrop,.stage.scene-folding .rear-layer{animation:none}
 }
+.stage.perf-low .prop,
+.stage.perf-low .pickup,
+.stage.perf-low .enemy.is-moving img{animation:none!important}
+.stage.perf-low .paper-footlights{display:none}
+.stage.perf-low .paper-backdrop,.stage.perf-low .rear-layer{filter:none!important}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
@@ -1830,6 +1835,8 @@ let lastNearNpcId=null;
 
 const SOLID_BUCKET_SIZE=1200;
 const solidBuckets=new Map();
+const solidQueryBuffer=[];
+let solidQueryToken=0;
 function addSolidToIndex(rect){
   const a=Math.floor(rect.x/SOLID_BUCKET_SIZE);
   const b=Math.floor((rect.x+rect.w)/SOLID_BUCKET_SIZE);
@@ -2438,6 +2445,14 @@ window.PaperchalkHealth={
 
 let debugLastUiUpdate=0;
 let perfWindowStart=performance.now(),perfFrameCount=0,perfFps=60,perfFrameMs=16.7;
+let perfLow=false,perfLowWindows=0,perfHighWindows=0;
+const coarsePointer=matchMedia('(pointer:coarse)').matches;
+function setPerfLow(next){
+  next=!!next;
+  if(next===perfLow)return;
+  perfLow=next;
+  worldEl.classList.toggle('perf-low',perfLow);
+}
 function sampleFramePerf(now){
   perfFrameCount++;
   const span=now-perfWindowStart;
@@ -2445,6 +2460,17 @@ function sampleFramePerf(now){
     perfFps=Math.round(perfFrameCount*1000/span);
     perfFrameMs=span/perfFrameCount;
     perfFrameCount=0;perfWindowStart=now;
+    if(coarsePointer){
+      if(perfFps<45){
+        perfLowWindows++;perfHighWindows=0;
+        if(perfLowWindows>=3)setPerfLow(true);
+      }else if(perfFps>=54){
+        perfHighWindows++;perfLowWindows=0;
+        if(perfHighWindows>=6)setPerfLow(false);
+      }else{
+        perfLowWindows=0;perfHighWindows=0;
+      }
+    }
   }
 }
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
@@ -2464,7 +2490,8 @@ function updateDebugStatus(){
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
-    '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>';
+    '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
+    '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>';
 }
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
@@ -2807,13 +2834,14 @@ function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PL
 function activeSolidRects(centerX=playerWorldX,radius=900){
   const minX=centerX-radius,maxX=centerX+radius;
   const first=Math.floor(minX/SOLID_BUCKET_SIZE),lastBucket=Math.floor(maxX/SOLID_BUCKET_SIZE);
-  const out=[],seen=new Set();
+  const out=solidQueryBuffer;out.length=0;
+  const token=++solidQueryToken;
   for(let i=first;i<=lastBucket;i++){
     const bucket=solidBuckets.get(i);
     if(!bucket)continue;
     for(const r of bucket){
-      if(seen.has(r)||r.x+r.w<=minX||r.x>=maxX)continue;
-      seen.add(r);
+      if(r._solidQueryToken===token||r.x+r.w<=minX||r.x>=maxX)continue;
+      r._solidQueryToken=token;
       if(r.breakable&&mapState.broken.has(r.id))continue;
       out.push(r);
     }
