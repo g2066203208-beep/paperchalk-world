@@ -6,7 +6,19 @@ function check(name,pass,detail=''){
   console.log((pass?'PASS':'FAIL')+' | '+name+' | '+detail);
 }
 async function state(page){
-  return page.evaluate(()=>window.eval('({worldX,worldMinutes,actorX,playerHp})'));
+  return page.evaluate(()=>window.eval('({worldX,playerWorldX,playerY,worldMinutes,actorX,playerHp})'));
+}
+async function mapState(page){
+  return page.evaluate(()=>({
+    playerX:window.PaperchalkMap?.playerX,
+    map:window.PaperchalkMap?.state,
+    enemies:window.PaperchalkCombat?.enemies||[],
+    debug:window.PaperchalkCombat?.debug||{},
+    terrainCount:window.PaperchalkMap?.terrain?.length||0,
+    objectCount:window.PaperchalkMap?.objects?.length||0,
+    spawnCount:window.PaperchalkMap?.enemySpawns?.length||0,
+    npcCount:window.PaperchalkMap?.npcs?.length||0
+  }));
 }
 async function healthState(page){
   return page.evaluate(()=>({
@@ -79,68 +91,93 @@ try{
   await page.waitForTimeout(500);
 
   let s=await state(page);
-  check('A enters a fresh world',Math.abs(s.worldX)<1,'worldX='+s.worldX);
+  check('A enters a fresh world',Math.abs(s.worldX)<1&&Math.abs(s.playerWorldX-460)<2,JSON.stringify(s));
 
-  // Realtime combat foundation: map entity, visible AI movement, jump and panel-only debugging.
-  const enemyParent=await page.locator('#enemy').evaluate(el=>el.parentElement?.id);
-  check('Enemy is mounted on the scrolling world entity track',enemyParent==='entityTrack','parent='+enemyParent);
+  // Finite-map + realtime-combat foundation.
+  const initialMap=await mapState(page);
+  check('Fresh A starts at A-village map spawn',
+    Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&initialMap.terrainCount===6&&initialMap.objectCount===2&&initialMap.spawnCount===2&&initialMap.npcCount===1,
+    JSON.stringify({s,initialMap}));
+  const parents=await page.evaluate(()=>[
+    document.getElementById('enemy')?.parentElement?.id,
+    document.getElementById('enemy2')?.parentElement?.id
+  ]);
+  check('Both enemies are mounted on the scrolling world entity track',
+    parents[0]==='entityTrack'&&parents[1]==='entityTrack',
+    JSON.stringify(parents));
 
-  await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(360));
-  const enemyMoveBefore=await page.evaluate(()=>({
-    enemy:window.PaperchalkCombat.enemy,
-    left:document.getElementById('enemy').getBoundingClientRect().left
-  }));
-  await page.waitForTimeout(360);
-  const enemyMoveAfter=await page.evaluate(()=>({
-    enemy:window.PaperchalkCombat.enemy,
-    left:document.getElementById('enemy').getBoundingClientRect().left
-  }));
-  check('Enemy AI visibly moves toward the player',
-    enemyMoveAfter.enemy.x<enemyMoveBefore.enemy.x-15 &&
-    enemyMoveAfter.left<enemyMoveBefore.left-15 &&
-    enemyMoveAfter.enemy.state==='chase',
+  const enemyMoveBefore=await page.evaluate(()=>window.PaperchalkCombat.enemies);
+  await page.waitForTimeout(420);
+  const enemyMoveAfter=await page.evaluate(()=>window.PaperchalkCombat.enemies);
+  check('Far enemy patrols visibly inside its map spawn zone',
+    enemyMoveAfter[0].x<enemyMoveBefore[0].x-10 &&
+    enemyMoveAfter[0].x>=enemyMoveAfter[0].patrolMin &&
+    enemyMoveAfter[0].x<=enemyMoveAfter[0].patrolMax &&
+    enemyMoveAfter[0].state==='patrol',
     JSON.stringify({enemyMoveBefore,enemyMoveAfter}));
 
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
   await page.waitForTimeout(140);
   const jumpAir=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Space-style jump enters airborne state',jumpStarted===true&&jumpAir.y>20&&!jumpAir.grounded,JSON.stringify(jumpAir));
+  check('Jump enters airborne state',jumpStarted===true&&jumpAir.y>20&&!jumpAir.grounded,JSON.stringify(jumpAir));
   await page.waitForTimeout(850);
   const jumpLanded=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Jump returns to ground',jumpLanded.grounded&&Math.abs(jumpLanded.y)<1,JSON.stringify(jumpLanded));
+  check('Jump returns to map ground',jumpLanded.grounded&&Math.abs(jumpLanded.y)<1,JSON.stringify(jumpLanded));
 
+  // All debugging lives in the visible in-game debug panel.
   await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(80);
   await page.locator('[data-debug-action="hitboxes"]').click();
   await page.locator('[data-debug-action="attackRange"]').click();
+  await page.locator('[data-debug-action="mapColliders"]').click();
+  await page.locator('[data-debug-action="spawnZones"]').click();
+  await page.locator('[data-debug-action="cameraDebug"]').click();
   await page.waitForTimeout(80);
-  const combatDebug=await page.evaluate(()=>({
-    debug:window.PaperchalkCombat.debug,
-    hitboxClass:document.getElementById('world').classList.contains('show-hitboxes'),
-    rangeClass:document.getElementById('world').classList.contains('show-attack-range'),
-    hurtDisplay:getComputedStyle(document.getElementById('playerHurtboxDebug')).display,
-    attackDisplay:getComputedStyle(document.getElementById('playerAttackDebug')).display,
-    attackWidth:document.getElementById('playerAttackDebug').getBoundingClientRect().width,
-    preview:document.getElementById('playerAttackDebug').classList.contains('is-preview')
+  const debugView=await page.evaluate(()=>({
+    combat:window.PaperchalkCombat.debug,
+    worldClass:document.getElementById('world').className,
+    playerHurt:{
+      hidden:document.getElementById('playerHurtboxDebug').hidden,
+      width:document.getElementById('playerHurtboxDebug').getBoundingClientRect().width
+    },
+    attack:{
+      hidden:document.getElementById('playerAttackDebug').hidden,
+      width:document.getElementById('playerAttackDebug').getBoundingClientRect().width,
+      preview:document.getElementById('playerAttackDebug').classList.contains('is-preview')
+    },
+    enemyAttack:{
+      hidden:document.getElementById('enemyAttackDebug').hidden,
+      width:document.getElementById('enemyAttackDebug').getBoundingClientRect().width
+    },
+    terrainBoxes:[...document.querySelectorAll('#mapDebugTrack .collider')].filter(el=>getComputedStyle(el).display!=='none').length,
+    spawnBoxes:[...document.querySelectorAll('#mapDebugTrack .spawn')].filter(el=>getComputedStyle(el).display!=='none').length,
+    cameraDisplay:getComputedStyle(document.getElementById('cameraLeftDebug')).display
   }));
-  check('Debug panel enables collision boxes and persistent attack-range preview',
-    combatDebug.debug.hitboxes===true&&combatDebug.debug.attackRange===true&&
-    combatDebug.hitboxClass&&combatDebug.rangeClass&&combatDebug.hurtDisplay!=='none'&&
-    combatDebug.attackDisplay!=='none'&&combatDebug.attackWidth>80&&combatDebug.preview,
-    JSON.stringify(combatDebug));
+  check('Debug panel exposes combat, terrain, spawn-zone and Camera overlays',
+    debugView.combat.hitboxes&&debugView.combat.attackRange&&debugView.combat.mapColliders&&debugView.combat.spawnZones&&debugView.combat.camera&&
+    debugView.playerHurt.width>40&&debugView.attack.width>80&&debugView.attack.preview&&
+    debugView.terrainBoxes>=7&&debugView.spawnBoxes===2&&debugView.cameraDisplay!=='none',
+    JSON.stringify(debugView));
+  check('Inactive enemy attack box leaves no red-line residual',
+    debugView.enemyAttack.hidden===true&&debugView.enemyAttack.width===0,
+    JSON.stringify(debugView.enemyAttack));
 
   await page.locator('[data-debug-action="enemyNear"]').click();
   await page.waitForTimeout(60);
   const nearEnemy=await page.evaluate(()=>({
     enemy:window.PaperchalkCombat.enemy,
-    playerX:window.eval('worldX+actorX')
+    playerX:window.PaperchalkMap.playerX
   }));
-  check('Debug panel can place enemy at a reachable map position',
+  check('Debug panel can place an enemy at a reachable map position',
     Math.abs((nearEnemy.enemy.x-nearEnemy.playerX)-210)<2,
     JSON.stringify(nearEnemy));
 
+  // Switch overlays off before gameplay checks.
   await page.locator('[data-debug-action="attackRange"]').click();
   await page.locator('[data-debug-action="hitboxes"]').click();
+  await page.locator('[data-debug-action="mapColliders"]').click();
+  await page.locator('[data-debug-action="spawnZones"]').click();
+  await page.locator('[data-debug-action="cameraDebug"]').click();
   await page.locator('#debugCloseBtn').click();
   await page.waitForTimeout(80);
 
@@ -149,15 +186,90 @@ try{
   await page.keyboard.press('KeyJ');
   await page.waitForTimeout(190);
   const enemyAfter=await page.evaluate(()=>window.PaperchalkCombat.enemy);
-  check('Gameplay attack hitbox damages nearby enemy exactly once',
+  check('Gameplay melee hitbox damages nearby enemy exactly once',
     enemyBefore.hp===3&&enemyAfter.hp===2,
     JSON.stringify({enemyBefore,enemyAfter}));
 
-  // Keep later persistence tests isolated from realtime enemy attacks.
+  // Terrain collision: rock-1 begins at x=1120, so player center must stop near 1093.
   await page.evaluate(()=>{
-    window.PaperchalkCombat.resetEnemy(1400);
     window.PaperchalkCombat.toggleEnemyAi(false);
+    window.PaperchalkMap.teleport(1060,{notice:''});
   });
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(550);
+  await page.keyboard.up('KeyD');
+  await page.waitForTimeout(80);
+  const blockedByRock=await state(page);
+  check('Ground obstacle collider blocks horizontal movement',
+    blockedByRock.playerWorldX>=1088&&blockedByRock.playerWorldX<=1094,
+    JSON.stringify(blockedByRock));
+
+  // Jump over the 70px rock and continue to the other side.
+  await page.keyboard.press('Space');
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(950);
+  await page.keyboard.up('KeyD');
+  await page.waitForTimeout(120);
+  const clearedRock=await state(page);
+  check('Jump can clear a low map obstacle',
+    clearedRock.playerWorldX>1225,
+    JSON.stringify(clearedRock));
+
+  // Falling onto platform-2 should land on its 116px top surface.
+  await page.evaluate(()=>window.eval("playerWorldX=3060;playerY=205;playerVy=-40;playerGrounded=false;updateCamera();renderWorld();"));
+  await page.waitForTimeout(500);
+  const platformLanding=await state(page);
+  check('Platform collider catches a falling player on its top surface',
+    platformLanding.playerY>114&&platformLanding.playerY<118,
+    JSON.stringify(platformLanding));
+
+  // Breakable crate and pickup pipeline.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(2335,{notice:''}));
+  await page.keyboard.press('KeyJ');
+  await page.waitForTimeout(220);
+  let mapAfterBreak=await mapState(page);
+  check('Attack can break the map crate',
+    mapAfterBreak.map.broken.includes('crate-1'),
+    JSON.stringify(mapAfterBreak.map));
+
+  await page.evaluate(()=>window.PaperchalkMap.teleport(2434,{notice:''}));
+  await page.waitForTimeout(180);
+  const mapAfterPickup=await mapState(page);
+  const pickedInventory=await page.evaluate(()=>window.eval("inventoryItems.find(v=>v&&v.id==='rough-herb')"));
+  check('Crate reveals a collectible and proximity pickup enters inventory',
+    mapAfterPickup.map.collected.includes('herb-crate')&&pickedInventory?.action==='heal'&&pickedInventory?.heal===2,
+    JSON.stringify({map:mapAfterPickup.map,pickedInventory}));
+
+  // Exit is a real finite-map endpoint.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(5750,{notice:''}));
+  await page.waitForTimeout(160);
+  const exitState=await mapState(page);
+  check('Map exit trigger is reached and recorded',exitState.map.exitReached===true,JSON.stringify(exitState.map));
+
+  // NPC is a map-bound entity with proximity prompt and real interaction.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(760,{notice:''}));
+  await page.waitForTimeout(140);
+  const npcNear=await page.evaluate(()=>({
+    near:document.querySelector('[data-npc-id="npc-old-crafter"]')?.classList.contains('is-near')||false,
+    interactDisabled:document.getElementById('interactBtn')?.disabled,
+    playerX:window.PaperchalkMap.playerX
+  }));
+  check('Village NPC proximity enables talk prompt',
+    npcNear.near===true&&npcNear.interactDisabled===false&&Math.abs(npcNear.playerX-760)<2,
+    JSON.stringify(npcNear));
+  await page.keyboard.press('KeyE');
+  await page.waitForTimeout(100);
+  const npcTalk=await page.evaluate(()=>({
+    text:document.getElementById('mapNotice')?.textContent||'',
+    shown:document.getElementById('mapNotice')?.classList.contains('is-show')||false
+  }));
+  check('E talks to the map NPC',
+    npcTalk.shown&&npcTalk.text.includes('村口老匠')&&npcTalk.text.includes('跳起来越过障碍'),
+    JSON.stringify(npcTalk));
+
+  // Return to a safe mid-map position for the legacy save/UI tests.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
+  await page.waitForTimeout(80);
 
   const healthInitial=await healthState(page);
   check('Health HUD is 10 stitched pieces',
@@ -257,7 +369,11 @@ try{
   check('Paper ball cleans up after world-menu transition',fx1.ball==='0',JSON.stringify(fx1));
   const saveA=await save(page,'audit_a');
   check('A save uses account-specific v2 key',saveA?.account==='audit_a',JSON.stringify(saveA));
-  check('A position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
+  check('A camera position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
+  check('A player world position saved',Math.abs((saveA?.playerWorldX||0)-moved.playerWorldX)<5,'saved='+saveA?.playerWorldX+' runtime='+moved.playerWorldX);
+  check('A map changes are saved',
+    saveA?.mapState?.broken?.includes('crate-1')&&saveA?.mapState?.collected?.includes('herb-crate')&&saveA?.mapState?.exitReached===true,
+    JSON.stringify(saveA?.mapState));
   check('A health saved with world state',saveA?.playerHp===8,'saved playerHp='+saveA?.playerHp);
 
   // Continue must visually hide shell, not merely disable pointer events.
@@ -283,6 +399,10 @@ try{
   await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const healthReloaded=await healthState(page);
   check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
+  const mapReloaded=await mapState(page);
+  check('Map destruction/pickups/exit state survive reload',
+    mapReloaded.map.broken.includes('crate-1')&&mapReloaded.map.collected.includes('herb-crate')&&mapReloaded.map.exitReached===true,
+    JSON.stringify(mapReloaded.map));
   await page.locator('#backpackBtn').click();
   await page.waitForTimeout(850);
   let inv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
@@ -341,12 +461,17 @@ try{
   await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const bState=await state(page);
   const saveB=await save(page,'audit_b');
-  check('B gets a fresh independent save',Math.abs(bState.worldX)<1&&saveB?.account==='audit_b',
+  check('B gets a fresh independent save',
+    Math.abs(bState.worldX)<1&&Math.abs(bState.playerWorldX-460)<2&&saveB?.account==='audit_b',
     JSON.stringify({bState,saveB}));
   const bInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
   check('B does not inherit A inventory',bInv===null,JSON.stringify(bInv));
   const bHealth=await healthState(page);
   check('B starts with independent full health',bHealth.hp===10&&saveB?.playerHp===10,JSON.stringify({bHealth,saveHp:saveB?.playerHp}));
+  const bMap=await mapState(page);
+  check('B does not inherit A map destruction or pickups',
+    bMap.map.broken.length===0&&bMap.map.collected.length===0&&bMap.map.exitReached===false,
+    JSON.stringify(bMap.map));
 
   // Save B, then return A and prove A is intact.
   await page.locator('#worldMenuBtn').click();
@@ -361,11 +486,16 @@ try{
   await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const aReturn=await state(page);
   const aReturnInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
-  check('A restores its own position',Math.abs(aReturn.worldX-saveA.worldX)<5,
-    'returned='+aReturn.worldX+' expected='+saveA.worldX);
+  check('A restores its own position',
+    Math.abs(aReturn.playerWorldX-saveA.playerWorldX)<5&&Math.abs(aReturn.worldX-saveA.worldX)<5,
+    JSON.stringify({returned:aReturn,expected:{worldX:saveA.worldX,playerWorldX:saveA.playerWorldX}}));
   check('A restores its own inventory',aReturnInv?.count===1,JSON.stringify(aReturnInv));
   const aReturnHealth=await healthState(page);
   check('A restores its own health',aReturnHealth.hp===8&&aReturnHealth.empty===2,JSON.stringify(aReturnHealth));
+  const aReturnMap=await mapState(page);
+  check('A restores its own persistent map state',
+    aReturnMap.map.broken.includes('crate-1')&&aReturnMap.map.collected.includes('herb-crate')&&aReturnMap.map.exitReached===true,
+    JSON.stringify(aReturnMap.map));
 
   // Paper cleanup after backpack too.
   await page.locator('#backpackBtn').click();
