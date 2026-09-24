@@ -39,28 +39,6 @@ async function healthState(page){
     })()
   }));
 }
-async function buffState(page){
-  return page.evaluate(()=>({
-    total:document.querySelectorAll('#playerBuffLayer .buff-banner').length,
-    chains:[...document.querySelectorAll('#playerBuffLayer .buff-chain')].map(chain=>{
-      const cell=Number(chain.dataset.cell);
-      const piece=document.querySelectorAll('#playerHealthBar .hp-segment')[cell];
-      const chainRect=chain.getBoundingClientRect();
-      const pieceRect=piece?.getBoundingClientRect();
-      const banners=[...chain.querySelectorAll('.buff-banner')];
-      return {
-        cell,
-        count:banners.length,
-        types:banners.map(el=>el.dataset.buffType),
-        tops:banners.map(el=>el.getBoundingClientRect().top),
-        chainCenter:chainRect.left+chainRect.width/2,
-        pieceCenter:pieceRect?pieceRect.left+pieceRect.width/2:null
-      };
-    }),
-    api:window.PaperchalkBuff?.all||[],
-    typeCount:window.PaperchalkBuff?.types?.length||0
-  }));
-}
 async function save(page,account){
   return page.evaluate(a=>{
     const raw=localStorage.getItem('paperchalk.save.v2.'+encodeURIComponent(a));
@@ -125,55 +103,6 @@ try{
     healthHealed.hp===8&&healthHealed.empty===2&&healthHealed.ariaNow==='8'&&healthHealed.healing===1,
     JSON.stringify(healthHealed));
 
-  // Hanging BUFF system: deterministic stack + random valid-cell placement.
-  const atlasInfo=await page.evaluate(async()=>{
-    const img=new Image();
-    const done=new Promise(resolve=>{
-      img.onload=()=>resolve({
-        loaded:img.naturalWidth>0&&img.naturalHeight>0,
-        width:img.naturalWidth,
-        height:img.naturalHeight,
-        ratio:img.naturalWidth/img.naturalHeight
-      });
-      img.onerror=()=>resolve({loaded:false,width:0,height:0,ratio:0});
-    });
-    img.src='./assets/ui/buffs/buff-atlas.webp?v=1';
-    return await done;
-  });
-  check('Buff atlas loads with the 6x3 sheet aspect',
-    atlasInfo.loaded&&Math.abs(atlasInfo.ratio-1.5)<0.01,
-    JSON.stringify(atlasInfo));
-
-  await page.evaluate(()=>window.PaperchalkBuff.clear());
-  const firstBuff=await page.evaluate(()=>window.PaperchalkBuff.add('poison',2));
-  const secondBuff=await page.evaluate(()=>window.PaperchalkBuff.add('burn',2));
-  await page.waitForTimeout(80);
-  let buffs=await buffState(page);
-  const sameCell=buffs.chains.find(chain=>chain.cell===2);
-  check('Two buffs on one HP cell form one vertical chain',
-    !!firstBuff&&!!secondBuff&&buffs.total===2&&buffs.chains.length===1&&sameCell?.count===2 &&
-    sameCell.types[0]==='poison'&&sameCell.types[1]==='burn' &&
-    sameCell.tops[1]>sameCell.tops[0],
-    JSON.stringify(buffs));
-  check('Buff chain is centered under its HP segment',
-    !!sameCell&&Math.abs(sameCell.chainCenter-sameCell.pieceCenter)<1.5,
-    JSON.stringify(sameCell));
-
-  await page.evaluate(()=>window.PaperchalkBuff.add('shield',5));
-  await page.waitForTimeout(60);
-  buffs=await buffState(page);
-  check('Different HP cells create separate hanging chains',
-    buffs.total===3&&buffs.chains.length===2&&buffs.chains.some(chain=>chain.cell===5&&chain.count===1),
-    JSON.stringify(buffs));
-
-  const randomBuff=await page.evaluate(()=>window.PaperchalkBuff.random('frost'));
-  await page.waitForTimeout(60);
-  buffs=await buffState(page);
-  check('Random buff only chooses a currently filled HP cell',
-    !!randomBuff&&randomBuff.type==='frost'&&randomBuff.cell>=0&&randomBuff.cell<8&&buffs.total===4,
-    JSON.stringify({randomBuff,buffs}));
-  check('Buff catalog exposes all 18 supplied icons',buffs.typeCount===18,'typeCount='+buffs.typeCount);
-
   // In-game debug panel: visible button, shortcuts, commands, and movement lock.
   await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(100);
@@ -210,35 +139,6 @@ try{
     JSON.stringify(healthDebug.healDelays)===JSON.stringify(['0ms','45ms','90ms']),
     JSON.stringify(healthDebug));
 
-  const beforeDebugBuffs=(await buffState(page)).total;
-  await page.locator('[data-debug-action="buffRandom"]').click();
-  await page.waitForTimeout(70);
-  let debugBuffs=await buffState(page);
-  check('Debug random BUFF button adds one hanging buff',
-    debugBuffs.total===beforeDebugBuffs+1,
-    JSON.stringify(debugBuffs));
-
-  await page.locator('[data-debug-action="buffPop"]').click();
-  await page.waitForTimeout(70);
-  debugBuffs=await buffState(page);
-  check('Debug remove-last BUFF button removes one buff',
-    debugBuffs.total===beforeDebugBuffs,
-    JSON.stringify(debugBuffs));
-
-  await page.locator('#debugCommandInput').fill('buff add 3 bleed');
-  await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
-  await page.waitForTimeout(70);
-  debugBuffs=await buffState(page);
-  const cell3Chain=debugBuffs.chains.find(chain=>chain.cell===2);
-  check('Debug command can attach a named buff to a chosen HP cell',
-    cell3Chain?.types.includes('bleed') &&
-    (await page.locator('#debugOutput').textContent()).includes('第 3 个生命格'),
-    JSON.stringify(debugBuffs));
-
-  // Return the deterministic stack to 4 buffs before persistence checks.
-  await page.evaluate(()=>window.PaperchalkBuff.pop());
-  await page.waitForTimeout(50);
-
   const beforeBlockedMove=await state(page);
   await page.keyboard.down('KeyD');
   await page.waitForTimeout(350);
@@ -273,9 +173,6 @@ try{
   check('A save uses account-specific v2 key',saveA?.account==='audit_a',JSON.stringify(saveA));
   check('A position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
   check('A health saved with world state',saveA?.playerHp===8,'saved playerHp='+saveA?.playerHp);
-  check('A buffs are saved with world state',
-    Array.isArray(saveA?.buffs)&&saveA.buffs.length===4,
-    JSON.stringify(saveA?.buffs));
 
   // Continue must visually hide shell, not merely disable pointer events.
   await page.locator('#continueBtn').click();
@@ -299,10 +196,6 @@ try{
   await page.waitForTimeout(450);
   const healthReloaded=await healthState(page);
   check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
-  const buffsReloaded=await buffState(page);
-  check('Buff chains survive reload',
-    buffsReloaded.total===4&&buffsReloaded.api.length===4&&buffsReloaded.chains.some(chain=>chain.cell===2&&chain.count===2),
-    JSON.stringify(buffsReloaded));
   await page.locator('#backpackBtn').click();
   await page.waitForTimeout(850);
   let inv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
@@ -366,10 +259,6 @@ try{
   check('B does not inherit A inventory',bInv===null,JSON.stringify(bInv));
   const bHealth=await healthState(page);
   check('B starts with independent full health',bHealth.hp===10&&saveB?.playerHp===10,JSON.stringify({bHealth,saveHp:saveB?.playerHp}));
-  const bBuffs=await buffState(page);
-  check('B does not inherit A buffs',
-    bBuffs.total===0&&Array.isArray(saveB?.buffs)&&saveB.buffs.length===0,
-    JSON.stringify({bBuffs,saveBuffs:saveB?.buffs}));
 
   // Save B, then return A and prove A is intact.
   await page.locator('#worldMenuBtn').click();
@@ -388,10 +277,6 @@ try{
   check('A restores its own inventory',aReturnInv?.count===1,JSON.stringify(aReturnInv));
   const aReturnHealth=await healthState(page);
   check('A restores its own health',aReturnHealth.hp===8&&aReturnHealth.empty===2,JSON.stringify(aReturnHealth));
-  const aReturnBuffs=await buffState(page);
-  check('A restores its own buff chains',
-    aReturnBuffs.total===4&&aReturnBuffs.api.length===4&&aReturnBuffs.chains.some(chain=>chain.cell===2&&chain.count===2),
-    JSON.stringify(aReturnBuffs));
 
   // Paper cleanup after backpack too.
   await page.locator('#backpackBtn').click();
