@@ -1822,6 +1822,9 @@ MAP_TERRAIN.push(...FORK_SOLIDS);
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 let mapDebugBuilt=false;
+const VISUAL_WINDOW_STEP=3000;
+const VISUAL_WINDOW_SPAN=15000;
+let visualOriginX=0;
 const mapNpcEls=new Map();
 let lastNearNpcId=null;
 
@@ -1871,47 +1874,54 @@ function buildMapVisuals(){
   mapDebugBuilt=false;
   mapNpcEls.clear();
   lastNearNpcId=null;
+  const visualMinX=visualOriginX-400;
+  const visualMaxX=visualOriginX+VISUAL_WINDOW_SPAN+400;
   MAP_TERRAIN.forEach(t=>{
+    if(t.x+t.w<visualMinX||t.x>visualMaxX)return;
     const el=document.createElement('div');
     el.className='terrain-piece '+t.kind+(t.fork?' fork-shelf':'');
     el.dataset.mapId=t.id;
-    Object.assign(el.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
+    Object.assign(el.style,{left:(t.x-visualOriginX)+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
     terrainTrack.appendChild(el);
   });
   MAP_OBJECTS.forEach(o=>{
+    if(o.x+o.w<visualMinX||o.x>visualMaxX)return;
     const el=document.createElement('div');
     el.className='map-object '+o.kind;
     el.dataset.mapId=o.id;
-    Object.assign(el.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
+    Object.assign(el.style,{left:(o.x-visualOriginX)+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
     if(mapState.broken.has(o.id))el.classList.add('is-broken');
     mapObjectTrack.appendChild(el);
   });
   MAP_LANDMARKS.forEach(m=>{
+    if(m.x<visualMinX||m.x>visualMaxX)return;
     const el=document.createElement('div');
     el.dataset.mapId=m.id;
     if(m.kind==='exit'){
       el.className='map-landmark map-exit';
-      el.style.left=m.x+'px';
+      el.style.left=(m.x-visualOriginX)+'px';
     }else{
       el.className='map-landmark sign';
-      el.style.left=m.x+'px';
+      el.style.left=(m.x-visualOriginX)+'px';
       const span=document.createElement('span');span.textContent=m.text;el.appendChild(span);
     }
     mapLandmarkTrack.appendChild(el);
   });
   MAP_PICKUPS.forEach(p=>{
+    if(p.x<visualMinX||p.x>visualMaxX)return;
     const el=document.createElement('div');
     el.className='pickup';
     el.dataset.pickupId=p.id;
-    el.style.left=p.x+'px';
+    el.style.left=(p.x-visualOriginX)+'px';
     el.style.bottom=(MAP_GROUND_SCREEN_Y+p.y)+'px';
     const hidden=mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken));
     if(hidden)el.classList.add('is-collected');
     mapObjectTrack.appendChild(el);
   });
   MAP_NPCS.forEach(n=>{
+    if(n.x<visualMinX||n.x>visualMaxX)return;
     const el=document.createElement('div');
-    el.className='map-npc';el.dataset.npcId=n.id;el.style.left=n.x+'px';
+    el.className='map-npc';el.dataset.npcId=n.id;el.style.left=(n.x-visualOriginX)+'px';
     el.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name">'+n.name+'</div><div class="map-npc-prompt">E / 聊</div>';
     mapLandmarkTrack.appendChild(el);
     mapNpcEls.set(n.id,el);
@@ -1922,6 +1932,7 @@ function buildMapVisuals(){
       {nodeId:route.from,x:base+82,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
       {nodeId:route.to,x:base+WORLD_ZONE_WIDTH-232,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
     ].forEach(mark=>{
+      if(mark.x<visualMinX||mark.x>visualMaxX)return;
       const node=WORLD_NODE_BY_ID.get(mark.nodeId);
       if(!node)return;
       const degree=nodeDegree(node.id);
@@ -1929,7 +1940,7 @@ function buildMapVisuals(){
       el.className='junction-marker';
       el.dataset.nodeId=node.id;
       el.dataset.side=mark.side;
-      el.style.left=mark.x+'px';
+      el.style.left=(mark.x-visualOriginX)+'px';
       el.innerHTML='<div class="junction-board">'+node.name+'<span class="junction-count">'+(degree>2?'实体岔路 · 直接走':degree===1?'道路尽头':'道路连接点')+'</span></div>';
       mapLandmarkTrack.appendChild(el);
 
@@ -1937,7 +1948,7 @@ function buildMapVisuals(){
       if(assignments.length>1){
         const hint=document.createElement('div');
         hint.className='fork-node-hint';
-        hint.style.left=(mark.side==='left'?mark.boundary+235:mark.boundary-235)+'px';
+        hint.style.left=((mark.side==='left'?mark.boundary+235:mark.boundary-235)-visualOriginX)+'px';
         hint.style.bottom=(MAP_GROUND_SCREEN_Y+190)+'px';
         hint.textContent='不弹菜单 · 走进对应高度的路';
         mapLandmarkTrack.appendChild(hint);
@@ -1946,7 +1957,7 @@ function buildMapVisuals(){
         const guide=document.createElement('div');
         guide.className='fork-exit-guide'+(a.laneY>=120?' is-air':a.laneY>0?' is-upper':'');
         const arrow=mark.side==='left'?'←':'→';
-        guide.style.left=(mark.side==='left'?mark.boundary+42:mark.boundary-196)+'px';
+        guide.style.left=((mark.side==='left'?mark.boundary+42:mark.boundary-196)-visualOriginX)+'px';
         guide.style.bottom=(MAP_GROUND_SCREEN_Y+a.laneY+22)+'px';
         guide.innerHTML='<span class="fork-arrow">'+arrow+'</span>'+(a.target?.name||a.route.name)+'<small>'+a.route.name+'</small>';
         mapLandmarkTrack.appendChild(guide);
@@ -1958,27 +1969,30 @@ function buildMapVisuals(){
 function ensureMapDebugVisuals(){
   if(mapDebugBuilt)return;
   mapDebugTrack.innerHTML='';
+  const minX=visualOriginX-400,maxX=visualOriginX+VISUAL_WINDOW_SPAN+400;
   MAP_TERRAIN.forEach(t=>{
+    if(t.x+t.w<minX||t.x>maxX)return;
     const dbg=document.createElement('div');
     dbg.className='map-debug-rect collider';
     dbg.dataset.debugFor=t.id;
-    Object.assign(dbg.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
+    Object.assign(dbg.style,{left:(t.x-visualOriginX)+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
     mapDebugTrack.appendChild(dbg);
   });
   MAP_OBJECTS.forEach(o=>{
-    if(!o.solid)return;
+    if(!o.solid||o.x+o.w<minX||o.x>maxX)return;
     const dbg=document.createElement('div');
     dbg.className='map-debug-rect collider';
     dbg.dataset.debugFor=o.id;
-    Object.assign(dbg.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
+    Object.assign(dbg.style,{left:(o.x-visualOriginX)+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
     if(mapState.broken.has(o.id))dbg.style.display='none';
     mapDebugTrack.appendChild(dbg);
   });
   ENEMY_SPAWNS.forEach(spawn=>{
+    if(spawn.patrolMax<minX||spawn.patrolMin>maxX)return;
     const dbg=document.createElement('div');
     dbg.className='map-debug-rect spawn';
     dbg.dataset.debugFor='spawn-'+spawn.id;
-    Object.assign(dbg.style,{left:spawn.patrolMin+'px',bottom:MAP_GROUND_SCREEN_Y+'px',width:(spawn.patrolMax-spawn.patrolMin)+'px',height:'142px'});
+    Object.assign(dbg.style,{left:(spawn.patrolMin-visualOriginX)+'px',bottom:MAP_GROUND_SCREEN_Y+'px',width:(spawn.patrolMax-spawn.patrolMin)+'px',height:'142px'});
     mapDebugTrack.appendChild(dbg);
   });
   mapDebugBuilt=true;
@@ -1995,7 +2009,7 @@ function buildProps(id,data,parallax){
   const root=document.getElementById(id);
   root.textContent='';
   root.style.width=MAP_WIDTH+'px';
-  const pool={root,data,parallax,startRepeat:null,els:[]};
+  const pool={root,data,parallax,startRepeat:null,originX:0,els:[]};
   for(let slot=0;slot<PROP_POOL_REPEATS;slot++){
     const row=[];
     data.forEach(p=>{
@@ -2009,7 +2023,9 @@ function buildProps(id,data,parallax){
     });
     pool.els.push(row);
   }
+  root.style.width=(PROP_POOL_REPEATS*PROP_PERIOD+PROP_PERIOD)+'px';
   propPools.push(pool);
+  return pool;
 }
 function updatePropPools(sceneryX,force=false){
   const viewW=VIEW_W;
@@ -2019,6 +2035,7 @@ function updatePropPools(sceneryX,force=false){
     const startRepeat=centerRepeat-2;
     if(!force&&pool.startRepeat===startRepeat)continue;
     pool.startRepeat=startRepeat;
+    pool.originX=startRepeat*PROP_PERIOD;
     for(let slot=0;slot<PROP_POOL_REPEATS;slot++){
       const repIndex=startRepeat+slot;
       const row=pool.els[slot];
@@ -2030,14 +2047,14 @@ function updatePropPools(sceneryX,force=false){
           return;
         }
         el.style.display='';
-        el.style.left=x+'px';
+        el.style.left=(x-pool.originX)+'px';
         el.style.animationDelay=(-((i*.71+repIndex*.43)%4.8))+'s';
       });
     }
   }
 }
-buildProps('rearTrack',rear,.97);
-buildProps('frontTrack',front,1.03);
+const rearPropPool=buildProps('rearTrack',rear,.97);
+const frontPropPool=buildProps('frontTrack',front,1.03);
 
 async function loadMidgroundAtlas(){
   try{
@@ -2149,8 +2166,9 @@ function syncViewportMetrics(){
   return changed;
 }
 function applyWorldDimensions(){
-  const width=MAP_WIDTH+'px';
-  [mapTrack,entityTrack,rearTrack,frontTrack].forEach(el=>{if(el)el.style.width=width});
+  const width=VISUAL_WINDOW_SPAN+'px';
+  if(mapTrack)mapTrack.style.width=width;
+  if(entityTrack)entityTrack.style.width=width;
 }
 syncViewportMetrics();
 applyWorldDimensions();
@@ -2933,7 +2951,7 @@ function setEnemyVisual(e,force=false){
     e.el.style.display=visible?'':'none';
   }
   if(!visible)return;
-  if(force||e._renderX!==e.x){e._renderX=e.x;e.el.style.left=e.x+'px'}
+  if(force||e._renderX!==e.x){e._renderX=e.x;e.el.style.left=(e.x-visualOriginX)+'px'}
   if(force||e._renderFacing!==e.facing){e._renderFacing=e.facing;e.el.style.setProperty('--enemy-facing',e.facing)}
   if(force||e._renderHp!==e.hp){e._renderHp=e.hp;e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%'}
   if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
@@ -3155,16 +3173,18 @@ window.PaperchalkCombat={
 };
 
 let roadPoolFirst=-1;
+let roadPoolOriginX=0;
 function updateRoadPool(sceneryX,force=false){
   if(!(roadW>0))return;
   const first=Math.max(0,Math.floor(Math.max(0,sceneryX)/roadW)-1);
   if(!force&&first===roadPoolFirst)return;
   roadPoolFirst=first;
+  roadPoolOriginX=first*roadW;
   [...roadTrack.children].forEach((tile,i)=>{
     const index=first+i;
     const x=index*roadW;
     tile.style.display=x<MAP_WIDTH+roadW?'':'none';
-    tile.style.left=x+'px';
+    tile.style.left=(x-roadPoolOriginX)+'px';
   });
 }
 function ensureRoadTiles(){
@@ -3179,7 +3199,7 @@ function ensureRoadTiles(){
   while(roadTrack.children.length>needed&&roadTrack.lastElementChild!==roadTile){
     roadTrack.lastElementChild.remove();
   }
-  roadTrack.style.width=MAP_WIDTH+'px';
+  roadTrack.style.width=(needed*roadW+roadW)+'px';
   roadPoolFirst=-1;
   updateRoadPool(worldX+sceneryOffsetX,true);
 }
@@ -3228,6 +3248,21 @@ function setFacing(dir){
   facing=dir;
   actorEl.classList.toggle('facing-left',dir<0);
 }
+function desiredVisualOrigin(cameraX=worldX){
+  const raw=Math.floor((cameraX-VISUAL_WINDOW_STEP)/VISUAL_WINDOW_STEP)*VISUAL_WINDOW_STEP;
+  return clamp(raw,0,Math.max(0,MAP_WIDTH-VISUAL_WINDOW_SPAN));
+}
+function updateVisualWindow(force=false){
+  const next=desiredVisualOrigin();
+  if(!force&&next===visualOriginX)return false;
+  visualOriginX=next;
+  buildMapVisuals();
+  mapTrack.style.width=VISUAL_WINDOW_SPAN+'px';
+  entityTrack.style.width=VISUAL_WINDOW_SPAN+'px';
+  enemies.forEach(e=>{e._renderX=null;e._visible=null});
+  return true;
+}
+
 const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
@@ -3235,12 +3270,15 @@ function writeTransform(el,key,value){
 }
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
+  const windowChanged=updateVisualWindow(force);
+  if(windowChanged)force=true;
   updateRoadPool(sceneryX,force);
   updatePropPools(sceneryX,force);
-  const roadT='translate3d('+(-sceneryX)+'px,0,0)';
-  const rearT='translate3d('+(-sceneryX*.97)+'px,0,0)';
-  const frontT='translate3d('+(-sceneryX*1.03)+'px,0,0)';
-  const mapT='translate3d('+(-worldX)+'px,0,0)';
+  const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,0,0)';
+  const rearCamera=sceneryX*.97,frontCamera=sceneryX*1.03;
+  const rearT='translate3d('+(-(rearCamera-rearPropPool.originX))+'px,0,0)';
+  const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,0,0)';
+  const mapT='translate3d('+(-(worldX-visualOriginX))+'px,0,0)';
   writeTransform(roadTrack,'road',roadT);
   writeTransform(rearTrack,'rear',rearT);
   writeTransform(frontTrack,'front',frontT);
