@@ -114,6 +114,9 @@ button{cursor:pointer}
 .fork-exit-guide.is-upper::after{
   content:"跳上平台走这里";display:block;margin-top:2px;font:600 8px/1 system-ui,sans-serif;color:#8a6a43
 }
+.fork-exit-guide.is-air::after{
+  content:"从平台起跳穿过这里";display:block;margin-top:2px;font:600 8px/1 system-ui,sans-serif;color:#8a6a43
+}
 .fork-node-hint{
   position:absolute;z-index:7;pointer-events:none;white-space:nowrap;
   padding:4px 8px;background:rgba(72,61,47,.84);color:#eee0c2;
@@ -1625,7 +1628,7 @@ WORLD_ROUTES.forEach((route,i)=>{
   ].forEach(endpoint=>{
     const assignments=forkAssignments(i,endpoint.nodeId);
     if(assignments.length<=1)return;
-    assignments.filter(a=>a.laneY>0).forEach((a,laneIndex)=>{
+    assignments.filter(a=>a.laneY===72).forEach((a,laneIndex)=>{
       const w=540;
       const x=endpoint.side==='left'?endpoint.boundary-18:endpoint.boundary-w+18;
       FORK_SOLIDS.push({
@@ -1749,7 +1752,7 @@ function buildMapVisuals(){
       }
       assignments.forEach((a,idx)=>{
         const guide=document.createElement('div');
-        guide.className='fork-exit-guide'+(a.laneY>0?' is-upper':'');
+        guide.className='fork-exit-guide'+(a.laneY>=120?' is-air':a.laneY>0?' is-upper':'');
         const arrow=mark.side==='left'?'←':'→';
         guide.style.left=(mark.side==='left'?mark.boundary+42:mark.boundary-196)+'px';
         guide.style.bottom=(MAP_GROUND_SCREEN_Y+a.laneY+22)+'px';
@@ -2381,13 +2384,11 @@ function tryLeaveCurrentRoute(side,moveDir){
 
   let chosen=assignments[0];
   if(assignments.length>1){
-    // No popup, no pause: the player's physical height IS the branch choice.
-    // Ground route = low branch; jumping onto the real shelves = upper branches.
-    if(!playerGrounded)return false;
+    // No popup, no pause: physical Y position is the fork.
+    // Ground=low route, shelf≈72px=middle route, airborne high gate≈142px=upper route.
     chosen=assignments.reduce((best,a)=>
       Math.abs(playerY-a.laneY)<Math.abs(playerY-best.laneY)?a:best
     ,assignments[0]);
-    if(Math.abs(playerY-chosen.laneY)>24)return false;
   }
   return physicallyEnterRoute(chosen.route,nodeId,chosen.laneY,moveDir);
 }
@@ -3193,7 +3194,8 @@ function drawWorldMap(){
   const progress=routeProgressForWorldX(playerWorldX);
   const bounds=routeBoundaryInfo(playerWorldX);
   const from=WORLD_NODE_BY_ID.get(bounds.leftNodeId),to=WORLD_NODE_BY_ID.get(bounds.rightNodeId);
-  worldMapLocation.textContent='当前位置：'+progress.route.name+' · '+(from?.name||'')+' ↔ '+(to?.name||'')+' · '+Math.round(progress.t*100)+'%';
+  const visualT=clamp((routeLocalX(playerWorldX)-ROUTE_ENDPOINT_PAD)/(WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD*2),0,1);
+  worldMapLocation.textContent='当前位置：'+progress.route.name+' · '+(from?.name||'')+' ↔ '+(to?.name||'')+' · '+Math.round(visualT*100)+'%';
   applyWorldMapZoom(false);
 }
 function applyWorldMapZoom(preserveCenter=true){
