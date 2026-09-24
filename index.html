@@ -1300,7 +1300,7 @@ button{cursor:pointer}
 <section id="worldMapOverlay" class="world-map-overlay" aria-hidden="true">
   <div id="worldMapPaper" class="world-map-paper" role="dialog" aria-modal="true" aria-label="大世界地图">
     <header class="world-map-head">
-      <div class="world-map-title">纸境世界网络</div>
+      <div class="world-map-title">纸境二维大世界</div>
       <div id="worldMapLocation" class="world-map-location">当前位置</div>
       <button id="worldMapClose" class="world-map-close" type="button" aria-label="关闭地图">×</button>
     </header>
@@ -1319,9 +1319,9 @@ button{cursor:pointer}
       </div>
     </div>
     <div id="worldMapScroll" class="world-map-scroll">
-      <canvas id="worldMapCanvas" class="world-map-canvas" width="2700" height="1200" aria-label="纸境网络式大世界地图"></canvas>
+      <canvas id="worldMapCanvas" class="world-map-canvas" width="2700" height="1300" aria-label="纸境真实二维大世界地图"></canvas>
     </div>
-    <div class="world-map-tip">节点是地点 · 线是可实际行走的横版道路 · 岔路、环路与死胡同和游戏场景完全对应</div>
+    <div class="world-map-tip">地图按真实 X/Y 坐标绘制 · 上层、主路、河岸、地下、竖井全部与游戏实体空间一一对应</div>
   </div>
 </section>
 
@@ -2197,11 +2197,11 @@ function updateDebugStatus(){
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
     '<span>时间 <b>'+worldMinutes.toFixed(1)+'</b></span>'+
     '<span>玩家X <b>'+playerWorldX.toFixed(1)+'</b></span>'+
-    '<span>Camera <b>'+worldX.toFixed(1)+'</b></span>'+
+    '<span>Camera <b>'+worldX.toFixed(1)+', '+worldY.toFixed(1)+'</b></span>'+
     '<span>脚底Y <b>'+playerY.toFixed(1)+'</b></span>'+
     '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
     '<span>敌人 <b>'+alive+' / '+enemies.length+'</b></span>'+
-    '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
+    '<span>最近敌距 <b>'+(nearest?Math.round(Math.hypot(playerWorldX-nearest.x,playerY-nearest.y)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>';
 }
@@ -2248,6 +2248,7 @@ function runDebugCommand(rawCommand){
   const parts=raw.split(/\s+/);
   const cmd=parts[0].toLowerCase();
   const arg=parts[1];
+  const arg2=parts[2];
 
   if(cmd==='help'){
     return [
@@ -2260,7 +2261,7 @@ function runDebugCommand(rawCommand){
       'time 60         世界时间设为 60',
       'pos             查看玩家/Camera坐标',
       'map             查看地图状态',
-      'tp 3000         传送到地图 X=3000',
+      'tp 3000 2200    传送到世界坐标 X/Y',
       'resetpos        回到村口出生点',
       'save            立即保存',
       'enemy reset      重置全地图敌人',
@@ -2312,19 +2313,19 @@ function runDebugCommand(rawCommand){
     return 'worldMinutes -> '+worldMinutes;
   }
   if(cmd==='pos'||cmd==='position'){
-    return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
+    return 'player=('+playerWorldX.toFixed(1)+','+playerY.toFixed(1)+') camera=('+worldX.toFixed(1)+','+worldY.toFixed(1)+') screenX='+actorX.toFixed(1);
   }
   if(cmd==='map'){
-    return '世界图 '+WORLD_NODES.length+' 节点 / '+WORLD_ROUTES.length+' 道路 | 当前='+regionNameAt(playerWorldX)+' | edge='+worldZoneIndexAt(playerWorldX)+' | 已探索道路='+mapState.visitedRoutes.size;
+    return '二维世界 '+MAP_WIDTH+'×'+MAP_HEIGHT+' | 当前='+regionNameAt(playerWorldX,playerY)+' | 已探索区域='+mapState.visitedAreas.size+'/'+WORLD_AREAS_2D.length;
   }
   if(cmd==='tp'||cmd==='teleport'){
-    const x=Number(arg);
-    if(!Number.isFinite(x))return '用法：tp 3000';
-    teleportTo(x,{notice:'调试传送到 X='+Math.round(x)});
-    return 'playerX -> '+playerWorldX.toFixed(1);
+    const x=Number(arg),y=arg2===undefined?null:Number(arg2);
+    if(!Number.isFinite(x)||(arg2!==undefined&&!Number.isFinite(y)))return '用法：tp 3000 2200';
+    teleportTo(x,{y,notice:'调试传送到 '+Math.round(x)+(y===null?'':' / '+Math.round(y))});
+    return 'player -> ('+playerWorldX.toFixed(1)+','+playerY.toFixed(1)+')';
   }
   if(cmd==='resetpos'){
-    teleportTo(MAP_SPAWN_X,{notice:'已回到 A村外道路村口'});
+    teleportTo(MAP_SPAWN_X,{y:MAP_SPAWN_Y,notice:'已回到 A村村口'});
     saveWorldState();
     return '位置已重置：playerX='+MAP_SPAWN_X;
   }
@@ -3064,171 +3065,110 @@ async function paperUIFrom(triggerEl,revealFn,targetEl){
 }
 window.PaperUITransition={openFrom:paperUIFrom};
 
-/* -------------------- NETWORK WORLD MAP -------------------- */
+/* -------------------- TRUE 2D WORLD MAP -------------------- */
 const WORLD_MAP_BASE_W=2700;
-const WORLD_MAP_BASE_H=1200;
+const WORLD_MAP_BASE_H=1300;
+const WORLD_MAP_MARGIN=70;
 let worldMapZoom=1;
 let worldMapLastTrigger=null;
 
-function routeControlPoint(route){
-  const a=WORLD_NODE_BY_ID.get(route.from),b=WORLD_NODE_BY_ID.get(route.to);
-  const mx=(a.x+b.x)*.5,my=(a.y+b.y)*.5;
-  const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy));
-  return {x:mx+(-dy/len)*(route.bend||0),y:my+(dx/len)*(route.bend||0)};
-}
-function routePoint(route,t){
-  const a=WORLD_NODE_BY_ID.get(route.from),b=WORLD_NODE_BY_ID.get(route.to),c=routeControlPoint(route);
-  const u=1-clamp(t,0,1),tt=clamp(t,0,1);
+function worldToMapPoint(x,y){
   return {
-    x:u*u*a.x+2*u*tt*c.x+tt*tt*b.x,
-    y:u*u*a.y+2*u*tt*c.y+tt*tt*b.y
+    x:WORLD_MAP_MARGIN+(x/MAP_WIDTH)*(WORLD_MAP_BASE_W-WORLD_MAP_MARGIN*2),
+    y:WORLD_MAP_BASE_H-WORLD_MAP_MARGIN-(y/MAP_HEIGHT)*(WORLD_MAP_BASE_H-WORLD_MAP_MARGIN*2)
   };
 }
-function routeProgressForWorldX(x){
-  const route=routeForWorldX(x);
-  const local=routeLocalX(x);
-  let t=clamp((local-ROUTE_ENDPOINT_PAD)/(WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD*2),0,1);
-  if(route.index===orientationRouteIndex&&currentRouteOrientation<0)t=1-t;
-  return {route,t};
+function worldRectToMap(r){
+  const a=worldToMapPoint(r.x,r.y+r.h);
+  const b=worldToMapPoint(r.x+r.w,r.y);
+  return {x:a.x,y:a.y,w:b.x-a.x,h:b.y-a.y};
 }
-function mapPointForWorldX(x){
-  const p=routeProgressForWorldX(x);
-  return routePoint(p.route,p.t);
+function areaMapColor(area,visited){
+  const colors={meadow:'#c8b87f',forest:'#7e8b64',mountain:'#8a8177',river:'#7d9691',cave:'#665f5a',ruins:'#8a7668',highland:'#9a9168',marsh:'#78826d',shrine:'#947063'};
+  return visited?(colors[area.biome]||'#927d60'):'rgba(118,104,83,.18)';
 }
-function traceRoute(ctx,route){
-  const a=WORLD_NODE_BY_ID.get(route.from),b=WORLD_NODE_BY_ID.get(route.to),c=routeControlPoint(route);
-  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(c.x,c.y,b.x,b.y);
-}
-function drawMapForest(ctx,x,y,scale=1){
-  ctx.save();ctx.translate(x,y);ctx.fillStyle='rgba(74,91,61,.32)';
-  for(let i=0;i<10;i++){
-    const px=((i*37)%126)-63,py=((i*53)%88)-44;
-    ctx.beginPath();ctx.moveTo(px,py-24*scale);ctx.lineTo(px-15*scale,py+12*scale);ctx.lineTo(px+15*scale,py+12*scale);ctx.closePath();ctx.fill();
-  }
-  ctx.restore();
-}
-function drawMapMountains(ctx,x,y){
-  ctx.save();ctx.translate(x,y);ctx.fillStyle='rgba(99,91,82,.25)';
-  [[-66,20,58],[-10,-4,76],[56,18,54]].forEach(([px,py,h])=>{ctx.beginPath();ctx.moveTo(px,py-h);ctx.lineTo(px-h*.55,py+16);ctx.lineTo(px+h*.55,py+16);ctx.closePath();ctx.fill()});
-  ctx.restore();
-}
-function drawMapBackdrop(ctx){
+function drawWorldMap(){
+  const canvas=worldMapCanvas,ctx=canvas.getContext('2d');
+  if(!ctx)return;
+  canvas.width=WORLD_MAP_BASE_W;canvas.height=WORLD_MAP_BASE_H;
+  ctx.clearRect(0,0,WORLD_MAP_BASE_W,WORLD_MAP_BASE_H);
   ctx.fillStyle='#dfcda7';ctx.fillRect(0,0,WORLD_MAP_BASE_W,WORLD_MAP_BASE_H);
-  ctx.strokeStyle='rgba(91,68,42,.07)';ctx.lineWidth=1;
-  for(let y=55;y<WORLD_MAP_BASE_H;y+=74){
+
+  // Paper contour lines.
+  ctx.strokeStyle='rgba(89,66,41,.07)';ctx.lineWidth=1;
+  for(let y=45;y<WORLD_MAP_BASE_H;y+=58){
     ctx.beginPath();
-    for(let x=0;x<=WORLD_MAP_BASE_W;x+=24){
-      const yy=y+Math.sin(x*.012+y*.02)*8;
+    for(let x=0;x<=WORLD_MAP_BASE_W;x+=30){
+      const yy=y+Math.sin(x*.012+y*.018)*7;
       if(x===0)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);
     }
     ctx.stroke();
   }
-  // Southern river/wetland band.
-  ctx.strokeStyle='rgba(103,126,120,.28)';ctx.lineWidth=76;ctx.lineCap='round';
-  ctx.beginPath();ctx.moveTo(600,910);ctx.bezierCurveTo(1030,1090,1510,900,1810,930);ctx.bezierCurveTo(2100,960,2330,1080,2570,1030);ctx.stroke();
-  ctx.strokeStyle='rgba(234,224,195,.42)';ctx.lineWidth=3;ctx.setLineDash([12,16]);ctx.stroke();ctx.setLineDash([]);
-  drawMapForest(ctx,720,330,1);drawMapForest(ctx,1875,300,1.15);
-  drawMapMountains(ctx,1010,630);drawMapMountains(ctx,1650,630);
-  ctx.fillStyle='rgba(112,128,83,.18)';ctx.beginPath();ctx.ellipse(1450,960,180,100,-.15,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='rgba(111,95,79,.15)';ctx.fillRect(1160,105,170,120);ctx.fillRect(2140,960,180,100);
-}
-function drawNodeIcon(ctx,node,visited){
-  const degree=nodeDegree(node.id);
-  ctx.save();ctx.translate(node.x,node.y);
-  ctx.globalAlpha=visited?1:.62;
-  ctx.fillStyle=visited?'#514231':'#81745f';
-  ctx.strokeStyle='#ead8b4';ctx.lineWidth=4;
-  ctx.beginPath();ctx.arc(0,0,degree>2?15:11,0,Math.PI*2);ctx.fill();ctx.stroke();
 
-  ctx.strokeStyle='#5a4936';ctx.fillStyle='#7a674e';ctx.lineWidth=3;
-  if(node.kind==='village'){
-    ctx.fillRect(-18,-34,36,24);ctx.beginPath();ctx.moveTo(-22,-34);ctx.lineTo(0,-52);ctx.lineTo(22,-34);ctx.closePath();ctx.fill();
-  }else if(node.kind==='forest'){
-    ctx.fillStyle='#596b4c';ctx.beginPath();ctx.moveTo(0,-52);ctx.lineTo(-20,-18);ctx.lineTo(20,-18);ctx.closePath();ctx.fill();
-  }else if(node.kind==='mountain'||node.kind==='highland'){
-    ctx.fillStyle='#777169';ctx.beginPath();ctx.moveTo(0,-55);ctx.lineTo(-25,-16);ctx.lineTo(27,-16);ctx.closePath();ctx.fill();
-  }else if(node.kind==='cave'){
-    ctx.strokeStyle='#625b52';ctx.lineWidth=9;ctx.beginPath();ctx.arc(0,-28,20,Math.PI,0);ctx.stroke();
-  }else if(node.kind==='windmill'){
-    ctx.font='42px serif';ctx.textAlign='center';ctx.fillStyle='#665743';ctx.fillText('✣',0,-20);
-  }else if(node.kind==='ruins'||node.kind==='tower'||node.kind==='shrine'){
-    ctx.fillStyle='#77685b';ctx.fillRect(-16,-50,9,31);ctx.fillRect(7,-44,9,25);ctx.fillRect(-20,-52,40,7);
-  }else if(node.kind==='bridge'){
-    ctx.strokeStyle='#765d42';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-26,-24);ctx.lineTo(26,-24);ctx.stroke();
-  }else if(node.kind==='marsh'||node.kind==='river'){
-    ctx.strokeStyle='#65755e';ctx.lineWidth=3;for(let i=-14;i<=14;i+=7){ctx.beginPath();ctx.moveTo(i,-18);ctx.lineTo(i-4,-45);ctx.stroke()}
-  }else{
-    ctx.fillStyle='#78664e';ctx.fillRect(-14,-41,28,20);
-  }
-  ctx.restore();
-}
-function drawWorldMap(){
-  const canvas=worldMapCanvas;
-  const ctx=canvas.getContext('2d');
-  if(!ctx)return;
-  canvas.width=WORLD_MAP_BASE_W;canvas.height=WORLD_MAP_BASE_H;
-  ctx.clearRect(0,0,WORLD_MAP_BASE_W,WORLD_MAP_BASE_H);
-  drawMapBackdrop(ctx);
+  // Actual world regions, using the same XY bounds as gameplay.
+  for(const area of WORLD_AREAS_2D){
+    const visited=mapState.visitedAreas.has(area.id);
+    const r=worldRectToMap(area);
+    ctx.fillStyle=areaMapColor(area,visited);
+    ctx.globalAlpha=visited?.24:.08;
+    ctx.fillRect(r.x,r.y,r.w,r.h);
+    ctx.globalAlpha=1;
+    ctx.strokeStyle=visited?'rgba(83,65,44,.24)':'rgba(83,65,44,.10)';
+    ctx.setLineDash(visited?[]:[7,8]);ctx.strokeRect(r.x,r.y,r.w,r.h);ctx.setLineDash([]);
 
-  // Draw the whole topology first. Unvisited roads stay visible but faint/dashed.
-  for(const route of WORLD_ROUTES){
-    const visited=mapState.visitedRoutes.has(route.index);
-    traceRoute(ctx,route);
-    ctx.strokeStyle=visited?'rgba(80,61,39,.56)':'rgba(95,79,59,.22)';
-    ctx.lineWidth=visited?18:11;ctx.lineCap='round';
-    ctx.setLineDash(visited?[]:[12,12]);ctx.stroke();
-    traceRoute(ctx,route);
-    ctx.strokeStyle=visited?'#b18d59':'rgba(186,160,116,.42)';
-    ctx.lineWidth=visited?11:6;ctx.setLineDash(visited?[]:[9,13]);ctx.stroke();ctx.setLineDash([]);
-
-    const mid=routePoint(route,.5);
-    ctx.save();ctx.translate(mid.x,mid.y);ctx.rotate(Math.atan2(WORLD_NODE_BY_ID.get(route.to).y-WORLD_NODE_BY_ID.get(route.from).y,WORLD_NODE_BY_ID.get(route.to).x-WORLD_NODE_BY_ID.get(route.from).x));
-    ctx.fillStyle=visited?'rgba(232,216,181,.94)':'rgba(232,216,181,.66)';
-    ctx.fillRect(-48,-11,96,22);
-    ctx.fillStyle='#5e4f3d';ctx.font='700 10px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(route.name,0,0);
-    ctx.restore();
+    const lp=worldToMapPoint(area.labelX,area.labelY);
+    ctx.fillStyle=visited?'#554634':'rgba(86,72,54,.42)';
+    ctx.font='800 14px "Noto Serif SC","Songti SC",serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(area.name,lp.x,lp.y);
   }
 
-  // World nodes and junction names.
-  for(const node of WORLD_NODES){
-    const visited=mapState.visitedNodes.has(node.id)||routesAtNode(node.id).some(r=>mapState.visitedRoutes.has(r.index));
-    drawNodeIcon(ctx,node,visited);
-    ctx.fillStyle=visited?'#4d4031':'rgba(83,70,54,.58)';
-    ctx.font=(nodeDegree(node.id)>2?'800 15px':'700 13px')+' "Noto Serif SC","Songti SC",serif';
-    ctx.textAlign='center';ctx.textBaseline='top';
-    ctx.fillText(node.name,node.x,node.y+21);
-    if(nodeDegree(node.id)>2){
-      ctx.fillStyle='rgba(91,73,51,.62)';ctx.font='700 10px system-ui,sans-serif';
-      ctx.fillText(nodeDegree(node.id)+' 路岔口',node.x,node.y+40);
-    }
+  // Draw every physical solid exactly where it exists in the platforming world.
+  for(const t of MAP_TERRAIN){
+    const r=worldRectToMap(t);
+    ctx.fillStyle=t.oneWay?'rgba(127,97,60,.72)':(t.kind==='rock'?'#716b65':'#866b4d');
+    const minH=t.oneWay?2:Math.max(3,r.h);
+    ctx.fillRect(r.x,r.y+(r.h-minH),Math.max(2,r.w),minH);
   }
 
-  // Known enemies and pickups are plotted on their actual route positions.
+  // Important world objects.
+  for(const o of MAP_OBJECTS){
+    if(o.breakable&&mapState.broken.has(o.id))continue;
+    const area=areaAt(o.x,o.y);
+    if(!mapState.visitedAreas.has(area.id))continue;
+    const p=worldToMapPoint(o.x+o.w*.5,o.y+o.h*.5);
+    if(o.kind==='tree'){ctx.fillStyle='#526348';ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill()}
+    else if(o.kind==='cave-mouth'){ctx.strokeStyle='#514c47';ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x,p.y,7,Math.PI,0);ctx.stroke()}
+    else if(o.kind==='windmill'){ctx.fillStyle='#705e48';ctx.font='18px serif';ctx.fillText('✣',p.x,p.y)}
+    else if(o.kind==='shrine'){ctx.fillStyle='#865f50';ctx.fillRect(p.x-5,p.y-7,10,14)}
+    else {ctx.fillStyle='#7d654e';ctx.fillRect(p.x-3,p.y-3,6,6)}
+  }
+
+  // Enemies/pickups only show in explored areas.
   for(let i=0;i<ENEMY_SPAWNS.length;i++){
-    const spawn=ENEMY_SPAWNS[i],route=routeForWorldX(spawn.x);
-    if(!mapState.visitedRoutes.has(route.index))continue;
+    const sp=ENEMY_SPAWNS[i],area=areaAt(sp.x,sp.y);
+    if(!mapState.visitedAreas.has(area.id))continue;
     const live=enemies[i];if(live&&live.spawned&&!live.alive)continue;
-    const p=mapPointForWorldX(live&&live.spawned?live.x:spawn.x);
-    ctx.fillStyle='#8b3c32';ctx.beginPath();ctx.moveTo(p.x,p.y-8);ctx.lineTo(p.x-6,p.y+3);ctx.lineTo(p.x+6,p.y+3);ctx.closePath();ctx.fill();
+    const ex=live&&live.spawned?live.x:sp.x,ey=live&&live.spawned?live.y:sp.y;
+    const p=worldToMapPoint(ex,ey);
+    ctx.fillStyle='#8b3c32';ctx.beginPath();ctx.moveTo(p.x,p.y-5);ctx.lineTo(p.x-5,p.y+4);ctx.lineTo(p.x+5,p.y+4);ctx.closePath();ctx.fill();
   }
-  for(const pickup of MAP_PICKUPS){
-    const route=routeForWorldX(pickup.x);
-    if(!mapState.visitedRoutes.has(route.index)||mapState.collected.has(pickup.id))continue;
-    if(pickup.requiresBroken&&!mapState.broken.has(pickup.requiresBroken))continue;
-    const p=mapPointForWorldX(pickup.x);ctx.fillStyle='#6f8452';ctx.beginPath();ctx.arc(p.x,p.y+10,5,0,Math.PI*2);ctx.fill();
+  for(const pck of MAP_PICKUPS){
+    if(mapState.collected.has(pck.id))continue;
+    if(pck.requiresBroken&&!mapState.broken.has(pck.requiresBroken))continue;
+    const area=areaAt(pck.x,pck.y);if(!mapState.visitedAreas.has(area.id))continue;
+    const p=worldToMapPoint(pck.x,pck.y);
+    ctx.fillStyle='#657b4a';ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();
   }
 
-  const player=mapPointForWorldX(playerWorldX);
-  ctx.strokeStyle='#f6e8c8';ctx.lineWidth=6;ctx.fillStyle='#3f3024';
-  ctx.beginPath();ctx.arc(player.x,player.y,10,0,Math.PI*2);ctx.fill();ctx.stroke();
+  const player=worldToMapPoint(playerWorldX,playerY);
+  ctx.strokeStyle='#f5e8ca';ctx.lineWidth=6;ctx.fillStyle='#3f3024';
+  ctx.beginPath();ctx.arc(player.x,player.y,9,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.fillStyle='#44382b';ctx.font='800 13px system-ui,sans-serif';ctx.textAlign='center';ctx.textBaseline='bottom';
-  ctx.fillText('你在这里',player.x,player.y-16);
+  ctx.fillText('你在这里',player.x,player.y-15);
 
-  const progress=routeProgressForWorldX(playerWorldX);
-  const bounds=routeBoundaryInfo(playerWorldX);
-  const from=WORLD_NODE_BY_ID.get(bounds.leftNodeId),to=WORLD_NODE_BY_ID.get(bounds.rightNodeId);
-  const visualT=clamp((routeLocalX(playerWorldX)-ROUTE_ENDPOINT_PAD)/(WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD*2),0,1);
-  worldMapLocation.textContent='当前位置：'+progress.route.name+' · '+(from?.name||'')+' ↔ '+(to?.name||'')+' · '+Math.round(visualT*100)+'%';
+  const area=areaAt(playerWorldX,playerY);
+  worldMapLocation.textContent='当前位置：'+area.name+' · X '+Math.round(playerWorldX)+' / Y '+Math.round(playerY);
   applyWorldMapZoom(false);
 }
 function applyWorldMapZoom(preserveCenter=true){
@@ -3246,7 +3186,7 @@ function applyWorldMapZoom(preserveCenter=true){
 function locatePlayerOnWorldMap({minimumZoom=.70}={}){
   if(worldMapZoom<minimumZoom){worldMapZoom=minimumZoom;applyWorldMapZoom(false)}
   requestAnimationFrame(()=>{
-    const p=mapPointForWorldX(playerWorldX);
+    const p=worldToMapPoint(playerWorldX,playerY);
     const px=p.x*worldMapZoom,py=p.y*worldMapZoom;
     worldMapScroll.scrollTo({
       left:Math.max(0,px-worldMapScroll.clientWidth*.5),
@@ -3545,12 +3485,14 @@ function defaultSave(session){
     location:'A村外道路',
     createdAt:Date.now(),
     worldMinutes:0,
+    worldVersion:2,
     worldX:0,
+    worldY:0,
     playerWorldX:MAP_SPAWN_X,
-    playerY:0,
+    playerY:MAP_SPAWN_Y,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
-    mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
+    mapState:{broken:[],collected:[],visitedAreas:['village'],exitReached:false},
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
@@ -3644,15 +3586,15 @@ function saveWorldState(){
   const session=getSession();
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
-  save.location=regionNameAt(playerWorldX);
-  save.worldX=worldX;
+  save.worldVersion=2;
+  save.location=regionNameAt(playerWorldX,playerY);
+  save.worldX=worldX;save.worldY=worldY;
   save.playerWorldX=playerWorldX;
   save.playerY=playerY;
-  save.routeOrientation={routeIndex:orientationRouteIndex,sign:currentRouteOrientation};
   save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.playerHp=playerHp;
-  save.mapState={broken:[...mapState.broken],collected:[...mapState.collected],visitedRoutes:[...mapState.visitedRoutes],visitedNodes:[...mapState.visitedNodes],exitReached:mapState.exitReached};
+  save.mapState={broken:[...mapState.broken],collected:[...mapState.collected],visitedAreas:[...mapState.visitedAreas],exitReached:mapState.exitReached};
   save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
@@ -3665,23 +3607,24 @@ function loadWorldState(){
   playerHp=Number.isFinite(save.playerHp)?clampPlayerHp(save.playerHp):PLAYER_MAX_HP;
 
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
+  const isV2=save.worldVersion===2;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
-  playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
-  orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
-  currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
-  if(orientationRouteIndex!==worldZoneIndexAt(playerWorldX)){orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1}
-  sceneryOffsetX=0;
-  updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
-  playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
-  playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
-  if(!playerGrounded){playerY=0;playerGrounded=true}
+  playerWorldX=isV2?clamp(Number(save.playerWorldX)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW):MAP_SPAWN_X;
+  playerY=isV2&&Number.isFinite(save.playerY)?clamp(save.playerY,80,MAP_HEIGHT-80):MAP_SPAWN_Y;
+  worldX=isV2&&Number.isFinite(save.worldX)?save.worldX:0;
+  worldY=isV2&&Number.isFinite(save.worldY)?save.worldY:0;
+  playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,8)!==null;
+  if(!playerGrounded){
+    const snap=nearestSupportYAt(playerWorldX,playerY);
+    playerY=snap;playerGrounded=true;
+  }
+  lastSafeX=playerWorldX;lastSafeY=playerY;
+  updateMapInteractions._area=areaAt(playerWorldX,playerY)?.id||'';
 
   const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
   mapState.broken=new Set(Array.isArray(savedMap.broken)?savedMap.broken:[]);
   mapState.collected=new Set(Array.isArray(savedMap.collected)?savedMap.collected:[]);
-  mapState.visitedRoutes=new Set(Array.isArray(savedMap.visitedRoutes)?savedMap.visitedRoutes:[worldZoneIndexAt(playerWorldX)]);
-  mapState.visitedNodes=new Set(Array.isArray(savedMap.visitedNodes)?savedMap.visitedNodes:['village']);
+  mapState.visitedAreas=new Set(Array.isArray(savedMap.visitedAreas)?savedMap.visitedAreas:[areaAt(playerWorldX,playerY)?.id||'village']);
   mapState.exitReached=!!savedMap.exitReached;
   buildMapVisuals();
 
@@ -3743,8 +3686,8 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
-      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
+      worldX=0;worldY=0;playerWorldX=MAP_SPAWN_X;playerY=MAP_SPAWN_Y;lastSafeX=MAP_SPAWN_X;lastSafeY=MAP_SPAWN_Y;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._area='village';
+      mapState.broken.clear();mapState.collected.clear();mapState.visitedAreas=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;
