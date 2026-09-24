@@ -558,7 +558,7 @@ button{cursor:pointer}
 }
 
 
-/* ---------- INVENTORY UI V2 : TRUE 9-SLICE + MODULAR PARTS ---------- */
+/* ---------- INVENTORY UI V3 : APPROVED FULL PAPER PANEL ---------- */
 .backpack-open-btn{
   position:absolute;z-index:29;
   top:max(78px,calc(env(safe-area-inset-top) + 72px));
@@ -570,178 +570,103 @@ button{cursor:pointer}
 .backpack-open-btn:active{transform:translate(1px,2px) rotate(-1deg)}
 
 .inventory-overlay{
-  position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;
-  background:rgba(36,31,24,.22);opacity:0;visibility:hidden;pointer-events:none;
-  transition:opacity .16s ease,visibility .16s ease;overflow:hidden;
+  position:fixed;inset:0;z-index:80;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(35,31,25,.20);
+  opacity:0;visibility:hidden;pointer-events:none;overflow:hidden;
+  transition:opacity .16s ease,visibility .16s ease;
 }
 .inventory-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
 .inventory-shell{
-  position:relative;width:min(96vw,1680px);height:min(92vh,900px);
-  min-width:720px;min-height:430px;
+  position:relative;
+  width:auto;height:min(94vh,1018px);
+  aspect-ratio:1448/1086;
   filter:drop-shadow(0 18px 28px rgba(26,20,14,.24));
-  transform-origin:50% 22%;
+  transform-origin:50% 50%;
 }
-.inventory-board{position:absolute;inset:0}
-
-.paper9-skin{
-  --edge-x:clamp(66px,6.1vw,96px);
-  --edge-y:clamp(54px,7.5vh,82px);
-  position:absolute;inset:0;z-index:0;display:grid;
-  grid-template-columns:var(--edge-x) minmax(0,1fr) var(--edge-x);
-  grid-template-rows:var(--edge-y) minmax(0,1fr) var(--edge-y);
-  pointer-events:none;
-}
-.paper9-skin img{display:block;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none}
-.paper9-skin .p9-tl{grid-area:1/1}.paper9-skin .p9-t{grid-area:1/2}.paper9-skin .p9-tr{grid-area:1/3}
-.paper9-skin .p9-l{grid-area:2/1}.paper9-skin .p9-c{grid-area:2/2}.paper9-skin .p9-r{grid-area:2/3}
-.paper9-skin .p9-bl{grid-area:3/1}.paper9-skin .p9-b{grid-area:3/2}.paper9-skin .p9-br{grid-area:3/3}
-
-.inventory-title{
-  position:absolute;z-index:4;width:clamp(210px,19vw,300px);left:6.4%;top:1.2%;
-  pointer-events:none;user-select:none;-webkit-user-drag:none;
-  filter:drop-shadow(3px 5px 0 rgba(55,42,28,.10));
+.inventory-art{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  image-rendering:auto;user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
 .inventory-close{
-  position:absolute;z-index:6;right:4.1%;top:2.8%;width:clamp(62px,5.8vw,88px);
-  aspect-ratio:1;border:0;background:transparent;padding:0;
+  position:absolute;z-index:6;
+  right:4.6%;top:7.0%;width:10.0%;height:13.2%;
+  border:0;background:transparent;padding:0;cursor:pointer;border-radius:50%;
 }
-.inventory-close img,.inventory-img-btn img,.inventory-page-btn img{
-  display:block;width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none
-}
-.inventory-close:active,.inventory-img-btn:active,.inventory-page-btn:active{transform:translate(1px,2px) scale(.97)}
-
-.inventory-rope{
-  position:absolute;z-index:1;top:-36vh;height:41vh;width:auto;
-  transform-origin:50% 0%;filter:drop-shadow(2px 3px 0 rgba(40,30,18,.10));pointer-events:none;
-}
-.inventory-rope.left{left:22%}.inventory-rope.right{right:22%}
-
-.inventory-content{
-  position:absolute;z-index:3;
-  left:clamp(78px,7vw,118px);right:clamp(78px,7vw,118px);
-  top:clamp(112px,16.5vh,138px);bottom:clamp(54px,7vh,76px);
-  display:grid;grid-template-columns:minmax(0,1.62fr) minmax(270px,.78fr);
-  gap:clamp(20px,2.5vw,44px);min-width:0;min-height:0;
-}
-.inventory-main{min-width:0;min-height:0;display:flex;flex-direction:column}
 .inventory-grid{
-  --slot:min(10.1vw,14.5vh,124px);
-  flex:1 1 auto;min-height:0;display:grid;
-  grid-template-columns:repeat(5,var(--slot));grid-template-rows:repeat(4,var(--slot));
-  gap:clamp(7px,1vw,13px);align-content:center;justify-content:center;
+  position:absolute;z-index:5;
+  left:6.35%;top:26.6%;width:51.55%;height:54.2%;
+  display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);
+  column-gap:1.15%;row-gap:1.6%;
 }
 .inventory-slot{
-  position:relative;width:var(--slot);height:var(--slot);padding:0;border:0;background-color:transparent;
-  background-image:url("./assets/ui/inventory-v2/slot.png?v=4");background-size:100% 100%;background-repeat:no-repeat;
-  overflow:hidden;
+  position:relative;min-width:0;min-height:0;
+  border:0;background:transparent;padding:0;
 }
-.inventory-slot.is-selected{background-image:url("./assets/ui/inventory-v2/slot-selected.png?v=4")}
-.inventory-slot:active{transform:translateY(2px) scale(.98)}
-.inventory-slot .item-icon{position:absolute;inset:15%;width:70%;height:70%;object-fit:contain;pointer-events:none}
+.inventory-slot:active{background:rgba(79,65,48,.05);transform:scale(.98)}
+.inventory-slot.is-selected{box-shadow:inset 0 0 0 4px rgba(74,113,133,.35);border-radius:18%}
+.inventory-slot .item-icon{
+  position:absolute;inset:14%;width:72%;height:72%;object-fit:contain;pointer-events:none;
+}
 .inventory-slot .item-count{
-  position:absolute;right:12%;bottom:10%;color:#f4ead5;font-weight:700;font-size:clamp(12px,1.2vw,20px);
-  text-shadow:0 1px 3px rgba(45,35,25,.8);pointer-events:none
+  position:absolute;right:12%;bottom:8%;
+  color:#f5ead4;font-weight:700;font-size:clamp(12px,1.25vw,20px);
+  text-shadow:0 2px 3px rgba(45,35,25,.78);pointer-events:none;
 }
 
-.inventory-footer{
-  flex:0 0 clamp(52px,7vh,68px);
-  display:grid;grid-template-columns:auto minmax(210px,1fr);align-items:center;
-  gap:clamp(18px,2vw,34px);padding:0 2%;position:relative;z-index:6;
+.inventory-preview-live{
+  position:absolute;z-index:5;left:69.3%;top:28.0%;width:15.8%;height:21.5%;
+  display:flex;align-items:center;justify-content:center;pointer-events:none;
 }
-.inventory-pagination{display:flex;align-items:center;gap:clamp(5px,.7vw,10px)}
-.inventory-page-btn{
-  width:clamp(40px,4.1vw,60px);height:clamp(44px,4.8vw,66px);border:0;background:transparent;padding:0;
-}
-.inventory-page-btn.page-num{width:clamp(33px,3.5vw,48px)}
-.inventory-page-btn.is-active{transform:translateY(-4px) scale(1.08);filter:drop-shadow(0 4px 0 rgba(44,67,76,.18))}
-.inventory-weight{
-  min-width:0;color:#5b5042;font-size:clamp(12px,1.2vw,18px);
-  display:grid;grid-template-columns:auto minmax(110px,1fr);gap:9px;align-items:center;
-}
-.inventory-weight-bar{
-  position:relative;height:13px;border-radius:9px;background:#c8b99d;
-  box-shadow:inset 0 1px 3px rgba(77,59,39,.28);overflow:hidden;
-}
-.inventory-weight-fill{height:100%;width:0%;background:#557f92;border-radius:inherit;transition:width .2s ease}
-
-.inventory-detail{
-  position:relative;min-width:0;min-height:0;padding:clamp(50px,7vh,72px) clamp(26px,2.3vw,38px) clamp(24px,3.5vh,36px);
-  box-sizing:border-box;display:flex;flex-direction:column;align-items:stretch;
-}
-.inventory-detail>.paper9-skin{--edge-x:clamp(42px,3.7vw,58px);--edge-y:clamp(38px,5vh,54px)}
-.inventory-detail>*:not(.paper9-skin){position:relative;z-index:2}
-.inventory-preview{
-  flex:0 0 auto;width:min(17vh,160px);height:min(17vh,160px);align-self:center;
-  background:url("./assets/ui/inventory-v2/preview-slot.png?v=4") center/contain no-repeat;
+.inventory-preview-live img{width:70%;height:70%;object-fit:contain}
+.inventory-name-live{
+  position:absolute;z-index:5;left:64.3%;top:53.9%;width:28.7%;height:5.7%;
   display:flex;align-items:center;justify-content:center;
+  color:#f2e8d4;font-size:clamp(13px,1.7vw,25px);font-weight:700;
+  text-align:center;pointer-events:none;
 }
-.inventory-preview img{width:68%;height:68%;object-fit:contain}
-.inventory-item-name{
-  margin:clamp(8px,1.4vh,14px) 2% 6px;min-height:34px;padding:7px 13px;color:#f0e7d5;
-  font-size:clamp(15px,1.45vw,21px);background:#54798b;
-  clip-path:polygon(1% 8%,99% 0,100% 88%,96% 100%,1% 94%,0 12%);
+.inventory-desc-live{
+  position:absolute;z-index:5;left:64.0%;top:63.0%;width:29.0%;height:8.0%;
+  color:#665948;font-size:clamp(10px,1vw,16px);line-height:1.45;overflow:hidden;
+  pointer-events:none;
 }
-.inventory-item-desc{min-height:62px;margin:5px 4% 8px;color:#716453;font-size:clamp(11px,1vw,15px);line-height:1.55}
-.inventory-meta{
-  margin:auto 4% 8px;display:flex;justify-content:space-between;gap:12px;color:#655746;font-size:clamp(11px,1vw,15px);
+.inventory-meta-live{
+  position:absolute;z-index:5;left:64.0%;top:75.0%;width:29.0%;
+  display:flex;justify-content:space-between;color:#5f5141;
+  font-size:clamp(10px,1vw,16px);pointer-events:none;
 }
-.inventory-actions{display:flex;gap:10px;justify-content:center}
-.inventory-img-btn{width:min(44%,170px);border:0;background:transparent;padding:0}
-.inventory-img-btn:disabled{opacity:.38;filter:grayscale(.25)}
+.inventory-use-hot,.inventory-drop-hot{
+  position:absolute;z-index:6;top:80.3%;height:10.2%;
+  border:0;background:transparent;padding:0;cursor:pointer;border-radius:16px;
+}
+.inventory-use-hot{left:63.1%;width:14.9%}
+.inventory-drop-hot{left:78.6%;width:14.5%}
+.inventory-use-hot:disabled,.inventory-drop-hot:disabled{cursor:default}
+.inventory-use-hot:active:not(:disabled),.inventory-drop-hot:active:not(:disabled){transform:translateY(2px) scale(.98)}
 
-.inventory-paper-stage{
-  position:absolute;z-index:12;left:50%;top:50%;width:150px;height:120px;transform:translate(-50%,-50%);
-  pointer-events:none;opacity:0;
+.inventory-shell.enter-drop{animation:invPaperDrop .62s cubic-bezier(.18,.78,.22,1.06) both}
+.inventory-shell.enter-crumple{animation:invPaperUnfold .46s cubic-bezier(.16,.82,.25,1.08) both}
+.inventory-shell.close-drop{animation:invPaperLift .30s ease-in both}
+.inventory-shell.close-crumple{animation:invPaperFold .28s ease-in both}
+@keyframes invPaperDrop{
+  0%{opacity:0;transform:translateY(-115vh) rotate(-1.1deg)}
+  74%{opacity:1;transform:translateY(10px) rotate(.45deg)}
+  88%{transform:translateY(-4px) rotate(-.18deg)}
+  100%{opacity:1;transform:translateY(0) rotate(0)}
 }
-.inventory-paper-stage img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);opacity:0}
-.paper-ball-img{width:72px}.paper-unfold1-img{width:108px}.paper-unfold2-img{width:142px}
-
-.inventory-shell.enter-rope{animation:invRopeDrop .82s cubic-bezier(.18,.78,.22,1.08) both}
-.inventory-shell.enter-rope .inventory-rope.left{animation:ropeSwayL 1.25s .68s ease-out both}
-.inventory-shell.enter-rope .inventory-rope.right{animation:ropeSwayR 1.25s .68s ease-out both}
-@keyframes invRopeDrop{
-  0%{transform:translateY(-125vh) rotate(-1.2deg)}
-  72%{transform:translateY(11px) rotate(.65deg)}
-  87%{transform:translateY(-5px) rotate(-.25deg)}
-  100%{transform:translateY(0) rotate(0)}
+@keyframes invPaperUnfold{
+  0%{opacity:0;transform:scale(.12,.08) rotate(-11deg)}
+  58%{opacity:1;transform:scale(1.025,.97) rotate(.45deg)}
+  80%{transform:scale(.99,1.015) rotate(-.15deg)}
+  100%{opacity:1;transform:scale(1) rotate(0)}
 }
-@keyframes ropeSwayL{0%{transform:rotate(0)}35%{transform:rotate(2.2deg)}68%{transform:rotate(-1.1deg)}100%{transform:rotate(0)}}
-@keyframes ropeSwayR{0%{transform:rotate(0)}35%{transform:rotate(-2deg)}68%{transform:rotate(1deg)}100%{transform:rotate(0)}}
-
-.inventory-overlay.mode-crumple .inventory-rope{opacity:0}
-.inventory-overlay.mode-crumple .inventory-paper-stage{opacity:1}
-.inventory-overlay.mode-crumple .paper-ball-img{animation:paperBall .22s 0s both}
-.inventory-overlay.mode-crumple .paper-unfold1-img{animation:paperStep1 .22s .16s both}
-.inventory-overlay.mode-crumple .paper-unfold2-img{animation:paperStep2 .24s .31s both}
-.inventory-shell.enter-crumple{animation:paperOpenPanel .48s .43s cubic-bezier(.16,.82,.25,1.08) both}
-@keyframes paperBall{0%{opacity:0;transform:translate(-50%,-50%) scale(.45) rotate(-70deg)}45%,80%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.05) rotate(12deg)}}
-@keyframes paperStep1{0%{opacity:0;transform:translate(-50%,-50%) scale(.55) rotate(12deg)}35%,75%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.25) rotate(-5deg)}}
-@keyframes paperStep2{0%{opacity:0;transform:translate(-50%,-50%) scale(.68) rotate(-4deg)}30%,75%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.65) rotate(1deg)}}
-@keyframes paperOpenPanel{0%{opacity:0;transform:scale(.08,.12) rotate(-9deg)}58%{opacity:1;transform:scale(1.035,.96) rotate(.6deg)}78%{transform:scale(.985,1.02) rotate(-.25deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
-
-.inventory-shell.close-rope{animation:invRopeClose .40s ease-in both}
-@keyframes invRopeClose{to{transform:translateY(-125vh) rotate(-.8deg)}}
-.inventory-shell.close-crumple{animation:invCrumpleClose .34s ease-in both}
-@keyframes invCrumpleClose{0%{opacity:1;transform:scale(1) rotate(0)}100%{opacity:0;transform:scale(.08,.12) rotate(12deg)}}
+@keyframes invPaperLift{to{opacity:0;transform:translateY(-115vh) rotate(-.7deg)}}
+@keyframes invPaperFold{to{opacity:0;transform:scale(.10,.07) rotate(10deg)}}
 
 @media(max-width:900px),(max-height:560px){
   .backpack-open-btn{width:62px;height:52px;top:max(66px,calc(env(safe-area-inset-top) + 60px))}
-  .inventory-shell{width:97vw;height:94vh;min-width:0;min-height:0}
-  .paper9-skin{--edge-x:58px;--edge-y:46px}
-  .inventory-title{width:clamp(170px,23vw,245px);left:5.7%;top:1.2%}
-  .inventory-close{width:54px;right:3%;top:2%}
-  .inventory-content{left:64px;right:64px;top:92px;bottom:42px;grid-template-columns:minmax(0,1.72fr) minmax(210px,.72fr);gap:12px}
-  .inventory-grid{--slot:min(9.4vw,13.5vh,96px);gap:5px}
-  .inventory-footer{flex-basis:47px;gap:8px;padding:0}
-  .inventory-page-btn{width:36px;height:40px}.inventory-page-btn.page-num{width:29px}
-  .inventory-detail{padding:40px 20px 18px}
-  .inventory-detail>.paper9-skin{--edge-x:36px;--edge-y:32px}
-  .inventory-preview{width:min(15vh,98px);height:min(15vh,98px)}
-  .inventory-item-name{font-size:13px;min-height:25px;padding:4px 7px;margin-top:4px}
-  .inventory-item-desc{font-size:10px;min-height:38px;margin-bottom:2px}
-  .inventory-meta{font-size:10px;margin-bottom:3px}
-  .inventory-img-btn{width:min(44%,108px)}
-  .inventory-rope{top:-39vh;height:44vh}
+  .inventory-shell{height:min(96vh,1018px)}
+  .inventory-slot.is-selected{box-shadow:inset 0 0 0 2px rgba(74,113,133,.35)}
 }
 
 </style>
@@ -778,77 +703,20 @@ button{cursor:pointer}
 </main>
 
 <section id="backpackOverlay" class="inventory-overlay" aria-hidden="true">
-  <div id="inventoryPaperStage" class="inventory-paper-stage" aria-hidden="true">
-    <img class="paper-ball-img" src="./assets/ui/inventory-v2/paper-ball.png?v=4" alt="">
-    <img class="paper-unfold1-img" src="./assets/ui/inventory-v2/paper-unfold-1.png?v=4" alt="">
-    <img class="paper-unfold2-img" src="./assets/ui/inventory-v2/paper-unfold-2.png?v=4" alt="">
-  </div>
-
   <div id="backpackFrame" class="inventory-shell" role="dialog" aria-modal="true" aria-label="背包">
-    <img class="inventory-rope left" src="./assets/ui/inventory-v2/rope-left.png?v=4" alt="">
-    <img class="inventory-rope right" src="./assets/ui/inventory-v2/rope-right.png?v=4" alt="">
+    <img class="inventory-art" src="./assets/ui/backpack-ui-v2.png?v=2" alt="背包">
+    <button id="backpackClose" class="inventory-close" aria-label="关闭背包"></button>
+    <div id="backpackSlots" class="inventory-grid" aria-label="背包格子"></div>
 
-    <div class="inventory-board">
-      <div class="paper9-skin" aria-hidden="true">
-        <img class="p9-tl" src="./assets/ui/inventory-v2/frame-tl.png?v=4" alt="">
-        <img class="p9-t" src="./assets/ui/inventory-v2/frame-t.png?v=4" alt="">
-        <img class="p9-tr" src="./assets/ui/inventory-v2/frame-tr.png?v=4" alt="">
-        <img class="p9-l" src="./assets/ui/inventory-v2/frame-l.png?v=4" alt="">
-        <img class="p9-c" src="./assets/ui/inventory-v2/frame-c.png?v=4" alt="">
-        <img class="p9-r" src="./assets/ui/inventory-v2/frame-r.png?v=4" alt="">
-        <img class="p9-bl" src="./assets/ui/inventory-v2/frame-bl.png?v=4" alt="">
-        <img class="p9-b" src="./assets/ui/inventory-v2/frame-b.png?v=4" alt="">
-        <img class="p9-br" src="./assets/ui/inventory-v2/frame-br.png?v=4" alt="">
-      </div>
-      <img class="inventory-title" src="./assets/ui/inventory-v2/title.png?v=4" alt="背包">
-      <button id="backpackClose" class="inventory-close" aria-label="关闭背包">
-        <img src="./assets/ui/inventory-v2/close.png?v=4" alt="">
-      </button>
-
-      <div class="inventory-content">
-        <section class="inventory-main" aria-label="物品栏">
-          <div id="backpackSlots" class="inventory-grid"></div>
-          <div class="inventory-footer">
-            <div class="inventory-pagination" aria-label="背包分页">
-              <button id="inventoryPrev" class="inventory-page-btn" aria-label="上一页"><img src="./assets/ui/inventory-v2/page-prev.png?v=4" alt=""></button>
-              <button class="inventory-page-btn page-num is-active" data-page="0" aria-label="第1页"><img src="./assets/ui/inventory-v2/page-1-active.png?v=4" alt="1"></button>
-              <button class="inventory-page-btn page-num" data-page="1" aria-label="第2页"><img src="./assets/ui/inventory-v2/page-2.png?v=4" alt="2"></button>
-              <button class="inventory-page-btn page-num" data-page="2" aria-label="第3页"><img src="./assets/ui/inventory-v2/page-3.png?v=4" alt="3"></button>
-              <button id="inventoryNext" class="inventory-page-btn" aria-label="下一页"><img src="./assets/ui/inventory-v2/page-next.png?v=4" alt=""></button>
-            </div>
-            <div class="inventory-weight">
-              <span>负重 <b id="inventoryWeightText">0.0 / 25.0</b></span>
-              <div class="inventory-weight-bar"><div id="inventoryWeightFill" class="inventory-weight-fill"></div></div>
-            </div>
-          </div>
-        </section>
-
-        <aside class="inventory-detail" aria-label="物品详情">
-          <div class="paper9-skin" aria-hidden="true">
-        <img class="p9-tl" src="./assets/ui/inventory-v2/frame-tl.png?v=4" alt="">
-        <img class="p9-t" src="./assets/ui/inventory-v2/frame-t.png?v=4" alt="">
-        <img class="p9-tr" src="./assets/ui/inventory-v2/frame-tr.png?v=4" alt="">
-        <img class="p9-l" src="./assets/ui/inventory-v2/frame-l.png?v=4" alt="">
-        <img class="p9-c" src="./assets/ui/inventory-v2/frame-c.png?v=4" alt="">
-        <img class="p9-r" src="./assets/ui/inventory-v2/frame-r.png?v=4" alt="">
-        <img class="p9-bl" src="./assets/ui/inventory-v2/frame-bl.png?v=4" alt="">
-        <img class="p9-b" src="./assets/ui/inventory-v2/frame-b.png?v=4" alt="">
-        <img class="p9-br" src="./assets/ui/inventory-v2/frame-br.png?v=4" alt="">
-      </div>
-          <div class="inventory-preview"><img id="inventoryPreviewImage" alt=""></div>
-          <div id="inventoryItemName" class="inventory-item-name">未选择物品</div>
-          <div id="inventoryItemDesc" class="inventory-item-desc">选择左侧格子查看物品信息。</div>
-          <div class="inventory-meta">
-            <span>重量 <b id="inventoryItemWeight">0.0</b></span>
-            <span>数量 <b id="inventoryItemCount">0</b></span>
-          </div>
-          <div class="inventory-actions">
-            <button id="inventoryUse" class="inventory-img-btn" disabled><img src="./assets/ui/inventory-v2/use.png?v=4" alt="使用"></button>
-            <button id="inventoryDrop" class="inventory-img-btn" disabled><img src="./assets/ui/inventory-v2/drop.png?v=4" alt="丢弃"></button>
-          </div>
-        </aside>
-      </div>
+    <div class="inventory-preview-live"><img id="inventoryPreviewImage" alt=""></div>
+    <div id="inventoryItemName" class="inventory-name-live"></div>
+    <div id="inventoryItemDesc" class="inventory-desc-live"></div>
+    <div class="inventory-meta-live">
+      <span>重量 <b id="inventoryItemWeight">0.0</b></span>
+      <span>数量 <b id="inventoryItemCount">0</b></span>
     </div>
+    <button id="inventoryUse" class="inventory-use-hot" aria-label="使用物品" disabled></button>
+    <button id="inventoryDrop" class="inventory-drop-hot" aria-label="丢弃物品" disabled></button>
   </div>
 </section>
 
@@ -860,7 +728,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.7 · 9宫格背包</div>
+          <div class="brand-foot">WORLD BUILD 0.8 · 高清整板背包</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
@@ -1007,16 +875,11 @@ const backpackOverlay=document.getElementById('backpackOverlay');
 const backpackFrame=document.getElementById('backpackFrame');
 const backpackClose=document.getElementById('backpackClose');
 const backpackSlots=document.getElementById('backpackSlots');
-const inventoryPrev=document.getElementById('inventoryPrev');
-const inventoryNext=document.getElementById('inventoryNext');
-const inventoryPageBtns=[...document.querySelectorAll('.inventory-page-btn.page-num')];
 const inventoryPreviewImage=document.getElementById('inventoryPreviewImage');
 const inventoryItemName=document.getElementById('inventoryItemName');
 const inventoryItemDesc=document.getElementById('inventoryItemDesc');
 const inventoryItemWeight=document.getElementById('inventoryItemWeight');
 const inventoryItemCount=document.getElementById('inventoryItemCount');
-const inventoryWeightText=document.getElementById('inventoryWeightText');
-const inventoryWeightFill=document.getElementById('inventoryWeightFill');
 const inventoryUse=document.getElementById('inventoryUse');
 const inventoryDrop=document.getElementById('inventoryDrop');
 
@@ -1177,39 +1040,32 @@ joystickZone.addEventListener('lostpointercapture',e=>{
 });
 
 /* inventory */
-const INVENTORY_PAGE_SIZE=20;
-const INVENTORY_PAGE_COUNT=3;
-const INVENTORY_CAPACITY=INVENTORY_PAGE_SIZE*INVENTORY_PAGE_COUNT;
-const INVENTORY_WEIGHT_LIMIT=25;
+const INVENTORY_CAPACITY=20;
 const inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
-let inventoryPage=0;
 let inventorySelected=-1;
-let backpackAnimationMode='rope';
+let backpackAnimationMode='drop';
 let backpackClosing=false;
 
-for(let i=0;i<INVENTORY_PAGE_SIZE;i++){
+for(let i=0;i<INVENTORY_CAPACITY;i++){
   const slot=document.createElement('button');
   slot.type='button';
   slot.className='inventory-slot';
-  slot.dataset.localIndex=String(i);
+  slot.dataset.index=String(i);
   slot.setAttribute('aria-label','背包格 '+(i+1));
   slot.addEventListener('click',()=>{
-    inventorySelected=inventoryPage*INVENTORY_PAGE_SIZE+i;
+    inventorySelected=i;
     renderInventory();
   });
   backpackSlots.appendChild(slot);
 }
 
-function currentInventoryWeight(){
-  return inventoryItems.reduce((sum,item)=>sum+(item?Number(item.weight||0)*Number(item.count||1):0),0);
-}
 function renderInventoryDetail(){
   const item=inventorySelected>=0?inventoryItems[inventorySelected]:null;
   if(!item){
     inventoryPreviewImage.removeAttribute('src');
     inventoryPreviewImage.style.display='none';
-    inventoryItemName.textContent='未选择物品';
-    inventoryItemDesc.textContent='选择左侧格子查看物品信息。';
+    inventoryItemName.textContent='';
+    inventoryItemDesc.textContent='';
     inventoryItemWeight.textContent='0.0';
     inventoryItemCount.textContent='0';
     inventoryUse.disabled=true;
@@ -1226,12 +1082,10 @@ function renderInventoryDetail(){
   inventoryDrop.disabled=false;
 }
 function renderInventory(){
-  const buttons=[...backpackSlots.children];
-  buttons.forEach((slot,i)=>{
-    const globalIndex=inventoryPage*INVENTORY_PAGE_SIZE+i;
-    const item=inventoryItems[globalIndex];
-    slot.classList.toggle('is-selected',globalIndex===inventorySelected);
-    slot.setAttribute('aria-label','背包格 '+(globalIndex+1)+(item?'：'+item.name:'：空'));
+  [...backpackSlots.children].forEach((slot,i)=>{
+    const item=inventoryItems[i];
+    slot.classList.toggle('is-selected',i===inventorySelected);
+    slot.setAttribute('aria-label','背包格 '+(i+1)+(item?'：'+item.name:'：空'));
     slot.innerHTML='';
     if(item){
       if(item.icon){
@@ -1246,31 +1100,14 @@ function renderInventory(){
       }
     }
   });
-  inventoryPageBtns.forEach((btn,i)=>btn.classList.toggle('is-active',i===inventoryPage));
-  const weight=currentInventoryWeight();
-  inventoryWeightText.textContent=weight.toFixed(1)+' / '+INVENTORY_WEIGHT_LIMIT.toFixed(1);
-  inventoryWeightFill.style.width=Math.min(100,weight/INVENTORY_WEIGHT_LIMIT*100).toFixed(1)+'%';
   renderInventoryDetail();
 }
-function setInventoryPage(page){
-  inventoryPage=Math.max(0,Math.min(INVENTORY_PAGE_COUNT-1,page));
-  if(inventorySelected<inventoryPage*INVENTORY_PAGE_SIZE ||
-     inventorySelected>=(inventoryPage+1)*INVENTORY_PAGE_SIZE){
-    inventorySelected=-1;
-  }
-  renderInventory();
-}
-inventoryPrev.addEventListener('click',()=>setInventoryPage(inventoryPage-1));
-inventoryNext.addEventListener('click',()=>setInventoryPage(inventoryPage+1));
-inventoryPageBtns.forEach((btn,i)=>btn.addEventListener('click',()=>setInventoryPage(i)));
-
 function chooseBackpackAnimation(){
-  backpackAnimationMode=Math.random()<.5?'rope':'crumple';
+  backpackAnimationMode=Math.random()<.5?'drop':'crumple';
   return backpackAnimationMode;
 }
 function clearBackpackAnimationClasses(){
-  backpackFrame.classList.remove('enter-rope','enter-crumple','close-rope','close-crumple');
-  backpackOverlay.classList.remove('mode-rope','mode-crumple');
+  backpackFrame.classList.remove('enter-drop','enter-crumple','close-drop','close-crumple');
 }
 function openBackpack(){
   const shell=document.getElementById('uiShell');
@@ -1281,10 +1118,10 @@ function openBackpack(){
 
   const mode=chooseBackpackAnimation();
   clearBackpackAnimationClasses();
-  backpackOverlay.classList.add('is-open','mode-'+mode);
+  backpackOverlay.classList.add('is-open');
   backpackOverlay.setAttribute('aria-hidden','false');
   void backpackFrame.offsetWidth;
-  backpackFrame.classList.add(mode==='rope'?'enter-rope':'enter-crumple');
+  backpackFrame.classList.add(mode==='drop'?'enter-drop':'enter-crumple');
 }
 function closeBackpack(immediate=false){
   if(!backpackOverlay.classList.contains('is-open'))return;
@@ -1297,14 +1134,14 @@ function closeBackpack(immediate=false){
   }
   if(backpackClosing)return;
   backpackClosing=true;
-  backpackFrame.classList.remove('enter-rope','enter-crumple');
-  backpackFrame.classList.add(backpackAnimationMode==='rope'?'close-rope':'close-crumple');
+  backpackFrame.classList.remove('enter-drop','enter-crumple');
+  backpackFrame.classList.add(backpackAnimationMode==='drop'?'close-drop':'close-crumple');
   setTimeout(()=>{
     backpackClosing=false;
     backpackOverlay.classList.remove('is-open');
     backpackOverlay.setAttribute('aria-hidden','true');
     clearBackpackAnimationClasses();
-  },420);
+  },330);
 }
 backpackBtn.addEventListener('click',openBackpack);
 backpackClose.addEventListener('click',()=>closeBackpack(false));
