@@ -1820,6 +1820,27 @@ WORLD_ROUTES.forEach((route,i)=>{
 MAP_TERRAIN.push(...FORK_SOLIDS);
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
+let mapDebugBuilt=false;
+const mapNpcEls=new Map();
+let lastNearNpcId=null;
+
+const SOLID_BUCKET_SIZE=1200;
+const solidBuckets=new Map();
+function addSolidToIndex(rect){
+  const a=Math.floor(rect.x/SOLID_BUCKET_SIZE);
+  const b=Math.floor((rect.x+rect.w)/SOLID_BUCKET_SIZE);
+  for(let i=a;i<=b;i++){
+    let bucket=solidBuckets.get(i);
+    if(!bucket){bucket=[];solidBuckets.set(i,bucket)}
+    bucket.push(rect);
+  }
+}
+function rebuildSolidSpatialIndex(){
+  solidBuckets.clear();
+  MAP_TERRAIN.forEach(addSolidToIndex);
+  MAP_OBJECTS.forEach(o=>{if(o.solid)addSolidToIndex(o)});
+}
+rebuildSolidSpatialIndex();
 
 const rear=[
   {s:0,x:120,w:108,c:'sway-a'},
@@ -1846,17 +1867,15 @@ function buildMapVisuals(){
   mapObjectTrack.innerHTML='';
   mapLandmarkTrack.innerHTML='';
   mapDebugTrack.innerHTML='';
+  mapDebugBuilt=false;
+  mapNpcEls.clear();
+  lastNearNpcId=null;
   MAP_TERRAIN.forEach(t=>{
     const el=document.createElement('div');
     el.className='terrain-piece '+t.kind+(t.fork?' fork-shelf':'');
     el.dataset.mapId=t.id;
     Object.assign(el.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
     terrainTrack.appendChild(el);
-    const dbg=document.createElement('div');
-    dbg.className='map-debug-rect collider';
-    dbg.dataset.debugFor=t.id;
-    Object.assign(dbg.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
-    mapDebugTrack.appendChild(dbg);
   });
   MAP_OBJECTS.forEach(o=>{
     const el=document.createElement('div');
@@ -1865,14 +1884,6 @@ function buildMapVisuals(){
     Object.assign(el.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
     if(mapState.broken.has(o.id))el.classList.add('is-broken');
     mapObjectTrack.appendChild(el);
-    if(o.solid){
-      const dbg=document.createElement('div');
-      dbg.className='map-debug-rect collider';
-      dbg.dataset.debugFor=o.id;
-      Object.assign(dbg.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
-      if(mapState.broken.has(o.id))dbg.style.display='none';
-      mapDebugTrack.appendChild(dbg);
-    }
   });
   MAP_LANDMARKS.forEach(m=>{
     const el=document.createElement('div');
@@ -1902,6 +1913,7 @@ function buildMapVisuals(){
     el.className='map-npc';el.dataset.npcId=n.id;el.style.left=n.x+'px';
     el.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name">'+n.name+'</div><div class="map-npc-prompt">E / 聊</div>';
     mapLandmarkTrack.appendChild(el);
+    mapNpcEls.set(n.id,el);
   });
   WORLD_ROUTES.forEach((route,i)=>{
     const base=routeBaseX(i);
@@ -1940,13 +1952,35 @@ function buildMapVisuals(){
       });
     });
   });
-  ENEMY_SPAWNS.forEach(s=>{
+}
+
+function ensureMapDebugVisuals(){
+  if(mapDebugBuilt)return;
+  mapDebugTrack.innerHTML='';
+  MAP_TERRAIN.forEach(t=>{
     const dbg=document.createElement('div');
-    dbg.className='map-debug-rect spawn';
-    dbg.dataset.debugFor='spawn-'+s.id;
-    Object.assign(dbg.style,{left:s.patrolMin+'px',bottom:MAP_GROUND_SCREEN_Y+'px',width:(s.patrolMax-s.patrolMin)+'px',height:'142px'});
+    dbg.className='map-debug-rect collider';
+    dbg.dataset.debugFor=t.id;
+    Object.assign(dbg.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
     mapDebugTrack.appendChild(dbg);
   });
+  MAP_OBJECTS.forEach(o=>{
+    if(!o.solid)return;
+    const dbg=document.createElement('div');
+    dbg.className='map-debug-rect collider';
+    dbg.dataset.debugFor=o.id;
+    Object.assign(dbg.style,{left:o.x+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
+    if(mapState.broken.has(o.id))dbg.style.display='none';
+    mapDebugTrack.appendChild(dbg);
+  });
+  ENEMY_SPAWNS.forEach(spawn=>{
+    const dbg=document.createElement('div');
+    dbg.className='map-debug-rect spawn';
+    dbg.dataset.debugFor='spawn-'+spawn.id;
+    Object.assign(dbg.style,{left:spawn.patrolMin+'px',bottom:MAP_GROUND_SCREEN_Y+'px',width:(spawn.patrolMax-spawn.patrolMin)+'px',height:'142px'});
+    mapDebugTrack.appendChild(dbg);
+  });
+  mapDebugBuilt=true;
 }
 
 function spritePosition(index){
@@ -2734,9 +2768,19 @@ function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
 function activeSolidRects(centerX=playerWorldX,radius=900){
   const minX=centerX-radius,maxX=centerX+radius;
-  const terrain=MAP_TERRAIN.filter(t=>t.x+t.w>minX&&t.x<maxX);
-  const objects=MAP_OBJECTS.filter(o=>o.solid&&!mapState.broken.has(o.id)&&o.x+o.w>minX&&o.x<maxX);
-  return terrain.concat(objects);
+  const first=Math.floor(minX/SOLID_BUCKET_SIZE),lastBucket=Math.floor(maxX/SOLID_BUCKET_SIZE);
+  const out=[],seen=new Set();
+  for(let i=first;i<=lastBucket;i++){
+    const bucket=solidBuckets.get(i);
+    if(!bucket)continue;
+    for(const r of bucket){
+      if(seen.has(r)||r.x+r.w<=minX||r.x>=maxX)continue;
+      seen.add(r);
+      if(r.breakable&&mapState.broken.has(r.id))continue;
+      out.push(r);
+    }
+  }
+  return out;
 }
 function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
 function movePlayerHorizontal(dx){
@@ -2999,9 +3043,14 @@ function nearbyNpc(maxDistance=92){
 }
 function updateNpcPrompt(){
   const near=nearbyNpc();
-  mapLandmarkTrack.querySelectorAll('.map-npc').forEach(el=>el.classList.toggle('is-near',!!near&&el.dataset.npcId===near.id));
-  interactBtn.disabled=!near;
-  interactBtn.style.opacity=near?'1':'.45';
+  const nextId=near?.id||null;
+  if(nextId!==lastNearNpcId){
+    if(lastNearNpcId)mapNpcEls.get(lastNearNpcId)?.classList.remove('is-near');
+    if(nextId)mapNpcEls.get(nextId)?.classList.add('is-near');
+    interactBtn.disabled=!near;
+    interactBtn.style.opacity=near?'1':'.45';
+    lastNearNpcId=nextId;
+  }
   return near;
 }
 function interactWithNpc(){
@@ -3066,6 +3115,7 @@ function debugRect(el,r){
   el.style.left=(r.x-worldX)+'px';el.style.bottom=(MAP_GROUND_SCREEN_Y+r.y)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
 }
 function renderCombatDebug(){
+  if(!showHitboxes&&!showAttackRange)return;
   const playerAttackActive=playerAttackTimer>0&&playerAttackTimer<.22&&playerAttackTimer>.08;
   const target=nearestLivingEnemy();
   debugRect(playerHurtboxDebug,getPlayerHurtbox());
@@ -3078,8 +3128,8 @@ function renderCombatDebug(){
 function toggleHitboxes(force){showHitboxes=typeof force==='boolean'?force:!showHitboxes;worldEl.classList.toggle('show-hitboxes',showHitboxes);renderCombatDebug();updateCombatDebugButtons();return showHitboxes}
 function toggleAttackRange(force){showAttackRange=typeof force==='boolean'?force:!showAttackRange;worldEl.classList.toggle('show-attack-range',showAttackRange);renderCombatDebug();updateCombatDebugButtons();return showAttackRange}
 function toggleEnemyAi(force){enemyAiEnabled=typeof force==='boolean'?force:!enemyAiEnabled;if(!enemyAiEnabled)enemies.forEach(e=>e.el.classList.remove('is-moving','is-attacking'));updateCombatDebugButtons();return enemyAiEnabled}
-function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?force:!showMapColliders;worldEl.classList.toggle('show-map-colliders',showMapColliders);updateCombatDebugButtons();return showMapColliders}
-function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
+function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?force:!showMapColliders;if(showMapColliders)ensureMapDebugVisuals();worldEl.classList.toggle('show-map-colliders',showMapColliders);updateCombatDebugButtons();return showMapColliders}
+function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;if(showSpawnZones)ensureMapDebugVisuals();worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
 function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
 window.PaperchalkMap={
   width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
