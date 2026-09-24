@@ -671,6 +671,24 @@ button{cursor:pointer}
   .inventory-slot.is-selected{box-shadow:none}
 }
 
+
+/* ---------- GENERIC PAPER UI TRANSITION ---------- */
+.paper-fx-layer{
+  position:fixed;inset:0;z-index:140;pointer-events:none;overflow:hidden;
+}
+.paper-fx{
+  position:absolute;left:0;top:0;opacity:0;display:block;
+  transform-origin:50% 50%;will-change:transform,opacity;
+  user-select:none;-webkit-user-drag:none;
+  filter:drop-shadow(3px 5px 0 rgba(50,38,25,.12));
+}
+.paper-fx-ball{width:clamp(54px,6.2vw,84px)}
+.paper-fx-unfold{width:clamp(150px,20vw,290px)}
+.paper-ui-transitioning{pointer-events:none!important}
+@media(prefers-reduced-motion:reduce){
+  .paper-fx-layer{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -722,6 +740,11 @@ button{cursor:pointer}
   </div>
 </section>
 
+<div id="paperFxLayer" class="paper-fx-layer" aria-hidden="true">
+  <img id="paperFxBall" class="paper-fx paper-fx-ball" src="./assets/ui/transitions/paper-ball.png?v=1" alt="">
+  <img id="paperFxUnfold" class="paper-fx paper-fx-unfold" src="./assets/ui/transitions/paper-unfold.png?v=1" alt="">
+</div>
+
 <section id="uiShell" class="ui-shell">
   <div class="ui-board">
 
@@ -730,7 +753,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.8.1 · 背包格精确校准</div>
+          <div class="brand-foot">WORLD BUILD 0.9 · 通用纸团 UI 过场</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
@@ -874,6 +897,9 @@ const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
 const backpackOverlay=document.getElementById('backpackOverlay');
+const paperFxLayer=document.getElementById('paperFxLayer');
+const paperFxBall=document.getElementById('paperFxBall');
+const paperFxUnfold=document.getElementById('paperFxUnfold');
 const backpackFrame=document.getElementById('backpackFrame');
 const backpackClose=document.getElementById('backpackClose');
 const backpackSlots=document.getElementById('backpackSlots');
@@ -1041,11 +1067,93 @@ joystickZone.addEventListener('lostpointercapture',e=>{
   if(e.pointerId===joystickPointer)resetJoystick();
 });
 
+/* reusable paper UI transition
+   Any current/future UI can call:
+   paperUIFrom(clickedElement, revealFunction, targetElement)
+*/
+let paperUIBusy=false;
+
+function paperFxOrigin(triggerEl){
+  if(triggerEl && typeof triggerEl.getBoundingClientRect==='function'){
+    const r=triggerEl.getBoundingClientRect();
+    if(r.width||r.height)return {x:r.left+r.width/2,y:r.top+r.height/2};
+  }
+  return {x:innerWidth*.5,y:innerHeight*.5};
+}
+function setPaperFxAt(el,x,y,size){
+  el.style.left=(x-size/2)+'px';
+  el.style.top=(y-size/2)+'px';
+}
+async function paperUIFrom(triggerEl,revealFn,targetEl){
+  if(typeof revealFn!=='function')return;
+  if(paperUIBusy){revealFn();return}
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){revealFn();return}
+
+  paperUIBusy=true;
+  const origin=paperFxOrigin(triggerEl);
+  const center={x:innerWidth*.5,y:innerHeight*.5};
+  const ballSize=Math.max(54,Math.min(84,innerWidth*.062));
+  const unfoldSize=Math.max(150,Math.min(290,innerWidth*.20));
+
+  paperFxBall.getAnimations().forEach(a=>a.cancel());
+  paperFxUnfold.getAnimations().forEach(a=>a.cancel());
+  paperFxBall.style.opacity='1';
+  paperFxUnfold.style.opacity='0';
+  setPaperFxAt(paperFxBall,origin.x,origin.y,ballSize);
+  setPaperFxAt(paperFxUnfold,center.x,center.y,unfoldSize);
+
+  const dx=center.x-origin.x;
+  const dy=center.y-origin.y;
+  const arc=-Math.min(74,Math.max(24,Math.abs(dx)*.09+24));
+
+  try{
+    const flight=paperFxBall.animate([
+      {transform:'translate(0,0) scale(.68) rotate(-10deg)',opacity:0},
+      {offset:.12,transform:'translate(0,0) scale(.92) rotate(-4deg)',opacity:1},
+      {offset:.56,transform:'translate('+(dx*.55)+'px,'+(dy*.55+arc)+'px) scale(1.03) rotate(145deg)',opacity:1},
+      {transform:'translate('+dx+'px,'+dy+'px) scale(.82) rotate(310deg)',opacity:1}
+    ],{duration:330,easing:'cubic-bezier(.22,.72,.22,1)',fill:'forwards'});
+    await flight.finished;
+
+    paperFxBall.style.opacity='0';
+    revealFn();
+
+    let targetAnim=null;
+    if(targetEl && typeof targetEl.animate==='function'){
+      targetEl.classList.add('paper-ui-transitioning');
+      targetAnim=targetEl.animate([
+        {opacity:0,transform:'scale(.90) rotate(-.7deg)'},
+        {offset:.62,opacity:1,transform:'scale(1.012) rotate(.18deg)'},
+        {opacity:1,transform:'scale(1) rotate(0)'}
+      ],{duration:260,easing:'cubic-bezier(.16,.82,.25,1)',fill:'both'});
+    }
+
+    paperFxUnfold.style.opacity='1';
+    const unfold=paperFxUnfold.animate([
+      {transform:'scale(.18,.13) rotate(-13deg)',opacity:0},
+      {offset:.22,transform:'scale(.48,.40) rotate(-7deg)',opacity:1},
+      {offset:.72,transform:'scale(1.05,.96) rotate(1.6deg)',opacity:1},
+      {transform:'scale(1.38,1.18) rotate(0)',opacity:0}
+    ],{duration:270,easing:'cubic-bezier(.18,.78,.22,1)',fill:'forwards'});
+
+    await Promise.allSettled([unfold.finished,targetAnim?targetAnim.finished:Promise.resolve()]);
+    if(targetEl)targetEl.classList.remove('paper-ui-transitioning');
+  }catch(err){
+    console.warn('PAPER_UI_TRANSITION_FALLBACK',err);
+    revealFn();
+    if(targetEl)targetEl.classList.remove('paper-ui-transitioning');
+  }finally{
+    paperFxBall.style.opacity='0';
+    paperFxUnfold.style.opacity='0';
+    paperUIBusy=false;
+  }
+}
+window.PaperUITransition={openFrom:paperUIFrom};
+
 /* inventory */
 const INVENTORY_CAPACITY=20;
 const inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
 let inventorySelected=-1;
-let backpackAnimationMode='drop';
 let backpackClosing=false;
 
 for(let i=0;i<INVENTORY_CAPACITY;i++){
@@ -1104,48 +1212,26 @@ function renderInventory(){
   });
   renderInventoryDetail();
 }
-function chooseBackpackAnimation(){
-  backpackAnimationMode=Math.random()<.5?'drop':'crumple';
-  return backpackAnimationMode;
+function revealBackpack(){
+  backpackOverlay.classList.add('is-open');
+  backpackOverlay.setAttribute('aria-hidden','false');
 }
-function clearBackpackAnimationClasses(){
-  backpackFrame.classList.remove('enter-drop','enter-crumple','close-drop','close-crumple');
-}
-function openBackpack(){
+function openBackpack(triggerEl=backpackBtn){
   const shell=document.getElementById('uiShell');
-  if(!shell.classList.contains('is-hidden')||backpackClosing)return;
+  if(!shell.classList.contains('is-hidden')||backpackClosing||backpackOverlay.classList.contains('is-open'))return;
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   renderInventory();
-
-  const mode=chooseBackpackAnimation();
-  clearBackpackAnimationClasses();
-  backpackOverlay.classList.add('is-open');
-  backpackOverlay.setAttribute('aria-hidden','false');
-  void backpackFrame.offsetWidth;
-  backpackFrame.classList.add(mode==='drop'?'enter-drop':'enter-crumple');
+  paperUIFrom(triggerEl,revealBackpack,backpackFrame);
 }
 function closeBackpack(immediate=false){
   if(!backpackOverlay.classList.contains('is-open'))return;
-  if(immediate){
-    backpackClosing=false;
-    clearBackpackAnimationClasses();
-    backpackOverlay.classList.remove('is-open');
-    backpackOverlay.setAttribute('aria-hidden','true');
-    return;
-  }
-  if(backpackClosing)return;
   backpackClosing=true;
-  backpackFrame.classList.remove('enter-drop','enter-crumple');
-  backpackFrame.classList.add(backpackAnimationMode==='drop'?'close-drop':'close-crumple');
-  setTimeout(()=>{
-    backpackClosing=false;
-    backpackOverlay.classList.remove('is-open');
-    backpackOverlay.setAttribute('aria-hidden','true');
-    clearBackpackAnimationClasses();
-  },330);
+  backpackOverlay.classList.remove('is-open');
+  backpackOverlay.setAttribute('aria-hidden','true');
+  backpackClosing=false;
 }
-backpackBtn.addEventListener('click',openBackpack);
+backpackBtn.addEventListener('click',e=>openBackpack(e.currentTarget));
 backpackClose.addEventListener('click',()=>closeBackpack(false));
 backpackOverlay.addEventListener('pointerdown',e=>{
   if(e.target===backpackOverlay)closeBackpack(false);
@@ -1155,7 +1241,7 @@ addEventListener('keydown',e=>{
   const shell=document.getElementById('uiShell');
   if(e.code==='KeyB' && shell.classList.contains('is-hidden')){
     e.preventDefault();
-    backpackOverlay.classList.contains('is-open')?closeBackpack(false):openBackpack();
+    backpackOverlay.classList.contains('is-open')?closeBackpack(false):openBackpack(backpackBtn);
   }else if(e.code==='Escape' && backpackOverlay.classList.contains('is-open')){
     e.preventDefault();
     closeBackpack(false);
@@ -1252,11 +1338,7 @@ function openUI(fromWorld=false){
   refreshMenu();
   showPage('menu');
   uiShell.classList.remove('is-hidden');
-  if(fromWorld){
-    uiShell.classList.remove('board-enter');
-    void uiShell.offsetWidth;
-    uiShell.classList.add('board-enter');
-  }
+  uiShell.classList.remove('board-enter');
 }
 function enterWorld(){
   closeBackpack(true);
@@ -1278,21 +1360,28 @@ function enterWorld(){
   uiShell.classList.add('is-hidden');
   uiShell.classList.remove('board-enter');
 }
-document.getElementById('worldMenuBtn').addEventListener('click',()=>openUI(true));
+document.getElementById('worldMenuBtn').addEventListener('click',e=>{
+  paperUIFrom(e.currentTarget,()=>openUI(true),uiShell);
+});
 continueBtn.addEventListener('click',enterWorld);
 enterBtn.addEventListener('click',enterWorld);
-settingsBtn.addEventListener('click',()=>showPage('settings'));
-document.querySelectorAll('[data-back="menu"]').forEach(b=>b.addEventListener('click',()=>showPage('menu')));
+settingsBtn.addEventListener('click',e=>{
+  paperUIFrom(e.currentTarget,()=>showPage('settings'),pages.settings);
+});
+document.querySelectorAll('[data-back="menu"]').forEach(b=>b.addEventListener('click',e=>{
+  paperUIFrom(e.currentTarget,()=>showPage('menu'),pages.menu);
+}));
 
-authBtn.addEventListener('click',()=>{
-  const session=getSession();
-  if(session){
-    storageRemove(KEY_SESSION);
-    refreshMenu();
+authBtn.addEventListener('click',e=>{
+  const trigger=e.currentTarget;
+  paperUIFrom(trigger,()=>{
+    const session=getSession();
+    if(session){
+      storageRemove(KEY_SESSION);
+      refreshMenu();
+    }
     showPage('auth');
-  }else{
-    showPage('auth');
-  }
+  },pages.auth);
 });
 
 const tabLogin=document.getElementById('tabLogin');
