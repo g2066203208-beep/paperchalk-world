@@ -32,17 +32,7 @@ button{cursor:pointer}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .prop-track{width:5000px;height:100%;position:absolute;left:0;top:0}
 .prop{position:absolute;transform-origin:50% 78%;will-change:transform}
-
-.prop img{display:none}
-.prop-sprite{
-  width:100%;aspect-ratio:170/105;display:block;
-  background-repeat:no-repeat;background-size:600% 100%;
-  background-image:var(--midground-sheet);
-  transform-origin:50% 100%;
-  filter:saturate(.88) contrast(.96) brightness(.99);
-}
-.prop-sprite.flip{transform:scaleX(-1)}
-
+.prop img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
 .sway-a{animation:swayA 3.9s ease-in-out infinite}
 .sway-b{animation:swayB 4.8s ease-in-out infinite}
 .sway-c{animation:swayC 5.6s ease-in-out infinite}
@@ -54,7 +44,7 @@ button{cursor:pointer}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
   --facing:1;
-  position:absolute;left:35%;bottom:103px;width:132px;z-index:5;
+  position:absolute;left:35%;bottom:132px;width:170px;z-index:5;
   transform:translateX(-50%);pointer-events:none;will-change:left;
 }
 .actor.facing-left{--facing:-1}
@@ -341,7 +331,7 @@ button{cursor:pointer}
   .rear-layer,.front-layer{bottom:2vh;height:220px}
   .rear-layer .prop{bottom:78px}
   .front-layer .prop{bottom:38px}
-  .actor{left:34%;bottom:78px;width:112px}
+  .actor{left:34%;bottom:104px;width:148px}
   .foot-shadow{width:64px;height:14px;bottom:5px}
   .rear-layer .prop{scale:.82}
   .front-layer .prop{scale:.88}
@@ -398,7 +388,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.4 · 统一中景试装</div>
+          <div class="brand-foot">WORLD BUILD 0.3 · 动态摇杆</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
@@ -481,22 +471,25 @@ button{cursor:pointer}
 
 <script>
 /* -------------------- WORLD -------------------- */
-const MIDGROUND_SHEET='data:image/webp;base64,UklGRg5+AABXRUJQVlA4WAoAAAAQAAAA+wMAaAAAQUxQSOBLAAABDMhtI0mSRP/NnuqsnL33FxET0P88vrlN396uigV8IGtW3C2qnLNi5LDNycyKm8r45IAwecconst rear=[
-  {s:0,x:90,w:98,c:'sway-a',f:0},
-  {s:2,x:430,w:108,c:'static',f:0},
-  {s:1,x:820,w:96,c:'sway-c',f:1},
-  {s:3,x:1210,w:92,c:'sway-b',f:0},
-  {s:4,x:1600,w:110,c:'static',f:1},
-  {s:5,x:1990,w:94,c:'sway-d',f:0}
+const ASSET={
+  grassRock:'./assets/props/grass-rock.webp?v=2',
+  rocksGrass:'./assets/props/rocks-grass.webp?v=2',
+  softGrass:'./assets/props/soft-grass.webp?v=2'
+};
+const rear=[
+  {a:'softGrass',x:60,w:105,c:'sway-a',f:0},{a:'grassRock',x:285,w:120,c:'sway-c',f:1},
+  {a:'softGrass',x:545,w:90,c:'sway-b',f:1},{a:'rocksGrass',x:785,w:125,c:'static',f:0},
+  {a:'softGrass',x:1055,w:94,c:'sway-d',f:0},{a:'grassRock',x:1305,w:112,c:'sway-b',f:0},
+  {a:'rocksGrass',x:1585,w:120,c:'static',f:1},{a:'softGrass',x:1840,w:90,c:'sway-c',f:1},
+  {a:'grassRock',x:2070,w:116,c:'sway-a',f:0}
 ];
 const front=[
-  {s:3,x:250,w:105,c:'sway-b',f:1},
-  {s:5,x:680,w:92,c:'sway-a',f:0},
-  {s:2,x:1080,w:116,c:'static',f:1},
-  {s:0,x:1510,w:102,c:'sway-c',f:0},
-  {s:1,x:1890,w:90,c:'sway-d',f:1}
+  {a:'grassRock',x:25,w:115,c:'sway-b',f:0},{a:'softGrass',x:235,w:86,c:'sway-a',f:1},
+  {a:'rocksGrass',x:460,w:130,c:'static',f:0},{a:'grassRock',x:735,w:108,c:'sway-c',f:1},
+  {a:'softGrass',x:980,w:88,c:'sway-d',f:0},{a:'rocksGrass',x:1225,w:122,c:'static',f:1},
+  {a:'grassRock',x:1500,w:112,c:'sway-a',f:0},{a:'softGrass',x:1740,w:84,c:'sway-c',f:1},
+  {a:'grassRock',x:1980,w:105,c:'sway-b',f:1}
 ];
-
 function buildProps(id,data){
  const root=document.getElementById(id);
  for(let rep=0;rep<3;rep++){
@@ -506,11 +499,10 @@ function buildProps(id,data){
     el.style.left=(rep*2200+p.x)+'px';
     el.style.width=p.w+'px';
     el.style.animationDelay=(-((i*.61+rep*.37)%4.1))+'s';
-
-    const art=document.createElement('span');
-    art.className='prop-sprite'+(p.f?' flip':'');
-    art.style.backgroundPositionX=(p.s*20)+'%';
-    el.appendChild(art);
+    const img=document.createElement('img');
+    img.src=ASSET[p.a];
+    if(p.f) img.style.transform='scaleX(-1)';
+    el.appendChild(img);
     root.appendChild(el);
   });
  }
