@@ -3,6 +3,7 @@ name: Core Runtime Regression
 on:
   push:
     branches:
+      - main
       - fix/core-runtime-20260924
     paths:
       - "index.html"
