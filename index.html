@@ -151,7 +151,7 @@ button{cursor:pointer}
 .day-night-tint{
   position:absolute;inset:0;z-index:20;pointer-events:none;
   background:
-    linear-gradient(rgba(239,160,89,var(--warm-alpha)),rgba(147,82,66,calc(var(--warm-alpha)*.55))),
+    linear-gradient(rgba(239,160,89,var(--warm-alpha)),rgba(147,82,66,var(--warm-alpha-soft))),
     rgba(19,28,54,var(--night-alpha));
   mix-blend-mode:multiply;
   transition:background .7s linear
@@ -361,9 +361,11 @@ button{cursor:pointer}
 #playerAttackDebug.is-active-box{border-style:solid;background:rgba(255,155,66,.28);box-shadow:0 0 0 2px rgba(255,255,255,.16) inset}
 #enemyHurtboxDebug{border-color:#a971ff;background:rgba(169,113,255,.10)}
 #enemyAttackDebug{border-color:#ff4f64;background:rgba(255,79,100,.20)}
-.debug-combat-actions,.debug-map-actions{
+.debug-combat-actions,.debug-map-actions,.debug-time-actions{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 8px;
 }
+.debug-time-actions{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:520px){.debug-time-actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .map-debug-rect{position:absolute;z-index:59;box-sizing:border-box;pointer-events:none;display:none;border:2px dashed #32a36a;background:rgba(50,163,106,.08)}
 .stage.show-map-colliders .map-debug-rect.collider{display:block}
 .stage.show-spawn-zones .map-debug-rect.spawn{display:block;border-color:#d88e2d;background:rgba(216,142,45,.08)}
@@ -1417,6 +1419,13 @@ button{cursor:pointer}
       <button class="debug-action" type="button" data-debug-action="teleportMid">传送中段</button>
       <button class="debug-action" type="button" data-debug-action="teleportEnd">传送远方</button>
     </div>
+    <div class="debug-time-actions" aria-label="纸片舞台与时间调试">
+      <button class="debug-action" type="button" data-debug-action="timeDawn">日出</button>
+      <button class="debug-action" type="button" data-debug-action="timeNoon">正午</button>
+      <button class="debug-action" type="button" data-debug-action="timeDusk">黄昏</button>
+      <button class="debug-action" type="button" data-debug-action="timeNight">深夜</button>
+      <button class="debug-action" type="button" data-debug-action="stageFold">舞台换景</button>
+    </div>
     <div class="debug-legend" aria-label="碰撞箱颜色说明">
       <span style="color:#249b92"><i class="debug-dot"></i>玩家身体</span>
       <span style="color:#d77a22"><i class="debug-dot"></i>玩家攻击</span>
@@ -1971,6 +1980,8 @@ const mapObjectTrack=document.getElementById('mapObjectTrack');
 const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
 const mapDebugTrack=document.getElementById('mapDebugTrack');
 const mapNotice=document.getElementById('mapNotice');
+const paperBackdrop=document.getElementById('paperBackdrop');
+const paperClock=document.getElementById('paperClock');
 const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
@@ -2057,6 +2068,107 @@ function applyWorldDimensions(){
 syncViewportMetrics();
 applyWorldDimensions();
 buildMapVisuals();
+
+const WORLD_CLOCK_OFFSET=360; // existing saves at 0 begin visually at 06:00
+const DAY_MINUTES=1440;
+const DAYLIGHT_KEYS=[
+  {m:0,top:[24,30,58],bottom:[53,55,79],horizon:[75,66,76],night:.58,stars:.92,warm:0,sun:0,moon:.95},
+  {m:300,top:[44,50,78],bottom:[91,75,89],horizon:[151,107,91],night:.34,stars:.62,warm:.08,sun:0,moon:.70},
+  {m:360,top:[101,120,139],bottom:[210,153,112],horizon:[230,184,132],night:.12,stars:.18,warm:.24,sun:.52,moon:.28},
+  {m:480,top:[137,177,194],bottom:[222,211,184],horizon:[200,183,139],night:0,stars:0,warm:.05,sun:1,moon:0},
+  {m:720,top:[126,178,205],bottom:[229,220,196],horizon:[202,188,147],night:0,stars:0,warm:0,sun:1,moon:0},
+  {m:960,top:[142,174,190],bottom:[225,197,164],horizon:[202,167,119],night:0,stars:0,warm:.08,sun:.92,moon:0},
+  {m:1080,top:[103,107,135],bottom:[195,128,96],horizon:[178,112,86],night:.12,stars:.10,warm:.30,sun:.45,moon:.20},
+  {m:1170,top:[58,61,93],bottom:[116,77,91],horizon:[111,78,84],night:.34,stars:.55,warm:.10,sun:0,moon:.68},
+  {m:1260,top:[29,35,65],bottom:[62,59,81],horizon:[78,67,76],night:.54,stars:.90,warm:0,sun:0,moon:.94},
+  {m:1440,top:[24,30,58],bottom:[53,55,79],horizon:[75,66,76],night:.58,stars:.92,warm:0,sun:0,moon:.95}
+];
+let lastDayNightRender=-Infinity;
+let sceneFoldTimer=0;
+
+function modDay(v){return ((v%DAY_MINUTES)+DAY_MINUTES)%DAY_MINUTES}
+function visibleClockMinutes(){return modDay(worldMinutes+WORLD_CLOCK_OFFSET)}
+function lerp(a,b,t){return a+(b-a)*t}
+function lerpRgb(a,b,t){return a.map((v,i)=>Math.round(lerp(v,b[i],t)))}
+function rgbCss(v){return 'rgb('+v.join(',')+')'}
+function daylightState(minutes=visibleClockMinutes()){
+  let a=DAYLIGHT_KEYS[0],b=DAYLIGHT_KEYS[DAYLIGHT_KEYS.length-1];
+  for(let i=0;i<DAYLIGHT_KEYS.length-1;i++){
+    if(minutes>=DAYLIGHT_KEYS[i].m&&minutes<=DAYLIGHT_KEYS[i+1].m){a=DAYLIGHT_KEYS[i];b=DAYLIGHT_KEYS[i+1];break}
+  }
+  const span=Math.max(1,b.m-a.m),t=clamp((minutes-a.m)/span,0,1);
+  return {
+    top:lerpRgb(a.top,b.top,t),bottom:lerpRgb(a.bottom,b.bottom,t),horizon:lerpRgb(a.horizon,b.horizon,t),
+    night:lerp(a.night,b.night,t),stars:lerp(a.stars,b.stars,t),warm:lerp(a.warm,b.warm,t),
+    sun:lerp(a.sun,b.sun,t),moon:lerp(a.moon,b.moon,t)
+  };
+}
+function formatWorldClock(minutes=visibleClockMinutes()){
+  const m=Math.floor(modDay(minutes)),hh=Math.floor(m/60),mm=m%60;
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+function worldTimeName(minutes=visibleClockMinutes()){
+  if(minutes<300)return '深夜';
+  if(minutes<390)return '黎明';
+  if(minutes<660)return '上午';
+  if(minutes<900)return '正午';
+  if(minutes<1080)return '下午';
+  if(minutes<1170)return '黄昏';
+  if(minutes<1260)return '入夜';
+  return '深夜';
+}
+function celestialPosition(minutes,offset=0){
+  const clock=modDay(minutes+offset);
+  const p=modDay(clock-330)/DAY_MINUTES;
+  const x=7+86*p;
+  const y=72-Math.sin(Math.PI*p)*55;
+  return {x,y};
+}
+function updateDayNightVisuals(force=false){
+  const now=performance.now();
+  if(!force&&now-lastDayNightRender<140)return;
+  lastDayNightRender=now;
+  const minutes=visibleClockMinutes(),state=daylightState(minutes);
+  const sun=celestialPosition(minutes,0),moon=celestialPosition(minutes,720);
+  worldEl.style.setProperty('--sky-top',rgbCss(state.top));
+  worldEl.style.setProperty('--sky-bottom',rgbCss(state.bottom));
+  worldEl.style.setProperty('--horizon',rgbCss(state.horizon));
+  worldEl.style.setProperty('--night-alpha',state.night.toFixed(3));
+  worldEl.style.setProperty('--warm-alpha',state.warm.toFixed(3));
+  worldEl.style.setProperty('--warm-alpha-soft',(state.warm*.55).toFixed(3));
+  worldEl.style.setProperty('--stars-alpha',state.stars.toFixed(3));
+  worldEl.style.setProperty('--sun-alpha',state.sun.toFixed(3));
+  worldEl.style.setProperty('--moon-alpha',state.moon.toFixed(3));
+  worldEl.style.setProperty('--sun-x',sun.x.toFixed(2)+'%');
+  worldEl.style.setProperty('--sun-y',sun.y.toFixed(2)+'%');
+  worldEl.style.setProperty('--moon-x',moon.x.toFixed(2)+'%');
+  worldEl.style.setProperty('--moon-y',moon.y.toFixed(2)+'%');
+  const clock=formatWorldClock(minutes),phase=worldTimeName(minutes);
+  paperClock.textContent=clock+' · '+phase;
+  paperClock.setAttribute('aria-label','世界时间 '+clock+' '+phase);
+}
+function setVisibleWorldClock(minutes,{persist=true}={}){
+  const target=modDay(Number(minutes)||0);
+  const dayBase=Math.floor(worldMinutes/DAY_MINUTES)*DAY_MINUTES;
+  worldMinutes=dayBase+modDay(target-WORLD_CLOCK_OFFSET);
+  updateDayNightVisuals(true);
+  if(persist&&typeof saveWorldState==='function')saveWorldState();
+  return formatWorldClock();
+}
+function triggerPaperSceneFold(){
+  clearTimeout(sceneFoldTimer);
+  worldEl.classList.remove('scene-folding');
+  void paperBackdrop.offsetWidth;
+  worldEl.classList.add('scene-folding');
+  sceneFoldTimer=setTimeout(()=>worldEl.classList.remove('scene-folding'),860);
+}
+window.PaperchalkTheater={
+  fold:triggerPaperSceneFold,
+  setClock:setVisibleWorldClock,
+  get clock(){return formatWorldClock()},
+  get phase(){return worldTimeName()}
+};
+updateDayNightVisuals(true);
 
 const PLAYER_MAX_HP=10;
 let playerHp=PLAYER_MAX_HP;
@@ -2221,7 +2333,7 @@ function updateDebugStatus(){
   const nearest=nearestLivingEnemy();
   debugStatus.innerHTML=
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
-    '<span>时间 <b>'+worldMinutes.toFixed(1)+'</b></span>'+
+    '<span>时间 <b>'+formatWorldClock()+' '+worldTimeName()+'</b></span>'+
     '<span>玩家X <b>'+playerWorldX.toFixed(1)+'</b></span>'+
     '<span>Camera <b>'+worldX.toFixed(1)+'</b></span>'+
     '<span>脚底Y <b>'+playerY.toFixed(1)+'</b></span>'+
@@ -2283,7 +2395,8 @@ function runDebugCommand(rawCommand){
       'hp max          满血',
       'damage 2        扣 2 血',
       'heal 2          回 2 血',
-      'time 60         世界时间设为 60',
+      'time 18:30      世界时间设为 18:30',
+      'stage            测试纸片舞台翻景',
       'pos             查看玩家/Camera坐标',
       'map             查看地图状态',
       'tp 3000         传送到地图 X=3000',
@@ -2331,12 +2444,20 @@ function runDebugCommand(rawCommand){
     return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
   }
   if(cmd==='time'){
-    const n=Number(arg);
-    if(!Number.isFinite(n)||n<0)return 'time 参数必须是非负数字';
-    worldMinutes=n;
-    saveWorldState();
-    return 'worldMinutes -> '+worldMinutes;
+    let target;
+    if(typeof arg==='string'&&/^\d{1,2}:\d{2}$/.test(arg)){
+      const [h,m]=arg.split(':').map(Number);
+      if(h>23||m>59)return 'time 格式：00:00–23:59';
+      target=h*60+m;
+    }else{
+      const n=Number(arg);
+      if(!Number.isFinite(n))return '用法：time 18:30';
+      target=n;
+    }
+    setVisibleWorldClock(target);
+    return '世界时间 -> '+formatWorldClock()+' '+worldTimeName();
   }
+  if(cmd==='stage'||cmd==='fold'){triggerPaperSceneFold();return '纸片舞台换景测试。';}
   if(cmd==='pos'||cmd==='position'){
     return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
   }
@@ -2433,6 +2554,16 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
     }else if(action==='teleportEnd'){
       teleportTo(MAP_WIDTH-1200,{notice:'传送：大世界远端'});writeDebugOutput('playerX -> '+playerWorldX);
       updateDebugStatus();return;
+    }else if(action==='timeDawn'){
+      setVisibleWorldClock(360);writeDebugOutput('时间 -> '+formatWorldClock()+' 日出');updateDebugStatus();return;
+    }else if(action==='timeNoon'){
+      setVisibleWorldClock(720);writeDebugOutput('时间 -> '+formatWorldClock()+' 正午');updateDebugStatus();return;
+    }else if(action==='timeDusk'){
+      setVisibleWorldClock(1080);writeDebugOutput('时间 -> '+formatWorldClock()+' 黄昏');updateDebugStatus();return;
+    }else if(action==='timeNight'){
+      setVisibleWorldClock(0);writeDebugOutput('时间 -> '+formatWorldClock()+' 深夜');updateDebugStatus();return;
+    }else if(action==='stageFold'){
+      triggerPaperSceneFold();writeDebugOutput('执行纸片舞台翻景。');return;
     }
     updateDebugStatus();
     writeDebugOutput('HP -> '+playerHp+' / '+PLAYER_MAX_HP);
@@ -2834,8 +2965,12 @@ function updateMapInteractions(){
   }
   const zone=worldZoneIndexAt(playerWorldX);
   if(updateMapInteractions._zone!==zone){
+    const previous=updateMapInteractions._zone;
     updateMapInteractions._zone=zone;
-    if(zone>0)showMapNotice('进入 · '+regionNameAt(playerWorldX),1200);
+    if(zone>0){
+      if(Number.isFinite(previous))triggerPaperSceneFold();
+      showMapNotice('进入 · '+regionNameAt(playerWorldX),1200);
+    }
   }
 }
 function teleportTo(x,{notice='已传送'}={}){
@@ -2986,6 +3121,7 @@ function frame(now){
   }
   const interactive=worldInteractive();
   if(interactive && worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  updateDayNightVisuals();
 
   const axis=interactive?movementAxis():0;
   const magnitude=Math.abs(axis);
