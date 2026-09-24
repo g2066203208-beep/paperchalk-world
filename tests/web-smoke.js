@@ -13,7 +13,7 @@ const requiredIds = [
   "loginForm","registerForm","worldMenuBtn",
   "joystickZone","joystick",
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
-  "inventoryPrev","inventoryNext","inventoryUse","inventoryDrop"
+  "inventoryUse","inventoryDrop"
 ];
 
 for (const id of requiredIds) {
@@ -41,15 +41,12 @@ assert(game.includes("function updateJoystick"), "Analog joystick update functio
 assert(game.includes("function movementAxis"), "Analog movement axis missing");
 assert(game.includes("JOY_DEADZONE"), "Joystick deadzone missing");
 assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
-assert(game.includes("INVENTORY_PAGE_SIZE=20"), "20-slot inventory page missing");
-assert(game.includes("INVENTORY_PAGE_COUNT=3"), "3 inventory pages missing");
-assert(game.includes("setInventoryPage"), "Inventory paging missing");
+assert(game.includes("INVENTORY_CAPACITY=20"), "20-slot inventory missing");
 assert(game.includes("chooseBackpackAnimation"), "Inventory animation selector missing");
-assert(game.includes("'rope':'crumple'"), "Both rope and crumple animations must exist");
-assert(html.includes("frame-tl.png") && html.includes("frame-c.png") && html.includes("frame-br.png"), "Independent 9-slice inventory pieces missing");
-assert(html.includes("slot-selected.png"), "Independent selected slot asset missing");
-assert(html.includes("paper-ball.png"), "Paper crumple asset missing");
-assert(html.includes("rope-left.png"), "Rope animation asset missing");
+assert(game.includes("'drop':'crumple'"), "Both paper drop and crumple animations must exist");
+assert(html.includes("backpack-ui-v2.png"), "Approved HD backpack panel missing");
+assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
+assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
 
 
 // Unified midground atlas must be present and decode as a WEBP file.
