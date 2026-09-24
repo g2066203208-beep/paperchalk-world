@@ -641,6 +641,100 @@ button{cursor:pointer}
 .backpack-open-btn img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .backpack-open-btn:active{transform:translate(1px,2px) rotate(-1deg)}
 
+/* ---------- IN-GAME DEBUG PANEL ---------- */
+.debug-toggle-btn{
+  position:absolute;z-index:32;
+  top:max(148px,calc(env(safe-area-inset-top) + 142px));
+  right:max(18px,env(safe-area-inset-right));
+  min-width:68px;height:34px;padding:0 11px;
+  border:1px dashed rgba(81,63,42,.52);
+  background:rgba(238,224,195,.92);color:#554936;
+  font:700 12px/32px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  letter-spacing:.08em;border-radius:5px;
+  box-shadow:3px 4px 0 rgba(54,40,27,.12);
+  cursor:pointer;
+}
+.debug-toggle-btn:active{transform:translate(1px,2px)}
+.debug-toggle-btn[aria-expanded="true"]{background:rgba(196,159,120,.95)}
+
+.debug-panel{
+  position:absolute;z-index:70;
+  top:max(190px,calc(env(safe-area-inset-top) + 182px));
+  right:max(18px,env(safe-area-inset-right));
+  width:min(360px,calc(100vw - 36px));
+  max-height:min(560px,calc(100vh - 210px));
+  padding:15px 15px 13px;
+  overflow:auto;
+  color:#4e4233;
+  background:
+    linear-gradient(rgba(239,225,196,.96),rgba(222,203,166,.96)),
+    #e5d3ad;
+  border:1px solid rgba(85,66,43,.35);
+  border-radius:7px;
+  box-shadow:6px 8px 0 rgba(45,34,24,.17),0 14px 30px rgba(35,28,20,.20);
+  clip-path:polygon(1% 2%,98% 0,100% 96%,97% 100%,2% 98%,0 5%);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(-5px) scale(.98);
+  transition:opacity .12s ease,transform .12s ease,visibility .12s ease;
+}
+.debug-panel.is-open{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transform:translateY(0) scale(1);
+}
+.debug-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.debug-panel-title{font-weight:800;font-size:16px;letter-spacing:.08em}
+.debug-close-btn{
+  border:0;background:transparent;color:#5a4a36;
+  font-size:20px;line-height:1;padding:3px 6px;cursor:pointer;
+}
+.debug-status{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px;
+  margin-bottom:10px;padding:8px 9px;
+  background:rgba(255,248,231,.34);border:1px dashed rgba(84,65,43,.30);
+  font-size:12px;line-height:1.45;
+}
+.debug-status b{font-weight:800}
+.debug-actions{
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px;
+}
+.debug-action{
+  min-width:0;height:34px;border:1px solid rgba(88,68,45,.30);
+  background:rgba(248,237,213,.72);color:#544633;border-radius:4px;
+  font-weight:700;font-size:12px;cursor:pointer;
+}
+.debug-action:active{transform:translateY(1px);background:rgba(210,181,143,.74)}
+.debug-command-form{display:flex;gap:6px}
+.debug-command-input{
+  flex:1;min-width:0;height:36px;padding:0 9px;
+  border:1px solid rgba(84,65,43,.34);border-radius:4px;
+  background:rgba(255,250,236,.62);color:#44392c;
+  font:13px/36px ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.debug-run-btn{
+  flex:none;height:36px;padding:0 12px;border:0;border-radius:4px;
+  background:#7f6448;color:#f6ead4;font-weight:800;cursor:pointer;
+}
+.debug-output{
+  margin-top:9px;min-height:50px;max-height:150px;overflow:auto;
+  padding:8px 9px;white-space:pre-wrap;word-break:break-word;
+  background:rgba(57,48,38,.88);color:#f3e6cf;border-radius:4px;
+  font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.debug-help{margin:8px 2px 0;font-size:11px;line-height:1.45;color:#6b5b48}
+@media(max-width:900px),(max-height:560px){
+  .debug-toggle-btn{
+    top:max(104px,calc(env(safe-area-inset-top) + 98px));
+    right:max(10px,env(safe-area-inset-right));height:30px;line-height:28px;min-width:58px;font-size:11px
+  }
+  .debug-panel{
+    top:max(140px,calc(env(safe-area-inset-top) + 134px));
+    right:max(10px,env(safe-area-inset-right));
+    width:min(330px,calc(100vw - 20px));
+    max-height:calc(100vh - 150px);
+    padding:11px;
+  }
+}
+
 .inventory-overlay{
   position:fixed;inset:0;z-index:80;
   display:flex;align-items:center;justify-content:center;
@@ -790,6 +884,31 @@ button{cursor:pointer}
   <button id="backpackBtn" class="backpack-open-btn" aria-label="打开背包">
     <img src="./assets/ui/inventory-v2/bag-icon.png?v=2" alt="">
   </button>
+
+  <button id="debugToggleBtn" class="debug-toggle-btn"
+          aria-controls="debugPanel" aria-expanded="false">调试</button>
+  <section id="debugPanel" class="debug-panel" aria-hidden="true" aria-label="游戏调试面板">
+    <div class="debug-panel-head">
+      <div class="debug-panel-title">开发调试</div>
+      <button id="debugCloseBtn" class="debug-close-btn" type="button" aria-label="关闭调试">×</button>
+    </div>
+    <div id="debugStatus" class="debug-status"></div>
+    <div class="debug-actions" aria-label="生命值快捷调试">
+      <button class="debug-action" type="button" data-debug-action="damage1">-1 HP</button>
+      <button class="debug-action" type="button" data-debug-action="heal1">+1 HP</button>
+      <button class="debug-action" type="button" data-debug-action="damage3">-3 HP</button>
+      <button class="debug-action" type="button" data-debug-action="zero">0 HP</button>
+      <button class="debug-action" type="button" data-debug-action="full">满血</button>
+    </div>
+    <form id="debugCommandForm" class="debug-command-form">
+      <input id="debugCommandInput" class="debug-command-input" type="text"
+             autocomplete="off" spellcheck="false" placeholder="输入：hp 5 / hp -1 / help">
+      <button class="debug-run-btn" type="submit">执行</button>
+    </form>
+    <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
+    <div class="debug-help">快捷命令：hp、hp 5、hp -1、hp +1、hp max、damage 2、heal 2、time 60、pos、resetpos、save、clear</div>
+  </section>
+
   <div id="desktopControlHint" class="desktop-control-hint">A / D　或　← / →</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
@@ -1014,6 +1133,13 @@ const settingLandscape=document.getElementById('settingLandscape');
 const settingsStatus=document.getElementById('settingsStatus');
 const playerHealthHud=document.getElementById('playerHealthHud');
 const playerHealthBar=document.getElementById('playerHealthBar');
+const debugToggleBtn=document.getElementById('debugToggleBtn');
+const debugPanel=document.getElementById('debugPanel');
+const debugCloseBtn=document.getElementById('debugCloseBtn');
+const debugStatus=document.getElementById('debugStatus');
+const debugCommandForm=document.getElementById('debugCommandForm');
+const debugCommandInput=document.getElementById('debugCommandInput');
+const debugOutput=document.getElementById('debugOutput');
 
 const PLAYER_MAX_HP=10;
 let playerHp=PLAYER_MAX_HP;
@@ -1094,6 +1220,163 @@ window.PaperchalkHealth={
   reset(){return setPlayerHp(PLAYER_MAX_HP)}
 };
 
+let debugLastUiUpdate=0;
+function debugIsOpen(){return debugPanel.classList.contains('is-open')}
+function updateDebugStatus(){
+  const session=typeof getSession==='function'?getSession():null;
+  debugStatus.innerHTML=
+    '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
+    '<span>时间 <b>'+worldMinutes.toFixed(1)+'</b></span>'+
+    '<span>worldX <b>'+worldX.toFixed(1)+'</b></span>'+
+    '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>';
+}
+function writeDebugOutput(message){
+  debugOutput.textContent=String(message);
+  debugOutput.scrollTop=debugOutput.scrollHeight;
+}
+function openDebugPanel(){
+  if(!document.getElementById('uiShell').classList.contains('is-hidden'))return false;
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
+  debugPanel.classList.add('is-open');
+  debugPanel.setAttribute('aria-hidden','false');
+  debugToggleBtn.setAttribute('aria-expanded','true');
+  updateDebugStatus();
+  return true;
+}
+function closeDebugPanel({focus=true}={}){
+  if(!debugIsOpen())return false;
+  debugPanel.classList.remove('is-open');
+  debugPanel.setAttribute('aria-hidden','true');
+  debugToggleBtn.setAttribute('aria-expanded','false');
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
+  if(focus)debugToggleBtn.focus({preventScroll:true});
+  return true;
+}
+function toggleDebugPanel(){
+  return debugIsOpen()?closeDebugPanel():openDebugPanel();
+}
+function runDebugCommand(rawCommand){
+  const raw=String(rawCommand||'').trim();
+  if(!raw)return '请输入命令。输入 help 查看帮助。';
+  const parts=raw.split(/\s+/);
+  const cmd=parts[0].toLowerCase();
+  const arg=parts[1];
+
+  if(cmd==='help'){
+    return [
+      'hp              查看血量',
+      'hp 5            设为 5 血',
+      'hp -1 / hp +1   扣血 / 回血',
+      'hp max          满血',
+      'damage 2        扣 2 血',
+      'heal 2          回 2 血',
+      'time 60         世界时间设为 60',
+      'pos             查看位置',
+      'resetpos        世界位置回到 0',
+      'save            立即保存',
+      'clear           清空输出'
+    ].join('\n');
+  }
+  if(cmd==='hp'){
+    if(arg===undefined)return 'HP '+playerHp+' / '+PLAYER_MAX_HP;
+    if(arg.toLowerCase()==='max'||arg.toLowerCase()==='full'){
+      setPlayerHp(PLAYER_MAX_HP);
+      return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
+    }
+    if(/^[+-]\d+(?:\.\d+)?$/.test(arg)){
+      const delta=Number(arg);
+      setPlayerHp(playerHp+delta);
+      return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
+    }
+    const target=Number(arg);
+    if(!Number.isFinite(target))return 'hp 参数无效。例：hp 5 / hp -1 / hp max';
+    setPlayerHp(target);
+    return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
+  }
+  if(cmd==='damage'||cmd==='dmg'){
+    const n=arg===undefined?1:Number(arg);
+    if(!Number.isFinite(n)||n<0)return 'damage 参数必须是非负数字';
+    damagePlayer(n);
+    return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
+  }
+  if(cmd==='heal'){
+    const n=arg===undefined?1:Number(arg);
+    if(!Number.isFinite(n)||n<0)return 'heal 参数必须是非负数字';
+    healPlayer(n);
+    return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
+  }
+  if(cmd==='time'){
+    const n=Number(arg);
+    if(!Number.isFinite(n)||n<0)return 'time 参数必须是非负数字';
+    worldMinutes=n;
+    saveWorldState();
+    return 'worldMinutes -> '+worldMinutes;
+  }
+  if(cmd==='pos'||cmd==='position'){
+    return 'worldX='+worldX.toFixed(2)+' actorX='+actorX.toFixed(2);
+  }
+  if(cmd==='resetpos'){
+    worldX=0;
+    actorX=Math.round(innerWidth*.35);
+    renderWorld();
+    saveWorldState();
+    return '位置已重置：worldX=0';
+  }
+  if(cmd==='save'){
+    return saveWorldState()?'存档已写入。':'当前没有登录账号，无法保存。';
+  }
+  if(cmd==='clear'){
+    debugOutput.textContent='';
+    return '';
+  }
+  return '未知命令：'+cmd+'。输入 help 查看帮助。';
+}
+function executeDebugCommand(command){
+  const message=runDebugCommand(command);
+  if(message!=='')writeDebugOutput(message);
+  updateDebugStatus();
+  return message;
+}
+debugToggleBtn.addEventListener('click',toggleDebugPanel);
+debugCloseBtn.addEventListener('click',()=>closeDebugPanel());
+debugCommandForm.addEventListener('submit',e=>{
+  e.preventDefault();
+  executeDebugCommand(debugCommandInput.value);
+  debugCommandInput.select();
+});
+debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
+  button.addEventListener('click',()=>{
+    const action=button.dataset.debugAction;
+    if(action==='damage1')damagePlayer(1);
+    else if(action==='heal1')healPlayer(1);
+    else if(action==='damage3')damagePlayer(3);
+    else if(action==='zero')setPlayerHp(0);
+    else if(action==='full')setPlayerHp(PLAYER_MAX_HP);
+    updateDebugStatus();
+    writeDebugOutput('HP -> '+playerHp+' / '+PLAYER_MAX_HP);
+  });
+});
+addEventListener('keydown',e=>{
+  if(e.code==='F2' && document.getElementById('uiShell').classList.contains('is-hidden')){
+    e.preventDefault();
+    toggleDebugPanel();
+    if(debugIsOpen())debugCommandInput.focus();
+    return;
+  }
+  if(e.code==='Escape'&&debugIsOpen()){
+    e.preventDefault();
+    closeDebugPanel();
+  }
+});
+window.PaperchalkDebug={
+  open:openDebugPanel,
+  close:closeDebugPanel,
+  toggle:toggleDebugPanel,
+  run:executeDebugCommand
+};
+
 function refreshRoadW(){
   const w=roadTile.getBoundingClientRect().width;
   if(w>0)roadW=w-1;
@@ -1109,7 +1392,8 @@ function worldInteractive(){
   const shell=document.getElementById('uiShell');
   return !!shell
     && shell.classList.contains('is-hidden')
-    && !backpackOverlay.classList.contains('is-open');
+    && !backpackOverlay.classList.contains('is-open')
+    && !debugIsOpen();
 }
 function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
@@ -1131,6 +1415,10 @@ function renderWorld(){
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
+  if(debugIsOpen()&&now-debugLastUiUpdate>200){
+    updateDebugStatus();
+    debugLastUiUpdate=now;
+  }
   const interactive=worldInteractive();
   if(interactive && worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
   const axis=interactive?movementAxis():0;
@@ -1684,6 +1972,7 @@ function loadWorldState(){
   renderWorld();
 }
 function openUI(fromWorld=false){
+  closeDebugPanel({focus:false});
   closeBackpack(true);
   if(fromWorld)saveWorldState();
   keyboardLeft=keyboardRight=false;
@@ -1697,6 +1986,7 @@ function openUI(fromWorld=false){
   uiShell.classList.remove('board-enter');
 }
 function enterWorld(){
+  closeDebugPanel({focus:false});
   closeBackpack(true);
   const session=getSession();
   if(!session){showPage('auth');return}
@@ -1809,6 +2099,10 @@ registerForm.addEventListener('submit',e=>{
 });
 
 window.PaperchalkHandleBack=function(){
+  if(debugIsOpen()){
+    closeDebugPanel({focus:false});
+    return true;
+  }
   if(backpackOverlay.classList.contains('is-open')){
     closeBackpack(false);
     return true;
