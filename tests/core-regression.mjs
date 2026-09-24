@@ -100,6 +100,54 @@ try{
     healthHealed.hp===8&&healthHealed.empty===2&&healthHealed.ariaNow==='8',
     JSON.stringify(healthHealed));
 
+  // In-game debug panel: visible button, shortcuts, commands, and movement lock.
+  await page.locator('#debugToggleBtn').click();
+  await page.waitForTimeout(100);
+  check('Debug button opens in-game debug panel',
+    await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')) &&
+    await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
+    'panel open');
+
+  await page.locator('[data-debug-action="damage1"]').click();
+  await page.waitForTimeout(80);
+  let healthDebug=await healthState(page);
+  check('Debug -1 HP button works',healthDebug.hp===7&&healthDebug.empty===3,JSON.stringify(healthDebug));
+
+  await page.locator('[data-debug-action="heal1"]').click();
+  await page.waitForTimeout(80);
+  healthDebug=await healthState(page);
+  check('Debug +1 HP button works',healthDebug.hp===8&&healthDebug.empty===2,JSON.stringify(healthDebug));
+
+  await page.locator('#debugCommandInput').fill('hp 5');
+  await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
+  await page.waitForTimeout(80);
+  healthDebug=await healthState(page);
+  check('Debug hp command works',
+    healthDebug.hp===5 && (await page.locator('#debugOutput').textContent()).includes('HP -> 5 / 10'),
+    JSON.stringify(healthDebug));
+
+  await page.locator('#debugCommandInput').fill('hp +3');
+  await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
+  await page.waitForTimeout(80);
+  healthDebug=await healthState(page);
+  check('Debug relative hp command works',healthDebug.hp===8,JSON.stringify(healthDebug));
+
+  const beforeBlockedMove=await state(page);
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(350);
+  await page.keyboard.up('KeyD');
+  const afterBlockedMove=await state(page);
+  check('Opening debug panel pauses movement input',
+    Math.abs(afterBlockedMove.worldX-beforeBlockedMove.worldX)<0.1 &&
+    Math.abs(afterBlockedMove.actorX-beforeBlockedMove.actorX)<0.1,
+    JSON.stringify({beforeBlockedMove,afterBlockedMove}));
+
+  await page.locator('#debugCloseBtn').click();
+  await page.waitForTimeout(80);
+  check('Debug close button closes panel',
+    !(await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open'))),
+    'panel closed');
+
   // Let world time advance and move.
   await page.keyboard.down('KeyD');
   await page.waitForTimeout(1800);
@@ -234,6 +282,17 @@ try{
   check('Native back closes backpack first',
     backClosed===true && !(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open'))),
     'handled='+backClosed);
+
+  await page.keyboard.press('F2');
+  await page.waitForTimeout(100);
+  check('F2 opens debug panel',
+    await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')),
+    'open='+await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')));
+  const backClosedDebug=await page.evaluate(()=>window.PaperchalkHandleBack());
+  await page.waitForTimeout(100);
+  check('Native back closes debug panel first',
+    backClosedDebug===true && !(await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open'))),
+    'handled='+backClosedDebug);
 
   const backOpenedMenu=await page.evaluate(()=>window.PaperchalkHandleBack());
   await page.waitForTimeout(120);
