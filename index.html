@@ -3790,9 +3790,6 @@ registerForm.addEventListener('submit',e=>{
 });
 
 window.PaperchalkHandleBack=function(){
-  if(junctionPanel.classList.contains('is-open')){
-      return true;
-  }
   if(debugIsOpen()){
     closeDebugPanel({focus:false});
     return true;
