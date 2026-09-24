@@ -17,6 +17,9 @@ async function healthState(page){
     tails:document.querySelectorAll('#playerHealthBar .hp-segment--tail').length,
     tailIsLast:document.querySelector('#playerHealthBar .hp-segment:last-child')?.classList.contains('hp-segment--tail')||false,
     empty:document.querySelectorAll('#playerHealthBar .hp-segment.is-empty').length,
+    hit:document.querySelectorAll('#playerHealthBar .hp-segment.is-hit').length,
+    healing:document.querySelectorAll('#playerHealthBar .hp-segment.is-heal').length,
+    healDelays:[...document.querySelectorAll('#playerHealthBar .hp-segment.is-heal')].map(el=>el.style.animationDelay),
     ariaNow:document.getElementById('playerHealthHud')?.getAttribute('aria-valuenow'),
     loaded:[...document.querySelectorAll('#playerHealthBar .hp-segment')].every(img=>img.complete&&img.naturalWidth>0),
     seam:(()=>{
@@ -90,14 +93,14 @@ try{
   await page.waitForTimeout(120);
   const healthDamaged=await healthState(page);
   check('Damage drains from right across three segments',
-    healthDamaged.hp===7&&healthDamaged.empty===3&&healthDamaged.ariaNow==='7',
+    healthDamaged.hp===7&&healthDamaged.empty===3&&healthDamaged.ariaNow==='7'&&healthDamaged.hit===3,
     JSON.stringify(healthDamaged));
 
   await page.evaluate(()=>window.PaperchalkHealth.heal(1));
   await page.waitForTimeout(120);
   const healthHealed=await healthState(page);
-  check('Healing restores one health segment',
-    healthHealed.hp===8&&healthHealed.empty===2&&healthHealed.ariaNow==='8',
+  check('Healing restores one segment with its own pop animation',
+    healthHealed.hp===8&&healthHealed.empty===2&&healthHealed.ariaNow==='8'&&healthHealed.healing===1,
     JSON.stringify(healthHealed));
 
   // In-game debug panel: visible button, shortcuts, commands, and movement lock.
@@ -131,6 +134,10 @@ try{
   await page.waitForTimeout(80);
   healthDebug=await healthState(page);
   check('Debug relative hp command works',healthDebug.hp===8,JSON.stringify(healthDebug));
+  check('Multi-point healing staggers restored pieces by 45ms',
+    healthDebug.healing===3 &&
+    JSON.stringify(healthDebug.healDelays)===JSON.stringify(['0ms','45ms','90ms']),
+    JSON.stringify(healthDebug));
 
   const beforeBlockedMove=await state(page);
   await page.keyboard.down('KeyD');
