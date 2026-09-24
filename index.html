@@ -1242,7 +1242,7 @@ const GRAVITY=1850,JUMP_SPEED=650;
 const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
-const enemy={x:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',attackTimer:0,attackCooldown:0,hitstun:0,spawned:false};
+const enemy={x:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null};
 let showHitboxes=false;
 
 function clampPlayerHp(value){
@@ -1523,7 +1523,7 @@ function damageEnemy(amount=1){
   return true;
 }
 function resetEnemy(offset=520){
-  enemy.x=worldX+actorX+offset;enemy.hp=ENEMY_MAX_HP;enemy.alive=true;enemy.state='idle';enemy.attackTimer=0;enemy.attackCooldown=.7;enemy.hitstun=0;enemy.spawned=true;
+  enemy.x=worldX+actorX+offset;enemy.hp=ENEMY_MAX_HP;enemy.alive=true;enemy.state='idle';enemy.attackTimer=0;enemy.attackCooldown=.7;enemy.hitstun=0;enemy.spawned=true;enemy.account=typeof getSession==='function'?(getSession()?.account||null):null;
   enemyEl.classList.remove('is-dead','is-hit','is-attacking','is-moving');enemyHealthFill.style.width='100%';
 }
 function updateCombat(dt,interactive){
@@ -2198,12 +2198,12 @@ function openUI(fromWorld=false){
 }
 function enterWorld(){
   closeDebugPanel({focus:false});
-  if(!enemy.spawned||!enemy.alive)resetEnemy(520);
   closeBackpack(true);
   const session=getSession();
   if(!session){showPage('auth');return}
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
+  if(!enemy.spawned||!enemy.alive||enemy.account!==session.account)resetEnemy(520);
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
