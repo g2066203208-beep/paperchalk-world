@@ -18,6 +18,7 @@ async function healthState(page){
     tailIsLast:document.querySelector('#playerHealthBar .hp-segment:last-child')?.classList.contains('hp-segment--tail')||false,
     empty:document.querySelectorAll('#playerHealthBar .hp-segment.is-empty').length,
     ariaNow:document.getElementById('playerHealthHud')?.getAttribute('aria-valuenow'),
+    loaded:[...document.querySelectorAll('#playerHealthBar .hp-segment')].every(img=>img.complete&&img.naturalWidth>0),
     overlap:(()=>{
       const pieces=[...document.querySelectorAll('#playerHealthBar .hp-segment')];
       if(pieces.length<10)return false;
@@ -73,7 +74,7 @@ try{
 
   const healthInitial=await healthState(page);
   check('Health HUD is 10 stitched pieces',
-    healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.overlap,
+    healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.loaded&&healthInitial.overlap,
     JSON.stringify(healthInitial));
   check('New player starts at 10 HP',
     healthInitial.hp===10&&healthInitial.maxHp===10&&healthInitial.empty===0&&healthInitial.ariaNow==='10',
