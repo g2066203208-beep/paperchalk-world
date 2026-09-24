@@ -81,6 +81,37 @@ try{
   let s=await state(page);
   check('A enters a fresh world',Math.abs(s.worldX)<1,'worldX='+s.worldX);
 
+  // Realtime combat foundation: jump, AABB debug boxes and melee hit.
+  await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(220));
+  const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
+  await page.waitForTimeout(140);
+  const jumpAir=await page.evaluate(()=>window.PaperchalkCombat.player);
+  check('Space-style jump enters airborne state',jumpStarted===true&&jumpAir.y>20&&!jumpAir.grounded,JSON.stringify(jumpAir));
+  await page.waitForTimeout(850);
+  const jumpLanded=await page.evaluate(()=>window.PaperchalkCombat.player);
+  check('Jump returns to ground',jumpLanded.grounded&&Math.abs(jumpLanded.y)<1,JSON.stringify(jumpLanded));
+
+  const hitboxesOn=await page.evaluate(()=>window.PaperchalkCombat.toggleHitboxes(true));
+  await page.waitForTimeout(60);
+  check('Collision box debug overlay can be enabled',
+    hitboxesOn===true &&
+    await page.locator('#world').evaluate(el=>el.classList.contains('show-hitboxes')) &&
+    await page.locator('#playerHurtboxDebug').evaluate(el=>getComputedStyle(el).display!=='none'),
+    'hitboxes enabled');
+
+  await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(68));
+  const enemyBefore=await page.evaluate(()=>window.PaperchalkCombat.enemy);
+  await page.evaluate(()=>window.PaperchalkCombat.attack());
+  await page.waitForTimeout(190);
+  const enemyAfter=await page.evaluate(()=>window.PaperchalkCombat.enemy);
+  check('Melee attack hitbox damages nearby enemy exactly once',
+    enemyBefore.hp===3&&enemyAfter.hp===2,
+    JSON.stringify({enemyBefore,enemyAfter}));
+  await page.evaluate(()=>{
+    window.PaperchalkCombat.toggleHitboxes(false);
+    window.PaperchalkCombat.resetEnemy(1400);
+  });
+
   const healthInitial=await healthState(page);
   check('Health HUD is 10 stitched pieces',
     healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.loaded&&healthInitial.seam.ok,

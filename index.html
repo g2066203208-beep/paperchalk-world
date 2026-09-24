@@ -78,6 +78,40 @@ button{cursor:pointer}
   0%,50%,100%{transform:translateX(-50%) scaleX(1.06);opacity:.88}
   25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.52}
 }
+/* ---------- REALTIME COMBAT ---------- */
+.actor{bottom:112px}
+.actor.is-jumping .walker{animation:none}
+.actor.is-attacking .walker{animation:player-swing .30s cubic-bezier(.2,.7,.2,1)}
+@keyframes player-swing{
+  0%{transform:scaleX(var(--facing)) rotate(0)}
+  35%{transform:translateX(calc(var(--facing)*10px)) scaleX(var(--facing)) rotate(calc(var(--facing)*-7deg))}
+  70%{transform:translateX(calc(var(--facing)*18px)) scaleX(var(--facing)) rotate(calc(var(--facing)*8deg))}
+  100%{transform:scaleX(var(--facing)) rotate(0)}
+}
+.enemy{
+  --enemy-facing:-1;position:absolute;z-index:5;bottom:112px;width:112px;height:132px;
+  transform:translateX(-50%);pointer-events:none;will-change:left,bottom,transform,opacity;
+}
+.enemy img{width:100%;height:100%;object-fit:contain;transform:scaleX(var(--enemy-facing));transform-origin:50% 92%;filter:drop-shadow(2px 5px 0 rgba(48,36,25,.14))}
+.enemy.is-moving img{animation:enemy-bob .48s ease-in-out infinite}
+.enemy.is-hit img{animation:enemy-hit .20s ease-out}
+.enemy.is-attacking img{animation:enemy-swing .34s ease-out}
+.enemy.is-dead{opacity:.18;transform:translateX(-50%) rotate(84deg);transition:opacity .3s,transform .3s}
+.enemy-health{position:absolute;left:50%;top:-8px;width:72px;height:7px;transform:translateX(-50%);background:#d7c49f;border:1px solid #66533d;border-radius:3px;overflow:hidden}
+.enemy-health-fill{height:100%;width:100%;background:#7e2f2d;transform-origin:left center}
+@keyframes enemy-bob{50%{transform:scaleX(var(--enemy-facing)) translateY(-3px) rotate(1deg)}}
+@keyframes enemy-hit{40%{transform:scaleX(var(--enemy-facing)) translateX(calc(var(--enemy-facing)*-9px)) rotate(-5deg);filter:brightness(1.45)}}
+@keyframes enemy-swing{45%{transform:scaleX(var(--enemy-facing)) translateX(calc(var(--enemy-facing)*12px)) rotate(7deg)}}
+.combat-controls{position:absolute;z-index:31;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:none;gap:12px;pointer-events:auto}
+.combat-btn{width:64px;height:58px;border:1px solid rgba(79,60,39,.36);background:rgba(235,218,181,.90);color:#584936;font-weight:800;font-size:15px;border-radius:48% 52% 46% 54%;box-shadow:4px 5px 0 rgba(55,42,28,.13);touch-action:manipulation}
+.combat-btn:active{transform:translateY(2px) scale(.96)}
+@media (hover:none),(pointer:coarse){.combat-controls{display:flex}}
+.combat-debug-box{position:absolute;z-index:60;display:none;pointer-events:none;box-sizing:border-box;border:2px solid}
+.stage.show-hitboxes .combat-debug-box{display:block}
+#playerHurtboxDebug{border-color:#39c5bb;background:rgba(57,197,187,.10)}
+#playerAttackDebug{border-color:#ff9b42;background:rgba(255,155,66,.16)}
+#enemyHurtboxDebug{border-color:#a971ff;background:rgba(169,113,255,.10)}
+#enemyAttackDebug{border-color:#ff4f64;background:rgba(255,79,100,.16)}
 .rear-layer .prop{bottom:128px}
 .front-layer .prop{bottom:96px}
 
@@ -898,6 +932,14 @@ button{cursor:pointer}
     <div class="foot-shadow" aria-hidden="true"></div>
     <img class="walker" src="./assets/traveler.webp?v=traveler-r3" alt="旅行者">
   </div>
+  <div id="enemy" class="enemy" aria-label="纸境游荡者">
+    <div class="enemy-health"><div id="enemyHealthFill" class="enemy-health-fill"></div></div>
+    <img src="./assets/enemies/rag-drifter.svg?v=1" alt="敌人">
+  </div>
+  <div id="playerHurtboxDebug" class="combat-debug-box"></div>
+  <div id="playerAttackDebug" class="combat-debug-box"></div>
+  <div id="enemyHurtboxDebug" class="combat-debug-box"></div>
+  <div id="enemyAttackDebug" class="combat-debug-box"></div>
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
 
   <div id="playerHealthHud" class="player-health-hud" role="meter"
@@ -934,7 +976,11 @@ button{cursor:pointer}
     <div class="debug-help">快捷命令：hp、hp 5、hp -1、hp +1、hp max、damage 2、heal 2、time 60、pos、resetpos、save、clear</div>
   </section>
 
-  <div id="desktopControlHint" class="desktop-control-hint">A / D　或　← / →</div>
+  <div class="combat-controls" aria-label="战斗操作">
+    <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
+    <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
+  </div>
+  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　F3 碰撞箱</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -1165,6 +1211,14 @@ const debugStatus=document.getElementById('debugStatus');
 const debugCommandForm=document.getElementById('debugCommandForm');
 const debugCommandInput=document.getElementById('debugCommandInput');
 const debugOutput=document.getElementById('debugOutput');
+const enemyEl=document.getElementById('enemy');
+const enemyHealthFill=document.getElementById('enemyHealthFill');
+const jumpBtn=document.getElementById('jumpBtn');
+const attackBtn=document.getElementById('attackBtn');
+const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
+const playerAttackDebug=document.getElementById('playerAttackDebug');
+const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
+const enemyAttackDebug=document.getElementById('enemyAttackDebug');
 
 const PLAYER_MAX_HP=10;
 let playerHp=PLAYER_MAX_HP;
@@ -1182,6 +1236,14 @@ let joystickAxis=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
+let playerY=0,playerVy=0,playerGrounded=true;
+let playerAttackTimer=0,playerAttackCooldown=0,playerAttackHit=false,playerInvuln=0;
+const GRAVITY=1850,JUMP_SPEED=650;
+const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
+const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
+const ENEMY_MAX_HP=3;
+const enemy={x:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null};
+let showHitboxes=false;
 
 function clampPlayerHp(value){
   const n=Number(value);
@@ -1284,7 +1346,9 @@ function updateDebugStatus(){
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
     '<span>时间 <b>'+worldMinutes.toFixed(1)+'</b></span>'+
     '<span>worldX <b>'+worldX.toFixed(1)+'</b></span>'+
-    '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>';
+    '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
+    '<span>敌人 <b>'+(enemy.alive?enemy.hp+'/'+ENEMY_MAX_HP:'击倒')+'</b></span>'+
+    '<span>碰撞箱 <b>'+(showHitboxes?'开':'关')+'</b></span>';
 }
 function writeDebugOutput(message){
   debugOutput.textContent=String(message);
@@ -1332,6 +1396,10 @@ function runDebugCommand(rawCommand){
       'pos             查看位置',
       'resetpos        世界位置回到 0',
       'save            立即保存',
+      'enemy reset      重置敌人',
+      'hitbox           开/关碰撞箱',
+      'jump             跳跃',
+      'attack           攻击',
       'clear           清空输出'
     ].join('\n');
   }
@@ -1383,6 +1451,10 @@ function runDebugCommand(rawCommand){
   if(cmd==='save'){
     return saveWorldState()?'存档已写入。':'当前没有登录账号，无法保存。';
   }
+  if(cmd==='enemy'&&String(arg||'').toLowerCase()==='reset'){resetEnemy();return '敌人已重置。'}
+  if(cmd==='hitbox')return '碰撞箱 -> '+(toggleHitboxes()?'开启':'关闭');
+  if(cmd==='jump'){jumpPlayer();return 'jump'}
+  if(cmd==='attack'){startPlayerAttack();return 'attack'}
   if(cmd==='clear'){
     debugOutput.textContent='';
     return '';
@@ -1433,11 +1505,91 @@ window.PaperchalkDebug={
   run:executeDebugCommand
 };
 
+function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function playerWorldPos(){return {x:worldX+actorX,y:playerY}}
+function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:PLAYER_HURT.h}}
+function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
+function getEnemyHurtbox(){return{x:enemy.x-31,y:10,w:62,h:108}}
+function getEnemyAttackBox(){return enemy.facing>0?{x:enemy.x+20,y:24,w:74,h:72}:{x:enemy.x-94,y:24,w:74,h:72}}
+function jumpPlayer(){if(!worldInteractive()||!playerGrounded)return false;playerVy=JUMP_SPEED;playerGrounded=false;actorEl.classList.add('is-jumping');return true}
+function startPlayerAttack(){if(!worldInteractive()||playerAttackCooldown>0||playerAttackTimer>0)return false;playerAttackTimer=.30;playerAttackCooldown=.38;playerAttackHit=false;actorEl.classList.add('is-attacking');return true}
+function damageEnemy(amount=1){
+  if(!enemy.alive||enemy.hitstun>0)return false;
+  enemy.hp=Math.max(0,enemy.hp-amount);enemy.hitstun=.22;enemyEl.classList.add('is-hit');
+  setTimeout(()=>enemyEl.classList.remove('is-hit'),220);
+  enemyHealthFill.style.width=(enemy.hp/ENEMY_MAX_HP*100)+'%';
+  enemy.x+=facing*34;
+  if(enemy.hp<=0){enemy.alive=false;enemy.state='dead';enemyEl.classList.add('is-dead')}
+  return true;
+}
+function resetEnemy(offset=520){
+  enemy.x=worldX+actorX+offset;enemy.hp=ENEMY_MAX_HP;enemy.alive=true;enemy.state='idle';enemy.attackTimer=0;enemy.attackCooldown=.7;enemy.hitstun=0;enemy.spawned=true;enemy.account=typeof getSession==='function'?(getSession()?.account||null):null;
+  enemyEl.classList.remove('is-dead','is-hit','is-attacking','is-moving');enemyHealthFill.style.width='100%';
+}
+function updateCombat(dt,interactive){
+  if(!enemy.spawned){
+    if(interactive)resetEnemy(520);
+    else return;
+  }
+  if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
+  if(playerInvuln>0)playerInvuln=Math.max(0,playerInvuln-dt);
+  if(playerAttackTimer>0){
+    playerAttackTimer=Math.max(0,playerAttackTimer-dt);
+    if(playerAttackTimer<=0)actorEl.classList.remove('is-attacking');
+    else if(!playerAttackHit&&playerAttackTimer<.22&&playerAttackTimer>.08&&enemy.alive&&rectsOverlap(getPlayerAttackBox(),getEnemyHurtbox())){
+      playerAttackHit=damageEnemy(1);
+    }
+  }
+  if(!playerGrounded){
+    playerVy-=GRAVITY*dt;playerY+=playerVy*dt;
+    if(playerY<=0){playerY=0;playerVy=0;playerGrounded=true;actorEl.classList.remove('is-jumping')}
+  }
+  if(!interactive||!enemy.alive)return;
+  enemy.attackCooldown=Math.max(0,enemy.attackCooldown-dt);enemy.hitstun=Math.max(0,enemy.hitstun-dt);
+  if(enemy.hitstun>0)return;
+  const px=worldX+actorX,dx=px-enemy.x,dist=Math.abs(dx);enemy.facing=dx>=0?1:-1;enemyEl.style.setProperty('--enemy-facing',enemy.facing);
+  if(enemy.attackTimer>0){
+    enemy.attackTimer=Math.max(0,enemy.attackTimer-dt);
+    if(enemy.attackTimer<=0){enemyEl.classList.remove('is-attacking');enemy.attackCooldown=.9}
+    else if(enemy.attackTimer<.20&&enemy.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(),getPlayerHurtbox())){
+      damagePlayer(1);playerInvuln=.72;actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
+    }
+  }else if(dist<82&&enemy.attackCooldown<=0){
+    enemy.attackTimer=.34;enemyEl.classList.remove('is-moving');enemyEl.classList.add('is-attacking');
+  }else if(dist<430&&dist>72){
+    enemy.state='chase';enemyEl.classList.add('is-moving');enemy.x+=Math.sign(dx)*Math.min(112*dt,Math.max(0,dist-70));
+  }else enemyEl.classList.remove('is-moving');
+}
+function debugRect(el,r){
+  if(!r){el.style.width='0';return}
+  el.style.left=(r.x-worldX)+'px';el.style.bottom=(112+r.y)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
+}
+function renderCombatDebug(){
+  debugRect(playerHurtboxDebug,getPlayerHurtbox());
+  debugRect(playerAttackDebug,playerAttackTimer>0&&playerAttackTimer<.22&&playerAttackTimer>.08?getPlayerAttackBox():null);
+  debugRect(enemyHurtboxDebug,enemy.alive?getEnemyHurtbox():null);
+  debugRect(enemyAttackDebug,enemy.attackTimer>0&&enemy.attackTimer<.20&&enemy.attackTimer>.08?getEnemyAttackBox():null);
+}
+function toggleHitboxes(force){
+  showHitboxes=typeof force==='boolean'?force:!showHitboxes;
+  worldEl.classList.toggle('show-hitboxes',showHitboxes);
+  return showHitboxes;
+}
+window.PaperchalkCombat={
+  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,toggleHitboxes,
+  get enemy(){return {x:enemy.x,hp:enemy.hp,alive:enemy.alive,state:enemy.state}},
+  get player(){return {y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}}
+};
+
 function refreshRoadW(){
   const w=roadTile.getBoundingClientRect().width;
   if(w>0)roadW=w-1;
   actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,actorX));
   actorEl.style.left=actorX+'px';
+  actorEl.style.bottom=(112+playerY)+'px';
+  enemyEl.style.left=(enemy.x-worldX)+'px';
+  enemyEl.style.bottom='112px';
+  renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
 addEventListener('resize',refreshRoadW);
@@ -1477,6 +1629,7 @@ function frame(now){
   }
   const interactive=worldInteractive();
   if(interactive && worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  updateCombat(dt,interactive);
   const axis=interactive?movementAxis():0;
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
@@ -1519,11 +1672,16 @@ addEventListener('keydown',e=>{
   if(isEditableTarget(e.target)||!worldInteractive())return;
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){jumpPlayer();e.preventDefault()}
+  if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
+  if(e.code==='F3'){toggleHitboxes();e.preventDefault()}
 });
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
 });
+jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jumpPlayer()});
+attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
   joystickAxis=0;
   joystickPointer=null;
@@ -2048,6 +2206,7 @@ function enterWorld(){
   if(!session){showPage('auth');return}
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
+  if(!enemy.spawned||!enemy.alive||enemy.account!==session.account)resetEnemy(520);
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
