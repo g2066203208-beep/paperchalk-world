@@ -53,7 +53,7 @@ button{cursor:pointer}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
   --facing:1;
-  position:absolute;left:35%;bottom:90px;width:126px;z-index:5;
+  position:absolute;left:35%;bottom:112px;width:126px;z-index:5;
   transform:translateX(-50%);pointer-events:none;will-change:left;
 }
 .actor.facing-left{--facing:-1}
@@ -79,8 +79,8 @@ button{cursor:pointer}
   0%,50%,100%{transform:translateX(-50%) scaleX(1.06);opacity:.88}
   25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.52}
 }
-.rear-layer .prop{bottom:98px}
-.front-layer .prop{bottom:55px}
+.rear-layer .prop{bottom:128px}
+.front-layer .prop{bottom:96px}
 
 /* tiny in-world menu tab */
 .world-menu-btn{
@@ -338,9 +338,9 @@ button{cursor:pointer}
 @media(max-width:800px){
   .road-layer{bottom:2vh;height:220px}
   .rear-layer,.front-layer{bottom:2vh;height:220px}
-  .rear-layer .prop{bottom:72px}
-  .front-layer .prop{bottom:36px}
-  .actor{left:34%;bottom:64px;width:106px}
+  .rear-layer .prop{bottom:96px}
+  .front-layer .prop{bottom:78px}
+  .actor{left:34%;bottom:82px;width:106px}
   .foot-shadow{width:48px;height:11px;bottom:5px}
   .rear-layer .prop{scale:.80}
   .front-layer .prop{scale:.84}
