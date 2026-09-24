@@ -953,14 +953,14 @@ button{cursor:pointer}
 .debug-help{margin:8px 2px 0;font-size:11px;line-height:1.45;color:#6b5b48}
 @media(max-width:900px),(max-height:560px){
   .debug-toggle-btn{
-    top:max(104px,calc(env(safe-area-inset-top) + 98px));
+    top:max(151px,calc(env(safe-area-inset-top) + 145px));
     right:max(10px,env(safe-area-inset-right));height:30px;line-height:28px;min-width:58px;font-size:11px
   }
   .debug-panel{
-    top:max(140px,calc(env(safe-area-inset-top) + 134px));
+    top:max(188px,calc(env(safe-area-inset-top) + 182px));
     right:max(10px,env(safe-area-inset-right));
     width:min(330px,calc(100vw - 20px));
-    max-height:calc(100vh - 150px);
+    max-height:calc(var(--app-height,100dvh) - 198px);
     padding:11px;
   }
 }
@@ -1062,7 +1062,7 @@ button{cursor:pointer}
 @keyframes invPaperFold{to{opacity:0;transform:scale(.10,.07) rotate(10deg)}}
 
 @media(max-width:900px),(max-height:560px){
-  .backpack-open-btn{width:62px;height:52px;top:max(66px,calc(env(safe-area-inset-top) + 60px))}
+  .backpack-open-btn{width:58px;height:48px;top:max(62px,calc(env(safe-area-inset-top) + 56px))}
   .inventory-shell{height:min(96vh,1018px)}
   .inventory-slot.is-selected{box-shadow:none}
 }
@@ -2761,7 +2761,7 @@ function drawWorldMap(){
     if(t.kind==='rock'){
       ctx.moveTo(p.x-9,p.y-18);ctx.lineTo(p.x-2,p.y-31);ctx.lineTo(p.x+10,p.y-17);ctx.closePath();
     }else{
-      ctx.roundRect(p.x-12,p.y-26,24,10,3);
+      ctx.rect(p.x-12,p.y-26,24,10);
     }
     ctx.fill();
   }
