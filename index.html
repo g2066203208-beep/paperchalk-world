@@ -1527,7 +1527,10 @@ function resetEnemy(offset=520){
   enemyEl.classList.remove('is-dead','is-hit','is-attacking','is-moving');enemyHealthFill.style.width='100%';
 }
 function updateCombat(dt,interactive){
-  if(!enemy.spawned)resetEnemy(520);
+  if(!enemy.spawned){
+    if(interactive)resetEnemy(520);
+    else return;
+  }
   if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
   if(playerInvuln>0)playerInvuln=Math.max(0,playerInvuln-dt);
   if(playerAttackTimer>0){
