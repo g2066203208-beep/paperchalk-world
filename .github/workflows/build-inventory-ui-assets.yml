@@ -56,6 +56,15 @@ jobs:
             "paper-ball.png":(38,849,103,913),
             "paper-unfold-1.png":(146,845,245,918),
             "paper-unfold-2.png":(289,846,408,920),
+            "frame-tl.png":(1081,728,1140,778),
+            "frame-t.png":(1161,729,1442,775),
+            "frame-tr.png":(1464,730,1523,780),
+            "frame-l.png":(1078,792,1135,870),
+            "frame-c.png":(1157,790,1444,874),
+            "frame-r.png":(1469,792,1523,871),
+            "frame-bl.png":(1080,881,1140,925),
+            "frame-b.png":(1162,887,1441,926),
+            "frame-br.png":(1463,881,1524,928),
           }
           for name,box in boxes.items():
             crop=src.crop(box)
