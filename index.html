@@ -1335,6 +1335,197 @@ button{cursor:pointer}
   .joystick-hint{left:max(10px,env(safe-area-inset-left));bottom:max(8px,env(safe-area-inset-bottom))}
   .inventory-shell{width:min(96vw,calc(var(--app-height,100dvh) * 1.28));height:auto!important;max-height:calc(var(--app-height,100dvh) - 12px)}
 }
+/* ---------- PAPER THEATER DIALOGUE ---------- */
+.dialogue-stage{
+  position:absolute;inset:0;z-index:58;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .28s ease,visibility .28s ease;
+  overflow:hidden;
+}
+.dialogue-stage.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.dialogue-dim{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 50% 78%,rgba(235,199,123,.10) 0 18%,transparent 48%),
+    rgba(24,21,19,.50);
+  opacity:0;transition:opacity .38s ease;
+}
+.dialogue-stage.is-open .dialogue-dim{opacity:1}
+.dialogue-stage.is-choice .dialogue-dim{
+  background:
+    radial-gradient(ellipse at 50% 61%,rgba(242,208,133,.34) 0 13%,rgba(242,208,133,.12) 29%,transparent 51%),
+    rgba(18,17,18,.66);
+}
+.dialogue-curtain{
+  position:absolute;left:0;right:0;top:0;height:17%;
+  background:linear-gradient(to bottom,rgba(54,38,27,.42),transparent);
+  pointer-events:none
+}
+.dialogue-portrait{
+  --portrait-side:1;
+  position:absolute;bottom:6%;
+  width:clamp(210px,26vw,390px);height:min(76vh,650px);
+  transform-origin:50% 100%;
+  opacity:0;
+  transition:left .42s cubic-bezier(.2,.72,.22,1),right .42s cubic-bezier(.2,.72,.22,1),
+             bottom .42s cubic-bezier(.2,.72,.22,1),width .42s cubic-bezier(.2,.72,.22,1),
+             height .42s cubic-bezier(.2,.72,.22,1),opacity .30s ease,transform .42s cubic-bezier(.2,.72,.22,1);
+  pointer-events:none;
+}
+.dialogue-portrait.player{left:-31%;--portrait-side:1}
+.dialogue-portrait.npc{right:-31%;--portrait-side:-1}
+.dialogue-stage.is-open .dialogue-portrait.player{left:4%}
+.dialogue-stage.is-open .dialogue-portrait.npc{right:4%}
+.dialogue-stage.is-open .dialogue-portrait{opacity:1}
+.dialogue-stick{
+  position:absolute;z-index:0;left:50%;bottom:-22%;width:16px;height:72%;
+  transform:translateX(-50%) rotate(calc(var(--portrait-side) * -1.7deg));
+  transform-origin:50% 100%;
+  background:linear-gradient(90deg,#69482e,#9a724a 46%,#65442c);
+  border:2px solid rgba(62,42,28,.55);
+  border-radius:8px 8px 3px 3px;
+  box-shadow:3px 3px 0 rgba(28,21,16,.15);
+}
+.dialogue-puppet{
+  position:absolute;z-index:2;left:50%;bottom:7%;width:76%;height:82%;
+  transform:translateX(-50%);
+  transform-origin:50% 95%;
+  animation:dialoguePuppetBreath 3.1s ease-in-out infinite;
+}
+.dialogue-portrait.npc .dialogue-puppet{animation-delay:-1.45s}
+@keyframes dialoguePuppetBreath{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-.35deg)}
+  48%{transform:translateX(-50%) translateY(-7px) rotate(.35deg)}
+}
+.dialogue-player-img{
+  position:absolute;left:50%;bottom:0;width:100%;height:100%;object-fit:contain;
+  transform:translateX(-50%) scaleX(var(--portrait-side));
+  transform-origin:50% 95%;user-select:none;-webkit-user-drag:none
+}
+.dialogue-npc-paper{
+  position:absolute;inset:0;transform:scaleX(var(--portrait-side));
+  transform-origin:50% 90%;
+}
+.dialogue-npc-body{
+  position:absolute;left:24%;bottom:2%;width:52%;height:62%;
+  background:linear-gradient(145deg,#88715a,#6f5b49);
+  border:5px solid #4f4032;border-radius:42% 44% 20% 24%;
+  clip-path:polygon(17% 3%,80% 1%,97% 32%,89% 96%,52% 100%,8% 93%,1% 34%);
+  box-shadow:inset 8px 4px 0 rgba(225,201,163,.10)
+}
+.dialogue-npc-head{
+  position:absolute;left:33%;top:10%;width:36%;aspect-ratio:1;
+  background:#cfad82;border:5px solid #5b4936;border-radius:47% 51% 45% 49%;
+}
+.dialogue-npc-head::before{
+  content:"";position:absolute;left:-15%;right:-14%;top:-18%;height:47%;
+  background:#d5cec0;border:4px solid #655c50;
+  clip-path:polygon(0 70%,10% 22%,27% 43%,42% 0,57% 40%,77% 11%,100% 68%,88% 100%,13% 95%)
+}
+.dialogue-npc-head::after{
+  content:"";position:absolute;left:20%;right:17%;bottom:-24%;height:38%;
+  background:#c5beb1;border:4px solid #655c50;
+  clip-path:polygon(0 0,28% 15%,48% 2%,72% 17%,100% 0,86% 78%,51% 100%,14% 74%)
+}
+.dialogue-nameplate{
+  position:absolute;z-index:4;left:50%;bottom:2%;
+  transform:translateX(-50%);
+  padding:5px 12px;background:#dcc28d;border:2px solid rgba(89,66,42,.55);
+  color:#4c3e2f;font:800 12px/1.15 "Noto Serif SC",serif;
+  white-space:nowrap;clip-path:polygon(2% 6%,96% 0,100% 87%,92% 100%,4% 94%,0 13%)
+}
+.dialogue-bubble{
+  position:absolute;z-index:5;top:20%;max-width:min(34vw,440px);
+  min-width:180px;padding:14px 18px 15px;
+  background:rgba(240,224,190,.97);color:#473b2e;
+  border:2px solid rgba(82,61,39,.56);
+  box-shadow:5px 6px 0 rgba(31,24,18,.16);
+  font:700 clamp(14px,1.45vw,20px)/1.55 "Noto Serif SC","Songti SC",serif;
+  opacity:0;transform:translateY(8px) scale(.97);
+  transition:opacity .20s ease,transform .20s ease;
+  clip-path:polygon(1% 5%,97% 0,100% 88%,93% 100%,3% 96%,0 13%);
+  cursor:pointer;
+}
+.dialogue-bubble.is-visible{opacity:1;transform:translateY(0) scale(1)}
+.dialogue-bubble.player{left:27%}
+.dialogue-bubble.npc{right:27%}
+.dialogue-bubble.player::after,.dialogue-bubble.npc::after{
+  content:"";position:absolute;bottom:-14px;width:26px;height:20px;
+  background:inherit;border-bottom:2px solid rgba(82,61,39,.56);
+  transform:rotate(35deg)
+}
+.dialogue-bubble.player::after{left:28px}
+.dialogue-bubble.npc::after{right:28px;transform:rotate(-35deg)}
+.dialogue-bubble small{
+  display:block;margin-top:7px;text-align:right;font:600 10px/1 system-ui,sans-serif;
+  color:#82705a;opacity:.78
+}
+.dialogue-skip{
+  position:absolute;z-index:8;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));
+  border:1px solid rgba(236,222,191,.34);background:rgba(36,31,26,.46);color:#e8d8b7;
+  border-radius:4px;padding:7px 11px;font-size:11px
+}
+
+/* Choice shot: player becomes the single central paper actor under a spotlight. */
+.dialogue-stage.is-choice .dialogue-portrait.npc{
+  right:-38%;opacity:.12;transform:rotate(3deg) scale(.82)
+}
+.dialogue-stage.is-choice .dialogue-portrait.player{
+  left:50%;bottom:1%;width:clamp(270px,38vw,520px);height:min(82vh,720px);
+  transform:translateX(-50%) scale(1.06)
+}
+.dialogue-stage.is-choice .dialogue-portrait.player .dialogue-puppet{
+  animation:dialogueChoiceBreath 2.6s ease-in-out infinite
+}
+@keyframes dialogueChoiceBreath{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-.2deg)}
+  50%{transform:translateX(-50%) translateY(-9px) rotate(.2deg)}
+}
+.dialogue-stage.is-choice .dialogue-bubble{opacity:0;pointer-events:none}
+.dialogue-choices{
+  position:absolute;z-index:9;inset:0;pointer-events:none;
+  opacity:0;transition:opacity .24s ease .14s
+}
+.dialogue-stage.is-choice .dialogue-choices{opacity:1}
+.dialogue-choice{
+  position:absolute;pointer-events:auto;
+  width:min(29vw,350px);min-height:58px;padding:12px 16px;
+  border:2px solid rgba(89,66,43,.56);background:rgba(242,226,191,.98);
+  color:#473b2e;font:800 clamp(13px,1.25vw,18px)/1.35 "Noto Serif SC",serif;
+  box-shadow:5px 6px 0 rgba(26,21,17,.15);cursor:pointer;
+  clip-path:polygon(1% 6%,97% 0,100% 90%,92% 100%,3% 95%,0 13%);
+  transition:transform .14s ease,background .14s ease
+}
+.dialogue-choice:active,.dialogue-choice:hover{transform:translateY(-3px) scale(1.02);background:#f1d8a4}
+.dialogue-choice.pos-top{left:50%;top:8%;transform:translateX(-50%)}
+.dialogue-choice.pos-left{right:67%;top:37%}
+.dialogue-choice.pos-right{left:67%;top:37%}
+.dialogue-choice.pos-top:hover,.dialogue-choice.pos-top:active{transform:translateX(-50%) translateY(-3px) scale(1.02)}
+
+.dialogue-stage.is-closing .dialogue-portrait.player{left:-35%;transform:rotate(-4deg) translateY(18px);opacity:0}
+.dialogue-stage.is-closing .dialogue-portrait.npc{right:-35%;transform:rotate(4deg) translateY(18px);opacity:0}
+.dialogue-stage.is-closing .dialogue-dim{opacity:0}
+.dialogue-stage.is-closing .dialogue-bubble{opacity:0}
+.stage.dialogue-active .combat-controls,
+.stage.dialogue-active .joystick-zone,
+.stage.dialogue-active .joystick-hint,
+.stage.dialogue-active .world-menu-btn,
+.stage.dialogue-active .backpack-open-btn,
+.stage.dialogue-active .world-map-btn,
+.stage.dialogue-active .debug-toggle-btn{opacity:.12;pointer-events:none}
+
+@media(max-width:760px),(max-height:520px){
+  .dialogue-portrait{width:clamp(170px,27vw,260px);height:min(75vh,440px);bottom:1%}
+  .dialogue-stage.is-open .dialogue-portrait.player{left:1%}
+  .dialogue-stage.is-open .dialogue-portrait.npc{right:1%}
+  .dialogue-bubble{top:13%;max-width:40vw;min-width:130px;padding:9px 11px;font-size:12px}
+  .dialogue-bubble.player{left:22%}.dialogue-bubble.npc{right:22%}
+  .dialogue-stage.is-choice .dialogue-portrait.player{width:clamp(230px,39vw,350px);height:82vh}
+  .dialogue-choice{width:29vw;min-height:42px;padding:7px 9px;font-size:11px}
+  .dialogue-choice.pos-top{top:4%}
+  .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:34%}
+}
+
 @media (max-height:430px) and (pointer:coarse){
   .player-health-hud{transform:scale(.56)!important}
   .world-menu-btn{width:50px!important;height:43px!important}
@@ -1400,6 +1591,35 @@ button{cursor:pointer}
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <div id="cameraLeftDebug" class="camera-debug-line" style="left:42%"><span class="camera-debug-label">CAMERA FOLLOW</span></div>
   <div id="mapNotice" class="map-notice" role="status" aria-live="polite"></div>
+
+  <section id="dialogueStage" class="dialogue-stage" aria-hidden="true" aria-label="舞台对话">
+    <div class="dialogue-dim" aria-hidden="true"></div>
+    <div class="dialogue-curtain" aria-hidden="true"></div>
+
+    <div id="dialoguePlayerPortrait" class="dialogue-portrait player" aria-hidden="true">
+      <div class="dialogue-stick"></div>
+      <div class="dialogue-puppet">
+        <img class="dialogue-player-img" src="./assets/traveler.webp?v=traveler-r3" alt="">
+      </div>
+      <div id="dialoguePlayerName" class="dialogue-nameplate">旅人</div>
+    </div>
+
+    <div id="dialogueNpcPortrait" class="dialogue-portrait npc" aria-hidden="true">
+      <div class="dialogue-stick"></div>
+      <div class="dialogue-puppet">
+        <div class="dialogue-npc-paper">
+          <div class="dialogue-npc-body"></div>
+          <div class="dialogue-npc-head"></div>
+        </div>
+      </div>
+      <div id="dialogueNpcName" class="dialogue-nameplate">村口老匠</div>
+    </div>
+
+    <button id="dialoguePlayerBubble" class="dialogue-bubble player" type="button"></button>
+    <button id="dialogueNpcBubble" class="dialogue-bubble npc" type="button"></button>
+    <div id="dialogueChoices" class="dialogue-choices" aria-label="回答选项"></div>
+    <button id="dialogueSkip" class="dialogue-skip" type="button">结束交谈</button>
+  </section>
 
   <div id="playerHealthHud" class="player-health-hud" role="meter"
        aria-label="生命值" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
