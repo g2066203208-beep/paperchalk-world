@@ -7,6 +7,7 @@ on:
     paths:
       - "tests/browser-audit.mjs"
       - "tests/browser-visual-audit.mjs"
+      - "tests/paper-transition-audit.mjs"
       - ".github/workflows/browser-audit.yml"
       - "index.html"
       - "assets/**"
@@ -63,6 +64,12 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/browser-visual-audit.mjs
+
+      - name: Check paper transition cleanup
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: node tests/paper-transition-audit.mjs
+        continue-on-error: true
 
       - name: Upload functional audit evidence
         if: always()
