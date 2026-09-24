@@ -1401,35 +1401,11 @@ button{cursor:pointer}
   0%,100%{transform:translateX(-50%) translateY(0) rotate(-.35deg)}
   48%{transform:translateX(-50%) translateY(-7px) rotate(.35deg)}
 }
-.dialogue-player-img{
+.dialogue-player-img,.dialogue-npc-img{
   position:absolute;left:50%;bottom:0;width:100%;height:100%;object-fit:contain;
   transform:translateX(-50%) scaleX(var(--portrait-side));
-  transform-origin:50% 95%;user-select:none;-webkit-user-drag:none
-}
-.dialogue-npc-paper{
-  position:absolute;inset:0;transform:scaleX(var(--portrait-side));
-  transform-origin:50% 90%;
-}
-.dialogue-npc-body{
-  position:absolute;left:24%;bottom:2%;width:52%;height:62%;
-  background:linear-gradient(145deg,#88715a,#6f5b49);
-  border:5px solid #4f4032;border-radius:42% 44% 20% 24%;
-  clip-path:polygon(17% 3%,80% 1%,97% 32%,89% 96%,52% 100%,8% 93%,1% 34%);
-  box-shadow:inset 8px 4px 0 rgba(225,201,163,.10)
-}
-.dialogue-npc-head{
-  position:absolute;left:33%;top:10%;width:36%;aspect-ratio:1;
-  background:#cfad82;border:5px solid #5b4936;border-radius:47% 51% 45% 49%;
-}
-.dialogue-npc-head::before{
-  content:"";position:absolute;left:-15%;right:-14%;top:-18%;height:47%;
-  background:#d5cec0;border:4px solid #655c50;
-  clip-path:polygon(0 70%,10% 22%,27% 43%,42% 0,57% 40%,77% 11%,100% 68%,88% 100%,13% 95%)
-}
-.dialogue-npc-head::after{
-  content:"";position:absolute;left:20%;right:17%;bottom:-24%;height:38%;
-  background:#c5beb1;border:4px solid #655c50;
-  clip-path:polygon(0 0,28% 15%,48% 2%,72% 17%,100% 0,86% 78%,51% 100%,14% 74%)
+  transform-origin:50% 95%;user-select:none;-webkit-user-drag:none;
+  filter:drop-shadow(5px 9px 0 rgba(25,19,14,.16))
 }
 .dialogue-nameplate{
   position:absolute;z-index:4;left:50%;bottom:2%;
@@ -1520,6 +1496,7 @@ button{cursor:pointer}
 
 @media(max-width:760px),(max-height:520px){
   .dialogue-portrait{width:clamp(170px,27vw,260px);height:min(75vh,440px);bottom:1%}
+  .dialogue-player-img,.dialogue-npc-img{filter:drop-shadow(3px 5px 0 rgba(25,19,14,.13))}
   .dialogue-stage.is-open .dialogue-portrait.player{left:1%}
   .dialogue-stage.is-open .dialogue-portrait.npc{right:1%}
   .dialogue-bubble{top:13%;max-width:40vw;min-width:130px;padding:9px 11px;font-size:12px}
@@ -1603,7 +1580,7 @@ button{cursor:pointer}
     <div id="dialoguePlayerPortrait" class="dialogue-portrait player" aria-hidden="true">
       <div class="dialogue-stick"></div>
       <div class="dialogue-puppet">
-        <img class="dialogue-player-img" src="./assets/traveler.webp?v=traveler-r3" alt="">
+        <img id="dialoguePlayerArt" class="dialogue-player-img" alt="旅人立绘" decoding="async" draggable="false">
       </div>
       <div id="dialoguePlayerName" class="dialogue-nameplate">旅人</div>
     </div>
@@ -1611,10 +1588,7 @@ button{cursor:pointer}
     <div id="dialogueNpcPortrait" class="dialogue-portrait npc" aria-hidden="true">
       <div class="dialogue-stick"></div>
       <div class="dialogue-puppet">
-        <div class="dialogue-npc-paper">
-          <div class="dialogue-npc-body"></div>
-          <div class="dialogue-npc-head"></div>
-        </div>
+        <img id="dialogueNpcArt" class="dialogue-npc-img" alt="白翼引路人立绘" decoding="async" draggable="false">
       </div>
       <div id="dialogueNpcName" class="dialogue-nameplate">村口老匠</div>
     </div>
@@ -1863,6 +1837,8 @@ button{cursor:pointer}
   </div>
 </section>
 
+<script src="./assets/dialogue/player-portrait.js?v=1"></script>
+<script src="./assets/dialogue/npc-portrait.js?v=1"></script>
 <script>
 /* -------------------- WORLD -------------------- */
 const WORLD_ZONE_WIDTH=6000;
@@ -1962,14 +1938,14 @@ const MAP_PICKUPS=[
 ];
 const MAP_NPCS=[
   {
-    id:'npc-old-crafter',x:760,name:'村口老匠',portrait:'crafter',
+    id:'npc-old-crafter',x:760,name:'白翼引路人',portrait:'white-wing-guide',
     text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。',
     dialogue:{
-      opening:'回来啦，旅人。今晚的风把纸边吹得很响……你还准备继续往前走吗？',
+      opening:'你终于来了，旅人。纸境的灯已经一盏盏亮起——舞台正在转动。你还要继续往前吗？',
       choices:[
-        {text:'我想知道前面的路。',reply:'沿旧土坡往东，路会越来越荒。别只看脚下，纸境的远景有时也会告诉你哪里不对劲。'},
-        {text:'这里一直都是这样安静吗？',reply:'安静？只是舞台还没轮到它开口。等灯暗下来，你会听见很多白天听不见的声音。'},
-        {text:'我只是来打个招呼。',reply:'那也很好。赶路的人若连招呼都忘了，走得再远也只是在赶路。'}
+        {text:'我想知道前面的路。',reply:'沿旧土坡向东。别只看脚下——纸境的远景、灯影和风声，有时比路牌更早告诉你哪里发生了变化。'},
+        {text:'你为什么在这里等我？',reply:'因为有些门只会为正在前进的人出现。我负责看着灯亮起，也负责提醒你：看见的未必就是全部。'},
+        {text:'我只是来打个招呼。',reply:'那么我收下这句招呼。继续走吧，等下一次舞台暗下来，我们还会再见。'}
       ]
     }
   }
@@ -2336,10 +2312,15 @@ const dialoguePlayerPortrait=document.getElementById('dialoguePlayerPortrait');
 const dialogueNpcPortrait=document.getElementById('dialogueNpcPortrait');
 const dialoguePlayerName=document.getElementById('dialoguePlayerName');
 const dialogueNpcName=document.getElementById('dialogueNpcName');
+const dialoguePlayerArt=document.getElementById('dialoguePlayerArt');
+const dialogueNpcArt=document.getElementById('dialogueNpcArt');
 const dialoguePlayerBubble=document.getElementById('dialoguePlayerBubble');
 const dialogueNpcBubble=document.getElementById('dialogueNpcBubble');
 const dialogueChoices=document.getElementById('dialogueChoices');
 const dialogueSkip=document.getElementById('dialogueSkip');
+if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
+else dialoguePlayerArt.src='./assets/traveler.webp?v=traveler-r3';
+if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
 const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
