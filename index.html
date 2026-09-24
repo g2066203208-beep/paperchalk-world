@@ -81,6 +81,63 @@ button{cursor:pointer}
 .rear-layer .prop{bottom:128px}
 .front-layer .prop{bottom:96px}
 
+/* ---------- SEWN HEALTH HUD ---------- */
+.player-health-hud{
+  position:absolute;z-index:31;
+  top:max(13px,calc(env(safe-area-inset-top) + 5px));
+  left:max(14px,calc(env(safe-area-inset-left) + 6px));
+  pointer-events:none;
+  transform-origin:left top;
+  filter:drop-shadow(2px 4px 0 rgba(48,31,20,.13));
+}
+.player-health-bar{
+  display:flex;align-items:center;
+  height:48px;
+  padding:0;
+  isolation:isolate;
+}
+.hp-segment{
+  display:block;flex:none;
+  object-fit:contain;
+  user-select:none;-webkit-user-drag:none;
+  transition:opacity .16s ease,filter .16s ease,transform .16s ease;
+  will-change:opacity,filter,transform;
+}
+.hp-segment--cell{
+  width:46px;height:auto;
+}
+.hp-segment--tail{
+  width:111px;height:auto;
+  margin-left:-10px;
+}
+.hp-segment--cell + .hp-segment--cell{
+  margin-left:-8px;
+}
+/* Keep the stitched silhouette in place as health is lost. */
+.hp-segment.is-empty{
+  opacity:.17;
+  filter:saturate(.12) brightness(.48) contrast(.88);
+}
+.hp-segment.is-hit{
+  animation:hp-sewn-hit .24s ease-out;
+}
+@keyframes hp-sewn-hit{
+  0%{transform:translate3d(0,0,0) rotate(0)}
+  25%{transform:translate3d(1px,-2px,0) rotate(.8deg)}
+  55%{transform:translate3d(-2px,1px,0) rotate(-1deg)}
+  100%{transform:translate3d(0,0,0) rotate(0)}
+}
+@media(max-width:900px),(max-height:560px){
+  .player-health-hud{
+    top:max(8px,calc(env(safe-area-inset-top) + 3px));
+    left:max(8px,calc(env(safe-area-inset-left) + 4px));
+    transform:scale(.72);
+  }
+}
+@media(max-width:560px){
+  .player-health-hud{transform:scale(.60)}
+}
+
 /* tiny in-world menu tab */
 .world-menu-btn{
   position:absolute;z-index:30;top:max(12px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));
@@ -721,6 +778,12 @@ button{cursor:pointer}
     <img class="walker" src="./assets/traveler.webp?v=traveler-r3" alt="旅行者">
   </div>
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
+
+  <div id="playerHealthHud" class="player-health-hud" role="meter"
+       aria-label="生命值" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
+    <div id="playerHealthBar" class="player-health-bar" aria-hidden="true"></div>
+  </div>
+
   <button id="worldMenuBtn" class="world-menu-btn" aria-label="主菜单">≡</button>
   <button id="backpackBtn" class="backpack-open-btn" aria-label="打开背包">
     <img src="./assets/ui/inventory-v2/bag-icon.png?v=2" alt="">
@@ -947,6 +1010,12 @@ const settingLanguage=document.getElementById('settingLanguage');
 const settingTimeScale=document.getElementById('settingTimeScale');
 const settingLandscape=document.getElementById('settingLandscape');
 const settingsStatus=document.getElementById('settingsStatus');
+const playerHealthHud=document.getElementById('playerHealthHud');
+const playerHealthBar=document.getElementById('playerHealthBar');
+
+const PLAYER_MAX_HP=10;
+let playerHp=PLAYER_MAX_HP;
+let healthPieces=[];
 
 let last=performance.now();
 let roadW=1200;
@@ -959,6 +1028,69 @@ let joystickAxis=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
+
+function clampPlayerHp(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return PLAYER_MAX_HP;
+  return Math.max(0,Math.min(PLAYER_MAX_HP,Math.round(n)));
+}
+function buildPlayerHealthBar(){
+  playerHealthBar.innerHTML='';
+  healthPieces=[];
+  for(let i=0;i<PLAYER_MAX_HP;i++){
+    const img=document.createElement('img');
+    const isTail=i===PLAYER_MAX_HP-1;
+    img.className='hp-segment '+(isTail?'hp-segment--tail':'hp-segment--cell');
+    img.src=isTail?'./assets/ui/health/hp-tail.webp?v=1':'./assets/ui/health/hp-cell.webp?v=1';
+    img.alt='';
+    img.draggable=false;
+    img.dataset.hpIndex=String(i);
+    playerHealthBar.appendChild(img);
+    healthPieces.push(img);
+  }
+}
+function renderPlayerHealth(previousHp=playerHp,animateLoss=false){
+  playerHp=clampPlayerHp(playerHp);
+  playerHealthHud.setAttribute('aria-valuemax',String(PLAYER_MAX_HP));
+  playerHealthHud.setAttribute('aria-valuenow',String(playerHp));
+  playerHealthHud.setAttribute('aria-valuetext',playerHp+' / '+PLAYER_MAX_HP+' 生命值');
+
+  healthPieces.forEach((piece,i)=>{
+    const filled=i<playerHp;
+    piece.classList.toggle('is-empty',!filled);
+    if(animateLoss && playerHp<previousHp && i>=playerHp && i<previousHp){
+      piece.classList.remove('is-hit');
+      void piece.offsetWidth;
+      piece.classList.add('is-hit');
+      setTimeout(()=>piece.classList.remove('is-hit'),300);
+    }
+  });
+}
+function setPlayerHp(value,{persist=true,animate=true}={}){
+  const previousHp=playerHp;
+  playerHp=clampPlayerHp(value);
+  renderPlayerHealth(previousHp,animate);
+  if(persist && typeof saveWorldState==='function')saveWorldState();
+  return playerHp;
+}
+function damagePlayer(amount=1){
+  const n=Math.max(0,Number(amount)||0);
+  return setPlayerHp(playerHp-n);
+}
+function healPlayer(amount=1){
+  const n=Math.max(0,Number(amount)||0);
+  return setPlayerHp(playerHp+n);
+}
+buildPlayerHealthBar();
+renderPlayerHealth();
+window.PaperchalkHealth={
+  get hp(){return playerHp},
+  get maxHp(){return PLAYER_MAX_HP},
+  set(value){return setPlayerHp(value)},
+  damage(amount=1){return damagePlayer(amount)},
+  heal(amount=1){return healPlayer(amount)},
+  reset(){return setPlayerHp(PLAYER_MAX_HP)}
+};
 
 function refreshRoadW(){
   const w=roadTile.getBoundingClientRect().width;
@@ -1434,6 +1566,7 @@ function defaultSave(session){
     worldMinutes:0,
     worldX:0,
     actorRatio:.35,
+    playerHp:PLAYER_MAX_HP,
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
@@ -1531,6 +1664,7 @@ function saveWorldState(){
   save.worldX=worldX;
   save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
+  save.playerHp=playerHp;
   save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
@@ -1541,8 +1675,10 @@ function loadWorldState(){
   const save=readSaveForSession(session)||defaultSave(session);
   worldX=Number.isFinite(save.worldX)?save.worldX:0;
   worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:0;
+  playerHp=Number.isFinite(save.playerHp)?clampPlayerHp(save.playerHp):PLAYER_MAX_HP;
   if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
   setInventoryFromSave(save.inventory);
+  renderPlayerHealth();
   renderWorld();
 }
 function openUI(fromWorld=false){
@@ -1595,6 +1731,8 @@ authBtn.addEventListener('click',e=>{
       setInventoryFromSave([]);
       worldX=0;
       worldMinutes=0;
+      playerHp=PLAYER_MAX_HP;
+      renderPlayerHealth();
       refreshMenu();
     }
     showPage('auth');
