@@ -11,7 +11,9 @@ const requiredIds = [
   "uiShell","pageMenu","pageAuth","pageSettings",
   "continueBtn","enterBtn","authBtn","settingsBtn",
   "loginForm","registerForm","worldMenuBtn",
-  "joystickZone","joystick"
+  "joystickZone","joystick",
+  "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
+  "inventoryPrev","inventoryNext","inventoryUse","inventoryDrop"
 ];
 
 for (const id of requiredIds) {
@@ -39,6 +41,15 @@ assert(game.includes("function updateJoystick"), "Analog joystick update functio
 assert(game.includes("function movementAxis"), "Analog movement axis missing");
 assert(game.includes("JOY_DEADZONE"), "Joystick deadzone missing");
 assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
+assert(game.includes("INVENTORY_PAGE_SIZE=20"), "20-slot inventory page missing");
+assert(game.includes("INVENTORY_PAGE_COUNT=3"), "3 inventory pages missing");
+assert(game.includes("setInventoryPage"), "Inventory paging missing");
+assert(game.includes("chooseBackpackAnimation"), "Inventory animation selector missing");
+assert(game.includes("'rope':'crumple'"), "Both rope and crumple animations must exist");
+assert(html.includes("frame-9slice.png"), "9-slice inventory frame missing");
+assert(html.includes("slot-selected.png"), "Independent selected slot asset missing");
+assert(html.includes("paper-ball.png"), "Paper crumple asset missing");
+assert(html.includes("rope-left.png"), "Rope animation asset missing");
 
 
 // Unified midground atlas must be present and decode as a WEBP file.
