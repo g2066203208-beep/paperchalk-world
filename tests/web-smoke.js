@@ -14,7 +14,7 @@ const requiredIds = [
   "joystickZone","joystick",
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
   "inventoryUse","inventoryDrop",
-  "playerHealthHud","playerHealthBar",
+  "playerHealthHud","playerHealthBar","playerBuffLayer",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
 ];
 
@@ -46,6 +46,13 @@ assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
 assert(game.includes("INVENTORY_CAPACITY=20"), "20-slot inventory missing");
 assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missing");
 assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
+assert(game.includes("window.PaperchalkBuff"), "Buff control API missing");
+assert(game.includes("const BUFF_TYPES=["), "Buff type catalog missing");
+assert(game.includes("function addRandomBuff"), "Random buff placement missing");
+assert(game.includes("save.buffs=buffSnapshot()"), "Buff persistence missing");
+assert(html.includes('data-debug-action="buffRandom"'), "Random buff debug button missing");
+assert(html.includes("assets/ui/buffs/buff-atlas.webp"), "Buff atlas reference missing");
+assert(fs.existsSync("assets/ui/buffs/buff-atlas.webp"), "Buff atlas file missing");
 assert(html.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
 assert(game.includes("order*45"), "Staggered heal timing missing");
 assert(game.includes("window.PaperchalkDebug"), "In-game debug API missing");
