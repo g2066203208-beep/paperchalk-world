@@ -40,4 +40,18 @@ assert(game.includes("function movementAxis"), "Analog movement axis missing");
 assert(game.includes("JOY_DEADZONE"), "Joystick deadzone missing");
 assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
 
+
+// Unified midground atlas must be present and decode as a WEBP file.
+const atlasParts = [0,1,2,3].map(i =>
+  fs.readFileSync('assets/midground-preview/p' + i + '.txt', 'utf8').trim()
+);
+const atlasBase64 = atlasParts.join('');
+assert(atlasBase64.length === 24120, 'Unexpected midground atlas base64 length');
+const atlasBytes = Buffer.from(atlasBase64, 'base64');
+assert(atlasBytes.slice(0,4).toString('ascii') === 'RIFF', 'Midground atlas is not RIFF');
+assert(atlasBytes.slice(8,12).toString('ascii') === 'WEBP', 'Midground atlas is not WEBP');
+assert(game.includes('loadMidgroundAtlas'), 'Midground atlas loader missing');
+assert(game.includes('spritePosition'), 'Midground sprite positioning missing');
+assert(!game.includes("./assets/props/grass-rock.webp?v=2"), 'Old mixed-style prop asset still referenced');
+
 console.log("WEB_SMOKE_PASS");
