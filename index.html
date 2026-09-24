@@ -401,7 +401,7 @@ button{cursor:pointer}
           <form id="registerForm" class="hidden">
             <div class="field">
               <label>账号</label>
-              <input id="regUser" autocomplete="username" maxlength="24" required>
+              <input id="regUser" autocomplete="username" minlength="2" maxlength="24" placeholder="可用中文、英文或数字" required>
             </div>
             <div class="field">
               <label>旅人名称</label>
@@ -617,22 +617,35 @@ const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
 const KEY_SAVE='paperchalk.save.v1';
 
+const memoryStore={};
+function storageGet(key){
+  try{return localStorage.getItem(key)}catch{return memoryStore[key]??null}
+}
+function storageSet(key,value){
+  try{localStorage.setItem(key,value);return true}
+  catch{memoryStore[key]=String(value);return false}
+}
+function storageRemove(key){
+  try{localStorage.removeItem(key)}catch{delete memoryStore[key]}
+}
 function getUsers(){
-  try{return JSON.parse(localStorage.getItem(KEY_USERS)||'{}')}catch{return{}}
+  try{return JSON.parse(storageGet(KEY_USERS)||'{}')}catch{return{}}
 }
 function getSession(){
-  try{return JSON.parse(localStorage.getItem(KEY_SESSION)||'null')}catch{return null}
+  try{return JSON.parse(storageGet(KEY_SESSION)||'null')}catch{return null}
 }
-function setSession(s){localStorage.setItem(KEY_SESSION,JSON.stringify(s))}
-async function hashText(text){
-  if(window.crypto&&crypto.subtle){
-    const data=new TextEncoder().encode(text);
-    const digest=await crypto.subtle.digest('SHA-256',data);
-    return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+function setSession(v){return storageSet(KEY_SESSION,JSON.stringify(v))}
+function hashText(text){
+  // Synchronous local-only hash for maximum Android WebView compatibility.
+  // This is a prototype local account system, not server authentication.
+  let h1=0x811c9dc5,h2=0x9e3779b9;
+  const t='paperchalk-local-v1|'+String(text);
+  for(let i=0;i<t.length;i++){
+    const c=t.charCodeAt(i);
+    h1^=c; h1=Math.imul(h1,0x01000193);
+    h2^=(c+i); h2=Math.imul(h2,0x85ebca6b);
   }
-  let h=2166136261;
-  for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}
-  return (h>>>0).toString(16);
+  return (h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0');
 }
 function showPage(name){
   Object.values(pages).forEach(p=>p.classList.remove('active'));
@@ -641,7 +654,7 @@ function showPage(name){
 }
 function refreshMenu(){
   const session=getSession();
-  const hasSave=!!localStorage.getItem(KEY_SAVE);
+  const hasSave=!!storageGet(KEY_SAVE);
   profileNote.textContent=session?'当前旅人：'+session.displayName:'尚未登录';
   continueBtn.style.display=(session&&hasSave)?'block':'none';
   enterBtn.textContent=session?'进入世界':'开始游戏';
@@ -651,17 +664,17 @@ function saveWorldState(){
   const session=getSession();
   if(!session)return;
   let save={};
-  try{save=JSON.parse(localStorage.getItem(KEY_SAVE)||'{}')}catch{}
+  try{save=JSON.parse(storageGet(KEY_SAVE)||'{}')}catch{}
   save.account=session.account;
   save.location=save.location||'A村';
   save.worldX=worldX;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.updatedAt=Date.now();
-  localStorage.setItem(KEY_SAVE,JSON.stringify(save));
+  storageSet(KEY_SAVE,JSON.stringify(save));
 }
 function loadWorldState(){
   try{
-    const save=JSON.parse(localStorage.getItem(KEY_SAVE)||'{}');
+    const save=JSON.parse(storageGet(KEY_SAVE)||'{}');
     if(Number.isFinite(save.worldX))worldX=save.worldX;
     if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
   }catch{}
@@ -681,8 +694,8 @@ function openUI(fromWorld=false){
 function enterWorld(){
   const session=getSession();
   if(!session){showPage('auth');return}
-  if(!localStorage.getItem(KEY_SAVE)){
-    localStorage.setItem(KEY_SAVE,JSON.stringify({
+  if(!storageGet(KEY_SAVE)){
+    storageSet(KEY_SAVE,JSON.stringify({
       account:session.account,
       location:'A村',
       createdAt:Date.now(),
@@ -705,7 +718,7 @@ document.querySelectorAll('[data-back="menu"]').forEach(b=>b.addEventListener('c
 authBtn.addEventListener('click',()=>{
   const session=getSession();
   if(session){
-    localStorage.removeItem(KEY_SESSION);
+    storageRemove(KEY_SESSION);
     refreshMenu();
     showPage('auth');
   }else{
@@ -728,37 +741,81 @@ function setAuthTab(mode){
 tabLogin.addEventListener('click',()=>setAuthTab('login'));
 tabRegister.addEventListener('click',()=>setAuthTab('register'));
 
-registerForm.addEventListener('submit',async e=>{
+registerForm.addEventListener('submit',e=>{
   e.preventDefault();
-  const account=document.getElementById('regUser').value.trim().toLowerCase();
-  const displayName=document.getElementById('regName').value.trim();
-  const pass=document.getElementById('regPass').value;
-  if(!/^[a-z0-9_\-]{3,24}$/i.test(account)){
-    authMsg.textContent='账号需为 3–24 位字母、数字、_ 或 -';return;
+  authMsg.textContent='';
+  try{
+    const rawAccount=document.getElementById('regUser').value.trim();
+    const account=rawAccount.toLocaleLowerCase();
+    const displayName=document.getElementById('regName').value.trim();
+    const pass=document.getElementById('regPass').value;
+
+    if(account.length<2||account.length>24){
+      authMsg.textContent='账号需要 2–24 个字符';return;
+    }
+    if(/\s/.test(account)){
+      authMsg.textContent='账号中不能包含空格';return;
+    }
+    if(displayName.length<1||displayName.length>16){
+      authMsg.textContent='旅人名称需要 1–16 个字符';return;
+    }
+    if(pass.length<4){
+      authMsg.textContent='密码至少 4 位';return;
+    }
+
+    const users=getUsers();
+    if(users[account]){
+      authMsg.textContent='这个账号已经存在，可以切换到“登录”';return;
+    }
+
+    users[account]={
+      displayName,
+      passwordHash:hashText(pass),
+      createdAt:Date.now()
+    };
+
+    const usersPersisted=storageSet(KEY_USERS,JSON.stringify(users));
+    setSession({account,displayName});
+    refreshMenu();
+
+    if(!usersPersisted){
+      authMsg.textContent='当前环境无法持久保存账号，已临时进入游戏';
+    }
+    enterWorld();
+  }catch(err){
+    console.error('REGISTER_FAILED',err);
+    authMsg.textContent='注册失败：'+(err&&err.message?err.message:'未知错误');
   }
-  if(displayName.length<1){authMsg.textContent='请输入旅人名称';return}
-  const users=getUsers();
-  if(users[account]){authMsg.textContent='这个账号已存在';return}
-  users[account]={displayName,passwordHash:await hashText(pass),createdAt:Date.now()};
-  localStorage.setItem(KEY_USERS,JSON.stringify(users));
-  setSession({account,displayName});
-  refreshMenu();
-  enterWorld();
 });
 
-loginForm.addEventListener('submit',async e=>{
+loginForm.addEventListener('submit',e=>{
   e.preventDefault();
-  const account=document.getElementById('loginUser').value.trim().toLowerCase();
-  const pass=document.getElementById('loginPass').value;
-  const users=getUsers();
-  const user=users[account];
-  if(!user){authMsg.textContent='未找到这个本机账号';return}
-  if(user.passwordHash!==await hashText(pass)){authMsg.textContent='密码不正确';return}
-  setSession({account,displayName:user.displayName});
-  refreshMenu();
-  enterWorld();
+  authMsg.textContent='';
+  try{
+    const account=document.getElementById('loginUser').value.trim().toLocaleLowerCase();
+    const pass=document.getElementById('loginPass').value;
+    const users=getUsers();
+    const user=users[account];
+
+    if(!user){authMsg.textContent='未找到这个账号';return}
+    if(user.passwordHash!==hashText(pass)){authMsg.textContent='密码不正确';return}
+
+    setSession({account,displayName:user.displayName});
+    refreshMenu();
+    enterWorld();
+  }catch(err){
+    console.error('LOGIN_FAILED',err);
+    authMsg.textContent='登录失败：'+(err&&err.message?err.message:'未知错误');
+  }
 });
 
+/* show fatal runtime problems instead of silently ignoring taps */
+addEventListener('unhandledrejection',e=>{
+  console.error('UNHANDLED_REJECTION',e.reason);
+  if(!uiShell.classList.contains('is-hidden')){
+    authMsg.textContent='运行错误：'+(e.reason&&e.reason.message?e.reason.message:String(e.reason||'未知错误'));
+  }
+});
 addEventListener('pagehide',saveWorldState);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&worldInteractive())saveWorldState()});
 
