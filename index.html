@@ -1642,6 +1642,7 @@ const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT; // 120000px continuous world,
 const MAP_SPAWN_X=460;
 const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
 let MAP_GROUND_SCREEN_Y=112;
+let VIEW_W=1280,VIEW_H=720;
 const PLAYER_BODY={halfW:27,h:108};
 const WORLD_NODES=[
   {id:'village',name:'A村',x:170,y:650,kind:'village'},
@@ -2011,7 +2012,7 @@ function buildProps(id,data,parallax){
   propPools.push(pool);
 }
 function updatePropPools(sceneryX,force=false){
-  const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
+  const viewW=VIEW_W;
   for(const pool of propPools){
     const cameraX=sceneryX*pool.parallax;
     const centerRepeat=Math.floor((cameraX+viewW*.5)/PROP_PERIOD);
@@ -2143,6 +2144,7 @@ function syncViewportMetrics(){
   document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
   const nextGround=clamp(Math.round(viewH*.30),72,112);
   const changed=nextGround!==MAP_GROUND_SCREEN_Y;
+  VIEW_W=viewW;VIEW_H=viewH;
   MAP_GROUND_SCREEN_Y=nextGround;
   return changed;
 }
@@ -2211,7 +2213,7 @@ function celestialPosition(minutes,offset=0){
 }
 function updateDayNightVisuals(force=false){
   const now=performance.now();
-  if(!force&&now-lastDayNightRender<140)return;
+  if(!force&&now-lastDayNightRender<500)return;
   lastDayNightRender=now;
   const minutes=visibleClockMinutes(),state=daylightState(minutes);
   const sun=celestialPosition(minutes,0),moon=celestialPosition(minutes,720);
@@ -2287,7 +2289,8 @@ const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
 function createEnemyState(id,el,healthEl){
   return {id,el,healthEl,x:0,spawnX:0,patrolMin:0,patrolMax:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
-    attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,patrolDir:-1};
+    attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,patrolDir:-1,
+    _visible:null,_renderX:null,_renderFacing:null,_renderHp:null,_renderAlive:null};
 }
 const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
 const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
@@ -2903,7 +2906,7 @@ function applyCurrentRouteTheme(force=false){
 }
 function updateCamera(){
   applyCurrentRouteTheme();
-  const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
+  const viewW=VIEW_W;
   const maxCamera=Math.max(0,MAP_WIDTH-viewW);
   const followX=viewW*.42;
   worldX=clamp(playerWorldX-followX,0,maxCamera);
@@ -2923,15 +2926,17 @@ function debugJump(){return jumpPlayer(true)}
 function debugAttack(){return startPlayerAttack(true)}
 function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
 function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
-function setEnemyVisual(e){
-  const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
-  const visible=e.x>=worldX-320&&e.x<=worldX+viewW+320;
-  e.el.style.display=visible?'':'none';
+function setEnemyVisual(e,force=false){
+  const visible=e.x>=worldX-320&&e.x<=worldX+VIEW_W+320;
+  if(force||e._visible!==visible){
+    e._visible=visible;
+    e.el.style.display=visible?'':'none';
+  }
   if(!visible)return;
-  e.el.style.left=e.x+'px';
-  e.el.style.setProperty('--enemy-facing',e.facing);
-  e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%';
-  e.el.classList.toggle('is-dead',!e.alive);
+  if(force||e._renderX!==e.x){e._renderX=e.x;e.el.style.left=e.x+'px'}
+  if(force||e._renderFacing!==e.facing){e._renderFacing=e.facing;e.el.style.setProperty('--enemy-facing',e.facing)}
+  if(force||e._renderHp!==e.hp){e._renderHp=e.hp;e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%'}
+  if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
 }
 function resetEnemyState(e,spawn){
   e.x=spawn.x;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
@@ -2982,8 +2987,10 @@ function updateEnemy(e,dt,interactive){
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
   const dx=playerWorldX-e.x,dist=Math.abs(dx);
   if(dist>1650){
-    e.state='sleep';
-    e.el.classList.remove('is-moving','is-attacking');
+    if(e.state!=='sleep'){
+      e.state='sleep';
+      e.el.classList.remove('is-moving','is-attacking');
+    }
     return;
   }
   e.facing=dx>=0?1:-1;e.el.style.setProperty('--enemy-facing',e.facing);
@@ -3162,7 +3169,7 @@ function updateRoadPool(sceneryX,force=false){
 }
 function ensureRoadTiles(){
   if(!(roadW>0))return;
-  const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
+  const viewW=VIEW_W;
   const needed=Math.max(4,Math.ceil(viewW/roadW)+3);
   while(roadTrack.children.length<needed){
     const clone=roadTile.cloneNode(false);
@@ -3206,9 +3213,8 @@ refreshRoadW();
 
 function posMod(v,m){return ((v%m)+m)%m}
 function worldInteractive(){
-  const shell=document.getElementById('uiShell');
-  return !!shell
-    && shell.classList.contains('is-hidden')
+  return !!uiShell
+    && uiShell.classList.contains('is-hidden')
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
     && !debugIsOpen();
@@ -3218,52 +3224,103 @@ function movementAxis(){
   return joystickAxis;
 }
 function setFacing(dir){
-  if(!dir)return;
+  if(!dir||dir===facing)return;
   facing=dir;
   actorEl.classList.toggle('facing-left',dir<0);
 }
-function renderWorld(){
+const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:''};
+function writeTransform(el,key,value){
+  if(renderCache[key]===value)return;
+  renderCache[key]=value;el.style.transform=value;
+}
+function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
-  roadTrack.style.transform='translate3d('+(-sceneryX)+'px,0,0)';
-  rearTrack.style.transform='translate3d('+(-sceneryX*.97)+'px,0,0)';
-  frontTrack.style.transform='translate3d('+(-sceneryX*1.03)+'px,0,0)';
-  mapTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
-  entityTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
-  actorEl.style.left=actorX+'px';
-  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY)+'px';
-  enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e)});
+  updateRoadPool(sceneryX,force);
+  updatePropPools(sceneryX,force);
+  const roadT='translate3d('+(-sceneryX)+'px,0,0)';
+  const rearT='translate3d('+(-sceneryX*.97)+'px,0,0)';
+  const frontT='translate3d('+(-sceneryX*1.03)+'px,0,0)';
+  const mapT='translate3d('+(-worldX)+'px,0,0)';
+  writeTransform(roadTrack,'road',roadT);
+  writeTransform(rearTrack,'rear',rearT);
+  writeTransform(frontTrack,'front',frontT);
+  writeTransform(mapTrack,'map',mapT);
+  writeTransform(entityTrack,'entity',mapT);
+  const actorLeft=actorX.toFixed(2)+'px';
+  const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
+  if(force||renderCache.actorLeft!==actorLeft){renderCache.actorLeft=actorLeft;actorEl.style.left=actorLeft}
+  if(force||renderCache.actorBottom!==actorBottom){renderCache.actorBottom=actorBottom;actorEl.style.bottom=actorBottom}
+  enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
+}
+let lastInteractionTick=0;
+let combatAccumulator=0;
+let lastMovingState=false;
+let lastWalkDuration='';
+function hasNearbyCombat(){
+  if(playerAttackTimer>0||playerAttackCooldown>0||playerInvuln>0)return true;
+  for(const e of enemies){
+    if(e.spawned&&e.alive&&Math.abs(playerWorldX-e.x)<1700)return true;
+  }
+  return false;
 }
 function frame(now){
   const dt=Math.min((now-last)/1000,.05);last=now;
-  if(debugIsOpen()&&now-debugLastUiUpdate>200){
+  if(document.hidden){requestAnimationFrame(frame);return}
+
+  if(debugIsOpen()&&now-debugLastUiUpdate>250){
     updateDebugStatus();
     debugLastUiUpdate=now;
   }
   const interactive=worldInteractive();
-  if(interactive && worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  if(interactive&&worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
   updateDayNightVisuals();
 
   const axis=interactive?movementAxis():0;
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
-  actorEl.classList.toggle('is-moving',moving);
+  if(moving!==lastMovingState){
+    lastMovingState=moving;
+    actorEl.classList.toggle('is-moving',moving);
+  }
 
+  let playerDynamic=!playerGrounded||jumpBufferTimer>0;
   if(moving){
     const dir=Math.sign(axis);
     setFacing(dir);
-    const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
-    const maxSpeed=Math.max(170,Math.min(260,viewW*.22));
+    const maxSpeed=Math.max(170,Math.min(260,VIEW_W*.22));
     const speed=maxSpeed*magnitude;
-    actorEl.style.setProperty('--walk-duration',(0.90-0.34*magnitude).toFixed(2)+'s');
+    const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
+    if(walkDuration!==lastWalkDuration){
+      lastWalkDuration=walkDuration;
+      actorEl.style.setProperty('--walk-duration',walkDuration);
+    }
     movePlayerHorizontal(dir*speed*dt);
+    playerDynamic=true;
   }
 
-  updatePlayerVertical(dt,interactive);
+  if(interactive&&playerDynamic)updatePlayerVertical(dt,true);
   updateCamera();
-  updateCombat(dt,interactive);
-  if(interactive)updateMapInteractions();
-  renderWorld();
+
+  let combatTick=false;
+  if(interactive&&hasNearbyCombat()){
+    combatAccumulator+=dt;
+    if(combatAccumulator>=1/30){
+      const step=Math.min(combatAccumulator,.066);
+      combatAccumulator=0;
+      updateCombat(step,true);
+      combatTick=true;
+    }
+  }else{
+    combatAccumulator=0;
+  }
+
+  if(interactive&&now-lastInteractionTick>=80){
+    lastInteractionTick=now;
+    updateMapInteractions();
+  }
+
+  if(playerDynamic||combatTick||showHitboxes||showAttackRange)renderWorld();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
