@@ -1672,7 +1672,11 @@ function addSteps(prefix,startX,startTop,count,dx,dy,w=250){
 
 /* Main west-to-east ground spine. */
 addFloor('village-floor',0,4300,2200,180);
-addFloor('valley-floor-a',4200,2500,2200,180);
+addFloor('valley-floor-a1',4200,1100,2200,180);
+addFloor('valley-floor-a2',6500,400,2200,180);
+addOneWay('valley-bridge-1',5300,350,2300);
+addOneWay('valley-bridge-2',5700,350,2300);
+addOneWay('valley-bridge-3',6100,350,2300);
 addFloor('valley-floor-b',6900,2200,2140,180);
 addFloor('valley-floor-c',9300,1750,2280,180);
 
@@ -1696,12 +1700,17 @@ addFloor('highland-floor-b',13350,2900,2960,160);
 /* River descent creates a true lower branch and reconnects later. */
 addSteps('river-descent-a',5150,2070,6,360,-120,300);
 addFloor('river-floor-a',6400,3400,1450,160);
-addFloor('river-floor-b',9950,3200,1510,160);
+addFloor('river-floor-b1',9950,1200,1510,160);
+addFloor('river-floor-b2',12400,750,1510,160);
+addOneWay('river-bridge-1',11150,350,1620);
+addOneWay('river-bridge-2',11550,350,1620);
+addOneWay('river-bridge-3',11950,350,1620);
+addOneWay('river-bridge-4',12350,350,1620);
 addOneWay('river-island-a',7600,520,1710);
 addOneWay('river-island-b',8900,620,1810);
 
 /* Cave network below the river. */
-addSteps('cave-descent',10800,1390,7,300,-115,240);
+addSteps('cave-descent',11050,1390,7,300,-115,240);
 addFloor('cave-floor-a',11600,2600,650,170);
 addFloor('cave-floor-b',14350,2200,720,170);
 addOneWay('cave-ledge-a',12500,520,940);
@@ -1709,15 +1718,15 @@ addOneWay('cave-ledge-b',13600,480,1080);
 
 /* Central tower / shaft: a vertical hub linking cave, river, highland and ruins. */
 addFloor('tower-base',15380,1550,760,180);
-for(let i=0;i<15;i++){
+for(let i=0;i<22;i++){
   const left=i%2===0;
-  addOneWay('tower-step-'+i, left?15150:16030,720,980+i*235,18);
+  addOneWay('tower-step-'+i,left?15040:15920,780,900+i*155,18);
 }
 addFloor('tower-mid-link',14550,2100,2960,150);
 addFloor('tower-top-link',14550,2350,4110,150);
 
 /* East upper ridge. */
-addSteps('ridge-rise',16500,3110,6,330,125,280);
+addSteps('ridge-rise',16500,3110,7,330,125,280);
 addFloor('pine-floor-a',17700,2500,3980,170);
 addFloor('pine-floor-b',20300,2200,4070,170);
 
@@ -1726,10 +1735,10 @@ addFloor('sunken-floor-a',16300,2800,1240,180);
 addFloor('sunken-floor-b',19200,3300,1320,180);
 addOneWay('sunken-roof-a',17000,700,1580);
 addOneWay('sunken-roof-b',18500,800,1730);
-addSteps('tower-to-sunken',16600,980,5,330,85,250);
+addSteps('tower-to-sunken',16600,900,5,330,85,250);
 
 /* Far cape reconnects upper/lower paths through a long climb. */
-addSteps('cape-climb',21100,1450,9,300,145,260);
+addSteps('cape-climb',21100,1450,10,300,145,260);
 addFloor('cape-floor',22400,1600,2820,170);
 addOneWay('shrine-platform',23100,620,3230);
 
@@ -2042,6 +2051,7 @@ let last=performance.now();
 let roadW=1200;
 let worldX=0; // camera X in true world coordinates
 let worldY=0; // camera Y in true world coordinates
+let cameraYReady=false;
 let playerWorldX=MAP_SPAWN_X;
 let worldMinutes=0;
 let worldTimeScale=1;
@@ -2492,7 +2502,7 @@ function updatePlayerVertical(dt,interactive){
   if(playerGrounded){
     const support=supportAt(playerWorldX,playerY,5);
     if(support===null){playerGrounded=false;playerVy=0}
-    else{playerY=support;return}
+    else{playerY=support;lastSafeX=playerWorldX;lastSafeY=playerY;return}
   }
   const oldY=playerY;
   playerVy-=GRAVITY*dt;
@@ -2554,7 +2564,13 @@ function updateCamera(){
   const desiredY=playerY+MAP_GROUND_SCREEN_Y-targetBottom;
   const minCamY=MAP_GROUND_SCREEN_Y;
   const maxCamY=Math.max(minCamY,MAP_HEIGHT-viewH+MAP_GROUND_SCREEN_Y);
-  worldY=clamp(desiredY,minCamY,maxCamY);
+  const targetY=clamp(desiredY,minCamY,maxCamY);
+  if(!cameraYReady){worldY=targetY;cameraYReady=true}
+  else{
+    const diff=targetY-worldY;
+    const dead=34;
+    if(Math.abs(diff)>dead)worldY+=diff*.095;
+  }
 }
 function jumpPlayer(force=false){
   if(!force&&!worldInteractive())return false;
@@ -2729,7 +2745,7 @@ function teleportTo(x,{y=null,notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   playerY=Number.isFinite(Number(y))?Number(y):nearestSupportYAt(playerWorldX,playerY);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,6)!==null;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
-  lastSafeX=playerWorldX;lastSafeY=playerY;
+  lastSafeX=playerWorldX;lastSafeY=playerY;cameraYReady=false;
   updateMapInteractions._area=areaAt(playerWorldX,playerY)?.id||'';
   updateCamera();renderWorld();if(notice)showMapNotice(notice);return {x:playerWorldX,y:playerY};
 }
@@ -3618,7 +3634,7 @@ function loadWorldState(){
     const snap=nearestSupportYAt(playerWorldX,playerY);
     playerY=snap;playerGrounded=true;
   }
-  lastSafeX=playerWorldX;lastSafeY=playerY;
+  lastSafeX=playerWorldX;lastSafeY=playerY;cameraYReady=false;
   updateMapInteractions._area=areaAt(playerWorldX,playerY)?.id||'';
 
   const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
@@ -3686,7 +3702,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;worldY=0;playerWorldX=MAP_SPAWN_X;playerY=MAP_SPAWN_Y;lastSafeX=MAP_SPAWN_X;lastSafeY=MAP_SPAWN_Y;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._area='village';
+      worldX=0;worldY=0;cameraYReady=false;playerWorldX=MAP_SPAWN_X;playerY=MAP_SPAWN_Y;lastSafeX=MAP_SPAWN_X;lastSafeY=MAP_SPAWN_Y;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._area='village';
       mapState.broken.clear();mapState.collected.clear();mapState.visitedAreas=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
