@@ -1275,7 +1275,7 @@ button{cursor:pointer}
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
     <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
   </div>
-  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　E 交谈　调试请点右上角「调试」</div>
+  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　E 交谈　M 地图　岔路按 1/2/3 选择</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -1302,6 +1302,8 @@ button{cursor:pointer}
         <span><i class="lg-player"></i>你</span>
         <span><i class="lg-enemy"></i>敌人</span>
         <span><i class="lg-pickup"></i>采集</span>
+        <span>━━ 已探索</span>
+        <span>┄┄ 未探索</span>
       </div>
     </div>
     <div id="worldMapScroll" class="world-map-scroll">
@@ -1547,7 +1549,7 @@ for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
 for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
   const base=zone*WORLD_ZONE_WIDTH;
   const variant=zone%5;
-  MAP_LANDMARKS.push({id:'zone-sign-'+zone,kind:'sign',x:base+180,text:regionNameAt(base+180)});
+  MAP_LANDMARKS.push({id:'zone-sign-'+zone,kind:'sign',x:base+390,text:regionNameAt(base+390)});
   MAP_TERRAIN.push(
     {id:'zone-rock-a-'+zone,kind:'rock',x:base+820+variant*35,y:0,w:96+variant*8,h:54+variant*6},
     {id:'zone-platform-a-'+zone,kind:'platform',x:base+1640-variant*30,y:0,w:300+variant*18,h:76+variant*8},
@@ -2125,7 +2127,7 @@ function runDebugCommand(rawCommand){
     return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
   }
   if(cmd==='map'){
-    return '连续世界 '+MAP_WIDTH+'px | 区域='+regionNameAt(playerWorldX)+' | zone='+worldZoneIndexAt(playerWorldX)+' | broken='+[...mapState.broken].join(',')+' | collected='+[...mapState.collected].join(',');
+    return '世界图 '+WORLD_NODES.length+' 节点 / '+WORLD_ROUTES.length+' 道路 | 当前='+regionNameAt(playerWorldX)+' | edge='+worldZoneIndexAt(playerWorldX)+' | 已探索道路='+mapState.visitedRoutes.size;
   }
   if(cmd==='tp'||cmd==='teleport'){
     const x=Number(arg);
@@ -2282,10 +2284,11 @@ function chooseRouteFromNode(routeIndex,nodeId=currentJunctionNodeId){
 function openJunction(nodeId,currentRouteIndex){
   const node=WORLD_NODE_BY_ID.get(nodeId);if(!node)return false;
   const options=routesAtNode(nodeId).filter(r=>r.index!==currentRouteIndex);
-  if(options.length===0){showMapNotice(node.name+' · 这里是道路尽头',1400);return false}
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
+  if(options.length===0){showMapNotice(node.name+' · 这里是道路尽头，掉头返回',1400);return false}
   if(options.length===1){chooseRouteFromNode(options[0].index,nodeId);return true}
   currentJunctionNodeId=nodeId;
-  keyboardLeft=keyboardRight=false;resetJoystick();
   junctionPanelTitle.textContent=node.name;
   junctionPanelSub.textContent='这里有 '+options.length+' 条去路 · 选择方向';
   junctionOptions.innerHTML='';
