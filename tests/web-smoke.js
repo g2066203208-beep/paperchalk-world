@@ -13,7 +13,8 @@ const requiredIds = [
   "loginForm","registerForm","worldMenuBtn",
   "joystickZone","joystick",
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
-  "inventoryUse","inventoryDrop"
+  "inventoryUse","inventoryDrop",
+  "playerHealthHud","playerHealthBar"
 ];
 
 for (const id of requiredIds) {
@@ -42,6 +43,11 @@ assert(game.includes("function movementAxis"), "Analog movement axis missing");
 assert(game.includes("JOY_DEADZONE"), "Joystick deadzone missing");
 assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
 assert(game.includes("INVENTORY_CAPACITY=20"), "20-slot inventory missing");
+assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missing");
+assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
+assert(game.includes("save.playerHp=playerHp"), "Health persistence missing");
+assert(html.includes("assets/ui/health/hp-cell.webp"), "Normal health segment asset missing");
+assert(html.includes("assets/ui/health/hp-tail.webp"), "Tail health segment asset missing");
 assert(game.includes("async function paperUIFrom"), "Reusable paper UI transition missing");
 assert(game.includes("window.PaperUITransition={openFrom:paperUIFrom}"), "Reusable UI transition API missing");
 assert(html.includes("assets/ui/transitions/paper-ball.png"), "Paper ball transition asset missing");
