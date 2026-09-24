@@ -70,6 +70,27 @@ jobs:
             crop=src.crop(box)
             crop.save(out/name,optimize=True)
 
+          # Rebuild the four corners so the paper/blue edge actually joins the side strips.
+          # The generated corner samples are decorative floating patches; these composites
+          # make the runtime 9-slice visually continuous.
+          t=Image.open(out/"frame-t.png").convert("RGBA")
+          b=Image.open(out/"frame-b.png").convert("RGBA")
+          l=Image.open(out/"frame-l.png").convert("RGBA")
+          r=Image.open(out/"frame-r.png").convert("RGBA")
+          c=Image.open(out/"frame-c.png").convert("RGBA")
+          CW,CH=150,130
+          def make_corner(horizontal,vertical,name,h_bottom=False,v_right=False):
+              base=c.resize((CW,CH),Image.Resampling.LANCZOS)
+              h=horizontal.resize((CW,68),Image.Resampling.LANCZOS)
+              v=vertical.resize((72,CH),Image.Resampling.LANCZOS)
+              base.alpha_composite(h,(0,CH-68 if h_bottom else 0))
+              base.alpha_composite(v,(CW-72 if v_right else 0,0))
+              base.save(out/name,optimize=True)
+          make_corner(t,l,"frame-tl.png")
+          make_corner(t,r,"frame-tr.png",v_right=True)
+          make_corner(b,l,"frame-bl.png",h_bottom=True)
+          make_corner(b,r,"frame-br.png",h_bottom=True,v_right=True)
+
           # Assemble a proper 9-slice source from the dedicated edge/corner pieces.
           pieces={
             "tl":src.crop((1081,728,1140,778)),
