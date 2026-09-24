@@ -31,10 +31,16 @@ button{cursor:pointer}
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .prop-track{width:5000px;height:100%;position:absolute;left:0;top:0}
-.prop{position:absolute;transform-origin:50% 78%;will-change:transform}
-.prop img{
-  display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;
-  filter:saturate(.86) contrast(.96) brightness(.99);
+.prop{
+  position:absolute;
+  aspect-ratio:120/108;
+  transform-origin:50% 88%;
+  will-change:transform;
+  background-image:var(--mid-atlas,none);
+  background-size:300% 200%;
+  background-repeat:no-repeat;
+  filter:saturate(.90) contrast(.97) brightness(.99);
+  pointer-events:none;
 }
 .sway-a{animation:swayA 3.9s ease-in-out infinite}
 .sway-b{animation:swayB 4.8s ease-in-out infinite}
@@ -47,7 +53,7 @@ button{cursor:pointer}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
   --facing:1;
-  position:absolute;left:35%;bottom:102px;width:132px;z-index:5;
+  position:absolute;left:35%;bottom:90px;width:126px;z-index:5;
   transform:translateX(-50%);pointer-events:none;will-change:left;
 }
 .actor.facing-left{--facing:-1}
@@ -73,8 +79,8 @@ button{cursor:pointer}
   0%,50%,100%{transform:translateX(-50%) scaleX(1.06);opacity:.88}
   25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.52}
 }
-.rear-layer .prop{bottom:112px}
-.front-layer .prop{bottom:58px}
+.rear-layer .prop{bottom:98px}
+.front-layer .prop{bottom:55px}
 
 /* tiny in-world menu tab */
 .world-menu-btn{
@@ -332,12 +338,12 @@ button{cursor:pointer}
 @media(max-width:800px){
   .road-layer{bottom:2vh;height:220px}
   .rear-layer,.front-layer{bottom:2vh;height:220px}
-  .rear-layer .prop{bottom:78px}
-  .front-layer .prop{bottom:38px}
-  .actor{left:34%;bottom:78px;width:112px}
-  .foot-shadow{width:64px;height:14px;bottom:5px}
-  .rear-layer .prop{scale:.82}
-  .front-layer .prop{scale:.88}
+  .rear-layer .prop{bottom:72px}
+  .front-layer .prop{bottom:36px}
+  .actor{left:34%;bottom:64px;width:106px}
+  .foot-shadow{width:48px;height:11px;bottom:5px}
+  .rear-layer .prop{scale:.80}
+  .front-layer .prop{scale:.84}
   .menu-layout{grid-template-columns:42% 58%}
   .brand{padding:8vh 4vw 4vh}
   .menu-panel{padding:5vh 4vw}
@@ -474,57 +480,57 @@ button{cursor:pointer}
 
 <script>
 /* -------------------- WORLD -------------------- */
-const ASSET={
-  grassRock:'./assets/props/grass-rock.webp?v=2',
-  rocksGrass:'./assets/props/rocks-grass.webp?v=2',
-  softGrass:'./assets/props/soft-grass.webp?v=2'
-};
 const rear=[
-  {a:'softGrass',x:60,w:105,c:'sway-a',f:0},{a:'grassRock',x:285,w:120,c:'sway-c',f:1},
-  {a:'softGrass',x:545,w:90,c:'sway-b',f:1},{a:'rocksGrass',x:785,w:125,c:'static',f:0},
-  {a:'softGrass',x:1055,w:94,c:'sway-d',f:0},{a:'grassRock',x:1305,w:112,c:'sway-b',f:0},
-  {a:'rocksGrass',x:1585,w:120,c:'static',f:1},{a:'softGrass',x:1840,w:90,c:'sway-c',f:1},
-  {a:'grassRock',x:2070,w:116,c:'sway-a',f:0}
+  {s:0,x:120,w:108,c:'sway-a'},
+  {s:2,x:560,w:116,c:'static'},
+  {s:1,x:1010,w:100,c:'sway-c'},
+  {s:5,x:1450,w:102,c:'sway-b'},
+  {s:4,x:1920,w:112,c:'static'}
 ];
 const front=[
-  {a:'grassRock',x:25,w:115,c:'sway-b',f:0},{a:'softGrass',x:235,w:86,c:'sway-a',f:1},
-  {a:'rocksGrass',x:460,w:130,c:'static',f:0},{a:'grassRock',x:735,w:108,c:'sway-c',f:1},
-  {a:'softGrass',x:980,w:88,c:'sway-d',f:0},{a:'rocksGrass',x:1225,w:122,c:'static',f:1},
-  {a:'grassRock',x:1500,w:112,c:'sway-a',f:0},{a:'softGrass',x:1740,w:84,c:'sway-c',f:1},
-  {a:'grassRock',x:1980,w:105,c:'sway-b',f:1}
+  {s:3,x:310,w:104,c:'sway-b'},
+  {s:4,x:790,w:116,c:'static'},
+  {s:5,x:1270,w:98,c:'sway-a'},
+  {s:1,x:1740,w:94,c:'sway-c'}
 ];
+
+function spritePosition(index){
+  const col=index%3,row=Math.floor(index/3);
+  return (col*50)+'% '+(row*100)+'%';
+}
 function buildProps(id,data){
- const root=document.getElementById(id);
- for(let rep=0;rep<3;rep++){
-  data.forEach((p,i)=>{
-    const el=document.createElement('div');
-    el.className='prop '+p.c;
-    el.style.left=(rep*2200+p.x)+'px';
-    el.style.width=p.w+'px';
-    el.style.animationDelay=(-((i*.61+rep*.37)%4.1))+'s';
-    const img=document.createElement('img');
-    img.src=ASSET[p.a];
-    if(p.f) img.style.transform='scaleX(-1)';
-    el.appendChild(img);
-    root.appendChild(el);
-  });
- }
+  const root=document.getElementById(id);
+  for(let rep=0;rep<3;rep++){
+    data.forEach((p,i)=>{
+      const el=document.createElement('div');
+      el.className='prop '+p.c;
+      el.style.left=(rep*2200+p.x)+'px';
+      el.style.width=p.w+'px';
+      el.style.backgroundPosition=spritePosition(p.s);
+      el.style.animationDelay=(-((i*.71+rep*.43)%4.8))+'s';
+      root.appendChild(el);
+    });
+  }
 }
 buildProps('rearTrack',rear);
 buildProps('frontTrack',front);
 
-/* Unified-brush art preview: load as an independent game asset.
-   If it fails, the playable fallback assets remain in place. */
-fetch('./assets/midground/unified-grass-01.b64?v=1',{cache:'no-store'})
-  .then(r=>{if(!r.ok)throw new Error('midground preview '+r.status);return r.text()})
-  .then(b64=>{
-    const src='data:image/webp;base64,'+b64.trim();
-    document.querySelectorAll('.prop img').forEach((img,i)=>{
-      img.src=src;
-      img.style.transform=(i%3===1)?'scaleX(-1)':'none';
-    });
-  })
-  .catch(err=>console.warn('MIDGROUND_PREVIEW_FALLBACK',err));
+async function loadMidgroundAtlas(){
+  try{
+    const parts=await Promise.all([0,1,2,3].map(async i=>{
+      const r=await fetch('./assets/midground-preview/p'+i+'.txt?v=2',{cache:'no-store'});
+      if(!r.ok)throw new Error('atlas part '+i+' '+r.status);
+      return (await r.text()).trim();
+    }));
+    const uri='data:image/webp;base64,'+parts.join('');
+    document.documentElement.style.setProperty('--mid-atlas','url("'+uri+'")');
+    document.documentElement.dataset.midground='ready';
+  }catch(err){
+    console.error('MIDGROUND_ATLAS_FAILED',err);
+    document.documentElement.dataset.midground='failed';
+  }
+}
+loadMidgroundAtlas();
 
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
