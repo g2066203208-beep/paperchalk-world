@@ -1,0 +1,104 @@
+name: Build Inventory UI Assets
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-inventory-ui-assets.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Pillow
+        run: pip install pillow
+      - name: Download approved inventory component sheet
+        run: |
+          mkdir -p /tmp/paperchalk
+          curl -fL --retry 3 --retry-delay 2             "https://cdn.openart.ai/openart-uploads/production/attachment-transfers/97647c09439ca1d2a485a3a1775f92d4454b804af98a1f4f4942ef447e32ac3c.png"             -o /tmp/paperchalk/inventory-sheet.png
+          test "$(stat -c%s /tmp/paperchalk/inventory-sheet.png)" -gt 1000000
+      - name: Crop modular UI assets
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+
+          src=Image.open("/tmp/paperchalk/inventory-sheet.png").convert("RGBA")
+          out=Path("assets/ui/inventory-v2")
+          out.mkdir(parents=True,exist_ok=True)
+
+          boxes={
+            "title.png":(1081,7,1354,122),
+            "bag-icon.png":(1359,10,1512,127),
+            "close.png":(1531,25,1621,114),
+            "page-prev.png":(1081,134,1136,196),
+            "page-next.png":(1298,134,1353,197),
+            "page-1-active.png":(1150,136,1192,195),
+            "page-2.png":(1199,136,1239,194),
+            "page-3.png":(1245,136,1286,195),
+            "use.png":(1080,220,1249,283),
+            "drop.png":(1264,220,1437,283),
+            "slot.png":(1082,321,1198,437),
+            "slot-selected.png":(1226,321,1343,438),
+            "slot-disabled.png":(1373,320,1490,438),
+            "preview-slot.png":(1082,562,1252,711),
+            "leaf.png":(1557,569,1657,707),
+            "rope-left.png":(1564,726,1593,919),
+            "rope-right.png":(1613,726,1642,919),
+            "paper-ball.png":(38,849,103,913),
+            "paper-unfold-1.png":(146,845,245,918),
+            "paper-unfold-2.png":(289,846,408,920),
+          }
+          for name,box in boxes.items():
+            crop=src.crop(box)
+            crop.save(out/name,optimize=True)
+
+          # Assemble a proper 9-slice source from the dedicated edge/corner pieces.
+          pieces={
+            "tl":src.crop((1081,728,1140,778)),
+            "t": src.crop((1161,729,1442,775)),
+            "tr":src.crop((1464,730,1523,780)),
+            "l": src.crop((1078,792,1135,870)),
+            "c": src.crop((1157,790,1444,874)),
+            "r": src.crop((1469,792,1523,871)),
+            "bl":src.crop((1080,881,1140,925)),
+            "b": src.crop((1162,887,1441,926)),
+            "br":src.crop((1463,881,1524,928)),
+          }
+          W,H=960,640
+          bx,by=160,140
+          midw,midh=W-2*bx,H-2*by
+          canvas=Image.new("RGBA",(W,H),(0,0,0,0))
+          canvas.alpha_composite(pieces["tl"].resize((bx,by),Image.Resampling.LANCZOS),(0,0))
+          canvas.alpha_composite(pieces["t"].resize((midw,by),Image.Resampling.LANCZOS),(bx,0))
+          canvas.alpha_composite(pieces["tr"].resize((bx,by),Image.Resampling.LANCZOS),(bx+midw,0))
+          canvas.alpha_composite(pieces["l"].resize((bx,midh),Image.Resampling.LANCZOS),(0,by))
+          canvas.alpha_composite(pieces["c"].resize((midw,midh),Image.Resampling.LANCZOS),(bx,by))
+          canvas.alpha_composite(pieces["r"].resize((bx,midh),Image.Resampling.LANCZOS),(bx+midw,by))
+          canvas.alpha_composite(pieces["bl"].resize((bx,by),Image.Resampling.LANCZOS),(0,by+midh))
+          canvas.alpha_composite(pieces["b"].resize((midw,by),Image.Resampling.LANCZOS),(bx,by+midh))
+          canvas.alpha_composite(pieces["br"].resize((bx,by),Image.Resampling.LANCZOS),(bx+midw,by+midh))
+          canvas.save(out/"frame-9slice.png",optimize=True)
+
+          # Separate detail paper frame uses same 9-slice art, ensuring scalable brush thickness.
+          canvas.save(out/"detail-9slice.png",optimize=True)
+          PY
+      - name: Commit modular inventory assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/ui/inventory-v2
+          if git diff --cached --quiet; then
+            echo "Assets already current."
+          else
+            git commit -m "Add modular paper-cut inventory UI assets"
+            git push
+          fi
