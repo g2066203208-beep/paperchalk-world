@@ -33,6 +33,7 @@ button{cursor:pointer}
 .stage[data-biome="marsh"]{background:#d5d5bd;--terrain-top:#9b9667;--terrain-mid:#716d4e;--terrain-deep:#505444;--terrain-edge:#5a5f49;--rock-light:#7d8176;--rock-dark:#555b55}
 .stage[data-biome="ruins"],.stage[data-biome="shrine"]{background:#ded4c2;--terrain-top:#b29a72;--terrain-mid:#7d6853;--terrain-deep:#5e5148;--terrain-edge:#66584c}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
+.stage.metroidvania-2d .road-layer,.stage.metroidvania-2d .rear-layer,.stage.metroidvania-2d .front-layer{display:none}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
 .road-layer{bottom:2.5vh;height:300px;z-index:3}
 .road-track{display:flex;height:100%}
@@ -1185,7 +1186,7 @@ button{cursor:pointer}
 </head>
 <body>
 
-<main id="world" class="stage" aria-label="Paperchalk World">
+<main id="world" class="stage metroidvania-2d" aria-label="Paperchalk World">
   <div class="world-layer road-layer">
     <div class="track road-track" id="roadTrack">
       <img class="road-tile" id="roadTile" src="./assets/road.webp?v=road-r3" alt="">
@@ -1864,6 +1865,7 @@ function buildMapVisuals(){
     }else{
       el.className='map-landmark sign';
       el.style.left=m.x+'px';
+      el.style.bottom=(MAP_GROUND_SCREEN_Y+(Number(m.y)||0))+'px';
       const span=document.createElement('span');span.textContent=m.text;el.appendChild(span);
     }
     mapLandmarkTrack.appendChild(el);
@@ -1881,51 +1883,15 @@ function buildMapVisuals(){
   MAP_NPCS.forEach(n=>{
     const el=document.createElement('div');
     el.className='map-npc';el.dataset.npcId=n.id;el.style.left=n.x+'px';
+    el.style.bottom=(MAP_GROUND_SCREEN_Y+(Number(n.y)||0))+'px';
     el.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name">'+n.name+'</div><div class="map-npc-prompt">E / 聊</div>';
     mapLandmarkTrack.appendChild(el);
-  });
-  WORLD_ROUTES.forEach((route,i)=>{
-    const base=routeBaseX(i);
-    [
-      {nodeId:route.from,x:base+82,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
-      {nodeId:route.to,x:base+WORLD_ZONE_WIDTH-232,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
-    ].forEach(mark=>{
-      const node=WORLD_NODE_BY_ID.get(mark.nodeId);
-      if(!node)return;
-      const degree=nodeDegree(node.id);
-      const el=document.createElement('div');
-      el.className='junction-marker';
-      el.dataset.nodeId=node.id;
-      el.dataset.side=mark.side;
-      el.style.left=mark.x+'px';
-      el.innerHTML='<div class="junction-board">'+node.name+'<span class="junction-count">'+(degree>2?'实体岔路 · 直接走':degree===1?'道路尽头':'道路连接点')+'</span></div>';
-      mapLandmarkTrack.appendChild(el);
-
-      const assignments=forkAssignments(i,node.id);
-      if(assignments.length>1){
-        const hint=document.createElement('div');
-        hint.className='fork-node-hint';
-        hint.style.left=(mark.side==='left'?mark.boundary+235:mark.boundary-235)+'px';
-        hint.style.bottom=(MAP_GROUND_SCREEN_Y+190)+'px';
-        hint.textContent='不弹菜单 · 走进对应高度的路';
-        mapLandmarkTrack.appendChild(hint);
-      }
-      assignments.forEach((a,idx)=>{
-        const guide=document.createElement('div');
-        guide.className='fork-exit-guide'+(a.laneY>=120?' is-air':a.laneY>0?' is-upper':'');
-        const arrow=mark.side==='left'?'←':'→';
-        guide.style.left=(mark.side==='left'?mark.boundary+42:mark.boundary-196)+'px';
-        guide.style.bottom=(MAP_GROUND_SCREEN_Y+a.laneY+22)+'px';
-        guide.innerHTML='<span class="fork-arrow">'+arrow+'</span>'+(a.target?.name||a.route.name)+'<small>'+a.route.name+'</small>';
-        mapLandmarkTrack.appendChild(guide);
-      });
-    });
   });
   ENEMY_SPAWNS.forEach(s=>{
     const dbg=document.createElement('div');
     dbg.className='map-debug-rect spawn';
     dbg.dataset.debugFor='spawn-'+s.id;
-    Object.assign(dbg.style,{left:s.patrolMin+'px',bottom:MAP_GROUND_SCREEN_Y+'px',width:(s.patrolMax-s.patrolMin)+'px',height:'142px'});
+    Object.assign(dbg.style,{left:s.patrolMin+'px',bottom:(MAP_GROUND_SCREEN_Y+(Number(s.y)||0))+'px',width:(s.patrolMax-s.patrolMin)+'px',height:'142px'});
     mapDebugTrack.appendChild(dbg);
   });
 }
@@ -2074,11 +2040,9 @@ const healthAnimationTimers=new WeakMap();
 
 let last=performance.now();
 let roadW=1200;
-let worldX=0; // camera X in current route-strip coordinates
-let sceneryOffsetX=0; // keeps road/parallax phase continuous when graph edges connect
+let worldX=0; // camera X in true world coordinates
+let worldY=0; // camera Y in true world coordinates
 let playerWorldX=MAP_SPAWN_X;
-let orientationRouteIndex=0;
-let currentRouteOrientation=1;
 let worldMinutes=0;
 let worldTimeScale=1;
 let actorX=Math.round(innerWidth*.35);
@@ -2087,7 +2051,8 @@ let joystickAxis=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
-let playerY=0,playerVy=0,playerGrounded=true;
+let playerY=MAP_SPAWN_Y,playerVy=0,playerGrounded=true;
+let lastSafeX=MAP_SPAWN_X,lastSafeY=MAP_SPAWN_Y;
 let coyoteTimer=0,jumpBufferTimer=0;
 let playerAttackTimer=0,playerAttackCooldown=0,playerInvuln=0;
 const playerAttackHits=new Set();
@@ -2097,7 +2062,7 @@ const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
 function createEnemyState(id,el,healthEl){
-  return {id,el,healthEl,x:0,spawnX:0,patrolMin:0,patrolMax:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
+  return {id,el,healthEl,x:0,y:MAP_SPAWN_Y,spawnX:0,spawnY:MAP_SPAWN_Y,patrolMin:0,patrolMax:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
     attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,patrolDir:-1};
 }
 const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
@@ -2460,127 +2425,22 @@ window.PaperchalkDebug={
   run:executeDebugCommand
 };
 
-let routeTransitionBusy=false;
-let deadEndNoticeAt=0;
-
-function directionLabelFromNode(nodeId,route){
-  const here=WORLD_NODE_BY_ID.get(nodeId);
-  const there=otherNodeOfRoute(route,nodeId);
-  if(!here||!there)return '前往';
-  const dx=there.x-here.x,dy=there.y-here.y;
-  if(Math.abs(dy)>Math.abs(dx)*.62)return dy<0?'北上':'南下';
-  return dx>=0?'东行':'西行';
-}
-function routeOrientationFor(route){
-  return route.index===orientationRouteIndex?currentRouteOrientation:1;
-}
-function routeBoundaryInfo(x=playerWorldX){
-  const route=routeForWorldX(x),base=routeBaseX(route.index);
-  const orientation=routeOrientationFor(route);
-  return {
-    route,base,orientation,
-    left:base+ROUTE_ENDPOINT_PAD,
-    right:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD,
-    leftNodeId:orientation>0?route.from:route.to,
-    rightNodeId:orientation>0?route.to:route.from
-  };
-}
-function setRouteEntryOrientation(route,nodeId,moveDir){
-  orientationRouteIndex=route.index;
-  if(moveDir>=0){
-    currentRouteOrientation=route.from===nodeId?1:-1;
-  }else{
-    currentRouteOrientation=route.to===nodeId?1:-1;
-  }
-}
-function physicallyEnterRoute(route,nodeId,laneY,moveDir){
-  if(routeTransitionBusy)return false;
-  routeTransitionBusy=true;
-
-  const oldSceneryCamera=worldX+sceneryOffsetX;
-  setRouteEntryOrientation(route,nodeId,moveDir);
-  const base=routeBaseX(route.index);
-  playerWorldX=moveDir>=0
-    ? base+ROUTE_ENDPOINT_PAD+30
-    : base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD-30;
-  playerY=laneY;
-  playerVy=0;
-  playerGrounded=true;
-  coyoteTimer=COYOTE_TIME;
-  jumpBufferTimer=0;
-  setFacing(moveDir>=0?1:-1);
-
-  mapState.visitedRoutes.add(route.index);
-  mapState.visitedNodes.add(nodeId);
-  const other=otherNodeOfRoute(route,nodeId);
-  if(other)mapState.visitedNodes.add(other.id);
-  updateMapInteractions._zone=route.index;
-
-  applyCurrentRouteTheme(true);
-  updateCamera();
-  sceneryOffsetX=oldSceneryCamera-worldX;
-  renderWorld();
-  saveWorldState();
-
-  showMapNotice(route.name,700);
-  routeTransitionBusy=false;
-  return true;
-}
-function tryLeaveCurrentRoute(side,moveDir){
-  if(routeTransitionBusy)return false;
-  const bounds=routeBoundaryInfo();
-  const nodeId=side==='left'?bounds.leftNodeId:bounds.rightNodeId;
-  const assignments=forkAssignments(bounds.route.index,nodeId);
-  mapState.visitedNodes.add(nodeId);
-
-  if(assignments.length===0){
-    const now=performance.now();
-    if(now-deadEndNoticeAt>1100){
-      deadEndNoticeAt=now;
-      showMapNotice((WORLD_NODE_BY_ID.get(nodeId)?.name||'道路尽头')+' · 前方没有路，直接掉头',1000);
-    }
-    return false;
-  }
-
-  let chosen=assignments[0];
-  if(assignments.length>1){
-    // No popup, no pause: physical Y position is the fork.
-    // Ground=low route, shelf≈72px=middle route, airborne high gate≈142px=upper route.
-    chosen=assignments.reduce((best,a)=>
-      Math.abs(playerY-a.laneY)<Math.abs(playerY-best.laneY)?a:best
-    ,assignments[0]);
-  }
-  return physicallyEnterRoute(chosen.route,nodeId,chosen.laneY,moveDir);
-}
-
 function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function playerWorldPos(){return {x:playerWorldX,y:playerY}}
 function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:PLAYER_HURT.h}}
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
-function activeSolidRects(centerX=playerWorldX,radius=900){
-  const minX=centerX-radius,maxX=centerX+radius;
-  const terrain=MAP_TERRAIN.filter(t=>t.x+t.w>minX&&t.x<maxX);
-  const objects=MAP_OBJECTS.filter(o=>o.solid&&!mapState.broken.has(o.id)&&o.x+o.w>minX&&o.x<maxX);
+function activeSolidRects(centerX=playerWorldX,radius=1100,centerY=playerY,yRadius=1100){
+  const minX=centerX-radius,maxX=centerX+radius,minY=centerY-yRadius,maxY=centerY+yRadius;
+  const terrain=MAP_TERRAIN.filter(t=>t.x+t.w>minX&&t.x<maxX&&t.y+t.h>minY&&t.y<maxY);
+  const objects=MAP_OBJECTS.filter(o=>o.solid&&!mapState.broken.has(o.id)&&o.x+o.w>minX&&o.x<maxX&&o.y+o.h>minY&&o.y<maxY);
   return terrain.concat(objects);
 }
 function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
-  const bounds=routeBoundaryInfo(oldX);
-  const requested=oldX+dx;
-  if(requested<bounds.left&&dx<0){
-    playerWorldX=bounds.left;
-    const crossed=tryLeaveCurrentRoute('left',-1);
-    return crossed?dx:playerWorldX-oldX;
-  }
-  if(requested>bounds.right&&dx>0){
-    playerWorldX=bounds.right;
-    const crossed=tryLeaveCurrentRoute('right',1);
-    return crossed?dx:playerWorldX-oldX;
-  }
-  let nextX=clamp(requested,bounds.left,bounds.right);
+  let nextX=clamp(oldX+dx,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
   const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
   for(const r of activeSolidRects()){
@@ -2590,9 +2450,6 @@ function movePlayerHorizontal(dx){
     const hitRight=dx>0&&oldBody.x+oldBody.w<=r.x+2&&proposed.x+proposed.w>r.x;
     const hitLeft=dx<0&&oldBody.x>=r.x+r.w-2&&proposed.x<r.x+r.w;
     if(!hitRight&&!hitLeft)continue;
-
-    /* Forgiving ledge assist: while rising, reaching the upper lip snaps onto it.
-       This prevents mobile players from getting hard-stuck on otherwise reachable terrain. */
     const top=r.y+r.h;
     const riseToTop=top-playerY;
     if(!playerGrounded&&playerVy>0&&riseToTop>0&&riseToTop<=AUTO_MANTLE_WINDOW){
@@ -2603,12 +2460,12 @@ function movePlayerHorizontal(dx){
     if(hitRight)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
     if(hitLeft)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
   }
-  playerWorldX=clamp(nextX,bounds.left,bounds.right);
+  playerWorldX=clamp(nextX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   return playerWorldX-oldX;
 }
 function supportAt(x,y,tolerance=3){
-  let support=Math.abs(y)<=tolerance?0:null;
-  for(const r of activeSolidRects()){
+  let support=null;
+  for(const r of activeSolidRects(x,900,y,900)){
     const top=r.y+r.h;
     if(horizontalOverlapAt(x,PLAYER_BODY.halfW-3,r)&&Math.abs(y-top)<=tolerance){
       if(support===null||top>support)support=top;
@@ -2652,6 +2509,7 @@ function updatePlayerVertical(dt,interactive){
     if(oldY>=0&&nextY<=0)landing=Math.max(0,landing??0);
     if(landing!==null){
       playerY=landing;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;actorEl.classList.remove('is-jumping');
+      lastSafeX=playerWorldX;lastSafeY=playerY;
       if(jumpBufferTimer>0)performJump();
       return;
     }
@@ -2666,30 +2524,36 @@ function updatePlayerVertical(dt,interactive){
       }
     }
   }
-  playerY=Math.max(-80,nextY);
-  if(playerY<-60)teleportTo(MAP_SPAWN_X,{notice:'跌落后回到村口'});
-}
-let lastAppliedRouteIndex=-1;
-function applyCurrentRouteTheme(force=false){
-  const route=routeForWorldX(playerWorldX);
-  if(!route)return;
-  if(route.index!==orientationRouteIndex){
-    orientationRouteIndex=route.index;
-    currentRouteOrientation=1;
+  playerY=nextY;
+  if(playerY<80){
+    playerWorldX=lastSafeX;playerY=lastSafeY;playerVy=0;playerGrounded=true;
+    updateCamera();showMapNotice('坠落 · 回到最近落脚点',900);
   }
-  if(force||route.index!==lastAppliedRouteIndex){
-    lastAppliedRouteIndex=route.index;
-    worldEl.dataset.biome=route.biome||'meadow';
-    mapState.visitedRoutes.add(route.index);
+}
+let lastAppliedAreaId='';
+function applyCurrentAreaTheme(force=false){
+  const area=areaAt(playerWorldX,playerY);
+  if(!area)return;
+  if(force||area.id!==lastAppliedAreaId){
+    lastAppliedAreaId=area.id;
+    worldEl.dataset.biome=area.biome||'meadow';
+    mapState.visitedAreas.add(area.id);
   }
 }
 function updateCamera(){
-  applyCurrentRouteTheme();
+  applyCurrentAreaTheme();
   const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
-  const maxCamera=Math.max(0,MAP_WIDTH-viewW);
+  const viewH=Math.max(180,Math.round(window.visualViewport?.height||innerHeight));
+  const maxCameraX=Math.max(0,MAP_WIDTH-viewW);
   const followX=viewW*.42;
-  worldX=clamp(playerWorldX-followX,0,maxCamera);
+  worldX=clamp(playerWorldX-followX,0,maxCameraX);
   actorX=playerWorldX-worldX;
+
+  const targetBottom=viewH*.44;
+  const desiredY=playerY+MAP_GROUND_SCREEN_Y-targetBottom;
+  const minCamY=MAP_GROUND_SCREEN_Y;
+  const maxCamY=Math.max(minCamY,MAP_HEIGHT-viewH+MAP_GROUND_SCREEN_Y);
+  worldY=clamp(desiredY,minCamY,maxCamY);
 }
 function jumpPlayer(force=false){
   if(!force&&!worldInteractive())return false;
@@ -2703,20 +2567,23 @@ function startPlayerAttack(force=false){
 }
 function debugJump(){return jumpPlayer(true)}
 function debugAttack(){return startPlayerAttack(true)}
-function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
-function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
+function getEnemyHurtbox(e){return{x:e.x-31,y:e.y+10,w:62,h:108}}
+function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:e.y+24,w:74,h:72}:{x:e.x-94,y:e.y+24,w:74,h:72}}
 function setEnemyVisual(e){
   const viewW=Math.max(280,Math.round(window.visualViewport?.width||innerWidth));
-  const visible=e.x>=worldX-320&&e.x<=worldX+viewW+320;
+  const viewH=Math.max(180,Math.round(window.visualViewport?.height||innerHeight));
+  const screenBottom=MAP_GROUND_SCREEN_Y+e.y-worldY;
+  const visible=e.x>=worldX-320&&e.x<=worldX+viewW+320&&screenBottom>-220&&screenBottom<viewH+260;
   e.el.style.display=visible?'':'none';
   if(!visible)return;
   e.el.style.left=e.x+'px';
+  e.el.style.bottom=(MAP_GROUND_SCREEN_Y+e.y)+'px';
   e.el.style.setProperty('--enemy-facing',e.facing);
   e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%';
   e.el.classList.toggle('is-dead',!e.alive);
 }
 function resetEnemyState(e,spawn){
-  e.x=spawn.x;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
+  e.x=spawn.x;e.y=Number(spawn.y)||MAP_SPAWN_Y;e.spawnX=spawn.x;e.spawnY=e.y;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
   e.hp=ENEMY_MAX_HP;e.alive=true;e.facing=-1;e.state='patrol';e.attackTimer=0;e.attackCooldown=.7;e.hitstun=0;e.spawned=true;
   e.account=typeof getSession==='function'?(getSession()?.account||null):null;e.patrolDir=-1;
   e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');setEnemyVisual(e);
@@ -2729,7 +2596,7 @@ function resetMapEnemies(){
 }
 function resetEnemy(offset=360){
   const x=clamp(playerWorldX+offset,80,MAP_WIDTH-80);
-  resetEnemyState(enemy,{x,patrolMin:Math.max(40,x-125),patrolMax:Math.min(MAP_WIDTH-40,x+125)});
+  resetEnemyState(enemy,{x,y:playerY,patrolMin:Math.max(40,x-125),patrolMax:Math.min(MAP_WIDTH-40,x+125)});
   renderWorld();
 }
 function placeEnemyNear(distance=210){resetEnemy(distance);enemy.attackCooldown=.55;renderWorld()}
@@ -2742,9 +2609,9 @@ function damageEnemy(e,amount=1,knockDir=facing){
   setEnemyVisual(e);return true;
 }
 function enemyCanMove(e,dx){
-  const old={x:e.x-31,y:0,w:62,h:108};
-  const next={x:e.x+dx-31,y:0,w:62,h:108};
-  for(const r of activeSolidRects(e.x,520)){
+  const old={x:e.x-31,y:e.y,w:62,h:108};
+  const next={x:e.x+dx-31,y:e.y,w:62,h:108};
+  for(const r of activeSolidRects(e.x,520,e.y,420)){
     if(r.oneWay)continue;
     const vertical=next.y<r.y+r.h-1&&next.y+next.h>r.y+1;
     if(!vertical)continue;
@@ -2762,8 +2629,8 @@ function updateEnemy(e,dt,interactive){
   e.attackCooldown=Math.max(0,e.attackCooldown-dt);e.hitstun=Math.max(0,e.hitstun-dt);
   if(!interactive||e.hitstun>0)return;
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
-  const dx=playerWorldX-e.x,dist=Math.abs(dx);
-  if(dist>1650){
+  const dx=playerWorldX-e.x,dy=playerY-e.y,dist=Math.hypot(dx,dy);
+  if(dist>1650||Math.abs(dy)>170){
     e.state='sleep';
     e.el.classList.remove('is-moving','is-attacking');
     return;
@@ -2818,8 +2685,8 @@ function collectPickup(p){
 function nearbyNpc(maxDistance=92){
   let best=null,bestD=Infinity;
   for(const n of MAP_NPCS){
-    const d=Math.abs(playerWorldX-n.x);
-    if(d<bestD&&d<=maxDistance&&playerY<80){best=n;bestD=d}
+    const d=Math.hypot(playerWorldX-n.x,playerY-(Number(n.y)||0));
+    if(d<bestD&&d<=maxDistance){best=n;bestD=d}
   }
   return best;
 }
@@ -2841,18 +2708,29 @@ function updateMapInteractions(){
     if(mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken)))continue;
     if(Math.abs(playerWorldX-p.x)<42&&Math.abs(playerY-p.y)<70)collectPickup(p);
   }
-  const zone=worldZoneIndexAt(playerWorldX);
-  if(updateMapInteractions._zone!==zone){
-    updateMapInteractions._zone=zone;
-    if(zone>0)showMapNotice('进入 · '+regionNameAt(playerWorldX),1200);
+  const area=areaAt(playerWorldX,playerY);
+  if(area&&updateMapInteractions._area!==area.id){
+    updateMapInteractions._area=area.id;
+    mapState.visitedAreas.add(area.id);
+    showMapNotice('进入 · '+area.name,1000);
   }
 }
-function teleportTo(x,{notice='已传送'}={}){
+function nearestSupportYAt(x,preferredY=playerY){
+  let best=null,bestD=Infinity;
+  for(const r of MAP_TERRAIN){
+    if(x<r.x-PLAYER_BODY.halfW||x>r.x+r.w+PLAYER_BODY.halfW)continue;
+    const top=r.y+r.h,d=Math.abs(top-preferredY);
+    if(d<bestD){bestD=d;best=top}
+  }
+  return best??MAP_SPAWN_Y;
+}
+function teleportTo(x,{y=null,notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
-  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
-  updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
-  updateCamera();renderWorld();if(notice)showMapNotice(notice);return playerWorldX;
+  playerY=Number.isFinite(Number(y))?Number(y):nearestSupportYAt(playerWorldX,playerY);
+  playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,6)!==null;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
+  lastSafeX=playerWorldX;lastSafeY=playerY;
+  updateMapInteractions._area=areaAt(playerWorldX,playerY)?.id||'';
+  updateCamera();renderWorld();if(notice)showMapNotice(notice);return {x:playerWorldX,y:playerY};
 }
 function updateCombat(dt,interactive){
   if(!enemies.every(e=>e.spawned)){if(interactive)resetMapEnemies();else return}
@@ -2877,7 +2755,7 @@ function updateCombat(dt,interactive){
 }
 function nearestLivingEnemy(){
   let best=null,bestD=Infinity;
-  for(const e of enemies){if(!e.spawned||!e.alive)continue;const d=Math.abs(playerWorldX-e.x);if(d<bestD){best=e;bestD=d}}
+  for(const e of enemies){if(!e.spawned||!e.alive)continue;const d=Math.hypot(playerWorldX-e.x,playerY-e.y);if(d<bestD){best=e;bestD=d}}
   return best;
 }
 function debugRect(el,r){
@@ -2885,7 +2763,7 @@ function debugRect(el,r){
     el.hidden=true;el.style.width='0';el.style.height='0';return;
   }
   el.hidden=false;
-  el.style.left=(r.x-worldX)+'px';el.style.bottom=(MAP_GROUND_SCREEN_Y+r.y)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
+  el.style.left=(r.x-worldX)+'px';el.style.bottom=(MAP_GROUND_SCREEN_Y+r.y-worldY)+'px';el.style.width=r.w+'px';el.style.height=r.h+'px';
 }
 function renderCombatDebug(){
   const playerAttackActive=playerAttackTimer>0&&playerAttackTimer<.22&&playerAttackTimer>.08;
@@ -2904,11 +2782,10 @@ function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?for
 function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
 function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
 window.PaperchalkMap={
-  width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
+  width:MAP_WIDTH,height:MAP_HEIGHT,spawnX:MAP_SPAWN_X,spawnY:MAP_SPAWN_Y,areas:WORLD_AREAS_2D,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
-  get playerX(){return playerWorldX},
-  get traversal(){return {routeIndex:worldZoneIndexAt(playerWorldX),orientation:currentRouteOrientation,nodeBounds:routeBoundaryInfo(playerWorldX)}},
-  get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
+  get player(){return {x:playerWorldX,y:playerY,area:areaAt(playerWorldX,playerY)?.id||null}},
+  get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],visitedAreas:[...mapState.visitedAreas]}}
 };
 window.PaperchalkCombat={
   jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,placeEnemyNear,resetMapEnemies,
@@ -2934,7 +2811,7 @@ function refreshRoadW(){
   if(w>0){roadW=w-1;ensureRoadTiles()}
   updateCamera();
   actorEl.style.left=actorX+'px';
-  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY)+'px';
+  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY-worldY)+'px';
   renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
@@ -2976,14 +2853,10 @@ function setFacing(dir){
   actorEl.classList.toggle('facing-left',dir<0);
 }
 function renderWorld(){
-  const sceneryX=worldX+sceneryOffsetX;
-  roadTrack.style.transform='translate3d('+(-sceneryX)+'px,0,0)';
-  rearTrack.style.transform='translate3d('+(-sceneryX*.97)+'px,0,0)';
-  frontTrack.style.transform='translate3d('+(-sceneryX*1.03)+'px,0,0)';
-  mapTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
-  entityTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
+  mapTrack.style.transform='translate3d('+(-worldX)+'px,'+worldY+'px,0)';
+  entityTrack.style.transform='translate3d('+(-worldX)+'px,'+worldY+'px,0)';
   actorEl.style.left=actorX+'px';
-  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY)+'px';
+  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY-worldY)+'px';
   enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e)});
   renderCombatDebug();
 }
