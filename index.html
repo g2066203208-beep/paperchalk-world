@@ -597,7 +597,7 @@ button{cursor:pointer}
 .paper9-skin .p9-bl{grid-area:3/1}.paper9-skin .p9-b{grid-area:3/2}.paper9-skin .p9-br{grid-area:3/3}
 
 .inventory-title{
-  position:absolute;z-index:4;width:clamp(220px,21vw,330px);left:6.4%;top:1.4%;
+  position:absolute;z-index:4;width:clamp(210px,19vw,300px);left:6.4%;top:1.2%;
   pointer-events:none;user-select:none;-webkit-user-drag:none;
   filter:drop-shadow(3px 5px 0 rgba(55,42,28,.10));
 }
@@ -619,23 +619,23 @@ button{cursor:pointer}
 .inventory-content{
   position:absolute;z-index:3;
   left:clamp(78px,7vw,118px);right:clamp(78px,7vw,118px);
-  top:clamp(78px,11vh,110px);bottom:clamp(46px,6.5vh,72px);
+  top:clamp(112px,16.5vh,138px);bottom:clamp(54px,7vh,76px);
   display:grid;grid-template-columns:minmax(0,1.62fr) minmax(270px,.78fr);
   gap:clamp(20px,2.5vw,44px);min-width:0;min-height:0;
 }
 .inventory-main{min-width:0;min-height:0;display:flex;flex-direction:column}
 .inventory-grid{
-  --slot:min(10.8vw,15.4vh,132px);
+  --slot:min(10.1vw,14.5vh,124px);
   flex:1 1 auto;min-height:0;display:grid;
   grid-template-columns:repeat(5,var(--slot));grid-template-rows:repeat(4,var(--slot));
   gap:clamp(7px,1vw,13px);align-content:center;justify-content:center;
 }
 .inventory-slot{
   position:relative;width:var(--slot);height:var(--slot);padding:0;border:0;background-color:transparent;
-  background-image:url("./assets/ui/inventory-v2/slot.png?v=3");background-size:100% 100%;background-repeat:no-repeat;
+  background-image:url("./assets/ui/inventory-v2/slot.png?v=4");background-size:100% 100%;background-repeat:no-repeat;
   overflow:hidden;
 }
-.inventory-slot.is-selected{background-image:url("./assets/ui/inventory-v2/slot-selected.png?v=3")}
+.inventory-slot.is-selected{background-image:url("./assets/ui/inventory-v2/slot-selected.png?v=4")}
 .inventory-slot:active{transform:translateY(2px) scale(.98)}
 .inventory-slot .item-icon{position:absolute;inset:15%;width:70%;height:70%;object-fit:contain;pointer-events:none}
 .inventory-slot .item-count{
@@ -672,7 +672,7 @@ button{cursor:pointer}
 .inventory-detail>*:not(.paper9-skin){position:relative;z-index:2}
 .inventory-preview{
   flex:0 0 auto;width:min(17vh,160px);height:min(17vh,160px);align-self:center;
-  background:url("./assets/ui/inventory-v2/preview-slot.png?v=3") center/contain no-repeat;
+  background:url("./assets/ui/inventory-v2/preview-slot.png?v=4") center/contain no-repeat;
   display:flex;align-items:center;justify-content:center;
 }
 .inventory-preview img{width:68%;height:68%;object-fit:contain}
@@ -730,8 +730,8 @@ button{cursor:pointer}
   .paper9-skin{--edge-x:58px;--edge-y:46px}
   .inventory-title{width:clamp(170px,23vw,245px);left:5.7%;top:1.2%}
   .inventory-close{width:54px;right:3%;top:2%}
-  .inventory-content{left:64px;right:64px;top:64px;bottom:38px;grid-template-columns:minmax(0,1.72fr) minmax(210px,.72fr);gap:12px}
-  .inventory-grid{--slot:min(10vw,14.9vh,102px);gap:5px}
+  .inventory-content{left:64px;right:64px;top:92px;bottom:42px;grid-template-columns:minmax(0,1.72fr) minmax(210px,.72fr);gap:12px}
+  .inventory-grid{--slot:min(9.4vw,13.5vh,96px);gap:5px}
   .inventory-footer{flex-basis:47px;gap:8px;padding:0}
   .inventory-page-btn{width:36px;height:40px}.inventory-page-btn.page-num{width:29px}
   .inventory-detail{padding:40px 20px 18px}
@@ -779,30 +779,30 @@ button{cursor:pointer}
 
 <section id="backpackOverlay" class="inventory-overlay" aria-hidden="true">
   <div id="inventoryPaperStage" class="inventory-paper-stage" aria-hidden="true">
-    <img class="paper-ball-img" src="./assets/ui/inventory-v2/paper-ball.png?v=3" alt="">
-    <img class="paper-unfold1-img" src="./assets/ui/inventory-v2/paper-unfold-1.png?v=3" alt="">
-    <img class="paper-unfold2-img" src="./assets/ui/inventory-v2/paper-unfold-2.png?v=3" alt="">
+    <img class="paper-ball-img" src="./assets/ui/inventory-v2/paper-ball.png?v=4" alt="">
+    <img class="paper-unfold1-img" src="./assets/ui/inventory-v2/paper-unfold-1.png?v=4" alt="">
+    <img class="paper-unfold2-img" src="./assets/ui/inventory-v2/paper-unfold-2.png?v=4" alt="">
   </div>
 
   <div id="backpackFrame" class="inventory-shell" role="dialog" aria-modal="true" aria-label="背包">
-    <img class="inventory-rope left" src="./assets/ui/inventory-v2/rope-left.png?v=3" alt="">
-    <img class="inventory-rope right" src="./assets/ui/inventory-v2/rope-right.png?v=3" alt="">
+    <img class="inventory-rope left" src="./assets/ui/inventory-v2/rope-left.png?v=4" alt="">
+    <img class="inventory-rope right" src="./assets/ui/inventory-v2/rope-right.png?v=4" alt="">
 
     <div class="inventory-board">
       <div class="paper9-skin" aria-hidden="true">
-        <img class="p9-tl" src="./assets/ui/inventory-v2/frame-tl.png?v=3" alt="">
-        <img class="p9-t" src="./assets/ui/inventory-v2/frame-t.png?v=3" alt="">
-        <img class="p9-tr" src="./assets/ui/inventory-v2/frame-tr.png?v=3" alt="">
-        <img class="p9-l" src="./assets/ui/inventory-v2/frame-l.png?v=3" alt="">
-        <img class="p9-c" src="./assets/ui/inventory-v2/frame-c.png?v=3" alt="">
-        <img class="p9-r" src="./assets/ui/inventory-v2/frame-r.png?v=3" alt="">
-        <img class="p9-bl" src="./assets/ui/inventory-v2/frame-bl.png?v=3" alt="">
-        <img class="p9-b" src="./assets/ui/inventory-v2/frame-b.png?v=3" alt="">
-        <img class="p9-br" src="./assets/ui/inventory-v2/frame-br.png?v=3" alt="">
+        <img class="p9-tl" src="./assets/ui/inventory-v2/frame-tl.png?v=4" alt="">
+        <img class="p9-t" src="./assets/ui/inventory-v2/frame-t.png?v=4" alt="">
+        <img class="p9-tr" src="./assets/ui/inventory-v2/frame-tr.png?v=4" alt="">
+        <img class="p9-l" src="./assets/ui/inventory-v2/frame-l.png?v=4" alt="">
+        <img class="p9-c" src="./assets/ui/inventory-v2/frame-c.png?v=4" alt="">
+        <img class="p9-r" src="./assets/ui/inventory-v2/frame-r.png?v=4" alt="">
+        <img class="p9-bl" src="./assets/ui/inventory-v2/frame-bl.png?v=4" alt="">
+        <img class="p9-b" src="./assets/ui/inventory-v2/frame-b.png?v=4" alt="">
+        <img class="p9-br" src="./assets/ui/inventory-v2/frame-br.png?v=4" alt="">
       </div>
-      <img class="inventory-title" src="./assets/ui/inventory-v2/title.png?v=3" alt="背包">
+      <img class="inventory-title" src="./assets/ui/inventory-v2/title.png?v=4" alt="背包">
       <button id="backpackClose" class="inventory-close" aria-label="关闭背包">
-        <img src="./assets/ui/inventory-v2/close.png?v=3" alt="">
+        <img src="./assets/ui/inventory-v2/close.png?v=4" alt="">
       </button>
 
       <div class="inventory-content">
@@ -810,11 +810,11 @@ button{cursor:pointer}
           <div id="backpackSlots" class="inventory-grid"></div>
           <div class="inventory-footer">
             <div class="inventory-pagination" aria-label="背包分页">
-              <button id="inventoryPrev" class="inventory-page-btn" aria-label="上一页"><img src="./assets/ui/inventory-v2/page-prev.png?v=3" alt=""></button>
-              <button class="inventory-page-btn page-num is-active" data-page="0" aria-label="第1页"><img src="./assets/ui/inventory-v2/page-1-active.png?v=3" alt="1"></button>
-              <button class="inventory-page-btn page-num" data-page="1" aria-label="第2页"><img src="./assets/ui/inventory-v2/page-2.png?v=3" alt="2"></button>
-              <button class="inventory-page-btn page-num" data-page="2" aria-label="第3页"><img src="./assets/ui/inventory-v2/page-3.png?v=3" alt="3"></button>
-              <button id="inventoryNext" class="inventory-page-btn" aria-label="下一页"><img src="./assets/ui/inventory-v2/page-next.png?v=3" alt=""></button>
+              <button id="inventoryPrev" class="inventory-page-btn" aria-label="上一页"><img src="./assets/ui/inventory-v2/page-prev.png?v=4" alt=""></button>
+              <button class="inventory-page-btn page-num is-active" data-page="0" aria-label="第1页"><img src="./assets/ui/inventory-v2/page-1-active.png?v=4" alt="1"></button>
+              <button class="inventory-page-btn page-num" data-page="1" aria-label="第2页"><img src="./assets/ui/inventory-v2/page-2.png?v=4" alt="2"></button>
+              <button class="inventory-page-btn page-num" data-page="2" aria-label="第3页"><img src="./assets/ui/inventory-v2/page-3.png?v=4" alt="3"></button>
+              <button id="inventoryNext" class="inventory-page-btn" aria-label="下一页"><img src="./assets/ui/inventory-v2/page-next.png?v=4" alt=""></button>
             </div>
             <div class="inventory-weight">
               <span>负重 <b id="inventoryWeightText">0.0 / 25.0</b></span>
@@ -825,15 +825,15 @@ button{cursor:pointer}
 
         <aside class="inventory-detail" aria-label="物品详情">
           <div class="paper9-skin" aria-hidden="true">
-        <img class="p9-tl" src="./assets/ui/inventory-v2/frame-tl.png?v=3" alt="">
-        <img class="p9-t" src="./assets/ui/inventory-v2/frame-t.png?v=3" alt="">
-        <img class="p9-tr" src="./assets/ui/inventory-v2/frame-tr.png?v=3" alt="">
-        <img class="p9-l" src="./assets/ui/inventory-v2/frame-l.png?v=3" alt="">
-        <img class="p9-c" src="./assets/ui/inventory-v2/frame-c.png?v=3" alt="">
-        <img class="p9-r" src="./assets/ui/inventory-v2/frame-r.png?v=3" alt="">
-        <img class="p9-bl" src="./assets/ui/inventory-v2/frame-bl.png?v=3" alt="">
-        <img class="p9-b" src="./assets/ui/inventory-v2/frame-b.png?v=3" alt="">
-        <img class="p9-br" src="./assets/ui/inventory-v2/frame-br.png?v=3" alt="">
+        <img class="p9-tl" src="./assets/ui/inventory-v2/frame-tl.png?v=4" alt="">
+        <img class="p9-t" src="./assets/ui/inventory-v2/frame-t.png?v=4" alt="">
+        <img class="p9-tr" src="./assets/ui/inventory-v2/frame-tr.png?v=4" alt="">
+        <img class="p9-l" src="./assets/ui/inventory-v2/frame-l.png?v=4" alt="">
+        <img class="p9-c" src="./assets/ui/inventory-v2/frame-c.png?v=4" alt="">
+        <img class="p9-r" src="./assets/ui/inventory-v2/frame-r.png?v=4" alt="">
+        <img class="p9-bl" src="./assets/ui/inventory-v2/frame-bl.png?v=4" alt="">
+        <img class="p9-b" src="./assets/ui/inventory-v2/frame-b.png?v=4" alt="">
+        <img class="p9-br" src="./assets/ui/inventory-v2/frame-br.png?v=4" alt="">
       </div>
           <div class="inventory-preview"><img id="inventoryPreviewImage" alt=""></div>
           <div id="inventoryItemName" class="inventory-item-name">未选择物品</div>
@@ -843,8 +843,8 @@ button{cursor:pointer}
             <span>数量 <b id="inventoryItemCount">0</b></span>
           </div>
           <div class="inventory-actions">
-            <button id="inventoryUse" class="inventory-img-btn" disabled><img src="./assets/ui/inventory-v2/use.png?v=3" alt="使用"></button>
-            <button id="inventoryDrop" class="inventory-img-btn" disabled><img src="./assets/ui/inventory-v2/drop.png?v=3" alt="丢弃"></button>
+            <button id="inventoryUse" class="inventory-img-btn" disabled><img src="./assets/ui/inventory-v2/use.png?v=4" alt="使用"></button>
+            <button id="inventoryDrop" class="inventory-img-btn" disabled><img src="./assets/ui/inventory-v2/drop.png?v=4" alt="丢弃"></button>
           </div>
         </aside>
       </div>
@@ -860,7 +860,7 @@ button{cursor:pointer}
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD</div>
           <h1>纸境<span>一段仍在继续的旅途</span></h1>
-          <div class="brand-foot">WORLD BUILD 0.6 · 组件化背包</div>
+          <div class="brand-foot">WORLD BUILD 0.7 · 9宫格背包</div>
         </div>
         <div class="menu-panel">
           <div class="menu-stack">
