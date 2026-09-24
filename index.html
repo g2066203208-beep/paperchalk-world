@@ -108,10 +108,12 @@ button{cursor:pointer}
 }
 .hp-segment--tail{
   width:111px;height:auto;
-  margin-left:-10px;
+  /* only let the torn cloth edges kiss; do not stack the body artwork */
+  margin-left:-3px;
 }
 .hp-segment--cell + .hp-segment--cell{
-  margin-left:-8px;
+  /* tiny seam overlap keeps the pieces visually stitched without crowding */
+  margin-left:-2px;
 }
 /* Keep the stitched silhouette in place as health is lost. */
 .hp-segment.is-empty{
