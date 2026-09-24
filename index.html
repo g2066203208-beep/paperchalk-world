@@ -1568,20 +1568,27 @@ let debugLastUiUpdate=0;
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
+  const alive=enemies.filter(e=>e.alive).length;
+  const nearest=nearestLivingEnemy();
   debugStatus.innerHTML=
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
     '<span>时间 <b>'+worldMinutes.toFixed(1)+'</b></span>'+
-    '<span>worldX <b>'+worldX.toFixed(1)+'</b></span>'+
+    '<span>玩家X <b>'+playerWorldX.toFixed(1)+'</b></span>'+
+    '<span>Camera <b>'+worldX.toFixed(1)+'</b></span>'+
+    '<span>脚底Y <b>'+playerY.toFixed(1)+'</b></span>'+
     '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
-    '<span>敌人 <b>'+(enemy.alive?enemy.hp+'/'+ENEMY_MAX_HP:'击倒')+'</b></span>'+
-    '<span>敌人状态 <b>'+enemy.state+'</b></span>'+
-    '<span>敌距 <b>'+(enemy.spawned?Math.round(Math.abs((worldX+actorX)-enemy.x)):'--')+'</b></span>'+
-    '<span>碰撞箱 <b>'+(showHitboxes?'开':'关')+'</b></span>';
+    '<span>敌人 <b>'+alive+' / '+enemies.length+'</b></span>'+
+    '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
+    '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
+    '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>';
 }
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
   debugRangeBtn.textContent='攻击范围：'+(showAttackRange?'开':'关');
   debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
+  debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
+  debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
+  debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
 }
 function writeDebugOutput(message){
   debugOutput.textContent=String(message);
@@ -1628,13 +1635,18 @@ function runDebugCommand(rawCommand){
       'damage 2        扣 2 血',
       'heal 2          回 2 血',
       'time 60         世界时间设为 60',
-      'pos             查看位置',
-      'resetpos        世界位置回到 0',
+      'pos             查看玩家/Camera坐标',
+      'map             查看地图状态',
+      'tp 3000         传送到地图 X=3000',
+      'resetpos        回到村口出生点',
       'save            立即保存',
-      'enemy reset      重置敌人',
-      'enemy near       把敌人放到玩家附近',
-      'hitbox           开/关碰撞箱',
+      'enemy reset      重置两处地图敌人',
+      'enemy near       把一号敌人放到附近',
+      'hitbox           开/关战斗碰撞箱',
       'range            开/关攻击范围预览',
+      'collider         开/关地形 collider',
+      'spawn            开/关敌人出生区',
+      'camera           开/关 Camera 调试',
       'ai               开/关敌人AI',
       'jump             跳跃测试',
       'attack           攻击测试',
@@ -1677,25 +1689,35 @@ function runDebugCommand(rawCommand){
     return 'worldMinutes -> '+worldMinutes;
   }
   if(cmd==='pos'||cmd==='position'){
-    return 'worldX='+worldX.toFixed(2)+' actorX='+actorX.toFixed(2);
+    return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
+  }
+  if(cmd==='map'){
+    return 'A村外道路 '+MAP_WIDTH+'px | broken='+[...mapState.broken].join(',')+' | collected='+[...mapState.collected].join(',')+' | exit='+(mapState.exitReached?'reached':'not reached');
+  }
+  if(cmd==='tp'||cmd==='teleport'){
+    const x=Number(arg);
+    if(!Number.isFinite(x))return '用法：tp 3000';
+    teleportTo(x,{notice:'调试传送到 X='+Math.round(x)});
+    return 'playerX -> '+playerWorldX.toFixed(1);
   }
   if(cmd==='resetpos'){
-    worldX=0;
-    actorX=Math.round(innerWidth*.35);
-    renderWorld();
+    teleportTo(MAP_SPAWN_X,{notice:'已回到 A村外道路村口'});
     saveWorldState();
-    return '位置已重置：worldX=0';
+    return '位置已重置：playerX='+MAP_SPAWN_X;
   }
   if(cmd==='save'){
     return saveWorldState()?'存档已写入。':'当前没有登录账号，无法保存。';
   }
   if(cmd==='enemy'){
     const sub=String(arg||'reset').toLowerCase();
-    if(sub==='near'){placeEnemyNear();return '敌人已放到玩家前方。'}
-    resetEnemy();return '敌人已重置到地图前方。';
+    if(sub==='near'){placeEnemyNear();return '一号敌人已放到玩家前方。'}
+    resetMapEnemies();return '两处地图敌人已按出生区重置。';
   }
   if(cmd==='hitbox')return '碰撞箱 -> '+(toggleHitboxes()?'开启':'关闭');
   if(cmd==='range')return '攻击范围预览 -> '+(toggleAttackRange()?'开启':'关闭');
+  if(cmd==='collider')return '地形 collider -> '+(toggleMapColliders()?'开启':'关闭');
+  if(cmd==='spawn')return '敌人出生区 -> '+(toggleSpawnZones()?'开启':'关闭');
+  if(cmd==='camera')return 'Camera 调试 -> '+(toggleCameraDebug()?'开启':'关闭');
   if(cmd==='ai')return '敌人AI -> '+(toggleEnemyAi()?'开启':'暂停');
   if(cmd==='jump'){debugJump();return 'jump'}
   if(cmd==='attack'){debugAttack();return 'attack'}
@@ -1743,6 +1765,24 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       updateDebugStatus();return;
     }else if(action==='attackTest'){
       debugAttack();writeDebugOutput('执行一次攻击测试。');
+      updateDebugStatus();return;
+    }else if(action==='mapColliders'){
+      writeDebugOutput('地形 collider -> '+(toggleMapColliders()?'开启':'关闭'));
+      updateDebugStatus();return;
+    }else if(action==='spawnZones'){
+      writeDebugOutput('敌人出生区 -> '+(toggleSpawnZones()?'开启':'关闭'));
+      updateDebugStatus();return;
+    }else if(action==='cameraDebug'){
+      writeDebugOutput('Camera 调试 -> '+(toggleCameraDebug()?'开启':'关闭'));
+      updateDebugStatus();return;
+    }else if(action==='teleportStart'){
+      teleportTo(MAP_SPAWN_X,{notice:'传送：A村村口'});writeDebugOutput('playerX -> '+playerWorldX);
+      updateDebugStatus();return;
+    }else if(action==='teleportMid'){
+      teleportTo(3000,{notice:'传送：地图中段'});writeDebugOutput('playerX -> '+playerWorldX);
+      updateDebugStatus();return;
+    }else if(action==='teleportEnd'){
+      teleportTo(5600,{notice:'传送：出口附近'});writeDebugOutput('playerX -> '+playerWorldX);
       updateDebugStatus();return;
     }
     updateDebugStatus();
