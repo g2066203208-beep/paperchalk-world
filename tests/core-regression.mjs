@@ -6,7 +6,28 @@ function check(name,pass,detail=''){
   console.log((pass?'PASS':'FAIL')+' | '+name+' | '+detail);
 }
 async function state(page){
-  return page.evaluate(()=>window.eval('({worldX,worldMinutes,actorX})'));
+  return page.evaluate(()=>window.eval('({worldX,worldMinutes,actorX,playerHp})'));
+}
+async function healthState(page){
+  return page.evaluate(()=>({
+    hp:window.PaperchalkHealth?.hp,
+    maxHp:window.PaperchalkHealth?.maxHp,
+    pieces:document.querySelectorAll('#playerHealthBar .hp-segment').length,
+    cells:document.querySelectorAll('#playerHealthBar .hp-segment--cell').length,
+    tails:document.querySelectorAll('#playerHealthBar .hp-segment--tail').length,
+    tailIsLast:document.querySelector('#playerHealthBar .hp-segment:last-child')?.classList.contains('hp-segment--tail')||false,
+    empty:document.querySelectorAll('#playerHealthBar .hp-segment.is-empty').length,
+    ariaNow:document.getElementById('playerHealthHud')?.getAttribute('aria-valuenow'),
+    overlap:(()=>{
+      const pieces=[...document.querySelectorAll('#playerHealthBar .hp-segment')];
+      if(pieces.length<10)return false;
+      const a=pieces[0].getBoundingClientRect();
+      const b=pieces[1].getBoundingClientRect();
+      const p=pieces[8].getBoundingClientRect();
+      const tail=pieces[9].getBoundingClientRect();
+      return b.left<a.right && tail.left<p.right;
+    })()
+  }));
 }
 async function save(page,account){
   return page.evaluate(a=>{
@@ -50,6 +71,28 @@ try{
   let s=await state(page);
   check('A enters a fresh world',Math.abs(s.worldX)<1,'worldX='+s.worldX);
 
+  const healthInitial=await healthState(page);
+  check('Health HUD is 10 stitched pieces',
+    healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.overlap,
+    JSON.stringify(healthInitial));
+  check('New player starts at 10 HP',
+    healthInitial.hp===10&&healthInitial.maxHp===10&&healthInitial.empty===0&&healthInitial.ariaNow==='10',
+    JSON.stringify(healthInitial));
+
+  await page.evaluate(()=>window.PaperchalkHealth.damage(3));
+  await page.waitForTimeout(120);
+  const healthDamaged=await healthState(page);
+  check('Damage drains from right across three segments',
+    healthDamaged.hp===7&&healthDamaged.empty===3&&healthDamaged.ariaNow==='7',
+    JSON.stringify(healthDamaged));
+
+  await page.evaluate(()=>window.PaperchalkHealth.heal(1));
+  await page.waitForTimeout(120);
+  const healthHealed=await healthState(page);
+  check('Healing restores one health segment',
+    healthHealed.hp===8&&healthHealed.empty===2&&healthHealed.ariaNow==='8',
+    JSON.stringify(healthHealed));
+
   // Let world time advance and move.
   await page.keyboard.down('KeyD');
   await page.waitForTimeout(1800);
@@ -67,6 +110,7 @@ try{
   const saveA=await save(page,'audit_a');
   check('A save uses account-specific v2 key',saveA?.account==='audit_a',JSON.stringify(saveA));
   check('A position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
+  check('A health saved with world state',saveA?.playerHp===8,'saved playerHp='+saveA?.playerHp);
 
   // Continue must visually hide shell, not merely disable pointer events.
   await page.locator('#continueBtn').click();
@@ -88,6 +132,8 @@ try{
   await page.waitForTimeout(250);
   await page.locator('#continueBtn').click();
   await page.waitForTimeout(450);
+  const healthReloaded=await healthState(page);
+  check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
   await page.locator('#backpackBtn').click();
   await page.waitForTimeout(850);
   let inv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
@@ -149,6 +195,8 @@ try{
     JSON.stringify({bState,saveB}));
   const bInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
   check('B does not inherit A inventory',bInv===null,JSON.stringify(bInv));
+  const bHealth=await healthState(page);
+  check('B starts with independent full health',bHealth.hp===10&&saveB?.playerHp===10,JSON.stringify({bHealth,saveHp:saveB?.playerHp}));
 
   // Save B, then return A and prove A is intact.
   await page.locator('#worldMenuBtn').click();
@@ -165,6 +213,8 @@ try{
   check('A restores its own position',Math.abs(aReturn.worldX-saveA.worldX)<5,
     'returned='+aReturn.worldX+' expected='+saveA.worldX);
   check('A restores its own inventory',aReturnInv?.count===1,JSON.stringify(aReturnInv));
+  const aReturnHealth=await healthState(page);
+  check('A restores its own health',aReturnHealth.hp===8&&aReturnHealth.empty===2,JSON.stringify(aReturnHealth));
 
   // Paper cleanup after backpack too.
   await page.locator('#backpackBtn').click();
