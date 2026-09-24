@@ -172,6 +172,18 @@ try{
   const fx2=await paperState(page);
   check('Paper ball cleans up after backpack transition',fx2.ball==='0',JSON.stringify(fx2));
 
+  const backClosed=await page.evaluate(()=>window.PaperchalkHandleBack());
+  await page.waitForTimeout(120);
+  check('Native back closes backpack first',
+    backClosed===true && !(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open'))),
+    'handled='+backClosed);
+
+  const backOpenedMenu=await page.evaluate(()=>window.PaperchalkHandleBack());
+  await page.waitForTimeout(120);
+  check('Native back from world opens game menu',
+    backOpenedMenu===true && !(await page.locator('#uiShell').evaluate(el=>el.classList.contains('is-hidden'))),
+    'handled='+backOpenedMenu);
+
   check('No uncaught runtime errors',result.errors.length===0,JSON.stringify(result.errors));
 } finally {
   await browser.close();
