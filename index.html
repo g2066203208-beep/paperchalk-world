@@ -1560,9 +1560,9 @@ addOneWay('cave-ledge-b',13600,480,1080);
 
 /* Central tower / shaft: a vertical hub linking cave, river, highland and ruins. */
 addFloor('tower-base',15380,1550,760,180);
-for(let i=0;i<22;i++){
+for(let i=0;i<21;i++){
   const left=i%2===0;
-  addOneWay('tower-step-'+i,left?15040:15920,780,900+i*155,18);
+  addOneWay('tower-step-'+i,left?15020:15900,860,900+i*155,18);
 }
 addFloor('tower-mid-link',14550,2100,2960,150);
 addFloor('tower-top-link',14550,2350,4110,150);
@@ -2585,7 +2585,7 @@ function nearestSupportYAt(x,preferredY=playerY){
 }
 function teleportTo(x,{y=null,notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  playerY=Number.isFinite(Number(y))?Number(y):nearestSupportYAt(playerWorldX,playerY);
+  playerY=(y!==null&&y!==undefined&&Number.isFinite(Number(y)))?Number(y):nearestSupportYAt(playerWorldX,playerY);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,6)!==null;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
   lastSafeX=playerWorldX;lastSafeY=playerY;cameraYReady=false;
   updateMapInteractions._area=areaAt(playerWorldX,playerY)?.id||'';
