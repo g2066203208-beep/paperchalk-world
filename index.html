@@ -2392,7 +2392,7 @@ function renderInventoryDetail(){
   inventoryItemDesc.textContent=item.desc||'';
   inventoryItemWeight.textContent=Number(item.weight||0).toFixed(1);
   inventoryItemCount.textContent=String(item.count||1);
-  inventoryUse.disabled=!(item.consumable===true||item.usable===true||item.action==='consume');
+  inventoryUse.disabled=!(item.consumable===true||item.usable===true||item.action==='consume'||item.action==='heal');
   inventoryDrop.disabled=false;
 }
 function renderInventory(){
@@ -2450,16 +2450,17 @@ function closeBackpack(immediate=false){
 inventoryUse.addEventListener('click',()=>{
   const item=inventorySelected>=0?inventoryItems[inventorySelected]:null;
   if(!item)return;
-  if(!(item.consumable===true||item.usable===true||item.action==='consume')){
+  if(!(item.consumable===true||item.usable===true||item.action==='consume'||item.action==='heal')){
     setInventoryMessage('这个物品目前不能直接使用');
     return;
   }
   const name=item.name||'物品';
-  if(item.consumable===true||item.action==='consume'){
+  if(item.consumable===true||item.action==='consume'||item.action==='heal'){
+    if(item.action==='heal')healPlayer(Math.max(1,Number(item.heal)||1));
     decrementInventoryItem(inventorySelected,1);
     saveWorldState();
     renderInventory();
-    if(inventorySelected>=0)setInventoryMessage('已使用 '+name);
+    if(inventorySelected>=0)setInventoryMessage('已使用 '+name+(item.action==='heal'?'，恢复生命':''));
   }else{
     item.lastUsedAt=Date.now();
     saveWorldState();
@@ -2551,12 +2552,15 @@ function accountSaveKey(account){
 function defaultSave(session){
   return {
     account:session.account,
-    location:'A村',
+    location:'A村外道路',
     createdAt:Date.now(),
     worldMinutes:0,
     worldX:0,
+    playerWorldX:MAP_SPAWN_X,
+    playerY:0,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
+    mapState:{broken:[],collected:[],exitReached:false},
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
@@ -2650,11 +2654,14 @@ function saveWorldState(){
   const session=getSession();
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
-  save.location=save.location||'A村';
+  save.location='A村外道路';
   save.worldX=worldX;
+  save.playerWorldX=playerWorldX;
+  save.playerY=playerY;
   save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.playerHp=playerHp;
+  save.mapState={broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached};
   save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
@@ -2663,12 +2670,25 @@ function loadWorldState(){
   const session=getSession();
   if(!session)return;
   const save=readSaveForSession(session)||defaultSave(session);
-  worldX=Number.isFinite(save.worldX)?save.worldX:0;
   worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:0;
   playerHp=Number.isFinite(save.playerHp)?clampPlayerHp(save.playerHp):PLAYER_MAX_HP;
-  if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
+
+  const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
+  const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
+  playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
+  playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
+  if(!playerGrounded){playerY=0;playerGrounded=true}
+
+  const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
+  mapState.broken=new Set(Array.isArray(savedMap.broken)?savedMap.broken:[]);
+  mapState.collected=new Set(Array.isArray(savedMap.collected)?savedMap.collected:[]);
+  mapState.exitReached=!!savedMap.exitReached;
+  buildMapVisuals();
+
   setInventoryFromSave(save.inventory);
   renderPlayerHealth();
+  updateCamera();
   renderWorld();
 }
 function openUI(fromWorld=false){
@@ -2692,7 +2712,7 @@ function enterWorld(){
   if(!session){showPage('auth');return}
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
-  if(!enemy.spawned||!enemy.alive||enemy.account!==session.account)resetEnemy(360);
+  if(enemies.some(e=>!e.spawned||e.account!==session.account))resetMapEnemies();
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
@@ -2722,10 +2742,12 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;
+      worldX=0;playerWorldX=MAP_SPAWN_X;playerY=0;playerVy=0;playerGrounded=true;
+      mapState.broken.clear();mapState.collected.clear();mapState.exitReached=false;buildMapVisuals();
+      enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;
-      renderPlayerHealth();
+      updateCamera();renderPlayerHealth();renderWorld();
       refreshMenu();
     }
     showPage('auth');
