@@ -16,7 +16,8 @@ async function mapState(page){
     debug:window.PaperchalkCombat?.debug||{},
     terrainCount:window.PaperchalkMap?.terrain?.length||0,
     objectCount:window.PaperchalkMap?.objects?.length||0,
-    spawnCount:window.PaperchalkMap?.enemySpawns?.length||0
+    spawnCount:window.PaperchalkMap?.enemySpawns?.length||0,
+    npcCount:window.PaperchalkMap?.npcs?.length||0
   }));
 }
 async function healthState(page){
@@ -95,7 +96,7 @@ try{
   // Finite-map + realtime-combat foundation.
   const initialMap=await mapState(page);
   check('Fresh A starts at A-village map spawn',
-    Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&initialMap.terrainCount===6&&initialMap.objectCount===2&&initialMap.spawnCount===2,
+    Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&initialMap.terrainCount===6&&initialMap.objectCount===2&&initialMap.spawnCount===2&&initialMap.npcCount===1,
     JSON.stringify({s,initialMap}));
   const parents=await page.evaluate(()=>[
     document.getElementById('enemy')?.parentElement?.id,
@@ -244,6 +245,27 @@ try{
   await page.waitForTimeout(160);
   const exitState=await mapState(page);
   check('Map exit trigger is reached and recorded',exitState.map.exitReached===true,JSON.stringify(exitState.map));
+
+  // NPC is a map-bound entity with proximity prompt and real interaction.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(760,{notice:''}));
+  await page.waitForTimeout(140);
+  const npcNear=await page.evaluate(()=>({
+    near:document.querySelector('[data-npc-id="npc-old-crafter"]')?.classList.contains('is-near')||false,
+    interactDisabled:document.getElementById('interactBtn')?.disabled,
+    playerX:window.PaperchalkMap.playerX
+  }));
+  check('Village NPC proximity enables talk prompt',
+    npcNear.near===true&&npcNear.interactDisabled===false&&Math.abs(npcNear.playerX-760)<2,
+    JSON.stringify(npcNear));
+  await page.keyboard.press('KeyE');
+  await page.waitForTimeout(100);
+  const npcTalk=await page.evaluate(()=>({
+    text:document.getElementById('mapNotice')?.textContent||'',
+    shown:document.getElementById('mapNotice')?.classList.contains('is-show')||false
+  }));
+  check('E talks to the map NPC',
+    npcTalk.shown&&npcTalk.text.includes('村口老匠')&&npcTalk.text.includes('跳起来越过障碍'),
+    JSON.stringify(npcTalk));
 
   // Return to a safe mid-map position for the legacy save/UI tests.
   await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
