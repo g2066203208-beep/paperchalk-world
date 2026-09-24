@@ -96,16 +96,31 @@ button{cursor:pointer}
 .junction-marker::before{content:"";position:absolute;left:70px;bottom:0;width:10px;height:82px;background:#6b4e33;transform:rotate(1deg)}
 .junction-marker .junction-board{position:absolute;left:5px;top:3px;width:140px;padding:8px 8px 9px;background:#d8c08d;border:3px solid #735a39;text-align:center;font:800 12px/1.25 "Noto Serif SC",serif;clip-path:polygon(2% 7%,97% 0,100% 88%,93% 100%,3% 94%,0 15%)}
 .junction-marker .junction-count{display:block;margin-top:2px;font:700 10px/1.2 system-ui,sans-serif;opacity:.66}
-.junction-panel{position:absolute;z-index:66;left:50%;bottom:max(74px,calc(env(safe-area-inset-bottom) + 66px));width:min(560px,92vw);transform:translate(-50%,12px);padding:14px 16px 15px;background:rgba(233,218,185,.97);border:1px solid rgba(79,60,39,.36);box-shadow:6px 8px 0 rgba(49,37,25,.16),0 12px 28px rgba(34,27,20,.18);clip-path:polygon(1% 3%,98% 0,100% 94%,96% 100%,2% 97%,0 7%);opacity:0;visibility:hidden;pointer-events:none;transition:.14s}
-.junction-panel.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0)}
-.junction-panel-title{font:800 16px/1.2 "Noto Serif SC",serif;color:#4c4031;margin-bottom:4px;text-align:center}
-.junction-panel-sub{text-align:center;color:#74624d;font-size:11px;margin-bottom:9px}
-.junction-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-.junction-option{min-width:0;min-height:46px;padding:7px 10px;border:1px solid rgba(82,62,40,.28);background:rgba(249,239,216,.72);color:#514432;border-radius:4px;font-weight:800;font-size:12px;text-align:left}
-.junction-option span{display:block;font-size:10px;font-weight:600;color:#7a6852;margin-top:2px}
-.junction-cancel{display:block;margin:8px auto 0;height:28px;padding:0 14px;border:0;background:rgba(91,70,46,.12);color:#665541;border-radius:3px;font-size:11px}
-.stage.junction-open .combat-controls,.stage.junction-open .joystick-zone{opacity:.22;pointer-events:none}
-@media(max-width:700px),(max-height:500px){.junction-panel{bottom:max(62px,calc(env(safe-area-inset-bottom) + 56px));padding:10px 11px}.junction-options{grid-template-columns:1fr 1fr}.junction-option{min-height:40px;padding:5px 8px}.junction-panel-title{font-size:14px}}
+.terrain-piece.fork-shelf{
+  background:linear-gradient(180deg,#d8bb82 0 35%,#93714d 36% 100%);
+  border-width:2px;border-radius:6px;clip-path:none;
+  box-shadow:inset 0 3px 0 rgba(249,232,190,.42),0 4px 0 rgba(68,51,34,.10)
+}
+.fork-exit-guide{
+  position:absolute;z-index:8;width:154px;min-height:30px;padding:5px 8px;
+  transform:translateY(50%);pointer-events:none;
+  background:rgba(224,205,163,.93);border:2px solid rgba(105,80,48,.62);
+  color:#514431;font:800 11px/1.15 "Noto Serif SC",serif;text-align:center;
+  clip-path:polygon(2% 5%,97% 0,100% 89%,94% 100%,2% 94%,0 12%);
+  filter:drop-shadow(2px 3px 0 rgba(49,37,25,.10))
+}
+.fork-exit-guide small{display:block;margin-top:2px;font:600 9px/1.1 system-ui,sans-serif;color:#77634b}
+.fork-exit-guide .fork-arrow{font-size:15px;margin:0 3px;vertical-align:-1px}
+.fork-exit-guide.is-upper::after{
+  content:"跳上平台走这里";display:block;margin-top:2px;font:600 8px/1 system-ui,sans-serif;color:#8a6a43
+}
+.fork-node-hint{
+  position:absolute;z-index:7;pointer-events:none;white-space:nowrap;
+  padding:4px 8px;background:rgba(72,61,47,.84);color:#eee0c2;
+  font:700 10px/1.2 system-ui,sans-serif;border-radius:3px;
+  transform:translateX(-50%)
+}
+
 .map-exit{bottom:112px;width:110px;height:150px;border-left:10px solid #6b4e33}
 .map-exit:before{content:"→ 下一地区";position:absolute;left:6px;top:12px;width:100px;padding:9px;background:#d5bd8b;border:3px solid #6b4e33;color:#51422f;font-weight:800}
 .pickup{bottom:144px;width:34px;height:34px;border-radius:50%;background:#7d9a60;border:3px solid #f0dfbb;box-shadow:0 3px 0 rgba(54,42,29,.18);animation:pickupFloat 1.4s ease-in-out infinite}
@@ -807,7 +822,7 @@ button{cursor:pointer}
 .world-map-btn{
   position:absolute;z-index:32;
   top:max(146px,calc(env(safe-area-inset-top) + 140px));
-  right:max(18px,env(safe-area-inset-right));
+  right:max(96px,calc(env(safe-area-inset-right) + 78px));
   width:72px;height:40px;padding:0 8px;border:1px solid rgba(78,60,39,.38);
   background:rgba(232,215,181,.95);color:#524636;
   font:800 14px/38px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
@@ -889,7 +904,7 @@ button{cursor:pointer}
   }
   .world-map-btn{
     top:max(113px,calc(env(safe-area-inset-top) + 107px));
-    right:max(10px,env(safe-area-inset-right));
+    right:max(76px,calc(env(safe-area-inset-right) + 66px));
     width:62px;height:34px;font-size:12px;line-height:32px
   }
   .debug-toggle-btn{
@@ -897,7 +912,7 @@ button{cursor:pointer}
   }
   .debug-panel{
     top:max(188px,calc(env(safe-area-inset-top) + 182px))!important;
-    max-height:calc(var(--app-height,100dvh) - 198px)!important
+    max-height:calc(var(--app-height,100dvh) - 161px)!important
   }
   .world-map-paper{width:98vw;height:calc(var(--app-height,100dvh) - 10px);max-height:none}
   .world-map-head{min-height:48px;padding:6px 12px}
@@ -912,7 +927,7 @@ button{cursor:pointer}
 /* ---------- IN-GAME DEBUG PANEL ---------- */
 .debug-toggle-btn{
   position:absolute;z-index:32;
-  top:max(194px,calc(env(safe-area-inset-top) + 188px));
+  top:max(146px,calc(env(safe-area-inset-top) + 140px));
   right:max(18px,env(safe-area-inset-right));
   min-width:68px;height:34px;padding:0 11px;
   border:1px dashed rgba(81,63,42,.52);
@@ -927,7 +942,7 @@ button{cursor:pointer}
 
 .debug-panel{
   position:absolute;z-index:70;
-  top:max(234px,calc(env(safe-area-inset-top) + 228px));
+  top:max(190px,calc(env(safe-area-inset-top) + 184px));
   right:max(18px,env(safe-area-inset-right));
   width:min(360px,calc(100vw - 36px));
   max-height:min(560px,calc(100vh - 210px));
@@ -991,14 +1006,14 @@ button{cursor:pointer}
 .debug-help{margin:8px 2px 0;font-size:11px;line-height:1.45;color:#6b5b48}
 @media(max-width:900px),(max-height:560px){
   .debug-toggle-btn{
-    top:max(151px,calc(env(safe-area-inset-top) + 145px));
-    right:max(10px,env(safe-area-inset-right));height:30px;line-height:28px;min-width:58px;font-size:11px
+    top:max(113px,calc(env(safe-area-inset-top) + 107px));
+    right:max(10px,env(safe-area-inset-right));height:34px;line-height:32px;min-width:58px;font-size:11px
   }
   .debug-panel{
-    top:max(188px,calc(env(safe-area-inset-top) + 182px));
+    top:max(151px,calc(env(safe-area-inset-top) + 145px));
     right:max(10px,env(safe-area-inset-right));
     width:min(330px,calc(100vw - 20px));
-    max-height:calc(var(--app-height,100dvh) - 198px);
+    max-height:calc(var(--app-height,100dvh) - 161px);
     padding:11px;
   }
 }
@@ -1263,19 +1278,12 @@ button{cursor:pointer}
     <div class="debug-help">调试都在这里：血量、战斗、地形 collider、敌人出生区、Camera、地图传送。命令：map / tp 3000 / enemy reset / hitbox / range / ai / pos / save</div>
   </section>
 
-  <section id="junctionPanel" class="junction-panel" aria-hidden="true">
-    <div id="junctionPanelTitle" class="junction-panel-title">岔路口</div>
-    <div id="junctionPanelSub" class="junction-panel-sub">选择下一条道路</div>
-    <div id="junctionOptions" class="junction-options"></div>
-    <button id="junctionCancel" class="junction-cancel" type="button">暂不选择</button>
-  </section>
-
   <div class="combat-controls" aria-label="战斗操作">
     <button id="interactBtn" class="combat-btn" type="button" aria-label="交谈">聊</button>
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
     <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
   </div>
-  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　E 交谈　M 地图　岔路按 1/2/3 选择</div>
+  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　Space 跳跃　J 攻击　E 交谈　M 地图　岔路直接走地面/跳上平台</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -1503,6 +1511,21 @@ function routeLocalX(x){const i=worldZoneIndexAt(x);return x-routeBaseX(i)}
 function routesAtNode(nodeId){return WORLD_ROUTES.filter(r=>r.from===nodeId||r.to===nodeId)}
 function otherNodeOfRoute(route,nodeId){return WORLD_NODE_BY_ID.get(route.from===nodeId?route.to:route.from)}
 function nodeDegree(nodeId){return routesAtNode(nodeId).length}
+const ROUTE_ENDPOINT_PAD=150;
+const FORK_LANE_LEVELS=[142,72,0];
+function forkAssignments(routeIndex,nodeId){
+  const options=routesAtNode(nodeId)
+    .filter(r=>r.index!==routeIndex)
+    .sort((a,b)=>{
+      const ay=otherNodeOfRoute(a,nodeId)?.y??0;
+      const by=otherNodeOfRoute(b,nodeId)?.y??0;
+      return ay-by;
+    });
+  let levels=[0];
+  if(options.length===2)levels=[72,0];
+  else if(options.length>=3)levels=[142,72,0];
+  return options.slice(0,3).map((route,i)=>({route,laneY:levels[i]??0,target:otherNodeOfRoute(route,nodeId)}));
+}
 const MAP_TERRAIN=[
   {id:'rock-1',kind:'rock',x:1120,y:0,w:104,h:70},
   {id:'platform-1',kind:'platform',x:1540,y:0,w:360,h:72},
@@ -1593,6 +1616,26 @@ for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
     {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
   );
 }
+const FORK_SOLIDS=[];
+WORLD_ROUTES.forEach((route,i)=>{
+  const base=routeBaseX(i);
+  [
+    {nodeId:route.from,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
+    {nodeId:route.to,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
+  ].forEach(endpoint=>{
+    const assignments=forkAssignments(i,endpoint.nodeId);
+    if(assignments.length<=1)return;
+    assignments.filter(a=>a.laneY>0).forEach((a,laneIndex)=>{
+      const w=540;
+      const x=endpoint.side==='left'?endpoint.boundary-18:endpoint.boundary-w+18;
+      FORK_SOLIDS.push({
+        id:'fork-shelf-'+i+'-'+endpoint.side+'-'+laneIndex,
+        kind:'platform',x,y:a.laneY-12,w,h:12,oneWay:true,fork:true
+      });
+    });
+  });
+});
+MAP_TERRAIN.push(...FORK_SOLIDS);
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 
@@ -1623,7 +1666,7 @@ function buildMapVisuals(){
   mapDebugTrack.innerHTML='';
   MAP_TERRAIN.forEach(t=>{
     const el=document.createElement('div');
-    el.className='terrain-piece '+t.kind;
+    el.className='terrain-piece '+t.kind+(t.fork?' fork-shelf':'');
     el.dataset.mapId=t.id;
     Object.assign(el.style,{left:t.x+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
     terrainTrack.appendChild(el);
@@ -1681,8 +1724,8 @@ function buildMapVisuals(){
   WORLD_ROUTES.forEach((route,i)=>{
     const base=routeBaseX(i);
     [
-      {nodeId:route.from,x:base+88,side:'from'},
-      {nodeId:route.to,x:base+WORLD_ZONE_WIDTH-238,side:'to'}
+      {nodeId:route.from,x:base+82,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
+      {nodeId:route.to,x:base+WORLD_ZONE_WIDTH-232,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
     ].forEach(mark=>{
       const node=WORLD_NODE_BY_ID.get(mark.nodeId);
       if(!node)return;
@@ -1692,8 +1735,27 @@ function buildMapVisuals(){
       el.dataset.nodeId=node.id;
       el.dataset.side=mark.side;
       el.style.left=mark.x+'px';
-      el.innerHTML='<div class="junction-board">'+node.name+'<span class="junction-count">'+(degree>2?'岔路 · '+degree+' 条道路':degree===1?'道路尽头':'道路连接点')+'</span></div>';
+      el.innerHTML='<div class="junction-board">'+node.name+'<span class="junction-count">'+(degree>2?'实体岔路 · 直接走':degree===1?'道路尽头':'道路连接点')+'</span></div>';
       mapLandmarkTrack.appendChild(el);
+
+      const assignments=forkAssignments(i,node.id);
+      if(assignments.length>1){
+        const hint=document.createElement('div');
+        hint.className='fork-node-hint';
+        hint.style.left=(mark.side==='left'?mark.boundary+235:mark.boundary-235)+'px';
+        hint.style.bottom=(MAP_GROUND_SCREEN_Y+190)+'px';
+        hint.textContent='不弹菜单 · 走进对应高度的路';
+        mapLandmarkTrack.appendChild(hint);
+      }
+      assignments.forEach((a,idx)=>{
+        const guide=document.createElement('div');
+        guide.className='fork-exit-guide'+(a.laneY>0?' is-upper':'');
+        const arrow=mark.side==='left'?'←':'→';
+        guide.style.left=(mark.side==='left'?mark.boundary+42:mark.boundary-196)+'px';
+        guide.style.bottom=(MAP_GROUND_SCREEN_Y+a.laneY+22)+'px';
+        guide.innerHTML='<span class="fork-arrow">'+arrow+'</span>'+(a.target?.name||a.route.name)+'<small>'+a.route.name+'</small>';
+        mapLandmarkTrack.appendChild(guide);
+      });
     });
   });
   ENEMY_SPAWNS.forEach(s=>{
@@ -1813,11 +1875,6 @@ const enemy2HealthFill=document.getElementById('enemy2HealthFill');
 const interactBtn=document.getElementById('interactBtn');
 const jumpBtn=document.getElementById('jumpBtn');
 const attackBtn=document.getElementById('attackBtn');
-const junctionPanel=document.getElementById('junctionPanel');
-const junctionPanelTitle=document.getElementById('junctionPanelTitle');
-const junctionPanelSub=document.getElementById('junctionPanelSub');
-const junctionOptions=document.getElementById('junctionOptions');
-const junctionCancel=document.getElementById('junctionCancel');
 const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
 const playerAttackDebug=document.getElementById('playerAttackDebug');
 const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
@@ -1854,8 +1911,11 @@ const healthAnimationTimers=new WeakMap();
 
 let last=performance.now();
 let roadW=1200;
-let worldX=0; // camera X in map coordinates
+let worldX=0; // camera X in current route-strip coordinates
+let sceneryOffsetX=0; // keeps road/parallax phase continuous when graph edges connect
 let playerWorldX=MAP_SPAWN_X;
+let orientationRouteIndex=0;
+let currentRouteOrientation=1;
 let worldMinutes=0;
 let worldTimeScale=1;
 let actorX=Math.round(innerWidth*.35);
@@ -2237,9 +2297,8 @@ window.PaperchalkDebug={
   run:executeDebugCommand
 };
 
-const ROUTE_ENDPOINT_PAD=150;
 let routeTransitionBusy=false;
-let currentJunctionNodeId=null;
+let deadEndNoticeAt=0;
 
 function directionLabelFromNode(nodeId,route){
   const here=WORLD_NODE_BY_ID.get(nodeId);
@@ -2249,81 +2308,89 @@ function directionLabelFromNode(nodeId,route){
   if(Math.abs(dy)>Math.abs(dx)*.62)return dy<0?'北上':'南下';
   return dx>=0?'东行':'西行';
 }
-function closeJunction(){
-  junctionPanel.classList.remove('is-open');
-  junctionPanel.setAttribute('aria-hidden','true');
-  worldEl.classList.remove('junction-open');
-  currentJunctionNodeId=null;
-}
-function arriveOnRoute(route,nodeId){
-  const entersFrom=route.from===nodeId;
-  const base=routeBaseX(route.index);
-  playerWorldX=entersFrom?base+ROUTE_ENDPOINT_PAD+22:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD-22;
-  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;
-  setFacing(entersFrom?1:-1);
-  mapState.visitedRoutes.add(route.index);
-  mapState.visitedNodes.add(nodeId);
-  const other=otherNodeOfRoute(route,nodeId);if(other)mapState.visitedNodes.add(other.id);
-  updateMapInteractions._zone=route.index;
-  applyCurrentRouteTheme(true);
-  updateCamera();renderWorld();
-  saveWorldState();
-  worldEl.animate([{transform:'translateX(0)',filter:'blur(0)'},{transform:'translateX('+(entersFrom?-10:10)+'px)',filter:'blur(.7px)'},{transform:'translateX(0)',filter:'blur(0)'}],{duration:240,easing:'ease-out'});
-  showMapNotice(route.name+' · '+directionLabelFromNode(nodeId,route),1100);
-  routeTransitionBusy=false;
-}
-function chooseRouteFromNode(routeIndex,nodeId=currentJunctionNodeId){
-  if(routeTransitionBusy)return false;
-  const route=WORLD_ROUTES[Number(routeIndex)];
-  if(!route||!(route.from===nodeId||route.to===nodeId))return false;
-  routeTransitionBusy=true;
-  closeJunction();
-  arriveOnRoute(route,nodeId);
-  return true;
-}
-function openJunction(nodeId,currentRouteIndex){
-  const node=WORLD_NODE_BY_ID.get(nodeId);if(!node)return false;
-  const options=routesAtNode(nodeId).filter(r=>r.index!==currentRouteIndex);
-  keyboardLeft=keyboardRight=false;
-  resetJoystick();
-  if(options.length===0){showMapNotice(node.name+' · 这里是道路尽头，掉头返回',1400);return false}
-  if(options.length===1){chooseRouteFromNode(options[0].index,nodeId);return true}
-  currentJunctionNodeId=nodeId;
-  junctionPanelTitle.textContent=node.name;
-  junctionPanelSub.textContent='这里有 '+options.length+' 条去路 · 选择方向';
-  junctionOptions.innerHTML='';
-  options.forEach((route,i)=>{
-    const target=otherNodeOfRoute(route,nodeId);
-    const btn=document.createElement('button');
-    btn.type='button';btn.className='junction-option';
-    btn.dataset.routeIndex=String(route.index);
-    btn.innerHTML=(i+1)+' · '+directionLabelFromNode(nodeId,route)+'　'+(target?.name||route.name)+'<span>'+route.name+' · '+route.biome+'</span>';
-    btn.addEventListener('click',()=>chooseRouteFromNode(route.index,nodeId));
-    junctionOptions.appendChild(btn);
-  });
-  junctionPanel.classList.add('is-open');
-  junctionPanel.setAttribute('aria-hidden','false');
-  worldEl.classList.add('junction-open');
-  return true;
+function routeOrientationFor(route){
+  return route.index===orientationRouteIndex?currentRouteOrientation:1;
 }
 function routeBoundaryInfo(x=playerWorldX){
   const route=routeForWorldX(x),base=routeBaseX(route.index);
-  return {route,base,left:base+ROUTE_ENDPOINT_PAD,right:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD};
+  const orientation=routeOrientationFor(route);
+  return {
+    route,base,orientation,
+    left:base+ROUTE_ENDPOINT_PAD,
+    right:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD,
+    leftNodeId:orientation>0?route.from:route.to,
+    rightNodeId:orientation>0?route.to:route.from
+  };
 }
-function tryLeaveCurrentRoute(side){
-  if(routeTransitionBusy||junctionPanel.classList.contains('is-open'))return true;
-  const {route}=routeBoundaryInfo();
-  const nodeId=side==='left'?route.from:route.to;
+function setRouteEntryOrientation(route,nodeId,moveDir){
+  orientationRouteIndex=route.index;
+  if(moveDir>=0){
+    currentRouteOrientation=route.from===nodeId?1:-1;
+  }else{
+    currentRouteOrientation=route.to===nodeId?1:-1;
+  }
+}
+function physicallyEnterRoute(route,nodeId,laneY,moveDir){
+  if(routeTransitionBusy)return false;
+  routeTransitionBusy=true;
+
+  const oldSceneryCamera=worldX+sceneryOffsetX;
+  setRouteEntryOrientation(route,nodeId,moveDir);
+  const base=routeBaseX(route.index);
+  playerWorldX=moveDir>=0
+    ? base+ROUTE_ENDPOINT_PAD+30
+    : base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD-30;
+  playerY=laneY;
+  playerVy=0;
+  playerGrounded=true;
+  coyoteTimer=COYOTE_TIME;
+  jumpBufferTimer=0;
+  setFacing(moveDir>=0?1:-1);
+
+  mapState.visitedRoutes.add(route.index);
   mapState.visitedNodes.add(nodeId);
-  return openJunction(nodeId,route.index);
+  const other=otherNodeOfRoute(route,nodeId);
+  if(other)mapState.visitedNodes.add(other.id);
+  updateMapInteractions._zone=route.index;
+
+  applyCurrentRouteTheme(true);
+  updateCamera();
+  sceneryOffsetX=oldSceneryCamera-worldX;
+  renderWorld();
+  saveWorldState();
+
+  showMapNotice(route.name,700);
+  routeTransitionBusy=false;
+  return true;
 }
-junctionCancel.addEventListener('click',closeJunction);
-addEventListener('keydown',e=>{
-  if(!junctionPanel.classList.contains('is-open'))return;
-  if(e.code==='Escape'){e.preventDefault();closeJunction();return}
-  const n=Number(e.key);
-  if(n>=1&&n<=junctionOptions.children.length){e.preventDefault();junctionOptions.children[n-1].click()}
-});
+function tryLeaveCurrentRoute(side,moveDir){
+  if(routeTransitionBusy)return false;
+  const bounds=routeBoundaryInfo();
+  const nodeId=side==='left'?bounds.leftNodeId:bounds.rightNodeId;
+  const assignments=forkAssignments(bounds.route.index,nodeId);
+  mapState.visitedNodes.add(nodeId);
+
+  if(assignments.length===0){
+    const now=performance.now();
+    if(now-deadEndNoticeAt>1100){
+      deadEndNoticeAt=now;
+      showMapNotice((WORLD_NODE_BY_ID.get(nodeId)?.name||'道路尽头')+' · 前方没有路，直接掉头',1000);
+    }
+    return false;
+  }
+
+  let chosen=assignments[0];
+  if(assignments.length>1){
+    // No popup, no pause: the player's physical height IS the branch choice.
+    // Ground route = low branch; jumping onto the real shelves = upper branches.
+    if(!playerGrounded)return false;
+    chosen=assignments.reduce((best,a)=>
+      Math.abs(playerY-a.laneY)<Math.abs(playerY-best.laneY)?a:best
+    ,assignments[0]);
+    if(Math.abs(playerY-chosen.laneY)>24)return false;
+  }
+  return physicallyEnterRoute(chosen.route,nodeId,chosen.laneY,moveDir);
+}
 
 function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
@@ -2344,18 +2411,19 @@ function movePlayerHorizontal(dx){
   const requested=oldX+dx;
   if(requested<bounds.left&&dx<0){
     playerWorldX=bounds.left;
-    tryLeaveCurrentRoute('left');
-    return playerWorldX-oldX;
+    const crossed=tryLeaveCurrentRoute('left',-1);
+    return crossed?dx:playerWorldX-oldX;
   }
   if(requested>bounds.right&&dx>0){
     playerWorldX=bounds.right;
-    tryLeaveCurrentRoute('right');
-    return playerWorldX-oldX;
+    const crossed=tryLeaveCurrentRoute('right',1);
+    return crossed?dx:playerWorldX-oldX;
   }
   let nextX=clamp(requested,bounds.left,bounds.right);
   const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
   const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
   for(const r of activeSolidRects()){
+    if(r.oneWay)continue;
     const vertical=proposed.y<r.y+r.h-1&&proposed.y+proposed.h>r.y+1;
     if(!vertical)continue;
     const hitRight=dx>0&&oldBody.x+oldBody.w<=r.x+2&&proposed.x+proposed.w>r.x;
@@ -2430,6 +2498,7 @@ function updatePlayerVertical(dt,interactive){
     const oldHead=oldY+PLAYER_BODY.h;
     const nextHead=nextY+PLAYER_BODY.h;
     for(const r of solids){
+      if(r.oneWay)continue;
       if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
       if(oldHead<=r.y+2&&nextHead>=r.y){
         nextY=r.y-PLAYER_BODY.h;playerVy=0;break;
@@ -2443,6 +2512,10 @@ let lastAppliedRouteIndex=-1;
 function applyCurrentRouteTheme(force=false){
   const route=routeForWorldX(playerWorldX);
   if(!route)return;
+  if(route.index!==orientationRouteIndex){
+    orientationRouteIndex=route.index;
+    currentRouteOrientation=1;
+  }
   if(force||route.index!==lastAppliedRouteIndex){
     lastAppliedRouteIndex=route.index;
     worldEl.dataset.biome=route.biome||'meadow';
@@ -2511,6 +2584,7 @@ function enemyCanMove(e,dx){
   const old={x:e.x-31,y:0,w:62,h:108};
   const next={x:e.x+dx-31,y:0,w:62,h:108};
   for(const r of activeSolidRects(e.x,520)){
+    if(r.oneWay)continue;
     const vertical=next.y<r.y+r.h-1&&next.y+next.h>r.y+1;
     if(!vertical)continue;
     if(dx>0&&old.x+old.w<=r.x+2&&next.x+next.w>r.x)return false;
@@ -2614,6 +2688,7 @@ function updateMapInteractions(){
 }
 function teleportTo(x,{notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
   updateCamera();renderWorld();if(notice)showMapNotice(notice);return playerWorldX;
@@ -2671,6 +2746,7 @@ window.PaperchalkMap={
   width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
   get playerX(){return playerWorldX},
+  get traversal(){return {routeIndex:worldZoneIndexAt(playerWorldX),orientation:currentRouteOrientation,nodeBounds:routeBoundaryInfo(playerWorldX)}},
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
 };
 window.PaperchalkCombat={
@@ -2727,7 +2803,6 @@ function worldInteractive(){
     && shell.classList.contains('is-hidden')
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
-    && !junctionPanel.classList.contains('is-open')
     && !debugIsOpen();
 }
 function movementAxis(){
@@ -2740,9 +2815,10 @@ function setFacing(dir){
   actorEl.classList.toggle('facing-left',dir<0);
 }
 function renderWorld(){
-  roadTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
-  rearTrack.style.transform='translate3d('+(-worldX*.97)+'px,0,0)';
-  frontTrack.style.transform='translate3d('+(-worldX*1.03)+'px,0,0)';
+  const sceneryX=worldX+sceneryOffsetX;
+  roadTrack.style.transform='translate3d('+(-sceneryX)+'px,0,0)';
+  rearTrack.style.transform='translate3d('+(-sceneryX*.97)+'px,0,0)';
+  frontTrack.style.transform='translate3d('+(-sceneryX*1.03)+'px,0,0)';
   mapTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
   entityTrack.style.transform='translate3d('+(-worldX)+'px,0,0)';
   actorEl.style.left=actorX+'px';
@@ -2977,7 +3053,9 @@ function routePoint(route,t){
 function routeProgressForWorldX(x){
   const route=routeForWorldX(x);
   const local=routeLocalX(x);
-  return {route,t:clamp((local-ROUTE_ENDPOINT_PAD)/(WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD*2),0,1)};
+  let t=clamp((local-ROUTE_ENDPOINT_PAD)/(WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD*2),0,1);
+  if(route.index===orientationRouteIndex&&currentRouteOrientation<0)t=1-t;
+  return {route,t};
 }
 function mapPointForWorldX(x){
   const p=routeProgressForWorldX(x);
@@ -3113,8 +3191,9 @@ function drawWorldMap(){
   ctx.fillText('你在这里',player.x,player.y-16);
 
   const progress=routeProgressForWorldX(playerWorldX);
-  const from=WORLD_NODE_BY_ID.get(progress.route.from),to=WORLD_NODE_BY_ID.get(progress.route.to);
-  worldMapLocation.textContent='当前位置：'+progress.route.name+' · '+from.name+' → '+to.name+' · '+Math.round(progress.t*100)+'%';
+  const bounds=routeBoundaryInfo(playerWorldX);
+  const from=WORLD_NODE_BY_ID.get(bounds.leftNodeId),to=WORLD_NODE_BY_ID.get(bounds.rightNodeId);
+  worldMapLocation.textContent='当前位置：'+progress.route.name+' · '+(from?.name||'')+' ↔ '+(to?.name||'')+' · '+Math.round(progress.t*100)+'%';
   applyWorldMapZoom(false);
 }
 function applyWorldMapZoom(preserveCenter=true){
@@ -3534,6 +3613,7 @@ function saveWorldState(){
   save.worldX=worldX;
   save.playerWorldX=playerWorldX;
   save.playerY=playerY;
+  save.routeOrientation={routeIndex:orientationRouteIndex,sign:currentRouteOrientation};
   save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.playerHp=playerHp;
@@ -3552,6 +3632,11 @@ function loadWorldState(){
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
   playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
+  orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
+  currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
+  if(orientationRouteIndex!==worldZoneIndexAt(playerWorldX)){orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1}
+  sceneryOffsetX=0;
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
   playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
@@ -3572,7 +3657,6 @@ function loadWorldState(){
 }
 function openUI(fromWorld=false){
   closeDebugPanel({focus:false});
-  closeJunction();
   closeWorldMap(true);
   closeBackpack(true);
   if(fromWorld)saveWorldState();
@@ -3588,7 +3672,6 @@ function openUI(fromWorld=false){
 }
 function enterWorld(){
   closeDebugPanel({focus:false});
-  closeJunction();
   closeWorldMap(true);
   closeBackpack(true);
   const session=getSession();
@@ -3625,7 +3708,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;playerWorldX=MAP_SPAWN_X;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
+      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
@@ -3706,8 +3789,7 @@ registerForm.addEventListener('submit',e=>{
 
 window.PaperchalkHandleBack=function(){
   if(junctionPanel.classList.contains('is-open')){
-    closeJunction();
-    return true;
+      return true;
   }
   if(debugIsOpen()){
     closeDebugPanel({focus:false});
