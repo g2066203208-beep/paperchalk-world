@@ -19,14 +19,20 @@ async function healthState(page){
     empty:document.querySelectorAll('#playerHealthBar .hp-segment.is-empty').length,
     ariaNow:document.getElementById('playerHealthHud')?.getAttribute('aria-valuenow'),
     loaded:[...document.querySelectorAll('#playerHealthBar .hp-segment')].every(img=>img.complete&&img.naturalWidth>0),
-    overlap:(()=>{
+    seam:(()=>{
       const pieces=[...document.querySelectorAll('#playerHealthBar .hp-segment')];
-      if(pieces.length<10)return false;
+      if(pieces.length<10)return {ok:false,cellOverlap:null,tailOverlap:null};
       const a=pieces[0].getBoundingClientRect();
       const b=pieces[1].getBoundingClientRect();
       const p=pieces[8].getBoundingClientRect();
       const tail=pieces[9].getBoundingClientRect();
-      return b.left<a.right && tail.left<p.right;
+      const cellOverlap=a.right-b.left;
+      const tailOverlap=p.right-tail.left;
+      return {
+        ok:cellOverlap>=1&&cellOverlap<=4&&tailOverlap>=1&&tailOverlap<=5,
+        cellOverlap,
+        tailOverlap
+      };
     })()
   }));
 }
@@ -74,7 +80,7 @@ try{
 
   const healthInitial=await healthState(page);
   check('Health HUD is 10 stitched pieces',
-    healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.loaded&&healthInitial.overlap,
+    healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.loaded&&healthInitial.seam.ok,
     JSON.stringify(healthInitial));
   check('New player starts at 10 HP',
     healthInitial.hp===10&&healthInitial.maxHp===10&&healthInitial.empty===0&&healthInitial.ariaNow==='10',
