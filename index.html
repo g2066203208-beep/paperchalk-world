@@ -1314,8 +1314,8 @@ button{cursor:pointer}
         <span><i class="lg-player"></i>你</span>
         <span><i class="lg-enemy"></i>敌人</span>
         <span><i class="lg-pickup"></i>采集</span>
-        <span>━━ 已探索</span>
-        <span>┄┄ 未探索</span>
+        <span>▰ 实体地形</span>
+        <span>□ 区域边界</span>
       </div>
     </div>
     <div id="worldMapScroll" class="world-map-scroll">
@@ -1467,59 +1467,6 @@ const MAP_SPAWN_Y=2200;
 const MAP_EXIT_X=MAP_WIDTH-520;
 let MAP_GROUND_SCREEN_Y=112;
 const PLAYER_BODY={halfW:27,h:108};
-const WORLD_NODES=[
-  {id:'village',name:'A村',x:170,y:650,kind:'village'},
-  {id:'meadowFork',name:'风草岔口',x:450,y:640,kind:'junction'},
-  {id:'forestGate',name:'旧林入口',x:720,y:350,kind:'forest'},
-  {id:'riverbank',name:'枯溪岸',x:740,y:900,kind:'river'},
-  {id:'stonePass',name:'浅石谷',x:1010,y:620,kind:'mountain'},
-  {id:'oldRuins',name:'古纸遗迹',x:1240,y:170,kind:'ruins'},
-  {id:'windmill',name:'风车丘',x:1320,y:430,kind:'windmill'},
-  {id:'caveMouth',name:'回声洞口',x:1070,y:1020,kind:'cave'},
-  {id:'marsh',name:'雾泽',x:1450,y:960,kind:'marsh'},
-  {id:'highland',name:'长草台地',x:1650,y:620,kind:'highland'},
-  {id:'brokenBridge',name:'断桥',x:1840,y:900,kind:'bridge'},
-  {id:'pineRidge',name:'雾松岭',x:1890,y:330,kind:'forest'},
-  {id:'northCamp',name:'北野营地',x:2220,y:160,kind:'camp'},
-  {id:'tower',name:'旧塔原',x:2230,y:590,kind:'tower'},
-  {id:'sunkenCity',name:'沉纸城',x:2230,y:1020,kind:'ruins'},
-  {id:'farShrine',name:'远岬祭坛',x:2540,y:560,kind:'shrine'}
-];
-const WORLD_ROUTES=[
-  {id:'village-road',name:'A村外道路',from:'village',to:'meadowFork',biome:'meadow',bend:0},
-  {id:'wind-grass-slope',name:'风草坡',from:'meadowFork',to:'forestGate',biome:'meadow',bend:-38},
-  {id:'shallow-creek-road',name:'浅溪旧道',from:'meadowFork',to:'riverbank',biome:'river',bend:42},
-  {id:'old-forest-edge',name:'旧林边',from:'forestGate',to:'stonePass',biome:'forest',bend:36},
-  {id:'dry-creek-bank',name:'枯溪岸',from:'riverbank',to:'stonePass',biome:'river',bend:-28},
-  {id:'canopy-road',name:'林冠古道',from:'forestGate',to:'oldRuins',biome:'forest',bend:-46},
-  {id:'ruin-high-slope',name:'遗迹高坡',from:'oldRuins',to:'windmill',biome:'ruins',bend:24},
-  {id:'shallow-stone-valley',name:'浅石谷',from:'stonePass',to:'windmill',biome:'mountain',bend:-18},
-  {id:'lower-rock-fork',name:'下岩岔路',from:'stonePass',to:'caveMouth',biome:'cave',bend:52},
-  {id:'echo-cave-way',name:'回声洞道',from:'caveMouth',to:'marsh',biome:'cave',bend:-24},
-  {id:'reed-lowland',name:'芦苇低地',from:'riverbank',to:'marsh',biome:'marsh',bend:38},
-  {id:'windmill-waste-road',name:'风车荒径',from:'windmill',to:'highland',biome:'meadow',bend:18},
-  {id:'mist-marsh-boardwalk',name:'雾泽栈道',from:'marsh',to:'highland',biome:'marsh',bend:-30},
-  {id:'north-wind-slope',name:'北风坡',from:'windmill',to:'pineRidge',biome:'highland',bend:-52},
-  {id:'long-grass-tableland',name:'长草台地',from:'highland',to:'pineRidge',biome:'highland',bend:-18},
-  {id:'broken-bridge-road',name:'断桥旧道',from:'highland',to:'brokenBridge',biome:'river',bend:34},
-  {id:'mist-pine-ridge',name:'雾松岭',from:'pineRidge',to:'northCamp',biome:'forest',bend:-24},
-  {id:'old-post-road',name:'旧驿道',from:'pineRidge',to:'tower',biome:'ruins',bend:32},
-  {id:'sunken-city-waterway',name:'沉城水路',from:'brokenBridge',to:'sunkenCity',biome:'marsh',bend:26},
-  {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
-];
-const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
-WORLD_ROUTES.forEach((r,i)=>r.index=i);
-function worldZoneIndexAt(x){return Math.max(0,Math.min(WORLD_ROUTES.length-1,Math.floor(Math.max(0,x)/WORLD_ZONE_WIDTH)))}
-function routeForWorldX(x){return WORLD_ROUTES[worldZoneIndexAt(x)]}
-function regionNameAt(x){return routeForWorldX(x)?.name||'未知道路'}
-function routeBaseX(routeIndex){return routeIndex*WORLD_ZONE_WIDTH}
-function routeLocalX(x){const i=worldZoneIndexAt(x);return x-routeBaseX(i)}
-function routesAtNode(nodeId){return WORLD_ROUTES.filter(r=>r.from===nodeId||r.to===nodeId)}
-function otherNodeOfRoute(route,nodeId){return WORLD_NODE_BY_ID.get(route.from===nodeId?route.to:route.from)}
-function nodeDegree(nodeId){return routesAtNode(nodeId).length}
-
-/* TRUE 2D METROIDVANIA WORLD
-   x/y here are the same coordinates used by gameplay, camera and the large map. */
 const WORLD_AREAS_2D=[
   {id:'village',name:'A村与风草原',biome:'meadow',x:0,y:1850,w:4300,h:900,labelX:1500,labelY:2460},
   {id:'forest',name:'旧林上层',biome:'forest',x:3000,y:2450,w:7800,h:1250,labelX:6500,labelY:3350},
@@ -1547,119 +1494,14 @@ function areaAt(x,y){
 }
 function regionNameAt(x,y=MAP_SPAWN_Y){return areaAt(x,y)?.name||'纸境荒野'}
 
-const ROUTE_ENDPOINT_PAD=150;
-const FORK_LANE_LEVELS=[142,72,0];
-function forkAssignments(routeIndex,nodeId){
-  const options=routesAtNode(nodeId)
-    .filter(r=>r.index!==routeIndex)
-    .sort((a,b)=>{
-      const ay=otherNodeOfRoute(a,nodeId)?.y??0;
-      const by=otherNodeOfRoute(b,nodeId)?.y??0;
-      return ay-by;
-    });
-  let levels=[0];
-  if(options.length===2)levels=[72,0];
-  else if(options.length>=3)levels=[142,72,0];
-  return options.slice(0,3).map((route,i)=>({route,laneY:levels[i]??0,target:otherNodeOfRoute(route,nodeId)}));
-}
-const MAP_TERRAIN=[
-  {id:'rock-1',kind:'rock',x:1120,y:0,w:104,h:70},
-  {id:'platform-1',kind:'platform',x:1540,y:0,w:360,h:72},
-  {id:'platform-2',kind:'platform',x:2920,y:0,w:330,h:104},
-  {id:'rock-2',kind:'rock',x:3720,y:0,w:138,h:80},
-  {id:'platform-3',kind:'platform',x:4280,y:0,w:380,h:126},
-  {id:'rock-3',kind:'rock',x:5140,y:0,w:126,h:62}
-];
-const MAP_OBJECTS=[
-  {id:'crate-1',kind:'crate',x:2390,y:0,w:88,h:88,solid:true,breakable:true},
-  /* Trees remain visible world props, but never form an unavoidable 190px movement wall. */
-  {id:'tree-1',kind:'tree',x:4980,y:0,w:96,h:190,solid:false}
-];
-const MAP_LANDMARKS=[
-  {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
-  {id:'sign-combat',kind:'sign',x:1440,text:'前方有游荡者'},
-  {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'}
-];
-const MAP_PICKUPS=[
-  {id:'herb-1',x:3330,y:108,type:'herb'},
-  {id:'herb-crate',x:2434,y:28,type:'herb',requiresBroken:'crate-1'}
-];
-const MAP_NPCS=[
-  {id:'npc-old-crafter',x:760,name:'村口老匠',text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。'}
-];
-const ENEMY_SPAWNS=[
-  {id:'enemy-1',x:2140,patrolMin:2010,patrolMax:2290},
-  {id:'enemy-2',x:4780,patrolMin:4680,patrolMax:4920}
-];
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const offset=1750+(zone%4)*720;
-  const x=base+offset;
-  ENEMY_SPAWNS.push({
-    id:'enemy-zone-'+zone,
-    x,
-    patrolMin:x-170-(zone%3)*20,
-    patrolMax:x+170+(zone%2)*30
-  });
-}
+const MAP_TERRAIN=[];
+const MAP_OBJECTS=[];
+const MAP_LANDMARKS=[];
+const MAP_PICKUPS=[];
+const MAP_NPCS=[];
+const ENEMY_SPAWNS=[];
 
-/* Deterministic continuation: every 6000px is authored into the same coordinate space.
-   Nothing is fetched or swapped while crossing a zone boundary. */
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const variant=zone%5;
-  MAP_LANDMARKS.push({id:'zone-sign-'+zone,kind:'sign',x:base+390,text:regionNameAt(base+390)});
-  MAP_TERRAIN.push(
-    {id:'zone-rock-a-'+zone,kind:'rock',x:base+820+variant*35,y:0,w:96+variant*8,h:54+variant*6},
-    {id:'zone-platform-a-'+zone,kind:'platform',x:base+1640-variant*30,y:0,w:300+variant*18,h:76+variant*8},
-    {id:'zone-platform-b-'+zone,kind:'platform',x:base+3180+variant*22,y:0,w:340-variant*12,h:92+variant*7},
-    {id:'zone-rock-b-'+zone,kind:'rock',x:base+4070-variant*26,y:0,w:118+variant*5,h:60+variant*5},
-    {id:'zone-platform-c-'+zone,kind:'platform',x:base+4860+variant*18,y:0,w:315+variant*14,h:104+variant*6}
-  );
-  MAP_OBJECTS.push(
-    {id:'zone-tree-'+zone,kind:'tree',x:base+1160+variant*24,y:0,w:96,h:190,solid:false},
-    {id:'zone-crate-'+zone,kind:'crate',x:base+2700+variant*34,y:0,w:82,h:82,solid:true,breakable:true}
-  );
-  const route=WORLD_ROUTES[zone];
-  if(route?.biome==='forest'){
-    MAP_OBJECTS.push(
-      {id:'forest-tree-a-'+zone,kind:'tree',x:base+2050,y:0,w:96,h:190,solid:false},
-      {id:'forest-tree-b-'+zone,kind:'tree',x:base+4450,y:0,w:96,h:190,solid:false}
-    );
-  }else if(route?.biome==='river'||route?.biome==='marsh'){
-    MAP_OBJECTS.push(
-      {id:'reed-a-'+zone,kind:'reed',x:base+1760,y:0,w:120,h:66,solid:false},
-      {id:'reed-b-'+zone,kind:'reed',x:base+4380,y:0,w:120,h:66,solid:false}
-    );
-    if(route.id==='broken-bridge-road')MAP_OBJECTS.push({id:'bridge-'+zone,kind:'bridge-post',x:base+3550,y:0,w:150,h:78,solid:false});
-  }else if(route?.biome==='ruins'){
-    MAP_OBJECTS.push(
-      {id:'ruin-a-'+zone,kind:'ruin',x:base+1880,y:0,w:128,h:120,solid:false},
-      {id:'ruin-b-'+zone,kind:'ruin',x:base+4300,y:0,w:128,h:120,solid:false}
-    );
-  }else if(route?.biome==='cave'){
-    MAP_OBJECTS.push({id:'cave-mouth-'+zone,kind:'cave-mouth',x:base+3360,y:0,w:158,h:126,solid:false});
-  }else if(route?.biome==='mountain'||route?.biome==='highland'){
-    MAP_TERRAIN.push(
-      {id:'ridge-rock-a-'+zone,kind:'rock',x:base+2200,y:0,w:116,h:76},
-      {id:'ridge-rock-b-'+zone,kind:'rock',x:base+4580,y:0,w:126,h:82}
-    );
-  }
-  if(route?.id==='windmill-waste-road')MAP_OBJECTS.push({id:'windmill-'+zone,kind:'windmill',x:base+3600,y:0,w:126,h:180,solid:false});
-  if(route?.biome==='shrine')MAP_OBJECTS.push({id:'shrine-'+zone,kind:'shrine',x:base+4020,y:0,w:140,h:134,solid:false});
-  MAP_PICKUPS.push(
-    {id:'zone-herb-'+zone,x:base+3660+variant*17,y:104,type:'herb'},
-    {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
-  );
-}
-/* Discard the old route-strip geometry. All following geometry lives in one real XY plane. */
-MAP_TERRAIN.length=0;
-MAP_OBJECTS.length=0;
-MAP_LANDMARKS.length=0;
-MAP_PICKUPS.length=0;
-MAP_NPCS.length=0;
-ENEMY_SPAWNS.length=0;
-
+/* All geometry below lives in one real XY plane. */
 function addFloor(id,x,w,top,thickness=120,kind='platform',extra={}){
   MAP_TERRAIN.push({id,kind,x,y:top-thickness,w,h:thickness,...extra});
 }
@@ -1809,7 +1651,7 @@ MAP_NPCS.push(
 
 const FORK_SOLIDS=[];
 
-const mapState={broken:new Set(),collected:new Set(),visitedAreas:new Set(['village']),visitedRoutes:new Set(),visitedNodes:new Set(),exitReached:false};
+const mapState={broken:new Set(),collected:new Set(),visitedAreas:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 
 const rear=[
