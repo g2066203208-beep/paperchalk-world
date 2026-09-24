@@ -557,6 +557,64 @@ button{cursor:pointer}
   .paper-btn{height:35px!important}
 }
 
+
+/* ---------- BACKPACK UI V1 ---------- */
+.backpack-open-btn{
+  position:absolute;z-index:29;
+  top:max(78px,calc(env(safe-area-inset-top) + 72px));
+  right:max(15px,env(safe-area-inset-right));
+  width:64px;height:64px;padding:0;border:0;background:transparent;
+  overflow:hidden;filter:drop-shadow(3px 4px 0 rgba(55,42,28,.13));
+}
+.backpack-open-btn img{
+  position:absolute;left:0;top:0;width:394px;height:auto;max-width:none;
+  transform:translate(-10px,-12px);pointer-events:none;user-select:none;
+}
+.backpack-overlay{
+  position:fixed;inset:0;z-index:80;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(37,32,25,.18);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .16s ease,visibility .16s ease;
+}
+.backpack-overlay.is-open{opacity:1;visibility:visible;pointer-events:auto}
+.backpack-frame{
+  position:relative;
+  width:min(92vw,120vh,1448px);
+  aspect-ratio:1448/1086;
+  filter:drop-shadow(0 14px 22px rgba(28,22,16,.24));
+  transform:scale(.97);
+  transition:transform .16s ease;
+}
+.backpack-overlay.is-open .backpack-frame{transform:scale(1)}
+.backpack-art{
+  display:block;width:100%;height:100%;object-fit:contain;
+  image-rendering:auto;user-select:none;-webkit-user-drag:none;
+}
+.backpack-close-hotspot{
+  position:absolute;right:2.4%;top:7.0%;
+  width:10.5%;height:12.5%;
+  border:0;background:transparent;padding:0;
+  cursor:pointer;border-radius:50%;
+}
+.backpack-close-hotspot:focus-visible{
+  outline:2px dashed rgba(73,59,42,.7);outline-offset:-5px;
+}
+.backpack-slot-layer{
+  position:absolute;left:8.7%;top:27.4%;width:56.1%;height:57.4%;
+  display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);
+  column-gap:1.9%;row-gap:2.6%;pointer-events:none;
+}
+.backpack-slot{
+  pointer-events:auto;border:0;background:transparent;min-width:0;min-height:0;
+}
+.backpack-slot:active{background:rgba(90,73,49,.06)}
+@media(max-width:800px),(max-height:520px){
+  .backpack-open-btn{width:52px;height:52px;top:max(66px,calc(env(safe-area-inset-top) + 60px))}
+  .backpack-open-btn img{width:320px;transform:translate(-8px,-10px)}
+  .backpack-frame{width:min(94vw,118vh,1448px)}
+}
+
 </style>
 </head>
 <body>
@@ -577,6 +635,9 @@ button{cursor:pointer}
   </div>
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <button id="worldMenuBtn" class="world-menu-btn" aria-label="主菜单">≡</button>
+  <button id="backpackBtn" class="backpack-open-btn" aria-label="打开背包">
+    <img src="./assets/ui/backpack-ui-v1.png?v=1" alt="">
+  </button>
   <div id="desktopControlHint" class="desktop-control-hint">A / D　或　← / →</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
@@ -586,6 +647,14 @@ button{cursor:pointer}
     </div>
   </div>
 </main>
+
+<section id="backpackOverlay" class="backpack-overlay" aria-hidden="true">
+  <div class="backpack-frame" role="dialog" aria-modal="true" aria-label="背包">
+    <img class="backpack-art" src="./assets/ui/backpack-ui-v1.png?v=1" alt="背包">
+    <button id="backpackClose" class="backpack-close-hotspot" aria-label="关闭背包"></button>
+    <div id="backpackSlots" class="backpack-slot-layer" aria-label="背包格子"></div>
+  </div>
+</section>
 
 <section id="uiShell" class="ui-shell">
   <div class="ui-board">
@@ -737,6 +806,10 @@ const frontTrack=document.getElementById('frontTrack');
 const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
+const backpackBtn=document.getElementById('backpackBtn');
+const backpackOverlay=document.getElementById('backpackOverlay');
+const backpackClose=document.getElementById('backpackClose');
+const backpackSlots=document.getElementById('backpackSlots');
 
 let last=performance.now();
 let roadW=1200;
@@ -761,7 +834,9 @@ refreshRoadW();
 function posMod(v,m){return ((v%m)+m)%m}
 function worldInteractive(){
   const shell=document.getElementById('uiShell');
-  return !!shell && shell.classList.contains('is-hidden');
+  return !!shell
+    && shell.classList.contains('is-hidden')
+    && !backpackOverlay.classList.contains('is-open');
 }
 function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
@@ -892,6 +967,43 @@ joystickZone.addEventListener('lostpointercapture',e=>{
   if(e.pointerId===joystickPointer)resetJoystick();
 });
 
+/* backpack */
+for(let i=0;i<20;i++){
+  const slot=document.createElement('button');
+  slot.type='button';
+  slot.className='backpack-slot';
+  slot.setAttribute('aria-label','背包格 '+(i+1));
+  backpackSlots.appendChild(slot);
+}
+function openBackpack(){
+  const shell=document.getElementById('uiShell');
+  if(!shell.classList.contains('is-hidden'))return;
+  keyboardLeft=keyboardRight=false;
+  resetJoystick();
+  backpackOverlay.classList.add('is-open');
+  backpackOverlay.setAttribute('aria-hidden','false');
+}
+function closeBackpack(){
+  backpackOverlay.classList.remove('is-open');
+  backpackOverlay.setAttribute('aria-hidden','true');
+}
+backpackBtn.addEventListener('click',openBackpack);
+backpackClose.addEventListener('click',closeBackpack);
+backpackOverlay.addEventListener('pointerdown',e=>{
+  if(e.target===backpackOverlay)closeBackpack();
+});
+addEventListener('keydown',e=>{
+  if(isEditableTarget(e.target))return;
+  const shell=document.getElementById('uiShell');
+  if(e.code==='KeyB' && shell.classList.contains('is-hidden')){
+    e.preventDefault();
+    backpackOverlay.classList.contains('is-open')?closeBackpack():openBackpack();
+  }else if(e.code==='Escape' && backpackOverlay.classList.contains('is-open')){
+    e.preventDefault();
+    closeBackpack();
+  }
+});
+
 /* -------------------- MENU / LOCAL ACCOUNT -------------------- */
 const uiShell=document.getElementById('uiShell');
 const pages={
@@ -974,6 +1086,7 @@ function loadWorldState(){
   renderWorld();
 }
 function openUI(fromWorld=false){
+  closeBackpack();
   if(fromWorld)saveWorldState();
   keyboardLeft=keyboardRight=false;
   resetJoystick();
@@ -987,6 +1100,7 @@ function openUI(fromWorld=false){
   }
 }
 function enterWorld(){
+  closeBackpack();
   const session=getSession();
   if(!session){showPage('auth');return}
   if(!storageGet(KEY_SAVE)){
