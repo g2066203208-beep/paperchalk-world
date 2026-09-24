@@ -46,6 +46,8 @@ assert(game.includes("maxSpeed*magnitude"), "Analog speed scaling missing");
 assert(game.includes("INVENTORY_CAPACITY=20"), "20-slot inventory missing");
 assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missing");
 assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
+assert(html.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
+assert(game.includes("order*45"), "Staggered heal timing missing");
 assert(game.includes("window.PaperchalkDebug"), "In-game debug API missing");
 assert(game.includes("function runDebugCommand"), "Debug command parser missing");
 assert(html.includes('data-debug-action="damage1"'), "Debug -1 HP shortcut missing");
