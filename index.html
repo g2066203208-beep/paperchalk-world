@@ -88,6 +88,7 @@ button{cursor:pointer}
   left:max(14px,calc(env(safe-area-inset-left) + 6px));
   pointer-events:none;
   transform-origin:left top;
+  overflow:visible;
   filter:drop-shadow(2px 4px 0 rgba(48,31,20,.13));
 }
 .player-health-bar{
@@ -153,6 +154,35 @@ button{cursor:pointer}
     filter:saturate(1) brightness(1);
     opacity:1;
   }
+}
+
+/* Buff flags hang from individual HP pieces. Multiple effects on one HP
+   piece continue downward as a single stitched chain. */
+.player-buff-layer{
+  position:absolute;z-index:3;left:0;top:0;width:100%;height:0;
+  overflow:visible;pointer-events:none;
+}
+.buff-chain{
+  position:absolute;
+  display:flex;flex-direction:column;align-items:center;
+  width:30px;
+  transform:translateX(-50%);
+  transform-origin:50% 0;
+}
+.buff-banner{
+  flex:none;width:30px;height:40px;
+  background-image:url("./assets/ui/buffs/buff-atlas.webp?v=1");
+  background-repeat:no-repeat;
+  background-size:600% 300%;
+  filter:drop-shadow(1px 2px 0 rgba(45,31,20,.15));
+  transform-origin:50% 5px;
+}
+.buff-banner + .buff-banner{margin-top:-5px}
+.buff-banner.is-new{animation:buff-hang-in .22s cubic-bezier(.2,.85,.25,1.12)}
+@keyframes buff-hang-in{
+  0%{transform:translateY(-7px) scale(.72) rotate(-5deg);opacity:0}
+  62%{transform:translateY(1px) scale(1.06) rotate(2deg);opacity:1}
+  100%{transform:translateY(0) scale(1) rotate(0);opacity:1}
 }
 @media(max-width:900px),(max-height:560px){
   .player-health-hud{
@@ -720,7 +750,10 @@ button{cursor:pointer}
 }
 .debug-status b{font-weight:800}
 .debug-actions{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px;
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:7px;
+}
+.debug-buff-actions{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-bottom:10px;
 }
 .debug-action{
   min-width:0;height:34px;border:1px solid rgba(88,68,45,.30);
@@ -903,6 +936,7 @@ button{cursor:pointer}
   <div id="playerHealthHud" class="player-health-hud" role="meter"
        aria-label="生命值" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10">
     <div id="playerHealthBar" class="player-health-bar" aria-hidden="true"></div>
+    <div id="playerBuffLayer" class="player-buff-layer" aria-hidden="true"></div>
   </div>
 
   <button id="worldMenuBtn" class="world-menu-btn" aria-label="主菜单">≡</button>
@@ -925,13 +959,18 @@ button{cursor:pointer}
       <button class="debug-action" type="button" data-debug-action="zero">0 HP</button>
       <button class="debug-action" type="button" data-debug-action="full">满血</button>
     </div>
+    <div class="debug-buff-actions" aria-label="BUFF快捷调试">
+      <button class="debug-action" type="button" data-debug-action="buffRandom">随机 BUFF</button>
+      <button class="debug-action" type="button" data-debug-action="buffPop">移除最后</button>
+      <button class="debug-action" type="button" data-debug-action="buffClear">清空 BUFF</button>
+    </div>
     <form id="debugCommandForm" class="debug-command-form">
       <input id="debugCommandInput" class="debug-command-input" type="text"
              autocomplete="off" spellcheck="false" placeholder="输入：hp 5 / hp -1 / help">
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">快捷命令：hp、hp 5、hp -1、hp +1、hp max、damage 2、heal 2、time 60、pos、resetpos、save、clear</div>
+    <div class="debug-help">快捷命令：hp、damage、heal、buff、buff random、buff add 3 poison、buff pop、buff clear、time、pos、resetpos、save、clear</div>
   </section>
 
   <div id="desktopControlHint" class="desktop-control-hint">A / D　或　← / →</div>
@@ -1158,6 +1197,7 @@ const settingLandscape=document.getElementById('settingLandscape');
 const settingsStatus=document.getElementById('settingsStatus');
 const playerHealthHud=document.getElementById('playerHealthHud');
 const playerHealthBar=document.getElementById('playerHealthBar');
+const playerBuffLayer=document.getElementById('playerBuffLayer');
 const debugToggleBtn=document.getElementById('debugToggleBtn');
 const debugPanel=document.getElementById('debugPanel');
 const debugCloseBtn=document.getElementById('debugCloseBtn');
@@ -1167,8 +1207,32 @@ const debugCommandInput=document.getElementById('debugCommandInput');
 const debugOutput=document.getElementById('debugOutput');
 
 const PLAYER_MAX_HP=10;
+const BUFF_TYPES=[
+  {id:'bleed',name:'出血',col:0,row:0},
+  {id:'frost',name:'冰冻',col:1,row:0},
+  {id:'poison',name:'中毒',col:2,row:0},
+  {id:'burn',name:'灼烧',col:3,row:0},
+  {id:'food',name:'食物',col:4,row:0},
+  {id:'wet',name:'潮湿',col:5,row:0},
+  {id:'regen',name:'再生',col:0,row:1},
+  {id:'shield',name:'护盾',col:1,row:1},
+  {id:'attack',name:'攻击',col:2,row:1},
+  {id:'vision',name:'洞察',col:3,row:1},
+  {id:'night',name:'夜幕',col:4,row:1},
+  {id:'feather',name:'轻盈',col:5,row:1},
+  {id:'luck',name:'幸运',col:0,row:2},
+  {id:'time',name:'时间',col:1,row:2},
+  {id:'bind',name:'束缚',col:2,row:2},
+  {id:'dizzy',name:'眩晕',col:3,row:2},
+  {id:'heal',name:'治疗',col:4,row:2},
+  {id:'haste',name:'加速',col:5,row:2}
+];
+const BUFF_TYPE_MAP=new Map(BUFF_TYPES.map(type=>[type.id,type]));
 let playerHp=PLAYER_MAX_HP;
 let healthPieces=[];
+let playerBuffs=[];
+let buffUidCounter=1;
+let newestBuffUid=null;
 const healthAnimationTimers=new WeakMap();
 
 let last=performance.now();
@@ -1199,6 +1263,7 @@ function buildPlayerHealthBar(){
     img.alt='';
     img.draggable=false;
     img.dataset.hpIndex=String(i);
+    img.addEventListener('load',positionBuffChains);
     playerHealthBar.appendChild(img);
     healthPieces.push(img);
   }
@@ -1249,6 +1314,7 @@ function renderPlayerHealth(previousHp=playerHp,animateChange=false){
       healthAnimationTimers.set(piece,timer);
     }
   });
+  positionBuffChains();
 }
 function setPlayerHp(value,{persist=true,animate=true}={}){
   const previousHp=playerHp;
@@ -1276,6 +1342,130 @@ window.PaperchalkHealth={
   reset(){return setPlayerHp(PLAYER_MAX_HP)}
 };
 
+function normalizeBuffType(type){
+  const id=String(type||'').trim().toLowerCase();
+  return BUFF_TYPE_MAP.has(id)?id:null;
+}
+function normalizePlayerBuffs(raw){
+  if(!Array.isArray(raw))return [];
+  return raw.flatMap((buff,index)=>{
+    if(!buff||typeof buff!=='object')return [];
+    const type=normalizeBuffType(buff.type);
+    const cell=Math.floor(Number(buff.cell));
+    if(!type||!Number.isFinite(cell)||cell<0||cell>=PLAYER_MAX_HP)return [];
+    return [{
+      uid:String(buff.uid||('saved-'+index+'-'+Date.now().toString(36))),
+      type,
+      cell,
+      createdAt:Number(buff.createdAt)||Date.now()
+    }];
+  });
+}
+function buffSnapshot(){
+  return playerBuffs.map(buff=>({...buff}));
+}
+function setPlayerBuffsFromSave(raw){
+  playerBuffs=normalizePlayerBuffs(raw);
+  newestBuffUid=null;
+  renderPlayerBuffs();
+}
+function positionBuffChains(){
+  if(!playerBuffLayer||!healthPieces.length)return;
+  playerBuffLayer.querySelectorAll('.buff-chain').forEach(chain=>{
+    const cell=Number(chain.dataset.cell);
+    const piece=healthPieces[cell];
+    if(!piece)return;
+    chain.style.left=(piece.offsetLeft+piece.offsetWidth/2)+'px';
+    chain.style.top=(piece.offsetTop+piece.offsetHeight-6)+'px';
+  });
+}
+function renderPlayerBuffs(){
+  playerBuffLayer.innerHTML='';
+  const groups=new Map();
+  playerBuffs.forEach(buff=>{
+    if(!groups.has(buff.cell))groups.set(buff.cell,[]);
+    groups.get(buff.cell).push(buff);
+  });
+
+  [...groups.keys()].sort((a,b)=>a-b).forEach(cell=>{
+    const chain=document.createElement('div');
+    chain.className='buff-chain';
+    chain.dataset.cell=String(cell);
+
+    groups.get(cell).forEach(buff=>{
+      const type=BUFF_TYPE_MAP.get(buff.type);
+      if(!type)return;
+      const banner=document.createElement('div');
+      banner.className='buff-banner'+(buff.uid===newestBuffUid?' is-new':'');
+      banner.dataset.buffUid=buff.uid;
+      banner.dataset.buffType=buff.type;
+      banner.title=type.name;
+      banner.style.backgroundPosition=(type.col*20)+'% '+(type.row*50)+'%';
+      chain.appendChild(banner);
+    });
+    playerBuffLayer.appendChild(chain);
+  });
+  positionBuffChains();
+  newestBuffUid=null;
+}
+function createBuff(type,cell){
+  return {
+    uid:'buff-'+Date.now().toString(36)+'-'+(buffUidCounter++).toString(36),
+    type,
+    cell,
+    createdAt:Date.now()
+  };
+}
+function addBuffToCell(type,cellIndex,{persist=true}={}){
+  type=normalizeBuffType(type);
+  const cell=Math.floor(Number(cellIndex));
+  if(!type||!Number.isFinite(cell)||cell<0||cell>=PLAYER_MAX_HP)return null;
+  if(cell>=playerHp)return null;
+  const buff=createBuff(type,cell);
+  playerBuffs.push(buff);
+  newestBuffUid=buff.uid;
+  renderPlayerBuffs();
+  if(persist&&typeof saveWorldState==='function')saveWorldState();
+  return {...buff};
+}
+function addRandomBuff(type=null,{persist=true}={}){
+  if(playerHp<=0)return null;
+  const chosenType=normalizeBuffType(type)||BUFF_TYPES[Math.floor(Math.random()*BUFF_TYPES.length)].id;
+  const cell=Math.floor(Math.random()*playerHp);
+  return addBuffToCell(chosenType,cell,{persist});
+}
+function removeLastBuff({persist=true}={}){
+  const removed=playerBuffs.pop()||null;
+  newestBuffUid=null;
+  renderPlayerBuffs();
+  if(persist&&typeof saveWorldState==='function')saveWorldState();
+  return removed?{...removed}:null;
+}
+function clearPlayerBuffs({persist=true}={}){
+  const removed=playerBuffs.length;
+  playerBuffs=[];
+  newestBuffUid=null;
+  renderPlayerBuffs();
+  if(persist&&typeof saveWorldState==='function')saveWorldState();
+  return removed;
+}
+function buffStackDepth(cell){
+  return playerBuffs.filter(buff=>buff.cell===cell).length;
+}
+function describeBuff(buff){
+  if(!buff)return '没有可用的生命格或 BUFF 类型无效。';
+  const type=BUFF_TYPE_MAP.get(buff.type);
+  return (type?.name||buff.type)+' -> 第 '+(buff.cell+1)+' 个生命格（该格第 '+buffStackDepth(buff.cell)+' 层）';
+}
+window.PaperchalkBuff={
+  types:BUFF_TYPES.map(type=>({id:type.id,name:type.name})),
+  get all(){return buffSnapshot()},
+  random(type){return addRandomBuff(type)},
+  add(type,cellIndex){return addBuffToCell(type,cellIndex)},
+  pop(){return removeLastBuff()},
+  clear(){return clearPlayerBuffs()}
+};
+
 let debugLastUiUpdate=0;
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 function updateDebugStatus(){
@@ -1284,7 +1474,8 @@ function updateDebugStatus(){
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
     '<span>时间 <b>'+worldMinutes.toFixed(1)+'</b></span>'+
     '<span>worldX <b>'+worldX.toFixed(1)+'</b></span>'+
-    '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>';
+    '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
+    '<span>BUFF <b>'+playerBuffs.length+'</b></span>';
 }
 function writeDebugOutput(message){
   debugOutput.textContent=String(message);
@@ -1328,6 +1519,13 @@ function runDebugCommand(rawCommand){
       'hp max          满血',
       'damage 2        扣 2 血',
       'heal 2          回 2 血',
+      'buff             查看当前 BUFF',
+      'buff random      随机图标 + 随机生命格',
+      'buff poison      中毒随机挂到有效生命格',
+      'buff add 3 burn  灼烧挂到第 3 个生命格',
+      'buff pop         移除最后一个 BUFF',
+      'buff clear       清空 BUFF',
+      'buff types       查看 18 种图标 ID',
       'time 60         世界时间设为 60',
       'pos             查看位置',
       'resetpos        世界位置回到 0',
@@ -1362,6 +1560,32 @@ function runDebugCommand(rawCommand){
     if(!Number.isFinite(n)||n<0)return 'heal 参数必须是非负数字';
     healPlayer(n);
     return 'HP -> '+playerHp+' / '+PLAYER_MAX_HP;
+  }
+  if(cmd==='buff'){
+    const sub=String(arg||'list').toLowerCase();
+    if(sub==='list'){
+      if(!playerBuffs.length)return '当前没有 BUFF。';
+      return playerBuffs.map((buff,i)=>{
+        const type=BUFF_TYPE_MAP.get(buff.type);
+        return (i+1)+'. '+(type?.name||buff.type)+' @ HP'+(buff.cell+1);
+      }).join('\n');
+    }
+    if(sub==='types')return BUFF_TYPES.map(type=>type.id+'='+type.name).join('  ');
+    if(sub==='random')return describeBuff(addRandomBuff(parts[2]));
+    if(sub==='add'){
+      const cell=Number(parts[2])-1;
+      const type=parts[3]||BUFF_TYPES[Math.floor(Math.random()*BUFF_TYPES.length)].id;
+      if(!Number.isInteger(cell)||cell<0||cell>=PLAYER_MAX_HP)return '用法：buff add 3 poison（生命格按 1-10 编号）';
+      if(cell>=playerHp)return '第 '+(cell+1)+' 个生命格当前为空，不能挂新 BUFF。';
+      return describeBuff(addBuffToCell(type,cell));
+    }
+    if(sub==='pop'){
+      const removed=removeLastBuff();
+      return removed?'已移除最后一个 BUFF：'+(BUFF_TYPE_MAP.get(removed.type)?.name||removed.type):'当前没有 BUFF。';
+    }
+    if(sub==='clear')return '已清空 '+clearPlayerBuffs()+' 个 BUFF。';
+    if(BUFF_TYPE_MAP.has(sub))return describeBuff(addRandomBuff(sub));
+    return '未知 BUFF 命令。例：buff random / buff add 3 poison / buff clear';
   }
   if(cmd==='time'){
     const n=Number(arg);
@@ -1410,6 +1634,20 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
     else if(action==='damage3')damagePlayer(3);
     else if(action==='zero')setPlayerHp(0);
     else if(action==='full')setPlayerHp(PLAYER_MAX_HP);
+    else if(action==='buffRandom'){
+      writeDebugOutput(describeBuff(addRandomBuff()));
+      updateDebugStatus();
+      return;
+    }else if(action==='buffPop'){
+      const removed=removeLastBuff();
+      writeDebugOutput(removed?'已移除：'+(BUFF_TYPE_MAP.get(removed.type)?.name||removed.type):'当前没有 BUFF。');
+      updateDebugStatus();
+      return;
+    }else if(action==='buffClear'){
+      writeDebugOutput('已清空 '+clearPlayerBuffs()+' 个 BUFF。');
+      updateDebugStatus();
+      return;
+    }
     updateDebugStatus();
     writeDebugOutput('HP -> '+playerHp+' / '+PLAYER_MAX_HP);
   });
@@ -1913,6 +2151,7 @@ function defaultSave(session){
     worldX:0,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
+    buffs:[],
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
@@ -2011,6 +2250,7 @@ function saveWorldState(){
   save.worldMinutes=worldMinutes;
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.playerHp=playerHp;
+  save.buffs=buffSnapshot();
   save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
@@ -2024,6 +2264,7 @@ function loadWorldState(){
   playerHp=Number.isFinite(save.playerHp)?clampPlayerHp(save.playerHp):PLAYER_MAX_HP;
   if(Number.isFinite(save.actorRatio))actorX=Math.max(innerWidth*.12,Math.min(innerWidth*.82,innerWidth*save.actorRatio));
   setInventoryFromSave(save.inventory);
+  setPlayerBuffsFromSave(save.buffs);
   renderPlayerHealth();
   renderWorld();
 }
@@ -2077,6 +2318,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
+      clearPlayerBuffs({persist:false});
       worldX=0;
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;
