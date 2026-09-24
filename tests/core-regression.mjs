@@ -107,7 +107,10 @@ try{
   check('Melee attack hitbox damages nearby enemy exactly once',
     enemyBefore.hp===3&&enemyAfter.hp===2,
     JSON.stringify({enemyBefore,enemyAfter}));
-  await page.evaluate(()=>window.PaperchalkCombat.toggleHitboxes(false));
+  await page.evaluate(()=>{
+    window.PaperchalkCombat.toggleHitboxes(false);
+    window.PaperchalkCombat.resetEnemy(1400);
+  });
 
   const healthInitial=await healthState(page);
   check('Health HUD is 10 stitched pieces',
