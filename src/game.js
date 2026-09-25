@@ -756,14 +756,27 @@ function syncViewportMetrics(){
   const layoutW=Number(document.documentElement.clientWidth)||rawW;
   const viewH=Math.max(180,Math.round(Math.min(rawH,layoutH)));
   const viewW=Math.max(280,Math.round(Math.min(rawW,layoutW)));
+  const prevW=VIEW_W,prevH=VIEW_H,prevScale=PLAYER_VISUAL.scale;
+  const rawScale=Math.min(viewW/VIEWPORT_REFERENCE.w,viewH/VIEWPORT_REFERENCE.h);
+  const viewportScale=Math.max(.82,Math.min(1.08,rawScale));
+  const playerW=Math.round(PLAYER_VISUAL_BASE.w*viewportScale*100)/100;
+  const playerH=Math.round(PLAYER_VISUAL_BASE.h*viewportScale*100)/100;
+  const controlScale=Math.max(.84,Math.min(1.06,viewportScale));
   document.documentElement.style.setProperty('--app-height',viewH+'px');
   document.documentElement.style.setProperty('--app-width',viewW+'px');
   document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
+  document.documentElement.style.setProperty('--viewport-scale',viewportScale.toFixed(4));
+  document.documentElement.style.setProperty('--control-scale',controlScale.toFixed(4));
+  document.documentElement.style.setProperty('--player-visual-w',playerW+'px');
+  document.documentElement.style.setProperty('--player-visual-h',playerH+'px');
   const nextGround=clamp(Math.round(viewH*.30),72,112);
-  const changed=nextGround!==MAP_GROUND_SCREEN_Y;
+  const groundChanged=nextGround!==MAP_GROUND_SCREEN_Y;
+  const sizeChanged=viewW!==prevW||viewH!==prevH;
+  const scaleChanged=Math.abs(viewportScale-prevScale)>.001;
   VIEW_W=viewW;VIEW_H=viewH;
   MAP_GROUND_SCREEN_Y=nextGround;
-  return changed;
+  PLAYER_VISUAL.w=playerW;PLAYER_VISUAL.h=playerH;PLAYER_VISUAL.scale=viewportScale;
+  return {groundChanged,sizeChanged,scaleChanged};
 }
 function applyWorldDimensions(){
   const width=VISUAL_WINDOW_SPAN+'px';
