@@ -417,7 +417,12 @@ try{
     JSON.stringify(interiorStage));
   const interiorDepth=await page.evaluate(()=>{
     const z=id=>Number.parseInt(getComputedStyle(document.getElementById(id)).zIndex,10);
-    const door=document.getElementById('interiorExitDoor').getBoundingClientRect();
+    const doorEl=document.getElementById('interiorExitDoor');
+    const door=doorEl.getBoundingClientRect();
+    const mid=document.getElementById('interiorMidLayer').getBoundingClientRect();
+    const scene=document.getElementById('interiorScene').getBoundingClientRect();
+    const stage=document.getElementById('world').getBoundingClientRect();
+    const cs=getComputedStyle(doorEl);
     return {
       far:z('interiorFarLayer'),
       mid:z('interiorMidLayer'),
@@ -427,7 +432,16 @@ try{
       doorGroundY:window.innerHeight-door.bottom,
       exteriorDoorX:window.PaperchalkScene.doorScreenX,
       interiorDoorX:window.PaperchalkScene.interiorDoorScreenX,
-      expectedGroundY:window.PaperchalkScene.interiorDoorGroundY
+      expectedGroundY:window.PaperchalkScene.interiorDoorGroundY,
+      geometry:{
+        inner:[window.innerWidth,window.innerHeight],
+        stage:{left:stage.left,top:stage.top,width:stage.width,height:stage.height},
+        scene:{left:scene.left,top:scene.top,width:scene.width,height:scene.height},
+        mid:{left:mid.left,top:mid.top,width:mid.width,height:mid.height},
+        door:{left:door.left,top:door.top,width:door.width,height:door.height,bottom:door.bottom},
+        inline:{left:doorEl.style.left,bottom:doorEl.style.bottom,right:doorEl.style.right,translate:doorEl.style.translate},
+        computed:{left:cs.left,bottom:cs.bottom,right:cs.right,translate:cs.translate,transform:cs.transform}
+      }
     };
   });
   check('Interior depth order is far -> mid -> player -> near',
