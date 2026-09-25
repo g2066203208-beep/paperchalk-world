@@ -136,7 +136,7 @@ try{
     Math.abs(paperGround.layerH-paperGround.groundY)<1.5&&
     Math.abs(paperGround.layerTop-(paperGround.stageH-paperGround.groundY))<1.5&&
     paperGround.background!=='none',
-    JSON.stringify(voxelGround));
+    JSON.stringify(paperGround));
 
   check('Player starts in optimized supplied idle pose',
     initialAction.player.action==='idle'&&initialAction.state==='idle'&&initialAction.src.includes('/assets/player/runtime/idle.webp'),
