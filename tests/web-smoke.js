@@ -18,7 +18,7 @@ const requiredIds = [
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
-  "entityTrack","enemy","enemy2","enemyHealthFill","enemy2HealthFill","jumpBtn","attackBtn",
+  "entityTrack","pixiEntityLayer","enemy","enemy2","enemyHealthFill","enemy2HealthFill","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
@@ -30,6 +30,10 @@ for (const id of requiredIds) {
 
 assert(html.includes('href="./styles/game.css"'), "External game stylesheet missing");
 assert(html.includes('src="./src/game.js"'), "External game runtime missing");
+assert(html.includes('src="./src/renderers/pixi-dynamic-renderer.mjs"'), "Pixi dynamic renderer module missing");
+assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
+assert(fs.existsSync("vendor/pixi/pixi-8.21.0.mjs"), "Pinned PixiJS vendor missing");
+assert(fs.existsSync("vendor/pixi/LICENSE"), "PixiJS license missing");
 new vm.Script(game);
 assert(
   /const\s+settingsBtn\s*=\s*document\.getElementById\(['"]settingsBtn['"]\)/.test(game),
@@ -49,6 +53,8 @@ assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missin
 assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
 assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
 assert(game.includes("window.PaperchalkMap"), "Map API missing");
+assert(game.includes("window.PaperchalkRuntime"), "Renderer-neutral runtime contract missing");
+assert(game.includes("refreshRuntimeFrameState"), "Allocation-free renderer frame state missing");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
   game.includes("const WORLD_ZONE_COUNT=20") &&
