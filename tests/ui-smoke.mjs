@@ -178,7 +178,7 @@ const entranceFx=await js(`(()=>{
 assert(entranceFx.playerName.includes('puppetPlayerArcOut')&&entranceFx.playerDir==='reverse','player entrance is not reverse exit '+JSON.stringify(entranceFx));
 assert(entranceFx.npcName.includes('puppetNpcArcOut')&&entranceFx.npcDir==='reverse','NPC entrance is not reverse exit '+JSON.stringify(entranceFx));
 console.log('PASS mirrored portrait entrance',entranceFx);
-await sleep(500);
+await sleep(760);
 noFaults('dialogue open');
 const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
 assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
