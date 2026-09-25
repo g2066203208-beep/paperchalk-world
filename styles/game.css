@@ -296,30 +296,31 @@ button{cursor:pointer}
 .map-object.bridge-post:after{content:"";position:absolute;left:12px;right:12px;bottom:42px;height:8px;background:#a47b4d;transform:rotate(-2deg)}
 .map-npc{
   position:absolute;bottom:var(--ground-screen-y,112px);
-  width:0;height:0;pointer-events:none;z-index:5;
+  width:64px;height:128px;pointer-events:none;z-index:5;
+  transform:translateX(-32px);
 }
 .map-npc-art{
-  position:absolute;left:0;bottom:0;display:block;
-  width:auto;height:auto;max-width:none;max-height:none;
-  object-fit:none;object-position:50% 100%;
+  position:absolute;left:50%;bottom:0;display:block;
+  width:auto;height:128px;max-width:64px;max-height:128px;
+  object-fit:contain;object-position:50% 100%;
   transform:translateX(-50%);
   transform-origin:50% 100%;
-  filter:drop-shadow(3px 7px 0 rgba(48,36,25,.14));
+  filter:drop-shadow(2px 4px 0 rgba(48,36,25,.14));
   animation:mapNpcNativeIdle 3.8s ease-in-out infinite;
   user-select:none;-webkit-user-drag:none;
 }
 .map-npc-name{
-  position:absolute;left:0;bottom:92px;transform:translateX(-50%);
+  position:absolute;left:50%;bottom:136px;transform:translateX(-50%);
   white-space:nowrap;padding:3px 7px;background:rgba(230,213,177,.92);
   border:1px solid #786244;color:#51422f;font:700 11px sans-serif;border-radius:3px;
 }
 .map-npc-prompt{
-  position:absolute;left:0;bottom:126px;transform:translateX(-50%) translateY(4px);
+  position:absolute;left:50%;bottom:168px;transform:translateX(-50%) translateY(4px);
   white-space:nowrap;padding:4px 8px;background:#40382e;color:#f0dfbe;
   font:700 11px sans-serif;border-radius:4px;opacity:0;transition:.15s;
 }
 .map-npc.is-near .map-npc-prompt{opacity:1;transform:translateX(-50%) translateY(0)}
-.map-npc.is-near .map-npc-art{filter:drop-shadow(4px 8px 0 rgba(48,36,25,.18)) brightness(1.025)}
+.map-npc.is-near .map-npc-art{filter:drop-shadow(3px 5px 0 rgba(48,36,25,.18)) brightness(1.025)}
 @keyframes mapNpcNativeIdle{
   0%,100%{transform:translateX(-50%) translateY(0) rotate(-.12deg)}
   50%{transform:translateX(-50%) translateY(-1px) rotate(.12deg)}

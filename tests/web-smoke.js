@@ -128,7 +128,8 @@ assert(game.includes("phone-girl-offline-r1.webp"), "NPC runtime is not using su
 assert(!game.includes("npc-old-crafter")&&!game.includes("白翼引路人"), "Old placeholder NPC data still present");
 assert(!html.includes("npc-portrait.js")&&!html.includes("npc-portrait-hd.svg"), "Old generated NPC portrait runtime still referenced");
 assert(!fs.existsSync("assets/dialogue/npc-portrait-hd.svg")&&!fs.existsSync("assets/dialogue/npc-portrait.js"), "Old generated NPC portrait assets still exist");
-assert(css.includes("width:auto;height:auto;max-width:none;max-height:none"), "NPC art is being geometrically scaled instead of native-size rendering");
+assert(css.includes("width:64px;height:128px"), "NPC world visual canvas is not player-matched");
+assert(css.includes("width:auto;height:128px;max-width:64px;max-height:128px"), "NPC art is not normalized to 128px visual height");
 assert(game.includes("function interactWithNpc"), "NPC interaction logic missing");
 assert(game.includes("function nearbyNpc"), "NPC proximity logic missing");
 assert(game.includes("e.code==='KeyE'"), "NPC keyboard interaction missing");

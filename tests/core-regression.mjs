@@ -351,7 +351,7 @@ try{
   check('Village NPC proximity enables talk prompt',
     npcNear.near===true&&npcNear.interactDisabled===false&&Math.abs(npcNear.playerX-760)<2&&
     npcNear.art.naturalW===326&&npcNear.art.naturalH===1002&&
-    npcNear.art.layoutW===npcNear.art.naturalW&&npcNear.art.layoutH===npcNear.art.naturalH,
+    npcNear.art.layoutH===128&&npcNear.art.layoutW>=41&&npcNear.art.layoutW<=43,
     JSON.stringify(npcNear));
   await page.keyboard.press('KeyE');
   await page.waitForTimeout(120);
