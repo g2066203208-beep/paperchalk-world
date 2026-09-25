@@ -559,6 +559,8 @@ function enterApartment(){
   exteriorReturnY=playerY;
   stageHeldActorX=actorX;
   stageHeldPlayerY=playerY;
+  cancelPlayerActionSettle();
+  cancelPlayerTurnFlip({snap:true});
   worldEl.classList.add('stage-transitioning','paper-stage-out');
   apartmentDoorPrompt?.classList.remove('is-visible');
   setTimeout(()=>{
@@ -586,6 +588,8 @@ function exitApartment(){
   sceneTransitionBusy=true;
   stageHeldActorX=actorX;
   stageHeldPlayerY=playerY;
+  cancelPlayerActionSettle();
+  cancelPlayerTurnFlip({snap:true});
   worldEl.classList.add('stage-transitioning','interior-stage-out');
   setTimeout(()=>{
     sceneLocation='outside';

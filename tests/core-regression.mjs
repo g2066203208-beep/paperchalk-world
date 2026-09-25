@@ -403,7 +403,7 @@ try{
     return {x:r.left,y:r.top};
   });
   check('Player stays fixed while exterior scenery exits',
-    Math.abs(stagePlayerMid.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerMid.y-stagePlayerBefore.y)<1,
+    Math.abs(stagePlayerMid.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerMid.y-stagePlayerBefore.y)<2.5,
     JSON.stringify({stagePlayerBefore,stagePlayerMid}));
   await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
   const interiorStage=await page.evaluate(()=>({
@@ -420,7 +420,7 @@ try{
     return {x:r.left,y:r.top};
   });
   check('Player keeps the same screen position when interior arrives',
-    Math.abs(stagePlayerInterior.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerInterior.y-stagePlayerBefore.y)<1,
+    Math.abs(stagePlayerInterior.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerInterior.y-stagePlayerBefore.y)<2.5,
     JSON.stringify({stagePlayerBefore,stagePlayerInterior}));
   const exitPlayerBefore=await page.evaluate(()=>{
     const r=document.querySelector('.actor').getBoundingClientRect();

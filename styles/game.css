@@ -2057,6 +2057,9 @@ button{cursor:pointer}
 .stage.stage-transitioning .combat-controls,
 .stage.stage-transitioning .world-map-btn,
 .stage.stage-transitioning .backpack-open-btn{pointer-events:none;opacity:.58}
+.stage.stage-transitioning .actor{animation:none!important;transition:none!important}
+.stage.stage-transitioning .walker,
+.stage.stage-transitioning .foot-shadow{animation-play-state:paused!important}
 
 .stage.paper-stage-out .paper-cloud-a{animation:paperHangExit .52s cubic-bezier(.55,.02,.86,.42) 0ms both}
 .stage.paper-stage-out .paper-celestial{animation:paperHangExit .56s cubic-bezier(.55,.02,.86,.42) 55ms both}
