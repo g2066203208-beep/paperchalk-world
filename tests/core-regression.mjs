@@ -136,11 +136,11 @@ try{
   await page.setViewportSize({width:1440,height:900});
   await page.waitForTimeout(220);
 
-  const crouchStart=await page.evaluate(()=>({
-    accepted:window.PaperchalkCombat.crouch(true),
-    flip:document.getElementById('playerFlip')?.getAnimations().length||0
-  }));
-  await page.waitForTimeout(180);
+  const crouchAccepted=await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
+  await page.waitForTimeout(35);
+  const crouchFlip=await page.evaluate(()=>document.getElementById('playerFlip')?.getAnimations().length||0);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='crouch',null,{timeout:900});
+  await page.waitForTimeout(90);
   const crouched=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
@@ -148,10 +148,10 @@ try{
     button:document.getElementById('crouchBtn')?.classList.contains('is-active')||false
   }));
   check('Crouch uses paper flip, normalized supplied pose and shorter real body',
-    crouchStart.accepted===true&&crouchStart.flip>0&&crouched.player.crouching&&crouched.player.action==='crouch'&&
+    crouchAccepted===true&&crouchFlip>0&&crouched.player.crouching&&crouched.player.action==='crouch'&&
     crouched.player.bodyH===78&&Math.abs(crouched.player.actionScale-.76)<.001&&crouched.state==='crouch'&&
     crouched.src.includes('/assets/player/runtime/crouch.webp')&&crouched.button,
-    JSON.stringify({crouchStart,crouched}));
+    JSON.stringify({crouchAccepted,crouchFlip,crouched}));
 
   await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
   await page.waitForTimeout(180);
@@ -161,7 +161,8 @@ try{
     JSON.stringify(stood));
 
   await page.keyboard.down('KeyD');
-  await page.waitForTimeout(140);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='walk',null,{timeout:900});
+  await page.waitForTimeout(45);
   const walking=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
@@ -203,6 +204,8 @@ try{
     JSON.stringify(jumpAir));
 
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.action==='jump-down',null,{timeout:1100});
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-down',null,{timeout:900});
+  await page.waitForTimeout(45);
   const jumpDown=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
