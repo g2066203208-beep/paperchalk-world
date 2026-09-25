@@ -2065,9 +2065,9 @@ button{cursor:pointer}
 .stage.paper-stage-out .paper-celestial{animation:paperHangExit .56s cubic-bezier(.55,.02,.86,.42) 55ms both}
 .stage.paper-stage-out .paper-cloud-b{animation:paperHangExit .52s cubic-bezier(.55,.02,.86,.42) 105ms both}
 .stage.paper-stage-out .paper-stars{animation:paperHangExit .48s cubic-bezier(.55,.02,.86,.42) 135ms both}
-.stage.paper-stage-out .midground-building-layer{animation:paperDropExit .66s cubic-bezier(.56,.04,.86,.47) 70ms both}
+.stage.paper-stage-out .midground-building-layer{animation:paperDropExitLayer .66s cubic-bezier(.56,.04,.86,.47) 70ms both}
 .stage.paper-stage-out .map-layer,
-.stage.paper-stage-out .entity-layer{animation:paperDropExit .58s cubic-bezier(.56,.04,.86,.47) 145ms both}
+.stage.paper-stage-out .entity-layer{animation:paperDropExitLayer .58s cubic-bezier(.56,.04,.86,.47) 145ms both}
 .stage.paper-stage-out .paper-wing{animation:paperDropExit .62s cubic-bezier(.56,.04,.86,.47) 220ms both}
 .stage.paper-stage-out .paper-stage-floor,
 .stage.paper-stage-out .paper-footlights{animation:paperDropExit .58s cubic-bezier(.56,.04,.86,.47) 265ms both}
@@ -2082,6 +2082,11 @@ button{cursor:pointer}
   0%{transform:translate3d(0,0,0);opacity:1}
   78%{opacity:1}
   100%{transform:translate3d(0,116vh,0);opacity:.08}
+}
+@keyframes paperDropExitLayer{
+  0%{translate:0 0;opacity:1}
+  78%{opacity:1}
+  100%{translate:0 116vh;opacity:.08}
 }
 @keyframes paperTintOut{to{opacity:0}}
 
@@ -2205,9 +2210,9 @@ button{cursor:pointer}
 
 .stage.exterior-stage-in .paper-stage-floor{animation:exteriorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
 .stage.exterior-stage-in .paper-wing{animation:exteriorRise .58s cubic-bezier(.14,.82,.22,1) 55ms both}
-.stage.exterior-stage-in .midground-building-layer{animation:exteriorRise .66s cubic-bezier(.14,.82,.22,1) 115ms both}
+.stage.exterior-stage-in .midground-building-layer{animation:exteriorRiseLayer .66s cubic-bezier(.14,.82,.22,1) 115ms both}
 .stage.exterior-stage-in .map-layer,
-.stage.exterior-stage-in .entity-layer{animation:exteriorRise .54s cubic-bezier(.14,.82,.22,1) 190ms both}
+.stage.exterior-stage-in .entity-layer{animation:exteriorRiseLayer .54s cubic-bezier(.14,.82,.22,1) 190ms both}
 .stage.exterior-stage-in .paper-cloud-a{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 105ms both}
 .stage.exterior-stage-in .paper-celestial{animation:paperHangEnter .60s cubic-bezier(.14,.82,.22,1) 165ms both}
 .stage.exterior-stage-in .paper-cloud-b{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 225ms both}
@@ -2215,6 +2220,7 @@ button{cursor:pointer}
 @keyframes interiorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
 @keyframes interiorDrop{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,115vh,0);opacity:.08}}
 @keyframes exteriorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
+@keyframes exteriorRiseLayer{from{translate:0 115vh;opacity:.08}to{translate:0 0;opacity:1}}
 @keyframes paperHangEnter{from{transform:translate3d(0,-118vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
 
 @media (prefers-reduced-motion:reduce){
