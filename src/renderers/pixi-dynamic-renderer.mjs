@@ -26,6 +26,8 @@ const stats={
   renderedEnemies:0,
   renderer:'',
   resolution:1,
+  renderMs:0,
+  maxRenderMs:0,
   playerScreenX:0,
   playerWorldX:0
 };
@@ -180,9 +182,13 @@ function renderEnemies(frame,now){
 }
 function renderFrame(frame=latestFrame,now=performance.now()){
   if(activeMode!=='pixi'||!frame||!app)return;
+  const started=performance.now();
   renderPlayer(frame,now);
   renderEnemies(frame,now);
   app.renderer.render(app.stage);
+  const elapsed=performance.now()-started;
+  stats.renderMs=stats.frameCount===0?elapsed:(stats.renderMs*.90+elapsed*.10);
+  stats.maxRenderMs=Math.max(stats.maxRenderMs,elapsed);
   stats.frameCount++;
 }
 async function ensurePixi(){
