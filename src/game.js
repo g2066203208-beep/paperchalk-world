@@ -487,6 +487,9 @@ const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
 const midgroundApartment=document.getElementById('midgroundApartment');
 const apartmentDoorPrompt=document.getElementById('apartmentDoorPrompt');
 const interiorScene=document.getElementById('interiorScene');
+const interiorFarLayer=document.getElementById('interiorFarLayer');
+const interiorMidLayer=document.getElementById('interiorMidLayer');
+const interiorNearLayer=document.getElementById('interiorNearLayer');
 const interiorExitDoor=document.getElementById('interiorExitDoor');
 const APARTMENT_WORLD_X=520;
 const APARTMENT_PARALLAX=.78;
@@ -495,6 +498,7 @@ const APARTMENT_DOOR_PROMPT_Y_RATIO=.43;
 let sceneLocation='outside';
 let sceneTransitionBusy=false;
 let interiorPlayerX=0;
+let interiorDoorScreenRatio=.82;
 let exteriorReturnX=MAP_SPAWN_X;
 let exteriorReturnY=0;
 let stageHeldActorX=0;
@@ -533,7 +537,29 @@ function nearbyApartmentDoor(maxDistance=78){
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
-function interiorExitX(){return VIEW_W*.82}
+function interiorExitX(){return clamp(VIEW_W*interiorDoorScreenRatio,72,Math.max(72,VIEW_W-72))}
+function syncInteriorDoorWithExterior(){
+  const x=clamp(apartmentDoorScreenX(),72,Math.max(72,VIEW_W-72));
+  interiorDoorScreenRatio=VIEW_W>0?x/VIEW_W:.82;
+  return x;
+}
+function positionInteriorExitDoor(){
+  if(!interiorExitDoor)return;
+  const rect=interiorExitDoor.getBoundingClientRect();
+  const doorW=rect.width||VIEW_W*.15;
+  interiorExitDoor.style.right='';
+  interiorExitDoor.style.left=(interiorExitX()-doorW*.5).toFixed(1)+'px';
+}
+function updateInteriorDepthLayers(){
+  if(sceneLocation!=='interior')return;
+  const normalized=VIEW_W>0?(interiorPlayerX-VIEW_W*.5)/VIEW_W:0;
+  const shift=(el,amount)=>{
+    if(el)el.style.transform='translate3d('+(-normalized*amount).toFixed(2)+'px,0,0)';
+  };
+  shift(interiorFarLayer,18);
+  shift(interiorMidLayer,32);
+  shift(interiorNearLayer,52);
+}
 function nearbyInteriorExit(maxDistance=92){
   return sceneLocation==='interior'&&!sceneTransitionBusy&&Math.abs(interiorPlayerX-interiorExitX())<=maxDistance;
 }
@@ -554,6 +580,7 @@ function clearSceneStageClasses(){
 }
 function enterApartment(){
   if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
+  syncInteriorDoorWithExterior();
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
   exteriorReturnY=playerY;
@@ -595,12 +622,15 @@ function exitApartment(){
     sceneLocation='outside';
     interiorScene?.setAttribute('aria-hidden','true');
     worldEl.classList.remove('scene-interior','interior-stage-out');
-    playerWorldX=exteriorReturnX;
     playerY=stageHeldPlayerY;
     playerVy=0;
     playerGrounded=playerY<=0;
     const maxCamera=Math.max(0,MAP_WIDTH-VIEW_W);
-    worldX=clamp(playerWorldX-stageHeldActorX,0,maxCamera);
+    const doorTargetX=interiorExitX();
+    const alignedCamera=((APARTMENT_WORLD_X+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO-doorTargetX)/APARTMENT_PARALLAX)-sceneryOffsetX;
+    worldX=clamp(alignedCamera,0,maxCamera);
+    playerWorldX=clamp(worldX+stageHeldActorX,0,MAP_WIDTH);
+    exteriorReturnX=playerWorldX;
     actorX=playerWorldX-worldX;
     worldEl.classList.add('exterior-stage-in');
     renderWorld(true);
@@ -1041,7 +1071,7 @@ updateDayNightVisuals(true);
 let actorX=Math.round(innerWidth*.35);
 let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
 let mobileCrouch=false,mobileFlightUp=false,mobileFlightDown=false;
-let joystickAxis=0;
+let joystickAxis=0,joystickFlightAxisY=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
@@ -1243,7 +1273,7 @@ function updateDebugStatus(){
     '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
-    '<span>飞行 <b>'+(debugFlightMode?'仅上下':'关')+'</b></span>'+
+    '<span>自由飞行 <b>'+(debugFlightMode?'四向':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>长任务 <b>'+perfLongTasks+' / '+perfWorstLongTask.toFixed(0)+'ms</b></span>'+
     '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
@@ -1260,7 +1290,7 @@ function updateCombatDebugButtons(){
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
   debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
-  if(debugFlightBtn){debugFlightBtn.textContent='飞行：'+(debugFlightMode?'开':'关');debugFlightBtn.classList.toggle('is-active',debugFlightMode);}
+  if(debugFlightBtn){debugFlightBtn.textContent='自由飞行：'+(debugFlightMode?'开':'关');debugFlightBtn.classList.toggle('is-active',debugFlightMode);}
   const renderer=window.PaperchalkRenderer;
   const requested=renderer?.requested||'auto';
   debugRendererAutoBtn?.classList.toggle('is-active',requested==='auto');
@@ -1301,6 +1331,7 @@ function setDebugFlightMode(enabled){
   debugFlightMode=!!enabled;
   keyboardFlightUp=keyboardFlightDown=false;
   mobileFlightUp=mobileFlightDown=false;
+  joystickFlightAxisY=0;
   playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
   playerGrounded=debugFlightMode?false:playerY<=0;
   if(playerCrouching)setPlayerCrouching(false,{force:true});
@@ -1342,8 +1373,8 @@ function runDebugCommand(rawCommand){
       'collider         开/关地形 collider',
       'spawn            开/关敌人出生区',
       'camera           开/关 Camera 调试',
-      'fly              开/关飞行（仅上下）',
-      'fly on / off     指定开启/关闭飞行',
+      'fly              开/关自由飞行（四向）',
+      'fly on / off     指定开启/关闭自由飞行',
       'ai               开/关敌人AI',
       'jump             跳跃测试',
       'attack           攻击测试',
@@ -1433,7 +1464,7 @@ function runDebugCommand(rawCommand){
   if(cmd==='fly'||cmd==='flight'){
     const target=String(arg||'toggle').toLowerCase();
     const enabled=target==='on'?setDebugFlightMode(true):target==='off'?setDebugFlightMode(false):toggleDebugFlightMode();
-    return '飞行模式 -> '+(enabled?'开启':'关闭');
+    return '自由飞行模式 -> '+(enabled?'开启':'关闭');
   }
   if(cmd==='ai')return '敌人AI -> '+(toggleEnemyAi()?'开启':'暂停');
   if(cmd==='jump'){debugJump();return 'jump'}
@@ -1493,7 +1524,7 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       writeDebugOutput('Camera 调试 -> '+(toggleCameraDebug()?'开启':'关闭'));
       updateDebugStatus();return;
     }else if(action==='flightMode'){
-      writeDebugOutput('飞行模式 -> '+(toggleDebugFlightMode()?'开启':'关闭'));
+      writeDebugOutput('自由飞行模式 -> '+(toggleDebugFlightMode()?'开启':'关闭'));
       updateDebugStatus();updateCombatDebugButtons();return;
     }else if(action==='teleportStart'){
       teleportTo(MAP_SPAWN_X,{notice:'传送：A村村口'});writeDebugOutput('playerX -> '+playerWorldX);
@@ -1543,7 +1574,9 @@ window.PaperchalkScene={
   enter:enterApartment,
   exit:exitApartment,
   get doorScreenX(){return apartmentDoorScreenX()},
-  get interiorX(){return interiorPlayerX}
+  get interiorDoorScreenX(){return interiorExitX()},
+  get interiorX(){return interiorPlayerX},
+  get depthLayers(){return {far:3,mid:4,player:5,near:6}}
 };
 window.PaperchalkDebug={
   open:openDebugPanel,
@@ -2498,6 +2531,13 @@ function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
   return joystickAxis;
 }
+function flightVerticalAxis(){
+  const buttons=((keyboardFlightUp||mobileFlightUp)?1:0)-((keyboardFlightDown||mobileFlightDown)?1:0);
+  return clamp(buttons+joystickFlightAxisY,-1,1);
+}
+function flightCeiling(){
+  return sceneLocation==='interior'?Math.max(160,VIEW_H*.62):Math.max(900,VIEW_H*3);
+}
 function setFacing(dir){
   if(!dir||dir===facing)return;
   facing=dir;
@@ -2562,9 +2602,9 @@ function renderWorld(force=false){
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
-  if(sceneLocation==='interior'&&interiorExitDoor){
-    interiorExitDoor.style.right='';
-    interiorExitDoor.style.left=(interiorExitX()-VIEW_W*.075).toFixed(1)+'px';
+  if(sceneLocation==='interior'){
+    positionInteriorExitDoor();
+    updateInteriorDepthLayers();
   }
   renderDoorPrompt();
   renderCombatDebug();
@@ -2616,7 +2656,7 @@ function frame(now){
 
   updateCrouchState();
   const rawAxis=movementAxis();
-  const axis=debugFlightMode?0:(playerCrouching?0:rawAxis);
+  const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis;
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
   if(moving!==lastMovingState){
@@ -2626,8 +2666,18 @@ function frame(now){
 
   let playerDynamic=!playerGrounded||jumpBufferTimer>0;
   if(sceneLocation==='interior'){
-    playerVy=0;jumpBufferTimer=0;coyoteTimer=COYOTE_TIME;
-    playerGrounded=playerY<=0;
+    playerVy=0;jumpBufferTimer=0;
+    if(debugFlightMode){
+      playerGrounded=false;coyoteTimer=0;
+      const vy=flightVerticalAxis();
+      if(Math.abs(vy)>.02){
+        playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
+        playerDynamic=true;
+      }
+    }else{
+      coyoteTimer=COYOTE_TIME;
+      playerGrounded=playerY<=0;
+    }
     if(moving){
       const dir=Math.sign(axis);
       setFacing(dir);
@@ -2639,9 +2689,9 @@ function frame(now){
   }else{
     if(debugFlightMode){
       playerGrounded=false;playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
-      if(keyboardFlightUp||keyboardFlightDown||mobileFlightUp||mobileFlightDown){
-        const vy=((keyboardFlightUp||mobileFlightUp)?1:0)-((keyboardFlightDown||mobileFlightDown)?1:0);
-        playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,Math.max(900,VIEW_H*3));
+      const vy=flightVerticalAxis();
+      if(Math.abs(vy)>.02){
+        playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
         playerDynamic=true;
       }
     }
@@ -2713,12 +2763,12 @@ addEventListener('keydown',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
   if(e.code==='ArrowDown'||e.code==='KeyS'){
-    if(debugFlightMode&&sceneLocation==='outside')keyboardFlightDown=true;
+    if(debugFlightMode)keyboardFlightDown=true;
     else if(sceneLocation!=='interior'){keyboardCrouch=true;updateCrouchState()}
     e.preventDefault();
   }
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){
-    if(debugFlightMode&&sceneLocation==='outside')keyboardFlightUp=true;
+    if(debugFlightMode)keyboardFlightUp=true;
     else if(sceneLocation!=='interior')jumpPlayer();
     e.preventDefault();
   }
@@ -2734,11 +2784,11 @@ addEventListener('keyup',e=>{
 interactBtn.addEventListener('pointerdown',e=>{e.preventDefault();interactWithNpc()});
 crouchBtn.addEventListener('pointerdown',e=>{
   e.preventDefault();
-  if(sceneLocation==='interior')return;
   if(debugFlightMode){
     mobileFlightDown=true;
     crouchBtn.classList.add('is-active');
   }else{
+    if(sceneLocation==='interior')return;
     mobileCrouch=true;
     updateCrouchState();
   }
@@ -2756,12 +2806,14 @@ crouchBtn.addEventListener('pointercancel',releaseMobileCrouch);
 crouchBtn.addEventListener('lostpointercapture',releaseMobileCrouch);
 jumpBtn.addEventListener('pointerdown',e=>{
   e.preventDefault();
-  if(sceneLocation==='interior')return;
   if(debugFlightMode){
     mobileFlightUp=true;
     jumpBtn.classList.add('is-active');
     try{jumpBtn.setPointerCapture(e.pointerId)}catch{}
-  }else jumpPlayer();
+  }else{
+    if(sceneLocation==='interior')return;
+    jumpPlayer();
+  }
 });
 const releaseMobileFlightUp=e=>{
   if(e)e.preventDefault();
@@ -2774,6 +2826,7 @@ jumpBtn.addEventListener('lostpointercapture',releaseMobileFlightUp);
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
   joystickAxis=0;
+  joystickFlightAxisY=0;
   joystickPointer=null;
   joystickEl.classList.remove('is-active');
   joystickEl.style.setProperty('--joy-x','0px');
@@ -2782,6 +2835,7 @@ function resetJoystick(){
 addEventListener('blur',()=>{
   keyboardLeft=keyboardRight=keyboardCrouch=keyboardFlightUp=keyboardFlightDown=false;
   mobileCrouch=mobileFlightUp=mobileFlightDown=false;
+  joystickFlightAxisY=0;
   if(playerCrouching)setPlayerCrouching(false);
   resetJoystick();
 });
@@ -2803,6 +2857,11 @@ function updateJoystick(clientX,clientY){
   const raw=dx/JOY_RADIUS;
   const a=Math.abs(raw);
   joystickAxis=a<=JOY_DEADZONE?0:Math.sign(raw)*Math.min(1,(a-JOY_DEADZONE)/(1-JOY_DEADZONE));
+  if(debugFlightMode){
+    const rawY=-dy/JOY_RADIUS;
+    const ay=Math.abs(rawY);
+    joystickFlightAxisY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
+  }else joystickFlightAxisY=0;
 }
 joystickZone.addEventListener('pointerdown',e=>{
   if(!worldInteractive()||joystickPointer!==null)return;
