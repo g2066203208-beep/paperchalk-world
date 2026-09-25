@@ -107,6 +107,53 @@ try{
     parents[0]==='entityTrack'&&parents[1]==='entityTrack',
     JSON.stringify(parents));
 
+  const initialAction=await page.evaluate(()=>({
+    player:window.PaperchalkCombat.player,
+    state:document.querySelector('.actor')?.dataset.playerState,
+    src:document.getElementById('playerSprite')?.getAttribute('src')||''
+  }));
+  check('Player starts in supplied idle pose',
+    initialAction.player.action==='idle'&&initialAction.state==='idle'&&initialAction.src.includes('/assets/player/idle.webp'),
+    JSON.stringify(initialAction));
+
+  const crouchOn=await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
+  await page.waitForTimeout(80);
+  const crouched=await page.evaluate(()=>({
+    player:window.PaperchalkCombat.player,
+    state:document.querySelector('.actor')?.dataset.playerState,
+    src:document.getElementById('playerSprite')?.getAttribute('src')||'',
+    button:document.getElementById('crouchBtn')?.classList.contains('is-active')||false
+  }));
+  check('Crouch uses supplied pose and shorter real body',
+    crouchOn===true&&crouched.player.crouching&&crouched.player.action==='crouch'&&
+    crouched.player.bodyH===78&&crouched.state==='crouch'&&
+    crouched.src.includes('/assets/player/crouch.webp')&&crouched.button,
+    JSON.stringify(crouched));
+
+  await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
+  await page.waitForTimeout(80);
+  const stood=await page.evaluate(()=>window.PaperchalkCombat.player);
+  check('Crouch release returns to standing body',
+    !stood.crouching&&stood.bodyH===108&&stood.action==='idle',
+    JSON.stringify(stood));
+
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(140);
+  const walking=await page.evaluate(()=>({
+    player:window.PaperchalkCombat.player,
+    state:document.querySelector('.actor')?.dataset.playerState,
+    src:document.getElementById('playerSprite')?.getAttribute('src')||''
+  }));
+  await page.keyboard.up('KeyD');
+  await page.waitForTimeout(80);
+  check('Walking uses newest supplied walking pose',
+    walking.player.action==='walk'&&walking.state==='walk'&&walking.src.includes('/assets/player/walk.webp'),
+    JSON.stringify(walking));
+
+  // Restore the original regression position before checking far-enemy sleep radius.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:''}));
+  await page.waitForTimeout(220);
+
   const enemyMoveBefore=await page.evaluate(()=>window.PaperchalkCombat.enemies);
   await page.waitForTimeout(420);
   const enemyMoveAfter=await page.evaluate(()=>window.PaperchalkCombat.enemies);
@@ -117,11 +164,34 @@ try{
 
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
   await page.waitForTimeout(140);
-  const jumpAir=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Jump enters airborne state',jumpStarted===true&&jumpAir.y>20&&!jumpAir.grounded,JSON.stringify(jumpAir));
+  const jumpAir=await page.evaluate(()=>({
+    player:window.PaperchalkCombat.player,
+    state:document.querySelector('.actor')?.dataset.playerState,
+    src:document.getElementById('playerSprite')?.getAttribute('src')||''
+  }));
+  check('Jump ascent uses supplied upward pose',
+    jumpStarted===true&&jumpAir.player.y>20&&!jumpAir.player.grounded&&
+    jumpAir.player.vy>0&&jumpAir.player.action==='jump-up'&&jumpAir.state==='jump-up'&&
+    jumpAir.src.includes('/assets/player/jump-up.webp'),
+    JSON.stringify(jumpAir));
+
+  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.action==='jump-down',null,{timeout:1100});
+  const jumpDown=await page.evaluate(()=>({
+    player:window.PaperchalkCombat.player,
+    state:document.querySelector('.actor')?.dataset.playerState,
+    src:document.getElementById('playerSprite')?.getAttribute('src')||''
+  }));
+  check('Jump descent switches to supplied falling pose',
+    jumpDown.player.vy<=0&&jumpDown.player.action==='jump-down'&&jumpDown.state==='jump-down'&&
+    jumpDown.src.includes('/assets/player/jump-down.webp'),
+    JSON.stringify(jumpDown));
+
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.grounded&&Math.abs(window.PaperchalkCombat.player.y)<1,null,{timeout:1800});
+  await page.waitForTimeout(60);
   const jumpLanded=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Jump returns to map ground',jumpLanded.grounded&&Math.abs(jumpLanded.y)<1,JSON.stringify(jumpLanded));
+  check('Jump landing returns to idle pose',
+    jumpLanded.grounded&&Math.abs(jumpLanded.y)<1&&jumpLanded.action==='idle',
+    JSON.stringify(jumpLanded));
 
   // All debugging lives in the visible in-game debug panel.
   await page.locator('#debugToggleBtn').click();

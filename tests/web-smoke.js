@@ -19,7 +19,7 @@ const requiredIds = [
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
-  "entityTrack","pixiEntityLayer","enemy","enemy2","enemyHealthFill","enemy2HealthFill","jumpBtn","attackBtn",
+  "entityTrack","pixiEntityLayer","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
@@ -37,6 +37,7 @@ assert(fs.existsSync("vendor/pixi/pixi-8.21.0.mjs"), "Pinned PixiJS vendor missi
 assert(fs.existsSync("vendor/pixi/LICENSE"), "PixiJS license missing");
 assert(/function autoMode\(\)\{[\s\S]*?return ['"]dom['"];[\s\S]*?\}/.test(renderer), "Mobile/desktop auto renderer parity missing");
 assert(renderer.includes("runtime?.worldData?.playerVisual"), "Pixi renderer is not using shared player visual dimensions");
+assert(renderer.includes("runtime.worldData?.playerActions"), "Pixi renderer is not using shared player action textures");
 new vm.Script(game);
 assert(
   /const\s+settingsBtn\s*=\s*document\.getElementById\(['"]settingsBtn['"]\)/.test(game),
@@ -81,6 +82,14 @@ assert(game.includes("playerWorldX"), "Player world coordinate missing");
 assert(game.includes("save.playerWorldX=playerWorldX"), "Player map position persistence missing");
 assert(game.includes("save.mapState="), "Map-state persistence missing");
 assert(game.includes("function jumpPlayer"), "Jump mechanic missing");
+assert(game.includes("const PLAYER_ACTION_ASSETS=Object.freeze"), "Player action asset map missing");
+assert(game.includes("function syncPlayerActionState"), "Player action state resolver missing");
+assert(game.includes("function setPlayerCrouching"), "Crouch state missing");
+assert(game.includes("playerVy>0?'jump-up':'jump-down'"), "Jump ascent/descent state split missing");
+assert(game.includes("e.code==='ArrowDown'||e.code==='KeyS'"), "Keyboard crouch input missing");
+for (const name of ['idle','crouch','jump-up','jump-down','walk']) {
+  assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied player action asset: '+name);
+}
 assert(game.includes("function startPlayerAttack"), "Player attack missing");
 assert(game.includes("function updateCombat"), "Realtime combat update missing");
 assert(game.includes("function rectsOverlap"), "AABB overlap function missing");

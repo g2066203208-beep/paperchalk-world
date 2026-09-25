@@ -6,8 +6,15 @@ const MAP_SPAWN_X=460;
 const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
 let MAP_GROUND_SCREEN_Y=112;
 let VIEW_W=1280,VIEW_H=720;
-const PLAYER_BODY={halfW:27,h:108};
+const PLAYER_BODY=Object.freeze({halfW:27,standH:108,crouchH:78});
 const PLAYER_VISUAL=Object.freeze({w:104,h:156});
+const PLAYER_ACTION_ASSETS=Object.freeze({
+  idle:'./assets/player/idle.webp?v=actions-r1',
+  crouch:'./assets/player/crouch.webp?v=actions-r1',
+  'jump-up':'./assets/player/jump-up.webp?v=actions-r1',
+  'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
+  walk:'./assets/player/walk.webp?v=actions-r1'
+});
 const WORLD_NODES=[
   {id:'village',name:'A村',x:170,y:650,kind:'village'},
   {id:'meadowFork',name:'风草岔口',x:450,y:640,kind:'junction'},
@@ -560,7 +567,7 @@ const dialogueSkip=document.getElementById('dialogueSkip');
 dialoguePlayerArt.src='./assets/dialogue/player-portrait-hd.svg?v=1';
 dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
-  else dialoguePlayerArt.src='./assets/traveler.webp?v=traveler-r3';
+  else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
 dialogueNpcArt.src='./assets/dialogue/npc-portrait-hd.svg?v=1';
 dialogueNpcArt.addEventListener('error',()=>{
@@ -574,6 +581,44 @@ const dialoguePortraitDecode=Promise.allSettled(
   return result;
 });
 const actorEl=document.querySelector('.actor');
+const playerSprite=document.getElementById('playerSprite');
+const playerActionPreloads=new Map();
+let playerActionAssetsReady=false;
+function preloadPlayerActionAssets(){
+  if(playerActionAssetsReady)return Promise.resolve();
+  const jobs=Object.entries(PLAYER_ACTION_ASSETS).map(([state,src])=>{
+    if(playerActionPreloads.has(state))return playerActionPreloads.get(state);
+    const img=new Image();
+    img.decoding='async';
+    img.src=src;
+    const job=(typeof img.decode==='function'?img.decode():new Promise((resolve,reject)=>{
+      img.addEventListener('load',resolve,{once:true});
+      img.addEventListener('error',reject,{once:true});
+    })).catch(()=>null);
+    playerActionPreloads.set(state,job);
+    return job;
+  });
+  return Promise.allSettled(jobs).then(()=>{playerActionAssetsReady=true});
+}
+function setPlayerActionState(state,force=false){
+  if(!PLAYER_ACTION_ASSETS[state])state='idle';
+  if(!force&&state===playerActionState)return false;
+  playerActionState=state;
+  actorEl.dataset.playerState=state;
+  const src=PLAYER_ACTION_ASSETS[state];
+  if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
+  return true;
+}
+function resolvePlayerActionState(){
+  if(playerCrouching&&playerGrounded)return 'crouch';
+  if(!playerGrounded)return playerVy>0?'jump-up':'jump-down';
+  if(lastMovingState)return 'walk';
+  return 'idle';
+}
+function syncPlayerActionState(force=false){
+  return setPlayerActionState(resolvePlayerActionState(),force);
+}
+window.addEventListener('paperchalk-world-enter',()=>{preloadPlayerActionAssets()});
 actorEl.style.width=PLAYER_VISUAL.w+'px';
 actorEl.style.height=PLAYER_VISUAL.h+'px';
 actorEl.style.setProperty('--player-visual-w',PLAYER_VISUAL.w+'px');
@@ -637,6 +682,7 @@ const enemyHealthFill=document.getElementById('enemyHealthFill');
 const enemy2El=document.getElementById('enemy2');
 const enemy2HealthFill=document.getElementById('enemy2HealthFill');
 const interactBtn=document.getElementById('interactBtn');
+const crouchBtn=document.getElementById('crouchBtn');
 const jumpBtn=document.getElementById('jumpBtn');
 const attackBtn=document.getElementById('attackBtn');
 const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
@@ -815,18 +861,21 @@ let worldMinutes=0;
 let worldTimeScale=1;
 updateDayNightVisuals(true);
 let actorX=Math.round(innerWidth*.35);
-let keyboardLeft=false,keyboardRight=false;
+let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false;
+let mobileCrouch=false;
 let joystickAxis=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
 let playerY=0,playerVy=0,playerGrounded=true;
+let playerCrouching=false;
+let playerActionState='idle';
 let coyoteTimer=0,jumpBufferTimer=0;
 let playerAttackTimer=0,playerAttackCooldown=0,playerInvuln=0;
 const playerAttackHits=new Set();
 const GRAVITY=1850,JUMP_SPEED=820;
 const COYOTE_TIME=.12,JUMP_BUFFER_TIME=.14,AUTO_MANTLE_WINDOW=72;
-const PLAYER_HURT={w:54,h:108,ox:-27,oy:8};
+const PLAYER_HURT={w:54,standH:108,crouchH:78,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
 const ENEMY_MAX_HP=3;
 function createEnemyState(id,el,healthEl){
@@ -1401,8 +1450,10 @@ function tryLeaveCurrentRoute(side,moveDir){
 
 function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function playerBodyHeight(){return playerCrouching?PLAYER_BODY.crouchH:PLAYER_BODY.standH}
+function playerHurtHeight(){return playerCrouching?PLAYER_HURT.crouchH:PLAYER_HURT.standH}
 function playerWorldPos(){return {x:playerWorldX,y:playerY}}
-function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:PLAYER_HURT.h}}
+function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:playerHurtHeight()}}
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
 function activeSolidRects(centerX=playerWorldX,radius=900){
   const minX=centerX-radius,maxX=centerX+radius;
@@ -1422,6 +1473,50 @@ function activeSolidRects(centerX=playerWorldX,radius=900){
   return out;
 }
 function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
+function canStandUp(){
+  const body={x:playerWorldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.standH};
+  for(const r of activeSolidRects()){
+    if(r.oneWay)continue;
+    if(body.x+body.w<=r.x+1||body.x>=r.x+r.w-1)continue;
+    if(body.y+body.h<=r.y+1||body.y>=r.y+r.h-1)continue;
+    return false;
+  }
+  return true;
+}
+function setPlayerCrouching(active,{force=false}={}){
+  active=!!active;
+  if(active){
+    if(!force&&(!playerGrounded||playerAttackTimer>0))return false;
+    if(playerCrouching)return true;
+    playerCrouching=true;
+    actorEl.classList.add('is-crouching');
+    crouchBtn?.classList.add('is-active');
+    syncPlayerActionState(true);
+    return true;
+  }
+  if(!playerCrouching)return true;
+  if(!force&&!canStandUp())return false;
+  playerCrouching=false;
+  actorEl.classList.remove('is-crouching');
+  crouchBtn?.classList.remove('is-active');
+  syncPlayerActionState(true);
+  return true;
+}
+function updateCrouchState(){
+  const requested=keyboardCrouch||mobileCrouch;
+  if(requested&&playerGrounded&&!playerAttackTimer)setPlayerCrouching(true);
+  else if(!requested&&playerCrouching)setPlayerCrouching(false);
+  if(!playerGrounded&&playerCrouching)setPlayerCrouching(false,{force:true});
+}
+function resetPlayerPoseState(){
+  keyboardCrouch=false;
+  mobileCrouch=false;
+  playerCrouching=false;
+  lastMovingState=false;
+  actorEl.classList.remove('is-crouching','is-jumping','is-moving');
+  crouchBtn?.classList.remove('is-active');
+  setPlayerActionState('idle',true);
+}
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
@@ -1438,8 +1533,8 @@ function movePlayerHorizontal(dx){
     return crossed?dx:playerWorldX-oldX;
   }
   let nextX=clamp(requested,bounds.left,bounds.right);
-  const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
-  const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
+  const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:playerBodyHeight()};
+  const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:playerBodyHeight()};
   for(const r of activeSolidRects()){
     if(r.oneWay)continue;
     const vertical=proposed.y<r.y+r.h-1&&proposed.y+proposed.h>r.y+1;
@@ -1474,11 +1569,13 @@ function supportAt(x,y,tolerance=3){
   return support;
 }
 function performJump(){
+  if(playerCrouching)setPlayerCrouching(false,{force:true});
   playerVy=JUMP_SPEED;
   playerGrounded=false;
   coyoteTimer=0;
   jumpBufferTimer=0;
   actorEl.classList.add('is-jumping');
+  syncPlayerActionState(true);
 }
 function updatePlayerVertical(dt,interactive){
   if(!interactive)return;
@@ -1513,13 +1610,13 @@ function updatePlayerVertical(dt,interactive){
       return;
     }
   }else{
-    const oldHead=oldY+PLAYER_BODY.h;
-    const nextHead=nextY+PLAYER_BODY.h;
+    const oldHead=oldY+playerBodyHeight();
+    const nextHead=nextY+playerBodyHeight();
     for(const r of solids){
       if(r.oneWay)continue;
       if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
       if(oldHead<=r.y+2&&nextHead>=r.y){
-        nextY=r.y-PLAYER_BODY.h;playerVy=0;break;
+        nextY=r.y-playerBodyHeight();playerVy=0;break;
       }
     }
   }
@@ -1555,6 +1652,10 @@ function updateCamera(){
 }
 function jumpPlayer(force=false){
   if(!force&&!worldInteractive())return false;
+  if(playerCrouching){
+    if(!force&&!canStandUp())return false;
+    setPlayerCrouching(false,{force:true});
+  }
   jumpBufferTimer=JUMP_BUFFER_TIME;
   if(force||playerGrounded||coyoteTimer>0){performJump();return true}
   return true;
@@ -1565,6 +1666,13 @@ function startPlayerAttack(force=false){
 }
 function debugJump(){return jumpPlayer(true)}
 function debugAttack(){return startPlayerAttack(true)}
+function setCrouchControl(active=true){
+  mobileCrouch=!!active;
+  updateCrouchState();
+  syncPlayerActionState(true);
+  renderWorld(true);
+  return playerCrouching;
+}
 function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
 function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
 function setEnemyVisual(e,force=false){
@@ -1894,7 +2002,7 @@ function updateMapInteractions(){
 function teleportTo(x,{notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
-  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
+  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
   lastInteractionX=NaN;lastInteractionY=NaN;
   updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
@@ -1965,11 +2073,11 @@ window.PaperchalkMap={
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
 };
 window.PaperchalkCombat={
-  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,placeEnemyNear,resetMapEnemies,
+  jump:jumpPlayer,attack:startPlayerAttack,crouch:setCrouchControl,resetEnemy,placeEnemyNear,resetMapEnemies,
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
   get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
   get enemies(){return enemies.map(e=>({id:e.id,x:e.x,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
-  get player(){return {x:playerWorldX,y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}},
+  get player(){return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
@@ -1985,8 +2093,9 @@ const runtimeFrameState={
   time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
   route:{index:0,id:'',biome:'meadow',orientation:1},
   player:{
-    x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
-    grounded:playerGrounded,moving:false,attacking:false,attackTimer:0,invulnerable:false
+    x:playerWorldX,y:playerY,vy:playerVy,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+    grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,
+    moving:false,attacking:false,attackTimer:0,invulnerable:false
   },
   enemies:enemies.map(e=>({
     id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
@@ -2004,8 +2113,9 @@ function refreshRuntimeFrameState(){
   s.camera.x=worldX;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
-  s.player.x=playerWorldX;s.player.y=playerY;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.x=playerWorldX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
   s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
+  s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
   s.player.invulnerable=playerInvuln>0;
   for(let i=0;i<enemies.length;i++){
@@ -2053,7 +2163,8 @@ window.PaperchalkRuntime={
     pickups:MAP_PICKUPS,
     npcs:MAP_NPCS,
     enemySpawns:ENEMY_SPAWNS,
-    playerVisual:PLAYER_VISUAL
+    playerVisual:PLAYER_VISUAL,
+    playerActions:PLAYER_ACTION_ASSETS
   }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
@@ -2161,7 +2272,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:''};
+const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -2184,6 +2295,7 @@ function renderWorld(force=false){
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
   const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
+  const actorAir=playerY.toFixed(2)+'px';
   if(!pixiDynamicActive()){
     if(force||renderCache.actorLeft!==actorLeft){
       renderCache.actorLeft=actorLeft;
@@ -2192,6 +2304,10 @@ function renderWorld(force=false){
     if(force||renderCache.actorBottom!==actorBottom){
       renderCache.actorBottom=actorBottom;
       actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
+    }
+    if(force||renderCache.actorAir!==actorAir){
+      renderCache.actorAir=actorAir;
+      actorEl.style.setProperty('--player-air-y',actorAir);
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
@@ -2242,7 +2358,9 @@ function frame(now){
     return;
   }
 
-  const axis=movementAxis();
+  updateCrouchState();
+  const rawAxis=movementAxis();
+  const axis=playerCrouching?0:rawAxis;
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
   if(moving!==lastMovingState){
@@ -2267,6 +2385,7 @@ function frame(now){
 
   if(playerDynamic)updatePlayerVertical(dt,true);
   if(playerDynamic)updateCamera();
+  const actionChanged=syncPlayerActionState();
 
   let combatTick=false;
   if(hasNearbyCombat(now)){
@@ -2290,7 +2409,7 @@ function frame(now){
     updateMapInteractions();
   }
 
-  if(playerDynamic||combatTick||showHitboxes||showAttackRange)renderWorld();
+  if(playerDynamic||combatTick||actionChanged||showHitboxes||showAttackRange)renderWorld();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
@@ -2316,6 +2435,7 @@ addEventListener('keydown',e=>{
   if(isEditableTarget(e.target)||!worldInteractive())return;
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){jumpPlayer();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
@@ -2323,8 +2443,23 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardCrouch=false;updateCrouchState();e.preventDefault()}
 });
 interactBtn.addEventListener('pointerdown',e=>{e.preventDefault();interactWithNpc()});
+crouchBtn.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  mobileCrouch=true;
+  try{crouchBtn.setPointerCapture(e.pointerId)}catch{}
+  updateCrouchState();
+});
+const releaseMobileCrouch=e=>{
+  if(e)e.preventDefault();
+  mobileCrouch=false;
+  updateCrouchState();
+};
+crouchBtn.addEventListener('pointerup',releaseMobileCrouch);
+crouchBtn.addEventListener('pointercancel',releaseMobileCrouch);
+crouchBtn.addEventListener('lostpointercapture',releaseMobileCrouch);
 jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jumpPlayer()});
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
@@ -2335,7 +2470,9 @@ function resetJoystick(){
   joystickEl.style.setProperty('--joy-y','0px');
 }
 addEventListener('blur',()=>{
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardCrouch=false;
+  mobileCrouch=false;
+  if(playerCrouching)setPlayerCrouching(false);
   resetJoystick();
 });
 
@@ -3156,6 +3293,7 @@ function loadWorldState(){
   playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
   if(!playerGrounded){playerY=0;playerGrounded=true}
+  resetPlayerPoseState();
 
   const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
   mapState.broken=new Set(Array.isArray(savedMap.broken)?savedMap.broken:[]);
@@ -3227,7 +3365,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
+      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
