@@ -9,7 +9,6 @@ on:
       - "styles/**"
       - "tests/web-smoke.js"
       - "tests/performance-budget.mjs"
-      - "tests/performance-budget.mjs"
       - ".github/workflows/web-smoke.yml"
   pull_request:
     paths:
@@ -17,6 +16,8 @@ on:
       - "src/**"
       - "styles/**"
       - "tests/web-smoke.js"
+      - "tests/performance-budget.mjs"
+      - ".github/workflows/web-smoke.yml"
 
 permissions:
   contents: read
