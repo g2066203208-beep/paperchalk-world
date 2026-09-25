@@ -257,29 +257,6 @@ button{cursor:pointer}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
 .map-track{position:absolute;left:0;top:0;height:100%;width:var(--world-width,6000px);will-change:transform}
-.world-block-track{position:absolute;inset:0;z-index:0;pointer-events:none}
-.world-block{
-  --block-road-x:0px;
-  position:absolute;width:128px;height:128px;box-sizing:border-box;pointer-events:none;
-  border-right:3px solid rgba(48,36,29,.34);
-  border-bottom:3px solid rgba(43,33,28,.30);
-  background:
-    radial-gradient(circle at 20% 46%,rgba(238,211,165,.11) 0 2px,transparent 2.8px),
-    radial-gradient(circle at 72% 68%,rgba(50,37,29,.18) 0 2.4px,transparent 3.2px),
-    linear-gradient(90deg,rgba(255,236,198,.06),transparent 18%,transparent 78%,rgba(36,28,24,.16)),
-    linear-gradient(to bottom,#816342 0 22%,#705137 23% 64%,#5b4333 100%);
-  box-shadow:inset 0 -16px 20px rgba(35,27,23,.12),inset 5px 0 0 rgba(255,235,195,.035)
-}
-.world-block.is-surface::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:30px;
-  background-image:url("../assets/road/user-road-surface-r1.webp?v=editable-blocks-r7");
-  background-repeat:repeat-x;background-size:512px 80px;
-  background-position:var(--block-road-x) 43%;
-  border-bottom:2px solid rgba(45,40,38,.34)
-}
-.world-block.is-placed{filter:brightness(1.035) saturate(.94)}
-/* The editable block layer is now the visible ground; keep the legacy pooled road only for sizing. */
-.road-surface,.road-track{opacity:0!important}
 .terrain-piece,.map-object,.map-landmark,.pickup{position:absolute;pointer-events:none}
 .terrain-piece{bottom:112px;box-sizing:border-box}
 .terrain-piece.platform{
@@ -482,9 +459,6 @@ button{cursor:pointer}
 .combat-btn{width:64px;height:58px;border:1px solid rgba(79,60,39,.36);background:rgba(235,218,181,.90);color:#584936;font-weight:800;font-size:15px;border-radius:48% 52% 46% 54%;box-shadow:4px 5px 0 rgba(55,42,28,.13);touch-action:manipulation}
 .combat-btn:active{transform:translateY(2px) scale(.96)}
 .combat-btn.is-active{background:rgba(92,78,57,.92);color:#f2e6c8;box-shadow:inset 0 0 0 2px rgba(255,255,255,.10),2px 3px 0 rgba(55,42,28,.18)}
-.combat-btn.build-btn{position:relative;width:58px}
-.combat-btn.build-btn small{font:800 9px/1 system-ui,sans-serif;margin-left:2px;vertical-align:1px;opacity:.78}
-.combat-btn.build-btn.is-empty{opacity:.52}
 @media (hover:none),(pointer:coarse){.combat-controls{display:flex}}
 .combat-debug-box{position:absolute;z-index:60;display:none;pointer-events:none;box-sizing:border-box;border:2px solid}
 .combat-debug-box[hidden]{display:none!important}

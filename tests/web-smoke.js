@@ -80,19 +80,13 @@ assert(!css.includes("transform:rotateX(68deg) translateZ(-30px)"), "Perspective
 assert(css.includes("user-road-surface-r1.webp"), "Supplied painted road texture is not active");
 assert(fs.existsSync("assets/road/user-road-surface-r1.webp"), "Supplied road texture asset missing");
 assert(html.includes('id="roadSurface" class="road-surface"'), "Dedicated road surface layer missing");
-assert(html.includes('id="worldBlockTrack"'), "Editable world block layer missing");
-assert(html.includes('id="mineBtn"') && html.includes('id="placeBtn"'), "Mine/place mobile controls missing");
-assert(css.includes(".world-block{"), "Editable block visuals missing");
-assert(game.includes("const WORLD_BLOCK_SIZE=128"), "128px block grid missing");
-assert(game.includes("function mineWorldBlock"), "Mining logic missing");
-assert(game.includes("function placeWorldBlock"), "Placement logic missing");
-assert(game.includes("appendWorldBlockSolids(out,minX,maxX)"), "Block collision integration missing");
-assert(!game.includes("if(oldY>=0&&nextY<=0)landing=Math.max(0,landing??0)"), "Legacy infinite ground collision still active");
-assert(game.includes("save.blockWorld=blockWorldSnapshot()"), "Editable block persistence missing");
-
 assert(css.includes(".road-surface{"), "Road surface CSS missing");
 assert(css.includes("background-repeat:repeat-x"), "Road surface must repeat horizontally");
 assert(game.includes("const roadSurface=document.getElementById('roadSurface')"), "Road surface DOM binding missing");
+assert(!html.includes('worldBlockTrack'), "Voxel/block world layer must stay removed");
+assert(!css.includes(".world-block{"), "Voxel/block ground visuals must stay removed");
+assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay removed");
+assert(!html.includes('id="mineBtn"') && !html.includes('id="placeBtn"'), "Voxel mine/place controls must stay removed");
 assert(game.includes("setProperty('--road-surface-x'"), "Road surface is not world-anchored");
 const androidMain=fs.readFileSync("android-app/app/src/main/java/com/paperchalk/world/MainActivity.java","utf8");
 assert(androidMain.includes("?androidLaunch="), "Android app must cache-bust the HTML shell on every launch");
