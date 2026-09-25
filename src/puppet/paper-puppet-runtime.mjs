@@ -124,6 +124,19 @@ class CardPuppet{
   setAction(action){
     if(action!==this.action)this._applyCard(action,false);
   }
+  setDisplaySize(w,h){
+    w=Math.max(1,num(w,this.displayW));
+    h=Math.max(1,num(h,this.displayH));
+    if(Math.abs(w-this.displayW)<.01&&Math.abs(h-this.displayH)<.01)return;
+    this.displayW=w;this.displayH=h;
+    const tex=this.sprite.texture;
+    if(tex){
+      this.baseFitX=this.displayW/Math.max(1,num(tex.width,1));
+      this.baseFitY=this.displayH/Math.max(1,num(tex.height,1));
+    }
+    this.stats.displayW=this.displayW*this.currentScale;
+    this.stats.displayH=this.displayH*this.currentScale;
+  }
   update(state,dt,now){
     this.setAction(state.action||'idle');
     const t=(now||performance.now())*.001;
@@ -154,6 +167,9 @@ class CardPuppet{
     this.root.x=this.xSpring.step(targetX,dt,10,.90);
     this.root.y=this.ySpring.step(targetY,dt,10,.92);
     this.stats.scale=this.currentScale;
+    this.stats.targetScale=this.targetScale;
+    this.stats.displayW=this.displayW*this.currentScale;
+    this.stats.displayH=this.displayH*this.currentScale;
     return this.stats;
   }
   destroy(){this.root.destroy({children:true})}
@@ -200,14 +216,21 @@ class LayeredPuppet{
     this.root.sortChildren();
     const design=manifest.designSize||{};
     const display=manifest.displaySize||design;
-    const dw=Math.max(1,num(design.w,display.w||104));
-    const dh=Math.max(1,num(design.h,display.h||156));
-    const ow=Math.max(1,num(display.w,dw));
-    const oh=Math.max(1,num(display.h,dh));
-    this.root.scale.set(ow/dw,oh/dh);
-    this.stats={layers:this.layers.length,mode:'layered',action:'idle',displayW:ow,displayH:oh};
+    this.designW=Math.max(1,num(design.w,display.w||104));
+    this.designH=Math.max(1,num(design.h,display.h||156));
+    this.displayW=Math.max(1,num(display.w,this.designW));
+    this.displayH=Math.max(1,num(display.h,this.designH));
+    this.root.scale.set(this.displayW/this.designW,this.displayH/this.designH);
+    this.stats={layers:this.layers.length,mode:'layered',action:'idle',displayW:this.displayW,displayH:this.displayH};
   }
   setAction(action){this.action=action||'idle';this.stats.action=this.action}
+  setDisplaySize(w,h){
+    this.displayW=Math.max(1,num(w,this.displayW));
+    this.displayH=Math.max(1,num(h,this.displayH));
+    this.root.scale.set(this.displayW/this.designW,this.displayH/this.designH);
+    this.stats.displayW=this.displayW;
+    this.stats.displayH=this.displayH;
+  }
   update(state,dt,now){
     this.setAction(state.action);
     const t=(now||performance.now())*.001;
