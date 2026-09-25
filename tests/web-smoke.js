@@ -102,12 +102,19 @@ assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing")
 assert(css.includes("width:calc(var(--player-visual-h,156px) * 5)"), "Apartment width is not tied to player scale");
 assert(css.includes("height:calc(var(--player-visual-h,156px) * 6.6667)"), "Apartment height is not tied to player scale");
 assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missing");
-assert(fs.existsSync("assets/backgrounds/mountain-background.svg"), "Mountain background runtime asset missing");
-assert(html.includes('id="mountainBackground"'), "Mountain background layer missing");
-assert(css.includes(".mountain-background-layer::before{"), "Mountain responsive visual layer missing");
-assert(css.includes("background-size:auto clamp(240px,62vh,520px)"), "Mountain responsive scaling rule missing");
+assert(fs.existsSync("assets/backgrounds/mountain-paper-r13.webp"), "Supplied paper mountain runtime asset missing");
+assert(fs.existsSync("assets/backgrounds/sun-paper-r13.webp"), "Supplied paper sun asset missing");
+assert(fs.existsSync("assets/backgrounds/moon-paper-r13.webp"), "Supplied paper moon asset missing");
+assert(fs.existsSync("assets/backgrounds/cloud-paper-r13.webp"), "Supplied paper cloud asset missing");
+assert(html.includes('id="mountainBackgroundTrack"'), "Mountain parallax track missing");
+assert((html.match(/mountain-background-tile/g)||[]).length===6, "Mountain loop must use six mirrored paper tiles");
+assert(css.includes("bottom:calc(var(--ground-screen-y,112px) - 48px)"), "Mountain foot is not buried below the ground seam");
+assert(css.includes("height:clamp(215px,46vh,340px)"), "Mountain responsive scale is not tuned as far scenery");
 assert(game.includes("const MOUNTAIN_PARALLAX=.16"), "Mountain parallax factor missing");
-assert(game.includes("sceneryX*MOUNTAIN_PARALLAX"), "Mountain parallax is not driven by camera scroll");
+assert(game.includes("mountainPairWidth"), "Mountain mirrored repeat width is not measured");
+assert(game.includes("writeTransform(mountainBackgroundTrack,'mountain',mountainT)"), "Mountain parallax track is not camera driven");
+assert(html.includes("sun-paper-r13.webp")&&html.includes("moon-paper-r13.webp")&&html.includes("cloud-paper-r13.webp"), "Paper sky props are not mounted");
+assert(css.includes(".paper-cloud::before")&&css.includes(".paper-celestial::before"), "Hanging lines for sky props are missing");
 
 assert(!css.includes(".world-block{"), "Voxel/block ground visuals must stay removed");
 assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay removed");
