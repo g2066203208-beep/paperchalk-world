@@ -590,9 +590,14 @@ const dialoguePortraitDecode=Promise.allSettled(
   return result;
 });
 const actorEl=document.querySelector('.actor');
+const playerFlip=document.getElementById('playerFlip');
 const playerSprite=document.getElementById('playerSprite');
 const playerActionPreloads=new Map();
+const playerReducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let playerActionAssetsReady=false;
+let playerFlipRevision=0;
+let playerDomActionState='idle';
+function playerActionMeta(state){return PLAYER_ACTION_META[state]||PLAYER_ACTION_META.idle}
 function preloadPlayerActionAssets(){
   if(playerActionAssetsReady)return Promise.resolve();
   const jobs=Object.entries(PLAYER_ACTION_ASSETS).map(([state,src])=>{
@@ -609,13 +614,54 @@ function preloadPlayerActionAssets(){
   });
   return Promise.allSettled(jobs).then(()=>{playerActionAssetsReady=true});
 }
+function applyPlayerActionVisual(state){
+  const meta=playerActionMeta(state);
+  actorEl.dataset.playerState=state;
+  actorEl.style.setProperty('--action-scale',String(meta.scale));
+  actorEl.style.setProperty('--source-facing',String(meta.sourceFacing));
+  const src=PLAYER_ACTION_ASSETS[state]||PLAYER_ACTION_ASSETS.idle;
+  if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
+  playerDomActionState=state;
+}
+function cancelPlayerPaperFlip(){
+  playerFlipRevision++;
+  if(!playerFlip)return;
+  for(const animation of playerFlip.getAnimations())animation.cancel();
+  playerFlip.style.removeProperty('transform');
+}
+function startPlayerPaperFlip(state){
+  const token=++playerFlipRevision;
+  if(!playerFlip||playerReducedMotion.matches||!playerActionAssetsReady){
+    applyPlayerActionVisual(state);
+    return;
+  }
+  for(const animation of playerFlip.getAnimations())animation.cancel();
+  const out=playerFlip.animate([
+    {transform:'perspective(260px) rotateY(0deg) scaleX(1)'},
+    {transform:'perspective(260px) rotateY(86deg) scaleX(.10)'}
+  ],{duration:58,easing:'cubic-bezier(.32,.02,.68,.98)',fill:'forwards'});
+  out.finished.then(()=>{
+    if(token!==playerFlipRevision)return;
+    applyPlayerActionVisual(state);
+    const incoming=playerFlip.animate([
+      {transform:'perspective(260px) rotateY(-86deg) scaleX(.10)'},
+      {transform:'perspective(260px) rotateY(0deg) scaleX(1)'}
+    ],{duration:72,easing:'cubic-bezier(.18,.76,.22,1)',fill:'forwards'});
+    return incoming.finished;
+  }).then(()=>{
+    if(token===playerFlipRevision)playerFlip.style.removeProperty('transform');
+  }).catch(()=>{});
+}
 function setPlayerActionState(state,force=false){
   if(!PLAYER_ACTION_ASSETS[state])state='idle';
   if(!force&&state===playerActionState)return false;
   playerActionState=state;
-  actorEl.dataset.playerState=state;
-  const src=PLAYER_ACTION_ASSETS[state];
-  if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
+  if(force){
+    cancelPlayerPaperFlip();
+    applyPlayerActionVisual(state);
+  }else{
+    startPlayerPaperFlip(state);
+  }
   return true;
 }
 function resolvePlayerActionState(){
@@ -627,11 +673,14 @@ function resolvePlayerActionState(){
 function syncPlayerActionState(force=false){
   return setPlayerActionState(resolvePlayerActionState(),force);
 }
+function schedulePlayerActionWarmup(){
+  const warm=()=>{preloadPlayerActionAssets()};
+  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:900});
+  else setTimeout(warm,160);
+}
+applyPlayerActionVisual('idle');
+schedulePlayerActionWarmup();
 window.addEventListener('paperchalk-world-enter',()=>{preloadPlayerActionAssets()});
-actorEl.style.width=PLAYER_VISUAL.w+'px';
-actorEl.style.height=PLAYER_VISUAL.h+'px';
-actorEl.style.setProperty('--player-visual-w',PLAYER_VISUAL.w+'px');
-actorEl.style.setProperty('--player-visual-h',PLAYER_VISUAL.h+'px');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
