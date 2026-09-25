@@ -176,10 +176,10 @@ try{
     src:document.getElementById('playerSprite')?.getAttribute('src')||'',
     button:document.getElementById('crouchBtn')?.classList.contains('is-active')||false
   }));
-  const crouchHasSoftScale=crouchTransition.some(k=>k.scale&&k.scale!=='none');
+  const crouchHasScaleTransition=crouchTransition.some(k=>k.scale&&k.scale!=='none');
   const crouchHasFullFlip=crouchTransition.some(k=>String(k.transform||'').includes('rotateY'));
-  check('Crouch uses soft settle without full paper flip',
-    crouchAccepted===true&&crouchHasSoftScale&&!crouchHasFullFlip&&crouched.player.crouching&&crouched.player.action==='crouch'&&
+  check('Crouch swaps directly without shrinking the standing card',
+    crouchAccepted===true&&!crouchHasScaleTransition&&!crouchHasFullFlip&&crouched.player.crouching&&crouched.player.action==='crouch'&&
     crouched.player.bodyH===78&&Math.abs(crouched.player.actionScale-.76)<.001&&crouched.state==='crouch'&&
     crouched.src.includes('/assets/player/runtime/crouch.webp')&&crouched.button,
     JSON.stringify({crouchAccepted,crouchTransition,crouched}));
