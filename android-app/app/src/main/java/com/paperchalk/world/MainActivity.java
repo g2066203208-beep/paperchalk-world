@@ -6,7 +6,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.webkit.RenderProcessGoneDetail;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -40,8 +42,9 @@ public class MainActivity extends Activity {
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
 
-            // Always fetch the newest GitHub Pages build.
-            settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+            // Reuse HTTP/image/script caches. Clearing them on every launch caused repeated
+            // download, SVG decode and GPU uploads on mobile.
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
             settings.setMediaPlaybackRequiresUserGesture(false);
             settings.setSupportZoom(false);
             settings.setBuiltInZoomControls(false);
@@ -49,17 +52,24 @@ public class MainActivity extends Activity {
             settings.setLoadWithOverviewMode(true);
             settings.setUseWideViewPort(true);
 
-            webView.setWebViewClient(new WebViewClient());
+            webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
+            webView.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+                    // Recover from a Chromium renderer crash/OOM instead of leaving a dead surface.
+                    ViewGroup parent = (ViewGroup) view.getParent();
+                    if (parent != null) parent.removeView(view);
+                    view.destroy();
+                    webView = null;
+                    recreate();
+                    return true;
+                }
+            });
             webView.setWebChromeClient(new WebChromeClient());
-
-            // Clear HTTP/cache files only. localStorage remains intact for game/session data.
-            webView.clearCache(true);
             webView.clearHistory();
 
             setContentView(webView);
-
-            // A unique query string prevents stale index.html from being reused by WebView/CDN.
-            webView.loadUrl(GAME_URL + "?app=" + System.currentTimeMillis());
+            webView.loadUrl(GAME_URL);
 
         } catch (Throwable t) {
             TextView error = new TextView(this);
@@ -97,6 +107,19 @@ public class MainActivity extends Activity {
     protected void onPause() {
         if (webView != null) webView.onPause();
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (webView != null) {
+            webView.stopLoading();
+            webView.loadUrl("about:blank");
+            webView.clearHistory();
+            webView.removeAllViews();
+            webView.destroy();
+            webView = null;
+        }
+        super.onDestroy();
     }
 
     @Override
