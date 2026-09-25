@@ -645,16 +645,17 @@ function exitApartment(){
     sceneLocation='outside';
     interiorScene?.setAttribute('aria-hidden','true');
     worldEl.classList.remove('scene-interior','interior-stage-out');
-    playerY=stageHeldPlayerY;
+    // Return to the exact exterior world position where the player entered.
+    // Then establish the normal follow camera BEFORE the exterior is rendered.
+    // Previously a temporary door-alignment camera was shown first and
+    // updateCamera() only ran after the next movement frame, causing a visible
+    // one-frame/first-input camera jump.
+    playerWorldX=clamp(exteriorReturnX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+    playerY=exteriorReturnY;
     playerVy=0;
     playerGrounded=playerY<=0;
-    const maxCamera=Math.max(0,MAP_WIDTH-VIEW_W);
-    const doorTargetX=interiorExitX();
-    const alignedCamera=((APARTMENT_WORLD_X+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO-doorTargetX)/APARTMENT_PARALLAX)-sceneryOffsetX;
-    worldX=clamp(alignedCamera,0,maxCamera);
-    playerWorldX=clamp(worldX+stageHeldActorX,0,MAP_WIDTH);
-    exteriorReturnX=playerWorldX;
-    actorX=playerWorldX-worldX;
+    updateCamera();
+    stageHeldActorX=actorX;
     worldEl.classList.add('exterior-stage-in');
     renderWorld(true);
     updateNpcPrompt();
