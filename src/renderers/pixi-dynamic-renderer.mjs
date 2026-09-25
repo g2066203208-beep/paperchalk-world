@@ -13,6 +13,7 @@ let unsubscribe=null;
 let initPromise=null;
 let activeMode='dom';
 let requestedMode='auto';
+let lastViewportW=-1,lastViewportH=-1;
 
 const coarsePointer=matchMedia('(pointer:coarse)').matches;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -134,7 +135,8 @@ function renderPlayer(frame,now){
   const shadowScale=Math.max(.62,1-air/430);
   node.shadow.scale.set(shadowScale,shadowScale);
   node.shadow.alpha=Math.max(.12,.34-air/620);
-  node.shadow.y=Math.min(0,air);
+  // Keep the shadow on the ground while the player sprite rises.
+  node.shadow.y=air;
 
   stats.playerScreenX=p.screenX;
   stats.playerWorldX=p.x;
@@ -195,7 +197,7 @@ async function ensurePixi(){
     app=new Application();
     const dpr=Math.max(1,Math.min(Number(devicePixelRatio)||1,coarsePointer?1.25:1.5));
     await app.init({
-      resizeTo:host,
+      resizeTo:world,
       backgroundAlpha:0,
       antialias:false,
       autoDensity:true,
@@ -220,12 +222,14 @@ async function ensurePixi(){
     for(const node of enemyNodes)app.stage.addChild(node.root);
 
     unsubscribe=runtime.subscribe(frame=>{
-      const resized=!latestFrame||
-        latestFrame.viewport.width!==frame.viewport.width||
-        latestFrame.viewport.height!==frame.viewport.height;
+      const resized=lastViewportW!==frame.viewport.width||lastViewportH!==frame.viewport.height;
       latestFrame=frame;
       stats.snapshotRevision=frame.revision;
-      if(resized)syncStaticScale(frame);
+      if(resized){
+        lastViewportW=frame.viewport.width;
+        lastViewportH=frame.viewport.height;
+        syncStaticScale(frame);
+      }
     });
 
     app.ticker.add(renderFrame);
