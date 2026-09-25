@@ -1522,8 +1522,8 @@ function movePlayerHorizontal(dx){
     return crossed?dx:playerWorldX-oldX;
   }
   let nextX=clamp(requested,bounds.left,bounds.right);
-  const oldBody={x:oldX-playerBodyHeight()alfW,y:playerY,w:playerBodyHeight()alfW*2,h:playerBodyHeight()};
-  const proposed={x:nextX-playerBodyHeight()alfW,y:playerY,w:playerBodyHeight()alfW*2,h:playerBodyHeight()};
+  const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:playerBodyHeight()};
+  const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:playerBodyHeight()};
   for(const r of activeSolidRects()){
     if(r.oneWay)continue;
     const vertical=proposed.y<r.y+r.h-1&&proposed.y+proposed.h>r.y+1;
@@ -1541,8 +1541,8 @@ function movePlayerHorizontal(dx){
       actorEl.classList.remove('is-jumping');
       continue;
     }
-    if(hitRight)nextX=Math.min(nextX,r.x-playerBodyHeight()alfW);
-    if(hitLeft)nextX=Math.max(nextX,r.x+r.w+playerBodyHeight()alfW);
+    if(hitRight)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
+    if(hitLeft)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
   }
   playerWorldX=clamp(nextX,bounds.left,bounds.right);
   return playerWorldX-oldX;
@@ -1551,7 +1551,7 @@ function supportAt(x,y,tolerance=3){
   let support=Math.abs(y)<=tolerance?0:null;
   for(const r of activeSolidRects()){
     const top=r.y+r.h;
-    if(horizontalOverlapAt(x,playerBodyHeight()alfW-3,r)&&Math.abs(y-top)<=tolerance){
+    if(horizontalOverlapAt(x,PLAYER_BODY.halfW-3,r)&&Math.abs(y-top)<=tolerance){
       if(support===null||top>support)support=top;
     }
   }
@@ -1585,7 +1585,7 @@ function updatePlayerVertical(dt,interactive){
     let landing=null;
     for(const r of solids){
       const top=r.y+r.h;
-      if(!horizontalOverlapAt(playerWorldX,playerBodyHeight()alfW-4,r))continue;
+      if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
       if(oldY>=top-2&&nextY<=top){
         if(landing===null||top>landing)landing=top;
       }
@@ -1601,7 +1601,7 @@ function updatePlayerVertical(dt,interactive){
     const nextHead=nextY+playerBodyHeight();
     for(const r of solids){
       if(r.oneWay)continue;
-      if(!horizontalOverlapAt(playerWorldX,playerBodyHeight()alfW-4,r))continue;
+      if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
       if(oldHead<=r.y+2&&nextHead>=r.y){
         nextY=r.y-playerBodyHeight();playerVy=0;break;
       }
@@ -1976,7 +1976,7 @@ function updateMapInteractions(){
   }
 }
 function teleportTo(x,{notice='已传送'}={}){
-  playerWorldX=clamp(Number(x)||MAP_SPAWN_X,playerBodyHeight()alfW,MAP_WIDTH-playerBodyHeight()alfW);
+  playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
@@ -3230,7 +3230,7 @@ function loadWorldState(){
 
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
-  playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,playerBodyHeight()alfW,MAP_WIDTH-playerBodyHeight()alfW);
+  playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
   orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
   currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
