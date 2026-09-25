@@ -422,6 +422,7 @@ button{cursor:pointer}
 .combat-controls{position:absolute;z-index:31;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:none;gap:12px;pointer-events:auto}
 .combat-btn{width:64px;height:58px;border:1px solid rgba(79,60,39,.36);background:rgba(235,218,181,.90);color:#584936;font-weight:800;font-size:15px;border-radius:48% 52% 46% 54%;box-shadow:4px 5px 0 rgba(55,42,28,.13);touch-action:manipulation}
 .combat-btn:active{transform:translateY(2px) scale(.96)}
+.combat-btn.is-active{background:rgba(92,78,57,.92);color:#f2e6c8;box-shadow:inset 0 0 0 2px rgba(255,255,255,.10),2px 3px 0 rgba(55,42,28,.18)}
 @media (hover:none),(pointer:coarse){.combat-controls{display:flex}}
 .combat-debug-box{position:absolute;z-index:60;display:none;pointer-events:none;box-sizing:border-box;border:2px solid}
 .combat-debug-box[hidden]{display:none!important}
