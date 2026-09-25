@@ -138,8 +138,14 @@ assert(game.includes("window.PaperchalkScene"), "Scene transition test API missi
 assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
 assert(!css.includes(".stage.paper-stage-out .actor{")&&!css.includes(".stage.scene-interior.interior-stage-in .actor{")&&!css.includes(".stage.scene-interior.interior-stage-out .actor{")&&!css.includes(".stage.exterior-stage-in .actor{"), "Player must stay fixed while paper scenery changes");
 assert(game.includes("playerScreenAnchorX=Math.round(VIEW_W*.5)")&&game.includes("actorX=playerScreenAnchorX"), "Player must use one fixed screen anchor");
-assert(game.includes("interiorDoorAnchorX=clamp(playerScreenAnchorX")&&game.includes("tweenInteriorWorldToPlayer"), "Entry must anchor the new doorway to the fixed player");
+assert(game.includes("interiorCameraX=INTERIOR_DOOR_X-playerScreenAnchorX")&&game.includes("interiorPlayerWorldX=INTERIOR_DOOR_X"), "Entry must place the finite indoor doorway exactly under the fixed player");
 assert(game.includes("worldX=exteriorCameraForDoorAt(playerScreenAnchorX)")&&game.includes("playerWorldX=clamp(worldX+playerScreenAnchorX")&&!game.includes("tweenExteriorWorldToPlayer"), "Exit must reveal the exterior door at the fixed player and must not run a second camera recenter tween");
+assert(game.includes("const INTERIOR_MAP_WIDTH=3072")&&game.includes("const INTERIOR_MAP_HEIGHT=1280")&&game.includes("const INTERIOR_SECOND_FLOOR_Y=512"), "Finite two-storey indoor world dimensions missing");
+assert(game.includes("function interiorWalkSurfaceY")&&game.includes("INTERIOR_STAIRS.x0")&&game.includes("INTERIOR_STAIRS.x1"), "Continuous stair Y=f(X) walking surface missing");
+assert(game.includes("function moveInteriorHorizontal")&&game.includes("playerY=interiorWalkSurfaceY(interiorPlayerWorldX)"), "Indoor horizontal walking must raise/lower Y on the stair surface");
+assert(html.includes('id="interiorStaircase"')&&html.includes("interior-wall-left")&&html.includes("interior-wall-right"), "Indoor walls or staircase visual missing");
+assert(css.includes(".interior-staircase{")&&css.includes(".interior-wall-left{left:0}")&&css.includes(".interior-floor-second{"), "Finite indoor wall/floor/stair styling missing");
+assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("debugFlightMode&&sceneLocation==='outside'"), "Free flight must support large Y and bypass road-strip snapping");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
 assert(game.includes("const actorBottom=MAP_GROUND_SCREEN_Y.toFixed(2)+'px'")&&game.includes("--world-camera-y"), "Vertical simulation must move the world while player screen Y stays fixed");
 assert(html.includes('id="interiorFarLayer"')&&html.includes('id="interiorMidLayer"')&&html.includes('id="interiorNearLayer"'), "Interior far/mid/near depth layers missing");
