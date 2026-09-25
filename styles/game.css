@@ -2122,7 +2122,7 @@ button{cursor:pointer}
   clip-path:polygon(1% 2%,12% 0,25% 1%,40% 0,58% 2%,72% 0,88% 1%,99% 0,100% 96%,91% 98%,73% 97%,59% 100%,40% 98%,22% 100%,4% 98%);
 }
 .interior-floor{
-  left:-4%;right:-4%;bottom:-3%;height:31%;
+  left:-4%;right:-4%;bottom:0;height:calc(var(--ground-screen-y,112px) + 16px);
   background:rgba(173,137,91,.94);
   border-top:5px solid rgba(92,67,43,.48);
   box-shadow:inset 0 12px 0 rgba(239,212,164,.18);
@@ -2148,7 +2148,8 @@ button{cursor:pointer}
 }
 .interior-shelf:before{left:18%}.interior-shelf:after{right:18%}
 .interior-exit-door{
-  right:15%;bottom:24%;width:15%;height:42%;
+  right:auto;bottom:calc(var(--ground-screen-y,112px) - 8px);width:15%;height:42%;
+  translate:-50% 0;
   background:rgba(107,76,53,.96);border:7px solid rgba(72,51,37,.82);
   box-shadow:5px 8px 0 rgba(46,34,25,.14),inset 0 0 0 5px rgba(219,185,135,.08);
 }
@@ -2177,7 +2178,7 @@ button{cursor:pointer}
   clip-path:polygon(7% 2%,100% 0,100% 100%,0 100%,3% 11%);
 }
 .interior-near-rug{
-  left:28%;bottom:18%;width:45%;height:7%;
+  left:28%;bottom:calc(var(--ground-screen-y,112px) - 10px);width:45%;height:7%;
   border-radius:48% 52% 44% 56%;
   background:rgba(133,80,62,.74);border:3px solid rgba(89,60,46,.42);
   box-shadow:inset 0 0 0 6px rgba(223,177,124,.10);
