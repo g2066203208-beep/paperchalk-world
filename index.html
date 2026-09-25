@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#28251f">
 <link rel="icon" href="data:,">
+<link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/dialogue/npc-portrait-hd.svg?v=1" fetchpriority="high">
 <title>Paperchalk World</title>
 <style>
 :root{
@@ -349,9 +351,10 @@ button{cursor:pointer}
 @keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2.2deg)}}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
-  --facing:1;
-  position:absolute;left:35%;bottom:112px;width:126px;z-index:5;
-  transform:translateX(-50%);pointer-events:none;will-change:left;
+  --facing:1;--actor-x:35vw;--actor-y:-112px;
+  position:absolute;left:0;bottom:0;width:126px;z-index:5;
+  transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%);
+  pointer-events:none;will-change:transform;contain:layout paint;
 }
 .actor.facing-left{--facing:-1}
 .walker{
@@ -377,7 +380,6 @@ button{cursor:pointer}
   25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.52}
 }
 /* ---------- REALTIME COMBAT ---------- */
-.actor{bottom:112px}
 .actor.is-jumping .walker{animation:none}
 .actor.is-attacking .walker{animation:player-swing .30s cubic-bezier(.2,.7,.2,1)}
 @keyframes player-swing{
@@ -808,7 +810,7 @@ button{cursor:pointer}
   .rear-layer,.front-layer{bottom:2vh;height:220px}
   .rear-layer .prop{bottom:96px}
   .front-layer .prop{bottom:78px}
-  .actor{left:34%;bottom:82px;width:106px}
+  .actor{width:106px}
   .foot-shadow{width:48px;height:11px;bottom:5px}
   .rear-layer .prop{scale:.80}
   .front-layer .prop{scale:.84}
@@ -2515,66 +2517,132 @@ function showMapNotice(message,duration=1600){
   clearTimeout(mapNoticeTimer);
   mapNoticeTimer=setTimeout(()=>mapNotice.classList.remove('is-show'),duration);
 }
+const mapVisualPools={
+  terrain:new Map(),
+  object:new Map(),
+  landmark:new Map()
+};
+let mapVisualSyncCount=0;
+let mapVisualCreateCount=0;
+
+function pooledMapNode(pool,track,key,create){
+  let el=pool.get(key);
+  if(!el){
+    el=create();
+    el.dataset.visualKey=key;
+    pool.set(key,el);
+    track.appendChild(el);
+    mapVisualCreateCount++;
+  }
+  el.hidden=false;
+  return el;
+}
+function hideMapPool(pool){
+  for(const el of pool.values())el.hidden=true;
+}
+
 function buildMapVisuals(){
-  terrainTrack.innerHTML='';
-  mapObjectTrack.innerHTML='';
-  mapLandmarkTrack.innerHTML='';
+  // Retained-mode DOM: reuse nodes instead of deleting/recreating the visible world every 3000px.
+  // This removes the largest layout/GC spike in the old mobile path.
+  mapVisualSyncCount++;
+  hideMapPool(mapVisualPools.terrain);
+  hideMapPool(mapVisualPools.object);
+  hideMapPool(mapVisualPools.landmark);
   mapDebugTrack.innerHTML='';
   mapDebugBuilt=false;
   mapNpcEls.clear();
   lastNearNpcId=null;
+
   const visualMinX=visualOriginX-400;
   const visualMaxX=visualOriginX+VISUAL_WINDOW_SPAN+400;
+
   MAP_TERRAIN.forEach(t=>{
     if(t.x+t.w<visualMinX||t.x>visualMaxX)return;
-    const el=document.createElement('div');
+    const key='terrain:'+t.id;
+    const el=pooledMapNode(mapVisualPools.terrain,terrainTrack,key,()=>{
+      const node=document.createElement('div');
+      node.dataset.mapId=t.id;
+      return node;
+    });
     el.className='terrain-piece '+t.kind+(t.fork?' fork-shelf':'');
-    el.dataset.mapId=t.id;
-    Object.assign(el.style,{left:(t.x-visualOriginX)+'px',bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',width:t.w+'px',height:t.h+'px'});
-    terrainTrack.appendChild(el);
+    Object.assign(el.style,{
+      left:(t.x-visualOriginX)+'px',
+      bottom:(MAP_GROUND_SCREEN_Y+t.y)+'px',
+      width:t.w+'px',
+      height:t.h+'px'
+    });
   });
+
   MAP_OBJECTS.forEach(o=>{
     if(o.x+o.w<visualMinX||o.x>visualMaxX)return;
-    const el=document.createElement('div');
+    const key='object:'+o.id;
+    const el=pooledMapNode(mapVisualPools.object,mapObjectTrack,key,()=>{
+      const node=document.createElement('div');
+      node.dataset.mapId=o.id;
+      return node;
+    });
     el.className='map-object '+o.kind;
-    el.dataset.mapId=o.id;
-    Object.assign(el.style,{left:(o.x-visualOriginX)+'px',bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',width:o.w+'px',height:o.h+'px'});
-    if(mapState.broken.has(o.id))el.classList.add('is-broken');
-    mapObjectTrack.appendChild(el);
+    Object.assign(el.style,{
+      left:(o.x-visualOriginX)+'px',
+      bottom:(MAP_GROUND_SCREEN_Y+o.y)+'px',
+      width:o.w+'px',
+      height:o.h+'px'
+    });
+    el.classList.toggle('is-broken',mapState.broken.has(o.id));
   });
-  MAP_LANDMARKS.forEach(m=>{
-    if(m.x<visualMinX||m.x>visualMaxX)return;
-    const el=document.createElement('div');
-    el.dataset.mapId=m.id;
-    if(m.kind==='exit'){
-      el.className='map-landmark map-exit';
-      el.style.left=(m.x-visualOriginX)+'px';
-    }else{
-      el.className='map-landmark sign';
-      el.style.left=(m.x-visualOriginX)+'px';
-      const span=document.createElement('span');span.textContent=m.text;el.appendChild(span);
-    }
-    mapLandmarkTrack.appendChild(el);
-  });
+
   MAP_PICKUPS.forEach(p=>{
     if(p.x<visualMinX||p.x>visualMaxX)return;
-    const el=document.createElement('div');
+    const key='pickup:'+p.id;
+    const el=pooledMapNode(mapVisualPools.object,mapObjectTrack,key,()=>{
+      const node=document.createElement('div');
+      node.className='pickup';
+      node.dataset.pickupId=p.id;
+      return node;
+    });
     el.className='pickup';
-    el.dataset.pickupId=p.id;
     el.style.left=(p.x-visualOriginX)+'px';
     el.style.bottom=(MAP_GROUND_SCREEN_Y+p.y)+'px';
     const hidden=mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken));
-    if(hidden)el.classList.add('is-collected');
-    mapObjectTrack.appendChild(el);
+    el.classList.toggle('is-collected',hidden);
   });
+
   MAP_NPCS.forEach(n=>{
     if(n.x<visualMinX||n.x>visualMaxX)return;
-    const el=document.createElement('div');
-    el.className='map-npc';el.dataset.npcId=n.id;el.style.left=(n.x-visualOriginX)+'px';
-    el.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name">'+n.name+'</div><div class="map-npc-prompt">E / 聊</div>';
-    mapLandmarkTrack.appendChild(el);
+    const key='npc:'+n.id;
+    const el=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,key,()=>{
+      const node=document.createElement('div');
+      node.className='map-npc';
+      node.dataset.npcId=n.id;
+      node.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name"></div><div class="map-npc-prompt">E / 聊</div>';
+      return node;
+    });
+    el.className='map-npc';
+    el.style.left=(n.x-visualOriginX)+'px';
+    const nameEl=el.querySelector('.map-npc-name');
+    if(nameEl&&nameEl.textContent!==n.name)nameEl.textContent=n.name;
     mapNpcEls.set(n.id,el);
   });
+
+  MAP_LANDMARKS.forEach(m=>{
+    if(m.x<visualMinX||m.x>visualMaxX)return;
+    const key='landmark:'+m.id;
+    const el=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,key,()=>{
+      const node=document.createElement('div');
+      node.dataset.mapId=m.id;
+      if(m.kind==='exit'){
+        node.className='map-landmark map-exit';
+      }else{
+        node.className='map-landmark sign';
+        const span=document.createElement('span');
+        span.textContent=m.text;
+        node.appendChild(span);
+      }
+      return node;
+    });
+    el.style.left=(m.x-visualOriginX)+'px';
+  });
+
   WORLD_ROUTES.forEach((route,i)=>{
     const base=routeBaseX(i);
     [
@@ -2585,36 +2653,47 @@ function buildMapVisuals(){
       const node=WORLD_NODE_BY_ID.get(mark.nodeId);
       if(!node)return;
       const degree=nodeDegree(node.id);
-      const el=document.createElement('div');
-      el.className='junction-marker';
-      el.dataset.nodeId=node.id;
-      el.dataset.side=mark.side;
+      const markerKey='junction:'+i+':'+mark.side+':'+node.id;
+      const el=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,markerKey,()=>{
+        const nodeEl=document.createElement('div');
+        nodeEl.className='junction-marker';
+        nodeEl.dataset.nodeId=node.id;
+        nodeEl.dataset.side=mark.side;
+        nodeEl.innerHTML='<div class="junction-board"></div>';
+        return nodeEl;
+      });
       el.style.left=(mark.x-visualOriginX)+'px';
-      el.innerHTML='<div class="junction-board">'+node.name+'<span class="junction-count">'+(degree>2?'实体岔路 · 直接走':degree===1?'道路尽头':'道路连接点')+'</span></div>';
-      mapLandmarkTrack.appendChild(el);
+      const board=el.querySelector('.junction-board');
+      if(board)board.innerHTML=node.name+'<span class="junction-count">'+(degree>2?'实体岔路 · 直接走':degree===1?'道路尽头':'道路连接点')+'</span>';
 
       const assignments=forkAssignments(i,node.id);
       if(assignments.length>1){
-        const hint=document.createElement('div');
-        hint.className='fork-node-hint';
+        const hintKey='fork-hint:'+i+':'+mark.side+':'+node.id;
+        const hint=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,hintKey,()=>{
+          const nodeEl=document.createElement('div');
+          nodeEl.className='fork-node-hint';
+          nodeEl.textContent='不弹菜单 · 走进对应高度的路';
+          return nodeEl;
+        });
         hint.style.left=((mark.side==='left'?mark.boundary+235:mark.boundary-235)-visualOriginX)+'px';
         hint.style.bottom=(MAP_GROUND_SCREEN_Y+190)+'px';
-        hint.textContent='不弹菜单 · 走进对应高度的路';
-        mapLandmarkTrack.appendChild(hint);
       }
       assignments.forEach((a,idx)=>{
-        const guide=document.createElement('div');
+        const guideKey='fork-guide:'+i+':'+mark.side+':'+idx+':'+a.route.id;
+        const guide=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,guideKey,()=>{
+          const nodeEl=document.createElement('div');
+          nodeEl.dataset.routeId=a.route.id;
+          return nodeEl;
+        });
         guide.className='fork-exit-guide'+(a.laneY>=120?' is-air':a.laneY>0?' is-upper':'');
         const arrow=mark.side==='left'?'←':'→';
         guide.style.left=((mark.side==='left'?mark.boundary+42:mark.boundary-196)-visualOriginX)+'px';
         guide.style.bottom=(MAP_GROUND_SCREEN_Y+a.laneY+22)+'px';
         guide.innerHTML='<span class="fork-arrow">'+arrow+'</span>'+(a.target?.name||a.route.name)+'<small>'+a.route.name+'</small>';
-        mapLandmarkTrack.appendChild(guide);
       });
     });
   });
 }
-
 function ensureMapDebugVisuals(){
   if(mapDebugBuilt)return;
   mapDebugTrack.innerHTML='';
@@ -2761,9 +2840,13 @@ dialogueNpcArt.src='./assets/dialogue/npc-portrait-hd.svg?v=1';
 dialogueNpcArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
 },{once:true});
+let dialoguePortraitReady=false;
 const dialoguePortraitDecode=Promise.allSettled(
   [dialoguePlayerArt,dialogueNpcArt].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
-);
+).then(result=>{
+  dialoguePortraitReady=true;
+  return result;
+});
 const actorEl=document.querySelector('.actor');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
@@ -3426,7 +3509,16 @@ window.PaperchalkDebug={
   close:closeDebugPanel,
   toggle:toggleDebugPanel,
   run:executeDebugCommand,
-  perf(){return {fps:perfFps,frameMs:perfFrameMs,roadTiles:roadTrack.children.length,propNodes:rearTrack.children.length+frontTrack.children.length,visualOriginX}}
+  perf(){return {
+    fps:perfFps,
+    frameMs:perfFrameMs,
+    roadTiles:roadTrack.children.length,
+    propNodes:rearTrack.children.length+frontTrack.children.length,
+    visualOriginX,
+    mapVisualSyncCount,
+    mapVisualCreateCount,
+    pooledMapNodes:mapVisualPools.terrain.size+mapVisualPools.object.size+mapVisualPools.landmark.size
+  }}
 };
 
 let routeTransitionBusy=false;
@@ -3924,6 +4016,12 @@ function openDialogue(npc){
   },940);
   return true;
 }
+function finalizeDialogueClose(){
+  dialogueStage.classList.remove('is-open','is-choice','is-closing','is-opening','is-entering','speaker-player','speaker-npc');
+  dialogueStage.setAttribute('aria-hidden','true');
+  worldEl.classList.remove('dialogue-active');
+  dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
+}
 function closeDialogue({immediate=false}={}){
   if(!dialogueIsOpen())return false;
   clearTimeout(dialogueCloseTimer);
@@ -3931,12 +4029,9 @@ function closeDialogue({immediate=false}={}){
   worldEl.classList.remove('dialogue-choice-camera');
   dialogueStage.classList.remove('is-opening','is-entering');
   if(immediate){
-    dialogueStage.classList.remove('is-open','is-choice','is-closing','is-opening','is-entering','speaker-player','speaker-npc');
-    dialogueStage.setAttribute('aria-hidden','true');
-    worldEl.classList.remove('dialogue-active');
+    finalizeDialogueClose();
     clearDialogueBubbles();
     dialogueChoices.innerHTML='';
-    dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
     return true;
   }
   if(dialogueState.closing)return true;
@@ -3945,12 +4040,20 @@ function closeDialogue({immediate=false}={}){
   dialogueStage.classList.add('is-closing');
   clearDialogueBubbles();
   dialogueChoices.innerHTML='';
-  dialogueCloseTimer=setTimeout(()=>{
-    dialogueStage.classList.remove('is-open','is-closing','is-opening','is-entering','speaker-player','speaker-npc');
-    dialogueStage.setAttribute('aria-hidden','true');
-    worldEl.classList.remove('dialogue-active');
-    dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
-  },700);
+
+  let finished=false;
+  const finish=()=>{
+    if(finished)return;
+    finished=true;
+    clearTimeout(dialogueCloseTimer);
+    dialogueNpcPortrait.removeEventListener('animationend',onAnimationEnd);
+    finalizeDialogueClose();
+  };
+  const onAnimationEnd=e=>{
+    if(e.target===dialogueNpcPortrait&&e.animationName==='puppetNpcArcOut')finish();
+  };
+  dialogueNpcPortrait.addEventListener('animationend',onAnimationEnd);
+  dialogueCloseTimer=setTimeout(finish,1100); // accessibility/browser fallback only
   return true;
 }
 dialogueStage.addEventListener('pointerup',e=>{
@@ -4065,7 +4168,7 @@ window.PaperchalkDialogue={
   close:closeDialogue,
   advance:advanceDialogue,
   choose:selectDialogueChoice,
-  get state(){return {...dialogueState,npc:dialogueState.npc?.id||null}}
+  get state(){return {...dialogueState,npc:dialogueState.npc?.id||null,assetsReady:dialoguePortraitReady}}
 };
 
 window.PaperchalkMap={
@@ -4119,8 +4222,8 @@ function refreshRoadW(){
   const w=roadTile.getBoundingClientRect().width;
   if(w>0){roadW=Math.max(1,w-1);ensureRoadTiles()}
   updateCamera();
-  actorEl.style.left=actorX+'px';
-  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY)+'px';
+  actorEl.style.setProperty('--actor-x',actorX.toFixed(2)+'px');
+  actorEl.style.setProperty('--actor-y',(-(MAP_GROUND_SCREEN_Y+playerY)).toFixed(2)+'px');
   renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
@@ -4200,8 +4303,14 @@ function renderWorld(force=false){
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
   const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
-  if(force||renderCache.actorLeft!==actorLeft){renderCache.actorLeft=actorLeft;actorEl.style.left=actorLeft}
-  if(force||renderCache.actorBottom!==actorBottom){renderCache.actorBottom=actorBottom;actorEl.style.bottom=actorBottom}
+  if(force||renderCache.actorLeft!==actorLeft){
+    renderCache.actorLeft=actorLeft;
+    actorEl.style.setProperty('--actor-x',actorLeft);
+  }
+  if(force||renderCache.actorBottom!==actorBottom){
+    renderCache.actorBottom=actorBottom;
+    actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
+  }
   enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
 }
