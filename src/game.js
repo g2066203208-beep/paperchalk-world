@@ -1450,8 +1450,10 @@ function tryLeaveCurrentRoute(side,moveDir){
 
 function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function playerBodyHeight(){return playerCrouching?PLAYER_BODY.crouchH:PLAYER_BODY.standH}
+function playerHurtHeight(){return playerCrouching?PLAYER_HURT.crouchH:PLAYER_HURT.standH}
 function playerWorldPos(){return {x:playerWorldX,y:playerY}}
-function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:PLAYER_HURT.h}}
+function getPlayerHurtbox(){const p=playerWorldPos();return{x:p.x+PLAYER_HURT.ox,y:p.y+PLAYER_HURT.oy,w:PLAYER_HURT.w,h:playerHurtHeight()}}
 function getPlayerAttackBox(){const p=playerWorldPos();return facing>0?{x:p.x+PLAYER_ATTACK.forward,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}:{x:p.x-PLAYER_ATTACK.forward-PLAYER_ATTACK.w,y:p.y+PLAYER_ATTACK.oy,w:PLAYER_ATTACK.w,h:PLAYER_ATTACK.h}}
 function activeSolidRects(centerX=playerWorldX,radius=900){
   const minX=centerX-radius,maxX=centerX+radius;
@@ -1471,6 +1473,39 @@ function activeSolidRects(centerX=playerWorldX,radius=900){
   return out;
 }
 function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
+function canStandUp(){
+  const body={x:playerWorldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.standH};
+  for(const r of activeSolidRects()){
+    if(r.oneWay)continue;
+    if(body.x+body.w<=r.x+1||body.x>=r.x+r.w-1)continue;
+    if(body.y+body.h<=r.y+1||body.y>=r.y+r.h-1)continue;
+    return false;
+  }
+  return true;
+}
+function setPlayerCrouching(active,{force=false}={}){
+  active=!!active;
+  if(active){
+    if(!force&&(!playerGrounded||playerAttackTimer>0))return false;
+    if(playerCrouching)return true;
+    playerCrouching=true;
+    actorEl.classList.add('is-crouching');
+    syncPlayerActionState(true);
+    return true;
+  }
+  if(!playerCrouching)return true;
+  if(!force&&!canStandUp())return false;
+  playerCrouching=false;
+  actorEl.classList.remove('is-crouching');
+  syncPlayerActionState(true);
+  return true;
+}
+function updateCrouchState(){
+  const requested=keyboardCrouch||mobileCrouch;
+  if(requested&&playerGrounded&&!playerAttackTimer)setPlayerCrouching(true);
+  else if(!requested&&playerCrouching)setPlayerCrouching(false);
+  if(!playerGrounded&&playerCrouching)setPlayerCrouching(false,{force:true});
+}
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
@@ -1487,8 +1522,8 @@ function movePlayerHorizontal(dx){
     return crossed?dx:playerWorldX-oldX;
   }
   let nextX=clamp(requested,bounds.left,bounds.right);
-  const oldBody={x:oldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
-  const proposed={x:nextX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:PLAYER_BODY.h};
+  const oldBody={x:oldX-playerBodyHeight()alfW,y:playerY,w:playerBodyHeight()alfW*2,h:playerBodyHeight()};
+  const proposed={x:nextX-playerBodyHeight()alfW,y:playerY,w:playerBodyHeight()alfW*2,h:playerBodyHeight()};
   for(const r of activeSolidRects()){
     if(r.oneWay)continue;
     const vertical=proposed.y<r.y+r.h-1&&proposed.y+proposed.h>r.y+1;
@@ -1506,8 +1541,8 @@ function movePlayerHorizontal(dx){
       actorEl.classList.remove('is-jumping');
       continue;
     }
-    if(hitRight)nextX=Math.min(nextX,r.x-PLAYER_BODY.halfW);
-    if(hitLeft)nextX=Math.max(nextX,r.x+r.w+PLAYER_BODY.halfW);
+    if(hitRight)nextX=Math.min(nextX,r.x-playerBodyHeight()alfW);
+    if(hitLeft)nextX=Math.max(nextX,r.x+r.w+playerBodyHeight()alfW);
   }
   playerWorldX=clamp(nextX,bounds.left,bounds.right);
   return playerWorldX-oldX;
@@ -1516,7 +1551,7 @@ function supportAt(x,y,tolerance=3){
   let support=Math.abs(y)<=tolerance?0:null;
   for(const r of activeSolidRects()){
     const top=r.y+r.h;
-    if(horizontalOverlapAt(x,PLAYER_BODY.halfW-3,r)&&Math.abs(y-top)<=tolerance){
+    if(horizontalOverlapAt(x,playerBodyHeight()alfW-3,r)&&Math.abs(y-top)<=tolerance){
       if(support===null||top>support)support=top;
     }
   }
@@ -1550,7 +1585,7 @@ function updatePlayerVertical(dt,interactive){
     let landing=null;
     for(const r of solids){
       const top=r.y+r.h;
-      if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
+      if(!horizontalOverlapAt(playerWorldX,playerBodyHeight()alfW-4,r))continue;
       if(oldY>=top-2&&nextY<=top){
         if(landing===null||top>landing)landing=top;
       }
@@ -1562,13 +1597,13 @@ function updatePlayerVertical(dt,interactive){
       return;
     }
   }else{
-    const oldHead=oldY+PLAYER_BODY.h;
-    const nextHead=nextY+PLAYER_BODY.h;
+    const oldHead=oldY+playerBodyHeight();
+    const nextHead=nextY+playerBodyHeight();
     for(const r of solids){
       if(r.oneWay)continue;
-      if(!horizontalOverlapAt(playerWorldX,PLAYER_BODY.halfW-4,r))continue;
+      if(!horizontalOverlapAt(playerWorldX,playerBodyHeight()alfW-4,r))continue;
       if(oldHead<=r.y+2&&nextHead>=r.y){
-        nextY=r.y-PLAYER_BODY.h;playerVy=0;break;
+        nextY=r.y-playerBodyHeight();playerVy=0;break;
       }
     }
   }
@@ -1941,7 +1976,7 @@ function updateMapInteractions(){
   }
 }
 function teleportTo(x,{notice='已传送'}={}){
-  playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerWorldX=clamp(Number(x)||MAP_SPAWN_X,playerBodyHeight()alfW,MAP_WIDTH-playerBodyHeight()alfW);
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
@@ -3195,7 +3230,7 @@ function loadWorldState(){
 
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
-  playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,playerBodyHeight()alfW,MAP_WIDTH-playerBodyHeight()alfW);
   const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
   orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
   currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
