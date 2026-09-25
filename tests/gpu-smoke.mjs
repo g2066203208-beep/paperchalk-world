@@ -156,7 +156,9 @@ try{
   // by Core/UI regressions; this test isolates the renderer contract from CI frame-rate/input jitter.
   const targetPlayerX=900;
   await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),targetPlayerX);
-  await page.waitForTimeout(140);
+  await page.waitForFunction(()=>Math.abs(
+    window.PaperchalkRenderer.stats.playerWorldX-window.PaperchalkCombat.player.x
+  )<1,null,{timeout:1200});
   const player=await page.evaluate(()=>({
     sim:window.PaperchalkCombat.player.x,
     gpu:window.PaperchalkRenderer.stats.playerWorldX,
