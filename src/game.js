@@ -113,15 +113,16 @@ const MAP_PICKUPS=[
 ];
 const MAP_NPCS=[
   {
-    id:'npc-old-crafter',x:760,name:'白翼引路人',portrait:'white-wing-guide',
-    sprite:'./assets/dialogue/npc-portrait-hd.svg?v=puppet-r1',
-    text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。',
+    id:'npc-phone-girl',x:760,name:'？？？',portrait:'phone-girl-offline',
+    sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
+    dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
+    text:'……你好。',
     dialogue:{
-      opening:'你终于来了，旅人。纸境的灯已经一盏盏亮起——舞台正在转动。你还要继续往前吗？',
+      opening:'……你好。',
       choices:[
-        {text:'我想知道前面的路。',reply:'沿旧土坡向东。别只看脚下——纸境的远景、灯影和风声，有时比路牌更早告诉你哪里发生了变化。'},
-        {text:'你为什么在这里等我？',reply:'因为有些门只会为正在前进的人出现。我负责看着灯亮起，也负责提醒你：看见的未必就是全部。'},
-        {text:'我只是来打个招呼。',reply:'那么我收下这句招呼。继续走吧，等下一次舞台暗下来，我们还会再见。'}
+        {text:'你是谁？',reply:'……暂时不重要。'},
+        {text:'你在看手机？',reply:'嗯。只是随便看看。'},
+        {text:'我先走了。',reply:'好。'}
       ]
     }
   }
@@ -534,9 +535,9 @@ dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
   else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
-dialogueNpcArt.src='./assets/dialogue/npc-portrait-hd.svg?v=1';
+dialogueNpcArt.src=MAP_NPCS[0]?.dialoguePortrait||MAP_NPCS[0]?.sprite||'';
 dialogueNpcArt.addEventListener('error',()=>{
-  if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
+  console.warn('NPC_PORTRAIT_UNAVAILABLE');
 },{once:true});
 let dialoguePortraitReady=false;
 const dialoguePortraitDecode=Promise.allSettled(
@@ -1974,6 +1975,8 @@ function openDialogue(npc){
   dialogueState={open:true,closing:false,npc,phase:'entering',choiceIndex:-1};
   dialoguePlayerName.textContent=playerDialogueName();
   dialogueNpcName.textContent=npc.name||'旅人';
+  const npcPortraitSrc=npc.dialoguePortrait||npc.sprite||'';
+  if(npcPortraitSrc&&dialogueNpcArt.getAttribute('src')!==npcPortraitSrc)dialogueNpcArt.src=npcPortraitSrc;
   dialogueStage.classList.remove('is-closing','is-choice','is-opening','is-entering','speaker-player','speaker-npc');
   dialogueStage.dataset.portrait=npc.portrait||'paper';
   worldEl.classList.remove('dialogue-choice-camera');
