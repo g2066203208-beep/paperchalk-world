@@ -1,0 +1,35 @@
+name: UI Smoke
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  chromium-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start local server
+        run: |
+          python3 -m http.server 4173 > /tmp/paperchalk-server.log 2>&1 &
+          echo $! > /tmp/paperchalk-server.pid
+      - name: Start Chromium
+        run: |
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          "$CHROME" --headless=new --no-sandbox --disable-gpu \
+            --remote-debugging-port=9222 --remote-allow-origins='*' \
+            --user-data-dir=/tmp/paperchalk-chrome about:blank \
+            > /tmp/paperchalk-chrome.log 2>&1 &
+          echo $! > /tmp/paperchalk-chrome.pid
+      - name: Run real-browser UI smoke test
+        run: node tests/ui-smoke.mjs
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          echo '--- server log ---'
+          cat /tmp/paperchalk-server.log || true
+          echo '--- chromium log ---'
+          cat /tmp/paperchalk-chrome.log || true
