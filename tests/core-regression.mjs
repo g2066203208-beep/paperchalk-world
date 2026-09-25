@@ -338,21 +338,20 @@ try{
   await page.waitForTimeout(80);
   const npcNear=await page.evaluate(()=>{
     const img=document.querySelector('[data-npc-id="npc-phone-girl"] .map-npc-art');
-    const rect=img?.getBoundingClientRect();
     return {
       near:document.querySelector('[data-npc-id="npc-phone-girl"]')?.classList.contains('is-near')||false,
       interactDisabled:document.getElementById('interactBtn')?.disabled,
       playerX:window.PaperchalkMap.playerX,
       art:{
         naturalW:img?.naturalWidth||0,naturalH:img?.naturalHeight||0,
-        displayW:rect?.width||0,displayH:rect?.height||0
+        layoutW:img?.offsetWidth||0,layoutH:img?.offsetHeight||0
       }
     };
   });
   check('Village NPC proximity enables talk prompt',
     npcNear.near===true&&npcNear.interactDisabled===false&&Math.abs(npcNear.playerX-760)<2&&
     npcNear.art.naturalW===326&&npcNear.art.naturalH===1002&&
-    Math.abs(npcNear.art.displayW-npcNear.art.naturalW)<1&&Math.abs(npcNear.art.displayH-npcNear.art.naturalH)<1,
+    npcNear.art.layoutW===npcNear.art.naturalW&&npcNear.art.layoutH===npcNear.art.naturalH,
     JSON.stringify(npcNear));
   await page.keyboard.press('KeyE');
   await page.waitForTimeout(120);
