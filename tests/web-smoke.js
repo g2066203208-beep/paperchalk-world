@@ -138,7 +138,7 @@ assert(game.includes("window.PaperchalkScene"), "Scene transition test API missi
 assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
 assert(!css.includes(".stage.paper-stage-out .actor{")&&!css.includes(".stage.scene-interior.interior-stage-in .actor{")&&!css.includes(".stage.scene-interior.interior-stage-out .actor{")&&!css.includes(".stage.exterior-stage-in .actor{"), "Player must stay fixed while paper scenery changes");
 assert(game.includes("interiorPlayerX=stageHeldActorX")&&game.includes("worldX=clamp(playerWorldX-stageHeldActorX"), "Scene transition does not preserve player screen position");
-assert(game.includes("movePlayerHorizontal(dir*speed*dt);")&&!game.includes("if(debugFlightMode)playerWorldX=clamp(playerWorldX+dir*speed*dt"), "Flight must not replace horizontal movement with free-flight motion");
+assert(game.includes("const axis=debugFlightMode?0:(playerCrouching?0:rawAxis)"), "Flight mode must disable horizontal movement entirely");
 assert(game.includes("mobileFlightUp")&&game.includes("mobileFlightDown"), "Mobile vertical-only flight controls missing");
 assert(css.includes("width:clamp(76px,5.8vw,88px)"), "Combat buttons were not enlarged");
 assert(game.includes("function nearbyNpc"), "NPC proximity logic missing");

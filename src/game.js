@@ -2612,7 +2612,7 @@ function frame(now){
 
   updateCrouchState();
   const rawAxis=movementAxis();
-  const axis=playerCrouching?0:rawAxis;
+  const axis=debugFlightMode?0:(playerCrouching?0:rawAxis);
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
   if(moving!==lastMovingState){

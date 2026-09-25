@@ -289,8 +289,8 @@ try{
   await page.keyboard.up('KeyD');
   await page.waitForTimeout(60);
   const flightRight=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Flight keeps normal horizontal movement instead of free-flight X',
-    flightRight.x>flightX0,
+  check('Vertical-only flight ignores horizontal movement input',
+    Math.abs(flightRight.x-flightX0)<1,
     JSON.stringify({flightX0,flightRight}));
   await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(50);
