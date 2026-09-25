@@ -109,12 +109,20 @@
 
   <section id="interiorScene" class="interior-scene" aria-hidden="true" aria-label="公寓室内">
     <div id="interiorFarLayer" class="interior-depth-layer interior-far-layer" aria-hidden="true">
-      <div class="interior-wall paper-stage-piece"></div>
-      <div class="interior-window paper-stage-piece"><span class="interior-window-cross"></span></div>
-      <div class="interior-floor paper-stage-piece"></div>
+      <div class="interior-room-shell paper-stage-piece"></div>
+      <div class="interior-wall interior-wall-left paper-stage-piece"></div>
+      <div class="interior-wall interior-wall-right paper-stage-piece"></div>
+      <div class="interior-ceiling paper-stage-piece"></div>
+      <div class="interior-floor interior-floor-first paper-stage-piece"></div>
+      <div class="interior-floor interior-floor-second paper-stage-piece"></div>
+      <div class="interior-window interior-window-first paper-stage-piece"><span class="interior-window-cross"></span></div>
+      <div class="interior-window interior-window-second paper-stage-piece"><span class="interior-window-cross"></span></div>
     </div>
     <div id="interiorMidLayer" class="interior-depth-layer interior-mid-layer" aria-hidden="true">
       <div class="interior-shelf paper-stage-piece"></div>
+      <div id="interiorStaircase" class="interior-staircase paper-stage-piece" aria-label="通往二楼的楼梯">
+        <span class="interior-stair-rail"></span>
+      </div>
       <div id="interiorExitDoor" class="interior-exit-door paper-stage-piece" aria-hidden="true">
         <span class="interior-door-handle"></span>
         <span class="interior-door-label">门</span>
