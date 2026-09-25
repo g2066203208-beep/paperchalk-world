@@ -19,7 +19,7 @@ const requiredIds = [
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
-  "entityTrack","pixiEntityLayer","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
+  "entityTrack","pixiEntityLayer","playerFlip","playerSprite","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput"
@@ -38,6 +38,7 @@ assert(fs.existsSync("vendor/pixi/LICENSE"), "PixiJS license missing");
 assert(/function autoMode\(\)\{[\s\S]*?return ['"]dom['"];[\s\S]*?\}/.test(renderer), "Mobile/desktop auto renderer parity missing");
 assert(renderer.includes("runtime?.worldData?.playerVisual"), "Pixi renderer is not using shared player visual dimensions");
 assert(renderer.includes("runtime.worldData?.playerActions"), "Pixi renderer is not using shared player action textures");
+assert(renderer.includes("runtime?.worldData?.playerActionMeta"), "Pixi renderer is not using shared action orientation/scale metadata");
 new vm.Script(game);
 assert(
   /const\s+settingsBtn\s*=\s*document\.getElementById\(['"]settingsBtn['"]\)/.test(game),
@@ -59,7 +60,16 @@ assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
 assert(game.includes("window.PaperchalkMap"), "Map API missing");
 assert(game.includes("window.PaperchalkRuntime"), "Renderer-neutral runtime contract missing");
 assert(game.includes("refreshRuntimeFrameState"), "Allocation-free renderer frame state missing");
-assert(game.includes("const PLAYER_VISUAL=Object.freeze({w:104,h:156})"), "Shared 104x156 player visual config missing");
+assert(game.includes("const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156})"), "Base 104x156 player visual config missing");
+assert(game.includes("const PLAYER_VISUAL={w:104,h:156,scale:1}"), "Mutable responsive player visual state missing");
+assert(game.includes("const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720})"), "Unified viewport reference missing");
+assert(game.includes("const PLAYER_ACTION_META=Object.freeze"), "Per-action visual metadata missing");
+assert(game.includes("walk:Object.freeze({scale:.92,sourceFacing:-1})"), "Newest walk orientation correction missing");
+assert(game.includes("crouch:Object.freeze({scale:.76,sourceFacing:1})"), "Crouch visual normalization missing");
+assert(game.includes("function startPlayerPaperFlip"), "Paper-puppet action flip transition missing");
+assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
+assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
+assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
   game.includes("const WORLD_ZONE_COUNT=20") &&
@@ -88,8 +98,14 @@ assert(game.includes("function setPlayerCrouching"), "Crouch state missing");
 assert(game.includes("playerVy>0?'jump-up':'jump-down'"), "Jump ascent/descent state split missing");
 assert(game.includes("e.code==='ArrowDown'||e.code==='KeyS'"), "Keyboard crouch input missing");
 for (const name of ['idle','crouch','jump-up','jump-down','walk']) {
-  assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied player action asset: '+name);
+  assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied high-resolution player source asset: '+name);
+  assert(fs.existsSync('assets/player/runtime/'+name+'.webp'), 'Missing optimized runtime player action asset: '+name);
 }
+assert(game.includes("./assets/player/runtime/idle.webp"), "Runtime is not using optimized player sprites");
+assert(html.includes('id="playerFlip"'), "Player paper-flip wrapper missing");
+assert(css.includes(".player-flip"), "Player paper-flip CSS missing");
+assert(css.includes("--action-scale"), "Action scale CSS variable missing");
+assert(css.includes("--source-facing"), "Source-facing correction CSS variable missing");
 assert(game.includes("function startPlayerAttack"), "Player attack missing");
 assert(game.includes("function updateCombat"), "Realtime combat update missing");
 assert(game.includes("function rectsOverlap"), "AABB overlap function missing");

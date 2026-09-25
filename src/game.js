@@ -7,13 +7,22 @@ const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no trans
 let MAP_GROUND_SCREEN_Y=112;
 let VIEW_W=1280,VIEW_H=720;
 const PLAYER_BODY=Object.freeze({halfW:27,standH:108,crouchH:78});
-const PLAYER_VISUAL=Object.freeze({w:104,h:156});
+const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720});
+const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156});
+const PLAYER_VISUAL={w:104,h:156,scale:1};
 const PLAYER_ACTION_ASSETS=Object.freeze({
-  idle:'./assets/player/idle.webp?v=actions-r1',
-  crouch:'./assets/player/crouch.webp?v=actions-r1',
-  'jump-up':'./assets/player/jump-up.webp?v=actions-r1',
-  'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
-  walk:'./assets/player/walk.webp?v=actions-r1'
+  idle:'./assets/player/runtime/idle.webp?v=responsive-actions-r2',
+  crouch:'./assets/player/runtime/crouch.webp?v=responsive-actions-r2',
+  'jump-up':'./assets/player/runtime/jump-up.webp?v=responsive-actions-r2',
+  'jump-down':'./assets/player/runtime/jump-down.webp?v=responsive-actions-r2',
+  walk:'./assets/player/runtime/walk.webp?v=responsive-actions-r2'
+});
+const PLAYER_ACTION_META=Object.freeze({
+  idle:Object.freeze({scale:1,sourceFacing:1}),
+  walk:Object.freeze({scale:.92,sourceFacing:-1}),
+  crouch:Object.freeze({scale:.76,sourceFacing:1}),
+  'jump-up':Object.freeze({scale:.88,sourceFacing:1}),
+  'jump-down':Object.freeze({scale:.86,sourceFacing:1})
 });
 const WORLD_NODES=[
   {id:'village',name:'A村',x:170,y:650,kind:'village'},
@@ -581,9 +590,14 @@ const dialoguePortraitDecode=Promise.allSettled(
   return result;
 });
 const actorEl=document.querySelector('.actor');
+const playerFlip=document.getElementById('playerFlip');
 const playerSprite=document.getElementById('playerSprite');
 const playerActionPreloads=new Map();
+const playerReducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let playerActionAssetsReady=false;
+let playerFlipRevision=0;
+let playerDomActionState='idle';
+function playerActionMeta(state){return PLAYER_ACTION_META[state]||PLAYER_ACTION_META.idle}
 function preloadPlayerActionAssets(){
   if(playerActionAssetsReady)return Promise.resolve();
   const jobs=Object.entries(PLAYER_ACTION_ASSETS).map(([state,src])=>{
@@ -600,13 +614,54 @@ function preloadPlayerActionAssets(){
   });
   return Promise.allSettled(jobs).then(()=>{playerActionAssetsReady=true});
 }
+function applyPlayerActionVisual(state){
+  const meta=playerActionMeta(state);
+  actorEl.dataset.playerState=state;
+  actorEl.style.setProperty('--action-scale',String(meta.scale));
+  actorEl.style.setProperty('--source-facing',String(meta.sourceFacing));
+  const src=PLAYER_ACTION_ASSETS[state]||PLAYER_ACTION_ASSETS.idle;
+  if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
+  playerDomActionState=state;
+}
+function cancelPlayerPaperFlip(){
+  playerFlipRevision++;
+  if(!playerFlip)return;
+  for(const animation of playerFlip.getAnimations())animation.cancel();
+  playerFlip.style.removeProperty('transform');
+}
+function startPlayerPaperFlip(state){
+  const token=++playerFlipRevision;
+  if(!playerFlip||playerReducedMotion.matches){
+    applyPlayerActionVisual(state);
+    return;
+  }
+  for(const animation of playerFlip.getAnimations())animation.cancel();
+  const out=playerFlip.animate([
+    {transform:'perspective(260px) rotateY(0deg) scaleX(1)'},
+    {transform:'perspective(260px) rotateY(86deg) scaleX(.10)'}
+  ],{duration:58,easing:'cubic-bezier(.32,.02,.68,.98)',fill:'forwards'});
+  out.finished.then(()=>{
+    if(token!==playerFlipRevision)return;
+    applyPlayerActionVisual(state);
+    const incoming=playerFlip.animate([
+      {transform:'perspective(260px) rotateY(-86deg) scaleX(.10)'},
+      {transform:'perspective(260px) rotateY(0deg) scaleX(1)'}
+    ],{duration:72,easing:'cubic-bezier(.18,.76,.22,1)',fill:'forwards'});
+    return incoming.finished;
+  }).then(()=>{
+    if(token===playerFlipRevision)playerFlip.style.removeProperty('transform');
+  }).catch(()=>{});
+}
 function setPlayerActionState(state,force=false){
   if(!PLAYER_ACTION_ASSETS[state])state='idle';
   if(!force&&state===playerActionState)return false;
   playerActionState=state;
-  actorEl.dataset.playerState=state;
-  const src=PLAYER_ACTION_ASSETS[state];
-  if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
+  if(force){
+    cancelPlayerPaperFlip();
+    applyPlayerActionVisual(state);
+  }else{
+    startPlayerPaperFlip(state);
+  }
   return true;
 }
 function resolvePlayerActionState(){
@@ -618,11 +673,14 @@ function resolvePlayerActionState(){
 function syncPlayerActionState(force=false){
   return setPlayerActionState(resolvePlayerActionState(),force);
 }
+function schedulePlayerActionWarmup(){
+  const warm=()=>{preloadPlayerActionAssets()};
+  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:900});
+  else setTimeout(warm,160);
+}
+applyPlayerActionVisual('idle');
+schedulePlayerActionWarmup();
 window.addEventListener('paperchalk-world-enter',()=>{preloadPlayerActionAssets()});
-actorEl.style.width=PLAYER_VISUAL.w+'px';
-actorEl.style.height=PLAYER_VISUAL.h+'px';
-actorEl.style.setProperty('--player-visual-w',PLAYER_VISUAL.w+'px');
-actorEl.style.setProperty('--player-visual-h',PLAYER_VISUAL.h+'px');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
@@ -698,14 +756,27 @@ function syncViewportMetrics(){
   const layoutW=Number(document.documentElement.clientWidth)||rawW;
   const viewH=Math.max(180,Math.round(Math.min(rawH,layoutH)));
   const viewW=Math.max(280,Math.round(Math.min(rawW,layoutW)));
+  const prevW=VIEW_W,prevH=VIEW_H,prevScale=PLAYER_VISUAL.scale;
+  const rawScale=Math.min(viewW/VIEWPORT_REFERENCE.w,viewH/VIEWPORT_REFERENCE.h);
+  const viewportScale=Math.max(.82,Math.min(1.08,rawScale));
+  const playerW=Math.round(PLAYER_VISUAL_BASE.w*viewportScale*100)/100;
+  const playerH=Math.round(PLAYER_VISUAL_BASE.h*viewportScale*100)/100;
+  const controlScale=Math.max(.84,Math.min(1.06,viewportScale));
   document.documentElement.style.setProperty('--app-height',viewH+'px');
   document.documentElement.style.setProperty('--app-width',viewW+'px');
   document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
+  document.documentElement.style.setProperty('--viewport-scale',viewportScale.toFixed(4));
+  document.documentElement.style.setProperty('--control-scale',controlScale.toFixed(4));
+  document.documentElement.style.setProperty('--player-visual-w',playerW+'px');
+  document.documentElement.style.setProperty('--player-visual-h',playerH+'px');
   const nextGround=clamp(Math.round(viewH*.30),72,112);
-  const changed=nextGround!==MAP_GROUND_SCREEN_Y;
+  const groundChanged=nextGround!==MAP_GROUND_SCREEN_Y;
+  const sizeChanged=viewW!==prevW||viewH!==prevH;
+  const scaleChanged=Math.abs(viewportScale-prevScale)>.001;
   VIEW_W=viewW;VIEW_H=viewH;
   MAP_GROUND_SCREEN_Y=nextGround;
-  return changed;
+  PLAYER_VISUAL.w=playerW;PLAYER_VISUAL.h=playerH;PLAYER_VISUAL.scale=viewportScale;
+  return {groundChanged,sizeChanged,scaleChanged};
 }
 function applyWorldDimensions(){
   const width=VISUAL_WINDOW_SPAN+'px';
@@ -1491,7 +1562,7 @@ function setPlayerCrouching(active,{force=false}={}){
     playerCrouching=true;
     actorEl.classList.add('is-crouching');
     crouchBtn?.classList.add('is-active');
-    syncPlayerActionState(true);
+    syncPlayerActionState();
     return true;
   }
   if(!playerCrouching)return true;
@@ -1499,7 +1570,7 @@ function setPlayerCrouching(active,{force=false}={}){
   playerCrouching=false;
   actorEl.classList.remove('is-crouching');
   crouchBtn?.classList.remove('is-active');
-  syncPlayerActionState(true);
+  syncPlayerActionState();
   return true;
 }
 function updateCrouchState(){
@@ -1569,13 +1640,17 @@ function supportAt(x,y,tolerance=3){
   return support;
 }
 function performJump(){
-  if(playerCrouching)setPlayerCrouching(false,{force:true});
+  if(playerCrouching){
+    playerCrouching=false;
+    actorEl.classList.remove('is-crouching');
+    crouchBtn?.classList.remove('is-active');
+  }
   playerVy=JUMP_SPEED;
   playerGrounded=false;
   coyoteTimer=0;
   jumpBufferTimer=0;
   actorEl.classList.add('is-jumping');
-  syncPlayerActionState(true);
+  syncPlayerActionState();
 }
 function updatePlayerVertical(dt,interactive){
   if(!interactive)return;
@@ -1669,7 +1744,6 @@ function debugAttack(){return startPlayerAttack(true)}
 function setCrouchControl(active=true){
   mobileCrouch=!!active;
   updateCrouchState();
-  syncPlayerActionState(true);
   renderWorld(true);
   return playerCrouching;
 }
@@ -2077,7 +2151,7 @@ window.PaperchalkCombat={
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
   get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
   get enemies(){return enemies.map(e=>({id:e.id,x:e.x,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
-  get player(){return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),attacking:playerAttackTimer>0}},
+  get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
@@ -2164,7 +2238,8 @@ window.PaperchalkRuntime={
     npcs:MAP_NPCS,
     enemySpawns:ENEMY_SPAWNS,
     playerVisual:PLAYER_VISUAL,
-    playerActions:PLAYER_ACTION_ASSETS
+    playerActions:PLAYER_ACTION_ASSETS,
+    playerActionMeta:PLAYER_ACTION_META
   }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
@@ -2219,22 +2294,31 @@ function refreshRoadW(){
 }
 roadTile.addEventListener('load',refreshRoadW);
 let viewportRebuildTimer=0;
-function handleViewportChange(){
-  const groundChanged=syncViewportMetrics();
+let viewportSyncRaf=0;
+function flushViewportChange(){
+  viewportSyncRaf=0;
+  const change=syncViewportMetrics();
+  if(!change.sizeChanged&&!change.groundChanged&&!change.scaleChanged)return;
   refreshRoadW();
-  if(groundChanged){
+  if(change.groundChanged||change.sizeChanged){
     clearTimeout(viewportRebuildTimer);
-    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld(true);if(worldMapOverlay.classList.contains('is-open'))drawWorldMap()},70);
+    viewportRebuildTimer=setTimeout(()=>{
+      buildMapVisuals();
+      renderWorld(true);
+      if(worldMapOverlay.classList.contains('is-open'))drawWorldMap();
+    },90);
   }else{
     renderWorld(true);
-    if(worldMapOverlay.classList.contains('is-open'))drawWorldMap();
   }
+}
+function handleViewportChange(){
+  if(viewportSyncRaf)return;
+  viewportSyncRaf=requestAnimationFrame(flushViewportChange);
 }
 addEventListener('resize',handleViewportChange,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(handleViewportChange,80),{passive:true});
 addEventListener('pageshow',()=>{handleViewportChange();setTimeout(handleViewportChange,120)},{passive:true});
 window.visualViewport?.addEventListener('resize',handleViewportChange,{passive:true});
-window.visualViewport?.addEventListener('scroll',handleViewportChange,{passive:true});
 refreshRoadW();
 
 function posMod(v,m){return ((v%m)+m)%m}

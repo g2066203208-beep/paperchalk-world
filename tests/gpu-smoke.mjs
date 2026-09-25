@@ -66,8 +66,10 @@ try{
     visual:window.PaperchalkRuntime.worldData.playerVisual
   }));
   assert(autoAfterEnter.mode==='dom','mobile auto mode diverged from desktop '+JSON.stringify(autoAfterEnter));
-  assert(Math.abs(autoAfterEnter.actorWidth-104)<1&&Math.abs(autoAfterEnter.actorHeight-156)<1,
-    'DOM player visual size is not 104x156 '+JSON.stringify(autoAfterEnter));
+  assert(autoAfterEnter.visual.scale<1&&autoAfterEnter.visual.scale>.90,
+    'mobile viewport scale is outside expected automatic range '+JSON.stringify(autoAfterEnter));
+  assert(Math.abs(autoAfterEnter.actorWidth-autoAfterEnter.visual.w)<1&&Math.abs(autoAfterEnter.actorHeight-autoAfterEnter.visual.h)<1,
+    'DOM player size diverged from shared responsive visual '+JSON.stringify(autoAfterEnter));
   await page.evaluate(()=>window.PaperchalkRenderer.setMode('pixi'));
   await page.waitForFunction(()=>window.PaperchalkRenderer?.mode==='pixi'&&window.PaperchalkRenderer?.ready,{timeout:12000});
 
@@ -87,9 +89,9 @@ try{
     entityVisibility:getComputedStyle(document.querySelector('.entity-layer')).visibility
   }));
   assert(initial.mode==='pixi'&&initial.active,'Pixi renderer did not activate after explicit switch '+JSON.stringify(initial));
-  assert(initial.visual.w===104&&initial.visual.h===156,'shared player visual config is not 104x156 '+JSON.stringify(initial.visual));
-  assert(Math.abs(initial.renderer.playerDisplayW-104)<1&&Math.abs(initial.renderer.playerDisplayH-156)<1,
-    'Pixi player visual size diverged from shared 104x156 config '+JSON.stringify(initial.renderer));
+  assert(initial.visual.scale<1&&initial.visual.scale>.90,'shared responsive player visual is invalid '+JSON.stringify(initial.visual));
+  assert(Math.abs(initial.renderer.playerDisplayW-initial.visual.w)<1&&Math.abs(initial.renderer.playerDisplayH-initial.visual.h)<1,
+    'Pixi idle player size diverged from shared responsive visual '+JSON.stringify(initial.renderer));
   assert(initial.pixiResources>0,'Pixi vendor was not lazy-loaded after world entry '+JSON.stringify(initial));
   assert(initial.canvas.exists&&initial.canvas.width>500&&initial.canvas.height>250,'Pixi canvas invalid '+JSON.stringify(initial.canvas));
   assert(initial.worldClass.includes('renderer-pixi-dynamic'),'renderer class missing');
@@ -99,10 +101,17 @@ try{
   await page.waitForTimeout(100);
   const gpuCrouch=await page.evaluate(()=>({
     action:window.PaperchalkCombat.player.action,
-    rendererAction:window.PaperchalkRenderer.stats.playerAction
+    actionScale:window.PaperchalkCombat.player.actionScale,
+    rendererAction:window.PaperchalkRenderer.stats.playerAction,
+    rendererScale:window.PaperchalkRenderer.stats.playerActionScale,
+    sourceFacing:window.PaperchalkRenderer.stats.playerSourceFacing,
+    displayW:window.PaperchalkRenderer.stats.playerDisplayW,
+    visual:{...window.PaperchalkRuntime.worldData.playerVisual}
   }));
-  assert(gpuCrouch.action==='crouch'&&gpuCrouch.rendererAction==='crouch',
-    'Pixi renderer did not follow crouch action texture '+JSON.stringify(gpuCrouch));
+  assert(gpuCrouch.action==='crouch'&&gpuCrouch.rendererAction==='crouch'&&
+    Math.abs(gpuCrouch.actionScale-.76)<.001&&Math.abs(gpuCrouch.rendererScale-.76)<.001&&
+    gpuCrouch.sourceFacing===1&&Math.abs(gpuCrouch.displayW-gpuCrouch.visual.w*.76)<1,
+    'Pixi renderer did not follow normalized crouch metadata '+JSON.stringify(gpuCrouch));
   await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
   await page.waitForTimeout(80);
 

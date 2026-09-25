@@ -48,17 +48,38 @@ assert(css.includes('will-change:transform'),'Compositor motion hint missing');
 assert(!android.includes('WebSettings.LOAD_NO_CACHE'),'Android WebView reverted to no-cache mode');
 assert(!android.includes('clearCache(true)'),'Android WebView reverted to clearing HTTP cache every launch');
 
+const playerRuntimeNames=['idle','crouch','jump-up','jump-down','walk'];
+const playerRuntimeSizes=Object.fromEntries(playerRuntimeNames.map(name=>{
+  const file='assets/player/runtime/'+name+'.webp';
+  assert(fs.existsSync(file),'Missing optimized player runtime sprite: '+file);
+  const bytes=size(file);
+  assert(bytes<=60000,file+' exceeded 60KB runtime sprite budget: '+bytes);
+  return [name,bytes];
+}));
+const playerRuntimeTotal=Object.values(playerRuntimeSizes).reduce((a,b)=>a+b,0);
+assert(playerRuntimeTotal<=230000,'Player runtime sprite set exceeded 230KB: '+playerRuntimeTotal);
+assert(game.includes("./assets/player/runtime/idle.webp"),'Game runtime is not using optimized player sprites');
+assert(!game.includes("./assets/player/idle.webp?v=actions-r1"),'High-resolution idle sprite returned to hot runtime path');
+assert(!game.includes("visualViewport?.addEventListener('scroll'"),'Visual viewport scroll still triggers expensive world work');
+assert(game.includes("requestAnimationFrame(flushViewportChange)"),'Viewport rebuilds are not RAF-debounced');
+assert(game.includes("schedulePlayerActionWarmup"),'Player action sprites are not predecoded during idle time');
+
 const eagerHeavyBytes=0;
 const report={
   budgets:Object.fromEntries(Object.keys(budgets).map(f=>[f,size(f)])),
   eagerHeavyBytes,
+  playerRuntimeSizes,
+  playerRuntimeTotal,
   guards:[
     'deferred-heavy-ui',
     'lazy-gpu-boot',
     'retained-map-dom',
     'spatial-collision-index',
     'compositor-motion',
-    'android-http-cache'
+    'android-http-cache',
+    'optimized-player-sprites',
+    'debounced-viewport',
+    'predecoded-player-actions'
   ]
 };
 console.log('PERFORMANCE_BUDGET_PASS '+JSON.stringify(report));

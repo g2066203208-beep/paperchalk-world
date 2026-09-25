@@ -107,47 +107,75 @@ try{
     parents[0]==='entityTrack'&&parents[1]==='entityTrack',
     JSON.stringify(parents));
 
+  await page.waitForFunction(()=>performance.getEntriesByType('resource').filter(e=>e.name.includes('/assets/player/runtime/')).length>=5,null,{timeout:5000});
   const initialAction=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||''
+    src:document.getElementById('playerSprite')?.getAttribute('src')||'',
+    visual:{...window.PaperchalkRuntime.worldData.playerVisual},
+    rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
   }));
-  check('Player starts in supplied idle pose',
-    initialAction.player.action==='idle'&&initialAction.state==='idle'&&initialAction.src.includes('/assets/player/idle.webp'),
+  check('Player starts in optimized supplied idle pose',
+    initialAction.player.action==='idle'&&initialAction.state==='idle'&&initialAction.src.includes('/assets/player/runtime/idle.webp'),
+    JSON.stringify(initialAction));
+  check('Desktop player size comes from unified viewport scale',
+    initialAction.visual.scale>1&&initialAction.visual.scale<=1.081&&
+    Math.abs(initialAction.rect.w-initialAction.visual.w)<1&&Math.abs(initialAction.rect.h-initialAction.visual.h)<1,
     JSON.stringify(initialAction));
 
-  const crouchOn=await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
-  await page.waitForTimeout(80);
+  await page.setViewportSize({width:900,height:540});
+  await page.waitForTimeout(220);
+  const compactViewport=await page.evaluate(()=>({
+    visual:{...window.PaperchalkRuntime.worldData.playerVisual},
+    rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
+  }));
+  check('Player automatically adapts to a compact viewport without device-specific sizing',
+    Math.abs(compactViewport.visual.scale-.82)<.01&&
+    Math.abs(compactViewport.rect.w-compactViewport.visual.w)<1&&Math.abs(compactViewport.rect.h-compactViewport.visual.h)<1,
+    JSON.stringify(compactViewport));
+  await page.setViewportSize({width:1440,height:900});
+  await page.waitForTimeout(220);
+
+  const crouchAccepted=await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
+  await page.waitForTimeout(35);
+  const crouchFlip=await page.evaluate(()=>document.getElementById('playerFlip')?.getAnimations().length||0);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='crouch',null,{timeout:900});
+  await page.waitForTimeout(90);
   const crouched=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
     src:document.getElementById('playerSprite')?.getAttribute('src')||'',
     button:document.getElementById('crouchBtn')?.classList.contains('is-active')||false
   }));
-  check('Crouch uses supplied pose and shorter real body',
-    crouchOn===true&&crouched.player.crouching&&crouched.player.action==='crouch'&&
-    crouched.player.bodyH===78&&crouched.state==='crouch'&&
-    crouched.src.includes('/assets/player/crouch.webp')&&crouched.button,
-    JSON.stringify(crouched));
+  check('Crouch uses paper flip, normalized supplied pose and shorter real body',
+    crouchAccepted===true&&crouchFlip>0&&crouched.player.crouching&&crouched.player.action==='crouch'&&
+    crouched.player.bodyH===78&&Math.abs(crouched.player.actionScale-.76)<.001&&crouched.state==='crouch'&&
+    crouched.src.includes('/assets/player/runtime/crouch.webp')&&crouched.button,
+    JSON.stringify({crouchAccepted,crouchFlip,crouched}));
 
   await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
-  await page.waitForTimeout(80);
+  await page.waitForTimeout(180);
   const stood=await page.evaluate(()=>window.PaperchalkCombat.player);
   check('Crouch release returns to standing body',
     !stood.crouching&&stood.bodyH===108&&stood.action==='idle',
     JSON.stringify(stood));
 
   await page.keyboard.down('KeyD');
-  await page.waitForTimeout(140);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='walk',null,{timeout:900});
+  await page.waitForTimeout(45);
   const walking=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||''
+    src:document.getElementById('playerSprite')?.getAttribute('src')||'',
+    left:document.querySelector('.actor')?.classList.contains('facing-left')||false,
+    sourceFacing:getComputedStyle(document.querySelector('.actor')).getPropertyValue('--source-facing').trim()
   }));
   await page.keyboard.up('KeyD');
-  await page.waitForTimeout(80);
-  check('Walking uses newest supplied walking pose',
-    walking.player.action==='walk'&&walking.state==='walk'&&walking.src.includes('/assets/player/walk.webp'),
+  await page.waitForTimeout(180);
+  check('Right movement and newest walking art face the same direction',
+    walking.player.x>460&&walking.player.facing===1&&walking.player.sourceFacing===-1&&
+    walking.player.action==='walk'&&walking.state==='walk'&&!walking.left&&walking.sourceFacing==='-1'&&
+    walking.src.includes('/assets/player/runtime/walk.webp'),
     JSON.stringify(walking));
 
   // Restore the original regression position before checking far-enemy sleep radius.
@@ -163,7 +191,8 @@ try{
     JSON.stringify({enemyMoveBefore:enemyMoveBefore[0],enemyMoveAfter:enemyMoveAfter[0]}));
 
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
-  await page.waitForTimeout(140);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-up',null,{timeout:900});
+  await page.waitForTimeout(45);
   const jumpAir=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
@@ -172,10 +201,12 @@ try{
   check('Jump ascent uses supplied upward pose',
     jumpStarted===true&&jumpAir.player.y>20&&!jumpAir.player.grounded&&
     jumpAir.player.vy>0&&jumpAir.player.action==='jump-up'&&jumpAir.state==='jump-up'&&
-    jumpAir.src.includes('/assets/player/jump-up.webp'),
+    jumpAir.src.includes('/assets/player/runtime/jump-up.webp'),
     JSON.stringify(jumpAir));
 
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.action==='jump-down',null,{timeout:1100});
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-down',null,{timeout:900});
+  await page.waitForTimeout(45);
   const jumpDown=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
@@ -183,7 +214,7 @@ try{
   }));
   check('Jump descent switches to supplied falling pose',
     jumpDown.player.vy<=0&&jumpDown.player.action==='jump-down'&&jumpDown.state==='jump-down'&&
-    jumpDown.src.includes('/assets/player/jump-down.webp'),
+    jumpDown.src.includes('/assets/player/runtime/jump-down.webp'),
     JSON.stringify(jumpDown));
 
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.grounded&&Math.abs(window.PaperchalkCombat.player.y)<1,null,{timeout:1800});

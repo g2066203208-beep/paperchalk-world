@@ -31,6 +31,8 @@ const stats={
   playerDisplayW:0,
   playerDisplayH:0,
   playerAction:'idle',
+  playerActionScale:1,
+  playerSourceFacing:1,
   renderMs:0,
   maxRenderMs:0,
   playerScreenX:0,
@@ -75,6 +77,13 @@ function playerVisualSize(){
     h:Number(size?.h)||156
   };
 }
+function playerActionMeta(state){
+  const meta=runtime?.worldData?.playerActionMeta?.[state]||runtime?.worldData?.playerActionMeta?.idle;
+  return {
+    scale:Number(meta?.scale)||1,
+    sourceFacing:Number(meta?.sourceFacing)===-1?-1:1
+  };
+}
 function makePlayer(textures){
   const root=new Container();
   root.eventMode='none';
@@ -87,10 +96,11 @@ function makePlayer(textures){
   const sprite=new Sprite(initial);
   sprite.anchor.set(.5,1);
   const target=playerVisualSize();
-  const scale=fitSpriteExact(sprite,initial,target.w,target.h);
+  const meta=playerActionMeta('idle');
+  const scale=fitSpriteExact(sprite,initial,target.w*meta.scale,target.h*meta.scale);
 
   root.addChild(shadow,sprite);
-  return {root,shadow,sprite,scale,textures,action:'idle'};
+  return {root,shadow,sprite,scale,textures,action:'idle',meta};
 }
 function makeEnemy(texture,id){
   const root=new Container();
@@ -120,9 +130,13 @@ function syncStaticScale(frame){
   if(!playerNode)return;
   const texture=playerNode.sprite.texture;
   const target=playerVisualSize();
-  playerNode.scale=fitSpriteExact(playerNode.sprite,texture,target.w,target.h);
-  stats.playerDisplayW=target.w;
-  stats.playerDisplayH=target.h;
+  const meta=playerActionMeta(playerNode.action||'idle');
+  playerNode.meta=meta;
+  playerNode.scale=fitSpriteExact(playerNode.sprite,texture,target.w*meta.scale,target.h*meta.scale);
+  stats.playerDisplayW=target.w*meta.scale;
+  stats.playerDisplayH=target.h*meta.scale;
+  stats.playerActionScale=meta.scale;
+  stats.playerSourceFacing=meta.sourceFacing;
 }
 function renderPlayer(frame,now){
   const p=frame.player,v=frame.viewport;
@@ -134,8 +148,14 @@ function renderPlayer(frame,now){
     node.action=action;
     node.sprite.texture=node.textures[action];
     const target=playerVisualSize();
-    node.scale=fitSpriteExact(node.sprite,node.sprite.texture,target.w,target.h);
+    const meta=playerActionMeta(action);
+    node.meta=meta;
+    node.scale=fitSpriteExact(node.sprite,node.sprite.texture,target.w*meta.scale,target.h*meta.scale);
     stats.playerAction=action;
+    stats.playerActionScale=meta.scale;
+    stats.playerSourceFacing=meta.sourceFacing;
+    stats.playerDisplayW=target.w*meta.scale;
+    stats.playerDisplayH=target.h*meta.scale;
   }
 
   const footY=v.height-v.groundY-p.y;
@@ -158,7 +178,8 @@ function renderPlayer(frame,now){
   }
 
   node.root.position.set(p.screenX+offsetX,footY+bob);
-  node.sprite.scale.x=Math.abs(node.scale.x)*p.facing;
+  const sourceFacing=node.meta?.sourceFacing===-1?-1:1;
+  node.sprite.scale.x=Math.abs(node.scale.x)*p.facing*sourceFacing;
   node.sprite.scale.y=Math.abs(node.scale.y);
   node.sprite.rotation=rotation;
   node.sprite.alpha=p.invulnerable?.78:1;
