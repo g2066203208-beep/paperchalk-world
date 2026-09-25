@@ -95,8 +95,9 @@ try{
 
   // Finite-map + realtime-combat foundation.
   const initialMap=await mapState(page);
-  check('Fresh A starts at A-village map spawn',
-    Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&initialMap.terrainCount===6&&initialMap.objectCount===2&&initialMap.spawnCount===2&&initialMap.npcCount===1,
+  check('Fresh A starts in the 20-zone continuous world',
+    Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&
+    initialMap.terrainCount>100&&initialMap.objectCount>40&&initialMap.spawnCount===21&&initialMap.npcCount===1,
     JSON.stringify({s,initialMap}));
   const parents=await page.evaluate(()=>[
     document.getElementById('enemy')?.parentElement?.id,
@@ -109,18 +110,16 @@ try{
   const enemyMoveBefore=await page.evaluate(()=>window.PaperchalkCombat.enemies);
   await page.waitForTimeout(420);
   const enemyMoveAfter=await page.evaluate(()=>window.PaperchalkCombat.enemies);
-  check('Far enemy patrols visibly inside its map spawn zone',
-    enemyMoveAfter[0].x<enemyMoveBefore[0].x-10 &&
-    enemyMoveAfter[0].x>=enemyMoveAfter[0].patrolMin &&
-    enemyMoveAfter[0].x<=enemyMoveAfter[0].patrolMax &&
-    enemyMoveAfter[0].state==='patrol',
-    JSON.stringify({enemyMoveBefore,enemyMoveAfter}));
+  check('Far enemies sleep outside the active simulation radius',
+    enemyMoveBefore[0].state==='sleep'&&enemyMoveAfter[0].state==='sleep'&&
+    Math.abs(enemyMoveAfter[0].x-enemyMoveBefore[0].x)<0.01,
+    JSON.stringify({enemyMoveBefore:enemyMoveBefore[0],enemyMoveAfter:enemyMoveAfter[0]}));
 
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
   await page.waitForTimeout(140);
   const jumpAir=await page.evaluate(()=>window.PaperchalkCombat.player);
   check('Jump enters airborne state',jumpStarted===true&&jumpAir.y>20&&!jumpAir.grounded,JSON.stringify(jumpAir));
-  await page.waitForTimeout(850);
+  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.grounded&&Math.abs(window.PaperchalkCombat.player.y)<1,null,{timeout:1800});
   const jumpLanded=await page.evaluate(()=>window.PaperchalkCombat.player);
   check('Jump returns to map ground',jumpLanded.grounded&&Math.abs(jumpLanded.y)<1,JSON.stringify(jumpLanded));
 
@@ -156,7 +155,7 @@ try{
   check('Debug panel exposes combat, terrain, spawn-zone and Camera overlays',
     debugView.combat.hitboxes&&debugView.combat.attackRange&&debugView.combat.mapColliders&&debugView.combat.spawnZones&&debugView.combat.camera&&
     debugView.playerHurt.width>40&&debugView.attack.width>80&&debugView.attack.preview&&
-    debugView.terrainBoxes>=7&&debugView.spawnBoxes===2&&debugView.cameraDisplay!=='none',
+    debugView.terrainBoxes>0&&debugView.spawnBoxes>0&&debugView.cameraDisplay!=='none',
     JSON.stringify(debugView));
   check('Inactive enemy attack box leaves no red-line residual',
     debugView.enemyAttack.hidden===true&&debugView.enemyAttack.width===0,
@@ -215,13 +214,17 @@ try{
     clearedRock.playerWorldX>1225,
     JSON.stringify(clearedRock));
 
-  // Falling onto platform-2 should land on its 116px top surface.
+  // Falling onto platform-2 should land exactly on the currently-authored platform top.
+  const platformTop=await page.evaluate(()=>{
+    const p=window.PaperchalkMap.terrain.find(v=>v.id==='platform-2');
+    return p.y+p.h;
+  });
   await page.evaluate(()=>window.eval("playerWorldX=3060;playerY=205;playerVy=-40;playerGrounded=false;updateCamera();renderWorld();"));
-  await page.waitForTimeout(500);
+  await page.waitForFunction(top=>window.PaperchalkCombat?.player?.grounded&&Math.abs(window.PaperchalkCombat.player.y-top)<1,platformTop,{timeout:1400});
   const platformLanding=await state(page);
-  check('Platform collider catches a falling player on its top surface',
-    platformLanding.playerY>114&&platformLanding.playerY<118,
-    JSON.stringify(platformLanding));
+  check('Platform collider catches a falling player on its authored top surface',
+    Math.abs(platformLanding.playerY-platformTop)<1,
+    JSON.stringify({platformLanding,platformTop}));
 
   // Breakable crate and pickup pipeline.
   await page.evaluate(()=>window.PaperchalkMap.teleport(2335,{notice:''}));
@@ -240,11 +243,16 @@ try{
     mapAfterPickup.map.collected.includes('herb-crate')&&pickedInventory?.action==='heal'&&pickedInventory?.heal===2,
     JSON.stringify({map:mapAfterPickup.map,pickedInventory}));
 
-  // Exit is a real finite-map endpoint.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(5750,{notice:''}));
+  // Crossing the old 6000px boundary must stay inside the continuous world with no loading gate.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(6250,{notice:''}));
   await page.waitForTimeout(160);
-  const exitState=await mapState(page);
-  check('Map exit trigger is reached and recorded',exitState.map.exitReached===true,JSON.stringify(exitState.map));
+  const continuousWorld=await page.evaluate(()=>({
+    x:window.PaperchalkMap.playerX,
+    route:window.PaperchalkMap.traversal.routeIndex
+  }));
+  check('Crossing 6000px enters the next continuous-world route with no exit gate',
+    continuousWorld.x>6000&&continuousWorld.route===1,
+    JSON.stringify(continuousWorld));
 
   // NPC is a map-bound entity with proximity prompt and real interaction.
   await page.evaluate(()=>window.PaperchalkMap.teleport(760,{notice:''}));
@@ -258,16 +266,18 @@ try{
     npcNear.near===true&&npcNear.interactDisabled===false&&Math.abs(npcNear.playerX-760)<2,
     JSON.stringify(npcNear));
   await page.keyboard.press('KeyE');
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(120);
   const npcTalk=await page.evaluate(()=>({
-    text:document.getElementById('mapNotice')?.textContent||'',
-    shown:document.getElementById('mapNotice')?.classList.contains('is-show')||false
+    open:document.getElementById('dialogueStage')?.classList.contains('is-open')||false,
+    name:document.getElementById('dialogueNpcName')?.textContent||'',
+    phase:window.PaperchalkDialogue?.state?.phase||''
   }));
-  check('E talks to the map NPC',
-    npcTalk.shown&&npcTalk.text.includes('村口老匠')&&npcTalk.text.includes('跳起来越过障碍'),
+  check('E opens the map NPC dialogue stage',
+    npcTalk.open&&npcTalk.name==='白翼引路人'&&npcTalk.phase==='opening',
     JSON.stringify(npcTalk));
+  await page.evaluate(()=>window.PaperchalkDialogue.close({immediate:true}));
 
-  // Return to a safe mid-map position for the legacy save/UI tests.
+  // Return to a safe mid-map position for persistence/UI tests.
   await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
   await page.waitForTimeout(80);
 
@@ -362,6 +372,31 @@ try{
     Number.isFinite(entityTranslateX)&&Math.abs(entityTranslateX+entityMapSync.worldX)<0.5,
     JSON.stringify({...entityMapSync,entityTranslateX}));
 
+  const compositorPlayer=await page.evaluate(()=>({
+    left:document.querySelector('.actor').style.left,
+    bottom:document.querySelector('.actor').style.bottom,
+    actorX:document.querySelector('.actor').style.getPropertyValue('--actor-x'),
+    actorY:document.querySelector('.actor').style.getPropertyValue('--actor-y'),
+    willChange:getComputedStyle(document.querySelector('.actor')).willChange
+  }));
+  check('Player motion uses compositor transform instead of per-frame left/bottom layout',
+    compositorPlayer.left===''&&compositorPlayer.bottom===''&&
+    compositorPlayer.actorX.endsWith('px')&&compositorPlayer.actorY.endsWith('px')&&
+    compositorPlayer.willChange.includes('transform'),
+    JSON.stringify(compositorPlayer));
+
+  const poolBefore=await page.evaluate(()=>window.PaperchalkDebug.perf());
+  await page.evaluate(()=>window.PaperchalkMap.teleport(3500,{notice:''}));
+  await page.waitForTimeout(100);
+  const poolFirstVisit=await page.evaluate(()=>window.PaperchalkDebug.perf());
+  await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
+  await page.waitForTimeout(100);
+  const poolReturn=await page.evaluate(()=>window.PaperchalkDebug.perf());
+  check('Map visual window reuses retained DOM nodes when revisiting an area',
+    poolFirstVisit.pooledMapNodes>=poolBefore.pooledMapNodes&&
+    poolReturn.mapVisualCreateCount===poolFirstVisit.mapVisualCreateCount,
+    JSON.stringify({poolBefore,poolFirstVisit,poolReturn}));
+
   // Open menu from world: paper effects must clean themselves up.
   await page.locator('#worldMenuBtn').click();
   await page.waitForTimeout(900);
@@ -372,7 +407,7 @@ try{
   check('A camera position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
   check('A player world position saved',Math.abs((saveA?.playerWorldX||0)-moved.playerWorldX)<5,'saved='+saveA?.playerWorldX+' runtime='+moved.playerWorldX);
   check('A map changes are saved',
-    saveA?.mapState?.broken?.includes('crate-1')&&saveA?.mapState?.collected?.includes('herb-crate')&&saveA?.mapState?.exitReached===true,
+    saveA?.mapState?.broken?.includes('crate-1')&&saveA?.mapState?.collected?.includes('herb-crate'),
     JSON.stringify(saveA?.mapState));
   check('A health saved with world state',saveA?.playerHp===8,'saved playerHp='+saveA?.playerHp);
 
@@ -400,8 +435,8 @@ try{
   const healthReloaded=await healthState(page);
   check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
   const mapReloaded=await mapState(page);
-  check('Map destruction/pickups/exit state survive reload',
-    mapReloaded.map.broken.includes('crate-1')&&mapReloaded.map.collected.includes('herb-crate')&&mapReloaded.map.exitReached===true,
+  check('Map destruction and pickups survive reload',
+    mapReloaded.map.broken.includes('crate-1')&&mapReloaded.map.collected.includes('herb-crate'),
     JSON.stringify(mapReloaded.map));
   await page.locator('#backpackBtn').click();
   await page.waitForTimeout(850);
@@ -470,7 +505,7 @@ try{
   check('B starts with independent full health',bHealth.hp===10&&saveB?.playerHp===10,JSON.stringify({bHealth,saveHp:saveB?.playerHp}));
   const bMap=await mapState(page);
   check('B does not inherit A map destruction or pickups',
-    bMap.map.broken.length===0&&bMap.map.collected.length===0&&bMap.map.exitReached===false,
+    bMap.map.broken.length===0&&bMap.map.collected.length===0,
     JSON.stringify(bMap.map));
 
   // Save B, then return A and prove A is intact.
@@ -494,7 +529,7 @@ try{
   check('A restores its own health',aReturnHealth.hp===8&&aReturnHealth.empty===2,JSON.stringify(aReturnHealth));
   const aReturnMap=await mapState(page);
   check('A restores its own persistent map state',
-    aReturnMap.map.broken.includes('crate-1')&&aReturnMap.map.collected.includes('herb-crate')&&aReturnMap.map.exitReached===true,
+    aReturnMap.map.broken.includes('crate-1')&&aReturnMap.map.collected.includes('herb-crate'),
     JSON.stringify(aReturnMap.map));
 
   // Paper cleanup after backpack too.
