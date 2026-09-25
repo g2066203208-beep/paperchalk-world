@@ -119,11 +119,14 @@ public class MainActivity extends Activity {
         hideSystemBars();
         if (webView != null) {
             webView.onResume();
+            long awayMs = pausedAtMs > 0L
+                    ? Math.max(0L, System.currentTimeMillis() - pausedAtMs)
+                    : 0L;
             if (initialResume) {
                 initialResume = false;
-            } else if (pausedAtMs > 0L) {
-                // Returning from the Android background must revalidate the HTML shell.
-                // This prevents the app from showing an old world indefinitely.
+            } else if (awayMs >= 1500L) {
+                // Revalidate after a real background trip, but do not tear down the game
+                // for tiny system interruptions such as a permission sheet or notification.
                 loadFreshGame("resume");
             }
         }
@@ -133,7 +136,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         pausedAtMs = System.currentTimeMillis();
-        if (webView != null) webView.onPause();
+        if (webView != null) {
+            // Native lifecycle backup: persist position/inventory before refresh/process kill.
+            webView.evaluateJavascript(
+                    "(function(){try{return !!(window.PaperchalkSaveNow && window.PaperchalkSaveNow());}catch(e){return false;}})()",
+                    ignored -> {}
+            );
+            webView.onPause();
+        }
         super.onPause();
     }
 
