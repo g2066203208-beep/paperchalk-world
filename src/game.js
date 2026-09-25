@@ -995,7 +995,8 @@ function updateDebugStatus(){
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
-    '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>';
+    '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>'+
+    '<span>渲染器 <b>'+(window.PaperchalkRenderer?.mode||'DOM')+'</b></span>';
 }
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
@@ -1051,6 +1052,9 @@ function runDebugCommand(rawCommand){
       'heal 2          回 2 血',
       'time 18:30      世界时间设为 18:30',
       'stage            测试纸片舞台翻景',
+      'renderer auto    自动选择渲染器',
+      'renderer pixi    Pixi/WebGL 动态实体',
+      'renderer dom     DOM 安全后端',
       'pos             查看玩家/Camera坐标',
       'map             查看地图状态',
       'tp 3000         传送到地图 X=3000',
@@ -1112,6 +1116,13 @@ function runDebugCommand(rawCommand){
     return '世界时间 -> '+formatWorldClock()+' '+worldTimeName();
   }
   if(cmd==='stage'||cmd==='fold'){triggerPaperSceneFold();return '纸片舞台换景测试。';}
+  if(cmd==='renderer'){
+    const target=String(arg||'auto').toLowerCase();
+    if(!['auto','pixi','dom'].includes(target))return '用法：renderer auto|pixi|dom';
+    if(!window.PaperchalkRenderer)return 'GPU 渲染器尚未加载';
+    window.PaperchalkRenderer.setMode(target);
+    return '渲染器请求 -> '+target;
+  }
   if(cmd==='pos'||cmd==='position'){
     return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
   }
@@ -1229,6 +1240,7 @@ addEventListener('keydown',e=>{
     closeDebugPanel();
   }
 });
+window.addEventListener('paperchalk-renderer-change',()=>{if(debugIsOpen())updateDebugStatus()});
 window.PaperchalkDebug={
   open:openDebugPanel,
   close:closeDebugPanel,
@@ -1527,7 +1539,7 @@ function resetEnemyState(e,spawn){
   e.x=spawn.x;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
   e.hp=ENEMY_MAX_HP;e.alive=true;e.facing=-1;e.state='patrol';e.attackTimer=0;e.attackCooldown=.7;e.hitstun=0;e.spawned=true;
   e.account=typeof getSession==='function'?(getSession()?.account||null):null;e.patrolDir=-1;
-  e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');setEnemyVisual(e);
+  e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');if(!pixiDynamicActive())setEnemyVisual(e);
 }
 function resetMapEnemies(){
   enemies.forEach((e,i)=>{
@@ -1547,7 +1559,7 @@ function damageEnemy(e,amount=1,knockDir=facing){
   setTimeout(()=>e.el.classList.remove('is-hit'),220);
   e.x=clamp(e.x+knockDir*34,40,MAP_WIDTH-40);
   if(e.hp<=0){e.alive=false;e.state='dead';e.el.classList.remove('is-moving','is-attacking');e.el.classList.add('is-dead')}
-  setEnemyVisual(e);return true;
+  if(!pixiDynamicActive())setEnemyVisual(e);return true;
 }
 function enemyCanMove(e,dx){
   const old={x:e.x-31,y:0,w:62,h:108};
@@ -1578,12 +1590,13 @@ function updateEnemy(e,dt,interactive){
     }
     return;
   }
-  e.facing=dx>=0?1:-1;e.el.style.setProperty('--enemy-facing',e.facing);
+  e.facing=dx>=0?1:-1;
   if(e.attackTimer>0){
     e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
     if(e.attackTimer<=0){e.el.classList.remove('is-attacking');e.attackCooldown=.9}
     else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
-      damagePlayer(1);playerInvuln=.72;actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
+      damagePlayer(1);playerInvuln=.72;
+      if(!pixiDynamicActive())actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
   }else if(dist<84&&e.attackCooldown<=0){
     e.state='attack';e.attackTimer=.34;e.el.classList.remove('is-moving');e.el.classList.add('is-attacking');
@@ -1595,7 +1608,7 @@ function updateEnemy(e,dt,interactive){
     e.state='patrol';e.el.classList.add('is-moving');
     if(e.x<=e.patrolMin)e.patrolDir=1;
     if(e.x>=e.patrolMax)e.patrolDir=-1;
-    e.facing=e.patrolDir;e.el.style.setProperty('--enemy-facing',e.facing);
+    e.facing=e.patrolDir;
     if(!moveEnemy(e,e.patrolDir*48*dt))e.patrolDir*=-1;
   }
 }
@@ -2001,6 +2014,7 @@ window.PaperchalkRuntime={
     return ()=>runtimeObservers.delete(observer);
   },
   markMapChanged:markRuntimeMapChanged,
+  requestDomSync(){renderWorld(true)},
   get subscriberCount(){return runtimeObservers.size}
 };
 
@@ -2064,6 +2078,7 @@ window.visualViewport?.addEventListener('scroll',handleViewportChange,{passive:t
 refreshRoadW();
 
 function posMod(v,m){return ((v%m)+m)%m}
+function pixiDynamicActive(){return worldEl.classList.contains('renderer-pixi-dynamic')}
 function worldInteractive(){
   return !!uiShell
     && uiShell.classList.contains('is-hidden')
@@ -2120,15 +2135,17 @@ function renderWorld(force=false){
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
   const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
-  if(force||renderCache.actorLeft!==actorLeft){
-    renderCache.actorLeft=actorLeft;
-    actorEl.style.setProperty('--actor-x',actorLeft);
+  if(!pixiDynamicActive()){
+    if(force||renderCache.actorLeft!==actorLeft){
+      renderCache.actorLeft=actorLeft;
+      actorEl.style.setProperty('--actor-x',actorLeft);
+    }
+    if(force||renderCache.actorBottom!==actorBottom){
+      renderCache.actorBottom=actorBottom;
+      actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
+    }
+    enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
-  if(force||renderCache.actorBottom!==actorBottom){
-    renderCache.actorBottom=actorBottom;
-    actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
-  }
-  enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
   notifyRuntimeObservers();
 }
