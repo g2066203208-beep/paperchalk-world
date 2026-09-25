@@ -1886,6 +1886,48 @@ button{cursor:pointer}
   }
 }
 
+
+/* ---------- R8 CONSTANT-SIZE PAPER PUPPET MOTION ---------- */
+/* The puppet NEVER changes scale while entering or leaving.
+   Rotation around the low transform-origin creates the rod-puppet arc. */
+@keyframes puppetPlayerArcOut{
+  0%{
+    opacity:1;
+    transform:translate3d(0,0,0) rotate(0deg);
+  }
+  100%{
+    opacity:0;
+    transform:translate3d(-48vw,17vh,0) rotate(-18deg);
+  }
+}
+@keyframes puppetNpcArcOut{
+  0%{
+    opacity:1;
+    transform:translate3d(0,0,0) rotate(0deg);
+  }
+  100%{
+    opacity:0;
+    transform:translate3d(48vw,17vh,0) rotate(18deg);
+  }
+}
+.dialogue-stage.is-opening .dialogue-portrait.player{
+  animation:puppetPlayerArcOut .72s cubic-bezier(.45,0,.55,1) reverse both!important;
+}
+.dialogue-stage.is-opening .dialogue-portrait.npc{
+  animation:puppetNpcArcOut .74s .025s cubic-bezier(.45,0,.55,1) reverse both!important;
+}
+.dialogue-stage.is-closing .dialogue-portrait.player{
+  animation:puppetPlayerArcOut .72s cubic-bezier(.45,0,.55,1) both!important;
+}
+.dialogue-stage.is-closing .dialogue-portrait.npc{
+  animation:puppetNpcArcOut .74s .025s cubic-bezier(.45,0,.55,1) both!important;
+}
+/* No parent scale in dialogue idle/choice either. */
+.dialogue-stage:not(.is-opening):not(.is-closing) .dialogue-portrait.player,
+.dialogue-stage:not(.is-opening):not(.is-closing) .dialogue-portrait.npc{
+  scale:1!important;
+}
+
 </style>
 </head>
 <body>
