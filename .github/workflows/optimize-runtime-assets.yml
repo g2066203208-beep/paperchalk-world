@@ -2,10 +2,6 @@ name: Optimize Runtime UI Assets
 
 on:
   workflow_dispatch:
-  push:
-    branches: [engine-v2-performance]
-    paths:
-      - ".github/workflows/optimize-runtime-assets.yml"
 
 permissions:
   contents: write

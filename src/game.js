@@ -622,6 +622,9 @@ const debugAiBtn=document.getElementById('debugAiBtn');
 const debugMapColliderBtn=document.getElementById('debugMapColliderBtn');
 const debugSpawnBtn=document.getElementById('debugSpawnBtn');
 const debugCameraBtn=document.getElementById('debugCameraBtn');
+const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
+const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
+const debugRendererDomBtn=document.getElementById('debugRendererDomBtn');
 const entityTrack=document.getElementById('entityTrack');
 const enemyEl=document.getElementById('enemy');
 const enemyHealthFill=document.getElementById('enemyHealthFill');
@@ -995,7 +998,9 @@ function updateDebugStatus(){
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
-    '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>';
+    '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>'+
+    '<span>渲染器 <b>'+(window.PaperchalkRenderer?.mode||'dom')+'</b></span>'+
+    '<span>GPU耗时 <b>'+(window.PaperchalkRenderer?.mode==='pixi'?(window.PaperchalkRenderer.stats.renderMs.toFixed(2)+'ms'):'--')+'</b></span>';
 }
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
@@ -1004,6 +1009,11 @@ function updateCombatDebugButtons(){
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
   debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
+  const renderer=window.PaperchalkRenderer;
+  const requested=renderer?.requested||'auto';
+  debugRendererAutoBtn?.classList.toggle('is-active',requested==='auto');
+  debugRendererGpuBtn?.classList.toggle('is-active',requested==='pixi');
+  debugRendererDomBtn?.classList.toggle('is-active',requested==='dom');
 }
 function writeDebugOutput(message){
   debugOutput.textContent=String(message);
@@ -1051,6 +1061,9 @@ function runDebugCommand(rawCommand){
       'heal 2          回 2 血',
       'time 18:30      世界时间设为 18:30',
       'stage            测试纸片舞台翻景',
+      'renderer auto    自动选择渲染器',
+      'renderer pixi    Pixi/WebGL 动态实体',
+      'renderer dom     DOM 安全后端',
       'pos             查看玩家/Camera坐标',
       'map             查看地图状态',
       'tp 3000         传送到地图 X=3000',
@@ -1112,6 +1125,13 @@ function runDebugCommand(rawCommand){
     return '世界时间 -> '+formatWorldClock()+' '+worldTimeName();
   }
   if(cmd==='stage'||cmd==='fold'){triggerPaperSceneFold();return '纸片舞台换景测试。';}
+  if(cmd==='renderer'){
+    const target=String(arg||'auto').toLowerCase();
+    if(!['auto','pixi','dom'].includes(target))return '用法：renderer auto|pixi|dom';
+    if(!window.PaperchalkRenderer)return 'GPU 渲染器尚未加载';
+    window.PaperchalkRenderer.setMode(target);
+    return '渲染器请求 -> '+target;
+  }
   if(cmd==='pos'||cmd==='position'){
     return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
   }
@@ -1218,6 +1238,14 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       setVisibleWorldClock(0);writeDebugOutput('时间 -> '+formatWorldClock()+' 深夜');updateDebugStatus();return;
     }else if(action==='stageFold'){
       triggerPaperSceneFold();writeDebugOutput('执行纸片舞台翻景。');return;
+    }else if(action==='rendererAuto'||action==='rendererPixi'||action==='rendererDom'){
+      const mode=action==='rendererPixi'?'pixi':action==='rendererDom'?'dom':'auto';
+      if(!window.PaperchalkRenderer){writeDebugOutput('GPU 渲染器尚未加载');return}
+      window.PaperchalkRenderer.setMode(mode).then(actual=>{
+        writeDebugOutput('渲染器 -> '+actual+'（请求 '+mode+'）');
+        updateDebugStatus();updateCombatDebugButtons();
+      });
+      return;
     }
     updateDebugStatus();
     writeDebugOutput('HP -> '+playerHp+' / '+PLAYER_MAX_HP);
@@ -1228,6 +1256,10 @@ addEventListener('keydown',e=>{
     e.preventDefault();
     closeDebugPanel();
   }
+});
+window.addEventListener('paperchalk-renderer-change',()=>{
+  updateCombatDebugButtons();
+  if(debugIsOpen())updateDebugStatus();
 });
 window.PaperchalkDebug={
   open:openDebugPanel,
@@ -1527,7 +1559,7 @@ function resetEnemyState(e,spawn){
   e.x=spawn.x;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
   e.hp=ENEMY_MAX_HP;e.alive=true;e.facing=-1;e.state='patrol';e.attackTimer=0;e.attackCooldown=.7;e.hitstun=0;e.spawned=true;
   e.account=typeof getSession==='function'?(getSession()?.account||null):null;e.patrolDir=-1;
-  e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');setEnemyVisual(e);
+  e.el.classList.remove('is-dead','is-hit','is-attacking','is-moving');if(!pixiDynamicActive())setEnemyVisual(e);
 }
 function resetMapEnemies(){
   enemies.forEach((e,i)=>{
@@ -1547,7 +1579,7 @@ function damageEnemy(e,amount=1,knockDir=facing){
   setTimeout(()=>e.el.classList.remove('is-hit'),220);
   e.x=clamp(e.x+knockDir*34,40,MAP_WIDTH-40);
   if(e.hp<=0){e.alive=false;e.state='dead';e.el.classList.remove('is-moving','is-attacking');e.el.classList.add('is-dead')}
-  setEnemyVisual(e);return true;
+  if(!pixiDynamicActive())setEnemyVisual(e);return true;
 }
 function enemyCanMove(e,dx){
   const old={x:e.x-31,y:0,w:62,h:108};
@@ -1578,12 +1610,13 @@ function updateEnemy(e,dt,interactive){
     }
     return;
   }
-  e.facing=dx>=0?1:-1;e.el.style.setProperty('--enemy-facing',e.facing);
+  e.facing=dx>=0?1:-1;
   if(e.attackTimer>0){
     e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
     if(e.attackTimer<=0){e.el.classList.remove('is-attacking');e.attackCooldown=.9}
     else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
-      damagePlayer(1);playerInvuln=.72;actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
+      damagePlayer(1);playerInvuln=.72;
+      if(!pixiDynamicActive())actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
   }else if(dist<84&&e.attackCooldown<=0){
     e.state='attack';e.attackTimer=.34;e.el.classList.remove('is-moving');e.el.classList.add('is-attacking');
@@ -1595,14 +1628,14 @@ function updateEnemy(e,dt,interactive){
     e.state='patrol';e.el.classList.add('is-moving');
     if(e.x<=e.patrolMin)e.patrolDir=1;
     if(e.x>=e.patrolMax)e.patrolDir=-1;
-    e.facing=e.patrolDir;e.el.style.setProperty('--enemy-facing',e.facing);
+    e.facing=e.patrolDir;
     if(!moveEnemy(e,e.patrolDir*48*dt))e.patrolDir*=-1;
   }
 }
 function breakMapObject(id){
   const obj=MAP_OBJECTS.find(o=>o.id===id&&o.breakable);
   if(!obj||mapState.broken.has(id))return false;
-  mapState.broken.add(id);
+  mapState.broken.add(id);markRuntimeMapChanged();
   const el=mapObjectTrack.querySelector('[data-map-id="'+id+'"]');if(el)el.classList.add('is-broken');
   const dbg=mapDebugTrack.querySelector('[data-debug-for="'+id+'"]');if(dbg)dbg.style.display='none';
   const dependent=MAP_PICKUPS.filter(p=>p.requiresBroken===id);
@@ -1621,7 +1654,7 @@ function collectPickup(p){
   if(mapState.collected.has(p.id))return false;
   const item=p.type==='herb'?{id:'rough-herb',name:'粗纸药草',desc:'揉碎后能恢复 2 点生命。',count:1,weight:.1,consumable:true,action:'heal',heal:2}:null;
   if(!item||!addInventoryItem(item))return false;
-  mapState.collected.add(p.id);
+  mapState.collected.add(p.id);markRuntimeMapChanged();
   const el=mapObjectTrack.querySelector('[data-pickup-id="'+p.id+'"]');if(el)el.classList.add('is-collected');
   showMapNotice('拾取：'+item.name);saveWorldState();return true;
 }
@@ -1913,52 +1946,95 @@ window.PaperchalkCombat={
 };
 
 /* -------------------- RUNTIME / RENDERER CONTRACT V2 --------------------
-   Simulation and HTML UI remain authoritative. Any future WebGL/Pixi renderer
-   consumes this snapshot API instead of reaching into local variables.
-   No snapshot allocations occur unless an external renderer is subscribed. */
+   Simulation and HTML UI remain authoritative. Renderers subscribe to a reused
+   mutable frame-state object so the hot path does not allocate snapshots/arrays. */
 const runtimeObservers=new Set();
 let runtimeRevision=0;
-function runtimeSnapshot(){
+const runtimeFrameState={
+  revision:0,
+  viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
+  camera:{x:worldX,visualOriginX,sceneryOffsetX},
+  time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
+  route:{index:0,id:'',biome:'meadow',orientation:1},
+  player:{
+    x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+    grounded:playerGrounded,moving:false,attacking:false,attackTimer:0,invulnerable:false
+  },
+  enemies:enemies.map(e=>({
+    id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
+    patrolMin:e.patrolMin,patrolMax:e.patrolMax,attackTimer:e.attackTimer,hitstun:e.hitstun
+  })),
+  mapRevision:0
+};
+let runtimeMapRevision=0;
+
+function refreshRuntimeFrameState(){
   const route=routeForWorldX(playerWorldX);
+  const s=runtimeFrameState;
+  s.revision=runtimeRevision;
+  s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
+  s.camera.x=worldX;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
+  s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
+  s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
+  s.player.x=playerWorldX;s.player.y=playerY;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
+  s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
+  s.player.invulnerable=playerInvuln>0;
+  for(let i=0;i<enemies.length;i++){
+    const e=enemies[i],o=s.enemies[i];
+    o.x=e.x;o.hp=e.hp;o.alive=e.alive;o.facing=e.facing;o.state=e.state;
+    o.patrolMin=e.patrolMin;o.patrolMax=e.patrolMax;o.attackTimer=e.attackTimer;o.hitstun=e.hitstun;
+  }
+  s.mapRevision=runtimeMapRevision;
+  return s;
+}
+function runtimeSnapshot(){
+  const s=refreshRuntimeFrameState();
   return {
-    revision:runtimeRevision,
-    viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
-    camera:{x:worldX,visualOriginX,sceneryOffsetX},
-    time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
-    route:{index:route?.index??0,id:route?.id||'',biome:route?.biome||'meadow',orientation:currentRouteOrientation},
-    player:{
-      x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
-      grounded:playerGrounded,attacking:playerAttackTimer>0,invulnerable:playerInvuln>0
-    },
-    enemies:enemies.map(e=>({
-      id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
-      patrolMin:e.patrolMin,patrolMax:e.patrolMax
-    })),
+    revision:s.revision,
+    viewport:{...s.viewport},
+    camera:{...s.camera},
+    time:{...s.time},
+    route:{...s.route},
+    player:{...s.player},
+    enemies:s.enemies.map(e=>({...e})),
     map:{
       width:MAP_WIDTH,
-      visualOriginX,
+      revision:runtimeMapRevision,
       broken:[...mapState.broken],
       collected:[...mapState.collected]
     }
   };
 }
+function markRuntimeMapChanged(){runtimeMapRevision++}
 function notifyRuntimeObservers(){
   if(runtimeObservers.size===0)return;
   runtimeRevision++;
-  const snapshot=runtimeSnapshot();
+  const frame=refreshRuntimeFrameState();
   for(const observer of runtimeObservers){
-    try{observer(snapshot)}catch(err){console.error('RUNTIME_OBSERVER_FAILED',err)}
+    try{observer(frame)}catch(err){console.error('RUNTIME_OBSERVER_FAILED',err)}
   }
 }
 window.PaperchalkRuntime={
   version:2,
+  worldData:Object.freeze({
+    width:MAP_WIDTH,
+    zoneWidth:WORLD_ZONE_WIDTH,
+    terrain:MAP_TERRAIN,
+    objects:MAP_OBJECTS,
+    pickups:MAP_PICKUPS,
+    npcs:MAP_NPCS,
+    enemySpawns:ENEMY_SPAWNS
+  }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
     if(typeof observer!=='function')throw new TypeError('observer must be a function');
     runtimeObservers.add(observer);
-    observer(runtimeSnapshot());
+    observer(refreshRuntimeFrameState());
     return ()=>runtimeObservers.delete(observer);
   },
+  markMapChanged:markRuntimeMapChanged,
+  requestDomSync(){renderWorld(true)},
   get subscriberCount(){return runtimeObservers.size}
 };
 
@@ -2022,6 +2098,7 @@ window.visualViewport?.addEventListener('scroll',handleViewportChange,{passive:t
 refreshRoadW();
 
 function posMod(v,m){return ((v%m)+m)%m}
+function pixiDynamicActive(){return worldEl.classList.contains('renderer-pixi-dynamic')}
 function worldInteractive(){
   return !!uiShell
     && uiShell.classList.contains('is-hidden')
@@ -2078,15 +2155,17 @@ function renderWorld(force=false){
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
   const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
-  if(force||renderCache.actorLeft!==actorLeft){
-    renderCache.actorLeft=actorLeft;
-    actorEl.style.setProperty('--actor-x',actorLeft);
+  if(!pixiDynamicActive()){
+    if(force||renderCache.actorLeft!==actorLeft){
+      renderCache.actorLeft=actorLeft;
+      actorEl.style.setProperty('--actor-x',actorLeft);
+    }
+    if(force||renderCache.actorBottom!==actorBottom){
+      renderCache.actorBottom=actorBottom;
+      actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
+    }
+    enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
-  if(force||renderCache.actorBottom!==actorBottom){
-    renderCache.actorBottom=actorBottom;
-    actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
-  }
-  enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
   notifyRuntimeObservers();
 }
@@ -2982,6 +3061,7 @@ function loadWorldState(){
   mapState.visitedRoutes=new Set(Array.isArray(savedMap.visitedRoutes)?savedMap.visitedRoutes:[worldZoneIndexAt(playerWorldX)]);
   mapState.visitedNodes=new Set(Array.isArray(savedMap.visitedNodes)?savedMap.visitedNodes:['village']);
   mapState.exitReached=!!savedMap.exitReached;
+  markRuntimeMapChanged();
   buildMapVisuals();
 
   setInventoryFromSave(save.inventory);
@@ -3043,7 +3123,7 @@ authBtn.addEventListener('click',e=>{
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
       worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
-      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
+      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;

@@ -324,6 +324,14 @@ button{cursor:pointer}
 .map-notice.is-show{opacity:1;transform:translate(-50%,0)}
 .entity-layer{position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none}
 .entity-track{position:absolute;left:0;top:0;width:var(--world-width,6000px);height:100%;will-change:transform}
+.pixi-entity-layer{
+  position:absolute;inset:0;z-index:5;overflow:hidden;pointer-events:none;
+  contain:strict;display:none;
+}
+.pixi-entity-layer canvas{display:block;width:100%;height:100%;pointer-events:none}
+.stage.renderer-pixi-dynamic .pixi-entity-layer{display:block}
+.stage.renderer-pixi-dynamic .actor,
+.stage.renderer-pixi-dynamic .entity-layer{visibility:hidden}
 .prop-track{width:var(--world-width,6000px);height:100%;position:absolute;left:0;top:0}
 .prop{
   position:absolute;
@@ -411,7 +419,7 @@ button{cursor:pointer}
 #playerAttackDebug.is-active-box{border-style:solid;background:rgba(255,155,66,.28);box-shadow:0 0 0 2px rgba(255,255,255,.16) inset}
 #enemyHurtboxDebug{border-color:#a971ff;background:rgba(169,113,255,.10)}
 #enemyAttackDebug{border-color:#ff4f64;background:rgba(255,79,100,.20)}
-.debug-combat-actions,.debug-map-actions,.debug-time-actions{
+.debug-combat-actions,.debug-map-actions,.debug-renderer-actions,.debug-time-actions{
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 8px;
 }
 .debug-time-actions{grid-template-columns:repeat(5,minmax(0,1fr))}
@@ -1202,6 +1210,7 @@ button{cursor:pointer}
   font-weight:700;font-size:12px;cursor:pointer;
 }
 .debug-action:active{transform:translateY(1px);background:rgba(210,181,143,.74)}
+.debug-action.is-active{background:#5f5445;color:#f4e7ca;border-color:#40372d;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
 .debug-command-form{display:flex;gap:6px}
 .debug-command-input{
   flex:1;min-width:0;height:36px;padding:0 9px;
