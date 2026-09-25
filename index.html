@@ -2379,6 +2379,9 @@ const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
 const mapDebugTrack=document.getElementById('mapDebugTrack');
 const mapNotice=document.getElementById('mapNotice');
 const paperBackdrop=document.getElementById('paperBackdrop');
+const paperBackdropNext=document.getElementById('paperBackdropNext');
+const paperSun=document.getElementById('paperSun');
+const paperMoon=document.getElementById('paperMoon');
 const paperClock=document.getElementById('paperClock');
 const dialogueStage=document.getElementById('dialogueStage');
 const dialoguePlayerPortrait=document.getElementById('dialoguePlayerPortrait');
@@ -2571,12 +2574,17 @@ function setVisibleWorldClock(minutes,{persist=true}={}){
   if(persist&&typeof saveWorldState==='function')saveWorldState();
   return formatWorldClock();
 }
-function triggerPaperSceneFold(){
+function triggerPaperSceneFold(nextScene=null){
+  const scene=nextScene||routeForWorldX(playerWorldX)?.biome||worldEl.dataset.biome||'meadow';
   clearTimeout(sceneFoldTimer);
-  worldEl.classList.remove('scene-folding');
-  void paperBackdrop.offsetWidth;
-  worldEl.classList.add('scene-folding');
-  sceneFoldTimer=setTimeout(()=>worldEl.classList.remove('scene-folding'),860);
+  paperBackdropNext.dataset.scene=scene;
+  worldEl.classList.remove('scene-shifting');
+  void paperBackdropNext.offsetWidth;
+  worldEl.classList.add('scene-shifting');
+  sceneFoldTimer=setTimeout(()=>{
+    paperBackdrop.dataset.scene=scene;
+    worldEl.classList.remove('scene-shifting');
+  },980);
 }
 window.PaperchalkTheater={
   fold:triggerPaperSceneFold,
@@ -3259,10 +3267,15 @@ function applyCurrentRouteTheme(force=false){
     orientationRouteIndex=route.index;
     currentRouteOrientation=1;
   }
-  if(force||route.index!==lastAppliedRouteIndex){
+  const changed=route.index!==lastAppliedRouteIndex;
+  if(force||changed){
+    const hadScene=lastAppliedRouteIndex>=0;
     lastAppliedRouteIndex=route.index;
-    worldEl.dataset.biome=route.biome||'meadow';
+    const biome=route.biome||'meadow';
+    worldEl.dataset.biome=biome;
     mapState.visitedRoutes.add(route.index);
+    if(hadScene&&changed)triggerPaperSceneFold(biome);
+    else if(!worldEl.classList.contains('scene-shifting'))paperBackdrop.dataset.scene=biome;
   }
 }
 function updateCamera(){
@@ -3405,6 +3418,7 @@ let dialogueState={
   open:false,closing:false,npc:null,phase:'',choiceIndex:-1
 };
 let dialogueCloseTimer=0;
+let dialogueOpeningTimer=0;
 
 function dialogueIsOpen(){return dialogueState.open||dialogueState.closing}
 function playerDialogueName(){
@@ -3440,6 +3454,7 @@ function showDialogueOpening(){
   if(!npc)return;
   dialogueState.phase='opening';
   dialogueStage.classList.remove('is-choice');
+  worldEl.classList.remove('dialogue-choice-camera');
   dialogueChoices.innerHTML='';
   setDialogueBubble('npc',npc.dialogue?.opening||npc.text||'……');
 }
@@ -3457,10 +3472,11 @@ function showDialogueChoices(){
     btn.className='dialogue-choice '+positions[index];
     btn.dataset.choiceIndex=String(index);
     btn.textContent=choice.text;
-    btn.addEventListener('click',()=>selectDialogueChoice(index));
+    btn.addEventListener('click',e=>{e.stopPropagation();selectDialogueChoice(index)});
     dialogueChoices.appendChild(btn);
   });
   dialogueStage.classList.add('is-choice');
+  worldEl.classList.add('dialogue-choice-camera');
 }
 function selectDialogueChoice(index){
   const npc=dialogueState.npc;
@@ -3469,6 +3485,7 @@ function selectDialogueChoice(index){
   dialogueState.choiceIndex=index;
   dialogueState.phase='player-line';
   dialogueStage.classList.remove('is-choice');
+  worldEl.classList.remove('dialogue-choice-camera');
   dialogueChoices.innerHTML='';
   setDialogueBubble('player',choice.text);
   return true;
@@ -3498,12 +3515,15 @@ function openDialogue(npc){
   resetJoystick();
   closeDebugPanel({focus:false});
   clearTimeout(dialogueCloseTimer);
+  clearTimeout(dialogueOpeningTimer);
   dialogueState={open:true,closing:false,npc,phase:'',choiceIndex:-1};
   dialoguePlayerName.textContent=playerDialogueName();
   dialogueNpcName.textContent=npc.name||'旅人';
-  dialogueStage.classList.remove('is-closing','is-choice','speaker-player','speaker-npc');
+  dialogueStage.classList.remove('is-closing','is-choice','is-opening','speaker-player','speaker-npc');
   dialogueStage.dataset.portrait=npc.portrait||'paper';
-  dialogueStage.classList.add('is-open');
+  worldEl.classList.remove('dialogue-choice-camera');
+  dialogueStage.classList.add('is-open','is-opening');
+  dialogueOpeningTimer=setTimeout(()=>dialogueStage.classList.remove('is-opening'),920);
   dialogueStage.setAttribute('aria-hidden','false');
   worldEl.classList.add('dialogue-active');
   showDialogueOpening();
@@ -3512,6 +3532,9 @@ function openDialogue(npc){
 function closeDialogue({immediate=false}={}){
   if(!dialogueIsOpen())return false;
   clearTimeout(dialogueCloseTimer);
+  clearTimeout(dialogueOpeningTimer);
+  worldEl.classList.remove('dialogue-choice-camera');
+  dialogueStage.classList.remove('is-opening');
   if(immediate){
     dialogueStage.classList.remove('is-open','is-choice','is-closing','speaker-player','speaker-npc');
     dialogueStage.setAttribute('aria-hidden','true');
@@ -3532,12 +3555,17 @@ function closeDialogue({immediate=false}={}){
     dialogueStage.setAttribute('aria-hidden','true');
     worldEl.classList.remove('dialogue-active');
     dialogueState={open:false,closing:false,npc:null,phase:'',choiceIndex:-1};
-  },480);
+  },700);
   return true;
 }
-dialoguePlayerBubble.addEventListener('click',advanceDialogue);
-dialogueNpcBubble.addEventListener('click',advanceDialogue);
-dialogueSkip.addEventListener('click',()=>closeDialogue());
+dialogueStage.addEventListener('pointerup',e=>{
+  if(!dialogueState.open||dialogueState.closing)return;
+  if(e.target.closest('#dialogueSkip,.dialogue-choice'))return;
+  if(dialogueState.phase==='choice')return;
+  e.preventDefault();
+  advanceDialogue();
+});
+dialogueSkip.addEventListener('click',e=>{e.stopPropagation();closeDialogue()});
 
 function nearbyNpc(maxDistance=92){
   let best=null,bestD=Infinity;
@@ -3575,7 +3603,6 @@ function updateMapInteractions(){
     const previous=updateMapInteractions._zone;
     updateMapInteractions._zone=zone;
     if(zone>0){
-      if(Number.isFinite(previous))triggerPaperSceneFold();
       showMapNotice('进入 · '+regionNameAt(playerWorldX),1200);
     }
   }
