@@ -466,16 +466,37 @@ button{cursor:pointer}
   filter:saturate(.12) brightness(.48) contrast(.88);
 }
 .hp-segment.is-hit{
-  animation:hp-sewn-hit .24s ease-out;
+  animation:hp-sewn-hit .36s cubic-bezier(.22,.72,.25,1) both;
 }
 .hp-segment.is-heal{
   animation:hp-sewn-heal .30s cubic-bezier(.18,.82,.28,1.15) both;
 }
 @keyframes hp-sewn-hit{
-  0%{transform:translate3d(0,0,0) rotate(0)}
-  25%{transform:translate3d(1px,-2px,0) rotate(.8deg)}
-  55%{transform:translate3d(-2px,1px,0) rotate(-1deg)}
-  100%{transform:translate3d(0,0,0) rotate(0)}
+  0%{
+    transform:translate3d(0,0,0) scale(1) rotate(0);
+    opacity:1;
+    filter:saturate(1) brightness(1) contrast(1);
+  }
+  20%{
+    transform:translate3d(3px,-3px,0) scale(1.10) rotate(2.2deg);
+    opacity:1;
+    filter:saturate(.55) brightness(1.72) contrast(1.14);
+  }
+  46%{
+    transform:translate3d(-5px,1px,0) scale(.82) rotate(-3.2deg);
+    opacity:.72;
+    filter:saturate(.22) brightness(.72) contrast(.95);
+  }
+  72%{
+    transform:translate3d(2px,0,0) scale(.94) rotate(1.1deg);
+    opacity:.34;
+    filter:saturate(.16) brightness(.56) contrast(.90);
+  }
+  100%{
+    transform:translate3d(0,0,0) scale(1) rotate(0);
+    opacity:.17;
+    filter:saturate(.12) brightness(.48) contrast(.88);
+  }
 }
 @keyframes hp-sewn-heal{
   0%{
@@ -1715,6 +1736,95 @@ button{cursor:pointer}
   }
   .dialogue-choice.pos-top{top:max(7%,28px)}
   .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:39%}
+}
+
+
+/* ---------- R6 SIMPLE DIALOGUE CHOICES + MIRRORED ENTRANCE ---------- */
+.dialogue-stage.is-opening .dialogue-portrait.player{
+  animation:puppetPlayerArcOut .62s cubic-bezier(.55,.02,.84,.28) reverse both!important;
+}
+.dialogue-stage.is-opening .dialogue-portrait.npc{
+  animation:puppetNpcArcOut .64s .04s cubic-bezier(.55,.02,.84,.28) reverse both!important;
+}
+.dialogue-stage.is-opening .dialogue-puppet{animation:none!important}
+
+/* Choice is no longer a separate cinematic shot. Keep the same dialogue stage/portraits. */
+.stage.dialogue-choice-camera .paper-sky,
+.stage.dialogue-choice-camera .paper-backdrop,
+.stage.dialogue-choice-camera .paper-stage-floor,
+.stage.dialogue-choice-camera .road-layer,
+.stage.dialogue-choice-camera .rear-layer,
+.stage.dialogue-choice-camera .front-layer,
+.stage.dialogue-choice-camera .map-layer,
+.stage.dialogue-choice-camera .entity-layer{
+  translate:0 0!important;
+  scale:1!important;
+}
+.dialogue-stage.is-choice .dialogue-dim{
+  background:
+    radial-gradient(ellipse at 50% 78%,rgba(235,199,123,.10) 0 18%,transparent 48%),
+    rgba(24,21,19,.50)!important;
+}
+.dialogue-stage.is-choice .dialogue-portrait.player,
+.dialogue-stage.is-choice .dialogue-portrait.npc{
+  opacity:1!important;
+  transform:none!important;
+}
+.dialogue-stage.is-choice .dialogue-portrait.player .dialogue-puppet,
+.dialogue-stage.is-choice .dialogue-portrait.npc .dialogue-puppet{
+  animation:dialoguePuppetBreath 3.1s ease-in-out infinite!important;
+}
+.dialogue-stage.is-choice .dialogue-portrait.npc .dialogue-puppet{animation-delay:-1.45s!important}
+
+.dialogue-choices{
+  inset:auto!important;
+  left:50%!important;
+  bottom:max(7%,calc(env(safe-area-inset-bottom) + 24px))!important;
+  width:min(42vw,460px)!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:9px!important;
+  transform:translateX(-50%)!important;
+  opacity:0;
+  transition:opacity .16s ease!important;
+}
+.dialogue-stage.is-choice .dialogue-choices{opacity:1}
+.dialogue-choice,
+.dialogue-choice.pos-top,
+.dialogue-choice.pos-left,
+.dialogue-choice.pos-right{
+  position:relative!important;
+  inset:auto!important;
+  left:auto!important;right:auto!important;top:auto!important;bottom:auto!important;
+  width:100%!important;
+  min-height:46px!important;
+  padding:9px 14px!important;
+  transform:none!important;
+  flex:none!important;
+}
+.dialogue-choice:hover,.dialogue-choice:active,
+.dialogue-choice.pos-top:hover,.dialogue-choice.pos-top:active{
+  transform:translateY(-2px) scale(1.01)!important;
+}
+@media(pointer:coarse){
+  .dialogue-choices{
+    width:min(48vw,440px)!important;
+    bottom:max(5%,calc(env(safe-area-inset-bottom) + 18px))!important;
+    gap:7px!important;
+  }
+  .dialogue-choice{
+    min-height:43px!important;
+    padding:7px 11px!important;
+    font-size:clamp(11px,1.55vw,15px)!important;
+  }
+}
+@media(max-height:520px){
+  .dialogue-choices{
+    width:min(46vw,420px)!important;
+    bottom:max(3%,calc(env(safe-area-inset-bottom) + 10px))!important;
+    gap:6px!important;
+  }
+  .dialogue-choice{min-height:40px!important;padding:6px 10px!important}
 }
 
 </style>
@@ -3628,18 +3738,16 @@ function showDialogueChoices(){
   dialogueState.phase='choice';
   clearDialogueBubbles();
   dialogueChoices.innerHTML='';
-  const positions=['pos-top','pos-left','pos-right'];
   choices.slice(0,3).forEach((choice,index)=>{
     const btn=document.createElement('button');
     btn.type='button';
-    btn.className='dialogue-choice '+positions[index];
+    btn.className='dialogue-choice';
     btn.dataset.choiceIndex=String(index);
     btn.textContent=choice.text;
     btn.addEventListener('click',e=>{e.stopPropagation();selectDialogueChoice(index)});
     dialogueChoices.appendChild(btn);
   });
   dialogueStage.classList.add('is-choice');
-  worldEl.classList.add('dialogue-choice-camera');
 }
 function selectDialogueChoice(index){
   const npc=dialogueState.npc;
@@ -3685,15 +3793,14 @@ function openDialogue(npc){
   dialogueStage.classList.remove('is-closing','is-choice','is-opening','is-entering','speaker-player','speaker-npc');
   dialogueStage.dataset.portrait=npc.portrait||'paper';
   worldEl.classList.remove('dialogue-choice-camera');
-  dialogueStage.classList.add('is-open','is-entering');
+  dialogueStage.classList.add('is-open','is-opening');
   dialogueStage.setAttribute('aria-hidden','false');
   worldEl.classList.add('dialogue-active');
   clearDialogueBubbles();
-  requestAnimationFrame(()=>{
-    if(!dialogueState.open)return;
-    dialogueStage.classList.remove('is-entering');
-    showDialogueOpening();
-  });
+  showDialogueOpening();
+  dialogueOpeningTimer=setTimeout(()=>{
+    if(dialogueState.open)dialogueStage.classList.remove('is-opening');
+  },720);
   return true;
 }
 function closeDialogue({immediate=false}={}){
