@@ -495,11 +495,29 @@ const APARTMENT_WORLD_X=520;
 const APARTMENT_PARALLAX=.78;
 const APARTMENT_DOOR_X_RATIO=.525;
 const APARTMENT_DOOR_PROMPT_Y_RATIO=.43;
+
+// Interior world uses the same 128 px = 1 m scale as the outdoor world.
+const INTERIOR_MAP_WIDTH=3072;        // 24 m
+const INTERIOR_MAP_HEIGHT=1280;       // 10 m
+const INTERIOR_WALL_THICKNESS=96;
+const INTERIOR_DOOR_X=896;            // 7 m from the room origin
+const INTERIOR_SECOND_FLOOR_Y=512;    // 4 m above first floor
+const INTERIOR_STAIRS=Object.freeze({
+  x0:1408,                            // 11 m
+  x1:2048,                            // 16 m
+  y0:0,
+  y1:INTERIOR_SECOND_FLOOR_Y
+});
+const OUTDOOR_FLIGHT_MAX_Y=50000;
+
 let sceneLocation='outside';
 let sceneTransitionBusy=false;
-let interiorPlayerX=0;
+let interiorPlayerX=0;                // compatibility: fixed screen X
+let interiorPlayerWorldX=INTERIOR_DOOR_X;
+let interiorCameraX=INTERIOR_DOOR_X;
+let interiorCameraY=0;
 let interiorDoorAnchorX=0;
-let interiorSceneShiftX=0;
+let interiorSceneShiftX=0;            // compatibility/debug = -interiorCameraX
 let exteriorReturnX=MAP_SPAWN_X;
 let exteriorReturnY=0;
 let stageHeldActorX=0;
@@ -508,6 +526,7 @@ let lastSceneDoorAnchorErrorX=0;
 const APARTMENT_CULL_MARGIN=180;
 let apartmentDisplayWidth=780;
 let midgroundApartmentVisible=null;
+
 function refreshSceneryMetrics(){
   const apartmentW=midgroundApartment?.getBoundingClientRect().width||0;
   if(apartmentW>0)apartmentDisplayWidth=apartmentW;
@@ -539,23 +558,62 @@ function nearbyApartmentDoor(maxDistance=78){
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
+
+function interiorWalkSurfaceY(x){
+  if(x<=INTERIOR_STAIRS.x0)return 0;
+  if(x>=INTERIOR_STAIRS.x1)return INTERIOR_SECOND_FLOOR_Y;
+  const t=(x-INTERIOR_STAIRS.x0)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0);
+  return INTERIOR_STAIRS.y0+(INTERIOR_STAIRS.y1-INTERIOR_STAIRS.y0)*t;
+}
+function interiorHorizontalBounds(){
+  return {
+    left:INTERIOR_WALL_THICKNESS+PLAYER_BODY.halfW,
+    right:INTERIOR_MAP_WIDTH-INTERIOR_WALL_THICKNESS-PLAYER_BODY.halfW
+  };
+}
+function updateInteriorCamera(){
+  // The player never moves on screen. Indoor X/Y are real world coordinates;
+  // all visible room layers move opposite those coordinates.
+  interiorCameraX=interiorPlayerWorldX-playerScreenAnchorX;
+  interiorCameraY=playerY;
+  interiorSceneShiftX=-interiorCameraX;
+  interiorPlayerX=playerScreenAnchorX;
+  actorX=playerScreenAnchorX;
+  interiorDoorAnchorX=INTERIOR_DOOR_X-interiorCameraX;
+}
+function moveInteriorHorizontal(dx,{flight=false}={}){
+  if(!dx)return 0;
+  const bounds=interiorHorizontalBounds();
+  const oldX=interiorPlayerWorldX;
+  interiorPlayerWorldX=clamp(oldX+dx,bounds.left,bounds.right);
+  if(!flight){
+    // Stairs are a continuous walking surface, never a platform/jump target.
+    playerY=interiorWalkSurfaceY(interiorPlayerWorldX);
+    playerVy=0;
+    playerGrounded=true;
+    coyoteTimer=COYOTE_TIME;
+  }
+  updateInteriorCamera();
+  return interiorPlayerWorldX-oldX;
+}
 function interiorExitX(){
-  return clamp(interiorDoorAnchorX+interiorSceneShiftX,72,Math.max(72,VIEW_W-72));
+  return INTERIOR_DOOR_X-interiorCameraX;
 }
 function syncInteriorDoorWithExterior(){
-  // Scene transitions are player-anchored: the NEW doorway must appear exactly
-  // under the player's current screen position, even if the outgoing doorway
-  // was only within interaction range rather than pixel-perfect.
-  interiorDoorAnchorX=clamp(playerScreenAnchorX,72,Math.max(72,VIEW_W-72));
-  interiorSceneShiftX=0;
-  return interiorDoorAnchorX;
+  // Enter exactly on the indoor doorway. Because camera = world - screenAnchor,
+  // the doorway's first rendered pixel is exactly under the fixed player.
+  interiorPlayerWorldX=INTERIOR_DOOR_X;
+  interiorCameraX=INTERIOR_DOOR_X-playerScreenAnchorX;
+  interiorCameraY=0;
+  interiorSceneShiftX=-interiorCameraX;
+  interiorPlayerX=playerScreenAnchorX;
+  interiorDoorAnchorX=playerScreenAnchorX;
+  return playerScreenAnchorX;
 }
 function alignInteriorSceneToStage(force=false){
   if(!interiorScene||sceneLocation!=='interior')return;
   const key=VIEW_W+'x'+VIEW_H+'@'+MAP_GROUND_SCREEN_Y;
   if(!force&&alignInteriorSceneToStage._key===key)return;
-  // Measure the browser's real containing-block offset, then cancel it with
-  // layout coordinates (not transforms, so far/mid/player/near z-order remains interleavable).
   interiorScene.style.left='0px';
   interiorScene.style.top='0px';
   interiorScene.style.right='0px';
@@ -576,25 +634,23 @@ function alignInteriorSceneToStage(force=false){
 }
 function positionInteriorExitDoor(){
   if(!interiorExitDoor)return;
-  // The doorway is authored at the transition anchor. Camera/world recentering
-  // moves the complete room layers, so the door remains physically attached to
-  // the room instead of being teleported independently.
+  // Door position is authored in finite indoor world coordinates.
   interiorExitDoor.style.right='auto';
-  interiorExitDoor.style.left=interiorDoorAnchorX.toFixed(1)+'px';
+  interiorExitDoor.style.left=INTERIOR_DOOR_X.toFixed(1)+'px';
   interiorExitDoor.style.translate='-50% 0';
-  interiorExitDoor.style.bottom=Math.max(0,MAP_GROUND_SCREEN_Y-8).toFixed(1)+'px';
+  interiorExitDoor.style.bottom='0px';
 }
 function updateInteriorDepthLayers(){
-  // One camera shift moves the entire indoor world; z-order still remains
-  // far(3) -> mid/door(4) -> player(5) -> near(6).
-  const shift=interiorSceneShiftX.toFixed(2)+'px '+playerY.toFixed(2)+'px';
-  if(interiorFarLayer)interiorFarLayer.style.translate=shift;
-  if(interiorMidLayer)interiorMidLayer.style.translate=shift;
-  if(interiorNearLayer)interiorNearLayer.style.translate=shift;
+  const transform='translate3d('+(-interiorCameraX).toFixed(2)+'px,'+interiorCameraY.toFixed(2)+'px,0)';
+  if(interiorFarLayer)interiorFarLayer.style.transform=transform;
+  if(interiorMidLayer)interiorMidLayer.style.transform=transform;
+  if(interiorNearLayer)interiorNearLayer.style.transform=transform;
   return sceneLocation==='interior';
 }
 function nearbyInteriorExit(maxDistance=92){
-  return sceneLocation==='interior'&&!sceneTransitionBusy&&Math.abs(interiorPlayerX-interiorExitX())<=maxDistance;
+  return sceneLocation==='interior'&&!sceneTransitionBusy
+    &&Math.abs(interiorPlayerWorldX-INTERIOR_DOOR_X)<=maxDistance
+    &&Math.abs(playerY)<=72;
 }
 function renderDoorPrompt(){
   if(!apartmentDoorPrompt)return;
@@ -607,32 +663,6 @@ function renderDoorPrompt(){
   apartmentDoorPrompt.style.bottom=apartmentDoorScreenY().toFixed(1)+'px';
   apartmentDoorPrompt.classList.add('is-visible');
   apartmentDoorPrompt.setAttribute('aria-hidden','false');
-}
-let sceneCameraTweenToken=0;
-function easeSceneCamera(t){
-  return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-}
-function tweenInteriorWorldToPlayer(duration=620){
-  const token=++sceneCameraTweenToken;
-  const startShift=interiorSceneShiftX;
-  // The player stays at the screen center. Move the entire room until its
-  // own center is under that fixed player anchor.
-  const targetShift=playerScreenAnchorX-VIEW_W*.5;
-  if(Math.abs(targetShift-startShift)<.5)return Promise.resolve(true);
-  return new Promise(resolve=>{
-    const start=performance.now();
-    const step=now=>{
-      if(token!==sceneCameraTweenToken){resolve(false);return}
-      const p=clamp((now-start)/duration,0,1);
-      interiorSceneShiftX=startShift+(targetShift-startShift)*easeSceneCamera(p);
-      actorX=playerScreenAnchorX;
-      interiorPlayerX=playerScreenAnchorX;
-      renderWorld();
-      if(p<1)requestAnimationFrame(step);
-      else resolve(true);
-    };
-    requestAnimationFrame(step);
-  });
 }
 function exteriorCameraForDoorAt(screenX){
   const maxCamera=Math.max(0,MAP_WIDTH-VIEW_W);
@@ -656,21 +686,17 @@ function enterApartment(){
   apartmentDoorPrompt?.classList.remove('is-visible');
   setTimeout(()=>{
     sceneLocation='interior';
-    interiorPlayerX=playerScreenAnchorX;
-    actorX=playerScreenAnchorX;
-    playerY=stageHeldPlayerY;
+    playerY=0;
     playerVy=0;
-    playerGrounded=playerY<=0;
+    playerGrounded=true;
+    interiorPlayerWorldX=INTERIOR_DOOR_X;
+    updateInteriorCamera();
     clearSceneStageClasses();
     worldEl.classList.add('scene-interior','interior-stage-in','stage-transitioning');
     interiorScene?.setAttribute('aria-hidden','false');
     renderWorld(true);
     lastSceneDoorAnchorErrorX=interiorExitX()-actorX;
     updateNpcPrompt();
-
-    // First frame: the new room doorway is exactly under the fixed player.
-    // Any settling moves the ROOM, never the player.
-    setTimeout(()=>{ void tweenInteriorWorldToPlayer(620); },120);
     setTimeout(()=>{
       worldEl.classList.remove('interior-stage-in','stage-transitioning');
       sceneTransitionBusy=false;
@@ -692,18 +718,12 @@ function exitApartment(){
     interiorScene?.setAttribute('aria-hidden','true');
     worldEl.classList.remove('scene-interior','interior-stage-out');
 
-    // Bind the incoming exterior WORLD to its doorway, not the player.
-    // At the reveal frame the exterior door is exactly at the player's current
-    // screen X. The player world coordinate stays fixed while the CAMERA then
-    // glides to center them.
-    playerY=stageHeldPlayerY;
+    // Restore the outdoor vertical coordinate, then reveal the exterior door
+    // directly under the same fixed player screen anchor.
+    playerY=exteriorReturnY;
     playerVy=0;
     playerGrounded=playerY<=0;
     refreshSceneryMetrics();
-    // Exit is symmetrical with entry: reveal the NEW exterior world with its
-    // doorway exactly under the fixed player anchor, then KEEP that camera.
-    // The logical player world coordinate is rebased to the point under the
-    // fixed screen anchor so the next movement continues from this exact frame.
     worldX=exteriorCameraForDoorAt(playerScreenAnchorX);
     playerWorldX=clamp(worldX+playerScreenAnchorX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
     actorX=playerScreenAnchorX;
