@@ -99,12 +99,12 @@ button{cursor:pointer}
 .paper-sun .paper-celestial-disc{animation:paperSunHang 5.4s ease-in-out infinite}
 .paper-moon .paper-celestial-disc{animation:paperMoonHang 6.8s ease-in-out infinite}
 @keyframes paperSunHang{
-  0%,100%{transform:translate(-50%,-50%) rotate(-1.25deg)}
-  50%{transform:translate(-50%,-50%) rotate(1.4deg)}
+  0%,100%{transform:rotate(-1.25deg)}
+  50%{transform:rotate(1.4deg)}
 }
 @keyframes paperMoonHang{
-  0%,100%{transform:translate(-50%,-50%) rotate(1.05deg)}
-  50%{transform:translate(-50%,-50%) rotate(-1.3deg)}
+  0%,100%{transform:rotate(1.05deg)}
+  50%{transform:rotate(-1.3deg)}
 }
 .paper-sun{--celestial-x:var(--sun-x);--celestial-y:var(--sun-y);opacity:var(--sun-alpha)}
 .paper-moon{--celestial-x:var(--moon-x);--celestial-y:var(--moon-y);opacity:var(--moon-alpha)}
