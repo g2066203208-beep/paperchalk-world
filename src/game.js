@@ -639,31 +639,6 @@ function exteriorCameraForDoorAt(screenX){
   const aligned=((APARTMENT_WORLD_X+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO-screenX)/APARTMENT_PARALLAX)-sceneryOffsetX;
   return clamp(aligned,0,maxCamera);
 }
-function tweenExteriorWorldToPlayer(duration=620){
-  const token=++sceneCameraTweenToken;
-  const startCamera=worldX;
-  const maxCamera=Math.max(0,MAP_WIDTH-VIEW_W);
-  const targetCamera=clamp(playerWorldX-playerScreenAnchorX,0,maxCamera);
-  if(Math.abs(targetCamera-startCamera)<.5){
-    worldX=targetCamera;
-    actorX=playerScreenAnchorX;
-    renderWorld(true);
-    return Promise.resolve(true);
-  }
-  return new Promise(resolve=>{
-    const start=performance.now();
-    const step=now=>{
-      if(token!==sceneCameraTweenToken){resolve(false);return}
-      const p=clamp((now-start)/duration,0,1);
-      worldX=startCamera+(targetCamera-startCamera)*easeSceneCamera(p);
-      actorX=playerScreenAnchorX;
-      renderWorld();
-      if(p<1)requestAnimationFrame(step);
-      else resolve(true);
-    };
-    requestAnimationFrame(step);
-  });
-}
 function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
@@ -725,8 +700,12 @@ function exitApartment(){
     playerVy=0;
     playerGrounded=playerY<=0;
     refreshSceneryMetrics();
-    playerWorldX=clamp(exteriorReturnX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+    // Exit is symmetrical with entry: reveal the NEW exterior world with its
+    // doorway exactly under the fixed player anchor, then KEEP that camera.
+    // The logical player world coordinate is rebased to the point under the
+    // fixed screen anchor so the next movement continues from this exact frame.
     worldX=exteriorCameraForDoorAt(playerScreenAnchorX);
+    playerWorldX=clamp(worldX+playerScreenAnchorX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
     actorX=playerScreenAnchorX;
 
     worldEl.classList.add('exterior-stage-in','stage-transitioning');
@@ -734,7 +713,6 @@ function exitApartment(){
     lastSceneDoorAnchorErrorX=apartmentDoorScreenX()-actorX;
     updateNpcPrompt();
 
-    setTimeout(()=>{ void tweenExteriorWorldToPlayer(620); },120);
     setTimeout(()=>{
       worldEl.classList.remove('exterior-stage-in','stage-transitioning');
       sceneTransitionBusy=false;
