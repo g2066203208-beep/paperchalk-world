@@ -178,11 +178,11 @@ function renderEnemies(frame,now){
   }
   stats.renderedEnemies=rendered;
 }
-function renderFrame(){
-  if(activeMode!=='pixi'||!latestFrame||!app)return;
-  const now=performance.now();
-  renderPlayer(latestFrame,now);
-  renderEnemies(latestFrame,now);
+function renderFrame(frame=latestFrame,now=performance.now()){
+  if(activeMode!=='pixi'||!frame||!app)return;
+  renderPlayer(frame,now);
+  renderEnemies(frame,now);
+  app.renderer.render(app.stage);
   stats.frameCount++;
 }
 async function ensurePixi(){
@@ -203,7 +203,8 @@ async function ensurePixi(){
       autoDensity:true,
       resolution:dpr,
       preference:'webgl',
-      powerPreference:'high-performance'
+      powerPreference:'high-performance',
+      autoStart:false
     });
     app.canvas.className='pixi-entity-canvas';
     app.canvas.setAttribute('aria-hidden','true');
@@ -230,10 +231,10 @@ async function ensurePixi(){
         lastViewportH=frame.viewport.height;
         syncStaticScale(frame);
       }
+      // The simulation owns the only RAF loop. Rendering here avoids a second ticker
+      // and guarantees visual updates are synchronized to authoritative game state.
+      if(activeMode==='pixi')renderFrame(frame,performance.now());
     });
-
-    app.ticker.add(renderFrame);
-    app.ticker.stop();
 
     stats.ready=true;
     stats.renderer=app.renderer?.constructor?.name||'WebGL';
@@ -260,8 +261,7 @@ async function setMode(value,{persist=true}={}){
       host.hidden=false;
       world.classList.add('renderer-pixi-dynamic');
       activeMode='pixi';
-      app.ticker.start();
-      renderFrame();
+      renderFrame(latestFrame,performance.now());
       dispatchMode();
       return activeMode;
     }catch{
@@ -277,7 +277,6 @@ async function setMode(value,{persist=true}={}){
   world.classList.remove('renderer-pixi-dynamic');
   host.hidden=true;
   activeMode='dom';
-  app?.ticker?.stop();
   runtime?.requestDomSync?.();
   dispatchMode();
   return activeMode;
@@ -295,12 +294,6 @@ window.PaperchalkRenderer={
 
 requestedMode=modeFromLocation();
 setMode(requestedMode,{persist:false});
-
-document.addEventListener('visibilitychange',()=>{
-  if(!app)return;
-  if(document.hidden)app.ticker.stop();
-  else if(activeMode==='pixi')app.ticker.start();
-});
 
 window.addEventListener('pagehide',()=>{
   try{unsubscribe?.()}catch{}
