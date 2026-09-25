@@ -1432,10 +1432,17 @@ function setDebugFlightMode(enabled){
   mobileFlightUp=mobileFlightDown=false;
   joystickFlightAxisY=0;
   playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
-  playerGrounded=debugFlightMode?false:playerY<=0;
+  if(sceneLocation==='interior'&&!debugFlightMode){
+    playerY=interiorWalkSurfaceY(interiorPlayerWorldX);
+    playerGrounded=true;
+    updateInteriorCamera();
+  }else{
+    playerGrounded=debugFlightMode?false:playerY<=0;
+  }
   if(playerCrouching)setPlayerCrouching(false,{force:true});
   actorEl.classList.toggle('is-flying',debugFlightMode);
   syncPlayerActionState(true);
+  renderWorld(true);
   updateCombatDebugButtons();
   return debugFlightMode;
 }
@@ -1531,7 +1538,10 @@ function runDebugCommand(rawCommand){
     return '渲染器请求 -> '+target;
   }
   if(cmd==='pos'||cmd==='position'){
-    return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' screenX='+actorX.toFixed(2);
+    if(sceneLocation==='interior'){
+      return 'interiorX='+interiorPlayerWorldX.toFixed(2)+' interiorY='+playerY.toFixed(2)+' cameraX='+interiorCameraX.toFixed(2)+' cameraY='+interiorCameraY.toFixed(2)+' screenX='+actorX.toFixed(2);
+    }
+    return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' cameraY='+playerY.toFixed(2)+' screenX='+actorX.toFixed(2);
   }
   if(cmd==='map'){
     return '世界图 '+WORLD_NODES.length+' 节点 / '+WORLD_ROUTES.length+' 道路 | 当前='+regionNameAt(playerWorldX)+' | edge='+worldZoneIndexAt(playerWorldX)+' | 已探索道路='+mapState.visitedRoutes.size;
@@ -1877,6 +1887,12 @@ function resetPlayerPoseState(){
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
+  // Free flight is true 2D world traversal. It must not snap to road forks or
+  // reset Y when crossing the 6000px route-strip boundaries.
+  if(debugFlightMode&&sceneLocation==='outside'){
+    playerWorldX=clamp(oldX+dx,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+    return playerWorldX-oldX;
+  }
   const bounds=routeBoundaryInfo(oldX);
   const requested=oldX+dx;
   if(requested<bounds.left&&dx<0){
