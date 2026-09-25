@@ -127,7 +127,7 @@ button{cursor:pointer}
   height:min(68vh,590px);
   background-image:url("../assets/backgrounds/mountain-background.webp?v=mountain-parallax-r12");
   background-repeat:repeat-x;
-  background-size:clamp(1050px,82vw,1500px) auto;
+  background-size:auto clamp(240px,62vh,520px);
   background-position:var(--mountain-x) bottom;
   opacity:.88;
   filter:saturate(.88) contrast(.96) brightness(1.02) drop-shadow(0 9px 5px rgba(53,45,35,.10));
