@@ -137,9 +137,10 @@ assert(game.includes("apartmentDoorScreenX")&&game.includes("nearbyApartmentDoor
 assert(game.includes("window.PaperchalkScene"), "Scene transition test API missing");
 assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
 assert(!css.includes(".stage.paper-stage-out .actor{")&&!css.includes(".stage.scene-interior.interior-stage-in .actor{")&&!css.includes(".stage.scene-interior.interior-stage-out .actor{")&&!css.includes(".stage.exterior-stage-in .actor{"), "Player must stay fixed while paper scenery changes");
-assert(game.includes("interiorDoorAnchorX=clamp(actorX")&&game.includes("tweenInteriorWorldToCenter")&&game.includes("tweenExteriorCameraToPlayerCenter"), "Scene transition must anchor the new doorway to the player and then move the world/camera smoothly");
-assert(game.includes("exteriorCameraForDoorAt(stageHeldActorX)")&&game.includes("lastSceneDoorAnchorErrorX=apartmentDoorScreenX()-actorX"), "Exterior scene must reveal with its doorway exactly at the player anchor");
-assert(game.includes("const followX=viewW*.5"), "Normal exterior camera must center the player while the world moves");
+assert(game.includes("playerScreenAnchorX=Math.round(VIEW_W*.5)")&&game.includes("actorX=playerScreenAnchorX"), "Player must use one fixed screen anchor");
+assert(game.includes("interiorDoorAnchorX=clamp(playerScreenAnchorX")&&game.includes("tweenInteriorWorldToPlayer")&&game.includes("tweenExteriorWorldToPlayer"), "Scene transition must anchor the new doorway to the fixed player and move only the world/camera");
+assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
+assert(game.includes("const actorBottom=MAP_GROUND_SCREEN_Y.toFixed(2)+'px'")&&game.includes("--world-camera-y"), "Vertical simulation must move the world while player screen Y stays fixed");
 assert(html.includes('id="interiorFarLayer"')&&html.includes('id="interiorMidLayer"')&&html.includes('id="interiorNearLayer"'), "Interior far/mid/near depth layers missing");
 assert(css.includes(".interior-far-layer{z-index:3}")&&css.includes(".interior-mid-layer{z-index:4}")&&css.includes(".stage.scene-interior .actor{z-index:5")&&css.includes(".interior-near-layer{z-index:6}"), "Interior depth order must be far -> mid -> player -> near");
 assert(game.includes("const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis"), "Free flight horizontal movement is missing");
