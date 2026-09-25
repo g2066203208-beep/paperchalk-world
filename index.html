@@ -1844,19 +1844,19 @@ button{cursor:pointer}
 
 /* ---------- R7 CONTINUOUS ENTRANCE -> BREATH HANDOFF ---------- */
 /* Parent pose must be identical when mirrored entrance finishes and dialogue idle begins. */
-.dialogue-stage.speaker-player:not(.is-closing) .dialogue-portrait.player,
-.dialogue-stage.speaker-npc:not(.is-closing) .dialogue-portrait.npc{
+.dialogue-stage:not(.is-opening):not(.is-closing).speaker-player .dialogue-portrait.player,
+.dialogue-stage:not(.is-opening):not(.is-closing).speaker-npc .dialogue-portrait.npc{
   transform:none!important;
   opacity:1;
 }
-.dialogue-stage.speaker-player:not(.is-closing) .dialogue-portrait.npc,
-.dialogue-stage.speaker-npc:not(.is-closing) .dialogue-portrait.player{
+.dialogue-stage:not(.is-opening):not(.is-closing).speaker-player .dialogue-portrait.npc,
+.dialogue-stage:not(.is-opening):not(.is-closing).speaker-npc .dialogue-portrait.player{
   transform:none!important;
   opacity:.72;
 }
-/* Choices do not alter either portrait pose. */
-.dialogue-stage.is-choice .dialogue-portrait.player,
-.dialogue-stage.is-choice .dialogue-portrait.npc{
+/* Choices do not alter either portrait pose, but never interrupt an entrance already running. */
+.dialogue-stage.is-choice:not(.is-opening) .dialogue-portrait.player,
+.dialogue-stage.is-choice:not(.is-opening) .dialogue-portrait.npc{
   transform:none!important;
 }
 
