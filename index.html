@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "player-anchor-r28";
+  const BUILD = "fixed-player-r29";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -32,14 +32,14 @@
 </script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=player-anchor-r28" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=fixed-player-r29" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="player-anchor-r28">
-<link rel="stylesheet" href="./styles/game.css?v=player-anchor-r28">
+<meta name="paperchalk-build" content="fixed-player-r29">
+<link rel="stylesheet" href="./styles/game.css?v=fixed-player-r29">
 </head>
 <body>
 
@@ -399,7 +399,7 @@
 </section>
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
-<script src="./src/game.js?v=player-anchor-r28"></script>
+<script src="./src/game.js?v=fixed-player-r29"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=puppet-r1"></script>
 </body>
 </html>
