@@ -2091,11 +2091,10 @@ button{cursor:pointer}
 @keyframes paperTintOut{to{opacity:0}}
 
 .interior-scene{
-  --interior-map-w:3072px;
-  --interior-map-h:1280px;
+  --interior-map-w:1536px;
+  --interior-map-h:768px;
   position:absolute;inset:0;z-index:auto;visibility:hidden;pointer-events:none;overflow:hidden;
-  background:
-    linear-gradient(180deg,rgba(47,38,31,.96),rgba(64,49,37,.98));
+  background:linear-gradient(180deg,rgba(47,38,31,.96),rgba(64,49,37,.98));
 }
 .stage.scene-interior{perspective:none}
 .stage.scene-interior .interior-scene{visibility:visible}
@@ -2130,137 +2129,133 @@ button{cursor:pointer}
 
 .paper-stage-piece{position:absolute;will-change:transform}
 .interior-room-shell{
-  left:0;bottom:0;width:3072px;height:1280px;
-  background:
-    linear-gradient(90deg,rgba(221,206,176,.97),rgba(232,216,184,.96) 48%,rgba(211,194,163,.97));
-  border:8px solid rgba(82,61,43,.72);
-  box-shadow:inset 0 0 0 16px rgba(255,248,228,.14);
+  left:0;bottom:0;width:1536px;height:768px;
+  background:linear-gradient(90deg,rgba(221,206,176,.97),rgba(232,216,184,.96) 48%,rgba(211,194,163,.97));
+  border:6px solid rgba(82,61,43,.72);
+  box-shadow:inset 0 0 0 12px rgba(255,248,228,.14);
 }
 .interior-wall{
-  top:0;bottom:0;width:96px;
-  background:
-    repeating-linear-gradient(180deg,rgba(112,83,58,.96) 0 74px,rgba(82,60,43,.96) 74px 80px);
-  border:6px solid rgba(61,45,34,.78);
-  box-shadow:inset 10px 0 0 rgba(236,215,174,.08),8px 0 0 rgba(42,31,24,.14);
+  top:0;bottom:0;width:64px;
+  background:repeating-linear-gradient(180deg,rgba(112,83,58,.96) 0 54px,rgba(82,60,43,.96) 54px 60px);
+  border:4px solid rgba(61,45,34,.78);
+  box-shadow:inset 7px 0 0 rgba(236,215,174,.08),6px 0 0 rgba(42,31,24,.14);
 }
 .interior-wall-left{left:0}
 .interior-wall-right{right:0;transform:scaleX(-1)}
 .interior-ceiling{
-  left:0;top:0;width:3072px;height:80px;
+  left:0;top:0;width:1536px;height:48px;
   background:rgba(103,75,52,.97);
-  border-bottom:7px solid rgba(67,48,35,.78);
-  box-shadow:inset 0 -12px 0 rgba(235,210,168,.10)
+  border-bottom:5px solid rgba(67,48,35,.78);
+  box-shadow:inset 0 -8px 0 rgba(235,210,168,.10)
 }
 .interior-floor{
-  height:38px;
-  background:rgba(173,137,91,.96);
-  border-top:6px solid rgba(92,67,43,.58);
-  box-shadow:inset 0 10px 0 rgba(239,212,164,.19),0 8px 0 rgba(58,42,30,.11)
+  height:28px;background:rgba(173,137,91,.96);
+  border-top:5px solid rgba(92,67,43,.58);
+  box-shadow:inset 0 8px 0 rgba(239,212,164,.19),0 6px 0 rgba(58,42,30,.11)
 }
-.interior-floor-first{left:96px;right:96px;bottom:-38px}
-.interior-floor-second{left:2048px;right:96px;bottom:474px}
+.interior-floor-first{left:64px;right:64px;bottom:-28px}
+.interior-floor-second{left:64px;width:704px;bottom:356px}
 .interior-window{
-  width:280px;height:300px;
-  background:rgba(126,151,157,.74);
-  border:12px solid rgba(119,86,57,.86);
-  box-shadow:4px 7px 0 rgba(57,44,29,.13),inset 0 0 0 4px rgba(240,230,205,.22)
+  width:170px;height:190px;background:rgba(126,151,157,.74);
+  border:9px solid rgba(119,86,57,.86);
+  box-shadow:4px 6px 0 rgba(57,44,29,.13),inset 0 0 0 3px rgba(240,230,205,.22)
 }
-.interior-window-first{left:320px;bottom:240px}
-.interior-window-second{left:2390px;bottom:700px}
+.interior-window-first{left:160px;bottom:150px}
+.interior-window-second{left:360px;bottom:505px}
 .interior-window:before,.interior-window:after,.interior-window-cross:before,.interior-window-cross:after{
   content:"";position:absolute;background:rgba(104,76,51,.82)
 }
-.interior-window:before{left:48%;top:0;bottom:0;width:7px}
-.interior-window:after{left:0;right:0;top:48%;height:7px}
+.interior-window:before{left:48%;top:0;bottom:0;width:5px}
+.interior-window:after{left:0;right:0;top:48%;height:5px}
 .interior-shelf{
-  left:1060px;bottom:46px;width:300px;height:86px;
-  background:rgba(126,84,51,.95);border:4px solid rgba(86,58,39,.68);
-  box-shadow:0 8px 0 rgba(55,39,27,.12);
+  left:470px;bottom:34px;width:220px;height:60px;
+  background:rgba(126,84,51,.95);border:3px solid rgba(86,58,39,.68);
+  box-shadow:0 6px 0 rgba(55,39,27,.12)
 }
 .interior-shelf:before,.interior-shelf:after{
-  content:"";position:absolute;bottom:-82px;width:16px;height:82px;background:rgba(108,72,46,.92)
+  content:"";position:absolute;bottom:-58px;width:12px;height:58px;background:rgba(108,72,46,.92)
 }
 .interior-shelf:before{left:18%}.interior-shelf:after{right:18%}
 
-/* Front-facing stair art. It is visual only; game.js supplies the continuous
-   walkable Y=f(X) slope, so this is never treated as a jump platform. */
+/* 12m x 6m apartment, 3m floor-to-floor. The staircase is a real switchback:
+   lower flight rises right to the half landing; upper flight rises left to floor 2. */
 .interior-staircase{
-  left:1408px;bottom:0;width:640px;height:512px;
-  overflow:visible;
+  left:768px;bottom:0;width:384px;height:384px;overflow:visible;
+}
+.interior-stair-run{
+  position:absolute;width:320px;height:192px;
+  filter:drop-shadow(6px 7px 0 rgba(50,36,27,.13));
+}
+.interior-stair-run-lower{
+  left:0;bottom:0;
   clip-path:polygon(0 100%,100% 0,100% 100%);
-  background:
-    repeating-linear-gradient(
-      to top,
-      rgba(202,165,111,.98) 0 34px,
-      rgba(113,78,52,.96) 34px 40px
-    );
-  border-right:7px solid rgba(79,55,39,.82);
-  border-bottom:7px solid rgba(79,55,39,.82);
-  filter:drop-shadow(8px 9px 0 rgba(50,36,27,.14))
+  background:repeating-linear-gradient(to top,rgba(202,165,111,.98) 0 25px,rgba(113,78,52,.96) 25px 30px);
 }
-.interior-staircase:before{
-  content:"";
-  position:absolute;inset:0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      transparent 0 38px,
-      rgba(102,71,48,.32) 38px 42px
-    );
-  opacity:.72
+.interior-stair-run-upper{
+  left:0;bottom:192px;
+  clip-path:polygon(0 0,0 100%,100% 100%);
+  background:repeating-linear-gradient(to top,rgba(202,165,111,.98) 0 25px,rgba(113,78,52,.96) 25px 30px);
 }
-.interior-stair-rail{
-  position:absolute;
-  left:10px;bottom:485px;
-  width:770px;height:12px;
-  border-radius:8px;
-  background:rgba(91,61,43,.96);
-  transform-origin:0 50%;
-  transform:rotate(-38.66deg);
+.interior-stair-run:before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0 32px,rgba(102,71,48,.28) 32px 36px);
+}
+.interior-stair-landing{
+  position:absolute;left:320px;bottom:176px;width:64px;height:32px;
+  background:rgba(188,146,94,.98);border:4px solid rgba(91,61,43,.82);
   box-shadow:0 5px 0 rgba(52,37,27,.12)
 }
-.interior-stair-rail:before,.interior-stair-rail:after{
-  content:"";position:absolute;width:12px;height:110px;background:rgba(91,61,43,.94)
+.interior-stair-rail{
+  position:absolute;height:10px;border-radius:8px;background:rgba(91,61,43,.96);
+  box-shadow:0 4px 0 rgba(52,37,27,.12)
 }
-.interior-stair-rail:before{left:86px;top:-4px;transform:rotate(38.66deg)}
-.interior-stair-rail:after{right:98px;top:-4px;transform:rotate(38.66deg)}
+.interior-stair-rail-lower{
+  left:5px;bottom:182px;width:372px;transform-origin:0 50%;transform:rotate(-30.96deg)
+}
+.interior-stair-rail-upper{
+  left:5px;top:5px;width:372px;transform-origin:0 50%;transform:rotate(30.96deg)
+}
+.interior-stair-rail-lower:before,.interior-stair-rail-lower:after,
+.interior-stair-rail-upper:before,.interior-stair-rail-upper:after{
+  content:"";position:absolute;width:9px;height:72px;background:rgba(91,61,43,.94)
+}
+.interior-stair-rail-lower:before,.interior-stair-rail-upper:before{left:70px;top:-4px}
+.interior-stair-rail-lower:after,.interior-stair-rail-upper:after{right:80px;top:-4px}
 
 .interior-exit-door{
-  right:auto;bottom:0;width:180px;height:360px;
-  translate:-50% 0;
-  background:rgba(107,76,53,.96);border:7px solid rgba(72,51,37,.82);
-  box-shadow:5px 8px 0 rgba(46,34,25,.14),inset 0 0 0 5px rgba(219,185,135,.08)
+  right:auto;bottom:0;width:128px;height:288px;translate:-50% 0;
+  background:rgba(107,76,53,.96);border:6px solid rgba(72,51,37,.82);
+  box-shadow:5px 7px 0 rgba(46,34,25,.14),inset 0 0 0 4px rgba(219,185,135,.08)
 }
 .interior-door-handle{
-  position:absolute;right:14%;top:52%;width:11px;height:11px;border-radius:50%;background:#d2b06d;border:2px solid #705234
+  position:absolute;right:14%;top:52%;width:10px;height:10px;border-radius:50%;background:#d2b06d;border:2px solid #705234
 }
 .interior-door-label{
-  position:absolute;left:50%;top:-34px;transform:translateX(-50%);
-  padding:4px 9px;background:#dac18d;border:1px solid #755c3b;color:#54432f;font:800 12px serif
+  position:absolute;left:50%;top:-30px;transform:translateX(-50%);
+  padding:3px 8px;background:#dac18d;border:1px solid #755c3b;color:#54432f;font:800 11px serif
 }
 .interior-near-left{
-  left:108px;bottom:0;width:230px;height:330px;
-  background:rgba(91,68,49,.93);border:5px solid rgba(64,47,35,.72);
-  box-shadow:inset -10px 0 0 rgba(212,184,137,.10),7px 8px 0 rgba(46,34,25,.12);
+  left:72px;bottom:0;width:150px;height:220px;
+  background:rgba(91,68,49,.93);border:4px solid rgba(64,47,35,.72);
+  box-shadow:inset -8px 0 0 rgba(212,184,137,.10),6px 6px 0 rgba(46,34,25,.12);
   clip-path:polygon(0 4%,88% 0,100% 9%,96% 100%,0 100%)
 }
 .interior-near-left:before{
   content:"";position:absolute;left:32%;top:-31%;width:42%;height:34%;
-  background:rgba(73,102,68,.92);border:4px solid rgba(54,72,49,.64);
+  background:rgba(73,102,68,.92);border:3px solid rgba(54,72,49,.64);
   border-radius:52% 48% 45% 55%;transform:rotate(-7deg)
 }
 .interior-near-right{
-  right:112px;bottom:512px;width:260px;height:300px;
-  background:rgba(112,79,52,.94);border:5px solid rgba(72,51,37,.70);
-  box-shadow:inset 10px 0 0 rgba(226,194,142,.08),-8px 7px 0 rgba(46,34,25,.11);
+  right:70px;bottom:384px;width:170px;height:190px;
+  background:rgba(112,79,52,.94);border:4px solid rgba(72,51,37,.70);
+  box-shadow:inset 8px 0 0 rgba(226,194,142,.08),-6px 6px 0 rgba(46,34,25,.11);
   clip-path:polygon(7% 2%,100% 0,100% 100%,0 100%,3% 11%)
 }
 .interior-near-rug{
-  left:760px;bottom:-10px;width:560px;height:70px;
+  left:330px;bottom:-8px;width:330px;height:48px;
   border-radius:48% 52% 44% 56%;
   background:rgba(133,80,62,.74);border:3px solid rgba(89,60,46,.42);
-  box-shadow:inset 0 0 0 6px rgba(223,177,124,.10);
-  transform:skewX(-7deg)
+  box-shadow:inset 0 0 0 5px rgba(223,177,124,.10);transform:skewX(-7deg)
 }
 
 .stage.scene-interior.interior-stage-in .interior-floor{animation:interiorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
