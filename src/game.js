@@ -7,6 +7,7 @@ const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no trans
 let MAP_GROUND_SCREEN_Y=112;
 let VIEW_W=1280,VIEW_H=720;
 const PLAYER_BODY={halfW:27,h:108};
+const PLAYER_VISUAL=Object.freeze({w:104,h:156});
 const WORLD_NODES=[
   {id:'village',name:'A村',x:170,y:650,kind:'village'},
   {id:'meadowFork',name:'风草岔口',x:450,y:640,kind:'junction'},
@@ -573,6 +574,10 @@ const dialoguePortraitDecode=Promise.allSettled(
   return result;
 });
 const actorEl=document.querySelector('.actor');
+actorEl.style.width=PLAYER_VISUAL.w+'px';
+actorEl.style.height=PLAYER_VISUAL.h+'px';
+actorEl.style.setProperty('--player-visual-w',PLAYER_VISUAL.w+'px');
+actorEl.style.setProperty('--player-visual-h',PLAYER_VISUAL.h+'px');
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
@@ -2047,7 +2052,8 @@ window.PaperchalkRuntime={
     objects:MAP_OBJECTS,
     pickups:MAP_PICKUPS,
     npcs:MAP_NPCS,
-    enemySpawns:ENEMY_SPAWNS
+    enemySpawns:ENEMY_SPAWNS,
+    playerVisual:PLAYER_VISUAL
   }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
