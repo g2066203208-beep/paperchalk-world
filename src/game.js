@@ -770,6 +770,7 @@ function syncViewportMetrics(){
   document.documentElement.style.setProperty('--player-visual-w',playerW+'px');
   document.documentElement.style.setProperty('--player-visual-h',playerH+'px');
   const nextGround=clamp(Math.round(viewH*.30),72,112);
+  document.documentElement.style.setProperty('--ground-screen-y',nextGround+'px');
   const groundChanged=nextGround!==MAP_GROUND_SCREEN_Y;
   const sizeChanged=viewW!==prevW||viewH!==prevH;
   const scaleChanged=Math.abs(viewportScale-prevScale)>.001;
@@ -2292,7 +2293,6 @@ function refreshRoadW(){
   actorEl.style.setProperty('--actor-y',(-(MAP_GROUND_SCREEN_Y+playerY)).toFixed(2)+'px');
   renderCombatDebug();
 }
-roadTile.addEventListener('load',refreshRoadW);
 let viewportRebuildTimer=0;
 let viewportSyncRaf=0;
 function flushViewportChange(){
