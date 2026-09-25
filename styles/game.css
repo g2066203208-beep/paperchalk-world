@@ -117,6 +117,25 @@ button{cursor:pointer}
   filter:drop-shadow(0 18px 8px var(--paper-shadow));
   backface-visibility:visible;
 }
+.mountain-background-layer{
+  position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;
+  contain:layout paint;
+}
+.mountain-background-track{
+  position:absolute;left:0;bottom:var(--ground-screen-y,112px);
+  display:flex;align-items:flex-end;width:max-content;height:auto;
+  pointer-events:none;will-change:transform;
+}
+.mountain-background-tile{
+  width:clamp(1050px,82vw,1500px);height:auto;max-width:none;flex:0 0 auto;
+  object-fit:contain;object-position:center bottom;
+  opacity:.88;
+  filter:saturate(.88) contrast(.96) brightness(1.02) drop-shadow(0 9px 5px rgba(53,45,35,.10));
+  transform-origin:50% 100%;backface-visibility:hidden;
+}
+.mountain-background-tile.is-mirrored{transform:scaleX(-1)}
+.stage.perf-low .mountain-background-tile{filter:none;opacity:.84}
+
 .paper-backdrop[data-scene="forest"]{--scene-a:rgba(66,93,67,.42);--scene-b:rgba(83,100,68,.34);--scene-paper:rgba(115,130,89,.30)}
 .paper-backdrop[data-scene="river"],.paper-backdrop[data-scene="marsh"]{--scene-a:rgba(74,101,103,.34);--scene-b:rgba(99,111,94,.30);--scene-paper:rgba(117,137,126,.28)}
 .paper-backdrop[data-scene="mountain"],.paper-backdrop[data-scene="highland"]{--scene-a:rgba(103,94,86,.38);--scene-b:rgba(121,108,87,.31);--scene-paper:rgba(139,124,101,.30)}
