@@ -178,7 +178,41 @@ const entranceFx=await js(`(()=>{
 assert(entranceFx.playerName.includes('puppetPlayerArcOut')&&entranceFx.playerDir==='reverse','player entrance is not reverse exit '+JSON.stringify(entranceFx));
 assert(entranceFx.npcName.includes('puppetNpcArcOut')&&entranceFx.npcDir==='reverse','NPC entrance is not reverse exit '+JSON.stringify(entranceFx));
 console.log('PASS mirrored portrait entrance',entranceFx);
-await sleep(760);
+
+await sleep(600);
+const handoffBefore=await js(`(()=>{
+  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
+  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
+  const pp=document.querySelector('#dialoguePlayerPortrait .dialogue-puppet').getBoundingClientRect();
+  const np=document.querySelector('#dialogueNpcPortrait .dialogue-puppet').getBoundingClientRect();
+  return {
+    opening:document.getElementById('dialogueStage').classList.contains('is-opening'),
+    p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height},
+    pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},np:{x:np.x,y:np.y,w:np.width,h:np.height}
+  };
+})()`);
+await sleep(150);
+const handoffAfter=await js(`(()=>{
+  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
+  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
+  const pp=document.querySelector('#dialoguePlayerPortrait .dialogue-puppet').getBoundingClientRect();
+  const np=document.querySelector('#dialogueNpcPortrait .dialogue-puppet').getBoundingClientRect();
+  return {
+    opening:document.getElementById('dialogueStage').classList.contains('is-opening'),
+    p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height},
+    pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},np:{x:np.x,y:np.y,w:np.width,h:np.height}
+  };
+})()`);
+assert(handoffBefore.opening===true&&handoffAfter.opening===false,'opening class did not hand off at expected time '+JSON.stringify({handoffBefore,handoffAfter}));
+for(const key of ['p','n']){
+  assert(Math.abs(handoffAfter[key].x-handoffBefore[key].x)<2&&Math.abs(handoffAfter[key].y-handoffBefore[key].y)<2,
+    'portrait parent jumps at entrance/breath handoff '+key+' '+JSON.stringify({handoffBefore,handoffAfter}));
+}
+for(const key of ['pp','np']){
+  assert(Math.abs(handoffAfter[key].x-handoffBefore[key].x)<2&&Math.abs(handoffAfter[key].y-handoffBefore[key].y)<2,
+    'puppet child jumps at entrance/breath handoff '+key+' '+JSON.stringify({handoffBefore,handoffAfter}));
+}
+console.log('PASS continuous entrance-to-breath handoff',{handoffBefore,handoffAfter});
 noFaults('dialogue open');
 const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
 assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
