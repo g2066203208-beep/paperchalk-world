@@ -952,6 +952,19 @@ window.PaperchalkHealth={
 
 let debugLastUiUpdate=0;
 let perfWindowStart=performance.now(),perfFrameCount=0,perfFps=60,perfFrameMs=16.7;
+let perfLongTasks=0,perfWorstLongTask=0,perfLastLongTaskAt=0;
+try{
+  if('PerformanceObserver' in window){
+    const longTaskObserver=new PerformanceObserver(list=>{
+      for(const entry of list.getEntries()){
+        perfLongTasks++;
+        perfWorstLongTask=Math.max(perfWorstLongTask,entry.duration||0);
+        perfLastLongTaskAt=performance.now();
+      }
+    });
+    longTaskObserver.observe({type:'longtask',buffered:true});
+  }
+}catch(err){console.debug('LONGTASK_OBSERVER_UNAVAILABLE',err)}
 let perfLow=false,perfLowWindows=0,perfHighWindows=0;
 const coarsePointer=matchMedia('(pointer:coarse)').matches;
 function setPerfLow(next){
@@ -997,6 +1010,7 @@ function updateDebugStatus(){
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
+    '<span>长任务 <b>'+perfLongTasks+' / '+perfWorstLongTask.toFixed(0)+'ms</b></span>'+
     '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
     '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>'+
     '<span>渲染器 <b>'+(window.PaperchalkRenderer?.mode||'dom')+'</b></span>'+
@@ -1269,6 +1283,9 @@ window.PaperchalkDebug={
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
+    longTasks:perfLongTasks,
+    worstLongTaskMs:perfWorstLongTask,
+    lastLongTaskAt:perfLastLongTaskAt,
     roadTiles:roadTrack.children.length,
     propNodes:rearTrack.children.length+frontTrack.children.length,
     visualOriginX,
@@ -2171,6 +2188,7 @@ function renderWorld(force=false){
 }
 let lastInteractionTick=0;
 let lastInteractionX=NaN,lastInteractionY=NaN;
+let lastAmbientVisualTick=0;
 let combatAccumulator=0;
 let lastCombatProbe=0,nearbyCombatCached=false;
 let lastMovingState=false;
@@ -2196,10 +2214,17 @@ function frame(now){
     debugLastUiUpdate=now;
   }
   const interactive=worldInteractive();
-  /* Celestial paper props and world clock keep moving even while dialogue/UI pauses gameplay. */
-  if(worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
-  updateCelestialVisuals();
-  updateDayNightVisuals();
+  const worldSession=uiShell.classList.contains('is-hidden');
+  // World time never advances on the menu/auth/settings screens.
+  if(worldSession&&worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  // Active play updates every frame. Paused overlays/dialogue update ambient visuals
+  // at 10–15 Hz; menus only at 4 Hz. This avoids needless style writes and phone heat.
+  const ambientInterval=interactive?0:(worldSession?(dialogueIsOpen()?66:100):250);
+  if(interactive||now-lastAmbientVisualTick>=ambientInterval){
+    lastAmbientVisualTick=now;
+    updateCelestialVisuals();
+    updateDayNightVisuals();
+  }
   if(!interactive){
     requestAnimationFrame(frame);
     return;
@@ -3083,6 +3108,7 @@ function openUI(fromWorld=false){
   showPage('menu');
   uiShell.classList.remove('is-hidden');
   uiShell.classList.remove('board-enter');
+  window.dispatchEvent(new CustomEvent('paperchalk-world-leave'));
 }
 function enterWorld(){
   closeDebugPanel({focus:false});
@@ -3100,6 +3126,7 @@ function enterWorld(){
   uiShell.classList.remove('board-enter');
   uiShell.setAttribute('inert','');
   worldEl.removeAttribute('inert');
+  window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
   backpackBtn.focus({preventScroll:true});
 }
 document.getElementById('worldMenuBtn').addEventListener('click',e=>{

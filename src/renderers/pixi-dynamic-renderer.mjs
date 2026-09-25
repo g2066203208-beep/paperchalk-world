@@ -13,7 +13,9 @@ let unsubscribe=null;
 let initPromise=null;
 let activeMode='dom';
 let requestedMode='auto';
+let worldSessionActive=false;
 let lastViewportW=-1,lastViewportH=-1;
+const forcedRendererQuery=new URL(location.href).searchParams.has('renderer');
 
 const coarsePointer=matchMedia('(pointer:coarse)').matches;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -239,7 +241,7 @@ async function ensurePixi(){
       }
       // The simulation owns the only RAF loop. Rendering here avoids a second ticker
       // and guarantees visual updates are synchronized to authoritative game state.
-      if(activeMode==='pixi')renderFrame(frame,performance.now());
+      if(worldSessionActive&&activeMode==='pixi')renderFrame(frame,performance.now());
     });
 
     stats.ready=true;
@@ -264,10 +266,10 @@ async function setMode(value,{persist=true}={}){
   if(target==='pixi'){
     try{
       await ensurePixi();
-      host.hidden=false;
+      host.hidden=!worldSessionActive;
       world.classList.add('renderer-pixi-dynamic');
       activeMode='pixi';
-      renderFrame(latestFrame,performance.now());
+      if(worldSessionActive||forcedRendererQuery)renderFrame(latestFrame,performance.now());
       dispatchMode();
       return activeMode;
     }catch{
@@ -288,19 +290,43 @@ async function setMode(value,{persist=true}={}){
   return activeMode;
 }
 
+async function activateWorld(){
+  worldSessionActive=true;
+  const mode=await setMode(requestedMode,{persist:false});
+  if(mode==='pixi'){
+    host.hidden=false;
+    renderFrame(latestFrame,performance.now());
+  }
+  return mode;
+}
+function suspendWorld(){
+  worldSessionActive=false;
+  host.hidden=true;
+}
+
 window.PaperchalkRenderer={
-  version:2,
+  version:3,
   setMode,
+  activateWorld,
+  suspendWorld,
   get mode(){return activeMode},
   get requested(){return requestedMode},
   get resolved(){return resolvedMode(requestedMode)},
+  get active(){return worldSessionActive},
   get stats(){return {...stats}},
   get ready(){return stats.ready}
 };
 
 requestedMode=modeFromLocation();
-setMode(requestedMode,{persist:false});
+// Explicit query mode is a developer/test override. Normal auto mode stays cold
+// on the menu and only imports Pixi/character textures after entering the world.
+if(forcedRendererQuery){
+  worldSessionActive=true;
+  setMode(requestedMode,{persist:false});
+}
 
+window.addEventListener('paperchalk-world-enter',()=>activateWorld());
+window.addEventListener('paperchalk-world-leave',()=>suspendWorld());
 window.addEventListener('pagehide',()=>{
   try{unsubscribe?.()}catch{}
 });
