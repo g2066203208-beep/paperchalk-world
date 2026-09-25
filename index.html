@@ -4,16 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <meta name="theme-color" content="#28251f">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<script>
+(() => {
+  const BUILD = "mobile-fresh-r25";
+  const url = new URL(window.location.href);
+  if (url.protocol === "http:" || url.protocol === "https:") {
+    if (url.searchParams.get("build") !== BUILD) {
+      url.searchParams.set("build", BUILD);
+      window.location.replace(url.toString());
+      return;
+    }
+  }
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
+      .catch(() => {});
+  }
+  if ("caches" in window) {
+    caches.keys()
+      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
+      .catch(() => {});
+  }
+})();
+</script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=indoor-depth-flight-r24" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=mobile-fresh-r25" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="indoor-depth-flight-r24">
-<link rel="stylesheet" href="./styles/game.css?v=indoor-depth-flight-r24">
+<meta name="paperchalk-build" content="mobile-fresh-r25">
+<link rel="stylesheet" href="./styles/game.css?v=mobile-fresh-r25">
 </head>
 <body>
 
@@ -373,7 +399,7 @@
 </section>
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
-<script src="./src/game.js?v=indoor-depth-flight-r24"></script>
+<script src="./src/game.js?v=mobile-fresh-r25"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=puppet-r1"></script>
 </body>
 </html>
