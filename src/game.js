@@ -2588,7 +2588,7 @@ function refreshRoadW(){
   if(w>0){roadW=Math.max(1,w-1);ensureRoadTiles()}
   updateCamera();
   actorEl.style.setProperty('--actor-x',actorX.toFixed(2)+'px');
-  actorEl.style.setProperty('--actor-y',(-(MAP_GROUND_SCREEN_Y+playerY)).toFixed(2)+'px');
+  actorEl.style.setProperty('--actor-y',(-MAP_GROUND_SCREEN_Y).toFixed(2)+'px');
   renderCombatDebug();
 }
 let viewportRebuildTimer=0;
@@ -2604,6 +2604,7 @@ function flushViewportChange(){
     actorX=playerScreenAnchorX;
     interiorPlayerX=playerScreenAnchorX;
     if(sceneLocation==='outside')updateCamera();
+    else updateInteriorCamera();
   }
   if(change.groundChanged||change.sizeChanged){
     clearTimeout(viewportRebuildTimer);
@@ -2647,7 +2648,9 @@ function flightVerticalAxis(){
   return clamp(buttons+joystickFlightAxisY,-1,1);
 }
 function flightCeiling(){
-  return sceneLocation==='interior'?Math.max(160,VIEW_H*.62):Math.max(900,VIEW_H*3);
+  return sceneLocation==='interior'
+    ? Math.max(0,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24)
+    : OUTDOOR_FLIGHT_MAX_Y;
 }
 function setFacing(dir){
   if(!dir||dir===facing)return;
@@ -2788,18 +2791,27 @@ function frame(now){
         playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
         playerDynamic=true;
       }
+      if(moving){
+        const dir=Math.sign(axis);
+        setFacing(dir);
+        const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
+        moveInteriorHorizontal(dir*speed*dt,{flight:true});
+        playerDynamic=true;
+      }else if(playerDynamic){
+        updateInteriorCamera();
+      }
     }else{
-      coyoteTimer=COYOTE_TIME;
-      playerGrounded=playerY<=0;
-    }
-    if(moving){
-      const dir=Math.sign(axis);
-      setFacing(dir);
-      const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
-      interiorSceneShiftX-=dir*speed*dt;
-      interiorPlayerX=playerScreenAnchorX;
-      actorX=playerScreenAnchorX;
-      playerDynamic=true;
+      playerGrounded=true;coyoteTimer=COYOTE_TIME;
+      playerY=interiorWalkSurfaceY(interiorPlayerWorldX);
+      if(moving){
+        const dir=Math.sign(axis);
+        setFacing(dir);
+        const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
+        moveInteriorHorizontal(dir*speed*dt);
+        playerDynamic=true;
+      }else{
+        updateInteriorCamera();
+      }
     }
   }else{
     if(debugFlightMode){
@@ -2843,7 +2855,7 @@ function frame(now){
     combatAccumulator=0;
   }
 
-  const interactionCoord=sceneLocation==='interior'?interiorPlayerX:playerWorldX;
+  const interactionCoord=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
   const interactionMoved=!Number.isFinite(lastInteractionX)||Math.abs(interactionCoord-lastInteractionX)>8||Math.abs(playerY-lastInteractionY)>8;
   if(interactionMoved&&now-lastInteractionTick>=80){
     lastInteractionTick=now;
