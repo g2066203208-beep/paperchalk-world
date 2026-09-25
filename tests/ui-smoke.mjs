@@ -219,27 +219,46 @@ const handoff=await js(`(async()=>{
       np:{x:np.x,y:np.y,w:np.width,h:np.height}
     };
   };
-  if(!stage.classList.contains('is-opening'))return {alreadyEnded:true,after:snap()};
-  const before=snap();
+
+  // Wait for the final portrait entrance animation to actually finish.
   await new Promise(resolve=>{
-    const obs=new MutationObserver(()=>{
-      if(!stage.classList.contains('is-opening')){obs.disconnect();requestAnimationFrame(resolve)}
-    });
-    obs.observe(stage,{attributes:true,attributeFilter:['class']});
+    let done=0;
+    const onEnd=e=>{
+      if(e.animationName!=='puppetPlayerArcOut'&&e.animationName!=='puppetNpcArcOut')return;
+      done++;
+      if(done>=2){
+        player.removeEventListener('animationend',onEnd);
+        npc.removeEventListener('animationend',onEnd);
+        requestAnimationFrame(resolve);
+      }
+    };
+    player.addEventListener('animationend',onEnd);
+    npc.addEventListener('animationend',onEnd);
   });
+  const before=snap();
+
+  if(stage.classList.contains('is-opening')){
+    await new Promise(resolve=>{
+      const obs=new MutationObserver(()=>{
+        if(!stage.classList.contains('is-opening')){
+          obs.disconnect();
+          requestAnimationFrame(resolve);
+        }
+      });
+      obs.observe(stage,{attributes:true,attributeFilter:['class']});
+    });
+  }
   const after=snap();
-  return {alreadyEnded:false,before,after};
+  return {before,after};
 })()`);
 
-if(!handoff.alreadyEnded){
-  for(const key of ['p','n']){
-    assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
-      'portrait parent jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
-  }
-  for(const key of ['pp','np']){
-    assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
-      'puppet child jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
-  }
+for(const key of ['p','n']){
+  assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
+    'portrait parent jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
+}
+for(const key of ['pp','np']){
+  assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
+    'puppet child jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
 }
 console.log('PASS continuous entrance-to-breath handoff',handoff);
 noFaults('dialogue open');
