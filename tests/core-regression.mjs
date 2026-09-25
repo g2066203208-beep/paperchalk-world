@@ -115,6 +115,29 @@ try{
     visual:{...window.PaperchalkRuntime.worldData.playerVisual},
     rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
   }));
+  const voxelGround=await page.evaluate(()=> {
+    const layer=document.querySelector('.road-layer');
+    const stage=document.getElementById('world');
+    const tile=document.getElementById('roadTile');
+    const layerRect=layer?.getBoundingClientRect();
+    const stageRect=stage?.getBoundingClientRect();
+    return {
+      tileClass:tile?.className||'',
+      tileTag:tile?.tagName||'',
+      groundY:window.PaperchalkRuntime?.snapshot?.().viewport?.groundY??null,
+      layerTop:layerRect&&stageRect?layerRect.top-stageRect.top:null,
+      stageH:stageRect?.height||0,
+      layerH:layerRect?.height||0,
+      background:getComputedStyle(tile).backgroundImage
+    };
+  });
+  check('Voxel ground replaces road image and aligns to physics ground',
+    voxelGround.tileTag==='DIV'&&voxelGround.tileClass.includes('voxel-ground-tile')&&
+    Math.abs(voxelGround.layerH-voxelGround.groundY)<1.5&&
+    Math.abs(voxelGround.layerTop-(voxelGround.stageH-voxelGround.groundY))<1.5&&
+    voxelGround.background!=='none',
+    JSON.stringify(voxelGround));
+
   check('Player starts in optimized supplied idle pose',
     initialAction.player.action==='idle'&&initialAction.state==='idle'&&initialAction.src.includes('/assets/player/runtime/idle.webp'),
     JSON.stringify(initialAction));
