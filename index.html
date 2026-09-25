@@ -1841,6 +1841,51 @@ button{cursor:pointer}
   transform:translateY(5px) scale(.97);
 }
 
+
+/* ---------- R7 CONTINUOUS ENTRANCE -> BREATH HANDOFF ---------- */
+/* Parent pose must be identical when mirrored entrance finishes and dialogue idle begins. */
+.dialogue-stage.speaker-player:not(.is-closing) .dialogue-portrait.player,
+.dialogue-stage.speaker-npc:not(.is-closing) .dialogue-portrait.npc{
+  transform:none!important;
+  opacity:1;
+}
+.dialogue-stage.speaker-player:not(.is-closing) .dialogue-portrait.npc,
+.dialogue-stage.speaker-npc:not(.is-closing) .dialogue-portrait.player{
+  transform:none!important;
+  opacity:.72;
+}
+/* Choices do not alter either portrait pose. */
+.dialogue-stage.is-choice .dialogue-portrait.player,
+.dialogue-stage.is-choice .dialogue-portrait.npc{
+  transform:none!important;
+}
+
+/* The first/last breath frame is EXACTLY the static puppet transform.
+   Therefore removing .is-opening cannot move the paper puppet by even one pixel. */
+.dialogue-puppet{
+  animation-name:dialoguePuppetBreathContinuous!important;
+  animation-duration:3.2s!important;
+  animation-timing-function:ease-in-out!important;
+  animation-iteration-count:infinite!important;
+  animation-delay:0s!important;
+}
+.dialogue-portrait.npc .dialogue-puppet{
+  animation-duration:3.55s!important;
+  animation-delay:0s!important;
+}
+.dialogue-stage.is-opening .dialogue-puppet{
+  animation:none!important;
+  transform:translateX(-50%) translateY(0) rotate(0deg)!important;
+}
+@keyframes dialoguePuppetBreathContinuous{
+  0%,100%{
+    transform:translateX(-50%) translateY(0) rotate(0deg);
+  }
+  50%{
+    transform:translateX(-50%) translateY(-4px) rotate(.14deg);
+  }
+}
+
 </style>
 </head>
 <body>
