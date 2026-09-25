@@ -567,7 +567,7 @@ const dialogueSkip=document.getElementById('dialogueSkip');
 dialoguePlayerArt.src='./assets/dialogue/player-portrait-hd.svg?v=1';
 dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
-  else dialoguePlayerArt.src='./assets/traveler.webp?v=traveler-r3';
+  else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
 dialogueNpcArt.src='./assets/dialogue/npc-portrait-hd.svg?v=1';
 dialogueNpcArt.addEventListener('error',()=>{
@@ -1508,6 +1508,15 @@ function updateCrouchState(){
   else if(!requested&&playerCrouching)setPlayerCrouching(false);
   if(!playerGrounded&&playerCrouching)setPlayerCrouching(false,{force:true});
 }
+function resetPlayerPoseState(){
+  keyboardCrouch=false;
+  mobileCrouch=false;
+  playerCrouching=false;
+  lastMovingState=false;
+  actorEl.classList.remove('is-crouching','is-jumping','is-moving');
+  crouchBtn?.classList.remove('is-active');
+  setPlayerActionState('idle',true);
+}
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
@@ -1993,7 +2002,7 @@ function updateMapInteractions(){
 function teleportTo(x,{notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
-  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;actorEl.classList.remove('is-jumping');
+  playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
   lastInteractionX=NaN;lastInteractionY=NaN;
   updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
@@ -3284,6 +3293,7 @@ function loadWorldState(){
   playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
   if(!playerGrounded){playerY=0;playerGrounded=true}
+  resetPlayerPoseState();
 
   const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
   mapState.broken=new Set(Array.isArray(savedMap.broken)?savedMap.broken:[]);
@@ -3355,7 +3365,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
+      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
