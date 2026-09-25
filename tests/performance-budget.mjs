@@ -18,7 +18,7 @@ const budgets={
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/apartment-midground.webp':350000,
-  'assets/backgrounds/mountain-background.webp':180000
+  'assets/backgrounds/mountain-background.svg':60000
 };
 for(const [file,max] of Object.entries(budgets)){
   const bytes=size(file);
