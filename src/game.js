@@ -553,15 +553,23 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
-const mountainBackground=document.getElementById('mountainBackground');
+const mountainBackgroundTrack=document.getElementById('mountainBackgroundTrack');
+const mountainBackgroundTiles=[...document.querySelectorAll('.mountain-background-tile')];
 const MOUNTAIN_PARALLAX=.16;
+let mountainPairWidth=1560;
 const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
 const midgroundApartment=document.getElementById('midgroundApartment');
 const APARTMENT_WORLD_X=520;
-const APARTMENT_WIDTH=1152;
 const APARTMENT_PARALLAX=.78;
 const APARTMENT_CULL_MARGIN=180;
+let apartmentDisplayWidth=780;
 let midgroundApartmentVisible=null;
+function refreshSceneryMetrics(){
+  const mountainW=mountainBackgroundTiles[0]?.getBoundingClientRect().width||0;
+  if(mountainW>0)mountainPairWidth=mountainW*2;
+  const apartmentW=midgroundApartment?.getBoundingClientRect().width||0;
+  if(apartmentW>0)apartmentDisplayWidth=apartmentW;
+}
 midgroundApartment?.addEventListener('error',()=>{
   midgroundApartment.hidden=true;
   midgroundApartmentVisible=false;
@@ -570,7 +578,7 @@ midgroundApartment?.addEventListener('error',()=>{
 function updateMidgroundApartmentVisibility(sceneryX,force=false){
   if(!midgroundApartment)return;
   const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
-  const visible=screenLeft+APARTMENT_WIDTH>-APARTMENT_CULL_MARGIN
+  const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
     &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
   if(force||visible!==midgroundApartmentVisible){
     midgroundApartmentVisible=visible;
@@ -664,10 +672,13 @@ function startPlayerActionSettle(previousState,state){
   playerActionSettleAnimation?.cancel();
   playerActionSettleAnimation=null;
   applyPlayerActionVisual(state);
+  // Crouch must swap directly. Scaling the shared card here can expose one frame
+  // of the old standing bitmap shrinking before the crouch bitmap is painted.
+  if(state==='crouch'||previousState==='crouch')return;
   if(!playerFlip||playerReducedMotion.matches)return;
   const ratio=Math.max(.72,Math.min(1.34,previousMeta.scale/Math.max(.01,nextMeta.scale)));
   if(Math.abs(ratio-1)<.008)return;
-  const duration=(state==='crouch'||previousState==='crouch')?135:105;
+  const duration=105;
   playerActionSettleAnimation=playerFlip.animate([
     {scale:String(ratio)},
     {scale:'1'}
@@ -2366,6 +2377,7 @@ function flushViewportChange(){
   const change=syncViewportMetrics();
   if(!change.sizeChanged&&!change.groundChanged&&!change.scaleChanged)return;
   refreshRoadW();
+  refreshSceneryMetrics();
   if(change.groundChanged||change.sizeChanged){
     clearTimeout(viewportRebuildTimer);
     viewportRebuildTimer=setTimeout(()=>{
@@ -2386,6 +2398,7 @@ addEventListener('orientationchange',()=>setTimeout(handleViewportChange,80),{pa
 addEventListener('pageshow',()=>{handleViewportChange();setTimeout(handleViewportChange,120)},{passive:true});
 window.visualViewport?.addEventListener('resize',handleViewportChange,{passive:true});
 refreshRoadW();
+refreshSceneryMetrics();
 
 function posMod(v,m){return ((v%m)+m)%m}
 function pixiDynamicActive(){return worldEl.classList.contains('renderer-pixi-dynamic')}
@@ -2430,7 +2443,8 @@ function writeTransform(el,key,value){
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
-  if(mountainBackground)mountainBackground.style.setProperty('--mountain-x',(-(sceneryX*MOUNTAIN_PARALLAX)).toFixed(2)+'px');
+  const mountainPhase=-posMod(sceneryX*MOUNTAIN_PARALLAX,mountainPairWidth);
+  const mountainT='translate3d('+mountainPhase.toFixed(2)+'px,0,0)';
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
   updateRoadPool(sceneryX,force);
@@ -2443,6 +2457,7 @@ function renderWorld(force=false){
   const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,0,0)';
   const mapT='translate3d('+(-(worldX-visualOriginX))+'px,0,0)';
   writeTransform(roadTrack,'road',roadT);
+  if(mountainBackgroundTrack)writeTransform(mountainBackgroundTrack,'mountain',mountainT);
   if(midgroundBuildingTrack)writeTransform(midgroundBuildingTrack,'midground',midgroundT);
   writeTransform(rearTrack,'rear',rearT);
   writeTransform(frontTrack,'front',frontT);
