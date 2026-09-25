@@ -3,6 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:label="Paperchalk World"
         android:usesCleartextTraffic="false"
         android:theme="@style/Theme.PaperchalkWorld">
