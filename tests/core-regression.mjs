@@ -386,13 +386,14 @@ try{
     JSON.stringify(compositorPlayer));
 
   const poolBefore=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  await page.evaluate(()=>window.PaperchalkMap.teleport(3500,{notice:''}));
+  await page.evaluate(()=>window.PaperchalkMap.teleport(9000,{notice:''}));
   await page.waitForTimeout(100);
   const poolFirstVisit=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
+  await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),moved.playerWorldX);
   await page.waitForTimeout(100);
   const poolReturn=await page.evaluate(()=>window.PaperchalkDebug.perf());
   check('Map visual window reuses retained DOM nodes when revisiting an area',
+    poolFirstVisit.visualOriginX>poolBefore.visualOriginX&&
     poolFirstVisit.pooledMapNodes>=poolBefore.pooledMapNodes&&
     poolReturn.mapVisualCreateCount===poolFirstVisit.mapVisualCreateCount,
     JSON.stringify({poolBefore,poolFirstVisit,poolReturn}));
