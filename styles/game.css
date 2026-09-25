@@ -2089,6 +2089,7 @@ button{cursor:pointer}
   position:absolute;inset:0;z-index:auto;visibility:hidden;pointer-events:none;overflow:hidden;
   background:transparent;
 }
+.stage.scene-interior{perspective:none}
 .stage.scene-interior .interior-scene{visibility:visible}
 .interior-depth-layer{
   position:absolute;inset:0;pointer-events:none;
