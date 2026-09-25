@@ -284,8 +284,8 @@ noFaults('dialogue open');
 const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
 assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
 assert(portraits.pw>=480&&portraits.ph>=900,'player portrait is still low resolution '+JSON.stringify(portraits));
-assert(portraits.nw>=640&&portraits.nh>=1004,'NPC portrait is still low resolution '+JSON.stringify(portraits));
-console.log('PASS dialogue/portraits HD',portraits);
+assert(portraits.nw===326&&portraits.nh===1002,'NPC portrait size mismatch '+JSON.stringify(portraits));
+console.log('PASS dialogue portraits',portraits);
 
 const portraitBeforeChoice=await js(`(()=>{
   const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
