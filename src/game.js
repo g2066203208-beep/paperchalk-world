@@ -2430,7 +2430,7 @@ function writeTransform(el,key,value){
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
-  if(mountainBackgroundTrack)mountainBackgroundTrack.style.setProperty('--mountain-x',(-posMod(sceneryX*.16,1536)).toFixed(2)+'px');
+  if(mountainBackground)mountainBackground.style.setProperty('--mountain-x',(-(sceneryX*MOUNTAIN_PARALLAX)).toFixed(2)+'px');
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
   updateRoadPool(sceneryX,force);
