@@ -391,30 +391,49 @@ try{
     npcTalk.open&&npcTalk.name==='？？？'&&npcTalk.phase==='opening',
     JSON.stringify(npcTalk));
   await page.evaluate(()=>window.PaperchalkDialogue.close({immediate:true}));
-  const stagePlayerBefore=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {x:r.left,y:r.top};
-  });
+  const stagePlayerBefore=await page.evaluate(()=>({
+    screenX:window.PaperchalkScene.playerScreenX,
+    centerX:window.PaperchalkScene.centerX,
+    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
+  }));
   const stageEnter=await page.evaluate(()=>window.PaperchalkScene.enter());
   check('Apartment door stage transition can start',stageEnter===true,'enter='+stageEnter);
   await page.waitForTimeout(360);
-  const stagePlayerMid=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {x:r.left,y:r.top};
-  });
-  check('Player stays fixed while exterior scenery exits',
-    Math.abs(stagePlayerMid.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerMid.y-stagePlayerBefore.y)<2.5,
+  const stagePlayerMid=await page.evaluate(()=>({
+    screenX:window.PaperchalkScene.playerScreenX,
+    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
+  }));
+  check('Player stays fixed while the outgoing exterior world leaves',
+    Math.abs(stagePlayerMid.screenX-stagePlayerBefore.screenX)<1&&
+    Math.abs(stagePlayerMid.rect.y-stagePlayerBefore.rect.y)<2.5,
     JSON.stringify({stagePlayerBefore,stagePlayerMid}));
+
+  await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&window.PaperchalkScene.transitioning,null,{timeout:2200});
+  const interiorReveal=await page.evaluate(()=>({
+    anchorError:window.PaperchalkScene.lastDoorAnchorErrorX,
+    anchorX:window.PaperchalkScene.interiorDoorAnchorX,
+    startPlayerX:window.PaperchalkScene.playerScreenX
+  }));
+  check('Interior world reveals with its doorway bound to the player anchor',
+    Math.abs(interiorReveal.anchorError)<1&&Math.abs(interiorReveal.anchorX-stagePlayerBefore.screenX)<1,
+    JSON.stringify({stagePlayerBefore,interiorReveal}));
+
   await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
   const interiorStage=await page.evaluate(()=>({
     location:window.PaperchalkScene.location,
     visible:getComputedStyle(document.getElementById('interiorScene')).visibility,
     worldClass:document.getElementById('world').className,
-    interactLabel:document.getElementById('interactBtn')?.textContent||''
+    playerX:window.PaperchalkScene.playerScreenX,
+    centerX:window.PaperchalkScene.centerX,
+    doorX:window.PaperchalkScene.interiorDoorScreenX
   }));
-  check('Interior paper stage arrives after exterior exits',
-    interiorStage.location==='interior'&&interiorStage.visible==='visible'&&interiorStage.worldClass.includes('scene-interior'),
+  check('Interior world finishes by smoothly centering the player',
+    interiorStage.location==='interior'&&interiorStage.visible==='visible'&&
+    interiorStage.worldClass.includes('scene-interior')&&
+    Math.abs(interiorStage.playerX-interiorStage.centerX)<1&&
+    Math.abs(interiorStage.doorX-interiorStage.playerX)<1,
     JSON.stringify(interiorStage));
+
   const interiorDepth=await page.evaluate(()=>{
     const z=id=>Number.parseInt(getComputedStyle(document.getElementById(id)).zIndex,10);
     const door=document.getElementById('interiorExitDoor').getBoundingClientRect();
@@ -427,8 +446,8 @@ try{
       near:z('interiorNearLayer'),
       doorCenterX:door.left+door.width/2,
       doorGroundY:window.innerHeight-door.bottom,
-      exteriorDoorX:window.PaperchalkScene.doorScreenX,
       interiorDoorX:window.PaperchalkScene.interiorDoorScreenX,
+      playerX:window.PaperchalkScene.playerScreenX,
       expectedGroundY:window.PaperchalkScene.interiorDoorGroundY,
       sceneAligned:Math.abs(scene.left-stage.left)<1&&Math.abs(scene.top-stage.top)<1&&
         Math.abs(scene.width-stage.width)<1&&Math.abs(scene.height-stage.height)<1
@@ -440,68 +459,64 @@ try{
   check('Interior depth order is far -> mid -> player -> near',
     interiorDepth.far<interiorDepth.mid&&interiorDepth.mid<interiorDepth.player&&interiorDepth.player<interiorDepth.near,
     JSON.stringify(interiorDepth));
-  check('Interior and exterior doorway share the same screen X',
+  check('Interior doorway stays physically attached to the centered player after camera settle',
     Math.abs(interiorDepth.doorCenterX-interiorDepth.interiorDoorX)<2&&
-    Math.abs(interiorDepth.doorCenterX-interiorDepth.exteriorDoorX)<2,
+    Math.abs(interiorDepth.doorCenterX-interiorDepth.playerX)<2,
     JSON.stringify(interiorDepth));
   check('Interior doorway threshold stays on the exterior ground line',
     Math.abs(interiorDepth.doorGroundY-interiorDepth.expectedGroundY)<2,
     JSON.stringify(interiorDepth));
-  const stagePlayerInterior=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {x:r.left,y:r.top};
-  });
-  check('Player keeps the same screen position when interior arrives',
-    Math.abs(stagePlayerInterior.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerInterior.y-stagePlayerBefore.y)<2.5,
-    JSON.stringify({stagePlayerBefore,stagePlayerInterior}));
-  const exitPlayerBefore=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {x:r.left,y:r.top};
-  });
+
+  const exitPlayerBefore=await page.evaluate(()=>({
+    screenX:window.PaperchalkScene.playerScreenX,
+    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
+  }));
   const stageExit=await page.evaluate(()=>window.PaperchalkScene.exit());
   check('Interior exit starts the return paper-stage transition',stageExit===true,'exit='+stageExit);
   await page.waitForTimeout(300);
-  const exitPlayerMid=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {x:r.left,y:r.top};
-  });
-  check('Player stays fixed while interior scenery exits',
-    Math.abs(exitPlayerMid.x-exitPlayerBefore.x)<1&&Math.abs(exitPlayerMid.y-exitPlayerBefore.y)<1,
+  const exitPlayerMid=await page.evaluate(()=>({
+    screenX:window.PaperchalkScene.playerScreenX,
+    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
+  }));
+  check('Player stays fixed while the outgoing interior world leaves',
+    Math.abs(exitPlayerMid.screenX-exitPlayerBefore.screenX)<1&&
+    Math.abs(exitPlayerMid.rect.y-exitPlayerBefore.rect.y)<1,
     JSON.stringify({exitPlayerBefore,exitPlayerMid}));
+
   await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&window.PaperchalkScene.transitioning,null,{timeout:1800});
-  const exteriorRevealCamera=await page.evaluate(()=>{
+  const exteriorReveal=await page.evaluate(()=>{
     const snap=window.PaperchalkRuntime.getSnapshot();
     const transform=getComputedStyle(document.getElementById('mapTrack')).transform;
     const matrix=transform&&transform!=='none'?new DOMMatrix(transform):new DOMMatrix();
     return {
+      anchorError:window.PaperchalkScene.lastDoorAnchorErrorX,
+      playerX:window.PaperchalkScene.playerScreenX,
+      doorX:window.PaperchalkScene.doorScreenX,
       cameraX:snap.camera.x,
       visualOriginX:snap.camera.visualOriginX,
       mapTransformX:matrix.m41,
       expectedMapTransformX:-(snap.camera.x-snap.camera.visualOriginX)
     };
   });
+  check('Exterior world reveals with its doorway bound to the player anchor',
+    Math.abs(exteriorReveal.anchorError)<1,
+    JSON.stringify(exteriorReveal));
   check('Exterior reveal keeps the live camera X transform during stage animation',
-    Math.abs(exteriorRevealCamera.mapTransformX-exteriorRevealCamera.expectedMapTransformX)<1,
-    JSON.stringify(exteriorRevealCamera));
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
-  const exitPlayerAfter=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {x:r.left,y:r.top};
-  });
-  check('Player keeps the same screen position when exterior returns',
-    Math.abs(exitPlayerAfter.x-exitPlayerBefore.x)<1&&Math.abs(exitPlayerAfter.y-exitPlayerBefore.y)<1,
-    JSON.stringify({exitPlayerBefore,exitPlayerAfter}));
+    Math.abs(exteriorReveal.mapTransformX-exteriorReveal.expectedMapTransformX)<1,
+    JSON.stringify(exteriorReveal));
 
+  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
   const exitFollowBefore=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
   const expectedExitCamera=Math.max(
     0,
     Math.min(
       exitFollowBefore.map.width-exitFollowBefore.viewport.width,
-      exitFollowBefore.player.x-exitFollowBefore.viewport.width*.42
+      exitFollowBefore.player.x-exitFollowBefore.viewport.width*.5
     )
   );
-  check('Exterior camera is locked to the player before the scene is revealed',
-    Math.abs(exitFollowBefore.camera.x-expectedExitCamera)<1,
+  check('Exterior camera settles smoothly with the player at screen center',
+    Math.abs(exitFollowBefore.camera.x-expectedExitCamera)<1&&
+    Math.abs(exitFollowBefore.player.screenX-exitFollowBefore.viewport.width*.5)<1,
     JSON.stringify({camera:exitFollowBefore.camera.x,expectedExitCamera,player:exitFollowBefore.player}));
 
   await page.keyboard.down('ArrowRight');
@@ -511,7 +526,7 @@ try{
   const exitFollowAfter=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
   const firstMovePlayerDx=exitFollowAfter.player.x-exitFollowBefore.player.x;
   const firstMoveCameraDx=exitFollowAfter.camera.x-exitFollowBefore.camera.x;
-  check('First movement after exit continues camera follow without a snap',
+  check('First movement after exit moves the world while player screen X stays fixed',
     firstMovePlayerDx>0&&Math.abs(firstMoveCameraDx-firstMovePlayerDx)<2&&
     Math.abs(exitFollowAfter.player.screenX-exitFollowBefore.player.screenX)<2,
     JSON.stringify({firstMovePlayerDx,firstMoveCameraDx,before:exitFollowBefore.player.screenX,after:exitFollowAfter.player.screenX}));
