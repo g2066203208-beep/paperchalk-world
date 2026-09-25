@@ -2,6 +2,8 @@ const fs = require("fs");
 const vm = require("vm");
 
 const html = fs.readFileSync("index.html", "utf8");
+const css = fs.readFileSync("styles/game.css", "utf8");
+const game = fs.readFileSync("src/game.js", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -26,14 +28,9 @@ for (const id of requiredIds) {
   assert(html.includes('id="' + id + '"'), "Missing required UI element: " + id);
 }
 
-const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
-assert(scripts.length > 0, "No inline game script found");
-
-for (const code of scripts) {
-  new vm.Script(code);
-}
-
-const game = scripts.join("\n");
+assert(html.includes('href="./styles/game.css"'), "External game stylesheet missing");
+assert(html.includes('src="./src/game.js"'), "External game runtime missing");
+new vm.Script(game);
 assert(
   /const\s+settingsBtn\s*=\s*document\.getElementById\(['"]settingsBtn['"]\)/.test(game),
   "settingsBtn is used but not declared"
@@ -98,22 +95,22 @@ assert(!game.includes("e.code==='F2'"), "Debug panel must not depend on F2 hotke
 assert(!game.includes("e.code==='F3'"), "Hitbox debug must live inside debug panel, not F3");
 assert(html.includes("assets/enemies/rag-drifter.svg"), "Enemy art missing");
 assert(fs.existsSync("assets/enemies/rag-drifter.svg"), "Enemy SVG asset missing");
-assert(html.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
+assert(css.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
 assert(game.includes("order*45"), "Staggered heal timing missing");
 assert(game.includes("window.PaperchalkDebug"), "In-game debug API missing");
 assert(game.includes("function runDebugCommand"), "Debug command parser missing");
 assert(html.includes('data-debug-action="damage1"'), "Debug -1 HP shortcut missing");
 assert(game.includes("save.playerHp=playerHp"), "Health persistence missing");
-assert(html.includes("assets/ui/health/hp-cell.webp"), "Normal health segment asset missing");
-assert(html.includes("assets/ui/health/hp-tail.webp"), "Tail health segment asset missing");
+assert(game.includes("assets/ui/health/hp-cell.webp"), "Normal health segment asset missing");
+assert(game.includes("assets/ui/health/hp-tail.webp"), "Tail health segment asset missing");
 assert(game.includes("async function paperUIFrom"), "Reusable paper UI transition missing");
 assert(game.includes("window.PaperUITransition={openFrom:paperUIFrom}"), "Reusable UI transition API missing");
-assert(html.includes("assets/ui/transitions/paper-ball.png"), "Paper ball transition asset missing");
-assert(html.includes("assets/ui/transitions/paper-unfold.png"), "Paper unfold transition asset missing");
+assert(html.includes("assets/ui/transitions/paper-ball.webp"), "Paper ball transition asset missing");
+assert(html.includes("assets/ui/transitions/paper-unfold.webp"), "Paper unfold transition asset missing");
 assert(game.includes("paperUIFrom(e.currentTarget,()=>showPage('settings')"), "Settings must use reusable paper transition");
 assert(game.includes("paperUIFrom(e.currentTarget,()=>openUI(true),uiShell)"), "World menu must use reusable paper transition");
 assert(game.includes("paperUIFrom(triggerEl,revealBackpack,backpackFrame)"), "Backpack must use reusable paper transition");
-assert(html.includes("backpack-ui-v2.png"), "Approved HD backpack panel missing");
+assert(html.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing");
 assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
 

@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Pillow
+        run: pip install pillow
       - name: Download approved paper UI assets
         run: |
           mkdir -p assets/ui assets/ui/transitions
@@ -31,11 +36,24 @@ jobs:
           test "$(stat -c%s assets/ui/backpack-ui-v2.png)" -gt 1000000
           test "$(stat -c%s assets/ui/transitions/paper-ball.png)" -gt 200000
           test "$(stat -c%s assets/ui/transitions/paper-unfold.png)" -gt 500000
+      - name: Build lossless WebP runtime copies
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          pairs = [
+              ("assets/ui/backpack-ui-v2.png", "assets/ui/backpack-ui-v2.webp"),
+              ("assets/ui/transitions/paper-ball.png", "assets/ui/transitions/paper-ball.webp"),
+              ("assets/ui/transitions/paper-unfold.png", "assets/ui/transitions/paper-unfold.webp"),
+          ]
+          for src_name, dst_name in pairs:
+              Image.open(src_name).convert("RGBA").save(dst_name, "WEBP", lossless=True, method=6, exact=True)
+          PY
       - name: Commit assets
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/ui/backpack-ui-v2.png assets/ui/transitions/paper-ball.png assets/ui/transitions/paper-unfold.png
+          git add assets/ui/backpack-ui-v2.png assets/ui/backpack-ui-v2.webp assets/ui/transitions/paper-ball.png assets/ui/transitions/paper-ball.webp assets/ui/transitions/paper-unfold.png assets/ui/transitions/paper-unfold.webp
           if git diff --cached --quiet; then
             echo "Assets already current."
           else

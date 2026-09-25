@@ -7,6 +7,8 @@ on:
       - fix/core-runtime-20260924
     paths:
       - "index.html"
+      - "src/**"
+      - "styles/**"
       - "tests/web-smoke.js"
       - "tests/core-regression.mjs"
       - ".github/workflows/core-regression.yml"
@@ -14,6 +16,8 @@ on:
   pull_request:
     paths:
       - "index.html"
+      - "src/**"
+      - "styles/**"
       - "tests/**"
 
 permissions:
