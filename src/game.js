@@ -582,6 +582,43 @@ const dialoguePortraitDecode=Promise.allSettled(
 });
 const actorEl=document.querySelector('.actor');
 const playerSprite=document.getElementById('playerSprite');
+const playerActionPreloads=new Map();
+let playerActionAssetsReady=false;
+function preloadPlayerActionAssets(){
+  if(playerActionAssetsReady)return Promise.resolve();
+  const jobs=Object.entries(PLAYER_ACTION_ASSETS).map(([state,src])=>{
+    if(playerActionPreloads.has(state))return playerActionPreloads.get(state);
+    const img=new Image();
+    img.decoding='async';
+    img.src=src;
+    const job=(typeof img.decode==='function'?img.decode():new Promise((resolve,reject)=>{
+      img.addEventListener('load',resolve,{once:true});
+      img.addEventListener('error',reject,{once:true});
+    })).catch(()=>null);
+    playerActionPreloads.set(state,job);
+    return job;
+  });
+  return Promise.allSettled(jobs).then(()=>{playerActionAssetsReady=true});
+}
+function setPlayerActionState(state,force=false){
+  if(!PLAYER_ACTION_ASSETS[state])state='idle';
+  if(!force&&state===playerActionState)return false;
+  playerActionState=state;
+  actorEl.dataset.playerState=state;
+  const src=PLAYER_ACTION_ASSETS[state];
+  if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
+  return true;
+}
+function resolvePlayerActionState(){
+  if(playerCrouching&&playerGrounded)return 'crouch';
+  if(!playerGrounded)return playerVy>0?'jump-up':'jump-down';
+  if(lastMovingState)return 'walk';
+  return 'idle';
+}
+function syncPlayerActionState(force=false){
+  return setPlayerActionState(resolvePlayerActionState(),force);
+}
+window.addEventListener('paperchalk-world-enter',()=>{preloadPlayerActionAssets()});
 actorEl.style.width=PLAYER_VISUAL.w+'px';
 actorEl.style.height=PLAYER_VISUAL.h+'px';
 actorEl.style.setProperty('--player-visual-w',PLAYER_VISUAL.w+'px');
