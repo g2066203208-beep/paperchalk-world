@@ -2,10 +2,6 @@ name: Vendor PixiJS
 
 on:
   workflow_dispatch:
-  push:
-    branches: [renderer-v2-webgl]
-    paths:
-      - ".github/workflows/vendor-pixijs.yml"
 
 permissions:
   contents: write
