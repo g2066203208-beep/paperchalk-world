@@ -80,7 +80,11 @@ assert(game.includes("function rectsOverlap"), "AABB overlap function missing");
 assert(game.includes("getPlayerAttackBox"), "Player attack hitbox missing");
 assert(game.includes("getEnemyHurtbox"), "Enemy hurtbox missing");
 assert(game.includes("KeyJ"), "Keyboard attack key missing");
-assert(game.includes("entityTrack.style.transform"), "World entity track transform missing");
+assert(
+  game.includes("writeTransform(entityTrack,'entity',mapT)") ||
+  game.includes("entityTrack.style.transform"),
+  "World entity track transform missing"
+);
 assert(game.includes("e.state='patrol'"), "Enemy patrol state missing");
 assert(game.includes("dist<=700"), "Enemy chase radius missing");
 assert(html.includes('data-debug-action="hitboxes"'), "Hitbox debug panel button missing");
