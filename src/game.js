@@ -2148,7 +2148,7 @@ window.PaperchalkCombat={
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
   get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
   get enemies(){return enemies.map(e=>({id:e.id,x:e.x,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
-  get player(){return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),attacking:playerAttackTimer>0}},
+  get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
@@ -2235,7 +2235,8 @@ window.PaperchalkRuntime={
     npcs:MAP_NPCS,
     enemySpawns:ENEMY_SPAWNS,
     playerVisual:PLAYER_VISUAL,
-    playerActions:PLAYER_ACTION_ASSETS
+    playerActions:PLAYER_ACTION_ASSETS,
+    playerActionMeta:PLAYER_ACTION_META
   }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
