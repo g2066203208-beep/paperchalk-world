@@ -23,9 +23,9 @@ for(const [file,max] of Object.entries(budgets)){
   assert(bytes<=max,`${file} exceeded performance budget: ${bytes} > ${max}`);
 }
 
-assert(!/<img[^>]+src=["'][^"']*backpack-ui-v2\.webp/i.test(html),
+assert(!/<img[^>]+\ssrc=["'][^"']*backpack-ui-v2\.webp/i.test(html),
   'Heavy backpack art became eager again');
-assert(!/<img[^>]+src=["'][^"']*paper-(?:ball|unfold)\.webp/i.test(html),
+assert(!/<img[^>]+\ssrc=["'][^"']*paper-(?:ball|unfold)\.webp/i.test(html),
   'Paper transition art became eager again');
 assert(/data-src=["'][^"']*backpack-ui-v2\.webp/i.test(html),
   'Deferred backpack asset marker missing');
