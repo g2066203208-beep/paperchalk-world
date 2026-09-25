@@ -1657,6 +1657,13 @@ function startPlayerAttack(force=false){
 }
 function debugJump(){return jumpPlayer(true)}
 function debugAttack(){return startPlayerAttack(true)}
+function setCrouchControl(active=true){
+  mobileCrouch=!!active;
+  updateCrouchState();
+  syncPlayerActionState(true);
+  renderWorld(true);
+  return playerCrouching;
+}
 function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
 function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
 function setEnemyVisual(e,force=false){
@@ -2057,11 +2064,11 @@ window.PaperchalkMap={
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
 };
 window.PaperchalkCombat={
-  jump:jumpPlayer,attack:startPlayerAttack,resetEnemy,placeEnemyNear,resetMapEnemies,
+  jump:jumpPlayer,attack:startPlayerAttack,crouch:setCrouchControl,resetEnemy,placeEnemyNear,resetMapEnemies,
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
   get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
   get enemies(){return enemies.map(e=>({id:e.id,x:e.x,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
-  get player(){return {x:playerWorldX,y:playerY,grounded:playerGrounded,attacking:playerAttackTimer>0}},
+  get player(){return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
@@ -2077,8 +2084,9 @@ const runtimeFrameState={
   time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
   route:{index:0,id:'',biome:'meadow',orientation:1},
   player:{
-    x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
-    grounded:playerGrounded,moving:false,attacking:false,attackTimer:0,invulnerable:false
+    x:playerWorldX,y:playerY,vy:playerVy,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+    grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,
+    moving:false,attacking:false,attackTimer:0,invulnerable:false
   },
   enemies:enemies.map(e=>({
     id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
@@ -2096,8 +2104,9 @@ function refreshRuntimeFrameState(){
   s.camera.x=worldX;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
-  s.player.x=playerWorldX;s.player.y=playerY;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.x=playerWorldX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
   s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
+  s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
   s.player.invulnerable=playerInvuln>0;
   for(let i=0;i<enemies.length;i++){
@@ -2145,7 +2154,8 @@ window.PaperchalkRuntime={
     pickups:MAP_PICKUPS,
     npcs:MAP_NPCS,
     enemySpawns:ENEMY_SPAWNS,
-    playerVisual:PLAYER_VISUAL
+    playerVisual:PLAYER_VISUAL,
+    playerActions:PLAYER_ACTION_ASSETS
   }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
