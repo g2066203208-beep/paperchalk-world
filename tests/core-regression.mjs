@@ -468,6 +468,21 @@ try{
   check('Player stays fixed while interior scenery exits',
     Math.abs(exitPlayerMid.x-exitPlayerBefore.x)<1&&Math.abs(exitPlayerMid.y-exitPlayerBefore.y)<1,
     JSON.stringify({exitPlayerBefore,exitPlayerMid}));
+  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&window.PaperchalkScene.transitioning,null,{timeout:1800});
+  const exteriorRevealCamera=await page.evaluate(()=>{
+    const snap=window.PaperchalkRuntime.getSnapshot();
+    const transform=getComputedStyle(document.getElementById('mapTrack')).transform;
+    const matrix=transform&&transform!=='none'?new DOMMatrix(transform):new DOMMatrix();
+    return {
+      cameraX:snap.camera.x,
+      visualOriginX:snap.camera.visualOriginX,
+      mapTransformX:matrix.m41,
+      expectedMapTransformX:-(snap.camera.x-snap.camera.visualOriginX)
+    };
+  });
+  check('Exterior reveal keeps the live camera X transform during stage animation',
+    Math.abs(exteriorRevealCamera.mapTransformX-exteriorRevealCamera.expectedMapTransformX)<1,
+    JSON.stringify(exteriorRevealCamera));
   await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
   const exitPlayerAfter=await page.evaluate(()=>{
     const r=document.querySelector('.actor').getBoundingClientRect();
