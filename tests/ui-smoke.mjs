@@ -56,12 +56,13 @@ await call('Log.enable');
 await call('Emulation.setDeviceMetricsOverride',{width:1536,height:691,deviceScaleFactor:1,mobile:true,screenWidth:1536,screenHeight:691});
 await call('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});
 await call('Page.navigate',{url:'http://127.0.0.1:4173/?ci=ui-smoke'});
-assert(await waitFor("document.readyState==='complete'",6000),'document did not load');
-await sleep(900);
+assert(await waitFor("location.href.startsWith('http://127.0.0.1:4173/') && document.readyState==='complete'",8000),'document did not navigate/load');
+await sleep(1200);
 noFaults('load');
 
-const initial=await js("({menu:document.getElementById('pageMenu')?.classList.contains('active'),enter:!!document.getElementById('enterBtn'),title:document.title})");
-assert(initial.menu&&initial.enter,'main menu not interactive');
+const initial=await js("({href:location.href,menu:document.getElementById('pageMenu')?.classList.contains('active'),enter:!!document.getElementById('enterBtn'),title:document.title,body:document.body?.innerText?.slice(0,300)})");
+console.log('INITIAL',initial);
+assert(initial.menu&&initial.enter,'main menu not interactive '+JSON.stringify(initial));
 console.log('PASS load/menu',initial);
 
 await click('enterBtn');
