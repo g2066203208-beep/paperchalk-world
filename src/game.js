@@ -1602,7 +1602,7 @@ function updateEnemy(e,dt,interactive){
 function breakMapObject(id){
   const obj=MAP_OBJECTS.find(o=>o.id===id&&o.breakable);
   if(!obj||mapState.broken.has(id))return false;
-  mapState.broken.add(id);
+  mapState.broken.add(id);markRuntimeMapChanged();
   const el=mapObjectTrack.querySelector('[data-map-id="'+id+'"]');if(el)el.classList.add('is-broken');
   const dbg=mapDebugTrack.querySelector('[data-debug-for="'+id+'"]');if(dbg)dbg.style.display='none';
   const dependent=MAP_PICKUPS.filter(p=>p.requiresBroken===id);
@@ -1621,7 +1621,7 @@ function collectPickup(p){
   if(mapState.collected.has(p.id))return false;
   const item=p.type==='herb'?{id:'rough-herb',name:'粗纸药草',desc:'揉碎后能恢复 2 点生命。',count:1,weight:.1,consumable:true,action:'heal',heal:2}:null;
   if(!item||!addInventoryItem(item))return false;
-  mapState.collected.add(p.id);
+  mapState.collected.add(p.id);markRuntimeMapChanged();
   const el=mapObjectTrack.querySelector('[data-pickup-id="'+p.id+'"]');if(el)el.classList.add('is-collected');
   showMapNotice('拾取：'+item.name);saveWorldState();return true;
 }
@@ -1913,52 +1913,94 @@ window.PaperchalkCombat={
 };
 
 /* -------------------- RUNTIME / RENDERER CONTRACT V2 --------------------
-   Simulation and HTML UI remain authoritative. Any future WebGL/Pixi renderer
-   consumes this snapshot API instead of reaching into local variables.
-   No snapshot allocations occur unless an external renderer is subscribed. */
+   Simulation and HTML UI remain authoritative. Renderers subscribe to a reused
+   mutable frame-state object so the hot path does not allocate snapshots/arrays. */
 const runtimeObservers=new Set();
 let runtimeRevision=0;
-function runtimeSnapshot(){
+const runtimeFrameState={
+  revision:0,
+  viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
+  camera:{x:worldX,visualOriginX,sceneryOffsetX},
+  time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
+  route:{index:0,id:'',biome:'meadow',orientation:1},
+  player:{
+    x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+    grounded:playerGrounded,moving:false,attacking:false,attackTimer:0,invulnerable:false
+  },
+  enemies:enemies.map(e=>({
+    id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
+    patrolMin:e.patrolMin,patrolMax:e.patrolMax,attackTimer:e.attackTimer,hitstun:e.hitstun
+  })),
+  mapRevision:0
+};
+let runtimeMapRevision=0;
+
+function refreshRuntimeFrameState(){
   const route=routeForWorldX(playerWorldX);
+  const s=runtimeFrameState;
+  s.revision=runtimeRevision;
+  s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
+  s.camera.x=worldX;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
+  s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
+  s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
+  s.player.x=playerWorldX;s.player.y=playerY;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
+  s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
+  s.player.invulnerable=playerInvuln>0;
+  for(let i=0;i<enemies.length;i++){
+    const e=enemies[i],o=s.enemies[i];
+    o.x=e.x;o.hp=e.hp;o.alive=e.alive;o.facing=e.facing;o.state=e.state;
+    o.patrolMin=e.patrolMin;o.patrolMax=e.patrolMax;o.attackTimer=e.attackTimer;o.hitstun=e.hitstun;
+  }
+  s.mapRevision=runtimeMapRevision;
+  return s;
+}
+function runtimeSnapshot(){
+  const s=refreshRuntimeFrameState();
   return {
-    revision:runtimeRevision,
-    viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
-    camera:{x:worldX,visualOriginX,sceneryOffsetX},
-    time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
-    route:{index:route?.index??0,id:route?.id||'',biome:route?.biome||'meadow',orientation:currentRouteOrientation},
-    player:{
-      x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
-      grounded:playerGrounded,attacking:playerAttackTimer>0,invulnerable:playerInvuln>0
-    },
-    enemies:enemies.map(e=>({
-      id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
-      patrolMin:e.patrolMin,patrolMax:e.patrolMax
-    })),
+    revision:s.revision,
+    viewport:{...s.viewport},
+    camera:{...s.camera},
+    time:{...s.time},
+    route:{...s.route},
+    player:{...s.player},
+    enemies:s.enemies.map(e=>({...e})),
     map:{
       width:MAP_WIDTH,
-      visualOriginX,
+      revision:runtimeMapRevision,
       broken:[...mapState.broken],
       collected:[...mapState.collected]
     }
   };
 }
+function markRuntimeMapChanged(){runtimeMapRevision++}
 function notifyRuntimeObservers(){
   if(runtimeObservers.size===0)return;
   runtimeRevision++;
-  const snapshot=runtimeSnapshot();
+  const frame=refreshRuntimeFrameState();
   for(const observer of runtimeObservers){
-    try{observer(snapshot)}catch(err){console.error('RUNTIME_OBSERVER_FAILED',err)}
+    try{observer(frame)}catch(err){console.error('RUNTIME_OBSERVER_FAILED',err)}
   }
 }
 window.PaperchalkRuntime={
   version:2,
+  worldData:Object.freeze({
+    width:MAP_WIDTH,
+    zoneWidth:WORLD_ZONE_WIDTH,
+    terrain:MAP_TERRAIN,
+    objects:MAP_OBJECTS,
+    pickups:MAP_PICKUPS,
+    npcs:MAP_NPCS,
+    enemySpawns:ENEMY_SPAWNS
+  }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
     if(typeof observer!=='function')throw new TypeError('observer must be a function');
     runtimeObservers.add(observer);
-    observer(runtimeSnapshot());
+    observer(refreshRuntimeFrameState());
     return ()=>runtimeObservers.delete(observer);
   },
+  markMapChanged:markRuntimeMapChanged,
   get subscriberCount(){return runtimeObservers.size}
 };
 
@@ -2982,6 +3024,7 @@ function loadWorldState(){
   mapState.visitedRoutes=new Set(Array.isArray(savedMap.visitedRoutes)?savedMap.visitedRoutes:[worldZoneIndexAt(playerWorldX)]);
   mapState.visitedNodes=new Set(Array.isArray(savedMap.visitedNodes)?savedMap.visitedNodes:['village']);
   mapState.exitReached=!!savedMap.exitReached;
+  markRuntimeMapChanged();
   buildMapVisuals();
 
   setInventoryFromSave(save.inventory);
@@ -3043,7 +3086,7 @@ authBtn.addEventListener('click',e=>{
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
       worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;updateMapInteractions._zone=0;
-      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;buildMapVisuals();
+      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;
