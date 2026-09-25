@@ -204,8 +204,8 @@ try{
     return {left:r.left,top:r.top};
   });
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
-  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-up',null,{timeout:900});
-  await page.waitForTimeout(45);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-up'&&
+    window.PaperchalkCombat?.player?.y>20,null,{timeout:900});
   const jumpAir=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
