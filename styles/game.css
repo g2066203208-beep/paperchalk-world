@@ -71,20 +71,20 @@ button{cursor:pointer}
 }
 .paper-celestial{
   --celestial-x:50vw;--celestial-y:20vh;
-  position:absolute;left:0;top:0;width:clamp(34px,5vw,68px);height:clamp(34px,5vw,68px);
-  border-radius:50%;will-change:transform,opacity;
+  position:absolute;left:0;top:0;width:clamp(72px,7vw,104px);height:clamp(72px,7vw,104px);
+  will-change:transform,opacity;
   transform:translate3d(var(--celestial-x),var(--celestial-y),0) translate(-50%,-50%);
   transition:transform .08s linear,opacity .45s linear;
-  filter:drop-shadow(0 5px 0 rgba(72,57,38,.10));
+  filter:drop-shadow(0 5px 2px rgba(72,57,38,.16));
 }
 .paper-celestial::before{
-  content:"";position:absolute;left:50%;bottom:100%;width:1px;height:190px;
-  background:linear-gradient(to top,rgba(91,75,56,.22),rgba(91,75,56,.03));
+  content:"";position:absolute;left:50%;bottom:92%;width:1px;height:260px;
+  background:linear-gradient(to top,rgba(72,57,38,.38),rgba(72,57,38,.12));
   transform:translateX(-50%);pointer-events:none
 }
 .paper-celestial-disc{
-  position:absolute;inset:0;border-radius:50%;
-  transform-origin:50% -180px;
+  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  transform-origin:50% -190px;user-select:none;pointer-events:none
 }
 .paper-sun .paper-celestial-disc{animation:paperSunHang 5.4s ease-in-out infinite}
 .paper-moon .paper-celestial-disc{animation:paperMoonHang 6.8s ease-in-out infinite}
@@ -98,14 +98,23 @@ button{cursor:pointer}
 }
 .paper-sun{--celestial-x:var(--sun-x);--celestial-y:var(--sun-y);opacity:var(--sun-alpha)}
 .paper-moon{--celestial-x:var(--moon-x);--celestial-y:var(--moon-y);opacity:var(--moon-alpha)}
-.paper-sun .paper-celestial-disc{
-  background:#e6bd68;border:3px solid rgba(112,78,39,.25);
-  box-shadow:0 0 28px rgba(240,191,96,.34)
+.paper-cloud{
+  position:absolute;z-index:1;width:clamp(155px,18vw,285px);height:auto;
+  transform-origin:50% -150px;pointer-events:none;
+  filter:drop-shadow(0 5px 2px rgba(64,66,68,.12));
 }
-.paper-moon .paper-celestial-disc{
-  background:#ddd7c3;border:3px solid rgba(77,72,68,.28);
-  box-shadow:inset -10px -3px 0 rgba(125,126,133,.12),0 0 24px rgba(214,218,225,.16)
+.paper-cloud::before{
+  content:"";position:absolute;left:50%;bottom:88%;width:1px;height:220px;
+  background:linear-gradient(to top,rgba(72,57,38,.30),rgba(72,57,38,.09));
+  transform:translateX(-50%);pointer-events:none
 }
+.paper-cloud img{display:block;width:100%;height:auto;pointer-events:none;user-select:none}
+.paper-cloud-a{left:14%;top:24%;animation:paperCloudHangA 8.2s ease-in-out infinite}
+.paper-cloud-b{left:66%;top:34%;width:clamp(130px,15vw,235px);animation:paperCloudHangB 9.4s ease-in-out infinite}
+@keyframes paperCloudHangA{0%,100%{transform:rotate(-.8deg)}50%{transform:rotate(1deg)}}
+@keyframes paperCloudHangB{0%,100%{transform:rotate(.7deg)}50%{transform:rotate(-1.1deg)}}
+.stage.perf-low .paper-cloud{filter:none;animation:none}
+
 .paper-backdrop{
   --scene-a:rgba(92,104,76,.34);--scene-b:rgba(110,99,75,.30);
   --scene-paper:rgba(174,151,106,.32);
@@ -118,22 +127,24 @@ button{cursor:pointer}
   backface-visibility:visible;
 }
 .mountain-background-layer{
-  --mountain-x:0px;
   position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;
-  contain:layout paint;
+  contain:layout paint
 }
-.mountain-background-layer::before{
-  content:"";position:absolute;left:0;right:0;bottom:var(--ground-screen-y,112px);
-  height:min(68vh,590px);
-  background-image:url("../assets/backgrounds/mountain-background.svg?v=mountain-parallax-r12");
-  background-repeat:repeat-x;
-  background-size:auto clamp(240px,62vh,520px);
-  background-position:var(--mountain-x) bottom;
-  opacity:.88;
-  filter:saturate(.88) contrast(.96) brightness(1.02) drop-shadow(0 9px 5px rgba(53,45,35,.10));
-  will-change:background-position;
+.mountain-background-track{
+  position:absolute;left:0;
+  bottom:calc(var(--ground-screen-y,112px) - 48px);
+  display:flex;align-items:flex-end;width:max-content;
+  will-change:transform;pointer-events:none
 }
-.stage.perf-low .mountain-background-layer::before{filter:none;opacity:.84}
+.mountain-background-tile{
+  display:block;flex:0 0 auto;
+  width:auto;height:clamp(215px,46vh,340px);max-width:none;
+  object-fit:contain;object-position:center bottom;
+  opacity:.94;filter:saturate(.94) contrast(.98) brightness(1.01) drop-shadow(0 8px 4px rgba(53,45,35,.10));
+  transform-origin:50% 100%;backface-visibility:hidden
+}
+.mountain-background-tile.is-mirrored{transform:scaleX(-1)}
+.stage.perf-low .mountain-background-tile{filter:none;opacity:.90}
 
 .paper-backdrop[data-scene="forest"]{--scene-a:rgba(66,93,67,.42);--scene-b:rgba(83,100,68,.34);--scene-paper:rgba(115,130,89,.30)}
 .paper-backdrop[data-scene="river"],.paper-backdrop[data-scene="marsh"]{--scene-a:rgba(74,101,103,.34);--scene-b:rgba(99,111,94,.30);--scene-paper:rgba(117,137,126,.28)}
@@ -280,8 +291,10 @@ button{cursor:pointer}
   pointer-events:none;contain:layout paint
 }
 .midground-apartment{
-  position:absolute;left:520px;bottom:var(--ground-screen-y,112px);
-  width:1152px;height:1536px;max-width:none;max-height:none;
+  position:absolute;left:520px;bottom:calc(var(--ground-screen-y,112px) - 8px);
+  width:calc(var(--player-visual-h,156px) * 5);
+  height:calc(var(--player-visual-h,156px) * 6.6667);
+  max-width:none;max-height:none;
   object-fit:contain;object-position:left bottom;
   transform-origin:50% 100%;
   backface-visibility:hidden;pointer-events:none;contain:paint
