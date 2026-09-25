@@ -97,7 +97,12 @@ class CardPuppet{
     this.xSpring=new Spring1D(0);
     this.ySpring=new Spring1D(0);
     this.currentScale=1;
-    this.stats={layers:1,mode:'card',action:'idle'};
+    this.baseFitX=1;
+    this.baseFitY=1;
+    const display=manifest.displaySize||manifest.designSize||{};
+    this.displayW=Math.max(1,num(display.w,104));
+    this.displayH=Math.max(1,num(display.h,156));
+    this.stats={layers:1,mode:'card',action:'idle',displayW:this.displayW,displayH:this.displayH};
     this._applyCard('idle',true);
   }
   _applyCard(action,snap=false){
@@ -105,6 +110,10 @@ class CardPuppet{
     if(!card)return;
     const tex=this.textures[action]||this.textures.idle||Object.values(this.textures)[0];
     if(tex&&this.sprite.texture!==tex)this.sprite.texture=tex;
+    if(tex){
+      this.baseFitX=this.displayW/Math.max(1,num(tex.width,1));
+      this.baseFitY=this.displayH/Math.max(1,num(tex.height,1));
+    }
     this.action=action;
     this.sourceFacing=num(card.sourceFacing,1)<0?-1:1;
     const target=Math.max(.2,num(card.scale,1));
@@ -140,7 +149,7 @@ class CardPuppet{
       targetRot+=num(state.facing,1)*.12*s;
     }
     this.currentScale=this.scaleSpring.step(this.targetScale,dt,9.5,.92);
-    this.sprite.scale.set(this.currentScale,this.currentScale);
+    this.sprite.scale.set(this.baseFitX*this.currentScale,this.baseFitY*this.currentScale);
     this.root.rotation=this.rotSpring.step(targetRot,dt,8.5,.84);
     this.root.x=this.xSpring.step(targetX,dt,10,.90);
     this.root.y=this.ySpring.step(targetY,dt,10,.92);
@@ -189,7 +198,14 @@ class LayeredPuppet{
     }
     this.root.sortableChildren=true;
     this.root.sortChildren();
-    this.stats={layers:this.layers.length,mode:'layered',action:'idle'};
+    const design=manifest.designSize||{};
+    const display=manifest.displaySize||design;
+    const dw=Math.max(1,num(design.w,display.w||104));
+    const dh=Math.max(1,num(design.h,display.h||156));
+    const ow=Math.max(1,num(display.w,dw));
+    const oh=Math.max(1,num(display.h,dh));
+    this.root.scale.set(ow/dw,oh/dh);
+    this.stats={layers:this.layers.length,mode:'layered',action:'idle',displayW:ow,displayH:oh};
   }
   setAction(action){this.action=action||'idle';this.stats.action=this.action}
   update(state,dt,now){
