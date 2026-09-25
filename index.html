@@ -1370,7 +1370,7 @@ button{cursor:pointer}
 /* ---------- PAPER THEATER DIALOGUE ---------- */
 .dialogue-stage{
   position:absolute;inset:0;z-index:58;
-  opacity:0;visibility:hidden;pointer-events:none;
+  opacity:0;visibility:hidden;pointer-events:none;touch-action:manipulation;
   transition:opacity .28s ease,visibility .28s ease;
   overflow:hidden;
 }
@@ -3837,12 +3837,13 @@ function frame(now){
     debugLastUiUpdate=now;
   }
   const interactive=worldInteractive();
+  /* Celestial paper props and world clock keep moving even while dialogue/UI pauses gameplay. */
+  if(worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
+  updateDayNightVisuals();
   if(!interactive){
     requestAnimationFrame(frame);
     return;
   }
-  if(worldTimeScale>0)worldMinutes+=dt*worldTimeScale;
-  updateDayNightVisuals();
 
   const axis=movementAxis();
   const magnitude=Math.abs(axis);
