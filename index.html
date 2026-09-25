@@ -2383,6 +2383,7 @@ if('requestIdleCallback' in window){
   setTimeout(()=>loadMidgroundAtlas(),220);
 }
 
+const worldEl=document.getElementById('world');
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
@@ -2462,7 +2463,6 @@ const inventoryItemWeight=document.getElementById('inventoryItemWeight');
 const inventoryItemCount=document.getElementById('inventoryItemCount');
 const inventoryUse=document.getElementById('inventoryUse');
 const inventoryDrop=document.getElementById('inventoryDrop');
-const worldEl=document.getElementById('world');
 const settingLanguage=document.getElementById('settingLanguage');
 const settingTimeScale=document.getElementById('settingTimeScale');
 const settingLandscape=document.getElementById('settingLandscape');
@@ -2803,6 +2803,7 @@ let perfLow=false,perfLowWindows=0,perfHighWindows=0;
 const coarsePointer=matchMedia('(pointer:coarse)').matches;
 function setPerfLow(next){
   next=!!next;
+  if(coarsePointer&&!next)next=true;
   if(next===perfLow)return;
   perfLow=next;
   worldEl.classList.toggle('perf-low',perfLow);
@@ -3582,13 +3583,14 @@ function openDialogue(npc){
   dialogueStage.setAttribute('aria-hidden','false');
   worldEl.classList.add('dialogue-active');
   clearDialogueBubbles();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  const beginEntrance=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
     if(!dialogueState.open)return;
     dialogueStage.classList.remove('is-entering');
     dialogueStage.classList.add('is-opening');
     showDialogueOpening();
     dialogueOpeningTimer=setTimeout(()=>dialogueStage.classList.remove('is-opening'),1180);
   }));
+  dialoguePortraitDecode.then(beginEntrance,beginEntrance);
   return true;
 }
 function closeDialogue({immediate=false}={}){
