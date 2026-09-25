@@ -546,7 +546,7 @@ function syncInteriorDoorWithExterior(){
   // Scene transitions are player-anchored: the NEW doorway must appear exactly
   // under the player's current screen position, even if the outgoing doorway
   // was only within interaction range rather than pixel-perfect.
-  interiorDoorAnchorX=clamp(actorX,72,Math.max(72,VIEW_W-72));
+  interiorDoorAnchorX=clamp(playerScreenAnchorX,72,Math.max(72,VIEW_W-72));
   interiorSceneShiftX=0;
   return interiorDoorAnchorX;
 }
@@ -587,7 +587,7 @@ function positionInteriorExitDoor(){
 function updateInteriorDepthLayers(){
   // One camera shift moves the entire indoor world; z-order still remains
   // far(3) -> mid/door(4) -> player(5) -> near(6).
-  const shift=interiorSceneShiftX.toFixed(2)+'px 0';
+  const shift=interiorSceneShiftX.toFixed(2)+'px '+playerY.toFixed(2)+'px';
   if(interiorFarLayer)interiorFarLayer.style.translate=shift;
   if(interiorMidLayer)interiorMidLayer.style.translate=shift;
   if(interiorNearLayer)interiorNearLayer.style.translate=shift;
@@ -612,22 +612,21 @@ let sceneCameraTweenToken=0;
 function easeSceneCamera(t){
   return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 }
-function tweenInteriorWorldToCenter(duration=620){
+function tweenInteriorWorldToPlayer(duration=620){
   const token=++sceneCameraTweenToken;
   const startShift=interiorSceneShiftX;
-  const startActorX=actorX;
-  const targetActorX=VIEW_W*.5;
-  const delta=targetActorX-startActorX;
-  if(Math.abs(delta)<.5)return Promise.resolve(true);
+  // The player stays at the screen center. Move the entire room until its
+  // own center is under that fixed player anchor.
+  const targetShift=playerScreenAnchorX-VIEW_W*.5;
+  if(Math.abs(targetShift-startShift)<.5)return Promise.resolve(true);
   return new Promise(resolve=>{
     const start=performance.now();
     const step=now=>{
       if(token!==sceneCameraTweenToken){resolve(false);return}
       const p=clamp((now-start)/duration,0,1);
-      const eased=easeSceneCamera(p);
-      interiorSceneShiftX=startShift+delta*eased;
-      actorX=startActorX+delta*eased;
-      interiorPlayerX=actorX;
+      interiorSceneShiftX=startShift+(targetShift-startShift)*easeSceneCamera(p);
+      actorX=playerScreenAnchorX;
+      interiorPlayerX=playerScreenAnchorX;
       renderWorld();
       if(p<1)requestAnimationFrame(step);
       else resolve(true);
@@ -640,14 +639,14 @@ function exteriorCameraForDoorAt(screenX){
   const aligned=((APARTMENT_WORLD_X+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO-screenX)/APARTMENT_PARALLAX)-sceneryOffsetX;
   return clamp(aligned,0,maxCamera);
 }
-function tweenExteriorCameraToPlayerCenter(duration=620){
+function tweenExteriorWorldToPlayer(duration=620){
   const token=++sceneCameraTweenToken;
   const startCamera=worldX;
   const maxCamera=Math.max(0,MAP_WIDTH-VIEW_W);
-  const targetCamera=clamp(playerWorldX-VIEW_W*.5,0,maxCamera);
+  const targetCamera=clamp(playerWorldX-playerScreenAnchorX,0,maxCamera);
   if(Math.abs(targetCamera-startCamera)<.5){
     worldX=targetCamera;
-    actorX=playerWorldX-worldX;
+    actorX=playerScreenAnchorX;
     renderWorld(true);
     return Promise.resolve(true);
   }
@@ -657,7 +656,7 @@ function tweenExteriorCameraToPlayerCenter(duration=620){
       if(token!==sceneCameraTweenToken){resolve(false);return}
       const p=clamp((now-start)/duration,0,1);
       worldX=startCamera+(targetCamera-startCamera)*easeSceneCamera(p);
-      actorX=playerWorldX-worldX;
+      actorX=playerScreenAnchorX;
       renderWorld();
       if(p<1)requestAnimationFrame(step);
       else resolve(true);
@@ -682,8 +681,8 @@ function enterApartment(){
   apartmentDoorPrompt?.classList.remove('is-visible');
   setTimeout(()=>{
     sceneLocation='interior';
-    interiorPlayerX=stageHeldActorX;
-    actorX=stageHeldActorX;
+    interiorPlayerX=playerScreenAnchorX;
+    actorX=playerScreenAnchorX;
     playerY=stageHeldPlayerY;
     playerVy=0;
     playerGrounded=playerY<=0;
@@ -694,9 +693,9 @@ function enterApartment(){
     lastSceneDoorAnchorErrorX=interiorExitX()-actorX;
     updateNpcPrompt();
 
-    // First frame: the new room doorway is exactly under the player.
-    // Then move the WHOLE room/camera smoothly until the player is centered.
-    setTimeout(()=>{ void tweenInteriorWorldToCenter(620); },120);
+    // First frame: the new room doorway is exactly under the fixed player.
+    // Any settling moves the ROOM, never the player.
+    setTimeout(()=>{ void tweenInteriorWorldToPlayer(620); },120);
     setTimeout(()=>{
       worldEl.classList.remove('interior-stage-in','stage-transitioning');
       sceneTransitionBusy=false;
@@ -726,16 +725,16 @@ function exitApartment(){
     playerVy=0;
     playerGrounded=playerY<=0;
     refreshSceneryMetrics();
-    worldX=exteriorCameraForDoorAt(stageHeldActorX);
-    playerWorldX=clamp(worldX+stageHeldActorX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-    actorX=playerWorldX-worldX;
+    playerWorldX=clamp(exteriorReturnX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+    worldX=exteriorCameraForDoorAt(playerScreenAnchorX);
+    actorX=playerScreenAnchorX;
 
     worldEl.classList.add('exterior-stage-in','stage-transitioning');
     renderWorld(true);
     lastSceneDoorAnchorErrorX=apartmentDoorScreenX()-actorX;
     updateNpcPrompt();
 
-    setTimeout(()=>{ void tweenExteriorCameraToPlayerCenter(620); },120);
+    setTimeout(()=>{ void tweenExteriorWorldToPlayer(620); },120);
     setTimeout(()=>{
       worldEl.classList.remove('exterior-stage-in','stage-transitioning');
       sceneTransitionBusy=false;
@@ -1169,7 +1168,8 @@ let currentRouteOrientation=1;
 let worldMinutes=0;
 let worldTimeScale=1;
 updateDayNightVisuals(true);
-let actorX=Math.round(innerWidth*.35);
+let playerScreenAnchorX=Math.round(VIEW_W*.5);
+let actorX=playerScreenAnchorX;
 let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
 let mobileCrouch=false,mobileFlightUp=false,mobileFlightDown=false;
 let joystickAxis=0,joystickFlightAxisY=0;
@@ -1679,6 +1679,7 @@ window.PaperchalkScene={
   get interiorDoorAnchorX(){return interiorDoorAnchorX},
   get interiorSceneShiftX(){return interiorSceneShiftX},
   get playerScreenX(){return actorX},
+  get playerScreenAnchorX(){return playerScreenAnchorX},
   get centerX(){return VIEW_W*.5},
   get lastDoorAnchorErrorX(){return lastSceneDoorAnchorErrorX},
   get interiorDoorGroundY(){return Math.max(0,MAP_GROUND_SCREEN_Y-8)},
@@ -2008,9 +2009,8 @@ function updateCamera(){
   applyCurrentRouteTheme();
   const viewW=VIEW_W;
   const maxCamera=Math.max(0,MAP_WIDTH-viewW);
-  const followX=viewW*.5;
-  worldX=clamp(playerWorldX-followX,0,maxCamera);
-  actorX=playerWorldX-worldX;
+  worldX=clamp(playerWorldX-playerScreenAnchorX,0,maxCamera);
+  actorX=playerScreenAnchorX;
 }
 function jumpPlayer(force=false){
   if(!force&&!worldInteractive())return false;
@@ -2601,6 +2601,12 @@ function flushViewportChange(){
   if(!change.sizeChanged&&!change.groundChanged&&!change.scaleChanged)return;
   refreshRoadW();
   refreshSceneryMetrics();
+  if(change.sizeChanged){
+    playerScreenAnchorX=Math.round(VIEW_W*.5);
+    actorX=playerScreenAnchorX;
+    interiorPlayerX=playerScreenAnchorX;
+    if(sceneLocation==='outside')updateCamera();
+  }
   if(change.groundChanged||change.sizeChanged){
     clearTimeout(viewportRebuildTimer);
     viewportRebuildTimer=setTimeout(()=>{
@@ -2678,13 +2684,15 @@ function renderWorld(force=false){
   if(windowChanged)force=true;
   updateRoadPool(sceneryX,force);
   updatePropPools(sceneryX,force);
-  const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,0,0)';
+  const worldCameraY=playerY;
+  worldEl.style.setProperty('--world-camera-y',worldCameraY.toFixed(2)+'px');
+  const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
   updateMidgroundApartmentVisibility(sceneryX,force);
-  const midgroundT='translate3d('+(-(sceneryX*APARTMENT_PARALLAX))+'px,0,0)';
+  const midgroundT='translate3d('+(-(sceneryX*APARTMENT_PARALLAX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
   const rearCamera=sceneryX*.97,frontCamera=sceneryX*1.03;
-  const rearT='translate3d('+(-(rearCamera-rearPropPool.originX))+'px,0,0)';
-  const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,0,0)';
-  const mapT='translate3d('+(-(worldX-visualOriginX))+'px,0,0)';
+  const rearT='translate3d('+(-(rearCamera-rearPropPool.originX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
+  const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
+  const mapT='translate3d('+(-(worldX-visualOriginX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
   writeTransform(roadTrack,'road',roadT);
   if(midgroundBuildingTrack)writeTransform(midgroundBuildingTrack,'midground',midgroundT);
   writeTransform(rearTrack,'rear',rearT);
@@ -2692,7 +2700,7 @@ function renderWorld(force=false){
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
-  const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
+  const actorBottom=MAP_GROUND_SCREEN_Y.toFixed(2)+'px';
   const actorAir=playerY.toFixed(2)+'px';
   if(!pixiDynamicActive()){
     if(force||renderCache.actorLeft!==actorLeft){
@@ -2790,8 +2798,9 @@ function frame(now){
       const dir=Math.sign(axis);
       setFacing(dir);
       const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
-      interiorPlayerX=clamp(interiorPlayerX+dir*speed*dt,70,VIEW_W-70);
-      actorX=interiorPlayerX;
+      interiorSceneShiftX-=dir*speed*dt;
+      interiorPlayerX=playerScreenAnchorX;
+      actorX=playerScreenAnchorX;
       playerDynamic=true;
     }
   }else{
