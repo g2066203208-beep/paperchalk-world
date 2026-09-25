@@ -1690,8 +1690,19 @@ window.PaperchalkScene={
   get playerScreenAnchorX(){return playerScreenAnchorX},
   get centerX(){return VIEW_W*.5},
   get lastDoorAnchorErrorX(){return lastSceneDoorAnchorErrorX},
-  get interiorDoorGroundY(){return Math.max(0,MAP_GROUND_SCREEN_Y-8)},
-  get interiorX(){return interiorPlayerX},
+  get interiorDoorGroundY(){return MAP_GROUND_SCREEN_Y-interiorCameraY},
+  get interiorX(){return interiorPlayerWorldX},
+  get interiorY(){return playerY},
+  get interiorCamera(){return {x:interiorCameraX,y:interiorCameraY}},
+  get interiorMap(){return {
+    width:INTERIOR_MAP_WIDTH,
+    height:INTERIOR_MAP_HEIGHT,
+    leftWall:INTERIOR_WALL_THICKNESS,
+    rightWall:INTERIOR_MAP_WIDTH-INTERIOR_WALL_THICKNESS,
+    secondFloorY:INTERIOR_SECOND_FLOOR_Y,
+    doorX:INTERIOR_DOOR_X,
+    stairs:{...INTERIOR_STAIRS}
+  }},
   get depthLayers(){return {far:3,mid:4,player:5,near:6}}
 };
 window.PaperchalkDebug={
@@ -2499,10 +2510,12 @@ function refreshRuntimeFrameState(){
   const s=runtimeFrameState;
   s.revision=runtimeRevision;
   s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
-  s.camera.x=worldX;s.camera.y=playerY;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
+  const activeCameraX=sceneLocation==='interior'?interiorCameraX:worldX;
+  const activePlayerX=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
+  s.camera.x=activeCameraX;s.camera.y=playerY;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
-  s.player.x=playerWorldX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.x=activePlayerX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
   s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
   s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
@@ -2530,6 +2543,18 @@ function runtimeSnapshot(){
       revision:runtimeMapRevision,
       broken:[...mapState.broken],
       collected:[...mapState.collected]
+    },
+    scene:{
+      location:sceneLocation,
+      interior:sceneLocation==='interior'?{
+        width:INTERIOR_MAP_WIDTH,
+        height:INTERIOR_MAP_HEIGHT,
+        playerX:interiorPlayerWorldX,
+        playerY,
+        cameraX:interiorCameraX,
+        cameraY:interiorCameraY,
+        stairs:{...INTERIOR_STAIRS}
+      }:null
     }
   };
 }
