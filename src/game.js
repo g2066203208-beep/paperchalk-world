@@ -3385,6 +3385,8 @@ function saveWorldState(){
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
 }
+window.PaperchalkSaveNow=()=>saveWorldState();
+
 function loadWorldState(){
   const session=getSession();
   if(!session)return;
