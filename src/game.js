@@ -497,15 +497,16 @@ const APARTMENT_DOOR_X_RATIO=.525;
 const APARTMENT_DOOR_PROMPT_Y_RATIO=.43;
 
 // Interior world uses the same 128 px = 1 m scale as the outdoor world.
-const INTERIOR_MAP_WIDTH=3072;        // 24 m
-const INTERIOR_MAP_HEIGHT=1280;       // 10 m
-const INTERIOR_WALL_THICKNESS=96;
-const INTERIOR_DOOR_X=896;            // 7 m from the room origin
-const INTERIOR_SECOND_FLOOR_Y=512;    // 4 m above first floor
+const INTERIOR_MAP_WIDTH=1536;        // 12 m
+const INTERIOR_MAP_HEIGHT=768;         // 6 m
+const INTERIOR_WALL_THICKNESS=64;     // 0.5 m
+const INTERIOR_DOOR_X=320;            // 2.5 m from the room origin
+const INTERIOR_SECOND_FLOOR_Y=384;    // 3 m floor-to-floor
 const INTERIOR_STAIRS=Object.freeze({
-  x0:1408,                            // 11 m
-  x1:2048,                            // 16 m
+  x0:768,                             // lower-flight foot / upper-flight top
+  x1:1088,                            // shared half-landing side
   y0:0,
+  midY:192,                           // 1.5 m half landing
   y1:INTERIOR_SECOND_FLOOR_Y
 });
 const OUTDOOR_FLIGHT_MAX_Y=50000;
@@ -516,6 +517,7 @@ let interiorPlayerX=0;                // compatibility: fixed screen X
 let interiorPlayerWorldX=INTERIOR_DOOR_X;
 let interiorCameraX=INTERIOR_DOOR_X;
 let interiorCameraY=0;
+let interiorStairState='floor1';
 let interiorDoorAnchorX=0;
 let interiorSceneShiftX=0;            // compatibility/debug = -interiorCameraX
 let exteriorReturnX=MAP_SPAWN_X;
@@ -559,11 +561,20 @@ function nearbyApartmentDoor(maxDistance=78){
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
 
-function interiorWalkSurfaceY(x){
-  if(x<=INTERIOR_STAIRS.x0)return 0;
-  if(x>=INTERIOR_STAIRS.x1)return INTERIOR_SECOND_FLOOR_Y;
-  const t=(x-INTERIOR_STAIRS.x0)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0);
-  return INTERIOR_STAIRS.y0+(INTERIOR_STAIRS.y1-INTERIOR_STAIRS.y0)*t;
+function interiorLowerY(x){
+  const t=clamp((x-INTERIOR_STAIRS.x0)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0),0,1);
+  return INTERIOR_STAIRS.y0+(INTERIOR_STAIRS.midY-INTERIOR_STAIRS.y0)*t;
+}
+function interiorUpperY(x){
+  const t=clamp((INTERIOR_STAIRS.x1-x)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0),0,1);
+  return INTERIOR_STAIRS.midY+(INTERIOR_STAIRS.y1-INTERIOR_STAIRS.midY)*t;
+}
+function interiorWalkSurfaceY(x=interiorPlayerWorldX,state=interiorStairState){
+  if(state==='lower')return interiorLowerY(x);
+  if(state==='landing-up'||state==='landing-down')return INTERIOR_STAIRS.midY;
+  if(state==='upper')return interiorUpperY(x);
+  if(state==='floor2')return INTERIOR_SECOND_FLOOR_Y;
+  return 0;
 }
 function interiorHorizontalBounds(){
   return {
@@ -581,20 +592,109 @@ function updateInteriorCamera(){
   actorX=playerScreenAnchorX;
   interiorDoorAnchorX=INTERIOR_DOOR_X-interiorCameraX;
 }
-function moveInteriorHorizontal(dx,{flight=false}={}){
+function setInteriorWalkStateFromPosition(){
+  if(playerY>=INTERIOR_STAIRS.midY+70){
+    interiorStairState='floor2';
+    interiorPlayerWorldX=Math.min(interiorPlayerWorldX,INTERIOR_STAIRS.x0);
+  }else if(interiorPlayerWorldX>=INTERIOR_STAIRS.x0&&interiorPlayerWorldX<=INTERIOR_STAIRS.x1){
+    interiorStairState=playerY>INTERIOR_STAIRS.midY?'upper':'lower';
+  }else{
+    interiorStairState='floor1';
+  }
+}
+function moveInteriorHorizontal(dx,{flight=false,airborne=false}={}){
   if(!dx)return 0;
   const bounds=interiorHorizontalBounds();
   const oldX=interiorPlayerWorldX;
-  interiorPlayerWorldX=clamp(oldX+dx,bounds.left,bounds.right);
-  if(!flight){
-    // Stairs are a continuous walking surface, never a platform/jump target.
-    playerY=interiorWalkSurfaceY(interiorPlayerWorldX);
+  const dir=Math.sign(dx);
+  let nextX=interiorPlayerWorldX+dx;
+
+  if(flight){
+    interiorPlayerWorldX=clamp(nextX,bounds.left,bounds.right);
+    updateInteriorCamera();
+    return interiorPlayerWorldX-oldX;
+  }
+
+  if(interiorStairState==='floor1'){
+    if(dir>0&&nextX>=INTERIOR_STAIRS.x0){
+      interiorStairState='lower';
+      nextX=Math.min(nextX,INTERIOR_STAIRS.x1);
+    }else{
+      nextX=Math.min(nextX,INTERIOR_STAIRS.x0);
+    }
+  }else if(interiorStairState==='lower'){
+    nextX=clamp(nextX,INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1);
+    if(nextX>=INTERIOR_STAIRS.x1-.01&&dir>0){
+      nextX=INTERIOR_STAIRS.x1;
+      interiorStairState='landing-up';
+    }else if(nextX<=INTERIOR_STAIRS.x0+.01&&dir<0){
+      nextX=INTERIOR_STAIRS.x0;
+      interiorStairState='floor1';
+    }
+  }else if(interiorStairState==='landing-up'){
+    nextX=INTERIOR_STAIRS.x1;
+    if(dir<0){
+      interiorStairState='upper';
+      nextX=Math.max(INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1+dx);
+    }
+  }else if(interiorStairState==='upper'){
+    nextX=clamp(nextX,INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1);
+    if(nextX<=INTERIOR_STAIRS.x0+.01&&dir<0){
+      nextX=INTERIOR_STAIRS.x0;
+      interiorStairState='floor2';
+    }else if(nextX>=INTERIOR_STAIRS.x1-.01&&dir>0){
+      nextX=INTERIOR_STAIRS.x1;
+      interiorStairState='landing-down';
+    }
+  }else if(interiorStairState==='landing-down'){
+    nextX=INTERIOR_STAIRS.x1;
+    if(dir<0){
+      interiorStairState='lower';
+      nextX=Math.max(INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1+dx);
+    }
+  }else if(interiorStairState==='floor2'){
+    if(dir>0&&nextX>=INTERIOR_STAIRS.x0){
+      interiorStairState='upper';
+      nextX=Math.min(INTERIOR_STAIRS.x1,INTERIOR_STAIRS.x0+Math.max(0,nextX-INTERIOR_STAIRS.x0));
+    }else{
+      nextX=Math.min(nextX,INTERIOR_STAIRS.x0);
+    }
+  }
+
+  interiorPlayerWorldX=clamp(nextX,bounds.left,bounds.right);
+  if(!airborne){
+    playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
     playerVy=0;
     playerGrounded=true;
     coyoteTimer=COYOTE_TIME;
   }
   updateInteriorCamera();
   return interiorPlayerWorldX-oldX;
+}
+function updateInteriorVertical(dt){
+  if(playerGrounded){
+    playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
+    updateInteriorCamera();
+    return;
+  }
+  const support=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
+  const oldY=playerY;
+  playerVy-=GRAVITY*dt;
+  let nextY=playerY+playerVy*dt;
+  const ceiling=Math.max(support,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24);
+  if(nextY>ceiling){
+    nextY=ceiling;
+    if(playerVy>0)playerVy=0;
+  }
+  if(playerVy<=0&&oldY>=support&&nextY<=support){
+    nextY=support;
+    playerVy=0;
+    playerGrounded=true;
+    coyoteTimer=COYOTE_TIME;
+    actorEl.classList.remove('is-jumping');
+  }
+  playerY=nextY;
+  updateInteriorCamera();
 }
 function interiorExitX(){
   return INTERIOR_DOOR_X-interiorCameraX;
@@ -603,6 +703,7 @@ function syncInteriorDoorWithExterior(){
   // Enter exactly on the indoor doorway. Because camera = world - screenAnchor,
   // the doorway's first rendered pixel is exactly under the fixed player.
   interiorPlayerWorldX=INTERIOR_DOOR_X;
+  interiorStairState='floor1';
   interiorCameraX=INTERIOR_DOOR_X-playerScreenAnchorX;
   interiorCameraY=0;
   interiorSceneShiftX=-interiorCameraX;
@@ -690,6 +791,7 @@ function enterApartment(){
     playerVy=0;
     playerGrounded=true;
     interiorPlayerWorldX=INTERIOR_DOOR_X;
+    interiorStairState='floor1';
     updateInteriorCamera();
     clearSceneStageClasses();
     worldEl.classList.add('scene-interior','interior-stage-in','stage-transitioning');
