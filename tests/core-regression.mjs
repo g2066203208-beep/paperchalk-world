@@ -424,8 +424,10 @@ try{
       player:Number.parseInt(getComputedStyle(document.querySelector('.actor')).zIndex,10),
       near:z('interiorNearLayer'),
       doorCenterX:door.left+door.width/2,
+      doorGroundY:window.innerHeight-door.bottom,
       exteriorDoorX:window.PaperchalkScene.doorScreenX,
-      interiorDoorX:window.PaperchalkScene.interiorDoorScreenX
+      interiorDoorX:window.PaperchalkScene.interiorDoorScreenX,
+      expectedGroundY:window.PaperchalkScene.interiorDoorGroundY
     };
   });
   check('Interior depth order is far -> mid -> player -> near',
@@ -434,6 +436,9 @@ try{
   check('Interior and exterior doorway share the same screen X',
     Math.abs(interiorDepth.doorCenterX-interiorDepth.interiorDoorX)<2&&
     Math.abs(interiorDepth.doorCenterX-interiorDepth.exteriorDoorX)<2,
+    JSON.stringify(interiorDepth));
+  check('Interior doorway threshold stays on the exterior ground line',
+    Math.abs(interiorDepth.doorGroundY-interiorDepth.expectedGroundY)<2,
     JSON.stringify(interiorDepth));
   const stagePlayerInterior=await page.evaluate(()=>{
     const r=document.querySelector('.actor').getBoundingClientRect();
