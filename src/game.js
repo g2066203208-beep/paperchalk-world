@@ -622,6 +622,9 @@ const debugAiBtn=document.getElementById('debugAiBtn');
 const debugMapColliderBtn=document.getElementById('debugMapColliderBtn');
 const debugSpawnBtn=document.getElementById('debugSpawnBtn');
 const debugCameraBtn=document.getElementById('debugCameraBtn');
+const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
+const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
+const debugRendererDomBtn=document.getElementById('debugRendererDomBtn');
 const entityTrack=document.getElementById('entityTrack');
 const enemyEl=document.getElementById('enemy');
 const enemyHealthFill=document.getElementById('enemyHealthFill');
@@ -996,7 +999,8 @@ function updateDebugStatus(){
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
     '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>'+
-    '<span>渲染器 <b>'+(window.PaperchalkRenderer?.mode||'DOM')+'</b></span>';
+    '<span>渲染器 <b>'+(window.PaperchalkRenderer?.mode||'dom')+'</b></span>'+
+    '<span>GPU耗时 <b>'+(window.PaperchalkRenderer?.mode==='pixi'?(window.PaperchalkRenderer.stats.renderMs.toFixed(2)+'ms'):'--')+'</b></span>';
 }
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
@@ -1005,6 +1009,11 @@ function updateCombatDebugButtons(){
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
   debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
+  const renderer=window.PaperchalkRenderer;
+  const requested=renderer?.requested||'auto';
+  debugRendererAutoBtn?.classList.toggle('is-active',requested==='auto');
+  debugRendererGpuBtn?.classList.toggle('is-active',requested==='pixi');
+  debugRendererDomBtn?.classList.toggle('is-active',requested==='dom');
 }
 function writeDebugOutput(message){
   debugOutput.textContent=String(message);
@@ -1229,6 +1238,14 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       setVisibleWorldClock(0);writeDebugOutput('时间 -> '+formatWorldClock()+' 深夜');updateDebugStatus();return;
     }else if(action==='stageFold'){
       triggerPaperSceneFold();writeDebugOutput('执行纸片舞台翻景。');return;
+    }else if(action==='rendererAuto'||action==='rendererPixi'||action==='rendererDom'){
+      const mode=action==='rendererPixi'?'pixi':action==='rendererDom'?'dom':'auto';
+      if(!window.PaperchalkRenderer){writeDebugOutput('GPU 渲染器尚未加载');return}
+      window.PaperchalkRenderer.setMode(mode).then(actual=>{
+        writeDebugOutput('渲染器 -> '+actual+'（请求 '+mode+'）');
+        updateDebugStatus();updateCombatDebugButtons();
+      });
+      return;
     }
     updateDebugStatus();
     writeDebugOutput('HP -> '+playerHp+' / '+PLAYER_MAX_HP);
@@ -1240,7 +1257,10 @@ addEventListener('keydown',e=>{
     closeDebugPanel();
   }
 });
-window.addEventListener('paperchalk-renderer-change',()=>{if(debugIsOpen())updateDebugStatus()});
+window.addEventListener('paperchalk-renderer-change',()=>{
+  updateCombatDebugButtons();
+  if(debugIsOpen())updateDebugStatus();
+});
 window.PaperchalkDebug={
   open:openDebugPanel,
   close:closeDebugPanel,
