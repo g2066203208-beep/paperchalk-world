@@ -6,14 +6,14 @@
 <meta name="theme-color" content="#28251f">
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=fixed-stage-player-r22" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=indoor-depth-flight-r23" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="fixed-stage-player-r22">
-<link rel="stylesheet" href="./styles/game.css?v=fixed-stage-player-r22">
+<meta name="paperchalk-build" content="indoor-depth-flight-r23">
+<link rel="stylesheet" href="./styles/game.css?v=indoor-depth-flight-r23">
 </head>
 <body>
 
@@ -82,14 +82,23 @@
   <div id="apartmentDoorPrompt" class="door-interact-prompt" aria-hidden="true">E / 开门</div>
 
   <section id="interiorScene" class="interior-scene" aria-hidden="true" aria-label="公寓室内">
-    <div class="interior-wall paper-stage-piece"></div>
-    <div class="interior-window paper-stage-piece"><span class="interior-window-cross"></span></div>
-    <div class="interior-shelf paper-stage-piece"></div>
-    <div id="interiorExitDoor" class="interior-exit-door paper-stage-piece" aria-hidden="true">
-      <span class="interior-door-handle"></span>
-      <span class="interior-door-label">门</span>
+    <div id="interiorFarLayer" class="interior-depth-layer interior-far-layer" aria-hidden="true">
+      <div class="interior-wall paper-stage-piece"></div>
+      <div class="interior-window paper-stage-piece"><span class="interior-window-cross"></span></div>
+      <div class="interior-floor paper-stage-piece"></div>
     </div>
-    <div class="interior-floor paper-stage-piece"></div>
+    <div id="interiorMidLayer" class="interior-depth-layer interior-mid-layer" aria-hidden="true">
+      <div class="interior-shelf paper-stage-piece"></div>
+      <div id="interiorExitDoor" class="interior-exit-door paper-stage-piece" aria-hidden="true">
+        <span class="interior-door-handle"></span>
+        <span class="interior-door-label">门</span>
+      </div>
+    </div>
+    <div id="interiorNearLayer" class="interior-depth-layer interior-near-layer" aria-hidden="true">
+      <div class="interior-near-left paper-stage-piece"></div>
+      <div class="interior-near-rug paper-stage-piece"></div>
+      <div class="interior-near-right paper-stage-piece"></div>
+    </div>
   </section>
 
   <section id="dialogueStage" class="dialogue-stage" aria-hidden="true" aria-label="舞台对话">
@@ -364,7 +373,7 @@
 </section>
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
-<script src="./src/game.js?v=fixed-stage-player-r22"></script>
+<script src="./src/game.js?v=indoor-depth-flight-r23"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=puppet-r1"></script>
 </body>
 </html>
