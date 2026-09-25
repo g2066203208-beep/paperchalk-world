@@ -477,6 +477,30 @@ try{
     Math.abs(exitPlayerAfter.x-exitPlayerBefore.x)<1&&Math.abs(exitPlayerAfter.y-exitPlayerBefore.y)<1,
     JSON.stringify({exitPlayerBefore,exitPlayerAfter}));
 
+  const exitFollowBefore=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
+  const expectedExitCamera=Math.max(
+    0,
+    Math.min(
+      exitFollowBefore.map.width-exitFollowBefore.viewport.width,
+      exitFollowBefore.player.x-exitFollowBefore.viewport.width*.42
+    )
+  );
+  check('Exterior camera is locked to the player before the scene is revealed',
+    Math.abs(exitFollowBefore.camera.x-expectedExitCamera)<1,
+    JSON.stringify({camera:exitFollowBefore.camera.x,expectedExitCamera,player:exitFollowBefore.player}));
+
+  await page.keyboard.down('ArrowRight');
+  await page.waitForTimeout(90);
+  await page.keyboard.up('ArrowRight');
+  await page.waitForTimeout(40);
+  const exitFollowAfter=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
+  const firstMovePlayerDx=exitFollowAfter.player.x-exitFollowBefore.player.x;
+  const firstMoveCameraDx=exitFollowAfter.camera.x-exitFollowBefore.camera.x;
+  check('First movement after exit continues camera follow without a snap',
+    firstMovePlayerDx>0&&Math.abs(firstMoveCameraDx-firstMovePlayerDx)<2&&
+    Math.abs(exitFollowAfter.player.screenX-exitFollowBefore.player.screenX)<2,
+    JSON.stringify({firstMovePlayerDx,firstMoveCameraDx,before:exitFollowBefore.player.screenX,after:exitFollowAfter.player.screenX}));
+
 
   // Return to a safe mid-map position for persistence/UI tests.
   await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
