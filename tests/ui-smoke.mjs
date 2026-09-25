@@ -71,6 +71,17 @@ console.log('INITIAL',initial);
 assert(initial.menu&&initial.enter,'main menu not interactive '+JSON.stringify(initial));
 console.log('PASS load/menu',initial);
 
+const orbit=await js(`(()=>{
+  const rise=330,set=1110,span=set-rise;
+  const pts=[0,.25,.5,.75,1].map(t=>celestialArcPosition(rise+span*t,rise,set));
+  const cx=VIEW_W*.50,cy=VIEW_H*.74;
+  const radii=pts.map(p=>Math.hypot(p.x-cx,p.y-cy));
+  return {pts,radii,min:Math.min(...radii),max:Math.max(...radii),cx,cy};
+})()`);
+assert(orbit.max-orbit.min<0.05,'celestial path is not circular '+JSON.stringify(orbit));
+assert(Math.abs(orbit.pts[2].x-orbit.cx)<0.1&&orbit.pts[2].y<orbit.cy,'celestial noon point is wrong '+JSON.stringify(orbit));
+console.log('PASS circular celestial orbit',orbit);
+
 await click('enterBtn');
 assert(await waitFor("document.getElementById('pageAuth')?.classList.contains('active')",1200),'fresh start did not open auth');
 noFaults('start -> auth');
@@ -135,14 +146,20 @@ console.log('PASS debug');
 await js("closeDebugPanel({focus:false}); PaperchalkDebug.run('tp 760');");
 await sleep(250);
 
+const dialogueClickAt=Date.now();
 const interact=await js("(()=>{const e=document.getElementById('interactBtn');e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:1,pointerType:'touch'}));return true})()");
 assert(interact,'interact dispatch failed');
-assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-open')",1500),'dialogue did not open');
-await sleep(1500);
+assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-open')",500),'dialogue did not open promptly');
+assert(await waitFor("window.PaperchalkDialogue?.state?.phase==='opening'",350),'dialogue first line stalled after interaction');
+const dialogueLatency=Date.now()-dialogueClickAt;
+assert(dialogueLatency<500,'dialogue opening latency too high '+dialogueLatency+'ms');
+console.log('PASS dialogue opening latency',dialogueLatency+'ms');
+await sleep(500);
 noFaults('dialogue open');
 const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
 assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
 assert(portraits.pw>=480&&portraits.ph>=900,'player portrait is still low resolution '+JSON.stringify(portraits));
+assert(portraits.nw>=640&&portraits.nh>=1004,'NPC portrait is still low resolution '+JSON.stringify(portraits));
 console.log('PASS dialogue/portraits HD',portraits);
 
 await js("document.getElementById('dialogueStage').dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:2,pointerType:'touch'}))");
