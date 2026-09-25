@@ -102,7 +102,7 @@ assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missin
 assert(fs.existsSync("assets/backgrounds/mountain-background.webp"), "Mountain background runtime asset missing");
 assert(html.includes('id="mountainBackground"'), "Mountain background layer missing");
 assert(css.includes(".mountain-background-layer::before{"), "Mountain responsive visual layer missing");
-assert(css.includes("background-size:clamp(1050px,82vw,1500px) auto"), "Mountain responsive scaling rule missing");
+assert(css.includes("background-size:auto clamp(240px,62vh,520px)"), "Mountain responsive scaling rule missing");
 assert(game.includes("const MOUNTAIN_PARALLAX=.16"), "Mountain parallax factor missing");
 assert(game.includes("sceneryX*MOUNTAIN_PARALLAX"), "Mountain parallax is not driven by camera scroll");
 
