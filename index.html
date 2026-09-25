@@ -79,8 +79,25 @@ button{cursor:pointer}
 }
 .paper-celestial{
   position:absolute;width:clamp(34px,5vw,68px);height:clamp(34px,5vw,68px);
-  border-radius:50%;transform:translate(-50%,-50%);will-change:left,top,opacity;
-  transition:opacity .6s linear;filter:drop-shadow(0 5px 0 rgba(72,57,38,.10))
+  border-radius:50%;will-change:left,top,opacity,transform;
+  transition:left .62s linear,top .62s linear,opacity .6s linear;
+  filter:drop-shadow(0 5px 0 rgba(72,57,38,.10));
+  transform-origin:50% -180px;
+}
+.paper-celestial::before{
+  content:"";position:absolute;left:50%;bottom:100%;width:1px;height:190px;
+  background:linear-gradient(to top,rgba(91,75,56,.22),rgba(91,75,56,.03));
+  transform:translateX(-50%);pointer-events:none
+}
+.paper-sun{animation:paperSunHang 5.4s ease-in-out infinite}
+.paper-moon{animation:paperMoonHang 6.8s ease-in-out infinite}
+@keyframes paperSunHang{
+  0%,100%{transform:translate(-50%,-50%) rotate(-1.25deg)}
+  50%{transform:translate(-50%,-50%) rotate(1.4deg)}
+}
+@keyframes paperMoonHang{
+  0%,100%{transform:translate(-50%,-50%) rotate(1.05deg)}
+  50%{transform:translate(-50%,-50%) rotate(-1.3deg)}
 }
 .paper-sun{
   left:var(--sun-x);top:var(--sun-y);opacity:var(--sun-alpha);
@@ -93,19 +110,40 @@ button{cursor:pointer}
   box-shadow:inset -10px -3px 0 rgba(125,126,133,.12),0 0 24px rgba(214,218,225,.16)
 }
 .paper-backdrop{
+  --scene-a:rgba(92,104,76,.34);--scene-b:rgba(110,99,75,.30);
+  --scene-paper:rgba(174,151,106,.32);
   position:absolute;z-index:1;left:-5%;right:-5%;bottom:18%;height:58%;
   transform-origin:50% 100%;transform-style:preserve-3d;
-  transform:rotateX(-5deg) translateZ(-100px);
+  transform:translate3d(0,0,-100px) rotateX(-5deg);
   will-change:transform,filter;
   pointer-events:none;
   filter:drop-shadow(0 18px 8px var(--paper-shadow));
   backface-visibility:visible;
 }
+.paper-backdrop[data-scene="forest"]{--scene-a:rgba(66,93,67,.42);--scene-b:rgba(83,100,68,.34);--scene-paper:rgba(115,130,89,.30)}
+.paper-backdrop[data-scene="river"],.paper-backdrop[data-scene="marsh"]{--scene-a:rgba(74,101,103,.34);--scene-b:rgba(99,111,94,.30);--scene-paper:rgba(117,137,126,.28)}
+.paper-backdrop[data-scene="mountain"],.paper-backdrop[data-scene="highland"]{--scene-a:rgba(103,94,86,.38);--scene-b:rgba(121,108,87,.31);--scene-paper:rgba(139,124,101,.30)}
+.paper-backdrop[data-scene="cave"]{--scene-a:rgba(68,65,63,.46);--scene-b:rgba(78,71,65,.40);--scene-paper:rgba(83,76,70,.40)}
+.paper-backdrop[data-scene="ruins"],.paper-backdrop[data-scene="shrine"]{--scene-a:rgba(114,92,73,.40);--scene-b:rgba(132,105,77,.32);--scene-paper:rgba(149,118,83,.28)}
+.paper-backdrop-next{visibility:hidden;transform:translate3d(0,118%,-92px) rotateX(-8deg)}
+.stage.scene-shifting .paper-backdrop-current{animation:paperSceneOldOut .94s cubic-bezier(.48,.02,.52,.98) both}
+.stage.scene-shifting .paper-backdrop-next{visibility:visible;animation:paperSceneNewIn .94s cubic-bezier(.20,.82,.24,1) both}
+@keyframes paperSceneOldOut{
+  0%{transform:translate3d(0,0,-100px) rotateX(-5deg);opacity:1}
+  58%{transform:translate3d(0,48%,-70px) rotateX(9deg);opacity:.96}
+  100%{transform:translate3d(0,122%,-35px) rotateX(14deg);opacity:0}
+}
+@keyframes paperSceneNewIn{
+  0%{transform:translate3d(0,118%,-92px) rotateX(-10deg);opacity:.35}
+  66%{transform:translate3d(0,-3%,-104px) rotateX(-3deg);opacity:1}
+  84%{transform:translate3d(0,1.5%,-100px) rotateX(-5.7deg)}
+  100%{transform:translate3d(0,0,-100px) rotateX(-5deg);opacity:1}
+}
 .paper-backdrop::before{
   content:"";position:absolute;left:0;right:0;bottom:0;height:72%;
   background:
-    linear-gradient(150deg,transparent 0 9%,rgba(92,104,76,.34) 9.5% 20%,transparent 20.5% 29%,rgba(110,99,75,.30) 29.5% 44%,transparent 44.5% 55%,rgba(83,96,68,.29) 55.5% 72%,transparent 72.5%),
-    linear-gradient(to bottom,rgba(231,218,188,.14),rgba(174,151,106,.32));
+    linear-gradient(150deg,transparent 0 9%,var(--scene-a) 9.5% 20%,transparent 20.5% 29%,var(--scene-b) 29.5% 44%,transparent 44.5% 55%,var(--scene-a) 55.5% 72%,transparent 72.5%),
+    linear-gradient(to bottom,rgba(231,218,188,.14),var(--scene-paper));
   clip-path:polygon(0 100%,0 70%,9% 43%,18% 61%,29% 25%,38% 56%,51% 15%,62% 53%,74% 31%,84% 60%,94% 38%,100% 69%,100% 100%);
   border-bottom:2px solid rgba(96,75,47,.20)
 }
@@ -146,19 +184,13 @@ button{cursor:pointer}
   transform:rotateX(-3deg) translateZ(-42px);
   filter:drop-shadow(0 9px 5px var(--paper-shadow));
 }
-.stage.scene-folding .paper-backdrop{animation:paperBackdropFall .82s cubic-bezier(.32,.02,.18,1)}
-.stage.scene-folding .rear-layer{animation:paperRearFall .82s cubic-bezier(.32,.02,.18,1)}
-@keyframes paperBackdropFall{
-  0%{transform:rotateX(-5deg) translateZ(-100px)}
-  43%{transform:rotateX(76deg) translateY(30px) translateZ(70px)}
-  58%{transform:rotateX(83deg) translateY(46px) translateZ(90px)}
-  100%{transform:rotateX(-5deg) translateZ(-100px)}
-}
-@keyframes paperRearFall{
-  0%{transform:rotateX(-3deg) translateZ(-42px)}
-  43%{transform:rotateX(68deg) translateY(26px) translateZ(74px)}
-  58%{transform:rotateX(75deg) translateY(36px) translateZ(88px)}
-  100%{transform:rotateX(-3deg) translateZ(-42px)}
+.stage.scene-shifting .rear-layer{animation:paperRearStageSwap .94s cubic-bezier(.36,.05,.28,1) both}
+@keyframes paperRearStageSwap{
+  0%{translate:0 0;opacity:1}
+  43%{translate:0 46vh;opacity:.20}
+  47%{translate:0 -36vh;opacity:.12}
+  74%{translate:0 2vh;opacity:1}
+  100%{translate:0 0;opacity:1}
 }
 .day-night-tint{
   position:absolute;inset:0;z-index:20;pointer-events:none;
@@ -181,7 +213,7 @@ button{cursor:pointer}
   .paper-backdrop{bottom:15%;height:62%}
 }
 @media(prefers-reduced-motion:reduce){
-  .stage.scene-folding .paper-backdrop,.stage.scene-folding .rear-layer{animation:none}
+  .stage.scene-shifting .paper-backdrop,.stage.scene-shifting .rear-layer{animation:none}
 }
 .stage.perf-low .prop,
 .stage.perf-low .pickup,
@@ -1365,18 +1397,29 @@ button{cursor:pointer}
   --portrait-side:1;
   position:absolute;bottom:6%;
   width:clamp(210px,26vw,390px);height:min(76vh,650px);
-  transform-origin:50% 100%;
+  transform-origin:50% 112%;
   opacity:0;
-  transition:left .42s cubic-bezier(.2,.72,.22,1),right .42s cubic-bezier(.2,.72,.22,1),
-             bottom .42s cubic-bezier(.2,.72,.22,1),width .42s cubic-bezier(.2,.72,.22,1),
-             height .42s cubic-bezier(.2,.72,.22,1),opacity .30s ease,transform .42s cubic-bezier(.2,.72,.22,1);
+  transition:bottom .48s cubic-bezier(.2,.72,.22,1),width .48s cubic-bezier(.2,.72,.22,1),
+             height .48s cubic-bezier(.2,.72,.22,1),opacity .28s ease,transform .48s cubic-bezier(.2,.72,.22,1);
   pointer-events:none;
 }
-.dialogue-portrait.player{left:-31%;--portrait-side:1}
-.dialogue-portrait.npc{right:-31%;--portrait-side:-1}
-.dialogue-stage.is-open .dialogue-portrait.player{left:4%}
-.dialogue-stage.is-open .dialogue-portrait.npc{right:4%}
+.dialogue-portrait.player{left:4%;--portrait-side:1}
+.dialogue-portrait.npc{right:4%;--portrait-side:-1}
 .dialogue-stage.is-open .dialogue-portrait{opacity:1}
+.dialogue-stage.is-opening .dialogue-portrait.player{animation:puppetPlayerArcIn .78s cubic-bezier(.16,.83,.20,1.08) both}
+.dialogue-stage.is-opening .dialogue-portrait.npc{animation:puppetNpcArcIn .82s .08s cubic-bezier(.16,.83,.20,1.08) both}
+@keyframes puppetPlayerArcIn{
+  0%{opacity:0;transform:translate3d(-46vw,13vh,0) rotate(-19deg) scale(.84)}
+  66%{opacity:1;transform:translate3d(2.4vw,-1.8vh,0) rotate(4.4deg) scale(1.035)}
+  84%{transform:translate3d(-.8vw,.5vh,0) rotate(-1.5deg) scale(.992)}
+  100%{opacity:1;transform:translate3d(0,0,0) rotate(0) scale(1)}
+}
+@keyframes puppetNpcArcIn{
+  0%{opacity:0;transform:translate3d(46vw,14vh,0) rotate(18deg) scale(.84)}
+  66%{opacity:1;transform:translate3d(-2.2vw,-1.6vh,0) rotate(-4deg) scale(1.03)}
+  84%{transform:translate3d(.7vw,.4vh,0) rotate(1.4deg) scale(.994)}
+  100%{opacity:1;transform:translate3d(0,0,0) rotate(0) scale(1)}
+}
 .dialogue-stage.speaker-player:not(.is-choice) .dialogue-portrait.player{transform:translateY(-8px) scale(1.025)}
 .dialogue-stage.speaker-player:not(.is-choice) .dialogue-portrait.npc{opacity:.68;transform:translateY(5px) scale(.97)}
 .dialogue-stage.speaker-npc:not(.is-choice) .dialogue-portrait.npc{transform:translateY(-8px) scale(1.025)}
@@ -1446,13 +1489,32 @@ button{cursor:pointer}
   border-radius:4px;padding:7px 11px;font-size:11px
 }
 
-/* Choice shot: player becomes the single central paper actor under a spotlight. */
+/* Choice shot: camera pushes left/down while the player puppet rises to upper-right. */
+.stage .paper-sky,.stage .paper-backdrop,.stage .paper-stage-floor,
+.stage .road-layer,.stage .rear-layer,.stage .front-layer,.stage .map-layer,.stage .entity-layer{
+  transition:translate .52s cubic-bezier(.22,.72,.20,1),scale .52s cubic-bezier(.22,.72,.20,1);
+}
+.stage.dialogue-choice-camera .paper-sky,
+.stage.dialogue-choice-camera .paper-backdrop,
+.stage.dialogue-choice-camera .paper-stage-floor,
+.stage.dialogue-choice-camera .road-layer,
+.stage.dialogue-choice-camera .rear-layer,
+.stage.dialogue-choice-camera .front-layer,
+.stage.dialogue-choice-camera .map-layer,
+.stage.dialogue-choice-camera .entity-layer{
+  translate:5.5vw -3.8vh;scale:1.115;
+}
+.dialogue-stage.is-choice .dialogue-dim{
+  background:
+    radial-gradient(ellipse at 61% 48%,rgba(247,214,141,.42) 0 12%,rgba(247,214,141,.16) 28%,transparent 52%),
+    rgba(18,17,18,.68);
+}
 .dialogue-stage.is-choice .dialogue-portrait.npc{
-  right:-38%;opacity:.12;transform:rotate(3deg) scale(.82)
+  right:-34%;bottom:-2%;opacity:.09;transform:rotate(5deg) scale(.76)
 }
 .dialogue-stage.is-choice .dialogue-portrait.player{
-  left:50%;bottom:1%;width:clamp(270px,38vw,520px);height:min(82vh,720px);
-  transform:translateX(-50%) scale(1.06)
+  left:58%;bottom:10%;width:clamp(300px,42vw,560px);height:min(88vh,760px);
+  transform:translateX(-50%) translateY(-2vh) rotate(1.2deg) scale(1.16)
 }
 .dialogue-stage.is-choice .dialogue-portrait.player .dialogue-puppet{
   animation:dialogueChoiceBreath 2.6s ease-in-out infinite
@@ -1477,13 +1539,23 @@ button{cursor:pointer}
   transition:transform .14s ease,background .14s ease
 }
 .dialogue-choice:active,.dialogue-choice:hover{transform:translateY(-3px) scale(1.02);background:#f1d8a4}
-.dialogue-choice.pos-top{left:50%;top:8%;transform:translateX(-50%)}
-.dialogue-choice.pos-left{right:67%;top:37%}
-.dialogue-choice.pos-right{left:67%;top:37%}
+.dialogue-choice.pos-top{left:58%;top:4%;transform:translateX(-50%)}
+.dialogue-choice.pos-left{right:58%;top:31%}
+.dialogue-choice.pos-right{left:72%;top:31%}
 .dialogue-choice.pos-top:hover,.dialogue-choice.pos-top:active{transform:translateX(-50%) translateY(-3px) scale(1.02)}
 
-.dialogue-stage.is-closing .dialogue-portrait.player{left:-35%;transform:rotate(-4deg) translateY(18px);opacity:0}
-.dialogue-stage.is-closing .dialogue-portrait.npc{right:-35%;transform:rotate(4deg) translateY(18px);opacity:0}
+.dialogue-stage.is-closing .dialogue-portrait.player{animation:puppetPlayerArcOut .62s cubic-bezier(.55,.02,.84,.28) both}
+.dialogue-stage.is-closing .dialogue-portrait.npc{animation:puppetNpcArcOut .64s .04s cubic-bezier(.55,.02,.84,.28) both}
+@keyframes puppetPlayerArcOut{
+  0%{opacity:1;transform:translate3d(0,0,0) rotate(0) scale(1)}
+  30%{transform:translate3d(1.5vw,1vh,0) rotate(3deg) scale(.99)}
+  100%{opacity:0;transform:translate3d(-48vw,17vh,0) rotate(-18deg) scale(.83)}
+}
+@keyframes puppetNpcArcOut{
+  0%{opacity:1;transform:translate3d(0,0,0) rotate(0) scale(1)}
+  30%{transform:translate3d(-1.4vw,1vh,0) rotate(-3deg) scale(.99)}
+  100%{opacity:0;transform:translate3d(48vw,17vh,0) rotate(18deg) scale(.83)}
+}
 .dialogue-stage.is-closing .dialogue-dim{opacity:0}
 .dialogue-stage.is-closing .dialogue-bubble{opacity:0}
 .stage.dialogue-active .combat-controls,
@@ -1501,7 +1573,7 @@ button{cursor:pointer}
   .dialogue-stage.is-open .dialogue-portrait.npc{right:1%}
   .dialogue-bubble{top:13%;max-width:40vw;min-width:130px;padding:9px 11px;font-size:12px}
   .dialogue-bubble.player{left:22%}.dialogue-bubble.npc{right:22%}
-  .dialogue-stage.is-choice .dialogue-portrait.player{width:clamp(230px,39vw,350px);height:82vh}
+  .dialogue-stage.is-choice .dialogue-portrait.player{left:60%;bottom:6%;width:clamp(250px,43vw,380px);height:86vh}
   .dialogue-choice{width:29vw;min-height:42px;padding:7px 9px;font-size:11px}
   .dialogue-choice.pos-top{top:4%}
   .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:34%}
@@ -1525,10 +1597,11 @@ button{cursor:pointer}
 <main id="world" class="stage" aria-label="Paperchalk World">
   <div class="paper-sky" aria-hidden="true">
     <div class="paper-stars"></div>
-    <div class="paper-celestial paper-sun"></div>
-    <div class="paper-celestial paper-moon"></div>
+    <div id="paperSun" class="paper-celestial paper-sun"></div>
+    <div id="paperMoon" class="paper-celestial paper-moon"></div>
   </div>
-  <div id="paperBackdrop" class="paper-backdrop" aria-hidden="true"></div>
+  <div id="paperBackdrop" class="paper-backdrop paper-backdrop-current" data-scene="meadow" aria-hidden="true"></div>
+  <div id="paperBackdropNext" class="paper-backdrop paper-backdrop-next" data-scene="meadow" aria-hidden="true"></div>
   <div class="paper-stage-floor" aria-hidden="true"></div>
   <div class="paper-wing left" aria-hidden="true"></div>
   <div class="paper-wing right" aria-hidden="true"></div>
