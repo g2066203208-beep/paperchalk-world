@@ -1,3 +1,4 @@
+import {loadPaperPuppet} from '../puppet/paper-puppet-runtime.mjs';
 const PIXI_MODULE='../../vendor/pixi/pixi-8.21.0.mjs';
 const STORAGE_KEY='paperchalk.renderer.v1';
 const world=document.getElementById('world');
@@ -7,6 +8,7 @@ const runtime=window.PaperchalkRuntime;
 let app=null;
 let Assets=null,Container=null,Graphics=null,Sprite=null;
 let playerNode=null;
+let playerPuppet=null;
 let enemyNodes=[];
 let latestFrame=null;
 let unsubscribe=null;
@@ -36,7 +38,11 @@ const stats={
   renderMs:0,
   maxRenderMs:0,
   playerScreenX:0,
-  playerWorldX:0
+  playerWorldX:0,
+  playerPuppetReady:false,
+  playerPuppetMode:'legacy',
+  playerPuppetLayers:0,
+  playerPuppetReason:''
 };
 
 function safeStorageGet(key){
@@ -102,6 +108,20 @@ function makePlayer(textures){
   root.addChild(shadow,sprite);
   return {root,shadow,sprite,scale,textures,action:'idle',meta};
 }
+function makePuppetPlayer(puppet){
+  const root=new Container();
+  root.eventMode='none';
+  root.interactiveChildren=false;
+  const shadow=new Graphics()
+    .ellipse(0,0,38,8)
+    .fill({color:0x312519,alpha:.30});
+  puppet.root.position.set(0,0);
+  root.addChild(shadow,puppet.root);
+  return {
+    root,shadow,puppet,isPuppet:true,action:'idle',lastNow:performance.now(),
+    meta:{scale:1,sourceFacing:1}
+  };
+}
 function makeEnemy(texture,id){
   const root=new Container();
   root.label=id;
@@ -128,6 +148,14 @@ function makeEnemy(texture,id){
 }
 function syncStaticScale(frame){
   if(!playerNode)return;
+  if(playerNode.isPuppet){
+    const s=playerNode.puppet?.stats||{};
+    stats.playerDisplayW=Number(s.displayW)||playerVisualSize().w;
+    stats.playerDisplayH=Number(s.displayH)||playerVisualSize().h;
+    stats.playerActionScale=Number(s.scale)||1;
+    stats.playerSourceFacing=Number(playerNode.puppet?.sourceFacing)===-1?-1:1;
+    return;
+  }
   const texture=playerNode.sprite.texture;
   const target=playerVisualSize();
   const meta=playerActionMeta(playerNode.action||'idle');
@@ -144,6 +172,34 @@ function renderPlayer(frame,now){
   if(!node)return;
 
   const action=p.action||'idle';
+  const footY=v.height-v.groundY-p.y;
+  if(node.isPuppet){
+    const dt=Math.min(.05,Math.max(0,(now-node.lastNow)/1000));
+    node.lastNow=now;
+    node.action=action;
+    node.puppet.update({
+      ...p,
+      action,
+      air:Math.max(0,p.y),
+      vx:p.moving?(p.facing*240):0
+    },dt,now);
+    const sourceFacing=Number(node.puppet.sourceFacing)===-1?-1:1;
+    const baseX=Math.max(.0001,Math.abs(node.puppet.root.scale.x)||1);
+    node.puppet.root.scale.x=baseX*p.facing*sourceFacing;
+    node.root.position.set(p.screenX,footY);
+    node.root.alpha=p.invulnerable?.78:1;
+    const air=Math.max(0,p.y);
+    const shadowScale=Math.max(.62,1-air/430);
+    node.shadow.scale.set(shadowScale,shadowScale);
+    node.shadow.alpha=Math.max(.12,.34-air/620);
+    node.shadow.y=air;
+    stats.playerAction=action;
+    stats.playerActionScale=Number(node.puppet.stats?.scale)||1;
+    stats.playerSourceFacing=sourceFacing;
+    stats.playerScreenX=p.screenX;
+    stats.playerWorldX=p.x;
+    return;
+  }
   if(action!==node.action&&node.textures[action]){
     node.action=action;
     node.sprite.texture=node.textures[action];
@@ -158,7 +214,6 @@ function renderPlayer(frame,now){
     stats.playerDisplayH=target.h*meta.scale;
   }
 
-  const footY=v.height-v.groundY-p.y;
   let bob=0,rotation=0,offsetX=0;
   if(action==='walk'&&p.grounded){
     const phase=now*.011;
@@ -274,13 +329,31 @@ async function ensurePixi(){
       'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
       walk:'./assets/player/walk.webp?v=actions-r1'
     };
-    const actionEntries=await Promise.all(
-      Object.entries(actionUrls).map(async([state,url])=>[state,await Assets.load(url)])
-    );
-    const playerTextures=Object.fromEntries(actionEntries);
+    try{
+      playerPuppet=await loadPaperPuppet(
+        {Assets,Container,Sprite},
+        './assets/puppets/player/manifest.json?v=puppet-r1'
+      );
+      playerNode=makePuppetPlayer(playerPuppet);
+      stats.playerPuppetReady=true;
+      stats.playerPuppetMode=playerPuppet.kind||'layered';
+      stats.playerPuppetLayers=Number(playerPuppet.stats?.layers)||0;
+      stats.playerPuppetReason='';
+    }catch(err){
+      playerPuppet=null;
+      stats.playerPuppetReady=false;
+      stats.playerPuppetMode='legacy';
+      stats.playerPuppetLayers=0;
+      stats.playerPuppetReason=String(err?.message||err);
+      const actionEntries=await Promise.all(
+        Object.entries(actionUrls).map(async([state,url])=>[state,await Assets.load(url)])
+      );
+      const playerTextures=Object.fromEntries(actionEntries);
+      playerNode=makePlayer(playerTextures);
+      console.warn('PAPER_PUPPET_FALLBACK',err);
+    }
     const enemyTexture=await Assets.load('./assets/enemies/rag-drifter.svg?v=1');
 
-    playerNode=makePlayer(playerTextures);
     app.stage.addChild(playerNode.root);
 
     const spawns=runtime.worldData?.enemySpawns||[];
