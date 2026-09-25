@@ -6,8 +6,15 @@ const MAP_SPAWN_X=460;
 const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
 let MAP_GROUND_SCREEN_Y=112;
 let VIEW_W=1280,VIEW_H=720;
-const PLAYER_BODY={halfW:27,h:108};
+const PLAYER_BODY=Object.freeze({halfW:27,standH:108,crouchH:78});
 const PLAYER_VISUAL=Object.freeze({w:104,h:156});
+const PLAYER_ACTION_ASSETS=Object.freeze({
+  idle:'./assets/player/idle.webp?v=actions-r1',
+  crouch:'./assets/player/crouch.webp?v=actions-r1',
+  'jump-up':'./assets/player/jump-up.webp?v=actions-r1',
+  'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
+  walk:'./assets/player/walk.webp?v=actions-r1'
+});
 const WORLD_NODES=[
   {id:'village',name:'A村',x:170,y:650,kind:'village'},
   {id:'meadowFork',name:'风草岔口',x:450,y:640,kind:'junction'},
@@ -574,6 +581,7 @@ const dialoguePortraitDecode=Promise.allSettled(
   return result;
 });
 const actorEl=document.querySelector('.actor');
+const playerSprite=document.getElementById('playerSprite');
 actorEl.style.width=PLAYER_VISUAL.w+'px';
 actorEl.style.height=PLAYER_VISUAL.h+'px';
 actorEl.style.setProperty('--player-visual-w',PLAYER_VISUAL.w+'px');
@@ -637,6 +645,7 @@ const enemyHealthFill=document.getElementById('enemyHealthFill');
 const enemy2El=document.getElementById('enemy2');
 const enemy2HealthFill=document.getElementById('enemy2HealthFill');
 const interactBtn=document.getElementById('interactBtn');
+const crouchBtn=document.getElementById('crouchBtn');
 const jumpBtn=document.getElementById('jumpBtn');
 const attackBtn=document.getElementById('attackBtn');
 const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
