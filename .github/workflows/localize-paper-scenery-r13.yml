@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install Pillow
-        run: python -m pip install --quiet pillow
+        run: python -m pip install --quiet pillow numpy
       - name: Download supplied artwork
         run: |
           mkdir -p /tmp/paper-scenery assets/backgrounds
