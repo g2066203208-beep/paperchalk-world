@@ -110,7 +110,7 @@ assert(html.includes("assets/ui/transitions/paper-unfold.webp"), "Paper unfold t
 assert(game.includes("paperUIFrom(e.currentTarget,()=>showPage('settings')"), "Settings must use reusable paper transition");
 assert(game.includes("paperUIFrom(e.currentTarget,()=>openUI(true),uiShell)"), "World menu must use reusable paper transition");
 assert(game.includes("paperUIFrom(triggerEl,revealBackpack,backpackFrame)"), "Backpack must use reusable paper transition");
-assert(css.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing");
+assert(html.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing");
 assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
 
