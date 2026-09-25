@@ -74,6 +74,10 @@ assert(html.includes('class="road-tile voxel-ground-tile"'), "Voxel ground tile 
 assert(css.includes(".voxel-ground-tile"), "Voxel ground CSS missing");
 assert(css.includes("--ground-screen-y"), "Responsive voxel ground line missing");
 assert(game.includes("setProperty('--ground-screen-y'"), "Physics ground is not wired to voxel visual surface");
+assert(css.includes("width:128px"), "Ground tile must use locked 128px world grid");
+const androidMain=fs.readFileSync("android-app/app/src/main/java/com/paperchalk/world/MainActivity.java","utf8");
+assert(androidMain.includes("?androidLaunch="), "Android app must cache-bust the HTML shell on every launch");
+assert(androidMain.includes('"Cache-Control", "no-cache, max-age=0"'), "Android HTML request must force revalidation");
 assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
