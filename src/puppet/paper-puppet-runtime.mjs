@@ -97,6 +97,9 @@ class CardPuppet{
     this.xSpring=new Spring1D(0);
     this.ySpring=new Spring1D(0);
     this.currentScale=1;
+    this.scaleFrom=1;
+    this.scaleStart=0;
+    this.scaleDurationMs=180;
     this.baseFitX=1;
     this.baseFitY=1;
     const display=manifest.displaySize||manifest.designSize||{};
@@ -105,7 +108,7 @@ class CardPuppet{
     this.stats={layers:1,mode:'card',action:'idle',displayW:this.displayW,displayH:this.displayH};
     this._applyCard('idle',true);
   }
-  _applyCard(action,snap=false){
+  _applyCard(action,snap=false,now=performance.now()){
     const card=safeAction(this.manifest,action);
     if(!card)return;
     const tex=this.textures[action]||this.textures.idle||Object.values(this.textures)[0];
@@ -117,15 +120,19 @@ class CardPuppet{
     this.action=action;
     this.sourceFacing=num(card.sourceFacing,1)<0?-1:1;
     const target=Math.max(.2,num(card.scale,1));
-    if(snap){
-      this.scaleSpring.snap(target);
-      this.currentScale=target;
-    }
+    this.scaleFrom=this.currentScale;
+    this.scaleStart=num(now,performance.now());
     this.targetScale=target;
+    if(snap){
+      this.currentScale=target;
+      this.scaleFrom=target;
+      this.scaleStart-=this.scaleDurationMs;
+      this.scaleSpring.snap(target);
+    }
     this.stats.action=action;
   }
-  setAction(action){
-    if(action!==this.action)this._applyCard(action,false);
+  setAction(action,now=performance.now()){
+    if(action!==this.action)this._applyCard(action,false,now);
   }
   setDisplaySize(w,h){
     w=Math.max(1,num(w,this.displayW));
@@ -141,8 +148,9 @@ class CardPuppet{
     this.stats.displayH=this.displayH*this.currentScale;
   }
   update(state,dt,now){
-    this.setAction(state.action||'idle');
-    const t=(now||performance.now())*.001;
+    now=num(now,performance.now());
+    this.setAction(state.action||'idle',now);
+    const t=now*.001;
     const moving=!!state.moving&&!!state.grounded;
     const crouch=state.action==='crouch';
     const air=!state.grounded;
@@ -164,11 +172,12 @@ class CardPuppet{
       targetX+=num(state.facing,1)*11*s;
       targetRot+=num(state.facing,1)*.12*s;
     }
-    // Character-card scale must never overshoot: action swaps used to create a
-    // visible size pop when a second-order spring crossed the target. Hair/skirt
-    // retain spring dynamics, but whole-body card size uses critically calm,
-    // monotonic exponential following.
-    this.currentScale=expFollow(this.currentScale,this.targetScale,dt,13.5);
+    // Whole-character scale is time-based and monotonic. Sparse simulation
+    // notifications or a slow GPU cannot freeze the card halfway through a pose
+    // transition, and unlike a second-order spring it can never overshoot.
+    const scaleP=clamp((now-this.scaleStart)/this.scaleDurationMs,0,1);
+    const scaleEase=1-Math.pow(1-scaleP,3);
+    this.currentScale=this.scaleFrom+(this.targetScale-this.scaleFrom)*scaleEase;
     this.scaleSpring.snap(this.currentScale);
     this.sprite.scale.set(this.baseFitX*this.currentScale,this.baseFitY*this.currentScale);
     this.root.rotation=this.rotSpring.step(targetRot,dt,8.5,.84);
