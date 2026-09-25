@@ -1673,6 +1673,10 @@ window.PaperchalkScene={
   exit:exitApartment,
   get doorScreenX(){return apartmentDoorScreenX()},
   get interiorDoorScreenX(){return interiorExitX()},
+  get interiorDoorAnchorX(){return interiorDoorAnchorX},
+  get interiorSceneShiftX(){return interiorSceneShiftX},
+  get playerScreenX(){return actorX},
+  get centerX(){return VIEW_W*.5},
   get interiorDoorGroundY(){return Math.max(0,MAP_GROUND_SCREEN_Y-8)},
   get interiorX(){return interiorPlayerX},
   get depthLayers(){return {far:3,mid:4,player:5,near:6}}
