@@ -98,7 +98,9 @@ try{
   assert(initial.actorVisibility==='hidden'&&initial.entityVisibility==='hidden','DOM dynamic entities are still visible');
 
   await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
-  await page.waitForTimeout(100);
+  await page.waitForFunction(()=>window.PaperchalkCombat.player.action==='crouch'&&
+    window.PaperchalkRenderer.stats.playerAction==='crouch'&&
+    window.PaperchalkRenderer.stats.playerPuppetReady,null,{timeout:1200});
   const gpuCrouch=await page.evaluate(()=>({
     action:window.PaperchalkCombat.player.action,
     actionScale:window.PaperchalkCombat.player.actionScale,
