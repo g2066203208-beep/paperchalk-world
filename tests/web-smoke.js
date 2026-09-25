@@ -66,7 +66,11 @@ assert(game.includes("const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720})"), 
 assert(game.includes("const PLAYER_ACTION_META=Object.freeze"), "Per-action visual metadata missing");
 assert(game.includes("walk:Object.freeze({scale:.92,sourceFacing:-1})"), "Newest walk orientation correction missing");
 assert(game.includes("crouch:Object.freeze({scale:.76,sourceFacing:1})"), "Crouch visual normalization missing");
-assert(game.includes("function startPlayerPaperFlip"), "Paper-puppet action flip transition missing");
+assert(game.includes("function startPlayerActionSettle"), "Soft player action settle transition missing");
+assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip transition missing");
+assert(!game.includes("function startPlayerPaperFlip"), "Full paper flip must not run on every action change");
+assert(game.includes("startPlayerActionSettle(previousState,state)"), "Action changes must use soft settle");
+assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
 assert(!fs.existsSync("assets/road.webp"), "Legacy road image asset must stay removed");

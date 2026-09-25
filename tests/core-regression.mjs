@@ -161,7 +161,13 @@ try{
 
   const crouchAccepted=await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
   await page.waitForTimeout(35);
-  const crouchFlip=await page.evaluate(()=>document.getElementById('playerFlip')?.getAnimations().length||0);
+  const crouchTransition=await page.evaluate(()=>{
+    const animations=document.getElementById('playerFlip')?.getAnimations()||[];
+    return animations.map(a=>a.effect?.getKeyframes?.()||[]).flat().map(k=>({
+      scale:k.scale||'',
+      transform:k.transform||''
+    }));
+  });
   await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='crouch',null,{timeout:900});
   await page.waitForTimeout(90);
   const crouched=await page.evaluate(()=>({
@@ -170,11 +176,13 @@ try{
     src:document.getElementById('playerSprite')?.getAttribute('src')||'',
     button:document.getElementById('crouchBtn')?.classList.contains('is-active')||false
   }));
-  check('Crouch uses paper flip, normalized supplied pose and shorter real body',
-    crouchAccepted===true&&crouchFlip>0&&crouched.player.crouching&&crouched.player.action==='crouch'&&
+  const crouchHasSoftScale=crouchTransition.some(k=>k.scale&&k.scale!=='none');
+  const crouchHasFullFlip=crouchTransition.some(k=>String(k.transform||'').includes('rotateY'));
+  check('Crouch uses soft settle without full paper flip',
+    crouchAccepted===true&&crouchHasSoftScale&&!crouchHasFullFlip&&crouched.player.crouching&&crouched.player.action==='crouch'&&
     crouched.player.bodyH===78&&Math.abs(crouched.player.actionScale-.76)<.001&&crouched.state==='crouch'&&
     crouched.src.includes('/assets/player/runtime/crouch.webp')&&crouched.button,
-    JSON.stringify({crouchAccepted,crouchFlip,crouched}));
+    JSON.stringify({crouchAccepted,crouchTransition,crouched}));
 
   await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
   await page.waitForTimeout(180);

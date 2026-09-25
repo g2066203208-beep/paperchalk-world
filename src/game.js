@@ -618,8 +618,12 @@ const playerSprite=document.getElementById('playerSprite');
 const playerActionPreloads=new Map();
 const playerReducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let playerActionAssetsReady=false;
-let playerFlipRevision=0;
 let playerDomActionState='idle';
+let playerActionSettleRevision=0;
+let playerActionSettleAnimation=null;
+let playerTurnRevision=0;
+let playerTurnOutAnimation=null;
+let playerTurnInAnimation=null;
 function playerActionMeta(state){return PLAYER_ACTION_META[state]||PLAYER_ACTION_META.idle}
 function preloadPlayerActionAssets(){
   if(playerActionAssetsReady)return Promise.resolve();
@@ -646,44 +650,80 @@ function applyPlayerActionVisual(state){
   if(playerSprite.getAttribute('src')!==src)playerSprite.src=src;
   playerDomActionState=state;
 }
-function cancelPlayerPaperFlip(){
-  playerFlipRevision++;
-  if(!playerFlip)return;
-  for(const animation of playerFlip.getAnimations())animation.cancel();
-  playerFlip.style.removeProperty('transform');
+function cancelPlayerActionSettle(){
+  playerActionSettleRevision++;
+  playerActionSettleAnimation?.cancel();
+  playerActionSettleAnimation=null;
 }
-function startPlayerPaperFlip(state){
-  const token=++playerFlipRevision;
+function startPlayerActionSettle(previousState,state){
+  const previousMeta=playerActionMeta(previousState);
+  const nextMeta=playerActionMeta(state);
+  const token=++playerActionSettleRevision;
+  playerActionSettleAnimation?.cancel();
+  playerActionSettleAnimation=null;
+  applyPlayerActionVisual(state);
+  if(!playerFlip||playerReducedMotion.matches)return;
+  const ratio=Math.max(.72,Math.min(1.34,previousMeta.scale/Math.max(.01,nextMeta.scale)));
+  if(Math.abs(ratio-1)<.008)return;
+  const duration=(state==='crouch'||previousState==='crouch')?135:105;
+  playerActionSettleAnimation=playerFlip.animate([
+    {scale:String(ratio)},
+    {scale:'1'}
+  ],{duration,easing:'cubic-bezier(.20,.72,.24,1)'});
+  playerActionSettleAnimation.finished.then(()=>{
+    if(token===playerActionSettleRevision)playerActionSettleAnimation=null;
+  }).catch(()=>{});
+}
+function clearPlayerTurnAnimations(){
+  playerTurnOutAnimation?.cancel();
+  playerTurnInAnimation?.cancel();
+  playerTurnOutAnimation=null;
+  playerTurnInAnimation=null;
+}
+function cancelPlayerTurnFlip({snap=true}={}){
+  playerTurnRevision++;
+  clearPlayerTurnAnimations();
+  if(snap)actorEl.classList.toggle('facing-left',facing<0);
+}
+function startPlayerTurnFlip(dir){
+  const token=++playerTurnRevision;
+  clearPlayerTurnAnimations();
+  const visualDir=actorEl.classList.contains('facing-left')?-1:1;
+  if(visualDir===dir)return;
   if(!playerFlip||playerReducedMotion.matches){
-    applyPlayerActionVisual(state);
+    actorEl.classList.toggle('facing-left',dir<0);
     return;
   }
-  for(const animation of playerFlip.getAnimations())animation.cancel();
-  const out=playerFlip.animate([
-    {transform:'perspective(260px) rotateY(0deg) scaleX(1)'},
-    {transform:'perspective(260px) rotateY(86deg) scaleX(.10)'}
-  ],{duration:58,easing:'cubic-bezier(.32,.02,.68,.98)',fill:'forwards'});
-  out.finished.then(()=>{
-    if(token!==playerFlipRevision)return;
-    applyPlayerActionVisual(state);
-    const incoming=playerFlip.animate([
-      {transform:'perspective(260px) rotateY(-86deg) scaleX(.10)'},
-      {transform:'perspective(260px) rotateY(0deg) scaleX(1)'}
-    ],{duration:72,easing:'cubic-bezier(.18,.76,.22,1)',fill:'forwards'});
-    return incoming.finished;
+  const spin=dir<visualDir?1:-1;
+  playerTurnOutAnimation=playerFlip.animate([
+    {transform:'perspective(260px) rotateY(0deg)'},
+    {transform:'perspective(260px) rotateY('+(spin*82)+'deg)'}
+  ],{duration:68,easing:'cubic-bezier(.32,.02,.68,.98)',fill:'forwards'});
+  playerTurnOutAnimation.finished.then(()=>{
+    if(token!==playerTurnRevision)return;
+    actorEl.classList.toggle('facing-left',dir<0);
+    playerTurnInAnimation=playerFlip.animate([
+      {transform:'perspective(260px) rotateY('+(-spin*82)+'deg)'},
+      {transform:'perspective(260px) rotateY(0deg)'}
+    ],{duration:82,easing:'cubic-bezier(.18,.76,.22,1)',fill:'forwards'});
+    return playerTurnInAnimation.finished;
   }).then(()=>{
-    if(token===playerFlipRevision)playerFlip.style.removeProperty('transform');
+    if(token===playerTurnRevision){
+      playerTurnOutAnimation=null;
+      playerTurnInAnimation=null;
+    }
   }).catch(()=>{});
 }
 function setPlayerActionState(state,force=false){
   if(!PLAYER_ACTION_ASSETS[state])state='idle';
   if(!force&&state===playerActionState)return false;
+  const previousState=playerActionState;
   playerActionState=state;
   if(force){
-    cancelPlayerPaperFlip();
+    cancelPlayerActionSettle();
     applyPlayerActionVisual(state);
   }else{
-    startPlayerPaperFlip(state);
+    startPlayerActionSettle(previousState,state);
   }
   return true;
 }
@@ -1604,6 +1644,7 @@ function updateCrouchState(){
   if(!playerGrounded&&playerCrouching)setPlayerCrouching(false,{force:true});
 }
 function resetPlayerPoseState(){
+  cancelPlayerTurnFlip({snap:true});
   keyboardCrouch=false;
   mobileCrouch=false;
   playerCrouching=false;
@@ -2361,7 +2402,7 @@ function movementAxis(){
 function setFacing(dir){
   if(!dir||dir===facing)return;
   facing=dir;
-  actorEl.classList.toggle('facing-left',dir<0);
+  startPlayerTurnFlip(dir);
 }
 function desiredVisualOrigin(cameraX=worldX){
   const raw=Math.floor((cameraX-VISUAL_WINDOW_STEP)/VISUAL_WINDOW_STEP)*VISUAL_WINDOW_STEP;
