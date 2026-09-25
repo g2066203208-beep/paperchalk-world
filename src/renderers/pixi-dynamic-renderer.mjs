@@ -74,7 +74,7 @@ function makePlayer(texture){
     .fill({color:0x312519,alpha:.30});
   const sprite=new Sprite(texture);
   sprite.anchor.set(.5,1);
-  const scale=fitSprite(sprite,texture,126,150);
+  const scale=fitSprite(sprite,texture,1024,1536);
 
   root.addChild(shadow,sprite);
   return {root,shadow,sprite,scale};
@@ -105,10 +105,9 @@ function makeEnemy(texture,id){
 }
 function syncStaticScale(frame){
   if(!playerNode)return;
-  const mobile=frame.viewport.width<=800||frame.viewport.height<=520;
-  const maxW=mobile?106:126;
   const texture=playerNode.sprite.texture;
-  playerNode.scale=fitSprite(playerNode.sprite,texture,maxW,mobile?128:150);
+  // Original-size proportion test: render the 1024x1536 formal protagonist at 1:1.
+  playerNode.scale=fitSprite(playerNode.sprite,texture,1024,1536);
 }
 function renderPlayer(frame,now){
   const p=frame.player,v=frame.viewport;
@@ -219,7 +218,7 @@ async function ensurePixi(){
     host.appendChild(app.canvas);
 
     const [playerTexture,enemyTexture]=await Promise.all([
-      Assets.load('./assets/traveler.webp?v=traveler-r3'),
+      Assets.load('./assets/traveler.webp?v=formal-r1'),
       Assets.load('./assets/enemies/rag-drifter.svg?v=1')
     ]);
 

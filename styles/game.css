@@ -355,7 +355,7 @@ button{cursor:pointer}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
   --facing:1;--actor-x:35vw;--actor-y:-112px;
-  position:absolute;left:0;bottom:0;width:126px;z-index:5;
+  position:absolute;left:0;bottom:0;width:1024px;z-index:5;
   transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%);
   pointer-events:none;will-change:transform;contain:layout paint;
 }
@@ -813,7 +813,7 @@ button{cursor:pointer}
   .rear-layer,.front-layer{bottom:2vh;height:220px}
   .rear-layer .prop{bottom:96px}
   .front-layer .prop{bottom:78px}
-  .actor{width:106px}
+  .actor{width:1024px}
   .foot-shadow{width:48px;height:11px;bottom:5px}
   .rear-layer .prop{scale:.80}
   .front-layer .prop{scale:.84}
