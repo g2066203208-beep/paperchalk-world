@@ -28,9 +28,9 @@ for (const id of requiredIds) {
   assert(html.includes('id="' + id + '"'), "Missing required UI element: " + id);
 }
 
-assert(html.includes('href="./styles/game.css"'), "External game stylesheet missing");
-assert(html.includes('src="./src/game.js"'), "External game runtime missing");
-assert(html.includes('src="./src/renderers/pixi-dynamic-renderer.mjs"'), "Pixi dynamic renderer module missing");
+assert(/href=["']\.\/styles\/game\.css(?:\?[^"']*)?["']/.test(html), "External game stylesheet missing");
+assert(/src=["']\.\/src\/game\.js(?:\?[^"']*)?["']/.test(html), "External game runtime missing");
+assert(/src=["']\.\/src\/renderers\/pixi-dynamic-renderer\.mjs(?:\?[^"']*)?["']/.test(html), "Pixi dynamic renderer module missing");
 assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
 assert(fs.existsSync("vendor/pixi/pixi-8.21.0.mjs"), "Pinned PixiJS vendor missing");
 assert(fs.existsSync("vendor/pixi/LICENSE"), "PixiJS license missing");
