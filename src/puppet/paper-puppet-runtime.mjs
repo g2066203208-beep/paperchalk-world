@@ -117,7 +117,10 @@ class CardPuppet{
     this.action=action;
     this.sourceFacing=num(card.sourceFacing,1)<0?-1:1;
     const target=Math.max(.2,num(card.scale,1));
-    if(snap)this.scaleSpring.snap(target);
+    if(snap){
+      this.scaleSpring.snap(target);
+      this.currentScale=target;
+    }
     this.targetScale=target;
     this.stats.action=action;
   }
@@ -161,7 +164,12 @@ class CardPuppet{
       targetX+=num(state.facing,1)*11*s;
       targetRot+=num(state.facing,1)*.12*s;
     }
-    this.currentScale=this.scaleSpring.step(this.targetScale,dt,9.5,.92);
+    // Character-card scale must never overshoot: action swaps used to create a
+    // visible size pop when a second-order spring crossed the target. Hair/skirt
+    // retain spring dynamics, but whole-body card size uses critically calm,
+    // monotonic exponential following.
+    this.currentScale=expFollow(this.currentScale,this.targetScale,dt,13.5);
+    this.scaleSpring.snap(this.currentScale);
     this.sprite.scale.set(this.baseFitX*this.currentScale,this.baseFitY*this.currentScale);
     this.root.rotation=this.rotSpring.step(targetRot,dt,8.5,.84);
     this.root.x=this.xSpring.step(targetX,dt,10,.90);
