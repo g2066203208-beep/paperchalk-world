@@ -1398,10 +1398,8 @@ button{cursor:pointer}
   position:absolute;bottom:6%;
   width:clamp(210px,26vw,390px);height:min(76vh,650px);
   transform-origin:50% 112%;
-  opacity:0;
-  transition:left .58s cubic-bezier(.20,.72,.18,1),right .58s cubic-bezier(.20,.72,.18,1),
-             bottom .58s cubic-bezier(.20,.72,.18,1),opacity .28s ease,
-             transform .58s cubic-bezier(.20,.72,.18,1);
+  opacity:0;will-change:transform,opacity;backface-visibility:hidden;
+  transition:opacity .28s ease,transform .62s cubic-bezier(.18,.74,.18,1);
   pointer-events:none;
 }
 .dialogue-portrait.player{left:4%;--portrait-side:1}
@@ -1521,11 +1519,10 @@ button{cursor:pointer}
     rgba(18,17,18,.68);
 }
 .dialogue-stage.is-choice .dialogue-portrait.npc{
-  right:-34%;bottom:-2%;opacity:.09;transform:rotate(5deg) scale(.76)
+  opacity:.09;transform:translate3d(27vw,4vh,0) rotate(5deg) scale(.76)
 }
 .dialogue-stage.is-choice .dialogue-portrait.player{
-  left:58%;bottom:-8%;
-  transform:translateX(-50%) rotate(1deg) scale(1.32)
+  transform:translate3d(45vw,10vh,0) rotate(1deg) scale(1.32)
 }
 .dialogue-stage.is-choice .dialogue-portrait.player .dialogue-puppet{
   animation:dialogueChoiceBreath 2.6s ease-in-out infinite
@@ -1579,12 +1576,12 @@ button{cursor:pointer}
 
 @media(max-width:760px),(max-height:520px){
   .dialogue-portrait{width:clamp(170px,27vw,260px);height:min(75vh,440px);bottom:1%}
-  .dialogue-player-img,.dialogue-npc-img{filter:drop-shadow(3px 5px 0 rgba(25,19,14,.13))}
+  .dialogue-player-img,.dialogue-npc-img{filter:none}
   .dialogue-stage.is-open .dialogue-portrait.player{left:1%}
   .dialogue-stage.is-open .dialogue-portrait.npc{right:1%}
   .dialogue-bubble{top:13%;max-width:40vw;min-width:130px;padding:9px 11px;font-size:12px}
   .dialogue-bubble.player{left:22%}.dialogue-bubble.npc{right:22%}
-  .dialogue-stage.is-choice .dialogue-portrait.player{left:59%;bottom:-10%;transform:translateX(-50%) rotate(.8deg) scale(1.30)}
+  .dialogue-stage.is-choice .dialogue-portrait.player{transform:translate3d(44vw,11vh,0) rotate(.8deg) scale(1.30)}
   .dialogue-choice{width:29vw;min-height:42px;padding:7px 9px;font-size:11px}
   .dialogue-choice.pos-top{top:4%}
   .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:34%}
