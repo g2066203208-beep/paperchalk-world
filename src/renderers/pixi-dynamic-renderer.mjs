@@ -30,6 +30,7 @@ const stats={
   resolution:1,
   playerDisplayW:0,
   playerDisplayH:0,
+  playerAction:'idle',
   renderMs:0,
   maxRenderMs:0,
   playerScreenX:0,
@@ -74,7 +75,7 @@ function playerVisualSize(){
     h:Number(size?.h)||156
   };
 }
-function makePlayer(texture){
+function makePlayer(textures){
   const root=new Container();
   root.eventMode='none';
   root.interactiveChildren=false;
@@ -82,13 +83,14 @@ function makePlayer(texture){
   const shadow=new Graphics()
     .ellipse(0,0,38,8)
     .fill({color:0x312519,alpha:.30});
-  const sprite=new Sprite(texture);
+  const initial=textures.idle||Object.values(textures)[0];
+  const sprite=new Sprite(initial);
   sprite.anchor.set(.5,1);
   const target=playerVisualSize();
-  const scale=fitSpriteExact(sprite,texture,target.w,target.h);
+  const scale=fitSpriteExact(sprite,initial,target.w,target.h);
 
   root.addChild(shadow,sprite);
-  return {root,shadow,sprite,scale};
+  return {root,shadow,sprite,scale,textures,action:'idle'};
 }
 function makeEnemy(texture,id){
   const root=new Container();
@@ -127,12 +129,26 @@ function renderPlayer(frame,now){
   const node=playerNode;
   if(!node)return;
 
+  const action=p.action||'idle';
+  if(action!==node.action&&node.textures[action]){
+    node.action=action;
+    node.sprite.texture=node.textures[action];
+    const target=playerVisualSize();
+    node.scale=fitSpriteExact(node.sprite,node.sprite.texture,target.w,target.h);
+    stats.playerAction=action;
+  }
+
   const footY=v.height-v.groundY-p.y;
   let bob=0,rotation=0,offsetX=0;
-  if(p.moving&&p.grounded){
+  if(action==='walk'&&p.grounded){
     const phase=now*.011;
     bob=-1.8*(.5+.5*Math.sin(phase));
     rotation=Math.sin(phase*.5)*.012;
+  }else if(action==='idle'&&p.grounded){
+    bob=-.55*(.5+.5*Math.sin(now*.003));
+    rotation=Math.sin(now*.0024)*.0025;
+  }else if(action==='crouch'&&p.grounded){
+    bob=-.35*(.5+.5*Math.sin(now*.0034));
   }
   if(p.attacking){
     const progress=Math.max(0,Math.min(1,(.30-p.attackTimer)/.30));
@@ -230,12 +246,20 @@ async function ensurePixi(){
     app.canvas.setAttribute('aria-hidden','true');
     host.appendChild(app.canvas);
 
-    const [playerTexture,enemyTexture]=await Promise.all([
-      Assets.load('./assets/traveler.webp?v=formal-r1'),
-      Assets.load('./assets/enemies/rag-drifter.svg?v=1')
-    ]);
+    const actionUrls=runtime.worldData?.playerActions||{
+      idle:'./assets/player/idle.webp?v=actions-r1',
+      crouch:'./assets/player/crouch.webp?v=actions-r1',
+      'jump-up':'./assets/player/jump-up.webp?v=actions-r1',
+      'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
+      walk:'./assets/player/walk.webp?v=actions-r1'
+    };
+    const actionEntries=await Promise.all(
+      Object.entries(actionUrls).map(async([state,url])=>[state,await Assets.load(url)])
+    );
+    const playerTextures=Object.fromEntries(actionEntries);
+    const enemyTexture=await Assets.load('./assets/enemies/rag-drifter.svg?v=1');
 
-    playerNode=makePlayer(playerTexture);
+    playerNode=makePlayer(playerTextures);
     app.stage.addChild(playerNode.root);
 
     const spawns=runtime.worldData?.enemySpawns||[];
