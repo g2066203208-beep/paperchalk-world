@@ -71,6 +71,19 @@ console.log('INITIAL',initial);
 assert(initial.menu&&initial.enter,'main menu not interactive '+JSON.stringify(initial));
 console.log('PASS load/menu',initial);
 
+const heavyInitial=await js(`(()=>{
+  const names=performance.getEntriesByType('resource').map(e=>e.name);
+  return {
+    backpack:names.some(n=>n.includes('backpack-ui-v2.webp')),
+    paperBall:names.some(n=>n.includes('paper-ball.webp')),
+    paperUnfold:names.some(n=>n.includes('paper-unfold.webp')),
+    backpackSrc:document.querySelector('.inventory-art')?.getAttribute('src')||''
+  };
+})()`);
+assert(!heavyInitial.backpack&&!heavyInitial.paperBall&&!heavyInitial.paperUnfold&&!heavyInitial.backpackSrc,
+  'heavy hidden UI assets loaded on initial menu '+JSON.stringify(heavyInitial));
+console.log('PASS deferred heavy UI assets',heavyInitial);
+
 const orbit=await js(`(()=>{
   const rise=330,set=1110,span=set-rise;
   const pts=[0,.25,.5,.75,1].map(t=>celestialArcPosition(rise+span*t,rise,set));
@@ -144,7 +157,13 @@ assert(await waitFor("document.getElementById('uiShell')?.classList.contains('is
 await click('backpackBtn');
 assert(await waitFor("document.getElementById('backpackOverlay')?.classList.contains('is-open')",2500),'backpack did not open');
 noFaults('backpack');
-console.log('PASS backpack');
+const backpackArt=await js(`(()=>{
+  const img=document.querySelector('.inventory-art');
+  return {src:img?.currentSrc||img?.src||'',complete:!!img?.complete,naturalWidth:img?.naturalWidth||0,loading:document.getElementById('backpackFrame')?.classList.contains('is-art-loading')};
+})()`);
+assert(backpackArt.src.includes('backpack-ui-v2.webp'),'backpack art was not requested on demand '+JSON.stringify(backpackArt));
+assert(await waitFor("document.querySelector('.inventory-art')?.naturalWidth>0",5000),'backpack art did not decode after open');
+console.log('PASS backpack deferred art',backpackArt);
 await js("closeBackpack(true)");
 await sleep(100);
 
