@@ -179,7 +179,7 @@ assert(entranceFx.playerName.includes('puppetPlayerArcOut')&&entranceFx.playerDi
 assert(entranceFx.npcName.includes('puppetNpcArcOut')&&entranceFx.npcDir==='reverse','NPC entrance is not reverse exit '+JSON.stringify(entranceFx));
 console.log('PASS mirrored portrait entrance',entranceFx);
 
-await sleep(600);
+await sleep(685);
 const handoffBefore=await js(`(()=>{
   const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
   const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
@@ -191,7 +191,7 @@ const handoffBefore=await js(`(()=>{
     pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},np:{x:np.x,y:np.y,w:np.width,h:np.height}
   };
 })()`);
-await sleep(150);
+await sleep(85);
 const handoffAfter=await js(`(()=>{
   const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
   const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
