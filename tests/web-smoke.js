@@ -108,8 +108,8 @@ assert(html.includes("assets/ui/health/hp-cell.webp"), "Normal health segment as
 assert(html.includes("assets/ui/health/hp-tail.webp"), "Tail health segment asset missing");
 assert(game.includes("async function paperUIFrom"), "Reusable paper UI transition missing");
 assert(game.includes("window.PaperUITransition={openFrom:paperUIFrom}"), "Reusable UI transition API missing");
-assert(html.includes("assets/ui/transitions/paper-ball.png"), "Paper ball transition asset missing");
-assert(html.includes("assets/ui/transitions/paper-unfold.png"), "Paper unfold transition asset missing");
+assert(html.includes("assets/ui/transitions/paper-ball.webp"), "Paper ball transition asset missing");
+assert(html.includes("assets/ui/transitions/paper-unfold.webp"), "Paper unfold transition asset missing");
 assert(game.includes("paperUIFrom(e.currentTarget,()=>showPage('settings')"), "Settings must use reusable paper transition");
 assert(game.includes("paperUIFrom(e.currentTarget,()=>openUI(true),uiShell)"), "World menu must use reusable paper transition");
 assert(game.includes("paperUIFrom(triggerEl,revealBackpack,backpackFrame)"), "Backpack must use reusable paper transition");
