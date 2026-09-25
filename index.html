@@ -1610,6 +1610,113 @@ button{cursor:pointer}
   .map-notice{top:max(50px,calc(env(safe-area-inset-top) + 42px))}
 }
 
+
+/* ---------- R5 DIALOGUE / COMBAT MOTION POLISH ---------- */
+.paper-celestial{
+  will-change:left,top,opacity;
+  transition:left .08s linear,top .08s linear,opacity .45s linear;
+}
+.enemy{
+  left:0;
+  transform:translate3d(var(--enemy-x,0px),0,0) translateX(-50%);
+  will-change:transform,opacity;
+  contain:layout paint;
+}
+.enemy.is-dead{
+  transform:translate3d(var(--enemy-x,0px),0,0) translateX(-50%) rotate(84deg);
+}
+.dialogue-portrait{
+  width:clamp(205px,23vw,360px);
+  height:min(74vh,570px);
+  transition:opacity .16s linear,transform .44s cubic-bezier(.20,.78,.22,1);
+}
+.dialogue-stage.is-entering .dialogue-portrait.player{
+  opacity:0;
+  transform:translate3d(-20vw,5vh,0) rotate(-8deg) scale(.97);
+}
+.dialogue-stage.is-entering .dialogue-portrait.npc{
+  opacity:0;
+  transform:translate3d(20vw,5vh,0) rotate(8deg) scale(.97);
+}
+.dialogue-stage.is-opening .dialogue-portrait.player,
+.dialogue-stage.is-opening .dialogue-portrait.npc{
+  animation:none!important;
+}
+.dialogue-player-img,.dialogue-npc-img{
+  transform:translate3d(-50%,0,0) scaleX(var(--portrait-side));
+  backface-visibility:hidden;
+  image-rendering:auto;
+}
+.stage.dialogue-choice-camera .paper-sky,
+.stage.dialogue-choice-camera .paper-backdrop,
+.stage.dialogue-choice-camera .paper-stage-floor,
+.stage.dialogue-choice-camera .road-layer,
+.stage.dialogue-choice-camera .rear-layer,
+.stage.dialogue-choice-camera .front-layer,
+.stage.dialogue-choice-camera .map-layer,
+.stage.dialogue-choice-camera .entity-layer{
+  translate:2vw -1.2vh;
+  scale:1.035;
+}
+.dialogue-stage.is-choice .dialogue-portrait.npc{
+  opacity:.055;
+  transform:translate3d(24vw,2vh,0) rotate(3deg) scale(.74);
+}
+.dialogue-stage.is-choice .dialogue-portrait.player{
+  transform:translate3d(35vw,1vh,0) rotate(.15deg) scale(1);
+}
+.dialogue-stage.is-choice .dialogue-portrait.player .dialogue-puppet{
+  animation:dialogueChoiceBreath 3.2s ease-in-out infinite;
+}
+@keyframes dialogueChoiceBreath{
+  0%,100%{transform:translateX(-50%) translateY(0) rotate(-.12deg)}
+  50%{transform:translateX(-50%) translateY(-4px) rotate(.12deg)}
+}
+.dialogue-choices{
+  transition:opacity .16s ease .04s;
+}
+.dialogue-choice.pos-top{
+  left:50%;top:9%;width:min(32vw,400px);transform:translateX(-50%);
+}
+.dialogue-choice.pos-left{
+  left:6%;right:auto;top:40%;width:min(26vw,350px);
+}
+.dialogue-choice.pos-right{
+  right:6%;left:auto;top:40%;width:min(26vw,350px);
+}
+.dialogue-choice.pos-top:hover,.dialogue-choice.pos-top:active{
+  transform:translateX(-50%) translateY(-2px) scale(1.015);
+}
+@media(pointer:coarse){
+  .stage .paper-sky,.stage .paper-backdrop,.stage .paper-stage-floor,
+  .stage .road-layer,.stage .rear-layer,.stage .front-layer,.stage .map-layer,.stage .entity-layer{
+    transition:translate .30s cubic-bezier(.22,.72,.20,1);
+  }
+  .stage.dialogue-choice-camera .paper-sky,
+  .stage.dialogue-choice-camera .paper-backdrop,
+  .stage.dialogue-choice-camera .paper-stage-floor,
+  .stage.dialogue-choice-camera .road-layer,
+  .stage.dialogue-choice-camera .rear-layer,
+  .stage.dialogue-choice-camera .front-layer,
+  .stage.dialogue-choice-camera .map-layer,
+  .stage.dialogue-choice-camera .entity-layer{
+    translate:0 -1vh;
+    scale:1;
+  }
+  .dialogue-stage.is-choice .dialogue-portrait.player{
+    transform:translate3d(35vw,0,0) scale(.98);
+  }
+  .dialogue-choice.pos-top{top:max(8%,46px)}
+  .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:40%}
+}
+@media(max-height:520px){
+  .dialogue-stage.is-choice .dialogue-portrait.player{
+    transform:translate3d(34vw,-1vh,0) scale(.94);
+  }
+  .dialogue-choice.pos-top{top:max(7%,28px)}
+  .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:39%}
+}
+
 </style>
 </head>
 <body>
@@ -1673,7 +1780,7 @@ button{cursor:pointer}
     <div id="dialoguePlayerPortrait" class="dialogue-portrait player" aria-hidden="true">
       <div class="dialogue-stick"></div>
       <div class="dialogue-puppet">
-        <img id="dialoguePlayerArt" class="dialogue-player-img" alt="旅人立绘" decoding="async" draggable="false">
+        <img id="dialoguePlayerArt" class="dialogue-player-img" alt="旅人立绘" decoding="sync" fetchpriority="high" draggable="false">
       </div>
       <div id="dialoguePlayerName" class="dialogue-nameplate">旅人</div>
     </div>
@@ -1681,7 +1788,7 @@ button{cursor:pointer}
     <div id="dialogueNpcPortrait" class="dialogue-portrait npc" aria-hidden="true">
       <div class="dialogue-stick"></div>
       <div class="dialogue-puppet">
-        <img id="dialogueNpcArt" class="dialogue-npc-img" alt="白翼引路人立绘" decoding="async" draggable="false">
+        <img id="dialogueNpcArt" class="dialogue-npc-img" alt="白翼引路人立绘" decoding="sync" fetchpriority="high" draggable="false">
       </div>
       <div id="dialogueNpcName" class="dialogue-nameplate">村口老匠</div>
     </div>
@@ -1930,7 +2037,7 @@ button{cursor:pointer}
   </div>
 </section>
 
-<script src="./assets/dialogue/player-portrait.js?v=2"></script>
+<script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
 <script>
 /* -------------------- WORLD -------------------- */
@@ -2560,26 +2667,36 @@ function worldTimeName(minutes=visibleClockMinutes()){
 function celestialArcPosition(minutes,rise,set){
   const visibleSpan=modDay(set-rise)||DAY_MINUTES;
   const elapsed=modDay(minutes-rise);
+  const radius=Math.min(VIEW_W*.46,VIEW_H*.66);
+  const cx=VIEW_W*.50;
+  const cy=VIEW_H*.74;
+  let theta,above;
   if(elapsed<=visibleSpan){
-    const t=elapsed/visibleSpan;
-    return {x:-8+116*t,y:78-Math.sin(Math.PI*t)*66,above:true};
+    theta=Math.PI*(elapsed/visibleSpan);
+    above=true;
+  }else{
+    const hiddenSpan=Math.max(1,DAY_MINUTES-visibleSpan);
+    theta=Math.PI+Math.PI*((elapsed-visibleSpan)/hiddenSpan);
+    above=false;
   }
-  const hiddenSpan=DAY_MINUTES-visibleSpan;
-  const t=(elapsed-visibleSpan)/Math.max(1,hiddenSpan);
-  return {x:108-116*t,y:78+Math.sin(Math.PI*t)*24,above:false};
+  return {
+    x:cx-radius*Math.cos(theta),
+    y:cy-radius*Math.sin(theta),
+    above
+  };
 }
 let lastCelestialRender=-Infinity;
 function updateCelestialVisuals(force=false){
   const now=performance.now();
-  if(!force&&now-lastCelestialRender<250)return;
+  if(!force&&now-lastCelestialRender<50)return;
   lastCelestialRender=now;
   const minutes=visibleClockMinutes();
   const sun=celestialArcPosition(minutes,330,1110);
   const moon=celestialArcPosition(minutes,1050,390);
-  worldEl.style.setProperty('--sun-x',sun.x.toFixed(3)+'%');
-  worldEl.style.setProperty('--sun-y',sun.y.toFixed(3)+'%');
-  worldEl.style.setProperty('--moon-x',moon.x.toFixed(3)+'%');
-  worldEl.style.setProperty('--moon-y',moon.y.toFixed(3)+'%');
+  worldEl.style.setProperty('--sun-x',sun.x.toFixed(2)+'px');
+  worldEl.style.setProperty('--sun-y',sun.y.toFixed(2)+'px');
+  worldEl.style.setProperty('--moon-x',moon.x.toFixed(2)+'px');
+  worldEl.style.setProperty('--moon-y',moon.y.toFixed(2)+'px');
 }
 function updateDayNightVisuals(force=false){
   const now=performance.now();
@@ -3343,7 +3460,11 @@ function setEnemyVisual(e,force=false){
     e.el.style.display=visible?'':'none';
   }
   if(!visible)return;
-  if(force||e._renderX!==e.x){e._renderX=e.x;e.el.style.left=(e.x-visualOriginX)+'px'}
+  if(force||e._renderX!==e.x||e._renderOrigin!==visualOriginX){
+    e._renderX=e.x;
+    e._renderOrigin=visualOriginX;
+    e.el.style.setProperty('--enemy-x',(e.x-visualOriginX).toFixed(2)+'px');
+  }
   if(force||e._renderFacing!==e.facing){e._renderFacing=e.facing;e.el.style.setProperty('--enemy-facing',e.facing)}
   if(force||e._renderHp!==e.hp){e._renderHp=e.hp;e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%'}
   if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
@@ -3562,14 +3683,11 @@ function openDialogue(npc){
   dialogueStage.setAttribute('aria-hidden','false');
   worldEl.classList.add('dialogue-active');
   clearDialogueBubbles();
-  const beginEntrance=()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>{
     if(!dialogueState.open)return;
     dialogueStage.classList.remove('is-entering');
-    dialogueStage.classList.add('is-opening');
     showDialogueOpening();
-    dialogueOpeningTimer=setTimeout(()=>dialogueStage.classList.remove('is-opening'),1180);
-  }));
-  dialoguePortraitDecode.then(beginEntrance,beginEntrance);
+  });
   return true;
 }
 function closeDialogue({immediate=false}={}){
@@ -3917,11 +4035,13 @@ function frame(now){
 
   let combatTick=false;
   if(hasNearbyCombat(now)){
-    combatAccumulator+=dt;
-    if(combatAccumulator>=1/30){
-      const step=Math.min(combatAccumulator,.066);
-      combatAccumulator=0;
-      updateCombat(step,true);
+    const fixedStep=1/60;
+    combatAccumulator=Math.min(combatAccumulator+dt,.05);
+    let combatSteps=0;
+    while(combatAccumulator>=fixedStep&&combatSteps<3){
+      updateCombat(fixedStep,true);
+      combatAccumulator-=fixedStep;
+      combatSteps++;
       combatTick=true;
     }
   }else{
