@@ -2290,22 +2290,31 @@ function refreshRoadW(){
 }
 roadTile.addEventListener('load',refreshRoadW);
 let viewportRebuildTimer=0;
-function handleViewportChange(){
-  const groundChanged=syncViewportMetrics();
+let viewportSyncRaf=0;
+function flushViewportChange(){
+  viewportSyncRaf=0;
+  const change=syncViewportMetrics();
+  if(!change.sizeChanged&&!change.groundChanged&&!change.scaleChanged)return;
   refreshRoadW();
-  if(groundChanged){
+  if(change.groundChanged||change.sizeChanged){
     clearTimeout(viewportRebuildTimer);
-    viewportRebuildTimer=setTimeout(()=>{buildMapVisuals();renderWorld(true);if(worldMapOverlay.classList.contains('is-open'))drawWorldMap()},70);
+    viewportRebuildTimer=setTimeout(()=>{
+      buildMapVisuals();
+      renderWorld(true);
+      if(worldMapOverlay.classList.contains('is-open'))drawWorldMap();
+    },90);
   }else{
     renderWorld(true);
-    if(worldMapOverlay.classList.contains('is-open'))drawWorldMap();
   }
+}
+function handleViewportChange(){
+  if(viewportSyncRaf)return;
+  viewportSyncRaf=requestAnimationFrame(flushViewportChange);
 }
 addEventListener('resize',handleViewportChange,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(handleViewportChange,80),{passive:true});
 addEventListener('pageshow',()=>{handleViewportChange();setTimeout(handleViewportChange,120)},{passive:true});
 window.visualViewport?.addEventListener('resize',handleViewportChange,{passive:true});
-window.visualViewport?.addEventListener('scroll',handleViewportChange,{passive:true});
 refreshRoadW();
 
 function posMod(v,m){return ((v%m)+m)%m}
