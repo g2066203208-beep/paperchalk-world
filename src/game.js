@@ -1562,7 +1562,7 @@ function setPlayerCrouching(active,{force=false}={}){
     playerCrouching=true;
     actorEl.classList.add('is-crouching');
     crouchBtn?.classList.add('is-active');
-    syncPlayerActionState(true);
+    syncPlayerActionState();
     return true;
   }
   if(!playerCrouching)return true;
@@ -1570,7 +1570,7 @@ function setPlayerCrouching(active,{force=false}={}){
   playerCrouching=false;
   actorEl.classList.remove('is-crouching');
   crouchBtn?.classList.remove('is-active');
-  syncPlayerActionState(true);
+  syncPlayerActionState();
   return true;
 }
 function updateCrouchState(){
@@ -1640,13 +1640,17 @@ function supportAt(x,y,tolerance=3){
   return support;
 }
 function performJump(){
-  if(playerCrouching)setPlayerCrouching(false,{force:true});
+  if(playerCrouching){
+    playerCrouching=false;
+    actorEl.classList.remove('is-crouching');
+    crouchBtn?.classList.remove('is-active');
+  }
   playerVy=JUMP_SPEED;
   playerGrounded=false;
   coyoteTimer=0;
   jumpBufferTimer=0;
   actorEl.classList.add('is-jumping');
-  syncPlayerActionState(true);
+  syncPlayerActionState();
 }
 function updatePlayerVertical(dt,interactive){
   if(!interactive)return;
@@ -1740,7 +1744,6 @@ function debugAttack(){return startPlayerAttack(true)}
 function setCrouchControl(active=true){
   mobileCrouch=!!active;
   updateCrouchState();
-  syncPlayerActionState(true);
   renderWorld(true);
   return playerCrouching;
 }
