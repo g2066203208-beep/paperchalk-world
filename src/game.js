@@ -504,6 +504,7 @@ let exteriorReturnX=MAP_SPAWN_X;
 let exteriorReturnY=0;
 let stageHeldActorX=0;
 let stageHeldPlayerY=0;
+let lastSceneDoorAnchorErrorX=0;
 const APARTMENT_CULL_MARGIN=180;
 let apartmentDisplayWidth=780;
 let midgroundApartmentVisible=null;
@@ -690,6 +691,7 @@ function enterApartment(){
     worldEl.classList.add('scene-interior','interior-stage-in','stage-transitioning');
     interiorScene?.setAttribute('aria-hidden','false');
     renderWorld(true);
+    lastSceneDoorAnchorErrorX=interiorExitX()-actorX;
     updateNpcPrompt();
 
     // First frame: the new room doorway is exactly under the player.
@@ -730,6 +732,7 @@ function exitApartment(){
 
     worldEl.classList.add('exterior-stage-in','stage-transitioning');
     renderWorld(true);
+    lastSceneDoorAnchorErrorX=apartmentDoorScreenX()-actorX;
     updateNpcPrompt();
 
     setTimeout(()=>{ void tweenExteriorCameraToPlayerCenter(620); },120);
@@ -1677,6 +1680,7 @@ window.PaperchalkScene={
   get interiorSceneShiftX(){return interiorSceneShiftX},
   get playerScreenX(){return actorX},
   get centerX(){return VIEW_W*.5},
+  get lastDoorAnchorErrorX(){return lastSceneDoorAnchorErrorX},
   get interiorDoorGroundY(){return Math.max(0,MAP_GROUND_SCREEN_Y-8)},
   get interiorX(){return interiorPlayerX},
   get depthLayers(){return {far:3,mid:4,player:5,near:6}}
