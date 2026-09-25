@@ -69,6 +69,11 @@ assert(game.includes("crouch:Object.freeze({scale:.76,sourceFacing:1})"), "Crouc
 assert(game.includes("function startPlayerPaperFlip"), "Paper-puppet action flip transition missing");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
+assert(!fs.existsSync("assets/road.webp"), "Legacy road image asset must stay removed");
+assert(html.includes('class="road-tile voxel-ground-tile"'), "Voxel ground tile missing");
+assert(css.includes(".voxel-ground-tile"), "Voxel ground CSS missing");
+assert(css.includes("--ground-screen-y"), "Responsive voxel ground line missing");
+assert(game.includes("setProperty('--ground-screen-y'"), "Physics ground is not wired to voxel visual surface");
 assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
