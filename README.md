@@ -35,3 +35,17 @@ https://g2066203208-beep.github.io/paperchalk-world/
 ## 回归测试
 
 主分支包含静态 Web Smoke Test 与真实 Chrome Core Runtime Regression，用于验证账号存档、生命 HUD、地图物理、即时战斗、调试面板、背包、地图进度及 NPC 等核心链路。
+
+
+## 角色自动动画工具链
+
+游戏侧已加入独立的 manifest 驱动 PaperPuppet 运行时，用于承接 AI 分层角色并保持角色视觉与战斗 / 碰撞 / 对话逻辑解耦。
+
+参考与致谢：
+
+- Auto-live2D-beta（MIT）：https://github.com/lTwTlol/Auto-live2D-beta
+- psd2live 原作者项目（GPL-3.0）：https://github.com/tsunehimatoi/psd2live
+- Auto_Vtb_beta（基于 psd2live 的桌面自动化工具）：https://github.com/lTwTlol/Auto_Vtb_beta
+- See-Through（角色单图分层）：https://github.com/shitagaki-lab/see-through
+
+许可证边界：游戏运行时不直接复制 GPL 的 psd2live / Auto_Vtb_beta 源码；它们仅作为离线角色制作与方法参考。PaperPuppet 游戏侧实现保持独立，未来的 See-Through 分层 PNG 通过 `assets/puppets/*/manifest.json` 接入。
