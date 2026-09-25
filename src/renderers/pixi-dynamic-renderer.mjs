@@ -176,7 +176,9 @@ function renderPlayer(frame,now){
   if(!node)return;
 
   const action=p.action||'idle';
-  const footY=v.height-v.groundY-p.y;
+  // Player is a fixed screen anchor. Vertical simulation moves the world,
+  // not the player sprite.
+  const footY=v.height-v.groundY;
   if(node.isPuppet){
     const dt=Math.min(.05,Math.max(0,(now-node.lastNow)/1000));
     node.lastNow=now;
@@ -284,7 +286,7 @@ function renderEnemies(frame,now){
       rotation-=data.facing*.06*(data.hitstun/.22);
     }
 
-    node.root.position.set(screenX+offsetX,v.height-v.groundY+bob);
+    node.root.position.set(screenX+offsetX,v.height-v.groundY+frame.player.y+bob);
     node.sprite.scale.x=Math.abs(node.scale.x)*data.facing;
     node.sprite.scale.y=Math.abs(node.scale.y);
     node.root.alpha=data.alive?1:.18;
