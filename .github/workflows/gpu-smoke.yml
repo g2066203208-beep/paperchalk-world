@@ -6,6 +6,7 @@ on:
     paths:
       - "index.html"
       - "src/**"
+      - "assets/puppets/**"
       - "styles/**"
       - "vendor/pixi/**"
       - "tests/gpu-smoke.mjs"
@@ -35,6 +36,8 @@ jobs:
       - name: Validate renderer syntax and vendor
         run: |
           node --check src/renderers/pixi-dynamic-renderer.mjs
+          node --check src/puppet/paper-puppet-runtime.mjs
+          node -e "JSON.parse(require('fs').readFileSync('assets/puppets/player/manifest.json','utf8'))"
           test -s vendor/pixi/pixi-8.21.0.mjs
           test -s vendor/pixi/LICENSE
       - name: Install browser driver
