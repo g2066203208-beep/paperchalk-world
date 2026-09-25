@@ -16,6 +16,8 @@ let initPromise=null;
 let activeMode='dom';
 let requestedMode='auto';
 let worldSessionActive=false;
+let visualRaf=0;
+let lastVisualRender=0;
 let lastViewportW=-1,lastViewportH=-1;
 const forcedRendererQuery=new URL(location.href).searchParams.has('renderer');
 
@@ -303,6 +305,32 @@ function renderFrame(frame=latestFrame,now=performance.now()){
   stats.maxRenderMs=Math.max(stats.maxRenderMs,elapsed);
   stats.frameCount++;
 }
+function stopVisualLoop(){
+  if(visualRaf)cancelAnimationFrame(visualRaf);
+  visualRaf=0;
+  lastVisualRender=0;
+}
+function visualLoop(now){
+  if(!worldSessionActive||activeMode!=='pixi'){
+    visualRaf=0;
+    lastVisualRender=0;
+    return;
+  }
+  // Layered paper-puppet physics (hair/skirt/breath) is visual state, not
+  // simulation state. Keep it independent of the allocation-free game loop.
+  // Phones are capped at 30 fps to avoid recreating the heat/lag problem that
+  // prompted the renderer split; desktop can use 60 fps.
+  const interval=coarsePointer?1000/30:1000/60;
+  if(!lastVisualRender||now-lastVisualRender>=interval){
+    lastVisualRender=now;
+    renderFrame(latestFrame,now);
+  }
+  visualRaf=requestAnimationFrame(visualLoop);
+}
+function startVisualLoop(){
+  if(visualRaf||!worldSessionActive||activeMode!=='pixi')return;
+  visualRaf=requestAnimationFrame(visualLoop);
+}
 async function ensurePixi(){
   if(initPromise)return initPromise;
   initPromise=(async()=>{
@@ -377,7 +405,7 @@ async function ensurePixi(){
       }
       // The simulation owns the only RAF loop. Rendering here avoids a second ticker
       // and guarantees visual updates are synchronized to authoritative game state.
-      if(worldSessionActive&&activeMode==='pixi')renderFrame(frame,performance.now());
+      if(worldSessionActive&&activeMode==='pixi'&&!visualRaf)renderFrame(frame,performance.now());
     });
 
     stats.ready=true;
@@ -406,6 +434,7 @@ async function setMode(value,{persist=true}={}){
       world.classList.add('renderer-pixi-dynamic');
       activeMode='pixi';
       if(worldSessionActive||forcedRendererQuery)renderFrame(latestFrame,performance.now());
+      startVisualLoop();
       dispatchMode();
       return activeMode;
     }catch{
@@ -418,6 +447,7 @@ async function setMode(value,{persist=true}={}){
     }
   }
 
+  stopVisualLoop();
   world.classList.remove('renderer-pixi-dynamic');
   host.hidden=true;
   activeMode='dom';
@@ -432,11 +462,13 @@ async function activateWorld(){
   if(mode==='pixi'){
     host.hidden=false;
     renderFrame(latestFrame,performance.now());
+    startVisualLoop();
   }
   return mode;
 }
 function suspendWorld(){
   worldSessionActive=false;
+  stopVisualLoop();
   host.hidden=true;
 }
 
@@ -464,5 +496,6 @@ if(forcedRendererQuery){
 window.addEventListener('paperchalk-world-enter',()=>activateWorld());
 window.addEventListener('paperchalk-world-leave',()=>suspendWorld());
 window.addEventListener('pagehide',()=>{
+  stopVisualLoop();
   try{unsubscribe?.()}catch{}
 });
