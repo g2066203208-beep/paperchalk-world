@@ -530,19 +530,42 @@ try{
     JSON.stringify(exteriorReveal));
 
   await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
-  const exitFollowBefore=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
+  const exteriorSettled=await page.evaluate(()=>{
+    const snap=window.PaperchalkRuntime.getSnapshot();
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {
+      cameraX:snap.camera.x,
+      playerWorldX:snap.player.x,
+      playerScreenX:snap.player.screenX,
+      doorX:window.PaperchalkScene.doorScreenX,
+      anchorX:window.PaperchalkScene.playerScreenAnchorX,
+      rect:{x:r.left,y:r.top}
+    };
+  });
   const expectedExitCamera=Math.max(
     0,
     Math.min(
-      exitFollowBefore.map.width-exitFollowBefore.viewport.width,
-      exitFollowBefore.player.x-exitFollowBefore.viewport.width*.5
+      window.PaperchalkRuntime.worldData.map.width-window.PaperchalkRuntime.worldData.viewport.width,
+      exteriorSettled.playerWorldX-exteriorSettled.anchorX
     )
   );
-  check('Exterior world settles around the fixed player screen anchor',
-    Math.abs(exitFollowBefore.camera.x-expectedExitCamera)<1&&
-    Math.abs(exitFollowBefore.player.screenX-exitFollowBefore.viewport.width*.5)<1,
-    JSON.stringify({camera:exitFollowBefore.camera.x,expectedExitCamera,player:exitFollowBefore.player}));
+  check('Exterior door remains pinned to the player after the exit animation finishes',
+    Math.abs(exteriorSettled.doorX-exteriorSettled.playerScreenX)<1&&
+    Math.abs(exteriorSettled.doorX-exteriorReveal.doorX)<1,
+    JSON.stringify({exteriorReveal,exteriorSettled}));
+  check('Exit has no secondary camera drift after exterior reveal',
+    Math.abs(exteriorSettled.cameraX-exteriorReveal.cameraX)<1,
+    JSON.stringify({revealCamera:exteriorReveal.cameraX,settledCamera:exteriorSettled.cameraX}));
+  check('Player stays fixed for the entire exit transition',
+    Math.abs(exteriorSettled.rect.x-exitPlayerBefore.rect.x)<1&&
+    Math.abs(exteriorSettled.rect.y-exitPlayerBefore.rect.y)<1,
+    JSON.stringify({exitPlayerBefore,exteriorSettled}));
+  check('Exterior world is internally rebased to the fixed player anchor',
+    Math.abs(exteriorSettled.cameraX-expectedExitCamera)<1&&
+    Math.abs(exteriorSettled.playerScreenX-exteriorSettled.anchorX)<1,
+    JSON.stringify({expectedExitCamera,exteriorSettled}));
 
+  const exitFollowBefore=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
   await page.keyboard.down('ArrowRight');
   await page.waitForTimeout(90);
   await page.keyboard.up('ArrowRight');
