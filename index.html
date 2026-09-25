@@ -40,6 +40,7 @@
     </div>
   </div>
   <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
+  <div id="pixiEntityLayer" class="pixi-entity-layer" hidden aria-hidden="true"></div>
   <div class="actor">
     <div class="foot-shadow" aria-hidden="true"></div>
     <img class="walker" src="./assets/traveler.webp?v=traveler-r3" alt="旅行者">
@@ -331,5 +332,6 @@
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
 <script src="./src/game.js"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs"></script>
 </body>
 </html>
