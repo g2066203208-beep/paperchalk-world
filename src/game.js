@@ -211,6 +211,74 @@ WORLD_ROUTES.forEach((route,i)=>{
 });
 MAP_TERRAIN.push(...FORK_SOLIDS);
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
+
+/* 128px editable world blocks. Negative rows are the original ground; positive rows are player-built. */
+const WORLD_BLOCK_SIZE=128;
+const WORLD_BLOCK_DEPTH=2;
+const WORLD_BLOCK_START_COUNT=6;
+const removedWorldBlocks=new Set();
+const placedWorldBlocks=new Set();
+let blockInventory=WORLD_BLOCK_START_COUNT;
+let worldBlockRenderSignature='';
+function worldBlockKey(gx,gy){return gx+','+gy}
+function parseWorldBlockKey(key){
+  const m=/^(-?\d+),(-?\d+)$/.exec(String(key));
+  return m?{gx:Number(m[1]),gy:Number(m[2])}:null;
+}
+function worldBlockIsDefault(gx,gy){
+  return gx>=0&&gx*WORLD_BLOCK_SIZE<MAP_WIDTH&&gy<=-1&&gy>=-WORLD_BLOCK_DEPTH;
+}
+function isWorldBlockFilled(gx,gy){
+  const key=worldBlockKey(gx,gy);
+  if(worldBlockIsDefault(gx,gy))return !removedWorldBlocks.has(key);
+  return placedWorldBlocks.has(key);
+}
+function setWorldBlockFilled(gx,gy,filled){
+  const key=worldBlockKey(gx,gy);
+  if(worldBlockIsDefault(gx,gy)){
+    if(filled)removedWorldBlocks.delete(key); else removedWorldBlocks.add(key);
+  }else{
+    if(filled)placedWorldBlocks.add(key); else placedWorldBlocks.delete(key);
+  }
+}
+function appendWorldBlockSolids(out,minX,maxX){
+  const first=Math.max(0,Math.floor(minX/WORLD_BLOCK_SIZE)-1);
+  const last=Math.min(Math.ceil(MAP_WIDTH/WORLD_BLOCK_SIZE)-1,Math.floor(maxX/WORLD_BLOCK_SIZE)+1);
+  for(let gx=first;gx<=last;gx++){
+    for(let gy=-WORLD_BLOCK_DEPTH;gy<=-1;gy++){
+      if(!isWorldBlockFilled(gx,gy))continue;
+      out.push({id:'world-block:'+worldBlockKey(gx,gy),x:gx*WORLD_BLOCK_SIZE,y:gy*WORLD_BLOCK_SIZE,w:WORLD_BLOCK_SIZE,h:WORLD_BLOCK_SIZE,_worldBlock:true});
+    }
+  }
+  for(const key of placedWorldBlocks){
+    const p=parseWorldBlockKey(key);
+    if(!p)continue;
+    const x=p.gx*WORLD_BLOCK_SIZE;
+    if(x+WORLD_BLOCK_SIZE<=minX||x>=maxX)continue;
+    out.push({id:'world-block:'+key,x,y:p.gy*WORLD_BLOCK_SIZE,w:WORLD_BLOCK_SIZE,h:WORLD_BLOCK_SIZE,_worldBlock:true});
+  }
+}
+function blockWorldSnapshot(){
+  return {removed:[...removedWorldBlocks],placed:[...placedWorldBlocks],count:blockInventory};
+}
+function loadBlockWorld(raw){
+  removedWorldBlocks.clear();placedWorldBlocks.clear();
+  const data=raw&&typeof raw==='object'?raw:{};
+  const sanitize=(arr,minGy,maxGy)=>{
+    const out=[];
+    for(const key of Array.isArray(arr)?arr.slice(0,5000):[]){
+      const p=parseWorldBlockKey(key);
+      if(!p||p.gx<0||p.gx*WORLD_BLOCK_SIZE>=MAP_WIDTH||p.gy<minGy||p.gy>maxGy)continue;
+      out.push(worldBlockKey(p.gx,p.gy));
+    }
+    return out;
+  };
+  sanitize(data.removed,-WORLD_BLOCK_DEPTH,-1).forEach(k=>removedWorldBlocks.add(k));
+  sanitize(data.placed,-WORLD_BLOCK_DEPTH+1,8).forEach(k=>placedWorldBlocks.add(k));
+  blockInventory=Math.max(0,Math.min(999,Math.floor(Number(data.count))));
+  if(!Number.isFinite(Number(data.count)))blockInventory=WORLD_BLOCK_START_COUNT;
+  worldBlockRenderSignature='';
+}
 let mapNoticeTimer=null;
 let mapDebugBuilt=false;
 const VISUAL_WINDOW_STEP=3000;
@@ -553,6 +621,7 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
+const worldBlockTrack=document.getElementById('worldBlockTrack');
 const terrainTrack=document.getElementById('terrainTrack');
 const mapObjectTrack=document.getElementById('mapObjectTrack');
 const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
@@ -744,6 +813,9 @@ const interactBtn=document.getElementById('interactBtn');
 const crouchBtn=document.getElementById('crouchBtn');
 const jumpBtn=document.getElementById('jumpBtn');
 const attackBtn=document.getElementById('attackBtn');
+const mineBtn=document.getElementById('mineBtn');
+const placeBtn=document.getElementById('placeBtn');
+const blockCount=document.getElementById('blockCount');
 const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
 const playerAttackDebug=document.getElementById('playerAttackDebug');
 const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
@@ -783,6 +855,7 @@ function syncViewportMetrics(){
 function applyWorldDimensions(){
   const width=VISUAL_WINDOW_SPAN+'px';
   if(mapTrack)mapTrack.style.width=width;
+  if(worldBlockTrack)worldBlockTrack.style.width=width;
   if(entityTrack)entityTrack.style.width=width;
 }
 syncViewportMetrics();
@@ -1543,6 +1616,7 @@ function activeSolidRects(centerX=playerWorldX,radius=900){
       out.push(r);
     }
   }
+  appendWorldBlockSolids(out,minX,maxX);
   return out;
 }
 function horizontalOverlapAt(centerX,halfW,rect){return centerX+halfW>rect.x&&centerX-halfW<rect.x+rect.w}
@@ -1632,7 +1706,7 @@ function movePlayerHorizontal(dx){
   return playerWorldX-oldX;
 }
 function supportAt(x,y,tolerance=3){
-  let support=Math.abs(y)<=tolerance?0:null;
+  let support=null;
   for(const r of activeSolidRects()){
     const top=r.y+r.h;
     if(horizontalOverlapAt(x,PLAYER_BODY.halfW-3,r)&&Math.abs(y-top)<=tolerance){
@@ -1680,7 +1754,6 @@ function updatePlayerVertical(dt,interactive){
         if(landing===null||top>landing)landing=top;
       }
     }
-    if(oldY>=0&&nextY<=0)landing=Math.max(0,landing??0);
     if(landing!==null){
       playerY=landing;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;actorEl.classList.remove('is-jumping');
       if(jumpBufferTimer>0)performJump();
@@ -1697,8 +1770,8 @@ function updatePlayerVertical(dt,interactive){
       }
     }
   }
-  playerY=Math.max(-80,nextY);
-  if(playerY<-60)teleportTo(MAP_SPAWN_X,{notice:'跌落后回到村口'});
+  playerY=Math.max(-WORLD_BLOCK_SIZE*2.6,nextY);
+  if(playerY<-WORLD_BLOCK_SIZE*2.15)teleportTo(MAP_SPAWN_X,{notice:'坠入深坑后回到村口'});
 }
 let lastAppliedRouteIndex=-1;
 function applyCurrentRouteTheme(force=false){
@@ -1719,6 +1792,80 @@ function applyCurrentRouteTheme(force=false){
     else if(!worldEl.classList.contains('scene-shifting'))paperBackdrop.dataset.scene=biome;
   }
 }
+function updateBlockCounter(){
+  if(blockCount)blockCount.textContent=String(blockInventory);
+  placeBtn?.classList.toggle('is-empty',blockInventory<=0);
+  placeBtn?.setAttribute('aria-label','放方块，剩余 '+blockInventory);
+}
+function renderWorldBlocks(force=false){
+  if(!worldBlockTrack)return;
+  const first=Math.max(0,Math.floor((worldX-256)/WORLD_BLOCK_SIZE));
+  const last=Math.min(Math.ceil(MAP_WIDTH/WORLD_BLOCK_SIZE)-1,Math.floor((worldX+VIEW_W+256)/WORLD_BLOCK_SIZE));
+  const signature=[first,last,visualOriginX,MAP_GROUND_SCREEN_Y,removedWorldBlocks.size,placedWorldBlocks.size].join(':');
+  if(!force&&signature===worldBlockRenderSignature)return;
+  worldBlockRenderSignature=signature;
+  const frag=document.createDocumentFragment();
+  for(let gx=first;gx<=last;gx++){
+    for(let gy=-WORLD_BLOCK_DEPTH;gy<=2;gy++){
+      if(!isWorldBlockFilled(gx,gy))continue;
+      const el=document.createElement('div');
+      el.className='world-block'+(placedWorldBlocks.has(worldBlockKey(gx,gy))?' is-placed':'')+(!isWorldBlockFilled(gx,gy+1)?' is-surface':'');
+      el.dataset.blockKey=worldBlockKey(gx,gy);
+      el.style.left=(gx*WORLD_BLOCK_SIZE-visualOriginX)+'px';
+      el.style.bottom=(MAP_GROUND_SCREEN_Y+gy*WORLD_BLOCK_SIZE)+'px';
+      el.style.setProperty('--block-road-x',(-(((gx*WORLD_BLOCK_SIZE)%512+512)%512))+'px');
+      frag.appendChild(el);
+    }
+  }
+  worldBlockTrack.replaceChildren(frag);
+}
+function blockTarget(){
+  const gx=Math.floor(playerWorldX/WORLD_BLOCK_SIZE)+(facing>=0?1:-1);
+  const footGy=Math.round(playerY/WORLD_BLOCK_SIZE);
+  return {gx,footGy};
+}
+function mineWorldBlock(force=false){
+  if(!force&&!worldInteractive())return false;
+  const {gx,footGy}=blockTarget();
+  let gy=footGy;
+  if(!isWorldBlockFilled(gx,gy))gy=footGy-1;
+  if(!isWorldBlockFilled(gx,gy)){
+    showMapNotice('这里没有可挖的方块',650);return false;
+  }
+  setWorldBlockFilled(gx,gy,false);
+  blockInventory=Math.min(999,blockInventory+1);
+  updateBlockCounter();renderWorldBlocks(true);
+  showMapNotice('挖出方块 · 现有 '+blockInventory,650);
+  saveWorldState();
+  return true;
+}
+function placeWorldBlock(force=false){
+  if(!force&&!worldInteractive())return false;
+  if(blockInventory<=0){showMapNotice('没有方块可放',650);return false}
+  const {gx,footGy}=blockTarget();
+  let gy=!isWorldBlockFilled(gx,footGy-1)?footGy-1:footGy;
+  if(isWorldBlockFilled(gx,gy)){showMapNotice('前方这一格已经有方块',650);return false}
+  const rect={x:gx*WORLD_BLOCK_SIZE,y:gy*WORLD_BLOCK_SIZE,w:WORLD_BLOCK_SIZE,h:WORLD_BLOCK_SIZE};
+  const body={x:playerWorldX-PLAYER_BODY.halfW,y:playerY,w:PLAYER_BODY.halfW*2,h:playerBodyHeight()};
+  if(rectsOverlap(rect,body)){showMapNotice('不能把方块放在自己身上',650);return false}
+  for(const r of activeSolidRects(rect.x+WORLD_BLOCK_SIZE/2,WORLD_BLOCK_SIZE)){
+    if(r._worldBlock)continue;
+    if(rectsOverlap(rect,r)){showMapNotice('这里被其他地形占住了',650);return false}
+  }
+  setWorldBlockFilled(gx,gy,true);
+  blockInventory--;
+  updateBlockCounter();renderWorldBlocks(true);
+  showMapNotice('放置方块 · 剩余 '+blockInventory,650);
+  saveWorldState();
+  return true;
+}
+window.PaperchalkBlocks={
+  mine:()=>mineWorldBlock(true),place:()=>placeWorldBlock(true),
+  get count(){return blockInventory},
+  get removed(){return [...removedWorldBlocks]},
+  get placed(){return [...placedWorldBlocks]}
+};
+
 function updateCamera(){
   applyCurrentRouteTheme();
   const viewW=VIEW_W;
@@ -2367,6 +2514,7 @@ function renderWorld(force=false){
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
+  renderWorldBlocks(force);
   updateRoadPool(sceneryX,force);
   updatePropPools(sceneryX,force);
   const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,0,0)';
@@ -2525,6 +2673,8 @@ addEventListener('keydown',e=>{
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){jumpPlayer();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
+  if(e.code==='KeyQ'){mineWorldBlock();e.preventDefault()}
+  if(e.code==='KeyR'){placeWorldBlock();e.preventDefault()}
 });
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
@@ -2548,6 +2698,9 @@ crouchBtn.addEventListener('pointercancel',releaseMobileCrouch);
 crouchBtn.addEventListener('lostpointercapture',releaseMobileCrouch);
 jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jumpPlayer()});
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
+mineBtn.addEventListener('pointerdown',e=>{e.preventDefault();mineWorldBlock()});
+placeBtn.addEventListener('pointerdown',e=>{e.preventDefault();placeWorldBlock()});
+updateBlockCounter();
 function resetJoystick(){
   joystickAxis=0;
   joystickPointer=null;
@@ -3254,6 +3407,7 @@ function defaultSave(session){
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
     mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
+    blockWorld:{removed:[],placed:[],count:WORLD_BLOCK_START_COUNT},
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
@@ -3356,6 +3510,7 @@ function saveWorldState(){
   save.actorRatio=innerWidth>0?actorX/innerWidth:.35;
   save.playerHp=playerHp;
   save.mapState={broken:[...mapState.broken],collected:[...mapState.collected],visitedRoutes:[...mapState.visitedRoutes],visitedNodes:[...mapState.visitedNodes],exitReached:mapState.exitReached};
+  save.blockWorld=blockWorldSnapshot();
   save.inventory=inventorySnapshot();
   save.updatedAt=Date.now();
   return writeSaveForSession(session,save);
@@ -3376,9 +3531,15 @@ function loadWorldState(){
   if(orientationRouteIndex!==worldZoneIndexAt(playerWorldX)){orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1}
   sceneryOffsetX=0;
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
-  playerY=Math.max(0,Number.isFinite(save.playerY)?save.playerY:0);
+  loadBlockWorld(save.blockWorld);
+  updateBlockCounter();
+  playerY=Math.max(-WORLD_BLOCK_SIZE,Number.isFinite(save.playerY)?save.playerY:0);
   playerVy=0;playerGrounded=supportAt(playerWorldX,playerY,5)!==null;
-  if(!playerGrounded){playerY=0;playerGrounded=true}
+  if(!playerGrounded){
+    const safe=supportAt(playerWorldX,0,6);
+    playerY=safe===null?0:safe;
+    playerGrounded=safe!==null;
+  }
   resetPlayerPoseState();
 
   const savedMap=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
@@ -3452,7 +3613,9 @@ authBtn.addEventListener('click',e=>{
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
       worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
-      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
+      mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;
+      removedWorldBlocks.clear();placedWorldBlocks.clear();blockInventory=WORLD_BLOCK_START_COUNT;worldBlockRenderSignature='';updateBlockCounter();
+      markRuntimeMapChanged();buildMapVisuals();renderWorldBlocks(true);
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
       playerHp=PLAYER_MAX_HP;

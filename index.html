@@ -7,10 +7,10 @@
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/dialogue/npc-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=user-road-r6" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=editable-blocks-r7" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="user-road-r6">
-<link rel="stylesheet" href="./styles/game.css?v=user-road-r6">
+<meta name="paperchalk-build" content="editable-blocks-r7">
+<link rel="stylesheet" href="./styles/game.css?v=editable-blocks-r7">
 </head>
 <body>
 
@@ -36,6 +36,7 @@
   </div>
   <div class="map-layer" aria-hidden="true">
     <div id="mapTrack" class="map-track">
+      <div id="worldBlockTrack" class="world-block-track"></div>
       <div id="terrainTrack"></div>
       <div id="mapObjectTrack"></div>
       <div id="mapLandmarkTrack"></div>
@@ -47,7 +48,7 @@
   <div class="actor" data-player-state="idle">
     <div class="foot-shadow" aria-hidden="true"></div>
     <div id="playerFlip" class="player-flip">
-      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=user-road-r6" alt="正式主角">
+      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=editable-blocks-r7" alt="正式主角">
     </div>
   </div>
   <div class="entity-layer" aria-hidden="true">
@@ -170,8 +171,10 @@
     <button id="crouchBtn" class="combat-btn" type="button" aria-label="蹲下">蹲</button>
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
     <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
+    <button id="mineBtn" class="combat-btn build-btn" type="button" aria-label="挖方块">挖</button>
+    <button id="placeBtn" class="combat-btn build-btn" type="button" aria-label="放方块">放<small id="blockCount">6</small></button>
   </div>
-  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　S/↓ 蹲下　Space/W/↑ 跳跃　J 攻击　E 交谈　M 地图</div>
+  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　S/↓ 蹲下　Space/W/↑ 跳跃　J 攻击　E 交谈　Q 挖方块　R 放方块　M 地图</div>
   <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -342,7 +345,7 @@
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
-<script src="./src/game.js?v=user-road-r6"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=user-road-r6"></script>
+<script src="./src/game.js?v=editable-blocks-r7"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=editable-blocks-r7"></script>
 </body>
 </html>
