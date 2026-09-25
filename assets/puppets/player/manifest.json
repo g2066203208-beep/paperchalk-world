@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "id": "paperchalk-player",
+  "kind": "card",
+  "note": "Compatibility manifest. Replace kind/card actionCards with layered PNG entries when See-Through/Auto-live2D assets are ready.",
+  "designSize": {
+    "w": 104,
+    "h": 156
+  },
+  "displaySize": {
+    "w": 104,
+    "h": 156
+  },
+  "actionCards": {
+    "idle": {
+      "src": "./assets/player/runtime/idle.webp?v=puppet-r1",
+      "scale": 1,
+      "sourceFacing": 1
+    },
+    "walk": {
+      "src": "./assets/player/runtime/walk.webp?v=puppet-r1",
+      "scale": 0.92,
+      "sourceFacing": -1
+    },
+    "crouch": {
+      "src": "./assets/player/runtime/crouch.webp?v=puppet-r1",
+      "scale": 0.76,
+      "sourceFacing": 1
+    },
+    "jump-up": {
+      "src": "./assets/player/runtime/jump-up.webp?v=puppet-r1",
+      "scale": 0.88,
+      "sourceFacing": 1
+    },
+    "jump-down": {
+      "src": "./assets/player/runtime/jump-down.webp?v=puppet-r1",
+      "scale": 0.86,
+      "sourceFacing": 1
+    }
+  }
+}
