@@ -2267,6 +2267,7 @@ function updateRoadPool(sceneryX,force=false){
     const x=index*roadW;
     tile.style.display=x<MAP_WIDTH+roadW?'':'none';
     tile.style.left=(x-roadPoolOriginX)+'px';
+    tile.style.setProperty('--road-tex-x',(-(((index*roadW)%512+512)%512))+'px');
   });
 }
 function ensureRoadTiles(){
