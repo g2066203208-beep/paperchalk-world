@@ -82,18 +82,18 @@ try{
   assert(Math.abs(after.simX-before.simX)>10,'enemy simulation did not advance '+JSON.stringify({before,after}));
   assert(after.snapshotRevision>0,'renderer is not receiving runtime snapshots');
 
-  // Player movement must stay synchronized with the renderer contract.
-  const px0=await page.evaluate(()=>window.PaperchalkCombat.player.x);
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(420);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(80);
+  // Deterministic player-state synchronization. Keyboard movement is already covered
+  // by Core/UI regressions; this test isolates the renderer contract from CI frame-rate/input jitter.
+  const targetPlayerX=900;
+  await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),targetPlayerX);
+  await page.waitForTimeout(140);
   const player=await page.evaluate(()=>({
     sim:window.PaperchalkCombat.player.x,
     gpu:window.PaperchalkRenderer.stats.playerWorldX,
-    screen:window.PaperchalkRenderer.stats.playerScreenX
+    screen:window.PaperchalkRenderer.stats.playerScreenX,
+    revision:window.PaperchalkRenderer.stats.snapshotRevision
   }));
-  assert(player.sim>px0+5,'player simulation did not move '+JSON.stringify({px0,player}));
+  assert(Math.abs(player.sim-targetPlayerX)<1,'player simulation did not reach deterministic target '+JSON.stringify(player));
   assert(Math.abs(player.sim-player.gpu)<1,'Pixi player state is out of sync '+JSON.stringify(player));
 
   // Renderer switching is a supported recovery path.
