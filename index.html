@@ -1827,6 +1827,25 @@ button{cursor:pointer}
   .dialogue-choice{min-height:40px!important;padding:6px 10px!important}
 }
 
+
+/* Preserve the exact speaker pose while choices appear: no portrait jump at all. */
+.dialogue-stage.is-choice.speaker-npc .dialogue-portrait.npc{
+  opacity:1!important;
+  transform:translateY(-8px) scale(1.025)!important;
+}
+.dialogue-stage.is-choice.speaker-npc .dialogue-portrait.player{
+  opacity:.68!important;
+  transform:translateY(5px) scale(.97)!important;
+}
+.dialogue-stage.is-choice.speaker-player .dialogue-portrait.player{
+  opacity:1!important;
+  transform:translateY(-8px) scale(1.025)!important;
+}
+.dialogue-stage.is-choice.speaker-player .dialogue-portrait.npc{
+  opacity:.68!important;
+  transform:translateY(5px) scale(.97)!important;
+}
+
 </style>
 </head>
 <body>
