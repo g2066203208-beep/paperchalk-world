@@ -539,13 +539,15 @@ try{
       playerScreenX:snap.player.screenX,
       doorX:window.PaperchalkScene.doorScreenX,
       anchorX:window.PaperchalkScene.playerScreenAnchorX,
+      mapWidth:snap.map.width,
+      viewportWidth:snap.viewport.width,
       rect:{x:r.left,y:r.top}
     };
   });
   const expectedExitCamera=Math.max(
     0,
     Math.min(
-      window.PaperchalkRuntime.worldData.map.width-window.PaperchalkRuntime.worldData.viewport.width,
+      exteriorSettled.mapWidth-exteriorSettled.viewportWidth,
       exteriorSettled.playerWorldX-exteriorSettled.anchorX
     )
   );
