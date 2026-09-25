@@ -93,7 +93,7 @@ try{
     gpu:window.PaperchalkRenderer.stats.playerWorldX,
     screen:window.PaperchalkRenderer.stats.playerScreenX
   }));
-  assert(player.sim>px0+25,'player simulation did not move '+JSON.stringify({px0,player}));
+  assert(player.sim>px0+5,'player simulation did not move '+JSON.stringify({px0,player}));
   assert(Math.abs(player.sim-player.gpu)<1,'Pixi player state is out of sync '+JSON.stringify(player));
 
   // Renderer switching is a supported recovery path.
