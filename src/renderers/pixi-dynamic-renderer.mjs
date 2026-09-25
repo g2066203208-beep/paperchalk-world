@@ -74,7 +74,7 @@ function makePlayer(texture){
     .fill({color:0x312519,alpha:.30});
   const sprite=new Sprite(texture);
   sprite.anchor.set(.5,1);
-  const scale=fitSprite(sprite,texture,1024,1536);
+  const scale=fitSprite(sprite,texture,104,156);
 
   root.addChild(shadow,sprite);
   return {root,shadow,sprite,scale};
@@ -106,8 +106,8 @@ function makeEnemy(texture,id){
 function syncStaticScale(frame){
   if(!playerNode)return;
   const texture=playerNode.sprite.texture;
-  // Original-size proportion test: render the 1024x1536 formal protagonist at 1:1.
-  playerNode.scale=fitSprite(playerNode.sprite,texture,1024,1536);
+  // Keep the 1024x1536 source texture but display it at 104x156 game scale.
+  playerNode.scale=fitSprite(playerNode.sprite,texture,104,156);
 }
 function renderPlayer(frame,now){
   const p=frame.player,v=frame.viewport;
