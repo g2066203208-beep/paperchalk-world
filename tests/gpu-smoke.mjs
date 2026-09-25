@@ -77,7 +77,7 @@ try{
     rendered:window.PaperchalkRenderer.stats.renderedEnemies,
     snapshotRevision:window.PaperchalkRenderer.stats.snapshotRevision
   }));
-  assert(after.frames>before.frames+5,'Pixi ticker is not advancing '+JSON.stringify({before,after}));
+  assert(after.frames>=before.frames+2,'Pixi render-on-state-change is not advancing '+JSON.stringify({before,after}));
   assert(after.rendered>0,'near enemy was not rendered by Pixi '+JSON.stringify(after));
   assert(Math.abs(after.simX-before.simX)>10,'enemy simulation did not advance '+JSON.stringify({before,after}));
   assert(after.snapshotRevision>0,'renderer is not receiving runtime snapshots');
