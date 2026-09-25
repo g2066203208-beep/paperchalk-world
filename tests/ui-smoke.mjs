@@ -55,8 +55,7 @@ await call('Runtime.enable');
 await call('Log.enable');
 await call('Emulation.setDeviceMetricsOverride',{width:1536,height:691,deviceScaleFactor:1,mobile:true,screenWidth:1536,screenHeight:691});
 await call('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});
-await call('Page.navigate',{url:'http://127.0.0.1:4173/?ci=ui-smoke'});
-assert(await waitFor("location.href.startsWith('http://127.0.0.1:4173/') && document.readyState==='complete'",8000),'document did not navigate/load');
+assert(await waitFor("location.href.startsWith('http://127.0.0.1:4173/') && document.readyState==='complete'",8000),'document did not start/load');
 await sleep(1200);
 noFaults('load');
 
