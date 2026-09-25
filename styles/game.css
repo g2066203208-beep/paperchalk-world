@@ -354,24 +354,39 @@ button{cursor:pointer}
 @keyframes swayC{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2.2deg)}}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
-  --facing:1;--actor-x:35vw;--actor-y:-112px;
+  --facing:1;--actor-x:35vw;--actor-y:-112px;--player-air-y:0px;
   position:absolute;left:0;bottom:0;width:var(--player-visual-w,104px);height:var(--player-visual-h,156px);z-index:5;
   transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%);
   pointer-events:none;will-change:transform;contain:layout paint;
 }
 .actor.facing-left{--facing:-1}
 .walker{
-  position:relative;z-index:2;display:block;width:100%;height:auto;
+  position:relative;z-index:2;display:block;width:100%;height:100%;object-fit:contain;
   transform-origin:52% 96%;will-change:transform;
   transform:scaleX(var(--facing));
 }
-.actor.is-moving .walker{animation:walk-cycle var(--walk-duration,.62s) ease-in-out infinite}
+.actor[data-player-state="idle"] .walker{animation:idle-cycle 2.8s ease-in-out infinite}
+.actor[data-player-state="walk"] .walker{animation:walk-cycle var(--walk-duration,.62s) ease-in-out infinite}
+.actor[data-player-state="crouch"] .walker{animation:crouch-cycle 2.1s ease-in-out infinite}
+.actor[data-player-state="jump-up"] .walker,
+.actor[data-player-state="jump-down"] .walker{animation:none}
 .foot-shadow{
   position:absolute;z-index:1;left:53%;bottom:6px;width:76px;height:17px;border-radius:50%;
   background:radial-gradient(ellipse at center,rgba(49,37,25,.42) 0%,rgba(49,37,25,.27) 38%,rgba(49,37,25,.10) 61%,rgba(49,37,25,0) 79%);
-  filter:blur(2px);transform:translateX(-50%);opacity:.72;
+  filter:blur(2px);transform:translate3d(-50%,var(--player-air-y),0);opacity:.72;
 }
-.actor.is-moving .foot-shadow{animation:shadow-cycle var(--walk-duration,.62s) ease-in-out infinite}
+.actor[data-player-state="walk"] .foot-shadow{animation:shadow-cycle var(--walk-duration,.62s) ease-in-out infinite}
+.actor[data-player-state="crouch"] .foot-shadow{transform:translate3d(-50%,var(--player-air-y),0) scaleX(.82);opacity:.58}
+.actor[data-player-state="jump-up"] .foot-shadow,
+.actor[data-player-state="jump-down"] .foot-shadow{opacity:.30}
+@keyframes idle-cycle{
+  0%,100%{transform:translate3d(0,0,0) rotate(-.18deg) scaleX(var(--facing))}
+  50%{transform:translate3d(0,-1px,0) rotate(.18deg) scaleX(var(--facing))}
+}
+@keyframes crouch-cycle{
+  0%,100%{transform:translate3d(0,0,0) scaleX(var(--facing))}
+  50%{transform:translate3d(0,-.7px,0) scaleX(var(--facing))}
+}
 @keyframes walk-cycle{
   0%,100%{transform:translate3d(0,0,0) rotate(-.8deg) scaleX(var(--facing))}
   25%{transform:translate3d(.5px,-2.2px,0) rotate(.3deg) scaleX(var(--facing))}
@@ -379,11 +394,10 @@ button{cursor:pointer}
   75%{transform:translate3d(.5px,-1.8px,0) rotate(-.2deg) scaleX(var(--facing))}
 }
 @keyframes shadow-cycle{
-  0%,50%,100%{transform:translateX(-50%) scaleX(1.06);opacity:.88}
-  25%,75%{transform:translateX(-50%) scaleX(.88);opacity:.52}
+  0%,50%,100%{transform:translate3d(-50%,var(--player-air-y),0) scaleX(1.06);opacity:.88}
+  25%,75%{transform:translate3d(-50%,var(--player-air-y),0) scaleX(.88);opacity:.52}
 }
 /* ---------- REALTIME COMBAT ---------- */
-.actor.is-jumping .walker{animation:none}
 .actor.is-attacking .walker{animation:player-swing .30s cubic-bezier(.2,.7,.2,1)}
 @keyframes player-swing{
   0%{transform:scaleX(var(--facing)) rotate(0)}
