@@ -94,6 +94,19 @@ assert(await waitFor("document.getElementById('uiShell')?.classList.contains('is
 noFaults('register -> world');
 console.log('PASS register -> world');
 
+const enemyMotion=await js(`(async()=>{
+  PaperchalkCombat.placeEnemyNear(320);
+  await new Promise(r=>setTimeout(r,120));
+  const e=document.getElementById('enemy');
+  const a=parseFloat(e.style.getPropertyValue('--enemy-x'))||0;
+  await new Promise(r=>setTimeout(r,520));
+  const b=parseFloat(e.style.getPropertyValue('--enemy-x'))||0;
+  return {a,b,delta:b-a,left:e.style.left,transform:getComputedStyle(e).transform};
+})()`);
+assert(Math.abs(enemyMotion.delta)>=20,'enemy did not move smoothly enough '+JSON.stringify(enemyMotion));
+assert(enemyMotion.left===''||enemyMotion.left==='0px','enemy still uses layout-driving left movement '+JSON.stringify(enemyMotion));
+console.log('PASS enemy GPU motion',enemyMotion);
+
 await click('worldMenuBtn');
 assert(await waitFor("!document.getElementById('uiShell')?.classList.contains('is-hidden')",2200),'world menu button did not open menu');
 noFaults('world menu');
@@ -127,16 +140,28 @@ assert(interact,'interact dispatch failed');
 assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-open')",1500),'dialogue did not open');
 await sleep(1500);
 noFaults('dialogue open');
-const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0})");
+const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
 assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
-console.log('PASS dialogue/portraits',portraits);
+assert(portraits.pw>=480&&portraits.ph>=900,'player portrait is still low resolution '+JSON.stringify(portraits));
+console.log('PASS dialogue/portraits HD',portraits);
 
 await js("document.getElementById('dialogueStage').dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:2,pointerType:'touch'}))");
 assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-choice')",1000),'choice state did not open');
 await sleep(300);
-const choices=await js(`(()=>{const vw=innerWidth,vh=innerHeight;const a=[...document.querySelectorAll('.dialogue-choice')].map(b=>{const r=b.getBoundingClientRect();return {text:b.textContent,x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom,visible:r.width>0&&r.height>0}});return {vw,vh,a,allInside:a.length===3&&a.every(r=>r.visible&&r.x>=0&&r.y>=0&&r.right<=vw&&r.bottom<=vh)}})()`);
+const choices=await js(`(()=>{
+  const vw=innerWidth,vh=innerHeight;
+  const a=[...document.querySelectorAll('.dialogue-choice')].map(b=>{const r=b.getBoundingClientRect();return {text:b.textContent,x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom,visible:r.width>0&&r.height>0}});
+  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
+  const player={x:p.x,y:p.y,w:p.width,h:p.height,right:p.right,bottom:p.bottom,cx:p.x+p.width/2,cy:p.y+p.height/2};
+  return {vw,vh,a,player,allInside:a.length===3&&a.every(r=>r.visible&&r.x>=0&&r.y>=0&&r.right<=vw&&r.bottom<=vh)};
+})()`);
 assert(choices.allInside,'choice layout clipped '+JSON.stringify(choices));
-console.log('PASS choices inside viewport',choices);
+assert(choices.a[0].y>=40&&choices.a[0].y<=choices.vh*.20,'top choice is too close to screen edge '+JSON.stringify(choices));
+assert(choices.a[1].y>=choices.vh*.32&&choices.a[1].y<=choices.vh*.50,'left choice vertical composition is poor '+JSON.stringify(choices));
+assert(choices.a[2].y>=choices.vh*.32&&choices.a[2].y<=choices.vh*.50,'right choice vertical composition is poor '+JSON.stringify(choices));
+assert(choices.player.cx>=choices.vw*.43&&choices.player.cx<=choices.vw*.58,'choice portrait is not centered enough '+JSON.stringify(choices));
+assert(choices.player.y>=-4&&choices.player.bottom<=choices.vh+4,'choice portrait is vertically clipped '+JSON.stringify(choices));
+console.log('PASS choice composition',choices);
 
 await js("document.querySelector('.dialogue-choice')?.click()");
 await sleep(250);
