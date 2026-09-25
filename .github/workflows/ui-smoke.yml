@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7.0.1
       - name: Start local server
         run: |
           python3 -m http.server 4173 > /tmp/paperchalk-server.log 2>&1 &

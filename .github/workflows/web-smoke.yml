@@ -8,6 +8,7 @@ on:
       - "src/**"
       - "styles/**"
       - "tests/web-smoke.js"
+      - "tests/performance-budget.mjs"
       - ".github/workflows/web-smoke.yml"
   pull_request:
     paths:
@@ -15,6 +16,8 @@ on:
       - "src/**"
       - "styles/**"
       - "tests/web-smoke.js"
+      - "tests/performance-budget.mjs"
+      - ".github/workflows/web-smoke.yml"
 
 permissions:
   contents: read
@@ -23,9 +26,11 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
       - name: Test menu, login and movement wiring
         run: node tests/web-smoke.js
+      - name: Enforce performance budgets
+        run: node tests/performance-budget.mjs
