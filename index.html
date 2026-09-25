@@ -1535,7 +1535,7 @@ button{cursor:pointer}
 .dialogue-stage.is-choice .dialogue-bubble{opacity:0;pointer-events:none}
 .dialogue-choices{
   position:absolute;z-index:9;inset:0;pointer-events:none;
-  opacity:0;transition:opacity .24s ease .14s
+  opacity:0;transition:opacity .22s ease .24s
 }
 .dialogue-stage.is-choice .dialogue-choices{opacity:1}
 .dialogue-choice{
@@ -2311,7 +2311,7 @@ function spritePosition(index){
   return (col*50)+'% '+(row*100)+'%';
 }
 const PROP_PERIOD=2200;
-const PROP_POOL_REPEATS=4;
+const PROP_POOL_REPEATS=3;
 const propPools=[];
 function buildProps(id,data,parallax){
   const root=document.getElementById(id);
@@ -2367,7 +2367,7 @@ const frontPropPool=buildProps('frontTrack',front,1.03);
 async function loadMidgroundAtlas(){
   try{
     const parts=await Promise.all([0,1,2,3].map(async i=>{
-      const r=await fetch('./assets/midground-preview/p'+i+'.txt?v=2',{cache:'no-store'});
+      const r=await fetch('./assets/midground-preview/p'+i+'.txt?v=2',{cache:'force-cache'});
       if(!r.ok)throw new Error('atlas part '+i+' '+r.status);
       return (await r.text()).trim();
     }));
@@ -3478,6 +3478,7 @@ let dialogueState={
 };
 let dialogueCloseTimer=0;
 let dialogueOpeningTimer=0;
+let dialogueChoiceReturnTimer=0;
 
 function dialogueIsOpen(){return dialogueState.open||dialogueState.closing}
 function playerDialogueName(){
@@ -3541,12 +3542,18 @@ function selectDialogueChoice(index){
   const npc=dialogueState.npc;
   const choice=npc?.dialogue?.choices?.[index];
   if(!choice||dialogueState.phase!=='choice')return false;
+  clearTimeout(dialogueChoiceReturnTimer);
   dialogueState.choiceIndex=index;
-  dialogueState.phase='player-line';
+  dialogueState.phase='choice-return';
   dialogueStage.classList.remove('is-choice');
   worldEl.classList.remove('dialogue-choice-camera');
   dialogueChoices.innerHTML='';
-  setDialogueBubble('player',choice.text);
+  clearDialogueBubbles();
+  dialogueChoiceReturnTimer=setTimeout(()=>{
+    if(!dialogueState.open||dialogueState.phase!=='choice-return')return;
+    dialogueState.phase='player-line';
+    setDialogueBubble('player',choice.text);
+  },650);
   return true;
 }
 function advanceDialogue(){
@@ -3575,6 +3582,7 @@ function openDialogue(npc){
   closeDebugPanel({focus:false});
   clearTimeout(dialogueCloseTimer);
   clearTimeout(dialogueOpeningTimer);
+  clearTimeout(dialogueChoiceReturnTimer);
   dialogueState={open:true,closing:false,npc,phase:'entering',choiceIndex:-1};
   dialoguePlayerName.textContent=playerDialogueName();
   dialogueNpcName.textContent=npc.name||'旅人';
@@ -3589,8 +3597,12 @@ function openDialogue(npc){
     if(!dialogueState.open)return;
     dialogueStage.classList.remove('is-entering');
     dialogueStage.classList.add('is-opening');
-    showDialogueOpening();
-    dialogueOpeningTimer=setTimeout(()=>dialogueStage.classList.remove('is-opening'),1180);
+    dialogueState.phase='opening-in';
+    dialogueOpeningTimer=setTimeout(()=>{
+      if(!dialogueState.open)return;
+      dialogueStage.classList.remove('is-opening');
+      showDialogueOpening();
+    },1080);
   }));
   dialoguePortraitDecode.then(beginEntrance,beginEntrance);
   return true;
@@ -3599,6 +3611,7 @@ function closeDialogue({immediate=false}={}){
   if(!dialogueIsOpen())return false;
   clearTimeout(dialogueCloseTimer);
   clearTimeout(dialogueOpeningTimer);
+  clearTimeout(dialogueChoiceReturnTimer);
   worldEl.classList.remove('dialogue-choice-camera');
   dialogueStage.classList.remove('is-opening','is-entering');
   if(immediate){
