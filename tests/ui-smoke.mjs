@@ -179,7 +179,30 @@ assert(entranceFx.playerName.includes('puppetPlayerArcOut')&&entranceFx.playerDi
 assert(entranceFx.npcName.includes('puppetNpcArcOut')&&entranceFx.npcDir==='reverse','NPC entrance is not reverse exit '+JSON.stringify(entranceFx));
 console.log('PASS mirrored portrait entrance',entranceFx);
 
-await sleep(685);
+const entranceScale=await js(`(async()=>{
+  const p=document.getElementById('dialoguePlayerPortrait');
+  const n=document.getElementById('dialogueNpcPortrait');
+  const scaleOf=el=>{
+    const t=getComputedStyle(el).transform;
+    if(!t||t==='none')return 1;
+    const m=new DOMMatrixReadOnly(t);
+    return Math.hypot(m.a,m.b);
+  };
+  const samples=[];
+  for(let i=0;i<9;i++){
+    samples.push({t:i*70,p:scaleOf(p),n:scaleOf(n)});
+    await new Promise(r=>setTimeout(r,70));
+  }
+  return samples;
+})()`);
+const pScales=entranceScale.map(x=>x.p),nScales=entranceScale.map(x=>x.n);
+const pSpread=Math.max(...pScales)-Math.min(...pScales);
+const nSpread=Math.max(...nScales)-Math.min(...nScales);
+assert(pSpread<0.004&&nSpread<0.004,'portrait scale changes during entrance '+JSON.stringify({entranceScale,pSpread,nSpread}));
+assert(pScales.every(v=>Math.abs(v-1)<0.004)&&nScales.every(v=>Math.abs(v-1)<0.004),'portrait entrance scale is not 1.0 '+JSON.stringify(entranceScale));
+console.log('PASS constant-size portrait entrance',{pSpread,nSpread,samples:entranceScale});
+
+await sleep(155);
 const handoffBefore=await js(`(()=>{
   const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
   const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
@@ -191,7 +214,7 @@ const handoffBefore=await js(`(()=>{
     pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},np:{x:np.x,y:np.y,w:np.width,h:np.height}
   };
 })()`);
-await sleep(85);
+await sleep(105);
 const handoffAfter=await js(`(()=>{
   const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
   const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
