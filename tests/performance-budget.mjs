@@ -17,7 +17,8 @@ const budgets={
   'src/game.js':180000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
-  'assets/backgrounds/apartment-midground.webp':350000
+  'assets/backgrounds/apartment-midground.webp':350000,
+  'assets/backgrounds/mountain-background.webp':180000
 };
 for(const [file,max] of Object.entries(budgets)){
   const bytes=size(file);
@@ -41,6 +42,8 @@ assert(game.includes("ambientInterval"),'Paused-world ambient throttling missing
 assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external apartment CDN');
 assert(!html.includes("blackKeyApartment")&&!css.includes("blackKeyApartment"),'Realtime apartment chroma-key filter returned');
 assert(game.includes("updateMidgroundApartmentVisibility"),'Apartment off-screen culling missing');
+assert(game.includes("MOUNTAIN_PARALLAX=.16"),'Mountain parallax factor missing');
+assert(css.includes(".mountain-background-layer::before{"),'Mountain background layer missing');
 assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
 
