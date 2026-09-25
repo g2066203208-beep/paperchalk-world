@@ -1,0 +1,68 @@
+name: GPU Renderer Smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "src/**"
+      - "styles/**"
+      - "vendor/pixi/**"
+      - "tests/gpu-smoke.mjs"
+      - ".github/workflows/gpu-smoke.yml"
+  pull_request:
+    paths:
+      - "index.html"
+      - "src/**"
+      - "styles/**"
+      - "vendor/pixi/**"
+      - "tests/gpu-smoke.mjs"
+      - ".github/workflows/gpu-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webgl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate renderer syntax and vendor
+        run: |
+          node --check src/renderers/pixi-dynamic-renderer.mjs
+          test -s vendor/pixi/pixi-8.21.0.mjs
+          test -s vendor/pixi/LICENSE
+      - name: Install browser driver
+        run: npm install --no-save playwright-core
+      - name: Detect Chrome
+        id: chrome
+        shell: bash
+        run: |
+          CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
+          if [ -z "$CHROME_PATH" ]; then
+            echo "No Chrome/Chromium found"
+            exit 1
+          fi
+          echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
+          "$CHROME_PATH" --version
+      - name: Start local game server
+        shell: bash
+        run: |
+          python3 -m http.server 8080 > /tmp/paperchalk-gpu-http.log 2>&1 &
+          for i in {1..50}; do
+            if curl -fsS http://127.0.0.1:8080/index.html >/dev/null; then
+              exit 0
+            fi
+            sleep 0.2
+          done
+          cat /tmp/paperchalk-gpu-http.log
+          exit 1
+      - name: Run WebGL regression
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: node tests/gpu-smoke.mjs
