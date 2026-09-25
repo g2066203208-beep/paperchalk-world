@@ -28,6 +28,8 @@ const stats={
   renderedEnemies:0,
   renderer:'',
   resolution:1,
+  playerDisplayW:0,
+  playerDisplayH:0,
   renderMs:0,
   maxRenderMs:0,
   playerScreenX:0,
@@ -49,20 +51,28 @@ function modeFromLocation(){
   return q?normalizeMode(q):normalizeMode(safeStorageGet(STORAGE_KEY)||'auto');
 }
 function autoMode(){
-  // GPU dynamic entities matter most on touch/mobile WebViews; desktop keeps the
-  // already-stable DOM path unless explicitly opted in for A/B comparison.
-  return coarsePointer&&!reducedMotion?'pixi':'dom';
+  // Production parity first: desktop and mobile use the same DOM entity backend.
+  // Pixi/WebGL remains available through debug or ?renderer=pixi for controlled A/B tests.
+  return 'dom';
 }
 function resolvedMode(value){
   const normalized=normalizeMode(value);
   return normalized==='auto'?autoMode():normalized;
 }
-function fitSprite(sprite,texture,maxW,maxH){
+function fitSpriteExact(sprite,texture,targetW,targetH){
   const tw=Math.max(1,Number(texture.width)||1);
   const th=Math.max(1,Number(texture.height)||1);
-  const scale=Math.min(maxW/tw,maxH/th);
-  sprite.scale.set(scale,scale);
-  return scale;
+  const sx=targetW/tw;
+  const sy=targetH/th;
+  sprite.scale.set(sx,sy);
+  return {x:sx,y:sy,w:targetW,h:targetH};
+}
+function playerVisualSize(){
+  const size=runtime?.worldData?.playerVisual;
+  return {
+    w:Number(size?.w)||104,
+    h:Number(size?.h)||156
+  };
 }
 function makePlayer(texture){
   const root=new Container();
@@ -74,7 +84,8 @@ function makePlayer(texture){
     .fill({color:0x312519,alpha:.30});
   const sprite=new Sprite(texture);
   sprite.anchor.set(.5,1);
-  const scale=fitSprite(sprite,texture,104,156);
+  const target=playerVisualSize();
+  const scale=fitSpriteExact(sprite,texture,target.w,target.h);
 
   root.addChild(shadow,sprite);
   return {root,shadow,sprite,scale};
@@ -87,7 +98,7 @@ function makeEnemy(texture,id){
 
   const sprite=new Sprite(texture);
   sprite.anchor.set(.5,1);
-  const scale=fitSprite(sprite,texture,112,132);
+  const scale=fitSpriteExact(sprite,texture,112,132);
 
   const health=new Container();
   health.position.set(-36,-142);
@@ -106,8 +117,10 @@ function makeEnemy(texture,id){
 function syncStaticScale(frame){
   if(!playerNode)return;
   const texture=playerNode.sprite.texture;
-  // Keep the 1024x1536 source texture but display it at 104x156 game scale.
-  playerNode.scale=fitSprite(playerNode.sprite,texture,104,156);
+  const target=playerVisualSize();
+  playerNode.scale=fitSpriteExact(playerNode.sprite,texture,target.w,target.h);
+  stats.playerDisplayW=target.w;
+  stats.playerDisplayH=target.h;
 }
 function renderPlayer(frame,now){
   const p=frame.player,v=frame.viewport;
@@ -129,8 +142,8 @@ function renderPlayer(frame,now){
   }
 
   node.root.position.set(p.screenX+offsetX,footY+bob);
-  node.sprite.scale.x=Math.abs(node.scale)*p.facing;
-  node.sprite.scale.y=Math.abs(node.scale);
+  node.sprite.scale.x=Math.abs(node.scale.x)*p.facing;
+  node.sprite.scale.y=Math.abs(node.scale.y);
   node.sprite.rotation=rotation;
   node.sprite.alpha=p.invulnerable?.78:1;
 
@@ -172,8 +185,8 @@ function renderEnemies(frame,now){
     }
 
     node.root.position.set(screenX+offsetX,v.height-v.groundY+bob);
-    node.sprite.scale.x=Math.abs(node.scale)*data.facing;
-    node.sprite.scale.y=Math.abs(node.scale);
+    node.sprite.scale.x=Math.abs(node.scale.x)*data.facing;
+    node.sprite.scale.y=Math.abs(node.scale.y);
     node.root.alpha=data.alive?1:.18;
     node.root.rotation=data.alive?rotation:(84*Math.PI/180);
     node.health.visible=data.alive;
