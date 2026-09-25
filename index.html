@@ -251,9 +251,14 @@ button{cursor:pointer}
 .map-object.crate:before{left:46%;top:0;width:9%;height:100%;transform:rotate(8deg)}
 .map-object.crate:after{left:0;top:46%;width:100%;height:9%;transform:rotate(-6deg)}
 .map-object.crate.is-broken{height:24px!important;opacity:.68;transform:rotate(-4deg);transition:.22s}
-.map-object.tree{bottom:112px;width:96px;height:190px}
-.map-object.tree:before{content:"";position:absolute;left:39px;bottom:0;width:25px;height:112px;background:#735239;border:3px solid #523b2c;border-radius:45% 55% 25% 30%;transform:rotate(2deg)}
-.map-object.tree:after{content:"";position:absolute;left:2px;top:0;width:92px;height:100px;background:#66744d;border:4px solid #4d593b;border-radius:48% 42% 54% 38%;clip-path:polygon(47% 0,60% 16%,80% 9%,83% 30%,100% 42%,84% 58%,91% 79%,68% 78%,56% 100%,40% 82%,16% 91%,17% 69%,0 55%,15% 37%,12% 17%,35% 19%)}
+.map-object.tree{
+  bottom:112px;
+  width:156px;
+  height:208px;
+  background:url('./assets/props/user-tree.webp?v=user-tree-r1') center bottom/contain no-repeat;
+  transform-origin:50% 100%;
+}
+.map-object.tree:before,.map-object.tree:after{content:none!important;display:none!important}
 .map-object.reed{bottom:112px;width:120px;height:66px}
 .map-object.reed:before,.map-object.reed:after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:62px;background:repeating-linear-gradient(77deg,transparent 0 8px,#697153 9px 13px,transparent 14px 20px);transform:skewX(-5deg);opacity:.9}
 .map-object.reed:after{transform:scaleX(-1) skewX(-8deg);opacity:.65}
@@ -2351,7 +2356,7 @@ const MAP_TERRAIN=[
 const MAP_OBJECTS=[
   {id:'crate-1',kind:'crate',x:2390,y:0,w:88,h:88,solid:true,breakable:true},
   /* Trees remain visible world props, but never form an unavoidable 190px movement wall. */
-  {id:'tree-1',kind:'tree',x:4980,y:0,w:96,h:190,solid:false}
+  {id:'tree-1',kind:'tree',x:4980,y:0,w:156,h:208,solid:false}
 ];
 const MAP_LANDMARKS=[
   {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
@@ -2406,14 +2411,14 @@ for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
     {id:'zone-platform-c-'+zone,kind:'platform',x:base+4860+variant*18,y:0,w:315+variant*14,h:104+variant*6}
   );
   MAP_OBJECTS.push(
-    {id:'zone-tree-'+zone,kind:'tree',x:base+1160+variant*24,y:0,w:96,h:190,solid:false},
+    {id:'zone-tree-'+zone,kind:'tree',x:base+1160+variant*24,y:0,w:156,h:208,solid:false},
     {id:'zone-crate-'+zone,kind:'crate',x:base+2700+variant*34,y:0,w:82,h:82,solid:true,breakable:true}
   );
   const route=WORLD_ROUTES[zone];
   if(route?.biome==='forest'){
     MAP_OBJECTS.push(
-      {id:'forest-tree-a-'+zone,kind:'tree',x:base+2050,y:0,w:96,h:190,solid:false},
-      {id:'forest-tree-b-'+zone,kind:'tree',x:base+4450,y:0,w:96,h:190,solid:false}
+      {id:'forest-tree-a-'+zone,kind:'tree',x:base+2050,y:0,w:156,h:208,solid:false},
+      {id:'forest-tree-b-'+zone,kind:'tree',x:base+4450,y:0,w:156,h:208,solid:false}
     );
   }else if(route?.biome==='river'||route?.biome==='marsh'){
     MAP_OBJECTS.push(
