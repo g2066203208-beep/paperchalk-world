@@ -191,7 +191,8 @@ try{
     JSON.stringify({enemyMoveBefore:enemyMoveBefore[0],enemyMoveAfter:enemyMoveAfter[0]}));
 
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
-  await page.waitForTimeout(140);
+  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-up',null,{timeout:900});
+  await page.waitForTimeout(45);
   const jumpAir=await page.evaluate(()=>({
     player:window.PaperchalkCombat.player,
     state:document.querySelector('.actor')?.dataset.playerState,
