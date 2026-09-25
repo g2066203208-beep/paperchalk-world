@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install Pillow
-        run: pip install pillow
+        run: pip install pillow numpy
       - name: Download approved apartment artwork
         run: |
           mkdir -p /tmp/paperchalk assets/backgrounds
