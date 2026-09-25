@@ -210,6 +210,11 @@ WORLD_ROUTES.forEach((route,i)=>{
   });
 });
 MAP_TERRAIN.push(...FORK_SOLIDS);
+/* clean-stage-r14: remove all assistant-authored terrain, props, signs and pickups. */
+MAP_TERRAIN.length=0;
+MAP_OBJECTS.length=0;
+MAP_LANDMARKS.length=0;
+MAP_PICKUPS.length=0;
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 let mapDebugBuilt=false;
@@ -239,19 +244,8 @@ function rebuildSolidSpatialIndex(){
 }
 rebuildSolidSpatialIndex();
 
-const rear=[
-  {s:0,x:120,w:108,c:'sway-a'},
-  {s:2,x:560,w:116,c:'static'},
-  {s:1,x:1010,w:100,c:'sway-c'},
-  {s:5,x:1450,w:102,c:'sway-b'},
-  {s:4,x:1920,w:112,c:'static'}
-];
-const front=[
-  {s:3,x:310,w:104,c:'sway-b'},
-  {s:4,x:790,w:116,c:'static'},
-  {s:5,x:1270,w:98,c:'sway-a'},
-  {s:1,x:1740,w:94,c:'sway-c'}
-];
+const rear=[];
+const front=[];
 
 function showMapNotice(message,duration=1600){
   mapNotice.textContent=message;
@@ -385,56 +379,8 @@ function buildMapVisuals(){
     el.style.left=(m.x-visualOriginX)+'px';
   });
 
-  WORLD_ROUTES.forEach((route,i)=>{
-    const base=routeBaseX(i);
-    [
-      {nodeId:route.from,x:base+82,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
-      {nodeId:route.to,x:base+WORLD_ZONE_WIDTH-232,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
-    ].forEach(mark=>{
-      if(mark.x<visualMinX||mark.x>visualMaxX)return;
-      const node=WORLD_NODE_BY_ID.get(mark.nodeId);
-      if(!node)return;
-      const degree=nodeDegree(node.id);
-      const markerKey='junction:'+i+':'+mark.side+':'+node.id;
-      const el=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,markerKey,()=>{
-        const nodeEl=document.createElement('div');
-        nodeEl.className='junction-marker';
-        nodeEl.dataset.nodeId=node.id;
-        nodeEl.dataset.side=mark.side;
-        nodeEl.innerHTML='<div class="junction-board"></div>';
-        return nodeEl;
-      });
-      el.style.left=(mark.x-visualOriginX)+'px';
-      const board=el.querySelector('.junction-board');
-      if(board)board.innerHTML=node.name+'<span class="junction-count">'+(degree>2?'实体岔路 · 直接走':degree===1?'道路尽头':'道路连接点')+'</span>';
+  // No authored route boards/guides in the clean stage.
 
-      const assignments=forkAssignments(i,node.id);
-      if(assignments.length>1){
-        const hintKey='fork-hint:'+i+':'+mark.side+':'+node.id;
-        const hint=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,hintKey,()=>{
-          const nodeEl=document.createElement('div');
-          nodeEl.className='fork-node-hint';
-          nodeEl.textContent='不弹菜单 · 走进对应高度的路';
-          return nodeEl;
-        });
-        hint.style.left=((mark.side==='left'?mark.boundary+235:mark.boundary-235)-visualOriginX)+'px';
-        hint.style.bottom=(MAP_GROUND_SCREEN_Y+190)+'px';
-      }
-      assignments.forEach((a,idx)=>{
-        const guideKey='fork-guide:'+i+':'+mark.side+':'+idx+':'+a.route.id;
-        const guide=pooledMapNode(mapVisualPools.landmark,mapLandmarkTrack,guideKey,()=>{
-          const nodeEl=document.createElement('div');
-          nodeEl.dataset.routeId=a.route.id;
-          return nodeEl;
-        });
-        guide.className='fork-exit-guide'+(a.laneY>=120?' is-air':a.laneY>0?' is-upper':'');
-        const arrow=mark.side==='left'?'←':'→';
-        guide.style.left=((mark.side==='left'?mark.boundary+42:mark.boundary-196)-visualOriginX)+'px';
-        guide.style.bottom=(MAP_GROUND_SCREEN_Y+a.laneY+22)+'px';
-        guide.innerHTML='<span class="fork-arrow">'+arrow+'</span>'+(a.target?.name||a.route.name)+'<small>'+a.route.name+'</small>';
-      });
-    });
-  });
 }
 function ensureMapDebugVisuals(){
   if(mapDebugBuilt)return;
@@ -526,37 +472,13 @@ function updatePropPools(sceneryX,force=false){
 const rearPropPool=buildProps('rearTrack',rear,.97);
 const frontPropPool=buildProps('frontTrack',front,1.03);
 
-async function loadMidgroundAtlas(){
-  try{
-    const parts=await Promise.all([0,1,2,3].map(async i=>{
-      const r=await fetch('./assets/midground-preview/p'+i+'.txt?v=2',{cache:'force-cache'});
-      if(!r.ok)throw new Error('atlas part '+i+' '+r.status);
-      return (await r.text()).trim();
-    }));
-    const uri='data:image/webp;base64,'+parts.join('');
-    document.documentElement.style.setProperty('--mid-atlas','url("'+uri+'")');
-    document.documentElement.dataset.midground='ready';
-  }catch(err){
-    console.error('MIDGROUND_ATLAS_FAILED',err);
-    document.documentElement.dataset.midground='failed';
-  }
-}
-if('requestIdleCallback' in window){
-  requestIdleCallback(()=>loadMidgroundAtlas(),{timeout:1400});
-}else{
-  setTimeout(()=>loadMidgroundAtlas(),220);
-}
-
+// clean-stage-r14: legacy midground atlas removed.
 const roadSurface=document.getElementById('roadSurface');
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
-const mountainBackgroundTrack=document.getElementById('mountainBackgroundTrack');
-const mountainBackgroundTiles=[...document.querySelectorAll('.mountain-background-tile')];
-const MOUNTAIN_PARALLAX=.16;
-let mountainPairWidth=1560;
 const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
 const midgroundApartment=document.getElementById('midgroundApartment');
 const APARTMENT_WORLD_X=520;
@@ -565,8 +487,6 @@ const APARTMENT_CULL_MARGIN=180;
 let apartmentDisplayWidth=780;
 let midgroundApartmentVisible=null;
 function refreshSceneryMetrics(){
-  const mountainW=mountainBackgroundTiles[0]?.getBoundingClientRect().width||0;
-  if(mountainW>0)mountainPairWidth=mountainW*2;
   const apartmentW=midgroundApartment?.getBoundingClientRect().width||0;
   if(apartmentW>0)apartmentDisplayWidth=apartmentW;
 }
@@ -2435,7 +2355,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',mountain:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
+const renderCache={road:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -2443,8 +2363,6 @@ function writeTransform(el,key,value){
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
-  const mountainPhase=-posMod(sceneryX*MOUNTAIN_PARALLAX,mountainPairWidth);
-  const mountainT='translate3d('+mountainPhase.toFixed(2)+'px,0,0)';
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
   updateRoadPool(sceneryX,force);
@@ -2457,7 +2375,6 @@ function renderWorld(force=false){
   const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,0,0)';
   const mapT='translate3d('+(-(worldX-visualOriginX))+'px,0,0)';
   writeTransform(roadTrack,'road',roadT);
-  if(mountainBackgroundTrack)writeTransform(mountainBackgroundTrack,'mountain',mountainT);
   if(midgroundBuildingTrack)writeTransform(midgroundBuildingTrack,'midground',midgroundT);
   writeTransform(rearTrack,'rear',rearT);
   writeTransform(frontTrack,'front',frontT);

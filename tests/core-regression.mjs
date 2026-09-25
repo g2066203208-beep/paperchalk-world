@@ -97,7 +97,7 @@ try{
   const initialMap=await mapState(page);
   check('Fresh A starts in the 20-zone continuous world',
     Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&
-    initialMap.terrainCount>100&&initialMap.objectCount>40&&initialMap.spawnCount===21&&initialMap.npcCount===1,
+    initialMap.terrainCount===0&&initialMap.objectCount===0&&initialMap.spawnCount===21&&initialMap.npcCount===1,
     JSON.stringify({s,initialMap}));
   const parents=await page.evaluate(()=>[
     document.getElementById('enemy')?.parentElement?.id,
@@ -115,36 +115,14 @@ try{
     visual:{...window.PaperchalkRuntime.worldData.playerVisual},
     rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
   }));
-  const paperGround=await page.evaluate(()=> {
-    const layer=document.querySelector('.road-layer');
-    const stage=document.getElementById('world');
-    const tile=document.getElementById('roadTile');
-    const layerRect=layer?.getBoundingClientRect();
-    const stageRect=stage?.getBoundingClientRect();
-    return {
-      tileClass:tile?.className||'',
-      tileTag:tile?.tagName||'',
-      groundY:Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y'))||null,
-      layerTop:layerRect&&stageRect?layerRect.top-stageRect.top:null,
-      stageH:stageRect?.height||0,
-      layerH:layerRect?.height||0,
-      background:getComputedStyle(tile).backgroundImage
-    };
-  });
-  check('Paper ground strip aligns to physics ground',
-    paperGround.tileTag==='DIV'&&paperGround.tileClass.includes('paper-ground-tile')&&
-    Math.abs(paperGround.layerH-paperGround.groundY)<1.5&&
-    Math.abs(paperGround.layerTop-(paperGround.stageH-paperGround.groundY))<1.5&&
-    paperGround.background!=='none',
-    JSON.stringify(paperGround));
-
-  check('Player starts in optimized supplied idle pose',
-    initialAction.player.action==='idle'&&initialAction.state==='idle'&&initialAction.src.includes('/assets/player/runtime/idle.webp'),
-    JSON.stringify(initialAction));
-  check('Desktop player size comes from unified viewport scale',
-    initialAction.visual.scale>1&&initialAction.visual.scale<=1.081&&
-    Math.abs(initialAction.rect.w-initialAction.visual.w)<1&&Math.abs(initialAction.rect.h-initialAction.visual.h)<1,
-    JSON.stringify(initialAction));
+  const cleanGround=await page.evaluate(()=>({
+    roadHidden:document.querySelector('.road-layer')?.hasAttribute('hidden')||false,
+    groundY:Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y'))||null,
+    roadDisplay:getComputedStyle(document.querySelector('.road-layer')).display
+  }));
+  check('Clean stage keeps only an invisible physics ground',
+    cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
+    JSON.stringify(cleanGround));
 
   await page.setViewportSize({width:900,height:540});
   await page.waitForTimeout(220);
@@ -284,10 +262,10 @@ try{
     spawnBoxes:[...document.querySelectorAll('#mapDebugTrack .spawn')].filter(el=>getComputedStyle(el).display!=='none').length,
     cameraDisplay:getComputedStyle(document.getElementById('cameraLeftDebug')).display
   }));
-  check('Debug panel exposes combat, terrain, spawn-zone and Camera overlays',
+  check('Debug panel exposes combat/spawn/camera overlays with no authored terrain colliders',
     debugView.combat.hitboxes&&debugView.combat.attackRange&&debugView.combat.mapColliders&&debugView.combat.spawnZones&&debugView.combat.camera&&
     debugView.playerHurt.width>40&&debugView.attack.width>80&&debugView.attack.preview&&
-    debugView.terrainBoxes>0&&debugView.spawnBoxes>0&&debugView.cameraDisplay!=='none',
+    debugView.terrainBoxes===0&&debugView.spawnBoxes>0&&debugView.cameraDisplay!=='none',
     JSON.stringify(debugView));
   check('Inactive enemy attack box leaves no red-line residual',
     debugView.enemyAttack.hidden===true&&debugView.enemyAttack.width===0,
@@ -321,7 +299,7 @@ try{
     enemyBefore.hp===3&&enemyAfter.hp===2,
     JSON.stringify({enemyBefore,enemyAfter}));
 
-  // Terrain collision: rock-1 begins at x=1120, so player center must stop near 1093.
+  // Clean stage: no authored rocks, platforms, crates or pickups may remain.
   await page.evaluate(()=>{
     window.PaperchalkCombat.toggleEnemyAi(false);
     window.PaperchalkMap.teleport(1060,{notice:''});
@@ -330,50 +308,15 @@ try{
   await page.waitForTimeout(550);
   await page.keyboard.up('KeyD');
   await page.waitForTimeout(80);
-  const blockedByRock=await state(page);
-  check('Ground obstacle collider blocks horizontal movement',
-    blockedByRock.playerWorldX>=1088&&blockedByRock.playerWorldX<=1094,
-    JSON.stringify(blockedByRock));
-
-  // Jump over the 70px rock and continue to the other side.
-  await page.keyboard.press('Space');
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(950);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(120);
-  const clearedRock=await state(page);
-  check('Jump can clear a low map obstacle',
-    clearedRock.playerWorldX>1225,
-    JSON.stringify(clearedRock));
-
-  // Falling onto platform-2 should land exactly on the currently-authored platform top.
-  const platformTop=await page.evaluate(()=>{
-    const p=window.PaperchalkMap.terrain.find(v=>v.id==='platform-2');
-    return p.y+p.h;
-  });
-  await page.evaluate(()=>window.eval("playerWorldX=3060;playerY=205;playerVy=-40;playerGrounded=false;updateCamera();renderWorld();"));
-  await page.waitForFunction(top=>window.PaperchalkCombat?.player?.grounded&&Math.abs(window.PaperchalkCombat.player.y-top)<1,platformTop,{timeout:1400});
-  const platformLanding=await state(page);
-  check('Platform collider catches a falling player on its authored top surface',
-    Math.abs(platformLanding.playerY-platformTop)<1,
-    JSON.stringify({platformLanding,platformTop}));
-
-  // Breakable crate and pickup pipeline.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(2335,{notice:''}));
-  await page.keyboard.press('KeyJ');
-  await page.waitForTimeout(220);
-  let mapAfterBreak=await mapState(page);
-  check('Attack can break the map crate',
-    mapAfterBreak.map.broken.includes('crate-1'),
-    JSON.stringify(mapAfterBreak.map));
-
-  await page.evaluate(()=>window.PaperchalkMap.teleport(2434,{notice:''}));
-  await page.waitForTimeout(180);
-  const mapAfterPickup=await mapState(page);
-  const pickedInventory=await page.evaluate(()=>window.eval("inventoryItems.find(v=>v&&v.id==='rough-herb')"));
-  check('Crate reveals a collectible and proximity pickup enters inventory',
-    mapAfterPickup.map.collected.includes('herb-crate')&&pickedInventory?.action==='heal'&&pickedInventory?.heal===2,
-    JSON.stringify({map:mapAfterPickup.map,pickedInventory}));
+  const unobstructed=await state(page);
+  check('Clean stage has no assistant-authored obstacle blocking movement',
+    unobstructed.playerWorldX>1140,
+    JSON.stringify(unobstructed));
+  const cleanMapObjects=await mapState(page);
+  check('Clean stage publishes zero authored terrain and map objects',
+    cleanMapObjects.terrainCount===0&&cleanMapObjects.objectCount===0&&
+    cleanMapObjects.map.broken.length===0&&cleanMapObjects.map.collected.length===0,
+    JSON.stringify(cleanMapObjects));
 
   // Crossing the old 6000px boundary must stay inside the continuous world with no loading gate.
   await page.evaluate(()=>window.PaperchalkMap.teleport(6250,{notice:''}));
@@ -524,9 +467,9 @@ try{
   await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),moved.playerWorldX);
   await page.waitForTimeout(100);
   const poolReturn=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  check('Map visual window reuses retained DOM nodes when revisiting an area',
+  check('Clean map window creates no filler nodes when visiting empty areas',
     poolFirstVisit.visualOriginX>poolBefore.visualOriginX&&
-    poolFirstVisit.pooledMapNodes>=poolBefore.pooledMapNodes&&
+    poolFirstVisit.mapVisualCreateCount===poolBefore.mapVisualCreateCount&&
     poolReturn.mapVisualCreateCount===poolFirstVisit.mapVisualCreateCount,
     JSON.stringify({poolBefore,poolFirstVisit,poolReturn}));
 
@@ -539,8 +482,8 @@ try{
   check('A save uses account-specific v2 key',saveA?.account==='audit_a',JSON.stringify(saveA));
   check('A camera position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
   check('A player world position saved',Math.abs((saveA?.playerWorldX||0)-moved.playerWorldX)<5,'saved='+saveA?.playerWorldX+' runtime='+moved.playerWorldX);
-  check('A map changes are saved',
-    saveA?.mapState?.broken?.includes('crate-1')&&saveA?.mapState?.collected?.includes('herb-crate'),
+  check('A clean map state stays empty in save',
+    (saveA?.mapState?.broken?.length||0)===0&&(saveA?.mapState?.collected?.length||0)===0,
     JSON.stringify(saveA?.mapState));
   check('A health saved with world state',saveA?.playerHp===8,'saved playerHp='+saveA?.playerHp);
 
@@ -568,8 +511,8 @@ try{
   const healthReloaded=await healthState(page);
   check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
   const mapReloaded=await mapState(page);
-  check('Map destruction and pickups survive reload',
-    mapReloaded.map.broken.includes('crate-1')&&mapReloaded.map.collected.includes('herb-crate'),
+  check('Clean map state survives reload',
+    mapReloaded.map.broken.length===0&&mapReloaded.map.collected.length===0,
     JSON.stringify(mapReloaded.map));
   await page.locator('#backpackBtn').click();
   await page.waitForTimeout(850);
@@ -661,8 +604,8 @@ try{
   const aReturnHealth=await healthState(page);
   check('A restores its own health',aReturnHealth.hp===8&&aReturnHealth.empty===2,JSON.stringify(aReturnHealth));
   const aReturnMap=await mapState(page);
-  check('A restores its own persistent map state',
-    aReturnMap.map.broken.includes('crate-1')&&aReturnMap.map.collected.includes('herb-crate'),
+  check('A restores its empty clean map state',
+    aReturnMap.map.broken.length===0&&aReturnMap.map.collected.length===0,
     JSON.stringify(aReturnMap.map));
 
   // Paper cleanup after backpack too.

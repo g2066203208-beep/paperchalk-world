@@ -75,46 +75,25 @@ assert(html.includes('/assets/player/runtime/crouch.webp?v=paper-scenery-r13'), 
 assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
-assert(!fs.existsSync("assets/road.webp"), "Legacy road image asset must stay removed");
-assert(html.includes('class="road-tile paper-ground-tile"'), "Paper ground strip tile missing");
-assert(css.includes("--ground-screen-y"), "Responsive ground line missing");
-assert(game.includes("setProperty('--ground-screen-y'"), "Physics ground is not wired to visual surface");
-assert(css.includes("width:128px"), "Road strip tile width changed unexpectedly");
-assert(!css.includes("clip-path:polygon(0 2px,92% 2px,100% 28%,8% 100%)"), "Old fake-perspective ground cap must stay removed");
-assert(!css.includes("transform:rotateX(68deg) translateZ(-30px)"), "Perspective stage floor must stay removed");
-assert(css.includes("user-road-surface-r1.webp"), "Supplied painted road texture is not active");
-assert(fs.existsSync("assets/road/user-road-surface-r1.webp"), "Supplied road texture asset missing");
-assert(html.includes('id="roadSurface" class="road-surface"'), "Dedicated road surface layer missing");
-assert(css.includes(".road-surface{"), "Road surface CSS missing");
-assert(css.includes("background-repeat:repeat-x"), "Road surface must repeat horizontally");
-assert(game.includes("const roadSurface=document.getElementById('roadSurface')"), "Road surface DOM binding missing");
-assert(!html.includes('worldBlockTrack'), "Voxel/block world layer must stay removed");
+assert(!fs.existsSync("assets/road/user-road-surface-r1.webp"), "Painted road asset must be removed");
+assert(html.includes('class="world-layer road-layer" hidden'), "Road compatibility layer must stay hidden");
+assert(css.includes(".road-layer{display:none!important}"), "Road visuals are not fully disabled");
 assert(html.includes('id="midgroundApartment"'), "Apartment midground image missing");
 assert(fs.existsSync("assets/backgrounds/apartment-midground.webp"), "Local apartment runtime asset missing");
 assert(html.includes('./assets/backgrounds/apartment-midground.webp?v='), "Apartment is not using the local runtime asset");
 assert(!html.includes("cdn.openart.ai"), "Runtime HTML still depends on OpenArt CDN");
 assert(!html.includes("blackKeyApartment") && !css.includes("blackKeyApartment"), "Realtime apartment black-key filter still present");
-assert(!html.includes("voxel-ground") && !css.includes("voxel-ground"), "Voxel-era ground naming returned");
 assert(game.includes("updateMidgroundApartmentVisibility"), "Apartment off-screen culling missing");
-assert(css.includes("width:1800px"), "Apartment track expanded back to world-scale width");
 assert(html.includes('width="780" height="1040"'), "Apartment display dimensions must be 780x1040 at default player scale");
-assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing");
 assert(css.includes("width:calc(var(--player-visual-h,156px) * 5)"), "Apartment width is not tied to player scale");
-assert(css.includes("height:calc(var(--player-visual-h,156px) * 6.6667)"), "Apartment height is not tied to player scale");
-assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missing");
-assert(fs.existsSync("assets/backgrounds/mountain-paper-r13.webp"), "Supplied paper mountain runtime asset missing");
-assert(fs.existsSync("assets/backgrounds/sun-paper-r13.webp"), "Supplied paper sun asset missing");
-assert(fs.existsSync("assets/backgrounds/moon-paper-r13.webp"), "Supplied paper moon asset missing");
-assert(fs.existsSync("assets/backgrounds/cloud-paper-r13.webp"), "Supplied paper cloud asset missing");
-assert(html.includes('id="mountainBackgroundTrack"'), "Mountain parallax track missing");
-assert((html.match(/mountain-background-tile/g)||[]).length===6, "Mountain loop must use six mirrored paper tiles");
-assert(css.includes("bottom:calc(var(--ground-screen-y,112px) - 48px)"), "Mountain foot is not buried below the ground seam");
-assert(css.includes("height:clamp(215px,46vh,340px)"), "Mountain responsive scale is not tuned as far scenery");
-assert(game.includes("const MOUNTAIN_PARALLAX=.16"), "Mountain parallax factor missing");
-assert(game.includes("mountainPairWidth"), "Mountain mirrored repeat width is not measured");
-assert(game.includes("writeTransform(mountainBackgroundTrack,'mountain',mountainT)"), "Mountain parallax track is not camera driven");
-assert(html.includes("sun-paper-r13.webp")&&html.includes("moon-paper-r13.webp")&&html.includes("cloud-paper-r13.webp"), "Paper sky props are not mounted");
+assert(!fs.existsSync("assets/backgrounds/mountain-paper-r13.webp"), "Background mountain asset must be removed");
+assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"), "Background mountain layer still exists");
+assert(html.includes("sun-paper-r13.webp")&&html.includes("moon-paper-r13.webp")&&html.includes("cloud-paper-r13.webp"), "User supplied sky props are not mounted");
 assert(css.includes(".paper-cloud::before")&&css.includes(".paper-celestial::before"), "Hanging lines for sky props are missing");
+assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=0")&&game.includes("MAP_LANDMARKS.length=0")&&game.includes("MAP_PICKUPS.length=0"), "Assistant-authored map filler is not cleared");
+assert(game.includes("const rear=[];")&&game.includes("const front=[];"), "Assistant-authored foreground/background prop strips remain");
+assert(!game.includes("loadMidgroundAtlas"), "Legacy grass/rock atlas loader remains");
+assert(!fs.existsSync("assets/props/grass-rock.webp")&&!fs.existsSync("assets/props/rocks-grass.webp")&&!fs.existsSync("assets/props/soft-grass.webp"), "Assistant grass assets remain");
 
 assert(!css.includes(".world-block{"), "Voxel/block ground visuals must stay removed");
 assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay removed");
@@ -211,17 +190,5 @@ assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
 
 
-// Unified midground atlas must be present and decode as a WEBP file.
-const atlasParts = [0,1,2,3].map(i =>
-  fs.readFileSync('assets/midground-preview/p' + i + '.txt', 'utf8').trim()
-);
-const atlasBase64 = atlasParts.join('');
-assert(atlasBase64.length === 24120, 'Unexpected midground atlas base64 length');
-const atlasBytes = Buffer.from(atlasBase64, 'base64');
-assert(atlasBytes.slice(0,4).toString('ascii') === 'RIFF', 'Midground atlas is not RIFF');
-assert(atlasBytes.slice(8,12).toString('ascii') === 'WEBP', 'Midground atlas is not WEBP');
-assert(game.includes('loadMidgroundAtlas'), 'Midground atlas loader missing');
-assert(game.includes('spritePosition'), 'Midground sprite positioning missing');
-assert(!game.includes("./assets/props/grass-rock.webp?v=2"), 'Old mixed-style prop asset still referenced');
-
+// clean-stage-r14: generated midground atlas intentionally removed.
 console.log("WEB_SMOKE_PASS");

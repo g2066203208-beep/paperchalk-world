@@ -7,53 +7,40 @@
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/dialogue/npc-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=paper-scenery-r13" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=paper-scenery-r13" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=paper-scenery-r13" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=paper-scenery-r13" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=clean-stage-r14" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=clean-stage-r14" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=clean-stage-r14" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=clean-stage-r14" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="paper-scenery-r13">
-<link rel="stylesheet" href="./styles/game.css?v=paper-scenery-r13">
+<meta name="paperchalk-build" content="clean-stage-r14">
+<link rel="stylesheet" href="./styles/game.css?v=clean-stage-r14">
 </head>
 <body>
 
 <main id="world" class="stage" aria-label="Paperchalk World">
   <div class="paper-sky" aria-hidden="true">
     <div class="paper-stars"></div>
-    <div class="paper-cloud paper-cloud-a"><img src="./assets/backgrounds/cloud-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false"></div>
-    <div class="paper-cloud paper-cloud-b"><img src="./assets/backgrounds/cloud-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" loading="lazy" draggable="false"></div>
-    <div id="paperSun" class="paper-celestial paper-sun"><img class="paper-celestial-disc" src="./assets/backgrounds/sun-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false"></div>
-    <div id="paperMoon" class="paper-celestial paper-moon"><img class="paper-celestial-disc" src="./assets/backgrounds/moon-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" loading="lazy" draggable="false"></div>
+    <div class="paper-cloud paper-cloud-a"><img src="./assets/backgrounds/cloud-paper-r13.webp?v=clean-stage-r14" alt="" decoding="async" draggable="false"></div>
+    <div class="paper-cloud paper-cloud-b"><img src="./assets/backgrounds/cloud-paper-r13.webp?v=clean-stage-r14" alt="" decoding="async" loading="lazy" draggable="false"></div>
+    <div id="paperSun" class="paper-celestial paper-sun"><img class="paper-celestial-disc" src="./assets/backgrounds/sun-paper-r13.webp?v=clean-stage-r14" alt="" decoding="async" draggable="false"></div>
+    <div id="paperMoon" class="paper-celestial paper-moon"><img class="paper-celestial-disc" src="./assets/backgrounds/moon-paper-r13.webp?v=clean-stage-r14" alt="" decoding="async" loading="lazy" draggable="false"></div>
   </div>
   <div id="paperBackdrop" class="paper-backdrop paper-backdrop-current" data-scene="meadow" aria-hidden="true"></div>
   <div id="paperBackdropNext" class="paper-backdrop paper-backdrop-next" data-scene="meadow" aria-hidden="true"></div>
-  <div id="mountainBackground" class="mountain-background-layer" aria-hidden="true">
-    <div id="mountainBackgroundTrack" class="mountain-background-track">
-      <img class="mountain-background-tile" src="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false">
-      <img class="mountain-background-tile is-mirrored" src="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false">
-      <img class="mountain-background-tile" src="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false">
-      <img class="mountain-background-tile is-mirrored" src="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false">
-      <img class="mountain-background-tile" src="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false">
-      <img class="mountain-background-tile is-mirrored" src="./assets/backgrounds/mountain-paper-r13.webp?v=paper-scenery-r13" alt="" decoding="async" draggable="false">
-    </div>
-  </div>
   <div class="paper-stage-floor" aria-hidden="true"></div>
   <div class="paper-wing left" aria-hidden="true"></div>
   <div class="paper-wing right" aria-hidden="true"></div>
   <div class="paper-footlights" aria-hidden="true"></div>
   <div id="dayNightTint" class="day-night-tint" aria-hidden="true"></div>
   <div id="paperClock" class="paper-clock" aria-label="世界时间">06:00</div>
-  <div class="world-layer road-layer">
-    <div id="roadSurface" class="road-surface" aria-hidden="true"></div>
-    <div class="track road-track paper-ground-track" id="roadTrack" aria-hidden="true">
-      <div class="road-tile paper-ground-tile" id="roadTile"></div>
-    </div>
+  <div class="world-layer road-layer" hidden aria-hidden="true">
+    <div id="roadSurface" class="road-surface"></div>
+    <div id="roadTrack" class="road-track"><div id="roadTile" class="road-tile"></div></div>
   </div>
   <div class="midground-building-layer" aria-hidden="true">
     <div id="midgroundBuildingTrack" class="midground-building-track">
       <img id="midgroundApartment" class="midground-apartment"
-           src="./assets/backgrounds/apartment-midground.webp?v=paper-scenery-r13"
+           src="./assets/backgrounds/apartment-midground.webp?v=clean-stage-r14"
            width="780" height="1040" alt="" decoding="async" loading="eager" fetchpriority="high" draggable="false">
     </div>
   </div>
@@ -70,7 +57,7 @@
   <div class="actor" data-player-state="idle">
     <div class="foot-shadow" aria-hidden="true"></div>
     <div id="playerFlip" class="player-flip">
-      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=paper-scenery-r13" alt="正式主角">
+      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=clean-stage-r14" alt="正式主角">
     </div>
   </div>
   <div class="entity-layer" aria-hidden="true">
@@ -365,7 +352,7 @@
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
-<script src="./src/game.js?v=paper-scenery-r13"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=paper-scenery-r13"></script>
+<script src="./src/game.js?v=clean-stage-r14"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=clean-stage-r14"></script>
 </body>
 </html>

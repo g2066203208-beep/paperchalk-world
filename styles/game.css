@@ -126,26 +126,6 @@ button{cursor:pointer}
   filter:drop-shadow(0 18px 8px var(--paper-shadow));
   backface-visibility:visible;
 }
-.mountain-background-layer{
-  position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;
-  contain:layout paint
-}
-.mountain-background-track{
-  position:absolute;left:0;
-  bottom:calc(var(--ground-screen-y,112px) - 48px);
-  display:flex;align-items:flex-end;width:max-content;
-  will-change:transform;pointer-events:none
-}
-.mountain-background-tile{
-  display:block;flex:0 0 auto;
-  width:auto;height:clamp(215px,46vh,340px);max-width:none;
-  object-fit:contain;object-position:center bottom;
-  opacity:.94;filter:saturate(.94) contrast(.98) brightness(1.01) drop-shadow(0 8px 4px rgba(53,45,35,.10));
-  transform-origin:50% 100%;backface-visibility:hidden
-}
-.mountain-background-tile.is-mirrored{transform:scaleX(-1)}
-.stage.perf-low .mountain-background-tile{filter:none;opacity:.90}
-
 .paper-backdrop[data-scene="forest"]{--scene-a:rgba(66,93,67,.42);--scene-b:rgba(83,100,68,.34);--scene-paper:rgba(115,130,89,.30)}
 .paper-backdrop[data-scene="river"],.paper-backdrop[data-scene="marsh"]{--scene-a:rgba(74,101,103,.34);--scene-b:rgba(99,111,94,.30);--scene-paper:rgba(117,137,126,.28)}
 .paper-backdrop[data-scene="mountain"],.paper-backdrop[data-scene="highland"]{--scene-a:rgba(103,94,86,.38);--scene-b:rgba(121,108,87,.31);--scene-paper:rgba(139,124,101,.30)}
@@ -245,43 +225,8 @@ button{cursor:pointer}
 .stage.perf-low .paper-backdrop,.stage.perf-low .rear-layer{filter:none!important}
 .world-layer{position:absolute;left:0;right:0;pointer-events:none;overflow:hidden}
 .track{position:absolute;left:0;top:0;height:100%;will-change:transform}
-.road-layer{
-  bottom:0;height:var(--ground-screen-y,112px);z-index:3;overflow:visible;
-}
-.road-surface{
-  --road-surface-x:0px;
-  position:absolute;z-index:3;left:0;right:0;top:0;height:80px;
-  pointer-events:none;
-  background-image:url("../assets/road/user-road-surface-r1.webp?v=user-road-r6");
-  background-repeat:repeat-x;
-  background-size:512px 80px;
-  background-position:var(--road-surface-x) 0;
-  border-top:2px solid rgba(236,211,173,.34);
-  border-bottom:3px solid rgba(38,36,37,.36);
-  box-shadow:0 5px 5px rgba(28,25,24,.18);
-}
-.road-track{
-  z-index:1;display:block;height:100%;position:absolute;left:0;top:0;
-  filter:drop-shadow(0 5px 4px rgba(28,24,22,.20));
-}
-.road-tile{
-  position:absolute;left:0;top:0;width:128px;height:100%;display:block;margin:0;
-  box-sizing:border-box;transform:translateZ(0);overflow:hidden;
-}
-.paper-ground-tile{
-  background:
-    radial-gradient(circle at 22% 48%,rgba(242,218,171,.10) 0 2px,transparent 2.7px),
-    radial-gradient(circle at 68% 67%,rgba(48,35,26,.17) 0 2.2px,transparent 3px),
-    linear-gradient(90deg,rgba(255,238,204,.04),transparent 18%,transparent 82%,rgba(24,25,28,.18)),
-    linear-gradient(to bottom,#5b5148 0 18%,#4b4541 19% 62%,#3d3938 100%);
-  border-left:1px solid rgba(238,218,181,.07);
-  border-right:3px solid rgba(33,31,31,.30);
-  box-shadow:inset 0 -16px 24px rgba(20,20,21,.15);
-}
-.paper-ground-tile::before{
-  content:"";position:absolute;left:0;right:0;top:78px;height:5px;pointer-events:none;
-  background:linear-gradient(to bottom,rgba(237,214,181,.10),rgba(28,27,28,.18));
-}
+.road-layer{display:none!important}
+.road-surface,.road-track,.road-tile{display:none!important}
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
 .midground-building-layer{
   position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none
@@ -2068,3 +2013,8 @@ button{cursor:pointer}
   animation-timing-function:cubic-bezier(.42,0,.58,1)!important;
 }
 
+
+/* clean-stage-r14: no assistant-authored filler scenery */
+#paperBackdrop,#paperBackdropNext{display:none!important}
+.rear-layer,.front-layer{display:none!important}
+.terrain-piece,.map-object,.map-landmark,.pickup,.junction-marker,.fork-node-hint,.fork-exit-guide{display:none!important}

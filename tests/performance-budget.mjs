@@ -18,7 +18,6 @@ const budgets={
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/apartment-midground.webp':350000,
-  'assets/backgrounds/mountain-paper-r13.webp':120000,
   'assets/backgrounds/sun-paper-r13.webp':50000,
   'assets/backgrounds/moon-paper-r13.webp':50000,
   'assets/backgrounds/cloud-paper-r13.webp':50000
@@ -45,10 +44,10 @@ assert(game.includes("ambientInterval"),'Paused-world ambient throttling missing
 assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external apartment CDN');
 assert(!html.includes("blackKeyApartment")&&!css.includes("blackKeyApartment"),'Realtime apartment chroma-key filter returned');
 assert(game.includes("updateMidgroundApartmentVisibility"),'Apartment off-screen culling missing');
-assert(game.includes("MOUNTAIN_PARALLAX=.16"),'Mountain parallax factor missing');
-assert(css.includes(".mountain-background-track{"),'Mountain paper track missing');
-assert(css.includes("bottom:calc(var(--ground-screen-y,112px) - 48px)"),'Mountain foot must stay buried below ground');
-assert(game.includes("mountainPairWidth"),'Mountain repeat width measurement missing');
+assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"),'Background mountain layer returned');
+assert(css.includes(".road-layer{display:none!important}"),'Road visuals returned');
+assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=0"),'Authored obstacles returned');
+assert(game.includes("const rear=[];")&&game.includes("const front=[];"),'Authored prop strips returned');
 assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
 
