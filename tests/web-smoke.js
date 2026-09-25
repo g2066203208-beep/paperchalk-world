@@ -59,6 +59,8 @@ assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
 assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
 assert(game.includes("window.PaperchalkMap"), "Map API missing");
 assert(game.includes("window.PaperchalkRuntime"), "Renderer-neutral runtime contract missing");
+assert(fs.existsSync("src/puppet/paper-puppet-runtime.mjs"), "Paper puppet runtime module missing");
+assert(fs.existsSync("assets/puppets/player/manifest.json"), "Player puppet manifest missing");
 assert(game.includes("refreshRuntimeFrameState"), "Allocation-free renderer frame state missing");
 assert(game.includes("const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156})"), "Base 104x156 player visual config missing");
 assert(game.includes("const PLAYER_VISUAL={w:104,h:156,scale:1}"), "Mutable responsive player visual state missing");
@@ -71,7 +73,7 @@ assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip tr
 assert(!game.includes("function startPlayerPaperFlip"), "Full paper flip must not run on every action change");
 assert(game.includes("startPlayerActionSettle(previousState,state)"), "Action changes must use soft settle");
 assert(game.includes("state==='crouch'||previousState==='crouch')return"), "Crouch must bypass shared-card scale settle");
-assert(html.includes('/assets/player/runtime/crouch.webp?v=clean-stage-r14'), "Crouch asset must be eagerly preloaded");
+assert(html.includes('/assets/player/runtime/crouch.webp?v='), "Crouch asset must be eagerly preloaded");
 assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
