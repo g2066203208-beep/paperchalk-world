@@ -1535,7 +1535,8 @@ function setDebugFlightMode(enabled){
   joystickFlightAxisY=0;
   playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
   if(sceneLocation==='interior'&&!debugFlightMode){
-    playerY=interiorWalkSurfaceY(interiorPlayerWorldX);
+    setInteriorWalkStateFromPosition();
+    playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
     playerGrounded=true;
     updateInteriorCamera();
   }else{
@@ -1796,6 +1797,7 @@ window.PaperchalkScene={
   get interiorX(){return interiorPlayerWorldX},
   get interiorY(){return playerY},
   get interiorCamera(){return {x:interiorCameraX,y:interiorCameraY}},
+  get interiorStairState(){return interiorStairState},
   get interiorMap(){return {
     width:INTERIOR_MAP_WIDTH,
     height:INTERIOR_MAP_HEIGHT,
@@ -2926,9 +2928,9 @@ function frame(now){
 
   let playerDynamic=!playerGrounded||jumpBufferTimer>0;
   if(sceneLocation==='interior'){
-    playerVy=0;jumpBufferTimer=0;
+    jumpBufferTimer=Math.max(0,jumpBufferTimer-dt);
     if(debugFlightMode){
-      playerGrounded=false;coyoteTimer=0;
+      playerGrounded=false;playerVy=0;coyoteTimer=0;
       const vy=flightVerticalAxis();
       if(Math.abs(vy)>.02){
         playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
@@ -2944,15 +2946,21 @@ function frame(now){
         updateInteriorCamera();
       }
     }else{
-      playerGrounded=true;coyoteTimer=COYOTE_TIME;
-      playerY=interiorWalkSurfaceY(interiorPlayerWorldX);
+      if(playerGrounded)coyoteTimer=COYOTE_TIME;
+      else coyoteTimer=Math.max(0,coyoteTimer-dt);
+      if(jumpBufferTimer>0&&(playerGrounded||coyoteTimer>0))performJump();
       if(moving){
         const dir=Math.sign(axis);
         setFacing(dir);
         const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
-        moveInteriorHorizontal(dir*speed*dt);
+        moveInteriorHorizontal(dir*speed*dt,{airborne:!playerGrounded});
+        playerDynamic=true;
+      }
+      if(!playerGrounded){
+        updateInteriorVertical(dt);
         playerDynamic=true;
       }else{
+        playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
         updateInteriorCamera();
       }
     }
@@ -3039,7 +3047,7 @@ addEventListener('keydown',e=>{
   }
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){
     if(debugFlightMode)keyboardFlightUp=true;
-    else if(sceneLocation!=='interior')jumpPlayer();
+    else jumpPlayer();
     e.preventDefault();
   }
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
@@ -3081,7 +3089,6 @@ jumpBtn.addEventListener('pointerdown',e=>{
     jumpBtn.classList.add('is-active');
     try{jumpBtn.setPointerCapture(e.pointerId)}catch{}
   }else{
-    if(sceneLocation==='interior')return;
     jumpPlayer();
   }
 });
