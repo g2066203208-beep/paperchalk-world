@@ -289,8 +289,8 @@ try{
   await page.keyboard.up('KeyD');
   await page.waitForTimeout(60);
   const flightRight=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Vertical-only flight ignores horizontal movement input',
-    Math.abs(flightRight.x-flightX0)<1,
+  check('Free flight moves horizontally as well as vertically',
+    flightRight.x>flightX0+25,
     JSON.stringify({flightX0,flightRight}));
   await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(50);
@@ -415,6 +415,26 @@ try{
   check('Interior paper stage arrives after exterior exits',
     interiorStage.location==='interior'&&interiorStage.visible==='visible'&&interiorStage.worldClass.includes('scene-interior'),
     JSON.stringify(interiorStage));
+  const interiorDepth=await page.evaluate(()=>{
+    const z=id=>Number.parseInt(getComputedStyle(document.getElementById(id)).zIndex,10);
+    const door=document.getElementById('interiorExitDoor').getBoundingClientRect();
+    return {
+      far:z('interiorFarLayer'),
+      mid:z('interiorMidLayer'),
+      player:Number.parseInt(getComputedStyle(document.querySelector('.actor')).zIndex,10),
+      near:z('interiorNearLayer'),
+      doorCenterX:door.left+door.width/2,
+      exteriorDoorX:window.PaperchalkScene.doorScreenX,
+      interiorDoorX:window.PaperchalkScene.interiorDoorScreenX
+    };
+  });
+  check('Interior depth order is far -> mid -> player -> near',
+    interiorDepth.far<interiorDepth.mid&&interiorDepth.mid<interiorDepth.player&&interiorDepth.player<interiorDepth.near,
+    JSON.stringify(interiorDepth));
+  check('Interior and exterior doorway share the same screen X',
+    Math.abs(interiorDepth.doorCenterX-interiorDepth.interiorDoorX)<2&&
+    Math.abs(interiorDepth.doorCenterX-interiorDepth.exteriorDoorX)<2,
+    JSON.stringify(interiorDepth));
   const stagePlayerInterior=await page.evaluate(()=>{
     const r=document.querySelector('.actor').getBoundingClientRect();
     return {x:r.left,y:r.top};
