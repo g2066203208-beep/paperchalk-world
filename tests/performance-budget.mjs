@@ -16,7 +16,8 @@ const budgets={
   'styles/game.css':120000,
   'src/game.js':180000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
-  'vendor/pixi/pixi-8.21.0.mjs':900000
+  'vendor/pixi/pixi-8.21.0.mjs':900000,
+  'assets/backgrounds/apartment-midground.webp':350000
 };
 for(const [file,max] of Object.entries(budgets)){
   const bytes=size(file);
@@ -37,6 +38,11 @@ assert(renderer.includes("forcedRendererQuery"),'Explicit renderer override path
 assert(renderer.includes("if(forcedRendererQuery)"),'GPU renderer appears to boot eagerly again');
 assert(game.includes("PerformanceObserver"),'Long-task performance diagnostics missing');
 assert(game.includes("ambientInterval"),'Paused-world ambient throttling missing');
+assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external apartment CDN');
+assert(!html.includes("blackKeyApartment")&&!css.includes("blackKeyApartment"),'Realtime apartment chroma-key filter returned');
+assert(game.includes("updateMidgroundApartmentVisibility"),'Apartment off-screen culling missing');
+assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
+assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
 
 assert(!game.includes("terrainTrack.innerHTML=''"),'Terrain window reverted to destructive DOM rebuild');
 assert(!game.includes("mapObjectTrack.innerHTML=''"),'Map objects reverted to destructive DOM rebuild');
@@ -79,7 +85,11 @@ const report={
     'android-http-cache',
     'optimized-player-sprites',
     'debounced-viewport',
-    'predecoded-player-actions'
+    'predecoded-player-actions',
+    'local-apartment-asset',
+    'apartment-culling',
+    'finite-midground-layer',
+    'no-runtime-chroma-key'
   ]
 };
 console.log('PERFORMANCE_BUDGET_PASS '+JSON.stringify(report));

@@ -555,6 +555,26 @@ const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
 const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
 const midgroundApartment=document.getElementById('midgroundApartment');
+const APARTMENT_WORLD_X=520;
+const APARTMENT_WIDTH=1152;
+const APARTMENT_PARALLAX=.78;
+const APARTMENT_CULL_MARGIN=180;
+let midgroundApartmentVisible=null;
+midgroundApartment?.addEventListener('error',()=>{
+  midgroundApartment.hidden=true;
+  midgroundApartmentVisible=false;
+  console.warn('APARTMENT_ASSET_UNAVAILABLE');
+},{once:true});
+function updateMidgroundApartmentVisibility(sceneryX,force=false){
+  if(!midgroundApartment)return;
+  const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
+  const visible=screenLeft+APARTMENT_WIDTH>-APARTMENT_CULL_MARGIN
+    &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
+  if(force||visible!==midgroundApartmentVisible){
+    midgroundApartmentVisible=visible;
+    midgroundApartment.hidden=!visible;
+  }
+}
 const terrainTrack=document.getElementById('terrainTrack');
 const mapObjectTrack=document.getElementById('mapObjectTrack');
 const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
@@ -2372,7 +2392,8 @@ function renderWorld(force=false){
   updateRoadPool(sceneryX,force);
   updatePropPools(sceneryX,force);
   const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,0,0)';
-  const midgroundT='translate3d('+(-(sceneryX*.78))+'px,0,0)';
+  updateMidgroundApartmentVisibility(sceneryX,force);
+  const midgroundT='translate3d('+(-(sceneryX*APARTMENT_PARALLAX))+'px,0,0)';
   const rearCamera=sceneryX*.97,frontCamera=sceneryX*1.03;
   const rearT='translate3d('+(-(rearCamera-rearPropPool.originX))+'px,0,0)';
   const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,0,0)';

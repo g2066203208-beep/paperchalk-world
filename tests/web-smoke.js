@@ -71,10 +71,9 @@ assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action p
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
 assert(!fs.existsSync("assets/road.webp"), "Legacy road image asset must stay removed");
 assert(html.includes('class="road-tile voxel-ground-tile"'), "Voxel ground tile missing");
-assert(css.includes(".voxel-ground-tile"), "Voxel ground CSS missing");
-assert(css.includes("--ground-screen-y"), "Responsive voxel ground line missing");
-assert(game.includes("setProperty('--ground-screen-y'"), "Physics ground is not wired to voxel visual surface");
-assert(css.includes("width:128px"), "Ground tile must use locked 128px world grid");
+assert(css.includes("--ground-screen-y"), "Responsive ground line missing");
+assert(game.includes("setProperty('--ground-screen-y'"), "Physics ground is not wired to visual surface");
+assert(css.includes("width:128px"), "Road strip tile width changed unexpectedly");
 assert(!css.includes("clip-path:polygon(0 2px,92% 2px,100% 28%,8% 100%)"), "Old fake-perspective ground cap must stay removed");
 assert(!css.includes("transform:rotateX(68deg) translateZ(-30px)"), "Perspective stage floor must stay removed");
 assert(css.includes("user-road-surface-r1.webp"), "Supplied painted road texture is not active");
@@ -85,10 +84,17 @@ assert(css.includes("background-repeat:repeat-x"), "Road surface must repeat hor
 assert(game.includes("const roadSurface=document.getElementById('roadSurface')"), "Road surface DOM binding missing");
 assert(!html.includes('worldBlockTrack'), "Voxel/block world layer must stay removed");
 assert(html.includes('id="midgroundApartment"'), "Apartment midground image missing");
+assert(fs.existsSync("assets/backgrounds/apartment-midground.webp"), "Local apartment runtime asset missing");
+assert(html.includes('./assets/backgrounds/apartment-midground.webp?v=repo-optimization-r10'), "Apartment is not using the local runtime asset");
+assert(!html.includes("cdn.openart.ai"), "Runtime HTML still depends on OpenArt CDN");
+assert(!html.includes("blackKeyApartment") && !css.includes("blackKeyApartment"), "Realtime apartment black-key filter still present");
+assert(!html.includes("voxel-ground") && !css.includes("voxel-ground"), "Voxel-era ground naming returned");
+assert(game.includes("updateMidgroundApartmentVisibility"), "Apartment off-screen culling missing");
+assert(css.includes("width:1800px"), "Apartment track expanded back to world-scale width");
 assert(html.includes('width="1152" height="1536"'), "Apartment must retain original 1152x1536 display dimensions");
 assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing");
 assert(css.includes("width:1152px;height:1536px"), "Apartment original-size CSS missing");
-assert(game.includes("midgroundT='translate3d('"), "Apartment parallax transform missing");
+assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missing");
 
 assert(!css.includes(".world-block{"), "Voxel/block ground visuals must stay removed");
 assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay removed");

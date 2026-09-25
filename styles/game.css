@@ -239,7 +239,7 @@ button{cursor:pointer}
   position:absolute;left:0;top:0;width:128px;height:100%;display:block;margin:0;
   box-sizing:border-box;transform:translateZ(0);overflow:hidden;
 }
-.voxel-ground-tile{
+.paper-ground-tile{
   background:
     radial-gradient(circle at 22% 48%,rgba(242,218,171,.10) 0 2px,transparent 2.7px),
     radial-gradient(circle at 68% 67%,rgba(48,35,26,.17) 0 2.2px,transparent 3px),
@@ -249,26 +249,24 @@ button{cursor:pointer}
   border-right:3px solid rgba(33,31,31,.30);
   box-shadow:inset 0 -16px 24px rgba(20,20,21,.15);
 }
-.voxel-ground-tile::before{
+.paper-ground-tile::before{
   content:"";position:absolute;left:0;right:0;top:78px;height:5px;pointer-events:none;
   background:linear-gradient(to bottom,rgba(237,214,181,.10),rgba(28,27,28,.18));
 }
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
-.asset-filter-defs{position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;pointer-events:none}
 .midground-building-layer{
   position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none
 }
 .midground-building-track{
-  position:absolute;left:0;top:0;height:100%;width:var(--world-width,120000px);
-  will-change:transform;pointer-events:none
+  position:absolute;left:0;top:0;height:100%;width:1800px;
+  pointer-events:none;contain:layout paint
 }
 .midground-apartment{
   position:absolute;left:520px;bottom:var(--ground-screen-y,112px);
   width:1152px;height:1536px;max-width:none;max-height:none;
   object-fit:contain;object-position:left bottom;
   transform-origin:50% 100%;
-  filter:url(#blackKeyApartment);
-  backface-visibility:hidden;pointer-events:none
+  backface-visibility:hidden;pointer-events:none;contain:paint
 }
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
