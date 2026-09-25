@@ -545,20 +545,22 @@ function syncInteriorDoorWithExterior(){
 }
 function positionInteriorExitDoor(){
   if(!interiorExitDoor)return;
-  const rect=interiorExitDoor.getBoundingClientRect();
-  const doorW=rect.width||VIEW_W*.15;
-  interiorExitDoor.style.right='';
-  interiorExitDoor.style.left=(interiorExitX()-doorW*.5).toFixed(1)+'px';
+  // Keep doorway placement in the same stage coordinate system as the exterior
+  // apartment. Centering uses CSS translate so responsive door width never leaks
+  // getBoundingClientRect() screen pixels back into logical stage coordinates.
+  interiorExitDoor.style.right='auto';
+  interiorExitDoor.style.left=interiorExitX().toFixed(1)+'px';
+  interiorExitDoor.style.translate='-50% 0';
+  interiorExitDoor.style.bottom=Math.max(0,MAP_GROUND_SCREEN_Y-8).toFixed(1)+'px';
 }
 function updateInteriorDepthLayers(){
+  // Depth is real z-order (far 3 / mid 4 / player 5 / near 6).
+  // The room itself stays fixed; moving the layers with the player would move
+  // the doorway away from the exterior doorway during a scene swap.
   if(sceneLocation!=='interior')return;
-  const normalized=VIEW_W>0?(interiorPlayerX-VIEW_W*.5)/VIEW_W:0;
-  const shift=(el,amount)=>{
-    if(el)el.style.transform='translate3d('+(-normalized*amount).toFixed(2)+'px,0,0)';
-  };
-  shift(interiorFarLayer,18);
-  shift(interiorMidLayer,32);
-  shift(interiorNearLayer,52);
+  if(interiorFarLayer)interiorFarLayer.style.transform='translate3d(0,0,0)';
+  if(interiorMidLayer)interiorMidLayer.style.transform='translate3d(0,0,0)';
+  if(interiorNearLayer)interiorNearLayer.style.transform='translate3d(0,0,0)';
 }
 function nearbyInteriorExit(maxDistance=92){
   return sceneLocation==='interior'&&!sceneTransitionBusy&&Math.abs(interiorPlayerX-interiorExitX())<=maxDistance;
@@ -1575,6 +1577,7 @@ window.PaperchalkScene={
   exit:exitApartment,
   get doorScreenX(){return apartmentDoorScreenX()},
   get interiorDoorScreenX(){return interiorExitX()},
+  get interiorDoorGroundY(){return Math.max(0,MAP_GROUND_SCREEN_Y-8)},
   get interiorX(){return interiorPlayerX},
   get depthLayers(){return {far:3,mid:4,player:5,near:6}}
 };
