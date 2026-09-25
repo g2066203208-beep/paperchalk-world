@@ -543,6 +543,30 @@ function syncInteriorDoorWithExterior(){
   interiorDoorScreenRatio=VIEW_W>0?x/VIEW_W:.82;
   return x;
 }
+function alignInteriorSceneToStage(force=false){
+  if(!interiorScene||sceneLocation!=='interior')return;
+  const key=VIEW_W+'x'+VIEW_H+'@'+MAP_GROUND_SCREEN_Y;
+  if(!force&&alignInteriorSceneToStage._key===key)return;
+  // Measure the browser's real containing-block offset, then cancel it with
+  // layout coordinates (not transforms, so far/mid/player/near z-order remains interleavable).
+  interiorScene.style.left='0px';
+  interiorScene.style.top='0px';
+  interiorScene.style.right='0px';
+  interiorScene.style.bottom='0px';
+  interiorScene.style.width='auto';
+  interiorScene.style.height='auto';
+  const stageRect=worldEl.getBoundingClientRect();
+  const sceneRect=interiorScene.getBoundingClientRect();
+  const dx=stageRect.left-sceneRect.left;
+  const dy=stageRect.top-sceneRect.top;
+  interiorScene.style.left=dx.toFixed(2)+'px';
+  interiorScene.style.top=dy.toFixed(2)+'px';
+  interiorScene.style.right='auto';
+  interiorScene.style.bottom='auto';
+  interiorScene.style.width=stageRect.width.toFixed(2)+'px';
+  interiorScene.style.height=stageRect.height.toFixed(2)+'px';
+  alignInteriorSceneToStage._key=key;
+}
 function positionInteriorExitDoor(){
   if(!interiorExitDoor)return;
   // Keep doorway placement in the same stage coordinate system as the exterior
@@ -2603,6 +2627,7 @@ function renderWorld(force=false){
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
   if(sceneLocation==='interior'){
+    alignInteriorSceneToStage(force);
     positionInteriorExitDoor();
     updateInteriorDepthLayers();
   }
