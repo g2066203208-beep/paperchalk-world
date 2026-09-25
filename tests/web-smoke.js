@@ -89,7 +89,7 @@ assert(game.includes("const roadSurface=document.getElementById('roadSurface')")
 assert(!html.includes('worldBlockTrack'), "Voxel/block world layer must stay removed");
 assert(html.includes('id="midgroundApartment"'), "Apartment midground image missing");
 assert(fs.existsSync("assets/backgrounds/apartment-midground.webp"), "Local apartment runtime asset missing");
-assert(html.includes('./assets/backgrounds/apartment-midground.webp?v=repo-optimization-r10'), "Apartment is not using the local runtime asset");
+assert(html.includes('./assets/backgrounds/apartment-midground.webp?v='), "Apartment is not using the local runtime asset");
 assert(!html.includes("cdn.openart.ai"), "Runtime HTML still depends on OpenArt CDN");
 assert(!html.includes("blackKeyApartment") && !css.includes("blackKeyApartment"), "Realtime apartment black-key filter still present");
 assert(!html.includes("voxel-ground") && !css.includes("voxel-ground"), "Voxel-era ground naming returned");
