@@ -21,6 +21,21 @@ public class MainActivity extends Activity {
             "https://g2066203208-beep.github.io/paperchalk-world/";
 
     private WebView webView;
+    private long pausedAtMs = 0L;
+    private boolean initialResume = true;
+
+    private void loadFreshGame(String reason) {
+        if (webView == null) return;
+        String refreshUrl = GAME_URL
+                + "?androidRefresh="
+                + System.currentTimeMillis()
+                + "&reason="
+                + reason;
+        java.util.HashMap<String, String> freshHeaders = new java.util.HashMap<>();
+        freshHeaders.put("Cache-Control", "no-cache, max-age=0");
+        freshHeaders.put("Pragma", "no-cache");
+        webView.loadUrl(refreshUrl, freshHeaders);
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -70,16 +85,8 @@ public class MainActivity extends Activity {
 
             setContentView(webView);
 
-            // Always fetch the tiny HTML shell fresh on every app launch so the Android
-            // WebView cannot stay pinned to an old GitHub Pages build. Heavy versioned
-            // images/scripts/styles still use the normal HTTP cache.
-            String launchUrl = GAME_URL
-                    + "?androidLaunch="
-                    + System.currentTimeMillis();
-            java.util.HashMap<String, String> freshHeaders = new java.util.HashMap<>();
-            freshHeaders.put("Cache-Control", "no-cache, max-age=0");
-            freshHeaders.put("Pragma", "no-cache");
-            webView.loadUrl(launchUrl, freshHeaders);
+            // Fetch the tiny HTML shell fresh. Heavy versioned assets remain cached.
+            loadFreshGame("launch");
 
         } catch (Throwable t) {
             TextView error = new TextView(this);
@@ -110,11 +117,22 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         hideSystemBars();
-        if (webView != null) webView.onResume();
+        if (webView != null) {
+            webView.onResume();
+            if (initialResume) {
+                initialResume = false;
+            } else if (pausedAtMs > 0L) {
+                // Returning from the Android background must revalidate the HTML shell.
+                // This prevents the app from showing an old world indefinitely.
+                loadFreshGame("resume");
+            }
+        }
+        pausedAtMs = 0L;
     }
 
     @Override
     protected void onPause() {
+        pausedAtMs = System.currentTimeMillis();
         if (webView != null) webView.onPause();
         super.onPause();
     }

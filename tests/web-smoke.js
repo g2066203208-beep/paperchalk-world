@@ -89,8 +89,12 @@ assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay rem
 assert(!html.includes('id="mineBtn"') && !html.includes('id="placeBtn"'), "Voxel mine/place controls must stay removed");
 assert(game.includes("setProperty('--road-surface-x'"), "Road surface is not world-anchored");
 const androidMain=fs.readFileSync("android-app/app/src/main/java/com/paperchalk/world/MainActivity.java","utf8");
-assert(androidMain.includes("?androidLaunch="), "Android app must cache-bust the HTML shell on every launch");
+assert(androidMain.includes("?androidRefresh="), "Android app must cache-bust the HTML shell on refresh");
+assert(androidMain.includes('loadFreshGame("launch")'), "Android cold launch refresh missing");
+assert(androidMain.includes('loadFreshGame("resume")'), "Android foreground resume refresh missing");
 assert(androidMain.includes('"Cache-Control", "no-cache, max-age=0"'), "Android HTML request must force revalidation");
+const androidGradle=fs.readFileSync("android-app/app/build.gradle.kts","utf8");
+assert(androidGradle.includes("versionCode = 2") && androidGradle.includes('versionName = "0.1.1"'), "Android APK version was not bumped");
 assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
