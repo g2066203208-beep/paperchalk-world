@@ -84,6 +84,12 @@ assert(css.includes(".road-surface{"), "Road surface CSS missing");
 assert(css.includes("background-repeat:repeat-x"), "Road surface must repeat horizontally");
 assert(game.includes("const roadSurface=document.getElementById('roadSurface')"), "Road surface DOM binding missing");
 assert(!html.includes('worldBlockTrack'), "Voxel/block world layer must stay removed");
+assert(html.includes('id="midgroundApartment"'), "Apartment midground image missing");
+assert(html.includes('width="1152" height="1536"'), "Apartment must retain original 1152x1536 display dimensions");
+assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing");
+assert(css.includes("width:1152px;height:1536px"), "Apartment original-size CSS missing");
+assert(game.includes("midgroundT='translate3d('"), "Apartment parallax transform missing");
+
 assert(!css.includes(".world-block{"), "Voxel/block ground visuals must stay removed");
 assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay removed");
 assert(!html.includes('id="mineBtn"') && !html.includes('id="placeBtn"'), "Voxel mine/place controls must stay removed");

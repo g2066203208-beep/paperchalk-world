@@ -254,6 +254,22 @@ button{cursor:pointer}
   background:linear-gradient(to bottom,rgba(237,214,181,.10),rgba(28,27,28,.18));
 }
 .rear-layer{bottom:2.5vh;height:300px;z-index:4}
+.asset-filter-defs{position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;pointer-events:none}
+.midground-building-layer{
+  position:absolute;inset:0;z-index:2;overflow:hidden;pointer-events:none
+}
+.midground-building-track{
+  position:absolute;left:0;top:0;height:100%;width:var(--world-width,120000px);
+  will-change:transform;pointer-events:none
+}
+.midground-apartment{
+  position:absolute;left:520px;bottom:var(--ground-screen-y,112px);
+  width:1152px;height:1536px;max-width:none;max-height:none;
+  object-fit:contain;object-position:left bottom;
+  transform-origin:50% 100%;
+  filter:url(#blackKeyApartment);
+  backface-visibility:hidden;pointer-events:none
+}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
 .map-track{position:absolute;left:0;top:0;height:100%;width:var(--world-width,6000px);will-change:transform}

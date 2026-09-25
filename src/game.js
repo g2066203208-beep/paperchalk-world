@@ -553,6 +553,8 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
+const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
+const midgroundApartment=document.getElementById('midgroundApartment');
 const terrainTrack=document.getElementById('terrainTrack');
 const mapObjectTrack=document.getElementById('mapObjectTrack');
 const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
@@ -2357,7 +2359,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
+const renderCache={road:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -2370,11 +2372,13 @@ function renderWorld(force=false){
   updateRoadPool(sceneryX,force);
   updatePropPools(sceneryX,force);
   const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,0,0)';
+  const midgroundT='translate3d('+(-(sceneryX*.78))+'px,0,0)';
   const rearCamera=sceneryX*.97,frontCamera=sceneryX*1.03;
   const rearT='translate3d('+(-(rearCamera-rearPropPool.originX))+'px,0,0)';
   const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,0,0)';
   const mapT='translate3d('+(-(worldX-visualOriginX))+'px,0,0)';
   writeTransform(roadTrack,'road',roadT);
+  if(midgroundBuildingTrack)writeTransform(midgroundBuildingTrack,'midground',midgroundT);
   writeTransform(rearTrack,'rear',rearT);
   writeTransform(frontTrack,'front',frontT);
   writeTransform(mapTrack,'map',mapT);

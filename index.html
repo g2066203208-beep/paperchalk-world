@@ -7,10 +7,10 @@
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/dialogue/npc-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=no-voxel-r8" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=apartment-midground-r9" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="no-voxel-r8">
-<link rel="stylesheet" href="./styles/game.css?v=no-voxel-r8">
+<meta name="paperchalk-build" content="apartment-midground-r9">
+<link rel="stylesheet" href="./styles/game.css?v=apartment-midground-r9">
 </head>
 <body>
 
@@ -34,6 +34,19 @@
       <div class="road-tile voxel-ground-tile" id="roadTile"></div>
     </div>
   </div>
+  <svg class="asset-filter-defs" aria-hidden="true" width="0" height="0">
+    <filter id="blackKeyApartment" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  .333333 .333333 .333333 0 0"/>
+      <feComponentTransfer><feFuncA type="linear" slope="255" intercept="0"/></feComponentTransfer>
+    </filter>
+  </svg>
+  <div class="midground-building-layer" aria-hidden="true">
+    <div id="midgroundBuildingTrack" class="midground-building-track">
+      <img id="midgroundApartment" class="midground-apartment"
+           src="https://cdn.openart.ai/openart-uploads/production/attachment-transfers/dec343ecea57d90d50ceb8cff2ac579208fbcec5dcf5f73c0c438dfeb71b0908.jpg"
+           width="1152" height="1536" alt="" decoding="async" draggable="false">
+    </div>
+  </div>
   <div class="map-layer" aria-hidden="true">
     <div id="mapTrack" class="map-track">
       <div id="terrainTrack"></div>
@@ -47,7 +60,7 @@
   <div class="actor" data-player-state="idle">
     <div class="foot-shadow" aria-hidden="true"></div>
     <div id="playerFlip" class="player-flip">
-      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=no-voxel-r8" alt="正式主角">
+      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=apartment-midground-r9" alt="正式主角">
     </div>
   </div>
   <div class="entity-layer" aria-hidden="true">
@@ -342,7 +355,7 @@
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
-<script src="./src/game.js?v=no-voxel-r8"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=no-voxel-r8"></script>
+<script src="./src/game.js?v=apartment-midground-r9"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=apartment-midground-r9"></script>
 </body>
 </html>
