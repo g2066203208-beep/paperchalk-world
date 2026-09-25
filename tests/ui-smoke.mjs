@@ -105,6 +105,22 @@ assert(await waitFor("document.getElementById('uiShell')?.classList.contains('is
 noFaults('register -> world');
 console.log('PASS register -> world');
 
+const damageFx=await js(`(async()=>{
+  PaperchalkHealth.reset();
+  await new Promise(r=>setTimeout(r,40));
+  PaperchalkHealth.damage(1);
+  const piece=document.querySelector('[data-hp-index="9"]');
+  const start={cls:piece.className,anim:getComputedStyle(piece).animationName,opacity:getComputedStyle(piece).opacity};
+  await new Promise(r=>setTimeout(r,110));
+  const mid={cls:piece.className,anim:getComputedStyle(piece).animationName,opacity:getComputedStyle(piece).opacity,transform:getComputedStyle(piece).transform,filter:getComputedStyle(piece).filter};
+  PaperchalkHealth.heal(1);
+  return {start,mid};
+})()`);
+assert(damageFx.start.cls.includes('is-hit'),'damage class missing '+JSON.stringify(damageFx));
+assert(damageFx.start.anim.includes('hp-sewn-hit'),'damage animation missing '+JSON.stringify(damageFx));
+assert(parseFloat(damageFx.mid.opacity)>.25,'damage animation is visually hidden '+JSON.stringify(damageFx));
+console.log('PASS visible damage FX',damageFx);
+
 const enemyMotion=await js(`(async()=>{
   PaperchalkCombat.placeEnemyNear(320);
   await new Promise(r=>setTimeout(r,120));
@@ -154,6 +170,14 @@ assert(await waitFor("window.PaperchalkDialogue?.state?.phase==='opening'",350),
 const dialogueLatency=Date.now()-dialogueClickAt;
 assert(dialogueLatency<500,'dialogue opening latency too high '+dialogueLatency+'ms');
 console.log('PASS dialogue opening latency',dialogueLatency+'ms');
+const entranceFx=await js(`(()=>{
+  const p=getComputedStyle(document.getElementById('dialoguePlayerPortrait'));
+  const n=getComputedStyle(document.getElementById('dialogueNpcPortrait'));
+  return {playerName:p.animationName,playerDir:p.animationDirection,npcName:n.animationName,npcDir:n.animationDirection};
+})()`);
+assert(entranceFx.playerName.includes('puppetPlayerArcOut')&&entranceFx.playerDir==='reverse','player entrance is not reverse exit '+JSON.stringify(entranceFx));
+assert(entranceFx.npcName.includes('puppetNpcArcOut')&&entranceFx.npcDir==='reverse','NPC entrance is not reverse exit '+JSON.stringify(entranceFx));
+console.log('PASS mirrored portrait entrance',entranceFx);
 await sleep(500);
 noFaults('dialogue open');
 const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
@@ -162,6 +186,12 @@ assert(portraits.pw>=480&&portraits.ph>=900,'player portrait is still low resolu
 assert(portraits.nw>=640&&portraits.nh>=1004,'NPC portrait is still low resolution '+JSON.stringify(portraits));
 console.log('PASS dialogue/portraits HD',portraits);
 
+const portraitBeforeChoice=await js(`(()=>{
+  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
+  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
+  return {p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height}};
+})()`);
+
 await js("document.getElementById('dialogueStage').dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:2,pointerType:'touch'}))");
 assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-choice')",1000),'choice state did not open');
 await sleep(300);
@@ -169,16 +199,20 @@ const choices=await js(`(()=>{
   const vw=innerWidth,vh=innerHeight;
   const a=[...document.querySelectorAll('.dialogue-choice')].map(b=>{const r=b.getBoundingClientRect();return {text:b.textContent,x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom,visible:r.width>0&&r.height>0}});
   const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
-  const player={x:p.x,y:p.y,w:p.width,h:p.height,right:p.right,bottom:p.bottom,cx:p.x+p.width/2,cy:p.y+p.height/2};
-  return {vw,vh,a,player,allInside:a.length===3&&a.every(r=>r.visible&&r.x>=0&&r.y>=0&&r.right<=vw&&r.bottom<=vh)};
+  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
+  const camera=document.getElementById('world').classList.contains('dialogue-choice-camera');
+  return {vw,vh,a,camera,p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height},
+    allInside:a.length===3&&a.every(r=>r.visible&&r.x>=0&&r.y>=0&&r.right<=vw&&r.bottom<=vh)};
 })()`);
-assert(choices.allInside,'choice layout clipped '+JSON.stringify(choices));
-assert(choices.a[0].y>=40&&choices.a[0].y<=choices.vh*.20,'top choice is too close to screen edge '+JSON.stringify(choices));
-assert(choices.a[1].y>=choices.vh*.32&&choices.a[1].y<=choices.vh*.50,'left choice vertical composition is poor '+JSON.stringify(choices));
-assert(choices.a[2].y>=choices.vh*.32&&choices.a[2].y<=choices.vh*.50,'right choice vertical composition is poor '+JSON.stringify(choices));
-assert(choices.player.cx>=choices.vw*.43&&choices.player.cx<=choices.vw*.58,'choice portrait is not centered enough '+JSON.stringify(choices));
-assert(choices.player.y>=-4&&choices.player.bottom<=choices.vh+4,'choice portrait is vertically clipped '+JSON.stringify(choices));
-console.log('PASS choice composition',choices);
+assert(choices.allInside,'choice stack clipped '+JSON.stringify(choices));
+assert(!choices.camera,'choice still triggers separate camera performance '+JSON.stringify(choices));
+assert(choices.a[0].x===choices.a[1].x&&choices.a[1].x===choices.a[2].x,'choices are not one vertical column '+JSON.stringify(choices));
+assert(Math.abs(choices.a[0].w-choices.a[1].w)<1&&Math.abs(choices.a[1].w-choices.a[2].w)<1,'choice widths differ '+JSON.stringify(choices));
+assert(choices.a[0].y<choices.a[1].y&&choices.a[1].y<choices.a[2].y,'choices are not vertically ordered '+JSON.stringify(choices));
+assert(choices.a[0].y>choices.vh*.52&&choices.a[2].bottom<choices.vh*.98,'choice stack is not in middle-bottom area '+JSON.stringify(choices));
+assert(Math.abs(choices.p.x-portraitBeforeChoice.p.x)<2&&Math.abs(choices.p.y-portraitBeforeChoice.p.y)<2,'player portrait jumps when choices appear '+JSON.stringify({before:portraitBeforeChoice,after:choices}));
+assert(Math.abs(choices.n.x-portraitBeforeChoice.n.x)<2&&Math.abs(choices.n.y-portraitBeforeChoice.n.y)<2,'NPC portrait jumps when choices appear '+JSON.stringify({before:portraitBeforeChoice,after:choices}));
+console.log('PASS simple stacked choices',choices);
 
 await js("document.querySelector('.dialogue-choice')?.click()");
 await sleep(250);
