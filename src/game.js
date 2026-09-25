@@ -555,12 +555,9 @@ function positionInteriorExitDoor(){
 }
 function updateInteriorDepthLayers(){
   // Depth is real z-order (far 3 / mid 4 / player 5 / near 6).
-  // The room itself stays fixed; moving the layers with the player would move
-  // the doorway away from the exterior doorway during a scene swap.
-  if(sceneLocation!=='interior')return;
-  if(interiorFarLayer)interiorFarLayer.style.transform='translate3d(0,0,0)';
-  if(interiorMidLayer)interiorMidLayer.style.transform='translate3d(0,0,0)';
-  if(interiorNearLayer)interiorNearLayer.style.transform='translate3d(0,0,0)';
+  // Keep all room layers in the same flat stage coordinate system so the
+  // doorway can swap 1:1 with its exterior position.
+  return sceneLocation==='interior';
 }
 function nearbyInteriorExit(maxDistance=92){
   return sceneLocation==='interior'&&!sceneTransitionBusy&&Math.abs(interiorPlayerX-interiorExitX())<=maxDistance;
