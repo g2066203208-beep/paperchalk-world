@@ -52,7 +52,12 @@ assert(game.includes("PLAYER_MAX_HP=10"), "Default 10-point health system missin
 assert(game.includes("window.PaperchalkHealth"), "Health control API missing");
 assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
 assert(game.includes("window.PaperchalkMap"), "Map API missing");
-assert(game.includes("const MAP_WIDTH=6000"), "Finite 6000px map missing");
+assert(
+  game.includes("const WORLD_ZONE_WIDTH=6000") &&
+  game.includes("const WORLD_ZONE_COUNT=20") &&
+  game.includes("const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT"),
+  "120000px network world definition missing"
+);
 assert(game.includes("const MAP_TERRAIN=["), "Terrain data missing");
 assert(game.includes("const MAP_OBJECTS=["), "Map object data missing");
 assert(game.includes("const ENEMY_SPAWNS=["), "Enemy spawn data missing");
