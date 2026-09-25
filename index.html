@@ -7,10 +7,10 @@
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/dialogue/npc-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=user-road-r5" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=user-road-r6" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="user-road-r5">
-<link rel="stylesheet" href="./styles/game.css?v=user-road-r5">
+<meta name="paperchalk-build" content="user-road-r6">
+<link rel="stylesheet" href="./styles/game.css?v=user-road-r6">
 </head>
 <body>
 
@@ -29,6 +29,7 @@
   <div id="dayNightTint" class="day-night-tint" aria-hidden="true"></div>
   <div id="paperClock" class="paper-clock" aria-label="世界时间">06:00</div>
   <div class="world-layer road-layer">
+    <div id="roadSurface" class="road-surface" aria-hidden="true"></div>
     <div class="track road-track voxel-ground-track" id="roadTrack" aria-hidden="true">
       <div class="road-tile voxel-ground-tile" id="roadTile"></div>
     </div>
@@ -46,7 +47,7 @@
   <div class="actor" data-player-state="idle">
     <div class="foot-shadow" aria-hidden="true"></div>
     <div id="playerFlip" class="player-flip">
-      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=user-road-r5" alt="正式主角">
+      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=user-road-r6" alt="正式主角">
     </div>
   </div>
   <div class="entity-layer" aria-hidden="true">
@@ -341,7 +342,7 @@
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
-<script src="./src/game.js?v=user-road-r5"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=user-road-r5"></script>
+<script src="./src/game.js?v=user-road-r6"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=user-road-r6"></script>
 </body>
 </html>

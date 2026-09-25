@@ -547,6 +547,7 @@ if('requestIdleCallback' in window){
   setTimeout(()=>loadMidgroundAtlas(),220);
 }
 
+const roadSurface=document.getElementById('roadSurface');
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
@@ -2267,7 +2268,6 @@ function updateRoadPool(sceneryX,force=false){
     const x=index*roadW;
     tile.style.display=x<MAP_WIDTH+roadW?'':'none';
     tile.style.left=(x-roadPoolOriginX)+'px';
-    tile.style.setProperty('--road-tex-x',(-(((index*roadW)%512+512)%512))+'px');
   });
 }
 function ensureRoadTiles(){
@@ -2364,6 +2364,7 @@ function writeTransform(el,key,value){
 }
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
+  if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
   updateRoadPool(sceneryX,force);
