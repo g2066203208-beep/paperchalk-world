@@ -137,8 +137,8 @@ assert(game.includes("apartmentDoorScreenX")&&game.includes("nearbyApartmentDoor
 assert(game.includes("window.PaperchalkScene"), "Scene transition test API missing");
 assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
 assert(!css.includes(".stage.paper-stage-out .actor{")&&!css.includes(".stage.scene-interior.interior-stage-in .actor{")&&!css.includes(".stage.scene-interior.interior-stage-out .actor{")&&!css.includes(".stage.exterior-stage-in .actor{"), "Player must stay fixed while paper scenery changes");
-assert(game.includes("interiorPlayerX=stageHeldActorX")&&game.includes("playerWorldX=clamp(worldX+stageHeldActorX"), "Scene transition does not preserve player screen position");
-assert(game.includes("syncInteriorDoorWithExterior")&&game.includes("positionInteriorExitDoor")&&game.includes("alignedCamera"), "Indoor/outdoor doorway alignment logic missing");
+assert(game.includes("interiorPlayerX=stageHeldActorX")&&game.includes("playerWorldX=clamp(exteriorReturnX")&&game.includes("updateCamera();"), "Scene transition must restore the exterior player position and establish follow camera before reveal");
+assert(game.includes("syncInteriorDoorWithExterior")&&game.includes("positionInteriorExitDoor")&&!game.includes("const alignedCamera="), "Indoor/outdoor doorway alignment must not use a temporary exit camera");
 assert(html.includes('id="interiorFarLayer"')&&html.includes('id="interiorMidLayer"')&&html.includes('id="interiorNearLayer"'), "Interior far/mid/near depth layers missing");
 assert(css.includes(".interior-far-layer{z-index:3}")&&css.includes(".interior-mid-layer{z-index:4}")&&css.includes(".stage.scene-interior .actor{z-index:5")&&css.includes(".interior-near-layer{z-index:6}"), "Interior depth order must be far -> mid -> player -> near");
 assert(game.includes("const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis"), "Free flight horizontal movement is missing");
