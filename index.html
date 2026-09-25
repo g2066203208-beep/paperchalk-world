@@ -1576,6 +1576,8 @@ button{cursor:pointer}
 .stage.dialogue-active .debug-toggle-btn{opacity:.12;pointer-events:none}
 
 @media(pointer:coarse){
+  .dialogue-stage{transition:visibility 0s!important}
+  .dialogue-player-img,.dialogue-npc-img{filter:none!important}
   .dialogue-choice{min-height:48px;padding:9px 12px;font-size:clamp(12px,1.7vw,17px)}
   .dialogue-choice.pos-top{left:50%;right:auto;top:max(3%,14px);width:min(36vw,420px)}
   .dialogue-choice.pos-left{left:max(3%,16px);right:auto;top:34%;width:min(29vw,360px)}
