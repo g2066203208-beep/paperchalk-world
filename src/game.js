@@ -2428,7 +2428,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
+const renderCache={road:'',mountain:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
