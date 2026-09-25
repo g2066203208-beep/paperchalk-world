@@ -43,11 +43,13 @@ try{
     pixiResources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/pixi/')).length,
     worldMinutes:window.PaperchalkRuntime.getSnapshot().time.minutes
   }));
+  assert(cold.mode==='dom'&&cold.requested==='auto','Auto renderer must be DOM on both desktop and mobile '+JSON.stringify(cold));
   assert(cold.ready===false&&cold.pixiResources===0,'Pixi loaded before world entry '+JSON.stringify(cold));
   assert(coldLater.pixiResources===0,'Pixi vendor fetched while still on menu '+JSON.stringify(coldLater));
   assert(Math.abs(coldLater.worldMinutes-cold.worldMinutes)<0.001,'world time advanced on menu '+JSON.stringify({cold,coldLater}));
 
-  // Enter a real world session. Auto mode on this touch/mobile context should then load Pixi/WebGL.
+  // Enter a real world session. Auto mode remains DOM on mobile for exact desktop/mobile parity.
+  // GPU-specific assertions explicitly switch to Pixi after entry.
   await page.locator('#authBtn').click();
   await page.waitForTimeout(450);
   await page.locator('#tabRegister').click();
@@ -56,10 +58,22 @@ try{
   await page.locator('#regPass').fill('test1234');
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>document.getElementById('uiShell')?.classList.contains('is-hidden'),{timeout:3000});
+  const autoAfterEnter=await page.evaluate(()=>({
+    mode:window.PaperchalkRenderer.mode,
+    requested:window.PaperchalkRenderer.requested,
+    actorWidth:document.querySelector('.actor')?.getBoundingClientRect().width||0,
+    actorHeight:document.querySelector('.actor')?.getBoundingClientRect().height||0,
+    visual:window.PaperchalkRuntime.worldData.playerVisual
+  }));
+  assert(autoAfterEnter.mode==='dom','mobile auto mode diverged from desktop '+JSON.stringify(autoAfterEnter));
+  assert(Math.abs(autoAfterEnter.actorWidth-104)<1&&Math.abs(autoAfterEnter.actorHeight-156)<1,
+    'DOM player visual size is not 104x156 '+JSON.stringify(autoAfterEnter));
+  await page.evaluate(()=>window.PaperchalkRenderer.setMode('pixi'));
   await page.waitForFunction(()=>window.PaperchalkRenderer?.mode==='pixi'&&window.PaperchalkRenderer?.ready,{timeout:12000});
 
   const initial=await page.evaluate(()=>({
     renderer:window.PaperchalkRenderer.stats,
+    visual:window.PaperchalkRuntime.worldData.playerVisual,
     mode:window.PaperchalkRenderer.mode,
     active:window.PaperchalkRenderer.active,
     pixiResources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/pixi/')).length,
@@ -72,7 +86,10 @@ try{
     actorVisibility:getComputedStyle(document.querySelector('.actor')).visibility,
     entityVisibility:getComputedStyle(document.querySelector('.entity-layer')).visibility
   }));
-  assert(initial.mode==='pixi'&&initial.active,'Pixi renderer did not activate after world entry '+JSON.stringify(initial));
+  assert(initial.mode==='pixi'&&initial.active,'Pixi renderer did not activate after explicit switch '+JSON.stringify(initial));
+  assert(initial.visual.w===104&&initial.visual.h===156,'shared player visual config is not 104x156 '+JSON.stringify(initial.visual));
+  assert(Math.abs(initial.renderer.playerDisplayW-104)<1&&Math.abs(initial.renderer.playerDisplayH-156)<1,
+    'Pixi player visual size diverged from shared 104x156 config '+JSON.stringify(initial.renderer));
   assert(initial.pixiResources>0,'Pixi vendor was not lazy-loaded after world entry '+JSON.stringify(initial));
   assert(initial.canvas.exists&&initial.canvas.width>500&&initial.canvas.height>250,'Pixi canvas invalid '+JSON.stringify(initial.canvas));
   assert(initial.worldClass.includes('renderer-pixi-dynamic'),'renderer class missing');
