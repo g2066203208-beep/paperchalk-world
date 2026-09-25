@@ -2526,7 +2526,10 @@ dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
   else dialoguePlayerArt.src='./assets/traveler.webp?v=traveler-r3';
 },{once:true});
-if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
+dialogueNpcArt.src='./assets/dialogue/npc-portrait-hd.svg?v=1';
+dialogueNpcArt.addEventListener('error',()=>{
+  if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
+},{once:true});
 const dialoguePortraitDecode=Promise.allSettled(
   [dialoguePlayerArt,dialogueNpcArt].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
 );
