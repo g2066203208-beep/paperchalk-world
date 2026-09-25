@@ -2091,8 +2091,7 @@ button{cursor:pointer}
 }
 .stage.scene-interior .interior-scene{visibility:visible}
 .interior-depth-layer{
-  position:absolute;inset:0;pointer-events:none;will-change:transform;
-  transform:translate3d(0,0,0);
+  position:absolute;inset:0;pointer-events:none;
 }
 .interior-far-layer{z-index:3}
 .interior-mid-layer{z-index:4}
