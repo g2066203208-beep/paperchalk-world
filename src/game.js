@@ -1490,6 +1490,7 @@ function setPlayerCrouching(active,{force=false}={}){
     if(playerCrouching)return true;
     playerCrouching=true;
     actorEl.classList.add('is-crouching');
+    crouchBtn?.classList.add('is-active');
     syncPlayerActionState(true);
     return true;
   }
@@ -1497,6 +1498,7 @@ function setPlayerCrouching(active,{force=false}={}){
   if(!force&&!canStandUp())return false;
   playerCrouching=false;
   actorEl.classList.remove('is-crouching');
+  crouchBtn?.classList.remove('is-active');
   syncPlayerActionState(true);
   return true;
 }
@@ -2414,6 +2416,7 @@ addEventListener('keydown',e=>{
   if(isEditableTarget(e.target)||!worldInteractive())return;
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
   if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){jumpPlayer();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
@@ -2421,8 +2424,23 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardCrouch=false;updateCrouchState();e.preventDefault()}
 });
 interactBtn.addEventListener('pointerdown',e=>{e.preventDefault();interactWithNpc()});
+crouchBtn.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  mobileCrouch=true;
+  try{crouchBtn.setPointerCapture(e.pointerId)}catch{}
+  updateCrouchState();
+});
+const releaseMobileCrouch=e=>{
+  if(e)e.preventDefault();
+  mobileCrouch=false;
+  updateCrouchState();
+};
+crouchBtn.addEventListener('pointerup',releaseMobileCrouch);
+crouchBtn.addEventListener('pointercancel',releaseMobileCrouch);
+crouchBtn.addEventListener('lostpointercapture',releaseMobileCrouch);
 jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jumpPlayer()});
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
@@ -2433,7 +2451,9 @@ function resetJoystick(){
   joystickEl.style.setProperty('--joy-y','0px');
 }
 addEventListener('blur',()=>{
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardCrouch=false;
+  mobileCrouch=false;
+  if(playerCrouching)setPlayerCrouching(false);
   resetJoystick();
 });
 
