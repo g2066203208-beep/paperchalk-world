@@ -28,12 +28,41 @@ try{
   page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
   page.on('requestfailed',r=>errors.push('REQUEST '+r.url()+' '+JSON.stringify(r.failure())));
 
-  await page.goto('http://127.0.0.1:8080/?ci=gpu-smoke&renderer=pixi',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:8080/?ci=gpu-smoke',{waitUntil:'networkidle'});
+  await page.waitForFunction(()=>!!window.PaperchalkRenderer&&!!window.PaperchalkRuntime,{timeout:5000});
+  const cold=await page.evaluate(()=>({
+    ready:window.PaperchalkRenderer.ready,
+    mode:window.PaperchalkRenderer.mode,
+    requested:window.PaperchalkRenderer.requested,
+    active:window.PaperchalkRenderer.active,
+    pixiResources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/pixi/')).length,
+    worldMinutes:window.PaperchalkRuntime.getSnapshot().time.minutes
+  }));
+  await page.waitForTimeout(320);
+  const coldLater=await page.evaluate(()=>({
+    pixiResources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/pixi/')).length,
+    worldMinutes:window.PaperchalkRuntime.getSnapshot().time.minutes
+  }));
+  assert(cold.ready===false&&cold.pixiResources===0,'Pixi loaded before world entry '+JSON.stringify(cold));
+  assert(coldLater.pixiResources===0,'Pixi vendor fetched while still on menu '+JSON.stringify(coldLater));
+  assert(Math.abs(coldLater.worldMinutes-cold.worldMinutes)<0.001,'world time advanced on menu '+JSON.stringify({cold,coldLater}));
+
+  // Enter a real world session. Auto mode on this touch/mobile context should then load Pixi/WebGL.
+  await page.locator('#authBtn').click();
+  await page.waitForTimeout(450);
+  await page.locator('#tabRegister').click();
+  await page.locator('#regUser').fill('gpu_audit');
+  await page.locator('#regName').fill('GPU审计');
+  await page.locator('#regPass').fill('test1234');
+  await page.locator('#registerForm button[type=submit]').click();
+  await page.waitForFunction(()=>document.getElementById('uiShell')?.classList.contains('is-hidden'),{timeout:3000});
   await page.waitForFunction(()=>window.PaperchalkRenderer?.mode==='pixi'&&window.PaperchalkRenderer?.ready,{timeout:12000});
 
   const initial=await page.evaluate(()=>({
     renderer:window.PaperchalkRenderer.stats,
     mode:window.PaperchalkRenderer.mode,
+    active:window.PaperchalkRenderer.active,
+    pixiResources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/pixi/')).length,
     canvas:{
       exists:!!document.querySelector('#pixiEntityLayer canvas'),
       width:document.querySelector('#pixiEntityLayer canvas')?.width||0,
@@ -43,20 +72,11 @@ try{
     actorVisibility:getComputedStyle(document.querySelector('.actor')).visibility,
     entityVisibility:getComputedStyle(document.querySelector('.entity-layer')).visibility
   }));
-  assert(initial.mode==='pixi','Pixi renderer did not activate '+JSON.stringify(initial));
+  assert(initial.mode==='pixi'&&initial.active,'Pixi renderer did not activate after world entry '+JSON.stringify(initial));
+  assert(initial.pixiResources>0,'Pixi vendor was not lazy-loaded after world entry '+JSON.stringify(initial));
   assert(initial.canvas.exists&&initial.canvas.width>500&&initial.canvas.height>250,'Pixi canvas invalid '+JSON.stringify(initial.canvas));
   assert(initial.worldClass.includes('renderer-pixi-dynamic'),'renderer class missing');
   assert(initial.actorVisibility==='hidden'&&initial.entityVisibility==='hidden','DOM dynamic entities are still visible');
-
-  // Enter a real world session.
-  await page.locator('#authBtn').click();
-  await page.waitForTimeout(450);
-  await page.locator('#tabRegister').click();
-  await page.locator('#regUser').fill('gpu_audit');
-  await page.locator('#regName').fill('GPU审计');
-  await page.locator('#regPass').fill('test1234');
-  await page.locator('#registerForm button[type=submit]').click();
-  await page.waitForFunction(()=>document.getElementById('uiShell')?.classList.contains('is-hidden'),{timeout:3000});
 
   await page.evaluate(()=>{
     window.PaperchalkCombat.placeEnemyNear(320);
@@ -117,7 +137,7 @@ try{
   assert(restored.actor==='hidden'&&restored.entity==='hidden'&&!restored.host,'Pixi reactivation failed '+JSON.stringify(restored));
 
   assert(errors.length===0,'runtime errors: '+JSON.stringify(errors));
-  console.log('GPU_RENDERER_SMOKE_PASS',JSON.stringify({initial,before,after,player,dom,restored}));
+  console.log('GPU_RENDERER_SMOKE_PASS',JSON.stringify({cold,coldLater,initial,before,after,player,dom,restored}));
 }finally{
   await browser.close();
 }
