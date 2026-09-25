@@ -149,9 +149,11 @@ function makeEnemy(texture,id){
 function syncStaticScale(frame){
   if(!playerNode)return;
   if(playerNode.isPuppet){
+    const target=playerVisualSize();
+    playerNode.puppet?.setDisplaySize?.(target.w,target.h);
     const s=playerNode.puppet?.stats||{};
-    stats.playerDisplayW=Number(s.displayW)||playerVisualSize().w;
-    stats.playerDisplayH=Number(s.displayH)||playerVisualSize().h;
+    stats.playerDisplayW=Number(s.displayW)||target.w;
+    stats.playerDisplayH=Number(s.displayH)||target.h;
     stats.playerActionScale=Number(s.scale)||1;
     stats.playerSourceFacing=Number(playerNode.puppet?.sourceFacing)===-1?-1:1;
     return;
@@ -177,6 +179,8 @@ function renderPlayer(frame,now){
     const dt=Math.min(.05,Math.max(0,(now-node.lastNow)/1000));
     node.lastNow=now;
     node.action=action;
+    const target=playerVisualSize();
+    node.puppet.setDisplaySize?.(target.w,target.h);
     node.puppet.update({
       ...p,
       action,
@@ -196,6 +200,8 @@ function renderPlayer(frame,now){
     stats.playerAction=action;
     stats.playerActionScale=Number(node.puppet.stats?.scale)||1;
     stats.playerSourceFacing=sourceFacing;
+    stats.playerDisplayW=Number(node.puppet.stats?.displayW)||target.w;
+    stats.playerDisplayH=Number(node.puppet.stats?.displayH)||target.h;
     stats.playerScreenX=p.screenX;
     stats.playerWorldX=p.x;
     return;
