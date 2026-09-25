@@ -271,6 +271,33 @@ try{
     debugView.enemyAttack.hidden===true&&debugView.enemyAttack.width===0,
     JSON.stringify(debugView.enemyAttack));
 
+  await page.locator('[data-debug-action="flightMode"]').click();
+  await page.locator('#debugCloseBtn').click();
+  await page.waitForTimeout(60);
+  const flightStart=await page.evaluate(()=>window.PaperchalkCombat.player);
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(280);
+  await page.keyboard.up('KeyW');
+  await page.waitForTimeout(80);
+  const flightUp=await page.evaluate(()=>window.PaperchalkCombat.player);
+  check('Debug flight moves vertically upward',
+    flightUp.y>flightStart.y+35,
+    JSON.stringify({flightStart,flightUp}));
+  const flightX0=flightUp.x;
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(220);
+  await page.keyboard.up('KeyD');
+  await page.waitForTimeout(60);
+  const flightRight=await page.evaluate(()=>window.PaperchalkCombat.player);
+  check('Flight keeps normal horizontal movement instead of free-flight X',
+    flightRight.x>flightX0,
+    JSON.stringify({flightX0,flightRight}));
+  await page.locator('#debugToggleBtn').click();
+  await page.waitForTimeout(50);
+  await page.locator('[data-debug-action="flightMode"]').click();
+  const flightOff=await page.evaluate(()=>window.PaperchalkDebug.flight);
+  check('Debug flight can be disabled',flightOff===false,'flight='+flightOff);
+
   await page.locator('[data-debug-action="enemyNear"]').click();
   await page.waitForTimeout(60);
   const nearEnemy=await page.evaluate(()=>({
@@ -364,8 +391,20 @@ try{
     npcTalk.open&&npcTalk.name==='？？？'&&npcTalk.phase==='opening',
     JSON.stringify(npcTalk));
   await page.evaluate(()=>window.PaperchalkDialogue.close({immediate:true}));
+  const stagePlayerBefore=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {x:r.left,y:r.top};
+  });
   const stageEnter=await page.evaluate(()=>window.PaperchalkScene.enter());
   check('Apartment door stage transition can start',stageEnter===true,'enter='+stageEnter);
+  await page.waitForTimeout(360);
+  const stagePlayerMid=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {x:r.left,y:r.top};
+  });
+  check('Player stays fixed while exterior scenery exits',
+    Math.abs(stagePlayerMid.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerMid.y-stagePlayerBefore.y)<1,
+    JSON.stringify({stagePlayerBefore,stagePlayerMid}));
   await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
   const interiorStage=await page.evaluate(()=>({
     location:window.PaperchalkScene.location,
@@ -376,9 +415,35 @@ try{
   check('Interior paper stage arrives after exterior exits',
     interiorStage.location==='interior'&&interiorStage.visible==='visible'&&interiorStage.worldClass.includes('scene-interior'),
     JSON.stringify(interiorStage));
+  const stagePlayerInterior=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {x:r.left,y:r.top};
+  });
+  check('Player keeps the same screen position when interior arrives',
+    Math.abs(stagePlayerInterior.x-stagePlayerBefore.x)<1&&Math.abs(stagePlayerInterior.y-stagePlayerBefore.y)<1,
+    JSON.stringify({stagePlayerBefore,stagePlayerInterior}));
+  const exitPlayerBefore=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {x:r.left,y:r.top};
+  });
   const stageExit=await page.evaluate(()=>window.PaperchalkScene.exit());
   check('Interior exit starts the return paper-stage transition',stageExit===true,'exit='+stageExit);
+  await page.waitForTimeout(300);
+  const exitPlayerMid=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {x:r.left,y:r.top};
+  });
+  check('Player stays fixed while interior scenery exits',
+    Math.abs(exitPlayerMid.x-exitPlayerBefore.x)<1&&Math.abs(exitPlayerMid.y-exitPlayerBefore.y)<1,
+    JSON.stringify({exitPlayerBefore,exitPlayerMid}));
   await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
+  const exitPlayerAfter=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {x:r.left,y:r.top};
+  });
+  check('Player keeps the same screen position when exterior returns',
+    Math.abs(exitPlayerAfter.x-exitPlayerBefore.x)<1&&Math.abs(exitPlayerAfter.y-exitPlayerBefore.y)<1,
+    JSON.stringify({exitPlayerBefore,exitPlayerAfter}));
 
 
   // Return to a safe mid-map position for persistence/UI tests.

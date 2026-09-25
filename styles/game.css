@@ -2065,7 +2065,6 @@ button{cursor:pointer}
 .stage.paper-stage-out .midground-building-layer{animation:paperDropExit .66s cubic-bezier(.56,.04,.86,.47) 70ms both}
 .stage.paper-stage-out .map-layer,
 .stage.paper-stage-out .entity-layer{animation:paperDropExit .58s cubic-bezier(.56,.04,.86,.47) 145ms both}
-.stage.paper-stage-out .actor{animation:paperDropExit .50s cubic-bezier(.56,.04,.86,.47) 185ms both}
 .stage.paper-stage-out .paper-wing{animation:paperDropExit .62s cubic-bezier(.56,.04,.86,.47) 220ms both}
 .stage.paper-stage-out .paper-stage-floor,
 .stage.paper-stage-out .paper-footlights{animation:paperDropExit .58s cubic-bezier(.56,.04,.86,.47) 265ms both}
@@ -2153,28 +2152,24 @@ button{cursor:pointer}
 .stage.scene-interior.interior-stage-in .interior-window{animation:interiorRise .54s cubic-bezier(.14,.82,.22,1) 155ms both}
 .stage.scene-interior.interior-stage-in .interior-shelf{animation:interiorRise .50s cubic-bezier(.14,.82,.22,1) 215ms both}
 .stage.scene-interior.interior-stage-in .interior-exit-door{animation:interiorRise .58s cubic-bezier(.14,.82,.22,1) 285ms both}
-.stage.scene-interior.interior-stage-in .actor{animation:interiorActorIn .48s cubic-bezier(.17,.88,.25,1) 370ms both}
 
 .stage.scene-interior.interior-stage-out .interior-exit-door{animation:interiorDrop .46s cubic-bezier(.55,.02,.86,.42) 0ms both}
 .stage.scene-interior.interior-stage-out .interior-shelf{animation:interiorDrop .46s cubic-bezier(.55,.02,.86,.42) 55ms both}
 .stage.scene-interior.interior-stage-out .interior-window{animation:interiorDrop .48s cubic-bezier(.55,.02,.86,.42) 95ms both}
 .stage.scene-interior.interior-stage-out .interior-wall{animation:interiorDrop .56s cubic-bezier(.55,.02,.86,.42) 135ms both}
 .stage.scene-interior.interior-stage-out .interior-floor{animation:interiorDrop .48s cubic-bezier(.55,.02,.86,.42) 205ms both}
-.stage.scene-interior.interior-stage-out .actor{animation:interiorDrop .44s cubic-bezier(.55,.02,.86,.42) 70ms both}
 
 .stage.exterior-stage-in .paper-stage-floor{animation:exteriorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
 .stage.exterior-stage-in .paper-wing{animation:exteriorRise .58s cubic-bezier(.14,.82,.22,1) 55ms both}
 .stage.exterior-stage-in .midground-building-layer{animation:exteriorRise .66s cubic-bezier(.14,.82,.22,1) 115ms both}
 .stage.exterior-stage-in .map-layer,
 .stage.exterior-stage-in .entity-layer{animation:exteriorRise .54s cubic-bezier(.14,.82,.22,1) 190ms both}
-.stage.exterior-stage-in .actor{animation:interiorActorIn .46s cubic-bezier(.17,.88,.25,1) 250ms both}
 .stage.exterior-stage-in .paper-cloud-a{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 105ms both}
 .stage.exterior-stage-in .paper-celestial{animation:paperHangEnter .60s cubic-bezier(.14,.82,.22,1) 165ms both}
 .stage.exterior-stage-in .paper-cloud-b{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 225ms both}
 
 @keyframes interiorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
 @keyframes interiorDrop{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,115vh,0);opacity:.08}}
-@keyframes interiorActorIn{from{transform:translate3d(0,80vh,0);opacity:.1}to{transform:translate3d(0,0,0);opacity:1}}
 @keyframes exteriorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
 @keyframes paperHangEnter{from{transform:translate3d(0,-118vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
 
@@ -2184,11 +2179,8 @@ button{cursor:pointer}
   .stage.paper-stage-out .midground-building-layer,
   .stage.paper-stage-out .map-layer,
   .stage.paper-stage-out .entity-layer,
-  .stage.paper-stage-out .actor,
   .stage.paper-stage-out .paper-stage-floor,
   .stage.scene-interior.interior-stage-in .paper-stage-piece,
-  .stage.scene-interior.interior-stage-in .actor,
   .stage.scene-interior.interior-stage-out .paper-stage-piece,
-  .stage.exterior-stage-in .paper-stage-piece,
-  .stage.exterior-stage-in .actor{animation-duration:.01ms!important;animation-delay:0ms!important}
+  .stage.exterior-stage-in .paper-stage-piece{animation-duration:.01ms!important;animation-delay:0ms!important}
 }
