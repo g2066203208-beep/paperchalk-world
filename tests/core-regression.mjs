@@ -199,6 +199,10 @@ try{
     Math.abs(enemyMoveAfter[0].x-enemyMoveBefore[0].x)<0.01,
     JSON.stringify({enemyMoveBefore:enemyMoveBefore[0],enemyMoveAfter:enemyMoveAfter[0]}));
 
+  const playerRectBeforeJump=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {left:r.left,top:r.top};
+  });
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
   await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-up',null,{timeout:900});
   await page.waitForTimeout(45);
@@ -207,11 +211,19 @@ try{
     state:document.querySelector('.actor')?.dataset.playerState,
     src:document.getElementById('playerSprite')?.getAttribute('src')||''
   }));
+  const playerRectInJump=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {left:r.left,top:r.top};
+  });
   check('Jump ascent uses supplied upward pose',
     jumpStarted===true&&jumpAir.player.y>20&&!jumpAir.player.grounded&&
     jumpAir.player.vy>0&&jumpAir.player.action==='jump-up'&&jumpAir.state==='jump-up'&&
     jumpAir.src.includes('/assets/player/runtime/jump-up.webp'),
     JSON.stringify(jumpAir));
+  check('Jump moves the world vertically while player screen position stays fixed',
+    Math.abs(playerRectInJump.left-playerRectBeforeJump.left)<1&&
+    Math.abs(playerRectInJump.top-playerRectBeforeJump.top)<1,
+    JSON.stringify({playerRectBeforeJump,playerRectInJump}));
 
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.action==='jump-down',null,{timeout:1100});
   await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-down',null,{timeout:900});
@@ -275,6 +287,10 @@ try{
   await page.locator('#debugCloseBtn').click();
   await page.waitForTimeout(60);
   const flightStart=await page.evaluate(()=>window.PaperchalkCombat.player);
+  const flightRectStart=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {left:r.left,top:r.top};
+  });
   await page.keyboard.down('KeyW');
   await page.waitForTimeout(280);
   await page.keyboard.up('KeyW');
@@ -292,6 +308,14 @@ try{
   check('Free flight moves horizontally as well as vertically',
     flightRight.x>flightX0+25,
     JSON.stringify({flightX0,flightRight}));
+  const flightRectAfter=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {left:r.left,top:r.top};
+  });
+  check('Free flight moves only the world while player stays fixed on screen',
+    Math.abs(flightRectAfter.left-flightRectStart.left)<1&&
+    Math.abs(flightRectAfter.top-flightRectStart.top)<1,
+    JSON.stringify({flightRectStart,flightRectAfter}));
   await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(50);
   await page.locator('[data-debug-action="flightMode"]').click();
@@ -427,7 +451,7 @@ try{
     centerX:window.PaperchalkScene.centerX,
     doorX:window.PaperchalkScene.interiorDoorScreenX
   }));
-  check('Interior world finishes by smoothly centering the player',
+  check('Interior world settles around the fixed player screen anchor',
     interiorStage.location==='interior'&&interiorStage.visible==='visible'&&
     interiorStage.worldClass.includes('scene-interior')&&
     Math.abs(interiorStage.playerX-interiorStage.centerX)<1&&
@@ -514,7 +538,7 @@ try{
       exitFollowBefore.player.x-exitFollowBefore.viewport.width*.5
     )
   );
-  check('Exterior camera settles smoothly with the player at screen center',
+  check('Exterior world settles around the fixed player screen anchor',
     Math.abs(exitFollowBefore.camera.x-expectedExitCamera)<1&&
     Math.abs(exitFollowBefore.player.screenX-exitFollowBefore.viewport.width*.5)<1,
     JSON.stringify({camera:exitFollowBefore.camera.x,expectedExitCamera,player:exitFollowBefore.player}));
