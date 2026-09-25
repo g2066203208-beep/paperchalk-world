@@ -631,7 +631,7 @@ function cancelPlayerPaperFlip(){
 }
 function startPlayerPaperFlip(state){
   const token=++playerFlipRevision;
-  if(!playerFlip||playerReducedMotion.matches){
+  if(!playerFlip){
     applyPlayerActionVisual(state);
     return;
   }
