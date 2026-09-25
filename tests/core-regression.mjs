@@ -115,7 +115,7 @@ try{
     visual:{...window.PaperchalkRuntime.worldData.playerVisual},
     rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
   }));
-  const voxelGround=await page.evaluate(()=> {
+  const paperGround=await page.evaluate(()=> {
     const layer=document.querySelector('.road-layer');
     const stage=document.getElementById('world');
     const tile=document.getElementById('roadTile');
@@ -131,11 +131,11 @@ try{
       background:getComputedStyle(tile).backgroundImage
     };
   });
-  check('Voxel ground replaces road image and aligns to physics ground',
-    voxelGround.tileTag==='DIV'&&voxelGround.tileClass.includes('voxel-ground-tile')&&
-    Math.abs(voxelGround.layerH-voxelGround.groundY)<1.5&&
-    Math.abs(voxelGround.layerTop-(voxelGround.stageH-voxelGround.groundY))<1.5&&
-    voxelGround.background!=='none',
+  check('Paper ground strip aligns to physics ground',
+    paperGround.tileTag==='DIV'&&paperGround.tileClass.includes('paper-ground-tile')&&
+    Math.abs(paperGround.layerH-paperGround.groundY)<1.5&&
+    Math.abs(paperGround.layerTop-(paperGround.stageH-paperGround.groundY))<1.5&&
+    paperGround.background!=='none',
     JSON.stringify(voxelGround));
 
   check('Player starts in optimized supplied idle pose',
