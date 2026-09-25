@@ -72,9 +72,27 @@ assert(initial.menu&&initial.enter,'main menu not interactive '+JSON.stringify(i
 console.log('PASS load/menu',initial);
 
 await click('enterBtn');
-assert(await waitFor("document.getElementById('uiShell')?.classList.contains('is-hidden')",2500),'enterBtn did not enter world');
-noFaults('enter world');
-console.log('PASS enter world');
+assert(await waitFor("document.getElementById('pageAuth')?.classList.contains('active')",1200),'fresh start did not open auth');
+noFaults('start -> auth');
+console.log('PASS start -> auth');
+
+await click('tabRegister');
+const submitted=await js(`(()=>{
+  const u=document.getElementById('regUser');
+  const n=document.getElementById('regName');
+  const p=document.getElementById('regPass');
+  const form=document.getElementById('registerForm');
+  if(!u||!n||!p||!form)return false;
+  u.value='ciuser';
+  n.value='CI旅人';
+  p.value='1234';
+  form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+  return true;
+})()`);
+assert(submitted,'registration form missing');
+assert(await waitFor("document.getElementById('uiShell')?.classList.contains('is-hidden')",3000),'registration did not enter world');
+noFaults('register -> world');
+console.log('PASS register -> world');
 
 await click('worldMenuBtn');
 assert(await waitFor("!document.getElementById('uiShell')?.classList.contains('is-hidden')",2200),'world menu button did not open menu');
