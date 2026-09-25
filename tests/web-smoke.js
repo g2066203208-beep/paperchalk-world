@@ -4,6 +4,7 @@ const vm = require("vm");
 const html = fs.readFileSync("index.html", "utf8");
 const css = fs.readFileSync("styles/game.css", "utf8");
 const game = fs.readFileSync("src/game.js", "utf8");
+const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -34,6 +35,8 @@ assert(/src=["']\.\/src\/renderers\/pixi-dynamic-renderer\.mjs(?:\?[^"']*)?["']/
 assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
 assert(fs.existsSync("vendor/pixi/pixi-8.21.0.mjs"), "Pinned PixiJS vendor missing");
 assert(fs.existsSync("vendor/pixi/LICENSE"), "PixiJS license missing");
+assert(/function autoMode\(\)\{[\s\S]*?return ['"]dom['"];[\s\S]*?\}/.test(renderer), "Mobile/desktop auto renderer parity missing");
+assert(renderer.includes("runtime?.worldData?.playerVisual"), "Pixi renderer is not using shared player visual dimensions");
 new vm.Script(game);
 assert(
   /const\s+settingsBtn\s*=\s*document\.getElementById\(['"]settingsBtn['"]\)/.test(game),
@@ -55,6 +58,7 @@ assert(game.includes("window.PaperchalkCombat"), "Combat API missing");
 assert(game.includes("window.PaperchalkMap"), "Map API missing");
 assert(game.includes("window.PaperchalkRuntime"), "Renderer-neutral runtime contract missing");
 assert(game.includes("refreshRuntimeFrameState"), "Allocation-free renderer frame state missing");
+assert(game.includes("const PLAYER_VISUAL=Object.freeze({w:104,h:156})"), "Shared 104x156 player visual config missing");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
   game.includes("const WORLD_ZONE_COUNT=20") &&
