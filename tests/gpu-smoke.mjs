@@ -106,12 +106,23 @@ try{
     rendererScale:window.PaperchalkRenderer.stats.playerActionScale,
     sourceFacing:window.PaperchalkRenderer.stats.playerSourceFacing,
     displayW:window.PaperchalkRenderer.stats.playerDisplayW,
-    visual:{...window.PaperchalkRuntime.worldData.playerVisual}
+    visual:{...window.PaperchalkRuntime.worldData.playerVisual},
+    puppetReady:window.PaperchalkRenderer.stats.playerPuppetReady
   }));
   assert(gpuCrouch.action==='crouch'&&gpuCrouch.rendererAction==='crouch'&&
-    Math.abs(gpuCrouch.actionScale-.76)<.001&&Math.abs(gpuCrouch.rendererScale-.76)<.001&&
-    gpuCrouch.sourceFacing===1&&Math.abs(gpuCrouch.displayW-gpuCrouch.visual.w*.76)<1,
-    'Pixi renderer did not follow normalized crouch metadata '+JSON.stringify(gpuCrouch));
+    Math.abs(gpuCrouch.actionScale-.76)<.001&&gpuCrouch.rendererScale<=1.001&&gpuCrouch.rendererScale>=.759&&
+    gpuCrouch.sourceFacing===1&&gpuCrouch.displayW<=gpuCrouch.visual.w+1&&
+    gpuCrouch.displayW>=gpuCrouch.visual.w*.76-1&&gpuCrouch.puppetReady,
+    'PaperPuppet crouch settle left the normalized visual envelope '+JSON.stringify(gpuCrouch));
+  await page.waitForTimeout(350);
+  const gpuCrouchSettled=await page.evaluate(()=>({
+    rendererScale:window.PaperchalkRenderer.stats.playerActionScale,
+    displayW:window.PaperchalkRenderer.stats.playerDisplayW,
+    visual:{...window.PaperchalkRuntime.worldData.playerVisual}
+  }));
+  assert(Math.abs(gpuCrouchSettled.rendererScale-.76)<.025&&
+    Math.abs(gpuCrouchSettled.displayW-gpuCrouchSettled.visual.w*.76)<3,
+    'PaperPuppet crouch spring did not settle '+JSON.stringify(gpuCrouchSettled));
   await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
   await page.waitForTimeout(80);
 
