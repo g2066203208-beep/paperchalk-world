@@ -2412,7 +2412,27 @@ const dialogueSkip=document.getElementById('dialogueSkip');
 if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
 else dialoguePlayerArt.src='./assets/traveler.webp?v=traveler-r3';
 if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
+dialoguePlayerArt.fetchPriority='high';
+dialogueNpcArt.fetchPriority='high';
+const dialoguePortraitDecode=Promise.allSettled(
+  [dialoguePlayerArt,dialogueNpcArt].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
+);
 const actorEl=document.querySelector('.actor');
+const stageCamera=document.createElement('div');
+stageCamera.id='stageCamera';
+stageCamera.className='stage-camera';
+worldEl.insertBefore(stageCamera,worldEl.firstElementChild);
+[
+  document.querySelector('.paper-sky'),
+  paperBackdrop,paperBackdropNext,
+  document.querySelector('.paper-stage-floor'),
+  document.querySelector('.road-layer'),
+  document.querySelector('.map-layer'),
+  document.querySelector('.rear-layer'),
+  actorEl,
+  document.querySelector('.entity-layer'),
+  document.querySelector('.front-layer')
+].forEach(el=>{if(el)stageCamera.appendChild(el)});
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
@@ -2563,19 +2583,19 @@ function celestialArcPosition(minutes,rise,set){
 let lastCelestialRender=-Infinity;
 function updateCelestialVisuals(force=false){
   const now=performance.now();
-  if(!force&&now-lastCelestialRender<100)return;
+  if(!force&&now-lastCelestialRender<250)return;
   lastCelestialRender=now;
   const minutes=visibleClockMinutes();
   const sun=celestialArcPosition(minutes,330,1110);
   const moon=celestialArcPosition(minutes,1050,390);
-  worldEl.style.setProperty('--sun-x',sun.x.toFixed(3)+'%');
-  worldEl.style.setProperty('--sun-y',sun.y.toFixed(3)+'%');
-  worldEl.style.setProperty('--moon-x',moon.x.toFixed(3)+'%');
-  worldEl.style.setProperty('--moon-y',moon.y.toFixed(3)+'%');
+  paperSun.style.left=sun.x.toFixed(3)+'%';
+  paperSun.style.top=sun.y.toFixed(3)+'%';
+  paperMoon.style.left=moon.x.toFixed(3)+'%';
+  paperMoon.style.top=moon.y.toFixed(3)+'%';
 }
 function updateDayNightVisuals(force=false){
   const now=performance.now();
-  if(!force&&now-lastDayNightRender<500)return;
+  if(!force&&now-lastDayNightRender<1000)return;
   lastDayNightRender=now;
   const minutes=visibleClockMinutes(),state=daylightState(minutes);
   worldEl.style.setProperty('--sky-top',rgbCss(state.top));
@@ -2786,6 +2806,10 @@ function setPerfLow(next){
   if(next===perfLow)return;
   perfLow=next;
   worldEl.classList.toggle('perf-low',perfLow);
+}
+if(coarsePointer){
+  perfLow=true;
+  worldEl.classList.add('perf-low');
 }
 function sampleFramePerf(now){
   perfFrameCount++;
@@ -3335,7 +3359,11 @@ function setEnemyVisual(e,force=false){
     e.el.style.display=visible?'':'none';
   }
   if(!visible)return;
-  if(force||e._renderX!==e.x){e._renderX=e.x;e.el.style.left=(e.x-visualOriginX)+'px'}
+  if(force||e._renderX!==e.x){
+    e._renderX=e.x;
+    e.el.style.translate=(e.x-visualOriginX).toFixed(2)+'px 0';
+  }
+  if(force)e.el.style.bottom=MAP_GROUND_SCREEN_Y+'px';
   if(force||e._renderFacing!==e.facing){e._renderFacing=e.facing;e.el.style.setProperty('--enemy-facing',e.facing)}
   if(force||e._renderHp!==e.hp){e._renderHp=e.hp;e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%'}
   if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
@@ -3758,8 +3786,7 @@ function refreshRoadW(){
   const w=roadTile.getBoundingClientRect().width;
   if(w>0){roadW=Math.max(1,w-1);ensureRoadTiles()}
   updateCamera();
-  actorEl.style.left=actorX+'px';
-  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY)+'px';
+  renderWorld(true);
   renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
@@ -3816,7 +3843,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:''};
+const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorTranslate:'',actorGround:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -3837,10 +3864,16 @@ function renderWorld(force=false){
   writeTransform(frontTrack,'front',frontT);
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
-  const actorLeft=actorX.toFixed(2)+'px';
-  const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
-  if(force||renderCache.actorLeft!==actorLeft){renderCache.actorLeft=actorLeft;actorEl.style.left=actorLeft}
-  if(force||renderCache.actorBottom!==actorBottom){renderCache.actorBottom=actorBottom;actorEl.style.bottom=actorBottom}
+  const actorTranslate=actorX.toFixed(2)+'px '+(-playerY).toFixed(2)+'px';
+  const actorGround=MAP_GROUND_SCREEN_Y.toFixed(2)+'px';
+  if(force||renderCache.actorTranslate!==actorTranslate){
+    renderCache.actorTranslate=actorTranslate;
+    actorEl.style.translate=actorTranslate;
+  }
+  if(force||renderCache.actorGround!==actorGround){
+    renderCache.actorGround=actorGround;
+    actorEl.style.bottom=actorGround;
+  }
   enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
 }
