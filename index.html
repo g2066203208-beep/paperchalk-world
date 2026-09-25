@@ -8,8 +8,8 @@
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/dialogue/npc-portrait-hd.svg?v=1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="dual-render-r3">
-<link rel="stylesheet" href="./styles/game.css?v=dual-render-r3">
+<meta name="paperchalk-build" content="actions-r1">
+<link rel="stylesheet" href="./styles/game.css?v=actions-r1">
 </head>
 <body>
 
@@ -42,9 +42,9 @@
   </div>
   <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
   <div id="pixiEntityLayer" class="pixi-entity-layer" hidden aria-hidden="true"></div>
-  <div class="actor">
+  <div class="actor" data-player-state="idle">
     <div class="foot-shadow" aria-hidden="true"></div>
-    <img class="walker" src="./assets/traveler.webp?v=formal-r1" alt="正式主角">
+    <img id="playerSprite" class="walker" src="./assets/player/idle.webp?v=actions-r1" alt="正式主角">
   </div>
   <div class="entity-layer" aria-hidden="true">
     <div id="entityTrack" class="entity-track">
@@ -337,7 +337,7 @@
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
 <script src="./assets/dialogue/npc-portrait.js?v=2"></script>
-<script src="./src/game.js?v=dual-render-r3"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=dual-render-r3"></script>
+<script src="./src/game.js?v=actions-r1"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=actions-r1"></script>
 </body>
 </html>
