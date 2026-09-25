@@ -351,6 +351,11 @@ try{
   const flightOff=await page.evaluate(()=>window.PaperchalkDebug.flight);
   check('Debug flight can be disabled',flightOff===false,'flight='+flightOff);
 
+  // Isolate the following ground-combat checks from the intentional 4km-high
+  // flight-camera regression above.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(6000,{notice:''}));
+  await page.waitForTimeout(80);
+
   await page.locator('[data-debug-action="enemyNear"]').click();
   await page.waitForTimeout(60);
   const nearEnemy=await page.evaluate(()=>({
