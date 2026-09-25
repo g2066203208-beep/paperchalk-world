@@ -553,14 +553,8 @@ const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
-const mountainBackgroundTrack=document.getElementById('mountainBackgroundTrack');
-const mountainBackgroundTiles=Array.from(document.querySelectorAll('.mountain-background-tile'));
+const mountainBackground=document.getElementById('mountainBackground');
 const MOUNTAIN_PARALLAX=.16;
-let mountainTileW=1280;
-function refreshMountainMetrics(){
-  const w=mountainBackgroundTiles[0]?.getBoundingClientRect().width||0;
-  if(w>0)mountainTileW=w;
-}
 const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
 const midgroundApartment=document.getElementById('midgroundApartment');
 const APARTMENT_WORLD_X=520;
