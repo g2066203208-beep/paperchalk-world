@@ -125,7 +125,7 @@ button{cursor:pointer}
 .mountain-background-layer::before{
   content:"";position:absolute;left:0;right:0;bottom:var(--ground-screen-y,112px);
   height:min(68vh,590px);
-  background-image:url("../assets/backgrounds/mountain-background.webp?v=mountain-parallax-r12");
+  background-image:url("../assets/backgrounds/mountain-background.svg?v=mountain-parallax-r12");
   background-repeat:repeat-x;
   background-size:auto clamp(240px,62vh,520px);
   background-position:var(--mountain-x) bottom;
