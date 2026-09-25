@@ -533,7 +533,7 @@ function apartmentDoorScreenX(){
 }
 function apartmentDoorScreenY(){
   const h=midgroundApartment?.getBoundingClientRect().height||1040;
-  return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO;
+  return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
@@ -2464,7 +2464,7 @@ let runtimeRevision=0;
 const runtimeFrameState={
   revision:0,
   viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
-  camera:{x:worldX,visualOriginX,sceneryOffsetX},
+  camera:{x:worldX,y:playerY,visualOriginX,sceneryOffsetX},
   time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
   route:{index:0,id:'',biome:'meadow',orientation:1},
   player:{
@@ -2485,7 +2485,7 @@ function refreshRuntimeFrameState(){
   const s=runtimeFrameState;
   s.revision=runtimeRevision;
   s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
-  s.camera.x=worldX;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
+  s.camera.x=worldX;s.camera.y=playerY;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
   s.player.x=playerWorldX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
