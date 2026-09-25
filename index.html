@@ -345,8 +345,8 @@ button{cursor:pointer}
 @keyframes swayD{0%,100%{transform:rotate(2.5deg)}50%{transform:rotate(-1.9deg)}}
 .actor{
   --facing:1;
-  position:absolute;left:0;bottom:112px;width:126px;z-index:5;
-  transform:translateX(-50%);pointer-events:none;will-change:translate;
+  position:absolute;left:35%;bottom:112px;width:126px;z-index:5;
+  transform:translateX(-50%);pointer-events:none;will-change:left;
 }
 .actor.facing-left{--facing:-1}
 .walker{
@@ -382,8 +382,8 @@ button{cursor:pointer}
   100%{transform:scaleX(var(--facing)) rotate(0)}
 }
 .enemy{
-  --enemy-facing:-1;position:absolute;left:0;z-index:5;bottom:112px;width:112px;height:132px;
-  transform:translateX(-50%);pointer-events:none;will-change:translate,transform,opacity;
+  --enemy-facing:-1;position:absolute;z-index:5;bottom:112px;width:112px;height:132px;
+  transform:translateX(-50%);pointer-events:none;will-change:left,transform,opacity;
 }
 .enemy img{width:100%;height:100%;object-fit:contain;transform:scaleX(var(--enemy-facing));transform-origin:50% 92%;filter:drop-shadow(2px 5px 0 rgba(48,36,25,.14))}
 .enemy.is-moving img{animation:enemy-bob .48s ease-in-out infinite}
@@ -1349,7 +1349,6 @@ button{cursor:pointer}
   .back-link{top:max(12px,env(safe-area-inset-top))!important;left:max(12px,env(safe-area-inset-left))!important}
 }
 @media (pointer:coarse){
-  /* Mobile baseline: keep gameplay motion, remove only decorative continuous GPU work. */
   .prop,.pickup,.enemy.is-moving img{animation:none!important}
   .paper-sky::after{display:none!important}
   .paper-celestial{filter:none!important}
@@ -1504,15 +1503,20 @@ button{cursor:pointer}
   border-radius:4px;padding:7px 11px;font-size:11px
 }
 
-/* Choice shot: one viewport-sized camera moves the world; child layers never scale separately. */
-.stage-camera{
-  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
-  perspective:980px;perspective-origin:50% 62%;
-  transform-origin:42% 58%;
-  transition:transform .56s cubic-bezier(.20,.72,.18,1);
+/* Choice shot: camera pushes left/down while the player puppet rises to upper-right. */
+.stage .paper-sky,.stage .paper-backdrop,.stage .paper-stage-floor,
+.stage .road-layer,.stage .rear-layer,.stage .front-layer,.stage .map-layer,.stage .entity-layer{
+  transition:translate .52s cubic-bezier(.22,.72,.20,1),scale .52s cubic-bezier(.22,.72,.20,1);
 }
-.stage.dialogue-choice-camera .stage-camera{
-  transform:translate3d(5vw,-3vh,0) scale(1.085);
+.stage.dialogue-choice-camera .paper-sky,
+.stage.dialogue-choice-camera .paper-backdrop,
+.stage.dialogue-choice-camera .paper-stage-floor,
+.stage.dialogue-choice-camera .road-layer,
+.stage.dialogue-choice-camera .rear-layer,
+.stage.dialogue-choice-camera .front-layer,
+.stage.dialogue-choice-camera .map-layer,
+.stage.dialogue-choice-camera .entity-layer{
+  translate:5.5vw -3.8vh;scale:1.115;
 }
 .dialogue-stage.is-choice .dialogue-dim{
   background:
@@ -1523,7 +1527,7 @@ button{cursor:pointer}
   opacity:.09;transform:translate3d(27vw,4vh,0) rotate(5deg) scale(.76)
 }
 .dialogue-stage.is-choice .dialogue-portrait.player{
-  transform:translate3d(44vw,18vh,0) rotate(.8deg) scale(1.22)
+  transform:translate3d(44vw,18vh,0) rotate(.8deg) scale(1.20)
 }
 .dialogue-stage.is-choice .dialogue-portrait.player .dialogue-puppet{
   animation:dialogueChoiceBreath 2.6s ease-in-out infinite
@@ -1535,7 +1539,7 @@ button{cursor:pointer}
 .dialogue-stage.is-choice .dialogue-bubble{opacity:0;pointer-events:none}
 .dialogue-choices{
   position:absolute;z-index:9;inset:0;pointer-events:none;
-  opacity:0;transition:opacity .22s ease .24s
+  opacity:0;transition:opacity .24s ease .14s
 }
 .dialogue-stage.is-choice .dialogue-choices{opacity:1}
 .dialogue-choice{
@@ -1576,9 +1580,8 @@ button{cursor:pointer}
 .stage.dialogue-active .debug-toggle-btn{opacity:.12;pointer-events:none}
 
 @media(pointer:coarse){
-  .dialogue-stage{transition:visibility 0s!important}
   .dialogue-player-img,.dialogue-npc-img{filter:none!important}
-  .dialogue-choice{min-height:48px;padding:9px 12px;font-size:clamp(12px,1.7vw,17px)}
+  .dialogue-choice{min-height:46px;padding:8px 10px;font-size:clamp(11px,1.6vw,16px)}
   .dialogue-choice.pos-top{left:50%;right:auto;top:max(3%,14px);width:min(36vw,420px)}
   .dialogue-choice.pos-left{left:max(3%,16px);right:auto;top:34%;width:min(29vw,360px)}
   .dialogue-choice.pos-right{right:max(3%,16px);left:auto;top:34%;width:min(29vw,360px)}
@@ -1590,7 +1593,7 @@ button{cursor:pointer}
   .dialogue-stage.is-open .dialogue-portrait.npc{right:1%}
   .dialogue-bubble{top:13%;max-width:40vw;min-width:130px;padding:9px 11px;font-size:12px}
   .dialogue-bubble.player{left:22%}.dialogue-bubble.npc{right:22%}
-  .dialogue-stage.is-choice .dialogue-portrait.player{transform:translate3d(43vw,18vh,0) rotate(.6deg) scale(1.20)}
+  .dialogue-stage.is-choice .dialogue-portrait.player{transform:translate3d(43vw,18vh,0) rotate(.6deg) scale(1.18)}
   .dialogue-choice{width:29vw;min-height:42px;padding:7px 9px;font-size:11px}
   .dialogue-choice.pos-top{top:4%}
   .dialogue-choice.pos-left,.dialogue-choice.pos-right{top:34%}
@@ -2128,8 +2131,8 @@ MAP_TERRAIN.push(...FORK_SOLIDS);
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 let mapDebugBuilt=false;
-const VISUAL_WINDOW_STEP=2400;
-const VISUAL_WINDOW_SPAN=9600;
+const VISUAL_WINDOW_STEP=3000;
+const VISUAL_WINDOW_SPAN=15000;
 let visualOriginX=0;
 const mapNpcEls=new Map();
 let lastNearNpcId=null;
@@ -2311,7 +2314,7 @@ function spritePosition(index){
   return (col*50)+'% '+(row*100)+'%';
 }
 const PROP_PERIOD=2200;
-const PROP_POOL_REPEATS=3;
+const PROP_POOL_REPEATS=5;
 const propPools=[];
 function buildProps(id,data,parallax){
   const root=document.getElementById(id);
@@ -2340,7 +2343,7 @@ function updatePropPools(sceneryX,force=false){
   for(const pool of propPools){
     const cameraX=sceneryX*pool.parallax;
     const centerRepeat=Math.floor((cameraX+viewW*.5)/PROP_PERIOD);
-    const startRepeat=centerRepeat-1;
+    const startRepeat=centerRepeat-2;
     if(!force&&pool.startRepeat===startRepeat)continue;
     pool.startRepeat=startRepeat;
     pool.originX=startRepeat*PROP_PERIOD;
@@ -2385,7 +2388,6 @@ if('requestIdleCallback' in window){
   setTimeout(()=>loadMidgroundAtlas(),220);
 }
 
-const worldEl=document.getElementById('world');
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
@@ -2398,13 +2400,8 @@ const mapDebugTrack=document.getElementById('mapDebugTrack');
 const mapNotice=document.getElementById('mapNotice');
 const paperBackdrop=document.getElementById('paperBackdrop');
 const paperBackdropNext=document.getElementById('paperBackdropNext');
-const paperSky=document.querySelector('.paper-sky');
-const paperStars=document.querySelector('.paper-stars');
 const paperSun=document.getElementById('paperSun');
 const paperMoon=document.getElementById('paperMoon');
-const paperFootlights=document.querySelector('.paper-footlights');
-const dayNightTint=document.getElementById('dayNightTint');
-const rearLayerEl=document.querySelector('.rear-layer');
 const paperClock=document.getElementById('paperClock');
 const dialogueStage=document.getElementById('dialogueStage');
 const dialoguePlayerPortrait=document.getElementById('dialoguePlayerPortrait');
@@ -2420,27 +2417,10 @@ const dialogueSkip=document.getElementById('dialogueSkip');
 if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
 else dialoguePlayerArt.src='./assets/traveler.webp?v=traveler-r3';
 if(window.PAPERCHALK_NPC_PORTRAIT)dialogueNpcArt.src=window.PAPERCHALK_NPC_PORTRAIT;
-dialoguePlayerArt.fetchPriority='high';
-dialogueNpcArt.fetchPriority='high';
 const dialoguePortraitDecode=Promise.allSettled(
   [dialoguePlayerArt,dialogueNpcArt].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
 );
 const actorEl=document.querySelector('.actor');
-const stageCamera=document.createElement('div');
-stageCamera.id='stageCamera';
-stageCamera.className='stage-camera';
-worldEl.insertBefore(stageCamera,worldEl.firstElementChild);
-[
-  document.querySelector('.paper-sky'),
-  paperBackdrop,paperBackdropNext,
-  document.querySelector('.paper-stage-floor'),
-  document.querySelector('.road-layer'),
-  document.querySelector('.map-layer'),
-  document.querySelector('.rear-layer'),
-  actorEl,
-  document.querySelector('.entity-layer'),
-  document.querySelector('.front-layer')
-].forEach(el=>{if(el)stageCamera.appendChild(el)});
 const joystickZone=document.getElementById('joystickZone');
 const joystickEl=document.getElementById('joystick');
 const backpackBtn=document.getElementById('backpackBtn');
@@ -2470,6 +2450,7 @@ const inventoryItemWeight=document.getElementById('inventoryItemWeight');
 const inventoryItemCount=document.getElementById('inventoryItemCount');
 const inventoryUse=document.getElementById('inventoryUse');
 const inventoryDrop=document.getElementById('inventoryDrop');
+const worldEl=document.getElementById('world');
 const settingLanguage=document.getElementById('settingLanguage');
 const settingTimeScale=document.getElementById('settingTimeScale');
 const settingLandscape=document.getElementById('settingLandscape');
@@ -2595,30 +2576,27 @@ function updateCelestialVisuals(force=false){
   const minutes=visibleClockMinutes();
   const sun=celestialArcPosition(minutes,330,1110);
   const moon=celestialArcPosition(minutes,1050,390);
-  paperSun.style.left=sun.x.toFixed(3)+'%';
-  paperSun.style.top=sun.y.toFixed(3)+'%';
-  paperMoon.style.left=moon.x.toFixed(3)+'%';
-  paperMoon.style.top=moon.y.toFixed(3)+'%';
+  worldEl.style.setProperty('--sun-x',sun.x.toFixed(3)+'%');
+  worldEl.style.setProperty('--sun-y',sun.y.toFixed(3)+'%');
+  worldEl.style.setProperty('--moon-x',moon.x.toFixed(3)+'%');
+  worldEl.style.setProperty('--moon-y',moon.y.toFixed(3)+'%');
 }
 function updateDayNightVisuals(force=false){
   const now=performance.now();
-  if(!force&&now-lastDayNightRender<1000)return;
+  if(!force&&now-lastDayNightRender<500)return;
   lastDayNightRender=now;
   const minutes=visibleClockMinutes(),state=daylightState(minutes);
-  paperSky.style.setProperty('--sky-top',rgbCss(state.top));
-  paperSky.style.setProperty('--sky-bottom',rgbCss(state.bottom));
-  paperSky.style.setProperty('--horizon',rgbCss(state.horizon));
-  dayNightTint.style.setProperty('--night-alpha',state.night.toFixed(3));
-  dayNightTint.style.setProperty('--warm-alpha',state.warm.toFixed(3));
-  dayNightTint.style.setProperty('--warm-alpha-soft',(state.warm*.55).toFixed(3));
-  paperStars.style.opacity=state.stars.toFixed(3);
-  paperSun.style.opacity=state.sun.toFixed(3);
-  paperMoon.style.opacity=state.moon.toFixed(3);
-  paperFootlights.style.opacity=clamp(state.night*.82+state.warm*.18,0,.52).toFixed(3);
-  const shadow='rgba(34,28,24,'+(0.13+state.night*.22).toFixed(3)+')';
-  paperBackdrop.style.setProperty('--paper-shadow',shadow);
-  paperBackdropNext.style.setProperty('--paper-shadow',shadow);
-  rearLayerEl.style.setProperty('--paper-shadow',shadow);
+  worldEl.style.setProperty('--sky-top',rgbCss(state.top));
+  worldEl.style.setProperty('--sky-bottom',rgbCss(state.bottom));
+  worldEl.style.setProperty('--horizon',rgbCss(state.horizon));
+  worldEl.style.setProperty('--night-alpha',state.night.toFixed(3));
+  worldEl.style.setProperty('--warm-alpha',state.warm.toFixed(3));
+  worldEl.style.setProperty('--warm-alpha-soft',(state.warm*.55).toFixed(3));
+  worldEl.style.setProperty('--stars-alpha',state.stars.toFixed(3));
+  worldEl.style.setProperty('--sun-alpha',state.sun.toFixed(3));
+  worldEl.style.setProperty('--moon-alpha',state.moon.toFixed(3));
+  worldEl.style.setProperty('--footlight-alpha',clamp(state.night*.82+state.warm*.18,0,.52).toFixed(3));
+  worldEl.style.setProperty('--paper-shadow','rgba(34,28,24,'+(0.13+state.night*.22).toFixed(3)+')');
   updateCelestialVisuals(force);
   const clock=formatWorldClock(minutes),phase=worldTimeName(minutes);
   paperClock.textContent=clock+' · '+phase;
@@ -2813,14 +2791,9 @@ let perfLow=false,perfLowWindows=0,perfHighWindows=0;
 const coarsePointer=matchMedia('(pointer:coarse)').matches;
 function setPerfLow(next){
   next=!!next;
-  if(coarsePointer&&!next)next=true;
   if(next===perfLow)return;
   perfLow=next;
   worldEl.classList.toggle('perf-low',perfLow);
-}
-if(coarsePointer){
-  perfLow=true;
-  worldEl.classList.add('perf-low');
 }
 function sampleFramePerf(now){
   perfFrameCount++;
@@ -3370,11 +3343,7 @@ function setEnemyVisual(e,force=false){
     e.el.style.display=visible?'':'none';
   }
   if(!visible)return;
-  if(force||e._renderX!==e.x){
-    e._renderX=e.x;
-    e.el.style.translate=(e.x-visualOriginX).toFixed(2)+'px 0';
-  }
-  if(force)e.el.style.bottom=MAP_GROUND_SCREEN_Y+'px';
+  if(force||e._renderX!==e.x){e._renderX=e.x;e.el.style.left=(e.x-visualOriginX)+'px'}
   if(force||e._renderFacing!==e.facing){e._renderFacing=e.facing;e.el.style.setProperty('--enemy-facing',e.facing)}
   if(force||e._renderHp!==e.hp){e._renderHp=e.hp;e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%'}
   if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
@@ -3486,7 +3455,6 @@ let dialogueState={
 };
 let dialogueCloseTimer=0;
 let dialogueOpeningTimer=0;
-let dialogueChoiceReturnTimer=0;
 
 function dialogueIsOpen(){return dialogueState.open||dialogueState.closing}
 function playerDialogueName(){
@@ -3550,18 +3518,12 @@ function selectDialogueChoice(index){
   const npc=dialogueState.npc;
   const choice=npc?.dialogue?.choices?.[index];
   if(!choice||dialogueState.phase!=='choice')return false;
-  clearTimeout(dialogueChoiceReturnTimer);
   dialogueState.choiceIndex=index;
-  dialogueState.phase='choice-return';
+  dialogueState.phase='player-line';
   dialogueStage.classList.remove('is-choice');
   worldEl.classList.remove('dialogue-choice-camera');
   dialogueChoices.innerHTML='';
-  clearDialogueBubbles();
-  dialogueChoiceReturnTimer=setTimeout(()=>{
-    if(!dialogueState.open||dialogueState.phase!=='choice-return')return;
-    dialogueState.phase='player-line';
-    setDialogueBubble('player',choice.text);
-  },650);
+  setDialogueBubble('player',choice.text);
   return true;
 }
 function advanceDialogue(){
@@ -3590,7 +3552,6 @@ function openDialogue(npc){
   closeDebugPanel({focus:false});
   clearTimeout(dialogueCloseTimer);
   clearTimeout(dialogueOpeningTimer);
-  clearTimeout(dialogueChoiceReturnTimer);
   dialogueState={open:true,closing:false,npc,phase:'entering',choiceIndex:-1};
   dialoguePlayerName.textContent=playerDialogueName();
   dialogueNpcName.textContent=npc.name||'旅人';
@@ -3605,12 +3566,8 @@ function openDialogue(npc){
     if(!dialogueState.open)return;
     dialogueStage.classList.remove('is-entering');
     dialogueStage.classList.add('is-opening');
-    dialogueState.phase='opening-in';
-    dialogueOpeningTimer=setTimeout(()=>{
-      if(!dialogueState.open)return;
-      dialogueStage.classList.remove('is-opening');
-      showDialogueOpening();
-    },1080);
+    showDialogueOpening();
+    dialogueOpeningTimer=setTimeout(()=>dialogueStage.classList.remove('is-opening'),1180);
   }));
   dialoguePortraitDecode.then(beginEntrance,beginEntrance);
   return true;
@@ -3619,7 +3576,6 @@ function closeDialogue({immediate=false}={}){
   if(!dialogueIsOpen())return false;
   clearTimeout(dialogueCloseTimer);
   clearTimeout(dialogueOpeningTimer);
-  clearTimeout(dialogueChoiceReturnTimer);
   worldEl.classList.remove('dialogue-choice-camera');
   dialogueStage.classList.remove('is-opening','is-entering');
   if(immediate){
@@ -3811,7 +3767,8 @@ function refreshRoadW(){
   const w=roadTile.getBoundingClientRect().width;
   if(w>0){roadW=Math.max(1,w-1);ensureRoadTiles()}
   updateCamera();
-  renderWorld(true);
+  actorEl.style.left=actorX+'px';
+  actorEl.style.bottom=(MAP_GROUND_SCREEN_Y+playerY)+'px';
   renderCombatDebug();
 }
 roadTile.addEventListener('load',refreshRoadW);
@@ -3868,7 +3825,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorTranslate:'',actorGround:''};
+const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -3889,16 +3846,10 @@ function renderWorld(force=false){
   writeTransform(frontTrack,'front',frontT);
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
-  const actorTranslate=actorX.toFixed(2)+'px '+(-playerY).toFixed(2)+'px';
-  const actorGround=MAP_GROUND_SCREEN_Y.toFixed(2)+'px';
-  if(force||renderCache.actorTranslate!==actorTranslate){
-    renderCache.actorTranslate=actorTranslate;
-    actorEl.style.translate=actorTranslate;
-  }
-  if(force||renderCache.actorGround!==actorGround){
-    renderCache.actorGround=actorGround;
-    actorEl.style.bottom=actorGround;
-  }
+  const actorLeft=actorX.toFixed(2)+'px';
+  const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
+  if(force||renderCache.actorLeft!==actorLeft){renderCache.actorLeft=actorLeft;actorEl.style.left=actorLeft}
+  if(force||renderCache.actorBottom!==actorBottom){renderCache.actorBottom=actorBottom;actorEl.style.bottom=actorBottom}
   enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
 }
