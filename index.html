@@ -1928,6 +1928,21 @@ button{cursor:pointer}
   scale:1!important;
 }
 
+
+/* ---------- R9 ULTRA-SMOOTH CONSTANT-SIZE ENTRANCE ---------- */
+.dialogue-stage.is-opening .dialogue-portrait.player,
+.dialogue-stage.is-opening .dialogue-portrait.npc{
+  animation-duration:.88s!important;
+  animation-delay:0s!important;
+  animation-timing-function:cubic-bezier(.42,0,.58,1)!important;
+}
+.dialogue-stage.is-closing .dialogue-portrait.player,
+.dialogue-stage.is-closing .dialogue-portrait.npc{
+  animation-duration:.88s!important;
+  animation-delay:0s!important;
+  animation-timing-function:cubic-bezier(.42,0,.58,1)!important;
+}
+
 </style>
 </head>
 <body>
@@ -3901,7 +3916,7 @@ function openDialogue(npc){
   showDialogueOpening();
   dialogueOpeningTimer=setTimeout(()=>{
     if(dialogueState.open)dialogueStage.classList.remove('is-opening');
-  },820);
+  },940);
   return true;
 }
 function closeDialogue({immediate=false}={}){
