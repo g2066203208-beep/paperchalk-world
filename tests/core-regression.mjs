@@ -417,12 +417,9 @@ try{
     JSON.stringify(interiorStage));
   const interiorDepth=await page.evaluate(()=>{
     const z=id=>Number.parseInt(getComputedStyle(document.getElementById(id)).zIndex,10);
-    const doorEl=document.getElementById('interiorExitDoor');
-    const door=doorEl.getBoundingClientRect();
-    const mid=document.getElementById('interiorMidLayer').getBoundingClientRect();
+    const door=document.getElementById('interiorExitDoor').getBoundingClientRect();
     const scene=document.getElementById('interiorScene').getBoundingClientRect();
     const stage=document.getElementById('world').getBoundingClientRect();
-    const cs=getComputedStyle(doorEl);
     return {
       far:z('interiorFarLayer'),
       mid:z('interiorMidLayer'),
@@ -433,17 +430,13 @@ try{
       exteriorDoorX:window.PaperchalkScene.doorScreenX,
       interiorDoorX:window.PaperchalkScene.interiorDoorScreenX,
       expectedGroundY:window.PaperchalkScene.interiorDoorGroundY,
-      geometry:{
-        inner:[window.innerWidth,window.innerHeight],
-        stage:{left:stage.left,top:stage.top,width:stage.width,height:stage.height},
-        scene:{left:scene.left,top:scene.top,width:scene.width,height:scene.height},
-        mid:{left:mid.left,top:mid.top,width:mid.width,height:mid.height},
-        door:{left:door.left,top:door.top,width:door.width,height:door.height,bottom:door.bottom},
-        inline:{left:doorEl.style.left,bottom:doorEl.style.bottom,right:doorEl.style.right,translate:doorEl.style.translate},
-        computed:{left:cs.left,bottom:cs.bottom,right:cs.right,translate:cs.translate,transform:cs.transform}
-      }
+      sceneAligned:Math.abs(scene.left-stage.left)<1&&Math.abs(scene.top-stage.top)<1&&
+        Math.abs(scene.width-stage.width)<1&&Math.abs(scene.height-stage.height)<1
     };
   });
+  check('Interior scene shares the exterior stage coordinate origin',
+    interiorDepth.sceneAligned,
+    JSON.stringify(interiorDepth));
   check('Interior depth order is far -> mid -> player -> near',
     interiorDepth.far<interiorDepth.mid&&interiorDepth.mid<interiorDepth.player&&interiorDepth.player<interiorDepth.near,
     JSON.stringify(interiorDepth));
