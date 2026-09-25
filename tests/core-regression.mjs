@@ -316,6 +316,35 @@ try{
     Math.abs(flightRectAfter.left-flightRectStart.left)<1&&
     Math.abs(flightRectAfter.top-flightRectStart.top)<1,
     JSON.stringify({flightRectStart,flightRectAfter}));
+
+  await page.evaluate(()=>window.eval(
+    'playerWorldX=5950;playerY=4200;playerVy=0;updateCamera();renderWorld(true);'
+  ));
+  const highFlightBefore=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    const s=window.PaperchalkRuntime.getSnapshot();
+    return {x:s.player.x,y:s.player.y,camera:s.camera,rect:{left:r.left,top:r.top}};
+  });
+  await page.keyboard.down('ArrowRight');
+  await page.keyboard.down('ArrowUp');
+  await page.waitForTimeout(520);
+  await page.keyboard.up('ArrowRight');
+  await page.keyboard.up('ArrowUp');
+  await page.waitForTimeout(80);
+  const highFlightAfter=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    const s=window.PaperchalkRuntime.getSnapshot();
+    return {x:s.player.x,y:s.player.y,camera:s.camera,rect:{left:r.left,top:r.top}};
+  });
+  check('Free flight crosses a 6000px route boundary without resetting Y',
+    highFlightAfter.x>6000&&highFlightAfter.y>highFlightBefore.y+80&&
+    Math.abs(highFlightAfter.camera.y-highFlightAfter.y)<1,
+    JSON.stringify({highFlightBefore,highFlightAfter}));
+  check('High-altitude XY camera keeps the player fixed on screen',
+    Math.abs(highFlightAfter.rect.left-highFlightBefore.rect.left)<1&&
+    Math.abs(highFlightAfter.rect.top-highFlightBefore.rect.top)<1,
+    JSON.stringify({highFlightBefore,highFlightAfter}));
+
   await page.locator('#debugToggleBtn').click();
   await page.waitForTimeout(50);
   await page.locator('[data-debug-action="flightMode"]').click();
@@ -490,6 +519,111 @@ try{
   check('Interior doorway threshold stays on the exterior ground line',
     Math.abs(interiorDepth.doorGroundY-interiorDepth.expectedGroundY)<2,
     JSON.stringify(interiorDepth));
+
+  const indoorMap=await page.evaluate(()=>{
+    const m=window.PaperchalkScene.interiorMap;
+    const left=document.querySelector('.interior-wall-left').getBoundingClientRect();
+    const right=document.querySelector('.interior-wall-right').getBoundingClientRect();
+    const stairs=document.getElementById('interiorStaircase').getBoundingClientRect();
+    return {m,leftW:left.width,rightW:right.width,stairsW:stairs.width,stairsH:stairs.height};
+  });
+  check('Interior is a finite 24m x 10m room with real side walls',
+    indoorMap.m.width===3072&&indoorMap.m.height===1280&&
+    indoorMap.leftW>80&&indoorMap.rightW>80,
+    JSON.stringify(indoorMap));
+  check('Interior has a visible full-height stair flight to the second floor',
+    indoorMap.stairsW>600&&indoorMap.stairsH>490&&
+    indoorMap.m.secondFloorY===512&&indoorMap.m.stairs.x0===1408&&indoorMap.m.stairs.x1===2048,
+    JSON.stringify(indoorMap));
+
+  // Start just before the stair and use real keyboard movement. The player card
+  // must remain fixed while indoor world X/Y and camera X/Y change.
+  await page.evaluate(()=>window.eval(
+    'interiorPlayerWorldX=INTERIOR_STAIRS.x0-40;'+
+    'playerY=interiorWalkSurfaceY(interiorPlayerWorldX);'+
+    'updateInteriorCamera();renderWorld(true);'
+  ));
+  const stairStart=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {
+      x:window.PaperchalkScene.interiorX,
+      y:window.PaperchalkScene.interiorY,
+      camera:window.PaperchalkScene.interiorCamera,
+      rect:{left:r.left,top:r.top}
+    };
+  });
+  await page.keyboard.down('ArrowRight');
+  await page.waitForTimeout(720);
+  await page.keyboard.up('ArrowRight');
+  await page.waitForTimeout(80);
+  const stairMid=await page.evaluate(()=>{
+    const r=document.querySelector('.actor').getBoundingClientRect();
+    return {
+      x:window.PaperchalkScene.interiorX,
+      y:window.PaperchalkScene.interiorY,
+      camera:window.PaperchalkScene.interiorCamera,
+      rect:{left:r.left,top:r.top}
+    };
+  });
+  check('Walking on the stair continuously raises indoor Y instead of platform-jumping',
+    stairMid.x>indoorMap.m.stairs.x0&&
+    stairMid.x<indoorMap.m.stairs.x1&&
+    stairMid.y>40&&stairMid.y<indoorMap.m.secondFloorY&&
+    Math.abs(stairMid.camera.y-stairMid.y)<1,
+    JSON.stringify({stairStart,stairMid}));
+  check('Player remains fixed on screen while the stair moves the room in X and Y',
+    Math.abs(stairMid.rect.left-stairStart.rect.left)<1&&
+    Math.abs(stairMid.rect.top-stairStart.rect.top)<1&&
+    stairMid.camera.x>stairStart.camera.x&&stairMid.camera.y>stairStart.camera.y,
+    JSON.stringify({stairStart,stairMid}));
+
+  await page.keyboard.down('ArrowRight');
+  await page.waitForTimeout(2200);
+  await page.keyboard.up('ArrowRight');
+  await page.waitForTimeout(80);
+  const secondFloor=await page.evaluate(()=>({
+    x:window.PaperchalkScene.interiorX,
+    y:window.PaperchalkScene.interiorY,
+    camera:window.PaperchalkScene.interiorCamera
+  }));
+  check('Walking to the top of the stair reaches the second floor at Y=512',
+    secondFloor.x>=indoorMap.m.stairs.x1&&Math.abs(secondFloor.y-indoorMap.m.secondFloorY)<1&&
+    Math.abs(secondFloor.camera.y-secondFloor.y)<1,
+    JSON.stringify(secondFloor));
+
+  // Walls are physical limits. Seed near the left wall, then try to walk through it.
+  await page.evaluate(()=>window.eval(
+    'interiorPlayerWorldX=interiorHorizontalBounds().left+3;'+
+    'playerY=interiorWalkSurfaceY(interiorPlayerWorldX);'+
+    'updateInteriorCamera();renderWorld(true);'
+  ));
+  await page.keyboard.down('ArrowLeft');
+  await page.waitForTimeout(260);
+  await page.keyboard.up('ArrowLeft');
+  await page.waitForTimeout(60);
+  const wallStop=await page.evaluate(()=>({
+    x:window.PaperchalkScene.interiorX,
+    map:window.PaperchalkScene.interiorMap
+  }));
+  check('Indoor left wall blocks movement at the finite room boundary',
+    wallStop.x>wallStop.map.leftWall&&wallStop.x<wallStop.map.leftWall+40,
+    JSON.stringify(wallStop));
+
+  // W/Up is not a fake platform jump indoors: without flight it does not change Y.
+  const noJumpBefore=await page.evaluate(()=>window.PaperchalkScene.interiorY);
+  await page.keyboard.press('ArrowUp');
+  await page.waitForTimeout(120);
+  const noJumpAfter=await page.evaluate(()=>window.PaperchalkScene.interiorY);
+  check('Indoor vertical access is by stairs, not platform jumping',
+    Math.abs(noJumpAfter-noJumpBefore)<1,
+    JSON.stringify({noJumpBefore,noJumpAfter}));
+
+  // Return to the door for the exit-transition regression below.
+  await page.evaluate(()=>window.eval(
+    'interiorPlayerWorldX=INTERIOR_DOOR_X;playerY=0;playerVy=0;playerGrounded=true;'+
+    'updateInteriorCamera();renderWorld(true);updateNpcPrompt();'
+  ));
+  await page.waitForTimeout(80);
 
   const exitPlayerBefore=await page.evaluate(()=>({
     screenX:window.PaperchalkScene.playerScreenX,
