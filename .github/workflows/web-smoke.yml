@@ -8,6 +8,8 @@ on:
       - "src/**"
       - "styles/**"
       - "tests/web-smoke.js"
+      - "tests/performance-budget.mjs"
+      - "tests/performance-budget.mjs"
       - ".github/workflows/web-smoke.yml"
   pull_request:
     paths:
@@ -29,3 +31,5 @@ jobs:
           node-version: "22"
       - name: Test menu, login and movement wiring
         run: node tests/web-smoke.js
+      - name: Enforce performance budgets
+        run: node tests/performance-budget.mjs
