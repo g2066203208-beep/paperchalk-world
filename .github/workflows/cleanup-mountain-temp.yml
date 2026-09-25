@@ -1,0 +1,31 @@
+name: Cleanup Mountain Temp
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cleanup-mountain-temp.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Remove temporary transfer files
+        run: |
+          rm -rf .tmp-mountain
+          rm -f .github/workflows/cleanup-mountain-temp.yml
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to clean."
+          else
+            git commit -m "Clean temporary mountain transfer files"
+            git push
+          fi
