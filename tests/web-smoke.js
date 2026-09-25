@@ -99,6 +99,12 @@ assert(html.includes('width="1152" height="1536"'), "Apartment must retain origi
 assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing");
 assert(css.includes("width:1152px;height:1536px"), "Apartment original-size CSS missing");
 assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missing");
+assert(fs.existsSync("assets/backgrounds/mountain-background.webp"), "Mountain background runtime asset missing");
+assert(html.includes('id="mountainBackground"'), "Mountain background layer missing");
+assert(css.includes(".mountain-background-layer::before{"), "Mountain responsive visual layer missing");
+assert(css.includes("background-size:clamp(1050px,82vw,1500px) auto"), "Mountain responsive scaling rule missing");
+assert(game.includes("const MOUNTAIN_PARALLAX=.16"), "Mountain parallax factor missing");
+assert(game.includes("sceneryX*MOUNTAIN_PARALLAX"), "Mountain parallax is not driven by camera scroll");
 
 assert(!css.includes(".world-block{"), "Voxel/block ground visuals must stay removed");
 assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay removed");
