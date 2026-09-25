@@ -3,6 +3,12 @@ name: UI Smoke
 on:
   push:
     branches: [ main ]
+  pull_request:
+    paths:
+      - "index.html"
+      - "tests/ui-smoke.mjs"
+      - ".github/workflows/ui-smoke.yml"
+      - "assets/**"
   workflow_dispatch:
 
 jobs:
