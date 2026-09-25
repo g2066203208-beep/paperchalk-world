@@ -104,9 +104,12 @@ const androidMain=fs.readFileSync("android-app/app/src/main/java/com/paperchalk/
 assert(androidMain.includes("?androidRefresh="), "Android app must cache-bust the HTML shell on refresh");
 assert(androidMain.includes('loadFreshGame("launch")'), "Android cold launch refresh missing");
 assert(androidMain.includes('loadFreshGame("resume")'), "Android foreground resume refresh missing");
+assert(androidMain.includes("awayMs >= 1500L"), "Android resume refresh is not protected from tiny interruptions");
+assert(androidMain.includes("window.PaperchalkSaveNow"), "Android onPause save bridge missing");
+assert(game.includes("window.PaperchalkSaveNow"), "Web save bridge missing");
 assert(androidMain.includes('"Cache-Control", "no-cache, max-age=0"'), "Android HTML request must force revalidation");
 const androidGradle=fs.readFileSync("android-app/app/build.gradle.kts","utf8");
-assert(androidGradle.includes("versionCode = 2") && androidGradle.includes('versionName = "0.1.1"'), "Android APK version was not bumped");
+assert(androidGradle.includes("versionCode = 3") && androidGradle.includes('versionName = "0.1.2"'), "Android APK version was not bumped");
 assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
