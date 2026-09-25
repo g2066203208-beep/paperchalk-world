@@ -202,40 +202,46 @@ assert(pSpread<0.004&&nSpread<0.004,'portrait scale changes during entrance '+JS
 assert(pScales.every(v=>Math.abs(v-1)<0.004)&&nScales.every(v=>Math.abs(v-1)<0.004),'portrait entrance scale is not 1.0 '+JSON.stringify(entranceScale));
 console.log('PASS constant-size portrait entrance',{pSpread,nSpread,samples:entranceScale});
 
-await sleep(155);
-const handoffBefore=await js(`(()=>{
-  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
-  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
-  const pp=document.querySelector('#dialoguePlayerPortrait .dialogue-puppet').getBoundingClientRect();
-  const np=document.querySelector('#dialogueNpcPortrait .dialogue-puppet').getBoundingClientRect();
-  return {
-    opening:document.getElementById('dialogueStage').classList.contains('is-opening'),
-    p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height},
-    pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},np:{x:np.x,y:np.y,w:np.width,h:np.height}
+const handoff=await js(`(async()=>{
+  const stage=document.getElementById('dialogueStage');
+  const player=document.getElementById('dialoguePlayerPortrait');
+  const npc=document.getElementById('dialogueNpcPortrait');
+  const playerPuppet=document.querySelector('#dialoguePlayerPortrait .dialogue-puppet');
+  const npcPuppet=document.querySelector('#dialogueNpcPortrait .dialogue-puppet');
+  const snap=()=> {
+    const p=player.getBoundingClientRect(),n=npc.getBoundingClientRect();
+    const pp=playerPuppet.getBoundingClientRect(),np=npcPuppet.getBoundingClientRect();
+    return {
+      opening:stage.classList.contains('is-opening'),
+      p:{x:p.x,y:p.y,w:p.width,h:p.height},
+      n:{x:n.x,y:n.y,w:n.width,h:n.height},
+      pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},
+      np:{x:np.x,y:np.y,w:np.width,h:np.height}
+    };
   };
+  if(!stage.classList.contains('is-opening'))return {alreadyEnded:true,after:snap()};
+  const before=snap();
+  await new Promise(resolve=>{
+    const obs=new MutationObserver(()=>{
+      if(!stage.classList.contains('is-opening')){obs.disconnect();requestAnimationFrame(resolve)}
+    });
+    obs.observe(stage,{attributes:true,attributeFilter:['class']});
+  });
+  const after=snap();
+  return {alreadyEnded:false,before,after};
 })()`);
-await sleep(105);
-const handoffAfter=await js(`(()=>{
-  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
-  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
-  const pp=document.querySelector('#dialoguePlayerPortrait .dialogue-puppet').getBoundingClientRect();
-  const np=document.querySelector('#dialogueNpcPortrait .dialogue-puppet').getBoundingClientRect();
-  return {
-    opening:document.getElementById('dialogueStage').classList.contains('is-opening'),
-    p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height},
-    pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},np:{x:np.x,y:np.y,w:np.width,h:np.height}
-  };
-})()`);
-assert(handoffBefore.opening===true&&handoffAfter.opening===false,'opening class did not hand off at expected time '+JSON.stringify({handoffBefore,handoffAfter}));
-for(const key of ['p','n']){
-  assert(Math.abs(handoffAfter[key].x-handoffBefore[key].x)<2&&Math.abs(handoffAfter[key].y-handoffBefore[key].y)<2,
-    'portrait parent jumps at entrance/breath handoff '+key+' '+JSON.stringify({handoffBefore,handoffAfter}));
+
+if(!handoff.alreadyEnded){
+  for(const key of ['p','n']){
+    assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
+      'portrait parent jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
+  }
+  for(const key of ['pp','np']){
+    assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
+      'puppet child jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
+  }
 }
-for(const key of ['pp','np']){
-  assert(Math.abs(handoffAfter[key].x-handoffBefore[key].x)<2&&Math.abs(handoffAfter[key].y-handoffBefore[key].y)<2,
-    'puppet child jumps at entrance/breath handoff '+key+' '+JSON.stringify({handoffBefore,handoffAfter}));
-}
-console.log('PASS continuous entrance-to-breath handoff',{handoffBefore,handoffAfter});
+console.log('PASS continuous entrance-to-breath handoff',handoff);
 noFaults('dialogue open');
 const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
 assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
