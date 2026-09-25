@@ -99,7 +99,7 @@ assert(html.includes('width="1152" height="1536"'), "Apartment must retain origi
 assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing");
 assert(css.includes("width:1152px;height:1536px"), "Apartment original-size CSS missing");
 assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missing");
-assert(fs.existsSync("assets/backgrounds/mountain-background.webp"), "Mountain background runtime asset missing");
+assert(fs.existsSync("assets/backgrounds/mountain-background.svg"), "Mountain background runtime asset missing");
 assert(html.includes('id="mountainBackground"'), "Mountain background layer missing");
 assert(css.includes(".mountain-background-layer::before{"), "Mountain responsive visual layer missing");
 assert(css.includes("background-size:auto clamp(240px,62vh,520px)"), "Mountain responsive scaling rule missing");
