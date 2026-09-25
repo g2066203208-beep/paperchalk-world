@@ -95,6 +95,17 @@ try{
   assert(initial.worldClass.includes('renderer-pixi-dynamic'),'renderer class missing');
   assert(initial.actorVisibility==='hidden'&&initial.entityVisibility==='hidden','DOM dynamic entities are still visible');
 
+  await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
+  await page.waitForTimeout(100);
+  const gpuCrouch=await page.evaluate(()=>({
+    action:window.PaperchalkCombat.player.action,
+    rendererAction:window.PaperchalkRenderer.stats.playerAction
+  }));
+  assert(gpuCrouch.action==='crouch'&&gpuCrouch.rendererAction==='crouch',
+    'Pixi renderer did not follow crouch action texture '+JSON.stringify(gpuCrouch));
+  await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
+  await page.waitForTimeout(80);
+
   await page.evaluate(()=>{
     window.PaperchalkCombat.placeEnemyNear(320);
     window.PaperchalkCombat.toggleEnemyAi(true);
