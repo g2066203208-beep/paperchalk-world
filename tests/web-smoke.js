@@ -70,6 +70,8 @@ assert(game.includes("function startPlayerActionSettle"), "Soft player action se
 assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip transition missing");
 assert(!game.includes("function startPlayerPaperFlip"), "Full paper flip must not run on every action change");
 assert(game.includes("startPlayerActionSettle(previousState,state)"), "Action changes must use soft settle");
+assert(game.includes("state==='crouch'||previousState==='crouch')return"), "Crouch must bypass shared-card scale settle");
+assert(html.includes('/assets/player/runtime/crouch.webp?v=paper-scenery-r13'), "Crouch asset must be eagerly preloaded");
 assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
@@ -95,9 +97,10 @@ assert(!html.includes("blackKeyApartment") && !css.includes("blackKeyApartment")
 assert(!html.includes("voxel-ground") && !css.includes("voxel-ground"), "Voxel-era ground naming returned");
 assert(game.includes("updateMidgroundApartmentVisibility"), "Apartment off-screen culling missing");
 assert(css.includes("width:1800px"), "Apartment track expanded back to world-scale width");
-assert(html.includes('width="1152" height="1536"'), "Apartment must retain original 1152x1536 display dimensions");
+assert(html.includes('width="780" height="1040"'), "Apartment display dimensions must be 780x1040 at default player scale");
 assert(css.includes(".midground-apartment{"), "Apartment midground CSS missing");
-assert(css.includes("width:1152px;height:1536px"), "Apartment original-size CSS missing");
+assert(css.includes("width:calc(var(--player-visual-h,156px) * 5)"), "Apartment width is not tied to player scale");
+assert(css.includes("height:calc(var(--player-visual-h,156px) * 6.6667)"), "Apartment height is not tied to player scale");
 assert(game.includes("APARTMENT_PARALLAX"), "Apartment parallax transform missing");
 assert(fs.existsSync("assets/backgrounds/mountain-background.svg"), "Mountain background runtime asset missing");
 assert(html.includes('id="mountainBackground"'), "Mountain background layer missing");
