@@ -10,9 +10,16 @@ async function waitJson(url,tries=80){
   }
   throw last||new Error('timeout '+url);
 }
-const pages=await waitJson(base+'/json');
-if(!pages.length)throw new Error('No Chromium page');
-const ws=new WebSocket(pages[0].webSocketDebuggerUrl);
+let gamePage=null;
+for(let i=0;i<120;i++){
+  const pages=await waitJson(base+'/json');
+  gamePage=pages.find(p=>p.type==='page'&&p.url.startsWith('http://127.0.0.1:4173/'))||null;
+  if(gamePage)break;
+  await sleep(100);
+}
+if(!gamePage)throw new Error('No game page target');
+console.log('TARGET',gamePage.url);
+const ws=new WebSocket(gamePage.webSocketDebuggerUrl);
 await new Promise((ok,bad)=>{ws.addEventListener('open',ok,{once:true});ws.addEventListener('error',bad,{once:true})});
 let id=0;
 const pending=new Map();
