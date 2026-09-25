@@ -150,6 +150,10 @@ try{
     walking.player.action==='walk'&&walking.state==='walk'&&walking.src.includes('/assets/player/walk.webp'),
     JSON.stringify(walking));
 
+  // Restore the original regression position before checking far-enemy sleep radius.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:''}));
+  await page.waitForTimeout(220);
+
   const enemyMoveBefore=await page.evaluate(()=>window.PaperchalkCombat.enemies);
   await page.waitForTimeout(420);
   const enemyMoveAfter=await page.evaluate(()=>window.PaperchalkCombat.enemies);
