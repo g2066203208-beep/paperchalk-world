@@ -71,7 +71,7 @@ assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip tr
 assert(!game.includes("function startPlayerPaperFlip"), "Full paper flip must not run on every action change");
 assert(game.includes("startPlayerActionSettle(previousState,state)"), "Action changes must use soft settle");
 assert(game.includes("state==='crouch'||previousState==='crouch')return"), "Crouch must bypass shared-card scale settle");
-assert(html.includes('/assets/player/runtime/crouch.webp?v=paper-scenery-r13'), "Crouch asset must be eagerly preloaded");
+assert(html.includes('/assets/player/runtime/crouch.webp?v=clean-stage-r14'), "Crouch asset must be eagerly preloaded");
 assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
