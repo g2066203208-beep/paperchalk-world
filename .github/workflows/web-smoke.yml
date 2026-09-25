@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - "index.html"
+      - "src/**"
+      - "styles/**"
       - "tests/web-smoke.js"
       - ".github/workflows/web-smoke.yml"
   pull_request:
     paths:
       - "index.html"
+      - "src/**"
+      - "styles/**"
       - "tests/web-smoke.js"
 
 permissions:
