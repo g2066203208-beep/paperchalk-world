@@ -470,8 +470,8 @@ button{cursor:pointer}
 @keyframes enemy-bob{50%{transform:scaleX(var(--enemy-facing)) translateY(-3px) rotate(1deg)}}
 @keyframes enemy-hit{40%{transform:scaleX(var(--enemy-facing)) translateX(calc(var(--enemy-facing)*-9px)) rotate(-5deg);filter:brightness(1.45)}}
 @keyframes enemy-swing{45%{transform:scaleX(var(--enemy-facing)) translateX(calc(var(--enemy-facing)*12px)) rotate(7deg)}}
-.combat-controls{position:absolute;z-index:31;right:max(18px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:none;gap:12px;pointer-events:auto;transform:scale(var(--control-scale,1));transform-origin:right bottom}
-.combat-btn{width:64px;height:58px;border:1px solid rgba(79,60,39,.36);background:rgba(235,218,181,.90);color:#584936;font-weight:800;font-size:15px;border-radius:48% 52% 46% 54%;box-shadow:4px 5px 0 rgba(55,42,28,.13);touch-action:manipulation}
+.combat-controls{position:absolute;z-index:31;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));display:none;gap:14px;pointer-events:auto;transform:scale(var(--control-scale,1));transform-origin:right bottom}
+.combat-btn{width:clamp(76px,5.8vw,88px);height:clamp(68px,5.1vw,80px);border:1px solid rgba(79,60,39,.36);background:rgba(235,218,181,.90);color:#584936;font-weight:800;font-size:18px;border-radius:48% 52% 46% 54%;box-shadow:5px 6px 0 rgba(55,42,28,.14);touch-action:manipulation}
 .combat-btn:active{transform:translateY(2px) scale(.96)}
 .combat-btn.is-active{background:rgba(92,78,57,.92);color:#f2e6c8;box-shadow:inset 0 0 0 2px rgba(255,255,255,.10),2px 3px 0 rgba(55,42,28,.18)}
 @media (hover:none),(pointer:coarse){.combat-controls{display:flex}}
@@ -2043,3 +2043,152 @@ button{cursor:pointer}
 #paperBackdrop,#paperBackdropNext{display:none!important}
 .rear-layer,.front-layer{display:none!important}
 .terrain-piece,.map-object,.map-landmark,.pickup,.junction-marker,.fork-node-hint,.fork-exit-guide{display:none!important}
+
+/* ---------- paper door stage transition ---------- */
+.door-interact-prompt{
+  position:absolute;z-index:24;left:0;bottom:0;opacity:0;pointer-events:none;
+  transform:translate(-50%,8px) rotate(-1deg);
+  padding:6px 10px;background:rgba(228,210,174,.96);border:1px solid rgba(91,70,44,.55);
+  color:#51422f;font:800 12px/1.1 "Noto Serif SC",serif;border-radius:4px;
+  box-shadow:2px 3px 0 rgba(58,43,28,.13);
+  transition:opacity .16s ease,transform .16s ease;
+}
+.door-interact-prompt.is-visible{opacity:1;transform:translate(-50%,0) rotate(-1deg)}
+.stage.stage-transitioning .combat-controls,
+.stage.stage-transitioning .world-map-btn,
+.stage.stage-transitioning .backpack-open-btn{pointer-events:none;opacity:.58}
+
+.stage.paper-stage-out .paper-cloud-a{animation:paperHangExit .52s cubic-bezier(.55,.02,.86,.42) 0ms both}
+.stage.paper-stage-out .paper-celestial{animation:paperHangExit .56s cubic-bezier(.55,.02,.86,.42) 55ms both}
+.stage.paper-stage-out .paper-cloud-b{animation:paperHangExit .52s cubic-bezier(.55,.02,.86,.42) 105ms both}
+.stage.paper-stage-out .paper-stars{animation:paperHangExit .48s cubic-bezier(.55,.02,.86,.42) 135ms both}
+.stage.paper-stage-out .midground-building-layer{animation:paperDropExit .66s cubic-bezier(.56,.04,.86,.47) 70ms both}
+.stage.paper-stage-out .map-layer,
+.stage.paper-stage-out .entity-layer{animation:paperDropExit .58s cubic-bezier(.56,.04,.86,.47) 145ms both}
+.stage.paper-stage-out .actor{animation:paperDropExit .50s cubic-bezier(.56,.04,.86,.47) 185ms both}
+.stage.paper-stage-out .paper-wing{animation:paperDropExit .62s cubic-bezier(.56,.04,.86,.47) 220ms both}
+.stage.paper-stage-out .paper-stage-floor,
+.stage.paper-stage-out .paper-footlights{animation:paperDropExit .58s cubic-bezier(.56,.04,.86,.47) 265ms both}
+.stage.paper-stage-out .day-night-tint{animation:paperTintOut .38s ease 120ms both}
+
+@keyframes paperHangExit{
+  0%{transform:translate3d(0,0,0) rotate(var(--paper-rot,0deg));opacity:1}
+  72%{opacity:1}
+  100%{transform:translate3d(0,-118vh,0) rotate(-2deg);opacity:.08}
+}
+@keyframes paperDropExit{
+  0%{transform:translate3d(0,0,0);opacity:1}
+  78%{opacity:1}
+  100%{transform:translate3d(0,116vh,0);opacity:.08}
+}
+@keyframes paperTintOut{to{opacity:0}}
+
+.interior-scene{
+  position:absolute;inset:0;z-index:8;visibility:hidden;pointer-events:none;overflow:hidden;
+  background:transparent;
+}
+.stage.scene-interior .interior-scene{visibility:visible}
+.stage.scene-interior .paper-sky,
+.stage.scene-interior .paper-backdrop,
+.stage.scene-interior .paper-backdrop-next,
+.stage.scene-interior .paper-stage-floor,
+.stage.scene-interior .paper-wing,
+.stage.scene-interior .paper-footlights,
+.stage.scene-interior .midground-building-layer,
+.stage.scene-interior .map-layer,
+.stage.scene-interior .entity-layer,
+.stage.scene-interior .rear-layer,
+.stage.scene-interior .front-layer,
+.stage.scene-interior .day-night-tint{visibility:hidden}
+
+.paper-stage-piece{position:absolute;will-change:transform}
+.interior-wall{
+  left:8%;right:8%;top:7%;bottom:24%;
+  background:rgba(216,202,175,.97);
+  border:4px solid rgba(103,78,51,.55);
+  box-shadow:inset 0 0 0 10px rgba(255,248,228,.18),8px 10px 0 rgba(57,44,29,.10);
+  clip-path:polygon(1% 2%,12% 0,25% 1%,40% 0,58% 2%,72% 0,88% 1%,99% 0,100% 96%,91% 98%,73% 97%,59% 100%,40% 98%,22% 100%,4% 98%);
+}
+.interior-floor{
+  left:-4%;right:-4%;bottom:-3%;height:31%;
+  background:rgba(173,137,91,.94);
+  border-top:5px solid rgba(92,67,43,.48);
+  box-shadow:inset 0 12px 0 rgba(239,212,164,.18);
+}
+.interior-window{
+  left:19%;top:22%;width:18%;height:31%;
+  background:rgba(126,151,157,.72);
+  border:12px solid rgba(119,86,57,.84);
+  box-shadow:4px 7px 0 rgba(57,44,29,.13),inset 0 0 0 4px rgba(240,230,205,.22);
+}
+.interior-window:before,.interior-window:after,.interior-window-cross:before,.interior-window-cross:after{
+  content:"";position:absolute;background:rgba(104,76,51,.82)
+}
+.interior-window:before{left:48%;top:0;bottom:0;width:7px}
+.interior-window:after{left:0;right:0;top:48%;height:7px}
+.interior-shelf{
+  left:43%;bottom:28%;width:23%;height:9%;
+  background:rgba(126,84,51,.95);border:3px solid rgba(86,58,39,.68);
+  box-shadow:0 8px 0 rgba(55,39,27,.12);
+}
+.interior-shelf:before,.interior-shelf:after{
+  content:"";position:absolute;bottom:-62px;width:12px;height:62px;background:rgba(108,72,46,.92)
+}
+.interior-shelf:before{left:18%}.interior-shelf:after{right:18%}
+.interior-exit-door{
+  right:15%;bottom:24%;width:15%;height:42%;
+  background:rgba(107,76,53,.96);border:7px solid rgba(72,51,37,.82);
+  box-shadow:5px 8px 0 rgba(46,34,25,.14),inset 0 0 0 5px rgba(219,185,135,.08);
+}
+.interior-door-handle{
+  position:absolute;right:14%;top:52%;width:11px;height:11px;border-radius:50%;background:#d2b06d;border:2px solid #705234
+}
+.interior-door-label{
+  position:absolute;left:50%;top:-34px;transform:translateX(-50%);
+  padding:4px 9px;background:#dac18d;border:1px solid #755c3b;color:#54432f;font:800 12px serif
+}
+
+.stage.scene-interior.interior-stage-in .interior-floor{animation:interiorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
+.stage.scene-interior.interior-stage-in .interior-wall{animation:interiorRise .64s cubic-bezier(.14,.82,.22,1) 70ms both}
+.stage.scene-interior.interior-stage-in .interior-window{animation:interiorRise .54s cubic-bezier(.14,.82,.22,1) 155ms both}
+.stage.scene-interior.interior-stage-in .interior-shelf{animation:interiorRise .50s cubic-bezier(.14,.82,.22,1) 215ms both}
+.stage.scene-interior.interior-stage-in .interior-exit-door{animation:interiorRise .58s cubic-bezier(.14,.82,.22,1) 285ms both}
+.stage.scene-interior.interior-stage-in .actor{animation:interiorActorIn .48s cubic-bezier(.17,.88,.25,1) 370ms both}
+
+.stage.scene-interior.interior-stage-out .interior-exit-door{animation:interiorDrop .46s cubic-bezier(.55,.02,.86,.42) 0ms both}
+.stage.scene-interior.interior-stage-out .interior-shelf{animation:interiorDrop .46s cubic-bezier(.55,.02,.86,.42) 55ms both}
+.stage.scene-interior.interior-stage-out .interior-window{animation:interiorDrop .48s cubic-bezier(.55,.02,.86,.42) 95ms both}
+.stage.scene-interior.interior-stage-out .interior-wall{animation:interiorDrop .56s cubic-bezier(.55,.02,.86,.42) 135ms both}
+.stage.scene-interior.interior-stage-out .interior-floor{animation:interiorDrop .48s cubic-bezier(.55,.02,.86,.42) 205ms both}
+.stage.scene-interior.interior-stage-out .actor{animation:interiorDrop .44s cubic-bezier(.55,.02,.86,.42) 70ms both}
+
+.stage.exterior-stage-in .paper-stage-floor{animation:exteriorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
+.stage.exterior-stage-in .paper-wing{animation:exteriorRise .58s cubic-bezier(.14,.82,.22,1) 55ms both}
+.stage.exterior-stage-in .midground-building-layer{animation:exteriorRise .66s cubic-bezier(.14,.82,.22,1) 115ms both}
+.stage.exterior-stage-in .map-layer,
+.stage.exterior-stage-in .entity-layer{animation:exteriorRise .54s cubic-bezier(.14,.82,.22,1) 190ms both}
+.stage.exterior-stage-in .actor{animation:interiorActorIn .46s cubic-bezier(.17,.88,.25,1) 250ms both}
+.stage.exterior-stage-in .paper-cloud-a{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 105ms both}
+.stage.exterior-stage-in .paper-celestial{animation:paperHangEnter .60s cubic-bezier(.14,.82,.22,1) 165ms both}
+.stage.exterior-stage-in .paper-cloud-b{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 225ms both}
+
+@keyframes interiorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
+@keyframes interiorDrop{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,115vh,0);opacity:.08}}
+@keyframes interiorActorIn{from{transform:translate3d(0,80vh,0);opacity:.1}to{transform:translate3d(0,0,0);opacity:1}}
+@keyframes exteriorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
+@keyframes paperHangEnter{from{transform:translate3d(0,-118vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
+
+@media (prefers-reduced-motion:reduce){
+  .stage.paper-stage-out .paper-cloud,
+  .stage.paper-stage-out .paper-celestial,
+  .stage.paper-stage-out .midground-building-layer,
+  .stage.paper-stage-out .map-layer,
+  .stage.paper-stage-out .entity-layer,
+  .stage.paper-stage-out .actor,
+  .stage.paper-stage-out .paper-stage-floor,
+  .stage.scene-interior.interior-stage-in .paper-stage-piece,
+  .stage.scene-interior.interior-stage-in .actor,
+  .stage.scene-interior.interior-stage-out .paper-stage-piece,
+  .stage.exterior-stage-in .paper-stage-piece,
+  .stage.exterior-stage-in .actor{animation-duration:.01ms!important;animation-delay:0ms!important}
+}

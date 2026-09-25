@@ -485,8 +485,18 @@ const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
 const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
 const midgroundApartment=document.getElementById('midgroundApartment');
+const apartmentDoorPrompt=document.getElementById('apartmentDoorPrompt');
+const interiorScene=document.getElementById('interiorScene');
+const interiorExitDoor=document.getElementById('interiorExitDoor');
 const APARTMENT_WORLD_X=520;
 const APARTMENT_PARALLAX=.78;
+const APARTMENT_DOOR_X_RATIO=.525;
+const APARTMENT_DOOR_PROMPT_Y_RATIO=.43;
+let sceneLocation='outside';
+let sceneTransitionBusy=false;
+let interiorPlayerX=0;
+let exteriorReturnX=MAP_SPAWN_X;
+let exteriorReturnY=0;
 const APARTMENT_CULL_MARGIN=180;
 let apartmentDisplayWidth=780;
 let midgroundApartmentVisible=null;
@@ -508,6 +518,86 @@ function updateMidgroundApartmentVisibility(sceneryX,force=false){
     midgroundApartmentVisible=visible;
     midgroundApartment.hidden=!visible;
   }
+}
+function apartmentDoorScreenX(){
+  const sceneryX=worldX+sceneryOffsetX;
+  return APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO;
+}
+function apartmentDoorScreenY(){
+  const h=midgroundApartment?.getBoundingClientRect().height||1040;
+  return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO;
+}
+function nearbyApartmentDoor(maxDistance=78){
+  if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
+  return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
+}
+function interiorExitX(){return VIEW_W*.82}
+function nearbyInteriorExit(maxDistance=92){
+  return sceneLocation==='interior'&&!sceneTransitionBusy&&Math.abs(interiorPlayerX-interiorExitX())<=maxDistance;
+}
+function renderDoorPrompt(){
+  if(!apartmentDoorPrompt)return;
+  if(sceneLocation!=='outside'||!nearbyApartmentDoor()){
+    apartmentDoorPrompt.classList.remove('is-visible');
+    apartmentDoorPrompt.setAttribute('aria-hidden','true');
+    return;
+  }
+  apartmentDoorPrompt.style.left=apartmentDoorScreenX().toFixed(1)+'px';
+  apartmentDoorPrompt.style.bottom=apartmentDoorScreenY().toFixed(1)+'px';
+  apartmentDoorPrompt.classList.add('is-visible');
+  apartmentDoorPrompt.setAttribute('aria-hidden','false');
+}
+function clearSceneStageClasses(){
+  worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
+}
+function enterApartment(){
+  if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
+  sceneTransitionBusy=true;
+  exteriorReturnX=playerWorldX;
+  exteriorReturnY=playerY;
+  worldEl.classList.add('stage-transitioning','paper-stage-out');
+  apartmentDoorPrompt?.classList.remove('is-visible');
+  setTimeout(()=>{
+    sceneLocation='interior';
+    interiorPlayerX=VIEW_W*.52;
+    actorX=interiorPlayerX;
+    playerY=0;playerVy=0;playerGrounded=true;
+    clearSceneStageClasses();
+    worldEl.classList.add('scene-interior','interior-stage-in');
+    interiorScene?.setAttribute('aria-hidden','false');
+    renderWorld(true);
+    updateNpcPrompt();
+    setTimeout(()=>{
+      worldEl.classList.remove('interior-stage-in','stage-transitioning');
+      sceneTransitionBusy=false;
+      updateNpcPrompt();
+    },900);
+  },860);
+  return true;
+}
+function exitApartment(){
+  if(sceneLocation!=='interior'||sceneTransitionBusy)return false;
+  sceneTransitionBusy=true;
+  worldEl.classList.add('stage-transitioning','interior-stage-out');
+  setTimeout(()=>{
+    sceneLocation='outside';
+    interiorScene?.setAttribute('aria-hidden','true');
+    worldEl.classList.remove('scene-interior','interior-stage-out');
+    playerWorldX=exteriorReturnX;
+    playerY=Math.max(0,exteriorReturnY);
+    playerVy=0;playerGrounded=true;
+    updateCamera();
+    actorX=playerWorldX-worldX;
+    worldEl.classList.add('exterior-stage-in');
+    renderWorld(true);
+    updateNpcPrompt();
+    setTimeout(()=>{
+      worldEl.classList.remove('exterior-stage-in','stage-transitioning');
+      sceneTransitionBusy=false;
+      updateNpcPrompt();
+    },900);
+  },720);
+  return true;
 }
 const terrainTrack=document.getElementById('terrainTrack');
 const mapObjectTrack=document.getElementById('mapObjectTrack');
@@ -731,6 +821,7 @@ const debugAiBtn=document.getElementById('debugAiBtn');
 const debugMapColliderBtn=document.getElementById('debugMapColliderBtn');
 const debugSpawnBtn=document.getElementById('debugSpawnBtn');
 const debugCameraBtn=document.getElementById('debugCameraBtn');
+const debugFlightBtn=document.getElementById('debugFlightBtn');
 const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
 const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
 const debugRendererDomBtn=document.getElementById('debugRendererDomBtn');
@@ -933,7 +1024,7 @@ let worldMinutes=0;
 let worldTimeScale=1;
 updateDayNightVisuals(true);
 let actorX=Math.round(innerWidth*.35);
-let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false;
+let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
 let mobileCrouch=false;
 let joystickAxis=0;
 let joystickPointer=null;
@@ -983,6 +1074,7 @@ let enemyAiEnabled=true;
 let showMapColliders=false;
 let showSpawnZones=false;
 let showCameraDebug=false;
+let debugFlightMode=false;
 
 function clampPlayerHp(value){
   const n=Number(value);
@@ -1152,6 +1244,7 @@ function updateCombatDebugButtons(){
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
   debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
+  if(debugFlightBtn){debugFlightBtn.textContent='飞行：'+(debugFlightMode?'开':'关');debugFlightBtn.classList.toggle('is-active',debugFlightMode);}
   const renderer=window.PaperchalkRenderer;
   const requested=renderer?.requested||'auto';
   debugRendererAutoBtn?.classList.toggle('is-active',requested==='auto');
@@ -1187,6 +1280,16 @@ function closeDebugPanel({focus=true}={}){
 function toggleDebugPanel(){
   return debugIsOpen()?closeDebugPanel():openDebugPanel();
 }
+
+function setDebugFlightMode(enabled){
+  debugFlightMode=!!enabled;
+  playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
+  playerGrounded=!debugFlightMode;
+  actorEl.classList.toggle('is-flying',debugFlightMode);
+  updateCombatDebugButtons();
+  return debugFlightMode;
+}
+function toggleDebugFlightMode(){return setDebugFlightMode(!debugFlightMode)}
 function runDebugCommand(rawCommand){
   const raw=String(rawCommand||'').trim();
   if(!raw)return '请输入命令。输入 help 查看帮助。';
@@ -1305,6 +1408,11 @@ function runDebugCommand(rawCommand){
   if(cmd==='collider')return '地形 collider -> '+(toggleMapColliders()?'开启':'关闭');
   if(cmd==='spawn')return '敌人出生区 -> '+(toggleSpawnZones()?'开启':'关闭');
   if(cmd==='camera')return 'Camera 调试 -> '+(toggleCameraDebug()?'开启':'关闭');
+  if(cmd==='fly'||cmd==='flight'){
+    const target=String(arg||'toggle').toLowerCase();
+    const enabled=target==='on'?setDebugFlightMode(true):target==='off'?setDebugFlightMode(false):toggleDebugFlightMode();
+    return '飞行模式 -> '+(enabled?'开启':'关闭');
+  }
   if(cmd==='ai')return '敌人AI -> '+(toggleEnemyAi()?'开启':'暂停');
   if(cmd==='jump'){debugJump();return 'jump'}
   if(cmd==='attack'){debugAttack();return 'attack'}
@@ -1362,6 +1470,9 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
     }else if(action==='cameraDebug'){
       writeDebugOutput('Camera 调试 -> '+(toggleCameraDebug()?'开启':'关闭'));
       updateDebugStatus();return;
+    }else if(action==='flightMode'){
+      writeDebugOutput('飞行模式 -> '+(toggleDebugFlightMode()?'开启':'关闭'));
+      updateDebugStatus();updateCombatDebugButtons();return;
     }else if(action==='teleportStart'){
       teleportTo(MAP_SPAWN_X,{notice:'传送：A村村口'});writeDebugOutput('playerX -> '+playerWorldX);
       updateDebugStatus();return;
@@ -1404,6 +1515,14 @@ window.addEventListener('paperchalk-renderer-change',()=>{
   updateCombatDebugButtons();
   if(debugIsOpen())updateDebugStatus();
 });
+window.PaperchalkScene={
+  get location(){return sceneLocation},
+  get transitioning(){return sceneTransitionBusy},
+  enter:enterApartment,
+  exit:exitApartment,
+  get doorScreenX(){return apartmentDoorScreenX()},
+  get interiorX(){return interiorPlayerX}
+};
 window.PaperchalkDebug={
   open:openDebugPanel,
   close:closeDebugPanel,
@@ -2048,20 +2167,32 @@ function nearbyNpc(maxDistance=92){
   return best;
 }
 function updateNpcPrompt(){
-  const near=nearbyNpc();
-  const nextId=near?.id||null;
+  const nearNpc=sceneLocation==='outside'?nearbyNpc():null;
+  const nearDoor=nearbyApartmentDoor();
+  const nearExit=nearbyInteriorExit();
+  const nextId=nearNpc?.id||null;
   if(nextId!==lastNearNpcId){
     if(lastNearNpcId)mapNpcEls.get(lastNearNpcId)?.classList.remove('is-near');
-    if(nextId)mapNpcEls.get(nextId)?.classList.add('is-near');
-    interactBtn.disabled=!near;
-    interactBtn.style.opacity=near?'1':'.45';
+    if(nextId&&!nearDoor)mapNpcEls.get(nextId)?.classList.add('is-near');
     lastNearNpcId=nextId;
   }
-  return near;
+  const active=nearDoor||nearExit||!!nearNpc;
+  interactBtn.disabled=!active;
+  interactBtn.style.opacity=active?'1':'.45';
+  interactBtn.textContent=nearDoor?'开门':nearExit?'出门':'聊';
+  renderDoorPrompt();
+  return nearDoor?{kind:'door'}:nearExit?{kind:'exit'}:nearNpc;
 }
 function interactWithNpc(){
+  if(sceneTransitionBusy)return false;
+  if(sceneLocation==='interior'){
+    if(nearbyInteriorExit())return exitApartment();
+    showMapNotice('走到门边可以出去');
+    return false;
+  }
+  if(nearbyApartmentDoor())return enterApartment();
   const npc=nearbyNpc();
-  if(!npc){showMapNotice('附近没有可以交谈的人');return false}
+  if(!npc){showMapNotice('附近没有可以交互的对象');return false}
   return openDialogue(npc);
 }
 function updateMapInteractions(){
@@ -2336,7 +2467,8 @@ function worldInteractive(){
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
     && !dialogueIsOpen()
-    && !debugIsOpen();
+    && !debugIsOpen()
+    && !sceneTransitionBusy;
 }
 function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
@@ -2406,6 +2538,11 @@ function renderWorld(force=false){
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
+  if(sceneLocation==='interior'&&interiorExitDoor){
+    interiorExitDoor.style.right='';
+    interiorExitDoor.style.left=(interiorExitX()-VIEW_W*.075).toFixed(1)+'px';
+  }
+  renderDoorPrompt();
   renderCombatDebug();
   notifyRuntimeObservers();
 }
@@ -2464,22 +2601,42 @@ function frame(now){
   }
 
   let playerDynamic=!playerGrounded||jumpBufferTimer>0;
-  if(moving){
-    const dir=Math.sign(axis);
-    setFacing(dir);
-    const maxSpeed=Math.max(170,Math.min(260,VIEW_W*.22));
-    const speed=maxSpeed*magnitude;
-    const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
-    if(walkDuration!==lastWalkDuration){
-      lastWalkDuration=walkDuration;
-      actorEl.style.setProperty('--walk-duration',walkDuration);
+  if(sceneLocation==='interior'){
+    playerGrounded=true;playerY=0;playerVy=0;jumpBufferTimer=0;coyoteTimer=COYOTE_TIME;
+    if(moving){
+      const dir=Math.sign(axis);
+      setFacing(dir);
+      const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
+      interiorPlayerX=clamp(interiorPlayerX+dir*speed*dt,70,VIEW_W-70);
+      actorX=interiorPlayerX;
+      playerDynamic=true;
     }
-    movePlayerHorizontal(dir*speed*dt);
-    playerDynamic=true;
+  }else{
+    if(debugFlightMode){
+      playerGrounded=false;playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
+      if(keyboardFlightUp||keyboardFlightDown){
+        const vy=(keyboardFlightUp?1:0)-(keyboardFlightDown?1:0);
+        playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,Math.max(900,VIEW_H*3));
+        playerDynamic=true;
+      }
+    }
+    if(moving){
+      const dir=Math.sign(axis);
+      setFacing(dir);
+      const maxSpeed=Math.max(170,Math.min(260,VIEW_W*.22));
+      const speed=maxSpeed*magnitude;
+      const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
+      if(walkDuration!==lastWalkDuration){
+        lastWalkDuration=walkDuration;
+        actorEl.style.setProperty('--walk-duration',walkDuration);
+      }
+      if(debugFlightMode)playerWorldX=clamp(playerWorldX+dir*speed*dt,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+      else movePlayerHorizontal(dir*speed*dt);
+      playerDynamic=true;
+    }
+    if(playerDynamic&&!debugFlightMode)updatePlayerVertical(dt,true);
+    if(playerDynamic)updateCamera();
   }
-
-  if(playerDynamic)updatePlayerVertical(dt,true);
-  if(playerDynamic)updateCamera();
   const actionChanged=syncPlayerActionState();
 
   let combatTick=false;
@@ -2497,10 +2654,11 @@ function frame(now){
     combatAccumulator=0;
   }
 
-  const interactionMoved=!Number.isFinite(lastInteractionX)||Math.abs(playerWorldX-lastInteractionX)>8||Math.abs(playerY-lastInteractionY)>8;
+  const interactionCoord=sceneLocation==='interior'?interiorPlayerX:playerWorldX;
+  const interactionMoved=!Number.isFinite(lastInteractionX)||Math.abs(interactionCoord-lastInteractionX)>8||Math.abs(playerY-lastInteractionY)>8;
   if(interactionMoved&&now-lastInteractionTick>=80){
     lastInteractionTick=now;
-    lastInteractionX=playerWorldX;lastInteractionY=playerY;
+    lastInteractionX=interactionCoord;lastInteractionY=playerY;
     updateMapInteractions();
   }
 
@@ -2530,19 +2688,29 @@ addEventListener('keydown',e=>{
   if(isEditableTarget(e.target)||!worldInteractive())return;
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=true;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
-  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
-  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){jumpPlayer();e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){
+    if(debugFlightMode&&sceneLocation==='outside')keyboardFlightDown=true;
+    else if(sceneLocation!=='interior'){keyboardCrouch=true;updateCrouchState()}
+    e.preventDefault();
+  }
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){
+    if(debugFlightMode&&sceneLocation==='outside')keyboardFlightUp=true;
+    else if(sceneLocation!=='interior')jumpPlayer();
+    e.preventDefault();
+  }
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
 });
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
-  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardCrouch=false;updateCrouchState();e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardFlightDown=false;keyboardCrouch=false;updateCrouchState();e.preventDefault()}
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;e.preventDefault()}
 });
 interactBtn.addEventListener('pointerdown',e=>{e.preventDefault();interactWithNpc()});
 crouchBtn.addEventListener('pointerdown',e=>{
   e.preventDefault();
+  if(sceneLocation==='interior')return;
   mobileCrouch=true;
   try{crouchBtn.setPointerCapture(e.pointerId)}catch{}
   updateCrouchState();
@@ -2555,7 +2723,7 @@ const releaseMobileCrouch=e=>{
 crouchBtn.addEventListener('pointerup',releaseMobileCrouch);
 crouchBtn.addEventListener('pointercancel',releaseMobileCrouch);
 crouchBtn.addEventListener('lostpointercapture',releaseMobileCrouch);
-jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jumpPlayer()});
+jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(sceneLocation!=='interior')jumpPlayer()});
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
   joystickAxis=0;

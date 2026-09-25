@@ -364,6 +364,22 @@ try{
     npcTalk.open&&npcTalk.name==='？？？'&&npcTalk.phase==='opening',
     JSON.stringify(npcTalk));
   await page.evaluate(()=>window.PaperchalkDialogue.close({immediate:true}));
+  const stageEnter=await page.evaluate(()=>window.PaperchalkScene.enter());
+  check('Apartment door stage transition can start',stageEnter===true,'enter='+stageEnter);
+  await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
+  const interiorStage=await page.evaluate(()=>({
+    location:window.PaperchalkScene.location,
+    visible:getComputedStyle(document.getElementById('interiorScene')).visibility,
+    worldClass:document.getElementById('world').className,
+    interactLabel:document.getElementById('interactBtn')?.textContent||''
+  }));
+  check('Interior paper stage arrives after exterior exits',
+    interiorStage.location==='interior'&&interiorStage.visible==='visible'&&interiorStage.worldClass.includes('scene-interior'),
+    JSON.stringify(interiorStage));
+  const stageExit=await page.evaluate(()=>window.PaperchalkScene.exit());
+  check('Interior exit starts the return paper-stage transition',stageExit===true,'exit='+stageExit);
+  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
+
 
   // Return to a safe mid-map position for persistence/UI tests.
   await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));

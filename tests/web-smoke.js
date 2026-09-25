@@ -131,8 +131,15 @@ assert(!fs.existsSync("assets/dialogue/npc-portrait-hd.svg")&&!fs.existsSync("as
 assert(css.includes("width:64px;height:128px"), "NPC world visual canvas is not player-matched");
 assert(css.includes("width:auto;height:128px;max-width:64px;max-height:128px"), "NPC art is not normalized to 128px visual height");
 assert(game.includes("function interactWithNpc"), "NPC interaction logic missing");
+assert(html.includes('id="apartmentDoorPrompt"')&&html.includes('id="interiorScene"'), "Apartment door/interior stage DOM missing");
+assert(game.includes("function enterApartment")&&game.includes("function exitApartment"), "Door stage transition runtime missing");
+assert(game.includes("apartmentDoorScreenX")&&game.includes("nearbyApartmentDoor"), "Apartment door proximity interaction missing");
+assert(game.includes("window.PaperchalkScene"), "Scene transition test API missing");
+assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
+assert(css.includes("width:clamp(76px,5.8vw,88px)"), "Combat buttons were not enlarged");
 assert(game.includes("function nearbyNpc"), "NPC proximity logic missing");
 assert(game.includes("e.code==='KeyE'"), "NPC keyboard interaction missing");
+assert(html.includes('id="debugFlightBtn"')&&game.includes("setDebugFlightMode"), "Debug flight mode missing");
 assert(game.includes("function movePlayerHorizontal"), "Terrain horizontal collision missing");
 assert(game.includes("function updatePlayerVertical"), "Platform vertical collision missing");
 assert(game.includes("function updateCamera"), "Camera follow missing");

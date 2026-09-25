@@ -6,14 +6,14 @@
 <meta name="theme-color" content="#28251f">
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=npc-match-player-r18" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=paper-door-stage-r19" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="npc-match-player-r18">
-<link rel="stylesheet" href="./styles/game.css?v=npc-match-player-r18">
+<meta name="paperchalk-build" content="paper-door-stage-r19">
+<link rel="stylesheet" href="./styles/game.css?v=paper-door-stage-r19">
 </head>
 <body>
 
@@ -79,6 +79,18 @@
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <div id="cameraLeftDebug" class="camera-debug-line" style="left:42%"><span class="camera-debug-label">CAMERA FOLLOW</span></div>
   <div id="mapNotice" class="map-notice" role="status" aria-live="polite"></div>
+  <div id="apartmentDoorPrompt" class="door-interact-prompt" aria-hidden="true">E / 开门</div>
+
+  <section id="interiorScene" class="interior-scene" aria-hidden="true" aria-label="公寓室内">
+    <div class="interior-wall paper-stage-piece"></div>
+    <div class="interior-window paper-stage-piece"><span class="interior-window-cross"></span></div>
+    <div class="interior-shelf paper-stage-piece"></div>
+    <div id="interiorExitDoor" class="interior-exit-door paper-stage-piece" aria-hidden="true">
+      <span class="interior-door-handle"></span>
+      <span class="interior-door-label">门</span>
+    </div>
+    <div class="interior-floor paper-stage-piece"></div>
+  </section>
 
   <section id="dialogueStage" class="dialogue-stage" aria-hidden="true" aria-label="舞台对话">
     <div class="dialogue-dim" aria-hidden="true"></div>
@@ -144,6 +156,7 @@
       <button id="debugMapColliderBtn" class="debug-action" type="button" data-debug-action="mapColliders">地形碰撞：关</button>
       <button id="debugSpawnBtn" class="debug-action" type="button" data-debug-action="spawnZones">出生区：关</button>
       <button id="debugCameraBtn" class="debug-action" type="button" data-debug-action="cameraDebug">Camera：关</button>
+      <button id="debugFlightBtn" class="debug-action" type="button" data-debug-action="flightMode">飞行：关</button>
       <button class="debug-action" type="button" data-debug-action="teleportStart">传送村口</button>
       <button class="debug-action" type="button" data-debug-action="teleportMid">传送中段</button>
       <button class="debug-action" type="button" data-debug-action="teleportEnd">传送远方</button>
@@ -172,7 +185,7 @@
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">调试都在这里：血量、战斗、地形、Camera、地图、日夜与纸片舞台。命令：time 18:30 / stage / map / tp 3000 / enemy reset / hitbox / range / ai / pos / save</div>
+    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右；手机摇杆可上下左右。命令：fly / fly on / fly off。</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
@@ -351,7 +364,7 @@
 </section>
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
-<script src="./src/game.js?v=npc-match-player-r18"></script>
+<script src="./src/game.js?v=paper-door-stage-r19"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=puppet-r1"></script>
 </body>
 </html>
