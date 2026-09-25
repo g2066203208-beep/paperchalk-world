@@ -7,13 +7,22 @@ const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no trans
 let MAP_GROUND_SCREEN_Y=112;
 let VIEW_W=1280,VIEW_H=720;
 const PLAYER_BODY=Object.freeze({halfW:27,standH:108,crouchH:78});
-const PLAYER_VISUAL=Object.freeze({w:104,h:156});
+const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720});
+const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156});
+const PLAYER_VISUAL={w:104,h:156,scale:1};
 const PLAYER_ACTION_ASSETS=Object.freeze({
-  idle:'./assets/player/idle.webp?v=actions-r1',
-  crouch:'./assets/player/crouch.webp?v=actions-r1',
-  'jump-up':'./assets/player/jump-up.webp?v=actions-r1',
-  'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
-  walk:'./assets/player/walk.webp?v=actions-r1'
+  idle:'./assets/player/runtime/idle.webp?v=responsive-actions-r2',
+  crouch:'./assets/player/runtime/crouch.webp?v=responsive-actions-r2',
+  'jump-up':'./assets/player/runtime/jump-up.webp?v=responsive-actions-r2',
+  'jump-down':'./assets/player/runtime/jump-down.webp?v=responsive-actions-r2',
+  walk:'./assets/player/runtime/walk.webp?v=responsive-actions-r2'
+});
+const PLAYER_ACTION_META=Object.freeze({
+  idle:Object.freeze({scale:1,sourceFacing:1}),
+  walk:Object.freeze({scale:.92,sourceFacing:-1}),
+  crouch:Object.freeze({scale:.76,sourceFacing:1}),
+  'jump-up':Object.freeze({scale:.88,sourceFacing:1}),
+  'jump-down':Object.freeze({scale:.86,sourceFacing:1})
 });
 const WORLD_NODES=[
   {id:'village',name:'A村',x:170,y:650,kind:'village'},
