@@ -70,7 +70,7 @@ assert(game.includes("function startPlayerPaperFlip"), "Paper-puppet action flip
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
 assert(!fs.existsSync("assets/road.webp"), "Legacy road image asset must stay removed");
-assert(html.includes('class="road-tile voxel-ground-tile"'), "Voxel ground tile missing");
+assert(html.includes('class="road-tile paper-ground-tile"'), "Paper ground strip tile missing");
 assert(css.includes("--ground-screen-y"), "Responsive ground line missing");
 assert(game.includes("setProperty('--ground-screen-y'"), "Physics ground is not wired to visual surface");
 assert(css.includes("width:128px"), "Road strip tile width changed unexpectedly");
