@@ -4187,6 +4187,56 @@ window.PaperchalkCombat={
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
+/* -------------------- RUNTIME / RENDERER CONTRACT V2 --------------------
+   Simulation and HTML UI remain authoritative. Any future WebGL/Pixi renderer
+   consumes this snapshot API instead of reaching into local variables.
+   No snapshot allocations occur unless an external renderer is subscribed. */
+const runtimeObservers=new Set();
+let runtimeRevision=0;
+function runtimeSnapshot(){
+  const route=routeForWorldX(playerWorldX);
+  return {
+    revision:runtimeRevision,
+    viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
+    camera:{x:worldX,visualOriginX,sceneryOffsetX},
+    time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
+    route:{index:route?.index??0,id:route?.id||'',biome:route?.biome||'meadow',orientation:currentRouteOrientation},
+    player:{
+      x:playerWorldX,y:playerY,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+      grounded:playerGrounded,attacking:playerAttackTimer>0,invulnerable:playerInvuln>0
+    },
+    enemies:enemies.map(e=>({
+      id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
+      patrolMin:e.patrolMin,patrolMax:e.patrolMax
+    })),
+    map:{
+      width:MAP_WIDTH,
+      visualOriginX,
+      broken:[...mapState.broken],
+      collected:[...mapState.collected]
+    }
+  };
+}
+function notifyRuntimeObservers(){
+  if(runtimeObservers.size===0)return;
+  runtimeRevision++;
+  const snapshot=runtimeSnapshot();
+  for(const observer of runtimeObservers){
+    try{observer(snapshot)}catch(err){console.error('RUNTIME_OBSERVER_FAILED',err)}
+  }
+}
+window.PaperchalkRuntime={
+  version:2,
+  getSnapshot:runtimeSnapshot,
+  subscribe(observer){
+    if(typeof observer!=='function')throw new TypeError('observer must be a function');
+    runtimeObservers.add(observer);
+    observer(runtimeSnapshot());
+    return ()=>runtimeObservers.delete(observer);
+  },
+  get subscriberCount(){return runtimeObservers.size}
+};
+
 let roadPoolFirst=-1;
 let roadPoolOriginX=0;
 function updateRoadPool(sceneryX,force=false){
@@ -4313,6 +4363,7 @@ function renderWorld(force=false){
   }
   enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   renderCombatDebug();
+  notifyRuntimeObservers();
 }
 let lastInteractionTick=0;
 let lastInteractionX=NaN,lastInteractionY=NaN;
