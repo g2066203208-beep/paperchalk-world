@@ -69,7 +69,17 @@ public class MainActivity extends Activity {
             webView.clearHistory();
 
             setContentView(webView);
-            webView.loadUrl(GAME_URL);
+
+            // Always fetch the tiny HTML shell fresh on every app launch so the Android
+            // WebView cannot stay pinned to an old GitHub Pages build. Heavy versioned
+            // images/scripts/styles still use the normal HTTP cache.
+            String launchUrl = GAME_URL
+                    + "?androidLaunch="
+                    + System.currentTimeMillis();
+            java.util.HashMap<String, String> freshHeaders = new java.util.HashMap<>();
+            freshHeaders.put("Cache-Control", "no-cache, max-age=0");
+            freshHeaders.put("Pragma", "no-cache");
+            webView.loadUrl(launchUrl, freshHeaders);
 
         } catch (Throwable t) {
             TextView error = new TextView(this);
