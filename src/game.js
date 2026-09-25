@@ -593,6 +593,7 @@ const paperFxLayer=document.getElementById('paperFxLayer');
 const paperFxBall=document.getElementById('paperFxBall');
 const paperFxUnfold=document.getElementById('paperFxUnfold');
 const backpackFrame=document.getElementById('backpackFrame');
+const backpackArt=backpackFrame.querySelector('.inventory-art');
 const backpackClose=document.getElementById('backpackClose');
 const backpackSlots=document.getElementById('backpackSlots');
 const inventoryPreviewImage=document.getElementById('inventoryPreviewImage');
@@ -1291,7 +1292,12 @@ window.PaperchalkDebug={
     visualOriginX,
     mapVisualSyncCount,
     mapVisualCreateCount,
-    pooledMapNodes:mapVisualPools.terrain.size+mapVisualPools.object.size+mapVisualPools.landmark.size
+    pooledMapNodes:mapVisualPools.terrain.size+mapVisualPools.object.size+mapVisualPools.landmark.size,
+    deferredAssets:{
+      backpack:deferredImageReady(backpackArt),
+      paperBall:deferredImageReady(paperFxBall),
+      paperUnfold:deferredImageReady(paperFxUnfold)
+    }
   }}
 };
 
@@ -2394,10 +2400,70 @@ function setPaperFxAt(el,x,y,size){
   el.style.left=(x-size/2)+'px';
   el.style.top=(y-size/2)+'px';
 }
+const deferredImagePromises=new WeakMap();
+function deferredImageReady(img){
+  return !!(img&&img.currentSrc&&img.complete&&img.naturalWidth>0);
+}
+function ensureDeferredImage(img){
+  if(!img)return Promise.resolve(null);
+  if(deferredImageReady(img))return Promise.resolve(img);
+  let pending=deferredImagePromises.get(img);
+  if(pending)return pending;
+  const source=img.dataset.src;
+  if(!source)return Promise.resolve(img);
+  pending=(async()=>{
+    if(!img.getAttribute('src'))img.src=source;
+    try{
+      if(typeof img.decode==='function')await img.decode();
+      else await new Promise((resolve,reject)=>{
+        img.addEventListener('load',resolve,{once:true});
+        img.addEventListener('error',reject,{once:true});
+      });
+    }catch(err){
+      if(!img.complete||!img.naturalWidth)throw err;
+    }
+    return img;
+  })().catch(err=>{
+    deferredImagePromises.delete(img);
+    console.warn('DEFERRED_IMAGE_FAILED',source,err);
+    throw err;
+  });
+  deferredImagePromises.set(img,pending);
+  return pending;
+}
+function ensurePaperFxAssets(){
+  return Promise.allSettled([ensureDeferredImage(paperFxBall),ensureDeferredImage(paperFxUnfold)]);
+}
+function ensureBackpackArt(){
+  if(deferredImageReady(backpackArt)){
+    backpackFrame.classList.remove('is-art-loading');
+    return Promise.resolve(backpackArt);
+  }
+  backpackFrame.classList.add('is-art-loading');
+  return ensureDeferredImage(backpackArt).then(img=>{
+    backpackFrame.classList.remove('is-art-loading');
+    return img;
+  }).catch(err=>{
+    backpackFrame.classList.remove('is-art-loading');
+    return null;
+  });
+}
+function warmPaperFxWhenIdle(){
+  const run=()=>{ensurePaperFxAssets()};
+  if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:1800});
+  else setTimeout(run,700);
+}
 async function paperUIFrom(triggerEl,revealFn,targetEl){
   if(typeof revealFn!=='function')return;
   if(paperUIBusy){revealFn();return}
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){revealFn();return}
+  // Never block a first interaction on ~0.9 MB of decorative transition art.
+  // Reveal immediately and warm it in the background; later transitions animate normally.
+  if(!deferredImageReady(paperFxBall)||!deferredImageReady(paperFxUnfold)){
+    revealFn();
+    ensurePaperFxAssets();
+    return;
+  }
 
   paperUIBusy=true;
   const origin=paperFxOrigin(triggerEl);
@@ -2825,6 +2891,9 @@ function openBackpack(triggerEl=backpackBtn){
   resetJoystick();
   lastBackpackTrigger=triggerEl;
   renderInventory();
+  // Pointer-down starts this request before click; first open still stays responsive
+  // and shows a paper placeholder if decoding is not finished yet.
+  ensureBackpackArt();
   paperUIFrom(triggerEl,revealBackpack,backpackFrame).then(()=>{
     if(backpackOverlay.classList.contains('is-open'))backpackClose.focus({preventScroll:true});
   });
@@ -2869,6 +2938,8 @@ inventoryDrop.addEventListener('click',()=>{
   renderInventory();
   if(inventorySelected>=0)setInventoryMessage('已丢弃 1 个 '+name);
 });
+backpackBtn.addEventListener('pointerenter',()=>{ensureBackpackArt()},{passive:true});
+backpackBtn.addEventListener('pointerdown',()=>{ensureBackpackArt()},{passive:true});
 backpackBtn.addEventListener('click',e=>openBackpack(e.currentTarget));
 backpackClose.addEventListener('click',()=>closeBackpack(false));
 backpackOverlay.addEventListener('pointerdown',e=>{
@@ -3127,6 +3198,7 @@ function enterWorld(){
   uiShell.setAttribute('inert','');
   worldEl.removeAttribute('inert');
   window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
+  warmPaperFxWhenIdle();
   backpackBtn.focus({preventScroll:true});
 }
 document.getElementById('worldMenuBtn').addEventListener('click',e=>{
