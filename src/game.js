@@ -114,6 +114,7 @@ const MAP_PICKUPS=[
 const MAP_NPCS=[
   {
     id:'npc-old-crafter',x:760,name:'白翼引路人',portrait:'white-wing-guide',
+    sprite:'./assets/dialogue/npc-portrait-hd.svg?v=puppet-r1',
     text:'道路已经连成一整片大世界。土坡都能正常跳上去，沿路走不会切地图。',
     dialogue:{
       opening:'你终于来了，旅人。纸境的灯已经一盏盏亮起——舞台正在转动。你还要继续往前吗？',
@@ -350,11 +351,13 @@ function buildMapVisuals(){
       const node=document.createElement('div');
       node.className='map-npc';
       node.dataset.npcId=n.id;
-      node.innerHTML='<div class="map-npc-head"></div><div class="map-npc-body"></div><div class="map-npc-name"></div><div class="map-npc-prompt">E / 聊</div>';
+      node.innerHTML='<img class="map-npc-art" alt="" decoding="async" draggable="false"><div class="map-npc-name"></div><div class="map-npc-prompt">E / 聊</div>';
       return node;
     });
     el.className='map-npc';
     el.style.left=(n.x-visualOriginX)+'px';
+    const artEl=el.querySelector('.map-npc-art');
+    if(artEl&&n.sprite&&artEl.getAttribute('src')!==n.sprite)artEl.src=n.sprite;
     const nameEl=el.querySelector('.map-npc-name');
     if(nameEl&&nameEl.textContent!==n.name)nameEl.textContent=n.name;
     mapNpcEls.set(n.id,el);
@@ -1137,6 +1140,8 @@ function updateDebugStatus(){
     '<span>对象池 <b>路'+roadTrack.children.length+' / 景'+(rearTrack.children.length+frontTrack.children.length)+'</b></span>'+
     '<span>性能档 <b>'+(perfLow?'自动低负载':'完整效果')+'</b></span>'+
     '<span>渲染器 <b>'+(window.PaperchalkRenderer?.mode||'dom')+'</b></span>'+
+    '<span>角色运行时 <b>'+(window.PaperchalkRenderer?.stats?.playerPuppetReady?('PaperPuppet/'+window.PaperchalkRenderer.stats.playerPuppetMode):'DOM/Legacy')+'</b></span>'+
+    '<span>角色层数 <b>'+(window.PaperchalkRenderer?.stats?.playerPuppetLayers||1)+'</b></span>'+
     '<span>GPU耗时 <b>'+(window.PaperchalkRenderer?.mode==='pixi'?(window.PaperchalkRenderer.stats.renderMs.toFixed(2)+'ms'):'--')+'</b></span>';
 }
 function updateCombatDebugButtons(){
