@@ -6,6 +6,8 @@ on:
   pull_request:
     paths:
       - "index.html"
+      - "src/**"
+      - "styles/**"
       - "tests/ui-smoke.mjs"
       - ".github/workflows/ui-smoke.yml"
       - "assets/**"
