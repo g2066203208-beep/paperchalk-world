@@ -124,7 +124,7 @@ try{
     return {
       tileClass:tile?.className||'',
       tileTag:tile?.tagName||'',
-      groundY:window.PaperchalkRuntime?.snapshot?.().viewport?.groundY??null,
+      groundY:Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y'))||null,
       layerTop:layerRect&&stageRect?layerRect.top-stageRect.top:null,
       stageH:stageRect?.height||0,
       layerH:layerRect?.height||0,
