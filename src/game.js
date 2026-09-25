@@ -2251,7 +2251,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:''};
+const renderCache={road:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -2274,6 +2274,7 @@ function renderWorld(force=false){
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
   const actorBottom=(MAP_GROUND_SCREEN_Y+playerY).toFixed(2)+'px';
+  const actorAir=playerY.toFixed(2)+'px';
   if(!pixiDynamicActive()){
     if(force||renderCache.actorLeft!==actorLeft){
       renderCache.actorLeft=actorLeft;
@@ -2282,6 +2283,10 @@ function renderWorld(force=false){
     if(force||renderCache.actorBottom!==actorBottom){
       renderCache.actorBottom=actorBottom;
       actorEl.style.setProperty('--actor-y',(-Number.parseFloat(actorBottom)).toFixed(2)+'px');
+    }
+    if(force||renderCache.actorAir!==actorAir){
+      renderCache.actorAir=actorAir;
+      actorEl.style.setProperty('--player-air-y',actorAir);
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
@@ -2332,7 +2337,9 @@ function frame(now){
     return;
   }
 
-  const axis=movementAxis();
+  updateCrouchState();
+  const rawAxis=movementAxis();
+  const axis=playerCrouching?0:rawAxis;
   const magnitude=Math.abs(axis);
   const moving=magnitude>.02;
   if(moving!==lastMovingState){
@@ -2357,6 +2364,7 @@ function frame(now){
 
   if(playerDynamic)updatePlayerVertical(dt,true);
   if(playerDynamic)updateCamera();
+  const actionChanged=syncPlayerActionState();
 
   let combatTick=false;
   if(hasNearbyCombat(now)){
@@ -2380,7 +2388,7 @@ function frame(now){
     updateMapInteractions();
   }
 
-  if(playerDynamic||combatTick||showHitboxes||showAttackRange)renderWorld();
+  if(playerDynamic||combatTick||actionChanged||showHitboxes||showAttackRange)renderWorld();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
