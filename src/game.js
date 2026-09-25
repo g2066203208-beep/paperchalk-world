@@ -1558,11 +1558,13 @@ function supportAt(x,y,tolerance=3){
   return support;
 }
 function performJump(){
+  if(playerCrouching)setPlayerCrouching(false,{force:true});
   playerVy=JUMP_SPEED;
   playerGrounded=false;
   coyoteTimer=0;
   jumpBufferTimer=0;
   actorEl.classList.add('is-jumping');
+  syncPlayerActionState(true);
 }
 function updatePlayerVertical(dt,interactive){
   if(!interactive)return;
@@ -1639,6 +1641,10 @@ function updateCamera(){
 }
 function jumpPlayer(force=false){
   if(!force&&!worldInteractive())return false;
+  if(playerCrouching){
+    if(!force&&!canStandUp())return false;
+    setPlayerCrouching(false,{force:true});
+  }
   jumpBufferTimer=JUMP_BUFFER_TIME;
   if(force||playerGrounded||coyoteTimer>0){performJump();return true}
   return true;
