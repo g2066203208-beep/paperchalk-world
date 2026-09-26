@@ -5,25 +5,25 @@
 const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
 const config=Object.freeze({
   gridSize:128,
-  baseDepth:900,
+  baseDepth:3840, // 30 m camera-to-mid plane at 128 px/m
   horizonRatio:.40,
   minDepth:96,
   maxDepth:6400,
   // The playable ground is finite in scene-depth: it ends exactly where the
   // far sky wall meets the floor. Nothing behind this line needs ground grid.
-  groundNearDepth:-384,
+  groundNearDepth:-704, // -5.5 m, includes the near-front guide
   farGroundDepth:FAR_GROUND_DEPTH,
   wallDepth:FAR_GROUND_DEPTH,
   sceneGuides:Object.freeze([
-    Object.freeze({id:'near-front',label:'NF',band:'near',kind:'sub',z:-160}),
-    Object.freeze({id:'near-main', label:'N', band:'near',kind:'main',z:-128}),
-    Object.freeze({id:'near-back', label:'NB',band:'near',kind:'sub',z:-96}),
-    Object.freeze({id:'mid-front', label:'MF',band:'mid', kind:'sub',z:-32}),
+    Object.freeze({id:'near-front',label:'NF',band:'near',kind:'sub',z:-704}),
+    Object.freeze({id:'near-main', label:'N', band:'near',kind:'main',z:-640}),
+    Object.freeze({id:'near-back', label:'NB',band:'near',kind:'sub',z:-576}),
+    Object.freeze({id:'mid-front', label:'MF',band:'mid', kind:'sub',z:-64}),
     Object.freeze({id:'mid-main',  label:'M', band:'mid', kind:'main',z:0}),
-    Object.freeze({id:'mid-back',  label:'MB',band:'mid', kind:'sub',z:32}),
-    Object.freeze({id:'far-front', label:'FF',band:'far', kind:'sub',z:512}),
+    Object.freeze({id:'mid-back',  label:'MB',band:'mid', kind:'sub',z:64}),
+    Object.freeze({id:'far-front', label:'FF',band:'far', kind:'sub',z:576}),
     Object.freeze({id:'far-main',  label:'F', band:'far', kind:'main',z:640}),
-    Object.freeze({id:'far-back',  label:'FB',band:'far', kind:'sub',z:768}),
+    Object.freeze({id:'far-back',  label:'FB',band:'far', kind:'sub',z:704}),
     Object.freeze({id:'horizon',   label:'H', band:'horizon',kind:'horizon',z:FAR_GROUND_DEPTH})
   ])
 });
