@@ -41,11 +41,11 @@ function pooledLine(group,pool,index){
     group.appendChild(line);
     pool[index]=line;
   }
-  if(line)line.hidden=false;
+  if(line)line.style.display='';
   return line;
 }
 function hideUnused(pool,used){
-  for(let i=used;i<pool.length;i++)pool[i].hidden=true;
+  for(let i=used;i<pool.length;i++)pool[i].style.display='none';
 }
 function setGridLine(line,x1,y1,x2,y2,kind,value,major,origin){
   if(!line)return;
