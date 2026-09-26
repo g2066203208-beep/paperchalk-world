@@ -333,7 +333,7 @@ try{
       player:window.PaperchalkCombat.player,
       camera:snap.camera,
       near:window.PaperchalkMap.project(760,0,0),
-      far:window.PaperchalkMap.project(760,600,0),
+      far:window.PaperchalkMap.project(760,640,0),
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
       groundZeroY:groundZero.y,
       groundFarY:groundFar.y,
