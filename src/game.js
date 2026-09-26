@@ -1018,12 +1018,6 @@ const debugAiBtn=document.getElementById('debugAiBtn');
 const debugMapColliderBtn=document.getElementById('debugMapColliderBtn');
 const debugSpawnBtn=document.getElementById('debugSpawnBtn');
 const debugCameraBtn=document.getElementById('debugCameraBtn');
-const debugCameraTilt=document.getElementById('debugCameraTilt');
-const debugCameraTiltValue=document.getElementById('debugCameraTiltValue');
-const debugCameraHorizonValue=document.getElementById('debugCameraHorizonValue');
-const debugCameraHeight=document.getElementById('debugCameraHeight');
-const debugCameraHeightValue=document.getElementById('debugCameraHeightValue');
-const debugCameraTiltReset=document.getElementById('debugCameraTiltReset');
 const debugFlightBtn=document.getElementById('debugFlightBtn');
 const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
 const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
@@ -1497,35 +1491,6 @@ function sampleFramePerf(now){
 }
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
-const DEBUG_CAMERA_ANGLE_KEY='paperchalk.debug.cameraAngle.v2',DEBUG_CAMERA_HEIGHT_KEY='paperchalk.debug.cameraHeight.v1';
-function redrawDebugCamera(){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}
-function updateCameraTiltControls(){
-  if(!debugCameraTilt)return;
-  const a=CARD_CAMERA.getTiltDegrees(VIEW_H,MAP_GROUND_SCREEN_Y),h=CARD_CAMERA.getCameraHeightMeters(VIEW_H,MAP_GROUND_SCREEN_Y),hy=CARD_CAMERA.resolveHorizonY(VIEW_H,MAP_GROUND_SCREEN_Y);
-  debugCameraTilt.value=a.toFixed(1);debugCameraTiltValue.textContent=a.toFixed(1)+'°'+(CARD_CAMERA.manualTiltDegrees===null?' 自动':'');
-  debugCameraHeight.value=h.toFixed(1);debugCameraHeightValue.textContent=h.toFixed(1)+' m'+(CARD_CAMERA.manualCameraHeightMeters===null?' 自动':'');
-  debugCameraHorizonValue.textContent='消失线 y='+hy.toFixed(0)+'px';
-}
-function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
-  const a=clamp(Number(v)||0,0,45);CARD_CAMERA.setTiltDegrees(a);if(persist)try{localStorage.setItem(DEBUG_CAMERA_ANGLE_KEY,a)}catch(_){}
-  updateCameraTiltControls();if(sync)redrawDebugCamera();return a;
-}
-function applyDebugCameraHeight(v,{persist=true,sync=true}={}){
-  const h=clamp(Number(v)||1,1,10);CARD_CAMERA.setCameraHeightMeters(h);if(persist)try{localStorage.setItem(DEBUG_CAMERA_HEIGHT_KEY,h)}catch(_){}
-  updateCameraTiltControls();if(sync)redrawDebugCamera();return h;
-}
-function resetDebugCameraTilt({sync=true}={}){
-  CARD_CAMERA.clearTiltDegrees();CARD_CAMERA.clearHorizonRatio();CARD_CAMERA.clearCameraHeight();
-  try{localStorage.removeItem(DEBUG_CAMERA_ANGLE_KEY);localStorage.removeItem(DEBUG_CAMERA_HEIGHT_KEY)}catch(_){}
-  updateCameraTiltControls();if(sync)redrawDebugCamera();return true;
-}
-function loadDebugCameraTilt(){
-  let a=null,h=null;try{a=localStorage.getItem(DEBUG_CAMERA_ANGLE_KEY);h=localStorage.getItem(DEBUG_CAMERA_HEIGHT_KEY)}catch(_){}
-  if(a!==null&&Number.isFinite(Number(a)))applyDebugCameraTilt(Number(a),{persist:false,sync:false});
-  if(h!==null&&Number.isFinite(Number(h)))applyDebugCameraHeight(Number(h),{persist:false,sync:false});
-  updateCameraTiltControls();
-}
-
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
   const alive=enemies.filter(e=>e.alive).length;
@@ -1579,7 +1544,7 @@ function openDebugPanel(){
   debugToggleBtn.setAttribute('aria-expanded','true');
   updateDebugStatus();
   updateCombatDebugButtons();
-  updateCameraTiltControls();
+  window.PaperchalkDebugCamera?.sync?.();
   renderCombatDebug();
   return true;
 }
@@ -1764,10 +1729,6 @@ function executeDebugCommand(command){
 }
 debugToggleBtn.addEventListener('click',toggleDebugPanel);
 debugCloseBtn.addEventListener('click',()=>closeDebugPanel());
-debugCameraTilt?.addEventListener('input',()=>{applyDebugCameraTilt(debugCameraTilt.value);if(debugIsOpen())updateDebugStatus()});
-debugCameraHeight?.addEventListener('input',()=>{applyDebugCameraHeight(debugCameraHeight.value);if(debugIsOpen())updateDebugStatus()});
-debugCameraTiltReset?.addEventListener('click',()=>{resetDebugCameraTilt();writeDebugOutput('摄像机 -> 自动');updateDebugStatus()});
-loadDebugCameraTilt();
 debugCommandForm.addEventListener('submit',e=>{
   e.preventDefault();
   executeDebugCommand(debugCommandInput.value);
@@ -1889,8 +1850,8 @@ window.PaperchalkDebug={
   run:executeDebugCommand,
   get flight(){return debugFlightMode},
   setFlight(value){return setDebugFlightMode(value)},
-  setCameraTilt:applyDebugCameraTilt,
-  setCameraHeight:applyDebugCameraHeight,
+  setCameraTilt(value){return window.PaperchalkDebugCamera?.setAngle(value)},
+  setCameraHeight(value){return window.PaperchalkDebugCamera?.setHeight(value)},
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
