@@ -279,7 +279,7 @@ assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
 assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"), "XY gameplay / Z scene-depth stage missing");
 assert(css.includes('background-image:url("../assets/debug/green-grid-1m.svg")'), "Perspective ground grid texture missing");
-assert(css.includes("var(--card-camera-y,0px)")&&css.includes("rotateX(68deg)"), "Ground plane does not follow camera Y");
+assert(css.includes(".card-ground-grid")&&!css.includes("transform:perspective(900px) rotateX(68deg)!important"), "Ground still uses a second CSS perspective camera");
 assert(css.includes("--card-horizon-y:40%"), "Card-camera horizon missing");
 assert(css.includes("translate3d(0,0,var(--card-wall-depth))"), "Altitude grid wall is not pushed into 3D depth");
 assert(css.includes("background-position:var(--card-wall-x,0px) var(--card-wall-y,0px)"), "Altitude wall is not camera synchronized");
@@ -288,14 +288,14 @@ assert(game.includes("function cardProjection("), "World-to-screen card projecti
 assert(!game.includes("let playerWorldZ"), "Player must not own a Z movement coordinate");
 assert(!game.includes("save.playerWorldZ=playerWorldZ"), "Player Z must not be persisted");
 assert(game.includes("delete save.playerWorldZ"), "Legacy player Z must be cleaned from saves");
-assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-camera-y'"), "Ground is not synchronized to camera X/Y");
+assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("camera.project({")&&domCardRenderer.includes("setProperty('--card-camera-y'"), "Ground is not projected by the shared card camera");
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
 assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
 assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS missing");
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="oldtown-r38"'), "R38 build cache key missing");
+assert(html.includes('meta name="paperchalk-build" content="ground-lock-r39"'), "R39 ground-lock build cache key missing");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
