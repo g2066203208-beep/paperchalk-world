@@ -59,6 +59,10 @@ const MAP_TERRAIN=[];
 const MAP_OBJECTS=[];
 const MAP_LANDMARKS=[];
 const MAP_PICKUPS=[];
+const MAP_BUILDINGS=(AUTHORED_CONTENT.buildings||[]).map(building=>({
+  ...building,
+  door:building.door?{...building.door}:null
+}));
 const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
   ...npc,
   dialogue:npc.dialogue?{
@@ -108,7 +112,8 @@ function showMapNotice(message,duration=1600){
 const mapVisualPools={
   terrain:new Map(),
   object:new Map(),
-  landmark:new Map()
+  landmark:new Map(),
+  building:new Map()
 };
 let mapVisualSyncCount=0;
 let mapVisualCreateCount=0;
@@ -136,6 +141,7 @@ function buildMapVisuals(){
   hideMapPool(mapVisualPools.terrain);
   hideMapPool(mapVisualPools.object);
   hideMapPool(mapVisualPools.landmark);
+  hideMapPool(mapVisualPools.building);
   mapDebugTrack.innerHTML='';
   mapDebugBuilt=false;
   mapNpcEls.clear();
@@ -193,6 +199,29 @@ function buildMapVisuals(){
     el.style.bottom=(MAP_GROUND_SCREEN_Y+p.y)+'px';
     const hidden=mapState.collected.has(p.id)||(p.requiresBroken&&!mapState.broken.has(p.requiresBroken));
     el.classList.toggle('is-collected',hidden);
+  });
+
+  MAP_BUILDINGS.forEach(b=>{
+    const halfW=(Number(b.width)||0)*.5;
+    if(b.x+halfW<visualMinX||b.x-halfW>visualMaxX)return;
+    const key='building:'+b.id;
+    const el=pooledMapNode(mapVisualPools.building,mapLandmarkTrack,key,()=>{
+      const node=document.createElement('div');
+      node.className='map-building';
+      node.dataset.buildingId=b.id;
+      const art=document.createElement('img');
+      art.className='map-building-art';
+      art.alt='';
+      art.decoding='async';
+      art.draggable=false;
+      node.appendChild(art);
+      return node;
+    });
+    el.className='map-building';
+    el.style.width=(Number(b.width)||1)+'px';
+    el.style.height=(Number(b.height)||1)+'px';
+    const art=el.querySelector('.map-building-art');
+    if(art&&b.asset&&art.getAttribute('src')!==b.asset)art.src=b.asset;
   });
 
   MAP_NPCS.forEach(n=>{
@@ -2178,6 +2207,7 @@ window.PaperchalkRuntime={
     terrain:MAP_TERRAIN,
     objects:MAP_OBJECTS,
     pickups:MAP_PICKUPS,
+    buildings:MAP_BUILDINGS,
     npcs:MAP_NPCS,
     enemySpawns:ENEMY_SPAWNS,
     playerVisual:PLAYER_VISUAL,
