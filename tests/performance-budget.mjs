@@ -8,6 +8,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html');
 const css=read('styles/game.css');
 const game=read('src/game.js');
+const ecs=read('src/core/ecs-runtime.js');
 const renderer=read('src/renderers/pixi-dynamic-renderer.mjs');
 const android=read('android-app/app/src/main/java/com/paperchalk/world/MainActivity.java');
 
@@ -15,6 +16,7 @@ const budgets={
   'index.html':40000,
   'styles/game.css':120000,
   'src/game.js':180000,
+  'src/core/ecs-runtime.js':12000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/apartment-midground.webp':350000,
@@ -56,6 +58,12 @@ assert(!game.includes("mapObjectTrack.innerHTML=''"),'Map objects reverted to de
 assert(!game.includes("mapLandmarkTrack.innerHTML=''"),'Landmarks reverted to destructive DOM rebuild');
 assert(game.includes("mapVisualPools"),'Retained map node pool missing');
 assert(game.includes("SOLID_BUCKET_SIZE"),'Collision spatial index missing');
+assert(ecs.includes("class SparseSetStore"),'Sparse-set ECS runtime missing');
+assert(ecs.includes("registerSystem(name"),'ECS system scheduler missing');
+assert(game.includes("combatEcs.run('enemy-ai'"),'Enemy AI no longer runs through the ECS fixed-step system');
+assert(game.includes("paperchalk-world-enter',startFrameLoop")&&game.includes("paperchalk-world-leave',stopFrameLoop"),
+  'World animation loop is no longer lifecycle-bound');
+assert(!game.includes("\nrequestAnimationFrame(frame);\n"),'Always-on world RAF returned');
 
 assert(css.includes('will-change:transform'),'Compositor motion hint missing');
 assert(!android.includes('WebSettings.LOAD_NO_CACHE'),'Android WebView reverted to no-cache mode');
@@ -88,6 +96,8 @@ const report={
     'lazy-gpu-boot',
     'retained-map-dom',
     'spatial-collision-index',
+    'sparse-set-ecs',
+    'lifecycle-bound-world-raf',
     'compositor-motion',
     'android-http-cache',
     'optimized-player-sprites',
