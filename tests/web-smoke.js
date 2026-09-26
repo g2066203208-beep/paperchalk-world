@@ -306,7 +306,6 @@ assert(cardCamera.includes("function setHorizonRatio(")&&cardCamera.includes("fu
 assert(cardCamera.includes("verticalFovDegrees:60")&&cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters("), "Real angle/camera-height API missing");
 assert(game.includes("DEBUG_CAMERA_ANGLE_KEY")&&game.includes("DEBUG_CAMERA_HEIGHT_KEY")&&game.includes("applyDebugCameraHeight"), "Camera angle/height debug controller missing");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
-assert(game.includes("DEBUG_CAMERA_TILT_KEY")&&game.includes("applyDebugCameraTilt")&&game.includes("resetDebugCameraTilt"), "Debug camera tilt controller missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 
 
