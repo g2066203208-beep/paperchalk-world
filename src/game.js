@@ -3048,7 +3048,9 @@ function frame(now){
   const rawAxis=movementAxis();
   const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis;
   const magnitude=Math.abs(axis);
-  const moving=magnitude>.02;
+  const rawDepthAxis=sceneLocation==='outside'&&!debugFlightMode?depthAxis():0;
+  const depthMagnitude=Math.abs(rawDepthAxis);
+  const moving=magnitude>.02||depthMagnitude>.02;
   if(moving!==lastMovingState){
     lastMovingState=moving;
     actorEl.classList.toggle('is-moving',moving);
@@ -3101,18 +3103,30 @@ function frame(now){
         playerDynamic=true;
       }
     }
-    if(moving){
+    if(magnitude>.02){
       const dir=Math.sign(axis);
       setFacing(dir);
       const maxSpeed=Math.max(170,Math.min(260,VIEW_W*.22));
       const speed=maxSpeed*magnitude;
-      const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
+      movePlayerHorizontal(dir*speed*dt);
+      playerDynamic=true;
+    }
+    if(depthMagnitude>.02){
+      const depthSpeed=Math.max(150,Math.min(235,VIEW_W*.18))*depthMagnitude;
+      playerWorldZ=clamp(
+        playerWorldZ+Math.sign(rawDepthAxis)*depthSpeed*dt,
+        -CARD_WORLD_Z_LIMIT,
+        CARD_WORLD_Z_LIMIT
+      );
+      playerDynamic=true;
+    }
+    if(moving){
+      const motionMagnitude=Math.max(magnitude,depthMagnitude);
+      const walkDuration=(0.90-0.34*motionMagnitude).toFixed(2)+'s';
       if(walkDuration!==lastWalkDuration){
         lastWalkDuration=walkDuration;
         actorEl.style.setProperty('--walk-duration',walkDuration);
       }
-      movePlayerHorizontal(dir*speed*dt);
-      playerDynamic=true;
     }
     if(playerDynamic&&!debugFlightMode)updatePlayerVertical(dt,true);
     if(playerDynamic)updateCamera();
@@ -3135,10 +3149,14 @@ function frame(now){
   }
 
   const interactionCoord=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
-  const interactionMoved=!Number.isFinite(lastInteractionX)||Math.abs(interactionCoord-lastInteractionX)>8||Math.abs(playerY-lastInteractionY)>8;
+  const interactionDepth=sceneLocation==='interior'?0:playerWorldZ;
+  const interactionMoved=!Number.isFinite(lastInteractionX)
+    ||Math.abs(interactionCoord-lastInteractionX)>8
+    ||Math.abs(playerY-lastInteractionY)>8
+    ||Math.abs(interactionDepth-(frame._lastInteractionDepth||0))>8;
   if(interactionMoved&&now-lastInteractionTick>=80){
     lastInteractionTick=now;
-    lastInteractionX=interactionCoord;lastInteractionY=playerY;
+    lastInteractionX=interactionCoord;lastInteractionY=playerY;frame._lastInteractionDepth=interactionDepth;
     updateMapInteractions();
   }
 
@@ -3171,22 +3189,32 @@ addEventListener('keydown',e=>{
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
   if(e.code==='ArrowDown'||e.code==='KeyS'){
     if(debugFlightMode)keyboardFlightDown=true;
-    else if(sceneLocation!=='interior'){keyboardCrouch=true;updateCrouchState()}
+    else if(sceneLocation==='outside')keyboardDepthBack=true;
+    else {keyboardCrouch=true;updateCrouchState()}
     e.preventDefault();
   }
-  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){
+  if(e.code==='ArrowUp'||e.code==='KeyW'){
     if(debugFlightMode)keyboardFlightUp=true;
+    else if(sceneLocation==='outside')keyboardDepthForward=true;
     else jumpPlayer();
     e.preventDefault();
   }
+  if(e.code==='Space'){jumpPlayer();e.preventDefault()}
+  if(e.code==='KeyC'&&sceneLocation==='outside'&&!debugFlightMode){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
 });
 addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
-  if(e.code==='ArrowDown'||e.code==='KeyS'){keyboardFlightDown=false;keyboardCrouch=false;updateCrouchState();e.preventDefault()}
-  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;e.preventDefault()}
+  if(e.code==='ArrowDown'||e.code==='KeyS'){
+    keyboardFlightDown=false;keyboardDepthBack=false;
+    if(sceneLocation==='interior'){keyboardCrouch=false;updateCrouchState()}
+    e.preventDefault();
+  }
+  if(e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;keyboardDepthForward=false;e.preventDefault()}
+  if(e.code==='KeyC'){keyboardCrouch=false;updateCrouchState();e.preventDefault()}
+  if(e.code==='Space'){keyboardFlightUp=false;e.preventDefault()}
 });
 interactBtn.addEventListener('pointerdown',e=>{e.preventDefault();interactWithNpc()});
 crouchBtn.addEventListener('pointerdown',e=>{
@@ -3232,6 +3260,7 @@ jumpBtn.addEventListener('lostpointercapture',releaseMobileFlightUp);
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
   joystickAxis=0;
+  joystickDepthAxis=0;
   joystickFlightAxisY=0;
   joystickPointer=null;
   joystickEl.classList.remove('is-active');
@@ -3240,8 +3269,9 @@ function resetJoystick(){
 }
 addEventListener('blur',()=>{
   keyboardLeft=keyboardRight=keyboardCrouch=keyboardFlightUp=keyboardFlightDown=false;
+  keyboardDepthForward=keyboardDepthBack=false;
   mobileCrouch=mobileFlightUp=mobileFlightDown=false;
-  joystickFlightAxisY=0;
+  joystickDepthAxis=0;joystickFlightAxisY=0;
   if(playerCrouching)setPlayerCrouching(false);
   resetJoystick();
 });
@@ -3263,11 +3293,19 @@ function updateJoystick(clientX,clientY){
   const raw=dx/JOY_RADIUS;
   const a=Math.abs(raw);
   joystickAxis=a<=JOY_DEADZONE?0:Math.sign(raw)*Math.min(1,(a-JOY_DEADZONE)/(1-JOY_DEADZONE));
+  const rawY=-dy/JOY_RADIUS;
+  const ay=Math.abs(rawY);
+  const normalizedY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
   if(debugFlightMode){
-    const rawY=-dy/JOY_RADIUS;
-    const ay=Math.abs(rawY);
-    joystickFlightAxisY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
-  }else joystickFlightAxisY=0;
+    joystickFlightAxisY=normalizedY;
+    joystickDepthAxis=0;
+  }else if(sceneLocation==='outside'){
+    joystickDepthAxis=normalizedY;
+    joystickFlightAxisY=0;
+  }else{
+    joystickDepthAxis=0;
+    joystickFlightAxisY=0;
+  }
 }
 joystickZone.addEventListener('pointerdown',e=>{
   if(!worldInteractive()||joystickPointer!==null)return;
