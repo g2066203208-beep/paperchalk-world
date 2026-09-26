@@ -77,7 +77,7 @@ assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"
 assert(content.includes("function validate(value=content)"), "Content validation runtime missing");
 assert(buildingPools.includes("realWorld")&&buildingPools.includes("oldTown"), "Real-world old-town building category missing");
 assert(buildingPools.includes("oldtown-building-10"), "Supplied 10-building pool is incomplete");
-assert(buildingPools.includes("layer:'midground-far'")&&buildingPools.includes("z:600"), "Old-town pool is not authored on far-midground scene depth");
+assert(buildingPools.includes("layer:'midground-far'")&&buildingPools.includes("z:640"), "Old-town pool is not authored on the 5m far-main depth");
 assert(domCardRenderer.includes("runtime.subscribe(render)"), "DOM card-camera renderer is not runtime-driven");
 assert(oldTownRenderer.includes("runtime.subscribe(render)"), "Old-town building renderer is not runtime-driven");
 assert(oldTownRenderer.includes("function shuffled(rowIndex)"), "Seeded random building order missing");
