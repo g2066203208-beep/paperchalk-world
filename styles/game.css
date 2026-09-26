@@ -2302,3 +2302,86 @@ button{cursor:pointer}
   .stage.scene-interior.interior-stage-out .paper-stage-piece,
   .stage.exterior-stage-in .paper-stage-piece{animation-duration:.01ms!important;animation-delay:0ms!important}
 }
+
+
+/* ---------- R35 OPEN-GREETING-CARD PERSPECTIVE PROTOTYPE ----------
+   Pure geometry test: vertical blue back card + horizontal green 1m grid card.
+   128 px = 1 m remains the authored world scale. Existing stage art is preserved
+   above this block and can be restored by removing this prototype override. */
+.stage:not(.scene-interior){
+  --card-horizon-y:52%;
+  perspective:900px!important;
+  perspective-origin:50% 46%!important;
+  background:#168bff!important;
+  transform-style:preserve-3d;
+}
+.stage:not(.scene-interior) .paper-sky{
+  inset:0!important;
+  background:#168bff!important;
+  transition:none!important;
+}
+.stage:not(.scene-interior) .paper-sky::after{display:none!important}
+.stage:not(.scene-interior) .paper-stars,
+.stage:not(.scene-interior) .paper-cloud,
+.stage:not(.scene-interior) .paper-celestial,
+.stage:not(.scene-interior) .paper-backdrop,
+.stage:not(.scene-interior) .paper-backdrop-next,
+.stage:not(.scene-interior) .midground-building-layer,
+.stage:not(.scene-interior) .rear-layer,
+.stage:not(.scene-interior) .front-layer,
+.stage:not(.scene-interior) .paper-wing,
+.stage:not(.scene-interior) .paper-footlights,
+.stage:not(.scene-interior) .day-night-tint{
+  display:none!important;
+}
+.stage:not(.scene-interior) .paper-stage-floor{
+  display:block!important;
+  position:absolute!important;
+  z-index:2!important;
+  left:-35%!important;
+  right:auto!important;
+  top:var(--card-horizon-y)!important;
+  bottom:auto!important;
+  width:170%!important;
+  height:92vh!important;
+  opacity:1!important;
+  pointer-events:none!important;
+  transform-origin:50% 0!important;
+  transform:rotateX(68deg) translateZ(0)!important;
+  translate:0 0!important;
+  backface-visibility:visible;
+  background-color:#2f9e44!important;
+  background-image:url("../assets/debug/green-grid-1m.svg")!important;
+  background-repeat:repeat!important;
+  background-size:128px 128px!important;
+  background-position:var(--card-grid-x,0px) 0!important;
+  border-top:4px solid rgba(4,66,102,.88)!important;
+  box-shadow:0 -8px 0 rgba(13,89,142,.24),0 10px 26px rgba(0,0,0,.10)!important;
+  filter:none!important;
+  will-change:background-position,transform;
+}
+/* Fold/hinge between the vertical and horizontal cards. */
+.stage:not(.scene-interior)::before{
+  content:"";
+  position:absolute;
+  z-index:3;
+  left:0;right:0;
+  top:calc(var(--card-horizon-y) - 2px);
+  height:4px;
+  pointer-events:none;
+  background:rgba(7,77,119,.78);
+  box-shadow:0 2px 0 rgba(255,255,255,.18);
+}
+/* Keep all standees upright on the screen plane while the ground alone tilts in 3D. */
+.stage:not(.scene-interior) .actor,
+.stage:not(.scene-interior) .map-layer,
+.stage:not(.scene-interior) .entity-layer,
+.stage:not(.scene-interior) .pixi-entity-layer{
+  transform-style:flat;
+}
+.stage:not(.scene-interior) .paper-clock{
+  color:#fff!important;
+  background:rgba(0,66,118,.55)!important;
+  border-color:rgba(255,255,255,.35)!important;
+}
+.stage:not(.scene-interior).perf-low .paper-stage-floor{filter:none!important}
