@@ -2,8 +2,8 @@
 (function(global){
 'use strict';
 
-const params=new URLSearchParams(location.search);
-const fixtureMode=params.has('core-regression')||params.get('ci')==='ui-smoke'||params.get('ci')==='gpu-smoke';
+const query=typeof location==='object'&&location?String(location.search||''):'';
+const fixtureMode=/(?:[?&])core-regression(?:=|&|$)/.test(query)||/[?&]ci=(?:ui-smoke|gpu-smoke)(?:&|$)/.test(query);
 
 const content={
   version:1,
