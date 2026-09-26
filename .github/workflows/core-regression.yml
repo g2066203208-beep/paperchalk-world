@@ -37,6 +37,9 @@ jobs:
       - name: Run static smoke test
         run: node tests/web-smoke.js
 
+      - name: Enforce runtime performance budgets
+        run: node tests/performance-budget.mjs
+
       - name: Install browser driver and CJK fonts
         run: |
           npm install --no-save playwright-core
