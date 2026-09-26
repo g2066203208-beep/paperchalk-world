@@ -252,6 +252,12 @@ assert(game.includes("paperUIFrom(triggerEl,revealBackpack,backpackFrame)"), "Ba
 assert(html.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing");
 assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
+assert(css.includes("R35 OPEN-GREETING-CARD PERSPECTIVE PROTOTYPE"), "Greeting-card perspective stage missing");
+assert(css.includes('background-image:url("../assets/debug/green-grid-1m.svg")'), "Perspective grid texture missing");
+assert(css.includes("transform:rotateX(68deg)"), "Ground plane is not tilted into 3D perspective");
+assert(css.includes("--card-horizon-y:52%"), "Greeting-card fold horizon missing");
+assert(fs.existsSync("assets/debug/green-grid-1m.svg"), "1m green grid texture asset missing");
+assert(game.includes("setProperty('--card-grid-x'"), "Perspective grid is not world-camera synchronized");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
