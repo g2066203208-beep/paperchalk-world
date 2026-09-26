@@ -1314,6 +1314,47 @@ for(let i=2;i<ENEMY_SPAWNS.length;i++){
   entityTrack.appendChild(el);
   enemies.push(createEnemyState(spawn.id,el,fill));
 }
+
+/* Dynamic gameplay entities now run through an ECS scheduler. The existing enemy
+   object remains the compatibility component so public debug/render contracts stay stable
+   while future position/health/AI data can be split into dedicated components safely. */
+const combatEcs=window.PaperchalkECS?.createWorld?.()||null;
+const enemyEntityById=new Map();
+function registerCombatEntity(e){
+  if(!combatEcs||!e)return null;
+  const entity=combatEcs.create({
+    enemy:e,
+    combatant:true,
+    ai:true,
+    renderable:true
+  });
+  e.entityId=entity;
+  enemyEntityById.set(e.id,entity);
+  return entity;
+}
+enemies.forEach(registerCombatEntity);
+if(combatEcs){
+  combatEcs.registerSystem('enemy-ai',{
+    require:['enemy','ai'],
+    phase:'fixed',
+    priority:20,
+    update(entity,world,dt,context){
+      updateEnemy(world.get(entity,'enemy'),dt,!!context?.interactive);
+    }
+  });
+}
+function eachCombatEnemy(callback){
+  if(combatEcs)return combatEcs.each(['enemy'],(entity,world)=>callback(world.get(entity,'enemy'),entity));
+  enemies.forEach((e,index)=>callback(e,index+1));
+  return enemies.length;
+}
+window.PaperchalkECSRuntime={
+  version:1,
+  get enabled(){return !!combatEcs},
+  get enemyCount(){return combatEcs?.stats().entities||enemies.length},
+  entityForEnemy(id){return enemyEntityById.get(id)||null},
+  stats(){return combatEcs?.stats()||{entities:enemies.length,components:{},systems:[]}}
+};
 let showHitboxes=false;
 let showAttackRange=false;
 let enemyAiEnabled=true;
@@ -2520,21 +2561,26 @@ function updateCombat(dt,interactive){
     if(playerAttackTimer<=0)actorEl.classList.remove('is-attacking');
     else if(playerAttackTimer<.22&&playerAttackTimer>.08){
       const attackBox=getPlayerAttackBox();
-      for(const e of enemies){
+      eachCombatEnemy(e=>{
         if(e.alive&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
           if(damageEnemy(e,1,facing))playerAttackHits.add(e.id);
         }
-      }
+      });
       for(const o of MAP_OBJECTS){
         if(o.breakable&&!mapState.broken.has(o.id)&&rectsOverlap(attackBox,{x:o.x,y:o.y,w:o.w,h:o.h}))breakMapObject(o.id);
       }
     }
   }
-  for(const e of enemies)updateEnemy(e,dt,interactive);
+  if(combatEcs)combatEcs.run('enemy-ai',dt,{interactive});
+  else for(const e of enemies)updateEnemy(e,dt,interactive);
 }
 function nearestLivingEnemy(){
   let best=null,bestD=Infinity;
-  for(const e of enemies){if(!e.spawned||!e.alive)continue;const d=Math.abs(playerWorldX-e.x);if(d<bestD){best=e;bestD=d}}
+  eachCombatEnemy(e=>{
+    if(!e.spawned||!e.alive)return;
+    const d=Math.abs(playerWorldX-e.x);
+    if(d<bestD){best=e;bestD=d}
+  });
   return best;
 }
 function debugRect(el,r){
@@ -2694,7 +2740,9 @@ window.PaperchalkRuntime={
   },
   markMapChanged:markRuntimeMapChanged,
   requestDomSync(){renderWorld(true)},
-  get subscriberCount(){return runtimeObservers.size}
+  get subscriberCount(){return runtimeObservers.size},
+  get ecs(){return combatEcs?.stats()||null},
+  get frameLoopActive(){return frameLoopActive}
 };
 
 let roadPoolFirst=-1;
@@ -2884,16 +2932,36 @@ function hasNearbyCombat(now){
   if(now-lastCombatProbe>=120){
     lastCombatProbe=now;
     nearbyCombatCached=false;
-    for(const e of enemies){
-      if(e.spawned&&e.alive&&Math.abs(playerWorldX-e.x)<1700){nearbyCombatCached=true;break}
-    }
+    eachCombatEnemy(e=>{
+      if(!nearbyCombatCached&&e.spawned&&e.alive&&Math.abs(playerWorldX-e.x)<1700)nearbyCombatCached=true;
+    });
   }
   return nearbyCombatCached;
 }
+let frameRaf=0;
+let frameLoopActive=false;
+function scheduleFrame(){
+  if(frameLoopActive&&!frameRaf)frameRaf=requestAnimationFrame(frame);
+}
+function startFrameLoop(){
+  if(frameLoopActive)return;
+  frameLoopActive=true;
+  last=performance.now();
+  combatAccumulator=0;
+  scheduleFrame();
+}
+function stopFrameLoop(){
+  frameLoopActive=false;
+  if(frameRaf)cancelAnimationFrame(frameRaf);
+  frameRaf=0;
+  combatAccumulator=0;
+}
 function frame(now){
+  frameRaf=0;
+  if(!frameLoopActive)return;
   const dt=Math.min((now-last)/1000,.05);last=now;
   sampleFramePerf(now);
-  if(document.hidden){requestAnimationFrame(frame);return}
+  if(document.hidden){scheduleFrame();return}
 
   if(debugIsOpen()&&now-debugLastUiUpdate>250){
     updateDebugStatus();
@@ -2912,7 +2980,7 @@ function frame(now){
     updateDayNightVisuals();
   }
   if(!interactive){
-    requestAnimationFrame(frame);
+    scheduleFrame();
     return;
   }
 
@@ -3015,9 +3083,10 @@ function frame(now){
   }
 
   if(playerDynamic||combatTick||actionChanged||showHitboxes||showAttackRange)renderWorld();
-  requestAnimationFrame(frame);
+  scheduleFrame();
 }
-requestAnimationFrame(frame);
+window.addEventListener('paperchalk-world-enter',startFrameLoop);
+window.addEventListener('paperchalk-world-leave',stopFrameLoop);
 
 function isEditableTarget(target){
   return target instanceof HTMLElement &&
