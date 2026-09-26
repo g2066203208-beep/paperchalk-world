@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "indoor-double-stairs-r32";
+  const BUILD = "preprod-architecture-r34";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -32,14 +32,14 @@
 </script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=indoor-double-stairs-r32" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=preprod-architecture-r34" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="indoor-double-stairs-r32">
-<link rel="stylesheet" href="./styles/game.css?v=indoor-double-stairs-r32">
+<meta name="paperchalk-build" content="preprod-architecture-r34">
+<link rel="stylesheet" href="./styles/game.css?v=preprod-architecture-r34">
 </head>
 <body>
 
@@ -319,7 +319,7 @@
             <div id="profileNote" class="profile-note"></div>
             <button id="continueBtn" class="menu-btn">继续游戏</button>
             <button id="enterBtn" class="menu-btn">进入世界</button>
-            <button id="authBtn" class="menu-btn">登录 / 注册</button>
+            <button id="authBtn" class="menu-btn">本地档案</button>
             <button id="settingsBtn" class="menu-btn secondary">设置</button>
           </div>
         </div>
@@ -330,31 +330,31 @@
       <button class="back-link" data-back="menu">← 返回</button>
       <div class="auth-wrap">
         <div class="auth-card">
-          <h2 class="auth-title">旅人身份</h2>
-          <p class="auth-sub">当前为开发版账号系统，账号保存在本机。正式联网账号将在服务器接入后迁移。</p>
+          <h2 class="auth-title">本地旅人档案</h2>
+          <p class="auth-sub">档案与存档只保存在当前设备。这里不是联网账号；未来接入云存档时会单独迁移。</p>
           <div class="tabs">
-            <button id="tabLogin" class="tab active">登录</button>
-            <button id="tabRegister" class="tab">注册</button>
+            <button id="tabLogin" class="tab active">已有档案</button>
+            <button id="tabRegister" class="tab">新建档案</button>
           </div>
 
           <form id="loginForm">
             <div class="field">
-              <label>账号</label>
+              <label>档案 ID</label>
               <input id="loginUser" autocomplete="username" maxlength="24" required>
             </div>
             <div class="field">
-              <label>密码</label>
+              <label>本机口令</label>
               <input id="loginPass" type="password" autocomplete="current-password" maxlength="64" required>
             </div>
             <div class="auth-actions">
-              <button class="paper-btn" type="submit">登录并进入</button>
+              <button class="paper-btn" type="submit">打开并进入</button>
               <button class="paper-btn ghost" type="button" data-back="menu">取消</button>
             </div>
           </form>
 
           <form id="registerForm" class="hidden">
             <div class="field">
-              <label>账号</label>
+              <label>档案 ID</label>
               <input id="regUser" autocomplete="username" minlength="2" maxlength="24" placeholder="可用中文、英文或数字" required>
             </div>
             <div class="field">
@@ -362,11 +362,11 @@
               <input id="regName" maxlength="16" placeholder="游戏内显示名称" required>
             </div>
             <div class="field">
-              <label>密码</label>
+              <label>本机口令</label>
               <input id="regPass" type="password" autocomplete="new-password" minlength="4" maxlength="64" required>
             </div>
             <div class="auth-actions">
-              <button class="paper-btn" type="submit">创建并进入</button>
+              <button class="paper-btn" type="submit">创建档案并进入</button>
               <button class="paper-btn ghost" type="button" data-back="menu">取消</button>
             </div>
           </form>
@@ -409,8 +409,12 @@
 </section>
 
 <script src="./assets/dialogue/player-portrait.js?v=3"></script>
-<script src="./src/core/ecs-runtime.js?v=1"></script>
-<script src="./src/game.js?v=ecs-runtime-r33"></script>
+<script src="./src/core/event-bus.js?v=1"></script>
+<script src="./src/core/game-state.js?v=1"></script>
+<script src="./src/core/save-runtime.js?v=1"></script>
+<script src="./src/core/ecs-runtime.js?v=2"></script>
+<script src="./src/content/game-content.js?v=1"></script>
+<script src="./src/game.js?v=preprod-architecture-r34"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=puppet-r1"></script>
 </body>
 </html>
