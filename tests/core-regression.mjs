@@ -1088,7 +1088,7 @@ try{
   await page.locator('#debugCameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
   const tiltAfter=await page.evaluate(()=>({
-    value:window.PaperchalkDebug.cameraTilt,
+    value:Number(document.getElementById('debugCameraTilt')?.value),
     manual:window.PaperchalkCardCamera.manualHorizonRatio,
     stored:localStorage.getItem('paperchalk.debug.cameraTilt.v1'),
     horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112),
