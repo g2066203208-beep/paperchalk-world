@@ -288,7 +288,7 @@ assert(game.includes("function cardProjection("), "World-to-screen card projecti
 assert(!game.includes("let playerWorldZ"), "Player must not own a Z movement coordinate");
 assert(!game.includes("save.playerWorldZ=playerWorldZ"), "Player Z must not be persisted");
 assert(game.includes("delete save.playerWorldZ"), "Legacy player Z must be cleaned from saves");
-assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("camera.project({")&&domCardRenderer.includes("setProperty('--card-camera-y'"), "Ground is not projected by the shared card camera");
+assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("camera.project({")&&domCardRenderer.includes("writeWorldVar('--card-camera-y'"), "Ground is not projected by the shared card camera");
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
 assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
 assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS missing");
