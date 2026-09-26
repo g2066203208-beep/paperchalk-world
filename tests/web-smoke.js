@@ -200,7 +200,9 @@ assert(game.includes("const PLAYER_ACTION_ASSETS=Object.freeze"), "Player action
 assert(game.includes("function syncPlayerActionState"), "Player action state resolver missing");
 assert(game.includes("function setPlayerCrouching"), "Crouch state missing");
 assert(game.includes("playerVy>0?'jump-up':'jump-down'"), "Jump ascent/descent state split missing");
-assert(game.includes("e.code==='ArrowDown'||e.code==='KeyS'"), "Keyboard crouch input missing");
+assert(game.includes("keyboardDepthForward")&&game.includes("keyboardDepthBack"), "Outdoor forward/back depth input missing");
+assert(game.includes("e.code==='KeyC'"), "Outdoor keyboard crouch input missing");
+assert(game.includes("if(e.code==='Space'){jumpPlayer()"), "Space jump input missing");
 for (const name of ['idle','crouch','jump-up','jump-down','walk']) {
   assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied high-resolution player source asset: '+name);
   assert(fs.existsSync('assets/player/runtime/'+name+'.webp'), 'Missing optimized runtime player action asset: '+name);
@@ -252,12 +254,18 @@ assert(game.includes("paperUIFrom(triggerEl,revealBackpack,backpackFrame)"), "Ba
 assert(html.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing");
 assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
-assert(css.includes("R35 OPEN-GREETING-CARD PERSPECTIVE PROTOTYPE"), "Greeting-card perspective stage missing");
-assert(css.includes('background-image:url("../assets/debug/green-grid-1m.svg")'), "Perspective grid texture missing");
+assert(css.includes("R36 FULL CARD CAMERA"), "Full card-camera perspective stage missing");
+assert(css.includes('background-image:url("../assets/debug/green-grid-1m.svg")'), "Perspective ground grid texture missing");
 assert(css.includes("transform:rotateX(68deg)"), "Ground plane is not tilted into 3D perspective");
-assert(css.includes("--card-horizon-y:52%"), "Greeting-card fold horizon missing");
+assert(css.includes("--card-horizon-y:40%"), "Card-camera horizon missing");
+assert(css.includes("translate3d(0,0,var(--card-wall-depth))"), "Altitude grid wall is not pushed into 3D depth");
+assert(css.includes("background-position:var(--card-wall-x,0px) var(--card-wall-y,0px)"), "Altitude wall is not camera synchronized");
 assert(fs.existsSync("assets/debug/green-grid-1m.svg"), "1m green grid texture asset missing");
-assert(game.includes("setProperty('--card-grid-x'"), "Perspective grid is not world-camera synchronized");
+assert(game.includes("function cardProjection("), "World-to-screen card projection missing");
+assert(game.includes("playerWorldZ"), "Player depth coordinate missing");
+assert(game.includes("save.playerWorldZ=playerWorldZ"), "Player depth persistence missing");
+assert(game.includes("joystickDepthAxis"), "2D ground joystick depth axis missing");
+assert(game.includes("setProperty('--card-grid-x'")&&game.includes("setProperty('--card-grid-z'"), "Ground grid is not synchronized to X/Z camera movement");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
