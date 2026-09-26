@@ -9,6 +9,10 @@ const html=read('index.html');
 const css=read('styles/game.css');
 const game=read('src/game.js');
 const ecs=read('src/core/ecs-runtime.js');
+const events=read('src/core/event-bus.js');
+const appState=read('src/core/game-state.js');
+const saveRuntime=read('src/core/save-runtime.js');
+const content=read('src/content/game-content.js');
 const renderer=read('src/renderers/pixi-dynamic-renderer.mjs');
 const android=read('android-app/app/src/main/java/com/paperchalk/world/MainActivity.java');
 
@@ -17,6 +21,10 @@ const budgets={
   'styles/game.css':120000,
   'src/game.js':180000,
   'src/core/ecs-runtime.js':12000,
+  'src/core/event-bus.js':6000,
+  'src/core/game-state.js':5000,
+  'src/core/save-runtime.js':8000,
+  'src/content/game-content.js':12000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/apartment-midground.webp':350000,
@@ -60,6 +68,10 @@ assert(game.includes("mapVisualPools"),'Retained map node pool missing');
 assert(game.includes("SOLID_BUCKET_SIZE"),'Collision spatial index missing');
 assert(ecs.includes("class SparseSetStore"),'Sparse-set ECS runtime missing');
 assert(ecs.includes("registerSystem(name"),'ECS system scheduler missing');
+assert(events.includes("class EventBus"),'Event bus runtime missing');
+assert(appState.includes("class StateMachine"),'Application state machine missing');
+assert(saveRuntime.includes("CURRENT_SCHEMA=3"),'Schema-v3 save runtime missing');
+assert(content.includes("function validate(value=content)"),'Content validation runtime missing');
 assert(game.includes("combatEcs.run('enemy-ai'"),'Enemy AI no longer runs through the ECS fixed-step system');
 assert(game.includes("paperchalk-world-enter',startFrameLoop")&&game.includes("paperchalk-world-leave',stopFrameLoop"),
   'World animation loop is no longer lifecycle-bound');
@@ -97,6 +109,9 @@ const report={
     'retained-map-dom',
     'spatial-collision-index',
     'sparse-set-ecs',
+    'bounded-core-modules',
+    'validated-authored-content',
+    'schema-v3-save-backup',
     'lifecycle-bound-world-raf',
     'compositor-motion',
     'android-http-cache',
