@@ -12,7 +12,9 @@ const ecs=read('src/core/ecs-runtime.js');
 const events=read('src/core/event-bus.js');
 const appState=read('src/core/game-state.js');
 const saveRuntime=read('src/core/save-runtime.js');
+const cardCamera=read('src/core/card-camera.js');
 const content=read('src/content/game-content.js');
+const domCardRenderer=read('src/renderers/dom-card-projection.js');
 const renderer=read('src/renderers/pixi-dynamic-renderer.mjs');
 const android=read('android-app/app/src/main/java/com/paperchalk/world/MainActivity.java');
 
@@ -24,7 +26,9 @@ const budgets={
   'src/core/event-bus.js':6000,
   'src/core/game-state.js':5000,
   'src/core/save-runtime.js':8000,
+  'src/core/card-camera.js':5000,
   'src/content/game-content.js':12000,
+  'src/renderers/dom-card-projection.js':7000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/apartment-midground.webp':350000,
@@ -64,8 +68,9 @@ assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era 
 assert(css.includes("R36 FULL CARD CAMERA"),'Full card-camera perspective runtime missing');
 assert(css.includes("transform:rotateX(68deg)"),'Perspective ground transform missing');
 assert(css.includes("translate3d(0,0,var(--card-wall-depth))"),'Distant altitude wall transform missing');
-assert(game.includes("setProperty('--card-grid-x'")&&game.includes("setProperty('--card-grid-z'"),'World-synced X/Z grid offsets missing');
-assert(game.includes("function cardProjection("),'Card-camera projection math missing');
+assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-grid-z'"),'World-synced X/Z grid offsets missing');
+assert(cardCamera.includes("function project("),'Shared card-camera projection math missing');
+assert(renderer.includes("const cardCamera=window.PaperchalkCardCamera"),'GPU renderer does not share the card-camera runtime');
 
 assert(!game.includes("terrainTrack.innerHTML=''"),'Terrain window reverted to destructive DOM rebuild');
 assert(!game.includes("mapObjectTrack.innerHTML=''"),'Map objects reverted to destructive DOM rebuild');
