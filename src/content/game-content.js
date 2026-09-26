@@ -2,7 +2,31 @@
 (function(global){
 'use strict';
 
+const params=new URLSearchParams(global.location?.search||'');
+const testContentEnabled=params.get('test-content')==='1';
+const TEST_NPCS=[
+  {
+    id:'npc-phone-girl',x:760,z:0,name:'？？？',portrait:'phone-girl-offline',
+    sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
+    dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
+    text:'……你好。',
+    dialogue:{
+      opening:'……你好。',
+      choices:[
+        {text:'你是谁？',reply:'……暂时不重要。'},
+        {text:'你在看手机？',reply:'嗯。只是随便看看。'},
+        {text:'我先走了。',reply:'好。'}
+      ]
+    }
+  }
+];
+const TEST_ENEMY_SPAWNS=[
+  {id:'enemy-1',archetype:'rag-drifter',x:2140,z:0,patrolMin:2010,patrolMax:2290},
+  {id:'enemy-2',archetype:'rag-drifter',x:4780,z:0,patrolMin:4680,patrolMax:4920}
+];
+
 const content={
+  testContentEnabled,
   version:1,
   world:{
     nodes:[
@@ -46,26 +70,8 @@ const content={
       {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
     ]
   },
-  npcs:[
-    {
-      id:'npc-phone-girl',x:760,z:0,name:'？？？',portrait:'phone-girl-offline',
-      sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
-      dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
-      text:'……你好。',
-      dialogue:{
-        opening:'……你好。',
-        choices:[
-          {text:'你是谁？',reply:'……暂时不重要。'},
-          {text:'你在看手机？',reply:'嗯。只是随便看看。'},
-          {text:'我先走了。',reply:'好。'}
-        ]
-      }
-    }
-  ],
-  enemySpawns:[
-    {id:'enemy-1',archetype:'rag-drifter',x:2140,z:0,patrolMin:2010,patrolMax:2290},
-    {id:'enemy-2',archetype:'rag-drifter',x:4780,z:0,patrolMin:4680,patrolMax:4920}
-  ],
+  npcs:testContentEnabled?TEST_NPCS:[],
+  enemySpawns:testContentEnabled?TEST_ENEMY_SPAWNS:[],
   enemyArchetypes:{
     'rag-drifter':{
       id:'rag-drifter',
@@ -125,6 +131,6 @@ function deepFreeze(value){
 const validation=validate(content);
 if(!validation.ok)throw new Error('Invalid Paperchalk content: '+validation.errors.join('; '));
 
-global.PaperchalkContentRuntime=Object.freeze({validate,version:content.version});
+global.PaperchalkContentRuntime=Object.freeze({validate,version:content.version,testContentEnabled});
 global.PaperchalkContent=deepFreeze(content);
 })(window);
