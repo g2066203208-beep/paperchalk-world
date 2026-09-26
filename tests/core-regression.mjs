@@ -1165,7 +1165,7 @@ try{
     distance15.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({distance30,distance15}));
 
-  await page.locator('#settingCameraReset').click();
+  await page.locator('#settingCameraReset').evaluate(el=>el.click());
   await page.waitForTimeout(80);
   const cameraReset=await page.evaluate(()=>({
     angle:window.PaperchalkCardCamera.getTiltDegrees(),
