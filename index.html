@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "camera-distance-r50";
+  const BUILD = "camera-settings-r51";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -39,8 +39,8 @@
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="camera-distance-r50">
-<link rel="stylesheet" href="./styles/game.css?v=camera-distance-r50">
+<meta name="paperchalk-build" content="camera-settings-r51">
+<link rel="stylesheet" href="./styles/game.css?v=camera-settings-r51">
 </head>
 <body>
 
@@ -214,47 +214,6 @@
       <button class="debug-action" type="button" data-debug-action="teleportMid">传送中段</button>
       <button class="debug-action" type="button" data-debug-action="teleportEnd">传送远方</button>
     </div>
-    <div class="debug-camera-control" aria-label="摄像机调试">
-      <div class="debug-camera-control-head">
-        <span>摄像机俯视角</span>
-        <b id="debugCameraTiltValue">--°</b>
-      </div>
-      <input id="debugCameraTilt" class="debug-camera-slider" type="range"
-             min="0" max="45" step="0.5" value="5"
-             aria-label="摄像机俯视角，0到45度">
-      <div class="debug-camera-control-foot">
-        <span>0° 平视</span>
-        <span id="debugCameraHorizonValue">消失线 --</span>
-        <span>45° 俯视</span>
-      </div>
-
-      <div class="debug-camera-control-head debug-camera-height-head">
-        <span>摄像机高度</span>
-        <b id="debugCameraHeightValue">-- m</b>
-      </div>
-      <input id="debugCameraHeight" class="debug-camera-slider" type="range"
-             min="1" max="10" step="0.1" value="4"
-             aria-label="摄像机高度，1到10米">
-      <div class="debug-camera-control-foot">
-        <span>1 m 低</span>
-        <span>真实尺度 128px = 1m</span>
-        <span>10 m 高</span>
-      </div>
-
-      <div class="debug-camera-control-head debug-camera-height-head">
-        <span>镜头距离</span>
-        <b id="debugCameraDistanceValue">-- m</b>
-      </div>
-      <input id="debugCameraDistance" class="debug-camera-slider" type="range"
-             min="6.5" max="60" step="0.5" value="30"
-             aria-label="镜头到玩家中景面的距离，6.5到60米">
-      <div class="debug-camera-control-foot">
-        <span>6.5 m 拉近</span>
-        <span>30 m 默认</span>
-        <span>60 m 拉远</span>
-      </div>
-      <button id="debugCameraTiltReset" class="debug-action debug-camera-reset" type="button">恢复自动相机</button>
-    </div>
     <div class="debug-renderer-actions" aria-label="渲染器调试">
       <button id="debugRendererAutoBtn" class="debug-action" type="button" data-debug-action="rendererAuto">渲染：自动</button>
       <button id="debugRendererGpuBtn" class="debug-action" type="button" data-debug-action="rendererPixi">渲染：GPU</button>
@@ -279,7 +238,7 @@
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。摄像机可独立调俯视角 0–45°、高度 1–10m、镜头距离 6.5–60m；只改相机，不改景线坐标。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
+    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。正式镜头参数已移到“设置”。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
@@ -429,7 +388,7 @@
       <div class="auth-wrap">
         <div class="auth-card">
           <h2 class="auth-title">设置</h2>
-          <p class="auth-sub">这些设置会保存在当前设备。世界时间只在实际游玩时推进。</p>
+          <p class="auth-sub">这些设置会保存在当前设备。摄像机的俯视角、高度和距离互相独立。</p>
           <div class="settings-list">
             <label class="setting-row" for="settingLanguage"><span>界面语言</span>
               <select id="settingLanguage" aria-label="界面语言">
@@ -448,6 +407,29 @@
             <label class="setting-row setting-toggle" for="settingLandscape"><span>网页横屏优先</span>
               <input id="settingLandscape" type="checkbox" aria-label="网页横屏优先">
             </label>
+
+            <div class="setting-camera-group" aria-label="摄像机设置">
+              <div class="setting-camera-title">摄像机</div>
+              <label class="setting-camera-row" for="settingCameraTilt">
+                <span>俯视角 <b id="settingCameraTiltValue">13.1°</b></span>
+                <input id="settingCameraTilt" type="range" min="0" max="80" step="0.1" value="13.1"
+                       aria-label="摄像机俯视角，0到80度">
+                <small>绕中景主线旋转，不改变高度与镜头距离</small>
+              </label>
+              <label class="setting-camera-row" for="settingCameraHeight">
+                <span>摄像机高度 <b id="settingCameraHeightValue">4.1 m</b></span>
+                <input id="settingCameraHeight" type="range" min="1" max="10" step="0.1" value="4.1"
+                       aria-label="摄像机高度，1到10米">
+                <small>真实尺度：128px = 1m</small>
+              </label>
+              <label class="setting-camera-row" for="settingCameraDistance">
+                <span>镜头距离 <b id="settingCameraDistanceValue">30.0 m</b></span>
+                <input id="settingCameraDistance" type="range" min="6.5" max="60" step="0.5" value="30"
+                       aria-label="镜头到玩家中景面的距离，6.5到60米">
+                <small>越小越靠近玩家，越大越拉远</small>
+              </label>
+              <button id="settingCameraReset" class="paper-btn ghost setting-camera-reset" type="button">恢复默认镜头</button>
+            </div>
           </div>
           <div id="settingsStatus" class="settings-status" role="status" aria-live="polite"></div>
         </div>
@@ -461,14 +443,14 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=camera-distance-r50"></script>
+<script src="./src/core/card-camera.js?v=camera-settings-r51"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
-<script src="./src/game.js?v=camera-distance-r50"></script>
-<script src="./src/renderers/dom-card-projection.js?v=camera-distance-r50"></script>
-<script src="./src/debug-camera-controls.js?v=camera-distance-r50"></script>
+<script src="./src/game.js?v=camera-settings-r51"></script>
+<script src="./src/renderers/dom-card-projection.js?v=camera-settings-r51"></script>
+<script src="./src/camera-settings.js?v=camera-settings-r51"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=canvas-cull-r41"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=camera-distance-r50"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=camera-settings-r51"></script>
 </body>
 </html>
