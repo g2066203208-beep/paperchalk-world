@@ -2359,7 +2359,8 @@ button{cursor:pointer}
   z-index:2!important;
   pointer-events:none!important;
   transform:translate3d(0,var(--card-camera-y,0px),0)!important;
-  transform-style:preserve-3d;
+  transform-style:flat;
+  perspective:none!important;
   will-change:transform;
 }
 /* Infinite horizontal 1 m grid. Z is scene depth only; player movement never scrolls it. */
@@ -2376,7 +2377,7 @@ button{cursor:pointer}
   opacity:1!important;
   pointer-events:none!important;
   transform-origin:50% 0!important;
-  transform:rotateX(68deg)!important;
+  transform:perspective(900px) rotateX(68deg)!important;
   translate:0 0!important;
   backface-visibility:visible;
   background-color:#2f9e44!important;
