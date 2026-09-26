@@ -34,6 +34,7 @@ const requiredIds = [
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput",
+  "cameraControlsBtn","cameraControlsPanel","cameraControlsClose","cameraControlsStatus",
   "settingCameraTilt","settingCameraTiltValue","settingCameraHeight","settingCameraHeightValue","settingCameraDistance","settingCameraDistanceValue","settingCameraReset"
 ];
 
@@ -311,7 +312,8 @@ assert(cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("fun
 assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("cameraControlsBtn")&&cameraSettings.includes("cameraControlsPanel")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"), "Standalone persistent camera controller missing");
 assert(html.includes('id="cameraControlsBtn"')&&html.includes('id="cameraControlsPanel"'), "Standalone camera UI missing");
 assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Camera controls must not remain in Debug");
-assert(!/#pageSettings[\s\S]{0,5000}id="settingCameraTilt"/.test(html), "Camera controls must not remain inside Settings");
+const settingsSection=html.match(/<section id="pageSettings"[\s\S]*?<\/section>/)?.[0]||'';
+assert(!settingsSection.includes('id="settingCameraTilt"')&&!settingsSection.includes('id="settingCameraHeight"')&&!settingsSection.includes('id="settingCameraDistance"'), "Camera controls must not remain inside Settings");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 
