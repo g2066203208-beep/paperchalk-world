@@ -187,8 +187,8 @@ assert(game.includes("else jumpPlayer();")&&!game.includes("if(sceneLocation==='
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("debugFlightMode&&sceneLocation==='outside'"), "Free flight must support large Y and bypass road-strip snapping");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
 assert(game.includes("const actorBottom=MAP_GROUND_SCREEN_Y.toFixed(2)+'px'")&&game.includes("--world-camera-y"), "Vertical simulation must move the world while player screen Y stays fixed");
-assert(html.includes('id="interiorFarLayer"')&&html.includes('id="interiorMidLayer"')&&html.includes('id="interiorNearLayer"'), "Interior far/mid/near depth layers missing");
-assert(css.includes(".interior-far-layer{z-index:3}")&&css.includes(".interior-mid-layer{z-index:4}")&&css.includes(".stage.scene-interior .actor{z-index:5")&&css.includes(".interior-near-layer{z-index:6}"), "Interior depth order must be far -> mid -> player -> near");
+assert(!html.includes('interiorFarLayer')&&!html.includes('interiorMidLayer')&&!html.includes('interiorNearLayer'), "Legacy interior depth DOM returned");
+assert(game.includes("function enterApartment(){return false}")&&game.includes("function nearbyApartmentDoor(){return false}"), "Legacy apartment path must stay disabled");
 assert(game.includes("const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis"), "Free flight horizontal movement is missing");
 assert(game.includes("function flightVerticalAxis")&&game.includes("joystickFlightAxisY"), "Free flight vertical/joystick controls missing");
 assert(game.includes("mobileFlightUp")&&game.includes("mobileFlightDown"), "Mobile free-flight controls missing");
