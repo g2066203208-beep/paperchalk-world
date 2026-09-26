@@ -278,7 +278,7 @@ assert(html.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing
 assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
 assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"), "XY gameplay / Z scene-depth stage missing");
-assert(css.includes('background-image:url("../assets/debug/green-grid-1m.svg")'), "Perspective ground grid texture missing");
+assert(html.includes('id="cardGroundGrid"')&&html.includes('id="cardGroundDepthLines"')&&html.includes('id="cardGroundWorldLines"'), "Projected ground grid host missing");
 assert(css.includes(".card-ground-grid")&&!css.includes("transform:perspective(900px) rotateX(68deg)!important"), "Ground still uses a second CSS perspective camera");
 assert(css.includes("--card-horizon-y:40%"), "Card-camera horizon missing");
 assert(css.includes("translate3d(0,0,var(--card-wall-depth))"), "Altitude grid wall is not pushed into 3D depth");
