@@ -2316,3 +2316,28 @@ button{cursor:pointer}
     animation-delay:0ms!important
   }
 }
+
+
+/* ---------- AUTHORED WORLD BUILDINGS ---------- */
+.map-building{
+  position:absolute;
+  left:var(--building-x,50vw);
+  bottom:var(--building-bottom,var(--ground-screen-y,112px));
+  transform:translateX(-50%) scale(var(--world-scale,1));
+  transform-origin:50% 100%;
+  z-index:4;
+  pointer-events:none;
+  will-change:left,bottom,transform;
+}
+.map-building-art{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:50% 100%;
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-drag:none;
+  filter:drop-shadow(0 10px 7px rgba(43,34,27,.18));
+}
+.stage.scene-interior .map-building{display:none!important}
