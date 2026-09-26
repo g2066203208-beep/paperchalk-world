@@ -215,12 +215,14 @@ try{
     perspectiveMetrics.ys[1]-perspectiveMetrics.ys[2],
     perspectiveMetrics.ys[2]-perspectiveMetrics.ys[3]
   ];
-  check('Four main scene lines are equal 5m world intervals with real perspective compression',
+  check('Four main scene lines are equal 5m world intervals with steeper real perspective compression',
     perspectiveMetrics.baseDepth===3840&&
     perspectiveMetrics.zs.every((z,i)=>i===0||z-perspectiveMetrics.zs[i-1]===640)&&
     perspectiveMetrics.scales.every((s,i)=>Math.abs(s-perspectiveMetrics.expected[i])<1e-9)&&
     mainScreenGaps[0]>mainScreenGaps[1]&&mainScreenGaps[1]>mainScreenGaps[2]&&
-    perspectiveMetrics.ys[0]>850&&perspectiveMetrics.ys[0]<900,
+    mainScreenGaps[0]>100&&mainScreenGaps[1]>70&&mainScreenGaps[2]>50&&
+    perspectiveMetrics.ys[0]>890&&perspectiveMetrics.ys[0]<900&&
+    perspectiveMetrics.ys[3]<670,
     JSON.stringify({...perspectiveMetrics,mainScreenGaps}));
   const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
   check('Near/mid/far front-main-back guides are ordered toward the horizon',

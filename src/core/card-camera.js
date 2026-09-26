@@ -6,7 +6,7 @@ const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
 const config=Object.freeze({
   gridSize:128,
   baseDepth:3840, // 30 m camera-to-mid plane at 128 px/m
-  horizonRatio:.40,
+  horizonRatio:.27, // steeper downward view: more screen height for the finite ground plane
   minDepth:96,
   maxDepth:6400,
   // The playable ground is finite in scene-depth: it ends exactly where the
