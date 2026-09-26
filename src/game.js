@@ -1507,7 +1507,7 @@ function updateCameraTiltControls(){
   debugCameraHorizonValue.textContent='消失线 y='+hy.toFixed(0)+'px';
 }
 function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
-  const a=clamp(Number(v)||0,0,30);CARD_CAMERA.setTiltDegrees(a);if(persist)try{localStorage.setItem(DEBUG_CAMERA_ANGLE_KEY,a)}catch(_){}
+  const a=clamp(Number(v)||0,0,45);CARD_CAMERA.setTiltDegrees(a);if(persist)try{localStorage.setItem(DEBUG_CAMERA_ANGLE_KEY,a)}catch(_){}
   updateCameraTiltControls();if(sync)redrawDebugCamera();return a;
 }
 function applyDebugCameraHeight(v,{persist=true,sync=true}={}){
