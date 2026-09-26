@@ -295,10 +295,10 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="scene-guides-r42"'), "R42 scene-guide build cache key missing");
+assert(html.includes('meta name="paperchalk-build" content="metric-guides-r43"'), "R43 metric-guide build cache key missing");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR_GROUND_DEPTH")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
-assert(cardCamera.includes("id:'near-front'")&&cardCamera.includes("id:'mid-main'")&&cardCamera.includes("id:'far-back'")&&cardCamera.includes("id:'horizon'"), "3x3+horizon scene guide hierarchy missing");
+assert(cardCamera.includes("id:'near-main'")&&cardCamera.includes("z:-256")&&cardCamera.includes("id:'far-main'")&&cardCamera.includes("z:640")&&cardCamera.includes("FAR_GROUND_DEPTH=1280"), "Meter-aligned main scene guides missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 
 
