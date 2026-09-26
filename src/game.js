@@ -1233,8 +1233,6 @@ let playerWorldZ=0;
 let playerY=0,playerVy=0,playerGrounded=true;
 const CARD_CAMERA=window.PaperchalkCardCamera;
 if(!CARD_CAMERA)throw new Error('PaperchalkCardCamera missing');
-const CARD_GRID_SIZE=CARD_CAMERA.config.gridSize;
-const CARD_CAMERA_BASE_DEPTH=CARD_CAMERA.config.baseDepth;
 const CARD_WORLD_Z_LIMIT=CARD_CAMERA.config.worldDepthLimit;
 let playerCrouching=false;
 let playerActionState='idle';
@@ -2623,7 +2621,6 @@ window.PaperchalkMap={
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
   get playerX(){return playerWorldX},
   get playerZ(){return playerWorldZ},
-  setPlayerZ(z){playerWorldZ=clamp(Number(z)||0,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);renderWorld(true);notifyRuntimeObservers();return playerWorldZ},
   project(x,z=0,y=0){return cardProjection(x,z,y)},
   get traversal(){return {routeIndex:worldZoneIndexAt(playerWorldX),orientation:currentRouteOrientation,nodeBounds:routeBoundaryInfo(playerWorldX)}},
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
@@ -2856,16 +2853,8 @@ function flightCeiling(){
     ? Math.max(0,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24)
     : OUTDOOR_FLIGHT_MAX_Y;
 }
-function cardProjection(worldX,worldZ=0,worldY=0){
-  return CARD_CAMERA.project({
-    worldX,worldZ,worldY,
-    playerX:playerWorldX,playerZ:playerWorldZ,playerY,
-    screenX:playerScreenAnchorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y
-  });
-}
-function cardDepthDistance(x,z=0){
-  return CARD_CAMERA.distance2D(x,z,playerWorldX,playerWorldZ);
-}
+function cardProjection(worldX,worldZ=0,worldY=0){return CARD_CAMERA.project({worldX,worldZ,worldY,playerX:playerWorldX,playerZ:playerWorldZ,playerY,screenX:playerScreenAnchorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y})}
+function cardDepthDistance(x,z=0){return CARD_CAMERA.distance2D(x,z,playerWorldX,playerWorldZ)}
 function setFacing(dir){
   if(!dir||dir===facing)return;
   facing=dir;
