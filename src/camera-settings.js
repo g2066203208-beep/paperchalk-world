@@ -16,9 +16,6 @@ const status=document.getElementById('cameraControlsStatus');
 if(!camera||!runtime||!openBtn||!panel||!tilt||!height||!distance)return;
 
 const KEY='paperchalk.settings.v1';
-const OLD_ANGLE='paperchalk.debug.cameraAngle.v2';
-const OLD_HEIGHT='paperchalk.debug.cameraHeight.v1';
-const OLD_DISTANCE='paperchalk.debug.cameraDistance.v1';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(_){return{}}}
@@ -77,18 +74,12 @@ function close(){
 }
 function toggle(){panel.classList.contains('is-open')?close():open()}
 function load(){
-  const saved=read(),legacy={};
-  try{
-    if(!Number.isFinite(Number(saved.cameraTilt))&&localStorage.getItem(OLD_ANGLE)!==null)legacy.cameraTilt=Number(localStorage.getItem(OLD_ANGLE));
-    if(!Number.isFinite(Number(saved.cameraHeight))&&localStorage.getItem(OLD_HEIGHT)!==null)legacy.cameraHeight=Number(localStorage.getItem(OLD_HEIGHT));
-    if(!Number.isFinite(Number(saved.cameraDistance))&&localStorage.getItem(OLD_DISTANCE)!==null)legacy.cameraDistance=Number(localStorage.getItem(OLD_DISTANCE));
-  }catch(_){}
+  const saved=read();
   apply({
-    cameraTilt:Number.isFinite(Number(saved.cameraTilt))?Number(saved.cameraTilt):(Number.isFinite(legacy.cameraTilt)?legacy.cameraTilt:camera.config.defaultTiltDegrees),
-    cameraHeight:Number.isFinite(Number(saved.cameraHeight))?Number(saved.cameraHeight):(Number.isFinite(legacy.cameraHeight)?legacy.cameraHeight:camera.config.defaultHeightMeters),
-    cameraDistance:Number.isFinite(Number(saved.cameraDistance))?Number(saved.cameraDistance):(Number.isFinite(legacy.cameraDistance)?legacy.cameraDistance:camera.config.defaultDistanceMeters)
+    cameraTilt:Number.isFinite(Number(saved.cameraTilt))?Number(saved.cameraTilt):camera.config.defaultTiltDegrees,
+    cameraHeight:Number.isFinite(Number(saved.cameraHeight))?Number(saved.cameraHeight):camera.config.defaultHeightMeters,
+    cameraDistance:Number.isFinite(Number(saved.cameraDistance))?Number(saved.cameraDistance):camera.config.defaultDistanceMeters
   },true,false);
-  try{localStorage.removeItem(OLD_ANGLE);localStorage.removeItem(OLD_HEIGHT);localStorage.removeItem(OLD_DISTANCE)}catch(_){}
 }
 openBtn.addEventListener('click',toggle);
 closeBtn?.addEventListener('click',close);
