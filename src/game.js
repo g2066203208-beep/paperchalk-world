@@ -27,7 +27,10 @@ const PLAYER_ACTION_META=Object.freeze({
 const AUTHORED_CONTENT=window.PaperchalkContent;
 if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
 const TEST_CONTENT_ENABLED=AUTHORED_CONTENT.testContentEnabled===true;
-document.getElementById('world')?.classList.toggle('production-clean-scene',!TEST_CONTENT_ENABLED);
+const DEV_TOOLS_ENABLED=TEST_CONTENT_ENABLED||new URLSearchParams(location.search).get('debug')==='1';
+const worldRoot=document.getElementById('world');
+worldRoot?.classList.toggle('production-clean-scene',!TEST_CONTENT_ENABLED);
+worldRoot?.classList.toggle('production-no-dev',!DEV_TOOLS_ENABLED);
 if(TEST_CONTENT_ENABLED){
   const apartmentLayer=document.querySelector('.midground-building-layer');
   const apartmentAsset=document.getElementById('midgroundApartment');
