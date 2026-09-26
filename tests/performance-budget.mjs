@@ -76,7 +76,7 @@ assert(css.includes("height:var(--card-far-ground-y,60%)")&&css.includes("backgr
 assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"),'Canvas ground/entity culling runtime missing');
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"),'Player-driven Z ground scrolling returned');
 assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"),'Shared scene-depth projection math missing');
-assert(cardCamera.includes("farGroundDepth:FAR_GROUND_DEPTH")&&cardCamera.includes("wallDepth:FAR_GROUND_DEPTH"),'Ground far edge and sky wall depth are no longer identical');
+assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("wallDepth:FAR"),'Ground far edge and sky wall depth are no longer identical');
 assert((cardCamera.match(/Object\.freeze\(\{id:'/g)||[]).length===10,'Scene guide count must remain 10');
 assert(domCardRenderer.includes("sceneMainLines")&&domCardRenderer.includes("sceneSubLines"),'Scene guide main/sub instrumentation missing');
 assert(domCardRenderer.includes("const farZ=Math.min(Number(cfg.farGroundDepth)")&&domCardRenderer.includes("dataset.farDepth"),'Ground grid is no longer finitely capped');
