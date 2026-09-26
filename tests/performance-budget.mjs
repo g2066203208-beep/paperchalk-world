@@ -61,9 +61,11 @@ assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=
 assert(game.includes("const rear=[];")&&game.includes("const front=[];"),'Authored prop strips returned');
 assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
-assert(css.includes("R35 OPEN-GREETING-CARD PERSPECTIVE PROTOTYPE"),'Greeting-card perspective prototype missing');
+assert(css.includes("R36 FULL CARD CAMERA"),'Full card-camera perspective runtime missing');
 assert(css.includes("transform:rotateX(68deg)"),'Perspective ground transform missing');
-assert(game.includes("setProperty('--card-grid-x'"),'World-synced grid offset missing');
+assert(css.includes("translate3d(0,0,var(--card-wall-depth))"),'Distant altitude wall transform missing');
+assert(game.includes("setProperty('--card-grid-x'")&&game.includes("setProperty('--card-grid-z'"),'World-synced X/Z grid offsets missing');
+assert(game.includes("function cardProjection("),'Card-camera projection math missing');
 
 assert(!game.includes("terrainTrack.innerHTML=''"),'Terrain window reverted to destructive DOM rebuild');
 assert(!game.includes("mapObjectTrack.innerHTML=''"),'Map objects reverted to destructive DOM rebuild');
