@@ -5,6 +5,10 @@ const html = fs.readFileSync("index.html", "utf8");
 const css = fs.readFileSync("styles/game.css", "utf8");
 const game = fs.readFileSync("src/game.js", "utf8");
 const ecs = fs.readFileSync("src/core/ecs-runtime.js", "utf8");
+const events = fs.readFileSync("src/core/event-bus.js", "utf8");
+const state = fs.readFileSync("src/core/game-state.js", "utf8");
+const saves = fs.readFileSync("src/core/save-runtime.js", "utf8");
+const content = fs.readFileSync("src/content/game-content.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
 
 function assert(condition, message) {
@@ -32,7 +36,11 @@ for (const id of requiredIds) {
 
 assert(/href=["']\.\/styles\/game\.css(?:\?[^"']*)?["']/.test(html), "External game stylesheet missing");
 assert(/src=["']\.\/src\/core\/ecs-runtime\.js(?:\?[^"']*)?["']/.test(html), "ECS runtime script missing");
+assert(html.indexOf("./src/core/event-bus.js") < html.indexOf("./src/game.js"), "Event bus must load before game runtime");
+assert(html.indexOf("./src/core/game-state.js") < html.indexOf("./src/game.js"), "State machine must load before game runtime");
+assert(html.indexOf("./src/core/save-runtime.js") < html.indexOf("./src/game.js"), "Save runtime must load before game runtime");
 assert(html.indexOf("./src/core/ecs-runtime.js") < html.indexOf("./src/game.js"), "ECS runtime must load before game runtime");
+assert(html.indexOf("./src/content/game-content.js") < html.indexOf("./src/game.js"), "Authored content must load before game runtime");
 assert(/src=["']\.\/src\/game\.js(?:\?[^"']*)?["']/.test(html), "External game runtime missing");
 assert(/src=["']\.\/src\/renderers\/pixi-dynamic-renderer\.mjs(?:\?[^"']*)?["']/.test(html), "Pixi dynamic renderer module missing");
 assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
@@ -42,10 +50,18 @@ assert(/function autoMode\(\)\{[\s\S]*?return ['"]dom['"];[\s\S]*?\}/.test(rende
 assert(renderer.includes("runtime?.worldData?.playerVisual"), "Pixi renderer is not using shared player visual dimensions");
 assert(renderer.includes("runtime.worldData?.playerActions"), "Pixi renderer is not using shared player action textures");
 assert(renderer.includes("runtime?.worldData?.playerActionMeta"), "Pixi renderer is not using shared action orientation/scale metadata");
+new vm.Script(events);
+new vm.Script(state);
+new vm.Script(saves);
 new vm.Script(ecs);
+new vm.Script(content);
 new vm.Script(game);
 assert(ecs.includes("class SparseSetStore"), "Sparse-set ECS component store missing");
 assert(ecs.includes("registerSystem(name"), "ECS system scheduler missing");
+assert(events.includes("class EventBus"), "Deterministic event bus missing");
+assert(state.includes("class StateMachine"), "Application state machine missing");
+assert(saves.includes("CURRENT_SCHEMA=3"), "Schema-v3 save runtime missing");
+assert(content.includes("function validate(value=content)"), "Content validation runtime missing");
 assert(game.includes("const combatEcs=window.PaperchalkECS"), "Combat ECS world bridge missing");
 assert(game.includes("combatEcs.registerSystem('enemy-ai'"), "Enemy AI ECS system missing");
 assert(game.includes("combatEcs.run('enemy-ai'"), "Fixed-step combat no longer dispatches through ECS");
@@ -133,11 +149,11 @@ assert(
 );
 assert(game.includes("const MAP_TERRAIN=["), "Terrain data missing");
 assert(game.includes("const MAP_OBJECTS=["), "Map object data missing");
-assert(game.includes("const ENEMY_SPAWNS=["), "Enemy spawn data missing");
-assert(game.includes("const MAP_NPCS=["), "Map NPC data missing");
+assert(content.includes("enemySpawns:["), "Enemy spawn content missing");
+assert(game.includes("const MAP_NPCS=AUTHORED_CONTENT.npcs"), "Map NPC runtime content bridge missing");
 assert(fs.existsSync("assets/npcs/phone-girl-offline-r1.webp"), "Supplied left-character NPC asset missing");
-assert(game.includes("id:'npc-phone-girl'"), "New left-character NPC data missing");
-assert(game.includes("phone-girl-offline-r1.webp"), "NPC runtime is not using supplied left-character asset");
+assert(content.includes("id:'npc-phone-girl'"), "New left-character NPC content missing");
+assert(content.includes("phone-girl-offline-r1.webp"), "NPC content is not using supplied left-character asset");
 assert(!game.includes("npc-old-crafter")&&!game.includes("白翼引路人"), "Old placeholder NPC data still present");
 assert(!html.includes("npc-portrait.js")&&!html.includes("npc-portrait-hd.svg"), "Old generated NPC portrait runtime still referenced");
 assert(!fs.existsSync("assets/dialogue/npc-portrait-hd.svg")&&!fs.existsSync("assets/dialogue/npc-portrait.js"), "Old generated NPC portrait assets still exist");
