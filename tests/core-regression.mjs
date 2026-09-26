@@ -189,9 +189,9 @@ try{
     };
   });
   check('Ground grid has 3x3 scene sublayers plus one horizon line',
-    finiteGround.farDepth===1280&&finiteGround.depthLines<=13&&finiteGround.worldLines<=50&&
+    finiteGround.farDepth===1280&&finiteGround.depthLines<=14&&finiteGround.worldLines<=40&&
     finiteGround.sceneLines===10&&finiteGround.sceneMainLines===4&&finiteGround.sceneSubLines===6&&
-    finiteGround.guideDepths==='near-front:-320,near-main:-256,near-back:-192,mid-front:-64,mid-main:0,mid-back:64,far-front:512,far-main:640,far-back:768,horizon:1280'&&
+    finiteGround.guideDepths==='near-front:-160,near-main:-128,near-back:-96,mid-front:-32,mid-main:0,mid-back:32,far-front:512,far-main:640,far-back:768,horizon:1280'&&
     finiteGround.childNodes===0&&finiteGround.backingPixels>0&&
     Math.abs(finiteGround.skyBottom-finiteGround.horizonY)<1&&
     finiteGround.horizonPixel[0]>180&&finiteGround.horizonPixel[1]>150&&finiteGround.horizonPixel[2]<150&&
@@ -200,7 +200,7 @@ try{
     finiteGround.farMainPixel[2]>finiteGround.farMainPixel[0],
     JSON.stringify(finiteGround));
   const perspectiveMetrics=await page.evaluate(()=>{
-    const zs=[-256,0,640,1280];
+    const zs=[-128,0,640,1280];
     const points=zs.map(z=>window.PaperchalkMap.project(window.PaperchalkMap.playerX,z,0));
     return {
       zs,
