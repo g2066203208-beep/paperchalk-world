@@ -1074,7 +1074,7 @@ try{
     'panel open');
 
   const tiltBefore=await page.evaluate(()=>({
-    value:window.PaperchalkDebug.cameraTilt,
+    value:Number(document.getElementById('debugCameraTilt')?.value),
     horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112),
     farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
