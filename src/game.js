@@ -2271,7 +2271,6 @@ addEventListener('orientationchange',()=>setTimeout(handleViewportChange,80),{pa
 addEventListener('pageshow',()=>{handleViewportChange();setTimeout(handleViewportChange,120)},{passive:true});
 window.visualViewport?.addEventListener('resize',handleViewportChange,{passive:true});
 refreshRoadW();
-refreshSceneryMetrics();
 
 function posMod(v,m){return ((v%m)+m)%m}
 function pixiDynamicActive(){return worldEl.classList.contains('renderer-pixi-dynamic')}
