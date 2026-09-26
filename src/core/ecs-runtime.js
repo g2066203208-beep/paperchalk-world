@@ -68,6 +68,7 @@
       this.systemOrder=[];
       this.iterationDepth=0;
       this.pendingDestroy=[];
+      this.pendingRemove=[];
     }
     ensureStore(name){
       const key=String(name);
@@ -96,17 +97,31 @@
       for(const store of this.components.values())store.delete(entity);
       return true;
     }
-    flushDestroy(){
-      if(!this.pendingDestroy.length)return;
-      const list=this.pendingDestroy.splice(0);
-      for(const entity of list)this.destroy(entity);
+    flushStructural(){
+      if(this.pendingRemove.length){
+        const list=this.pendingRemove.splice(0);
+        for(const item of list)this.components.get(item.name)?.delete(item.entity);
+      }
+      if(this.pendingDestroy.length){
+        const list=this.pendingDestroy.splice(0);
+        for(const entity of list)this.destroy(entity);
+      }
     }
     add(entity,name,value=true){
       if(!this.alive.has(entity))throw new Error('ECS_ENTITY_NOT_ALIVE '+entity);
       return this.ensureStore(name).set(entity,value);
     }
     remove(entity,name){
-      return this.components.get(String(name))?.delete(entity)||false;
+      const key=String(name);
+      const store=this.components.get(key);
+      if(!store?.has(entity))return false;
+      if(this.iterationDepth>0){
+        if(!this.pendingRemove.some(item=>item.entity===entity&&item.name===key)){
+          this.pendingRemove.push({entity,name:key});
+        }
+        return true;
+      }
+      return store.delete(entity);
     }
     get(entity,name){
       return this.components.get(String(name))?.get(entity);
@@ -125,7 +140,8 @@
       this.iterationDepth++;
       try{
         const dense=primary.dense;
-        for(let i=0;i<dense.length;i++){
+        const limit=dense.length;
+        for(let i=0;i<limit;i++){
           const entity=dense[i];
           if(!this.alive.has(entity))continue;
           let matches=true;
@@ -138,7 +154,7 @@
         }
       }finally{
         this.iterationDepth--;
-        if(this.iterationDepth===0)this.flushDestroy();
+        if(this.iterationDepth===0)this.flushStructural();
       }
       return count;
     }

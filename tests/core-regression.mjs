@@ -120,14 +120,14 @@ try{
   const productionStart=await page.evaluate(()=>({
     visibleEnemies:document.querySelectorAll('#entityTrack .enemy').length,
     visibleNpcs:document.querySelectorAll('[data-npc-id]').length,
-    compatDisplay:getComputedStyle(document.getElementById('prototypeRuntimeCompat')).display,
+    prototypeCompatExists:!!document.getElementById('prototypeRuntimeCompat'),
     apartmentAsset:[...document.images].some(img=>(img.getAttribute('src')||'').includes('apartment-midground')),
     interactHidden:document.getElementById('interactBtn')?.hidden===true
   }));
   check('Fresh A starts in the production-clean continuous world',
     Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&
     initialMap.terrainCount===0&&initialMap.objectCount===0&&initialMap.spawnCount===0&&initialMap.npcCount===0&&
-    productionStart.visibleEnemies===0&&productionStart.visibleNpcs===0&&productionStart.compatDisplay==='none'&&
+    productionStart.visibleEnemies===0&&productionStart.visibleNpcs===0&&!productionStart.prototypeCompatExists&&
     productionStart.apartmentAsset===false&&productionStart.interactHidden,
     JSON.stringify({s,initialMap,productionStart}));
 
@@ -616,14 +616,14 @@ try{
     enemySpawns:window.PaperchalkMap.enemySpawns.length,
     entityEnemies:document.querySelectorAll('#entityTrack .enemy').length,
     npcEls:document.querySelectorAll('[data-npc-id]').length,
-    compatDisplay:getComputedStyle(document.getElementById('prototypeRuntimeCompat')).display,
-    canEnterPrototypeInterior:window.PaperchalkScene.enter(),
-    location:window.PaperchalkScene.location,
+    prototypeCompatExists:!!document.getElementById('prototypeRuntimeCompat'),
+    sceneApi:Object.keys(window.PaperchalkScene||{}).sort(),
+    location:window.PaperchalkScene?.location,
     interactHidden:document.getElementById('interactBtn').hidden
   }));
   check('Formal stage contains no prototype NPC enemy door or interior content',
     formalStage.npcs===0&&formalStage.enemySpawns===0&&formalStage.entityEnemies===0&&formalStage.npcEls===0&&
-    formalStage.compatDisplay==='none'&&formalStage.canEnterPrototypeInterior===false&&
+    !formalStage.prototypeCompatExists&&formalStage.sceneApi.join(',')==='location,transitioning'&&
     formalStage.location==='outside'&&formalStage.interactHidden===true,
     JSON.stringify(formalStage));
 

@@ -235,15 +235,6 @@ button{cursor:pointer}
   position:absolute;left:0;top:0;height:100%;width:1800px;
   pointer-events:none;contain:layout paint
 }
-.midground-apartment{
-  position:absolute;left:520px;bottom:calc(var(--ground-screen-y,112px) - 8px);
-  width:calc(var(--player-visual-h,156px) * 5);
-  height:calc(var(--player-visual-h,156px) * 6.6667);
-  max-width:none;max-height:none;
-  object-fit:contain;object-position:left bottom;
-  transform-origin:50% 100%;
-  backface-visibility:hidden;pointer-events:none;contain:paint
-}
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
 .map-track{position:absolute;left:0;top:0;height:100%;width:var(--world-width,6000px);will-change:transform}
@@ -1110,7 +1101,6 @@ button{cursor:pointer}
 .backpack-open-btn:active{transform:translate(1px,2px) rotate(-1deg)}
 
 /* ---------- PRODUCTION CLEAN STAGE ---------- */
-#prototypeRuntimeCompat{display:none!important}
 .combat-btn[hidden]{display:none!important}
 
 /* ---------- CAMERA CONTROL ---------- */
@@ -2149,224 +2139,10 @@ button{cursor:pointer}
 }
 @keyframes paperTintOut{to{opacity:0}}
 
-.interior-scene{
-  --interior-map-w:1536px;
-  --interior-map-h:768px;
-  position:absolute;inset:0;z-index:auto;visibility:hidden;pointer-events:none;overflow:hidden;
-  background:linear-gradient(180deg,rgba(47,38,31,.96),rgba(64,49,37,.98));
-}
-.stage.scene-interior{perspective:none}
-.stage.scene-interior .interior-scene{visibility:visible}
-.interior-depth-layer{
-  position:absolute;
-  left:0;
-  bottom:var(--ground-screen-y,112px);
-  width:var(--interior-map-w);
-  height:var(--interior-map-h);
-  pointer-events:none;
-  transform-origin:0 100%;
-  will-change:transform;
-}
-.interior-far-layer{z-index:3}
-.interior-mid-layer{z-index:4}
-.interior-near-layer{z-index:6}
-.stage.scene-interior .actor{z-index:5;visibility:visible}
-.stage.scene-interior.renderer-pixi-dynamic .actor{visibility:visible!important}
-.stage.scene-interior.renderer-pixi-dynamic .pixi-entity-layer{display:none!important}
-.stage.scene-interior .paper-sky,
-.stage.scene-interior .paper-backdrop,
-.stage.scene-interior .paper-backdrop-next,
-.stage.scene-interior .paper-stage-floor,
-.stage.scene-interior .paper-wing,
-.stage.scene-interior .paper-footlights,
-.stage.scene-interior .midground-building-layer,
-.stage.scene-interior .map-layer,
-.stage.scene-interior .entity-layer,
-.stage.scene-interior .rear-layer,
-.stage.scene-interior .front-layer,
-.stage.scene-interior .day-night-tint{visibility:hidden}
-
-.paper-stage-piece{position:absolute;will-change:transform}
-.interior-room-shell{
-  left:0;bottom:0;width:1536px;height:768px;
-  background:linear-gradient(90deg,rgba(221,206,176,.97),rgba(232,216,184,.96) 48%,rgba(211,194,163,.97));
-  border:6px solid rgba(82,61,43,.72);
-  box-shadow:inset 0 0 0 12px rgba(255,248,228,.14);
-}
-.interior-wall{
-  top:0;bottom:0;width:64px;
-  background:repeating-linear-gradient(180deg,rgba(112,83,58,.96) 0 54px,rgba(82,60,43,.96) 54px 60px);
-  border:4px solid rgba(61,45,34,.78);
-  box-shadow:inset 7px 0 0 rgba(236,215,174,.08),6px 0 0 rgba(42,31,24,.14);
-}
-.interior-wall-left{left:0}
-.interior-wall-right{right:0;transform:scaleX(-1)}
-.interior-ceiling{
-  left:0;top:0;width:1536px;height:48px;
-  background:rgba(103,75,52,.97);
-  border-bottom:5px solid rgba(67,48,35,.78);
-  box-shadow:inset 0 -8px 0 rgba(235,210,168,.10)
-}
-.interior-floor{
-  height:28px;background:rgba(173,137,91,.96);
-  border-top:5px solid rgba(92,67,43,.58);
-  box-shadow:inset 0 8px 0 rgba(239,212,164,.19),0 6px 0 rgba(58,42,30,.11)
-}
-.interior-floor-first{left:64px;right:64px;bottom:-28px}
-.interior-floor-second{left:64px;width:704px;bottom:356px}
-.interior-window{
-  width:170px;height:190px;background:rgba(126,151,157,.74);
-  border:9px solid rgba(119,86,57,.86);
-  box-shadow:4px 6px 0 rgba(57,44,29,.13),inset 0 0 0 3px rgba(240,230,205,.22)
-}
-.interior-window-first{left:160px;bottom:150px}
-.interior-window-second{left:360px;bottom:505px}
-.interior-window:before,.interior-window:after,.interior-window-cross:before,.interior-window-cross:after{
-  content:"";position:absolute;background:rgba(104,76,51,.82)
-}
-.interior-window:before{left:48%;top:0;bottom:0;width:5px}
-.interior-window:after{left:0;right:0;top:48%;height:5px}
-.interior-shelf{
-  left:470px;bottom:34px;width:220px;height:60px;
-  background:rgba(126,84,51,.95);border:3px solid rgba(86,58,39,.68);
-  box-shadow:0 6px 0 rgba(55,39,27,.12)
-}
-.interior-shelf:before,.interior-shelf:after{
-  content:"";position:absolute;bottom:-58px;width:12px;height:58px;background:rgba(108,72,46,.92)
-}
-.interior-shelf:before{left:18%}.interior-shelf:after{right:18%}
-
-/* 12m x 6m apartment, 3m floor-to-floor. The staircase is a real switchback:
-   lower flight rises right to the half landing; upper flight rises left to floor 2. */
-.interior-staircase{
-  left:768px;bottom:0;width:384px;height:384px;overflow:visible;
-}
-.interior-stair-run{
-  position:absolute;width:320px;height:192px;
-  filter:drop-shadow(6px 7px 0 rgba(50,36,27,.13));
-}
-.interior-stair-run-lower{
-  left:0;bottom:0;
-  clip-path:polygon(0 100%,100% 0,100% 100%);
-  background:repeating-linear-gradient(to top,rgba(202,165,111,.98) 0 25px,rgba(113,78,52,.96) 25px 30px);
-}
-.interior-stair-run-upper{
-  left:0;bottom:192px;
-  clip-path:polygon(0 0,0 100%,100% 100%);
-  background:repeating-linear-gradient(to top,rgba(202,165,111,.98) 0 25px,rgba(113,78,52,.96) 25px 30px);
-}
-.interior-stair-run:before{
-  content:"";position:absolute;inset:0;
-  background:repeating-linear-gradient(90deg,transparent 0 32px,rgba(102,71,48,.28) 32px 36px);
-}
-.interior-stair-landing{
-  position:absolute;left:320px;bottom:176px;width:64px;height:32px;
-  background:rgba(188,146,94,.98);border:4px solid rgba(91,61,43,.82);
-  box-shadow:0 5px 0 rgba(52,37,27,.12)
-}
-.interior-stair-rail{
-  position:absolute;height:10px;border-radius:8px;background:rgba(91,61,43,.96);
-  box-shadow:0 4px 0 rgba(52,37,27,.12)
-}
-.interior-stair-rail-lower{
-  left:5px;bottom:182px;width:372px;transform-origin:0 50%;transform:rotate(-30.96deg)
-}
-.interior-stair-rail-upper{
-  left:5px;top:5px;width:372px;transform-origin:0 50%;transform:rotate(30.96deg)
-}
-.interior-stair-rail-lower:before,.interior-stair-rail-lower:after,
-.interior-stair-rail-upper:before,.interior-stair-rail-upper:after{
-  content:"";position:absolute;width:9px;height:72px;background:rgba(91,61,43,.94)
-}
-.interior-stair-rail-lower:before,.interior-stair-rail-upper:before{left:70px;top:-4px}
-.interior-stair-rail-lower:after,.interior-stair-rail-upper:after{right:80px;top:-4px}
-
-.interior-exit-door{
-  right:auto;bottom:0;width:128px;height:288px;translate:-50% 0;
-  background:rgba(107,76,53,.96);border:6px solid rgba(72,51,37,.82);
-  box-shadow:5px 7px 0 rgba(46,34,25,.14),inset 0 0 0 4px rgba(219,185,135,.08)
-}
-.interior-door-handle{
-  position:absolute;right:14%;top:52%;width:10px;height:10px;border-radius:50%;background:#d2b06d;border:2px solid #705234
-}
-.interior-door-label{
-  position:absolute;left:50%;top:-30px;transform:translateX(-50%);
-  padding:3px 8px;background:#dac18d;border:1px solid #755c3b;color:#54432f;font:800 11px serif
-}
-.interior-near-left{
-  left:72px;bottom:0;width:150px;height:220px;
-  background:rgba(91,68,49,.93);border:4px solid rgba(64,47,35,.72);
-  box-shadow:inset -8px 0 0 rgba(212,184,137,.10),6px 6px 0 rgba(46,34,25,.12);
-  clip-path:polygon(0 4%,88% 0,100% 9%,96% 100%,0 100%)
-}
-.interior-near-left:before{
-  content:"";position:absolute;left:32%;top:-31%;width:42%;height:34%;
-  background:rgba(73,102,68,.92);border:3px solid rgba(54,72,49,.64);
-  border-radius:52% 48% 45% 55%;transform:rotate(-7deg)
-}
-.interior-near-right{
-  right:70px;bottom:384px;width:170px;height:190px;
-  background:rgba(112,79,52,.94);border:4px solid rgba(72,51,37,.70);
-  box-shadow:inset 8px 0 0 rgba(226,194,142,.08),-6px 6px 0 rgba(46,34,25,.11);
-  clip-path:polygon(7% 2%,100% 0,100% 100%,0 100%,3% 11%)
-}
-.interior-near-rug{
-  left:330px;bottom:-8px;width:330px;height:48px;
-  border-radius:48% 52% 44% 56%;
-  background:rgba(133,80,62,.74);border:3px solid rgba(89,60,46,.42);
-  box-shadow:inset 0 0 0 5px rgba(223,177,124,.10);transform:skewX(-7deg)
-}
-
-.stage.scene-interior.interior-stage-in .interior-floor{animation:interiorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
-.stage.scene-interior.interior-stage-in .interior-wall{animation:interiorRise .64s cubic-bezier(.14,.82,.22,1) 70ms both}
-.stage.scene-interior.interior-stage-in .interior-window{animation:interiorRise .54s cubic-bezier(.14,.82,.22,1) 155ms both}
-.stage.scene-interior.interior-stage-in .interior-shelf{animation:interiorRise .50s cubic-bezier(.14,.82,.22,1) 215ms both}
-.stage.scene-interior.interior-stage-in .interior-exit-door{animation:interiorRise .58s cubic-bezier(.14,.82,.22,1) 285ms both}
-.stage.scene-interior.interior-stage-in .interior-near-left{animation:interiorRise .56s cubic-bezier(.14,.82,.22,1) 250ms both}
-.stage.scene-interior.interior-stage-in .interior-near-rug{animation:interiorRise .50s cubic-bezier(.14,.82,.22,1) 315ms both}
-.stage.scene-interior.interior-stage-in .interior-near-right{animation:interiorRise .58s cubic-bezier(.14,.82,.22,1) 270ms both}
-
-.stage.scene-interior.interior-stage-out .interior-near-right{animation:interiorDrop .42s cubic-bezier(.55,.02,.86,.42) 0ms both}
-.stage.scene-interior.interior-stage-out .interior-near-rug{animation:interiorDrop .40s cubic-bezier(.55,.02,.86,.42) 30ms both}
-.stage.scene-interior.interior-stage-out .interior-near-left{animation:interiorDrop .44s cubic-bezier(.55,.02,.86,.42) 45ms both}
-.stage.scene-interior.interior-stage-out .interior-exit-door{animation:interiorDrop .46s cubic-bezier(.55,.02,.86,.42) 0ms both}
-.stage.scene-interior.interior-stage-out .interior-shelf{animation:interiorDrop .46s cubic-bezier(.55,.02,.86,.42) 55ms both}
-.stage.scene-interior.interior-stage-out .interior-window{animation:interiorDrop .48s cubic-bezier(.55,.02,.86,.42) 95ms both}
-.stage.scene-interior.interior-stage-out .interior-wall{animation:interiorDrop .56s cubic-bezier(.55,.02,.86,.42) 135ms both}
-.stage.scene-interior.interior-stage-out .interior-floor{animation:interiorDrop .48s cubic-bezier(.55,.02,.86,.42) 205ms both}
-
-.stage.exterior-stage-in .paper-stage-floor{animation:exteriorRise .52s cubic-bezier(.14,.82,.22,1) 0ms both}
-.stage.exterior-stage-in .paper-wing{animation:exteriorRise .58s cubic-bezier(.14,.82,.22,1) 55ms both}
-.stage.exterior-stage-in .midground-building-layer{animation:exteriorRiseLayer .66s cubic-bezier(.14,.82,.22,1) 115ms both}
-.stage.exterior-stage-in .map-layer,
-.stage.exterior-stage-in .entity-layer{animation:exteriorRiseLayer .54s cubic-bezier(.14,.82,.22,1) 190ms both}
-.stage.exterior-stage-in .paper-cloud-a{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 105ms both}
-.stage.exterior-stage-in .paper-celestial{animation:paperHangEnter .60s cubic-bezier(.14,.82,.22,1) 165ms both}
-.stage.exterior-stage-in .paper-cloud-b{animation:paperHangEnter .56s cubic-bezier(.14,.82,.22,1) 225ms both}
-
-@keyframes interiorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
-@keyframes interiorDrop{from{transform:translate3d(0,0,0);opacity:1}to{transform:translate3d(0,115vh,0);opacity:.08}}
-@keyframes exteriorRise{from{transform:translate3d(0,115vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
-@keyframes exteriorRiseLayer{from{translate:0 115vh;opacity:.08}to{translate:0 0;opacity:1}}
-@keyframes paperHangEnter{from{transform:translate3d(0,-118vh,0);opacity:.08}to{transform:translate3d(0,0,0);opacity:1}}
-
-@media (prefers-reduced-motion:reduce){
-  .stage.paper-stage-out .paper-cloud,
-  .stage.paper-stage-out .paper-celestial,
-  .stage.paper-stage-out .midground-building-layer,
-  .stage.paper-stage-out .map-layer,
-  .stage.paper-stage-out .entity-layer,
-  .stage.paper-stage-out .paper-stage-floor,
-  .stage.scene-interior.interior-stage-in .paper-stage-piece,
-  .stage.scene-interior.interior-stage-out .paper-stage-piece,
-  .stage.exterior-stage-in .paper-stage-piece{animation-duration:.01ms!important;animation-delay:0ms!important}
-}
-
-
 /* ---------- R37 XY GAMEPLAY + Z SCENE DEPTH ----------
    Gameplay moves only in X/Y. Z is reserved for authored scene depth/parallax.
    The player remains a front-facing paper standee while the world moves opposite camera X/Y. */
-.stage:not(.scene-interior){
+.stage.production-clean-stage{
   --card-horizon-y:40%;
   --card-wall-depth:-1200px;
   perspective:900px!important;
@@ -2375,7 +2151,7 @@ button{cursor:pointer}
   background:#168bff!important;
 }
 /* Finite far wall. Its lower edge is exactly the far end of the ground plane. */
-.stage:not(.scene-interior) .paper-sky{
+.stage.production-clean-stage .paper-sky{
   display:block!important;
   position:absolute!important;
   z-index:0!important;
@@ -2397,12 +2173,12 @@ button{cursor:pointer}
   transition:none!important;
   will-change:background-position,height;
 }
-.stage:not(.scene-interior) .paper-sky::before,
-.stage:not(.scene-interior) .paper-sky::after{display:none!important}
+.stage.production-clean-stage .paper-sky::before,
+.stage.production-clean-stage .paper-sky::after{display:none!important}
 
 /* Ground and actors share PaperchalkCardCamera exactly. The floor is a flat
    screen-space host; dom-card-projection.js projects every 1 m grid line. */
-.stage:not(.scene-interior) .paper-stage-floor-camera{
+.stage.production-clean-stage .paper-stage-floor-camera{
   position:absolute!important;
   inset:0!important;
   z-index:2!important;
@@ -2411,7 +2187,7 @@ button{cursor:pointer}
   transform-style:flat;
   perspective:none!important;
 }
-.stage:not(.scene-interior) .paper-stage-floor{
+.stage.production-clean-stage .paper-stage-floor{
   display:block!important;
   position:absolute!important;
   inset:0!important;
@@ -2427,7 +2203,7 @@ button{cursor:pointer}
   box-shadow:none!important;
   filter:none!important;
 }
-.stage:not(.scene-interior) .card-ground-canvas{
+.stage.production-clean-stage .card-ground-canvas{
   position:absolute;
   inset:0;
   display:block;
@@ -2436,56 +2212,56 @@ button{cursor:pointer}
   pointer-events:none;
   contain:strict;
 }
-.stage:not(.scene-interior)::before{display:none!important}
+.stage.production-clean-stage::before{display:none!important}
 
 /* Outdoor dynamic standees are already projected by game.js, so their tracks
    stay in screen space rather than receiving the old side-scroller translation. */
-.stage:not(.scene-interior) .map-layer,
-.stage:not(.scene-interior) .entity-layer{
+.stage.production-clean-stage .map-layer,
+.stage.production-clean-stage .entity-layer{
   overflow:visible!important;
 }
-.stage:not(.scene-interior) .map-track,
-.stage:not(.scene-interior) .entity-track{
+.stage.production-clean-stage .map-track,
+.stage.production-clean-stage .entity-track{
   transform:none!important;
   left:0!important;
   top:0!important;
   width:100%!important;
   height:100%!important;
 }
-.stage:not(.scene-interior) .map-npc{
+.stage.production-clean-stage .map-npc{
   left:var(--npc-x,50vw)!important;
   bottom:var(--npc-bottom,var(--ground-screen-y,112px))!important;
   transform:translateX(-50%) scale(var(--world-scale,1))!important;
   transform-origin:50% 100%!important;
   will-change:left,bottom,transform;
 }
-.stage:not(.scene-interior) .enemy{
+.stage.production-clean-stage .enemy{
   left:var(--enemy-x,50vw)!important;
   bottom:var(--enemy-bottom,var(--ground-screen-y,112px))!important;
   transform:translateX(-50%) scale(var(--world-scale,1))!important;
   transform-origin:50% 100%!important;
   will-change:left,bottom,transform,opacity;
 }
-.stage:not(.scene-interior) .enemy.is-dead{
+.stage.production-clean-stage .enemy.is-dead{
   transform:translateX(-50%) scale(var(--world-scale,1)) rotate(84deg)!important;
 }
-.stage:not(.scene-interior) .actor{
+.stage.production-clean-stage .actor{
   z-index:40!important;
   transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%) scale(var(--camera-scale,1))!important;
   transform-origin:50% 100%!important;
 }
 /* Old decorative outdoor layers remain disabled in the geometry prototype. */
-.stage:not(.scene-interior) .paper-stars,
-.stage:not(.scene-interior) .paper-cloud,
-.stage:not(.scene-interior) .paper-celestial,
-.stage:not(.scene-interior) .paper-backdrop,
-.stage:not(.scene-interior) .paper-backdrop-next,
-.stage:not(.scene-interior) .midground-building-layer,
-.stage:not(.scene-interior) .rear-layer,
-.stage:not(.scene-interior) .front-layer,
-.stage:not(.scene-interior) .paper-wing,
-.stage:not(.scene-interior) .paper-footlights,
-.stage:not(.scene-interior) .day-night-tint{
+.stage.production-clean-stage .paper-stars,
+.stage.production-clean-stage .paper-cloud,
+.stage.production-clean-stage .paper-celestial,
+.stage.production-clean-stage .paper-backdrop,
+.stage.production-clean-stage .paper-backdrop-next,
+.stage.production-clean-stage .midground-building-layer,
+.stage.production-clean-stage .rear-layer,
+.stage.production-clean-stage .front-layer,
+.stage.production-clean-stage .paper-wing,
+.stage.production-clean-stage .paper-footlights,
+.stage.production-clean-stage .day-night-tint{
   display:none!important;
 }
 
@@ -2520,7 +2296,6 @@ button{cursor:pointer}
   will-change:left,bottom,transform;
   filter:saturate(.94) contrast(.98);
 }
-.stage.scene-interior .oldtown-building-layer{display:none!important}
 .stage.paper-stage-out .oldtown-building-layer{
   animation:paperDropExitLayer .62s cubic-bezier(.56,.04,.86,.47) 95ms both
 }

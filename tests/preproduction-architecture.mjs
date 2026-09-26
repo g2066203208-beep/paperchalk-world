@@ -12,6 +12,7 @@ const context=vm.createContext({
 context.window.window=context.window;
 
 for(const path of [
+  'src/core/ecs-runtime.js',
   'src/core/event-bus.js',
   'src/core/game-state.js',
   'src/core/save-runtime.js',
@@ -22,7 +23,7 @@ for(const path of [
   new vm.Script(read(path),{filename:path}).runInContext(context);
 }
 
-const {PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content,PaperchalkBuildingPools:buildingPools,PaperchalkBuildingPoolRuntime:buildingPoolRuntime}=context.window;
+const {PaperchalkECS,PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content,PaperchalkBuildingPools:buildingPools,PaperchalkBuildingPoolRuntime:buildingPoolRuntime}=context.window;
 
 let eventValue=0;
 const off=events.on('test:event',event=>{eventValue+=event.payload});
@@ -36,6 +37,25 @@ events.once('test:once',()=>onceCount++);
 events.emit('test:once');
 events.emit('test:once');
 assert.equal(onceCount,1,'once listener must fire exactly once');
+
+const guardedEvent=events.emit('real:type',{ok:true},{type:'spoof',sequence:-99,time:-1});
+assert.equal(guardedEvent.type,'real:type','event metadata must not override authoritative type');
+assert.ok(guardedEvent.sequence>0,'event metadata must not override sequence');
+assert.equal(guardedEvent.time,1234,'event metadata must not override timestamp');
+
+const ecsWorld=PaperchalkECS.createWorld();
+const ecsA=ecsWorld.create({tag:'a'});
+const ecsB=ecsWorld.create({tag:'b'});
+const ecsC=ecsWorld.create({tag:'c'});
+const visited=[];
+ecsWorld.each(['tag'],(entity,world)=>{
+  visited.push(entity);
+  if(entity===ecsA)world.remove(ecsA,'tag');
+});
+assert.deepEqual(visited,[ecsA,ecsB,ecsC],'structural removal during ECS iteration must not skip swapped entities');
+assert.equal(ecsWorld.has(ecsA,'tag'),false,'deferred component removal must flush after iteration');
+assert.equal(ecsWorld.has(ecsB,'tag'),true);
+assert.equal(ecsWorld.has(ecsC,'tag'),true);
 
 assert.equal(app.state,'boot');
 app.transition('menu');
