@@ -16,9 +16,9 @@ Paperchalk World uses a hybrid browser-game architecture rather than forcing eve
 
 ### 1. Core
 
-`src/core/ecs-runtime.js`, `event-bus.js`, `game-state.js`, `save-runtime.js`
+`src/core/ecs-runtime.js`, `event-bus.js`, `game-state.js`, `save-runtime.js`, `card-camera.js`
 
-The core layer is dependency-free. Sparse-set ECS stores dense component arrays plus sparse entity indices; deterministic events decouple domain side effects; the top-level app lifecycle is a finite-state machine; saves use schema migrations and a last-known-good backup.
+The core layer is dependency-free. Sparse-set ECS stores dense component arrays plus sparse entity indices; deterministic events decouple domain side effects; the top-level app lifecycle is a finite-state machine; saves use schema migrations and a last-known-good backup. `card-camera.js` is the single X/Z/Y perspective authority for the outdoor open-card stage.
 
 Combat enemies now expose granular `Transform`, `Health`, `Combat`, `AI`, `Patrol` and `Renderable` components while retaining a temporary compatibility object for unchanged renderer/debug APIs.
 
@@ -46,7 +46,7 @@ UI overlays and account/settings screens should **not** be converted into ECS en
 
 ### 4. Renderer boundary
 
-`window.PaperchalkRuntime` exposes a renderer-neutral reused frame state. DOM rendering remains the safe default. `src/renderers/pixi-dynamic-renderer.mjs` subscribes to the same state and can be selected for controlled GPU testing.
+`window.PaperchalkRuntime` exposes a renderer-neutral reused frame state including player/enemy Z depth. `src/renderers/dom-card-projection.js` and `src/renderers/pixi-dynamic-renderer.mjs` consume the same `PaperchalkCardCamera` projection so DOM and GPU cannot drift into different perspective rules. DOM remains the safe default; Pixi can be selected for controlled GPU testing.
 
 ### 5. Presentation
 
@@ -74,5 +74,6 @@ UI overlays and account/settings screens should **not** be converted into ECS en
 - [x] Add deterministic event bus and app state machine
 - [x] Add authored content registry + validation
 - [x] Add schema-v3 saves, v2 migration and last-known-good backup
+- [x] Add shared X/Z/Y card camera, infinite grid references and DOM/Pixi projection parity
 - [ ] Migrate NPCs, pickups and projectiles into ECS where simulation benefits
 - [ ] Extract input commands, scene traversal and inventory domains from the compatibility runtime

@@ -15,12 +15,13 @@ for(const path of [
   'src/core/event-bus.js',
   'src/core/game-state.js',
   'src/core/save-runtime.js',
+  'src/core/card-camera.js',
   'src/content/game-content.js'
 ]){
   new vm.Script(read(path),{filename:path}).runInContext(context);
 }
 
-const {PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkContent:content}=context.window;
+const {PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content}=context.window;
 
 let eventValue=0;
 const off=events.on('test:event',event=>{eventValue+=event.payload});
@@ -54,6 +55,12 @@ first.save.worldX=30;
 saveRuntime.write({key:'save',save:first.save,account:'tester',storage});
 assert.ok(memory.has('save.backup'),'write should keep last-known-good backup');
 
+const near=cardCamera.project({worldX:0,worldZ:0,playerX:0,playerZ:100,screenX:640,viewportHeight:720,groundY:112});
+const far=cardCamera.project({worldX:0,worldZ:0,playerX:0,playerZ:-100,screenX:640,viewportHeight:720,groundY:112});
+assert.ok(near.scale>far.scale,'card camera must make nearer world points larger');
+assert.ok(near.y>far.y,'card camera must move nearer ground points lower on screen');
+assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
+
 const contentCheck=context.window.PaperchalkContentRuntime.validate(content);
 assert.equal(contentCheck.ok,true,contentCheck.errors.join('\n'));
 assert.equal(new Set(content.world.nodes.map(x=>x.id)).size,content.world.nodes.length);
@@ -65,6 +72,7 @@ const workflow=read('.github/workflows/core-regression.yml');
 assert.ok(html.indexOf('event-bus.js')<html.indexOf('game.js'),'event bus must load before game');
 assert.ok(html.indexOf('game-state.js')<html.indexOf('game.js'),'state machine must load before game');
 assert.ok(html.indexOf('save-runtime.js')<html.indexOf('game.js'),'save runtime must load before game');
+assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera must load before game');
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');
 for(const component of ['transform','health','combat','ai','patrol','renderable']){

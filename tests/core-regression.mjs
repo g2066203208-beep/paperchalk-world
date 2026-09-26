@@ -120,7 +120,7 @@ try{
     groundY:Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y'))||null,
     roadDisplay:getComputedStyle(document.querySelector('.road-layer')).display
   }));
-  check('Clean stage keeps only an invisible physics ground',
+  check('Card stage keeps legacy road hidden while the perspective ground anchor remains valid',
     cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
     JSON.stringify(cleanGround));
 
@@ -186,6 +186,63 @@ try{
     walking.player.action==='walk'&&walking.state==='walk'&&!walking.left&&walking.sourceFacing==='-1'&&
     walking.src.includes('/assets/player/runtime/walk.webp'),
     JSON.stringify(walking));
+
+  // Full X/Z/Y card camera: W moves into world depth while the player remains
+  // fixed on screen. A fixed world point must grow and move downward as it
+  // becomes closer to the camera, proving this is projection rather than a
+  // decorative skewed grid.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:'',z:0}));
+  await page.waitForTimeout(100);
+  const depthBefore=await page.evaluate(()=>{
+    const actor=document.querySelector('.actor').getBoundingClientRect();
+    const world=document.getElementById('world');
+    return {
+      player:window.PaperchalkCombat.player,
+      point:window.PaperchalkMap.project(760,0,0),
+      gridZ:world.style.getPropertyValue('--card-grid-z'),
+      wallY:world.style.getPropertyValue('--card-wall-y'),
+      actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
+    };
+  });
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(460);
+  await page.keyboard.up('KeyW');
+  await page.waitForTimeout(90);
+  const depthAfter=await page.evaluate(()=>{
+    const actor=document.querySelector('.actor').getBoundingClientRect();
+    const world=document.getElementById('world');
+    return {
+      player:window.PaperchalkCombat.player,
+      point:window.PaperchalkMap.project(760,0,0),
+      gridZ:world.style.getPropertyValue('--card-grid-z'),
+      wallY:world.style.getPropertyValue('--card-wall-y'),
+      actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
+    };
+  });
+  check('Forward input changes real world Z and both infinite reference grids',
+    depthAfter.player.z>depthBefore.player.z+45&&
+    depthAfter.gridZ!==depthBefore.gridZ&&depthAfter.wallY!==depthBefore.wallY,
+    JSON.stringify({depthBefore,depthAfter}));
+  check('Depth movement changes projected scale and screen Y of a fixed world point',
+    depthAfter.point.scale>depthBefore.point.scale+.04&&
+    depthAfter.point.y>depthBefore.point.y+8,
+    JSON.stringify({before:depthBefore.point,after:depthAfter.point}));
+  check('Front-facing camera keeps the protagonist fixed while moving in depth',
+    Math.abs(depthAfter.actor.left-depthBefore.actor.left)<1&&
+    Math.abs(depthAfter.actor.top-depthBefore.actor.top)<1&&
+    Math.abs(depthAfter.actor.width-depthBefore.actor.width)<1&&
+    Math.abs(depthAfter.actor.height-depthBefore.actor.height)<1,
+    JSON.stringify({before:depthBefore.actor,after:depthAfter.actor}));
+
+  // S reverses the same depth axis instead of crouching outdoors.
+  const zBeforeBack=depthAfter.player.z;
+  await page.keyboard.down('KeyS');
+  await page.waitForTimeout(300);
+  await page.keyboard.up('KeyS');
+  await page.waitForTimeout(70);
+  const zAfterBack=await page.evaluate(()=>window.PaperchalkCombat.player.z);
+  check('Backward input reverses world Z outdoors',zAfterBack<zBeforeBack-25,
+    JSON.stringify({zBeforeBack,zAfterBack}));
 
   // Restore the original regression position before checking far-enemy sleep radius.
   await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:''}));
@@ -390,7 +447,7 @@ try{
     window.PaperchalkMap.teleport(1060,{notice:''});
   });
   await page.keyboard.down('KeyD');
-  await page.waitForTimeout(550);
+  await page.waitForTimeout(800);
   await page.keyboard.up('KeyD');
   await page.waitForTimeout(80);
   const unobstructed=await state(page);
@@ -724,14 +781,15 @@ try{
       cameraX:snap.camera.x,
       visualOriginX:snap.camera.visualOriginX,
       mapTransformX:matrix.m41,
-      expectedMapTransformX:-(snap.camera.x-snap.camera.visualOriginX)
+      projectedPlayerX:window.PaperchalkMap.project(snap.player.x,snap.player.z||0,0).x
     };
   });
   check('Exterior world reveals with its doorway bound to the player anchor',
     Math.abs(exteriorReveal.anchorError)<1,
     JSON.stringify(exteriorReveal));
-  check('Exterior reveal keeps the live camera X transform during stage animation',
-    Math.abs(exteriorReveal.mapTransformX-exteriorReveal.expectedMapTransformX)<1,
+  check('Exterior reveal uses screen-space track plus live per-entity projection',
+    Math.abs(exteriorReveal.mapTransformX)<1&&
+    Math.abs(exteriorReveal.projectedPlayerX-exteriorReveal.playerX)<1,
     JSON.stringify(exteriorReveal));
 
   await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
@@ -872,13 +930,21 @@ try{
   const moved=await state(page);
   check('Movement works',moved.worldX>0||moved.actorX>s.actorX,JSON.stringify(moved));
   check('World time advances',moved.worldMinutes>1,'worldMinutes='+moved.worldMinutes);
-  const entityMapSync=await page.evaluate(()=>({
-    worldX:window.eval('worldX'),
-    transform:document.getElementById('entityTrack').style.transform
-  }));
-  const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]);
-  check('World entity track scrolls with map coordinates',
-    Number.isFinite(entityTranslateX)&&Math.abs(entityTranslateX+entityMapSync.worldX)<0.5,
+  const entityMapSync=await page.evaluate(()=>{
+    const npc=window.PaperchalkMap.npcs.find(n=>n.id==='npc-phone-girl');
+    const projected=window.PaperchalkMap.project(npc.x,npc.z||0,0);
+    const npcEl=document.querySelector('[data-npc-id="npc-phone-girl"]');
+    return {
+      transform:document.getElementById('entityTrack').style.transform,
+      projectedX:projected.x,
+      domX:Number.parseFloat(npcEl?.style.getPropertyValue('--npc-x'))||0,
+      display:getComputedStyle(npcEl).display
+    };
+  });
+  const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]||0);
+  check('World tracks stay screen-space while visible entities receive perspective projection',
+    Math.abs(entityTranslateX)<0.5&&entityMapSync.display!=='none'&&
+    Math.abs(entityMapSync.domX-entityMapSync.projectedX)<1,
     JSON.stringify({...entityMapSync,entityTranslateX}));
 
   const compositorPlayer=await page.evaluate(()=>({

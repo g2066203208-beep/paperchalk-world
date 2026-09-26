@@ -2304,23 +2304,125 @@ button{cursor:pointer}
 }
 
 
-/* ---------- R35 OPEN-GREETING-CARD PERSPECTIVE PROTOTYPE ----------
-   Pure geometry test: vertical blue back card + horizontal green 1m grid card.
-   128 px = 1 m remains the authored world scale. Existing stage art is preserved
-   above this block and can be restored by removing this prototype override. */
+/* ---------- R36 FULL CARD CAMERA ----------
+   Outdoor world uses one perspective camera:
+   X = left/right, Z = forward/back on the ground, Y = elevation/jump.
+   The player remains a front-facing paper standee while world entities are projected. */
 .stage:not(.scene-interior){
-  --card-horizon-y:52%;
+  --card-horizon-y:40%;
+  --card-wall-depth:-1200px;
   perspective:900px!important;
-  perspective-origin:50% 46%!important;
-  background:#168bff!important;
+  perspective-origin:50% 40%!important;
   transform-style:preserve-3d;
-}
-.stage:not(.scene-interior) .paper-sky{
-  inset:0!important;
   background:#168bff!important;
+}
+/* Infinite vertical coordinate wall, pushed far behind the player. */
+.stage:not(.scene-interior) .paper-sky{
+  display:block!important;
+  position:absolute!important;
+  z-index:0!important;
+  left:-70%!important;
+  top:-70%!important;
+  width:240%!important;
+  height:240%!important;
+  inset:auto!important;
+  overflow:visible!important;
+  transform-origin:50% 50%!important;
+  transform:translate3d(0,0,var(--card-wall-depth)) scale(2.38)!important;
+  background-color:#168bff!important;
+  background-image:
+    linear-gradient(rgba(224,247,255,.34) 2px,transparent 2px),
+    linear-gradient(90deg,rgba(224,247,255,.34) 2px,transparent 2px)!important;
+  background-repeat:repeat!important;
+  background-size:128px 128px!important;
+  background-position:var(--card-wall-x,0px) var(--card-wall-y,0px)!important;
+  filter:none!important;
   transition:none!important;
+  will-change:background-position;
+}
+.stage:not(.scene-interior) .paper-sky::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(rgba(255,255,255,.08),rgba(0,64,132,.08)),
+    repeating-linear-gradient(0deg,transparent 0 639px,rgba(255,255,255,.42) 639px 642px),
+    repeating-linear-gradient(90deg,transparent 0 639px,rgba(255,255,255,.42) 639px 642px);
 }
 .stage:not(.scene-interior) .paper-sky::after{display:none!important}
+
+/* Infinite horizontal 1 m grid. The 3D transform supplies real foreshortening;
+   camera X/Z offsets move the texture in world space. */
+.stage:not(.scene-interior) .paper-stage-floor{
+  display:block!important;
+  position:absolute!important;
+  z-index:2!important;
+  left:-75vw!important;
+  right:auto!important;
+  top:var(--card-horizon-y)!important;
+  bottom:auto!important;
+  width:250vw!important;
+  height:260vh!important;
+  opacity:1!important;
+  pointer-events:none!important;
+  transform-origin:50% 0!important;
+  transform:rotateX(68deg)!important;
+  translate:0 0!important;
+  backface-visibility:visible;
+  background-color:#2f9e44!important;
+  background-image:url("../assets/debug/green-grid-1m.svg")!important;
+  background-repeat:repeat!important;
+  background-size:128px 128px!important;
+  background-position:var(--card-grid-x,0px) var(--card-grid-z,0px)!important;
+  border-top:4px solid rgba(4,66,102,.90)!important;
+  box-shadow:0 -7px 0 rgba(13,89,142,.22)!important;
+  filter:none!important;
+  will-change:background-position,transform;
+}
+.stage:not(.scene-interior)::before{
+  top:calc(var(--card-horizon-y) - 2px)!important;
+  height:4px!important;
+  background:rgba(5,66,108,.90)!important;
+  box-shadow:0 2px 0 rgba(255,255,255,.20)!important;
+}
+
+/* Outdoor dynamic standees are already projected by game.js, so their tracks
+   stay in screen space rather than receiving the old side-scroller translation. */
+.stage:not(.scene-interior) .map-layer,
+.stage:not(.scene-interior) .entity-layer{
+  overflow:visible!important;
+}
+.stage:not(.scene-interior) .map-track,
+.stage:not(.scene-interior) .entity-track{
+  transform:none!important;
+  left:0!important;
+  top:0!important;
+  width:100%!important;
+  height:100%!important;
+}
+.stage:not(.scene-interior) .map-npc{
+  left:var(--npc-x,50vw)!important;
+  bottom:var(--npc-bottom,var(--ground-screen-y,112px))!important;
+  transform:translateX(-50%) scale(var(--world-scale,1))!important;
+  transform-origin:50% 100%!important;
+  will-change:left,bottom,transform;
+}
+.stage:not(.scene-interior) .enemy{
+  left:var(--enemy-x,50vw)!important;
+  bottom:var(--enemy-bottom,var(--ground-screen-y,112px))!important;
+  transform:translateX(-50%) scale(var(--world-scale,1))!important;
+  transform-origin:50% 100%!important;
+  will-change:left,bottom,transform,opacity;
+}
+.stage:not(.scene-interior) .enemy.is-dead{
+  transform:translateX(-50%) scale(var(--world-scale,1)) rotate(84deg)!important;
+}
+.stage:not(.scene-interior) .actor{
+  z-index:40!important;
+  transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%)!important;
+}
+/* Old decorative outdoor layers remain disabled in the geometry prototype. */
 .stage:not(.scene-interior) .paper-stars,
 .stage:not(.scene-interior) .paper-cloud,
 .stage:not(.scene-interior) .paper-celestial,
@@ -2334,54 +2436,3 @@ button{cursor:pointer}
 .stage:not(.scene-interior) .day-night-tint{
   display:none!important;
 }
-.stage:not(.scene-interior) .paper-stage-floor{
-  display:block!important;
-  position:absolute!important;
-  z-index:2!important;
-  left:-35%!important;
-  right:auto!important;
-  top:var(--card-horizon-y)!important;
-  bottom:auto!important;
-  width:170%!important;
-  height:92vh!important;
-  opacity:1!important;
-  pointer-events:none!important;
-  transform-origin:50% 0!important;
-  transform:rotateX(68deg) translateZ(0)!important;
-  translate:0 0!important;
-  backface-visibility:visible;
-  background-color:#2f9e44!important;
-  background-image:url("../assets/debug/green-grid-1m.svg")!important;
-  background-repeat:repeat!important;
-  background-size:128px 128px!important;
-  background-position:var(--card-grid-x,0px) 0!important;
-  border-top:4px solid rgba(4,66,102,.88)!important;
-  box-shadow:0 -8px 0 rgba(13,89,142,.24),0 10px 26px rgba(0,0,0,.10)!important;
-  filter:none!important;
-  will-change:background-position,transform;
-}
-/* Fold/hinge between the vertical and horizontal cards. */
-.stage:not(.scene-interior)::before{
-  content:"";
-  position:absolute;
-  z-index:3;
-  left:0;right:0;
-  top:calc(var(--card-horizon-y) - 2px);
-  height:4px;
-  pointer-events:none;
-  background:rgba(7,77,119,.78);
-  box-shadow:0 2px 0 rgba(255,255,255,.18);
-}
-/* Keep all standees upright on the screen plane while the ground alone tilts in 3D. */
-.stage:not(.scene-interior) .actor,
-.stage:not(.scene-interior) .map-layer,
-.stage:not(.scene-interior) .entity-layer,
-.stage:not(.scene-interior) .pixi-entity-layer{
-  transform-style:flat;
-}
-.stage:not(.scene-interior) .paper-clock{
-  color:#fff!important;
-  background:rgba(0,66,118,.55)!important;
-  border-color:rgba(255,255,255,.35)!important;
-}
-.stage:not(.scene-interior).perf-low .paper-stage-floor{filter:none!important}
