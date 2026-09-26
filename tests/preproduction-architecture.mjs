@@ -76,6 +76,7 @@ assert.equal(buildingPools.realWorld.oldTown.z,600,'old-town pool must remain au
 
 const html=read('index.html');
 const game=read('src/game.js');
+const domCardRenderer=read('src/renderers/dom-card-projection.js');
 const workflow=read('.github/workflows/core-regression.yml');
 assert.ok(html.indexOf('event-bus.js')<html.indexOf('game.js'),'event bus must load before game');
 assert.ok(html.indexOf('game-state.js')<html.indexOf('game.js'),'state machine must load before game');
@@ -84,7 +85,9 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="oldtown-r38"/,'old-town build cache key missing');
+assert.match(html,/paperchalk-build" content="ground-lock-r39"/,'ground-lock build cache key missing');
+assert.ok(html.includes('id="cardGroundGrid"'),'shared-camera ground grid host missing');
+assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');
 for(const component of ['transform','health','combat','ai','patrol','renderable']){
   assert.ok(game.includes(component+':e.'+component),'combat ECS must expose granular '+component+' component');
