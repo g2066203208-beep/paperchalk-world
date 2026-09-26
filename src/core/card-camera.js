@@ -2,7 +2,7 @@
 (function(global){
 'use strict';
 
-const FAR_GROUND_DEPTH=1200;
+const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
 const config=Object.freeze({
   gridSize:128,
   baseDepth:900,
@@ -15,15 +15,15 @@ const config=Object.freeze({
   farGroundDepth:FAR_GROUND_DEPTH,
   wallDepth:FAR_GROUND_DEPTH,
   sceneGuides:Object.freeze([
-    Object.freeze({id:'near-front',label:'NF',band:'near',kind:'sub',z:-160}),
-    Object.freeze({id:'near-main', label:'N', band:'near',kind:'main',z:-120}),
-    Object.freeze({id:'near-back', label:'NB',band:'near',kind:'sub',z:-80}),
-    Object.freeze({id:'mid-front', label:'MF',band:'mid', kind:'sub',z:-40}),
+    Object.freeze({id:'near-front',label:'NF',band:'near',kind:'sub',z:-320}),
+    Object.freeze({id:'near-main', label:'N', band:'near',kind:'main',z:-256}),
+    Object.freeze({id:'near-back', label:'NB',band:'near',kind:'sub',z:-192}),
+    Object.freeze({id:'mid-front', label:'MF',band:'mid', kind:'sub',z:-64}),
     Object.freeze({id:'mid-main',  label:'M', band:'mid', kind:'main',z:0}),
-    Object.freeze({id:'mid-back',  label:'MB',band:'mid', kind:'sub',z:40}),
-    Object.freeze({id:'far-front', label:'FF',band:'far', kind:'sub',z:400}),
-    Object.freeze({id:'far-main',  label:'F', band:'far', kind:'main',z:600}),
-    Object.freeze({id:'far-back',  label:'FB',band:'far', kind:'sub',z:800}),
+    Object.freeze({id:'mid-back',  label:'MB',band:'mid', kind:'sub',z:64}),
+    Object.freeze({id:'far-front', label:'FF',band:'far', kind:'sub',z:512}),
+    Object.freeze({id:'far-main',  label:'F', band:'far', kind:'main',z:640}),
+    Object.freeze({id:'far-back',  label:'FB',band:'far', kind:'sub',z:768}),
     Object.freeze({id:'horizon',   label:'H', band:'horizon',kind:'horizon',z:FAR_GROUND_DEPTH})
   ])
 });
