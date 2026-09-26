@@ -1498,8 +1498,6 @@ function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
-  const alive=enemies.filter(e=>e.alive).length;
-  const nearest=nearestLivingEnemy();
   debugStatus.innerHTML=
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
     '<span>时间 <b>'+formatWorldClock()+' '+worldTimeName()+'</b></span>'+
@@ -1507,8 +1505,6 @@ function updateDebugStatus(){
     '<span>Camera <b>'+worldX.toFixed(1)+'</b></span>'+
     '<span>脚底Y <b>'+playerY.toFixed(1)+'</b></span>'+
     '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
-    '<span>敌人 <b>'+alive+' / '+enemies.length+'</b></span>'+
-    '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
 
@@ -1525,9 +1521,9 @@ function updateDebugStatus(){
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
   debugRangeBtn.textContent='攻击范围：'+(showAttackRange?'开':'关');
-  debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
+  if(debugAiBtn)debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
-  debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
+  if(debugSpawnBtn)debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
   if(debugFlightBtn){debugFlightBtn.textContent='自由飞行：'+(debugFlightMode?'开':'关');debugFlightBtn.classList.toggle('is-active',debugFlightMode);}
   const renderer=window.PaperchalkRenderer;
