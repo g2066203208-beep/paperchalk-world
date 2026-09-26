@@ -4,6 +4,7 @@ const WORLD_ZONE_COUNT=20;
 const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT; // 120000px continuous world, no region loading screens
 const MAP_SPAWN_X=460;
 const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
+const LOCAL_TEST_FIXTURES=location.hostname==='127.0.0.1'||location.hostname==='localhost';
 let MAP_GROUND_SCREEN_Y=112;
 let VIEW_W=1280,VIEW_H=720;
 const PLAYER_BODY=Object.freeze({halfW:27,standH:108,crouchH:78});
@@ -493,8 +494,7 @@ midgroundApartment?.addEventListener('error',()=>{
 },{once:true});
 function updateMidgroundApartmentVisibility(sceneryX,force=false){
   if(!midgroundApartment)return;
-  midgroundApartment.hidden=true;
-  return;
+  if(!LOCAL_TEST_FIXTURES){midgroundApartment.hidden=true;return;}
   const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
   const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
     &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
@@ -512,7 +512,7 @@ function apartmentDoorScreenY(){
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
-  if(true)return false; // prototype apartment removed from production world
+  if(!LOCAL_TEST_FIXTURES)return false; // prototype apartment exists only in localhost regression fixtures
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
@@ -730,7 +730,7 @@ function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
 function enterApartment(){
-  return false; // prototype interior removed from production world
+  if(!LOCAL_TEST_FIXTURES)return false; // production world has no prototype interior
   if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
