@@ -1018,10 +1018,6 @@ const debugAiBtn=document.getElementById('debugAiBtn');
 const debugMapColliderBtn=document.getElementById('debugMapColliderBtn');
 const debugSpawnBtn=document.getElementById('debugSpawnBtn');
 const debugCameraBtn=document.getElementById('debugCameraBtn');
-const debugCameraTilt=document.getElementById('debugCameraTilt');
-const debugCameraTiltValue=document.getElementById('debugCameraTiltValue');
-const debugCameraHorizonValue=document.getElementById('debugCameraHorizonValue');
-const debugCameraTiltReset=document.getElementById('debugCameraTiltReset');
 const debugFlightBtn=document.getElementById('debugFlightBtn');
 const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
 const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
@@ -1495,28 +1491,6 @@ function sampleFramePerf(now){
 }
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
-const DEBUG_CAMERA_TILT_KEY='paperchalk.debug.cameraTilt.v1',DEBUG_CAMERA_HORIZON_MAX=.46,DEBUG_CAMERA_HORIZON_MIN=.06;
-function cameraTiltToHorizonRatio(v){return DEBUG_CAMERA_HORIZON_MAX+(DEBUG_CAMERA_HORIZON_MIN-DEBUG_CAMERA_HORIZON_MAX)*clamp(Number(v)||0,0,100)/100}
-function currentCameraTiltValue(){const r=clamp(CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y),DEBUG_CAMERA_HORIZON_MIN,DEBUG_CAMERA_HORIZON_MAX);return Math.round((DEBUG_CAMERA_HORIZON_MAX-r)/(DEBUG_CAMERA_HORIZON_MAX-DEBUG_CAMERA_HORIZON_MIN)*100)}
-function updateCameraTiltControls(){
-  if(!debugCameraTilt)return;
-  const t=currentCameraTiltValue(),r=CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y);
-  debugCameraTilt.value=t;debugCameraTiltValue.textContent=t+(CARD_CAMERA.manualHorizonRatio===null?' 自动':'');debugCameraHorizonValue.textContent='地平线 '+(r*100).toFixed(1)+'%';
-}
-function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
-  const t=Math.round(clamp(Number(v)||0,0,100));CARD_CAMERA.setHorizonRatio(cameraTiltToHorizonRatio(t));
-  if(persist)try{localStorage.setItem(DEBUG_CAMERA_TILT_KEY,t)}catch(_){}
-  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return t;
-}
-function resetDebugCameraTilt({sync=true}={}){
-  CARD_CAMERA.clearHorizonRatio();try{localStorage.removeItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return currentCameraTiltValue();
-}
-function loadDebugCameraTilt(){
-  let v=null;try{v=localStorage.getItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  const n=Number(v);if(v!==null&&Number.isFinite(n))applyDebugCameraTilt(n,{persist:false,sync:false});else updateCameraTiltControls();
-}
-
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
   const alive=enemies.filter(e=>e.alive).length;
@@ -1570,7 +1544,7 @@ function openDebugPanel(){
   debugToggleBtn.setAttribute('aria-expanded','true');
   updateDebugStatus();
   updateCombatDebugButtons();
-  updateCameraTiltControls();
+  window.PaperchalkDebugCamera?.sync?.();
   renderCombatDebug();
   return true;
 }
@@ -1755,17 +1729,6 @@ function executeDebugCommand(command){
 }
 debugToggleBtn.addEventListener('click',toggleDebugPanel);
 debugCloseBtn.addEventListener('click',()=>closeDebugPanel());
-debugCameraTilt?.addEventListener('input',()=>{
-  const tilt=applyDebugCameraTilt(debugCameraTilt.value);
-  if(debugIsOpen())updateDebugStatus();
-  debugCameraTiltValue.textContent=String(tilt);
-});
-debugCameraTiltReset?.addEventListener('click',()=>{
-  const tilt=resetDebugCameraTilt();
-  writeDebugOutput('摄像机倾角 -> 自动（当前 '+tilt+'）');
-  updateDebugStatus();
-});
-loadDebugCameraTilt();
 debugCommandForm.addEventListener('submit',e=>{
   e.preventDefault();
   executeDebugCommand(debugCommandInput.value);
@@ -1887,7 +1850,8 @@ window.PaperchalkDebug={
   run:executeDebugCommand,
   get flight(){return debugFlightMode},
   setFlight(value){return setDebugFlightMode(value)},
-  setCameraTilt:applyDebugCameraTilt,
+  setCameraTilt(value){return window.PaperchalkDebugCamera?.setAngle(value)},
+  setCameraHeight(value){return window.PaperchalkDebugCamera?.setHeight(value)},
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
@@ -2811,7 +2775,8 @@ function refreshRoadW(){
   if(w>0){roadW=Math.max(1,w-1);ensureRoadTiles()}
   updateCamera();
   actorEl.style.setProperty('--actor-x',actorX.toFixed(2)+'px');
-  actorEl.style.setProperty('--actor-y',(-MAP_GROUND_SCREEN_Y).toFixed(2)+'px');
+  const gy=CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}).y;
+  actorEl.style.setProperty('--actor-y',(gy-VIEW_H).toFixed(2)+'px');
   renderCombatDebug();
 }
 let viewportRebuildTimer=0;
@@ -2928,7 +2893,8 @@ function renderWorld(force=false){
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
-  const actorBottom=MAP_GROUND_SCREEN_Y.toFixed(2)+'px';
+  const groundY=sceneLocation==='outside'?CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}).y:VIEW_H-MAP_GROUND_SCREEN_Y;
+  const actorBottom=(VIEW_H-groundY).toFixed(2)+'px';
   const actorAir=playerY.toFixed(2)+'px';
   if(!pixiDynamicActive()){
     if(force||renderCache.actorLeft!==actorLeft){

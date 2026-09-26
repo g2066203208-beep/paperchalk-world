@@ -1073,46 +1073,73 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
-  const tiltBefore=await page.evaluate(()=>({
-    value:Number(document.getElementById('debugCameraTilt')?.value),
-    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112),
-    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
+  const cameraBefore=await page.evaluate(()=>({
+    angle:Number(document.getElementById('debugCameraTilt')?.value),
+    height:Number(document.getElementById('debugCameraHeight')?.value),
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
-  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='20';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='5';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
-  const tilt20=await page.evaluate(()=>({
+  const angle5=await page.evaluate(()=>({
     farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
-    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112)
+    horizonY:window.PaperchalkCardCamera.resolveHorizonY(innerHeight,112)
   }));
-  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
-  const tiltAfter=await page.evaluate(()=>({
+  const angle35=await page.evaluate(()=>({
     value:Number(document.getElementById('debugCameraTilt')?.value),
-    manual:window.PaperchalkCardCamera.manualHorizonRatio,
-    stored:localStorage.getItem('paperchalk.debug.cameraTilt.v1'),
-    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112),
+    manual:window.PaperchalkCardCamera.manualTiltDegrees,
+    stored:localStorage.getItem('paperchalk.debug.cameraAngle.v2'),
+    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
+    horizonY:window.PaperchalkCardCamera.resolveHorizonY(innerHeight,112),
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
-    skyBottom:document.querySelector('.paper-sky')?.getBoundingClientRect().bottom,
-    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY)
-  }));
-  check('Debug camera tilt slider visibly moves the projected horizon immediately',
-    tiltAfter.value===80&&tiltAfter.stored==='80'&&tiltAfter.manual!==null&&
-    Math.abs(tilt20.farY-tiltAfter.farY)>40&&
-    Math.abs(tiltAfter.horizon-tilt20.horizon)>.15&&
-    tiltAfter.depths.join(',')===tiltBefore.depths.join(',')&&
-    Math.abs(tiltAfter.skyBottom-tiltAfter.farY)<1,
-    JSON.stringify({tiltBefore,tilt20,tiltAfter}));
-  await page.locator('#debugCameraTiltReset').click();
-  await page.waitForTimeout(80);
-  const tiltReset=await page.evaluate(()=>({
-    manual:window.PaperchalkCardCamera.manualHorizonRatio,
-    stored:localStorage.getItem('paperchalk.debug.cameraTilt.v1'),
     label:document.getElementById('debugCameraTiltValue')?.textContent
   }));
-  check('Debug camera tilt reset returns to automatic mode',
-    tiltReset.manual===null&&tiltReset.stored===null&&tiltReset.label.includes('自动'),
-    JSON.stringify(tiltReset));
+  check('Debug camera angle is real degrees and visibly changes perspective',
+    angle35.value===35&&angle35.manual===35&&angle35.stored==='35'&&angle35.label.includes('35.0°')&&
+    Math.abs(angle5.farY-angle35.farY)>90&&Math.abs(angle5.horizonY-angle35.horizonY)>300&&
+    angle35.depths.join(',')===cameraBefore.depths.join(','),
+    JSON.stringify({cameraBefore,angle5,angle35}));
+
+  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='10';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#debugCameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
+  const height3=await page.evaluate(()=>({
+    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    manual:window.PaperchalkCardCamera.manualCameraHeightMeters,
+    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom
+  }));
+  await page.locator('#debugCameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
+  const height45=await page.evaluate(()=>({
+    value:Number(document.getElementById('debugCameraHeight')?.value),
+    manual:window.PaperchalkCardCamera.manualCameraHeightMeters,
+    stored:localStorage.getItem('paperchalk.debug.cameraHeight.v1'),
+    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom,
+    label:document.getElementById('debugCameraHeightValue')?.textContent,
+    renderer:window.PaperchalkRenderer?.mode||'dom'
+  }));
+  check('Debug camera height uses meters and moves the shared ground/player framing',
+    height3.manual===3&&height45.value===4.5&&height45.manual===4.5&&height45.stored==='4.5'&&
+    Math.abs((height45.midY-height3.midY)-1.5*128)<1e-6&&height45.label.includes('4.5 m')&&
+    (height45.renderer!=='dom'||Math.abs(height45.actorBottom-height45.midY)<1),
+    JSON.stringify({height3,height45}));
+
+  await page.locator('#debugCameraTiltReset').click();
+  await page.waitForTimeout(80);
+  const cameraReset=await page.evaluate(()=>({
+    angle:window.PaperchalkCardCamera.manualTiltDegrees,
+    height:window.PaperchalkCardCamera.manualCameraHeightMeters,
+    angleStored:localStorage.getItem('paperchalk.debug.cameraAngle.v2'),
+    heightStored:localStorage.getItem('paperchalk.debug.cameraHeight.v1'),
+    angleLabel:document.getElementById('debugCameraTiltValue')?.textContent,
+    heightLabel:document.getElementById('debugCameraHeightValue')?.textContent
+  }));
+  check('Debug camera reset returns angle and height to automatic mode',
+    cameraReset.angle===null&&cameraReset.height===null&&cameraReset.angleStored===null&&cameraReset.heightStored===null&&
+    cameraReset.angleLabel.includes('自动')&&cameraReset.heightLabel.includes('自动'),
+    JSON.stringify(cameraReset));
 
   await page.locator('[data-debug-action="damage1"]').click();
   await page.waitForTimeout(80);

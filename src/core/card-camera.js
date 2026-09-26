@@ -1,110 +1,100 @@
-/* Shared X/Y gameplay camera with authored Z scene depth. DOM and Pixi consume this exact math. */
+/* Shared X/Y gameplay camera with authored Z scene depth. */
 (function(global){
 'use strict';
 
-const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
-let manualHorizonRatio=null;
-let tiltRevision=0;
-
+const FAR=1280;
+let manualHorizonRatio=null,manualTiltDegrees=null,manualCameraHeightPx=null,tiltRevision=0;
 const config=Object.freeze({
-  gridSize:128,
-  baseDepth:3840, // 30 m camera-to-mid plane at 128 px/m
-  nearMainDepth:-640,
-  nearMainScreenMargin:8, // responsive tilt target: near-main sits ~8px above viewport bottom
-  minDepth:96,
-  maxDepth:6400,
-  // The playable ground is finite in scene-depth: it ends exactly where the
-  // far sky wall meets the floor. Nothing behind this line needs ground grid.
-  groundNearDepth:-704, // -5.5 m, includes the near-front guide
-  farGroundDepth:FAR_GROUND_DEPTH,
-  wallDepth:FAR_GROUND_DEPTH,
+  gridSize:128,baseDepth:3840,verticalFovDegrees:60,
+  nearMainDepth:-640,nearMainScreenMargin:8,minDepth:96,maxDepth:6400,
+  groundNearDepth:-704,farGroundDepth:FAR,wallDepth:FAR,
   sceneGuides:Object.freeze([
     Object.freeze({id:'near-front',label:'NF',band:'near',kind:'sub',z:-704}),
-    Object.freeze({id:'near-main', label:'N', band:'near',kind:'main',z:-640}),
-    Object.freeze({id:'near-back', label:'NB',band:'near',kind:'sub',z:-576}),
-    Object.freeze({id:'mid-front', label:'MF',band:'mid', kind:'sub',z:-64}),
-    Object.freeze({id:'mid-main',  label:'M', band:'mid', kind:'main',z:0}),
-    Object.freeze({id:'mid-back',  label:'MB',band:'mid', kind:'sub',z:64}),
-    Object.freeze({id:'far-front', label:'FF',band:'far', kind:'sub',z:576}),
-    Object.freeze({id:'far-main',  label:'F', band:'far', kind:'main',z:640}),
-    Object.freeze({id:'far-back',  label:'FB',band:'far', kind:'sub',z:704}),
-    Object.freeze({id:'horizon',   label:'H', band:'horizon',kind:'horizon',z:FAR_GROUND_DEPTH})
+    Object.freeze({id:'near-main',label:'N',band:'near',kind:'main',z:-640}),
+    Object.freeze({id:'near-back',label:'NB',band:'near',kind:'sub',z:-576}),
+    Object.freeze({id:'mid-front',label:'MF',band:'mid',kind:'sub',z:-64}),
+    Object.freeze({id:'mid-main',label:'M',band:'mid',kind:'main',z:0}),
+    Object.freeze({id:'mid-back',label:'MB',band:'mid',kind:'sub',z:64}),
+    Object.freeze({id:'far-front',label:'FF',band:'far',kind:'sub',z:576}),
+    Object.freeze({id:'far-main',label:'F',band:'far',kind:'main',z:640}),
+    Object.freeze({id:'far-back',label:'FB',band:'far',kind:'sub',z:704}),
+    Object.freeze({id:'horizon',label:'H',band:'horizon',kind:'horizon',z:FAR})
   ])
 });
+const num=(v,d)=>Number.isFinite(Number(v))?Number(v):d;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-function resolveAutoHorizonY(viewportHeight=720,groundY=112){
-  const h=Number(viewportHeight)||720;
-  const g=Number(groundY)||112;
-  const playerFootY=h-g;
-  const nearScale=config.baseDepth/(config.baseDepth+config.nearMainDepth);
-  const targetNearY=h-config.nearMainScreenMargin;
-  // Solve targetNearY = horizonY + (playerFootY-horizonY)*nearScale.
-  // This changes only camera tilt / vanishing-line placement; world Z stays untouched.
-  return (targetNearY-nearScale*playerFootY)/(1-nearScale);
+function autoH(h=720,g=112){
+  h=num(h,720);g=num(g,112);
+  const foot=h-g,s=config.baseDepth/(config.baseDepth+config.nearMainDepth);
+  return (h-config.nearMainScreenMargin-s*foot)/(1-s);
 }
-function clampHorizonRatio(value){
-  const n=Number(value);
-  if(!Number.isFinite(n))return null;
-  return Math.max(.04,Math.min(.48,n));
+function verticalFocalLength(h=720){
+  h=num(h,720);
+  return h*.5/Math.tan(config.verticalFovDegrees*Math.PI/360);
 }
-function setHorizonRatio(value){
-  const next=clampHorizonRatio(value);
-  if(next===null)return false;
-  if(manualHorizonRatio!==null&&Math.abs(manualHorizonRatio-next)<1e-9)return true;
-  manualHorizonRatio=next;
-  tiltRevision++;
-  return true;
+function setHorizonRatio(v){
+  v=Number(v);if(!Number.isFinite(v))return false;
+  manualTiltDegrees=null;v=clamp(v,.04,.48);
+  if(manualHorizonRatio===v)return true;
+  manualHorizonRatio=v;tiltRevision++;return true;
 }
-function clearHorizonRatio(){
-  if(manualHorizonRatio===null)return;
-  manualHorizonRatio=null;
-  tiltRevision++;
+function clearHorizonRatio(){if(manualHorizonRatio!==null){manualHorizonRatio=null;tiltRevision++}}
+function setTiltDegrees(v){
+  v=Number(v);if(!Number.isFinite(v))return false;
+  manualHorizonRatio=null;v=clamp(v,0,45);
+  if(manualTiltDegrees===v)return true;
+  manualTiltDegrees=v;tiltRevision++;return true;
 }
-function resolveHorizonY(viewportHeight=720,groundY=112){
-  const h=Number(viewportHeight)||720;
+function clearTiltDegrees(){if(manualTiltDegrees!==null){manualTiltDegrees=null;tiltRevision++}}
+function setCameraHeightMeters(v){
+  v=Number(v);if(!Number.isFinite(v))return false;
+  v=clamp(v,1,10)*config.gridSize;
+  if(manualCameraHeightPx===v)return true;
+  manualCameraHeightPx=v;tiltRevision++;return true;
+}
+function clearCameraHeight(){if(manualCameraHeightPx!==null){manualCameraHeightPx=null;tiltRevision++}}
+function resolveHorizonY(h=720,g=112){
+  h=num(h,720);
+  if(manualTiltDegrees!==null)return h*.5-verticalFocalLength(h)*Math.tan(manualTiltDegrees*Math.PI/180);
   if(manualHorizonRatio!==null)return h*manualHorizonRatio;
-  return resolveAutoHorizonY(h,groundY);
+  return autoH(h,g);
 }
-function getHorizonRatio(viewportHeight=720,groundY=112){
-  const h=Number(viewportHeight)||720;
-  return resolveHorizonY(h,groundY)/h;
+function getHorizonRatio(h=720,g=112){h=num(h,720);return resolveHorizonY(h,g)/h}
+function getTiltDegrees(h=720,g=112){
+  if(manualTiltDegrees!==null)return manualTiltDegrees;
+  h=num(h,720);
+  return Math.atan((h*.5-resolveHorizonY(h,g))/verticalFocalLength(h))*180/Math.PI;
 }
+function resolveCameraHeight(h=720,g=112){
+  if(manualCameraHeightPx!==null)return manualCameraHeightPx;
+  h=num(h,720);g=num(g,112);
+  return h-g-resolveHorizonY(h,g);
+}
+function getCameraHeightMeters(h=720,g=112){return resolveCameraHeight(h,g)/config.gridSize}
 
-function project({
-  worldX=0,worldZ=0,worldY=0,
-  playerX=0,playerY=0,cameraZ=0,
-  screenX=0,viewportHeight=720,groundY=112
-}={}){
-  // Z is authored scene depth only. Normal gameplay never moves cameraZ.
-  const relativeZ=(Number(worldZ)||0)-(Number(cameraZ)||0);
-  const depth=config.baseDepth+relativeZ;
+function project({worldX=0,worldZ=0,worldY=0,playerX=0,playerY=0,cameraZ=0,screenX=0,viewportHeight=720,groundY=112}={}){
+  const z=num(worldZ,0)-num(cameraZ,0),depth=config.baseDepth+z;
   if(depth<=config.minDepth)return {visible:false,x:0,y:0,scale:0,depth};
-  const scale=config.baseDepth/depth;
-  const horizonY=resolveHorizonY(viewportHeight,groundY);
-  const playerFootY=(Number(viewportHeight)||720)-(Number(groundY)||0);
-  const cameraHeight=playerFootY-horizonY;
+  const scale=config.baseDepth/depth,h=resolveHorizonY(viewportHeight,groundY);
   return {
     visible:depth<config.maxDepth&&scale>.12&&scale<5,
-    x:(Number(screenX)||0)+((Number(worldX)||0)-(Number(playerX)||0))*scale,
-    y:horizonY+(cameraHeight+(Number(playerY)||0)-(Number(worldY)||0))*scale,
-    scale,
-    depth
+    x:num(screenX,0)+(num(worldX,0)-num(playerX,0))*scale,
+    y:h+(resolveCameraHeight(viewportHeight,groundY)+num(playerY,0)-num(worldY,0))*scale,
+    scale,depth
   };
 }
-
-function distance2D(ax=0,az=0,bx=0,bz=0){
-  return Math.hypot((Number(ax)||0)-(Number(bx)||0),(Number(az)||0)-(Number(bz)||0));
-}
-
-function wrap(value,size=config.gridSize){
-  const m=Math.max(1,Number(size)||config.gridSize);
-  const v=Number(value)||0;
-  return ((v%m)+m)%m;
-}
+function distance2D(ax=0,az=0,bx=0,bz=0){return Math.hypot(num(ax,0)-num(bx,0),num(az,0)-num(bz,0))}
+function wrap(value,size=config.gridSize){const m=Math.max(1,num(size,config.gridSize)),v=num(value,0);return ((v%m)+m)%m}
 
 global.PaperchalkCardCamera=Object.freeze({
-  config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,distance2D,wrap,
+  config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,
+  getTiltDegrees,setTiltDegrees,clearTiltDegrees,verticalFocalLength,
+  resolveCameraHeight,getCameraHeightMeters,setCameraHeightMeters,clearCameraHeight,
+  distance2D,wrap,
   get manualHorizonRatio(){return manualHorizonRatio},
+  get manualTiltDegrees(){return manualTiltDegrees},
+  get manualCameraHeightMeters(){return manualCameraHeightPx===null?null:manualCameraHeightPx/config.gridSize},
   get tiltRevision(){return tiltRevision}
 });
 })(window);
