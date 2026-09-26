@@ -152,6 +152,15 @@ function renderGroundGrid(frame){
   lastFarY=farY;
   ctx.fillStyle='#2f9e44';
   ctx.fillRect(0,Math.max(0,farY),v.width,Math.max(0,v.height-farY));
+  const debugGuides=world.classList.contains('show-camera-debug');
+  if(!debugGuides){
+    stats.depthLines=0;stats.worldLines=0;stats.sceneLines=0;stats.sceneMainLines=0;stats.sceneSubLines=0;stats.sceneGuideYs={};
+    stats.farDepth=farZ;stats.farY=farY;
+    groundCanvas.dataset.depthLineCount='0';groundCanvas.dataset.worldLineCount='0';groundCanvas.dataset.sceneLineCount='0';
+    groundCanvas.dataset.sceneMainCount='0';groundCanvas.dataset.sceneSubCount='0';groundCanvas.dataset.sceneGuideDepths='';
+    groundCanvas.dataset.farDepth=String(farZ);groundCanvas.dataset.farY=farY.toFixed(2);
+    return;
+  }
   ctx.save();
   ctx.beginPath();
   ctx.rect(0,Math.max(0,farY-5),v.width,Math.max(0,v.height-farY+10));
