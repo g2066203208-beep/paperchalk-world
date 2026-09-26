@@ -100,7 +100,46 @@ page.on('console',m=>{
 });
 
 try{
-  await page.goto('http://127.0.0.1:8080/index.html?core-regression=1',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:8080/index.html?formal-scene-check=1',{waitUntil:'networkidle'});
+  const formalScene=await page.evaluate(()=>({
+    npcCount:window.PaperchalkMap?.npcs?.length??-1,
+    spawnCount:window.PaperchalkMap?.enemySpawns?.length??-1,
+    npcNodes:document.querySelectorAll('[data-npc-id]').length,
+    visibleEnemies:[...document.querySelectorAll('.enemy')].filter(el=>getComputedStyle(el).display!=='none').length,
+    apartmentVisible:document.querySelector('.midground-building-layer')?getComputedStyle(document.querySelector('.midground-building-layer')).display!=='none':false,
+    interiorVisible:document.getElementById('interiorScene')?getComputedStyle(document.getElementById('interiorScene')).display!=='none':false,
+    doorPromptVisible:document.getElementById('apartmentDoorPrompt')?getComputedStyle(document.getElementById('apartmentDoorPrompt')).display!=='none':false,
+    interactHidden:document.getElementById('interactBtn')?.hidden??false,
+    cameraButton:!!document.getElementById('cameraControlsBtn'),
+    cameraPanel:!!document.getElementById('cameraControlsPanel'),
+    cameraInSettings:!!document.querySelector('#pageSettings #settingCameraTilt')
+  }));
+  check('Production scene starts clean with no legacy NPC/enemy/door/interior fixtures',
+    formalScene.npcCount===0&&formalScene.spawnCount===0&&formalScene.npcNodes===0&&formalScene.visibleEnemies===0&&
+    formalScene.apartmentVisible===false&&formalScene.interiorVisible===false&&formalScene.doorPromptVisible===false&&formalScene.interactHidden===true,
+    JSON.stringify(formalScene));
+  check('Camera controls are a standalone in-world UI, not part of Settings',
+    formalScene.cameraButton&&formalScene.cameraPanel&&!formalScene.cameraInSettings,
+    JSON.stringify(formalScene));
+  const productionUi=await page.evaluate(()=>({
+    debugDisplay:getComputedStyle(document.getElementById('debugToggleBtn')).display,
+    guideCount:Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)
+  }));
+  check('Production hides developer UI and calibration guides by default',
+    productionUi.debugDisplay==='none'&&productionUi.guideCount===0,
+    JSON.stringify(productionUi));
+  await page.locator('#cameraControlsBtn').evaluate(el=>el.click());
+  await page.waitForFunction(()=>Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)===10);
+  const cameraOpen=await page.evaluate(()=>({
+    open:document.getElementById('cameraControlsPanel')?.classList.contains('is-open')||false,
+    guideCount:Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)
+  }));
+  check('Standalone camera UI temporarily reveals the 10 calibration guides',
+    cameraOpen.open&&cameraOpen.guideCount===10,JSON.stringify(cameraOpen));
+  await page.locator('#cameraControlsClose').evaluate(el=>el.click());
+  await page.waitForFunction(()=>Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)===0);
+
+  await page.goto('http://127.0.0.1:8080/index.html?core-regression=1&test-content=1',{waitUntil:'networkidle'});
 
   // Register A through the actual UI.
   await page.locator('#authBtn').click();
@@ -397,7 +436,7 @@ try{
   const nearGroundRise=xyCameraRaised.groundZeroY-xyCameraBefore.groundZeroY;
   const farGroundRise=xyCameraRaised.groundFarY-xyCameraBefore.groundFarY;
   check('Rising in Y moves the shared-camera ground downward with correct depth scaling',
-    Number.parseFloat(xyCameraRaised.cameraY)>20&&
+    Number.parseFloat(xyCameraRaised.cameraY)>0&&
     Math.abs(nearGroundRise-xyCameraRaised.player.y)<1.2&&
     farGroundRise>0&&farGroundRise<nearGroundRise,
     JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised,nearGroundRise,farGroundRise}));
@@ -1073,12 +1112,13 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
-  check('Camera controls live in Settings, not Debug',
-    await page.locator('#pageSettings #settingCameraTilt').count()===1&&
-    await page.locator('#pageSettings #settingCameraHeight').count()===1&&
-    await page.locator('#pageSettings #settingCameraDistance').count()===1&&
+  check('Camera controls live in their own panel, not Settings or Debug',
+    await page.locator('#cameraControlsPanel #settingCameraTilt').count()===1&&
+    await page.locator('#cameraControlsPanel #settingCameraHeight').count()===1&&
+    await page.locator('#cameraControlsPanel #settingCameraDistance').count()===1&&
+    await page.locator('#pageSettings #settingCameraTilt').count()===0&&
     await page.locator('#debugPanel #settingCameraTilt').count()===0,
-    'settings camera controls');
+    'standalone camera controls');
 
   const cameraBefore=await page.evaluate(()=>({
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),

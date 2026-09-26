@@ -34,6 +34,7 @@ const requiredIds = [
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput",
+  "cameraControlsBtn","cameraControlsPanel","cameraControlsClose","cameraControlsStatus",
   "settingCameraTilt","settingCameraTiltValue","settingCameraHeight","settingCameraHeightValue","settingCameraDistance","settingCameraDistanceValue","settingCameraReset"
 ];
 
@@ -171,7 +172,7 @@ assert(
 );
 assert(game.includes("const MAP_TERRAIN=["), "Terrain data missing");
 assert(game.includes("const MAP_OBJECTS=["), "Map object data missing");
-assert(content.includes("enemySpawns:["), "Enemy spawn content missing");
+assert(content.includes("testContentEnabled")&&content.includes("enemySpawns:testContentEnabled?TEST_ENEMY_SPAWNS:[]"), "Production/test enemy content split missing");
 assert(game.includes("const MAP_NPCS=AUTHORED_CONTENT.npcs"), "Map NPC runtime content bridge missing");
 assert(fs.existsSync("assets/npcs/phone-girl-offline-r1.webp"), "Supplied left-character NPC asset missing");
 assert(content.includes("id:'npc-phone-girl'"), "New left-character NPC content missing");
@@ -297,10 +298,10 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="camera-settings-r51"'), "R51 camera-settings build cache key missing");
-assert(html.includes('const BUILD = "camera-settings-r51"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=camera-settings-r51'), "game.js camera debug cache key missing");
-assert(html.includes('./src/camera-settings.js?v=camera-settings-r51'), "camera settings controller missing");
+assert(html.includes('meta name="paperchalk-build" content="formal-scene-r52"'), "R52 formal-scene build cache key missing");
+assert(html.includes('const BUILD = "formal-scene-r52"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=formal-scene-r52'), "game.js formal-scene cache key missing");
+assert(html.includes('./src/camera-settings.js?v=formal-scene-r52'), "camera UI controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
@@ -308,8 +309,11 @@ assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main
 assert(cardCamera.includes("defaultTiltDegrees:DT")&&cardCamera.includes("defaultHeightMeters:DH")&&cardCamera.includes("maxTiltDegrees:80"), "Independent production camera defaults/range missing");
 assert(cardCamera.includes("function tiltFactor(")&&cardCamera.includes("function resolveMidY("), "Mid-axis camera pitch projection missing");
 assert(cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters(")&&cardCamera.includes("function setCameraDistanceMeters("), "Angle/height/distance camera API missing");
-assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"), "Persistent camera settings controller missing");
-assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Production camera controls must not remain in Debug");
+assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("cameraControlsBtn")&&cameraSettings.includes("cameraControlsPanel")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"), "Standalone persistent camera controller missing");
+assert(html.includes('id="cameraControlsBtn"')&&html.includes('id="cameraControlsPanel"'), "Standalone camera UI missing");
+assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Camera controls must not remain in Debug");
+const settingsSection=html.match(/<section id="pageSettings"[\s\S]*?<\/section>/)?.[0]||'';
+assert(!settingsSection.includes('id="settingCameraTilt"')&&!settingsSection.includes('id="settingCameraHeight"')&&!settingsSection.includes('id="settingCameraDistance"'), "Camera controls must not remain inside Settings");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 

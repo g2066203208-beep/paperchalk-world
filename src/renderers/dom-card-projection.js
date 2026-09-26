@@ -121,11 +121,15 @@ function strokeLine(ctx,x1,y1,x2,y2,color,width){
 function renderGroundGrid(frame){
   if(!groundCanvas)return;
   const cfg=camera.config,p=frame.player,v=frame.viewport;
+  const showSceneGuides=!world.classList.contains('production-clean-scene')
+    ||world.classList.contains('camera-controls-open')
+    ||world.classList.contains('show-camera-debug');
   const groundKey=[
     Math.round((Number(p.x)||0)*100)/100,
     Math.round((Number(p.y)||0)*100)/100,
     v.width,v.height,v.groundY,
-    camera.tiltRevision||0
+    camera.tiltRevision||0,
+    showSceneGuides?1:0
   ].join('|');
   if(groundKey===lastGroundKey)return;
   lastGroundKey=groundKey;
@@ -208,24 +212,26 @@ function renderGroundGrid(frame){
     'far-back':  {color:'#c77dff',width:2},
     'horizon':   {color:'#ffd43b',width:5}
   };
-  for(const guide of cfg.sceneGuides||[]){
-    const q=camera.project({
-      worldX:p.x,worldZ:guide.z,worldY:0,
-      playerX:p.x,playerY:p.y,cameraZ:0,
-      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
-    });
-    const style=sceneStyles[guide.id]||{color:'#ffffff',width:2};
-    strokeLine(ctx,0,q.y,v.width,q.y,style.color,style.width);
-    ctx.save();
-    ctx.font=(guide.kind==='main'||guide.kind==='horizon'?'700 ':'500 ')+'11px sans-serif';
-    ctx.fillStyle=style.color;
-    ctx.globalAlpha=.95;
-    ctx.fillText((guide.label||guide.id)+'  z='+guide.z,10,Math.max(12,q.y-5));
-    ctx.restore();
-    sceneGuideYs[guide.id]=q.y;
-    sceneUsed++;
-    if(guide.kind==='sub')sceneSub++;
-    else sceneMain++;
+  if(showSceneGuides){
+    for(const guide of cfg.sceneGuides||[]){
+      const q=camera.project({
+        worldX:p.x,worldZ:guide.z,worldY:0,
+        playerX:p.x,playerY:p.y,cameraZ:0,
+        screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+      });
+      const style=sceneStyles[guide.id]||{color:'#ffffff',width:2};
+      strokeLine(ctx,0,q.y,v.width,q.y,style.color,style.width);
+      ctx.save();
+      ctx.font=(guide.kind==='main'||guide.kind==='horizon'?'700 ':'500 ')+'11px sans-serif';
+      ctx.fillStyle=style.color;
+      ctx.globalAlpha=.95;
+      ctx.fillText((guide.label||guide.id)+'  z='+guide.z,10,Math.max(12,q.y-5));
+      ctx.restore();
+      sceneGuideYs[guide.id]=q.y;
+      sceneUsed++;
+      if(guide.kind==='sub')sceneSub++;
+      else sceneMain++;
+    }
   }
 
   ctx.restore();

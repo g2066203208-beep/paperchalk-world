@@ -856,19 +856,60 @@ button{cursor:pointer}
   background:rgba(245,235,213,.55);color:#4f4639;padding:5px 8px;border-radius:4px;
 }
 .setting-row input[type="checkbox"]{width:20px;height:20px;accent-color:#6e604c}
-.setting-camera-group{
-  background:#ead9b7;padding:12px 14px 14px;color:#54493a;
-  clip-path:polygon(1% 2%,99% 0,100% 96%,97% 100%,1% 98%,0 5%);
-}
-.setting-camera-title{font-size:14px;font-weight:800;letter-spacing:.08em;margin-bottom:8px}
-.setting-camera-row{display:block;padding:8px 0;border-top:1px solid rgba(84,65,43,.14)}
-.setting-camera-row>span{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:700}
-.setting-camera-row b{font:800 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
-.setting-camera-row input[type="range"]{display:block;width:100%;height:28px;margin:3px 0 1px;accent-color:#7f6448}
-.setting-camera-row small{display:block;color:#7a6b56;font-size:10px;line-height:1.35}
-.setting-camera-reset{width:100%;margin-top:8px}
 #pageSettings .auth-wrap{overflow:auto;align-items:flex-start;padding-top:48px;padding-bottom:48px}
 #pageSettings .auth-card{margin:auto}
+
+.production-clean-scene .midground-building-layer,
+.production-clean-scene #apartmentDoorPrompt,
+.production-clean-scene #interiorScene,
+.production-clean-scene .enemy,
+.production-clean-scene #enemyHurtboxDebug,
+.production-clean-scene #enemyAttackDebug{display:none!important}
+.production-clean-scene [data-debug-action="enemyAI"],
+.production-clean-scene [data-debug-action="enemyNear"],
+.production-clean-scene [data-debug-action="enemyReset"],
+.production-clean-scene [data-debug-action="spawnZones"]{display:none!important}
+.production-no-dev .debug-toggle-btn,
+.production-no-dev .debug-panel{display:none!important}
+
+.camera-controls-btn{
+  position:absolute;z-index:33;
+  top:max(146px,calc(env(safe-area-inset-top) + 140px));
+  right:max(18px,env(safe-area-inset-right));
+  min-width:68px;height:34px;padding:0 11px;
+  border:1px solid rgba(78,60,39,.38);
+  background:rgba(232,215,181,.96);color:#524636;
+  font:800 12px/32px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  letter-spacing:.10em;border-radius:5px;
+  box-shadow:3px 4px 0 rgba(54,40,27,.12);
+}
+.camera-controls-btn::before{content:"◉";margin-right:5px;font-size:11px}
+.camera-controls-btn:active{transform:translate(1px,2px)}
+.camera-controls-btn[aria-expanded="true"]{background:rgba(204,178,135,.98)}
+.camera-controls-panel{
+  position:absolute;z-index:74;
+  top:max(188px,calc(env(safe-area-inset-top) + 182px));
+  right:max(18px,env(safe-area-inset-right));
+  width:min(330px,calc(100vw - 36px));
+  padding:13px 14px 12px;color:#504536;
+  background:linear-gradient(rgba(239,225,196,.98),rgba(224,204,166,.98));
+  border:1px solid rgba(85,66,43,.34);border-radius:7px;
+  box-shadow:6px 8px 0 rgba(45,34,24,.16),0 12px 26px rgba(35,28,20,.18);
+  clip-path:polygon(1% 2%,98% 0,100% 96%,97% 100%,2% 98%,0 5%);
+  opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-5px) scale(.98);
+  transition:opacity .12s ease,transform .12s ease,visibility .12s ease;
+}
+.camera-controls-panel.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+.camera-controls-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:5px}
+.camera-controls-head strong{font-size:15px;letter-spacing:.10em}
+.camera-controls-close{border:0;background:transparent;color:#5a4a36;font-size:20px;line-height:1;padding:3px 6px}
+.camera-control-row{display:block;padding:8px 0;border-top:1px solid rgba(84,65,43,.14)}
+.camera-control-row>span{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:800}
+.camera-control-row b{font:800 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
+.camera-control-row input[type="range"]{display:block;width:100%;height:28px;margin:3px 0 1px;accent-color:#7f6448}
+.camera-control-row small{display:block;color:#786952;font-size:10px;line-height:1.35}
+.camera-controls-reset{width:100%;height:32px;margin-top:7px;border:1px dashed rgba(84,65,43,.34);background:rgba(255,248,231,.42);color:#584b39}
+.camera-controls-status{min-height:17px;margin-top:5px;text-align:center;color:#725f46;font-size:10px}
 .settings-status{position:relative;z-index:2;min-height:20px;margin-top:10px;text-align:center;color:#665948;font-size:12px}
 .orientation-hint{
   position:fixed;inset:0;z-index:170;display:none;align-items:center;justify-content:center;
@@ -1209,6 +1250,13 @@ button{cursor:pointer}
     right:max(76px,calc(env(safe-area-inset-right) + 66px));
     width:62px;height:34px;font-size:12px;line-height:32px
   }
+  .camera-controls-btn{
+    top:max(113px,calc(env(safe-area-inset-top) + 107px))!important;
+    right:max(12px,env(safe-area-inset-right))!important
+  }
+  .camera-controls-panel{
+    top:max(151px,calc(env(safe-area-inset-top) + 145px))!important
+  }
   .debug-toggle-btn{
     top:max(151px,calc(env(safe-area-inset-top) + 145px))!important
   }
@@ -1229,7 +1277,7 @@ button{cursor:pointer}
 /* ---------- IN-GAME DEBUG PANEL ---------- */
 .debug-toggle-btn{
   position:absolute;z-index:32;
-  top:max(146px,calc(env(safe-area-inset-top) + 140px));
+  top:max(188px,calc(env(safe-area-inset-top) + 182px));
   right:max(18px,env(safe-area-inset-right));
   min-width:68px;height:34px;padding:0 11px;
   border:1px dashed rgba(81,63,42,.52);
@@ -1244,7 +1292,7 @@ button{cursor:pointer}
 
 .debug-panel{
   position:absolute;z-index:70;
-  top:max(190px,calc(env(safe-area-inset-top) + 184px));
+  top:max(230px,calc(env(safe-area-inset-top) + 224px));
   right:max(18px,env(safe-area-inset-right));
   width:min(360px,calc(100vw - 36px));
   max-height:min(560px,calc(100vh - 210px));
@@ -1706,6 +1754,7 @@ button{cursor:pointer}
 .stage.dialogue-active .world-menu-btn,
 .stage.dialogue-active .backpack-open-btn,
 .stage.dialogue-active .world-map-btn,
+.stage.dialogue-active .camera-controls-btn,
 .stage.dialogue-active .debug-toggle-btn{opacity:.12;pointer-events:none}
 
 @media(pointer:coarse){
