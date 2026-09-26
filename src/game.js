@@ -59,6 +59,14 @@ const MAP_TERRAIN=[];
 const MAP_OBJECTS=[];
 const MAP_LANDMARKS=[];
 const MAP_PICKUPS=[];
+const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
+  ...npc,
+  dialogue:npc.dialogue?{
+    ...npc.dialogue,
+    choices:Array.isArray(npc.dialogue.choices)?npc.dialogue.choices.map(choice=>({...choice})):[]
+  }:null
+}));
+const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 let mapDebugBuilt=false;
@@ -554,6 +562,248 @@ const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
 const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
 const debugRendererDomBtn=document.getElementById('debugRendererDomBtn');
 const entityTrack=document.getElementById('entityTrack');
+const interactBtn=document.getElementById('interactBtn');
+const crouchBtn=document.getElementById('crouchBtn');
+const jumpBtn=document.getElementById('jumpBtn');
+const attackBtn=document.getElementById('attackBtn');
+const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
+const playerAttackDebug=document.getElementById('playerAttackDebug');
+const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
+const enemyAttackDebug=document.getElementById('enemyAttackDebug');
+
+function syncViewportMetrics(){
+  const vv=window.visualViewport;
+  const rawH=Number(vv?.height)||Number(innerHeight)||720;
+  const rawW=Number(vv?.width)||Number(innerWidth)||1280;
+  const layoutH=Number(document.documentElement.clientHeight)||rawH;
+  const layoutW=Number(document.documentElement.clientWidth)||rawW;
+  const viewH=Math.max(180,Math.round(Math.min(rawH,layoutH)));
+  const viewW=Math.max(280,Math.round(Math.min(rawW,layoutW)));
+  const prevW=VIEW_W,prevH=VIEW_H,prevScale=PLAYER_VISUAL.scale;
+  const rawScale=Math.min(viewW/VIEWPORT_REFERENCE.w,viewH/VIEWPORT_REFERENCE.h);
+  const viewportScale=Math.max(.82,Math.min(1.08,rawScale));
+  const playerW=Math.round(PLAYER_VISUAL_BASE.w*viewportScale*100)/100;
+  const playerH=Math.round(PLAYER_VISUAL_BASE.h*viewportScale*100)/100;
+  const controlScale=Math.max(.84,Math.min(1.06,viewportScale));
+  document.documentElement.style.setProperty('--app-height',viewH+'px');
+  document.documentElement.style.setProperty('--app-width',viewW+'px');
+  document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
+  document.documentElement.style.setProperty('--viewport-scale',viewportScale.toFixed(4));
+  document.documentElement.style.setProperty('--control-scale',controlScale.toFixed(4));
+  document.documentElement.style.setProperty('--player-visual-w',playerW+'px');
+  document.documentElement.style.setProperty('--player-visual-h',playerH+'px');
+  const nextGround=clamp(Math.round(viewH*.30),72,112);
+  document.documentElement.style.setProperty('--ground-screen-y',nextGround+'px');
+  const groundChanged=nextGround!==MAP_GROUND_SCREEN_Y;
+  const sizeChanged=viewW!==prevW||viewH!==prevH;
+  const scaleChanged=Math.abs(viewportScale-prevScale)>.001;
+  VIEW_W=viewW;VIEW_H=viewH;
+  MAP_GROUND_SCREEN_Y=nextGround;
+  PLAYER_VISUAL.w=playerW;PLAYER_VISUAL.h=playerH;PLAYER_VISUAL.scale=viewportScale;
+  return {groundChanged,sizeChanged,scaleChanged};
+}
+function applyWorldDimensions(){
+  const width=VISUAL_WINDOW_SPAN+'px';
+  if(mapTrack)mapTrack.style.width=width;
+  if(entityTrack)entityTrack.style.width=width;
+}
+syncViewportMetrics();
+applyWorldDimensions();
+buildMapVisuals();
+
+const WORLD_CLOCK_OFFSET=360;
+const DAY_MINUTES=1440;
+const DAYLIGHT_KEYS=[
+  {m:0,top:[24,30,58],bottom:[53,55,79],horizon:[75,66,76],night:.58,stars:.92,warm:0,sun:0,moon:.95},
+  {m:300,top:[44,50,78],bottom:[91,75,89],horizon:[151,107,91],night:.34,stars:.62,warm:.08,sun:0,moon:.70},
+  {m:360,top:[101,120,139],bottom:[210,153,112],horizon:[230,184,132],night:.12,stars:.18,warm:.24,sun:.52,moon:.28},
+  {m:480,top:[137,177,194],bottom:[222,211,184],horizon:[200,183,139],night:0,stars:0,warm:.05,sun:1,moon:0},
+  {m:720,top:[126,178,205],bottom:[229,220,196],horizon:[202,188,147],night:0,stars:0,warm:0,sun:1,moon:0},
+  {m:960,top:[142,174,190],bottom:[225,197,164],horizon:[202,167,119],night:0,stars:0,warm:.08,sun:.92,moon:0},
+  {m:1080,top:[103,107,135],bottom:[195,128,96],horizon:[178,112,86],night:.12,stars:.10,warm:.30,sun:.45,moon:.20},
+  {m:1170,top:[58,61,93],bottom:[116,77,91],horizon:[111,78,84],night:.34,stars:.55,warm:.10,sun:0,moon:.68},
+  {m:1260,top:[29,35,65],bottom:[62,59,81],horizon:[78,67,76],night:.54,stars:.90,warm:0,sun:0,moon:.94},
+  {m:1440,top:[24,30,58],bottom:[53,55,79],horizon:[75,66,76],night:.58,stars:.92,warm:0,sun:0,moon:.95}
+];
+let lastDayNightRender=-Infinity;
+let sceneFoldTimer=0;
+function modDay(v){return ((v%DAY_MINUTES)+DAY_MINUTES)%DAY_MINUTES}
+function visibleClockMinutes(){return modDay(worldMinutes+WORLD_CLOCK_OFFSET)}
+function lerp(a,b,t){return a+(b-a)*t}
+function lerpRgb(a,b,t){return a.map((v,i)=>Math.round(lerp(v,b[i],t)))}
+function rgbCss(v){return 'rgb('+v.join(',')+')'}
+function daylightState(minutes=visibleClockMinutes()){
+  let a=DAYLIGHT_KEYS[0],b=DAYLIGHT_KEYS[DAYLIGHT_KEYS.length-1];
+  for(let i=0;i<DAYLIGHT_KEYS.length-1;i++){
+    if(minutes>=DAYLIGHT_KEYS[i].m&&minutes<=DAYLIGHT_KEYS[i+1].m){a=DAYLIGHT_KEYS[i];b=DAYLIGHT_KEYS[i+1];break}
+  }
+  const span=Math.max(1,b.m-a.m),t=clamp((minutes-a.m)/span,0,1);
+  return {
+    top:lerpRgb(a.top,b.top,t),bottom:lerpRgb(a.bottom,b.bottom,t),horizon:lerpRgb(a.horizon,b.horizon,t),
+    night:lerp(a.night,b.night,t),stars:lerp(a.stars,b.stars,t),warm:lerp(a.warm,b.warm,t),
+    sun:lerp(a.sun,b.sun,t),moon:lerp(a.moon,b.moon,t)
+  };
+}
+function formatWorldClock(minutes=visibleClockMinutes()){
+  const m=Math.floor(modDay(minutes)),hh=Math.floor(m/60),mm=m%60;
+  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+}
+function worldTimeName(minutes=visibleClockMinutes()){
+  if(minutes<300)return '深夜';
+  if(minutes<390)return '黎明';
+  if(minutes<660)return '上午';
+  if(minutes<900)return '正午';
+  if(minutes<1080)return '下午';
+  if(minutes<1170)return '黄昏';
+  if(minutes<1260)return '入夜';
+  return '深夜';
+}
+function celestialArcPosition(minutes,rise,set){
+  const visibleSpan=modDay(set-rise)||DAY_MINUTES;
+  const elapsed=modDay(minutes-rise);
+  const radius=Math.min(VIEW_W*.46,VIEW_H*.66);
+  const cx=VIEW_W*.50;
+  const cy=VIEW_H*.74;
+  let theta,above;
+  if(elapsed<=visibleSpan){
+    theta=Math.PI*(elapsed/visibleSpan);
+    above=true;
+  }else{
+    const hiddenSpan=Math.max(1,DAY_MINUTES-visibleSpan);
+    theta=Math.PI+Math.PI*((elapsed-visibleSpan)/hiddenSpan);
+    above=false;
+  }
+  return {x:cx-radius*Math.cos(theta),y:cy-radius*Math.sin(theta),above};
+}
+let lastCelestialRender=-Infinity;
+function updateCelestialVisuals(force=false){
+  const now=performance.now();
+  if(!force&&now-lastCelestialRender<50)return;
+  lastCelestialRender=now;
+  const minutes=visibleClockMinutes();
+  const sun=celestialArcPosition(minutes,330,1110);
+  const moon=celestialArcPosition(minutes,1050,390);
+  worldEl.style.setProperty('--sun-x',sun.x.toFixed(2)+'px');
+  worldEl.style.setProperty('--sun-y',sun.y.toFixed(2)+'px');
+  worldEl.style.setProperty('--moon-x',moon.x.toFixed(2)+'px');
+  worldEl.style.setProperty('--moon-y',moon.y.toFixed(2)+'px');
+}
+function updateDayNightVisuals(force=false){
+  const now=performance.now();
+  if(!force&&now-lastDayNightRender<500)return;
+  lastDayNightRender=now;
+  const minutes=visibleClockMinutes(),state=daylightState(minutes);
+  worldEl.style.setProperty('--sky-top',rgbCss(state.top));
+  worldEl.style.setProperty('--sky-bottom',rgbCss(state.bottom));
+  worldEl.style.setProperty('--horizon',rgbCss(state.horizon));
+  worldEl.style.setProperty('--night-alpha',state.night.toFixed(3));
+  worldEl.style.setProperty('--warm-alpha',state.warm.toFixed(3));
+  worldEl.style.setProperty('--warm-alpha-soft',(state.warm*.55).toFixed(3));
+  worldEl.style.setProperty('--stars-alpha',state.stars.toFixed(3));
+  worldEl.style.setProperty('--sun-alpha',state.sun.toFixed(3));
+  worldEl.style.setProperty('--moon-alpha',state.moon.toFixed(3));
+  worldEl.style.setProperty('--footlight-alpha',clamp(state.night*.82+state.warm*.18,0,.52).toFixed(3));
+  worldEl.style.setProperty('--paper-shadow','rgba(34,28,24,'+(0.13+state.night*.22).toFixed(3)+')');
+  updateCelestialVisuals(force);
+  const clock=formatWorldClock(minutes),phase=worldTimeName(minutes);
+  paperClock.textContent=clock+' · '+phase;
+  paperClock.setAttribute('aria-label','世界时间 '+clock+' '+phase);
+}
+function setVisibleWorldClock(minutes,{persist=true}={}){
+  const target=modDay(Number(minutes)||0);
+  const dayBase=Math.floor(worldMinutes/DAY_MINUTES)*DAY_MINUTES;
+  worldMinutes=dayBase+modDay(target-WORLD_CLOCK_OFFSET);
+  updateDayNightVisuals(true);
+  if(persist&&typeof saveWorldState==='function')saveWorldState();
+  return formatWorldClock();
+}
+function triggerPaperSceneFold(nextScene=null){
+  const scene=nextScene||routeForWorldX(playerWorldX)?.biome||worldEl.dataset.biome||'meadow';
+  clearTimeout(sceneFoldTimer);
+  paperBackdropNext.dataset.scene=scene;
+  worldEl.classList.remove('scene-shifting');
+  void paperBackdropNext.offsetWidth;
+  worldEl.classList.add('scene-shifting');
+  sceneFoldTimer=setTimeout(()=>{
+    paperBackdrop.dataset.scene=scene;
+    worldEl.classList.remove('scene-shifting');
+  },980);
+}
+window.PaperchalkTheater={
+  fold:triggerPaperSceneFold,
+  setClock:setVisibleWorldClock,
+  get clock(){return formatWorldClock()},
+  get phase(){return worldTimeName()}
+};
+
+const PLAYER_MAX_HP=10;
+let playerHp=PLAYER_MAX_HP;
+let healthPieces=[];
+const healthAnimationTimers=new WeakMap();
+let last=performance.now();
+let roadW=1200;
+let worldX=0;
+let sceneryOffsetX=0;
+let playerWorldX=MAP_SPAWN_X;
+let orientationRouteIndex=0;
+let currentRouteOrientation=1;
+let worldMinutes=0;
+let worldTimeScale=1;
+let playerScreenAnchorX=Math.round(VIEW_W*.5);
+let actorX=playerScreenAnchorX;
+let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
+let mobileCrouch=false,mobileFlightUp=false,mobileFlightDown=false;
+let joystickAxis=0,joystickFlightAxisY=0;
+let joystickPointer=null;
+let joystickOriginX=0,joystickOriginY=0;
+let facing=1;
+let playerY=0,playerVy=0,playerGrounded=true;
+const CARD_CAMERA=window.PaperchalkCardCamera;
+if(!CARD_CAMERA)throw new Error('PaperchalkCardCamera missing');
+let playerCrouching=false;
+let playerActionState='idle';
+let coyoteTimer=0,jumpBufferTimer=0;
+let playerAttackTimer=0,playerAttackCooldown=0,playerInvuln=0;
+const playerAttackHits=new Set();
+const GRAVITY=1850,JUMP_SPEED=820;
+const COYOTE_TIME=.12,JUMP_BUFFER_TIME=.14,AUTO_MANTLE_WINDOW=72;
+const PLAYER_HURT={w:54,standH:108,crouchH:78,ox:-27,oy:8};
+const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
+const RAG_DRIFTER=AUTHORED_CONTENT.enemyArchetypes['rag-drifter'];
+const ENEMY_MAX_HP=RAG_DRIFTER.maxHp;
+function createEnemyState(id,el,healthEl){
+  const e={
+    id,el,healthEl,spawned:false,account:null,facing:-1,
+    transform:{x:0,z:0},
+    health:{current:ENEMY_MAX_HP,max:ENEMY_MAX_HP,alive:true},
+    combat:{attackTimer:0,attackCooldown:0,hitstun:0},
+    ai:{state:'idle',enabled:true},
+    patrol:{spawnX:0,min:0,max:0,dir:-1},
+    renderable:{el,healthEl,visible:null,renderX:null,renderFacing:null,renderHp:null,renderAlive:null}
+  };
+  Object.defineProperties(e,{
+    x:{enumerable:true,get(){return e.transform.x},set(v){e.transform.x=v}},
+    z:{enumerable:true,get(){return e.transform.z},set(v){e.transform.z=v}},
+    hp:{enumerable:true,get(){return e.health.current},set(v){e.health.current=v}},
+    alive:{enumerable:true,get(){return e.health.alive},set(v){e.health.alive=!!v}},
+    state:{enumerable:true,get(){return e.ai.state},set(v){e.ai.state=v}},
+    attackTimer:{enumerable:true,get(){return e.combat.attackTimer},set(v){e.combat.attackTimer=v}},
+    attackCooldown:{enumerable:true,get(){return e.combat.attackCooldown},set(v){e.combat.attackCooldown=v}},
+    hitstun:{enumerable:true,get(){return e.combat.hitstun},set(v){e.combat.hitstun=v}},
+    spawnX:{enumerable:true,get(){return e.patrol.spawnX},set(v){e.patrol.spawnX=v}},
+    patrolMin:{enumerable:true,get(){return e.patrol.min},set(v){e.patrol.min=v}},
+    patrolMax:{enumerable:true,get(){return e.patrol.max},set(v){e.patrol.max=v}},
+    patrolDir:{enumerable:true,get(){return e.patrol.dir},set(v){e.patrol.dir=v}},
+    _visible:{get(){return e.renderable.visible},set(v){e.renderable.visible=v}},
+    _renderX:{get(){return e.renderable.renderX},set(v){e.renderable.renderX=v}},
+    _renderFacing:{get(){return e.renderable.renderFacing},set(v){e.renderable.renderFacing=v}},
+    _renderHp:{get(){return e.renderable.renderHp},set(v){e.renderable.renderHp=v}},
+    _renderAlive:{get(){return e.renderable.renderAlive},set(v){e.renderable.renderAlive=v}}
+  });
+  return e;
+}
+updateDayNightVisuals(true);
+
 function createEnemyDom(spawn,index){
   const el=document.createElement('div');
   el.className='enemy';
