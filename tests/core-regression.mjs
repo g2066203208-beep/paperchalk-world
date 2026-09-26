@@ -1194,6 +1194,9 @@ try{
     cameraReset.angleLabel.includes('13.1°')&&cameraReset.heightLabel.includes('4.1 m')&&cameraReset.distanceLabel.includes('30.0 m'),
     JSON.stringify(cameraReset));
 
+  await page.locator('#cameraControlClose').click();
+  await page.waitForTimeout(40);
+
   await page.locator('[data-debug-action="damage1"]').click();
   await page.waitForTimeout(80);
   let healthDebug=await healthState(page);
