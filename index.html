@@ -39,8 +39,8 @@
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="oldtown-r38">
-<link rel="stylesheet" href="./styles/game.css?v=oldtown-r38">
+<meta name="paperchalk-build" content="ground-lock-r39">
+<link rel="stylesheet" href="./styles/game.css?v=ground-lock-r39">
 </head>
 <body>
 
@@ -55,7 +55,12 @@
   <div id="paperBackdrop" class="paper-backdrop paper-backdrop-current" data-scene="meadow" aria-hidden="true"></div>
   <div id="paperBackdropNext" class="paper-backdrop paper-backdrop-next" data-scene="meadow" aria-hidden="true"></div>
   <div class="paper-stage-floor-camera" aria-hidden="true">
-    <div class="paper-stage-floor"></div>
+    <div class="paper-stage-floor">
+      <svg id="cardGroundGrid" class="card-ground-grid" aria-hidden="true">
+        <g id="cardGroundDepthLines"></g>
+        <g id="cardGroundWorldLines"></g>
+      </svg>
+    </div>
   </div>
   <div id="oldTownBuildingLayer" class="oldtown-building-layer" aria-hidden="true">
     <div id="oldTownBuildingTrack" class="oldtown-building-track"></div>
@@ -423,7 +428,7 @@
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
 <script src="./src/game.js?v=oldtown-r38"></script>
-<script src="./src/renderers/dom-card-projection.js?v=1"></script>
+<script src="./src/renderers/dom-card-projection.js?v=ground-lock-r39"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=oldtown-r1"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=oldtown-r38"></script>
 </body>
