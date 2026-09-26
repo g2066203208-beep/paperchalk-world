@@ -157,7 +157,7 @@
     <button id="settingCameraReset" class="paper-btn ghost camera-control-reset" type="button">恢复默认镜头</button>
   </section>
 
-  <button id="debugToggleBtn" class="debug-toggle-btn"
+  <button id="debugToggleBtn" class="debug-toggle-btn" hidden
           aria-controls="debugPanel" aria-expanded="false">调试</button>
   <section id="debugPanel" class="debug-panel" aria-hidden="true" aria-label="游戏调试面板">
     <div class="debug-panel-head">
@@ -217,7 +217,7 @@
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
-    <button id="interactBtn" class="combat-btn" type="button" aria-label="交谈">聊</button>
+    <button id="interactBtn" class="combat-btn" type="button" aria-label="交互" hidden>交互</button>
     <button id="crouchBtn" class="combat-btn" type="button" aria-label="蹲下">蹲</button>
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
     <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
@@ -247,7 +247,6 @@
       <button id="worldMapLocate" class="world-map-tool" type="button">定位我</button>
       <div class="world-map-legend" aria-label="地图图例">
         <span><i class="lg-player"></i>你</span>
-        <span><i class="lg-enemy"></i>敌人</span>
         <span><i class="lg-pickup"></i>采集</span>
         <span>━━ 已探索</span>
         <span>┄┄ 未探索</span>
