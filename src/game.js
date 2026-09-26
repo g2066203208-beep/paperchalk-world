@@ -3199,10 +3199,15 @@ const JOY_DEADZONE=.14;
 function updateJoystick(clientX,clientY){
   let dx=clientX-joystickOriginX;
   let dy=clientY-joystickOriginY;
-  const distance=Math.hypot(dx,dy);
-  if(distance>JOY_RADIUS){
-    const scale=JOY_RADIUS/distance;
-    dx*=scale;dy*=scale;
+  if(debugFlightMode){
+    const distance=Math.hypot(dx,dy);
+    if(distance>JOY_RADIUS){
+      const scale=JOY_RADIUS/distance;
+      dx*=scale;dy*=scale;
+    }
+  }else{
+    dx=clamp(dx,-JOY_RADIUS,JOY_RADIUS);
+    dy=0;
   }
   joystickEl.style.setProperty('--joy-x',dx.toFixed(1)+'px');
   joystickEl.style.setProperty('--joy-y',dy.toFixed(1)+'px');
@@ -3210,10 +3215,11 @@ function updateJoystick(clientX,clientY){
   const raw=dx/JOY_RADIUS;
   const a=Math.abs(raw);
   joystickAxis=a<=JOY_DEADZONE?0:Math.sign(raw)*Math.min(1,(a-JOY_DEADZONE)/(1-JOY_DEADZONE));
-  const rawY=-dy/JOY_RADIUS;
-  const ay=Math.abs(rawY);
-  const normalizedY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
-  joystickFlightAxisY=debugFlightMode?normalizedY:0;
+  if(debugFlightMode){
+    const rawY=-dy/JOY_RADIUS;
+    const ay=Math.abs(rawY);
+    joystickFlightAxisY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
+  }else joystickFlightAxisY=0;
 }
 joystickZone.addEventListener('pointerdown',e=>{
   if(!worldInteractive()||joystickPointer!==null)return;
