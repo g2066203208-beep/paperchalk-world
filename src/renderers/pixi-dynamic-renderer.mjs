@@ -103,7 +103,7 @@ function projectCard(frame,x,z=0,y=0){
   return {
     visible:depth<maxDepth&&scale>.12&&scale<5,
     x:(Number(frame.player?.screenX)||v.width*.5)+((Number(x)||0)-(Number(frame.player?.x)||0))*scale,
-    y:horizonY+(cameraHeight-(Number(y)||0))*scale,
+    y:horizonY+(cameraHeight+(Number(frame.player?.y)||0)-(Number(y)||0))*scale,
     scale,
     depth
   };
