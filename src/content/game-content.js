@@ -46,6 +46,22 @@ const content={
       {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
     ]
   },
+  buildings:[
+    {
+      id:'village-shop-house',
+      name:'A村街角小楼',
+      x:1450,
+      y:0,
+      z:0,
+      width:780,
+      height:810,
+      asset:'./assets/buildings/real-world/village/village-shop-house.webp?v=village-house-r1',
+      layer:'midground-main',
+      anchorX:.5,
+      anchorY:1,
+      door:Object.freeze({xOffset:-170,interactionRadius:110,label:'店门'})
+    }
+  ],
   // Production story content starts empty. Main-line NPCs and enemies are authored here later.
   npcs:[],
   enemySpawns:[],
@@ -83,6 +99,11 @@ function validate(value=content){
   try{
     const nodeIds=assertUnique(value.world.nodes,'world.nodes');
     assertUnique(value.world.routes,'world.routes');
+    assertUnique(value.buildings||[],'buildings');
+    for(const building of value.buildings||[]){
+      if(!(building.width>0&&building.height>0))errors.push('building '+building.id+' has invalid dimensions');
+      if(typeof building.asset!=='string'||!building.asset)errors.push('building '+building.id+' missing asset');
+    }
     assertUnique(value.npcs,'npcs');
     assertUnique(value.enemySpawns,'enemySpawns');
     const enemyTypeIds=new Set(Object.keys(value.enemyArchetypes));
