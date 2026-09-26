@@ -68,7 +68,6 @@ const MAP_OBJECTS=[
 ];
 const MAP_LANDMARKS=[
   {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
-  {id:'sign-combat',kind:'sign',x:1440,text:'前方有游荡者'},
   {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'}
 ];
 const MAP_PICKUPS=[
@@ -83,16 +82,18 @@ const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
   }:null
 }));
 const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const offset=1750+(zone%4)*720;
-  const x=base+offset;
-  ENEMY_SPAWNS.push({
-    id:'enemy-zone-'+zone,
-    x,
-    patrolMin:x-170-(zone%3)*20,
-    patrolMax:x+170+(zone%2)*30
-  });
+if(ENEMY_SPAWNS.length){
+  for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
+    const base=zone*WORLD_ZONE_WIDTH;
+    const offset=1750+(zone%4)*720;
+    const x=base+offset;
+    ENEMY_SPAWNS.push({
+      id:'enemy-zone-'+zone,
+      x,
+      patrolMin:x-170-(zone%3)*20,
+      patrolMax:x+170+(zone%2)*30
+    });
+  }
 }
 
 /* Deterministic continuation: every 6000px is authored into the same coordinate space.
@@ -492,6 +493,8 @@ midgroundApartment?.addEventListener('error',()=>{
 },{once:true});
 function updateMidgroundApartmentVisibility(sceneryX,force=false){
   if(!midgroundApartment)return;
+  midgroundApartment.hidden=true;
+  return;
   const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
   const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
     &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
@@ -509,6 +512,7 @@ function apartmentDoorScreenY(){
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
+  if(true)return false; // prototype apartment removed from production world
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
@@ -726,6 +730,7 @@ function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
 function enterApartment(){
+  return false; // prototype interior removed from production world
   if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
@@ -2501,7 +2506,8 @@ function updateNpcPrompt(){
   }
   const active=nearDoor||nearExit||!!nearNpc;
   interactBtn.disabled=!active;
-  interactBtn.style.opacity=active?'1':'.45';
+  interactBtn.hidden=!active;
+  interactBtn.style.opacity=active?'1':'0';
   interactBtn.textContent=nearDoor?'开门':nearExit?'出门':'聊';
   renderDoorPrompt();
   return nearDoor?{kind:'door'}:nearExit?{kind:'exit'}:nearNpc;
