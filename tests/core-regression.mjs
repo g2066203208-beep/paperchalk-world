@@ -1073,6 +1073,42 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
+  const tiltBefore=await page.evaluate(()=>({
+    value:window.PaperchalkDebug.cameraTilt,
+    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,Number(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y').replace('px',''))||112),
+    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
+  }));
+  await page.locator('#debugCameraTilt').evaluate(el=>{
+    el.value='70';
+    el.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  await page.waitForTimeout(100);
+  const tiltAfter=await page.evaluate(()=>({
+    value:window.PaperchalkDebug.cameraTilt,
+    manual:window.PaperchalkCardCamera.manualHorizonRatio,
+    stored:localStorage.getItem('paperchalk.debug.cameraTilt.v1'),
+    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,Number(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y').replace('px',''))||112),
+    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
+    skyBottom:document.querySelector('.paper-sky')?.getBoundingClientRect().bottom,
+    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY)
+  }));
+  check('Debug camera tilt slider updates only camera tilt in real time',
+    tiltAfter.value===70&&tiltAfter.stored==='70'&&tiltAfter.manual!==null&&
+    Math.abs(tiltAfter.horizon-tiltBefore.horizon)>.01&&
+    tiltAfter.depths.join(',')===tiltBefore.depths.join(',')&&
+    Math.abs(tiltAfter.skyBottom-tiltAfter.farY)<1,
+    JSON.stringify({tiltBefore,tiltAfter}));
+  await page.locator('#debugCameraTiltReset').click();
+  await page.waitForTimeout(80);
+  const tiltReset=await page.evaluate(()=>({
+    manual:window.PaperchalkCardCamera.manualHorizonRatio,
+    stored:localStorage.getItem('paperchalk.debug.cameraTilt.v1'),
+    label:document.getElementById('debugCameraTiltValue')?.textContent
+  }));
+  check('Debug camera tilt reset returns to automatic mode',
+    tiltReset.manual===null&&tiltReset.stored===null&&tiltReset.label.includes('自动'),
+    JSON.stringify(tiltReset));
+
   await page.locator('[data-debug-action="damage1"]').click();
   await page.waitForTimeout(80);
   let healthDebug=await healthState(page);

@@ -124,7 +124,8 @@ function renderGroundGrid(frame){
   const groundKey=[
     Math.round((Number(p.x)||0)*100)/100,
     Math.round((Number(p.y)||0)*100)/100,
-    v.width,v.height,v.groundY
+    v.width,v.height,v.groundY,
+    camera.tiltRevision||0
   ].join('|');
   if(groundKey===lastGroundKey)return;
   lastGroundKey=groundKey;

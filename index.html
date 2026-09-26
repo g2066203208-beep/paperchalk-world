@@ -39,7 +39,7 @@
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="near-edge-tilt-r46">
+<meta name="paperchalk-build" content="debug-tilt-r47">
 <link rel="stylesheet" href="./styles/game.css?v=scene-guides-r42">
 </head>
 <body>
@@ -214,6 +214,21 @@
       <button class="debug-action" type="button" data-debug-action="teleportMid">传送中段</button>
       <button class="debug-action" type="button" data-debug-action="teleportEnd">传送远方</button>
     </div>
+    <div class="debug-camera-control" aria-label="摄像机倾角调试">
+      <div class="debug-camera-control-head">
+        <span>摄像机倾角</span>
+        <b id="debugCameraTiltValue">--</b>
+      </div>
+      <input id="debugCameraTilt" class="debug-camera-slider" type="range"
+             min="0" max="100" step="1" value="50"
+             aria-label="摄像机倾角，0最平，100最俯视">
+      <div class="debug-camera-control-foot">
+        <span>0 平</span>
+        <span id="debugCameraHorizonValue">地平线 --%</span>
+        <span>100 俯视</span>
+      </div>
+      <button id="debugCameraTiltReset" class="debug-action debug-camera-reset" type="button">恢复自动倾角</button>
+    </div>
     <div class="debug-renderer-actions" aria-label="渲染器调试">
       <button id="debugRendererAutoBtn" class="debug-action" type="button" data-debug-action="rendererAuto">渲染：自动</button>
       <button id="debugRendererGpuBtn" class="debug-action" type="button" data-debug-action="rendererPixi">渲染：GPU</button>
@@ -238,7 +253,7 @@
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右；手机摇杆可上下左右。命令：fly / fly on / fly off。</div>
+    <div class="debug-help">调试：血量、战斗、Camera、摄像机倾角、飞行、地图、日夜与纸片舞台。倾角滑块：0 最平，100 最俯视；拖动后实时生效并保存在本机。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
@@ -420,12 +435,12 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=near-edge-tilt-r46"></script>
+<script src="./src/core/card-camera.js?v=debug-tilt-r47"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
 <script src="./src/game.js?v=oldtown-r38"></script>
-<script src="./src/renderers/dom-card-projection.js?v=near-edge-tilt-r46"></script>
+<script src="./src/renderers/dom-card-projection.js?v=debug-tilt-r47"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=canvas-cull-r41"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=oldtown-r38"></script>
 </body>
