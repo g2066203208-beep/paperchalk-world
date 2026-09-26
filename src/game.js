@@ -1675,7 +1675,7 @@ function runDebugCommand(rawCommand){
     if(sceneLocation==='interior'){
       return 'interiorX='+interiorPlayerWorldX.toFixed(2)+' interiorY='+playerY.toFixed(2)+' cameraX='+interiorCameraX.toFixed(2)+' cameraY='+interiorCameraY.toFixed(2)+' screenX='+actorX.toFixed(2);
     }
-    return 'playerX='+playerWorldX.toFixed(2)+' playerZ='+playerWorldZ.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' cameraZ='+playerWorldZ.toFixed(2)+' cameraY='+playerY.toFixed(2)+' screenX='+actorX.toFixed(2);
+    return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' cameraY='+playerY.toFixed(2)+' sceneZ=fixed-camera-plane screenX='+actorX.toFixed(2);
   }
   if(cmd==='map'){
     return '世界图 '+WORLD_NODES.length+' 节点 / '+WORLD_ROUTES.length+' 道路 | 当前='+regionNameAt(playerWorldX)+' | edge='+worldZoneIndexAt(playerWorldX)+' | 已探索道路='+mapState.visitedRoutes.size;
@@ -3108,18 +3108,20 @@ addEventListener('keydown',e=>{
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
   if(e.code==='ArrowDown'||e.code==='KeyS'){
     if(debugFlightMode)keyboardFlightDown=true;
-    else if(sceneLocation==='outside')keyboardDepthBack=true;
     else {keyboardCrouch=true;updateCrouchState()}
     e.preventDefault();
   }
   if(e.code==='ArrowUp'||e.code==='KeyW'){
     if(debugFlightMode)keyboardFlightUp=true;
-    else if(sceneLocation==='outside')keyboardDepthForward=true;
     else jumpPlayer();
     e.preventDefault();
   }
-  if(e.code==='Space'){jumpPlayer();e.preventDefault()}
-  if(e.code==='KeyC'&&sceneLocation==='outside'&&!debugFlightMode){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
+  if(e.code==='Space'){
+    if(debugFlightMode)keyboardFlightUp=true;
+    else jumpPlayer();
+    e.preventDefault();
+  }
+  if(e.code==='KeyC'&&!debugFlightMode){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
 });
@@ -3127,11 +3129,9 @@ addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
   if(e.code==='ArrowDown'||e.code==='KeyS'){
-    keyboardFlightDown=false;keyboardDepthBack=false;
-    if(sceneLocation==='interior'){keyboardCrouch=false;updateCrouchState()}
-    e.preventDefault();
+    keyboardFlightDown=false;keyboardCrouch=false;updateCrouchState();e.preventDefault()
   }
-  if(e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;keyboardDepthForward=false;e.preventDefault()}
+  if(e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;e.preventDefault()}
   if(e.code==='KeyC'){keyboardCrouch=false;updateCrouchState();e.preventDefault()}
   if(e.code==='Space'){keyboardFlightUp=false;e.preventDefault()}
 });
@@ -3179,7 +3179,6 @@ jumpBtn.addEventListener('lostpointercapture',releaseMobileFlightUp);
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
   joystickAxis=0;
-  joystickDepthAxis=0;
   joystickFlightAxisY=0;
   joystickPointer=null;
   joystickEl.classList.remove('is-active');
@@ -3188,9 +3187,8 @@ function resetJoystick(){
 }
 addEventListener('blur',()=>{
   keyboardLeft=keyboardRight=keyboardCrouch=keyboardFlightUp=keyboardFlightDown=false;
-  keyboardDepthForward=keyboardDepthBack=false;
   mobileCrouch=mobileFlightUp=mobileFlightDown=false;
-  joystickDepthAxis=0;joystickFlightAxisY=0;
+  joystickFlightAxisY=0;
   if(playerCrouching)setPlayerCrouching(false);
   resetJoystick();
 });
@@ -3215,16 +3213,7 @@ function updateJoystick(clientX,clientY){
   const rawY=-dy/JOY_RADIUS;
   const ay=Math.abs(rawY);
   const normalizedY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
-  if(debugFlightMode){
-    joystickFlightAxisY=normalizedY;
-    joystickDepthAxis=0;
-  }else if(sceneLocation==='outside'){
-    joystickDepthAxis=normalizedY;
-    joystickFlightAxisY=0;
-  }else{
-    joystickDepthAxis=0;
-    joystickFlightAxisY=0;
-  }
+  joystickFlightAxisY=debugFlightMode?normalizedY:0;
 }
 joystickZone.addEventListener('pointerdown',e=>{
   if(!worldInteractive()||joystickPointer!==null)return;
@@ -3900,7 +3889,6 @@ function defaultSave(session){
     worldMinutes:0,
     worldX:0,
     playerWorldX:MAP_SPAWN_X,
-    playerWorldZ:0,
     playerY:0,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
@@ -4023,7 +4011,7 @@ function saveWorldState(){
   save.location=regionNameAt(playerWorldX);
   save.worldX=worldX;
   save.playerWorldX=playerWorldX;
-  save.playerWorldZ=playerWorldZ;
+  delete save.playerWorldZ;
   save.playerY=playerY;
   save.routeOrientation={routeIndex:orientationRouteIndex,sign:currentRouteOrientation};
   save.worldMinutes=worldMinutes;
@@ -4046,7 +4034,6 @@ function loadWorldState(){
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
   playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  playerWorldZ=clamp(Number.isFinite(save.playerWorldZ)?save.playerWorldZ:0,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);
   const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
   orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
   currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
@@ -4132,7 +4119,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;playerWorldZ=0;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
+      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
