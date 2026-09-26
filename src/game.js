@@ -2278,8 +2278,14 @@ function enemyCanMove(e,dx){
   }
   return true;
 }
-function moveEnemy(e,dx){
-  if(enemyCanMove(e,dx)){e.x=clamp(e.x+dx,35,MAP_WIDTH-35);return true}
+function moveEnemy(e,dx,dz=0){
+  let moved=false;
+  if(!dx||enemyCanMove(e,dx)){
+    if(dx){e.x=clamp(e.x+dx,35,MAP_WIDTH-35);moved=true}
+    if(dz){e.z=clamp(e.z+dz,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);moved=true}
+    return moved||(!dx&&!dz);
+  }
+  if(dz){e.z=clamp(e.z+dz,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);return true}
   return false;
 }
 function updateEnemy(e,dt,interactive){
@@ -2287,7 +2293,7 @@ function updateEnemy(e,dt,interactive){
   e.attackCooldown=Math.max(0,e.attackCooldown-dt);e.hitstun=Math.max(0,e.hitstun-dt);
   if(!interactive||e.hitstun>0)return;
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
-  const dx=playerWorldX-e.x,dist=Math.abs(dx);
+  const dx=playerWorldX-e.x,dz=playerWorldZ-e.z,dist=Math.hypot(dx,dz);
   if(dist>RAG_DRIFTER.sleepRange){
     if(e.state!=='sleep'){
       e.state='sleep';
@@ -2299,7 +2305,7 @@ function updateEnemy(e,dt,interactive){
   if(e.attackTimer>0){
     e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
     if(e.attackTimer<=0){e.el.classList.remove('is-attacking');e.attackCooldown=.9}
-    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
+    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&Math.abs(playerWorldZ-e.z)<=82&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
       damagePlayer(1);playerInvuln=.72;
       if(!pixiDynamicActive())actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
@@ -2307,8 +2313,9 @@ function updateEnemy(e,dt,interactive){
     e.state='attack';e.attackTimer=.34;e.el.classList.remove('is-moving');e.el.classList.add('is-attacking');
   }else if(dist<=RAG_DRIFTER.aggroRange&&dist>74){
     e.state='chase';e.el.classList.add('is-moving');
-    const step=Math.sign(dx)*Math.min(RAG_DRIFTER.chaseSpeed*dt,Math.max(0,dist-72));
-    if(!moveEnemy(e,step)){e.state='blocked';e.el.classList.remove('is-moving')}
+    const step=Math.min(RAG_DRIFTER.chaseSpeed*dt,Math.max(0,dist-72));
+    const inv=dist>0?1/dist:0;
+    if(!moveEnemy(e,dx*inv*step,dz*inv*step)){e.state='blocked';e.el.classList.remove('is-moving')}
   }else{
     e.state='patrol';e.el.classList.add('is-moving');
     if(e.x<=e.patrolMin)e.patrolDir=1;
@@ -2516,7 +2523,7 @@ dialogueSkip.addEventListener('click',e=>{e.stopPropagation();closeDialogue()});
 function nearbyNpc(maxDistance=92){
   let best=null,bestD=Infinity;
   for(const n of MAP_NPCS){
-    const d=Math.abs(playerWorldX-n.x);
+    const d=cardDepthDistance(n.x,Number(n.z)||0);
     if(d<bestD&&d<=maxDistance&&playerY<80){best=n;bestD=d}
   }
   return best;
@@ -2583,7 +2590,8 @@ function updateCombat(dt,interactive){
     else if(playerAttackTimer<.22&&playerAttackTimer>.08){
       const attackBox=getPlayerAttackBox();
       eachCombatEnemy(e=>{
-        if(e.alive&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
+        const depthClose=Math.abs(playerWorldZ-e.z)<=86;
+        if(e.alive&&depthClose&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
           if(damageEnemy(e,1,facing))playerAttackHits.add(e.id);
         }
       });
@@ -2599,7 +2607,7 @@ function nearestLivingEnemy(){
   let best=null,bestD=Infinity;
   eachCombatEnemy(e=>{
     if(!e.spawned||!e.alive)return;
-    const d=Math.abs(playerWorldX-e.x);
+    const d=cardDepthDistance(e.x,e.z);
     if(d<bestD){best=e;bestD=d}
   });
   return best;
@@ -2985,7 +2993,7 @@ function hasNearbyCombat(now){
     lastCombatProbe=now;
     nearbyCombatCached=false;
     eachCombatEnemy(e=>{
-      if(!nearbyCombatCached&&e.spawned&&e.alive&&Math.abs(playerWorldX-e.x)<1700)nearbyCombatCached=true;
+      if(!nearbyCombatCached&&e.spawned&&e.alive&&cardDepthDistance(e.x,e.z)<1700)nearbyCombatCached=true;
     });
   }
   return nearbyCombatCached;
