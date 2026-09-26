@@ -86,27 +86,15 @@ function playerVisualSize(){
     h:Number(size?.h)||156
   };
 }
+const cardCamera=window.PaperchalkCardCamera;
+
 function projectCard(frame,x,z=0,y=0){
-  const cfg=runtime?.worldData?.cardProjection||{};
-  const baseDepth=Number(cfg.baseDepth)||900;
-  const minDepth=Number(cfg.minDepth)||96;
-  const maxDepth=Number(cfg.maxDepth)||6400;
-  const horizonRatio=Number(cfg.horizonRatio)||.40;
-  const relativeZ=(Number(z)||0)-(Number(frame.player?.z)||0);
-  const depth=baseDepth+relativeZ;
-  if(depth<=minDepth)return {visible:false,x:0,y:0,scale:0,depth};
-  const scale=baseDepth/depth;
-  const v=frame.viewport;
-  const horizonY=v.height*horizonRatio;
-  const footY=v.height-v.groundY;
-  const cameraHeight=footY-horizonY;
-  return {
-    visible:depth<maxDepth&&scale>.12&&scale<5,
-    x:(Number(frame.player?.screenX)||v.width*.5)+((Number(x)||0)-(Number(frame.player?.x)||0))*scale,
-    y:horizonY+(cameraHeight+(Number(frame.player?.y)||0)-(Number(y)||0))*scale,
-    scale,
-    depth
-  };
+  if(!cardCamera)return {visible:false,x:0,y:0,scale:0,depth:0};
+  return cardCamera.project({
+    worldX:x,worldZ:z,worldY:y,
+    playerX:frame.player?.x,playerZ:frame.player?.z,playerY:frame.player?.y,
+    screenX:frame.player?.screenX,viewportHeight:frame.viewport?.height,groundY:frame.viewport?.groundY
+  });
 }
 function playerActionMeta(state){
   const meta=runtime?.worldData?.playerActionMeta?.[state]||runtime?.worldData?.playerActionMeta?.idle;
