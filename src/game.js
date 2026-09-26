@@ -2870,6 +2870,7 @@ function writeTransform(el,key,value){
 }
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
+  worldEl.style.setProperty('--card-grid-x',(-posMod(sceneryX,128)).toFixed(2)+'px');
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;

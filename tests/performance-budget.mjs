@@ -30,7 +30,8 @@ const budgets={
   'assets/backgrounds/apartment-midground.webp':350000,
   'assets/backgrounds/sun-paper-r13.webp':50000,
   'assets/backgrounds/moon-paper-r13.webp':50000,
-  'assets/backgrounds/cloud-paper-r13.webp':50000
+  'assets/backgrounds/cloud-paper-r13.webp':50000,
+  'assets/debug/green-grid-1m.svg':2000
 };
 for(const [file,max] of Object.entries(budgets)){
   const bytes=size(file);
@@ -60,6 +61,9 @@ assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=
 assert(game.includes("const rear=[];")&&game.includes("const front=[];"),'Authored prop strips returned');
 assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
+assert(css.includes("R35 OPEN-GREETING-CARD PERSPECTIVE PROTOTYPE"),'Greeting-card perspective prototype missing');
+assert(css.includes("transform:rotateX(68deg)"),'Perspective ground transform missing');
+assert(game.includes("setProperty('--card-grid-x'"),'World-synced grid offset missing');
 
 assert(!game.includes("terrainTrack.innerHTML=''"),'Terrain window reverted to destructive DOM rebuild');
 assert(!game.includes("mapObjectTrack.innerHTML=''"),'Map objects reverted to destructive DOM rebuild');
