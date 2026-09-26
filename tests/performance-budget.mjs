@@ -31,7 +31,7 @@ const budgets={
   'src/core/card-camera.js':5000,
   'src/content/game-content.js':12000,
   'src/content/building-pools.js':6000,
-  'src/renderers/dom-card-projection.js':11000,
+  'src/renderers/dom-card-projection.js':12000,
   'src/renderers/oldtown-building-layer.js':8000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
@@ -77,6 +77,8 @@ assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRend
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"),'Player-driven Z ground scrolling returned');
 assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"),'Shared scene-depth projection math missing');
 assert(cardCamera.includes("farGroundDepth:FAR_GROUND_DEPTH")&&cardCamera.includes("wallDepth:FAR_GROUND_DEPTH"),'Ground far edge and sky wall depth are no longer identical');
+assert((cardCamera.match(/Object\.freeze\(\{id:'/g)||[]).length===10,'Scene guide count must remain 10');
+assert(domCardRenderer.includes("sceneMainLines")&&domCardRenderer.includes("sceneSubLines"),'Scene guide main/sub instrumentation missing');
 assert(domCardRenderer.includes("const farZ=Math.min(Number(cfg.farGroundDepth)")&&domCardRenderer.includes("dataset.farDepth"),'Ground grid is no longer finitely capped');
 assert(!game.includes("keyboardDepthForward")&&!game.includes("joystickDepthAxis"),'Player Z input returned');
 assert(renderer.includes("const cardCamera=window.PaperchalkCardCamera"),'GPU renderer does not share the card-camera runtime');
