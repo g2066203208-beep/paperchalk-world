@@ -121,6 +121,23 @@ try{
   check('Camera controls are a standalone in-world UI, not part of Settings',
     formalScene.cameraButton&&formalScene.cameraPanel&&!formalScene.cameraInSettings,
     JSON.stringify(formalScene));
+  const productionUi=await page.evaluate(()=>({
+    debugDisplay:getComputedStyle(document.getElementById('debugToggleBtn')).display,
+    guideCount:Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)
+  }));
+  check('Production hides developer UI and calibration guides by default',
+    productionUi.debugDisplay==='none'&&productionUi.guideCount===0,
+    JSON.stringify(productionUi));
+  await page.locator('#cameraControlsBtn').evaluate(el=>el.click());
+  await page.waitForFunction(()=>Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)===10);
+  const cameraOpen=await page.evaluate(()=>({
+    open:document.getElementById('cameraControlsPanel')?.classList.contains('is-open')||false,
+    guideCount:Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)
+  }));
+  check('Standalone camera UI temporarily reveals the 10 calibration guides',
+    cameraOpen.open&&cameraOpen.guideCount===10,JSON.stringify(cameraOpen));
+  await page.locator('#cameraControlsClose').evaluate(el=>el.click());
+  await page.waitForFunction(()=>Number(document.getElementById('cardGroundCanvas')?.dataset.sceneLineCount||0)===0);
 
   await page.goto('http://127.0.0.1:8080/index.html?core-regression=1&test-content=1',{waitUntil:'networkidle'});
 
