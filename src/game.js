@@ -823,13 +823,13 @@ dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
   else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
-dialogueNpcArt.src=MAP_NPCS[0]?.dialoguePortrait||MAP_NPCS[0]?.sprite||'';
-dialogueNpcArt.addEventListener('error',()=>{
-  console.warn('NPC_PORTRAIT_UNAVAILABLE');
-},{once:true});
+const initialNpc=MAP_NPCS[0]||null;
+if(initialNpc)dialogueNpcArt.src=initialNpc.dialoguePortrait||initialNpc.sprite||'';
+else dialogueNpcArt.removeAttribute('src');
+dialogueNpcArt.addEventListener('error',()=>{if(initialNpc)console.warn('NPC_PORTRAIT_UNAVAILABLE')},{once:true});
 let dialoguePortraitReady=false;
 const dialoguePortraitDecode=Promise.allSettled(
-  [dialoguePlayerArt,dialogueNpcArt].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
+  [dialoguePlayerArt,...(initialNpc?[dialogueNpcArt]:[])].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
 ).then(result=>{
   dialoguePortraitReady=true;
   return result;
