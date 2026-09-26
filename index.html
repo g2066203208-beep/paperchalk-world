@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "xy-camera-r37";
+  const BUILD = "oldtown-r38";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -55,6 +55,9 @@
   <div id="paperBackdropNext" class="paper-backdrop paper-backdrop-next" data-scene="meadow" aria-hidden="true"></div>
   <div class="paper-stage-floor-camera" aria-hidden="true">
     <div class="paper-stage-floor"></div>
+  </div>
+  <div id="oldTownBuildingLayer" class="oldtown-building-layer" aria-hidden="true">
+    <div id="oldTownBuildingTrack" class="oldtown-building-track"></div>
   </div>
   <div class="paper-wing left" aria-hidden="true"></div>
   <div class="paper-wing right" aria-hidden="true"></div>
@@ -417,8 +420,10 @@
 <script src="./src/core/card-camera.js?v=1"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
-<script src="./src/game.js?v=xy-camera-r37"></script>
+<script src="./src/content/building-pools.js?v=oldtown-r1"></script>
+<script src="./src/game.js?v=oldtown-r38"></script>
 <script src="./src/renderers/dom-card-projection.js?v=1"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=xy-camera-r37"></script>
+<script src="./src/renderers/oldtown-building-layer.js?v=oldtown-r1"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=oldtown-r38"></script>
 </body>
 </html>
