@@ -1,13 +1,11 @@
 /* DOM adapter for the X/Z/Y open-card camera. Simulation remains renderer-neutral. */
 (function(global){
 'use strict';
-
 const runtime=global.PaperchalkRuntime;
 const camera=global.PaperchalkCardCamera;
 const world=document.getElementById('world');
 const groundCanvas=document.getElementById('cardGroundCanvas');
 if(!runtime||!camera||!world)return;
-
 const maxDpr=1;
 const styleCache=new WeakMap();
 const worldVarCache=new Map();
@@ -35,7 +33,6 @@ const stats={
   farDepth:0,
   farY:0
 };
-
 function refreshNodes(){
   enemyEls=[...document.querySelectorAll('#entityTrack .enemy')];
   npcEls=new Map(
@@ -133,7 +130,6 @@ function renderGroundGrid(frame){
   const step=cfg.gridSize;
   const horizonY=camera.resolveHorizonY(v.height,v.groundY);
   writeWorldVar('--card-horizon-y',horizonY.toFixed(2)+'px');
-
   const nearZ=Number(cfg.groundNearDepth)||-step*3;
   const farZ=Math.min(Number(cfg.farGroundDepth)||Number(cfg.wallDepth)||step*10,cfg.maxDepth-camera.resolveCameraDistance()-step);
   const farProjection=camera.project({
@@ -143,7 +139,6 @@ function renderGroundGrid(frame){
   });
   const farY=farProjection.y;
   writeWorldVar('--card-far-ground-y',farY.toFixed(2)+'px');
-
   const clearTop=Math.max(0,Math.min(lastFarY||farY,farY)-6);
   ctx.clearRect(0,clearTop,v.width,Math.max(0,v.height-clearTop));
   lastFarY=farY;
@@ -162,7 +157,6 @@ function renderGroundGrid(frame){
   ctx.beginPath();
   ctx.rect(0,Math.max(0,farY-5),v.width,Math.max(0,v.height-farY+10));
   ctx.clip();
-
   let depthUsed=0;
   for(let z=Math.ceil(nearZ/step)*step;z<=farZ;z+=step){
     const q=camera.project({
@@ -178,7 +172,6 @@ function renderGroundGrid(frame){
       origin?3:(major?2.4:1.5));
     depthUsed++;
   }
-
   const farScale=Math.max(.12,farProjection.scale||.12);
   const halfWorld=(v.width*.5+step*2)/farScale;
   const firstX=Math.floor((p.x-halfWorld)/step)*step;
@@ -199,7 +192,6 @@ function renderGroundGrid(frame){
     strokeLine(ctx,a.x,a.y,b.x,b.y,major?'rgba(255,255,255,.48)':'rgba(224,247,255,.34)',major?2.4:1.5);
     worldUsed++;
   }
-
   let sceneUsed=0,sceneMain=0,sceneSub=0;
   const sceneGuideYs={};
   const sceneStyles={
@@ -233,7 +225,6 @@ function renderGroundGrid(frame){
     if(guide.kind==='sub')sceneSub++;
     else sceneMain++;
   }
-
   ctx.restore();
   stats.depthLines=depthUsed;
   stats.worldLines=worldUsed;
@@ -252,7 +243,6 @@ function renderGroundGrid(frame){
   groundCanvas.dataset.farDepth=String(farZ);
   groundCanvas.dataset.farY=farY.toFixed(2);
 }
-
 function render(frame,force=false){
   if(!frame||world.classList.contains('scene-interior'))return;
   const now=performance.now();
@@ -263,7 +253,6 @@ function render(frame,force=false){
   }
   lastRenderAt=now;
   stats.renders++;
-
   const cfg=camera.config,p=frame.player,v=frame.viewport;
   renderGroundGrid(frame);
   writeWorldVar('--card-camera-y',(Number(p.y)||0).toFixed(2)+'px');
@@ -271,7 +260,6 @@ function render(frame,force=false){
   writeWorldVar('--card-wall-grid-size',(cfg.gridSize*wallScale).toFixed(2)+'px');
   writeWorldVar('--card-wall-x',(-camera.wrap(p.x*wallScale,cfg.gridSize*wallScale)).toFixed(2)+'px');
   writeWorldVar('--card-wall-y',camera.wrap((Number(p.y)||0)*wallScale,cfg.gridSize).toFixed(2)+'px');
-
   let projectedEnemies=0,culledEnemies=0;
   if(enemyEls.length!==frame.enemies.length)refreshNodes();
   for(let i=0;i<frame.enemies.length;i++){
@@ -290,7 +278,6 @@ function render(frame,force=false){
     if(applyProjection(el,projected,{xVar:'--enemy-x',bottomVar:'--enemy-bottom',viewportWidth:v.width,viewportHeight:v.height}))projectedEnemies++;
     else culledEnemies++;
   }
-
   let projectedNpcs=0,culledNpcs=0;
   const npcs=runtime.worldData?.npcs||[];
   if(npcEls.size!==npcs.length)refreshNodes();
@@ -315,7 +302,6 @@ function render(frame,force=false){
   stats.projectedNpcs=projectedNpcs;
   stats.culledNpcs=culledNpcs;
 }
-
 refreshNodes();
 const unsubscribe=runtime.subscribe(render);
 global.addEventListener('paperchalk-world-enter',()=>{lastRenderAt=0;refreshNodes();render(runtime.getSnapshot())});
