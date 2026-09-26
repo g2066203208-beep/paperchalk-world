@@ -99,7 +99,7 @@ function coarseCardVisible(frame,x,z=0,margin=280){
   if(!cardCamera)return false;
   const cfg=cardCamera.config;
   if(z>cfg.farGroundDepth)return false;
-  const depth=cfg.baseDepth+(Number(z)||0);
+  const depth=cardCamera.resolveCameraDistance()+(Number(z)||0);
   if(depth<=cfg.minDepth)return false;
   const scale=cfg.baseDepth/depth;
   const p=frame.player,v=frame.viewport;
@@ -200,11 +200,13 @@ function renderPlayer(frame,now){
   const action=p.action||'idle';
   // Player is a fixed screen anchor. Vertical simulation moves the world,
   // not the player sprite.
-  const footY=cardCamera?cardCamera.project({
+  const playerProjection=cardCamera?cardCamera.project({
     worldX:p.x,worldZ:0,worldY:0,
     playerX:p.x,playerY:0,cameraZ:0,
     screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
-  }).y:v.height-v.groundY;
+  }):{y:v.height-v.groundY,scale:1};
+  const footY=playerProjection.y,cameraScale=playerProjection.scale||1;
+  node.root.scale.set(cameraScale,cameraScale);
   if(node.isPuppet){
     const dt=Math.min(.05,Math.max(0,(now-node.lastNow)/1000));
     node.lastNow=now;
