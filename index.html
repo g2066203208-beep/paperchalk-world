@@ -39,8 +39,8 @@
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="ground-lock-r39">
-<link rel="stylesheet" href="./styles/game.css?v=ground-lock-r39">
+<meta name="paperchalk-build" content="finite-ground-r40">
+<link rel="stylesheet" href="./styles/game.css?v=finite-ground-r40">
 </head>
 <body>
 
@@ -59,6 +59,7 @@
       <svg id="cardGroundGrid" class="card-ground-grid" aria-hidden="true">
         <g id="cardGroundDepthLines"></g>
         <g id="cardGroundWorldLines"></g>
+        <g id="cardGroundSceneLines"></g>
       </svg>
     </div>
   </div>
@@ -423,12 +424,12 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=1"></script>
+<script src="./src/core/card-camera.js?v=finite-ground-r40"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
 <script src="./src/game.js?v=oldtown-r38"></script>
-<script src="./src/renderers/dom-card-projection.js?v=ground-lock-r39"></script>
+<script src="./src/renderers/dom-card-projection.js?v=finite-ground-r40"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=oldtown-r1"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=oldtown-r38"></script>
 </body>
