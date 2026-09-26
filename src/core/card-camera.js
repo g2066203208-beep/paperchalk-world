@@ -3,6 +3,9 @@
 'use strict';
 
 const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
+let manualHorizonRatio=null;
+let tiltRevision=0;
+
 const config=Object.freeze({
   gridSize:128,
   baseDepth:3840, // 30 m camera-to-mid plane at 128 px/m
@@ -29,7 +32,7 @@ const config=Object.freeze({
   ])
 });
 
-function resolveHorizonY(viewportHeight=720,groundY=112){
+function resolveAutoHorizonY(viewportHeight=720,groundY=112){
   const h=Number(viewportHeight)||720;
   const g=Number(groundY)||112;
   const playerFootY=h-g;
@@ -38,6 +41,33 @@ function resolveHorizonY(viewportHeight=720,groundY=112){
   // Solve targetNearY = horizonY + (playerFootY-horizonY)*nearScale.
   // This changes only camera tilt / vanishing-line placement; world Z stays untouched.
   return (targetNearY-nearScale*playerFootY)/(1-nearScale);
+}
+function clampHorizonRatio(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return null;
+  return Math.max(.04,Math.min(.48,n));
+}
+function setHorizonRatio(value){
+  const next=clampHorizonRatio(value);
+  if(next===null)return false;
+  if(manualHorizonRatio!==null&&Math.abs(manualHorizonRatio-next)<1e-9)return true;
+  manualHorizonRatio=next;
+  tiltRevision++;
+  return true;
+}
+function clearHorizonRatio(){
+  if(manualHorizonRatio===null)return;
+  manualHorizonRatio=null;
+  tiltRevision++;
+}
+function resolveHorizonY(viewportHeight=720,groundY=112){
+  const h=Number(viewportHeight)||720;
+  if(manualHorizonRatio!==null)return h*manualHorizonRatio;
+  return resolveAutoHorizonY(h,groundY);
+}
+function getHorizonRatio(viewportHeight=720,groundY=112){
+  const h=Number(viewportHeight)||720;
+  return resolveHorizonY(h,groundY)/h;
 }
 
 function project({
@@ -72,5 +102,9 @@ function wrap(value,size=config.gridSize){
   return ((v%m)+m)%m;
 }
 
-global.PaperchalkCardCamera=Object.freeze({config,project,resolveHorizonY,distance2D,wrap});
+global.PaperchalkCardCamera=Object.freeze({
+  config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,distance2D,wrap,
+  get manualHorizonRatio(){return manualHorizonRatio},
+  get tiltRevision(){return tiltRevision}
+});
 })(window);
