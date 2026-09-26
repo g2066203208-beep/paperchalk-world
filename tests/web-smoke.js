@@ -281,7 +281,7 @@ assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"), "XY gameplay / Z scene-d
 assert(html.includes('id="cardGroundGrid"')&&html.includes('id="cardGroundDepthLines"')&&html.includes('id="cardGroundWorldLines"'), "Projected ground grid host missing");
 assert(css.includes(".card-ground-grid")&&!css.includes("transform:perspective(900px) rotateX(68deg)!important"), "Ground still uses a second CSS perspective camera");
 assert(css.includes("--card-horizon-y:40%"), "Card-camera horizon missing");
-assert(css.includes("translate3d(0,0,var(--card-wall-depth))"), "Altitude grid wall is not pushed into 3D depth");
+assert(css.includes("height:var(--card-far-ground-y,60%)"), "Far sky wall is not attached to the finite ground edge");
 assert(css.includes("background-position:var(--card-wall-x,0px) var(--card-wall-y,0px)"), "Altitude wall is not camera synchronized");
 assert(fs.existsSync("assets/debug/green-grid-1m.svg"), "1m green grid texture asset missing");
 assert(game.includes("function cardProjection("), "World-to-screen card projection missing");
@@ -295,7 +295,9 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="ground-lock-r39"'), "R39 ground-lock build cache key missing");
+assert(html.includes('meta name="paperchalk-build" content="finite-ground-r40"'), "R40 finite-ground build cache key missing");
+assert(html.includes('id="cardGroundSceneLines"'), "Scene-depth guide line layer missing");
+assert(cardCamera.includes("farGroundDepth:FAR_GROUND_DEPTH")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
