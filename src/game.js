@@ -26,6 +26,8 @@ const PLAYER_ACTION_META=Object.freeze({
 });
 const AUTHORED_CONTENT=window.PaperchalkContent;
 if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
+const TEST_CONTENT_ENABLED=AUTHORED_CONTENT.testContentEnabled===true;
+document.getElementById('world')?.classList.toggle('production-clean-scene',!TEST_CONTENT_ENABLED);
 const WORLD_NODES=AUTHORED_CONTENT.world.nodes.map(node=>({...node}));
 const WORLD_ROUTES=AUTHORED_CONTENT.world.routes.map(route=>({...route}));
 const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
@@ -83,16 +85,18 @@ const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
   }:null
 }));
 const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const offset=1750+(zone%4)*720;
-  const x=base+offset;
-  ENEMY_SPAWNS.push({
-    id:'enemy-zone-'+zone,
-    x,
-    patrolMin:x-170-(zone%3)*20,
-    patrolMax:x+170+(zone%2)*30
-  });
+if(TEST_CONTENT_ENABLED){
+  for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
+    const base=zone*WORLD_ZONE_WIDTH;
+    const offset=1750+(zone%4)*720;
+    const x=base+offset;
+    ENEMY_SPAWNS.push({
+      id:'enemy-zone-'+zone,
+      x,
+      patrolMin:x-170-(zone%3)*20,
+      patrolMax:x+170+(zone%2)*30
+    });
+  }
 }
 
 /* Deterministic continuation: every 6000px is authored into the same coordinate space.
@@ -492,6 +496,11 @@ midgroundApartment?.addEventListener('error',()=>{
 },{once:true});
 function updateMidgroundApartmentVisibility(sceneryX,force=false){
   if(!midgroundApartment)return;
+  if(!TEST_CONTENT_ENABLED){
+    midgroundApartment.hidden=true;
+    midgroundApartmentVisible=false;
+    return;
+  }
   const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
   const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
     &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
@@ -509,6 +518,7 @@ function apartmentDoorScreenY(){
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
+  if(!TEST_CONTENT_ENABLED)return false;
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
@@ -701,6 +711,7 @@ function updateInteriorDepthLayers(){
   return sceneLocation==='interior';
 }
 function nearbyInteriorExit(maxDistance=92){
+  if(!TEST_CONTENT_ENABLED)return false;
   return sceneLocation==='interior'&&!sceneTransitionBusy
     &&Math.abs(interiorPlayerWorldX-INTERIOR_DOOR_X)<=maxDistance
     &&Math.abs(playerY)<=72;
@@ -726,6 +737,7 @@ function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
 function enterApartment(){
+  if(!TEST_CONTENT_ENABLED)return false;
   if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
@@ -760,6 +772,7 @@ function enterApartment(){
   return true;
 }
 function exitApartment(){
+  if(!TEST_CONTENT_ENABLED)return false;
   if(sceneLocation!=='interior'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   stageHeldActorX=actorX;
@@ -821,7 +834,8 @@ dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
   else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
-dialogueNpcArt.src=MAP_NPCS[0]?.dialoguePortrait||MAP_NPCS[0]?.sprite||'';
+if(MAP_NPCS[0])dialogueNpcArt.src=MAP_NPCS[0].dialoguePortrait||MAP_NPCS[0].sprite||'';
+else dialogueNpcArt.removeAttribute('src');
 dialogueNpcArt.addEventListener('error',()=>{
   console.warn('NPC_PORTRAIT_UNAVAILABLE');
 },{once:true});
@@ -1275,7 +1289,7 @@ function createEnemyState(id,el,healthEl){
 }
 const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
 const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
-const enemies=[enemy,enemy2];
+const enemies=ENEMY_SPAWNS.length?[enemy,enemy2].slice(0,Math.min(2,ENEMY_SPAWNS.length)):[];
 
 for(let i=2;i<ENEMY_SPAWNS.length;i++){
   const spawn=ENEMY_SPAWNS[i];
@@ -2501,7 +2515,8 @@ function updateNpcPrompt(){
   }
   const active=nearDoor||nearExit||!!nearNpc;
   interactBtn.disabled=!active;
-  interactBtn.style.opacity=active?'1':'.45';
+  interactBtn.hidden=!active;
+  interactBtn.style.opacity=active?'1':'0';
   interactBtn.textContent=nearDoor?'开门':nearExit?'出门':'聊';
   renderDoorPrompt();
   return nearDoor?{kind:'door'}:nearExit?{kind:'exit'}:nearNpc;
