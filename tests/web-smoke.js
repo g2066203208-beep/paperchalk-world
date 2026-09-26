@@ -4,6 +4,7 @@ const vm = require("vm");
 const html = fs.readFileSync("index.html", "utf8");
 const css = fs.readFileSync("styles/game.css", "utf8");
 const game = fs.readFileSync("src/game.js", "utf8");
+const ecs = fs.readFileSync("src/core/ecs-runtime.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
 
 function assert(condition, message) {
@@ -30,6 +31,8 @@ for (const id of requiredIds) {
 }
 
 assert(/href=["']\.\/styles\/game\.css(?:\?[^"']*)?["']/.test(html), "External game stylesheet missing");
+assert(/src=["']\.\/src\/core\/ecs-runtime\.js(?:\?[^"']*)?["']/.test(html), "ECS runtime script missing");
+assert(html.indexOf("./src/core/ecs-runtime.js") < html.indexOf("./src/game.js"), "ECS runtime must load before game runtime");
 assert(/src=["']\.\/src\/game\.js(?:\?[^"']*)?["']/.test(html), "External game runtime missing");
 assert(/src=["']\.\/src\/renderers\/pixi-dynamic-renderer\.mjs(?:\?[^"']*)?["']/.test(html), "Pixi dynamic renderer module missing");
 assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
@@ -39,7 +42,17 @@ assert(/function autoMode\(\)\{[\s\S]*?return ['"]dom['"];[\s\S]*?\}/.test(rende
 assert(renderer.includes("runtime?.worldData?.playerVisual"), "Pixi renderer is not using shared player visual dimensions");
 assert(renderer.includes("runtime.worldData?.playerActions"), "Pixi renderer is not using shared player action textures");
 assert(renderer.includes("runtime?.worldData?.playerActionMeta"), "Pixi renderer is not using shared action orientation/scale metadata");
+new vm.Script(ecs);
 new vm.Script(game);
+assert(ecs.includes("class SparseSetStore"), "Sparse-set ECS component store missing");
+assert(ecs.includes("registerSystem(name"), "ECS system scheduler missing");
+assert(game.includes("const combatEcs=window.PaperchalkECS"), "Combat ECS world bridge missing");
+assert(game.includes("combatEcs.registerSystem('enemy-ai'"), "Enemy AI ECS system missing");
+assert(game.includes("combatEcs.run('enemy-ai'"), "Fixed-step combat no longer dispatches through ECS");
+assert(game.includes("window.PaperchalkECSRuntime"), "ECS debug/inspection API missing");
+assert(game.includes("paperchalk-world-enter',startFrameLoop"), "World RAF does not start on world lifecycle");
+assert(game.includes("paperchalk-world-leave',stopFrameLoop"), "World RAF does not stop when leaving gameplay");
+assert(!game.includes("\nrequestAnimationFrame(frame);\n"), "Always-on legacy frame loop returned");
 assert(
   /const\s+settingsBtn\s*=\s*document\.getElementById\(['"]settingsBtn['"]\)/.test(game),
   "settingsBtn is used but not declared"
