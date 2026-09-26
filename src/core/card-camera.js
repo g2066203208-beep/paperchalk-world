@@ -3,10 +3,10 @@
 'use strict';
 
 const FAR=1280;
-let manualHorizonRatio=null,manualTiltDegrees=null,manualCameraHeightPx=null,tiltRevision=0;
+let manualHorizonRatio=null,manualTiltDegrees=null,manualCameraHeightPx=null,manualCameraDistancePx=null,tiltRevision=0;
 const config=Object.freeze({
   gridSize:128,baseDepth:3840,verticalFovDegrees:60,
-  nearMainDepth:-640,nearMainScreenMargin:8,minDepth:96,maxDepth:6400,
+  nearMainDepth:-640,nearMainScreenMargin:8,minDepth:96,maxDepth:10000,
   groundNearDepth:-704,farGroundDepth:FAR,wallDepth:FAR,
   sceneGuides:Object.freeze([
     Object.freeze({id:'near-front',label:'NF',band:'near',kind:'sub',z:-704}),
@@ -54,6 +54,15 @@ function setCameraHeightMeters(v){
   manualCameraHeightPx=v;tiltRevision++;return true;
 }
 function clearCameraHeight(){if(manualCameraHeightPx!==null){manualCameraHeightPx=null;tiltRevision++}}
+function setCameraDistanceMeters(v){
+  v=Number(v);if(!Number.isFinite(v))return false;
+  v=clamp(v,6.5,60)*config.gridSize;
+  if(manualCameraDistancePx===v)return true;
+  manualCameraDistancePx=v;tiltRevision++;return true;
+}
+function clearCameraDistance(){if(manualCameraDistancePx!==null){manualCameraDistancePx=null;tiltRevision++}}
+function resolveCameraDistance(){return manualCameraDistancePx===null?config.baseDepth:manualCameraDistancePx}
+function getCameraDistanceMeters(){return resolveCameraDistance()/config.gridSize}
 function resolveHorizonY(h=720,g=112){
   h=num(h,720);
   if(manualTiltDegrees!==null)return h*.5-verticalFocalLength(h)*Math.tan(manualTiltDegrees*Math.PI/180);
@@ -74,7 +83,7 @@ function resolveCameraHeight(h=720,g=112){
 function getCameraHeightMeters(h=720,g=112){return resolveCameraHeight(h,g)/config.gridSize}
 
 function project({worldX=0,worldZ=0,worldY=0,playerX=0,playerY=0,cameraZ=0,screenX=0,viewportHeight=720,groundY=112}={}){
-  const z=num(worldZ,0)-num(cameraZ,0),depth=config.baseDepth+z;
+  const z=num(worldZ,0)-num(cameraZ,0),depth=resolveCameraDistance()+z;
   if(depth<=config.minDepth)return {visible:false,x:0,y:0,scale:0,depth};
   const scale=config.baseDepth/depth,h=resolveHorizonY(viewportHeight,groundY);
   return {
@@ -91,10 +100,12 @@ global.PaperchalkCardCamera=Object.freeze({
   config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,
   getTiltDegrees,setTiltDegrees,clearTiltDegrees,verticalFocalLength,
   resolveCameraHeight,getCameraHeightMeters,setCameraHeightMeters,clearCameraHeight,
+  resolveCameraDistance,getCameraDistanceMeters,setCameraDistanceMeters,clearCameraDistance,
   distance2D,wrap,
   get manualHorizonRatio(){return manualHorizonRatio},
   get manualTiltDegrees(){return manualTiltDegrees},
   get manualCameraHeightMeters(){return manualCameraHeightPx===null?null:manualCameraHeightPx/config.gridSize},
+  get manualCameraDistanceMeters(){return manualCameraDistancePx===null?null:manualCameraDistancePx/config.gridSize},
   get tiltRevision(){return tiltRevision}
 });
 })(window);
