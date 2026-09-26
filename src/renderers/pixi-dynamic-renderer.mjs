@@ -95,6 +95,18 @@ function projectCard(frame,x,z=0,y=0){
     screenX:frame.player?.screenX,viewportHeight:frame.viewport?.height,groundY:frame.viewport?.groundY
   });
 }
+function coarseCardVisible(frame,x,z=0,margin=280){
+  if(!cardCamera)return false;
+  const cfg=cardCamera.config;
+  if(z>cfg.farGroundDepth)return false;
+  const depth=cfg.baseDepth+(Number(z)||0);
+  if(depth<=cfg.minDepth)return false;
+  const scale=cfg.baseDepth/depth;
+  const p=frame.player,v=frame.viewport;
+  const left=p.x-(p.screenX+margin)/scale;
+  const right=p.x+(v.width-p.screenX+margin)/scale;
+  return x>=left&&x<=right;
+}
 function playerActionMeta(state){
   const meta=runtime?.worldData?.playerActionMeta?.[state]||runtime?.worldData?.playerActionMeta?.idle;
   return {
@@ -275,6 +287,10 @@ function renderEnemies(frame,now){
   for(let i=0;i<enemyNodes.length;i++){
     const data=frame.enemies[i],node=enemyNodes[i];
     if(!data||!node){continue}
+    if(!coarseCardVisible(frame,data.x,data.z||0,280)){
+      node.root.visible=false;
+      continue;
+    }
     const projection=projectCard(frame,data.x,data.z||0,0);
     const inView=projection.visible&&projection.x>-220&&projection.x<v.width+220&&projection.y>-220&&projection.y<v.height+220;
     node.root.visible=inView;

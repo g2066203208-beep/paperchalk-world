@@ -2363,44 +2363,20 @@ button{cursor:pointer}
   pointer-events:none!important;
   transform:none!important;
   translate:0 0!important;
-  background:
-    linear-gradient(to bottom,
-      transparent 0 var(--card-far-ground-y,60%),
-      #2f9e44 var(--card-far-ground-y,60%) 100%)!important;
+  background:transparent!important;
   border:0!important;
   box-shadow:none!important;
   filter:none!important;
 }
-.stage:not(.scene-interior) .card-ground-grid{
+.stage:not(.scene-interior) .card-ground-canvas{
   position:absolute;
   inset:0;
+  display:block;
   width:100%;
   height:100%;
-  overflow:hidden;
   pointer-events:none;
-  shape-rendering:geometricPrecision;
+  contain:strict;
 }
-.stage:not(.scene-interior) .card-ground-grid line{
-  vector-effect:non-scaling-stroke;
-  stroke:rgba(224,247,255,.34);
-  stroke-width:2;
-}
-.stage:not(.scene-interior) .card-ground-grid line.is-major{
-  stroke:rgba(255,255,255,.48);
-  stroke-width:3;
-}
-.stage:not(.scene-interior) .card-ground-grid line.is-origin{
-  stroke:rgba(5,66,108,.82);
-  stroke-width:3;
-}
-/* Scene-depth guides: player / far scenery / far sky-wall contact line. */
-.stage:not(.scene-interior) .card-ground-grid .scene-guide{
-  stroke-width:4;
-  opacity:.95;
-}
-.stage:not(.scene-interior) .card-ground-grid .scene-guide-player{stroke:#0878d1}
-.stage:not(.scene-interior) .card-ground-grid .scene-guide-far{stroke:#9b51e0}
-.stage:not(.scene-interior) .card-ground-grid .scene-guide-sky{stroke:#ffd43b}
 .stage:not(.scene-interior)::before{display:none!important}
 
 /* Outdoor dynamic standees are already projected by game.js, so their tracks

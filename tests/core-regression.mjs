@@ -66,33 +66,22 @@ async function paperState(page){
 async function npcGroundLockState(page){
   return page.evaluate(()=>{
     const npc=document.querySelector('[data-npc-id="npc-phone-girl"]');
-    const vertical=document.querySelector('#cardGroundWorldLines [data-world-x="768"]');
-    const zero=document.querySelector('#cardGroundDepthLines [data-world-z="0"]');
-    if(!npc||!vertical||!zero)return {ok:false};
+    const canvas=document.getElementById('cardGroundCanvas');
+    if(!npc||!canvas)return {ok:false};
     const r=npc.getBoundingClientRect();
-    const x1=Number(vertical.getAttribute('x1')),y1=Number(vertical.getAttribute('y1'));
-    const x2=Number(vertical.getAttribute('x2')),y2=Number(vertical.getAttribute('y2'));
-    const zeroLocalY=Number(zero.getAttribute('y1'));
-    const vm=vertical.getScreenCTM(),zm=zero.getScreenCTM();
-    if(!vm||!zm)return {ok:false,reason:'missing-screen-ctm'};
-    const a=new DOMPoint(x1,y1).matrixTransform(vm);
-    const b=new DOMPoint(x2,y2).matrixTransform(vm);
-    const z0=new DOMPoint(0,zeroLocalY).matrixTransform(zm);
-    const t=(z0.y-a.y)/(b.y-a.y);
-    const gridX=a.x+(b.x-a.x)*t;
+    const grid=window.PaperchalkMap.project(768,0,0);
+    const ground=window.PaperchalkMap.project(760,0,0);
     const npcX=r.left+r.width*.5;
-    const stageRect=document.getElementById('world').getBoundingClientRect();
-    const svgRect=document.getElementById('cardGroundGrid').getBoundingClientRect();
+    const canvasRect=canvas.getBoundingClientRect();
     return {
-      ok:Number.isFinite(gridX)&&Number.isFinite(z0.y),
+      ok:Number.isFinite(grid.x)&&Number.isFinite(ground.y)&&canvas.width>0&&canvas.height>0,
       playerX:window.PaperchalkMap.playerX,
-      npcX,npcFootY:r.bottom,gridX,zeroY:z0.y,
-      horizontalOffset:gridX-npcX,
-      footError:r.bottom-z0.y,
+      npcX,npcFootY:r.bottom,gridX:grid.x,zeroY:ground.y,
+      horizontalOffset:grid.x-npcX,
+      footError:r.bottom-ground.y,
       npcCssX:getComputedStyle(npc).left,
       npcVarX:npc.style.getPropertyValue('--npc-x'),
-      stage:{left:stageRect.left,top:stageRect.top,width:stageRect.width,height:stageRect.height},
-      svg:{left:svgRect.left,top:svgRect.top,width:svgRect.width,height:svgRect.height}
+      canvas:{left:canvasRect.left,top:canvasRect.top,width:canvasRect.width,height:canvasRect.height}
     };
   });
 }
@@ -158,36 +147,55 @@ try{
     JSON.stringify(cleanGround));
 
   const finiteGround=await page.evaluate(()=>{
-    const svg=document.getElementById('cardGroundGrid');
-    const skyLine=document.querySelector('#cardGroundSceneLines [data-scene-id="sky"]');
-    const farLine=document.querySelector('#cardGroundSceneLines [data-scene-id="far"]');
-    const playerLine=document.querySelector('#cardGroundSceneLines [data-scene-id="player"]');
+    const canvas=document.getElementById('cardGroundCanvas');
     const sky=document.querySelector('.paper-sky');
-    const y=Number(skyLine?.getAttribute('y1'));
-    const m=skyLine?.getScreenCTM?.();
-    const screenPoint=m?new DOMPoint(0,y).matrixTransform(m):null;
+    const stats=window.PaperchalkDomCardProjection?.stats||{};
+    const skyY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,1200,0).y;
+    const playerY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0).y;
     const skyRect=sky?.getBoundingClientRect();
+    const rect=canvas?.getBoundingClientRect();
+    const dpr=rect?.width?canvas.width/rect.width:1;
+    const ctx=canvas?.getContext('2d');
+    function bestPixel(y){
+      let best=[0,0,0,0],bestScore=-1;
+      if(!ctx)return best;
+      const px=Math.max(0,Math.round(20*dpr));
+      const py=Math.round(y*dpr);
+      for(let dy=-3;dy<=3;dy++){
+        const data=ctx.getImageData(px,Math.max(0,py+dy),1,1).data;
+        const score=data[3]+Math.max(data[0],data[1],data[2]);
+        if(score>bestScore){bestScore=score;best=[...data]}
+      }
+      return best;
+    }
     return {
-      farDepth:Number(svg?.dataset.farDepth),
-      depthLines:Number(svg?.dataset.depthLineCount),
-      worldLines:Number(svg?.dataset.worldLineCount),
-      sceneLines:Number(svg?.dataset.sceneLineCount),
-      skyY:screenPoint?.y??null,
+      farDepth:Number(canvas?.dataset.farDepth),
+      depthLines:Number(canvas?.dataset.depthLineCount),
+      worldLines:Number(canvas?.dataset.worldLineCount),
+      sceneLines:Number(canvas?.dataset.sceneLineCount),
+      childNodes:canvas?.childNodes?.length??-1,
+      backingPixels:(canvas?.width||0)*(canvas?.height||0),
+      skyY,
       skyBottom:skyRect?.bottom??null,
-      guides:[
-        playerLine?.getAttribute('data-scene-depth'),
-        farLine?.getAttribute('data-scene-depth'),
-        skyLine?.getAttribute('data-scene-depth')
-      ]
+      playerY,
+      skyPixel:bestPixel(skyY),
+      playerPixel:bestPixel(playerY),
+      renderer:stats
     };
   });
-  check('Ground grid stops at the far scenery line and the sky wall starts on that same edge',
+  check('Ground grid is one finite canvas and the sky wall starts on its far edge',
     finiteGround.farDepth===1200&&finiteGround.depthLines<=13&&finiteGround.worldLines<=50&&finiteGround.sceneLines===3&&
-    finiteGround.guides.join(',')==='0,600,1200'&&
-    Math.abs(finiteGround.skyBottom-finiteGround.skyY)<1,
+    finiteGround.childNodes===0&&finiteGround.backingPixels>0&&
+    Math.abs(finiteGround.skyBottom-finiteGround.skyY)<1&&
+    finiteGround.skyPixel[0]>180&&finiteGround.skyPixel[1]>150&&finiteGround.skyPixel[2]<150&&
+    finiteGround.playerPixel[2]>finiteGround.playerPixel[0],
     JSON.stringify(finiteGround));
+  check('Off-screen enemy projection is culled before camera/DOM work',
+    finiteGround.renderer.culledEnemies>=20&&finiteGround.renderer.projectedEnemies<=1&&
+    finiteGround.renderer.projectedNpcs===1,
+    JSON.stringify(finiteGround.renderer));
 
-  await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===30,null,{timeout:3000});
+  await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===20,null,{timeout:3000});
   await page.waitForTimeout(120);
   const oldTownScene=await page.evaluate(()=>{
     const slots=[...document.querySelectorAll('#oldTownBuildingTrack .oldtown-building')];
@@ -209,12 +217,14 @@ try{
       layerZ:Number.parseFloat(getComputedStyle(layer).zIndex)||0,
       actorZ:Number.parseFloat(getComputedStyle(actor).zIndex)||0,
       atlasRequested:performance.getEntriesByType('resource').some(e=>e.name.includes('oldtown-building-atlas-r1.webp')),
-      firstRect:firstRect?{w:firstRect.width,h:firstRect.height,left:firstRect.left,top:firstRect.top}:null
+      firstRect:firstRect?{w:firstRect.width,h:firstRect.height,left:firstRect.left,top:firstRect.top}:null,
+      perf:window.PaperchalkOldTownBuildings.stats
     };
   });
   check('Old-town scene uses all 10 supplied buildings in a retained seeded row pool',
     oldTownScene.poolId==='real-world.old-town.buildings'&&
-    oldTownScene.slots===30&&oldTownScene.uniqueIds===10&&oldTownScene.shuffled&&oldTownScene.rowWidth>1000,
+    oldTownScene.slots===20&&oldTownScene.uniqueIds===10&&oldTownScene.shuffled&&oldTownScene.rowWidth>1000&&
+    oldTownScene.perf.projected<oldTownScene.slots&&oldTownScene.perf.coarseCulled>0,
     JSON.stringify(oldTownScene));
   check('Old-town buildings are visible in the deepest midground behind the protagonist',
     oldTownScene.visible>0&&oldTownScene.firstRect?.w>40&&oldTownScene.firstRect?.h>80&&
@@ -290,16 +300,16 @@ try{
   const xyCameraBefore=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
     const snap=window.PaperchalkRuntime.getSnapshot();
-    const zero=document.querySelector('#cardGroundDepthLines [data-world-z="0"]');
-    const farLine=document.querySelector('#cardGroundDepthLines [data-world-z="640"]');
+    const groundZero=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0);
+    const groundFar=window.PaperchalkMap.project(window.PaperchalkMap.playerX,640,0);
     return {
       player:window.PaperchalkCombat.player,
       camera:snap.camera,
       near:window.PaperchalkMap.project(760,0,0),
       far:window.PaperchalkMap.project(760,600,0),
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      groundZeroY:Number(zero?.getAttribute('y1')),
-      groundFarY:Number(farLine?.getAttribute('y1')),
+      groundZeroY:groundZero.y,
+      groundFarY:groundFar.y,
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
   });
@@ -315,13 +325,13 @@ try{
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.y>20,null,{timeout:900});
   const xyCameraRaised=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
-    const zero=document.querySelector('#cardGroundDepthLines [data-world-z="0"]');
-    const farLine=document.querySelector('#cardGroundDepthLines [data-world-z="640"]');
+    const groundZero=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0);
+    const groundFar=window.PaperchalkMap.project(window.PaperchalkMap.playerX,640,0);
     return {
       player:window.PaperchalkCombat.player,
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      groundZeroY:Number(zero?.getAttribute('y1')),
-      groundFarY:Number(farLine?.getAttribute('y1')),
+      groundZeroY:groundZero.y,
+      groundFarY:groundFar.y,
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
   });
