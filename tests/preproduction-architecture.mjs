@@ -65,7 +65,18 @@ assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
 assert.equal(cardCamera.config.farGroundDepth,1200,'ground must end at the far scenery line');
 assert.equal(cardCamera.config.wallDepth,cardCamera.config.farGroundDepth,'sky wall must rise from the ground far edge');
-assert.deepEqual(Array.from(cardCamera.config.sceneGuides,x=>x.z),[0,600,1200],'scene guide depths must stay player/far/sky');
+const guides=Array.from(cardCamera.config.sceneGuides);
+assert.equal(guides.length,10,'scene depth must expose 3x3 near/mid/far guides plus horizon');
+assert.deepEqual(guides.map(x=>x.id),['near-front','near-main','near-back','mid-front','mid-main','mid-back','far-front','far-main','far-back','horizon']);
+assert.deepEqual(guides.map(x=>x.z),[-160,-120,-80,-40,0,40,400,600,800,1200]);
+assert.equal(guides.filter(x=>x.kind==='main').length,3,'near/mid/far each need one main guide');
+assert.equal(guides.filter(x=>x.kind==='sub').length,6,'near/mid/far each need front/back sub-guides');
+assert.equal(guides.filter(x=>x.kind==='horizon').length,1,'scene needs one final horizon guide');
+for(const band of ['near','mid','far']){
+  const trio=guides.filter(x=>x.band===band);
+  assert.equal(trio.length,3,band+' must have front/main/back guides');
+  assert.equal(trio[1].z-trio[0].z,trio[2].z-trio[1].z,band+' main guide must be centered');
+}
 
 const contentCheck=context.window.PaperchalkContentRuntime.validate(content);
 assert.equal(contentCheck.ok,true,contentCheck.errors.join('\n'));
@@ -88,7 +99,7 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="canvas-cull-r41"/,'canvas-cull build cache key missing');
+assert.match(html,/paperchalk-build" content="scene-guides-r42"/,'scene-guide build cache key missing');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
