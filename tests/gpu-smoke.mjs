@@ -28,7 +28,7 @@ try{
   page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
   page.on('requestfailed',r=>errors.push('REQUEST '+r.url()+' '+JSON.stringify(r.failure())));
 
-  await page.goto('http://127.0.0.1:8080/?ci=gpu-smoke',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:8080/?ci=gpu-smoke&test-content=1',{waitUntil:'networkidle'});
   await page.waitForFunction(()=>!!window.PaperchalkRenderer&&!!window.PaperchalkRuntime,{timeout:5000});
   const cold=await page.evaluate(()=>({
     ready:window.PaperchalkRenderer.ready,
