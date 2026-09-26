@@ -66,7 +66,7 @@ assert(ecs.includes("registerSystem(name"), "ECS system scheduler missing");
 assert(events.includes("class EventBus"), "Deterministic event bus missing");
 assert(state.includes("class StateMachine"), "Application state machine missing");
 assert(saves.includes("CURRENT_SCHEMA=3"), "Schema-v3 save runtime missing");
-assert(cardCamera.includes("function project("), "Shared X/Z/Y card-camera projection missing");
+assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"), "Shared XY camera with authored Z scene depth missing");
 assert(content.includes("function validate(value=content)"), "Content validation runtime missing");
 assert(domCardRenderer.includes("runtime.subscribe(render)"), "DOM card-camera renderer is not runtime-driven");
 assert(game.includes("const combatEcs=window.PaperchalkECS"), "Combat ECS world bridge missing");
@@ -207,9 +207,12 @@ assert(game.includes("const PLAYER_ACTION_ASSETS=Object.freeze"), "Player action
 assert(game.includes("function syncPlayerActionState"), "Player action state resolver missing");
 assert(game.includes("function setPlayerCrouching"), "Crouch state missing");
 assert(game.includes("playerVy>0?'jump-up':'jump-down'"), "Jump ascent/descent state split missing");
-assert(game.includes("keyboardDepthForward")&&game.includes("keyboardDepthBack"), "Outdoor forward/back depth input missing");
-assert(game.includes("e.code==='KeyC'"), "Outdoor keyboard crouch input missing");
-assert(game.includes("if(e.code==='Space'){jumpPlayer()"), "Space jump input missing");
+assert(!game.includes("keyboardDepthForward")&&!game.includes("keyboardDepthBack"), "Player depth keyboard input must not exist");
+assert(!game.includes("joystickDepthAxis"), "Player depth joystick input must not exist");
+assert(game.includes("e.code==='ArrowUp'||e.code==='KeyW'")&&game.includes("else jumpPlayer();"), "W/Up jump input missing");
+assert(game.includes("e.code==='ArrowDown'||e.code==='KeyS'")&&game.includes("keyboardCrouch=true"), "S/Down crouch input missing");
+assert(game.includes("e.code==='KeyC'"), "Keyboard C crouch input missing");
+assert(game.includes("if(e.code==='Space'){")&&game.includes("jumpPlayer();"), "Space jump input missing");
 for (const name of ['idle','crouch','jump-up','jump-down','walk']) {
   assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied high-resolution player source asset: '+name);
   assert(fs.existsSync('assets/player/runtime/'+name+'.webp'), 'Missing optimized runtime player action asset: '+name);
@@ -261,18 +264,20 @@ assert(game.includes("paperUIFrom(triggerEl,revealBackpack,backpackFrame)"), "Ba
 assert(html.includes("backpack-ui-v2.webp"), "Approved HD backpack panel missing");
 assert(html.includes("inventory-grid"), "Inventory clickable grid missing");
 assert(!html.includes("rope-left.png"), "Old rope decoration should not be used");
-assert(css.includes("R36 FULL CARD CAMERA"), "Full card-camera perspective stage missing");
+assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"), "XY gameplay / Z scene-depth stage missing");
 assert(css.includes('background-image:url("../assets/debug/green-grid-1m.svg")'), "Perspective ground grid texture missing");
-assert(css.includes("transform:rotateX(68deg)"), "Ground plane is not tilted into 3D perspective");
+assert(css.includes("var(--card-camera-y,0px)")&&css.includes("rotateX(68deg)"), "Ground plane does not follow camera Y");
 assert(css.includes("--card-horizon-y:40%"), "Card-camera horizon missing");
 assert(css.includes("translate3d(0,0,var(--card-wall-depth))"), "Altitude grid wall is not pushed into 3D depth");
 assert(css.includes("background-position:var(--card-wall-x,0px) var(--card-wall-y,0px)"), "Altitude wall is not camera synchronized");
 assert(fs.existsSync("assets/debug/green-grid-1m.svg"), "1m green grid texture asset missing");
 assert(game.includes("function cardProjection("), "World-to-screen card projection missing");
-assert(game.includes("playerWorldZ"), "Player depth coordinate missing");
-assert(game.includes("save.playerWorldZ=playerWorldZ"), "Player depth persistence missing");
-assert(game.includes("joystickDepthAxis"), "2D ground joystick depth axis missing");
-assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground grid is not synchronized to X/Z camera movement");
+assert(!game.includes("let playerWorldZ"), "Player must not own a Z movement coordinate");
+assert(!game.includes("save.playerWorldZ=playerWorldZ"), "Player Z must not be persisted");
+assert(game.includes("delete save.playerWorldZ"), "Legacy player Z must be cleaned from saves");
+assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-camera-y'"), "Ground is not synchronized to camera X/Y");
+assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
+assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
