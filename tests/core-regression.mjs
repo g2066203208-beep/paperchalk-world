@@ -1073,20 +1073,20 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
-  check('Camera controls live in Settings, not Debug',
-    await page.locator('#pageSettings #settingCameraTilt').count()===1&&
-    await page.locator('#pageSettings #settingCameraHeight').count()===1&&
-    await page.locator('#pageSettings #settingCameraDistance').count()===1&&
-    await page.locator('#debugPanel #settingCameraTilt').count()===0,
+  check('Camera controls live in standalone panel, not Debug',
+    await page.locator('#cameraPanel #cameraTilt').count()===1&&
+    await page.locator('#cameraPanel #cameraHeight').count()===1&&
+    await page.locator('#cameraPanel #cameraDistance').count()===1&&
+    await page.locator('#debugPanel #cameraTilt').count()===0,
     'settings camera controls');
 
   const cameraBefore=await page.evaluate(()=>({
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
-    maxTilt:Number(document.getElementById('settingCameraTilt')?.max)
+    maxTilt:Number(document.getElementById('cameraTilt')?.max)
   }));
-  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='4.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='13.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='4.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraTilt').evaluate(el=>{el.value='13.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
   const pitchBase=await page.evaluate(()=>({
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
@@ -1096,7 +1096,7 @@ try{
     nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
   }));
-  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
   const pitch80=await page.evaluate(()=>({
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
@@ -1105,8 +1105,8 @@ try{
     midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraTiltValue')?.textContent,
+    stored:JSON.parse(localStorage.getItem('paperchalk.camera.v1')||'{}'),
+    label:document.getElementById('cameraTiltValue')?.textContent,
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   check('Camera pitch rotates around the mid axis without changing height or distance',
@@ -1117,45 +1117,45 @@ try{
     pitch80.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({pitchBase,pitch80}));
 
-  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const height3=await page.evaluate(()=>({
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
   }));
-  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const height45=await page.evaluate(()=>({
     value:window.PaperchalkCardCamera.getCameraHeightMeters(),
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraHeightValue')?.textContent
+    stored:JSON.parse(localStorage.getItem('paperchalk.camera.v1')||'{}'),
+    label:document.getElementById('cameraHeightValue')?.textContent
   }));
   check('Camera height is independent of pitch and distance',
     height45.value===4.5&&height45.tilt===height3.tilt&&height45.distance===height3.distance&&
     Math.abs((height45.midY-height3.midY)-1.5*128)<1e-6&&height45.stored.cameraHeight===4.5&&height45.label.includes('4.5 m'),
     JSON.stringify({height3,height45}));
 
-  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const distance30=await page.evaluate(()=>({
     scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     height:window.PaperchalkCardCamera.getCameraHeightMeters()
   }));
-  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const distance15=await page.evaluate(()=>({
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     height:window.PaperchalkCardCamera.getCameraHeightMeters(),
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraDistanceValue')?.textContent,
+    stored:JSON.parse(localStorage.getItem('paperchalk.camera.v1')||'{}'),
+    label:document.getElementById('cameraDistanceValue')?.textContent,
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   check('Camera distance dollies independently without changing pitch or height',
@@ -1165,16 +1165,16 @@ try{
     distance15.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({distance30,distance15}));
 
-  await page.locator('#settingCameraReset').evaluate(el=>el.click());
+  await page.locator('#cameraResetBtn').evaluate(el=>el.click());
   await page.waitForTimeout(80);
   const cameraReset=await page.evaluate(()=>({
     angle:window.PaperchalkCardCamera.getTiltDegrees(),
     height:window.PaperchalkCardCamera.getCameraHeightMeters(),
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    angleLabel:document.getElementById('settingCameraTiltValue')?.textContent,
-    heightLabel:document.getElementById('settingCameraHeightValue')?.textContent,
-    distanceLabel:document.getElementById('settingCameraDistanceValue')?.textContent
+    stored:JSON.parse(localStorage.getItem('paperchalk.camera.v1')||'{}'),
+    angleLabel:document.getElementById('cameraTiltValue')?.textContent,
+    heightLabel:document.getElementById('cameraHeightValue')?.textContent,
+    distanceLabel:document.getElementById('cameraDistanceValue')?.textContent
   }));
   check('Camera reset restores independent production defaults',
     Math.abs(cameraReset.angle-13.1)<1e-9&&Math.abs(cameraReset.height-4.1)<1e-9&&cameraReset.distance===30&&
@@ -1359,7 +1359,7 @@ try{
     'controls='+await page.locator('#settingLanguage,#settingTimeScale,#settingLandscape').count());
   await page.locator('#settingTimeScale').selectOption('2');
   await page.locator('#settingLandscape').uncheck();
-  const settings=await page.evaluate(()=>JSON.parse(localStorage.getItem('paperchalk.settings.v1')));
+  const settings=await page.evaluate(()=>JSON.parse(localStorage.getItem('paperchalk.camera.v1')));
   check('Settings persist',settings?.timeScale===2&&settings?.preferLandscape===false,JSON.stringify(settings));
 
   // Switch to B, which must not inherit A.
