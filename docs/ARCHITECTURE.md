@@ -18,7 +18,7 @@ Paperchalk World uses a hybrid browser-game architecture rather than forcing eve
 
 `src/core/ecs-runtime.js`, `event-bus.js`, `game-state.js`, `save-runtime.js`, `card-camera.js`
 
-The core layer is dependency-free. Sparse-set ECS stores dense component arrays plus sparse entity indices; deterministic events decouple domain side effects; the top-level app lifecycle is a finite-state machine; saves use schema migrations and a last-known-good backup. `card-camera.js` is the single X/Z/Y perspective authority for the outdoor open-card stage.
+The core layer is dependency-free. Sparse-set ECS stores dense component arrays plus sparse entity indices; deterministic events decouple domain side effects; the top-level app lifecycle is a finite-state machine; saves use schema migrations and a last-known-good backup. `card-camera.js` is the single outdoor projection authority: gameplay camera follows X/Y only, while Z is authored scene depth and is never a player movement axis.
 
 Combat enemies now expose granular `Transform`, `Health`, `Combat`, `AI`, `Patrol` and `Renderable` components while retaining a temporary compatibility object for unchanged renderer/debug APIs.
 
@@ -46,7 +46,7 @@ UI overlays and account/settings screens should **not** be converted into ECS en
 
 ### 4. Renderer boundary
 
-`window.PaperchalkRuntime` exposes a renderer-neutral reused frame state including player/enemy Z depth. `src/renderers/dom-card-projection.js` and `src/renderers/pixi-dynamic-renderer.mjs` consume the same `PaperchalkCardCamera` projection so DOM and GPU cannot drift into different perspective rules. DOM remains the safe default; Pixi can be selected for controlled GPU testing.
+`window.PaperchalkRuntime` exposes renderer-neutral X/Y player/camera state plus optional entity Z scene depth. `src/renderers/dom-card-projection.js` and `src/renderers/pixi-dynamic-renderer.mjs` consume the same `PaperchalkCardCamera` projection so DOM and GPU cannot drift into different perspective rules. DOM remains the safe default; Pixi can be selected for controlled GPU testing.
 
 ### 5. Presentation
 
@@ -74,6 +74,6 @@ UI overlays and account/settings screens should **not** be converted into ECS en
 - [x] Add deterministic event bus and app state machine
 - [x] Add authored content registry + validation
 - [x] Add schema-v3 saves, v2 migration and last-known-good backup
-- [x] Add shared X/Z/Y card camera, infinite grid references and DOM/Pixi projection parity
+- [x] Add shared X/Y gameplay camera with authored Z scene depth, infinite grid references and DOM/Pixi projection parity
 - [ ] Migrate NPCs, pickups and projectiles into ECS where simulation benefits
 - [ ] Extract input commands, scene traversal and inventory domains from the compatibility runtime

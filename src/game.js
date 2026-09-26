@@ -1223,17 +1223,14 @@ updateDayNightVisuals(true);
 let playerScreenAnchorX=Math.round(VIEW_W*.5);
 let actorX=playerScreenAnchorX;
 let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
-let keyboardDepthForward=false,keyboardDepthBack=false;
 let mobileCrouch=false,mobileFlightUp=false,mobileFlightDown=false;
-let joystickAxis=0,joystickDepthAxis=0,joystickFlightAxisY=0;
+let joystickAxis=0,joystickFlightAxisY=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
-let playerWorldZ=0;
 let playerY=0,playerVy=0,playerGrounded=true;
 const CARD_CAMERA=window.PaperchalkCardCamera;
 if(!CARD_CAMERA)throw new Error('PaperchalkCardCamera missing');
-const CARD_WORLD_Z_LIMIT=CARD_CAMERA.config.worldDepthLimit;
 let playerCrouching=false;
 let playerActionState='idle';
 let coyoteTimer=0,jumpBufferTimer=0;
@@ -1538,7 +1535,7 @@ function writeDebugOutput(message){
 }
 function openDebugPanel(){
   if(!document.getElementById('uiShell').classList.contains('is-hidden'))return false;
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   debugPanel.classList.add('is-open');
   debugPanel.setAttribute('aria-hidden','false');
@@ -1553,7 +1550,7 @@ function closeDebugPanel({focus=true}={}){
   debugPanel.classList.remove('is-open');
   debugPanel.setAttribute('aria-hidden','true');
   debugToggleBtn.setAttribute('aria-expanded','false');
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   if(focus)debugToggleBtn.focus({preventScroll:true});
   return true;
@@ -1678,7 +1675,7 @@ function runDebugCommand(rawCommand){
     if(sceneLocation==='interior'){
       return 'interiorX='+interiorPlayerWorldX.toFixed(2)+' interiorY='+playerY.toFixed(2)+' cameraX='+interiorCameraX.toFixed(2)+' cameraY='+interiorCameraY.toFixed(2)+' screenX='+actorX.toFixed(2);
     }
-    return 'playerX='+playerWorldX.toFixed(2)+' playerZ='+playerWorldZ.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' cameraZ='+playerWorldZ.toFixed(2)+' cameraY='+playerY.toFixed(2)+' screenX='+actorX.toFixed(2);
+    return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' cameraY='+playerY.toFixed(2)+' sceneZ=fixed-camera-plane screenX='+actorX.toFixed(2);
   }
   if(cmd==='map'){
     return '世界图 '+WORLD_NODES.length+' 节点 / '+WORLD_ROUTES.length+' 道路 | 当前='+regionNameAt(playerWorldX)+' | edge='+worldZoneIndexAt(playerWorldX)+' | 已探索道路='+mapState.visitedRoutes.size;
@@ -2245,14 +2242,9 @@ function enemyCanMove(e,dx){
   }
   return true;
 }
-function moveEnemy(e,dx,dz=0){
-  let moved=false;
-  if(!dx||enemyCanMove(e,dx)){
-    if(dx){e.x=clamp(e.x+dx,35,MAP_WIDTH-35);moved=true}
-    if(dz){e.z=clamp(e.z+dz,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);moved=true}
-    return moved||(!dx&&!dz);
-  }
-  if(dz){e.z=clamp(e.z+dz,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);return true}
+function moveEnemy(e,dx){
+  if(!dx)return true;
+  if(enemyCanMove(e,dx)){e.x=clamp(e.x+dx,35,MAP_WIDTH-35);return true}
   return false;
 }
 function updateEnemy(e,dt,interactive){
@@ -2260,7 +2252,7 @@ function updateEnemy(e,dt,interactive){
   e.attackCooldown=Math.max(0,e.attackCooldown-dt);e.hitstun=Math.max(0,e.hitstun-dt);
   if(!interactive||e.hitstun>0)return;
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
-  const dx=playerWorldX-e.x,dz=playerWorldZ-e.z,dist=Math.hypot(dx,dz);
+  const dx=playerWorldX-e.x,dz=-e.z,dist=Math.hypot(dx,dz);
   if(dist>RAG_DRIFTER.sleepRange){
     if(e.state!=='sleep'){
       e.state='sleep';
@@ -2272,7 +2264,7 @@ function updateEnemy(e,dt,interactive){
   if(e.attackTimer>0){
     e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
     if(e.attackTimer<=0){e.el.classList.remove('is-attacking');e.attackCooldown=.9}
-    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&Math.abs(playerWorldZ-e.z)<=82&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
+    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&Math.abs(e.z)<=82&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
       damagePlayer(1);playerInvuln=.72;
       if(!pixiDynamicActive())actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
@@ -2280,9 +2272,8 @@ function updateEnemy(e,dt,interactive){
     e.state='attack';e.attackTimer=.34;e.el.classList.remove('is-moving');e.el.classList.add('is-attacking');
   }else if(dist<=RAG_DRIFTER.aggroRange&&dist>74){
     e.state='chase';e.el.classList.add('is-moving');
-    const step=Math.min(RAG_DRIFTER.chaseSpeed*dt,Math.max(0,dist-72));
-    const inv=dist>0?1/dist:0;
-    if(!moveEnemy(e,dx*inv*step,dz*inv*step)){e.state='blocked';e.el.classList.remove('is-moving')}
+    const step=Math.sign(dx)*Math.min(RAG_DRIFTER.chaseSpeed*dt,Math.max(0,Math.abs(dx)-72));
+    if(!moveEnemy(e,step)){e.state='blocked';e.el.classList.remove('is-moving')}
   }else{
     e.state='patrol';e.el.classList.add('is-moving');
     if(e.x<=e.patrolMin)e.patrolDir=1;
@@ -2415,7 +2406,7 @@ function advanceDialogue(){
 }
 function openDialogue(npc){
   if(!npc||dialogueIsOpen())return false;
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   closeDebugPanel({focus:false});
   clearTimeout(dialogueCloseTimer);
@@ -2539,13 +2530,12 @@ function updateMapInteractions(){
     }
   }
 }
-function teleportTo(x,{notice='已传送',z=0}={}){
+function teleportTo(x,{notice='已传送'}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  playerWorldZ=clamp(Number(z)||0,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
-  lastInteractionX=NaN;lastInteractionY=NaN;lastInteractionZ=NaN;
+  lastInteractionX=NaN;lastInteractionY=NaN;
   updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
 }
 function updateCombat(dt,interactive){
@@ -2558,7 +2548,7 @@ function updateCombat(dt,interactive){
     else if(playerAttackTimer<.22&&playerAttackTimer>.08){
       const attackBox=getPlayerAttackBox();
       eachCombatEnemy(e=>{
-        const depthClose=Math.abs(playerWorldZ-e.z)<=86;
+        const depthClose=Math.abs(e.z)<=86;
         if(e.alive&&depthClose&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
           if(damageEnemy(e,1,facing))playerAttackHits.add(e.id);
         }
@@ -2616,7 +2606,6 @@ window.PaperchalkMap={
   width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
   get playerX(){return playerWorldX},
-  get playerZ(){return playerWorldZ},
   project(x,z=0,y=0){return cardProjection(x,z,y)},
   get traversal(){return {routeIndex:worldZoneIndexAt(playerWorldX),orientation:currentRouteOrientation,nodeBounds:routeBoundaryInfo(playerWorldX)}},
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
@@ -2626,7 +2615,7 @@ window.PaperchalkCombat={
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
   get enemy(){return {x:enemy.x,z:enemy.z,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
   get enemies(){return enemies.map(e=>({id:e.id,x:e.x,z:e.z,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
-  get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,z:playerWorldZ,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
+  get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
@@ -2638,11 +2627,11 @@ let runtimeRevision=0;
 const runtimeFrameState={
   revision:0,
   viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
-  camera:{x:worldX,y:playerY,z:playerWorldZ,visualOriginX,sceneryOffsetX},
+  camera:{x:worldX,y:playerY,z:0,visualOriginX,sceneryOffsetX},
   time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
   route:{index:0,id:'',biome:'meadow',orientation:1},
   player:{
-    x:playerWorldX,z:playerWorldZ,y:playerY,vy:playerVy,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+    x:playerWorldX,y:playerY,vy:playerVy,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
     grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,
     moving:false,attacking:false,attackTimer:0,invulnerable:false
   },
@@ -2661,10 +2650,10 @@ function refreshRuntimeFrameState(){
   s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
   const activeCameraX=sceneLocation==='interior'?interiorCameraX:worldX;
   const activePlayerX=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
-  s.camera.x=activeCameraX;s.camera.y=playerY;s.camera.z=sceneLocation==='outside'?playerWorldZ:0;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
+  s.camera.x=activeCameraX;s.camera.y=playerY;s.camera.z=0;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
-  s.player.x=activePlayerX;s.player.z=sceneLocation==='outside'?playerWorldZ:0;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.x=activePlayerX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
   s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
   s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
@@ -2836,7 +2825,6 @@ function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
   return joystickAxis;
 }
-function depthAxis(){return clamp((keyboardDepthForward?1:0)-(keyboardDepthBack?1:0)+joystickDepthAxis,-1,1)}
 function flightVerticalAxis(){
   const buttons=((keyboardFlightUp||mobileFlightUp)?1:0)-((keyboardFlightDown||mobileFlightDown)?1:0);
   return clamp(buttons+joystickFlightAxisY,-1,1);
@@ -2846,8 +2834,8 @@ function flightCeiling(){
     ? Math.max(0,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24)
     : OUTDOOR_FLIGHT_MAX_Y;
 }
-function cardProjection(worldX,worldZ=0,worldY=0){return CARD_CAMERA.project({worldX,worldZ,worldY,playerX:playerWorldX,playerZ:playerWorldZ,playerY,screenX:playerScreenAnchorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y})}
-function cardDepthDistance(x,z=0){return CARD_CAMERA.distance2D(x,z,playerWorldX,playerWorldZ)}
+function cardProjection(worldX,worldZ=0,worldY=0){return CARD_CAMERA.project({worldX,worldZ,worldY,playerX:playerWorldX,playerY,cameraZ:0,screenX:playerScreenAnchorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y})}
+function cardDepthDistance(x,z=0){return CARD_CAMERA.distance2D(x,z,playerWorldX,0)}
 function setFacing(dir){
   if(!dir||dir===facing)return;
   facing=dir;
@@ -2926,7 +2914,7 @@ function renderWorld(force=false){
   notifyRuntimeObservers();
 }
 let lastInteractionTick=0;
-let lastInteractionX=NaN,lastInteractionY=NaN,lastInteractionZ=NaN;
+let lastInteractionX=NaN,lastInteractionY=NaN;
 let lastAmbientVisualTick=0;
 let combatAccumulator=0;
 let lastCombatProbe=0,nearbyCombatCached=false;
@@ -2993,9 +2981,7 @@ function frame(now){
   const rawAxis=movementAxis();
   const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis;
   const magnitude=Math.abs(axis);
-  const rawDepthAxis=sceneLocation==='outside'&&!debugFlightMode?depthAxis():0;
-  const depthMagnitude=Math.abs(rawDepthAxis);
-  const moving=magnitude>.02||depthMagnitude>.02;
+  const moving=magnitude>.02;
   if(moving!==lastMovingState){
     lastMovingState=moving;
     actorEl.classList.toggle('is-moving',moving);
@@ -3056,18 +3042,8 @@ function frame(now){
       movePlayerHorizontal(dir*speed*dt);
       playerDynamic=true;
     }
-    if(depthMagnitude>.02){
-      const depthSpeed=Math.max(150,Math.min(235,VIEW_W*.18))*depthMagnitude;
-      playerWorldZ=clamp(
-        playerWorldZ+Math.sign(rawDepthAxis)*depthSpeed*dt,
-        -CARD_WORLD_Z_LIMIT,
-        CARD_WORLD_Z_LIMIT
-      );
-      playerDynamic=true;
-    }
     if(moving){
-      const motionMagnitude=Math.max(magnitude,depthMagnitude);
-      const walkDuration=(0.90-0.34*motionMagnitude).toFixed(2)+'s';
+      const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
       if(walkDuration!==lastWalkDuration){
         lastWalkDuration=walkDuration;
         actorEl.style.setProperty('--walk-duration',walkDuration);
@@ -3094,15 +3070,12 @@ function frame(now){
   }
 
   const interactionCoord=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
-  const interactionDepth=sceneLocation==='interior'?0:playerWorldZ;
   const interactionMoved=!Number.isFinite(lastInteractionX)
-    ||!Number.isFinite(lastInteractionZ)
     ||Math.abs(interactionCoord-lastInteractionX)>8
-    ||Math.abs(playerY-lastInteractionY)>8
-    ||Math.abs(interactionDepth-lastInteractionZ)>8;
+    ||Math.abs(playerY-lastInteractionY)>8;
   if(interactionMoved&&now-lastInteractionTick>=80){
     lastInteractionTick=now;
-    lastInteractionX=interactionCoord;lastInteractionY=playerY;lastInteractionZ=interactionDepth;
+    lastInteractionX=interactionCoord;lastInteractionY=playerY;
     updateMapInteractions();
   }
 
@@ -3135,18 +3108,20 @@ addEventListener('keydown',e=>{
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=true;e.preventDefault()}
   if(e.code==='ArrowDown'||e.code==='KeyS'){
     if(debugFlightMode)keyboardFlightDown=true;
-    else if(sceneLocation==='outside')keyboardDepthBack=true;
     else {keyboardCrouch=true;updateCrouchState()}
     e.preventDefault();
   }
   if(e.code==='ArrowUp'||e.code==='KeyW'){
     if(debugFlightMode)keyboardFlightUp=true;
-    else if(sceneLocation==='outside')keyboardDepthForward=true;
     else jumpPlayer();
     e.preventDefault();
   }
-  if(e.code==='Space'){jumpPlayer();e.preventDefault()}
-  if(e.code==='KeyC'&&sceneLocation==='outside'&&!debugFlightMode){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
+  if(e.code==='Space'){
+    if(debugFlightMode)keyboardFlightUp=true;
+    else jumpPlayer();
+    e.preventDefault();
+  }
+  if(e.code==='KeyC'&&!debugFlightMode){keyboardCrouch=true;updateCrouchState();e.preventDefault()}
   if(e.code==='KeyJ'){startPlayerAttack();e.preventDefault()}
   if(e.code==='KeyE'){interactWithNpc();e.preventDefault()}
 });
@@ -3154,11 +3129,9 @@ addEventListener('keyup',e=>{
   if(e.code==='ArrowLeft'||e.code==='KeyA'){keyboardLeft=false;e.preventDefault()}
   if(e.code==='ArrowRight'||e.code==='KeyD'){keyboardRight=false;e.preventDefault()}
   if(e.code==='ArrowDown'||e.code==='KeyS'){
-    keyboardFlightDown=false;keyboardDepthBack=false;
-    if(sceneLocation==='interior'){keyboardCrouch=false;updateCrouchState()}
-    e.preventDefault();
+    keyboardFlightDown=false;keyboardCrouch=false;updateCrouchState();e.preventDefault()
   }
-  if(e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;keyboardDepthForward=false;e.preventDefault()}
+  if(e.code==='ArrowUp'||e.code==='KeyW'){keyboardFlightUp=false;e.preventDefault()}
   if(e.code==='KeyC'){keyboardCrouch=false;updateCrouchState();e.preventDefault()}
   if(e.code==='Space'){keyboardFlightUp=false;e.preventDefault()}
 });
@@ -3206,7 +3179,6 @@ jumpBtn.addEventListener('lostpointercapture',releaseMobileFlightUp);
 attackBtn.addEventListener('pointerdown',e=>{e.preventDefault();startPlayerAttack()});
 function resetJoystick(){
   joystickAxis=0;
-  joystickDepthAxis=0;
   joystickFlightAxisY=0;
   joystickPointer=null;
   joystickEl.classList.remove('is-active');
@@ -3215,9 +3187,8 @@ function resetJoystick(){
 }
 addEventListener('blur',()=>{
   keyboardLeft=keyboardRight=keyboardCrouch=keyboardFlightUp=keyboardFlightDown=false;
-  keyboardDepthForward=keyboardDepthBack=false;
   mobileCrouch=mobileFlightUp=mobileFlightDown=false;
-  joystickDepthAxis=0;joystickFlightAxisY=0;
+  joystickFlightAxisY=0;
   if(playerCrouching)setPlayerCrouching(false);
   resetJoystick();
 });
@@ -3228,10 +3199,15 @@ const JOY_DEADZONE=.14;
 function updateJoystick(clientX,clientY){
   let dx=clientX-joystickOriginX;
   let dy=clientY-joystickOriginY;
-  const distance=Math.hypot(dx,dy);
-  if(distance>JOY_RADIUS){
-    const scale=JOY_RADIUS/distance;
-    dx*=scale;dy*=scale;
+  if(debugFlightMode){
+    const distance=Math.hypot(dx,dy);
+    if(distance>JOY_RADIUS){
+      const scale=JOY_RADIUS/distance;
+      dx*=scale;dy*=scale;
+    }
+  }else{
+    dx=clamp(dx,-JOY_RADIUS,JOY_RADIUS);
+    dy=0;
   }
   joystickEl.style.setProperty('--joy-x',dx.toFixed(1)+'px');
   joystickEl.style.setProperty('--joy-y',dy.toFixed(1)+'px');
@@ -3239,19 +3215,11 @@ function updateJoystick(clientX,clientY){
   const raw=dx/JOY_RADIUS;
   const a=Math.abs(raw);
   joystickAxis=a<=JOY_DEADZONE?0:Math.sign(raw)*Math.min(1,(a-JOY_DEADZONE)/(1-JOY_DEADZONE));
-  const rawY=-dy/JOY_RADIUS;
-  const ay=Math.abs(rawY);
-  const normalizedY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
   if(debugFlightMode){
-    joystickFlightAxisY=normalizedY;
-    joystickDepthAxis=0;
-  }else if(sceneLocation==='outside'){
-    joystickDepthAxis=normalizedY;
-    joystickFlightAxisY=0;
-  }else{
-    joystickDepthAxis=0;
-    joystickFlightAxisY=0;
-  }
+    const rawY=-dy/JOY_RADIUS;
+    const ay=Math.abs(rawY);
+    joystickFlightAxisY=ay<=JOY_DEADZONE?0:Math.sign(rawY)*Math.min(1,(ay-JOY_DEADZONE)/(1-JOY_DEADZONE));
+  }else joystickFlightAxisY=0;
 }
 joystickZone.addEventListener('pointerdown',e=>{
   if(!worldInteractive()||joystickPointer!==null)return;
@@ -3645,7 +3613,7 @@ function openWorldMap(triggerEl=worldMapBtn){
   if(!shell.classList.contains('is-hidden')||worldMapOverlay.classList.contains('is-open'))return false;
   closeDebugPanel({focus:false});
   closeBackpack(true);
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   worldMapLastTrigger=triggerEl;
   paperUIFrom(triggerEl,revealWorldMap,worldMapPaper);
@@ -3789,7 +3757,7 @@ function revealBackpack(){
 function openBackpack(triggerEl=backpackBtn){
   const shell=document.getElementById('uiShell');
   if(!shell.classList.contains('is-hidden')||backpackClosing||backpackOverlay.classList.contains('is-open'))return;
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   lastBackpackTrigger=triggerEl;
   renderInventory();
@@ -3927,7 +3895,6 @@ function defaultSave(session){
     worldMinutes:0,
     worldX:0,
     playerWorldX:MAP_SPAWN_X,
-    playerWorldZ:0,
     playerY:0,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
@@ -4050,7 +4017,7 @@ function saveWorldState(){
   save.location=regionNameAt(playerWorldX);
   save.worldX=worldX;
   save.playerWorldX=playerWorldX;
-  save.playerWorldZ=playerWorldZ;
+  delete save.playerWorldZ;
   save.playerY=playerY;
   save.routeOrientation={routeIndex:orientationRouteIndex,sign:currentRouteOrientation};
   save.worldMinutes=worldMinutes;
@@ -4073,7 +4040,6 @@ function loadWorldState(){
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
   playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-  playerWorldZ=clamp(Number.isFinite(save.playerWorldZ)?save.playerWorldZ:0,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);
   const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
   orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
   currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
@@ -4104,7 +4070,7 @@ function openUI(fromWorld=false){
   closeWorldMap(true);
   closeBackpack(true);
   if(fromWorld)saveWorldState();
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
   uiShell.removeAttribute('inert');
@@ -4125,7 +4091,7 @@ function enterWorld(){
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
   if(enemies.some(e=>!e.spawned||e.account!==session.account))resetMapEnemies();
-  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
+  keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
   const appState=window.PaperchalkAppState;
@@ -4159,7 +4125,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;playerWorldZ=0;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
+      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;

@@ -55,10 +55,12 @@ first.save.worldX=30;
 saveRuntime.write({key:'save',save:first.save,account:'tester',storage});
 assert.ok(memory.has('save.backup'),'write should keep last-known-good backup');
 
-const near=cardCamera.project({worldX:0,worldZ:0,playerX:0,playerZ:100,screenX:640,viewportHeight:720,groundY:112});
-const far=cardCamera.project({worldX:0,worldZ:0,playerX:0,playerZ:-100,screenX:640,viewportHeight:720,groundY:112});
-assert.ok(near.scale>far.scale,'card camera must make nearer world points larger');
-assert.ok(near.y>far.y,'card camera must move nearer ground points lower on screen');
+const near=cardCamera.project({worldX:0,worldZ:0,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
+const far=cardCamera.project({worldX:0,worldZ:600,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
+assert.ok(near.scale>far.scale,'authored scene Z must make farther objects smaller');
+assert.ok(near.y>far.y,'authored scene Z must move farther ground objects toward the horizon');
+const raised=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:120,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
+assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
 
 const contentCheck=context.window.PaperchalkContentRuntime.validate(content);

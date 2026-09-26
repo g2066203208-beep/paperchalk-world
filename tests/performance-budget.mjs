@@ -65,11 +65,13 @@ assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=
 assert(game.includes("const rear=[];")&&game.includes("const front=[];"),'Authored prop strips returned');
 assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
-assert(css.includes("R36 FULL CARD CAMERA"),'Full card-camera perspective runtime missing');
-assert(css.includes("transform:rotateX(68deg)"),'Perspective ground transform missing');
+assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"),'XY gameplay / Z scene-depth runtime missing');
+assert(css.includes("var(--card-camera-y,0px)")&&css.includes("rotateX(68deg)"),'Perspective ground camera-Y transform missing');
 assert(css.includes("translate3d(0,0,var(--card-wall-depth))"),'Distant altitude wall transform missing');
-assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-grid-z'"),'World-synced X/Z grid offsets missing');
-assert(cardCamera.includes("function project("),'Shared card-camera projection math missing');
+assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-camera-y'"),'World-synced X/Y ground camera missing');
+assert(!domCardRenderer.includes("setProperty('--card-grid-z'"),'Player-driven Z ground scrolling returned');
+assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"),'Shared scene-depth projection math missing');
+assert(!game.includes("keyboardDepthForward")&&!game.includes("joystickDepthAxis"),'Player Z input returned');
 assert(renderer.includes("const cardCamera=window.PaperchalkCardCamera"),'GPU renderer does not share the card-camera runtime');
 
 assert(!game.includes("terrainTrack.innerHTML=''"),'Terrain window reverted to destructive DOM rebuild');
