@@ -129,14 +129,15 @@ assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport up
 assert(!fs.existsSync("assets/road/user-road-surface-r1.webp"), "Painted road asset must be removed");
 assert(html.includes('class="world-layer road-layer" hidden'), "Road compatibility layer must stay hidden");
 assert(css.includes(".road-layer{display:none!important}"), "Road visuals are not fully disabled");
-assert(html.includes('id="midgroundApartment"'), "Apartment midground image missing");
-assert(fs.existsSync("assets/backgrounds/apartment-midground.webp"), "Local apartment runtime asset missing");
-assert(html.includes('./assets/backgrounds/apartment-midground.webp?v='), "Apartment is not using the local runtime asset");
+assert(!html.includes('id="midgroundApartment"'), "Legacy apartment exterior returned");
+assert(!html.includes('./assets/backgrounds/apartment-midground.webp'), "Legacy apartment image is still mounted");
+assert(!html.includes('id="apartmentDoorPrompt"'), "Legacy apartment door prompt returned");
+assert(!html.includes('id="interiorScene"'), "Legacy apartment interior DOM returned");
+assert(game.includes("function nearbyApartmentDoor(){return false}"), "Legacy apartment door can become interactive");
+assert(game.includes("function nearbyInteriorExit(){return false}"), "Legacy interior exit can become interactive");
+assert(game.includes("function enterApartment(){return false}")&&game.includes("function exitApartment(){return false}"), "Legacy apartment transitions are not hard-disabled");
 assert(!html.includes("cdn.openart.ai"), "Runtime HTML still depends on OpenArt CDN");
 assert(!html.includes("blackKeyApartment") && !css.includes("blackKeyApartment"), "Realtime apartment black-key filter still present");
-assert(game.includes("updateMidgroundApartmentVisibility"), "Apartment off-screen culling missing");
-assert(html.includes('width="780" height="1040"'), "Apartment display dimensions must be 780x1040 at default player scale");
-assert(css.includes("width:calc(var(--player-visual-h,156px) * 5)"), "Apartment width is not tied to player scale");
 assert(!fs.existsSync("assets/backgrounds/mountain-paper-r13.webp"), "Background mountain asset must be removed");
 assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"), "Background mountain layer still exists");
 assert(html.includes("sun-paper-r13.webp")&&html.includes("moon-paper-r13.webp")&&html.includes("cloud-paper-r13.webp"), "User supplied sky props are not mounted");
@@ -180,20 +181,8 @@ assert(!fs.existsSync("assets/dialogue/npc-portrait-hd.svg")&&!fs.existsSync("as
 assert(css.includes("width:64px;height:128px"), "NPC world visual canvas is not player-matched");
 assert(css.includes("width:auto;height:128px;max-width:64px;max-height:128px"), "NPC art is not normalized to 128px visual height");
 assert(game.includes("function interactWithNpc"), "NPC interaction logic missing");
-assert(html.includes('id="apartmentDoorPrompt"')&&html.includes('id="interiorScene"'), "Apartment door/interior stage DOM missing");
-assert(game.includes("function enterApartment")&&game.includes("function exitApartment"), "Door stage transition runtime missing");
-assert(game.includes("apartmentDoorScreenX")&&game.includes("nearbyApartmentDoor"), "Apartment door proximity interaction missing");
-assert(game.includes("window.PaperchalkScene"), "Scene transition test API missing");
-assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
-assert(!css.includes(".stage.paper-stage-out .actor{")&&!css.includes(".stage.scene-interior.interior-stage-in .actor{")&&!css.includes(".stage.scene-interior.interior-stage-out .actor{")&&!css.includes(".stage.exterior-stage-in .actor{"), "Player must stay fixed while paper scenery changes");
-assert(game.includes("playerScreenAnchorX=Math.round(VIEW_W*.5)")&&game.includes("actorX=playerScreenAnchorX"), "Player must use one fixed screen anchor");
-assert(game.includes("interiorCameraX=INTERIOR_DOOR_X-playerScreenAnchorX")&&game.includes("interiorPlayerWorldX=INTERIOR_DOOR_X"), "Entry must place the finite indoor doorway exactly under the fixed player");
-assert(game.includes("worldX=exteriorCameraForDoorAt(playerScreenAnchorX)")&&game.includes("playerWorldX=clamp(worldX+playerScreenAnchorX")&&!game.includes("tweenExteriorWorldToPlayer"), "Exit must reveal the exterior door at the fixed player and must not run a second camera recenter tween");
-assert(game.includes("const INTERIOR_MAP_WIDTH=1536")&&game.includes("const INTERIOR_MAP_HEIGHT=768")&&game.includes("const INTERIOR_SECOND_FLOOR_Y=384"), "Residential-scale two-storey indoor world dimensions missing");
-assert(game.includes("midY:192")&&game.includes("interiorStairState='landing-up'")&&game.includes("interiorStairState='landing-down'"), "Switchback double-flight stair traversal states missing");
-assert(game.includes("function interiorLowerY")&&game.includes("function interiorUpperY")&&game.includes("function updateInteriorVertical"), "Double-flight stair surfaces or indoor jump physics missing");
-assert(html.includes('id="interiorStaircase"')&&html.includes("interior-stair-run-lower")&&html.includes("interior-stair-run-upper")&&html.includes("interior-stair-landing"), "Switchback double-flight stair visual missing");
-assert(css.includes(".interior-stair-run-lower{")&&css.includes(".interior-stair-run-upper{")&&css.includes(".interior-stair-rail-upper{"), "Crossing double-flight stair styling missing");
+assert(!html.includes('id="apartmentDoorPrompt"')&&!html.includes('id="interiorScene"'), "Legacy apartment/interior live DOM must stay removed");
+assert(game.includes("window.PaperchalkScene"), "Scene inspection API missing");
 assert(game.includes("else jumpPlayer();")&&!game.includes("if(sceneLocation==='interior')return;\n    jumpPlayer();"), "Indoor keyboard/mobile jump must remain enabled");
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("debugFlightMode&&sceneLocation==='outside'"), "Free flight must support large Y and bypass road-strip snapping");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
@@ -295,7 +284,7 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="oldtown-r38"'), "R38 build cache key missing");
+assert(html.includes('meta name="paperchalk-build" content="mobile-oldtown-r39"'), "R38 build cache key missing");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
