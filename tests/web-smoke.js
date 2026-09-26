@@ -30,7 +30,7 @@ const requiredIds = [
   "playerHealthHud","playerHealthBar",
   "oldTownBuildingLayer","oldTownBuildingTrack",
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
-  "entityTrack","pixiEntityLayer","playerFlip","playerSprite","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
+  "entityTrack","pixiEntityLayer","playerFlip","playerSprite","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugMapColliderBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput",
