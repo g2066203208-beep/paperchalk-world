@@ -28,6 +28,26 @@ const AUTHORED_CONTENT=window.PaperchalkContent;
 if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
 const TEST_CONTENT_ENABLED=AUTHORED_CONTENT.testContentEnabled===true;
 document.getElementById('world')?.classList.toggle('production-clean-scene',!TEST_CONTENT_ENABLED);
+if(TEST_CONTENT_ENABLED){
+  const apartmentLayer=document.querySelector('.midground-building-layer');
+  const apartmentAsset=document.getElementById('midgroundApartment');
+  if(apartmentLayer)apartmentLayer.hidden=false;
+  if(apartmentAsset){
+    apartmentAsset.hidden=false;
+    if(apartmentAsset.dataset.testSrc)apartmentAsset.src=apartmentAsset.dataset.testSrc;
+  }
+  for(const id of ['enemy','enemy2']){
+    const el=document.getElementById(id);
+    if(!el)continue;
+    el.hidden=false;
+    const img=el.querySelector('img');
+    if(img?.dataset.testSrc)img.src=img.dataset.testSrc;
+  }
+  const interior=document.getElementById('interiorScene');
+  const doorPrompt=document.getElementById('apartmentDoorPrompt');
+  if(interior)interior.hidden=false;
+  if(doorPrompt)doorPrompt.hidden=false;
+}
 const WORLD_NODES=AUTHORED_CONTENT.world.nodes.map(node=>({...node}));
 const WORLD_ROUTES=AUTHORED_CONTENT.world.routes.map(route=>({...route}));
 const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
