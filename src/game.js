@@ -1021,6 +1021,8 @@ const debugCameraBtn=document.getElementById('debugCameraBtn');
 const debugCameraTilt=document.getElementById('debugCameraTilt');
 const debugCameraTiltValue=document.getElementById('debugCameraTiltValue');
 const debugCameraHorizonValue=document.getElementById('debugCameraHorizonValue');
+const debugCameraHeight=document.getElementById('debugCameraHeight');
+const debugCameraHeightValue=document.getElementById('debugCameraHeightValue');
 const debugCameraTiltReset=document.getElementById('debugCameraTiltReset');
 const debugFlightBtn=document.getElementById('debugFlightBtn');
 const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
@@ -1495,26 +1497,33 @@ function sampleFramePerf(now){
 }
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
-const DEBUG_CAMERA_TILT_KEY='paperchalk.debug.cameraTilt.v1',DEBUG_CAMERA_HORIZON_MAX=.46,DEBUG_CAMERA_HORIZON_MIN=.06;
-function cameraTiltToHorizonRatio(v){return DEBUG_CAMERA_HORIZON_MAX+(DEBUG_CAMERA_HORIZON_MIN-DEBUG_CAMERA_HORIZON_MAX)*clamp(Number(v)||0,0,100)/100}
-function currentCameraTiltValue(){const r=clamp(CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y),DEBUG_CAMERA_HORIZON_MIN,DEBUG_CAMERA_HORIZON_MAX);return Math.round((DEBUG_CAMERA_HORIZON_MAX-r)/(DEBUG_CAMERA_HORIZON_MAX-DEBUG_CAMERA_HORIZON_MIN)*100)}
+const DEBUG_CAMERA_ANGLE_KEY='paperchalk.debug.cameraAngle.v2',DEBUG_CAMERA_HEIGHT_KEY='paperchalk.debug.cameraHeight.v1';
+function redrawDebugCamera(){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}
 function updateCameraTiltControls(){
   if(!debugCameraTilt)return;
-  const t=currentCameraTiltValue(),r=CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y);
-  debugCameraTilt.value=t;debugCameraTiltValue.textContent=t+(CARD_CAMERA.manualHorizonRatio===null?' 自动':'');debugCameraHorizonValue.textContent='地平线 '+(r*100).toFixed(1)+'%';
+  const a=CARD_CAMERA.getTiltDegrees(VIEW_H,MAP_GROUND_SCREEN_Y),h=CARD_CAMERA.getCameraHeightMeters(VIEW_H,MAP_GROUND_SCREEN_Y),hy=CARD_CAMERA.resolveHorizonY(VIEW_H,MAP_GROUND_SCREEN_Y);
+  debugCameraTilt.value=a.toFixed(1);debugCameraTiltValue.textContent=a.toFixed(1)+'°'+(CARD_CAMERA.manualTiltDegrees===null?' 自动':'');
+  debugCameraHeight.value=h.toFixed(1);debugCameraHeightValue.textContent=h.toFixed(1)+' m'+(CARD_CAMERA.manualCameraHeightMeters===null?' 自动':'');
+  debugCameraHorizonValue.textContent='消失线 y='+hy.toFixed(0)+'px';
 }
 function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
-  const t=Math.round(clamp(Number(v)||0,0,100));CARD_CAMERA.setHorizonRatio(cameraTiltToHorizonRatio(t));
-  if(persist)try{localStorage.setItem(DEBUG_CAMERA_TILT_KEY,t)}catch(_){}
-  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return t;
+  const a=clamp(Number(v)||0,0,30);CARD_CAMERA.setTiltDegrees(a);if(persist)try{localStorage.setItem(DEBUG_CAMERA_ANGLE_KEY,a)}catch(_){}
+  updateCameraTiltControls();if(sync)redrawDebugCamera();return a;
+}
+function applyDebugCameraHeight(v,{persist=true,sync=true}={}){
+  const h=clamp(Number(v)||1,1,10);CARD_CAMERA.setCameraHeightMeters(h);if(persist)try{localStorage.setItem(DEBUG_CAMERA_HEIGHT_KEY,h)}catch(_){}
+  updateCameraTiltControls();if(sync)redrawDebugCamera();return h;
 }
 function resetDebugCameraTilt({sync=true}={}){
-  CARD_CAMERA.clearHorizonRatio();try{localStorage.removeItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return currentCameraTiltValue();
+  CARD_CAMERA.clearTiltDegrees();CARD_CAMERA.clearHorizonRatio();CARD_CAMERA.clearCameraHeight();
+  try{localStorage.removeItem(DEBUG_CAMERA_ANGLE_KEY);localStorage.removeItem(DEBUG_CAMERA_HEIGHT_KEY)}catch(_){}
+  updateCameraTiltControls();if(sync)redrawDebugCamera();return true;
 }
 function loadDebugCameraTilt(){
-  let v=null;try{v=localStorage.getItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  const n=Number(v);if(v!==null&&Number.isFinite(n))applyDebugCameraTilt(n,{persist:false,sync:false});else updateCameraTiltControls();
+  let a=null,h=null;try{a=localStorage.getItem(DEBUG_CAMERA_ANGLE_KEY);h=localStorage.getItem(DEBUG_CAMERA_HEIGHT_KEY)}catch(_){}
+  if(a!==null&&Number.isFinite(Number(a)))applyDebugCameraTilt(Number(a),{persist:false,sync:false});
+  if(h!==null&&Number.isFinite(Number(h)))applyDebugCameraHeight(Number(h),{persist:false,sync:false});
+  updateCameraTiltControls();
 }
 
 function updateDebugStatus(){
@@ -1755,16 +1764,9 @@ function executeDebugCommand(command){
 }
 debugToggleBtn.addEventListener('click',toggleDebugPanel);
 debugCloseBtn.addEventListener('click',()=>closeDebugPanel());
-debugCameraTilt?.addEventListener('input',()=>{
-  const tilt=applyDebugCameraTilt(debugCameraTilt.value);
-  if(debugIsOpen())updateDebugStatus();
-  debugCameraTiltValue.textContent=String(tilt);
-});
-debugCameraTiltReset?.addEventListener('click',()=>{
-  const tilt=resetDebugCameraTilt();
-  writeDebugOutput('摄像机倾角 -> 自动（当前 '+tilt+'）');
-  updateDebugStatus();
-});
+debugCameraTilt?.addEventListener('input',()=>{applyDebugCameraTilt(debugCameraTilt.value);if(debugIsOpen())updateDebugStatus()});
+debugCameraHeight?.addEventListener('input',()=>{applyDebugCameraHeight(debugCameraHeight.value);if(debugIsOpen())updateDebugStatus()});
+debugCameraTiltReset?.addEventListener('click',()=>{resetDebugCameraTilt();writeDebugOutput('摄像机 -> 自动');updateDebugStatus()});
 loadDebugCameraTilt();
 debugCommandForm.addEventListener('submit',e=>{
   e.preventDefault();
@@ -1888,6 +1890,7 @@ window.PaperchalkDebug={
   get flight(){return debugFlightMode},
   setFlight(value){return setDebugFlightMode(value)},
   setCameraTilt:applyDebugCameraTilt,
+  setCameraHeight:applyDebugCameraHeight,
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
@@ -2811,7 +2814,8 @@ function refreshRoadW(){
   if(w>0){roadW=Math.max(1,w-1);ensureRoadTiles()}
   updateCamera();
   actorEl.style.setProperty('--actor-x',actorX.toFixed(2)+'px');
-  actorEl.style.setProperty('--actor-y',(-MAP_GROUND_SCREEN_Y).toFixed(2)+'px');
+  const gy=CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}).y;
+  actorEl.style.setProperty('--actor-y',(gy-VIEW_H).toFixed(2)+'px');
   renderCombatDebug();
 }
 let viewportRebuildTimer=0;
@@ -2928,7 +2932,8 @@ function renderWorld(force=false){
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
-  const actorBottom=MAP_GROUND_SCREEN_Y.toFixed(2)+'px';
+  const groundY=sceneLocation==='outside'?CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}).y:VIEW_H-MAP_GROUND_SCREEN_Y;
+  const actorBottom=(VIEW_H-groundY).toFixed(2)+'px';
   const actorAir=playerY.toFixed(2)+'px';
   if(!pixiDynamicActive()){
     if(force||renderCache.actorLeft!==actorLeft){
