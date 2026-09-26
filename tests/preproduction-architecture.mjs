@@ -64,8 +64,13 @@ const raised=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:12
 assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
 assert.equal(cardCamera.config.baseDepth,3840,'camera-to-mid baseline must be 30m so the -5m near line stays near the screen edge');
-assert.equal(cardCamera.config.horizonRatio,.27,'ground view must keep the horizon high enough to expose the 5m scene-band spacing');
+assert.equal(cardCamera.config.nearMainDepth,-640,'responsive tilt must target the unchanged -5m near-main plane');
+assert.equal(cardCamera.config.nearMainScreenMargin,8,'near-main line must target an 8px bottom margin');
 assert.deepEqual([-640,0,640,1280].map(z=>z/cardCamera.config.gridSize),[-5,0,5,10],'major scene depths must be -5m/0m/5m/10m');
+for(const [vh,gy] of [[900,112],[691,112],[720,112]]){
+  const q=cardCamera.project({worldX:0,worldZ:-640,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:vh,groundY:gy});
+  assert.ok(Math.abs(q.y-(vh-8))<1e-9,'near-main must remain 8px above viewport bottom at '+vh+'px height');
+}
 const metricDepths=[-640,0,640,1280];
 for(const z of metricDepths){
   const q=cardCamera.project({worldX:0,worldZ:z,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
@@ -112,7 +117,7 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="steeper-perspective-r45"/,'steeper-perspective build cache key missing');
+assert.match(html,/paperchalk-build" content="near-edge-tilt-r46"/,'near-edge-tilt build cache key missing');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
