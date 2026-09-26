@@ -2359,14 +2359,14 @@ button{cursor:pointer}
   z-index:2!important;
   left:-75vw!important;
   right:auto!important;
-  top:var(--card-horizon-y)!important;
+  top:calc(var(--card-horizon-y) + var(--card-camera-y,0px))!important;
   bottom:auto!important;
   width:250vw!important;
   height:260vh!important;
   opacity:1!important;
   pointer-events:none!important;
   transform-origin:50% 0!important;
-  transform:translate3d(0,var(--card-camera-y,0px),0) rotateX(68deg)!important;
+  transform:rotateX(68deg)!important;
   translate:0 0!important;
   backface-visibility:visible;
   background-color:#2f9e44!important;
