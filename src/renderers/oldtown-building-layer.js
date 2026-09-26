@@ -96,7 +96,7 @@ function render(frame){
   const p=frame.player,v=frame.viewport;
   ensureRows(p.x);
 
-  const depth=camera.config.baseDepth+pool.z;
+  const depth=camera.resolveCameraDistance()+pool.z;
   const scale=camera.config.baseDepth/depth;
   const screenMargin=360;
   const worldHalf=((v.width*.5)+screenMargin)/scale;
