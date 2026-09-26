@@ -2315,40 +2315,30 @@ button{cursor:pointer}
   transform-style:preserve-3d;
   background:#168bff!important;
 }
-/* Infinite vertical coordinate wall, pushed far behind the player. */
+/* Finite far wall. Its lower edge is exactly the far end of the ground plane. */
 .stage:not(.scene-interior) .paper-sky{
   display:block!important;
   position:absolute!important;
   z-index:0!important;
-  left:-70%!important;
-  top:-70%!important;
-  width:240%!important;
-  height:240%!important;
+  left:0!important;
+  top:0!important;
+  width:100%!important;
+  height:var(--card-far-ground-y,60%)!important;
   inset:auto!important;
-  overflow:visible!important;
-  transform-origin:50% 50%!important;
-  transform:translate3d(0,0,var(--card-wall-depth)) scale(2.38)!important;
+  overflow:hidden!important;
+  transform:none!important;
   background-color:#168bff!important;
   background-image:
-    linear-gradient(rgba(224,247,255,.34) 2px,transparent 2px),
-    linear-gradient(90deg,rgba(224,247,255,.34) 2px,transparent 2px)!important;
+    linear-gradient(rgba(224,247,255,.30) 2px,transparent 2px),
+    linear-gradient(90deg,rgba(224,247,255,.30) 2px,transparent 2px)!important;
   background-repeat:repeat!important;
-  background-size:128px 128px!important;
+  background-size:var(--card-wall-grid-size,55px) var(--card-wall-grid-size,55px)!important;
   background-position:var(--card-wall-x,0px) var(--card-wall-y,0px)!important;
   filter:none!important;
   transition:none!important;
-  will-change:background-position;
+  will-change:background-position,height;
 }
-.stage:not(.scene-interior) .paper-sky::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background:
-    linear-gradient(rgba(255,255,255,.08),rgba(0,64,132,.08)),
-    repeating-linear-gradient(0deg,transparent 0 639px,rgba(255,255,255,.42) 639px 642px),
-    repeating-linear-gradient(90deg,transparent 0 639px,rgba(255,255,255,.42) 639px 642px);
-}
+.stage:not(.scene-interior) .paper-sky::before,
 .stage:not(.scene-interior) .paper-sky::after{display:none!important}
 
 /* Ground and actors share PaperchalkCardCamera exactly. The floor is a flat
@@ -2375,8 +2365,8 @@ button{cursor:pointer}
   translate:0 0!important;
   background:
     linear-gradient(to bottom,
-      transparent 0 var(--card-horizon-y),
-      #2f9e44 var(--card-horizon-y) 100%)!important;
+      transparent 0 var(--card-far-ground-y,60%),
+      #2f9e44 var(--card-far-ground-y,60%) 100%)!important;
   border:0!important;
   box-shadow:none!important;
   filter:none!important;
@@ -2403,12 +2393,15 @@ button{cursor:pointer}
   stroke:rgba(5,66,108,.82);
   stroke-width:3;
 }
-.stage:not(.scene-interior)::before{
-  top:calc(var(--card-horizon-y) - 2px)!important;
-  height:4px!important;
-  background:rgba(5,66,108,.90)!important;
-  box-shadow:0 2px 0 rgba(255,255,255,.20)!important;
+/* Scene-depth guides: player / far scenery / far sky-wall contact line. */
+.stage:not(.scene-interior) .card-ground-grid .scene-guide{
+  stroke-width:4;
+  opacity:.95;
 }
+.stage:not(.scene-interior) .card-ground-grid .scene-guide-player{stroke:#0878d1}
+.stage:not(.scene-interior) .card-ground-grid .scene-guide-far{stroke:#9b51e0}
+.stage:not(.scene-interior) .card-ground-grid .scene-guide-sky{stroke:#ffd43b}
+.stage:not(.scene-interior)::before{display:none!important}
 
 /* Outdoor dynamic standees are already projected by game.js, so their tracks
    stay in screen space rather than receiving the old side-scroller translation. */
