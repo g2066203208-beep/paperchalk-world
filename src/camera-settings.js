@@ -65,12 +65,15 @@ function open(){
   panel.classList.add('is-open');
   panel.setAttribute('aria-hidden','false');
   openBtn.setAttribute('aria-expanded','true');
-  sync();
+  document.getElementById('world')?.classList.add('camera-controls-open');
+  sync();redraw();
 }
 function close(){
   panel.classList.remove('is-open');
   panel.setAttribute('aria-hidden','true');
   openBtn.setAttribute('aria-expanded','false');
+  document.getElementById('world')?.classList.remove('camera-controls-open');
+  redraw();
 }
 function toggle(){panel.classList.contains('is-open')?close():open()}
 function load(){
