@@ -63,7 +63,7 @@ assert.ok(near.y>far.y,'authored scene Z must move farther ground objects toward
 const raised=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:120,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
 assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
-const metricDepths=[-256,0,640,1280];
+const metricDepths=[-128,0,640,1280];
 for(const z of metricDepths){
   const q=cardCamera.project({worldX:0,worldZ:z,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
   const expected=cardCamera.config.baseDepth/(cardCamera.config.baseDepth+z);
@@ -76,7 +76,7 @@ assert.equal(cardCamera.config.wallDepth,cardCamera.config.farGroundDepth,'sky w
 const guides=Array.from(cardCamera.config.sceneGuides);
 assert.equal(guides.length,10,'scene depth must expose 3x3 near/mid/far guides plus horizon');
 assert.deepEqual(guides.map(x=>x.id),['near-front','near-main','near-back','mid-front','mid-main','mid-back','far-front','far-main','far-back','horizon']);
-assert.deepEqual(guides.map(x=>x.z),[-320,-256,-192,-64,0,64,512,640,768,1280]);
+assert.deepEqual(guides.map(x=>x.z),[-160,-128,-96,-32,0,32,512,640,768,1280]);
 assert.equal(guides.filter(x=>x.kind==='main').length,3,'near/mid/far each need one main guide');
 assert.equal(guides.filter(x=>x.kind==='sub').length,6,'near/mid/far each need front/back sub-guides');
 assert.equal(guides.filter(x=>x.kind==='horizon').length,1,'scene needs one final horizon guide');
