@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "debug-tilt-r48";
+  const BUILD = "camera-angle-height-r49";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -39,8 +39,8 @@
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="debug-tilt-r48">
-<link rel="stylesheet" href="./styles/game.css?v=debug-tilt-r48">
+<meta name="paperchalk-build" content="camera-angle-height-r49">
+<link rel="stylesheet" href="./styles/game.css?v=camera-angle-height-r49">
 </head>
 <body>
 
@@ -214,20 +214,33 @@
       <button class="debug-action" type="button" data-debug-action="teleportMid">传送中段</button>
       <button class="debug-action" type="button" data-debug-action="teleportEnd">传送远方</button>
     </div>
-    <div class="debug-camera-control" aria-label="摄像机倾角调试">
+    <div class="debug-camera-control" aria-label="摄像机调试">
       <div class="debug-camera-control-head">
-        <span>摄像机倾角</span>
-        <b id="debugCameraTiltValue">--</b>
+        <span>摄像机俯视角</span>
+        <b id="debugCameraTiltValue">--°</b>
       </div>
       <input id="debugCameraTilt" class="debug-camera-slider" type="range"
-             min="0" max="100" step="1" value="50"
-             aria-label="摄像机倾角，0最平，100最俯视">
+             min="0" max="30" step="0.5" value="5"
+             aria-label="摄像机俯视角，0到30度">
       <div class="debug-camera-control-foot">
-        <span>0 平</span>
-        <span id="debugCameraHorizonValue">地平线 --%</span>
-        <span>100 俯视</span>
+        <span>0° 平视</span>
+        <span id="debugCameraHorizonValue">消失线 --</span>
+        <span>30° 俯视</span>
       </div>
-      <button id="debugCameraTiltReset" class="debug-action debug-camera-reset" type="button">恢复自动倾角</button>
+
+      <div class="debug-camera-control-head debug-camera-height-head">
+        <span>摄像机高度</span>
+        <b id="debugCameraHeightValue">-- m</b>
+      </div>
+      <input id="debugCameraHeight" class="debug-camera-slider" type="range"
+             min="1" max="10" step="0.1" value="4"
+             aria-label="摄像机高度，1到10米">
+      <div class="debug-camera-control-foot">
+        <span>1 m 低</span>
+        <span>真实尺度 128px = 1m</span>
+        <span>10 m 高</span>
+      </div>
+      <button id="debugCameraTiltReset" class="debug-action debug-camera-reset" type="button">恢复自动相机</button>
     </div>
     <div class="debug-renderer-actions" aria-label="渲染器调试">
       <button id="debugRendererAutoBtn" class="debug-action" type="button" data-debug-action="rendererAuto">渲染：自动</button>
@@ -253,7 +266,7 @@
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">调试：血量、战斗、Camera、摄像机倾角、飞行、地图、日夜与纸片舞台。倾角滑块：0 最平，100 最俯视；拖动后实时生效并保存在本机。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
+    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。摄像机可独立调俯视角 0–30° 与高度 1–10m；只改相机，不改景线距离。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
@@ -435,13 +448,13 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=debug-tilt-r48"></script>
+<script src="./src/core/card-camera.js?v=camera-angle-height-r49"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
-<script src="./src/game.js?v=debug-tilt-r48"></script>
-<script src="./src/renderers/dom-card-projection.js?v=debug-tilt-r48"></script>
+<script src="./src/game.js?v=camera-angle-height-r49"></script>
+<script src="./src/renderers/dom-card-projection.js?v=camera-angle-height-r49"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=canvas-cull-r41"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=oldtown-r38"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=camera-angle-height-r49"></script>
 </body>
 </html>
