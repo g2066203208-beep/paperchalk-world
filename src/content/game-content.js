@@ -2,8 +2,8 @@
 (function(global){
 'use strict';
 
-const params=new URLSearchParams(global.location?.search||'');
-const testContentEnabled=params.get('test-content')==='1';
+const search=String(global.location?.search||'');
+const testContentEnabled=/(?:\?|&)test-content=1(?:&|$)/.test(search);
 const TEST_NPCS=[
   {
     id:'npc-phone-girl',x:760,z:0,name:'？？？',portrait:'phone-girl-offline',
