@@ -2036,8 +2036,6 @@ function resetPlayerPoseState(){
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
-  // Free flight is true 2D world traversal. It must not snap to road forks or
-  // reset Y when crossing the 6000px route-strip boundaries.
   if(debugFlightMode&&sceneLocation==='outside'){
     playerWorldX=clamp(oldX+dx,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
     return playerWorldX-oldX;
@@ -2065,8 +2063,6 @@ function movePlayerHorizontal(dx){
     const hitLeft=dx<0&&oldBody.x>=r.x+r.w-2&&proposed.x<r.x+r.w;
     if(!hitRight&&!hitLeft)continue;
 
-    /* Forgiving ledge assist: while rising, reaching the upper lip snaps onto it.
-       This prevents mobile players from getting hard-stuck on otherwise reachable terrain. */
     const top=r.y+r.h;
     const riseToTop=top-playerY;
     if(!playerGrounded&&playerVy>0&&riseToTop>0&&riseToTop<=AUTO_MANTLE_WINDOW){
@@ -2840,10 +2836,7 @@ function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
   return joystickAxis;
 }
-function depthAxis(){
-  const keyboard=(keyboardDepthForward?1:0)-(keyboardDepthBack?1:0);
-  return clamp(keyboard+joystickDepthAxis,-1,1);
-}
+function depthAxis(){return clamp((keyboardDepthForward?1:0)-(keyboardDepthBack?1:0)+joystickDepthAxis,-1,1)}
 function flightVerticalAxis(){
   const buttons=((keyboardFlightUp||mobileFlightUp)?1:0)-((keyboardFlightDown||mobileFlightDown)?1:0);
   return clamp(buttons+joystickFlightAxisY,-1,1);
