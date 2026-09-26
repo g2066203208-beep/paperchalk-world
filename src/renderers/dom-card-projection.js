@@ -131,7 +131,7 @@ function renderGroundGrid(frame){
   const ctx=ensureGroundCanvas(v);
   if(!ctx)return;
   const step=cfg.gridSize;
-  const horizonY=v.height*cfg.horizonRatio;
+  const horizonY=camera.resolveHorizonY(v.height,v.groundY);
   writeWorldVar('--card-horizon-y',horizonY.toFixed(2)+'px');
 
   const nearZ=Number(cfg.groundNearDepth)||-step*3;
