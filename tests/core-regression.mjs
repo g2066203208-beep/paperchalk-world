@@ -931,18 +931,20 @@ try{
   check('Movement works',moved.worldX>0||moved.actorX>s.actorX,JSON.stringify(moved));
   check('World time advances',moved.worldMinutes>1,'worldMinutes='+moved.worldMinutes);
   const entityMapSync=await page.evaluate(()=>{
-    const enemy=window.PaperchalkCombat.enemies.find(e=>e.alive)||window.PaperchalkCombat.enemies[0];
-    const projected=window.PaperchalkMap.project(enemy.x,enemy.z||0,0);
-    const enemyEl=document.querySelector('#entityTrack .enemy');
+    const npc=window.PaperchalkMap.npcs.find(n=>n.id==='npc-phone-girl');
+    const projected=window.PaperchalkMap.project(npc.x,npc.z||0,0);
+    const npcEl=document.querySelector('[data-npc-id="npc-phone-girl"]');
     return {
       transform:document.getElementById('entityTrack').style.transform,
       projectedX:projected.x,
-      domX:Number.parseFloat(enemyEl?.style.getPropertyValue('--enemy-x'))||0
+      domX:Number.parseFloat(npcEl?.style.getPropertyValue('--npc-x'))||0,
+      display:getComputedStyle(npcEl).display
     };
   });
   const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]||0);
-  check('World entity track stays screen-space while entities receive perspective projection',
-    Math.abs(entityTranslateX)<0.5&&Math.abs(entityMapSync.domX-entityMapSync.projectedX)<1,
+  check('World tracks stay screen-space while visible entities receive perspective projection',
+    Math.abs(entityTranslateX)<0.5&&entityMapSync.display!=='none'&&
+    Math.abs(entityMapSync.domX-entityMapSync.projectedX)<1,
     JSON.stringify({...entityMapSync,entityTranslateX}));
 
   const compositorPlayer=await page.evaluate(()=>({
