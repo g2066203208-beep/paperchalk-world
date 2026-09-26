@@ -19,6 +19,7 @@ const domCardRenderer=read('src/renderers/dom-card-projection.js');
 const oldTownRenderer=read('src/renderers/oldtown-building-layer.js');
 const renderer=read('src/renderers/pixi-dynamic-renderer.mjs');
 const cameraSettings=read('src/camera-settings.js');
+const testFixtures=read('src/test-fixtures.js');
 const android=read('android-app/app/src/main/java/com/paperchalk/world/MainActivity.java');
 
 const budgets={
@@ -26,6 +27,7 @@ const budgets={
   'styles/game.css':120000,
   'src/game.js':180000,
   'src/camera-settings.js':5000,
+  'src/test-fixtures.js':7000,
   'src/core/ecs-runtime.js':12000,
   'src/core/event-bus.js':6000,
   'src/core/game-state.js':5000,
@@ -65,7 +67,9 @@ assert(game.includes("PerformanceObserver"),'Long-task performance diagnostics m
 assert(game.includes("ambientInterval"),'Paused-world ambient throttling missing');
 assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external apartment CDN');
 assert(!html.includes("blackKeyApartment")&&!css.includes("blackKeyApartment"),'Realtime apartment chroma-key filter returned');
-assert(game.includes("updateMidgroundApartmentVisibility"),'Apartment off-screen culling missing');
+assert(!html.includes('id="midgroundApartment"')&&!html.includes('id="enemy"')&&!html.includes('id="interiorScene"'),'Demo fixtures leaked into production DOM');
+assert(testFixtures.includes('id="midgroundApartment"')&&testFixtures.includes('id="enemy"')&&testFixtures.includes('id="interiorScene"'),'CI fixtures missing after production cleanup');
+assert(game.includes("updateMidgroundApartmentVisibility"),'Dormant apartment culling capability missing');
 assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"),'Background mountain layer returned');
 assert(css.includes(".road-layer{display:none!important}"),'Road visuals returned');
 assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=0"),'Authored obstacles returned');
@@ -91,7 +95,8 @@ assert(oldTownRenderer.includes("function shuffled(rowIndex)"),'Seeded old-town 
 assert(oldTownRenderer.includes("runtime.subscribe(render)"),'Old-town layer is not lifecycle/runtime driven');
 assert(oldTownRenderer.includes("worldHalf")&&oldTownRenderer.includes("coarseCulled"),'Old-town coarse visibility culling missing');
 assert(renderer.includes("coarseCardVisible"),'Pixi renderer coarse visibility culling missing');
-assert(cameraSettings.includes("PaperchalkCameraSettings")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"),'Production camera settings controller missing');
+assert(cameraSettings.includes("PaperchalkCameraSettings")&&cameraSettings.includes("cameraControlBtn")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"),'Standalone camera controller missing');
+assert(html.includes('id="cameraControlBtn"')&&html.includes('id="cameraControlPanel"'),'Standalone camera UI missing');
 assert(css.includes(".oldtown-building-layer")&&css.includes("R38 OLD-TOWN BUILDING POOL"),'Old-town far-midground CSS missing');
 assert(!html.includes("atlas-r38-b64/"),'Temporary atlas base64 chunks leaked into runtime');
 
