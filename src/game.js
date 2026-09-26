@@ -2606,7 +2606,7 @@ function toggleAttackRange(force){showAttackRange=typeof force==='boolean'?force
 function toggleEnemyAi(force){enemyAiEnabled=typeof force==='boolean'?force:!enemyAiEnabled;if(!enemyAiEnabled)enemies.forEach(e=>e.el.classList.remove('is-moving','is-attacking'));updateCombatDebugButtons();return enemyAiEnabled}
 function toggleMapColliders(force){showMapColliders=typeof force==='boolean'?force:!showMapColliders;if(showMapColliders)ensureMapDebugVisuals();worldEl.classList.toggle('show-map-colliders',showMapColliders);updateCombatDebugButtons();return showMapColliders}
 function toggleSpawnZones(force){showSpawnZones=typeof force==='boolean'?force:!showSpawnZones;if(showSpawnZones)ensureMapDebugVisuals();worldEl.classList.toggle('show-spawn-zones',showSpawnZones);updateCombatDebugButtons();return showSpawnZones}
-function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();return showCameraDebug}
+function toggleCameraDebug(force){showCameraDebug=typeof force==='boolean'?force:!showCameraDebug;worldEl.classList.toggle('show-camera-debug',showCameraDebug);updateCombatDebugButtons();renderWorld(true);requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.());return showCameraDebug}
 window.PaperchalkDialogue={
   openById(id){const npc=MAP_NPCS.find(n=>n.id===id);return npc?openDialogue(npc):false},
   close:closeDialogue,
