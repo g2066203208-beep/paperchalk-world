@@ -84,7 +84,8 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="oldtown-r38"/,'old-town build cache key missing');
+assert.match(html,/paperchalk-build" content="mobile-oldtown-r39"/,'old-town build cache key missing');
+assert.ok(!html.includes('midgroundApartment')&&!html.includes('apartmentDoorPrompt')&&!html.includes('interiorScene'),'legacy apartment live DOM must stay removed');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');
 for(const component of ['transform','health','combat','ai','patrol','renderable']){
   assert.ok(game.includes(component+':e.'+component),'combat ECS must expose granular '+component+' component');

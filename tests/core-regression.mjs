@@ -158,6 +158,37 @@ try{
     oldTownScene.layerZ<oldTownScene.actorZ&&oldTownScene.atlasRequested,
     JSON.stringify(oldTownScene));
 
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForTimeout(260);
+  const oldTownMobile=await page.evaluate(async()=>{
+    const slots=[...document.querySelectorAll('#oldTownBuildingTrack .oldtown-building')];
+    const visible=slots.filter(el=>{
+      if(el.hidden||getComputedStyle(el).display==='none')return false;
+      const r=el.getBoundingClientRect();
+      return r.right>0&&r.left<innerWidth&&r.bottom>0&&r.top<innerHeight&&r.width>35&&r.height>70;
+    });
+    const img=new Image();
+    img.src='./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1';
+    await img.decode();
+    const first=visible[0]?.getBoundingClientRect();
+    return {
+      viewport:{w:innerWidth,h:innerHeight},
+      visible:visible.length,
+      first:first?{left:first.left,right:first.right,top:first.top,bottom:first.bottom,w:first.width,h:first.height}:null,
+      atlas:{w:img.naturalWidth,h:img.naturalHeight},
+      apartment:!!document.getElementById('midgroundApartment'),
+      interior:!!document.getElementById('interiorScene')
+    };
+  });
+  check('Phone portrait shows the old-town midground and no legacy apartment',
+    oldTownMobile.viewport.w===390&&oldTownMobile.viewport.h===844&&
+    oldTownMobile.visible>0&&oldTownMobile.first?.w>35&&oldTownMobile.first?.h>70&&
+    oldTownMobile.atlas.w===4137&&oldTownMobile.atlas.h===380&&
+    !oldTownMobile.apartment&&!oldTownMobile.interior,
+    JSON.stringify(oldTownMobile));
+  await page.setViewportSize({width:1440,height:900});
+  await page.waitForTimeout(180);
+
   await page.setViewportSize({width:900,height:540});
   await page.waitForTimeout(220);
   const compactViewport=await page.evaluate(()=>({
@@ -555,343 +586,19 @@ try{
     npcTalk.open&&npcTalk.name==='？？？'&&npcTalk.phase==='opening',
     JSON.stringify(npcTalk));
   await page.evaluate(()=>window.PaperchalkDialogue.close({immediate:true}));
-  const stagePlayerBefore=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    centerX:window.PaperchalkScene.centerX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  const stageEnter=await page.evaluate(()=>window.PaperchalkScene.enter());
-  check('Apartment door stage transition can start',stageEnter===true,'enter='+stageEnter);
-  await page.waitForTimeout(360);
-  const stagePlayerMid=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  check('Player stays fixed while the outgoing exterior world leaves',
-    Math.abs(stagePlayerMid.screenX-stagePlayerBefore.screenX)<1&&
-    Math.abs(stagePlayerMid.rect.y-stagePlayerBefore.rect.y)<2.5,
-    JSON.stringify({stagePlayerBefore,stagePlayerMid}));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&window.PaperchalkScene.transitioning,null,{timeout:2200});
-  const interiorReveal=await page.evaluate(()=>({
-    anchorError:window.PaperchalkScene.lastDoorAnchorErrorX,
-    anchorX:window.PaperchalkScene.interiorDoorAnchorX,
-    startPlayerX:window.PaperchalkScene.playerScreenX
-  }));
-  check('Interior world reveals with its doorway bound to the player anchor',
-    Math.abs(interiorReveal.anchorError)<1&&Math.abs(interiorReveal.anchorX-stagePlayerBefore.screenX)<1,
-    JSON.stringify({stagePlayerBefore,interiorReveal}));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
-  const interiorStage=await page.evaluate(()=>({
+  const legacyApartment=await page.evaluate(()=>({
+    exterior:!!document.getElementById('midgroundApartment'),
+    doorPrompt:!!document.getElementById('apartmentDoorPrompt'),
+    interior:!!document.getElementById('interiorScene'),
     location:window.PaperchalkScene.location,
-    visible:getComputedStyle(document.getElementById('interiorScene')).visibility,
-    worldClass:document.getElementById('world').className,
-    playerX:window.PaperchalkScene.playerScreenX,
-    centerX:window.PaperchalkScene.centerX,
-    doorX:window.PaperchalkScene.interiorDoorScreenX
+    enterResult:window.PaperchalkScene.enter(),
+    interactText:document.getElementById('interactBtn')?.textContent||''
   }));
-  check('Interior world settles around the fixed player screen anchor',
-    interiorStage.location==='interior'&&interiorStage.visible==='visible'&&
-    interiorStage.worldClass.includes('scene-interior')&&
-    Math.abs(interiorStage.playerX-interiorStage.centerX)<1&&
-    Math.abs(interiorStage.doorX-interiorStage.playerX)<1,
-    JSON.stringify(interiorStage));
-
-  const interiorDepth=await page.evaluate(()=>{
-    const z=id=>Number.parseInt(getComputedStyle(document.getElementById(id)).zIndex,10);
-    const door=document.getElementById('interiorExitDoor').getBoundingClientRect();
-    const scene=document.getElementById('interiorScene').getBoundingClientRect();
-    const stage=document.getElementById('world').getBoundingClientRect();
-    return {
-      far:z('interiorFarLayer'),
-      mid:z('interiorMidLayer'),
-      player:Number.parseInt(getComputedStyle(document.querySelector('.actor')).zIndex,10),
-      near:z('interiorNearLayer'),
-      doorCenterX:door.left+door.width/2,
-      doorGroundY:window.innerHeight-door.bottom,
-      interiorDoorX:window.PaperchalkScene.interiorDoorScreenX,
-      playerX:window.PaperchalkScene.playerScreenX,
-      expectedGroundY:window.PaperchalkScene.interiorDoorGroundY,
-      sceneAligned:Math.abs(scene.left-stage.left)<1&&Math.abs(scene.top-stage.top)<1&&
-        Math.abs(scene.width-stage.width)<1&&Math.abs(scene.height-stage.height)<1
-    };
-  });
-  check('Interior scene shares the exterior stage coordinate origin',
-    interiorDepth.sceneAligned,
-    JSON.stringify(interiorDepth));
-  check('Interior depth order is far -> mid -> player -> near',
-    interiorDepth.far<interiorDepth.mid&&interiorDepth.mid<interiorDepth.player&&interiorDepth.player<interiorDepth.near,
-    JSON.stringify(interiorDepth));
-  check('Interior doorway stays physically attached to the centered player after camera settle',
-    Math.abs(interiorDepth.doorCenterX-interiorDepth.interiorDoorX)<2&&
-    Math.abs(interiorDepth.doorCenterX-interiorDepth.playerX)<2,
-    JSON.stringify(interiorDepth));
-  check('Interior doorway threshold stays on the exterior ground line',
-    Math.abs(interiorDepth.doorGroundY-interiorDepth.expectedGroundY)<2,
-    JSON.stringify(interiorDepth));
-
-  const indoorMap=await page.evaluate(()=>{
-    const m=window.PaperchalkScene.interiorMap;
-    const left=document.querySelector('.interior-wall-left').getBoundingClientRect();
-    const right=document.querySelector('.interior-wall-right').getBoundingClientRect();
-    const stairs=document.getElementById('interiorStaircase').getBoundingClientRect();
-    const lower=document.querySelector('.interior-stair-run-lower').getBoundingClientRect();
-    const upper=document.querySelector('.interior-stair-run-upper').getBoundingClientRect();
-    return {
-      m,leftW:left.width,rightW:right.width,
-      stairsW:stairs.width,stairsH:stairs.height,
-      lower:{w:lower.width,h:lower.height},
-      upper:{w:upper.width,h:upper.height}
-    };
-  });
-  check('Interior uses residential 12m x 6m proportions with real side walls',
-    indoorMap.m.width===1536&&indoorMap.m.height===768&&
-    indoorMap.m.secondFloorY===384&&
-    indoorMap.leftW>=60&&indoorMap.rightW>=60,
-    JSON.stringify(indoorMap));
-  check('Interior draws two opposite stair runs with a half landing',
-    indoorMap.stairsW>=380&&indoorMap.stairsH>=380&&
-    indoorMap.lower.w>=315&&indoorMap.lower.h>=188&&
-    indoorMap.upper.w>=315&&indoorMap.upper.h>=188&&
-    indoorMap.m.stairs.x0===768&&indoorMap.m.stairs.x1===1088&&
-    indoorMap.m.stairs.midY===192,
-    JSON.stringify(indoorMap));
-
-  // Start just before the lower flight. Real input must climb right to the
-  // half landing, then reverse left onto the upper flight.
-  await page.evaluate(()=>window.eval(
-    "interiorPlayerWorldX=INTERIOR_STAIRS.x0-24;interiorStairState='floor1';"+
-    "playerY=0;playerVy=0;playerGrounded=true;updateInteriorCamera();renderWorld(true);"
-  ));
-  const stairStart=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      x:window.PaperchalkScene.interiorX,
-      y:window.PaperchalkScene.interiorY,
-      state:window.PaperchalkScene.interiorStairState,
-      camera:window.PaperchalkScene.interiorCamera,
-      rect:{left:r.left,top:r.top}
-    };
-  });
-
-  await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(700);
-  await page.keyboard.up('ArrowRight');
-  await page.waitForTimeout(70);
-  const lowerRun=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    y:window.PaperchalkScene.interiorY,
-    state:window.PaperchalkScene.interiorStairState,
-    camera:window.PaperchalkScene.interiorCamera
-  }));
-  check('Lower stair run raises Y continuously while walking right',
-    lowerRun.state==='lower'&&
-    lowerRun.x>indoorMap.m.stairs.x0&&lowerRun.x<indoorMap.m.stairs.x1&&
-    lowerRun.y>35&&lowerRun.y<indoorMap.m.stairs.midY,
-    JSON.stringify(lowerRun));
-
-  await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(900);
-  await page.keyboard.up('ArrowRight');
-  await page.waitForTimeout(70);
-  const halfLanding=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    y:window.PaperchalkScene.interiorY,
-    state:window.PaperchalkScene.interiorStairState
-  }));
-  check('Lower run reaches the 1.5m half landing and requires a turn',
-    halfLanding.state==='landing-up'&&
-    Math.abs(halfLanding.x-indoorMap.m.stairs.x1)<1&&
-    Math.abs(halfLanding.y-indoorMap.m.stairs.midY)<1,
-    JSON.stringify(halfLanding));
-
-  await page.keyboard.down('ArrowLeft');
-  await page.waitForTimeout(700);
-  await page.keyboard.up('ArrowLeft');
-  await page.waitForTimeout(70);
-  const upperRun=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    y:window.PaperchalkScene.interiorY,
-    state:window.PaperchalkScene.interiorStairState,
-    camera:window.PaperchalkScene.interiorCamera
-  }));
-  check('After turning, upper stair run raises Y while walking left',
-    upperRun.state==='upper'&&
-    upperRun.x>indoorMap.m.stairs.x0&&upperRun.x<indoorMap.m.stairs.x1&&
-    upperRun.y>indoorMap.m.stairs.midY&&upperRun.y<indoorMap.m.secondFloorY,
-    JSON.stringify(upperRun));
-
-  await page.keyboard.down('ArrowLeft');
-  await page.waitForTimeout(900);
-  await page.keyboard.up('ArrowLeft');
-  await page.waitForTimeout(70);
-  const secondFloor=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      x:window.PaperchalkScene.interiorX,
-      y:window.PaperchalkScene.interiorY,
-      state:window.PaperchalkScene.interiorStairState,
-      camera:window.PaperchalkScene.interiorCamera,
-      rect:{left:r.left,top:r.top}
-    };
-  });
-  check('Second stair run reaches the 3m second floor',
-    secondFloor.state==='floor2'&&
-    secondFloor.x<=indoorMap.m.stairs.x0&&
-    Math.abs(secondFloor.y-indoorMap.m.secondFloorY)<1&&
-    Math.abs(secondFloor.camera.y-secondFloor.y)<1,
-    JSON.stringify(secondFloor));
-  check('Player remains fixed while both stair runs move the room in X and Y',
-    Math.abs(secondFloor.rect.left-stairStart.rect.left)<1&&
-    Math.abs(secondFloor.rect.top-stairStart.rect.top)<1&&
-    secondFloor.camera.y>stairStart.camera.y,
-    JSON.stringify({stairStart,secondFloor}));
-
-  // Indoor jump is a real jump, independent of stair traversal.
-  await page.evaluate(()=>window.eval(
-    "interiorPlayerWorldX=INTERIOR_DOOR_X;interiorStairState='floor1';"+
-    "playerY=0;playerVy=0;playerGrounded=true;updateInteriorCamera();renderWorld(true);"
-  ));
-  const indoorJumpBefore=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {y:window.PaperchalkScene.interiorY,rect:{left:r.left,top:r.top}};
-  });
-  await page.keyboard.press('Space');
-  await page.waitForFunction(()=>window.PaperchalkScene.interiorY>24&&
-    !window.PaperchalkCombat.player.grounded,null,{timeout:900});
-  const indoorJumpAir=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      y:window.PaperchalkScene.interiorY,
-      vy:window.PaperchalkCombat.player.vy,
-      rect:{left:r.left,top:r.top}
-    };
-  });
-  check('Indoor jump key launches the player in world Y',
-    indoorJumpAir.y>24&&indoorJumpAir.vy>0,
-    JSON.stringify(indoorJumpAir));
-  check('Indoor jump moves the room while player stays fixed on screen',
-    Math.abs(indoorJumpAir.rect.left-indoorJumpBefore.rect.left)<1&&
-    Math.abs(indoorJumpAir.rect.top-indoorJumpBefore.rect.top)<1,
-    JSON.stringify({indoorJumpBefore,indoorJumpAir}));
-  await page.waitForFunction(()=>window.PaperchalkCombat.player.grounded&&
-    Math.abs(window.PaperchalkScene.interiorY)<1,null,{timeout:2200});
-
-  // Walls are physical limits.
-  await page.evaluate(()=>window.eval(
-    "interiorPlayerWorldX=interiorHorizontalBounds().left+3;interiorStairState='floor1';"+
-    "playerY=0;playerVy=0;playerGrounded=true;updateInteriorCamera();renderWorld(true);"
-  ));
-  await page.keyboard.down('ArrowLeft');
-  await page.waitForTimeout(260);
-  await page.keyboard.up('ArrowLeft');
-  await page.waitForTimeout(60);
-  const wallStop=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    map:window.PaperchalkScene.interiorMap
-  }));
-  check('Indoor left wall blocks movement at the finite room boundary',
-    wallStop.x>wallStop.map.leftWall&&wallStop.x<wallStop.map.leftWall+40,
-    JSON.stringify(wallStop));
-
-  // Return to the door for the exit-transition regression below.
-  await page.evaluate(()=>window.eval(
-    'interiorPlayerWorldX=INTERIOR_DOOR_X;playerY=0;playerVy=0;playerGrounded=true;'+
-    'updateInteriorCamera();renderWorld(true);updateNpcPrompt();'
-  ));
-  await page.waitForTimeout(80);
-
-  const exitPlayerBefore=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  const stageExit=await page.evaluate(()=>window.PaperchalkScene.exit());
-  check('Interior exit starts the return paper-stage transition',stageExit===true,'exit='+stageExit);
-  await page.waitForTimeout(300);
-  const exitPlayerMid=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  check('Player stays fixed while the outgoing interior world leaves',
-    Math.abs(exitPlayerMid.screenX-exitPlayerBefore.screenX)<1&&
-    Math.abs(exitPlayerMid.rect.y-exitPlayerBefore.rect.y)<1,
-    JSON.stringify({exitPlayerBefore,exitPlayerMid}));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&window.PaperchalkScene.transitioning,null,{timeout:1800});
-  const exteriorReveal=await page.evaluate(()=>{
-    const snap=window.PaperchalkRuntime.getSnapshot();
-    const transform=getComputedStyle(document.getElementById('mapTrack')).transform;
-    const matrix=transform&&transform!=='none'?new DOMMatrix(transform):new DOMMatrix();
-    return {
-      anchorError:window.PaperchalkScene.lastDoorAnchorErrorX,
-      playerX:window.PaperchalkScene.playerScreenX,
-      doorX:window.PaperchalkScene.doorScreenX,
-      cameraX:snap.camera.x,
-      visualOriginX:snap.camera.visualOriginX,
-      mapTransformX:matrix.m41,
-      projectedPlayerX:window.PaperchalkMap.project(snap.player.x,snap.player.z||0,0).x
-    };
-  });
-  check('Exterior world reveals with its doorway bound to the player anchor',
-    Math.abs(exteriorReveal.anchorError)<1,
-    JSON.stringify(exteriorReveal));
-  check('Exterior reveal uses screen-space track plus live per-entity projection',
-    Math.abs(exteriorReveal.mapTransformX)<1&&
-    Math.abs(exteriorReveal.projectedPlayerX-exteriorReveal.playerX)<1,
-    JSON.stringify(exteriorReveal));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
-  const exteriorSettled=await page.evaluate(()=>{
-    const snap=window.PaperchalkRuntime.getSnapshot();
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      cameraX:snap.camera.x,
-      playerWorldX:snap.player.x,
-      playerScreenX:snap.player.screenX,
-      doorX:window.PaperchalkScene.doorScreenX,
-      anchorX:window.PaperchalkScene.playerScreenAnchorX,
-      mapWidth:snap.map.width,
-      viewportWidth:snap.viewport.width,
-      rect:{x:r.left,y:r.top}
-    };
-  });
-  const expectedExitCamera=Math.max(
-    0,
-    Math.min(
-      exteriorSettled.mapWidth-exteriorSettled.viewportWidth,
-      exteriorSettled.playerWorldX-exteriorSettled.anchorX
-    )
-  );
-  check('Exterior door remains pinned to the player after the exit animation finishes',
-    Math.abs(exteriorSettled.doorX-exteriorSettled.playerScreenX)<1&&
-    Math.abs(exteriorSettled.doorX-exteriorReveal.doorX)<1,
-    JSON.stringify({exteriorReveal,exteriorSettled}));
-  check('Exit has no secondary camera drift after exterior reveal',
-    Math.abs(exteriorSettled.cameraX-exteriorReveal.cameraX)<1,
-    JSON.stringify({revealCamera:exteriorReveal.cameraX,settledCamera:exteriorSettled.cameraX}));
-  check('Player stays fixed for the entire exit transition',
-    Math.abs(exteriorSettled.rect.x-exitPlayerBefore.rect.x)<1&&
-    Math.abs(exteriorSettled.rect.y-exitPlayerBefore.rect.y)<1,
-    JSON.stringify({exitPlayerBefore,exteriorSettled}));
-  check('Exterior world is internally rebased to the fixed player anchor',
-    Math.abs(exteriorSettled.cameraX-expectedExitCamera)<1&&
-    Math.abs(exteriorSettled.playerScreenX-exteriorSettled.anchorX)<1,
-    JSON.stringify({expectedExitCamera,exteriorSettled}));
-
-  const exitFollowBefore=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
-  await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(90);
-  await page.keyboard.up('ArrowRight');
-  await page.waitForTimeout(40);
-  const exitFollowAfter=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
-  const firstMovePlayerDx=exitFollowAfter.player.x-exitFollowBefore.player.x;
-  const firstMoveCameraDx=exitFollowAfter.camera.x-exitFollowBefore.camera.x;
-  check('First movement after exit moves the world while player screen X stays fixed',
-    firstMovePlayerDx>0&&Math.abs(firstMoveCameraDx-firstMovePlayerDx)<2&&
-    Math.abs(exitFollowAfter.player.screenX-exitFollowBefore.player.screenX)<2,
-    JSON.stringify({firstMovePlayerDx,firstMoveCameraDx,before:exitFollowBefore.player.screenX,after:exitFollowAfter.player.screenX}));
-
+  check('Legacy apartment exterior and interior are removed from the live scene',
+    !legacyApartment.exterior&&!legacyApartment.doorPrompt&&!legacyApartment.interior&&
+    legacyApartment.location==='outside'&&legacyApartment.enterResult===false&&
+    legacyApartment.interactText!=='开门'&&legacyApartment.interactText!=='出门',
+    JSON.stringify(legacyApartment));
 
   // Return to a safe mid-map position for persistence/UI tests.
   await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));

@@ -118,6 +118,41 @@ assert(await waitFor("document.getElementById('uiShell')?.classList.contains('is
 noFaults('register -> world');
 console.log('PASS register -> world');
 
+await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:2,mobile:true,screenWidth:390,screenHeight:844});
+await sleep(320);
+const phoneOldTown=await js(`(async()=>{
+  const slots=[...document.querySelectorAll('#oldTownBuildingTrack .oldtown-building')];
+  const visible=slots.filter(el=>{
+    if(el.hidden||getComputedStyle(el).display==='none')return false;
+    const r=el.getBoundingClientRect();
+    return r.right>0&&r.left<innerWidth&&r.bottom>0&&r.top<innerHeight&&r.width>35&&r.height>70;
+  });
+  const img=new Image();
+  img.src='./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1';
+  await img.decode();
+  const first=visible[0]?.getBoundingClientRect();
+  return {
+    viewport:{w:innerWidth,h:innerHeight,dpr:devicePixelRatio},
+    visible:visible.length,
+    first:first?{left:first.left,right:first.right,top:first.top,bottom:first.bottom,w:first.width,h:first.height}:null,
+    atlas:{w:img.naturalWidth,h:img.naturalHeight},
+    apartment:!!document.getElementById('midgroundApartment'),
+    door:!!document.getElementById('apartmentDoorPrompt'),
+    interior:!!document.getElementById('interiorScene'),
+    canEnter:window.PaperchalkScene?.enter?.()
+  };
+})()`);
+assert(phoneOldTown.viewport.w===390&&phoneOldTown.viewport.h===844,'phone viewport override failed '+JSON.stringify(phoneOldTown));
+assert(phoneOldTown.visible>0&&phoneOldTown.first?.w>35&&phoneOldTown.first?.h>70,
+  'old-town buildings are not visible on phone portrait '+JSON.stringify(phoneOldTown));
+assert(phoneOldTown.atlas.w===4137&&phoneOldTown.atlas.h===380,
+  'old-town atlas failed to decode on phone '+JSON.stringify(phoneOldTown));
+assert(!phoneOldTown.apartment&&!phoneOldTown.door&&!phoneOldTown.interior&&phoneOldTown.canEnter===false,
+  'legacy apartment/interior still exists or can be entered '+JSON.stringify(phoneOldTown));
+console.log('PASS phone old-town + removed apartment',phoneOldTown);
+await call('Emulation.setDeviceMetricsOverride',{width:1536,height:691,deviceScaleFactor:1,mobile:true,screenWidth:1536,screenHeight:691});
+await sleep(180);
+
 const damageFx=await js(`(async()=>{
   PaperchalkHealth.reset();
   await new Promise(r=>setTimeout(r,40));
