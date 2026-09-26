@@ -69,6 +69,8 @@ assert.equal(cardCamera.config.nearMainScreenMargin,8,'near-main line must targe
 assert.equal(cardCamera.config.verticalFovDegrees,60,'debug camera angle math must use a 60deg vertical field of view');
 assert.equal(typeof cardCamera.setTiltDegrees,'function','camera tilt-degree setter missing');
 assert.equal(typeof cardCamera.setCameraHeightMeters,'function','camera-height setter missing');
+assert.equal(typeof cardCamera.setCameraDistanceMeters,'function','camera-distance setter missing');
+assert.equal(cardCamera.getCameraDistanceMeters(),30,'default camera distance must preserve the current 30m view');
 assert.equal(typeof cardCamera.setHorizonRatio,'function','runtime camera tilt setter missing');
 assert.equal(typeof cardCamera.clearHorizonRatio,'function','runtime camera tilt reset missing');
 const frozenGuideDepths=Array.from(cardCamera.config.sceneGuides,g=>g.z);
@@ -80,10 +82,15 @@ cardCamera.setCameraHeightMeters(4.5);
 assert.equal(cardCamera.manualCameraHeightMeters,4.5,'manual camera height must use real meters');
 const manualGround=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
 assert.ok(Math.abs(manualGround.y-(cardCamera.resolveHorizonY(720,112)+4.5*128))<1e-9,'camera height must shift the shared ground projection by 128px per meter');
+cardCamera.setCameraDistanceMeters(15);
+assert.equal(cardCamera.manualCameraDistanceMeters,15,'manual camera distance must use real meters');
+const dollyNear=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
+assert.ok(Math.abs(dollyNear.scale-2)<1e-12,'15m camera distance must double the mid-plane visual scale relative to the 30m reference view');
 assert.deepEqual(Array.from(cardCamera.config.sceneGuides,g=>g.z),frozenGuideDepths,'camera controls must never mutate scene depths');
-cardCamera.clearTiltDegrees();cardCamera.clearCameraHeight();cardCamera.clearHorizonRatio();
+cardCamera.clearTiltDegrees();cardCamera.clearCameraHeight();cardCamera.clearCameraDistance();cardCamera.clearHorizonRatio();
 assert.equal(cardCamera.manualTiltDegrees,null,'camera angle reset must restore automatic mode');
 assert.equal(cardCamera.manualCameraHeightMeters,null,'camera height reset must restore automatic mode');
+assert.equal(cardCamera.manualCameraDistanceMeters,null,'camera distance reset must restore automatic mode');
 assert.deepEqual([-640,0,640,1280].map(z=>z/cardCamera.config.gridSize),[-5,0,5,10],'major scene depths must be -5m/0m/5m/10m');
 for(const [vh,gy] of [[900,112],[691,112],[720,112]]){
   const q=cardCamera.project({worldX:0,worldZ:-640,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:vh,groundY:gy});
@@ -135,8 +142,8 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="camera-angle-height-r49"/,'camera angle-height build cache key missing');
-assert.match(html,/const BUILD = "camera-angle-height-r49"/,'page redirect cache key must match runtime build');
+assert.match(html,/paperchalk-build" content="camera-distance-r50"/,'camera angle-height-distance build cache key missing');
+assert.match(html,/const BUILD = "camera-distance-r50"/,'page redirect cache key must match runtime build');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
