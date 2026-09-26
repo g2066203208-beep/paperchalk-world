@@ -5,8 +5,14 @@
 const runtime=global.PaperchalkRuntime;
 const camera=global.PaperchalkCardCamera;
 const world=document.getElementById('world');
+const groundSvg=document.getElementById('cardGroundGrid');
+const groundDepth=document.getElementById('cardGroundDepthLines');
+const groundWorld=document.getElementById('cardGroundWorldLines');
 if(!runtime||!camera||!world)return;
 
+const SVG_NS='http://www.w3.org/2000/svg';
+const depthLinePool=[];
+const worldLinePool=[];
 let enemyEls=[];
 let npcEls=new Map();
 
@@ -18,19 +24,99 @@ function refreshNodes(){
   );
 }
 
-function applyProjection(el,p,{xVar,bottomVar,viewportHeight}){
-  const visible=p.visible&&p.x>-320&&p.x<(innerWidth||1280)+320&&p.y>-280&&p.y<(viewportHeight||720)+280;
+function applyProjection(el,p,{xVar,bottomVar,viewportWidth,viewportHeight}){
+  const w=viewportWidth||1280,h=viewportHeight||720;
+  const visible=p.visible&&p.x>-320&&p.x<w+320&&p.y>-280&&p.y<h+280;
   el.style.display=visible?'':'none';
   if(!visible)return;
   el.style.setProperty(xVar,p.x.toFixed(2)+'px');
-  el.style.setProperty(bottomVar,((viewportHeight||720)-p.y).toFixed(2)+'px');
+  el.style.setProperty(bottomVar,(h-p.y).toFixed(2)+'px');
   el.style.setProperty('--world-scale',p.scale.toFixed(4));
+}
+
+function pooledLine(group,pool,index){
+  let line=pool[index];
+  if(!line&&group){
+    line=document.createElementNS(SVG_NS,'line');
+    group.appendChild(line);
+    pool[index]=line;
+  }
+  if(line)line.hidden=false;
+  return line;
+}
+function hideUnused(pool,used){
+  for(let i=used;i<pool.length;i++)pool[i].hidden=true;
+}
+function setGridLine(line,x1,y1,x2,y2,kind,value,major,origin){
+  if(!line)return;
+  line.setAttribute('x1',x1.toFixed(2));
+  line.setAttribute('y1',y1.toFixed(2));
+  line.setAttribute('x2',x2.toFixed(2));
+  line.setAttribute('y2',y2.toFixed(2));
+  line.classList.toggle('is-major',!!major);
+  line.classList.toggle('is-origin',!!origin);
+  line.dataset[kind]=String(value);
+}
+function renderGroundGrid(frame){
+  if(!groundSvg||!groundDepth||!groundWorld)return;
+  const cfg=camera.config,p=frame.player,v=frame.viewport;
+  const step=cfg.gridSize;
+  const horizonY=v.height*cfg.horizonRatio;
+  world.style.setProperty('--card-horizon-y',horizonY.toFixed(2)+'px');
+  groundSvg.setAttribute('viewBox','0 0 '+v.width+' '+v.height);
+
+  const nearZ=-step*3;
+  const farZ=Math.min(step*32,cfg.maxDepth-cfg.baseDepth-step);
+  let depthUsed=0;
+  for(let z=Math.ceil(nearZ/step)*step;z<=farZ;z+=step){
+    const q=camera.project({
+      worldX:p.x,worldZ:z,worldY:0,
+      playerX:p.x,playerY:p.y,cameraZ:0,
+      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+    });
+    if(!q.visible&&q.depth<=cfg.minDepth)continue;
+    setGridLine(
+      pooledLine(groundDepth,depthLinePool,depthUsed++),
+      0,q.y,v.width,q.y,'worldZ',z,
+      Math.round(z/step)%5===0,z===0
+    );
+  }
+  hideUnused(depthLinePool,depthUsed);
+
+  const farProjection=camera.project({
+    worldX:p.x,worldZ:farZ,worldY:0,
+    playerX:p.x,playerY:p.y,cameraZ:0,
+    screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+  });
+  const farScale=Math.max(.12,farProjection.scale||.12);
+  const halfWorld=(v.width*.5+step*2)/farScale;
+  const firstX=Math.floor((p.x-halfWorld)/step)*step;
+  const lastX=Math.ceil((p.x+halfWorld)/step)*step;
+  let worldUsed=0;
+  for(let x=firstX;x<=lastX;x+=step){
+    const a=camera.project({
+      worldX:x,worldZ:nearZ,worldY:0,
+      playerX:p.x,playerY:p.y,cameraZ:0,
+      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+    });
+    const b=camera.project({
+      worldX:x,worldZ:farZ,worldY:0,
+      playerX:p.x,playerY:p.y,cameraZ:0,
+      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+    });
+    setGridLine(
+      pooledLine(groundWorld,worldLinePool,worldUsed++),
+      a.x,a.y,b.x,b.y,'worldX',x,
+      Math.round(x/step)%5===0,false
+    );
+  }
+  hideUnused(worldLinePool,worldUsed);
 }
 
 function render(frame){
   if(!frame||world.classList.contains('scene-interior'))return;
   const cfg=camera.config,p=frame.player,v=frame.viewport;
-  world.style.setProperty('--card-grid-x',(-camera.wrap(p.x,cfg.gridSize)).toFixed(2)+'px');
+  renderGroundGrid(frame);
   world.style.setProperty('--card-camera-y',(Number(p.y)||0).toFixed(2)+'px');
   const wallScale=cfg.baseDepth/(cfg.baseDepth+cfg.wallDepth);
   world.style.setProperty('--card-wall-x',(-camera.wrap(p.x*wallScale,cfg.gridSize)).toFixed(2)+'px');
@@ -45,7 +131,7 @@ function render(frame){
       playerX:p.x,playerY:p.y,cameraZ:0,
       screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
     });
-    applyProjection(el,projected,{xVar:'--enemy-x',bottomVar:'--enemy-bottom',viewportHeight:v.height});
+    applyProjection(el,projected,{xVar:'--enemy-x',bottomVar:'--enemy-bottom',viewportWidth:v.width,viewportHeight:v.height});
   }
 
   const npcs=runtime.worldData?.npcs||[];
@@ -58,7 +144,7 @@ function render(frame){
       playerX:p.x,playerY:p.y,cameraZ:0,
       screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
     });
-    applyProjection(el,projected,{xVar:'--npc-x',bottomVar:'--npc-bottom',viewportHeight:v.height});
+    applyProjection(el,projected,{xVar:'--npc-x',bottomVar:'--npc-bottom',viewportWidth:v.width,viewportHeight:v.height});
   }
 }
 
@@ -66,5 +152,5 @@ refreshNodes();
 const unsubscribe=runtime.subscribe(render);
 global.addEventListener('paperchalk-world-enter',()=>{refreshNodes();render(runtime.getSnapshot())});
 global.addEventListener('beforeunload',()=>unsubscribe?.(),{once:true});
-global.PaperchalkDomCardProjection=Object.freeze({render,refreshNodes});
+global.PaperchalkDomCardProjection=Object.freeze({render,refreshNodes,renderGroundGrid});
 })(window);
