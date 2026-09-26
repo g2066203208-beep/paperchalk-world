@@ -32,9 +32,9 @@ const requiredIds = [
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
   "entityTrack","pixiEntityLayer","playerFlip","playerSprite","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
-  "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
+  "debugHitboxBtn","debugRangeBtn","debugMapColliderBtn","debugCameraBtn",
   "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput",
-  "settingCameraTilt","settingCameraTiltValue","settingCameraHeight","settingCameraHeightValue","settingCameraDistance","settingCameraDistanceValue","settingCameraReset"
+  "cameraControlBtn","cameraControlPanel","cameraControlClose","cameraTilt","cameraTiltValue","cameraHeight","cameraHeightValue","cameraDistance","cameraDistanceValue","cameraReset"
 ];
 
 for (const id of requiredIds) {
@@ -131,14 +131,10 @@ assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport up
 assert(!fs.existsSync("assets/road/user-road-surface-r1.webp"), "Painted road asset must be removed");
 assert(html.includes('class="world-layer road-layer" hidden'), "Road compatibility layer must stay hidden");
 assert(css.includes(".road-layer{display:none!important}"), "Road visuals are not fully disabled");
-assert(html.includes('id="midgroundApartment"'), "Apartment midground image missing");
-assert(fs.existsSync("assets/backgrounds/apartment-midground.webp"), "Local apartment runtime asset missing");
-assert(html.includes('./assets/backgrounds/apartment-midground.webp?v='), "Apartment is not using the local runtime asset");
-assert(!html.includes("cdn.openart.ai"), "Runtime HTML still depends on OpenArt CDN");
-assert(!html.includes("blackKeyApartment") && !css.includes("blackKeyApartment"), "Realtime apartment black-key filter still present");
-assert(game.includes("updateMidgroundApartmentVisibility"), "Apartment off-screen culling missing");
-assert(html.includes('width="780" height="1040"'), "Apartment display dimensions must be 780x1040 at default player scale");
-assert(css.includes("width:calc(var(--player-visual-h,156px) * 5)"), "Apartment width is not tied to player scale");
+assert(html.includes('id="prototypeRuntimeCompat"'), "Hidden prototype compatibility host missing");
+assert(html.includes('id="midgroundApartment"')&&!html.includes('./assets/backgrounds/apartment-midground.webp?v='), "Prototype apartment must not load as production content");
+assert(css.includes("#prototypeRuntimeCompat{display:none!important}"), "Prototype compatibility host must stay invisible");
+assert(game.includes("const PRODUCTION_INTERIORS_ENABLED=false"), "Prototype interior content must be disabled in production");
 assert(!fs.existsSync("assets/backgrounds/mountain-paper-r13.webp"), "Background mountain asset must be removed");
 assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"), "Background mountain layer still exists");
 assert(html.includes("sun-paper-r13.webp")&&html.includes("moon-paper-r13.webp")&&html.includes("cloud-paper-r13.webp"), "User supplied sky props are not mounted");
@@ -171,32 +167,16 @@ assert(
 );
 assert(game.includes("const MAP_TERRAIN=["), "Terrain data missing");
 assert(game.includes("const MAP_OBJECTS=["), "Map object data missing");
-assert(content.includes("enemySpawns:["), "Enemy spawn content missing");
-assert(game.includes("const MAP_NPCS=AUTHORED_CONTENT.npcs"), "Map NPC runtime content bridge missing");
-assert(fs.existsSync("assets/npcs/phone-girl-offline-r1.webp"), "Supplied left-character NPC asset missing");
-assert(content.includes("id:'npc-phone-girl'"), "New left-character NPC content missing");
-assert(content.includes("phone-girl-offline-r1.webp"), "NPC content is not using supplied left-character asset");
-assert(!game.includes("npc-old-crafter")&&!game.includes("白翼引路人"), "Old placeholder NPC data still present");
-assert(!html.includes("npc-portrait.js")&&!html.includes("npc-portrait-hd.svg"), "Old generated NPC portrait runtime still referenced");
-assert(!fs.existsSync("assets/dialogue/npc-portrait-hd.svg")&&!fs.existsSync("assets/dialogue/npc-portrait.js"), "Old generated NPC portrait assets still exist");
-assert(css.includes("width:64px;height:128px"), "NPC world visual canvas is not player-matched");
-assert(css.includes("width:auto;height:128px;max-width:64px;max-height:128px"), "NPC art is not normalized to 128px visual height");
-assert(game.includes("function interactWithNpc"), "NPC interaction logic missing");
-assert(html.includes('id="apartmentDoorPrompt"')&&html.includes('id="interiorScene"'), "Apartment door/interior stage DOM missing");
-assert(game.includes("function enterApartment")&&game.includes("function exitApartment"), "Door stage transition runtime missing");
-assert(game.includes("apartmentDoorScreenX")&&game.includes("nearbyApartmentDoor"), "Apartment door proximity interaction missing");
-assert(game.includes("window.PaperchalkScene"), "Scene transition test API missing");
-assert(css.includes("paperHangExit")&&css.includes("paperDropExit")&&css.includes("interiorRise"), "Paper stage choreography missing");
-assert(!css.includes(".stage.paper-stage-out .actor{")&&!css.includes(".stage.scene-interior.interior-stage-in .actor{")&&!css.includes(".stage.scene-interior.interior-stage-out .actor{")&&!css.includes(".stage.exterior-stage-in .actor{"), "Player must stay fixed while paper scenery changes");
-assert(game.includes("playerScreenAnchorX=Math.round(VIEW_W*.5)")&&game.includes("actorX=playerScreenAnchorX"), "Player must use one fixed screen anchor");
-assert(game.includes("interiorCameraX=INTERIOR_DOOR_X-playerScreenAnchorX")&&game.includes("interiorPlayerWorldX=INTERIOR_DOOR_X"), "Entry must place the finite indoor doorway exactly under the fixed player");
-assert(game.includes("worldX=exteriorCameraForDoorAt(playerScreenAnchorX)")&&game.includes("playerWorldX=clamp(worldX+playerScreenAnchorX")&&!game.includes("tweenExteriorWorldToPlayer"), "Exit must reveal the exterior door at the fixed player and must not run a second camera recenter tween");
-assert(game.includes("const INTERIOR_MAP_WIDTH=1536")&&game.includes("const INTERIOR_MAP_HEIGHT=768")&&game.includes("const INTERIOR_SECOND_FLOOR_Y=384"), "Residential-scale two-storey indoor world dimensions missing");
-assert(game.includes("midY:192")&&game.includes("interiorStairState='landing-up'")&&game.includes("interiorStairState='landing-down'"), "Switchback double-flight stair traversal states missing");
-assert(game.includes("function interiorLowerY")&&game.includes("function interiorUpperY")&&game.includes("function updateInteriorVertical"), "Double-flight stair surfaces or indoor jump physics missing");
-assert(html.includes('id="interiorStaircase"')&&html.includes("interior-stair-run-lower")&&html.includes("interior-stair-run-upper")&&html.includes("interior-stair-landing"), "Switchback double-flight stair visual missing");
-assert(css.includes(".interior-stair-run-lower{")&&css.includes(".interior-stair-run-upper{")&&css.includes(".interior-stair-rail-upper{"), "Crossing double-flight stair styling missing");
-assert(game.includes("else jumpPlayer();")&&!game.includes("if(sceneLocation==='interior')return;\n    jumpPlayer();"), "Indoor keyboard/mobile jump must remain enabled");
+assert(content.includes("npcs:[]")&&content.includes("enemySpawns:[]"), "Production story content must start without prototype NPC/enemy spawns");
+assert(game.includes("const MAP_NPCS=AUTHORED_CONTENT.npcs"), "Future NPC content bridge missing");
+assert(game.includes("const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns"), "Future enemy content bridge missing");
+assert(!html.includes("phone-girl-offline-r1.webp"), "Prototype NPC asset must not be loaded by production HTML");
+assert(!html.includes('src="./assets/enemies/rag-drifter.svg'), "Prototype enemy art must not be mounted in production HTML");
+assert(!html.includes('id="apartmentDoorPrompt"'), "Prototype door prompt must not exist in production UI");
+assert(game.includes("function enterApartment")&&game.includes("function exitApartment"), "Dormant interior engine hooks must remain reusable");
+assert(game.includes("PRODUCTION_INTERIORS_ENABLED=false"), "Prototype interiors must remain disabled");
+assert(html.includes('id="prototypeRuntimeCompat"'), "Dormant prototype engine compatibility host missing");
+assert(html.includes('id="debugFlightBtn"')&&game.includes("setDebugFlightMode"), "Debug flight mode missing");
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("debugFlightMode&&sceneLocation==='outside'"), "Free flight must support large Y and bypass road-strip snapping");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
 assert(game.includes("const playerProjection=sceneLocation==='outside'?CARD_CAMERA.project")&&game.includes("const actorBottom=(VIEW_H-playerProjection.y).toFixed(2)+'px'")&&game.includes("--world-camera-y"), "Vertical simulation/camera framing must keep player feet on the shared projected ground");
@@ -252,14 +232,11 @@ assert(game.includes("e.state='patrol'"), "Enemy patrol state missing");
 assert(game.includes("RAG_DRIFTER.aggroRange")&&content.includes("aggroRange:700"), "Enemy chase radius missing");
 assert(html.includes('data-debug-action="hitboxes"'), "Hitbox debug panel button missing");
 assert(html.includes('data-debug-action="attackRange"'), "Attack range debug panel button missing");
-assert(html.includes('data-debug-action="enemyAI"'), "Enemy AI debug panel button missing");
 assert(html.includes('data-debug-action="mapColliders"'), "Terrain collider debug button missing");
-assert(html.includes('data-debug-action="spawnZones"'), "Enemy spawn-zone debug button missing");
 assert(html.includes('data-debug-action="cameraDebug"'), "Camera debug button missing");
 assert(html.includes('data-debug-action="teleportStart"'), "Map teleport debug controls missing");
 assert(!game.includes("e.code==='F2'"), "Debug panel must not depend on F2 hotkey");
 assert(!game.includes("e.code==='F3'"), "Hitbox debug must live inside debug panel, not F3");
-assert(html.includes("assets/enemies/rag-drifter.svg"), "Enemy art missing");
 assert(fs.existsSync("assets/enemies/rag-drifter.svg"), "Enemy SVG asset missing");
 assert(css.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
 assert(game.includes("order*45"), "Staggered heal timing missing");
@@ -297,10 +274,10 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="camera-settings-r51"'), "R51 camera-settings build cache key missing");
-assert(html.includes('const BUILD = "camera-settings-r51"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=camera-settings-r51'), "game.js camera debug cache key missing");
-assert(html.includes('./src/camera-settings.js?v=camera-settings-r51'), "camera settings controller missing");
+assert(html.includes('meta name="paperchalk-build" content="production-clean-r52"'), "R52 production-clean build cache key missing");
+assert(html.includes('const BUILD = "production-clean-r52"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=production-clean-r52'), "game.js camera debug cache key missing");
+assert(html.includes('./src/camera-settings.js?v=production-clean-r52'), "camera settings controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
@@ -308,9 +285,13 @@ assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main
 assert(cardCamera.includes("defaultTiltDegrees:DT")&&cardCamera.includes("defaultHeightMeters:DH")&&cardCamera.includes("maxTiltDegrees:80"), "Independent production camera defaults/range missing");
 assert(cardCamera.includes("function tiltFactor(")&&cardCamera.includes("function resolveMidY("), "Mid-axis camera pitch projection missing");
 assert(cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters(")&&cardCamera.includes("function setCameraDistanceMeters("), "Angle/height/distance camera API missing");
-assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"), "Persistent camera settings controller missing");
-assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Production camera controls must not remain in Debug");
+assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("cameraControlBtn")&&cameraSettings.includes("cameraTilt")&&cameraSettings.includes("cameraHeight")&&cameraSettings.includes("cameraDistance"), "Standalone camera controller missing");
+assert(html.includes('id="cameraControlBtn"')&&html.includes('id="cameraControlPanel"'), "Standalone camera UI missing");
+assert(!html.includes('id="settingCameraTilt"')&&!html.includes('id="settingCameraHeight"')&&!html.includes('id="settingCameraDistance"'), "Camera controls must not remain in Settings");
+assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Camera controls must not remain in Debug");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
+assert(html.includes('class="stage production-clean-stage"'), "Production-clean stage marker missing");
+assert(!html.includes('data-debug-action="enemyNear"')&&!html.includes('data-debug-action="enemyReset"')&&!html.includes('data-debug-action="enemyAI"')&&!html.includes('data-debug-action="spawnZones"'), "Prototype enemy debug controls must be removed");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 
 

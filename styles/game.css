@@ -856,17 +856,6 @@ button{cursor:pointer}
   background:rgba(245,235,213,.55);color:#4f4639;padding:5px 8px;border-radius:4px;
 }
 .setting-row input[type="checkbox"]{width:20px;height:20px;accent-color:#6e604c}
-.setting-camera-group{
-  background:#ead9b7;padding:12px 14px 14px;color:#54493a;
-  clip-path:polygon(1% 2%,99% 0,100% 96%,97% 100%,1% 98%,0 5%);
-}
-.setting-camera-title{font-size:14px;font-weight:800;letter-spacing:.08em;margin-bottom:8px}
-.setting-camera-row{display:block;padding:8px 0;border-top:1px solid rgba(84,65,43,.14)}
-.setting-camera-row>span{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:700}
-.setting-camera-row b{font:800 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
-.setting-camera-row input[type="range"]{display:block;width:100%;height:28px;margin:3px 0 1px;accent-color:#7f6448}
-.setting-camera-row small{display:block;color:#7a6b56;font-size:10px;line-height:1.35}
-.setting-camera-reset{width:100%;margin-top:8px}
 #pageSettings .auth-wrap{overflow:auto;align-items:flex-start;padding-top:48px;padding-bottom:48px}
 #pageSettings .auth-card{margin:auto}
 .settings-status{position:relative;z-index:2;min-height:20px;margin-top:10px;text-align:center;color:#665948;font-size:12px}
@@ -1119,6 +1108,49 @@ button{cursor:pointer}
 }
 .backpack-open-btn img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none;user-select:none;-webkit-user-drag:none}
 .backpack-open-btn:active{transform:translate(1px,2px) rotate(-1deg)}
+
+/* ---------- PRODUCTION CLEAN STAGE ---------- */
+#prototypeRuntimeCompat{display:none!important}
+.combat-btn[hidden]{display:none!important}
+
+/* ---------- CAMERA CONTROL ---------- */
+.camera-control-btn{
+  position:absolute;z-index:32;
+  top:max(194px,calc(env(safe-area-inset-top) + 188px));
+  right:max(18px,env(safe-area-inset-right));
+  min-width:68px;height:34px;padding:0 11px;
+  border:1px solid rgba(81,63,42,.40);
+  background:rgba(238,224,195,.94);color:#554936;
+  font:700 12px/32px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  border-radius:5px;box-shadow:3px 4px 0 rgba(54,40,27,.12);
+}
+.camera-control-btn[aria-expanded="true"]{background:rgba(196,159,120,.96)}
+.camera-control-panel{
+  position:absolute;z-index:72;
+  top:max(232px,calc(env(safe-area-inset-top) + 226px));
+  right:max(18px,env(safe-area-inset-right));
+  width:min(330px,calc(100vw - 36px));padding:14px;
+  color:#4e4233;background:rgba(232,216,184,.97);
+  border:1px solid rgba(85,66,43,.35);border-radius:7px;
+  box-shadow:6px 8px 0 rgba(45,34,24,.17),0 14px 30px rgba(35,28,20,.20);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(-5px) scale(.98);transition:.12s ease;
+}
+.camera-control-panel.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:none}
+.camera-control-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.camera-control-head strong{font-size:15px;letter-spacing:.08em}
+.camera-control-head button{border:0;background:transparent;font-size:22px;color:#5a4a36}
+.camera-control-row{display:block;padding:9px 0;border-top:1px solid rgba(84,65,43,.16)}
+.camera-control-row>span{display:flex;justify-content:space-between;font-size:12px;font-weight:700}
+.camera-control-row b{font:800 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
+.camera-control-row input{display:block;width:100%;height:30px;margin:3px 0;accent-color:#7f6448}
+.camera-control-row small{display:block;color:#75634f;font-size:10px}
+.camera-control-reset{width:100%;height:32px;margin-top:8px;border:1px dashed rgba(81,63,42,.42);background:#ead9b7;color:#554936;font-weight:700}
+.camera-control-status{min-height:16px;margin-top:6px;text-align:center;font-size:10px;color:#6b5b48}
+@media(max-width:900px),(max-height:560px){
+  .camera-control-btn{top:max(151px,calc(env(safe-area-inset-top) + 145px));right:max(76px,calc(env(safe-area-inset-right) + 66px));height:34px}
+  .camera-control-panel{top:max(189px,calc(env(safe-area-inset-top) + 183px));right:max(10px,env(safe-area-inset-right));width:min(310px,calc(100vw - 20px))}
+}
 
 /* ---------- WORLD MAP ---------- */
 .world-map-btn{

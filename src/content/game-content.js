@@ -46,26 +46,9 @@ const content={
       {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
     ]
   },
-  npcs:[
-    {
-      id:'npc-phone-girl',x:760,z:0,name:'？？？',portrait:'phone-girl-offline',
-      sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
-      dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
-      text:'……你好。',
-      dialogue:{
-        opening:'……你好。',
-        choices:[
-          {text:'你是谁？',reply:'……暂时不重要。'},
-          {text:'你在看手机？',reply:'嗯。只是随便看看。'},
-          {text:'我先走了。',reply:'好。'}
-        ]
-      }
-    }
-  ],
-  enemySpawns:[
-    {id:'enemy-1',archetype:'rag-drifter',x:2140,z:0,patrolMin:2010,patrolMax:2290},
-    {id:'enemy-2',archetype:'rag-drifter',x:4780,z:0,patrolMin:4680,patrolMax:4920}
-  ],
+  // Production story content starts empty. Main-line NPCs and enemies are authored here later.
+  npcs:[],
+  enemySpawns:[],
   enemyArchetypes:{
     'rag-drifter':{
       id:'rag-drifter',

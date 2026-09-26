@@ -128,28 +128,21 @@ try{
   await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
   await page.waitForTimeout(80);
 
-  await page.evaluate(()=>{
-    window.PaperchalkCombat.placeEnemyNear(320);
-    window.PaperchalkCombat.toggleEnemyAi(true);
-  });
-  await page.waitForTimeout(180);
   const before=await page.evaluate(()=>({
-    simX:window.PaperchalkCombat.enemy.x,
     frames:window.PaperchalkRenderer.stats.frameCount,
-    gpuX:window.PaperchalkRenderer.stats.playerWorldX,
-    rendered:window.PaperchalkRenderer.stats.renderedEnemies
+    rendered:window.PaperchalkRenderer.stats.renderedEnemies,
+    spawns:window.PaperchalkRuntime.worldData.enemySpawns.length
   }));
   await page.waitForTimeout(650);
   const after=await page.evaluate(()=>({
-    simX:window.PaperchalkCombat.enemy.x,
     frames:window.PaperchalkRenderer.stats.frameCount,
-    gpuX:window.PaperchalkRenderer.stats.playerWorldX,
     rendered:window.PaperchalkRenderer.stats.renderedEnemies,
-    snapshotRevision:window.PaperchalkRenderer.stats.snapshotRevision
+    snapshotRevision:window.PaperchalkRenderer.stats.snapshotRevision,
+    spawns:window.PaperchalkRuntime.worldData.enemySpawns.length
   }));
   assert(after.frames>=before.frames+2,'Pixi render-on-state-change is not advancing '+JSON.stringify({before,after}));
-  assert(after.rendered>0,'near enemy was not rendered by Pixi '+JSON.stringify(after));
-  assert(Math.abs(after.simX-before.simX)>10,'enemy simulation did not advance '+JSON.stringify({before,after}));
+  assert(before.spawns===0&&after.spawns===0&&before.rendered===0&&after.rendered===0,
+    'production GPU scene rendered prototype enemies '+JSON.stringify({before,after}));
   assert(after.snapshotRevision>0,'renderer is not receiving runtime snapshots');
 
   // Deterministic player-state synchronization. Keyboard movement is already covered

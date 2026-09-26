@@ -26,6 +26,7 @@ const PLAYER_ACTION_META=Object.freeze({
 });
 const AUTHORED_CONTENT=window.PaperchalkContent;
 if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
+const PRODUCTION_INTERIORS_ENABLED=false;
 const WORLD_NODES=AUTHORED_CONTENT.world.nodes.map(node=>({...node}));
 const WORLD_ROUTES=AUTHORED_CONTENT.world.routes.map(route=>({...route}));
 const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
@@ -68,7 +69,6 @@ const MAP_OBJECTS=[
 ];
 const MAP_LANDMARKS=[
   {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
-  {id:'sign-combat',kind:'sign',x:1440,text:'前方有游荡者'},
   {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'}
 ];
 const MAP_PICKUPS=[
@@ -83,17 +83,6 @@ const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
   }:null
 }));
 const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const offset=1750+(zone%4)*720;
-  const x=base+offset;
-  ENEMY_SPAWNS.push({
-    id:'enemy-zone-'+zone,
-    x,
-    patrolMin:x-170-(zone%3)*20,
-    patrolMax:x+170+(zone%2)*30
-  });
-}
 
 /* Deterministic continuation: every 6000px is authored into the same coordinate space.
    Nothing is fetched or swapped while crossing a zone boundary. */
@@ -492,6 +481,11 @@ midgroundApartment?.addEventListener('error',()=>{
 },{once:true});
 function updateMidgroundApartmentVisibility(sceneryX,force=false){
   if(!midgroundApartment)return;
+  if(!PRODUCTION_INTERIORS_ENABLED){
+    midgroundApartmentVisible=false;
+    midgroundApartment.hidden=true;
+    return;
+  }
   const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
   const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
     &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
@@ -509,6 +503,7 @@ function apartmentDoorScreenY(){
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
+  if(!PRODUCTION_INTERIORS_ENABLED)return false;
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
@@ -701,6 +696,7 @@ function updateInteriorDepthLayers(){
   return sceneLocation==='interior';
 }
 function nearbyInteriorExit(maxDistance=92){
+  if(!PRODUCTION_INTERIORS_ENABLED)return false;
   return sceneLocation==='interior'&&!sceneTransitionBusy
     &&Math.abs(interiorPlayerWorldX-INTERIOR_DOOR_X)<=maxDistance
     &&Math.abs(playerY)<=72;
@@ -726,6 +722,7 @@ function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
 function enterApartment(){
+  if(!PRODUCTION_INTERIORS_ENABLED)return false;
   if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
@@ -760,6 +757,7 @@ function enterApartment(){
   return true;
 }
 function exitApartment(){
+  if(!PRODUCTION_INTERIORS_ENABLED)return false;
   if(sceneLocation!=='interior'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   stageHeldActorX=actorX;
@@ -1493,8 +1491,6 @@ function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
-  const alive=enemies.filter(e=>e.alive).length;
-  const nearest=nearestLivingEnemy();
   debugStatus.innerHTML=
     '<span>HP <b>'+playerHp+' / '+PLAYER_MAX_HP+'</b></span>'+
     '<span>时间 <b>'+formatWorldClock()+' '+worldTimeName()+'</b></span>'+
@@ -1502,8 +1498,6 @@ function updateDebugStatus(){
     '<span>Camera <b>'+worldX.toFixed(1)+'</b></span>'+
     '<span>脚底Y <b>'+playerY.toFixed(1)+'</b></span>'+
     '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
-    '<span>敌人 <b>'+alive+' / '+enemies.length+'</b></span>'+
-    '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
 
@@ -1520,9 +1514,9 @@ function updateDebugStatus(){
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
   debugRangeBtn.textContent='攻击范围：'+(showAttackRange?'开':'关');
-  debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
+  if(debugAiBtn)debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
-  debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
+  if(debugSpawnBtn)debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
   if(debugFlightBtn){debugFlightBtn.textContent='自由飞行：'+(debugFlightMode?'开':'关');debugFlightBtn.classList.toggle('is-active',debugFlightMode);}
   const renderer=window.PaperchalkRenderer;
@@ -1544,7 +1538,6 @@ function openDebugPanel(){
   debugToggleBtn.setAttribute('aria-expanded','true');
   updateDebugStatus();
   updateCombatDebugButtons();
-  window.PaperchalkDebugCamera?.sync?.();
   renderCombatDebug();
   return true;
 }
@@ -1609,16 +1602,12 @@ function runDebugCommand(rawCommand){
       'tp 3000         传送到地图 X=3000',
       'resetpos        回到村口出生点',
       'save            立即保存',
-      'enemy reset      重置全地图敌人',
-      'enemy near       把一号敌人放到附近',
       'hitbox           开/关战斗碰撞箱',
       'range            开/关攻击范围预览',
       'collider         开/关地形 collider',
-      'spawn            开/关敌人出生区',
       'camera           开/关 Camera 调试',
       'fly              开/关自由飞行（四向）',
       'fly on / off     指定开启/关闭自由飞行',
-      'ai               开/关敌人AI',
       'jump             跳跃测试',
       'attack           攻击测试',
       'clear           清空输出'
@@ -2501,6 +2490,7 @@ function updateNpcPrompt(){
   }
   const active=nearDoor||nearExit||!!nearNpc;
   interactBtn.disabled=!active;
+  interactBtn.hidden=!active;
   interactBtn.style.opacity=active?'1':'.45';
   interactBtn.textContent=nearDoor?'开门':nearExit?'出门':'聊';
   renderDoorPrompt();
@@ -2542,7 +2532,8 @@ function teleportTo(x,{notice='已传送'}={}){
   updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
 }
 function updateCombat(dt,interactive){
-  if(!enemies.every(e=>e.spawned)){if(interactive)resetMapEnemies();else return}
+  const enemyContentActive=ENEMY_SPAWNS.length>0;
+  if(enemyContentActive&&!enemies.every(e=>e.spawned)){if(interactive)resetMapEnemies();else return}
   if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
   if(playerInvuln>0)playerInvuln=Math.max(0,playerInvuln-dt);
   if(playerAttackTimer>0&&interactive){
@@ -2561,8 +2552,10 @@ function updateCombat(dt,interactive){
       }
     }
   }
-  if(combatEcs)combatEcs.run('enemy-ai',dt,{interactive});
-  else for(const e of enemies)updateEnemy(e,dt,interactive);
+  if(enemyContentActive){
+    if(combatEcs)combatEcs.run('enemy-ai',dt,{interactive});
+    else for(const e of enemies)updateEnemy(e,dt,interactive);
+  }
 }
 function nearestLivingEnemy(){
   let best=null,bestD=Infinity;
@@ -2638,7 +2631,7 @@ const runtimeFrameState={
     grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,
     moving:false,attacking:false,attackTimer:0,invulnerable:false
   },
-  enemies:enemies.map(e=>({
+  enemies:enemies.slice(0,ENEMY_SPAWNS.length).map(e=>({
     id:e.id,x:e.x,z:e.z,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
     patrolMin:e.patrolMin,patrolMax:e.patrolMax,attackTimer:e.attackTimer,hitstun:e.hitstun
   })),
@@ -2661,7 +2654,7 @@ function refreshRuntimeFrameState(){
   s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
   s.player.invulnerable=playerInvuln>0;
-  for(let i=0;i<enemies.length;i++){
+  for(let i=0;i<s.enemies.length;i++){
     const e=enemies[i],o=s.enemies[i];
     o.x=e.x;o.z=e.z;o.hp=e.hp;o.alive=e.alive;o.facing=e.facing;o.state=e.state;
     o.patrolMin=e.patrolMin;o.patrolMax=e.patrolMax;o.attackTimer=e.attackTimer;o.hitstun=e.hitstun;
@@ -4104,7 +4097,7 @@ function enterWorld(){
   if(!session){showPage('auth');return}
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
-  if(enemies.some(e=>!e.spawned||e.account!==session.account))resetMapEnemies();
+  if(ENEMY_SPAWNS.length&&enemies.some(e=>!e.spawned||e.account!==session.account))resetMapEnemies();
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());

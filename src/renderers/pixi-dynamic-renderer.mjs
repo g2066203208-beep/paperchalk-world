@@ -421,13 +421,16 @@ async function ensurePixi(){
       playerNode=makePlayer(playerTextures);
       console.warn('PAPER_PUPPET_FALLBACK',err);
     }
-    const enemyTexture=await Assets.load('./assets/enemies/rag-drifter.svg?v=1');
-
     app.stage.addChild(playerNode.root);
 
     const spawns=runtime.worldData?.enemySpawns||[];
-    enemyNodes=spawns.map(s=>makeEnemy(enemyTexture,s.id));
-    for(const node of enemyNodes)app.stage.addChild(node.root);
+    if(spawns.length){
+      const enemyTexture=await Assets.load('./assets/enemies/rag-drifter.svg?v=1');
+      enemyNodes=spawns.map(s=>makeEnemy(enemyTexture,s.id));
+      for(const node of enemyNodes)app.stage.addChild(node.root);
+    }else{
+      enemyNodes=[];
+    }
 
     unsubscribe=runtime.subscribe(frame=>{
       const resized=lastViewportW!==frame.viewport.width||lastViewportH!==frame.viewport.height;

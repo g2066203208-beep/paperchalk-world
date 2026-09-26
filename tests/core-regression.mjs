@@ -115,19 +115,21 @@ try{
   let s=await state(page);
   check('A enters a fresh world',Math.abs(s.worldX)<1&&Math.abs(s.playerWorldX-460)<2,JSON.stringify(s));
 
-  // Finite-map + realtime-combat foundation.
+  // Production baseline: systems remain available, but prototype story content is absent.
   const initialMap=await mapState(page);
-  check('Fresh A starts in the 20-zone continuous world',
+  const productionStart=await page.evaluate(()=>({
+    visibleEnemies:document.querySelectorAll('#entityTrack .enemy').length,
+    visibleNpcs:document.querySelectorAll('[data-npc-id]').length,
+    compatDisplay:getComputedStyle(document.getElementById('prototypeRuntimeCompat')).display,
+    apartmentAsset:[...document.images].some(img=>(img.getAttribute('src')||'').includes('apartment-midground')),
+    interactHidden:document.getElementById('interactBtn')?.hidden===true
+  }));
+  check('Fresh A starts in the production-clean continuous world',
     Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&
-    initialMap.terrainCount===0&&initialMap.objectCount===0&&initialMap.spawnCount===21&&initialMap.npcCount===1,
-    JSON.stringify({s,initialMap}));
-  const parents=await page.evaluate(()=>[
-    document.getElementById('enemy')?.parentElement?.id,
-    document.getElementById('enemy2')?.parentElement?.id
-  ]);
-  check('Both enemies are mounted on the scrolling world entity track',
-    parents[0]==='entityTrack'&&parents[1]==='entityTrack',
-    JSON.stringify(parents));
+    initialMap.terrainCount===0&&initialMap.objectCount===0&&initialMap.spawnCount===0&&initialMap.npcCount===0&&
+    productionStart.visibleEnemies===0&&productionStart.visibleNpcs===0&&productionStart.compatDisplay==='none'&&
+    productionStart.apartmentAsset===false&&productionStart.interactHidden,
+    JSON.stringify({s,initialMap,productionStart}));
 
   await page.waitForFunction(()=>performance.getEntriesByType('resource').filter(e=>e.name.includes('/assets/player/runtime/')).length>=5,null,{timeout:5000});
   const initialAction=await page.evaluate(()=>({
@@ -245,9 +247,8 @@ try{
   check('Near/mid/far front-main-back guides are ordered toward the horizon',
     guideOrder.length===10&&guideOrder.every((y,i)=>i===0||guideOrder[i-1]>y),
     JSON.stringify(finiteGround.renderer.sceneGuideYs));
-  check('Off-screen enemy projection is culled before camera/DOM work',
-    finiteGround.renderer.culledEnemies>=20&&finiteGround.renderer.projectedEnemies<=1&&
-    finiteGround.renderer.projectedNpcs===1,
+  check('Production-clean frame projects no prototype NPCs or enemies',
+    finiteGround.renderer.projectedEnemies===0&&finiteGround.renderer.projectedNpcs===0,
     JSON.stringify(finiteGround.renderer));
 
   await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===20,null,{timeout:3000});
@@ -419,18 +420,6 @@ try{
     sCrouch.crouching===true&&!('z' in sCrouch)&&sRelease.crouching===false,
     JSON.stringify({sCrouch,sRelease}));
 
-  // Restore the original regression position before checking far-enemy sleep radius.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:''}));
-  await page.waitForTimeout(220);
-
-  const enemyMoveBefore=await page.evaluate(()=>window.PaperchalkCombat.enemies);
-  await page.waitForTimeout(420);
-  const enemyMoveAfter=await page.evaluate(()=>window.PaperchalkCombat.enemies);
-  check('Far enemies sleep outside the active simulation radius',
-    enemyMoveBefore[0].state==='sleep'&&enemyMoveAfter[0].state==='sleep'&&
-    Math.abs(enemyMoveAfter[0].x-enemyMoveBefore[0].x)<0.01,
-    JSON.stringify({enemyMoveBefore:enemyMoveBefore[0],enemyMoveAfter:enemyMoveAfter[0]}));
-
   const playerRectBeforeJump=await page.evaluate(()=>{
     const r=document.querySelector('.actor').getBoundingClientRect();
     return {left:r.left,top:r.top};
@@ -483,7 +472,6 @@ try{
   await page.locator('[data-debug-action="hitboxes"]').click();
   await page.locator('[data-debug-action="attackRange"]').click();
   await page.locator('[data-debug-action="mapColliders"]').click();
-  await page.locator('[data-debug-action="spawnZones"]').click();
   await page.locator('[data-debug-action="cameraDebug"]').click();
   await page.waitForTimeout(80);
   const debugView=await page.evaluate(()=>({
@@ -504,12 +492,13 @@ try{
     },
     terrainBoxes:[...document.querySelectorAll('#mapDebugTrack .collider')].filter(el=>getComputedStyle(el).display!=='none').length,
     spawnBoxes:[...document.querySelectorAll('#mapDebugTrack .spawn')].filter(el=>getComputedStyle(el).display!=='none').length,
-    cameraDisplay:getComputedStyle(document.getElementById('cameraLeftDebug')).display
+    cameraDisplay:getComputedStyle(document.getElementById('cameraLeftDebug')).display,
+    enemyButtons:document.querySelectorAll('[data-debug-action="enemyNear"],[data-debug-action="enemyReset"],[data-debug-action="enemyAI"],[data-debug-action="spawnZones"]').length
   }));
-  check('Debug panel exposes combat/spawn/camera overlays with no authored terrain colliders',
-    debugView.combat.hitboxes&&debugView.combat.attackRange&&debugView.combat.mapColliders&&debugView.combat.spawnZones&&debugView.combat.camera&&
+  check('Debug panel keeps engine overlays but removes prototype enemy/spawn controls',
+    debugView.combat.hitboxes&&debugView.combat.attackRange&&debugView.combat.mapColliders&&debugView.combat.camera&&
     debugView.playerHurt.width>40&&debugView.attack.width>80&&debugView.attack.preview&&
-    debugView.terrainBoxes===0&&debugView.spawnBoxes>0&&debugView.cameraDisplay!=='none',
+    debugView.terrainBoxes===0&&debugView.spawnBoxes===0&&debugView.enemyButtons===0&&debugView.cameraDisplay!=='none',
     JSON.stringify(debugView));
   check('Inactive enemy attack box leaves no red-line residual',
     debugView.enemyAttack.hidden===true&&debugView.enemyAttack.width===0,
@@ -588,35 +577,10 @@ try{
   await page.evaluate(()=>window.PaperchalkMap.teleport(6000,{notice:''}));
   await page.waitForTimeout(80);
 
-  await page.locator('[data-debug-action="enemyNear"]').click();
-  await page.waitForTimeout(60);
-  const nearEnemy=await page.evaluate(()=>({
-    enemy:window.PaperchalkCombat.enemy,
-    playerX:window.PaperchalkMap.playerX
-  }));
-  check('Debug panel can place an enemy at a reachable map position',
-    Math.abs((nearEnemy.enemy.x-nearEnemy.playerX)-210)<2,
-    JSON.stringify(nearEnemy));
-
-  // Switch overlays off before gameplay checks.
-  await page.locator('[data-debug-action="attackRange"]').click();
-  await page.locator('[data-debug-action="hitboxes"]').click();
-  await page.locator('[data-debug-action="mapColliders"]').click();
-  await page.locator('[data-debug-action="spawnZones"]').click();
-  await page.locator('[data-debug-action="cameraDebug"]').click();
-  await page.locator('#debugCloseBtn').click();
-  await page.waitForTimeout(80);
-
-  await page.evaluate(()=>window.PaperchalkCombat.resetEnemy(68));
-  const enemyBefore=await page.evaluate(()=>window.PaperchalkCombat.enemy);
-  await page.keyboard.press('KeyJ');
-  await page.waitForTimeout(190);
-  const enemyAfter=await page.evaluate(()=>window.PaperchalkCombat.enemy);
-  check('Gameplay melee hitbox damages nearby enemy exactly once',
-    enemyBefore.hp===3&&enemyAfter.hp===2,
-    JSON.stringify({enemyBefore,enemyAfter}));
-
+  // Prototype enemies are not part of the production scene.
   // Clean stage: no authored rocks, platforms, crates or pickups may remain.
+  await page.evaluate(()=>{closeDebugPanel({focus:false});});
+  await page.waitForTimeout(40);
   await page.evaluate(()=>{
     window.PaperchalkCombat.toggleEnemyAi(false);
     window.PaperchalkMap.teleport(1060,{notice:''});
@@ -646,424 +610,22 @@ try{
     continuousWorld.x>6000&&continuousWorld.route===1,
     JSON.stringify(continuousWorld));
 
-  // NPC is a map-bound entity with proximity prompt and real interaction.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(760,{notice:''}));
-  await page.waitForFunction(()=>{
-    const img=document.querySelector('[data-npc-id="npc-phone-girl"] .map-npc-art');
-    return !!img&&img.complete&&img.naturalWidth>0&&img.naturalHeight>0;
-  },null,{timeout:3000});
-  await page.waitForTimeout(80);
-  const npcNear=await page.evaluate(()=>{
-    const img=document.querySelector('[data-npc-id="npc-phone-girl"] .map-npc-art');
-    return {
-      near:document.querySelector('[data-npc-id="npc-phone-girl"]')?.classList.contains('is-near')||false,
-      interactDisabled:document.getElementById('interactBtn')?.disabled,
-      playerX:window.PaperchalkMap.playerX,
-      art:{
-        naturalW:img?.naturalWidth||0,naturalH:img?.naturalHeight||0,
-        layoutW:img?.offsetWidth||0,layoutH:img?.offsetHeight||0
-      }
-    };
-  });
-  check('Village NPC proximity enables talk prompt',
-    npcNear.near===true&&npcNear.interactDisabled===false&&Math.abs(npcNear.playerX-760)<2&&
-    npcNear.art.naturalW===326&&npcNear.art.naturalH===1002&&
-    npcNear.art.layoutH===128&&npcNear.art.layoutW>=41&&npcNear.art.layoutW<=43,
-    JSON.stringify(npcNear));
-
-  // Ground/NPC lock: the NPC is authored at x=760,z=0. The nearest 1 m grid
-  // line is x=768, so their screen-space offset must remain exactly 8 px while
-  // the player/camera moves horizontally.
-  const npcGroundBefore=await npcGroundLockState(page);
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(260);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(80);
-  const npcGroundAfter=await npcGroundLockState(page);
-  check('Fixed NPC stays locked to the same ground coordinates during horizontal camera motion',
-    npcGroundBefore.ok&&npcGroundAfter.ok&&
-    npcGroundAfter.playerX>npcGroundBefore.playerX+20&&
-    Math.abs(npcGroundBefore.horizontalOffset-8)<1&&
-    Math.abs(npcGroundAfter.horizontalOffset-8)<1&&
-    Math.abs(npcGroundAfter.horizontalOffset-npcGroundBefore.horizontalOffset)<.6&&
-    Math.abs(npcGroundBefore.footError)<.8&&Math.abs(npcGroundAfter.footError)<.8,
-    JSON.stringify({before:npcGroundBefore,after:npcGroundAfter}));
-  await page.evaluate(()=>window.PaperchalkMap.teleport(760,{notice:''}));
-  await page.waitForTimeout(80);
-  await page.keyboard.press('KeyE');
-  await page.waitForTimeout(120);
-  const npcTalk=await page.evaluate(()=>({
-    open:document.getElementById('dialogueStage')?.classList.contains('is-open')||false,
-    name:document.getElementById('dialogueNpcName')?.textContent||'',
-    phase:window.PaperchalkDialogue?.state?.phase||''
-  }));
-  check('E opens the map NPC dialogue stage',
-    npcTalk.open&&npcTalk.name==='？？？'&&npcTalk.phase==='opening',
-    JSON.stringify(npcTalk));
-  await page.evaluate(()=>window.PaperchalkDialogue.close({immediate:true}));
-  const stagePlayerBefore=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    centerX:window.PaperchalkScene.centerX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  const stageEnter=await page.evaluate(()=>window.PaperchalkScene.enter());
-  check('Apartment door stage transition can start',stageEnter===true,'enter='+stageEnter);
-  await page.waitForTimeout(360);
-  const stagePlayerMid=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  check('Player stays fixed while the outgoing exterior world leaves',
-    Math.abs(stagePlayerMid.screenX-stagePlayerBefore.screenX)<1&&
-    Math.abs(stagePlayerMid.rect.y-stagePlayerBefore.rect.y)<2.5,
-    JSON.stringify({stagePlayerBefore,stagePlayerMid}));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&window.PaperchalkScene.transitioning,null,{timeout:2200});
-  const interiorReveal=await page.evaluate(()=>({
-    anchorError:window.PaperchalkScene.lastDoorAnchorErrorX,
-    anchorX:window.PaperchalkScene.interiorDoorAnchorX,
-    startPlayerX:window.PaperchalkScene.playerScreenX
-  }));
-  check('Interior world reveals with its doorway bound to the player anchor',
-    Math.abs(interiorReveal.anchorError)<1&&Math.abs(interiorReveal.anchorX-stagePlayerBefore.screenX)<1,
-    JSON.stringify({stagePlayerBefore,interiorReveal}));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='interior'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
-  const interiorStage=await page.evaluate(()=>({
+  // Formal main-line content starts empty; old prototype systems are dormant.
+  const formalStage=await page.evaluate(()=>({
+    npcs:window.PaperchalkMap.npcs.length,
+    enemySpawns:window.PaperchalkMap.enemySpawns.length,
+    entityEnemies:document.querySelectorAll('#entityTrack .enemy').length,
+    npcEls:document.querySelectorAll('[data-npc-id]').length,
+    compatDisplay:getComputedStyle(document.getElementById('prototypeRuntimeCompat')).display,
+    canEnterPrototypeInterior:window.PaperchalkScene.enter(),
     location:window.PaperchalkScene.location,
-    visible:getComputedStyle(document.getElementById('interiorScene')).visibility,
-    worldClass:document.getElementById('world').className,
-    playerX:window.PaperchalkScene.playerScreenX,
-    centerX:window.PaperchalkScene.centerX,
-    doorX:window.PaperchalkScene.interiorDoorScreenX
+    interactHidden:document.getElementById('interactBtn').hidden
   }));
-  check('Interior world settles around the fixed player screen anchor',
-    interiorStage.location==='interior'&&interiorStage.visible==='visible'&&
-    interiorStage.worldClass.includes('scene-interior')&&
-    Math.abs(interiorStage.playerX-interiorStage.centerX)<1&&
-    Math.abs(interiorStage.doorX-interiorStage.playerX)<1,
-    JSON.stringify(interiorStage));
-
-  const interiorDepth=await page.evaluate(()=>{
-    const z=id=>Number.parseInt(getComputedStyle(document.getElementById(id)).zIndex,10);
-    const door=document.getElementById('interiorExitDoor').getBoundingClientRect();
-    const scene=document.getElementById('interiorScene').getBoundingClientRect();
-    const stage=document.getElementById('world').getBoundingClientRect();
-    return {
-      far:z('interiorFarLayer'),
-      mid:z('interiorMidLayer'),
-      player:Number.parseInt(getComputedStyle(document.querySelector('.actor')).zIndex,10),
-      near:z('interiorNearLayer'),
-      doorCenterX:door.left+door.width/2,
-      doorGroundY:window.innerHeight-door.bottom,
-      interiorDoorX:window.PaperchalkScene.interiorDoorScreenX,
-      playerX:window.PaperchalkScene.playerScreenX,
-      expectedGroundY:window.PaperchalkScene.interiorDoorGroundY,
-      sceneAligned:Math.abs(scene.left-stage.left)<1&&Math.abs(scene.top-stage.top)<1&&
-        Math.abs(scene.width-stage.width)<1&&Math.abs(scene.height-stage.height)<1
-    };
-  });
-  check('Interior scene shares the exterior stage coordinate origin',
-    interiorDepth.sceneAligned,
-    JSON.stringify(interiorDepth));
-  check('Interior depth order is far -> mid -> player -> near',
-    interiorDepth.far<interiorDepth.mid&&interiorDepth.mid<interiorDepth.player&&interiorDepth.player<interiorDepth.near,
-    JSON.stringify(interiorDepth));
-  check('Interior doorway stays physically attached to the centered player after camera settle',
-    Math.abs(interiorDepth.doorCenterX-interiorDepth.interiorDoorX)<2&&
-    Math.abs(interiorDepth.doorCenterX-interiorDepth.playerX)<2,
-    JSON.stringify(interiorDepth));
-  check('Interior doorway threshold stays on the exterior ground line',
-    Math.abs(interiorDepth.doorGroundY-interiorDepth.expectedGroundY)<2,
-    JSON.stringify(interiorDepth));
-
-  const indoorMap=await page.evaluate(()=>{
-    const m=window.PaperchalkScene.interiorMap;
-    const left=document.querySelector('.interior-wall-left').getBoundingClientRect();
-    const right=document.querySelector('.interior-wall-right').getBoundingClientRect();
-    const stairs=document.getElementById('interiorStaircase').getBoundingClientRect();
-    const lower=document.querySelector('.interior-stair-run-lower').getBoundingClientRect();
-    const upper=document.querySelector('.interior-stair-run-upper').getBoundingClientRect();
-    return {
-      m,leftW:left.width,rightW:right.width,
-      stairsW:stairs.width,stairsH:stairs.height,
-      lower:{w:lower.width,h:lower.height},
-      upper:{w:upper.width,h:upper.height}
-    };
-  });
-  check('Interior uses residential 12m x 6m proportions with real side walls',
-    indoorMap.m.width===1536&&indoorMap.m.height===768&&
-    indoorMap.m.secondFloorY===384&&
-    indoorMap.leftW>=60&&indoorMap.rightW>=60,
-    JSON.stringify(indoorMap));
-  check('Interior draws two opposite stair runs with a half landing',
-    indoorMap.stairsW>=380&&indoorMap.stairsH>=380&&
-    indoorMap.lower.w>=315&&indoorMap.lower.h>=188&&
-    indoorMap.upper.w>=315&&indoorMap.upper.h>=188&&
-    indoorMap.m.stairs.x0===768&&indoorMap.m.stairs.x1===1088&&
-    indoorMap.m.stairs.midY===192,
-    JSON.stringify(indoorMap));
-
-  // Start just before the lower flight. Real input must climb right to the
-  // half landing, then reverse left onto the upper flight.
-  await page.evaluate(()=>window.eval(
-    "interiorPlayerWorldX=INTERIOR_STAIRS.x0-24;interiorStairState='floor1';"+
-    "playerY=0;playerVy=0;playerGrounded=true;updateInteriorCamera();renderWorld(true);"
-  ));
-  const stairStart=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      x:window.PaperchalkScene.interiorX,
-      y:window.PaperchalkScene.interiorY,
-      state:window.PaperchalkScene.interiorStairState,
-      camera:window.PaperchalkScene.interiorCamera,
-      rect:{left:r.left,top:r.top}
-    };
-  });
-
-  await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(700);
-  await page.keyboard.up('ArrowRight');
-  await page.waitForTimeout(70);
-  const lowerRun=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    y:window.PaperchalkScene.interiorY,
-    state:window.PaperchalkScene.interiorStairState,
-    camera:window.PaperchalkScene.interiorCamera
-  }));
-  check('Lower stair run raises Y continuously while walking right',
-    lowerRun.state==='lower'&&
-    lowerRun.x>indoorMap.m.stairs.x0&&lowerRun.x<indoorMap.m.stairs.x1&&
-    lowerRun.y>35&&lowerRun.y<indoorMap.m.stairs.midY,
-    JSON.stringify(lowerRun));
-
-  await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(900);
-  await page.keyboard.up('ArrowRight');
-  await page.waitForTimeout(70);
-  const halfLanding=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    y:window.PaperchalkScene.interiorY,
-    state:window.PaperchalkScene.interiorStairState
-  }));
-  check('Lower run reaches the 1.5m half landing and requires a turn',
-    halfLanding.state==='landing-up'&&
-    Math.abs(halfLanding.x-indoorMap.m.stairs.x1)<1&&
-    Math.abs(halfLanding.y-indoorMap.m.stairs.midY)<1,
-    JSON.stringify(halfLanding));
-
-  await page.keyboard.down('ArrowLeft');
-  await page.waitForTimeout(700);
-  await page.keyboard.up('ArrowLeft');
-  await page.waitForTimeout(70);
-  const upperRun=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    y:window.PaperchalkScene.interiorY,
-    state:window.PaperchalkScene.interiorStairState,
-    camera:window.PaperchalkScene.interiorCamera
-  }));
-  check('After turning, upper stair run raises Y while walking left',
-    upperRun.state==='upper'&&
-    upperRun.x>indoorMap.m.stairs.x0&&upperRun.x<indoorMap.m.stairs.x1&&
-    upperRun.y>indoorMap.m.stairs.midY&&upperRun.y<indoorMap.m.secondFloorY,
-    JSON.stringify(upperRun));
-
-  await page.keyboard.down('ArrowLeft');
-  await page.waitForTimeout(900);
-  await page.keyboard.up('ArrowLeft');
-  await page.waitForTimeout(70);
-  const secondFloor=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      x:window.PaperchalkScene.interiorX,
-      y:window.PaperchalkScene.interiorY,
-      state:window.PaperchalkScene.interiorStairState,
-      camera:window.PaperchalkScene.interiorCamera,
-      rect:{left:r.left,top:r.top}
-    };
-  });
-  check('Second stair run reaches the 3m second floor',
-    secondFloor.state==='floor2'&&
-    secondFloor.x<=indoorMap.m.stairs.x0&&
-    Math.abs(secondFloor.y-indoorMap.m.secondFloorY)<1&&
-    Math.abs(secondFloor.camera.y-secondFloor.y)<1,
-    JSON.stringify(secondFloor));
-  check('Player remains fixed while both stair runs move the room in X and Y',
-    Math.abs(secondFloor.rect.left-stairStart.rect.left)<1&&
-    Math.abs(secondFloor.rect.top-stairStart.rect.top)<1&&
-    secondFloor.camera.y>stairStart.camera.y,
-    JSON.stringify({stairStart,secondFloor}));
-
-  // Indoor jump is a real jump, independent of stair traversal.
-  await page.evaluate(()=>window.eval(
-    "interiorPlayerWorldX=INTERIOR_DOOR_X;interiorStairState='floor1';"+
-    "playerY=0;playerVy=0;playerGrounded=true;updateInteriorCamera();renderWorld(true);"
-  ));
-  const indoorJumpBefore=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {y:window.PaperchalkScene.interiorY,rect:{left:r.left,top:r.top}};
-  });
-  await page.keyboard.press('Space');
-  await page.waitForFunction(()=>window.PaperchalkScene.interiorY>24&&
-    !window.PaperchalkCombat.player.grounded,null,{timeout:900});
-  const indoorJumpAir=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      y:window.PaperchalkScene.interiorY,
-      vy:window.PaperchalkCombat.player.vy,
-      rect:{left:r.left,top:r.top}
-    };
-  });
-  check('Indoor jump key launches the player in world Y',
-    indoorJumpAir.y>24&&indoorJumpAir.vy>0,
-    JSON.stringify(indoorJumpAir));
-  check('Indoor jump moves the room while player stays fixed on screen',
-    Math.abs(indoorJumpAir.rect.left-indoorJumpBefore.rect.left)<1&&
-    Math.abs(indoorJumpAir.rect.top-indoorJumpBefore.rect.top)<1,
-    JSON.stringify({indoorJumpBefore,indoorJumpAir}));
-  await page.waitForFunction(()=>window.PaperchalkCombat.player.grounded&&
-    Math.abs(window.PaperchalkScene.interiorY)<1,null,{timeout:2200});
-
-  // Walls are physical limits.
-  await page.evaluate(()=>window.eval(
-    "interiorPlayerWorldX=interiorHorizontalBounds().left+3;interiorStairState='floor1';"+
-    "playerY=0;playerVy=0;playerGrounded=true;updateInteriorCamera();renderWorld(true);"
-  ));
-  await page.keyboard.down('ArrowLeft');
-  await page.waitForTimeout(260);
-  await page.keyboard.up('ArrowLeft');
-  await page.waitForTimeout(60);
-  const wallStop=await page.evaluate(()=>({
-    x:window.PaperchalkScene.interiorX,
-    map:window.PaperchalkScene.interiorMap
-  }));
-  check('Indoor left wall blocks movement at the finite room boundary',
-    wallStop.x>wallStop.map.leftWall&&wallStop.x<wallStop.map.leftWall+40,
-    JSON.stringify(wallStop));
-
-  // Return to the door for the exit-transition regression below.
-  await page.evaluate(()=>window.eval(
-    'interiorPlayerWorldX=INTERIOR_DOOR_X;playerY=0;playerVy=0;playerGrounded=true;'+
-    'updateInteriorCamera();renderWorld(true);updateNpcPrompt();'
-  ));
-  await page.waitForTimeout(80);
-
-  const exitPlayerBefore=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  const stageExit=await page.evaluate(()=>window.PaperchalkScene.exit());
-  check('Interior exit starts the return paper-stage transition',stageExit===true,'exit='+stageExit);
-  await page.waitForTimeout(300);
-  const exitPlayerMid=await page.evaluate(()=>({
-    screenX:window.PaperchalkScene.playerScreenX,
-    rect:(()=>{const r=document.querySelector('.actor').getBoundingClientRect();return {x:r.left,y:r.top}})()
-  }));
-  check('Player stays fixed while the outgoing interior world leaves',
-    Math.abs(exitPlayerMid.screenX-exitPlayerBefore.screenX)<1&&
-    Math.abs(exitPlayerMid.rect.y-exitPlayerBefore.rect.y)<1,
-    JSON.stringify({exitPlayerBefore,exitPlayerMid}));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&window.PaperchalkScene.transitioning,null,{timeout:1800});
-  const exteriorReveal=await page.evaluate(()=>{
-    const snap=window.PaperchalkRuntime.getSnapshot();
-    const transform=getComputedStyle(document.getElementById('mapTrack')).transform;
-    const matrix=transform&&transform!=='none'?new DOMMatrix(transform):new DOMMatrix();
-    return {
-      anchorError:window.PaperchalkScene.lastDoorAnchorErrorX,
-      playerX:window.PaperchalkScene.playerScreenX,
-      doorX:window.PaperchalkScene.doorScreenX,
-      cameraX:snap.camera.x,
-      visualOriginX:snap.camera.visualOriginX,
-      mapTransformX:matrix.m41,
-      projectedPlayerX:window.PaperchalkMap.project(snap.player.x,snap.player.z||0,0).x
-    };
-  });
-  check('Exterior world reveals with its doorway bound to the player anchor',
-    Math.abs(exteriorReveal.anchorError)<1,
-    JSON.stringify(exteriorReveal));
-  check('Exterior reveal uses screen-space track plus live per-entity projection',
-    Math.abs(exteriorReveal.mapTransformX)<1&&
-    Math.abs(exteriorReveal.projectedPlayerX-exteriorReveal.playerX)<1,
-    JSON.stringify(exteriorReveal));
-
-  await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
-  const exteriorSettled=await page.evaluate(()=>{
-    const snap=window.PaperchalkRuntime.getSnapshot();
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {
-      cameraX:snap.camera.x,
-      playerWorldX:snap.player.x,
-      playerScreenX:snap.player.screenX,
-      doorX:window.PaperchalkScene.doorScreenX,
-      anchorX:window.PaperchalkScene.playerScreenAnchorX,
-      mapWidth:snap.map.width,
-      viewportWidth:snap.viewport.width,
-      rect:{x:r.left,y:r.top}
-    };
-  });
-  const expectedExitCamera=Math.max(
-    0,
-    Math.min(
-      exteriorSettled.mapWidth-exteriorSettled.viewportWidth,
-      exteriorSettled.playerWorldX-exteriorSettled.anchorX
-    )
-  );
-  check('Exterior door remains pinned to the player after the exit animation finishes',
-    Math.abs(exteriorSettled.doorX-exteriorSettled.playerScreenX)<1&&
-    Math.abs(exteriorSettled.doorX-exteriorReveal.doorX)<1,
-    JSON.stringify({exteriorReveal,exteriorSettled}));
-  check('Exit has no secondary camera drift after exterior reveal',
-    Math.abs(exteriorSettled.cameraX-exteriorReveal.cameraX)<1,
-    JSON.stringify({revealCamera:exteriorReveal.cameraX,settledCamera:exteriorSettled.cameraX}));
-  check('Player stays fixed for the entire exit transition',
-    Math.abs(exteriorSettled.rect.x-exitPlayerBefore.rect.x)<1&&
-    Math.abs(exteriorSettled.rect.y-exitPlayerBefore.rect.y)<1,
-    JSON.stringify({exitPlayerBefore,exteriorSettled}));
-  check('Exterior world is internally rebased to the fixed player anchor',
-    Math.abs(exteriorSettled.cameraX-expectedExitCamera)<1&&
-    Math.abs(exteriorSettled.playerScreenX-exteriorSettled.anchorX)<1,
-    JSON.stringify({expectedExitCamera,exteriorSettled}));
-
-  const exitFollowBefore=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
-  await page.keyboard.down('ArrowRight');
-  await page.waitForTimeout(90);
-  await page.keyboard.up('ArrowRight');
-  await page.waitForTimeout(40);
-  const exitFollowAfter=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot());
-  const firstMovePlayerDx=exitFollowAfter.player.x-exitFollowBefore.player.x;
-  const firstMoveCameraDx=exitFollowAfter.camera.x-exitFollowBefore.camera.x;
-  check('First movement after exit moves the world while player screen X stays fixed',
-    firstMovePlayerDx>0&&Math.abs(firstMoveCameraDx-firstMovePlayerDx)<2&&
-    Math.abs(exitFollowAfter.player.screenX-exitFollowBefore.player.screenX)<2,
-    JSON.stringify({firstMovePlayerDx,firstMoveCameraDx,before:exitFollowBefore.player.screenX,after:exitFollowAfter.player.screenX}));
-
-
-  // Return to a safe mid-map position for persistence/UI tests.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(700,{notice:''}));
-  await page.waitForTimeout(80);
-
-  const healthInitial=await healthState(page);
-  check('Health HUD is 10 stitched pieces',
-    healthInitial.pieces===10&&healthInitial.cells===9&&healthInitial.tails===1&&healthInitial.tailIsLast&&healthInitial.loaded&&healthInitial.seam.ok,
-    JSON.stringify(healthInitial));
-  check('New player starts at 10 HP',
-    healthInitial.hp===10&&healthInitial.maxHp===10&&healthInitial.empty===0&&healthInitial.ariaNow==='10',
-    JSON.stringify(healthInitial));
-
-  await page.evaluate(()=>window.PaperchalkHealth.damage(3));
-  await page.waitForTimeout(120);
-  const healthDamaged=await healthState(page);
-  check('Damage drains from right across three segments',
-    healthDamaged.hp===7&&healthDamaged.empty===3&&healthDamaged.ariaNow==='7'&&healthDamaged.hit===3,
-    JSON.stringify(healthDamaged));
-
-  await page.evaluate(()=>window.PaperchalkHealth.heal(1));
-  await page.waitForTimeout(120);
-  const healthHealed=await healthState(page);
-  check('Healing restores one segment with its own pop animation',
-    healthHealed.hp===8&&healthHealed.empty===2&&healthHealed.ariaNow==='8'&&healthHealed.healing===1,
-    JSON.stringify(healthHealed));
+  check('Formal stage contains no prototype NPC enemy door or interior content',
+    formalStage.npcs===0&&formalStage.enemySpawns===0&&formalStage.entityEnemies===0&&formalStage.npcEls===0&&
+    formalStage.compatDisplay==='none'&&formalStage.canEnterPrototypeInterior===false&&
+    formalStage.location==='outside'&&formalStage.interactHidden===true,
+    JSON.stringify(formalStage));
 
   // In-game debug panel: visible button, shortcuts, commands, and movement lock.
   await page.locator('#debugToggleBtn').click();
@@ -1073,20 +635,28 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
-  check('Camera controls live in Settings, not Debug',
-    await page.locator('#pageSettings #settingCameraTilt').count()===1&&
-    await page.locator('#pageSettings #settingCameraHeight').count()===1&&
-    await page.locator('#pageSettings #settingCameraDistance').count()===1&&
-    await page.locator('#debugPanel #settingCameraTilt').count()===0,
-    'settings camera controls');
+  const cameraSurface=await page.evaluate(()=>{
+    document.getElementById('cameraControlBtn').click();
+    const panel=document.getElementById('cameraControlPanel');
+    return {
+      open:panel.classList.contains('is-open'),
+      expanded:document.getElementById('cameraControlBtn').getAttribute('aria-expanded'),
+      inDebug:!!document.querySelector('#debugPanel #cameraTilt'),
+      inSettings:!!document.querySelector('#pageSettings #cameraTilt'),
+      controls:panel.querySelectorAll('#cameraTilt,#cameraHeight,#cameraDistance').length
+    };
+  });
+  check('Camera controls use their own in-world UI, separate from Debug and Settings',
+    cameraSurface.open&&cameraSurface.expanded==='true'&&!cameraSurface.inDebug&&!cameraSurface.inSettings&&cameraSurface.controls===3,
+    JSON.stringify(cameraSurface));
 
   const cameraBefore=await page.evaluate(()=>({
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
-    maxTilt:Number(document.getElementById('settingCameraTilt')?.max)
+    maxTilt:Number(document.getElementById('cameraTilt')?.max)
   }));
-  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='4.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='13.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='4.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraTilt').evaluate(el=>{el.value='13.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
   const pitchBase=await page.evaluate(()=>({
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
@@ -1096,7 +666,7 @@ try{
     nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
   }));
-  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
   const pitch80=await page.evaluate(()=>({
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
@@ -1106,7 +676,7 @@ try{
     nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraTiltValue')?.textContent,
+    label:document.getElementById('cameraTiltValue')?.textContent,
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   check('Camera pitch rotates around the mid axis without changing height or distance',
@@ -1117,15 +687,15 @@ try{
     pitch80.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({pitchBase,pitch80}));
 
-  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const height3=await page.evaluate(()=>({
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
   }));
-  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const height45=await page.evaluate(()=>({
     value:window.PaperchalkCardCamera.getCameraHeightMeters(),
@@ -1133,21 +703,21 @@ try{
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraHeightValue')?.textContent
+    label:document.getElementById('cameraHeightValue')?.textContent
   }));
   check('Camera height is independent of pitch and distance',
     height45.value===4.5&&height45.tilt===height3.tilt&&height45.distance===height3.distance&&
     Math.abs((height45.midY-height3.midY)-1.5*128)<1e-6&&height45.stored.cameraHeight===4.5&&height45.label.includes('4.5 m'),
     JSON.stringify({height3,height45}));
 
-  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const distance30=await page.evaluate(()=>({
     scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     height:window.PaperchalkCardCamera.getCameraHeightMeters()
   }));
-  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#cameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(60);
   const distance15=await page.evaluate(()=>({
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
@@ -1155,7 +725,7 @@ try{
     tilt:window.PaperchalkCardCamera.getTiltDegrees(),
     height:window.PaperchalkCardCamera.getCameraHeightMeters(),
     stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraDistanceValue')?.textContent,
+    label:document.getElementById('cameraDistanceValue')?.textContent,
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   check('Camera distance dollies independently without changing pitch or height',
@@ -1165,32 +735,35 @@ try{
     distance15.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({distance30,distance15}));
 
-  await page.locator('#settingCameraReset').evaluate(el=>el.click());
+  await page.locator('#cameraReset').evaluate(el=>el.click());
   await page.waitForTimeout(80);
   const cameraReset=await page.evaluate(()=>({
     angle:window.PaperchalkCardCamera.getTiltDegrees(),
     height:window.PaperchalkCardCamera.getCameraHeightMeters(),
     distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    angleLabel:document.getElementById('settingCameraTiltValue')?.textContent,
-    heightLabel:document.getElementById('settingCameraHeightValue')?.textContent,
-    distanceLabel:document.getElementById('settingCameraDistanceValue')?.textContent
+    angleLabel:document.getElementById('cameraTiltValue')?.textContent,
+    heightLabel:document.getElementById('cameraHeightValue')?.textContent,
+    distanceLabel:document.getElementById('cameraDistanceValue')?.textContent
   }));
   check('Camera reset restores independent production defaults',
     Math.abs(cameraReset.angle-13.1)<1e-9&&Math.abs(cameraReset.height-4.1)<1e-9&&cameraReset.distance===30&&
     Math.abs(cameraReset.stored.cameraTilt-13.1)<1e-9&&Math.abs(cameraReset.stored.cameraHeight-4.1)<1e-9&&cameraReset.stored.cameraDistance===30&&
     cameraReset.angleLabel.includes('13.1°')&&cameraReset.heightLabel.includes('4.1 m')&&cameraReset.distanceLabel.includes('30.0 m'),
     JSON.stringify(cameraReset));
+  await page.locator('#cameraControlClose').evaluate(el=>el.click());
+  await page.waitForTimeout(40);
+
 
   await page.locator('[data-debug-action="damage1"]').click();
   await page.waitForTimeout(80);
   let healthDebug=await healthState(page);
-  check('Debug -1 HP button works',healthDebug.hp===7&&healthDebug.empty===3,JSON.stringify(healthDebug));
+  check('Debug -1 HP button works',healthDebug.hp===9&&healthDebug.empty===1,JSON.stringify(healthDebug));
 
   await page.locator('[data-debug-action="heal1"]').click();
   await page.waitForTimeout(80);
   healthDebug=await healthState(page);
-  check('Debug +1 HP button works',healthDebug.hp===8&&healthDebug.empty===2,JSON.stringify(healthDebug));
+  check('Debug +1 HP button works',healthDebug.hp===10&&healthDebug.empty===0,JSON.stringify(healthDebug));
 
   await page.locator('#debugCommandInput').fill('hp 5');
   await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
@@ -1234,21 +807,15 @@ try{
   const moved=await state(page);
   check('Movement works',moved.worldX>0||moved.actorX>s.actorX,JSON.stringify(moved));
   check('World time advances',moved.worldMinutes>1,'worldMinutes='+moved.worldMinutes);
-  const entityMapSync=await page.evaluate(()=>{
-    const npc=window.PaperchalkMap.npcs.find(n=>n.id==='npc-phone-girl');
-    const projected=window.PaperchalkMap.project(npc.x,npc.z||0,0);
-    const npcEl=document.querySelector('[data-npc-id="npc-phone-girl"]');
-    return {
-      transform:document.getElementById('entityTrack').style.transform,
-      projectedX:projected.x,
-      domX:Number.parseFloat(npcEl?.style.getPropertyValue('--npc-x'))||0,
-      display:getComputedStyle(npcEl).display
-    };
-  });
+  const entityMapSync=await page.evaluate(()=>({
+    transform:document.getElementById('entityTrack').style.transform,
+    childCount:document.getElementById('entityTrack').children.length,
+    npcs:window.PaperchalkMap.npcs.length,
+    enemySpawns:window.PaperchalkMap.enemySpawns.length
+  }));
   const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]||0);
-  check('World tracks stay screen-space while visible entities receive perspective projection',
-    Math.abs(entityTranslateX)<0.5&&entityMapSync.display!=='none'&&
-    Math.abs(entityMapSync.domX-entityMapSync.projectedX)<1,
+  check('Production entity track stays screen-space and empty until main-line content is authored',
+    Math.abs(entityTranslateX)<0.5&&entityMapSync.childCount===0&&entityMapSync.npcs===0&&entityMapSync.enemySpawns===0,
     JSON.stringify({...entityMapSync,entityTranslateX}));
 
   const compositorPlayer=await page.evaluate(()=>({
@@ -1311,7 +878,6 @@ try{
   await page.waitForTimeout(250);
   await page.locator('#continueBtn').click();
   await page.waitForTimeout(450);
-  await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const healthReloaded=await healthState(page);
   check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
   const mapReloaded=await mapState(page);
@@ -1373,7 +939,6 @@ try{
   await page.locator('#regPass').fill('test5678');
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForTimeout(450);
-  await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const bState=await state(page);
   const saveB=await save(page,'audit_b');
   check('B gets a fresh independent save',
@@ -1398,7 +963,6 @@ try{
   await page.locator('#loginPass').fill('test1234');
   await page.locator('#loginForm button[type=submit]').click();
   await page.waitForTimeout(450);
-  await page.evaluate(()=>window.PaperchalkCombat.toggleEnemyAi(false));
   const aReturn=await state(page);
   const aReturnInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
   check('A restores its own position',
