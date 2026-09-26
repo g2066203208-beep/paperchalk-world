@@ -1079,7 +1079,7 @@ try{
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   await page.locator('#debugCameraTilt').evaluate(el=>{
-    el.value='42';
+    el.value='70';
     el.dispatchEvent(new Event('input',{bubbles:true}));
   });
   await page.waitForTimeout(100);
@@ -1093,7 +1093,7 @@ try{
     farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY)
   }));
   check('Debug camera tilt slider updates only camera tilt in real time',
-    tiltAfter.value===42&&tiltAfter.stored==='42'&&tiltAfter.manual!==null&&
+    tiltAfter.value===70&&tiltAfter.stored==='70'&&tiltAfter.manual!==null&&
     Math.abs(tiltAfter.horizon-tiltBefore.horizon)>.01&&
     tiltAfter.depths.join(',')===tiltBefore.depths.join(',')&&
     Math.abs(tiltAfter.skyBottom-tiltAfter.farY)<1,
