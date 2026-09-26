@@ -66,6 +66,14 @@ assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m 
 assert.equal(cardCamera.config.baseDepth,3840,'camera-to-mid baseline must be 30m so the -5m near line stays near the screen edge');
 assert.equal(cardCamera.config.nearMainDepth,-640,'responsive tilt must target the unchanged -5m near-main plane');
 assert.equal(cardCamera.config.nearMainScreenMargin,8,'near-main line must target an 8px bottom margin');
+assert.equal(typeof cardCamera.setHorizonRatio,'function','runtime camera tilt setter missing');
+assert.equal(typeof cardCamera.clearHorizonRatio,'function','runtime camera tilt reset missing');
+const frozenGuideDepths=Array.from(cardCamera.config.sceneGuides,g=>g.z);
+cardCamera.setHorizonRatio(.25);
+assert.equal(cardCamera.manualHorizonRatio,.25,'manual horizon ratio must be applied');
+assert.deepEqual(Array.from(cardCamera.config.sceneGuides,g=>g.z),frozenGuideDepths,'camera tilt must never mutate scene depths');
+cardCamera.clearHorizonRatio();
+assert.equal(cardCamera.manualHorizonRatio,null,'camera tilt reset must restore automatic mode');
 assert.deepEqual([-640,0,640,1280].map(z=>z/cardCamera.config.gridSize),[-5,0,5,10],'major scene depths must be -5m/0m/5m/10m');
 for(const [vh,gy] of [[900,112],[691,112],[720,112]]){
   const q=cardCamera.project({worldX:0,worldZ:-640,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:vh,groundY:gy});
@@ -117,7 +125,7 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="near-edge-tilt-r46"/,'near-edge-tilt build cache key missing');
+assert.match(html,/paperchalk-build" content="debug-tilt-r47"/,'debug-tilt build cache key missing');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
