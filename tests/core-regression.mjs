@@ -124,6 +124,40 @@ try{
     cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
     JSON.stringify(cleanGround));
 
+  await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===30,null,{timeout:3000});
+  await page.waitForTimeout(120);
+  const oldTownScene=await page.evaluate(()=>{
+    const slots=[...document.querySelectorAll('#oldTownBuildingTrack .oldtown-building')];
+    const visible=slots.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
+    const ids=[...new Set(slots.map(el=>el.dataset.buildingId).filter(Boolean))];
+    const firstRow=slots.slice(0,10).map(el=>el.dataset.buildingId);
+    const sequential=Array.from({length:10},(_,i)=>'oldtown-building-'+String(i+1).padStart(2,'0'));
+    const layer=document.getElementById('oldTownBuildingLayer');
+    const actor=document.querySelector('.actor');
+    const firstRect=visible[0]?.getBoundingClientRect();
+    return {
+      poolId:window.PaperchalkOldTownBuildings.poolId,
+      rowWidth:window.PaperchalkOldTownBuildings.rowWidth,
+      slots:slots.length,
+      visible:visible.length,
+      uniqueIds:ids.length,
+      firstRow,
+      shuffled:firstRow.some((id,i)=>id!==sequential[i]),
+      layerZ:Number.parseFloat(getComputedStyle(layer).zIndex)||0,
+      actorZ:Number.parseFloat(getComputedStyle(actor).zIndex)||0,
+      atlasRequested:performance.getEntriesByType('resource').some(e=>e.name.includes('oldtown-building-atlas-r1.webp')),
+      firstRect:firstRect?{w:firstRect.width,h:firstRect.height,left:firstRect.left,top:firstRect.top}:null
+    };
+  });
+  check('Old-town scene uses all 10 supplied buildings in a retained seeded row pool',
+    oldTownScene.poolId==='real-world.old-town.buildings'&&
+    oldTownScene.slots===30&&oldTownScene.uniqueIds===10&&oldTownScene.shuffled&&oldTownScene.rowWidth>1000,
+    JSON.stringify(oldTownScene));
+  check('Old-town buildings are visible in the deepest midground behind the protagonist',
+    oldTownScene.visible>0&&oldTownScene.firstRect?.w>40&&oldTownScene.firstRect?.h>80&&
+    oldTownScene.layerZ<oldTownScene.actorZ&&oldTownScene.atlasRequested,
+    JSON.stringify(oldTownScene));
+
   await page.setViewportSize({width:900,height:540});
   await page.waitForTimeout(220);
   const compactViewport=await page.evaluate(()=>({

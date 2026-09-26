@@ -10,7 +10,9 @@ const state = fs.readFileSync("src/core/game-state.js", "utf8");
 const saves = fs.readFileSync("src/core/save-runtime.js", "utf8");
 const cardCamera = fs.readFileSync("src/core/card-camera.js", "utf8");
 const content = fs.readFileSync("src/content/game-content.js", "utf8");
+const buildingPools = fs.readFileSync("src/content/building-pools.js", "utf8");
 const domCardRenderer = fs.readFileSync("src/renderers/dom-card-projection.js", "utf8");
+const oldTownRenderer = fs.readFileSync("src/renderers/oldtown-building-layer.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
 
 function assert(condition, message) {
@@ -25,6 +27,7 @@ const requiredIds = [
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
+  "oldTownBuildingLayer","oldTownBuildingTrack",
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
   "entityTrack","pixiEntityLayer","playerFlip","playerSprite","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
@@ -44,6 +47,8 @@ assert(html.indexOf("./src/core/save-runtime.js") < html.indexOf("./src/game.js"
 assert(html.indexOf("./src/core/card-camera.js") < html.indexOf("./src/game.js"), "Card camera must load before game runtime");
 assert(html.indexOf("./src/core/ecs-runtime.js") < html.indexOf("./src/game.js"), "ECS runtime must load before game runtime");
 assert(html.indexOf("./src/content/game-content.js") < html.indexOf("./src/game.js"), "Authored content must load before game runtime");
+assert(html.indexOf("./src/content/building-pools.js") < html.indexOf("./src/game.js"), "Building pools must load before game runtime");
+assert(html.indexOf("./src/game.js") < html.indexOf("./src/renderers/oldtown-building-layer.js"), "Old-town renderer must load after game runtime");
 assert(/src=["']\.\/src\/game\.js(?:\?[^"']*)?["']/.test(html), "External game runtime missing");
 assert(/src=["']\.\/src\/renderers\/pixi-dynamic-renderer\.mjs(?:\?[^"']*)?["']/.test(html), "Pixi dynamic renderer module missing");
 assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
@@ -59,8 +64,10 @@ new vm.Script(saves);
 new vm.Script(cardCamera);
 new vm.Script(ecs);
 new vm.Script(content);
+new vm.Script(buildingPools);
 new vm.Script(game);
 new vm.Script(domCardRenderer);
+new vm.Script(oldTownRenderer);
 assert(ecs.includes("class SparseSetStore"), "Sparse-set ECS component store missing");
 assert(ecs.includes("registerSystem(name"), "ECS system scheduler missing");
 assert(events.includes("class EventBus"), "Deterministic event bus missing");
@@ -68,7 +75,13 @@ assert(state.includes("class StateMachine"), "Application state machine missing"
 assert(saves.includes("CURRENT_SCHEMA=3"), "Schema-v3 save runtime missing");
 assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"), "Shared XY camera with authored Z scene depth missing");
 assert(content.includes("function validate(value=content)"), "Content validation runtime missing");
+assert(buildingPools.includes("realWorld")&&buildingPools.includes("oldTown"), "Real-world old-town building category missing");
+assert(buildingPools.includes("oldtown-building-10"), "Supplied 10-building pool is incomplete");
+assert(buildingPools.includes("layer:'midground-far'")&&buildingPools.includes("z:600"), "Old-town pool is not authored on far-midground scene depth");
 assert(domCardRenderer.includes("runtime.subscribe(render)"), "DOM card-camera renderer is not runtime-driven");
+assert(oldTownRenderer.includes("runtime.subscribe(render)"), "Old-town building renderer is not runtime-driven");
+assert(oldTownRenderer.includes("function shuffled(rowIndex)"), "Seeded random building order missing");
+assert(oldTownRenderer.includes("ROW_COPIES=3"), "Retained infinite-row building pool missing");
 assert(game.includes("const combatEcs=window.PaperchalkECS"), "Combat ECS world bridge missing");
 assert(game.includes("combatEcs.registerSystem('enemy-ai'"), "Enemy AI ECS system missing");
 assert(game.includes("combatEcs.run('enemy-ai'"), "Fixed-step combat no longer dispatches through ECS");
@@ -278,6 +291,11 @@ assert(game.includes("delete save.playerWorldZ"), "Legacy player Z must be clean
 assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-camera-y'"), "Ground is not synchronized to camera X/Y");
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
 assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
+assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS missing");
+assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
+assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
+assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
+assert(html.includes('meta name="paperchalk-build" content="oldtown-r38"'), "R38 build cache key missing");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
