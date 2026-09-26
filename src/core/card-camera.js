@@ -4,6 +4,8 @@
 
 const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
 let manualHorizonRatio=null;
+let manualTiltDegrees=null;
+let manualCameraHeightPx=null;
 let tiltRevision=0;
 
 const config=Object.freeze({
@@ -50,6 +52,7 @@ function clampHorizonRatio(value){
 function setHorizonRatio(value){
   const next=clampHorizonRatio(value);
   if(next===null)return false;
+  manualTiltDegrees=null;
   if(manualHorizonRatio!==null&&Math.abs(manualHorizonRatio-next)<1e-9)return true;
   manualHorizonRatio=next;
   tiltRevision++;
@@ -60,14 +63,66 @@ function clearHorizonRatio(){
   manualHorizonRatio=null;
   tiltRevision++;
 }
+function clampTiltDegrees(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return null;
+  return Math.max(0,Math.min(30,n));
+}
+function setTiltDegrees(value){
+  const next=clampTiltDegrees(value);
+  if(next===null)return false;
+  manualHorizonRatio=null;
+  if(manualTiltDegrees!==null&&Math.abs(manualTiltDegrees-next)<1e-9)return true;
+  manualTiltDegrees=next;
+  tiltRevision++;
+  return true;
+}
+function clearTiltDegrees(){
+  if(manualTiltDegrees===null)return;
+  manualTiltDegrees=null;
+  tiltRevision++;
+}
+function setCameraHeightMeters(value){
+  const n=Number(value);
+  if(!Number.isFinite(n))return false;
+  const next=Math.max(1,Math.min(10,n))*config.gridSize;
+  if(manualCameraHeightPx!==null&&Math.abs(manualCameraHeightPx-next)<1e-9)return true;
+  manualCameraHeightPx=next;
+  tiltRevision++;
+  return true;
+}
+function clearCameraHeight(){
+  if(manualCameraHeightPx===null)return;
+  manualCameraHeightPx=null;
+  tiltRevision++;
+}
 function resolveHorizonY(viewportHeight=720,groundY=112){
   const h=Number(viewportHeight)||720;
+  if(manualTiltDegrees!==null){
+    const theta=manualTiltDegrees*Math.PI/180;
+    return h*.5-config.baseDepth*Math.tan(theta);
+  }
   if(manualHorizonRatio!==null)return h*manualHorizonRatio;
   return resolveAutoHorizonY(h,groundY);
 }
 function getHorizonRatio(viewportHeight=720,groundY=112){
   const h=Number(viewportHeight)||720;
   return resolveHorizonY(h,groundY)/h;
+}
+function getTiltDegrees(viewportHeight=720,groundY=112){
+  if(manualTiltDegrees!==null)return manualTiltDegrees;
+  const h=Number(viewportHeight)||720;
+  const horizon=resolveHorizonY(h,groundY);
+  return Math.atan((h*.5-horizon)/config.baseDepth)*180/Math.PI;
+}
+function resolveCameraHeight(viewportHeight=720,groundY=112){
+  if(manualCameraHeightPx!==null)return manualCameraHeightPx;
+  const h=Number(viewportHeight)||720;
+  const g=Number(groundY)||112;
+  return h-g-resolveHorizonY(h,g);
+}
+function getCameraHeightMeters(viewportHeight=720,groundY=112){
+  return resolveCameraHeight(viewportHeight,groundY)/config.gridSize;
 }
 
 function project({
@@ -81,8 +136,7 @@ function project({
   if(depth<=config.minDepth)return {visible:false,x:0,y:0,scale:0,depth};
   const scale=config.baseDepth/depth;
   const horizonY=resolveHorizonY(viewportHeight,groundY);
-  const playerFootY=(Number(viewportHeight)||720)-(Number(groundY)||0);
-  const cameraHeight=playerFootY-horizonY;
+  const cameraHeight=resolveCameraHeight(viewportHeight,groundY);
   return {
     visible:depth<config.maxDepth&&scale>.12&&scale<5,
     x:(Number(screenX)||0)+((Number(worldX)||0)-(Number(playerX)||0))*scale,
@@ -103,8 +157,13 @@ function wrap(value,size=config.gridSize){
 }
 
 global.PaperchalkCardCamera=Object.freeze({
-  config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,distance2D,wrap,
+  config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,
+  getTiltDegrees,setTiltDegrees,clearTiltDegrees,
+  resolveCameraHeight,getCameraHeightMeters,setCameraHeightMeters,clearCameraHeight,
+  distance2D,wrap,
   get manualHorizonRatio(){return manualHorizonRatio},
+  get manualTiltDegrees(){return manualTiltDegrees},
+  get manualCameraHeightMeters(){return manualCameraHeightPx===null?null:manualCameraHeightPx/config.gridSize},
   get tiltRevision(){return tiltRevision}
 });
 })(window);
