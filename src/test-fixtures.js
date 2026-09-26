@@ -5,6 +5,9 @@ const p=new URLSearchParams(location.search);
 const fixture=p.has('core-regression')||p.get('ci')==='ui-smoke'||p.get('ci')==='gpu-smoke';
 if(!fixture)return;
 
+document.getElementById('debugToggleBtn')?.removeAttribute('hidden');
+document.getElementById('interactBtn')?.removeAttribute('hidden');
+
 const mid=document.getElementById('midgroundBuildingTrack');
 if(mid&&!document.getElementById('midgroundApartment')){
   mid.insertAdjacentHTML('beforeend','<img id="midgroundApartment" class="midground-apartment" src="./assets/backgrounds/apartment-midground.webp?v=puppet-r1" width="780" height="1040" alt="" decoding="async" loading="eager" fetchpriority="high" draggable="false">');
