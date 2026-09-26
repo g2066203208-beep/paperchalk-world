@@ -1495,53 +1495,26 @@ function sampleFramePerf(now){
 }
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
-const DEBUG_CAMERA_TILT_KEY='paperchalk.debug.cameraTilt.v1';
-const DEBUG_CAMERA_HORIZON_MAX=.46; // 0 = flatter
-const DEBUG_CAMERA_HORIZON_MIN=.06; // 100 = steeper
-function cameraTiltToHorizonRatio(value){
-  const t=clamp(Number(value)||0,0,100)/100;
-  return DEBUG_CAMERA_HORIZON_MAX+(DEBUG_CAMERA_HORIZON_MIN-DEBUG_CAMERA_HORIZON_MAX)*t;
-}
-function horizonRatioToCameraTilt(ratio){
-  const r=clamp(Number(ratio)||DEBUG_CAMERA_HORIZON_MAX,DEBUG_CAMERA_HORIZON_MIN,DEBUG_CAMERA_HORIZON_MAX);
-  return Math.round(((DEBUG_CAMERA_HORIZON_MAX-r)/(DEBUG_CAMERA_HORIZON_MAX-DEBUG_CAMERA_HORIZON_MIN))*100);
-}
-function currentCameraTiltValue(){
-  return horizonRatioToCameraTilt(CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y));
-}
+const DEBUG_CAMERA_TILT_KEY='paperchalk.debug.cameraTilt.v1',DEBUG_CAMERA_HORIZON_MAX=.46,DEBUG_CAMERA_HORIZON_MIN=.06;
+function cameraTiltToHorizonRatio(v){return DEBUG_CAMERA_HORIZON_MAX+(DEBUG_CAMERA_HORIZON_MIN-DEBUG_CAMERA_HORIZON_MAX)*clamp(Number(v)||0,0,100)/100}
+function currentCameraTiltValue(){const r=clamp(CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y),DEBUG_CAMERA_HORIZON_MIN,DEBUG_CAMERA_HORIZON_MAX);return Math.round((DEBUG_CAMERA_HORIZON_MAX-r)/(DEBUG_CAMERA_HORIZON_MAX-DEBUG_CAMERA_HORIZON_MIN)*100)}
 function updateCameraTiltControls(){
   if(!debugCameraTilt)return;
-  const tilt=currentCameraTiltValue();
-  const ratio=CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y);
-  debugCameraTilt.value=String(tilt);
-  debugCameraTiltValue.textContent=tilt+(CARD_CAMERA.manualHorizonRatio===null?' 自动':'');
-  debugCameraHorizonValue.textContent='地平线 '+(ratio*100).toFixed(1)+'%';
+  const t=currentCameraTiltValue(),r=CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y);
+  debugCameraTilt.value=t;debugCameraTiltValue.textContent=t+(CARD_CAMERA.manualHorizonRatio===null?' 自动':'');debugCameraHorizonValue.textContent='地平线 '+(r*100).toFixed(1)+'%';
 }
-function applyDebugCameraTilt(value,{persist=true,sync=true}={}){
-  const tilt=Math.round(clamp(Number(value)||0,0,100));
-  CARD_CAMERA.setHorizonRatio(cameraTiltToHorizonRatio(tilt));
-  if(persist){
-    try{localStorage.setItem(DEBUG_CAMERA_TILT_KEY,String(tilt))}catch(_){}
-  }
-  updateCameraTiltControls();
-  if(sync)window.PaperchalkRuntime?.requestDomSync?.();
-  return tilt;
+function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
+  const t=Math.round(clamp(Number(v)||0,0,100));CARD_CAMERA.setHorizonRatio(cameraTiltToHorizonRatio(t));
+  if(persist)try{localStorage.setItem(DEBUG_CAMERA_TILT_KEY,t)}catch(_){}
+  updateCameraTiltControls();if(sync)window.PaperchalkRuntime?.requestDomSync?.();return t;
 }
 function resetDebugCameraTilt({sync=true}={}){
-  CARD_CAMERA.clearHorizonRatio();
-  try{localStorage.removeItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  updateCameraTiltControls();
-  if(sync)window.PaperchalkRuntime?.requestDomSync?.();
-  return currentCameraTiltValue();
+  CARD_CAMERA.clearHorizonRatio();try{localStorage.removeItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
+  updateCameraTiltControls();if(sync)window.PaperchalkRuntime?.requestDomSync?.();return currentCameraTiltValue();
 }
 function loadDebugCameraTilt(){
-  let saved=null;
-  try{saved=localStorage.getItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  if(saved!==null&&saved!==''){
-    const n=Number(saved);
-    if(Number.isFinite(n)){applyDebugCameraTilt(n,{persist:false,sync:false});return}
-  }
-  updateCameraTiltControls();
+  let v=null;try{v=localStorage.getItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
+  const n=Number(v);if(v!==null&&Number.isFinite(n))applyDebugCameraTilt(n,{persist:false,sync:false});else updateCameraTiltControls();
 }
 
 function updateDebugStatus(){
@@ -1669,8 +1642,6 @@ function runDebugCommand(rawCommand){
       'collider         开/关地形 collider',
       'spawn            开/关敌人出生区',
       'camera           开/关 Camera 调试',
-      'tilt 0-100       调整摄像机倾角（0平 / 100俯视）',
-      'tilt auto        恢复自动倾角',
       'fly              开/关自由飞行（四向）',
       'fly on / off     指定开启/关闭自由飞行',
       'ai               开/关敌人AI',
@@ -1762,14 +1733,6 @@ function runDebugCommand(rawCommand){
   if(cmd==='collider')return '地形 collider -> '+(toggleMapColliders()?'开启':'关闭');
   if(cmd==='spawn')return '敌人出生区 -> '+(toggleSpawnZones()?'开启':'关闭');
   if(cmd==='camera')return 'Camera 调试 -> '+(toggleCameraDebug()?'开启':'关闭');
-  if(cmd==='tilt'){
-    const raw=String(arg??'').trim().toLowerCase();
-    if(raw===''||raw==='show')return '摄像机倾角='+currentCameraTiltValue()+' / 地平线='+(CARD_CAMERA.getHorizonRatio(VIEW_H,MAP_GROUND_SCREEN_Y)*100).toFixed(1)+'%';
-    if(raw==='auto'||raw==='reset')return '摄像机倾角 -> 自动（当前 '+resetDebugCameraTilt()+'）';
-    const n=Number(raw);
-    if(!Number.isFinite(n)||n<0||n>100)return 'tilt 参数范围 0–100，或 tilt auto';
-    return '摄像机倾角 -> '+applyDebugCameraTilt(n);
-  }
   if(cmd==='fly'||cmd==='flight'){
     const target=String(arg||'toggle').toLowerCase();
     const enabled=target==='on'?setDebugFlightMode(true):target==='off'?setDebugFlightMode(false):toggleDebugFlightMode();
