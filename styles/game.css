@@ -2304,10 +2304,9 @@ button{cursor:pointer}
 }
 
 
-/* ---------- R36 FULL CARD CAMERA ----------
-   Outdoor world uses one perspective camera:
-   X = left/right, Z = forward/back on the ground, Y = elevation/jump.
-   The player remains a front-facing paper standee while world entities are projected. */
+/* ---------- R37 XY GAMEPLAY + Z SCENE DEPTH ----------
+   Gameplay moves only in X/Y. Z is reserved for authored scene depth/parallax.
+   The player remains a front-facing paper standee while the world moves opposite camera X/Y. */
 .stage:not(.scene-interior){
   --card-horizon-y:40%;
   --card-wall-depth:-1200px;
@@ -2367,21 +2366,21 @@ button{cursor:pointer}
   opacity:1!important;
   pointer-events:none!important;
   transform-origin:50% 0!important;
-  transform:rotateX(68deg)!important;
+  transform:translate3d(0,var(--card-camera-y,0px),0) rotateX(68deg)!important;
   translate:0 0!important;
   backface-visibility:visible;
   background-color:#2f9e44!important;
   background-image:url("../assets/debug/green-grid-1m.svg")!important;
   background-repeat:repeat!important;
   background-size:128px 128px!important;
-  background-position:var(--card-grid-x,0px) var(--card-grid-z,0px)!important;
+  background-position:var(--card-grid-x,0px) 0px!important;
   border-top:4px solid rgba(4,66,102,.90)!important;
   box-shadow:0 -7px 0 rgba(13,89,142,.22)!important;
   filter:none!important;
   will-change:background-position,transform;
 }
 .stage:not(.scene-interior)::before{
-  top:calc(var(--card-horizon-y) - 2px)!important;
+  top:calc(var(--card-horizon-y) + var(--card-camera-y,0px) - 2px)!important;
   height:4px!important;
   background:rgba(5,66,108,.90)!important;
   box-shadow:0 2px 0 rgba(255,255,255,.20)!important;
