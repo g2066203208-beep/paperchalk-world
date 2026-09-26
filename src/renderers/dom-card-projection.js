@@ -116,13 +116,7 @@ function strokeLine(ctx,x1,y1,x2,y2,color,width){
 function renderGroundGrid(frame){
   if(!groundCanvas)return;
   const cfg=camera.config,p=frame.player,v=frame.viewport;
-  const groundKey=[
-    Math.round((Number(p.x)||0)*100)/100,
-    Math.round((Number(p.y)||0)*100)/100,
-    v.width,v.height,v.groundY,
-    camera.tiltRevision||0,
-    world.classList.contains('show-camera-debug')?1:0
-  ].join('|');
+  const groundKey=[Math.round((Number(p.x)||0)*100)/100,Math.round((Number(p.y)||0)*100)/100,v.width,v.height,v.groundY,camera.tiltRevision||0,+world.classList.contains('show-camera-debug')].join('|');
   if(groundKey===lastGroundKey)return;
   lastGroundKey=groundKey;
   const ctx=ensureGroundCanvas(v);
