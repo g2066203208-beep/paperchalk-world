@@ -1,4 +1,4 @@
-/* Persistent camera controls exposed in the normal Settings page. */
+/* Persistent standalone in-game camera controls. */
 (function(global){
 'use strict';
 const camera=global.PaperchalkCardCamera,runtime=global.PaperchalkRuntime;
@@ -9,8 +9,10 @@ const heightValue=document.getElementById('settingCameraHeightValue');
 const distance=document.getElementById('settingCameraDistance');
 const distanceValue=document.getElementById('settingCameraDistanceValue');
 const reset=document.getElementById('settingCameraReset');
-const status=document.getElementById('settingsStatus');
-if(!camera||!runtime||!tilt||!height||!distance)return;
+const openBtn=document.getElementById('cameraControlBtn');
+const panel=document.getElementById('cameraControlPanel');
+const closeBtn=document.getElementById('cameraControlClose');
+if(!camera||!runtime||!tilt||!height||!distance||!openBtn||!panel)return;
 
 const KEY='paperchalk.settings.v1';
 const OLD_ANGLE='paperchalk.debug.cameraAngle.v2';
@@ -48,17 +50,12 @@ function apply(values={},persist=false,announce=false){
   camera.setTiltDegrees(a);camera.setCameraHeightMeters(h);camera.setCameraDistanceMeters(d);
   sync();redraw();
   if(persist)write({cameraTilt:a,cameraHeight:h,cameraDistance:d});
-  if(announce&&status){
-    status.textContent='镜头设置已保存';
-    clearTimeout(apply._timer);apply._timer=setTimeout(()=>{status.textContent=''},1000);
-  }
+  if(announce)openBtn.dataset.saved='1';
   return snapshot();
 }
 function resetAll(){
   camera.reset();
   const values=snapshot();write(values);sync();redraw();
-  if(status)status.textContent='已恢复默认镜头';
-  clearTimeout(resetAll._timer);resetAll._timer=setTimeout(()=>{if(status)status.textContent=''},1000);
 }
 function load(){
   const saved=read();
@@ -76,10 +73,24 @@ function load(){
   apply(values,true,false);
   try{localStorage.removeItem(OLD_ANGLE);localStorage.removeItem(OLD_HEIGHT);localStorage.removeItem(OLD_DISTANCE)}catch(_){}
 }
+function setOpen(value){
+  const open=!!value;
+  panel.classList.toggle('is-open',open);
+  panel.setAttribute('aria-hidden',open?'false':'true');
+  openBtn.setAttribute('aria-expanded',open?'true':'false');
+  if(open)sync();
+  return open;
+}
+openBtn.addEventListener('click',()=>setOpen(!panel.classList.contains('is-open')));
+closeBtn?.addEventListener('click',()=>setOpen(false));
+document.addEventListener('pointerdown',e=>{
+  if(!panel.classList.contains('is-open')||panel.contains(e.target)||openBtn.contains(e.target))return;
+  setOpen(false);
+});
 tilt.addEventListener('input',()=>apply({cameraTilt:Number(tilt.value)},true,true));
 height.addEventListener('input',()=>apply({cameraHeight:Number(height.value)},true,true));
 distance.addEventListener('input',()=>apply({cameraDistance:Number(distance.value)},true,true));
 reset?.addEventListener('click',resetAll);
 load();
-global.PaperchalkCameraSettings=Object.freeze({sync,apply,snapshot,reset:resetAll});
+global.PaperchalkCameraSettings=Object.freeze({sync,apply,snapshot,reset:resetAll,open(){return setOpen(true)},close(){return setOpen(false)}});
 })(window);
