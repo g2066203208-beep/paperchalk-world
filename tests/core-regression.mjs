@@ -120,7 +120,7 @@ try{
     groundY:Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y'))||null,
     roadDisplay:getComputedStyle(document.querySelector('.road-layer')).display
   }));
-  check('Clean stage keeps only an invisible physics ground',
+  check('Card stage keeps legacy road hidden while the perspective ground anchor remains valid',
     cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
     JSON.stringify(cleanGround));
 
@@ -186,6 +186,63 @@ try{
     walking.player.action==='walk'&&walking.state==='walk'&&!walking.left&&walking.sourceFacing==='-1'&&
     walking.src.includes('/assets/player/runtime/walk.webp'),
     JSON.stringify(walking));
+
+  // Full X/Z/Y card camera: W moves into world depth while the player remains
+  // fixed on screen. A fixed world point must grow and move downward as it
+  // becomes closer to the camera, proving this is projection rather than a
+  // decorative skewed grid.
+  await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:'',z:0}));
+  await page.waitForTimeout(100);
+  const depthBefore=await page.evaluate(()=>{
+    const actor=document.querySelector('.actor').getBoundingClientRect();
+    const world=document.getElementById('world');
+    return {
+      player:window.PaperchalkCombat.player,
+      point:window.PaperchalkMap.project(760,0,0),
+      gridZ:world.style.getPropertyValue('--card-grid-z'),
+      wallY:world.style.getPropertyValue('--card-wall-y'),
+      actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
+    };
+  });
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(460);
+  await page.keyboard.up('KeyW');
+  await page.waitForTimeout(90);
+  const depthAfter=await page.evaluate(()=>{
+    const actor=document.querySelector('.actor').getBoundingClientRect();
+    const world=document.getElementById('world');
+    return {
+      player:window.PaperchalkCombat.player,
+      point:window.PaperchalkMap.project(760,0,0),
+      gridZ:world.style.getPropertyValue('--card-grid-z'),
+      wallY:world.style.getPropertyValue('--card-wall-y'),
+      actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
+    };
+  });
+  check('Forward input changes real world Z and both infinite reference grids',
+    depthAfter.player.z>depthBefore.player.z+45&&
+    depthAfter.gridZ!==depthBefore.gridZ&&depthAfter.wallY!==depthBefore.wallY,
+    JSON.stringify({depthBefore,depthAfter}));
+  check('Depth movement changes projected scale and screen Y of a fixed world point',
+    depthAfter.point.scale>depthBefore.point.scale+.04&&
+    depthAfter.point.y>depthBefore.point.y+8,
+    JSON.stringify({before:depthBefore.point,after:depthAfter.point}));
+  check('Front-facing camera keeps the protagonist fixed while moving in depth',
+    Math.abs(depthAfter.actor.left-depthBefore.actor.left)<1&&
+    Math.abs(depthAfter.actor.top-depthBefore.actor.top)<1&&
+    Math.abs(depthAfter.actor.width-depthBefore.actor.width)<1&&
+    Math.abs(depthAfter.actor.height-depthBefore.actor.height)<1,
+    JSON.stringify({before:depthBefore.actor,after:depthAfter.actor}));
+
+  // S reverses the same depth axis instead of crouching outdoors.
+  const zBeforeBack=depthAfter.player.z;
+  await page.keyboard.down('KeyS');
+  await page.waitForTimeout(300);
+  await page.keyboard.up('KeyS');
+  await page.waitForTimeout(70);
+  const zAfterBack=await page.evaluate(()=>window.PaperchalkCombat.player.z);
+  check('Backward input reverses world Z outdoors',zAfterBack<zBeforeBack-25,
+    JSON.stringify({zBeforeBack,zAfterBack}));
 
   // Restore the original regression position before checking far-enemy sleep radius.
   await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:''}));
