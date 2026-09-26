@@ -2572,8 +2572,9 @@ function updateMapInteractions(){
     }
   }
 }
-function teleportTo(x,{notice='已传送'}={}){
+function teleportTo(x,{notice='已传送',z=0}={}){
   playerWorldX=clamp(Number(x)||MAP_SPAWN_X,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerWorldZ=clamp(Number(z)||0,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
@@ -2648,15 +2649,17 @@ window.PaperchalkMap={
   width:MAP_WIDTH,spawnX:MAP_SPAWN_X,farEdgeX:MAP_EXIT_X,zoneWidth:WORLD_ZONE_WIDTH,zoneCount:WORLD_ZONE_COUNT,nodes:WORLD_NODES,routes:WORLD_ROUTES,terrain:MAP_TERRAIN,objects:MAP_OBJECTS,npcs:MAP_NPCS,enemySpawns:ENEMY_SPAWNS,
   teleport:teleportTo,interact:interactWithNpc,toggleColliders:toggleMapColliders,toggleSpawns:toggleSpawnZones,toggleCamera:toggleCameraDebug,
   get playerX(){return playerWorldX},
+  get playerZ(){return playerWorldZ},
+  project(x,z=0,y=0){return cardProjection(x,z,y)},
   get traversal(){return {routeIndex:worldZoneIndexAt(playerWorldX),orientation:currentRouteOrientation,nodeBounds:routeBoundaryInfo(playerWorldX)}},
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
 };
 window.PaperchalkCombat={
   jump:jumpPlayer,attack:startPlayerAttack,crouch:setCrouchControl,resetEnemy,placeEnemyNear,resetMapEnemies,
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
-  get enemy(){return {x:enemy.x,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
-  get enemies(){return enemies.map(e=>({id:e.id,x:e.x,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
-  get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
+  get enemy(){return {x:enemy.x,z:enemy.z,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
+  get enemies(){return enemies.map(e=>({id:e.id,x:e.x,z:e.z,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
+  get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,z:playerWorldZ,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
 };
 
@@ -3981,6 +3984,7 @@ function defaultSave(session){
     worldMinutes:0,
     worldX:0,
     playerWorldX:MAP_SPAWN_X,
+    playerWorldZ:0,
     playerY:0,
     actorRatio:.35,
     playerHp:PLAYER_MAX_HP,
@@ -4103,6 +4107,7 @@ function saveWorldState(){
   save.location=regionNameAt(playerWorldX);
   save.worldX=worldX;
   save.playerWorldX=playerWorldX;
+  save.playerWorldZ=playerWorldZ;
   save.playerY=playerY;
   save.routeOrientation={routeIndex:orientationRouteIndex,sign:currentRouteOrientation};
   save.worldMinutes=worldMinutes;
@@ -4125,6 +4130,7 @@ function loadWorldState(){
   const oldRatio=Number.isFinite(save.actorRatio)?save.actorRatio:.35;
   const migratedX=Number.isFinite(save.worldX)?save.worldX+innerWidth*oldRatio:MAP_SPAWN_X;
   playerWorldX=clamp(Number.isFinite(save.playerWorldX)?save.playerWorldX:migratedX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
+  playerWorldZ=clamp(Number.isFinite(save.playerWorldZ)?save.playerWorldZ:0,-CARD_WORLD_Z_LIMIT,CARD_WORLD_Z_LIMIT);
   const savedOrientation=save.routeOrientation&&typeof save.routeOrientation==='object'?save.routeOrientation:null;
   orientationRouteIndex=savedOrientation&&Number.isFinite(savedOrientation.routeIndex)?savedOrientation.routeIndex:worldZoneIndexAt(playerWorldX);
   currentRouteOrientation=savedOrientation&&savedOrientation.sign===-1?-1:1;
@@ -4210,7 +4216,7 @@ authBtn.addEventListener('click',e=>{
       saveWorldState();
       storageRemove(KEY_SESSION);
       setInventoryFromSave([]);
-      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
+      worldX=0;sceneryOffsetX=0;playerWorldX=MAP_SPAWN_X;playerWorldZ=0;orientationRouteIndex=0;currentRouteOrientation=1;playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();updateMapInteractions._zone=0;
       mapState.broken.clear();mapState.collected.clear();mapState.visitedRoutes=new Set([0]);mapState.visitedNodes=new Set(['village']);mapState.exitReached=false;markRuntimeMapChanged();buildMapVisuals();
       enemies.forEach(e=>{e.spawned=false;e.alive=true;e.el.classList.remove('is-dead','is-moving','is-attacking')});
       worldMinutes=0;
