@@ -1073,109 +1073,112 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
-  const cameraBefore=await page.evaluate(()=>({
-    angle:Number(document.getElementById('debugCameraTilt')?.value),
-    height:Number(document.getElementById('debugCameraHeight')?.value),
-    distance:Number(document.getElementById('debugCameraDistance')?.value),
-    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
-  }));
-  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='5';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
-  const angle5=await page.evaluate(()=>({
-    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
-    horizonY:window.PaperchalkCardCamera.resolveHorizonY(innerHeight,112)
-  }));
-  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='35';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
-  const angle35=await page.evaluate(()=>({
-    value:Number(document.getElementById('debugCameraTilt')?.value),
-    manual:window.PaperchalkCardCamera.manualTiltDegrees,
-    stored:localStorage.getItem('paperchalk.debug.cameraAngle.v2'),
-    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
-    horizonY:window.PaperchalkCardCamera.resolveHorizonY(innerHeight,112),
-    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
-    label:document.getElementById('debugCameraTiltValue')?.textContent
-  }));
-  check('Debug camera angle is real degrees and visibly changes perspective',
-    angle35.value===35&&angle35.manual===35&&angle35.stored==='35'&&angle35.label.includes('35.0°')&&
-    Math.abs(angle5.farY-angle35.farY)>90&&Math.abs(angle5.horizonY-angle35.horizonY)>300&&
-    angle35.depths.join(',')===cameraBefore.depths.join(','),
-    JSON.stringify({cameraBefore,angle5,angle35}));
+  check('Camera controls live in Settings, not Debug',
+    await page.locator('#pageSettings #settingCameraTilt').count()===1&&
+    await page.locator('#pageSettings #settingCameraHeight').count()===1&&
+    await page.locator('#pageSettings #settingCameraDistance').count()===1&&
+    await page.locator('#debugPanel #settingCameraTilt').count()===0,
+    'settings camera controls');
 
-  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='10';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#debugCameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  const cameraBefore=await page.evaluate(()=>({
+    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
+    maxTilt:Number(document.getElementById('settingCameraTilt')?.max)
+  }));
+  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='4.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='13.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
+  const pitchBase=await page.evaluate(()=>({
+    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
+    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
+    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
+    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
+  }));
+  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
+  const pitch80=await page.evaluate(()=>({
+    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
+    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
+    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
+    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
+    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
+    label:document.getElementById('settingCameraTiltValue')?.textContent
+  }));
+  check('Camera pitch rotates around the mid axis without changing height or distance',
+    cameraBefore.maxTilt===80&&pitch80.tilt===80&&pitch80.height===pitchBase.height&&pitch80.distance===pitchBase.distance&&
+    Math.abs(pitch80.midY-pitchBase.midY)<1e-9&&
+    (pitch80.nearY-pitch80.farY)>(pitchBase.nearY-pitchBase.farY)*4&&
+    pitch80.stored.cameraTilt===80&&pitch80.label.includes('80.0°')&&
+    window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z).join(',')===cameraBefore.depths.join(','),
+    JSON.stringify({pitchBase,pitch80}));
+
+  await page.locator('#settingCameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(60);
   const height3=await page.evaluate(()=>({
-    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    manual:window.PaperchalkCardCamera.manualCameraHeightMeters,
-    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom
+    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
+    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
+    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
   }));
-  await page.locator('#debugCameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
+  await page.locator('#settingCameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(60);
   const height45=await page.evaluate(()=>({
-    value:Number(document.getElementById('debugCameraHeight')?.value),
-    manual:window.PaperchalkCardCamera.manualCameraHeightMeters,
-    stored:localStorage.getItem('paperchalk.debug.cameraHeight.v1'),
+    value:window.PaperchalkCardCamera.getCameraHeightMeters(),
+    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
+    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
     midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom,
-    label:document.getElementById('debugCameraHeightValue')?.textContent,
-    renderer:window.PaperchalkRenderer?.mode||'dom'
+    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
+    label:document.getElementById('settingCameraHeightValue')?.textContent
   }));
-  check('Debug camera height uses meters and moves the shared ground/player framing',
-    height3.manual===3&&height45.value===4.5&&height45.manual===4.5&&height45.stored==='4.5'&&
-    Math.abs((height45.midY-height3.midY)-1.5*128)<1e-6&&height45.label.includes('4.5 m')&&
-    (height45.renderer!=='dom'||Math.abs(height45.actorBottom-height45.midY)<1),
+  check('Camera height is independent of pitch and distance',
+    height45.value===4.5&&height45.tilt===height3.tilt&&height45.distance===height3.distance&&
+    Math.abs((height45.midY-height3.midY)-1.5*128)<1e-6&&height45.stored.cameraHeight===4.5&&height45.label.includes('4.5 m'),
     JSON.stringify({height3,height45}));
 
-  await page.locator('#debugCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
-  const distance30=await page.evaluate(()=>{
-    const t=getComputedStyle(document.querySelector('.actor')).transform;
-    const m=!t||t==='none'?null:new DOMMatrixReadOnly(t);
-    return {
-      scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
-      actorScale:m?Math.hypot(m.a,m.b):1,
-      actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom
-    };
-  });
-  await page.locator('#debugCameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
-  const distance15=await page.evaluate(()=>({
-    value:Number(document.getElementById('debugCameraDistance')?.value),
-    manual:window.PaperchalkCardCamera.manualCameraDistanceMeters,
-    stored:localStorage.getItem('paperchalk.debug.cameraDistance.v1'),
+  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(60);
+  const distance30=await page.evaluate(()=>({
     scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
-    actorScale:(()=>{const t=getComputedStyle(document.querySelector('.actor')).transform;const m=!t||t==='none'?null:new DOMMatrixReadOnly(t);return m?Math.hypot(m.a,m.b):1})(),
-    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom,
-    label:document.getElementById('debugCameraDistanceValue')?.textContent,
-    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
-    renderer:window.PaperchalkRenderer?.mode||'dom'
+    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
+    height:window.PaperchalkCardCamera.getCameraHeightMeters()
   }));
-  check('Debug camera distance performs a real dolly toward the player',
-    distance15.value===15&&distance15.manual===15&&distance15.stored==='15'&&distance15.label.includes('15.0 m')&&
+  await page.locator('#settingCameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(60);
+  const distance15=await page.evaluate(()=>({
+    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
+    scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
+    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
+    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
+    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
+    label:document.getElementById('settingCameraDistanceValue')?.textContent,
+    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
+  }));
+  check('Camera distance dollies independently without changing pitch or height',
+    distance15.distance===15&&distance15.tilt===distance30.tilt&&distance15.height===distance30.height&&
     Math.abs(distance30.scale-1)<1e-9&&Math.abs(distance15.scale-2)<1e-9&&
-    distance15.depths.join(',')===cameraBefore.depths.join(',')&&
-    Math.abs(distance15.actorBottom-distance30.actorBottom)<1&&
-    (distance15.renderer!=='dom'||distance15.actorScale>distance30.actorScale*1.9),
+    distance15.stored.cameraDistance===15&&distance15.label.includes('15.0 m')&&
+    distance15.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({distance30,distance15}));
 
-  await page.locator('#debugCameraTiltReset').click();
+  await page.locator('#settingCameraReset').click();
   await page.waitForTimeout(80);
   const cameraReset=await page.evaluate(()=>({
-    angle:window.PaperchalkCardCamera.manualTiltDegrees,
-    height:window.PaperchalkCardCamera.manualCameraHeightMeters,
-    distance:window.PaperchalkCardCamera.manualCameraDistanceMeters,
-    angleStored:localStorage.getItem('paperchalk.debug.cameraAngle.v2'),
-    heightStored:localStorage.getItem('paperchalk.debug.cameraHeight.v1'),
-    distanceStored:localStorage.getItem('paperchalk.debug.cameraDistance.v1'),
-    angleLabel:document.getElementById('debugCameraTiltValue')?.textContent,
-    heightLabel:document.getElementById('debugCameraHeightValue')?.textContent,
-    distanceLabel:document.getElementById('debugCameraDistanceValue')?.textContent
+    angle:window.PaperchalkCardCamera.getTiltDegrees(),
+    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
+    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
+    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
+    angleLabel:document.getElementById('settingCameraTiltValue')?.textContent,
+    heightLabel:document.getElementById('settingCameraHeightValue')?.textContent,
+    distanceLabel:document.getElementById('settingCameraDistanceValue')?.textContent
   }));
-  check('Debug camera reset returns angle, height and distance to automatic mode',
-    cameraReset.angle===null&&cameraReset.height===null&&cameraReset.distance===null&&
-    cameraReset.angleStored===null&&cameraReset.heightStored===null&&cameraReset.distanceStored===null&&
-    cameraReset.angleLabel.includes('自动')&&cameraReset.heightLabel.includes('自动')&&cameraReset.distanceLabel.includes('自动'),
+  check('Camera reset restores independent production defaults',
+    Math.abs(cameraReset.angle-13.1)<1e-9&&Math.abs(cameraReset.height-4.1)<1e-9&&cameraReset.distance===30&&
+    Math.abs(cameraReset.stored.cameraTilt-13.1)<1e-9&&Math.abs(cameraReset.stored.cameraHeight-4.1)<1e-9&&cameraReset.stored.cameraDistance===30&&
+    cameraReset.angleLabel.includes('13.1°')&&cameraReset.heightLabel.includes('4.1 m')&&cameraReset.distanceLabel.includes('30.0 m'),
     JSON.stringify(cameraReset));
 
   await page.locator('[data-debug-action="damage1"]').click();
