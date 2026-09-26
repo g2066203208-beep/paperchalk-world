@@ -72,16 +72,27 @@ async function npcGroundLockState(page){
     const r=npc.getBoundingClientRect();
     const x1=Number(vertical.getAttribute('x1')),y1=Number(vertical.getAttribute('y1'));
     const x2=Number(vertical.getAttribute('x2')),y2=Number(vertical.getAttribute('y2'));
-    const zeroY=Number(zero.getAttribute('y1'));
-    const t=(zeroY-y1)/(y2-y1);
-    const gridX=x1+(x2-x1)*t;
+    const zeroLocalY=Number(zero.getAttribute('y1'));
+    const vm=vertical.getScreenCTM(),zm=zero.getScreenCTM();
+    if(!vm||!zm)return {ok:false,reason:'missing-screen-ctm'};
+    const a=new DOMPoint(x1,y1).matrixTransform(vm);
+    const b=new DOMPoint(x2,y2).matrixTransform(vm);
+    const z0=new DOMPoint(0,zeroLocalY).matrixTransform(zm);
+    const t=(z0.y-a.y)/(b.y-a.y);
+    const gridX=a.x+(b.x-a.x)*t;
     const npcX=r.left+r.width*.5;
+    const stageRect=document.getElementById('world').getBoundingClientRect();
+    const svgRect=document.getElementById('cardGroundGrid').getBoundingClientRect();
     return {
-      ok:Number.isFinite(gridX)&&Number.isFinite(zeroY),
+      ok:Number.isFinite(gridX)&&Number.isFinite(z0.y),
       playerX:window.PaperchalkMap.playerX,
-      npcX,npcFootY:r.bottom,gridX,zeroY,
+      npcX,npcFootY:r.bottom,gridX,zeroY:z0.y,
       horizontalOffset:gridX-npcX,
-      footError:r.bottom-zeroY
+      footError:r.bottom-z0.y,
+      npcCssX:getComputedStyle(npc).left,
+      npcVarX:npc.style.getPropertyValue('--npc-x'),
+      stage:{left:stageRect.left,top:stageRect.top,width:stageRect.width,height:stageRect.height},
+      svg:{left:svgRect.left,top:svgRect.top,width:svgRect.width,height:svgRect.height}
     };
   });
 }
