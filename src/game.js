@@ -2631,7 +2631,7 @@ const runtimeFrameState={
     grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,
     moving:false,attacking:false,attackTimer:0,invulnerable:false
   },
-  enemies:enemies.map(e=>({
+  enemies:enemies.slice(0,ENEMY_SPAWNS.length).map(e=>({
     id:e.id,x:e.x,z:e.z,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
     patrolMin:e.patrolMin,patrolMax:e.patrolMax,attackTimer:e.attackTimer,hitstun:e.hitstun
   })),
@@ -2654,7 +2654,7 @@ function refreshRuntimeFrameState(){
   s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
   s.player.invulnerable=playerInvuln>0;
-  for(let i=0;i<enemies.length;i++){
+  for(let i=0;i<s.enemies.length;i++){
     const e=enemies[i],o=s.enemies[i];
     o.x=e.x;o.z=e.z;o.hp=e.hp;o.alive=e.alive;o.facing=e.facing;o.state=e.state;
     o.patrolMin=e.patrolMin;o.patrolMax=e.patrolMax;o.attackTimer=e.attackTimer;o.hitstun=e.hitstun;
