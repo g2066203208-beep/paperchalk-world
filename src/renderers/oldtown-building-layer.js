@@ -49,6 +49,7 @@ function createRows(){
       const el=document.createElement('div');
       el.className='oldtown-building';
       el.setAttribute('aria-hidden','true');
+      el.hidden=true;
       track.appendChild(el);
       row.push({el,worldX:0,building:null,hidden:true});
     }
