@@ -88,9 +88,10 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="finite-ground-r40"/,'finite-ground build cache key missing');
-assert.ok(html.includes('id="cardGroundGrid"'),'shared-camera ground grid host missing');
+assert.match(html,/paperchalk-build" content="canvas-cull-r41"/,'canvas-cull build cache key missing');
+assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
+assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');
 for(const component of ['transform','health','combat','ai','patrol','renderable']){
   assert.ok(game.includes(component+':e.'+component),'combat ECS must expose granular '+component+' component');
