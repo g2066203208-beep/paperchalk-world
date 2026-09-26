@@ -63,6 +63,39 @@ async function paperState(page){
     unfold:getComputedStyle(document.getElementById('paperFxUnfold')).opacity
   }));
 }
+async function npcGroundLockState(page){
+  return page.evaluate(()=>{
+    const npc=document.querySelector('[data-npc-id="npc-phone-girl"]');
+    const vertical=document.querySelector('#cardGroundWorldLines [data-world-x="768"]');
+    const zero=document.querySelector('#cardGroundDepthLines [data-world-z="0"]');
+    if(!npc||!vertical||!zero)return {ok:false};
+    const r=npc.getBoundingClientRect();
+    const x1=Number(vertical.getAttribute('x1')),y1=Number(vertical.getAttribute('y1'));
+    const x2=Number(vertical.getAttribute('x2')),y2=Number(vertical.getAttribute('y2'));
+    const zeroLocalY=Number(zero.getAttribute('y1'));
+    const vm=vertical.getScreenCTM(),zm=zero.getScreenCTM();
+    if(!vm||!zm)return {ok:false,reason:'missing-screen-ctm'};
+    const a=new DOMPoint(x1,y1).matrixTransform(vm);
+    const b=new DOMPoint(x2,y2).matrixTransform(vm);
+    const z0=new DOMPoint(0,zeroLocalY).matrixTransform(zm);
+    const t=(z0.y-a.y)/(b.y-a.y);
+    const gridX=a.x+(b.x-a.x)*t;
+    const npcX=r.left+r.width*.5;
+    const stageRect=document.getElementById('world').getBoundingClientRect();
+    const svgRect=document.getElementById('cardGroundGrid').getBoundingClientRect();
+    return {
+      ok:Number.isFinite(gridX)&&Number.isFinite(z0.y),
+      playerX:window.PaperchalkMap.playerX,
+      npcX,npcFootY:r.bottom,gridX,zeroY:z0.y,
+      horizontalOffset:gridX-npcX,
+      footError:r.bottom-z0.y,
+      npcCssX:getComputedStyle(npc).left,
+      npcVarX:npc.style.getPropertyValue('--npc-x'),
+      stage:{left:stageRect.left,top:stageRect.top,width:stageRect.width,height:stageRect.height},
+      svg:{left:svgRect.left,top:svgRect.top,width:svgRect.width,height:svgRect.height}
+    };
+  });
+}
 
 const browser=await chromium.launch({
   headless:true,
@@ -226,19 +259,17 @@ try{
   await page.waitForTimeout(100);
   const xyCameraBefore=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
-    const floor=document.querySelector('.paper-stage-floor');
-    const floorCamera=document.querySelector('.paper-stage-floor-camera');
-    const floorRect=floor.getBoundingClientRect();
-    const floorCameraMatrix=new DOMMatrix(getComputedStyle(floorCamera).transform);
     const snap=window.PaperchalkRuntime.getSnapshot();
+    const zero=document.querySelector('#cardGroundDepthLines [data-world-z="0"]');
+    const farLine=document.querySelector('#cardGroundDepthLines [data-world-z="640"]');
     return {
       player:window.PaperchalkCombat.player,
       camera:snap.camera,
       near:window.PaperchalkMap.project(760,0,0),
       far:window.PaperchalkMap.project(760,600,0),
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      floorCameraY:floorCameraMatrix.m42,
-      floorTop:floorRect.top,
+      groundZeroY:Number(zero?.getAttribute('y1')),
+      groundFarY:Number(farLine?.getAttribute('y1')),
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
   });
@@ -254,15 +285,13 @@ try{
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.y>20,null,{timeout:900});
   const xyCameraRaised=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
-    const floor=document.querySelector('.paper-stage-floor');
-    const floorCamera=document.querySelector('.paper-stage-floor-camera');
-    const floorRect=floor.getBoundingClientRect();
-    const floorCameraMatrix=new DOMMatrix(getComputedStyle(floorCamera).transform);
+    const zero=document.querySelector('#cardGroundDepthLines [data-world-z="0"]');
+    const farLine=document.querySelector('#cardGroundDepthLines [data-world-z="640"]');
     return {
       player:window.PaperchalkCombat.player,
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      floorCameraY:floorCameraMatrix.m42,
-      floorTop:floorRect.top,
+      groundZeroY:Number(zero?.getAttribute('y1')),
+      groundFarY:Number(farLine?.getAttribute('y1')),
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
   });
@@ -270,11 +299,13 @@ try{
   check('W/Up is Y jump, not Z movement',
     xyCameraRaised.player.y>20&&!('z' in xyCameraRaised.player),
     JSON.stringify(xyCameraRaised));
-  check('Rising in Y moves the perspective ground downward',
+  const nearGroundRise=xyCameraRaised.groundZeroY-xyCameraBefore.groundZeroY;
+  const farGroundRise=xyCameraRaised.groundFarY-xyCameraBefore.groundFarY;
+  check('Rising in Y moves the shared-camera ground downward with correct depth scaling',
     Number.parseFloat(xyCameraRaised.cameraY)>20&&
-    xyCameraRaised.floorCameraY>xyCameraBefore.floorCameraY+10&&
-    xyCameraRaised.floorTop>xyCameraBefore.floorTop+10,
-    JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised}));
+    Math.abs(nearGroundRise-xyCameraRaised.player.y)<1.2&&
+    farGroundRise>0&&farGroundRise<nearGroundRise,
+    JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised,nearGroundRise,farGroundRise}));
   check('XY camera keeps the protagonist fixed while the world moves vertically',
     Math.abs(xyCameraRaised.actor.left-xyCameraBefore.actor.left)<1&&
     Math.abs(xyCameraRaised.actor.top-xyCameraBefore.actor.top)<1&&
@@ -544,6 +575,26 @@ try{
     npcNear.art.naturalW===326&&npcNear.art.naturalH===1002&&
     npcNear.art.layoutH===128&&npcNear.art.layoutW>=41&&npcNear.art.layoutW<=43,
     JSON.stringify(npcNear));
+
+  // Ground/NPC lock: the NPC is authored at x=760,z=0. The nearest 1 m grid
+  // line is x=768, so their screen-space offset must remain exactly 8 px while
+  // the player/camera moves horizontally.
+  const npcGroundBefore=await npcGroundLockState(page);
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(260);
+  await page.keyboard.up('KeyD');
+  await page.waitForTimeout(80);
+  const npcGroundAfter=await npcGroundLockState(page);
+  check('Fixed NPC stays locked to the same ground coordinates during horizontal camera motion',
+    npcGroundBefore.ok&&npcGroundAfter.ok&&
+    npcGroundAfter.playerX>npcGroundBefore.playerX+20&&
+    Math.abs(npcGroundBefore.horizontalOffset-8)<1&&
+    Math.abs(npcGroundAfter.horizontalOffset-8)<1&&
+    Math.abs(npcGroundAfter.horizontalOffset-npcGroundBefore.horizontalOffset)<.6&&
+    Math.abs(npcGroundBefore.footError)<.8&&Math.abs(npcGroundAfter.footError)<.8,
+    JSON.stringify({before:npcGroundBefore,after:npcGroundAfter}));
+  await page.evaluate(()=>window.PaperchalkMap.teleport(760,{notice:''}));
+  await page.waitForTimeout(80);
   await page.keyboard.press('KeyE');
   await page.waitForTimeout(120);
   const npcTalk=await page.evaluate(()=>({

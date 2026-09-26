@@ -71,9 +71,9 @@ assert(game.includes("const rear=[];")&&game.includes("const front=[];"),'Author
 assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
 assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"),'XY gameplay / Z scene-depth runtime missing');
-assert(css.includes("var(--card-camera-y,0px)")&&css.includes("rotateX(68deg)"),'Perspective ground camera-Y transform missing');
+assert(css.includes(".card-ground-grid")&&!css.includes("transform:perspective(900px) rotateX(68deg)!important"),'Ground reverted to split CSS perspective projection');
 assert(css.includes("translate3d(0,0,var(--card-wall-depth))"),'Distant altitude wall transform missing');
-assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-camera-y'"),'World-synced X/Y ground camera missing');
+assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("dataset[kind]")&&domCardRenderer.includes("setProperty('--card-camera-y'"),'Ground grid no longer consumes the shared card camera');
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"),'Player-driven Z ground scrolling returned');
 assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"),'Shared scene-depth projection math missing');
 assert(!game.includes("keyboardDepthForward")&&!game.includes("joystickDepthAxis"),'Player Z input returned');

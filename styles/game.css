@@ -2351,47 +2351,60 @@ button{cursor:pointer}
 }
 .stage:not(.scene-interior) .paper-sky::after{display:none!important}
 
-/* Screen-space camera-Y wrapper. Its translation happens outside the child's
-   rotateX, so rising in Y always moves the rendered ground downward. */
+/* Ground and actors share PaperchalkCardCamera exactly. The floor is a flat
+   screen-space host; dom-card-projection.js projects every 1 m grid line. */
 .stage:not(.scene-interior) .paper-stage-floor-camera{
   position:absolute!important;
   inset:0!important;
   z-index:2!important;
   pointer-events:none!important;
-  transform:translate3d(0,var(--card-camera-y,0px),0)!important;
+  transform:none!important;
   transform-style:flat;
   perspective:none!important;
-  will-change:transform;
 }
-/* Infinite horizontal 1 m grid. Z is scene depth only; player movement never scrolls it. */
 .stage:not(.scene-interior) .paper-stage-floor{
   display:block!important;
   position:absolute!important;
+  inset:0!important;
   z-index:2!important;
-  left:-75vw!important;
-  right:auto!important;
-  top:var(--card-horizon-y)!important;
-  bottom:auto!important;
-  width:250vw!important;
-  height:260vh!important;
+  width:100%!important;
+  height:100%!important;
   opacity:1!important;
   pointer-events:none!important;
-  transform-origin:50% 0!important;
-  transform:perspective(900px) rotateX(68deg)!important;
+  transform:none!important;
   translate:0 0!important;
-  backface-visibility:visible;
-  background-color:#2f9e44!important;
-  background-image:url("../assets/debug/green-grid-1m.svg")!important;
-  background-repeat:repeat!important;
-  background-size:128px 128px!important;
-  background-position:var(--card-grid-x,0px) 0px!important;
-  border-top:4px solid rgba(4,66,102,.90)!important;
-  box-shadow:0 -7px 0 rgba(13,89,142,.22)!important;
+  background:
+    linear-gradient(to bottom,
+      transparent 0 var(--card-horizon-y),
+      #2f9e44 var(--card-horizon-y) 100%)!important;
+  border:0!important;
+  box-shadow:none!important;
   filter:none!important;
-  will-change:background-position,transform;
+}
+.stage:not(.scene-interior) .card-ground-grid{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  pointer-events:none;
+  shape-rendering:geometricPrecision;
+}
+.stage:not(.scene-interior) .card-ground-grid line{
+  vector-effect:non-scaling-stroke;
+  stroke:rgba(224,247,255,.34);
+  stroke-width:2;
+}
+.stage:not(.scene-interior) .card-ground-grid line.is-major{
+  stroke:rgba(255,255,255,.48);
+  stroke-width:3;
+}
+.stage:not(.scene-interior) .card-ground-grid line.is-origin{
+  stroke:rgba(5,66,108,.82);
+  stroke-width:3;
 }
 .stage:not(.scene-interior)::before{
-  top:calc(var(--card-horizon-y) + var(--card-camera-y,0px) - 2px)!important;
+  top:calc(var(--card-horizon-y) - 2px)!important;
   height:4px!important;
   background:rgba(5,66,108,.90)!important;
   box-shadow:0 2px 0 rgba(255,255,255,.20)!important;
