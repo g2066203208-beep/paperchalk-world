@@ -150,8 +150,8 @@ try{
     const canvas=document.getElementById('cardGroundCanvas');
     const sky=document.querySelector('.paper-sky');
     const stats=window.PaperchalkDomCardProjection?.stats||{};
-    const skyY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,1200,0).y;
-    const playerY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0).y;
+    const horizonY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,1200,0).y;
+    const midMainY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0).y;
     const skyRect=sky?.getBoundingClientRect();
     const rect=canvas?.getBoundingClientRect();
     const dpr=rect?.width?canvas.width/rect.width:1;
@@ -173,23 +173,36 @@ try{
       depthLines:Number(canvas?.dataset.depthLineCount),
       worldLines:Number(canvas?.dataset.worldLineCount),
       sceneLines:Number(canvas?.dataset.sceneLineCount),
+      sceneMainLines:Number(canvas?.dataset.sceneMainCount),
+      sceneSubLines:Number(canvas?.dataset.sceneSubCount),
+      guideDepths:canvas?.dataset.sceneGuideDepths||'',
       childNodes:canvas?.childNodes?.length??-1,
       backingPixels:(canvas?.width||0)*(canvas?.height||0),
-      skyY,
+      horizonY,
       skyBottom:skyRect?.bottom??null,
-      playerY,
-      skyPixel:bestPixel(skyY),
-      playerPixel:bestPixel(playerY),
+      midMainY,
+      horizonPixel:bestPixel(horizonY),
+      midMainPixel:bestPixel(midMainY),
+      nearMainPixel:bestPixel(stats.sceneGuideYs?.['near-main']??-100),
+      farMainPixel:bestPixel(stats.sceneGuideYs?.['far-main']??-100),
       renderer:stats
     };
   });
-  check('Ground grid is one finite canvas and the sky wall starts on its far edge',
-    finiteGround.farDepth===1200&&finiteGround.depthLines<=13&&finiteGround.worldLines<=50&&finiteGround.sceneLines===3&&
+  check('Ground grid has 3x3 scene sublayers plus one horizon line',
+    finiteGround.farDepth===1200&&finiteGround.depthLines<=13&&finiteGround.worldLines<=50&&
+    finiteGround.sceneLines===10&&finiteGround.sceneMainLines===4&&finiteGround.sceneSubLines===6&&
+    finiteGround.guideDepths==='near-front:-160,near-main:-120,near-back:-80,mid-front:-40,mid-main:0,mid-back:40,far-front:400,far-main:600,far-back:800,horizon:1200'&&
     finiteGround.childNodes===0&&finiteGround.backingPixels>0&&
-    Math.abs(finiteGround.skyBottom-finiteGround.skyY)<1&&
-    finiteGround.skyPixel[0]>180&&finiteGround.skyPixel[1]>150&&finiteGround.skyPixel[2]<150&&
-    finiteGround.playerPixel[2]>finiteGround.playerPixel[0],
+    Math.abs(finiteGround.skyBottom-finiteGround.horizonY)<1&&
+    finiteGround.horizonPixel[0]>180&&finiteGround.horizonPixel[1]>150&&finiteGround.horizonPixel[2]<150&&
+    finiteGround.midMainPixel[2]>finiteGround.midMainPixel[0]&&
+    finiteGround.nearMainPixel[0]>finiteGround.nearMainPixel[2]&&
+    finiteGround.farMainPixel[2]>finiteGround.farMainPixel[0],
     JSON.stringify(finiteGround));
+  const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
+  check('Near/mid/far front-main-back guides are ordered toward the horizon',
+    guideOrder.length===10&&guideOrder.every((y,i)=>i===0||guideOrder[i-1]>y),
+    JSON.stringify(finiteGround.renderer.sceneGuideYs));
   check('Off-screen enemy projection is culled before camera/DOM work',
     finiteGround.renderer.culledEnemies>=20&&finiteGround.renderer.projectedEnemies<=1&&
     finiteGround.renderer.projectedNpcs===1,

@@ -30,6 +30,9 @@ const stats={
   depthLines:0,
   worldLines:0,
   sceneLines:0,
+  sceneMainLines:0,
+  sceneSubLines:0,
+  sceneGuideYs:{},
   canvasPixels:0,
   farDepth:0,
   farY:0
@@ -190,27 +193,55 @@ function renderGroundGrid(frame){
     worldUsed++;
   }
 
-  let sceneUsed=0;
-  const sceneColors={player:'#0878d1',far:'#9b51e0',sky:'#ffd43b'};
+  let sceneUsed=0,sceneMain=0,sceneSub=0;
+  const sceneGuideYs={};
+  const sceneStyles={
+    'near-front':{color:'#ff5a36',width:2},
+    'near-main': {color:'#ff8c00',width:4},
+    'near-back': {color:'#ffb347',width:2},
+    'mid-front': {color:'#00a6a6',width:2},
+    'mid-main':  {color:'#0878d1',width:4},
+    'mid-back':  {color:'#56b4e9',width:2},
+    'far-front': {color:'#7f5af0',width:2},
+    'far-main':  {color:'#9b51e0',width:4},
+    'far-back':  {color:'#c77dff',width:2},
+    'horizon':   {color:'#ffd43b',width:5}
+  };
   for(const guide of cfg.sceneGuides||[]){
     const q=camera.project({
       worldX:p.x,worldZ:guide.z,worldY:0,
       playerX:p.x,playerY:p.y,cameraZ:0,
       screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
     });
-    strokeLine(ctx,0,q.y,v.width,q.y,sceneColors[guide.id]||'#ffffff',4);
+    const style=sceneStyles[guide.id]||{color:'#ffffff',width:2};
+    strokeLine(ctx,0,q.y,v.width,q.y,style.color,style.width);
+    ctx.save();
+    ctx.font=(guide.kind==='main'||guide.kind==='horizon'?'700 ':'500 ')+'11px sans-serif';
+    ctx.fillStyle=style.color;
+    ctx.globalAlpha=.95;
+    ctx.fillText((guide.label||guide.id)+'  z='+guide.z,10,Math.max(12,q.y-5));
+    ctx.restore();
+    sceneGuideYs[guide.id]=q.y;
     sceneUsed++;
+    if(guide.kind==='sub')sceneSub++;
+    else sceneMain++;
   }
 
   ctx.restore();
   stats.depthLines=depthUsed;
   stats.worldLines=worldUsed;
   stats.sceneLines=sceneUsed;
+  stats.sceneMainLines=sceneMain;
+  stats.sceneSubLines=sceneSub;
+  stats.sceneGuideYs=sceneGuideYs;
   stats.farDepth=farZ;
   stats.farY=farY;
   groundCanvas.dataset.depthLineCount=String(depthUsed);
   groundCanvas.dataset.worldLineCount=String(worldUsed);
   groundCanvas.dataset.sceneLineCount=String(sceneUsed);
+  groundCanvas.dataset.sceneMainCount=String(sceneMain);
+  groundCanvas.dataset.sceneSubCount=String(sceneSub);
+  groundCanvas.dataset.sceneGuideDepths=(cfg.sceneGuides||[]).map(g=>g.id+':'+g.z).join(',');
   groundCanvas.dataset.farDepth=String(farZ);
   groundCanvas.dataset.farY=farY.toFixed(2);
 }
