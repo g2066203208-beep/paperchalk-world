@@ -200,7 +200,11 @@ function renderPlayer(frame,now){
   const action=p.action||'idle';
   // Player is a fixed screen anchor. Vertical simulation moves the world,
   // not the player sprite.
-  const footY=v.height-v.groundY;
+  const footY=cardCamera?cardCamera.project({
+    worldX:p.x,worldZ:0,worldY:0,
+    playerX:p.x,playerY:0,cameraZ:0,
+    screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+  }).y:v.height-v.groundY;
   if(node.isPuppet){
     const dt=Math.min(.05,Math.max(0,(now-node.lastNow)/1000));
     node.lastNow=now;
