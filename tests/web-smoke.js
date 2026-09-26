@@ -261,7 +261,8 @@ assert(html.includes('data-debug-action="cameraDebug"'), "Camera debug button mi
 assert(html.includes('data-debug-action="teleportStart"'), "Map teleport debug controls missing");
 assert(!game.includes("e.code==='F2'"), "Debug panel must not depend on F2 hotkey");
 assert(!game.includes("e.code==='F3'"), "Hitbox debug must live inside debug panel, not F3");
-assert(html.includes("assets/enemies/rag-drifter.svg"), "Enemy art missing");
+assert(!html.includes("assets/enemies/rag-drifter.svg"), "Demo enemy art leaked into production HTML");
+assert(testFixtures.includes("assets/enemies/rag-drifter.svg"), "CI enemy art fixture missing");
 assert(fs.existsSync("assets/enemies/rag-drifter.svg"), "Enemy SVG asset missing");
 assert(css.includes("@keyframes hp-sewn-heal"), "Health heal pop animation missing");
 assert(game.includes("order*45"), "Staggered heal timing missing");
