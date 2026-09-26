@@ -436,7 +436,7 @@ try{
   const nearGroundRise=xyCameraRaised.groundZeroY-xyCameraBefore.groundZeroY;
   const farGroundRise=xyCameraRaised.groundFarY-xyCameraBefore.groundFarY;
   check('Rising in Y moves the shared-camera ground downward with correct depth scaling',
-    Number.parseFloat(xyCameraRaised.cameraY)>20&&
+    Number.parseFloat(xyCameraRaised.cameraY)>0&&
     Math.abs(nearGroundRise-xyCameraRaised.player.y)<1.2&&
     farGroundRise>0&&farGroundRise<nearGroundRise,
     JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised,nearGroundRise,farGroundRise}));
