@@ -121,11 +121,15 @@ function strokeLine(ctx,x1,y1,x2,y2,color,width){
 function renderGroundGrid(frame){
   if(!groundCanvas)return;
   const cfg=camera.config,p=frame.player,v=frame.viewport;
+  const showSceneGuides=!world.classList.contains('production-clean-scene')
+    ||world.classList.contains('camera-controls-open')
+    ||world.classList.contains('show-camera-debug');
   const groundKey=[
     Math.round((Number(p.x)||0)*100)/100,
     Math.round((Number(p.y)||0)*100)/100,
     v.width,v.height,v.groundY,
-    camera.tiltRevision||0
+    camera.tiltRevision||0,
+    showSceneGuides?1:0
   ].join('|');
   if(groundKey===lastGroundKey)return;
   lastGroundKey=groundKey;
@@ -208,9 +212,6 @@ function renderGroundGrid(frame){
     'far-back':  {color:'#c77dff',width:2},
     'horizon':   {color:'#ffd43b',width:5}
   };
-  const showSceneGuides=!world.classList.contains('production-clean-scene')
-    ||world.classList.contains('camera-controls-open')
-    ||world.classList.contains('show-camera-debug');
   if(showSceneGuides){
     for(const guide of cfg.sceneGuides||[]){
       const q=camera.project({
