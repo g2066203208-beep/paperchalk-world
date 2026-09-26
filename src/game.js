@@ -1275,28 +1275,35 @@ function createEnemyState(id,el,healthEl){
   });
   return e;
 }
-const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
-const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
-const enemies=[enemy,enemy2];
-
-for(let i=2;i<ENEMY_SPAWNS.length;i++){
+const enemies=[];
+for(let i=0;i<ENEMY_SPAWNS.length;i++){
   const spawn=ENEMY_SPAWNS[i];
-  const el=document.createElement('div');
-  el.className='enemy';
-  el.setAttribute('aria-label','纸境游荡者 '+(i+1));
-  const health=document.createElement('div');
-  health.className='enemy-health';
-  const fill=document.createElement('div');
-  fill.className='enemy-health-fill';
-  health.appendChild(fill);
-  const img=document.createElement('img');
-  img.src=RAG_DRIFTER.asset;
-  img.alt='敌人';
-  el.appendChild(health);
-  el.appendChild(img);
-  entityTrack.appendChild(el);
+  let el=i===0?enemyEl:(i===1?enemy2El:null);
+  let fill=i===0?enemyHealthFill:(i===1?enemy2HealthFill:null);
+  if(!el){
+    el=document.createElement('div');
+    el.className='enemy';
+    el.setAttribute('aria-label','纸境游荡者 '+(i+1));
+    const health=document.createElement('div');
+    health.className='enemy-health';
+    fill=document.createElement('div');
+    fill.className='enemy-health-fill';
+    health.appendChild(fill);
+    const img=document.createElement('img');
+    img.src=RAG_DRIFTER.asset;
+    img.alt='敌人';
+    el.appendChild(health);
+    el.appendChild(img);
+    entityTrack.appendChild(el);
+  }
   enemies.push(createEnemyState(spawn.id,el,fill));
 }
+function dormantEnemy(id){
+  const el=document.createElement('div'),fill=document.createElement('div');
+  const e=createEnemyState(id,el,fill);e.spawned=false;e.alive=false;return e;
+}
+const enemy=enemies[0]||dormantEnemy('enemy-none');
+const enemy2=enemies[1]||dormantEnemy('enemy-none-2');
 
 /* Dynamic gameplay entities now run through an ECS scheduler. The existing enemy
    object remains the compatibility component so public debug/render contracts stay stable
@@ -2215,11 +2222,12 @@ function resetMapEnemies(){
   });
 }
 function resetEnemy(offset=360){
+  if(!ENEMY_SPAWNS.length)return false;
   const x=clamp(playerWorldX+offset,80,MAP_WIDTH-80);
   resetEnemyState(enemy,{x,patrolMin:Math.max(40,x-125),patrolMax:Math.min(MAP_WIDTH-40,x+125)});
   renderWorld();
 }
-function placeEnemyNear(distance=210){resetEnemy(distance);enemy.attackCooldown=.55;renderWorld()}
+function placeEnemyNear(distance=210){if(!resetEnemy(distance))return false;enemy.attackCooldown=.55;renderWorld();return true}
 function damageEnemy(e,amount=1,knockDir=facing){
   if(!e.alive||e.hitstun>0)return false;
   const previousHp=e.hp;
