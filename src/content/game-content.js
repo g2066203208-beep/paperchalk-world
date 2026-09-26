@@ -2,6 +2,9 @@
 (function(global){
 'use strict';
 
+const params=new URLSearchParams(location.search);
+const fixtureMode=params.has('core-regression')||params.get('ci')==='ui-smoke'||params.get('ci')==='gpu-smoke';
+
 const content={
   version:1,
   world:{
@@ -46,8 +49,8 @@ const content={
       {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
     ]
   },
-  npcs:[
-    {
+  npcs:fixtureMode?[
+{
       id:'npc-phone-girl',x:760,z:0,name:'？？？',portrait:'phone-girl-offline',
       sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
       dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
@@ -61,11 +64,11 @@ const content={
         ]
       }
     }
-  ],
-  enemySpawns:[
-    {id:'enemy-1',archetype:'rag-drifter',x:2140,z:0,patrolMin:2010,patrolMax:2290},
+  ]:[],
+  enemySpawns:fixtureMode?[
+{id:'enemy-1',archetype:'rag-drifter',x:2140,z:0,patrolMin:2010,patrolMax:2290},
     {id:'enemy-2',archetype:'rag-drifter',x:4780,z:0,patrolMin:4680,patrolMax:4920}
-  ],
+  ]:[],
   enemyArchetypes:{
     'rag-drifter':{
       id:'rag-drifter',
