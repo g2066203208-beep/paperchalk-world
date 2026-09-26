@@ -1,4 +1,4 @@
-/* Shared X/Z/Y projection for the open-card world. DOM and Pixi consume this exact math. */
+/* Shared X/Y gameplay camera with authored Z scene depth. DOM and Pixi consume this exact math. */
 (function(global){
 'use strict';
 
@@ -8,16 +8,16 @@ const config=Object.freeze({
   horizonRatio:.40,
   minDepth:96,
   maxDepth:6400,
-  worldDepthLimit:1000000000,
   wallDepth:1200
 });
 
 function project({
   worldX=0,worldZ=0,worldY=0,
-  playerX=0,playerZ=0,playerY=0,
+  playerX=0,playerY=0,cameraZ=0,
   screenX=0,viewportHeight=720,groundY=112
 }={}){
-  const relativeZ=(Number(worldZ)||0)-(Number(playerZ)||0);
+  // Z is authored scene depth only. Normal gameplay never moves cameraZ.
+  const relativeZ=(Number(worldZ)||0)-(Number(cameraZ)||0);
   const depth=config.baseDepth+relativeZ;
   if(depth<=config.minDepth)return {visible:false,x:0,y:0,scale:0,depth};
   const scale=config.baseDepth/depth;
