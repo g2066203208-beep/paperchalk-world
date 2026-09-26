@@ -1256,7 +1256,7 @@ button{cursor:pointer}
 /* ---------- IN-GAME DEBUG PANEL ---------- */
 .debug-toggle-btn{
   position:absolute;z-index:32;
-  top:max(146px,calc(env(safe-area-inset-top) + 140px));
+  top:max(184px,calc(env(safe-area-inset-top) + 178px));
   right:max(18px,env(safe-area-inset-right));
   min-width:68px;height:34px;padding:0 11px;
   border:1px dashed rgba(81,63,42,.52);
