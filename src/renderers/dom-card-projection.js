@@ -15,6 +15,7 @@ const styleCache=new WeakMap();
 const worldVarCache=new Map();
 let enemyEls=[];
 let npcEls=new Map();
+let buildingEls=new Map();
 let groundCtx=null;
 let lastCanvasW=0,lastCanvasH=0,lastCanvasDpr=0;
 let lastGroundKey='',lastFarY=0;
@@ -27,6 +28,8 @@ const stats={
   culledEnemies:0,
   projectedNpcs:0,
   culledNpcs:0,
+  projectedBuildings:0,
+  culledBuildings:0,
   depthLines:0,
   worldLines:0,
   sceneLines:0,
@@ -43,6 +46,10 @@ function refreshNodes(){
   npcEls=new Map(
     [...document.querySelectorAll('#mapLandmarkTrack .map-npc')]
       .map(el=>[el.dataset.npcId,el])
+  );
+  buildingEls=new Map(
+    [...document.querySelectorAll('#mapLandmarkTrack .map-building')]
+      .map(el=>[el.dataset.buildingId,el])
   );
 }
 function writeWorldVar(name,value){
@@ -304,10 +311,33 @@ function render(frame,force=false){
     if(applyProjection(el,projected,{xVar:'--npc-x',bottomVar:'--npc-bottom',viewportWidth:v.width,viewportHeight:v.height}))projectedNpcs++;
     else culledNpcs++;
   }
+  let projectedBuildings=0,culledBuildings=0;
+  const buildings=runtime.worldData?.buildings||[];
+  if(buildingEls.size!==buildings.length)refreshNodes();
+  for(const building of buildings){
+    const el=buildingEls.get(building.id);
+    if(!el)continue;
+    const margin=Math.max(420,(Number(building.width)||0)*.6);
+    if(!coarseVisibleX(building.x,building.z||0,p,v,margin)){
+      setVisible(el,false);
+      culledBuildings++;
+      continue;
+    }
+    const projected=camera.project({
+      worldX:building.x,worldZ:building.z||0,worldY:building.y||0,
+      playerX:p.x,playerY:p.y,cameraZ:0,
+      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+    });
+    if(applyProjection(el,projected,{xVar:'--building-x',bottomVar:'--building-bottom',viewportWidth:v.width,viewportHeight:v.height}))projectedBuildings++;
+    else culledBuildings++;
+  }
+
   stats.projectedEnemies=projectedEnemies;
   stats.culledEnemies=culledEnemies;
   stats.projectedNpcs=projectedNpcs;
   stats.culledNpcs=culledNpcs;
+  stats.projectedBuildings=projectedBuildings;
+  stats.culledBuildings=culledBuildings;
 }
 
 refreshNodes();
