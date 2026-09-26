@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "oldtown-r38";
+  const BUILD = "mobile-oldtown-r39";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -32,15 +32,15 @@
 </script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=oldtown-r38" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=mobile-oldtown-r39" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="oldtown-r38">
-<link rel="stylesheet" href="./styles/game.css?v=oldtown-r38">
+<meta name="paperchalk-build" content="mobile-oldtown-r39">
+<link rel="stylesheet" href="./styles/game.css?v=mobile-oldtown-r39">
 </head>
 <body>
 
@@ -68,13 +68,6 @@
   <div class="world-layer road-layer" hidden aria-hidden="true">
     <div id="roadSurface" class="road-surface"></div>
     <div id="roadTrack" class="road-track"><div id="roadTile" class="road-tile"></div></div>
-  </div>
-  <div class="midground-building-layer" aria-hidden="true">
-    <div id="midgroundBuildingTrack" class="midground-building-track">
-      <img id="midgroundApartment" class="midground-apartment"
-           src="./assets/backgrounds/apartment-midground.webp?v=puppet-r1"
-           width="780" height="1040" alt="" decoding="async" loading="eager" fetchpriority="high" draggable="false">
-    </div>
   </div>
   <div class="map-layer" aria-hidden="true">
     <div id="mapTrack" class="map-track">
@@ -111,38 +104,6 @@
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <div id="cameraLeftDebug" class="camera-debug-line" style="left:50%"><span class="camera-debug-label">CAMERA FOLLOW</span></div>
   <div id="mapNotice" class="map-notice" role="status" aria-live="polite"></div>
-  <div id="apartmentDoorPrompt" class="door-interact-prompt" aria-hidden="true">E / 开门</div>
-
-  <section id="interiorScene" class="interior-scene" aria-hidden="true" aria-label="公寓室内">
-    <div id="interiorFarLayer" class="interior-depth-layer interior-far-layer" aria-hidden="true">
-      <div class="interior-room-shell paper-stage-piece"></div>
-      <div class="interior-wall interior-wall-left paper-stage-piece"></div>
-      <div class="interior-wall interior-wall-right paper-stage-piece"></div>
-      <div class="interior-ceiling paper-stage-piece"></div>
-      <div class="interior-floor interior-floor-first paper-stage-piece"></div>
-      <div class="interior-floor interior-floor-second paper-stage-piece"></div>
-      <div class="interior-window interior-window-first paper-stage-piece"><span class="interior-window-cross"></span></div>
-      <div class="interior-window interior-window-second paper-stage-piece"><span class="interior-window-cross"></span></div>
-    </div>
-    <div id="interiorMidLayer" class="interior-depth-layer interior-mid-layer" aria-hidden="true">
-      <div class="interior-shelf paper-stage-piece"></div>
-      <div id="interiorStaircase" class="interior-staircase paper-stage-piece" aria-label="折返双跑楼梯">
-        <span class="interior-stair-run interior-stair-run-lower"><i class="interior-stair-rail interior-stair-rail-lower"></i></span>
-        <span class="interior-stair-landing"></span>
-        <span class="interior-stair-run interior-stair-run-upper"><i class="interior-stair-rail interior-stair-rail-upper"></i></span>
-      </div>
-      <div id="interiorExitDoor" class="interior-exit-door paper-stage-piece" aria-hidden="true">
-        <span class="interior-door-handle"></span>
-        <span class="interior-door-label">门</span>
-      </div>
-    </div>
-    <div id="interiorNearLayer" class="interior-depth-layer interior-near-layer" aria-hidden="true">
-      <div class="interior-near-left paper-stage-piece"></div>
-      <div class="interior-near-rug paper-stage-piece"></div>
-      <div class="interior-near-right paper-stage-piece"></div>
-    </div>
-  </section>
-
   <section id="dialogueStage" class="dialogue-stage" aria-hidden="true" aria-label="舞台对话">
     <div class="dialogue-dim" aria-hidden="true"></div>
     <div class="dialogue-curtain" aria-hidden="true"></div>
@@ -422,9 +383,9 @@
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
-<script src="./src/game.js?v=oldtown-r38"></script>
+<script src="./src/game.js?v=mobile-oldtown-r39"></script>
 <script src="./src/renderers/dom-card-projection.js?v=1"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=oldtown-r1"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=oldtown-r38"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=mobile-oldtown-r39"></script>
 </body>
 </html>
