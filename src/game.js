@@ -1532,7 +1532,7 @@ function updateDebugStatus(){
     '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
-    '<span>倾角 <b>'+currentCameraTiltValue()+'</b></span>'+
+
     '<span>自由飞行 <b>'+(debugFlightMode?'四向':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>长任务 <b>'+perfLongTasks+' / '+perfWorstLongTask.toFixed(0)+'ms</b></span>'+
@@ -1887,9 +1887,7 @@ window.PaperchalkDebug={
   run:executeDebugCommand,
   get flight(){return debugFlightMode},
   setFlight(value){return setDebugFlightMode(value)},
-  get cameraTilt(){return currentCameraTiltValue()},
-  setCameraTilt(value){return applyDebugCameraTilt(value)},
-  resetCameraTilt(){return resetDebugCameraTilt()},
+  setCameraTilt:applyDebugCameraTilt,
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
