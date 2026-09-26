@@ -13,7 +13,7 @@
 - 村口 NPC：靠近提示，`E` / 手机「聊」交谈
 - 地图出口与地图进度状态
 - 10 格缝布生命条、掉血 / 回血动画
-- 每账号独立存档：位置、血量、背包、破坏物、拾取物、出口进度
+- 每个本地旅人档案独立存档：位置、血量、背包、破坏物、拾取物、出口进度；Schema V3 自动迁移并保留上一个有效备份
 - 游戏内「调试」面板统一管理生命、战斗、碰撞箱、攻击范围、地形 Collider、敌人出生区、Camera 与地图传送
 - Android WebView 调试 APK 构建
 
@@ -34,15 +34,15 @@ https://g2066203208-beep.github.io/paperchalk-world/
 
 ## 回归测试
 
-主分支包含静态 Web Smoke Test 与真实 Chrome Core Runtime Regression，用于验证账号存档、生命 HUD、地图物理、即时战斗、调试面板、背包、地图进度及 NPC 等核心链路。
+主分支包含静态 Web Smoke Test、架构契约测试与真实 Chrome Core Runtime Regression，用于验证本地档案存档、生命 HUD、地图物理、即时战斗、调试面板、背包、地图进度及 NPC 等核心链路。
 
 性能预算现在与核心回归绑定，防止热路径文件、运行时素材和渲染生命周期出现性能倒退。
 
 ## 运行时架构
 
-动态战斗实体开始采用轻量 Sparse-Set ECS；UI、对话和菜单继续使用 DOM retained-mode，PixiJS 8 作为可切换的动态实体 GPU 渲染后端。主游戏 RAF 只在进入世界后运行，离开世界时停止。
+动态战斗实体采用轻量 Sparse-Set ECS，并已拆出 Transform / Health / Combat / AI / Patrol / Renderable 组件源；跨系统副作用通过事件总线解耦；世界图、NPC、敌人原型和物品进入可验证 Content 层。UI、对话和菜单继续使用 DOM retained-mode，PixiJS 8 作为可切换的动态实体 GPU 渲染后端。主游戏 RAF 只在进入世界后运行，离开世界时停止。
 
-详细设计与后续迁移边界见 `docs/ARCHITECTURE.md`。
+详细设计与后续迁移边界见 `docs/ARCHITECTURE.md` 与 `docs/PREPRODUCTION_FREEZE.md`。
 
 
 ## 角色自动动画工具链
