@@ -869,6 +869,8 @@ button{cursor:pointer}
 .production-clean-scene [data-debug-action="enemyNear"],
 .production-clean-scene [data-debug-action="enemyReset"],
 .production-clean-scene [data-debug-action="spawnZones"]{display:none!important}
+.production-no-dev .debug-toggle-btn,
+.production-no-dev .debug-panel{display:none!important}
 
 .camera-controls-btn{
   position:absolute;z-index:33;
@@ -1752,6 +1754,7 @@ button{cursor:pointer}
 .stage.dialogue-active .world-menu-btn,
 .stage.dialogue-active .backpack-open-btn,
 .stage.dialogue-active .world-map-btn,
+.stage.dialogue-active .camera-controls-btn,
 .stage.dialogue-active .debug-toggle-btn{opacity:.12;pointer-events:none}
 
 @media(pointer:coarse){
