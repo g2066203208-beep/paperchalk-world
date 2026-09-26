@@ -579,6 +579,8 @@ try{
 
   // Prototype enemies are not part of the production scene.
   // Clean stage: no authored rocks, platforms, crates or pickups may remain.
+  await page.evaluate(()=>{closeDebugPanel({focus:false});});
+  await page.waitForTimeout(40);
   await page.evaluate(()=>{
     window.PaperchalkCombat.toggleEnemyAi(false);
     window.PaperchalkMap.teleport(1060,{notice:''});
