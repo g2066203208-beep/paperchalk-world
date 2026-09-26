@@ -31,10 +31,10 @@ function render(frame){
   if(!frame||world.classList.contains('scene-interior'))return;
   const cfg=camera.config,p=frame.player,v=frame.viewport;
   world.style.setProperty('--card-grid-x',(-camera.wrap(p.x,cfg.gridSize)).toFixed(2)+'px');
-  world.style.setProperty('--card-grid-z',camera.wrap(p.z,cfg.gridSize).toFixed(2)+'px');
+  world.style.setProperty('--card-camera-y',(Number(p.y)||0).toFixed(2)+'px');
   const wallScale=cfg.baseDepth/(cfg.baseDepth+cfg.wallDepth);
   world.style.setProperty('--card-wall-x',(-camera.wrap(p.x*wallScale,cfg.gridSize)).toFixed(2)+'px');
-  world.style.setProperty('--card-wall-y',camera.wrap((p.y-p.z*.16)*wallScale,cfg.gridSize).toFixed(2)+'px');
+  world.style.setProperty('--card-wall-y',camera.wrap((Number(p.y)||0)*wallScale,cfg.gridSize).toFixed(2)+'px');
 
   if(enemyEls.length!==frame.enemies.length)refreshNodes();
   for(let i=0;i<frame.enemies.length;i++){
@@ -42,7 +42,7 @@ function render(frame){
     if(!data||!el)continue;
     const projected=camera.project({
       worldX:data.x,worldZ:data.z,worldY:0,
-      playerX:p.x,playerZ:p.z,playerY:p.y,
+      playerX:p.x,playerY:p.y,cameraZ:0,
       screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
     });
     applyProjection(el,projected,{xVar:'--enemy-x',bottomVar:'--enemy-bottom',viewportHeight:v.height});
@@ -55,7 +55,7 @@ function render(frame){
     if(!el)continue;
     const projected=camera.project({
       worldX:npc.x,worldZ:npc.z||0,worldY:0,
-      playerX:p.x,playerZ:p.z,playerY:p.y,
+      playerX:p.x,playerY:p.y,cameraZ:0,
       screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
     });
     applyProjection(el,projected,{xVar:'--npc-x',bottomVar:'--npc-bottom',viewportHeight:v.height});
