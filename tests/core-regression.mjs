@@ -1074,30 +1074,35 @@ try{
     'panel open');
 
   const tiltBefore=await page.evaluate(()=>({
-    value:window.PaperchalkDebug.cameraTilt,
-    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,Number(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y').replace('px',''))||112),
+    value:Number(document.getElementById('debugCameraTilt')?.value),
+    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112),
+    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
-  await page.locator('#debugCameraTilt').evaluate(el=>{
-    el.value='70';
-    el.dispatchEvent(new Event('input',{bubbles:true}));
-  });
-  await page.waitForTimeout(100);
+  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='20';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
+  const tilt20=await page.evaluate(()=>({
+    farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY),
+    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112)
+  }));
+  await page.locator('#debugCameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
   const tiltAfter=await page.evaluate(()=>({
-    value:window.PaperchalkDebug.cameraTilt,
+    value:Number(document.getElementById('debugCameraTilt')?.value),
     manual:window.PaperchalkCardCamera.manualHorizonRatio,
     stored:localStorage.getItem('paperchalk.debug.cameraTilt.v1'),
-    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,Number(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y').replace('px',''))||112),
+    horizon:window.PaperchalkCardCamera.getHorizonRatio(innerHeight,112),
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
     skyBottom:document.querySelector('.paper-sky')?.getBoundingClientRect().bottom,
     farY:Number(document.getElementById('cardGroundCanvas')?.dataset.farY)
   }));
-  check('Debug camera tilt slider updates only camera tilt in real time',
-    tiltAfter.value===70&&tiltAfter.stored==='70'&&tiltAfter.manual!==null&&
-    Math.abs(tiltAfter.horizon-tiltBefore.horizon)>.01&&
+  check('Debug camera tilt slider visibly moves the projected horizon immediately',
+    tiltAfter.value===80&&tiltAfter.stored==='80'&&tiltAfter.manual!==null&&
+    Math.abs(tilt20.farY-tiltAfter.farY)>40&&
+    Math.abs(tiltAfter.horizon-tilt20.horizon)>.15&&
     tiltAfter.depths.join(',')===tiltBefore.depths.join(',')&&
     Math.abs(tiltAfter.skyBottom-tiltAfter.farY)<1,
-    JSON.stringify({tiltBefore,tiltAfter}));
+    JSON.stringify({tiltBefore,tilt20,tiltAfter}));
   await page.locator('#debugCameraTiltReset').click();
   await page.waitForTimeout(80);
   const tiltReset=await page.evaluate(()=>({

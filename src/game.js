@@ -1506,11 +1506,11 @@ function updateCameraTiltControls(){
 function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
   const t=Math.round(clamp(Number(v)||0,0,100));CARD_CAMERA.setHorizonRatio(cameraTiltToHorizonRatio(t));
   if(persist)try{localStorage.setItem(DEBUG_CAMERA_TILT_KEY,t)}catch(_){}
-  updateCameraTiltControls();if(sync)window.PaperchalkRuntime?.requestDomSync?.();return t;
+  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return t;
 }
 function resetDebugCameraTilt({sync=true}={}){
   CARD_CAMERA.clearHorizonRatio();try{localStorage.removeItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  updateCameraTiltControls();if(sync)window.PaperchalkRuntime?.requestDomSync?.();return currentCameraTiltValue();
+  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return currentCameraTiltValue();
 }
 function loadDebugCameraTilt(){
   let v=null;try{v=localStorage.getItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
@@ -1532,7 +1532,7 @@ function updateDebugStatus(){
     '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
-    '<span>倾角 <b>'+currentCameraTiltValue()+'</b></span>'+
+
     '<span>自由飞行 <b>'+(debugFlightMode?'四向':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>长任务 <b>'+perfLongTasks+' / '+perfWorstLongTask.toFixed(0)+'ms</b></span>'+
@@ -1887,9 +1887,7 @@ window.PaperchalkDebug={
   run:executeDebugCommand,
   get flight(){return debugFlightMode},
   setFlight(value){return setDebugFlightMode(value)},
-  get cameraTilt(){return currentCameraTiltValue()},
-  setCameraTilt(value){return applyDebugCameraTilt(value)},
-  resetCameraTilt(){return resetDebugCameraTilt()},
+  setCameraTilt:applyDebugCameraTilt,
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
