@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "camera-settings-r51";
+  const BUILD = "formal-scene-r52";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -32,15 +32,14 @@
 </script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=oldtown-r38" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="camera-settings-r51">
-<link rel="stylesheet" href="./styles/game.css?v=camera-settings-r51">
+<meta name="paperchalk-build" content="formal-scene-r52">
+<link rel="stylesheet" href="./styles/game.css?v=formal-scene-r52">
 </head>
 <body>
 
@@ -71,11 +70,11 @@
     <div id="roadSurface" class="road-surface"></div>
     <div id="roadTrack" class="road-track"><div id="roadTile" class="road-tile"></div></div>
   </div>
-  <div class="midground-building-layer" aria-hidden="true">
+  <div class="midground-building-layer" hidden aria-hidden="true">
     <div id="midgroundBuildingTrack" class="midground-building-track">
-      <img id="midgroundApartment" class="midground-apartment"
-           src="./assets/backgrounds/apartment-midground.webp?v=puppet-r1"
-           width="780" height="1040" alt="" decoding="async" loading="eager" fetchpriority="high" draggable="false">
+      <img id="midgroundApartment" class="midground-apartment" hidden
+           data-test-src="./assets/backgrounds/apartment-midground.webp?v=puppet-r1"
+           width="780" height="1040" alt="" decoding="async" loading="lazy" draggable="false">
     </div>
   </div>
   <div class="map-layer" aria-hidden="true">
@@ -96,13 +95,13 @@
   </div>
   <div class="entity-layer" aria-hidden="true">
     <div id="entityTrack" class="entity-track">
-      <div id="enemy" class="enemy" aria-label="纸境游荡者一号">
+      <div id="enemy" class="enemy" hidden aria-label="纸境游荡者一号">
         <div class="enemy-health"><div id="enemyHealthFill" class="enemy-health-fill"></div></div>
-        <img src="./assets/enemies/rag-drifter.svg?v=1" alt="敌人">
+        <img data-test-src="./assets/enemies/rag-drifter.svg?v=1" alt="">
       </div>
-      <div id="enemy2" class="enemy" aria-label="纸境游荡者二号">
+      <div id="enemy2" class="enemy" hidden aria-label="纸境游荡者二号">
         <div class="enemy-health"><div id="enemy2HealthFill" class="enemy-health-fill"></div></div>
-        <img src="./assets/enemies/rag-drifter.svg?v=1" alt="敌人">
+        <img data-test-src="./assets/enemies/rag-drifter.svg?v=1" alt="">
       </div>
     </div>
   </div>
@@ -113,9 +112,9 @@
   <div class="world-layer front-layer"><div class="prop-track" id="frontTrack"></div></div>
   <div id="cameraLeftDebug" class="camera-debug-line" style="left:50%"><span class="camera-debug-label">CAMERA FOLLOW</span></div>
   <div id="mapNotice" class="map-notice" role="status" aria-live="polite"></div>
-  <div id="apartmentDoorPrompt" class="door-interact-prompt" aria-hidden="true">E / 开门</div>
+  <div id="apartmentDoorPrompt" class="door-interact-prompt" hidden aria-hidden="true">E / 开门</div>
 
-  <section id="interiorScene" class="interior-scene" aria-hidden="true" aria-label="公寓室内">
+  <section id="interiorScene" class="interior-scene" hidden aria-hidden="true" aria-label="公寓室内">
     <div id="interiorFarLayer" class="interior-depth-layer interior-far-layer" aria-hidden="true">
       <div class="interior-room-shell paper-stage-piece"></div>
       <div class="interior-wall interior-wall-left paper-stage-piece"></div>
@@ -181,6 +180,33 @@
     <img src="./assets/ui/inventory-v2/bag-icon.png?v=2" alt="">
   </button>
   <button id="worldMapBtn" class="world-map-btn" type="button" aria-label="打开大地图">地图</button>
+
+  <button id="cameraControlsBtn" class="camera-controls-btn" type="button"
+          aria-controls="cameraControlsPanel" aria-expanded="false">镜头</button>
+  <section id="cameraControlsPanel" class="camera-controls-panel" aria-hidden="true" aria-label="镜头调整">
+    <div class="camera-controls-head">
+      <strong>镜头调整</strong>
+      <button id="cameraControlsClose" class="camera-controls-close" type="button" aria-label="关闭镜头调整">×</button>
+    </div>
+    <label class="camera-control-row" for="settingCameraTilt">
+      <span>俯视角 <b id="settingCameraTiltValue">13.1°</b></span>
+      <input id="settingCameraTilt" type="range" min="0" max="80" step="0.1" value="13.1"
+             aria-label="摄像机俯视角，0到80度">
+      <small>绕玩家所在中景主线旋转</small>
+    </label>
+    <label class="camera-control-row" for="settingCameraHeight">
+      <span>高度 <b id="settingCameraHeightValue">4.1 m</b></span>
+      <input id="settingCameraHeight" type="range" min="1" max="10" step="0.1" value="4.1"
+             aria-label="摄像机高度，1到10米">
+    </label>
+    <label class="camera-control-row" for="settingCameraDistance">
+      <span>距离 <b id="settingCameraDistanceValue">30.0 m</b></span>
+      <input id="settingCameraDistance" type="range" min="6.5" max="60" step="0.5" value="30"
+             aria-label="镜头到玩家中景面的距离，6.5到60米">
+    </label>
+    <button id="settingCameraReset" class="camera-controls-reset" type="button">恢复默认镜头</button>
+    <div id="cameraControlsStatus" class="camera-controls-status" role="status" aria-live="polite"></div>
+  </section>
 
   <button id="debugToggleBtn" class="debug-toggle-btn"
           aria-controls="debugPanel" aria-expanded="false">调试</button>
@@ -388,7 +414,7 @@
       <div class="auth-wrap">
         <div class="auth-card">
           <h2 class="auth-title">设置</h2>
-          <p class="auth-sub">这些设置会保存在当前设备。摄像机的俯视角、高度和距离互相独立。</p>
+          <p class="auth-sub">这些设置会保存在当前设备。</p>
           <div class="settings-list">
             <label class="setting-row" for="settingLanguage"><span>界面语言</span>
               <select id="settingLanguage" aria-label="界面语言">
@@ -408,28 +434,7 @@
               <input id="settingLandscape" type="checkbox" aria-label="网页横屏优先">
             </label>
 
-            <div class="setting-camera-group" aria-label="摄像机设置">
-              <div class="setting-camera-title">摄像机</div>
-              <label class="setting-camera-row" for="settingCameraTilt">
-                <span>俯视角 <b id="settingCameraTiltValue">13.1°</b></span>
-                <input id="settingCameraTilt" type="range" min="0" max="80" step="0.1" value="13.1"
-                       aria-label="摄像机俯视角，0到80度">
-                <small>绕中景主线旋转，不改变高度与镜头距离</small>
-              </label>
-              <label class="setting-camera-row" for="settingCameraHeight">
-                <span>摄像机高度 <b id="settingCameraHeightValue">4.1 m</b></span>
-                <input id="settingCameraHeight" type="range" min="1" max="10" step="0.1" value="4.1"
-                       aria-label="摄像机高度，1到10米">
-                <small>真实尺度：128px = 1m</small>
-              </label>
-              <label class="setting-camera-row" for="settingCameraDistance">
-                <span>镜头距离 <b id="settingCameraDistanceValue">30.0 m</b></span>
-                <input id="settingCameraDistance" type="range" min="6.5" max="60" step="0.5" value="30"
-                       aria-label="镜头到玩家中景面的距离，6.5到60米">
-                <small>越小越靠近玩家，越大越拉远</small>
-              </label>
-              <button id="settingCameraReset" class="paper-btn ghost setting-camera-reset" type="button">恢复默认镜头</button>
-            </div>
+
           </div>
           <div id="settingsStatus" class="settings-status" role="status" aria-live="polite"></div>
         </div>
@@ -443,14 +448,14 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=camera-settings-r51"></script>
+<script src="./src/core/card-camera.js?v=formal-scene-r52"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
-<script src="./src/content/game-content.js?v=1"></script>
+<script src="./src/content/game-content.js?v=formal-scene-r52"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
-<script src="./src/game.js?v=camera-settings-r51"></script>
-<script src="./src/renderers/dom-card-projection.js?v=camera-settings-r51"></script>
-<script src="./src/camera-settings.js?v=camera-settings-r51"></script>
+<script src="./src/game.js?v=formal-scene-r52"></script>
+<script src="./src/renderers/dom-card-projection.js?v=formal-scene-r52"></script>
+<script src="./src/camera-settings.js?v=formal-scene-r52"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=canvas-cull-r41"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=camera-settings-r51"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=formal-scene-r52"></script>
 </body>
 </html>
