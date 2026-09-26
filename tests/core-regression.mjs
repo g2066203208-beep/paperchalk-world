@@ -53,7 +53,7 @@ async function healthState(page){
 }
 async function save(page,account){
   return page.evaluate(a=>{
-    const raw=localStorage.getItem('paperchalk.save.v2.'+encodeURIComponent(a));
+    const raw=localStorage.getItem('paperchalk.save.v3.'+encodeURIComponent(a));
     return raw?JSON.parse(raw):null;
   },account);
 }
