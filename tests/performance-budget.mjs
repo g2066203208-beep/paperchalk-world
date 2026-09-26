@@ -18,12 +18,14 @@ const buildingPools=read('src/content/building-pools.js');
 const domCardRenderer=read('src/renderers/dom-card-projection.js');
 const oldTownRenderer=read('src/renderers/oldtown-building-layer.js');
 const renderer=read('src/renderers/pixi-dynamic-renderer.mjs');
+const debugCamera=read('src/debug-camera-controls.js');
 const android=read('android-app/app/src/main/java/com/paperchalk/world/MainActivity.java');
 
 const budgets={
   'index.html':40000,
   'styles/game.css':120000,
   'src/game.js':180000,
+  'src/debug-camera-controls.js':5000,
   'src/core/ecs-runtime.js':12000,
   'src/core/event-bus.js':6000,
   'src/core/game-state.js':5000,
@@ -89,6 +91,7 @@ assert(oldTownRenderer.includes("function shuffled(rowIndex)"),'Seeded old-town 
 assert(oldTownRenderer.includes("runtime.subscribe(render)"),'Old-town layer is not lifecycle/runtime driven');
 assert(oldTownRenderer.includes("worldHalf")&&oldTownRenderer.includes("coarseCulled"),'Old-town coarse visibility culling missing');
 assert(renderer.includes("coarseCardVisible"),'Pixi renderer coarse visibility culling missing');
+assert(debugCamera.includes("PaperchalkDebugCamera")&&debugCamera.includes("setAngle")&&debugCamera.includes("setHeight"),'Standalone camera debug controller missing');
 assert(css.includes(".oldtown-building-layer")&&css.includes("R38 OLD-TOWN BUILDING POOL"),'Old-town far-midground CSS missing');
 assert(!html.includes("atlas-r38-b64/"),'Temporary atlas base64 chunks leaked into runtime');
 
