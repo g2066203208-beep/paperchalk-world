@@ -41,6 +41,7 @@ const stats={
   maxRenderMs:0,
   playerScreenX:0,
   playerWorldX:0,
+  playerWorldZ:0,
   playerPuppetReady:false,
   playerPuppetMode:'legacy',
   playerPuppetLayers:0,
@@ -83,6 +84,28 @@ function playerVisualSize(){
   return {
     w:Number(size?.w)||104,
     h:Number(size?.h)||156
+  };
+}
+function projectCard(frame,x,z=0,y=0){
+  const cfg=runtime?.worldData?.cardProjection||{};
+  const baseDepth=Number(cfg.baseDepth)||900;
+  const minDepth=Number(cfg.minDepth)||96;
+  const maxDepth=Number(cfg.maxDepth)||6400;
+  const horizonRatio=Number(cfg.horizonRatio)||.40;
+  const relativeZ=(Number(z)||0)-(Number(frame.player?.z)||0);
+  const depth=baseDepth+relativeZ;
+  if(depth<=minDepth)return {visible:false,x:0,y:0,scale:0,depth};
+  const scale=baseDepth/depth;
+  const v=frame.viewport;
+  const horizonY=v.height*horizonRatio;
+  const footY=v.height-v.groundY;
+  const cameraHeight=footY-horizonY;
+  return {
+    visible:depth<maxDepth&&scale>.12&&scale<5,
+    x:(Number(frame.player?.screenX)||v.width*.5)+((Number(x)||0)-(Number(frame.player?.x)||0))*scale,
+    y:horizonY+(cameraHeight-(Number(y)||0))*scale,
+    scale,
+    depth
   };
 }
 function playerActionMeta(state){
@@ -208,6 +231,7 @@ function renderPlayer(frame,now){
     stats.playerDisplayH=Number(node.puppet.stats?.displayH)||target.h;
     stats.playerScreenX=p.screenX;
     stats.playerWorldX=p.x;
+  stats.playerWorldZ=Number(p.z)||0;
     return;
   }
   if(action!==node.action&&node.textures[action]){
@@ -258,15 +282,16 @@ function renderPlayer(frame,now){
 
   stats.playerScreenX=p.screenX;
   stats.playerWorldX=p.x;
+  stats.playerWorldZ=Number(p.z)||0;
 }
 function renderEnemies(frame,now){
-  const v=frame.viewport,cameraX=frame.camera.x;
+  const v=frame.viewport;
   let rendered=0;
   for(let i=0;i<enemyNodes.length;i++){
     const data=frame.enemies[i],node=enemyNodes[i];
     if(!data||!node){continue}
-    const screenX=data.x-cameraX;
-    const inView=screenX>-180&&screenX<v.width+180;
+    const projection=projectCard(frame,data.x,data.z||0,0);
+    const inView=projection.visible&&projection.x>-220&&projection.x<v.width+220&&projection.y>-220&&projection.y<v.height+220;
     node.root.visible=inView;
     if(!inView)continue;
     rendered++;
@@ -286,7 +311,8 @@ function renderEnemies(frame,now){
       rotation-=data.facing*.06*(data.hitstun/.22);
     }
 
-    node.root.position.set(screenX+offsetX,v.height-v.groundY+frame.player.y+bob);
+    node.root.position.set(projection.x+offsetX,projection.y+bob);
+    node.root.scale.set(projection.scale,projection.scale);
     node.sprite.scale.x=Math.abs(node.scale.x)*data.facing;
     node.sprite.scale.y=Math.abs(node.scale.y);
     node.root.alpha=data.alive?1:.18;
