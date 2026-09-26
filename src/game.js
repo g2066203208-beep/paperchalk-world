@@ -4063,7 +4063,7 @@ function openUI(fromWorld=false){
   showPage('menu');
   uiShell.classList.remove('is-hidden');
   uiShell.classList.remove('board-enter');
-  window.PaperchalkEvents?.emit('world:left',{reason:fromWorld?'menu':'shell'});
+  if(fromWorld)window.PaperchalkEvents?.emit('world:left',{reason:'menu'});
   window.dispatchEvent(new CustomEvent('paperchalk-world-leave'));
 }
 function enterWorld(){
