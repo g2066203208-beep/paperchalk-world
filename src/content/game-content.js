@@ -62,6 +62,10 @@ const content={
       }
     }
   ],
+  enemySpawns:[
+    {id:'enemy-1',archetype:'rag-drifter',x:2140,patrolMin:2010,patrolMax:2290},
+    {id:'enemy-2',archetype:'rag-drifter',x:4780,patrolMin:4680,patrolMax:4920}
+  ],
   enemyArchetypes:{
     'rag-drifter':{
       id:'rag-drifter',
@@ -97,6 +101,11 @@ function validate(value=content){
     const nodeIds=assertUnique(value.world.nodes,'world.nodes');
     assertUnique(value.world.routes,'world.routes');
     assertUnique(value.npcs,'npcs');
+    assertUnique(value.enemySpawns,'enemySpawns');
+    const enemyTypeIds=new Set(Object.keys(value.enemyArchetypes));
+    for(const spawn of value.enemySpawns){
+      if(!enemyTypeIds.has(spawn.archetype))errors.push('enemy spawn '+spawn.id+' missing archetype '+spawn.archetype);
+    }
     for(const route of value.world.routes){
       if(!nodeIds.has(route.from))errors.push('route '+route.id+' missing from node '+route.from);
       if(!nodeIds.has(route.to))errors.push('route '+route.id+' missing to node '+route.to);
