@@ -650,6 +650,30 @@ try{
     cameraSurface.open&&cameraSurface.expanded==='true'&&!cameraSurface.inDebug&&!cameraSurface.inSettings&&cameraSurface.controls===3,
     JSON.stringify(cameraSurface));
 
+  await page.setViewportSize({width:900,height:380});
+  await page.waitForTimeout(160);
+  const cameraScroll=await page.evaluate(()=>{
+    const panel=document.getElementById('cameraControlPanel');
+    const distance=document.getElementById('cameraDistance');
+    const before={clientHeight:panel.clientHeight,scrollHeight:panel.scrollHeight,scrollTop:panel.scrollTop};
+    panel.scrollTop=panel.scrollHeight;
+    const pr=panel.getBoundingClientRect(),dr=distance.getBoundingClientRect();
+    return {
+      ...before,
+      afterScrollTop:panel.scrollTop,
+      overflowY:getComputedStyle(panel).overflowY,
+      distanceVisible:dr.top>=pr.top-1&&dr.bottom<=pr.bottom+1,
+      panelBottom:pr.bottom,
+      viewportHeight:innerHeight
+    };
+  });
+  check('Camera panel scrolls on short landscape screens so the distance control is reachable',
+    cameraScroll.scrollHeight>cameraScroll.clientHeight&&cameraScroll.afterScrollTop>0&&
+    cameraScroll.overflowY==='auto'&&cameraScroll.distanceVisible&&cameraScroll.panelBottom<=cameraScroll.viewportHeight+1,
+    JSON.stringify(cameraScroll));
+  await page.setViewportSize({width:1440,height:900});
+  await page.waitForTimeout(180);
+
   const cameraBefore=await page.evaluate(()=>({
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
     maxTilt:Number(document.getElementById('cameraTilt')?.max)
@@ -832,7 +856,7 @@ try{
     JSON.stringify(compositorPlayer));
 
   const poolBefore=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  await page.evaluate(()=>window.PaperchalkMap.teleport(9000,{notice:''}));
+  await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),poolBefore.visualOriginX+12000);
   await page.waitForTimeout(100);
   const poolFirstVisit=await page.evaluate(()=>window.PaperchalkDebug.perf());
   await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),moved.playerWorldX);
