@@ -194,7 +194,7 @@ try{
     const actor=document.querySelector('.actor').getBoundingClientRect();
     const floor=document.querySelector('.paper-stage-floor');
     const floorRect=floor.getBoundingClientRect();
-    const matrix=new DOMMatrix(getComputedStyle(floor).transform);
+    const floorStyle=getComputedStyle(floor);
     const snap=window.PaperchalkRuntime.getSnapshot();
     return {
       player:window.PaperchalkCombat.player,
@@ -202,7 +202,7 @@ try{
       near:window.PaperchalkMap.project(760,0,0),
       far:window.PaperchalkMap.project(760,600,0),
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      floorMatrixY:matrix.m42,
+      floorCssTop:Number.parseFloat(floorStyle.top),
       floorTop:floorRect.top,
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
@@ -221,11 +221,11 @@ try{
     const actor=document.querySelector('.actor').getBoundingClientRect();
     const floor=document.querySelector('.paper-stage-floor');
     const floorRect=floor.getBoundingClientRect();
-    const matrix=new DOMMatrix(getComputedStyle(floor).transform);
+    const floorStyle=getComputedStyle(floor);
     return {
       player:window.PaperchalkCombat.player,
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      floorMatrixY:matrix.m42,
+      floorCssTop:Number.parseFloat(floorStyle.top),
       floorTop:floorRect.top,
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
@@ -236,7 +236,7 @@ try{
     JSON.stringify(xyCameraRaised));
   check('Rising in Y moves the perspective ground downward',
     Number.parseFloat(xyCameraRaised.cameraY)>20&&
-    xyCameraRaised.floorMatrixY>xyCameraBefore.floorMatrixY+10&&
+    xyCameraRaised.floorCssTop>xyCameraBefore.floorCssTop+10&&
     xyCameraRaised.floorTop>xyCameraBefore.floorTop+10,
     JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised}));
   check('XY camera keeps the protagonist fixed while the world moves vertically',
