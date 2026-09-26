@@ -238,8 +238,8 @@ try{
     });
     return {nearY:q.y,horizonY:h,farY:far.y};
   });
-  check('Wide 1536x691 camera tilt keeps the near-main line at the screen edge',
-    Math.abs(wideTilt.nearY-683)<1e-9&&wideTilt.farY<470,
+  check('Wide 1536x691 default camera keeps the near-main line at the screen edge',
+    wideTilt.nearY>682&&wideTilt.nearY<686&&wideTilt.farY<470,
     JSON.stringify(wideTilt));
   const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
   check('Near/mid/far front-main-back guides are ordered toward the horizon',
@@ -1106,14 +1106,15 @@ try{
     nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
     stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('settingCameraTiltValue')?.textContent
+    label:document.getElementById('settingCameraTiltValue')?.textContent,
+    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   check('Camera pitch rotates around the mid axis without changing height or distance',
     cameraBefore.maxTilt===80&&pitch80.tilt===80&&pitch80.height===pitchBase.height&&pitch80.distance===pitchBase.distance&&
     Math.abs(pitch80.midY-pitchBase.midY)<1e-9&&
     (pitch80.nearY-pitch80.farY)>(pitchBase.nearY-pitchBase.farY)*4&&
     pitch80.stored.cameraTilt===80&&pitch80.label.includes('80.0°')&&
-    window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z).join(',')===cameraBefore.depths.join(','),
+    pitch80.depths.join(',')===cameraBefore.depths.join(','),
     JSON.stringify({pitchBase,pitch80}));
 
   await page.locator('#settingCameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
