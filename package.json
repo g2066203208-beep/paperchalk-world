@@ -1,0 +1,15 @@
+{
+  "name": "paperchalk-world",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paperchalk World browser game runtime",
+  "scripts": {
+    "test": "node tests/web-smoke.js && node tests/core-regression.mjs && node tests/performance-budget.mjs && node tests/preproduction-architecture.mjs",
+    "test:architecture": "node tests/preproduction-architecture.mjs",
+    "test:core": "node tests/core-regression.mjs",
+    "test:performance": "node tests/performance-budget.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

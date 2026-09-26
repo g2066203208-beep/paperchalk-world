@@ -24,46 +24,10 @@ const PLAYER_ACTION_META=Object.freeze({
   'jump-up':Object.freeze({scale:.88,sourceFacing:1}),
   'jump-down':Object.freeze({scale:.86,sourceFacing:1})
 });
-const WORLD_NODES=[
-  {id:'village',name:'A村',x:170,y:650,kind:'village'},
-  {id:'meadowFork',name:'风草岔口',x:450,y:640,kind:'junction'},
-  {id:'forestGate',name:'旧林入口',x:720,y:350,kind:'forest'},
-  {id:'riverbank',name:'枯溪岸',x:740,y:900,kind:'river'},
-  {id:'stonePass',name:'浅石谷',x:1010,y:620,kind:'mountain'},
-  {id:'oldRuins',name:'古纸遗迹',x:1240,y:170,kind:'ruins'},
-  {id:'windmill',name:'风车丘',x:1320,y:430,kind:'windmill'},
-  {id:'caveMouth',name:'回声洞口',x:1070,y:1020,kind:'cave'},
-  {id:'marsh',name:'雾泽',x:1450,y:960,kind:'marsh'},
-  {id:'highland',name:'长草台地',x:1650,y:620,kind:'highland'},
-  {id:'brokenBridge',name:'断桥',x:1840,y:900,kind:'bridge'},
-  {id:'pineRidge',name:'雾松岭',x:1890,y:330,kind:'forest'},
-  {id:'northCamp',name:'北野营地',x:2220,y:160,kind:'camp'},
-  {id:'tower',name:'旧塔原',x:2230,y:590,kind:'tower'},
-  {id:'sunkenCity',name:'沉纸城',x:2230,y:1020,kind:'ruins'},
-  {id:'farShrine',name:'远岬祭坛',x:2540,y:560,kind:'shrine'}
-];
-const WORLD_ROUTES=[
-  {id:'village-road',name:'A村外道路',from:'village',to:'meadowFork',biome:'meadow',bend:0},
-  {id:'wind-grass-slope',name:'风草坡',from:'meadowFork',to:'forestGate',biome:'meadow',bend:-38},
-  {id:'shallow-creek-road',name:'浅溪旧道',from:'meadowFork',to:'riverbank',biome:'river',bend:42},
-  {id:'old-forest-edge',name:'旧林边',from:'forestGate',to:'stonePass',biome:'forest',bend:36},
-  {id:'dry-creek-bank',name:'枯溪岸',from:'riverbank',to:'stonePass',biome:'river',bend:-28},
-  {id:'canopy-road',name:'林冠古道',from:'forestGate',to:'oldRuins',biome:'forest',bend:-46},
-  {id:'ruin-high-slope',name:'遗迹高坡',from:'oldRuins',to:'windmill',biome:'ruins',bend:24},
-  {id:'shallow-stone-valley',name:'浅石谷',from:'stonePass',to:'windmill',biome:'mountain',bend:-18},
-  {id:'lower-rock-fork',name:'下岩岔路',from:'stonePass',to:'caveMouth',biome:'cave',bend:52},
-  {id:'echo-cave-way',name:'回声洞道',from:'caveMouth',to:'marsh',biome:'cave',bend:-24},
-  {id:'reed-lowland',name:'芦苇低地',from:'riverbank',to:'marsh',biome:'marsh',bend:38},
-  {id:'windmill-waste-road',name:'风车荒径',from:'windmill',to:'highland',biome:'meadow',bend:18},
-  {id:'mist-marsh-boardwalk',name:'雾泽栈道',from:'marsh',to:'highland',biome:'marsh',bend:-30},
-  {id:'north-wind-slope',name:'北风坡',from:'windmill',to:'pineRidge',biome:'highland',bend:-52},
-  {id:'long-grass-tableland',name:'长草台地',from:'highland',to:'pineRidge',biome:'highland',bend:-18},
-  {id:'broken-bridge-road',name:'断桥旧道',from:'highland',to:'brokenBridge',biome:'river',bend:34},
-  {id:'mist-pine-ridge',name:'雾松岭',from:'pineRidge',to:'northCamp',biome:'forest',bend:-24},
-  {id:'old-post-road',name:'旧驿道',from:'pineRidge',to:'tower',biome:'ruins',bend:32},
-  {id:'sunken-city-waterway',name:'沉城水路',from:'brokenBridge',to:'sunkenCity',biome:'marsh',bend:26},
-  {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
-];
+const AUTHORED_CONTENT=window.PaperchalkContent;
+if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
+const WORLD_NODES=AUTHORED_CONTENT.world.nodes.map(node=>({...node}));
+const WORLD_ROUTES=AUTHORED_CONTENT.world.routes.map(route=>({...route}));
 const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
 WORLD_ROUTES.forEach((r,i)=>r.index=i);
 function worldZoneIndexAt(x){return Math.max(0,Math.min(WORLD_ROUTES.length-1,Math.floor(Math.max(0,x)/WORLD_ZONE_WIDTH)))}
@@ -111,26 +75,14 @@ const MAP_PICKUPS=[
   {id:'herb-1',x:3330,y:108,type:'herb'},
   {id:'herb-crate',x:2434,y:28,type:'herb',requiresBroken:'crate-1'}
 ];
-const MAP_NPCS=[
-  {
-    id:'npc-phone-girl',x:760,name:'？？？',portrait:'phone-girl-offline',
-    sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
-    dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
-    text:'……你好。',
-    dialogue:{
-      opening:'……你好。',
-      choices:[
-        {text:'你是谁？',reply:'……暂时不重要。'},
-        {text:'你在看手机？',reply:'嗯。只是随便看看。'},
-        {text:'我先走了。',reply:'好。'}
-      ]
-    }
-  }
-];
-const ENEMY_SPAWNS=[
-  {id:'enemy-1',x:2140,patrolMin:2010,patrolMax:2290},
-  {id:'enemy-2',x:4780,patrolMin:4680,patrolMax:4920}
-];
+const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
+  ...npc,
+  dialogue:npc.dialogue?{
+    ...npc.dialogue,
+    choices:Array.isArray(npc.dialogue.choices)?npc.dialogue.choices.map(choice=>({...choice})):[]
+  }:null
+}));
+const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
 for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
   const base=zone*WORLD_ZONE_WIDTH;
   const offset=1750+(zone%4)*720;
@@ -1286,11 +1238,37 @@ const GRAVITY=1850,JUMP_SPEED=820;
 const COYOTE_TIME=.12,JUMP_BUFFER_TIME=.14,AUTO_MANTLE_WINDOW=72;
 const PLAYER_HURT={w:54,standH:108,crouchH:78,ox:-27,oy:8};
 const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
-const ENEMY_MAX_HP=3;
+const RAG_DRIFTER=AUTHORED_CONTENT.enemyArchetypes['rag-drifter'];
+const ENEMY_MAX_HP=RAG_DRIFTER.maxHp;
 function createEnemyState(id,el,healthEl){
-  return {id,el,healthEl,x:0,spawnX:0,patrolMin:0,patrolMax:0,hp:ENEMY_MAX_HP,alive:true,facing:-1,state:'idle',
-    attackTimer:0,attackCooldown:0,hitstun:0,spawned:false,account:null,patrolDir:-1,
-    _visible:null,_renderX:null,_renderFacing:null,_renderHp:null,_renderAlive:null};
+  const e={
+    id,el,healthEl,spawned:false,account:null,facing:-1,
+    transform:{x:0},
+    health:{current:ENEMY_MAX_HP,max:ENEMY_MAX_HP,alive:true},
+    combat:{attackTimer:0,attackCooldown:0,hitstun:0},
+    ai:{state:'idle',enabled:true},
+    patrol:{spawnX:0,min:0,max:0,dir:-1},
+    renderable:{el,healthEl,visible:null,renderX:null,renderFacing:null,renderHp:null,renderAlive:null}
+  };
+  Object.defineProperties(e,{
+    x:{enumerable:true,get(){return e.transform.x},set(v){e.transform.x=v}},
+    hp:{enumerable:true,get(){return e.health.current},set(v){e.health.current=v}},
+    alive:{enumerable:true,get(){return e.health.alive},set(v){e.health.alive=!!v}},
+    state:{enumerable:true,get(){return e.ai.state},set(v){e.ai.state=v}},
+    attackTimer:{enumerable:true,get(){return e.combat.attackTimer},set(v){e.combat.attackTimer=v}},
+    attackCooldown:{enumerable:true,get(){return e.combat.attackCooldown},set(v){e.combat.attackCooldown=v}},
+    hitstun:{enumerable:true,get(){return e.combat.hitstun},set(v){e.combat.hitstun=v}},
+    spawnX:{enumerable:true,get(){return e.patrol.spawnX},set(v){e.patrol.spawnX=v}},
+    patrolMin:{enumerable:true,get(){return e.patrol.min},set(v){e.patrol.min=v}},
+    patrolMax:{enumerable:true,get(){return e.patrol.max},set(v){e.patrol.max=v}},
+    patrolDir:{enumerable:true,get(){return e.patrol.dir},set(v){e.patrol.dir=v}},
+    _visible:{get(){return e.renderable.visible},set(v){e.renderable.visible=v}},
+    _renderX:{get(){return e.renderable.renderX},set(v){e.renderable.renderX=v}},
+    _renderFacing:{get(){return e.renderable.renderFacing},set(v){e.renderable.renderFacing=v}},
+    _renderHp:{get(){return e.renderable.renderHp},set(v){e.renderable.renderHp=v}},
+    _renderAlive:{get(){return e.renderable.renderAlive},set(v){e.renderable.renderAlive=v}}
+  });
+  return e;
 }
 const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
 const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
@@ -1307,7 +1285,7 @@ for(let i=2;i<ENEMY_SPAWNS.length;i++){
   fill.className='enemy-health-fill';
   health.appendChild(fill);
   const img=document.createElement('img');
-  img.src='./assets/enemies/rag-drifter.svg?v=1';
+  img.src=RAG_DRIFTER.asset;
   img.alt='敌人';
   el.appendChild(health);
   el.appendChild(img);
@@ -1324,9 +1302,13 @@ function registerCombatEntity(e){
   if(!combatEcs||!e)return null;
   const entity=combatEcs.create({
     enemy:e,
-    combatant:true,
-    ai:true,
-    renderable:true
+    transform:e.transform,
+    health:e.health,
+    combat:e.combat,
+    ai:e.ai,
+    patrol:e.patrol,
+    renderable:e.renderable,
+    combatant:true
   });
   e.entityId=entity;
   enemyEntityById.set(e.id,entity);
@@ -1335,7 +1317,7 @@ function registerCombatEntity(e){
 enemies.forEach(registerCombatEntity);
 if(combatEcs){
   combatEcs.registerSystem('enemy-ai',{
-    require:['enemy','ai'],
+    require:['enemy','transform','health','combat','ai','patrol'],
     phase:'fixed',
     priority:20,
     update(entity,world,dt,context){
@@ -1434,6 +1416,11 @@ function setPlayerHp(value,{persist=true,animate=true}={}){
   const previousHp=playerHp;
   playerHp=clampPlayerHp(value);
   renderPlayerHealth(previousHp,animate);
+  if(playerHp!==previousHp){
+    window.PaperchalkEvents?.emit('player:health-changed',{
+      previous:previousHp,current:playerHp,delta:playerHp-previousHp,max:PLAYER_MAX_HP
+    });
+  }
   if(persist && typeof saveWorldState==='function')saveWorldState();
   return playerHp;
 }
@@ -2242,10 +2229,17 @@ function resetEnemy(offset=360){
 function placeEnemyNear(distance=210){resetEnemy(distance);enemy.attackCooldown=.55;renderWorld()}
 function damageEnemy(e,amount=1,knockDir=facing){
   if(!e.alive||e.hitstun>0)return false;
+  const previousHp=e.hp;
   e.hp=Math.max(0,e.hp-amount);e.hitstun=.22;e.el.classList.add('is-hit');
   setTimeout(()=>e.el.classList.remove('is-hit'),220);
   e.x=clamp(e.x+knockDir*34,40,MAP_WIDTH-40);
-  if(e.hp<=0){e.alive=false;e.state='dead';e.el.classList.remove('is-moving','is-attacking');e.el.classList.add('is-dead')}
+  window.PaperchalkEvents?.emit('combat:damage',{
+    source:'player',target:e.id,amount:previousHp-e.hp,remainingHp:e.hp
+  });
+  if(e.hp<=0){
+    e.alive=false;e.state='dead';e.el.classList.remove('is-moving','is-attacking');e.el.classList.add('is-dead');
+    window.PaperchalkEvents?.emit('entity:dead',{entityId:e.entityId||null,id:e.id,kind:'enemy',archetype:'rag-drifter'});
+  }
   if(!pixiDynamicActive())setEnemyVisual(e);return true;
 }
 function enemyCanMove(e,dx){
@@ -2270,7 +2264,7 @@ function updateEnemy(e,dt,interactive){
   if(!interactive||e.hitstun>0)return;
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
   const dx=playerWorldX-e.x,dist=Math.abs(dx);
-  if(dist>1650){
+  if(dist>RAG_DRIFTER.sleepRange){
     if(e.state!=='sleep'){
       e.state='sleep';
       e.el.classList.remove('is-moving','is-attacking');
@@ -2285,18 +2279,18 @@ function updateEnemy(e,dt,interactive){
       damagePlayer(1);playerInvuln=.72;
       if(!pixiDynamicActive())actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
-  }else if(dist<84&&e.attackCooldown<=0){
+  }else if(dist<RAG_DRIFTER.attackRange&&e.attackCooldown<=0){
     e.state='attack';e.attackTimer=.34;e.el.classList.remove('is-moving');e.el.classList.add('is-attacking');
-  }else if(dist<=700&&dist>74){
+  }else if(dist<=RAG_DRIFTER.aggroRange&&dist>74){
     e.state='chase';e.el.classList.add('is-moving');
-    const step=Math.sign(dx)*Math.min(118*dt,Math.max(0,dist-72));
+    const step=Math.sign(dx)*Math.min(RAG_DRIFTER.chaseSpeed*dt,Math.max(0,dist-72));
     if(!moveEnemy(e,step)){e.state='blocked';e.el.classList.remove('is-moving')}
   }else{
     e.state='patrol';e.el.classList.add('is-moving');
     if(e.x<=e.patrolMin)e.patrolDir=1;
     if(e.x>=e.patrolMax)e.patrolDir=-1;
     e.facing=e.patrolDir;
-    if(!moveEnemy(e,e.patrolDir*48*dt))e.patrolDir*=-1;
+    if(!moveEnemy(e,e.patrolDir*RAG_DRIFTER.patrolSpeed*dt))e.patrolDir*=-1;
   }
 }
 function breakMapObject(id){
@@ -2319,11 +2313,14 @@ function addInventoryItem(item){
 }
 function collectPickup(p){
   if(mapState.collected.has(p.id))return false;
-  const item=p.type==='herb'?{id:'rough-herb',name:'粗纸药草',desc:'揉碎后能恢复 2 点生命。',count:1,weight:.1,consumable:true,action:'heal',heal:2}:null;
+  const herb=AUTHORED_CONTENT.items['rough-herb'];
+  const item=p.type==='herb'?{...herb,count:1}:null;
   if(!item||!addInventoryItem(item))return false;
   mapState.collected.add(p.id);markRuntimeMapChanged();
   const el=mapObjectTrack.querySelector('[data-pickup-id="'+p.id+'"]');if(el)el.classList.add('is-collected');
-  showMapNotice('拾取：'+item.name);saveWorldState();return true;
+  showMapNotice('拾取：'+item.name);
+  window.PaperchalkEvents?.emit('world:pickup-collected',{pickupId:p.id,itemId:item.id,count:item.count||1});
+  saveWorldState();return true;
 }
 let dialogueState={
   open:false,closing:false,npc:null,phase:'',choiceIndex:-1
@@ -3847,7 +3844,8 @@ const authMsg=document.getElementById('authMsg');
 const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
 const KEY_SAVE_LEGACY='paperchalk.save.v1';
-const KEY_SAVE_PREFIX='paperchalk.save.v2.';
+const KEY_SAVE_V2_PREFIX='paperchalk.save.v2.';
+const KEY_SAVE_PREFIX='paperchalk.save.v3.';
 const KEY_SETTINGS='paperchalk.settings.v1';
 
 const memoryStore={};
@@ -3861,6 +3859,7 @@ function storageSet(key,value){
 function storageRemove(key){
   try{localStorage.removeItem(key)}catch{delete memoryStore[key]}
 }
+const SAVE_STORAGE={get:storageGet,set:storageSet,remove:storageRemove};
 function getUsers(){
   try{return JSON.parse(storageGet(KEY_USERS)||'{}')}catch{return{}}
 }
@@ -3868,11 +3867,13 @@ function getSession(){
   try{return JSON.parse(storageGet(KEY_SESSION)||'null')}catch{return null}
 }
 function setSession(v){return storageSet(KEY_SESSION,JSON.stringify(v))}
-function accountSaveKey(account){
-  return KEY_SAVE_PREFIX+encodeURIComponent(String(account||''));
+function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
+  return prefix+encodeURIComponent(String(account||''));
 }
 function defaultSave(session){
   return {
+    schemaVersion:3,
+    gameVersion:window.PaperchalkSaveRuntime?.gameVersion||'0.1.0-preprod',
     account:session.account,
     location:'A村外道路',
     createdAt:Date.now(),
@@ -3886,32 +3887,52 @@ function defaultSave(session){
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
 }
+function importLegacySave(session,targetKey){
+  const candidateKeys=[accountSaveKey(session.account,KEY_SAVE_V2_PREFIX),KEY_SAVE_LEGACY];
+  for(const oldKey of candidateKeys){
+    const raw=storageGet(oldKey);
+    if(!raw)continue;
+    try{
+      const legacy=JSON.parse(raw);
+      if(!legacy||legacy.account!==session.account)continue;
+      const migrated=window.PaperchalkSaveRuntime.migrate(legacy);
+      window.PaperchalkSaveRuntime.write({key:targetKey,save:migrated,account:session.account,storage:SAVE_STORAGE});
+      return migrated;
+    }catch(error){
+      console.warn('SAVE_MIGRATION_SKIPPED',oldKey,error);
+    }
+  }
+  return null;
+}
 function readSaveForSession(session=getSession()){
   if(!session||!session.account)return null;
   const key=accountSaveKey(session.account);
-  let raw=storageGet(key);
-
-  // One-time compatible migration from the original shared save.
-  if(!raw){
-    try{
-      const legacy=JSON.parse(storageGet(KEY_SAVE_LEGACY)||'null');
-      if(legacy&&legacy.account===session.account){
-        storageSet(key,JSON.stringify(legacy));
-        raw=JSON.stringify(legacy);
-      }
-    }catch{}
+  const runtime=window.PaperchalkSaveRuntime;
+  if(!runtime)throw new Error('PaperchalkSaveRuntime missing');
+  const result=runtime.read({key,account:session.account,storage:SAVE_STORAGE});
+  if(result.save){
+    if(result.migrated||result.source==='backup'){
+      try{runtime.write({key,save:result.save,account:session.account,storage:SAVE_STORAGE})}catch(error){console.warn('SAVE_REPAIR_FAILED',error)}
+    }
+    return result.save;
   }
-  if(!raw)return null;
-  try{
-    const save=JSON.parse(raw);
-    return save&&save.account===session.account?save:null;
-  }catch{return null}
+  return importLegacySave(session,key);
 }
 function writeSaveForSession(session,save){
   if(!session||!session.account)return false;
-  save.account=session.account;
-  return storageSet(accountSaveKey(session.account),JSON.stringify(save));
+  try{
+    window.PaperchalkSaveRuntime.write({key:accountSaveKey(session.account),save,account:session.account,storage:SAVE_STORAGE});
+    return true;
+  }catch(error){
+    console.error('SAVE_WRITE_FAILED',error);
+    return false;
+  }
 }
+window.PaperchalkSaveDiagnostics={
+  schemaVersion:window.PaperchalkSaveRuntime?.schemaVersion||3,
+  keyFor(account){return accountSaveKey(account)},
+  backupKeyFor(account){return accountSaveKey(account)+'.backup'}
+};
 function getSettings(){
   const defaults={language:'zh-CN',timeScale:1,preferLandscape:true};
   try{
@@ -3953,6 +3974,8 @@ function hashText(text){
   return (h1>>>0).toString(16).padStart(8,'0')+(h2>>>0).toString(16).padStart(8,'0');
 }
 function showPage(name){
+  const appState=window.PaperchalkAppState;
+  if(appState&&appState.state!==name&&appState.can(name))appState.transition(name,{source:'showPage'});
   Object.values(pages).forEach(p=>{
     p.getAnimations().forEach(a=>a.cancel());
     p.classList.remove('active');
@@ -3967,10 +3990,10 @@ function showPage(name){
 function refreshMenu(){
   const session=getSession();
   const hasSave=!!readSaveForSession(session);
-  profileNote.textContent=session?'当前旅人：'+session.displayName:'尚未登录';
+  profileNote.textContent=session?'当前旅人：'+session.displayName:'尚未选择本地档案';
   continueBtn.style.display=(session&&hasSave)?'block':'none';
   enterBtn.textContent=session?'进入世界':'开始游戏';
-  authBtn.textContent=session?'切换账号 / 退出':'登录 / 注册';
+  authBtn.textContent=session?'切换档案 / 退出':'本地档案';
 }
 function saveWorldState(){
   const session=getSession();
@@ -4040,6 +4063,7 @@ function openUI(fromWorld=false){
   showPage('menu');
   uiShell.classList.remove('is-hidden');
   uiShell.classList.remove('board-enter');
+  if(fromWorld)window.PaperchalkEvents?.emit('world:left',{reason:'menu'});
   window.dispatchEvent(new CustomEvent('paperchalk-world-leave'));
 }
 function enterWorld(){
@@ -4054,10 +4078,13 @@ function enterWorld(){
   keyboardLeft=keyboardRight=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
+  const appState=window.PaperchalkAppState;
+  if(appState&&appState.state!=='world'&&appState.can('world'))appState.transition('world',{source:'enterWorld'});
   uiShell.classList.add('is-hidden');
   uiShell.classList.remove('board-enter');
   uiShell.setAttribute('inert','');
   worldEl.removeAttribute('inert');
+  window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:regionNameAt(playerWorldX)});
   window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
   warmPaperFxWhenIdle();
   backpackBtn.focus({preventScroll:true});
@@ -4124,10 +4151,10 @@ registerForm.addEventListener('submit',e=>{
     const pass=document.getElementById('regPass').value;
 
     if(account.length<2||account.length>24){
-      authMsg.textContent='账号需要 2–24 个字符';return;
+      authMsg.textContent='档案 ID 需要 2–24 个字符';return;
     }
     if(/\s/.test(account)){
-      authMsg.textContent='账号中不能包含空格';return;
+      authMsg.textContent='档案 ID 中不能包含空格';return;
     }
     if(displayName.length<1||displayName.length>16){
       authMsg.textContent='旅人名称需要 1–16 个字符';return;
@@ -4138,7 +4165,7 @@ registerForm.addEventListener('submit',e=>{
 
     const users=getUsers();
     if(users[account]){
-      authMsg.textContent='这个账号已经存在，可以切换到“登录”';return;
+      authMsg.textContent='这个本地档案已经存在，可以切换到“已有档案”';return;
     }
 
     users[account]={
@@ -4152,7 +4179,7 @@ registerForm.addEventListener('submit',e=>{
     refreshMenu();
 
     if(!usersPersisted){
-      authMsg.textContent='当前环境无法持久保存账号，已临时进入游戏';
+      authMsg.textContent='当前环境无法持久保存档案，已临时进入游戏';
     }
     enterWorld();
   }catch(err){
@@ -4199,8 +4226,8 @@ loginForm.addEventListener('submit',e=>{
     const users=getUsers();
     const user=users[account];
 
-    if(!user){authMsg.textContent='未找到这个账号';return}
-    if(user.passwordHash!==hashText(pass)){authMsg.textContent='密码不正确';return}
+    if(!user){authMsg.textContent='未找到这个本地档案';return}
+    if(user.passwordHash!==hashText(pass)){authMsg.textContent='本机口令不正确';return}
 
     setSession({account,displayName:user.displayName});
     refreshMenu();

@@ -11,6 +11,8 @@ on:
       - "styles/**"
       - "tests/web-smoke.js"
       - "tests/core-regression.mjs"
+      - "tests/preproduction-architecture.mjs"
+      - "package.json"
       - ".github/workflows/core-regression.yml"
       - "assets/**"
   pull_request:
@@ -39,6 +41,9 @@ jobs:
 
       - name: Enforce runtime performance budgets
         run: node tests/performance-budget.mjs
+
+      - name: Enforce preproduction architecture contracts
+        run: node tests/preproduction-architecture.mjs
 
       - name: Install browser driver and CJK fonts
         run: |

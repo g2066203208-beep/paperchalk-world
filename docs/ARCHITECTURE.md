@@ -16,17 +16,23 @@ Paperchalk World uses a hybrid browser-game architecture rather than forcing eve
 
 ### 1. Core
 
-`src/core/ecs-runtime.js`
+`src/core/ecs-runtime.js`, `event-bus.js`, `game-state.js`, `save-runtime.js`
 
-A dependency-free sparse-set ECS. Components are stored as dense arrays plus sparse entity indices. Systems declare required components, phase and priority.
+The core layer is dependency-free. Sparse-set ECS stores dense component arrays plus sparse entity indices; deterministic events decouple domain side effects; the top-level app lifecycle is a finite-state machine; saves use schema migrations and a last-known-good backup.
 
-The first migration target is combat enemies. Existing enemy objects are temporarily stored as the `enemy` component so the current public APIs and renderer snapshots stay compatible. This is intentional: ECS migration is incremental, not a destructive rewrite.
+Combat enemies now expose granular `Transform`, `Health`, `Combat`, `AI`, `Patrol` and `Renderable` components while retaining a temporary compatibility object for unchanged renderer/debug APIs.
 
-### 2. Simulation
+### 2. Content
+
+`src/content/game-content.js`
+
+Authored world graph, NPC dialogue, enemy archetypes, seed spawns and item definitions use stable IDs and are validated before game boot. Runtime code clones only the mutable state it needs.
+
+### 3. Simulation
 
 `src/game.js`
 
-Still owns world traversal, player physics, interaction, inventory, dialogue and persistence. Combat enemies are scheduled through the ECS at the existing 60 Hz fixed step.
+Acts as the compatibility composition root while domain systems are extracted. Combat enemies are scheduled through the ECS at the existing 60 Hz fixed step; world/NPC/enemy/item definitions no longer belong to the main loop.
 
 Future extractions should happen by domain, not by arbitrary file size:
 
@@ -38,11 +44,11 @@ Future extractions should happen by domain, not by arbitrary file size:
 
 UI overlays and account/settings screens should **not** be converted into ECS entities.
 
-### 3. Renderer boundary
+### 4. Renderer boundary
 
 `window.PaperchalkRuntime` exposes a renderer-neutral reused frame state. DOM rendering remains the safe default. `src/renderers/pixi-dynamic-renderer.mjs` subscribes to the same state and can be selected for controlled GPU testing.
 
-### 4. Presentation
+### 5. Presentation
 
 `styles/game.css`, HTML overlays and PaperPuppet animation remain presentation concerns. They can react to simulation state but do not own gameplay truth.
 
@@ -64,6 +70,9 @@ UI overlays and account/settings screens should **not** be converted into ECS en
 - [x] ECS-aware combat queries
 - [x] Lifecycle-bound gameplay RAF
 - [x] CI guards for ECS and performance budgets
-- [ ] Split legacy enemy object into granular components
-- [ ] Migrate NPCs, pickups and projectiles
-- [ ] Extract input/scene/save domains from the monolithic runtime
+- [x] Split enemy state into granular ECS component sources
+- [x] Add deterministic event bus and app state machine
+- [x] Add authored content registry + validation
+- [x] Add schema-v3 saves, v2 migration and last-known-good backup
+- [ ] Migrate NPCs, pickups and projectiles into ECS where simulation benefits
+- [ ] Extract input commands, scene traversal and inventory domains from the compatibility runtime
