@@ -3965,7 +3965,7 @@ window.PaperchalkSaveDiagnostics={
   backupKeyFor(account){return accountSaveKey(account)+'.backup'}
 };
 function getSettings(){
-  const defaults={language:'zh-CN',timeScale:1,preferLandscape:true,cameraTilt:13.1,cameraHeight:4.1,cameraDistance:30};
+  const defaults={language:'zh-CN',timeScale:1,preferLandscape:true};
   try{
     const parsed=JSON.parse(storageGet(KEY_SETTINGS)||'{}');
     return {...defaults,...parsed};
@@ -3979,15 +3979,13 @@ function applySettings(settings=getSettings()){
   settingLanguage.value='zh-CN';
   settingTimeScale.value=String(worldTimeScale);
   settingLandscape.checked=settings.preferLandscape!==false;
-  window.PaperchalkCameraSettings?.apply?.(settings,false,false);
 }
 function saveSettingsFromUI(){
   const settings={
     ...getSettings(),
     language:settingLanguage.value||'zh-CN',
     timeScale:Number(settingTimeScale.value)||0,
-    preferLandscape:settingLandscape.checked,
-    ...(window.PaperchalkCameraSettings?.snapshot?.()||{})
+    preferLandscape:settingLandscape.checked
   };
   storageSet(KEY_SETTINGS,JSON.stringify(settings));
   applySettings(settings);
@@ -4018,7 +4016,6 @@ function showPage(name){
   authMsg.textContent='';
   if(name==='settings'){
     applySettings();
-    window.PaperchalkCameraSettings?.sync?.();
     settingsStatus.textContent='';
   }
 }
