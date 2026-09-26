@@ -193,8 +193,9 @@ try{
   const xyCameraBefore=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
     const floor=document.querySelector('.paper-stage-floor');
+    const floorCamera=document.querySelector('.paper-stage-floor-camera');
     const floorRect=floor.getBoundingClientRect();
-    const floorStyle=getComputedStyle(floor);
+    const floorCameraMatrix=new DOMMatrix(getComputedStyle(floorCamera).transform);
     const snap=window.PaperchalkRuntime.getSnapshot();
     return {
       player:window.PaperchalkCombat.player,
@@ -202,7 +203,7 @@ try{
       near:window.PaperchalkMap.project(760,0,0),
       far:window.PaperchalkMap.project(760,600,0),
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      floorCssTop:Number.parseFloat(floorStyle.top),
+      floorCameraY:floorCameraMatrix.m42,
       floorTop:floorRect.top,
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
@@ -220,12 +221,13 @@ try{
   const xyCameraRaised=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
     const floor=document.querySelector('.paper-stage-floor');
+    const floorCamera=document.querySelector('.paper-stage-floor-camera');
     const floorRect=floor.getBoundingClientRect();
-    const floorStyle=getComputedStyle(floor);
+    const floorCameraMatrix=new DOMMatrix(getComputedStyle(floorCamera).transform);
     return {
       player:window.PaperchalkCombat.player,
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      floorCssTop:Number.parseFloat(floorStyle.top),
+      floorCameraY:floorCameraMatrix.m42,
       floorTop:floorRect.top,
       actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
     };
@@ -236,7 +238,7 @@ try{
     JSON.stringify(xyCameraRaised));
   check('Rising in Y moves the perspective ground downward',
     Number.parseFloat(xyCameraRaised.cameraY)>20&&
-    xyCameraRaised.floorCssTop>xyCameraBefore.floorCssTop+10&&
+    xyCameraRaised.floorCameraY>xyCameraBefore.floorCameraY+10&&
     xyCameraRaised.floorTop>xyCameraBefore.floorTop+10,
     JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised}));
   check('XY camera keeps the protagonist fixed while the world moves vertically',
