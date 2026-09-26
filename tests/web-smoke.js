@@ -8,7 +8,9 @@ const ecs = fs.readFileSync("src/core/ecs-runtime.js", "utf8");
 const events = fs.readFileSync("src/core/event-bus.js", "utf8");
 const state = fs.readFileSync("src/core/game-state.js", "utf8");
 const saves = fs.readFileSync("src/core/save-runtime.js", "utf8");
+const cardCamera = fs.readFileSync("src/core/card-camera.js", "utf8");
 const content = fs.readFileSync("src/content/game-content.js", "utf8");
+const domCardRenderer = fs.readFileSync("src/renderers/dom-card-projection.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
 
 function assert(condition, message) {
@@ -39,6 +41,7 @@ assert(/src=["']\.\/src\/core\/ecs-runtime\.js(?:\?[^"']*)?["']/.test(html), "EC
 assert(html.indexOf("./src/core/event-bus.js") < html.indexOf("./src/game.js"), "Event bus must load before game runtime");
 assert(html.indexOf("./src/core/game-state.js") < html.indexOf("./src/game.js"), "State machine must load before game runtime");
 assert(html.indexOf("./src/core/save-runtime.js") < html.indexOf("./src/game.js"), "Save runtime must load before game runtime");
+assert(html.indexOf("./src/core/card-camera.js") < html.indexOf("./src/game.js"), "Card camera must load before game runtime");
 assert(html.indexOf("./src/core/ecs-runtime.js") < html.indexOf("./src/game.js"), "ECS runtime must load before game runtime");
 assert(html.indexOf("./src/content/game-content.js") < html.indexOf("./src/game.js"), "Authored content must load before game runtime");
 assert(/src=["']\.\/src\/game\.js(?:\?[^"']*)?["']/.test(html), "External game runtime missing");
@@ -53,15 +56,19 @@ assert(renderer.includes("runtime?.worldData?.playerActionMeta"), "Pixi renderer
 new vm.Script(events);
 new vm.Script(state);
 new vm.Script(saves);
+new vm.Script(cardCamera);
 new vm.Script(ecs);
 new vm.Script(content);
 new vm.Script(game);
+new vm.Script(domCardRenderer);
 assert(ecs.includes("class SparseSetStore"), "Sparse-set ECS component store missing");
 assert(ecs.includes("registerSystem(name"), "ECS system scheduler missing");
 assert(events.includes("class EventBus"), "Deterministic event bus missing");
 assert(state.includes("class StateMachine"), "Application state machine missing");
 assert(saves.includes("CURRENT_SCHEMA=3"), "Schema-v3 save runtime missing");
+assert(cardCamera.includes("function project("), "Shared X/Z/Y card-camera projection missing");
 assert(content.includes("function validate(value=content)"), "Content validation runtime missing");
+assert(domCardRenderer.includes("runtime.subscribe(render)"), "DOM card-camera renderer is not runtime-driven");
 assert(game.includes("const combatEcs=window.PaperchalkECS"), "Combat ECS world bridge missing");
 assert(game.includes("combatEcs.registerSystem('enemy-ai'"), "Enemy AI ECS system missing");
 assert(game.includes("combatEcs.run('enemy-ai'"), "Fixed-step combat no longer dispatches through ECS");
@@ -265,7 +272,7 @@ assert(game.includes("function cardProjection("), "World-to-screen card projecti
 assert(game.includes("playerWorldZ"), "Player depth coordinate missing");
 assert(game.includes("save.playerWorldZ=playerWorldZ"), "Player depth persistence missing");
 assert(game.includes("joystickDepthAxis"), "2D ground joystick depth axis missing");
-assert(game.includes("setProperty('--card-grid-x'")&&game.includes("setProperty('--card-grid-z'"), "Ground grid is not synchronized to X/Z camera movement");
+assert(domCardRenderer.includes("setProperty('--card-grid-x'")&&domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground grid is not synchronized to X/Z camera movement");
 
 
 // clean-stage-r14: generated midground atlas intentionally removed.
