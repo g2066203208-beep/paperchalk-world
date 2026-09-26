@@ -1223,12 +1223,20 @@ updateDayNightVisuals(true);
 let playerScreenAnchorX=Math.round(VIEW_W*.5);
 let actorX=playerScreenAnchorX;
 let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
+let keyboardDepthForward=false,keyboardDepthBack=false;
 let mobileCrouch=false,mobileFlightUp=false,mobileFlightDown=false;
-let joystickAxis=0,joystickFlightAxisY=0;
+let joystickAxis=0,joystickDepthAxis=0,joystickFlightAxisY=0;
 let joystickPointer=null;
 let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
+let playerWorldZ=0;
 let playerY=0,playerVy=0,playerGrounded=true;
+const CARD_GRID_SIZE=128;
+const CARD_CAMERA_BASE_DEPTH=900;
+const CARD_HORIZON_RATIO=.40;
+const CARD_MIN_DEPTH=96;
+const CARD_MAX_DEPTH=6400;
+const CARD_WORLD_Z_LIMIT=100000;
 let playerCrouching=false;
 let playerActionState='idle';
 let coyoteTimer=0,jumpBufferTimer=0;
@@ -1243,7 +1251,7 @@ const ENEMY_MAX_HP=RAG_DRIFTER.maxHp;
 function createEnemyState(id,el,healthEl){
   const e={
     id,el,healthEl,spawned:false,account:null,facing:-1,
-    transform:{x:0},
+    transform:{x:0,z:0},
     health:{current:ENEMY_MAX_HP,max:ENEMY_MAX_HP,alive:true},
     combat:{attackTimer:0,attackCooldown:0,hitstun:0},
     ai:{state:'idle',enabled:true},
@@ -1252,6 +1260,7 @@ function createEnemyState(id,el,healthEl){
   };
   Object.defineProperties(e,{
     x:{enumerable:true,get(){return e.transform.x},set(v){e.transform.x=v}},
+    z:{enumerable:true,get(){return e.transform.z},set(v){e.transform.z=v}},
     hp:{enumerable:true,get(){return e.health.current},set(v){e.health.current=v}},
     alive:{enumerable:true,get(){return e.health.alive},set(v){e.health.alive=!!v}},
     state:{enumerable:true,get(){return e.ai.state},set(v){e.ai.state=v}},
@@ -2833,6 +2842,10 @@ function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
   return joystickAxis;
 }
+function depthAxis(){
+  const keyboard=(keyboardDepthForward?1:0)-(keyboardDepthBack?1:0);
+  return clamp(keyboard+joystickDepthAxis,-1,1);
+}
 function flightVerticalAxis(){
   const buttons=((keyboardFlightUp||mobileFlightUp)?1:0)-((keyboardFlightDown||mobileFlightDown)?1:0);
   return clamp(buttons+joystickFlightAxisY,-1,1);
@@ -2841,6 +2854,25 @@ function flightCeiling(){
   return sceneLocation==='interior'
     ? Math.max(0,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24)
     : OUTDOOR_FLIGHT_MAX_Y;
+}
+function cardProjection(worldX,worldZ=0,worldY=0){
+  const relativeZ=(Number(worldZ)||0)-playerWorldZ;
+  const depth=CARD_CAMERA_BASE_DEPTH+relativeZ;
+  if(depth<=CARD_MIN_DEPTH)return {visible:false,x:0,y:0,scale:0,depth};
+  const scale=CARD_CAMERA_BASE_DEPTH/depth;
+  const horizonY=VIEW_H*CARD_HORIZON_RATIO;
+  const playerFootY=VIEW_H-MAP_GROUND_SCREEN_Y;
+  const cameraHeight=playerFootY-horizonY;
+  return {
+    visible:depth<CARD_MAX_DEPTH&&scale>.12&&scale<5,
+    x:playerScreenAnchorX+(worldX-playerWorldX)*scale,
+    y:horizonY+(cameraHeight-worldY)*scale,
+    scale,
+    depth
+  };
+}
+function cardDepthDistance(x,z=0){
+  return Math.hypot((Number(x)||0)-playerWorldX,(Number(z)||0)-playerWorldZ);
 }
 function setFacing(dir){
   if(!dir||dir===facing)return;
