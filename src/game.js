@@ -83,16 +83,18 @@ const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
   }:null
 }));
 const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const offset=1750+(zone%4)*720;
-  const x=base+offset;
-  ENEMY_SPAWNS.push({
-    id:'enemy-zone-'+zone,
-    x,
-    patrolMin:x-170-(zone%3)*20,
-    patrolMax:x+170+(zone%2)*30
-  });
+if(ENEMY_SPAWNS.length){
+  for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
+    const base=zone*WORLD_ZONE_WIDTH;
+    const offset=1750+(zone%4)*720;
+    const x=base+offset;
+    ENEMY_SPAWNS.push({
+      id:'enemy-zone-'+zone,
+      x,
+      patrolMin:x-170-(zone%3)*20,
+      patrolMax:x+170+(zone%2)*30
+    });
+  }
 }
 
 /* Deterministic continuation: every 6000px is authored into the same coordinate space.
@@ -509,7 +511,7 @@ function apartmentDoorScreenY(){
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
-  if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
+  if(!midgroundApartment||!interiorScene||sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
 
@@ -726,7 +728,7 @@ function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
 function enterApartment(){
-  if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
+  if(!midgroundApartment||!interiorScene||sceneLocation!=='outside'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
   exteriorReturnY=playerY;
