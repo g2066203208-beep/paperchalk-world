@@ -856,17 +856,6 @@ button{cursor:pointer}
   background:rgba(245,235,213,.55);color:#4f4639;padding:5px 8px;border-radius:4px;
 }
 .setting-row input[type="checkbox"]{width:20px;height:20px;accent-color:#6e604c}
-.setting-camera-group{
-  background:#ead9b7;padding:12px 14px 14px;color:#54493a;
-  clip-path:polygon(1% 2%,99% 0,100% 96%,97% 100%,1% 98%,0 5%);
-}
-.setting-camera-title{font-size:14px;font-weight:800;letter-spacing:.08em;margin-bottom:8px}
-.setting-camera-row{display:block;padding:8px 0;border-top:1px solid rgba(84,65,43,.14)}
-.setting-camera-row>span{display:flex;justify-content:space-between;gap:12px;font-size:12px;font-weight:700}
-.setting-camera-row b{font:800 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
-.setting-camera-row input[type="range"]{display:block;width:100%;height:28px;margin:3px 0 1px;accent-color:#7f6448}
-.setting-camera-row small{display:block;color:#7a6b56;font-size:10px;line-height:1.35}
-.setting-camera-reset{width:100%;margin-top:8px}
 #pageSettings .auth-wrap{overflow:auto;align-items:flex-start;padding-top:48px;padding-bottom:48px}
 #pageSettings .auth-card{margin:auto}
 .settings-status{position:relative;z-index:2;min-height:20px;margin-top:10px;text-align:center;color:#665948;font-size:12px}
@@ -1123,7 +1112,7 @@ button{cursor:pointer}
 /* ---------- WORLD MAP ---------- */
 .world-map-btn{
   position:absolute;z-index:32;
-  top:max(146px,calc(env(safe-area-inset-top) + 140px));
+  top:max(184px,calc(env(safe-area-inset-top) + 178px));
   right:max(96px,calc(env(safe-area-inset-right) + 78px));
   width:72px;height:40px;padding:0 8px;border:1px solid rgba(78,60,39,.38);
   background:rgba(232,215,181,.95);color:#524636;
@@ -1226,6 +1215,44 @@ button{cursor:pointer}
   .world-map-legend{display:none}
 }
 
+/* ---------- STANDALONE CAMERA PANEL ---------- */
+.camera-ui-btn{
+  position:absolute;z-index:33;
+  top:max(146px,calc(env(safe-area-inset-top) + 140px));
+  right:max(18px,env(safe-area-inset-right));
+  min-width:68px;height:34px;padding:0 11px;
+  border:1px dashed rgba(81,63,42,.52);
+  background:rgba(231,218,190,.94);color:#554936;
+  font:800 12px/32px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  letter-spacing:.08em;border-radius:5px;
+  box-shadow:3px 4px 0 rgba(54,40,27,.12);cursor:pointer;
+}
+.camera-ui-btn[aria-expanded="true"]{background:rgba(196,159,120,.96)}
+.camera-panel{
+  position:absolute;z-index:72;
+  top:max(184px,calc(env(safe-area-inset-top) + 178px));
+  right:max(18px,env(safe-area-inset-right));
+  width:min(310px,calc(100vw - 36px));
+  padding:14px 14px 12px;color:#4e4233;
+  background:linear-gradient(rgba(239,225,196,.98),rgba(222,203,166,.98)),#e5d3ad;
+  border:1px solid rgba(85,66,43,.35);border-radius:7px;
+  box-shadow:6px 8px 0 rgba(45,34,24,.17),0 14px 30px rgba(35,28,20,.20);
+  clip-path:polygon(1% 2%,98% 0,100% 96%,97% 100%,2% 98%,0 5%);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transform:translateY(-5px) scale(.98);
+  transition:opacity .12s ease,transform .12s ease,visibility .12s ease;
+}
+.camera-panel.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translateY(0) scale(1)}
+.camera-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.camera-panel-head strong{font-size:15px;letter-spacing:.08em}
+.camera-close-btn{border:0;background:transparent;color:#5a4a36;font-size:20px;line-height:1;padding:3px 6px}
+.camera-control-row{display:block;padding:8px 0;border-top:1px solid rgba(84,65,43,.16)}
+.camera-control-row>span{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:800}
+.camera-control-row b{font:800 12px/1 ui-monospace,SFMono-Regular,Consolas,monospace}
+.camera-control-row input[type="range"]{display:block;width:100%;height:28px;margin:3px 0 1px;accent-color:#7f6448}
+.camera-control-row small{display:block;font-size:10px;color:#75634f;line-height:1.35}
+.camera-reset-btn{width:100%;height:32px;margin-top:7px;border:1px solid rgba(88,68,45,.30);background:rgba(248,237,213,.72);color:#544633;border-radius:4px;font-weight:800}
+
 /* ---------- IN-GAME DEBUG PANEL ---------- */
 .debug-toggle-btn{
   position:absolute;z-index:32;
@@ -1244,7 +1271,7 @@ button{cursor:pointer}
 
 .debug-panel{
   position:absolute;z-index:70;
-  top:max(190px,calc(env(safe-area-inset-top) + 184px));
+  top:max(222px,calc(env(safe-area-inset-top) + 216px));
   right:max(18px,env(safe-area-inset-right));
   width:min(360px,calc(100vw - 36px));
   max-height:min(560px,calc(100vh - 210px));
@@ -1308,12 +1335,20 @@ button{cursor:pointer}
 }
 .debug-help{margin:8px 2px 0;font-size:11px;line-height:1.45;color:#6b5b48}
 @media(max-width:900px),(max-height:560px){
+  .camera-ui-btn{
+    top:max(113px,calc(env(safe-area-inset-top) + 107px));right:max(10px,env(safe-area-inset-right));
+    min-width:58px;height:34px;font-size:11px
+  }
+  .camera-panel{
+    top:max(151px,calc(env(safe-area-inset-top) + 145px));right:max(10px,env(safe-area-inset-right));
+    width:min(300px,calc(100vw - 20px))
+  }
   .debug-toggle-btn{
-    top:max(113px,calc(env(safe-area-inset-top) + 107px));
+    top:max(151px,calc(env(safe-area-inset-top) + 145px));
     right:max(10px,env(safe-area-inset-right));height:34px;line-height:32px;min-width:58px;font-size:11px
   }
   .debug-panel{
-    top:max(151px,calc(env(safe-area-inset-top) + 145px));
+    top:max(189px,calc(env(safe-area-inset-top) + 183px));
     right:max(10px,env(safe-area-inset-right));
     width:min(330px,calc(100vw - 20px));
     max-height:calc(var(--app-height,100dvh) - 161px);
@@ -1732,7 +1767,9 @@ button{cursor:pointer}
   .player-health-hud{transform:scale(.56)!important}
   .world-menu-btn{width:50px!important;height:43px!important}
   .backpack-open-btn{width:55px!important;height:45px!important;top:max(55px,calc(env(safe-area-inset-top) + 50px))!important}
-  .debug-toggle-btn{top:max(98px,calc(env(safe-area-inset-top) + 92px))!important}
+  .camera-ui-btn{top:max(98px,calc(env(safe-area-inset-top) + 92px))!important}
+  .camera-panel{top:max(136px,calc(env(safe-area-inset-top) + 130px))!important}
+  .debug-toggle-btn{top:max(136px,calc(env(safe-area-inset-top) + 130px))!important}
   .combat-btn{width:52px;height:46px;font-size:13px}
   .joystick{transform:translate(-50%,-50%) scale(calc(var(--control-scale,1) * .86))!important}
   .joystick-hint{display:none!important}
@@ -2495,3 +2532,6 @@ button{cursor:pointer}
     animation-delay:0ms!important
   }
 }
+
+/* Production clean-world: prototype content is not rendered. */
+#midgroundApartment[hidden],#enemy[hidden],#enemy2[hidden],#interiorScene[hidden],#interactBtn[hidden]{display:none!important}
