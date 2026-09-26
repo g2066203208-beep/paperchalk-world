@@ -46,7 +46,7 @@ function wrap(value,size=config.gridSize){const m=Math.max(1,num(size,config.gri
 global.PaperchalkCardCamera=Object.freeze({
 config,project,resolveHorizonY,setHorizonRatio,clearHorizonRatio,getTiltDegrees,setTiltDegrees,clearTiltDegrees,verticalFocalLength,
 resolveCameraHeight,getCameraHeightMeters,setCameraHeightMeters,clearCameraHeight,resolveCameraDistance,getCameraDistanceMeters,setCameraDistanceMeters,clearCameraDistance,distance2D,wrap,
-get manualHorizonRatio(){return manualHorizonRatio},get manualTiltDegrees(){return manualTiltDegrees},
+get manualTiltDegrees(){return manualTiltDegrees},
 get manualCameraHeightMeters(){return manualCameraHeightPx===null?null:manualCameraHeightPx/config.gridSize},
 get manualCameraDistanceMeters(){return manualCameraDistancePx===null?null:manualCameraDistancePx/config.gridSize},get tiltRevision(){return tiltRevision}
 });
