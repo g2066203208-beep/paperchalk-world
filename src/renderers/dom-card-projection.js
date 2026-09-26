@@ -247,11 +247,11 @@ function renderGroundGrid(frame){
   groundCanvas.dataset.farY=farY.toFixed(2);
 }
 
-function render(frame){
+function render(frame,force=false){
   if(!frame||world.classList.contains('scene-interior'))return;
   const now=performance.now();
   const minInterval=1000/MAX_RENDER_FPS;
-  if(lastRenderAt&&now-lastRenderAt<minInterval-1){
+  if(!force&&lastRenderAt&&now-lastRenderAt<minInterval-1){
     stats.skippedHighRefresh++;
     return;
   }
@@ -316,6 +316,7 @@ global.addEventListener('paperchalk-world-enter',()=>{lastRenderAt=0;refreshNode
 global.addEventListener('beforeunload',()=>unsubscribe?.(),{once:true});
 global.PaperchalkDomCardProjection=Object.freeze({
   render,refreshNodes,renderGroundGrid,
+  renderNow(){lastRenderAt=0;render(runtime.getSnapshot(),true)},
   get stats(){return {...stats}}
 });
 })(window);
