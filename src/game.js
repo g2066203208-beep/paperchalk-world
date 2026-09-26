@@ -1236,7 +1236,7 @@ const CARD_CAMERA_BASE_DEPTH=900;
 const CARD_HORIZON_RATIO=.40;
 const CARD_MIN_DEPTH=96;
 const CARD_MAX_DEPTH=6400;
-const CARD_WORLD_Z_LIMIT=100000;
+const CARD_WORLD_Z_LIMIT=1000000000;
 let playerCrouching=false;
 let playerActionState='idle';
 let coyoteTimer=0,jumpBufferTimer=0;
@@ -1541,7 +1541,7 @@ function writeDebugOutput(message){
 }
 function openDebugPanel(){
   if(!document.getElementById('uiShell').classList.contains('is-hidden'))return false;
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   debugPanel.classList.add('is-open');
   debugPanel.setAttribute('aria-hidden','false');
@@ -1556,7 +1556,7 @@ function closeDebugPanel({focus=true}={}){
   debugPanel.classList.remove('is-open');
   debugPanel.setAttribute('aria-hidden','true');
   debugToggleBtn.setAttribute('aria-expanded','false');
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   if(focus)debugToggleBtn.focus({preventScroll:true});
   return true;
@@ -2448,7 +2448,7 @@ function advanceDialogue(){
 }
 function openDialogue(npc){
   if(!npc||dialogueIsOpen())return false;
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   closeDebugPanel({focus:false});
   clearTimeout(dialogueCloseTimer);
@@ -2578,7 +2578,7 @@ function teleportTo(x,{notice='已传送',z=0}={}){
   orientationRouteIndex=worldZoneIndexAt(playerWorldX);currentRouteOrientation=1;sceneryOffsetX=0;
   playerY=0;playerVy=0;playerGrounded=true;coyoteTimer=COYOTE_TIME;jumpBufferTimer=0;resetPlayerPoseState();
   updateMapInteractions._zone=worldZoneIndexAt(playerWorldX);
-  lastInteractionX=NaN;lastInteractionY=NaN;
+  lastInteractionX=NaN;lastInteractionY=NaN;lastInteractionZ=NaN;
   updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
 }
 function updateCombat(dt,interactive){
@@ -2899,7 +2899,7 @@ function cardProjection(worldX,worldZ=0,worldY=0){
   return {
     visible:depth<CARD_MAX_DEPTH&&scale>.12&&scale<5,
     x:playerScreenAnchorX+(worldX-playerWorldX)*scale,
-    y:horizonY+(cameraHeight-worldY)*scale,
+    y:horizonY+(cameraHeight+playerY-worldY)*scale,
     scale,
     depth
   };
@@ -2939,7 +2939,7 @@ function renderWorld(force=false){
   worldEl.style.setProperty('--card-grid-z',(posMod(playerWorldZ,CARD_GRID_SIZE)).toFixed(2)+'px');
   const wallPerspective=CARD_CAMERA_BASE_DEPTH/(CARD_CAMERA_BASE_DEPTH+1200);
   worldEl.style.setProperty('--card-wall-x',(-posMod(playerWorldX*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
-  worldEl.style.setProperty('--card-wall-y',(posMod(playerY*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
+  worldEl.style.setProperty('--card-wall-y',(posMod((playerY-playerWorldZ*.16)*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
@@ -2991,7 +2991,7 @@ function renderWorld(force=false){
   notifyRuntimeObservers();
 }
 let lastInteractionTick=0;
-let lastInteractionX=NaN,lastInteractionY=NaN;
+let lastInteractionX=NaN,lastInteractionY=NaN,lastInteractionZ=NaN;
 let lastAmbientVisualTick=0;
 let combatAccumulator=0;
 let lastCombatProbe=0,nearbyCombatCached=false;
@@ -3161,12 +3161,13 @@ function frame(now){
   const interactionCoord=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
   const interactionDepth=sceneLocation==='interior'?0:playerWorldZ;
   const interactionMoved=!Number.isFinite(lastInteractionX)
+    ||!Number.isFinite(lastInteractionZ)
     ||Math.abs(interactionCoord-lastInteractionX)>8
     ||Math.abs(playerY-lastInteractionY)>8
-    ||Math.abs(interactionDepth-(frame._lastInteractionDepth||0))>8;
+    ||Math.abs(interactionDepth-lastInteractionZ)>8;
   if(interactionMoved&&now-lastInteractionTick>=80){
     lastInteractionTick=now;
-    lastInteractionX=interactionCoord;lastInteractionY=playerY;frame._lastInteractionDepth=interactionDepth;
+    lastInteractionX=interactionCoord;lastInteractionY=playerY;lastInteractionZ=interactionDepth;
     updateMapInteractions();
   }
 
@@ -3709,7 +3710,7 @@ function openWorldMap(triggerEl=worldMapBtn){
   if(!shell.classList.contains('is-hidden')||worldMapOverlay.classList.contains('is-open'))return false;
   closeDebugPanel({focus:false});
   closeBackpack(true);
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   worldMapLastTrigger=triggerEl;
   paperUIFrom(triggerEl,revealWorldMap,worldMapPaper);
@@ -3853,7 +3854,7 @@ function revealBackpack(){
 function openBackpack(triggerEl=backpackBtn){
   const shell=document.getElementById('uiShell');
   if(!shell.classList.contains('is-hidden')||backpackClosing||backpackOverlay.classList.contains('is-open'))return;
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   lastBackpackTrigger=triggerEl;
   renderInventory();
@@ -4168,7 +4169,7 @@ function openUI(fromWorld=false){
   closeWorldMap(true);
   closeBackpack(true);
   if(fromWorld)saveWorldState();
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
   uiShell.removeAttribute('inert');
@@ -4189,7 +4190,7 @@ function enterWorld(){
   if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
   loadWorldState();
   if(enemies.some(e=>!e.spawned||e.account!==session.account))resetMapEnemies();
-  keyboardLeft=keyboardRight=false;
+  keyboardLeft=keyboardRight=keyboardDepthForward=keyboardDepthBack=false;
   resetJoystick();
   uiShell.getAnimations().forEach(a=>a.cancel());
   const appState=window.PaperchalkAppState;
