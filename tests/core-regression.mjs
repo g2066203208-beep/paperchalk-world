@@ -856,7 +856,7 @@ try{
     JSON.stringify(compositorPlayer));
 
   const poolBefore=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  await page.evaluate(()=>window.PaperchalkMap.teleport(9000,{notice:''}));
+  await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),poolBefore.visualOriginX+12000);
   await page.waitForTimeout(100);
   const poolFirstVisit=await page.evaluate(()=>window.PaperchalkDebug.perf());
   await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),moved.playerWorldX);
