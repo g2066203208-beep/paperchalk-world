@@ -508,10 +508,7 @@ function apartmentDoorScreenY(){
   const h=midgroundApartment?.getBoundingClientRect().height||1040;
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
-function nearbyApartmentDoor(maxDistance=78){
-  if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
-  return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
-}
+function nearbyApartmentDoor(){return false}
 
 function interiorLowerY(x){
   const t=clamp((x-INTERIOR_STAIRS.x0)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0),0,1);
@@ -700,11 +697,7 @@ function updateInteriorDepthLayers(){
   if(interiorNearLayer)interiorNearLayer.style.transform=transform;
   return sceneLocation==='interior';
 }
-function nearbyInteriorExit(maxDistance=92){
-  return sceneLocation==='interior'&&!sceneTransitionBusy
-    &&Math.abs(interiorPlayerWorldX-INTERIOR_DOOR_X)<=maxDistance
-    &&Math.abs(playerY)<=72;
-}
+function nearbyInteriorExit(){return false}
 function renderDoorPrompt(){
   if(!apartmentDoorPrompt)return;
   if(sceneLocation!=='outside'||!nearbyApartmentDoor()){
@@ -725,76 +718,8 @@ function exteriorCameraForDoorAt(screenX){
 function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
-function enterApartment(){
-  if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
-  sceneTransitionBusy=true;
-  exteriorReturnX=playerWorldX;
-  exteriorReturnY=playerY;
-  stageHeldActorX=actorX;
-  stageHeldPlayerY=playerY;
-  syncInteriorDoorWithExterior();
-  cancelPlayerActionSettle();
-  cancelPlayerTurnFlip({snap:true});
-  worldEl.classList.add('stage-transitioning','paper-stage-out');
-  apartmentDoorPrompt?.classList.remove('is-visible');
-  setTimeout(()=>{
-    sceneLocation='interior';
-    playerY=0;
-    playerVy=0;
-    playerGrounded=true;
-    interiorPlayerWorldX=INTERIOR_DOOR_X;
-    interiorStairState='floor1';
-    updateInteriorCamera();
-    clearSceneStageClasses();
-    worldEl.classList.add('scene-interior','interior-stage-in','stage-transitioning');
-    interiorScene?.setAttribute('aria-hidden','false');
-    renderWorld(true);
-    lastSceneDoorAnchorErrorX=interiorExitX()-actorX;
-    updateNpcPrompt();
-    setTimeout(()=>{
-      worldEl.classList.remove('interior-stage-in','stage-transitioning');
-      sceneTransitionBusy=false;
-      updateNpcPrompt();
-    },900);
-  },860);
-  return true;
-}
-function exitApartment(){
-  if(sceneLocation!=='interior'||sceneTransitionBusy)return false;
-  sceneTransitionBusy=true;
-  stageHeldActorX=actorX;
-  stageHeldPlayerY=playerY;
-  cancelPlayerActionSettle();
-  cancelPlayerTurnFlip({snap:true});
-  worldEl.classList.add('stage-transitioning','interior-stage-out');
-  setTimeout(()=>{
-    sceneLocation='outside';
-    interiorScene?.setAttribute('aria-hidden','true');
-    worldEl.classList.remove('scene-interior','interior-stage-out');
-
-    // Restore the outdoor vertical coordinate, then reveal the exterior door
-    // directly under the same fixed player screen anchor.
-    playerY=exteriorReturnY;
-    playerVy=0;
-    playerGrounded=playerY<=0;
-    refreshSceneryMetrics();
-    worldX=exteriorCameraForDoorAt(playerScreenAnchorX);
-    playerWorldX=clamp(worldX+playerScreenAnchorX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-    actorX=playerScreenAnchorX;
-
-    worldEl.classList.add('exterior-stage-in','stage-transitioning');
-    renderWorld(true);
-    lastSceneDoorAnchorErrorX=apartmentDoorScreenX()-actorX;
-    updateNpcPrompt();
-
-    setTimeout(()=>{
-      worldEl.classList.remove('exterior-stage-in','stage-transitioning');
-      sceneTransitionBusy=false;
-      updateNpcPrompt();
-    },900);
-  },720);
-  return true;
-}
+function enterApartment(){return false}
+function exitApartment(){return false}
 const terrainTrack=document.getElementById('terrainTrack');
 const mapObjectTrack=document.getElementById('mapObjectTrack');
 const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
