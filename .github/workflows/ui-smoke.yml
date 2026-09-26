@@ -39,7 +39,7 @@ jobs:
           test -n "$CHROME"
           "$CHROME" --headless=new --no-sandbox --disable-gpu \
             --remote-debugging-port=9222 --remote-allow-origins='*' \
-            --user-data-dir=/tmp/paperchalk-chrome 'http://127.0.0.1:4173/?ci=ui-smoke' \
+            --user-data-dir=/tmp/paperchalk-chrome 'http://127.0.0.1:4173/?ci=ui-smoke&test-content=1' \
             > /tmp/paperchalk-chrome.log 2>&1 &
           echo $! > /tmp/paperchalk-chrome.pid
           for i in $(seq 1 200); do
