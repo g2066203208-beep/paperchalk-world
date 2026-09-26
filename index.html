@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "camera-angle-height-r49";
+  const BUILD = "camera-distance-r50";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -39,8 +39,8 @@
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="camera-angle-height-r49">
-<link rel="stylesheet" href="./styles/game.css?v=camera-angle-height-r49">
+<meta name="paperchalk-build" content="camera-distance-r50">
+<link rel="stylesheet" href="./styles/game.css?v=camera-distance-r50">
 </head>
 <body>
 
@@ -240,6 +240,19 @@
         <span>真实尺度 128px = 1m</span>
         <span>10 m 高</span>
       </div>
+
+      <div class="debug-camera-control-head debug-camera-height-head">
+        <span>镜头距离</span>
+        <b id="debugCameraDistanceValue">-- m</b>
+      </div>
+      <input id="debugCameraDistance" class="debug-camera-slider" type="range"
+             min="6.5" max="60" step="0.5" value="30"
+             aria-label="镜头到玩家中景面的距离，6.5到60米">
+      <div class="debug-camera-control-foot">
+        <span>6.5 m 拉近</span>
+        <span>30 m 默认</span>
+        <span>60 m 拉远</span>
+      </div>
       <button id="debugCameraTiltReset" class="debug-action debug-camera-reset" type="button">恢复自动相机</button>
     </div>
     <div class="debug-renderer-actions" aria-label="渲染器调试">
@@ -266,7 +279,7 @@
       <button class="debug-run-btn" type="submit">执行</button>
     </form>
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
-    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。摄像机可独立调俯视角 0–45° 与高度 1–10m；只改相机，不改景线距离。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
+    <div class="debug-help">调试：血量、战斗、Camera、飞行、地图、日夜与纸片舞台。摄像机可独立调俯视角 0–45°、高度 1–10m、镜头距离 6.5–60m；只改相机，不改景线坐标。飞行：W/↑/Space 上升，S/↓ 下降，A/D 左右。</div>
   </section>
 
   <div class="combat-controls" aria-label="战斗操作">
@@ -448,14 +461,14 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=camera-angle-height-r49"></script>
+<script src="./src/core/card-camera.js?v=camera-distance-r50"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
 <script src="./src/content/building-pools.js?v=oldtown-r1"></script>
-<script src="./src/game.js?v=camera-angle-height-r49"></script>
-<script src="./src/renderers/dom-card-projection.js?v=camera-angle-height-r49"></script>
-<script src="./src/debug-camera-controls.js?v=camera-angle-height-r49"></script>
+<script src="./src/game.js?v=camera-distance-r50"></script>
+<script src="./src/renderers/dom-card-projection.js?v=camera-distance-r50"></script>
+<script src="./src/debug-camera-controls.js?v=camera-distance-r50"></script>
 <script src="./src/renderers/oldtown-building-layer.js?v=canvas-cull-r41"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=camera-angle-height-r49"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=camera-distance-r50"></script>
 </body>
 </html>
