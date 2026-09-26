@@ -758,12 +758,12 @@ try{
   await page.locator('[data-debug-action="damage1"]').click();
   await page.waitForTimeout(80);
   let healthDebug=await healthState(page);
-  check('Debug -1 HP button works',healthDebug.hp===7&&healthDebug.empty===3,JSON.stringify(healthDebug));
+  check('Debug -1 HP button works',healthDebug.hp===9&&healthDebug.empty===1,JSON.stringify(healthDebug));
 
   await page.locator('[data-debug-action="heal1"]').click();
   await page.waitForTimeout(80);
   healthDebug=await healthState(page);
-  check('Debug +1 HP button works',healthDebug.hp===8&&healthDebug.empty===2,JSON.stringify(healthDebug));
+  check('Debug +1 HP button works',healthDebug.hp===10&&healthDebug.empty===0,JSON.stringify(healthDebug));
 
   await page.locator('#debugCommandInput').fill('hp 5');
   await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
