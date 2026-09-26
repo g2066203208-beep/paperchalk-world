@@ -1,10 +1,10 @@
 # Paperchalk World
 
-纸片 / 粉笔手绘风持续世界游戏原型。外景采用“打开的贺卡”X/Z/Y 透视舞台：角色保持正面纸偶，地面与背景通过统一相机投影形成真实前后景深。
+纸片 / 粉笔手绘风持续世界游戏原型。外景采用“打开的贺卡”舞台：玩家只在 X/Y 游戏平面移动；Z 只作为树木、建筑、远景等场景元素的景深参数。
 
 当前可玩版本已经从早期单段道路扩展为 **20 × 6000 px = 120000 px** 的连续世界坐标，并保留 A村外道路作为起始区域：
 
-- 120000 px 主世界 X 坐标 + 可连续前后移动的 Z 深度坐标，道路图节点/分支与 Camera 跟随
+- 120000 px 主世界 X 坐标 + Y 跳跃/高程 Camera；Z 不参与玩家移动，仅用于场景景深
 - 地面、岩石、平台、木箱、树木等地图实体
 - 地形碰撞、跳跃、平台落地与地图边界
 - 即时近战：玩家 hitbox / hurtbox、敌人受击、击退与生命
@@ -20,15 +20,14 @@
 ## 操作
 
 - `A / D` 或 `← / →`：左右移动（X）
-- `W / S` 或 `↑ / ↓`：前后移动（Z）
-- `Space`：跳跃（Y）
-- `C`：蹲下
+- `W / ↑ / Space`：跳跃（Y）
+- `S / ↓ / C`：蹲下
 - `J`：攻击
 - `E`：与附近 NPC 交谈
 - `B`：背包
 - 所有开发调试功能：点击游戏内右上角 **调试**
 
-触屏设备使用左侧二维动态摇杆控制 X/Z 地面移动，以及右侧「聊 / 跳 / 攻」按钮。
+触屏设备使用左侧摇杆控制左右移动，Y 方向由「跳」按钮控制；调试飞行模式下摇杆 Y 才用于上下移动。
 
 ## 在线版本
 
@@ -42,7 +41,7 @@ https://g2066203208-beep.github.io/paperchalk-world/
 
 ## 运行时架构
 
-动态战斗实体采用轻量 Sparse-Set ECS，并已拆出 Transform(X/Z) / Health / Combat / AI / Patrol / Renderable 组件源；X/Z/Y 外景投影由共享 Card Camera 核心统一提供给 DOM 与 Pixi 两个渲染后端；跨系统副作用通过事件总线解耦；世界图、NPC、敌人原型和物品进入可验证 Content 层。UI、对话和菜单继续使用 DOM retained-mode，PixiJS 8 作为可切换的动态实体 GPU 渲染后端。主游戏 RAF 只在进入世界后运行，离开世界时停止。
+动态战斗实体采用轻量 Sparse-Set ECS，并已拆出 Transform(X/Z) / Health / Combat / AI / Patrol / Renderable 组件源；玩家模拟只使用 X/Y，Transform.z 作为可选场景深度；共享 Card Camera 统一给 DOM 与 Pixi 提供景深投影；跨系统副作用通过事件总线解耦；世界图、NPC、敌人原型和物品进入可验证 Content 层。UI、对话和菜单继续使用 DOM retained-mode，PixiJS 8 作为可切换的动态实体 GPU 渲染后端。主游戏 RAF 只在进入世界后运行，离开世界时停止。
 
 详细设计与后续迁移边界见 `docs/ARCHITECTURE.md` 与 `docs/PREPRODUCTION_FREEZE.md`。
 
