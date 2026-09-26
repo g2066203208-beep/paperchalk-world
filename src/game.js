@@ -83,17 +83,6 @@ const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
   }:null
 }));
 const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const offset=1750+(zone%4)*720;
-  const x=base+offset;
-  ENEMY_SPAWNS.push({
-    id:'enemy-zone-'+zone,
-    x,
-    patrolMin:x-170-(zone%3)*20,
-    patrolMax:x+170+(zone%2)*30
-  });
-}
 
 /* Deterministic continuation: every 6000px is authored into the same coordinate space.
    Nothing is fetched or swapped while crossing a zone boundary. */
@@ -492,6 +481,8 @@ midgroundApartment?.addEventListener('error',()=>{
 },{once:true});
 function updateMidgroundApartmentVisibility(sceneryX,force=false){
   if(!midgroundApartment)return;
+  midgroundApartment.hidden=true;midgroundApartmentVisible=false;return;
+  /* retained system path for future authored building content */
   const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
   const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
     &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
@@ -509,6 +500,8 @@ function apartmentDoorScreenY(){
   return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
 }
 function nearbyApartmentDoor(maxDistance=78){
+  return false;
+  /* retained system path for future authored door content */
   if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
   return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
 }
@@ -701,6 +694,8 @@ function updateInteriorDepthLayers(){
   return sceneLocation==='interior';
 }
 function nearbyInteriorExit(maxDistance=92){
+  return false;
+  /* retained system path for future authored interior content */
   return sceneLocation==='interior'&&!sceneTransitionBusy
     &&Math.abs(interiorPlayerWorldX-INTERIOR_DOOR_X)<=maxDistance
     &&Math.abs(playerY)<=72;
@@ -726,6 +721,8 @@ function clearSceneStageClasses(){
   worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
 }
 function enterApartment(){
+  return false;
+  /* retained system path for future authored interior content */
   if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
   sceneTransitionBusy=true;
   exteriorReturnX=playerWorldX;
@@ -821,10 +818,7 @@ dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
   else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
-dialogueNpcArt.src=MAP_NPCS[0]?.dialoguePortrait||MAP_NPCS[0]?.sprite||'';
-dialogueNpcArt.addEventListener('error',()=>{
-  console.warn('NPC_PORTRAIT_UNAVAILABLE');
-},{once:true});
+if(MAP_NPCS[0])dialogueNpcArt.src=MAP_NPCS[0].dialoguePortrait||MAP_NPCS[0].sprite||'';
 let dialoguePortraitReady=false;
 const dialoguePortraitDecode=Promise.allSettled(
   [dialoguePlayerArt,dialogueNpcArt].map(img=>typeof img.decode==='function'?img.decode():Promise.resolve())
@@ -1520,9 +1514,9 @@ function updateDebugStatus(){
 function updateCombatDebugButtons(){
   debugHitboxBtn.textContent='碰撞箱：'+(showHitboxes?'开':'关');
   debugRangeBtn.textContent='攻击范围：'+(showAttackRange?'开':'关');
-  debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
+  if(debugAiBtn)debugAiBtn.textContent='敌人AI：'+(enemyAiEnabled?'开':'停');
   debugMapColliderBtn.textContent='地形碰撞：'+(showMapColliders?'开':'关');
-  debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
+  if(debugSpawnBtn)debugSpawnBtn.textContent='出生区：'+(showSpawnZones?'开':'关');
   debugCameraBtn.textContent='Camera：'+(showCameraDebug?'开':'关');
   if(debugFlightBtn){debugFlightBtn.textContent='自由飞行：'+(debugFlightMode?'开':'关');debugFlightBtn.classList.toggle('is-active',debugFlightMode);}
   const renderer=window.PaperchalkRenderer;
@@ -1544,7 +1538,6 @@ function openDebugPanel(){
   debugToggleBtn.setAttribute('aria-expanded','true');
   updateDebugStatus();
   updateCombatDebugButtons();
-  window.PaperchalkDebugCamera?.sync?.();
   renderCombatDebug();
   return true;
 }
@@ -2201,6 +2194,7 @@ function setEnemyVisual(e,force=false){
   if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
 }
 function resetEnemyState(e,spawn){
+  e.el.hidden=false;
   e.x=spawn.x;e.z=Number(spawn.z)||0;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
   e.hp=ENEMY_MAX_HP;e.alive=true;e.facing=-1;e.state='patrol';e.attackTimer=0;e.attackCooldown=.7;e.hitstun=0;e.spawned=true;
   e.account=typeof getSession==='function'?(getSession()?.account||null):null;e.patrolDir=-1;
@@ -2210,6 +2204,7 @@ function resetMapEnemies(){
   enemies.forEach((e,i)=>{
     const spawn=ENEMY_SPAWNS[i];
     if(spawn)resetEnemyState(e,spawn);
+    else{e.spawned=false;e.alive=false;e.el.hidden=true}
   });
 }
 function resetEnemy(offset=360){
@@ -2542,6 +2537,7 @@ function teleportTo(x,{notice='已传送'}={}){
   updateCamera();renderWorld(true);if(notice)showMapNotice(notice);return playerWorldX;
 }
 function updateCombat(dt,interactive){
+  if(!ENEMY_SPAWNS.length)return;
   if(!enemies.every(e=>e.spawned)){if(interactive)resetMapEnemies();else return}
   if(playerAttackCooldown>0)playerAttackCooldown=Math.max(0,playerAttackCooldown-dt);
   if(playerInvuln>0)playerInvuln=Math.max(0,playerInvuln-dt);
@@ -3959,7 +3955,7 @@ window.PaperchalkSaveDiagnostics={
   backupKeyFor(account){return accountSaveKey(account)+'.backup'}
 };
 function getSettings(){
-  const defaults={language:'zh-CN',timeScale:1,preferLandscape:true,cameraTilt:13.1,cameraHeight:4.1,cameraDistance:30};
+  const defaults={language:'zh-CN',timeScale:1,preferLandscape:true};
   try{
     const parsed=JSON.parse(storageGet(KEY_SETTINGS)||'{}');
     return {...defaults,...parsed};
@@ -3973,7 +3969,6 @@ function applySettings(settings=getSettings()){
   settingLanguage.value='zh-CN';
   settingTimeScale.value=String(worldTimeScale);
   settingLandscape.checked=settings.preferLandscape!==false;
-  window.PaperchalkCameraSettings?.apply?.(settings,false,false);
 }
 function saveSettingsFromUI(){
   const settings={
@@ -3981,7 +3976,6 @@ function saveSettingsFromUI(){
     language:settingLanguage.value||'zh-CN',
     timeScale:Number(settingTimeScale.value)||0,
     preferLandscape:settingLandscape.checked,
-    ...(window.PaperchalkCameraSettings?.snapshot?.()||{})
   };
   storageSet(KEY_SETTINGS,JSON.stringify(settings));
   applySettings(settings);
@@ -4012,7 +4006,6 @@ function showPage(name){
   authMsg.textContent='';
   if(name==='settings'){
     applySettings();
-    window.PaperchalkCameraSettings?.sync?.();
     settingsStatus.textContent='';
   }
 }
