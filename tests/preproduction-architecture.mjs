@@ -146,10 +146,15 @@ assert.ok(html.indexOf('save-runtime.js')<html.indexOf('game.js'),'save runtime 
 assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera must load before game');
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
+assert.ok(html.indexOf('test-fixtures.js')<html.indexOf('game.js'),'CI fixtures must mount before game runtime');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="camera-settings-r51"/,'camera settings build cache key missing');
-assert.match(html,/const BUILD = "camera-settings-r51"/,'page redirect cache key must match runtime build');
+assert.match(html,/paperchalk-build" content="mainline-clean-r52"/,'mainline clean build cache key missing');
+assert.match(html,/const BUILD = "mainline-clean-r52"/,'page redirect cache key must match runtime build');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
+assert.ok(html.includes('id="cameraControlBtn"')&&html.includes('id="cameraControlPanel"'),'standalone camera UI missing');
+assert.ok(!html.includes('id="enemy"')&&!html.includes('id="enemy2"'),'demo enemies must not exist in production DOM');
+assert.ok(!html.includes('id="midgroundApartment"')&&!html.includes('id="interiorScene"'),'demo apartment/interior must not exist in production DOM');
+assert.ok(html.includes('id="debugToggleBtn" class="debug-toggle-btn" hidden'),'developer debug entry must be hidden in production');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');
