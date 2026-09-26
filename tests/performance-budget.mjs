@@ -65,12 +65,12 @@ assert(game.includes("ambientInterval"),'Paused-world ambient throttling missing
 assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external prototype CDN');
 assert(!html.includes("blackKeyApartment")&&!css.includes("blackKeyApartment"),'Realtime apartment chroma-key filter returned');
 assert(!html.includes('./assets/backgrounds/apartment-midground.webp?v='),'Prototype apartment asset returned to production runtime');
-assert(game.includes("PRODUCTION_INTERIORS_ENABLED=false"),'Prototype interior content is not production-disabled');
+assert(!game.includes("PRODUCTION_INTERIORS_ENABLED")&&!game.includes("enterApartment")&&!game.includes("interiorPlayerWorldX"),'Prototype interior runtime returned');
 assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"),'Background mountain layer returned');
 assert(css.includes(".road-layer{display:none!important}"),'Road visuals returned');
-assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=0"),'Authored obstacles returned');
+assert(game.includes("const MAP_TERRAIN=[]")&&game.includes("const MAP_OBJECTS=[]"),'Production world no longer starts from empty authored collections');
 assert(game.includes("const rear=[];")&&game.includes("const front=[];"),'Authored prop strips returned');
-assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment track became world-scale again');
+assert(!html.includes('id="midgroundApartment"')&&!html.includes('id="prototypeRuntimeCompat"'),'Prototype apartment compatibility DOM returned');
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
 assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"),'XY gameplay / Z scene-depth runtime missing');
 assert(css.includes(".card-ground-canvas")&&!css.includes("transform:perspective(900px) rotateX(68deg)!important"),'Ground reverted from the single canvas projection path');
@@ -83,6 +83,7 @@ assert((cardCamera.match(/Object\.freeze\(\{id:'/g)||[]).length===10,'Scene guid
 assert(domCardRenderer.includes("sceneMainLines")&&domCardRenderer.includes("sceneSubLines"),'Scene guide main/sub instrumentation missing');
 assert(domCardRenderer.includes("const farZ=Math.min(Number(cfg.farGroundDepth)")&&domCardRenderer.includes("dataset.farDepth"),'Ground grid is no longer finitely capped');
 assert(!game.includes("keyboardDepthForward")&&!game.includes("joystickDepthAxis"),'Player Z input returned');
+assert(!game.includes("Math.hypot(dx,dz)")&&!game.includes("Math.abs(e.z)")&&!game.includes("cardDepthDistance(n.x"),'Authored scene Z leaked into gameplay logic');
 assert(renderer.includes("const cardCamera=window.PaperchalkCardCamera"),'GPU renderer does not share the card-camera runtime');
 assert(buildingPools.includes("realWorld")&&buildingPools.includes("oldTown"),'Old-town building content pool missing');
 assert(buildingPools.includes("oldtown-building-10"),'Old-town pool no longer contains all 10 supplied buildings');
