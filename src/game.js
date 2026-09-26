@@ -2202,35 +2202,9 @@ function setCrouchControl(active=true){
 function getEnemyHurtbox(e){return{x:e.x-31,y:10,w:62,h:108}}
 function getEnemyAttackBox(e){return e.facing>0?{x:e.x+20,y:24,w:74,h:72}:{x:e.x-94,y:24,w:74,h:72}}
 function setEnemyVisual(e,force=false){
-  const p=cardProjection(e.x,e.z,0);
-  const visible=p.visible&&p.x>-320&&p.x<VIEW_W+320&&p.y>-260&&p.y<VIEW_H+260;
-  if(force||e._visible!==visible){
-    e._visible=visible;
-    e.el.style.display=visible?'':'none';
-  }
-  if(!visible)return;
-  if(force||e._renderX!==e.x||e._renderZ!==e.z||e._renderCameraZ!==playerWorldZ||e._renderCameraX!==playerWorldX){
-    e._renderX=e.x;e._renderZ=e.z;e._renderCameraZ=playerWorldZ;e._renderCameraX=playerWorldX;
-    e.el.style.setProperty('--enemy-x',p.x.toFixed(2)+'px');
-    e.el.style.setProperty('--enemy-bottom',(VIEW_H-p.y).toFixed(2)+'px');
-    e.el.style.setProperty('--world-scale',p.scale.toFixed(4));
-  }
   if(force||e._renderFacing!==e.facing){e._renderFacing=e.facing;e.el.style.setProperty('--enemy-facing',e.facing)}
   if(force||e._renderHp!==e.hp){e._renderHp=e.hp;e.healthEl.style.width=(e.hp/ENEMY_MAX_HP*100)+'%'}
   if(force||e._renderAlive!==e.alive){e._renderAlive=e.alive;e.el.classList.toggle('is-dead',!e.alive)}
-}
-function renderProjectedNpcs(){
-  for(const n of MAP_NPCS){
-    const el=mapNpcEls.get(n.id);
-    if(!el)continue;
-    const p=cardProjection(n.x,Number(n.z)||0,0);
-    const visible=p.visible&&p.x>-220&&p.x<VIEW_W+220;
-    el.style.display=visible?'':'none';
-    if(!visible)continue;
-    el.style.setProperty('--npc-x',p.x.toFixed(2)+'px');
-    el.style.setProperty('--npc-bottom',(VIEW_H-p.y).toFixed(2)+'px');
-    el.style.setProperty('--world-scale',p.scale.toFixed(4));
-  }
 }
 function resetEnemyState(e,spawn){
   e.x=spawn.x;e.z=Number(spawn.z)||0;e.spawnX=spawn.x;e.patrolMin=spawn.patrolMin;e.patrolMax=spawn.patrolMax;
@@ -2920,11 +2894,6 @@ function writeTransform(el,key,value){
 }
 function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
-  worldEl.style.setProperty('--card-grid-x',(-posMod(playerWorldX,CARD_GRID_SIZE)).toFixed(2)+'px');
-  worldEl.style.setProperty('--card-grid-z',(posMod(playerWorldZ,CARD_GRID_SIZE)).toFixed(2)+'px');
-  const wallPerspective=CARD_CAMERA_BASE_DEPTH/(CARD_CAMERA_BASE_DEPTH+CARD_CAMERA.config.wallDepth);
-  worldEl.style.setProperty('--card-wall-x',(-posMod(playerWorldX*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
-  worldEl.style.setProperty('--card-wall-y',(posMod((playerY-playerWorldZ*.16)*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
   const windowChanged=updateVisualWindow(force);
   if(windowChanged)force=true;
@@ -2965,7 +2934,6 @@ function renderWorld(force=false){
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
-  if(sceneLocation==='outside')renderProjectedNpcs();
   if(sceneLocation==='interior'){
     alignInteriorSceneToStage(force);
     positionInteriorExitDoor();
