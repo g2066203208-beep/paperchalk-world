@@ -8,8 +8,6 @@ const world=document.getElementById('world');
 const groundCanvas=document.getElementById('cardGroundCanvas');
 if(!runtime||!camera||!world)return;
 
-// The grid is a debug/geometry aid, not raster artwork. A 1x backing store is
-// deliberate: high-DPR phones otherwise rasterize 4-9x as many pixels per frame.
 const maxDpr=1;
 const styleCache=new WeakMap();
 const worldVarCache=new Map();
@@ -145,8 +143,6 @@ function renderGroundGrid(frame){
   const farY=farProjection.y;
   writeWorldVar('--card-far-ground-y',farY.toFixed(2)+'px');
 
-  // Clear only the finite ground band. During a jump include the previous far
-  // edge so no old lines remain where the sky wall moved.
   const clearTop=Math.max(0,Math.min(lastFarY||farY,farY)-6);
   ctx.clearRect(0,clearTop,v.width,Math.max(0,v.height-clearTop));
   lastFarY=farY;
