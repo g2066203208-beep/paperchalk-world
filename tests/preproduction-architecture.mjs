@@ -64,6 +64,7 @@ const raised=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:12
 assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
 assert.equal(cardCamera.config.baseDepth,3840,'camera-to-mid baseline must be 30m so the -5m near line stays near the screen edge');
+assert.equal(cardCamera.config.horizonRatio,.27,'ground view must keep the horizon high enough to expose the 5m scene-band spacing');
 assert.deepEqual([-640,0,640,1280].map(z=>z/cardCamera.config.gridSize),[-5,0,5,10],'major scene depths must be -5m/0m/5m/10m');
 const metricDepths=[-640,0,640,1280];
 for(const z of metricDepths){
@@ -111,7 +112,7 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="equal-metric-r44"/,'equal-metric build cache key missing');
+assert.match(html,/paperchalk-build" content="steeper-perspective-r45"/,'steeper-perspective build cache key missing');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
