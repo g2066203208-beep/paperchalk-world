@@ -1129,10 +1129,15 @@ try{
 
   await page.locator('#debugCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
-  const distance30=await page.evaluate(()=>({
-    scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
-    actorTransform:getComputedStyle(document.querySelector('.actor')).transform
-  }));
+  const distance30=await page.evaluate(()=>{
+    const t=getComputedStyle(document.querySelector('.actor')).transform;
+    const m=!t||t==='none'?null:new DOMMatrixReadOnly(t);
+    return {
+      scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
+      actorScale:m?Math.hypot(m.a,m.b):1,
+      actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom
+    };
+  });
   await page.locator('#debugCameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
   await page.waitForTimeout(80);
   const distance15=await page.evaluate(()=>({
@@ -1140,20 +1145,18 @@ try{
     manual:window.PaperchalkCardCamera.manualCameraDistanceMeters,
     stored:localStorage.getItem('paperchalk.debug.cameraDistance.v1'),
     scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
-    actorTransform:getComputedStyle(document.querySelector('.actor')).transform,
+    actorScale:(()=>{const t=getComputedStyle(document.querySelector('.actor')).transform;const m=!t||t==='none'?null:new DOMMatrixReadOnly(t);return m?Math.hypot(m.a,m.b):1})(),
+    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom,
     label:document.getElementById('debugCameraDistanceValue')?.textContent,
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
     renderer:window.PaperchalkRenderer?.mode||'dom'
   }));
-  const domScaleFromTransform=t=>{
-    if(!t||t==='none')return 1;
-    const m=new DOMMatrixReadOnly(t);return Math.hypot(m.a,m.b);
-  };
   check('Debug camera distance performs a real dolly toward the player',
     distance15.value===15&&distance15.manual===15&&distance15.stored==='15'&&distance15.label.includes('15.0 m')&&
     Math.abs(distance30.scale-1)<1e-9&&Math.abs(distance15.scale-2)<1e-9&&
     distance15.depths.join(',')===cameraBefore.depths.join(',')&&
-    (distance15.renderer!=='dom'||domScaleFromTransform(distance15.actorTransform)>domScaleFromTransform(distance30.actorTransform)*1.9),
+    Math.abs(distance15.actorBottom-distance30.actorBottom)<1&&
+    (distance15.renderer!=='dom'||distance15.actorScale>distance30.actorScale*1.9),
     JSON.stringify({distance30,distance15}));
 
   await page.locator('#debugCameraTiltReset').click();
