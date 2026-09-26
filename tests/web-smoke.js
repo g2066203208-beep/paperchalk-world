@@ -222,7 +222,7 @@ assert(
   "World entity track transform missing"
 );
 assert(game.includes("e.state='patrol'"), "Enemy patrol state missing");
-assert(game.includes("dist<=700"), "Enemy chase radius missing");
+assert(game.includes("RAG_DRIFTER.aggroRange")&&content.includes("aggroRange:700"), "Enemy chase radius missing");
 assert(html.includes('data-debug-action="hitboxes"'), "Hitbox debug panel button missing");
 assert(html.includes('data-debug-action="attackRange"'), "Attack range debug panel button missing");
 assert(html.includes('data-debug-action="enemyAI"'), "Enemy AI debug panel button missing");
