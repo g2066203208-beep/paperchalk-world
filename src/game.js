@@ -2671,16 +2671,16 @@ let runtimeRevision=0;
 const runtimeFrameState={
   revision:0,
   viewport:{width:VIEW_W,height:VIEW_H,groundY:MAP_GROUND_SCREEN_Y},
-  camera:{x:worldX,y:playerY,visualOriginX,sceneryOffsetX},
+  camera:{x:worldX,y:playerY,z:playerWorldZ,visualOriginX,sceneryOffsetX},
   time:{minutes:worldMinutes,visibleMinutes:visibleClockMinutes(),scale:worldTimeScale},
   route:{index:0,id:'',biome:'meadow',orientation:1},
   player:{
-    x:playerWorldX,y:playerY,vy:playerVy,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
+    x:playerWorldX,z:playerWorldZ,y:playerY,vy:playerVy,screenX:actorX,facing,hp:playerHp,maxHp:PLAYER_MAX_HP,
     grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,
     moving:false,attacking:false,attackTimer:0,invulnerable:false
   },
   enemies:enemies.map(e=>({
-    id:e.id,x:e.x,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
+    id:e.id,x:e.x,z:e.z,hp:e.hp,alive:e.alive,facing:e.facing,state:e.state,
     patrolMin:e.patrolMin,patrolMax:e.patrolMax,attackTimer:e.attackTimer,hitstun:e.hitstun
   })),
   mapRevision:0
@@ -2694,17 +2694,17 @@ function refreshRuntimeFrameState(){
   s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
   const activeCameraX=sceneLocation==='interior'?interiorCameraX:worldX;
   const activePlayerX=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
-  s.camera.x=activeCameraX;s.camera.y=playerY;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
+  s.camera.x=activeCameraX;s.camera.y=playerY;s.camera.z=sceneLocation==='outside'?playerWorldZ:0;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
-  s.player.x=activePlayerX;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
+  s.player.x=activePlayerX;s.player.z=sceneLocation==='outside'?playerWorldZ:0;s.player.y=playerY;s.player.vy=playerVy;s.player.screenX=actorX;s.player.facing=facing;
   s.player.hp=playerHp;s.player.maxHp=PLAYER_MAX_HP;s.player.grounded=playerGrounded;
   s.player.crouching=playerCrouching;s.player.action=playerActionState;
   s.player.moving=lastMovingState;s.player.attacking=playerAttackTimer>0;s.player.attackTimer=playerAttackTimer;
   s.player.invulnerable=playerInvuln>0;
   for(let i=0;i<enemies.length;i++){
     const e=enemies[i],o=s.enemies[i];
-    o.x=e.x;o.hp=e.hp;o.alive=e.alive;o.facing=e.facing;o.state=e.state;
+    o.x=e.x;o.z=e.z;o.hp=e.hp;o.alive=e.alive;o.facing=e.facing;o.state=e.state;
     o.patrolMin=e.patrolMin;o.patrolMax=e.patrolMax;o.attackTimer=e.attackTimer;o.hitstun=e.hitstun;
   }
   s.mapRevision=runtimeMapRevision;
@@ -2761,7 +2761,14 @@ window.PaperchalkRuntime={
     enemySpawns:ENEMY_SPAWNS,
     playerVisual:PLAYER_VISUAL,
     playerActions:PLAYER_ACTION_ASSETS,
-    playerActionMeta:PLAYER_ACTION_META
+    playerActionMeta:PLAYER_ACTION_META,
+    cardProjection:Object.freeze({
+      gridSize:CARD_GRID_SIZE,
+      baseDepth:CARD_CAMERA_BASE_DEPTH,
+      horizonRatio:CARD_HORIZON_RATIO,
+      minDepth:CARD_MIN_DEPTH,
+      maxDepth:CARD_MAX_DEPTH
+    })
   }),
   getSnapshot:runtimeSnapshot,
   subscribe(observer){
