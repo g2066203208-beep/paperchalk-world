@@ -11,6 +11,7 @@ let tiltRevision=0;
 const config=Object.freeze({
   gridSize:128,
   baseDepth:3840, // 30 m camera-to-mid plane at 128 px/m
+  verticalFovDegrees:60,
   nearMainDepth:-640,
   nearMainScreenMargin:8, // responsive tilt target: near-main sits ~8px above viewport bottom
   minDepth:96,
@@ -66,7 +67,7 @@ function clearHorizonRatio(){
 function clampTiltDegrees(value){
   const n=Number(value);
   if(!Number.isFinite(n))return null;
-  return Math.max(0,Math.min(30,n));
+  return Math.max(0,Math.min(45,n));
 }
 function setTiltDegrees(value){
   const next=clampTiltDegrees(value);
@@ -96,11 +97,15 @@ function clearCameraHeight(){
   manualCameraHeightPx=null;
   tiltRevision++;
 }
+function verticalFocalLength(viewportHeight=720){
+  const h=Number(viewportHeight)||720;
+  return (h*.5)/Math.tan(config.verticalFovDegrees*Math.PI/360);
+}
 function resolveHorizonY(viewportHeight=720,groundY=112){
   const h=Number(viewportHeight)||720;
   if(manualTiltDegrees!==null){
     const theta=manualTiltDegrees*Math.PI/180;
-    return h*.5-config.baseDepth*Math.tan(theta);
+    return h*.5-verticalFocalLength(h)*Math.tan(theta);
   }
   if(manualHorizonRatio!==null)return h*manualHorizonRatio;
   return resolveAutoHorizonY(h,groundY);
@@ -113,7 +118,7 @@ function getTiltDegrees(viewportHeight=720,groundY=112){
   if(manualTiltDegrees!==null)return manualTiltDegrees;
   const h=Number(viewportHeight)||720;
   const horizon=resolveHorizonY(h,groundY);
-  return Math.atan((h*.5-horizon)/config.baseDepth)*180/Math.PI;
+  return Math.atan((h*.5-horizon)/verticalFocalLength(h))*180/Math.PI;
 }
 function resolveCameraHeight(viewportHeight=720,groundY=112){
   if(manualCameraHeightPx!==null)return manualCameraHeightPx;
@@ -158,7 +163,7 @@ function wrap(value,size=config.gridSize){
 
 global.PaperchalkCardCamera=Object.freeze({
   config,project,resolveHorizonY,getHorizonRatio,setHorizonRatio,clearHorizonRatio,
-  getTiltDegrees,setTiltDegrees,clearTiltDegrees,
+  getTiltDegrees,setTiltDegrees,clearTiltDegrees,verticalFocalLength,
   resolveCameraHeight,getCameraHeightMeters,setCameraHeightMeters,clearCameraHeight,
   distance2D,wrap,
   get manualHorizonRatio(){return manualHorizonRatio},
