@@ -63,20 +63,24 @@ assert.ok(near.y>far.y,'authored scene Z must move farther ground objects toward
 const raised=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:120,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
 assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
-const metricDepths=[-128,0,640,1280];
+assert.equal(cardCamera.config.baseDepth,3840,'camera-to-mid baseline must be 30m so the -5m near line stays near the screen edge');
+assert.deepEqual([-640,0,640,1280].map(z=>z/cardCamera.config.gridSize),[-5,0,5,10],'major scene depths must be -5m/0m/5m/10m');
+const metricDepths=[-640,0,640,1280];
 for(const z of metricDepths){
   const q=cardCamera.project({worldX:0,worldZ:z,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
   const expected=cardCamera.config.baseDepth/(cardCamera.config.baseDepth+z);
   assert.ok(Math.abs(q.scale-expected)<1e-12,'main guide must obey pinhole perspective at z='+z);
 }
 const mainYs=metricDepths.map(z=>cardCamera.project({worldX:0,worldZ:z,playerX:0,playerY:0,cameraZ:0,screenX:640,viewportHeight:720,groundY:112}).y);
+const mainWorldGaps=metricDepths.slice(1).map((z,i)=>z-metricDepths[i]);
+assert.deepEqual(mainWorldGaps,[640,640,640],'near-mid-far-horizon main lines must be equally spaced by 5m');
 assert.ok((mainYs[1]-mainYs[2])>(mainYs[2]-mainYs[3]),'equal/farther physical depth must visually compress toward the horizon');
 assert.equal(cardCamera.config.farGroundDepth,1280,'ground must end at the 10 m far scenery line');
 assert.equal(cardCamera.config.wallDepth,cardCamera.config.farGroundDepth,'sky wall must rise from the ground far edge');
 const guides=Array.from(cardCamera.config.sceneGuides);
 assert.equal(guides.length,10,'scene depth must expose 3x3 near/mid/far guides plus horizon');
 assert.deepEqual(guides.map(x=>x.id),['near-front','near-main','near-back','mid-front','mid-main','mid-back','far-front','far-main','far-back','horizon']);
-assert.deepEqual(guides.map(x=>x.z),[-160,-128,-96,-32,0,32,512,640,768,1280]);
+assert.deepEqual(guides.map(x=>x.z),[-704,-640,-576,-64,0,64,576,640,704,1280]);
 assert.equal(guides.filter(x=>x.kind==='main').length,3,'near/mid/far each need one main guide');
 assert.equal(guides.filter(x=>x.kind==='sub').length,6,'near/mid/far each need front/back sub-guides');
 assert.equal(guides.filter(x=>x.kind==='horizon').length,1,'scene needs one final horizon guide');
@@ -107,7 +111,7 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="metric-guides-r43"/,'metric-guide build cache key missing');
+assert.match(html,/paperchalk-build" content="equal-metric-r44"/,'equal-metric build cache key missing');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
