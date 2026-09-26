@@ -299,8 +299,8 @@ assert(html.includes('meta name="paperchalk-build" content="camera-angle-height-
 assert(html.includes('const BUILD = "camera-angle-height-r49"'), "Top-level cache redirect build key missing");
 assert(html.includes('./src/game.js?v=camera-angle-height-r49'), "game.js camera debug cache key missing");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
-assert(cardCamera.includes("farGroundDepth:FAR_GROUND_DEPTH")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
-assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main'")&&cardCamera.includes("z:-640")&&cardCamera.includes("id:'far-main'")&&cardCamera.includes("z:640")&&cardCamera.includes("FAR_GROUND_DEPTH=1280"), "Meter-aligned main scene guides missing");
+assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
+assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main'")&&cardCamera.includes("z:-640")&&cardCamera.includes("id:'far-main'")&&cardCamera.includes("z:640")&&cardCamera.includes("const FAR=1280"), "Meter-aligned main scene guides missing");
 assert(cardCamera.includes("nearMainScreenMargin:8")&&cardCamera.includes("function resolveHorizonY("), "Responsive near-edge camera tilt missing");
 assert(cardCamera.includes("function setHorizonRatio(")&&cardCamera.includes("function clearHorizonRatio("), "Runtime camera tilt override API missing");
 assert(cardCamera.includes("verticalFovDegrees:60")&&cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters("), "Real angle/camera-height API missing");
