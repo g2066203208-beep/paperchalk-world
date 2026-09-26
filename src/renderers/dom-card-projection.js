@@ -8,14 +8,16 @@ const world=document.getElementById('world');
 const groundCanvas=document.getElementById('cardGroundCanvas');
 if(!runtime||!camera||!world)return;
 
-const coarsePointer=matchMedia('(pointer:coarse)').matches;
-const maxDpr=coarsePointer?1.25:1.5;
+// The grid is a debug/geometry aid, not raster artwork. A 1x backing store is
+// deliberate: high-DPR phones otherwise rasterize 4-9x as many pixels per frame.
+const maxDpr=1;
 const styleCache=new WeakMap();
 const worldVarCache=new Map();
 let enemyEls=[];
 let npcEls=new Map();
 let groundCtx=null;
 let lastCanvasW=0,lastCanvasH=0,lastCanvasDpr=0;
+let lastGroundKey='',lastFarY=0;
 let lastRenderAt=0;
 const MAX_RENDER_FPS=60;
 const stats={
@@ -116,6 +118,13 @@ function strokeLine(ctx,x1,y1,x2,y2,color,width){
 function renderGroundGrid(frame){
   if(!groundCanvas)return;
   const cfg=camera.config,p=frame.player,v=frame.viewport;
+  const groundKey=[
+    Math.round((Number(p.x)||0)*100)/100,
+    Math.round((Number(p.y)||0)*100)/100,
+    v.width,v.height,v.groundY
+  ].join('|');
+  if(groundKey===lastGroundKey)return;
+  lastGroundKey=groundKey;
   const ctx=ensureGroundCanvas(v);
   if(!ctx)return;
   const step=cfg.gridSize;
@@ -132,9 +141,17 @@ function renderGroundGrid(frame){
   const farY=farProjection.y;
   writeWorldVar('--card-far-ground-y',farY.toFixed(2)+'px');
 
-  ctx.clearRect(0,0,v.width,v.height);
+  // Clear only the finite ground band. During a jump include the previous far
+  // edge so no old lines remain where the sky wall moved.
+  const clearTop=Math.max(0,Math.min(lastFarY||farY,farY)-6);
+  ctx.clearRect(0,clearTop,v.width,Math.max(0,v.height-clearTop));
+  lastFarY=farY;
   ctx.fillStyle='#2f9e44';
   ctx.fillRect(0,Math.max(0,farY),v.width,Math.max(0,v.height-farY));
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0,Math.max(0,farY-5),v.width,Math.max(0,v.height-farY+10));
+  ctx.clip();
 
   let depthUsed=0;
   for(let z=Math.ceil(nearZ/step)*step;z<=farZ;z+=step){
@@ -185,6 +202,7 @@ function renderGroundGrid(frame){
     sceneUsed++;
   }
 
+  ctx.restore();
   stats.depthLines=depthUsed;
   stats.worldLines=worldUsed;
   stats.sceneLines=sceneUsed;
