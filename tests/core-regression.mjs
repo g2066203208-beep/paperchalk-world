@@ -447,7 +447,7 @@ try{
     window.PaperchalkMap.teleport(1060,{notice:''});
   });
   await page.keyboard.down('KeyD');
-  await page.waitForTimeout(550);
+  await page.waitForTimeout(800);
   await page.keyboard.up('KeyD');
   await page.waitForTimeout(80);
   const unobstructed=await state(page);
@@ -781,14 +781,15 @@ try{
       cameraX:snap.camera.x,
       visualOriginX:snap.camera.visualOriginX,
       mapTransformX:matrix.m41,
-      expectedMapTransformX:-(snap.camera.x-snap.camera.visualOriginX)
+      projectedPlayerX:window.PaperchalkMap.project(snap.player.x,snap.player.z||0,0).x
     };
   });
   check('Exterior world reveals with its doorway bound to the player anchor',
     Math.abs(exteriorReveal.anchorError)<1,
     JSON.stringify(exteriorReveal));
-  check('Exterior reveal keeps the live camera X transform during stage animation',
-    Math.abs(exteriorReveal.mapTransformX-exteriorReveal.expectedMapTransformX)<1,
+  check('Exterior reveal uses screen-space track plus live per-entity projection',
+    Math.abs(exteriorReveal.mapTransformX)<1&&
+    Math.abs(exteriorReveal.projectedPlayerX-exteriorReveal.playerX)<1,
     JSON.stringify(exteriorReveal));
 
   await page.waitForFunction(()=>window.PaperchalkScene.location==='outside'&&!window.PaperchalkScene.transitioning,null,{timeout:2500});
@@ -929,13 +930,19 @@ try{
   const moved=await state(page);
   check('Movement works',moved.worldX>0||moved.actorX>s.actorX,JSON.stringify(moved));
   check('World time advances',moved.worldMinutes>1,'worldMinutes='+moved.worldMinutes);
-  const entityMapSync=await page.evaluate(()=>({
-    worldX:window.eval('worldX'),
-    transform:document.getElementById('entityTrack').style.transform
-  }));
-  const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]);
-  check('World entity track scrolls with map coordinates',
-    Number.isFinite(entityTranslateX)&&Math.abs(entityTranslateX+entityMapSync.worldX)<0.5,
+  const entityMapSync=await page.evaluate(()=>{
+    const enemy=window.PaperchalkCombat.enemies.find(e=>e.alive)||window.PaperchalkCombat.enemies[0];
+    const projected=window.PaperchalkMap.project(enemy.x,enemy.z||0,0);
+    const enemyEl=document.querySelector('#entityTrack .enemy');
+    return {
+      transform:document.getElementById('entityTrack').style.transform,
+      projectedX:projected.x,
+      domX:Number.parseFloat(enemyEl?.style.getPropertyValue('--enemy-x'))||0
+    };
+  });
+  const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]||0);
+  check('World entity track stays screen-space while entities receive perspective projection',
+    Math.abs(entityTranslateX)<0.5&&Math.abs(entityMapSync.domX-entityMapSync.projectedX)<1,
     JSON.stringify({...entityMapSync,entityTranslateX}));
 
   const compositorPlayer=await page.evaluate(()=>({
