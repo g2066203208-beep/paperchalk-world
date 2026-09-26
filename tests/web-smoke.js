@@ -274,10 +274,10 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="production-clean-r52"'), "R52 production-clean build cache key missing");
-assert(html.includes('const BUILD = "production-clean-r52"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=production-clean-r52'), "game.js camera debug cache key missing");
-assert(html.includes('./src/camera-settings.js?v=production-clean-r52'), "camera settings controller missing");
+assert(html.includes('meta name="paperchalk-build" content="camera-scroll-r53"'), "R53 camera-scroll build cache key missing");
+assert(html.includes('const BUILD = "camera-scroll-r53"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=camera-scroll-r53'), "game.js camera debug cache key missing");
+assert(html.includes('./src/camera-settings.js?v=camera-scroll-r53'), "camera settings controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
@@ -287,6 +287,8 @@ assert(cardCamera.includes("function tiltFactor(")&&cardCamera.includes("functio
 assert(cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters(")&&cardCamera.includes("function setCameraDistanceMeters("), "Angle/height/distance camera API missing");
 assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("cameraControlBtn")&&cameraSettings.includes("cameraTilt")&&cameraSettings.includes("cameraHeight")&&cameraSettings.includes("cameraDistance"), "Standalone camera controller missing");
 assert(html.includes('id="cameraControlBtn"')&&html.includes('id="cameraControlPanel"'), "Standalone camera UI missing");
+assert(css.includes(".camera-control-panel{")&&css.includes("overflow-x:hidden;overflow-y:auto")&&css.includes("-webkit-overflow-scrolling:touch"), "Camera panel must be vertically scrollable");
+assert(css.includes("@media(max-width:900px),(max-height:700px)")&&css.includes("max-height:calc(100dvh - 92px - env(safe-area-inset-bottom))"), "Short-screen camera panel viewport cap missing");
 assert(!html.includes('id="settingCameraTilt"')&&!html.includes('id="settingCameraHeight"')&&!html.includes('id="settingCameraDistance"'), "Camera controls must not remain in Settings");
 assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Camera controls must not remain in Debug");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
