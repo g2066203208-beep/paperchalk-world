@@ -14,7 +14,7 @@ const buildingPools = fs.readFileSync("src/content/building-pools.js", "utf8");
 const domCardRenderer = fs.readFileSync("src/renderers/dom-card-projection.js", "utf8");
 const oldTownRenderer = fs.readFileSync("src/renderers/oldtown-building-layer.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
-const debugCamera = fs.readFileSync("src/debug-camera-controls.js", "utf8");
+const cameraSettings = fs.readFileSync("src/camera-settings.js", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -33,7 +33,8 @@ const requiredIds = [
   "entityTrack","pixiEntityLayer","playerFlip","playerSprite","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
-  "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput","debugCameraTilt","debugCameraTiltValue","debugCameraHorizonValue","debugCameraHeight","debugCameraHeightValue","debugCameraDistance","debugCameraDistanceValue","debugCameraTiltReset"
+  "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput",
+  "settingCameraTilt","settingCameraTiltValue","settingCameraHeight","settingCameraHeightValue","settingCameraDistance","settingCameraDistanceValue","settingCameraReset"
 ];
 
 for (const id of requiredIds) {
@@ -296,18 +297,19 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="camera-distance-r50"'), "R50 camera-distance build cache key missing");
-assert(html.includes('const BUILD = "camera-distance-r50"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=camera-distance-r50'), "game.js camera debug cache key missing");
-assert(html.includes('./src/debug-camera-controls.js?v=camera-distance-r50'), "standalone camera debug controller missing");
-assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/debug-camera-controls.js'), "camera debug controller must load after projection renderer");
+assert(html.includes('meta name="paperchalk-build" content="camera-settings-r51"'), "R51 camera-settings build cache key missing");
+assert(html.includes('const BUILD = "camera-settings-r51"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=camera-settings-r51'), "game.js camera debug cache key missing");
+assert(html.includes('./src/camera-settings.js?v=camera-settings-r51'), "camera settings controller missing");
+assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
 assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main'")&&cardCamera.includes("z:-640")&&cardCamera.includes("id:'far-main'")&&cardCamera.includes("z:640")&&cardCamera.includes("const FAR=1280"), "Meter-aligned main scene guides missing");
-assert(cardCamera.includes("nearMainScreenMargin:8")&&cardCamera.includes("function resolveHorizonY("), "Responsive near-edge camera tilt missing");
-assert(cardCamera.includes("function setHorizonRatio(")&&cardCamera.includes("function clearHorizonRatio("), "Runtime camera tilt override API missing");
-assert(cardCamera.includes("verticalFovDegrees:60")&&cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters(")&&cardCamera.includes("function setCameraDistanceMeters("), "Real angle/height/distance camera API missing");
-assert(debugCamera.includes("paperchalk.debug.cameraAngle.v2")&&debugCamera.includes("paperchalk.debug.cameraHeight.v1")&&debugCamera.includes("paperchalk.debug.cameraDistance.v1")&&debugCamera.includes("function setDistance("), "Camera angle/height/distance debug controller missing");
+assert(cardCamera.includes("defaultTiltDegrees:DT")&&cardCamera.includes("defaultHeightMeters:DH")&&cardCamera.includes("maxTiltDegrees:80"), "Independent production camera defaults/range missing");
+assert(cardCamera.includes("function tiltFactor(")&&cardCamera.includes("function resolveMidY("), "Mid-axis camera pitch projection missing");
+assert(cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters(")&&cardCamera.includes("function setCameraDistanceMeters("), "Angle/height/distance camera API missing");
+assert(cameraSettings.includes("paperchalk.settings.v1")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"), "Persistent camera settings controller missing");
+assert(!html.includes('id="debugCameraTilt"')&&!html.includes('id="debugCameraHeight"')&&!html.includes('id="debugCameraDistance"'), "Production camera controls must not remain in Debug");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 
