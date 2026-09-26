@@ -189,9 +189,9 @@ try{
     };
   });
   check('Ground grid has 3x3 scene sublayers plus one horizon line',
-    finiteGround.farDepth===1280&&finiteGround.depthLines<=14&&finiteGround.worldLines<=40&&
+    finiteGround.farDepth===1280&&finiteGround.depthLines<=16&&finiteGround.worldLines<=30&&
     finiteGround.sceneLines===10&&finiteGround.sceneMainLines===4&&finiteGround.sceneSubLines===6&&
-    finiteGround.guideDepths==='near-front:-160,near-main:-128,near-back:-96,mid-front:-32,mid-main:0,mid-back:32,far-front:512,far-main:640,far-back:768,horizon:1280'&&
+    finiteGround.guideDepths==='near-front:-704,near-main:-640,near-back:-576,mid-front:-64,mid-main:0,mid-back:64,far-front:576,far-main:640,far-back:704,horizon:1280'&&
     finiteGround.childNodes===0&&finiteGround.backingPixels>0&&
     Math.abs(finiteGround.skyBottom-finiteGround.horizonY)<1&&
     finiteGround.horizonPixel[0]>180&&finiteGround.horizonPixel[1]>150&&finiteGround.horizonPixel[2]<150&&
@@ -200,19 +200,28 @@ try{
     finiteGround.farMainPixel[2]>finiteGround.farMainPixel[0],
     JSON.stringify(finiteGround));
   const perspectiveMetrics=await page.evaluate(()=>{
-    const zs=[-128,0,640,1280];
+    const zs=[-640,0,640,1280];
     const points=zs.map(z=>window.PaperchalkMap.project(window.PaperchalkMap.playerX,z,0));
     return {
       zs,
       scales:points.map(p=>p.scale),
       ys:points.map(p=>p.y),
-      expected:zs.map(z=>900/(900+z))
+      baseDepth:window.PaperchalkCardCamera.config.baseDepth,
+      expected:zs.map(z=>window.PaperchalkCardCamera.config.baseDepth/(window.PaperchalkCardCamera.config.baseDepth+z))
     };
   });
-  check('Main scene lines use real pinhole perspective at meter-aligned depths',
+  const mainScreenGaps=[
+    perspectiveMetrics.ys[0]-perspectiveMetrics.ys[1],
+    perspectiveMetrics.ys[1]-perspectiveMetrics.ys[2],
+    perspectiveMetrics.ys[2]-perspectiveMetrics.ys[3]
+  ];
+  check('Four main scene lines are equal 5m world intervals with real perspective compression',
+    perspectiveMetrics.baseDepth===3840&&
+    perspectiveMetrics.zs.every((z,i)=>i===0||z-perspectiveMetrics.zs[i-1]===640)&&
     perspectiveMetrics.scales.every((s,i)=>Math.abs(s-perspectiveMetrics.expected[i])<1e-9)&&
-    (perspectiveMetrics.ys[1]-perspectiveMetrics.ys[2])>(perspectiveMetrics.ys[2]-perspectiveMetrics.ys[3]),
-    JSON.stringify(perspectiveMetrics));
+    mainScreenGaps[0]>mainScreenGaps[1]&&mainScreenGaps[1]>mainScreenGaps[2]&&
+    perspectiveMetrics.ys[0]>850&&perspectiveMetrics.ys[0]<900,
+    JSON.stringify({...perspectiveMetrics,mainScreenGaps}));
   const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
   check('Near/mid/far front-main-back guides are ordered toward the horizon',
     guideOrder.length===10&&guideOrder.every((y,i)=>i===0||guideOrder[i-1]>y),
