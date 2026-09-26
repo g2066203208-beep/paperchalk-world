@@ -150,7 +150,7 @@ try{
     const canvas=document.getElementById('cardGroundCanvas');
     const sky=document.querySelector('.paper-sky');
     const stats=window.PaperchalkDomCardProjection?.stats||{};
-    const horizonY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,1200,0).y;
+    const horizonY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,1280,0).y;
     const midMainY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0).y;
     const skyRect=sky?.getBoundingClientRect();
     const rect=canvas?.getBoundingClientRect();
@@ -189,9 +189,9 @@ try{
     };
   });
   check('Ground grid has 3x3 scene sublayers plus one horizon line',
-    finiteGround.farDepth===1200&&finiteGround.depthLines<=13&&finiteGround.worldLines<=50&&
+    finiteGround.farDepth===1280&&finiteGround.depthLines<=14&&finiteGround.worldLines<=40&&
     finiteGround.sceneLines===10&&finiteGround.sceneMainLines===4&&finiteGround.sceneSubLines===6&&
-    finiteGround.guideDepths==='near-front:-160,near-main:-120,near-back:-80,mid-front:-40,mid-main:0,mid-back:40,far-front:400,far-main:600,far-back:800,horizon:1200'&&
+    finiteGround.guideDepths==='near-front:-160,near-main:-128,near-back:-96,mid-front:-32,mid-main:0,mid-back:32,far-front:512,far-main:640,far-back:768,horizon:1280'&&
     finiteGround.childNodes===0&&finiteGround.backingPixels>0&&
     Math.abs(finiteGround.skyBottom-finiteGround.horizonY)<1&&
     finiteGround.horizonPixel[0]>180&&finiteGround.horizonPixel[1]>150&&finiteGround.horizonPixel[2]<150&&
@@ -199,6 +199,20 @@ try{
     finiteGround.nearMainPixel[0]>finiteGround.nearMainPixel[2]&&
     finiteGround.farMainPixel[2]>finiteGround.farMainPixel[0],
     JSON.stringify(finiteGround));
+  const perspectiveMetrics=await page.evaluate(()=>{
+    const zs=[-128,0,640,1280];
+    const points=zs.map(z=>window.PaperchalkMap.project(window.PaperchalkMap.playerX,z,0));
+    return {
+      zs,
+      scales:points.map(p=>p.scale),
+      ys:points.map(p=>p.y),
+      expected:zs.map(z=>900/(900+z))
+    };
+  });
+  check('Main scene lines use real pinhole perspective at meter-aligned depths',
+    perspectiveMetrics.scales.every((s,i)=>Math.abs(s-perspectiveMetrics.expected[i])<1e-9)&&
+    (perspectiveMetrics.ys[1]-perspectiveMetrics.ys[2])>(perspectiveMetrics.ys[2]-perspectiveMetrics.ys[3]),
+    JSON.stringify(perspectiveMetrics));
   const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
   check('Near/mid/far front-main-back guides are ordered toward the horizon',
     guideOrder.length===10&&guideOrder.every((y,i)=>i===0||guideOrder[i-1]>y),
@@ -319,7 +333,7 @@ try{
       player:window.PaperchalkCombat.player,
       camera:snap.camera,
       near:window.PaperchalkMap.project(760,0,0),
-      far:window.PaperchalkMap.project(760,600,0),
+      far:window.PaperchalkMap.project(760,640,0),
       cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
       groundZeroY:groundZero.y,
       groundFarY:groundFar.y,
