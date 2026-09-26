@@ -37,7 +37,6 @@ const budgets={
   'src/renderers/oldtown-building-layer.js':8000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
-  'assets/backgrounds/apartment-midground.webp':350000,
   'assets/backgrounds/sun-paper-r13.webp':50000,
   'assets/backgrounds/moon-paper-r13.webp':50000,
   'assets/backgrounds/cloud-paper-r13.webp':50000,
@@ -63,9 +62,10 @@ assert(renderer.includes("forcedRendererQuery"),'Explicit renderer override path
 assert(renderer.includes("if(forcedRendererQuery)"),'GPU renderer appears to boot eagerly again');
 assert(game.includes("PerformanceObserver"),'Long-task performance diagnostics missing');
 assert(game.includes("ambientInterval"),'Paused-world ambient throttling missing');
-assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external apartment CDN');
+assert(!html.includes("cdn.openart.ai"),'Runtime still depends on external prototype CDN');
 assert(!html.includes("blackKeyApartment")&&!css.includes("blackKeyApartment"),'Realtime apartment chroma-key filter returned');
-assert(game.includes("updateMidgroundApartmentVisibility"),'Apartment off-screen culling missing');
+assert(!html.includes('./assets/backgrounds/apartment-midground.webp?v='),'Prototype apartment asset returned to production runtime');
+assert(game.includes("PRODUCTION_INTERIORS_ENABLED=false"),'Prototype interior content is not production-disabled');
 assert(!html.includes("mountainBackground")&&!css.includes(".mountain-background-layer"),'Background mountain layer returned');
 assert(css.includes(".road-layer{display:none!important}"),'Road visuals returned');
 assert(game.includes("MAP_TERRAIN.length=0")&&game.includes("MAP_OBJECTS.length=0"),'Authored obstacles returned');
@@ -91,7 +91,7 @@ assert(oldTownRenderer.includes("function shuffled(rowIndex)"),'Seeded old-town 
 assert(oldTownRenderer.includes("runtime.subscribe(render)"),'Old-town layer is not lifecycle/runtime driven');
 assert(oldTownRenderer.includes("worldHalf")&&oldTownRenderer.includes("coarseCulled"),'Old-town coarse visibility culling missing');
 assert(renderer.includes("coarseCardVisible"),'Pixi renderer coarse visibility culling missing');
-assert(cameraSettings.includes("PaperchalkCameraSettings")&&cameraSettings.includes("settingCameraTilt")&&cameraSettings.includes("settingCameraHeight")&&cameraSettings.includes("settingCameraDistance"),'Production camera settings controller missing');
+assert(cameraSettings.includes("PaperchalkCameraSettings")&&cameraSettings.includes("cameraControlBtn")&&cameraSettings.includes("cameraTilt")&&cameraSettings.includes("cameraHeight")&&cameraSettings.includes("cameraDistance"),'Standalone camera controller missing');
 assert(css.includes(".oldtown-building-layer")&&css.includes("R38 OLD-TOWN BUILDING POOL"),'Old-town far-midground CSS missing');
 assert(!html.includes("atlas-r38-b64/"),'Temporary atlas base64 chunks leaked into runtime');
 
@@ -106,7 +106,9 @@ assert(events.includes("class EventBus"),'Event bus runtime missing');
 assert(appState.includes("class StateMachine"),'Application state machine missing');
 assert(saveRuntime.includes("CURRENT_SCHEMA=3"),'Schema-v3 save runtime missing');
 assert(content.includes("function validate(value=content)"),'Content validation runtime missing');
-assert(game.includes("combatEcs.run('enemy-ai'"),'Enemy AI no longer runs through the ECS fixed-step system');
+assert(game.includes("combatEcs.run('enemy-ai'"),'Dormant enemy AI engine no longer runs through the ECS fixed-step system');
+assert(content.includes("npcs:[]")&&content.includes("enemySpawns:[]"),'Production story content must start without prototype NPC/enemy spawns');
+assert(renderer.includes("if(spawns.length)")&&renderer.includes("enemyNodes=[]"),'GPU renderer must skip prototype enemy asset work when no formal enemies exist');
 assert(game.includes("paperchalk-world-enter',startFrameLoop")&&game.includes("paperchalk-world-leave',stopFrameLoop"),
   'World animation loop is no longer lifecycle-bound');
 assert(!game.includes("\nrequestAnimationFrame(frame);\n"),'Always-on world RAF returned');
@@ -152,8 +154,8 @@ const report={
     'optimized-player-sprites',
     'debounced-viewport',
     'predecoded-player-actions',
-    'local-apartment-asset',
-    'apartment-culling',
+    'production-clean-content',
+    'standalone-camera-ui',
     'finite-midground-layer',
     'no-runtime-chroma-key'
   ]
