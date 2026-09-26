@@ -33,11 +33,11 @@ class EventBus{
   }
   emit(type,payload,meta={}){
     const event=Object.freeze({
+      ...meta,
       type,
       payload,
       sequence:++this.sequence,
-      time:typeof performance!=='undefined'&&performance.now?performance.now():Date.now(),
-      ...meta
+      time:typeof performance!=='undefined'&&performance.now?performance.now():Date.now()
     });
     const bucket=this.listeners.get(type);
     if(!bucket||!bucket.size)return event;
