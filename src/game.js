@@ -26,7 +26,6 @@ const PLAYER_ACTION_META=Object.freeze({
 });
 const AUTHORED_CONTENT=window.PaperchalkContent;
 if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
-const PRODUCTION_INTERIORS_ENABLED=false;
 const WORLD_NODES=AUTHORED_CONTENT.world.nodes.map(node=>({...node}));
 const WORLD_ROUTES=AUTHORED_CONTENT.world.routes.map(route=>({...route}));
 const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
@@ -54,110 +53,12 @@ function forkAssignments(routeIndex,nodeId){
   else if(options.length>=3)levels=[142,72,0];
   return options.slice(0,3).map((route,i)=>({route,laneY:levels[i]??0,target:otherNodeOfRoute(route,nodeId)}));
 }
-const MAP_TERRAIN=[
-  {id:'rock-1',kind:'rock',x:1120,y:0,w:104,h:70},
-  {id:'platform-1',kind:'platform',x:1540,y:0,w:360,h:72},
-  {id:'platform-2',kind:'platform',x:2920,y:0,w:330,h:104},
-  {id:'rock-2',kind:'rock',x:3720,y:0,w:138,h:80},
-  {id:'platform-3',kind:'platform',x:4280,y:0,w:380,h:126},
-  {id:'rock-3',kind:'rock',x:5140,y:0,w:126,h:62}
-];
-const MAP_OBJECTS=[
-  {id:'crate-1',kind:'crate',x:2390,y:0,w:88,h:88,solid:true,breakable:true},
-  /* Trees remain visible world props, but never form an unavoidable 190px movement wall. */
-  {id:'tree-1',kind:'tree',x:4980,y:0,w:156,h:208,solid:false}
-];
-const MAP_LANDMARKS=[
-  {id:'sign-start',kind:'sign',x:250,text:'A村外道路'},
-  {id:'sign-lookout',kind:'sign',x:4160,text:'旧土坡'}
-];
-const MAP_PICKUPS=[
-  {id:'herb-1',x:3330,y:108,type:'herb'},
-  {id:'herb-crate',x:2434,y:28,type:'herb',requiresBroken:'crate-1'}
-];
-const MAP_NPCS=AUTHORED_CONTENT.npcs.map(npc=>({
-  ...npc,
-  dialogue:npc.dialogue?{
-    ...npc.dialogue,
-    choices:Array.isArray(npc.dialogue.choices)?npc.dialogue.choices.map(choice=>({...choice})):[]
-  }:null
-}));
-const ENEMY_SPAWNS=AUTHORED_CONTENT.enemySpawns.map(spawn=>({...spawn}));
-
-/* Deterministic continuation: every 6000px is authored into the same coordinate space.
-   Nothing is fetched or swapped while crossing a zone boundary. */
-for(let zone=1;zone<WORLD_ZONE_COUNT;zone++){
-  const base=zone*WORLD_ZONE_WIDTH;
-  const variant=zone%5;
-  MAP_LANDMARKS.push({id:'zone-sign-'+zone,kind:'sign',x:base+390,text:regionNameAt(base+390)});
-  MAP_TERRAIN.push(
-    {id:'zone-rock-a-'+zone,kind:'rock',x:base+820+variant*35,y:0,w:96+variant*8,h:54+variant*6},
-    {id:'zone-platform-a-'+zone,kind:'platform',x:base+1640-variant*30,y:0,w:300+variant*18,h:76+variant*8},
-    {id:'zone-platform-b-'+zone,kind:'platform',x:base+3180+variant*22,y:0,w:340-variant*12,h:92+variant*7},
-    {id:'zone-rock-b-'+zone,kind:'rock',x:base+4070-variant*26,y:0,w:118+variant*5,h:60+variant*5},
-    {id:'zone-platform-c-'+zone,kind:'platform',x:base+4860+variant*18,y:0,w:315+variant*14,h:104+variant*6}
-  );
-  MAP_OBJECTS.push(
-    {id:'zone-tree-'+zone,kind:'tree',x:base+1160+variant*24,y:0,w:156,h:208,solid:false},
-    {id:'zone-crate-'+zone,kind:'crate',x:base+2700+variant*34,y:0,w:82,h:82,solid:true,breakable:true}
-  );
-  const route=WORLD_ROUTES[zone];
-  if(route?.biome==='forest'){
-    MAP_OBJECTS.push(
-      {id:'forest-tree-a-'+zone,kind:'tree',x:base+2050,y:0,w:156,h:208,solid:false},
-      {id:'forest-tree-b-'+zone,kind:'tree',x:base+4450,y:0,w:156,h:208,solid:false}
-    );
-  }else if(route?.biome==='river'||route?.biome==='marsh'){
-    MAP_OBJECTS.push(
-      {id:'reed-a-'+zone,kind:'reed',x:base+1760,y:0,w:120,h:66,solid:false},
-      {id:'reed-b-'+zone,kind:'reed',x:base+4380,y:0,w:120,h:66,solid:false}
-    );
-    if(route.id==='broken-bridge-road')MAP_OBJECTS.push({id:'bridge-'+zone,kind:'bridge-post',x:base+3550,y:0,w:150,h:78,solid:false});
-  }else if(route?.biome==='ruins'){
-    MAP_OBJECTS.push(
-      {id:'ruin-a-'+zone,kind:'ruin',x:base+1880,y:0,w:128,h:120,solid:false},
-      {id:'ruin-b-'+zone,kind:'ruin',x:base+4300,y:0,w:128,h:120,solid:false}
-    );
-  }else if(route?.biome==='cave'){
-    MAP_OBJECTS.push({id:'cave-mouth-'+zone,kind:'cave-mouth',x:base+3360,y:0,w:158,h:126,solid:false});
-  }else if(route?.biome==='mountain'||route?.biome==='highland'){
-    MAP_TERRAIN.push(
-      {id:'ridge-rock-a-'+zone,kind:'rock',x:base+2200,y:0,w:116,h:76},
-      {id:'ridge-rock-b-'+zone,kind:'rock',x:base+4580,y:0,w:126,h:82}
-    );
-  }
-  if(route?.id==='windmill-waste-road')MAP_OBJECTS.push({id:'windmill-'+zone,kind:'windmill',x:base+3600,y:0,w:126,h:180,solid:false});
-  if(route?.biome==='shrine')MAP_OBJECTS.push({id:'shrine-'+zone,kind:'shrine',x:base+4020,y:0,w:140,h:134,solid:false});
-  MAP_PICKUPS.push(
-    {id:'zone-herb-'+zone,x:base+3660+variant*17,y:104,type:'herb'},
-    {id:'zone-crate-herb-'+zone,x:base+2741+variant*34,y:28,type:'herb',requiresBroken:'zone-crate-'+zone}
-  );
-}
-const FORK_SOLIDS=[];
-WORLD_ROUTES.forEach((route,i)=>{
-  const base=routeBaseX(i);
-  [
-    {nodeId:route.from,side:'left',boundary:base+ROUTE_ENDPOINT_PAD},
-    {nodeId:route.to,side:'right',boundary:base+WORLD_ZONE_WIDTH-ROUTE_ENDPOINT_PAD}
-  ].forEach(endpoint=>{
-    const assignments=forkAssignments(i,endpoint.nodeId);
-    if(assignments.length<=1)return;
-    assignments.filter(a=>a.laneY===72).forEach((a,laneIndex)=>{
-      const w=540;
-      const x=endpoint.side==='left'?endpoint.boundary-18:endpoint.boundary-w+18;
-      FORK_SOLIDS.push({
-        id:'fork-shelf-'+i+'-'+endpoint.side+'-'+laneIndex,
-        kind:'platform',x,y:a.laneY-12,w,h:12,oneWay:true,fork:true
-      });
-    });
-  });
-});
-MAP_TERRAIN.push(...FORK_SOLIDS);
-/* clean-stage-r14: remove all assistant-authored terrain, props, signs and pickups. */
-MAP_TERRAIN.length=0;
-MAP_OBJECTS.length=0;
-MAP_LANDMARKS.length=0;
-MAP_PICKUPS.length=0;
+/* Formal production world starts empty. Main-line terrain, props, landmarks and
+   pickups are authored explicitly; no prototype filler is constructed at boot. */
+const MAP_TERRAIN=[];
+const MAP_OBJECTS=[];
+const MAP_LANDMARKS=[];
+const MAP_PICKUPS=[];
 const mapState={broken:new Set(),collected:new Set(),visitedRoutes:new Set([0]),visitedNodes:new Set(['village']),exitReached:false};
 let mapNoticeTimer=null;
 let mapDebugBuilt=false;
@@ -417,382 +318,14 @@ function updatePropPools(sceneryX,force=false){
 const rearPropPool=buildProps('rearTrack',rear,.97);
 const frontPropPool=buildProps('frontTrack',front,1.03);
 
-// clean-stage-r14: legacy midground atlas removed.
 const roadSurface=document.getElementById('roadSurface');
 const roadTrack=document.getElementById('roadTrack');
 const roadTile=document.getElementById('roadTile');
 const rearTrack=document.getElementById('rearTrack');
 const frontTrack=document.getElementById('frontTrack');
 const mapTrack=document.getElementById('mapTrack');
-const midgroundBuildingTrack=document.getElementById('midgroundBuildingTrack');
-const midgroundApartment=document.getElementById('midgroundApartment');
-const apartmentDoorPrompt=document.getElementById('apartmentDoorPrompt');
-const interiorScene=document.getElementById('interiorScene');
-const interiorFarLayer=document.getElementById('interiorFarLayer');
-const interiorMidLayer=document.getElementById('interiorMidLayer');
-const interiorNearLayer=document.getElementById('interiorNearLayer');
-const interiorExitDoor=document.getElementById('interiorExitDoor');
-const APARTMENT_WORLD_X=520;
-const APARTMENT_PARALLAX=.78;
-const APARTMENT_DOOR_X_RATIO=.525;
-const APARTMENT_DOOR_PROMPT_Y_RATIO=.43;
-
-// Interior world uses the same 128 px = 1 m scale as the outdoor world.
-const INTERIOR_MAP_WIDTH=1536;        // 12 m
-const INTERIOR_MAP_HEIGHT=768;         // 6 m
-const INTERIOR_WALL_THICKNESS=64;     // 0.5 m
-const INTERIOR_DOOR_X=320;            // 2.5 m from the room origin
-const INTERIOR_SECOND_FLOOR_Y=384;    // 3 m floor-to-floor
-const INTERIOR_STAIRS=Object.freeze({
-  x0:768,                             // lower-flight foot / upper-flight top
-  x1:1088,                            // shared half-landing side
-  y0:0,
-  midY:192,                           // 1.5 m half landing
-  y1:INTERIOR_SECOND_FLOOR_Y
-});
 const OUTDOOR_FLIGHT_MAX_Y=50000;
 
-let sceneLocation='outside';
-let sceneTransitionBusy=false;
-let interiorPlayerX=0;                // compatibility: fixed screen X
-let interiorPlayerWorldX=INTERIOR_DOOR_X;
-let interiorCameraX=INTERIOR_DOOR_X;
-let interiorCameraY=0;
-let interiorStairState='floor1';
-let interiorDoorAnchorX=0;
-let interiorSceneShiftX=0;            // compatibility/debug = -interiorCameraX
-let exteriorReturnX=MAP_SPAWN_X;
-let exteriorReturnY=0;
-let stageHeldActorX=0;
-let stageHeldPlayerY=0;
-let lastSceneDoorAnchorErrorX=0;
-const APARTMENT_CULL_MARGIN=180;
-let apartmentDisplayWidth=780;
-let midgroundApartmentVisible=null;
-
-function refreshSceneryMetrics(){
-  const apartmentW=midgroundApartment?.getBoundingClientRect().width||0;
-  if(apartmentW>0)apartmentDisplayWidth=apartmentW;
-}
-midgroundApartment?.addEventListener('error',()=>{
-  midgroundApartment.hidden=true;
-  midgroundApartmentVisible=false;
-  console.warn('APARTMENT_ASSET_UNAVAILABLE');
-},{once:true});
-function updateMidgroundApartmentVisibility(sceneryX,force=false){
-  if(!midgroundApartment)return;
-  if(!PRODUCTION_INTERIORS_ENABLED){
-    midgroundApartmentVisible=false;
-    midgroundApartment.hidden=true;
-    return;
-  }
-  const screenLeft=APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX;
-  const visible=screenLeft+apartmentDisplayWidth>-APARTMENT_CULL_MARGIN
-    &&screenLeft<VIEW_W+APARTMENT_CULL_MARGIN;
-  if(force||visible!==midgroundApartmentVisible){
-    midgroundApartmentVisible=visible;
-    midgroundApartment.hidden=!visible;
-  }
-}
-function apartmentDoorScreenX(){
-  const sceneryX=worldX+sceneryOffsetX;
-  return APARTMENT_WORLD_X-sceneryX*APARTMENT_PARALLAX+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO;
-}
-function apartmentDoorScreenY(){
-  const h=midgroundApartment?.getBoundingClientRect().height||1040;
-  return MAP_GROUND_SCREEN_Y+h*APARTMENT_DOOR_PROMPT_Y_RATIO-playerY;
-}
-function nearbyApartmentDoor(maxDistance=78){
-  if(!PRODUCTION_INTERIORS_ENABLED)return false;
-  if(sceneLocation!=='outside'||sceneTransitionBusy||midgroundApartment?.hidden)return false;
-  return playerY<68&&Math.abs(actorX-apartmentDoorScreenX())<=maxDistance;
-}
-
-function interiorLowerY(x){
-  const t=clamp((x-INTERIOR_STAIRS.x0)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0),0,1);
-  return INTERIOR_STAIRS.y0+(INTERIOR_STAIRS.midY-INTERIOR_STAIRS.y0)*t;
-}
-function interiorUpperY(x){
-  const t=clamp((INTERIOR_STAIRS.x1-x)/(INTERIOR_STAIRS.x1-INTERIOR_STAIRS.x0),0,1);
-  return INTERIOR_STAIRS.midY+(INTERIOR_STAIRS.y1-INTERIOR_STAIRS.midY)*t;
-}
-function interiorWalkSurfaceY(x=interiorPlayerWorldX,state=interiorStairState){
-  if(state==='lower')return interiorLowerY(x);
-  if(state==='landing-up'||state==='landing-down')return INTERIOR_STAIRS.midY;
-  if(state==='upper')return interiorUpperY(x);
-  if(state==='floor2')return INTERIOR_SECOND_FLOOR_Y;
-  return 0;
-}
-function interiorHorizontalBounds(){
-  return {
-    left:INTERIOR_WALL_THICKNESS+PLAYER_BODY.halfW,
-    right:INTERIOR_MAP_WIDTH-INTERIOR_WALL_THICKNESS-PLAYER_BODY.halfW
-  };
-}
-function updateInteriorCamera(){
-  // The player never moves on screen. Indoor X/Y are real world coordinates;
-  // all visible room layers move opposite those coordinates.
-  interiorCameraX=interiorPlayerWorldX-playerScreenAnchorX;
-  interiorCameraY=playerY;
-  interiorSceneShiftX=-interiorCameraX;
-  interiorPlayerX=playerScreenAnchorX;
-  actorX=playerScreenAnchorX;
-  interiorDoorAnchorX=INTERIOR_DOOR_X-interiorCameraX;
-}
-function setInteriorWalkStateFromPosition(){
-  if(playerY>=INTERIOR_STAIRS.midY+70){
-    interiorStairState='floor2';
-    interiorPlayerWorldX=Math.min(interiorPlayerWorldX,INTERIOR_STAIRS.x0);
-  }else if(interiorPlayerWorldX>=INTERIOR_STAIRS.x0&&interiorPlayerWorldX<=INTERIOR_STAIRS.x1){
-    interiorStairState=playerY>INTERIOR_STAIRS.midY?'upper':'lower';
-  }else{
-    interiorStairState='floor1';
-  }
-}
-function moveInteriorHorizontal(dx,{flight=false,airborne=false}={}){
-  if(!dx)return 0;
-  const bounds=interiorHorizontalBounds();
-  const oldX=interiorPlayerWorldX;
-  const dir=Math.sign(dx);
-  let nextX=interiorPlayerWorldX+dx;
-
-  if(flight){
-    interiorPlayerWorldX=clamp(nextX,bounds.left,bounds.right);
-    updateInteriorCamera();
-    return interiorPlayerWorldX-oldX;
-  }
-
-  if(interiorStairState==='floor1'){
-    if(dir>0&&nextX>=INTERIOR_STAIRS.x0){
-      interiorStairState='lower';
-      nextX=Math.min(nextX,INTERIOR_STAIRS.x1);
-    }else{
-      nextX=Math.min(nextX,INTERIOR_STAIRS.x0);
-    }
-  }else if(interiorStairState==='lower'){
-    nextX=clamp(nextX,INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1);
-    if(nextX>=INTERIOR_STAIRS.x1-.01&&dir>0){
-      nextX=INTERIOR_STAIRS.x1;
-      interiorStairState='landing-up';
-    }else if(nextX<=INTERIOR_STAIRS.x0+.01&&dir<0){
-      nextX=INTERIOR_STAIRS.x0;
-      interiorStairState='floor1';
-    }
-  }else if(interiorStairState==='landing-up'){
-    nextX=INTERIOR_STAIRS.x1;
-    if(dir<0){
-      interiorStairState='upper';
-      nextX=Math.max(INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1+dx);
-    }
-  }else if(interiorStairState==='upper'){
-    nextX=clamp(nextX,INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1);
-    if(nextX<=INTERIOR_STAIRS.x0+.01&&dir<0){
-      nextX=INTERIOR_STAIRS.x0;
-      interiorStairState='floor2';
-    }else if(nextX>=INTERIOR_STAIRS.x1-.01&&dir>0){
-      nextX=INTERIOR_STAIRS.x1;
-      interiorStairState='landing-down';
-    }
-  }else if(interiorStairState==='landing-down'){
-    nextX=INTERIOR_STAIRS.x1;
-    if(dir<0){
-      interiorStairState='lower';
-      nextX=Math.max(INTERIOR_STAIRS.x0,INTERIOR_STAIRS.x1+dx);
-    }
-  }else if(interiorStairState==='floor2'){
-    if(dir>0&&nextX>=INTERIOR_STAIRS.x0){
-      interiorStairState='upper';
-      nextX=Math.min(INTERIOR_STAIRS.x1,INTERIOR_STAIRS.x0+Math.max(0,nextX-INTERIOR_STAIRS.x0));
-    }else{
-      nextX=Math.min(nextX,INTERIOR_STAIRS.x0);
-    }
-  }
-
-  interiorPlayerWorldX=clamp(nextX,bounds.left,bounds.right);
-  if(!airborne){
-    playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
-    playerVy=0;
-    playerGrounded=true;
-    coyoteTimer=COYOTE_TIME;
-  }
-  updateInteriorCamera();
-  return interiorPlayerWorldX-oldX;
-}
-function updateInteriorVertical(dt){
-  if(playerGrounded){
-    playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
-    updateInteriorCamera();
-    return;
-  }
-  const support=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
-  const oldY=playerY;
-  playerVy-=GRAVITY*dt;
-  let nextY=playerY+playerVy*dt;
-  const ceiling=Math.max(support,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24);
-  if(nextY>ceiling){
-    nextY=ceiling;
-    if(playerVy>0)playerVy=0;
-  }
-  if(playerVy<=0&&oldY>=support&&nextY<=support){
-    nextY=support;
-    playerVy=0;
-    playerGrounded=true;
-    coyoteTimer=COYOTE_TIME;
-    actorEl.classList.remove('is-jumping');
-  }
-  playerY=nextY;
-  updateInteriorCamera();
-}
-function interiorExitX(){
-  return INTERIOR_DOOR_X-interiorCameraX;
-}
-function syncInteriorDoorWithExterior(){
-  // Enter exactly on the indoor doorway. Because camera = world - screenAnchor,
-  // the doorway's first rendered pixel is exactly under the fixed player.
-  interiorPlayerWorldX=INTERIOR_DOOR_X;
-  interiorStairState='floor1';
-  interiorCameraX=INTERIOR_DOOR_X-playerScreenAnchorX;
-  interiorCameraY=0;
-  interiorSceneShiftX=-interiorCameraX;
-  interiorPlayerX=playerScreenAnchorX;
-  interiorDoorAnchorX=playerScreenAnchorX;
-  return playerScreenAnchorX;
-}
-function alignInteriorSceneToStage(force=false){
-  if(!interiorScene||sceneLocation!=='interior')return;
-  const key=VIEW_W+'x'+VIEW_H+'@'+MAP_GROUND_SCREEN_Y;
-  if(!force&&alignInteriorSceneToStage._key===key)return;
-  interiorScene.style.left='0px';
-  interiorScene.style.top='0px';
-  interiorScene.style.right='0px';
-  interiorScene.style.bottom='0px';
-  interiorScene.style.width='auto';
-  interiorScene.style.height='auto';
-  const stageRect=worldEl.getBoundingClientRect();
-  const sceneRect=interiorScene.getBoundingClientRect();
-  const dx=stageRect.left-sceneRect.left;
-  const dy=stageRect.top-sceneRect.top;
-  interiorScene.style.left=dx.toFixed(2)+'px';
-  interiorScene.style.top=dy.toFixed(2)+'px';
-  interiorScene.style.right='auto';
-  interiorScene.style.bottom='auto';
-  interiorScene.style.width=stageRect.width.toFixed(2)+'px';
-  interiorScene.style.height=stageRect.height.toFixed(2)+'px';
-  alignInteriorSceneToStage._key=key;
-}
-function positionInteriorExitDoor(){
-  if(!interiorExitDoor)return;
-  // Door position is authored in finite indoor world coordinates.
-  interiorExitDoor.style.right='auto';
-  interiorExitDoor.style.left=INTERIOR_DOOR_X.toFixed(1)+'px';
-  interiorExitDoor.style.translate='-50% 0';
-  interiorExitDoor.style.bottom='0px';
-}
-function updateInteriorDepthLayers(){
-  const transform='translate3d('+(-interiorCameraX).toFixed(2)+'px,'+interiorCameraY.toFixed(2)+'px,0)';
-  if(interiorFarLayer)interiorFarLayer.style.transform=transform;
-  if(interiorMidLayer)interiorMidLayer.style.transform=transform;
-  if(interiorNearLayer)interiorNearLayer.style.transform=transform;
-  return sceneLocation==='interior';
-}
-function nearbyInteriorExit(maxDistance=92){
-  if(!PRODUCTION_INTERIORS_ENABLED)return false;
-  return sceneLocation==='interior'&&!sceneTransitionBusy
-    &&Math.abs(interiorPlayerWorldX-INTERIOR_DOOR_X)<=maxDistance
-    &&Math.abs(playerY)<=72;
-}
-function renderDoorPrompt(){
-  if(!apartmentDoorPrompt)return;
-  if(sceneLocation!=='outside'||!nearbyApartmentDoor()){
-    apartmentDoorPrompt.classList.remove('is-visible');
-    apartmentDoorPrompt.setAttribute('aria-hidden','true');
-    return;
-  }
-  apartmentDoorPrompt.style.left=apartmentDoorScreenX().toFixed(1)+'px';
-  apartmentDoorPrompt.style.bottom=apartmentDoorScreenY().toFixed(1)+'px';
-  apartmentDoorPrompt.classList.add('is-visible');
-  apartmentDoorPrompt.setAttribute('aria-hidden','false');
-}
-function exteriorCameraForDoorAt(screenX){
-  const maxCamera=Math.max(0,MAP_WIDTH-VIEW_W);
-  const aligned=((APARTMENT_WORLD_X+apartmentDisplayWidth*APARTMENT_DOOR_X_RATIO-screenX)/APARTMENT_PARALLAX)-sceneryOffsetX;
-  return clamp(aligned,0,maxCamera);
-}
-function clearSceneStageClasses(){
-  worldEl.classList.remove('paper-stage-out','interior-stage-in','interior-stage-out','exterior-stage-in');
-}
-function enterApartment(){
-  if(!PRODUCTION_INTERIORS_ENABLED)return false;
-  if(sceneLocation!=='outside'||sceneTransitionBusy)return false;
-  sceneTransitionBusy=true;
-  exteriorReturnX=playerWorldX;
-  exteriorReturnY=playerY;
-  stageHeldActorX=actorX;
-  stageHeldPlayerY=playerY;
-  syncInteriorDoorWithExterior();
-  cancelPlayerActionSettle();
-  cancelPlayerTurnFlip({snap:true});
-  worldEl.classList.add('stage-transitioning','paper-stage-out');
-  apartmentDoorPrompt?.classList.remove('is-visible');
-  setTimeout(()=>{
-    sceneLocation='interior';
-    playerY=0;
-    playerVy=0;
-    playerGrounded=true;
-    interiorPlayerWorldX=INTERIOR_DOOR_X;
-    interiorStairState='floor1';
-    updateInteriorCamera();
-    clearSceneStageClasses();
-    worldEl.classList.add('scene-interior','interior-stage-in','stage-transitioning');
-    interiorScene?.setAttribute('aria-hidden','false');
-    renderWorld(true);
-    lastSceneDoorAnchorErrorX=interiorExitX()-actorX;
-    updateNpcPrompt();
-    setTimeout(()=>{
-      worldEl.classList.remove('interior-stage-in','stage-transitioning');
-      sceneTransitionBusy=false;
-      updateNpcPrompt();
-    },900);
-  },860);
-  return true;
-}
-function exitApartment(){
-  if(!PRODUCTION_INTERIORS_ENABLED)return false;
-  if(sceneLocation!=='interior'||sceneTransitionBusy)return false;
-  sceneTransitionBusy=true;
-  stageHeldActorX=actorX;
-  stageHeldPlayerY=playerY;
-  cancelPlayerActionSettle();
-  cancelPlayerTurnFlip({snap:true});
-  worldEl.classList.add('stage-transitioning','interior-stage-out');
-  setTimeout(()=>{
-    sceneLocation='outside';
-    interiorScene?.setAttribute('aria-hidden','true');
-    worldEl.classList.remove('scene-interior','interior-stage-out');
-
-    // Restore the outdoor vertical coordinate, then reveal the exterior door
-    // directly under the same fixed player screen anchor.
-    playerY=exteriorReturnY;
-    playerVy=0;
-    playerGrounded=playerY<=0;
-    refreshSceneryMetrics();
-    worldX=exteriorCameraForDoorAt(playerScreenAnchorX);
-    playerWorldX=clamp(worldX+playerScreenAnchorX,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
-    actorX=playerScreenAnchorX;
-
-    worldEl.classList.add('exterior-stage-in','stage-transitioning');
-    renderWorld(true);
-    lastSceneDoorAnchorErrorX=apartmentDoorScreenX()-actorX;
-    updateNpcPrompt();
-
-    setTimeout(()=>{
-      worldEl.classList.remove('exterior-stage-in','stage-transitioning');
-      sceneTransitionBusy=false;
-      updateNpcPrompt();
-    },900);
-  },720);
-  return true;
-}
 const terrainTrack=document.getElementById('terrainTrack');
 const mapObjectTrack=document.getElementById('mapObjectTrack');
 const mapLandmarkTrack=document.getElementById('mapLandmarkTrack');
@@ -1021,265 +554,11 @@ const debugRendererAutoBtn=document.getElementById('debugRendererAutoBtn');
 const debugRendererGpuBtn=document.getElementById('debugRendererGpuBtn');
 const debugRendererDomBtn=document.getElementById('debugRendererDomBtn');
 const entityTrack=document.getElementById('entityTrack');
-const enemyEl=document.getElementById('enemy');
-const enemyHealthFill=document.getElementById('enemyHealthFill');
-const enemy2El=document.getElementById('enemy2');
-const enemy2HealthFill=document.getElementById('enemy2HealthFill');
-const interactBtn=document.getElementById('interactBtn');
-const crouchBtn=document.getElementById('crouchBtn');
-const jumpBtn=document.getElementById('jumpBtn');
-const attackBtn=document.getElementById('attackBtn');
-const playerHurtboxDebug=document.getElementById('playerHurtboxDebug');
-const playerAttackDebug=document.getElementById('playerAttackDebug');
-const enemyHurtboxDebug=document.getElementById('enemyHurtboxDebug');
-const enemyAttackDebug=document.getElementById('enemyAttackDebug');
-
-function syncViewportMetrics(){
-  const vv=window.visualViewport;
-  const rawH=Number(vv?.height)||Number(innerHeight)||720;
-  const rawW=Number(vv?.width)||Number(innerWidth)||1280;
-  const layoutH=Number(document.documentElement.clientHeight)||rawH;
-  const layoutW=Number(document.documentElement.clientWidth)||rawW;
-  const viewH=Math.max(180,Math.round(Math.min(rawH,layoutH)));
-  const viewW=Math.max(280,Math.round(Math.min(rawW,layoutW)));
-  const prevW=VIEW_W,prevH=VIEW_H,prevScale=PLAYER_VISUAL.scale;
-  const rawScale=Math.min(viewW/VIEWPORT_REFERENCE.w,viewH/VIEWPORT_REFERENCE.h);
-  const viewportScale=Math.max(.82,Math.min(1.08,rawScale));
-  const playerW=Math.round(PLAYER_VISUAL_BASE.w*viewportScale*100)/100;
-  const playerH=Math.round(PLAYER_VISUAL_BASE.h*viewportScale*100)/100;
-  const controlScale=Math.max(.84,Math.min(1.06,viewportScale));
-  document.documentElement.style.setProperty('--app-height',viewH+'px');
-  document.documentElement.style.setProperty('--app-width',viewW+'px');
-  document.documentElement.style.setProperty('--world-width',MAP_WIDTH+'px');
-  document.documentElement.style.setProperty('--viewport-scale',viewportScale.toFixed(4));
-  document.documentElement.style.setProperty('--control-scale',controlScale.toFixed(4));
-  document.documentElement.style.setProperty('--player-visual-w',playerW+'px');
-  document.documentElement.style.setProperty('--player-visual-h',playerH+'px');
-  const nextGround=clamp(Math.round(viewH*.30),72,112);
-  document.documentElement.style.setProperty('--ground-screen-y',nextGround+'px');
-  const groundChanged=nextGround!==MAP_GROUND_SCREEN_Y;
-  const sizeChanged=viewW!==prevW||viewH!==prevH;
-  const scaleChanged=Math.abs(viewportScale-prevScale)>.001;
-  VIEW_W=viewW;VIEW_H=viewH;
-  MAP_GROUND_SCREEN_Y=nextGround;
-  PLAYER_VISUAL.w=playerW;PLAYER_VISUAL.h=playerH;PLAYER_VISUAL.scale=viewportScale;
-  return {groundChanged,sizeChanged,scaleChanged};
-}
-function applyWorldDimensions(){
-  const width=VISUAL_WINDOW_SPAN+'px';
-  if(mapTrack)mapTrack.style.width=width;
-  if(entityTrack)entityTrack.style.width=width;
-}
-syncViewportMetrics();
-applyWorldDimensions();
-buildMapVisuals();
-
-const WORLD_CLOCK_OFFSET=360; // existing saves at 0 begin visually at 06:00
-const DAY_MINUTES=1440;
-const DAYLIGHT_KEYS=[
-  {m:0,top:[24,30,58],bottom:[53,55,79],horizon:[75,66,76],night:.58,stars:.92,warm:0,sun:0,moon:.95},
-  {m:300,top:[44,50,78],bottom:[91,75,89],horizon:[151,107,91],night:.34,stars:.62,warm:.08,sun:0,moon:.70},
-  {m:360,top:[101,120,139],bottom:[210,153,112],horizon:[230,184,132],night:.12,stars:.18,warm:.24,sun:.52,moon:.28},
-  {m:480,top:[137,177,194],bottom:[222,211,184],horizon:[200,183,139],night:0,stars:0,warm:.05,sun:1,moon:0},
-  {m:720,top:[126,178,205],bottom:[229,220,196],horizon:[202,188,147],night:0,stars:0,warm:0,sun:1,moon:0},
-  {m:960,top:[142,174,190],bottom:[225,197,164],horizon:[202,167,119],night:0,stars:0,warm:.08,sun:.92,moon:0},
-  {m:1080,top:[103,107,135],bottom:[195,128,96],horizon:[178,112,86],night:.12,stars:.10,warm:.30,sun:.45,moon:.20},
-  {m:1170,top:[58,61,93],bottom:[116,77,91],horizon:[111,78,84],night:.34,stars:.55,warm:.10,sun:0,moon:.68},
-  {m:1260,top:[29,35,65],bottom:[62,59,81],horizon:[78,67,76],night:.54,stars:.90,warm:0,sun:0,moon:.94},
-  {m:1440,top:[24,30,58],bottom:[53,55,79],horizon:[75,66,76],night:.58,stars:.92,warm:0,sun:0,moon:.95}
-];
-let lastDayNightRender=-Infinity;
-let sceneFoldTimer=0;
-
-function modDay(v){return ((v%DAY_MINUTES)+DAY_MINUTES)%DAY_MINUTES}
-function visibleClockMinutes(){return modDay(worldMinutes+WORLD_CLOCK_OFFSET)}
-function lerp(a,b,t){return a+(b-a)*t}
-function lerpRgb(a,b,t){return a.map((v,i)=>Math.round(lerp(v,b[i],t)))}
-function rgbCss(v){return 'rgb('+v.join(',')+')'}
-function daylightState(minutes=visibleClockMinutes()){
-  let a=DAYLIGHT_KEYS[0],b=DAYLIGHT_KEYS[DAYLIGHT_KEYS.length-1];
-  for(let i=0;i<DAYLIGHT_KEYS.length-1;i++){
-    if(minutes>=DAYLIGHT_KEYS[i].m&&minutes<=DAYLIGHT_KEYS[i+1].m){a=DAYLIGHT_KEYS[i];b=DAYLIGHT_KEYS[i+1];break}
-  }
-  const span=Math.max(1,b.m-a.m),t=clamp((minutes-a.m)/span,0,1);
-  return {
-    top:lerpRgb(a.top,b.top,t),bottom:lerpRgb(a.bottom,b.bottom,t),horizon:lerpRgb(a.horizon,b.horizon,t),
-    night:lerp(a.night,b.night,t),stars:lerp(a.stars,b.stars,t),warm:lerp(a.warm,b.warm,t),
-    sun:lerp(a.sun,b.sun,t),moon:lerp(a.moon,b.moon,t)
-  };
-}
-function formatWorldClock(minutes=visibleClockMinutes()){
-  const m=Math.floor(modDay(minutes)),hh=Math.floor(m/60),mm=m%60;
-  return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
-}
-function worldTimeName(minutes=visibleClockMinutes()){
-  if(minutes<300)return '深夜';
-  if(minutes<390)return '黎明';
-  if(minutes<660)return '上午';
-  if(minutes<900)return '正午';
-  if(minutes<1080)return '下午';
-  if(minutes<1170)return '黄昏';
-  if(minutes<1260)return '入夜';
-  return '深夜';
-}
-function celestialArcPosition(minutes,rise,set){
-  const visibleSpan=modDay(set-rise)||DAY_MINUTES;
-  const elapsed=modDay(minutes-rise);
-  const radius=Math.min(VIEW_W*.46,VIEW_H*.66);
-  const cx=VIEW_W*.50;
-  const cy=VIEW_H*.74;
-  let theta,above;
-  if(elapsed<=visibleSpan){
-    theta=Math.PI*(elapsed/visibleSpan);
-    above=true;
-  }else{
-    const hiddenSpan=Math.max(1,DAY_MINUTES-visibleSpan);
-    theta=Math.PI+Math.PI*((elapsed-visibleSpan)/hiddenSpan);
-    above=false;
-  }
-  return {
-    x:cx-radius*Math.cos(theta),
-    y:cy-radius*Math.sin(theta),
-    above
-  };
-}
-let lastCelestialRender=-Infinity;
-function updateCelestialVisuals(force=false){
-  const now=performance.now();
-  if(!force&&now-lastCelestialRender<50)return;
-  lastCelestialRender=now;
-  const minutes=visibleClockMinutes();
-  const sun=celestialArcPosition(minutes,330,1110);
-  const moon=celestialArcPosition(minutes,1050,390);
-  worldEl.style.setProperty('--sun-x',sun.x.toFixed(2)+'px');
-  worldEl.style.setProperty('--sun-y',sun.y.toFixed(2)+'px');
-  worldEl.style.setProperty('--moon-x',moon.x.toFixed(2)+'px');
-  worldEl.style.setProperty('--moon-y',moon.y.toFixed(2)+'px');
-}
-function updateDayNightVisuals(force=false){
-  const now=performance.now();
-  if(!force&&now-lastDayNightRender<500)return;
-  lastDayNightRender=now;
-  const minutes=visibleClockMinutes(),state=daylightState(minutes);
-  worldEl.style.setProperty('--sky-top',rgbCss(state.top));
-  worldEl.style.setProperty('--sky-bottom',rgbCss(state.bottom));
-  worldEl.style.setProperty('--horizon',rgbCss(state.horizon));
-  worldEl.style.setProperty('--night-alpha',state.night.toFixed(3));
-  worldEl.style.setProperty('--warm-alpha',state.warm.toFixed(3));
-  worldEl.style.setProperty('--warm-alpha-soft',(state.warm*.55).toFixed(3));
-  worldEl.style.setProperty('--stars-alpha',state.stars.toFixed(3));
-  worldEl.style.setProperty('--sun-alpha',state.sun.toFixed(3));
-  worldEl.style.setProperty('--moon-alpha',state.moon.toFixed(3));
-  worldEl.style.setProperty('--footlight-alpha',clamp(state.night*.82+state.warm*.18,0,.52).toFixed(3));
-  worldEl.style.setProperty('--paper-shadow','rgba(34,28,24,'+(0.13+state.night*.22).toFixed(3)+')');
-  updateCelestialVisuals(force);
-  const clock=formatWorldClock(minutes),phase=worldTimeName(minutes);
-  paperClock.textContent=clock+' · '+phase;
-  paperClock.setAttribute('aria-label','世界时间 '+clock+' '+phase);
-}
-function setVisibleWorldClock(minutes,{persist=true}={}){
-  const target=modDay(Number(minutes)||0);
-  const dayBase=Math.floor(worldMinutes/DAY_MINUTES)*DAY_MINUTES;
-  worldMinutes=dayBase+modDay(target-WORLD_CLOCK_OFFSET);
-  updateDayNightVisuals(true);
-  if(persist&&typeof saveWorldState==='function')saveWorldState();
-  return formatWorldClock();
-}
-function triggerPaperSceneFold(nextScene=null){
-  const scene=nextScene||routeForWorldX(playerWorldX)?.biome||worldEl.dataset.biome||'meadow';
-  clearTimeout(sceneFoldTimer);
-  paperBackdropNext.dataset.scene=scene;
-  worldEl.classList.remove('scene-shifting');
-  void paperBackdropNext.offsetWidth;
-  worldEl.classList.add('scene-shifting');
-  sceneFoldTimer=setTimeout(()=>{
-    paperBackdrop.dataset.scene=scene;
-    worldEl.classList.remove('scene-shifting');
-  },980);
-}
-window.PaperchalkTheater={
-  fold:triggerPaperSceneFold,
-  setClock:setVisibleWorldClock,
-  get clock(){return formatWorldClock()},
-  get phase(){return worldTimeName()}
-};
-const PLAYER_MAX_HP=10;
-let playerHp=PLAYER_MAX_HP;
-let healthPieces=[];
-const healthAnimationTimers=new WeakMap();
-
-let last=performance.now();
-let roadW=1200;
-let worldX=0; // camera X in current route-strip coordinates
-let sceneryOffsetX=0; // keeps road/parallax phase continuous when graph edges connect
-let playerWorldX=MAP_SPAWN_X;
-let orientationRouteIndex=0;
-let currentRouteOrientation=1;
-let worldMinutes=0;
-let worldTimeScale=1;
-updateDayNightVisuals(true);
-let playerScreenAnchorX=Math.round(VIEW_W*.5);
-let actorX=playerScreenAnchorX;
-let keyboardLeft=false,keyboardRight=false,keyboardCrouch=false,keyboardFlightUp=false,keyboardFlightDown=false;
-let mobileCrouch=false,mobileFlightUp=false,mobileFlightDown=false;
-let joystickAxis=0,joystickFlightAxisY=0;
-let joystickPointer=null;
-let joystickOriginX=0,joystickOriginY=0;
-let facing=1;
-let playerY=0,playerVy=0,playerGrounded=true;
-const CARD_CAMERA=window.PaperchalkCardCamera;
-if(!CARD_CAMERA)throw new Error('PaperchalkCardCamera missing');
-let playerCrouching=false;
-let playerActionState='idle';
-let coyoteTimer=0,jumpBufferTimer=0;
-let playerAttackTimer=0,playerAttackCooldown=0,playerInvuln=0;
-const playerAttackHits=new Set();
-const GRAVITY=1850,JUMP_SPEED=820;
-const COYOTE_TIME=.12,JUMP_BUFFER_TIME=.14,AUTO_MANTLE_WINDOW=72;
-const PLAYER_HURT={w:54,standH:108,crouchH:78,ox:-27,oy:8};
-const PLAYER_ATTACK={w:92,h:76,forward:22,oy:30};
-const RAG_DRIFTER=AUTHORED_CONTENT.enemyArchetypes['rag-drifter'];
-const ENEMY_MAX_HP=RAG_DRIFTER.maxHp;
-function createEnemyState(id,el,healthEl){
-  const e={
-    id,el,healthEl,spawned:false,account:null,facing:-1,
-    transform:{x:0,z:0},
-    health:{current:ENEMY_MAX_HP,max:ENEMY_MAX_HP,alive:true},
-    combat:{attackTimer:0,attackCooldown:0,hitstun:0},
-    ai:{state:'idle',enabled:true},
-    patrol:{spawnX:0,min:0,max:0,dir:-1},
-    renderable:{el,healthEl,visible:null,renderX:null,renderFacing:null,renderHp:null,renderAlive:null}
-  };
-  Object.defineProperties(e,{
-    x:{enumerable:true,get(){return e.transform.x},set(v){e.transform.x=v}},
-    z:{enumerable:true,get(){return e.transform.z},set(v){e.transform.z=v}},
-    hp:{enumerable:true,get(){return e.health.current},set(v){e.health.current=v}},
-    alive:{enumerable:true,get(){return e.health.alive},set(v){e.health.alive=!!v}},
-    state:{enumerable:true,get(){return e.ai.state},set(v){e.ai.state=v}},
-    attackTimer:{enumerable:true,get(){return e.combat.attackTimer},set(v){e.combat.attackTimer=v}},
-    attackCooldown:{enumerable:true,get(){return e.combat.attackCooldown},set(v){e.combat.attackCooldown=v}},
-    hitstun:{enumerable:true,get(){return e.combat.hitstun},set(v){e.combat.hitstun=v}},
-    spawnX:{enumerable:true,get(){return e.patrol.spawnX},set(v){e.patrol.spawnX=v}},
-    patrolMin:{enumerable:true,get(){return e.patrol.min},set(v){e.patrol.min=v}},
-    patrolMax:{enumerable:true,get(){return e.patrol.max},set(v){e.patrol.max=v}},
-    patrolDir:{enumerable:true,get(){return e.patrol.dir},set(v){e.patrol.dir=v}},
-    _visible:{get(){return e.renderable.visible},set(v){e.renderable.visible=v}},
-    _renderX:{get(){return e.renderable.renderX},set(v){e.renderable.renderX=v}},
-    _renderFacing:{get(){return e.renderable.renderFacing},set(v){e.renderable.renderFacing=v}},
-    _renderHp:{get(){return e.renderable.renderHp},set(v){e.renderable.renderHp=v}},
-    _renderAlive:{get(){return e.renderable.renderAlive},set(v){e.renderable.renderAlive=v}}
-  });
-  return e;
-}
-const enemy=createEnemyState('enemy-1',enemyEl,enemyHealthFill);
-const enemy2=createEnemyState('enemy-2',enemy2El,enemy2HealthFill);
-const enemies=[enemy,enemy2];
-
-for(let i=2;i<ENEMY_SPAWNS.length;i++){
-  const spawn=ENEMY_SPAWNS[i];
+function createEnemyDom(spawn,index){
   const el=document.createElement('div');
   el.className='enemy';
-  el.setAttribute('aria-label','纸境游荡者 '+(i+1));
+  el.dataset.enemyId=spawn.id;
+  el.setAttribute('aria-label','敌人 '+(index+1));
   const health=document.createElement('div');
   health.className='enemy-health';
   const fill=document.createElement('div');
@@ -1291,8 +570,13 @@ for(let i=2;i<ENEMY_SPAWNS.length;i++){
   el.appendChild(health);
   el.appendChild(img);
   entityTrack.appendChild(el);
-  enemies.push(createEnemyState(spawn.id,el,fill));
+  return {el,fill};
 }
+const enemies=ENEMY_SPAWNS.map((spawn,index)=>{
+  const dom=createEnemyDom(spawn,index);
+  return createEnemyState(spawn.id,dom.el,dom.fill);
+});
+const enemy=enemies[0]||null;
 
 /* Dynamic gameplay entities now run through an ECS scheduler. The existing enemy
    object remains the compatibility component so public debug/render contracts stay stable
@@ -1489,6 +773,7 @@ function sampleFramePerf(now){
 }
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
 
+function escapeHtml(value){return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
 function updateDebugStatus(){
   const session=typeof getSession==='function'?getSession():null;
   debugStatus.innerHTML=
@@ -1497,7 +782,7 @@ function updateDebugStatus(){
     '<span>玩家X <b>'+playerWorldX.toFixed(1)+'</b></span>'+
     '<span>Camera <b>'+worldX.toFixed(1)+'</b></span>'+
     '<span>脚底Y <b>'+playerY.toFixed(1)+'</b></span>'+
-    '<span>账号 <b>'+(session?.account||'未登录')+'</b></span>'+
+    '<span>账号 <b>'+escapeHtml(session?.account||'未登录')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
 
@@ -1561,14 +846,7 @@ function setDebugFlightMode(enabled){
   mobileFlightUp=mobileFlightDown=false;
   joystickFlightAxisY=0;
   playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
-  if(sceneLocation==='interior'&&!debugFlightMode){
-    setInteriorWalkStateFromPosition();
-    playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
-    playerGrounded=true;
-    updateInteriorCamera();
-  }else{
-    playerGrounded=debugFlightMode?false:playerY<=0;
-  }
+  playerGrounded=debugFlightMode?false:playerY<=0;
   if(playerCrouching)setPlayerCrouching(false,{force:true});
   actorEl.classList.toggle('is-flying',debugFlightMode);
   syncPlayerActionState(true);
@@ -1664,9 +942,6 @@ function runDebugCommand(rawCommand){
     return '渲染器请求 -> '+target;
   }
   if(cmd==='pos'||cmd==='position'){
-    if(sceneLocation==='interior'){
-      return 'interiorX='+interiorPlayerWorldX.toFixed(2)+' interiorY='+playerY.toFixed(2)+' cameraX='+interiorCameraX.toFixed(2)+' cameraY='+interiorCameraY.toFixed(2)+' screenX='+actorX.toFixed(2);
-    }
     return 'playerX='+playerWorldX.toFixed(2)+' playerY='+playerY.toFixed(2)+' cameraX='+worldX.toFixed(2)+' cameraY='+playerY.toFixed(2)+' sceneZ=fixed-camera-plane screenX='+actorX.toFixed(2);
   }
   if(cmd==='map'){
@@ -1685,11 +960,6 @@ function runDebugCommand(rawCommand){
   }
   if(cmd==='save'){
     return saveWorldState()?'存档已写入。':'当前没有登录账号，无法保存。';
-  }
-  if(cmd==='enemy'){
-    const sub=String(arg||'reset').toLowerCase();
-    if(sub==='near'){placeEnemyNear();return '一号敌人已放到玩家前方。'}
-    resetMapEnemies();return '全地图敌人已按各区域出生区重置。';
   }
   if(cmd==='hitbox')return '碰撞箱 -> '+(toggleHitboxes()?'开启':'关闭');
   if(cmd==='range')return '攻击范围预览 -> '+(toggleAttackRange()?'开启':'关闭');
@@ -1803,35 +1073,10 @@ window.addEventListener('paperchalk-renderer-change',()=>{
   updateCombatDebugButtons();
   if(debugIsOpen())updateDebugStatus();
 });
-window.PaperchalkScene={
-  get location(){return sceneLocation},
-  get transitioning(){return sceneTransitionBusy},
-  enter:enterApartment,
-  exit:exitApartment,
-  get doorScreenX(){return apartmentDoorScreenX()},
-  get interiorDoorScreenX(){return interiorExitX()},
-  get interiorDoorAnchorX(){return interiorDoorAnchorX},
-  get interiorSceneShiftX(){return interiorSceneShiftX},
-  get playerScreenX(){return actorX},
-  get playerScreenAnchorX(){return playerScreenAnchorX},
-  get centerX(){return VIEW_W*.5},
-  get lastDoorAnchorErrorX(){return lastSceneDoorAnchorErrorX},
-  get interiorDoorGroundY(){return MAP_GROUND_SCREEN_Y-interiorCameraY},
-  get interiorX(){return interiorPlayerWorldX},
-  get interiorY(){return playerY},
-  get interiorCamera(){return {x:interiorCameraX,y:interiorCameraY}},
-  get interiorStairState(){return interiorStairState},
-  get interiorMap(){return {
-    width:INTERIOR_MAP_WIDTH,
-    height:INTERIOR_MAP_HEIGHT,
-    leftWall:INTERIOR_WALL_THICKNESS,
-    rightWall:INTERIOR_MAP_WIDTH-INTERIOR_WALL_THICKNESS,
-    secondFloorY:INTERIOR_SECOND_FLOOR_Y,
-    doorX:INTERIOR_DOOR_X,
-    stairs:{...INTERIOR_STAIRS}
-  }},
-  get depthLayers(){return {far:3,mid:4,player:5,near:6}}
-};
+window.PaperchalkScene=Object.freeze({
+  location:'outside',
+  transitioning:false
+});
 window.PaperchalkDebug={
   open:openDebugPanel,
   close:closeDebugPanel,
@@ -2025,7 +1270,7 @@ function resetPlayerPoseState(){
 function movePlayerHorizontal(dx){
   if(!dx)return 0;
   const oldX=playerWorldX;
-  if(debugFlightMode&&sceneLocation==='outside'){
+  if(debugFlightMode){
     playerWorldX=clamp(oldX+dx,PLAYER_BODY.halfW,MAP_WIDTH-PLAYER_BODY.halfW);
     return playerWorldX-oldX;
   }
@@ -2201,12 +1446,6 @@ function resetMapEnemies(){
     if(spawn)resetEnemyState(e,spawn);
   });
 }
-function resetEnemy(offset=360){
-  const x=clamp(playerWorldX+offset,80,MAP_WIDTH-80);
-  resetEnemyState(enemy,{x,patrolMin:Math.max(40,x-125),patrolMax:Math.min(MAP_WIDTH-40,x+125)});
-  renderWorld();
-}
-function placeEnemyNear(distance=210){resetEnemy(distance);enemy.attackCooldown=.55;renderWorld()}
 function damageEnemy(e,amount=1,knockDir=facing){
   if(!e.alive||e.hitstun>0)return false;
   const previousHp=e.hp;
@@ -2244,7 +1483,7 @@ function updateEnemy(e,dt,interactive){
   e.attackCooldown=Math.max(0,e.attackCooldown-dt);e.hitstun=Math.max(0,e.hitstun-dt);
   if(!interactive||e.hitstun>0)return;
   if(!enemyAiEnabled){e.state='frozen';e.el.classList.remove('is-moving','is-attacking');return}
-  const dx=playerWorldX-e.x,dz=-e.z,dist=Math.hypot(dx,dz);
+  const dx=playerWorldX-e.x,dist=Math.abs(dx);
   if(dist>RAG_DRIFTER.sleepRange){
     if(e.state!=='sleep'){
       e.state='sleep';
@@ -2256,7 +1495,7 @@ function updateEnemy(e,dt,interactive){
   if(e.attackTimer>0){
     e.state='attack';e.attackTimer=Math.max(0,e.attackTimer-dt);
     if(e.attackTimer<=0){e.el.classList.remove('is-attacking');e.attackCooldown=.9}
-    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&Math.abs(e.z)<=82&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
+    else if(e.attackTimer<.20&&e.attackTimer>.08&&playerInvuln<=0&&rectsOverlap(getEnemyAttackBox(e),getPlayerHurtbox())){
       damagePlayer(1);playerInvuln=.72;
       if(!pixiDynamicActive())actorEl.animate([{filter:'brightness(1.7)'},{filter:'brightness(1)'}],{duration:220});
     }
@@ -2473,37 +1712,29 @@ dialogueSkip.addEventListener('click',e=>{e.stopPropagation();closeDialogue()});
 function nearbyNpc(maxDistance=92){
   let best=null,bestD=Infinity;
   for(const n of MAP_NPCS){
-    const d=cardDepthDistance(n.x,Number(n.z)||0);
-    if(d<bestD&&d<=maxDistance&&playerY<80){best=n;bestD=d}
+    const dx=(Number(n.x)||0)-playerWorldX;
+    const dy=(Number(n.y)||0)-playerY;
+    const d=Math.hypot(dx,dy);
+    if(d<bestD&&d<=maxDistance){best=n;bestD=d}
   }
   return best;
 }
 function updateNpcPrompt(){
-  const nearNpc=sceneLocation==='outside'?nearbyNpc():null;
-  const nearDoor=nearbyApartmentDoor();
-  const nearExit=nearbyInteriorExit();
+  const nearNpc=nearbyNpc();
   const nextId=nearNpc?.id||null;
   if(nextId!==lastNearNpcId){
     if(lastNearNpcId)mapNpcEls.get(lastNearNpcId)?.classList.remove('is-near');
-    if(nextId&&!nearDoor)mapNpcEls.get(nextId)?.classList.add('is-near');
+    if(nextId)mapNpcEls.get(nextId)?.classList.add('is-near');
     lastNearNpcId=nextId;
   }
-  const active=nearDoor||nearExit||!!nearNpc;
+  const active=!!nearNpc;
   interactBtn.disabled=!active;
   interactBtn.hidden=!active;
   interactBtn.style.opacity=active?'1':'.45';
-  interactBtn.textContent=nearDoor?'开门':nearExit?'出门':'聊';
-  renderDoorPrompt();
-  return nearDoor?{kind:'door'}:nearExit?{kind:'exit'}:nearNpc;
+  interactBtn.textContent='聊';
+  return nearNpc;
 }
 function interactWithNpc(){
-  if(sceneTransitionBusy)return false;
-  if(sceneLocation==='interior'){
-    if(nearbyInteriorExit())return exitApartment();
-    showMapNotice('走到门边可以出去');
-    return false;
-  }
-  if(nearbyApartmentDoor())return enterApartment();
   const npc=nearbyNpc();
   if(!npc){showMapNotice('附近没有可以交互的对象');return false}
   return openDialogue(npc);
@@ -2542,8 +1773,7 @@ function updateCombat(dt,interactive){
     else if(playerAttackTimer<.22&&playerAttackTimer>.08){
       const attackBox=getPlayerAttackBox();
       eachCombatEnemy(e=>{
-        const depthClose=Math.abs(e.z)<=86;
-        if(e.alive&&depthClose&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
+        if(e.alive&&!playerAttackHits.has(e.id)&&rectsOverlap(attackBox,getEnemyHurtbox(e))){
           if(damageEnemy(e,1,facing))playerAttackHits.add(e.id);
         }
       });
@@ -2561,7 +1791,7 @@ function nearestLivingEnemy(){
   let best=null,bestD=Infinity;
   eachCombatEnemy(e=>{
     if(!e.spawned||!e.alive)return;
-    const d=cardDepthDistance(e.x,e.z);
+    const d=Math.abs(e.x-playerWorldX);
     if(d<bestD){best=e;bestD=d}
   });
   return best;
@@ -2607,9 +1837,9 @@ window.PaperchalkMap={
   get state(){return {broken:[...mapState.broken],collected:[...mapState.collected],exitReached:mapState.exitReached}}
 };
 window.PaperchalkCombat={
-  jump:jumpPlayer,attack:startPlayerAttack,crouch:setCrouchControl,resetEnemy,placeEnemyNear,resetMapEnemies,
+  jump:jumpPlayer,attack:startPlayerAttack,crouch:setCrouchControl,resetMapEnemies,
   toggleHitboxes,toggleAttackRange,toggleEnemyAi,
-  get enemy(){return {x:enemy.x,z:enemy.z,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}},
+  get enemy(){return enemy?{x:enemy.x,z:enemy.z,spawnX:enemy.spawnX,hp:enemy.hp,alive:enemy.alive,state:enemy.state,ai:enemyAiEnabled}:null},
   get enemies(){return enemies.map(e=>({id:e.id,x:e.x,z:e.z,hp:e.hp,alive:e.alive,state:e.state,patrolMin:e.patrolMin,patrolMax:e.patrolMax}))},
   get player(){const meta=playerActionMeta(playerActionState);return {x:playerWorldX,y:playerY,vy:playerVy,grounded:playerGrounded,crouching:playerCrouching,action:playerActionState,bodyH:playerBodyHeight(),facing,sourceFacing:meta.sourceFacing,actionScale:meta.scale,attacking:playerAttackTimer>0}},
   get debug(){return {hitboxes:showHitboxes,attackRange:showAttackRange,mapColliders:showMapColliders,spawnZones:showSpawnZones,camera:showCameraDebug}}
@@ -2644,8 +1874,8 @@ function refreshRuntimeFrameState(){
   const s=runtimeFrameState;
   s.revision=runtimeRevision;
   s.viewport.width=VIEW_W;s.viewport.height=VIEW_H;s.viewport.groundY=MAP_GROUND_SCREEN_Y;
-  const activeCameraX=sceneLocation==='interior'?interiorCameraX:worldX;
-  const activePlayerX=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
+  const activeCameraX=worldX;
+  const activePlayerX=playerWorldX;
   s.camera.x=activeCameraX;s.camera.y=playerY;s.camera.z=0;s.camera.visualOriginX=visualOriginX;s.camera.sceneryOffsetX=sceneryOffsetX;
   s.time.minutes=worldMinutes;s.time.visibleMinutes=visibleClockMinutes();s.time.scale=worldTimeScale;
   s.route.index=route?.index??0;s.route.id=route?.id||'';s.route.biome=route?.biome||'meadow';s.route.orientation=currentRouteOrientation;
@@ -2678,18 +1908,7 @@ function runtimeSnapshot(){
       broken:[...mapState.broken],
       collected:[...mapState.collected]
     },
-    scene:{
-      location:sceneLocation,
-      interior:sceneLocation==='interior'?{
-        width:INTERIOR_MAP_WIDTH,
-        height:INTERIOR_MAP_HEIGHT,
-        playerX:interiorPlayerWorldX,
-        playerY,
-        cameraX:interiorCameraX,
-        cameraY:interiorCameraY,
-        stairs:{...INTERIOR_STAIRS}
-      }:null
-    }
+    scene:{location:'outside',interior:null}
   };
 }
 function markRuntimeMapChanged(){runtimeMapRevision++}
@@ -2777,13 +1996,10 @@ function flushViewportChange(){
   const change=syncViewportMetrics();
   if(!change.sizeChanged&&!change.groundChanged&&!change.scaleChanged)return;
   refreshRoadW();
-  refreshSceneryMetrics();
   if(change.sizeChanged){
     playerScreenAnchorX=Math.round(VIEW_W*.5);
     actorX=playerScreenAnchorX;
-    interiorPlayerX=playerScreenAnchorX;
-    if(sceneLocation==='outside')updateCamera();
-    else updateInteriorCamera();
+    updateCamera();
   }
   if(change.groundChanged||change.sizeChanged){
     clearTimeout(viewportRebuildTimer);
@@ -2815,8 +2031,7 @@ function worldInteractive(){
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
     && !dialogueIsOpen()
-    && !debugIsOpen()
-    && !sceneTransitionBusy;
+    && !debugIsOpen();
 }
 function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
@@ -2827,12 +2042,9 @@ function flightVerticalAxis(){
   return clamp(buttons+joystickFlightAxisY,-1,1);
 }
 function flightCeiling(){
-  return sceneLocation==='interior'
-    ? Math.max(0,INTERIOR_MAP_HEIGHT-playerBodyHeight()-24)
-    : OUTDOOR_FLIGHT_MAX_Y;
+  return OUTDOOR_FLIGHT_MAX_Y;
 }
 function cardProjection(worldX,worldZ=0,worldY=0){return CARD_CAMERA.project({worldX,worldZ,worldY,playerX:playerWorldX,playerY,cameraZ:0,screenX:playerScreenAnchorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y})}
-function cardDepthDistance(x,z=0){return CARD_CAMERA.distance2D(x,z,playerWorldX,0)}
 function setFacing(dir){
   if(!dir||dir===facing)return;
   facing=dir;
@@ -2869,22 +2081,17 @@ function renderWorld(force=false){
   const worldCameraY=playerY;
   worldEl.style.setProperty('--world-camera-y',worldCameraY.toFixed(2)+'px');
   const roadT='translate3d('+(-(sceneryX-roadPoolOriginX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
-  updateMidgroundApartmentVisibility(sceneryX,force);
-  const midgroundT='translate3d('+(-(sceneryX*APARTMENT_PARALLAX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
   const rearCamera=sceneryX*.97,frontCamera=sceneryX*1.03;
   const rearT='translate3d('+(-(rearCamera-rearPropPool.originX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
   const frontT='translate3d('+(-(frontCamera-frontPropPool.originX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
-  const mapT=sceneLocation==='outside'
-    ? 'translate3d(0px,0px,0)'
-    : 'translate3d('+(-(worldX-visualOriginX))+'px,'+worldCameraY.toFixed(2)+'px,0)';
+  const mapT='translate3d(0px,0px,0)';
   writeTransform(roadTrack,'road',roadT);
-  if(midgroundBuildingTrack)writeTransform(midgroundBuildingTrack,'midground',midgroundT);
   writeTransform(rearTrack,'rear',rearT);
   writeTransform(frontTrack,'front',frontT);
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
-  const playerProjection=sceneLocation==='outside'?CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}):{y:VIEW_H-MAP_GROUND_SCREEN_Y,scale:1};
+  const playerProjection=CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y});
   const actorBottom=(VIEW_H-playerProjection.y).toFixed(2)+'px';
   const actorAir=playerY.toFixed(2)+'px';
   const actorScale=(playerProjection.scale||1).toFixed(4);
@@ -2907,12 +2114,6 @@ function renderWorld(force=false){
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
-  if(sceneLocation==='interior'){
-    alignInteriorSceneToStage(force);
-    positionInteriorExitDoor();
-    updateInteriorDepthLayers();
-  }
-  renderDoorPrompt();
   renderCombatDebug();
   notifyRuntimeObservers();
 }
@@ -2929,7 +2130,7 @@ function hasNearbyCombat(now){
     lastCombatProbe=now;
     nearbyCombatCached=false;
     eachCombatEnemy(e=>{
-      if(!nearbyCombatCached&&e.spawned&&e.alive&&cardDepthDistance(e.x,e.z)<1700)nearbyCombatCached=true;
+      if(!nearbyCombatCached&&e.spawned&&e.alive&&Math.abs(e.x-playerWorldX)<1700)nearbyCombatCached=true;
     });
   }
   return nearbyCombatCached;
@@ -2991,70 +2192,31 @@ function frame(now){
   }
 
   let playerDynamic=!playerGrounded||jumpBufferTimer>0;
-  if(sceneLocation==='interior'){
-    jumpBufferTimer=Math.max(0,jumpBufferTimer-dt);
-    if(debugFlightMode){
-      playerGrounded=false;playerVy=0;coyoteTimer=0;
-      const vy=flightVerticalAxis();
-      if(Math.abs(vy)>.02){
-        playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
-        playerDynamic=true;
-      }
-      if(moving){
-        const dir=Math.sign(axis);
-        setFacing(dir);
-        const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
-        moveInteriorHorizontal(dir*speed*dt,{flight:true});
-        playerDynamic=true;
-      }else if(playerDynamic){
-        updateInteriorCamera();
-      }
-    }else{
-      if(playerGrounded)coyoteTimer=COYOTE_TIME;
-      else coyoteTimer=Math.max(0,coyoteTimer-dt);
-      if(jumpBufferTimer>0&&(playerGrounded||coyoteTimer>0))performJump();
-      if(moving){
-        const dir=Math.sign(axis);
-        setFacing(dir);
-        const speed=Math.max(175,Math.min(255,VIEW_W*.21))*magnitude;
-        moveInteriorHorizontal(dir*speed*dt,{airborne:!playerGrounded});
-        playerDynamic=true;
-      }
-      if(!playerGrounded){
-        updateInteriorVertical(dt);
-        playerDynamic=true;
-      }else{
-        playerY=interiorWalkSurfaceY(interiorPlayerWorldX,interiorStairState);
-        updateInteriorCamera();
-      }
-    }
-  }else{
-    if(debugFlightMode){
-      playerGrounded=false;playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
-      const vy=flightVerticalAxis();
-      if(Math.abs(vy)>.02){
-        playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
-        playerDynamic=true;
-      }
-    }
-    if(magnitude>.02){
-      const dir=Math.sign(axis);
-      setFacing(dir);
-      const maxSpeed=Math.max(170,Math.min(260,VIEW_W*.22));
-      const speed=maxSpeed*magnitude;
-      movePlayerHorizontal(dir*speed*dt);
+  if(debugFlightMode){
+    playerGrounded=false;playerVy=0;jumpBufferTimer=0;coyoteTimer=0;
+    const vy=flightVerticalAxis();
+    if(Math.abs(vy)>.02){
+      playerY=clamp(playerY+vy*Math.max(220,VIEW_H*.50)*dt,0,flightCeiling());
       playerDynamic=true;
     }
-    if(moving){
-      const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
-      if(walkDuration!==lastWalkDuration){
-        lastWalkDuration=walkDuration;
-        actorEl.style.setProperty('--walk-duration',walkDuration);
-      }
-    }
-    if(playerDynamic&&!debugFlightMode)updatePlayerVertical(dt,true);
-    if(playerDynamic)updateCamera();
   }
+  if(magnitude>.02){
+    const dir=Math.sign(axis);
+    setFacing(dir);
+    const maxSpeed=Math.max(170,Math.min(260,VIEW_W*.22));
+    const speed=maxSpeed*magnitude;
+    movePlayerHorizontal(dir*speed*dt);
+    playerDynamic=true;
+  }
+  if(moving){
+    const walkDuration=(0.90-0.34*magnitude).toFixed(2)+'s';
+    if(walkDuration!==lastWalkDuration){
+      lastWalkDuration=walkDuration;
+      actorEl.style.setProperty('--walk-duration',walkDuration);
+    }
+  }
+  if(playerDynamic&&!debugFlightMode)updatePlayerVertical(dt,true);
+  if(playerDynamic)updateCamera();
   const actionChanged=syncPlayerActionState();
 
   let combatTick=false;
@@ -3072,7 +2234,7 @@ function frame(now){
     combatAccumulator=0;
   }
 
-  const interactionCoord=sceneLocation==='interior'?interiorPlayerWorldX:playerWorldX;
+  const interactionCoord=playerWorldX;
   const interactionMoved=!Number.isFinite(lastInteractionX)
     ||Math.abs(interactionCoord-lastInteractionX)>8
     ||Math.abs(playerY-lastInteractionY)>8;
@@ -3145,7 +2307,6 @@ crouchBtn.addEventListener('pointerdown',e=>{
     mobileFlightDown=true;
     crouchBtn.classList.add('is-active');
   }else{
-    if(sceneLocation==='interior')return;
     mobileCrouch=true;
     updateCrouchState();
   }
