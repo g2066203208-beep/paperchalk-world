@@ -1532,7 +1532,7 @@ function updateDebugStatus(){
     '<span>最近敌距 <b>'+(nearest?Math.round(Math.abs(playerWorldX-nearest.x)):'--')+'</b></span>'+
     '<span>地形碰撞 <b>'+(showMapColliders?'开':'关')+'</b></span>'+
     '<span>Camera调试 <b>'+(showCameraDebug?'开':'关')+'</b></span>'+
-    '<span>摄像机倾角 <b>'+currentCameraTiltValue()+'</b></span>'+
+    '<span>倾角 <b>'+currentCameraTiltValue()+'</b></span>'+
     '<span>自由飞行 <b>'+(debugFlightMode?'四向':'关')+'</b></span>'+
     '<span>FPS <b>'+perfFps+' / '+perfFrameMs.toFixed(1)+'ms</b></span>'+
     '<span>长任务 <b>'+perfLongTasks+' / '+perfWorstLongTask.toFixed(0)+'ms</b></span>'+
