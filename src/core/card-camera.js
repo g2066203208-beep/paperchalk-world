@@ -2,13 +2,23 @@
 (function(global){
 'use strict';
 
+const FAR_GROUND_DEPTH=1200;
 const config=Object.freeze({
   gridSize:128,
   baseDepth:900,
   horizonRatio:.40,
   minDepth:96,
   maxDepth:6400,
-  wallDepth:1200
+  // The playable ground is finite in scene-depth: it ends exactly where the
+  // far sky wall meets the floor. Nothing behind this line needs ground grid.
+  groundNearDepth:-384,
+  farGroundDepth:FAR_GROUND_DEPTH,
+  wallDepth:FAR_GROUND_DEPTH,
+  sceneGuides:Object.freeze([
+    Object.freeze({id:'player',z:0}),
+    Object.freeze({id:'far',z:600}),
+    Object.freeze({id:'sky',z:FAR_GROUND_DEPTH})
+  ])
 });
 
 function project({
