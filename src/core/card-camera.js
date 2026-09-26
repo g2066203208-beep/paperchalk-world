@@ -6,7 +6,8 @@ const FAR_GROUND_DEPTH=1280; // 10 m at 128 px/m
 const config=Object.freeze({
   gridSize:128,
   baseDepth:3840, // 30 m camera-to-mid plane at 128 px/m
-  horizonRatio:.27, // steeper downward view: more screen height for the finite ground plane
+  nearMainDepth:-640,
+  nearMainScreenMargin:8, // responsive tilt target: near-main sits ~8px above viewport bottom
   minDepth:96,
   maxDepth:6400,
   // The playable ground is finite in scene-depth: it ends exactly where the
@@ -28,6 +29,17 @@ const config=Object.freeze({
   ])
 });
 
+function resolveHorizonY(viewportHeight=720,groundY=112){
+  const h=Number(viewportHeight)||720;
+  const g=Number(groundY)||112;
+  const playerFootY=h-g;
+  const nearScale=config.baseDepth/(config.baseDepth+config.nearMainDepth);
+  const targetNearY=h-config.nearMainScreenMargin;
+  // Solve targetNearY = horizonY + (playerFootY-horizonY)*nearScale.
+  // This changes only camera tilt / vanishing-line placement; world Z stays untouched.
+  return (targetNearY-nearScale*playerFootY)/(1-nearScale);
+}
+
 function project({
   worldX=0,worldZ=0,worldY=0,
   playerX=0,playerY=0,cameraZ=0,
@@ -38,7 +50,7 @@ function project({
   const depth=config.baseDepth+relativeZ;
   if(depth<=config.minDepth)return {visible:false,x:0,y:0,scale:0,depth};
   const scale=config.baseDepth/depth;
-  const horizonY=(Number(viewportHeight)||720)*config.horizonRatio;
+  const horizonY=resolveHorizonY(viewportHeight,groundY);
   const playerFootY=(Number(viewportHeight)||720)-(Number(groundY)||0);
   const cameraHeight=playerFootY-horizonY;
   return {
@@ -60,5 +72,5 @@ function wrap(value,size=config.gridSize){
   return ((v%m)+m)%m;
 }
 
-global.PaperchalkCardCamera=Object.freeze({config,project,distance2D,wrap});
+global.PaperchalkCardCamera=Object.freeze({config,project,resolveHorizonY,distance2D,wrap});
 })(window);

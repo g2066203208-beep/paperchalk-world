@@ -224,6 +224,23 @@ try{
     perspectiveMetrics.ys[0]>890&&perspectiveMetrics.ys[0]<900&&
     perspectiveMetrics.ys[3]<670,
     JSON.stringify({...perspectiveMetrics,mainScreenGaps}));
+  const wideTilt=await page.evaluate(()=>{
+    const q=window.PaperchalkCardCamera.project({
+      worldX:0,worldZ:-640,worldY:0,
+      playerX:0,playerY:0,cameraZ:0,
+      screenX:768,viewportHeight:691,groundY:112
+    });
+    const h=window.PaperchalkCardCamera.resolveHorizonY(691,112);
+    const far=window.PaperchalkCardCamera.project({
+      worldX:0,worldZ:1280,worldY:0,
+      playerX:0,playerY:0,cameraZ:0,
+      screenX:768,viewportHeight:691,groundY:112
+    });
+    return {nearY:q.y,horizonY:h,farY:far.y};
+  });
+  check('Wide 1536x691 camera tilt keeps the near-main line at the screen edge',
+    Math.abs(wideTilt.nearY-683)<1e-9&&wideTilt.farY<470,
+    JSON.stringify(wideTilt));
   const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
   check('Near/mid/far front-main-back guides are ordered toward the horizon',
     guideOrder.length===10&&guideOrder.every((y,i)=>i===0||guideOrder[i-1]>y),
