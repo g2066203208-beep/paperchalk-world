@@ -66,7 +66,7 @@ function setVisible(el,visible){
 }
 function coarseVisibleX(worldX,worldZ,player,viewport,margin=300){
   const cfg=camera.config;
-  const depth=cfg.baseDepth+(Number(worldZ)||0);
+  const depth=camera.resolveCameraDistance()+(Number(worldZ)||0);
   if(depth<=cfg.minDepth)return false;
   if((Number(worldZ)||0)>cfg.farGroundDepth)return false;
   const scale=cfg.baseDepth/depth;
@@ -136,7 +136,7 @@ function renderGroundGrid(frame){
   writeWorldVar('--card-horizon-y',horizonY.toFixed(2)+'px');
 
   const nearZ=Number(cfg.groundNearDepth)||-step*3;
-  const farZ=Math.min(Number(cfg.farGroundDepth)||Number(cfg.wallDepth)||step*10,cfg.maxDepth-cfg.baseDepth-step);
+  const farZ=Math.min(Number(cfg.farGroundDepth)||Number(cfg.wallDepth)||step*10,cfg.maxDepth-camera.resolveCameraDistance()-step);
   const farProjection=camera.project({
     worldX:p.x,worldZ:farZ,worldY:0,
     playerX:p.x,playerY:p.y,cameraZ:0,
@@ -261,7 +261,7 @@ function render(frame,force=false){
   const cfg=camera.config,p=frame.player,v=frame.viewport;
   renderGroundGrid(frame);
   writeWorldVar('--card-camera-y',(Number(p.y)||0).toFixed(2)+'px');
-  const wallScale=cfg.baseDepth/(cfg.baseDepth+cfg.wallDepth);
+  const wallScale=cfg.baseDepth/(camera.resolveCameraDistance()+cfg.wallDepth);
   writeWorldVar('--card-wall-grid-size',(cfg.gridSize*wallScale).toFixed(2)+'px');
   writeWorldVar('--card-wall-x',(-camera.wrap(p.x*wallScale,cfg.gridSize*wallScale)).toFixed(2)+'px');
   writeWorldVar('--card-wall-y',camera.wrap((Number(p.y)||0)*wallScale,cfg.gridSize).toFixed(2)+'px');

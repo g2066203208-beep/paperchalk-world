@@ -33,7 +33,7 @@ const requiredIds = [
   "entityTrack","pixiEntityLayer","playerFlip","playerSprite","enemy","enemy2","enemyHealthFill","enemy2HealthFill","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
   "debugHitboxBtn","debugRangeBtn","debugAiBtn","debugMapColliderBtn","debugSpawnBtn","debugCameraBtn",
-  "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput","debugCameraTilt","debugCameraTiltValue","debugCameraHorizonValue","debugCameraHeight","debugCameraHeightValue","debugCameraTiltReset"
+  "debugToggleBtn","debugPanel","debugCommandForm","debugCommandInput","debugOutput","debugCameraTilt","debugCameraTiltValue","debugCameraHorizonValue","debugCameraHeight","debugCameraHeightValue","debugCameraDistance","debugCameraDistanceValue","debugCameraTiltReset"
 ];
 
 for (const id of requiredIds) {
@@ -198,7 +198,7 @@ assert(css.includes(".interior-stair-run-lower{")&&css.includes(".interior-stair
 assert(game.includes("else jumpPlayer();")&&!game.includes("if(sceneLocation==='interior')return;\n    jumpPlayer();"), "Indoor keyboard/mobile jump must remain enabled");
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("debugFlightMode&&sceneLocation==='outside'"), "Free flight must support large Y and bypass road-strip snapping");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
-assert(game.includes("const groundY=sceneLocation==='outside'?CARD_CAMERA.project")&&game.includes("const actorBottom=(VIEW_H-groundY).toFixed(2)+'px'")&&game.includes("--world-camera-y"), "Vertical simulation/camera height must keep player feet on the shared projected ground");
+assert(game.includes("const playerProjection=sceneLocation==='outside'?CARD_CAMERA.project")&&game.includes("const actorBottom=(VIEW_H-playerProjection.y).toFixed(2)+'px'")&&game.includes("--world-camera-y"), "Vertical simulation/camera framing must keep player feet on the shared projected ground");
 assert(html.includes('id="interiorFarLayer"')&&html.includes('id="interiorMidLayer"')&&html.includes('id="interiorNearLayer"'), "Interior far/mid/near depth layers missing");
 assert(css.includes(".interior-far-layer{z-index:3}")&&css.includes(".interior-mid-layer{z-index:4}")&&css.includes(".stage.scene-interior .actor{z-index:5")&&css.includes(".interior-near-layer{z-index:6}"), "Interior depth order must be far -> mid -> player -> near");
 assert(game.includes("const axis=(playerCrouching&&!debugFlightMode)?0:rawAxis"), "Free flight horizontal movement is missing");
@@ -296,18 +296,18 @@ assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS m
 assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
 assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
 assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="camera-angle-height-r49"'), "R49 camera build cache key missing");
-assert(html.includes('const BUILD = "camera-angle-height-r49"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=camera-angle-height-r49'), "game.js camera debug cache key missing");
-assert(html.includes('./src/debug-camera-controls.js?v=camera-angle-height-r49'), "standalone camera debug controller missing");
+assert(html.includes('meta name="paperchalk-build" content="camera-distance-r50"'), "R50 camera-distance build cache key missing");
+assert(html.includes('const BUILD = "camera-distance-r50"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=camera-distance-r50'), "game.js camera debug cache key missing");
+assert(html.includes('./src/debug-camera-controls.js?v=camera-distance-r50'), "standalone camera debug controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/debug-camera-controls.js'), "camera debug controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
 assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main'")&&cardCamera.includes("z:-640")&&cardCamera.includes("id:'far-main'")&&cardCamera.includes("z:640")&&cardCamera.includes("const FAR=1280"), "Meter-aligned main scene guides missing");
 assert(cardCamera.includes("nearMainScreenMargin:8")&&cardCamera.includes("function resolveHorizonY("), "Responsive near-edge camera tilt missing");
 assert(cardCamera.includes("function setHorizonRatio(")&&cardCamera.includes("function clearHorizonRatio("), "Runtime camera tilt override API missing");
-assert(cardCamera.includes("verticalFovDegrees:60")&&cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters("), "Real angle/camera-height API missing");
-assert(debugCamera.includes("paperchalk.debug.cameraAngle.v2")&&debugCamera.includes("paperchalk.debug.cameraHeight.v1")&&debugCamera.includes("function setHeight("), "Camera angle/height debug controller missing");
+assert(cardCamera.includes("verticalFovDegrees:60")&&cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters(")&&cardCamera.includes("function setCameraDistanceMeters("), "Real angle/height/distance camera API missing");
+assert(debugCamera.includes("paperchalk.debug.cameraAngle.v2")&&debugCamera.includes("paperchalk.debug.cameraHeight.v1")&&debugCamera.includes("paperchalk.debug.cameraDistance.v1")&&debugCamera.includes("function setDistance("), "Camera angle/height/distance debug controller missing");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 

@@ -77,7 +77,7 @@ assert(css.includes(".card-ground-canvas")&&!css.includes("transform:perspective
 assert(css.includes("height:var(--card-far-ground-y,60%)")&&css.includes("background-size:var(--card-wall-grid-size,55px)"),'Finite sky wall is not attached to the far ground edge');
 assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"),'Canvas ground/entity culling runtime missing');
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"),'Player-driven Z ground scrolling returned');
-assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"),'Shared scene-depth projection math missing');
+assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0")&&cardCamera.includes("resolveCameraDistance()"),'Shared scene-depth/dolly projection math missing');
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("wallDepth:FAR"),'Ground far edge and sky wall depth are no longer identical');
 assert((cardCamera.match(/Object\.freeze\(\{id:'/g)||[]).length===10,'Scene guide count must remain 10');
 assert(domCardRenderer.includes("sceneMainLines")&&domCardRenderer.includes("sceneSubLines"),'Scene guide main/sub instrumentation missing');
@@ -91,7 +91,7 @@ assert(oldTownRenderer.includes("function shuffled(rowIndex)"),'Seeded old-town 
 assert(oldTownRenderer.includes("runtime.subscribe(render)"),'Old-town layer is not lifecycle/runtime driven');
 assert(oldTownRenderer.includes("worldHalf")&&oldTownRenderer.includes("coarseCulled"),'Old-town coarse visibility culling missing');
 assert(renderer.includes("coarseCardVisible"),'Pixi renderer coarse visibility culling missing');
-assert(debugCamera.includes("PaperchalkDebugCamera")&&debugCamera.includes("setAngle")&&debugCamera.includes("setHeight"),'Standalone camera debug controller missing');
+assert(debugCamera.includes("PaperchalkDebugCamera")&&debugCamera.includes("setAngle")&&debugCamera.includes("setHeight")&&debugCamera.includes("setDistance"),'Standalone camera debug controller missing');
 assert(css.includes(".oldtown-building-layer")&&css.includes("R38 OLD-TOWN BUILDING POOL"),'Old-town far-midground CSS missing');
 assert(!html.includes("atlas-r38-b64/"),'Temporary atlas base64 chunks leaked into runtime');
 

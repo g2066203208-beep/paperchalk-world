@@ -2429,7 +2429,8 @@ button{cursor:pointer}
 }
 .stage:not(.scene-interior) .actor{
   z-index:40!important;
-  transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%)!important;
+  transform:translate3d(var(--actor-x),var(--actor-y),0) translateX(-50%) scale(var(--camera-scale,1))!important;
+  transform-origin:50% 100%!important;
 }
 /* Old decorative outdoor layers remain disabled in the geometry prototype. */
 .stage:not(.scene-interior) .paper-stars,

@@ -1076,6 +1076,7 @@ try{
   const cameraBefore=await page.evaluate(()=>({
     angle:Number(document.getElementById('debugCameraTilt')?.value),
     height:Number(document.getElementById('debugCameraHeight')?.value),
+    distance:Number(document.getElementById('debugCameraDistance')?.value),
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
   }));
   await page.locator('#debugCameraTilt').evaluate(el=>{el.value='5';el.dispatchEvent(new Event('input',{bubbles:true}))});
@@ -1126,19 +1127,55 @@ try{
     (height45.renderer!=='dom'||Math.abs(height45.actorBottom-height45.midY)<1),
     JSON.stringify({height3,height45}));
 
+  await page.locator('#debugCameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
+  const distance30=await page.evaluate(()=>{
+    const t=getComputedStyle(document.querySelector('.actor')).transform;
+    const m=!t||t==='none'?null:new DOMMatrixReadOnly(t);
+    return {
+      scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
+      actorScale:m?Math.hypot(m.a,m.b):1,
+      actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom
+    };
+  });
+  await page.locator('#debugCameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(80);
+  const distance15=await page.evaluate(()=>({
+    value:Number(document.getElementById('debugCameraDistance')?.value),
+    manual:window.PaperchalkCardCamera.manualCameraDistanceMeters,
+    stored:localStorage.getItem('paperchalk.debug.cameraDistance.v1'),
+    scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
+    actorScale:(()=>{const t=getComputedStyle(document.querySelector('.actor')).transform;const m=!t||t==='none'?null:new DOMMatrixReadOnly(t);return m?Math.hypot(m.a,m.b):1})(),
+    actorBottom:document.querySelector('.actor')?.getBoundingClientRect().bottom,
+    label:document.getElementById('debugCameraDistanceValue')?.textContent,
+    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
+    renderer:window.PaperchalkRenderer?.mode||'dom'
+  }));
+  check('Debug camera distance performs a real dolly toward the player',
+    distance15.value===15&&distance15.manual===15&&distance15.stored==='15'&&distance15.label.includes('15.0 m')&&
+    Math.abs(distance30.scale-1)<1e-9&&Math.abs(distance15.scale-2)<1e-9&&
+    distance15.depths.join(',')===cameraBefore.depths.join(',')&&
+    Math.abs(distance15.actorBottom-distance30.actorBottom)<1&&
+    (distance15.renderer!=='dom'||distance15.actorScale>distance30.actorScale*1.9),
+    JSON.stringify({distance30,distance15}));
+
   await page.locator('#debugCameraTiltReset').click();
   await page.waitForTimeout(80);
   const cameraReset=await page.evaluate(()=>({
     angle:window.PaperchalkCardCamera.manualTiltDegrees,
     height:window.PaperchalkCardCamera.manualCameraHeightMeters,
+    distance:window.PaperchalkCardCamera.manualCameraDistanceMeters,
     angleStored:localStorage.getItem('paperchalk.debug.cameraAngle.v2'),
     heightStored:localStorage.getItem('paperchalk.debug.cameraHeight.v1'),
+    distanceStored:localStorage.getItem('paperchalk.debug.cameraDistance.v1'),
     angleLabel:document.getElementById('debugCameraTiltValue')?.textContent,
-    heightLabel:document.getElementById('debugCameraHeightValue')?.textContent
+    heightLabel:document.getElementById('debugCameraHeightValue')?.textContent,
+    distanceLabel:document.getElementById('debugCameraDistanceValue')?.textContent
   }));
-  check('Debug camera reset returns angle and height to automatic mode',
-    cameraReset.angle===null&&cameraReset.height===null&&cameraReset.angleStored===null&&cameraReset.heightStored===null&&
-    cameraReset.angleLabel.includes('自动')&&cameraReset.heightLabel.includes('自动'),
+  check('Debug camera reset returns angle, height and distance to automatic mode',
+    cameraReset.angle===null&&cameraReset.height===null&&cameraReset.distance===null&&
+    cameraReset.angleStored===null&&cameraReset.heightStored===null&&cameraReset.distanceStored===null&&
+    cameraReset.angleLabel.includes('自动')&&cameraReset.heightLabel.includes('自动')&&cameraReset.distanceLabel.includes('自动'),
     JSON.stringify(cameraReset));
 
   await page.locator('[data-debug-action="damage1"]').click();

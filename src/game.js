@@ -1852,6 +1852,7 @@ window.PaperchalkDebug={
   setFlight(value){return setDebugFlightMode(value)},
   setCameraTilt(value){return window.PaperchalkDebugCamera?.setAngle(value)},
   setCameraHeight(value){return window.PaperchalkDebugCamera?.setHeight(value)},
+  setCameraDistance(value){return window.PaperchalkDebugCamera?.setDistance(value)},
   perf(){return {
     fps:perfFps,
     frameMs:perfFrameMs,
@@ -2863,7 +2864,7 @@ function updateVisualWindow(force=false){
   return true;
 }
 
-const renderCache={road:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:''};
+const renderCache={road:'',midground:'',rear:'',front:'',map:'',entity:'',actorLeft:'',actorBottom:'',actorAir:'',actorScale:''};
 function writeTransform(el,key,value){
   if(renderCache[key]===value)return;
   renderCache[key]=value;el.style.transform=value;
@@ -2893,9 +2894,10 @@ function renderWorld(force=false){
   writeTransform(mapTrack,'map',mapT);
   writeTransform(entityTrack,'entity',mapT);
   const actorLeft=actorX.toFixed(2)+'px';
-  const groundY=sceneLocation==='outside'?CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}).y:VIEW_H-MAP_GROUND_SCREEN_Y;
-  const actorBottom=(VIEW_H-groundY).toFixed(2)+'px';
+  const playerProjection=sceneLocation==='outside'?CARD_CAMERA.project({worldX:playerWorldX,worldZ:0,worldY:0,playerX:playerWorldX,playerY:0,cameraZ:0,screenX:actorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y}):{y:VIEW_H-MAP_GROUND_SCREEN_Y,scale:1};
+  const actorBottom=(VIEW_H-playerProjection.y).toFixed(2)+'px';
   const actorAir=playerY.toFixed(2)+'px';
+  const actorScale=(playerProjection.scale||1).toFixed(4);
   if(!pixiDynamicActive()){
     if(force||renderCache.actorLeft!==actorLeft){
       renderCache.actorLeft=actorLeft;
@@ -2908,6 +2910,10 @@ function renderWorld(force=false){
     if(force||renderCache.actorAir!==actorAir){
       renderCache.actorAir=actorAir;
       actorEl.style.setProperty('--player-air-y',actorAir);
+    }
+    if(force||renderCache.actorScale!==actorScale){
+      renderCache.actorScale=actorScale;
+      actorEl.style.setProperty('--camera-scale',actorScale);
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
   }
