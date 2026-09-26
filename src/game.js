@@ -1231,12 +1231,16 @@ let joystickOriginX=0,joystickOriginY=0;
 let facing=1;
 let playerWorldZ=0;
 let playerY=0,playerVy=0,playerGrounded=true;
-const CARD_GRID_SIZE=128;
-const CARD_CAMERA_BASE_DEPTH=900;
-const CARD_HORIZON_RATIO=.40;
-const CARD_MIN_DEPTH=96;
-const CARD_MAX_DEPTH=6400;
-const CARD_WORLD_Z_LIMIT=1000000000;
+const CARD_CAMERA=window.PaperchalkCardCamera;
+if(!CARD_CAMERA)throw new Error('PaperchalkCardCamera missing');
+const {
+  gridSize:CARD_GRID_SIZE,
+  baseDepth:CARD_CAMERA_BASE_DEPTH,
+  horizonRatio:CARD_HORIZON_RATIO,
+  minDepth:CARD_MIN_DEPTH,
+  maxDepth:CARD_MAX_DEPTH,
+  worldDepthLimit:CARD_WORLD_Z_LIMIT
+}=CARD_CAMERA.config;
 let playerCrouching=false;
 let playerActionState='idle';
 let coyoteTimer=0,jumpBufferTimer=0;
@@ -2889,23 +2893,14 @@ function flightCeiling(){
     : OUTDOOR_FLIGHT_MAX_Y;
 }
 function cardProjection(worldX,worldZ=0,worldY=0){
-  const relativeZ=(Number(worldZ)||0)-playerWorldZ;
-  const depth=CARD_CAMERA_BASE_DEPTH+relativeZ;
-  if(depth<=CARD_MIN_DEPTH)return {visible:false,x:0,y:0,scale:0,depth};
-  const scale=CARD_CAMERA_BASE_DEPTH/depth;
-  const horizonY=VIEW_H*CARD_HORIZON_RATIO;
-  const playerFootY=VIEW_H-MAP_GROUND_SCREEN_Y;
-  const cameraHeight=playerFootY-horizonY;
-  return {
-    visible:depth<CARD_MAX_DEPTH&&scale>.12&&scale<5,
-    x:playerScreenAnchorX+(worldX-playerWorldX)*scale,
-    y:horizonY+(cameraHeight+playerY-worldY)*scale,
-    scale,
-    depth
-  };
+  return CARD_CAMERA.project({
+    worldX,worldZ,worldY,
+    playerX:playerWorldX,playerZ:playerWorldZ,playerY,
+    screenX:playerScreenAnchorX,viewportHeight:VIEW_H,groundY:MAP_GROUND_SCREEN_Y
+  });
 }
 function cardDepthDistance(x,z=0){
-  return Math.hypot((Number(x)||0)-playerWorldX,(Number(z)||0)-playerWorldZ);
+  return CARD_CAMERA.distance2D(x,z,playerWorldX,playerWorldZ);
 }
 function setFacing(dir){
   if(!dir||dir===facing)return;
@@ -2937,7 +2932,7 @@ function renderWorld(force=false){
   const sceneryX=worldX+sceneryOffsetX;
   worldEl.style.setProperty('--card-grid-x',(-posMod(playerWorldX,CARD_GRID_SIZE)).toFixed(2)+'px');
   worldEl.style.setProperty('--card-grid-z',(posMod(playerWorldZ,CARD_GRID_SIZE)).toFixed(2)+'px');
-  const wallPerspective=CARD_CAMERA_BASE_DEPTH/(CARD_CAMERA_BASE_DEPTH+1200);
+  const wallPerspective=CARD_CAMERA_BASE_DEPTH/(CARD_CAMERA_BASE_DEPTH+CARD_CAMERA.config.wallDepth);
   worldEl.style.setProperty('--card-wall-x',(-posMod(playerWorldX*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
   worldEl.style.setProperty('--card-wall-y',(posMod((playerY-playerWorldZ*.16)*wallPerspective,CARD_GRID_SIZE)).toFixed(2)+'px');
   if(roadSurface)roadSurface.style.setProperty('--road-surface-x',(-posMod(sceneryX,512)).toFixed(2)+'px');
