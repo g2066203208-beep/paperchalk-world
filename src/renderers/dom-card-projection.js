@@ -208,24 +208,29 @@ function renderGroundGrid(frame){
     'far-back':  {color:'#c77dff',width:2},
     'horizon':   {color:'#ffd43b',width:5}
   };
-  for(const guide of cfg.sceneGuides||[]){
-    const q=camera.project({
-      worldX:p.x,worldZ:guide.z,worldY:0,
-      playerX:p.x,playerY:p.y,cameraZ:0,
-      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
-    });
-    const style=sceneStyles[guide.id]||{color:'#ffffff',width:2};
-    strokeLine(ctx,0,q.y,v.width,q.y,style.color,style.width);
-    ctx.save();
-    ctx.font=(guide.kind==='main'||guide.kind==='horizon'?'700 ':'500 ')+'11px sans-serif';
-    ctx.fillStyle=style.color;
-    ctx.globalAlpha=.95;
-    ctx.fillText((guide.label||guide.id)+'  z='+guide.z,10,Math.max(12,q.y-5));
-    ctx.restore();
-    sceneGuideYs[guide.id]=q.y;
-    sceneUsed++;
-    if(guide.kind==='sub')sceneSub++;
-    else sceneMain++;
+  const showSceneGuides=!world.classList.contains('production-clean-scene')
+    ||world.classList.contains('camera-controls-open')
+    ||world.classList.contains('show-camera-debug');
+  if(showSceneGuides){
+    for(const guide of cfg.sceneGuides||[]){
+      const q=camera.project({
+        worldX:p.x,worldZ:guide.z,worldY:0,
+        playerX:p.x,playerY:p.y,cameraZ:0,
+        screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+      });
+      const style=sceneStyles[guide.id]||{color:'#ffffff',width:2};
+      strokeLine(ctx,0,q.y,v.width,q.y,style.color,style.width);
+      ctx.save();
+      ctx.font=(guide.kind==='main'||guide.kind==='horizon'?'700 ':'500 ')+'11px sans-serif';
+      ctx.fillStyle=style.color;
+      ctx.globalAlpha=.95;
+      ctx.fillText((guide.label||guide.id)+'  z='+guide.z,10,Math.max(12,q.y-5));
+      ctx.restore();
+      sceneGuideYs[guide.id]=q.y;
+      sceneUsed++;
+      if(guide.kind==='sub')sceneSub++;
+      else sceneMain++;
+    }
   }
 
   ctx.restore();
