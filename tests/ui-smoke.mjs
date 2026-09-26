@@ -139,10 +139,10 @@ const productionClean=await js(`(()=>({
   spawns:PaperchalkMap.enemySpawns.length,
   visibleEnemies:document.querySelectorAll('#entityTrack .enemy').length,
   visibleNpcs:document.querySelectorAll('[data-npc-id]').length,
-  compat:getComputedStyle(document.getElementById('prototypeRuntimeCompat')).display,
+  prototypeCompatExists:!!document.getElementById('prototypeRuntimeCompat'),
   interactHidden:document.getElementById('interactBtn').hidden
 }))()`);
-assert(productionClean.npcs===0&&productionClean.spawns===0&&productionClean.visibleEnemies===0&&productionClean.visibleNpcs===0&&productionClean.compat==='none'&&productionClean.interactHidden,
+assert(productionClean.npcs===0&&productionClean.spawns===0&&productionClean.visibleEnemies===0&&productionClean.visibleNpcs===0&&!productionClean.prototypeCompatExists&&productionClean.interactHidden,
   'production-clean stage still exposes prototype content '+JSON.stringify(productionClean));
 console.log('PASS production-clean stage',productionClean);
 
