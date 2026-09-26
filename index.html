@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "greeting-card-r35";
+  const BUILD = "full-3d-card-r36";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -32,14 +32,14 @@
 </script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=greeting-card-r35" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/npcs/phone-girl-offline-r1.webp?v=full-3d-card-r36" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="greeting-card-r35">
-<link rel="stylesheet" href="./styles/game.css?v=greeting-card-r35">
+<meta name="paperchalk-build" content="full-3d-card-r36">
+<link rel="stylesheet" href="./styles/game.css?v=full-3d-card-r36">
 </head>
 <body>
 
@@ -239,8 +239,8 @@
     <button id="jumpBtn" class="combat-btn" type="button" aria-label="跳跃">跳</button>
     <button id="attackBtn" class="combat-btn" type="button" aria-label="攻击">攻</button>
   </div>
-  <div id="desktopControlHint" class="desktop-control-hint">A/D 移动　S/↓ 蹲下　Space/W/↑ 跳跃　J 攻击　E 交谈　M 地图</div>
-  <div id="joystickHint" class="joystick-hint">左侧任意位置按住拖动</div>
+  <div id="desktopControlHint" class="desktop-control-hint">A/D 左右　W/S 或 ↑/↓ 前后　Space 跳跃　C 蹲下　J 攻击　E 交谈　M 地图</div>
+  <div id="joystickHint" class="joystick-hint">左侧摇杆：四向地面移动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="动态移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
       <div class="joystick-base"></div>
@@ -414,7 +414,7 @@
 <script src="./src/core/save-runtime.js?v=1"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=1"></script>
-<script src="./src/game.js?v=greeting-card-r35"></script>
+<script src="./src/game.js?v=full-3d-card-r36"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=puppet-r1"></script>
 </body>
 </html>
