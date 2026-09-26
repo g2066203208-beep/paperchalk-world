@@ -48,7 +48,7 @@ const content={
   },
   npcs:[
     {
-      id:'npc-phone-girl',x:760,name:'？？？',portrait:'phone-girl-offline',
+      id:'npc-phone-girl',x:760,z:0,name:'？？？',portrait:'phone-girl-offline',
       sprite:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
       dialoguePortrait:'./assets/npcs/phone-girl-offline-r1.webp?v=npc-left-r15',
       text:'……你好。',
@@ -63,8 +63,8 @@ const content={
     }
   ],
   enemySpawns:[
-    {id:'enemy-1',archetype:'rag-drifter',x:2140,patrolMin:2010,patrolMax:2290},
-    {id:'enemy-2',archetype:'rag-drifter',x:4780,patrolMin:4680,patrolMax:4920}
+    {id:'enemy-1',archetype:'rag-drifter',x:2140,z:0,patrolMin:2010,patrolMax:2290},
+    {id:'enemy-2',archetype:'rag-drifter',x:4780,z:160,patrolMin:4680,patrolMax:4920}
   ],
   enemyArchetypes:{
     'rag-drifter':{
