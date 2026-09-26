@@ -16,12 +16,13 @@ for(const path of [
   'src/core/game-state.js',
   'src/core/save-runtime.js',
   'src/core/card-camera.js',
-  'src/content/game-content.js'
+  'src/content/game-content.js',
+  'src/content/building-pools.js'
 ]){
   new vm.Script(read(path),{filename:path}).runInContext(context);
 }
 
-const {PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content}=context.window;
+const {PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content,PaperchalkBuildingPools:buildingPools,PaperchalkBuildingPoolRuntime:buildingPoolRuntime}=context.window;
 
 let eventValue=0;
 const off=events.on('test:event',event=>{eventValue+=event.payload});
@@ -67,6 +68,11 @@ const contentCheck=context.window.PaperchalkContentRuntime.validate(content);
 assert.equal(contentCheck.ok,true,contentCheck.errors.join('\n'));
 assert.equal(new Set(content.world.nodes.map(x=>x.id)).size,content.world.nodes.length);
 assert.equal(new Set(content.world.routes.map(x=>x.id)).size,content.world.routes.length);
+const buildingCheck=buildingPoolRuntime.validate();
+assert.equal(buildingCheck.ok,true,buildingCheck.errors.join('\n'));
+assert.equal(buildingPools.realWorld.oldTown.buildings.length,10,'old-town pool must contain all supplied buildings');
+assert.equal(buildingPools.realWorld.oldTown.layer,'midground-far');
+assert.equal(buildingPools.realWorld.oldTown.z,600,'old-town pool must remain authored on scene-depth Z');
 
 const html=read('index.html');
 const game=read('src/game.js');
@@ -76,6 +82,9 @@ assert.ok(html.indexOf('game-state.js')<html.indexOf('game.js'),'state machine m
 assert.ok(html.indexOf('save-runtime.js')<html.indexOf('game.js'),'save runtime must load before game');
 assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera must load before game');
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
+assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
+assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
+assert.match(html,/paperchalk-build" content="oldtown-r38"/,'old-town build cache key missing');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');
 for(const component of ['transform','health','combat','ai','patrol','renderable']){
   assert.ok(game.includes(component+':e.'+component),'combat ECS must expose granular '+component+' component');
@@ -86,3 +95,4 @@ console.log('Preproduction architecture: PASS');
 console.log('  content nodes:',content.world.nodes.length);
 console.log('  content routes:',content.world.routes.length);
 console.log('  save schema:',saveRuntime.schemaVersion);
+console.log('  old-town buildings:',buildingPools.realWorld.oldTown.buildings.length);
