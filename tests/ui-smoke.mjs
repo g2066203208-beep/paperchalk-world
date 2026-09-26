@@ -134,18 +134,17 @@ assert(damageFx.start.anim.includes('hp-sewn-hit'),'damage animation missing '+J
 assert(parseFloat(damageFx.mid.opacity)>.25,'damage animation is visually hidden '+JSON.stringify(damageFx));
 console.log('PASS visible damage FX',damageFx);
 
-const enemyMotion=await js(`(async()=>{
-  PaperchalkCombat.placeEnemyNear(320);
-  await new Promise(r=>setTimeout(r,120));
-  const e=document.getElementById('enemy');
-  const a=parseFloat(e.style.getPropertyValue('--enemy-x'))||0;
-  await new Promise(r=>setTimeout(r,520));
-  const b=parseFloat(e.style.getPropertyValue('--enemy-x'))||0;
-  return {a,b,delta:b-a,left:e.style.left,transform:getComputedStyle(e).transform};
-})()`);
-assert(Math.abs(enemyMotion.delta)>=20,'enemy did not move smoothly enough '+JSON.stringify(enemyMotion));
-assert(enemyMotion.left===''||enemyMotion.left==='0px','enemy still uses layout-driving left movement '+JSON.stringify(enemyMotion));
-console.log('PASS enemy GPU motion',enemyMotion);
+const productionClean=await js(`(()=>({
+  npcs:PaperchalkMap.npcs.length,
+  spawns:PaperchalkMap.enemySpawns.length,
+  visibleEnemies:document.querySelectorAll('#entityTrack .enemy').length,
+  visibleNpcs:document.querySelectorAll('[data-npc-id]').length,
+  compat:getComputedStyle(document.getElementById('prototypeRuntimeCompat')).display,
+  interactHidden:document.getElementById('interactBtn').hidden
+}))()`);
+assert(productionClean.npcs===0&&productionClean.spawns===0&&productionClean.visibleEnemies===0&&productionClean.visibleNpcs===0&&productionClean.compat==='none'&&productionClean.interactHidden,
+  'production-clean stage still exposes prototype content '+JSON.stringify(productionClean));
+console.log('PASS production-clean stage',productionClean);
 
 await click('worldMenuBtn');
 assert(await waitFor("!document.getElementById('uiShell')?.classList.contains('is-hidden')",2200),'world menu button did not open menu');
@@ -178,147 +177,31 @@ await click('debugToggleBtn');
 assert(await waitFor("document.getElementById('debugPanel')?.classList.contains('is-open')",800),'debug did not open');
 noFaults('debug');
 console.log('PASS debug');
-await js("closeDebugPanel({focus:false}); PaperchalkDebug.run('tp 760');");
-await sleep(250);
+await js("closeDebugPanel({focus:false});");
+await sleep(80);
 
-const dialogueClickAt=Date.now();
-const interact=await js("(()=>{const e=document.getElementById('interactBtn');e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:1,pointerType:'touch'}));return true})()");
-assert(interact,'interact dispatch failed');
-assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-open')",500),'dialogue did not open promptly');
-assert(await waitFor("window.PaperchalkDialogue?.state?.phase==='opening'",350),'dialogue first line stalled after interaction');
-const dialogueLatency=Date.now()-dialogueClickAt;
-assert(dialogueLatency<500,'dialogue opening latency too high '+dialogueLatency+'ms');
-console.log('PASS dialogue opening latency',dialogueLatency+'ms');
-const entranceFx=await js(`(()=>{
-  const p=getComputedStyle(document.getElementById('dialoguePlayerPortrait'));
-  const n=getComputedStyle(document.getElementById('dialogueNpcPortrait'));
-  return {playerName:p.animationName,playerDir:p.animationDirection,npcName:n.animationName,npcDir:n.animationDirection};
-})()`);
-assert(entranceFx.playerName.includes('puppetPlayerArcOut')&&entranceFx.playerDir==='reverse','player entrance is not reverse exit '+JSON.stringify(entranceFx));
-assert(entranceFx.npcName.includes('puppetNpcArcOut')&&entranceFx.npcDir==='reverse','NPC entrance is not reverse exit '+JSON.stringify(entranceFx));
-console.log('PASS mirrored portrait entrance',entranceFx);
+await click('cameraControlBtn');
+assert(await waitFor("document.getElementById('cameraControlPanel')?.classList.contains('is-open')",500),'camera control panel did not open');
+const cameraUi=await js(`(()=>({
+  inDebug:!!document.querySelector('#debugPanel #cameraTilt'),
+  inSettings:!!document.querySelector('#pageSettings #cameraTilt'),
+  max:Number(document.getElementById('cameraTilt').max),
+  controls:document.querySelectorAll('#cameraControlPanel input[type=range]').length
+}))()`);
+assert(!cameraUi.inDebug&&!cameraUi.inSettings&&cameraUi.max===80&&cameraUi.controls===3,
+  'camera controls are not a standalone production UI '+JSON.stringify(cameraUi));
 
-const entranceScale=await js(`(async()=>{
-  const p=document.getElementById('dialoguePlayerPortrait');
-  const n=document.getElementById('dialogueNpcPortrait');
-  const scaleOf=el=>{
-    const t=getComputedStyle(el).transform;
-    if(!t||t==='none')return 1;
-    const m=new DOMMatrixReadOnly(t);
-    return Math.hypot(m.a,m.b);
-  };
-  const samples=[];
-  for(let i=0;i<9;i++){
-    samples.push({t:i*70,p:scaleOf(p),n:scaleOf(n)});
-    await new Promise(r=>setTimeout(r,70));
-  }
-  return samples;
-})()`);
-const pScales=entranceScale.map(x=>x.p),nScales=entranceScale.map(x=>x.n);
-const pSpread=Math.max(...pScales)-Math.min(...pScales);
-const nSpread=Math.max(...nScales)-Math.min(...nScales);
-assert(pSpread<0.004&&nSpread<0.004,'portrait scale changes during entrance '+JSON.stringify({entranceScale,pSpread,nSpread}));
-assert(pScales.every(v=>Math.abs(v-1)<0.004)&&nScales.every(v=>Math.abs(v-1)<0.004),'portrait entrance scale is not 1.0 '+JSON.stringify(entranceScale));
-console.log('PASS constant-size portrait entrance',{pSpread,nSpread,samples:entranceScale});
-
-const handoff=await js(`(async()=>{
-  const stage=document.getElementById('dialogueStage');
-  const player=document.getElementById('dialoguePlayerPortrait');
-  const npc=document.getElementById('dialogueNpcPortrait');
-  const playerPuppet=document.querySelector('#dialoguePlayerPortrait .dialogue-puppet');
-  const npcPuppet=document.querySelector('#dialogueNpcPortrait .dialogue-puppet');
-  const snap=()=> {
-    const p=player.getBoundingClientRect(),n=npc.getBoundingClientRect();
-    const pp=playerPuppet.getBoundingClientRect(),np=npcPuppet.getBoundingClientRect();
-    return {
-      opening:stage.classList.contains('is-opening'),
-      p:{x:p.x,y:p.y,w:p.width,h:p.height},
-      n:{x:n.x,y:n.y,w:n.width,h:n.height},
-      pp:{x:pp.x,y:pp.y,w:pp.width,h:pp.height},
-      np:{x:np.x,y:np.y,w:np.width,h:np.height}
-    };
-  };
-
-  // Wait for the final portrait entrance animation to actually finish.
-  await new Promise(resolve=>{
-    let done=0;
-    const onEnd=e=>{
-      if(e.animationName!=='puppetPlayerArcOut'&&e.animationName!=='puppetNpcArcOut')return;
-      done++;
-      if(done>=2){
-        player.removeEventListener('animationend',onEnd);
-        npc.removeEventListener('animationend',onEnd);
-        requestAnimationFrame(resolve);
-      }
-    };
-    player.addEventListener('animationend',onEnd);
-    npc.addEventListener('animationend',onEnd);
-  });
-  const before=snap();
-
-  if(stage.classList.contains('is-opening')){
-    await new Promise(resolve=>{
-      const obs=new MutationObserver(()=>{
-        if(!stage.classList.contains('is-opening')){
-          obs.disconnect();
-          requestAnimationFrame(resolve);
-        }
-      });
-      obs.observe(stage,{attributes:true,attributeFilter:['class']});
-    });
-  }
-  const after=snap();
-  return {before,after};
-})()`);
-
-for(const key of ['p','n']){
-  assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
-    'portrait parent jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
-}
-for(const key of ['pp','np']){
-  assert(Math.abs(handoff.after[key].x-handoff.before[key].x)<2&&Math.abs(handoff.after[key].y-handoff.before[key].y)<2,
-    'puppet child jumps at entrance/breath handoff '+key+' '+JSON.stringify(handoff));
-}
-console.log('PASS continuous entrance-to-breath handoff',handoff);
-noFaults('dialogue open');
-const portraits=await js("({p:dialoguePlayerArt.complete&&dialoguePlayerArt.naturalWidth>0,n:dialogueNpcArt.complete&&dialogueNpcArt.naturalWidth>0,pw:dialoguePlayerArt.naturalWidth,ph:dialoguePlayerArt.naturalHeight,nw:dialogueNpcArt.naturalWidth,nh:dialogueNpcArt.naturalHeight})");
-assert(portraits.p&&portraits.n,'dialogue portraits did not decode '+JSON.stringify(portraits));
-assert(portraits.pw>=480&&portraits.ph>=900,'player portrait is still low resolution '+JSON.stringify(portraits));
-assert(portraits.nw===326&&portraits.nh===1002,'NPC portrait size mismatch '+JSON.stringify(portraits));
-console.log('PASS dialogue portraits',portraits);
-
-const portraitBeforeChoice=await js(`(()=>{
-  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
-  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
-  return {p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height}};
-})()`);
-
-await js("document.getElementById('dialogueStage').dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:2,pointerType:'touch'}))");
-assert(await waitFor("document.getElementById('dialogueStage')?.classList.contains('is-choice')",1000),'choice state did not open');
-await sleep(300);
-const choices=await js(`(()=>{
-  const vw=innerWidth,vh=innerHeight;
-  const a=[...document.querySelectorAll('.dialogue-choice')].map(b=>{const r=b.getBoundingClientRect();return {text:b.textContent,x:r.x,y:r.y,w:r.width,h:r.height,right:r.right,bottom:r.bottom,visible:r.width>0&&r.height>0}});
-  const p=document.getElementById('dialoguePlayerPortrait').getBoundingClientRect();
-  const n=document.getElementById('dialogueNpcPortrait').getBoundingClientRect();
-  const camera=document.getElementById('world').classList.contains('dialogue-choice-camera');
-  return {vw,vh,a,camera,p:{x:p.x,y:p.y,w:p.width,h:p.height},n:{x:n.x,y:n.y,w:n.width,h:n.height},
-    allInside:a.length===3&&a.every(r=>r.visible&&r.x>=0&&r.y>=0&&r.right<=vw&&r.bottom<=vh)};
-})()`);
-assert(choices.allInside,'choice stack clipped '+JSON.stringify(choices));
-assert(!choices.camera,'choice still triggers separate camera performance '+JSON.stringify(choices));
-assert(choices.a[0].x===choices.a[1].x&&choices.a[1].x===choices.a[2].x,'choices are not one vertical column '+JSON.stringify(choices));
-assert(Math.abs(choices.a[0].w-choices.a[1].w)<1&&Math.abs(choices.a[1].w-choices.a[2].w)<1,'choice widths differ '+JSON.stringify(choices));
-assert(choices.a[0].y<choices.a[1].y&&choices.a[1].y<choices.a[2].y,'choices are not vertically ordered '+JSON.stringify(choices));
-assert(choices.a[0].y>choices.vh*.52&&choices.a[2].bottom<choices.vh*.98,'choice stack is not in middle-bottom area '+JSON.stringify(choices));
-assert(Math.abs(choices.p.x-portraitBeforeChoice.p.x)<2&&Math.abs(choices.p.y-portraitBeforeChoice.p.y)<2,'player portrait jumps when choices appear '+JSON.stringify({before:portraitBeforeChoice,after:choices}));
-assert(Math.abs(choices.n.x-portraitBeforeChoice.n.x)<2&&Math.abs(choices.n.y-portraitBeforeChoice.n.y)<2,'NPC portrait jumps when choices appear '+JSON.stringify({before:portraitBeforeChoice,after:choices}));
-console.log('PASS simple stacked choices',choices);
-
-await js("document.querySelector('.dialogue-choice')?.click()");
-await sleep(250);
-noFaults('choice click');
-console.log('PASS choice click');
+const cameraBefore=await js("({tilt:PaperchalkCardCamera.getTiltDegrees(),height:PaperchalkCardCamera.getCameraHeightMeters(),distance:PaperchalkCardCamera.getCameraDistanceMeters(),mid:PaperchalkCardCamera.project({worldZ:0,viewportHeight:innerHeight,groundY:112}).y,near:PaperchalkCardCamera.project({worldZ:-640,viewportHeight:innerHeight,groundY:112}).y,far:PaperchalkCardCamera.project({worldZ:640,viewportHeight:innerHeight,groundY:112}).y})");
+await js("(()=>{const e=document.getElementById('cameraTilt');e.value='80';e.dispatchEvent(new Event('input',{bubbles:true}));return true})()");
+await sleep(100);
+const cameraAfter=await js("({tilt:PaperchalkCardCamera.getTiltDegrees(),height:PaperchalkCardCamera.getCameraHeightMeters(),distance:PaperchalkCardCamera.getCameraDistanceMeters(),mid:PaperchalkCardCamera.project({worldZ:0,viewportHeight:innerHeight,groundY:112}).y,near:PaperchalkCardCamera.project({worldZ:-640,viewportHeight:innerHeight,groundY:112}).y,far:PaperchalkCardCamera.project({worldZ:640,viewportHeight:innerHeight,groundY:112}).y})");
+assert(cameraAfter.tilt===80&&cameraAfter.height===cameraBefore.height&&cameraAfter.distance===cameraBefore.distance&&
+  Math.abs(cameraAfter.mid-cameraBefore.mid)<1&&
+  (cameraAfter.near-cameraAfter.far)>(cameraBefore.near-cameraBefore.far)*4,
+  'camera pitch does not rotate independently around the mid axis '+JSON.stringify({cameraBefore,cameraAfter}));
+await click('cameraControlClose');
+assert(await waitFor("!document.getElementById('cameraControlPanel')?.classList.contains('is-open')",500),'camera control panel did not close');
+console.log('PASS standalone camera UI',{cameraUi,cameraBefore,cameraAfter});
 
 console.log('UI_SMOKE_PASS');
 ws.close();
