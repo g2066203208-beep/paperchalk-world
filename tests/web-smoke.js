@@ -14,6 +14,7 @@ const buildingPools = fs.readFileSync("src/content/building-pools.js", "utf8");
 const domCardRenderer = fs.readFileSync("src/renderers/dom-card-projection.js", "utf8");
 const oldTownRenderer = fs.readFileSync("src/renderers/oldtown-building-layer.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
+const debugCamera = fs.readFileSync("src/debug-camera-controls.js", "utf8");
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -298,13 +299,15 @@ assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas prel
 assert(html.includes('meta name="paperchalk-build" content="camera-angle-height-r49"'), "R49 camera build cache key missing");
 assert(html.includes('const BUILD = "camera-angle-height-r49"'), "Top-level cache redirect build key missing");
 assert(html.includes('./src/game.js?v=camera-angle-height-r49'), "game.js camera debug cache key missing");
+assert(html.includes('./src/debug-camera-controls.js?v=camera-angle-height-r49'), "standalone camera debug controller missing");
+assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/debug-camera-controls.js'), "camera debug controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
 assert(cardCamera.includes("baseDepth:3840")&&cardCamera.includes("id:'near-main'")&&cardCamera.includes("z:-640")&&cardCamera.includes("id:'far-main'")&&cardCamera.includes("z:640")&&cardCamera.includes("const FAR=1280"), "Meter-aligned main scene guides missing");
 assert(cardCamera.includes("nearMainScreenMargin:8")&&cardCamera.includes("function resolveHorizonY("), "Responsive near-edge camera tilt missing");
 assert(cardCamera.includes("function setHorizonRatio(")&&cardCamera.includes("function clearHorizonRatio("), "Runtime camera tilt override API missing");
 assert(cardCamera.includes("verticalFovDegrees:60")&&cardCamera.includes("function setTiltDegrees(")&&cardCamera.includes("function setCameraHeightMeters("), "Real angle/camera-height API missing");
-assert(game.includes("DEBUG_CAMERA_ANGLE_KEY")&&game.includes("DEBUG_CAMERA_HEIGHT_KEY")&&game.includes("applyDebugCameraHeight"), "Camera angle/height debug controller missing");
+assert(debugCamera.includes("paperchalk.debug.cameraAngle.v2")&&debugCamera.includes("paperchalk.debug.cameraHeight.v1")&&debugCamera.includes("function setHeight("), "Camera angle/height debug controller missing");
 assert(domCardRenderer.includes("renderNow(){")&&domCardRenderer.includes("render(runtime.getSnapshot(),true)"), "Immediate camera tilt redraw API missing");
 assert(domCardRenderer.includes("'near-main': {color:'#ff8c00',width:4}")&&domCardRenderer.includes("'mid-main':  {color:'#0878d1',width:4}")&&domCardRenderer.includes("'far-main':  {color:'#9b51e0',width:4}")&&domCardRenderer.includes("'horizon':   {color:'#ffd43b',width:5}"), "Main scene-guide colors/weights missing");
 
