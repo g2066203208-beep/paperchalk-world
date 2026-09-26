@@ -8,11 +8,13 @@ const world=document.getElementById('world');
 const groundSvg=document.getElementById('cardGroundGrid');
 const groundDepth=document.getElementById('cardGroundDepthLines');
 const groundWorld=document.getElementById('cardGroundWorldLines');
+const groundScenes=document.getElementById('cardGroundSceneLines');
 if(!runtime||!camera||!world)return;
 
 const SVG_NS='http://www.w3.org/2000/svg';
 const depthLinePool=[];
 const worldLinePool=[];
+const sceneLinePool=[];
 let enemyEls=[];
 let npcEls=new Map();
 
@@ -65,8 +67,8 @@ function renderGroundGrid(frame){
   world.style.setProperty('--card-horizon-y',horizonY.toFixed(2)+'px');
   groundSvg.setAttribute('viewBox','0 0 '+v.width+' '+v.height);
 
-  const nearZ=-step*3;
-  const farZ=Math.min(step*32,cfg.maxDepth-cfg.baseDepth-step);
+  const nearZ=Number(cfg.groundNearDepth)||-step*3;
+  const farZ=Math.min(Number(cfg.farGroundDepth)||Number(cfg.wallDepth)||step*10,cfg.maxDepth-cfg.baseDepth-step);
   let depthUsed=0;
   for(let z=Math.ceil(nearZ/step)*step;z<=farZ;z+=step){
     const q=camera.project({
@@ -88,6 +90,7 @@ function renderGroundGrid(frame){
     playerX:p.x,playerY:p.y,cameraZ:0,
     screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
   });
+  world.style.setProperty('--card-far-ground-y',farProjection.y.toFixed(2)+'px');
   const farScale=Math.max(.12,farProjection.scale||.12);
   const halfWorld=(v.width*.5+step*2)/farScale;
   const firstX=Math.floor((p.x-halfWorld)/step)*step;
@@ -111,6 +114,28 @@ function renderGroundGrid(frame){
     );
   }
   hideUnused(worldLinePool,worldUsed);
+
+  let sceneUsed=0;
+  for(const guide of cfg.sceneGuides||[]){
+    const q=camera.project({
+      worldX:p.x,worldZ:guide.z,worldY:0,
+      playerX:p.x,playerY:p.y,cameraZ:0,
+      screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
+    });
+    const line=pooledLine(groundScenes,sceneLinePool,sceneUsed++);
+    setGridLine(line,0,q.y,v.width,q.y,'sceneDepth',guide.z,false,guide.z===0);
+    line.dataset.sceneId=guide.id;
+    line.classList.add('scene-guide');
+    line.classList.toggle('scene-guide-player',guide.id==='player');
+    line.classList.toggle('scene-guide-far',guide.id==='far');
+    line.classList.toggle('scene-guide-sky',guide.id==='sky');
+  }
+  hideUnused(sceneLinePool,sceneUsed);
+
+  groundSvg.dataset.depthLineCount=String(depthUsed);
+  groundSvg.dataset.worldLineCount=String(worldUsed);
+  groundSvg.dataset.sceneLineCount=String(sceneUsed);
+  groundSvg.dataset.farDepth=String(farZ);
 }
 
 function render(frame){
@@ -119,7 +144,8 @@ function render(frame){
   renderGroundGrid(frame);
   world.style.setProperty('--card-camera-y',(Number(p.y)||0).toFixed(2)+'px');
   const wallScale=cfg.baseDepth/(cfg.baseDepth+cfg.wallDepth);
-  world.style.setProperty('--card-wall-x',(-camera.wrap(p.x*wallScale,cfg.gridSize)).toFixed(2)+'px');
+  world.style.setProperty('--card-wall-grid-size',(cfg.gridSize*wallScale).toFixed(2)+'px');
+  world.style.setProperty('--card-wall-x',(-camera.wrap(p.x*wallScale,cfg.gridSize*wallScale)).toFixed(2)+'px');
   world.style.setProperty('--card-wall-y',camera.wrap((Number(p.y)||0)*wallScale,cfg.gridSize).toFixed(2)+'px');
 
   if(enemyEls.length!==frame.enemies.length)refreshNodes();

@@ -63,6 +63,9 @@ assert.ok(near.y>far.y,'authored scene Z must move farther ground objects toward
 const raised=cardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:120,cameraZ:0,screenX:640,viewportHeight:720,groundY:112});
 assert.ok(raised.y>near.y,'camera Y rise must move the ground downward');
 assert.equal(cardCamera.config.gridSize,128,'card grid must preserve 128px = 1m scale');
+assert.equal(cardCamera.config.farGroundDepth,1200,'ground must end at the far scenery line');
+assert.equal(cardCamera.config.wallDepth,cardCamera.config.farGroundDepth,'sky wall must rise from the ground far edge');
+assert.deepEqual(Array.from(cardCamera.config.sceneGuides,x=>x.z),[0,600,1200],'scene guide depths must stay player/far/sky');
 
 const contentCheck=context.window.PaperchalkContentRuntime.validate(content);
 assert.equal(contentCheck.ok,true,contentCheck.errors.join('\n'));
@@ -85,7 +88,7 @@ assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera mu
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
 assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="ground-lock-r39"/,'ground-lock build cache key missing');
+assert.match(html,/paperchalk-build" content="finite-ground-r40"/,'finite-ground build cache key missing');
 assert.ok(html.includes('id="cardGroundGrid"'),'shared-camera ground grid host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.match(game,/schemaVersion\s*:\s*3/,'default save must declare schema v3');

@@ -31,7 +31,7 @@ const budgets={
   'src/core/card-camera.js':5000,
   'src/content/game-content.js':12000,
   'src/content/building-pools.js':6000,
-  'src/renderers/dom-card-projection.js':7000,
+  'src/renderers/dom-card-projection.js':8000,
   'src/renderers/oldtown-building-layer.js':8000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
@@ -72,10 +72,12 @@ assert(/\.midground-building-track\{[\s\S]*?width:1800px/.test(css),'Apartment t
 assert(!html.includes("voxel-ground")&&!css.includes("voxel-ground"),'Voxel-era ground naming returned');
 assert(css.includes("R37 XY GAMEPLAY + Z SCENE DEPTH"),'XY gameplay / Z scene-depth runtime missing');
 assert(css.includes(".card-ground-grid")&&!css.includes("transform:perspective(900px) rotateX(68deg)!important"),'Ground reverted to split CSS perspective projection');
-assert(css.includes("translate3d(0,0,var(--card-wall-depth))"),'Distant altitude wall transform missing');
+assert(css.includes("height:var(--card-far-ground-y,60%)")&&css.includes("background-size:var(--card-wall-grid-size,55px)"),'Finite sky wall is not attached to the far ground edge');
 assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("dataset[kind]")&&domCardRenderer.includes("setProperty('--card-camera-y'"),'Ground grid no longer consumes the shared card camera');
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"),'Player-driven Z ground scrolling returned');
 assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"),'Shared scene-depth projection math missing');
+assert(cardCamera.includes("farGroundDepth:FAR_GROUND_DEPTH")&&cardCamera.includes("wallDepth:FAR_GROUND_DEPTH"),'Ground far edge and sky wall depth are no longer identical');
+assert(domCardRenderer.includes("const farZ=Math.min(Number(cfg.farGroundDepth)")&&domCardRenderer.includes("dataset.farDepth"),'Ground grid is no longer finitely capped');
 assert(!game.includes("keyboardDepthForward")&&!game.includes("joystickDepthAxis"),'Player Z input returned');
 assert(renderer.includes("const cardCamera=window.PaperchalkCardCamera"),'GPU renderer does not share the card-camera runtime');
 assert(buildingPools.includes("realWorld")&&buildingPools.includes("oldTown"),'Old-town building content pool missing');

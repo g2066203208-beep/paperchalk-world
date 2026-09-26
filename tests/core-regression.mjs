@@ -157,6 +157,36 @@ try{
     cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
     JSON.stringify(cleanGround));
 
+  const finiteGround=await page.evaluate(()=>{
+    const svg=document.getElementById('cardGroundGrid');
+    const skyLine=document.querySelector('#cardGroundSceneLines [data-scene-id="sky"]');
+    const farLine=document.querySelector('#cardGroundSceneLines [data-scene-id="far"]');
+    const playerLine=document.querySelector('#cardGroundSceneLines [data-scene-id="player"]');
+    const sky=document.querySelector('.paper-sky');
+    const y=Number(skyLine?.getAttribute('y1'));
+    const m=skyLine?.getScreenCTM?.();
+    const screenPoint=m?new DOMPoint(0,y).matrixTransform(m):null;
+    const skyRect=sky?.getBoundingClientRect();
+    return {
+      farDepth:Number(svg?.dataset.farDepth),
+      depthLines:Number(svg?.dataset.depthLineCount),
+      worldLines:Number(svg?.dataset.worldLineCount),
+      sceneLines:Number(svg?.dataset.sceneLineCount),
+      skyY:screenPoint?.y??null,
+      skyBottom:skyRect?.bottom??null,
+      guides:[
+        playerLine?.getAttribute('data-scene-depth'),
+        farLine?.getAttribute('data-scene-depth'),
+        skyLine?.getAttribute('data-scene-depth')
+      ]
+    };
+  });
+  check('Ground grid stops at the far scenery line and the sky wall starts on that same edge',
+    finiteGround.farDepth===1200&&finiteGround.depthLines<=13&&finiteGround.worldLines<=50&&finiteGround.sceneLines===3&&
+    finiteGround.guides.join(',')==='0,600,1200'&&
+    Math.abs(finiteGround.skyBottom-finiteGround.skyY)<1,
+    JSON.stringify(finiteGround));
+
   await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===30,null,{timeout:3000});
   await page.waitForTimeout(120);
   const oldTownScene=await page.evaluate(()=>{
