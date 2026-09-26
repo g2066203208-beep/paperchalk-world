@@ -2964,8 +2964,8 @@ function renderWorld(force=false){
       actorEl.style.setProperty('--player-air-y',actorAir);
     }
     enemies.forEach(e=>{if(e.spawned)setEnemyVisual(e,force)});
-    if(sceneLocation==='outside')renderProjectedNpcs();
   }
+  if(sceneLocation==='outside')renderProjectedNpcs();
   if(sceneLocation==='interior'){
     alignInteriorSceneToStage(force);
     positionInteriorExitDoor();
