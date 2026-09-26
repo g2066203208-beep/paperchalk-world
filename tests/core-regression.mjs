@@ -146,6 +146,8 @@ try{
     cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
     JSON.stringify(cleanGround));
 
+  await page.evaluate(()=>window.PaperchalkMap.toggleCamera(true));
+  await page.waitForTimeout(80);
   const finiteGround=await page.evaluate(()=>{
     const canvas=document.getElementById('cardGroundCanvas');
     const sky=document.querySelector('.paper-sky');
@@ -249,6 +251,9 @@ try{
     finiteGround.renderer.culledEnemies>=20&&finiteGround.renderer.projectedEnemies<=1&&
     finiteGround.renderer.projectedNpcs===1,
     JSON.stringify(finiteGround.renderer));
+
+  await page.evaluate(()=>window.PaperchalkMap.toggleCamera(false));
+  await page.waitForTimeout(40);
 
   await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===20,null,{timeout:3000});
   await page.waitForTimeout(120);
@@ -1073,12 +1078,19 @@ try{
     await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
     'panel open');
 
-  check('Camera controls live in Settings, not Debug',
-    await page.locator('#pageSettings #settingCameraTilt').count()===1&&
-    await page.locator('#pageSettings #settingCameraHeight').count()===1&&
-    await page.locator('#pageSettings #settingCameraDistance').count()===1&&
+  check('Camera controls use a standalone in-game panel',
+    await page.locator('#cameraControlPanel #settingCameraTilt').count()===1&&
+    await page.locator('#cameraControlPanel #settingCameraHeight').count()===1&&
+    await page.locator('#cameraControlPanel #settingCameraDistance').count()===1&&
+    await page.locator('#pageSettings #settingCameraTilt').count()===0&&
     await page.locator('#debugPanel #settingCameraTilt').count()===0,
-    'settings camera controls');
+    'standalone camera controls');
+  await page.locator('#cameraControlBtn').click();
+  await page.waitForTimeout(40);
+  check('Standalone camera button opens its panel',
+    await page.locator('#cameraControlPanel').evaluate(el=>el.classList.contains('is-open'))&&
+    await page.locator('#cameraControlBtn').getAttribute('aria-expanded')==='true',
+    'camera panel open');
 
   const cameraBefore=await page.evaluate(()=>({
     depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
