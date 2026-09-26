@@ -38,8 +38,8 @@ function getCameraHeightMeters(h=720,g=112){return resolveCameraHeight(h,g)/conf
 function project({worldX=0,worldZ=0,worldY=0,playerX=0,playerY=0,cameraZ=0,screenX=0,viewportHeight=720,groundY=112}={}){
 const z=num(worldZ,0)-num(cameraZ,0),depth=resolveCameraDistance()+z;
 if(depth<=config.minDepth)return{visible:false,x:0,y:0,scale:0,depth};
-const scale=config.baseDepth/depth,h=resolveHorizonY(viewportHeight,groundY);
-return{visible:depth<config.maxDepth&&scale>.12&&scale<5,x:num(screenX,0)+(num(worldX,0)-num(playerX,0))*scale,y:h+(resolveCameraHeight(viewportHeight,groundY)+num(playerY,0)-num(worldY,0))*scale,scale,depth};
+const scale=config.baseDepth/depth,h=resolveHorizonY(viewportHeight,groundY),ch=resolveCameraHeight(viewportHeight,groundY),mid=config.baseDepth/resolveCameraDistance();
+return{visible:depth<config.maxDepth&&scale>.12&&scale<5,x:num(screenX,0)+(num(worldX,0)-num(playerX,0))*scale,y:h+ch*(1-mid)+(ch+num(playerY,0)-num(worldY,0))*scale,scale,depth};
 }
 function distance2D(ax=0,az=0,bx=0,bz=0){return Math.hypot(num(ax,0)-num(bx,0),num(az,0)-num(bz,0))}
 function wrap(value,size=config.gridSize){const m=Math.max(1,num(size,config.gridSize)),v=num(value,0);return((v%m)+m)%m}
