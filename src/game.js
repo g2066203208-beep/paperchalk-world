@@ -1506,11 +1506,11 @@ function updateCameraTiltControls(){
 function applyDebugCameraTilt(v,{persist=true,sync=true}={}){
   const t=Math.round(clamp(Number(v)||0,0,100));CARD_CAMERA.setHorizonRatio(cameraTiltToHorizonRatio(t));
   if(persist)try{localStorage.setItem(DEBUG_CAMERA_TILT_KEY,t)}catch(_){}
-  updateCameraTiltControls();if(sync)window.PaperchalkRuntime?.requestDomSync?.();return t;
+  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return t;
 }
 function resetDebugCameraTilt({sync=true}={}){
   CARD_CAMERA.clearHorizonRatio();try{localStorage.removeItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
-  updateCameraTiltControls();if(sync)window.PaperchalkRuntime?.requestDomSync?.();return currentCameraTiltValue();
+  updateCameraTiltControls();if(sync){window.PaperchalkRuntime?.requestDomSync?.();requestAnimationFrame(()=>window.PaperchalkDomCardProjection?.renderNow?.())}return currentCameraTiltValue();
 }
 function loadDebugCameraTilt(){
   let v=null;try{v=localStorage.getItem(DEBUG_CAMERA_TILT_KEY)}catch(_){}
