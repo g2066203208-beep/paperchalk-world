@@ -377,7 +377,7 @@ button{cursor:pointer}
 }
 .three-world-layer canvas{display:block;width:100%;height:100%;pointer-events:none}
 .three-world-layer canvas{pointer-events:auto}
-.voxel-controls{position:absolute;right:14px;bottom:92px;display:flex;gap:8px;pointer-events:auto;z-index:8}
+.voxel-controls{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(86px,calc(14px + env(safe-area-inset-bottom)));display:flex;gap:8px;pointer-events:auto;z-index:120;transform:translateZ(0)}
 .voxel-controls button{border:2px solid #554936;background:#e9d8ad;color:#3f3427;padding:8px 12px;border-radius:5px;font-weight:800;box-shadow:0 2px 0 rgba(50,35,20,.25);touch-action:manipulation}
 .voxel-controls button.is-active{background:#6d8f79;color:#fff8e8;border-color:#365b46}
 .traffic-layer{display:none!important}
