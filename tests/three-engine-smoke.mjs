@@ -86,11 +86,9 @@ try{
 
   const before=await page.evaluate(()=>window.Paperchalk3D.stats.player);
   await page.keyboard.down('KeyW');
-  await page.waitForTimeout(420);
+  const after=await page.evaluate(()=>window.Paperchalk3D.debugStep(12));
   await page.keyboard.up('KeyW');
-  await page.waitForTimeout(100);
-  const after=await page.evaluate(()=>window.Paperchalk3D.stats.player);
-  assert(Math.hypot(after.x-before.x,after.z-before.z)>.12,'WASD did not move the 3D player '+JSON.stringify({before,after}));
+  assert(Math.hypot(after.x-before.x,after.z-before.z)>.5,'WASD did not move the 3D player '+JSON.stringify({before,after}));
 
   const airborne=await page.evaluate(()=>{
     const started=window.Paperchalk3D.jump();
