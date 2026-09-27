@@ -237,6 +237,11 @@ button{cursor:pointer}
 }
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
+.traffic-layer{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;contain:layout paint}
+.traffic-road{position:absolute;left:0;top:0;height:100px;background:#6e8590 url('../assets/traffic/road.png?v=traffic-r1') center/720px 260px repeat-x;box-shadow:inset 0 8px 0 rgba(225,238,238,.55),inset 0 -8px 0 rgba(44,62,68,.42);transform-origin:left center;opacity:.95}
+.traffic-road-mid{filter:brightness(.94)}
+.traffic-crosswalk{position:absolute;width:140px;height:34px;background:repeating-linear-gradient(90deg,#f4f2e7 0 12px,transparent 12px 23px);transform-origin:center;opacity:.86}
+.traffic-car{position:absolute;width:150px;height:78px;object-fit:contain;object-position:center bottom;transform-origin:50% 100%;filter:drop-shadow(0 5px 4px rgba(24,34,38,.28));will-change:left,top,transform}
 .map-track{position:absolute;left:0;top:0;height:100%;width:var(--world-width,6000px);will-change:transform}
 .terrain-piece,.map-object,.map-landmark,.pickup{position:absolute;pointer-events:none}
 .terrain-piece{bottom:112px;box-sizing:border-box}
