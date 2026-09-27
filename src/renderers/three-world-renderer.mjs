@@ -16,6 +16,7 @@ let cars = [];
 let raf = 0;
 let last = 0;
 let ready = false;
+let proofCube;
 const blocks = new Map();
 let voxelMode = 'mine';
 let selected = null;
@@ -183,6 +184,21 @@ function buildTraffic() {
   }
 }
 
+function build3dProofCube() {
+  const geometry = new THREE.BoxGeometry(2.4, 2.4, 2.4);
+  const materials = [
+    new THREE.MeshStandardMaterial({ color: 0xf05d5e, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ color: 0xf5c04a, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ color: 0x5cc8a1, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ color: 0x4b8bd8, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ color: 0xa970d8, roughness: 0.45 }),
+    new THREE.MeshStandardMaterial({ color: 0xf28c62, roughness: 0.45 })
+  ];
+  proofCube = new THREE.Mesh(geometry, materials);
+  proofCube.position.set(7, 1.8, -4.5);
+  root.add(proofCube);
+}
+
 function resize() {
   if (!renderer) return;
   const w = window.innerWidth;
@@ -206,6 +222,10 @@ function frame(now) {
     car.sprite.position.x = car.x;
     car.sprite.position.z = LANE_Z[car.lane];
     car.sprite.material.rotation = car.dir < 0 ? Math.PI : 0;
+  }
+  if (proofCube) {
+    proofCube.rotation.x += dt * 0.8;
+    proofCube.rotation.y += dt * 1.15;
   }
   renderer.render(scene, camera);
 }
@@ -241,6 +261,7 @@ async function boot() {
   scene.add(sun);
   buildGround();
   buildTraffic();
+  build3dProofCube();
   resize();
   ready = true;
   host.dataset.engine = 'three-webgl-world';
