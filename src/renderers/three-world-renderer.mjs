@@ -122,6 +122,7 @@ function interact(event) {
 
 function installVoxelControls() {
   const host = document.getElementById('threeWorldLayer');
+  if (host.querySelector('.voxel-controls')) return;
   const controls = document.createElement('div');
   controls.className = 'voxel-controls';
   controls.innerHTML = '<button type="button" data-voxel-mode="mine">挖方块</button><button type="button" data-voxel-mode="place">放方块</button>';
@@ -184,11 +185,19 @@ function frame(now) {
 
 async function boot() {
   if (ready || !document.getElementById('threeWorldLayer')) return;
-  THREE = await import('../../vendor/three/three.module.js');
-  raycaster = new THREE.Raycaster();
-  pointer = new THREE.Vector2();
   const host = document.getElementById('threeWorldLayer');
-  renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+  try {
+    THREE = await import('../../vendor/three/three.module.js');
+    raycaster = new THREE.Raycaster();
+    pointer = new THREE.Vector2();
+    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+  } catch (error) {
+    host.dataset.engine = 'three-unavailable';
+    host.dataset.error = String(error?.message || error);
+    installVoxelControls();
+    console.error('[paperchalk] Three.js failed to initialize', error);
+    return;
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.setClearColor(0x000000, 0);
