@@ -21,21 +21,6 @@ public class MainActivity extends Activity {
             "https://g2066203208-beep.github.io/paperchalk-world/";
 
     private WebView webView;
-    private long pausedAtMs = 0L;
-    private boolean initialResume = true;
-
-    private void loadFreshGame(String reason) {
-        if (webView == null) return;
-        String refreshUrl = GAME_URL
-                + "?androidRefresh="
-                + System.currentTimeMillis()
-                + "&reason="
-                + reason;
-        java.util.HashMap<String, String> freshHeaders = new java.util.HashMap<>();
-        freshHeaders.put("Cache-Control", "no-cache, max-age=0");
-        freshHeaders.put("Pragma", "no-cache");
-        webView.loadUrl(refreshUrl, freshHeaders);
-    }
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -85,8 +70,9 @@ public class MainActivity extends Activity {
 
             setContentView(webView);
 
-            // Fetch the tiny HTML shell fresh. Heavy versioned assets remain cached.
-            loadFreshGame("launch");
+            // Versioned web assets handle cache invalidation. Avoid a second forced navigation
+            // on every launch so WebGL and decoded images are not initialized twice.
+            webView.loadUrl(GAME_URL);
 
         } catch (Throwable t) {
             TextView error = new TextView(this);
@@ -119,23 +105,17 @@ public class MainActivity extends Activity {
         hideSystemBars();
         if (webView != null) {
             webView.onResume();
-            long awayMs = pausedAtMs > 0L
-                    ? Math.max(0L, System.currentTimeMillis() - pausedAtMs)
-                    : 0L;
-            if (initialResume) {
-                initialResume = false;
-            } else if (awayMs >= 1500L) {
-                // Revalidate after a real background trip, but do not tear down the game
-                // for tiny system interruptions such as a permission sheet or notification.
-                loadFreshGame("resume");
-            }
+            // Resume the existing page instead of reloading the whole game after a short
+            // background trip. The web runtime owns visibility/save recovery.
+            webView.evaluateJavascript(
+                    "(function(){try{window.dispatchEvent(new Event('resize'));return true;}catch(e){return false;}})()",
+                    ignored -> {}
+            );
         }
-        pausedAtMs = 0L;
     }
 
     @Override
     protected void onPause() {
-        pausedAtMs = System.currentTimeMillis();
         if (webView != null) {
             // Native lifecycle backup: persist position/inventory before refresh/process kill.
             webView.evaluateJavascript(
