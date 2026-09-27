@@ -131,10 +131,37 @@ function installVoxelControls() {
     if (!mode) return;
     voxelMode = mode;
     controls.querySelectorAll('button').forEach((button) => button.classList.toggle('is-active', button.dataset.voxelMode === mode));
+    if (!voxelGroup) installFallbackVoxels();
   });
   controls.querySelector('[data-voxel-mode="mine"]').classList.add('is-active');
   host.appendChild(controls);
   renderer.domElement.addEventListener('pointerup', interact, { passive: true });
+}
+
+function installFallbackVoxels() {
+  const host = document.getElementById('threeWorldLayer');
+  if (host.querySelector('.voxel-fallback-grid')) return;
+  const grid = document.createElement('div');
+  grid.className = 'voxel-fallback-grid';
+  for (let i = 0; i < 18; i += 1) {
+    const block = document.createElement('button');
+    block.type = 'button';
+    block.className = 'voxel-fallback-block';
+    block.dataset.block = '1';
+    block.addEventListener('click', () => {
+      if (voxelMode === 'mine') block.remove();
+      else {
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.className = 'voxel-fallback-block';
+        next.dataset.block = '1';
+        next.addEventListener('click', () => voxelMode === 'mine' ? next.remove() : installFallbackVoxels());
+        grid.appendChild(next);
+      }
+    });
+    grid.appendChild(block);
+  }
+  host.appendChild(grid);
 }
 
 function addCar(index, lane, x) {
@@ -195,6 +222,7 @@ async function boot() {
     host.dataset.engine = 'three-unavailable';
     host.dataset.error = String(error?.message || error);
     installVoxelControls();
+    installFallbackVoxels();
     console.error('[paperchalk] Three.js failed to initialize', error);
     return;
   }

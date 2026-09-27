@@ -380,6 +380,8 @@ button{cursor:pointer}
 .voxel-controls{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(86px,calc(14px + env(safe-area-inset-bottom)));display:flex;gap:8px;pointer-events:auto;z-index:120;transform:translateZ(0)}
 .voxel-controls button{border:2px solid #554936;background:#e9d8ad;color:#3f3427;padding:8px 12px;border-radius:5px;font-weight:800;box-shadow:0 2px 0 rgba(50,35,20,.25);touch-action:manipulation}
 .voxel-controls button.is-active{background:#6d8f79;color:#fff8e8;border-color:#365b46}
+.voxel-fallback-grid{position:fixed;left:50%;bottom:145px;transform:translateX(-50%);display:grid;grid-template-columns:repeat(6,34px);gap:3px;z-index:119;pointer-events:auto}
+.voxel-fallback-block{width:34px;height:34px;padding:0;border:1px solid #365b46;background:#78986e;box-shadow:inset 0 0 0 2px rgba(255,245,210,.18);touch-action:manipulation}
 .traffic-layer{display:none!important}
 .stage.renderer-pixi-dynamic .pixi-entity-layer{display:block}
 .stage.renderer-pixi-dynamic .actor,
