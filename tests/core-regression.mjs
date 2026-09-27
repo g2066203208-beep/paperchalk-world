@@ -251,9 +251,10 @@ try{
     finiteGround.renderer.projectedEnemies===0&&finiteGround.renderer.projectedNpcs===0,
     JSON.stringify(finiteGround.renderer));
 
-  await page.waitForFunction(()=>window.PaperchalkOldTownBuildings&&document.querySelectorAll('#oldTownBuildingTrack .oldtown-building').length===20,null,{timeout:3000});
-  await page.waitForTimeout(120);
   const oldTownScene=await page.evaluate(()=>{
+    if(window.PaperchalkOldTownBuildings)return {removed:false};
+    return {removed:true};
+    /*
     const slots=[...document.querySelectorAll('#oldTownBuildingTrack .oldtown-building')];
     const visible=slots.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
     const ids=[...new Set(slots.map(el=>el.dataset.buildingId).filter(Boolean))];
@@ -276,16 +277,9 @@ try{
       firstRect:firstRect?{w:firstRect.width,h:firstRect.height,left:firstRect.left,top:firstRect.top}:null,
       perf:window.PaperchalkOldTownBuildings.stats
     };
+    }); */
   });
-  check('Old-town scene uses all 10 supplied buildings in a retained seeded row pool',
-    oldTownScene.poolId==='real-world.old-town.buildings'&&
-    oldTownScene.slots===20&&oldTownScene.uniqueIds===10&&oldTownScene.shuffled&&oldTownScene.rowWidth>1000&&
-    oldTownScene.perf.projected<oldTownScene.slots&&oldTownScene.perf.coarseCulled>0,
-    JSON.stringify(oldTownScene));
-  check('Old-town buildings are visible in the deepest midground behind the protagonist',
-    oldTownScene.visible>0&&oldTownScene.firstRect?.w>40&&oldTownScene.firstRect?.h>80&&
-    oldTownScene.layerZ<oldTownScene.actorZ&&oldTownScene.atlasRequested,
-    JSON.stringify(oldTownScene));
+  check('Removed old-town building pool is absent', oldTownScene.removed, JSON.stringify(oldTownScene));
 
   await page.setViewportSize({width:900,height:540});
   await page.waitForTimeout(220);
