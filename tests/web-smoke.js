@@ -135,21 +135,20 @@ assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay rem
 assert(!html.includes('id="mineBtn"') && !html.includes('id="placeBtn"'), "Voxel mine/place controls must stay removed");
 assert(game.includes("setProperty('--road-surface-x'"), "Road surface is not world-anchored");
 const androidMain=fs.readFileSync("android-app/app/src/main/java/com/paperchalk/world/MainActivity.java","utf8");
-assert(androidMain.includes("?androidRefresh="), "Android app must cache-bust the HTML shell on refresh");
-assert(androidMain.includes('loadFreshGame("launch")'), "Android cold launch refresh missing");
-assert(androidMain.includes('loadFreshGame("resume")'), "Android foreground resume refresh missing");
-assert(androidMain.includes("awayMs >= 1500L"), "Android resume refresh is not protected from tiny interruptions");
+assert(androidMain.includes("webView.loadUrl(GAME_URL)"), "Android cold launch must load the stable versioned web entry");
+assert(!androidMain.includes("?androidRefresh="), "Android must not force cache-busting query reloads");
+assert(!androidMain.includes("loadFreshGame"), "Android must not tear down the game on launch/resume");
+assert(androidMain.includes("window.dispatchEvent(new Event('resize'))"), "Android resume must resync the live page without reloading it");
 assert(androidMain.includes("window.PaperchalkSaveNow"), "Android onPause save bridge missing");
 assert(game.includes("window.PaperchalkSaveNow"), "Web save bridge missing");
-assert(androidMain.includes('"Cache-Control", "no-cache, max-age=0"'), "Android HTML request must force revalidation");
 const androidGradle=fs.readFileSync("android-app/app/build.gradle.kts","utf8");
 assert(androidGradle.includes("versionCode = 3") && androidGradle.includes('versionName = "0.1.2"'), "Android APK version was not bumped");
 assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
-  game.includes("const WORLD_ZONE_COUNT=20") &&
+  game.includes("const WORLD_ZONE_COUNT=Math.max(1,AUTHORED_CONTENT.world?.routes?.length||1)") &&
   game.includes("const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT"),
-  "120000px network world definition missing"
+  "Authored-route network world definition missing"
 );
 assert(game.includes("const MAP_TERRAIN=[]"), "Empty terrain authoring bridge missing");
 assert(game.includes("const MAP_OBJECTS=[]"), "Empty map-object authoring bridge missing");
