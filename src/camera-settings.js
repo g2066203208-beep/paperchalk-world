@@ -79,8 +79,8 @@ document.addEventListener('keydown',e=>{if(e.code==='Escape'&&panel.classList.co
 load();
 global.PaperchalkCameraSettings=Object.freeze({
   sync,apply,snapshot,reset:resetAll,
-  openPanel(){return setOpen(true)},
+  open(){return setOpen(true)},
   close(){return setOpen(false)},
-  get open(){return panel.classList.contains('is-open')}
+  get isOpen(){return panel.classList.contains('is-open')}
 });
 })(window);
