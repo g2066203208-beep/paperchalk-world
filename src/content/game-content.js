@@ -54,10 +54,10 @@ const content={
       y:0,
       z:0,
       width:780,
-      height:810,
+      height:438,
       // Artwork is authored at a large resolution; this controls its in-game footprint.
       scale:.62,
-      asset:'./assets/buildings/real-world/village/village-shop-house.webp?v=village-house-r1',
+      asset:'./assets/buildings/real-world/village/village-main-building.png?v=village-main-r1',
       layer:'midground-main',
       anchorX:.5,
       anchorY:1,

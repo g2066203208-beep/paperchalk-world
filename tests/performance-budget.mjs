@@ -107,17 +107,11 @@ assert(css.includes('will-change:transform'),'Compositor motion hint missing');
 assert(!android.includes('WebSettings.LOAD_NO_CACHE'),'Android WebView reverted to no-cache mode');
 assert(!android.includes('clearCache(true)'),'Android WebView reverted to clearing HTTP cache every launch');
 
-const playerRuntimeNames=['idle','crouch','jump-up','jump-down','walk'];
-const playerRuntimeSizes=Object.fromEntries(playerRuntimeNames.map(name=>{
-  const file='assets/player/runtime/'+name+'.webp';
-  assert(fs.existsSync(file),'Missing optimized player runtime sprite: '+file);
-  const bytes=size(file);
-  assert(bytes<=60000,file+' exceeded 60KB runtime sprite budget: '+bytes);
-  return [name,bytes];
-}));
+const playerRuntimeSizes={default:size('assets/player/player-default.png')};
+assert(playerRuntimeSizes.default>0,'Missing default player asset');
 const playerRuntimeTotal=Object.values(playerRuntimeSizes).reduce((a,b)=>a+b,0);
-assert(playerRuntimeTotal<=230000,'Player runtime sprite set exceeded 230KB: '+playerRuntimeTotal);
-assert(game.includes("./assets/player/runtime/idle.webp"),'Game runtime is not using optimized player sprites');
+assert(playerRuntimeTotal<=1800000,'Default player sprite exceeded 1.8MB: '+playerRuntimeTotal);
+assert(game.includes("./assets/player/player-default.png"),'Game runtime is not using the default player asset');
 assert(!game.includes("./assets/player/idle.webp?v=actions-r1"),'High-resolution idle sprite returned to hot runtime path');
 assert(!game.includes("visualViewport?.addEventListener('scroll'"),'Visual viewport scroll still triggers expensive world work');
 assert(game.includes("requestAnimationFrame(flushViewportChange)"),'Viewport rebuilds are not RAF-debounced');

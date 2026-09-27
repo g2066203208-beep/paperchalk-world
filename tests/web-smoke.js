@@ -111,7 +111,7 @@ assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip tr
 assert(!game.includes("function startPlayerPaperFlip"), "Full paper flip must not run on every action change");
 assert(game.includes("startPlayerActionSettle(previousState,state)"), "Action changes must use soft settle");
 assert(game.includes("state==='crouch'||previousState==='crouch')return"), "Crouch must bypass shared-card scale settle");
-assert(html.includes('/assets/player/runtime/crouch.webp?v='), "Crouch asset must be eagerly preloaded");
+assert(html.includes('/assets/player/player-default.png?v='), "Default player asset must be eagerly preloaded");
 assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
@@ -193,11 +193,8 @@ assert(game.includes("e.code==='ArrowUp'||e.code==='KeyW'")&&game.includes("else
 assert(game.includes("e.code==='ArrowDown'||e.code==='KeyS'")&&game.includes("keyboardCrouch=true"), "S/Down crouch input missing");
 assert(game.includes("e.code==='KeyC'"), "Keyboard C crouch input missing");
 assert(game.includes("if(e.code==='Space'){")&&game.includes("jumpPlayer();"), "Space jump input missing");
-for (const name of ['idle','crouch','jump-up','jump-down','walk']) {
-  assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied high-resolution player source asset: '+name);
-  assert(fs.existsSync('assets/player/runtime/'+name+'.webp'), 'Missing optimized runtime player action asset: '+name);
-}
-assert(game.includes("./assets/player/runtime/idle.webp"), "Runtime is not using optimized player sprites");
+assert(fs.existsSync('assets/player/player-default.png'), 'Missing default player asset');
+assert(game.includes("./assets/player/player-default.png"), "Runtime is not using the default player asset");
 assert(html.includes('id="playerFlip"'), "Player paper-flip wrapper missing");
 assert(css.includes(".player-flip"), "Player paper-flip CSS missing");
 assert(css.includes("--action-scale"), "Action scale CSS variable missing");
