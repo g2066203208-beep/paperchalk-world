@@ -214,4 +214,11 @@ async function boot() {
 RUNTIME?.subscribe?.((next) => { state = next; });
 window.addEventListener('resize', resize, { passive: true });
 window.addEventListener('paperchalk-world-enter', boot);
-if (document.body?.classList.contains('world-active')) boot();
+window.addEventListener('DOMContentLoaded', () => {
+  // The module is deferred; on some mobile browsers the world-enter event can
+  // arrive before this module has finished evaluating. Boot once after load so
+  // the 3D layer cannot remain empty after a cold page visit.
+  setTimeout(boot, 0);
+});
+window.addEventListener('load', () => setTimeout(boot, 0), { once: true });
+if (document.readyState !== 'loading') setTimeout(boot, 0);
