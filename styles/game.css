@@ -1155,6 +1155,18 @@ button{cursor:pointer}
   background:rgba(255,255,255,.10);color:#fff;font:700 12px system-ui,-apple-system,"Microsoft YaHei",sans-serif
 }
 .three-test-actions button.is-active{background:rgba(231,211,144,.88);color:#3f392b}
+.three-test-mobile-controls{
+  display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,44px);
+  gap:4px;justify-content:start;margin:7px 0 6px
+}
+.three-test-mobile-controls span{display:block}
+.three-test-mobile-controls button{
+  width:46px;height:44px;padding:0;border:1px solid rgba(255,255,255,.28);border-radius:7px;
+  background:rgba(255,255,255,.12);color:#fff;font:900 17px system-ui,-apple-system,"Microsoft YaHei",sans-serif;
+  touch-action:none
+}
+.three-test-mobile-controls button.is-held{background:rgba(231,211,144,.92);color:#3f392b;transform:translateY(1px)}
+@media (hover:hover) and (pointer:fine){.three-test-mobile-controls{display:none}}
 .three-test-help{opacity:.82}
 .three-test-status{margin-top:4px;color:#f0dfaa;min-height:1.45em}
 
