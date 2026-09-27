@@ -339,8 +339,8 @@ try{
   await page.keyboard.up('KeyD');
   await page.waitForTimeout(180);
   check('Right movement and newest walking art face the same direction',
-    walking.player.x>460&&walking.player.facing===1&&walking.player.sourceFacing===-1&&
-    walking.player.action==='walk'&&walking.state==='walk'&&!walking.left&&walking.sourceFacing==='-1'&&
+    walking.player.x>460&&walking.player.facing===1&&walking.player.sourceFacing===1&&
+    walking.player.action==='walk'&&walking.state==='walk'&&!walking.left&&walking.sourceFacing==='1'&&
     walking.src.includes('/assets/player/player-default.png'),
     JSON.stringify(walking));
 
