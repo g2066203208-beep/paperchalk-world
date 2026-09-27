@@ -2313,7 +2313,7 @@ function worldInteractive(){
     && !worldMapOverlay.classList.contains('is-open')
     && !dialogueIsOpen()
     && !debugIsOpen()
-    && !window.PaperchalkCameraSettings?.open
+    && !window.PaperchalkCameraSettings?.isOpen
     && !window.Paperchalk3D?.active;
 }
 function movementAxis(){
