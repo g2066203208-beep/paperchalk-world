@@ -92,10 +92,12 @@ try{
   const after=await page.evaluate(()=>window.Paperchalk3D.stats.player);
   assert(Math.hypot(after.x-before.x,after.z-before.z)>.12,'WASD did not move the 3D player '+JSON.stringify({before,after}));
 
-  await page.keyboard.press('Space');
-  await page.waitForTimeout(120);
-  const airborne=await page.evaluate(()=>window.Paperchalk3D.stats.player);
-  assert(airborne.y>.05&&!airborne.grounded,'3D jump/gravity state did not activate '+JSON.stringify(airborne));
+  const airborne=await page.evaluate(()=>{
+    const started=window.Paperchalk3D.jump();
+    const stepped=window.Paperchalk3D.debugStep(6);
+    return {started,...stepped};
+  });
+  assert(airborne.started&&airborne.y>.05&&!airborne.grounded,'3D jump/gravity state did not activate '+JSON.stringify(airborne));
 
   const voxel=await page.evaluate(()=>{
     const before=window.Paperchalk3D.stats.voxelCount;
