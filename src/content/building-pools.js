@@ -31,9 +31,8 @@ const pools=Object.freeze({
       category:'building',
       label:'现实世界 / 老城区 / 建筑',
       layer:'midground-far',
-      // Far midground scene depth. The player/camera never travels on Z.
       z:640,
-      authoredScale:2,
+      authoredScale:1,
       seamOverlap:12,
       seed:0x4f4c4454,
       atlas,
