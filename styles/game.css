@@ -237,6 +237,11 @@ button{cursor:pointer}
 }
 .front-layer{bottom:2.5vh;height:300px;z-index:6}
 .map-layer{position:absolute;inset:0;z-index:4;overflow:hidden;pointer-events:none}
+.traffic-layer{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;contain:layout paint}
+.traffic-road{position:absolute;left:0;top:0;height:100px;background:#6e8590 url('../assets/traffic/road.png?v=traffic-r1') center/720px 260px repeat-x;box-shadow:inset 0 8px 0 rgba(225,238,238,.55),inset 0 -8px 0 rgba(44,62,68,.42);transform-origin:left center;opacity:.95}
+.traffic-road-mid{filter:brightness(.94)}
+.traffic-crosswalk{position:absolute;width:140px;height:34px;background:repeating-linear-gradient(90deg,#f4f2e7 0 12px,transparent 12px 23px);transform-origin:center;opacity:.86}
+.traffic-car{position:absolute;width:150px;height:78px;object-fit:contain;object-position:center bottom;transform-origin:50% 100%;filter:drop-shadow(0 5px 4px rgba(24,34,38,.28));will-change:left,top,transform}
 .map-track{position:absolute;left:0;top:0;height:100%;width:var(--world-width,6000px);will-change:transform}
 .terrain-piece,.map-object,.map-landmark,.pickup{position:absolute;pointer-events:none}
 .terrain-piece{bottom:112px;box-sizing:border-box}
@@ -366,6 +371,16 @@ button{cursor:pointer}
   contain:strict;display:none;
 }
 .pixi-entity-layer canvas{display:block;width:100%;height:100%;pointer-events:none}
+.three-world-layer{
+  position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;
+  contain:strict;
+}
+.three-world-layer canvas{display:block;width:100%;height:100%;pointer-events:none}
+.three-world-layer canvas{pointer-events:auto}
+.voxel-controls{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(86px,calc(14px + env(safe-area-inset-bottom)));display:flex;gap:8px;pointer-events:auto;z-index:120;transform:translateZ(0)}
+.voxel-controls button{border:2px solid #554936;background:#e9d8ad;color:#3f3427;padding:8px 12px;border-radius:5px;font-weight:800;box-shadow:0 2px 0 rgba(50,35,20,.25);touch-action:manipulation}
+.voxel-controls button.is-active{background:#6d8f79;color:#fff8e8;border-color:#365b46}
+.traffic-layer{display:none!important}
 .stage.renderer-pixi-dynamic .pixi-entity-layer{display:block}
 .stage.renderer-pixi-dynamic .actor,
 .stage.renderer-pixi-dynamic .entity-layer{visibility:hidden}
@@ -2266,58 +2281,6 @@ button{cursor:pointer}
 }
 
 
-/* ---------- R38 OLD-TOWN BUILDING POOL ----------
-   Real world > old town > buildings.
-   This is the deepest midground scenery layer: above the ground plane, below map actors.
-   Buildings are billboard paper facades; authored Z provides perspective only. */
-.oldtown-building-layer{
-  position:absolute;
-  inset:0;
-  z-index:3;
-  overflow:hidden;
-  pointer-events:none;
-  contain:layout paint;
-}
-.oldtown-building-track{
-  position:absolute;
-  inset:0;
-  overflow:visible;
-  pointer-events:none;
-}
-.oldtown-building{
-  position:absolute;
-  left:var(--oldtown-x,50vw);
-  bottom:var(--oldtown-bottom,var(--ground-screen-y,112px));
-  background-repeat:no-repeat;
-  transform:translateX(-50%) scale(var(--oldtown-perspective,1));
-  transform-origin:50% 100%;
-  backface-visibility:hidden;
-  pointer-events:none;
-  will-change:left,bottom,transform;
-  filter:saturate(.94) contrast(.98);
-}
-.stage.paper-stage-out .oldtown-building-layer{
-  animation:paperDropExitLayer .62s cubic-bezier(.56,.04,.86,.47) 95ms both
-}
-.stage.exterior-stage-in .oldtown-building-layer{
-  animation:exteriorRiseLayer .62s cubic-bezier(.14,.82,.22,1) 135ms both
-}
-.stage.dialogue-choice-camera .oldtown-building-layer{
-  translate:4.2vw -2.7vh;
-  scale:1.075;
-}
-.stage .oldtown-building-layer{
-  transition:translate .52s cubic-bezier(.22,.72,.20,1),scale .52s cubic-bezier(.22,.72,.20,1);
-}
-@media(prefers-reduced-motion:reduce){
-  .stage.paper-stage-out .oldtown-building-layer,
-  .stage.exterior-stage-in .oldtown-building-layer{
-    animation-duration:.01ms!important;
-    animation-delay:0ms!important
-  }
-}
-
-
 /* ---------- AUTHORED WORLD BUILDINGS ---------- */
 .map-building{
   position:absolute;
@@ -2340,4 +2303,3 @@ button{cursor:pointer}
   -webkit-user-drag:none;
   filter:drop-shadow(0 10px 7px rgba(43,34,27,.18));
 }
-.stage.scene-interior .map-building{display:none!important}

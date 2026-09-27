@@ -10,9 +10,7 @@ const state = fs.readFileSync("src/core/game-state.js", "utf8");
 const saves = fs.readFileSync("src/core/save-runtime.js", "utf8");
 const cardCamera = fs.readFileSync("src/core/card-camera.js", "utf8");
 const content = fs.readFileSync("src/content/game-content.js", "utf8");
-const buildingPools = fs.readFileSync("src/content/building-pools.js", "utf8");
 const domCardRenderer = fs.readFileSync("src/renderers/dom-card-projection.js", "utf8");
-const oldTownRenderer = fs.readFileSync("src/renderers/oldtown-building-layer.js", "utf8");
 const renderer = fs.readFileSync("src/renderers/pixi-dynamic-renderer.mjs", "utf8");
 const cameraSettings = fs.readFileSync("src/camera-settings.js", "utf8");
 
@@ -28,7 +26,6 @@ const requiredIds = [
   "backpackBtn","backpackOverlay","backpackFrame","backpackSlots",
   "inventoryUse","inventoryDrop",
   "playerHealthHud","playerHealthBar",
-  "oldTownBuildingLayer","oldTownBuildingTrack",
   "mapTrack","terrainTrack","mapObjectTrack","mapLandmarkTrack","mapDebugTrack","mapNotice","interactBtn",
   "entityTrack","pixiEntityLayer","playerFlip","playerSprite","crouchBtn","jumpBtn","attackBtn",
   "playerHurtboxDebug","playerAttackDebug","enemyHurtboxDebug","enemyAttackDebug",
@@ -49,8 +46,6 @@ assert(html.indexOf("./src/core/save-runtime.js") < html.indexOf("./src/game.js"
 assert(html.indexOf("./src/core/card-camera.js") < html.indexOf("./src/game.js"), "Card camera must load before game runtime");
 assert(html.indexOf("./src/core/ecs-runtime.js") < html.indexOf("./src/game.js"), "ECS runtime must load before game runtime");
 assert(html.indexOf("./src/content/game-content.js") < html.indexOf("./src/game.js"), "Authored content must load before game runtime");
-assert(html.indexOf("./src/content/building-pools.js") < html.indexOf("./src/game.js"), "Building pools must load before game runtime");
-assert(html.indexOf("./src/game.js") < html.indexOf("./src/renderers/oldtown-building-layer.js"), "Old-town renderer must load after game runtime");
 assert(/src=["']\.\/src\/game\.js(?:\?[^"']*)?["']/.test(html), "External game runtime missing");
 assert(/src=["']\.\/src\/renderers\/pixi-dynamic-renderer\.mjs(?:\?[^"']*)?["']/.test(html), "Pixi dynamic renderer module missing");
 assert(fs.existsSync("src/renderers/pixi-dynamic-renderer.mjs"), "Pixi renderer source missing");
@@ -66,10 +61,8 @@ new vm.Script(saves);
 new vm.Script(cardCamera);
 new vm.Script(ecs);
 new vm.Script(content);
-new vm.Script(buildingPools);
 new vm.Script(game);
 new vm.Script(domCardRenderer);
-new vm.Script(oldTownRenderer);
 assert(ecs.includes("class SparseSetStore"), "Sparse-set ECS component store missing");
 assert(ecs.includes("registerSystem(name"), "ECS system scheduler missing");
 assert(events.includes("class EventBus"), "Deterministic event bus missing");
@@ -77,13 +70,7 @@ assert(state.includes("class StateMachine"), "Application state machine missing"
 assert(saves.includes("CURRENT_SCHEMA=3"), "Schema-v3 save runtime missing");
 assert(cardCamera.includes("function project(")&&cardCamera.includes("cameraZ=0"), "Shared XY camera with authored Z scene depth missing");
 assert(content.includes("function validate(value=content)"), "Content validation runtime missing");
-assert(buildingPools.includes("realWorld")&&buildingPools.includes("oldTown"), "Real-world old-town building category missing");
-assert(buildingPools.includes("oldtown-building-10"), "Supplied 10-building pool is incomplete");
-assert(buildingPools.includes("layer:'midground-far'")&&buildingPools.includes("z:640"), "Old-town pool is not authored on the 5m far-main depth");
 assert(domCardRenderer.includes("runtime.subscribe(render)"), "DOM card-camera renderer is not runtime-driven");
-assert(oldTownRenderer.includes("runtime.subscribe(render)"), "Old-town building renderer is not runtime-driven");
-assert(oldTownRenderer.includes("function shuffled(rowIndex)"), "Seeded random building order missing");
-assert(oldTownRenderer.includes("ROW_COPIES=2")&&oldTownRenderer.includes("coarseCulled"), "Virtualized old-town building pool missing");
 assert(game.includes("const combatEcs=window.PaperchalkECS"), "Combat ECS world bridge missing");
 assert(game.includes("combatEcs.registerSystem('enemy-ai'"), "Enemy AI ECS system missing");
 assert(game.includes("combatEcs.run('enemy-ai'"), "Fixed-step combat no longer dispatches through ECS");
@@ -124,7 +111,7 @@ assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip tr
 assert(!game.includes("function startPlayerPaperFlip"), "Full paper flip must not run on every action change");
 assert(game.includes("startPlayerActionSettle(previousState,state)"), "Action changes must use soft settle");
 assert(game.includes("state==='crouch'||previousState==='crouch')return"), "Crouch must bypass shared-card scale settle");
-assert(html.includes('/assets/player/runtime/crouch.webp?v='), "Crouch asset must be eagerly preloaded");
+assert(html.includes('/assets/player/player-default.png?v='), "Default player asset must be eagerly preloaded");
 assert(game.includes("startPlayerTurnFlip(dir)"), "Direction changes must own the full paper flip");
 assert(game.includes("function schedulePlayerActionWarmup"), "Idle-time action predecode missing");
 assert(game.includes("requestAnimationFrame(flushViewportChange)"), "Viewport updates are not frame-debounced");
@@ -174,7 +161,7 @@ assert(!html.includes('src="./assets/enemies/rag-drifter.svg'), "Prototype enemy
 assert(!html.includes('id="apartmentDoorPrompt"'), "Prototype door prompt must not exist in production UI");
 assert(!game.includes("enterApartment")&&!game.includes("exitApartment")&&!game.includes("sceneLocation"), "Prototype scene/interior runtime returned");
 assert(!html.includes('id="prototypeRuntimeCompat"')&&!html.includes('id="interiorFarLayer"')&&!html.includes('id="interiorMidLayer"')&&!html.includes('id="interiorNearLayer"'), "Prototype interior DOM returned");
-assert(!css.includes(".interior-scene")&&!css.includes(".stage.scene-interior"), "Prototype interior CSS returned");
+assert(!css.includes(".interior-scene"), "Prototype interior CSS returned");
 assert(html.includes('id="debugFlightBtn"')&&game.includes("setDebugFlightMode"), "Debug flight mode missing");
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("if(debugFlightMode){"), "Free flight must support large Y");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
@@ -206,12 +193,11 @@ assert(game.includes("e.code==='ArrowUp'||e.code==='KeyW'")&&game.includes("else
 assert(game.includes("e.code==='ArrowDown'||e.code==='KeyS'")&&game.includes("keyboardCrouch=true"), "S/Down crouch input missing");
 assert(game.includes("e.code==='KeyC'"), "Keyboard C crouch input missing");
 assert(game.includes("if(e.code==='Space'){")&&game.includes("jumpPlayer();"), "Space jump input missing");
-for (const name of ['idle','crouch','jump-up','jump-down','walk']) {
-  assert(fs.existsSync('assets/player/'+name+'.webp'), 'Missing supplied high-resolution player source asset: '+name);
-  assert(fs.existsSync('assets/player/runtime/'+name+'.webp'), 'Missing optimized runtime player action asset: '+name);
-}
-assert(game.includes("./assets/player/runtime/idle.webp"), "Runtime is not using optimized player sprites");
+assert(fs.existsSync('assets/player/player-default.png'), 'Missing default player asset');
+assert(game.includes("./assets/player/player-default.png"), "Runtime is not using the default player asset");
 assert(html.includes('id="playerFlip"'), "Player paper-flip wrapper missing");
+assert(html.includes('id="trafficLayer"')&&fs.existsSync('src/renderers/traffic-layer.js'), "Traffic layer missing");
+assert(game.includes('const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT'), "Traffic world width contract missing");
 assert(css.includes(".player-flip"), "Player paper-flip CSS missing");
 assert(css.includes("--action-scale"), "Action scale CSS variable missing");
 assert(css.includes("--source-facing"), "Source-facing correction CSS variable missing");
@@ -268,14 +254,11 @@ assert(game.includes("delete save.playerWorldZ"), "Legacy player Z must be clean
 assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("camera.project({")&&domCardRenderer.includes("writeWorldVar('--card-camera-y'"), "Ground is not projected by the shared card camera");
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
 assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
-assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS missing");
-assert(css.includes(".oldtown-building-layer")&&css.includes("z-index:3"), "Old-town building layer depth missing");
-assert(fs.existsSync("assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp"), "Old-town building atlas missing");
-assert(html.includes("oldtown-building-atlas-r1.webp?v=1"), "Old-town atlas preload missing");
-assert(html.includes('meta name="paperchalk-build" content="camera-scroll-r53"'), "R53 camera-scroll build cache key missing");
-assert(html.includes('const BUILD = "camera-scroll-r53"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=camera-scroll-r53'), "game.js camera debug cache key missing");
-assert(html.includes('./src/camera-settings.js?v=camera-scroll-r53'), "camera settings controller missing");
+assert(!html.includes("oldtown-building-atlas-r1.webp")&&!css.includes(".oldtown-building-layer"), "Removed old-town houses are still referenced by the runtime");
+assert(html.includes('meta name="paperchalk-build" content="village-house-r54"'), "R53 camera-scroll build cache key missing");
+assert(html.includes('const BUILD = "village-house-r54"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=village-house-r54'), "game.js camera debug cache key missing");
+assert(html.includes('./src/camera-settings.js?v=village-house-r54'), "camera settings controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");

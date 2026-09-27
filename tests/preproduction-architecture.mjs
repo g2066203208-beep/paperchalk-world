@@ -18,12 +18,11 @@ for(const path of [
   'src/core/save-runtime.js',
   'src/core/card-camera.js',
   'src/content/game-content.js',
-  'src/content/building-pools.js'
 ]){
   new vm.Script(read(path),{filename:path}).runInContext(context);
 }
 
-const {PaperchalkECS,PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content,PaperchalkBuildingPools:buildingPools,PaperchalkBuildingPoolRuntime:buildingPoolRuntime}=context.window;
+const {PaperchalkECS,PaperchalkEvents:events,PaperchalkAppState:app,PaperchalkSaveRuntime:saveRuntime,PaperchalkCardCamera:cardCamera,PaperchalkContent:content}=context.window;
 
 let eventValue=0;
 const off=events.on('test:event',event=>{eventValue+=event.payload});
@@ -150,11 +149,8 @@ const contentCheck=context.window.PaperchalkContentRuntime.validate(content);
 assert.equal(contentCheck.ok,true,contentCheck.errors.join('\n'));
 assert.equal(new Set(content.world.nodes.map(x=>x.id)).size,content.world.nodes.length);
 assert.equal(new Set(content.world.routes.map(x=>x.id)).size,content.world.routes.length);
-const buildingCheck=buildingPoolRuntime.validate();
-assert.equal(buildingCheck.ok,true,buildingCheck.errors.join('\n'));
-assert.equal(buildingPools.realWorld.oldTown.buildings.length,10,'old-town pool must contain all supplied buildings');
-assert.equal(buildingPools.realWorld.oldTown.layer,'midground-far');
-assert.equal(buildingPools.realWorld.oldTown.z,640,'old-town pool must sit on the 5 m far-main guide');
+const authoredBuilding=content.buildings.find(x=>x.id==='village-shop-house');
+assert.equal(authoredBuilding.scale,.62,'village house must expose an in-game art scale');
 
 const html=read('index.html');
 const game=read('src/game.js');
@@ -165,10 +161,9 @@ assert.ok(html.indexOf('game-state.js')<html.indexOf('game.js'),'state machine m
 assert.ok(html.indexOf('save-runtime.js')<html.indexOf('game.js'),'save runtime must load before game');
 assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera must load before game');
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
-assert.ok(html.indexOf('building-pools.js')<html.indexOf('game.js'),'building pools must load before game');
-assert.ok(html.indexOf('game.js')<html.indexOf('oldtown-building-layer.js'),'old-town renderer must load after game runtime');
-assert.match(html,/paperchalk-build" content="camera-scroll-r53"/,'camera-scroll build cache key missing');
-assert.match(html,/const BUILD = "camera-scroll-r53"/,'page redirect cache key must match runtime build');
+assert.ok(!html.includes('oldtown-building-layer.js'),'Removed old-town renderer must stay out of the production page');
+assert.match(html,/paperchalk-build" content="village-house-r54"/,'camera-scroll build cache key missing');
+assert.match(html,/const BUILD = "village-house-r54"/,'page redirect cache key must match runtime build');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
@@ -182,4 +177,3 @@ console.log('Preproduction architecture: PASS');
 console.log('  content nodes:',content.world.nodes.length);
 console.log('  content routes:',content.world.routes.length);
 console.log('  save schema:',saveRuntime.schemaVersion);
-console.log('  old-town buildings:',buildingPools.realWorld.oldTown.buildings.length);

@@ -26,3 +26,24 @@ Example layered manifest:
 ```
 
 The role names intentionally follow the same semantic split used by See-Through / Auto-live2D-style PSD workflows.
+
+## AI 拆图接入
+
+把 AI 或人工修补后的透明 PNG 放进角色目录，再运行：
+
+```powershell
+node tools/build_puppet_manifest.mjs `
+  --input assets/puppets/player/layers `
+  --output assets/puppets/player/manifest.json `
+  --id paperchalk-player `
+  --width 104 `
+  --height 156
+```
+
+文件名就是角色部件名，前面的数字可用于表达绘制顺序，例如：
+`02-backHair.png`、`12-body.png`、`20-face.png`、`30-frontHair.png`。
+工具会根据部件角色生成 z 顺序和相对路径。生成后可以在 manifest 中微调
+`anchor`、`offset`、`scale` 和 `physicsGain`，再通过 `?renderer=pixi` 检查动作。
+
+建议至少拆出 `backHair`、`body`、`face`、`frontHair`；需要跑步和攻击时，
+再拆出 `legLeft`、`legRight`、`arms`、`handwear` 和武器层。

@@ -32,11 +32,9 @@
 </script>
 <link rel="icon" href="data:,">
 <link rel="preload" as="image" href="./assets/dialogue/player-portrait-hd.svg?v=1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/idle.webp?v=puppet-r1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/player/runtime/crouch.webp?v=puppet-r1" fetchpriority="high">
+<link rel="preload" as="image" href="./assets/player/player-default.png?v=player-default-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
-<link rel="preload" as="image" href="./assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp?v=1" type="image/webp">
 <title>Paperchalk World</title>
 <meta name="paperchalk-build" content="village-house-r54">
 <link rel="stylesheet" href="./styles/game.css?v=village-house-r54">
@@ -58,9 +56,6 @@
       <canvas id="cardGroundCanvas" class="card-ground-canvas" aria-hidden="true"></canvas>
     </div>
   </div>
-  <div id="oldTownBuildingLayer" class="oldtown-building-layer" aria-hidden="true">
-    <div id="oldTownBuildingTrack" class="oldtown-building-track"></div>
-  </div>
   <div class="paper-wing left" aria-hidden="true"></div>
   <div class="paper-wing right" aria-hidden="true"></div>
   <div class="paper-footlights" aria-hidden="true"></div>
@@ -78,12 +73,14 @@
       <div id="mapDebugTrack"></div>
     </div>
   </div>
+  <div id="trafficLayer" class="traffic-layer" aria-hidden="true"></div>
+  <div id="threeWorldLayer" class="three-world-layer" aria-hidden="true"></div>
   <div class="world-layer rear-layer"><div class="prop-track" id="rearTrack"></div></div>
   <div id="pixiEntityLayer" class="pixi-entity-layer" hidden aria-hidden="true"></div>
   <div class="actor" data-player-state="idle">
     <div class="foot-shadow" aria-hidden="true"></div>
     <div id="playerFlip" class="player-flip">
-      <img id="playerSprite" class="walker" src="./assets/player/runtime/idle.webp?v=puppet-r1" alt="正式主角">
+      <img id="playerSprite" class="walker" src="./assets/player/player-default.png?v=player-default-r1" alt="正式主角">
     </div>
   </div>
   <div class="entity-layer" aria-hidden="true"><div id="entityTrack" class="entity-track"></div></div>
@@ -389,11 +386,10 @@
 <script src="./src/core/card-camera.js?v=village-house-r54"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
 <script src="./src/content/game-content.js?v=village-house-r54"></script>
-<script src="./src/content/building-pools.js?v=oldtown-r1"></script>
 <script src="./src/game.js?v=village-house-r54"></script>
 <script src="./src/renderers/dom-card-projection.js?v=village-house-r54"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=three-voxel-r1"></script>
 <script src="./src/camera-settings.js?v=village-house-r54"></script>
-<script src="./src/renderers/oldtown-building-layer.js?v=canvas-cull-r41"></script>
 <script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=village-house-r54"></script>
 </body>
 </html>

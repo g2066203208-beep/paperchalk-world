@@ -392,11 +392,11 @@ async function ensurePixi(){
     host.appendChild(app.canvas);
 
     const actionUrls=runtime.worldData?.playerActions||{
-      idle:'./assets/player/idle.webp?v=actions-r1',
-      crouch:'./assets/player/crouch.webp?v=actions-r1',
-      'jump-up':'./assets/player/jump-up.webp?v=actions-r1',
-      'jump-down':'./assets/player/jump-down.webp?v=actions-r1',
-      walk:'./assets/player/walk.webp?v=actions-r1'
+      idle:'./assets/player/player-default.png?v=player-default-r1',
+      crouch:'./assets/player/player-default.png?v=player-default-r1',
+      'jump-up':'./assets/player/player-default.png?v=player-default-r1',
+      'jump-down':'./assets/player/player-default.png?v=player-default-r1',
+      walk:'./assets/player/player-default.png?v=player-default-r1'
     };
     try{
       playerPuppet=await loadPaperPuppet(
