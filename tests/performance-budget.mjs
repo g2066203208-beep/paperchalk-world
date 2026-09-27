@@ -14,9 +14,7 @@ const appState=read('src/core/game-state.js');
 const saveRuntime=read('src/core/save-runtime.js');
 const cardCamera=read('src/core/card-camera.js');
 const content=read('src/content/game-content.js');
-const buildingPools=read('src/content/building-pools.js');
 const domCardRenderer=read('src/renderers/dom-card-projection.js');
-const oldTownRenderer=read('src/renderers/oldtown-building-layer.js');
 const renderer=read('src/renderers/pixi-dynamic-renderer.mjs');
 const cameraSettings=read('src/camera-settings.js');
 const android=read('android-app/app/src/main/java/com/paperchalk/world/MainActivity.java');
@@ -32,16 +30,13 @@ const budgets={
   'src/core/save-runtime.js':8000,
   'src/core/card-camera.js':5000,
   'src/content/game-content.js':12000,
-  'src/content/building-pools.js':6000,
   'src/renderers/dom-card-projection.js':12000,
-  'src/renderers/oldtown-building-layer.js':8000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/sun-paper-r13.webp':50000,
   'assets/backgrounds/moon-paper-r13.webp':50000,
   'assets/backgrounds/cloud-paper-r13.webp':50000,
   'assets/debug/green-grid-1m.svg':2000,
-  'assets/buildings/real-world/old-town/oldtown-building-atlas-r1.webp':500000
 };
 for(const [file,max] of Object.entries(budgets)){
   const bytes=size(file);
@@ -85,15 +80,9 @@ assert(domCardRenderer.includes("const farZ=Math.min(Number(cfg.farGroundDepth)"
 assert(!game.includes("keyboardDepthForward")&&!game.includes("joystickDepthAxis"),'Player Z input returned');
 assert(!game.includes("Math.hypot(dx,dz)")&&!game.includes("Math.abs(e.z)")&&!game.includes("cardDepthDistance(n.x"),'Authored scene Z leaked into gameplay logic');
 assert(renderer.includes("const cardCamera=window.PaperchalkCardCamera"),'GPU renderer does not share the card-camera runtime');
-assert(buildingPools.includes("realWorld")&&buildingPools.includes("oldTown"),'Old-town building content pool missing');
-assert(buildingPools.includes("oldtown-building-10"),'Old-town pool no longer contains all 10 supplied buildings');
-assert(oldTownRenderer.includes("ROW_COPIES=2"),'Old-town renderer lost the two-row virtualized pool');
-assert(oldTownRenderer.includes("function shuffled(rowIndex)"),'Seeded old-town random order missing');
-assert(oldTownRenderer.includes("runtime.subscribe(render)"),'Old-town layer is not lifecycle/runtime driven');
-assert(oldTownRenderer.includes("worldHalf")&&oldTownRenderer.includes("coarseCulled"),'Old-town coarse visibility culling missing');
 assert(renderer.includes("coarseCardVisible"),'Pixi renderer coarse visibility culling missing');
 assert(cameraSettings.includes("PaperchalkCameraSettings")&&cameraSettings.includes("cameraControlBtn")&&cameraSettings.includes("cameraTilt")&&cameraSettings.includes("cameraHeight")&&cameraSettings.includes("cameraDistance"),'Standalone camera controller missing');
-assert(css.includes(".oldtown-building-layer")&&css.includes("R38 OLD-TOWN BUILDING POOL"),'Old-town far-midground CSS missing');
+assert(!html.includes('oldtown-building-atlas-r1.webp')&&!css.includes('.oldtown-building-layer'),'Removed old-town houses must stay out of runtime');
 assert(!html.includes("atlas-r38-b64/"),'Temporary atlas base64 chunks leaked into runtime');
 
 assert(!game.includes("terrainTrack.innerHTML=''"),'Terrain window reverted to destructive DOM rebuild');
