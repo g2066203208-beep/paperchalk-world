@@ -16,6 +16,12 @@ let cars = [];
 let raf = 0;
 let last = 0;
 let ready = false;
+const blocks = new Map();
+let voxelMode = 'mine';
+let selected = null;
+let voxelGroup;
+let raycaster;
+let pointer;
 
 function makeMaterial(map, color) {
   return new THREE.MeshStandardMaterial({ map, color, roughness: 0.9, metalness: 0 });
@@ -58,6 +64,76 @@ function buildGround() {
   addVoxelStrip({ x: 0, z: -0.75, width: TRACK_LENGTH, depth: 0.8, height: 0.24, material: walkMat });
   const stripeMat = new THREE.MeshStandardMaterial({ color: 0xf4ead2, roughness: 0.85 });
   for (let x = -4.5; x <= 4.5; x += 0.75) addVoxelStrip({ x, z: -3.1, width: 0.38, depth: 1.65, height: 0.035, material: stripeMat });
+  buildInteractiveVoxels();
+}
+
+function blockKey(x, y, z) { return `${x}|${y}|${z}`; }
+function buildInteractiveVoxels() {
+  voxelGroup = new THREE.Group();
+  root.add(voxelGroup);
+  const material = new THREE.MeshStandardMaterial({ color: 0x76956c, roughness: 1 });
+  const geo = new THREE.BoxGeometry(1, 1, 1);
+  for (let x = -10; x <= 10; x += 1) {
+    for (let z = -8; z <= 2; z += 1) {
+      const key = blockKey(x, 0, z);
+      const mesh = new THREE.Mesh(geo, material.clone());
+      mesh.position.set(x, -0.68, z);
+      mesh.userData.voxel = { x, y: 0, z };
+      voxelGroup.add(mesh);
+      blocks.set(key, mesh);
+    }
+  }
+}
+
+function selectVoxel(mesh) {
+  if (selected) selected.material.emissive?.setHex(0x000000);
+  selected = mesh;
+  if (selected) selected.material.emissive?.setHex(0x8a6f20);
+}
+
+function interact(event) {
+  if (!renderer || !voxelGroup) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hit = raycaster.intersectObjects(voxelGroup.children, false)[0];
+  if (!hit) return;
+  const v = hit.object.userData.voxel;
+  selectVoxel(hit.object);
+  if (voxelMode === 'mine') {
+    blocks.delete(blockKey(v.x, v.y, v.z));
+    hit.object.removeFromParent();
+    selected = null;
+    return;
+  }
+  const normal = hit.face.normal;
+  const x = v.x + Math.round(normal.x);
+  const y = v.y + Math.round(normal.y);
+  const z = v.z + Math.round(normal.z);
+  const key = blockKey(x, y, z);
+  if (blocks.has(key)) return;
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0x76956c, roughness: 1 }));
+  mesh.position.set(x, y - 0.68, z);
+  mesh.userData.voxel = { x, y, z };
+  voxelGroup.add(mesh);
+  blocks.set(key, mesh);
+}
+
+function installVoxelControls() {
+  const host = document.getElementById('threeWorldLayer');
+  const controls = document.createElement('div');
+  controls.className = 'voxel-controls';
+  controls.innerHTML = '<button type="button" data-voxel-mode="mine">挖方块</button><button type="button" data-voxel-mode="place">放方块</button>';
+  controls.addEventListener('click', (event) => {
+    const mode = event.target.closest('[data-voxel-mode]')?.dataset.voxelMode;
+    if (!mode) return;
+    voxelMode = mode;
+    controls.querySelectorAll('button').forEach((button) => button.classList.toggle('is-active', button.dataset.voxelMode === mode));
+  });
+  controls.querySelector('[data-voxel-mode="mine"]').classList.add('is-active');
+  host.appendChild(controls);
+  renderer.domElement.addEventListener('pointerup', interact, { passive: true });
 }
 
 function addCar(index, lane, x) {
@@ -109,6 +185,8 @@ function frame(now) {
 async function boot() {
   if (ready || !document.getElementById('threeWorldLayer')) return;
   THREE = await import('../../vendor/three/three.module.js');
+  raycaster = new THREE.Raycaster();
+  pointer = new THREE.Vector2();
   const host = document.getElementById('threeWorldLayer');
   renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -126,6 +204,7 @@ async function boot() {
   scene.add(sun);
   buildGround();
   buildTraffic();
+  installVoxelControls();
   resize();
   ready = true;
   host.dataset.engine = 'three-voxel';
