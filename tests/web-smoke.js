@@ -196,6 +196,8 @@ assert(game.includes("if(e.code==='Space'){")&&game.includes("jumpPlayer();"), "
 assert(fs.existsSync('assets/player/player-default.png'), 'Missing default player asset');
 assert(game.includes("./assets/player/player-default.png"), "Runtime is not using the default player asset");
 assert(html.includes('id="playerFlip"'), "Player paper-flip wrapper missing");
+assert(html.includes('id="trafficLayer"')&&fs.existsSync('src/renderers/traffic-layer.js'), "Traffic layer missing");
+assert(game.includes('const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT'), "Traffic world width contract missing");
 assert(css.includes(".player-flip"), "Player paper-flip CSS missing");
 assert(css.includes("--action-scale"), "Action scale CSS variable missing");
 assert(css.includes("--source-facing"), "Source-facing correction CSS variable missing");
