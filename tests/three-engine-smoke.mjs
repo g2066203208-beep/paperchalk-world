@@ -97,6 +97,24 @@ try{
   });
   assert(airborne.started&&airborne.y>.05&&!airborne.grounded,'3D jump/gravity state did not activate '+JSON.stringify(airborne));
 
+  const touchControls=await page.evaluate(()=>{
+    window.Paperchalk3D.resetPlayer();
+    const forward=document.querySelector('[data-three-key="KeyW"]');
+    const jump=document.querySelector('[data-three-jump]');
+    if(!forward||!jump)return {exists:false};
+    forward.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:77}));
+    const moved=window.Paperchalk3D.debugStep(10);
+    forward.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:77}));
+    jump.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:78}));
+    const jumped=window.Paperchalk3D.debugStep(4);
+    jump.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:78}));
+    return {exists:true,moved,jumped};
+  });
+  assert(touchControls.exists&&Math.hypot(touchControls.moved.x,touchControls.moved.z-12.5)>.35,
+    '3D mobile movement controls failed '+JSON.stringify(touchControls));
+  assert(touchControls.jumped.y>.02&&!touchControls.jumped.grounded,
+    '3D mobile jump control failed '+JSON.stringify(touchControls));
+
   const voxel=await page.evaluate(()=>{
     const before=window.Paperchalk3D.stats.voxelCount;
     const added=window.Paperchalk3D.debugAddVoxel();

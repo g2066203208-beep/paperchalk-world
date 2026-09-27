@@ -108,7 +108,14 @@ function buildHud(){
       '<button type="button" data-three-action="reset">重置角色</button>'+
       '<button type="button" data-three-action="close">返回2D</button>'+
     '</div>'+
-    '<div class="three-test-help">WASD移动 · Space跳跃 · 拖动旋转镜头 · 滚轮缩放 · 点方块挖/放</div>'+
+    '<div class="three-test-mobile-controls" aria-label="3D移动触控">'+
+      '<span></span><button type="button" data-three-key="KeyW" aria-label="向前">▲</button><span></span>'+
+      '<button type="button" data-three-key="KeyA" aria-label="向左">◀</button>'+
+      '<button type="button" data-three-jump="1" aria-label="跳跃">跳</button>'+
+      '<button type="button" data-three-key="KeyD" aria-label="向右">▶</button>'+
+      '<span></span><button type="button" data-three-key="KeyS" aria-label="向后">▼</button><span></span>'+
+    '</div>'+
+    '<div class="three-test-help">WASD/触控移动 · Space/“跳”跳跃 · 拖动旋转镜头 · 滚轮缩放 · 点方块挖/放</div>'+
     '<div class="three-test-status" aria-live="polite"></div>';
   statusEl=hud.querySelector('.three-test-status');
   hud.addEventListener('click',event=>{
@@ -118,6 +125,33 @@ function buildHud(){
     else if(action==='reset')resetPlayer();
     else if(action==='close')disable();
   });
+  hud.addEventListener('pointerdown',event=>{
+    const keyButton=event.target.closest('[data-three-key]');
+    const jumpButton=event.target.closest('[data-three-jump]');
+    if(keyButton){
+      event.preventDefault();
+      keys.add(keyButton.dataset.threeKey);
+      keyButton.classList.add('is-held');
+      try{keyButton.setPointerCapture(event.pointerId)}catch{}
+    }else if(jumpButton){
+      event.preventDefault();
+      jumpButton.classList.add('is-held');
+      jump();
+      try{jumpButton.setPointerCapture(event.pointerId)}catch{}
+    }
+  });
+  const releaseTouchControl=event=>{
+    const keyButton=event.target.closest?.('[data-three-key]');
+    const jumpButton=event.target.closest?.('[data-three-jump]');
+    if(keyButton){
+      keys.delete(keyButton.dataset.threeKey);
+      keyButton.classList.remove('is-held');
+    }
+    if(jumpButton)jumpButton.classList.remove('is-held');
+  };
+  hud.addEventListener('pointerup',releaseTouchControl);
+  hud.addEventListener('pointercancel',releaseTouchControl);
+  hud.addEventListener('lostpointercapture',releaseTouchControl,true);
   HOST.appendChild(hud);
 }
 
