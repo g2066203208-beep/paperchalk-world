@@ -104,7 +104,7 @@ assert(game.includes("const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156})"), "
 assert(game.includes("const PLAYER_VISUAL={w:104,h:156,scale:1}"), "Mutable responsive player visual state missing");
 assert(game.includes("const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720})"), "Unified viewport reference missing");
 assert(game.includes("const PLAYER_ACTION_META=Object.freeze"), "Per-action visual metadata missing");
-assert(game.includes("walk:Object.freeze({scale:.92,sourceFacing:-1})"), "Newest walk orientation correction missing");
+assert(game.includes("walk:Object.freeze({scale:.92,sourceFacing:1})"), "Shared-card walk facing must match the source artwork");
 assert(game.includes("crouch:Object.freeze({scale:.76,sourceFacing:1})"), "Crouch visual normalization missing");
 assert(game.includes("function startPlayerActionSettle"), "Soft player action settle transition missing");
 assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip transition missing");
