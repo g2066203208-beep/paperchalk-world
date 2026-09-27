@@ -310,22 +310,25 @@ class LayeredPuppet{
   destroy(){this.root.destroy({children:true})}
 }
 
-async function loadCardPuppet(pixi,manifest){
+function resolveManifestAsset(baseUrl,src){
+  return new URL(src,baseUrl).href;
+}
+async function loadCardPuppet(pixi,manifest,baseUrl){
   const cards=manifest.actionCards||{};
   const entries=await Promise.all(Object.entries(cards).map(async([name,cfg])=>{
     const src=typeof cfg==='string'?cfg:cfg?.src;
     if(!src)throw new Error('PUPPET_CARD_SRC_'+name);
-    return [name,await pixi.Assets.load(src)];
+    return [name,await pixi.Assets.load(resolveManifestAsset(baseUrl,src))];
   }));
   if(!entries.length)throw new Error('PUPPET_CARD_EMPTY');
   return new CardPuppet(pixi,manifest,Object.fromEntries(entries));
 }
-async function loadLayeredPuppet(pixi,manifest){
+async function loadLayeredPuppet(pixi,manifest,baseUrl){
   const layers=Array.isArray(manifest.layers)?manifest.layers:[];
   if(!layers.length)throw new Error('PUPPET_LAYERS_EMPTY');
   const loaded=await Promise.all(layers.map(async cfg=>{
     if(!cfg?.src)throw new Error('PUPPET_LAYER_SRC');
-    return {cfg,texture:await pixi.Assets.load(cfg.src)};
+    return {cfg,texture:await pixi.Assets.load(resolveManifestAsset(baseUrl,cfg.src))};
   }));
   return new LayeredPuppet(pixi,manifest,loaded);
 }
@@ -333,8 +336,9 @@ async function loadLayeredPuppet(pixi,manifest){
 export async function loadPaperPuppet(pixi,manifestUrl){
   if(!pixi?.Assets||!pixi?.Container||!pixi?.Sprite)throw new Error('PUPPET_PIXI_API');
   const manifest=await fetchManifest(manifestUrl);
+  const baseUrl=new URL(manifestUrl,document.baseURI);
   const kind=String(manifest.kind||'layered').toLowerCase();
-  return kind==='card'?loadCardPuppet(pixi,manifest):loadLayeredPuppet(pixi,manifest);
+  return kind==='card'?loadCardPuppet(pixi,manifest,baseUrl):loadLayeredPuppet(pixi,manifest,baseUrl);
 }
 
 export const PaperPuppetRoles=Object.freeze(Object.keys(ROLE_DEFAULTS));
