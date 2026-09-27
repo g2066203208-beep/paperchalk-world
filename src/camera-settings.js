@@ -77,5 +77,10 @@ button.addEventListener('click',()=>setOpen(!panel.classList.contains('is-open')
 close?.addEventListener('click',()=>setOpen(false));
 document.addEventListener('keydown',e=>{if(e.code==='Escape'&&panel.classList.contains('is-open'))setOpen(false)});
 load();
-global.PaperchalkCameraSettings=Object.freeze({sync,apply,snapshot,reset:resetAll,open(){return setOpen(true)},close(){return setOpen(false)}});
+global.PaperchalkCameraSettings=Object.freeze({
+  sync,apply,snapshot,reset:resetAll,
+  open(){return setOpen(true)},
+  close(){return setOpen(false)},
+  get isOpen(){return panel.classList.contains('is-open')}
+});
 })(window);

@@ -1,7 +1,9 @@
 /* -------------------- WORLD -------------------- */
+const AUTHORED_CONTENT=window.PaperchalkContent;
+if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
 const WORLD_ZONE_WIDTH=6000;
-const WORLD_ZONE_COUNT=20;
-const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT; // 120000px continuous world, no region loading screens
+const WORLD_ZONE_COUNT=Math.max(1,AUTHORED_CONTENT.world?.routes?.length||1);
+const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT; // continuous authored route world, no region loading screens
 const MAP_SPAWN_X=460;
 const MAP_EXIT_X=MAP_WIDTH-520; // compatibility/debug far-edge marker; no transition gate
 let MAP_GROUND_SCREEN_Y=112;
@@ -20,13 +22,11 @@ const PLAYER_ACTION_ASSETS=Object.freeze({
 });
 const PLAYER_ACTION_META=Object.freeze({
   idle:Object.freeze({scale:1,sourceFacing:1}),
-  walk:Object.freeze({scale:.92,sourceFacing:-1}),
+  walk:Object.freeze({scale:.92,sourceFacing:1}),
   crouch:Object.freeze({scale:.76,sourceFacing:1}),
   'jump-up':Object.freeze({scale:.88,sourceFacing:1}),
   'jump-down':Object.freeze({scale:.86,sourceFacing:1})
 });
-const AUTHORED_CONTENT=window.PaperchalkContent;
-if(!AUTHORED_CONTENT)throw new Error('Paperchalk authored content failed to load');
 const WORLD_NODES=AUTHORED_CONTENT.world.nodes.map(node=>({...node}));
 const WORLD_ROUTES=AUTHORED_CONTENT.world.routes.map(route=>({...route}));
 const WORLD_NODE_BY_ID=new Map(WORLD_NODES.map(n=>[n.id,n]));
@@ -84,7 +84,7 @@ let lastNearNpcId=null;
 const SOLID_BUCKET_SIZE=1200;
 const solidBuckets=new Map();
 const solidQueryBuffer=[];
-let solidQueryToken=0;
+const solidQuerySeen=new Set();
 function addSolidToIndex(rect){
   const a=Math.floor(rect.x/SOLID_BUCKET_SIZE);
   const b=Math.floor((rect.x+rect.w)/SOLID_BUCKET_SIZE);
@@ -390,7 +390,8 @@ dialoguePlayerArt.addEventListener('error',()=>{
   if(window.PAPERCHALK_PLAYER_PORTRAIT)dialoguePlayerArt.src=window.PAPERCHALK_PLAYER_PORTRAIT;
   else dialoguePlayerArt.src=PLAYER_ACTION_ASSETS.idle;
 },{once:true});
-dialogueNpcArt.src=MAP_NPCS[0]?.dialoguePortrait||MAP_NPCS[0]?.sprite||'';
+const initialNpcPortrait=MAP_NPCS[0]?.dialoguePortrait||MAP_NPCS[0]?.sprite||'';
+if(initialNpcPortrait)dialogueNpcArt.src=initialNpcPortrait;
 dialogueNpcArt.addEventListener('error',()=>{
   console.warn('NPC_PORTRAIT_UNAVAILABLE');
 },{once:true});
@@ -1488,13 +1489,13 @@ function activeSolidRects(centerX=playerWorldX,radius=900){
   const minX=centerX-radius,maxX=centerX+radius;
   const first=Math.floor(minX/SOLID_BUCKET_SIZE),lastBucket=Math.floor(maxX/SOLID_BUCKET_SIZE);
   const out=solidQueryBuffer;out.length=0;
-  const token=++solidQueryToken;
+  solidQuerySeen.clear();
   for(let i=first;i<=lastBucket;i++){
     const bucket=solidBuckets.get(i);
     if(!bucket)continue;
     for(const r of bucket){
-      if(r._solidQueryToken===token||r.x+r.w<=minX||r.x>=maxX)continue;
-      r._solidQueryToken=token;
+      if(solidQuerySeen.has(r)||r.x+r.w<=minX||r.x>=maxX)continue;
+      solidQuerySeen.add(r);
       if(r.breakable&&mapState.broken.has(r.id))continue;
       out.push(r);
     }
@@ -2311,7 +2312,9 @@ function worldInteractive(){
     && !backpackOverlay.classList.contains('is-open')
     && !worldMapOverlay.classList.contains('is-open')
     && !dialogueIsOpen()
-    && !debugIsOpen();
+    && !debugIsOpen()
+    && !window.PaperchalkCameraSettings?.isOpen
+    && !window.Paperchalk3D?.active;
 }
 function movementAxis(){
   if(keyboardLeft!==keyboardRight)return keyboardLeft?-1:1;
@@ -3232,7 +3235,7 @@ inventoryUse.addEventListener('click',()=>{
   }
   const name=item.name||'物品';
   if(item.consumable===true||item.action==='consume'||item.action==='heal'){
-    if(item.action==='heal')healPlayer(Math.max(1,Number(item.heal)||1));
+    if(item.action==='heal')setPlayerHp(playerHp+Math.max(1,Number(item.heal)||1),{persist:false,animate:true});
     decrementInventoryItem(inventorySelected,1);
     saveWorldState();
     renderInventory();

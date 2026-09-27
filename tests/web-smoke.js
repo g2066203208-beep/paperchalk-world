@@ -104,7 +104,7 @@ assert(game.includes("const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156})"), "
 assert(game.includes("const PLAYER_VISUAL={w:104,h:156,scale:1}"), "Mutable responsive player visual state missing");
 assert(game.includes("const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720})"), "Unified viewport reference missing");
 assert(game.includes("const PLAYER_ACTION_META=Object.freeze"), "Per-action visual metadata missing");
-assert(game.includes("walk:Object.freeze({scale:.92,sourceFacing:-1})"), "Newest walk orientation correction missing");
+assert(game.includes("walk:Object.freeze({scale:.92,sourceFacing:1})"), "Shared-card walk facing must match the source artwork");
 assert(game.includes("crouch:Object.freeze({scale:.76,sourceFacing:1})"), "Crouch visual normalization missing");
 assert(game.includes("function startPlayerActionSettle"), "Soft player action settle transition missing");
 assert(game.includes("function startPlayerTurnFlip"), "Paper-puppet turn flip transition missing");
@@ -135,21 +135,20 @@ assert(!game.includes("WORLD_BLOCK_SIZE"), "Voxel/block simulation must stay rem
 assert(!html.includes('id="mineBtn"') && !html.includes('id="placeBtn"'), "Voxel mine/place controls must stay removed");
 assert(game.includes("setProperty('--road-surface-x'"), "Road surface is not world-anchored");
 const androidMain=fs.readFileSync("android-app/app/src/main/java/com/paperchalk/world/MainActivity.java","utf8");
-assert(androidMain.includes("?androidRefresh="), "Android app must cache-bust the HTML shell on refresh");
-assert(androidMain.includes('loadFreshGame("launch")'), "Android cold launch refresh missing");
-assert(androidMain.includes('loadFreshGame("resume")'), "Android foreground resume refresh missing");
-assert(androidMain.includes("awayMs >= 1500L"), "Android resume refresh is not protected from tiny interruptions");
+assert(androidMain.includes("webView.loadUrl(GAME_URL)"), "Android cold launch must load the stable versioned web entry");
+assert(!androidMain.includes("?androidRefresh="), "Android must not force cache-busting query reloads");
+assert(!androidMain.includes("loadFreshGame"), "Android must not tear down the game on launch/resume");
+assert(androidMain.includes("window.dispatchEvent(new Event('resize'))"), "Android resume must resync the live page without reloading it");
 assert(androidMain.includes("window.PaperchalkSaveNow"), "Android onPause save bridge missing");
 assert(game.includes("window.PaperchalkSaveNow"), "Web save bridge missing");
-assert(androidMain.includes('"Cache-Control", "no-cache, max-age=0"'), "Android HTML request must force revalidation");
 const androidGradle=fs.readFileSync("android-app/app/build.gradle.kts","utf8");
 assert(androidGradle.includes("versionCode = 3") && androidGradle.includes('versionName = "0.1.2"'), "Android APK version was not bumped");
 assert(!game.includes("visualViewport?.addEventListener('scroll'"), "Visual viewport scroll still forces world rebuilds");
 assert(
   game.includes("const WORLD_ZONE_WIDTH=6000") &&
-  game.includes("const WORLD_ZONE_COUNT=20") &&
+  game.includes("const WORLD_ZONE_COUNT=Math.max(1,AUTHORED_CONTENT.world?.routes?.length||1)") &&
   game.includes("const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT"),
-  "120000px network world definition missing"
+  "Authored-route network world definition missing"
 );
 assert(game.includes("const MAP_TERRAIN=[]"), "Empty terrain authoring bridge missing");
 assert(game.includes("const MAP_OBJECTS=[]"), "Empty map-object authoring bridge missing");
@@ -196,7 +195,7 @@ assert(game.includes("if(e.code==='Space'){")&&game.includes("jumpPlayer();"), "
 assert(fs.existsSync('assets/player/player-default.png'), 'Missing default player asset');
 assert(game.includes("./assets/player/player-default.png"), "Runtime is not using the default player asset");
 assert(html.includes('id="playerFlip"'), "Player paper-flip wrapper missing");
-assert(html.includes('id="trafficLayer"')&&fs.existsSync('src/renderers/traffic-layer.js'), "Traffic layer missing");
+assert(!html.includes('id="trafficLayer"')&&!fs.existsSync('src/renderers/traffic-layer.js'), "Retired DOM traffic layer must stay removed");
 assert(game.includes('const MAP_WIDTH=WORLD_ZONE_WIDTH*WORLD_ZONE_COUNT'), "Traffic world width contract missing");
 assert(css.includes(".player-flip"), "Player paper-flip CSS missing");
 assert(css.includes("--action-scale"), "Action scale CSS variable missing");
@@ -255,10 +254,10 @@ assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRend
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
 assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
 assert(!html.includes("oldtown-building-atlas-r1.webp")&&!css.includes(".oldtown-building-layer"), "Removed old-town houses are still referenced by the runtime");
-assert(html.includes('meta name="paperchalk-build" content="village-house-r54"'), "R53 camera-scroll build cache key missing");
-assert(html.includes('const BUILD = "village-house-r54"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=village-house-r54'), "game.js camera debug cache key missing");
-assert(html.includes('./src/camera-settings.js?v=village-house-r54'), "camera settings controller missing");
+assert(html.includes('meta name="paperchalk-build" content="three-engine-r1"'), "3D engine build cache key missing");
+assert(html.includes('const BUILD = "three-engine-r1"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=three-engine-r1'), "game.js camera debug cache key missing");
+assert(html.includes('./src/camera-settings.js?v=three-engine-r1'), "camera settings controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");

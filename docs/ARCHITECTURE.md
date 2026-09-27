@@ -8,7 +8,8 @@ Paperchalk World uses a hybrid browser-game architecture rather than forcing eve
 - **Renderer contract** keeps simulation authoritative and allows DOM/Pixi backends to consume the same frame state.
 - **DOM retained mode** remains appropriate for UI, dialogue, menus and accessibility-heavy controls.
 - **PixiJS 8** is an optional dynamic-entity renderer and PaperPuppet host.
-- **Fixed-step simulation** is used for combat; visual animation can run independently.
+- **Three.js r180** powers an isolated real WebGL 3D test engine with perspective camera, lighting/shadows, fixed-step movement and raycast voxel interaction; it stays cold during normal 2D play.
+- **Fixed-step simulation** is used for combat and the 3D test scene; visual animation can run independently.
 - **Spatial buckets and object pools** keep world queries and scrolling work bounded.
 - **Lifecycle-bound loops** stop gameplay RAF work when the world is not active.
 
@@ -75,5 +76,7 @@ UI overlays and account/settings screens should **not** be converted into ECS en
 - [x] Add authored content registry + validation
 - [x] Add schema-v3 saves, v2 migration and last-known-good backup
 - [x] Add shared X/Y gameplay camera with authored Z scene depth, infinite grid references and DOM/Pixi projection parity
+- [x] Add an isolated Three.js r180 WebGL 3D engine/test scene with lifecycle-safe rendering and dedicated CI
+- [x] Remove the retired DOM traffic renderer after the Three.js test engine superseded it
 - [ ] Migrate NPCs, pickups and projectiles into ECS where simulation benefits
 - [ ] Extract input commands, scene traversal and inventory domains from the compatibility runtime
