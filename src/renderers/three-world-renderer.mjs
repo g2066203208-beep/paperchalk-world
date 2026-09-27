@@ -646,6 +646,14 @@ function debugRemoveVoxel(){
   return mesh?removeVoxel(mesh):false;
 }
 
+function debugStep(frames=1){
+  const count=Math.max(1,Math.min(240,Math.floor(Number(frames)||1)));
+  for(let i=0;i<count;i++)fixedUpdate(FIXED_DT);
+  updateCamera();
+  if(renderer&&scene&&camera)renderer.render(scene,camera);
+  return {x:player.x,y:player.y,z:player.z,vy:player.vy,grounded:player.grounded};
+}
+
 window.addEventListener('keydown',event=>{
   if(!active)return;
   if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(event.code)){
@@ -688,7 +696,7 @@ window.Paperchalk3D=Object.freeze({
   version:1,
   engine:'three-r180-webgl',
   enable,disable,toggle,resetPlayer,setVoxelMode,jump,
-  debugAddVoxel,debugRemoveVoxel,
+  debugAddVoxel,debugRemoveVoxel,debugStep,
   get active(){return active},
   get ready(){return stats.ready},
   get stats(){
