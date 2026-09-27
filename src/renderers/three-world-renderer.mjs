@@ -40,7 +40,7 @@ const keys=new Set();
 const raycasterState={raycaster:null,pointer:null};
 const cameraRig={yaw:.72,pitch:.42,distance:15,minDistance:5,maxDistance:28};
 const player={
-  x:0,y:0,z:7,
+  x:0,y:0,z:12.5,
   vx:0,vy:0,vz:0,
   grounded:true,
   speed:5.2,
@@ -376,7 +376,7 @@ function resize(){
 }
 
 function resetPlayer(){
-  player.x=0;player.y=0;player.z=7;
+  player.x=0;player.y=0;player.z=12.5;
   player.vx=0;player.vy=0;player.vz=0;player.grounded=true;
   if(playerRoot)playerRoot.position.set(player.x,player.y,player.z);
   cameraRig.yaw=.72;cameraRig.pitch=.42;cameraRig.distance=15;
