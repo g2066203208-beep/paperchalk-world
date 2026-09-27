@@ -241,10 +241,9 @@ async function boot() {
   scene.add(sun);
   buildGround();
   buildTraffic();
-  installVoxelControls();
   resize();
   ready = true;
-  host.dataset.engine = 'three-voxel';
+  host.dataset.engine = 'three-webgl-world';
   raf = requestAnimationFrame(frame);
 }
 
