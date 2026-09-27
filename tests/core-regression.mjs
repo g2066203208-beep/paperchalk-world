@@ -373,6 +373,10 @@ try{
 
   await page.keyboard.down('KeyW');
   await page.waitForFunction(()=>window.PaperchalkCombat?.player?.y>20,null,{timeout:900});
+  await page.waitForFunction(()=>{
+    const value=document.getElementById('world')?.style.getPropertyValue('--card-camera-y')||'0';
+    return Number.parseFloat(value)>20;
+  },null,{timeout:900});
   const xyCameraRaised=await page.evaluate(()=>{
     const actor=document.querySelector('.actor').getBoundingClientRect();
     const groundZero=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0);
