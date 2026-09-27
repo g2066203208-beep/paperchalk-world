@@ -10,12 +10,13 @@ const PLAYER_BODY=Object.freeze({halfW:27,standH:108,crouchH:78});
 const VIEWPORT_REFERENCE=Object.freeze({w:1280,h:720});
 const PLAYER_VISUAL_BASE=Object.freeze({w:104,h:156});
 const PLAYER_VISUAL={w:104,h:156,scale:1};
+const PLAYER_DEFAULT_ASSET='./assets/player/player-default.png?v=player-default-r1';
 const PLAYER_ACTION_ASSETS=Object.freeze({
-  idle:'./assets/player/runtime/idle.webp?v=responsive-actions-r2',
-  crouch:'./assets/player/runtime/crouch.webp?v=responsive-actions-r2',
-  'jump-up':'./assets/player/runtime/jump-up.webp?v=responsive-actions-r2',
-  'jump-down':'./assets/player/runtime/jump-down.webp?v=responsive-actions-r2',
-  walk:'./assets/player/runtime/walk.webp?v=responsive-actions-r2'
+  idle:PLAYER_DEFAULT_ASSET,
+  crouch:PLAYER_DEFAULT_ASSET,
+  'jump-up':PLAYER_DEFAULT_ASSET,
+  'jump-down':PLAYER_DEFAULT_ASSET,
+  walk:PLAYER_DEFAULT_ASSET
 });
 const PLAYER_ACTION_META=Object.freeze({
   idle:Object.freeze({scale:1,sourceFacing:1}),
