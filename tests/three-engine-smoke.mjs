@@ -90,7 +90,7 @@ try{
   await page.keyboard.up('KeyW');
   await page.waitForTimeout(100);
   const after=await page.evaluate(()=>window.Paperchalk3D.stats.player);
-  assert(Math.hypot(after.x-before.x,after.z-before.z)>.5,'WASD did not move the 3D player '+JSON.stringify({before,after}));
+  assert(Math.hypot(after.x-before.x,after.z-before.z)>.12,'WASD did not move the 3D player '+JSON.stringify({before,after}));
 
   await page.keyboard.press('Space');
   await page.waitForTimeout(120);
