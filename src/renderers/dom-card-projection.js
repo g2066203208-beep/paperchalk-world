@@ -82,7 +82,7 @@ function coarseVisibleX(worldX,worldZ,player,viewport,margin=300){
   const x=Number(worldX)||0;
   return x>=left&&x<=right;
 }
-function applyProjection(el,p,{xVar,bottomVar,viewportWidth,viewportHeight}){
+function applyProjection(el,p,{xVar,bottomVar,viewportWidth,viewportHeight,artScale=1}){
   const w=viewportWidth||1280,h=viewportHeight||720;
   const visible=p.visible&&p.x>-260&&p.x<w+260&&p.y>-220&&p.y<h+220;
   setVisible(el,visible);
@@ -90,7 +90,7 @@ function applyProjection(el,p,{xVar,bottomVar,viewportWidth,viewportHeight}){
   const c=visibilityCache(el);
   const x=p.x.toFixed(2)+'px';
   const bottom=(h-p.y).toFixed(2)+'px';
-  const scale=p.scale.toFixed(4);
+  const scale=(p.scale*Math.max(.05,Number(artScale)||1)).toFixed(4);
   if(c.x!==x){c.x=x;el.style.setProperty(xVar,x)}
   if(c.bottom!==bottom){c.bottom=bottom;el.style.setProperty(bottomVar,bottom)}
   if(c.scale!==scale){c.scale=scale;el.style.setProperty('--world-scale',scale)}
@@ -328,7 +328,7 @@ function render(frame,force=false){
       playerX:p.x,playerY:p.y,cameraZ:0,
       screenX:p.screenX,viewportHeight:v.height,groundY:v.groundY
     });
-    if(applyProjection(el,projected,{xVar:'--building-x',bottomVar:'--building-bottom',viewportWidth:v.width,viewportHeight:v.height}))projectedBuildings++;
+    if(applyProjection(el,projected,{xVar:'--building-x',bottomVar:'--building-bottom',viewportWidth:v.width,viewportHeight:v.height,artScale:building.scale}))projectedBuildings++;
     else culledBuildings++;
   }
 
