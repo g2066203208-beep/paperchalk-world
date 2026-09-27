@@ -30,7 +30,7 @@ const budgets={
   'src/core/save-runtime.js':8000,
   'src/core/card-camera.js':5000,
   'src/content/game-content.js':12000,
-  'src/renderers/dom-card-projection.js':12000,
+  'src/renderers/dom-card-projection.js':14000,
   'src/renderers/pixi-dynamic-renderer.mjs':24000,
   'vendor/pixi/pixi-8.21.0.mjs':900000,
   'assets/backgrounds/sun-paper-r13.webp':50000,

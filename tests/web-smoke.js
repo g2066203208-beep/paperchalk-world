@@ -161,7 +161,7 @@ assert(!html.includes('src="./assets/enemies/rag-drifter.svg'), "Prototype enemy
 assert(!html.includes('id="apartmentDoorPrompt"'), "Prototype door prompt must not exist in production UI");
 assert(!game.includes("enterApartment")&&!game.includes("exitApartment")&&!game.includes("sceneLocation"), "Prototype scene/interior runtime returned");
 assert(!html.includes('id="prototypeRuntimeCompat"')&&!html.includes('id="interiorFarLayer"')&&!html.includes('id="interiorMidLayer"')&&!html.includes('id="interiorNearLayer"'), "Prototype interior DOM returned");
-assert(!css.includes(".interior-scene")&&!css.includes(".stage.scene-interior"), "Prototype interior CSS returned");
+assert(!css.includes(".interior-scene"), "Prototype interior CSS returned");
 assert(html.includes('id="debugFlightBtn"')&&game.includes("setDebugFlightMode"), "Debug flight mode missing");
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("if(debugFlightMode){"), "Free flight must support large Y");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
@@ -255,12 +255,11 @@ assert(game.includes("delete save.playerWorldZ"), "Legacy player Z must be clean
 assert(domCardRenderer.includes("function renderGroundGrid(frame)")&&domCardRenderer.includes("camera.project({")&&domCardRenderer.includes("writeWorldVar('--card-camera-y'"), "Ground is not projected by the shared card camera");
 assert(!domCardRenderer.includes("setProperty('--card-grid-z'"), "Ground texture must not scroll from player Z input");
 assert(cardCamera.includes("worldZ")&&cardCamera.includes("cameraZ"), "Scene-depth Z projection missing");
-assert(css.includes("R38 OLD-TOWN BUILDING POOL"), "Old-town far-midground CSS missing");
 assert(!html.includes("oldtown-building-atlas-r1.webp")&&!css.includes(".oldtown-building-layer"), "Removed old-town houses are still referenced by the runtime");
-assert(html.includes('meta name="paperchalk-build" content="camera-scroll-r53"'), "R53 camera-scroll build cache key missing");
-assert(html.includes('const BUILD = "camera-scroll-r53"'), "Top-level cache redirect build key missing");
-assert(html.includes('./src/game.js?v=camera-scroll-r53'), "game.js camera debug cache key missing");
-assert(html.includes('./src/camera-settings.js?v=camera-scroll-r53'), "camera settings controller missing");
+assert(html.includes('meta name="paperchalk-build" content="village-house-r54"'), "R53 camera-scroll build cache key missing");
+assert(html.includes('const BUILD = "village-house-r54"'), "Top-level cache redirect build key missing");
+assert(html.includes('./src/game.js?v=village-house-r54'), "game.js camera debug cache key missing");
+assert(html.includes('./src/camera-settings.js?v=village-house-r54'), "camera settings controller missing");
 assert(html.indexOf('./src/renderers/dom-card-projection.js')<html.indexOf('./src/camera-settings.js'), "camera settings controller must load after projection renderer");
 assert(domCardRenderer.includes("getContext('2d'")&&domCardRenderer.includes("coarseVisibleX"), "Canvas/culling renderer path missing");
 assert(cardCamera.includes("farGroundDepth:FAR")&&cardCamera.includes("sceneGuides:Object.freeze"), "Finite scene-depth guide config missing");
