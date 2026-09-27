@@ -155,6 +155,8 @@ assert.equal(buildingCheck.ok,true,buildingCheck.errors.join('\n'));
 assert.equal(buildingPools.realWorld.oldTown.buildings.length,10,'old-town pool must contain all supplied buildings');
 assert.equal(buildingPools.realWorld.oldTown.layer,'midground-far');
 assert.equal(buildingPools.realWorld.oldTown.z,640,'old-town pool must sit on the 5 m far-main guide');
+const authoredBuilding=content.buildings.find(x=>x.id==='village-shop-house');
+assert.equal(authoredBuilding.scale,.62,'village house must expose an in-game art scale');
 
 const html=read('index.html');
 const game=read('src/game.js');
