@@ -162,8 +162,8 @@ assert.ok(html.indexOf('save-runtime.js')<html.indexOf('game.js'),'save runtime 
 assert.ok(html.indexOf('card-camera.js')<html.indexOf('game.js'),'card camera must load before game');
 assert.ok(html.indexOf('game-content.js')<html.indexOf('game.js'),'content must load before game');
 assert.ok(!html.includes('oldtown-building-layer.js'),'Removed old-town renderer must stay out of the production page');
-assert.match(html,/paperchalk-build" content="village-house-r54"/,'camera-scroll build cache key missing');
-assert.match(html,/const BUILD = "village-house-r54"/,'page redirect cache key must match runtime build');
+assert.match(html,/paperchalk-build" content="three-engine-r1"/,'3D engine build cache key missing');
+assert.match(html,/const BUILD = "three-engine-r1"/,'page redirect cache key must match runtime build');
 assert.ok(html.includes('id="cardGroundCanvas"'),'shared-camera ground canvas host missing');
 assert.ok(domCardRenderer.includes('function renderGroundGrid(frame)'),'ground projection must live in the renderer boundary');
 assert.ok(domCardRenderer.includes("coarseVisibleX"),'entity culling must happen before projection/style writes');
