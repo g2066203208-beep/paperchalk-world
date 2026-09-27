@@ -20,7 +20,7 @@
     "walk": {
       "src": "../../player/player-default.png?v=player-default-r1",
       "scale": 0.92,
-      "sourceFacing": -1
+      "sourceFacing": 1
     },
     "crouch": {
       "src": "../../player/player-default.png?v=player-default-r1",
