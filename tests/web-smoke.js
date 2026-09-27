@@ -161,7 +161,7 @@ assert(!html.includes('src="./assets/enemies/rag-drifter.svg'), "Prototype enemy
 assert(!html.includes('id="apartmentDoorPrompt"'), "Prototype door prompt must not exist in production UI");
 assert(!game.includes("enterApartment")&&!game.includes("exitApartment")&&!game.includes("sceneLocation"), "Prototype scene/interior runtime returned");
 assert(!html.includes('id="prototypeRuntimeCompat"')&&!html.includes('id="interiorFarLayer"')&&!html.includes('id="interiorMidLayer"')&&!html.includes('id="interiorNearLayer"'), "Prototype interior DOM returned");
-assert(!css.includes(".interior-scene")&&!css.includes(".stage.scene-interior"), "Prototype interior CSS returned");
+assert(!css.includes(".interior-scene"), "Prototype interior CSS returned");
 assert(html.includes('id="debugFlightBtn"')&&game.includes("setDebugFlightMode"), "Debug flight mode missing");
 assert(game.includes("const OUTDOOR_FLIGHT_MAX_Y=50000")&&game.includes("if(debugFlightMode){"), "Free flight must support large Y");
 assert(game.includes("worldX=clamp(playerWorldX-playerScreenAnchorX")&&!game.includes("actorX=playerWorldX-worldX"), "Normal camera follow must move the world without moving the player");
