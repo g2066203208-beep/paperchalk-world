@@ -371,6 +371,12 @@ button{cursor:pointer}
   contain:strict;display:none;
 }
 .pixi-entity-layer canvas{display:block;width:100%;height:100%;pointer-events:none}
+.three-world-layer{
+  position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none;
+  contain:strict;
+}
+.three-world-layer canvas{display:block;width:100%;height:100%;pointer-events:none}
+.traffic-layer{display:none!important}
 .stage.renderer-pixi-dynamic .pixi-entity-layer{display:block}
 .stage.renderer-pixi-dynamic .actor,
 .stage.renderer-pixi-dynamic .entity-layer{visibility:hidden}
