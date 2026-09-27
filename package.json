@@ -8,7 +8,8 @@
     "test:architecture": "node tests/preproduction-architecture.mjs",
     "test:core": "node tests/core-regression.mjs",
     "test:performance": "node tests/performance-budget.mjs",
-    "puppet:manifest": "node tools/build_puppet_manifest.mjs"
+    "puppet:manifest": "node tools/build_puppet_manifest.mjs",
+    "test:3d": "node tests/three-engine-smoke.mjs"
   },
   "engines": {
     "node": ">=20"
