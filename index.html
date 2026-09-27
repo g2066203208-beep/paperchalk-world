@@ -9,7 +9,7 @@
 <meta http-equiv="Expires" content="0">
 <script>
 (() => {
-  const BUILD = "village-house-r54";
+  const BUILD = "three-engine-r1";
   const url = new URL(window.location.href);
   if (url.protocol === "http:" || url.protocol === "https:") {
     if (url.searchParams.get("build") !== BUILD) {
@@ -18,16 +18,8 @@
       return;
     }
   }
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then(registrations => Promise.all(registrations.map(registration => registration.unregister())))
-      .catch(() => {});
-  }
-  if ("caches" in window) {
-    caches.keys()
-      .then(keys => Promise.all(keys.map(key => caches.delete(key))))
-      .catch(() => {});
-  }
+  // Runtime files use build/version query strings. Do not purge Cache Storage or
+  // unregister service workers on every launch; that caused repeated mobile downloads.
 })();
 </script>
 <link rel="icon" href="data:,">
@@ -36,8 +28,8 @@
 <link rel="preload" as="image" href="./assets/backgrounds/sun-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <link rel="preload" as="image" href="./assets/backgrounds/cloud-paper-r13.webp?v=puppet-r1" fetchpriority="high">
 <title>Paperchalk World</title>
-<meta name="paperchalk-build" content="village-house-r54">
-<link rel="stylesheet" href="./styles/game.css?v=village-house-r54">
+<meta name="paperchalk-build" content="three-engine-r1">
+<link rel="stylesheet" href="./styles/game.css?v=three-engine-r1">
 </head>
 <body>
 
@@ -130,6 +122,8 @@
   <button id="worldMapBtn" class="world-map-btn" type="button" aria-label="打开大地图">地图</button>
   <button id="cameraControlBtn" class="camera-control-btn" type="button"
           aria-controls="cameraControlPanel" aria-expanded="false">镜头</button>
+  <button id="threeTestBtn" class="three-test-btn" type="button"
+          aria-pressed="false" aria-label="打开真实3D测试场景">3D测试</button>
   <section id="cameraControlPanel" class="camera-control-panel" aria-hidden="true" aria-label="镜头调整">
     <div class="camera-control-head">
       <strong>镜头调整</strong>
@@ -383,13 +377,13 @@
 <script src="./src/core/event-bus.js?v=1"></script>
 <script src="./src/core/game-state.js?v=1"></script>
 <script src="./src/core/save-runtime.js?v=1"></script>
-<script src="./src/core/card-camera.js?v=village-house-r54"></script>
+<script src="./src/core/card-camera.js?v=three-engine-r1"></script>
 <script src="./src/core/ecs-runtime.js?v=2"></script>
-<script src="./src/content/game-content.js?v=village-house-r54"></script>
-<script src="./src/game.js?v=village-house-r54"></script>
-<script src="./src/renderers/dom-card-projection.js?v=village-house-r54"></script>
+<script src="./src/content/game-content.js?v=three-engine-r1"></script>
+<script src="./src/game.js?v=three-engine-r1"></script>
+<script src="./src/renderers/dom-card-projection.js?v=three-engine-r1"></script>
 <script type="module" src="./src/renderers/three-world-renderer.mjs?v=three-voxel-r1"></script>
-<script src="./src/camera-settings.js?v=village-house-r54"></script>
-<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=village-house-r54"></script>
+<script src="./src/camera-settings.js?v=three-engine-r1"></script>
+<script type="module" src="./src/renderers/pixi-dynamic-renderer.mjs?v=three-engine-r1"></script>
 </body>
 </html>
