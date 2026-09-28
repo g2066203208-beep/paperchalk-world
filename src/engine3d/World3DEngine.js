@@ -195,20 +195,29 @@ export class World3DEngine{
 
     // One and only world light: the sun. No hemisphere/ambient fill.
     // Therefore caves and covered terrain stay black unless direct sunlight reaches them.
-    const sun=new THREE.DirectionalLight(0xfff0d2,2.2);
+    const sun=new THREE.DirectionalLight(0xfff0d2,3.8);
     sun.name='world-sun';
     sun.castShadow=true;
     sun.position.set(18,32,14);
     sun.shadow.mapSize.set(2048,2048);
     sun.shadow.camera.near=.5;
-    sun.shadow.camera.far=90;
-    sun.shadow.camera.left=-28;sun.shadow.camera.right=28;
-    sun.shadow.camera.top=28;sun.shadow.camera.bottom=-28;
-    sun.shadow.bias=-0.00035;
-    sun.shadow.normalBias=.02;
+    sun.shadow.camera.far=120;
+    sun.shadow.camera.left=-32;sun.shadow.camera.right=32;
+    sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;
+    sun.shadow.bias=-0.0002;
+    sun.shadow.normalBias=.025;
     this.scene.add(sun);
     this.scene.add(sun.target);
-    this.terrainLights={sun};
+
+    const sunDisc=new THREE.Mesh(
+      new THREE.SphereGeometry(2.6,24,16),
+      new THREE.MeshBasicMaterial({color:0xffe49a,toneMapped:false,depthWrite:false})
+    );
+    sunDisc.name='visible-sun';
+    sunDisc.renderOrder=-50;
+    this.scene.add(sunDisc);
+
+    this.terrainLights={sun,sunDisc};
 
     this.backdrop=null;
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
@@ -363,21 +372,33 @@ export class World3DEngine{
   _updateWorldTime(snapshot){
     const minutes=Number(snapshot?.world?.minutes);if(!Number.isFinite(minutes))return;
     const n=((minutes%1440)+1440)%1440/1440;
-    const daylight=Math.max(0,Math.sin((n-.25)*Math.PI*2));
+    const angle=(n-.25)*Math.PI*2;
+    const daylight=Math.max(0,Math.sin(angle));
     this.scene.background.setRGB(0,0,0);
-    if(this.terrainLights?.sun)this.terrainLights.sun.intensity=daylight*2.2;
+
+    const sun=this.terrainLights?.sun,sunDisc=this.terrainLights?.sunDisc;
+    if(sun){
+      sun.intensity=daylight*3.8;
+      const p=this.lastSnapshot?.player||{x:0,y:0,z:0};
+      const radius=42;
+      const sx=Math.cos(angle)*radius;
+      const sy=Math.max(6,Math.sin(angle)*radius);
+      const sz=22;
+      sun.position.set(p.x+sx,p.y+sy,p.z+sz);
+      sun.target.position.set(p.x,p.y-2,p.z);
+      sun.target.updateMatrixWorld();
+      if(sunDisc){
+        sunDisc.visible=daylight>.02;
+        sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
+        sunDisc.scale.setScalar(.8+daylight*.35);
+      }
+    }
   }
   update(dt,snapshot=this.lastSnapshot){
     if(snapshot)this.lastSnapshot=snapshot;
     const current=this.lastSnapshot;
     this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateWorldTime(current);
     const p=current?.player;
-    if(p&&this.terrainLights?.sun){
-      const sun=this.terrainLights.sun;
-      sun.position.set(p.x+18,p.y+32,p.z+14);
-      sun.target.position.set(p.x,p.y-2,p.z);
-      sun.target.updateMatrixWorld();
-    }
     this.terrainRenderer.update(p);
     this.healthBar?.update(this.camera,dt);
   }
@@ -435,7 +456,7 @@ export class World3DEngine{
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
-      lighting:{mode:'sun-only',ambient:0,background:'black',sunIntensity:this.terrainLights?.sun?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+      lighting:{mode:'sun-only',ambient:0,background:'black',visibleSun:!!this.terrainLights?.sunDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
