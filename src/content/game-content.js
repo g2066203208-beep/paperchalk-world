@@ -13,7 +13,7 @@ const scene3d={
     depth:.18,
     seed:2066203208,
     activeRadiusX:2,
-    activeRadiusY:2
+    activeRadiusY:1
   },
   paperEntities:[
     {id:'village-shop',kind:'building',name:'A村街角小楼',x:-27,width:9,height:6.2,zLayer:-.42,tint:'#9b7d65'},
