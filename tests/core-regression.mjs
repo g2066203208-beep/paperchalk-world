@@ -65,9 +65,13 @@ try{
 
   const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
   assert(jumpStarted===true,'jump was rejected while grounded');
-  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===false,null,{timeout:800});
+  await page.waitForFunction(
+    y0=>window.PaperchalkRuntime.getSnapshot().player.y>y0+.04,
+    afterW.y,
+    {timeout:1200}
+  );
   const air=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(air.y>afterW.y,'jump did not move upward on Y '+JSON.stringify({afterW,air}));
+  assert(air.y>afterW.y+.04&&!air.grounded,'jump did not move upward on Y '+JSON.stringify({afterW,air}));
 
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:3500});
 
