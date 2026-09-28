@@ -338,13 +338,12 @@ public class MainActivity extends Activity {
             })
             .build();
 
-        spineView = new SpineView(this, controller);
+        // Static loadFromDrawable exists in both supported Spine 4.2 and 4.3 runtimes.
+        spineView = SpineView.loadFromDrawable(drawable, this, controller);
         spineView.setContentMode(ContentMode.FIT);
         zoomViewport.removeAllViews();
         zoomViewport.addView(spineView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         zoomViewport.resetTransform();
-
-        spineView.setSkeletonDrawable(drawable);
 
         if (persist) {
             getSharedPreferences(PREFS, MODE_PRIVATE).edit()
