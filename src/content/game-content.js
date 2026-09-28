@@ -3,7 +3,7 @@
 'use strict';
 
 const scene3d={
-  spawn:{x:0,y:0,z:8,yaw:Math.PI},
+  spawn:{x:0,y:0,z:13,yaw:Math.PI},
   bounds:{minX:-46,maxX:46,minZ:-26,maxZ:31},
   road:{x:0,z:-6,width:92,depth:7.5},
   buildings:[
