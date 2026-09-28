@@ -525,7 +525,7 @@ function jump(){
   // Standing on the bottom while in water must still allow a real jump.
   if(controller.grounded){
     controller.grounded=false;
-    velocity.y=JUMP_SPEED*(waterContact?.depthInside>.25?.90:1);
+    velocity.y=JUMP_SPEED*(((waterContact?.depthInside||0)>.25)?0.90:1);
     window.PaperchalkEvents?.emit('player:jump',{x:transform.x,y:transform.y,z:transform.z,inWater:!!waterContact});
     publish();
     return true;
