@@ -102,6 +102,9 @@ class TerrainWorld{
     const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n);
     return this.getChunk(cx,cy).get(this._mod(gx,n),this._mod(gy,n));
   }
+  unloadChunk(cx,cy){
+    return this.chunks.delete(this.chunkKey(cx,cy));
+  }
   setTile(gx,gy,value){
     value=Number(value)|0;
     if(value<0||value>255)return false;
