@@ -17,6 +17,7 @@
     samples: [],
     lastSampleAt: 0,
     mirror: true,
+    latestAnimationId: null,
   };
 
   function androidStatus(msg) {
@@ -241,12 +242,139 @@
     project = ps.getState().project;
     const committed = project.animations.find(a => a.id === anim.id);
     if (committed) {
+      state.latestAnimationId = committed.id;
       as.getState().switchAnimation(committed);
       as.getState().setActiveAnimationId(committed.id);
     }
     toast('动作已写入时间轴：' + Math.round(duration / 100) / 10 + ' 秒');
     androidStatus('动作录制完成，已生成时间轴动画。关键帧：' +
       (committed?.tracks?.reduce((n,t)=>n+(t.keyframes?.length||0),0) ?? 0));
+  }
+
+  function jsonSafeValue(value) {
+    if (value == null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
+    if (ArrayBuffer.isView(value)) return Array.from(value);
+    if (Array.isArray(value)) return value.map(jsonSafeValue);
+    if (typeof value === 'object') {
+      const out = {};
+      for (const [k, v] of Object.entries(value)) out[k] = jsonSafeValue(v);
+      return out;
+    }
+    return null;
+  }
+
+  function portableMotionFromCurrent() {
+    const stores = getStores();
+    const ps = stores.project;
+    const as = stores.animation;
+    if (!ps?.getState) throw new Error('project-store-unavailable');
+
+    const project = ps.getState().project;
+    const animations = project.animations ?? [];
+    const activeId = as?.getState?.().activeAnimationId ?? state.latestAnimationId;
+    const anim = animations.find(a => a.id === activeId) ||
+      animations.find(a => a.id === state.latestAnimationId) ||
+      animations[animations.length - 1];
+    if (!anim) throw new Error('no-animation');
+
+    const byId = new Map((project.nodes ?? []).map(n => [n.id, n]));
+    const bones = (project.nodes ?? [])
+      .filter(n => n.type === 'group' && n.boneRole)
+      .map(n => {
+        const parent = n.parent ? byId.get(n.parent) : null;
+        return {
+          name: n.boneRole,
+          sourceNode: n.name ?? n.id,
+          parent: parent?.boneRole ?? null,
+          rest: {
+            x: Number(n.transform?.x ?? 0),
+            y: Number(n.transform?.y ?? 0),
+            rotation: Number(n.transform?.rotation ?? 0),
+            scaleX: Number(n.transform?.scaleX ?? 1),
+            scaleY: Number(n.transform?.scaleY ?? 1),
+            pivotX: Number(n.transform?.pivotX ?? 0),
+            pivotY: Number(n.transform?.pivotY ?? 0),
+          }
+        };
+      });
+
+    const tracks = (anim.tracks ?? []).map(track => {
+      const node = byId.get(track.nodeId);
+      return {
+        target: node?.boneRole ?? node?.name ?? track.nodeId,
+        targetType: node?.boneRole ? 'bone' : (node?.type ?? 'node'),
+        sourceNodeId: track.nodeId,
+        property: track.property,
+        keyframes: (track.keyframes ?? []).map(k => ({
+          timeMs: Number(k.time ?? 0),
+          value: jsonSafeValue(k.value),
+          easing: k.easing ?? 'linear'
+        }))
+      };
+    });
+
+    return {
+      schema: 'paperchalk.motion.v1',
+      kind: '2d-skeletal-animation',
+      name: anim.name ?? 'Animation',
+      fps: Number(anim.fps ?? 30),
+      durationMs: Number(anim.duration ?? 0),
+      coordinateSystem: {
+        axes: 'x-right,y-down',
+        rotation: 'degrees',
+        rotationAxis: '+z',
+        units: 'authoring-pixels'
+      },
+      retargeting: {
+        key: 'bone-role',
+        note: 'Match tracks by stable bone role names; source node IDs are informational only.'
+      },
+      bones,
+      tracks,
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        producer: 'PaperChalk SpineStudio',
+        version: 1
+      }
+    };
+  }
+
+  function bytesToBase64(bytes) {
+    let binary = '';
+    const step = 0x8000;
+    for (let i = 0; i < bytes.length; i += step) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + step));
+    }
+    return btoa(binary);
+  }
+
+  function safeFileStem(name) {
+    return String(name || 'motion')
+      .replace(/[\\/:*?"<>|]+/g, '_')
+      .replace(/\s+/g, '_')
+      .slice(0, 80) || 'motion';
+  }
+
+  async function exportPortableMotion() {
+    const motion = portableMotionFromCurrent();
+    const filename = safeFileStem(motion.name) + '.pcmotion.json';
+    const json = JSON.stringify(motion);
+    const bytes = new TextEncoder().encode(json);
+
+    if (!AndroidStudio.beginMotionFile(filename)) throw new Error('android-output-open-failed');
+    try {
+      const chunkSize = 96 * 1024;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        AndroidStudio.appendMotionChunk(bytesToBase64(bytes.subarray(i, Math.min(bytes.length, i + chunkSize))));
+        if ((i / chunkSize) % 8 === 0) await new Promise(r => setTimeout(r, 0));
+      }
+      AndroidStudio.endMotionFile();
+      toast('动作已保存：' + filename);
+      androidStatus('动作文件已导出，可按 bone-role 重定向到游戏骨架：' + filename);
+      return filename;
+    } catch (e) {
+      throw e;
+    }
   }
 
   async function ensureMediaPipe() {
@@ -384,6 +512,15 @@
         state.record = false;
         commitRecording();
         return 'saved-to-timeline';
+      }
+    },
+    async exportCurrentMotion() {
+      try {
+        return await exportPortableMotion();
+      } catch (e) {
+        toast('保存动作失败：' + e.message);
+        androidStatus('保存动作失败：' + e.message);
+        return 'error';
       }
     },
     recalibrate() {
