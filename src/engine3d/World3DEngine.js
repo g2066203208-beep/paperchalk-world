@@ -302,9 +302,14 @@ export class World3DEngine{
       });
       this.paperEntities.push(entity);this.scene.add(entity.root);
     }
+    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp');
+    playerTexture.colorSpace=THREE.SRGBColorSpace;
+    playerTexture.magFilter=THREE.LinearFilter;
+    playerTexture.minFilter=THREE.LinearMipmapLinearFilter;
+    playerTexture.generateMipmaps=true;
     this.playerSprite=new PaperSpriteEntity(THREE,{
-      id:'player',kind:'player',label:'',x:0,y:0,z:this.layers.actor,width:1,height:2,anchorY:1,
-      primary:'#526f86',secondary:'#e4c4a6',seed:77
+      id:'player',kind:'player',label:'',x:0,y:0,z:this.layers.actor,
+      width:1,height:2,anchorY:1,texture:playerTexture
     });
     this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
     this.playerSprite.root.add(this.healthBar.group);
