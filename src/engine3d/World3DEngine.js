@@ -302,7 +302,7 @@ export class World3DEngine{
       });
       this.paperEntities.push(entity);this.scene.add(entity.root);
     }
-    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp');
+    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp?v=hd-r1');
     playerTexture.colorSpace=THREE.SRGBColorSpace;
     playerTexture.magFilter=THREE.LinearFilter;
     playerTexture.minFilter=THREE.LinearMipmapLinearFilter;
