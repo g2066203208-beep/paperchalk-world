@@ -497,7 +497,8 @@ export class World3DEngine{
     this.debugColliders=false;this.pointerState=null;
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
     const coarse=matchMedia('(pointer:coarse)').matches;
-    this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,2));
+    this.mobileLike=coarse;
+    this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,coarse?1.5:2));
     this.renderer.setPixelRatio(this.pixelRatio);
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.setClearColor(this.fixedBackgroundColor,1);
@@ -522,7 +523,7 @@ export class World3DEngine{
     sun.name='world-sun';
     sun.castShadow=true;
     sun.position.set(18,32,14);
-    sun.shadow.mapSize.set(2048,2048);
+    sun.shadow.mapSize.set(this.mobileLike?1024:2048,this.mobileLike?1024:2048);
     sun.shadow.camera.near=.5;
     sun.shadow.camera.far=120;
     sun.shadow.camera.left=-32;sun.shadow.camera.right=32;
@@ -543,7 +544,7 @@ export class World3DEngine{
     const moon=new THREE.DirectionalLight(0x8eb6ff,.0);
     moon.name='world-moon';
     moon.castShadow=true;
-    moon.shadow.mapSize.set(1024,1024);
+    moon.shadow.mapSize.set(this.mobileLike?512:1024,this.mobileLike?512:1024);
     moon.shadow.camera.near=.5;
     moon.shadow.camera.far=110;
     moon.shadow.camera.left=-28;moon.shadow.camera.right=28;
@@ -575,7 +576,7 @@ export class World3DEngine{
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
       radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
       radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
-      maxBuildsPerFrame:this.sceneData.terrain?.maxBuildsPerFrame??5,
+      maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?3:5),
       texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
     });
     this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
@@ -929,7 +930,7 @@ export class World3DEngine{
       terrainMode:'streamed-3d-voxel-chunks',
       entityMode:'paper-sprites-in-3d',
       drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
-      sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
+      sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,
       lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
