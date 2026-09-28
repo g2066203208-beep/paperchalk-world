@@ -40,7 +40,7 @@ assert(terrain.includes('Perlin'),'Perlin detail generator missing');
 assert(terrain.includes('Cellular'),'Cellular strata generator missing');
 assert(terrain.includes('Uint8Array'),'chunk tile storage must be typed');
 assert(terrain.includes('chunkSize=64'),'64x64 single-layer chunks missing');
-assert(terrain.includes("tileSize=.25"),'0.25m terrain cell size missing');
+assert(terrain.includes("tileSize=1")&&terrain.includes("pixelsPerMeter=128"),'1m / 128px terrain scale missing');
 assert(terrain.includes('digWorld(x,y)')&&terrain.includes('placeWorld(x,y'),'dig/place terrain mutation missing');
 assert(terrain.includes('exportEdits()')&&terrain.includes('importEdits(rows)'),'terrain delta persistence missing');
 assert(terrain.includes('peekTile(gx,gy)'),'non-loading border lookup missing');
@@ -81,7 +81,7 @@ assert(!game.includes('cameraRelativeMove'),'3D camera-relative movement must be
 
 assert(content.includes("mode:'paper-stage-2.5d'"),'paper-stage content mode missing');
 assert(content.includes('stageEntities'),'paper stage entities missing');
-assert(content.includes('thickness:.25'),'terrain blocks must be true 0.25m cubes');
+assert(content.includes('thickness:1')&&content.includes('texturePixels:128'),'terrain blocks must be true 1m cubes with 128px faces');
 assert(!content.includes('buildings:[')&&!content.includes('trees:['),'legacy volumetric scene lists remain');
 assert(save.includes('CURRENT_SCHEMA=5'),'paper-stage save schema not active');
 assert(save.includes('terrainEdits'),'terrain delta save field missing');
