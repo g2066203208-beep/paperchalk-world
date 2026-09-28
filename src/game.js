@@ -102,6 +102,12 @@ const HUNGER_DRAIN_PER_SECOND=.055;
 const HUNGER_ZERO_DAMAGE_INTERVAL=6;
 const FISHING_CAST_SPEED=9.2;
 const FISHING_GRAVITY=13.5;
+const FISH_SIM_DT=.10;
+const FISH_MAX_ACTIVE=24;
+const FISH_ACTIVE_RADIUS=16;
+const FISH_DESPAWN_RADIUS=23;
+const FISH_APPROACH_RADIUS=7;
+const FISH_BITE_RADIUS=.34;
 const INVENTORY_CAPACITY=20;
 const FIXED_DT=1/60;
 const MAX_FRAME_DT=.06;
@@ -258,17 +264,28 @@ const fishing={
   state:'idle',timer:0,biteWindow:0,nextBite:0,
   x:0,y:0,z:0,vx:0,vy:0,vz:0,
   castX:0,castY:0,castZ:0,
-  fishId:null,fishName:'',result:'',
+  fishId:null,fishName:'',result:'',targetFishEntityId:null,
   seed:1
+};
+const fishWorld={
+  entities:[],nextId:1,accumulator:0,spawnAccumulator:0,
+  maxActive:FISH_MAX_ACTIVE,spatial:new Map(),lastWaterVersion:-1
 };
 function fishingSnapshot(){
   return {
     state:fishing.state,timer:fishing.timer,biteWindow:fishing.biteWindow,
     x:fishing.x,y:fishing.y,z:fishing.z,
-    fishId:fishing.fishId,fishName:fishing.fishName,result:fishing.result
+    fishId:fishing.fishId,fishName:fishing.fishName,result:fishing.result,
+    targetFishEntityId:fishing.targetFishEntityId
   };
 }
 function hungerSnapshot(){return {current:hunger.current,max:hunger.max,ratio:hunger.current/hunger.max}}
+function fishSnapshot(){
+  return fishWorld.entities.map(f=>({
+    id:f.id,species:f.species,x:f.x,y:f.y,z:f.z,
+    vx:f.vx,vy:f.vy,vz:f.vz,state:f.state,size:f.size
+  }));
+}
 let lastHungerHud=-1,lastFishingHud='';
 function updateSurvivalHud(){
   const ratio=Math.max(0,Math.min(1,hunger.current/hunger.max));
@@ -346,6 +363,7 @@ function buildSnapshot(){
     health:{current:health.current,max:health.max},
     hunger:hungerSnapshot(),
     fishing:fishingSnapshot(),
+    fish:fishSnapshot(),
     world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
     scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
     terrain:terrain.stats(),
@@ -360,7 +378,7 @@ function publish(){
   return snap;
 }
 window.PaperchalkRuntime=Object.freeze({
-  version:6,
+  version:7,
   getSnapshot:buildSnapshot,
   subscribe(listener){
     if(typeof listener!=='function')throw new TypeError('runtime listener must be a function');
@@ -578,28 +596,219 @@ function random01(){
   fishing.seed=(Math.imul(fishing.seed|0,1664525)+1013904223)|0;
   return (fishing.seed>>>0)/4294967296;
 }
-function chooseFish(){
-  const r=random01();
-  if(r<.12)return CONTENT.items['golden-paperfish'];
-  if(r<.50)return CONTENT.items['bluefin-minnow'];
-  return CONTENT.items['paper-carp'];
+function chooseFishSpecies(){
+  const phase=worldPhase(),env=terrain.sampleAtWorld(transform.x,transform.z),r=random01();
+  const rareBoost=(phase==='dawn'||phase==='dusk'?0.05:0)+(env.biome==='marsh'?0.03:0);
+  if(r<.09+rareBoost)return 'golden-paperfish';
+  if(r<.48)return 'bluefin-minnow';
+  return 'paper-carp';
 }
 function waterSurfaceNear(x,z,radius=1){
   const s=terrain.tileSize,gx=Math.floor(x/s),gz=Math.floor(z/s+.5);
   let best=null,bestD=Infinity;
   for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
-    const y=terrain.water.highestSurfaceY(gx+dx,gz+dz);
-    if(!Number.isFinite(y))continue;
+    const b=terrain.water.columnBounds(gx+dx,gz+dz);
+    if(!b)continue;
     const wx=(gx+dx+.5)*s,wz=(gz+dz)*s,d=Math.hypot(wx-x,wz-z);
-    if(d<bestD){bestD=d;best={x:wx,y,z:wz,gx:gx+dx,gz:gz+dz}}
+    if(d<bestD){bestD=d;best={x:wx,y:b.top,z:wz,gx:gx+dx,gz:gz+dz,bottom:b.bottom,top:b.top,depth:b.depth}}
   }
   return best;
 }
+function fishById(id){return fishWorld.entities.find(f=>f.id===id)||null}
+function removeFishEntity(id){
+  const i=fishWorld.entities.findIndex(f=>f.id===id);
+  if(i>=0)fishWorld.entities.splice(i,1);
+}
+function releaseFishingTarget({flee=true,remove=false}={}){
+  const id=fishing.targetFishEntityId;
+  if(id!=null){
+    const fish=fishById(id);
+    if(remove)removeFishEntity(id);
+    else if(fish){
+      fish.state=flee?'flee':'wander';fish.stateTimer=flee?2.2:0;
+      fish.targetX=fish.x+(random01()-.5)*4;fish.targetZ=fish.z+(random01()-.5)*3;
+    }
+  }
+  fishing.targetFishEntityId=null;
+}
 function resetFishing(result=''){
+  releaseFishingTarget({flee:result!=='caught',remove:false});
   fishing.state='idle';fishing.timer=0;fishing.biteWindow=0;fishing.nextBite=0;
   fishing.vx=fishing.vy=fishing.vz=0;fishing.fishId=null;fishing.fishName='';fishing.result=result;
   updateSurvivalHud();publish();
 }
+function rebuildFishSpatial(){
+  const cell=3,grid=fishWorld.spatial;grid.clear();
+  for(const fish of fishWorld.entities){
+    const key=Math.floor(fish.x/cell)+','+Math.floor(fish.z/cell);
+    let bucket=grid.get(key);if(!bucket){bucket=[];grid.set(key,bucket)}
+    bucket.push(fish);
+  }
+}
+function nearbyFish(x,z,radius){
+  const cell=3,cx=Math.floor(x/cell),cz=Math.floor(z/cell),r=Math.ceil(radius/cell),out=[];
+  for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){
+    const bucket=fishWorld.spatial.get((cx+dx)+','+(cz+dz));
+    if(!bucket)continue;
+    for(const fish of bucket)if(Math.hypot(fish.x-x,fish.z-z)<=radius)out.push(fish);
+  }
+  return out;
+}
+function fishWaterTargetNear(x,z,radius=4){
+  const s=terrain.tileSize,gx=Math.floor(x/s),gz=Math.floor(z/s+.5),tries=18;
+  for(let i=0;i<tries;i++){
+    const dx=Math.round((random01()*2-1)*radius),dz=Math.round((random01()*2-1)*radius);
+    const b=terrain.water.columnBounds(gx+dx,gz+dz);
+    if(!b||b.depth<.28)continue;
+    const margin=Math.min(.22,b.depth*.3);
+    return {
+      x:(gx+dx+.5)*s,z:(gz+dz)*s,
+      y:b.bottom+margin+random01()*Math.max(.05,b.depth-margin*2),
+      bounds:b
+    };
+  }
+  return null;
+}
+function spawnFishAtColumn(gx,gz,bounds){
+  if(!bounds||bounds.depth<.28||fishWorld.entities.length>=fishWorld.maxActive)return null;
+  const species=chooseFishSpecies();
+  const size=species==='golden-paperfish'?.72:species==='bluefin-minnow'?.46:.62;
+  const margin=Math.min(.22,bounds.depth*.3);
+  const fish={
+    id:fishWorld.nextId++,species,
+    x:(gx+.5)*terrain.tileSize+(random01()-.5)*.35,
+    z:gz*terrain.tileSize+(random01()-.5)*.35,
+    y:bounds.bottom+margin+random01()*Math.max(.05,bounds.depth-margin*2),
+    vx:(random01()-.5)*.7,vy:0,vz:(random01()-.5)*.55,
+    state:'wander',stateTimer:0,wanderTimer:.5+random01()*2,
+    targetX:0,targetY:0,targetZ:0,size
+  };
+  fishWorld.entities.push(fish);return fish;
+}
+function ensureFishPopulation(){
+  // Only inspect actual water columns near the player; no global fish simulation.
+  const s=terrain.tileSize,seen=new Set(),candidates=[];
+  for(const key of terrain.water.cells.keys()){
+    const [gx,,gz]=key.split(',').map(Number),ck=gx+','+gz;
+    if(seen.has(ck))continue;seen.add(ck);
+    const wx=(gx+.5)*s,wz=gz*s,d=Math.hypot(wx-transform.x,wz-transform.z);
+    if(d>FISH_ACTIVE_RADIUS)continue;
+    const b=terrain.water.columnBounds(gx,gz);
+    if(b&&b.depth>=.28)candidates.push({gx,gz,b,d});
+  }
+  const desired=Math.min(FISH_MAX_ACTIVE,Math.max(0,Math.floor(candidates.length*.32)));
+  let guard=80;
+  while(fishWorld.entities.length<desired&&candidates.length&&guard-->0){
+    const c=candidates[Math.floor(random01()*candidates.length)];
+    if(fishWorld.entities.some(f=>Math.hypot(f.x-(c.gx+.5)*s,f.z-c.gz*s)<.8))continue;
+    spawnFishAtColumn(c.gx,c.gz,c.b);
+  }
+}
+function acquireFishForBobber(){
+  if(fishing.state!=='waiting'||fishing.targetFishEntityId!=null)return null;
+  rebuildFishSpatial();
+  let best=null,bestD=Infinity;
+  for(const fish of nearbyFish(fishing.x,fishing.z,FISH_APPROACH_RADIUS)){
+    if(fish.state==='flee'||fish.state==='hooked')continue;
+    const d=Math.hypot(fish.x-fishing.x,fish.y-(fishing.y-.24),fish.z-fishing.z);
+    if(d<bestD){best=fish;bestD=d}
+  }
+  if(best){
+    best.state='approach';best.stateTimer=0;fishing.targetFishEntityId=best.id;
+    window.PaperchalkEvents?.emit('fishing:fish-approach',{fishId:best.id,species:best.species});
+  }
+  return best;
+}
+function updateFishEcology(dt){
+  fishWorld.accumulator+=dt;fishWorld.spawnAccumulator+=dt;
+  if(fishWorld.spawnAccumulator>=1){
+    fishWorld.spawnAccumulator=0;
+    fishWorld.entities=fishWorld.entities.filter(f=>{
+      if(f.id===fishing.targetFishEntityId)return true;
+      return Math.hypot(f.x-transform.x,f.z-transform.z)<=FISH_DESPAWN_RADIUS&&!!terrain.water.boundsAtWorld(f.x,f.z);
+    });
+    ensureFishPopulation();
+  }
+  if(fishWorld.accumulator<FISH_SIM_DT)return;
+  const step=Math.min(.2,fishWorld.accumulator);fishWorld.accumulator=0;
+  rebuildFishSpatial();
+  acquireFishForBobber();
+
+  for(const fish of fishWorld.entities){
+    if(fish.state==='hooked')continue;
+    fish.stateTimer=Math.max(0,(fish.stateTimer||0)-step);
+    const bounds=terrain.water.boundsAtWorld(fish.x,fish.z);
+    if(!bounds){
+      const target=fishWaterTargetNear(fish.x,fish.z,2);
+      if(target){fish.x=target.x;fish.y=target.y;fish.z=target.z}
+      continue;
+    }
+
+    let tx=fish.targetX,ty=fish.targetY,tz=fish.targetZ,speed=.65;
+    if(fish.state==='approach'&&fishing.state==='waiting'&&fishing.targetFishEntityId===fish.id){
+      tx=fishing.x;tz=fishing.z;ty=Math.max(bounds.bottom+.12,Math.min(bounds.top-.12,fishing.y-.24));speed=1.35;
+      const d=Math.hypot(fish.x-tx,fish.y-ty,fish.z-tz);
+      if(d<=FISH_BITE_RADIUS){
+        fish.state='nibbling';fish.vx=fish.vy=fish.vz=0;
+        fishing.state='bite';fishing.timer=0;fishing.biteWindow=1.7;
+        fishing.fishId=fish.species;fishing.fishName=CONTENT.items[fish.species]?.name||'鱼';
+        window.PaperchalkEvents?.emit('fishing:bite',{...fishingSnapshot(),fishEntityId:fish.id});
+        updateSurvivalHud();publish();continue;
+      }
+    }else if(fish.state==='flee'){
+      speed=1.7;
+      if(fish.stateTimer<=0){fish.state='wander';fish.wanderTimer=0}
+      tx=fish.targetX||fish.x+(fish.vx>=0?2:-2);tz=fish.targetZ||fish.z;
+      ty=Math.min(bounds.top-.14,Math.max(bounds.bottom+.14,fish.y));
+    }else if(fish.state==='nibbling'){
+      fish.x+=(fishing.x-fish.x)*Math.min(1,step*5);
+      fish.z+=(fishing.z-fish.z)*Math.min(1,step*5);
+      fish.y+=(fishing.y-.22-fish.y)*Math.min(1,step*5);
+      continue;
+    }else{
+      fish.state='wander';fish.wanderTimer=(fish.wanderTimer||0)-step;
+      if(fish.wanderTimer<=0||!Number.isFinite(tx)){
+        const target=fishWaterTargetNear(fish.x,fish.z,4);
+        if(target){fish.targetX=tx=target.x;fish.targetY=ty=target.y;fish.targetZ=tz=target.z}
+        fish.wanderTimer=.8+random01()*2.8;
+      }
+      speed=fish.species==='bluefin-minnow'?.92:fish.species==='golden-paperfish'?.72:.62;
+    }
+
+    if(!Number.isFinite(tx)||!Number.isFinite(ty)||!Number.isFinite(tz))continue;
+    let dx=tx-fish.x,dy=ty-fish.y,dz=tz-fish.z;
+    const len=Math.max(.001,Math.hypot(dx,dy,dz));dx/=len;dy/=len;dz/=len;
+
+    // Lightweight local separation using the 3m spatial hash.
+    let sx=0,sz=0;
+    for(const other of nearbyFish(fish.x,fish.z,1.1)){
+      if(other===fish)continue;
+      const ox=fish.x-other.x,oz=fish.z-other.z,d2=Math.max(.04,ox*ox+oz*oz);
+      sx+=ox/d2;sz+=oz/d2;
+    }
+    dx+=sx*.08;dz+=sz*.08;
+    const norm=Math.max(.001,Math.hypot(dx,dy,dz));dx/=norm;dy/=norm;dz/=norm;
+    const response=Math.min(1,step*4);
+    fish.vx+=(dx*speed-fish.vx)*response;
+    fish.vy+=(dy*speed*.55-fish.vy)*response;
+    fish.vz+=(dz*speed-fish.vz)*response;
+
+    const nx=fish.x+fish.vx*step,ny=fish.y+fish.vy*step,nz=fish.z+fish.vz*step;
+    const nb=terrain.water.boundsAtWorld(nx,nz);
+    if(nb&&ny>nb.bottom+.07&&ny<nb.top-.05){
+      fish.x=nx;fish.y=ny;fish.z=nz;
+    }else{
+      fish.vx*=-.65;fish.vz*=-.65;
+      fish.wanderTimer=0;
+      fish.y=Math.max(bounds.bottom+.08,Math.min(bounds.top-.08,fish.y));
+    }
+  }
+}
+window.PaperchalkFishEcology=Object.freeze({
+  get fish(){return fishSnapshot()},
+  get stats(){return {active:fishWorld.entities.length,maxActive:fishWorld.maxActive,spatialCells:fishWorld.spatial.size,simulationHz:Math.round(1/FISH_SIM_DT)}}
+});
+
 function castFishingRod(){
   if(!worldInteractive())return false;
   const dir=controller.facingX||1;
@@ -616,10 +825,13 @@ function castFishingRod(){
 function reelFishingRod(){
   if(fishing.state==='idle')return castFishingRod();
   if(fishing.state==='bite'){
-    const fish=chooseFish();
+    const entity=fishById(fishing.targetFishEntityId);
+    const species=entity?.species||fishing.fishId||'paper-carp';
+    const fish=CONTENT.items[species]||CONTENT.items['paper-carp'];
     fishing.fishId=fish.id;fishing.fishName=fish.name;fishing.state='reeling';fishing.timer=0;
     fishing.result='catch';
-    window.PaperchalkEvents?.emit('fishing:hooked',{...fishingSnapshot(),fishId:fish.id});
+    if(entity)entity.state='hooked';
+    window.PaperchalkEvents?.emit('fishing:hooked',{...fishingSnapshot(),fishId:fish.id,fishEntityId:entity?.id??null});
     updateSurvivalHud();publish();
     return true;
   }
@@ -653,16 +865,15 @@ function updateFishing(dt){
     const water=waterSurfaceNear(fishing.x,fishing.z,1);
     if(!water){showMapNotice('水退走了，自动收杆。',800);resetFishing('dry');return}
     fishing.x=water.x;fishing.z=water.z;fishing.y=water.y+.06+Math.sin(performance.now()*.004)*.025;
-    if(fishing.timer>=fishing.nextBite){
-      fishing.state='bite';fishing.timer=0;fishing.biteWindow=1.65;
-      window.PaperchalkEvents?.emit('fishing:bite',fishingSnapshot());
-      updateSurvivalHud();publish();return;
-    }
+    acquireFishForBobber();
   }else if(fishing.state==='bite'){
     const water=waterSurfaceNear(fishing.x,fishing.z,1);
     if(water){fishing.x=water.x;fishing.z=water.z;fishing.y=water.y-.025+Math.sin(performance.now()*.016)*.045}
     if(fishing.timer>=fishing.biteWindow){
-      fishing.state='waiting';fishing.timer=0;fishing.nextBite=1.8+random01()*3.8;
+      const missed=fishById(fishing.targetFishEntityId);
+      if(missed){missed.state='flee';missed.stateTimer=2.4;missed.targetX=missed.x+(missed.x<fishing.x?-4:4);missed.targetZ=missed.z+(random01()-.5)*2}
+      fishing.targetFishEntityId=null;fishing.fishId=null;fishing.fishName='';
+      fishing.state='waiting';fishing.timer=0;
       window.PaperchalkEvents?.emit('fishing:bite-missed',fishingSnapshot());
       updateSurvivalHud();publish();return;
     }
@@ -676,7 +887,9 @@ function updateFishing(dt){
       const fish=CONTENT.items[fishing.fishId]||CONTENT.items['paper-carp'];
       const ok=addInventoryItem({...fish,count:1});
       showMapNotice(ok?('钓到了 '+fish.name+'！'):'鱼上钩了，但背包已满！',1200);
-      window.PaperchalkEvents?.emit('fishing:caught',{fishId:fish.id,name:fish.name});
+      window.PaperchalkEvents?.emit('fishing:caught',{fishId:fish.id,name:fish.name,fishEntityId:fishing.targetFishEntityId});
+      if(ok&&fishing.targetFishEntityId!=null)removeFishEntity(fishing.targetFishEntityId);
+      fishing.targetFishEntityId=null;
       resetFishing(ok?'caught':'inventory-full');
     }
   }
@@ -1313,6 +1526,7 @@ function fixedUpdate(dt){
         if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
       }
     }
+    updateFishEcology(dt);
     updateFishing(dt);
     const hungerDrain=HUNGER_DRAIN_PER_SECOND*dt*(controller.moving?1.35:1)*(controller.inWater?1.22:1);
     hunger.current=clampHunger(hunger.current-hungerDrain);
@@ -1442,6 +1656,7 @@ function loadWorldState(){
   health.current=clampHp(save.playerHp);
   hunger.current=clampHunger(save.hunger??HUNGER_MAX);hunger.zeroDamageTimer=0;
   resetFishing();
+  fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
   controller.torchOn=!!save.torchOn;
   worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
   setInventoryFromSave(save.inventory);
