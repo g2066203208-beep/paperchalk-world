@@ -47,6 +47,107 @@ class TerrainChunk{
   }
 }
 
+class WaterWorld{
+  constructor(terrain){
+    this.terrain=terrain;
+    this.cells=new Map();
+    this.version=0;
+    this.tick=0;
+  }
+  key(gx,gy,gz){return gx+','+gy+','+gz}
+  parse(key){return key.split(',').map(Number)}
+  getLevel(gx,gy,gz){return this.cells.get(this.key(gx,gy,gz))||0}
+  setLevel(gx,gy,gz,level){
+    level=Math.max(0,Math.min(8,Math.round(Number(level)||0)));
+    const key=this.key(gx,gy,gz),prev=this.cells.get(key)||0;
+    if(prev===level)return false;
+    if(level<=0)this.cells.delete(key);else this.cells.set(key,level);
+    this.version++;
+    return true;
+  }
+  placeFull(gx,gy,gz){
+    if(this.terrain.isSolidPeek(gx,gy,gz))return {changed:false,reason:'solid',gx,gy,gz};
+    const before=this.getLevel(gx,gy,gz);
+    if(before>=8)return {changed:false,reason:'full',gx,gy,gz,level:before};
+    this.setLevel(gx,gy,gz,8);
+    return {changed:true,gx,gy,gz,previous:before,level:8,unitsAdded:8-before};
+  }
+  remove(gx,gy,gz){return this.setLevel(gx,gy,gz,0)}
+  _canOccupy(gx,gy,gz){return !this.terrain.isSolidPeek(gx,gy,gz)}
+  _transfer(a,b,amount){
+    if(amount<=0)return 0;
+    const al=this.getLevel(...a),bl=this.getLevel(...b);
+    const move=Math.max(0,Math.min(amount,al,8-bl));
+    if(!move)return 0;
+    this.setLevel(...a,al-move);this.setLevel(...b,bl+move);
+    return move;
+  }
+  step({maxTransfers=384}={}){
+    if(!this.cells.size)return {changed:false,transfers:0,cells:0};
+    let transfers=0,changed=false;
+    const entries=[...this.cells.entries()];
+    // Process lower cells first so falling water settles before spreading sideways.
+    entries.sort((a,b)=>{
+      const A=this.parse(a[0]),B=this.parse(b[0]);
+      return A[1]-B[1]||A[0]-B[0]||A[2]-B[2];
+    });
+    for(const [key] of entries){
+      if(transfers>=maxTransfers)break;
+      const [gx,gy,gz]=this.parse(key);
+      let level=this.getLevel(gx,gy,gz);
+      if(!level)continue;
+      if(!this._canOccupy(gx,gy,gz)){this.remove(gx,gy,gz);changed=true;continue}
+
+      // Gravity always wins: fill the cell below to 8 layers before horizontal flow.
+      const below=[gx,gy-1,gz];
+      if(this._canOccupy(...below)){
+        const capacity=8-this.getLevel(...below);
+        if(capacity>0){
+          const moved=this._transfer([gx,gy,gz],below,Math.min(level,capacity));
+          if(moved){transfers++;changed=true;level-=moved}
+          if(level<=0)continue;
+        }
+      }
+
+      // Four horizontal directions. One layer is 1/8 voxel high.
+      // Rotate the order every tick to avoid a permanent directional bias.
+      const dirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
+      const offset=this.tick&3;
+      for(let di=0;di<4&&transfers<maxTransfers;di++){
+        level=this.getLevel(gx,gy,gz);if(level<=1)break;
+        const d=dirs[(di+offset)&3],nx=gx+d[0],ny=gy,nz=gz+d[2];
+        if(!this._canOccupy(nx,ny,nz))continue;
+        const nl=this.getLevel(nx,ny,nz);
+        const diff=level-nl;
+        if(diff<=1)continue;
+        // Move a discrete number of eighth-layers toward equilibrium.
+        const amount=Math.max(1,Math.floor(diff/2));
+        const moved=this._transfer([gx,gy,gz],[nx,ny,nz],amount);
+        if(moved){transfers++;changed=true}
+      }
+    }
+    this.tick++;
+    return {changed,transfers,cells:this.cells.size,totalLayers:this.totalLayers()};
+  }
+  totalLayers(){let n=0;for(const level of this.cells.values())n+=level;return n}
+  exportState(){
+    const rows=[];
+    for(const [key,level] of this.cells){const [gx,gy,gz]=this.parse(key);rows.push([gx,gy,gz,level])}
+    return rows;
+  }
+  importState(rows){
+    this.cells.clear();
+    for(const row of Array.isArray(rows)?rows:[]){
+      if(!Array.isArray(row)||row.length<4)continue;
+      const [gx,gy,gz,level]=row.map(Number);
+      if(![gx,gy,gz,level].every(Number.isFinite))continue;
+      if(level>0&&!this.terrain.isSolidPeek(gx|0,gy|0,gz|0))this.cells.set(this.key(gx|0,gy|0,gz|0),Math.max(1,Math.min(8,Math.round(level))));
+    }
+    this.version++;
+  }
+  stats(){return {cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,layerHeight:this.terrain.tileSize/8,version:this.version,flowModel:'gravity-plus-four-neighbor-discrete-equilibrium'}}
+}
+
 class TerrainWorld{
   constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0,blackBackRowZ=null}={}){
     this.tileSize=Number(tileSize)||1;
@@ -57,6 +158,7 @@ class TerrainWorld{
     this.blackBackRowZ=Number.isFinite(Number(blackBackRowZ))?Math.floor(Number(blackBackRowZ)):this.interactionRowZ-1;
     this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();
     this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';
+    this.water=new WaterWorld(this);
 
     const F=global.FastNoiseLite;
     if(F){
@@ -197,6 +299,7 @@ class TerrainWorld{
     const n=this.chunkSize,cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n),cz=this._floorDiv(gz,n);
     const lx=this._mod(gx,n),ly=this._mod(gy,n),lz=this._mod(gz,n),chunk=this.getChunk(cx,cy,cz);
     if(!chunk.set(lx,ly,lz,value))return false;
+    if(this.isSolidTile(value))this.water?.remove(gx,gy,gz);
     const key=this.chunkKey(cx,cy,cz);let patch=this.edits.get(key);
     if(!patch){patch=new Map();this.edits.set(key,patch)}
     const index=chunk.index(lx,ly,lz),generated=gz===this.blackBackRowZ?this.generateBlackBackdropVoxel(gx,gy,gz):this.generateVoxel(gx,gy,gz);
@@ -264,9 +367,9 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'normal-grass',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'normal-grass',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,water:this.water?.stats?.()||null};
   }
 }
 
-global.PaperchalkTerrainRuntime=Object.freeze({TILE,TerrainWorld,TerrainChunk});
+global.PaperchalkTerrainRuntime=Object.freeze({TILE,TerrainWorld,TerrainChunk,WaterWorld});
 })(window);
