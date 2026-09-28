@@ -58,7 +58,7 @@ assert(engine.includes('class FishingRenderer'),'fishing renderer missing');
 assert(engine.includes('class FishSchoolRenderer'),'fish school renderer missing');
 assert(engine.includes('InstancedMesh'),'instanced fish rendering missing');
 assert(engine.includes("renderMode:'pooled-instanced-paper-fish'"),'pooled fish render mode missing');
-assert(engine.includes("renderMode:'line+bobber+worldspace-bite-ui'"),'world-space bite UI missing');
+assert(engine.includes("renderMode:'line+bobber+worldspace-bite-ui-v2'"),'world-space bite UI missing');
 assert(engine.includes('flatShading:true'),'flat shading missing');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
 assert(engine.includes("renderMode:'chunked-visible-surface-water-v3-3d'"),'3D water renderer missing');
