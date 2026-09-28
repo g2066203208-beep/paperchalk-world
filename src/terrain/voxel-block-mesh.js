@@ -75,7 +75,14 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
           const a=sample(x[0],x[1],x[2]);
           const b=sample(x[0]+q[0],x[1]+q[1],x[2]+q[2]);
           const sa=terrain.isSolidTile(a),sb=terrain.isSolidTile(b);
-          let face=sa===sb?0:(sa?a:-b);
+          let face=0;
+          if(sa!==sb){
+            const tile=sa?a:b;
+            const solidLocalZ=sa?x[2]:x[2]+q[2];
+            const solidGz=chunk.cz*n+solidLocalZ;
+            const renderCode=solidGz===terrain.blackBackRowZ?tile+32:tile;
+            face=sa?renderCode:-renderCode;
+          }
           if(face&&d===2){
             const solidLocalZ=sa?x[2]:x[2]+1;
             const gx=chunk.cx*n+x[0];
@@ -108,7 +115,10 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
           const positive=m>0;
           const normal=[0,0,0];normal[d]=positive?1:-1;
           const intensity=d===1?(positive?1.08:.62):d===0?(positive?.92:.82):(positive?.98:.74);
-          const color=colorFor(THREE,palette,Math.abs(m),intensity);
+          const renderCode=Math.abs(m);
+          const isBlackBack=renderCode>=32;
+          const tile=isBlackBack?renderCode-32:renderCode;
+          const color=isBlackBack?new THREE.Color(0x000000):colorFor(THREE,palette,tile,intensity);
           pushQuad(buffer,p,du,dv,normal,color,[w,h],!positive,darknessAt);
 
           for(let l=0;l<h;l++)for(let k=0;k<w;k++)mask[mi+k+l*dims[u]]=0;
@@ -134,7 +144,8 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
     vertices:buffer.vertexCount,
     dimensions:3,
     darknessVertices:buffer.darkness.filter(v=>v>.01).length,
-    greedyRatio:buffer.quads?buffer.unitFaces/buffer.quads:1
+    greedyRatio:buffer.quads?buffer.unitFaces/buffer.quads:1,
+    absoluteBlackBackRowZ:terrain.blackBackRowZ
   };
   return geometry;
 }
