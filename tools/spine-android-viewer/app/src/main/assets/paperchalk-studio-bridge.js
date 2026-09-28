@@ -782,3 +782,285 @@
   window.PaperChalkRecorder = recorder;
   androidStatus('PaperChalk 全离线扩展已就绪：PSD / 自动绑定 / 面捕 / 动作录制 / 视频导出');
 })();
+
+/* PAPERCHALK_MOBILE_V3
+ * Phone/tablet interaction layer: Chinese UI translation, pane switching,
+ * one-finger pan, two-finger pinch/pan, double-tap fit.
+ */
+(() => {
+  'use strict';
+
+  const ZH = new Map([
+    ['Stretchy Studio','PaperChalk 动画工作室'],
+    ['Layers','图层'], ['LAYERS','图层'], ['Draw Order','绘制顺序'], ['DRAW ORDER','绘制顺序'],
+    ['Inspector','属性'], ['INSPECTOR','属性'], ['Parameters','参数'], ['PARAMETERS','参数'],
+    ['Armature','骨骼'], ['ARMATURE','骨骼'], ['Animations','动画'], ['ANIMATIONS','动画'],
+    ['Timeline','时间轴'], ['TIMELINE','时间轴'], ['Staging','布局'], ['Animation','动画'],
+    ['New project','新建工程'], ['Save project','保存工程'], ['Load project','打开工程'],
+    ['Export frames','导出帧'], ['Canvas Properties','画布设置'], ['Preferences','设置'],
+    ['Adjust Joints','调整骨骼'], ['Drag yellow dots to reposition joints.','拖动关节端点调整骨骼位置。'],
+    ['Step 2: Reorder Layers','第2步：调整图层顺序'],
+    ['Rearrange layers in the Layer Panel as needed to fix any ordering issues.','在图层面板中拖动图层，修正前后遮挡顺序。'],
+    ['Step 3: Adjust Joints','第3步：调整骨骼'],
+    ['Mesh all parts','为全部部件生成网格'], ['AI Auto-Rig (DWPose)','离线 AI 自动绑骨（DWPose）'],
+    ['Next: Adjust Joints →','下一步：调整骨骼 →'], ['Next: Setup Parameters →','下一步：设置参数 →'],
+    ['Load DWPose model','内置 DWPose 自动绑骨'],
+    ['Download or upload the ~50 MB DWPose ONNX model for high-accuracy pose detection.','使用 APK 内置 DWPose ONNX 模型进行高精度姿态检测，无需联网。'],
+    ['Status:','状态：'], ['Not loaded','未加载'], ['Loaded ✓','已加载 ✓'], ['Load Model','模型'],
+    ['Load .onnx file','选择本地 .onnx'], ['Download','使用内置模型'], ['Working…','处理中…'],
+    ['← Back','← 返回'], ['Back','返回'], ['Cancel','取消'], ['Cancel Import','取消导入'],
+    ['Continue →','继续 →'], ['Skip rigging','跳过绑骨'], ['Skip','跳过'], ['Done →','完成 →'],
+    ['Review Layer Mapping','检查图层识别'], ['Split merged parts (recommended)','拆分合并部件（推荐）'],
+    ['Mesh all parts after import','导入后为所有部件生成网格'],
+    ['Step 4: Live2D Parameters','第4步：变形参数'], ['Idle preview playing','正在预览待机动作'],
+    ['Generating…','正在生成…'], ['Face','脸部'], ['Eye','眼睛'], ['Eyeball','眼球'],
+    ['Brow','眉毛'], ['Mouth','嘴部'], ['Body','身体'], ['Hair','头发'], ['Other','其他'],
+    ['Group','组'], ['Warp','网格变形'], ['Visible','可见'], ['Opacity','透明度'],
+    ['Position','位置'], ['Rotation','旋转'], ['Scale','缩放'], ['Mesh','网格'],
+    ['Remesh','重新网格化'], ['Delete Mesh','删除网格'], ['Edit Mesh','编辑网格'],
+    ['Show Skeleton','显示骨骼'], ['Hide Skeleton','隐藏骨骼'], ['Edit Joints','编辑关节'],
+    ['Auto Keyframe','自动关键帧'], ['Play','播放'], ['Pause','暂停'], ['Loop','循环'],
+    ['Add Animation','新建动画'], ['Delete','删除'], ['Rename','重命名'], ['Duration','时长'],
+    ['FPS','帧率'], ['Save','保存'], ['Load','打开'], ['Export','导出'],
+    ['Project','工程'], ['Library','工程库'], ['Settings','设置'],
+    ['Drop or','拖放或'], ['click','点击'], ['to upload a','上传'],
+    ['Character rigging and animation in seconds.','导入角色素材后即可绑骨、变形和制作动画。'],
+    ["Don't have a layered PSD?",'没有分层 PSD？'],
+    ['LAYER-IFY YOUR IMAGE','单图自动分层'], ['Offline mode','离线模式'],
+    ['Wipe current project?','清空当前工程？'], ['Wipe & Load','清空并载入'],
+    ['Replace current project?','替换当前工程？'], ['Replace Workspace','替换工作区'],
+    ['Store imported project in Library?','将导入工程保存到本地工程库？'],
+    ['Save to Library','保存到工程库'], ['Iris Offset','眼球偏移'],
+    ['Scroll to zoom · Alt+drag to pan','手机：单指拖动画布 · 双指缩放/平移'],
+    ['Limb mesh required','需要肢体网格'],
+    ['No animation','无动画']
+  ]);
+
+  function trTextNode(node) {
+    if (!node || node.nodeType !== Node.TEXT_NODE) return;
+    const raw = node.nodeValue;
+    const t = raw.trim();
+    if (!t) return;
+    const z = ZH.get(t);
+    if (z) node.nodeValue = raw.replace(t, z);
+  }
+
+  function translate(root = document.body) {
+    if (!root) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (w.nextNode()) nodes.push(w.currentNode);
+    nodes.forEach(trTextNode);
+    const attrs = ['title','placeholder','aria-label'];
+    root.querySelectorAll?.('*').forEach(el => {
+      for (const a of attrs) {
+        const v = el.getAttribute(a);
+        if (v && ZH.has(v)) el.setAttribute(a, ZH.get(v));
+      }
+    });
+  }
+
+  function stores() {
+    return {
+      editor: window.__PAPERCHALK_EDITOR_STORE__,
+      project: window.__PAPERCHALK_PROJECT_STORE__,
+      animation: window.__PAPERCHALK_ANIMATION_STORE__,
+    };
+  }
+
+  function mainCanvas() {
+    const cs = [...document.querySelectorAll('canvas')];
+    return cs.sort((a,b) => (b.clientWidth*b.clientHeight)-(a.clientWidth*a.clientHeight))[0] || null;
+  }
+
+  function fitCanvas() {
+    const { editor, project } = stores();
+    const canvas = mainCanvas();
+    const ps = project?.getState?.().project;
+    if (!editor?.getState || !canvas || !ps?.canvas) return 'not-ready';
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(1, Number(ps.canvas.width || 1));
+    const h = Math.max(1, Number(ps.canvas.height || 1));
+    const pad = 24;
+    const zoom = Math.max(0.05, Math.min(20,
+      Math.min(Math.max(1, rect.width-pad*2)/w, Math.max(1, rect.height-pad*2)/h)
+    ));
+    editor.getState().setView({
+      zoom,
+      panX: (rect.width - w*zoom)/2,
+      panY: (rect.height - h*zoom)/2
+    });
+    return 'fit';
+  }
+
+  function classifyPanels() {
+    const groups = [...document.querySelectorAll('[data-panel-group-direction="horizontal"]')];
+    const main = groups.find(g => g.querySelector('canvas'));
+    if (!main) return;
+    main.classList.add('pc-main-panels');
+    const panels = [...main.children].filter(el => el.hasAttribute?.('data-panel'));
+    for (const p of panels) {
+      p.classList.remove('pc-panel-layers','pc-panel-canvas','pc-panel-inspector');
+      if (p.querySelector('canvas')) p.classList.add('pc-panel-canvas');
+      else {
+        const tx = (p.textContent || '').toLowerCase();
+        if (tx.includes('layers') || tx.includes('图层') || tx.includes('draw order') || tx.includes('绘制顺序')) {
+          p.classList.add('pc-panel-layers');
+        } else {
+          p.classList.add('pc-panel-inspector');
+        }
+      }
+    }
+    [...main.children].filter(el => el.hasAttribute?.('data-panel-resize-handle-enabled'))
+      .forEach(el => el.classList.add('pc-panel-handle'));
+  }
+
+  function setPane(pane) {
+    classifyPanels();
+    document.documentElement.dataset.pcMobilePane = pane;
+    setTimeout(classifyPanels, 50);
+    return pane;
+  }
+
+  function setMode(mode) {
+    const { editor, project, animation } = stores();
+    if (!editor?.getState) return 'not-ready';
+    if (mode === 'animation') {
+      try { animation?.getState?.().captureRestPose(project?.getState?.().project?.nodes || []); } catch (_) {}
+    }
+    editor.getState().setEditorMode(mode);
+    setPane('canvas');
+    return mode;
+  }
+
+  const gesture = {
+    one: null,
+    pinch: null,
+    lastTap: 0,
+  };
+
+  function canvasTarget(target) {
+    const c = mainCanvas();
+    if (!c) return null;
+    if (target === c) return c;
+    return target?.closest?.('canvas') === c ? c : null;
+  }
+
+  function centerOf(t0,t1) {
+    return { x:(t0.clientX+t1.clientX)/2, y:(t0.clientY+t1.clientY)/2 };
+  }
+  function distance(t0,t1) {
+    return Math.hypot(t0.clientX-t1.clientX,t0.clientY-t1.clientY);
+  }
+
+  function onTouchStart(e) {
+    const { editor } = stores();
+    if (!editor?.getState) return;
+    const canvas = mainCanvas();
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const touches = e.touches;
+    if (touches.length >= 2) {
+      const a = touches[0], b = touches[1];
+      const ctr = centerOf(a,b);
+      const st = editor.getState();
+      const v = st.view;
+      gesture.pinch = {
+        dist: Math.max(1, distance(a,b)),
+        cx0: ctr.x - rect.left,
+        cy0: ctr.y - rect.top,
+        zoom0: v.zoom,
+        panX0: v.panX,
+        panY0: v.panY,
+        worldX: ((ctr.x-rect.left)-v.panX)/v.zoom,
+        worldY: ((ctr.y-rect.top)-v.panY)/v.zoom,
+      };
+      gesture.one = null;
+      e.preventDefault();
+      return;
+    }
+    if (touches.length === 1 && canvasTarget(e.target)) {
+      const st = editor.getState();
+      const t = touches[0];
+      gesture.one = {
+        x0:t.clientX, y0:t.clientY,
+        panX0:st.view.panX, panY0:st.view.panY,
+        moved:false,
+        start:performance.now()
+      };
+    }
+  }
+
+  function onTouchMove(e) {
+    const { editor } = stores();
+    if (!editor?.getState) return;
+    const canvas = mainCanvas();
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const touches = e.touches;
+
+    if (touches.length >= 2 && gesture.pinch) {
+      const a=touches[0], b=touches[1], ctr=centerOf(a,b);
+      const p=gesture.pinch;
+      const factor=distance(a,b)/p.dist;
+      const zoom=Math.max(0.05,Math.min(20,p.zoom0*factor));
+      const cx=ctr.x-rect.left, cy=ctr.y-rect.top;
+      editor.getState().setView({
+        zoom,
+        panX: cx - p.worldX*zoom,
+        panY: cy - p.worldY*zoom,
+      });
+      e.preventDefault();
+      return;
+    }
+
+    if (touches.length === 1 && gesture.one) {
+      const st = editor.getState();
+      // In mesh/deformation editing, one finger belongs to the actual editor
+      // tool. Outside mesh editing it is a direct canvas pan gesture.
+      if (st.meshEditMode || st.blendShapeEditMode) return;
+      const t=touches[0], g=gesture.one;
+      const dx=t.clientX-g.x0, dy=t.clientY-g.y0;
+      if (Math.hypot(dx,dy)>5) g.moved=true;
+      editor.getState().setView({panX:g.panX0+dx,panY:g.panY0+dy});
+      e.preventDefault();
+    }
+  }
+
+  function onTouchEnd(e) {
+    if (e.touches.length < 2) gesture.pinch = null;
+    if (e.touches.length === 0 && gesture.one) {
+      const g=gesture.one;
+      const now=performance.now();
+      if (!g.moved && now-g.start<280) {
+        if (now-gesture.lastTap<320) {
+          fitCanvas();
+          gesture.lastTap=0;
+        } else gesture.lastTap=now;
+      }
+      gesture.one=null;
+    }
+  }
+
+  document.addEventListener('touchstart', onTouchStart, {capture:true, passive:false});
+  document.addEventListener('touchmove', onTouchMove, {capture:true, passive:false});
+  document.addEventListener('touchend', onTouchEnd, {capture:true, passive:false});
+  document.addEventListener('touchcancel', onTouchEnd, {capture:true, passive:false});
+
+  const observer = new MutationObserver(() => {
+    translate(document.body);
+    classifyPanels();
+  });
+  observer.observe(document.documentElement, {subtree:true, childList:true});
+  translate(document.body);
+  classifyPanels();
+  setPane('canvas');
+
+  window.PaperChalkMobile = {
+    setPane, fit:fitCanvas, setMode,
+    translate:() => translate(document.body),
+    getView:() => stores().editor?.getState?.().view || null
+  };
+
+  try { AndroidStudio.status('手机模式已启用：单指拖动 · 双指缩放/平移 · 双击适应 · 中文界面'); } catch (_) {}
+})();
