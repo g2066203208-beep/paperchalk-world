@@ -78,7 +78,7 @@ class TerrainChunkRenderer{
     this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
     this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
     this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
-    this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false});
+    this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false,transparent:true,opacity:1,depthWrite:true});
     this.lightGridSize=25;
     this.lightGridRadius=(this.lightGridSize-1)>>1;
     this.lightGridData=new Uint8Array(this.lightGridSize*this.lightGridSize);
@@ -100,7 +100,13 @@ class TerrainChunkRenderer{
       uDarkTime:{value:0},
       uVoxelLightMap:{value:this.lightGridTexture},
       uVoxelLightOrigin:{value:this.lightGridOrigin},
-      uVoxelLightSpan:{value:this.lightGridSize*this.terrain.tileSize}
+      uVoxelLightSpan:{value:this.lightGridSize*this.terrain.tileSize},
+      uOcclusionCamera:{value:new THREE.Vector3()},
+      uOcclusionPlayer:{value:new THREE.Vector3()},
+      uOcclusionEnabled:{value:1},
+      uInteractionRowCenterZ:{value:this.terrain.interactionRowZ*this.terrain.tileSize},
+      uBlackBackRowCenterZ:{value:this.terrain.blackBackRowZ*this.terrain.tileSize},
+      uVoxelSize:{value:this.terrain.tileSize}
     };
     this.material.onBeforeCompile=shader=>{
       shader.uniforms.uDarkPlayer=this.darknessUniforms.uDarkPlayer;
@@ -109,11 +115,17 @@ class TerrainChunkRenderer{
       shader.uniforms.uVoxelLightMap=this.darknessUniforms.uVoxelLightMap;
       shader.uniforms.uVoxelLightOrigin=this.darknessUniforms.uVoxelLightOrigin;
       shader.uniforms.uVoxelLightSpan=this.darknessUniforms.uVoxelLightSpan;
+      shader.uniforms.uOcclusionCamera=this.darknessUniforms.uOcclusionCamera;
+      shader.uniforms.uOcclusionPlayer=this.darknessUniforms.uOcclusionPlayer;
+      shader.uniforms.uOcclusionEnabled=this.darknessUniforms.uOcclusionEnabled;
+      shader.uniforms.uInteractionRowCenterZ=this.darknessUniforms.uInteractionRowCenterZ;
+      shader.uniforms.uBlackBackRowCenterZ=this.darknessUniforms.uBlackBackRowCenterZ;
+      shader.uniforms.uVoxelSize=this.darknessUniforms.uVoxelSize;
       shader.vertexShader=shader.vertexShader
         .replace('#include <common>','#include <common>\nattribute float darkness;\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;')
         .replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;');
       shader.fragmentShader=shader.fragmentShader
-        .replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;')
+        .replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
         .replace('#include <opaque_fragment>',`
           vec2 lightUv=(vVoxelWorldPos.xy-uVoxelLightOrigin)/uVoxelLightSpan;
           float inside=step(0.0,lightUv.x)*step(lightUv.x,1.0)*step(0.0,lightUv.y)*step(lightUv.y,1.0);
@@ -122,11 +134,29 @@ class TerrainChunkRenderer{
           float effectiveDarkness=clamp(vVoxelDarkness,0.0,1.0);
           float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
           outgoingLight*=darknessVisibility;
+
+          // Camera-obstruction fade: only non-gameplay scenery layers can fade.
+          // The Z=0 interaction row and Z=-1 black underground backing are protected.
+          vec3 seg=uOcclusionPlayer-uOcclusionCamera;
+          float segLen2=max(dot(seg,seg),0.0001);
+          float t=clamp(dot(vVoxelWorldPos-uOcclusionCamera,seg)/segLen2,0.0,1.0);
+          vec3 nearest=uOcclusionCamera+seg*t;
+          float distToSight=length(vVoxelWorldPos-nearest);
+          float rowHalf=uVoxelSize*0.52;
+          bool protectedInteraction=abs(vVoxelWorldPos.z-uInteractionRowCenterZ)<=rowHalf;
+          bool protectedBlack=abs(vVoxelWorldPos.z-uBlackBackRowCenterZ)<=rowHalf;
+          float inFront=step(0.03,t)*step(t,0.97);
+          float radius=1.05;
+          float fade=1.0-smoothstep(radius*.55,radius,distToSight);
+          float occlusionAlpha=mix(1.0,0.18,fade*inFront*uOcclusionEnabled);
+          if(protectedInteraction||protectedBlack)occlusionAlpha=1.0;
+
           #include <opaque_fragment>
+          gl_FragColor.a*=occlusionAlpha;
         `);
       this.terrainShader=shader;
     };
-    this.material.customProgramCacheKey=()=> 'paperchalk-cutaway-face-darkness-v6';
+    this.material.customProgramCacheKey=()=> 'paperchalk-camera-occlusion-fade-v11';
 
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
@@ -202,6 +232,11 @@ class TerrainChunkRenderer{
     }
     this.lightGridTexture.needsUpdate=true;
   }
+  setCameraOcclusion(cameraPosition,playerPosition,enabled=true){
+    if(cameraPosition)this.darknessUniforms.uOcclusionCamera.value.copy(cameraPosition);
+    if(playerPosition)this.darknessUniforms.uOcclusionPlayer.value.copy(playerPosition);
+    this.darknessUniforms.uOcclusionEnabled.value=enabled?1:0;
+  }
   update(player,{torchOn=false,time=0}={}){
     if(!player)return;
     this._updateVoxelLightMap(player,torchOn);
@@ -267,6 +302,7 @@ export class World3DEngine{
     this.cameraTarget=new THREE.Vector3();
     this.cameraTargetSmooth=new THREE.Vector3();
     this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.paperEntities=[];
+    this.cameraOcclusion={enabled:true,radius:1.05,minOpacity:.18,entityStates:new Map(),terrainShader:true};
     this.debugColliders=false;this.pointerState=null;
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
     const coarse=matchMedia('(pointer:coarse)').matches;
@@ -531,7 +567,32 @@ export class World3DEngine{
       );
     }
     this.camera.position.lerp(desired,k);this.camera.lookAt(this.cameraTarget);
+  }
+  _updateCameraOcclusion(dt,snapshot){
+    const p=snapshot?.player;if(!p||!this.cameraOcclusion?.enabled)return;
+    const playerPos=new this.THREE.Vector3(p.x,p.y,p.z);
+    this.terrainRenderer?.setCameraOcclusion(this.camera.position,playerPos,true);
 
+    const a=this.camera.position,b=playerPos,ab=b.clone().sub(a),len2=Math.max(.0001,ab.lengthSq());
+    const k=1-Math.pow(.00003,Math.max(0,dt));
+    let faded=0;
+    for(const entity of this.paperEntities){
+      if(!entity?.root||!entity.material)continue;
+      const pos=new this.THREE.Vector3();entity.root.getWorldPosition(pos);
+      const t=Math.max(0,Math.min(1,pos.clone().sub(a).dot(ab)/len2));
+      const nearest=a.clone().addScaledVector(ab,t);
+      const radius=Math.max(this.cameraOcclusion.radius,Math.min(2.2,(entity.width||1)*.32));
+      const blocks=t>.03&&t<.97&&pos.distanceTo(nearest)<radius;
+      const target=blocks?this.cameraOcclusion.minOpacity:1;
+      const state=this.cameraOcclusion.entityStates.get(entity.id)||{opacity:1};
+      state.opacity+=(target-state.opacity)*k;
+      this.cameraOcclusion.entityStates.set(entity.id,state);
+      entity.material.transparent=true;
+      entity.material.opacity=state.opacity;
+      entity.material.depthWrite=state.opacity>.92;
+      if(state.opacity<.95)faded++;
+    }
+    this.cameraOcclusion.fadedEntities=faded;
   }
   _skyExposureAt(player){
     if(!player)return 1;
@@ -606,7 +667,7 @@ export class World3DEngine{
   update(dt,snapshot=this.lastSnapshot){
     if(snapshot)this.lastSnapshot=snapshot;
     const current=this.lastSnapshot;
-    this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateWorldTime(current);
+    this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
     const p=current?.player;
     this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
     this.healthBar?.update(this.camera,dt);
@@ -679,6 +740,7 @@ export class World3DEngine{
       lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
       undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
+      cameraOcclusion:{mode:'camera-player-capsule-fade-v1',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.05,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
       undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
