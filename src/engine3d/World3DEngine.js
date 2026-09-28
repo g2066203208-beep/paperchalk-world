@@ -572,33 +572,31 @@ export class World3DEngine{
     const sz=22;
 
     if(sun){
-      sun.intensity=daylight*3.4*(1-undergroundFactor*.92);
+      sun.intensity=daylight*3.4;
       sun.position.set(p.x+sx,p.y+sy,p.z+sz);
       sun.target.position.set(p.x,p.y-2,p.z);
       sun.target.updateMatrixWorld();
     }
     if(skyFill){
       const outdoor=.62+daylight*1.05+twilight*.28+night*.18;
-      const underground=.12+night*.06;
-      const exposed=underground+(outdoor-underground)*exposure;
-      skyFill.intensity=exposed*(1-undergroundFactor*.62);
+      skyFill.intensity=outdoor;
     }
     if(ambient){
-      ambient.intensity=(.10+daylight*.11+night*.07)*(1-undergroundFactor*.45);
+      ambient.intensity=.10+daylight*.11+night*.07;
     }
     if(moon){
-      moon.intensity=night*.72*Math.max(.35,exposure)*(1-undergroundFactor*.88);
+      moon.intensity=night*.72;
       moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
       moon.target.position.set(p.x,p.y-1,p.z);
       moon.target.updateMatrixWorld();
     }
     if(sunDisc){
-      sunDisc.visible=daylight>.02&&undergroundFactor<.15;
+      sunDisc.visible=daylight>.02;
       sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
       sunDisc.scale.setScalar(.8+daylight*.35);
     }
     if(moonDisc){
-      moonDisc.visible=night>.03&&undergroundFactor<.15;
+      moonDisc.visible=night>.03;
       moonDisc.position.set(p.x-sx*1.45,p.y+Math.max(14,sy*1.2),p.z-sz*1.1);
     }
     this.skyExposure=exposure;
@@ -613,7 +611,12 @@ export class World3DEngine{
     this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
     this.healthBar?.update(this.camera,dt);
   }
-  render(){this.renderer.render(this.scene,this.camera)}
+  render(){
+    // Hard guarantee: camera/player Y can never affect the world background.
+    this.scene.background.copy(this.fixedBackgroundColor);
+    this.renderer.setClearColor(this.fixedBackgroundColor,1);
+    this.renderer.render(this.scene,this.camera);
+  }
   _screenRay(clientX,clientY){
     const rect=this.renderer.domElement.getBoundingClientRect();
     const ndc=new this.THREE.Vector2(((clientX-rect.left)/Math.max(1,rect.width))*2-1,-((clientY-rect.top)/Math.max(1,rect.height))*2+1);
@@ -676,7 +679,7 @@ export class World3DEngine{
       lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
       undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
-      undergroundOcclusion:{mode:'culled-buried-z-faces-v9',backgroundProvidesBlack:true,noBuriedDepthFaces:true},
+      undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
