@@ -91,17 +91,17 @@ class WaterRenderer{
     const old=this.meshes.get(chunkKey);
     if(old){this.root.remove(old);old.geometry.dispose();this.meshes.delete(chunkKey)}
     const [cx,cy,cz]=chunkKey.split(',').map(Number),n=this.terrain.chunkSize,s=this.terrain.tileSize;
-    if(cz!==Math.floor(this.terrain.interactionRowZ/n))return;
-    const gz=this.terrain.interactionRowZ,z0=gz*s-s*.47,z1=gz*s+s*.47;
     const data={positions:[],indices:[],faces:0,cells:0};
     const xStart=cx*n,xEnd=xStart+n,yStart=cy*n,yEnd=yStart+n;
 
-    for(let gy=yStart;gy<yEnd;gy++)for(let gx=xStart;gx<xEnd;gx++){
+    const zStart=cz*n,zEnd=zStart+n;
+    for(let gz=zStart;gz<zEnd;gz++)for(let gy=yStart;gy<yEnd;gy++)for(let gx=xStart;gx<xEnd;gx++){
       const level=water.getLevel(gx,gy,gz);if(!level)continue;
       data.cells++;
       const h=(level/8)*s;
-      const x0=gx*s+.015*s,x1=(gx+1)*s-.015*s;
+      const x0=gx*s+.008*s,x1=(gx+1)*s-.008*s;
       const y0=gy*s,y1=y0+h;
+      const z0=gz*s-s*.492,z1=gz*s+s*.492;
 
       // Top is hidden if another water cell continues directly above.
       if(water.getLevel(gx,gy+1,gz)<=0)
@@ -124,9 +124,18 @@ class WaterRenderer{
         this._pushQuad(data,[x1,ys,z1],[x1,ys,z0],[x1,y1,z0],[x1,y1,z1]);
       }
 
-      // Gameplay water occupies only Z=0, so front/back are true exterior surfaces.
-      this._pushQuad(data,[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]);
-      this._pushQuad(data,[x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0]);
+      // Z sides use the same partial-height culling as X sides, so 3D-connected
+      // water never draws overlapping internal faces.
+      const frontH=(water.getLevel(gx,gy,gz+1)/8)*s;
+      if(h>frontH+.0001){
+        const ys=y0+frontH;
+        this._pushQuad(data,[x0,ys,z1],[x1,ys,z1],[x1,y1,z1],[x0,y1,z1]);
+      }
+      const backH=(water.getLevel(gx,gy,gz-1)/8)*s;
+      if(h>backH+.0001){
+        const ys=y0+backH;
+        this._pushQuad(data,[x1,ys,z0],[x0,ys,z0],[x0,y1,z0],[x1,y1,z0]);
+      }
     }
 
     if(!data.faces)return;
@@ -158,7 +167,7 @@ class WaterRenderer{
     const w=this.terrain.water?.stats?.()||{cells:0,totalLayers:0,levels:8,layerHeight:this.terrain.tileSize/8};
     let faces=0,renderedCells=0;
     for(const mesh of this.meshes.values()){faces+=mesh.geometry.userData.faces||0;renderedCells+=mesh.geometry.userData.cells||0}
-    return {...w,renderMode:'chunked-visible-surface-water-v2',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,drawCalls:this.meshes.size};
+    return {...w,renderMode:'chunked-visible-surface-water-v3-3d',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,threeDimensional:true,drawCalls:this.meshes.size};
   }
   dispose(){
     for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
