@@ -815,7 +815,7 @@ function runDebugCommand(command){
   const raw=String(command||'').trim();
   if(!raw)return '';
   const [cmd,...args]=raw.split(/\s+/);
-  if(cmd==='help')return 'hp 5 | hp +1 | tp X Y | dig X Y | put X Y | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
+  if(cmd==='help')return 'hp 5 | hp +1 | tp X Z [Y] | dig X Y Z | put X Y Z | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
   if(cmd==='hp'){
     const token=args[0]||'';
     const n=Number(token);
@@ -824,20 +824,20 @@ function runDebugCommand(command){
     return 'HP -> '+setPlayerHp(target)+' / '+PLAYER_MAX_HP;
   }
   if(cmd==='tp'){
-    const x=Number(args[0]),y=Number(args[1]);
-    if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：tp 0 -8';
-    teleport(x,y,{notice:'调试传送'});
-    return 'XY -> '+transform.x.toFixed(1)+', '+transform.y.toFixed(1);
+    const x=Number(args[0]),z=Number(args[1]),y=args[2]===undefined?null:Number(args[2]);
+    if(!Number.isFinite(x)||!Number.isFinite(z)||(y!==null&&!Number.isFinite(y)))return '用法：tp X Z [Y]';
+    teleport(x,z,y,{notice:'调试传送'});
+    return 'XYZ -> '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+', '+transform.z.toFixed(1);
   }
   if(cmd==='dig'){
-    const x=Number(args[0]),y=Number(args[1]);
-    if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：dig X Y';
-    const r=digTerrainAt(x,y);return r.changed?'已挖除方块':'挖掘失败：'+(r.reason||'AIR');
+    const x=Number(args[0]),y=Number(args[1]),z=Number(args[2]);
+    if(![x,y,z].every(Number.isFinite))return '用法：dig X Y Z';
+    const r=digTerrainAt(x,y,z);return r.changed?'已挖除方块':'挖掘失败：'+(r.reason||'AIR');
   }
   if(cmd==='put'){
-    const x=Number(args[0]),y=Number(args[1]);
-    if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：put X Y';
-    const r=placeTerrainAt(x,y);return r.changed?'已放置方块':'放置失败：'+(r.reason||'OCCUPIED');
+    const x=Number(args[0]),y=Number(args[1]),z=Number(args[2]);
+    if(![x,y,z].every(Number.isFinite))return '用法：put X Y Z';
+    const r=placeTerrainAt(x,y,z);return r.changed?'已放置方块':'放置失败：'+(r.reason||'OCCUPIED');
   }
   if(cmd==='tool'){
     const mode=String(args[0]||'').toLowerCase();
