@@ -25,6 +25,14 @@
   <div id="threeWorldLayer" class="three-world-layer" aria-hidden="true" hidden></div>
 
   <div id="paperClock" class="world-clock" aria-label="世界时间">06:00</div>
+  <div id="survivalHud" class="survival-hud" aria-label="生存状态">
+    <div class="survival-row hunger-row" title="饥饿值">
+      <span class="survival-icon" aria-hidden="true">🍖</span>
+      <div class="survival-meter"><i id="hungerFill"></i></div>
+      <b id="hungerValue">100</b>
+    </div>
+    <div id="fishingStatusHud" class="fishing-status-hud" aria-live="polite"></div>
+  </div>
   <div id="mapNotice" class="map-notice" role="status" aria-live="polite"></div>
 
   <div class="world-toolbar">
@@ -88,7 +96,7 @@
     <button id="jumpBtn" class="combat-btn" type="button">跳</button>
     <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
   </div>
-  <div class="desktop-control-hint">A/D 左右移动 · Space 跳跃 · 左键挖 · 右键放 · 1–5 快捷栏 · T 火把 · C 蹲下 · J 攻击</div>
+  <div class="desktop-control-hint">A/D 左右移动 · Space 跳跃/游泳 · 左键挖 · 右键放 · 1–5 快捷栏 · 钓鱼竿再次使用收杆 · T 火把 · C 蹲下 · J 攻击</div>
   <div class="joystick-hint">左侧摇杆：左右移动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="横向移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
