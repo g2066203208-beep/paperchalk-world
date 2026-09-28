@@ -98,6 +98,10 @@ const content={
       id:'hand-torch',name:'手持火把',desc:'点亮后跟随玩家移动，为洞穴和夜间提供暖色局部光。',
       weight:.35,consumable:false,action:'toggle-torch',glyph:'🔥',
       light:{color:'#ffb35c',intensity:2.6,distance:10,decay:1.7}
+    },
+    'water-bucket':{
+      id:'water-bucket',name:'水桶',desc:'选择后进入放水模式。每次放下一整格水，内部按 8 层离散水位向下和四周流动直到平衡。',
+      weight:1.0,consumable:false,action:'water-tool',glyph:'💧'
     }
   }
 };
