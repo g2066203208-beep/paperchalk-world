@@ -75,7 +75,15 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
           const a=sample(x[0],x[1],x[2]);
           const b=sample(x[0]+q[0],x[1]+q[1],x[2]+q[2]);
           const sa=terrain.isSolidTile(a),sb=terrain.isSolidTile(b);
-          mask[mi++]=sa===sb?0:(sa?a:-b);
+          let face=sa===sb?0:(sa?a:-b);
+          if(face&&d===2){
+            const solidLocalZ=sa?x[2]:x[2]+1;
+            const gx=chunk.cx*n+x[0];
+            const gy=chunk.cy*n+x[1];
+            const gz=chunk.cz*n+solidLocalZ;
+            if(gz===terrain.interactionRowZ&&gy<terrain.surfaceCell(gx,gz))face=0;
+          }
+          mask[mi++]=face;
         }
       }
       x[d]++;
@@ -133,58 +141,6 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
 
 // Compatibility alias for older imports during migration.
 export const buildSingleLayerCubeGeometry=buildVoxelChunkGeometry;
-
-export function buildUndergroundOcclusionGeometry(THREE,terrain,chunk){
-  const n=chunk.size,s=terrain.tileSize;
-  const localZ=terrain.interactionRowZ-chunk.cz*n;
-  const positions=[],indices=[];
-  let vertexCount=0,faces=0;
-  if(localZ<0||localZ>=n){
-    const empty=new THREE.BufferGeometry();
-    empty.userData={faces:0,vertices:0};
-    return empty;
-  }
-  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
-    const tile=chunk.get(x,y,localZ);
-    if(!terrain.isSolidTile(tile))continue;
-
-    const gx=chunk.cx*n+x,gy=chunk.cy*n+y,gz=terrain.interactionRowZ;
-    const surface=terrain.surfaceCell(gx,gz);
-    if(gy>=surface)continue; // only truly buried blocks
-
-    const x0=x*s,x1=(x+1)*s,y0=y*s,y1=(y+1)*s;
-    const zFront=(localZ+1)*s+.006;
-    const zBack=localZ*s-.006;
-
-    // +Z cutaway face
-    let base=vertexCount;
-    positions.push(
-      x0,y0,zFront,
-      x1,y0,zFront,
-      x1,y1,zFront,
-      x0,y1,zFront
-    );
-    indices.push(base,base+1,base+2,base,base+2,base+3);
-    vertexCount+=4;faces++;
-
-    // -Z cutaway face, so whichever side the camera is on stays absolutely black
-    base=vertexCount;
-    positions.push(
-      x1,y0,zBack,
-      x0,y0,zBack,
-      x0,y1,zBack,
-      x1,y1,zBack
-    );
-    indices.push(base,base+1,base+2,base,base+2,base+3);
-    vertexCount+=4;faces++;
-  }
-  const geometry=new THREE.BufferGeometry();
-  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  geometry.setIndex(new THREE.Uint32BufferAttribute(indices,1));
-  geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  geometry.userData={faces,vertices:vertexCount,mode:'absolute-black-buried-z-faces'};
-  return geometry;
-}
 
 export function createVoxelGridTexture(THREE,{size=128}={}){
   const canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
