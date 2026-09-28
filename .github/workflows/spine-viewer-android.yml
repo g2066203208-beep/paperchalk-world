@@ -53,6 +53,36 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Build integrated Stretchy Studio
+        working-directory: .
+        run: |
+          rm -rf /tmp/stretchystudio
+          git clone https://github.com/MangoLion/stretchystudio.git /tmp/stretchystudio
+          cd /tmp/stretchystudio
+          git checkout 24a83a27ba43e43e9d2e3de5e33994594e6199c2
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('vite.config.js')
+          s = p.read_text()
+          s = s.replace("export default defineConfig({", "export default defineConfig({\n  base: './',", 1)
+          p.write_text(s)
+
+          for path, line in [
+              ('src/store/projectStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_PROJECT_STORE__ = useProjectStore;\n"),
+              ('src/store/animationStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_ANIMATION_STORE__ = useAnimationStore;\n"),
+              ('src/store/parameterStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_PARAMETER_STORE__ = useParameterStore;\n"),
+          ]:
+              q = Path(path)
+              q.write_text(q.read_text() + line)
+          PY
+          npm ci
+          npm run build
+          TARGET="$GITHUB_WORKSPACE/tools/spine-android-viewer/app/src/main/assets/studio"
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp -R dist/. "$TARGET/"
+          cp LICENSE "$TARGET/LICENSE.StretchyStudio.txt"
+
       - name: Build debug APK
         run: gradle :app:assembleDebug -PspineVersion=${{ matrix.spine }} --stacktrace
 
