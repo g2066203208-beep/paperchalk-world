@@ -13,6 +13,7 @@ const scene3d={
     chunkSize:16,
     seed:24681357,
     visibleChunkRadiusXZ:3,
+    interactionRowZ:0,
     visibleChunkRadiusY:2,
     maxBuildsPerFrame:5
   },
