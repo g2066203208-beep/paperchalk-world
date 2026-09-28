@@ -83,6 +83,9 @@ public class StudioActivity extends Activity {
         bar.addView(button("录制动作", v -> runJs(
             "window.PaperChalkMocap?PaperChalkMocap.toggleRecord():'bridge-loading'"
         )));
+        bar.addView(button("保存动作", v -> runJs(
+            "window.PaperChalkMocap?PaperChalkMocap.exportCurrentMotion():'bridge-loading'"
+        )));
         bar.addView(button("导出视频", v -> runJs(
             "window.PaperChalkRecorder?PaperChalkRecorder.start():'bridge-loading'"
         )));
@@ -261,6 +264,11 @@ public class StudioActivity extends Activity {
         private File legacyFile;
         private String currentName;
 
+        private OutputStream motionStream;
+        private Uri motionUri;
+        private File motionLegacyFile;
+        private String motionName;
+
         @JavascriptInterface public synchronized boolean beginVideo(String mimeType) {
             closeQuietly(false);
             String ext = mimeType != null && mimeType.contains("mp4") ? ".mp4" : ".webm";
@@ -304,6 +312,83 @@ public class StudioActivity extends Activity {
 
         @JavascriptInterface public synchronized void endVideo() {
             closeQuietly(true);
+        }
+
+        @JavascriptInterface public synchronized boolean beginMotionFile(String requestedName) {
+            closeMotionQuietly(false);
+            String safe = requestedName == null ? "PaperChalkMotion.pcmotion.json" :
+                requestedName.replaceAll("[\\\\/:*?\"<>|]", "_");
+            if (!safe.endsWith(".json")) safe += ".pcmotion.json";
+            motionName = safe;
+            try {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    ContentValues values = new ContentValues();
+                    values.put(MediaStore.Downloads.DISPLAY_NAME, motionName);
+                    values.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                    values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PaperChalk");
+                    values.put(MediaStore.Downloads.IS_PENDING, 1);
+                    motionUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                    if (motionUri == null) return false;
+                    motionStream = getContentResolver().openOutputStream(motionUri, "w");
+                } else {
+                    File dir = new File(getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), "PaperChalk");
+                    if (!dir.exists()) dir.mkdirs();
+                    motionLegacyFile = new File(dir, motionName);
+                    motionStream = new FileOutputStream(motionLegacyFile);
+                }
+                return motionStream != null;
+            } catch (Exception e) {
+                closeMotionQuietly(false);
+                runOnUiThread(() -> showError("无法创建动作文件", e));
+                return false;
+            }
+        }
+
+        @JavascriptInterface public synchronized void appendMotionChunk(String base64Data) {
+            if (motionStream == null || base64Data == null || base64Data.isEmpty()) return;
+            try {
+                byte[] bytes = Base64.decode(base64Data, Base64.DEFAULT);
+                motionStream.write(bytes);
+            } catch (Exception e) {
+                runOnUiThread(() -> showError("写入动作文件失败", e));
+            }
+        }
+
+        @JavascriptInterface public synchronized void endMotionFile() {
+            closeMotionQuietly(true);
+        }
+
+        private void closeMotionQuietly(boolean publish) {
+            try {
+                if (motionStream != null) {
+                    motionStream.flush();
+                    motionStream.close();
+                }
+            } catch (Exception ignored) { }
+            motionStream = null;
+
+            if (Build.VERSION.SDK_INT >= 29 && motionUri != null) {
+                try {
+                    if (publish) {
+                        ContentValues values = new ContentValues();
+                        values.put(MediaStore.Downloads.IS_PENDING, 0);
+                        getContentResolver().update(motionUri, values, null, null);
+                    } else {
+                        getContentResolver().delete(motionUri, null, null);
+                    }
+                } catch (Exception ignored) { }
+            }
+
+            if (publish && motionName != null) {
+                final String name = motionName;
+                runOnUiThread(() -> {
+                    status.setText("动作已保存：Downloads/PaperChalk/" + name);
+                    Toast.makeText(StudioActivity.this, "动作已保存，可直接作为游戏动画资源导入", Toast.LENGTH_LONG).show();
+                });
+            }
+            motionUri = null;
+            motionLegacyFile = null;
+            motionName = null;
         }
 
         @JavascriptInterface public void toast(String message) {
