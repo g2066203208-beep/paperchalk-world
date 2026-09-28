@@ -14,7 +14,7 @@ try{
   await page.locator('#settingsBtn').click();
   assert(await page.locator('#pageSettings').evaluate(el=>el.classList.contains('active')),'settings did not open');
   await page.locator('#settingTimeScale').selectOption('2');
-  await page.locator('[data-back="menu"]').first().click();
+  await page.locator('#pageSettings [data-back="menu"]').click();
   assert(await page.locator('#pageMenu').evaluate(el=>el.classList.contains('active')),'menu did not restore');
 
   await page.locator('#authBtn').click();
@@ -46,6 +46,19 @@ try{
   assert(await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')),'debug panel did not open');
   await page.locator('[data-debug-action="damage1"]').click();
   assert((await page.evaluate(()=>window.PaperchalkHealth.state.hp))===9,'debug health control failed');
+
+  const stageDefault=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageDefault.enabled&&stageDefault.axis==='z','paper-stage view must default to fixed Z axis '+JSON.stringify(stageDefault));
+  await page.locator('[data-debug-action="stageview"]').click();
+  const stageOff=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageOff.enabled===false,'debug stage-view toggle did not unlock camera '+JSON.stringify(stageOff));
+  await page.locator('[data-debug-action="stageview"]').click();
+  await page.locator('[data-debug-action="stageaxis"]').click();
+  const stageX=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageX.enabled===true&&stageX.axis==='x','debug stage-axis toggle did not switch to X '+JSON.stringify(stageX));
+  await page.locator('[data-debug-action="stageaxis"]').click();
+  const stageZ=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageZ.axis==='z','debug stage-axis toggle did not return to Z '+JSON.stringify(stageZ));
   await page.locator('#debugCloseBtn').click();
 
   const handled=await page.evaluate(()=>window.PaperchalkHandleBack());
