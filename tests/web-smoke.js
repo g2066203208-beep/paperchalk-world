@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('voxel3d-r41'),'build key missing');
+assert(html.includes('voxel3d-r42'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
@@ -27,7 +27,7 @@ assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(mesher.includes('buildVoxelChunkGeometry'),'voxel mesher missing');
 assert(terrain.includes('class WaterWorld'),'WaterWorld missing');
-assert(terrain.includes("flowModel:'priority-flood-shared-volume-hydrostatic-v2'"),'global hydrostatic solver missing');
+assert(terrain.includes("flowModel:'priority-flood-shared-volume-hydrostatic-v3-visible-flow'"),'global hydrostatic solver missing');
 assert(terrain.includes("flowPlane:'full-x-z-with-y-gravity'"),'full 3D water plane missing');
 assert(terrain.includes('settleAll()'),'global water settle missing');
 assert(terrain.includes('_heapPush'),'priority flood heap missing');
@@ -61,8 +61,15 @@ assert(engine.includes("renderMode:'pooled-instanced-paper-fish'"),'pooled fish 
 assert(engine.includes("renderMode:'line+bobber+worldspace-bite-ui-v2'"),'world-space bite UI missing');
 assert(engine.includes('flatShading:true'),'flat shading missing');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
-assert(engine.includes("renderMode:'chunked-visible-surface-water-v4-animated'"),'3D water renderer missing');
+assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
+
+assert(engine.includes("paperchalk-whole-voxel-color-v15"),'whole voxel tint cache key missing');
+assert(engine.includes("vVoxelWorldNormal"),'whole voxel owner normal missing');
+assert(engine.includes("vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01)"),'whole voxel tint ownership missing');
+assert(game.includes("fishing.state='landed'"),'land cast fishing state missing');
+assert(game.includes("waterTarget||(terrainTarget?"),'cast-anywhere terrain fallback missing');
+assert(terrain.includes("sources:sources.slice(0,24)"),'water wavefront source tracking missing');
