@@ -247,6 +247,7 @@ let frameHandle=0;
 let lastNow=0;
 let accumulator=0;
 let saveAccumulator=0;
+let waterStepAccumulator=0;
 let cameraYaw=settings.camera3d.yaw;
 let keyboardCrouch=false;
 let mobileCrouch=false;
@@ -504,14 +505,28 @@ function placeTerrainCell(gx,gy,gz,tile=TerrainRuntime.TILE.DIRT,{persist=true}=
 }
 function digTerrainAt(x,y,z=transform.z,options){const c=terrain.worldToCell(x,y,z);return digTerrainCell(c.gx,c.gy,c.gz,options)}
 function placeTerrainAt(x,y,z=transform.z,tile=TerrainRuntime.TILE.DIRT,options){const c=terrain.worldToCell(x,y,z);return placeTerrainCell(c.gx,c.gy,c.gz,tile,options)}
+function placeWaterCell(gx,gy,gz,{persist=true}={}){
+  if(!isInteractionRow(gz))return {changed:false,reason:'interaction-row-only',interactionRowZ:INTERACTION_ROW_Z};
+  const center=terrain.cellCenter(gx,gy,gz);
+  if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
+  if(terrain.isSolidPeek(gx,gy,gz))return {changed:false,reason:'solid'};
+  const result=terrain.water.placeFull(gx,gy,gz);
+  if(result.changed){
+    window.PaperchalkEvents?.emit('liquid:changed',{...result,action:'place-water',levels:8});
+    publish();if(persist)saveWorldState();
+  }
+  return result;
+}
+function placeWaterAt(x,y,z=transform.z,options){const c=terrain.worldToCell(x,y,z);return placeWaterCell(c.gx,c.gy,c.gz,options)}
 let terrainToolMode='dig';
 function setTerrainTool(mode,{notice=false}={}){
-  terrainToolMode=mode==='place'?'place':'dig';
+  terrainToolMode=mode==='water'?'water':mode==='place'?'place':'dig';
   terrainDigBtn.classList.toggle('is-active',terrainToolMode==='dig');
-  terrainPlaceBtn.classList.toggle('is-active',terrainToolMode==='place');
+  terrainPlaceBtn.classList.toggle('is-active',terrainToolMode==='place'||terrainToolMode==='water');
   terrainDigBtn.setAttribute('aria-pressed',String(terrainToolMode==='dig'));
-  terrainPlaceBtn.setAttribute('aria-pressed',String(terrainToolMode==='place'));
-  if(notice)showMapNotice(terrainToolMode==='dig'?'挖掘模式':'放置模式');
+  terrainPlaceBtn.setAttribute('aria-pressed',String(terrainToolMode==='place'||terrainToolMode==='water'));
+  if(notice)showMapNotice(terrainToolMode==='dig'?'挖掘模式':terrainToolMode==='water'?'放水模式：每格 8 层':'放置模式');
+  renderQuickbar?.();
   return terrainToolMode;
 }
 terrainDigBtn.addEventListener('click',()=>setTerrainTool('dig',{notice:true}));
@@ -520,14 +535,17 @@ terrainPlaceBtn.addEventListener('click',()=>setTerrainTool('place',{notice:true
 window.PaperchalkTerrainActions=Object.freeze({
   dig:digTerrainAt,
   place:placeTerrainAt,
+  water:placeWaterAt,
   digCell:digTerrainCell,
   placeCell:placeTerrainCell,
+  waterCell:placeWaterCell,
   setTool:setTerrainTool,
   targetAtScreen(x,y){return window.Paperchalk3D?.screenToTerrainCell?.(x,y,{showCursor:false})||null},
   get tool(){return terrainToolMode},
   get interactionRowZ(){return INTERACTION_ROW_Z},
   get stats(){return {...terrain.stats(),interactionRowZ:INTERACTION_ROW_Z}},
-  get edits(){return terrain.exportEdits()}
+  get edits(){return terrain.exportEdits()},
+  get water(){return terrain.water.exportState()}
 });
 
 let terrainPointer=null;
@@ -557,18 +575,23 @@ worldEl.addEventListener('pointerup',event=>{
   const target=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
   if(!target)return;
 
-  const placing=event.button===2||(pointer?.pointerType==='touch'&&terrainToolMode==='place');
-  const result=placing
-    ?placeTerrainCell(target.placeGx,target.placeGy,target.placeGz)
-    :digTerrainCell(target.gx,target.gy,target.gz);
+  const waterMode=terrainToolMode==='water';
+  const placing=waterMode||event.button===2||(pointer?.pointerType==='touch'&&terrainToolMode==='place');
+  const result=waterMode
+    ?placeWaterCell(target.placeGx,target.placeGy,target.placeGz)
+    :placing
+      ?placeTerrainCell(target.placeGx,target.placeGy,target.placeGz)
+      :digTerrainCell(target.gx,target.gy,target.gz);
 
   if(result.changed){
-    showMapNotice(placing?'已放置方块':'已挖除方块',500);
+    showMapNotice(waterMode?'已放下 1 立方米水（8 层）':placing?'已放置方块':'已挖除方块',650);
     return;
   }
   if(result.reason==='out-of-reach')showMapNotice('太远了');
   else if(result.reason==='interaction-row-only')showMapNotice('只能交互指定这一排方块');
   else if(result.reason==='player-overlap')showMapNotice('不能把方块放在自己身上');
+  else if(result.reason==='solid')showMapNotice('这里被方块占据');
+  else if(result.reason==='full')showMapNotice('这里的水已经是 8 层');
   else if(placing)showMapNotice('这里已有方块');
   else showMapNotice('这里没有可挖方块');
 });
@@ -586,7 +609,7 @@ function renderQuickbar(){
     glyph.textContent=item?.glyph||item?.name?.slice(0,1)||'';
     count.textContent=item&&Number(item.count||1)>1?String(item.count):'';
     button.classList.toggle('is-selected',inventorySelected===i);
-    button.classList.toggle('is-active',item?.action==='toggle-torch'&&controller.torchOn);
+    button.classList.toggle('is-active',(item?.action==='toggle-torch'&&controller.torchOn)||(item?.action==='water-tool'&&terrainToolMode==='water'));
     button.setAttribute('aria-label',item?('快捷栏 '+(i+1)+'：'+item.name+(item.action==='toggle-torch'?(controller.torchOn?'，已点亮':'，已熄灭'):''))
       :('快捷栏 '+(i+1)+'：空'));
   }
@@ -598,6 +621,7 @@ function activateQuickSlot(index){
   renderInventory();
   if(!item)return false;
   if(item.action==='toggle-torch')return toggleTorch();
+  if(item.action==='water-tool')return setTerrainTool('water',{notice:true});
   return useSelectedItem();
 }
 quickSlots.forEach((button,index)=>button.addEventListener('click',()=>activateQuickSlot(index)));
@@ -683,6 +707,11 @@ function useSelectedItem(){
   }
   if(item.action==='toggle-torch'){
     toggleTorch();
+    renderInventory();
+    return true;
+  }
+  if(item.action==='water-tool'){
+    setTerrainTool('water',{notice:true});
     renderInventory();
     return true;
   }
@@ -1020,6 +1049,12 @@ function fixedUpdate(dt){
   if(active){
     worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
     paperClock.textContent=formatClock();
+    waterStepAccumulator+=dt;
+    if(waterStepAccumulator>=.10){
+      waterStepAccumulator=0;
+      const liquidStep=terrain.water.step({maxTransfers:384});
+      if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
+    }
   }
   saveAccumulator+=dt;
   if(active&&saveAccumulator>=5){saveAccumulator=0;saveWorldState()}
@@ -1060,9 +1095,10 @@ function defaultSave(session){
     player:{...sceneData.spawn},
     playerHp:PLAYER_MAX_HP,
     terrainEdits:[],
+    waterCells:[],
     torchOn:false,
     mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
-    inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:null)
+    inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:i===1?{...CONTENT.items['water-bucket'],count:1}:null)
   };
 }
 function importLegacySave(session,targetKey){
@@ -1112,6 +1148,7 @@ function saveWorldState(){
   save.playerHp=health.current;
   save.torchOn=controller.torchOn;
   save.terrainEdits=terrain.exportEdits();
+  save.waterCells=terrain.water.exportState();
   save.inventory=inventorySnapshot();
   save.mapState=save.mapState||{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false};
   save.updatedAt=Date.now();
@@ -1122,6 +1159,7 @@ function loadWorldState(){
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
   terrain.importEdits(save.terrainEdits);
+  terrain.water.importState(save.waterCells);
   const p=save.player||sceneData.spawn;
   transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
   transform.z=PLAYER_ROW_CENTER_Z;
@@ -1137,6 +1175,11 @@ function loadWorldState(){
   setInventoryFromSave(save.inventory);
   if(!inventoryItems.some(item=>item?.id==='hand-torch')){
     inventoryItems[0]={...itemClone(CONTENT.items['hand-torch']),count:1};
+    renderInventory();
+  }
+  if(!inventoryItems.some(item=>item?.id==='water-bucket')){
+    const waterSlot=inventoryItems.findIndex(v=>!v);
+    if(waterSlot>=0)inventoryItems[waterSlot]={...itemClone(CONTENT.items['water-bucket']),count:1};
     renderInventory();
   }
   paperClock.textContent=formatClock();
