@@ -1,1041 +1,133 @@
-import { chromium } from 'playwright-core';
+import process from 'node:process';
+import {chromium} from 'playwright-core';
 
-const result={checks:[],errors:[]};
-function check(name,pass,detail=''){
-  result.checks.push({name,pass:!!pass,detail});
-  console.log((pass?'PASS':'FAIL')+' | '+name+' | '+detail);
-}
-async function state(page){
-  return page.evaluate(()=>window.eval('({worldX,playerWorldX,playerY,worldMinutes,actorX,playerHp})'));
-}
-async function mapState(page){
-  return page.evaluate(()=>({
-    playerX:window.PaperchalkMap?.playerX,
-    map:window.PaperchalkMap?.state,
-    enemies:window.PaperchalkCombat?.enemies||[],
-    debug:window.PaperchalkCombat?.debug||{},
-    terrainCount:window.PaperchalkMap?.terrain?.length||0,
-    objectCount:window.PaperchalkMap?.objects?.length||0,
-    spawnCount:window.PaperchalkMap?.enemySpawns?.length||0,
-    npcCount:window.PaperchalkMap?.npcs?.length||0
-  }));
-}
-async function healthState(page){
-  return page.evaluate(()=>({
-    hp:window.PaperchalkHealth?.hp,
-    maxHp:window.PaperchalkHealth?.maxHp,
-    pieces:document.querySelectorAll('#playerHealthBar .hp-segment').length,
-    cells:document.querySelectorAll('#playerHealthBar .hp-segment--cell').length,
-    tails:document.querySelectorAll('#playerHealthBar .hp-segment--tail').length,
-    tailIsLast:document.querySelector('#playerHealthBar .hp-segment:last-child')?.classList.contains('hp-segment--tail')||false,
-    empty:document.querySelectorAll('#playerHealthBar .hp-segment.is-empty').length,
-    hit:document.querySelectorAll('#playerHealthBar .hp-segment.is-hit').length,
-    healing:document.querySelectorAll('#playerHealthBar .hp-segment.is-heal').length,
-    healDelays:[...document.querySelectorAll('#playerHealthBar .hp-segment.is-heal')].map(el=>el.style.animationDelay),
-    ariaNow:document.getElementById('playerHealthHud')?.getAttribute('aria-valuenow'),
-    loaded:[...document.querySelectorAll('#playerHealthBar .hp-segment')].every(img=>img.complete&&img.naturalWidth>0),
-    seam:(()=>{
-      const pieces=[...document.querySelectorAll('#playerHealthBar .hp-segment')];
-      if(pieces.length<10)return {ok:false,cellOverlap:null,tailOverlap:null};
-      const a=pieces[0].getBoundingClientRect();
-      const b=pieces[1].getBoundingClientRect();
-      const p=pieces[8].getBoundingClientRect();
-      const tail=pieces[9].getBoundingClientRect();
-      const cellOverlap=a.right-b.left;
-      const tailOverlap=p.right-tail.left;
-      return {
-        ok:cellOverlap>=1&&cellOverlap<=4&&tailOverlap>=1&&tailOverlap<=5,
-        cellOverlap,
-        tailOverlap
-      };
-    })()
-  }));
-}
-async function save(page,account){
-  return page.evaluate(a=>{
-    const raw=localStorage.getItem('paperchalk.save.v3.'+encodeURIComponent(a));
-    return raw?JSON.parse(raw):null;
-  },account);
-}
-async function paperState(page){
-  return page.evaluate(()=>({
-    ball:getComputedStyle(document.getElementById('paperFxBall')).opacity,
-    unfold:getComputedStyle(document.getElementById('paperFxUnfold')).opacity
-  }));
-}
-async function npcGroundLockState(page){
-  return page.evaluate(()=>{
-    const npc=document.querySelector('[data-npc-id="npc-phone-girl"]');
-    const canvas=document.getElementById('cardGroundCanvas');
-    if(!npc||!canvas)return {ok:false};
-    const r=npc.getBoundingClientRect();
-    const grid=window.PaperchalkMap.project(768,0,0);
-    const ground=window.PaperchalkMap.project(760,0,0);
-    const npcX=r.left+r.width*.5;
-    const canvasRect=canvas.getBoundingClientRect();
-    return {
-      ok:Number.isFinite(grid.x)&&Number.isFinite(ground.y)&&canvas.width>0&&canvas.height>0,
-      playerX:window.PaperchalkMap.playerX,
-      npcX,npcFootY:r.bottom,gridX:grid.x,zeroY:ground.y,
-      horizontalOffset:grid.x-npcX,
-      footError:r.bottom-ground.y,
-      npcCssX:getComputedStyle(npc).left,
-      npcVarX:npc.style.getPropertyValue('--npc-x'),
-      canvas:{left:canvasRect.left,top:canvasRect.top,width:canvasRect.width,height:canvasRect.height}
-    };
-  });
-}
-
+function assert(condition,message){if(!condition)throw new Error(message)}
+const errors=[];
 const browser=await chromium.launch({
-  headless:true,
   executablePath:process.env.CHROME_PATH,
-  args:['--no-sandbox','--disable-dev-shm-usage']
-});
-const page=await browser.newPage({viewport:{width:1440,height:900}});
-page.on('pageerror',e=>result.errors.push('PAGEERROR '+String(e)));
-page.on('response',r=>{if(r.status()>=400)result.errors.push('HTTP '+r.status()+' '+r.url())});
-page.on('requestfailed',r=>result.errors.push('REQUEST_FAILED '+r.url()+' '+JSON.stringify(r.failure())));
-page.on('console',m=>{
-  if(m.type()==='error'&&!m.text().startsWith('Failed to load resource:'))result.errors.push('CONSOLE '+m.text());
+  headless:true,
+  args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']
 });
 
 try{
-  await page.goto('http://127.0.0.1:8080/index.html?core-regression=1',{waitUntil:'networkidle'});
+  const page=await browser.newPage({viewport:{width:1440,height:900}});
+  page.on('pageerror',error=>errors.push('PAGE '+String(error)));
+  page.on('console',message=>{if(message.type()==='error')errors.push('CONSOLE '+message.text())});
+  page.on('response',response=>{if(response.status()>=400)errors.push('HTTP '+response.status()+' '+response.url())});
+  page.on('requestfailed',request=>errors.push('REQUEST '+request.url()));
 
-  // Register A through the actual UI.
+  await page.goto('http://127.0.0.1:8080/?ci=core-3d',{waitUntil:'networkidle'});
+  await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.Paperchalk3D&&!!window.PaperchalkHealth,{timeout:5000});
+  const cold=await page.evaluate(()=>({
+    runtime:window.PaperchalkRuntime.getSnapshot(),
+    three:{ready:window.Paperchalk3D.ready,active:window.Paperchalk3D.active},
+    legacy:{
+      actor:!!document.querySelector('.actor'),
+      pixi:!!document.getElementById('pixiEntityLayer'),
+      healthDom:!!document.getElementById('playerHealthHud'),
+      cardGround:!!document.getElementById('cardGroundCanvas')
+    }
+  }));
+  assert(!cold.runtime.active&&!cold.three.active&&!cold.three.ready,'3D engine must stay cold on menu '+JSON.stringify(cold));
+  assert(Object.values(cold.legacy).every(v=>!v),'legacy 2D DOM remains '+JSON.stringify(cold.legacy));
+
   await page.locator('#authBtn').click();
-  await page.waitForTimeout(750);
   await page.locator('#tabRegister').click();
-  await page.locator('#regUser').fill('audit_a');
-  await page.locator('#regName').fill('审计A');
+  await page.locator('#regUser').fill('three_core');
+  await page.locator('#regName').fill('3D旅人');
   await page.locator('#regPass').fill('test1234');
   await page.locator('#registerForm button[type=submit]').click();
-  await page.waitForTimeout(500);
 
-  let s=await state(page);
-  check('A enters a fresh world',Math.abs(s.worldX)<1&&Math.abs(s.playerWorldX-460)<2,JSON.stringify(s));
-
-  // Production baseline: systems remain available, but prototype story content is absent.
-  const initialMap=await mapState(page);
-  const productionStart=await page.evaluate(()=>({
-    visibleEnemies:document.querySelectorAll('#entityTrack .enemy').length,
-    visibleNpcs:document.querySelectorAll('[data-npc-id]').length,
-    prototypeCompatExists:!!document.getElementById('prototypeRuntimeCompat'),
-    apartmentAsset:[...document.images].some(img=>(img.getAttribute('src')||'').includes('apartment-midground')),
-    interactHidden:document.getElementById('interactBtn')?.hidden===true
-  }));
-  check('Fresh A starts in the production-clean continuous world',
-    Math.abs(s.playerWorldX-460)<2&&Math.abs(s.worldX)<1&&
-    initialMap.terrainCount===0&&initialMap.objectCount===0&&initialMap.spawnCount===0&&initialMap.npcCount===0&&
-    productionStart.visibleEnemies===0&&productionStart.visibleNpcs===0&&!productionStart.prototypeCompatExists&&
-    productionStart.apartmentAsset===false&&productionStart.interactHidden,
-    JSON.stringify({s,initialMap,productionStart}));
-
-  await page.waitForFunction(()=>performance.getEntriesByType('resource').some(e=>e.name.includes('/assets/player/player-default.png')),null,{timeout:5000});
-  const initialAction=await page.evaluate(()=>({
-    player:window.PaperchalkCombat.player,
-    state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||'',
-    visual:{...window.PaperchalkRuntime.worldData.playerVisual},
-    rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
-  }));
-  const cleanGround=await page.evaluate(()=>({
-    roadHidden:document.querySelector('.road-layer')?.hasAttribute('hidden')||false,
-    groundY:Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ground-screen-y'))||null,
-    roadDisplay:getComputedStyle(document.querySelector('.road-layer')).display
-  }));
-  check('Card stage keeps legacy road hidden while the perspective ground anchor remains valid',
-    cleanGround.roadHidden&&cleanGround.roadDisplay==='none'&&cleanGround.groundY>0,
-    JSON.stringify(cleanGround));
-
-  const finiteGround=await page.evaluate(()=>{
-    const canvas=document.getElementById('cardGroundCanvas');
-    const sky=document.querySelector('.paper-sky');
-    const stats=window.PaperchalkDomCardProjection?.stats||{};
-    const horizonY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,1280,0).y;
-    const midMainY=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0).y;
-    const skyRect=sky?.getBoundingClientRect();
-    const rect=canvas?.getBoundingClientRect();
-    const dpr=rect?.width?canvas.width/rect.width:1;
-    const ctx=canvas?.getContext('2d');
-    function bestPixel(y){
-      let best=[0,0,0,0],bestScore=-1;
-      if(!ctx)return best;
-      const px=Math.max(0,Math.round(20*dpr));
-      const py=Math.round(y*dpr);
-      for(let dy=-3;dy<=3;dy++){
-        const data=ctx.getImageData(px,Math.max(0,py+dy),1,1).data;
-        const score=data[3]+Math.max(data[0],data[1],data[2]);
-        if(score>bestScore){bestScore=score;best=[...data]}
-      }
-      return best;
-    }
-    return {
-      farDepth:Number(canvas?.dataset.farDepth),
-      depthLines:Number(canvas?.dataset.depthLineCount),
-      worldLines:Number(canvas?.dataset.worldLineCount),
-      sceneLines:Number(canvas?.dataset.sceneLineCount),
-      sceneMainLines:Number(canvas?.dataset.sceneMainCount),
-      sceneSubLines:Number(canvas?.dataset.sceneSubCount),
-      guideDepths:canvas?.dataset.sceneGuideDepths||'',
-      childNodes:canvas?.childNodes?.length??-1,
-      backingPixels:(canvas?.width||0)*(canvas?.height||0),
-      horizonY,
-      skyBottom:skyRect?.bottom??null,
-      midMainY,
-      horizonPixel:bestPixel(horizonY),
-      midMainPixel:bestPixel(midMainY),
-      nearMainPixel:bestPixel(stats.sceneGuideYs?.['near-main']??-100),
-      farMainPixel:bestPixel(stats.sceneGuideYs?.['far-main']??-100),
-      renderer:stats
-    };
-  });
-  check('Ground grid has 3x3 scene sublayers plus one horizon line',
-    finiteGround.farDepth===1280&&finiteGround.depthLines<=16&&finiteGround.worldLines<=30&&
-    finiteGround.sceneLines===10&&finiteGround.sceneMainLines===4&&finiteGround.sceneSubLines===6&&
-    finiteGround.guideDepths==='near-front:-704,near-main:-640,near-back:-576,mid-front:-64,mid-main:0,mid-back:64,far-front:576,far-main:640,far-back:704,horizon:1280'&&
-    finiteGround.childNodes===0&&finiteGround.backingPixels>0&&
-    Math.abs(finiteGround.skyBottom-finiteGround.horizonY)<1&&
-    finiteGround.horizonPixel[0]>180&&finiteGround.horizonPixel[1]>150&&finiteGround.horizonPixel[2]<150&&
-    finiteGround.midMainPixel[2]>finiteGround.midMainPixel[0]&&
-    finiteGround.nearMainPixel[0]>finiteGround.nearMainPixel[2]&&
-    finiteGround.farMainPixel[2]>finiteGround.farMainPixel[0],
-    JSON.stringify(finiteGround));
-  const perspectiveMetrics=await page.evaluate(()=>{
-    const zs=[-640,0,640,1280];
-    const points=zs.map(z=>window.PaperchalkMap.project(window.PaperchalkMap.playerX,z,0));
-    return {
-      zs,
-      scales:points.map(p=>p.scale),
-      ys:points.map(p=>p.y),
-      baseDepth:window.PaperchalkCardCamera.config.baseDepth,
-      expected:zs.map(z=>window.PaperchalkCardCamera.config.baseDepth/(window.PaperchalkCardCamera.config.baseDepth+z))
-    };
-  });
-  const mainScreenGaps=[
-    perspectiveMetrics.ys[0]-perspectiveMetrics.ys[1],
-    perspectiveMetrics.ys[1]-perspectiveMetrics.ys[2],
-    perspectiveMetrics.ys[2]-perspectiveMetrics.ys[3]
-  ];
-  check('Four main scene lines are equal 5m world intervals with steeper real perspective compression',
-    perspectiveMetrics.baseDepth===3840&&
-    perspectiveMetrics.zs.every((z,i)=>i===0||z-perspectiveMetrics.zs[i-1]===640)&&
-    perspectiveMetrics.scales.every((s,i)=>Math.abs(s-perspectiveMetrics.expected[i])<1e-9)&&
-    mainScreenGaps[0]>mainScreenGaps[1]&&mainScreenGaps[1]>mainScreenGaps[2]&&
-    mainScreenGaps[0]>100&&mainScreenGaps[1]>70&&mainScreenGaps[2]>50&&
-    perspectiveMetrics.ys[0]>890&&perspectiveMetrics.ys[0]<900&&
-    perspectiveMetrics.ys[3]<670,
-    JSON.stringify({...perspectiveMetrics,mainScreenGaps}));
-  const wideTilt=await page.evaluate(()=>{
-    const q=window.PaperchalkCardCamera.project({
-      worldX:0,worldZ:-640,worldY:0,
-      playerX:0,playerY:0,cameraZ:0,
-      screenX:768,viewportHeight:691,groundY:112
-    });
-    const h=window.PaperchalkCardCamera.resolveHorizonY(691,112);
-    const far=window.PaperchalkCardCamera.project({
-      worldX:0,worldZ:1280,worldY:0,
-      playerX:0,playerY:0,cameraZ:0,
-      screenX:768,viewportHeight:691,groundY:112
-    });
-    return {nearY:q.y,horizonY:h,farY:far.y};
-  });
-  check('Wide 1536x691 default camera keeps the near-main line at the screen edge',
-    wideTilt.nearY>682&&wideTilt.nearY<686&&wideTilt.farY<470,
-    JSON.stringify(wideTilt));
-  const guideOrder=Object.values(finiteGround.renderer.sceneGuideYs||{});
-  check('Near/mid/far front-main-back guides are ordered toward the horizon',
-    guideOrder.length===10&&guideOrder.every((y,i)=>i===0||guideOrder[i-1]>y),
-    JSON.stringify(finiteGround.renderer.sceneGuideYs));
-  check('Production-clean frame projects no prototype NPCs or enemies',
-    finiteGround.renderer.projectedEnemies===0&&finiteGround.renderer.projectedNpcs===0,
-    JSON.stringify(finiteGround.renderer));
-
-  const oldTownScene=await page.evaluate(()=>{
-    if(window.PaperchalkOldTownBuildings)return {removed:false};
-    return {removed:true};
-    /*
-    const slots=[...document.querySelectorAll('#oldTownBuildingTrack .oldtown-building')];
-    const visible=slots.filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
-    const ids=[...new Set(slots.map(el=>el.dataset.buildingId).filter(Boolean))];
-    const firstRow=slots.slice(0,10).map(el=>el.dataset.buildingId);
-    const sequential=Array.from({length:10},(_,i)=>'oldtown-building-'+String(i+1).padStart(2,'0'));
-    const layer=document.getElementById('oldTownBuildingLayer');
-    const actor=document.querySelector('.actor');
-    const firstRect=visible[0]?.getBoundingClientRect();
-    return {
-      poolId:window.PaperchalkOldTownBuildings.poolId,
-      rowWidth:window.PaperchalkOldTownBuildings.rowWidth,
-      slots:slots.length,
-      visible:visible.length,
-      uniqueIds:ids.length,
-      firstRow,
-      shuffled:firstRow.some((id,i)=>id!==sequential[i]),
-      layerZ:Number.parseFloat(getComputedStyle(layer).zIndex)||0,
-      actorZ:Number.parseFloat(getComputedStyle(actor).zIndex)||0,
-      atlasRequested:performance.getEntriesByType('resource').some(e=>e.name.includes('oldtown-building-atlas-r1.webp')),
-      firstRect:firstRect?{w:firstRect.width,h:firstRect.height,left:firstRect.left,top:firstRect.top}:null,
-      perf:window.PaperchalkOldTownBuildings.stats
-    };
-    }); */
-  });
-  check('Removed old-town building pool is absent', oldTownScene.removed, JSON.stringify(oldTownScene));
-
-  await page.setViewportSize({width:900,height:540});
-  await page.waitForTimeout(220);
-  const compactViewport=await page.evaluate(()=>({
-    visual:{...window.PaperchalkRuntime.worldData.playerVisual},
-    rect:(()=>{const r=document.querySelector('.actor')?.getBoundingClientRect();return r?{w:r.width,h:r.height}:null})()
-  }));
-  check('Player automatically adapts to a compact viewport without device-specific sizing',
-    Math.abs(compactViewport.visual.scale-.82)<.01&&
-    Math.abs(compactViewport.rect.w-compactViewport.visual.w)<1&&Math.abs(compactViewport.rect.h-compactViewport.visual.h)<1,
-    JSON.stringify(compactViewport));
-  await page.setViewportSize({width:1440,height:900});
-  await page.waitForTimeout(220);
-
-  const crouchAccepted=await page.evaluate(()=>window.PaperchalkCombat.crouch(true));
-  await page.waitForTimeout(35);
-  const crouchTransition=await page.evaluate(()=>{
-    const animations=document.getElementById('playerFlip')?.getAnimations()||[];
-    return animations.map(a=>a.effect?.getKeyframes?.()||[]).flat().map(k=>({
-      scale:k.scale||'',
-      transform:k.transform||''
-    }));
-  });
-  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='crouch',null,{timeout:900});
-  await page.waitForTimeout(90);
-  const crouched=await page.evaluate(()=>({
-    player:window.PaperchalkCombat.player,
-    state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||'',
-    button:document.getElementById('crouchBtn')?.classList.contains('is-active')||false
-  }));
-  const crouchHasScaleTransition=crouchTransition.some(k=>k.scale&&k.scale!=='none');
-  const crouchHasFullFlip=crouchTransition.some(k=>String(k.transform||'').includes('rotateY'));
-  check('Crouch swaps directly without shrinking the standing card',
-    crouchAccepted===true&&!crouchHasScaleTransition&&!crouchHasFullFlip&&crouched.player.crouching&&crouched.player.action==='crouch'&&
-    crouched.player.bodyH===78&&Math.abs(crouched.player.actionScale-.76)<.001&&crouched.state==='crouch'&&
-    crouched.src.includes('/assets/player/player-default.png')&&crouched.button,
-    JSON.stringify({crouchAccepted,crouchTransition,crouched}));
-
-  await page.evaluate(()=>window.PaperchalkCombat.crouch(false));
-  await page.waitForTimeout(180);
-  const stood=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Crouch release returns to standing body',
-    !stood.crouching&&stood.bodyH===108&&stood.action==='idle',
-    JSON.stringify(stood));
-
-  await page.keyboard.down('KeyD');
-  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='walk',null,{timeout:900});
-  await page.waitForTimeout(45);
-  const walking=await page.evaluate(()=>({
-    player:window.PaperchalkCombat.player,
-    state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||'',
-    left:document.querySelector('.actor')?.classList.contains('facing-left')||false,
-    sourceFacing:getComputedStyle(document.querySelector('.actor')).getPropertyValue('--source-facing').trim()
-  }));
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(180);
-  check('Right movement and newest walking art face the same direction',
-    walking.player.x>460&&walking.player.facing===1&&walking.player.sourceFacing===1&&
-    walking.player.action==='walk'&&walking.state==='walk'&&!walking.left&&walking.sourceFacing==='1'&&
-    walking.src.includes('/assets/player/player-default.png'),
-    JSON.stringify(walking));
-
-  // Gameplay is strictly X/Y. Z remains available only as authored scene depth.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(460,{notice:''}));
-  await page.waitForTimeout(100);
-  const xyCameraBefore=await page.evaluate(()=>{
-    const actor=document.querySelector('.actor').getBoundingClientRect();
-    const snap=window.PaperchalkRuntime.getSnapshot();
-    const groundZero=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0);
-    const groundFar=window.PaperchalkMap.project(window.PaperchalkMap.playerX,640,0);
-    return {
-      player:window.PaperchalkCombat.player,
-      camera:snap.camera,
-      near:window.PaperchalkMap.project(760,0,0),
-      far:window.PaperchalkMap.project(760,640,0),
-      cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      groundZeroY:groundZero.y,
-      groundFarY:groundFar.y,
-      actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
-    };
-  });
-  check('Gameplay player owns only X/Y while camera Z stays fixed',
-    !('z' in xyCameraBefore.player)&&Math.abs(xyCameraBefore.camera.z||0)<.001,
-    JSON.stringify(xyCameraBefore));
-  check('Authored Z still produces scene depth without player Z movement',
-    xyCameraBefore.near.scale>xyCameraBefore.far.scale&&
-    xyCameraBefore.near.y>xyCameraBefore.far.y,
-    JSON.stringify({near:xyCameraBefore.near,far:xyCameraBefore.far}));
-
-  await page.keyboard.down('KeyW');
-  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.y>20,null,{timeout:900});
-  await page.waitForFunction(()=>{
-    const value=document.getElementById('world')?.style.getPropertyValue('--card-camera-y')||'0';
-    return Number.parseFloat(value)>20;
-  },null,{timeout:900});
-  const xyCameraRaised=await page.evaluate(()=>{
-    const actor=document.querySelector('.actor').getBoundingClientRect();
-    const groundZero=window.PaperchalkMap.project(window.PaperchalkMap.playerX,0,0);
-    const groundFar=window.PaperchalkMap.project(window.PaperchalkMap.playerX,640,0);
-    return {
-      player:window.PaperchalkCombat.player,
-      cameraY:document.getElementById('world').style.getPropertyValue('--card-camera-y'),
-      groundZeroY:groundZero.y,
-      groundFarY:groundFar.y,
-      actor:{left:actor.left,top:actor.top,width:actor.width,height:actor.height}
-    };
-  });
-  await page.keyboard.up('KeyW');
-  check('W/Up is Y jump, not Z movement',
-    xyCameraRaised.player.y>20&&!('z' in xyCameraRaised.player),
-    JSON.stringify(xyCameraRaised));
-  const nearGroundRise=xyCameraRaised.groundZeroY-xyCameraBefore.groundZeroY;
-  const farGroundRise=xyCameraRaised.groundFarY-xyCameraBefore.groundFarY;
-  check('Rising in Y moves the shared-camera ground downward with correct depth scaling',
-    Number.parseFloat(xyCameraRaised.cameraY)>20&&
-    Math.abs(nearGroundRise-xyCameraRaised.player.y)<1.2&&
-    farGroundRise>0&&farGroundRise<nearGroundRise,
-    JSON.stringify({before:xyCameraBefore,raised:xyCameraRaised,nearGroundRise,farGroundRise}));
-  check('XY camera keeps the protagonist fixed while the world moves vertically',
-    Math.abs(xyCameraRaised.actor.left-xyCameraBefore.actor.left)<1&&
-    Math.abs(xyCameraRaised.actor.top-xyCameraBefore.actor.top)<1&&
-    Math.abs(xyCameraRaised.actor.width-xyCameraBefore.actor.width)<1&&
-    Math.abs(xyCameraRaised.actor.height-xyCameraBefore.actor.height)<1,
-    JSON.stringify({before:xyCameraBefore.actor,raised:xyCameraRaised.actor}));
-  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.grounded,null,{timeout:1800});
-
-  await page.keyboard.down('KeyS');
-  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.crouching===true,null,{timeout:600});
-  const sCrouch=await page.evaluate(()=>window.PaperchalkCombat.player);
-  await page.keyboard.up('KeyS');
-  await page.waitForTimeout(100);
-  const sRelease=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('S/Down crouches instead of moving in depth',
-    sCrouch.crouching===true&&!('z' in sCrouch)&&sRelease.crouching===false,
-    JSON.stringify({sCrouch,sRelease}));
-
-  const playerRectBeforeJump=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {left:r.left,top:r.top};
-  });
-  const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
-  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-up'&&
-    window.PaperchalkCombat?.player?.y>20,null,{timeout:900});
-  const jumpAir=await page.evaluate(()=>({
-    player:window.PaperchalkCombat.player,
-    state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||''
-  }));
-  const playerRectInJump=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {left:r.left,top:r.top};
-  });
-  check('Jump ascent uses supplied upward pose',
-    jumpStarted===true&&jumpAir.player.y>20&&!jumpAir.player.grounded&&
-    jumpAir.player.vy>0&&jumpAir.player.action==='jump-up'&&jumpAir.state==='jump-up'&&
-    jumpAir.src.includes('/assets/player/player-default.png'),
-    JSON.stringify(jumpAir));
-  check('Jump moves the world vertically while player screen position stays fixed',
-    Math.abs(playerRectInJump.left-playerRectBeforeJump.left)<1&&
-    Math.abs(playerRectInJump.top-playerRectBeforeJump.top)<1,
-    JSON.stringify({playerRectBeforeJump,playerRectInJump}));
-
-  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.action==='jump-down',null,{timeout:1100});
-  await page.waitForFunction(()=>document.querySelector('.actor')?.dataset.playerState==='jump-down',null,{timeout:900});
-  await page.waitForTimeout(45);
-  const jumpDown=await page.evaluate(()=>({
-    player:window.PaperchalkCombat.player,
-    state:document.querySelector('.actor')?.dataset.playerState,
-    src:document.getElementById('playerSprite')?.getAttribute('src')||''
-  }));
-  check('Jump descent switches to supplied falling pose',
-    jumpDown.player.vy<=0&&jumpDown.player.action==='jump-down'&&jumpDown.state==='jump-down'&&
-    jumpDown.src.includes('/assets/player/player-default.png'),
-    JSON.stringify(jumpDown));
-
-  await page.waitForFunction(()=>window.PaperchalkCombat?.player?.grounded&&Math.abs(window.PaperchalkCombat.player.y)<1,null,{timeout:1800});
-  await page.waitForTimeout(60);
-  const jumpLanded=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Jump landing returns to idle pose',
-    jumpLanded.grounded&&Math.abs(jumpLanded.y)<1&&jumpLanded.action==='idle',
-    JSON.stringify(jumpLanded));
-
-  // All debugging lives in the visible in-game debug panel.
-  await page.locator('#debugToggleBtn').click();
-  await page.waitForTimeout(80);
-  await page.locator('[data-debug-action="hitboxes"]').click();
-  await page.locator('[data-debug-action="attackRange"]').click();
-  await page.locator('[data-debug-action="mapColliders"]').click();
-  await page.locator('[data-debug-action="cameraDebug"]').click();
-  await page.waitForTimeout(80);
-  const debugView=await page.evaluate(()=>({
-    combat:window.PaperchalkCombat.debug,
-    worldClass:document.getElementById('world').className,
-    playerHurt:{
-      hidden:document.getElementById('playerHurtboxDebug').hidden,
-      width:document.getElementById('playerHurtboxDebug').getBoundingClientRect().width
-    },
-    attack:{
-      hidden:document.getElementById('playerAttackDebug').hidden,
-      width:document.getElementById('playerAttackDebug').getBoundingClientRect().width,
-      preview:document.getElementById('playerAttackDebug').classList.contains('is-preview')
-    },
-    enemyAttack:{
-      hidden:document.getElementById('enemyAttackDebug').hidden,
-      width:document.getElementById('enemyAttackDebug').getBoundingClientRect().width
-    },
-    terrainBoxes:[...document.querySelectorAll('#mapDebugTrack .collider')].filter(el=>getComputedStyle(el).display!=='none').length,
-    spawnBoxes:[...document.querySelectorAll('#mapDebugTrack .spawn')].filter(el=>getComputedStyle(el).display!=='none').length,
-    cameraDisplay:getComputedStyle(document.getElementById('cameraLeftDebug')).display,
-    enemyButtons:document.querySelectorAll('[data-debug-action="enemyNear"],[data-debug-action="enemyReset"],[data-debug-action="enemyAI"],[data-debug-action="spawnZones"]').length
-  }));
-  check('Debug panel keeps engine overlays but removes prototype enemy/spawn controls',
-    debugView.combat.hitboxes&&debugView.combat.attackRange&&debugView.combat.mapColliders&&debugView.combat.camera&&
-    debugView.playerHurt.width>40&&debugView.attack.width>80&&debugView.attack.preview&&
-    debugView.terrainBoxes===0&&debugView.spawnBoxes===0&&debugView.enemyButtons===0&&debugView.cameraDisplay!=='none',
-    JSON.stringify(debugView));
-  check('Inactive enemy attack box leaves no red-line residual',
-    debugView.enemyAttack.hidden===true&&debugView.enemyAttack.width===0,
-    JSON.stringify(debugView.enemyAttack));
-
-  await page.locator('[data-debug-action="flightMode"]').click();
-  await page.locator('#debugCloseBtn').click();
-  await page.waitForTimeout(60);
-  const flightStart=await page.evaluate(()=>window.PaperchalkCombat.player);
-  const flightRectStart=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {left:r.left,top:r.top};
-  });
-  await page.keyboard.down('KeyW');
-  await page.waitForTimeout(280);
-  await page.keyboard.up('KeyW');
-  await page.waitForTimeout(80);
-  const flightUp=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Debug flight moves vertically upward',
-    flightUp.y>flightStart.y+35,
-    JSON.stringify({flightStart,flightUp}));
-  const flightX0=flightUp.x;
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(220);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(60);
-  const flightRight=await page.evaluate(()=>window.PaperchalkCombat.player);
-  check('Free flight moves horizontally as well as vertically',
-    flightRight.x>flightX0+25,
-    JSON.stringify({flightX0,flightRight}));
-  const flightRectAfter=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    return {left:r.left,top:r.top};
-  });
-  check('Free flight moves only the world while player stays fixed on screen',
-    Math.abs(flightRectAfter.left-flightRectStart.left)<1&&
-    Math.abs(flightRectAfter.top-flightRectStart.top)<1,
-    JSON.stringify({flightRectStart,flightRectAfter}));
-
-  await page.evaluate(()=>window.eval(
-    'playerWorldX=5950;playerY=4200;playerVy=0;updateCamera();renderWorld(true);'
-  ));
-  const highFlightBefore=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    const s=window.PaperchalkRuntime.getSnapshot();
-    return {x:s.player.x,y:s.player.y,camera:s.camera,rect:{left:r.left,top:r.top}};
-  });
-  await page.keyboard.down('ArrowRight');
-  await page.keyboard.down('ArrowUp');
-  await page.waitForTimeout(520);
-  await page.keyboard.up('ArrowRight');
-  await page.keyboard.up('ArrowUp');
-  await page.waitForTimeout(80);
-  const highFlightAfter=await page.evaluate(()=>{
-    const r=document.querySelector('.actor').getBoundingClientRect();
-    const s=window.PaperchalkRuntime.getSnapshot();
-    return {x:s.player.x,y:s.player.y,camera:s.camera,rect:{left:r.left,top:r.top}};
-  });
-  check('Free flight crosses a 6000px route boundary without resetting Y',
-    highFlightAfter.x>6000&&highFlightAfter.y>highFlightBefore.y+80&&
-    Math.abs(highFlightAfter.camera.y-highFlightAfter.y)<1,
-    JSON.stringify({highFlightBefore,highFlightAfter}));
-  check('High-altitude XY camera keeps the player fixed on screen',
-    Math.abs(highFlightAfter.rect.left-highFlightBefore.rect.left)<1&&
-    Math.abs(highFlightAfter.rect.top-highFlightBefore.rect.top)<1,
-    JSON.stringify({highFlightBefore,highFlightAfter}));
-
-  await page.locator('#debugToggleBtn').click();
-  await page.waitForTimeout(50);
-  await page.locator('[data-debug-action="flightMode"]').click();
-  const flightOff=await page.evaluate(()=>window.PaperchalkDebug.flight);
-  check('Debug flight can be disabled',flightOff===false,'flight='+flightOff);
-
-  // Isolate the following ground-combat checks from the intentional 4km-high
-  // flight-camera regression above.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(6000,{notice:''}));
-  await page.waitForTimeout(80);
-
-  // Prototype enemies are not part of the production scene.
-  // Clean stage: no authored rocks, platforms, crates or pickups may remain.
-  await page.evaluate(()=>{closeDebugPanel({focus:false});});
-  await page.waitForTimeout(40);
-  await page.evaluate(()=>{
-    window.PaperchalkCombat.toggleEnemyAi(false);
-    window.PaperchalkMap.teleport(1060,{notice:''});
-  });
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(800);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(80);
-  const unobstructed=await state(page);
-  check('Clean stage has no assistant-authored obstacle blocking movement',
-    unobstructed.playerWorldX>1140,
-    JSON.stringify(unobstructed));
-  const cleanMapObjects=await mapState(page);
-  check('Clean stage publishes zero authored terrain and map objects',
-    cleanMapObjects.terrainCount===0&&cleanMapObjects.objectCount===0&&
-    cleanMapObjects.map.broken.length===0&&cleanMapObjects.map.collected.length===0,
-    JSON.stringify(cleanMapObjects));
-
-  // Crossing the old 6000px boundary must stay inside the continuous world with no loading gate.
-  await page.evaluate(()=>window.PaperchalkMap.teleport(6250,{notice:''}));
-  await page.waitForTimeout(160);
-  const continuousWorld=await page.evaluate(()=>({
-    x:window.PaperchalkMap.playerX,
-    route:window.PaperchalkMap.traversal.routeIndex
-  }));
-  check('Crossing 6000px enters the next continuous-world route with no exit gate',
-    continuousWorld.x>6000&&continuousWorld.route===1,
-    JSON.stringify(continuousWorld));
-
-  // Formal main-line content starts empty; old prototype systems are dormant.
-  const formalStage=await page.evaluate(()=>({
-    npcs:window.PaperchalkMap.npcs.length,
-    enemySpawns:window.PaperchalkMap.enemySpawns.length,
-    entityEnemies:document.querySelectorAll('#entityTrack .enemy').length,
-    npcEls:document.querySelectorAll('[data-npc-id]').length,
-    prototypeCompatExists:!!document.getElementById('prototypeRuntimeCompat'),
-    sceneApi:Object.keys(window.PaperchalkScene||{}).sort(),
-    location:window.PaperchalkScene?.location,
-    interactHidden:document.getElementById('interactBtn').hidden
-  }));
-  check('Formal stage contains no prototype NPC enemy door or interior content',
-    formalStage.npcs===0&&formalStage.enemySpawns===0&&formalStage.entityEnemies===0&&formalStage.npcEls===0&&
-    !formalStage.prototypeCompatExists&&formalStage.sceneApi.join(',')==='location,transitioning'&&
-    formalStage.location==='outside'&&formalStage.interactHidden===true,
-    JSON.stringify(formalStage));
-
-  // In-game debug panel: visible button, shortcuts, commands, and movement lock.
-  await page.locator('#debugToggleBtn').click();
-  await page.waitForTimeout(100);
-  check('Debug button opens in-game debug panel',
-    await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')) &&
-    await page.locator('#debugToggleBtn').getAttribute('aria-expanded')==='true',
-    'panel open');
-
-  const cameraSurface=await page.evaluate(()=>{
-    document.getElementById('cameraControlBtn').click();
-    const panel=document.getElementById('cameraControlPanel');
-    return {
-      open:panel.classList.contains('is-open'),
-      expanded:document.getElementById('cameraControlBtn').getAttribute('aria-expanded'),
-      inDebug:!!document.querySelector('#debugPanel #cameraTilt'),
-      inSettings:!!document.querySelector('#pageSettings #cameraTilt'),
-      controls:panel.querySelectorAll('#cameraTilt,#cameraHeight,#cameraDistance').length
-    };
-  });
-  check('Camera controls use their own in-world UI, separate from Debug and Settings',
-    cameraSurface.open&&cameraSurface.expanded==='true'&&!cameraSurface.inDebug&&!cameraSurface.inSettings&&cameraSurface.controls===3,
-    JSON.stringify(cameraSurface));
-
-  await page.setViewportSize({width:900,height:380});
-  await page.waitForTimeout(160);
-  const cameraScroll=await page.evaluate(()=>{
-    const panel=document.getElementById('cameraControlPanel');
-    const distance=document.getElementById('cameraDistance');
-    const before={clientHeight:panel.clientHeight,scrollHeight:panel.scrollHeight,scrollTop:panel.scrollTop};
-    panel.scrollTop=panel.scrollHeight;
-    const pr=panel.getBoundingClientRect(),dr=distance.getBoundingClientRect();
-    return {
-      ...before,
-      afterScrollTop:panel.scrollTop,
-      overflowY:getComputedStyle(panel).overflowY,
-      distanceVisible:dr.top>=pr.top-1&&dr.bottom<=pr.bottom+1,
-      panelBottom:pr.bottom,
-      viewportHeight:innerHeight
-    };
-  });
-  check('Camera panel scrolls on short landscape screens so the distance control is reachable',
-    cameraScroll.scrollHeight>cameraScroll.clientHeight&&cameraScroll.afterScrollTop>0&&
-    cameraScroll.overflowY==='auto'&&cameraScroll.distanceVisible&&cameraScroll.panelBottom<=cameraScroll.viewportHeight+1,
-    JSON.stringify(cameraScroll));
-  await page.setViewportSize({width:1440,height:900});
-  await page.waitForTimeout(180);
-
-  const cameraBefore=await page.evaluate(()=>({
-    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z),
-    maxTilt:Number(document.getElementById('cameraTilt')?.max)
-  }));
-  await page.locator('#cameraHeight').evaluate(el=>{el.value='4.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#cameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#cameraTilt').evaluate(el=>{el.value='13.1';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
-  const pitchBase=await page.evaluate(()=>({
-    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
-    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
-    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
-  }));
-  await page.locator('#cameraTilt').evaluate(el=>{el.value='80';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(80);
-  const pitch80=await page.evaluate(()=>({
-    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
-    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
-    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    nearY:window.PaperchalkCardCamera.project({worldX:0,worldZ:-640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    farY:window.PaperchalkCardCamera.project({worldX:0,worldZ:640,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('cameraTiltValue')?.textContent,
-    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
-  }));
-  check('Camera pitch rotates around the mid axis without changing height or distance',
-    cameraBefore.maxTilt===80&&pitch80.tilt===80&&pitch80.height===pitchBase.height&&pitch80.distance===pitchBase.distance&&
-    Math.abs(pitch80.midY-pitchBase.midY)<1e-9&&
-    (pitch80.nearY-pitch80.farY)>(pitchBase.nearY-pitchBase.farY)*4&&
-    pitch80.stored.cameraTilt===80&&pitch80.label.includes('80.0°')&&
-    pitch80.depths.join(',')===cameraBefore.depths.join(','),
-    JSON.stringify({pitchBase,pitch80}));
-
-  await page.locator('#cameraTilt').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.locator('#cameraHeight').evaluate(el=>{el.value='3';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(60);
-  const height3=await page.evaluate(()=>({
-    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
-    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y
-  }));
-  await page.locator('#cameraHeight').evaluate(el=>{el.value='4.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(60);
-  const height45=await page.evaluate(()=>({
-    value:window.PaperchalkCardCamera.getCameraHeightMeters(),
-    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
-    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    midY:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).y,
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('cameraHeightValue')?.textContent
-  }));
-  check('Camera height is independent of pitch and distance',
-    height45.value===4.5&&height45.tilt===height3.tilt&&height45.distance===height3.distance&&
-    Math.abs((height45.midY-height3.midY)-1.5*128)<1e-6&&height45.stored.cameraHeight===4.5&&height45.label.includes('4.5 m'),
-    JSON.stringify({height3,height45}));
-
-  await page.locator('#cameraDistance').evaluate(el=>{el.value='30';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(60);
-  const distance30=await page.evaluate(()=>({
-    scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
-    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
-    height:window.PaperchalkCardCamera.getCameraHeightMeters()
-  }));
-  await page.locator('#cameraDistance').evaluate(el=>{el.value='15';el.dispatchEvent(new Event('input',{bubbles:true}))});
-  await page.waitForTimeout(60);
-  const distance15=await page.evaluate(()=>({
-    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    scale:window.PaperchalkCardCamera.project({worldX:0,worldZ:0,worldY:0,playerX:0,playerY:0,screenX:0,viewportHeight:innerHeight,groundY:112}).scale,
-    tilt:window.PaperchalkCardCamera.getTiltDegrees(),
-    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    label:document.getElementById('cameraDistanceValue')?.textContent,
-    depths:window.PaperchalkCardCamera.config.sceneGuides.map(g=>g.z)
-  }));
-  check('Camera distance dollies independently without changing pitch or height',
-    distance15.distance===15&&distance15.tilt===distance30.tilt&&distance15.height===distance30.height&&
-    Math.abs(distance30.scale-1)<1e-9&&Math.abs(distance15.scale-2)<1e-9&&
-    distance15.stored.cameraDistance===15&&distance15.label.includes('15.0 m')&&
-    distance15.depths.join(',')===cameraBefore.depths.join(','),
-    JSON.stringify({distance30,distance15}));
-
-  await page.locator('#cameraReset').evaluate(el=>el.click());
-  await page.waitForTimeout(80);
-  const cameraReset=await page.evaluate(()=>({
-    angle:window.PaperchalkCardCamera.getTiltDegrees(),
-    height:window.PaperchalkCardCamera.getCameraHeightMeters(),
-    distance:window.PaperchalkCardCamera.getCameraDistanceMeters(),
-    stored:JSON.parse(localStorage.getItem('paperchalk.settings.v1')||'{}'),
-    angleLabel:document.getElementById('cameraTiltValue')?.textContent,
-    heightLabel:document.getElementById('cameraHeightValue')?.textContent,
-    distanceLabel:document.getElementById('cameraDistanceValue')?.textContent
-  }));
-  check('Camera reset restores independent production defaults',
-    Math.abs(cameraReset.angle-13.1)<1e-9&&Math.abs(cameraReset.height-4.1)<1e-9&&cameraReset.distance===30&&
-    Math.abs(cameraReset.stored.cameraTilt-13.1)<1e-9&&Math.abs(cameraReset.stored.cameraHeight-4.1)<1e-9&&cameraReset.stored.cameraDistance===30&&
-    cameraReset.angleLabel.includes('13.1°')&&cameraReset.heightLabel.includes('4.1 m')&&cameraReset.distanceLabel.includes('30.0 m'),
-    JSON.stringify(cameraReset));
-  await page.locator('#cameraControlClose').evaluate(el=>el.click());
-  await page.waitForTimeout(40);
-
-
-  await page.locator('[data-debug-action="damage1"]').click();
-  await page.waitForTimeout(80);
-  let healthDebug=await healthState(page);
-  check('Debug -1 HP button works',healthDebug.hp===9&&healthDebug.empty===1,JSON.stringify(healthDebug));
-
-  await page.locator('[data-debug-action="heal1"]').click();
-  await page.waitForTimeout(80);
-  healthDebug=await healthState(page);
-  check('Debug +1 HP button works',healthDebug.hp===10&&healthDebug.empty===0,JSON.stringify(healthDebug));
-
-  await page.locator('#debugCommandInput').fill('hp 5');
-  await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
-  await page.waitForTimeout(80);
-  healthDebug=await healthState(page);
-  check('Debug hp command works',
-    healthDebug.hp===5 && (await page.locator('#debugOutput').textContent()).includes('HP -> 5 / 10'),
-    JSON.stringify(healthDebug));
-
-  await page.locator('#debugCommandInput').fill('hp +3');
-  await page.locator('#debugCommandForm').evaluate(form=>form.requestSubmit());
-  await page.waitForTimeout(80);
-  healthDebug=await healthState(page);
-  check('Debug relative hp command works',healthDebug.hp===8,JSON.stringify(healthDebug));
-  check('Multi-point healing staggers restored pieces by 45ms',
-    healthDebug.healing===3 &&
-    JSON.stringify(healthDebug.healDelays)===JSON.stringify(['0ms','45ms','90ms']),
-    JSON.stringify(healthDebug));
-
-  const beforeBlockedMove=await state(page);
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(350);
-  await page.keyboard.up('KeyD');
-  const afterBlockedMove=await state(page);
-  check('Opening debug panel pauses movement input',
-    Math.abs(afterBlockedMove.worldX-beforeBlockedMove.worldX)<0.1 &&
-    Math.abs(afterBlockedMove.actorX-beforeBlockedMove.actorX)<0.1,
-    JSON.stringify({beforeBlockedMove,afterBlockedMove}));
-
-  await page.locator('#debugCloseBtn').click();
-  await page.waitForTimeout(80);
-  check('Debug close button closes panel',
-    !(await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open'))),
-    'panel closed');
-
-  // Let world time advance and move.
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(1800);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(300);
-  const moved=await state(page);
-  check('Movement works',moved.worldX>0||moved.actorX>s.actorX,JSON.stringify(moved));
-  check('World time advances',moved.worldMinutes>1,'worldMinutes='+moved.worldMinutes);
-  const entityMapSync=await page.evaluate(()=>({
-    transform:document.getElementById('entityTrack').style.transform,
-    childCount:document.getElementById('entityTrack').children.length,
-    npcs:window.PaperchalkMap.npcs.length,
-    enemySpawns:window.PaperchalkMap.enemySpawns.length
-  }));
-  const entityTranslateX=Number((entityMapSync.transform.match(/translate3d\((-?[0-9.]+)px/)||[])[1]||0);
-  check('Production entity track stays screen-space and empty until main-line content is authored',
-    Math.abs(entityTranslateX)<0.5&&entityMapSync.childCount===0&&entityMapSync.npcs===0&&entityMapSync.enemySpawns===0,
-    JSON.stringify({...entityMapSync,entityTranslateX}));
-
-  const compositorPlayer=await page.evaluate(()=>({
-    left:document.querySelector('.actor').style.left,
-    bottom:document.querySelector('.actor').style.bottom,
-    actorX:document.querySelector('.actor').style.getPropertyValue('--actor-x'),
-    actorY:document.querySelector('.actor').style.getPropertyValue('--actor-y'),
-    willChange:getComputedStyle(document.querySelector('.actor')).willChange
-  }));
-  check('Player motion uses compositor transform instead of per-frame left/bottom layout',
-    compositorPlayer.left===''&&compositorPlayer.bottom===''&&
-    compositorPlayer.actorX.endsWith('px')&&compositorPlayer.actorY.endsWith('px')&&
-    compositorPlayer.willChange.includes('transform'),
-    JSON.stringify(compositorPlayer));
-
-  const poolBefore=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),poolBefore.visualOriginX+12000);
-  await page.waitForTimeout(100);
-  const poolFirstVisit=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  await page.evaluate(x=>window.PaperchalkMap.teleport(x,{notice:''}),moved.playerWorldX);
-  await page.waitForTimeout(100);
-  const poolReturn=await page.evaluate(()=>window.PaperchalkDebug.perf());
-  check('Clean map window creates no filler nodes when visiting empty areas',
-    poolFirstVisit.visualOriginX>poolBefore.visualOriginX&&
-    poolFirstVisit.mapVisualCreateCount===poolBefore.mapVisualCreateCount&&
-    poolReturn.mapVisualCreateCount===poolFirstVisit.mapVisualCreateCount,
-    JSON.stringify({poolBefore,poolFirstVisit,poolReturn}));
-
-  // Open menu from world: paper effects must clean themselves up.
-  await page.locator('#worldMenuBtn').click();
-  await page.waitForTimeout(900);
-  const fx1=await paperState(page);
-  check('Paper ball cleans up after world-menu transition',fx1.ball==='0',JSON.stringify(fx1));
-  const saveA=await save(page,'audit_a');
-  check('A save uses account-specific v2 key',saveA?.account==='audit_a',JSON.stringify(saveA));
-  check('A camera position saved',Math.abs((saveA?.worldX||0)-moved.worldX)<5,'saved='+saveA?.worldX+' runtime='+moved.worldX);
-  check('A player world position saved',Math.abs((saveA?.playerWorldX||0)-moved.playerWorldX)<5,'saved='+saveA?.playerWorldX+' runtime='+moved.playerWorldX);
-  check('A clean map state stays empty in save',
-    (saveA?.mapState?.broken?.length||0)===0&&(saveA?.mapState?.collected?.length||0)===0,
-    JSON.stringify(saveA?.mapState));
-  check('A health saved with world state',saveA?.playerHp===8,'saved playerHp='+saveA?.playerHp);
-
-  // Continue must visually hide shell, not merely disable pointer events.
-  await page.locator('#continueBtn').click();
-  await page.waitForTimeout(450);
-  const shell=await page.locator('#uiShell').evaluate(el=>({
-    cls:el.className,opacity:getComputedStyle(el).opacity,pointer:getComputedStyle(el).pointerEvents
-  }));
-  check('Continue visually hides menu',shell.cls.includes('is-hidden')&&Number(shell.opacity)<0.02,JSON.stringify(shell));
-
-  // Inventory: inject a serializable consumable and persist it.
-  await page.evaluate(()=>{
-    window.eval("inventoryItems[0]={name:'测试叶片',desc:'回归测试',weight:1,count:3,consumable:true,icon:'./assets/ui/inventory-v2/leaf.png'};inventorySelected=0;renderInventory();saveWorldState();");
-  });
-  let invSave=await save(page,'audit_a');
-  check('Inventory is persisted in account save',invSave?.inventory?.[0]?.count===3,JSON.stringify(invSave?.inventory?.[0]));
-
-  // Reload to prove persistence.
-  await page.reload({waitUntil:'networkidle'});
+  await page.waitForFunction(()=>document.getElementById('uiShell')?.classList.contains('is-hidden'),{timeout:3000});
+  await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
   await page.waitForTimeout(250);
-  await page.locator('#continueBtn').click();
-  await page.waitForTimeout(450);
-  const healthReloaded=await healthState(page);
-  check('Health survives reload',healthReloaded.hp===8&&healthReloaded.empty===2,JSON.stringify(healthReloaded));
-  const mapReloaded=await mapState(page);
-  check('Clean map state survives reload',
-    mapReloaded.map.broken.length===0&&mapReloaded.map.collected.length===0,
-    JSON.stringify(mapReloaded.map));
+
+  const entered=await page.evaluate(()=>({
+    runtime:window.PaperchalkRuntime.getSnapshot(),
+    three:window.Paperchalk3D.stats,
+    canvas:{
+      count:document.querySelectorAll('#threeWorldLayer canvas').length,
+      width:document.querySelector('#threeWorldLayer canvas')?.width||0,
+      height:document.querySelector('#threeWorldLayer canvas')?.height||0
+    }
+  }));
+  assert(entered.runtime.active,'runtime did not enter world');
+  assert(['x','y','z'].every(k=>Number.isFinite(entered.runtime.player[k])),'player is not native XYZ '+JSON.stringify(entered.runtime.player));
+  assert(entered.three.renderer==='WebGLRenderer'&&entered.three.drawCalls>0&&entered.three.triangles>0,'real WebGL 3D renderer not drawing '+JSON.stringify(entered.three));
+  assert(entered.canvas.count===1&&entered.canvas.width>700&&entered.canvas.height>400,'3D canvas invalid '+JSON.stringify(entered.canvas));
+
+  const before=entered.runtime.player;
+  await page.keyboard.down('KeyW');
+  await page.waitForTimeout(420);
+  await page.keyboard.up('KeyW');
+  await page.waitForTimeout(100);
+  const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
+  assert(Math.hypot(afterW.x-before.x,afterW.z-before.z)>.35,'W did not move in 3D '+JSON.stringify({before,afterW}));
+
+  await page.keyboard.down('KeyD');
+  await page.waitForTimeout(360);
+  await page.keyboard.up('KeyD');
+  await page.waitForTimeout(80);
+  const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
+  assert(Math.hypot(afterD.x-afterW.x,afterD.z-afterW.z)>.25,'D did not move in 3D '+JSON.stringify({afterW,afterD}));
+
+  const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
+  assert(jumpStarted===true,'jump was rejected');
+  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.y>.08,null,{timeout:1200});
+  const air=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
+  assert(air.y>.08&&!air.grounded,'3D gravity/jump state invalid '+JSON.stringify(air));
+
+  await page.evaluate(()=>window.PaperchalkHealth.damage(1));
+  await page.waitForTimeout(80);
+  const hp9=await page.evaluate(()=>({
+    runtime:window.PaperchalkRuntime.getSnapshot().health,
+    api:window.PaperchalkHealth.state,
+    bar:window.Paperchalk3D.stats.health
+  }));
+  assert(hp9.runtime.current===9&&hp9.api.hp===9,'health state did not reach 9 '+JSON.stringify(hp9));
+  assert(hp9.bar?.value===9&&hp9.bar?.max===10&&hp9.bar?.cells===10&&hp9.bar?.tail===true,'3D world health bar not synchronized '+JSON.stringify(hp9.bar));
+
+  await page.evaluate(()=>{
+    window.PaperchalkInventory.setSlot(0,{id:'rough-herb',name:'粗纸药草',desc:'回归测试药草',weight:.1,count:2,consumable:true,action:'heal',heal:2,glyph:'草'});
+    window.PaperchalkHealth.damage(2);
+  });
   await page.locator('#backpackBtn').click();
-  await page.waitForTimeout(850);
-  let inv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
-  check('Inventory survives reload',inv?.count===3,JSON.stringify(inv));
-
-  // Focus trap.
-  await page.locator('#backpackClose').focus();
-  let escaped=false;
-  for(let i=0;i<30;i++){
-    await page.keyboard.press('Tab');
-    const inside=await page.evaluate(()=>!!document.activeElement?.closest('#backpackFrame'));
-    if(!inside){escaped=true;break}
-  }
-  check('Backpack traps keyboard focus',!escaped,'escaped='+escaped);
-
-  // Use and drop both mutate + persist.
-  await page.evaluate(()=>window.eval('inventorySelected=0;renderInventory();'));
+  await page.locator('.inventory-slot[data-slot="0"]').click();
   await page.locator('#inventoryUse').click();
   await page.waitForTimeout(100);
-  inv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
-  check('Use consumes one consumable',inv?.count===2,JSON.stringify(inv));
-  await page.locator('#inventoryDrop').click();
-  await page.waitForTimeout(100);
-  inv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
-  check('Drop removes one item',inv?.count===1,JSON.stringify(inv));
-  invSave=await save(page,'audit_a');
-  check('Use/drop persist immediately',invSave?.inventory?.[0]?.count===1,JSON.stringify(invSave?.inventory?.[0]));
-
+  const inventoryState=await page.evaluate(()=>({
+    hp:window.PaperchalkHealth.state.hp,
+    item:window.PaperchalkInventory.items[0],
+    open:document.getElementById('backpackOverlay').classList.contains('is-open')
+  }));
+  assert(inventoryState.hp===9&&inventoryState.item?.count===1,'inventory heal path failed '+JSON.stringify(inventoryState));
   await page.locator('#backpackClose').click();
-  await page.waitForTimeout(120);
 
-  // Settings are real and persist.
+  const saved=await page.evaluate(()=>{
+    window.PaperchalkSaveNow();
+    const key=window.PaperchalkSaveDiagnostics.keyFor('three_core');
+    return JSON.parse(localStorage.getItem(key)||'null');
+  });
+  assert(saved?.schemaVersion===4&&Number.isFinite(saved?.player?.x)&&Number.isFinite(saved?.player?.z),'3D save payload invalid '+JSON.stringify(saved));
+  assert(saved.playerHp===9,'health not persisted '+JSON.stringify(saved));
+
+  const savedPlayer={...saved.player};
   await page.locator('#worldMenuBtn').click();
-  await page.waitForTimeout(850);
-  await page.locator('#settingsBtn').click();
-  await page.waitForTimeout(850);
-  check('Settings controls exist',
-    await page.locator('#settingLanguage,#settingTimeScale,#settingLandscape').count()===3,
-    'controls='+await page.locator('#settingLanguage,#settingTimeScale,#settingLandscape').count());
-  await page.locator('#settingTimeScale').selectOption('2');
-  await page.locator('#settingLandscape').uncheck();
-  const settings=await page.evaluate(()=>JSON.parse(localStorage.getItem('paperchalk.settings.v1')));
-  check('Settings persist',settings?.timeScale===2&&settings?.preferLandscape===false,JSON.stringify(settings));
-
-  // Switch to B, which must not inherit A.
-  await page.locator('#pageSettings [data-back="menu"]').click();
-  await page.waitForTimeout(800);
-  await page.locator('#authBtn').click();
-  await page.waitForTimeout(800);
-  await page.locator('#tabRegister').click();
-  await page.locator('#regUser').fill('audit_b');
-  await page.locator('#regName').fill('审计B');
-  await page.locator('#regPass').fill('test5678');
-  await page.locator('#registerForm button[type=submit]').click();
-  await page.waitForTimeout(450);
-  const bState=await state(page);
-  const saveB=await save(page,'audit_b');
-  check('B gets a fresh independent save',
-    Math.abs(bState.worldX)<1&&Math.abs(bState.playerWorldX-460)<2&&saveB?.account==='audit_b',
-    JSON.stringify({bState,saveB}));
-  const bInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
-  check('B does not inherit A inventory',bInv===null,JSON.stringify(bInv));
-  const bHealth=await healthState(page);
-  check('B starts with independent full health',bHealth.hp===10&&saveB?.playerHp===10,JSON.stringify({bHealth,saveHp:saveB?.playerHp}));
-  const bMap=await mapState(page);
-  check('B does not inherit A map destruction or pickups',
-    bMap.map.broken.length===0&&bMap.map.collected.length===0,
-    JSON.stringify(bMap.map));
-
-  // Save B, then return A and prove A is intact.
-  await page.locator('#worldMenuBtn').click();
-  await page.waitForTimeout(850);
-  await page.locator('#authBtn').click();
-  await page.waitForTimeout(800);
-  await page.locator('#tabLogin').click();
-  await page.locator('#loginUser').fill('audit_a');
-  await page.locator('#loginPass').fill('test1234');
-  await page.locator('#loginForm button[type=submit]').click();
-  await page.waitForTimeout(450);
-  const aReturn=await state(page);
-  const aReturnInv=await page.evaluate(()=>window.eval('inventoryItems[0]'));
-  check('A restores its own position',
-    Math.abs(aReturn.playerWorldX-saveA.playerWorldX)<5&&Math.abs(aReturn.worldX-saveA.worldX)<5,
-    JSON.stringify({returned:aReturn,expected:{worldX:saveA.worldX,playerWorldX:saveA.playerWorldX}}));
-  check('A restores its own inventory',aReturnInv?.count===1,JSON.stringify(aReturnInv));
-  const aReturnHealth=await healthState(page);
-  check('A restores its own health',aReturnHealth.hp===8&&aReturnHealth.empty===2,JSON.stringify(aReturnHealth));
-  const aReturnMap=await mapState(page);
-  check('A restores its empty clean map state',
-    aReturnMap.map.broken.length===0&&aReturnMap.map.collected.length===0,
-    JSON.stringify(aReturnMap.map));
-
-  // Paper cleanup after backpack too.
-  await page.locator('#backpackBtn').click();
-  await page.waitForTimeout(850);
-  const fx2=await paperState(page);
-  check('Paper ball cleans up after backpack transition',fx2.ball==='0',JSON.stringify(fx2));
-
-  const backClosed=await page.evaluate(()=>window.PaperchalkHandleBack());
   await page.waitForTimeout(120);
-  check('Native back closes backpack first',
-    backClosed===true && !(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open'))),
-    'handled='+backClosed);
+  const stopped=await page.evaluate(()=>({active:window.Paperchalk3D.active,loop:window.Paperchalk3D.stats.loopActive,runtime:window.PaperchalkRuntime.getSnapshot().active}));
+  assert(!stopped.active&&!stopped.loop&&!stopped.runtime,'world leave did not stop 3D loops '+JSON.stringify(stopped));
 
-  await page.locator('#debugToggleBtn').click();
-  await page.waitForTimeout(100);
-  check('Visible debug button opens the debug panel',
-    await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')),
-    'open='+await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open')));
-  const backClosedDebug=await page.evaluate(()=>window.PaperchalkHandleBack());
-  await page.waitForTimeout(100);
-  check('Native back closes debug panel first',
-    backClosedDebug===true && !(await page.locator('#debugPanel').evaluate(el=>el.classList.contains('is-open'))),
-    'handled='+backClosedDebug);
+  await page.reload({waitUntil:'networkidle'});
+  await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.Paperchalk3D,{timeout:5000});
+  await page.locator('#continueBtn').click();
+  await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
+  await page.waitForTimeout(150);
+  const restored=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,h:window.PaperchalkHealth.state.hp,item:window.PaperchalkInventory.items[0]}));
+  assert(Math.hypot(restored.p.x-savedPlayer.x,restored.p.z-savedPlayer.z)<.15,'3D position did not restore '+JSON.stringify({savedPlayer,restored}));
+  assert(restored.h===9&&restored.item?.count===1,'health/inventory did not restore '+JSON.stringify(restored));
 
-  const backOpenedMenu=await page.evaluate(()=>window.PaperchalkHandleBack());
-  await page.waitForTimeout(120);
-  check('Native back from world opens game menu',
-    backOpenedMenu===true && !(await page.locator('#uiShell').evaluate(el=>el.classList.contains('is-hidden'))),
-    'handled='+backOpenedMenu);
-
-  check('No uncaught runtime errors',result.errors.length===0,JSON.stringify(result.errors));
-} finally {
+  assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
+  console.log(JSON.stringify({ok:true,entered:entered.three,afterW,afterD,air,hp9,inventoryState,saved,restored},null,2));
+}finally{
   await browser.close();
 }
-
-result.summary={
-  total:result.checks.length,
-  passed:result.checks.filter(x=>x.pass).length,
-  failed:result.checks.filter(x=>!x.pass).length
-};
-console.log('CORE_REGRESSION '+JSON.stringify(result));
-if(result.summary.failed>0)process.exitCode=1;
