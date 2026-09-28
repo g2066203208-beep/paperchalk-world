@@ -25,7 +25,7 @@ try{
     terrain:window.PaperchalkTerrainActions.stats
   }));
   assert(!cold.runtime.active&&!cold.three.active&&!cold.three.ready,'renderer must stay cold on menu '+JSON.stringify(cold));
-  assert(cold.terrain.tileSize===.25&&cold.terrain.chunkSize===64,'single-layer terrain configuration wrong '+JSON.stringify(cold.terrain));
+  assert(cold.terrain.tileSize===1&&cold.terrain.pixelsPerMeter===128&&cold.terrain.chunkSize===64,'single-layer terrain configuration wrong '+JSON.stringify(cold.terrain));
   assert(cold.terrain.noiseBackend==='FastNoiseLite-1.1.1','FastNoiseLite terrain backend missing '+JSON.stringify(cold.terrain));
   assert(cold.terrain.generatorVersion===2,'terrain generator version missing '+JSON.stringify(cold.terrain));
 
@@ -46,7 +46,7 @@ try{
   assert(entered.three.worldMode==='paper-stage-2.5d','wrong world mode '+JSON.stringify(entered.three));
   assert(entered.three.terrainMode==='single-layer-3d-cubes','terrain is not one-layer 3D cube terrain '+JSON.stringify(entered.three));
   assert(entered.three.terrain?.oneLayer===true&&entered.three.terrain?.blockGeometry==='3d-cube','terrain gained depth layers or lost cube geometry '+JSON.stringify(entered.three.terrain));
-  assert(Math.abs((entered.three.terrain?.thickness||0)-.25)<1e-6,'terrain blocks are not true 0.25m cubes '+JSON.stringify(entered.three.terrain));
+  assert(Math.abs((entered.three.terrain?.thickness||0)-1)<1e-6,'terrain blocks are not true 1m cubes '+JSON.stringify(entered.three.terrain));
   assert(entered.three.entityMode==='2d-textured-planes','entities are not paper planes '+JSON.stringify(entered.three));
   assert(entered.three.playerGeometry==='PlaneGeometry','player is not a flat paper entity '+JSON.stringify(entered.three));
   assert(entered.three.terrain.visibleChunks>0&&entered.three.terrain.renderedSolidTiles>0,'terrain chunks are not rendered '+JSON.stringify(entered.three.terrain));
