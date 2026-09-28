@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n    xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />\n    <uses-permission android:name="android.permission.CAMERA" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- A transitive dependency declares INTERNET. Remove it explicitly:
+         every shipped authoring/inference asset is inside the APK. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_spine_viewer"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <activity
             android:name=".CutoutActivity"
             android:screenOrientation="fullSensor"
@@ -14,13 +23,15 @@
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|uiMode"
             android:hardwareAccelerated="true"
             android:exported="false" />
+
         <activity
             android:name=".StudioActivity"
+            android:screenOrientation="fullSensor"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|uiMode"
             android:hardwareAccelerated="true"
-            android:screenOrientation="fullSensor"
             android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:screenOrientation="fullSensor"
@@ -32,5 +43,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 </manifest>
