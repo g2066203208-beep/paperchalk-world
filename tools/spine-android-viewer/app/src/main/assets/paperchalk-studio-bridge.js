@@ -355,26 +355,182 @@
       .slice(0, 80) || 'motion';
   }
 
+  function motionToGltf(motion) {
+    const boneIndex = new Map(motion.bones.map((b, i) => [b.name, i]));
+    const nodes = motion.bones.map(b => {
+      const r = Number(b.rest?.rotation ?? 0) * Math.PI / 180;
+      return {
+        name: b.name,
+        translation: [Number(b.rest?.x ?? 0), -Number(b.rest?.y ?? 0), 0],
+        rotation: [0, 0, Math.sin(r / 2), Math.cos(r / 2)],
+        scale: [Number(b.rest?.scaleX ?? 1), Number(b.rest?.scaleY ?? 1), 1],
+        extras: { boneRole: b.name, sourceNode: b.sourceNode ?? null }
+      };
+    });
+
+    const roots = [];
+    motion.bones.forEach((b, i) => {
+      if (b.parent && boneIndex.has(b.parent)) {
+        const p = nodes[boneIndex.get(b.parent)];
+        (p.children ??= []).push(i);
+      } else roots.push(i);
+    });
+
+    const chunks = [];
+    const bufferViews = [];
+    const accessors = [];
+    let byteLength = 0;
+
+    function pad4() {
+      const pad = (4 - (byteLength % 4)) % 4;
+      if (pad) {
+        chunks.push(new Uint8Array(pad));
+        byteLength += pad;
+      }
+    }
+
+    function addFloatAccessor(values, type, count, includeMinMax = false) {
+      pad4();
+      const arr = Array.from(values, Number);
+      const bytes = new Uint8Array(arr.length * 4);
+      const dv = new DataView(bytes.buffer);
+      for (let i = 0; i < arr.length; i++) dv.setFloat32(i * 4, arr[i], true);
+      const viewIndex = bufferViews.length;
+      bufferViews.push({ buffer: 0, byteOffset: byteLength, byteLength: bytes.byteLength });
+      chunks.push(bytes);
+      byteLength += bytes.byteLength;
+
+      const accessor = { bufferView: viewIndex, componentType: 5126, count, type };
+      if (includeMinMax && arr.length) {
+        accessor.min = [Math.min(...arr)];
+        accessor.max = [Math.max(...arr)];
+      }
+      const accessorIndex = accessors.length;
+      accessors.push(accessor);
+      return accessorIndex;
+    }
+
+    const tracksByBone = new Map();
+    for (const track of motion.tracks) {
+      if (track.targetType !== 'bone' || !boneIndex.has(track.target)) continue;
+      let obj = tracksByBone.get(track.target);
+      if (!obj) tracksByBone.set(track.target, obj = {});
+      obj[track.property] = track;
+    }
+
+    const samplers = [];
+    const channels = [];
+
+    function addChannel(nodeIndex, path, timesMs, values, gltfType, components) {
+      if (!timesMs.length) return;
+      const timesSec = timesMs.map(t => Number(t) / 1000);
+      const input = addFloatAccessor(timesSec, 'SCALAR', timesSec.length, true);
+      const output = addFloatAccessor(values, gltfType, timesSec.length, false);
+      const samplerIndex = samplers.length;
+      samplers.push({ input, output, interpolation: 'LINEAR' });
+      channels.push({ sampler: samplerIndex, target: { node: nodeIndex, path } });
+    }
+
+    for (const [boneName, set] of tracksByBone) {
+      const nodeIndex = boneIndex.get(boneName);
+
+      if (set.rotation?.keyframes?.length) {
+        const times = set.rotation.keyframes.map(k => k.timeMs);
+        const values = [];
+        for (const k of set.rotation.keyframes) {
+          const rad = Number(k.value ?? 0) * Math.PI / 180;
+          values.push(0, 0, Math.sin(rad / 2), Math.cos(rad / 2));
+        }
+        addChannel(nodeIndex, 'rotation', times, values, 'VEC4', 4);
+      }
+
+      if (set.x?.keyframes?.length || set.y?.keyframes?.length) {
+        const times = [...new Set([
+          ...(set.x?.keyframes ?? []).map(k => Number(k.timeMs)),
+          ...(set.y?.keyframes ?? []).map(k => Number(k.timeMs))
+        ])].sort((a,b) => a-b);
+        const values = [];
+        const bone = motion.bones[nodeIndex];
+        for (const t of times) {
+          const x = set.x ? Number(sampleKeyframes(set.x.keyframes, t) ?? 0) : Number(bone.rest?.x ?? 0);
+          const y = set.y ? Number(sampleKeyframes(set.y.keyframes, t) ?? 0) : Number(bone.rest?.y ?? 0);
+          values.push(x, -y, 0);
+        }
+        addChannel(nodeIndex, 'translation', times, values, 'VEC3', 3);
+      }
+
+      if (set.scaleX?.keyframes?.length || set.scaleY?.keyframes?.length) {
+        const times = [...new Set([
+          ...(set.scaleX?.keyframes ?? []).map(k => Number(k.timeMs)),
+          ...(set.scaleY?.keyframes ?? []).map(k => Number(k.timeMs))
+        ])].sort((a,b) => a-b);
+        const values = [];
+        const bone = motion.bones[nodeIndex];
+        for (const t of times) {
+          const sx = set.scaleX ? Number(sampleKeyframes(set.scaleX.keyframes, t) ?? 1) : Number(bone.rest?.scaleX ?? 1);
+          const sy = set.scaleY ? Number(sampleKeyframes(set.scaleY.keyframes, t) ?? 1) : Number(bone.rest?.scaleY ?? 1);
+          values.push(sx, sy, 1);
+        }
+        addChannel(nodeIndex, 'scale', times, values, 'VEC3', 3);
+      }
+    }
+
+    const all = new Uint8Array(byteLength);
+    let cursor = 0;
+    for (const chunk of chunks) {
+      all.set(chunk, cursor);
+      cursor += chunk.byteLength;
+    }
+
+    const binaryUri = 'data:application/octet-stream;base64,' + bytesToBase64(all);
+    return {
+      asset: {
+        version: '2.0',
+        generator: 'PaperChalk SpineStudio',
+        extras: {
+          note: 'Motion-only glTF skeleton. Mesh deformation/custom 2D node tracks remain in the companion .pcmotion.json file.',
+          sourceSchema: motion.schema
+        }
+      },
+      scene: 0,
+      scenes: [{ name: motion.name, nodes: roots }],
+      nodes,
+      animations: [{
+        name: motion.name,
+        samplers,
+        channels,
+        extras: { fps: motion.fps, durationMs: motion.durationMs }
+      }],
+      buffers: [{ byteLength, uri: binaryUri }],
+      bufferViews,
+      accessors
+    };
+  }
+
+  async function streamTextFile(filename, text) {
+    const bytes = new TextEncoder().encode(text);
+    if (!AndroidStudio.beginMotionFile(filename)) throw new Error('android-output-open-failed');
+    const chunkSize = 96 * 1024;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      AndroidStudio.appendMotionChunk(bytesToBase64(bytes.subarray(i, Math.min(bytes.length, i + chunkSize))));
+      if ((i / chunkSize) % 8 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+    AndroidStudio.endMotionFile();
+  }
+
   async function exportPortableMotion() {
     const motion = portableMotionFromCurrent();
-    const filename = safeFileStem(motion.name) + '.pcmotion.json';
-    const json = JSON.stringify(motion);
-    const bytes = new TextEncoder().encode(json);
+    const stem = safeFileStem(motion.name);
+    const nativeName = stem + '.pcmotion.json';
+    const gltfName = stem + '.gltf';
 
-    if (!AndroidStudio.beginMotionFile(filename)) throw new Error('android-output-open-failed');
-    try {
-      const chunkSize = 96 * 1024;
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        AndroidStudio.appendMotionChunk(bytesToBase64(bytes.subarray(i, Math.min(bytes.length, i + chunkSize))));
-        if ((i / chunkSize) % 8 === 0) await new Promise(r => setTimeout(r, 0));
-      }
-      AndroidStudio.endMotionFile();
-      toast('动作已保存：' + filename);
-      androidStatus('动作文件已导出，可按 bone-role 重定向到游戏骨架：' + filename);
-      return filename;
-    } catch (e) {
-      throw e;
-    }
+    await streamTextFile(nativeName, JSON.stringify(motion));
+    const gltf = motionToGltf(motion);
+    await streamTextFile(gltfName, JSON.stringify(gltf));
+
+    toast('动作已保存：' + nativeName + ' + ' + gltfName);
+    androidStatus('动作已导出两个版本：PaperChalk直接运行格式 + glTF 2.0通用骨骼动作');
+    return nativeName + ' + ' + gltfName;
   }
 
   async function ensureMediaPipe() {
