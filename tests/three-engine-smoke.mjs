@@ -36,16 +36,40 @@ try{
   assert(initial.stats.health?.cells===10&&initial.stats.health?.tail===true,'stitched 9-cell + tail health bar missing '+JSON.stringify(initial.stats.health));
 
   const beforeCam=initial.stats.camera;
+  assert(beforeCam.stageView?.enabled===true&&beforeCam.stageView?.axis==='z',
+    'paper-stage camera must start fixed on Z axis '+JSON.stringify(beforeCam));
   const canvas=page.locator('#threeWorldLayer canvas');
   const box=await canvas.boundingBox();
   assert(box,'canvas bounds unavailable');
+
   await page.mouse.move(box.x+box.width*.55,box.y+box.height*.45);
   await page.mouse.down();
   await page.mouse.move(box.x+box.width*.70,box.y+box.height*.52,{steps:8});
   await page.mouse.up();
   await page.waitForTimeout(80);
+  const lockedCam=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(Math.abs(lockedCam.yaw-beforeCam.yaw)<1e-6,
+    'paper-stage camera rotated even though fixed-axis mode is enabled '+JSON.stringify({beforeCam,lockedCam}));
+
+  await page.evaluate(()=>window.Paperchalk3D.setStageView(false));
+  const freeBefore=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  await page.mouse.move(box.x+box.width*.55,box.y+box.height*.45);
+  await page.mouse.down();
+  await page.mouse.move(box.x+box.width*.70,box.y+box.height*.52,{steps:8});
+  await page.mouse.up();
+  await page.waitForTimeout(80);
+  const freeAfter=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(Math.abs(freeAfter.yaw-freeBefore.yaw)>.15,
+    'free camera did not orbit after paper-stage lock was disabled '+JSON.stringify({freeBefore,freeAfter}));
+
+  await page.evaluate(()=>{window.Paperchalk3D.setStageView(true,'x')});
+  const xStage=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(xStage.stageView?.enabled===true&&xStage.stageView?.axis==='x'&&Math.abs(xStage.yaw-Math.PI/2)<1e-6,
+    'fixed X-axis paper-stage camera failed '+JSON.stringify(xStage));
+  await page.evaluate(()=>{window.Paperchalk3D.setStageAxis('z')});
   const afterCam=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
-  assert(Math.abs(afterCam.yaw-beforeCam.yaw)>.15,'pointer orbit did not change yaw '+JSON.stringify({beforeCam,afterCam}));
+  assert(afterCam.stageView?.axis==='z'&&Math.abs(afterCam.yaw)<1e-6,
+    'fixed Z-axis paper-stage camera failed '+JSON.stringify(afterCam));
 
   await page.evaluate(()=>window.Paperchalk3D.setDebugColliders(true));
   const debugOn=await page.evaluate(()=>window.Paperchalk3D.stats.debugColliders);
