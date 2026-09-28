@@ -260,18 +260,26 @@ function fishingSnapshot(){
   };
 }
 function hungerSnapshot(){return {current:hunger.current,max:hunger.max,ratio:hunger.current/hunger.max}}
+let lastHungerHud=-1,lastFishingHud='';
 function updateSurvivalHud(){
   const ratio=Math.max(0,Math.min(1,hunger.current/hunger.max));
-  if(hungerFill)hungerFill.style.transform='scaleX('+ratio.toFixed(4)+')';
-  if(hungerValue)hungerValue.textContent=String(Math.round(hunger.current));
+  const quantized=Math.round(ratio*200)/200;
+  if(Math.abs(quantized-lastHungerHud)>.0001){
+    lastHungerHud=quantized;
+    if(hungerFill)hungerFill.style.transform='scaleX('+quantized.toFixed(3)+')';
+    if(hungerValue)hungerValue.textContent=String(Math.round(hunger.current));
+  }
   if(fishingStatusHud){
     let text='';
     if(fishing.state==='flying')text='🎣 浮漂飞行中';
     else if(fishing.state==='waiting')text='🎣 等待咬钩…';
     else if(fishing.state==='bite')text='❗ 有鱼咬钩，立即收杆！';
     else if(fishing.state==='reeling')text='🎣 收杆中…';
-    fishingStatusHud.textContent=text;
-    fishingStatusHud.classList.toggle('is-show',!!text);
+    if(text!==lastFishingHud){
+      lastFishingHud=text;
+      fishingStatusHud.textContent=text;
+      fishingStatusHud.classList.toggle('is-show',!!text);
+    }
   }
 }
 
