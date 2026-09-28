@@ -139,6 +139,29 @@ jobs:
               s = s.replace('Free HuggingFace Space', 'Offline mode')
               s = s.replace('https://huggingface.co/spaces/24yearsold/see-through-demo', '#offline-see-through-disabled')
               q.write_text(s)
+
+          # Mobile adaptation for the upstream desktop-first editor:
+          # horizontal top-toolbar scrolling, larger touch targets, and a
+          # non-overlapping Staging/Animation switch on narrow screens.
+          q = Path('src/app/layout/EditorLayout.jsx')
+          s = q.read_text()
+          s = s.replace(
+              'className="h-10 border-b flex items-center px-4 shrink-0 bg-card gap-3 relative"',
+              'className="min-h-11 border-b flex items-center px-2 sm:px-4 shrink-0 bg-card gap-1 sm:gap-3 relative overflow-x-auto overflow-y-hidden"'
+          )
+          s = s.replace(
+              'className="font-semibold text-sm select-none tracking-tight"',
+              'className="font-semibold text-sm select-none tracking-tight hidden sm:inline"'
+          )
+          s = s.replace(
+              'className="text-xs text-muted-foreground border border-border/50 px-1.5 py-0.5 font-mono"',
+              'className="text-xs text-muted-foreground border border-border/50 px-1.5 py-0.5 font-mono hidden md:inline"'
+          )
+          s = s.replace(
+              'className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/40"',
+              'className="sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/40 shrink-0"'
+          )
+          q.write_text(s)
           PY
 
           npm run build
