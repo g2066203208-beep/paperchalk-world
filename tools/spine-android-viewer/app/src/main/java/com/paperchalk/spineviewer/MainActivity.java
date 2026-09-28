@@ -99,30 +99,46 @@ public class MainActivity extends Activity {
         root.setBackgroundColor(Color.rgb(18, 20, 26));
         root.setPadding(dp(8), dp(8), dp(8), dp(8));
         setContentView(root);
+        MobileUi.applySystemBars(this, root);
 
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setOrientation(LinearLayout.HORIZONTAL);
-        root.addView(header, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52)));
+        root.addView(header, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(46)));
 
         TextView title = new TextView(this);
-        title.setText("Spine 骨骼动画工具  ·  Runtime " + BuildConfig.SPINE_RUNTIME_VERSION);
+        title.setText("PaperChalk Spine Studio");
         title.setTextColor(Color.WHITE);
-        title.setTextSize(17);
+        title.setTextSize(16);
         title.setSingleLine(true);
-        header.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        Button importButton = button("导入 Spine 文件");
-        importButton.setOnClickListener(v -> openImporter());
-        header.addView(importButton);
-
-        Button studioButton = button("PSD自动绑定工作室");
-        studioButton.setOnClickListener(v -> startActivity(new Intent(this, StudioActivity.class)));
-        header.addView(studioButton);
+        header.addView(title, new LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         Button aboutButton = button("说明");
         aboutButton.setOnClickListener(v -> showAbout());
         header.addView(aboutButton);
+
+        HorizontalScrollView launchScroller = new HorizontalScrollView(this);
+        launchScroller.setHorizontalScrollBarEnabled(false);
+        launchScroller.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        root.addView(launchScroller, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(54)));
+
+        LinearLayout launchRow = new LinearLayout(this);
+        launchRow.setOrientation(LinearLayout.HORIZONTAL);
+        launchRow.setGravity(Gravity.CENTER_VERTICAL);
+        launchScroller.addView(launchRow, new HorizontalScrollView.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.MATCH_PARENT));
+
+        Button studioButton = button("PSD / 自动绑定 / 动捕");
+        studioButton.setOnClickListener(v -> startActivity(new Intent(this, StudioActivity.class)));
+        launchRow.addView(studioButton);
+
+        Button importButton = button("导入 Spine 文件");
+        importButton.setOnClickListener(v -> openImporter());
+        launchRow.addView(importButton);
 
         statusText = new TextView(this);
         statusText.setTextColor(Color.rgb(190, 198, 214));
@@ -585,8 +601,10 @@ public class MainActivity extends Activity {
         b.setText(text);
         b.setTextSize(12);
         b.setAllCaps(false);
-        b.setMinHeight(0);
-        b.setMinWidth(0);
+        b.setMinHeight(dp(44));
+        b.setMinWidth(dp(72));
+        b.setMinimumHeight(dp(44));
+        b.setMinimumWidth(dp(72));
         b.setPadding(dp(10), dp(4), dp(10), dp(4));
         return b;
     }
