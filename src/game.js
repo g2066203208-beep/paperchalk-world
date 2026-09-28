@@ -631,7 +631,7 @@ function drawWorldMap(){
   }
   ctx.restore();
   worldMapZoomLabel.textContent=Math.round(worldMapZoom*100)+'%';
-  worldMapLocation.textContent='当前位置：A村 3D场景';
+  worldMapLocation.textContent='当前位置：A村 · 单层体素纸片舞台';
 }
 function openWorldMap(){
   if(!active)return;
@@ -768,7 +768,7 @@ function runDebugCommand(command){
     debugColliders=!debugColliders;
     window.Paperchalk3D?.setDebugColliders?.(debugColliders);
     publish();
-    return '3D Collider -> '+(debugColliders?'开启':'关闭');
+    return '地形/实体调试线框 -> '+(debugColliders?'开启':'关闭');
   }
   if(cmd==='stage'){
     const token=String(args[0]||'toggle').toLowerCase();
