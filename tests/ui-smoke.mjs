@@ -58,17 +58,14 @@ try{
   assert((await page.evaluate(()=>window.PaperchalkHealth.state.hp))===9,'debug health control failed');
 
   const stageDefault=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageDefault.enabled&&stageDefault.axis==='z','paper-stage view must default to fixed Z axis '+JSON.stringify(stageDefault));
+  assert(stageDefault.enabled===false,'3D voxel world must default to free orbit camera '+JSON.stringify(stageDefault));
   await page.locator('[data-debug-action="stageview"]').click();
-  const stageOff=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageOff.enabled===false,'debug stage-view toggle did not unlock camera '+JSON.stringify(stageOff));
-  await page.locator('[data-debug-action="stageview"]').click();
+  const stageOn=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageOn.enabled===true,'debug stage-view toggle did not lock camera '+JSON.stringify(stageOn));
   await page.locator('[data-debug-action="stageaxis"]').click();
   const stageX=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageX.enabled===true&&stageX.axis==='x','debug stage-axis toggle did not switch to X '+JSON.stringify(stageX));
-  await page.locator('[data-debug-action="stageaxis"]').click();
-  const stageZ=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageZ.axis==='z','debug stage-axis toggle did not return to Z '+JSON.stringify(stageZ));
+  assert(stageX.axis==='x','debug stage-axis toggle did not switch to X '+JSON.stringify(stageX));
+  await page.locator('[data-debug-action="stageview"]').click();
   await page.locator('#debugCloseBtn').click();
 
   const handled=await page.evaluate(()=>window.PaperchalkHandleBack());
