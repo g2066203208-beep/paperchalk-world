@@ -110,7 +110,7 @@ class WaterWorld{
       }
       y++;
     }
-    if(added&&settle){this.requestSettleAround(gx,gy,gz);this.settleAll()}
+    if(added&&settle){this.requestSettleAround(gx,gy,gz)}
     return {changed:added>0,gx,gy,gz,unitsAdded:added,unitsRejected:remaining,totalLayers:this.totalLayers()};
   }
   placeFull(gx,gy,gz){return this.addVolume(gx,gy,gz,8)}
@@ -293,11 +293,17 @@ class WaterWorld{
       beforeLayers,afterLayers,conserved:true,rollback:false
     };
     if(changed){
+      const sources=[];
+      for(const [key,oldLevel] of before){
+        const newLevel=next.get(key)||0;
+        if(oldLevel>newLevel)sources.push(this.parse(key));
+      }
       this.visualTransition={
         id:++this.visualTransitionId,
         from:before,
         to:new Map(next),
-        duration:.72
+        duration:1.35,
+        sources:sources.slice(0,24)
       };
     }
     return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
@@ -392,7 +398,7 @@ class WaterWorld{
       cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,
       layerHeight:this.terrain.tileSize/8,dirtyChunks:this.dirtyChunks.size,
       version:this.version,needsSettle:this.needsSettle,
-      flowModel:'priority-flood-shared-volume-hydrostatic-v2',
+      flowModel:'priority-flood-shared-volume-hydrostatic-v3-visible-flow',
       flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
       exactHydrostatic:true,lastSettle:this.lastSettle,visualTransitionId:this.visualTransition?.id||0
     };
