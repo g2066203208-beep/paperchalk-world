@@ -104,8 +104,8 @@ const PLAYER_HALF_D=.28;
 const TERRAIN_REACH=4.5;
 const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
-const KEY_SAVE_PREFIX='paperchalk.save.v5.';
-const LEGACY_SAVE_PREFIXES=['paperchalk.save.v4.','paperchalk.save.v3.','paperchalk.save.v2.'];
+const KEY_SAVE_PREFIX='paperchalk.save.v6.';
+const LEGACY_SAVE_PREFIXES=['paperchalk.save.v5.','paperchalk.save.v4.','paperchalk.save.v3.','paperchalk.save.v2.'];
 const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
@@ -292,7 +292,7 @@ function publish(){
   return snap;
 }
 window.PaperchalkRuntime=Object.freeze({
-  version:4,
+  version:5,
   getSnapshot:buildSnapshot,
   subscribe(listener){
     if(typeof listener!=='function')throw new TypeError('runtime listener must be a function');
