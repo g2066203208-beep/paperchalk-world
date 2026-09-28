@@ -24,9 +24,11 @@ try{
   assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
 
   const before={...entered.p};
-  await page.keyboard.down('KeyW');await page.waitForTimeout(450);await page.keyboard.up('KeyW');await page.waitForTimeout(100);
+  assert(Math.abs(before.z)<1e-6,'player is not centered on interaction row '+JSON.stringify(before));
+  await page.keyboard.down('KeyD');await page.waitForTimeout(450);await page.keyboard.up('KeyD');await page.waitForTimeout(100);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(Math.hypot(afterW.x-before.x,afterW.z-before.z)>.25,'W did not move across X/Z '+JSON.stringify({before,afterW}));
+  assert(afterW.x-before.x>.25,'D did not move on X '+JSON.stringify({before,afterW}));
+  assert(Math.abs(afterW.z)<1e-6,'Z movement is not locked '+JSON.stringify(afterW));
 
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
   const jumped=await page.evaluate(()=>window.PaperchalkCombat.jump());assert(jumped===true,'jump rejected');
