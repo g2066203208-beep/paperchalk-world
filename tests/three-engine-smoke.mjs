@@ -33,6 +33,7 @@ try{
   assert(initial.stats.terrainMode==='single-layer-3d-cubes','wrong terrain mode '+JSON.stringify(initial.stats));
   assert(initial.stats.entityMode==='2d-textured-planes','non-terrain entities are not planes '+JSON.stringify(initial.stats));
   assert(initial.stats.playerGeometry==='PlaneGeometry','player is not a paper plane '+JSON.stringify(initial.stats));
+  assert(initial.stats.playerTextureSize?.width===768&&initial.stats.playerTextureSize?.height===1536,'HD protagonist texture did not decode '+JSON.stringify(initial.stats.playerTextureSize));
   assert(initial.stats.paperEntities>=6,'paper entity scene not constructed '+JSON.stringify(initial.stats));
   assert(initial.stats.terrain.visibleChunks>=20,'not enough streamed chunks '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.oneLayer===true,'terrain unexpectedly gained Z gameplay layers '+JSON.stringify(initial.stats.terrain));
