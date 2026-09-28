@@ -3,34 +3,36 @@
 'use strict';
 
 const scene3d={
-  spawn:{x:0,y:0,z:13,yaw:Math.PI},
-  bounds:{minX:-46,maxX:46,minZ:-26,maxZ:31},
-  road:{x:0,z:-6,width:92,depth:7.5},
-  buildings:[
-    {id:'village-shop',name:'A村街角小楼',x:-27,z:6,width:9,height:6.2,depth:7.5,color:0x9b7d65},
-    {id:'village-house-a',name:'A村住宅',x:-14,z:7,width:8,height:4.8,depth:6.5,color:0x81776d},
-    {id:'village-house-b',name:'A村住宅',x:0,z:6.5,width:9,height:5.6,depth:7,color:0x9a937c},
-    {id:'village-workshop',name:'A村工坊',x:15,z:7,width:10,height:5.1,depth:7.2,color:0x77898c},
-    {id:'village-inn',name:'A村旅店',x:30,z:6.5,width:10,height:6.6,depth:7.6,color:0x936f63},
-    {id:'south-house-a',name:'南街住宅',x:-27,z:-17,width:9,height:5.2,depth:7,color:0x8b776a},
-    {id:'south-house-b',name:'南街住宅',x:-13,z:-17,width:8,height:4.4,depth:6.5,color:0x748184},
-    {id:'south-store',name:'南街商铺',x:2,z:-17,width:10,height:5.7,depth:7.5,color:0x9c8b72},
-    {id:'south-house-c',name:'南街住宅',x:17,z:-17,width:8.5,height:4.9,depth:6.8,color:0x7f756b},
-    {id:'south-hall',name:'南街会馆',x:31,z:-17,width:10,height:6.2,depth:7.6,color:0x8c7469}
-  ],
-  trees:[
-    {x:-39,z:2.5,scale:1.05},{x:-34,z:14,scale:.9},{x:-21,z:2.5,scale:1.15},
-    {x:-8,z:2.5,scale:.95},{x:9,z:2.2,scale:1.08},{x:22,z:2.6,scale:1},
-    {x:38,z:2.8,scale:1.2},{x:-37,z:-12,scale:1},{x:39,z:-12,scale:1.05},
-    {x:-5,z:20,scale:1.1},{x:8,z:21,scale:.95}
-  ],
-  rocks:[
-    {x:-9,z:14,r:1.15},{x:12,z:15,r:.9},{x:24,z:20,r:1.25},{x:-24,z:21,r:.8}
+  mode:'paper-stage-voxel',
+  // Gameplay is 2D (X/Y). Z is reserved exclusively for the paper-stage layer.
+  spawn:{x:0,y:3,z:0.36,yaw:0},
+  bounds:{minX:-96,maxX:96,minY:-1024,maxY:80},
+  terrain:{
+    tileSize:.25,
+    chunkSize:64,
+    depth:.18,
+    seed:2066203208,
+    activeRadiusX:2,
+    activeRadiusY:2
+  },
+  paperEntities:[
+    {id:'village-shop',kind:'building',name:'A村街角小楼',x:-27,width:9,height:6.2,zLayer:-.42,tint:'#9b7d65'},
+    {id:'village-house-a',kind:'building',name:'A村住宅',x:-14,width:8,height:4.8,zLayer:-.40,tint:'#81776d'},
+    {id:'village-house-b',kind:'building',name:'A村住宅',x:0,width:9,height:5.6,zLayer:-.43,tint:'#9a937c'},
+    {id:'village-workshop',kind:'building',name:'A村工坊',x:15,width:10,height:5.1,zLayer:-.41,tint:'#77898c'},
+    {id:'village-inn',kind:'building',name:'A村旅店',x:30,width:10,height:6.6,zLayer:-.44,tint:'#936f63'},
+    {id:'tree-west-1',kind:'tree',name:'纸片树',x:-39,width:3.4,height:5.2,zLayer:-.18,tint:'#486c4b'},
+    {id:'tree-west-2',kind:'tree',name:'纸片树',x:-21,width:3.7,height:5.6,zLayer:-.16,tint:'#506f4c'},
+    {id:'tree-center',kind:'tree',name:'纸片树',x:9,width:3.4,height:5.1,zLayer:-.17,tint:'#4b714f'},
+    {id:'tree-east',kind:'tree',name:'纸片树',x:38,width:3.9,height:5.8,zLayer:-.16,tint:'#466949'},
+    {id:'road-sign',kind:'prop',name:'A村路牌',x:20,width:1.4,height:2.3,zLayer:.12,tint:'#8e6948'},
+    {id:'rock-west',kind:'rock',name:'纸片岩块',x:-9,width:2.2,height:1.5,zLayer:.08,tint:'#77756c'},
+    {id:'rock-east',kind:'rock',name:'纸片岩块',x:24,width:2.4,height:1.7,zLayer:.08,tint:'#817e72'}
   ]
-};
+}
 
 const content={
-  version:2,
+  version:3,
   world:{
     nodes:[
       {id:'village',name:'A村',x:170,y:650,kind:'village'},
@@ -101,7 +103,7 @@ function validate(value=content){
   try{
     const nodeIds=assertUnique(value.world.nodes,'world.nodes');
     assertUnique(value.world.routes,'world.routes');
-    assertUnique(value.scene3d.buildings,'scene3d.buildings');
+    assertUnique(value.scene3d.paperEntities,'scene3d.paperEntities');
     assertUnique(value.npcs,'npcs');
     assertUnique(value.enemySpawns,'enemySpawns');
     for(const route of value.world.routes){
@@ -109,9 +111,11 @@ function validate(value=content){
       if(!nodeIds.has(route.to))errors.push('route '+route.id+' missing to node '+route.to);
     }
     const b=value.scene3d.bounds;
-    if(!(b.minX<b.maxX&&b.minZ<b.maxZ))errors.push('scene3d bounds invalid');
-    for(const building of value.scene3d.buildings){
-      if(!(building.width>0&&building.height>0&&building.depth>0))errors.push('building '+building.id+' dimensions invalid');
+    if(!(b.minX<b.maxX&&b.minY<b.maxY))errors.push('scene3d bounds invalid');
+    const terrain=value.scene3d.terrain||{};
+    if(!(terrain.tileSize>0&&terrain.chunkSize>=16&&terrain.depth>0))errors.push('scene3d terrain config invalid');
+    for(const entity of value.scene3d.paperEntities){
+      if(!(entity.width>0&&entity.height>0))errors.push('paper entity '+entity.id+' dimensions invalid');
     }
   }catch(error){errors.push(error.message)}
   return {ok:errors.length===0,errors};
