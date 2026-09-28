@@ -45,6 +45,8 @@ const inventoryItemWeight=byId('inventoryItemWeight');
 const inventoryItemCount=byId('inventoryItemCount');
 const inventoryUse=byId('inventoryUse');
 const inventoryDrop=byId('inventoryDrop');
+const quickbar=byId('quickbar');
+const quickSlots=[...quickbar.querySelectorAll('[data-quick-slot]')];
 
 const worldMapBtn=byId('worldMapBtn');
 const worldMapOverlay=byId('worldMapOverlay');
@@ -580,10 +582,33 @@ let inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
 let inventorySelected=-1;
 function itemClone(item){return item?JSON.parse(JSON.stringify(item)):null}
 function inventorySnapshot(){return inventoryItems.map(itemClone)}
+function renderQuickbar(){
+  for(let i=0;i<quickSlots.length;i++){
+    const button=quickSlots[i],item=inventoryItems[i]||null;
+    const glyph=button.querySelector('.quick-glyph'),count=button.querySelector('.quick-count');
+    glyph.textContent=item?.glyph||item?.name?.slice(0,1)||'';
+    count.textContent=item&&Number(item.count||1)>1?String(item.count):'';
+    button.classList.toggle('is-selected',inventorySelected===i);
+    button.classList.toggle('is-active',item?.action==='toggle-torch'&&controller.torchOn);
+    button.setAttribute('aria-label',item?('快捷栏 '+(i+1)+'：'+item.name+(item.action==='toggle-torch'?(controller.torchOn?'，已点亮':'，已熄灭'):''))
+      :('快捷栏 '+(i+1)+'：空'));
+  }
+}
+function activateQuickSlot(index){
+  const i=Math.max(0,Math.min(quickSlots.length-1,Number(index)|0));
+  const item=inventoryItems[i]||null;
+  inventorySelected=i;
+  renderInventory();
+  if(!item)return false;
+  if(item.action==='toggle-torch')return toggleTorch();
+  return useSelectedItem();
+}
+quickSlots.forEach((button,index)=>button.addEventListener('click',()=>activateQuickSlot(index)));
 function setInventoryFromSave(saved){
   inventoryItems=Array.from({length:INVENTORY_CAPACITY},(_,i)=>itemClone(Array.isArray(saved)?saved[i]:null));
   inventorySelected=-1;
   renderInventory();
+  renderQuickbar();
 }
 function renderInventory(){
   backpackSlots.innerHTML='';
@@ -618,11 +643,12 @@ function renderInventory(){
   inventoryItemCount.textContent=selected?String(selected.count||1):'0';
   inventoryUse.disabled=!selected;
   inventoryDrop.disabled=!selected;
+  renderQuickbar();
 }
 function addInventoryItem(item){
   if(!item)return false;
   const stack=inventoryItems.find(v=>v&&v.id===item.id);
-  if(stack){stack.count=(stack.count||1)+(item.count||1);renderInventory();saveWorldState();return true}
+  if(stack){stack.count=(stack.count||1)+(item.count||1);renderInventory();renderQuickbar();saveWorldState();return true}
   const slot=inventoryItems.findIndex(v=>!v);
   if(slot<0){showMapNotice('背包已满');return false}
   inventoryItems[slot]=itemClone(item);
@@ -640,6 +666,7 @@ function toggleTorch(enabled=!controller.torchOn,{notice=true,persist=true}={}){
   controller.torchOn=!!enabled;
   window.PaperchalkEvents?.emit('player:torch-changed',{enabled:controller.torchOn});
   if(notice)showMapNotice(controller.torchOn?'火把已点亮':'火把已熄灭',700);
+  renderQuickbar();
   publish();
   if(persist)saveWorldState();
   return controller.torchOn;
@@ -676,7 +703,7 @@ window.PaperchalkInventory=Object.freeze({
   add:addInventoryItem,
   setSlot(index,item){
     const i=Math.max(0,Math.min(INVENTORY_CAPACITY-1,Math.floor(Number(index)||0)));
-    inventoryItems[i]=itemClone(item);renderInventory();saveWorldState();return itemClone(inventoryItems[i]);
+    inventoryItems[i]=itemClone(item);renderInventory();renderQuickbar();saveWorldState();return itemClone(inventoryItems[i]);
   }
 });
 
@@ -1254,6 +1281,11 @@ window.PaperchalkHandleBack=function(){
 };
 
 addEventListener('keydown',event=>{
+  if(/^Digit[1-5]$/.test(event.code)&&worldInteractive()){
+    event.preventDefault();
+    activateQuickSlot(Number(event.code.slice(-1))-1);
+    return;
+  }
   if(event.code==='KeyT'&&worldInteractive()){
     event.preventDefault();
     toggleTorch();
@@ -1268,6 +1300,7 @@ addEventListener('unhandledrejection',event=>{
 
 applySettings();
 setInventoryFromSave([]);
+renderQuickbar();
 paperClock.textContent=formatClock();
 refreshMenu();
 showPage('menu');
