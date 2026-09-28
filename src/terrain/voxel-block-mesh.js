@@ -76,7 +76,16 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
           const b=sample(x[0]+q[0],x[1]+q[1],x[2]+q[2]);
           const sa=terrain.isSolidTile(a),sb=terrain.isSolidTile(b);
           let face=0;
-          if(sa!==sb){
+          if(d===2&&sa&&sb){
+            const aGz=chunk.cz*n+x[2],bGz=chunk.cz*n+x[2]+1;
+            // Force the +Z face of the real rear black voxel row to render even
+            // when the interaction-row voxel directly in front is solid.
+            // Only the chunk that owns the rear cell emits it, avoiding duplicates.
+            if(aGz===terrain.blackBackRowZ&&bGz===terrain.interactionRowZ&&x[2]>=0&&x[2]<n){
+              face=a+32;
+            }
+          }
+          if(!face&&sa!==sb){
             const tile=sa?a:b;
             const solidLocalZ=sa?x[2]:x[2]+q[2];
             const solidGz=chunk.cz*n+solidLocalZ;
