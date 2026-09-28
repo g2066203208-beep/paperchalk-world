@@ -14,6 +14,7 @@ const scene3d={
     seed:24681357,
     visibleChunkRadiusXZ:3,
     interactionRowZ:0,
+    blackBackRowZ:-1,
     visibleChunkRadiusY:2,
     maxBuildsPerFrame:5
   },
