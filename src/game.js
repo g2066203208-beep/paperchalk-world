@@ -227,7 +227,7 @@ const velocity={x:0,y:0,z:0};
 const health={current:PLAYER_MAX_HP,max:PLAYER_MAX_HP};
 const controller={
   grounded:true,crouching:false,attacking:false,attackTimer:0,attackCooldown:0,
-  action:'idle',moving:false,torchOn:false
+  action:'idle',moving:false,torchOn:false,inWater:false,submerged:0
 };
 const playerEntity=ecs.create({
   Transform:transform,
@@ -276,7 +276,8 @@ function playerSnapshot(){
     x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw,
     vx:velocity.x,vy:velocity.y,vz:velocity.z,
     grounded:controller.grounded,crouching:controller.crouching,
-    attacking:controller.attacking,action:controller.action,torchOn:controller.torchOn
+    attacking:controller.attacking,action:controller.action,torchOn:controller.torchOn,
+    inWater:controller.inWater,submerged:controller.submerged
   };
 }
 function buildSnapshot(){
@@ -364,12 +365,22 @@ function worldInteractive(){
   return active&&uiShell.classList.contains('is-hidden')&&!overlayOpen();
 }
 
+function playerSubmersion(){
+  return terrain.water?.submersionAABB?.(
+    transform.x,transform.y,transform.z,
+    PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D
+  )||0;
+}
+
 ecs.registerSystem('player-movement',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:10,
   update(entity,world,dt,context){
     if(entity!==playerEntity)return;
     const input=context.interactive?rawMoveInput():{horizontal:0,magnitude:0};
-    const speed=PLAYER_SPEED*(controller.crouching?.48:1);
+    const submerged=playerSubmersion();
+    controller.submerged=submerged;controller.inWater=submerged>.06;
+    const swimFactor=controller.inWater?.58:1;
+    const speed=PLAYER_SPEED*(controller.crouching?.48:1)*swimFactor;
     velocity.x=input.horizontal*speed;
     velocity.z=0;
     transform.z=PLAYER_ROW_CENTER_Z;
@@ -382,8 +393,23 @@ ecs.registerSystem('player-gravity',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:20,
   update(entity,world,dt){
     if(entity!==playerEntity)return;
+    const submerged=playerSubmersion();
+    controller.submerged=submerged;controller.inWater=submerged>.06;
     if(!groundProbe())controller.grounded=false;
-    if(!controller.grounded)velocity.y-=GRAVITY*dt;
+
+    if(controller.inWater){
+      // Buoyancy increases with displaced player volume; velocity drag keeps swimming controllable.
+      const buoyancy=GRAVITY*1.18*submerged;
+      const gravity=GRAVITY*(1-submerged*.82);
+      velocity.y+=(buoyancy-gravity)*dt;
+      const drag=Math.exp(-3.4*submerged*dt);
+      velocity.y*=drag;
+      velocity.x*=Math.exp(-1.8*submerged*dt);
+      velocity.y=Math.max(-3.2,Math.min(4.8,velocity.y));
+      controller.grounded=false;
+    }else if(!controller.grounded){
+      velocity.y-=GRAVITY*dt;
+    }
     moveVertical(velocity.y*dt);
   }
 });
@@ -397,6 +423,7 @@ ecs.registerSystem('player-action',{
       controller.attacking=controller.attackTimer>0;
     }else controller.attacking=false;
     if(controller.attacking)controller.action='attack';
+    else if(controller.inWater)controller.action=controller.moving||Math.abs(velocity.y)>.15?'swim':'float';
     else if(!controller.grounded)controller.action=velocity.y>=0?'jump-up':'jump-down';
     else if(controller.crouching)controller.action='crouch';
     else if(controller.moving)controller.action='walk';
@@ -405,7 +432,16 @@ ecs.registerSystem('player-action',{
 });
 
 function jump(){
-  if(!worldInteractive()||!controller.grounded)return false;
+  if(!worldInteractive())return false;
+  const submerged=playerSubmersion();
+  if(submerged>.06){
+    controller.inWater=true;controller.submerged=submerged;controller.grounded=false;
+    velocity.y=Math.max(velocity.y,3.9+submerged*1.4);
+    window.PaperchalkEvents?.emit('player:swim-stroke',{x:transform.x,y:transform.y,z:transform.z,submerged});
+    publish();
+    return true;
+  }
+  if(!controller.grounded)return false;
   controller.grounded=false;
   velocity.y=JUMP_SPEED;
   window.PaperchalkEvents?.emit('player:jump',{x:transform.x,y:transform.y,z:transform.z});
@@ -1050,9 +1086,9 @@ function fixedUpdate(dt){
     worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
     paperClock.textContent=formatClock();
     waterStepAccumulator+=dt;
-    if(waterStepAccumulator>=.10){
+    if(waterStepAccumulator>=.06){
       waterStepAccumulator=0;
-      const liquidStep=terrain.water.step({maxTransfers:384});
+      const liquidStep=terrain.water.step({maxTransfers:960,maxActive:768});
       if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
     }
   }
@@ -1168,7 +1204,7 @@ function loadWorldState(){
   if(collidesAt(transform.x,transform.y,transform.z))transform.y=safeSpawnY(transform.x,transform.z);
   velocity.x=velocity.y=velocity.z=0;
   controller.grounded=groundProbe();
-  controller.crouching=false;controller.attacking=false;controller.action='idle';
+  controller.crouching=false;controller.attacking=false;controller.action='idle';controller.inWater=false;controller.submerged=0;
   health.current=clampHp(save.playerHp);
   controller.torchOn=!!save.torchOn;
   worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
