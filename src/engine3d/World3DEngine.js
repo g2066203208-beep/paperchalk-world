@@ -340,14 +340,14 @@ export class World3DEngine{
     let desired;
     if(this.stageView.enabled){
       desired=this.stageView.axis==='x'
-        ?new this.THREE.Vector3(this.cameraTarget.x+this.stageView.side*this.cameraRig.distance,this.cameraTarget.y,0)
-        :new this.THREE.Vector3(this.cameraTarget.x,this.cameraTarget.y,this.stageView.side*this.cameraRig.distance);
+        ?new this.THREE.Vector3(this.cameraTarget.x+this.stageView.side*this.cameraRig.distance,this.cameraTarget.y,this.cameraTarget.z)
+        :new this.THREE.Vector3(this.cameraTarget.x,this.cameraTarget.y,this.cameraTarget.z+this.stageView.side*this.cameraRig.distance);
     }else{
       const cp=Math.cos(this.cameraRig.pitch);
       desired=new this.THREE.Vector3(
         this.cameraTarget.x+Math.sin(this.cameraRig.yaw)*cp*this.cameraRig.distance,
         this.cameraTarget.y+Math.sin(this.cameraRig.pitch)*this.cameraRig.distance,
-        Math.cos(this.cameraRig.yaw)*cp*this.cameraRig.distance
+        this.cameraTarget.z+Math.cos(this.cameraRig.yaw)*cp*this.cameraRig.distance
       );
     }
     this.camera.position.lerp(desired,k);this.camera.lookAt(this.cameraTarget);
