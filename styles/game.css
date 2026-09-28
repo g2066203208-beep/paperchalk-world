@@ -68,9 +68,11 @@ body{touch-action:manipulation}
 
 .combat-controls{
   position:absolute;z-index:13;right:max(18px,env(safe-area-inset-right));bottom:max(20px,calc(env(safe-area-inset-bottom) + 14px));
-  display:flex;align-items:flex-end;gap:10px
+  display:flex;align-items:flex-end;gap:8px
 }
 .combat-btn{width:64px;height:64px;border-radius:50%;font-size:17px;background:rgba(236,224,198,.9)}
+.combat-btn.terrain-tool{width:52px;height:52px;font-size:15px;background:rgba(217,203,170,.9)}
+.combat-btn.terrain-tool.is-active{outline:3px solid #f0c55e;outline-offset:2px;background:#5c4938;color:#fff4d8}
 .combat-btn.primary{width:76px;height:76px;background:rgba(175,94,76,.94);color:#fff4e7;border-color:#6d3d31}
 .desktop-control-hint{
   position:absolute;z-index:11;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);
