@@ -39,6 +39,11 @@ try{
   await page.waitForTimeout(100);
   const hp=await page.evaluate(()=>window.Paperchalk3D.stats.health);
   assert(hp?.value===5,'health bar failed');
+  const torchItem=await page.evaluate(()=>window.PaperchalkInventory.items.find(i=>i?.id==='hand-torch')||null);
+  assert(torchItem?.action==='toggle-torch','starter torch missing');
+  await page.keyboard.press('KeyT');await page.waitForTimeout(120);
+  const light=await page.evaluate(()=>window.Paperchalk3D.stats.lighting);
+  assert(light.torchOn===true&&light.torchIntensity>2,'moving torch light did not activate '+JSON.stringify(light));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('INFINITE_VOXEL_3D_ENGINE_OK');
 }finally{await browser.close()}
