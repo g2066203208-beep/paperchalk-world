@@ -76,7 +76,7 @@ class TerrainChunkRenderer{
     this.THREE=THREE;
     this.terrain=terrain;
     this.scene=scene;
-    this.settings={radiusX:3,radiusY:2,thickness:terrain.tileSize,...settings};
+    this.settings={radiusX:3,radiusY:2,thickness:terrain.tileSize,texturePixels:terrain.pixelsPerMeter||128,...settings};
     // One gameplay layer, one physical cube thickness. This is not a 3D voxel volume.
     this.thickness=Math.max(.001,Number(this.settings.thickness)||terrain.tileSize);
     this.root=new THREE.Group();
@@ -84,7 +84,7 @@ class TerrainChunkRenderer{
     scene.add(this.root);
     this.meshes=new Map();
     this.visibleKeys=new Set();
-    this.texture=createVoxelGridTexture(THREE);
+    this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
     this.material=new THREE.MeshLambertMaterial({
       map:this.texture,
       vertexColors:true,
@@ -203,6 +203,7 @@ class TerrainChunkRenderer{
       oneLayer:true,
       blockGeometry:'3d-cube',
       thickness:this.thickness,
+      texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,
       greedyRatio:quads?unitFaces/quads:1,
       ...this.terrain.stats()
     };
@@ -271,7 +272,8 @@ export class World3DEngine{
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
       radiusX:this.sceneData.terrain?.visibleChunkRadiusX??3,
       radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
-      thickness:this.sceneData.terrain?.thickness??this.terrain.tileSize
+      thickness:this.sceneData.terrain?.thickness??this.terrain.tileSize,
+      texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
     });
 
     const cursorGeometry=new THREE.BoxGeometry(
