@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const size=p=>fs.statSync(p).size;
 assert(size('src/game.js')<76000,'gameplay runtime exceeds 76KB budget');
 assert(size('src/engine3d/World3DEngine.js')<56000,'paper-stage engine exceeds 56KB budget');
-assert(size('src/terrain/terrain-runtime.js')<24000,'terrain runtime exceeds 24KB budget');
+assert(size('src/terrain/terrain-runtime.js')<30000,'terrain+water runtime exceeds 30KB budget');
 assert(size('src/terrain/voxel-block-mesh.js')<24000,'cube mesher exceeds 24KB budget');
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
