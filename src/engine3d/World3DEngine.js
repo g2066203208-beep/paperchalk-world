@@ -73,12 +73,27 @@ export class WorldSpaceHealthBar{
 
 class WaterRenderer{
   constructor(THREE,terrain,scene){
-    this.THREE=THREE;this.terrain=terrain;this.scene=scene;this.meshes=new Map();this.initialized=false;
+    this.THREE=THREE;this.terrain=terrain;this.scene=scene;
+    this.meshes=new Map();this.initialized=false;this.displayLevels=new Map();this.targetLevels=new Map();
+    this.transitionId=-1;this.transitionT=1;this.transitionDuration=.72;this.displayDirty=new Set();
     this.material=new THREE.MeshPhongMaterial({
       color:0x49a9df,transparent:true,opacity:.62,depthWrite:false,
       shininess:78,specular:0xc8eeff,side:THREE.DoubleSide,flatShading:true
     });
     this.root=new THREE.Group();this.root.name='eight-layer-water-surface-meshes';scene.add(this.root);
+  }
+  _key(gx,gy,gz){return gx+','+gy+','+gz}
+  _level(gx,gy,gz){return this.displayLevels.get(this._key(gx,gy,gz))||0}
+  _chunkKeyFromCell(gx,gy,gz){
+    const n=this.terrain.chunkSize;
+    return Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n);
+  }
+  _markDisplayDirtyForKey(key){
+    const [gx,gy,gz]=key.split(',').map(Number);
+    this.displayDirty.add(this._chunkKeyFromCell(gx,gy,gz));
+    this.displayDirty.add(this._chunkKeyFromCell(gx-1,gy,gz));this.displayDirty.add(this._chunkKeyFromCell(gx+1,gy,gz));
+    this.displayDirty.add(this._chunkKeyFromCell(gx,gy-1,gz));this.displayDirty.add(this._chunkKeyFromCell(gx,gy+1,gz));
+    this.displayDirty.add(this._chunkKeyFromCell(gx,gy,gz-1));this.displayDirty.add(this._chunkKeyFromCell(gx,gy,gz+1));
   }
   _pushQuad(data,a,b,c,d){
     const base=data.positions.length/3;
@@ -87,55 +102,37 @@ class WaterRenderer{
     data.faces++;
   }
   _buildChunk(chunkKey){
-    const THREE=this.THREE,water=this.terrain.water;
+    const THREE=this.THREE;
     const old=this.meshes.get(chunkKey);
     if(old){this.root.remove(old);old.geometry.dispose();this.meshes.delete(chunkKey)}
     const [cx,cy,cz]=chunkKey.split(',').map(Number),n=this.terrain.chunkSize,s=this.terrain.tileSize;
     const data={positions:[],indices:[],faces:0,cells:0};
-    const xStart=cx*n,xEnd=xStart+n,yStart=cy*n,yEnd=yStart+n;
+    const xStart=cx*n,xEnd=xStart+n,yStart=cy*n,yEnd=yStart+n,zStart=cz*n,zEnd=zStart+n;
 
-    const zStart=cz*n,zEnd=zStart+n;
     for(let gz=zStart;gz<zEnd;gz++)for(let gy=yStart;gy<yEnd;gy++)for(let gx=xStart;gx<xEnd;gx++){
-      const level=water.getLevel(gx,gy,gz);if(!level)continue;
+      const level=this._level(gx,gy,gz);if(!level)continue;
       data.cells++;
       const h=(level/8)*s;
       const x0=gx*s+.008*s,x1=(gx+1)*s-.008*s;
       const y0=gy*s,y1=y0+h;
       const z0=gz*s-s*.492,z1=gz*s+s*.492;
 
-      // Top is hidden if another water cell continues directly above.
-      if(water.getLevel(gx,gy+1,gz)<=0)
+      if(this._level(gx,gy+1,gz)<=0)
         this._pushQuad(data,[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]);
 
-      // Bottom is hidden by solid ground or a full water cell below.
-      const belowLevel=water.getLevel(gx,gy-1,gz);
+      const belowLevel=this._level(gx,gy-1,gz);
       if(belowLevel<8&&!this.terrain.isSolidPeek(gx,gy-1,gz))
         this._pushQuad(data,[x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0]);
 
-      // X sides only draw the vertical height not already covered by adjacent water.
-      const leftH=(water.getLevel(gx-1,gy,gz)/8)*s;
-      if(h>leftH+.0001){
-        const ys=y0+leftH;
-        this._pushQuad(data,[x0,ys,z0],[x0,ys,z1],[x0,y1,z1],[x0,y1,z0]);
-      }
-      const rightH=(water.getLevel(gx+1,gy,gz)/8)*s;
-      if(h>rightH+.0001){
-        const ys=y0+rightH;
-        this._pushQuad(data,[x1,ys,z1],[x1,ys,z0],[x1,y1,z0],[x1,y1,z1]);
-      }
+      const leftH=(this._level(gx-1,gy,gz)/8)*s;
+      if(h>leftH+.0001){const ys=y0+leftH;this._pushQuad(data,[x0,ys,z0],[x0,ys,z1],[x0,y1,z1],[x0,y1,z0])}
+      const rightH=(this._level(gx+1,gy,gz)/8)*s;
+      if(h>rightH+.0001){const ys=y0+rightH;this._pushQuad(data,[x1,ys,z1],[x1,ys,z0],[x1,y1,z0],[x1,y1,z1])}
 
-      // Z sides use the same partial-height culling as X sides, so 3D-connected
-      // water never draws overlapping internal faces.
-      const frontH=(water.getLevel(gx,gy,gz+1)/8)*s;
-      if(h>frontH+.0001){
-        const ys=y0+frontH;
-        this._pushQuad(data,[x0,ys,z1],[x1,ys,z1],[x1,y1,z1],[x0,y1,z1]);
-      }
-      const backH=(water.getLevel(gx,gy,gz-1)/8)*s;
-      if(h>backH+.0001){
-        const ys=y0+backH;
-        this._pushQuad(data,[x1,ys,z0],[x0,ys,z0],[x0,y1,z0],[x1,y1,z0]);
-      }
+      const frontH=(this._level(gx,gy,gz+1)/8)*s;
+      if(h>frontH+.0001){const ys=y0+frontH;this._pushQuad(data,[x0,ys,z1],[x1,ys,z1],[x1,y1,z1],[x0,y1,z1])}
+      const backH=(this._level(gx,gy,gz-1)/8)*s;
+      if(h>backH+.0001){const ys=y0+backH;this._pushQuad(data,[x1,ys,z0],[x0,ys,z0],[x0,y1,z0],[x1,y1,z0])}
     }
 
     if(!data.faces)return;
@@ -148,26 +145,65 @@ class WaterRenderer{
     mesh.name='water-surface-chunk:'+chunkKey;mesh.renderOrder=30;mesh.castShadow=false;mesh.receiveShadow=true;
     this.root.add(mesh);this.meshes.set(chunkKey,mesh);
   }
-  _allChunkKeys(){
-    const out=new Set(),n=this.terrain.chunkSize;
-    for(const key of this.terrain.water.cells.keys()){
+  _markAllChunks(map){
+    const n=this.terrain.chunkSize;
+    for(const key of map.keys()){
       const [gx,gy,gz]=key.split(',').map(Number);
-      out.add(Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n));
+      this.displayDirty.add(Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n));
     }
-    return out;
   }
-  update(){
+  _beginTransition(water){
+    const tr=water.visualTransition;
+    if(!tr||tr.id===this.transitionId)return false;
+    this.transitionId=tr.id;this.transitionT=0;this.transitionDuration=Math.max(.2,Number(tr.duration)||.72);
+    this.displayLevels=new Map(tr.from);
+    this.targetLevels=new Map(tr.to);
+    for(const key of new Set([...this.displayLevels.keys(),...this.targetLevels.keys()]))this._markDisplayDirtyForKey(key);
+    return true;
+  }
+  update(dt=.016){
     const water=this.terrain.water;if(!water)return;
-    let dirty;
-    if(!this.initialized){dirty=[...this._allChunkKeys()];this.initialized=true;water.consumeDirtyChunks()}
-    else dirty=water.consumeDirtyChunks();
+    if(!this.initialized){
+      this.displayLevels=new Map(water.cells);this.targetLevels=new Map(water.cells);
+      this._markAllChunks(this.displayLevels);this.initialized=true;this.transitionId=water.visualTransition?.id??-1;
+    }else this._beginTransition(water);
+
+    for(const key of water.consumeDirtyChunks())this.displayDirty.add(key);
+
+    if(this.transitionT<1){
+      const prevT=this.transitionT;
+      this.transitionT=Math.min(1,this.transitionT+Math.max(0,dt)/this.transitionDuration);
+      const eased=1-Math.pow(1-this.transitionT,3);
+      const keys=new Set([...this.displayLevels.keys(),...this.targetLevels.keys()]);
+      for(const key of keys){
+        const a=this.displayLevels.get(key)||0,b=this.targetLevels.get(key)||0;
+        const from=this.terrain.water.visualTransition?.from?.get(key)??a;
+        const next=Math.max(0,Math.min(8,Math.round(from+(b-from)*eased)));
+        const old=this.displayLevels.get(key)||0;
+        if(next!==old){
+          if(next<=0)this.displayLevels.delete(key);else this.displayLevels.set(key,next);
+          this._markDisplayDirtyForKey(key);
+        }
+      }
+      if(this.transitionT>=1){
+        this.displayLevels=new Map(this.targetLevels);
+        this._markAllChunks(this.displayLevels);
+      }
+    }else if(this.transitionId!==water.visualTransition?.id&&water.visualTransition){
+      this._beginTransition(water);
+    }else if(!water.visualTransition&&water.version!==this._waterVersion){
+      this.displayLevels=new Map(water.cells);this.targetLevels=new Map(water.cells);this._markAllChunks(this.displayLevels);
+    }
+    this._waterVersion=water.version;
+
+    const dirty=[...this.displayDirty];this.displayDirty.clear();
     for(const key of dirty)this._buildChunk(key);
   }
   stats(){
     const w=this.terrain.water?.stats?.()||{cells:0,totalLayers:0,levels:8,layerHeight:this.terrain.tileSize/8};
     let faces=0,renderedCells=0;
     for(const mesh of this.meshes.values()){faces+=mesh.geometry.userData.faces||0;renderedCells+=mesh.geometry.userData.cells||0}
-    return {...w,renderMode:'chunked-visible-surface-water-v3-3d',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,threeDimensional:true,drawCalls:this.meshes.size};
+    return {...w,renderMode:'chunked-visible-surface-water-v4-animated',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:this.transitionT<1,visualTransitionT:this.transitionT};
   }
   dispose(){
     for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
@@ -906,7 +942,7 @@ export class World3DEngine{
     this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
     const p=current?.player;
     this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
-    this.waterRenderer?.update();
+    this.waterRenderer?.update(dt);
     const renderTime=performance.now()/1000;
     this.fishSchoolRenderer?.update(current,this.camera,renderTime);
     this.fishingRenderer?.update(current,this.camera,renderTime);
