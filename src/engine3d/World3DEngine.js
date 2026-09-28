@@ -82,30 +82,33 @@ class TerrainChunkRenderer{
     this.darknessUniforms={
       uDarkPlayer:{value:new THREE.Vector3()},
       uDarkTorchOn:{value:0},
-      uDarkTime:{value:0}
+      uDarkTime:{value:0},
+      uDarkUnderground:{value:0}
     };
     this.material.onBeforeCompile=shader=>{
       shader.uniforms.uDarkPlayer=this.darknessUniforms.uDarkPlayer;
       shader.uniforms.uDarkTorchOn=this.darknessUniforms.uDarkTorchOn;
       shader.uniforms.uDarkTime=this.darknessUniforms.uDarkTime;
+      shader.uniforms.uDarkUnderground=this.darknessUniforms.uDarkUnderground;
       shader.vertexShader=shader.vertexShader
         .replace('#include <common>','#include <common>\nattribute float darkness;\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;')
         .replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;');
       shader.fragmentShader=shader.fragmentShader
-        .replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;')
+        .replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform float uDarkUnderground;')
         .replace('#include <opaque_fragment>',`
           float voxelDist=distance(vVoxelWorldPos,uDarkPlayer);
           float bodyReveal=1.0-smoothstep(0.55,1.55,voxelDist);
           float torchRadius=10.5+0.45*sin(uDarkTime*7.0);
           float torchReveal=uDarkTorchOn*(1.0-smoothstep(1.6,torchRadius,voxelDist));
           float reveal=max(bodyReveal,torchReveal);
-          float darknessVisibility=mix(1.0,0.015+0.985*reveal,clamp(vVoxelDarkness,0.0,1.0));
+          float effectiveDarkness=max(clamp(vVoxelDarkness,0.0,1.0),clamp(uDarkUnderground,0.0,1.0));
+          float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
           outgoingLight*=darknessVisibility;
           #include <opaque_fragment>
         `);
       this.terrainShader=shader;
     };
-    this.material.customProgramCacheKey=()=> 'paperchalk-terrain-darkness-v3';
+    this.material.customProgramCacheKey=()=> 'paperchalk-terrain-darkness-v4';
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
   _markDirty(cx,cy,cz){
@@ -144,11 +147,12 @@ class TerrainChunkRenderer{
     if(record){this.root.remove(record.mesh);record.mesh.geometry.dispose()}
     record=this._build(cx,cy,cz);this.meshes.set(key,record);this.root.add(record.mesh);return record;
   }
-  update(player,{torchOn=false,time=0}={}){
+  update(player,{torchOn=false,time=0,undergroundFactor=0}={}){
     if(!player)return;
     this.darknessUniforms.uDarkPlayer.value.set(player.x,player.y,player.z);
     this.darknessUniforms.uDarkTorchOn.value=torchOn?1:0;
     this.darknessUniforms.uDarkTime.value=Number(time)||0;
+    this.darknessUniforms.uDarkUnderground.value=Math.max(0,Math.min(1,Number(undergroundFactor)||0));
     const span=this.terrain.chunkSize*this.terrain.tileSize;
     const ccx=Math.floor(player.x/span),ccy=Math.floor(player.y/span),ccz=Math.floor(player.z/span);
     const next=new Set(),queue=[];
@@ -553,7 +557,7 @@ export class World3DEngine{
     const current=this.lastSnapshot;
     this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateWorldTime(current);
     const p=current?.player;
-    this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
+    this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000,undergroundFactor:this.undergroundFactor??0});
     this.healthBar?.update(this.camera,dt);
   }
   render(){this.renderer.render(this.scene,this.camera)}
@@ -617,7 +621,7 @@ export class World3DEngine{
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
-      undergroundOcclusion:{mode:'terraria-style-light-field-v3',torchRevealRadius:10.5,playerRevealRadius:1.55,integratedTerrainShader:true},
+      undergroundOcclusion:{mode:'terraria-style-full-underground-mask-v4',torchRevealRadius:10.5,playerRevealRadius:1.55,integratedTerrainShader:true,undergroundFactor:this.undergroundFactor??0},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
