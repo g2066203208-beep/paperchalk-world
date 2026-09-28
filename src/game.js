@@ -76,6 +76,8 @@ const debugCommandForm=byId('debugCommandForm');
 const debugCommandInput=byId('debugCommandInput');
 const debugOutput=byId('debugOutput');
 
+const terrainDigBtn=byId('terrainDigBtn');
+const terrainPlaceBtn=byId('terrainPlaceBtn');
 const jumpBtn=byId('jumpBtn');
 const crouchBtn=byId('crouchBtn');
 const attackBtn=byId('attackBtn');
@@ -502,9 +504,25 @@ function placeTerrainAt(x,y,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
   }
   return result;
 }
+let terrainToolMode='dig';
+function setTerrainTool(mode,{notice=false}={}){
+  terrainToolMode=mode==='place'?'place':'dig';
+  terrainDigBtn.classList.toggle('is-active',terrainToolMode==='dig');
+  terrainPlaceBtn.classList.toggle('is-active',terrainToolMode==='place');
+  terrainDigBtn.setAttribute('aria-pressed',String(terrainToolMode==='dig'));
+  terrainPlaceBtn.setAttribute('aria-pressed',String(terrainToolMode==='place'));
+  if(notice)showMapNotice(terrainToolMode==='dig'?'挖掘模式':'放置模式');
+  return terrainToolMode;
+}
+terrainDigBtn.addEventListener('click',()=>setTerrainTool('dig',{notice:true}));
+terrainPlaceBtn.addEventListener('click',()=>setTerrainTool('place',{notice:true}));
+
 window.PaperchalkTerrainActions=Object.freeze({
   dig:digTerrainAt,
   place:placeTerrainAt,
+  setTool:setTerrainTool,
+  targetAtScreen(x,y){return window.Paperchalk3D?.screenToTerrainCell?.(x,y,{showCursor:false})||null},
+  get tool(){return terrainToolMode},
   get stats(){return terrain.stats()},
   get edits(){return terrain.exportEdits()}
 });
@@ -515,24 +533,43 @@ worldEl.addEventListener('contextmenu',event=>{
 });
 worldEl.addEventListener('pointerdown',event=>{
   if(!event.target?.closest?.('.three-world-canvas'))return;
-  terrainPointer={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false};
+  terrainPointer={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false,pointerType:event.pointerType};
+  window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
 });
 worldEl.addEventListener('pointermove',event=>{
+  if(event.target?.closest?.('.three-world-canvas')){
+    window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
+  }
   if(!terrainPointer||terrainPointer.id!==event.pointerId)return;
   if(Math.hypot(event.clientX-terrainPointer.x,event.clientY-terrainPointer.y)>8)terrainPointer.moved=true;
 });
+worldEl.addEventListener('pointerleave',()=>window.Paperchalk3D?.hideTerrainCursor?.());
 worldEl.addEventListener('pointerup',event=>{
   const pointer=terrainPointer;
   if(pointer&&pointer.id===event.pointerId)terrainPointer=null;
   if(!worldInteractive()||!event.target?.closest?.('.three-world-canvas'))return;
   if(pointer?.moved)return;
   if(event.button!==0&&event.button!==2)return;
-  const point=window.Paperchalk3D?.screenToWorld?.(event.clientX,event.clientY);
-  if(!point)return;
-  const result=event.button===2?placeTerrainAt(point.x,point.y):digTerrainAt(point.x,point.y);
-  if(!result.changed&&result.reason==='out-of-reach')showMapNotice('太远了');
+
+  const target=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
+  if(!target)return;
+
+  const placing=event.button===2||(pointer?.pointerType==='touch'&&terrainToolMode==='place');
+  const result=placing
+    ?placeTerrainAt(target.x,target.y)
+    :digTerrainAt(target.x,target.y);
+
+  if(result.changed){
+    showMapNotice(placing?'已放置方块':'已挖除方块',500);
+    return;
+  }
+  if(result.reason==='out-of-reach')showMapNotice('太远了');
+  else if(result.reason==='player-overlap')showMapNotice('不能把方块放在自己身上');
+  else if(placing)showMapNotice('这里已有方块');
+  else showMapNotice('这里没有可挖方块');
 });
 worldEl.addEventListener('pointercancel',()=>{terrainPointer=null});
+
 
 let inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
 let inventorySelected=-1;
@@ -757,7 +794,8 @@ function updateDebugStatus(){
   const ts=terrain.stats();
   debugStatus.textContent='HP '+health.current+'/'+health.max+
     ' · XY '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+
-    ' · 单层体素 '+ts.loadedChunks+' chunks / '+ts.editedTiles+' edits'+
+    ' · 3D方块 '+(s.terrain?.renderedQuads||0)+' quads / '+ts.loadedChunks+' chunks'+
+    ' · '+terrainToolMode.toUpperCase()+
     ' · 舞台 '+(stage.enabled?stage.axis.toUpperCase()+'轴':'自由镜头')+
     ' · '+(s.fps||0)+' FPS · '+(s.drawCalls||0)+' draws';
   syncStageDebugButtons();
@@ -778,7 +816,7 @@ function runDebugCommand(command){
   const raw=String(command||'').trim();
   if(!raw)return '';
   const [cmd,...args]=raw.split(/\s+/);
-  if(cmd==='help')return 'hp 5 | hp +1 | tp X Y | reset | collider | stage on/off | axis x/z | terrain | stats | save';
+  if(cmd==='help')return 'hp 5 | hp +1 | tp X Y | dig X Y | put X Y | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
   if(cmd==='hp'){
     const token=args[0]||'';
     const n=Number(token);
@@ -791,6 +829,21 @@ function runDebugCommand(command){
     if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：tp 0 -8';
     teleport(x,y,{notice:'调试传送'});
     return 'XY -> '+transform.x.toFixed(1)+', '+transform.y.toFixed(1);
+  }
+  if(cmd==='dig'){
+    const x=Number(args[0]),y=Number(args[1]);
+    if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：dig X Y';
+    const r=digTerrainAt(x,y);return r.changed?'已挖除方块':'挖掘失败：'+(r.reason||'AIR');
+  }
+  if(cmd==='put'){
+    const x=Number(args[0]),y=Number(args[1]);
+    if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：put X Y';
+    const r=placeTerrainAt(x,y);return r.changed?'已放置方块':'放置失败：'+(r.reason||'OCCUPIED');
+  }
+  if(cmd==='tool'){
+    const mode=String(args[0]||'').toLowerCase();
+    if(mode!=='dig'&&mode!=='place')return '用法：tool dig / tool place';
+    return '工具 -> '+setTerrainTool(mode);
   }
   if(cmd==='reset'){window.PaperchalkMap.reset();return '已返回出生点'}
   if(cmd==='collider'){
