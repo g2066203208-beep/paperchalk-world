@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r5'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r6'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -23,13 +23,18 @@ assert(content.includes("mode:'infinite-voxel-3d'"),'3D voxel content mode missi
 assert(content.includes('visibleChunkRadiusXZ'),'3D streaming radius missing');
 assert(content.includes('interactionRowZ:0'),'configured interaction row missing');
 assert(game.includes("interaction-row-only"),'interaction-row editing guard missing');
-assert(engine.includes("mode:'sun-sky-moon'"),'balanced world lighting mode missing');
+assert(engine.includes("mode:'sun-sky-moon-torch'"),'balanced world lighting mode missing');
 assert(engine.includes('sun.castShadow=true'),'sun shadowing missing');
 assert(engine.includes("visible-sun"),'visible sun mesh missing');
 assert(engine.includes('sun.intensity=daylight*3.4'),'daylight sun intensity missing');
 assert(engine.includes('sky-environment-bounce'),'sky/environment bounce light missing');
 assert(engine.includes('world-moon'),'moonlight missing');
 assert(engine.includes('_skyExposureAt(player)'),'sky-exposure cave darkening missing');
+assert(terrain.includes("nonInteractionTerrain:'surface-shell-only'"),'non-interaction rows are not surface-only');
+assert(terrain.includes('chunkMayContainTerrain'),'empty scenery chunk culling missing');
+assert(engine.includes('moving-torch-light'),'moving torch point light missing');
+assert(content.includes("'hand-torch'"),'torch item definition missing');
+assert(game.includes("action==='toggle-torch'"),'torch inventory action missing');
 assert(engine.includes('mesh.receiveShadow=true;mesh.castShadow=true'),'voxel chunks must cast and receive sunlight shadows');
 assert(engine.includes('interactionOnly=true'),'interaction-only voxel raycast missing');
 assert(engine.includes('z===this.interactionRowZ'),'non-interaction rows are not ignored by picking');
