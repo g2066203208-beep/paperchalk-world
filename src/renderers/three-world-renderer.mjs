@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-terrain-r4';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
