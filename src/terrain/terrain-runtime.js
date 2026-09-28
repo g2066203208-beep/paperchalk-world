@@ -52,7 +52,7 @@ class TerrainWorld{
     this.chunkSize=Math.max(8,Math.min(32,Math.round(Number(chunkSize)||16)));
     this.seed=seed|0;
     this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
-    this.chunks=new Map();this.edits=new Map();this.listeners=new Set();
+    this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();
     this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';
 
     const F=global.FastNoiseLite;
@@ -128,6 +128,27 @@ class TerrainWorld{
     return TILE.STONE;
   }
   generateTile(gx,gy,gz=0){return this.generateVoxel(gx,gy,gz)}
+  surfaceRangeForChunk(cx,cz){
+    const key=cx+','+cz;
+    const cached=this.surfaceRangeCache.get(key);if(cached)return cached;
+    const n=this.chunkSize;
+    let min=Infinity,max=-Infinity;
+    for(let lz=0;lz<n;lz++)for(let lx=0;lx<n;lx++){
+      const h=this.surfaceCell(cx*n+lx,cz*n+lz);
+      if(h<min)min=h;if(h>max)max=h;
+    }
+    const range={min,max};this.surfaceRangeCache.set(key,range);return range;
+  }
+  chunkContainsInteractionRow(cz){
+    const n=this.chunkSize;
+    return this.interactionRowZ>=cz*n&&this.interactionRowZ<(cz+1)*n;
+  }
+  chunkMayContainTerrain(cx,cy,cz){
+    if(this.chunkContainsInteractionRow(cz))return true;
+    const range=this.surfaceRangeForChunk(cx,cz),n=this.chunkSize;
+    const minY=cy*n,maxY=minY+n-1;
+    return range.max>=minY&&range.min<=maxY;
+  }
   _floorDiv(n,d){return Math.floor(n/d)}
   _mod(n,d){return ((n%d)+d)%d}
   chunkKey(cx,cy,cz){return cx+','+cy+','+cz}
@@ -228,7 +249,7 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,nonInteractionTerrain:'surface-shell-only'};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,nonInteractionTerrain:'surface-shell-only',surfaceChunkCulling:true};
   }
 }
 
