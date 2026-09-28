@@ -10,7 +10,7 @@ const scene3d={
     tileSize:.25,
     chunkSize:64,
     seed:24681357,
-    thickness:.16,
+    thickness:.25,
     visibleChunkRadiusX:3,
     visibleChunkRadiusY:2
   },

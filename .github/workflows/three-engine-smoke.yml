@@ -9,6 +9,8 @@ on:
       - "src/engine3d/**"
       - "src/renderers/three-world-renderer.mjs"
       - "src/content/**"
+      - "src/terrain/**"
+      - "src/entities/**"
       - "styles/**"
       - "vendor/three/**"
       - "vendor/fastnoise-lite/**"
@@ -21,6 +23,8 @@ on:
       - "src/engine3d/**"
       - "src/renderers/three-world-renderer.mjs"
       - "src/content/**"
+      - "src/terrain/**"
+      - "src/entities/**"
       - "styles/**"
       - "vendor/three/**"
       - "vendor/fastnoise-lite/**"
@@ -45,6 +49,7 @@ jobs:
           node --check src/engine3d/World3DEngine.js
           node --check src/renderers/three-world-renderer.mjs
           node --check src/terrain/terrain-runtime.js
+          node --check src/terrain/voxel-block-mesh.js
           node --check src/entities/PaperSpriteEntity.js
           node --check vendor/fastnoise-lite/FastNoiseLite.js
           test -s vendor/three/three.module.js

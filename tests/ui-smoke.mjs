@@ -25,7 +25,13 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
 
-  await page.locator('#backpackBtn').click();
+  assert(await page.locator('#terrainDigBtn').count()===1&&await page.locator('#terrainPlaceBtn').count()===1,'dig/place controls missing');
+  await page.locator('#terrainPlaceBtn').click();
+  assert((await page.evaluate(()=>window.PaperchalkTerrainActions.tool))==='place','place tool did not activate');
+  await page.locator('#terrainDigBtn').click();
+  assert((await page.evaluate(()=>window.PaperchalkTerrainActions.tool))==='dig','dig tool did not reactivate');
+
+    await page.locator('#backpackBtn').click();
   assert(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open')),'backpack did not open');
   assert(await page.locator('.inventory-slot').count()===20,'inventory must have 20 slots');
   await page.locator('#backpackClose').click();

@@ -30,11 +30,17 @@ try{
   }));
   assert(initial.stats.renderer==='WebGLRenderer','renderer is not WebGLRenderer '+JSON.stringify(initial.stats));
   assert(initial.stats.worldMode==='paper-stage-2.5d','wrong world mode '+JSON.stringify(initial.stats));
-  assert(initial.stats.terrainMode==='single-layer-voxel','wrong terrain mode '+JSON.stringify(initial.stats));
+  assert(initial.stats.terrainMode==='single-layer-3d-cubes','wrong terrain mode '+JSON.stringify(initial.stats));
   assert(initial.stats.entityMode==='2d-textured-planes','non-terrain entities are not planes '+JSON.stringify(initial.stats));
   assert(initial.stats.playerGeometry==='PlaneGeometry','player is not a paper plane '+JSON.stringify(initial.stats));
   assert(initial.stats.paperEntities>=6,'paper entity scene not constructed '+JSON.stringify(initial.stats));
   assert(initial.stats.terrain.visibleChunks>=20,'not enough streamed chunks '+JSON.stringify(initial.stats.terrain));
+  assert(initial.stats.terrain.oneLayer===true,'terrain unexpectedly gained Z gameplay layers '+JSON.stringify(initial.stats.terrain));
+  assert(initial.stats.terrain.blockGeometry==='3d-cube','terrain blocks are not real 3D cube geometry '+JSON.stringify(initial.stats.terrain));
+  assert(Math.abs(initial.stats.terrain.thickness-.25)<1e-6,'terrain cube thickness must equal tile size '+JSON.stringify(initial.stats.terrain));
+  assert(initial.stats.terrain.renderedQuads>0&&initial.stats.terrain.terrainTriangles>0,'cube mesher emitted no geometry '+JSON.stringify(initial.stats.terrain));
+  assert(initial.stats.terrain.culledInternalFaces>0,'internal cube faces were not culled '+JSON.stringify(initial.stats.terrain));
+  assert(initial.stats.terrain.greedyRatio>1,'greedy meshing did not merge any faces '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.renderedSolidTiles>100,'terrain mesher produced too little geometry '+JSON.stringify(initial.stats.terrain));
   assert(initial.resources.some(x=>x.includes('three.module.js'))&&initial.resources.some(x=>x.includes('three.core.js')),'Three module/core pair missing');
   assert(initial.resources.some(x=>x.includes('/vendor/fastnoise-lite/FastNoiseLite.js')),'FastNoiseLite browser resource missing '+JSON.stringify(initial.resources));
@@ -68,7 +74,12 @@ try{
     const canvas=document.querySelector('#threeWorldLayer canvas'),r=canvas.getBoundingClientRect();
     return window.Paperchalk3D.screenToWorld(r.left+r.width*.5,r.top+r.height*.5);
   });
-  assert(Number.isFinite(projection?.x)&&Number.isFinite(projection?.y)&&Math.abs(projection.z)<1e-6,'screen-to-single-layer projection failed '+JSON.stringify(projection));
+  assert(Number.isFinite(projection?.x)&&Number.isFinite(projection?.y)&&Math.abs(projection.z-.125)<1e-6,'screen-to-cube-front projection failed '+JSON.stringify(projection));
+  const targeted=await page.evaluate(()=>{
+    const canvas=document.querySelector('#threeWorldLayer canvas'),r=canvas.getBoundingClientRect();
+    return window.Paperchalk3D.screenToTerrainCell(r.left+r.width*.5,r.top+r.height*.5,{showCursor:true});
+  });
+  assert(Number.isInteger(targeted?.gx)&&Number.isInteger(targeted?.gy),'screen terrain-cell targeting failed '+JSON.stringify(targeted));
 
   await page.evaluate(()=>window.PaperchalkHealth.set(5));
   await page.waitForTimeout(90);

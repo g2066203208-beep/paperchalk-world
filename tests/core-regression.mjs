@@ -44,7 +44,9 @@ try{
     three:window.Paperchalk3D.stats
   }));
   assert(entered.three.worldMode==='paper-stage-2.5d','wrong world mode '+JSON.stringify(entered.three));
-  assert(entered.three.terrainMode==='single-layer-voxel','terrain is not single-layer voxel '+JSON.stringify(entered.three));
+  assert(entered.three.terrainMode==='single-layer-3d-cubes','terrain is not one-layer 3D cube terrain '+JSON.stringify(entered.three));
+  assert(entered.three.terrain?.oneLayer===true&&entered.three.terrain?.blockGeometry==='3d-cube','terrain gained depth layers or lost cube geometry '+JSON.stringify(entered.three.terrain));
+  assert(Math.abs((entered.three.terrain?.thickness||0)-.25)<1e-6,'terrain blocks are not true 0.25m cubes '+JSON.stringify(entered.three.terrain));
   assert(entered.three.entityMode==='2d-textured-planes','entities are not paper planes '+JSON.stringify(entered.three));
   assert(entered.three.playerGeometry==='PlaneGeometry','player is not a flat paper entity '+JSON.stringify(entered.three));
   assert(entered.three.terrain.visibleChunks>0&&entered.three.terrain.renderedSolidTiles>0,'terrain chunks are not rendered '+JSON.stringify(entered.three.terrain));
@@ -105,6 +107,33 @@ try{
   },dig.point);
   assert(removed===0,'dug tile is not AIR '+removed);
 
+  const placed=await page.evaluate(()=>{
+    const p=window.PaperchalkRuntime.getSnapshot().player;
+    const t=window.PaperchalkTerrain;
+    const half=.49*t.tileSize;
+    const base=t.worldToCell(p.x,p.y+.5);
+    for(let radius=1;radius<=14;radius++){
+      for(let dy=-radius;dy<=radius;dy++){
+        for(let dx=-radius;dx<=radius;dx++){
+          const gx=base.gx+dx,gy=base.gy+dy;
+          if(t.isSolid(gx,gy))continue;
+          const c=t.cellCenter(gx,gy);
+          if(Math.hypot(c.x-p.x,c.y-p.y)>3.8)continue;
+          const overlaps=Math.abs(c.x-p.x)<.34+half&&Math.abs(c.y-p.y)<.95+half;
+          if(overlaps)continue;
+          const result=window.PaperchalkTerrainActions.place(c.x,c.y);
+          if(result.changed)return {result,point:c,stats:window.PaperchalkTerrainActions.stats};
+        }
+      }
+    }
+    return null;
+  });
+  assert(placed?.result?.changed,'could not place a reachable 3D terrain cube '+JSON.stringify(placed));
+  const placedTile=await page.evaluate(({x,y})=>{
+    const t=window.PaperchalkTerrain,c=t.worldToCell(x,y);return t.getTile(c.gx,c.gy);
+  },placed.point);
+  assert(placedTile!==0,'placed terrain cube did not become solid '+JSON.stringify({placed,placedTile}));
+
   await page.evaluate(()=>window.PaperchalkHealth.damage(1));
   await page.waitForTimeout(80);
   const hp9=await page.evaluate(()=>({hp:window.PaperchalkHealth.state.hp,bar:window.Paperchalk3D.stats.health}));
@@ -127,18 +156,20 @@ try{
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
   await page.waitForTimeout(180);
 
-  const restored=await page.evaluate(({x,y})=>{
+  const restored=await page.evaluate(({x,y,px,py})=>{
     const t=window.PaperchalkTerrain,c=t.worldToCell(x,y);
     return {
       p:window.PaperchalkRuntime.getSnapshot().player,
       hp:window.PaperchalkHealth.state.hp,
       tile:t.getTile(c.gx,c.gy),
-      edits:window.PaperchalkTerrainActions.stats.editedTiles
+      edits:window.PaperchalkTerrainActions.stats.editedTiles,
+      placedTile:t.getTile(t.worldToCell(px,py).gx,t.worldToCell(px,py).gy)
     };
-  },dig.point);
+  },{x:dig.point.x,y:dig.point.y,px:placed.point.x,py:placed.point.y});
   assert(Math.abs(restored.p.x-savedPlayer.x)<.15,'X position did not restore '+JSON.stringify({savedPlayer,restored}));
   assert(restored.hp===9,'health did not restore '+JSON.stringify(restored));
   assert(restored.tile===0&&restored.edits>=1,'dug terrain did not restore after reload '+JSON.stringify(restored));
+  assert(restored.placedTile!==0,'placed 3D cube did not restore after reload '+JSON.stringify(restored));
 
   assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
   console.log(JSON.stringify({ok:true,entered:entered.three,afterD,air,dig,saved,restored},null,2));

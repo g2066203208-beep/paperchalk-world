@@ -26,7 +26,8 @@ Z is a presentation coordinate. It separates far background, rear paper entities
 
 - tile size: 0.25 m
 - chunk size: 64×64 cells
-- depth: exactly one gameplay layer
+- gameplay depth: exactly one layer
+- render geometry: each occupied cell is a real 0.25 m cube slab cell (front/back/top/bottom/left/right faces as exposed)
 - storage: Uint8Array
 - coordinates: integer X/Y cell coordinates
 - generation: FastNoiseLite 1.1.1; OpenSimplex2S for broad surface/caves, Perlin for detail, Cellular for material strata
@@ -34,7 +35,7 @@ Z is a presentation coordinate. It separates far background, rear paper entities
 - persistence: per-chunk edit deltas
 - streaming: chunks outside the active window are unloaded and regenerated from seed when revisited
 
-The renderer turns each visible chunk into one vertex-colored `BufferGeometry`. A tile is not a separate Three.js object.
+The renderer uses `src/terrain/voxel-block-mesh.js` to turn each visible chunk into one indexed, lit `BufferGeometry`. It applies voxel-engine techniques used by modern open-source implementations: hidden-face culling, greedy merging of equal-material coplanar faces, chunk-local floating-point coordinates, and repeating block UVs. A tile is **not** a separate Three.js Mesh, but it remains an individual logical 3D cube and its boundaries remain visible through the repeating block texture.
 
 The official FastNoiseLite JavaScript distribution is vendored under `vendor/fastnoise-lite/` with its MIT license header intact. Terrain generation remains deterministic from the world seed. A small built-in fallback is retained for diagnostics, but production reports `noiseBackend: "FastNoiseLite-1.1.1"`.
 
@@ -50,7 +51,7 @@ Player facing uses a real paper flip: the plane rotates around Y toward 0 or π,
 
 `src/game.js` treats X as horizontal movement and Y as vertical movement. The player cannot walk through Z.
 
-Terrain collision uses the same TerrainWorld cells used by rendering. Gravity, jump and horizontal movement are resolved against the X/Y block field. This allows the player to dig beneath themselves and fall into generated underground space.
+Terrain collision uses the same TerrainWorld cells used by rendering. Rendering thickness never creates another collidable Z cell. Gravity, jump and horizontal movement are resolved against the X/Y block field. This allows the player to dig beneath themselves and fall into generated underground space.
 
 ## 5. Camera
 

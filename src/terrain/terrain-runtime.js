@@ -159,6 +159,21 @@ class TerrainWorld{
     const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n);
     return this.getChunk(cx,cy).get(this._mod(gx,n),this._mod(gy,n));
   }
+  // Read without forcing a neighbouring chunk into the streaming cache.
+  // Chunk meshers use this on borders so face culling does not accidentally
+  // load entire off-screen columns.
+  peekTile(gx,gy){
+    const n=this.chunkSize;
+    const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n);
+    const lx=this._mod(gx,n),ly=this._mod(gy,n);
+    const key=this.chunkKey(cx,cy);
+    const loaded=this.chunks.get(key);
+    if(loaded)return loaded.get(lx,ly);
+    const patch=this.edits.get(key);
+    const index=ly*n+lx;
+    if(patch?.has(index))return patch.get(index);
+    return this.generateTile(gx,gy);
+  }
   unloadChunk(cx,cy){
     return this.chunks.delete(this.chunkKey(cx,cy));
   }
@@ -184,6 +199,7 @@ class TerrainWorld{
   }
   isSolidTile(tile){return SOLID.has(tile)}
   isSolid(gx,gy){return this.isSolidTile(this.getTile(gx,gy))}
+  isSolidPeek(gx,gy){return this.isSolidTile(this.peekTile(gx,gy))}
   worldToCell(x,y){return {gx:Math.floor(x/this.tileSize),gy:Math.floor(y/this.tileSize)}}
   cellCenter(gx,gy){return {x:(gx+.5)*this.tileSize,y:(gy+.5)*this.tileSize}}
   digWorld(x,y){
