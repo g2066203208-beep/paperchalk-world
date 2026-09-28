@@ -1088,7 +1088,7 @@ function fixedUpdate(dt){
     waterStepAccumulator+=dt;
     if(waterStepAccumulator>=.06){
       waterStepAccumulator=0;
-      const liquidStep=terrain.water.step({maxTransfers:960,maxActive:768});
+      const liquidStep=terrain.water.step({maxTransfers:1800,maxActive:1200,relaxPasses:8});
       if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
     }
   }
