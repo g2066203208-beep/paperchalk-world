@@ -21,7 +21,7 @@ assert.match(biome,/riverMask/);
 assert.match(biome,/mountainMask/);
 assert.match(terrain,/terrainProfile\(gx,gz=0\)/);
 assert.match(terrain,/surfaceTile\(gx,gz=0\)/);
-assert.match(terrain,/generatorVersion=5/);
+assert.match(terrain,/generatorVersion=4/);
 assert.match(game,/PaperchalkBiomes/);
 
 assert.match(terrain,/priority-flood-global-hydrostatic-settle-v1/);
