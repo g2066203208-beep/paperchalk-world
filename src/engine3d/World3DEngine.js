@@ -66,12 +66,11 @@ export class WorldSpaceHealthBar {
     const previous=this.value;
     if(next===previous)return next;
     this.value=next;
-    const now=performance.now()/1000;
     if(animate){
       if(next<previous){
-        for(let i=next;i<previous;i++)this.animations.set(i,{kind:'damage',start:now,delay:(previous-1-i)*.025,duration:.28});
+        for(let i=next;i<previous;i++)this.animations.set(i,{kind:'damage',elapsed:0,delay:(previous-1-i)*.025,duration:.28});
       }else{
-        for(let i=previous;i<next;i++)this.animations.set(i,{kind:'heal',start:now,delay:(i-previous)*.045,duration:.38});
+        for(let i=previous;i<next;i++)this.animations.set(i,{kind:'heal',elapsed:0,delay:(i-previous)*.045,duration:.38});
       }
     }
     this._syncVisibility(!animate);
@@ -89,14 +88,15 @@ export class WorldSpaceHealthBar {
     }
   }
 
-  update(camera){
+  update(camera,dt=0){
     if(camera)this.group.quaternion.copy(camera.quaternion);
-    const now=performance.now()/1000;
+    const step=Math.max(0,Math.min(.1,Number(dt)||0));
     for(const [i,anim] of [...this.animations]){
+      anim.elapsed+=step;
       const holder=this.cells[i];
       const fill=holder?.userData?.fill;
       if(!fill){this.animations.delete(i);continue}
-      const t=(now-anim.start-anim.delay)/anim.duration;
+      const t=(anim.elapsed-anim.delay)/anim.duration;
       if(t<0)continue;
       if(t>=1){
         fill.visible=i<this.value;
@@ -521,7 +521,7 @@ export class World3DEngine {
     this._updatePlayer(dt,current);
     this._updateCamera(dt,current);
     this._updateWorldTime(current);
-    this.healthBar?.update(this.camera);
+    this.healthBar?.update(this.camera,dt);
   }
 
   render(){
