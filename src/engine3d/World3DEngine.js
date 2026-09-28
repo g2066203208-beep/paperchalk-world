@@ -156,19 +156,39 @@ return true;
 update(dt=.016){
 const water=this.terrain.water;if(!water)return;
 if(!this.initialized){
+this.initialized=true;
+if(water.visualTransition){
+this.transitionId=-1;
+this._beginTransition(water);
+}else{
 this.displayLevels=new Map(water.cells);this.targetLevels=new Map(water.cells);
-this._markAllChunks(this.displayLevels);this.initialized=true;this.transitionId=water.visualTransition?.id??-1;
+this._markAllChunks(this.displayLevels);this.transitionId=-1;
+}
 }else this._beginTransition(water);
 for(const key of water.consumeDirtyChunks())this.displayDirty.add(key);
 if(this.transitionT<1){
 const prevT=this.transitionT;
 this.transitionT=Math.min(1,this.transitionT+Math.max(0,dt)/this.transitionDuration);
 const eased=1-Math.pow(1-this.transitionT,3);
+const tr=this.terrain.water.visualTransition;
+const sources=Array.isArray(tr?.sources)?tr.sources:[];
 const keys=new Set([...this.displayLevels.keys(),...this.targetLevels.keys()]);
 for(const key of keys){
 const a=this.displayLevels.get(key)||0,b=this.targetLevels.get(key)||0;
-const from=this.terrain.water.visualTransition?.from?.get(key)??a;
-const next=Math.max(0,Math.min(8,Math.round(from+(b-from)*eased)));
+const from=tr?.from?.get(key)??a;
+let localT=eased;
+if(sources.length){
+const [gx,gy,gz]=key.split(',').map(Number);
+let dist=Infinity;
+for(const src of sources)dist=Math.min(dist,Math.abs(gx-src[0])+Math.abs(gy-src[1])+Math.abs(gz-src[2]));
+if(b>from){
+const delay=Math.min(.72,dist*.075);
+localT=Math.max(0,Math.min(1,(eased-delay)/Math.max(.12,1-delay)));
+}else if(b<from){
+localT=Math.max(0,Math.min(1,(eased-.12)/.88));
+}
+}
+const next=Math.max(0,Math.min(8,Math.round(from+(b-from)*localT)));
 const old=this.displayLevels.get(key)||0;
 if(next!==old){
 if(next<=0)this.displayLevels.delete(key);else this.displayLevels.set(key,next);
@@ -192,7 +212,7 @@ stats(){
 const w=this.terrain.water?.stats?.()||{cells:0,totalLayers:0,levels:8,layerHeight:this.terrain.tileSize/8};
 let faces=0,renderedCells=0;
 for(const mesh of this.meshes.values()){faces+=mesh.geometry.userData.faces||0;renderedCells+=mesh.geometry.userData.cells||0}
-return {...w,renderMode:'chunked-visible-surface-water-v4-animated',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:this.transitionT<1,visualTransitionT:this.transitionT};
+return {...w,renderMode:'chunked-visible-surface-water-v5-wavefront',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:this.transitionT<1,visualTransitionT:this.transitionT};
 }
 dispose(){
 for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
@@ -250,10 +270,10 @@ shader.uniforms.uInteractionRowCenterZ=this.darknessUniforms.uInteractionRowCent
 shader.uniforms.uBlackBackRowCenterZ=this.darknessUniforms.uBlackBackRowCenterZ;
 shader.uniforms.uVoxelSize=this.darknessUniforms.uVoxelSize;
 shader.vertexShader=shader.vertexShader
-.replace('#include <common>','#include <common>\nattribute float darkness;\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;')
-.replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;');
+.replace('#include <common>','#include <common>\nattribute float darkness;\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;')
+.replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvVoxelWorldNormal=normalize(mat3(modelMatrix)*normal);');
 shader.fragmentShader=shader.fragmentShader
-.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
+.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
 .replace('#include <opaque_fragment>',`
 vec2 lightUv=(vVoxelWorldPos.xy-uVoxelLightOrigin)/uVoxelLightSpan;
 float inside=step(0.0,lightUv.x)*step(lightUv.x,1.0)*step(0.0,lightUv.y)*step(lightUv.y,1.0);
@@ -262,7 +282,7 @@ float reveal=gridReveal;
 float effectiveDarkness=clamp(vVoxelDarkness,0.0,1.0);
 float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
 outgoingLight*=darknessVisibility;
-vec3 voxelCell=floor((vVoxelWorldPos+vec3(0.0001))/uVoxelSize);
+vec3 voxelCell=floor((vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01))/uVoxelSize);
 float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
 float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
 float valueShift=mix(0.82,1.18,colorHash);
@@ -290,7 +310,7 @@ gl_FragColor.a*=occlusionAlpha;
 `);
 this.terrainShader=shader;
 };
-this.material.customProgramCacheKey=()=> 'paperchalk-color-variation-water-v14';
+this.material.customProgramCacheKey=()=> 'paperchalk-whole-voxel-color-v15';
 this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
 }
 _markDirty(cx,cy,cz){
