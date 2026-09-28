@@ -100,6 +100,7 @@ const JUMP_SPEED=7.4;
 const PLAYER_SPEED=4.6;
 const PLAYER_HALF_W=.34;
 const PLAYER_HALF_H=.95;
+const PLAYER_HALF_D=.28;
 const TERRAIN_REACH=4.5;
 const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
@@ -142,8 +143,8 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
 }
 
 const defaultCamera=Object.freeze({
-  yaw:0,pitch:0,distance:18,height:.35,fov:42,
-  stageView:Object.freeze({enabled:true,axis:'z',side:1})
+  yaw:.72,pitch:.38,distance:12,height:.65,fov:42,
+  stageView:Object.freeze({enabled:false,axis:'z',side:1})
 });
 function getSettings(){
   const defaults={language:'zh-CN',timeScale:1,preferLandscape:true,camera3d:{...defaultCamera}};
@@ -229,7 +230,7 @@ const playerEntity=ecs.create({
   Player:controller
 });
 
-// World collision now comes exclusively from the X/Y single-layer terrain.
+// World collision now comes from the streamed X/Y/Z voxel field.
 const buildingColliders=[];
 
 let active=false;
@@ -278,7 +279,7 @@ function buildSnapshot(){
     player:playerSnapshot(),
     health:{current:health.current,max:health.max},
     world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase()},
-    scene:{id:'village-paper-stage',name:'A村 · 单层体素纸片舞台'},
+    scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
     terrain:terrain.stats(),
     debug:{colliders:debugColliders},
     ecs:ecs.stats()
@@ -309,47 +310,46 @@ function showMapNotice(message,duration=1400){
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
-function collidesAt(x,y){
-  return terrain.collidesAABB(x,y,PLAYER_HALF_W,PLAYER_HALF_H);
+function collidesAt(x,y,z){
+  return terrain.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D);
 }
-function groundProbe(x=transform.x,y=transform.y){
-  return terrain.collidesAABB(x,y-.035,PLAYER_HALF_W*.92,PLAYER_HALF_H);
+function groundProbe(x=transform.x,y=transform.y,z=transform.z){
+  return terrain.collidesAABB(x,y-.035,z,PLAYER_HALF_W*.92,PLAYER_HALF_H,PLAYER_HALF_D*.92);
 }
-function moveHorizontal(dx){
-  if(!dx)return;
-  const nx=transform.x+dx;
-  if(!collidesAt(nx,transform.y))transform.x=nx;
-  else{
-    const step=Math.sign(dx)*Math.min(Math.abs(dx),terrain.tileSize*.2);
-    let remaining=Math.abs(dx);
-    while(remaining>1e-4){
-      const d=Math.sign(dx)*Math.min(Math.abs(step),remaining);
-      if(collidesAt(transform.x+d,transform.y))break;
-      transform.x+=d;remaining-=Math.abs(d);
-    }
-    velocity.x=0;
+function moveAxis(axis,delta){
+  if(!delta)return;
+  const next={x:transform.x,y:transform.y,z:transform.z};
+  next[axis]+=delta;
+  if(!collidesAt(next.x,next.y,next.z)){transform[axis]=next[axis];return}
+  const sign=Math.sign(delta),step=sign*Math.min(Math.abs(delta),terrain.tileSize*.18);
+  let remaining=Math.abs(delta);
+  while(remaining>1e-4){
+    const d=sign*Math.min(Math.abs(step),remaining);
+    next.x=transform.x;next.y=transform.y;next.z=transform.z;next[axis]+=d;
+    if(collidesAt(next.x,next.y,next.z))break;
+    transform[axis]+=d;remaining-=Math.abs(d);
   }
+  velocity[axis]=0;
 }
 function moveVertical(dy){
   if(!dy)return;
-  const ny=transform.y+dy;
-  if(!collidesAt(transform.x,ny)){transform.y=ny;controller.grounded=false;return}
-  const sign=Math.sign(dy),step=sign*Math.min(Math.abs(dy),terrain.tileSize*.18);
-  let remaining=Math.abs(dy);
-  while(remaining>1e-4){
-    const d=sign*Math.min(Math.abs(step),remaining);
-    if(collidesAt(transform.x,transform.y+d))break;
-    transform.y+=d;remaining-=Math.abs(d);
-  }
-  if(dy<0)controller.grounded=true;
-  velocity.y=0;
+  const before=transform.y;moveAxis('y',dy);
+  if(Math.abs(transform.y-before-dy)>.0001){
+    if(dy<0)controller.grounded=true;
+    velocity.y=0;
+  }else if(dy!==0)controller.grounded=false;
 }
 function rawMoveInput(){
-  let x=0;
-  if(keys.has('KeyA')||keys.has('ArrowLeft'))x-=1;
-  if(keys.has('KeyD')||keys.has('ArrowRight'))x+=1;
-  x+=joystickAxisX;
-  return {x:clamp(x,-1,1),magnitude:Math.min(1,Math.abs(x))};
+  let strafe=0,forward=0;
+  if(keys.has('KeyA')||keys.has('ArrowLeft'))strafe-=1;
+  if(keys.has('KeyD')||keys.has('ArrowRight'))strafe+=1;
+  if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
+  if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
+  strafe+=joystickAxisX;
+  forward+=-joystickAxisY;
+  const len=Math.hypot(strafe,forward);
+  if(len>1){strafe/=len;forward/=len}
+  return {strafe,forward,magnitude:Math.min(1,Math.hypot(strafe,forward))};
 }
 function overlayOpen(){
   return backpackOverlay.classList.contains('is-open')||
@@ -365,13 +365,15 @@ ecs.registerSystem('player-movement',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:10,
   update(entity,world,dt,context){
     if(entity!==playerEntity)return;
-    const input=context.interactive?rawMoveInput():{x:0,magnitude:0};
+    const input=context.interactive?rawMoveInput():{strafe:0,forward:0,magnitude:0};
     const speed=PLAYER_SPEED*(controller.crouching?.48:1);
-    velocity.x=input.x*speed;
-    velocity.z=0;
+    const cy=Math.cos(cameraYaw),sy=Math.sin(cameraYaw);
+    velocity.x=(input.strafe*cy-input.forward*sy)*speed;
+    velocity.z=(-input.strafe*sy-input.forward*cy)*speed;
     controller.moving=input.magnitude>.05;
-    if(controller.moving)transform.yaw=velocity.x<0?Math.PI:0;
-    moveHorizontal(velocity.x*dt);
+    if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
+    moveAxis('x',velocity.x*dt);
+    moveAxis('z',velocity.z*dt);
   }
 });
 ecs.registerSystem('player-gravity',{
@@ -381,7 +383,6 @@ ecs.registerSystem('player-gravity',{
     if(!groundProbe())controller.grounded=false;
     if(!controller.grounded)velocity.y-=GRAVITY*dt;
     moveVertical(velocity.y*dt);
-    transform.z=sceneData.layers?.actor??.45;
   }
 });
 ecs.registerSystem('player-action',{
@@ -454,19 +455,17 @@ window.PaperchalkCombat=Object.freeze({
   damagePlayer,healPlayer,setPlayerHp
 });
 
-function safeSpawnY(x=sceneData.spawn.x){
-  return terrain.highestGroundY(x)+PLAYER_HALF_H+.03;
+function safeSpawnY(x=sceneData.spawn.x,z=sceneData.spawn.z||0){
+  return terrain.highestGroundY(x,z)+PLAYER_HALF_H+.03;
 }
-function teleport(x,y=null,{notice=''}={}){
+function teleport(x,z=0,y=null,{notice=''}={}){
   const nx=Number.isFinite(Number(x))?Number(x):sceneData.spawn.x;
-  let ny=Number.isFinite(Number(y))?Number(y):safeSpawnY(nx);
-  if(collidesAt(nx,ny))ny=safeSpawnY(nx);
-  transform.x=nx;transform.y=ny;transform.z=sceneData.layers?.actor??.45;
-  velocity.x=velocity.y=velocity.z=0;
-  controller.grounded=groundProbe(nx,ny);
-  if(notice)showMapNotice(notice);
-  publish();
-  return true;
+  const nz=Number.isFinite(Number(z))?Number(z):(sceneData.spawn.z||0);
+  let ny=Number.isFinite(Number(y))?Number(y):safeSpawnY(nx,nz);
+  if(collidesAt(nx,ny,nz))ny=safeSpawnY(nx,nz);
+  transform.x=nx;transform.y=ny;transform.z=nz;
+  velocity.x=velocity.y=velocity.z=0;controller.grounded=groundProbe(nx,ny,nz);
+  if(notice)showMapNotice(notice);publish();return true;
 }
 window.PaperchalkMap=Object.freeze({
   get player(){return playerSnapshot()},
@@ -474,38 +473,33 @@ window.PaperchalkMap=Object.freeze({
   get nodes(){return CONTENT.world.nodes},
   get routes(){return CONTENT.world.routes},
   teleport,
-  reset(){return teleport(sceneData.spawn.x,null,{notice:'已返回出生点'})}
+  reset(){return teleport(sceneData.spawn.x,sceneData.spawn.z||0,null,{notice:'已返回出生点'})}
 });
-window.PaperchalkScene=Object.freeze({
-  get location(){return 'village-paper-stage'},
-  get transitioning(){return false}
-});
+window.PaperchalkScene=Object.freeze({get location(){return 'infinite-voxel-world'},get transitioning(){return false}});
 
 function terrainTargetInReach(point){
   if(!point)return false;
-  return Math.hypot(point.x-transform.x,point.y-transform.y)<=TERRAIN_REACH;
+  return Math.hypot(point.x-transform.x,point.y-transform.y,point.z-transform.z)<=TERRAIN_REACH;
 }
-function digTerrainAt(x,y,{persist=true}={}){
-  if(!terrainTargetInReach({x,y}))return {changed:false,reason:'out-of-reach'};
-  const result=terrain.digWorld(x,y);
-  if(result.changed){
-    window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'dig'});
-    publish();if(persist)saveWorldState();
-  }
+function digTerrainCell(gx,gy,gz,{persist=true}={}){
+  const center=terrain.cellCenter(gx,gy,gz);
+  if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
+  const result=terrain.digCell(gx,gy,gz);
+  if(result.changed){window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'dig'});publish();if(persist)saveWorldState()}
   return result;
 }
-function placeTerrainAt(x,y,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
-  if(!terrainTargetInReach({x,y}))return {changed:false,reason:'out-of-reach'};
-  const cell=terrain.worldToCell(x,y),center=terrain.cellCenter(cell.gx,cell.gy),half=terrain.tileSize*.49;
-  const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half;
+function placeTerrainCell(gx,gy,gz,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
+  const center=terrain.cellCenter(gx,gy,gz);
+  if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
+  const half=terrain.tileSize*.49;
+  const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half&&Math.abs(center.z-transform.z)<PLAYER_HALF_D+half;
   if(overlapsPlayer)return {changed:false,reason:'player-overlap'};
-  const result=terrain.placeWorld(x,y,tile);
-  if(result.changed){
-    window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place'});
-    publish();if(persist)saveWorldState();
-  }
+  const result=terrain.placeCell(gx,gy,gz,tile);
+  if(result.changed){window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place'});publish();if(persist)saveWorldState()}
   return result;
 }
+function digTerrainAt(x,y,z=transform.z,options){const c=terrain.worldToCell(x,y,z);return digTerrainCell(c.gx,c.gy,c.gz,options)}
+function placeTerrainAt(x,y,z=transform.z,tile=TerrainRuntime.TILE.DIRT,options){const c=terrain.worldToCell(x,y,z);return placeTerrainCell(c.gx,c.gy,c.gz,tile,options)}
 let terrainToolMode='dig';
 function setTerrainTool(mode,{notice=false}={}){
   terrainToolMode=mode==='place'?'place':'dig';
@@ -522,6 +516,8 @@ terrainPlaceBtn.addEventListener('click',()=>setTerrainTool('place',{notice:true
 window.PaperchalkTerrainActions=Object.freeze({
   dig:digTerrainAt,
   place:placeTerrainAt,
+  digCell:digTerrainCell,
+  placeCell:placeTerrainCell,
   setTool:setTerrainTool,
   targetAtScreen(x,y){return window.Paperchalk3D?.screenToTerrainCell?.(x,y,{showCursor:false})||null},
   get tool(){return terrainToolMode},
@@ -558,8 +554,8 @@ worldEl.addEventListener('pointerup',event=>{
 
   const placing=event.button===2||(pointer?.pointerType==='touch'&&terrainToolMode==='place');
   const result=placing
-    ?placeTerrainAt(target.x,target.y)
-    :digTerrainAt(target.x,target.y);
+    ?placeTerrainCell(target.placeGx,target.placeGy,target.placeGz)
+    :digTerrainCell(target.gx,target.gy,target.gz);
 
   if(result.changed){
     showMapNotice(placing?'已放置方块':'已挖除方块',500);
@@ -958,7 +954,7 @@ window.addEventListener('keydown',event=>{
   if(event.code==='KeyM'&&active){event.preventDefault();worldMapOverlay.classList.contains('is-open')?closeWorldMap():openWorldMap();return}
   if(event.code==='Escape'){if(window.PaperchalkHandleBack())event.preventDefault();return}
   if(!worldInteractive())return;
-  if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
+  if(['KeyA','KeyD','KeyW','KeyS','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.code)){
     keys.add(event.code);event.preventDefault();return;
   }
   if(event.code==='Space'){if(!event.repeat)jump();event.preventDefault();return}
@@ -1012,7 +1008,7 @@ function defaultSave(session){
     schemaVersion:SAVE_RUNTIME.schemaVersion,
     gameVersion:SAVE_RUNTIME.gameVersion,
     account:session.account,
-    location:'A村 · 单层体素纸片舞台',
+    location:'Paperchalk · 无限3D体素世界',
     createdAt:Date.now(),
     worldMinutes:360,
     player:{...sceneData.spawn},
@@ -1063,9 +1059,9 @@ function saveWorldState(){
   const session=getSession();
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
-  save.location='A村 · 单层体素纸片舞台';
+  save.location='Paperchalk · 无限3D体素世界';
   save.worldMinutes=worldMinutes;
-  save.player={x:transform.x,y:transform.y,z:sceneData.layers?.actor??.45,yaw:transform.yaw};
+  save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
   save.playerHp=health.current;
   save.terrainEdits=terrain.exportEdits();
   save.inventory=inventorySnapshot();
@@ -1080,10 +1076,10 @@ function loadWorldState(){
   terrain.importEdits(save.terrainEdits);
   const p=save.player||sceneData.spawn;
   transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
-  transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x);
-  transform.z=sceneData.layers?.actor??.45;
+  transform.z=Number.isFinite(Number(p.z))?Number(p.z):(sceneData.spawn.z||0);
+  transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x,transform.z);
   transform.yaw=Number.isFinite(p.yaw)?p.yaw:sceneData.spawn.yaw;
-  if(collidesAt(transform.x,transform.y))transform.y=safeSpawnY(transform.x);
+  if(collidesAt(transform.x,transform.y,transform.z))transform.y=safeSpawnY(transform.x,transform.z);
   velocity.x=velocity.y=velocity.z=0;
   controller.grounded=groundProbe();
   controller.crouching=false;controller.attacking=false;controller.action='idle';
