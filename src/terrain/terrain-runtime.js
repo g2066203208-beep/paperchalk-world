@@ -1,284 +1,215 @@
-/* Paperchalk single-layer Terraria-style terrain runtime.
- * Gameplay is 2D (X/Y). Z is reserved for paper-stage depth only.
+/* Paperchalk infinite 3D voxel-world runtime.
+ * Deterministic chunk streaming: X/Y/Z are all gameplay voxel axes.
+ * Chunks are generated on demand and can be unloaded without losing edits.
  */
 (function(global){
 'use strict';
 
-const TILE=Object.freeze({
-  AIR:0,
-  GRASS:1,
-  DIRT:2,
-  STONE:3,
-  SAND:4,
-  CLAY:5
-});
+const TILE=Object.freeze({AIR:0,GRASS:1,DIRT:2,STONE:3,SAND:4,CLAY:5});
 const SOLID=new Set([TILE.GRASS,TILE.DIRT,TILE.STONE,TILE.SAND,TILE.CLAY]);
 
 class TerrainChunk{
-  constructor(world,cx,cy){
-    this.world=world;
-    this.cx=cx;
-    this.cy=cy;
-    this.size=world.chunkSize;
-    this.tiles=new Uint8Array(this.size*this.size);
-    this.version=1;
-    this.dirty=true;
-    this._generate();
+  constructor(world,cx,cy,cz){
+    this.world=world;this.cx=cx;this.cy=cy;this.cz=cz;this.size=world.chunkSize;
+    this.voxels=new Uint8Array(this.size*this.size*this.size);
+    this.tiles=this.voxels;
+    this.version=1;this.dirty=true;this._generate();
   }
-  index(lx,ly){return ly*this.size+lx}
+  index(lx,ly,lz){return (ly*this.size+lz)*this.size+lx}
   _generate(){
     const n=this.size;
-    for(let ly=0;ly<n;ly++){
-      for(let lx=0;lx<n;lx++){
-        const gx=this.cx*n+lx;
-        const gy=this.cy*n+ly;
-        this.tiles[this.index(lx,ly)]=this.world.generateTile(gx,gy);
-      }
+    for(let ly=0;ly<n;ly++)for(let lz=0;lz<n;lz++)for(let lx=0;lx<n;lx++){
+      const gx=this.cx*n+lx,gy=this.cy*n+ly,gz=this.cz*n+lz;
+      this.voxels[this.index(lx,ly,lz)]=this.world.generateVoxel(gx,gy,gz);
     }
   }
-  get(lx,ly){return this.tiles[this.index(lx,ly)]}
-  set(lx,ly,value){
-    const i=this.index(lx,ly);
-    if(this.tiles[i]===value)return false;
-    this.tiles[i]=value;
-    this.version++;
-    this.dirty=true;
-    return true;
+  get(lx,ly,lz){return this.voxels[this.index(lx,ly,lz)]}
+  set(lx,ly,lz,value){
+    const i=this.index(lx,ly,lz);
+    if(this.voxels[i]===value)return false;
+    this.voxels[i]=value;this.version++;this.dirty=true;return true;
   }
 }
 
 class TerrainWorld{
-  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=64,seed=24681357}={}){
-    this.tileSize=tileSize;
+  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357}={}){
+    this.tileSize=Number(tileSize)||1;
     this.pixelsPerMeter=Math.max(1,Math.round(Number(pixelsPerMeter)||128));
-    this.chunkSize=chunkSize;
+    this.chunkSize=Math.max(8,Math.min(32,Math.round(Number(chunkSize)||16)));
     this.seed=seed|0;
-    this.chunks=new Map();
-    this.edits=new Map();
-    this.listeners=new Set();
-    this.changeVersion=0;
-    this.generatorVersion=2;
-    this.noiseBackend='deterministic-fallback';
+    this.chunks=new Map();this.edits=new Map();this.listeners=new Set();
+    this.changeVersion=0;this.generatorVersion=3;this.noiseBackend='deterministic-fallback';
 
-    // FastNoiseLite is the production terrain generator. A deterministic fallback
-    // remains so save inspection/tests still work if the vendor script is omitted.
     const F=global.FastNoiseLite;
     if(F){
-      const Noise=global.FastNoiseLiteNoiseType||{};
-      const Fractal=global.FastNoiseLiteFractalType||{};
-
+      const Noise=global.FastNoiseLiteNoiseType||{},Fractal=global.FastNoiseLiteFractalType||{};
       this.surfaceNoise=new F(this.seed+11);
       this.surfaceNoise.SetNoiseType(Noise.OpenSimplex2S||2);
-      this.surfaceNoise.SetFrequency(.018);
+      this.surfaceNoise.SetFrequency(.012);
       this.surfaceNoise.SetFractalType(Fractal.FBm||1);
-      this.surfaceNoise.SetFractalOctaves(4);
+      this.surfaceNoise.SetFractalOctaves(5);
 
       this.detailNoise=new F(this.seed+37);
       this.detailNoise.SetNoiseType(Noise.Perlin||4);
-      this.detailNoise.SetFrequency(.055);
+      this.detailNoise.SetFrequency(.038);
       this.detailNoise.SetFractalType(Fractal.FBm||1);
       this.detailNoise.SetFractalOctaves(3);
 
       this.caveNoise=new F(this.seed+101);
       this.caveNoise.SetNoiseType(Noise.OpenSimplex2S||2);
-      this.caveNoise.SetFrequency(.052);
+      this.caveNoise.SetFrequency(.048);
       this.caveNoise.SetFractalType(Fractal.FBm||1);
-      this.caveNoise.SetFractalOctaves(4);
+      this.caveNoise.SetFractalOctaves(3);
+
+      this.caveWarp=new F(this.seed+211);
+      this.caveWarp.SetNoiseType(Noise.Perlin||4);
+      this.caveWarp.SetFrequency(.085);
 
       this.strataNoise=new F(this.seed+509);
       this.strataNoise.SetNoiseType(Noise.Cellular||3);
-      this.strataNoise.SetFrequency(.082);
-
+      this.strataNoise.SetFrequency(.055);
       this.noiseBackend='FastNoiseLite-1.1.1';
     }
   }
-  _hash(x,y=0){
-    let h=(Math.imul((x|0)^this.seed,0x45d9f3b)+Math.imul((y|0)^0x9e3779b9,0x119de1f3))|0;
-    h^=h>>>16;h=Math.imul(h,0x45d9f3b);h^=h>>>16;
-    return (h>>>0)/4294967295;
+  _hash(x,y=0,z=0){
+    let h=(Math.imul((x|0)^this.seed,0x45d9f3b)+Math.imul((y|0)^0x9e3779b9,0x119de1f3)+Math.imul((z|0)^0x85ebca6b,0x27d4eb2d))|0;
+    h^=h>>>16;h=Math.imul(h,0x45d9f3b);h^=h>>>16;return (h>>>0)/4294967295;
   }
-  surfaceCell(gx){
+  surfaceCell(gx,gz=0){
     if(this.surfaceNoise){
-      const broad=this.surfaceNoise.GetNoise(gx,0);
-      const detail=this.detailNoise.GetNoise(gx,19);
-      return Math.floor(broad*5.2+detail*1.8);
+      const broad=this.surfaceNoise.GetNoise(gx,gz);
+      const detail=this.detailNoise.GetNoise(gx+71,gz-113);
+      return Math.floor(3+broad*9+detail*2.4);
     }
-    const broad=Math.sin((gx+this.seed*.001)*.035)*5.2;
-    const medium=Math.sin((gx-this.seed*.0007)*.11)*2.0;
-    const detail=(this._hash(gx,17)-.5)*1.8;
-    return Math.floor(broad+medium+detail);
+    return Math.floor(3+Math.sin((gx+this.seed*.001)*.027)*6+Math.cos((gz-this.seed*.001)*.031)*5+(this._hash(gx,0,gz)-.5)*3);
   }
-  generateTile(gx,gy){
-    const surface=this.surfaceCell(gx);
+  generateVoxel(gx,gy,gz){
+    const surface=this.surfaceCell(gx,gz);
     if(gy>surface)return TILE.AIR;
     const depth=surface-gy;
 
-    // Two-dimensional cave fields are sampled in X/Y only. There is deliberately
-    // no voxel Z coordinate: the whole destructible world is one Terraria slice.
-    if(depth>10&&depth<240){
+    if(depth>4&&gy>-96&&gy<surface-2){
       if(this.caveNoise){
-        const cave=this.caveNoise.GetNoise(gx,gy);
-        const pinch=Math.abs(this.detailNoise.GetNoise(gx*1.7,gy*1.3));
-        if(cave>.38&&pinch<.57)return TILE.AIR;
+        const cave=this.caveNoise.GetNoise(gx,gy,gz);
+        const warp=Math.abs(this.caveWarp.GetNoise(gx*1.43,gy*.91,gz*1.37));
+        if(cave>.48&&warp<.66)return TILE.AIR;
       }else{
-        const a=Math.sin((gx+this.seed*.003)*.19)+Math.cos((gy-this.seed*.002)*.23);
-        const b=Math.sin((gx+gy)*.071+this.seed*.0001);
-        if(a+b*.72>1.63)return TILE.AIR;
+        const n=Math.sin(gx*.13+gy*.17)+Math.cos(gz*.15-gy*.11)+Math.sin((gx+gz)*.071);
+        if(n>2.15)return TILE.AIR;
       }
     }
 
     if(depth===0)return TILE.GRASS;
-    if(depth<8)return TILE.DIRT;
-
+    if(depth<6)return TILE.DIRT;
     if(this.strataNoise){
-      const strata=this.strataNoise.GetNoise(gx,gy);
-      const detail=this.detailNoise.GetNoise(gx*.9,gy*.9);
-      if(depth<17&&strata>.42&&detail>.12)return TILE.CLAY;
-      if(depth<22&&strata<-.42&&detail<-.08)return TILE.SAND;
-    }else{
-      if(depth<14&&this._hash(gx>>2,gy>>2)>.87)return TILE.CLAY;
-      if(depth<18&&this._hash(gx>>3,gy>>3)>.91)return TILE.SAND;
+      const strata=this.strataNoise.GetNoise(gx,gy,gz);
+      if(depth<18&&strata>.52)return TILE.CLAY;
+      if(depth<16&&strata<-.55)return TILE.SAND;
     }
     return TILE.STONE;
   }
+  generateTile(gx,gy,gz=0){return this.generateVoxel(gx,gy,gz)}
   _floorDiv(n,d){return Math.floor(n/d)}
   _mod(n,d){return ((n%d)+d)%d}
-  chunkKey(cx,cy){return cx+','+cy}
-  getChunk(cx,cy){
-    const key=this.chunkKey(cx,cy);
-    let chunk=this.chunks.get(key);
+  chunkKey(cx,cy,cz){return cx+','+cy+','+cz}
+  getChunk(cx,cy,cz){
+    const key=this.chunkKey(cx,cy,cz);let chunk=this.chunks.get(key);
     if(!chunk){
-      chunk=new TerrainChunk(this,cx,cy);
+      chunk=new TerrainChunk(this,cx,cy,cz);
       const patch=this.edits.get(key);
-      if(patch){for(const [index,value] of patch)chunk.tiles[index]=value}
+      if(patch)for(const [index,value] of patch)chunk.voxels[index]=value;
       this.chunks.set(key,chunk);
     }
     return chunk;
   }
-  getTile(gx,gy){
-    const n=this.chunkSize;
-    const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n);
-    return this.getChunk(cx,cy).get(this._mod(gx,n),this._mod(gy,n));
+  getVoxel(gx,gy,gz){
+    const n=this.chunkSize,cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n),cz=this._floorDiv(gz,n);
+    return this.getChunk(cx,cy,cz).get(this._mod(gx,n),this._mod(gy,n),this._mod(gz,n));
   }
-  // Read without forcing a neighbouring chunk into the streaming cache.
-  // Chunk meshers use this on borders so face culling does not accidentally
-  // load entire off-screen columns.
-  peekTile(gx,gy){
-    const n=this.chunkSize;
-    const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n);
-    const lx=this._mod(gx,n),ly=this._mod(gy,n);
-    const key=this.chunkKey(cx,cy);
-    const loaded=this.chunks.get(key);
-    if(loaded)return loaded.get(lx,ly);
-    const patch=this.edits.get(key);
-    const index=ly*n+lx;
+  getTile(gx,gy,gz=0){return this.getVoxel(gx,gy,gz)}
+  peekVoxel(gx,gy,gz){
+    const n=this.chunkSize,cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n),cz=this._floorDiv(gz,n);
+    const lx=this._mod(gx,n),ly=this._mod(gy,n),lz=this._mod(gz,n),key=this.chunkKey(cx,cy,cz);
+    const loaded=this.chunks.get(key);if(loaded)return loaded.get(lx,ly,lz);
+    const patch=this.edits.get(key),index=(ly*n+lz)*n+lx;
     if(patch?.has(index))return patch.get(index);
-    return this.generateTile(gx,gy);
+    return this.generateVoxel(gx,gy,gz);
   }
-  unloadChunk(cx,cy){
-    return this.chunks.delete(this.chunkKey(cx,cy));
-  }
-  setTile(gx,gy,value){
-    value=Number(value)|0;
-    if(value<0||value>255)return false;
-    const n=this.chunkSize;
-    const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n);
-    const lx=this._mod(gx,n),ly=this._mod(gy,n);
-    const chunk=this.getChunk(cx,cy);
-    if(!chunk.set(lx,ly,value))return false;
-    const key=this.chunkKey(cx,cy);
-    let patch=this.edits.get(key);
+  peekTile(gx,gy,gz=0){return this.peekVoxel(gx,gy,gz)}
+  unloadChunk(cx,cy,cz){return this.chunks.delete(this.chunkKey(cx,cy,cz))}
+  setVoxel(gx,gy,gz,value){
+    value=Number(value)|0;if(value<0||value>255)return false;
+    const n=this.chunkSize,cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n),cz=this._floorDiv(gz,n);
+    const lx=this._mod(gx,n),ly=this._mod(gy,n),lz=this._mod(gz,n),chunk=this.getChunk(cx,cy,cz);
+    if(!chunk.set(lx,ly,lz,value))return false;
+    const key=this.chunkKey(cx,cy,cz);let patch=this.edits.get(key);
     if(!patch){patch=new Map();this.edits.set(key,patch)}
-    const index=chunk.index(lx,ly);
-    const generated=this.generateTile(gx,gy);
+    const index=chunk.index(lx,ly,lz),generated=this.generateVoxel(gx,gy,gz);
     if(value===generated)patch.delete(index);else patch.set(index,value);
     if(patch.size===0)this.edits.delete(key);
     this.changeVersion++;
-    const event={gx,gy,value,cx,cy,version:this.changeVersion};
+    const event={gx,gy,gz,value,cx,cy,cz,version:this.changeVersion};
     for(const listener of this.listeners)listener(event);
     return true;
   }
+  setTile(gx,gy,value,gz=0){return this.setVoxel(gx,gy,gz,value)}
   isSolidTile(tile){return SOLID.has(tile)}
-  isSolid(gx,gy){return this.isSolidTile(this.getTile(gx,gy))}
-  isSolidPeek(gx,gy){return this.isSolidTile(this.peekTile(gx,gy))}
-  metersToPixels(meters){return Number(meters)*this.pixelsPerMeter}
-  pixelsToMeters(pixels){return Number(pixels)/this.pixelsPerMeter}
-  worldToCell(x,y){return {gx:Math.floor(x/this.tileSize),gy:Math.floor(y/this.tileSize)}}
-  cellCenter(gx,gy){return {x:(gx+.5)*this.tileSize,y:(gy+.5)*this.tileSize}}
-  digWorld(x,y){
-    const {gx,gy}=this.worldToCell(x,y);
-    const previous=this.getTile(gx,gy);
-    if(previous===TILE.AIR)return {changed:false,gx,gy,previous};
-    this.setTile(gx,gy,TILE.AIR);
-    return {changed:true,gx,gy,previous,value:TILE.AIR};
+  isSolid(gx,gy,gz=0){return this.isSolidTile(this.getVoxel(gx,gy,gz))}
+  isSolidPeek(gx,gy,gz=0){return this.isSolidTile(this.peekVoxel(gx,gy,gz))}
+  metersToPixels(m){return Number(m)*this.pixelsPerMeter}
+  pixelsToMeters(px){return Number(px)/this.pixelsPerMeter}
+  worldToCell(x,y,z=0){const s=this.tileSize;return {gx:Math.floor(x/s),gy:Math.floor(y/s),gz:Math.floor(z/s)}}
+  cellCenter(gx,gy,gz=0){const s=this.tileSize;return {x:(gx+.5)*s,y:(gy+.5)*s,z:(gz+.5)*s}}
+  digCell(gx,gy,gz){
+    const previous=this.getVoxel(gx,gy,gz);if(previous===TILE.AIR)return {changed:false,gx,gy,gz,previous};
+    this.setVoxel(gx,gy,gz,TILE.AIR);return {changed:true,gx,gy,gz,previous,value:TILE.AIR};
   }
-  placeWorld(x,y,tile=TILE.DIRT){
-    const {gx,gy}=this.worldToCell(x,y);
-    const previous=this.getTile(gx,gy);
-    if(previous!==TILE.AIR)return {changed:false,gx,gy,previous};
-    this.setTile(gx,gy,tile);
-    return {changed:true,gx,gy,previous,value:tile};
+  placeCell(gx,gy,gz,tile=TILE.DIRT){
+    const previous=this.getVoxel(gx,gy,gz);if(previous!==TILE.AIR)return {changed:false,gx,gy,gz,previous};
+    this.setVoxel(gx,gy,gz,tile);return {changed:true,gx,gy,gz,previous,value:tile};
   }
-  collidesAABB(x,y,halfW,halfH){
+  digWorld(x,y,z=0){const c=this.worldToCell(x,y,z);return this.digCell(c.gx,c.gy,c.gz)}
+  placeWorld(x,y,z=0,tile=TILE.DIRT){const c=this.worldToCell(x,y,z);return this.placeCell(c.gx,c.gy,c.gz,tile)}
+  collidesAABB(x,y,z,halfW,halfH,halfD){
     const s=this.tileSize;
-    const minX=Math.floor((x-halfW+.001)/s);
-    const maxX=Math.floor((x+halfW-.001)/s);
-    const minY=Math.floor((y-halfH+.001)/s);
-    const maxY=Math.floor((y+halfH-.001)/s);
-    for(let gy=minY;gy<=maxY;gy++){
-      for(let gx=minX;gx<=maxX;gx++){
-        if(this.isSolid(gx,gy))return true;
-      }
-    }
+    const minX=Math.floor((x-halfW+.001)/s),maxX=Math.floor((x+halfW-.001)/s);
+    const minY=Math.floor((y-halfH+.001)/s),maxY=Math.floor((y+halfH-.001)/s);
+    const minZ=Math.floor((z-halfD+.001)/s),maxZ=Math.floor((z+halfD-.001)/s);
+    for(let gy=minY;gy<=maxY;gy++)for(let gz=minZ;gz<=maxZ;gz++)for(let gx=minX;gx<=maxX;gx++)if(this.isSolid(gx,gy,gz))return true;
     return false;
   }
-  highestGroundY(worldX,{fromCell=64,toCell=-512}={}){
-    const gx=Math.floor(worldX/this.tileSize);
-    for(let gy=fromCell;gy>=toCell;gy--){
-      if(this.isSolid(gx,gy))return (gy+1)*this.tileSize;
-    }
-    return toCell*this.tileSize;
+  highestGroundY(worldX,worldZ=0,{fromCell=96,toCell=-256}={}){
+    const s=this.tileSize,gx=Math.floor(worldX/s),gz=Math.floor(worldZ/s);
+    for(let gy=fromCell;gy>=toCell;gy--)if(this.isSolid(gx,gy,gz))return (gy+1)*s;
+    return toCell*s;
   }
-  subscribe(listener){
-    if(typeof listener!=='function')return ()=>{};
-    this.listeners.add(listener);
-    return ()=>this.listeners.delete(listener);
-  }
+  subscribe(listener){if(typeof listener!=='function')return ()=>{};this.listeners.add(listener);return ()=>this.listeners.delete(listener)}
   exportEdits(){
     const out=[];
     for(const [key,patch] of this.edits){
-      const [cx,cy]=key.split(',').map(Number);
-      for(const [index,value] of patch)out.push([cx,cy,index,value]);
+      const [cx,cy,cz]=key.split(',').map(Number);
+      for(const [index,value] of patch)out.push([cx,cy,cz,index,value]);
     }
     return out;
   }
   importEdits(rows){
-    this.edits.clear();
-    this.chunks.clear();
+    this.edits.clear();this.chunks.clear();
     for(const row of Array.isArray(rows)?rows:[]){
-      if(!Array.isArray(row)||row.length<4)continue;
-      const [cx,cy,index,value]=row.map(Number);
-      if(![cx,cy,index,value].every(Number.isFinite))continue;
-      const key=this.chunkKey(cx,cy);
-      let patch=this.edits.get(key);
+      if(!Array.isArray(row))continue;
+      let cx,cy,cz,index,value;
+      if(row.length>=5)[cx,cy,cz,index,value]=row.map(Number);
+      else if(row.length>=4){[cx,cy,index,value]=row.map(Number);cz=0}
+      else continue;
+      if(![cx,cy,cz,index,value].every(Number.isFinite))continue;
+      const key=this.chunkKey(cx,cy,cz);let patch=this.edits.get(key);
       if(!patch){patch=new Map();this.edits.set(key,patch)}
       patch.set(index|0,value|0);
     }
-    this.changeVersion++;
-    for(const listener of this.listeners)listener({reload:true,version:this.changeVersion});
+    this.changeVersion++;for(const listener of this.listeners)listener({reload:true,version:this.changeVersion});
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {
-      tileSize:this.tileSize,
-      pixelsPerMeter:this.pixelsPerMeter,
-      chunkSize:this.chunkSize,
-      loadedChunks:this.chunks.size,
-      editedTiles:edits,
-      version:this.changeVersion,
-      generatorVersion:this.generatorVersion,
-      noiseBackend:this.noiseBackend
-    };
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true};
   }
 }
 
