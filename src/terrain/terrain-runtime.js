@@ -198,7 +198,7 @@ class TerrainWorld{
     if(!chunk.set(lx,ly,lz,value))return false;
     const key=this.chunkKey(cx,cy,cz);let patch=this.edits.get(key);
     if(!patch){patch=new Map();this.edits.set(key,patch)}
-    const index=chunk.index(lx,ly,lz),generated=this.generateVoxel(gx,gy,gz);
+    const index=chunk.index(lx,ly,lz),generated=gz===this.blackBackRowZ?this.generateBlackBackdropVoxel(gx,gy,gz):this.generateVoxel(gx,gy,gz);
     if(value===generated)patch.delete(index);else patch.set(index,value);
     if(patch.size===0)this.edits.delete(key);
     this.changeVersion++;
