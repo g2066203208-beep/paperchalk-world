@@ -175,11 +175,13 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:4,
-  engine:'three-r180-paper-stage',
+  version:5,
+  engine:'three-r180-paper-stage-cube-terrain',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setStageView,toggleStageView,setStageAxis,
   screenToWorld(clientX,clientY){return engine?.screenToWorld?.(clientX,clientY)||null},
+  screenToTerrainCell(clientX,clientY,options){return engine?.screenToTerrainCell?.(clientX,clientY,options)||null},
+  hideTerrainCursor(){return engine?.hideTerrainCursor?.()},
   get active(){return active},
   get ready(){return ready},
   get stats(){
