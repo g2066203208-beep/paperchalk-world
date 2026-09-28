@@ -132,9 +132,9 @@ class TerrainWorld{
   }
   generateBlackBackdropVoxel(gx,gy,gz=this.blackBackRowZ){
     const surface=this.surfaceCell(gx,this.interactionRowZ);
-    // Rear row is a solid underground backing sheet: no caves, no light holes.
-    // Keep the surface itself out so the black layer only exists underground.
-    if(gy>=surface)return TILE.AIR;
+    // Rear row is a complete solid black backing column, including its top voxel.
+    // It has no caves and no light holes.
+    if(gy>surface)return TILE.AIR;
     return TILE.STONE;
   }
   generateTile(gx,gy,gz=0){return gz===this.blackBackRowZ?this.generateBlackBackdropVoxel(gx,gy,gz):this.generateVoxel(gx,gy,gz)}
