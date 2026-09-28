@@ -4,7 +4,6 @@ import {
   createVoxelGridTexture,
   DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
-
 export class WorldSpaceHealthBar{
   constructor(THREE,{max=10}={}){
     this.THREE=THREE;this.max=max;this.value=max;
@@ -70,7 +69,6 @@ export class WorldSpaceHealthBar{
   }
   snapshot(){return {value:this.value,max:this.max,cells:this.cells.length,tail:this.cells.at(-1)?.userData?.isTail===true,animating:this.animations.size}}
 }
-
 class WaterRenderer{
   constructor(THREE,terrain,scene){
     this.THREE=THREE;this.terrain=terrain;this.scene=scene;
@@ -108,7 +106,6 @@ class WaterRenderer{
     const [cx,cy,cz]=chunkKey.split(',').map(Number),n=this.terrain.chunkSize,s=this.terrain.tileSize;
     const data={positions:[],indices:[],faces:0,cells:0};
     const xStart=cx*n,xEnd=xStart+n,yStart=cy*n,yEnd=yStart+n,zStart=cz*n,zEnd=zStart+n;
-
     for(let gz=zStart;gz<zEnd;gz++)for(let gy=yStart;gy<yEnd;gy++)for(let gx=xStart;gx<xEnd;gx++){
       const level=this._level(gx,gy,gz);if(!level)continue;
       data.cells++;
@@ -116,25 +113,20 @@ class WaterRenderer{
       const x0=gx*s+.008*s,x1=(gx+1)*s-.008*s;
       const y0=gy*s,y1=y0+h;
       const z0=gz*s-s*.492,z1=gz*s+s*.492;
-
       if(this._level(gx,gy+1,gz)<=0)
         this._pushQuad(data,[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]);
-
       const belowLevel=this._level(gx,gy-1,gz);
       if(belowLevel<8&&!this.terrain.isSolidPeek(gx,gy-1,gz))
         this._pushQuad(data,[x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0]);
-
       const leftH=(this._level(gx-1,gy,gz)/8)*s;
       if(h>leftH+.0001){const ys=y0+leftH;this._pushQuad(data,[x0,ys,z0],[x0,ys,z1],[x0,y1,z1],[x0,y1,z0])}
       const rightH=(this._level(gx+1,gy,gz)/8)*s;
       if(h>rightH+.0001){const ys=y0+rightH;this._pushQuad(data,[x1,ys,z1],[x1,ys,z0],[x1,y1,z0],[x1,y1,z1])}
-
       const frontH=(this._level(gx,gy,gz+1)/8)*s;
       if(h>frontH+.0001){const ys=y0+frontH;this._pushQuad(data,[x0,ys,z1],[x1,ys,z1],[x1,y1,z1],[x0,y1,z1])}
       const backH=(this._level(gx,gy,gz-1)/8)*s;
       if(h>backH+.0001){const ys=y0+backH;this._pushQuad(data,[x1,ys,z0],[x0,ys,z0],[x0,y1,z0],[x1,y1,z0])}
     }
-
     if(!data.faces)return;
     const geometry=new THREE.BufferGeometry();
     geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.positions,3));
@@ -167,9 +159,7 @@ class WaterRenderer{
       this.displayLevels=new Map(water.cells);this.targetLevels=new Map(water.cells);
       this._markAllChunks(this.displayLevels);this.initialized=true;this.transitionId=water.visualTransition?.id??-1;
     }else this._beginTransition(water);
-
     for(const key of water.consumeDirtyChunks())this.displayDirty.add(key);
-
     if(this.transitionT<1){
       const prevT=this.transitionT;
       this.transitionT=Math.min(1,this.transitionT+Math.max(0,dt)/this.transitionDuration);
@@ -195,7 +185,6 @@ class WaterRenderer{
       this.displayLevels=new Map(water.cells);this.targetLevels=new Map(water.cells);this._markAllChunks(this.displayLevels);
     }
     this._waterVersion=water.version;
-
     const dirty=[...this.displayDirty];this.displayDirty.clear();
     for(const key of dirty)this._buildChunk(key);
   }
@@ -210,7 +199,6 @@ class WaterRenderer{
     this.meshes.clear();this.material.dispose();this.scene.remove(this.root);
   }
 }
-
 class TerrainChunkRenderer{
   constructor(THREE,terrain,scene,settings={}){
     this.THREE=THREE;this.terrain=terrain;this.scene=scene;
@@ -274,7 +262,6 @@ class TerrainChunkRenderer{
           float effectiveDarkness=clamp(vVoxelDarkness,0.0,1.0);
           float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
           outgoingLight*=darknessVisibility;
-
           vec3 voxelCell=floor((vVoxelWorldPos+vec3(0.0001))/uVoxelSize);
           float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
           float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
@@ -285,7 +272,6 @@ class TerrainChunkRenderer{
             valueShift,
             valueShift*(1.0-warmShift)
           );
-
           vec3 seg=uOcclusionPlayer-uOcclusionCamera;
           float segLen2=max(dot(seg,seg),0.0001);
           float t=clamp(dot(vVoxelWorldPos-uOcclusionCamera,seg)/segLen2,0.0,1.0);
@@ -299,14 +285,12 @@ class TerrainChunkRenderer{
           float fade=1.0-smoothstep(radius*.55,radius,distToSight);
           float occlusionAlpha=mix(1.0,0.18,fade*inFront*uOcclusionEnabled);
           if(protectedInteraction||protectedBlack)occlusionAlpha=1.0;
-
           #include <opaque_fragment>
           gl_FragColor.a*=occlusionAlpha;
         `);
       this.terrainShader=shader;
     };
     this.material.customProgramCacheKey=()=> 'paperchalk-color-variation-water-v14';
-
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
   _markDirty(cx,cy,cz){
@@ -482,7 +466,6 @@ class FishSchoolRenderer{
     this.scene.remove(this.root);
   }
 }
-
 class FishingRenderer{
   constructor(THREE,scene){
     this.THREE=THREE;this.scene=scene;this.root=new THREE.Group();this.root.name='fishing-system';scene.add(this.root);
@@ -492,13 +475,11 @@ class FishingRenderer{
     this.rodGeometry=new THREE.BufferGeometry();
     this.rodMaterial=new THREE.LineBasicMaterial({color:0x5b3824,depthTest:true});
     this.rod=new THREE.Line(this.rodGeometry,this.rodMaterial);this.rod.visible=false;this.root.add(this.rod);
-
     const bobber=new THREE.Group();
     const body=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),new THREE.MeshLambertMaterial({color:0xf0eee5,flatShading:true}));
     body.scale.y=1.25;
     const cap=new THREE.Mesh(new THREE.SphereGeometry(.075,8,6),new THREE.MeshLambertMaterial({color:0xd64f42,flatShading:true}));
     cap.position.y=.08;bobber.add(body,cap);bobber.visible=false;this.root.add(bobber);this.bobber=bobber;
-
     const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;
     const ctx=canvas.getContext('2d');ctx.clearRect(0,0,256,128);
     ctx.fillStyle='rgba(40,34,28,.9)';ctx.strokeStyle='#f3d36b';ctx.lineWidth=8;
@@ -507,7 +488,6 @@ class FishingRenderer{
     const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
     this.prompt=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));
     this.prompt.scale.set(1.35,.68,1);this.prompt.visible=false;this.prompt.renderOrder=2000;this.root.add(this.prompt);this.promptTexture=tex;
-
     const fishCanvas=document.createElement('canvas');fishCanvas.width=128;fishCanvas.height=128;
     const fctx=fishCanvas.getContext('2d');fctx.font='86px sans-serif';fctx.textAlign='center';fctx.textBaseline='middle';fctx.fillText('🐟',64,70);
     const ftex=new THREE.CanvasTexture(fishCanvas);ftex.colorSpace=THREE.SRGBColorSpace;
@@ -545,7 +525,6 @@ class FishingRenderer{
     this.scene.remove(this.root);
   }
 }
-
 export class World3DEngine{
   constructor({THREE,host,content,onCameraChanged=null}){
     if(!THREE)throw new Error('THREE_REQUIRED');
@@ -588,7 +567,6 @@ export class World3DEngine{
   }
   _buildStage(){
     const THREE=this.THREE;
-
     const sun=new THREE.DirectionalLight(0xfff0d2,3.4);
     sun.name='world-sun';
     sun.castShadow=true;
@@ -602,15 +580,12 @@ export class World3DEngine{
     sun.shadow.normalBias=.025;
     this.scene.add(sun);
     this.scene.add(sun.target);
-
     const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,1.0);
     skyFill.name='sky-environment-bounce';
     this.scene.add(skyFill);
-
     const ambient=new THREE.AmbientLight(0x8090a6,.12);
     ambient.name='soft-global-bounce';
     this.scene.add(ambient);
-
     const moon=new THREE.DirectionalLight(0x8eb6ff,.0);
     moon.name='world-moon';
     moon.castShadow=true;
@@ -623,7 +598,6 @@ export class World3DEngine{
     moon.shadow.normalBias=.02;
     this.scene.add(moon);
     this.scene.add(moon.target);
-
     const sunDisc=new THREE.Mesh(
       new THREE.SphereGeometry(2.6,24,16),
       new THREE.MeshBasicMaterial({color:0xffe49a,toneMapped:false,depthWrite:false})
@@ -631,7 +605,6 @@ export class World3DEngine{
     sunDisc.name='visible-sun';
     sunDisc.renderOrder=-50;
     this.scene.add(sunDisc);
-
     const moonDisc=new THREE.Mesh(
       new THREE.SphereGeometry(1.8,20,14),
       new THREE.MeshBasicMaterial({color:0xdce7ff,toneMapped:false,depthWrite:false})
@@ -639,9 +612,7 @@ export class World3DEngine{
     moonDisc.name='visible-moon';
     moonDisc.renderOrder=-50;
     this.scene.add(moonDisc);
-
     this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
-
     this.backdrop=null;
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
       radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
@@ -652,7 +623,6 @@ export class World3DEngine{
     this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
     this.fishingRenderer=new FishingRenderer(THREE,this.scene);
     this.fishSchoolRenderer=new FishSchoolRenderer(THREE,this.scene,{capacity:this.mobileLike?24:32});
-
     const cursorGeometry=new THREE.BoxGeometry(
       this.terrain.tileSize*1.035,
       this.terrain.tileSize*1.035,
@@ -671,7 +641,6 @@ export class World3DEngine{
     this.terrainCursor.visible=false;
     this.terrainCursor.renderOrder=1000;
     this.scene.add(this.terrainCursor);
-
     for(const def of this.sceneData.stageEntities||[]){
       const ground=def.grounded?this.terrain.highestGroundY(def.x,Number(def.z)||0):Number(def.y)||0;
       const entity=new PaperSpriteEntity(THREE,{
@@ -690,7 +659,6 @@ export class World3DEngine{
     });
     this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
     this.playerSprite.root.add(this.healthBar.group);
-
     const torchRoot=new THREE.Group();
     torchRoot.name='player-hand-torch';
     torchRoot.position.set(.42,.15,.12);
@@ -718,7 +686,6 @@ export class World3DEngine{
     torchRoot.visible=false;
     this.playerSprite.root.add(torchRoot);
     this.torch={root:torchRoot,flame:torchFlame,light:torchLight};
-
     this.scene.add(this.playerSprite.root);
   }
   _seedFromId(id){
@@ -837,7 +804,6 @@ export class World3DEngine{
     const p=snapshot?.player;if(!p||!this.cameraOcclusion?.enabled)return;
     const playerPos=new this.THREE.Vector3(p.x,p.y,p.z);
     this.terrainRenderer?.setCameraOcclusion(this.camera.position,playerPos,true);
-
     const a=this.camera.position,b=playerPos,ab=b.clone().sub(a),len2=Math.max(.0001,ab.lengthSq());
     const k=1-Math.pow(.00003,Math.max(0,dt));
     let faded=0;
@@ -884,17 +850,14 @@ export class World3DEngine{
     const localSurfaceY=(this.terrain.surfaceCell(Math.floor(p.x/this.terrain.tileSize),Math.floor(p.z/this.terrain.tileSize))+1)*this.terrain.tileSize;
     const undergroundDepth=Math.max(0,localSurfaceY-p.y);
     const undergroundFactor=Math.max(0,Math.min(1,(undergroundDepth-.35)/2.4));
-
     this.scene.background.copy(this.fixedBackgroundColor);
     this.renderer.setClearColor(this.fixedBackgroundColor,1);
-
     const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,ambient=this.terrainLights?.ambient,moon=this.terrainLights?.moon;
     const sunDisc=this.terrainLights?.sunDisc,moonDisc=this.terrainLights?.moonDisc;
     const radius=42;
     const sx=Math.cos(angle)*radius;
     const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
     const sz=22;
-
     if(sun){
       sun.intensity=daylight*3.4;
       sun.position.set(p.x+sx,p.y+sy,p.z+sz);
@@ -1002,7 +965,6 @@ export class World3DEngine{
     if(showCursor&&this.terrainCursor){this.terrainCursor.position.set(center.x,center.y,center.z);this.terrainCursor.visible=true}
     return result;
   }
-
   hideTerrainCursor(){
     if(this.terrainCursor)this.terrainCursor.visible=false;
   }
