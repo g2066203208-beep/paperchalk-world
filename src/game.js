@@ -1124,6 +1124,12 @@ function activateQuickSlot(index){
   if(!item)return false;
   if(item.action==='toggle-torch')return toggleTorch();
   if(item.action==='water-tool')return setTerrainTool('water',{notice:true});
+  if(item.action==='fishing-rod'){
+    setTerrainTool('dig');
+    showMapNotice(fishing.state==='idle'?'钓鱼竿已装备：直接点击水面抛竿。':'再次点击画面即可收杆。',900);
+    renderQuickbar();
+    return true;
+  }
   return useSelectedItem();
 }
 quickSlots.forEach((button,index)=>button.addEventListener('click',()=>activateQuickSlot(index)));
@@ -1219,6 +1225,10 @@ function useSelectedItem(){
   }
   if(item.action==='fishing-rod'){
     setTerrainTool('dig');
+    if(fishing.state==='idle'){
+      showMapNotice('直接点击想抛到的水面。',900);
+      renderInventory();renderQuickbar();return true;
+    }
     const ok=reelFishingRod();renderInventory();renderQuickbar();return ok;
   }
   if(item.action==='eat'){
@@ -1549,7 +1559,10 @@ window.addEventListener('keydown',event=>{
   }
   if(event.code==='Space'){if(!event.repeat||controller.inWater||!!playerWaterContact())jump();event.preventDefault();return}
   if(event.code==='KeyF'){
-    if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod'))reelFishingRod();
+    if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod')){
+      if(fishing.state==='idle')showMapNotice('装备钓鱼竿后，点击水面选择抛竿位置。',900);
+      else reelFishingRod();
+    }
     event.preventDefault();return;
   }
   if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
