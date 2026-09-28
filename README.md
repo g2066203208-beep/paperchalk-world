@@ -12,11 +12,11 @@ Three.js paper stage
 Z only controls front/back paper layers
 ```
 
-世界不是 Minecraft 式多层三维体素。地形数据仍然只有 `Terrain[x][y]` 一层，但**每一个格子在 Three.js 中都有真实三维立方体体积**：长、宽、厚都为 0.25 m。玩家所在的中景可以挖和放这些 3D 方块；房屋、树木、岩石、玩家和后续 NPC/敌人仍然是贴在 `PlaneGeometry` 上的 2D 纸片实体。
+世界不是 Minecraft 式多层三维体素。地形数据仍然只有 `Terrain[x][y]` 一层，但**每一个格子在 Three.js 中都有真实三维立方体体积**：长、宽、厚都为 1 m。玩家所在的中景可以挖和放这些 3D 方块；房屋、树木、岩石、玩家和后续 NPC/敌人仍然是贴在 `PlaneGeometry` 上的 2D 纸片实体。
 
 ## 当前实现
 
-- 0.25 m 单元，64×64 cell 的单层 TerrainChunk；每格渲染为 0.25×0.25×0.25 m 的真实 3D Cube
+- 1 m 单元，64×64 cell 的单层 TerrainChunk；每格渲染为 0.25×0.25×1 m 的真实 3D Cube
 - TypedArray 地形存储
 - Chunk 按玩家位置流式加载/卸载
 - 地表、土层、石层、洞穴使用 **FastNoiseLite 1.1.1** 确定性程序生成（OpenSimplex2S + Perlin + Cellular）
@@ -53,7 +53,7 @@ https://g2066203208-beep.github.io/paperchalk-world/
 ## 架构原则
 
 1. Three.js 是舞台和 WebGL 渲染器，不代表世界物体必须是 3D 模型。
-2. Terrain 数据维度只有 X/Y；不存在第二个 Z 方块层。Z 仅提供每个格子的真实立方体厚度（当前 0.25 m）以及舞台前后层级。
+2. Terrain 数据维度只有 X/Y；不存在第二个 Z 方块层。Z 仅提供每个格子的真实立方体厚度（当前 1 m）以及舞台前后层级。
 3. 非地形对象统一走 PaperSpriteEntity / PlaneGeometry。
 4. 正常玩法只允许 X/Y 运动；Z 仅用于远景、中景、玩家、前景的纸片层次。
 5. 地形修改只保存 delta，未修改区域始终由 seed 重建。
