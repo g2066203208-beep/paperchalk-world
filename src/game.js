@@ -128,12 +128,20 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
   return prefix+encodeURIComponent(String(account||''));
 }
 
-const defaultCamera=Object.freeze({yaw:.72,pitch:.42,distance:14,fov:55});
+const defaultCamera=Object.freeze({
+  yaw:.72,pitch:.42,distance:14,fov:55,
+  stageView:Object.freeze({enabled:true,axis:'z',side:1})
+});
 function getSettings(){
   const defaults={language:'zh-CN',timeScale:1,preferLandscape:true,camera3d:{...defaultCamera}};
   try{
     const parsed=JSON.parse(storageGet(KEY_SETTINGS)||'{}');
-    const camera3d={...defaultCamera,...(parsed.camera3d||{})};
+    const parsedCamera=parsed.camera3d||{};
+    const camera3d={
+      ...defaultCamera,
+      ...parsedCamera,
+      stageView:{...defaultCamera.stageView,...(parsedCamera.stageView||{})}
+    };
     return {...defaults,...parsed,camera3d};
   }catch{return defaults}
 }
@@ -146,10 +154,13 @@ let settings=getSettings();
 window.PaperchalkSettings=Object.freeze({
   get(){return JSON.parse(JSON.stringify(settings))},
   setCamera3D(config){
-    settings={...settings,camera3d:{...settings.camera3d,...config}};
+    const stageView=config?.stageView
+      ?{...settings.camera3d.stageView,...config.stageView}
+      :settings.camera3d.stageView;
+    settings={...settings,camera3d:{...settings.camera3d,...config,stageView}};
     writeSettings(settings);
     syncCameraPanel();
-    return {...settings.camera3d};
+    return {...settings.camera3d,stageView:{...settings.camera3d.stageView}};
   }
 });
 
@@ -654,16 +665,33 @@ cameraReset.addEventListener('click',()=>{
 window.addEventListener('paperchalk-3d-camera-change',event=>{
   if(!event.detail)return;
   cameraYaw=Number.isFinite(event.detail.yaw)?event.detail.yaw:cameraYaw;
-  settings={...settings,camera3d:{...settings.camera3d,...event.detail}};
-  writeSettings(settings);syncCameraPanel();
+  const stageView=event.detail.stageView
+    ?{...settings.camera3d.stageView,...event.detail.stageView}
+    :settings.camera3d.stageView;
+  settings={...settings,camera3d:{...settings.camera3d,...event.detail,stageView}};
+  writeSettings(settings);syncCameraPanel();syncStageDebugButtons();
 });
 
 function debugIsOpen(){return debugPanel.classList.contains('is-open')}
+function stageViewState(){
+  const state=window.Paperchalk3D?.stats?.stageView||settings.camera3d.stageView||{enabled:true,axis:'z',side:1};
+  return {enabled:state.enabled!==false,axis:state.axis==='x'?'x':'z',side:state.side===-1?-1:1};
+}
+function syncStageDebugButtons(){
+  const stage=stageViewState();
+  const stageButton=debugPanel.querySelector('[data-debug-action="stageview"]');
+  const axisButton=debugPanel.querySelector('[data-debug-action="stageaxis"]');
+  if(stageButton)stageButton.textContent='纸片舞台视角：'+(stage.enabled?'开':'关');
+  if(axisButton)axisButton.textContent='舞台观察轴：'+stage.axis.toUpperCase();
+}
 function updateDebugStatus(){
   const s=window.Paperchalk3D?.stats||{};
+  const stage=stageViewState();
   debugStatus.textContent='HP '+health.current+'/'+health.max+
     ' · XYZ '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+', '+transform.z.toFixed(1)+
+    ' · 舞台 '+(stage.enabled?stage.axis.toUpperCase()+'轴':'自由镜头')+
     ' · '+(s.fps||0)+' FPS · '+(s.drawCalls||0)+' draws';
+  syncStageDebugButtons();
 }
 function openDebugPanel(){
   debugPanel.classList.add('is-open');
@@ -681,7 +709,7 @@ function runDebugCommand(command){
   const raw=String(command||'').trim();
   if(!raw)return '';
   const [cmd,...args]=raw.split(/\s+/);
-  if(cmd==='help')return 'hp 5 | hp +1 | tp X Z | reset | collider | stats | save';
+  if(cmd==='help')return 'hp 5 | hp +1 | tp X Z | reset | collider | stage on/off | axis x/z | stats | save';
   if(cmd==='hp'){
     const token=args[0]||'';
     const n=Number(token);
@@ -700,6 +728,25 @@ function runDebugCommand(command){
     window.Paperchalk3D?.setDebugColliders?.(debugColliders);
     publish();
     return '3D Collider -> '+(debugColliders?'开启':'关闭');
+  }
+  if(cmd==='stage'){
+    const token=String(args[0]||'toggle').toLowerCase();
+    const current=stageViewState();
+    const enabled=token==='on'||token==='1'||token==='true'
+      ?true
+      :token==='off'||token==='0'||token==='false'
+        ?false
+        :!current.enabled;
+    const next=window.Paperchalk3D?.setStageView?.(enabled,current.axis)||{...current,enabled};
+    syncStageDebugButtons();
+    return '纸片舞台视角 -> '+(next.enabled?'开启':'关闭');
+  }
+  if(cmd==='axis'){
+    const axis=String(args[0]||'').toLowerCase();
+    if(axis!=='x'&&axis!=='z')return '用法：axis x / axis z';
+    const next=window.Paperchalk3D?.setStageAxis?.(axis)||{...stageViewState(),axis};
+    syncStageDebugButtons();
+    return '舞台观察轴 -> '+next.axis.toUpperCase();
   }
   if(cmd==='stats')return JSON.stringify(window.Paperchalk3D?.stats||{},null,2);
   if(cmd==='save')return saveWorldState()?'存档已写入':'没有活动档案';
@@ -726,6 +773,12 @@ debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
       debugColliders=!debugColliders;
       window.Paperchalk3D?.setDebugColliders?.(debugColliders);
       button.textContent='Collider：'+(debugColliders?'开':'关');
+    }else if(a==='stageview'){
+      const current=stageViewState();
+      window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
+    }else if(a==='stageaxis'){
+      const current=stageViewState();
+      window.Paperchalk3D?.setStageAxis?.(current.axis==='z'?'x':'z');
     }
     updateDebugStatus();
   });
