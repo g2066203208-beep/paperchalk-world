@@ -175,10 +175,11 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:3,
-  engine:'three-r180-production',
+  version:4,
+  engine:'three-r180-paper-stage',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setStageView,toggleStageView,setStageAxis,
+  screenToWorld(clientX,clientY){return engine?.screenToWorld?.(clientX,clientY)||null},
   get active(){return active},
   get ready(){return ready},
   get stats(){
