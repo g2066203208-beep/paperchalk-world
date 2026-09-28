@@ -42,7 +42,7 @@ Movement and gravity run at a fixed 60 Hz step. 3D building collisions are resol
 - WebGLRenderer
 - lighting and shadows
 - procedural village geometry
-- third-person camera rig
+- paper-stage camera rig: fixed X/Z principal-axis view by default, with debug-toggleable free orbit
 - player mesh
 - 3D world-space health bar
 - collider debug helpers
