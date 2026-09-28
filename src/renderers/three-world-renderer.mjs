@@ -46,6 +46,7 @@ async function ensureReady(){
       THREE,
       host:HOST,
       content:CONTENT,
+      terrain:window.PaperchalkTerrain,
       onCameraChanged:syncCameraControls
     });
     latestSnapshot=RUNTIME.getSnapshot();
@@ -175,8 +176,8 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:3,
-  engine:'three-r180-production',
+  version:4,
+  engine:'three-r180-paper-stage-voxel',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setStageView,toggleStageView,setStageAxis,
   get active(){return active},
