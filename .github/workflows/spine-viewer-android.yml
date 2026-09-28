@@ -1,15 +1,17 @@
-name: Build Spine Android Viewer
+name: Build PaperChalk Android Studio
 
 on:
   push:
-    branches: [ spine-android-apk ]
+    branches:
+      - spine-android-apk
     paths:
       - 'tools/spine-android-viewer/**'
       - '.github/workflows/spine-viewer-android.yml'
       - 'src/animation/paperchalk-motion.js'
       - 'index.html'
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
     paths:
       - 'tools/spine-android-viewer/**'
       - '.github/workflows/spine-viewer-android.yml'
@@ -22,11 +24,8 @@ permissions:
 
 jobs:
   build:
-    name: PaperChalk Studio APK
+    name: Mobile Offline APK
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: tools/spine-android-viewer
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -35,27 +34,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Java 17
         uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android platform
+      - name: Android SDK
+        shell: bash
         run: |
           SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then SDKMANAGER="$ANDROID_HOME/cmdline-tools/12.0/bin/sdkmanager"; fi
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$ANDROID_HOME/cmdline-tools/12.0/bin/sdkmanager"
+          fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
 
-      - name: Set up Gradle
+      - name: Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build fully offline integrated Stretchy Studio
-        working-directory: .
+      - name: Build embedded offline editor
+        shell: bash
         run: |
+          set -euo pipefail
           rm -rf /tmp/stretchystudio
           git clone https://github.com/MangoLion/stretchystudio.git /tmp/stretchystudio
           cd /tmp/stretchystudio
@@ -65,230 +68,23 @@ jobs:
           npm install --no-save @mediapipe/tasks-vision@0.10.35
 
           mkdir -p public/ort public/mediapipe public/models
-
-          # Bundle ONNX Runtime WASM locally for DWPose. No CDN at app runtime.
-          cp node_modules/onnxruntime-web/dist/*.wasm public/ort/ || true
-          cp node_modules/onnxruntime-web/dist/*.mjs public/ort/ || true
-
-          # Bundle MediaPipe Tasks Vision WASM locally for camera pose tracking.
+          cp node_modules/onnxruntime-web/dist/*.wasm public/ort/
+          cp node_modules/onnxruntime-web/dist/*.mjs public/ort/
           cp -R node_modules/@mediapipe/tasks-vision/wasm/. public/mediapipe/
 
-          # Bundle the two runtime models. Download occurs only during CI build;
-          # the installed APK never needs network access.
-          curl -L --fail --retry 3 \
-            -o public/models/pose_landmarker_lite.task \
-            https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
-          curl -L --fail --retry 3 \
-            -o public/models/dw-ll_ucoco_384.onnx \
-            https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx
+          curl -L --fail --retry 3             -o public/models/pose_landmarker_lite.task             https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+          curl -L --fail --retry 3             -o public/models/dw-ll_ucoco_384.onnx             https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx
 
-          python3 - <<'PY'
-          from pathlib import Path
-
-          p = Path('vite.config.js')
-          s = p.read_text()
-          s = s.replace("export default defineConfig({", "export default defineConfig({\n  base: './',", 1)
-          p.write_text(s)
-
-          # Expose stores and MediaPipe constructors to the Android bridge.
-          main = Path('src/main.jsx')
-          s = main.read_text()
-          s = s.replace(
-              "import { ThemeProvider } from './contexts/ThemeProvider.jsx'\n",
-              "import { ThemeProvider } from './contexts/ThemeProvider.jsx'\n"
-              "import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision'\n"
-          )
-          s += "\nif (typeof window !== 'undefined') {\n"
-          s += "  window.__PAPERCHALK_MEDIAPIPE__ = { FilesetResolver, PoseLandmarker };\n"
-          s += "}\n"
-          main.write_text(s)
-
-          for path, line in [
-              ('src/store/projectStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_PROJECT_STORE__ = useProjectStore;\n"),
-              ('src/store/animationStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_ANIMATION_STORE__ = useAnimationStore;\n"),
-              ('src/store/parameterStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_PARAMETER_STORE__ = useParameterStore;\n"),
-              ('src/store/editorStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_EDITOR_STORE__ = useEditorStore;\n"),
-          ]:
-              q = Path(path)
-              q.write_text(q.read_text() + line)
-
-          # Force auto-rig inference to use the CPU/WASM-only ORT bundle and
-          # explicit local appassets URLs. This avoids the JSEP dynamic-import
-          # path that Android WebView cannot resolve reliably.
-          q = Path('src/io/armatureOrganizer.js')
-          s = q.read_text()
-          s = s.replace("await import('onnxruntime-web')", "await import('onnxruntime-web/wasm')")
-          s = s.replace(
-              "instance.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.3/dist/';",
-              "instance.env.wasm.numThreads = 1;\n"
-              "    instance.env.wasm.proxy = false;\n"
-              "    instance.env.wasm.wasmPaths = {\n"
-              "      mjs: 'https://appassets.androidplatform.net/assets/studio/ort/ort-wasm-simd-threaded.mjs',\n"
-              "      wasm: 'https://appassets.androidplatform.net/assets/studio/ort/ort-wasm-simd-threaded.wasm',\n"
-              "    };"
-          )
-          s = s.replace(
-              "export const DWPOSE_URL = 'https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx';",
-              "export const DWPOSE_URL = 'https://appassets.androidplatform.net/assets/studio/models/dw-ll_ucoco_384.onnx';"
-          )
-          q.write_text(s)
-
-          # Remove cloud/login wording and external See-Through shortcuts from the
-          # embedded editor. PSD import itself is always local.
-          for path in [
-              'src/components/canvas/PsdImportWizard.jsx',
-              'src/components/canvas/CanvasViewport.jsx',
-              'src/components/preferences/PreferencesModal.jsx',
-          ]:
-              q = Path(path)
-              if not q.exists():
-                  continue
-              s = q.read_text()
-              s = s.replace('Download from HuggingFace', 'Use bundled offline DWPose')
-              s = s.replace('Free HuggingFace Space', 'Offline mode')
-              s = s.replace('https://huggingface.co/spaces/24yearsold/see-through-demo', '#offline-see-through-disabled')
-              q.write_text(s)
-
-          # Mobile adaptation for the upstream desktop-first editor:
-          # horizontal top-toolbar scrolling, larger touch targets, and a
-          # non-overlapping Staging/Animation switch on narrow screens.
-          q = Path('src/app/layout/EditorLayout.jsx')
-          s = q.read_text()
-          s = s.replace(
-              'className="h-10 border-b flex items-center px-4 shrink-0 bg-card gap-3 relative"',
-              'className="min-h-11 border-b flex items-center px-2 sm:px-4 shrink-0 bg-card gap-1 sm:gap-3 relative overflow-x-auto overflow-y-hidden"'
-          )
-          s = s.replace(
-              'className="font-semibold text-sm select-none tracking-tight"',
-              'className="font-semibold text-sm select-none tracking-tight hidden sm:inline"'
-          )
-          s = s.replace(
-              'className="text-xs text-muted-foreground border border-border/50 px-1.5 py-0.5 font-mono"',
-              'className="text-xs text-muted-foreground border border-border/50 px-1.5 py-0.5 font-mono hidden md:inline"'
-          )
-          s = s.replace(
-              'className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/40"',
-              'className="sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/40 shrink-0"'
-          )
-          q.write_text(s)
-
-          # Professional mobile armature rendering:
-          # tapered bone bodies + joint heads + large invisible touch targets +
-          # Chinese role labels. This replaces the dot-only look.
-          q = Path('src/components/canvas/SkeletonOverlay.jsx')
-          s = q.read_text()
-          s = s.replace(
-              "const LINE_COLOUR   = 'rgba(34,211,238,0.55)';",
-              "const LINE_COLOUR   = 'rgba(34,211,238,0.72)';\n"
-              "const BONE_FILL_EDIT = 'rgba(250,204,21,0.30)';\n"
-              "const BONE_FILL_NORMAL = 'rgba(34,211,238,0.22)';\n"
-              "const BONE_STROKE_EDIT = 'rgba(250,204,21,0.95)';\n"
-              "const BONE_STROKE_NORMAL = 'rgba(34,211,238,0.90)';\n"
-              "const ROLE_ZH = { root:'骨盆/根', torso:'躯干', neck:'颈部', head:'头部', eyes:'眼睛', "
-              "leftArm:'左上臂', rightArm:'右上臂', leftElbow:'左前臂', rightElbow:'右前臂', bothArms:'双臂', "
-              "leftLeg:'左大腿', rightLeg:'右大腿', leftKnee:'左小腿', rightKnee:'右小腿', bothLegs:'双腿' };"
-          )
-
-          old = """  const lines = [];
-  for (const [fromRole, toRole] of SKELETON_CONNECTIONS) {
-    const from = boneNodes[fromRole];
-    const to   = boneNodes[toRole];
-    if (!from || !to) continue;
-    const [x1, y1] = pivotScreenPos(from);
-    const [x2, y2] = pivotScreenPos(to);
-    lines.push(
-      <line key={`${fromRole}-${toRole}`}
-        x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke={LINE_COLOUR} strokeWidth={skeletonEditMode ? 2 : 1.5}
-        strokeLinecap="round" pointerEvents="none"
-      />
-    );
-  }
-"""
-          new = """  const boneShapes = [];
-  for (const [fromRole, toRole] of SKELETON_CONNECTIONS) {
-    const from = boneNodes[fromRole];
-    const to   = boneNodes[toRole];
-    if (!from || !to) continue;
-    const [x1, y1] = pivotScreenPos(from);
-    const [x2, y2] = pivotScreenPos(to);
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.max(1, Math.hypot(dx, dy));
-    const px = -dy / len, py = dx / len;
-    const baseW = Math.max(5, Math.min(10, len * 0.09));
-    const neckW = Math.max(2.5, baseW * 0.34);
-    const shoulderX = x1 + dx * 0.22, shoulderY = y1 + dy * 0.22;
-    const tipX = x2 - dx * Math.min(0.08, 8 / len);
-    const tipY = y2 - dy * Math.min(0.08, 8 / len);
-    const points = [
-      `${x1 + px*neckW},${y1 + py*neckW}`,
-      `${shoulderX + px*baseW},${shoulderY + py*baseW}`,
-      `${tipX + px*2.2},${tipY + py*2.2}`,
-      `${x2},${y2}`,
-      `${tipX - px*2.2},${tipY - py*2.2}`,
-      `${shoulderX - px*baseW},${shoulderY - py*baseW}`,
-      `${x1 - px*neckW},${y1 - py*neckW}`,
-    ].join(' ');
-    boneShapes.push(
-      <g key={`bone-${fromRole}-${toRole}`} pointerEvents="none">
-        <polygon
-          points={points}
-          fill={skeletonEditMode ? BONE_FILL_EDIT : BONE_FILL_NORMAL}
-          stroke={skeletonEditMode ? BONE_STROKE_EDIT : BONE_STROKE_NORMAL}
-          strokeWidth={1.5}
-          strokeLinejoin="round"
-        />
-        <line x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke={LINE_COLOUR} strokeWidth={1} strokeLinecap="round" />
-      </g>
-    );
-  }
-"""
-          if old not in s:
-              raise SystemExit('SkeletonOverlay connection block not found')
-          s = s.replace(old, new)
-
-          s = s.replace(
-              """      <circle key={role}
-        cx={cx} cy={cy} r={radius}
-        fill={fill} stroke="#000" strokeWidth={1.5}
-        style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents: 'auto' }}
-        onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
-        onClick={() => !skeletonEditMode && setSelection([node.id])}
-      />""",
-              """      <g key={role}>
-        <circle cx={cx} cy={cy} r={Math.max(18, radius + 10)}
-          fill="transparent"
-          style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents: 'auto', touchAction: 'none' }}
-          onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
-          onClick={() => !skeletonEditMode && setSelection([node.id])}
-        />
-        <circle
-          cx={cx} cy={cy} r={radius}
-          fill={fill} stroke="#111827" strokeWidth={2}
-          pointerEvents="none"
-        />
-        <circle cx={cx} cy={cy} r={Math.max(1.8, radius*0.28)}
-          fill="#111827" opacity={0.72} pointerEvents="none" />
-      </g>"""
-          )
-          s = s.replace("{role}\n          </text>", "{ROLE_ZH[role] ?? role}\n          </text>")
-          s = s.replace("{arcs}\n        {lines}", "{arcs}\n        {boneShapes}")
-          s = s.replace(">Adjust Joints</span>", ">调整骨骼</span>")
-          s = s.replace("Drag yellow dots to reposition joints.", "拖动关节端点调整骨骼位置；骨骼实体表示父子骨段。")
-          q.write_text(s)
-          PY
-
+          python3 "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/patch_stretchy.py" /tmp/stretchystudio
           npm run build
 
-          # Offline runtime audit: the installed APK must not depend on model/CDN
-          # downloads. Also verify the exact WASM-only ORT pair used by WebView.
           test -f dist/ort/ort-wasm-simd-threaded.mjs
           test -f dist/ort/ort-wasm-simd-threaded.wasm
           test -f dist/models/dw-ll_ucoco_384.onnx
           test -f dist/models/pose_landmarker_lite.task
-          if grep -R -E "cdn\\.jsdelivr\\.net/npm/onnxruntime|huggingface\\.co/yzd-v/DWPose|storage\\.googleapis\\.com/mediapipe-models" dist/assets dist/index.html; then
-            echo "ERROR: runtime network dependency found in built editor"
+
+          if grep -R -E             'cdn\.jsdelivr\.net/npm/onnxruntime|huggingface\.co/yzd-v/DWPose|storage\.googleapis\.com/mediapipe-models'             dist/assets dist/index.html; then
+            echo 'Runtime network dependency detected in embedded editor.'
             exit 1
           fi
 
@@ -298,25 +94,51 @@ jobs:
           cp -R dist/. "$TARGET/"
           cp LICENSE "$TARGET/LICENSE.StretchyStudio.txt"
 
-      - name: Bundle MediaPipe cutout model
+      - name: Bundle local cutout model
+        working-directory: tools/spine-android-viewer
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p app/src/main/assets
-          curl -L --fail --retry 3 \
-            -o app/src/main/assets/selfie_segmenter.tflite \
-            https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite
+          curl -L --fail --retry 3             -o app/src/main/assets/selfie_segmenter.tflite             https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite
 
-      - name: Build debug APK
-        run: gradle :app:assembleDebug -PspineVersion=4.3.5 --stacktrace
+      - name: Build APK
+        working-directory: tools/spine-android-viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle :app:assembleDebug -PspineVersion=4.3.5 --stacktrace
 
-      - name: Stage artifact
+      - name: Audit APK offline permissions and bundled assets
+        working-directory: tools/spine-android-viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$AAPT" dump permissions "$APK" | tee /tmp/apk-permissions.txt
+          if grep -q 'android.permission.INTERNET' /tmp/apk-permissions.txt; then
+            echo 'APK unexpectedly requests INTERNET permission.'
+            exit 1
+          fi
+          unzip -l "$APK" > /tmp/apk-files.txt
+          grep -q 'assets/studio/models/dw-ll_ucoco_384.onnx' /tmp/apk-files.txt
+          grep -q 'assets/studio/ort/ort-wasm-simd-threaded.mjs' /tmp/apk-files.txt
+          grep -q 'assets/studio/ort/ort-wasm-simd-threaded.wasm' /tmp/apk-files.txt
+          grep -q 'assets/studio/models/pose_landmarker_lite.task' /tmp/apk-files.txt
+          grep -q 'assets/selfie_segmenter.tflite' /tmp/apk-files.txt
+
+      - name: Stage APK
+        working-directory: tools/spine-android-viewer
+        shell: bash
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk "artifacts/PaperChalk-SpineStudio.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PaperChalk-SpineStudio-Mobile-V3-Offline.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PaperChalk-SpineStudio
-          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineStudio.apk
+          name: PaperChalk-SpineStudio-Mobile-V3-Offline
+          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineStudio-Mobile-V3-Offline.apk
           if-no-files-found: error
           retention-days: 30
