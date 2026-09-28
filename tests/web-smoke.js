@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r25'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r26'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -78,4 +78,8 @@ assert(!engine.includes('sun.intensity=daylight*3.4*(1-undergroundFactor'),'sun 
 assert(!engine.includes('skyFill.intensity=exposed*(1-undergroundFactor'),'sky fill still dims by underground depth');
 assert(terrain.includes("rearTopSurface:'normal-grass'"),'rear top surface normal flag missing');
 assert(mesher.includes('solidGy<=surface-1'),'rear black is not restricted below surface');
+assert(engine.includes("camera-player-capsule-fade-v1"),'camera obstruction fade mode missing');
+assert(engine.includes('uOcclusionCamera')&&engine.includes('uOcclusionPlayer'),'terrain camera occlusion uniforms missing');
+assert(engine.includes('protectedInteraction')&&engine.includes('protectedBlack'),'protected gameplay rows missing');
+assert(engine.includes('entity.material.opacity=state.opacity'),'paper entity obstruction fade missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
