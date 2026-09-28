@@ -46,6 +46,10 @@ try{
   await page.waitForTimeout(50);
   const pitch=await page.evaluate(()=>window.Paperchalk3D.stats.camera.pitch);
   assert(Math.abs(pitch-35*Math.PI/180)<.02,'camera panel did not control 3D camera '+pitch);
+  await page.locator('#cameraHeight').evaluate(el=>{el.value='2.5';el.dispatchEvent(new Event('input',{bubbles:true}))});
+  await page.waitForTimeout(50);
+  const height=await page.evaluate(()=>window.Paperchalk3D.stats.camera.height);
+  assert(Math.abs(height-2.5)<.05,'camera height control failed '+height);
   await page.locator('#cameraControlClose').click();
 
   await page.locator('#debugToggleBtn').click();
