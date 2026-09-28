@@ -51,15 +51,19 @@ class WaterWorld{
   constructor(terrain){
     this.terrain=terrain;
     this.cells=new Map();
-    this.active=new Set();
     this.dirtyChunks=new Set();
     this.version=0;
     this.tick=0;
     this.levels=8;
+    this.needsSettle=false;
+    this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
     this.horizontalDirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
+    this.neighborDirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
   }
   key(gx,gy,gz){return gx+','+gy+','+gz}
+  columnKey(gx,gz){return gx+','+gz}
   parse(key){return key.split(',').map(Number)}
+  parseColumn(key){return key.split(',').map(Number)}
   getLevel(gx,gy,gz){return this.cells.get(this.key(gx,gy,gz))||0}
   surfaceUnits(gx,gy,gz){return gy*8+this.getLevel(gx,gy,gz)}
   _chunkKey(gx,gy,gz){
@@ -67,39 +71,42 @@ class WaterWorld{
     return Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n);
   }
   _markDirty(gx,gy,gz){this.dirtyChunks.add(this._chunkKey(gx,gy,gz))}
-  _wake(gx,gy,gz){this.active.add(this.key(gx,gy,gz))}
-  wakeAround(gx,gy,gz){
-    this._wake(gx,gy,gz);
-    this._wake(gx,gy+1,gz);this._wake(gx,gy-1,gz);
-    for(const [dx,,dz] of this.horizontalDirs)this._wake(gx+dx,gy,gz+dz);
+  _markNeighborhoodDirty(gx,gy,gz){
+    this._markDirty(gx,gy,gz);
+    this._markDirty(gx,gy+1,gz);this._markDirty(gx,gy-1,gz);
+    for(const [dx,,dz] of this.horizontalDirs)this._markDirty(gx+dx,gy,gz+dz);
   }
-  consumeDirtyChunks(){
-    const out=[...this.dirtyChunks];this.dirtyChunks.clear();return out;
-  }
+  consumeDirtyChunks(){const out=[...this.dirtyChunks];this.dirtyChunks.clear();return out}
   _terrainBlocksWater(gx,gy,gz){
-    // The scenery-only Z rows render only their top shell for performance.
-    // For liquid physics they still behave as solid terrain columns below that shell,
-    // otherwise water would fall through the intentionally unrendered underground.
+    // Scenery Z rows keep only their visible surface shell. For liquid physics
+    // the hidden material below that shell is treated as solid so water cannot
+    // fall through intentionally ungenerated terrain.
     if(gz!==this.terrain.interactionRowZ&&gz!==this.terrain.blackBackRowZ){
-      const surface=this.terrain.surfaceCell(gx,gz);
-      if(gy<=surface)return true;
+      if(gy<=this.terrain.surfaceCell(gx,gz))return true;
     }
     return this.terrain.isSolidPeek(gx,gy,gz);
   }
   _canOccupy(gx,gy,gz){return !this._terrainBlocksWater(gx,gy,gz)}
-  setLevel(gx,gy,gz,level){
+  _writeLevel(gx,gy,gz,level){
     level=Math.max(0,Math.min(8,Math.round(Number(level)||0)));
     const key=this.key(gx,gy,gz),prev=this.cells.get(key)||0;
     if(prev===level)return false;
     if(level<=0)this.cells.delete(key);else this.cells.set(key,level);
-    this.version++;
-    this._markDirty(gx,gy,gz);
-    this._markDirty(gx,gy+1,gz);this._markDirty(gx,gy-1,gz);
-    for(const [dx,,dz] of this.horizontalDirs)this._markDirty(gx+dx,gy,gz+dz);
-    this.wakeAround(gx,gy,gz);
+    this.version++;this._markNeighborhoodDirty(gx,gy,gz);
     return true;
   }
-  addVolume(gx,gy,gz,units=8){
+  requestSettle(){this.needsSettle=true}
+  requestSettleAround(gx,gy,gz){
+    this.needsSettle=true;
+    this._markNeighborhoodDirty(gx,gy,gz);
+  }
+  setLevel(gx,gy,gz,level,{settle=true}={}){
+    if(!this._canOccupy(gx,gy,gz)&&level>0)return false;
+    const changed=this._writeLevel(gx,gy,gz,level);
+    if(changed&&settle)this.requestSettleAround(gx,gy,gz);
+    return changed;
+  }
+  addVolume(gx,gy,gz,units=8,{settle=true}={}){
     if(!this._canOccupy(gx,gy,gz))return {changed:false,reason:'solid',gx,gy,gz};
     let remaining=Math.max(0,Math.round(Number(units)||0)),added=0,y=gy,guard=0;
     while(remaining>0&&guard++<96){
@@ -107,141 +114,192 @@ class WaterWorld{
       const before=this.getLevel(gx,y,gz),capacity=8-before;
       if(capacity>0){
         const put=Math.min(capacity,remaining);
-        this.setLevel(gx,y,gz,before+put);
+        this._writeLevel(gx,y,gz,before+put);
         remaining-=put;added+=put;
       }
       y++;
     }
-    this.wakeAround(gx,gy,gz);
+    if(added&&settle){this.requestSettleAround(gx,gy,gz);this.settleAll()}
     return {changed:added>0,gx,gy,gz,unitsAdded:added,unitsRejected:remaining,totalLayers:this.totalLayers()};
   }
   placeFull(gx,gy,gz){return this.addVolume(gx,gy,gz,8)}
-  remove(gx,gy,gz){return this.setLevel(gx,gy,gz,0)}
-  _transfer(a,b,amount){
-    if(amount<=0)return 0;
-    const al=this.getLevel(...a),bl=this.getLevel(...b);
-    const move=Math.max(0,Math.min(Math.round(amount),al,8-bl));
-    if(!move)return 0;
-    this.setLevel(...a,al-move);this.setLevel(...b,bl+move);
-    return move;
+  remove(gx,gy,gz,{settle=true}={}){
+    const changed=this._writeLevel(gx,gy,gz,0);
+    if(changed&&settle)this.requestSettleAround(gx,gy,gz);
+    return changed;
   }
-  _hasDrop(gx,gy,gz){
-    return this._canOccupy(gx,gy,gz)&&this._canOccupy(gx,gy-1,gz)&&this.getLevel(gx,gy-1,gz)<8;
+  _columnFloorUnits(gx,gz,nearUnits){
+    let gy=Math.floor(nearUnits/8);
+    let guard=0;
+    while(guard++<192&&this._terrainBlocksWater(gx,gy,gz))gy++;
+    guard=0;
+    while(guard++<192&&this._canOccupy(gx,gy-1,gz))gy--;
+    return gy*8;
   }
-  _findDropDirection3D(gx,gy,gz,maxDistance=10){
-    // Breadth-first search across the X/Z plane. It finds the nearest shelf edge
-    // with free space below and returns only the first step, so thin films migrate
-    // toward a lower outlet instead of sticking where the bucket was poured.
-    const start=this.key(gx,gy,gz);
-    const queue=[[gx,gz,0,0,0]];
-    const seen=new Set([start]);
-    for(let qi=0;qi<queue.length;qi++){
-      const [x,z,dist,firstDx,firstDz]=queue[qi];
-      if(dist>0&&this._hasDrop(x,gy,z))return [firstDx,0,firstDz];
-      if(dist>=maxDistance)continue;
-      const offset=(this.tick+dist+x+z)&3;
-      for(let i=0;i<4;i++){
-        const [dx,,dz]=this.horizontalDirs[(i+offset)&3];
-        const nx=x+dx,nz=z+dz,key=this.key(nx,gy,nz);
-        if(seen.has(key)||!this._canOccupy(nx,gy,nz))continue;
-        // A completely full cell at the same height is not a useful path for
-        // a thin surface film; non-full cells can accept/transport volume.
-        if(dist>0&&this.getLevel(nx,gy,nz)>=8)continue;
-        seen.add(key);
-        queue.push([nx,nz,dist+1,dist===0?dx:firstDx,dist===0?dz:firstDz]);
-      }
-    }
-    return null;
-  }
-  _gravityPass(work,maxTransfers){
-    let transfers=0,changed=false;
-    // Highest cells first so one simulation tick can cascade through several Y cells.
-    work.sort((ka,kb)=>this.parse(kb)[1]-this.parse(ka)[1]);
-    for(const key of work){
-      if(transfers>=maxTransfers)break;
-      const [gx,gy,gz]=this.parse(key),level=this.getLevel(gx,gy,gz);
-      if(!level)continue;
-      if(!this._canOccupy(gx,gy,gz)){this.remove(gx,gy,gz);changed=true;continue}
-      const below=[gx,gy-1,gz];
-      if(!this._canOccupy(...below))continue;
-      const capacity=8-this.getLevel(...below);
-      if(capacity<=0)continue;
-      const moved=this._transfer([gx,gy,gz],below,Math.min(level,capacity));
-      if(moved){transfers++;changed=true}
-    }
-    return {transfers,changed};
-  }
-  _horizontalRelaxPass(work,maxTransfers){
-    let transfers=0,changed=false;
-    const dirs=(this.tick&1)?this.horizontalDirs:[...this.horizontalDirs].reverse();
-    for(const key of work){
-      if(transfers>=maxTransfers)break;
-      const [gx,gy,gz]=this.parse(key);
-      let level=this.getLevel(gx,gy,gz);if(level<=0)continue;
-      if(!this._canOccupy(gx,gy,gz))continue;
-
-      // Prefer a route to a lower shelf in any X/Z direction.
-      const downhill=this._findDropDirection3D(gx,gy,gz,10);
-      if(downhill&&level>0){
-        const nx=gx+downhill[0],nz=gz+downhill[2];
-        if(this._canOccupy(nx,gy,nz)){
-          const moved=this._transfer([gx,gy,gz],[nx,gy,nz],Math.max(1,Math.ceil(level*.5)));
-          if(moved){transfers++;changed=true;level-=moved}
+  _collectBodies(){
+    const remaining=new Set(this.cells.keys()),bodies=[];
+    while(remaining.size){
+      const first=remaining.values().next().value;
+      const queue=[first],cells=[];
+      remaining.delete(first);
+      for(let qi=0;qi<queue.length;qi++){
+        const key=queue[qi],level=this.cells.get(key)||0;
+        if(!level)continue;
+        cells.push([key,level]);
+        const [gx,gy,gz]=this.parse(key);
+        for(const [dx,dy,dz] of this.neighborDirs){
+          const nk=this.key(gx+dx,gy+dy,gz+dz);
+          if(remaining.has(nk)){remaining.delete(nk);queue.push(nk)}
         }
       }
-
-      // Hydrostatic equalisation on the full X/Z plane. Since both cells share
-      // the same voxel-base Y, equal level means equal absolute free-surface height.
-      for(const [dx,,dz] of dirs){
-        if(transfers>=maxTransfers)break;
-        level=this.getLevel(gx,gy,gz);if(level<=0)break;
-        const nx=gx+dx,nz=gz+dz;
-        if(!this._canOccupy(nx,gy,nz))continue;
-        const nl=this.getLevel(nx,gy,nz);
-        const diff=level-nl;
-        if(diff<=1)continue;
-        const moved=this._transfer([gx,gy,gz],[nx,gy,nz],Math.floor(diff/2));
-        if(moved){transfers++;changed=true}
-      }
+      if(cells.length)bodies.push(cells);
     }
-    return {transfers,changed};
+    return bodies;
   }
-  step({maxTransfers=1800,maxActive=1200,relaxPasses=8}={}){
-    if(!this.cells.size||!this.active.size)return {changed:false,transfers:0,cells:this.cells.size,active:this.active.size};
-    let transfers=0,changed=false;
-    let work=[...this.active];this.active.clear();
-    if(work.length>maxActive){
-      const rest=work.splice(maxActive);
-      for(const key of rest)this.active.add(key);
+  _heapPush(heap,node){
+    let i=heap.length;heap.push(node);
+    while(i>0){
+      const p=(i-1)>>1;if(heap[p][0]<=node[0])break;
+      heap[i]=heap[p];i=p;
     }
-
-    // Several local finite-volume sweeps per game tick make one connected pool
-    // settle to a common free-surface elevation instead of visibly staircase.
-    for(let pass=0;pass<relaxPasses&&work.length&&transfers<maxTransfers;pass++){
-      const g=this._gravityPass(work,maxTransfers-transfers);
-      transfers+=g.transfers;changed=changed||g.changed;
-      const h=this._horizontalRelaxPass(work,maxTransfers-transfers);
-      transfers+=h.transfers;changed=changed||h.changed;
-
-      // Pull the newly awakened neighborhood into the next relaxation sweep.
-      if(this.active.size){
-        const next=new Set(work);
-        for(const key of this.active)next.add(key);
-        this.active.clear();
-        work=[...next];
-        if(work.length>maxActive){
-          const rest=work.splice(maxActive);
-          for(const key of rest)this.active.add(key);
-        }
+    heap[i]=node;
+  }
+  _heapPop(heap){
+    if(!heap.length)return null;
+    const root=heap[0],last=heap.pop();
+    if(heap.length&&last){
+      let i=0;
+      while(true){
+        let l=i*2+1,r=l+1;if(l>=heap.length)break;
+        let c=r<heap.length&&heap[r][0]<heap[l][0]?r:l;
+        if(heap[c][0]>=last[0])break;
+        heap[i]=heap[c];i=c;
       }
-      if(!g.changed&&!h.changed)break;
+      heap[i]=last;
     }
+    return root;
+  }
+  _settleBody(body,blockedColumns){
+    let total=0,heapPops=0;
+    const seeds=new Map();
+    for(const [key,level] of body){
+      total+=level;
+      const [gx,gy,gz]=this.parse(key),ck=this.columnKey(gx,gz);
+      const near=gy*8;
+      const prev=seeds.get(ck);
+      if(prev==null||near<prev)seeds.set(ck,near);
+    }
+    if(total<=0)return {cells:new Map(),columns:0,layers:0,heapPops:0};
 
-    this.tick++;
-    return {
-      changed,transfers,cells:this.cells.size,active:this.active.size,totalLayers:this.totalLayers(),
-      relaxPasses,threeDimensional:true
+    const states=new Map(),heap=[];
+    const activate=(gx,gz,nearUnits,force=false)=>{
+      const ck=this.columnKey(gx,gz);
+      if(states.has(ck))return states.get(ck);
+      if(!force&&blockedColumns?.has(ck))return null;
+      const floor=this._columnFloorUnits(gx,gz,nearUnits);
+      const state={gx,gz,floor,filled:0,next:floor};
+      states.set(ck,state);this._heapPush(heap,[state.next,ck]);
+      return state;
     };
+    for(const [ck,near] of seeds){
+      const [gx,gz]=this.parseColumn(ck);activate(gx,gz,near,true);
+    }
+
+    let placed=0,safety=Math.max(4096,total*40);
+    while(placed<total&&heap.length&&safety-->0){
+      const popped=this._heapPop(heap);heapPops++;
+      if(!popped)break;
+      const [height,ck]=popped,state=states.get(ck);
+      if(!state||height!==state.next)continue;
+      const gy=Math.floor(height/8);
+      if(!this._canOccupy(state.gx,gy,state.gz)){
+        // A ceiling/solid interrupted this column. Do not teleport through it.
+        state.next=Infinity;continue;
+      }
+
+      state.filled++;placed++;
+      const topHeight=height+1;
+      state.next=state.floor+state.filled;
+      this._heapPush(heap,[state.next,ck]);
+
+      // A filled layer can spill sideways at its top elevation. Newly reached
+      // columns are inserted by floor elevation, so the heap automatically
+      // sends the next units to the lowest reachable places first.
+      for(const [dx,,dz] of this.horizontalDirs){
+        const nx=state.gx+dx,nz=state.gz+dz,nck=this.columnKey(nx,nz);
+        if(states.has(nck)||(!seeds.has(nck)&&blockedColumns?.has(nck)))continue;
+        const floor=this._columnFloorUnits(nx,nz,height);
+        if(floor<=topHeight)activate(nx,nz,height,seeds.has(nck));
+      }
+    }
+
+    // If exotic enclosed geometry exhausted the frontier, keep the remaining
+    // conserved volume in the original seed columns rather than deleting it.
+    if(placed<total){
+      const seedStates=[...seeds.keys()].map(k=>states.get(k)).filter(Boolean);
+      let si=0;
+      while(placed<total&&seedStates.length){
+        const state=seedStates[si++%seedStates.length];
+        const h=state.floor+state.filled,gy=Math.floor(h/8);
+        if(this._canOccupy(state.gx,gy,state.gz)){state.filled++;placed++}
+        else break;
+      }
+    }
+
+    const out=new Map();
+    for(const state of states.values()){
+      for(let i=0;i<state.filled;i++){
+        const abs=state.floor+i,gy=Math.floor(abs/8),layer=(abs-gy*8)+1;
+        const key=this.key(state.gx,gy,state.gz);
+        if(layer>(out.get(key)||0))out.set(key,layer);
+      }
+    }
+    return {cells:out,columns:states.size,layers:placed,heapPops};
+  }
+  settleAll(){
+    if(!this.needsSettle)return {changed:false,...this.lastSettle};
+    this.needsSettle=false;
+    if(!this.cells.size){
+      this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
+      return {changed:false,...this.lastSettle};
+    }
+
+    const before=new Map(this.cells),bodies=this._collectBodies();
+    const bodyColumns=bodies.map(body=>{
+      const set=new Set();
+      for(const [key] of body){const [gx,,gz]=this.parse(key);set.add(this.columnKey(gx,gz))}
+      return set;
+    });
+    const next=new Map();
+    let columns=0,layers=0,heapPops=0;
+    for(let bi=0;bi<bodies.length;bi++){
+      const blocked=new Set();
+      for(let oi=0;oi<bodyColumns.length;oi++)if(oi!==bi)for(const ck of bodyColumns[oi])blocked.add(ck);
+      const settled=this._settleBody(bodies[bi],blocked);
+      columns+=settled.columns;layers+=settled.layers;heapPops+=settled.heapPops;
+      for(const [key,level] of settled.cells){
+        const prev=next.get(key)||0;
+        if(level>prev)next.set(key,level);
+      }
+    }
+
+    let changed=before.size!==next.size;
+    const keys=new Set([...before.keys(),...next.keys()]);
+    this.cells=next;
+    for(const key of keys){
+      const old=before.get(key)||0,now=next.get(key)||0;
+      if(old!==now){
+        changed=true;
+        const [gx,gy,gz]=this.parse(key);this._markNeighborhoodDirty(gx,gy,gz);
+      }
+    }
+    if(changed)this.version++;
+    this.tick++;
+    this.lastSettle={bodies:bodies.length,columns,layers,heapPops};
+    return {changed,...this.lastSettle,totalLayers:this.totalLayers(),exactHydrostatic:true};
+  }
+  step(){
+    return this.settleAll();
   }
   totalLayers(){let n=0;for(const level of this.cells.values())n+=level;return n}
   submersionAABB(x,y,z,halfW,halfH,halfD){
@@ -253,8 +311,7 @@ class WaterWorld{
     let overlap=0;
     for(let gz=gz0;gz<=gz1;gz++)for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){
       const level=this.getLevel(gx,gy,gz);if(!level)continue;
-      const wx0=gx*s,wx1=(gx+1)*s;
-      const wy0=gy*s,wy1=gy*s+(level/8)*s;
+      const wx0=gx*s,wx1=(gx+1)*s,wy0=gy*s,wy1=gy*s+(level/8)*s;
       const wz0=gz*s-s*.5,wz1=gz*s+s*.5;
       const ox=Math.max(0,Math.min(maxX,wx1)-Math.max(minX,wx0));
       const oy=Math.max(0,Math.min(maxY,wy1)-Math.max(minY,wy0));
@@ -270,26 +327,26 @@ class WaterWorld{
     return rows;
   }
   importState(rows){
-    this.cells.clear();this.active.clear();this.dirtyChunks.clear();
+    this.cells.clear();this.dirtyChunks.clear();
     for(const row of Array.isArray(rows)?rows:[]){
       if(!Array.isArray(row)||row.length<4)continue;
       const [gx,gy,gz,level]=row.map(Number);
       if(![gx,gy,gz,level].every(Number.isFinite))continue;
       if(level>0&&this._canOccupy(gx|0,gy|0,gz|0)){
-        const l=Math.max(1,Math.min(8,Math.round(level)));
-        this.cells.set(this.key(gx|0,gy|0,gz|0),l);
-        this.wakeAround(gx|0,gy|0,gz|0);this._markDirty(gx|0,gy|0,gz|0);
+        this.cells.set(this.key(gx|0,gy|0,gz|0),Math.max(1,Math.min(8,Math.round(level))));
+        this._markNeighborhoodDirty(gx|0,gy|0,gz|0);
       }
     }
-    this.version++;
+    this.version++;this.needsSettle=true;this.settleAll();
   }
   stats(){
     return {
       cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,
-      layerHeight:this.terrain.tileSize/8,activeCells:this.active.size,
-      dirtyChunks:this.dirtyChunks.size,version:this.version,
-      flowModel:'3d-finite-volume-gravity-plus-hydrostatic-relaxation',
-      flowPlane:'x-z-with-y-gravity',threeDimensional:true
+      layerHeight:this.terrain.tileSize/8,dirtyChunks:this.dirtyChunks.size,
+      version:this.version,needsSettle:this.needsSettle,
+      flowModel:'priority-flood-global-hydrostatic-settle-v1',
+      flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
+      exactHydrostatic:true,lastSettle:this.lastSettle
     };
   }
 }
@@ -452,7 +509,7 @@ class TerrainWorld{
     if(value===generated)patch.delete(index);else patch.set(index,value);
     if(patch.size===0)this.edits.delete(key);
     this.changeVersion++;
-    this.water?.wakeAround(gx,gy,gz);
+    this.water?.requestSettleAround(gx,gy,gz);
     const event={gx,gy,gz,value,cx,cy,cz,version:this.changeVersion};
     for(const listener of this.listeners)listener(event);
     return true;
