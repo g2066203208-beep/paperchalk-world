@@ -109,6 +109,7 @@ const LEGACY_SAVE_PREFIXES=['paperchalk.save.v5.','paperchalk.save.v4.','paperch
 const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
+const INTERACTION_ROW_Z=Number(sceneData.terrain?.interactionRowZ??0);
 const bounds=sceneData.bounds;
 const terrain=new TerrainRuntime.TerrainWorld({
   tileSize:sceneData.terrain?.tileSize??1,
@@ -481,7 +482,9 @@ function terrainTargetInReach(point){
   if(!point)return false;
   return Math.hypot(point.x-transform.x,point.y-transform.y,point.z-transform.z)<=TERRAIN_REACH;
 }
+function isInteractionRow(gz){return Number(gz)===INTERACTION_ROW_Z}
 function digTerrainCell(gx,gy,gz,{persist=true}={}){
+  if(!isInteractionRow(gz))return {changed:false,reason:'interaction-row-only',interactionRowZ:INTERACTION_ROW_Z};
   const center=terrain.cellCenter(gx,gy,gz);
   if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
   const result=terrain.digCell(gx,gy,gz);
@@ -489,6 +492,7 @@ function digTerrainCell(gx,gy,gz,{persist=true}={}){
   return result;
 }
 function placeTerrainCell(gx,gy,gz,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
+  if(!isInteractionRow(gz))return {changed:false,reason:'interaction-row-only',interactionRowZ:INTERACTION_ROW_Z};
   const center=terrain.cellCenter(gx,gy,gz);
   if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
   const half=terrain.tileSize*.49;
@@ -521,7 +525,8 @@ window.PaperchalkTerrainActions=Object.freeze({
   setTool:setTerrainTool,
   targetAtScreen(x,y){return window.Paperchalk3D?.screenToTerrainCell?.(x,y,{showCursor:false})||null},
   get tool(){return terrainToolMode},
-  get stats(){return terrain.stats()},
+  get interactionRowZ(){return INTERACTION_ROW_Z},
+  get stats(){return {...terrain.stats(),interactionRowZ:INTERACTION_ROW_Z}},
   get edits(){return terrain.exportEdits()}
 });
 
@@ -562,6 +567,7 @@ worldEl.addEventListener('pointerup',event=>{
     return;
   }
   if(result.reason==='out-of-reach')showMapNotice('太远了');
+  else if(result.reason==='interaction-row-only')showMapNotice('只能交互指定这一排方块');
   else if(result.reason==='player-overlap')showMapNotice('不能把方块放在自己身上');
   else if(placing)showMapNotice('这里已有方块');
   else showMapNotice('这里没有可挖方块');
