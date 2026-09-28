@@ -73,45 +73,96 @@ export class WorldSpaceHealthBar{
 
 class WaterRenderer{
   constructor(THREE,terrain,scene){
-    this.THREE=THREE;this.terrain=terrain;this.scene=scene;this.version=-1;this.mesh=null;
-    const s=terrain.tileSize;
-    this.geometry=new THREE.BoxGeometry(s*.94,(s/8)*.96,s*.94);
+    this.THREE=THREE;this.terrain=terrain;this.scene=scene;this.meshes=new Map();this.initialized=false;
     this.material=new THREE.MeshPhongMaterial({
-      color:0x4aa9df,transparent:true,opacity:.58,depthWrite:false,
-      shininess:72,specular:0xbdeaff,side:THREE.DoubleSide
+      color:0x49a9df,transparent:true,opacity:.62,depthWrite:false,
+      shininess:78,specular:0xc8eeff,side:THREE.DoubleSide
     });
-    this.root=new THREE.Group();this.root.name='eight-layer-water';scene.add(this.root);
+    this.root=new THREE.Group();this.root.name='eight-layer-water-surface-meshes';scene.add(this.root);
   }
-  rebuild(){
-    const water=this.terrain.water;if(!water)return;
-    if(this.mesh){this.root.remove(this.mesh);this.mesh.dispose?.();this.mesh=null}
-    const cells=[...water.cells.entries()];
-    let count=0;for(const [,level] of cells)count+=level;
-    if(!count){this.version=water.version;return}
-    const mesh=new this.THREE.InstancedMesh(this.geometry,this.material,count);
-    mesh.name='water-slabs-1-of-8';
-    mesh.renderOrder=30;mesh.castShadow=false;mesh.receiveShadow=true;
-    const dummy=new this.THREE.Object3D(),s=this.terrain.tileSize,h=s/8;
-    let i=0;
-    for(const [key,level] of cells){
-      const [gx,gy,gz]=key.split(',').map(Number);
-      for(let layer=0;layer<level;layer++){
-        dummy.position.set((gx+.5)*s,gy*s+(layer+.5)*h,gz*s);
-        dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();
-        mesh.setMatrixAt(i++,dummy.matrix);
+  _pushQuad(data,a,b,c,d){
+    const base=data.positions.length/3;
+    for(const p of [a,b,c,d])data.positions.push(p[0],p[1],p[2]);
+    data.indices.push(base,base+1,base+2,base,base+2,base+3);
+    data.faces++;
+  }
+  _buildChunk(chunkKey){
+    const THREE=this.THREE,water=this.terrain.water;
+    const old=this.meshes.get(chunkKey);
+    if(old){this.root.remove(old);old.geometry.dispose();this.meshes.delete(chunkKey)}
+    const [cx,cy,cz]=chunkKey.split(',').map(Number),n=this.terrain.chunkSize,s=this.terrain.tileSize;
+    if(cz!==Math.floor(this.terrain.interactionRowZ/n))return;
+    const gz=this.terrain.interactionRowZ,z0=gz*s-s*.47,z1=gz*s+s*.47;
+    const data={positions:[],indices:[],faces:0,cells:0};
+    const xStart=cx*n,xEnd=xStart+n,yStart=cy*n,yEnd=yStart+n;
+
+    for(let gy=yStart;gy<yEnd;gy++)for(let gx=xStart;gx<xEnd;gx++){
+      const level=water.getLevel(gx,gy,gz);if(!level)continue;
+      data.cells++;
+      const h=(level/8)*s;
+      const x0=gx*s+.015*s,x1=(gx+1)*s-.015*s;
+      const y0=gy*s,y1=y0+h;
+
+      // Top is hidden if another water cell continues directly above.
+      if(water.getLevel(gx,gy+1,gz)<=0)
+        this._pushQuad(data,[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]);
+
+      // Bottom is hidden by solid ground or a full water cell below.
+      const belowLevel=water.getLevel(gx,gy-1,gz);
+      if(belowLevel<8&&!this.terrain.isSolidPeek(gx,gy-1,gz))
+        this._pushQuad(data,[x0,y0,z1],[x1,y0,z1],[x1,y0,z0],[x0,y0,z0]);
+
+      // X sides only draw the vertical height not already covered by adjacent water.
+      const leftH=(water.getLevel(gx-1,gy,gz)/8)*s;
+      if(h>leftH+.0001){
+        const ys=y0+leftH;
+        this._pushQuad(data,[x0,ys,z0],[x0,ys,z1],[x0,y1,z1],[x0,y1,z0]);
       }
+      const rightH=(water.getLevel(gx+1,gy,gz)/8)*s;
+      if(h>rightH+.0001){
+        const ys=y0+rightH;
+        this._pushQuad(data,[x1,ys,z1],[x1,ys,z0],[x1,y1,z0],[x1,y1,z1]);
+      }
+
+      // Gameplay water occupies only Z=0, so front/back are true exterior surfaces.
+      this._pushQuad(data,[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]);
+      this._pushQuad(data,[x1,y0,z0],[x0,y0,z0],[x0,y1,z0],[x1,y1,z0]);
     }
-    mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
-    this.root.add(mesh);this.mesh=mesh;this.version=water.version;
+
+    if(!data.faces)return;
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.positions,3));
+    geometry.setIndex(data.indices);
+    geometry.computeVertexNormals();geometry.computeBoundingBox();geometry.computeBoundingSphere();
+    geometry.userData={faces:data.faces,cells:data.cells,internalFacesCulled:true,quantizedLevels:8};
+    const mesh=new THREE.Mesh(geometry,this.material);
+    mesh.name='water-surface-chunk:'+chunkKey;mesh.renderOrder=30;mesh.castShadow=false;mesh.receiveShadow=true;
+    this.root.add(mesh);this.meshes.set(chunkKey,mesh);
   }
-  update(){if(this.terrain.water&&this.version!==this.terrain.water.version)this.rebuild()}
+  _allChunkKeys(){
+    const out=new Set(),n=this.terrain.chunkSize;
+    for(const key of this.terrain.water.cells.keys()){
+      const [gx,gy,gz]=key.split(',').map(Number);
+      out.add(Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n));
+    }
+    return out;
+  }
+  update(){
+    const water=this.terrain.water;if(!water)return;
+    let dirty;
+    if(!this.initialized){dirty=[...this._allChunkKeys()];this.initialized=true;water.consumeDirtyChunks()}
+    else dirty=water.consumeDirtyChunks();
+    for(const key of dirty)this._buildChunk(key);
+  }
   stats(){
     const w=this.terrain.water?.stats?.()||{cells:0,totalLayers:0,levels:8,layerHeight:this.terrain.tileSize/8};
-    return {...w,renderMode:'instanced-eight-slab-water',instances:w.totalLayers};
+    let faces=0,renderedCells=0;
+    for(const mesh of this.meshes.values()){faces+=mesh.geometry.userData.faces||0;renderedCells+=mesh.geometry.userData.cells||0}
+    return {...w,renderMode:'chunked-visible-surface-water-v2',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,internalFacesCulled:true,drawCalls:this.meshes.size};
   }
   dispose(){
-    if(this.mesh){this.root.remove(this.mesh);this.mesh.dispose?.();this.mesh=null}
-    this.geometry.dispose();this.material.dispose();this.scene.remove(this.root);
+    for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
+    this.meshes.clear();this.material.dispose();this.scene.remove(this.root);
   }
 }
 
