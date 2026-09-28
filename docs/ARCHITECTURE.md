@@ -1,87 +1,81 @@
-# Paperchalk World — Three.js Production Architecture
+# Paperchalk World — Paper Stage Architecture
 
-## 1. Single rendering authority
+## 1. Rendering model
 
-The world has one production renderer: Three.js r180 WebGL.
+Production rendering remains Three.js r180 WebGL, but the game is intentionally **2.5D**.
 
 ```text
 Input
   ↓
-ECS fixed-step simulation
+ECS fixed-step X/Y simulation
+  ↓
+TerrainWorld + Paper Entities
   ↓
 PaperchalkRuntime snapshot
   ↓
 World3DEngine
   ↓
-Three.js Scene
-  ↓
-WebGLRenderer
+Three.js WebGLRenderer
 ```
 
-DOM is not a world renderer. It is restricted to screen-space UI such as menus, inventory, the network map, camera controls and debug controls.
+Z is a presentation coordinate. It separates far background, rear paper entities, the terrain sheet, actors and foreground paper entities.
 
-## 2. Gameplay state
+## 2. Terrain
 
-`src/game.js` owns the authoritative player simulation using X/Y/Z coordinates.
+`src/terrain/terrain-runtime.js` owns the only block/voxel layer.
 
-The player ECS entity contains:
+- tile size: 0.25 m
+- chunk size: 64×64 cells
+- depth: exactly one gameplay layer
+- storage: Uint8Array
+- coordinates: integer X/Y cell coordinates
+- generation: deterministic surface/material/cave functions
+- mutation: dig/place
+- persistence: per-chunk edit deltas
+- streaming: chunks outside the active window are unloaded and regenerated from seed when revisited
 
-- Transform: x, y, z, yaw
-- Velocity: x, y, z
-- Health: current, max
-- Player controller state: grounded, crouching, attacking, action
+The renderer turns each visible chunk into one vertex-colored `BufferGeometry`. A tile is not a separate Three.js object.
 
-Movement and gravity run at a fixed 60 Hz step. 3D building collisions are resolved in X/Z; Y is vertical height.
+## 3. Paper entities
 
-## 3. Renderer
+`src/entities/PaperSpriteEntity.js` owns non-terrain visuals.
 
-`src/engine3d/World3DEngine.js` owns:
+Every building, tree, rock, player, NPC, enemy or prop is represented by a textured `PlaneGeometry` in the stage. The current development textures are generated into CanvasTexture objects so the renderer already exercises the final texture-plane path without returning to DOM/Pixi rendering.
 
-- Scene
-- PerspectiveCamera
-- WebGLRenderer
-- lighting and shadows
-- procedural village geometry
-- paper-stage camera rig: fixed X/Z principal-axis view by default, with debug-toggleable free orbit
-- player mesh
-- 3D world-space health bar
-- collider debug helpers
+Player facing uses a real paper flip: the plane rotates around Y toward 0 or π, becoming edge-on in the middle of the turn.
 
-`src/renderers/three-world-renderer.mjs` is the lifecycle adapter. It lazy-loads Three.js, subscribes to `PaperchalkRuntime`, starts rendering on `paperchalk-world-enter`, and stops on `paperchalk-world-leave`.
+## 4. Gameplay simulation
 
-## 4. Health UI
+`src/game.js` treats X as horizontal movement and Y as vertical movement. The player cannot walk through Z.
 
-The health bar is a Three.js group attached directly to the player mesh.
+Terrain collision uses the same TerrainWorld cells used by rendering. Gravity, jump and horizontal movement are resolved against the X/Y block field. This allows the player to dig beneath themselves and fall into generated underground space.
 
-It contains ten pieces: nine standard cells plus a tail cell. The group copies the camera quaternion every frame so it behaves as a world-space billboard. Damage and healing animate the 3D fill meshes; there is no DOM health bar.
+## 5. Camera
 
-## 5. Persistence
+Normal play locks the camera along the Z axis, preserving the side-on paper theatre composition.
 
-Save schema V4 stores:
+The debug panel can:
+- enable/disable the paper-stage camera lock
+- switch the fixed observation axis between Z and X
+- orbit freely when the lock is disabled
+- inspect renderer/terrain statistics
+
+## 6. Persistence
+
+Schema V5 stores the paper-stage transform and terrain deltas:
 
 ```json
 {
-  "player": {"x":0,"y":0,"z":13,"yaw":3.14159},
-  "playerHp":10,
-  "worldMinutes":360,
-  "inventory":[]
+  "player": {"x": 0, "y": 3, "z": 0.45, "yaw": 0},
+  "terrainEdits": [[0, -1, 123, 0]],
+  "playerHp": 10,
+  "worldMinutes": 360,
+  "inventory": []
 }
 ```
 
-V2/V3 2D saves are migrated once into the native 3D transform.
+Negative Y is valid so underground positions can be saved. V2–V4 saves migrate into the single gameplay plane.
 
-## 6. Removed legacy renderer stack
+## 7. Removed systems
 
-The following are intentionally absent:
-
-- Card Camera
-- DOM card projection renderer
-- PixiJS renderer
-- PixiJS vendor bundle
-- PaperPuppet runtime
-- 2D player actor/sprite
-- 2D ground/map/entity/traffic layers
-- DOM health bar
-- 2D world art asset tree
-
-Tests fail if these systems return.
+The old DOM Card Camera, Pixi renderer, PaperPuppet world renderer, 2D DOM actor, old background/traffic layers and volumetric procedural building/tree meshes are not production paths. Screen-space menus, inventory and the network-map canvas remain UI only.
