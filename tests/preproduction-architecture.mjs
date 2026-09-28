@@ -60,4 +60,7 @@ assert.match(engine,/camera-player-capsule-fade-v1/);
 assert.match(engine,/uOcclusionCamera/);
 assert.match(engine,/protectedInteraction/);
 assert.match(engine,/entity\.material\.opacity=state\.opacity/);
+assert.match(engine,/camera-player-capsule-fade-v2/);
+assert.match(engine,/transparent:true,opacity:1,depthWrite:true/);
+assert.match(engine,/setCameraOcclusion\(this\.camera\.position,playerPos,true\)/);
 console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
