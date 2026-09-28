@@ -13,7 +13,7 @@ function finitePlayer(value){
   return {
     x:finiteOr(value.x,0),
     y:Math.max(0,finiteOr(value.y,0)),
-    z:finiteOr(value.z,8),
+    z:finiteOr(value.z,13),
     yaw:finiteOr(value.yaw,Math.PI)
   };
 }
