@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="voxel3d-r7";
+  const BUILD="voxel3d-r8";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="voxel3d-r7">
+<meta name="paperchalk-build" content="voxel3d-r8">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=voxel3d-r7">
+<link rel="stylesheet" href="./styles/game.css?v=voxel3d-r8">
 </head>
 <body>
 
@@ -73,6 +73,14 @@
     <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
   </section>
 
+  <div id="quickbar" class="quickbar" aria-label="快捷物品栏">
+    <button class="quick-slot" type="button" data-quick-slot="0" aria-label="快捷栏 1"><span class="quick-key">1</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="1" aria-label="快捷栏 2"><span class="quick-key">2</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="2" aria-label="快捷栏 3"><span class="quick-key">3</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="3" aria-label="快捷栏 4"><span class="quick-key">4</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="4" aria-label="快捷栏 5"><span class="quick-key">5</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+  </div>
+
   <div class="combat-controls" aria-label="地形与战斗操作">
     <button id="terrainDigBtn" class="combat-btn terrain-tool is-active" type="button" aria-pressed="true">挖</button>
     <button id="terrainPlaceBtn" class="combat-btn terrain-tool" type="button" aria-pressed="false">放</button>
@@ -80,7 +88,7 @@
     <button id="jumpBtn" class="combat-btn" type="button">跳</button>
     <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
   </div>
-  <div class="desktop-control-hint">A/D / ←→ 移动 · Space 跳跃 · 左键挖 · 右键放 · 移动端先选“挖/放”再点方块 · C 蹲下 · J 攻击</div>
+  <div class="desktop-control-hint">A/D/W/S 移动 · Space 跳跃 · 左键挖 · 右键放 · 1–5 快捷栏 · T 火把 · C 蹲下 · J 攻击</div>
   <div class="joystick-hint">左侧摇杆：自由移动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="横向移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -199,14 +207,14 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=voxel3d-r7"></script>
-<script src="./src/core/game-state.js?v=voxel3d-r7"></script>
-<script src="./src/core/save-runtime.js?v=voxel3d-r7"></script>
-<script src="./src/core/ecs-runtime.js?v=voxel3d-r7"></script>
-<script src="./src/content/game-content.js?v=voxel3d-r7"></script>
+<script src="./src/core/event-bus.js?v=voxel3d-r8"></script>
+<script src="./src/core/game-state.js?v=voxel3d-r8"></script>
+<script src="./src/core/save-runtime.js?v=voxel3d-r8"></script>
+<script src="./src/core/ecs-runtime.js?v=voxel3d-r8"></script>
+<script src="./src/content/game-content.js?v=voxel3d-r8"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/terrain-runtime.js?v=voxel3d-r7"></script>
-<script src="./src/game.js?v=voxel3d-r7"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=voxel3d-r7"></script>
+<script src="./src/terrain/terrain-runtime.js?v=voxel3d-r8"></script>
+<script src="./src/game.js?v=voxel3d-r8"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=voxel3d-r8"></script>
 </body>
 </html>
