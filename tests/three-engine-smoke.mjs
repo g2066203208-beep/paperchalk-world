@@ -25,6 +25,8 @@ try{
   assert(initial.terrain?.greedyRatio>=1,'greedy mesher stats missing');
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
+  assert(initial.flatShading===true,'flat shading renderer flag missing');
+  assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui','fishing renderer missing '+JSON.stringify(initial.fishing));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
@@ -44,6 +46,11 @@ try{
   await page.keyboard.press('KeyT');await page.waitForTimeout(120);
   const light=await page.evaluate(()=>window.Paperchalk3D.stats.lighting);
   assert(light.torchOn===true&&light.torchIntensity>2,'moving torch light did not activate '+JSON.stringify(light));
+  const cast=await page.evaluate(()=>window.PaperchalkFishing.cast());assert(cast===true,'fishing cast rejected');
+  await page.waitForTimeout(80);
+  const fishing=await page.evaluate(()=>window.Paperchalk3D.stats.fishing);
+  assert(fishing?.visible===true&&fishing?.state==='flying','fishing render did not activate '+JSON.stringify(fishing));
+  await page.evaluate(()=>window.PaperchalkFishing.reel());
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('INFINITE_VOXEL_3D_ENGINE_OK');
 }finally{await browser.close()}
