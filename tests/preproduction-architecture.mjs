@@ -26,7 +26,7 @@ assert.match(engine,/single-layer-3d-cube-terrain/);
 assert.match(engine,/single-layer-3d-cubes/);
 assert.match(engine,/MeshLambertMaterial/);
 assert.match(engine,/2d-textured-planes/);
-assert.match(engine,/assets\\/player\\/protagonist\\.webp/);
+assert.match(engine,/assets\/player\/protagonist\.webp/);
 assert.equal(fs.existsSync('assets/player/protagonist.webp'),true);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(terrain,/FastNoiseLite-1\.1\.1/);
