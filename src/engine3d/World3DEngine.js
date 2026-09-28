@@ -162,6 +162,7 @@ export class World3DEngine{
     if(!window.PaperchalkTerrain)throw new Error('PAPERCHALK_TERRAIN_REQUIRED');
     this.THREE=THREE;this.host=host;this.content=content||{};
     this.terrain=window.PaperchalkTerrain;
+    this.interactionRowZ=Number(this.content?.scene3d?.terrain?.interactionRowZ??0);
     this.onCameraChanged=typeof onCameraChanged==='function'?onCameraChanged:null;
     this.sceneData=this.content.scene3d||{};
     this.layers=this.sceneData.layers||{far:-8,rear:-3,terrain:0,actor:.45,front:2.5};
@@ -408,7 +409,7 @@ export class World3DEngine{
     const ndc=new this.THREE.Vector2(((clientX-rect.left)/Math.max(1,rect.width))*2-1,-((clientY-rect.top)/Math.max(1,rect.height))*2+1);
     const ray=new this.THREE.Raycaster();ray.setFromCamera(ndc,this.camera);return ray.ray;
   }
-  _raycastVoxel(ray,maxDistance=8){
+  _raycastVoxel(ray,maxDistance=8,{interactionOnly=false}={}){
     const s=this.terrain.tileSize,origin=ray.origin.clone().multiplyScalar(1/s),dir=ray.direction.clone();
     let x=Math.floor(origin.x),y=Math.floor(origin.y),z=Math.floor(origin.z);
     const sx=dir.x>0?1:dir.x<0?-1:0,sy=dir.y>0?1:dir.y<0?-1:0,sz=dir.z>0?1:dir.z<0?-1:0;
@@ -418,9 +419,11 @@ export class World3DEngine{
     let ty=sy>0?(y+1-origin.y)*dy:sy<0?(origin.y-y)*dy:inf;
     let tz=sz>0?(z+1-origin.z)*dz:sz<0?(origin.z-z)*dz:inf;
     let px=x,py=y,pz=z,dist=0;
-    for(let i=0;i<256&&dist*s<=maxDistance;i++){
+    for(let i=0;i<512&&dist*s<=maxDistance;i++){
       const tile=this.terrain.peekVoxel(x,y,z);
-      if(this.terrain.isSolidTile(tile))return {gx:x,gy:y,gz:z,tile,previous:{gx:px,gy:py,gz:pz},distance:dist*s};
+      const solid=this.terrain.isSolidTile(tile);
+      const interactable=!interactionOnly||z===this.interactionRowZ;
+      if(solid&&interactable)return {gx:x,gy:y,gz:z,tile,previous:{gx:px,gy:py,gz:pz},distance:dist*s};
       px=x;py=y;pz=z;
       if(tx<ty&&tx<tz){x+=sx;dist=tx;tx+=dx}
       else if(ty<tz){y+=sy;dist=ty;ty+=dy}
@@ -429,15 +432,18 @@ export class World3DEngine{
     return null;
   }
   screenToWorld(clientX,clientY){
-    const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10);
+    const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10,{interactionOnly:true});
     if(!hit)return null;
     return this.terrain.cellCenter(hit.gx,hit.gy,hit.gz);
   }
   screenToTerrainCell(clientX,clientY,{showCursor=true}={}){
-    const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10);
+    const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10,{interactionOnly:true});
     if(!hit){if(this.terrainCursor)this.terrainCursor.visible=false;return null}
-    const center=this.terrain.cellCenter(hit.gx,hit.gy,hit.gz),place=this.terrain.cellCenter(hit.previous.gx,hit.previous.gy,hit.previous.gz);
-    const result={...center,gx:hit.gx,gy:hit.gy,gz:hit.gz,tile:hit.tile,solid:true,placeGx:hit.previous.gx,placeGy:hit.previous.gy,placeGz:hit.previous.gz,placeX:place.x,placeY:place.y,placeZ:place.z,distance:hit.distance};
+    const center=this.terrain.cellCenter(hit.gx,hit.gy,hit.gz);
+    const previousOnRow=hit.previous.gz===this.interactionRowZ;
+    const placeCell=previousOnRow?hit.previous:{gx:hit.gx,gy:hit.gy+1,gz:this.interactionRowZ};
+    const place=this.terrain.cellCenter(placeCell.gx,placeCell.gy,placeCell.gz);
+    const result={...center,gx:hit.gx,gy:hit.gy,gz:hit.gz,tile:hit.tile,solid:true,interactionRowZ:this.interactionRowZ,placeGx:placeCell.gx,placeGy:placeCell.gy,placeGz:placeCell.gz,placeX:place.x,placeY:place.y,placeZ:place.z,distance:hit.distance};
     if(showCursor&&this.terrainCursor){this.terrainCursor.position.set(center.x,center.y,center.z);this.terrainCursor.visible=true}
     return result;
   }
@@ -457,6 +463,7 @@ export class World3DEngine{
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       lighting:{mode:'sun-only',ambient:0,background:'black',visibleSun:!!this.terrainLights?.sunDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+      interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
