@@ -317,7 +317,7 @@ function playerSnapshot(){
     vx:velocity.x,vy:velocity.y,vz:velocity.z,
     grounded:controller.grounded,crouching:controller.crouching,
     attacking:controller.attacking,action:controller.action,torchOn:controller.torchOn,
-    inWater:controller.inWater,submerged:controller.submerged
+    inWater:controller.inWater,submerged:controller.submerged,facingX:controller.facingX
   };
 }
 function buildSnapshot(){
