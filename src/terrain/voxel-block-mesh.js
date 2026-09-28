@@ -18,7 +18,7 @@ function colorFor(THREE,palette,tile,intensity=1){
   c.multiplyScalar(intensity);return c;
 }
 
-function pushQuad(buffer,p,du,dv,normal,color,uvScale,flip=false){
+function pushQuad(buffer,p,du,dv,normal,color,uvScale,flip=false,darknessFn=null){
   const p0=[p[0],p[1],p[2]];
   const p1=[p[0]+du[0],p[1]+du[1],p[2]+du[2]];
   const p2=[p1[0]+dv[0],p1[1]+dv[1],p1[2]+dv[2]];
@@ -29,6 +29,7 @@ function pushQuad(buffer,p,du,dv,normal,color,uvScale,flip=false){
     buffer.positions.push(v[0],v[1],v[2]);
     buffer.normals.push(normal[0],normal[1],normal[2]);
     buffer.colors.push(color.r,color.g,color.b);
+    buffer.darkness.push(darknessFn?darknessFn(v):0);
   }
   const [uw,vh]=uvScale;
   buffer.uvs.push(0,0,uw,0,uw,vh,0,vh);
@@ -46,12 +47,21 @@ function getLocalOrWorld(terrain,chunk,x,y,z){
 export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TERRAIN_PALETTE}={}){
   const n=chunk.size,s=terrain.tileSize;
   const dims=[n,n,n];
-  const buffer={positions:[],normals:[],colors:[],uvs:[],indices:[],vertexCount:0,quads:0,unitFaces:0};
+  const buffer={positions:[],normals:[],colors:[],darkness:[],uvs:[],indices:[],vertexCount:0,quads:0,unitFaces:0};
   const mask=new Int16Array(n*n);
   let solidVoxels=0;
   for(let y=0;y<n;y++)for(let z=0;z<n;z++)for(let x=0;x<n;x++)if(terrain.isSolidTile(chunk.get(x,y,z)))solidVoxels++;
 
   const sample=(x,y,z)=>getLocalOrWorld(terrain,chunk,x,y,z);
+  const darknessAt=(v)=>{
+    const gx=chunk.cx*n+Math.max(0,Math.min(n-1,Math.floor(v[0]/s-.0001)));
+    const gyWorld=chunk.cy*n*s+v[1];
+    const gz=chunk.cz*n+Math.max(0,Math.min(n-1,Math.floor(v[2]/s-.0001)));
+    if(gz!==terrain.interactionRowZ)return 0;
+    const surfaceTop=(terrain.surfaceCell(gx,gz)+1)*s;
+    const depth=surfaceTop-gyWorld;
+    return Math.max(0,Math.min(1,(depth-.08)/.75));
+  };
 
   for(let d=0;d<3;d++){
     const u=(d+1)%3,v=(d+2)%3;
@@ -90,7 +100,7 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
           const normal=[0,0,0];normal[d]=positive?1:-1;
           const intensity=d===1?(positive?1.08:.62):d===0?(positive?.92:.82):(positive?.98:.74);
           const color=colorFor(THREE,palette,Math.abs(m),intensity);
-          pushQuad(buffer,p,du,dv,normal,color,[w,h],!positive);
+          pushQuad(buffer,p,du,dv,normal,color,[w,h],!positive,darknessAt);
 
           for(let l=0;l<h;l++)for(let k=0;k<w;k++)mask[mi+k+l*dims[u]]=0;
           i+=w;mi+=w;
@@ -103,6 +113,7 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(buffer.positions,3));
   geometry.setAttribute('normal',new THREE.Float32BufferAttribute(buffer.normals,3));
   geometry.setAttribute('color',new THREE.Float32BufferAttribute(buffer.colors,3));
+  geometry.setAttribute('darkness',new THREE.Float32BufferAttribute(buffer.darkness,1));
   geometry.setAttribute('uv',new THREE.Float32BufferAttribute(buffer.uvs,2));
   geometry.setIndex(new THREE.Uint32BufferAttribute(buffer.indices,1));
   geometry.computeBoundingBox();geometry.computeBoundingSphere();
@@ -113,6 +124,7 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
     triangles:buffer.indices.length/3,
     vertices:buffer.vertexCount,
     dimensions:3,
+    darknessVertices:buffer.darkness.filter(v=>v>.01).length,
     greedyRatio:buffer.quads?buffer.unitFaces/buffer.quads:1
   };
   return geometry;
