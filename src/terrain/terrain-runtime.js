@@ -21,13 +21,15 @@ class TerrainChunk{
     const baseY=this.cy*n;
     for(let lz=0;lz<n;lz++){
       const gz=this.cz*n+lz;
-      const fullDepth=gz===this.world.interactionRowZ;
+      const fullDepth=gz===this.world.interactionRowZ||gz===this.world.blackBackRowZ;
       for(let lx=0;lx<n;lx++){
         const gx=this.cx*n+lx;
         if(fullDepth){
           for(let ly=0;ly<n;ly++){
             const gy=baseY+ly;
-            this.voxels[this.index(lx,ly,lz)]=this.world.generateVoxel(gx,gy,gz);
+            this.voxels[this.index(lx,ly,lz)]=gz===this.world.blackBackRowZ
+              ?this.world.generateBlackBackdropVoxel(gx,gy,gz)
+              :this.world.generateVoxel(gx,gy,gz);
           }
           continue;
         }
@@ -46,12 +48,13 @@ class TerrainChunk{
 }
 
 class TerrainWorld{
-  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0}={}){
+  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0,blackBackRowZ=null}={}){
     this.tileSize=Number(tileSize)||1;
     this.pixelsPerMeter=Math.max(1,Math.round(Number(pixelsPerMeter)||128));
     this.chunkSize=Math.max(8,Math.min(32,Math.round(Number(chunkSize)||16)));
     this.seed=seed|0;
     this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
+    this.blackBackRowZ=Number.isFinite(Number(blackBackRowZ))?Math.floor(Number(blackBackRowZ)):this.interactionRowZ-1;
     this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();
     this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';
 
@@ -127,7 +130,14 @@ class TerrainWorld{
     }
     return TILE.STONE;
   }
-  generateTile(gx,gy,gz=0){return this.generateVoxel(gx,gy,gz)}
+  generateBlackBackdropVoxel(gx,gy,gz=this.blackBackRowZ){
+    const surface=this.surfaceCell(gx,this.interactionRowZ);
+    // Rear row is a solid underground backing sheet: no caves, no light holes.
+    // Keep the surface itself out so the black layer only exists underground.
+    if(gy>=surface)return TILE.AIR;
+    return TILE.STONE;
+  }
+  generateTile(gx,gy,gz=0){return gz===this.blackBackRowZ?this.generateBlackBackdropVoxel(gx,gy,gz):this.generateVoxel(gx,gy,gz)}
   surfaceRangeForChunk(cx,cz){
     const key=cx+','+cz;
     const cached=this.surfaceRangeCache.get(key);if(cached)return cached;
@@ -143,8 +153,12 @@ class TerrainWorld{
     const n=this.chunkSize;
     return this.interactionRowZ>=cz*n&&this.interactionRowZ<(cz+1)*n;
   }
+  chunkContainsBlackBackRow(cz){
+    const n=this.chunkSize;
+    return this.blackBackRowZ>=cz*n&&this.blackBackRowZ<(cz+1)*n;
+  }
   chunkMayContainTerrain(cx,cy,cz){
-    if(this.chunkContainsInteractionRow(cz))return true;
+    if(this.chunkContainsInteractionRow(cz)||this.chunkContainsBlackBackRow(cz))return true;
     const range=this.surfaceRangeForChunk(cx,cz),n=this.chunkSize;
     const minY=cy*n,maxY=minY+n-1;
     return range.max>=minY&&range.min<=maxY;
@@ -173,7 +187,7 @@ class TerrainWorld{
     const loaded=this.chunks.get(key);if(loaded)return loaded.get(lx,ly,lz);
     const patch=this.edits.get(key),index=(ly*n+lz)*n+lx;
     if(patch?.has(index))return patch.get(index);
-    return this.generateVoxel(gx,gy,gz);
+    return gz===this.blackBackRowZ?this.generateBlackBackdropVoxel(gx,gy,gz):this.generateVoxel(gx,gy,gz);
   }
   peekTile(gx,gy,gz=0){return this.peekVoxel(gx,gy,gz)}
   unloadChunk(cx,cy,cz){return this.chunks.delete(this.chunkKey(cx,cy,cz))}
@@ -249,7 +263,7 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only',surfaceChunkCulling:true};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',surfaceChunkCulling:true};
   }
 }
 
