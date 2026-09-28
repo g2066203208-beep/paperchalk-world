@@ -116,6 +116,10 @@ public class MainActivity extends Activity {
         importButton.setOnClickListener(v -> openImporter());
         header.addView(importButton);
 
+        Button studioButton = button("PSD自动绑定工作室");
+        studioButton.setOnClickListener(v -> startActivity(new Intent(this, StudioActivity.class)));
+        header.addView(studioButton);
+
         Button aboutButton = button("说明");
         aboutButton.setOnClickListener(v -> showAbout());
         header.addView(aboutButton);
