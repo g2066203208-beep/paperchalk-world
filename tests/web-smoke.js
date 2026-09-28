@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r20'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r21'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -63,4 +63,9 @@ assert(engine.includes('cz*span-this.terrain.tileSize*.5'),'voxel render Z offse
 assert(engine.includes("backgroundMode:'fixed-uniform-blue'"),'fixed uniform background mode missing');
 assert(engine.includes("backgroundColor:'#6f7fa8'"),'fixed blue background color missing');
 assert(!engine.includes('sky.lerp(undergroundVoid'),'background still changes underground');
+assert(content.includes('blackBackRowZ:-1'),'rear black voxel row config missing');
+assert(terrain.includes('generateBlackBackdropVoxel'),'rear black voxel generation missing');
+assert(terrain.includes('gz===this.world.blackBackRowZ'),'rear row is not generated as full-depth voxels');
+assert(mesher.includes('new THREE.Color(0x000000)'),'rear row is not absolute black');
+assert(mesher.includes('renderCode=solidGz===terrain.blackBackRowZ?tile+32:tile'),'black row render separation missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
