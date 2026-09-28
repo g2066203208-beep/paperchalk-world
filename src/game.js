@@ -305,45 +305,47 @@ function showMapNotice(message,duration=1400){
 }
 
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
-function collidesAt(x,z){
-  for(const c of buildingColliders){
-    const nx=clamp(x,c.minX,c.maxX);
-    const nz=clamp(z,c.minZ,c.maxZ);
-    const dx=x-nx,dz=z-nz;
-    if(dx*dx+dz*dz<PLAYER_RADIUS*PLAYER_RADIUS)return true;
+function collidesAt(x,y){
+  return terrain.collidesAABB(x,y,PLAYER_HALF_W,PLAYER_HALF_H);
+}
+function groundProbe(x=transform.x,y=transform.y){
+  return terrain.collidesAABB(x,y-.035,PLAYER_HALF_W*.92,PLAYER_HALF_H);
+}
+function moveHorizontal(dx){
+  if(!dx)return;
+  const nx=transform.x+dx;
+  if(!collidesAt(nx,transform.y))transform.x=nx;
+  else{
+    const step=Math.sign(dx)*Math.min(Math.abs(dx),terrain.tileSize*.2);
+    let remaining=Math.abs(dx);
+    while(remaining>1e-4){
+      const d=Math.sign(dx)*Math.min(Math.abs(step),remaining);
+      if(collidesAt(transform.x+d,transform.y))break;
+      transform.x+=d;remaining-=Math.abs(d);
+    }
+    velocity.x=0;
   }
-  return false;
 }
-function moveWithCollision(dx,dz){
-  const nx=clamp(transform.x+dx,bounds.minX+PLAYER_RADIUS,bounds.maxX-PLAYER_RADIUS);
-  const nz=clamp(transform.z+dz,bounds.minZ+PLAYER_RADIUS,bounds.maxZ-PLAYER_RADIUS);
-  if(!collidesAt(nx,transform.z))transform.x=nx;
-  else velocity.x=0;
-  if(!collidesAt(transform.x,nz))transform.z=nz;
-  else velocity.z=0;
+function moveVertical(dy){
+  if(!dy)return;
+  const ny=transform.y+dy;
+  if(!collidesAt(transform.x,ny)){transform.y=ny;controller.grounded=false;return}
+  const sign=Math.sign(dy),step=sign*Math.min(Math.abs(dy),terrain.tileSize*.18);
+  let remaining=Math.abs(dy);
+  while(remaining>1e-4){
+    const d=sign*Math.min(Math.abs(step),remaining);
+    if(collidesAt(transform.x,transform.y+d))break;
+    transform.y+=d;remaining-=Math.abs(d);
+  }
+  if(dy<0)controller.grounded=true;
+  velocity.y=0;
 }
-
 function rawMoveInput(){
-  let x=0,z=0;
+  let x=0;
   if(keys.has('KeyA')||keys.has('ArrowLeft'))x-=1;
   if(keys.has('KeyD')||keys.has('ArrowRight'))x+=1;
-  if(keys.has('KeyW')||keys.has('ArrowUp'))z+=1;
-  if(keys.has('KeyS')||keys.has('ArrowDown'))z-=1;
   x+=joystickAxisX;
-  z+=-joystickAxisY;
-  const mag=Math.hypot(x,z);
-  if(mag>1){x/=mag;z/=mag}
-  return {x,z,magnitude:Math.min(1,mag)};
-}
-function cameraRelativeMove(input){
-  const yaw=cameraYaw;
-  const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
-  const rx=-Math.cos(yaw),rz=Math.sin(yaw);
-  return {
-    x:rx*input.x+fx*input.z,
-    z:rz*input.x+fz*input.z,
-    magnitude:input.magnitude
-  };
+  return {x:clamp(x,-1,1),magnitude:Math.min(1,Math.abs(x))};
 }
 function overlayOpen(){
   return backpackOverlay.classList.contains('is-open')||
@@ -359,26 +361,23 @@ ecs.registerSystem('player-movement',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:10,
   update(entity,world,dt,context){
     if(entity!==playerEntity)return;
-    const input=context.interactive?cameraRelativeMove(rawMoveInput()):{x:0,z:0,magnitude:0};
+    const input=context.interactive?rawMoveInput():{x:0,magnitude:0};
     const speed=PLAYER_SPEED*(controller.crouching?.48:1);
     velocity.x=input.x*speed;
-    velocity.z=input.z*speed;
+    velocity.z=0;
     controller.moving=input.magnitude>.05;
-    if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
-    moveWithCollision(velocity.x*dt,velocity.z*dt);
+    if(controller.moving)transform.yaw=velocity.x<0?Math.PI:0;
+    moveHorizontal(velocity.x*dt);
   }
 });
 ecs.registerSystem('player-gravity',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:20,
   update(entity,world,dt){
     if(entity!==playerEntity)return;
+    if(!groundProbe())controller.grounded=false;
     if(!controller.grounded)velocity.y-=GRAVITY*dt;
-    transform.y+=velocity.y*dt;
-    if(transform.y<=0){
-      transform.y=0;
-      velocity.y=0;
-      controller.grounded=true;
-    }
+    moveVertical(velocity.y*dt);
+    transform.z=sceneData.layers?.actor??.45;
   }
 });
 ecs.registerSystem('player-action',{
