@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=player-hd-camera-r1';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=stage-wall-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
