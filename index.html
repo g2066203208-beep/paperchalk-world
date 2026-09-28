@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-terrain-r1";
+  const BUILD="paper-terrain-r2";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -14,14 +14,14 @@
   }
 })();
 </script>
-<title>Paperchalk World 3D</title>
-<meta name="paperchalk-build" content="paper-terrain-r1">
+<title>Paperchalk World · 单层体素纸片舞台</title>
+<meta name="paperchalk-build" content="paper-terrain-r2">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-terrain-r1">
+<link rel="stylesheet" href="./styles/game.css?v=paper-terrain-r2">
 </head>
 <body>
 
-<main id="world" class="stage" aria-label="Paperchalk World 3D" inert>
+<main id="world" class="stage" aria-label="Paperchalk World 单层体素纸片舞台" inert>
   <div id="threeWorldLayer" class="three-world-layer" aria-hidden="true" hidden></div>
 
   <div id="paperClock" class="world-clock" aria-label="世界时间">06:00</div>
@@ -52,8 +52,8 @@
     <button id="cameraReset" class="panel-action" type="button">恢复默认镜头</button>
   </section>
 
-  <section id="debugPanel" class="floating-panel debug-panel" aria-hidden="true" aria-label="3D开发调试">
-    <header><strong>3D 开发调试</strong><button id="debugCloseBtn" type="button" aria-label="关闭">×</button></header>
+  <section id="debugPanel" class="floating-panel debug-panel" aria-hidden="true" aria-label="纸片舞台开发调试">
+    <header><strong>纸片舞台调试</strong><button id="debugCloseBtn" type="button" aria-label="关闭">×</button></header>
     <div id="debugStatus" class="debug-status">等待进入世界</div>
     <div class="debug-actions">
       <button type="button" data-debug-action="damage1">-1 HP</button>
@@ -80,7 +80,7 @@
   </div>
   <div class="desktop-control-hint">A/D / ←→ 移动 · Space 跳跃 · 左键挖掘 · 右键放置 · C 蹲下 · J 攻击 · 世界为单层体素纸片舞台</div>
   <div class="joystick-hint">左侧摇杆：左右移动</div>
-  <div id="joystickZone" class="joystick-zone" aria-label="3D移动摇杆">
+  <div id="joystickZone" class="joystick-zone" aria-label="横向移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
       <div class="joystick-base"></div>
       <div class="joystick-knob"></div>
@@ -93,7 +93,7 @@
     <header class="overlay-head">
       <div>
         <strong>纸境世界网络</strong>
-        <span id="worldMapLocation">当前位置：A村 3D场景</span>
+        <span id="worldMapLocation">当前位置：A村 · 单层体素纸片舞台</span>
       </div>
       <button id="worldMapClose" type="button" aria-label="关闭">×</button>
     </header>
@@ -136,9 +136,9 @@
     <section id="pageMenu" class="ui-page active">
       <div class="menu-layout">
         <div class="brand">
-          <div class="brand-mark">PAPERCHALK WORLD · THREE.JS</div>
+          <div class="brand-mark">PAPERCHALK WORLD · PAPER STAGE</div>
           <h1>纸境世界</h1>
-          <p>原生 3D 世界运行时</p>
+          <p>Three.js 纸片舞台 · 单层可破坏体素地形</p>
         </div>
         <div class="menu-panel">
           <div id="profileNote" class="profile-note"></div>
@@ -197,13 +197,14 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-terrain-r1"></script>
-<script src="./src/core/game-state.js?v=paper-terrain-r1"></script>
-<script src="./src/core/save-runtime.js?v=paper-terrain-r1"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-terrain-r1"></script>
-<script src="./src/content/game-content.js?v=paper-terrain-r1"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-terrain-r1"></script>
-<script src="./src/game.js?v=paper-terrain-r1"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-terrain-r1"></script>
+<script src="./src/core/event-bus.js?v=paper-terrain-r2"></script>
+<script src="./src/core/game-state.js?v=paper-terrain-r2"></script>
+<script src="./src/core/save-runtime.js?v=paper-terrain-r2"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-terrain-r2"></script>
+<script src="./src/content/game-content.js?v=paper-terrain-r2"></script>
+<script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-terrain-r2"></script>
+<script src="./src/game.js?v=paper-terrain-r2"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-terrain-r2"></script>
 </body>
 </html>
