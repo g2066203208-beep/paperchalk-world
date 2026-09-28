@@ -558,7 +558,9 @@ export class World3DEngine{
         singleLayer:true
       },
       paperEntities:this.paperEntities.length+1,
-      playerRepresentation:'PlaneGeometry'
+      playerRepresentation:'PlaneGeometry',
+      playerFacing:this.playerPaper?.facing||1,
+      playerTurnRotationY:this.playerRoot?.rotation?.y||0
     };
   }
 
