@@ -147,17 +147,33 @@ export function buildUndergroundOcclusionGeometry(THREE,terrain,chunk){
   for(let y=0;y<n;y++)for(let x=0;x<n;x++){
     const tile=chunk.get(x,y,localZ);
     if(!terrain.isSolidTile(tile))continue;
+
     const gx=chunk.cx*n+x,gy=chunk.cy*n+y,gz=terrain.interactionRowZ;
     const surface=terrain.surfaceCell(gx,gz);
-    if(gy>=surface)continue;
-    const z=(localZ+1)*s+.004;
+    if(gy>=surface)continue; // only truly buried blocks
+
     const x0=x*s,x1=(x+1)*s,y0=y*s,y1=(y+1)*s;
-    const base=vertexCount;
+    const zFront=(localZ+1)*s+.006;
+    const zBack=localZ*s-.006;
+
+    // +Z cutaway face
+    let base=vertexCount;
     positions.push(
-      x0,y0,z,
-      x1,y0,z,
-      x1,y1,z,
-      x0,y1,z
+      x0,y0,zFront,
+      x1,y0,zFront,
+      x1,y1,zFront,
+      x0,y1,zFront
+    );
+    indices.push(base,base+1,base+2,base,base+2,base+3);
+    vertexCount+=4;faces++;
+
+    // -Z cutaway face, so whichever side the camera is on stays absolutely black
+    base=vertexCount;
+    positions.push(
+      x1,y0,zBack,
+      x0,y0,zBack,
+      x0,y1,zBack,
+      x1,y1,zBack
     );
     indices.push(base,base+1,base+2,base,base+2,base+3);
     vertexCount+=4;faces++;
@@ -166,7 +182,7 @@ export function buildUndergroundOcclusionGeometry(THREE,terrain,chunk){
   geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
   geometry.setIndex(new THREE.Uint32BufferAttribute(indices,1));
   geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  geometry.userData={faces,vertices:vertexCount,mode:'buried-front-z-faces'};
+  geometry.userData={faces,vertices:vertexCount,mode:'absolute-black-buried-z-faces'};
   return geometry;
 }
 
