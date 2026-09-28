@@ -1,69 +1,61 @@
-# Paperchalk World 3D
+# Paperchalk World — Paper Stage Voxel
 
-Paperchalk World 已迁移为 **Three.js r180 + WebGLRenderer 的原生 3D 浏览器游戏运行时**。
+Paperchalk World 现在采用 **Three.js 3D 舞台 + Terraria 式单层体素地形 + 2D 纸片实体**。
 
-当前主线架构只有一套世界渲染路径：
+这不是完整 3D 建模世界，也不是 Minecraft 式三维体素世界。正式玩法只发生在一个 X/Y 平面中；Z 轴只用于舞台前后层级、遮挡、纸片翻面和调试镜头。
 
 ```text
-ECS gameplay state
-      ↓
-PaperchalkRuntime
-      ↓
-Three.js Scene / PerspectiveCamera / WebGLRenderer
-      ↓
-WebGL canvas
+固定 Z 轴摄像机
+        ↓
+Three.js Paper Stage
+        ↓
+┌──────────────────────────┐
+│ 远景 Plane / 中景 Plane  │
+│ 建筑 Plane / 树 Plane    │
+│ 玩家 Plane / NPC Plane   │
+│                          │
+│ X × Y × 1 Voxel Terrain  │
+└──────────────────────────┘
 ```
 
-旧的 DOM Card Camera、PixiJS 世界渲染、2D 玩家 Sprite、2D 建筑/道路/交通层、PaperPuppet 世界渲染和 DOM 血条已经退出生产运行时。
+## 当前实现
 
-## 当前 3D 功能
-
-- 原生 X/Y/Z 玩家状态与存档
-- WASD / 方向键在 3D 地面移动
-- Space 跳跃、重力和落地
-- C 蹲下、J 攻击动作状态
-- 默认“纸片舞台”固定轴相机：3D 世界保持真实深度，但镜头锁定沿 Z 轴侧视
-- 调试面板可一键关闭舞台锁定恢复自由第三人称镜头，也可在 X / Z 固定观察轴之间切换
-- 自由镜头模式支持鼠标/触控拖动旋转，滚轮缩放
-- 程序化 3D 地面、道路、人行道、建筑、树木和岩石
-- DirectionalLight / HemisphereLight
-- 实时阴影、雾、色调映射
-- 建筑 3D 碰撞
-- ECS 固定步长模拟
-- 10 点世界空间血条：9 个普通格 + 1 个尾巴格
-- 掉血和回血的 3D 缩放/透明动画
-- 血条 Billboard 始终朝向摄像机
-- 本地档案、Schema V4 3D Transform 存档
-- 20 格背包
-- 3D 镜头设置
-- 3D Collider 调试显示
-- Android WebView 壳
-
-HTML 只保留菜单、背包、地图和调试等屏幕 UI；游戏世界本体全部由 Three.js 渲染。
+- **单层体素地形**：0.25 m 方块，Chunk 为 64×64×1。
+- **地下连续生成**：Chunk 按玩家 X/Y 动态加载，Y 允许负值；当前世界边界预留到 -1024 m。
+- **FastNoiseLite 1.1.1**：MIT 许可，OpenSimplex2S / Perlin / Cellular 用于地表、洞穴和矿物分布。
+- **增量破坏**：挖掉或放置的 tile 只记录 delta，不保存整张程序地图。
+- **纸片实体**：玩家、建筑、树、岩石、路牌全部使用 Three.js `PlaneGeometry + texture`。
+- **纸片转身**：左右换向时 Plane 绕 Y 轴约 0.16 s 翻过 180°，中间会出现纸板侧边。
+- **固定纸片舞台镜头**：默认沿 Z 轴看；调试面板可关闭锁定并自由旋转，也可切 X/Z 观察轴。
+- **2D 碰撞逻辑**：玩家实际运动只有 X/Y；Z 恒定为舞台层 `0.36`。
+- **地形挖掘**：固定舞台模式下左键挖方块，右键放置土块；编辑距离限制在玩家附近。
+- **世界空间血条**：跟随玩家但独立于角色翻面，始终朝摄像机。
+- **Schema V5 存档**：保存 X/Y 角色位置、背包、生命值和 `terrainDeltas`，支持负 Y 地下位置。
+- **旧 2D DOM/Pixi/CardCamera 栈继续保持删除状态**。
 
 ## 操作
 
-- `WASD` / 方向键：3D 平面移动
-- `Space`：跳跃
-- `C`：蹲下
+- `A / D` 或 `← / →`：左右移动
+- `W / ↑ / Space`：跳跃
+- `S / ↓ / C`：蹲下
 - `J`：攻击
+- 左键地形：挖除单层体素
+- 右键地形：放置土块
 - `B`：背包
 - `M`：世界地图
-- 拖动 3D 场景：旋转镜头
-- 鼠标滚轮：镜头缩放
+- 滚轮：镜头距离
+- 调试关闭“纸片舞台视角”后：拖动场景自由旋转镜头
 
-手机端使用左侧虚拟摇杆和右侧“蹲 / 跳 / 攻”按钮。
+## 核心代码
+
+- `src/terrain/terrain-world.js`：X/Y×1 Chunk、生成、查询、碰撞和 delta。
+- `src/entities/PaperSpriteEntity.js`：2D 纸片实体、运行时纹理和翻面转身。
+- `src/engine3d/World3DEngine.js`：Three.js 舞台、Chunk meshing、纸片实体、镜头和交互。
+- `src/game.js`：ECS、X/Y 运动、重力、体素碰撞、存档和 UI。
+- `vendor/fastnoise-lite/FastNoiseLite.js`：FastNoiseLite 1.1.1（MIT）。
+
+当前纸片纹理是运行时生成的程序化占位纹理，后续可以直接替换成正式 PNG/WebP 素材，而不用改变实体或地形架构。
 
 ## 在线版本
 
 https://g2066203208-beep.github.io/paperchalk-world/
-
-## 回归测试
-
-- Web 3D Static Smoke
-- Core 3D Runtime Regression
-- Three.js Production Engine Smoke
-- UI + 3D Overlay Smoke
-- Android APK Build
-
-这些测试会阻止 2D/Pixi/CardCamera 渲染代码重新进入生产架构。
