@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=player-hd-camera-r1';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=voxel3d-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -175,8 +175,8 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:5,
-  engine:'three-r180-paper-stage-cube-terrain',
+  version:6,
+  engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setStageView,toggleStageView,setStageAxis,
   screenToWorld(clientX,clientY){return engine?.screenToWorld?.(clientX,clientY)||null},
