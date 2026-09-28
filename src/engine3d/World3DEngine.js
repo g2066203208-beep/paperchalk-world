@@ -1,4 +1,9 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
+import {
+  buildSingleLayerCubeGeometry,
+  createVoxelGridTexture,
+  DEFAULT_TERRAIN_PALETTE
+} from '../terrain/voxel-block-mesh.js';
 
 export class WorldSpaceHealthBar{
   constructor(THREE,{max=10}={}){
@@ -68,65 +73,85 @@ export class WorldSpaceHealthBar{
 
 class TerrainChunkRenderer{
   constructor(THREE,terrain,scene,settings={}){
-    this.THREE=THREE;this.terrain=terrain;this.scene=scene;
-    this.settings={radiusX:3,radiusY:2,...settings};
-    this.root=new THREE.Group();this.root.name='single-layer-voxel-terrain';scene.add(this.root);
-    this.meshes=new Map();this.visibleKeys=new Set();
-    this.palette={
-      1:new THREE.Color('#667f4e'),
-      2:new THREE.Color('#7a593b'),
-      3:new THREE.Color('#676b70'),
-      4:new THREE.Color('#b9a56d'),
-      5:new THREE.Color('#8c6f65')
-    };
-    this.material=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,toneMapped:false});
-    this.unsubscribe=terrain.subscribe(event=>{
-      if(event.reload){for(const record of this.meshes.values())record.version=-1;return}
-      const record=this.meshes.get(terrain.chunkKey(event.cx,event.cy));
-      if(record)record.version=-1;
+    this.THREE=THREE;
+    this.terrain=terrain;
+    this.scene=scene;
+    this.settings={radiusX:3,radiusY:2,thickness:terrain.tileSize,...settings};
+    // One gameplay layer, one physical cube thickness. This is not a 3D voxel volume.
+    this.thickness=Math.max(.001,Number(this.settings.thickness)||terrain.tileSize);
+    this.root=new THREE.Group();
+    this.root.name='single-layer-3d-cube-terrain';
+    scene.add(this.root);
+    this.meshes=new Map();
+    this.visibleKeys=new Set();
+    this.texture=createVoxelGridTexture(THREE);
+    this.material=new THREE.MeshLambertMaterial({
+      map:this.texture,
+      vertexColors:true,
+      side:THREE.FrontSide,
+      toneMapped:false
     });
+    this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
-  _shade(color,gx,gy){
-    const n=((Math.imul(gx,73856093)^Math.imul(gy,19349663))>>>0)%17;
-    const factor=.91+n/170;
-    return color.clone().multiplyScalar(factor);
+
+  _markDirty(cx,cy){
+    const record=this.meshes.get(this.terrain.chunkKey(cx,cy));
+    if(record)record.version=-1;
   }
-  _build(chunk){
-    const THREE=this.THREE,s=this.terrain.tileSize,n=chunk.size;
-    const positions=[],colors=[],indices=[];
-    let vertex=0,solid=0;
-    for(let ly=0;ly<n;ly++){
-      for(let lx=0;lx<n;lx++){
-        const tile=chunk.get(lx,ly);
-        if(!this.terrain.isSolidTile(tile))continue;
-        solid++;
-        const gx=chunk.cx*n+lx,gy=chunk.cy*n+ly;
-        const x=gx*s,y=gy*s,z=0;
-        positions.push(x,y,z,x+s,y,z,x+s,y+s,z,x,y+s,z);
-        const c=this._shade(this.palette[tile]||this.palette[3],gx,gy);
-        for(let i=0;i<4;i++)colors.push(c.r,c.g,c.b);
-        indices.push(vertex,vertex+1,vertex+2,vertex,vertex+2,vertex+3);vertex+=4;
-      }
+
+  _onTerrainChanged(event){
+    if(event.reload){
+      for(const record of this.meshes.values())record.version=-1;
+      return;
     }
-    const geometry=new THREE.BufferGeometry();
-    geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-    geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-    geometry.setIndex(indices);geometry.computeBoundingSphere();
+    if(!Number.isFinite(event.cx)||!Number.isFinite(event.cy))return;
+    this._markDirty(event.cx,event.cy);
+
+    // A border edit changes the exposed side face of the adjacent chunk too.
+    const n=this.terrain.chunkSize;
+    const lx=((event.gx%n)+n)%n;
+    const ly=((event.gy%n)+n)%n;
+    if(lx===0)this._markDirty(event.cx-1,event.cy);
+    if(lx===n-1)this._markDirty(event.cx+1,event.cy);
+    if(ly===0)this._markDirty(event.cx,event.cy-1);
+    if(ly===n-1)this._markDirty(event.cx,event.cy+1);
+  }
+
+  _build(chunk){
+    const THREE=this.THREE;
+    const geometry=buildSingleLayerCubeGeometry(THREE,this.terrain,chunk,{
+      thickness:this.thickness,
+      palette:DEFAULT_TERRAIN_PALETTE
+    });
     const mesh=new THREE.Mesh(geometry,this.material);
-    mesh.name='terrain-chunk:'+chunk.cx+','+chunk.cy;
-    mesh.position.z=0;mesh.userData={cx:chunk.cx,cy:chunk.cy,solid};
+    const span=chunk.size*this.terrain.tileSize;
+    mesh.name='terrain-cube-chunk:'+chunk.cx+','+chunk.cy;
+    mesh.position.set(chunk.cx*span,chunk.cy*span,0);
+    mesh.castShadow=false;
+    mesh.receiveShadow=true;
+    mesh.userData={
+      cx:chunk.cx,cy:chunk.cy,
+      ...geometry.userData
+    };
     return mesh;
   }
+
   _ensure(cx,cy){
-    const key=this.terrain.chunkKey(cx,cy),chunk=this.terrain.getChunk(cx,cy);
+    const key=this.terrain.chunkKey(cx,cy);
+    const chunk=this.terrain.getChunk(cx,cy);
     let record=this.meshes.get(key);
     if(record&&record.version===chunk.version)return record;
-    if(record){this.root.remove(record.mesh);record.mesh.geometry.dispose()}
+    if(record){
+      this.root.remove(record.mesh);
+      record.mesh.geometry.dispose();
+    }
     const mesh=this._build(chunk);
     record={mesh,version:chunk.version,cx,cy};
-    this.meshes.set(key,record);this.root.add(mesh);
+    this.meshes.set(key,record);
+    this.root.add(mesh);
     return record;
   }
+
   update(player){
     if(!player)return;
     const span=this.terrain.chunkSize*this.terrain.tileSize;
@@ -136,7 +161,8 @@ class TerrainChunkRenderer{
       for(let x=-this.settings.radiusX;x<=this.settings.radiusX;x++){
         const cx=ccx+x,cy=ccy+y,key=this.terrain.chunkKey(cx,cy);
         next.add(key);
-        const record=this._ensure(cx,cy);record.mesh.visible=true;
+        const record=this._ensure(cx,cy);
+        record.mesh.visible=true;
       }
     }
     for(const [key,record] of [...this.meshes]){
@@ -148,21 +174,48 @@ class TerrainChunkRenderer{
     }
     this.visibleKeys=next;
   }
+
   setDebug(enabled){
-    this.root.position.z=enabled?.015:0;
+    this.material.wireframe=!!enabled;
+    this.material.needsUpdate=true;
   }
+
   stats(){
-    let visible=0,solid=0;
-    for(const key of this.visibleKeys){const r=this.meshes.get(key);if(r?.mesh.visible){visible++;solid+=r.mesh.userData.solid||0}}
-    return {visibleChunks:visible,renderedSolidTiles:solid,...this.terrain.stats()};
+    let visible=0,solid=0,quads=0,unitFaces=0,triangles=0,culledFaces=0;
+    for(const key of this.visibleKeys){
+      const r=this.meshes.get(key);
+      if(!r?.mesh.visible)continue;
+      visible++;
+      const u=r.mesh.userData||{};
+      solid+=u.solidTiles||0;
+      quads+=u.quads||0;
+      unitFaces+=u.unitFaces||0;
+      triangles+=u.triangles||0;
+      culledFaces+=u.culledFaces||0;
+    }
+    return {
+      visibleChunks:visible,
+      renderedSolidTiles:solid,
+      renderedQuads:quads,
+      representedUnitFaces:unitFaces,
+      terrainTriangles:triangles,
+      culledInternalFaces:culledFaces,
+      oneLayer:true,
+      blockGeometry:'3d-cube',
+      thickness:this.thickness,
+      greedyRatio:quads?unitFaces/quads:1,
+      ...this.terrain.stats()
+    };
   }
+
   dispose(){
     this.unsubscribe?.();
     for(const r of this.meshes.values())r.mesh.geometry.dispose();
-    this.material.dispose();this.scene.remove(this.root);
+    this.texture.dispose();
+    this.material.dispose();
+    this.scene.remove(this.root);
   }
 }
-
 export class World3DEngine{
   constructor({THREE,host,content,onCameraChanged=null}){
     if(!THREE)throw new Error('THREE_REQUIRED');
@@ -199,14 +252,46 @@ export class World3DEngine{
   }
   _buildStage(){
     const THREE=this.THREE;
+
+    // Paper entities use MeshBasicMaterial; these lights affect only the cube terrain,
+    // making its physical thickness readable when the debug camera moves off-axis.
+    const hemi=new THREE.HemisphereLight(0xfff2d6,0x3d4245,1.35);
+    hemi.name='terrain-hemi-light';
+    this.scene.add(hemi);
+    const sun=new THREE.DirectionalLight(0xffedcf,1.55);
+    sun.name='terrain-key-light';
+    sun.position.set(9,13,12);
+    this.scene.add(sun);
+    this.terrainLights={hemi,sun};
+
     const bgMat=new THREE.MeshBasicMaterial({color:'#d7d0bd',side:THREE.DoubleSide,depthWrite:false,toneMapped:false});
     const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(180,90),bgMat);
     backdrop.position.set(0,12,this.layers.far-2);backdrop.name='paper-sky-backdrop';this.scene.add(backdrop);this.backdrop=backdrop;
 
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
       radiusX:this.sceneData.terrain?.visibleChunkRadiusX??3,
-      radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2
+      radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
+      thickness:this.sceneData.terrain?.thickness??this.terrain.tileSize
     });
+
+    const cursorGeometry=new THREE.BoxGeometry(
+      this.terrain.tileSize*1.035,
+      this.terrain.tileSize*1.035,
+      this.terrainRenderer.thickness*1.08
+    );
+    const cursorMaterial=new THREE.MeshBasicMaterial({
+      color:0xf3d06b,
+      wireframe:true,
+      transparent:true,
+      opacity:.95,
+      depthTest:false,
+      toneMapped:false
+    });
+    this.terrainCursor=new THREE.Mesh(cursorGeometry,cursorMaterial);
+    this.terrainCursor.name='terrain-block-cursor';
+    this.terrainCursor.visible=false;
+    this.terrainCursor.renderOrder=1000;
+    this.scene.add(this.terrainCursor);
 
     for(const def of this.sceneData.stageEntities||[]){
       const ground=def.grounded?this.terrain.highestGroundY(def.x):Number(def.y)||0;
@@ -340,29 +425,68 @@ export class World3DEngine{
   render(){this.renderer.render(this.scene,this.camera)}
   screenToWorld(clientX,clientY){
     const rect=this.renderer.domElement.getBoundingClientRect();
-    const ndc=new this.THREE.Vector2(((clientX-rect.left)/rect.width)*2-1,-((clientY-rect.top)/rect.height)*2+1);
-    const ray=new this.THREE.Raycaster();ray.setFromCamera(ndc,this.camera);
-    const plane=new this.THREE.Plane(new this.THREE.Vector3(0,0,1),0);
+    const ndc=new this.THREE.Vector2(
+      ((clientX-rect.left)/Math.max(1,rect.width))*2-1,
+      -((clientY-rect.top)/Math.max(1,rect.height))*2+1
+    );
+    const ray=new this.THREE.Raycaster();
+    ray.setFromCamera(ndc,this.camera);
+
+    // Normal play edits the front face of the sole cube layer.
+    // No hidden Z cell can ever be selected because no such gameplay layer exists.
+    const frontZ=this.terrainRenderer.thickness*.5;
+    const plane=new this.THREE.Plane(new this.THREE.Vector3(0,0,1),-frontZ);
     const point=new this.THREE.Vector3();
     if(!ray.ray.intersectPlane(plane,point))return null;
-    return {x:point.x,y:point.y,z:0};
+    return {x:point.x,y:point.y,z:frontZ};
+  }
+
+  screenToTerrainCell(clientX,clientY,{showCursor=true}={}){
+    const point=this.screenToWorld(clientX,clientY);
+    if(!point){
+      if(this.terrainCursor)this.terrainCursor.visible=false;
+      return null;
+    }
+    const cell=this.terrain.worldToCell(point.x,point.y);
+    const center=this.terrain.cellCenter(cell.gx,cell.gy);
+    const tile=this.terrain.peekTile(cell.gx,cell.gy);
+    const result={
+      x:center.x,y:center.y,z:0,
+      gx:cell.gx,gy:cell.gy,
+      tile,solid:this.terrain.isSolidTile(tile),
+      point
+    };
+    if(showCursor&&this.terrainCursor){
+      this.terrainCursor.position.set(center.x,center.y,0);
+      this.terrainCursor.visible=true;
+    }
+    return result;
+  }
+
+  hideTerrainCursor(){
+    if(this.terrainCursor)this.terrainCursor.visible=false;
   }
   stats(){
     const info=this.renderer.info?.render||{};
     return {
       renderer:this.renderer.constructor?.name||'WebGLRenderer',
       worldMode:'paper-stage-2.5d',
-      terrainMode:'single-layer-voxel',
+      terrainMode:'single-layer-3d-cubes',
       entityMode:'2d-textured-planes',
       drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
-      paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry'
+      paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
+      terrainBlockGeometry:'Box/Cube faces via greedy BufferGeometry'
     };
   }
   dispose(){
     this.terrainRenderer?.dispose();
+    if(this.terrainCursor){
+      this.terrainCursor.geometry.dispose();
+      this.terrainCursor.material.dispose();
+    }
     this.playerSprite?.dispose();for(const entity of this.paperEntities)entity.dispose();
     this.renderer.dispose();this.host.replaceChildren();
   }
