@@ -145,15 +145,40 @@ function setDebugColliders(enabled){
   return value;
 }
 
+function setStageView(enabled,axis){
+  const value=engine?.setStageView(enabled,axis)||{enabled:!!enabled,axis:axis==='x'?'x':'z',side:1};
+  const camera=engine?.cameraConfig?.()||{stageView:value};
+  window.PaperchalkSettings?.setCamera3D?.(camera);
+  emit();
+  return value;
+}
+
+function toggleStageView(){
+  const value=engine?.toggleStageView?.()||{enabled:true,axis:'z',side:1};
+  const camera=engine?.cameraConfig?.()||{stageView:value};
+  window.PaperchalkSettings?.setCamera3D?.(camera);
+  emit();
+  return value;
+}
+
+function setStageAxis(axis){
+  const value=engine?.setStageAxis?.(axis)||{enabled:true,axis:axis==='x'?'x':'z',side:1};
+  const camera=engine?.cameraConfig?.()||{stageView:value};
+  window.PaperchalkSettings?.setCamera3D?.(camera);
+  emit();
+  return value;
+}
+
 window.addEventListener('resize',()=>engine?.resize?.(),{passive:true});
 window.addEventListener('paperchalk-world-enter',()=>{enable()});
 window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:2,
+  version:3,
   engine:'three-r180-production',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
+  setStageView,toggleStageView,setStageAxis,
   get active(){return active},
   get ready(){return ready},
   get stats(){
