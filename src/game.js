@@ -492,7 +492,10 @@ function jump(){
   return true;
 }
 function attack(){
-  if(!worldInteractive()||controller.attackCooldown>0)return false;
+  if(!worldInteractive())return false;
+  const selected=typeof inventorySelected==='number'?inventoryItems?.[inventorySelected]:null;
+  if(fishing.state!=='idle'||selected?.action==='fishing-rod')return reelFishingRod();
+  if(controller.attackCooldown>0)return false;
   controller.attacking=true;
   controller.attackTimer=.28;
   controller.attackCooldown=.42;
@@ -1262,6 +1265,10 @@ window.addEventListener('keydown',event=>{
     keys.add(event.code);event.preventDefault();return;
   }
   if(event.code==='Space'){if(!event.repeat||controller.inWater)jump();event.preventDefault();return}
+  if(event.code==='KeyF'){
+    if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod'))reelFishingRod();
+    event.preventDefault();return;
+  }
   if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
   if(event.code==='KeyC'){keyboardCrouch=true;setCrouch(true);event.preventDefault()}
 });
