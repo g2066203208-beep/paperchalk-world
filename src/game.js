@@ -696,7 +696,7 @@ function ensureFishPopulation(){
     const b=terrain.water.columnBounds(gx,gz);
     if(b&&b.depth>=.28)candidates.push({gx,gz,b,d});
   }
-  const desired=Math.min(FISH_MAX_ACTIVE,Math.max(0,Math.floor(candidates.length*.32)));
+  const desired=Math.min(FISH_MAX_ACTIVE,candidates.length?Math.max(1,Math.floor(candidates.length*.32)):0);
   let guard=80;
   while(fishWorld.entities.length<desired&&candidates.length&&guard-->0){
     const c=candidates[Math.floor(random01()*candidates.length)];
