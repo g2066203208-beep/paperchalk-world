@@ -15,7 +15,7 @@ assert(mesher.includes('for(let d=0;d<3;d++)'),'mesher does not sweep 3 axes');
 assert(engine.includes("infinite-3d-voxel-terrain"),'3D chunk renderer missing');
 assert(engine.includes("worldMode:'infinite-voxel-3d'"),'wrong world mode');
 assert(engine.includes("terrainMode:'streamed-3d-voxel-chunks'"),'wrong terrain mode');
-assert(engine.includes('_raycastVoxel(ray,maxDistance=8)'),'voxel DDA raycast missing');
+assert(engine.includes('_raycastVoxel(ray,maxDistance=8,{interactionOnly=false}={})'),'voxel DDA raycast missing');
 assert(game.includes("keys.has('KeyW')")&&game.includes("keys.has('KeyS')"),'forward/back movement missing');
 assert(game.includes("moveAxis('z'"),'Z-axis movement missing');
 assert(game.includes('placeTerrainCell')&&game.includes('digTerrainCell'),'3D dig/place missing');
