@@ -6,11 +6,15 @@ on:
     paths:
       - 'tools/spine-android-viewer/**'
       - '.github/workflows/spine-viewer-android.yml'
+      - 'src/animation/paperchalk-motion.js'
+      - 'index.html'
   pull_request:
     branches: [ main ]
     paths:
       - 'tools/spine-android-viewer/**'
       - '.github/workflows/spine-viewer-android.yml'
+      - 'src/animation/paperchalk-motion.js'
+      - 'index.html'
   workflow_dispatch:
 
 permissions:
@@ -18,12 +22,8 @@ permissions:
 
 jobs:
   build:
-    name: Spine ${{ matrix.spine }}
+    name: PaperChalk Studio APK
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        spine: ['4.2.12', '4.3.5']
     defaults:
       run:
         working-directory: tools/spine-android-viewer
@@ -91,17 +91,17 @@ jobs:
             https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite
 
       - name: Build debug APK
-        run: gradle :app:assembleDebug -PspineVersion=${{ matrix.spine }} --stacktrace
+        run: gradle :app:assembleDebug -PspineVersion=4.3.5 --stacktrace
 
       - name: Stage artifact
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk "artifacts/PaperChalk-SpineViewer-${{ matrix.spine }}.apk"
+          cp app/build/outputs/apk/debug/app-debug.apk "artifacts/PaperChalk-SpineStudio.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PaperChalk-SpineViewer-${{ matrix.spine }}
-          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineViewer-${{ matrix.spine }}.apk
+          name: PaperChalk-SpineStudio
+          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineStudio.apk
           if-no-files-found: error
           retention-days: 30
