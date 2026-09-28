@@ -127,6 +127,25 @@ public class StudioActivity extends Activity {
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.MATCH_PARENT));
 
+        actions.addView(button("画布", v -> runJs(
+            "window.PaperChalkMobile?PaperChalkMobile.setPane('canvas'):'bridge-loading'"
+        )));
+        actions.addView(button("图层", v -> runJs(
+            "window.PaperChalkMobile?PaperChalkMobile.setPane('layers'):'bridge-loading'"
+        )));
+        actions.addView(button("属性", v -> runJs(
+            "window.PaperChalkMobile?PaperChalkMobile.setPane('inspector'):'bridge-loading'"
+        )));
+        actions.addView(button("适应", v -> runJs(
+            "window.PaperChalkMobile?PaperChalkMobile.fit():'bridge-loading'"
+        )));
+        actions.addView(button("布局", v -> runJs(
+            "window.PaperChalkMobile?PaperChalkMobile.setMode('staging'):'bridge-loading'"
+        )));
+        actions.addView(button("动画", v -> runJs(
+            "window.PaperChalkMobile?PaperChalkMobile.setMode('animation'):'bridge-loading'"
+        )));
+
         actions.addView(button("PSD/图片", v -> runJs(
             "(function(){const i=document.querySelector('input[type=file]');if(i){i.click();return 'ok'}return 'no-input'})()"
         )));
