@@ -194,9 +194,10 @@ export class World3DEngine{
   _buildStage(){
     const THREE=this.THREE;
 
-    // One and only world light: the sun. No hemisphere/ambient fill.
-    // Therefore caves and covered terrain stay black unless direct sunlight reaches them.
-    const sun=new THREE.DirectionalLight(0xfff0d2,3.8);
+    // Outdoor lighting model:
+    // direct sun + soft skylight/environment bounce + moonlight.
+    // Covered caves keep only a small residual bounce so they remain dark without becoming unreadable.
+    const sun=new THREE.DirectionalLight(0xfff0d2,3.4);
     sun.name='world-sun';
     sun.castShadow=true;
     sun.position.set(18,32,14);
@@ -210,6 +211,23 @@ export class World3DEngine{
     this.scene.add(sun);
     this.scene.add(sun.target);
 
+    const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,.9);
+    skyFill.name='sky-environment-bounce';
+    this.scene.add(skyFill);
+
+    const moon=new THREE.DirectionalLight(0x8eb6ff,.0);
+    moon.name='world-moon';
+    moon.castShadow=true;
+    moon.shadow.mapSize.set(1024,1024);
+    moon.shadow.camera.near=.5;
+    moon.shadow.camera.far=110;
+    moon.shadow.camera.left=-28;moon.shadow.camera.right=28;
+    moon.shadow.camera.top=28;moon.shadow.camera.bottom=-28;
+    moon.shadow.bias=-0.00025;
+    moon.shadow.normalBias=.02;
+    this.scene.add(moon);
+    this.scene.add(moon.target);
+
     const sunDisc=new THREE.Mesh(
       new THREE.SphereGeometry(2.6,24,16),
       new THREE.MeshBasicMaterial({color:0xffe49a,toneMapped:false,depthWrite:false})
@@ -218,7 +236,15 @@ export class World3DEngine{
     sunDisc.renderOrder=-50;
     this.scene.add(sunDisc);
 
-    this.terrainLights={sun,sunDisc};
+    const moonDisc=new THREE.Mesh(
+      new THREE.SphereGeometry(1.8,20,14),
+      new THREE.MeshBasicMaterial({color:0xdce7ff,toneMapped:false,depthWrite:false})
+    );
+    moonDisc.name='visible-moon';
+    moonDisc.renderOrder=-50;
+    this.scene.add(moonDisc);
+
+    this.terrainLights={sun,skyFill,moon,sunDisc,moonDisc};
 
     this.backdrop=null;
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
@@ -370,30 +396,72 @@ export class World3DEngine{
     this.camera.position.lerp(desired,k);this.camera.lookAt(this.cameraTarget);
 
   }
+  _skyExposureAt(player){
+    if(!player)return 1;
+    const c=this.terrain.worldToCell(player.x,player.y,player.z);
+    let roofDistance=Infinity;
+    for(let dy=1;dy<=28;dy++){
+      if(this.terrain.isSolidPeek(c.gx,c.gy+dy,c.gz)){roofDistance=dy;break}
+    }
+    if(!Number.isFinite(roofDistance))return 1;
+    if(roofDistance<=2)return .12;
+    if(roofDistance<=5)return .22;
+    if(roofDistance<=10)return .38;
+    return .58;
+  }
   _updateWorldTime(snapshot){
     const minutes=Number(snapshot?.world?.minutes);if(!Number.isFinite(minutes))return;
     const n=((minutes%1440)+1440)%1440/1440;
     const angle=(n-.25)*Math.PI*2;
     const daylight=Math.max(0,Math.sin(angle));
-    this.scene.background.setRGB(0,0,0);
+    const night=Math.max(0,-Math.sin(angle));
+    const twilight=Math.max(0,1-Math.abs(Math.sin(angle))*2.6);
+    const p=snapshot?.player||this.lastSnapshot?.player||{x:0,y:0,z:0};
+    const exposure=this._skyExposureAt(p);
 
-    const sun=this.terrainLights?.sun,sunDisc=this.terrainLights?.sunDisc;
+    const daySky=new this.THREE.Color(0x87bfe8);
+    const duskSky=new this.THREE.Color(0x7c5876);
+    const nightSky=new this.THREE.Color(0x071221);
+    let sky;
+    if(daylight>.08)sky=nightSky.clone().lerp(daySky,Math.min(1,.22+daylight*.95));
+    else if(twilight>.08)sky=nightSky.clone().lerp(duskSky,Math.min(1,twilight*.72));
+    else sky=nightSky.clone();
+    this.scene.background.copy(sky);
+
+    const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,moon=this.terrainLights?.moon;
+    const sunDisc=this.terrainLights?.sunDisc,moonDisc=this.terrainLights?.moonDisc;
+    const radius=42;
+    const sx=Math.cos(angle)*radius;
+    const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
+    const sz=22;
+
     if(sun){
-      sun.intensity=daylight*3.8;
-      const p=this.lastSnapshot?.player||{x:0,y:0,z:0};
-      const radius=42;
-      const sx=Math.cos(angle)*radius;
-      const sy=Math.max(6,Math.sin(angle)*radius);
-      const sz=22;
+      sun.intensity=daylight*3.4;
       sun.position.set(p.x+sx,p.y+sy,p.z+sz);
       sun.target.position.set(p.x,p.y-2,p.z);
       sun.target.updateMatrixWorld();
-      if(sunDisc){
-        sunDisc.visible=daylight>.02;
-        sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
-        sunDisc.scale.setScalar(.8+daylight*.35);
-      }
     }
+    if(skyFill){
+      const outdoor=.42+daylight*.95+twilight*.18+night*.08;
+      const underground=.08+night*.04;
+      skyFill.intensity=underground+(outdoor-underground)*exposure;
+    }
+    if(moon){
+      moon.intensity=night*.55*exposure;
+      moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
+      moon.target.position.set(p.x,p.y-1,p.z);
+      moon.target.updateMatrixWorld();
+    }
+    if(sunDisc){
+      sunDisc.visible=daylight>.02;
+      sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
+      sunDisc.scale.setScalar(.8+daylight*.35);
+    }
+    if(moonDisc){
+      moonDisc.visible=night>.03;
+      moonDisc.position.set(p.x-sx*1.45,p.y+Math.max(14,sy*1.2),p.z-sz*1.1);
+    }
+    this.skyExposure=exposure;
   }
   update(dt,snapshot=this.lastSnapshot){
     if(snapshot)this.lastSnapshot=snapshot;
@@ -462,7 +530,7 @@ export class World3DEngine{
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
-      lighting:{mode:'sun-only',ambient:0,background:'black',visibleSun:!!this.terrainLights?.sunDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+      lighting:{mode:'sun-sky-moon',skyExposure:this.skyExposure??1,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
