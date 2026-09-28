@@ -92,6 +92,11 @@ const content={
     'rough-herb':{
       id:'rough-herb',name:'粗纸药草',desc:'揉碎后能恢复 2 点生命。',
       weight:.1,consumable:true,action:'heal',heal:2
+    },
+    'hand-torch':{
+      id:'hand-torch',name:'手持火把',desc:'点亮后跟随玩家移动，为洞穴和夜间提供暖色局部光。',
+      weight:.35,consumable:false,action:'toggle-torch',glyph:'🔥',
+      light:{color:'#ffb35c',intensity:2.6,distance:10,decay:1.7}
     }
   }
 };
