@@ -20,7 +20,7 @@ assert(terrain.includes('this.biomeGenerator=BiomeGenerator'),'terrain biome int
 assert(terrain.includes('terrainProfile(gx,gz=0)'),'terrain biome profile missing');
 assert(terrain.includes('surfaceTile(gx,gz=0)'),'biome surface material missing');
 assert(terrain.includes('biomeSummaryForChunk(cx,cz)'),'biome chunk summary missing');
-assert(terrain.includes('generatorVersion=5'),'terrain generator version missing');
+assert(terrain.includes('generatorVersion=4'),'legacy terrain generator compatibility missing');
 assert(game.includes('window.PaperchalkBiomes'),'biome runtime API missing');
 assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 
