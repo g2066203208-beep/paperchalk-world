@@ -133,6 +133,52 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
 // Compatibility alias for older imports during migration.
 export const buildSingleLayerCubeGeometry=buildVoxelChunkGeometry;
 
+export function buildUndergroundOcclusionGeometry(THREE,terrain,chunk){
+  const n=chunk.size,s=terrain.tileSize;
+  const localZ=terrain.interactionRowZ-chunk.cz*n;
+  const positions=[],normals=[],indices=[];
+  let vertexCount=0,faces=0;
+  if(localZ<0||localZ>=n){
+    const empty=new THREE.BufferGeometry();
+    empty.userData={faces:0,vertices:0};
+    return empty;
+  }
+  const dirs=[
+    {d:[-1,0,0],corners:[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]},
+    {d:[1,0,0],corners:[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]},
+    {d:[0,-1,0],corners:[[0,0,1],[0,0,0],[1,0,0],[1,0,1]]},
+    {d:[0,1,0],corners:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]]},
+    {d:[0,0,-1],corners:[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]},
+    {d:[0,0,1],corners:[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]}
+  ];
+  const sample=(x,y,z)=>getLocalOrWorld(terrain,chunk,x,y,z);
+  for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+    const tile=chunk.get(x,y,localZ);
+    if(!terrain.isSolidTile(tile))continue;
+    const gx=chunk.cx*n+x,gy=chunk.cy*n+y,gz=terrain.interactionRowZ;
+    const surface=terrain.surfaceCell(gx,gz);
+    if(gy>=surface)continue; // surface block remains visible; only underground is masked.
+    for(const face of dirs){
+      const [dx,dy,dz]=face.d;
+      if(terrain.isSolidTile(sample(x+dx,y+dy,localZ+dz)))continue;
+      const base=vertexCount;
+      for(const c of face.corners){
+        positions.push((x+c[0])*s,(y+c[1])*s,(localZ+c[2])*s);
+        normals.push(dx,dy,dz);
+      }
+      indices.push(base,base+1,base+2,base,base+2,base+3);
+      vertexCount+=4;faces++;
+    }
+  }
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+  geometry.setIndex(new THREE.Uint32BufferAttribute(indices,1));
+  geometry.computeBoundingBox();geometry.computeBoundingSphere();
+  geometry.userData={faces,vertices:vertexCount};
+  return geometry;
+}
+
 export function createVoxelGridTexture(THREE,{size=128}={}){
   const canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
   const ctx=canvas.getContext('2d');ctx.fillStyle='#f4ead5';ctx.fillRect(0,0,size,size);
