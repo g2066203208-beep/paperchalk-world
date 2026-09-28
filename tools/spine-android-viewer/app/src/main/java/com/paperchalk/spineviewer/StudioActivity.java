@@ -98,7 +98,7 @@ public class StudioActivity extends Activity {
         status.setTextColor(0xffd3d7e3);
         status.setTextSize(11);
         status.setSingleLine(true);
-        status.setText("PSD自动识别/组装 · 自动绑定 · 网格变形 · 时间轴 · 摄像头面捕 · 流式视频导出");
+        status.setText("全离线 · PSD自动识别/组装 · 自动绑定 · 网格变形 · 摄像头面捕 · 动作/视频导出");
         LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
         statusLp.leftMargin = dp(8);
         bar.addView(status, statusLp);
@@ -145,10 +145,22 @@ public class StudioActivity extends Activity {
                 return assetLoader.shouldInterceptRequest(request.getUrl());
             }
 
+            @Override public boolean shouldOverrideUrlLoading(
+                WebView view, android.webkit.WebResourceRequest request) {
+                Uri uri = request.getUrl();
+                if ("appassets.androidplatform.net".equals(uri.getHost())) return false;
+                runOnUiThread(() -> Toast.makeText(
+                    StudioActivity.this,
+                    "离线模式：已阻止外部网页/登录页面",
+                    Toast.LENGTH_SHORT
+                ).show());
+                return true;
+            }
+
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 injectPaperChalkBridge();
-                status.setText("工作室已加载。导入分层 PSD 后可直接自动绑定；摄像头面捕可实时驱动骨骼。");
+                status.setText("全离线工作室已加载。PSD、自动绑定、摄像头面捕均不需要登录或联网。");
             }
         });
 
