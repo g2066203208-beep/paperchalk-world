@@ -1,82 +1,87 @@
-# Paperchalk World Runtime Architecture
+# Paperchalk World — Three.js Production Architecture
 
-## Principles
+## 1. Single rendering authority
 
-Paperchalk World uses a hybrid browser-game architecture rather than forcing every concern into one abstraction.
+The world has one production renderer: Three.js r180 WebGL.
 
-- **ECS** owns dynamic gameplay entities and fixed-step systems.
-- **Renderer contract** keeps simulation authoritative and allows DOM/Pixi backends to consume the same frame state.
-- **DOM retained mode** remains appropriate for UI, dialogue, menus and accessibility-heavy controls.
-- **PixiJS 8** is an optional dynamic-entity renderer and PaperPuppet host.
-- **Three.js r180** powers an isolated real WebGL 3D test engine with perspective camera, lighting/shadows, fixed-step movement and raycast voxel interaction; it stays cold during normal 2D play.
-- **Fixed-step simulation** is used for combat and the 3D test scene; visual animation can run independently.
-- **Spatial buckets and object pools** keep world queries and scrolling work bounded.
-- **Lifecycle-bound loops** stop gameplay RAF work when the world is not active.
+```text
+Input
+  ↓
+ECS fixed-step simulation
+  ↓
+PaperchalkRuntime snapshot
+  ↓
+World3DEngine
+  ↓
+Three.js Scene
+  ↓
+WebGLRenderer
+```
 
-## Runtime layers
+DOM is not a world renderer. It is restricted to screen-space UI such as menus, inventory, the network map, camera controls and debug controls.
 
-### 1. Core
+## 2. Gameplay state
 
-`src/core/ecs-runtime.js`, `event-bus.js`, `game-state.js`, `save-runtime.js`, `card-camera.js`
+`src/game.js` owns the authoritative player simulation using X/Y/Z coordinates.
 
-The core layer is dependency-free. Sparse-set ECS stores dense component arrays plus sparse entity indices; deterministic events decouple domain side effects; the top-level app lifecycle is a finite-state machine; saves use schema migrations and a last-known-good backup. `card-camera.js` is the single outdoor projection authority: gameplay camera follows X/Y only, while Z is authored scene depth and is never a player movement axis.
+The player ECS entity contains:
 
-Combat enemies now expose granular `Transform`, `Health`, `Combat`, `AI`, `Patrol` and `Renderable` components while retaining a temporary compatibility object for unchanged renderer/debug APIs.
+- Transform: x, y, z, yaw
+- Velocity: x, y, z
+- Health: current, max
+- Player controller state: grounded, crouching, attacking, action
 
-### 2. Content
+Movement and gravity run at a fixed 60 Hz step. 3D building collisions are resolved in X/Z; Y is vertical height.
 
-`src/content/game-content.js`
+## 3. Renderer
 
-Authored world graph, NPC dialogue, enemy archetypes, seed spawns and item definitions use stable IDs and are validated before game boot. Runtime code clones only the mutable state it needs.
+`src/engine3d/World3DEngine.js` owns:
 
-### 3. Simulation
+- Scene
+- PerspectiveCamera
+- WebGLRenderer
+- lighting and shadows
+- procedural village geometry
+- third-person camera rig
+- player mesh
+- 3D world-space health bar
+- collider debug helpers
 
-`src/game.js`
+`src/renderers/three-world-renderer.mjs` is the lifecycle adapter. It lazy-loads Three.js, subscribes to `PaperchalkRuntime`, starts rendering on `paperchalk-world-enter`, and stops on `paperchalk-world-leave`.
 
-Acts as the compatibility composition root while domain systems are extracted. Combat enemies are scheduled through the ECS at the existing 60 Hz fixed step; world/NPC/enemy/item definitions no longer belong to the main loop.
+## 4. Health UI
 
-Future extractions should happen by domain, not by arbitrary file size:
+The health bar is a Three.js group attached directly to the player mesh.
 
-1. `Transform`, `Health`, `Combat`, `AI`, `Patrol`, `Renderable` components.
-2. NPC / pickup / projectile / temporary combat-effect entities.
-3. Player combat state after enemy ECS parity is proven.
-4. Input mapping and scene state machines.
-5. Inventory/save services.
+It contains ten pieces: nine standard cells plus a tail cell. The group copies the camera quaternion every frame so it behaves as a world-space billboard. Damage and healing animate the 3D fill meshes; there is no DOM health bar.
 
-UI overlays and account/settings screens should **not** be converted into ECS entities.
+## 5. Persistence
 
-### 4. Renderer boundary
+Save schema V4 stores:
 
-`window.PaperchalkRuntime` exposes renderer-neutral X/Y player/camera state plus optional entity Z scene depth. `src/renderers/dom-card-projection.js` and `src/renderers/pixi-dynamic-renderer.mjs` consume the same `PaperchalkCardCamera` projection so DOM and GPU cannot drift into different perspective rules. DOM remains the safe default; Pixi can be selected for controlled GPU testing.
+```json
+{
+  "player": {"x":0,"y":0,"z":8,"yaw":3.14159},
+  "playerHp":10,
+  "worldMinutes":360,
+  "inventory":[]
+}
+```
 
-### 5. Presentation
+V2/V3 2D saves are migrated once into the native 3D transform.
 
-`styles/game.css`, HTML overlays and PaperPuppet animation remain presentation concerns. They can react to simulation state but do not own gameplay truth.
+## 6. Removed legacy renderer stack
 
-## Performance rules
+The following are intentionally absent:
 
-- Do not re-create world DOM nodes while scrolling; reuse retained pools.
-- Do not scan the full world for collision; use the spatial index.
-- Do not run gameplay RAF on menu/auth/settings screens.
-- Keep combat deterministic at a fixed step.
-- Keep heavy UI and GPU assets lazy/deferred.
-- Add a regression test whenever a hot-path optimization becomes an architectural invariant.
-- Prefer measured DOM/Pixi/WebGL/WebGPU comparisons over switching backends for novelty.
+- Card Camera
+- DOM card projection renderer
+- PixiJS renderer
+- PixiJS vendor bundle
+- PaperPuppet runtime
+- 2D player actor/sprite
+- 2D ground/map/entity/traffic layers
+- DOM health bar
+- 2D world art asset tree
 
-## Migration status
-
-- [x] Sparse-set ECS core
-- [x] Enemy entities registered in ECS
-- [x] Enemy AI scheduled by ECS at fixed combat step
-- [x] ECS-aware combat queries
-- [x] Lifecycle-bound gameplay RAF
-- [x] CI guards for ECS and performance budgets
-- [x] Split enemy state into granular ECS component sources
-- [x] Add deterministic event bus and app state machine
-- [x] Add authored content registry + validation
-- [x] Add schema-v3 saves, v2 migration and last-known-good backup
-- [x] Add shared X/Y gameplay camera with authored Z scene depth, infinite grid references and DOM/Pixi projection parity
-- [x] Add an isolated Three.js r180 WebGL 3D engine/test scene with lifecycle-safe rendering and dedicated CI
-- [x] Remove the retired DOM traffic renderer after the Three.js test engine superseded it
-- [ ] Migrate NPCs, pickups and projectiles into ECS where simulation benefits
-- [ ] Extract input commands, scene traversal and inventory domains from the compatibility runtime
+Tests fail if these systems return.
