@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=player-art-hd-r1';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=player-hd-camera-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -133,7 +133,7 @@ function setCameraConfig(config){
 }
 
 function resetCamera(){
-  const next=engine?.resetCamera()||{yaw:.72,pitch:.42,distance:14,fov:55};
+  const next=engine?.resetCamera()||{yaw:0,pitch:0,distance:18,height:.35,fov:42};
   window.PaperchalkSettings?.setCamera3D?.(next);
   emit();
   return next;
