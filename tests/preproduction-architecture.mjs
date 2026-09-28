@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
-assert.match(html,/voxel3d-r33/);
+assert.match(html,/voxel3d-r34/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
