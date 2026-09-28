@@ -23,20 +23,6 @@ const scene3d={
     actor:.45,
     front:2.5
   },
-  paperWalls:[
-    {
-      id:'village-wall-demo',
-      name:'纸片墙示例',
-      x:6,
-      z:-1.55,
-      columns:4,
-      rows:3,
-      tileSize:1,
-      grounded:true,
-      primary:'#cbb894',
-      edge:'#6f5b49'
-    }
-  ],
   stageEntities:[
     {id:'far-hills-a',kind:'rock',name:'远山',x:-18,z:-8,width:18,height:6,primary:'#87959a',grounded:true},
     {id:'far-hills-b',kind:'rock',name:'远山',x:18,z:-8,width:20,height:7,primary:'#7d8e91',grounded:true},
@@ -124,7 +110,6 @@ function validate(value=content){
     const nodeIds=assertUnique(value.world.nodes,'world.nodes');
     assertUnique(value.world.routes,'world.routes');
     assertUnique(value.scene3d.stageEntities,'scene3d.stageEntities');
-    assertUnique(value.scene3d.paperWalls||[],'scene3d.paperWalls');
     assertUnique(value.npcs,'npcs');
     assertUnique(value.enemySpawns,'enemySpawns');
     for(const route of value.world.routes){
