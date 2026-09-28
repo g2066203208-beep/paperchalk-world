@@ -51,54 +51,108 @@ class WaterWorld{
   constructor(terrain){
     this.terrain=terrain;
     this.cells=new Map();
+    this.active=new Set();
+    this.dirtyChunks=new Set();
     this.version=0;
     this.tick=0;
+    this.levels=8;
   }
   key(gx,gy,gz){return gx+','+gy+','+gz}
   parse(key){return key.split(',').map(Number)}
   getLevel(gx,gy,gz){return this.cells.get(this.key(gx,gy,gz))||0}
+  _chunkKey(gx,gy,gz){
+    const n=this.terrain.chunkSize;
+    return Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n);
+  }
+  _markDirty(gx,gy,gz){this.dirtyChunks.add(this._chunkKey(gx,gy,gz))}
+  _wake(gx,gy,gz){
+    if(gz!==this.terrain.interactionRowZ)return;
+    this.active.add(this.key(gx,gy,gz));
+  }
+  wakeAround(gx,gy,gz){
+    const z=this.terrain.interactionRowZ;
+    for(const [dx,dy] of [[0,0],[0,1],[0,-1],[-1,0],[1,0]])this._wake(gx+dx,gy+dy,z);
+  }
+  consumeDirtyChunks(){
+    const out=[...this.dirtyChunks];this.dirtyChunks.clear();return out;
+  }
   setLevel(gx,gy,gz,level){
+    if(gz!==this.terrain.interactionRowZ)return false;
     level=Math.max(0,Math.min(8,Math.round(Number(level)||0)));
     const key=this.key(gx,gy,gz),prev=this.cells.get(key)||0;
     if(prev===level)return false;
     if(level<=0)this.cells.delete(key);else this.cells.set(key,level);
     this.version++;
+    this._markDirty(gx,gy,gz);
+    this._markDirty(gx-1,gy,gz);this._markDirty(gx+1,gy,gz);
+    this._markDirty(gx,gy-1,gz);this._markDirty(gx,gy+1,gz);
+    this.wakeAround(gx,gy,gz);
     return true;
   }
-  placeFull(gx,gy,gz){
-    if(this.terrain.isSolidPeek(gx,gy,gz))return {changed:false,reason:'solid',gx,gy,gz};
-    const before=this.getLevel(gx,gy,gz);
-    if(before>=8)return {changed:false,reason:'full',gx,gy,gz,level:before};
-    this.setLevel(gx,gy,gz,8);
-    return {changed:true,gx,gy,gz,previous:before,level:8,unitsAdded:8-before};
+  _canOccupy(gx,gy,gz){
+    return gz===this.terrain.interactionRowZ&&!this.terrain.isSolidPeek(gx,gy,gz);
   }
+  addVolume(gx,gy,gz,units=8){
+    if(gz!==this.terrain.interactionRowZ)return {changed:false,reason:'interaction-row-only',gx,gy,gz};
+    if(!this._canOccupy(gx,gy,gz))return {changed:false,reason:'solid',gx,gy,gz};
+    let remaining=Math.max(0,Math.round(Number(units)||0)),added=0,y=gy,guard=0;
+    while(remaining>0&&guard++<64){
+      if(!this._canOccupy(gx,y,gz)){y++;continue}
+      const before=this.getLevel(gx,y,gz),capacity=8-before;
+      if(capacity>0){
+        const put=Math.min(capacity,remaining);
+        this.setLevel(gx,y,gz,before+put);
+        remaining-=put;added+=put;
+      }
+      y++;
+    }
+    this.wakeAround(gx,gy,gz);
+    return {changed:added>0,gx,gy,gz,unitsAdded:added,unitsRejected:remaining,totalLayers:this.totalLayers()};
+  }
+  placeFull(gx,gy,gz){return this.addVolume(gx,gy,gz,8)}
   remove(gx,gy,gz){return this.setLevel(gx,gy,gz,0)}
-  _canOccupy(gx,gy,gz){return !this.terrain.isSolidPeek(gx,gy,gz)}
   _transfer(a,b,amount){
     if(amount<=0)return 0;
     const al=this.getLevel(...a),bl=this.getLevel(...b);
-    const move=Math.max(0,Math.min(amount,al,8-bl));
+    const move=Math.max(0,Math.min(Math.round(amount),al,8-bl));
     if(!move)return 0;
     this.setLevel(...a,al-move);this.setLevel(...b,bl+move);
     return move;
   }
-  step({maxTransfers=384}={}){
-    if(!this.cells.size)return {changed:false,transfers:0,cells:0};
-    let transfers=0,changed=false;
-    const entries=[...this.cells.entries()];
-    // Process lower cells first so falling water settles before spreading sideways.
-    entries.sort((a,b)=>{
-      const A=this.parse(a[0]),B=this.parse(b[0]);
-      return A[1]-B[1]||A[0]-B[0]||A[2]-B[2];
-    });
-    for(const [key] of entries){
-      if(transfers>=maxTransfers)break;
+  _hasDrop(gx,gy,gz){
+    return this._canOccupy(gx,gy,gz)&&this._canOccupy(gx,gy-1,gz)&&this.getLevel(gx,gy-1,gz)<8;
+  }
+  _findDropDirection(gx,gy,gz,maxDistance=12){
+    // Side-on world: search the X plane for the nearest lower outlet.
+    // This keeps water in the same Z=0 gameplay slice instead of leaking into scenery-only rows.
+    for(let d=1;d<=maxDistance;d++){
+      for(const dir of ((this.tick+d)&1)?[-1,1]:[1,-1]){
+        let clear=true;
+        for(let step=1;step<=d;step++){
+          const x=gx+dir*step;
+          if(!this._canOccupy(x,gy,gz)){clear=false;break}
+          if(step<d&&this.getLevel(x,gy,gz)>=8){clear=false;break}
+        }
+        if(clear&&this._hasDrop(gx+dir*d,gy,gz))return dir;
+      }
+    }
+    return 0;
+  }
+  step({maxTransfers=640,maxActive=512}={}){
+    if(!this.cells.size||!this.active.size)return {changed:false,transfers:0,cells:this.cells.size,active:this.active.size};
+    let transfers=0,changed=false,processed=0;
+    const work=[...this.active];this.active.clear();
+
+    // High water first: gravity cascades down in the same simulation tick budget.
+    work.sort((ka,kb)=>this.parse(kb)[1]-this.parse(ka)[1]);
+    for(const key of work){
+      if(processed++>=maxActive||transfers>=maxTransfers){this.active.add(key);continue}
       const [gx,gy,gz]=this.parse(key);
       let level=this.getLevel(gx,gy,gz);
       if(!level)continue;
       if(!this._canOccupy(gx,gy,gz)){this.remove(gx,gy,gz);changed=true;continue}
 
-      // Gravity always wins: fill the cell below to 8 layers before horizontal flow.
+      // 1) Gravity has absolute priority.
       const below=[gx,gy-1,gz];
       if(this._canOccupy(...below)){
         const capacity=8-this.getLevel(...below);
@@ -109,43 +163,75 @@ class WaterWorld{
         }
       }
 
-      // Four horizontal directions. One layer is 1/8 voxel high.
-      // Rotate the order every tick to avoid a permanent directional bias.
-      const dirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
-      const offset=this.tick&3;
-      for(let di=0;di<4&&transfers<maxTransfers;di++){
-        level=this.getLevel(gx,gy,gz);if(level<=1)break;
-        const d=dirs[(di+offset)&3],nx=gx+d[0],ny=gy,nz=gz+d[2];
-        if(!this._canOccupy(nx,ny,nz))continue;
-        const nl=this.getLevel(nx,ny,nz);
+      // 2) Find a lower outlet across a flat shelf and feed it, even from a 1/8 film.
+      const downhill=this._findDropDirection(gx,gy,gz,12);
+      if(downhill&&level>0&&transfers<maxTransfers){
+        const nx=gx+downhill,nl=this.getLevel(nx,gy,gz);
+        if(this._canOccupy(nx,gy,gz)&&nl<8){
+          const moved=this._transfer([gx,gy,gz],[nx,gy,gz],Math.max(1,Math.ceil(level*.5)));
+          if(moved){transfers++;changed=true;level-=moved}
+        }
+      }
+
+      // 3) Local finite-volume equalisation on the horizontal gameplay plane.
+      const dirs=((this.tick+gx+gy)&1)?[-1,1]:[1,-1];
+      for(const dx of dirs){
+        if(transfers>=maxTransfers)break;
+        level=this.getLevel(gx,gy,gz);if(level<=0)break;
+        const nx=gx+dx;
+        if(!this._canOccupy(nx,gy,gz))continue;
+        const nl=this.getLevel(nx,gy,gz);
         const diff=level-nl;
         if(diff<=1)continue;
-        // Move a discrete number of eighth-layers toward equilibrium.
-        const amount=Math.max(1,Math.floor(diff/2));
-        const moved=this._transfer([gx,gy,gz],[nx,ny,nz],amount);
+        const moved=this._transfer([gx,gy,gz],[nx,gy,gz],Math.floor(diff/2));
         if(moved){transfers++;changed=true}
       }
     }
     this.tick++;
-    return {changed,transfers,cells:this.cells.size,totalLayers:this.totalLayers()};
+    return {changed,transfers,cells:this.cells.size,active:this.active.size,totalLayers:this.totalLayers()};
   }
   totalLayers(){let n=0;for(const level of this.cells.values())n+=level;return n}
+  submersionAABB(x,y,z,halfW,halfH,halfD){
+    const s=this.terrain.tileSize,gz=this.terrain.interactionRowZ;
+    if(Math.abs(z-gz*s)>s*.6+halfD)return 0;
+    const minX=x-halfW,maxX=x+halfW,minY=y-halfH,maxY=y+halfH;
+    const gx0=Math.floor(minX/s),gx1=Math.floor((maxX-.0001)/s);
+    const gy0=Math.floor(minY/s),gy1=Math.floor((maxY-.0001)/s);
+    let overlap=0;
+    for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){
+      const level=this.getLevel(gx,gy,gz);if(!level)continue;
+      const wx0=gx*s,wx1=(gx+1)*s;
+      const wy0=gy*s,wy1=gy*s+(level/8)*s;
+      const ox=Math.max(0,Math.min(maxX,wx1)-Math.max(minX,wx0));
+      const oy=Math.max(0,Math.min(maxY,wy1)-Math.max(minY,wy0));
+      overlap+=ox*oy;
+    }
+    const area=Math.max(.0001,(maxX-minX)*(maxY-minY));
+    return Math.max(0,Math.min(1,overlap/area));
+  }
   exportState(){
     const rows=[];
     for(const [key,level] of this.cells){const [gx,gy,gz]=this.parse(key);rows.push([gx,gy,gz,level])}
     return rows;
   }
   importState(rows){
-    this.cells.clear();
+    this.cells.clear();this.active.clear();this.dirtyChunks.clear();
     for(const row of Array.isArray(rows)?rows:[]){
       if(!Array.isArray(row)||row.length<4)continue;
       const [gx,gy,gz,level]=row.map(Number);
       if(![gx,gy,gz,level].every(Number.isFinite))continue;
-      if(level>0&&!this.terrain.isSolidPeek(gx|0,gy|0,gz|0))this.cells.set(this.key(gx|0,gy|0,gz|0),Math.max(1,Math.min(8,Math.round(level))));
+      if((gz|0)!==this.terrain.interactionRowZ)continue;
+      if(level>0&&!this.terrain.isSolidPeek(gx|0,gy|0,gz|0)){
+        const l=Math.max(1,Math.min(8,Math.round(level)));
+        this.cells.set(this.key(gx|0,gy|0,gz|0),l);
+        this.wakeAround(gx|0,gy|0,gz|0);this._markDirty(gx|0,gy|0,gz|0);
+      }
     }
     this.version++;
   }
-  stats(){return {cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,layerHeight:this.terrain.tileSize/8,version:this.version,flowModel:'gravity-plus-four-neighbor-discrete-equilibrium'}}
+  stats(){
+    return {cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,layerHeight:this.terrain.tileSize/8,activeCells:this.active.size,dirtyChunks:this.dirtyChunks.size,version:this.version,flowModel:'finite-active-cell-downhill-search-plus-equilibrium',flowPlane:'interaction-row-x-y'};
+  }
 }
 
 class TerrainWorld{
@@ -306,6 +392,7 @@ class TerrainWorld{
     if(value===generated)patch.delete(index);else patch.set(index,value);
     if(patch.size===0)this.edits.delete(key);
     this.changeVersion++;
+    this.water?.wakeAround(gx,gy,gz);
     const event={gx,gy,gz,value,cx,cy,cz,version:this.changeVersion};
     for(const listener of this.listeners)listener(event);
     return true;
