@@ -1,26 +1,24 @@
-name: Core Runtime Regression
+name: Core 3D Runtime Regression
 
 on:
   push:
-    branches:
-      - main
-      - fix/core-runtime-20260924
+    branches: [main]
     paths:
       - "index.html"
       - "src/**"
       - "styles/**"
-      - "tests/web-smoke.js"
-      - "tests/core-regression.mjs"
-      - "tests/preproduction-architecture.mjs"
+      - "tests/**"
       - "package.json"
+      - "vendor/three/**"
       - ".github/workflows/core-regression.yml"
-      - "assets/**"
   pull_request:
     paths:
       - "index.html"
       - "src/**"
       - "styles/**"
       - "tests/**"
+      - "package.json"
+      - "vendor/three/**"
 
 permissions:
   contents: read
@@ -31,53 +29,31 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7.0.1
-
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-
-      - name: Run static smoke test
-        run: node tests/web-smoke.js
-
-      - name: Enforce runtime performance budgets
-        run: node tests/performance-budget.mjs
-
-      - name: Enforce preproduction architecture contracts
-        run: node tests/preproduction-architecture.mjs
-
-      - name: Install browser driver and CJK fonts
-        run: |
-          npm install --no-save playwright-core
-          sudo apt-get update -qq
-          sudo apt-get install -y fonts-noto-cjk
-          fc-cache -f
-
+      - name: Run 3D static architecture checks
+        run: npm test
+      - name: Install browser driver
+        run: npm install --no-save playwright-core
       - name: Detect Chrome
         id: chrome
         shell: bash
         run: |
           CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
-          if [ -z "$CHROME_PATH" ]; then
-            echo "No Chrome/Chromium found"
-            exit 1
-          fi
+          test -n "$CHROME_PATH"
           echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
           "$CHROME_PATH" --version
-
-      - name: Start local game server
-        shell: bash
+      - name: Start local server
         run: |
           python3 -m http.server 8080 > /tmp/paperchalk-http.log 2>&1 &
-          for i in {1..30}; do
-            if curl -fsS http://127.0.0.1:8080/index.html >/dev/null; then
-              exit 0
-            fi
-            sleep 1
+          for i in {1..50}; do
+            curl -fsS http://127.0.0.1:8080/index.html >/dev/null && exit 0
+            sleep 0.2
           done
           cat /tmp/paperchalk-http.log
           exit 1
-
-      - name: Run real browser regression
+      - name: Run real browser 3D gameplay regression
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/core-regression.mjs

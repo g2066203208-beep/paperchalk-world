@@ -1,4 +1,4 @@
-name: Web Game Smoke Test
+name: Web 3D Static Smoke
 
 on:
   push:
@@ -30,7 +30,5 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-      - name: Test menu, login and movement wiring
-        run: node tests/web-smoke.js
-      - name: Enforce performance budgets
-        run: node tests/performance-budget.mjs
+      - run: node tests/web-smoke.js
+      - run: node tests/performance-budget.mjs

@@ -1,15 +1,15 @@
 {
   "name": "paperchalk-world",
-  "version": "0.1.0",
+  "version": "1.0.0-3d-alpha",
   "private": true,
-  "description": "Paperchalk World browser game runtime",
+  "description": "Paperchalk World Three.js 3D browser game runtime",
   "scripts": {
-    "test": "node tests/web-smoke.js && node tests/core-regression.mjs && node tests/performance-budget.mjs && node tests/preproduction-architecture.mjs",
-    "test:architecture": "node tests/preproduction-architecture.mjs",
+    "test": "node tests/web-smoke.js && node tests/performance-budget.mjs && node tests/preproduction-architecture.mjs",
     "test:core": "node tests/core-regression.mjs",
-    "test:performance": "node tests/performance-budget.mjs",
-    "puppet:manifest": "node tools/build_puppet_manifest.mjs",
-    "test:3d": "node tests/three-engine-smoke.mjs"
+    "test:ui": "node tests/ui-smoke.mjs",
+    "test:3d": "node tests/three-engine-smoke.mjs",
+    "test:architecture": "node tests/preproduction-architecture.mjs",
+    "test:performance": "node tests/performance-budget.mjs"
   },
   "engines": {
     "node": ">=20"

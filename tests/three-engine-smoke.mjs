@@ -1,144 +1,97 @@
 import process from 'node:process';
 import {chromium} from 'playwright-core';
-
-function assert(condition,message){
-  if(!condition)throw new Error(message);
-}
-
+function assert(c,m){if(!c)throw new Error(m)}
 const errors=[];
 const browser=await chromium.launch({
   executablePath:process.env.CHROME_PATH,
   headless:true,
-  args:[
-    '--no-sandbox',
-    '--disable-dev-shm-usage',
-    '--use-gl=angle',
-    '--use-angle=swiftshader',
-    '--enable-unsafe-swiftshader'
-  ]
+  args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']
 });
-
 try{
-  const page=await browser.newPage({viewport:{width:1440,height:900}});
-  page.on('pageerror',error=>errors.push('PAGE '+String(error)));
-  page.on('console',message=>{
-    if(message.type()==='error')errors.push('CONSOLE '+message.text());
-  });
-  page.on('response',response=>{
-    if(response.status()>=400)errors.push('HTTP '+response.status()+' '+response.url());
-  });
-  page.on('requestfailed',request=>errors.push('REQUEST '+request.url()+' '+JSON.stringify(request.failure())));
-
-  await page.goto('http://127.0.0.1:8080/?ci=three-engine-smoke',{waitUntil:'networkidle'});
-  await page.waitForFunction(()=>!!window.Paperchalk3D&&!!window.PaperchalkRuntime,{timeout:5000});
-
-  const cold=await page.evaluate(()=>({
-    active:window.Paperchalk3D.active,
-    ready:window.Paperchalk3D.ready,
-    threeResources:performance.getEntriesByType('resource').filter(entry=>entry.name.includes('/vendor/three/')).length
-  }));
-  assert(cold.active===false&&cold.ready===false,'3D engine should stay cold on menu '+JSON.stringify(cold));
-  assert(cold.threeResources===0,'Three.js vendor loaded before 3D scene was requested '+JSON.stringify(cold));
-
+  const page=await browser.newPage({viewport:{width:1365,height:768}});
+  page.on('pageerror',e=>errors.push('PAGE '+String(e)));
+  page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
+  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url())});
+  await page.goto('http://127.0.0.1:8080/?ci=three-production',{waitUntil:'networkidle'});
   await page.locator('#authBtn').click();
-  await page.waitForTimeout(450);
   await page.locator('#tabRegister').click();
-  await page.locator('#regUser').fill('three_audit');
-  await page.locator('#regName').fill('3D审计');
+  await page.locator('#regUser').fill('three_engine');
+  await page.locator('#regName').fill('Engine');
   await page.locator('#regPass').fill('test1234');
   await page.locator('#registerForm button[type=submit]').click();
-  await page.waitForFunction(()=>document.getElementById('uiShell')?.classList.contains('is-hidden'),{timeout:3000});
+  await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
+  await page.waitForTimeout(350);
 
-  const enabled=await page.evaluate(()=>window.Paperchalk3D.enable());
-  assert(enabled===true,'3D engine refused to enable');
-  await page.waitForFunction(()=>window.Paperchalk3D.ready&&window.Paperchalk3D.active,{timeout:12000});
-  await page.waitForTimeout(300);
-
-  const live=await page.evaluate(()=>{
-    const canvas=document.querySelector('#threeWorldLayer canvas');
-    const host=document.getElementById('threeWorldLayer');
-    const stats=window.Paperchalk3D.stats;
-    return {
-      stats,
-      canvas:{
-        exists:!!canvas,
-        width:canvas?.width||0,
-        height:canvas?.height||0,
-        context:!!(canvas?.getContext('webgl2')||canvas?.getContext('webgl'))
-      },
-      hostHidden:host.hidden,
-      hostVisibility:getComputedStyle(host).visibility,
-      stageClass:document.getElementById('world').className,
-      vendorResources:performance.getEntriesByType('resource').filter(entry=>entry.name.includes('/vendor/three/')).map(entry=>entry.name)
-    };
-  });
-
-  assert(live.stats.engine==='three-r180-webgl','wrong 3D engine '+JSON.stringify(live.stats));
-  assert(live.stats.ready&&live.stats.active&&live.stats.loopActive,'3D loop is not active '+JSON.stringify(live.stats));
-  assert(live.stats.renderer.includes('WebGL'),'renderer is not WebGL '+JSON.stringify(live.stats));
-  assert(live.canvas.exists&&live.canvas.width>700&&live.canvas.height>400&&live.canvas.context,'WebGL canvas invalid '+JSON.stringify(live.canvas));
-  assert(live.hostHidden===false&&live.hostVisibility==='visible'&&live.stageClass.includes('three-test-active'),'3D surface is not visible '+JSON.stringify(live));
-  assert(live.vendorResources.some(url=>url.includes('three.module.js'))&&live.vendorResources.some(url=>url.includes('three.core.js')),
-    'pinned Three.js module/core pair did not load '+JSON.stringify(live.vendorResources));
-  assert(live.stats.voxelCount>=60&&live.stats.carCount>=4&&live.stats.sceneChildren>=8,
-    '3D test scene content is incomplete '+JSON.stringify(live.stats));
-  assert(live.stats.drawCalls>0&&live.stats.triangles>0,'renderer produced no 3D draw work '+JSON.stringify(live.stats));
-
-  const before=await page.evaluate(()=>window.Paperchalk3D.stats.player);
-  await page.keyboard.down('KeyW');
-  const after=await page.evaluate(()=>window.Paperchalk3D.debugStep(12));
-  await page.keyboard.up('KeyW');
-  assert(Math.hypot(after.x-before.x,after.z-before.z)>.5,'WASD did not move the 3D player '+JSON.stringify({before,after}));
-
-  const airborne=await page.evaluate(()=>{
-    const started=window.Paperchalk3D.jump();
-    const stepped=window.Paperchalk3D.debugStep(6);
-    return {started,...stepped};
-  });
-  assert(airborne.started&&airborne.y>.05&&!airborne.grounded,'3D jump/gravity state did not activate '+JSON.stringify(airborne));
-
-  const touchControls=await page.evaluate(()=>{
-    window.Paperchalk3D.resetPlayer();
-    const forward=document.querySelector('[data-three-key="KeyW"]');
-    const jump=document.querySelector('[data-three-jump]');
-    if(!forward||!jump)return {exists:false};
-    forward.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:77}));
-    const moved=window.Paperchalk3D.debugStep(10);
-    forward.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:77}));
-    jump.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:78}));
-    const jumped=window.Paperchalk3D.debugStep(4);
-    jump.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:78}));
-    return {exists:true,moved,jumped};
-  });
-  assert(touchControls.exists&&Math.hypot(touchControls.moved.x,touchControls.moved.z-12.5)>.35,
-    '3D mobile movement controls failed '+JSON.stringify(touchControls));
-  assert(touchControls.jumped.y>.02&&!touchControls.jumped.grounded,
-    '3D mobile jump control failed '+JSON.stringify(touchControls));
-
-  const voxel=await page.evaluate(()=>{
-    const before=window.Paperchalk3D.stats.voxelCount;
-    const added=window.Paperchalk3D.debugAddVoxel();
-    const middle=window.Paperchalk3D.stats.voxelCount;
-    const removed=window.Paperchalk3D.debugRemoveVoxel();
-    const after=window.Paperchalk3D.stats.voxelCount;
-    return {before,added,middle,removed,after};
-  });
-  assert(voxel.added&&voxel.middle===voxel.before+1&&voxel.removed&&voxel.after===voxel.before,
-    'voxel add/remove path failed '+JSON.stringify(voxel));
-
-  await page.evaluate(()=>window.Paperchalk3D.disable());
-  await page.waitForTimeout(80);
-  const stopped=await page.evaluate(()=>({
-    active:window.Paperchalk3D.active,
-    loop:window.Paperchalk3D.stats.loopActive,
-    hidden:document.getElementById('threeWorldLayer').hidden,
-    className:document.getElementById('world').className
+  const initial=await page.evaluate(()=>({
+    stats:window.Paperchalk3D.stats,
+    snap:window.Paperchalk3D.snapshot(),
+    resources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/three/')).map(e=>e.name),
+    canvas:document.querySelector('#threeWorldLayer canvas')?.className||''
   }));
-  assert(!stopped.active&&!stopped.loop&&stopped.hidden&&!stopped.className.includes('three-test-active'),
-    '3D engine did not suspend cleanly '+JSON.stringify(stopped));
+  assert(initial.stats.renderer==='WebGLRenderer','renderer is not WebGLRenderer '+JSON.stringify(initial.stats));
+  assert(initial.stats.drawCalls>10&&initial.stats.triangles>100,'3D scene is too empty/not rendered '+JSON.stringify(initial.stats));
+  assert(initial.stats.sceneChildren>=20,'procedural 3D village not constructed '+JSON.stringify(initial.stats));
+  assert(initial.resources.some(x=>x.includes('three.module.js'))&&initial.resources.some(x=>x.includes('three.core.js')),'Three module/core pair missing '+JSON.stringify(initial.resources));
+  assert(initial.canvas==='three-world-canvas','production 3D canvas class missing');
+  assert(initial.stats.health?.cells===10&&initial.stats.health?.tail===true,'stitched 9-cell + tail health bar missing '+JSON.stringify(initial.stats.health));
 
-  assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
-  console.log(JSON.stringify({ok:true,cold,live:live.stats,before,after,airborne,voxel,stopped},null,2));
-}finally{
-  await browser.close();
-}
+  const beforeCam=initial.stats.camera;
+  assert(beforeCam.stageView?.enabled===true&&beforeCam.stageView?.axis==='z',
+    'paper-stage camera must start fixed on Z axis '+JSON.stringify(beforeCam));
+  const canvas=page.locator('#threeWorldLayer canvas');
+  const box=await canvas.boundingBox();
+  assert(box,'canvas bounds unavailable');
+
+  await page.mouse.move(box.x+box.width*.55,box.y+box.height*.45);
+  await page.mouse.down();
+  await page.mouse.move(box.x+box.width*.70,box.y+box.height*.52,{steps:8});
+  await page.mouse.up();
+  await page.waitForTimeout(80);
+  const lockedCam=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(Math.abs(lockedCam.yaw-beforeCam.yaw)<1e-6,
+    'paper-stage camera rotated even though fixed-axis mode is enabled '+JSON.stringify({beforeCam,lockedCam}));
+
+  await page.evaluate(()=>window.Paperchalk3D.setStageView(false));
+  const freeBefore=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  await page.mouse.move(box.x+box.width*.55,box.y+box.height*.45);
+  await page.mouse.down();
+  await page.mouse.move(box.x+box.width*.70,box.y+box.height*.52,{steps:8});
+  await page.mouse.up();
+  await page.waitForTimeout(80);
+  const freeAfter=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(Math.abs(freeAfter.yaw-freeBefore.yaw)>.15,
+    'free camera did not orbit after paper-stage lock was disabled '+JSON.stringify({freeBefore,freeAfter}));
+
+  await page.evaluate(()=>{window.Paperchalk3D.setStageView(true,'x')});
+  const xStage=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(xStage.stageView?.enabled===true&&xStage.stageView?.axis==='x'&&Math.abs(xStage.yaw-Math.PI/2)<1e-6,
+    'fixed X-axis paper-stage camera failed '+JSON.stringify(xStage));
+  await page.evaluate(()=>{window.Paperchalk3D.setStageAxis('z')});
+  const afterCam=await page.evaluate(()=>window.Paperchalk3D.stats.camera);
+  assert(afterCam.stageView?.axis==='z'&&Math.abs(afterCam.yaw)<1e-6,
+    'fixed Z-axis paper-stage camera failed '+JSON.stringify(afterCam));
+
+  await page.evaluate(()=>window.Paperchalk3D.setDebugColliders(true));
+  const debugOn=await page.evaluate(()=>window.Paperchalk3D.stats.debugColliders);
+  assert(debugOn===true,'3D collider debug helpers did not enable');
+
+  await page.evaluate(()=>window.PaperchalkHealth.set(5));
+  await page.waitForTimeout(90);
+  const health5=await page.evaluate(()=>window.Paperchalk3D.stats.health);
+  assert(health5.value===5&&health5.animating>0,'3D damage animation did not start '+JSON.stringify(health5));
+  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.health?.animating===0,null,{timeout:2500});
+  const healthSettled=await page.evaluate(()=>window.Paperchalk3D.stats.health);
+  assert(healthSettled.value===5&&healthSettled.animating===0,'3D health animation did not settle '+JSON.stringify(healthSettled));
+
+  await page.evaluate(()=>window.PaperchalkHealth.set(8));
+  await page.waitForTimeout(70);
+  const healing=await page.evaluate(()=>window.Paperchalk3D.stats.health);
+  assert(healing.value===8&&healing.animating>0,'3D heal animation did not start '+JSON.stringify(healing));
+
+  await page.locator('#worldMenuBtn').click();
+  await page.waitForTimeout(100);
+  const off=await page.evaluate(()=>({active:window.Paperchalk3D.active,loop:window.Paperchalk3D.stats.loopActive,hidden:document.getElementById('threeWorldLayer').hidden}));
+  assert(!off.active&&!off.loop&&off.hidden,'3D renderer did not suspend on menu '+JSON.stringify(off));
+  assert(errors.length===0,'3D runtime errors:\n'+errors.join('\n'));
+  console.log(JSON.stringify({ok:true,initial:initial.stats,beforeCam,afterCam,health5,healing,off},null,2));
+}finally{await browser.close()}
