@@ -170,6 +170,23 @@ s = s.replace(
     'className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/40"',
     'className="sm:absolute sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 flex items-center bg-muted/30 rounded-lg p-0.5 border border-border/40 shrink-0"'
 )
+s = s.replace(
+    '<ResizablePanelGroup direction="horizontal">',
+    '<ResizablePanelGroup direction="horizontal" className="pc-main-panels">',
+    1
+)
+s = s.replace(
+    '<ResizablePanel defaultSize={18} minSize={12} maxSize={28}>',
+    '<ResizablePanel defaultSize={18} minSize={12} maxSize={28} className="pc-panel-layers">'
+)
+s = s.replace(
+    '<ResizablePanel defaultSize={nodes.length > 0 ? 62 : 100}>',
+    '<ResizablePanel defaultSize={nodes.length > 0 ? 62 : 100} className="pc-panel-canvas">'
+)
+s = s.replace(
+    'className={cn("bg-card border-l transition-all duration-300", (!nodes.length || wizardStep) && "hidden")}',
+    'className={cn("pc-panel-inspector bg-card border-l transition-all duration-300", (!nodes.length || wizardStep) && "hidden")}'
+)
 s = s.replace(">Staging</button>", ">布局</button>")
 s = s.replace(">Animation</button>", ">动画</button>")
 s = s.replace("Scroll to zoom · Alt+drag to pan", "手机：单指拖动画布 · 双指缩放/平移")
