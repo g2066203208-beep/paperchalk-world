@@ -223,7 +223,7 @@ const velocity={x:0,y:0,z:0};
 const health={current:PLAYER_MAX_HP,max:PLAYER_MAX_HP};
 const controller={
   grounded:true,crouching:false,attacking:false,attackTimer:0,attackCooldown:0,
-  action:'idle',moving:false
+  action:'idle',moving:false,torchOn:false
 };
 const playerEntity=ecs.create({
   Transform:transform,
@@ -271,7 +271,7 @@ function playerSnapshot(){
     x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw,
     vx:velocity.x,vy:velocity.y,vz:velocity.z,
     grounded:controller.grounded,crouching:controller.crouching,
-    attacking:controller.attacking,action:controller.action
+    attacking:controller.attacking,action:controller.action,torchOn:controller.torchOn
   };
 }
 function buildSnapshot(){
@@ -453,7 +453,7 @@ window.PaperchalkHealth=Object.freeze({
 });
 window.PaperchalkCombat=Object.freeze({
   get player(){return playerSnapshot()},
-  jump,attack,setCrouch,
+  jump,attack,setCrouch,toggleTorch,
   damagePlayer,healPlayer,setPlayerHp
 });
 
@@ -636,6 +636,14 @@ function decrementInventoryItem(index,count=1){
   if(!inventoryItems[index])inventorySelected=-1;
   return true;
 }
+function toggleTorch(enabled=!controller.torchOn,{notice=true,persist=true}={}){
+  controller.torchOn=!!enabled;
+  window.PaperchalkEvents?.emit('player:torch-changed',{enabled:controller.torchOn});
+  if(notice)showMapNotice(controller.torchOn?'火把已点亮':'火把已熄灭',700);
+  publish();
+  if(persist)saveWorldState();
+  return controller.torchOn;
+}
 function useSelectedItem(){
   const item=inventoryItems[inventorySelected];
   if(!item)return false;
@@ -647,6 +655,11 @@ function useSelectedItem(){
     decrementInventoryItem(inventorySelected,1);
     window.PaperchalkEvents?.emit('player:health-changed',{previous:before,current:next,delta:next-before,max:health.max,animate:true});
     renderInventory();publish();saveWorldState();
+    return true;
+  }
+  if(item.action==='toggle-torch'){
+    toggleTorch();
+    renderInventory();
     return true;
   }
   return false;
@@ -1021,8 +1034,9 @@ function defaultSave(session){
     player:{...sceneData.spawn},
     playerHp:PLAYER_MAX_HP,
     terrainEdits:[],
+    torchOn:false,
     mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
-    inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
+    inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:null)
   };
 }
 function importLegacySave(session,targetKey){
@@ -1070,6 +1084,7 @@ function saveWorldState(){
   save.worldMinutes=worldMinutes;
   save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
   save.playerHp=health.current;
+  save.torchOn=controller.torchOn;
   save.terrainEdits=terrain.exportEdits();
   save.inventory=inventorySnapshot();
   save.mapState=save.mapState||{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false};
@@ -1091,8 +1106,13 @@ function loadWorldState(){
   controller.grounded=groundProbe();
   controller.crouching=false;controller.attacking=false;controller.action='idle';
   health.current=clampHp(save.playerHp);
+  controller.torchOn=!!save.torchOn;
   worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
   setInventoryFromSave(save.inventory);
+  if(!inventoryItems.some(item=>item?.id==='hand-torch')){
+    inventoryItems[0]={...itemClone(CONTENT.items['hand-torch']),count:1};
+    renderInventory();
+  }
   paperClock.textContent=formatClock();
   publish();
   return true;
@@ -1233,6 +1253,12 @@ window.PaperchalkHandleBack=function(){
   return false;
 };
 
+addEventListener('keydown',event=>{
+  if(event.code==='KeyT'&&worldInteractive()){
+    event.preventDefault();
+    toggleTorch();
+  }
+});
 addEventListener('pagehide',saveWorldState);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)saveWorldState()});
 addEventListener('unhandledrejection',event=>{
