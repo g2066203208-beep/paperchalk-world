@@ -52,3 +52,32 @@ Official references:
 - https://github.com/EsotericSoftware/spine-runtimes
 - https://esotericsoftware.com/spine-android
 - https://esotericsoftware.com/spine-runtimes
+
+
+## V2 authoring studio
+
+The APK now includes a mobile authoring studio built from a pinned MIT-licensed Stretchy Studio revision. It is served through Android's secure `appassets.androidplatform.net` origin so PSD file input, WebGL and camera APIs work inside WebView.
+
+Features:
+
+- Layered PSD import and automatic layer/group reconstruction (`ag-psd` upstream).
+- Heuristic auto-rig that works locally without a model download.
+- Optional DWPose/ONNX auto-rig for higher-accuracy whole-body joint placement.
+- Mesh generation, triangle/vertex editing, vertex skinning and mesh deformation/warp animation.
+- Keyframe timeline and animation clips.
+- Camera pose tracking bridge using MediaPipe Pose Landmarker. The first detected pose becomes the calibration pose; body/limb rotations are written as non-destructive draft poses.
+- Motion capture recording: camera samples are compressed and written directly into a new 30 fps timeline animation.
+- Clean canvas recording: records the largest WebGL/Canvas surface only, not the Android toolbar. MediaRecorder data is flushed to Android storage every second rather than accumulated for the whole recording.
+- No application-imposed recording duration. Real limits are device thermal/battery state, codec/WebView behavior, available storage and filesystem/media-container limits.
+- On-device one-tap foreground cutout using MediaPipe Selfie Segmenter, with transparent PNG output and alpha-bound trimming.
+
+### Important scope note
+
+The foreground cutout model is a person/selfie segmenter. It is useful for human and human-like characters, but it is not equivalent to semantic anime layer decomposition. For a single flattened anime illustration, high-quality automatic separation into hair/face/arms/clothes/etc. is a different task (for example the See-Through research/model family). A layered PSD remains the preferred input for reliable auto-rigging.
+
+### Third-party components
+
+- Stretchy Studio — MIT, pinned at `24a83a27ba43e43e9d2e3de5e33994594e6199c2`.
+- ag-psd — MIT (transitively used by Stretchy Studio).
+- MediaPipe / Tasks Vision — Apache-2.0 APIs; camera pose tracking and foreground segmentation.
+- Official Spine Android runtime — Spine Runtimes License (separate from the MIT/Apache components).
