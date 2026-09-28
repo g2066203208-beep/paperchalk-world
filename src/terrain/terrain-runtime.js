@@ -35,7 +35,7 @@ class TerrainChunk{
         }
         const surface=this.world.surfaceCell(gx,gz);
         const ly=surface-baseY;
-        if(ly>=0&&ly<n)this.voxels[this.index(lx,ly,lz)]=TILE.GRASS;
+        if(ly>=0&&ly<n)this.voxels[this.index(lx,ly,lz)]=this.world.surfaceTile(gx,gz);
       }
     }
   }
@@ -382,8 +382,8 @@ class TerrainWorld{
     this.seed=seed|0;
     this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
     this.blackBackRowZ=Number.isFinite(Number(blackBackRowZ))?Math.floor(Number(blackBackRowZ)):this.interactionRowZ-1;
-    this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();
-    this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';
+    this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();this.biomeChunkCache=new Map();
+    this.changeVersion=0;this.generatorVersion=5;this.noiseBackend='deterministic-fallback';
     this.water=new WaterWorld(this);
 
     const F=global.FastNoiseLite;
@@ -416,27 +416,47 @@ class TerrainWorld{
       this.strataNoise.SetFrequency(.055);
       this.noiseBackend='FastNoiseLite-1.1.1';
     }
+    const BiomeGenerator=global.PaperchalkBiomeRuntime?.BiomeLandformGenerator;
+    this.biomeGenerator=BiomeGenerator?new BiomeGenerator({
+      seed:this.seed,spawnX:0,spawnZ:this.interactionRowZ,spawnSafeRadius:22
+    }):null;
+    if(this.biomeGenerator)this.noiseBackend=this.biomeGenerator.backend+' + '+this.noiseBackend;
   }
   _hash(x,y=0,z=0){
     let h=(Math.imul((x|0)^this.seed,0x45d9f3b)+Math.imul((y|0)^0x9e3779b9,0x119de1f3)+Math.imul((z|0)^0x85ebca6b,0x27d4eb2d))|0;
     h^=h>>>16;h=Math.imul(h,0x45d9f3b);h^=h>>>16;return (h>>>0)/4294967295;
   }
-  surfaceCell(gx,gz=0){
-    if(this.surfaceNoise){
-      const broad=this.surfaceNoise.GetNoise(gx,gz);
-      const detail=this.detailNoise.GetNoise(gx+71,gz-113);
-      return Math.floor(3+broad*9+detail*2.4);
-    }
-    return Math.floor(3+Math.sin((gx+this.seed*.001)*.027)*6+Math.cos((gz-this.seed*.001)*.031)*5+(this._hash(gx,0,gz)-.5)*3);
+  terrainProfile(gx,gz=0){
+    if(this.biomeGenerator)return this.biomeGenerator.sample(gx,gz);
+    const height=this.surfaceNoise
+      ?Math.floor(3+this.surfaceNoise.GetNoise(gx,gz)*9+this.detailNoise.GetNoise(gx+71,gz-113)*2.4)
+      :Math.floor(3+Math.sin((gx+this.seed*.001)*.027)*6+Math.cos((gz-this.seed*.001)*.031)*5+(this._hash(gx,0,gz)-.5)*3);
+    return {gx,gz,height,heightFloat:height,biome:'meadow',landform:'rolling-hills',surfaceKind:'grass',subsurfaceKind:'dirt',riverMask:0,mountainMask:0};
+  }
+  surfaceCell(gx,gz=0){return this.terrainProfile(gx,gz).height}
+  _kindToTile(kind){
+    if(kind==='sand')return TILE.SAND;
+    if(kind==='stone')return TILE.STONE;
+    if(kind==='clay')return TILE.CLAY;
+    if(kind==='dirt')return TILE.DIRT;
+    return TILE.GRASS;
+  }
+  surfaceTile(gx,gz=0){return this._kindToTile(this.terrainProfile(gx,gz).surfaceKind)}
+  biomeAt(gx,gz=0){return this.terrainProfile(gx,gz).biome}
+  landformAt(gx,gz=0){return this.terrainProfile(gx,gz).landform}
+  sampleAtWorld(x,z=0){
+    const s=this.tileSize,gx=Math.floor(Number(x)/s),gz=Math.floor(Number(z)/s+.5);
+    return this.terrainProfile(gx,gz);
   }
   generateVoxel(gx,gy,gz){
-    const surface=this.surfaceCell(gx,gz);
+    const profile=this.terrainProfile(gx,gz);
+    const surface=profile.height;
     if(gy>surface)return TILE.AIR;
     const depth=surface-gy;
 
     // Only the configured interaction row keeps a complete underground column.
     // Every other Z row is a one-voxel surface shell for 3D scenery only.
-    if(gz!==this.interactionRowZ)return depth===0?TILE.GRASS:TILE.AIR;
+    if(gz!==this.interactionRowZ)return depth===0?this._kindToTile(profile.surfaceKind):TILE.AIR;
 
     if(depth>4&&gy>-96&&gy<surface-2){
       if(this.caveNoise){
@@ -449,12 +469,16 @@ class TerrainWorld{
       }
     }
 
-    if(depth===0)return TILE.GRASS;
-    if(depth<6)return TILE.DIRT;
+    if(depth===0)return this._kindToTile(profile.surfaceKind);
+    const subsurface=this._kindToTile(profile.subsurfaceKind);
+    const soilDepth=profile.biome==='alpine'?2:profile.biome==='dry-steppe'?5:profile.biome==='marsh'?7:6;
+    if(depth<soilDepth)return subsurface;
     if(this.strataNoise){
       const strata=this.strataNoise.GetNoise(gx,gy,gz);
-      if(depth<18&&strata>.52)return TILE.CLAY;
-      if(depth<16&&strata<-.55)return TILE.SAND;
+      if(profile.biome==='claylands'&&depth<20)return TILE.CLAY;
+      if(profile.biome==='dry-steppe'&&depth<18&&strata<.58)return TILE.SAND;
+      if(depth<18&&strata>.58)return TILE.CLAY;
+      if(depth<16&&strata<-.62)return TILE.SAND;
     }
     return TILE.STONE;
   }
@@ -462,7 +486,7 @@ class TerrainWorld{
     const surface=this.surfaceCell(gx,this.interactionRowZ);
     if(gy>surface)return TILE.AIR;
     // The entire exposed surface voxel is ordinary grass terrain.
-    if(gy===surface)return TILE.GRASS;
+    if(gy===surface)return this.surfaceTile(gx,this.interactionRowZ);
     // Only buried rear voxels are the absolute-black backing layer.
     return TILE.STONE;
   }
@@ -478,7 +502,21 @@ class TerrainWorld{
     }
     const range={min,max};this.surfaceRangeCache.set(key,range);return range;
   }
-  chunkContainsInteractionRow(cz){
+  biomeSummaryForChunk(cx,cz){
+    const key=cx+','+cz,cached=this.biomeChunkCache.get(key);if(cached)return cached;
+    const n=this.chunkSize,counts=new Map(),landforms=new Map();
+    let min=Infinity,max=-Infinity;
+    for(let lz=0;lz<n;lz+=4)for(let lx=0;lx<n;lx+=4){
+      const p=this.terrainProfile(cx*n+lx,cz*n+lz);
+      counts.set(p.biome,(counts.get(p.biome)||0)+1);
+      landforms.set(p.landform,(landforms.get(p.landform)||0)+1);
+      min=Math.min(min,p.height);max=Math.max(max,p.height);
+    }
+    const dominant=map=>[...map.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||'unknown';
+    const summary={biome:dominant(counts),landform:dominant(landforms),minHeight:min,maxHeight:max};
+    this.biomeChunkCache.set(key,summary);return summary;
+  }
+    chunkContainsInteractionRow(cz){
     const n=this.chunkSize;
     return this.interactionRowZ>=cz*n&&this.interactionRowZ<(cz+1)*n;
   }
@@ -594,7 +632,7 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'normal-grass',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,water:this.water?.stats?.()||null};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
   }
 }
 
