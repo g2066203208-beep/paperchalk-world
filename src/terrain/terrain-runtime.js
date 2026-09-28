@@ -53,6 +53,7 @@ class WaterWorld{
     this.cells=new Map();
     this.dirtyChunks=new Set();
     this.surfaceCache=new Map();
+    this.boundsCache=new Map();
     this.version=0;
     this.tick=0;
     this.levels=8;
@@ -94,6 +95,7 @@ class WaterWorld{
     if(prev===level)return false;
     if(level<=0)this.cells.delete(key);else this.cells.set(key,level);
     this.surfaceCache.delete(this.columnKey(gx,gz));
+    this.boundsCache.delete(this.columnKey(gx,gz));
     this.version++;this._markNeighborhoodDirty(gx,gy,gz);
     return true;
   }
@@ -287,7 +289,7 @@ class WaterWorld{
 
     let changed=before.size!==next.size;
     const keys=new Set([...before.keys(),...next.keys()]);
-    this.cells=next;this.surfaceCache.clear();
+    this.cells=next;this.surfaceCache.clear();this.boundsCache.clear();
     for(const key of keys){
       const old=before.get(key)||0,now=next.get(key)||0;
       if(old!==now){
@@ -325,6 +327,31 @@ class WaterWorld{
     const y=this.highestSurfaceY(gx,gz);
     return Number.isFinite(y)?{gx,gz,y,levelColumn:true}:null;
   }
+  columnBounds(gx,gz){
+    const ck=this.columnKey(gx,gz),cached=this.boundsCache.get(ck);
+    if(cached!==undefined)return cached;
+    let bottom=Infinity,top=-Infinity,cells=0,layers=0;
+    const s=this.terrain.tileSize;
+    for(const [key,level] of this.cells){
+      if(!level)continue;
+      const [x,gy,z]=this.parse(key);
+      if(x!==gx||z!==gz)continue;
+      cells++;layers+=level;
+      bottom=Math.min(bottom,gy*s);
+      top=Math.max(top,gy*s+(level/8)*s);
+    }
+    const out=Number.isFinite(top)?{gx,gz,bottom,top,depth:Math.max(0,top-bottom),cells,layers}:null;
+    this.boundsCache.set(ck,out);
+    return out;
+  }
+  boundsAtWorld(x,z){
+    const s=this.terrain.tileSize,gx=Math.floor(x/s),gz=Math.floor(z/s+.5);
+    return this.columnBounds(gx,gz);
+  }
+  containsPoint(x,y,z,margin=.04){
+    const b=this.boundsAtWorld(x,z);
+    return !!b&&y>=b.bottom+margin&&y<=b.top-margin;
+  }
   submersionAABB(x,y,z,halfW,halfH,halfD){
     const s=this.terrain.tileSize;
     const minX=x-halfW,maxX=x+halfW,minY=y-halfH,maxY=y+halfH,minZ=z-halfD,maxZ=z+halfD;
@@ -350,7 +377,7 @@ class WaterWorld{
     return rows;
   }
   importState(rows){
-    this.cells.clear();this.dirtyChunks.clear();this.surfaceCache.clear();
+    this.cells.clear();this.dirtyChunks.clear();this.surfaceCache.clear();this.boundsCache.clear();
     for(const row of Array.isArray(rows)?rows:[]){
       if(!Array.isArray(row)||row.length<4)continue;
       const [gx,gy,gz,level]=row.map(Number);
