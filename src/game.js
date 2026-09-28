@@ -1,6 +1,6 @@
-/* Paperchalk World production gameplay runtime.
- * The world is simulated in 3D (X/Y/Z) and rendered only by Three.js.
- * DOM is reserved for menus, inventory, map and debug controls.
+/* Paperchalk World gameplay runtime.
+ * Gameplay is Terraria-style 2D (X/Y) on one voxel layer.
+ * Three.js provides the 3D paper-stage depth; Z is presentation-only.
  */
 (function(){
 'use strict';
@@ -11,6 +11,8 @@ const SAVE_RUNTIME=window.PaperchalkSaveRuntime;
 if(!SAVE_RUNTIME)throw new Error('PaperchalkSaveRuntime missing');
 const ECS=window.PaperchalkECS;
 if(!ECS)throw new Error('PaperchalkECS missing');
+const TerrainRuntime=window.PaperchalkTerrainRuntime;
+if(!TerrainRuntime)throw new Error('PaperchalkTerrainRuntime missing');
 
 const byId=id=>{
   const node=document.getElementById(id);
@@ -91,10 +93,12 @@ const PLAYER_MAX_HP=10;
 const INVENTORY_CAPACITY=20;
 const FIXED_DT=1/60;
 const MAX_FRAME_DT=.06;
-const GRAVITY=18.5;
-const JUMP_SPEED=7.2;
-const PLAYER_SPEED=5.15;
-const PLAYER_RADIUS=.38;
+const GRAVITY=22;
+const JUMP_SPEED=7.4;
+const PLAYER_SPEED=4.6;
+const PLAYER_HALF_W=.34;
+const PLAYER_HALF_H=.95;
+const TERRAIN_REACH=4.5;
 const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
 const KEY_SAVE_PREFIX='paperchalk.save.v4.';
@@ -103,6 +107,12 @@ const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
 const bounds=sceneData.bounds;
+const terrain=new TerrainRuntime.TerrainWorld({
+  tileSize:sceneData.terrain?.tileSize??.25,
+  chunkSize:sceneData.terrain?.chunkSize??64,
+  seed:sceneData.terrain?.seed??24681357
+});
+window.PaperchalkTerrain=terrain;
 
 const memoryStore={};
 function storageGet(key){
@@ -129,7 +139,7 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
 }
 
 const defaultCamera=Object.freeze({
-  yaw:.72,pitch:.42,distance:14,fov:55,
+  yaw:0,pitch:0,distance:18,fov:42,
   stageView:Object.freeze({enabled:true,axis:'z',side:1})
 });
 function getSettings(){
@@ -215,11 +225,8 @@ const playerEntity=ecs.create({
   Player:controller
 });
 
-const buildingColliders=(sceneData.buildings||[]).map(b=>({
-  id:b.id,
-  minX:b.x-b.width*.5,maxX:b.x+b.width*.5,
-  minZ:b.z-b.depth*.5,maxZ:b.z+b.depth*.5
-}));
+// World collision now comes exclusively from the X/Y single-layer terrain.
+const buildingColliders=[];
 
 let active=false;
 let worldMinutes=360;
@@ -267,7 +274,8 @@ function buildSnapshot(){
     player:playerSnapshot(),
     health:{current:health.current,max:health.max},
     world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase()},
-    scene:{id:'village-3d',name:'A村 3D场景'},
+    scene:{id:'village-paper-stage',name:'A村 · 单层体素纸片舞台'},
+    terrain:terrain.stats(),
     debug:{colliders:debugColliders},
     ecs:ecs.stats()
   };
