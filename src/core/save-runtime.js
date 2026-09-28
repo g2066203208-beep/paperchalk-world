@@ -1,9 +1,9 @@
-/* Versioned Paperchalk World save codec for the production 3D runtime. */
+/* Versioned Paperchalk World save codec for the paper-stage voxel runtime. */
 (function(global){
 'use strict';
 
-const CURRENT_SCHEMA=4;
-const GAME_VERSION='1.0.0-3d-alpha';
+const CURRENT_SCHEMA=5;
+const GAME_VERSION='1.1.0-paper-stage-voxel';
 
 function cloneJson(value){return JSON.parse(JSON.stringify(value))}
 function finiteOr(value,fallback){return Number.isFinite(value)?value:fallback}
@@ -12,16 +12,16 @@ function finitePlayer(value){
   if(!value||typeof value!=='object')return null;
   return {
     x:finiteOr(value.x,0),
-    y:Math.max(0,finiteOr(value.y,0)),
-    z:finiteOr(value.z,13),
+    y:finiteOr(value.y,0),
+    z:finiteOr(value.z,.36),
     yaw:finiteOr(value.yaw,Math.PI)
   };
 }
 
-function migrateToV4(input){
+function migrateToV5(input){
   const save=input&&typeof input==='object'?cloneJson(input):{};
   const sourceVersion=Number.isFinite(save.schemaVersion)?save.schemaVersion:2;
-  save.schemaVersion=4;
+  save.schemaVersion=5;
   save.gameVersion=typeof save.gameVersion==='string'?save.gameVersion:GAME_VERSION;
   save.createdAt=finiteOr(save.createdAt,Date.now());
   save.updatedAt=finiteOr(save.updatedAt,save.createdAt);
@@ -36,13 +36,14 @@ function migrateToV4(input){
     const legacyY=finiteOr(save.playerY,0);
     player={
       x:(legacyX-460)/128,
-      y:Math.max(0,legacyY/128),
-      z:13,
+      y:legacyY/128,
+      z:.36,
       yaw:finiteOr(save.routeOrientation?.sign,1)<0?-Math.PI/2:Math.PI/2
     };
   }
   save.player=player;
 
+  save.terrainDeltas=asArray(save.terrainDeltas);
   save.mapState=save.mapState&&typeof save.mapState==='object'?save.mapState:{};
   save.mapState.visitedNodes=asArray(save.mapState.visitedNodes,['village']);
   save.mapState.visitedRoutes=asArray(save.mapState.visitedRoutes,[0]);
@@ -65,7 +66,7 @@ function migrate(input){
   if(!input||typeof input!=='object')throw new Error('Save payload must be an object');
   const version=Number.isFinite(input.schemaVersion)?input.schemaVersion:2;
   if(version>CURRENT_SCHEMA)throw new Error('Save schema '+version+' is newer than runtime '+CURRENT_SCHEMA);
-  return migrateToV4(input);
+  return migrateToV5(input);
 }
 
 function validate(save,{account=null}={}){
@@ -75,7 +76,7 @@ function validate(save,{account=null}={}){
     if(save.schemaVersion!==CURRENT_SCHEMA)errors.push('schemaVersion must be '+CURRENT_SCHEMA);
     if(account!==null&&save.account!==account)errors.push('account/profile id mismatch');
     if(!Number.isFinite(save.createdAt))errors.push('createdAt must be finite');
-    if(!save.player||![save.player.x,save.player.y,save.player.z,save.player.yaw].every(Number.isFinite))errors.push('player 3D transform missing');
+    if(!save.player||![save.player.x,save.player.y,save.player.z,save.player.yaw].every(Number.isFinite))errors.push('player paper-stage transform missing');
     if(!Array.isArray(save.inventory))errors.push('inventory must be an array');
   }
   return {ok:errors.length===0,errors};
