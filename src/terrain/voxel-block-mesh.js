@@ -29,7 +29,7 @@ function pushQuad(buffer,p,du,dv,normal,color,uvScale,flip=false,darknessFn=null
     buffer.positions.push(v[0],v[1],v[2]);
     buffer.normals.push(normal[0],normal[1],normal[2]);
     buffer.colors.push(color.r,color.g,color.b);
-    buffer.darkness.push(darknessFn?darknessFn(v):0);
+    buffer.darkness.push(darknessFn?darknessFn(v,normal):0);
   }
   const [uw,vh]=uvScale;
   buffer.uvs.push(0,0,uw,0,uw,vh,0,vh);
@@ -53,7 +53,8 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
   for(let y=0;y<n;y++)for(let z=0;z<n;z++)for(let x=0;x<n;x++)if(terrain.isSolidTile(chunk.get(x,y,z)))solidVoxels++;
 
   const sample=(x,y,z)=>getLocalOrWorld(terrain,chunk,x,y,z);
-  const darknessAt=(v)=>{
+  const darknessAt=(v,normal)=>{
+    if(Math.abs(normal?.[2]||0)<.5)return 0;
     const gx=chunk.cx*n+Math.max(0,Math.min(n-1,Math.floor(v[0]/s-.0001)));
     const gyWorld=chunk.cy*n*s+v[1];
     const gz=chunk.cz*n+Math.max(0,Math.min(n-1,Math.floor(v[2]/s-.0001)));
