@@ -408,8 +408,8 @@ export class World3DEngine{
       this.torch.root.visible=on;
       if(on){
         const flicker=.92+Math.sin(performance.now()*.017)*.06+Math.sin(performance.now()*.041)*.03;
-        this.torch.light.intensity=2.9*flicker;
-        this.torch.light.distance=11;
+        this.torch.light.intensity=4.2*flicker;
+        this.torch.light.distance=12;
         this.torch.flame.scale.set(.72,1.25+.18*Math.sin(performance.now()*.029),.72);
       }else this.torch.light.intensity=0;
     }
