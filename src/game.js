@@ -278,7 +278,7 @@ function publish(){
   return snap;
 }
 window.PaperchalkRuntime=Object.freeze({
-  version:4,
+  version:5,
   getSnapshot:buildSnapshot,
   subscribe(listener){
     if(typeof listener!=='function')throw new TypeError('runtime listener must be a function');
@@ -858,7 +858,12 @@ window.addEventListener('keydown',event=>{
   if(event.code==='Escape'){if(window.PaperchalkHandleBack())event.preventDefault();return}
   if(!worldInteractive())return;
   if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(event.code)){
-    keys.add(event.code);event.preventDefault();return;
+    if(event.code==='KeyW'||event.code==='ArrowUp'){
+      if(!event.repeat)jump();
+    }else if(event.code==='KeyS'||event.code==='ArrowDown'){
+      keyboardCrouch=true;setCrouch(true);
+    }else keys.add(event.code);
+    event.preventDefault();return;
   }
   if(event.code==='Space'){if(!event.repeat)jump();event.preventDefault();return}
   if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
@@ -910,7 +915,7 @@ function stopGameLoop(){
 
 function defaultSave(session){
   return {
-    schemaVersion:4,
+    schemaVersion:5,
     gameVersion:SAVE_RUNTIME.gameVersion,
     account:session.account,
     location:'A村 · 单层体素纸片舞台',
