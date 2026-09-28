@@ -128,9 +128,18 @@ const terrain=new TerrainRuntime.TerrainWorld({
   chunkSize:sceneData.terrain?.chunkSize??16,
   seed:sceneData.terrain?.seed??24681357,
   interactionRowZ:INTERACTION_ROW_Z,
-  blackBackRowZ:sceneData.terrain?.blackBackRowZ??(INTERACTION_ROW_Z-1)
+  blackBackRowZ:sceneData.terrain?.blackBackRowZ??(INTERACTION_ROW_Z-1),
+  biomeConfig:sceneData.terrain?.biome||null
 });
 window.PaperchalkTerrain=terrain;
+window.PaperchalkBiomes=Object.freeze({
+  sampleCell(gx,gz=0){return terrain.terrainProfile(gx,gz)},
+  sampleWorld(x,z=0){return terrain.sampleAtWorld(x,z)},
+  biomeAt(gx,gz=0){return terrain.biomeAt(gx,gz)},
+  landformAt(gx,gz=0){return terrain.landformAt(gx,gz)},
+  chunkSummary(cx,cz){return terrain.biomeSummaryForChunk(cx,cz)},
+  get stats(){return terrain.biomeGenerator?.stats?.()||null}
+});
 
 const memoryStore={};
 function storageGet(key){
@@ -329,6 +338,7 @@ function playerSnapshot(){
   };
 }
 function buildSnapshot(){
+  const environment=terrain.sampleAtWorld(transform.x,transform.z);
   return {
     version:runtimeVersion,
     active,
@@ -336,7 +346,7 @@ function buildSnapshot(){
     health:{current:health.current,max:health.max},
     hunger:hungerSnapshot(),
     fishing:fishingSnapshot(),
-    world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase()},
+    world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
     scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
     terrain:terrain.stats(),
     debug:{colliders:debugColliders},
