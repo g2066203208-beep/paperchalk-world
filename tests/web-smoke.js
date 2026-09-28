@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r7'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r8'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -40,4 +40,9 @@ assert(game.includes("action==='toggle-torch'"),'torch inventory action missing'
 assert(engine.includes('mesh.receiveShadow=true;mesh.castShadow=true'),'voxel chunks must cast and receive sunlight shadows');
 assert(engine.includes('interactionOnly:true'),'interaction-only voxel raycast missing');
 assert(engine.includes('z===this.interactionRowZ'),'non-interaction rows are not ignored by picking');
+assert(html.includes('id="quickbar"')&&html.includes('data-quick-slot="0"'),'visible quickbar missing');
+assert(game.includes('activateQuickSlot(index)'),'quickbar activation missing');
+assert(game.includes("event.code==='KeyT'"),'torch hotkey missing');
+assert(engine.includes('new THREE.PointLight(0xffa24f'),'torch is not a real point light');
+assert(engine.includes('this.torch.light.intensity=4.2*flicker'),'torch light intensity missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
