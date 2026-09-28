@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r3'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r4'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -28,4 +28,6 @@ assert(engine.includes('sun.castShadow=true'),'sun shadowing missing');
 assert(engine.includes("visible-sun"),'visible sun mesh missing');
 assert(engine.includes('sun.intensity=daylight*3.8'),'daylight sun intensity missing');
 assert(engine.includes('mesh.receiveShadow=true;mesh.castShadow=true'),'voxel chunks must cast and receive sunlight shadows');
+assert(engine.includes('interactionOnly=true'),'interaction-only voxel raycast missing');
+assert(engine.includes('z===this.interactionRowZ'),'non-interaction rows are not ignored by picking');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
