@@ -259,7 +259,8 @@ export class World3DEngine{
     this.sceneData=this.content.scene3d||{};
     this.layers=this.sceneData.layers||{far:-8,rear:-3,terrain:0,actor:.45,front:2.5};
     this.scene=new THREE.Scene();
-    this.scene.background=new THREE.Color(0x000000);
+    this.fixedBackgroundColor=new THREE.Color(0x6f7fa8);
+    this.scene.background=this.fixedBackgroundColor.clone();
     this.camera=new THREE.PerspectiveCamera(42,1,.05,140);
     this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,height:.65,fov:42};
     this.stageView={enabled:false,axis:'z',side:1};
@@ -272,6 +273,7 @@ export class World3DEngine{
     this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,2));
     this.renderer.setPixelRatio(this.pixelRatio);
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
+    this.renderer.setClearColor(this.fixedBackgroundColor,1);
     this.renderer.toneMapping=THREE.NoToneMapping;
     this.renderer.shadowMap.enabled=true;
     this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -557,19 +559,10 @@ export class World3DEngine{
     const undergroundDepth=Math.max(0,localSurfaceY-p.y);
     const undergroundFactor=Math.max(0,Math.min(1,(undergroundDepth-.35)/2.4));
 
-    const daySky=new this.THREE.Color(0x9bd4f2);
-    const duskSky=new this.THREE.Color(0x7c5876);
-    const nightSky=new this.THREE.Color(0x0c1b31);
-    const undergroundVoid=new this.THREE.Color(0x010203);
-    let sky;
-    if(daylight>.08)sky=nightSky.clone().lerp(daySky,Math.min(1,.22+daylight*.95));
-    else if(twilight>.08)sky=nightSky.clone().lerp(duskSky,Math.min(1,twilight*.72));
-    else sky=nightSky.clone();
-    // Non-interaction rows intentionally have no underground volume. When the
-    // player descends below the local surface, fade the world background to an
-    // almost-black void so missing scenery shells never look like blue sky.
-    sky.lerp(undergroundVoid,undergroundFactor);
-    this.scene.background.copy(sky);
+    // Background is intentionally uniform everywhere: same blue above ground,
+    // underground, at every Y height and at every time of day.
+    this.scene.background.copy(this.fixedBackgroundColor);
+    this.renderer.setClearColor(this.fixedBackgroundColor,1);
 
     const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,ambient=this.terrainLights?.ambient,moon=this.terrainLights?.moon;
     const sunDisc=this.terrainLights?.sunDisc,moonDisc=this.terrainLights?.moonDisc;
@@ -680,7 +673,7 @@ export class World3DEngine{
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
-      lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+      lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
       undergroundOcclusion:{mode:'culled-buried-z-faces-v9',backgroundProvidesBlack:true,noBuriedDepthFaces:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
