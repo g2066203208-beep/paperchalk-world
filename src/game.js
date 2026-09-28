@@ -379,7 +379,7 @@ ecs.registerSystem('player-movement',{
     const input=context.interactive?rawMoveInput():{horizontal:0,magnitude:0};
     const submerged=playerSubmersion();
     controller.submerged=submerged;controller.inWater=submerged>.06;
-    const swimFactor=controller.inWater?.58:1;
+    const swimFactor=controller.inWater ? .58 : 1;
     const speed=PLAYER_SPEED*(controller.crouching?.48:1)*swimFactor;
     velocity.x=input.horizontal*speed;
     velocity.z=0;
