@@ -458,14 +458,22 @@ export class World3DEngine{
     const twilight=Math.max(0,1-Math.abs(Math.sin(angle))*2.6);
     const p=snapshot?.player||this.lastSnapshot?.player||{x:0,y:0,z:0};
     const exposure=this._skyExposureAt(p);
+    const localSurfaceY=(this.terrain.surfaceCell(Math.floor(p.x/this.terrain.tileSize),Math.floor(p.z/this.terrain.tileSize))+1)*this.terrain.tileSize;
+    const undergroundDepth=Math.max(0,localSurfaceY-p.y);
+    const undergroundFactor=Math.max(0,Math.min(1,(undergroundDepth-.35)/2.4));
 
     const daySky=new this.THREE.Color(0x9bd4f2);
     const duskSky=new this.THREE.Color(0x7c5876);
     const nightSky=new this.THREE.Color(0x0c1b31);
+    const undergroundVoid=new this.THREE.Color(0x010203);
     let sky;
     if(daylight>.08)sky=nightSky.clone().lerp(daySky,Math.min(1,.22+daylight*.95));
     else if(twilight>.08)sky=nightSky.clone().lerp(duskSky,Math.min(1,twilight*.72));
     else sky=nightSky.clone();
+    // Non-interaction rows intentionally have no underground volume. When the
+    // player descends below the local surface, fade the world background to an
+    // almost-black void so missing scenery shells never look like blue sky.
+    sky.lerp(undergroundVoid,undergroundFactor);
     this.scene.background.copy(sky);
 
     const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,ambient=this.terrainLights?.ambient,moon=this.terrainLights?.moon;
@@ -476,35 +484,38 @@ export class World3DEngine{
     const sz=22;
 
     if(sun){
-      sun.intensity=daylight*3.4;
+      sun.intensity=daylight*3.4*(1-undergroundFactor*.92);
       sun.position.set(p.x+sx,p.y+sy,p.z+sz);
       sun.target.position.set(p.x,p.y-2,p.z);
       sun.target.updateMatrixWorld();
     }
     if(skyFill){
       const outdoor=.62+daylight*1.05+twilight*.28+night*.18;
-      const underground=.16+night*.08;
-      skyFill.intensity=underground+(outdoor-underground)*exposure;
+      const underground=.12+night*.06;
+      const exposed=underground+(outdoor-underground)*exposure;
+      skyFill.intensity=exposed*(1-undergroundFactor*.62);
     }
     if(ambient){
-      ambient.intensity=.10+daylight*.11+night*.07;
+      ambient.intensity=(.10+daylight*.11+night*.07)*(1-undergroundFactor*.45);
     }
     if(moon){
-      moon.intensity=night*.72*Math.max(.35,exposure);
+      moon.intensity=night*.72*Math.max(.35,exposure)*(1-undergroundFactor*.88);
       moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
       moon.target.position.set(p.x,p.y-1,p.z);
       moon.target.updateMatrixWorld();
     }
     if(sunDisc){
-      sunDisc.visible=daylight>.02;
+      sunDisc.visible=daylight>.02&&undergroundFactor<.15;
       sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
       sunDisc.scale.setScalar(.8+daylight*.35);
     }
     if(moonDisc){
-      moonDisc.visible=night>.03;
+      moonDisc.visible=night>.03&&undergroundFactor<.15;
       moonDisc.position.set(p.x-sx*1.45,p.y+Math.max(14,sy*1.2),p.z-sz*1.1);
     }
     this.skyExposure=exposure;
+    this.undergroundDepth=undergroundDepth;
+    this.undergroundFactor=undergroundFactor;
   }
   update(dt,snapshot=this.lastSnapshot){
     if(snapshot)this.lastSnapshot=snapshot;
@@ -573,7 +584,7 @@ export class World3DEngine{
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
-      lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+      lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
