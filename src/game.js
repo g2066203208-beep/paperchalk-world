@@ -852,8 +852,18 @@ window.PaperchalkEvents?.emit('fishing:bobber-water',fishingSnapshot());
 updateSurvivalHud();return;
 }
 const ground=terrain.highestGroundY(fishing.x,fishing.z);
-if((fishing.y<=ground+.05&&fishing.timer>.12)||fishing.timer>2.4){
+const validTargetWater=terrain.water.surfaceAtWorld(fishing.castX,fishing.castZ);
+const castTimeout=Math.max(1.4,(fishing.flightTime||.7)+.75);
+// If the player explicitly clicked a valid water surface, keep the ballistic cast
+// committed to that target instead of letting intervening terrain cancel it.
+if(!validTargetWater&&((fishing.y<=ground+.05&&fishing.timer>.12)||fishing.timer>castTimeout)){
 showMapNotice('浮漂没有落到目标水面。',800);resetFishing('landed');return;
+}
+if(validTargetWater&&fishing.timer>castTimeout){
+fishing.x=fishing.castX;fishing.y=validTargetWater.y+.06;fishing.z=fishing.castZ;
+fishing.vx=fishing.vy=fishing.vz=0;fishing.state='waiting';fishing.timer=0;
+window.PaperchalkEvents?.emit('fishing:bobber-water',fishingSnapshot());
+updateSurvivalHud();publish();return;
 }
 }else if(fishing.state==='waiting'){
 const water=waterSurfaceNear(fishing.x,fishing.z,1);
