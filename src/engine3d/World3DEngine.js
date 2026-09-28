@@ -105,7 +105,7 @@ class TerrainChunkRenderer{
     const span=chunk.size*this.terrain.tileSize;
     mesh.name='voxel-chunk:'+cx+','+cy+','+cz;
     mesh.position.set(cx*span,cy*span,cz*span);
-    mesh.receiveShadow=true;mesh.castShadow=false;
+    mesh.receiveShadow=true;mesh.castShadow=true;
     mesh.userData={cx,cy,cz,...geometry.userData};
     return {mesh,version:chunk.version,cx,cy,cz};
   }
@@ -166,7 +166,7 @@ export class World3DEngine{
     this.sceneData=this.content.scene3d||{};
     this.layers=this.sceneData.layers||{far:-8,rear:-3,terrain:0,actor:.45,front:2.5};
     this.scene=new THREE.Scene();
-    this.scene.background=new THREE.Color('#b9cbd4');
+    this.scene.background=new THREE.Color(0x000000);
     this.camera=new THREE.PerspectiveCamera(42,1,.05,140);
     this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,height:.65,fov:42};
     this.stageView={enabled:false,axis:'z',side:1};
@@ -180,7 +180,8 @@ export class World3DEngine{
     this.renderer.setPixelRatio(this.pixelRatio);
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.toneMapping=THREE.NoToneMapping;
-    this.renderer.shadowMap.enabled=false;
+    this.renderer.shadowMap.enabled=true;
+    this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
     this.renderer.domElement.className='three-world-canvas';
     this.renderer.domElement.setAttribute('aria-label','Paperchalk infinite 3D voxel world');
     this.renderer.domElement.tabIndex=0;this.renderer.domElement.style.touchAction='none';
@@ -192,16 +193,22 @@ export class World3DEngine{
   _buildStage(){
     const THREE=this.THREE;
 
-    // Paper entities use MeshBasicMaterial; these lights affect only the cube terrain,
-    // making its physical thickness readable when the debug camera moves off-axis.
-    const hemi=new THREE.HemisphereLight(0xfff2d6,0x3d4245,1.35);
-    hemi.name='terrain-hemi-light';
-    this.scene.add(hemi);
-    const sun=new THREE.DirectionalLight(0xffedcf,1.55);
-    sun.name='terrain-key-light';
-    sun.position.set(9,13,12);
+    // One and only world light: the sun. No hemisphere/ambient fill.
+    // Therefore caves and covered terrain stay black unless direct sunlight reaches them.
+    const sun=new THREE.DirectionalLight(0xfff0d2,2.2);
+    sun.name='world-sun';
+    sun.castShadow=true;
+    sun.position.set(18,32,14);
+    sun.shadow.mapSize.set(2048,2048);
+    sun.shadow.camera.near=.5;
+    sun.shadow.camera.far=90;
+    sun.shadow.camera.left=-28;sun.shadow.camera.right=28;
+    sun.shadow.camera.top=28;sun.shadow.camera.bottom=-28;
+    sun.shadow.bias=-0.00035;
+    sun.shadow.normalBias=.02;
     this.scene.add(sun);
-    this.terrainLights={hemi,sun};
+    this.scene.add(sun.target);
+    this.terrainLights={sun};
 
     this.backdrop=null;
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
@@ -355,14 +362,23 @@ export class World3DEngine{
   }
   _updateWorldTime(snapshot){
     const minutes=Number(snapshot?.world?.minutes);if(!Number.isFinite(minutes))return;
-    const n=((minutes%1440)+1440)%1440/1440,sun=Math.max(0,Math.sin((n-.25)*Math.PI*2));
-    this.scene.background.setRGB(.08+sun*.58,.10+sun*.66,.15+sun*.64);
+    const n=((minutes%1440)+1440)%1440/1440;
+    const daylight=Math.max(0,Math.sin((n-.25)*Math.PI*2));
+    this.scene.background.setRGB(0,0,0);
+    if(this.terrainLights?.sun)this.terrainLights.sun.intensity=daylight*2.2;
   }
   update(dt,snapshot=this.lastSnapshot){
     if(snapshot)this.lastSnapshot=snapshot;
     const current=this.lastSnapshot;
     this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateWorldTime(current);
-    this.terrainRenderer.update(current?.player);
+    const p=current?.player;
+    if(p&&this.terrainLights?.sun){
+      const sun=this.terrainLights.sun;
+      sun.position.set(p.x+18,p.y+32,p.z+14);
+      sun.target.position.set(p.x,p.y-2,p.z);
+      sun.target.updateMatrixWorld();
+    }
+    this.terrainRenderer.update(p);
     this.healthBar?.update(this.camera,dt);
   }
   render(){this.renderer.render(this.scene,this.camera)}
@@ -419,6 +435,7 @@ export class World3DEngine{
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
+      lighting:{mode:'sun-only',ambient:0,background:'black',sunIntensity:this.terrainLights?.sun?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
