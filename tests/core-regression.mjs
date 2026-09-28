@@ -82,7 +82,7 @@ try{
           const gx=base.gx+dx,gy=base.gy+dy;
           if(!t.isSolid(gx,gy))continue;
           const c=t.cellCenter(gx,gy);
-          if(Math.hypot(c.x-p.x,c.y-p.y)>4)return;
+          if(Math.hypot(c.x-p.x,c.y-p.y)>4)continue;
           const result=window.PaperchalkTerrainActions.dig(c.x,c.y);
           if(result.changed)return {result,beforeTile:result.previous,point:c,stats:window.PaperchalkTerrainActions.stats};
         }
