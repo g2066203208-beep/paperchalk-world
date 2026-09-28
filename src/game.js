@@ -114,8 +114,9 @@ const bounds=sceneData.bounds;
 const terrain=new TerrainRuntime.TerrainWorld({
   tileSize:sceneData.terrain?.tileSize??1,
   pixelsPerMeter:sceneData.terrain?.pixelsPerMeter??128,
-  chunkSize:sceneData.terrain?.chunkSize??64,
-  seed:sceneData.terrain?.seed??24681357
+  chunkSize:sceneData.terrain?.chunkSize??16,
+  seed:sceneData.terrain?.seed??24681357,
+  interactionRowZ:INTERACTION_ROW_Z
 });
 window.PaperchalkTerrain=terrain;
 
