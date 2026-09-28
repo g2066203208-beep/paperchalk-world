@@ -149,6 +149,7 @@ export class World3DEngine {
     this.scene.fog=new THREE.Fog(0xb9cbd4,42,105);
     this.camera=new THREE.PerspectiveCamera(55,1,.08,220);
     this.cameraRig={yaw:.72,pitch:.42,distance:14,minDistance:4.5,maxDistance:30,fov:55};
+    this.stageView={enabled:true,axis:'z',side:1};
     this.cameraTarget=new THREE.Vector3();
     this.cameraTargetSmooth=new THREE.Vector3();
     this.lastSnapshot=null;
@@ -380,6 +381,7 @@ export class World3DEngine {
       this.pointerState.lastX=event.clientX;
       this.pointerState.lastY=event.clientY;
       if(Math.abs(dx)+Math.abs(dy)<.2)return;
+      if(this.stageView.enabled)return;
       this.cameraRig.yaw-=dx*.006;
       this.cameraRig.pitch=Math.max(.12,Math.min(1.18,this.cameraRig.pitch+dy*.004));
       this._notifyCamera();
@@ -397,17 +399,25 @@ export class World3DEngine {
     },{passive:false});
   }
 
+  _stageYaw(){
+    if(!this.stageView.enabled)return this.cameraRig.yaw;
+    return this.stageView.axis==='x' ? Math.PI*.5 : 0;
+  }
+
   _notifyCamera(){
     if(this.onCameraChanged)this.onCameraChanged({
-      yaw:this.cameraRig.yaw,
+      yaw:this._stageYaw(),
+      orbitYaw:this.cameraRig.yaw,
       pitch:this.cameraRig.pitch,
       distance:this.cameraRig.distance,
-      fov:this.cameraRig.fov
+      fov:this.cameraRig.fov,
+      stageView:{...this.stageView}
     });
   }
 
   setCameraConfig(config={}){
     if(Number.isFinite(config.yaw))this.cameraRig.yaw=config.yaw;
+    if(Number.isFinite(config.orbitYaw))this.cameraRig.yaw=config.orbitYaw;
     if(Number.isFinite(config.pitch))this.cameraRig.pitch=Math.max(.12,Math.min(1.18,config.pitch));
     if(Number.isFinite(config.distance))this.cameraRig.distance=Math.max(this.cameraRig.minDistance,Math.min(this.cameraRig.maxDistance,config.distance));
     if(Number.isFinite(config.fov)){
@@ -415,7 +425,31 @@ export class World3DEngine {
       this.camera.fov=this.cameraRig.fov;
       this.camera.updateProjectionMatrix();
     }
+    if(config.stageView&&typeof config.stageView==='object'){
+      this.stageView.enabled=config.stageView.enabled!==false;
+      this.stageView.axis=config.stageView.axis==='x'?'x':'z';
+      this.stageView.side=config.stageView.side===-1?-1:1;
+    }
+    this._notifyCamera();
     return this.cameraConfig();
+  }
+
+  setStageView(enabled,axis=this.stageView.axis){
+    this.stageView.enabled=!!enabled;
+    this.stageView.axis=axis==='x'?'x':'z';
+    this.pointerState=null;
+    this._notifyCamera();
+    return {...this.stageView};
+  }
+
+  toggleStageView(){
+    return this.setStageView(!this.stageView.enabled,this.stageView.axis);
+  }
+
+  setStageAxis(axis){
+    this.stageView.axis=axis==='x'?'x':'z';
+    this._notifyCamera();
+    return {...this.stageView};
   }
 
   resetCamera(){
@@ -423,6 +457,9 @@ export class World3DEngine {
     this.cameraRig.pitch=.42;
     this.cameraRig.distance=14;
     this.cameraRig.fov=55;
+    this.stageView.enabled=true;
+    this.stageView.axis='z';
+    this.stageView.side=1;
     this.camera.fov=55;
     this.camera.updateProjectionMatrix();
     this._notifyCamera();
@@ -431,10 +468,12 @@ export class World3DEngine {
 
   cameraConfig(){
     return {
-      yaw:this.cameraRig.yaw,
+      yaw:this._stageYaw(),
+      orbitYaw:this.cameraRig.yaw,
       pitch:this.cameraRig.pitch,
       distance:this.cameraRig.distance,
-      fov:this.cameraRig.fov
+      fov:this.cameraRig.fov,
+      stageView:{...this.stageView}
     };
   }
 
@@ -496,12 +535,30 @@ export class World3DEngine {
     else this.cameraTargetSmooth.lerp(desiredTarget,targetFactor);
     this.cameraTarget.copy(this.cameraTargetSmooth);
 
-    const cp=Math.cos(this.cameraRig.pitch);
-    const desired=new this.THREE.Vector3(
-      this.cameraTarget.x+Math.sin(this.cameraRig.yaw)*cp*this.cameraRig.distance,
-      this.cameraTarget.y+Math.sin(this.cameraRig.pitch)*this.cameraRig.distance,
-      this.cameraTarget.z+Math.cos(this.cameraRig.yaw)*cp*this.cameraRig.distance
-    );
+    let desired;
+    if(this.stageView.enabled){
+      // Paper-stage camera: the world remains fully 3D, but the view direction is
+      // locked to a principal axis so the composition reads like the original
+      // side-on paper theatre.
+      desired=this.stageView.axis==='x'
+        ?new this.THREE.Vector3(
+          this.cameraTarget.x+this.stageView.side*this.cameraRig.distance,
+          this.cameraTarget.y,
+          this.cameraTarget.z
+        )
+        :new this.THREE.Vector3(
+          this.cameraTarget.x,
+          this.cameraTarget.y,
+          this.cameraTarget.z+this.stageView.side*this.cameraRig.distance
+        );
+    }else{
+      const cp=Math.cos(this.cameraRig.pitch);
+      desired=new this.THREE.Vector3(
+        this.cameraTarget.x+Math.sin(this.cameraRig.yaw)*cp*this.cameraRig.distance,
+        this.cameraTarget.y+Math.sin(this.cameraRig.pitch)*this.cameraRig.distance,
+        this.cameraTarget.z+Math.cos(this.cameraRig.yaw)*cp*this.cameraRig.distance
+      );
+    }
     const cameraFactor=1-Math.pow(.002,Math.max(0,dt));
     this.camera.position.lerp(desired,cameraFactor);
     this.camera.lookAt(this.cameraTarget);
@@ -545,6 +602,7 @@ export class World3DEngine {
       pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,
       camera:this.cameraConfig(),
+      stageView:{...this.stageView},
       debugColliders:this.debugColliders
     };
   }
