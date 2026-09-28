@@ -126,7 +126,7 @@ class TerrainChunkRenderer{
       const cx=ccx+dx,cy=ccy+dy,cz=ccz+dz,key=this.terrain.chunkKey(cx,cy,cz);
       next.add(key);
       const record=this.meshes.get(key);
-      if(!record||record.version!==this.terrain.getChunk(cx,cy,cz).version)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+      if(!record||record.version<0)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
       else record.mesh.visible=true;
     }
     queue.sort((a,b)=>a.d-b.d);
