@@ -241,7 +241,7 @@ export function buildSingleLayerCubeGeometry(
   return geometry;
 }
 
-export function createVoxelGridTexture(THREE,{size=64}={}){
+export function createVoxelGridTexture(THREE,{size=128}={}){
   const canvas=document.createElement('canvas');
   canvas.width=size;canvas.height=size;
   const ctx=canvas.getContext('2d');
