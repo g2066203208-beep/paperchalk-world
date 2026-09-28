@@ -1,9 +1,36 @@
-/* Authored game content. Runtime code consumes stable IDs instead of owning story data. */
+/* Authored Paperchalk World content for the production Three.js runtime. */
 (function(global){
 'use strict';
 
+const scene3d={
+  spawn:{x:0,y:0,z:8,yaw:Math.PI},
+  bounds:{minX:-46,maxX:46,minZ:-26,maxZ:31},
+  road:{x:0,z:-6,width:92,depth:7.5},
+  buildings:[
+    {id:'village-shop',name:'A村街角小楼',x:-27,z:6,width:9,height:6.2,depth:7.5,color:0x9b7d65},
+    {id:'village-house-a',name:'A村住宅',x:-14,z:7,width:8,height:4.8,depth:6.5,color:0x81776d},
+    {id:'village-house-b',name:'A村住宅',x:0,z:6.5,width:9,height:5.6,depth:7,color:0x9a937c},
+    {id:'village-workshop',name:'A村工坊',x:15,z:7,width:10,height:5.1,depth:7.2,color:0x77898c},
+    {id:'village-inn',name:'A村旅店',x:30,z:6.5,width:10,height:6.6,depth:7.6,color:0x936f63},
+    {id:'south-house-a',name:'南街住宅',x:-27,z:-17,width:9,height:5.2,depth:7,color:0x8b776a},
+    {id:'south-house-b',name:'南街住宅',x:-13,z:-17,width:8,height:4.4,depth:6.5,color:0x748184},
+    {id:'south-store',name:'南街商铺',x:2,z:-17,width:10,height:5.7,depth:7.5,color:0x9c8b72},
+    {id:'south-house-c',name:'南街住宅',x:17,z:-17,width:8.5,height:4.9,depth:6.8,color:0x7f756b},
+    {id:'south-hall',name:'南街会馆',x:31,z:-17,width:10,height:6.2,depth:7.6,color:0x8c7469}
+  ],
+  trees:[
+    {x:-39,z:2.5,scale:1.05},{x:-34,z:14,scale:.9},{x:-21,z:2.5,scale:1.15},
+    {x:-8,z:2.5,scale:.95},{x:9,z:2.2,scale:1.08},{x:22,z:2.6,scale:1},
+    {x:38,z:2.8,scale:1.2},{x:-37,z:-12,scale:1},{x:39,z:-12,scale:1.05},
+    {x:-5,z:20,scale:1.1},{x:8,z:21,scale:.95}
+  ],
+  rocks:[
+    {x:-9,z:14,r:1.15},{x:12,z:15,r:.9},{x:24,z:20,r:1.25},{x:-24,z:21,r:.8}
+  ]
+};
+
 const content={
-  version:1,
+  version:2,
   world:{
     nodes:[
       {id:'village',name:'A村',x:170,y:650,kind:'village'},
@@ -24,60 +51,33 @@ const content={
       {id:'farShrine',name:'远岬祭坛',x:2540,y:560,kind:'shrine'}
     ],
     routes:[
-      {id:'village-road',name:'A村外道路',from:'village',to:'meadowFork',biome:'meadow',bend:0},
-      {id:'wind-grass-slope',name:'风草坡',from:'meadowFork',to:'forestGate',biome:'meadow',bend:-38},
-      {id:'shallow-creek-road',name:'浅溪旧道',from:'meadowFork',to:'riverbank',biome:'river',bend:42},
-      {id:'old-forest-edge',name:'旧林边',from:'forestGate',to:'stonePass',biome:'forest',bend:36},
-      {id:'dry-creek-bank',name:'枯溪岸',from:'riverbank',to:'stonePass',biome:'river',bend:-28},
-      {id:'canopy-road',name:'林冠古道',from:'forestGate',to:'oldRuins',biome:'forest',bend:-46},
-      {id:'ruin-high-slope',name:'遗迹高坡',from:'oldRuins',to:'windmill',biome:'ruins',bend:24},
-      {id:'shallow-stone-valley',name:'浅石谷',from:'stonePass',to:'windmill',biome:'mountain',bend:-18},
-      {id:'lower-rock-fork',name:'下岩岔路',from:'stonePass',to:'caveMouth',biome:'cave',bend:52},
-      {id:'echo-cave-way',name:'回声洞道',from:'caveMouth',to:'marsh',biome:'cave',bend:-24},
-      {id:'reed-lowland',name:'芦苇低地',from:'riverbank',to:'marsh',biome:'marsh',bend:38},
-      {id:'windmill-waste-road',name:'风车荒径',from:'windmill',to:'highland',biome:'meadow',bend:18},
-      {id:'mist-marsh-boardwalk',name:'雾泽栈道',from:'marsh',to:'highland',biome:'marsh',bend:-30},
-      {id:'north-wind-slope',name:'北风坡',from:'windmill',to:'pineRidge',biome:'highland',bend:-52},
-      {id:'long-grass-tableland',name:'长草台地',from:'highland',to:'pineRidge',biome:'highland',bend:-18},
-      {id:'broken-bridge-road',name:'断桥旧道',from:'highland',to:'brokenBridge',biome:'river',bend:34},
-      {id:'mist-pine-ridge',name:'雾松岭',from:'pineRidge',to:'northCamp',biome:'forest',bend:-24},
-      {id:'old-post-road',name:'旧驿道',from:'pineRidge',to:'tower',biome:'ruins',bend:32},
-      {id:'sunken-city-waterway',name:'沉城水路',from:'brokenBridge',to:'sunkenCity',biome:'marsh',bend:26},
-      {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine',bend:-14}
+      {id:'village-road',name:'A村外道路',from:'village',to:'meadowFork',biome:'meadow'},
+      {id:'wind-grass-slope',name:'风草坡',from:'meadowFork',to:'forestGate',biome:'meadow'},
+      {id:'shallow-creek-road',name:'浅溪旧道',from:'meadowFork',to:'riverbank',biome:'river'},
+      {id:'old-forest-edge',name:'旧林边',from:'forestGate',to:'stonePass',biome:'forest'},
+      {id:'dry-creek-bank',name:'枯溪岸',from:'riverbank',to:'stonePass',biome:'river'},
+      {id:'canopy-road',name:'林冠古道',from:'forestGate',to:'oldRuins',biome:'forest'},
+      {id:'ruin-high-slope',name:'遗迹高坡',from:'oldRuins',to:'windmill',biome:'ruins'},
+      {id:'shallow-stone-valley',name:'浅石谷',from:'stonePass',to:'windmill',biome:'mountain'},
+      {id:'lower-rock-fork',name:'下岩岔路',from:'stonePass',to:'caveMouth',biome:'cave'},
+      {id:'echo-cave-way',name:'回声洞道',from:'caveMouth',to:'marsh',biome:'cave'},
+      {id:'reed-lowland',name:'芦苇低地',from:'riverbank',to:'marsh',biome:'marsh'},
+      {id:'windmill-waste-road',name:'风车荒径',from:'windmill',to:'highland',biome:'meadow'},
+      {id:'mist-marsh-boardwalk',name:'雾泽栈道',from:'marsh',to:'highland',biome:'marsh'},
+      {id:'north-wind-slope',name:'北风坡',from:'windmill',to:'pineRidge',biome:'highland'},
+      {id:'long-grass-tableland',name:'长草台地',from:'highland',to:'pineRidge',biome:'highland'},
+      {id:'broken-bridge-road',name:'断桥旧道',from:'highland',to:'brokenBridge',biome:'river'},
+      {id:'mist-pine-ridge',name:'雾松岭',from:'pineRidge',to:'northCamp',biome:'forest'},
+      {id:'old-post-road',name:'旧驿道',from:'pineRidge',to:'tower',biome:'ruins'},
+      {id:'sunken-city-waterway',name:'沉城水路',from:'brokenBridge',to:'sunkenCity',biome:'marsh'},
+      {id:'far-cape-old-road',name:'远岬古道',from:'tower',to:'farShrine',biome:'shrine'}
     ]
   },
-  buildings:[
-    {
-      id:'village-shop-house',
-      name:'A村街角小楼',
-      x:1450,
-      y:0,
-      z:0,
-      width:780,
-      height:438,
-      // Artwork is authored at a large resolution; this controls its in-game footprint.
-      scale:.62,
-      asset:'./assets/buildings/real-world/village/village-main-building.png?v=village-main-r1',
-      layer:'midground-main',
-      anchorX:.5,
-      anchorY:1,
-      door:Object.freeze({xOffset:-170,interactionRadius:110,label:'店门'})
-    }
-  ],
-  // Production story content starts empty. Main-line NPCs and enemies are authored here later.
+  scene3d,
   npcs:[],
   enemySpawns:[],
   enemyArchetypes:{
-    'rag-drifter':{
-      id:'rag-drifter',
-      maxHp:3,
-      patrolSpeed:48,
-      chaseSpeed:118,
-      aggroRange:700,
-      sleepRange:1650,
-      attackRange:84,
-      asset:'./assets/enemies/rag-drifter.svg?v=1'
-    }
+    'rag-drifter':{id:'rag-drifter',maxHp:3,patrolSpeed:1.6,chaseSpeed:3.6,aggroRange:9,attackRange:1.4}
   },
   items:{
     'rough-herb':{
@@ -89,7 +89,7 @@ const content={
 
 function assertUnique(items,label){
   const ids=new Set();
-  for(const item of items){
+  for(const item of items||[]){
     if(!item||typeof item.id!=='string'||!item.id)throw new Error(label+' contains an item without id');
     if(ids.has(item.id))throw new Error(label+' contains duplicate id: '+item.id);
     ids.add(item.id);
@@ -101,23 +101,17 @@ function validate(value=content){
   try{
     const nodeIds=assertUnique(value.world.nodes,'world.nodes');
     assertUnique(value.world.routes,'world.routes');
-    assertUnique(value.buildings||[],'buildings');
-    for(const building of value.buildings||[]){
-      if(!(building.width>0&&building.height>0))errors.push('building '+building.id+' has invalid dimensions');
-      if(typeof building.asset!=='string'||!building.asset)errors.push('building '+building.id+' missing asset');
-    }
+    assertUnique(value.scene3d.buildings,'scene3d.buildings');
     assertUnique(value.npcs,'npcs');
     assertUnique(value.enemySpawns,'enemySpawns');
-    const enemyTypeIds=new Set(Object.keys(value.enemyArchetypes));
-    for(const spawn of value.enemySpawns){
-      if(!enemyTypeIds.has(spawn.archetype))errors.push('enemy spawn '+spawn.id+' missing archetype '+spawn.archetype);
-    }
     for(const route of value.world.routes){
       if(!nodeIds.has(route.from))errors.push('route '+route.id+' missing from node '+route.from);
       if(!nodeIds.has(route.to))errors.push('route '+route.id+' missing to node '+route.to);
     }
-    for(const npc of value.npcs){
-      if(!npc.dialogue||!Array.isArray(npc.dialogue.choices))errors.push('npc '+npc.id+' has invalid dialogue');
+    const b=value.scene3d.bounds;
+    if(!(b.minX<b.maxX&&b.minZ<b.maxZ))errors.push('scene3d bounds invalid');
+    for(const building of value.scene3d.buildings){
+      if(!(building.width>0&&building.height>0&&building.depth>0))errors.push('building '+building.id+' dimensions invalid');
     }
   }catch(error){errors.push(error.message)}
   return {ok:errors.length===0,errors};
