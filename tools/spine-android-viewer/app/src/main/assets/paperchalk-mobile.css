@@ -1,0 +1,66 @@
+/* PaperChalk phone/tablet adaptation for the embedded authoring UI. */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overscroll-behavior: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"] {
+    min-width: 38px;
+    min-height: 38px;
+    touch-action: manipulation;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* prevents Android WebView focus zoom */
+  }
+
+  input[type="range"] {
+    min-height: 38px;
+  }
+
+  [data-panel-resize-handle-enabled] {
+    min-width: 10px;
+    min-height: 10px;
+    touch-action: none;
+  }
+}
+
+@media (max-width: 900px), (max-height: 520px) {
+  header {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  header::-webkit-scrollbar {
+    display: none;
+  }
+
+  header > * {
+    flex-shrink: 0 !important;
+  }
+
+  /* Preserve canvas space on phones while keeping controls usable. */
+  header {
+    min-height: 44px !important;
+  }
+
+  [data-panel-group-direction="horizontal"] {
+    min-width: 0 !important;
+  }
+}
