@@ -82,14 +82,19 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
             // when the interaction-row voxel directly in front is solid.
             // Only the chunk that owns the rear cell emits it, avoiding duplicates.
             if(aGz===terrain.blackBackRowZ&&bGz===terrain.interactionRowZ&&x[2]>=0&&x[2]<n){
-              face=a+32;
+              const gx=chunk.cx*n+x[0],gy=chunk.cy*n+x[1];
+              const buried=gy<terrain.surfaceCell(gx,terrain.interactionRowZ);
+              face=buried?a+32:a;
             }
           }
           if(!face&&sa!==sb){
             const tile=sa?a:b;
             const solidLocalZ=sa?x[2]:x[2]+q[2];
             const solidGz=chunk.cz*n+solidLocalZ;
-            const renderCode=solidGz===terrain.blackBackRowZ?tile+32:tile;
+            const solidGx=chunk.cx*n+x[0];
+            const solidGy=chunk.cy*n+x[1];
+            const buriedBlack=solidGz===terrain.blackBackRowZ&&solidGy<terrain.surfaceCell(solidGx,terrain.interactionRowZ);
+            const renderCode=buriedBlack?tile+32:tile;
             face=sa?renderCode:-renderCode;
           }
           if(face&&d===2){
