@@ -304,6 +304,22 @@ class WaterWorld{
     return this.settleAll();
   }
   totalLayers(){let n=0;for(const level of this.cells.values())n+=level;return n}
+  highestSurfaceY(gx,gz){
+    let top=-Infinity;
+    for(const [key,level] of this.cells){
+      if(!level)continue;
+      const [x,gy,z]=this.parse(key);
+      if(x!==gx||z!==gz)continue;
+      top=Math.max(top,gy*this.terrain.tileSize+(level/8)*this.terrain.tileSize);
+    }
+    return top;
+  }
+  surfaceAtWorld(x,z){
+    const s=this.terrain.tileSize;
+    const gx=Math.floor(x/s),gz=Math.floor(z/s+.5);
+    const y=this.highestSurfaceY(gx,gz);
+    return Number.isFinite(y)?{gx,gz,y,levelColumn:true}:null;
+  }
   submersionAABB(x,y,z,halfW,halfH,halfD){
     const s=this.terrain.tileSize;
     const minX=x-halfW,maxX=x+halfW,minY=y-halfH,maxY=y+halfH,minZ=z-halfD,maxZ=z+halfD;
