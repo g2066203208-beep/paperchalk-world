@@ -13,12 +13,12 @@ const sprites=read('src/entities/PaperSpriteEntity.js');
 const save=read('src/core/save-runtime.js');
 const css=read('styles/game.css');
 
-assert(html.includes('paperchalk-build" content="player-art-r1"'),'paper-stage build key missing');
+assert(html.includes('paperchalk-build" content="player-art-hd-r1"'),'paper-stage build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js stage host missing');
 assert(html.includes('src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"'),'FastNoiseLite vendor not booted');
-assert(html.indexOf('FastNoiseLite.js?v=1.1.1')<html.indexOf('terrain-runtime.js?v=player-art-r1'),'FastNoiseLite must boot before terrain runtime');
-assert(html.includes('src="./src/terrain/terrain-runtime.js?v=player-art-r1"'),'terrain runtime not booted');
-assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=player-art-r1"'),'paper-stage renderer not loaded');
+assert(html.indexOf('FastNoiseLite.js?v=1.1.1')<html.indexOf('terrain-runtime.js?v=player-art-hd-r1'),'FastNoiseLite must boot before terrain runtime');
+assert(html.includes('src="./src/terrain/terrain-runtime.js?v=player-art-hd-r1"'),'terrain runtime not booted');
+assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=player-art-hd-r1"'),'paper-stage renderer not loaded');
 assert(!html.includes('pixiEntityLayer')&&!html.includes('cardGroundCanvas'),'retired 2D renderer layers remain');
 assert(!html.includes('class="actor"')&&!html.includes('playerHealthHud'),'retired DOM actor/HUD remains');
 
