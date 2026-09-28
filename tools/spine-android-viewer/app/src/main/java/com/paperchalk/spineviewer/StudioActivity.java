@@ -318,13 +318,14 @@ public class StudioActivity extends Activity {
             closeMotionQuietly(false);
             String safe = requestedName == null ? "PaperChalkMotion.pcmotion.json" :
                 requestedName.replaceAll("[\\\\/:*?\"<>|]", "_");
-            if (!safe.endsWith(".json")) safe += ".pcmotion.json";
+            if (!(safe.endsWith(".json") || safe.endsWith(".gltf"))) safe += ".pcmotion.json";
             motionName = safe;
+            String mime = safe.endsWith(".gltf") ? "model/gltf+json" : "application/json";
             try {
                 if (Build.VERSION.SDK_INT >= 29) {
                     ContentValues values = new ContentValues();
                     values.put(MediaStore.Downloads.DISPLAY_NAME, motionName);
-                    values.put(MediaStore.Downloads.MIME_TYPE, "application/json");
+                    values.put(MediaStore.Downloads.MIME_TYPE, mime);
                     values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/PaperChalk");
                     values.put(MediaStore.Downloads.IS_PENDING, 1);
                     motionUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
