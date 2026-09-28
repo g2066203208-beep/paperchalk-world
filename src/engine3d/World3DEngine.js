@@ -74,7 +74,8 @@ export class WorldSpaceHealthBar{
     }
   }
 
-  update(dt=0){
+  update(camera,dt=0){
+    if(camera)this.group.quaternion.copy(camera.quaternion);
     const step=Math.max(0,Math.min(.08,Number(dt)||0));
     for(const [i,a] of [...this.animations]){
       a.elapsed+=step;
@@ -328,8 +329,8 @@ export class World3DEngine{
     this.playerRoot=this.playerPaper.group;
     this.playerRoot.name='player-paper-entity';
     this.healthBar=new WorldSpaceHealthBar(this.THREE,{max:10});
-    this.playerRoot.add(this.healthBar.group);
     this.scene.add(this.playerRoot);
+    this.scene.add(this.healthBar.group);
   }
 
   _installInput(){
@@ -484,6 +485,7 @@ export class World3DEngine{
     const facing=Number.isFinite(p.facing)?p.facing:(p.vx<-.02?-1:p.vx>.02?1:this.playerPaper.facing);
     this.playerPaper.setFacing(facing);
     this.playerPaper.update(dt,{action:p.action,time:performance.now()/1000});
+    this.healthBar.group.position.set(p.x,p.y+2.42,(Number.isFinite(p.z)?p.z:.36)+.05);
     const crouch=p.crouching?.82:1;
     this.playerRoot.scale.y+=(crouch-this.playerRoot.scale.y)*Math.min(1,dt*14);
   }
@@ -531,7 +533,7 @@ export class World3DEngine{
     this._updatePlayer(dt,current);
     this._updateCamera(dt,current);
     this._updateBackdrop(current);
-    this.healthBar?.update(dt);
+    this.healthBar?.update(this.camera,dt);
   }
 
   render(){this.renderer.render(this.scene,this.camera)}
