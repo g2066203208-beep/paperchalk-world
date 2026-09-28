@@ -129,43 +129,17 @@ class TerrainChunkRenderer{
     };
     this.material.customProgramCacheKey=()=> 'paperchalk-cutaway-face-darkness-v6';
 
-    this.cutawayMaterial=new THREE.ShaderMaterial({
-      transparent:true,
+    this.cutawayMaterial=new THREE.MeshBasicMaterial({
+      color:0x000000,
+      side:THREE.DoubleSide,
+      transparent:false,
+      opacity:1,
       depthTest:true,
-      depthWrite:false,
-      side:THREE.FrontSide,
-      polygonOffset:true,
-      polygonOffsetFactor:-2,
-      polygonOffsetUnits:-2,
+      depthWrite:true,
       toneMapped:false,
-      uniforms:{
-        uLightMap:{value:this.lightGridTexture},
-        uLightOrigin:{value:this.lightGridOrigin},
-        uLightSpan:{value:this.lightGridSize*this.terrain.tileSize}
-      },
-      vertexShader:`
-        varying vec3 vWorldPos;
-        void main(){
-          vec4 wp=modelMatrix*vec4(position,1.0);
-          vWorldPos=wp.xyz;
-          gl_Position=projectionMatrix*viewMatrix*wp;
-        }
-      `,
-      fragmentShader:`
-        precision mediump float;
-        varying vec3 vWorldPos;
-        uniform sampler2D uLightMap;
-        uniform vec2 uLightOrigin;
-        uniform float uLightSpan;
-        void main(){
-          vec2 uv=(vWorldPos.xy-uLightOrigin)/uLightSpan;
-          float inside=step(0.0,uv.x)*step(uv.x,1.0)*step(0.0,uv.y)*step(uv.y,1.0);
-          float reveal=texture2D(uLightMap,clamp(uv,0.001,0.999)).r*inside;
-          float alpha=0.995*(1.0-reveal);
-          if(alpha<0.01)discard;
-          gl_FragColor=vec4(0.0,0.0,0.0,alpha);
-        }
-      `
+      polygonOffset:true,
+      polygonOffsetFactor:-3,
+      polygonOffsetUnits:-3
     });
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
@@ -731,7 +705,7 @@ export class World3DEngine{
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
-      undergroundOcclusion:{mode:'explicit-black-cutaway-mesh-v7',torchRevealRadius:10.5,playerRevealRadius:1.25,voxelOcclusion:true,frontFacesOnly:true,separateMaskMesh:true},
+      undergroundOcclusion:{mode:'absolute-black-buried-z-faces-v8',absoluteBlack:true,torchReveal:false,bothDepthSides:true,separateMaskMesh:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
