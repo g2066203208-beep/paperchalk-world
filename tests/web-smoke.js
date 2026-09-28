@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('voxel3d-r37'),'build key missing');
+assert(html.includes('voxel3d-r38'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
@@ -27,8 +27,8 @@ assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(mesher.includes('buildVoxelChunkGeometry'),'voxel mesher missing');
 assert(terrain.includes('class WaterWorld'),'WaterWorld missing');
-assert(terrain.includes("flowModel:'priority-flood-global-hydrostatic-settle-v1'"),'global hydrostatic solver missing');
-assert(terrain.includes("flowPlane:'full-x-z-with-y-gravity'"),'full 3D water plane missing');
+assert(terrain.includes("flowModel:'priority-flood-shared-volume-hydrostatic-v2'"),'global hydrostatic solver missing');
+assert(terrain.includes("flowPlane:'full-full-x-z-with-y-gravity'"),'full 3D water plane missing');
 assert(terrain.includes('settleAll()'),'global water settle missing');
 assert(terrain.includes('_heapPush'),'priority flood heap missing');
 assert(terrain.includes('conserved:beforeLayers===afterLayers'),'water conservation check missing');
@@ -61,7 +61,7 @@ assert(engine.includes("renderMode:'pooled-instanced-paper-fish'"),'pooled fish 
 assert(engine.includes("renderMode:'line+bobber+worldspace-bite-ui-v2'"),'world-space bite UI missing');
 assert(engine.includes('flatShading:true'),'flat shading missing');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
-assert(engine.includes("renderMode:'chunked-visible-surface-water-v3-3d'"),'3D water renderer missing');
+assert(engine.includes("renderMode:'chunked-visible-surface-water-v4-animated'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
