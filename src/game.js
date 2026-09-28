@@ -311,8 +311,23 @@ function groundedAt(x=transform.x,y=transform.y){
 function moveHorizontal(dx){
   if(!dx)return;
   const nx=clamp(transform.x+dx,bounds.minX+PLAYER_HALF_WIDTH,bounds.maxX-PLAYER_HALF_WIDTH);
-  if(!playerCollidesAt(nx,transform.y))transform.x=nx;
-  else velocity.x=0;
+  if(!playerCollidesAt(nx,transform.y)){
+    transform.x=nx;
+    return;
+  }
+  // Terraria-style step-up: let the paper actor walk over one or two 0.25 m blocks
+  // without requiring a jump for every terrain pixel.
+  const step=TERRAIN.tileSize;
+  for(let i=1;i<=2;i++){
+    const ny=transform.y+step*i;
+    if(!playerCollidesAt(nx,ny)){
+      transform.x=nx;
+      transform.y=ny;
+      controller.grounded=groundedAt(nx,ny);
+      return;
+    }
+  }
+  velocity.x=0;
 }
 function moveVertical(dy){
   if(!dy)return;
