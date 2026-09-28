@@ -24,10 +24,10 @@ Z is a presentation coordinate. It separates far background, rear paper entities
 
 `src/terrain/terrain-runtime.js` owns the only block/voxel layer.
 
-- tile size: 0.25 m
+- tile size: 1 m
 - chunk size: 64×64 cells
 - gameplay depth: exactly one layer
-- render geometry: each occupied cell is a real 0.25 m cube slab cell (front/back/top/bottom/left/right faces as exposed)
+- render geometry: each occupied cell is a real 1 m cube slab cell (front/back/top/bottom/left/right faces as exposed)
 - storage: Uint8Array
 - coordinates: integer X/Y cell coordinates
 - generation: FastNoiseLite 1.1.1; OpenSimplex2S for broad surface/caves, Perlin for detail, Cellular for material strata
