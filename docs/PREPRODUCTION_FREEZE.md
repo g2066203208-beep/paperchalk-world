@@ -4,7 +4,7 @@ The production world is intentionally neither a flat 2D renderer nor a Minecraft
 
 1. Three.js remains the sole world renderer.
 2. Gameplay terrain data is strictly `Terrain[x][y]`; there is no second gameplay Z layer.
-3. Every occupied terrain cell is rendered as a **true 3D cube** whose current dimensions are 0.25 × 0.25 × 0.25 m.
+3. Every occupied terrain cell is rendered as a **true 3D cube** whose fixed dimensions are 1 × 1 × 1 m, with the asset scale fixed at **128 px = 1 m**.
 4. Terrain chunks use indexed BufferGeometry, exposed-face culling and greedy face merging. One block must never become one Three.js Mesh.
 5. Greedy meshing must preserve visible per-block boundaries through repeated block UVs/material treatment.
 6. Chunk vertices stay chunk-local; Mesh position carries world offsets to preserve precision far from origin.
