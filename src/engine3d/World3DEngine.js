@@ -405,6 +405,9 @@ class FishingRenderer{
     this.lineGeometry=new THREE.BufferGeometry();
     this.lineMaterial=new THREE.LineBasicMaterial({color:0xe6ddc9,transparent:true,opacity:.9,depthTest:true});
     this.line=new THREE.Line(this.lineGeometry,this.lineMaterial);this.line.visible=false;this.root.add(this.line);
+    this.rodGeometry=new THREE.BufferGeometry();
+    this.rodMaterial=new THREE.LineBasicMaterial({color:0x5b3824,depthTest:true});
+    this.rod=new THREE.Line(this.rodGeometry,this.rodMaterial);this.rod.visible=false;this.root.add(this.rod);
 
     const bobber=new THREE.Group();
     const body=new THREE.Mesh(
@@ -437,16 +440,36 @@ class FishingRenderer{
     this.fishSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:ftex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));
     this.fishSprite.scale.set(.62,.62,1);this.fishSprite.visible=false;this.fishSprite.renderOrder=1999;this.root.add(this.fishSprite);this.fishTexture=ftex;
 
-    this.statsState={visible:false,state:'idle',prompt:false};
+    this.school=new THREE.Group();this.school.name='fishing-local-fish-school';this.school.visible=false;this.root.add(this.school);
+    this.schoolFish=[];
+    for(let i=0;i<3;i++){
+      const fish=new THREE.Group();
+      const bodyMesh=new THREE.Mesh(
+        new THREE.SphereGeometry(.18,6,4),
+        new THREE.MeshLambertMaterial({color:i===2?0xd7b24d:0x608aa1,flatShading:true})
+      );
+      bodyMesh.scale.set(1.7,.65,.42);
+      const tail=new THREE.Mesh(
+        new THREE.ConeGeometry(.13,.22,3),
+        new THREE.MeshLambertMaterial({color:i===2?0xb78d38:0x4e7489,flatShading:true})
+      );
+      tail.rotation.z=-Math.PI*.5;tail.position.x=-.28;
+      fish.add(bodyMesh,tail);fish.scale.setScalar(.75+i*.08);this.school.add(fish);this.schoolFish.push(fish);
+    }
+    this.statsState={visible:false,state:'idle',prompt:false,school:0};
   }
   update(snapshot,camera,time=0){
     const f=snapshot?.fishing,p=snapshot?.player;
     if(!f||f.state==='idle'||!p){
-      this.line.visible=false;this.bobber.visible=false;this.prompt.visible=false;this.fishSprite.visible=false;
-      this.statsState={visible:false,state:'idle',prompt:false};return;
+      this.line.visible=false;this.rod.visible=false;this.bobber.visible=false;this.prompt.visible=false;this.fishSprite.visible=false;this.school.visible=false;
+      this.statsState={visible:false,state:'idle',prompt:false,school:0};return;
     }
-    const THREE=this.THREE,start=new THREE.Vector3(p.x+(p.facingX||1)*.28,p.y+.42,p.z+.06),end=new THREE.Vector3(f.x,f.y,f.z);
-    this.lineGeometry.setFromPoints([start,end]);this.line.visible=true;
+    const THREE=this.THREE,dir=p.facingX||1;
+    const hand=new THREE.Vector3(p.x+dir*.18,p.y+.32,p.z+.06);
+    const tip=new THREE.Vector3(p.x+dir*.78,p.y+.92,p.z+.06);
+    const end=new THREE.Vector3(f.x,f.y,f.z);
+    this.rodGeometry.setFromPoints([hand,tip]);this.rod.visible=true;
+    this.lineGeometry.setFromPoints([tip,end]);this.line.visible=true;
     this.bobber.visible=true;this.bobber.position.copy(end);
     const floatScale=f.state==='bite'?1+Math.sin(time*15)*.16:1+Math.sin(time*4)*.03;
     this.bobber.scale.set(floatScale,floatScale,floatScale);
@@ -461,14 +484,24 @@ class FishingRenderer{
       this.fishSprite.position.set(f.x,f.y-.28,f.z+.02);
       this.fishSprite.quaternion.copy(camera.quaternion);
     }
-    this.statsState={visible:true,state:f.state,prompt:this.prompt.visible};
+    this.school.visible=f.state==='waiting'||f.state==='bite';
+    if(this.school.visible){
+      for(let i=0;i<this.schoolFish.length;i++){
+        const fish=this.schoolFish[i],a=time*(.8+i*.17)+i*2.1,r=.42+i*.18;
+        fish.position.set(f.x+Math.cos(a)*r,f.y-.30-i*.06,f.z+Math.sin(a)*r*.55);
+        fish.rotation.y=-a;
+        fish.rotation.z=Math.sin(a*1.7)*.08;
+      }
+    }
+    this.statsState={visible:true,state:f.state,prompt:this.prompt.visible,school:this.school.visible?this.schoolFish.length:0};
   }
   stats(){return {...this.statsState,renderMode:'line+bobber+worldspace-bite-ui'}}
   dispose(){
-    this.lineGeometry.dispose();this.lineMaterial.dispose();
+    this.lineGeometry.dispose();this.lineMaterial.dispose();this.rodGeometry.dispose();this.rodMaterial.dispose();
     this.bobber.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
     this.prompt.material.dispose();this.promptTexture.dispose();
     this.fishSprite.material.dispose();this.fishTexture.dispose();
+    this.school.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
     this.scene.remove(this.root);
   }
 }
