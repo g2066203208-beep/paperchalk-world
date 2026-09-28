@@ -11,7 +11,7 @@ try{
   await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.PaperchalkTerrainActions,{timeout:7000});
   const cold=await page.evaluate(()=>window.PaperchalkTerrainActions.stats);
   assert(cold.dimensions===3&&cold.infinite===true&&cold.chunkSize===16,'3D terrain config wrong '+JSON.stringify(cold));
-  assert(cold.generatorVersion===3&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
+  assert(cold.generatorVersion===4&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
 
   await page.locator('#authBtn').click();await page.locator('#tabRegister').click();
   await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
@@ -34,7 +34,7 @@ try{
 
   const edit=await page.evaluate(()=>{
     const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain;
-    const gx=Math.floor(p.x),gz=Math.floor(p.z),surface=Math.floor(t.highestGroundY(p.x,p.z)/t.tileSize)-1;
+    const gx=Math.floor(p.x),gz=t.stats().interactionRowZ,surface=Math.floor(t.highestGroundY(p.x,gz)/t.tileSize)-1;
     const before=t.getVoxel(gx,surface,gz);
     const dug=window.PaperchalkTerrainActions.digCell(gx,surface,gz,{persist:false});
     const placed=window.PaperchalkTerrainActions.placeCell(gx,surface,gz,before,{persist:false});
