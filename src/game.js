@@ -64,8 +64,8 @@ const cameraPitch=byId('cameraPitch');
 const cameraPitchValue=byId('cameraPitchValue');
 const cameraDistance=byId('cameraDistance');
 const cameraDistanceValue=byId('cameraDistanceValue');
-const cameraFov=byId('cameraFov');
-const cameraFovValue=byId('cameraFovValue');
+const cameraHeight=byId('cameraHeight');
+const cameraHeightValue=byId('cameraHeightValue');
 const cameraReset=byId('cameraReset');
 
 const debugToggleBtn=byId('debugToggleBtn');
@@ -142,7 +142,7 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
 }
 
 const defaultCamera=Object.freeze({
-  yaw:0,pitch:0,distance:18,fov:42,
+  yaw:0,pitch:0,distance:18,height:.35,fov:42,
   stageView:Object.freeze({enabled:true,axis:'z',side:1})
 });
 function getSettings(){
@@ -153,6 +153,7 @@ function getSettings(){
     const camera3d={
       ...defaultCamera,
       ...parsedCamera,
+      fov:42,
       stageView:{...defaultCamera.stageView,...(parsedCamera.stageView||{})}
     };
     return {...defaults,...parsed,camera3d};
@@ -732,15 +733,16 @@ function syncCameraPanel(){
   cameraPitchValue.textContent=Number(cameraPitch.value).toFixed(1)+'°';
   cameraDistance.value=String(Number(c.distance).toFixed(1));
   cameraDistanceValue.textContent=Number(c.distance).toFixed(1)+' m';
-  cameraFov.value=String(Number(c.fov).toFixed(0));
-  cameraFovValue.textContent=Number(c.fov).toFixed(0)+'°';
+  cameraHeight.value=String(Number(c.height??.35).toFixed(1));
+  cameraHeightValue.textContent=Number(c.height??.35).toFixed(1)+' m';
 }
 function pushCameraPanel(){
   const config={
     ...settings.camera3d,
     pitch:Number(cameraPitch.value)*Math.PI/180,
     distance:Number(cameraDistance.value),
-    fov:Number(cameraFov.value)
+    height:Number(cameraHeight.value),
+    fov:42
   };
   window.PaperchalkSettings.setCamera3D(config);
   window.Paperchalk3D?.setCameraConfig?.(config);
@@ -761,7 +763,7 @@ cameraControlBtn.addEventListener('click',()=>cameraControlPanel.classList.conta
 cameraControlClose.addEventListener('click',closeCameraPanel);
 cameraPitch.addEventListener('input',pushCameraPanel);
 cameraDistance.addEventListener('input',pushCameraPanel);
-cameraFov.addEventListener('input',pushCameraPanel);
+cameraHeight.addEventListener('input',pushCameraPanel);
 cameraReset.addEventListener('click',()=>{
   const c=window.Paperchalk3D?.resetCamera?.()||{...defaultCamera};
   settings={...settings,camera3d:{...c}};
