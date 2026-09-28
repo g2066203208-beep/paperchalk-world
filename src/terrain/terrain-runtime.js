@@ -375,7 +375,7 @@ class WaterWorld{
 }
 
 class TerrainWorld{
-  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0,blackBackRowZ=null}={}){
+  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0,blackBackRowZ=null,biomeConfig=null}={}){
     this.tileSize=Number(tileSize)||1;
     this.pixelsPerMeter=Math.max(1,Math.round(Number(pixelsPerMeter)||128));
     this.chunkSize=Math.max(8,Math.min(32,Math.round(Number(chunkSize)||16)));
@@ -383,7 +383,7 @@ class TerrainWorld{
     this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
     this.blackBackRowZ=Number.isFinite(Number(blackBackRowZ))?Math.floor(Number(blackBackRowZ)):this.interactionRowZ-1;
     this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();this.biomeChunkCache=new Map();
-    this.changeVersion=0;this.generatorVersion=5;this.noiseBackend='deterministic-fallback';
+    this.changeVersion=0;this.generatorVersion=5;this.noiseBackend='deterministic-fallback';this.biomeConfig=biomeConfig&&typeof biomeConfig==='object'?{...biomeConfig}:{};
     this.water=new WaterWorld(this);
 
     const F=global.FastNoiseLite;
@@ -418,7 +418,8 @@ class TerrainWorld{
     }
     const BiomeGenerator=global.PaperchalkBiomeRuntime?.BiomeLandformGenerator;
     this.biomeGenerator=BiomeGenerator?new BiomeGenerator({
-      seed:this.seed,spawnX:0,spawnZ:this.interactionRowZ,spawnSafeRadius:22
+      seed:this.seed,spawnX:0,spawnZ:this.interactionRowZ,
+      spawnSafeRadius:Number(this.biomeConfig.spawnSafeRadius)||22
     }):null;
     if(this.biomeGenerator)this.noiseBackend=this.biomeGenerator.backend+' + '+this.noiseBackend;
   }
