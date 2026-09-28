@@ -672,7 +672,7 @@ function fishWaterTargetNear(x,z,radius=4){
 function spawnFishAtColumn(gx,gz,bounds){
   if(!bounds||bounds.depth<.28||fishWorld.entities.length>=fishWorld.maxActive)return null;
   const species=chooseFishSpecies();
-  const size=species==='golden-paperfish'?.72:species==='bluefin-minnow'?.46:.62;
+  const size=species==='golden-paperfish' ? .72 : species==='bluefin-minnow' ? .46 : .62;
   const margin=Math.min(.22,bounds.depth*.3);
   const fish={
     id:fishWorld.nextId++,species,
@@ -772,7 +772,7 @@ function updateFishEcology(dt){
         if(target){fish.targetX=tx=target.x;fish.targetY=ty=target.y;fish.targetZ=tz=target.z}
         fish.wanderTimer=.8+random01()*2.8;
       }
-      speed=fish.species==='bluefin-minnow'?.92:fish.species==='golden-paperfish'?.72:.62;
+      speed=fish.species==='bluefin-minnow' ? .92 : fish.species==='golden-paperfish' ? .72 : .62;
     }
 
     if(!Number.isFinite(tx)||!Number.isFinite(ty)||!Number.isFinite(tz))continue;
