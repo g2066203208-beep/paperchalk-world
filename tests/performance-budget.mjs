@@ -5,6 +5,7 @@ assert(size('src/game.js')<76000,'gameplay runtime exceeds 76KB budget');
 assert(size('src/engine3d/World3DEngine.js')<56000,'paper-stage engine exceeds 56KB budget');
 assert(size('src/terrain/terrain-runtime.js')<22000,'terrain runtime exceeds 22KB budget');
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
+assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
 assert(!fs.existsSync('assets'),'legacy raster/SVG asset tree should remain absent until authored paper assets are reintroduced');
@@ -15,6 +16,7 @@ console.log(JSON.stringify({
   engine:size('src/engine3d/World3DEngine.js'),
   terrain:size('src/terrain/terrain-runtime.js'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
+  fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
   html:size('index.html')
 }));
