@@ -477,6 +477,50 @@ window.PaperchalkScene=Object.freeze({
   get transitioning(){return false}
 });
 
+function terrainTargetInReach(point){
+  if(!point)return false;
+  return Math.hypot(point.x-transform.x,point.y-transform.y)<=TERRAIN_REACH;
+}
+function digTerrainAt(x,y,{persist=true}={}){
+  if(!terrainTargetInReach({x,y}))return {changed:false,reason:'out-of-reach'};
+  const result=terrain.digWorld(x,y);
+  if(result.changed){
+    window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'dig'});
+    publish();if(persist)saveWorldState();
+  }
+  return result;
+}
+function placeTerrainAt(x,y,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
+  if(!terrainTargetInReach({x,y}))return {changed:false,reason:'out-of-reach'};
+  const cell=terrain.worldToCell(x,y),center=terrain.cellCenter(cell.gx,cell.gy),half=terrain.tileSize*.49;
+  const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half;
+  if(overlapsPlayer)return {changed:false,reason:'player-overlap'};
+  const result=terrain.placeWorld(x,y,tile);
+  if(result.changed){
+    window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place'});
+    publish();if(persist)saveWorldState();
+  }
+  return result;
+}
+window.PaperchalkTerrainActions=Object.freeze({
+  dig:digTerrainAt,
+  place:placeTerrainAt,
+  get stats(){return terrain.stats()},
+  get edits(){return terrain.exportEdits()}
+});
+
+worldEl.addEventListener('contextmenu',event=>{
+  if(event.target?.closest?.('.three-world-canvas'))event.preventDefault();
+});
+worldEl.addEventListener('pointerup',event=>{
+  if(!worldInteractive()||!event.target?.closest?.('.three-world-canvas'))return;
+  if(event.button!==0&&event.button!==2)return;
+  const point=window.Paperchalk3D?.screenToWorld?.(event.clientX,event.clientY);
+  if(!point)return;
+  const result=event.button===2?placeTerrainAt(point.x,point.y):digTerrainAt(point.x,point.y);
+  if(!result.changed&&result.reason==='out-of-reach')showMapNotice('太远了');
+});
+
 let inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
 let inventorySelected=-1;
 function itemClone(item){return item?JSON.parse(JSON.stringify(item)):null}
@@ -697,8 +741,10 @@ function syncStageDebugButtons(){
 function updateDebugStatus(){
   const s=window.Paperchalk3D?.stats||{};
   const stage=stageViewState();
+  const ts=terrain.stats();
   debugStatus.textContent='HP '+health.current+'/'+health.max+
-    ' · XYZ '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+', '+transform.z.toFixed(1)+
+    ' · XY '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+
+    ' · 单层体素 '+ts.loadedChunks+' chunks / '+ts.editedTiles+' edits'+
     ' · 舞台 '+(stage.enabled?stage.axis.toUpperCase()+'轴':'自由镜头')+
     ' · '+(s.fps||0)+' FPS · '+(s.drawCalls||0)+' draws';
   syncStageDebugButtons();
@@ -843,7 +889,7 @@ window.addEventListener('keydown',event=>{
   if(event.code==='KeyM'&&active){event.preventDefault();worldMapOverlay.classList.contains('is-open')?closeWorldMap():openWorldMap();return}
   if(event.code==='Escape'){if(window.PaperchalkHandleBack())event.preventDefault();return}
   if(!worldInteractive())return;
-  if(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(event.code)){
+  if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
     keys.add(event.code);event.preventDefault();return;
   }
   if(event.code==='Space'){if(!event.repeat)jump();event.preventDefault();return}
