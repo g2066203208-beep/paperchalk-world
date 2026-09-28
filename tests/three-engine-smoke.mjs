@@ -28,7 +28,6 @@ try{
     resources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/three/')).map(e=>e.name),
     canvas:document.querySelector('#threeWorldLayer canvas')?.className||''
   }));
-  assert(initial.stats.engine===undefined||true,'');
   assert(initial.stats.renderer==='WebGLRenderer','renderer is not WebGLRenderer '+JSON.stringify(initial.stats));
   assert(initial.stats.drawCalls>10&&initial.stats.triangles>100,'3D scene is too empty/not rendered '+JSON.stringify(initial.stats));
   assert(initial.stats.sceneChildren>=20,'procedural 3D village not constructed '+JSON.stringify(initial.stats));
@@ -56,7 +55,7 @@ try{
   await page.waitForTimeout(90);
   const health5=await page.evaluate(()=>window.Paperchalk3D.stats.health);
   assert(health5.value===5&&health5.animating>0,'3D damage animation did not start '+JSON.stringify(health5));
-  await page.waitForTimeout(450);
+  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.health?.animating===0,null,{timeout:2500});
   const healthSettled=await page.evaluate(()=>window.Paperchalk3D.stats.health);
   assert(healthSettled.value===5&&healthSettled.animating===0,'3D health animation did not settle '+JSON.stringify(healthSettled));
 
