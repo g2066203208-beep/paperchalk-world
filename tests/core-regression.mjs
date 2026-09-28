@@ -44,7 +44,9 @@ try{
     three:window.Paperchalk3D.stats
   }));
   assert(entered.three.worldMode==='paper-stage-2.5d','wrong world mode '+JSON.stringify(entered.three));
-  assert(entered.three.terrainMode==='single-layer-voxel','terrain is not single-layer voxel '+JSON.stringify(entered.three));
+  assert(entered.three.terrainMode==='single-layer-3d-cubes','terrain is not one-layer 3D cube terrain '+JSON.stringify(entered.three));
+  assert(entered.three.terrain?.oneLayer===true&&entered.three.terrain?.blockGeometry==='3d-cube','terrain gained depth layers or lost cube geometry '+JSON.stringify(entered.three.terrain));
+  assert(Math.abs((entered.three.terrain?.thickness||0)-.25)<1e-6,'terrain blocks are not true 0.25m cubes '+JSON.stringify(entered.three.terrain));
   assert(entered.three.entityMode==='2d-textured-planes','entities are not paper planes '+JSON.stringify(entered.three));
   assert(entered.three.playerGeometry==='PlaneGeometry','player is not a flat paper entity '+JSON.stringify(entered.three));
   assert(entered.three.terrain.visibleChunks>0&&entered.three.terrain.renderedSolidTiles>0,'terrain chunks are not rendered '+JSON.stringify(entered.three.terrain));
