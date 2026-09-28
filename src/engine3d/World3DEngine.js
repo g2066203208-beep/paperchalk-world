@@ -1,6 +1,6 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
 import {
-  buildSingleLayerCubeGeometry,
+  buildVoxelChunkGeometry,
   createVoxelGridTexture,
   DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
@@ -73,148 +73,86 @@ export class WorldSpaceHealthBar{
 
 class TerrainChunkRenderer{
   constructor(THREE,terrain,scene,settings={}){
-    this.THREE=THREE;
-    this.terrain=terrain;
-    this.scene=scene;
-    this.settings={radiusX:3,radiusY:2,thickness:terrain.tileSize,texturePixels:terrain.pixelsPerMeter||128,...settings};
-    // One gameplay layer, one physical cube thickness. This is not a 3D voxel volume.
-    this.thickness=Math.max(.001,Number(this.settings.thickness)||terrain.tileSize);
-    this.root=new THREE.Group();
-    this.root.name='single-layer-3d-cube-terrain';
-    scene.add(this.root);
-    this.meshes=new Map();
-    this.visibleKeys=new Set();
+    this.THREE=THREE;this.terrain=terrain;this.scene=scene;
+    this.settings={radiusXZ:3,radiusY:2,texturePixels:terrain.pixelsPerMeter||128,maxBuildsPerFrame:5,...settings};
+    this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
+    this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
     this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
-    this.material=new THREE.MeshLambertMaterial({
-      map:this.texture,
-      vertexColors:true,
-      side:THREE.FrontSide,
-      toneMapped:false
-    });
+    this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false});
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
-
-  _markDirty(cx,cy){
-    const record=this.meshes.get(this.terrain.chunkKey(cx,cy));
+  _markDirty(cx,cy,cz){
+    const record=this.meshes.get(this.terrain.chunkKey(cx,cy,cz));
     if(record)record.version=-1;
   }
-
   _onTerrainChanged(event){
-    if(event.reload){
-      for(const record of this.meshes.values())record.version=-1;
-      return;
-    }
-    if(!Number.isFinite(event.cx)||!Number.isFinite(event.cy))return;
-    this._markDirty(event.cx,event.cy);
-
-    // A border edit changes the exposed side face of the adjacent chunk too.
+    if(event.reload){for(const r of this.meshes.values())r.version=-1;return}
+    if(![event.cx,event.cy,event.cz].every(Number.isFinite))return;
+    this._markDirty(event.cx,event.cy,event.cz);
     const n=this.terrain.chunkSize;
-    const lx=((event.gx%n)+n)%n;
-    const ly=((event.gy%n)+n)%n;
-    if(lx===0)this._markDirty(event.cx-1,event.cy);
-    if(lx===n-1)this._markDirty(event.cx+1,event.cy);
-    if(ly===0)this._markDirty(event.cx,event.cy-1);
-    if(ly===n-1)this._markDirty(event.cx,event.cy+1);
+    const lx=((event.gx%n)+n)%n,ly=((event.gy%n)+n)%n,lz=((event.gz%n)+n)%n;
+    if(lx===0)this._markDirty(event.cx-1,event.cy,event.cz);
+    if(lx===n-1)this._markDirty(event.cx+1,event.cy,event.cz);
+    if(ly===0)this._markDirty(event.cx,event.cy-1,event.cz);
+    if(ly===n-1)this._markDirty(event.cx,event.cy+1,event.cz);
+    if(lz===0)this._markDirty(event.cx,event.cy,event.cz-1);
+    if(lz===n-1)this._markDirty(event.cx,event.cy,event.cz+1);
   }
-
-  _build(chunk){
-    const THREE=this.THREE;
-    const geometry=buildSingleLayerCubeGeometry(THREE,this.terrain,chunk,{
-      thickness:this.thickness,
-      palette:DEFAULT_TERRAIN_PALETTE
-    });
-    const mesh=new THREE.Mesh(geometry,this.material);
+  _build(cx,cy,cz){
+    const chunk=this.terrain.getChunk(cx,cy,cz);
+    const geometry=buildVoxelChunkGeometry(this.THREE,this.terrain,chunk,{palette:DEFAULT_TERRAIN_PALETTE});
+    const mesh=new this.THREE.Mesh(geometry,this.material);
     const span=chunk.size*this.terrain.tileSize;
-    mesh.name='terrain-cube-chunk:'+chunk.cx+','+chunk.cy;
-    mesh.position.set(chunk.cx*span,chunk.cy*span,0);
-    mesh.castShadow=false;
-    mesh.receiveShadow=true;
-    mesh.userData={
-      cx:chunk.cx,cy:chunk.cy,
-      ...geometry.userData
-    };
-    return mesh;
+    mesh.name='voxel-chunk:'+cx+','+cy+','+cz;
+    mesh.position.set(cx*span,cy*span,cz*span);
+    mesh.receiveShadow=true;mesh.castShadow=false;
+    mesh.userData={cx,cy,cz,...geometry.userData};
+    return {mesh,version:chunk.version,cx,cy,cz};
   }
-
-  _ensure(cx,cy){
-    const key=this.terrain.chunkKey(cx,cy);
-    const chunk=this.terrain.getChunk(cx,cy);
+  _ensure(cx,cy,cz){
+    const key=this.terrain.chunkKey(cx,cy,cz),chunk=this.terrain.getChunk(cx,cy,cz);
     let record=this.meshes.get(key);
     if(record&&record.version===chunk.version)return record;
-    if(record){
-      this.root.remove(record.mesh);
-      record.mesh.geometry.dispose();
-    }
-    const mesh=this._build(chunk);
-    record={mesh,version:chunk.version,cx,cy};
-    this.meshes.set(key,record);
-    this.root.add(mesh);
-    return record;
+    if(record){this.root.remove(record.mesh);record.mesh.geometry.dispose()}
+    record=this._build(cx,cy,cz);this.meshes.set(key,record);this.root.add(record.mesh);return record;
   }
-
   update(player){
     if(!player)return;
     const span=this.terrain.chunkSize*this.terrain.tileSize;
-    const ccx=Math.floor(player.x/span),ccy=Math.floor(player.y/span);
-    const next=new Set();
-    for(let y=-this.settings.radiusY;y<=this.settings.radiusY;y++){
-      for(let x=-this.settings.radiusX;x<=this.settings.radiusX;x++){
-        const cx=ccx+x,cy=ccy+y,key=this.terrain.chunkKey(cx,cy);
-        next.add(key);
-        const record=this._ensure(cx,cy);
-        record.mesh.visible=true;
-      }
+    const ccx=Math.floor(player.x/span),ccy=Math.floor(player.y/span),ccz=Math.floor(player.z/span);
+    const next=new Set(),queue=[];
+    const rx=Math.max(1,this.settings.radiusXZ|0),ry=Math.max(1,this.settings.radiusY|0);
+    for(let dy=-ry;dy<=ry;dy++)for(let dz=-rx;dz<=rx;dz++)for(let dx=-rx;dx<=rx;dx++){
+      const cx=ccx+dx,cy=ccy+dy,cz=ccz+dz,key=this.terrain.chunkKey(cx,cy,cz);
+      next.add(key);
+      const record=this.meshes.get(key);
+      if(!record||record.version!==this.terrain.getChunk(cx,cy,cz).version)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+      else record.mesh.visible=true;
+    }
+    queue.sort((a,b)=>a.d-b.d);
+    const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
+    for(let i=0;i<Math.min(budget,queue.length);i++){
+      const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
     }
     for(const [key,record] of [...this.meshes]){
       if(next.has(key))continue;
-      this.root.remove(record.mesh);
-      record.mesh.geometry.dispose();
-      this.meshes.delete(key);
-      this.terrain.unloadChunk(record.cx,record.cy);
+      this.root.remove(record.mesh);record.mesh.geometry.dispose();this.meshes.delete(key);
+      this.terrain.unloadChunk(record.cx,record.cy,record.cz);
     }
     this.visibleKeys=next;
   }
-
-  setDebug(enabled){
-    this.material.wireframe=!!enabled;
-    this.material.needsUpdate=true;
-  }
-
+  setDebug(enabled){this.material.wireframe=!!enabled;this.material.needsUpdate=true}
   stats(){
-    let visible=0,solid=0,quads=0,unitFaces=0,triangles=0,culledFaces=0;
+    let visible=0,solid=0,quads=0,unitFaces=0,triangles=0;
     for(const key of this.visibleKeys){
-      const r=this.meshes.get(key);
-      if(!r?.mesh.visible)continue;
-      visible++;
-      const u=r.mesh.userData||{};
-      solid+=u.solidTiles||0;
-      quads+=u.quads||0;
-      unitFaces+=u.unitFaces||0;
-      triangles+=u.triangles||0;
-      culledFaces+=u.culledFaces||0;
+      const r=this.meshes.get(key);if(!r?.mesh.visible)continue;visible++;
+      const u=r.mesh.userData||{};solid+=u.solidVoxels||0;quads+=u.quads||0;unitFaces+=u.unitFaces||0;triangles+=u.triangles||0;
     }
-    return {
-      visibleChunks:visible,
-      renderedSolidTiles:solid,
-      renderedQuads:quads,
-      representedUnitFaces:unitFaces,
-      terrainTriangles:triangles,
-      culledInternalFaces:culledFaces,
-      oneLayer:true,
-      blockGeometry:'3d-cube',
-      thickness:this.thickness,
-      texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,
-      greedyRatio:quads?unitFaces/quads:1,
-      ...this.terrain.stats()
-    };
+    return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,...this.terrain.stats()};
   }
-
   dispose(){
-    this.unsubscribe?.();
-    for(const r of this.meshes.values())r.mesh.geometry.dispose();
-    this.texture.dispose();
-    this.material.dispose();
-    this.scene.remove(this.root);
+    this.unsubscribe?.();for(const r of this.meshes.values())r.mesh.geometry.dispose();
+    this.texture.dispose();this.material.dispose();this.scene.remove(this.root);
   }
 }
 export class World3DEngine{
@@ -230,8 +168,8 @@ export class World3DEngine{
     this.scene=new THREE.Scene();
     this.scene.background=new THREE.Color('#b9cbd4');
     this.camera=new THREE.PerspectiveCamera(42,1,.05,140);
-    this.cameraRig={yaw:0,pitch:0,distance:18,minDistance:7,maxDistance:34,height:.35,fov:42};
-    this.stageView={enabled:true,axis:'z',side:1};
+    this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,height:.65,fov:42};
+    this.stageView={enabled:false,axis:'z',side:1};
     this.cameraTarget=new THREE.Vector3();
     this.cameraTargetSmooth=new THREE.Vector3();
     this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.paperEntities=[];
@@ -244,7 +182,7 @@ export class World3DEngine{
     this.renderer.toneMapping=THREE.NoToneMapping;
     this.renderer.shadowMap.enabled=false;
     this.renderer.domElement.className='three-world-canvas';
-    this.renderer.domElement.setAttribute('aria-label','Paperchalk 3D paper stage');
+    this.renderer.domElement.setAttribute('aria-label','Paperchalk infinite 3D voxel world');
     this.renderer.domElement.tabIndex=0;this.renderer.domElement.style.touchAction='none';
     host.replaceChildren(this.renderer.domElement);
     this._buildStage();
@@ -265,21 +203,18 @@ export class World3DEngine{
     this.scene.add(sun);
     this.terrainLights={hemi,sun};
 
-    const bgMat=new THREE.MeshBasicMaterial({color:'#d7d0bd',side:THREE.DoubleSide,depthWrite:false,toneMapped:false});
-    const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(180,90),bgMat);
-    backdrop.position.set(0,12,this.layers.far-2);backdrop.name='paper-sky-backdrop';this.scene.add(backdrop);this.backdrop=backdrop;
-
+    this.backdrop=null;
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
-      radiusX:this.sceneData.terrain?.visibleChunkRadiusX??3,
+      radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
       radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
-      thickness:this.sceneData.terrain?.thickness??this.terrain.tileSize,
+      maxBuildsPerFrame:this.sceneData.terrain?.maxBuildsPerFrame??5,
       texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
     });
 
     const cursorGeometry=new THREE.BoxGeometry(
       this.terrain.tileSize*1.035,
       this.terrain.tileSize*1.035,
-      this.terrainRenderer.thickness*1.08
+      this.terrain.tileSize*1.035
     );
     const cursorMaterial=new THREE.MeshBasicMaterial({
       color:0xf3d06b,
@@ -296,9 +231,9 @@ export class World3DEngine{
     this.scene.add(this.terrainCursor);
 
     for(const def of this.sceneData.stageEntities||[]){
-      const ground=def.grounded?this.terrain.highestGroundY(def.x):Number(def.y)||0;
+      const ground=def.grounded?this.terrain.highestGroundY(def.x,Number(def.z)||0):Number(def.y)||0;
       const entity=new PaperSpriteEntity(THREE,{
-        ...def,y:ground,z:Number.isFinite(Number(def.z))?Number(def.z):this.layers.rear,seed:this._seedFromId(def.id)
+        ...def,y:ground,z:Number.isFinite(Number(def.z))?Number(def.z):0,seed:this._seedFromId(def.id)
       });
       this.paperEntities.push(entity);this.scene.add(entity.root);
     }
@@ -308,7 +243,7 @@ export class World3DEngine{
     playerTexture.minFilter=THREE.LinearMipmapLinearFilter;
     playerTexture.generateMipmaps=true;
     this.playerSprite=new PaperSpriteEntity(THREE,{
-      id:'player',kind:'player',label:'',x:0,y:0,z:this.layers.actor,
+      id:'player',kind:'player',label:'',x:0,y:0,z:0,
       width:1,height:2,anchorY:1,texture:playerTexture
     });
     this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
@@ -386,9 +321,10 @@ export class World3DEngine{
   }
   _updatePlayer(dt,snapshot){
     const p=snapshot?.player;if(!p||!this.playerSprite)return;
-    const target=new this.THREE.Vector3(p.x,p.y,this.layers.actor);
+    const target=new this.THREE.Vector3(p.x,p.y,p.z);
     const k=1-Math.pow(.0003,Math.max(0,dt));this.playerSprite.root.position.lerp(target,k);
-    if(Math.abs(p.vx)>.03)this.playerSprite.setFacing(p.vx<0?-1:1);
+    this.playerSprite.root.rotation.y=this._stageYaw();
+    if(Math.hypot(p.vx||0,p.vz||0)>.03)this.playerSprite.setFacing(1);
     this.playerSprite.update(dt);
     const mesh=this.playerSprite.mesh;
     if(p.action==='walk')mesh.position.y=Math.sin(performance.now()*.018)*.025;
@@ -397,7 +333,7 @@ export class World3DEngine{
   }
   _updateCamera(dt,snapshot){
     const p=snapshot?.player;if(!p)return;
-    const desiredTarget=new this.THREE.Vector3(p.x,p.y+this.cameraRig.height,0);
+    const desiredTarget=new this.THREE.Vector3(p.x,p.y+this.cameraRig.height,p.z);
     const k=1-Math.pow(.0005,Math.max(0,dt));
     if(!this.cameraTargetSmooth.lengthSq())this.cameraTargetSmooth.copy(desiredTarget);else this.cameraTargetSmooth.lerp(desiredTarget,k);
     this.cameraTarget.copy(this.cameraTargetSmooth);
@@ -415,8 +351,7 @@ export class World3DEngine{
       );
     }
     this.camera.position.lerp(desired,k);this.camera.lookAt(this.cameraTarget);
-    this.backdrop.position.x=this.cameraTarget.x*.18;
-    this.backdrop.position.y=this.cameraTarget.y*.12+8;
+
   }
   _updateWorldTime(snapshot){
     const minutes=Number(snapshot?.world?.minutes);if(!Number.isFinite(minutes))return;
@@ -431,43 +366,42 @@ export class World3DEngine{
     this.healthBar?.update(this.camera,dt);
   }
   render(){this.renderer.render(this.scene,this.camera)}
-  screenToWorld(clientX,clientY){
+  _screenRay(clientX,clientY){
     const rect=this.renderer.domElement.getBoundingClientRect();
-    const ndc=new this.THREE.Vector2(
-      ((clientX-rect.left)/Math.max(1,rect.width))*2-1,
-      -((clientY-rect.top)/Math.max(1,rect.height))*2+1
-    );
-    const ray=new this.THREE.Raycaster();
-    ray.setFromCamera(ndc,this.camera);
-
-    // Normal play edits the front face of the sole cube layer.
-    // No hidden Z cell can ever be selected because no such gameplay layer exists.
-    const frontZ=this.terrainRenderer.thickness*.5;
-    const plane=new this.THREE.Plane(new this.THREE.Vector3(0,0,1),-frontZ);
-    const point=new this.THREE.Vector3();
-    if(!ray.ray.intersectPlane(plane,point))return null;
-    return {x:point.x,y:point.y,z:frontZ};
+    const ndc=new this.THREE.Vector2(((clientX-rect.left)/Math.max(1,rect.width))*2-1,-((clientY-rect.top)/Math.max(1,rect.height))*2+1);
+    const ray=new this.THREE.Raycaster();ray.setFromCamera(ndc,this.camera);return ray.ray;
   }
-
+  _raycastVoxel(ray,maxDistance=8){
+    const s=this.terrain.tileSize,origin=ray.origin.clone().multiplyScalar(1/s),dir=ray.direction.clone();
+    let x=Math.floor(origin.x),y=Math.floor(origin.y),z=Math.floor(origin.z);
+    const sx=dir.x>0?1:dir.x<0?-1:0,sy=dir.y>0?1:dir.y<0?-1:0,sz=dir.z>0?1:dir.z<0?-1:0;
+    const inf=Infinity;
+    const dx=sx?Math.abs(1/dir.x):inf,dy=sy?Math.abs(1/dir.y):inf,dz=sz?Math.abs(1/dir.z):inf;
+    let tx=sx>0?(x+1-origin.x)*dx:sx<0?(origin.x-x)*dx:inf;
+    let ty=sy>0?(y+1-origin.y)*dy:sy<0?(origin.y-y)*dy:inf;
+    let tz=sz>0?(z+1-origin.z)*dz:sz<0?(origin.z-z)*dz:inf;
+    let px=x,py=y,pz=z,dist=0;
+    for(let i=0;i<256&&dist*s<=maxDistance;i++){
+      const tile=this.terrain.peekVoxel(x,y,z);
+      if(this.terrain.isSolidTile(tile))return {gx:x,gy:y,gz:z,tile,previous:{gx:px,gy:py,gz:pz},distance:dist*s};
+      px=x;py=y;pz=z;
+      if(tx<ty&&tx<tz){x+=sx;dist=tx;tx+=dx}
+      else if(ty<tz){y+=sy;dist=ty;ty+=dy}
+      else{z+=sz;dist=tz;tz+=dz}
+    }
+    return null;
+  }
+  screenToWorld(clientX,clientY){
+    const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10);
+    if(!hit)return null;
+    return this.terrain.cellCenter(hit.gx,hit.gy,hit.gz);
+  }
   screenToTerrainCell(clientX,clientY,{showCursor=true}={}){
-    const point=this.screenToWorld(clientX,clientY);
-    if(!point){
-      if(this.terrainCursor)this.terrainCursor.visible=false;
-      return null;
-    }
-    const cell=this.terrain.worldToCell(point.x,point.y);
-    const center=this.terrain.cellCenter(cell.gx,cell.gy);
-    const tile=this.terrain.peekTile(cell.gx,cell.gy);
-    const result={
-      x:center.x,y:center.y,z:0,
-      gx:cell.gx,gy:cell.gy,
-      tile,solid:this.terrain.isSolidTile(tile),
-      point
-    };
-    if(showCursor&&this.terrainCursor){
-      this.terrainCursor.position.set(center.x,center.y,0);
-      this.terrainCursor.visible=true;
-    }
+    const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10);
+    if(!hit){if(this.terrainCursor)this.terrainCursor.visible=false;return null}
+    const center=this.terrain.cellCenter(hit.gx,hit.gy,hit.gz),place=this.terrain.cellCenter(hit.previous.gx,hit.previous.gy,hit.previous.gz);
+    const result={...center,gx:hit.gx,gy:hit.gy,gz:hit.gz,tile:hit.tile,solid:true,placeGx:hit.previous.gx,placeGy:hit.previous.gy,placeGz:hit.previous.gz,placeX:place.x,placeY:place.y,placeZ:place.z,distance:hit.distance};
+    if(showCursor&&this.terrainCursor){this.terrainCursor.position.set(center.x,center.y,center.z);this.terrainCursor.visible=true}
     return result;
   }
 
@@ -478,16 +412,16 @@ export class World3DEngine{
     const info=this.renderer.info?.render||{};
     return {
       renderer:this.renderer.constructor?.name||'WebGLRenderer',
-      worldMode:'paper-stage-2.5d',
-      terrainMode:'single-layer-3d-cubes',
-      entityMode:'2d-textured-planes',
+      worldMode:'infinite-voxel-3d',
+      terrainMode:'streamed-3d-voxel-chunks',
+      entityMode:'paper-sprites-in-3d',
       drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
-      terrainBlockGeometry:'Box/Cube faces via greedy BufferGeometry'
+      terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
     };
   }
   dispose(){
