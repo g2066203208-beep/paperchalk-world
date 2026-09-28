@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="voxel3d-r26";
+  const BUILD="voxel3d-r27";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="voxel3d-r26">
+<meta name="paperchalk-build" content="voxel3d-r27">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=voxel3d-r26">
+<link rel="stylesheet" href="./styles/game.css?v=voxel3d-r27">
 </head>
 <body>
 
@@ -207,14 +207,14 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=voxel3d-r26"></script>
-<script src="./src/core/game-state.js?v=voxel3d-r26"></script>
-<script src="./src/core/save-runtime.js?v=voxel3d-r26"></script>
-<script src="./src/core/ecs-runtime.js?v=voxel3d-r26"></script>
-<script src="./src/content/game-content.js?v=voxel3d-r26"></script>
+<script src="./src/core/event-bus.js?v=voxel3d-r27"></script>
+<script src="./src/core/game-state.js?v=voxel3d-r27"></script>
+<script src="./src/core/save-runtime.js?v=voxel3d-r27"></script>
+<script src="./src/core/ecs-runtime.js?v=voxel3d-r27"></script>
+<script src="./src/content/game-content.js?v=voxel3d-r27"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/terrain-runtime.js?v=voxel3d-r26"></script>
-<script src="./src/game.js?v=voxel3d-r26"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=voxel3d-r26"></script>
+<script src="./src/terrain/terrain-runtime.js?v=voxel3d-r27"></script>
+<script src="./src/game.js?v=voxel3d-r27"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=voxel3d-r27"></script>
 </body>
 </html>
