@@ -37,7 +37,8 @@ try{
   assert(initial.stats.terrain.visibleChunks>=20,'not enough streamed chunks '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.oneLayer===true,'terrain unexpectedly gained Z gameplay layers '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.blockGeometry==='3d-cube','terrain blocks are not real 3D cube geometry '+JSON.stringify(initial.stats.terrain));
-  assert(Math.abs(initial.stats.terrain.thickness-.25)<1e-6,'terrain cube thickness must equal tile size '+JSON.stringify(initial.stats.terrain));
+  assert(Math.abs(initial.stats.terrain.thickness-1)<1e-6,'terrain cube thickness must be 1m '+JSON.stringify(initial.stats.terrain));
+  assert(initial.stats.terrain.tileSize===1&&initial.stats.terrain.pixelsPerMeter===128&&initial.stats.terrain.texturePixels===128,'terrain scale must be 1m / 128px '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.renderedQuads>0&&initial.stats.terrain.terrainTriangles>0,'cube mesher emitted no geometry '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.culledInternalFaces>0,'internal cube faces were not culled '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.greedyRatio>1,'greedy meshing did not merge any faces '+JSON.stringify(initial.stats.terrain));
