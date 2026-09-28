@@ -11,9 +11,9 @@ const content=read('src/content/game-content.js');
 const save=read('src/core/save-runtime.js');
 const css=read('styles/game.css');
 
-assert(html.includes('paperchalk-build" content="three-main-r1"'),'3D build key missing');
+assert(html.includes('paperchalk-build" content="three-stage-r2"'),'3D build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js world host missing');
-assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=three-main-r1"'),'production Three renderer not loaded');
+assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=three-stage-r2"'),'production Three renderer not loaded');
 assert(!html.includes('pixiEntityLayer'),'Pixi world layer still mounted');
 assert(!html.includes('cardGroundCanvas'),'card-camera ground canvas still mounted');
 assert(!html.includes('class="actor"'),'legacy 2D player actor still mounted');
@@ -42,6 +42,11 @@ assert(engine.includes("this.group.name='player-health-3d'"),'health bar is not 
 assert(engine.includes('this.healthBar=new WorldSpaceHealthBar'),'player does not own the 3D health bar');
 assert(engine.includes('this.group.quaternion.copy(this._parentQuaternion).multiply(camera.quaternion)'),'3D health bar is not billboarded through player rotation');
 assert(engine.includes('new THREE.PerspectiveCamera'),'perspective camera missing');
+assert(engine.includes("this.stageView={enabled:true,axis:'z',side:1}"),'paper-stage camera must default to fixed Z-axis view');
+assert(engine.includes('setStageView(enabled'),'paper-stage camera toggle API missing');
+assert(engine.includes('setStageAxis(axis'),'paper-stage X/Z axis selector missing');
+assert(html.includes('data-debug-action="stageview"'),'debug stage-view toggle missing');
+assert(html.includes('data-debug-action="stageaxis"'),'debug stage-axis toggle missing');
 assert(engine.includes('new THREE.WebGLRenderer'),'WebGLRenderer missing');
 assert(engine.includes('shadowMap.enabled=true'),'3D shadows missing');
 assert(engine.includes('sceneData.buildings'),'3D authored buildings are not consumed');
