@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+String spineVersion = providers.gradleProperty('spineVersion').getOrElse('4.3.5')
+
+android {
+    namespace 'com.paperchalk.spineviewer'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.paperchalk.spineviewer'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName "1.0-spine-${spineVersion}"
+        buildConfigField 'String', 'SPINE_RUNTIME_VERSION', '"' + spineVersion + '"'
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packaging {
+        resources {
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}']
+        }
+    }
+}
+
+dependencies {
+    implementation "com.esotericsoftware.spine:spine-android:${spineVersion}"
+}
