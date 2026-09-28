@@ -132,9 +132,10 @@ class TerrainWorld{
   }
   generateBlackBackdropVoxel(gx,gy,gz=this.blackBackRowZ){
     const surface=this.surfaceCell(gx,this.interactionRowZ);
-    // Rear row is a complete solid black backing column, including its top voxel.
-    // It has no caves and no light holes.
+    // Rear row follows the same visible ground top as the interaction row.
+    // Only voxels buried below that top are the absolute-black backing.
     if(gy>surface)return TILE.AIR;
+    if(gy===surface)return TILE.GRASS;
     return TILE.STONE;
   }
   generateTile(gx,gy,gz=0){return gz===this.blackBackRowZ?this.generateBlackBackdropVoxel(gx,gy,gz):this.generateVoxel(gx,gy,gz)}
