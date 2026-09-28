@@ -237,7 +237,7 @@ export class World3DEngine{
       });
       this.paperEntities.push(entity);this.scene.add(entity.root);
     }
-    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp?v=player-hd-camera-r1');
+    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp?v=voxel3d-r1');
     playerTexture.colorSpace=THREE.SRGBColorSpace;
     playerTexture.magFilter=THREE.LinearFilter;
     playerTexture.minFilter=THREE.LinearMipmapLinearFilter;
