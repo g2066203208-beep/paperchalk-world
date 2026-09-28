@@ -16,7 +16,12 @@ const scene3d={
     interactionRowZ:0,
     blackBackRowZ:-1,
     visibleChunkRadiusY:2,
-    maxBuildsPerFrame:5
+    maxBuildsPerFrame:5,
+    biome:{
+      version:1,
+      spawnSafeRadius:22,
+      generator:'multi-noise-landform-v1'
+    }
   },
   layers:{
     far:-8,
