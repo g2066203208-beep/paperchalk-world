@@ -230,7 +230,7 @@ export class World3DEngine{
     this.scene=new THREE.Scene();
     this.scene.background=new THREE.Color('#b9cbd4');
     this.camera=new THREE.PerspectiveCamera(42,1,.05,140);
-    this.cameraRig={yaw:0,pitch:0,distance:18,minDistance:7,maxDistance:34,fov:42};
+    this.cameraRig={yaw:0,pitch:0,distance:18,minDistance:7,maxDistance:34,height:.35,fov:42};
     this.stageView={enabled:true,axis:'z',side:1};
     this.cameraTarget=new THREE.Vector3();
     this.cameraTargetSmooth=new THREE.Vector3();
@@ -238,7 +238,7 @@ export class World3DEngine{
     this.debugColliders=false;this.pointerState=null;
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
     const coarse=matchMedia('(pointer:coarse)').matches;
-    this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,coarse?1.25:1.7));
+    this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,2));
     this.renderer.setPixelRatio(this.pixelRatio);
     this.renderer.outputColorSpace=THREE.SRGBColorSpace;
     this.renderer.toneMapping=THREE.NoToneMapping;
@@ -302,7 +302,7 @@ export class World3DEngine{
       });
       this.paperEntities.push(entity);this.scene.add(entity.root);
     }
-    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp?v=hd-r1');
+    const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp?v=player-hd-camera-r1');
     playerTexture.colorSpace=THREE.SRGBColorSpace;
     playerTexture.magFilter=THREE.LinearFilter;
     playerTexture.minFilter=THREE.LinearMipmapLinearFilter;
@@ -347,7 +347,7 @@ export class World3DEngine{
   _notifyCamera(){
     this.onCameraChanged?.({
       yaw:this._stageYaw(),orbitYaw:this.cameraRig.yaw,pitch:this.cameraRig.pitch,
-      distance:this.cameraRig.distance,fov:this.cameraRig.fov,stageView:{...this.stageView}
+      distance:this.cameraRig.distance,height:this.cameraRig.height,fov:this.cameraRig.fov,stageView:{...this.stageView}
     });
   }
   setCameraConfig(config={}){
@@ -355,7 +355,8 @@ export class World3DEngine{
     else if(Number.isFinite(config.yaw)&&!config.stageView?.enabled)this.cameraRig.yaw=config.yaw;
     if(Number.isFinite(config.pitch))this.cameraRig.pitch=Math.max(-1.15,Math.min(1.15,config.pitch));
     if(Number.isFinite(config.distance))this.cameraRig.distance=Math.max(this.cameraRig.minDistance,Math.min(this.cameraRig.maxDistance,config.distance));
-    if(Number.isFinite(config.fov)){this.cameraRig.fov=Math.max(28,Math.min(70,config.fov));this.camera.fov=this.cameraRig.fov;this.camera.updateProjectionMatrix()}
+    if(Number.isFinite(config.height))this.cameraRig.height=Math.max(-4,Math.min(8,config.height));
+    this.cameraRig.fov=42;this.camera.fov=42;this.camera.updateProjectionMatrix();
     if(config.stageView&&typeof config.stageView==='object'){
       this.stageView.enabled=config.stageView.enabled!==false;
       this.stageView.axis=config.stageView.axis==='x'?'x':'z';
@@ -367,11 +368,11 @@ export class World3DEngine{
   toggleStageView(){return this.setStageView(!this.stageView.enabled,this.stageView.axis)}
   setStageAxis(axis){this.stageView.axis=axis==='x'?'x':'z';this._notifyCamera();return {...this.stageView}}
   resetCamera(){
-    Object.assign(this.cameraRig,{yaw:0,pitch:0,distance:18,fov:42});
+    Object.assign(this.cameraRig,{yaw:0,pitch:0,distance:18,height:.35,fov:42});
     Object.assign(this.stageView,{enabled:true,axis:'z',side:1});
     this.camera.fov=42;this.camera.updateProjectionMatrix();this._notifyCamera();return this.cameraConfig();
   }
-  cameraConfig(){return {yaw:this._stageYaw(),orbitYaw:this.cameraRig.yaw,pitch:this.cameraRig.pitch,distance:this.cameraRig.distance,fov:this.cameraRig.fov,stageView:{...this.stageView}}}
+  cameraConfig(){return {yaw:this._stageYaw(),orbitYaw:this.cameraRig.yaw,pitch:this.cameraRig.pitch,distance:this.cameraRig.distance,height:this.cameraRig.height,fov:this.cameraRig.fov,stageView:{...this.stageView}}}
   setDebugColliders(enabled){this.debugColliders=!!enabled;this.terrainRenderer.setDebug(this.debugColliders);return this.debugColliders}
   setSnapshot(snapshot){
     this.lastSnapshot=snapshot||null;
@@ -396,7 +397,7 @@ export class World3DEngine{
   }
   _updateCamera(dt,snapshot){
     const p=snapshot?.player;if(!p)return;
-    const desiredTarget=new this.THREE.Vector3(p.x,p.y+.35,0);
+    const desiredTarget=new this.THREE.Vector3(p.x,p.y+this.cameraRig.height,0);
     const k=1-Math.pow(.0005,Math.max(0,dt));
     if(!this.cameraTargetSmooth.lengthSq())this.cameraTargetSmooth.copy(desiredTarget);else this.cameraTargetSmooth.lerp(desiredTarget,k);
     this.cameraTarget.copy(this.cameraTargetSmooth);
@@ -485,6 +486,7 @@ export class World3DEngine{
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
+      playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'Box/Cube faces via greedy BufferGeometry'
     };
   }
