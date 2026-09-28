@@ -64,3 +64,73 @@ html, body, #root {
     min-width: 0 !important;
   }
 }
+
+
+/* V3 mobile workspaces: show one major pane at a time instead of squeezing
+   desktop Layers + Canvas + Inspector into a phone-width three-column layout. */
+@media (max-width: 900px) {
+  .pc-main-panels {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .pc-main-panels > .pc-panel-handle {
+    display: none !important;
+  }
+
+  html[data-pc-mobile-pane="canvas"] .pc-main-panels > .pc-panel-layers,
+  html[data-pc-mobile-pane="canvas"] .pc-main-panels > .pc-panel-inspector {
+    display: none !important;
+  }
+
+  html[data-pc-mobile-pane="layers"] .pc-main-panels > .pc-panel-canvas,
+  html[data-pc-mobile-pane="layers"] .pc-main-panels > .pc-panel-inspector {
+    display: none !important;
+  }
+
+  html[data-pc-mobile-pane="inspector"] .pc-main-panels > .pc-panel-canvas,
+  html[data-pc-mobile-pane="inspector"] .pc-main-panels > .pc-panel-layers {
+    display: none !important;
+  }
+
+  .pc-main-panels > .pc-panel-canvas,
+  .pc-main-panels > .pc-panel-layers,
+  .pc-main-panels > .pc-panel-inspector {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Wizard bars wrap instead of pushing controls off-screen. */
+  .absolute.top-0.inset-x-0.z-40 {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 7px 8px !important;
+  }
+
+  /* Dialogs fit the phone instead of using desktop max widths. */
+  [role="dialog"] {
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    overflow: auto !important;
+  }
+
+  /* Touch-sized layer rows and tree controls. */
+  .pc-panel-layers button,
+  .pc-panel-inspector button {
+    min-height: 40px;
+  }
+
+  .pc-panel-layers,
+  .pc-panel-inspector {
+    overflow: auto !important;
+  }
+}
+
+/* Landscape phones still use the same pane switching, but dialogs can be wider. */
+@media (max-height: 520px) and (pointer: coarse) {
+  [role="dialog"] {
+    max-height: calc(100vh - 12px) !important;
+  }
+}
