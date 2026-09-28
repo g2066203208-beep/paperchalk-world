@@ -139,8 +139,12 @@ class TerrainChunkRenderer{
         const record=this._ensure(cx,cy);record.mesh.visible=true;
       }
     }
-    for(const [key,record] of this.meshes){
-      if(!next.has(key))record.mesh.visible=false;
+    for(const [key,record] of [...this.meshes]){
+      if(next.has(key))continue;
+      this.root.remove(record.mesh);
+      record.mesh.geometry.dispose();
+      this.meshes.delete(key);
+      this.terrain.unloadChunk(record.cx,record.cy);
     }
     this.visibleKeys=next;
   }
@@ -207,12 +211,12 @@ export class World3DEngine{
     for(const def of this.sceneData.stageEntities||[]){
       const ground=def.grounded?this.terrain.highestGroundY(def.x):Number(def.y)||0;
       const entity=new PaperSpriteEntity(THREE,{
-        ...def,y:ground,z:Number(def.z)??this.layers.rear,seed:this._seedFromId(def.id)
+        ...def,y:ground,z:Number.isFinite(Number(def.z))?Number(def.z):this.layers.rear,seed:this._seedFromId(def.id)
       });
       this.paperEntities.push(entity);this.scene.add(entity.root);
     }
     this.playerSprite=new PaperSpriteEntity(THREE,{
-      id:'player',kind:'player',label:'',x:0,y:0,z:this.layers.actor,width:1,height:2,
+      id:'player',kind:'player',label:'',x:0,y:0,z:this.layers.actor,width:1,height:2,anchorY:1,
       primary:'#526f86',secondary:'#e4c4a6',seed:77
     });
     this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
@@ -294,8 +298,8 @@ export class World3DEngine{
     if(Math.abs(p.vx)>.03)this.playerSprite.setFacing(p.vx<0?-1:1);
     this.playerSprite.update(dt);
     const mesh=this.playerSprite.mesh;
-    if(p.action==='walk')mesh.position.y=this.playerSprite.height*.5+Math.sin(performance.now()*.018)*.025;
-    else mesh.position.y=this.playerSprite.height*.5;
+    if(p.action==='walk')mesh.position.y=Math.sin(performance.now()*.018)*.025;
+    else mesh.position.y=0;
     const crouch=p.crouching?.72:1;mesh.scale.y+=(crouch-mesh.scale.y)*Math.min(1,dt*18);
   }
   _updateCamera(dt,snapshot){
