@@ -1,87 +1,108 @@
-# Paperchalk World — Three.js Production Architecture
+# Paperchalk World — Paper Stage Architecture
 
-## 1. Single rendering authority
+## 1. 生产世界定义
 
-The world has one production renderer: Three.js r180 WebGL.
+唯一的生产世界仍由 Three.js / WebGLRenderer 渲染，但游戏不是自由 3D 世界。
 
 ```text
-Input
-  ↓
-ECS fixed-step simulation
-  ↓
-PaperchalkRuntime snapshot
-  ↓
-World3DEngine
-  ↓
-Three.js Scene
-  ↓
-WebGLRenderer
+Gameplay X/Y ECS
+      │
+      ├── TerrainWorld: X × Y × 1 voxel slice
+      │
+      └── Paper entities: PlaneGeometry
+                ↓
+         PaperchalkRuntime
+                ↓
+         World3DEngine
+                ↓
+          Three.js Scene
+                ↓
+          fixed Z camera
 ```
 
-DOM is not a world renderer. It is restricted to screen-space UI such as menus, inventory, the network map, camera controls and debug controls.
+Z 轴是**舞台层级**，不是玩家自由移动轴。正常玩法中玩家固定在 `z=0.36`。
 
-## 2. Gameplay state
+## 2. TerrainWorld
 
-`src/game.js` owns the authoritative player simulation using X/Y/Z coordinates.
+`src/terrain/terrain-world.js` 是地形数据权威。
 
-The player ECS entity contains:
+- tile：0.25 m
+- chunk：64×64 tile
+- 厚度：单个 Z slice，渲染厚度 0.18 m
+- 存储：每 Chunk 使用 `Uint16Array`
+- 生成：FastNoiseLite 1.1.1
+- Streaming：只保留玩家附近 Chunk 的 Three.js Mesh
+- 修改：`setTile / breakTile / placeTile`
+- 保存：仅保存 `terrainDeltas`
 
-- Transform: x, y, z, yaw
-- Velocity: x, y, z
-- Health: current, max
-- Player controller state: grounded, crouching, attacking, action
+地下通过负 Y Chunk 延伸，而不是增加 Z 层。
 
-Movement and gravity run at a fixed 60 Hz step. 3D building collisions are resolved in X/Z; Y is vertical height.
+## 3. Paper entities
 
-## 3. Renderer
+除地形外，世界对象都走 `PaperSpriteEntity`：
 
-`src/engine3d/World3DEngine.js` owns:
+- Player
+- Building
+- Tree
+- Rock
+- Prop
+- 后续 NPC / Enemy / Item
 
-- Scene
+每个实体的可见主体是 `PlaneGeometry`。正式素材可以换成 PNG/WebP 纹理；当前程序化 CanvasTexture 只是占位美术。
+
+角色左右转身通过 Plane 绕 Y 轴翻转完成，不使用 3D 人体转身。
+
+## 4. Gameplay collision
+
+游戏逻辑只处理 X/Y：
+
+- X：左右移动
+- Y：跳跃、重力、地下深度
+- Z：常量舞台层
+
+玩家碰撞通过 TerrainWorld 的 tile AABB 查询完成。横向移动允许自动跨越最多两个 0.25 m tile 的台阶，避免每个地表像素都要求跳跃。
+
+## 5. Renderer
+
+`World3DEngine` 负责：
+
 - PerspectiveCamera
-- WebGLRenderer
-- lighting and shadows
-- procedural village geometry
-- paper-stage camera rig: fixed X/Z principal-axis view by default, with debug-toggleable free orbit
-- player mesh
-- 3D world-space health bar
-- collider debug helpers
+- 默认固定 Z 轴纸片舞台镜头
+- 调试自由镜头
+- 单层 Chunk BufferGeometry
+- PlaneGeometry 纸片实体
+- 纸片翻身
+- 世界空间血条
+- 鼠标/触摸地形命中与挖/放
+- Chunk dirty rebuild
 
-`src/renderers/three-world-renderer.mjs` is the lifecycle adapter. It lazy-loads Three.js, subscribes to `PaperchalkRuntime`, starts rendering on `paperchalk-world-enter`, and stops on `paperchalk-world-leave`.
+DOM 仅用于菜单、背包、世界网络地图、镜头和调试 UI。
 
-## 4. Health UI
+## 6. Persistence
 
-The health bar is a Three.js group attached directly to the player mesh.
-
-It contains ten pieces: nine standard cells plus a tail cell. The group copies the camera quaternion every frame so it behaves as a world-space billboard. Damage and healing animate the 3D fill meshes; there is no DOM health bar.
-
-## 5. Persistence
-
-Save schema V4 stores:
+Schema V5：
 
 ```json
 {
-  "player": {"x":0,"y":0,"z":13,"yaw":3.14159},
+  "player": {"x":0,"y":-12.25,"z":0.36,"yaw":0},
   "playerHp":10,
-  "worldMinutes":360,
+  "terrainDeltas":[[12,-53,0], [13,-53,0]],
   "inventory":[]
 }
 ```
 
-V2/V3 2D saves are migrated once into the native 3D transform.
+程序地形由 seed 重建；只持久化修改 delta，因此深地下不会要求保存整张世界。
 
-## 6. Removed legacy renderer stack
+## 7. 不允许回归的架构
 
-The following are intentionally absent:
+以下内容不能重新成为生产世界：
 
-- Card Camera
-- DOM card projection renderer
-- PixiJS renderer
-- PixiJS vendor bundle
-- PaperPuppet runtime
-- 2D player actor/sprite
-- 2D ground/map/entity/traffic layers
-- DOM health bar
-- 2D world art asset tree
+- 自由 X/Z 地面移动
+- 3D Box/Cylinder/Cone 建筑和树
+- Minecraft 式 X/Y/Z 三维体素场
+- PixiJS 世界渲染
+- DOM CardCamera 世界
+- DOM 玩家角色
+- 旧 PaperPuppet 世界运行时
 
-Tests fail if these systems return.
+Three.js 可以继续提供真正的 3D 舞台空间，但正常美术对象必须保持纸片实体，地形必须保持单层 X/Y 体素切片。
