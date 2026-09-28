@@ -1,4 +1,4 @@
-name: UI + 3D Overlay Smoke
+name: UI + Paper Stage Overlay Smoke
 
 on:
   push:
