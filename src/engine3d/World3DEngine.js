@@ -79,6 +79,45 @@ class TerrainChunkRenderer{
     this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
     this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
     this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false});
+    this.darknessMaterial=new THREE.ShaderMaterial({
+      transparent:true,depthWrite:false,depthTest:true,side:THREE.FrontSide,
+      polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,toneMapped:false,
+      uniforms:{
+        uPlayer:{value:new THREE.Vector3()},
+        uTorchOn:{value:0},
+        uTime:{value:0}
+      },
+      vertexShader:`
+        attribute float darkness;
+        varying float vDarkness;
+        varying vec3 vWorldPos;
+        void main(){
+          vDarkness=darkness;
+          vec4 wp=modelMatrix*vec4(position,1.0);
+          vWorldPos=wp.xyz;
+          gl_Position=projectionMatrix*viewMatrix*wp;
+        }
+      `,
+      fragmentShader:`
+        precision mediump float;
+        varying float vDarkness;
+        varying vec3 vWorldPos;
+        uniform vec3 uPlayer;
+        uniform float uTorchOn;
+        uniform float uTime;
+        void main(){
+          if(vDarkness<0.01)discard;
+          float d=distance(vWorldPos,uPlayer);
+          float bodyReveal=1.0-smoothstep(0.55,1.45,d);
+          float torchRadius=9.5+0.35*sin(uTime*7.0);
+          float torchReveal=uTorchOn*(1.0-smoothstep(2.0,torchRadius,d));
+          float reveal=max(bodyReveal,torchReveal);
+          float alpha=vDarkness*(1.0-reveal)*0.985;
+          if(alpha<0.01)discard;
+          gl_FragColor=vec4(0.0,0.0,0.0,alpha);
+        }
+      `
+    });
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
   _markDirty(cx,cy,cz){
@@ -107,17 +146,30 @@ class TerrainChunkRenderer{
     mesh.position.set(cx*span,cy*span,cz*span);
     mesh.receiveShadow=true;mesh.castShadow=true;
     mesh.userData={cx,cy,cz,...geometry.userData};
-    return {mesh,version:chunk.version,cx,cy,cz};
+
+    let darknessMesh=null;
+    if((geometry.userData?.darknessVertices||0)>0){
+      darknessMesh=new this.THREE.Mesh(geometry,this.darknessMaterial);
+      darknessMesh.name='underground-darkness:'+cx+','+cy+','+cz;
+      darknessMesh.position.copy(mesh.position);
+      darknessMesh.renderOrder=20;
+      darknessMesh.frustumCulled=true;
+      this.root.add(darknessMesh);
+    }
+    return {mesh,darknessMesh,version:chunk.version,cx,cy,cz};
   }
   _ensure(cx,cy,cz){
     const key=this.terrain.chunkKey(cx,cy,cz),chunk=this.terrain.getChunk(cx,cy,cz);
     let record=this.meshes.get(key);
     if(record&&record.version===chunk.version)return record;
-    if(record){this.root.remove(record.mesh);record.mesh.geometry.dispose()}
+    if(record){this.root.remove(record.mesh);if(record.darknessMesh)this.root.remove(record.darknessMesh);record.mesh.geometry.dispose()}
     record=this._build(cx,cy,cz);this.meshes.set(key,record);this.root.add(record.mesh);return record;
   }
-  update(player){
+  update(player,{torchOn=false,time=0}={}){
     if(!player)return;
+    this.darknessMaterial.uniforms.uPlayer.value.set(player.x,player.y,player.z);
+    this.darknessMaterial.uniforms.uTorchOn.value=torchOn?1:0;
+    this.darknessMaterial.uniforms.uTime.value=Number(time)||0;
     const span=this.terrain.chunkSize*this.terrain.tileSize;
     const ccx=Math.floor(player.x/span),ccy=Math.floor(player.y/span),ccz=Math.floor(player.z/span);
     const next=new Set(),queue=[];
@@ -129,16 +181,16 @@ class TerrainChunkRenderer{
       next.add(key);
       const record=this.meshes.get(key);
       if(!record||record.version<0)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
-      else record.mesh.visible=true;
+      else {record.mesh.visible=true;if(record.darknessMesh)record.darknessMesh.visible=true;}
     }
     queue.sort((a,b)=>a.d-b.d);
     const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
     for(let i=0;i<Math.min(budget,queue.length);i++){
-      const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+      const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;if(r.darknessMesh)r.darknessMesh.visible=true;
     }
     for(const [key,record] of [...this.meshes]){
       if(next.has(key))continue;
-      this.root.remove(record.mesh);record.mesh.geometry.dispose();this.meshes.delete(key);
+      this.root.remove(record.mesh);if(record.darknessMesh)this.root.remove(record.darknessMesh);record.mesh.geometry.dispose();this.meshes.delete(key);
       this.terrain.unloadChunk(record.cx,record.cy,record.cz);
     }
     this.visibleKeys=next;
@@ -154,7 +206,7 @@ class TerrainChunkRenderer{
   }
   dispose(){
     this.unsubscribe?.();for(const r of this.meshes.values())r.mesh.geometry.dispose();
-    this.texture.dispose();this.material.dispose();this.scene.remove(this.root);
+    this.texture.dispose();this.material.dispose();this.darknessMaterial.dispose();this.scene.remove(this.root);
   }
 }
 export class World3DEngine{
@@ -522,7 +574,7 @@ export class World3DEngine{
     const current=this.lastSnapshot;
     this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateWorldTime(current);
     const p=current?.player;
-    this.terrainRenderer.update(p);
+    this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
     this.healthBar?.update(this.camera,dt);
   }
   render(){this.renderer.render(this.scene,this.camera)}
@@ -586,6 +638,7 @@ export class World3DEngine{
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
+      undergroundOcclusion:{mode:'terraria-style-black-mask',torchRevealRadius:9.5,playerRevealRadius:1.45},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
