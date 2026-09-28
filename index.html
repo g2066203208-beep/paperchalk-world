@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="three-stage-r2";
+  const BUILD="paper-terrain-r1";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World 3D</title>
-<meta name="paperchalk-build" content="three-stage-r2">
+<meta name="paperchalk-build" content="paper-terrain-r1">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=three-stage-r2">
+<link rel="stylesheet" href="./styles/game.css?v=paper-terrain-r1">
 </head>
 <body>
 
@@ -78,8 +78,8 @@
     <button id="jumpBtn" class="combat-btn" type="button">跳</button>
     <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
   </div>
-  <div class="desktop-control-hint">WASD / 方向键移动 · Space 跳跃 · C 蹲下 · J 攻击 · 舞台视角默认锁定 · 调试可切自由镜头 · 滚轮缩放</div>
-  <div class="joystick-hint">左侧摇杆：3D 平面移动</div>
+  <div class="desktop-control-hint">A/D / ←→ 移动 · Space 跳跃 · 左键挖掘 · 右键放置 · C 蹲下 · J 攻击 · 世界为单层体素纸片舞台</div>
+  <div class="joystick-hint">左侧摇杆：左右移动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="3D移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
       <div class="joystick-base"></div>
@@ -197,12 +197,13 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=three-stage-r2"></script>
-<script src="./src/core/game-state.js?v=three-stage-r2"></script>
-<script src="./src/core/save-runtime.js?v=three-stage-r2"></script>
-<script src="./src/core/ecs-runtime.js?v=three-stage-r2"></script>
-<script src="./src/content/game-content.js?v=three-stage-r2"></script>
-<script src="./src/game.js?v=three-stage-r2"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=three-stage-r2"></script>
+<script src="./src/core/event-bus.js?v=paper-terrain-r1"></script>
+<script src="./src/core/game-state.js?v=paper-terrain-r1"></script>
+<script src="./src/core/save-runtime.js?v=paper-terrain-r1"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-terrain-r1"></script>
+<script src="./src/content/game-content.js?v=paper-terrain-r1"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-terrain-r1"></script>
+<script src="./src/game.js?v=paper-terrain-r1"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-terrain-r1"></script>
 </body>
 </html>
