@@ -26,7 +26,8 @@ try{
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
-  assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui','fishing renderer missing '+JSON.stringify(initial.fishing));
+  assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui-v2','fishing renderer missing '+JSON.stringify(initial.fishing));
+  assert(initial.fishEcology?.renderMode==='pooled-instanced-paper-fish','fish ecology renderer missing '+JSON.stringify(initial.fishEcology));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
