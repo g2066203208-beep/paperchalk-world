@@ -1,0 +1,61 @@
+name: Build Spine Android Viewer
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'tools/spine-android-viewer/**'
+      - '.github/workflows/spine-viewer-android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Spine ${{ matrix.spine }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        spine: ['4.2.12', '4.3.5']
+    defaults:
+      run:
+        working-directory: tools/spine-android-viewer
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        run: gradle :app:assembleDebug -PspineVersion=${{ matrix.spine }} --stacktrace
+
+      - name: Stage artifact
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk "artifacts/PaperChalk-SpineViewer-${{ matrix.spine }}.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaperChalk-SpineViewer-${{ matrix.spine }}
+          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineViewer-${{ matrix.spine }}.apk
+          if-no-files-found: error
+          retention-days: 30
