@@ -153,7 +153,7 @@ class TerrainChunkRenderer{
     const mesh=new this.THREE.Mesh(geometry,this.material);
     const span=chunk.size*this.terrain.tileSize;
     mesh.name='voxel-chunk:'+cx+','+cy+','+cz;
-    mesh.position.set(cx*span,cy*span,cz*span);
+    mesh.position.set(cx*span,cy*span,cz*span-this.terrain.tileSize*.5);
     mesh.receiveShadow=true;mesh.castShadow=true;
     mesh.userData={cx,cy,cz,...geometry.userData};
     return {mesh,version:chunk.version,cx,cy,cz};
@@ -628,6 +628,7 @@ export class World3DEngine{
   }
   _raycastVoxel(ray,maxDistance=8,{interactionOnly=false}={}){
     const s=this.terrain.tileSize,origin=ray.origin.clone().multiplyScalar(1/s),dir=ray.direction.clone();
+    origin.z+=.5;
     let x=Math.floor(origin.x),y=Math.floor(origin.y),z=Math.floor(origin.z);
     const sx=dir.x>0?1:dir.x<0?-1:0,sy=dir.y>0?1:dir.y<0?-1:0,sz=dir.z>0?1:dir.z<0?-1:0;
     const inf=Infinity;
@@ -680,7 +681,7 @@ export class World3DEngine{
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
-      interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
+      interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
       undergroundOcclusion:{mode:'culled-buried-z-faces-v9',backgroundProvidesBlack:true,noBuriedDepthFaces:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
