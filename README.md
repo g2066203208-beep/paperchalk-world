@@ -1,69 +1,59 @@
-# Paperchalk World 3D
+# Paperchalk World — 单层体素纸片舞台
 
-Paperchalk World 已迁移为 **Three.js r180 + WebGLRenderer 的原生 3D 浏览器游戏运行时**。
-
-当前主线架构只有一套世界渲染路径：
+Paperchalk World 当前主线是 **Three.js 3D 舞台 + Terraria 式单层可破坏地形 + 2D 贴图实体**。
 
 ```text
-ECS gameplay state
-      ↓
-PaperchalkRuntime
-      ↓
-Three.js Scene / PerspectiveCamera / WebGLRenderer
-      ↓
-WebGL canvas
+ECS / gameplay (X,Y)
+        ↓
+single-layer TerrainWorld (X,Y × 1)
+        ↓
+Three.js paper stage
+        ↓
+Z only controls front/back paper layers
 ```
 
-旧的 DOM Card Camera、PixiJS 世界渲染、2D 玩家 Sprite、2D 建筑/道路/交通层、PaperPuppet 世界渲染和 DOM 血条已经退出生产运行时。
+世界不是 Minecraft 式三维体素。只有玩家所在的中景地形是一层可挖、可放的方块网格；房屋、树木、岩石、玩家和后续 NPC/敌人都使用贴在 Three.js `PlaneGeometry` 上的 2D 纸片纹理。
 
-## 当前 3D 功能
+## 当前实现
 
-- 原生 X/Y/Z 玩家状态与存档
-- WASD / 方向键在 3D 地面移动
-- Space 跳跃、重力和落地
-- C 蹲下、J 攻击动作状态
-- 默认“纸片舞台”固定轴相机：3D 世界保持真实深度，但镜头锁定沿 Z 轴侧视
-- 调试面板可一键关闭舞台锁定恢复自由第三人称镜头，也可在 X / Z 固定观察轴之间切换
-- 自由镜头模式支持鼠标/触控拖动旋转，滚轮缩放
-- 程序化 3D 地面、道路、人行道、建筑、树木和岩石
-- DirectionalLight / HemisphereLight
-- 实时阴影、雾、色调映射
-- 建筑 3D 碰撞
-- ECS 固定步长模拟
-- 10 点世界空间血条：9 个普通格 + 1 个尾巴格
-- 掉血和回血的 3D 缩放/透明动画
-- 血条 Billboard 始终朝向摄像机
-- 本地档案、Schema V4 3D Transform 存档
-- 20 格背包
-- 3D 镜头设置
-- 3D Collider 调试显示
-- Android WebView 壳
-
-HTML 只保留菜单、背包、地图和调试等屏幕 UI；游戏世界本体全部由 Three.js 渲染。
+- 0.25 m 单元，64×64 cell 的单层 TerrainChunk
+- TypedArray 地形存储
+- Chunk 按玩家位置流式加载/卸载
+- 地表、土层、石层、洞穴的确定性程序生成
+- 地下 Y 可持续向负方向加载，不设置 3D 体素厚度
+- Chunk 通过单个 BufferGeometry 合批，不是一方块一个 Mesh
+- 左键挖掘、右键放置泥土
+- 地形修改保存为 delta；Schema V5 可恢复挖过的洞
+- 玩家碰撞、重力和跳跃全部在 X/Y 平面
+- Gameplay Z 固定，只作为舞台层级
+- 建筑、树、石头、玩家全部为 2D textured Plane
+- 玩家左右换向使用纸片绕 Y 轴翻 180° 的转身效果
+- 默认摄像机沿 Z 轴固定观察
+- 调试中可关闭舞台锁定进入自由 3D 镜头，也可切 X/Z 观察轴
+- 10 格世界空间血条继续跟随玩家
+- 背包、地图、本地档案和 Android 壳继续保留
 
 ## 操作
 
-- `WASD` / 方向键：3D 平面移动
+- `A / D`、`← / →`：左右移动
 - `Space`：跳跃
+- 左键：挖掉指针位置的地形块
+- 右键：放置泥土块
 - `C`：蹲下
-- `J`：攻击
+- `J`：攻击状态
 - `B`：背包
 - `M`：世界地图
-- 拖动 3D 场景：旋转镜头
-- 鼠标滚轮：镜头缩放
-
-手机端使用左侧虚拟摇杆和右侧“蹲 / 跳 / 攻”按钮。
+- 滚轮：镜头距离
+- 调试关闭“纸片舞台视角”后可拖动镜头自由查看这张单层世界
 
 ## 在线版本
 
 https://g2066203208-beep.github.io/paperchalk-world/
 
-## 回归测试
+## 架构原则
 
-- Web 3D Static Smoke
-- Core 3D Runtime Regression
-- Three.js Production Engine Smoke
-- UI + 3D Overlay Smoke
-- Android APK Build
-
-这些测试会阻止 2D/Pixi/CardCamera 渲染代码重新进入生产架构。
+1. Three.js 是舞台和 WebGL 渲染器，不代表世界物体必须是 3D 模型。
+2. Terrain 是唯一的 voxel/block 世界层，数据维度是 X/Y；Z 厚度不参与世界生成。
+3. 非地形对象统一走 PaperSpriteEntity / PlaneGeometry。
+4. 正常玩法只允许 X/Y 运动；Z 仅用于远景、中景、玩家、前景的纸片层次。
+5. 地形修改只保存 delta，未修改区域始终由 seed 重建。
