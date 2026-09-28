@@ -53,19 +53,55 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build integrated Stretchy Studio
+      - name: Build fully offline integrated Stretchy Studio
         working-directory: .
         run: |
           rm -rf /tmp/stretchystudio
           git clone https://github.com/MangoLion/stretchystudio.git /tmp/stretchystudio
           cd /tmp/stretchystudio
           git checkout 24a83a27ba43e43e9d2e3de5e33994594e6199c2
+
+          npm ci
+          npm install --no-save @mediapipe/tasks-vision@0.10.35
+
+          mkdir -p public/ort public/mediapipe public/models
+
+          # Bundle ONNX Runtime WASM locally for DWPose. No CDN at app runtime.
+          cp node_modules/onnxruntime-web/dist/*.wasm public/ort/ || true
+          cp node_modules/onnxruntime-web/dist/*.mjs public/ort/ || true
+
+          # Bundle MediaPipe Tasks Vision WASM locally for camera pose tracking.
+          cp -R node_modules/@mediapipe/tasks-vision/wasm/. public/mediapipe/
+
+          # Bundle the two runtime models. Download occurs only during CI build;
+          # the installed APK never needs network access.
+          curl -L --fail --retry 3 \
+            -o public/models/pose_landmarker_lite.task \
+            https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+          curl -L --fail --retry 3 \
+            -o public/models/dw-ll_ucoco_384.onnx \
+            https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx
+
           python3 - <<'PY'
           from pathlib import Path
+
           p = Path('vite.config.js')
           s = p.read_text()
           s = s.replace("export default defineConfig({", "export default defineConfig({\n  base: './',", 1)
           p.write_text(s)
+
+          # Expose stores and MediaPipe constructors to the Android bridge.
+          main = Path('src/main.jsx')
+          s = main.read_text()
+          s = s.replace(
+              "import { ThemeProvider } from './contexts/ThemeProvider.jsx'\n",
+              "import { ThemeProvider } from './contexts/ThemeProvider.jsx'\n"
+              "import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision'\n"
+          )
+          s += "\nif (typeof window !== 'undefined') {\n"
+          s += "  window.__PAPERCHALK_MEDIAPIPE__ = { FilesetResolver, PoseLandmarker };\n"
+          s += "}\n"
+          main.write_text(s)
 
           for path, line in [
               ('src/store/projectStore.js', "\nif (typeof window !== 'undefined') window.__PAPERCHALK_PROJECT_STORE__ = useProjectStore;\n"),
@@ -74,9 +110,39 @@ jobs:
           ]:
               q = Path(path)
               q.write_text(q.read_text() + line)
+
+          # Force auto-rig inference to use only assets shipped inside the APK.
+          q = Path('src/io/armatureOrganizer.js')
+          s = q.read_text()
+          s = s.replace(
+              "instance.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.3/dist/';",
+              "instance.env.wasm.wasmPaths = './ort/';"
+          )
+          s = s.replace(
+              "export const DWPOSE_URL = 'https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx';",
+              "export const DWPOSE_URL = './models/dw-ll_ucoco_384.onnx';"
+          )
+          q.write_text(s)
+
+          # Remove cloud/login wording and external See-Through shortcuts from the
+          # embedded editor. PSD import itself is always local.
+          for path in [
+              'src/components/canvas/PsdImportWizard.jsx',
+              'src/components/canvas/CanvasViewport.jsx',
+              'src/components/preferences/PreferencesModal.jsx',
+          ]:
+              q = Path(path)
+              if not q.exists():
+                  continue
+              s = q.read_text()
+              s = s.replace('Download from HuggingFace', 'Use bundled offline DWPose')
+              s = s.replace('Free HuggingFace Space', 'Offline mode')
+              s = s.replace('https://huggingface.co/spaces/24yearsold/see-through-demo', '#offline-see-through-disabled')
+              q.write_text(s)
           PY
-          npm ci
+
           npm run build
+
           TARGET="$GITHUB_WORKSPACE/tools/spine-android-viewer/app/src/main/assets/studio"
           rm -rf "$TARGET"
           mkdir -p "$TARGET"
