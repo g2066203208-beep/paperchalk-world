@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=voxel3d-r37';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=voxel3d-r38';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
