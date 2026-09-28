@@ -24,6 +24,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -65,56 +66,99 @@ public class StudioActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(0xff15171d);
         setContentView(root);
+        MobileUi.applySystemBars(this, root);
 
-        LinearLayout bar = new LinearLayout(this);
-        bar.setOrientation(LinearLayout.HORIZONTAL);
-        bar.setGravity(Gravity.CENTER_VERTICAL);
-        bar.setPadding(dp(6), dp(4), dp(6), dp(4));
-        root.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(52)));
+        // Safe top header: only navigation + title live here, so the Android
+        // status bar/notch can never cover the editing actions.
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(6), dp(3), dp(6), dp(3));
+        header.setBackgroundColor(0xff1d2028);
+        root.addView(header, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(48)));
 
-        bar.addView(button("返回", v -> finish()));
-        bar.addView(button("导入 PSD/图片", v -> runJs(
-            "(function(){const i=document.querySelector('input[type=file]');if(i){i.click();return 'ok'}return 'no-input'})()"
-        )));
-        bar.addView(button("自动抠图", v -> startActivity(new Intent(this, CutoutActivity.class))));
-        bar.addView(button("摄像头面捕", v -> runJs(
-            "window.PaperChalkMocap?PaperChalkMocap.toggle():'bridge-loading'"
-        )));
-        bar.addView(button("录制动作", v -> runJs(
-            "window.PaperChalkMocap?PaperChalkMocap.toggleRecord():'bridge-loading'"
-        )));
-        bar.addView(button("保存动作", v -> runJs(
-            "window.PaperChalkMocap?PaperChalkMocap.exportCurrentMotion():'bridge-loading'"
-        )));
-        bar.addView(button("导出视频", v -> runJs(
-            "window.PaperChalkRecorder?PaperChalkRecorder.start():'bridge-loading'"
-        )));
-        bar.addView(button("停止视频", v -> runJs(
-            "window.PaperChalkRecorder?PaperChalkRecorder.stop():'bridge-loading'"
-        )));
-        bar.addView(button("刷新", v -> webView.reload()));
+        Button back = button("← 返回", v -> finish());
+        header.addView(back);
+
+        TextView title = new TextView(this);
+        title.setText("PaperChalk · 离线动画工作室");
+        title.setTextColor(0xffffffff);
+        title.setTextSize(14);
+        title.setSingleLine(true);
+        title.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.MATCH_PARENT, 1f);
+        titleLp.leftMargin = dp(8);
+        header.addView(title, titleLp);
+
+        Button refresh = button("刷新", v -> webView.reload());
+        header.addView(refresh);
 
         status = new TextView(this);
-        status.setTextColor(0xffd3d7e3);
+        status.setTextColor(0xffc7ccda);
         status.setTextSize(11);
         status.setSingleLine(true);
-        status.setText("全离线 · PSD自动识别/组装 · 自动绑定 · 网格变形 · 摄像头面捕 · 动作/视频导出");
-        LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        statusLp.leftMargin = dp(8);
-        bar.addView(status, statusLp);
+        status.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        status.setPadding(dp(8), dp(2), dp(8), dp(2));
+        status.setText("全离线 · PSD · 自动绑定 · 网格变形 · 面捕 · 动作/视频导出");
+        root.addView(status, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(28)));
 
         webView = new WebView(this);
-        root.addView(webView, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        root.addView(webView, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+
+        // Thumb-friendly bottom toolbar. It stays above gesture/navigation bars
+        // and scrolls horizontally instead of squeezing buttons off-screen.
+        HorizontalScrollView actionsScroll = new HorizontalScrollView(this);
+        actionsScroll.setHorizontalScrollBarEnabled(false);
+        actionsScroll.setFillViewport(false);
+        actionsScroll.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+        actionsScroll.setBackgroundColor(0xff20232b);
+        root.addView(actionsScroll, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(58)));
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+        actions.setPadding(dp(6), dp(4), dp(6), dp(4));
+        actionsScroll.addView(actions, new HorizontalScrollView.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.MATCH_PARENT));
+
+        actions.addView(button("PSD/图片", v -> runJs(
+            "(function(){const i=document.querySelector('input[type=file]');if(i){i.click();return 'ok'}return 'no-input'})()"
+        )));
+        actions.addView(button("自动抠图", v ->
+            startActivity(new Intent(this, CutoutActivity.class))));
+        actions.addView(button("摄像头面捕", v -> runJs(
+            "window.PaperChalkMocap?PaperChalkMocap.toggle():'bridge-loading'"
+        )));
+        actions.addView(button("录制动作", v -> runJs(
+            "window.PaperChalkMocap?PaperChalkMocap.toggleRecord():'bridge-loading'"
+        )));
+        actions.addView(button("保存动作", v -> runJs(
+            "window.PaperChalkMocap?PaperChalkMocap.exportCurrentMotion():'bridge-loading'"
+        )));
+        actions.addView(button("导出视频", v -> runJs(
+            "window.PaperChalkRecorder?PaperChalkRecorder.start():'bridge-loading'"
+        )));
+        actions.addView(button("停止视频", v -> runJs(
+            "window.PaperChalkRecorder?PaperChalkRecorder.stop():'bridge-loading'"
+        )));
     }
 
     private Button button(String text, android.view.View.OnClickListener listener) {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
-        b.setTextSize(11);
-        b.setMinWidth(0);
-        b.setMinHeight(0);
-        b.setPadding(dp(8), dp(2), dp(8), dp(2));
+        b.setTextSize(12);
+        b.setMinWidth(dp(72));
+        b.setMinHeight(dp(44));
+        b.setMinimumWidth(dp(72));
+        b.setMinimumHeight(dp(44));
+        b.setPadding(dp(10), dp(4), dp(10), dp(4));
         b.setOnClickListener(listener);
         return b;
     }
@@ -211,11 +255,16 @@ public class StudioActivity extends Activity {
 
     private void injectPaperChalkBridge() {
         String js = "(function(){"
-            + "if(document.getElementById('paperchalk-android-bridge'))return;"
+            + "if(!document.getElementById('paperchalk-mobile-css')){"
+            + "var l=document.createElement('link');"
+            + "l.id='paperchalk-mobile-css';l.rel='stylesheet';"
+            + "l.href='https://appassets.androidplatform.net/assets/paperchalk-mobile.css';"
+            + "document.head.appendChild(l);}"
+            + "if(!document.getElementById('paperchalk-android-bridge')){"
             + "var s=document.createElement('script');"
             + "s.id='paperchalk-android-bridge';"
             + "s.src='https://appassets.androidplatform.net/assets/paperchalk-studio-bridge.js';"
-            + "document.head.appendChild(s);"
+            + "document.head.appendChild(s);}"
             + "})();";
         webView.evaluateJavascript(js, null);
     }
