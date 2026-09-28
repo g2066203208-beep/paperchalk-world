@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="player-hd-camera-r1";
+  const BUILD="stage-wall-r1";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="player-hd-camera-r1">
+<meta name="paperchalk-build" content="stage-wall-r1">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=player-hd-camera-r1">
+<link rel="stylesheet" href="./styles/game.css?v=stage-wall-r1">
 </head>
 <body>
 
@@ -199,14 +199,14 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=player-hd-camera-r1"></script>
-<script src="./src/core/game-state.js?v=player-hd-camera-r1"></script>
-<script src="./src/core/save-runtime.js?v=player-hd-camera-r1"></script>
-<script src="./src/core/ecs-runtime.js?v=player-hd-camera-r1"></script>
-<script src="./src/content/game-content.js?v=player-hd-camera-r1"></script>
+<script src="./src/core/event-bus.js?v=stage-wall-r1"></script>
+<script src="./src/core/game-state.js?v=stage-wall-r1"></script>
+<script src="./src/core/save-runtime.js?v=stage-wall-r1"></script>
+<script src="./src/core/ecs-runtime.js?v=stage-wall-r1"></script>
+<script src="./src/content/game-content.js?v=stage-wall-r1"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/terrain-runtime.js?v=player-hd-camera-r1"></script>
-<script src="./src/game.js?v=player-hd-camera-r1"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=player-hd-camera-r1"></script>
+<script src="./src/terrain/terrain-runtime.js?v=stage-wall-r1"></script>
+<script src="./src/game.js?v=stage-wall-r1"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=stage-wall-r1"></script>
 </body>
 </html>
