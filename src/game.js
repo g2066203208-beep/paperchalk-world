@@ -110,7 +110,8 @@ const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
 const bounds=sceneData.bounds;
 const terrain=new TerrainRuntime.TerrainWorld({
-  tileSize:sceneData.terrain?.tileSize??.25,
+  tileSize:sceneData.terrain?.tileSize??1,
+  pixelsPerMeter:sceneData.terrain?.pixelsPerMeter??128,
   chunkSize:sceneData.terrain?.chunkSize??64,
   seed:sceneData.terrain?.seed??24681357
 });
