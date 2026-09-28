@@ -81,3 +81,17 @@ The foreground cutout model is a person/selfie segmenter. It is useful for human
 - ag-psd — MIT (transitively used by Stretchy Studio).
 - MediaPipe / Tasks Vision — Apache-2.0 APIs; camera pose tracking and foreground segmentation.
 - Official Spine Android runtime — Spine Runtimes License (separate from the MIT/Apache components).
+
+
+## Unified APK and motion export
+
+The Android build is now intentionally a **single APK** using Spine Runtime 4.3.5. The PSD/rigging/mocap studio does not depend on Spine data version. Spine 4.2 projects should be re-exported from a compatible Spine editor/runtime if they need to be loaded through the Spine viewer path.
+
+After recording or editing an animation, tap **保存动作**. The app writes both files into `Downloads/PaperChalk/`:
+
+- `<name>.pcmotion.json` — PaperChalk's engine-neutral 2D skeletal interchange. Tracks are keyed by stable bone roles rather than editor node IDs. It preserves the full authoring tracks, including custom 2D node and mesh-deformation tracks where present.
+- `<name>.gltf` — glTF 2.0 motion-only skeleton for wider interchange. Standard bone translation/rotation/scale channels are exported; custom 2D mesh-warp tracks remain in the companion `.pcmotion.json` because glTF cannot represent the editor's arbitrary 2D warp lattice without baking it into a mesh/morph-target asset.
+
+The game branch also includes `src/animation/paperchalk-motion.js`, which validates, loads, samples and retargets `paperchalk.motion.v1` clips by bone role.
+
+There is no single animation file format that every 2D skeletal runtime can consume without adaptation. The paired export deliberately provides one lossless project/game format and one standardized glTF interchange format.
