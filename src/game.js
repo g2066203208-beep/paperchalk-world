@@ -525,7 +525,11 @@ function digTerrainCell(gx,gy,gz,{persist=true}={}){
   const center=terrain.cellCenter(gx,gy,gz);
   if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
   const result=terrain.digCell(gx,gy,gz);
-  if(result.changed){window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'dig'});publish();if(persist)saveWorldState()}
+  if(result.changed){
+    const waterSettle=terrain.water.settleAll();
+    window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'dig',waterSettle});
+    publish();if(persist)saveWorldState()
+  }
   return result;
 }
 function placeTerrainCell(gx,gy,gz,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
@@ -536,7 +540,11 @@ function placeTerrainCell(gx,gy,gz,tile=TerrainRuntime.TILE.DIRT,{persist=true}=
   const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half&&Math.abs(center.z-transform.z)<PLAYER_HALF_D+half;
   if(overlapsPlayer)return {changed:false,reason:'player-overlap'};
   const result=terrain.placeCell(gx,gy,gz,tile);
-  if(result.changed){window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place'});publish();if(persist)saveWorldState()}
+  if(result.changed){
+    const waterSettle=terrain.water.settleAll();
+    window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place',waterSettle});
+    publish();if(persist)saveWorldState()
+  }
   return result;
 }
 function digTerrainAt(x,y,z=transform.z,options){const c=terrain.worldToCell(x,y,z);return digTerrainCell(c.gx,c.gy,c.gz,options)}
@@ -1088,7 +1096,7 @@ function fixedUpdate(dt){
     waterStepAccumulator+=dt;
     if(waterStepAccumulator>=.06){
       waterStepAccumulator=0;
-      const liquidStep=terrain.water.step({maxTransfers:1800,maxActive:1200,relaxPasses:8});
+      const liquidStep=terrain.water.step();
       if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
     }
   }
