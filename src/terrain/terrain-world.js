@@ -63,6 +63,38 @@ class TerrainWorld{
     this.chunkCache=new Map();
     this.listeners=new Set();
     this.revision=0;
+    this.noiseBackend='fallback-value-noise';
+    this.surfaceNoise=null;
+    this.detailNoise=null;
+    this.caveNoise=null;
+    this.oreNoise=null;
+    if(global.FastNoiseLite){
+      const F=global.FastNoiseLite;
+      const NT=global.FastNoiseLiteNoiseType||{};
+      const FT=global.FastNoiseLiteFractalType||{};
+      this.surfaceNoise=new F(this.seed+11);
+      this.surfaceNoise.SetNoiseType(NT.OpenSimplex2S||2);
+      this.surfaceNoise.SetFrequency(.018);
+      this.surfaceNoise.SetFractalType(FT.FBm||1);
+      this.surfaceNoise.SetFractalOctaves(4);
+
+      this.detailNoise=new F(this.seed+37);
+      this.detailNoise.SetNoiseType(NT.Perlin||4);
+      this.detailNoise.SetFrequency(.052);
+      this.detailNoise.SetFractalType(FT.FBm||1);
+      this.detailNoise.SetFractalOctaves(3);
+
+      this.caveNoise=new F(this.seed+101);
+      this.caveNoise.SetNoiseType(NT.OpenSimplex2S||2);
+      this.caveNoise.SetFrequency(.055);
+      this.caveNoise.SetFractalType(FT.FBm||1);
+      this.caveNoise.SetFractalOctaves(4);
+
+      this.oreNoise=new F(this.seed+509);
+      this.oreNoise.SetNoiseType(NT.Cellular||3);
+      this.oreNoise.SetFrequency(.085);
+      this.noiseBackend='FastNoiseLite-1.1.1';
+    }
   }
 
   key(tx,ty){return tx+','+ty}
@@ -76,9 +108,9 @@ class TerrainWorld{
   }
 
   _surfaceTile(tx){
-    const broad=fbm(tx*.018,0,this.seed+11,4)*5.0;
-    const detail=fbm(tx*.052,8.3,this.seed+37,3)*2.0;
-    return Math.floor(broad+detail);
+    const broad=this.surfaceNoise?this.surfaceNoise.GetNoise(tx,0):fbm(tx*.018,0,this.seed+11,4);
+    const detail=this.detailNoise?this.detailNoise.GetNoise(tx,17):fbm(tx*.052,8.3,this.seed+37,3);
+    return Math.floor(broad*5.0+detail*2.0);
   }
 
   _baseTile(tx,ty){
@@ -92,12 +124,13 @@ class TerrainWorld{
 
     // Underground cavities are 2D caves, matching the single-slice Terraria layout.
     if(depth>10){
-      const caveA=fbm(tx*.055,ty*.055,this.seed+101,4);
+      const caveA=this.caveNoise?this.caveNoise.GetNoise(tx,ty):fbm(tx*.055,ty*.055,this.seed+101,4);
       const caveB=Math.abs(fbm(tx*.10,ty*.08,this.seed+223,2));
       if(caveA>.38&&caveB<.42)return MATERIALS.AIR;
     }
 
-    if(depth>16&&rand01(tx,ty,this.seed+509)>.965)return MATERIALS.ORE;
+    const oreSignal=this.oreNoise?this.oreNoise.GetNoise(tx,ty):rand01(tx,ty,this.seed+509)*2-1;
+    if(depth>16&&oreSignal>.72)return MATERIALS.ORE;
     if(depth>5&&depth<18&&fbm(tx*.12,ty*.09,this.seed+701,2)>.52)return MATERIALS.CLAY;
     return MATERIALS.STONE;
   }
@@ -268,6 +301,7 @@ class TerrainWorld{
       chunkSize:this.chunkSize,
       layerDepth:this.depth,
       seed:this.seed,
+      noiseBackend:this.noiseBackend,
       deltas:this.deltas.size,
       revision:this.revision
     };
