@@ -15,6 +15,7 @@ import android.provider.MediaStore;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -67,42 +68,70 @@ public class CutoutActivity extends Activity {
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(10), dp(10), dp(10), dp(10));
+        root.setPadding(dp(8), dp(8), dp(8), dp(8));
         root.setBackgroundColor(0xff17191f);
         setContentView(root);
+        MobileUi.applySystemBars(this, root);
 
-        LinearLayout bar = new LinearLayout(this);
-        bar.setGravity(Gravity.CENTER_VERTICAL);
-        root.addView(bar, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(54)));
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        root.addView(header, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(46)));
 
-        Button back = button("返回");
+        Button back = button("← 返回");
         back.setOnClickListener(v -> finish());
-        bar.addView(back);
+        header.addView(back);
 
-        Button choose = button("选择图片并自动抠图");
-        choose.setOnClickListener(v -> chooseImage());
-        bar.addView(choose);
-
-        Button save = button("保存透明PNG");
-        save.setOnClickListener(v -> saveResult());
-        bar.addView(save);
+        TextView title = new TextView(this);
+        title.setText("自动抠图 · 本地 MediaPipe");
+        title.setTextColor(Color.WHITE);
+        title.setTextSize(14);
+        title.setSingleLine(true);
+        LinearLayout.LayoutParams titleLp = new LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        titleLp.leftMargin = dp(8);
+        header.addView(title, titleLp);
 
         status = new TextView(this);
         status.setTextColor(Color.WHITE);
-        status.setTextSize(12);
-        status.setText("MediaPipe 本地抠图：适合人物/人形角色。分层 PSD 会直接保留原图层透明度。");
-        LinearLayout.LayoutParams st = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        st.leftMargin = dp(12);
-        bar.addView(status, st);
+        status.setTextSize(11);
+        status.setSingleLine(true);
+        status.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        status.setText("完全离线 · 适合人物/人形角色 · 分层 PSD 保留原透明度");
+        root.addView(status, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(28)));
 
         preview = new ImageView(this);
         preview.setScaleType(ImageView.ScaleType.FIT_CENTER);
         preview.setBackgroundColor(0xff2c3038);
-        root.addView(preview, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
+        root.addView(preview, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         progress = new ProgressBar(this);
         progress.setVisibility(android.view.View.GONE);
-        root.addView(progress, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(4)));
+        root.addView(progress, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(4)));
+
+        HorizontalScrollView actionScroll = new HorizontalScrollView(this);
+        actionScroll.setHorizontalScrollBarEnabled(false);
+        actionScroll.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+        root.addView(actionScroll, new LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(58)));
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setGravity(Gravity.CENTER_VERTICAL);
+        actions.setPadding(dp(4), dp(4), dp(4), dp(4));
+        actionScroll.addView(actions, new HorizontalScrollView.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.MATCH_PARENT));
+
+        Button choose = button("选择图片并抠图");
+        choose.setOnClickListener(v -> chooseImage());
+        actions.addView(choose);
+
+        Button save = button("保存透明 PNG");
+        save.setOnClickListener(v -> saveResult());
+        actions.addView(save);
     }
 
     private Button button(String text) {
@@ -110,6 +139,11 @@ public class CutoutActivity extends Activity {
         b.setText(text);
         b.setAllCaps(false);
         b.setTextSize(12);
+        b.setMinWidth(dp(96));
+        b.setMinHeight(dp(44));
+        b.setMinimumWidth(dp(96));
+        b.setMinimumHeight(dp(44));
+        b.setPadding(dp(10), dp(4), dp(10), dp(4));
         return b;
     }
 
