@@ -1,8 +1,7 @@
 (() => {
   'use strict';
 
-  const MP_VERSION = '0.10.35';
-  const POSE_MODEL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+  const POSE_MODEL = './models/pose_landmarker_lite.task';
 
   const state = {
     stream: null,
@@ -535,11 +534,12 @@
 
   async function ensureMediaPipe() {
     if (state.landmarker) return state.landmarker;
-    androidStatus('正在加载 MediaPipe Pose Landmarker…');
-    const mp = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VERSION + '/+esm');
-    const vision = await mp.FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@' + MP_VERSION + '/wasm'
-    );
+    androidStatus('正在加载本地 MediaPipe Pose Landmarker…');
+    const mp = window.__PAPERCHALK_MEDIAPIPE__;
+    if (!mp?.FilesetResolver || !mp?.PoseLandmarker) {
+      throw new Error('本地 MediaPipe 模块未打包');
+    }
+    const vision = await mp.FilesetResolver.forVisionTasks('./mediapipe');
     state.landmarker = await mp.PoseLandmarker.createFromOptions(vision, {
       baseOptions: { modelAssetPath: POSE_MODEL, delegate: 'GPU' },
       runningMode: 'VIDEO',
@@ -780,5 +780,5 @@
   };
 
   window.PaperChalkRecorder = recorder;
-  androidStatus('PaperChalk Android 扩展已就绪：面捕 / 动作录制 / 流式视频导出');
+  androidStatus('PaperChalk 全离线扩展已就绪：PSD / 自动绑定 / 面捕 / 动作录制 / 视频导出');
 })();
