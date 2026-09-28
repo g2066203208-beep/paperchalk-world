@@ -1,4 +1,4 @@
-name: Core 3D Runtime Regression
+name: Core Paper Stage Runtime Regression
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
       - "tests/**"
       - "package.json"
       - "vendor/three/**"
+      - "vendor/fastnoise-lite/**"
       - ".github/workflows/core-regression.yml"
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - "tests/**"
       - "package.json"
       - "vendor/three/**"
+      - "vendor/fastnoise-lite/**"
 
 permissions:
   contents: read
@@ -32,7 +34,7 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-      - name: Run 3D static architecture checks
+      - name: Run paper-stage static architecture checks
         run: npm test
       - name: Install browser driver
         run: npm install --no-save playwright-core
@@ -53,7 +55,7 @@ jobs:
           done
           cat /tmp/paperchalk-http.log
           exit 1
-      - name: Run real browser 3D gameplay regression
+      - name: Run real browser paper-stage gameplay regression
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/core-regression.mjs

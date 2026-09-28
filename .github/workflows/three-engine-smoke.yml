@@ -1,4 +1,4 @@
-name: Three.js Production Engine Smoke
+name: Three.js Paper Stage Engine Smoke
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
       - "src/content/**"
       - "styles/**"
       - "vendor/three/**"
+      - "vendor/fastnoise-lite/**"
       - "tests/three-engine-smoke.mjs"
       - ".github/workflows/three-engine-smoke.yml"
   pull_request:
@@ -22,6 +23,7 @@ on:
       - "src/content/**"
       - "styles/**"
       - "vendor/three/**"
+      - "vendor/fastnoise-lite/**"
       - "tests/three-engine-smoke.mjs"
   workflow_dispatch:
 
@@ -42,6 +44,9 @@ jobs:
           node --check src/game.js
           node --check src/engine3d/World3DEngine.js
           node --check src/renderers/three-world-renderer.mjs
+          node --check src/terrain/terrain-runtime.js
+          node --check src/entities/PaperSpriteEntity.js
+          node --check vendor/fastnoise-lite/FastNoiseLite.js
           test -s vendor/three/three.module.js
           test -s vendor/three/three.core.js
           grep -q "from './three.core.js'" vendor/three/three.module.js

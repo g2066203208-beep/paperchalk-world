@@ -24,7 +24,7 @@ try{
 
   const initial=await page.evaluate(()=>({
     stats:window.Paperchalk3D.stats,
-    resources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/three/')).map(e=>e.name),
+    resources:performance.getEntriesByType('resource').filter(e=>e.name.includes('/vendor/')).map(e=>e.name),
     canvas:document.querySelector('#threeWorldLayer canvas')?.className||'',
     terrain:window.PaperchalkTerrainActions.stats
   }));
@@ -37,6 +37,8 @@ try{
   assert(initial.stats.terrain.visibleChunks>=20,'not enough streamed chunks '+JSON.stringify(initial.stats.terrain));
   assert(initial.stats.terrain.renderedSolidTiles>100,'terrain mesher produced too little geometry '+JSON.stringify(initial.stats.terrain));
   assert(initial.resources.some(x=>x.includes('three.module.js'))&&initial.resources.some(x=>x.includes('three.core.js')),'Three module/core pair missing');
+  assert(initial.resources.some(x=>x.includes('/vendor/fastnoise-lite/FastNoiseLite.js')),'FastNoiseLite browser resource missing '+JSON.stringify(initial.resources));
+  assert(initial.terrain.noiseBackend==='FastNoiseLite-1.1.1','FastNoiseLite terrain backend not active '+JSON.stringify(initial.terrain));
   assert(initial.canvas==='three-world-canvas','paper-stage canvas class missing');
   assert(initial.stats.health?.cells===10&&initial.stats.health?.tail===true,'world-space health bar missing '+JSON.stringify(initial.stats.health));
 

@@ -9,7 +9,7 @@ const terrain=read('src/terrain/terrain-runtime.js');
 const sprites=read('src/entities/PaperSpriteEntity.js');
 const pkg=JSON.parse(read('package.json'));
 
-assert.match(html,/paper-terrain-r1/);
+assert.match(html,/paper-terrain-r2/);
 assert.match(renderer,/three-r180-paper-stage/);
 assert.match(renderer,/paperchalk-world-enter/);
 assert.match(renderer,/paperchalk-world-leave/);
@@ -22,6 +22,9 @@ assert.match(engine,/TerrainChunkRenderer/);
 assert.match(engine,/single-layer-voxel-terrain/);
 assert.match(engine,/2d-textured-planes/);
 assert.match(terrain,/class TerrainWorld/);
+assert.match(terrain,/FastNoiseLite-1\.1\.1/);
+assert.match(terrain,/OpenSimplex2S/);
+assert.equal(fs.existsSync('vendor/fastnoise-lite/FastNoiseLite.js'),true);
 assert.match(terrain,/Uint8Array/);
 assert.match(terrain,/digWorld\(x,y\)/);
 assert.match(terrain,/placeWorld\(x,y/);

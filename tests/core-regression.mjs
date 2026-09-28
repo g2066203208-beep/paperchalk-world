@@ -26,6 +26,8 @@ try{
   }));
   assert(!cold.runtime.active&&!cold.three.active&&!cold.three.ready,'renderer must stay cold on menu '+JSON.stringify(cold));
   assert(cold.terrain.tileSize===.25&&cold.terrain.chunkSize===64,'single-layer terrain configuration wrong '+JSON.stringify(cold.terrain));
+  assert(cold.terrain.noiseBackend==='FastNoiseLite-1.1.1','FastNoiseLite terrain backend missing '+JSON.stringify(cold.terrain));
+  assert(cold.terrain.generatorVersion===2,'terrain generator version missing '+JSON.stringify(cold.terrain));
 
   await page.locator('#authBtn').click();
   await page.locator('#tabRegister').click();

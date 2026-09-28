@@ -56,6 +56,40 @@ class TerrainWorld{
     this.edits=new Map();
     this.listeners=new Set();
     this.changeVersion=0;
+    this.generatorVersion=2;
+    this.noiseBackend='deterministic-fallback';
+
+    // FastNoiseLite is the production terrain generator. A deterministic fallback
+    // remains so save inspection/tests still work if the vendor script is omitted.
+    const F=global.FastNoiseLite;
+    if(F){
+      const Noise=global.FastNoiseLiteNoiseType||{};
+      const Fractal=global.FastNoiseLiteFractalType||{};
+
+      this.surfaceNoise=new F(this.seed+11);
+      this.surfaceNoise.SetNoiseType(Noise.OpenSimplex2S||2);
+      this.surfaceNoise.SetFrequency(.018);
+      this.surfaceNoise.SetFractalType(Fractal.FBm||1);
+      this.surfaceNoise.SetFractalOctaves(4);
+
+      this.detailNoise=new F(this.seed+37);
+      this.detailNoise.SetNoiseType(Noise.Perlin||4);
+      this.detailNoise.SetFrequency(.055);
+      this.detailNoise.SetFractalType(Fractal.FBm||1);
+      this.detailNoise.SetFractalOctaves(3);
+
+      this.caveNoise=new F(this.seed+101);
+      this.caveNoise.SetNoiseType(Noise.OpenSimplex2S||2);
+      this.caveNoise.SetFrequency(.052);
+      this.caveNoise.SetFractalType(Fractal.FBm||1);
+      this.caveNoise.SetFractalOctaves(4);
+
+      this.strataNoise=new F(this.seed+509);
+      this.strataNoise.SetNoiseType(Noise.Cellular||3);
+      this.strataNoise.SetFrequency(.082);
+
+      this.noiseBackend='FastNoiseLite-1.1.1';
+    }
   }
   _hash(x,y=0){
     let h=(Math.imul((x|0)^this.seed,0x45d9f3b)+Math.imul((y|0)^0x9e3779b9,0x119de1f3))|0;
@@ -63,6 +97,11 @@ class TerrainWorld{
     return (h>>>0)/4294967295;
   }
   surfaceCell(gx){
+    if(this.surfaceNoise){
+      const broad=this.surfaceNoise.GetNoise(gx,0);
+      const detail=this.detailNoise.GetNoise(gx,19);
+      return Math.floor(broad*5.2+detail*1.8);
+    }
     const broad=Math.sin((gx+this.seed*.001)*.035)*5.2;
     const medium=Math.sin((gx-this.seed*.0007)*.11)*2.0;
     const detail=(this._hash(gx,17)-.5)*1.8;
@@ -72,15 +111,33 @@ class TerrainWorld{
     const surface=this.surfaceCell(gx);
     if(gy>surface)return TILE.AIR;
     const depth=surface-gy;
-    if(depth>10){
-      const a=Math.sin((gx+this.seed*.003)*.19)+Math.cos((gy-this.seed*.002)*.23);
-      const b=Math.sin((gx+gy)*.071+this.seed*.0001);
-      if(depth<150&&a+b*.72>1.63)return TILE.AIR;
+
+    // Two-dimensional cave fields are sampled in X/Y only. There is deliberately
+    // no voxel Z coordinate: the whole destructible world is one Terraria slice.
+    if(depth>10&&depth<240){
+      if(this.caveNoise){
+        const cave=this.caveNoise.GetNoise(gx,gy);
+        const pinch=Math.abs(this.detailNoise.GetNoise(gx*1.7,gy*1.3));
+        if(cave>.38&&pinch<.57)return TILE.AIR;
+      }else{
+        const a=Math.sin((gx+this.seed*.003)*.19)+Math.cos((gy-this.seed*.002)*.23);
+        const b=Math.sin((gx+gy)*.071+this.seed*.0001);
+        if(a+b*.72>1.63)return TILE.AIR;
+      }
     }
+
     if(depth===0)return TILE.GRASS;
     if(depth<8)return TILE.DIRT;
-    if(depth<14&&this._hash(gx>>2,gy>>2)>.87)return TILE.CLAY;
-    if(depth<18&&this._hash(gx>>3,gy>>3)>.91)return TILE.SAND;
+
+    if(this.strataNoise){
+      const strata=this.strataNoise.GetNoise(gx,gy);
+      const detail=this.detailNoise.GetNoise(gx*.9,gy*.9);
+      if(depth<17&&strata>.42&&detail>.12)return TILE.CLAY;
+      if(depth<22&&strata<-.42&&detail<-.08)return TILE.SAND;
+    }else{
+      if(depth<14&&this._hash(gx>>2,gy>>2)>.87)return TILE.CLAY;
+      if(depth<18&&this._hash(gx>>3,gy>>3)>.91)return TILE.SAND;
+    }
     return TILE.STONE;
   }
   _floorDiv(n,d){return Math.floor(n/d)}
@@ -193,7 +250,15 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedTiles:edits,version:this.changeVersion};
+    return {
+      tileSize:this.tileSize,
+      chunkSize:this.chunkSize,
+      loadedChunks:this.chunks.size,
+      editedTiles:edits,
+      version:this.changeVersion,
+      generatorVersion:this.generatorVersion,
+      noiseBackend:this.noiseBackend
+    };
   }
 }
 
