@@ -48,7 +48,7 @@ assert(game.includes('updateFishEcology(dt)'),'fish ecology simulation missing')
 assert(game.includes('rebuildFishSpatial()'),'fish spatial hash missing');
 assert(game.includes('acquireFishForBobber()'),'fish-to-bobber targeting missing');
 assert(game.includes('FISH_MAX_ACTIVE=24'),'fish active cap missing');
-assert(game.includes("fish.state='approach'"),'fish approach state missing');
+assert(game.includes("best.state='approach'")||game.includes("fish.state='approach'"),'fish approach state missing');
 assert(game.includes("fish.state='nibbling'"),'fish bite approach missing');
 assert(game.includes('terrain.water.needsSettle'),'idle water solver optimization missing');
 assert(game.includes('save.hunger=hunger.current'),'hunger persistence missing');
