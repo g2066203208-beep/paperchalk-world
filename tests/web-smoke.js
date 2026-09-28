@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r23'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r24'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -69,4 +69,6 @@ assert(mesher.includes('renderCode=solidGz===terrain.blackBackRowZ?tile+32:tile'
 assert(mesher.includes('aGz===terrain.blackBackRowZ&&bGz===terrain.interactionRowZ'),'rear black interface face missing');
 assert(engine.includes('undergroundLayers:{count:2'),'two-layer underground stats missing');
 assert(terrain.includes('if(gy>surface)return TILE.AIR;'),'rear black row top voxel is still missing');
+assert(terrain.includes('if(gy===surface)return TILE.GRASS;'),'rear row top surface is not normal grass');
+assert(mesher.includes('buriedBlack=solidGz===terrain.blackBackRowZ&&solidGy<terrain.surfaceCell'),'rear row blackening is not limited to buried voxels');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
