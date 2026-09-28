@@ -58,7 +58,7 @@ function migrateToV5(input){
   delete save.playerY;
   delete save.actorRatio;
   delete save.routeOrientation;
-  if(sourceVersion<4)save.migratedFromSchema=sourceVersion;
+  if(sourceVersion<5)save.migratedFromSchema=sourceVersion;
   return save;
 }
 
