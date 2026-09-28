@@ -29,12 +29,14 @@ Z is a presentation coordinate. It separates far background, rear paper entities
 - depth: exactly one gameplay layer
 - storage: Uint8Array
 - coordinates: integer X/Y cell coordinates
-- generation: deterministic surface/material/cave functions
+- generation: FastNoiseLite 1.1.1; OpenSimplex2S for broad surface/caves, Perlin for detail, Cellular for material strata
 - mutation: dig/place
 - persistence: per-chunk edit deltas
 - streaming: chunks outside the active window are unloaded and regenerated from seed when revisited
 
 The renderer turns each visible chunk into one vertex-colored `BufferGeometry`. A tile is not a separate Three.js object.
+
+The official FastNoiseLite JavaScript distribution is vendored under `vendor/fastnoise-lite/` with its MIT license header intact. Terrain generation remains deterministic from the world seed. A small built-in fallback is retained for diagnostics, but production reports `noiseBackend: "FastNoiseLite-1.1.1"`.
 
 ## 3. Paper entities
 
