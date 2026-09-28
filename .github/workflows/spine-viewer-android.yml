@@ -281,6 +281,17 @@ jobs:
 
           npm run build
 
+          # Offline runtime audit: the installed APK must not depend on model/CDN
+          # downloads. Also verify the exact WASM-only ORT pair used by WebView.
+          test -f dist/ort/ort-wasm-simd-threaded.mjs
+          test -f dist/ort/ort-wasm-simd-threaded.wasm
+          test -f dist/models/dw-ll_ucoco_384.onnx
+          test -f dist/models/pose_landmarker_lite.task
+          if grep -R -E "cdn\\.jsdelivr\\.net/npm/onnxruntime|huggingface\\.co/yzd-v/DWPose|storage\\.googleapis\\.com/mediapipe-models" dist/assets dist/index.html; then
+            echo "ERROR: runtime network dependency found in built editor"
+            exit 1
+          fi
+
           TARGET="$GITHUB_WORKSPACE/tools/spine-android-viewer/app/src/main/assets/studio"
           rm -rf "$TARGET"
           mkdir -p "$TARGET"
