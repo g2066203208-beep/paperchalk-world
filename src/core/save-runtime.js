@@ -1,9 +1,9 @@
-/* Versioned save codec for the Terraria-style paper-stage runtime. */
+/* Versioned save codec for the infinite 3D voxel runtime. */
 (function(global){
 'use strict';
 
-const CURRENT_SCHEMA=5;
-const GAME_VERSION='1.1.0-paper-stage';
+const CURRENT_SCHEMA=6;
+const GAME_VERSION='2.0.0-infinite-voxel-3d';
 
 function cloneJson(value){return JSON.parse(JSON.stringify(value))}
 function finiteOr(value,fallback){return Number.isFinite(value)?value:fallback}
@@ -13,12 +13,12 @@ function finitePlayer(value){
   return {
     x:finiteOr(value.x,0),
     y:finiteOr(value.y,3),
-    z:finiteOr(value.z,.45),
+    z:finiteOr(value.z,0),
     yaw:finiteOr(value.yaw,0)
   };
 }
 
-function migrateToV5(input){
+function migrateToV6(input){
   const save=input&&typeof input==='object'?cloneJson(input):{};
   const sourceVersion=Number.isFinite(save.schemaVersion)?save.schemaVersion:2;
   save.schemaVersion=CURRENT_SCHEMA;
@@ -37,15 +37,14 @@ function migrateToV5(input){
     player={
       x:(legacyX-460)/128,
       y:legacyY/128+3,
-      z:.45,
+      z:0,
       yaw:finiteOr(save.routeOrientation?.sign,1)<0?Math.PI:0
     };
-  }else if(sourceVersion<=4){
-    // The former 3D runtime used Y as height above a flat ground and Z as horizontal depth.
-    // Keep X, map the old height into a safe spawn height, and collapse gameplay to one Z layer.
+  }else if(sourceVersion<=5){
+    // Legacy paper-stage saves had only one gameplay depth layer.
+    // Preserve horizontal X and height; start the migrated player on Z=0 in the real 3D world.
     player.y=Math.max(3,finiteOr(player.y,3));
-    player.z=.45;
-    player.yaw=Math.abs(player.yaw)>Math.PI*.5?Math.PI:0;
+    player.z=0;
   }
   save.player=player;
 
@@ -70,7 +69,7 @@ function migrate(input){
   if(!input||typeof input!=='object')throw new Error('Save payload must be an object');
   const version=Number.isFinite(input.schemaVersion)?input.schemaVersion:2;
   if(version>CURRENT_SCHEMA)throw new Error('Save schema '+version+' is newer than runtime '+CURRENT_SCHEMA);
-  return migrateToV5(input);
+  return migrateToV6(input);
 }
 function validate(save,{account=null}={}){
   const errors=[];
