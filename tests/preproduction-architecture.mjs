@@ -25,7 +25,7 @@ assert.match(terrain,/generatorVersion=4/);
 assert.match(game,/PaperchalkBiomes/);
 
 assert.match(terrain,/priority-flood-shared-volume-hydrostatic-v2/);
-assert.match(terrain,/full-full-x-z-with-y-gravity/);
+assert.match(terrain,/full-x-z-with-y-gravity/);
 assert.match(terrain,/exactHydrostatic:true/);
 assert.match(terrain,/surfaceCache/);
 assert.match(terrain,/boundsCache/);
