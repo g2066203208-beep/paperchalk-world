@@ -76,7 +76,7 @@ class WaterRenderer{
     this.THREE=THREE;this.terrain=terrain;this.scene=scene;this.meshes=new Map();this.initialized=false;
     this.material=new THREE.MeshPhongMaterial({
       color:0x49a9df,transparent:true,opacity:.62,depthWrite:false,
-      shininess:78,specular:0xc8eeff,side:THREE.DoubleSide
+      shininess:78,specular:0xc8eeff,side:THREE.DoubleSide,flatShading:true
     });
     this.root=new THREE.Group();this.root.name='eight-layer-water-surface-meshes';scene.add(this.root);
   }
@@ -182,7 +182,7 @@ class TerrainChunkRenderer{
     this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
     this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
     this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
-    this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false,transparent:true,opacity:1,depthWrite:true});
+    this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false,transparent:true,opacity:1,depthWrite:true,flatShading:true});
     this.lightGridSize=25;
     this.lightGridRadius=(this.lightGridSize-1)>>1;
     this.lightGridData=new Uint8Array(this.lightGridSize*this.lightGridSize);
@@ -399,6 +399,80 @@ class TerrainChunkRenderer{
     this.texture.dispose();this.lightGridTexture.dispose();this.material.dispose();this.scene.remove(this.root);
   }
 }
+class FishingRenderer{
+  constructor(THREE,scene){
+    this.THREE=THREE;this.scene=scene;this.root=new THREE.Group();this.root.name='fishing-system';scene.add(this.root);
+    this.lineGeometry=new THREE.BufferGeometry();
+    this.lineMaterial=new THREE.LineBasicMaterial({color:0xe6ddc9,transparent:true,opacity:.9,depthTest:true});
+    this.line=new THREE.Line(this.lineGeometry,this.lineMaterial);this.line.visible=false;this.root.add(this.line);
+
+    const bobber=new THREE.Group();
+    const body=new THREE.Mesh(
+      new THREE.SphereGeometry(.11,8,6),
+      new THREE.MeshLambertMaterial({color:0xf0eee5,flatShading:true})
+    );
+    body.scale.y=1.25;
+    const cap=new THREE.Mesh(
+      new THREE.SphereGeometry(.075,8,6),
+      new THREE.MeshLambertMaterial({color:0xd64f42,flatShading:true})
+    );
+    cap.position.y=.08;
+    bobber.add(body,cap);bobber.visible=false;this.root.add(bobber);this.bobber=bobber;
+
+    const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,256,128);
+    ctx.fillStyle='rgba(40,34,28,.9)';ctx.strokeStyle='#f3d36b';ctx.lineWidth=8;
+    if(ctx.roundRect){ctx.beginPath();ctx.roundRect(8,8,240,112,24);ctx.fill();ctx.stroke()}
+    else{ctx.fillRect(8,8,240,112);ctx.strokeRect(8,8,240,112)}
+    ctx.fillStyle='#fff4dd';ctx.font='900 58px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！收杆',128,67);
+    const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
+    const sm=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false});
+    this.prompt=new THREE.Sprite(sm);this.prompt.scale.set(1.35,.68,1);this.prompt.visible=false;this.prompt.renderOrder=2000;this.root.add(this.prompt);
+    this.promptTexture=tex;
+
+    const fishCanvas=document.createElement('canvas');fishCanvas.width=128;fishCanvas.height=128;
+    const fctx=fishCanvas.getContext('2d');fctx.font='86px sans-serif';fctx.textAlign='center';fctx.textBaseline='middle';fctx.fillText('🐟',64,70);
+    const ftex=new THREE.CanvasTexture(fishCanvas);ftex.colorSpace=THREE.SRGBColorSpace;
+    this.fishSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:ftex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));
+    this.fishSprite.scale.set(.62,.62,1);this.fishSprite.visible=false;this.fishSprite.renderOrder=1999;this.root.add(this.fishSprite);this.fishTexture=ftex;
+
+    this.statsState={visible:false,state:'idle',prompt:false};
+  }
+  update(snapshot,camera,time=0){
+    const f=snapshot?.fishing,p=snapshot?.player;
+    if(!f||f.state==='idle'||!p){
+      this.line.visible=false;this.bobber.visible=false;this.prompt.visible=false;this.fishSprite.visible=false;
+      this.statsState={visible:false,state:'idle',prompt:false};return;
+    }
+    const THREE=this.THREE,start=new THREE.Vector3(p.x+(p.facingX||1)*.28,p.y+.42,p.z+.06),end=new THREE.Vector3(f.x,f.y,f.z);
+    this.lineGeometry.setFromPoints([start,end]);this.line.visible=true;
+    this.bobber.visible=true;this.bobber.position.copy(end);
+    const floatScale=f.state==='bite'?1+Math.sin(time*15)*.16:1+Math.sin(time*4)*.03;
+    this.bobber.scale.set(floatScale,floatScale,floatScale);
+    this.prompt.visible=f.state==='bite';
+    if(this.prompt.visible){
+      this.prompt.position.set(f.x,f.y+.72,f.z);
+      const pulse=1+Math.sin(time*12)*.08;this.prompt.scale.set(1.35*pulse,.68*pulse,1);
+      this.prompt.quaternion.copy(camera.quaternion);
+    }
+    this.fishSprite.visible=f.state==='reeling';
+    if(this.fishSprite.visible){
+      this.fishSprite.position.set(f.x,f.y-.28,f.z+.02);
+      this.fishSprite.quaternion.copy(camera.quaternion);
+    }
+    this.statsState={visible:true,state:f.state,prompt:this.prompt.visible};
+  }
+  stats(){return {...this.statsState,renderMode:'line+bobber+worldspace-bite-ui'}}
+  dispose(){
+    this.lineGeometry.dispose();this.lineMaterial.dispose();
+    this.bobber.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
+    this.prompt.material.dispose();this.promptTexture.dispose();
+    this.fishSprite.material.dispose();this.fishTexture.dispose();
+    this.scene.remove(this.root);
+  }
+}
+
 export class World3DEngine{
   constructor({THREE,host,content,onCameraChanged=null}){
     if(!THREE)throw new Error('THREE_REQUIRED');
@@ -418,7 +492,7 @@ export class World3DEngine{
     this.stageView={enabled:false,axis:'z',side:1};
     this.cameraTarget=new THREE.Vector3();
     this.cameraTargetSmooth=new THREE.Vector3();
-    this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.paperEntities=[];
+    this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.fishingRenderer=null;this.paperEntities=[];
     this.cameraOcclusion={enabled:true,radius:1.15,minOpacity:.18,entityStates:new Map(),terrainShader:true};
     this.debugColliders=false;this.pointerState=null;
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -505,6 +579,7 @@ export class World3DEngine{
       texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
     });
     this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
+    this.fishingRenderer=new FishingRenderer(THREE,this.scene);
 
     const cursorGeometry=new THREE.BoxGeometry(
       this.terrain.tileSize*1.035,
@@ -789,6 +864,7 @@ export class World3DEngine{
     const p=current?.player;
     this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
     this.waterRenderer?.update();
+    this.fishingRenderer?.update(current,this.camera,performance.now()/1000);
     this.healthBar?.update(this.camera,dt);
   }
   render(){
@@ -855,7 +931,7 @@ export class World3DEngine{
       drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-      debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,
+      debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,
       lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
       undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -863,12 +939,13 @@ export class World3DEngine{
       undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
-      terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
+      terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true
     };
   }
   dispose(){
     this.terrainRenderer?.dispose();
     this.waterRenderer?.dispose();
+    this.fishingRenderer?.dispose();
     if(this.terrainCursor){
       this.terrainCursor.geometry.dispose();
       this.terrainCursor.material.dispose();
