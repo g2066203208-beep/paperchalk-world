@@ -275,8 +275,6 @@ class TerrainChunkRenderer{
           float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
           outgoingLight*=darknessVisibility;
 
-          // Deterministic per-voxel color variation only.
-          // Keeps geometry/materials unchanged and avoids extra draw calls.
           vec3 voxelCell=floor((vVoxelWorldPos+vec3(0.0001))/uVoxelSize);
           float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
           float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
@@ -288,8 +286,6 @@ class TerrainChunkRenderer{
             valueShift*(1.0-warmShift)
           );
 
-          // Camera-obstruction fade: only non-gameplay scenery layers can fade.
-          // The Z=0 interaction row and Z=-1 black underground backing are protected.
           vec3 seg=uOcclusionPlayer-uOcclusionCamera;
           float segLen2=max(dot(seg,seg),0.0001);
           float t=clamp(dot(vVoxelWorldPos-uOcclusionCamera,seg)/segLen2,0.0,1.0);
@@ -593,9 +589,6 @@ export class World3DEngine{
   _buildStage(){
     const THREE=this.THREE;
 
-    // Outdoor lighting model:
-    // direct sun + soft skylight/environment bounce + moonlight.
-    // Covered caves keep only a small residual bounce so they remain dark without becoming unreadable.
     const sun=new THREE.DirectionalLight(0xfff0d2,3.4);
     sun.name='world-sun';
     sun.castShadow=true;
@@ -892,8 +885,6 @@ export class World3DEngine{
     const undergroundDepth=Math.max(0,localSurfaceY-p.y);
     const undergroundFactor=Math.max(0,Math.min(1,(undergroundDepth-.35)/2.4));
 
-    // Background is intentionally uniform everywhere: same blue above ground,
-    // underground, at every Y height and at every time of day.
     this.scene.background.copy(this.fixedBackgroundColor);
     this.renderer.setClearColor(this.fixedBackgroundColor,1);
 
@@ -949,7 +940,6 @@ export class World3DEngine{
     this.healthBar?.update(this.camera,dt);
   }
   render(){
-    // Hard guarantee: camera/player Y can never affect the world background.
     this.scene.background.copy(this.fixedBackgroundColor);
     this.renderer.setClearColor(this.fixedBackgroundColor,1);
     this.renderer.render(this.scene,this.camera);
@@ -995,7 +985,6 @@ export class World3DEngine{
       ray.at(d,p);
       const surface=this.terrain.water?.surfaceAtWorld?.(p.x,p.z);
       if(!surface)continue;
-      // Detect the ray crossing the current liquid free surface.
       if(p.y<=surface.y+.10&&p.y>=surface.y-.22){
         return {x:p.x,y:surface.y,z:p.z,gx:surface.gx,gz:surface.gz,distance:d};
       }
