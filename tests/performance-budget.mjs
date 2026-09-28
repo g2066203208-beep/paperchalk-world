@@ -1,4 +1,4 @@
-const fs=require('fs');
+import fs from 'node:fs';
 function assert(c,m){if(!c)throw new Error(m)}
 const size=p=>fs.statSync(p).size;
 assert(size('src/game.js')<70000,'3D gameplay runtime exceeds 70KB budget');
