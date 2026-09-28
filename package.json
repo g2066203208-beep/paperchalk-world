@@ -1,8 +1,8 @@
 {
   "name": "paperchalk-world",
-  "version": "1.0.0-3d-alpha",
+  "version": "1.1.0-paper-stage",
   "private": true,
-  "description": "Paperchalk World Three.js 3D browser game runtime",
+  "description": "Three.js paper-stage browser game with single-layer destructible terrain and 2D textured entities",
   "scripts": {
     "test": "node tests/web-smoke.js && node tests/performance-budget.mjs && node tests/preproduction-architecture.mjs",
     "test:core": "node tests/core-regression.mjs",
