@@ -52,7 +52,11 @@ try{
     window.PaperchalkHunger.feed(10,{persist:false});
     const h1=window.PaperchalkHunger.state.current;
     const rod=window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null;
-    const cast=window.PaperchalkFishing.cast();
+    const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain,s=t.tileSize;
+    const gx=Math.floor(p.x/s)+2,gz=t.stats().interactionRowZ,gy=t.surfaceCell(gx,gz)+1;
+    t.water.setLevel(gx,gy,gz,8,{settle:false});
+    const target={x:(gx+.5)*s,y:gy*s+s,z:gz*s};
+    const cast=window.PaperchalkFishing.cast(target);
     const fishingState=window.PaperchalkFishing.state.state;
     const reel=window.PaperchalkFishing.reel();
     return {h0,h1,rod,cast,fishingState,reel,end:window.PaperchalkFishing.state.state};
