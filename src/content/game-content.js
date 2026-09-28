@@ -3,18 +3,18 @@
 'use strict';
 
 const scene3d={
-  mode:'paper-stage-2.5d',
-  spawn:{x:0,y:3,z:.45,yaw:0},
+  mode:'infinite-voxel-3d',
+  spawn:{x:0,y:12,z:0,yaw:0},
   bounds:{minX:-100000,maxX:100000,minY:-100000,maxY:100000},
   terrain:{
     tileSize:1,
     pixelsPerMeter:128,
     texturePixels:128,
-    chunkSize:64,
+    chunkSize:16,
     seed:24681357,
-    thickness:1,
-    visibleChunkRadiusX:3,
-    visibleChunkRadiusY:2
+    visibleChunkRadiusXZ:3,
+    visibleChunkRadiusY:2,
+    maxBuildsPerFrame:5
   },
   layers:{
     far:-8,
