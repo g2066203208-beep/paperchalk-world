@@ -36,6 +36,6 @@ assert(engine.includes('moving-torch-light'),'moving torch point light missing')
 assert(content.includes("'hand-torch'"),'torch item definition missing');
 assert(game.includes("action==='toggle-torch'"),'torch inventory action missing');
 assert(engine.includes('mesh.receiveShadow=true;mesh.castShadow=true'),'voxel chunks must cast and receive sunlight shadows');
-assert(engine.includes('interactionOnly=true'),'interaction-only voxel raycast missing');
+assert(engine.includes('interactionOnly:true'),'interaction-only voxel raycast missing');
 assert(engine.includes('z===this.interactionRowZ'),'non-interaction rows are not ignored by picking');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
