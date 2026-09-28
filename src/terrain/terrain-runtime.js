@@ -48,8 +48,9 @@ class TerrainChunk{
 }
 
 class TerrainWorld{
-  constructor({tileSize=.25,chunkSize=64,seed=24681357}={}){
+  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=64,seed=24681357}={}){
     this.tileSize=tileSize;
+    this.pixelsPerMeter=Math.max(1,Math.round(Number(pixelsPerMeter)||128));
     this.chunkSize=chunkSize;
     this.seed=seed|0;
     this.chunks=new Map();
@@ -200,6 +201,8 @@ class TerrainWorld{
   isSolidTile(tile){return SOLID.has(tile)}
   isSolid(gx,gy){return this.isSolidTile(this.getTile(gx,gy))}
   isSolidPeek(gx,gy){return this.isSolidTile(this.peekTile(gx,gy))}
+  metersToPixels(meters){return Number(meters)*this.pixelsPerMeter}
+  pixelsToMeters(pixels){return Number(pixels)/this.pixelsPerMeter}
   worldToCell(x,y){return {gx:Math.floor(x/this.tileSize),gy:Math.floor(y/this.tileSize)}}
   cellCenter(gx,gy){return {x:(gx+.5)*this.tileSize,y:(gy+.5)*this.tileSize}}
   digWorld(x,y){
@@ -268,6 +271,7 @@ class TerrainWorld{
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
     return {
       tileSize:this.tileSize,
+      pixelsPerMeter:this.pixelsPerMeter,
       chunkSize:this.chunkSize,
       loadedChunks:this.chunks.size,
       editedTiles:edits,
