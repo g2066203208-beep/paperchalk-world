@@ -6,67 +6,62 @@ const read=path=>fs.readFileSync(path,'utf8');
 const html=read('index.html');
 const game=read('src/game.js');
 const engine=read('src/engine3d/World3DEngine.js');
+const sprite=read('src/entities/PaperSpriteEntity.js');
+const terrain=read('src/terrain/terrain-world.js');
 const renderer=read('src/renderers/three-world-renderer.mjs');
 const content=read('src/content/game-content.js');
 const save=read('src/core/save-runtime.js');
 const css=read('styles/game.css');
 
-assert(html.includes('paperchalk-build" content="three-stage-r2"'),'3D build key missing');
-assert(html.includes('id="threeWorldLayer"'),'Three.js world host missing');
-assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=three-stage-r2"'),'production Three renderer not loaded');
-assert(!html.includes('pixiEntityLayer'),'Pixi world layer still mounted');
-assert(!html.includes('cardGroundCanvas'),'card-camera ground canvas still mounted');
-assert(!html.includes('class="actor"'),'legacy 2D player actor still mounted');
-assert(!html.includes('playerSprite'),'legacy 2D player sprite still mounted');
-assert(!html.includes('playerHealthHud'),'DOM health bar still mounted');
-assert(!html.includes('paperBackdrop'),'2D paper backdrop still mounted');
-assert(!html.includes('rearTrack')&&!html.includes('frontTrack'),'2D prop tracks still mounted');
-assert(!html.includes('entityTrack'),'2D entity track still mounted');
-assert(!html.includes('threeTestBtn'),'3D must be production, not a test toggle');
+assert(html.includes('paperchalk-build" content="paper-stage-voxel-r3"'),'paper-stage build key missing');
+assert(html.includes('id="threeWorldLayer"'),'Three.js stage host missing');
+assert(html.includes('vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1'),'FastNoiseLite runtime not loaded');
+assert(html.includes('src/terrain/terrain-world.js?v=paper-stage-voxel-r3'),'terrain runtime not loaded before game');
+assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=paper-stage-voxel-r3"'),'Three stage renderer not loaded');
 
+for(const legacy of ['pixiEntityLayer','cardGroundCanvas','class="actor"','playerSprite','playerHealthHud','paperBackdrop','rearTrack','frontTrack','entityTrack','threeTestBtn']){
+  assert(!html.includes(legacy),'retired legacy world DOM returned: '+legacy);
+}
 for(const path of [
-  'src/core/card-camera.js',
-  'src/camera-settings.js',
-  'src/renderers/dom-card-projection.js',
-  'src/renderers/pixi-dynamic-renderer.mjs',
-  'src/puppet/paper-puppet-runtime.mjs',
-  'vendor/pixi/pixi-8.21.0.mjs',
-  'tests/gpu-smoke.mjs'
-])assert(!fs.existsSync(path),'retired 2D/Pixi file remains: '+path);
+  'src/core/card-camera.js','src/camera-settings.js','src/renderers/dom-card-projection.js',
+  'src/renderers/pixi-dynamic-renderer.mjs','src/puppet/paper-puppet-runtime.mjs','vendor/pixi/pixi-8.21.0.mjs'
+])assert(!fs.existsSync(path),'retired renderer file remains: '+path);
 
 assert(fs.existsSync('vendor/three/three.module.js'),'Three.js module missing');
-assert(fs.existsSync('vendor/three/three.core.js'),'Three.js core missing');
-assert(engine.includes('export class World3DEngine'),'production 3D engine class missing');
-assert(engine.includes('export class WorldSpaceHealthBar'),'3D health bar class missing');
-assert(engine.includes("this.group.name='player-health-3d'"),'health bar is not a world-space 3D group');
-assert(engine.includes('this.healthBar=new WorldSpaceHealthBar'),'player does not own the 3D health bar');
-assert(engine.includes('this.group.quaternion.copy(this._parentQuaternion).multiply(camera.quaternion)'),'3D health bar is not billboarded through player rotation');
-assert(engine.includes('new THREE.PerspectiveCamera'),'perspective camera missing');
-assert(engine.includes("this.stageView={enabled:true,axis:'z',side:1}"),'paper-stage camera must default to fixed Z-axis view');
-assert(engine.includes('setStageView(enabled'),'paper-stage camera toggle API missing');
-assert(engine.includes('setStageAxis(axis'),'paper-stage X/Z axis selector missing');
-assert(html.includes('data-debug-action="stageview"'),'debug stage-view toggle missing');
-assert(html.includes('data-debug-action="stageaxis"'),'debug stage-axis toggle missing');
-assert(engine.includes('new THREE.WebGLRenderer'),'WebGLRenderer missing');
-assert(engine.includes('shadowMap.enabled=true'),'3D shadows missing');
-assert(engine.includes('sceneData.buildings'),'3D authored buildings are not consumed');
+assert(fs.existsSync('vendor/fastnoise-lite/FastNoiseLite.js'),'FastNoiseLite vendor missing');
+assert(engine.includes("import {PaperSpriteEntity}"),'paper entity renderer not imported');
+assert(engine.includes("this.terrainGroup.name='terrain-single-layer'"),'single-layer terrain group missing');
+assert(engine.includes("mode:'paper-stage-x-y-voxel'"),'paper-stage renderer mode missing');
+assert(engine.includes("playerRepresentation:'PlaneGeometry'"),'player is not a paper plane');
+assert(engine.includes("this.stageView={enabled:true,axis:'z',side:1}"),'fixed Z paper-stage camera is not default');
+assert(engine.includes('_buildTerrainChunk(cx,cy)'),'chunk terrain mesher missing');
+assert(!engine.includes('_buildBuilding(')&&!engine.includes('_buildTree(')&&!engine.includes('_buildRock('),'old 3D primitive world builders remain');
 
-assert(game.includes('x:sceneData.spawn.x')&&game.includes('z:sceneData.spawn.z'),'native XYZ player state missing');
-assert(game.includes("ecs.registerSystem('player-movement'"),'3D ECS movement system missing');
-assert(game.includes("ecs.registerSystem('player-gravity'"),'3D ECS gravity system missing');
-assert(game.includes('cameraRelativeMove'),'camera-relative 3D movement missing');
-assert(game.includes('collidesAt'),'3D world collision missing');
-assert(game.includes("window.PaperchalkHealth"),'health API missing');
-assert(game.includes("window.PaperchalkRuntime"),'renderer-neutral runtime API missing');
-assert(!game.includes('PaperchalkCardCamera'),'retired 2D CardCamera still referenced');
-assert(!game.includes('playerWorldX'),'retired 2D playerWorldX still referenced');
-assert(!game.includes('buildMapVisuals'),'retired DOM world builder still referenced');
+assert(sprite.includes('new THREE.PlaneGeometry'),'paper entities are not PlaneGeometry');
+assert(sprite.includes("kind==='player'"),'paper player texture path missing');
+assert(sprite.includes('setFacing(facing'),'paper flip-turn state missing');
 
-assert(content.includes('scene3d'),'native 3D authored content missing');
-assert(!content.includes('assets/buildings'),'2D building art still referenced');
-assert(save.includes('CURRENT_SCHEMA=4'),'3D save schema not active');
-assert(save.includes('player 3D transform missing'),'3D transform save validation missing');
-assert(css.includes('.three-world-canvas'),'3D canvas styling missing');
-assert(!css.includes('.map-building')&&!css.includes('.paper-backdrop'),'legacy 2D world CSS remains');
+assert(terrain.includes('new Uint16Array'),'terrain chunks are not compact typed arrays');
+assert(terrain.includes("noiseBackend='FastNoiseLite-1.1.1'"),'FastNoiseLite backend is not active-capable');
+assert(terrain.includes('activeChunkKeys('),'chunk streaming API missing');
+assert(terrain.includes('exportDeltas()')&&terrain.includes('importDeltas('),'terrain delta persistence API missing');
 
-console.log('WEB_SMOKE_OK');
+assert(game.includes('const TERRAIN=window.PaperchalkTerrain'),'gameplay terrain authority missing');
+assert(game.includes('PLAYER_LAYER_Z=.36'),'paper gameplay Z layer missing');
+assert(game.includes('playerCollidesAt'),'XY voxel collision missing');
+assert(game.includes('moveVertical'),'vertical terrain collision missing');
+assert(game.includes('terrainDeltas=TERRAIN.exportDeltas()'),'terrain edits not written to save');
+assert(!game.includes('cameraRelativeMove'),'retired camera-relative X/Z movement remains');
+assert(!game.includes('buildingColliders'),'retired 3D building collision remains');
+
+assert(content.includes("mode:'paper-stage-voxel'"),'authored scene mode is not paper-stage voxel');
+assert(content.includes('paperEntities:['),'paper entity content list missing');
+assert(content.includes('tileSize:.25'),'0.25 m voxel scale missing');
+assert(!content.includes('buildings:[')&&!content.includes('trees:[')&&!content.includes('rocks:['),'old 3D primitive content remains');
+
+assert(save.includes('CURRENT_SCHEMA=5'),'save schema v5 not active');
+assert(save.includes('terrainDeltas=asArray'),'terrain deltas are not migration-safe');
+assert(save.includes('y:finiteOr(value.y,0)'),'negative underground Y is being clamped');
+assert(css.includes('.three-world-canvas'),'Three stage canvas styling missing');
+
+console.log('PAPER_STAGE_VOXEL_STATIC_OK');
