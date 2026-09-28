@@ -31,8 +31,9 @@ try{
   assert(Math.abs(afterW.z)<1e-6,'Z movement is not locked '+JSON.stringify(afterW));
 
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
+  const groundedY=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player.y);
   const jumped=await page.evaluate(()=>window.PaperchalkCombat.jump());assert(jumped===true,'jump rejected');
-  await page.waitForFunction(y=>window.PaperchalkRuntime.getSnapshot().player.y>y+.04,afterW.y,{timeout:1500});
+  await page.waitForFunction(y=>window.PaperchalkRuntime.getSnapshot().player.y>y+.04,groundedY,{timeout:1500});
 
   const edit=await page.evaluate(()=>{
     const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain;
@@ -44,6 +45,22 @@ try{
   });
   assert(edit.before!==0&&edit.dug.changed&&edit.placed.changed,'3D edit failed '+JSON.stringify(edit));
   assert(edit.stats.editedVoxels>=0,'3D edit stats missing '+JSON.stringify(edit.stats));
+
+  const survival=await page.evaluate(()=>{
+    const h0=window.PaperchalkHunger.state.current;
+    window.PaperchalkHunger.set(50,{persist:false});
+    window.PaperchalkHunger.feed(10,{persist:false});
+    const h1=window.PaperchalkHunger.state.current;
+    const rod=window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null;
+    const cast=window.PaperchalkFishing.cast();
+    const fishingState=window.PaperchalkFishing.state.state;
+    const reel=window.PaperchalkFishing.reel();
+    return {h0,h1,rod,cast,fishingState,reel,end:window.PaperchalkFishing.state.state};
+  });
+  assert(survival.h1===60,'hunger system failed '+JSON.stringify(survival));
+  assert(survival.rod?.action==='fishing-rod','starter fishing rod missing '+JSON.stringify(survival));
+  assert(survival.cast===true&&survival.fishingState==='flying','fishing cast state failed '+JSON.stringify(survival));
+  assert(survival.reel===true&&survival.end==='idle','early reel did not reset fishing '+JSON.stringify(survival));
 
   assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
   console.log('INFINITE_VOXEL_3D_CORE_OK');
