@@ -135,6 +135,19 @@ class TerrainChunkRenderer{
           float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
           outgoingLight*=darknessVisibility;
 
+          // Deterministic per-voxel color variation only.
+          // Keeps geometry/materials unchanged and avoids extra draw calls.
+          vec3 voxelCell=floor((vVoxelWorldPos+vec3(0.0001))/uVoxelSize);
+          float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
+          float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
+          float valueShift=mix(0.94,1.06,colorHash);
+          float warmShift=(colorHash2-.5)*0.030;
+          outgoingLight*=vec3(
+            valueShift*(1.0+warmShift),
+            valueShift,
+            valueShift*(1.0-warmShift)
+          );
+
           // Camera-obstruction fade: only non-gameplay scenery layers can fade.
           // The Z=0 interaction row and Z=-1 black underground backing are protected.
           vec3 seg=uOcclusionPlayer-uOcclusionCamera;
@@ -156,7 +169,7 @@ class TerrainChunkRenderer{
         `);
       this.terrainShader=shader;
     };
-    this.material.customProgramCacheKey=()=> 'paperchalk-camera-occlusion-fade-v12';
+    this.material.customProgramCacheKey=()=> 'paperchalk-voxel-color-variation-v13';
 
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
