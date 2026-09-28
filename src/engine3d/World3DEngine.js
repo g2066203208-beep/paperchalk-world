@@ -10,16 +10,16 @@ export class WorldSpaceHealthBar {
     this.group.position.set(0,2.72,0);
     this.cells=[];
     this.animations=new Map();
+    this._parentQuaternion=new THREE.Quaternion();
 
     const unit=.28;
     const gap=.035;
     const total=(max-1)*(unit+gap)+.44;
-    this.group.position.x=-total*.5;
 
     for(let i=0;i<max;i++){
       const isTail=i===max-1;
       const holder=new THREE.Group();
-      holder.position.x=i*(unit+gap);
+      holder.position.x=i*(unit+gap)-total*.5;
       const frameGeometry=isTail
         ?this._tailGeometry(.42,.20)
         :new THREE.BoxGeometry(unit,.20,.045);
@@ -89,7 +89,14 @@ export class WorldSpaceHealthBar {
   }
 
   update(camera,dt=0){
-    if(camera)this.group.quaternion.copy(camera.quaternion);
+    if(camera){
+      const parent=this.group.parent;
+      if(parent){
+        parent.getWorldQuaternion(this._parentQuaternion);
+        this._parentQuaternion.invert();
+        this.group.quaternion.copy(this._parentQuaternion).multiply(camera.quaternion);
+      }else this.group.quaternion.copy(camera.quaternion);
+    }
     const step=Math.max(0,Math.min(.1,Number(dt)||0));
     for(const [i,anim] of [...this.animations]){
       anim.elapsed+=step;
