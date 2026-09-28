@@ -32,13 +32,14 @@ class TerrainChunk{
 }
 
 class TerrainWorld{
-  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357}={}){
+  constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0}={}){
     this.tileSize=Number(tileSize)||1;
     this.pixelsPerMeter=Math.max(1,Math.round(Number(pixelsPerMeter)||128));
     this.chunkSize=Math.max(8,Math.min(32,Math.round(Number(chunkSize)||16)));
     this.seed=seed|0;
+    this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
     this.chunks=new Map();this.edits=new Map();this.listeners=new Set();
-    this.changeVersion=0;this.generatorVersion=3;this.noiseBackend='deterministic-fallback';
+    this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';
 
     const F=global.FastNoiseLite;
     if(F){
@@ -87,6 +88,10 @@ class TerrainWorld{
     const surface=this.surfaceCell(gx,gz);
     if(gy>surface)return TILE.AIR;
     const depth=surface-gy;
+
+    // Only the configured interaction row keeps a complete underground column.
+    // Every other Z row is a one-voxel surface shell for 3D scenery only.
+    if(gz!==this.interactionRowZ)return depth===0?TILE.GRASS:TILE.AIR;
 
     if(depth>4&&gy>-96&&gy<surface-2){
       if(this.caveNoise){
@@ -209,7 +214,7 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,nonInteractionTerrain:'surface-shell-only'};
   }
 }
 
