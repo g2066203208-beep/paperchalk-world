@@ -282,6 +282,7 @@ if(fishingStatusHud){
 let text='';
 if(fishing.state==='flying')text='🎣 浮漂飞行中';
 else if(fishing.state==='waiting')text='🎣 等待咬钩…';
+else if(fishing.state==='landed')text='🎣 浮漂落地，点击收杆';
 else if(fishing.state==='bite')text='❗ 有鱼咬钩，立即收杆！';
 else if(fishing.state==='reeling')text='🎣 收杆中…';
 if(text!==lastFishingHud){
@@ -812,7 +813,7 @@ fishing.vz=dz/flightTime;
 fishing.vy=(ty-startY+.5*FISHING_GRAVITY*flightTime*flightTime)/flightTime;
 fishing.nextBite=0;fishing.biteWindow=0;
 window.PaperchalkEvents?.emit('fishing:cast',fishingSnapshot());
-showMapNotice('抛向选中的水面！',550);updateSurvivalHud();publish();
+showMapNotice('抛竿！',550);updateSurvivalHud();publish();
 return true;
 }
 function reelFishingRod(){
@@ -828,7 +829,7 @@ window.PaperchalkEvents?.emit('fishing:hooked',{...fishingSnapshot(),fishId:fish
 updateSurvivalHud();publish();
 return true;
 }
-if(fishing.state==='waiting'||fishing.state==='flying'){
+if(fishing.state==='waiting'||fishing.state==='flying'||fishing.state==='landed'){
 showMapNotice('提前收杆，没有鱼。',700);
 window.PaperchalkEvents?.emit('fishing:reel-empty',fishingSnapshot());
 resetFishing('empty');
@@ -857,7 +858,13 @@ const castTimeout=Math.max(1.4,(fishing.flightTime||.7)+.75);
 // If the player explicitly clicked a valid water surface, keep the ballistic cast
 // committed to that target instead of letting intervening terrain cancel it.
 if(!validTargetWater&&((fishing.y<=ground+.05&&fishing.timer>.12)||fishing.timer>castTimeout)){
-showMapNotice('浮漂没有落到目标水面。',800);resetFishing('landed');return;
+const targetGround=terrain.highestGroundY(fishing.castX,fishing.castZ);
+fishing.x=fishing.castX;fishing.z=fishing.castZ;
+fishing.y=(Number.isFinite(targetGround)?targetGround:ground)+.08;
+fishing.vx=fishing.vy=fishing.vz=0;fishing.state='landed';fishing.timer=0;
+window.PaperchalkEvents?.emit('fishing:bobber-land',fishingSnapshot());
+showMapNotice('浮漂落地，没有水就不会有鱼咬钩。',900);
+updateSurvivalHud();publish();return;
 }
 if(validTargetWater&&fishing.timer>castTimeout){
 fishing.x=fishing.castX;fishing.y=validTargetWater.y+.06;fishing.z=fishing.castZ;
@@ -865,6 +872,9 @@ fishing.vx=fishing.vy=fishing.vz=0;fishing.state='waiting';fishing.timer=0;
 window.PaperchalkEvents?.emit('fishing:bobber-water',fishingSnapshot());
 updateSurvivalHud();publish();return;
 }
+}else if(fishing.state==='landed'){
+const ground=terrain.highestGroundY(fishing.x,fishing.z);
+if(Number.isFinite(ground))fishing.y=ground+.08;
 }else if(fishing.state==='waiting'){
 const water=waterSurfaceNear(fishing.x,fishing.z,1);
 if(!water){showMapNotice('水退走了，自动收杆。',800);resetFishing('dry');return}
@@ -1026,8 +1036,14 @@ const selectedItem=inventoryItems[inventorySelected]||null;
 if(selectedItem?.action==='fishing-rod'){
 if(fishing.state!=='idle'){reelFishingRod();return}
 const waterTarget=window.Paperchalk3D?.screenToWaterSurface?.(event.clientX,event.clientY,{maxDistance:32});
-if(!waterTarget){showMapNotice('请直接点击想要抛到的水面。',900);return}
-castFishingRod(waterTarget);
+const terrainTarget=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:false});
+const castTarget=waterTarget||(terrainTarget?{
+x:terrainTarget.x,
+y:terrainTarget.y+terrain.tileSize*.52,
+z:terrainTarget.z
+}:null);
+if(!castTarget){showMapNotice('这里太远，换个位置抛竿。',750);return}
+castFishingRod(castTarget);
 return;
 }
 const target=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
@@ -1078,7 +1094,7 @@ if(item.action==='toggle-torch')return toggleTorch();
 if(item.action==='water-tool')return setTerrainTool('water',{notice:true});
 if(item.action==='fishing-rod'){
 setTerrainTool('dig');
-showMapNotice(fishing.state==='idle'?'钓鱼竿已装备：直接点击水面抛竿。':'再次点击画面即可收杆。',900);
+showMapNotice(fishing.state==='idle'?'钓鱼竿已装备：点击任意可见位置抛竿。':'再次点击画面即可收杆。',900);
 renderQuickbar();
 return true;
 }
@@ -1178,7 +1194,7 @@ return true;
 if(item.action==='fishing-rod'){
 setTerrainTool('dig');
 if(fishing.state==='idle'){
-showMapNotice('直接点击想抛到的水面。',900);
+showMapNotice('点击任意可见位置抛竿；落水后才会钓到鱼。',900);
 renderInventory();renderQuickbar();return true;
 }
 const ok=reelFishingRod();renderInventory();renderQuickbar();return ok;
@@ -1505,7 +1521,7 @@ keys.add(event.code);event.preventDefault();return;
 if(event.code==='Space'){if(!event.repeat||controller.inWater||!!playerWaterContact())jump();event.preventDefault();return}
 if(event.code==='KeyF'){
 if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod')){
-if(fishing.state==='idle')showMapNotice('装备钓鱼竿后，点击水面选择抛竿位置。',900);
+if(fishing.state==='idle')showMapNotice('装备钓鱼竿后，点击任意可见位置抛竿。',900);
 else reelFishingRod();
 }
 event.preventDefault();return;
