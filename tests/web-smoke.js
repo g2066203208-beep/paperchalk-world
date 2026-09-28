@@ -1,13 +1,28 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('voxel3d-r35'),'build key missing');
+assert(html.includes('voxel3d-r36'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
 assert(content.includes("'paper-carp'")&&content.includes("'bluefin-minnow'")&&content.includes("'golden-paperfish'"),'fish items missing');
+
+assert(html.includes('src/terrain/biome-generator.js'),'biome generator script missing');
+assert(content.includes("generator:'multi-noise-landform-v1'"),'biome generator config missing');
+assert(biome.includes('class BiomeLandformGenerator'),'BiomeLandformGenerator missing');
+assert(biome.includes("MEADOW:'meadow'")&&biome.includes("ALPINE:'alpine'")&&biome.includes("MARSH:'marsh'"),'biome catalogue missing');
+assert(biome.includes("MOUNTAIN:'mountain'")&&biome.includes("VALLEY:'river-valley'"),'landform catalogue missing');
+assert(biome.includes('mountainMask')&&biome.includes('riverMask'),'mountain/river fields missing');
+assert(biome.includes("fields:['continentalness','erosion','ridge','temperature','moisture','river','detail']"),'multi-noise fields missing');
+assert(terrain.includes('this.biomeGenerator=BiomeGenerator'),'terrain biome integration missing');
+assert(terrain.includes('terrainProfile(gx,gz=0)'),'terrain biome profile missing');
+assert(terrain.includes('surfaceTile(gx,gz=0)'),'biome surface material missing');
+assert(terrain.includes('biomeSummaryForChunk(cx,cz)'),'biome chunk summary missing');
+assert(terrain.includes('generatorVersion=5'),'terrain generator version missing');
+assert(game.includes('window.PaperchalkBiomes'),'biome runtime API missing');
+assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(mesher.includes('buildVoxelChunkGeometry'),'voxel mesher missing');
