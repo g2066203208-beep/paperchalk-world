@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r12'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r13'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -51,4 +51,6 @@ assert(engine.includes('uTorchOn'),'torch reveal uniform missing');
 assert(engine.includes("terraria-style-light-field-v3"),'integrated Terraria darkness shader missing');
 assert(engine.includes('outgoingLight*=darknessVisibility'),'terrain darkness is not integrated into lighting');
 assert(engine.includes('uDarkTorchOn'),'torch reveal uniform missing');
+assert(engine.includes("terraria-style-full-underground-mask-v4"),'full underground blackout mode missing');
+assert(engine.includes('uDarkUnderground'),'underground blackout uniform missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
