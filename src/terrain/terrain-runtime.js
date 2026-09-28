@@ -18,9 +18,23 @@ class TerrainChunk{
   index(lx,ly,lz){return (ly*this.size+lz)*this.size+lx}
   _generate(){
     const n=this.size;
-    for(let ly=0;ly<n;ly++)for(let lz=0;lz<n;lz++)for(let lx=0;lx<n;lx++){
-      const gx=this.cx*n+lx,gy=this.cy*n+ly,gz=this.cz*n+lz;
-      this.voxels[this.index(lx,ly,lz)]=this.world.generateVoxel(gx,gy,gz);
+    const baseY=this.cy*n;
+    for(let lz=0;lz<n;lz++){
+      const gz=this.cz*n+lz;
+      const fullDepth=gz===this.world.interactionRowZ;
+      for(let lx=0;lx<n;lx++){
+        const gx=this.cx*n+lx;
+        if(fullDepth){
+          for(let ly=0;ly<n;ly++){
+            const gy=baseY+ly;
+            this.voxels[this.index(lx,ly,lz)]=this.world.generateVoxel(gx,gy,gz);
+          }
+          continue;
+        }
+        const surface=this.world.surfaceCell(gx,gz);
+        const ly=surface-baseY;
+        if(ly>=0&&ly<n)this.voxels[this.index(lx,ly,lz)]=TILE.GRASS;
+      }
     }
   }
   get(lx,ly,lz){return this.voxels[this.index(lx,ly,lz)]}
