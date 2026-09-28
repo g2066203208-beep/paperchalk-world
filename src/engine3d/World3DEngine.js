@@ -1,6 +1,7 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
 import {
   buildVoxelChunkGeometry,
+  buildUndergroundOcclusionGeometry,
   createVoxelGridTexture,
   DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
@@ -127,6 +128,45 @@ class TerrainChunkRenderer{
       this.terrainShader=shader;
     };
     this.material.customProgramCacheKey=()=> 'paperchalk-cutaway-face-darkness-v6';
+
+    this.cutawayMaterial=new THREE.ShaderMaterial({
+      transparent:true,
+      depthTest:true,
+      depthWrite:false,
+      side:THREE.FrontSide,
+      polygonOffset:true,
+      polygonOffsetFactor:-2,
+      polygonOffsetUnits:-2,
+      toneMapped:false,
+      uniforms:{
+        uLightMap:{value:this.lightGridTexture},
+        uLightOrigin:{value:this.lightGridOrigin},
+        uLightSpan:{value:this.lightGridSize*this.terrain.tileSize}
+      },
+      vertexShader:`
+        varying vec3 vWorldPos;
+        void main(){
+          vec4 wp=modelMatrix*vec4(position,1.0);
+          vWorldPos=wp.xyz;
+          gl_Position=projectionMatrix*viewMatrix*wp;
+        }
+      `,
+      fragmentShader:`
+        precision mediump float;
+        varying vec3 vWorldPos;
+        uniform sampler2D uLightMap;
+        uniform vec2 uLightOrigin;
+        uniform float uLightSpan;
+        void main(){
+          vec2 uv=(vWorldPos.xy-uLightOrigin)/uLightSpan;
+          float inside=step(0.0,uv.x)*step(uv.x,1.0)*step(0.0,uv.y)*step(uv.y,1.0);
+          float reveal=texture2D(uLightMap,clamp(uv,0.001,0.999)).r*inside;
+          float alpha=0.995*(1.0-reveal);
+          if(alpha<0.01)discard;
+          gl_FragColor=vec4(0.0,0.0,0.0,alpha);
+        }
+      `
+    });
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
   _markDirty(cx,cy,cz){
@@ -156,13 +196,23 @@ class TerrainChunkRenderer{
     mesh.receiveShadow=true;mesh.castShadow=true;
     mesh.userData={cx,cy,cz,...geometry.userData};
 
-    return {mesh,version:chunk.version,cx,cy,cz};
+    const cutawayGeometry=buildUndergroundOcclusionGeometry(this.THREE,this.terrain,chunk);
+    let cutawayMesh=null;
+    if((cutawayGeometry.userData?.faces||0)>0){
+      cutawayMesh=new this.THREE.Mesh(cutawayGeometry,this.cutawayMaterial);
+      cutawayMesh.name='buried-cutaway-mask:'+cx+','+cy+','+cz;
+      cutawayMesh.position.copy(mesh.position);
+      cutawayMesh.renderOrder=30;
+      this.root.add(cutawayMesh);
+    }else cutawayGeometry.dispose();
+
+    return {mesh,cutawayMesh,version:chunk.version,cx,cy,cz};
   }
   _ensure(cx,cy,cz){
     const key=this.terrain.chunkKey(cx,cy,cz),chunk=this.terrain.getChunk(cx,cy,cz);
     let record=this.meshes.get(key);
     if(record&&record.version===chunk.version)return record;
-    if(record){this.root.remove(record.mesh);record.mesh.geometry.dispose()}
+    if(record){this.root.remove(record.mesh);if(record.cutawayMesh){this.root.remove(record.cutawayMesh);record.cutawayMesh.geometry.dispose()}record.mesh.geometry.dispose()}
     record=this._build(cx,cy,cz);this.meshes.set(key,record);this.root.add(record.mesh);return record;
   }
   _torchLineClear(x0,y0,x1,y1,gz){
@@ -219,16 +269,16 @@ class TerrainChunkRenderer{
       next.add(key);
       const record=this.meshes.get(key);
       if(!record||record.version<0)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
-      else record.mesh.visible=true;
+      else {record.mesh.visible=true;if(record.cutawayMesh)record.cutawayMesh.visible=true;}
     }
     queue.sort((a,b)=>a.d-b.d);
     const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
     for(let i=0;i<Math.min(budget,queue.length);i++){
-      const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+      const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;if(r.cutawayMesh)r.cutawayMesh.visible=true;
     }
     for(const [key,record] of [...this.meshes]){
       if(next.has(key))continue;
-      this.root.remove(record.mesh);record.mesh.geometry.dispose();this.meshes.delete(key);
+      this.root.remove(record.mesh);if(record.cutawayMesh){this.root.remove(record.cutawayMesh);record.cutawayMesh.geometry.dispose()}record.mesh.geometry.dispose();this.meshes.delete(key);
       this.terrain.unloadChunk(record.cx,record.cy,record.cz);
     }
     this.visibleKeys=next;
@@ -244,7 +294,7 @@ class TerrainChunkRenderer{
   }
   dispose(){
     this.unsubscribe?.();for(const r of this.meshes.values())r.mesh.geometry.dispose()
-    this.texture.dispose();this.lightGridTexture.dispose();this.material.dispose();this.scene.remove(this.root);
+    this.texture.dispose();this.lightGridTexture.dispose();this.material.dispose();this.cutawayMaterial.dispose();this.scene.remove(this.root);
   }
 }
 export class World3DEngine{
@@ -681,7 +731,7 @@ export class World3DEngine{
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,undergroundBackground:'near-black',visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
-      undergroundOcclusion:{mode:'terraria-cutaway-z-face-mask-v6',torchRevealRadius:10.5,playerRevealRadius:1.25,voxelOcclusion:true,frontFacesOnly:true,integratedTerrainShader:true},
+      undergroundOcclusion:{mode:'explicit-black-cutaway-mesh-v7',torchRevealRadius:10.5,playerRevealRadius:1.25,voxelOcclusion:true,frontFacesOnly:true,separateMaskMesh:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'3-axis greedy voxel BufferGeometry'
