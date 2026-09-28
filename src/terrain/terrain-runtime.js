@@ -270,16 +270,16 @@ class WaterWorld{
       for(const [key] of body){const [gx,,gz]=this.parse(key);set.add(this.columnKey(gx,gz))}
       return set;
     });
-    const next=new Map();
+    const next=new Map(),claimedColumns=new Set();
     let columns=0,layers=0,heapPops=0;
     for(let bi=0;bi<bodies.length;bi++){
-      const blocked=new Set();
+      const blocked=new Set(claimedColumns);
       for(let oi=0;oi<bodyColumns.length;oi++)if(oi!==bi)for(const ck of bodyColumns[oi])blocked.add(ck);
       const settled=this._settleBody(bodies[bi],blocked);
       columns+=settled.columns;layers+=settled.layers;heapPops+=settled.heapPops;
       for(const [key,level] of settled.cells){
-        const prev=next.get(key)||0;
-        if(level>prev)next.set(key,level);
+        next.set(key,level);
+        const [gx,,gz]=this.parse(key);claimedColumns.add(this.columnKey(gx,gz));
       }
     }
 
@@ -295,8 +295,10 @@ class WaterWorld{
     }
     if(changed)this.version++;
     this.tick++;
-    this.lastSettle={bodies:bodies.length,columns,layers,heapPops};
-    return {changed,...this.lastSettle,totalLayers:this.totalLayers(),exactHydrostatic:true};
+    const beforeLayers=[...before.values()].reduce((sum,v)=>sum+v,0);
+    const afterLayers=this.totalLayers();
+    this.lastSettle={bodies:bodies.length,columns,layers,heapPops,beforeLayers,afterLayers,conserved:beforeLayers===afterLayers};
+    return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
   }
   step(){
     return this.settleAll();
