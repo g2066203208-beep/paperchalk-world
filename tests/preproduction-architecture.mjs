@@ -7,12 +7,15 @@ const engine=read('src/engine3d/World3DEngine.js');
 const renderer=read('src/renderers/three-world-renderer.mjs');
 const pkg=JSON.parse(read('package.json'));
 
-assert.match(html,/three-main-r1/);
+assert.match(html,/three-stage-r2/);
 assert.match(renderer,/three-r180-production/);
 assert.match(renderer,/paperchalk-world-enter/);
 assert.match(renderer,/paperchalk-world-leave/);
 assert.match(engine,/WorldSpaceHealthBar/);
 assert.match(engine,/PerspectiveCamera/);
+assert.match(engine,/stageView=\{enabled:true,axis:'z',side:1\}/);
+assert.match(engine,/setStageView\(enabled/);
+assert.match(engine,/setStageAxis\(axis/);
 assert.match(engine,/WebGLRenderer/);
 assert.match(engine,/DirectionalLight/);
 assert.match(engine,/Box3Helper/);
