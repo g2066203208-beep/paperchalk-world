@@ -509,17 +509,30 @@ window.PaperchalkTerrainActions=Object.freeze({
   get edits(){return terrain.exportEdits()}
 });
 
+let terrainPointer=null;
 worldEl.addEventListener('contextmenu',event=>{
   if(event.target?.closest?.('.three-world-canvas'))event.preventDefault();
 });
+worldEl.addEventListener('pointerdown',event=>{
+  if(!event.target?.closest?.('.three-world-canvas'))return;
+  terrainPointer={id:event.pointerId,x:event.clientX,y:event.clientY,moved:false};
+});
+worldEl.addEventListener('pointermove',event=>{
+  if(!terrainPointer||terrainPointer.id!==event.pointerId)return;
+  if(Math.hypot(event.clientX-terrainPointer.x,event.clientY-terrainPointer.y)>8)terrainPointer.moved=true;
+});
 worldEl.addEventListener('pointerup',event=>{
+  const pointer=terrainPointer;
+  if(pointer&&pointer.id===event.pointerId)terrainPointer=null;
   if(!worldInteractive()||!event.target?.closest?.('.three-world-canvas'))return;
+  if(pointer?.moved)return;
   if(event.button!==0&&event.button!==2)return;
   const point=window.Paperchalk3D?.screenToWorld?.(event.clientX,event.clientY);
   if(!point)return;
   const result=event.button===2?placeTerrainAt(point.x,point.y):digTerrainAt(point.x,point.y);
   if(!result.changed&&result.reason==='out-of-reach')showMapNotice('太远了');
 });
+worldEl.addEventListener('pointercancel',()=>{terrainPointer=null});
 
 let inventoryItems=Array.from({length:INVENTORY_CAPACITY},()=>null);
 let inventorySelected=-1;
