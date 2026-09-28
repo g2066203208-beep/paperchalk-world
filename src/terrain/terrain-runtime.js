@@ -17,25 +17,17 @@ class TerrainChunk{
   }
   index(lx,ly,lz){return (ly*this.size+lz)*this.size+lx}
   _generate(){
-    const n=this.size;
-    const baseY=this.cy*n;
+    const n=this.size,baseY=this.cy*n;
     for(let lz=0;lz<n;lz++){
       const gz=this.cz*n+lz;
-      const fullDepth=gz===this.world.interactionRowZ||gz===this.world.blackBackRowZ;
       for(let lx=0;lx<n;lx++){
         const gx=this.cx*n+lx;
-        if(fullDepth){
-          for(let ly=0;ly<n;ly++){
-            const gy=baseY+ly;
-            this.voxels[this.index(lx,ly,lz)]=gz===this.world.blackBackRowZ
-              ?this.world.generateBlackBackdropVoxel(gx,gy,gz)
-              :this.world.generateVoxel(gx,gy,gz);
-          }
-          continue;
+        for(let ly=0;ly<n;ly++){
+          const gy=baseY+ly;
+          this.voxels[this.index(lx,ly,lz)]=gz===this.world.blackBackRowZ
+            ?this.world.generateBlackBackdropVoxel(gx,gy,gz)
+            :this.world.generateVoxel(gx,gy,gz);
         }
-        const surface=this.world.surfaceCell(gx,gz);
-        const ly=surface-baseY;
-        if(ly>=0&&ly<n)this.voxels[this.index(lx,ly,lz)]=this.world.surfaceTile(gx,gz);
       }
     }
   }
@@ -80,12 +72,6 @@ class WaterWorld{
   }
   consumeDirtyChunks(){const out=[...this.dirtyChunks];this.dirtyChunks.clear();return out}
   _terrainBlocksWater(gx,gy,gz){
-    // Scenery Z rows keep only their visible surface shell. For liquid physics
-    // the hidden material below that shell is treated as solid so water cannot
-    // fall through intentionally ungenerated terrain.
-    if(gz!==this.terrain.interactionRowZ&&gz!==this.terrain.blackBackRowZ){
-      if(gy<=this.terrain.surfaceCell(gx,gz))return true;
-    }
     return this.terrain.isSolidPeek(gx,gy,gz);
   }
   _canOccupy(gx,gy,gz){return !this._terrainBlocksWater(gx,gy,gz)}
@@ -264,27 +250,29 @@ class WaterWorld{
     if(!this.needsSettle)return {changed:false,...this.lastSettle};
     this.needsSettle=false;
     if(!this.cells.size){
-      this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
-      return {changed:false,...this.lastSettle};
+      this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0,beforeLayers:0,afterLayers:0,conserved:true};
+      return {changed:false,...this.lastSettle,exactHydrostatic:true};
     }
 
-    const before=new Map(this.cells),bodies=this._collectBodies();
-    const bodyColumns=bodies.map(body=>{
-      const set=new Set();
-      for(const [key] of body){const [gx,,gz]=this.parse(key);set.add(this.columnKey(gx,gz))}
-      return set;
-    });
-    const next=new Map(),claimedColumns=new Set();
-    let columns=0,layers=0,heapPops=0;
-    for(let bi=0;bi<bodies.length;bi++){
-      const blocked=new Set(claimedColumns);
-      for(let oi=0;oi<bodyColumns.length;oi++)if(oi!==bi)for(const ck of bodyColumns[oi])blocked.add(ck);
-      const settled=this._settleBody(bodies[bi],blocked);
-      columns+=settled.columns;layers+=settled.layers;heapPops+=settled.heapPops;
-      for(const [key,level] of settled.cells){
-        next.set(key,level);
-        const [gx,,gz]=this.parse(key);claimedColumns.add(this.columnKey(gx,gz));
-      }
+    const before=new Map(this.cells);
+    const beforeLayers=[...before.values()].reduce((sum,v)=>sum+v,0);
+
+    // Solve the whole current water volume in one shared priority-flood pass.
+    // This is crucial when a second bucket joins water that was already present:
+    // all old and new water participates in the same equilibrium calculation.
+    const settled=this._settleBody([...before.entries()],null);
+    const next=settled.cells;
+    const afterLayers=[...next.values()].reduce((sum,v)=>sum+v,0);
+
+    // Never create or delete water because of a solver edge case.
+    if(afterLayers!==beforeLayers){
+      this.cells=before;
+      this.needsSettle=true;
+      this.lastSettle={
+        bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
+        beforeLayers,afterLayers:beforeLayers,conserved:false,rollback:true
+      };
+      return {changed:false,...this.lastSettle,totalLayers:beforeLayers,exactHydrostatic:false};
     }
 
     let changed=before.size!==next.size;
@@ -299,9 +287,10 @@ class WaterWorld{
     }
     if(changed)this.version++;
     this.tick++;
-    const beforeLayers=[...before.values()].reduce((sum,v)=>sum+v,0);
-    const afterLayers=this.totalLayers();
-    this.lastSettle={bodies:bodies.length,columns,layers,heapPops,beforeLayers,afterLayers,conserved:beforeLayers===afterLayers};
+    this.lastSettle={
+      bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
+      beforeLayers,afterLayers,conserved:true,rollback:false
+    };
     return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
   }
   step(){
@@ -394,7 +383,7 @@ class WaterWorld{
       cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,
       layerHeight:this.terrain.tileSize/8,dirtyChunks:this.dirtyChunks.size,
       version:this.version,needsSettle:this.needsSettle,
-      flowModel:'priority-flood-global-hydrostatic-settle-v1',
+      flowModel:'priority-flood-shared-volume-hydrostatic-v2',
       flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
       exactHydrostatic:true,lastSettle:this.lastSettle
     };
@@ -482,11 +471,9 @@ class TerrainWorld{
     if(gy>surface)return TILE.AIR;
     const depth=surface-gy;
 
-    // Only the configured interaction row keeps a complete underground column.
-    // Every other Z row is a one-voxel surface shell for 3D scenery only.
-    if(gz!==this.interactionRowZ)return depth===0?this._kindToTile(profile.surfaceKind):TILE.AIR;
-
-    if(depth>4&&gy>-96&&gy<surface-2){
+    // Every visible Z slice is a closed solid terrain volume.
+    // Caves remain a gameplay-row feature so scenery depth cannot expose hollow shell gaps.
+    if(gz===this.interactionRowZ&&depth>4&&gy>-96&&gy<surface-2){
       if(this.caveNoise){
         const cave=this.caveNoise.GetNoise(gx,gy,gz);
         const warp=Math.abs(this.caveWarp.GetNoise(gx*1.43,gy*.91,gz*1.37));
@@ -553,10 +540,12 @@ class TerrainWorld{
     return this.blackBackRowZ>=cz*n&&this.blackBackRowZ<(cz+1)*n;
   }
   chunkMayContainTerrain(cx,cy,cz){
-    if(this.chunkContainsInteractionRow(cz)||this.chunkContainsBlackBackRow(cz))return true;
+    if(this.chunkContainsBlackBackRow(cz))return true;
     const range=this.surfaceRangeForChunk(cx,cz),n=this.chunkSize;
-    const minY=cy*n,maxY=minY+n-1;
-    return range.max>=minY&&range.min<=maxY;
+    const minY=cy*n;
+    // A volumetric terrain chunk is relevant whenever its bottom is at/below
+    // the highest surface in that X/Z chunk. Above-surface chunks stay culled.
+    return minY<=range.max;
   }
   _floorDiv(n,d){return Math.floor(n/d)}
   _mod(n,d){return ((n%d)+d)%d}
