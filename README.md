@@ -19,7 +19,7 @@ Z only controls front/back paper layers
 - 0.25 m 单元，64×64 cell 的单层 TerrainChunk
 - TypedArray 地形存储
 - Chunk 按玩家位置流式加载/卸载
-- 地表、土层、石层、洞穴的确定性程序生成
+- 地表、土层、石层、洞穴使用 **FastNoiseLite 1.1.1** 确定性程序生成（OpenSimplex2S + Perlin + Cellular）
 - 地下 Y 可持续向负方向加载，不设置 3D 体素厚度
 - Chunk 通过单个 BufferGeometry 合批，不是一方块一个 Mesh
 - 左键挖掘、右键放置泥土
@@ -57,3 +57,4 @@ https://g2066203208-beep.github.io/paperchalk-world/
 3. 非地形对象统一走 PaperSpriteEntity / PlaneGeometry。
 4. 正常玩法只允许 X/Y 运动；Z 仅用于远景、中景、玩家、前景的纸片层次。
 5. 地形修改只保存 delta，未修改区域始终由 seed 重建。
+6. 程序地形使用官方 FastNoiseLite JavaScript 实现（MIT），并保留确定性 fallback，避免生成器成为单点故障。
