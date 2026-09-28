@@ -1066,7 +1066,7 @@ window.addEventListener('keydown',event=>{
   if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
     keys.add(event.code);event.preventDefault();return;
   }
-  if(event.code==='Space'){if(!event.repeat)jump();event.preventDefault();return}
+  if(event.code==='Space'){if(!event.repeat||controller.inWater)jump();event.preventDefault();return}
   if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
   if(event.code==='KeyC'){keyboardCrouch=true;setCrouch(true);event.preventDefault()}
 });
