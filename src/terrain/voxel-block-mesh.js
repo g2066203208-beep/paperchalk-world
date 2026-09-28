@@ -83,8 +83,9 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
             // Only the chunk that owns the rear cell emits it, avoiding duplicates.
             if(aGz===terrain.blackBackRowZ&&bGz===terrain.interactionRowZ&&x[2]>=0&&x[2]<n){
               const gx=chunk.cx*n+x[0],gy=chunk.cy*n+x[1];
-              const buried=gy<terrain.surfaceCell(gx,terrain.interactionRowZ);
-              face=buried?a+32:a;
+              const surface=terrain.surfaceCell(gx,terrain.interactionRowZ);
+              const buriedRearVoxel=gy<=surface-1;
+              face=buriedRearVoxel?a+32:a;
             }
           }
           if(!face&&sa!==sb){
@@ -93,7 +94,8 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
             const solidGz=chunk.cz*n+solidLocalZ;
             const solidGx=chunk.cx*n+x[0];
             const solidGy=chunk.cy*n+x[1];
-            const buriedBlack=solidGz===terrain.blackBackRowZ&&solidGy<terrain.surfaceCell(solidGx,terrain.interactionRowZ);
+            const surface=terrain.surfaceCell(solidGx,terrain.interactionRowZ);
+            const buriedBlack=solidGz===terrain.blackBackRowZ&&solidGy<=surface-1;
             const renderCode=buriedBlack?tile+32:tile;
             face=sa?renderCode:-renderCode;
           }
@@ -159,7 +161,8 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
     dimensions:3,
     darknessVertices:buffer.darkness.filter(v=>v>.01).length,
     greedyRatio:buffer.quads?buffer.unitFaces/buffer.quads:1,
-    absoluteBlackBackRowZ:terrain.blackBackRowZ
+    absoluteBlackBackRowZ:terrain.blackBackRowZ,
+    rearTopSurfaceNormal:true
   };
   return geometry;
 }
