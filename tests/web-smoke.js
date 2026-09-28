@@ -12,10 +12,12 @@ const sprites=read('src/entities/PaperSpriteEntity.js');
 const save=read('src/core/save-runtime.js');
 const css=read('styles/game.css');
 
-assert(html.includes('paperchalk-build" content="paper-terrain-r1"'),'paper-stage build key missing');
+assert(html.includes('paperchalk-build" content="paper-terrain-r2"'),'paper-stage build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js stage host missing');
-assert(html.includes('src="./src/terrain/terrain-runtime.js?v=paper-terrain-r1"'),'terrain runtime not booted');
-assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=paper-terrain-r1"'),'paper-stage renderer not loaded');
+assert(html.includes('src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"'),'FastNoiseLite vendor not booted');
+assert(html.indexOf('FastNoiseLite.js?v=1.1.1')<html.indexOf('terrain-runtime.js?v=paper-terrain-r2'),'FastNoiseLite must boot before terrain runtime');
+assert(html.includes('src="./src/terrain/terrain-runtime.js?v=paper-terrain-r2"'),'terrain runtime not booted');
+assert(html.includes('src="./src/renderers/three-world-renderer.mjs?v=paper-terrain-r2"'),'paper-stage renderer not loaded');
 assert(!html.includes('pixiEntityLayer')&&!html.includes('cardGroundCanvas'),'retired 2D renderer layers remain');
 assert(!html.includes('class="actor"')&&!html.includes('playerHealthHud'),'retired DOM actor/HUD remains');
 
@@ -25,10 +27,15 @@ for(const path of [
 ])assert(!fs.existsSync(path),'retired renderer file remains: '+path);
 
 assert(fs.existsSync('vendor/three/three.module.js'),'Three.js module missing');
+assert(fs.existsSync('vendor/fastnoise-lite/FastNoiseLite.js'),'FastNoiseLite vendor missing');
 assert(fs.existsSync('src/terrain/terrain-runtime.js'),'single-layer terrain runtime missing');
 assert(fs.existsSync('src/entities/PaperSpriteEntity.js'),'paper entity runtime missing');
 
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
+assert(terrain.includes("noiseBackend='FastNoiseLite-1.1.1'"),'FastNoiseLite production terrain backend missing');
+assert(terrain.includes('OpenSimplex2S'),'OpenSimplex2S surface/cave generator missing');
+assert(terrain.includes('Perlin'),'Perlin detail generator missing');
+assert(terrain.includes('Cellular'),'Cellular strata generator missing');
 assert(terrain.includes('Uint8Array'),'chunk tile storage must be typed');
 assert(terrain.includes('chunkSize=64'),'64x64 single-layer chunks missing');
 assert(terrain.includes("tileSize=.25"),'0.25m terrain cell size missing');
