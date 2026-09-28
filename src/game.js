@@ -112,6 +112,7 @@ const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
 const INTERACTION_ROW_Z=Number(sceneData.terrain?.interactionRowZ??0);
+const PLAYER_ROW_CENTER_Z=INTERACTION_ROW_Z*(sceneData.terrain?.tileSize??1);
 const bounds=sceneData.bounds;
 const terrain=new TerrainRuntime.TerrainWorld({
   tileSize:sceneData.terrain?.tileSize??1,
@@ -344,16 +345,12 @@ function moveVertical(dy){
   }else if(dy!==0)controller.grounded=false;
 }
 function rawMoveInput(){
-  let strafe=0,forward=0;
-  if(keys.has('KeyA')||keys.has('ArrowLeft'))strafe-=1;
-  if(keys.has('KeyD')||keys.has('ArrowRight'))strafe+=1;
-  if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
-  if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
-  strafe+=joystickAxisX;
-  forward+=-joystickAxisY;
-  const len=Math.hypot(strafe,forward);
-  if(len>1){strafe/=len;forward/=len}
-  return {strafe,forward,magnitude:Math.min(1,Math.hypot(strafe,forward))};
+  let horizontal=0;
+  if(keys.has('KeyA')||keys.has('ArrowLeft'))horizontal-=1;
+  if(keys.has('KeyD')||keys.has('ArrowRight'))horizontal+=1;
+  horizontal+=joystickAxisX;
+  horizontal=Math.max(-1,Math.min(1,horizontal));
+  return {horizontal,magnitude:Math.abs(horizontal)};
 }
 function overlayOpen(){
   return backpackOverlay.classList.contains('is-open')||
@@ -369,15 +366,14 @@ ecs.registerSystem('player-movement',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:10,
   update(entity,world,dt,context){
     if(entity!==playerEntity)return;
-    const input=context.interactive?rawMoveInput():{strafe:0,forward:0,magnitude:0};
+    const input=context.interactive?rawMoveInput():{horizontal:0,magnitude:0};
     const speed=PLAYER_SPEED*(controller.crouching?.48:1);
-    const cy=Math.cos(cameraYaw),sy=Math.sin(cameraYaw);
-    velocity.x=(input.strafe*cy-input.forward*sy)*speed;
-    velocity.z=(-input.strafe*sy-input.forward*cy)*speed;
+    velocity.x=input.horizontal*speed;
+    velocity.z=0;
+    transform.z=PLAYER_ROW_CENTER_Z;
     controller.moving=input.magnitude>.05;
-    if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
+    if(controller.moving)transform.yaw=velocity.x<0?Math.PI:0;
     moveAxis('x',velocity.x*dt);
-    moveAxis('z',velocity.z*dt);
   }
 });
 ecs.registerSystem('player-gravity',{
@@ -462,9 +458,9 @@ window.PaperchalkCombat=Object.freeze({
 function safeSpawnY(x=sceneData.spawn.x,z=sceneData.spawn.z||0){
   return terrain.highestGroundY(x,z)+PLAYER_HALF_H+.03;
 }
-function teleport(x,z=0,y=null,{notice=''}={}){
+function teleport(x,z=PLAYER_ROW_CENTER_Z,y=null,{notice=''}={}){
   const nx=Number.isFinite(Number(x))?Number(x):sceneData.spawn.x;
-  const nz=Number.isFinite(Number(z))?Number(z):(sceneData.spawn.z||0);
+  const nz=PLAYER_ROW_CENTER_Z;
   let ny=Number.isFinite(Number(y))?Number(y):safeSpawnY(nx,nz);
   if(collidesAt(nx,ny,nz))ny=safeSpawnY(nx,nz);
   transform.x=nx;transform.y=ny;transform.z=nz;
@@ -1001,7 +997,7 @@ window.addEventListener('keydown',event=>{
   if(event.code==='KeyM'&&active){event.preventDefault();worldMapOverlay.classList.contains('is-open')?closeWorldMap():openWorldMap();return}
   if(event.code==='Escape'){if(window.PaperchalkHandleBack())event.preventDefault();return}
   if(!worldInteractive())return;
-  if(['KeyA','KeyD','KeyW','KeyS','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.code)){
+  if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
     keys.add(event.code);event.preventDefault();return;
   }
   if(event.code==='Space'){if(!event.repeat)jump();event.preventDefault();return}
@@ -1016,6 +1012,8 @@ window.addEventListener('blur',()=>{keys.clear();keyboardCrouch=false;resetJoyst
 
 function fixedUpdate(dt){
   const interactive=worldInteractive();
+  transform.z=PLAYER_ROW_CENTER_Z;
+  velocity.z=0;
   controller.crouching=keyboardCrouch||mobileCrouch;
   ecs.runPhase('fixed',dt,{interactive});
   if(active){
@@ -1109,7 +1107,7 @@ function saveWorldState(){
   const save=readSaveForSession(session)||defaultSave(session);
   save.location='Paperchalk · 无限3D体素世界';
   save.worldMinutes=worldMinutes;
-  save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
+  save.player={x:transform.x,y:transform.y,z:PLAYER_ROW_CENTER_Z,yaw:transform.yaw};
   save.playerHp=health.current;
   save.torchOn=controller.torchOn;
   save.terrainEdits=terrain.exportEdits();
@@ -1125,7 +1123,7 @@ function loadWorldState(){
   terrain.importEdits(save.terrainEdits);
   const p=save.player||sceneData.spawn;
   transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
-  transform.z=Number.isFinite(Number(p.z))?Number(p.z):(sceneData.spawn.z||0);
+  transform.z=PLAYER_ROW_CENTER_Z;
   transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x,transform.z);
   transform.yaw=Number.isFinite(p.yaw)?p.yaw:sceneData.spawn.yaw;
   if(collidesAt(transform.x,transform.y,transform.z))transform.y=safeSpawnY(transform.x,transform.z);
