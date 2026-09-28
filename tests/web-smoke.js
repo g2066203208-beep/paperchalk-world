@@ -82,4 +82,8 @@ assert(engine.includes("camera-player-capsule-fade-v1"),'camera obstruction fade
 assert(engine.includes('uOcclusionCamera')&&engine.includes('uOcclusionPlayer'),'terrain camera occlusion uniforms missing');
 assert(engine.includes('protectedInteraction')&&engine.includes('protectedBlack'),'protected gameplay rows missing');
 assert(engine.includes('entity.material.opacity=state.opacity'),'paper entity obstruction fade missing');
+assert(engine.includes("camera-player-capsule-fade-v2"),'camera obstruction fade v2 missing');
+assert(engine.includes('transparent:true,opacity:1,depthWrite:true'),'terrain material is not blending obstruction alpha');
+assert(engine.includes('protectInteractionRow:true')&&engine.includes('protectBlackBackRow:true'),'protected gameplay rows missing from camera occlusion');
+assert(engine.includes('this.terrainRenderer?.setCameraOcclusion(this.camera.position,playerPos,true)'),'camera-player terrain occlusion update missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
