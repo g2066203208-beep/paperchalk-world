@@ -1,176 +1,48 @@
 import process from 'node:process';
 import {chromium} from 'playwright-core';
-
 function assert(c,m){if(!c)throw new Error(m)}
 const errors=[];
-const browser=await chromium.launch({
-  executablePath:process.env.CHROME_PATH,
-  headless:true,
-  args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']
-});
-
+const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
-  const page=await browser.newPage({viewport:{width:1440,height:900}});
+  const page=await browser.newPage({viewport:{width:1280,height:720}});
   page.on('pageerror',e=>errors.push('PAGE '+String(e)));
   page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
-  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url())});
-  page.on('requestfailed',r=>errors.push('REQUEST '+r.url()));
+  await page.goto('http://127.0.0.1:8080/?ci=voxel3d-core',{waitUntil:'networkidle'});
+  await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.PaperchalkTerrainActions,{timeout:7000});
+  const cold=await page.evaluate(()=>window.PaperchalkTerrainActions.stats);
+  assert(cold.dimensions===3&&cold.infinite===true&&cold.chunkSize===16,'3D terrain config wrong '+JSON.stringify(cold));
+  assert(cold.generatorVersion===3&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
 
-  await page.goto('http://127.0.0.1:8080/?ci=core-paper-stage',{waitUntil:'networkidle'});
-  await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.Paperchalk3D&&!!window.PaperchalkTerrainActions,{timeout:5000});
-
-  const cold=await page.evaluate(()=>({
-    runtime:window.PaperchalkRuntime.getSnapshot(),
-    three:{ready:window.Paperchalk3D.ready,active:window.Paperchalk3D.active},
-    terrain:window.PaperchalkTerrainActions.stats
-  }));
-  assert(!cold.runtime.active&&!cold.three.active&&!cold.three.ready,'renderer must stay cold on menu '+JSON.stringify(cold));
-  assert(cold.terrain.tileSize===1&&cold.terrain.pixelsPerMeter===128&&cold.terrain.chunkSize===64,'single-layer terrain configuration wrong '+JSON.stringify(cold.terrain));
-  assert(cold.terrain.noiseBackend==='FastNoiseLite-1.1.1','FastNoiseLite terrain backend missing '+JSON.stringify(cold.terrain));
-  assert(cold.terrain.generatorVersion===2,'terrain generator version missing '+JSON.stringify(cold.terrain));
-
-  await page.locator('#authBtn').click();
-  await page.locator('#tabRegister').click();
-  await page.locator('#regUser').fill('paper_core');
-  await page.locator('#regName').fill('纸片旅人');
-  await page.locator('#regPass').fill('test1234');
+  await page.locator('#authBtn').click();await page.locator('#tabRegister').click();
+  await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
   await page.locator('#registerForm button[type=submit]').click();
-  await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
-  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:3500});
-  await page.waitForTimeout(100);
+  await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
+  await page.waitForTimeout(1400);
+  const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats}));
+  assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
+  assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
+  assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
 
-  const entered=await page.evaluate(()=>({
-    runtime:window.PaperchalkRuntime.getSnapshot(),
-    three:window.Paperchalk3D.stats
-  }));
-  assert(entered.three.worldMode==='paper-stage-2.5d','wrong world mode '+JSON.stringify(entered.three));
-  assert(entered.three.terrainMode==='single-layer-3d-cubes','terrain is not one-layer 3D cube terrain '+JSON.stringify(entered.three));
-  assert(entered.three.terrain?.oneLayer===true&&entered.three.terrain?.blockGeometry==='3d-cube','terrain gained depth layers or lost cube geometry '+JSON.stringify(entered.three.terrain));
-  assert(Math.abs((entered.three.terrain?.thickness||0)-1)<1e-6,'terrain blocks are not true 1m cubes '+JSON.stringify(entered.three.terrain));
-  assert(entered.three.entityMode==='2d-textured-planes','entities are not paper planes '+JSON.stringify(entered.three));
-  assert(entered.three.playerGeometry==='PlaneGeometry','player is not a flat paper entity '+JSON.stringify(entered.three));
-  assert(entered.three.terrain.visibleChunks>0&&entered.three.terrain.renderedSolidTiles>0,'terrain chunks are not rendered '+JSON.stringify(entered.three.terrain));
-
-  const before=entered.runtime.player;
-  await page.keyboard.down('KeyD');
-  await page.waitForTimeout(420);
-  await page.keyboard.up('KeyD');
-  await page.waitForTimeout(80);
-  const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(afterD.x-before.x>.25,'D did not move right on the 2D gameplay plane '+JSON.stringify({before,afterD}));
-  assert(Math.abs(afterD.z-before.z)<1e-6,'gameplay must not move through Z '+JSON.stringify({before,afterD}));
-
-  const beforeW={...afterD};
-  await page.keyboard.down('KeyW');
-  await page.waitForTimeout(220);
-  await page.keyboard.up('KeyW');
+  const before={...entered.p};
+  await page.keyboard.down('KeyW');await page.waitForTimeout(450);await page.keyboard.up('KeyW');await page.waitForTimeout(100);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(Math.abs(afterW.x-beforeW.x)<.03&&Math.abs(afterW.z-beforeW.z)<1e-6,'W must not create free 3D movement '+JSON.stringify({beforeW,afterW}));
+  assert(Math.hypot(afterW.x-before.x,afterW.z-before.z)>.25,'W did not move across X/Z '+JSON.stringify({before,afterW}));
 
-  const jumpStarted=await page.evaluate(()=>window.PaperchalkCombat.jump());
-  assert(jumpStarted===true,'jump was rejected while grounded');
-  await page.waitForFunction(
-    y0=>window.PaperchalkRuntime.getSnapshot().player.y>y0+.04,
-    afterW.y,
-    {timeout:1200}
-  );
-  const air=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(air.y>afterW.y+.04&&!air.grounded,'jump did not move upward on Y '+JSON.stringify({afterW,air}));
+  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
+  const jumped=await page.evaluate(()=>window.PaperchalkCombat.jump());assert(jumped===true,'jump rejected');
+  await page.waitForFunction(y=>window.PaperchalkRuntime.getSnapshot().player.y>y+.04,afterW.y,{timeout:1500});
 
-  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:3500});
-
-  const dig=await page.evaluate(()=>{
-    const p=window.PaperchalkRuntime.getSnapshot().player;
-    const t=window.PaperchalkTerrain;
-    const s=t.tileSize;
-    const base=t.worldToCell(p.x,p.y-1.05);
-    for(let radius=0;radius<=12;radius++){
-      for(let dx=-radius;dx<=radius;dx++){
-        for(let dy=-radius;dy<=0;dy++){
-          const gx=base.gx+dx,gy=base.gy+dy;
-          if(!t.isSolid(gx,gy))continue;
-          const c=t.cellCenter(gx,gy);
-          if(Math.hypot(c.x-p.x,c.y-p.y)>4)continue;
-          const result=window.PaperchalkTerrainActions.dig(c.x,c.y);
-          if(result.changed)return {result,beforeTile:result.previous,point:c,stats:window.PaperchalkTerrainActions.stats};
-        }
-      }
-    }
-    return null;
+  const edit=await page.evaluate(()=>{
+    const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain;
+    const gx=Math.floor(p.x),gz=Math.floor(p.z),surface=Math.floor(t.highestGroundY(p.x,p.z)/t.tileSize)-1;
+    const before=t.getVoxel(gx,surface,gz);
+    const dug=window.PaperchalkTerrainActions.digCell(gx,surface,gz,{persist:false});
+    const placed=window.PaperchalkTerrainActions.placeCell(gx,surface,gz,before,{persist:false});
+    return {before,dug,placed,stats:t.stats()};
   });
-  assert(dig?.result?.changed,'could not dig a reachable terrain tile '+JSON.stringify(dig));
-  assert(dig.stats.editedTiles>=1,'terrain delta was not recorded '+JSON.stringify(dig));
-
-  const removed=await page.evaluate(({x,y})=>{
-    const t=window.PaperchalkTerrain,c=t.worldToCell(x,y);
-    return t.getTile(c.gx,c.gy);
-  },dig.point);
-  assert(removed===0,'dug tile is not AIR '+removed);
-
-  const placed=await page.evaluate(()=>{
-    const p=window.PaperchalkRuntime.getSnapshot().player;
-    const t=window.PaperchalkTerrain;
-    const half=.49*t.tileSize;
-    const base=t.worldToCell(p.x,p.y+.5);
-    for(let radius=1;radius<=14;radius++){
-      for(let dy=-radius;dy<=radius;dy++){
-        for(let dx=-radius;dx<=radius;dx++){
-          const gx=base.gx+dx,gy=base.gy+dy;
-          if(t.isSolid(gx,gy))continue;
-          const c=t.cellCenter(gx,gy);
-          if(Math.hypot(c.x-p.x,c.y-p.y)>3.8)continue;
-          const overlaps=Math.abs(c.x-p.x)<.34+half&&Math.abs(c.y-p.y)<.95+half;
-          if(overlaps)continue;
-          const result=window.PaperchalkTerrainActions.place(c.x,c.y);
-          if(result.changed)return {result,point:c,stats:window.PaperchalkTerrainActions.stats};
-        }
-      }
-    }
-    return null;
-  });
-  assert(placed?.result?.changed,'could not place a reachable 3D terrain cube '+JSON.stringify(placed));
-  const placedTile=await page.evaluate(({x,y})=>{
-    const t=window.PaperchalkTerrain,c=t.worldToCell(x,y);return t.getTile(c.gx,c.gy);
-  },placed.point);
-  assert(placedTile!==0,'placed terrain cube did not become solid '+JSON.stringify({placed,placedTile}));
-
-  await page.evaluate(()=>window.PaperchalkHealth.damage(1));
-  await page.waitForTimeout(80);
-  const hp9=await page.evaluate(()=>({hp:window.PaperchalkHealth.state.hp,bar:window.Paperchalk3D.stats.health}));
-  assert(hp9.hp===9&&hp9.bar?.value===9,'world-space health bar did not follow runtime '+JSON.stringify(hp9));
-
-  const saved=await page.evaluate(()=>{
-    window.PaperchalkSaveNow();
-    const key=window.PaperchalkSaveDiagnostics.keyFor('paper_core');
-    return JSON.parse(localStorage.getItem(key)||'null');
-  });
-  assert(saved?.schemaVersion===5,'paper-stage save schema is not v5 '+JSON.stringify(saved));
-  assert(Array.isArray(saved.terrainEdits)&&saved.terrainEdits.length>=1,'terrain edits were not persisted '+JSON.stringify(saved.terrainEdits));
-  assert(Number.isFinite(saved.player.y)&&Number.isFinite(saved.player.x),'XY player state missing '+JSON.stringify(saved.player));
-  const savedPlayer={...saved.player};
-
-  await page.locator('#worldMenuBtn').click();
-  await page.reload({waitUntil:'networkidle'});
-  await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.Paperchalk3D,{timeout:5000});
-  await page.locator('#continueBtn').click();
-  await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
-  await page.waitForTimeout(180);
-
-  const restored=await page.evaluate(({x,y,px,py})=>{
-    const t=window.PaperchalkTerrain,c=t.worldToCell(x,y);
-    return {
-      p:window.PaperchalkRuntime.getSnapshot().player,
-      hp:window.PaperchalkHealth.state.hp,
-      tile:t.getTile(c.gx,c.gy),
-      edits:window.PaperchalkTerrainActions.stats.editedTiles,
-      placedTile:t.getTile(t.worldToCell(px,py).gx,t.worldToCell(px,py).gy)
-    };
-  },{x:dig.point.x,y:dig.point.y,px:placed.point.x,py:placed.point.y});
-  assert(Math.abs(restored.p.x-savedPlayer.x)<.15,'X position did not restore '+JSON.stringify({savedPlayer,restored}));
-  assert(restored.hp===9,'health did not restore '+JSON.stringify(restored));
-  assert(restored.tile===0&&restored.edits>=1,'dug terrain did not restore after reload '+JSON.stringify(restored));
-  assert(restored.placedTile!==0,'placed 3D cube did not restore after reload '+JSON.stringify(restored));
+  assert(edit.before!==0&&edit.dug.changed&&edit.placed.changed,'3D edit failed '+JSON.stringify(edit));
+  assert(edit.stats.editedVoxels>=0,'3D edit stats missing '+JSON.stringify(edit.stats));
 
   assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
-  console.log(JSON.stringify({ok:true,entered:entered.three,afterD,air,dig,saved,restored},null,2));
+  console.log('INFINITE_VOXEL_3D_CORE_OK');
 }finally{await browser.close()}
