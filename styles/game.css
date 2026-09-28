@@ -23,6 +23,24 @@ body{touch-action:manipulation}
   min-width:74px;padding:7px 11px;border:1px solid rgba(255,255,255,.22);border-radius:7px;
   color:#f7f0df;background:rgba(25,31,33,.72);font-weight:900;letter-spacing:.08em;backdrop-filter:blur(5px)
 }
+.survival-hud{
+  position:absolute;z-index:14;left:max(68px,calc(env(safe-area-inset-left) + 68px));top:max(72px,calc(env(safe-area-inset-top) + 72px));
+  display:grid;gap:6px;min-width:176px;pointer-events:none
+}
+.survival-row{
+  display:flex;align-items:center;gap:7px;padding:5px 8px;border:1px solid rgba(72,57,42,.58);border-radius:8px;
+  background:rgba(48,40,31,.68);box-shadow:2px 3px 0 rgba(0,0,0,.16);backdrop-filter:blur(4px);color:#fff0d6
+}
+.survival-icon{width:22px;text-align:center}
+.survival-meter{width:110px;height:12px;border-radius:999px;overflow:hidden;background:rgba(26,22,18,.7);border:1px solid rgba(255,255,255,.15)}
+.survival-meter i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#b96642,#e0b95f);transform-origin:left center;transition:transform .2s linear}
+.survival-row b{min-width:24px;text-align:right;font-size:11px}
+.fishing-status-hud{
+  min-height:0;padding:0 8px;border-radius:7px;color:#fff6dc;background:rgba(35,43,46,.74);font-size:11px;font-weight:800;
+  line-height:28px;opacity:0;transform:translateY(-3px);transition:.14s ease;white-space:nowrap
+}
+.fishing-status-hud.is-show{opacity:1;transform:none}
+
 .map-notice{
   position:absolute;z-index:12;left:50%;top:12%;transform:translate(-50%,-6px);opacity:0;
   pointer-events:none;padding:9px 16px;border-radius:8px;background:rgba(33,38,40,.83);color:#f5eedf;
