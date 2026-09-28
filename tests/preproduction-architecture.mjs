@@ -10,7 +10,7 @@ const cubeMesher=read('src/terrain/voxel-block-mesh.js');
 const sprites=read('src/entities/PaperSpriteEntity.js');
 const pkg=JSON.parse(read('package.json'));
 
-assert.match(html,/paper-terrain-r3/);
+assert.match(html,/player-art-r1/);
 assert.match(renderer,/three-r180-paper-stage/);
 assert.match(renderer,/paperchalk-world-enter/);
 assert.match(renderer,/paperchalk-world-leave/);
@@ -23,7 +23,7 @@ assert.match(engine,/TerrainChunkRenderer/);
 assert.match(engine,/single-layer-3d-cube-terrain/);
 assert.match(engine,/single-layer-3d-cubes/);
 assert.match(engine,/MeshLambertMaterial/);
-assert.match(engine,/2d-textured-planes/);
+assert.match(engine,/2d-textured-planes/);\nassert.match(engine,/assets\\/player\\/protagonist\\.webp/);\nassert.equal(fs.existsSync('assets/player/protagonist.webp'),true);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(terrain,/FastNoiseLite-1\.1\.1/);
 assert.match(terrain,/OpenSimplex2S/);

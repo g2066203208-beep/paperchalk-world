@@ -9,7 +9,7 @@ assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exc
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
-assert(!fs.existsSync('assets'),'legacy raster/SVG asset tree should remain absent until authored paper assets are reintroduced');
+assert(fs.existsSync('assets/player/protagonist.webp'),'authored protagonist paper asset missing');\nassert(size('assets/player/protagonist.webp')<100000,'protagonist paper asset exceeds 100KB budget');
 assert(!fs.existsSync('vendor/pixi'),'Pixi vendor tree should remain removed');
 console.log(JSON.stringify({
   ok:true,
@@ -20,5 +20,5 @@ console.log(JSON.stringify({
   sprites:size('src/entities/PaperSpriteEntity.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
-  html:size('index.html')
+  html:size('index.html'),\n  protagonist:size('assets/player/protagonist.webp')
 }));
