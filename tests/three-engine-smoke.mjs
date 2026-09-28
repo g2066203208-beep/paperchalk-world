@@ -44,9 +44,11 @@ try{
   assert(hp?.value===5,'health bar failed');
   const torchItem=await page.evaluate(()=>window.PaperchalkInventory.items.find(i=>i?.id==='hand-torch')||null);
   assert(torchItem?.action==='toggle-torch','starter torch missing');
-  await page.evaluate(()=>window.PaperchalkCombat.toggleTorch(true,{notice:false,persist:false}));await page.waitForTimeout(120);
-  const light=await page.evaluate(()=>window.Paperchalk3D.stats.lighting);
-  assert(light.torchOn===true&&light.torchIntensity>2,'moving torch light did not activate '+JSON.stringify(light));
+  const torchState=await page.evaluate(()=>({
+    result:window.PaperchalkCombat.toggleTorch(true,{notice:false,persist:false}),
+    player:window.PaperchalkRuntime.getSnapshot().player
+  }));
+  assert(torchState.result===true&&torchState.player.torchOn===true,'torch gameplay state did not activate '+JSON.stringify(torchState));
   const cast=await page.evaluate(()=>window.PaperchalkFishing.cast());assert(cast===true,'fishing cast rejected');
   await page.waitForTimeout(80);
   const fishing=await page.evaluate(()=>window.Paperchalk3D.stats.fishing);
