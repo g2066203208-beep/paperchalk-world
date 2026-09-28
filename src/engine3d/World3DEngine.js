@@ -123,7 +123,9 @@ class TerrainChunkRenderer{
     const next=new Set(),queue=[];
     const rx=Math.max(1,this.settings.radiusXZ|0),ry=Math.max(1,this.settings.radiusY|0);
     for(let dy=-ry;dy<=ry;dy++)for(let dz=-rx;dz<=rx;dz++)for(let dx=-rx;dx<=rx;dx++){
-      const cx=ccx+dx,cy=ccy+dy,cz=ccz+dz,key=this.terrain.chunkKey(cx,cy,cz);
+      const cx=ccx+dx,cy=ccy+dy,cz=ccz+dz;
+      if(this.terrain.chunkMayContainTerrain&&!this.terrain.chunkMayContainTerrain(cx,cy,cz))continue;
+      const key=this.terrain.chunkKey(cx,cy,cz);
       next.add(key);
       const record=this.meshes.get(key);
       if(!record||record.version<0)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
