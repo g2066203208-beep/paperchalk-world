@@ -37,7 +37,7 @@ function migrateToV4(input){
     player={
       x:(legacyX-460)/128,
       y:Math.max(0,legacyY/128),
-      z:8,
+      z:13,
       yaw:finiteOr(save.routeOrientation?.sign,1)<0?-Math.PI/2:Math.PI/2
     };
   }
