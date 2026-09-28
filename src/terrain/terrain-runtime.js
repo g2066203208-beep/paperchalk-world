@@ -52,6 +52,7 @@ class WaterWorld{
     this.terrain=terrain;
     this.cells=new Map();
     this.dirtyChunks=new Set();
+    this.surfaceCache=new Map();
     this.version=0;
     this.tick=0;
     this.levels=8;
@@ -92,6 +93,7 @@ class WaterWorld{
     const key=this.key(gx,gy,gz),prev=this.cells.get(key)||0;
     if(prev===level)return false;
     if(level<=0)this.cells.delete(key);else this.cells.set(key,level);
+    this.surfaceCache.delete(this.columnKey(gx,gz));
     this.version++;this._markNeighborhoodDirty(gx,gy,gz);
     return true;
   }
@@ -285,7 +287,7 @@ class WaterWorld{
 
     let changed=before.size!==next.size;
     const keys=new Set([...before.keys(),...next.keys()]);
-    this.cells=next;
+    this.cells=next;this.surfaceCache.clear();
     for(const key of keys){
       const old=before.get(key)||0,now=next.get(key)||0;
       if(old!==now){
@@ -305,6 +307,8 @@ class WaterWorld{
   }
   totalLayers(){let n=0;for(const level of this.cells.values())n+=level;return n}
   highestSurfaceY(gx,gz){
+    const ck=this.columnKey(gx,gz),cached=this.surfaceCache.get(ck);
+    if(cached!==undefined)return cached;
     let top=-Infinity;
     for(const [key,level] of this.cells){
       if(!level)continue;
@@ -312,6 +316,7 @@ class WaterWorld{
       if(x!==gx||z!==gz)continue;
       top=Math.max(top,gy*this.terrain.tileSize+(level/8)*this.terrain.tileSize);
     }
+    this.surfaceCache.set(ck,top);
     return top;
   }
   surfaceAtWorld(x,z){
@@ -345,7 +350,7 @@ class WaterWorld{
     return rows;
   }
   importState(rows){
-    this.cells.clear();this.dirtyChunks.clear();
+    this.cells.clear();this.dirtyChunks.clear();this.surfaceCache.clear();
     for(const row of Array.isArray(rows)?rows:[]){
       if(!Array.isArray(row)||row.length<4)continue;
       const [gx,gy,gz,level]=row.map(Number);
