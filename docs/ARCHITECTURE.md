@@ -61,7 +61,7 @@ Save schema V4 stores:
 
 ```json
 {
-  "player": {"x":0,"y":0,"z":8,"yaw":3.14159},
+  "player": {"x":0,"y":0,"z":13,"yaw":3.14159},
   "playerHp":10,
   "worldMinutes":360,
   "inventory":[]
