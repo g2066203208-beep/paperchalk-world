@@ -51,6 +51,7 @@ class WaterWorld{
     this.levels=8;
     this.needsSettle=false;
     this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
+    this.visualTransition=null;this.visualTransitionId=0;
     this.horizontalDirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
     this.neighborDirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
   }
@@ -291,6 +292,14 @@ class WaterWorld{
       bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
       beforeLayers,afterLayers,conserved:true,rollback:false
     };
+    if(changed){
+      this.visualTransition={
+        id:++this.visualTransitionId,
+        from:before,
+        to:new Map(next),
+        duration:.72
+      };
+    }
     return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
   }
   step(){
@@ -385,7 +394,7 @@ class WaterWorld{
       version:this.version,needsSettle:this.needsSettle,
       flowModel:'priority-flood-shared-volume-hydrostatic-v2',
       flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
-      exactHydrostatic:true,lastSettle:this.lastSettle
+      exactHydrostatic:true,lastSettle:this.lastSettle,visualTransitionId:this.visualTransition?.id||0
     };
   }
 }
