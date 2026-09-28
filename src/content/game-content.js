@@ -7,10 +7,12 @@ const scene3d={
   spawn:{x:0,y:3,z:.45,yaw:0},
   bounds:{minX:-100000,maxX:100000,minY:-100000,maxY:100000},
   terrain:{
-    tileSize:.25,
+    tileSize:1,
+    pixelsPerMeter:128,
+    texturePixels:128,
     chunkSize:64,
     seed:24681357,
-    thickness:.25,
+    thickness:1,
     visibleChunkRadiusX:3,
     visibleChunkRadiusY:2
   },
@@ -115,7 +117,7 @@ function validate(value=content){
       if(!nodeIds.has(route.to))errors.push('route '+route.id+' missing to node '+route.to);
     }
     const terrain=value.scene3d.terrain;
-    if(!(terrain.tileSize>0&&terrain.chunkSize>=16))errors.push('scene3d terrain settings invalid');
+    if(!(terrain.tileSize===1&&terrain.pixelsPerMeter===128&&terrain.texturePixels===128&&terrain.chunkSize>=16))errors.push('scene3d terrain scale must be 1m / 128px');
     if(value.scene3d.mode!=='paper-stage-2.5d')errors.push('scene3d mode must be paper-stage-2.5d');
     for(const entity of value.scene3d.stageEntities){
       if(!(entity.width>0&&entity.height>0))errors.push('stage entity '+entity.id+' dimensions invalid');
