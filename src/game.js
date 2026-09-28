@@ -101,8 +101,8 @@ const PLAYER_HALF_H=.95;
 const TERRAIN_REACH=4.5;
 const KEY_USERS='paperchalk.localUsers.v1';
 const KEY_SESSION='paperchalk.session.v1';
-const KEY_SAVE_PREFIX='paperchalk.save.v4.';
-const LEGACY_SAVE_PREFIXES=['paperchalk.save.v3.','paperchalk.save.v2.'];
+const KEY_SAVE_PREFIX='paperchalk.save.v5.';
+const LEGACY_SAVE_PREFIXES=['paperchalk.save.v4.','paperchalk.save.v3.','paperchalk.save.v2.'];
 const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
@@ -450,13 +450,16 @@ window.PaperchalkCombat=Object.freeze({
   damagePlayer,healPlayer,setPlayerHp
 });
 
-function teleport(x,z=sceneData.spawn.z,{notice=''}={}){
-  const nx=clamp(Number(x)||0,bounds.minX+PLAYER_RADIUS,bounds.maxX-PLAYER_RADIUS);
-  const nz=clamp(Number(z)||0,bounds.minZ+PLAYER_RADIUS,bounds.maxZ-PLAYER_RADIUS);
-  if(collidesAt(nx,nz))return false;
-  transform.x=nx;transform.z=nz;transform.y=0;
+function safeSpawnY(x=sceneData.spawn.x){
+  return terrain.highestGroundY(x)+PLAYER_HALF_H+.03;
+}
+function teleport(x,y=null,{notice=''}={}){
+  const nx=Number.isFinite(Number(x))?Number(x):sceneData.spawn.x;
+  let ny=Number.isFinite(Number(y))?Number(y):safeSpawnY(nx);
+  if(collidesAt(nx,ny))ny=safeSpawnY(nx);
+  transform.x=nx;transform.y=ny;transform.z=sceneData.layers?.actor??.45;
   velocity.x=velocity.y=velocity.z=0;
-  controller.grounded=true;
+  controller.grounded=groundProbe(nx,ny);
   if(notice)showMapNotice(notice);
   publish();
   return true;
@@ -467,10 +470,10 @@ window.PaperchalkMap=Object.freeze({
   get nodes(){return CONTENT.world.nodes},
   get routes(){return CONTENT.world.routes},
   teleport,
-  reset(){return teleport(sceneData.spawn.x,sceneData.spawn.z,{notice:'已返回出生点'})}
+  reset(){return teleport(sceneData.spawn.x,null,{notice:'已返回出生点'})}
 });
 window.PaperchalkScene=Object.freeze({
-  get location(){return 'village-3d'},
+  get location(){return 'village-paper-stage'},
   get transitioning(){return false}
 });
 
@@ -716,7 +719,7 @@ function runDebugCommand(command){
   const raw=String(command||'').trim();
   if(!raw)return '';
   const [cmd,...args]=raw.split(/\s+/);
-  if(cmd==='help')return 'hp 5 | hp +1 | tp X Z | reset | collider | stage on/off | axis x/z | stats | save';
+  if(cmd==='help')return 'hp 5 | hp +1 | tp X Y | reset | collider | stage on/off | axis x/z | terrain | stats | save';
   if(cmd==='hp'){
     const token=args[0]||'';
     const n=Number(token);
@@ -725,9 +728,10 @@ function runDebugCommand(command){
     return 'HP -> '+setPlayerHp(target)+' / '+PLAYER_MAX_HP;
   }
   if(cmd==='tp'){
-    const x=Number(args[0]),z=Number(args[1]);
-    if(!Number.isFinite(x)||!Number.isFinite(z))return '用法：tp 0 8';
-    return teleport(x,z,{notice:'调试传送'})?'XYZ -> '+transform.x.toFixed(1)+', '+transform.z.toFixed(1):'目标位置被建筑占用';
+    const x=Number(args[0]),y=Number(args[1]);
+    if(!Number.isFinite(x)||!Number.isFinite(y))return '用法：tp 0 -8';
+    teleport(x,y,{notice:'调试传送'});
+    return 'XY -> '+transform.x.toFixed(1)+', '+transform.y.toFixed(1);
   }
   if(cmd==='reset'){window.PaperchalkMap.reset();return '已返回出生点'}
   if(cmd==='collider'){
@@ -755,6 +759,7 @@ function runDebugCommand(command){
     syncStageDebugButtons();
     return '舞台观察轴 -> '+next.axis.toUpperCase();
   }
+  if(cmd==='terrain')return JSON.stringify(terrain.stats(),null,2);
   if(cmd==='stats')return JSON.stringify(window.Paperchalk3D?.stats||{},null,2);
   if(cmd==='save')return saveWorldState()?'存档已写入':'没有活动档案';
   return '未知命令：'+cmd;
@@ -889,14 +894,15 @@ function stopGameLoop(){
 
 function defaultSave(session){
   return {
-    schemaVersion:4,
+    schemaVersion:SAVE_RUNTIME.schemaVersion,
     gameVersion:SAVE_RUNTIME.gameVersion,
     account:session.account,
-    location:'A村 3D场景',
+    location:'A村 · 单层体素纸片舞台',
     createdAt:Date.now(),
     worldMinutes:360,
     player:{...sceneData.spawn},
     playerHp:PLAYER_MAX_HP,
+    terrainEdits:[],
     mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
     inventory:Array.from({length:INVENTORY_CAPACITY},()=>null)
   };
@@ -942,10 +948,11 @@ function saveWorldState(){
   const session=getSession();
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
-  save.location='A村 3D场景';
+  save.location='A村 · 单层体素纸片舞台';
   save.worldMinutes=worldMinutes;
-  save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
+  save.player={x:transform.x,y:transform.y,z:sceneData.layers?.actor??.45,yaw:transform.yaw};
   save.playerHp=health.current;
+  save.terrainEdits=terrain.exportEdits();
   save.inventory=inventorySnapshot();
   save.mapState=save.mapState||{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false};
   save.updatedAt=Date.now();
@@ -955,14 +962,15 @@ function loadWorldState(){
   const session=getSession();
   if(!session)return false;
   const save=readSaveForSession(session)||defaultSave(session);
+  terrain.importEdits(save.terrainEdits);
   const p=save.player||sceneData.spawn;
-  transform.x=clamp(Number(p.x)||0,bounds.minX+PLAYER_RADIUS,bounds.maxX-PLAYER_RADIUS);
-  transform.y=Math.max(0,Number(p.y)||0);
-  transform.z=clamp(Number(p.z)||sceneData.spawn.z,bounds.minZ+PLAYER_RADIUS,bounds.maxZ-PLAYER_RADIUS);
+  transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
+  transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x);
+  transform.z=sceneData.layers?.actor??.45;
   transform.yaw=Number.isFinite(p.yaw)?p.yaw:sceneData.spawn.yaw;
-  if(collidesAt(transform.x,transform.z)){Object.assign(transform,sceneData.spawn)}
+  if(collidesAt(transform.x,transform.y))transform.y=safeSpawnY(transform.x);
   velocity.x=velocity.y=velocity.z=0;
-  controller.grounded=transform.y===0;
+  controller.grounded=groundProbe();
   controller.crouching=false;controller.attacking=false;controller.action='idle';
   health.current=clampHp(save.playerHp);
   worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
@@ -1005,7 +1013,7 @@ function enterWorld(){
   uiShell.classList.add('is-hidden');
   uiShell.setAttribute('inert','');
   worldEl.removeAttribute('inert');
-  window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:'village-3d'});
+  window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:'village-paper-stage'});
   window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
   startGameLoop();
   publish();
