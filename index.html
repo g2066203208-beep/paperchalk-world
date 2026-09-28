@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="voxel3d-r18";
+  const BUILD="voxel3d-r19";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="voxel3d-r18">
+<meta name="paperchalk-build" content="voxel3d-r19">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=voxel3d-r18">
+<link rel="stylesheet" href="./styles/game.css?v=voxel3d-r19">
 </head>
 <body>
 
@@ -88,8 +88,8 @@
     <button id="jumpBtn" class="combat-btn" type="button">跳</button>
     <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
   </div>
-  <div class="desktop-control-hint">A/D/W/S 移动 · Space 跳跃 · 左键挖 · 右键放 · 1–5 快捷栏 · T 火把 · C 蹲下 · J 攻击</div>
-  <div class="joystick-hint">左侧摇杆：自由移动</div>
+  <div class="desktop-control-hint">A/D 左右移动 · Space 跳跃 · 左键挖 · 右键放 · 1–5 快捷栏 · T 火把 · C 蹲下 · J 攻击</div>
+  <div class="joystick-hint">左侧摇杆：左右移动</div>
   <div id="joystickZone" class="joystick-zone" aria-label="横向移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
       <div class="joystick-base"></div>
@@ -207,14 +207,14 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=voxel3d-r18"></script>
-<script src="./src/core/game-state.js?v=voxel3d-r18"></script>
-<script src="./src/core/save-runtime.js?v=voxel3d-r18"></script>
-<script src="./src/core/ecs-runtime.js?v=voxel3d-r18"></script>
-<script src="./src/content/game-content.js?v=voxel3d-r18"></script>
+<script src="./src/core/event-bus.js?v=voxel3d-r19"></script>
+<script src="./src/core/game-state.js?v=voxel3d-r19"></script>
+<script src="./src/core/save-runtime.js?v=voxel3d-r19"></script>
+<script src="./src/core/ecs-runtime.js?v=voxel3d-r19"></script>
+<script src="./src/content/game-content.js?v=voxel3d-r19"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/terrain-runtime.js?v=voxel3d-r18"></script>
-<script src="./src/game.js?v=voxel3d-r18"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=voxel3d-r18"></script>
+<script src="./src/terrain/terrain-runtime.js?v=voxel3d-r19"></script>
+<script src="./src/game.js?v=voxel3d-r19"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=voxel3d-r19"></script>
 </body>
 </html>
