@@ -40,7 +40,7 @@ assert(engine.includes('export class World3DEngine'),'production 3D engine class
 assert(engine.includes('export class WorldSpaceHealthBar'),'3D health bar class missing');
 assert(engine.includes("this.group.name='player-health-3d'"),'health bar is not a world-space 3D group');
 assert(engine.includes('this.healthBar=new WorldSpaceHealthBar'),'player does not own the 3D health bar');
-assert(engine.includes('this.group.quaternion.copy(camera.quaternion)'),'3D health bar is not billboarded to the camera');
+assert(engine.includes('this.group.quaternion.copy(this._parentQuaternion).multiply(camera.quaternion)'),'3D health bar is not billboarded through player rotation');
 assert(engine.includes('new THREE.PerspectiveCamera'),'perspective camera missing');
 assert(engine.includes('new THREE.WebGLRenderer'),'WebGLRenderer missing');
 assert(engine.includes('shadowMap.enabled=true'),'3D shadows missing');
