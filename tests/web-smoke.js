@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r15'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r16'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -59,4 +59,7 @@ assert(engine.includes('uVoxelLightMap'),'voxel lightmap uniform missing');
 assert(engine.includes('torchLight.castShadow=true'),'torch shadow casting missing');
 assert(engine.includes("terraria-cutaway-z-face-mask-v6"),'cutaway-face underground mask missing');
 assert(mesher.includes("Math.abs(normal?.[2]||0)<.5"),'darkness must apply only to depth-facing faces');
+assert(engine.includes("explicit-black-cutaway-mesh-v7"),'explicit buried cutaway mask missing');
+assert(engine.includes('buried-cutaway-mask'),'buried cutaway mesh missing');
+assert(mesher.includes("mode:'buried-front-z-faces'"),'buried front-face geometry missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
