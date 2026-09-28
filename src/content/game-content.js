@@ -118,7 +118,7 @@ function validate(value=content){
     }
     const terrain=value.scene3d.terrain;
     if(!(terrain.tileSize===1&&terrain.pixelsPerMeter===128&&terrain.texturePixels===128&&terrain.chunkSize>=16))errors.push('scene3d terrain scale must be 1m / 128px');
-    if(value.scene3d.mode!=='paper-stage-2.5d')errors.push('scene3d mode must be paper-stage-2.5d');
+    if(value.scene3d.mode!=='infinite-voxel-3d')errors.push('scene3d mode must be infinite-voxel-3d');
     for(const entity of value.scene3d.stageEntities){
       if(!(entity.width>0&&entity.height>0))errors.push('stage entity '+entity.id+' dimensions invalid');
     }
