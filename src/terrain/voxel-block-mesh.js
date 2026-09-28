@@ -61,8 +61,8 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
       let mi=0;
       for(x[v]=0;x[v]<dims[v];x[v]++){
         for(x[u]=0;x[u]<dims[u];x[u]++){
-          const a=x[d]>=0?sample(x[0],x[1],x[2]):sample(x[0]-q[0],x[1]-q[1],x[2]-q[2]);
-          const b=x[d]<dims[d]-1?sample(x[0]+q[0],x[1]+q[1],x[2]+q[2]):sample(x[0]+q[0],x[1]+q[1],x[2]+q[2]);
+          const a=sample(x[0],x[1],x[2]);
+          const b=sample(x[0]+q[0],x[1]+q[1],x[2]+q[2]);
           const sa=terrain.isSolidTile(a),sb=terrain.isSolidTile(b);
           mask[mi++]=sa===sb?0:(sa?a:-b);
         }
