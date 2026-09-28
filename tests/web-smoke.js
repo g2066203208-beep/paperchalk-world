@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r16'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r17'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -62,4 +62,7 @@ assert(mesher.includes("Math.abs(normal?.[2]||0)<.5"),'darkness must apply only 
 assert(engine.includes("explicit-black-cutaway-mesh-v7"),'explicit buried cutaway mask missing');
 assert(engine.includes('buried-cutaway-mask'),'buried cutaway mesh missing');
 assert(mesher.includes("mode:'buried-front-z-faces'"),'buried front-face geometry missing');
+assert(engine.includes("absolute-black-buried-z-faces-v8"),'absolute black underground face mode missing');
+assert(engine.includes('color:0x000000')&&engine.includes('transparent:false'),'cutaway mask is not absolute opaque black');
+assert(mesher.includes("absolute-black-buried-z-faces"),'buried Z face geometry mode missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
