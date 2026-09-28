@@ -71,6 +71,50 @@ export class WorldSpaceHealthBar{
   snapshot(){return {value:this.value,max:this.max,cells:this.cells.length,tail:this.cells.at(-1)?.userData?.isTail===true,animating:this.animations.size}}
 }
 
+class WaterRenderer{
+  constructor(THREE,terrain,scene){
+    this.THREE=THREE;this.terrain=terrain;this.scene=scene;this.version=-1;this.mesh=null;
+    const s=terrain.tileSize;
+    this.geometry=new THREE.BoxGeometry(s*.94,(s/8)*.96,s*.94);
+    this.material=new THREE.MeshPhongMaterial({
+      color:0x4aa9df,transparent:true,opacity:.58,depthWrite:false,
+      shininess:72,specular:0xbdeaff,side:THREE.DoubleSide
+    });
+    this.root=new THREE.Group();this.root.name='eight-layer-water';scene.add(this.root);
+  }
+  rebuild(){
+    const water=this.terrain.water;if(!water)return;
+    if(this.mesh){this.root.remove(this.mesh);this.mesh.dispose?.();this.mesh=null}
+    const cells=[...water.cells.entries()];
+    let count=0;for(const [,level] of cells)count+=level;
+    if(!count){this.version=water.version;return}
+    const mesh=new this.THREE.InstancedMesh(this.geometry,this.material,count);
+    mesh.name='water-slabs-1-of-8';
+    mesh.renderOrder=30;mesh.castShadow=false;mesh.receiveShadow=true;
+    const dummy=new this.THREE.Object3D(),s=this.terrain.tileSize,h=s/8;
+    let i=0;
+    for(const [key,level] of cells){
+      const [gx,gy,gz]=key.split(',').map(Number);
+      for(let layer=0;layer<level;layer++){
+        dummy.position.set((gx+.5)*s,gy*s+(layer+.5)*h,gz*s);
+        dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();
+        mesh.setMatrixAt(i++,dummy.matrix);
+      }
+    }
+    mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
+    this.root.add(mesh);this.mesh=mesh;this.version=water.version;
+  }
+  update(){if(this.terrain.water&&this.version!==this.terrain.water.version)this.rebuild()}
+  stats(){
+    const w=this.terrain.water?.stats?.()||{cells:0,totalLayers:0,levels:8,layerHeight:this.terrain.tileSize/8};
+    return {...w,renderMode:'instanced-eight-slab-water',instances:w.totalLayers};
+  }
+  dispose(){
+    if(this.mesh){this.root.remove(this.mesh);this.mesh.dispose?.();this.mesh=null}
+    this.geometry.dispose();this.material.dispose();this.scene.remove(this.root);
+  }
+}
+
 class TerrainChunkRenderer{
   constructor(THREE,terrain,scene,settings={}){
     this.THREE=THREE;this.terrain=terrain;this.scene=scene;
@@ -140,8 +184,8 @@ class TerrainChunkRenderer{
           vec3 voxelCell=floor((vVoxelWorldPos+vec3(0.0001))/uVoxelSize);
           float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
           float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
-          float valueShift=mix(0.94,1.06,colorHash);
-          float warmShift=(colorHash2-.5)*0.030;
+          float valueShift=mix(0.82,1.18,colorHash);
+          float warmShift=(colorHash2-.5)*0.080;
           outgoingLight*=vec3(
             valueShift*(1.0+warmShift),
             valueShift,
@@ -169,7 +213,7 @@ class TerrainChunkRenderer{
         `);
       this.terrainShader=shader;
     };
-    this.material.customProgramCacheKey=()=> 'paperchalk-voxel-color-variation-v13';
+    this.material.customProgramCacheKey=()=> 'paperchalk-color-variation-water-v14';
 
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
   }
@@ -400,6 +444,7 @@ export class World3DEngine{
       maxBuildsPerFrame:this.sceneData.terrain?.maxBuildsPerFrame??5,
       texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
     });
+    this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
 
     const cursorGeometry=new THREE.BoxGeometry(
       this.terrain.tileSize*1.035,
@@ -683,6 +728,7 @@ export class World3DEngine{
     this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
     const p=current?.player;
     this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
+    this.waterRenderer?.update();
     this.healthBar?.update(this.camera,dt);
   }
   render(){
@@ -749,7 +795,7 @@ export class World3DEngine{
       drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-      debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
+      debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,
       lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
       undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -762,6 +808,7 @@ export class World3DEngine{
   }
   dispose(){
     this.terrainRenderer?.dispose();
+    this.waterRenderer?.dispose();
     if(this.terrainCursor){
       this.terrainCursor.geometry.dispose();
       this.terrainCursor.material.dispose();
