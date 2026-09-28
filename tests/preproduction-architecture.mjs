@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
-assert.match(html,/voxel3d-r37/);
+assert.match(html,/voxel3d-r38/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -24,18 +24,25 @@ assert.match(terrain,/surfaceTile\(gx,gz=0\)/);
 assert.match(terrain,/generatorVersion=4/);
 assert.match(game,/PaperchalkBiomes/);
 
-assert.match(terrain,/priority-flood-global-hydrostatic-settle-v1/);
-assert.match(terrain,/full-x-z-with-y-gravity/);
+assert.match(terrain,/priority-flood-shared-volume-hydrostatic-v2/);
+assert.match(terrain,/full-full-x-z-with-y-gravity/);
 assert.match(terrain,/exactHydrostatic:true/);
 assert.match(terrain,/surfaceCache/);
 assert.match(terrain,/boundsCache/);
 assert.match(terrain,/columnBounds\(gx,gz\)/);
-assert.match(engine,/chunked-visible-surface-water-v3-3d/);
+assert.match(engine,/chunked-visible-surface-water-v4-animated/);
 assert.match(engine,/internalFacesCulled:true/);
 
 assert.match(content,/'fishing-rod'/);
 assert.match(content,/'paper-carp'/);
 assert.match(game,/castFishingRod/);
+assert.match(game,/playerWaterContact/);
+assert.match(game,/screenToWaterSurface/);
+assert.match(engine,/screenToWaterSurface/);
+assert.match(engine,/chunked-visible-surface-water-v4-animated/);
+assert.match(terrain,/priority-flood-shared-volume-hydrostatic-v2/);
+assert.match(terrain,/visualTransition/);
+assert.match(terrain,/closed solid terrain volume/);
 assert.match(game,/reelFishingRod/);
 assert.match(game,/fishing\.state==='bite'/);
 assert.match(engine,/class FishingRenderer/);
