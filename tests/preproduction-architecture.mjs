@@ -10,12 +10,14 @@ const cubeMesher=read('src/terrain/voxel-block-mesh.js');
 const sprites=read('src/entities/PaperSpriteEntity.js');
 const pkg=JSON.parse(read('package.json'));
 
-assert.match(html,/player-art-hd-r1/);
+assert.match(html,/player-hd-camera-r1/);
 assert.match(renderer,/three-r180-paper-stage/);
 assert.match(renderer,/paperchalk-world-enter/);
 assert.match(renderer,/paperchalk-world-leave/);
 assert.match(engine,/WorldSpaceHealthBar/);
 assert.match(engine,/PerspectiveCamera/);
+assert.match(engine,/height:\.35/);
+assert.match(engine,/p\.y\+this\.cameraRig\.height/);
 assert.match(engine,/stageView=\{enabled:true,axis:'z',side:1\}/);
 assert.match(engine,/setStageView\(enabled/);
 assert.match(engine,/setStageAxis\(axis/);
