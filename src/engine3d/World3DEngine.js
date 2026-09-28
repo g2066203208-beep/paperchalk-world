@@ -951,6 +951,21 @@ export class World3DEngine{
     if(!hit)return null;
     return this.terrain.cellCenter(hit.gx,hit.gy,hit.gz);
   }
+  screenToWaterSurface(clientX,clientY,{maxDistance=32}={}){
+    const ray=this._screenRay(clientX,clientY);
+    const p=new this.THREE.Vector3();
+    const step=Math.max(.04,this.terrain.tileSize*.06);
+    for(let d=0;d<=maxDistance;d+=step){
+      ray.at(d,p);
+      const surface=this.terrain.water?.surfaceAtWorld?.(p.x,p.z);
+      if(!surface)continue;
+      // Detect the ray crossing the current liquid free surface.
+      if(p.y<=surface.y+.10&&p.y>=surface.y-.22){
+        return {x:p.x,y:surface.y,z:p.z,gx:surface.gx,gz:surface.gz,distance:d};
+      }
+    }
+    return null;
+  }
   screenToTerrainCell(clientX,clientY,{showCursor=true}={}){
     const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10,{interactionOnly:true});
     if(!hit){if(this.terrainCursor)this.terrainCursor.visible=false;return null}
