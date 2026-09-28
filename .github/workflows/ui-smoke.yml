@@ -1,8 +1,14 @@
-name: UI Smoke
+name: UI + 3D Overlay Smoke
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - "index.html"
+      - "src/**"
+      - "styles/**"
+      - "tests/ui-smoke.mjs"
+      - ".github/workflows/ui-smoke.yml"
   pull_request:
     paths:
       - "index.html"
@@ -10,54 +16,39 @@ on:
       - "styles/**"
       - "tests/ui-smoke.mjs"
       - ".github/workflows/ui-smoke.yml"
-      - "assets/**"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   chromium-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+      - name: Install browser driver
+        run: npm install --no-save playwright-core
+      - name: Detect Chrome
+        id: chrome
+        shell: bash
+        run: |
+          CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
+          test -n "$CHROME_PATH"
+          echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
       - name: Start local server
         run: |
-          python3 -m http.server 4173 > /tmp/paperchalk-server.log 2>&1 &
-          echo $! > /tmp/paperchalk-server.pid
-          for i in $(seq 1 50); do
-            if curl -fsS http://127.0.0.1:4173/index.html >/dev/null; then
-              echo "server ready"
-              exit 0
-            fi
-            sleep 0.1
+          python3 -m http.server 4173 > /tmp/paperchalk-ui-http.log 2>&1 &
+          for i in {1..50}; do
+            curl -fsS http://127.0.0.1:4173/index.html >/dev/null && exit 0
+            sleep 0.2
           done
-          echo "server did not become ready"
-          cat /tmp/paperchalk-server.log || true
+          cat /tmp/paperchalk-ui-http.log
           exit 1
-      - name: Start Chromium
-        run: |
-          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
-          test -n "$CHROME"
-          "$CHROME" --headless=new --no-sandbox --disable-gpu \
-            --remote-debugging-port=9222 --remote-allow-origins='*' \
-            --user-data-dir=/tmp/paperchalk-chrome 'http://127.0.0.1:4173/?ci=ui-smoke' \
-            > /tmp/paperchalk-chrome.log 2>&1 &
-          echo $! > /tmp/paperchalk-chrome.pid
-          for i in $(seq 1 200); do
-            if curl -fsS http://127.0.0.1:9222/json/version >/dev/null; then
-              echo "chromium ready"
-              exit 0
-            fi
-            sleep 0.1
-          done
-          echo "chromium did not become ready"
-          cat /tmp/paperchalk-chrome.log || true
-          exit 1
-      - name: Run real-browser UI smoke test
+      - name: Run UI smoke
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/ui-smoke.mjs
-      - name: Diagnostics on failure
-        if: failure()
-        run: |
-          echo '--- server log ---'
-          cat /tmp/paperchalk-server.log || true
-          echo '--- chromium log ---'
-          cat /tmp/paperchalk-chrome.log || true
