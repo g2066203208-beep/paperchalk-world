@@ -383,7 +383,7 @@ class TerrainWorld{
     this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
     this.blackBackRowZ=Number.isFinite(Number(blackBackRowZ))?Math.floor(Number(blackBackRowZ)):this.interactionRowZ-1;
     this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();this.biomeChunkCache=new Map();
-    this.changeVersion=0;this.generatorVersion=5;this.noiseBackend='deterministic-fallback';this.biomeConfig=biomeConfig&&typeof biomeConfig==='object'?{...biomeConfig}:{};
+    this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';this.biomeConfig=biomeConfig&&typeof biomeConfig==='object'?{...biomeConfig}:{};
     this.water=new WaterWorld(this);
 
     const F=global.FastNoiseLite;
@@ -421,7 +421,7 @@ class TerrainWorld{
       seed:this.seed,spawnX:0,spawnZ:this.interactionRowZ,
       spawnSafeRadius:Number(this.biomeConfig.spawnSafeRadius)||22
     }):null;
-    if(this.biomeGenerator)this.noiseBackend=this.biomeGenerator.backend+' + '+this.noiseBackend;
+    this.biomeBackend=this.biomeGenerator?.backend||'none';
   }
   _hash(x,y=0,z=0){
     let h=(Math.imul((x|0)^this.seed,0x45d9f3b)+Math.imul((y|0)^0x9e3779b9,0x119de1f3)+Math.imul((z|0)^0x85ebca6b,0x27d4eb2d))|0;
@@ -633,7 +633,7 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,biomeBackend:this.biomeBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
   }
 }
 
