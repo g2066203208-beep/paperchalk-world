@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r19'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r20'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -60,4 +60,7 @@ assert(!game.includes("keys.has('KeyW')")&&!game.includes("keys.has('KeyS')"),'W
 assert(terrain.includes('gz:Math.floor(z/s+.5)'),'centered-Z worldToCell missing');
 assert(terrain.includes('z:gz*s'),'centered-Z cellCenter missing');
 assert(engine.includes('cz*span-this.terrain.tileSize*.5'),'voxel render Z offset missing');
+assert(engine.includes("backgroundMode:'fixed-uniform-blue'"),'fixed uniform background mode missing');
+assert(engine.includes("backgroundColor:'#6f7fa8'"),'fixed blue background color missing');
+assert(!engine.includes('sky.lerp(undergroundVoid'),'background still changes underground');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
