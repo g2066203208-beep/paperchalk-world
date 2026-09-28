@@ -2,7 +2,7 @@ const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),mesher=read('src/terrain/voxel-block-mesh.js');
-assert(html.includes('voxel3d-r21'),'3D voxel build key missing');
+assert(html.includes('voxel3d-r22'),'3D voxel build key missing');
 assert(html.includes('id="threeWorldLayer"'),'Three.js host missing');
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(terrain.includes('chunkSize=16'),'16^3 voxel chunks missing');
@@ -28,10 +28,8 @@ assert(engine.includes('sun.intensity=daylight*3.4'),'daylight sun intensity mis
 assert(engine.includes('sky-environment-bounce'),'sky/environment bounce light missing');
 assert(engine.includes('world-moon'),'moonlight missing');
 assert(engine.includes('_skyExposureAt(player)'),'sky-exposure cave darkening missing');
-assert(terrain.includes("nonInteractionTerrain:'surface-shell-only'"),'non-interaction rows are not surface-only');
 assert(terrain.includes('chunkMayContainTerrain'),'empty scenery chunk culling missing');
 assert(engine.includes('moving-torch-light'),'moving torch point light missing');
-assert(engine.includes('undergroundBackground:\'near-black\''),'underground void background fade missing');
 assert(engine.includes('undergroundFactor'),'underground depth fade missing');
 assert(content.includes("'hand-torch'"),'torch item definition missing');
 assert(game.includes("action==='toggle-torch'"),'torch inventory action missing');
@@ -68,4 +66,6 @@ assert(terrain.includes('generateBlackBackdropVoxel'),'rear black voxel generati
 assert(terrain.includes('gz===this.world.blackBackRowZ'),'rear row is not generated as full-depth voxels');
 assert(mesher.includes('new THREE.Color(0x000000)'),'rear row is not absolute black');
 assert(mesher.includes('renderCode=solidGz===terrain.blackBackRowZ?tile+32:tile'),'black row render separation missing');
+assert(mesher.includes('aGz===terrain.blackBackRowZ&&bGz===terrain.interactionRowZ'),'rear black interface face missing');
+assert(engine.includes('undergroundLayers:{count:2'),'two-layer underground stats missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
