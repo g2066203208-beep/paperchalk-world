@@ -211,9 +211,13 @@ export class World3DEngine{
     this.scene.add(sun);
     this.scene.add(sun.target);
 
-    const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,.9);
+    const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,1.0);
     skyFill.name='sky-environment-bounce';
     this.scene.add(skyFill);
+
+    const ambient=new THREE.AmbientLight(0x8090a6,.12);
+    ambient.name='soft-global-bounce';
+    this.scene.add(ambient);
 
     const moon=new THREE.DirectionalLight(0x8eb6ff,.0);
     moon.name='world-moon';
@@ -244,7 +248,7 @@ export class World3DEngine{
     moonDisc.renderOrder=-50;
     this.scene.add(moonDisc);
 
-    this.terrainLights={sun,skyFill,moon,sunDisc,moonDisc};
+    this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
 
     this.backdrop=null;
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
@@ -291,6 +295,30 @@ export class World3DEngine{
     });
     this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
     this.playerSprite.root.add(this.healthBar.group);
+
+    const torchRoot=new THREE.Group();
+    torchRoot.name='player-hand-torch';
+    torchRoot.position.set(.42,.15,.12);
+    const torchStick=new THREE.Mesh(
+      new THREE.BoxGeometry(.07,.55,.07),
+      new THREE.MeshBasicMaterial({color:0x6b4429,toneMapped:false})
+    );
+    torchStick.position.y=-.14;
+    const torchFlame=new THREE.Mesh(
+      new THREE.SphereGeometry(.11,10,8),
+      new THREE.MeshBasicMaterial({color:0xffb04d,toneMapped:false})
+    );
+    torchFlame.scale.set(.72,1.35,.72);
+    torchFlame.position.y=.19;
+    const torchLight=new THREE.PointLight(0xffa24f,0,10,1.7);
+    torchLight.name='moving-torch-light';
+    torchLight.position.set(0,.23,.05);
+    torchLight.castShadow=false;
+    torchRoot.add(torchStick,torchFlame,torchLight);
+    torchRoot.visible=false;
+    this.playerSprite.root.add(torchRoot);
+    this.torch={root:torchRoot,flame:torchFlame,light:torchLight};
+
     this.scene.add(this.playerSprite.root);
   }
   _seedFromId(id){
@@ -373,6 +401,16 @@ export class World3DEngine{
     if(p.action==='walk')mesh.position.y=Math.sin(performance.now()*.018)*.025;
     else mesh.position.y=0;
     const crouch=p.crouching?.72:1;mesh.scale.y+=(crouch-mesh.scale.y)*Math.min(1,dt*18);
+    if(this.torch){
+      const on=!!p.torchOn;
+      this.torch.root.visible=on;
+      if(on){
+        const flicker=.92+Math.sin(performance.now()*.017)*.06+Math.sin(performance.now()*.041)*.03;
+        this.torch.light.intensity=2.9*flicker;
+        this.torch.light.distance=11;
+        this.torch.flame.scale.set(.72,1.25+.18*Math.sin(performance.now()*.029),.72);
+      }else this.torch.light.intensity=0;
+    }
   }
   _updateCamera(dt,snapshot){
     const p=snapshot?.player;if(!p)return;
@@ -419,16 +457,16 @@ export class World3DEngine{
     const p=snapshot?.player||this.lastSnapshot?.player||{x:0,y:0,z:0};
     const exposure=this._skyExposureAt(p);
 
-    const daySky=new this.THREE.Color(0x87bfe8);
+    const daySky=new this.THREE.Color(0x9bd4f2);
     const duskSky=new this.THREE.Color(0x7c5876);
-    const nightSky=new this.THREE.Color(0x071221);
+    const nightSky=new this.THREE.Color(0x0c1b31);
     let sky;
     if(daylight>.08)sky=nightSky.clone().lerp(daySky,Math.min(1,.22+daylight*.95));
     else if(twilight>.08)sky=nightSky.clone().lerp(duskSky,Math.min(1,twilight*.72));
     else sky=nightSky.clone();
     this.scene.background.copy(sky);
 
-    const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,moon=this.terrainLights?.moon;
+    const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,ambient=this.terrainLights?.ambient,moon=this.terrainLights?.moon;
     const sunDisc=this.terrainLights?.sunDisc,moonDisc=this.terrainLights?.moonDisc;
     const radius=42;
     const sx=Math.cos(angle)*radius;
@@ -442,12 +480,15 @@ export class World3DEngine{
       sun.target.updateMatrixWorld();
     }
     if(skyFill){
-      const outdoor=.42+daylight*.95+twilight*.18+night*.08;
-      const underground=.08+night*.04;
+      const outdoor=.62+daylight*1.05+twilight*.28+night*.18;
+      const underground=.16+night*.08;
       skyFill.intensity=underground+(outdoor-underground)*exposure;
     }
+    if(ambient){
+      ambient.intensity=.10+daylight*.11+night*.07;
+    }
     if(moon){
-      moon.intensity=night*.55*exposure;
+      moon.intensity=night*.72*Math.max(.35,exposure);
       moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
       moon.target.position.set(p.x,p.y-1,p.z);
       moon.target.updateMatrixWorld();
@@ -530,7 +571,7 @@ export class World3DEngine{
       sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
-      lighting:{mode:'sun-sky-moon',skyExposure:this.skyExposure??1,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+      lighting:{mode:'sun-sky-moon-torch',skyExposure:this.skyExposure??1,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
       interaction:{rowZ:this.interactionRowZ,raycastIgnoresOtherRows:true},
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
@@ -542,6 +583,9 @@ export class World3DEngine{
     if(this.terrainCursor){
       this.terrainCursor.geometry.dispose();
       this.terrainCursor.material.dispose();
+    }
+    if(this.torch){
+      this.torch.root.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
     }
     this.playerSprite?.dispose();for(const entity of this.paperEntities)entity.dispose();
     this.renderer.dispose();this.host.replaceChildren();
