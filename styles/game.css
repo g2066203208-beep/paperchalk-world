@@ -67,8 +67,8 @@ body{touch-action:manipulation}
 .debug-output{white-space:pre-wrap;word-break:break-word;max-height:170px;overflow:auto;margin:9px 0 0;padding:8px;border-radius:6px;background:rgba(0,0,0,.22);font-size:11px;color:#f0dfb6}
 
 .quickbar{
-  position:absolute;z-index:14;left:50%;bottom:max(66px,calc(env(safe-area-inset-bottom) + 60px));transform:translateX(-50%);
-  display:flex;gap:6px;padding:6px;border:1px solid rgba(83,66,45,.7);border-radius:10px;
+  position:absolute;z-index:14;left:max(10px,env(safe-area-inset-left));top:50%;bottom:auto;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:6px;padding:6px;border:1px solid rgba(83,66,45,.7);border-radius:10px;
   background:rgba(37,31,25,.58);backdrop-filter:blur(5px);box-shadow:0 6px 18px rgba(0,0,0,.2)
 }
 .quick-slot{
@@ -202,7 +202,7 @@ body{touch-action:manipulation}
 .orientation-hint span{font-size:13px;font-weight:500;opacity:.7}
 
 @media (pointer:coarse){
-  .quickbar{bottom:max(86px,calc(env(safe-area-inset-bottom) + 80px));gap:5px;padding:5px}
+  .quickbar{left:max(8px,env(safe-area-inset-left));top:43%;bottom:auto;transform:translateY(-50%);flex-direction:column;gap:5px;padding:5px}
   .quick-slot{width:48px;height:48px}
 
   .joystick-zone{display:block}
