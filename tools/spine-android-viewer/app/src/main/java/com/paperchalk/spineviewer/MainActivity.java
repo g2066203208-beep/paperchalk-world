@@ -418,7 +418,7 @@ public class MainActivity extends Activity {
     private void resetSetupPose() {
         if (controller == null || !controller.isInitialized()) return;
         controller.getAnimationState().clearTracks();
-        controller.getSkeleton().setToSetupPose();
+        resetSkeletonSetupPose(controller.getSkeleton());
         currentAnimation = null;
         if (spineView != null) spineView.invalidate();
         Toast.makeText(this, "已切回设置姿势。重新选择动画即可继续播放。", Toast.LENGTH_SHORT).show();
@@ -441,7 +441,7 @@ public class MainActivity extends Activity {
         Skin skin = controller.getDrawable().getSkeletonData().findSkin(selected.toString());
         if (skin != null) {
             controller.getSkeleton().setSkin(skin);
-            controller.getSkeleton().setSlotsToSetupPose();
+            resetSkeletonSlots(controller.getSkeleton());
             if (spineView != null) spineView.invalidate();
         }
     }
@@ -540,6 +540,31 @@ public class MainActivity extends Activity {
 
     private static String sanitizeFileName(String name) {
         return name.replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    /**
+     * Spine 4.3 renamed the setup-pose helpers used by 4.2. Reflection keeps one
+     * APK source tree compatible with both official runtime lines.
+     */
+    private static void resetSkeletonSetupPose(Object skeleton) {
+        invokeCompat(skeleton, "setupPose", "setToSetupPose");
+    }
+
+    private static void resetSkeletonSlots(Object skeleton) {
+        invokeCompat(skeleton, "setupPoseSlots", "setSlotsToSetupPose");
+    }
+
+    private static void invokeCompat(Object target, String modernName, String legacyName) {
+        try {
+            target.getClass().getMethod(modernName).invoke(target);
+            return;
+        } catch (ReflectiveOperationException ignored) {
+        }
+        try {
+            target.getClass().getMethod(legacyName).invoke(target);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Unsupported Spine runtime API: " + modernName + "/" + legacyName, e);
+        }
     }
 
     private static void deleteRecursively(File file) {
