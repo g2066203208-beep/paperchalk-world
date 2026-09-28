@@ -76,6 +76,7 @@ public class StudioActivity extends Activity {
         bar.addView(button("导入 PSD/图片", v -> runJs(
             "(function(){const i=document.querySelector('input[type=file]');if(i){i.click();return 'ok'}return 'no-input'})()"
         )));
+        bar.addView(button("自动抠图", v -> startActivity(new Intent(this, CutoutActivity.class))));
         bar.addView(button("摄像头面捕", v -> runJs(
             "window.PaperChalkMocap?PaperChalkMocap.toggle():'bridge-loading'"
         )));
