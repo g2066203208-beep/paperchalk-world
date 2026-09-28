@@ -449,6 +449,13 @@ function playerSubmersion(){
     PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D
   )||0;
 }
+function playerWaterContact(){
+  const b=terrain.water?.boundsAtWorld?.(transform.x,transform.z);
+  if(!b)return null;
+  const bottom=transform.y-PLAYER_HALF_H,top=transform.y+PLAYER_HALF_H;
+  if(b.top<=bottom+.015||b.bottom>=top-.015)return null;
+  return {bounds:b,depthInside:Math.max(0,Math.min(top,b.top)-Math.max(bottom,b.bottom))};
+}
 
 ecs.registerSystem('player-movement',{
   require:['Transform','Velocity','Player'],phase:'fixed',priority:10,
@@ -513,19 +520,26 @@ ecs.registerSystem('player-action',{
 function jump(){
   if(!worldInteractive())return false;
   const submerged=playerSubmersion();
-  if(submerged>.06){
-    controller.inWater=true;controller.submerged=submerged;controller.grounded=false;
-    velocity.y=Math.max(velocity.y,3.9+submerged*1.4);
-    window.PaperchalkEvents?.emit('player:swim-stroke',{x:transform.x,y:transform.y,z:transform.z,submerged});
+  const waterContact=playerWaterContact();
+
+  // Standing on the bottom while in water must still allow a real jump.
+  if(controller.grounded){
+    controller.grounded=false;
+    velocity.y=JUMP_SPEED*(waterContact?.depthInside>.25?.90:1);
+    window.PaperchalkEvents?.emit('player:jump',{x:transform.x,y:transform.y,z:transform.z,inWater:!!waterContact});
     publish();
     return true;
   }
-  if(!controller.grounded)return false;
-  controller.grounded=false;
-  velocity.y=JUMP_SPEED;
-  window.PaperchalkEvents?.emit('player:jump',{x:transform.x,y:transform.y,z:transform.z});
-  publish();
-  return true;
+
+  // Once airborne/submerged, Space becomes an upward swim stroke.
+  if(waterContact||submerged>.015){
+    controller.inWater=true;controller.submerged=Math.max(submerged,.08);controller.grounded=false;
+    velocity.y=Math.max(velocity.y,4.6+Math.min(1,submerged)*1.8);
+    window.PaperchalkEvents?.emit('player:swim-stroke',{x:transform.x,y:transform.y,z:transform.z,submerged:controller.submerged});
+    publish();
+    return true;
+  }
+  return false;
 }
 function attack(){
   if(!worldInteractive())return false;
@@ -809,17 +823,44 @@ window.PaperchalkFishEcology=Object.freeze({
   get stats(){return {active:fishWorld.entities.length,maxActive:fishWorld.maxActive,spatialCells:fishWorld.spatial.size,simulationHz:Math.round(1/FISH_SIM_DT)}}
 });
 
-function castFishingRod(){
+function castFishingRod(target=null){
   if(!worldInteractive())return false;
+  if(fishing.state!=='idle')return reelFishingRod();
+
   const dir=controller.facingX||1;
-  const castDistance=5.5+random01()*2.5;
+  const startX=transform.x+dir*.28,startY=transform.y+.55,startZ=transform.z;
+  let tx,ty,tz;
+
+  if(target&&[target.x,target.y,target.z].every(Number.isFinite)){
+    tx=Number(target.x);ty=Number(target.y)+.06;tz=Number(target.z);
+    const distance=Math.hypot(tx-startX,tz-startZ);
+    if(distance>16){showMapNotice('这个位置太远了。',700);return false}
+  }else{
+    // Keyboard/mobile fallback: choose an actual water surface in front, never a random point.
+    let best=null;
+    for(let d=2;d<=10;d+=.5){
+      const x=transform.x+dir*d;
+      const w=terrain.water.surfaceAtWorld(x,transform.z);
+      if(w){best={x,y:w.y,z:transform.z};break}
+    }
+    if(!best){showMapNotice('请点击水面选择抛竿位置。',900);return false}
+    tx=best.x;ty=best.y+.06;tz=best.z;
+  }
+
+  const dx=tx-startX,dz=tz-startZ;
+  const horizontal=Math.hypot(dx,dz);
+  const flightTime=Math.max(.48,Math.min(1.05,.46+horizontal*.055));
+
   fishing.state='flying';fishing.timer=0;fishing.result='';
-  fishing.x=transform.x+dir*.28;fishing.y=transform.y+.55;fishing.z=transform.z;
-  fishing.vx=dir*FISHING_CAST_SPEED;fishing.vy=4.8;fishing.vz=(random01()-.5)*1.6;
-  fishing.castX=transform.x+dir*castDistance;fishing.castY=transform.y;fishing.castZ=transform.z;
+  fishing.x=startX;fishing.y=startY;fishing.z=startZ;
+  fishing.castX=tx;fishing.castY=ty;fishing.castZ=tz;
+  fishing.flightTime=flightTime;
+  fishing.vx=dx/flightTime;
+  fishing.vz=dz/flightTime;
+  fishing.vy=(ty-startY+.5*FISHING_GRAVITY*flightTime*flightTime)/flightTime;
   fishing.nextBite=0;fishing.biteWindow=0;
   window.PaperchalkEvents?.emit('fishing:cast',fishingSnapshot());
-  showMapNotice('抛竿！',550);updateSurvivalHud();publish();
+  showMapNotice('抛向选中的水面！',550);updateSurvivalHud();publish();
   return true;
 }
 function reelFishingRod(){
@@ -849,17 +890,18 @@ function updateFishing(dt){
   if(fishing.state==='flying'){
     fishing.vy-=FISHING_GRAVITY*dt;
     fishing.x+=fishing.vx*dt;fishing.y+=fishing.vy*dt;fishing.z+=fishing.vz*dt;
-    const water=waterSurfaceNear(fishing.x,fishing.z,1);
-    if(water&&fishing.y<=water.y+.12&&fishing.vy<0){
-      fishing.x=water.x;fishing.y=water.y+.06;fishing.z=water.z;
+    const targetWater=terrain.water.surfaceAtWorld(fishing.castX,fishing.castZ);
+    const reachedTarget=fishing.timer>=Math.max(.2,(fishing.flightTime||.7)*.92);
+    if(targetWater&&reachedTarget){
+      fishing.x=fishing.castX;fishing.y=targetWater.y+.06;fishing.z=fishing.castZ;
       fishing.vx=fishing.vy=fishing.vz=0;fishing.state='waiting';fishing.timer=0;
       fishing.nextBite=2.2+random01()*4.8;
       window.PaperchalkEvents?.emit('fishing:bobber-water',fishingSnapshot());
       updateSurvivalHud();return;
     }
     const ground=terrain.highestGroundY(fishing.x,fishing.z);
-    if(fishing.y<=ground+.05||fishing.timer>2.4){
-      showMapNotice('浮漂没有落到水里。',800);resetFishing('landed');return;
+    if((fishing.y<=ground+.05&&fishing.timer>.12)||fishing.timer>2.4){
+      showMapNotice('浮漂没有落到目标水面。',800);resetFishing('landed');return;
     }
   }else if(fishing.state==='waiting'){
     const water=waterSurfaceNear(fishing.x,fishing.z,1);
@@ -991,6 +1033,7 @@ window.PaperchalkTerrainActions=Object.freeze({
   waterCell:placeWaterCell,
   setTool:setTerrainTool,
   targetAtScreen(x,y){return window.Paperchalk3D?.screenToTerrainCell?.(x,y,{showCursor:false})||null},
+  waterTargetAtScreen(x,y){return window.Paperchalk3D?.screenToWaterSurface?.(x,y,{maxDistance:32})||null},
   get tool(){return terrainToolMode},
   get interactionRowZ(){return INTERACTION_ROW_Z},
   get stats(){return {...terrain.stats(),interactionRowZ:INTERACTION_ROW_Z}},
@@ -1021,6 +1064,15 @@ worldEl.addEventListener('pointerup',event=>{
   if(!worldInteractive()||!event.target?.closest?.('.three-world-canvas'))return;
   if(pointer?.moved)return;
   if(event.button!==0&&event.button!==2)return;
+
+  const selectedItem=inventoryItems[inventorySelected]||null;
+  if(selectedItem?.action==='fishing-rod'){
+    if(fishing.state!=='idle'){reelFishingRod();return}
+    const waterTarget=window.Paperchalk3D?.screenToWaterSurface?.(event.clientX,event.clientY,{maxDistance:32});
+    if(!waterTarget){showMapNotice('请直接点击想要抛到的水面。',900);return}
+    castFishingRod(waterTarget);
+    return;
+  }
 
   const target=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
   if(!target)return;
@@ -1495,7 +1547,7 @@ window.addEventListener('keydown',event=>{
   if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
     keys.add(event.code);event.preventDefault();return;
   }
-  if(event.code==='Space'){if(!event.repeat||controller.inWater)jump();event.preventDefault();return}
+  if(event.code==='Space'){if(!event.repeat||controller.inWater||!!playerWaterContact())jump();event.preventDefault();return}
   if(event.code==='KeyF'){
     if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod'))reelFishingRod();
     event.preventDefault();return;
