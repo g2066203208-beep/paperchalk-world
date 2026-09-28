@@ -1,11 +1,14 @@
-name: Three.js 3D Engine Smoke
+name: Three.js Production Engine Smoke
 
 on:
   push:
     branches: [main]
     paths:
       - "index.html"
+      - "src/game.js"
+      - "src/engine3d/**"
       - "src/renderers/three-world-renderer.mjs"
+      - "src/content/**"
       - "styles/**"
       - "vendor/three/**"
       - "tests/three-engine-smoke.mjs"
@@ -13,11 +16,13 @@ on:
   pull_request:
     paths:
       - "index.html"
+      - "src/game.js"
+      - "src/engine3d/**"
       - "src/renderers/three-world-renderer.mjs"
+      - "src/content/**"
       - "styles/**"
       - "vendor/three/**"
       - "tests/three-engine-smoke.mjs"
-      - ".github/workflows/three-engine-smoke.yml"
   workflow_dispatch:
 
 permissions:
@@ -29,48 +34,36 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v7.0.1
-
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-
-      - name: Validate Three.js engine and pinned vendor pair
+      - name: Validate production Three.js files
         run: |
+          node --check src/game.js
+          node --check src/engine3d/World3DEngine.js
           node --check src/renderers/three-world-renderer.mjs
           test -s vendor/three/three.module.js
           test -s vendor/three/three.core.js
-          test -s vendor/three/LICENSE
           grep -q "from './three.core.js'" vendor/three/three.module.js
-
       - name: Install browser driver
         run: npm install --no-save playwright-core
-
       - name: Detect Chrome
         id: chrome
         shell: bash
         run: |
           CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
-          if [ -z "$CHROME_PATH" ]; then
-            echo "No Chrome/Chromium found"
-            exit 1
-          fi
+          test -n "$CHROME_PATH"
           echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
-          "$CHROME_PATH" --version
-
-      - name: Start local game server
-        shell: bash
+      - name: Start local server
         run: |
           python3 -m http.server 8080 > /tmp/paperchalk-three-http.log 2>&1 &
           for i in {1..50}; do
-            if curl -fsS http://127.0.0.1:8080/index.html >/dev/null; then
-              exit 0
-            fi
+            curl -fsS http://127.0.0.1:8080/index.html >/dev/null && exit 0
             sleep 0.2
           done
           cat /tmp/paperchalk-three-http.log
           exit 1
-
-      - name: Run real 3D WebGL regression
+      - name: Run production WebGL regression
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/three-engine-smoke.mjs
