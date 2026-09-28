@@ -119,7 +119,8 @@ const terrain=new TerrainRuntime.TerrainWorld({
   pixelsPerMeter:sceneData.terrain?.pixelsPerMeter??128,
   chunkSize:sceneData.terrain?.chunkSize??16,
   seed:sceneData.terrain?.seed??24681357,
-  interactionRowZ:INTERACTION_ROW_Z
+  interactionRowZ:INTERACTION_ROW_Z,
+  blackBackRowZ:sceneData.terrain?.blackBackRowZ??(INTERACTION_ROW_Z-1)
 });
 window.PaperchalkTerrain=terrain;
 
