@@ -1,6 +1,11 @@
 name: Build Spine Android Viewer
 
 on:
+  push:
+    branches: [ spine-android-apk ]
+    paths:
+      - 'tools/spine-android-viewer/**'
+      - '.github/workflows/spine-viewer-android.yml'
   pull_request:
     branches: [ main ]
     paths:
