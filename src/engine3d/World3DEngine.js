@@ -217,45 +217,6 @@ class TerrainChunkRenderer{
     this.scene.remove(this.root);
   }
 }
-
-class PaperWallRenderer{
-  constructor(THREE,scene,terrain,definitions=[]){
-    this.THREE=THREE;this.scene=scene;this.terrain=terrain;
-    this.root=new THREE.Group();this.root.name='paper-wall-system';scene.add(this.root);
-    this.walls=[];
-    for(const def of definitions||[])this._build(def);
-  }
-  _build(def){
-    const THREE=this.THREE;
-    const tile=Math.max(.1,Number(def.tileSize)||1);
-    const cols=Math.max(1,Math.floor(Number(def.columns)||1));
-    const rows=Math.max(1,Math.floor(Number(def.rows)||1));
-    const ground=def.grounded?this.terrain.highestGroundY(Number(def.x)||0):Number(def.y)||0;
-    const group=new THREE.Group();
-    group.name='paper-wall:'+String(def.id||'wall');
-    group.position.set(Number(def.x)||0,ground,Number(def.z)||-1.5);
-    const edgeMat=new THREE.MeshBasicMaterial({color:def.edge||'#6f5b49',side:THREE.DoubleSide,toneMapped:false});
-    const faceMat=new THREE.MeshBasicMaterial({color:def.primary||'#cbb894',side:THREE.DoubleSide,toneMapped:false});
-    for(let r=0;r<rows;r++){
-      for(let c=0;c<cols;c++){
-        const x=(c-(cols-1)/2)*tile,y=(r+.5)*tile;
-        const edge=new THREE.Mesh(new THREE.PlaneGeometry(tile*.985,tile*.985),edgeMat);
-        edge.position.set(x,y,0);
-        const face=new THREE.Mesh(new THREE.PlaneGeometry(tile*.92,tile*.92),faceMat);
-        face.position.set(x,y,.012);
-        group.add(edge,face);
-      }
-    }
-    group.userData={id:def.id,columns:cols,rows,tileSize:tile,kind:'paper-wall'};
-    this.root.add(group);this.walls.push(group);
-  }
-  stats(){return {walls:this.walls.length,mode:'square-paper-panels',collision:false}}
-  dispose(){
-    this.root.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
-    this.scene.remove(this.root);
-  }
-}
-
 export class World3DEngine{
   constructor({THREE,host,content,onCameraChanged=null}){
     if(!THREE)throw new Error('THREE_REQUIRED');
@@ -305,31 +266,8 @@ export class World3DEngine{
     this.terrainLights={hemi,sun};
 
     const bgMat=new THREE.MeshBasicMaterial({color:'#d7d0bd',side:THREE.DoubleSide,depthWrite:false,toneMapped:false});
-    const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(220,90),bgMat);
+    const backdrop=new THREE.Mesh(new THREE.PlaneGeometry(180,90),bgMat);
     backdrop.position.set(0,12,this.layers.far-2);backdrop.name='paper-sky-backdrop';this.scene.add(backdrop);this.backdrop=backdrop;
-
-    const blackMat=new THREE.MeshBasicMaterial({color:0x050505,side:THREE.DoubleSide,depthWrite:false,toneMapped:false});
-    this.understage=new THREE.Mesh(new THREE.PlaneGeometry(240,80),blackMat);
-    this.understage.name='black-understage';
-    this.understage.position.set(0,-40,this.layers.far-1.2);
-    this.scene.add(this.understage);
-
-    const apronShape=new THREE.Shape();
-    apronShape.moveTo(-42,0);apronShape.lineTo(42,0);apronShape.lineTo(72,-24);apronShape.lineTo(-72,-24);apronShape.closePath();
-    const apronMat=new THREE.MeshBasicMaterial({color:'#6f7148',side:THREE.DoubleSide,toneMapped:false});
-    this.stageApron=new THREE.Mesh(new THREE.ShapeGeometry(apronShape),apronMat);
-    this.stageApron.name='paper-road-apron';
-    this.stageApron.position.set(0,0,this.layers.rear+.35);
-    this.scene.add(this.stageApron);
-
-    const seamMat=new THREE.MeshBasicMaterial({color:'#555a37',side:THREE.DoubleSide,toneMapped:false,transparent:true,opacity:.72});
-    this.stageApronSeams=[];
-    for(const y of [-5,-10,-15,-20]){
-      const seam=new THREE.Mesh(new THREE.PlaneGeometry(120,.08),seamMat);
-      seam.name='paper-road-seam';seam.position.set(0,y,this.layers.rear+.37);this.scene.add(seam);this.stageApronSeams.push(seam);
-    }
-
-    this.paperWallRenderer=new PaperWallRenderer(THREE,this.scene,this.terrain,this.sceneData.paperWalls||[]);
 
     this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
       radiusX:this.sceneData.terrain?.visibleChunkRadiusX??3,
@@ -479,16 +417,6 @@ export class World3DEngine{
     this.camera.position.lerp(desired,k);this.camera.lookAt(this.cameraTarget);
     this.backdrop.position.x=this.cameraTarget.x*.18;
     this.backdrop.position.y=this.cameraTarget.y*.12+8;
-
-    const stageTop=this.terrain.highestGroundY(p.x);
-    this.stageApron.position.x=this.cameraTarget.x;
-    this.stageApron.position.y=stageTop-.02;
-    this.understage.position.x=this.cameraTarget.x;
-    this.understage.position.y=stageTop-40;
-    for(let i=0;i<this.stageApronSeams.length;i++){
-      this.stageApronSeams[i].position.x=this.cameraTarget.x;
-      this.stageApronSeams[i].position.y=stageTop+[-5,-10,-15,-20][i];
-    }
   }
   _updateWorldTime(snapshot){
     const minutes=Number(snapshot?.world?.minutes);if(!Number.isFinite(minutes))return;
@@ -558,18 +486,12 @@ export class World3DEngine{
       health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
       debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),
       paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
-      stageVisual:{understage:'black',roadApron:'paper-trapezoid'},
-      paperWalls:this.paperWallRenderer?.stats?.()||null,
       playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
       terrainBlockGeometry:'Box/Cube faces via greedy BufferGeometry'
     };
   }
   dispose(){
     this.terrainRenderer?.dispose();
-    this.paperWallRenderer?.dispose?.();
-    this.stageApron?.geometry?.dispose?.();this.stageApron?.material?.dispose?.();
-    this.understage?.geometry?.dispose?.();this.understage?.material?.dispose?.();
-    for(const seam of this.stageApronSeams||[]){seam.geometry?.dispose?.();seam.material?.dispose?.()}
     if(this.terrainCursor){
       this.terrainCursor.geometry.dispose();
       this.terrainCursor.material.dispose();
