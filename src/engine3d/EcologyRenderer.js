@@ -4,28 +4,73 @@ export class EcologyRenderer{
     this.radius=mobile?30:42;this.step=4;this.anchorX=Infinity;this.anchorZ=Infinity;
     this.root=new THREE.Group();this.root.name='procedural-paper-ecology';scene.add(this.root);
     this.capacity=mobile?90:180;this.dummy=new THREE.Object3D();
-    this.geometry=this._crossCardGeometry();
+    this.cardGeometry=this._crossCardGeometry();
+    this.rockGeometry=new THREE.IcosahedronGeometry(.58,0);
+    this.textures={
+      deciduous:this._paperTexture('deciduous'),
+      pine:this._paperTexture('pine'),
+      shrub:this._paperTexture('shrub')
+    };
     this.meshes={
-      deciduous:this._mesh(0x4f744d),
-      pine:this._mesh(0x3f6350),
-      shrub:this._mesh(0x71845b),
-      rock:this._mesh(0x77746d)
+      deciduous:this._cardMesh('deciduous',0xffffff),
+      pine:this._cardMesh('pine',0xffffff),
+      shrub:this._cardMesh('shrub',0xffffff),
+      rock:this._rockMesh()
     };
     for(const m of Object.values(this.meshes))this.root.add(m);
     this.statsState={active:0,drawCalls:0};
   }
   _crossCardGeometry(){
     const T=this.THREE;
-    const p=[
-      -.5,0,0, .5,0,0, .5,1,0, -.5,1,0,
-      0,0,-.5, 0,0,.5, 0,1,.5, 0,1,-.5
-    ];
+    const p=[-.5,0,0,.5,0,0,.5,1,0,-.5,1,0, 0,0,-.5,0,0,.5,0,1,.5,0,1,-.5];
+    const uv=[0,0,1,0,1,1,0,1, 0,0,1,0,1,1,0,1];
     const idx=[0,1,2,0,2,3,4,5,6,4,6,7];
-    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();return g;
+    const g=new T.BufferGeometry();
+    g.setAttribute('position',new T.Float32BufferAttribute(p,3));
+    g.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
+    g.setIndex(idx);g.computeVertexNormals();return g;
   }
-  _mesh(color){
-    const T=this.THREE,mat=new T.MeshStandardMaterial({color,roughness:.96,metalness:0,side:T.DoubleSide,flatShading:true});
-    const mesh=new T.InstancedMesh(this.geometry,mat,this.capacity);mesh.count=0;mesh.castShadow=!this.mobile;mesh.receiveShadow=true;return mesh;
+  _paperTexture(kind){
+    const T=this.THREE,canvas=document.createElement('canvas');canvas.width=128;canvas.height=192;
+    const c=canvas.getContext('2d');c.clearRect(0,0,128,192);
+    const chalk=(x,y,r,color,seed)=>{
+      for(let i=0;i<9;i++){
+        const a=(i*2.399+seed)*1.7,rr=r*(.72+((i*37+seed*13)%29)/100);
+        c.globalAlpha=.16+(i%4)*.055;c.fillStyle=color;c.beginPath();
+        c.arc(x+Math.cos(a)*r*.18,y+Math.sin(a)*r*.13,rr,0,Math.PI*2);c.fill();
+      }
+      c.globalAlpha=1;
+    };
+    if(kind==='deciduous'){
+      c.fillStyle='#60452f';c.fillRect(57,104,14,77);
+      chalk(64,84,39,'#557c4e',1);chalk(42,90,27,'#668957',2);chalk(85,93,28,'#486f48',3);chalk(65,57,30,'#718f5a',4);
+    }else if(kind==='pine'){
+      c.fillStyle='#59432f';c.fillRect(59,116,11,66);
+      const tri=(y,w,h,col)=>{c.fillStyle=col;c.beginPath();c.moveTo(64,y);c.lineTo(64-w*.5,y+h);c.lineTo(64+w*.5,y+h);c.closePath();c.fill()};
+      tri(20,60,72,'#3f674f');tri(51,83,80,'#496f53');tri(82,98,78,'#365d49');
+      c.globalAlpha=.16;for(let i=0;i<70;i++){c.fillStyle='#dfe5c5';c.fillRect(18+(i*37)%94,50+(i*53)%85,1.4,1.4)}c.globalAlpha=1;
+    }else{
+      chalk(64,131,42,'#71875c',7);chalk(39,139,27,'#607a54',8);chalk(91,140,25,'#81946a',9);
+      c.fillStyle='#5d4937';c.fillRect(61,150,6,31);
+    }
+    // Chalk-cut paper edge.
+    c.globalCompositeOperation='source-atop';c.globalAlpha=.12;c.fillStyle='#fff8df';
+    for(let i=0;i<220;i++)c.fillRect((i*47)%128,(i*83)%188,1+(i%3===0),1);
+    c.globalAlpha=1;c.globalCompositeOperation='source-over';
+    const tex=new T.CanvasTexture(canvas);tex.colorSpace=T.SRGBColorSpace;
+    tex.magFilter=T.LinearFilter;tex.minFilter=T.LinearMipmapLinearFilter;tex.generateMipmaps=true;return tex;
+  }
+  _cardMesh(kind,color){
+    const T=this.THREE,mat=new T.MeshStandardMaterial({
+      map:this.textures[kind],color,transparent:true,alphaTest:.18,depthWrite:true,
+      roughness:.98,metalness:0,side:T.DoubleSide,flatShading:true
+    });
+    const mesh=new T.InstancedMesh(this.cardGeometry,mat,this.capacity);mesh.count=0;
+    mesh.castShadow=!this.mobile;mesh.receiveShadow=true;return mesh;
+  }
+  _rockMesh(){
+    const T=this.THREE,mat=new T.MeshStandardMaterial({color:0x77746d,roughness:1,metalness:0,flatShading:true});
+    const mesh=new T.InstancedMesh(this.rockGeometry,mat,this.capacity);mesh.count=0;mesh.castShadow=!this.mobile;mesh.receiveShadow=true;return mesh;
   }
   _hash(x,z,salt=0){
     let h=(Math.imul((x|0)^salt,0x45d9f3b)+Math.imul((z|0)^0x9e3779b9,0x27d4eb2d))|0;
@@ -33,7 +78,8 @@ export class EcologyRenderer{
   }
   _place(kind,i,x,y,z,scale,rot){
     const m=this.meshes[kind];if(!m||i>=this.capacity)return false;
-    this.dummy.position.set(x,y,z);this.dummy.rotation.set(0,rot,0);this.dummy.scale.set(scale.x,scale.y,scale.z);this.dummy.updateMatrix();m.setMatrixAt(i,this.dummy.matrix);return true;
+    this.dummy.position.set(x,y,z);this.dummy.rotation.set(0,rot,0);this.dummy.scale.set(scale.x,scale.y,scale.z);
+    this.dummy.updateMatrix();m.setMatrixAt(i,this.dummy.matrix);return true;
   }
   rebuild(player){
     const snap=8,ax=Math.round(player.x/snap)*snap,az=Math.round(player.z/snap)*snap;
@@ -52,14 +98,20 @@ export class EcologyRenderer{
       else if(p.biome==='alpine'||p.biome==='snowfield'||p.landform==='cliff'){kind='rock';prob=.28}
       if(!kind||h>prob||counts[kind]>=this.capacity)continue;
       const tall=kind==='deciduous'||kind==='pine',sc=.75+r*.55;
-      const scale=tall?{x:2.2*sc,y:4.2*sc,z:2.2*sc}:kind==='rock'?{x:1.4*sc,y:1.15*sc,z:1.4*sc}:{x:1.25*sc,y:1.35*sc,z:1.25*sc};
-      this._place(kind,counts[kind]++,wx+(r-.5)*1.8,y,wz+(h-.5)*1.8,scale,r*Math.PI);
+      const scale=tall?{x:2.25*sc,y:4.25*sc,z:2.25*sc}:kind==='rock'?{x:1.25*sc,y:.95*sc,z:1.1*sc}:{x:1.35*sc,y:1.55*sc,z:1.35*sc};
+      this._place(kind,counts[kind]++,wx+(r-.5)*1.6,y,wz+(h-.5)*.34,scale,r*Math.PI);
     }
     let active=0,drawCalls=0;
-    for(const [kind,m] of Object.entries(this.meshes)){m.count=counts[kind];m.instanceMatrix.needsUpdate=true;active+=m.count;if(m.count)drawCalls++}
-    this.statsState={active,drawCalls,counts,mode:'instanced-paper-ecology',rebuildDistance:snap,radius:this.radius};
+    for(const [kind,m] of Object.entries(this.meshes)){
+      m.count=counts[kind];m.instanceMatrix.needsUpdate=true;active+=m.count;if(m.count)drawCalls++;
+    }
+    this.statsState={active,drawCalls,counts,mode:'instanced-paper-ecology',paperTextures:true,rebuildDistance:snap,radius:this.radius};
   }
   update(player){if(player)this.rebuild(player)}
   stats(){return this.statsState}
-  dispose(){for(const m of Object.values(this.meshes)){this.root.remove(m);m.material.dispose()}this.geometry.dispose();this.scene.remove(this.root)}
+  dispose(){
+    for(const m of Object.values(this.meshes)){this.root.remove(m);m.material.dispose()}
+    for(const t of Object.values(this.textures))t.dispose();
+    this.cardGeometry.dispose();this.rockGeometry.dispose();this.scene.remove(this.root);
+  }
 }
