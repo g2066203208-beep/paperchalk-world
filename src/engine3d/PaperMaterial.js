@@ -140,11 +140,22 @@ export function createPaperMaterialSet(THREE,settings){
     top:deriveSet(THREE,{size:resolution,seed:0x31f2a7,side:false}),
     side:deriveSet(THREE,{size:resolution,seed:0xa9417d,side:true})
   };
-  const grassReference=new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-ref-r1');
-  grassReference.name='user-grass-reference';grassReference.colorSpace=THREE.SRGBColorSpace;
-  grassReference.wrapS=grassReference.wrapT=THREE.MirroredRepeatWrapping;
-  grassReference.minFilter=THREE.LinearMipmapLinearFilter;grassReference.magFilter=THREE.LinearFilter;
-  grassReference.generateMipmaps=true;grassReference.anisotropy=4;
+  const grassFallback=new THREE.DataTexture(new Uint8Array([174,196,112,255]),1,1,THREE.RGBAFormat,THREE.UnsignedByteType);
+  grassFallback.name='grass-reference-fallback';grassFallback.colorSpace=THREE.SRGBColorSpace;grassFallback.needsUpdate=true;
+  let grassReference=grassFallback,grassLoaded=false,grassReferenceSize=[1,1];
+  const grassUniforms=[];
+  new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-ref-r2',source=>{
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+    const ctx=canvas.getContext('2d');ctx.drawImage(source.image,0,0,512,512);
+    const tex=new THREE.CanvasTexture(canvas);
+    tex.name='user-grass-reference-512';tex.colorSpace=THREE.SRGBColorSpace;
+    tex.wrapS=tex.wrapT=THREE.MirroredRepeatWrapping;
+    tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
+    tex.generateMipmaps=true;tex.anisotropy=4;tex.needsUpdate=true;
+    grassReference=tex;grassLoaded=true;grassReferenceSize=[512,512];
+    for(const uniform of grassUniforms)uniform.value=tex;
+    source.dispose();
+  });
 
   const make=({side=false,bevel=false}={})=>{
     const source=side?sets.side:sets.top;
@@ -154,6 +165,7 @@ export function createPaperMaterialSet(THREE,settings){
       uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)},
       uGrassReference:{value:grassReference}
     };
+    grassUniforms.push(uniforms.uGrassReference);
     const mat=new THREE.MeshPhysicalMaterial({
       vertexColors:true,map:source.albedo,normalMap:source.normal,roughnessMap:source.roughness,
       normalScale:new THREE.Vector2(side?.24:.30,side?.24:.30),
@@ -243,10 +255,13 @@ export function createPaperMaterialSet(THREE,settings){
     diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
     userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
+    grassReferenceLoaded:grassLoaded,grassReferenceSize,grassPowerOfTwoRuntime:true,
     grassWorldScale:.115,seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
-    for(const m of materials)m.dispose();grassReference.dispose();
+    for(const m of materials)m.dispose();
+    if(grassReference!==grassFallback)grassReference.dispose();
+    grassFallback.dispose();
     for(const set of Object.values(sets)){set.albedo.dispose();set.normal.dispose();set.roughness.dispose()}
   };
   return {sets,materials,sync,stats,dispose};
