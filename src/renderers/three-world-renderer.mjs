@@ -159,6 +159,11 @@ function configureAtmosphere(patch={}){
   emit();
   return value;
 }
+function configureAtmosphere(patch={}){
+  const value=engine?.configureAtmosphere?.(patch)||null;
+  emit();
+  return value;
+}
 
 function setStageView(enabled,axis){
   const value=engine?.setStageView(enabled,axis)||{enabled:!!enabled,axis:axis==='x'?'x':'z',side:1};
@@ -193,7 +198,7 @@ window.Paperchalk3D=Object.freeze({
   version:9,
   engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
-  setPaperStyle,configurePaperTerrain,configureAtmosphere,
+  setPaperStyle,configurePaperTerrain,configureAtmosphere,configureAtmosphere,
   setStageView,toggleStageView,setStageAxis,
   screenToWorld(clientX,clientY){return engine?.screenToWorld?.(clientX,clientY)||null},
   screenToWaterSurface(clientX,clientY,options){return engine?.screenToWaterSurface?.(clientX,clientY,options)||null},
