@@ -47,6 +47,11 @@ try{
   assert((initial.atmosphere?.mieAnisotropy||0)>.6,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.photon?.mode==='photon-feature-port-r1','Photon feature pipeline missing '+JSON.stringify(initial.photon));
+  assert(initial.photon?.gtao===true&&initial.photon?.bloom===true&&initial.photon?.volumetricClouds===true,'Photon core post stack missing '+JSON.stringify(initial.photon));
+  assert(initial.photon?.historyReprojection===true&&initial.photon?.depthAwareAO===true,'Photon temporal/AO path missing '+JSON.stringify(initial.photon));
+  assert(initial.photon?.fxaa===true&&initial.photon?.cas===true,'Photon AA/sharpen path missing '+JSON.stringify(initial.photon));
+  assert(initial.photon?.buffers?.scene?.[0]>0&&initial.photon?.buffers?.ao?.[0]>0&&initial.photon?.buffers?.cloud?.[0]>0,'Photon render targets missing '+JSON.stringify(initial.photon));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
@@ -113,15 +118,28 @@ try{
   assert((liveAtmosphere?.currentStrength||0)>.01&&(liveAtmosphere?.renders||0)>0,'world-space volumetric pass did not render '+JSON.stringify(liveAtmosphere));
   await page.screenshot({path:'artifacts/atmosphere-volumetric-on.png'});
 
+  const photonOff=await page.evaluate(()=>window.Paperchalk3D.configurePhoton({enabled:false}));
+  assert(photonOff?.enabled===false,'Photon pipeline did not disable '+JSON.stringify(photonOff));
+  await page.waitForTimeout(260);
+  await page.screenshot({path:'artifacts/photon-pipeline-off.png'});
+  const photonOn=await page.evaluate(()=>window.Paperchalk3D.configurePhoton({enabled:true,gtao:true,bloom:true,clouds:true,taa:true,fxaa:true,cas:true}));
+  assert(photonOn?.enabled===true&&photonOn?.gtao===true&&photonOn?.volumetricClouds===true,'Photon pipeline did not restore '+JSON.stringify(photonOn));
+  await page.waitForFunction(()=>window.Paperchalk3D.stats.photon?.renders>0,{timeout:3500,polling:'raf'});
+  await page.waitForTimeout(320);
+  await page.screenshot({path:'artifacts/photon-pipeline-on.png'});
+
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
   const materialBytes=fs.statSync('artifacts/paper-material-v3-reference-closeup.png').size;
   const raysOffBytes=fs.statSync('artifacts/atmosphere-volumetric-off.png').size;
   const raysOnBytes=fs.statSync('artifacts/atmosphere-volumetric-on.png').size;
-  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
+  const photonOffBytes=fs.statSync('artifacts/photon-pipeline-off.png').size;
+  const photonOnBytes=fs.statSync('artifacts/photon-pipeline-on.png').size;
+  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000&&photonOffBytes>10000&&photonOnBytes>10000,'paper/atmosphere/Photon framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   assert(raysOffBytes!==raysOnBytes,'volumetric on/off framebuffers are byte-identical');
-  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,tuned},null,2));
+  assert(photonOffBytes!==photonOnBytes,'Photon on/off framebuffers are byte-identical');
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,photonOffBytes,photonOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,photon:initial.photon,tuned},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}
