@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),css=read('styles/game.css'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),water=read('src/terrain/water-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),paperEntity=read('src/entities/PaperSpriteEntity.js'),environment=read('src/engine3d/EnvironmentFX.js'),ocean=read('src/engine3d/OceanRenderer.js'),farTerrain=read('src/engine3d/FarTerrainRenderer.js');
 
-assert(html.includes('stage-fix-r3'),'build key missing');
+assert(html.includes('big-voxel-r4'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="staminaFill"'),'survival HUD missing');
 assert(/\.combat-controls\{[\s\S]*?display:none/.test(css),'desktop touch controls should be hidden');
 assert(/@media \(pointer:coarse\)[\s\S]*?\.combat-controls\{display:flex\}/.test(css),'touch controls should return on coarse pointers');
@@ -68,12 +68,13 @@ assert(engine.includes("renderMode:'event-driven-greedy-water-v7'"),'3D water re
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 assert(engine.includes('_interactionRayDistance()')&&engine.includes('cameraRig.distance+14'),'desktop mouse ray distance fix missing');
-assert(farTerrain.includes("mode:'layered-paper-backdrop'")&&farTerrain.includes('gameplayIntersection:false'),'paper-stage backdrop isolation missing');
+assert(!engine.includes('FarTerrainRenderer')&&!engine.includes('EcologyRenderer'),'procedural far terrain must not replace the main voxel world');
+assert(engine.includes('radiusX:this.mobileLike?3:6'),'wide horizontal voxel streaming missing');
+assert(engine.includes("stageView={enabled:true,axis:'z',side:1}"),'paper-stage camera must be default');
 
 assert(html.includes('src/terrain/water-runtime.js'),'dedicated water runtime missing');
 assert(terrain.includes('analyticOcean:true'),'analytic ocean terrain API missing');
 assert(ocean.includes('analytic-ocean-surface'),'analytic ocean renderer missing');
-assert(farTerrain.includes('paper-stage-distant-landscape'),'far terrain LOD missing');
 assert(environment.includes('FogExp2')&&environment.includes('gpu-vertex-shader'),'weather atmosphere missing');
 assert(biome.includes("DEEP_OCEAN:'deep-ocean'")&&biome.includes("CLIFF:'cliff'")&&biome.includes("SNOWFIELD:'snowfield'"),'macro landforms missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
