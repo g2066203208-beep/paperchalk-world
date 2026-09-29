@@ -292,7 +292,6 @@ fishingStatusHud.classList.toggle('is-show',!!text);
 }
 }
 }
-const buildingColliders=[];
 let active=false;
 let worldMinutes=360;
 let worldTimeScale=1;
@@ -1349,9 +1348,11 @@ const stage=stageViewState();
 const stageButton=debugPanel.querySelector('[data-debug-action="stageview"]');
 const axisButton=debugPanel.querySelector('[data-debug-action="stageaxis"]');
 const paperButton=debugPanel.querySelector('[data-debug-action="paperstyle"]');
+const raysButton=debugPanel.querySelector('[data-debug-action="godrays"]');
 if(stageButton)stageButton.textContent='纸片舞台视角：'+(stage.enabled?'开':'关');
 if(axisButton)axisButton.textContent='舞台观察轴：'+stage.axis.toUpperCase();
 if(paperButton)paperButton.textContent='Paper Style：'+(window.Paperchalk3D?.stats?.paperStyle?.enabled===false?'关':'开');
+if(raysButton)raysButton.textContent='丁达尔：'+(window.Paperchalk3D?.stats?.atmosphere?.godRays===false?'关':'开');
 }
 function updateDebugStatus(){
 const s=window.Paperchalk3D?.stats||{};
@@ -1361,6 +1362,7 @@ debugStatus.textContent='HP '+health.current+'/'+health.max+
 ' · XY '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+
 ' · '+(s.paperStyle?.enabled===false?('3D方块 '+(s.terrain?.renderedQuads||0)+' quads'):('Paper '+(s.paperTerrain?.visiblePaperChunks||0)+' chunks / '+(s.paperTerrain?.paperTriangles||0)+' tris'))+' · '+ts.loadedChunks+' logical chunks'+
 ' · '+terrainToolMode.toUpperCase()+
+' · Rays '+((s.atmosphere?.currentStrength||0).toFixed?.(2)||'0.00')+
 ' · 舞台 '+(stage.enabled?stage.axis.toUpperCase()+'轴':'自由镜头')+
 ' · '+(s.fps||0)+' FPS · '+(s.drawCalls||0)+' draws';
 syncStageDebugButtons();
@@ -1381,7 +1383,7 @@ function runDebugCommand(command){
 const raw=String(command||'').trim();
 if(!raw)return '';
 const [cmd,...args]=raw.split(/\s+/);
-if(cmd==='help')return 'hp 5 | hp +1 | tp X Z [Y] | dig X Y Z | put X Y Z | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
+if(cmd==='help')return 'hp 5 | hp +1 | tp X Z [Y] | time 分钟(0-1439) | dig X Y Z | put X Y Z | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
 if(cmd==='hp'){
 const token=args[0]||'';
 const n=Number(token);
@@ -1394,6 +1396,12 @@ const x=Number(args[0]),z=Number(args[1]),y=args[2]===undefined?null:Number(args
 if(!Number.isFinite(x)||!Number.isFinite(z)||(y!==null&&!Number.isFinite(y)))return '用法：tp X Z [Y]';
 teleport(x,z,y,{notice:'调试传送'});
 return 'XYZ -> '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+', '+transform.z.toFixed(1);
+}
+if(cmd==='time'){
+const m=Number(args[0]);
+if(!Number.isFinite(m))return '用法：time 390（06:30）';
+worldMinutes=((m%1440)+1440)%1440;paperClock.textContent=formatClock();publish();
+return '世界时间 -> '+formatClock();
 }
 if(cmd==='dig'){
 const x=Number(args[0]),y=Number(args[1]),z=Number(args[2]);
@@ -1452,6 +1460,9 @@ updateDebugStatus();
 debugPanel.querySelectorAll('[data-paper-setting]').forEach(input=>{
 input.addEventListener('input',()=>window.Paperchalk3D?.configurePaperTerrain?.({[input.dataset.paperSetting]:Number(input.value)}));
 });
+debugPanel.querySelectorAll('[data-atmos-setting]').forEach(input=>{
+input.addEventListener('input',()=>window.Paperchalk3D?.configureAtmosphere?.({[input.dataset.atmosSetting]:Number(input.value)}));
+});
 debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
 button.addEventListener('click',()=>{
 const a=button.dataset.debugAction;
@@ -1467,6 +1478,9 @@ window.Paperchalk3D?.setDebugColliders?.(debugColliders);
 button.textContent='Collider：'+(debugColliders?'开':'关');
 }else if(a==='paperstyle'){
 window.Paperchalk3D?.setPaperStyle?.(!(window.Paperchalk3D?.stats?.paperStyle?.enabled!==false));
+}else if(a==='godrays'){
+const current=window.Paperchalk3D?.stats?.atmosphere?.godRays!==false;
+window.Paperchalk3D?.configureAtmosphere?.({godRays:!current});
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);

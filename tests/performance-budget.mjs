@@ -7,6 +7,8 @@ assert(size('src/terrain/terrain-runtime.js')<30000,'terrain+water runtime excee
 assert(size('src/terrain/voxel-block-mesh.js')<24000,'cube mesher exceeds 24KB budget');
 assert(size('src/engine3d/PaperTerrainRenderer.js')<20000,'paper terrain renderer exceeds 20KB budget');
 assert(size('src/engine3d/PaperMaterial.js')<16000,'paper material runtime exceeds 16KB budget');
+assert(size('src/engine3d/AtmospherePass.js')<12000,'atmosphere/god-ray pass exceeds 12KB budget');
+assert(size('src/engine3d/AtmospherePass.js')<14000,'atmosphere pass exceeds 14KB budget');
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
@@ -22,6 +24,8 @@ console.log(JSON.stringify({
   cubeMesher:size('src/terrain/voxel-block-mesh.js'),
   paperTerrain:size('src/engine3d/PaperTerrainRenderer.js'),
   paperMaterial:size('src/engine3d/PaperMaterial.js'),
+  atmosphere:size('src/engine3d/AtmospherePass.js'),
+  atmosphere:size('src/engine3d/AtmospherePass.js'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),

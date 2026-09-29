@@ -28,11 +28,23 @@ try{
   assert(initial.paperTerrain?.paperVertices>0&&initial.paperTerrain?.paperTriangles>0,'paper terrain geometry empty '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.topRects>0&&initial.paperTerrain?.sideQuads>0&&initial.paperTerrain?.bevelQuads>0,'paper top/side/bevel geometry incomplete '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.renderGridExposed===false,'render grid is still exposed');
+  assert(initial.paperTerrain?.lowPolyBoundaryRing===true,'low-poly paper boundary ring missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.neighbourhood==='3x3','3x3 boundary classification missing '+JSON.stringify(initial.paperTerrain));
+  assert((initial.paperTerrain?.boundaryCells||0)>0&&(initial.paperTerrain?.edgeFacets||0)>0,'no deformed boundary cells/facets '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.authority==='TerrainWorld-gameplay-grid-unchanged','gameplay authority changed');
-  assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v2','PaperMaterial v2 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
-  assert(initial.paperTerrain?.paperMaterial?.textureResolution===256,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.textureResolution===512,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
+  assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
+  assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
+  assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
+  assert(initial.atmosphere?.technique==='quarter-res-occlusion-radial-scattering','atmosphere scattering missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.samples===24,'god-ray sample gate failed '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.terrainOcclusion===true&&initial.atmosphere?.dynamicSun===true,'occluded dynamic sun rays missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
@@ -76,20 +88,38 @@ try{
   await page.screenshot({path:'artifacts/paper-phase1-after.png'});
 
   const tuned=await page.evaluate(()=>window.Paperchalk3D.configurePaperTerrain({
-    fiberStrength:.09,microNormalStrength:.92,roughnessVariation:.075,printNoiseStrength:.06
+    fiberStrength:.055,microNormalStrength:.38,roughnessVariation:.04,printNoiseStrength:.07
   }));
-  assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v2','paper material tuning API failed '+JSON.stringify(tuned));
+  assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','paper material tuning API failed '+JSON.stringify(tuned));
   await page.waitForTimeout(350);
-  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-8}));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-0.14}));
   await page.waitForTimeout(250);
-  await page.screenshot({path:'artifacts/paper-material-v2-closeup.png'});
+  await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
+
+  const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
+  assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({yaw:-2.05,pitch:.34,distance:20,height:3.4}));
+  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:false,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
+  assert(atmosphereOff?.godRays===false,'god rays did not disable '+JSON.stringify(atmosphereOff));
+  await page.waitForTimeout(700);
+  await page.screenshot({path:'artifacts/atmosphere-godrays-off.png'});
+  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:true,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
+  assert(atmosphereOn?.godRays===true,'god rays did not enable '+JSON.stringify(atmosphereOn));
+  await page.waitForTimeout(850);
+  const liveAtmosphere=await page.evaluate(()=>window.Paperchalk3D.stats.atmosphere);
+  assert(liveAtmosphere?.visibleLastFrame===true,'god rays are not visible in dawn validation view '+JSON.stringify(liveAtmosphere));
+  assert((liveAtmosphere?.currentStrength||0)>.01,'god-ray strength stayed near zero '+JSON.stringify(liveAtmosphere));
+  await page.screenshot({path:'artifacts/atmosphere-godrays-on.png'});
 
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
-  const materialBytes=fs.statSync('artifacts/paper-material-v2-closeup.png').size;
-  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000,'paper framebuffer screenshots missing');
+  const materialBytes=fs.statSync('artifacts/paper-material-v3-reference-closeup.png').size;
+  const raysOffBytes=fs.statSync('artifacts/atmosphere-godrays-off.png').size;
+  const raysOnBytes=fs.statSync('artifacts/atmosphere-godrays-on.png').size;
+  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
-  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,stats:initial.paperTerrain,tuned},null,2));
+  assert(raysOffBytes!==raysOnBytes,'god-ray on/off framebuffers are byte-identical');
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,tuned},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}

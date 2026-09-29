@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r2';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r4';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -154,6 +154,11 @@ function configurePaperTerrain(patch={}){
   emit();
   return value;
 }
+function configureAtmosphere(patch={}){
+  const value=engine?.configureAtmosphere?.(patch)||null;
+  emit();
+  return value;
+}
 
 function setStageView(enabled,axis){
   const value=engine?.setStageView(enabled,axis)||{enabled:!!enabled,axis:axis==='x'?'x':'z',side:1};
@@ -185,10 +190,10 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:8,
+  version:9,
   engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
-  setPaperStyle,configurePaperTerrain,
+  setPaperStyle,configurePaperTerrain,configureAtmosphere,
   setStageView,toggleStageView,setStageAxis,
   screenToWorld(clientX,clientY){return engine?.screenToWorld?.(clientX,clientY)||null},
   screenToWaterSurface(clientX,clientY,options){return engine?.screenToWaterSurface?.(clientX,clientY,options)||null},
