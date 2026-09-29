@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),photon=read('src/engine3d/PhotonPipeline.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
 assert.match(html,/paper-r5/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
@@ -74,6 +74,17 @@ assert.match(atmos,/FogExp2/);
 assert.match(atmos,/uShadowMatrix/);
 assert.match(atmos,/mieAnisotropy/);
 assert.match(atmos,/jitteredRaymarch:true/);
+assert.match(atmos,/linearTargetAware:true/);
+assert.match(engine,/PhotonPipeline/);
+assert.match(renderer,/configurePhoton/);
+assert.match(photon,/photon-feature-port-r1/);
+assert.match(photon,/historyReprojection:true/);
+assert.match(photon,/depthAwareAO:true/);
+assert.match(photon,/volumetricClouds/);
+assert.match(photon,/Halton|halton/);
+assert.match(photon,/uPrevViewProj/);
+assert.match(photon,/cloudShadowSteps/);
+assert.match(photon,/sampleFxaa/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
