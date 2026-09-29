@@ -79,7 +79,7 @@ assert(atmos.includes('new THREE.FogExp2'),'distance atmosphere fog missing');
 assert(atmos.includes('uShadowMatrix'),'shadow-map volumetric occlusion missing');
 assert(atmos.includes('mieAnisotropy'),'Mie scattering stats missing');
 assert(atmos.includes('jitteredRaymarch:true'),'jittered volumetric raymarch missing');
-assert(html.includes('undefined')&&html.includes('data-atmos-setting="rayIntensity"'),'god-ray debug controls missing');
+assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmos-setting="intensity"')&&html.includes('data-atmos-setting="anisotropy"'),'volumetric debug controls missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
 assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
