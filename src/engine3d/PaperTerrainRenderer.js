@@ -27,11 +27,16 @@ function normalized(x,y,z){
   const m=Math.hypot(x,y,z)||1;return [x/m,y/m,z/m];
 }
 function addQuad(data,a,b,c,d,normal,color,group){
-  const base=data.positions.length/3;
+  const base=data.positions.length/3,off=data.worldOffset||[0,0,0];
+  const ax=Math.abs(normal[0]),ay=Math.abs(normal[1]),az=Math.abs(normal[2]);
   for(const p of [a,b,c,d]){
     data.positions.push(p[0],p[1],p[2]);
     data.normals.push(normal[0],normal[1],normal[2]);
     data.colors.push(color.r,color.g,color.b);
+    const wx=p[0]+off[0],wy=p[1]+off[1],wz=p[2]+off[2];
+    if(ay>=ax&&ay>=az)data.uvs.push(wx*.18,wz*.18);
+    else if(ax>=az)data.uvs.push(wz*.20,wy*.20);
+    else data.uvs.push(wx*.20,wy*.20);
   }
   data.indices[group].push(base,base+1,base+2,base,base+2,base+3);
 }
@@ -58,8 +63,43 @@ export class PaperTerrainRenderer{
     scene.add(this.root);
     this.meshes=new Map();this.visibleKeys=new Set();this.dirty=new Set();
     this.lastBuildMs=0;this.totalRebuilds=0;
+    this.paperTextures=this._createPaperTextures();
     this.materials=this._createMaterials();
     this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
+  }
+
+  _createPaperTexture({side=false}={}){
+    const THREE=this.THREE,canvas=document.createElement('canvas');
+    canvas.width=256;canvas.height=256;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle=side?'#f2e1c9':'#faf7ee';ctx.fillRect(0,0,256,256);
+    let seed=side?0x6d2b79f5:0x2f6e2b1d;
+    const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+    // Fine pulp dots.
+    for(let i=0;i<3200;i++){
+      const v=218+Math.floor(rnd()*35),a=.018+rnd()*.055;
+      ctx.fillStyle=`rgba(${v},${Math.max(0,v-(side?18:6))},${Math.max(0,v-(side?28:10))},${a})`;
+      const x=rnd()*256,y=rnd()*256,r=.25+rnd()*.85;
+      ctx.fillRect(x,y,r,r);
+    }
+    // Long cut-paper fibres. Side stock has stronger horizontal/cardboard grain.
+    ctx.lineCap='round';
+    const fibres=side?520:310;
+    for(let i=0;i<fibres;i++){
+      const x=rnd()*256,y=rnd()*256,len=(side?4:2)+rnd()*(side?20:11);
+      const angle=side?(rnd()-.5)*.16:(rnd()-.5)*.65;
+      ctx.strokeStyle=side?`rgba(105,72,45,${.025+rnd()*.07})`:`rgba(130,112,86,${.018+rnd()*.045})`;
+      ctx.lineWidth=.25+rnd()*.55;ctx.beginPath();ctx.moveTo(x,y);
+      ctx.lineTo(x+Math.cos(angle)*len,y+Math.sin(angle)*len);ctx.stroke();
+    }
+    const tex=new THREE.CanvasTexture(canvas);
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
+    tex.generateMipmaps=true;tex.colorSpace=THREE.SRGBColorSpace;
+    return tex;
+  }
+  _createPaperTextures(){
+    return {top:this._createPaperTexture({side:false}),side:this._createPaperTexture({side:true})};
   }
 
   _makePaperMaterial({side=false,bevel=false}={}){
@@ -71,8 +111,12 @@ export class PaperTerrainRenderer{
       uPaperBevel:{value:bevel?1:0},
       uPaperBandHeight:{value:Math.max(.08,Number(this.settings.paperThickness)||.30)}
     };
+    const paperMap=side?this.paperTextures.side:this.paperTextures.top;
     const mat=new THREE.MeshStandardMaterial({
       vertexColors:true,
+      map:paperMap,
+      bumpMap:paperMap,
+      bumpScale:side?.020:.012,
       roughness:side?.97:.93,
       metalness:0,
       side:THREE.DoubleSide,
@@ -80,6 +124,7 @@ export class PaperTerrainRenderer{
       emissive:side?0x24170f:0x000000,
       emissiveIntensity:side?.20:0
     });
+    mat.userData.paperRole=side?'side':bevel?'bevel':'top';
     mat.userData.paperUniforms=uniforms;
     mat.onBeforeCompile=shader=>{
       Object.assign(shader.uniforms,uniforms);
@@ -133,6 +178,8 @@ export class PaperTerrainRenderer{
       u.uPaperFiber.value=Number(this.settings.fiberStrength)||0;
       u.uPaperPrint.value=Number(this.settings.printNoiseStrength)||0;
       u.uPaperBandHeight.value=Math.max(.08,Number(this.settings.paperThickness)||.30);
+      const f=clamp(Number(this.settings.fiberStrength)||0,0,.12);
+      mat.bumpScale=(mat.userData.paperRole==='side'?.014:.008)+f*(mat.userData.paperRole==='side'?.12:.08);
     }
   }
 
@@ -182,7 +229,7 @@ export class PaperTerrainRenderer{
     const getLocal=(x,z)=>getHalo(x,z);
 
     const data={
-      positions:[],normals:[],colors:[],indices:[[],[],[]],
+      positions:[],normals:[],colors:[],uvs:[],worldOffset:[cx*n*s,0,cz*n*s-s*.5],indices:[[],[],[]],
       topRects:0,sideQuads:0,bevelQuads:0,edgeRuns:0,layerBands:0,layerLips:0
     };
     const used=new Uint8Array(n*n);
@@ -331,6 +378,7 @@ export class PaperTerrainRenderer{
     geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.positions,3));
     geometry.setAttribute('normal',new THREE.Float32BufferAttribute(data.normals,3));
     geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.colors,3));
+    geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uvs,2));
     const all=[],groups=[];
     for(let g=0;g<3;g++){
       const start=all.length;all.push(...data.indices[g]);
@@ -413,12 +461,13 @@ export class PaperTerrainRenderer{
       paperLayerHeight:this.settings.paperLayerHeight,paperThickness:this.settings.paperThickness,
       bevelWidth:this.settings.bevelWidth,fiberStrength:this.settings.fiberStrength,
       sideDarkness:this.settings.sideDarkness,
-      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true
+      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true
     };
   }
   dispose(){
     this.unsubscribe?.();
     for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
-    this.meshes.clear();for(const m of this.materials)m.dispose();this.scene.remove(this.root);
+    this.meshes.clear();for(const m of this.materials)m.dispose();
+    this.paperTextures.top.dispose();this.paperTextures.side.dispose();this.scene.remove(this.root);
   }
 }
