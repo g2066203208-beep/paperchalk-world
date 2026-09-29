@@ -1485,6 +1485,8 @@ const current=window.Paperchalk3D?.stats?.atmosphere?.volumetric!==false;
 window.Paperchalk3D?.configureAtmosphere?.({volumetric:!current});
 }else if(a==='photon'){
 window.Paperchalk3D?.configurePhoton?.({enabled:window.Paperchalk3D?.stats?.photon?.enabled===false});
+}else if(a==='photonprofile'){
+const p=window.Paperchalk3D?.stats?.photon?.profile||'balanced',next=p==='balanced'?'ultra':p==='ultra'?'mobile':'balanced';window.Paperchalk3D?.configurePhoton?.({profile:next});button.textContent='Photon：'+next[0].toUpperCase()+next.slice(1);
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
