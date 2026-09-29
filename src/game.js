@@ -292,7 +292,6 @@ fishingStatusHud.classList.toggle('is-show',!!text);
 }
 }
 }
-const buildingColliders=[];
 let active=false;
 let worldMinutes=360;
 let worldTimeScale=1;
