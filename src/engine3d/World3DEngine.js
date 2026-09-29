@@ -523,8 +523,15 @@ queue.sort((a,b)=>a.d-b.d);
 const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
 for(let i=0;i<Math.min(budget,queue.length);i++){
 const q=queue[i];
-if(this.meshWorker)this._requestWorkerBuild(q.cx,q.cy,q.cz);
-else{const r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;}
+// Bootstrap exactly one nearest chunk synchronously so the world is visible
+// immediately. All subsequent chunk rebuilds stay off the main thread.
+if(this.meshWorker&&this.meshes.size===0&&i===0){
+  const r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+}else if(this.meshWorker){
+  this._requestWorkerBuild(q.cx,q.cy,q.cz);
+}else{
+  const r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+}
 }
 for(const [key,record] of [...this.meshes]){
 if(next.has(key))continue;
