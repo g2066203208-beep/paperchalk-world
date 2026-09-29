@@ -24,8 +24,11 @@ export class AtmospherePass{
     this.sunNdc=new THREE.Vector3();
     this.sunUv=new THREE.Vector2(.5,.5);
     this.clearColor=new THREE.Color();
-    this.fogColor=new THREE.Color(0x7487a5);
-    this.warmFog=new THREE.Color(0xd6b49a);
+    this.fogColor=new THREE.Color(0x7487a5);this.warmFog=new THREE.Color(0xd6b49a);
+    this.skyColor=new THREE.Color(0x6f7fa8);this.daySky=new THREE.Color(0x7897be);
+    this.dawnSky=new THREE.Color(0xb99186);this.duskSky=new THREE.Color(0xa47d91);this.nightSky=new THREE.Color(0x19243b);
+    this.sunDay=new THREE.Color(0xffedcf);this.sunHorizon=new THREE.Color(0xffbd78);
+    this.skyGround=new THREE.Color(0x745b43);
     this.scene.fog=new THREE.FogExp2(this.fogColor,this.settings.fogDensity);
 
     const rtOpts={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
@@ -147,19 +150,25 @@ export class AtmospherePass{
     this.size={width:w,height:h,pixelRatio:pr,bufferWidth:bw,bufferHeight:bh};
   }
 
-  update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0,fogColor=null}={}){
+  update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0,fogColor=null,sunLight=null,skyLight=null,sunDisc=null}={}){
     if(sunPosition)this.sunWorld.copy(sunPosition);
     const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
     // Stronger near sunrise/sunset and in hazier air, but never visible underground.
     const lowSun=clamp(1-Math.max(0,(d-.18)/.82),0,1);
     const atmospheric=(d*.72+tw*.28)*(.48+lowSun*.52)*sky*(1-under);
     this.state={strength:atmospheric*this.settings.rayIntensity,daylight:d,twilight:tw,skyExposure:sky,underground:under,time:Number(time)||0};
+    const minute=((Number(time)||0)%1440+1440)%1440,morning=minute<720;
+    const horizon=morning?this.dawnSky:this.duskSky,dayMix=clamp((d-.08)/.78,0,1);
+    if(d>.001)this.skyColor.copy(horizon).lerp(this.daySky,dayMix);
+    else this.skyColor.copy(this.nightSky).lerp(horizon,clamp(tw*.72,0,.72));
+    if(sunLight)sunLight.color.copy(this.sunHorizon).lerp(this.sunDay,clamp(d*1.25,0,1));
+    if(skyLight){skyLight.color.copy(this.skyColor).lerp(this.sunDay,.18);skyLight.groundColor.copy(this.skyGround)}
+    if(sunDisc?.material?.color)sunDisc.material.color.copy(this.sunHorizon).lerp(this.sunDay,clamp(d*1.25,0,1));
     const fogBoost=1+tw*.38+lowSun*.18;
     this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*fogBoost*(1-under*.72):0;
     const warm=clamp(tw+lowSun*.45,0,1);
-    if(fogColor)this.fogColor.copy(fogColor);else this.fogColor.setRGB(.43,.52,.65);
-    this.fogColor.lerp(this.warmFog,warm*.10);
-    this.scene.fog.color.copy(this.fogColor);
+    if(fogColor)this.fogColor.copy(fogColor);else this.fogColor.copy(this.skyColor);
+    this.fogColor.lerp(this.warmFog,warm*.10);this.scene.fog.color.copy(this.fogColor);
   }
 
   _projectSun(camera){
@@ -229,7 +238,7 @@ export class AtmospherePass{
       buffer:[this.size.bufferWidth,this.size.bufferHeight],
       rayIntensity:this.settings.rayIntensity,currentStrength:this.state.strength,
       fog:'FogExp2-distance-air',fogDensity:this.scene.fog?.density||0,
-      dynamicSun:true,terrainOcclusion:true,additiveComposite:true,
+      dynamicSun:true,dynamicSky:true,skyColor:'#'+this.skyColor.getHexString(),terrainOcclusion:true,additiveComposite:true,
       mobileOptimized:this.mobileLike,visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
