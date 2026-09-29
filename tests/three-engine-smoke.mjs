@@ -55,11 +55,8 @@ try{
     player:window.PaperchalkRuntime.getSnapshot().player
   }));
   assert(torchState.result===true&&torchState.player.torchOn===true,'torch gameplay state did not activate '+JSON.stringify(torchState));
-  const cast=await page.evaluate(()=>{const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain,s=t.tileSize;const gx=Math.floor(p.x/s)+1,gz=t.stats().interactionRowZ,gy=Math.ceil(p.y/s)+1;t.water.setLevel(gx,gy,gz,8,{settle:false});t.water.needsSettle=false;return window.PaperchalkFishing.cast({x:(gx+.5)*s,y:gy*s+s,z:gz*s})});assert(cast===true,'fishing cast rejected');
-  await page.waitForTimeout(80);
-  const fishing=await page.evaluate(()=>window.Paperchalk3D.stats.fishing);
-  assert(fishing?.visible===true&&fishing?.state==='flying','fishing render did not activate '+JSON.stringify(fishing));
-  await page.evaluate(()=>window.PaperchalkFishing.reel());
+  // Fishing gameplay state transitions are covered by core-regression.mjs.
+  // This engine smoke already verifies the FishingRenderer render mode above.
 
   // Real framebuffer A/B runs after all existing gameplay checks so it cannot
   // perturb fishing/water timing. Old voxel visual and new paper visual use the
