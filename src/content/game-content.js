@@ -30,18 +30,7 @@ const scene3d={
     actor:.45,
     front:2.5
   },
-  stageEntities:[
-    {id:'far-hills-a',kind:'rock',name:'远山',x:-18,z:-8,width:18,height:6,primary:'#87959a',grounded:true},
-    {id:'far-hills-b',kind:'rock',name:'远山',x:18,z:-8,width:20,height:7,primary:'#7d8e91',grounded:true},
-    {id:'village-shop',kind:'building',name:'A村街角小楼',x:-12,z:-2.4,width:7,height:5.5,primary:'#9b7d65',secondary:'#d8c29d',grounded:true},
-    {id:'village-house-a',kind:'building',name:'A村住宅',x:2,z:-2.2,width:6.5,height:4.8,primary:'#81776d',secondary:'#d6c7a7',grounded:true},
-    {id:'village-workshop',kind:'building',name:'A村工坊',x:15,z:-2.5,width:8,height:5.2,primary:'#77898c',secondary:'#d7c69e',grounded:true},
-    {id:'tree-a',kind:'tree',name:'树',x:-21,z:-.8,width:3.2,height:5.5,primary:'#486c4b',grounded:true},
-    {id:'tree-b',kind:'tree',name:'树',x:-5,z:-.7,width:3,height:5.2,primary:'#4f744d',grounded:true},
-    {id:'tree-c',kind:'tree',name:'树',x:9,z:-.75,width:3.3,height:5.8,primary:'#45694b',grounded:true},
-    {id:'rock-a',kind:'rock',name:'石块',x:7,z:.25,width:1.5,height:1.1,primary:'#797970',grounded:true},
-    {id:'rock-b',kind:'rock',name:'石块',x:-7,z:.2,width:1.2,height:.9,primary:'#858074',grounded:true}
-  ]
+  stageEntities:[]
 };
 
 const content={
