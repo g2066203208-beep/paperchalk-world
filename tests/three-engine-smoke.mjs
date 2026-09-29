@@ -51,6 +51,10 @@ try{
   assert(initial.photon?.gtao===true&&initial.photon?.bloom===true&&initial.photon?.volumetricClouds===true,'Photon core post stack missing '+JSON.stringify(initial.photon));
   assert(initial.photon?.historyReprojection===true&&initial.photon?.depthAwareAO===true,'Photon temporal/AO path missing '+JSON.stringify(initial.photon));
   assert(initial.photon?.fxaa===true&&initial.photon?.cas===true,'Photon AA/sharpen path missing '+JSON.stringify(initial.photon));
+  assert(initial.photon?.pcss===true&&initial.photon?.variablePenumbra===true,'Photon PCSS path missing '+JSON.stringify(initial.photon));
+  assert(initial.photon?.water?.ssr===true&&initial.photon?.water?.screenSpaceRaymarch===true,'Photon water SSR missing '+JSON.stringify(initial.photon?.water));
+  assert(initial.photon?.water?.gerstnerStyleWaves===true&&initial.photon?.water?.variableFresnel===true,'Photon water waves/Fresnel missing '+JSON.stringify(initial.photon?.water));
+  assert(initial.photon?.coloredLighting?.sixNeighbourPropagation===true&&initial.photon?.coloredLighting?.pointLightEmitters===true,'Photon RGB voxel lighting missing '+JSON.stringify(initial.photon?.coloredLighting));
   assert(initial.photon?.buffers?.scene?.[0]>0&&initial.photon?.buffers?.ao?.[0]>0&&initial.photon?.buffers?.cloud?.[0]>0,'Photon render targets missing '+JSON.stringify(initial.photon));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
