@@ -64,6 +64,13 @@ assert.match(game,/item\.action==='eat'/);
 assert.match(html,/hungerFill/);
 
 assert.match(engine,/flatShading:true/);
+assert.match(engine,/AtmospherePass/);
+assert.match(renderer,/configureAtmosphere/);
+assert.match(atmos,/quarter-res-occlusion-radial-scattering/);
+assert.match(atmos,/const int SAMPLES=24/);
+assert.match(atmos,/scene\.overrideMaterial=this\.blockerMaterial/);
+assert.match(atmos,/AdditiveBlending/);
+assert.match(atmos,/FogExp2/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
