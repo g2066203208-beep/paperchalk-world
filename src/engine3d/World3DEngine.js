@@ -493,8 +493,12 @@ if(this.terrain.chunkMayContainTerrain&&!this.terrain.chunkMayContainTerrain(cx,
 const key=this.terrain.chunkKey(cx,cy,cz);
 next.add(key);
 const record=this.meshes.get(key);
-if((!record||record.version<0)&&!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
-else record.mesh.visible=true;
+if(!record){
+  if(!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+}else{
+  record.mesh.visible=true;
+  if(record.version<0&&!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+}
 }
 queue.sort((a,b)=>a.d-b.d);
 const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
