@@ -544,9 +544,9 @@ this.scene.add(moonDisc);
 this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
 this.backdrop=null;
 this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
-radiusXZ:this.mobileLike?Math.min(2,this.sceneData.terrain?.visibleChunkRadiusXZ??3):(this.sceneData.terrain?.visibleChunkRadiusXZ??3),
-radiusY:this.mobileLike?1:(this.sceneData.terrain?.visibleChunkRadiusY??2),
-maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?2:5),
+radiusXZ:Math.min(2,this.sceneData.terrain?.visibleChunkRadiusXZ??3),
+radiusY:1,
+maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,2),
 texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128,
 anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
