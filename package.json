@@ -1,17 +1,1 @@
-{
-  "name": "paperchalk-world",
-  "version": "2.0.0-infinite-voxel-3d",
-  "private": true,
-  "description": "Three.js browser game with deterministic streamed infinite 3D voxel terrain, greedy chunk meshing, editable blocks, and paper-character rendering",
-  "scripts": {
-    "test": "node tests/web-smoke.js && node tests/performance-budget.mjs && node tests/preproduction-architecture.mjs",
-    "test:core": "node tests/core-regression.mjs",
-    "test:ui": "node tests/ui-smoke.mjs",
-    "test:3d": "node tests/three-engine-smoke.mjs",
-    "test:architecture": "node tests/preproduction-architecture.mjs",
-    "test:performance": "node tests/performance-budget.mjs"
-  },
-  "engines": {
-    "node": ">=20"
-  }
-}
+{"name":"paperchalk-world","version":"0.1.0","private":true,"scripts":{"test":"npm run test:core && npm run test:world","test:core":"node tests/core-regression.cjs","test:world":"node tests/world-foundation-smoke.cjs","test:ui":"node tests/ui-smoke.cjs","test:web":"node tests/web-smoke.cjs","test:three":"node tests/three-engine-smoke.cjs"},"dependencies":{},"devDependencies":{}}
