@@ -228,6 +228,9 @@ this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add
 this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
 this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
 this.paperSurfaceTexture=createVoxelPaperSurfaceTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
+const anisotropy=Math.max(1,Math.min(8,Number(this.settings.anisotropy)||1));
+this.texture.anisotropy=anisotropy;
+this.paperSurfaceTexture.anisotropy=anisotropy;
 this.material=new THREE.MeshStandardMaterial({
 map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:true,
 transparent:true,opacity:1,depthWrite:true,flatShading:true,
@@ -650,7 +653,8 @@ this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
 radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
 radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
 maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?3:5),
-texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
+texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128,
+anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
 this.fishingRenderer=new FishingRenderer(THREE,this.scene);
