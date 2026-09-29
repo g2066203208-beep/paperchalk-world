@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-r4";
+  const BUILD="paper-r5";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="paper-r4">
+<meta name="paperchalk-build" content="paper-r5">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-r4">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r5">
 </head>
 <body>
 
@@ -234,15 +234,15 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-r4"></script>
-<script src="./src/core/game-state.js?v=paper-r4"></script>
-<script src="./src/core/save-runtime.js?v=paper-r4"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-r4"></script>
-<script src="./src/content/game-content.js?v=paper-r4"></script>
+<script src="./src/core/event-bus.js?v=paper-r5"></script>
+<script src="./src/core/game-state.js?v=paper-r5"></script>
+<script src="./src/core/save-runtime.js?v=paper-r5"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r5"></script>
+<script src="./src/content/game-content.js?v=paper-r5"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=paper-r4"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-r4"></script>
-<script src="./src/game.js?v=paper-r4"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r4"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r5"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r5"></script>
+<script src="./src/game.js?v=paper-r5"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r5"></script>
 </body>
 </html>
