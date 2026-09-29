@@ -271,7 +271,7 @@ export class AtmospherePass{
       const target=sunLight.target?.position||new this.THREE.Vector3();
       this.sunDirection.copy(sunLight.position).sub(target).normalize();
     }else if(sunPosition)this.sunDirection.copy(sunPosition).normalize();
-    if(skyLight){skyLight.color.copy(this.zenithColor);skyLight.groundColor.set(0x74604b)}
+    if(skyLight){skyLight.color.copy(this.zenithColor);skyLight.groundColor.set(0x967a60)}
     if(sunDisc?.material?.color){
       sunDisc.material.color.copy(sunColor);
       sunDisc.visible=!this.settings.enabled&&d>.02;
