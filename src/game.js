@@ -1478,9 +1478,9 @@ window.Paperchalk3D?.setDebugColliders?.(debugColliders);
 button.textContent='Collider：'+(debugColliders?'开':'关');
 }else if(a==='paperstyle'){
 window.Paperchalk3D?.setPaperStyle?.(!(window.Paperchalk3D?.stats?.paperStyle?.enabled!==false));
-}else if(a==='godrays'){
-const current=window.Paperchalk3D?.stats?.atmosphere?.godRays!==false;
-window.Paperchalk3D?.configureAtmosphere?.({godRays:!current});
+}else if(a==='volumetric'){
+const current=window.Paperchalk3D?.stats?.atmosphere?.volumetric!==false;
+window.Paperchalk3D?.configureAtmosphere?.({volumetric:!current});
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
