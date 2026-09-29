@@ -1,48 +1,83 @@
 # Photon feature port for Paperchalk
 
-Paperchalk is integrating the rendering feature set of [sixthsurge/photon](https://github.com/sixthsurge/photon) into its Three.js/WebGL renderer.
+Paperchalk is translating the rendering feature set of [sixthsurge/photon](https://github.com/sixthsurge/photon) into its native Three.js/WebGL renderer.
 
-This is not a Minecraft shader-loader wrapper. Minecraft/Iris-specific buffers, macros and world hooks are translated into native Paperchalk render passes so the game keeps its own terrain, paper materials, entities and gameplay model.
+This is not a Minecraft/Iris shader-loader wrapper. Minecraft-specific uniforms, G-buffer contracts, block IDs, Iris compute/image APIs and Distant Horizons hooks are replaced by Paperchalk-native render passes that preserve the game's paper materials, terrain runtime, entities and side-scrolling gameplay.
 
 ## License and attribution
 
-Photon Shaders is Copyright © 2021-2025 Benjamin Stott ("SixthSurge") and uses a custom license that permits source study, personal modification, and redistribution of modified or unmodified portions subject to its stated restrictions. The upstream license is preserved verbatim in `THIRD_PARTY_LICENSES/PHOTON_SHADERS_LICENSE.txt`.
+Photon Shaders is Copyright © 2021-2025 Benjamin Stott ("SixthSurge"). Its custom license permits source study, personal modification, and redistribution of modified or unmodified portions subject to the stated restrictions. The upstream license is preserved verbatim in `THIRD_PARTY_LICENSES/PHOTON_SHADERS_LICENSE.txt`.
 
-## Port matrix
+## Feature parity
 
-Implemented in `PhotonPipeline.js`:
+Implemented on `feat/photon-full-port-r1`:
 
-- Offscreen scene color + hardware depth buffer.
-- GTAO-style depth reconstructed ambient occlusion with depth-aware bilateral filtering.
-- Volumetric cloud slab with procedural 3D noise, sun scattering, self-shadow samples and weather coverage.
-- Bloom extraction + separable Gaussian blur.
-- TAA history accumulation with Halton subpixel jitter, world-space history reprojection and neighborhood clamping.
-- FXAA edge filtering.
-- CAS-style contrast-adaptive sharpening.
-- Optional depth of field.
-- Optional camera motion blur.
-- Linear-target-aware integration with the existing shadow-map / Mie atmosphere pass.
-- Desktop/mobile quality profiles.
+- **Sky / lighting / water**
+  - existing Paperchalk world-space Mie + height-fog atmosphere retained as the volumetric-fog stage;
+  - Photon-style PCSS blocker search and variable-size penumbra filtering patched into Three.js directional shadows;
+  - dynamic sun/moon coupling and ACES output retained;
+  - water-only depth/mask pass, screen-space reflection raymarch, depth intersection, Fresnel, refraction and multi-wave Gerstner-style normals.
+- **Clouds and weather**
+  - volumetric low cumulus layer with sun self-shadow;
+  - cirrus, altocumulus and noctilucent high layers;
+  - procedural changing weather front;
+  - ground cloud shadows;
+  - rain streaks and wet-weather color shift;
+  - lightning flash;
+  - aurora and primary/secondary rainbow optics.
+- **Colored lighting**
+  - local RGB voxel light volume;
+  - terrain-solid occupancy;
+  - six-neighbour flood-fill propagation;
+  - PointLight emitters including the hand torch;
+  - world-space surface lookup in the post-lighting pass.
+- **Ambient / reflections**
+  - GTAO-style depth reconstructed ambient occlusion;
+  - depth-aware bilateral AO filtering;
+  - screen-space water reflections.
+- **Camera / image quality**
+  - bloom extraction + separable blur;
+  - depth of field;
+  - camera motion blur;
+  - native TAA with Halton jitter, world-space history reprojection and neighbourhood clamping;
+  - TAAU path: reduced internal scene resolution + full-resolution temporal reconstruction;
+  - FXAA;
+  - CAS-style sharpening.
+- **Performance**
+  - independent desktop/mobile quality levels;
+  - offscreen scene/depth pipeline;
+  - subsampled AO and bloom buffers;
+  - adjustable TAAU render scale;
+  - rendering systems split into independent modules to keep `World3DEngine.js` inside its original 56 KB architecture budget.
 
-Existing Paperchalk systems retained as Photon equivalents where they already provide the required function:
+## Photon-to-Paperchalk translation notes
 
-- Directional shadow map + world-space volumetric fog/light shafts: `AtmospherePass.js`.
-- ACES filmic tone mapping: Three.js renderer output transform.
-- Dynamic day/night sky and sun/moon coupling: `AtmospherePass.js` + `World3DEngine.js`.
-- Moving warm local light: player torch PointLight.
-- Water surface geometry: Paperchalk 8-layer 3D water renderer.
+Photon's **labPBR resource-pack support** is a Minecraft asset convention, not a rendering effect by itself. Paperchalk already owns its authored/procedural `PaperMaterial` normal/roughness/physical-sheen pipeline, so importing labPBR block-ID/resource-pack decoding would not make sense for this game. The equivalent material channels are consumed natively from Paperchalk materials instead.
 
-## Remaining full-feature parity work
+Photon's Iris-specific compute/image voxelization is likewise replaced with a bounded Paperchalk voxel light volume fed directly from `TerrainWorld`. This preserves the visible colored-light behavior without making the browser renderer depend on Minecraft/Iris APIs unavailable in WebGL.
 
-These Photon feature families still require Paperchalk-native implementations before the port can be called feature-complete:
+Photon's Distant Horizons / Voxy compatibility programs are Minecraft-mod integration layers and therefore have no Paperchalk equivalent to port.
 
-- PCSS / variable-penumbra sun shadows.
-- Screen-space reflections with material masking.
-- Voxel/LPV colored emissive lighting.
-- Photon-class water reflection/refraction and wave normals.
-- Multi-family cloud types and storm/rain state transitions beyond the first volumetric weather layer.
-- LabPBR-specific material decoding (only relevant if Paperchalk adopts that asset convention).
-- Temporal upscaling path separate from native-resolution TAA.
-- Aurora/rainbow/special weather optics.
+## Modules
 
-The branch intentionally keeps these as separate modules instead of growing `World3DEngine.js`, which is already at its enforced 56 KB architecture budget.
+- `PhotonPipeline.js` — render graph, PCSS hook, GTAO, bloom, TAA/TAAU, FXAA/CAS, DOF and motion blur.
+- `PhotonWaterPass.js` — water mask/depth, SSR, refraction, Fresnel and procedural wave normals.
+- `PhotonVoxelLightVolume.js` — bounded RGB voxel occupancy and flood-fill colored lighting.
+- `PhotonSkyWeatherPass.js` — multi-layer clouds, weather, cloud shadows, rain, lightning, aurora and rainbow.
+- `AtmospherePass.js` — world-space shadow-map volumetric fog/Mie scattering and dynamic base sky.
+
+## Validation gates
+
+The branch has static architecture and size-budget assertions for every Photon module, plus real Chromium/SwiftShader framebuffer A/B smoke coverage. The Photon pipeline can be disabled at runtime with `Paperchalk3D.configurePhoton({enabled:false})` so comparisons use the exact same gameplay/world state.
+
+## Remaining parity work
+
+The remaining items are integration/tuning parity rather than missing headline Photon feature families:
+
+- richer per-material SSR masks beyond water;
+- additional cloud morphology/tuning to more closely match Photon screenshots;
+- weather state driven by a future Paperchalk gameplay weather system rather than only renderer-side procedural fronts;
+- exposing the full Photon settings matrix in the in-game debug UI;
+- device profiling/tuning of Ultra/Balanced/Mobile presets.
+
+These are intentionally kept separate from Minecraft-only labPBR, Iris, Distant Horizons and Voxy compatibility code.
