@@ -11,9 +11,9 @@ export class AtmospherePass{
     this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
       enabled:true,volumetric:true,
-      intensity:this.mobileLike?.56:.72,
-      fogDensity:this.mobileLike?.0065:.0075,
-      heightFalloff:.105,anisotropy:.68,maxDistance:this.mobileLike?46:62,
+      intensity:this.mobileLike?.34:.46,
+      fogDensity:this.mobileLike?.0036:.0046,
+      heightFalloff:.105,anisotropy:.64,maxDistance:this.mobileLike?44:58,
       qualityScale:this.mobileLike?.30:.46,steps:this.mobileLike?11:19
     };
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
@@ -142,15 +142,21 @@ export class AtmospherePass{
             float height=max(0.0,p.y-uFogBase);
             float density=uFogDensity*(.28+.72*exp(-height*uHeightFalloff));
             float lit=shadowAt(p,noise+float(i)*.6180339);
-            float absorb=exp(-density*ds*1.18);
-            sunScatter+=trans*lit*density*phase*ds;
+            lit=smoothstep(.10,.90,lit);
+            float absorb=exp(-density*ds*.92);
+            sunScatter+=trans*lit*lit*density*phase*ds;
             trans*=absorb;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.42);
-          float forwardBoost=smoothstep(.15,.96,mu);
-          vec3 scatter=uSunColor*sunScatter*uIntensity*(.72+forwardBoost*.85);
-          vec3 premul=uFogColor*fogAlpha+scatter;
-          gl_FragColor=vec4(premul,fogAlpha);
+          float fogAlpha=clamp(1.0-trans,0.0,.32);
+          float forwardBoost=smoothstep(.20,.94,mu);
+          float phaseSafe=min(1.0,.58+forwardBoost*.42);
+          vec3 scatter=uSunColor*sunScatter*uIntensity*phaseSafe;
+          // Base atmospheric perspective is handled by FogExp2. The volumetric
+          // target carries mostly directional sunlight, so paper colours and
+          // shadow contrast are preserved instead of being covered by a beige veil.
+          float veil=fogAlpha*.035;
+          vec3 premul=uFogColor*veil+scatter;
+          gl_FragColor=vec4(premul,veil);
         }
       `
     });
@@ -232,7 +238,7 @@ export class AtmospherePass{
     this.settings.intensity=clamp(Number(this.settings.intensity)||0,0,1.6);
     this.settings.fogDensity=clamp(Number(this.settings.fogDensity)||0,0,.025);
     this.settings.heightFalloff=clamp(Number(this.settings.heightFalloff)||.1,.02,.35);
-    this.settings.anisotropy=clamp(Number(this.settings.anisotropy)||.68,.0,.86);
+    this.settings.anisotropy=clamp(Number(this.settings.anisotropy)||.64,.0,.82);
     this.settings.maxDistance=clamp(Number(this.settings.maxDistance)||50,20,100);
     this.settings.qualityScale=clamp(Number(this.settings.qualityScale)||.35,.2,.65);
     this.settings.steps=Math.round(clamp(Number(this.settings.steps)||12,6,20));
@@ -291,7 +297,7 @@ export class AtmospherePass{
     this.volumeUniforms.uMaxDistance.value=this.settings.maxDistance;
     this.volumeUniforms.uSteps.value=this.settings.steps;
     this.volumeUniforms.uTime.value=this.state.time;
-    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.19*(1+tw*.18)*(1-under*.8):0;
+    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.30*(1+tw*.16)*(1-under*.8):0;
     this.scene.fog.color.copy(this.fogColor);
   }
 
@@ -354,7 +360,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,stableDither:true,nonlinearRaySteps:true,filteredShadowSamples:3,
-      premultipliedComposite:true,dynamicSky:true,
+      directionalScatterOnly:true,baseFogSeparated:true,premultipliedComposite:true,dynamicSky:true,
       minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
