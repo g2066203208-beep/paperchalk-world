@@ -1,4 +1,4 @@
-import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r1';
+import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r2';
 /* Phase 1 visual-only paper terrain.
  * TerrainWorld remains the gameplay/collision authority. The render grid is
  * hidden by merged paper tops plus batched layered-cardboard edge geometry.
@@ -35,9 +35,9 @@ function addQuad(data,a,b,c,d,normal,color,group){
     data.normals.push(normal[0],normal[1],normal[2]);
     data.colors.push(color.r,color.g,color.b);
     const wx=p[0]+off[0],wy=p[1]+off[1],wz=p[2]+off[2];
-    if(ay>=ax&&ay>=az)data.uvs.push(wx*.18,wz*.18);
-    else if(ax>=az)data.uvs.push(wz*.20,wy*.20);
-    else data.uvs.push(wx*.20,wy*.20);
+    if(ay>=ax&&ay>=az)data.uvs.push(wx*.72,wz*.72);
+    else if(ax>=az)data.uvs.push(wz*.62,wy*.62);
+    else data.uvs.push(wx*.62,wy*.62);
   }
   data.indices[group].push(base,base+1,base+2,base,base+2,base+3);
 }
@@ -54,8 +54,10 @@ export class PaperTerrainRenderer{
       paperThickness:settings.paperThickness??.30,
       bevelWidth:settings.bevelWidth??.045,
       bevelHeight:settings.bevelHeight??.055,
-      fiberStrength:settings.fiberStrength??.050,
-      printNoiseStrength:settings.printNoiseStrength??.040,
+      fiberStrength:settings.fiberStrength??.065,
+      printNoiseStrength:settings.printNoiseStrength??.045,
+      microNormalStrength:settings.microNormalStrength??.68,
+      roughnessVariation:settings.roughnessVariation??.055,
       sideDarkness:settings.sideDarkness??.92,
       ...settings
     };
@@ -346,8 +348,9 @@ export class PaperTerrainRenderer{
       paperRebuildMs:this.lastBuildMs,totalRebuilds:this.totalRebuilds,
       paperLayerHeight:this.settings.paperLayerHeight,paperThickness:this.settings.paperThickness,
       bevelWidth:this.settings.bevelWidth,fiberStrength:this.settings.fiberStrength,
-      sideDarkness:this.settings.sideDarkness,
-      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true
+      microNormalStrength:this.settings.microNormalStrength,roughnessVariation:this.settings.roughnessVariation,
+      sideDarkness:this.settings.sideDarkness,paperMaterial:this.paperMaterialSet.stats?.()||null,
+      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV2:true
     };
   }
   dispose(){
