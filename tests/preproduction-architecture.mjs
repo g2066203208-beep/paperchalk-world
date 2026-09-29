@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
-assert.match(html,/voxel3d-r42/);
+assert.match(html,/paper-r1/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -60,6 +60,13 @@ assert.match(game,/item\.action==='eat'/);
 assert.match(html,/hungerFill/);
 
 assert.match(engine,/flatShading:true/);
+assert.match(engine,/new PaperTerrainRenderer/);
+assert.match(paper,/visual-only paper terrain/);
+assert.match(paper,/Greedy merged top surfaces/);
+assert.match(paper,/topSideMaterialSplit:true/);
+assert.match(paper,/realThickness:true/);
+assert.match(paper,/bevelQuads/);
+assert.match(paper,/renderGridExposed:false/);
 assert.match(engine,/coarse\?1\.5:2/);
 assert.match(game,/terrain\.water\.needsSettle/);
 
