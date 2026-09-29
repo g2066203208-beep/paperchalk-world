@@ -78,6 +78,8 @@ assert.match(atmos,/jitteredRaymarch:true/);
 assert.match(atmos,/stableDither:true/);
 assert.match(atmos,/nonlinearRaySteps:true/);
 assert.match(atmos,/filteredShadowSamples:3/);
+assert.match(atmos,/directionalScatterOnly:true/);
+assert.match(atmos,/baseFogSeparated:true/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
