@@ -30,7 +30,7 @@ assert.match(water,/exactHydrostatic:true/);
 assert.match(water,/surfaceCache/);
 assert.match(water,/boundsCache/);
 assert.match(water,/columnBounds\(gx,gz\)/);
-assert.match(engine,/event-driven-greedy-water-v6/);
+assert.match(engine,/event-driven-greedy-water-v7/);
 assert.match(engine,/internalFacesCulled:true/);
 
 assert.doesNotMatch(content,/'fishing-rod'/);
