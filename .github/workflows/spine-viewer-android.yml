@@ -76,7 +76,10 @@ jobs:
           curl -L --fail --retry 3             -o public/models/dw-ll_ucoco_384.onnx             https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx
 
           python3 "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/patch_stretchy.py" /tmp/stretchystudio
-          cp "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/SkeletonOverlay.jsx"              /tmp/stretchystudio/src/components/canvas/SkeletonOverlay.jsx
+          cp "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/SkeletonOverlay.jsx" \
+            /tmp/stretchystudio/src/components/canvas/SkeletonOverlay.jsx
+          cp "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/ArmaturePanel.mobile.jsx" \
+            /tmp/stretchystudio/src/components/armature/ArmaturePanel.jsx
           npm run build
 
           test -f dist/ort/ort-wasm-simd-threaded.mjs
@@ -134,12 +137,12 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PaperChalk-SpineStudio-Mobile-V3-Offline.apk
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PaperChalk-SpineStudio-Mobile-V4-Offline.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PaperChalk-SpineStudio-Mobile-V3-Offline
-          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineStudio-Mobile-V3-Offline.apk
+          name: PaperChalk-SpineStudio-Mobile-V4-Offline
+          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineStudio-Mobile-V4-Offline.apk
           if-no-files-found: error
           retention-days: 30
