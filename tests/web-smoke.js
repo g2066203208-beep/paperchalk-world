@@ -72,9 +72,9 @@ assert(renderer.includes('setPaperStyle')&&renderer.includes('configurePaperTerr
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime control missing');
 assert(engine.includes("from './AtmospherePass.js?v=atmos-r2'"),'AtmospherePass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
-assert(atmos.includes('const int SAMPLES=24'),'bounded radial scattering samples missing');
-assert(atmos.includes('scene.overrideMaterial=this.blockerMaterial'),'terrain occlusion pass missing');
-assert(atmos.includes('THREE.AdditiveBlending'),'additive god-ray composite missing');
+assert(atmos.includes('for(int i=0;i<20;i++)'),'bounded volumetric raymarch loop missing');
+assert(atmos.includes('scene.overrideMaterial=this.depthMaterial'),'depth occlusion pass missing');
+assert(atmos.includes('THREE.CustomBlending'),'premultiplied volumetric composite missing');
 assert(atmos.includes('new THREE.FogExp2'),'distance atmosphere fog missing');
 assert(atmos.includes('uShadowMatrix'),'shadow-map volumetric occlusion missing');
 assert(atmos.includes('mieAnisotropy'),'Mie scattering stats missing');
@@ -83,9 +83,9 @@ assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmo
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
 assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
-assert(atmos.includes('const int SAMPLES=24'),'god-ray radial sampling missing');
+assert(atmos.includes('for(int i=0;i<20;i++)'),'volumetric raymarch sampling missing');
 assert(atmos.includes('FogExp2'),'distance atmosphere fog missing');
-assert(atmos.includes('terrainOcclusion:true'),'terrain-occluded Tyndall gate missing');
+assert(atmos.includes('shadowMapOcclusion:true'),'shadow-map Tyndall occlusion gate missing');
 assert(atmos.includes('mobileOptimized:this.mobileLike'),'mobile atmosphere quality path missing');
 assert(paper.includes("mode:'paper-diorama-slab-v3-lowpoly-edge-ring'"),'paper slab geometry missing');
 assert(paper.includes('boundary[idx]')&&paper.includes('used[(z+zz)*n+x+xx]=1')&&paper.includes('edgeTopCells'),'interior greedy merge + boundary-cell split missing');
