@@ -98,8 +98,8 @@ try{
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
 
-  const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
-  assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
+  const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 370'));
+  assert(String(timeSet).includes('06:10'),'debug time control failed '+String(timeSet));
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:-.17,distance:12,height:.45}));
   await page.waitForTimeout(2200);
   const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.50,anisotropy:.70,multiScattering:.26,fogDensity:.0048}));
