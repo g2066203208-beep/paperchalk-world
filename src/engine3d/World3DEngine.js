@@ -595,10 +595,28 @@ this.renderer.domElement.className='three-world-canvas';
 this.renderer.domElement.setAttribute('aria-label','Paperchalk infinite 3D voxel world');
 this.renderer.domElement.tabIndex=0;this.renderer.domElement.style.touchAction='none';
 host.replaceChildren(this.renderer.domElement);
+this._buildPaperEnvironment();
 this._buildStage();
 this._installCameraInput();
 this.resize();
 }
+_buildPaperEnvironment(){
+const THREE=this.THREE;
+const env=new THREE.Scene();env.background=new THREE.Color(0x98aabd);
+const addPanel=(color,pos,scale)=>{
+const mesh=new THREE.Mesh(new THREE.PlaneGeometry(scale[0],scale[1]),new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,toneMapped:false}));
+mesh.position.set(pos[0],pos[1],pos[2]);mesh.lookAt(0,0,0);env.add(mesh);
+};
+addPanel(0xffd7a3,[3.2,4.0,2.6],[4.5,3.4]);
+addPanel(0xa9c7dc,[-3.6,1.5,2.0],[4.0,4.2]);
+addPanel(0x8f755d,[0,-3.0,0],[5.5,5.5]);
+const pmrem=new THREE.PMREMGenerator(this.renderer);
+this.environmentTarget=pmrem.fromScene(env,.10,.1,20,{size:this.mobileLike?64:128});
+this.scene.environment=this.environmentTarget.texture;
+pmrem.dispose();
+env.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
+}
+
 _buildStage(){
 const THREE=this.THREE;
 const sun=new THREE.DirectionalLight(0xfff0d2,3.4);
@@ -1022,7 +1040,7 @@ cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusi
 undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
 paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
 playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
-terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneMapping:'ACESFilmic',paperSurfacePBR:true
+terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneMapping:'ACESFilmic',paperSurfacePBR:true,imageBasedLighting:'PMREM-studio-paper'
 };
 }
 dispose(){
@@ -1038,6 +1056,7 @@ if(this.torch){
 this.torch.root.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
 }
 this.playerSprite?.dispose();for(const entity of this.paperEntities)entity.dispose();
+this.environmentTarget?.dispose?.();
 this.renderer.dispose();this.host.replaceChildren();
 }
 }
