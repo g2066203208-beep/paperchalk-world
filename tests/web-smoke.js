@@ -9,7 +9,7 @@ assert(/\.combat-controls\{[\s\S]*?display:none/.test(css),'desktop touch contro
 assert(/@media \(pointer:coarse\)[\s\S]*?\.combat-controls\{display:flex\}/.test(css),'touch controls should return on coarse pointers');
 assert(css.includes('cursor:crosshair'),'desktop terrain cursor missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
-assert(!content.includes("'fishing-rod'")&&!content.includes("'paper-carp'"),'fishing/fish content should be absent during foundation phase');
+assert(content.includes("'fishing-rod'")&&content.includes("'paper-carp'"),'fishing rod/catch content missing');
 
 assert(html.includes('src/terrain/biome-generator.js'),'biome generator script missing');
 assert(content.includes("generator:'multi-noise-macro-landform-v2'"),'biome generator config missing');
@@ -46,11 +46,12 @@ assert(game.includes('snapDownToGround(1.05)'),'voxel ground snap missing');
 assert(game.includes('window.PaperchalkStamina'),'stamina API missing');
 assert(game.includes('save.stamina=stamina.current'),'stamina persistence missing');
 assert(game.includes("item.action==='eat'"),'food consumption action missing');
-assert(!/PaperchalkFish|PaperchalkFishing|fishing-rod|paper-carp/.test(game),'fish/fishing runtime should be absent');
+assert(game.includes('window.PaperchalkFishing')&&game.includes('castFishingRod')&&game.includes('updateFishing'),'fishing gameplay runtime missing');
 assert(game.includes('terrain.water.needsSettle'),'idle water solver optimization missing');
 assert(game.includes('save.hunger=hunger.current'),'hunger persistence missing');
 
-assert(!engine.includes('class FishSchoolRenderer')&&!engine.includes('class FishingRenderer'),'fish/fishing renderers should be removed');
+assert(!engine.includes('FishSchoolRenderer'),'visible fish ecology must stay removed');
+assert(engine.includes("import {FishingRenderer}"),'lightweight fishing renderer missing');
 assert(engine.includes('flatShading:true'),'flat shading missing');
 assert(paperEntity.includes('MeshStandardMaterial'),'paper actors are not PBR lit');
 assert(paperEntity.includes('castShadow=true'),'paper actor shadows missing');
