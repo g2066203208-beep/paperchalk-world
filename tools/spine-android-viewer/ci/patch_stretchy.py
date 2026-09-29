@@ -78,6 +78,118 @@ s = must_replace(
 )
 write("src/io/armatureOrganizer.js", s)
 
+# Upgrade the default auto-rig to separate left/right limb chains. Merged PSD
+# artwork may remain attached to torso/root, but the skeleton itself never
+# collapses into "bothArms"/"bothLegs".
+s = read("src/io/armatureOrganizer.js")
+s = s.replace("if (tag === 'handwear')                             return 'bothArms';",
+              "if (tag === 'handwear')                             return 'torso';")
+s = s.replace("if (tag === 'legwear'   || tag === 'footwear')      return 'bothLegs';",
+              "if (tag === 'legwear'   || tag === 'footwear')      return 'root';")
+
+s = s.replace(
+"""    leftArm:   groups.arms === 'split' || (groups.arms === 'partial' && layers.some(l => matchTag(l.name) === 'handwear-l')),
+    rightArm:  groups.arms === 'split' || (groups.arms === 'partial' && layers.some(l => matchTag(l.name) === 'handwear-r')),
+    bothArms:  groups.arms === 'merged',
+    leftElbow: groups.arms === 'split' || (groups.arms === 'partial' && layers.some(l => matchTag(l.name) === 'handwear-l')),
+    rightElbow:groups.arms === 'split' || (groups.arms === 'partial' && layers.some(l => matchTag(l.name) === 'handwear-r')),
+    leftLeg:   groups.legs === 'split' || (groups.legs === 'partial' && layers.some(l => matchTag(l.name) === 'legwear-l')),
+    rightLeg:  groups.legs === 'split' || (groups.legs === 'partial' && layers.some(l => matchTag(l.name) === 'legwear-r')),
+    leftKnee:  groups.legs === 'split' || (groups.legs === 'partial' && layers.some(l => matchTag(l.name) === 'legwear-l')),
+    rightKnee: groups.legs === 'split' || (groups.legs === 'partial' && layers.some(l => matchTag(l.name) === 'legwear-r')),
+    bothLegs:  groups.legs === 'merged',
+""",
+"""    leftArm:   groups.arms !== 'missing',
+    rightArm:  groups.arms !== 'missing',
+    leftElbow: groups.arms !== 'missing',
+    rightElbow:groups.arms !== 'missing',
+    leftHand:  groups.arms !== 'missing',
+    rightHand: groups.arms !== 'missing',
+    leftLeg:   groups.legs !== 'missing' || groups.feet !== 'missing',
+    rightLeg:  groups.legs !== 'missing' || groups.feet !== 'missing',
+    leftKnee:  groups.legs !== 'missing' || groups.feet !== 'missing',
+    rightKnee: groups.legs !== 'missing' || groups.feet !== 'missing',
+    leftFoot:  groups.legs !== 'missing' || groups.feet !== 'missing',
+    rightFoot: groups.legs !== 'missing' || groups.feet !== 'missing',
+"""
+)
+
+s = s.replace(
+"""    leftElbow: kp.lElbow,
+    rightElbow:kp.rElbow,
+    bothArms:  kp.shoulderMid,  // actual shoulder midpoint
+    leftLeg:   kp.lHip,
+    rightLeg:  kp.rHip,
+    leftKnee:  kp.lKnee,
+    rightKnee: kp.rKnee,
+    bothLegs:  kp.pelvis,       // hip line
+""",
+"""    leftElbow: kp.lElbow,
+    rightElbow:kp.rElbow,
+    leftHand:  kp.lWrist ?? kp.lElbow,
+    rightHand: kp.rWrist ?? kp.rElbow,
+    leftLeg:   kp.lHip,
+    rightLeg:  kp.rHip,
+    leftKnee:  kp.lKnee,
+    rightKnee: kp.rKnee,
+    leftFoot:  kp.lAnkle ?? kp.lKnee,
+    rightFoot: kp.rAnkle ?? kp.rKnee,
+"""
+)
+
+s = s.replace(
+"""    leftElbow: needGroup.leftArm ? 'leftArm' : (needGroup.torso ? 'torso' : 'root'),
+    rightElbow:needGroup.rightArm ? 'rightArm' : (needGroup.torso ? 'torso' : 'root'),
+    bothArms:  needGroup.torso ? 'torso' : 'root',
+    leftLeg:   'root',
+    rightLeg:  'root',
+    leftKnee:  needGroup.leftLeg ? 'leftLeg' : 'root',
+    rightKnee: needGroup.rightLeg ? 'rightLeg' : 'root',
+    bothLegs:  'root',
+""",
+"""    leftElbow: needGroup.leftArm ? 'leftArm' : (needGroup.torso ? 'torso' : 'root'),
+    rightElbow:needGroup.rightArm ? 'rightArm' : (needGroup.torso ? 'torso' : 'root'),
+    leftHand:  needGroup.leftElbow ? 'leftElbow' : (needGroup.leftArm ? 'leftArm' : 'root'),
+    rightHand: needGroup.rightElbow ? 'rightElbow' : (needGroup.rightArm ? 'rightArm' : 'root'),
+    leftLeg:   'root',
+    rightLeg:  'root',
+    leftKnee:  needGroup.leftLeg ? 'leftLeg' : 'root',
+    rightKnee: needGroup.rightLeg ? 'rightLeg' : 'root',
+    leftFoot:  needGroup.leftKnee ? 'leftKnee' : (needGroup.leftLeg ? 'leftLeg' : 'root'),
+    rightFoot: needGroup.rightKnee ? 'rightKnee' : (needGroup.rightLeg ? 'rightLeg' : 'root'),
+"""
+)
+
+s = s.replace(
+"const CREATE_ORDER = ['root','torso','neck','head','eyes','leftArm','rightArm','leftElbow','rightElbow','bothArms','leftLeg','rightLeg','leftKnee','rightKnee','bothLegs'];",
+"const CREATE_ORDER = ['root','torso','neck','head','eyes','leftArm','rightArm','leftElbow','rightElbow','leftHand','rightHand','leftLeg','rightLeg','leftKnee','rightKnee','leftFoot','rightFoot'];"
+)
+
+s = s.replace(
+"""  ['leftArm', 'leftElbow'],
+  ['rightArm', 'rightElbow'],
+  ['torso',  'leftLeg'],
+  ['torso',  'rightLeg'],
+  ['leftLeg', 'leftKnee'],
+  ['rightLeg', 'rightKnee'],
+  // merged variants
+  ['torso', 'bothArms'],
+  ['torso',  'bothLegs'],
+""",
+"""  ['leftArm', 'leftElbow'],
+  ['rightArm', 'rightElbow'],
+  ['leftElbow', 'leftHand'],
+  ['rightElbow', 'rightHand'],
+  ['root',  'leftLeg'],
+  ['root',  'rightLeg'],
+  ['leftLeg', 'leftKnee'],
+  ['rightLeg', 'rightKnee'],
+  ['leftKnee', 'leftFoot'],
+  ['rightKnee', 'rightFoot'],
+"""
+)
+write("src/io/armatureOrganizer.js", s)
+
 # Auto-start bundled DWPose when user enters the AI rig step. Keep the local
 # file picker as an offline fallback, but never require a download/login.
 s = read("src/components/canvas/PsdImportWizard.jsx")
@@ -204,104 +316,4 @@ for rel in [
     s = s.replace("Download from HuggingFace", "使用 APK 内置模型")
     write(rel, s)
 
-# Professional armature: render tapered bone bodies between joints (a real
-# bone chain visual), joint heads, and generous invisible touch hit targets.
-s = read("src/components/canvas/SkeletonOverlay.jsx")
-s = must_replace(
-    s,
-    "const LINE_COLOUR   = 'rgba(34,211,238,0.55)';",
-    """const LINE_COLOUR   = 'rgba(34,211,238,0.72)';
-const BONE_FILL_EDIT = 'rgba(250,204,21,0.30)';
-const BONE_FILL_NORMAL = 'rgba(34,211,238,0.22)';
-const BONE_STROKE_EDIT = 'rgba(250,204,21,0.95)';
-const BONE_STROKE_NORMAL = 'rgba(34,211,238,0.90)';
-const ROLE_ZH = {
-  root:'骨盆/根', torso:'躯干', neck:'颈部', head:'头部', eyes:'眼睛',
-  leftArm:'左上臂', rightArm:'右上臂', leftElbow:'左前臂', rightElbow:'右前臂', bothArms:'双臂',
-  leftLeg:'左大腿', rightLeg:'右大腿', leftKnee:'左小腿', rightKnee:'右小腿', bothLegs:'双腿'
-};""",
-    "bone palette"
-)
-
-old_lines = """  const lines = [];
-  for (const [fromRole, toRole] of SKELETON_CONNECTIONS) {
-    const from = boneNodes[fromRole];
-    const to   = boneNodes[toRole];
-    if (!from || !to) continue;
-    const [x1, y1] = pivotScreenPos(from);
-    const [x2, y2] = pivotScreenPos(to);
-    lines.push(
-      <line key={`${fromRole}-${toRole}`}
-        x1={x1} y1={y1} x2={x2} y2={y2}
-        stroke={LINE_COLOUR} strokeWidth={skeletonEditMode ? 2 : 1.5}
-        strokeLinecap="round" pointerEvents="none"
-      />
-    );
-  }
-"""
-new_lines = """  const boneShapes = [];
-  for (const [fromRole, toRole] of SKELETON_CONNECTIONS) {
-    const from = boneNodes[fromRole];
-    const to   = boneNodes[toRole];
-    if (!from || !to) continue;
-    const [x1, y1] = pivotScreenPos(from);
-    const [x2, y2] = pivotScreenPos(to);
-    const dx = x2 - x1, dy = y2 - y1;
-    const len = Math.max(1, Math.hypot(dx, dy));
-    const px = -dy / len, py = dx / len;
-    const baseW = Math.max(6, Math.min(12, len * 0.10));
-    const neckW = Math.max(3, baseW * 0.34);
-    const shoulderX = x1 + dx * 0.22, shoulderY = y1 + dy * 0.22;
-    const tipInset = Math.min(0.08, 8 / len);
-    const tipX = x2 - dx * tipInset, tipY = y2 - dy * tipInset;
-    const points = [
-      `${x1 + px*neckW},${y1 + py*neckW}`,
-      `${shoulderX + px*baseW},${shoulderY + py*baseW}`,
-      `${tipX + px*2.4},${tipY + py*2.4}`,
-      `${x2},${y2}`,
-      `${tipX - px*2.4},${tipY - py*2.4}`,
-      `${shoulderX - px*baseW},${shoulderY - py*baseW}`,
-      `${x1 - px*neckW},${y1 - py*neckW}`,
-    ].join(' ');
-    boneShapes.push(
-      <g key={`bone-${fromRole}-${toRole}`} pointerEvents="none">
-        <polygon points={points}
-          fill={skeletonEditMode ? BONE_FILL_EDIT : BONE_FILL_NORMAL}
-          stroke={skeletonEditMode ? BONE_STROKE_EDIT : BONE_STROKE_NORMAL}
-          strokeWidth={1.5} strokeLinejoin="round" />
-        <line x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke={LINE_COLOUR} strokeWidth={1} strokeLinecap="round" />
-      </g>
-    );
-  }
-"""
-s = must_replace(s, old_lines, new_lines, "bone segment rendering")
-
-old_circle = """      <circle key={role}
-        cx={cx} cy={cy} r={radius}
-        fill={fill} stroke="#000" strokeWidth={1.5}
-        style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents: 'auto' }}
-        onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
-        onClick={() => !skeletonEditMode && setSelection([node.id])}
-      />"""
-new_circle = """      <g key={role}>
-        <circle cx={cx} cy={cy} r={Math.max(20, radius + 11)}
-          fill="transparent"
-          style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents: 'auto', touchAction: 'none' }}
-          onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
-          onClick={() => !skeletonEditMode && setSelection([node.id])}
-        />
-        <circle cx={cx} cy={cy} r={radius}
-          fill={fill} stroke="#111827" strokeWidth={2} pointerEvents="none" />
-        <circle cx={cx} cy={cy} r={Math.max(1.8, radius*0.28)}
-          fill="#111827" opacity={0.72} pointerEvents="none" />
-      </g>"""
-s = must_replace(s, old_circle, new_circle, "touch joint heads")
-s = s.replace("{role}\n          </text>", "{ROLE_ZH[role] ?? role}\n          </text>")
-s = s.replace("{arcs}\n        {lines}", "{arcs}\n        {boneShapes}")
-s = s.replace(">Adjust Joints</span>", ">调整骨骼</span>")
-s = s.replace("Drag yellow dots to reposition joints.", "拖动关节端点调整骨骼位置；骨骼实体表示父子骨段。")
-s = s.replace(">Iris Offset</text>", ">眼球偏移</text>")
-write("src/components/canvas/SkeletonOverlay.jsx", s)
-
-print("[patch_stretchy] OK")
+# SkeletonOverlay is replaced by the maintained Android/mobile version after this patch script runs.\n\nprint("[patch_stretchy] OK")
