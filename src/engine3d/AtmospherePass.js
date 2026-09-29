@@ -24,8 +24,10 @@ export class AtmospherePass{
     this.horizonColor=new THREE.Color(0xa8b8c4);
     this.dawnColor=new THREE.Color(0xd6a181);
     this.duskColor=new THREE.Color(0xc28f91);
-    this.nightColor=new THREE.Color(0x18243d);
-    this.nightHorizon=new THREE.Color(0x344158);
+    this.nightColor=new THREE.Color(0x253754);
+    this.nightHorizon=new THREE.Color(0x58627d);
+    this.nightFill=new THREE.Color(0x8fa9d0);
+    this.nightGround=new THREE.Color(0x665950);
     this.sunDay=new THREE.Color(0xffedcf);
     this.sunHorizon=new THREE.Color(0xffb76c);
     this.fogColor=new THREE.Color(0x8da1b2);
@@ -176,7 +178,7 @@ export class AtmospherePass{
     this.skyUniforms={
       uZenith:{value:this.zenithColor},uHorizon:{value:this.horizonColor},
       uSunColor:{value:this.sunDay.clone()},uSunDir:{value:this.sunDirection},
-      uTwilight:{value:0},uTime:{value:0}
+      uTwilight:{value:0},uNight:{value:0},uTime:{value:0}
     };
     this.skyMaterial=new THREE.ShaderMaterial({
       uniforms:this.skyUniforms,side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false,toneMapped:false,
@@ -188,7 +190,7 @@ export class AtmospherePass{
         precision highp float;
         varying vec3 vDir;
         uniform vec3 uZenith,uHorizon,uSunColor,uSunDir;
-        uniform float uTwilight,uTime;
+        uniform float uTwilight,uNight,uTime;
         float hash21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
         vec3 toSRGB(vec3 c){
           vec3 lo=c*12.92;vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;
@@ -202,8 +204,13 @@ export class AtmospherePass{
           float mu=max(0.0,dot(d,normalize(uSunDir)));
           float glow=pow(mu,9.0)*(.32+uTwilight*.34);
           float disc=pow(mu,620.0)*1.25;
-          float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.012;
+          float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.016;
+          vec2 starCell=floor(vec2(atan(d.z,d.x)*78.0,asin(clamp(d.y,-1.0,1.0))*145.0));
+          float starSeed=hash21(starCell+91.7);
+          float stars=step(.9945,starSeed)*pow(max(d.y,0.0),.42)*uNight;
+          float twinkle=.72+.28*sin(uTime*.09+starSeed*41.0);
           col+=uSunColor*(glow+disc);
+          col+=vec3(.72,.82,1.0)*stars*twinkle*.42;
           col*=1.0+grain;
           gl_FragColor=vec4(toSRGB(max(col,vec3(0.0))),1.0);
         }
@@ -244,6 +251,7 @@ export class AtmospherePass{
 
   update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0,fogBaseHeight=0,sunLight=null,skyLight=null,sunDisc=null}={}){
     const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
+    const night=clamp(1-d-tw*.32,0,1);
     const minute=((Number(time)||0)%1440+1440)%1440,morning=minute<720;
     const lowSun=clamp(1-d*1.18,0,1);
     const active=d>.01?(d*.68+tw*.18)*(.64+lowSun*.58)*sky*(1-under):0;
@@ -261,17 +269,24 @@ export class AtmospherePass{
     this.skyColor.copy(this.horizonColor).lerp(this.zenithColor,.55);
     const sunColor=this.sunHorizon.clone().lerp(this.sunDay,clamp(d*1.35,0,1));
     this.fogColor.copy(this.horizonColor).lerp(this.zenithColor,.22);
+    if(d<.05)this.fogColor.lerp(new this.THREE.Color(0x6b7890),.48+night*.16);
 
     if(sunLight){
       sunLight.color.copy(sunColor);
       const target=sunLight.target?.position||new this.THREE.Vector3();
       this.sunDirection.copy(sunLight.position).sub(target).normalize();
     }else if(sunPosition)this.sunDirection.copy(sunPosition).normalize();
-    if(skyLight){skyLight.color.copy(this.zenithColor);skyLight.groundColor.set(0x74604b)}
+    if(skyLight){
+      const dayFill=new this.THREE.Color(0xdce9f4);
+      skyLight.color.copy(this.nightFill).lerp(dayFill,clamp(d*1.55,0,1));
+      skyLight.color.lerp(new this.THREE.Color(0xb8b0c8),tw*.18);
+      skyLight.groundColor.copy(this.nightGround).lerp(new this.THREE.Color(0x7a6049),clamp(d*1.25,0,1));
+    }
     if(sunDisc?.material?.color)sunDisc.material.color.copy(sunColor);
 
     this.skyUniforms.uSunColor.value.copy(sunColor);
-    this.skyUniforms.uTwilight.value=tw;this.skyUniforms.uTime.value=Number(time)||0;
+    this.skyUniforms.uTwilight.value=tw;this.skyUniforms.uNight.value=night;
+    this.skyUniforms.uTime.value=Number(time)||0;
     this.volumeUniforms.uSunColor.value.copy(sunColor);
     this.volumeUniforms.uFogColor.value.copy(this.fogColor);
     this.volumeUniforms.uIntensity.value=this.state.strength;
@@ -345,7 +360,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
-      minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
+      minecraftShaderInspired:true,dynamicNightSky:true,stars:true,nightFillDecoupled:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
