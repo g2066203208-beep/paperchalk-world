@@ -1510,3 +1510,557 @@
     refresh:render,
   };
 })();
+
+
+/* PAPERCHALK_BONE_MANAGER_V4
+ * General-purpose 2D armature editor for phones:
+ * arbitrary add/delete/reparent, finger/toe/hair presets, rigid and weighted
+ * mesh binding. No fixed human template is required.
+ */
+(() => {
+  'use strict';
+
+  const state = {
+    overlay: null,
+    activeBoneId: null,
+    activePartId: null,
+    reparentMode: false,
+  };
+
+  function stores() {
+    return {
+      project: window.__PAPERCHALK_PROJECT_STORE__,
+      editor: window.__PAPERCHALK_EDITOR_STORE__,
+    };
+  }
+
+  function projectState() {
+    return stores().project?.getState?.();
+  }
+
+  function editorState() {
+    return stores().editor?.getState?.();
+  }
+
+  function uid(prefix='bone') {
+    return prefix + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,7);
+  }
+
+  function slug(s) {
+    return String(s || 'bone')
+      .trim()
+      .replace(/\s+/g,'_')
+      .replace(/[^\p{L}\p{N}_-]+/gu,'_')
+      .replace(/^_+|_+$/g,'')
+      .slice(0,48) || 'bone';
+  }
+
+  function uniqueRole(base) {
+    const ps = projectState();
+    const used = new Set((ps?.project?.nodes || [])
+      .filter(n => n.type === 'group' && n.boneRole)
+      .map(n => n.boneRole));
+    let role = slug(base);
+    if (!used.has(role)) return role;
+    let i = 2;
+    while (used.has(role + '_' + i)) i++;
+    return role + '_' + i;
+  }
+
+  function bones() {
+    return (projectState()?.project?.nodes || [])
+      .filter(n => n.type === 'group' && n.boneRole);
+  }
+
+  function parts() {
+    return (projectState()?.project?.nodes || [])
+      .filter(n => n.type === 'part');
+  }
+
+  function boneById(id) {
+    return bones().find(b => b.id === id) || null;
+  }
+
+  function selectedBone() {
+    const ids = editorState()?.selection || [];
+    return ids.map(boneById).find(Boolean) || boneById(state.activeBoneId);
+  }
+
+  function setActiveBone(id) {
+    state.activeBoneId = id;
+    const ed = editorState();
+    ed?.setSelection?.(id ? [id] : []);
+    ed?.setShowSkeleton?.(true);
+    ed?.setSkeletonEditMode?.(true);
+    render();
+  }
+
+  function defaultPivot(parentId) {
+    const ps = projectState()?.project;
+    const p = boneById(parentId);
+    if (p) {
+      return {
+        x: Number(p.transform?.pivotX || 0),
+        y: Number(p.transform?.pivotY || 0) + 70,
+      };
+    }
+    return {
+      x: Number(ps?.canvas?.width || 800) / 2,
+      y: Number(ps?.canvas?.height || 600) / 2,
+    };
+  }
+
+  function addBone({parentId=null,name='新骨骼',pivot=null}={}) {
+    const ps = projectState();
+    if (!ps?.updateProject) return null;
+    const id = uid();
+    const role = uniqueRole(name);
+    const p = pivot || defaultPivot(parentId);
+    ps.updateProject(proj => {
+      proj.nodes.push({
+        id,
+        type:'group',
+        name,
+        parent: parentId || null,
+        opacity:1,
+        visible:true,
+        boneRole:role,
+        transform:{
+          x:0,y:0,rotation:0,scaleX:1,scaleY:1,
+          pivotX:p.x,pivotY:p.y
+        }
+      });
+    });
+    setActiveBone(id);
+    return id;
+  }
+
+  function addChild() {
+    const p = selectedBone();
+    const n = document.getElementById('pc-bone-name')?.value?.trim() || '新子骨骼';
+    addBone({parentId:p?.id || null,name:n});
+  }
+
+  function addSibling() {
+    const p = selectedBone();
+    const n = document.getElementById('pc-bone-name')?.value?.trim() || '新同级骨骼';
+    addBone({parentId:p?.parent || null,name:n});
+  }
+
+  function addRoot() {
+    const n = document.getElementById('pc-bone-name')?.value?.trim() || '新根骨骼';
+    addBone({parentId:null,name:n});
+  }
+
+  function descendantsOf(id) {
+    const all = bones();
+    const out = new Set();
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const b of all) {
+        if (b.parent === id || (b.parent && out.has(b.parent))) {
+          if (!out.has(b.id)) { out.add(b.id); changed=true; }
+        }
+      }
+    }
+    return out;
+  }
+
+  function setParent(childId, parentId) {
+    if (!childId) return false;
+    if (childId === parentId) return false;
+    const desc = descendantsOf(childId);
+    if (parentId && desc.has(parentId)) {
+      toast('不能把骨骼挂到自己的子骨骼下面');
+      return false;
+    }
+    const ps = projectState();
+    ps.updateProject(proj => {
+      const b = proj.nodes.find(n => n.id === childId);
+      if (b) b.parent = parentId || null;
+    });
+    state.reparentMode = false;
+    render();
+    return true;
+  }
+
+  function deleteActiveBone() {
+    const b = selectedBone();
+    if (!b) return;
+    const ps = projectState();
+    const parent = b.parent || null;
+    ps.updateProject(proj => {
+      for (const n of proj.nodes) {
+        if (n.parent === b.id) n.parent = parent;
+        if (n.type === 'part' && n.mesh) {
+          if (n.mesh.jointBoneId === b.id) {
+            delete n.mesh.jointBoneId;
+            delete n.mesh.boneWeights;
+          }
+          if (Array.isArray(n.mesh.skinBones)) {
+            n.mesh.skinBones = n.mesh.skinBones.filter(sb => sb.id !== b.id);
+          }
+        }
+      }
+      proj.nodes = proj.nodes.filter(n => n.id !== b.id);
+      for (const a of proj.animations || []) {
+        a.tracks = (a.tracks || []).filter(t => t.nodeId !== b.id);
+      }
+    });
+    state.activeBoneId = parent;
+    const ed = editorState();
+    ed?.setSelection?.(parent ? [parent] : []);
+    render();
+  }
+
+  function renameActive() {
+    const b = selectedBone();
+    if (!b) return;
+    const input = document.getElementById('pc-bone-name');
+    const name = input?.value?.trim();
+    if (!name) return;
+    const ps = projectState();
+    const oldRole = b.boneRole;
+    let newRole = slug(name);
+    const used = new Set(bones().filter(x => x.id !== b.id).map(x => x.boneRole));
+    if (used.has(newRole)) newRole = uniqueRole(newRole);
+    ps.updateProject(proj => {
+      const node = proj.nodes.find(n => n.id === b.id);
+      if (node) {
+        node.name = name;
+        node.boneRole = newRole;
+      }
+    });
+    toast('已重命名：' + name);
+    render();
+  }
+
+  function addChain(parentId, prefix, count, dx, dy) {
+    let parent = parentId || selectedBone()?.id || null;
+    let p = defaultPivot(parent);
+    for (let i=1;i<=count;i++) {
+      p = {x:p.x+dx, y:p.y+dy};
+      parent = addBone({parentId:parent,name:prefix + i,pivot:p});
+    }
+    return parent;
+  }
+
+  function addFingerPreset() {
+    const hand = selectedBone();
+    if (!hand) { toast('先选择手部骨骼'); return; }
+    const hp = {x:Number(hand.transform?.pivotX||0),y:Number(hand.transform?.pivotY||0)};
+    const fingers = [
+      ['拇指', -0.60],['食指',-0.30],['中指',0],['无名指',0.30],['小指',0.60]
+    ];
+    for (const [name,fan] of fingers) {
+      let parent = hand.id;
+      for (let i=1;i<=3;i++) {
+        const p={x:hp.x + fan*35*i + (fan<0?-8:8)*i, y:hp.y + 36*i};
+        parent=addBone({parentId:parent,name:name+i,pivot:p});
+      }
+    }
+    toast('已添加 5 指 × 3 节骨链');
+    render();
+  }
+
+  function addToePreset() {
+    const foot = selectedBone();
+    if (!foot) { toast('先选择脚部骨骼'); return; }
+    const fp={x:Number(foot.transform?.pivotX||0),y:Number(foot.transform?.pivotY||0)};
+    for (let t=1;t<=5;t++) {
+      let parent=foot.id;
+      const fan=(t-3)*0.22;
+      for (let i=1;i<=2;i++) {
+        const p={x:fp.x + 34*i, y:fp.y + fan*25*i};
+        parent=addBone({parentId:parent,name:'脚趾'+t+'_'+i,pivot:p});
+      }
+    }
+    toast('已添加 5 趾 × 2 节骨链');
+    render();
+  }
+
+  function addHairPreset() {
+    const rootBone=selectedBone();
+    if (!rootBone) { toast('先选择头部或头发根骨'); return; }
+    addChain(rootBone.id,'头发_',6,0,42);
+    toast('已添加 6 节头发骨链');
+    render();
+  }
+
+  function bindPartRigid(partId) {
+    const bone = selectedBone();
+    if (!bone || !partId) { toast('先选择骨骼和部件'); return; }
+    projectState().updateProject(proj => {
+      const pt=proj.nodes.find(n=>n.id===partId && n.type==='part');
+      if (!pt) return;
+      pt.parent=bone.id;
+      if (pt.mesh) {
+        delete pt.mesh.jointBoneId;
+        delete pt.mesh.boneWeights;
+        pt.mesh.skinBones=[];
+      }
+    });
+    toast('部件已刚性绑定到：'+(bone.name||bone.boneRole));
+    render();
+  }
+
+  function distToSegment(px,py,ax,ay,bx,by) {
+    const vx=bx-ax,vy=by-ay,wx=px-ax,wy=py-ay;
+    const vv=vx*vx+vy*vy;
+    let t=vv>1e-6?(wx*vx+wy*vy)/vv:0;
+    t=Math.max(0,Math.min(1,t));
+    const qx=ax+vx*t,qy=ay+vy*t;
+    return Math.hypot(px-qx,py-qy);
+  }
+
+  function addWeightedInfluence(partId) {
+    const bone=selectedBone();
+    if (!bone || !partId) { toast('先选择骨骼和部件'); return; }
+    projectState().updateProject(proj => {
+      const pt=proj.nodes.find(n=>n.id===partId && n.type==='part');
+      const bn=proj.nodes.find(n=>n.id===bone.id);
+      if (!pt?.mesh?.vertices?.length || !bn) return;
+      const parent=bn.parent ? proj.nodes.find(n=>n.id===bn.parent) : null;
+      const ax=Number(parent?.transform?.pivotX ?? bn.transform?.pivotX ?? 0);
+      const ay=Number(parent?.transform?.pivotY ?? bn.transform?.pivotY ?? 0);
+      const bx=Number(bn.transform?.pivotX ?? ax);
+      const by=Number(bn.transform?.pivotY ?? ay);
+      const len=Math.max(18,Math.hypot(bx-ax,by-ay));
+      const sigma=Math.max(18,len*0.60);
+      const verts=pt.mesh.vertices;
+      const scores=verts.map(v=>{
+        const d=distToSegment(v.x,v.y,ax,ay,bx,by);
+        return Math.exp(-(d*d)/(2*sigma*sigma));
+      });
+
+      const skins=Array.isArray(pt.mesh.skinBones)
+        ? pt.mesh.skinBones.filter(sb=>sb.id!==bn.id).map(sb=>({id:sb.id,weights:Array.from(sb.weights||[])}))
+        : [];
+      skins.push({id:bn.id,weights:scores});
+
+      // Normalize all influences per vertex. Keep max 4 influences at each
+      // vertex, which is the conventional real-time skinning budget.
+      for (let i=0;i<verts.length;i++) {
+        const ranked=skins.map((sb,idx)=>({idx,w:Number(sb.weights[i]||0)}))
+          .sort((a,b)=>b.w-a.w);
+        const keep=new Set(ranked.slice(0,4).map(x=>x.idx));
+        let sum=0;
+        ranked.forEach(x=>{ if(keep.has(x.idx)) sum+=x.w; });
+        sum=sum||1;
+        skins.forEach((sb,idx)=>{
+          sb.weights[i]=keep.has(idx)?Number(sb.weights[i]||0)/sum:0;
+        });
+      }
+      pt.mesh.skinBones=skins.filter(sb=>sb.weights.some(w=>w>0.001));
+      const strongest=pt.mesh.skinBones
+        .map(sb=>({sb,total:sb.weights.reduce((a,b)=>a+b,0)}))
+        .sort((a,b)=>b.total-a.total)[0]?.sb;
+      if (strongest) {
+        pt.mesh.jointBoneId=strongest.id;
+        pt.mesh.boneWeights=Array.from(strongest.weights);
+      }
+    });
+    toast('已加入网格权重影响：'+(bone.name||bone.boneRole));
+    render();
+  }
+
+  function unbindPart(partId) {
+    if (!partId) return;
+    projectState().updateProject(proj=>{
+      const pt=proj.nodes.find(n=>n.id===partId && n.type==='part');
+      if (!pt) return;
+      pt.parent=null;
+      if (pt.mesh) {
+        delete pt.mesh.jointBoneId;
+        delete pt.mesh.boneWeights;
+        pt.mesh.skinBones=[];
+      }
+    });
+    toast('已解除部件骨骼绑定');
+    render();
+  }
+
+  function treeOrder() {
+    const all=bones();
+    const byParent=new Map();
+    for(const b of all){
+      const k=b.parent||'__root__';
+      if(!byParent.has(k)) byParent.set(k,[]);
+      byParent.get(k).push(b);
+    }
+    const out=[];
+    const walk=(pid,depth)=>{
+      for(const b of (byParent.get(pid)||[])){
+        out.push({b,depth});
+        walk(b.id,depth+1);
+      }
+    };
+    walk('__root__',0);
+    for(const b of all){
+      if(!out.some(x=>x.b.id===b.id)) out.push({b,depth:0});
+    }
+    return out;
+  }
+
+  function btn(txt,fn,small=false) {
+    const b=document.createElement('button');
+    b.textContent=txt;
+    Object.assign(b.style,{
+      minHeight:small?'38px':'44px',padding:small?'6px 9px':'8px 12px',
+      borderRadius:'9px',border:'1px solid #4b5563',background:'#272b35',
+      color:'#f8fafc',fontSize:small?'12px':'13px',fontWeight:'600'
+    });
+    b.onclick=fn;
+    return b;
+  }
+
+  function render() {
+    if(!state.overlay) return;
+    const panel=state.overlay.querySelector('#pc-bone-panel');
+    if(!panel) return;
+    const all=treeOrder();
+    const b=selectedBone();
+    if(b) state.activeBoneId=b.id;
+    const activePart=parts().find(p=>p.id===state.activePartId)||null;
+
+    panel.innerHTML='';
+
+    const top=document.createElement('div');
+    Object.assign(top.style,{display:'flex',alignItems:'center',gap:'8px'});
+    const title=document.createElement('div');
+    title.textContent='通用骨骼管理器 V4';
+    Object.assign(title.style,{fontSize:'16px',fontWeight:'800',flex:'1'});
+    top.appendChild(title);
+    top.appendChild(btn('关闭',close,true));
+    panel.appendChild(top);
+
+    const desc=document.createElement('div');
+    desc.textContent='骨骼数量不限；可任意父子层级。手指、脚趾、头发、衣摆、耳朵、尾巴等都使用同一种骨骼。';
+    Object.assign(desc.style,{fontSize:'11px',color:'#aeb7c6',lineHeight:'1.5'});
+    panel.appendChild(desc);
+
+    const input=document.createElement('input');
+    input.id='pc-bone-name';
+    input.value=b?.name||'';
+    input.placeholder='骨骼名称，例如：左手食指_1 / 前发_3';
+    Object.assign(input.style,{height:'42px',padding:'0 10px',borderRadius:'8px',
+      border:'1px solid #4b5563',background:'#11151c',color:'white',fontSize:'14px'});
+    panel.appendChild(input);
+
+    const row=document.createElement('div');
+    Object.assign(row.style,{display:'flex',gap:'6px',overflowX:'auto',paddingBottom:'2px'});
+    row.append(btn('+ 根骨',addRoot,true),btn('+ 子骨',addChild,true),btn('+ 同级',addSibling,true),
+      btn('重命名',renameActive,true),btn('删除',deleteActiveBone,true),
+      btn(state.reparentMode?'点一个目标父骨':'设父骨',()=>{state.reparentMode=!state.reparentMode;render();},true),
+      btn('解除父级',()=>b&&setParent(b.id,null),true));
+    panel.appendChild(row);
+
+    const preset=document.createElement('div');
+    Object.assign(preset.style,{display:'flex',gap:'6px',overflowX:'auto'});
+    preset.append(btn('手指 5×3',addFingerPreset,true),btn('脚趾 5×2',addToePreset,true),
+      btn('头发链 6',addHairPreset,true));
+    panel.appendChild(preset);
+
+    const split=document.createElement('div');
+    split.textContent='骨骼树（点选骨骼；“设父骨”模式下点另一个骨骼即可重连）';
+    Object.assign(split.style,{fontSize:'12px',fontWeight:'700',marginTop:'3px'});
+    panel.appendChild(split);
+
+    const tree=document.createElement('div');
+    Object.assign(tree.style,{maxHeight:'30vh',overflow:'auto',border:'1px solid #343a46',
+      borderRadius:'8px',background:'#12161d'});
+    for(const {b:bone,depth} of all){
+      const item=document.createElement('button');
+      const selected=bone.id===state.activeBoneId;
+      item.textContent='　'.repeat(Math.min(depth,6))+(depth?'↳ ':'')+(bone.name||bone.boneRole);
+      Object.assign(item.style,{display:'block',width:'100%',textAlign:'left',minHeight:'40px',
+        padding:'6px 8px',border:'0',borderBottom:'1px solid #262c36',
+        background:selected?'#1e5262':'transparent',color:'white',fontSize:'13px'});
+      item.onclick=()=>{
+        if(state.reparentMode && state.activeBoneId && state.activeBoneId!==bone.id){
+          setParent(state.activeBoneId,bone.id);
+        }else setActiveBone(bone.id);
+      };
+      tree.appendChild(item);
+    }
+    panel.appendChild(tree);
+
+    const partTitle=document.createElement('div');
+    partTitle.textContent='部件绑定 / 网格权重';
+    Object.assign(partTitle.style,{fontSize:'12px',fontWeight:'700',marginTop:'4px'});
+    panel.appendChild(partTitle);
+
+    const plist=document.createElement('div');
+    Object.assign(plist.style,{maxHeight:'18vh',overflow:'auto',border:'1px solid #343a46',
+      borderRadius:'8px',background:'#12161d'});
+    for(const p of parts()){
+      const item=document.createElement('button');
+      const infl=p.mesh?.skinBones?.length||0;
+      const parent=boneById(p.parent);
+      item.textContent=(p.id===state.activePartId?'✓ ':'')+(p.name||p.id)+
+        (parent?'　[父骨:'+parent.name+']':'')+(infl?'　[权重骨:'+infl+']':'');
+      Object.assign(item.style,{display:'block',width:'100%',textAlign:'left',minHeight:'38px',
+        padding:'5px 8px',border:'0',borderBottom:'1px solid #262c36',
+        background:p.id===state.activePartId?'#3c315f':'transparent',color:'white',fontSize:'12px'});
+      item.onclick=()=>{state.activePartId=p.id;render();};
+      plist.appendChild(item);
+    }
+    panel.appendChild(plist);
+
+    const bind=document.createElement('div');
+    Object.assign(bind.style,{display:'flex',gap:'6px',overflowX:'auto'});
+    bind.append(
+      btn('刚性绑定到当前骨',()=>activePart&&bindPartRigid(activePart.id),true),
+      btn('加入网格权重',()=>activePart&&addWeightedInfluence(activePart.id),true),
+      btn('解除部件绑定',()=>activePart&&unbindPart(activePart.id),true)
+    );
+    panel.appendChild(bind);
+
+    const note=document.createElement('div');
+    note.textContent='提示：刚性绑定适合独立纸片；“加入网格权重”适合需要弯曲的网格，可对同一网格连续加入多根骨骼，单顶点最多保留 4 根影响骨。';
+    Object.assign(note.style,{fontSize:'10px',color:'#9ca3af',lineHeight:'1.45'});
+    panel.appendChild(note);
+  }
+
+  function open() {
+    if(state.overlay){render();return 'open';}
+    const ed=editorState();
+    ed?.setEditorMode?.('staging');
+    ed?.setShowSkeleton?.(true);
+    ed?.setSkeletonEditMode?.(true);
+    const sel=selectedBone();
+    if(sel) state.activeBoneId=sel.id;
+
+    const ov=document.createElement('div');
+    ov.id='paperchalk-bone-manager-v4';
+    Object.assign(ov.style,{position:'fixed',inset:'0',zIndex:'2147483647',
+      background:'rgba(0,0,0,.58)',display:'flex',alignItems:'flex-end',
+      justifyContent:'center',padding:'10px',boxSizing:'border-box'});
+    ov.onclick=e=>{if(e.target===ov)close();};
+
+    const panel=document.createElement('div');
+    panel.id='pc-bone-panel';
+    Object.assign(panel.style,{width:'min(720px,100%)',maxHeight:'88vh',overflow:'auto',
+      display:'flex',flexDirection:'column',gap:'8px',padding:'12px',
+      borderRadius:'16px 16px 10px 10px',background:'#1b1f27',color:'white',
+      boxShadow:'0 8px 40px rgba(0,0,0,.55)',boxSizing:'border-box'});
+    ov.appendChild(panel);
+    document.body.appendChild(ov);
+    state.overlay=ov;
+    render();
+    return 'open';
+  }
+
+  function close() {
+    state.overlay?.remove();
+    state.overlay=null;
+    state.reparentMode=false;
+    return 'closed';
+  }
+
+  window.PaperChalkBones={
+    open,close,render,addBone,setParent,deleteActiveBone,
+    addFingerPreset,addToePreset,addHairPreset
+  };
+})();
