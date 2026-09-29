@@ -30,7 +30,7 @@ try{
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.ocean?.mode==='analytic-ocean-plane','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
-  assert(initial.farTerrain?.mode==='coarse-heightfield-ring','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
+  assert(initial.farTerrain?.mode==='layered-paper-backdrop','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
