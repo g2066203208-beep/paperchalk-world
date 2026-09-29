@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-r2";
+  const BUILD="paper-r3";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="paper-r2">
+<meta name="paperchalk-build" content="paper-r3">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-r2">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r3">
 </head>
 <body>
 
@@ -78,11 +78,11 @@
     <div class="paper-debug-controls">
       <label>纸层高 <input data-paper-setting="paperLayerHeight" type="range" min="0.25" max="0.60" step="0.05" value="0.50"></label>
       <label>纸厚 <input data-paper-setting="paperThickness" type="range" min="0.12" max="0.50" step="0.02" value="0.30"></label>
-      <label>倒角 <input data-paper-setting="bevelWidth" type="range" min="0.01" max="0.10" step="0.005" value="0.045"></label>
+      <label>倒角 <input data-paper-setting="bevelWidth" type="range" min="0.01" max="0.10" step="0.005" value="0.065"></label>
       <label>纸浆色差 <input data-paper-setting="printNoiseStrength" type="range" min="0" max="0.10" step="0.005" value="0.045"></label>
-      <label>纤维 <input data-paper-setting="fiberStrength" type="range" min="0" max="0.12" step="0.005" value="0.065"></label>
-      <label>微法线 <input data-paper-setting="microNormalStrength" type="range" min="0.20" max="1.20" step="0.05" value="0.68"></label>
-      <label>粗糙变化 <input data-paper-setting="roughnessVariation" type="range" min="0" max="0.12" step="0.005" value="0.055"></label>
+      <label>纤维 <input data-paper-setting="fiberStrength" type="range" min="0" max="0.12" step="0.005" value="0.050"></label>
+      <label>微法线 <input data-paper-setting="microNormalStrength" type="range" min="0.08" max="0.85" step="0.025" value="0.34"></label>
+      <label>粗糙变化 <input data-paper-setting="roughnessVariation" type="range" min="0" max="0.12" step="0.005" value="0.035"></label>
       <label>纸芯亮度 <input data-paper-setting="sideDarkness" type="range" min="0.55" max="1.10" step="0.025" value="0.92"></label>
     </div>
     <form id="debugCommandForm" class="debug-command-form">
@@ -226,15 +226,15 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-r2"></script>
-<script src="./src/core/game-state.js?v=paper-r2"></script>
-<script src="./src/core/save-runtime.js?v=paper-r2"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-r2"></script>
-<script src="./src/content/game-content.js?v=paper-r2"></script>
+<script src="./src/core/event-bus.js?v=paper-r3"></script>
+<script src="./src/core/game-state.js?v=paper-r3"></script>
+<script src="./src/core/save-runtime.js?v=paper-r3"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r3"></script>
+<script src="./src/content/game-content.js?v=paper-r3"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=paper-r2"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-r2"></script>
-<script src="./src/game.js?v=paper-r2"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r2"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r3"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r3"></script>
+<script src="./src/game.js?v=paper-r3"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r3"></script>
 </body>
 </html>
