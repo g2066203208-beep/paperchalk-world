@@ -80,18 +80,21 @@ export class PaperSpriteEntity{
     this.root.name='paper:'+this.id;
     const map=texture||makePaperTexture(THREE,{kind,label,primary,secondary,seed});
     this.texture=map;
-    this.material=new THREE.MeshBasicMaterial({
+    this.material=new THREE.MeshStandardMaterial({
       map,
       transparent:true,
-      alphaTest:.035,
+      alphaTest:.055,
       side:THREE.DoubleSide,
       depthWrite:true,
-      toneMapped:false
+      toneMapped:true,
+      metalness:0,
+      roughness:.92,
+      flatShading:true
     });
     this.mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),this.material);
     this.mesh.position.y=height*.5-anchorY;
-    this.mesh.castShadow=false;
-    this.mesh.receiveShadow=false;
+    this.mesh.castShadow=true;
+    this.mesh.receiveShadow=true;
     this.root.add(this.mesh);
     this.root.position.set(x,y,z);
     this.targetFlip=0;
