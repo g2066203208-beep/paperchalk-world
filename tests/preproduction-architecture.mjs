@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
-assert.match(html,/paper-r3/);
+assert.match(html,/paper-r4/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -65,6 +65,12 @@ assert.match(html,/hungerFill/);
 
 assert.match(engine,/flatShading:true/);
 assert.match(engine,/new PaperTerrainRenderer/);
+assert.match(engine,/new AtmospherePass/);
+assert.match(renderer,/configureAtmosphere/);
+assert.match(atmos,/quarter-res-occlusion-radial-scattering/);
+assert.match(atmos,/const int SAMPLES=24/);
+assert.match(atmos,/FogExp2/);
+assert.match(atmos,/terrainOcclusion:true/);
 assert.match(paper,/visual-only paper terrain/);
 assert.match(paper,/boundary\[idx\]/);
 assert.match(paper,/used\[\(z\+zz\)\*n\+x\+xx\]=1/);
