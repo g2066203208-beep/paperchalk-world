@@ -68,7 +68,8 @@ export class PaperTerrainRenderer{
       uPaperFiber:{value:Number(this.settings.fiberStrength)||0},
       uPaperPrint:{value:Number(this.settings.printNoiseStrength)||0},
       uPaperSide:{value:side?1:0},
-      uPaperBevel:{value:bevel?1:0}
+      uPaperBevel:{value:bevel?1:0},
+      uPaperBandHeight:{value:Math.max(.08,Number(this.settings.paperThickness)||.30)}
     };
     const mat=new THREE.MeshStandardMaterial({
       vertexColors:true,
@@ -92,6 +93,7 @@ export class PaperTerrainRenderer{
           uniform float uPaperPrint;
           uniform float uPaperSide;
           uniform float uPaperBevel;
+          uniform float uPaperBandHeight;
           float paperHash(vec2 p){
             p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);
             return fract(p.x*p.y);
@@ -103,8 +105,13 @@ export class PaperTerrainRenderer{
           float fiberLine=sin(vPaperWorldPos.x*76.0+vPaperWorldPos.z*29.0+fine*7.0);
           float paperVar=1.0+broad*uPaperPrint*.72+grain*uPaperFiber*.60+fine*uPaperFiber*.22+fiberLine*uPaperFiber*.12;
           diffuseColor.rgb*=paperVar;
-          if(uPaperSide>.5)diffuseColor.rgb*=.985;
-          if(uPaperBevel>.5)diffuseColor.rgb*=1.055;`)
+          if(uPaperSide>.5){
+            float bandPhase=fract((vPaperWorldPos.y+1000.0)/max(.04,uPaperBandHeight));
+            float bandEdge=min(bandPhase,1.0-bandPhase);
+            float layerSeam=1.0-smoothstep(.015,.10,bandEdge);
+            diffuseColor.rgb*=.99-layerSeam*.11;
+          }
+          if(uPaperBevel>.5)diffuseColor.rgb*=1.065;`)
         .replace('#include <roughnessmap_fragment>',`#include <roughnessmap_fragment>
           float paperRough=paperHash(floor(vPaperWorldPos.xz*53.0)+floor(vPaperWorldPos.xy*19.0))-.5;
           roughnessFactor=clamp(roughnessFactor+paperRough*uPaperFiber*.42,.82,1.0);`);
@@ -125,6 +132,7 @@ export class PaperTerrainRenderer{
       if(!u)continue;
       u.uPaperFiber.value=Number(this.settings.fiberStrength)||0;
       u.uPaperPrint.value=Number(this.settings.printNoiseStrength)||0;
+      u.uPaperBandHeight.value=Math.max(.08,Number(this.settings.paperThickness)||.30);
     }
   }
 
@@ -264,7 +272,10 @@ export class PaperTerrainRenderer{
         const bandBottom=Math.max(bottom,y-bandHeight);
         // Tiny deterministic mis-registration makes stacked sheets read as
         // physical cut cards without exposing cell seams.
-        const offset=bevelWidth*(.62+hash01(runSeedA,runSeedB,band)*.58);
+        // Keep every side plane on the exact authoritative contour. Earlier
+        // outward per-run offsets created sky-colored cracks at run/corner joins.
+        // Layer separation now comes from real vertical bands + material seams.
+        const offset=0;
         const sideColor=this._sideColor(desc.tile,band,runSeedA,runSeedB);
 
         if(band===0){
@@ -273,7 +284,8 @@ export class PaperTerrainRenderer{
           const inner=points(y,y,0);
           // Connect the exact top contour to the slightly proud cardboard edge.
           const a=inner[0],b=inner[1],c=outer[2],d=outer[3];
-          const bn=normalized(dx*bevelHeight,offset,dz*bevelHeight);
+          const bevelNormalStrength=clamp(bevelWidth/Math.max(.001,bevelHeight),.35,1.25);
+          const bn=normalized(dx*bevelNormalStrength,1,dz*bevelNormalStrength);
           addQuad(data,a,b,c,d,bn,this._topColor(desc.tile),2);data.bevelQuads++;
           if(bevelBottom>bandBottom+.001){
             const q=points(bevelBottom,bandBottom,offset);
@@ -401,7 +413,7 @@ export class PaperTerrainRenderer{
       paperLayerHeight:this.settings.paperLayerHeight,paperThickness:this.settings.paperThickness,
       bevelWidth:this.settings.bevelWidth,fiberStrength:this.settings.fiberStrength,
       sideDarkness:this.settings.sideDarkness,
-      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true
+      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true
     };
   }
   dispose(){
