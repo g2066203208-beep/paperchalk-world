@@ -11,9 +11,9 @@ export class AtmospherePass{
     this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
       enabled:true,volumetric:true,
-      intensity:this.mobileLike?.42:.58,
-      fogDensity:this.mobileLike?.0036:.0042,
-      heightFalloff:.15,anisotropy:.74,maxDistance:this.mobileLike?42:58,
+      intensity:this.mobileLike?.26:.34,
+      fogDensity:this.mobileLike?.0024:.0028,
+      heightFalloff:.16,anisotropy:.72,maxDistance:this.mobileLike?42:58,
       qualityScale:this.mobileLike?.34:.50,steps:this.mobileLike?10:17
     };
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
@@ -137,11 +137,13 @@ export class AtmospherePass{
             trans*=absorb;
             t+=stepLen;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.18);
-          float forwardBoost=smoothstep(.35,.985,mu);
-          vec3 scatter=uSunColor*sunScatter*uIntensity*(.46+forwardBoost*1.55);
-          vec3 premul=uFogColor*fogAlpha*.22+scatter;
-          gl_FragColor=vec4(premul,fogAlpha*.22);
+          float fogAlpha=clamp(1.0-trans,0.0,.10);
+          float forwardBoost=smoothstep(.42,.99,mu);
+          float skyWeight=depth>.9997?.34:1.0;
+          vec3 scatter=uSunColor*sunScatter*uIntensity*(.24+forwardBoost*.58)*skyWeight;
+          scatter=min(scatter,vec3(.18));
+          vec3 premul=uFogColor*fogAlpha*.12+scatter;
+          gl_FragColor=vec4(premul,fogAlpha*.12);
         }
       `
     });
@@ -282,7 +284,7 @@ export class AtmospherePass{
     this.volumeUniforms.uMaxDistance.value=this.settings.maxDistance;
     this.volumeUniforms.uSteps.value=this.settings.steps;
     this.volumeUniforms.uTime.value=this.state.time;
-    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.10*(1+tw*.18)*(1-under*.8):0;
+    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.075*(1+tw*.18)*(1-under*.8):0;
     this.scene.fog.color.copy(this.fogColor);
   }
 
