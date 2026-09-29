@@ -102,11 +102,11 @@ try{
   assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:-.17,distance:12,height:.45}));
   await page.waitForTimeout(2200);
-  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.76,anisotropy:.72,multiScattering:.34,fogDensity:.0072}));
+  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.50,anisotropy:.70,multiScattering:.26,fogDensity:.0048}));
   assert(atmosphereOff?.volumetric===false,'volumetric atmosphere did not disable '+JSON.stringify(atmosphereOff));
   await page.waitForTimeout(220);
   await page.screenshot({path:'artifacts/atmosphere-volumetric-off.png'});
-  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:true,intensity:.76,anisotropy:.72,multiScattering:.34,fogDensity:.0072}));
+  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:true,intensity:.50,anisotropy:.70,multiScattering:.26,fogDensity:.0048}));
   assert(atmosphereOn?.volumetric===true,'volumetric atmosphere did not enable '+JSON.stringify(atmosphereOn));
   await page.waitForFunction(()=>window.Paperchalk3D.stats.atmosphere?.visibleLastFrame===true,{timeout:3500,polling:'raf'});
   const liveAtmosphere=await page.evaluate(()=>({...window.Paperchalk3D.stats.atmosphere}));
