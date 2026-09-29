@@ -222,7 +222,7 @@ export class PhotonPipeline{
           gl_FragColor=vec4(toSRGB(max(c,vec3(0.0))),1.0);}
       `
     });
-    this.finalPass=fullScreenScene(THREE,this.finalMaterial);this._syncShadowSoftness();
+    this.finalPass=fullScreenScene(THREE,this.finalMaterial);this.configure({profile:this.settings.profile});
   }
 
   _syncShadowSoftness(){this.scene?.traverse?.(o=>{if(o?.isDirectionalLight&&o.castShadow&&o.shadow)o.shadow.radius=this.settings.pcssLightSize});}
