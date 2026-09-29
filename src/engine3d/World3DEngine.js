@@ -609,6 +609,7 @@ sun.shadow.camera.left=-32;sun.shadow.camera.right=32;
 sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;
 sun.shadow.bias=-0.0002;
 sun.shadow.normalBias=.025;
+sun.shadow.radius=2.0;
 this.scene.add(sun);
 this.scene.add(sun.target);
 const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,.82);
@@ -890,20 +891,20 @@ const sx=Math.cos(angle)*radius;
 const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
 const sz=22;
 if(sun){
-sun.intensity=daylight*3.4;
+sun.intensity=daylight*3.05;
 sun.position.set(p.x+sx,p.y+sy,p.z+sz);
 sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
 }
 if(skyFill){
-const outdoor=.62+daylight*1.05+twilight*.28+night*.18;
+const outdoor=.46+daylight*.68+twilight*.20+night*.13;
 skyFill.intensity=outdoor;
 }
 if(ambient){
-ambient.intensity=.10+daylight*.11+night*.07;
+ambient.intensity=.045+daylight*.045+night*.03;
 }
 if(moon){
-moon.intensity=night*.72;
+moon.intensity=night*.52;
 moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
 moon.target.position.set(p.x,p.y-1,p.z);
 moon.target.updateMatrixWorld();
