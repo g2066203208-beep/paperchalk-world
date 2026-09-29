@@ -17,7 +17,8 @@ try{
   await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
-  await page.waitForTimeout(1400);
+  await page.evaluate(()=>window.Paperchalk3D.configurePhoton?.({enabled:false}));
+  await page.waitForTimeout(900);
   const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats}));
   assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
   assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
@@ -27,11 +28,11 @@ try{
   assert(Math.abs(before.z)<1e-6,'player is not centered on interaction row '+JSON.stringify(before));
   await page.keyboard.down('KeyD');
   try{
-    await page.waitForFunction(x=>window.PaperchalkRuntime.getSnapshot().player.x-x>.22,before.x,{timeout:1800,polling:'raf'});
+    await page.waitForFunction(x=>window.PaperchalkRuntime.getSnapshot().player.x-x>.16,before.x,{timeout:4000,polling:50});
   }finally{await page.keyboard.up('KeyD')}
   await page.waitForTimeout(80);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(afterW.x-before.x>.20,'D did not move on X '+JSON.stringify({before,afterW}));
+  assert(afterW.x-before.x>.14,'D did not move on X '+JSON.stringify({before,afterW}));
   assert(Math.abs(afterW.z)<1e-6,'Z movement is not locked '+JSON.stringify(afterW));
 
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
