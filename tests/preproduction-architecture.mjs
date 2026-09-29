@@ -80,6 +80,8 @@ assert.match(atmos,/nonlinearRaySteps:true/);
 assert.match(atmos,/filteredShadowSamples:3/);
 assert.match(atmos,/directionalScatterOnly:true/);
 assert.match(atmos,/baseFogSeparated:true/);
+assert.match(atmos,/bilateralBlur:true/);
+assert.match(atmos,/depthAwareBlur:true/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
