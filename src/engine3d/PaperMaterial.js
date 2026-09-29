@@ -142,9 +142,8 @@ export function createPaperMaterialSet(THREE,settings){
   };
   const grassFallback=new THREE.DataTexture(new Uint8Array([174,196,112,255]),1,1,THREE.RGBAFormat,THREE.UnsignedByteType);
   grassFallback.name='grass-reference-fallback';grassFallback.colorSpace=THREE.SRGBColorSpace;grassFallback.needsUpdate=true;
-  let grassReference=grassFallback,grassLoaded=false,grassReferenceSize=[1,1];
-  const grassUniforms=[];
-  new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-ref-r2',source=>{
+  let grassReference=grassFallback,grassLoaded=false,grassReferenceSize=[1,1],grassMaterial=null;
+  new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-ref-r3',source=>{
     const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
     const ctx=canvas.getContext('2d');ctx.drawImage(source.image,0,0,512,512);
     const tex=new THREE.CanvasTexture(canvas);
@@ -152,8 +151,9 @@ export function createPaperMaterialSet(THREE,settings){
     tex.wrapS=tex.wrapT=THREE.MirroredRepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
     tex.generateMipmaps=true;tex.anisotropy=4;tex.needsUpdate=true;
+    tex.repeat.set(.16,.16);
     grassReference=tex;grassLoaded=true;grassReferenceSize=[512,512];
-    for(const uniform of grassUniforms)uniform.value=tex;
+    if(grassMaterial){grassMaterial.map=tex;grassMaterial.needsUpdate=true}
     source.dispose();
   });
 
@@ -162,10 +162,8 @@ export function createPaperMaterialSet(THREE,settings){
     const uniforms={
       uPaperPrint:{value:Number(settings.printNoiseStrength)||0},
       uPaperSide:{value:side?1:0},uPaperBevel:{value:bevel?1:0},
-      uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)},
-      uGrassReference:{value:grassReference}
+      uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)}
     };
-    grassUniforms.push(uniforms.uGrassReference);
     const mat=new THREE.MeshPhysicalMaterial({
       vertexColors:true,map:source.albedo,normalMap:source.normal,roughnessMap:source.roughness,
       normalScale:new THREE.Vector2(side?.24:.30,side?.24:.30),
@@ -179,13 +177,11 @@ export function createPaperMaterialSet(THREE,settings){
     mat.onBeforeCompile=shader=>{
       Object.assign(shader.uniforms,uniforms);
       shader.vertexShader=shader.vertexShader
-        .replace('#include <common>','#include <common>\nvarying vec3 vPaperWorldPos;\nvarying vec3 vPaperBaseColor;')
-        .replace('#include <begin_vertex>','#include <begin_vertex>\nvPaperWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvPaperBaseColor=color;');
+        .replace('#include <common>','#include <common>\nvarying vec3 vPaperWorldPos;')
+        .replace('#include <begin_vertex>','#include <begin_vertex>\nvPaperWorldPos=(modelMatrix*vec4(position,1.0)).xyz;');
       shader.fragmentShader=shader.fragmentShader
         .replace('#include <common>',`#include <common>
           varying vec3 vPaperWorldPos;
-          varying vec3 vPaperBaseColor;
-          uniform sampler2D uGrassReference;
           uniform float uPaperPrint;
           uniform float uPaperSide;
           uniform float uPaperBevel;
@@ -205,12 +201,6 @@ export function createPaperMaterialSet(THREE,settings){
           float cloud=paperValueNoise(vPaperWorldPos.xz*.16+vPaperWorldPos.xy*.035+13.0)-.5;
           float mid=paperValueNoise(vPaperWorldPos.xz*.62+vPaperWorldPos.xy*.09+37.0)-.5;
           diffuseColor.rgb*=1.0+cloud*uPaperPrint*.44+mid*uPaperPrint*.16;
-          if(uPaperSide<.5&&uPaperBevel<.5){
-            float grassMask=smoothstep(.025,.095,vPaperBaseColor.g-max(vPaperBaseColor.r,vPaperBaseColor.b));
-            vec3 grassTex=texture2D(uGrassReference,vPaperWorldPos.xz*.115).rgb;
-            grassTex=pow(max(grassTex,vec3(0.0)),vec3(.94));
-            diffuseColor.rgb=mix(diffuseColor.rgb,grassTex,grassMask*.96);
-          }
           if(uPaperSide>.5){
             // Very weak sheet seam only. The fibre map, not a dark stripe,
             // must define the cardboard core.
@@ -230,6 +220,14 @@ export function createPaperMaterialSet(THREE,settings){
   };
 
   const materials=[make(),make({side:true}),make({bevel:true})];
+  grassMaterial=new THREE.MeshPhysicalMaterial({
+    map:grassReference,normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
+    normalScale:new THREE.Vector2(.28,.28),roughness:.98,metalness:0,side:THREE.DoubleSide,
+    specularIntensity:.09,ior:1.34,sheen:.075,sheenRoughness:.97,
+    sheenColor:new THREE.Color(0xe9efbd)
+  });
+  grassMaterial.name='grass-reference-paper-top';grassMaterial.userData.paperRole='grass-top';
+  materials.push(grassMaterial);
   const sync=next=>{
     const micro=clamp(Number(next.microNormalStrength)||.34,.08,.85);
     const rough=clamp(Number(next.roughnessVariation)||.035,0,.10);
@@ -244,6 +242,8 @@ export function createPaperMaterialSet(THREE,settings){
       mat.sheenRoughness=.96;
       mat.specularIntensity=sideRole?.08:.11;
     }
+    grassMaterial.normalScale.setScalar(micro*.82);
+    grassMaterial.roughness=clamp(.985-rough*.16,.95,.995);
   };
   sync(settings);
 
@@ -256,7 +256,7 @@ export function createPaperMaterialSet(THREE,settings){
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
     userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
     grassReferenceLoaded:grassLoaded,grassReferenceSize,grassPowerOfTwoRuntime:true,
-    grassWorldScale:.115,seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
+    grassMaterialGroup:true,grassWorldScale:.115,seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
     for(const m of materials)m.dispose();
