@@ -5,9 +5,9 @@ createVoxelGridTexture,
 createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
-import {OceanRenderer} from './OceanRenderer.js?v=world-core-r2';
-import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=world-core-r2';
-import {EcologyRenderer} from './EcologyRenderer.js?v=world-core-r2';
+import {OceanRenderer} from './OceanRenderer.js?v=stage-fix-r3';
+import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=stage-fix-r3';
+import {EcologyRenderer} from './EcologyRenderer.js?v=stage-fix-r3';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -351,7 +351,7 @@ this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
 _initMeshWorker(){
 if(typeof Worker==='undefined')return;
 try{
-this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=world-core-r2',import.meta.url),{type:'module'});
+this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=stage-fix-r3',import.meta.url),{type:'module'});
 this.meshWorker.onmessage=event=>this._onMeshWorkerMessage(event.data);
 this.meshWorker.onerror=error=>{
 console.warn('[paperchalk] voxel mesh worker disabled',error);
