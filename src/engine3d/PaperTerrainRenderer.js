@@ -1,4 +1,4 @@
-import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r3';
+import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r4';
 /* Phase 1 visual-only paper terrain.
  * TerrainWorld remains the gameplay/collision authority. The render grid is
  * hidden by merged paper tops plus batched layered-cardboard edge geometry.
