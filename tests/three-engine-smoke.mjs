@@ -44,6 +44,8 @@ try{
   assert(initial.atmosphere?.samples===19,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.jitteredRaymarch===true&&initial.atmosphere?.minecraftShaderInspired===true,'Minecraft-style volumetric integration missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.stableDither===true&&initial.atmosphere?.nonlinearRaySteps===true,'stable nonlinear volumetric sampling missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.filteredShadowSamples===3,'filtered volumetric shadow samples missing '+JSON.stringify(initial.atmosphere));
   assert((initial.atmosphere?.mieAnisotropy||0)>.5,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
