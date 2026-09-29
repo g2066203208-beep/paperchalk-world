@@ -137,13 +137,12 @@ export class AtmospherePass{
             trans*=absorb;
             t+=stepLen;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.075);
-          // A Minecraft-style shaft should appear where the camera nearly
-          // aligns with sunlight and shadow-map visibility changes along the
-          // ray. Suppress broad forward haze so it never becomes a glow dome.
+          float sceneWeight=depth>.9997?0.0:1.0;
+          float fogAlpha=clamp(1.0-trans,0.0,.075)*sceneWeight;
+          // Strong forward Mie only close to the sun direction; the shadow
+          // map carves that lit air into shafts. Clear sky stays untouched.
           float shaftGate=smoothstep(.975,.998,mu);
-          float skyWeight=depth>.9997?0.0:1.0;
-          vec3 scatter=uSunColor*sunScatter*uIntensity*(.018+shaftGate*.46)*skyWeight;
+          vec3 scatter=uSunColor*sunScatter*uIntensity*(.018+shaftGate*.46)*sceneWeight;
           scatter=min(scatter,vec3(.105));
           vec3 premul=uFogColor*fogAlpha*.075+scatter;
           gl_FragColor=vec4(premul,fogAlpha*.075);
