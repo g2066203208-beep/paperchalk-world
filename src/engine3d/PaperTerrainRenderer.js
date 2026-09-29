@@ -1,20 +1,20 @@
-import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r2';
+import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r3';
 /* Phase 1 visual-only paper terrain.
  * TerrainWorld remains the gameplay/collision authority. The render grid is
  * hidden by merged paper tops plus batched layered-cardboard edge geometry.
  */
 const TOP_COLORS=Object.freeze({
-  1:0x78945d, // grass paper
+  1:0x6f895c, // grass paper
   2:0xa17b5d, // earth paper
   3:0x95918a, // stone paper
-  4:0xd9bb7e, // sand paper
+  4:0xd4b275, // sand paper
   5:0xae7f69  // clay paper
 });
 const SIDE_COLORS=Object.freeze({
-  1:0xa1744c,
+  1:0x8d5e40,
   2:0x8f6245,
   3:0x77716b,
-  4:0xa87349,
+  4:0x95613f,
   5:0x855947
 });
 
@@ -54,10 +54,10 @@ export class PaperTerrainRenderer{
       paperThickness:settings.paperThickness??.30,
       bevelWidth:settings.bevelWidth??.045,
       bevelHeight:settings.bevelHeight??.055,
-      fiberStrength:settings.fiberStrength??.065,
-      printNoiseStrength:settings.printNoiseStrength??.045,
-      microNormalStrength:settings.microNormalStrength??.68,
-      roughnessVariation:settings.roughnessVariation??.055,
+      fiberStrength:settings.fiberStrength??.050,
+      printNoiseStrength:settings.printNoiseStrength??.065,
+      microNormalStrength:settings.microNormalStrength??.34,
+      roughnessVariation:settings.roughnessVariation??.035,
       sideDarkness:settings.sideDarkness??.92,
       ...settings
     };
@@ -350,7 +350,7 @@ export class PaperTerrainRenderer{
       bevelWidth:this.settings.bevelWidth,fiberStrength:this.settings.fiberStrength,
       microNormalStrength:this.settings.microNormalStrength,roughnessVariation:this.settings.roughnessVariation,
       sideDarkness:this.settings.sideDarkness,paperMaterial:this.paperMaterialSet.stats?.()||null,
-      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV2:true
+      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV3:true,referenceStyle:'pressed-cardstock-diorama'
     };
   }
   dispose(){
