@@ -5,6 +5,8 @@ createVoxelGridTexture,
 createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
+import {OceanRenderer} from './OceanRenderer.js?v=world-core-r2';
+import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=world-core-r2';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -447,8 +449,7 @@ for(const [species,material] of Object.entries(this.materials)){
 const mesh=new THREE.InstancedMesh(this.geometry,material,capacity);
 mesh.name='fish-school:'+species;mesh.count=0;mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;
 this.root.add(mesh);this.meshes[species]=mesh;
-}
-this.dummy=new THREE.Object3D();this.statsState={active:0,drawCalls:0,species:{}};
+}this.dummy=new THREE.Object3D();this.statsState={active:0,drawCalls:0,species:{}};
 }
 update(snapshot,camera,time=0){
 const fish=Array.isArray(snapshot?.fish)?snapshot.fish:[];
@@ -555,7 +556,7 @@ this.layers=this.sceneData.layers||{far:-8,rear:-3,terrain:0,actor:.45,front:2.5
 this.scene=new THREE.Scene();
 this.fixedBackgroundColor=new THREE.Color(0x6f7fa8);
 this.scene.background=this.fixedBackgroundColor.clone();
-this.camera=new THREE.PerspectiveCamera(42,1,.05,140);
+this.camera=new THREE.PerspectiveCamera(42,1,.05,520);
 this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,height:.65,fov:42};
 this.stageView={enabled:false,axis:'z',side:1};
 this.cameraTarget=new THREE.Vector3();
@@ -657,9 +658,11 @@ maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mob
 texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128,
 anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
+this.farTerrainRenderer=new FarTerrainRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
+this.oceanRenderer=new OceanRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
 this.fishingRenderer=new FishingRenderer(THREE,this.scene);
-this.fishSchoolRenderer=new FishSchoolRenderer(THREE,this.scene,{capacity:this.mobileLike?24:32});
+this.fishSchoolRenderer=new FishSchoolRenderer(THREE,this.scene,{capacity:0});
 const cursorGeometry=new THREE.BoxGeometry(
 this.terrain.tileSize*1.035,
 this.terrain.tileSize*1.035,
@@ -897,8 +900,7 @@ const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
 const sz=22;
 if(sun){
 sun.intensity=daylight*3.05;
-sun.position.set(p.x+sx,p.y+sy,p.z+sz);
-sun.target.position.set(p.x,p.y-2,p.z);
+sun.position.set(p.x+sx,p.y+sy,p.z+sz);sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
 }
 if(skyFill){
@@ -933,9 +935,11 @@ const current=this.lastSnapshot;
 this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
 const p=current?.player;
 this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
+this.farTerrainRenderer?.update(p);
+this.oceanRenderer?.update(dt,p);
 this.waterRenderer?.update(dt);
 const renderTime=performance.now()/1000;
-this.fishSchoolRenderer?.update(current,this.camera,renderTime);
+this.fishSchoolRenderer?.update({fish:[]},this.camera,renderTime);
 this.fishingRenderer?.update(current,this.camera,renderTime);
 this.healthBar?.update(this.camera,dt);
 }
@@ -1015,8 +1019,8 @@ entityMode:'paper-sprites-in-3d',
 drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
-lighting:{mode:'paper-pbr-sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),farTerrain:this.farTerrainRenderer?.stats?.()||null,ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:{active:0,drawCalls:0,disabled:true},
+lighting:{mode:'paper-pbr-sun-sky-moon-torch-weather',backgroundMode:'dynamic-atmosphere',backgroundColor:'#'+this.fixedBackgroundColor.getHexString(),skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
 cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.15,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
@@ -1028,6 +1032,8 @@ terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneM
 }
 dispose(){
 this.terrainRenderer?.dispose();
+this.farTerrainRenderer?.dispose();
+this.oceanRenderer?.dispose();
 this.waterRenderer?.dispose();
 this.fishingRenderer?.dispose();
 this.fishSchoolRenderer?.dispose();
