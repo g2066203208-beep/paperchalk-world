@@ -78,10 +78,6 @@ function mesh(msg){
           const solidGz=cz*n+solid[2],solidGy=cy*n+solid[1],buried=solidGz===blackBackRowZ&&solidGy<=surfaceAt(solid[0])-1;
           const code=(buried?tile+32:tile)+(faceAO(solid,d,!!sa)<<6);face=sa?code:-code;
         }
-        if(face&&d===2){
-          const solidLocalZ=sa?x[2]:x[2]+1,gz=cz*n+solidLocalZ,gy=cy*n+x[1];
-          if(gz===interactionRowZ&&gy<surfaceAt(x[0]))face=0;
-        }
         mask[mi++]=face;
       }
       x[d]++;
