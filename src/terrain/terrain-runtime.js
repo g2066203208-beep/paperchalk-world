@@ -237,8 +237,7 @@ this.levels=8;
       const state={gx,gz,floor,filled:0,next:floor};
       states.set(ck,state);this._heapPush(heap,[state.next,ck]);
       return state;
-    };
-    for(const [ck,near] of seeds){      const [gx,gz]=this.parseColumn(ck);activate(gx,gz,near,true);
+    };    for(const [ck,near] of seeds){      const [gx,gz]=this.parseColumn(ck);activate(gx,gz,near,true);
     }
 
     let placed=0,safety=Math.max(4096,total*40);
@@ -380,7 +379,9 @@ this.levels=8;
     const s=this.terrain.tileSize;
     const gx=Math.floor(x/s),gz=Math.floor(z/s+.5);
     const y=this.highestSurfaceY(gx,gz);
-    return Number.isFinite(y)?{gx,gz,y,levelColumn:true}:null;
+    if(Number.isFinite(y))return {gx,gz,y,levelColumn:true,analyticOcean:false};
+    const ocean=this.terrain.oceanBoundsForColumn?.(gx,gz);
+    return ocean?{gx,gz,y:ocean.top,levelColumn:false,analyticOcean:true}:null;
   }
   columnBounds(gx,gz){
     const ck=this.columnKey(gx,gz),cached=this.boundsCache.get(ck);
@@ -394,7 +395,14 @@ this.levels=8;
       bottom=Math.min(bottom,gy*s);
       top=Math.max(top,gy*s+(level/8)*s);
     }
-    const out=Number.isFinite(top)?{gx,gz,bottom,top,depth:Math.max(0,top-bottom),cells,layers}:null;
+    const dynamic=Number.isFinite(top)?{gx,gz,bottom,top,depth:Math.max(0,top-bottom),cells,layers,analyticOcean:false}:null;
+    const ocean=this.terrain.oceanBoundsForColumn?.(gx,gz)||null;
+    let out=dynamic;
+    if(ocean&&dynamic){
+      out={gx,gz,bottom:Math.min(ocean.bottom,dynamic.bottom),top:Math.max(ocean.top,dynamic.top),
+        depth:Math.max(ocean.top,dynamic.top)-Math.min(ocean.bottom,dynamic.bottom),
+        cells:dynamic.cells,layers:dynamic.layers,analyticOcean:true};
+    }else if(ocean)out=ocean;
     this.boundsCache.set(ck,out);
     return out;
   }
@@ -413,14 +421,24 @@ this.levels=8;
     const gy0=Math.floor(minY/s),gy1=Math.floor((maxY-.0001)/s);
     const gz0=Math.floor(minZ/s+.5),gz1=Math.floor((maxZ-.0001)/s+.5);
     let overlap=0;
-    for(let gz=gz0;gz<=gz1;gz++)for(let gy=gy0;gy<=gy1;gy++)for(let gx=gx0;gx<=gx1;gx++){
-      const level=this.getLevel(gx,gy,gz);if(!level)continue;
-      const wx0=gx*s,wx1=(gx+1)*s,wy0=gy*s,wy1=gy*s+(level/8)*s;
-      const wz0=gz*s-s*.5,wz1=gz*s+s*.5;
+    for(let gz=gz0;gz<=gz1;gz++)for(let gx=gx0;gx<=gx1;gx++){
+      const wx0=gx*s,wx1=(gx+1)*s,wz0=gz*s-s*.5,wz1=gz*s+s*.5;
       const ox=Math.max(0,Math.min(maxX,wx1)-Math.max(minX,wx0));
-      const oy=Math.max(0,Math.min(maxY,wy1)-Math.max(minY,wy0));
       const oz=Math.max(0,Math.min(maxZ,wz1)-Math.max(minZ,wz0));
-      overlap+=ox*oy*oz;
+      if(ox<=0||oz<=0)continue;
+
+      // Dynamic cells stay sparse. Ocean water is analytic and contributes no cells.
+      for(let gy=gy0;gy<=gy1;gy++){
+        const level=this.getLevel(gx,gy,gz);if(!level)continue;
+        const wy0=gy*s,wy1=gy*s+(level/8)*s;
+        const oy=Math.max(0,Math.min(maxY,wy1)-Math.max(minY,wy0));
+        overlap+=ox*oy*oz;
+      }
+      const ocean=this.terrain.oceanBoundsForColumn?.(gx,gz);
+      if(ocean){
+        const oy=Math.max(0,Math.min(maxY,ocean.top)-Math.max(minY,ocean.bottom));
+        if(oy>0)overlap+=ox*oy*oz;
+      }
     }
     const volume=Math.max(.0001,(maxX-minX)*(maxY-minY)*(maxZ-minZ));
     return Math.max(0,Math.min(1,overlap/volume));
@@ -465,7 +483,8 @@ class TerrainWorld{
     this.interactionRowZ=Number.isFinite(Number(interactionRowZ))?Math.floor(Number(interactionRowZ)):0;
     this.blackBackRowZ=Number.isFinite(Number(blackBackRowZ))?Math.floor(Number(blackBackRowZ)):this.interactionRowZ-1;
     this.chunks=new Map();this.edits=new Map();this.listeners=new Set();this.surfaceRangeCache=new Map();this.biomeChunkCache=new Map();
-    this.changeVersion=0;this.generatorVersion=4;this.noiseBackend='deterministic-fallback';this.biomeConfig=biomeConfig&&typeof biomeConfig==='object'?{...biomeConfig}:{};
+    this.changeVersion=0;this.generatorVersion=5;this.noiseBackend='deterministic-fallback';this.biomeConfig=biomeConfig&&typeof biomeConfig==='object'?{...biomeConfig}:{};
+    this.seaLevel=Number.isFinite(Number(this.biomeConfig.seaLevel))?Number(this.biomeConfig.seaLevel):0;
     this.water=new WaterWorld(this);
 
     const F=global.FastNoiseLite;
@@ -477,8 +496,7 @@ class TerrainWorld{
       this.surfaceNoise.SetFractalType(Fractal.FBm||1);
       this.surfaceNoise.SetFractalOctaves(5);
 
-      this.detailNoise=new F(this.seed+37);
-      this.detailNoise.SetNoiseType(Noise.Perlin||4);
+      this.detailNoise=new F(this.seed+37);      this.detailNoise.SetNoiseType(Noise.Perlin||4);
       this.detailNoise.SetFrequency(.038);
       this.detailNoise.SetFractalType(Fractal.FBm||1);
       this.detailNoise.SetFractalOctaves(3);
@@ -500,7 +518,8 @@ class TerrainWorld{
     const BiomeGenerator=global.PaperchalkBiomeRuntime?.BiomeLandformGenerator;
     this.biomeGenerator=BiomeGenerator?new BiomeGenerator({
       seed:this.seed,spawnX:0,spawnZ:this.interactionRowZ,
-      spawnSafeRadius:Number(this.biomeConfig.spawnSafeRadius)||22
+      spawnSafeRadius:Number(this.biomeConfig.spawnSafeRadius)||22,
+      seaLevel:this.seaLevel
     }):null;
     this.biomeBackend=this.biomeGenerator?.backend||'none';
   }
@@ -530,6 +549,14 @@ class TerrainWorld{
     const s=this.tileSize,gx=Math.floor(Number(x)/s),gz=Math.floor(Number(z)/s+.5);
     return this.terrainProfile(gx,gz);
   }
+  seaSurfaceY(){return this.seaLevel*this.tileSize}
+  oceanBoundsForColumn(gx,gz=0){
+    const profile=this.terrainProfile(gx,gz),s=this.tileSize;
+    const bottom=(profile.height+1)*s,top=this.seaSurfaceY();
+    if(bottom>=top-.0001)return null;
+    return {gx,gz,bottom,top,depth:top-bottom,cells:0,layers:0,analyticOcean:true};
+  }
+  isOceanColumn(gx,gz=0){return !!this.oceanBoundsForColumn(gx,gz)}
   generateVoxel(gx,gy,gz){
     const profile=this.terrainProfile(gx,gz);
     const surface=profile.height;
@@ -713,9 +740,8 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,biomeBackend:this.biomeBackend,dimensions:3,infinite:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,biomeBackend:this.biomeBackend,dimensions:3,infinite:true,seaLevel:this.seaLevel,seaSurfaceY:this.seaSurfaceY(),analyticOcean:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
   }
 }
 
-global.PaperchalkTerrainRuntime=Object.freeze({TILE,TerrainWorld,TerrainChunk,WaterWorld});
-})(window);
+global.PaperchalkTerrainRuntime=Object.freeze({TILE,TerrainWorld,TerrainChunk,WaterWorld});})(window);
