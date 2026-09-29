@@ -85,7 +85,7 @@ export class PhotonPipeline{
       enabled:true,
       taa:!this.mobileLike,
       taau:true,
-      renderScale:this.mobileLike?.72:.82,
+      renderScale:this.mobileLike?.68:.76,
       gtao:true,
       bloom:true,
       clouds:true,
@@ -95,7 +95,7 @@ export class PhotonPipeline{
       motionBlur:false,
       water:true,
       ssr:true,
-      specularSSR:true,
+      specularSSR:false,
       coloredLighting:true,
       aoStrength:this.mobileLike?.42:.55,
       aoRadius:this.mobileLike?.75:1.05,
@@ -104,8 +104,8 @@ export class PhotonPipeline{
       sharpen:this.mobileLike?.22:.32,
       cloudCoverage:.46,
       cloudDensity:this.mobileLike?.58:.72,
-      cloudSteps:this.mobileLike?10:18,
-      cloudShadowSteps:this.mobileLike?2:4,
+      cloudSteps:this.mobileLike?8:12,
+      cloudShadowSteps:this.mobileLike?2:3,
       taaHistory:.88,
       focusDistance:12,
       focusRange:7,
@@ -237,7 +237,7 @@ export class PhotonPipeline{
     this.settings.cloudDensity=clamp(Number(this.settings.cloudDensity)||.7,.05,2);
     this.settings.cloudSteps=Math.round(clamp(Number(this.settings.cloudSteps)||12,6,24));
     this.settings.cloudShadowSteps=Math.round(clamp(Number(this.settings.cloudShadowSteps)||3,1,4));
-    this.settings.taaHistory=clamp(Number(this.settings.taaHistory)||.88,.35,.97);this.settings.renderScale=clamp(Number(this.settings.renderScale)||.82,.5,1);
+    this.settings.taaHistory=clamp(Number(this.settings.taaHistory)||.88,.35,.97);this.settings.renderScale=clamp(Number(this.settings.renderScale)||.76,.5,1);
     this.waterPass.configure({enabled:this.settings.water!==false,ssr:this.settings.ssr!==false,...(patch.waterOptions||{})});this.weatherPass.configure({enabled:this.settings.clouds!==false,cloudCoverage:this.settings.cloudCoverage,cloudDensity:this.settings.cloudDensity,lowCloudSteps:this.settings.cloudSteps,cloudShadowSteps:this.settings.cloudShadowSteps,...(patch.weatherOptions||{})});this.specularSSR.configure({enabled:this.settings.specularSSR!==false,...(patch.specularOptions||{})});
     this.settings.pcssLightSize=clamp(Number(this.settings.pcssLightSize)||2.4,.5,6);this._syncShadowSoftness();
     this.historyValid=false;return this.stats();
