@@ -98,14 +98,15 @@ try{
 
   const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
   assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
-  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:.08,distance:12,height:.45}));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:-.10,distance:12,height:.45}));
+  await page.waitForTimeout(2200);
   const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:false,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
   assert(atmosphereOff?.godRays===false,'god rays did not disable '+JSON.stringify(atmosphereOff));
-  await page.waitForTimeout(700);
+  await page.waitForTimeout(180);
   await page.screenshot({path:'artifacts/atmosphere-godrays-off.png'});
   const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:true,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
   assert(atmosphereOn?.godRays===true,'god rays did not enable '+JSON.stringify(atmosphereOn));
-  await page.waitForTimeout(850);
+  await page.waitForTimeout(260);
   const liveAtmosphere=await page.evaluate(()=>window.Paperchalk3D.stats.atmosphere);
   assert(liveAtmosphere?.visibleLastFrame===true,'god rays are not visible in dawn validation view '+JSON.stringify(liveAtmosphere));
   assert((liveAtmosphere?.currentStrength||0)>.01,'god-ray strength stayed near zero '+JSON.stringify(liveAtmosphere));
