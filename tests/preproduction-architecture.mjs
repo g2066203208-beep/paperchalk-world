@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),water=read('src/terrain/water-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),paperEntity=read('src/entities/PaperSpriteEntity.js'),environment=read('src/engine3d/EnvironmentFX.js'),ocean=read('src/engine3d/OceanRenderer.js'),farTerrain=read('src/engine3d/FarTerrainRenderer.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),water=read('src/terrain/water-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),paperEntity=read('src/entities/PaperSpriteEntity.js'),environment=read('src/engine3d/EnvironmentFX.js'),ocean=read('src/engine3d/OceanRenderer.js'),farTerrain=read('src/engine3d/FarTerrainRenderer.js'),ecology=read('src/engine3d/EcologyRenderer.js'),meshWorker=read('src/terrain/voxel-mesh-worker.js');
 
 assert.match(html,/world-core-r2/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
@@ -70,6 +70,12 @@ assert.match(environment,/FogExp2/);
 assert.match(biome,/DEEP_OCEAN:'deep-ocean'/);
 assert.match(biome,/CLIFF:'cliff'/);
 assert.match(biome,/SNOWFIELD:'snowfield'/);
+assert.match(terrain,/air-except-black-back-row/);
+assert.match(engine,/workerMeshing/);
+assert.match(meshWorker,/stale-result-safe/);
+assert.match(meshWorker,/workerMeshed:true/);
+assert.match(ecology,/InstancedMesh/);
+assert.match(environment,/uWeatherSnow/);
 console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
 
 assert.match(engine,/paperchalk-pbr-voxel-ao-v16/);
