@@ -1,3 +1,44 @@
+function installPhotonPCSS(THREE){
+  const key='shadowmap_pars_fragment',source=THREE.ShaderChunk?.[key];if(!source||source.includes('PAPERCHALK_PHOTON_PCSS'))return false;
+  const a=source.indexOf('#elif defined( SHADOWMAP_TYPE_PCF_SOFT )'),b=source.indexOf('#elif defined( SHADOWMAP_TYPE_VSM )',a);if(a<0||b<0)return false;
+  const branch=`#elif defined( SHADOWMAP_TYPE_PCF_SOFT )
+            // PAPERCHALK_PHOTON_PCSS: blocker search + variable penumbra filtering.
+            vec2 texelSize = vec2( 1.0 ) / shadowMapSize;
+            float seed = fract( sin( dot( gl_FragCoord.xy, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 );
+            float searchRadius = 2.0 + max( 0.0, shadowRadius ) * 1.65;
+            float blockerDepth = 0.0;
+            float blockerCount = 0.0;
+            for ( int i = 0; i < 8; i ++ ) {
+                float fi = float( i );
+                float ang = fi * 2.39996323 + seed * 6.2831853;
+                float rad = sqrt( ( fi + 0.5 ) / 8.0 ) * searchRadius;
+                vec2 off = vec2( cos( ang ), sin( ang ) ) * texelSize * rad;
+                float d = unpackRGBAToDepth( texture2D( shadowMap, shadowCoord.xy + off ) );
+                float blocked = step( d + 0.00004, shadowCoord.z );
+                blockerDepth += d * blocked;
+                blockerCount += blocked;
+            }
+            if ( blockerCount < 0.5 ) {
+                shadow = 1.0;
+            } else {
+                float avgBlocker = blockerDepth / blockerCount;
+                float receiverGap = max( 0.0, shadowCoord.z - avgBlocker );
+                float penumbra = clamp( receiverGap / max( avgBlocker, 0.0005 ) * ( 18.0 + shadowRadius * 7.0 ), 1.0, 12.0 );
+                shadow = 0.0;
+                for ( int i = 0; i < 16; i ++ ) {
+                    float fi = float( i );
+                    float ang = fi * 2.39996323 + seed * 6.2831853;
+                    float rad = sqrt( ( fi + 0.5 ) / 16.0 ) * penumbra;
+                    vec2 off = vec2( cos( ang ), sin( ang ) ) * texelSize * rad;
+                    shadow += texture2DCompare( shadowMap, shadowCoord.xy + off, shadowCoord.z );
+                }
+                shadow *= 0.0625;
+            }
+        `;
+  THREE.ShaderChunk[key]=source.slice(0,a)+branch+source.slice(b);
+  return true;
+}
+
 const FS_VERT=`
 varying vec2 vUv;
 void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
@@ -35,7 +76,7 @@ function fullScreenScene(THREE,material){
 
 export class PhotonPipeline{
   constructor(THREE,{renderer,scene,camera,mobileLike=false}={}){
-    this.THREE=THREE;this.renderer=renderer;this.scene=scene;this.camera=camera;this.mobileLike=!!mobileLike;
+    this.THREE=THREE;this.renderer=renderer;this.scene=scene;this.camera=camera;this.mobileLike=!!mobileLike;this.pcssInstalled=installPhotonPCSS(THREE);
     this.settings={
       enabled:true,
       taa:!this.mobileLike,
@@ -58,7 +99,8 @@ export class PhotonPipeline{
       taaHistory:.88,
       focusDistance:12,
       focusRange:7,
-      motionBlurStrength:.45
+      motionBlurStrength:.45,
+      pcssLightSize:this.mobileLike?1.8:2.8
     };
     this.size={width:1,height:1,pixelRatio:1,bufferWidth:1,bufferHeight:1};
     this.frame=0;this.historyValid=false;this.renderCount=0;
@@ -192,8 +234,10 @@ export class PhotonPipeline{
           gl_FragColor=vec4(toSRGB(max(c,vec3(0.0))),1.0);}
       `
     });
-    this.finalPass=fullScreenScene(THREE,this.finalMaterial);
+    this.finalPass=fullScreenScene(THREE,this.finalMaterial);this._syncShadowSoftness();
   }
+
+  _syncShadowSoftness(){this.scene?.traverse?.(o=>{if(o?.isDirectionalLight&&o.castShadow&&o.shadow)o.shadow.radius=this.settings.pcssLightSize});}
 
   configure(patch={}){
     Object.assign(this.settings,patch||{});
@@ -207,6 +251,7 @@ export class PhotonPipeline{
     this.settings.cloudSteps=Math.round(clamp(Number(this.settings.cloudSteps)||12,6,24));
     this.settings.cloudShadowSteps=Math.round(clamp(Number(this.settings.cloudShadowSteps)||3,1,4));
     this.settings.taaHistory=clamp(Number(this.settings.taaHistory)||.88,.35,.97);
+    this.settings.pcssLightSize=clamp(Number(this.settings.pcssLightSize)||2.4,.5,6);this._syncShadowSoftness();
     this.historyValid=false;return this.stats();
   }
 
@@ -270,7 +315,7 @@ export class PhotonPipeline{
     }
   }
 
-  stats(){return {enabled:!!this.settings.enabled,mode:'photon-feature-port-r1',source:'sixthsurge/photon',featurePort:true,taa:!!this.settings.taa,gtao:!!this.settings.gtao,bloom:!!this.settings.bloom,volumetricClouds:!!this.settings.clouds,fxaa:!!this.settings.fxaa,cas:!!this.settings.cas,dof:!!this.settings.dof,motionBlur:!!this.settings.motionBlur,historyReprojection:true,depthAwareAO:true,weatherCloudCoverage:this.settings.cloudCoverage,buffers:{scene:[this.size.bufferWidth,this.size.bufferHeight],ao:this.size.ao||[1,1],bloom:this.size.bloom||[1,1],cloud:this.size.cloud||[1,1]},renders:this.renderCount};}
+  stats(){return {enabled:!!this.settings.enabled,mode:'photon-feature-port-r1',source:'sixthsurge/photon',featurePort:true,pcss:!!this.pcssInstalled,variablePenumbra:true,taa:!!this.settings.taa,gtao:!!this.settings.gtao,bloom:!!this.settings.bloom,volumetricClouds:!!this.settings.clouds,fxaa:!!this.settings.fxaa,cas:!!this.settings.cas,dof:!!this.settings.dof,motionBlur:!!this.settings.motionBlur,historyReprojection:true,depthAwareAO:true,weatherCloudCoverage:this.settings.cloudCoverage,buffers:{scene:[this.size.bufferWidth,this.size.bufferHeight],ao:this.size.ao||[1,1],bloom:this.size.bloom||[1,1],cloud:this.size.cloud||[1,1]},renders:this.renderCount};}
 
   dispose(){for(const t of [this.sceneTarget,this.workA,this.workB,this.aoA,this.aoB,this.bloomA,this.bloomB,this.cloudTarget,this.historyA,this.historyB])t.dispose();for(const p of [this.copyPass,this.aoPass,this.blurPass,this.bloomExtractPass,this.gaussPass,this.cloudPass,this.compositePass,this.temporalPass,this.finalPass])p.geometry.dispose();for(const m of [this.copyMaterial,this.aoMaterial,this.blurMaterial,this.bloomExtractMaterial,this.gaussMaterial,this.cloudMaterial,this.compositeMaterial,this.temporalMaterial,this.finalMaterial])m.dispose();}
 }
