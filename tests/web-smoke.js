@@ -84,6 +84,7 @@ assert(atmos.includes('minecraftShaderInspired:true'),'Minecraft-shader atmosphe
 assert(atmos.includes('new THREE.FogExp2'),'distance haze fallback missing');
 assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmos-setting="intensity"')&&html.includes('data-atmos-setting="anisotropy"')&&html.includes('data-atmos-setting="multiScattering"'),'volumetric atmosphere debug controls missing');
 assert(atmos.includes('mobileOptimized:this.mobileLike'),'mobile volumetric quality path missing');
+assert(atmos.includes('temporalReuse:true')&&atmos.includes('updateEvery:this.updateEvery'),'temporal volumetric reuse missing');
 assert(paper.includes("mode:'paper-diorama-slab-v3-lowpoly-edge-ring'"),'paper slab geometry missing');
 assert(paper.includes('boundary[idx]')&&paper.includes('used[(z+zz)*n+x+xx]=1')&&paper.includes('edgeTopCells'),'interior greedy merge + boundary-cell split missing');
 assert(paper.includes('topSideMaterialSplit:true'),'top/side material split missing');
