@@ -909,22 +909,23 @@ const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
 const sz=22;
 if(sun){
 const paperLight=this.paperStyle?.enabled!==false;
-sun.intensity=daylight*(paperLight?2.65:3.4);
+const horizonSun=twilight*Math.max(0,1-night*4.2);
+sun.intensity=paperLight?(daylight*2.35+horizonSun*.48):(daylight*3.4+horizonSun*.34);
 sun.position.set(p.x+sx,p.y+sy,p.z+sz);
 sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
 }
 if(skyFill){
 const outdoor=this.paperStyle?.enabled!==false
-?(.84+daylight*.74+twilight*.24+night*.14)
-:(.62+daylight*1.05+twilight*.28+night*.18);
+?(.95+daylight*.62+twilight*.33+night*.08)
+:(.68+daylight*.94+twilight*.32+night*.16);
 skyFill.intensity=outdoor;
 }
 if(ambient){
-ambient.intensity=(this.paperStyle?.enabled!==false ? .13 : .10)+daylight*(this.paperStyle?.enabled!==false ? .09 : .11)+night*.07;
+ambient.intensity=(this.paperStyle?.enabled!==false ? .18 : .12)+daylight*(this.paperStyle?.enabled!==false ? .08 : .10)+twilight*(this.paperStyle?.enabled!==false ? .07 : .04)+night*.045;
 }
 if(moon){
-moon.intensity=night*.72;
+moon.intensity=night*.56;
 moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
 moon.target.position.set(p.x,p.y-1,p.z);
 moon.target.updateMatrixWorld();
@@ -934,6 +935,7 @@ sunDisc.visible=daylight>.02;
 sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
 sunDisc.scale.setScalar(.8+daylight*.35);
 }
+this.renderer.toneMappingExposure=.98+daylight*.08+twilight*.12+night*.025;
 if(moonDisc){
 moonDisc.visible=night>.03;
 moonDisc.position.set(p.x-sx*1.45,p.y+Math.max(14,sy*1.2),p.z-sz*1.1);
