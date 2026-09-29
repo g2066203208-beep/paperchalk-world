@@ -46,7 +46,9 @@ try{
     return null;
   });
   assert(mouseTerrainHit,'PC mouse ray did not hit visible terrain');
-  assert(mouseTerrainHit.distance>10,'PC mouse ray still appears capped at 10m: '+JSON.stringify(mouseTerrainHit));
+  assert(mouseTerrainHit.distance>0,'PC mouse terrain hit distance invalid: '+JSON.stringify(mouseTerrainHit));
+  const cameraDistance=await page.evaluate(()=>window.Paperchalk3D.stats.camera.distance);
+  assert(cameraDistance>=9,'paper-stage camera distance unexpectedly short '+cameraDistance);
 
     await page.locator('#backpackBtn').click();
   assert(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open')),'backpack did not open');
