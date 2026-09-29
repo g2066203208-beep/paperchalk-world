@@ -175,8 +175,9 @@ export class PaperTerrainRenderer{
     };
     const used=new Uint8Array(n*n);
 
-    // Merge all equal-height/material cells into large top cards. No per-tile UV
-    // border is emitted, so the gameplay grid is not visible in the framebuffer.
+    // Greedy merged top surfaces: merge all equal-height/material cells into
+    // large top cards. No per-tile UV border is emitted, so the gameplay grid
+    // is not visible in the framebuffer.
     for(let z=0;z<n;z++)for(let x=0;x<n;x++){
       const idx=z*n+x;if(used[idx])continue;
       const cell=getLocal(x,z);if(!cell)continue;
