@@ -12,6 +12,7 @@ assert(size('src/engine3d/PhotonPipeline.js')<30000,'Photon feature pipeline exc
 assert(size('src/engine3d/PhotonWaterPass.js')<12000,'Photon water pass exceeds 12KB budget');
 assert(size('src/engine3d/PhotonVoxelLightVolume.js')<10000,'Photon RGB voxel light volume exceeds 10KB budget');
 assert(size('src/engine3d/PhotonSkyWeatherPass.js')<16000,'Photon weather sky pass exceeds 16KB budget');
+assert(size('src/engine3d/PhotonSpecularSSRPass.js')<10000,'Photon material SSR pass exceeds 10KB budget');
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
@@ -32,6 +33,7 @@ console.log(JSON.stringify({
   photonWater:size('src/engine3d/PhotonWaterPass.js'),
   photonVoxelLight:size('src/engine3d/PhotonVoxelLightVolume.js'),
   photonWeather:size('src/engine3d/PhotonSkyWeatherPass.js'),
+  photonSpecularSSR:size('src/engine3d/PhotonSpecularSSRPass.js'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
