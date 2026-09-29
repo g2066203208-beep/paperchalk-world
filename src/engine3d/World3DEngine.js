@@ -1,5 +1,5 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
-import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r2';
+import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r3';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
@@ -576,7 +576,8 @@ this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,coarse?1.5:2));
 this.renderer.setPixelRatio(this.pixelRatio);
 this.renderer.outputColorSpace=THREE.SRGBColorSpace;
 this.renderer.setClearColor(this.fixedBackgroundColor,1);
-this.renderer.toneMapping=THREE.NoToneMapping;
+this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
+this.renderer.toneMappingExposure=1.08;
 this.renderer.shadowMap.enabled=true;
 this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 this.renderer.domElement.className='three-world-canvas';
@@ -589,7 +590,7 @@ this.resize();
 }
 _buildStage(){
 const THREE=this.THREE;
-const sun=new THREE.DirectionalLight(0xfff0d2,3.4);
+const sun=new THREE.DirectionalLight(0xffe7c2,2.65);
 sun.name='world-sun';
 sun.castShadow=true;
 sun.position.set(18,32,14);
@@ -602,10 +603,10 @@ sun.shadow.bias=-0.0002;
 sun.shadow.normalBias=.025;
 this.scene.add(sun);
 this.scene.add(sun.target);
-const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,1.0);
+const skyFill=new THREE.HemisphereLight(0xdce9f4,0x7a6049,1.0);
 skyFill.name='sky-environment-bounce';
 this.scene.add(skyFill);
-const ambient=new THREE.AmbientLight(0x8090a6,.12);
+const ambient=new THREE.AmbientLight(0x9b968d,.14);
 ambient.name='soft-global-bounce';
 this.scene.add(ambient);
 const moon=new THREE.DirectionalLight(0x8eb6ff,.0);
@@ -649,10 +650,10 @@ paperLayerHeight:.5,
 paperThickness:.30,
 bevelWidth:.045,
 bevelHeight:.055,
-fiberStrength:.065,
-printNoiseStrength:.045,
-microNormalStrength:.68,
-roughnessVariation:.055,
+fiberStrength:.050,
+printNoiseStrength:.065,
+microNormalStrength:.34,
+roughnessVariation:.035,
 sideDarkness:.92
 });
 this.terrainRenderer.root.visible=false;
@@ -924,17 +925,20 @@ const sx=Math.cos(angle)*radius;
 const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
 const sz=22;
 if(sun){
-sun.intensity=daylight*3.4;
+const paperLight=this.paperStyle?.enabled!==false;
+sun.intensity=daylight*(paperLight?2.65:3.4);
 sun.position.set(p.x+sx,p.y+sy,p.z+sz);
 sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
 }
 if(skyFill){
-const outdoor=.62+daylight*1.05+twilight*.28+night*.18;
+const outdoor=this.paperStyle?.enabled!==false
+?(.84+daylight*.74+twilight*.24+night*.14)
+:(.62+daylight*1.05+twilight*.28+night*.18);
 skyFill.intensity=outdoor;
 }
 if(ambient){
-ambient.intensity=.10+daylight*.11+night*.07;
+ambient.intensity=(this.paperStyle?.enabled!==false?.13:.10)+daylight*(this.paperStyle?.enabled!==false?.09:.11)+night*.07;
 }
 if(moon){
 moon.intensity=night*.72;
@@ -1056,7 +1060,7 @@ terrain:this.terrainRenderer.stats(),
 paperTerrain:this.paperTerrainRenderer?.snapshot?.()||null,
 voxelTerrain:this.terrainRenderer.stats(),
 water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
-lighting:{mode:'sun-sky-moon-torch',contactShadow:'soft-worldspace-player-shadow',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+lighting:{mode:'soft-cardstock-sun-sky-moon-torch',toneMapping:'ACESFilmic',contactShadow:'soft-worldspace-player-shadow',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
 cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.15,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
