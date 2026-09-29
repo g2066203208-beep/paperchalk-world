@@ -98,7 +98,7 @@ try{
 
   const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
   assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
-  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({yaw:-2.05,pitch:.34,distance:20,height:3.4}));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:.08,distance:12,height:.45}));
   const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:false,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
   assert(atmosphereOff?.godRays===false,'god rays did not disable '+JSON.stringify(atmosphereOff));
   await page.waitForTimeout(700);
