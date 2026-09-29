@@ -75,7 +75,7 @@ assert(environment.includes('FogExp2')&&environment.includes('gpu-vertex-shader'
 assert(biome.includes("DEEP_OCEAN:'deep-ocean'")&&biome.includes("CLIFF:'cliff'")&&biome.includes("SNOWFIELD:'snowfield'"),'macro landforms missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
 
-assert(engine.includes("paperchalk-pbr-voxel-ao-v16"),'PBR voxel AO shader cache key missing');
+assert(engine.includes("paperchalk-pbr-voxel-ao-v17-weather"),'PBR voxel AO shader cache key missing');
 assert(engine.includes("vVoxelWorldNormal"),'whole voxel owner normal missing');
 assert(engine.includes("vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01)"),'whole voxel tint ownership missing');
 assert(water.includes('_packRemainderToBoundary'),'shoreline remainder packing missing');
