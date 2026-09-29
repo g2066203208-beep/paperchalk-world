@@ -2,6 +2,7 @@ import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
+createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
 export class WorldSpaceHealthBar{
@@ -226,7 +227,13 @@ this.settings={radiusXZ:3,radiusY:2,texturePixels:terrain.pixelsPerMeter||128,ma
 this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
 this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
 this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
-this.material=new THREE.MeshLambertMaterial({map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:false,transparent:true,opacity:1,depthWrite:true,flatShading:true});
+this.paperSurfaceTexture=createVoxelPaperSurfaceTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
+this.material=new THREE.MeshStandardMaterial({
+map:this.texture,vertexColors:true,side:THREE.FrontSide,toneMapped:true,
+transparent:true,opacity:1,depthWrite:true,flatShading:true,
+metalness:0,roughness:.94,roughnessMap:this.paperSurfaceTexture,
+bumpMap:this.paperSurfaceTexture,bumpScale:.075
+});
 this.lightGridSize=25;
 this.lightGridRadius=(this.lightGridSize-1)>>1;
 this.lightGridData=new Uint8Array(this.lightGridSize*this.lightGridSize);
@@ -270,10 +277,10 @@ shader.uniforms.uInteractionRowCenterZ=this.darknessUniforms.uInteractionRowCent
 shader.uniforms.uBlackBackRowCenterZ=this.darknessUniforms.uBlackBackRowCenterZ;
 shader.uniforms.uVoxelSize=this.darknessUniforms.uVoxelSize;
 shader.vertexShader=shader.vertexShader
-.replace('#include <common>','#include <common>\nattribute float darkness;\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;')
-.replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvVoxelWorldNormal=normalize(mat3(modelMatrix)*normal);');
+.replace('#include <common>','#include <common>\nattribute float darkness;\nattribute float voxelAO;\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;')
+.replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelAO=voxelAO;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvVoxelWorldNormal=normalize(mat3(modelMatrix)*normal);');
 shader.fragmentShader=shader.fragmentShader
-.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
+.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
 .replace('#include <opaque_fragment>',`
 vec2 lightUv=(vVoxelWorldPos.xy-uVoxelLightOrigin)/uVoxelLightSpan;
 float inside=step(0.0,lightUv.x)*step(lightUv.x,1.0)*step(0.0,lightUv.y)*step(lightUv.y,1.0);
@@ -282,6 +289,9 @@ float reveal=gridReveal;
 float effectiveDarkness=clamp(vVoxelDarkness,0.0,1.0);
 float darknessVisibility=mix(1.0,0.01+0.99*reveal,effectiveDarkness);
 outgoingLight*=darknessVisibility;
+// View-independent voxel AO: cheap contact darkening baked at greedy-mesh vertices.
+float voxelAoLight=mix(.52,1.0,smoothstep(0.0,1.0,vVoxelAO));
+outgoingLight*=voxelAoLight;
 vec3 voxelCell=floor((vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01))/uVoxelSize);
 float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
 float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
@@ -310,7 +320,7 @@ gl_FragColor.a*=occlusionAlpha;
 `);
 this.terrainShader=shader;
 };
-this.material.customProgramCacheKey=()=> 'paperchalk-whole-voxel-color-v15';
+this.material.customProgramCacheKey=()=> 'paperchalk-pbr-voxel-ao-v16';
 this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
 }
 _markDirty(cx,cy,cz){
@@ -428,11 +438,11 @@ for(const key of this.visibleKeys){
 const r=this.meshes.get(key);if(!r?.mesh.visible)continue;visible++;
 const u=r.mesh.userData||{};solid+=u.solidVoxels||0;quads+=u.quads||0;unitFaces+=u.unitFaces||0;triangles+=u.triangles||0;
 }
-return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,...this.terrain.stats()};
+return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,materialMode:'MeshStandardMaterial-paper-PBR',voxelAmbientOcclusion:'0fps-style-vertex-ao',paperBump:true,...this.terrain.stats()};
 }
 dispose(){
 this.unsubscribe?.();for(const r of this.meshes.values())r.mesh.geometry.dispose()
-this.texture.dispose();this.lightGridTexture.dispose();this.material.dispose();this.scene.remove(this.root);
+this.texture.dispose();this.paperSurfaceTexture?.dispose?.();this.lightGridTexture.dispose();this.material.dispose();this.scene.remove(this.root);
 }
 }
 class FishSchoolRenderer{
@@ -574,7 +584,8 @@ this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,coarse?1.5:2));
 this.renderer.setPixelRatio(this.pixelRatio);
 this.renderer.outputColorSpace=THREE.SRGBColorSpace;
 this.renderer.setClearColor(this.fixedBackgroundColor,1);
-this.renderer.toneMapping=THREE.NoToneMapping;
+this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
+this.renderer.toneMappingExposure=1.08;
 this.renderer.shadowMap.enabled=true;
 this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 this.renderer.domElement.className='three-world-canvas';
@@ -600,10 +611,10 @@ sun.shadow.bias=-0.0002;
 sun.shadow.normalBias=.025;
 this.scene.add(sun);
 this.scene.add(sun.target);
-const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,1.0);
+const skyFill=new THREE.HemisphereLight(0xcfe6ff,0x5a4738,.82);
 skyFill.name='sky-environment-bounce';
 this.scene.add(skyFill);
-const ambient=new THREE.AmbientLight(0x8090a6,.12);
+const ambient=new THREE.AmbientLight(0x8090a6,.075);
 ambient.name='soft-global-bounce';
 this.scene.add(ambient);
 const moon=new THREE.DirectionalLight(0x8eb6ff,.0);
@@ -999,14 +1010,14 @@ drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
 debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
-lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+lighting:{mode:'paper-pbr-sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
 cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.15,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
 undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
 paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
 playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
-terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true
+terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneMapping:'ACESFilmic',paperSurfacePBR:true
 };
 }
 dispose(){
