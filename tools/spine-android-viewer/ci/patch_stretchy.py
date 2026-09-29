@@ -320,45 +320,9 @@ for rel in [
 # Generic multi-bone skinning when a mesh is generated. Any custom bone branch
 # (fingers, toes, hair, clothes, tail, ears...) can influence the mesh.
 s = read("src/components/canvas/CanvasViewport.jsx")
-old_skin = """          // Compute skin weights if this part belongs to a limb
-          const parentGroup = proj.nodes.find(n => n.id === node.parent);
-          if (parentGroup && parentGroup.boneRole) {
-            const roleMap = {
-              'leftArm': 'leftElbow', 'rightArm': 'rightElbow',
-              'leftLeg': 'leftKnee', 'rightLeg': 'rightKnee'
-            };
-            const childRole = roleMap[parentGroup.boneRole];
-            if (childRole) {
-              const jointBone = proj.nodes.find(n => n.parent === parentGroup.id && n.boneRole === childRole);
-              if (jointBone) {
-                const jx = jointBone.transform.pivotX;
-                const jy = jointBone.transform.pivotY;
-
-                // Build a direction vector from the shoulder (parentGroup pivot) → elbow (jointBone pivot).
-                // Projecting vertices onto this axis gives correct weights regardless of arm orientation.
-                const sx = parentGroup.transform.pivotX;
-                const sy = parentGroup.transform.pivotY;
-                const axDx = jx - sx;
-                const axDy = jy - sy;
-                const axLen = Math.sqrt(axDx * axDx + axDy * axDy) || 1;
-                const axX = axDx / axLen;
-                const axY = axDy / axLen;
-
-                // Blend zone: 40px centred on the elbow pivot along the arm axis
-                const blend = 40;
-                node.mesh.boneWeights = vertices.map(v => {
-                  // Signed distance of vertex past the elbow pivot (along the arm axis)
-                  const proj2 = (v.x - jx) * axX + (v.y - jy) * axY;
-                  // proj2 < 0 → upper arm (rigid to shoulder), > 0 → lower arm (follows elbow)
-                  const w = proj2 / blend + 0.5;
-                  return Math.max(0, Math.min(1, w));
-                });
-                node.mesh.jointBoneId = jointBone.id;
-                console.log(\`[Skinning] \${node.name} → \${childRole} (\${vertices.length} verts, pivot \${jx.toFixed(0)},\${jy.toFixed(0)})\`);
-              }
-            }
-          }
-"""
+skin_pat = re.compile(
+    r"""          // Compute skin weights if this part belongs to a limb\n[\s\S]*?          \}\n\n          // If the pivot is at the default"""
+)
 new_skin = """          // Generic multi-bone weights for any armature branch.
           const parentGroup = proj.nodes.find(n => n.id === node.parent);
           if (parentGroup && parentGroup.boneRole) {
@@ -410,7 +374,6 @@ new_skin = """          // Generic multi-bone weights for any armature branch.
               .map(([id,weights])=>({id,weights}))
               .filter(sb=>sb.weights.some(w=>w>0.001));
 
-            // Backward-compatible strongest influence for legacy exporters.
             const strongest=node.mesh.skinBones
               .map(sb=>({sb,total:sb.weights.reduce((a,b)=>a+b,0)}))
               .sort((a,b)=>b.total-a.total)[0]?.sb;
@@ -419,10 +382,11 @@ new_skin = """          // Generic multi-bone weights for any armature branch.
               node.mesh.boneWeights=[...strongest.weights];
             }
           }
-"""
-if old_skin not in s:
+
+          // If the pivot is at the default"""
+s, n = skin_pat.subn(new_skin, s, count=1)
+if n != 1:
     raise SystemExit("[patch_stretchy] required pattern missing: generic skinning")
-s=s.replace(old_skin,new_skin,1)
 write("src/components/canvas/CanvasViewport.jsx", s)
 
 # Save/load all multi-bone weights losslessly.
