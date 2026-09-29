@@ -11,8 +11,8 @@ export class AtmospherePass{
     this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
       enabled:true,volumetric:true,
-      intensity:this.mobileLike?.26:.34,
-      fogDensity:this.mobileLike?.0024:.0028,
+      intensity:this.mobileLike?.24:.30,
+      fogDensity:this.mobileLike?.0022:.0026,
       heightFalloff:.16,anisotropy:.72,maxDistance:this.mobileLike?42:58,
       qualityScale:this.mobileLike?.34:.50,steps:this.mobileLike?10:17
     };
@@ -137,13 +137,16 @@ export class AtmospherePass{
             trans*=absorb;
             t+=stepLen;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.10);
-          float forwardBoost=smoothstep(.42,.99,mu);
-          float skyWeight=depth>.9997?.34:1.0;
-          vec3 scatter=uSunColor*sunScatter*uIntensity*(.24+forwardBoost*.58)*skyWeight;
-          scatter=min(scatter,vec3(.18));
-          vec3 premul=uFogColor*fogAlpha*.12+scatter;
-          gl_FragColor=vec4(premul,fogAlpha*.12);
+          float fogAlpha=clamp(1.0-trans,0.0,.075);
+          // A Minecraft-style shaft should appear where the camera nearly
+          // aligns with sunlight and shadow-map visibility changes along the
+          // ray. Suppress broad forward haze so it never becomes a glow dome.
+          float shaftGate=smoothstep(.975,.998,mu);
+          float skyWeight=depth>.9997?.055:1.0;
+          vec3 scatter=uSunColor*sunScatter*uIntensity*(.018+shaftGate*.46)*skyWeight;
+          scatter=min(scatter,vec3(.105));
+          vec3 premul=uFogColor*fogAlpha*.075+scatter;
+          gl_FragColor=vec4(premul,fogAlpha*.075);
         }
       `
     });
