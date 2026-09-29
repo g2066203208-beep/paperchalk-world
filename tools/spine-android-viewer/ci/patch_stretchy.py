@@ -398,7 +398,223 @@ if needle in s and "skinBones:" not in s:
 """,1)
 write("src/io/projectFile.js", s)
 
-# SkeletonOverlay is copied from the maintained Android/mobile implementation
-# after this patch script. Keeping it outside the patcher avoids brittle source
-# substitutions while allowing arbitrary hierarchy and smooth touch dragging.
+# Skeleton overlay V4: arbitrary hierarchy, professional tapered bones, generic
+# custom-bone rotation/mesh weights, and requestAnimationFrame-throttled joint drag.
+s = read("src/components/canvas/SkeletonOverlay.jsx")
+
+# Professional bone palette and Chinese labels.
+s = must_replace(
+    s,
+    "const LINE_COLOUR   = 'rgba(34,211,238,0.55)';",
+    """const LINE_COLOUR   = 'rgba(34,211,238,0.72)';
+const BONE_FILL_EDIT = 'rgba(250,204,21,0.30)';
+const BONE_FILL_NORMAL = 'rgba(34,211,238,0.22)';
+const BONE_STROKE_EDIT = 'rgba(250,204,21,0.95)';
+const BONE_STROKE_NORMAL = 'rgba(34,211,238,0.90)';
+const ROLE_ZH = {
+  root:'骨盆/根', torso:'躯干', neck:'颈部', head:'头部', eyes:'眼睛',
+  leftArm:'左上臂', rightArm:'右上臂', leftElbow:'左前臂', rightElbow:'右前臂',
+  leftHand:'左手', rightHand:'右手',
+  leftLeg:'左大腿', rightLeg:'右大腿', leftKnee:'左小腿', rightKnee:'右小腿',
+  leftFoot:'左脚', rightFoot:'右脚'
+};""",
+    "skeleton V4 palette"
+)
+
+# rAF state for high-frequency touch / stylus dragging.
+s = must_replace(
+    s,
+    "  const dragRef  = useRef(null); // { type: 'joint'|'rotate', nodeId, ... }\n  const svgRef   = useRef(null);",
+    """  const dragRef  = useRef(null); // { type: 'joint'|'rotate', nodeId, ... }
+  const svgRef   = useRef(null);
+  const jointFrameRef = useRef(0);
+  const jointPendingRef = useRef(null);""",
+    "joint rAF refs"
+)
+
+# Joint dragging now starts a single undo batch.
+s = must_replace(
+    s,
+    """      if (!skeletonEditMode) return;
+      dragRef.current = { type: 'joint', nodeId };""",
+    """      if (!skeletonEditMode) return;
+      beginBatch(useProjectStore.getState().project);
+      dragRef.current = { type: 'joint', nodeId };""",
+    "joint begin batch"
+)
+
+# Replace fixed-role dependent mesh collection with arbitrary bone IDs and
+# multi-bone skin entries.
+pat = re.compile(
+    r"""      const JSKinningRoles = new Set\(\['leftElbow',[\s\S]*?      dragRef\.current = \{""",
+    re.M
+)
+generic_dep = """      const dependentParts = [];
+      for (const pt of effectiveNodes) {
+        if (pt.type !== 'part' || !pt.mesh) continue;
+        const skinEntry = pt.mesh.skinBones?.find?.(sb => sb.id === node.id) ?? null;
+        const legacy = pt.mesh.jointBoneId === node.id;
+        if (!skinEntry && !legacy) continue;
+        let startVerts = pt.mesh.vertices;
+        if (editorModeRef.current === 'animation') {
+          startVerts = animDraftPose.get(pt.id)?.mesh_verts ?? overrides?.get(pt.id)?.mesh_verts ?? pt.mesh.vertices;
+        }
+        dependentParts.push({
+          partId: pt.id,
+          startVerts: startVerts.map(v => ({...v})),
+          boneWeights: skinEntry?.weights ?? pt.mesh.boneWeights ?? startVerts.map(() => 1),
+          imgPivotX: node.transform.pivotX,
+          imgPivotY: node.transform.pivotY,
+        });
+      }
+
+      dragRef.current = {"""
+s, n = pat.subn(generic_dep, s, count=1)
+if n != 1:
+    raise SystemExit("[patch_stretchy] required pattern missing: generic dependent meshes")
+
+# Smooth joint drag: one project update per display frame, never every raw
+# touch event. This removes the visible stutter on high-rate Android touch.
+old_joint = """      updateProject((proj) => {
+        const node = proj.nodes.find(n => n.id === drag.nodeId);
+        if (node) {
+          node.transform.pivotX = imgX;
+          node.transform.pivotY = imgY;
+        }
+      }, { skipHistory: true });"""
+new_joint = """      jointPendingRef.current = { nodeId: drag.nodeId, imgX, imgY };
+      if (!jointFrameRef.current) {
+        jointFrameRef.current = requestAnimationFrame(() => {
+          jointFrameRef.current = 0;
+          const p = jointPendingRef.current;
+          jointPendingRef.current = null;
+          if (!p) return;
+          updateProject((proj) => {
+            const node = proj.nodes.find(n => n.id === p.nodeId);
+            if (node) {
+              node.transform.pivotX = p.imgX;
+              node.transform.pivotY = p.imgY;
+            }
+          }, { skipHistory: true });
+        });
+      }"""
+s = must_replace(s, old_joint, new_joint, "rAF joint update")
+
+# Flush/cancel frame at pointer-up before ending the batch.
+s = must_replace(
+    s,
+    """  const onPointerUp = useCallback(() => {
+    endBatch();
+    const drag = dragRef.current;""",
+    """  const onPointerUp = useCallback(() => {
+    if (jointFrameRef.current) {
+      cancelAnimationFrame(jointFrameRef.current);
+      jointFrameRef.current = 0;
+    }
+    const pending = jointPendingRef.current;
+    jointPendingRef.current = null;
+    if (pending) {
+      updateProject((proj) => {
+        const node = proj.nodes.find(n => n.id === pending.nodeId);
+        if (node) {
+          node.transform.pivotX = pending.imgX;
+          node.transform.pivotY = pending.imgY;
+        }
+      }, { skipHistory: true });
+    }
+    endBatch();
+    const drag = dragRef.current;""",
+    "joint flush"
+)
+
+# Connections come from actual parent IDs, never a hard-coded human template.
+old_lines = """  const lines = [];
+  for (const [fromRole, toRole] of SKELETON_CONNECTIONS) {
+    const from = boneNodes[fromRole];
+    const to   = boneNodes[toRole];
+    if (!from || !to) continue;
+    const [x1, y1] = pivotScreenPos(from);
+    const [x2, y2] = pivotScreenPos(to);
+    lines.push(
+      <line key={`${fromRole}-${toRole}`}
+        x1={x1} y1={y1} x2={x2} y2={y2}
+        stroke={LINE_COLOUR} strokeWidth={skeletonEditMode ? 2 : 1.5}
+        strokeLinecap="round" pointerEvents="none"
+      />
+    );
+  }
+"""
+new_lines = """  const boneShapes = [];
+  const boneById = new Map(Object.values(boneNodes).map(n => [n.id, n]));
+  for (const [toRole, to] of Object.entries(boneNodes)) {
+    const from = to.parent ? boneById.get(to.parent) : null;
+    if (!from) continue;
+    const [x1, y1] = pivotScreenPos(from);
+    const [x2, y2] = pivotScreenPos(to);
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    const px = -dy / len, py = dx / len;
+    const baseW = Math.max(6, Math.min(13, len * 0.10));
+    const neckW = Math.max(3, baseW * 0.34);
+    const shoulderX = x1 + dx * 0.22, shoulderY = y1 + dy * 0.22;
+    const inset = Math.min(0.08, 8 / len);
+    const tipX = x2 - dx * inset, tipY = y2 - dy * inset;
+    const points = [
+      `${x1 + px*neckW},${y1 + py*neckW}`,
+      `${shoulderX + px*baseW},${shoulderY + py*baseW}`,
+      `${tipX + px*2.4},${tipY + py*2.4}`,
+      `${x2},${y2}`,
+      `${tipX - px*2.4},${tipY - py*2.4}`,
+      `${shoulderX - px*baseW},${shoulderY - py*baseW}`,
+      `${x1 - px*neckW},${y1 - py*neckW}`,
+    ].join(' ');
+    boneShapes.push(
+      <g key={`bone-${from.id}-${to.id}`} pointerEvents="none">
+        <polygon points={points}
+          fill={skeletonEditMode ? BONE_FILL_EDIT : BONE_FILL_NORMAL}
+          stroke={skeletonEditMode ? BONE_STROKE_EDIT : BONE_STROKE_NORMAL}
+          strokeWidth={1.5} strokeLinejoin="round" />
+        <line x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke={LINE_COLOUR} strokeWidth={1} strokeLinecap="round" />
+      </g>
+    );
+  }
+"""
+s = must_replace(s, old_lines, new_lines, "generic tapered hierarchy")
+
+# Every custom bone is rotatable; only root and special eye trackpad skip arcs.
+s = s.replace(
+    "    if (!ARC_BONE_ROLES.has(role) || skeletonEditMode) continue;",
+    "    if (role === 'root' || role === 'eyes' || skeletonEditMode) continue;"
+)
+
+# Root is also editable, and touch target is much larger than the visible head.
+s = s.replace("    if (role === 'root') continue;\n", "")
+old_circle = """      <circle key={role}
+        cx={cx} cy={cy} r={radius}
+        fill={fill} stroke="#000" strokeWidth={1.5}
+        style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents: 'auto' }}
+        onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
+        onClick={() => !skeletonEditMode && setSelection([node.id])}
+      />"""
+new_circle = """      <g key={role}>
+        <circle cx={cx} cy={cy} r={Math.max(20, radius + 11)}
+          fill="transparent"
+          style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents: 'auto', touchAction: 'none' }}
+          onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
+          onClick={() => !skeletonEditMode && setSelection([node.id])}
+        />
+        <circle cx={cx} cy={cy} r={radius}
+          fill={fill} stroke="#111827" strokeWidth={2} pointerEvents="none" />
+        <circle cx={cx} cy={cy} r={Math.max(1.8, radius*0.28)}
+          fill="#111827" opacity={0.72} pointerEvents="none" />
+      </g>"""
+s = must_replace(s, old_circle, new_circle, "large touch joints")
+s = s.replace("{role}\n          </text>", "{ROLE_ZH[role] ?? node.name ?? role}\n          </text>")
+s = s.replace("{arcs}\n        {lines}", "{arcs}\n        {boneShapes}")
+s = s.replace(">Adjust Joints</span>", ">调整骨骼</span>")
+s = s.replace("Drag yellow dots to reposition joints.", "拖动关节调整骨骼；支持任意父子骨链。")
+s = s.replace(">Iris Offset</text>", ">眼球偏移</text>")
+write("src/components/canvas/SkeletonOverlay.jsx", s)
+
 print("[patch_stretchy] OK")
