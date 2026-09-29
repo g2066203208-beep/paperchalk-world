@@ -212,6 +212,13 @@ this.THREE=THREE;this.terrain=terrain;this.scene=scene;
 this.settings={radiusXZ:3,radiusY:2,texturePixels:terrain.pixelsPerMeter||128,maxBuildsPerFrame:5,...settings};
 this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
 this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
+this.meshWorker=null;this.meshInFlight=new Map();this.meshRequestId=0;
+this.meshWorkerStats={requested:0,completed:0,staleRejected:0,errors:0};
+this.workerPalette=new Float32Array(6*3);
+for(const [tile,value] of Object.entries(DEFAULT_TERRAIN_PALETTE)){
+const c=new THREE.Color(value),i=(Number(tile)||0)*3;
+this.workerPalette[i]=c.r;this.workerPalette[i+1]=c.g;this.workerPalette[i+2]=c.b;
+}
 this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
 this.paperSurfaceTexture=createVoxelPaperSurfaceTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
 const anisotropy=Math.max(1,Math.min(8,Number(this.settings.anisotropy)||1));
@@ -318,8 +325,76 @@ gl_FragColor.a*=occlusionAlpha;
 `);
 this.terrainShader=shader;
 };
-this.material.customProgramCacheKey=()=> 'paperchalk-pbr-voxel-ao-v16';
+this.material.customProgramCacheKey=()=> 'paperchalk-pbr-voxel-ao-v17-weather';
+this._initMeshWorker();
 this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
+}
+_initMeshWorker(){
+if(typeof Worker==='undefined')return;
+try{
+this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=world-core-r2',import.meta.url),{type:'module'});
+this.meshWorker.onmessage=event=>this._onMeshWorkerMessage(event.data);
+this.meshWorker.onerror=error=>{
+console.warn('[paperchalk] voxel mesh worker disabled',error);
+this.meshWorkerStats.errors++;this.meshWorker?.terminate?.();this.meshWorker=null;this.meshInFlight.clear();
+};
+}catch(error){console.warn('[paperchalk] voxel mesh worker unavailable',error);this.meshWorker=null}
+}
+_workerGeometry(data){
+const T=this.THREE,g=new T.BufferGeometry();
+g.setAttribute('position',new T.BufferAttribute(data.positions,3));
+g.setAttribute('normal',new T.BufferAttribute(data.normals,3));
+g.setAttribute('color',new T.BufferAttribute(data.colors,3));
+g.setAttribute('darkness',new T.BufferAttribute(data.darkness,1));
+g.setAttribute('voxelAO',new T.BufferAttribute(data.ao,1));
+g.setAttribute('uv',new T.BufferAttribute(data.uvs,2));
+g.setIndex(new T.BufferAttribute(data.indices,1));
+if(data.positions.length){g.computeBoundingBox();g.computeBoundingSphere()}
+g.userData=data.userData||{};return g;
+}
+_requestWorkerBuild(cx,cy,cz){
+if(!this.meshWorker)return this._ensure(cx,cy,cz);
+const key=this.terrain.chunkKey(cx,cy,cz),chunk=this.terrain.getChunk(cx,cy,cz);
+const existing=this.meshInFlight.get(key);
+if(existing?.version===chunk.version)return null;
+const n=chunk.size,H=n+2,halo=new Uint8Array(H*H*H),s=this.terrain.tileSize;
+for(let y=-1;y<=n;y++)for(let z=-1;z<=n;z++)for(let x=-1;x<=n;x++){
+const value=(x>=0&&x<n&&y>=0&&y<n&&z>=0&&z<n)
+?chunk.get(x,y,z)
+:this.terrain.peekVoxel(cx*n+x,cy*n+y,cz*n+z);
+halo[((y+1)*H+(z+1))*H+(x+1)]=value;
+}
+const surfaces=new Int16Array(n);
+for(let x=0;x<n;x++)surfaces[x]=this.terrain.surfaceCell(cx*n+x,this.terrain.interactionRowZ);
+const id=++this.meshRequestId,version=chunk.version;
+this.meshInFlight.set(key,{id,version,cx,cy,cz});this.meshWorkerStats.requested++;
+this.meshWorker.postMessage({
+type:'mesh',id,key,version,n,s,cx,cy,cz,
+interactionRowZ:this.terrain.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,
+voxels:halo.buffer,surfaces:surfaces.buffer,palette:this.workerPalette
+},[halo.buffer,surfaces.buffer]);
+return null;
+}
+_onMeshWorkerMessage(data){
+if(!data||!data.key)return;
+const pending=this.meshInFlight.get(data.key);
+if(!pending||pending.id!==data.id){this.meshWorkerStats.staleRejected++;return}
+this.meshInFlight.delete(data.key);
+if(data.type==='mesh-error'){
+this.meshWorkerStats.errors++;console.warn('[paperchalk] voxel mesh worker error',data.message);return;
+}
+const chunk=this.terrain.chunks.get(data.key);
+if(!chunk||chunk.version!==data.version||!this.visibleKeys.has(data.key)){
+this.meshWorkerStats.staleRejected++;return;
+}
+const geometry=this._workerGeometry(data),old=this.meshes.get(data.key);
+if(old){this.root.remove(old.mesh);old.mesh.geometry.dispose()}
+const span=chunk.size*this.terrain.tileSize,mesh=new this.THREE.Mesh(geometry,this.material);
+mesh.name='voxel-chunk:'+data.cx+','+data.cy+','+data.cz;
+mesh.position.set(data.cx*span,data.cy*span,data.cz*span-this.terrain.tileSize*.5);
+mesh.receiveShadow=true;mesh.castShadow=true;mesh.userData={cx:data.cx,cy:data.cy,cz:data.cz,...geometry.userData};
+this.meshes.set(data.key,{mesh,version:data.version,cx:data.cx,cy:data.cy,cz:data.cz});this.root.add(mesh);
+this.meshWorkerStats.completed++;
 }
 _markDirty(cx,cy,cz){
 const record=this.meshes.get(this.terrain.chunkKey(cx,cy,cz));
@@ -418,18 +493,20 @@ if(this.terrain.chunkMayContainTerrain&&!this.terrain.chunkMayContainTerrain(cx,
 const key=this.terrain.chunkKey(cx,cy,cz);
 next.add(key);
 const record=this.meshes.get(key);
-if(!record||record.version<0)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+if((!record||record.version<0)&&!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
 else record.mesh.visible=true;
 }
 queue.sort((a,b)=>a.d-b.d);
 const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
 for(let i=0;i<Math.min(budget,queue.length);i++){
-const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+const q=queue[i];
+if(this.meshWorker)this._requestWorkerBuild(q.cx,q.cy,q.cz);
+else{const r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;}
 }
 for(const [key,record] of [...this.meshes]){
 if(next.has(key))continue;
 this.root.remove(record.mesh);record.mesh.geometry.dispose();this.meshes.delete(key);
-this.terrain.unloadChunk(record.cx,record.cy,record.cz);
+this.meshInFlight.delete(key);this.terrain.unloadChunk(record.cx,record.cy,record.cz);
 }
 this.visibleKeys=next;
 }
@@ -440,10 +517,11 @@ for(const key of this.visibleKeys){
 const r=this.meshes.get(key);if(!r?.mesh.visible)continue;visible++;
 const u=r.mesh.userData||{};solid+=u.solidVoxels||0;quads+=u.quads||0;unitFaces+=u.unitFaces||0;triangles+=u.triangles||0;
 }
-return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,materialMode:'MeshStandardMaterial-paper-PBR',voxelAmbientOcclusion:'0fps-style-vertex-ao',paperBump:true,...this.terrain.stats()};
+return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,materialMode:'MeshStandardMaterial-paper-PBR',voxelAmbientOcclusion:'0fps-style-vertex-ao',paperBump:true,workerMeshing:!!this.meshWorker,workerInFlight:this.meshInFlight.size,workerStats:{...this.meshWorkerStats},...this.terrain.stats()};
 }
 dispose(){
-this.unsubscribe?.();for(const r of this.meshes.values())r.mesh.geometry.dispose()
+this.unsubscribe?.();this.meshWorker?.terminate?.();this.meshWorker=null;this.meshInFlight.clear();
+for(const r of this.meshes.values())r.mesh.geometry.dispose()
 this.texture.dispose();this.paperSurfaceTexture?.dispose?.();this.lightGridTexture.dispose();this.material.dispose();this.scene.remove(this.root);
 }
 }
