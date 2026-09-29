@@ -622,20 +622,21 @@ moon.shadow.bias=-0.00025;
 moon.shadow.normalBias=.02;
 this.scene.add(moon);
 this.scene.add(moon.target);
-const sunDisc=new THREE.Mesh(
-new THREE.SphereGeometry(2.6,24,16),
-new THREE.MeshBasicMaterial({color:0xffe49a,toneMapped:false,depthWrite:false})
-);
-sunDisc.name='visible-sun';
-sunDisc.renderOrder=-50;
-this.scene.add(sunDisc);
-const moonDisc=new THREE.Mesh(
-new THREE.SphereGeometry(1.8,20,14),
-new THREE.MeshBasicMaterial({color:0xdce7ff,toneMapped:false,depthWrite:false})
-);
-moonDisc.name='visible-moon';
-moonDisc.renderOrder=-50;
-this.scene.add(moonDisc);
+const paperDiscTexture=(inner,outer)=>{
+const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
+const ctx=canvas.getContext('2d'),g=ctx.createRadialGradient(64,64,34,64,64,61);
+g.addColorStop(0,inner);g.addColorStop(.72,inner);g.addColorStop(.93,outer);g.addColorStop(1,'rgba(255,255,255,0)');
+ctx.fillStyle=g;ctx.beginPath();ctx.arc(64,64,62,0,Math.PI*2);ctx.fill();
+ctx.globalAlpha=.15;ctx.fillStyle='#fff';
+for(let i=0;i<180;i++){const a=i*2.399,r=8+(i*37)%48;ctx.fillRect(64+Math.cos(a)*r,64+Math.sin(a)*r,1.2,1.2)}
+const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;return tex;
+};
+this.sunDiscTexture=paperDiscTexture('#ffe49a','rgba(255,205,112,.2)');
+this.moonDiscTexture=paperDiscTexture('#dce7ff','rgba(170,195,235,.18)');
+const sunDisc=new THREE.Sprite(new THREE.SpriteMaterial({map:this.sunDiscTexture,transparent:true,depthWrite:false,depthTest:false,toneMapped:false,fog:false}));
+sunDisc.name='visible-sun';sunDisc.scale.set(5.2,5.2,1);sunDisc.renderOrder=-50;this.scene.add(sunDisc);
+const moonDisc=new THREE.Sprite(new THREE.SpriteMaterial({map:this.moonDiscTexture,transparent:true,depthWrite:false,depthTest:false,toneMapped:false,fog:false}));
+moonDisc.name='visible-moon';moonDisc.scale.set(3.7,3.7,1);moonDisc.renderOrder=-50;this.scene.add(moonDisc);
 this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
 this.backdrop=null;
 this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
@@ -905,7 +906,7 @@ moon.target.updateMatrixWorld();
 if(sunDisc){
 sunDisc.visible=daylight>.02;
 sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
-sunDisc.scale.setScalar(.8+daylight*.35);
+sunDisc.scale.setScalar(4.6+daylight*1.1);
 }
 if(moonDisc){
 moonDisc.visible=night>.03;
@@ -1029,6 +1030,8 @@ this.torch.root.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
 }
 this.playerSprite?.dispose();for(const entity of this.paperEntities)entity.dispose();
 this.environmentTarget?.dispose?.();
+this.sunDiscTexture?.dispose?.();this.moonDiscTexture?.dispose?.();
+this.terrainLights?.sunDisc?.material?.dispose?.();this.terrainLights?.moonDisc?.material?.dispose?.();
 this.renderer.dispose();this.host.replaceChildren();
 }
 }
