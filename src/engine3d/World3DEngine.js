@@ -1,5 +1,5 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
-import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r1';
+import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r2';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
@@ -649,8 +649,10 @@ paperLayerHeight:.5,
 paperThickness:.30,
 bevelWidth:.045,
 bevelHeight:.055,
-fiberStrength:.050,
-printNoiseStrength:.040,
+fiberStrength:.065,
+printNoiseStrength:.045,
+microNormalStrength:.68,
+roughnessVariation:.055,
 sideDarkness:.92
 });
 this.terrainRenderer.root.visible=false;
