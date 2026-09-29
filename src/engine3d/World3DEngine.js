@@ -77,10 +77,27 @@ class WaterRenderer{
 constructor(THREE,terrain,scene){
 this.THREE=THREE;this.terrain=terrain;this.scene=scene;
 this.meshes=new Map();this.initialized=false;this.waterVersion=-1;this.dirty=new Set();
-this.material=new THREE.MeshPhongMaterial({
-color:0x49a9df,transparent:true,opacity:.62,depthWrite:false,
-shininess:78,specular:0xc8eeff,side:THREE.DoubleSide,flatShading:true
+this.waterTime=0;this.waterUniforms={uWaterTime:{value:0}};
+this.material=new THREE.MeshStandardMaterial({
+color:0x4aa4c7,transparent:true,opacity:.60,depthWrite:false,
+roughness:.22,metalness:0,side:THREE.DoubleSide,flatShading:false
 });
+this.material.onBeforeCompile=shader=>{
+shader.uniforms.uWaterTime=this.waterUniforms.uWaterTime;
+shader.vertexShader=shader.vertexShader
+.replace('#include <common>','#include <common>\nuniform float uWaterTime; varying float vWaterTop;')
+.replace('#include <begin_vertex>',`#include <begin_vertex>
+vWaterTop=smoothstep(.45,.82,normal.y);
+float waterWave=(sin(position.x*1.35+uWaterTime*1.9)+cos(position.z*1.15-uWaterTime*1.45)+sin((position.x+position.z)*.52+uWaterTime*.8))*.010;
+transformed.y+=waterWave*vWaterTop;`);
+shader.fragmentShader=shader.fragmentShader
+.replace('#include <common>','#include <common>\nvarying float vWaterTop;')
+.replace('#include <color_fragment>',`#include <color_fragment>
+diffuseColor.rgb*=mix(vec3(.68,.80,.86),vec3(1.04,1.08,1.10),vWaterTop);
+diffuseColor.a*=mix(.86,1.0,vWaterTop);`);
+this.waterShader=shader;
+};
+this.material.customProgramCacheKey=()=> 'paperchalk-water-v7';
 this.root=new THREE.Group();this.root.name='eight-layer-water-surface-meshes';scene.add(this.root);
 }
 _key(gx,gy,gz){return gx+','+gy+','+gz}
@@ -175,7 +192,9 @@ out.add(Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n));
 }
 return out;
 }
-update(){
+update(dt=0){
+this.waterTime+=Math.max(0,Math.min(.05,Number(dt)||0));
+this.waterUniforms.uWaterTime.value=this.waterTime;
 const water=this.terrain.water;if(!water)return;
 if(!this.initialized){
 this.initialized=true;
@@ -198,7 +217,7 @@ let faces=0,renderedCells=0,topRects=0,topCells=0;
 for(const mesh of this.meshes.values()){
 const u=mesh.geometry.userData||{};faces+=u.faces||0;renderedCells+=u.cells||0;topRects+=u.topRects||0;topCells+=u.topCells||0;
 }
-return {...w,renderMode:'event-driven-greedy-water-v6',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,topRects,topCells,topMergeRatio:topRects?topCells/topRects:1,internalFacesCulled:true,greedyTopSurface:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:false};
+return {...w,renderMode:'event-driven-greedy-water-v7',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,topRects,topCells,topMergeRatio:topRects?topCells/topRects:1,internalFacesCulled:true,greedyTopSurface:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:true,waveShader:true};
 }
 dispose(){
 for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
