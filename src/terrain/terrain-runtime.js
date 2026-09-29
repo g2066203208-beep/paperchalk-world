@@ -126,7 +126,8 @@ class TerrainWorld{
   }
   isOceanColumn(gx,gz=0){return !!this.oceanBoundsForColumn(gx,gz)}
   generateVoxel(gx,gy,gz){
-    const profile=this.terrainProfile(gx,gz);
+    if(gz!==this.interactionRowZ)return TILE.AIR;
+    const profile=this.terrainProfile(gx,this.interactionRowZ);
     const surface=profile.height;
     if(gy>surface)return TILE.AIR;
     const depth=surface-gy;
@@ -200,11 +201,10 @@ class TerrainWorld{
     return this.blackBackRowZ>=cz*n&&this.blackBackRowZ<(cz+1)*n;
   }
   chunkMayContainTerrain(cx,cy,cz){
-    if(this.chunkContainsBlackBackRow(cz))return true;
-    const range=this.surfaceRangeForChunk(cx,cz),n=this.chunkSize;
-    const minY=cy*n;
-    // A volumetric terrain chunk is relevant whenever its bottom is at/below
-    // the highest surface in that X/Z chunk. Above-surface chunks stay culled.
+    // Gameplay terrain is deliberately one voxel thick in Z. The only second
+    // voxel row is the rear black backing used to hide underground depth.
+    if(!this.chunkContainsInteractionRow(cz)&&!this.chunkContainsBlackBackRow(cz))return false;
+    const range=this.surfaceRangeForChunk(cx,cz),n=this.chunkSize,minY=cy*n;
     return minY<=range.max;
   }
   _floorDiv(n,d){return Math.floor(n/d)}
@@ -308,7 +308,7 @@ class TerrainWorld{
   }
   stats(){
     let edits=0;for(const patch of this.edits.values())edits+=patch.size;
-    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,biomeBackend:this.biomeBackend,dimensions:3,infinite:true,seaLevel:this.seaLevel,seaSurfaceY:this.seaSurfaceY(),analyticOcean:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'surface-shell-only-plus-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
+    return {tileSize:this.tileSize,pixelsPerMeter:this.pixelsPerMeter,chunkSize:this.chunkSize,loadedChunks:this.chunks.size,editedVoxels:edits,editedTiles:edits,version:this.changeVersion,generatorVersion:this.generatorVersion,noiseBackend:this.noiseBackend,biomeBackend:this.biomeBackend,dimensions:3,infinite:true,seaLevel:this.seaLevel,seaSurfaceY:this.seaSurfaceY(),analyticOcean:true,interactionRowZ:this.interactionRowZ,interactionRowCenterZ:this.interactionRowZ*this.tileSize,blackBackRowZ:this.blackBackRowZ,blackBackRowCenterZ:this.blackBackRowZ*this.tileSize,zConvention:'integer-cell-centers',nonInteractionTerrain:'air-except-black-back-row',rearTopSurface:'biome-surface',rearBlackStartsBelowSurface:true,surfaceChunkCulling:true,biomeGenerator:this.biomeGenerator?.stats?.()||null,water:this.water?.stats?.()||null};
   }
 }
 
