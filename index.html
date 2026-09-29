@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="stage-fix-r3";
+  const BUILD="big-voxel-r4";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="stage-fix-r3">
+<meta name="paperchalk-build" content="big-voxel-r4">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=stage-fix-r3">
+<link rel="stylesheet" href="./styles/game.css?v=big-voxel-r4">
 </head>
 <body>
 
@@ -219,16 +219,16 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=stage-fix-r3"></script>
-<script src="./src/core/game-state.js?v=stage-fix-r3"></script>
-<script src="./src/core/save-runtime.js?v=stage-fix-r3"></script>
-<script src="./src/core/ecs-runtime.js?v=stage-fix-r3"></script>
-<script src="./src/content/game-content.js?v=stage-fix-r3"></script>
+<script src="./src/core/event-bus.js?v=big-voxel-r4"></script>
+<script src="./src/core/game-state.js?v=big-voxel-r4"></script>
+<script src="./src/core/save-runtime.js?v=big-voxel-r4"></script>
+<script src="./src/core/ecs-runtime.js?v=big-voxel-r4"></script>
+<script src="./src/content/game-content.js?v=big-voxel-r4"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=stage-fix-r3"></script>
-<script src="./src/terrain/water-runtime.js?v=stage-fix-r3"></script>
-<script src="./src/terrain/terrain-runtime.js?v=stage-fix-r3"></script>
-<script src="./src/game.js?v=stage-fix-r3"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=stage-fix-r3"></script>
+<script src="./src/terrain/biome-generator.js?v=big-voxel-r4"></script>
+<script src="./src/terrain/water-runtime.js?v=big-voxel-r4"></script>
+<script src="./src/terrain/terrain-runtime.js?v=big-voxel-r4"></script>
+<script src="./src/game.js?v=big-voxel-r4"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=big-voxel-r4"></script>
 </body>
 </html>
