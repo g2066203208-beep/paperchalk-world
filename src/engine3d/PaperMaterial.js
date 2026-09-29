@@ -140,13 +140,20 @@ export function createPaperMaterialSet(THREE,settings){
     top:deriveSet(THREE,{size:resolution,seed:0x31f2a7,side:false}),
     side:deriveSet(THREE,{size:resolution,seed:0xa9417d,side:true})
   };
+  const grassReference=new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-ref-r1');
+  grassReference.name='user-grass-reference';
+  grassReference.colorSpace=THREE.SRGBColorSpace;
+  grassReference.wrapS=grassReference.wrapT=THREE.MirroredRepeatWrapping;
+  grassReference.minFilter=THREE.LinearMipmapLinearFilter;grassReference.magFilter=THREE.LinearFilter;
+  grassReference.generateMipmaps=true;grassReference.anisotropy=4;
 
   const make=({side=false,bevel=false}={})=>{
     const source=side?sets.side:sets.top;
     const uniforms={
       uPaperPrint:{value:Number(settings.printNoiseStrength)||0},
       uPaperSide:{value:side?1:0},uPaperBevel:{value:bevel?1:0},
-      uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)}
+      uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)},
+      uGrassReference:{value:grassReference}
     };
     const mat=new THREE.MeshPhysicalMaterial({
       vertexColors:true,map:source.albedo,normalMap:source.normal,roughnessMap:source.roughness,
@@ -161,11 +168,13 @@ export function createPaperMaterialSet(THREE,settings){
     mat.onBeforeCompile=shader=>{
       Object.assign(shader.uniforms,uniforms);
       shader.vertexShader=shader.vertexShader
-        .replace('#include <common>','#include <common>\nvarying vec3 vPaperWorldPos;')
-        .replace('#include <begin_vertex>','#include <begin_vertex>\nvPaperWorldPos=(modelMatrix*vec4(position,1.0)).xyz;');
+        .replace('#include <common>','#include <common>\nvarying vec3 vPaperWorldPos;\nvarying vec3 vPaperBaseColor;')
+        .replace('#include <begin_vertex>','#include <begin_vertex>\nvPaperWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvPaperBaseColor=color;');
       shader.fragmentShader=shader.fragmentShader
         .replace('#include <common>',`#include <common>
           varying vec3 vPaperWorldPos;
+          varying vec3 vPaperBaseColor;
+          uniform sampler2D uGrassReference;
           uniform float uPaperPrint;
           uniform float uPaperSide;
           uniform float uPaperBevel;
@@ -185,6 +194,12 @@ export function createPaperMaterialSet(THREE,settings){
           float cloud=paperValueNoise(vPaperWorldPos.xz*.16+vPaperWorldPos.xy*.035+13.0)-.5;
           float mid=paperValueNoise(vPaperWorldPos.xz*.62+vPaperWorldPos.xy*.09+37.0)-.5;
           diffuseColor.rgb*=1.0+cloud*uPaperPrint*.44+mid*uPaperPrint*.16;
+          if(uPaperSide<.5&&uPaperBevel<.5){
+            float grassMask=smoothstep(.025,.095,vPaperBaseColor.g-max(vPaperBaseColor.r,vPaperBaseColor.b));
+            vec3 grassTex=texture2D(uGrassReference,vPaperWorldPos.xz*.115).rgb;
+            grassTex=pow(max(grassTex,vec3(0.0)),vec3(.94));
+            diffuseColor.rgb=mix(diffuseColor.rgb,grassTex,grassMask*.96);
+          }
           if(uPaperSide>.5){
             // Very weak sheet seam only. The fibre map, not a dark stripe,
             // must define the cardboard core.
@@ -228,10 +243,12 @@ export function createPaperMaterialSet(THREE,settings){
     visualPriority:['pulp-albedo','contact-shadow','cut-edge-fibre','micro-normal'],
     diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
-    seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
+    userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
+    grassWorldScale:.115,seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
     for(const m of materials)m.dispose();
+    grassReference.dispose();
     for(const set of Object.values(sets)){set.albedo.dispose();set.normal.dispose();set.roughness.dispose()}
   };
   return {sets,materials,sync,stats,dispose};
