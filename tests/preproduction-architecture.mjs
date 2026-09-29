@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),photon=read('src/engine3d/PhotonPipeline.js'),photonWater=read('src/engine3d/PhotonWaterPass.js'),photonLight=read('src/engine3d/PhotonVoxelLightVolume.js'),photonWeather=read('src/engine3d/PhotonSkyWeatherPass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),photon=read('src/engine3d/PhotonPipeline.js'),photonWater=read('src/engine3d/PhotonWaterPass.js'),photonLight=read('src/engine3d/PhotonVoxelLightVolume.js'),photonWeather=read('src/engine3d/PhotonSkyWeatherPass.js'),photonSSR=read('src/engine3d/PhotonSpecularSSRPass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
 assert.match(html,/paper-r5/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
@@ -105,6 +105,13 @@ assert.match(photonWeather,/groundCloudShadows/);
 assert.match(photonWeather,/aurora/);
 assert.match(photonWeather,/rainbow/);
 assert.match(photonWeather,/lightning/);
+assert.match(photonSSR,/photon-material-ssr-r1/);
+assert.match(photonSSR,/materialMask:true/);
+assert.match(photonSSR,/roughnessMetalnessMask:true/);
+assert.match(photonSSR,/screenSpaceRaymarch:true/);
+assert.match(html,/data-photon-setting="renderScale"/);
+assert.match(html,/data-photon-weather-setting="weather"/);
+assert.match(game,/configurePhoton/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
