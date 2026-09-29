@@ -942,8 +942,8 @@ this.skyExposure=exposure;
 this.undergroundDepth=undergroundDepth;
 this.undergroundFactor=undergroundFactor;
 this.atmosphere?.update({
-  sunPosition:sunDisc?.position,daylight,twilight,skyExposure:exposure,
-  underground:undergroundFactor,time:n*1440
+  sunPosition:sunDisc?.position,daylight,twilight,skyExposure:exposure,underground:undergroundFactor,time:n*1440,
+  sunLight:sun,skyLight:skyFill,sunDisc
 });
 }
 update(dt,snapshot=this.lastSnapshot){
@@ -967,8 +967,8 @@ this.fishingRenderer?.update(current,this.camera,renderTime);
 this.healthBar?.update(this.camera,dt);
 }
 render(){
-this.scene.background.copy(this.fixedBackgroundColor);
-this.renderer.setClearColor(this.fixedBackgroundColor,1);
+const bg=this.atmosphere?.skyColor||this.fixedBackgroundColor;
+this.scene.background.copy(bg);this.renderer.setClearColor(bg,1);
 this.renderer.render(this.scene,this.camera);
 this.atmosphere?.render(this.renderer,this.scene,this.camera);
 }
