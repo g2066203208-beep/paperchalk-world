@@ -644,7 +644,7 @@ texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter
 });
 this.paperTerrainRenderer=new PaperTerrainRenderer(THREE,this.terrain,this.scene,{
 radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
-maxBuildsPerFrame:this.mobileLike?1:2,
+maxBuildsPerFrame:1,
 paperLayerHeight:.5,
 paperThickness:.30,
 bevelWidth:.045,
