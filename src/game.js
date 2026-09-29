@@ -1383,7 +1383,7 @@ function runDebugCommand(command){
 const raw=String(command||'').trim();
 if(!raw)return '';
 const [cmd,...args]=raw.split(/\s+/);
-if(cmd==='help')return 'hp 5 | hp +1 | tp X Z [Y] | dig X Y Z | put X Y Z | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
+if(cmd==='help')return 'hp 5 | hp +1 | tp X Z [Y] | time 分钟(0-1439) | dig X Y Z | put X Y Z | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
 if(cmd==='hp'){
 const token=args[0]||'';
 const n=Number(token);
@@ -1396,6 +1396,12 @@ const x=Number(args[0]),z=Number(args[1]),y=args[2]===undefined?null:Number(args
 if(!Number.isFinite(x)||!Number.isFinite(z)||(y!==null&&!Number.isFinite(y)))return '用法：tp X Z [Y]';
 teleport(x,z,y,{notice:'调试传送'});
 return 'XYZ -> '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+', '+transform.z.toFixed(1);
+}
+if(cmd==='time'){
+const m=Number(args[0]);
+if(!Number.isFinite(m))return '用法：time 390（06:30）';
+worldMinutes=((m%1440)+1440)%1440;paperClock.textContent=formatClock();publish();
+return '世界时间 -> '+formatClock();
 }
 if(cmd==='dig'){
 const x=Number(args[0]),y=Number(args[1]),z=Number(args[2]);
