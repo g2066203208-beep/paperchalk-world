@@ -39,14 +39,13 @@ export class EnvironmentFX{
     }
     this.cloudTexture=new T.CanvasTexture(cloudCanvas);this.cloudTexture.colorSpace=T.SRGBColorSpace;
     this.cloudTexture.minFilter=T.LinearMipmapLinearFilter;this.cloudTexture.magFilter=T.LinearFilter;
-    const geo=new T.PlaneGeometry(34,12);
-    for(let i=0;i<(this.mobile?6:10);i++){
-      const mat=new T.MeshBasicMaterial({map:this.cloudTexture,color:0xd9dedf,transparent:true,opacity:.08,depthWrite:false,alphaTest:.015,side:T.DoubleSide,toneMapped:false,fog:true});
-      const m=new T.Mesh(geo,mat);m.rotation.x=-Math.PI/2;
-      m.position.set((i%5-2)*26+(i%2)*7,24+(i%3)*1.3,Math.floor(i/5)*34-17);
-      m.scale.set(1+(i%3)*.28,1,1);this.clouds.add(m);
+    for(let i=0;i<(this.mobile?5:8);i++){
+      const mat=new T.SpriteMaterial({map:this.cloudTexture,color:0xf2f0e7,transparent:true,opacity:.08,depthWrite:false,toneMapped:false,fog:true});
+      const m=new T.Sprite(mat);
+      m.position.set((i%4-1.5)*32+(i%2)*8,15+(i%3)*2.1,-34-(i%2)*6);
+      const scale=18+(i%3)*5;m.scale.set(scale,scale*.34,1);this.clouds.add(m);
     }
-    this.cloudGeometry=geo;this.scene.add(this.clouds);
+    this.cloudGeometry=null;this.scene.add(this.clouds);
   }
   _precip(snow,count){
     const T=this.THREE,p=new Float32Array(count*3),seed=new Float32Array(count);
@@ -123,7 +122,7 @@ export class EnvironmentFX{
     this.snow.material.uniforms.uOpacity.value+=(q.snow*.90-this.snow.material.uniforms.uOpacity.value)*Math.min(1,dt*3);
     this.rain.visible=this.rain.material.uniforms.uOpacity.value>.01;this.snow.visible=this.snow.material.uniforms.uOpacity.value>.01;
 
-    this.clouds.position.set(p.x,0,p.z);
+    this.clouds.position.set(p.x,0,0);
     let i=0;for(const c of this.clouds.children){
       c.material.opacity+=(q.cloud*.42-c.material.opacity)*Math.min(1,dt*.8);
       c.position.x+=this.wind*dt*(.55+(i++%3)*.12);if(c.position.x>70)c.position.x=-70;
@@ -151,7 +150,7 @@ export class EnvironmentFX{
   dispose(){
     for(const o of [this.rain,this.snow]){this.scene.remove(o);o.geometry.dispose();o.material.dispose()}
     for(const c of [...this.clouds.children])c.material.dispose();
-    this.cloudGeometry.dispose();this.cloudTexture?.dispose?.();this.scene.remove(this.clouds);
+    this.cloudGeometry?.dispose?.();this.cloudTexture?.dispose?.();this.scene.remove(this.clouds);
     this.scene.remove(this.sky);this.skyGeometry.dispose();this.skyMaterial.dispose();
   }
 }
