@@ -1348,11 +1348,11 @@ const stage=stageViewState();
 const stageButton=debugPanel.querySelector('[data-debug-action="stageview"]');
 const axisButton=debugPanel.querySelector('[data-debug-action="stageaxis"]');
 const paperButton=debugPanel.querySelector('[data-debug-action="paperstyle"]');
-const raysButton=debugPanel.querySelector('[data-debug-action="godrays"]');
+const raysButton=debugPanel.querySelector('[data-debug-action="volumetric"]');
 if(stageButton)stageButton.textContent='纸片舞台视角：'+(stage.enabled?'开':'关');
 if(axisButton)axisButton.textContent='舞台观察轴：'+stage.axis.toUpperCase();
 if(paperButton)paperButton.textContent='Paper Style：'+(window.Paperchalk3D?.stats?.paperStyle?.enabled===false?'关':'开');
-if(raysButton)raysButton.textContent='丁达尔：'+(window.Paperchalk3D?.stats?.atmosphere?.godRays===false?'关':'开');
+if(raysButton)raysButton.textContent='体积光：'+(window.Paperchalk3D?.stats?.atmosphere?.volumetric===false?'关':'开');
 }
 function updateDebugStatus(){
 const s=window.Paperchalk3D?.stats||{};
@@ -1362,7 +1362,7 @@ debugStatus.textContent='HP '+health.current+'/'+health.max+
 ' · XY '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+
 ' · '+(s.paperStyle?.enabled===false?('3D方块 '+(s.terrain?.renderedQuads||0)+' quads'):('Paper '+(s.paperTerrain?.visiblePaperChunks||0)+' chunks / '+(s.paperTerrain?.paperTriangles||0)+' tris'))+' · '+ts.loadedChunks+' logical chunks'+
 ' · '+terrainToolMode.toUpperCase()+
-' · Rays '+((s.atmosphere?.currentStrength||0).toFixed?.(2)||'0.00')+
+' · VL '+((s.atmosphere?.currentStrength||0).toFixed?.(2)||'0.00')+
 ' · 舞台 '+(stage.enabled?stage.axis.toUpperCase()+'轴':'自由镜头')+
 ' · '+(s.fps||0)+' FPS · '+(s.drawCalls||0)+' draws';
 syncStageDebugButtons();
@@ -1478,9 +1478,9 @@ window.Paperchalk3D?.setDebugColliders?.(debugColliders);
 button.textContent='Collider：'+(debugColliders?'开':'关');
 }else if(a==='paperstyle'){
 window.Paperchalk3D?.setPaperStyle?.(!(window.Paperchalk3D?.stats?.paperStyle?.enabled!==false));
-}else if(a==='godrays'){
-const current=window.Paperchalk3D?.stats?.atmosphere?.godRays!==false;
-window.Paperchalk3D?.configureAtmosphere?.({godRays:!current});
+}else if(a==='volumetric'){
+const current=window.Paperchalk3D?.stats?.atmosphere?.volumetric!==false;
+window.Paperchalk3D?.configureAtmosphere?.({volumetric:!current});
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
