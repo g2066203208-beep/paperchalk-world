@@ -35,9 +35,8 @@ assert.match(engine,/internalFacesCulled:true/);
 
 assert.doesNotMatch(content,/'fishing-rod'/);
 assert.doesNotMatch(content,/'paper-carp'/);
-assert.match(game,/PaperchalkFishEcology/);
-assert.match(game,/enabled:false,active:0/);
-assert.match(engine,/fishEcology:\{active:0,drawCalls:0,disabled:true\}/);
+assert.doesNotMatch(game,/PaperchalkFish|PaperchalkFishing|fishing-rod|paper-carp/);
+assert.doesNotMatch(engine,/FishSchoolRenderer|FishingRenderer|fishEcology/);
 assert.match(game,/HUNGER_DRAIN_PER_SECOND/);
 assert.match(game,/PaperchalkHunger/);
 assert.match(game,/PaperchalkStamina/);
