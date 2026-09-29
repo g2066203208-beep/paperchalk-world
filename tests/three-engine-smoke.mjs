@@ -1,7 +1,9 @@
 import process from 'node:process';
+import fs from 'node:fs';
 import {chromium} from 'playwright-core';
 function assert(c,m){if(!c)throw new Error(m)}
 const errors=[];
+fs.mkdirSync('artifacts',{recursive:true});
 const browser=await chromium.launch({executablePath:process.env.CHROME_PATH,headless:true,args:['--no-sandbox','--disable-dev-shm-usage','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
   const page=await browser.newPage({viewport:{width:1365,height:768}});
@@ -16,13 +18,28 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
+
+  // Real framebuffer A/B: old render-grid path first, then Paper Diorama.
+  const paperOff=await page.evaluate(()=>window.Paperchalk3D.setPaperStyle(false));
+  assert(paperOff===false,'paper style did not switch off');
+  await page.waitForTimeout(1200);
+  await page.screenshot({path:'artifacts/paper-phase1-before.png'});
+
+  const paperOn=await page.evaluate(()=>window.Paperchalk3D.setPaperStyle(true));
+  assert(paperOn===true,'paper style did not switch on');
+  await page.waitForTimeout(1600);
+  await page.screenshot({path:'artifacts/paper-phase1-after.png'});
+
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
   assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
-  assert(initial.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode');
-  assert(initial.terrain?.visibleChunks>0&&initial.terrain?.renderedSolidVoxels>0,'no streamed voxel geometry');
-  assert(initial.terrain?.dimensions===3&&initial.terrain?.infinite===true,'not true 3D terrain');
-  assert(initial.terrain?.greedyRatio>=1,'greedy mesher stats missing');
+  assert(initial.paperStyle?.enabled===true&&initial.paperStyle?.visualOnly===true,'paper style not active '+JSON.stringify(initial.paperStyle));
+  assert(initial.paperTerrain?.mode==='visual-only-paper-diorama-v1','paper terrain renderer missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.visiblePaperChunks>0,'no visible paper chunks '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.paperVertices>0&&initial.paperTerrain?.paperTriangles>0,'paper terrain geometry empty '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.topRects>0&&initial.paperTerrain?.sideQuads>0&&initial.paperTerrain?.bevelQuads>0,'paper top/side/bevel geometry incomplete '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.renderGridExposed===false,'render grid is still exposed');
+  assert(initial.paperTerrain?.authority==='TerrainWorld-gameplay-grid-unchanged','gameplay authority changed');
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
@@ -54,6 +71,11 @@ try{
   const fishing=await page.evaluate(()=>window.Paperchalk3D.stats.fishing);
   assert(fishing?.visible===true&&fishing?.state==='flying','fishing render did not activate '+JSON.stringify(fishing));
   await page.evaluate(()=>window.PaperchalkFishing.reel());
+  const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
+  const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
+  assert(beforeBytes>10000&&afterBytes>10000,'A/B framebuffer screenshots missing');
+  assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,stats:initial.paperTerrain},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
-  console.log('INFINITE_VOXEL_3D_ENGINE_OK');
+  console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}
