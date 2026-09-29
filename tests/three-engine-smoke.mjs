@@ -16,6 +16,7 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
+  await page.waitForFunction(()=>((window.Paperchalk3D?.stats?.terrain?.workerStats?.completed)||0)>0,null,{timeout:7000});
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
   assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
