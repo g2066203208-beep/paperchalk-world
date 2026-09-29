@@ -77,11 +77,14 @@ function buildPaperField(size,{seed=1,side=false}={}){
   }
 
   if(side){
-    addFibres(height,size,rng,{count:920,angle:0,jitter:.24,minLength:5,maxLength:30,minRadius:.34,maxRadius:.95,strength:.18});
-    addFibres(height,size,rng,{count:220,angle:Math.PI*.5,jitter:.75,minLength:2,maxLength:10,minRadius:.28,maxRadius:.70,strength:.085});
+    // Exposed cardboard core: many short compressed fibres, mostly along the
+    // sheet direction. Avoid long ridges that read as wood grain/bark.
+    addFibres(height,size,rng,{count:1450,angle:0,jitter:.42,minLength:2,maxLength:12,minRadius:.20,maxRadius:.52,strength:.072});
+    addFibres(height,size,rng,{count:330,angle:Math.PI*.5,jitter:.95,minLength:1.2,maxLength:5.5,minRadius:.18,maxRadius:.42,strength:.032});
   }else{
-    addFibres(height,size,rng,{count:690,angle:.10,jitter:.58,minLength:3,maxLength:20,minRadius:.28,maxRadius:.78,strength:.14});
-    addFibres(height,size,rng,{count:190,angle:Math.PI*.53,jitter:.90,minLength:2,maxLength:9,minRadius:.24,maxRadius:.62,strength:.065});
+    // Face stock: finer, denser cellulose with broader orientation spread.
+    addFibres(height,size,rng,{count:1120,angle:.10,jitter:.82,minLength:1.5,maxLength:10,minRadius:.18,maxRadius:.50,strength:.078});
+    addFibres(height,size,rng,{count:310,angle:Math.PI*.53,jitter:1.05,minLength:1,maxLength:5,minRadius:.16,maxRadius:.38,strength:.034});
   }
 
   // Pulp specks / compressed fibres: tiny local height changes.
@@ -113,7 +116,7 @@ function deriveTextureSet(THREE,{size=256,seed=1,side=false}={}){
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const i=y*size+x,o=i*4,h=height[i],m=macro[i];
     const dx=(at(x+1,y)-at(x-1,y))*.5,dy=(at(x,y+1)-at(x,y-1))*.5;
-    const micro=side?5.5:4.2;
+    const micro=side?2.85:2.65;
     let nx=-dx*micro,ny=-dy*micro,nz=1;
     const inv=1/Math.max(1e-6,Math.hypot(nx,ny,nz));nx*=inv;ny*=inv;nz*=inv;
     normal[o]=Math.round((nx*.5+.5)*255);normal[o+1]=Math.round((ny*.5+.5)*255);normal[o+2]=Math.round((nz*.5+.5)*255);normal[o+3]=255;
@@ -162,7 +165,7 @@ export function createPaperMaterialSet(THREE,settings){
       map:source.albedo,
       normalMap:source.normal,
       roughnessMap:source.roughness,
-      normalScale:new THREE.Vector2(side?.82:.58,side?.82:.58),
+      normalScale:new THREE.Vector2(side?.56:.58,side?.56:.58),
       roughness:1,
       metalness:0,
       side:THREE.DoubleSide,
@@ -230,7 +233,7 @@ export function createPaperMaterialSet(THREE,settings){
       u.uPaperPrint.value=Number(next.printNoiseStrength)||0;
       u.uPaperBandHeight.value=Math.max(.08,Number(next.paperThickness)||.30);
       const sideRole=mat.userData.paperRole==='side';
-      mat.normalScale.setScalar(micro*(sideRole?1.24:1));
+      mat.normalScale.setScalar(micro*(sideRole?.84:1));
       mat.roughness=clamp(1-rough*(sideRole?.22:.45),.92,1);
     }
   };
