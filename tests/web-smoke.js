@@ -75,7 +75,7 @@ assert(engine.includes("stageView={enabled:true,axis:'z',side:1}"),'paper-stage 
 
 assert(html.includes('src/terrain/water-runtime.js'),'dedicated water runtime missing');
 assert(terrain.includes('analyticOcean:true'),'analytic ocean terrain API missing');
-assert(ocean.includes('analytic-ocean-surface'),'analytic ocean renderer missing');
+assert(ocean.includes('analytic-ocean-stage-strip')&&ocean.includes('singleVoxelDepth:true'),'single-depth ocean renderer missing');
 assert(environment.includes('FogExp2')&&environment.includes('gpu-vertex-shader'),'weather atmosphere missing');
 assert(biome.includes("DEEP_OCEAN:'deep-ocean'")&&biome.includes("CLIFF:'cliff'")&&biome.includes("SNOWFIELD:'snowfield'"),'macro landforms missing');
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
