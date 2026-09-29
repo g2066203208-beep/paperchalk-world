@@ -1348,8 +1348,10 @@ function syncStageDebugButtons(){
 const stage=stageViewState();
 const stageButton=debugPanel.querySelector('[data-debug-action="stageview"]');
 const axisButton=debugPanel.querySelector('[data-debug-action="stageaxis"]');
+const paperButton=debugPanel.querySelector('[data-debug-action="paperstyle"]');
 if(stageButton)stageButton.textContent='纸片舞台视角：'+(stage.enabled?'开':'关');
 if(axisButton)axisButton.textContent='舞台观察轴：'+stage.axis.toUpperCase();
+if(paperButton)paperButton.textContent='Paper Style：'+(window.Paperchalk3D?.stats?.paperStyle?.enabled===false?'关':'开');
 }
 function updateDebugStatus(){
 const s=window.Paperchalk3D?.stats||{};
@@ -1357,7 +1359,7 @@ const stage=stageViewState();
 const ts=terrain.stats();
 debugStatus.textContent='HP '+health.current+'/'+health.max+
 ' · XY '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+
-' · 3D方块 '+(s.terrain?.renderedQuads||0)+' quads / '+ts.loadedChunks+' chunks'+
+' · '+(s.paperStyle?.enabled===false?('3D方块 '+(s.terrain?.renderedQuads||0)+' quads'):('Paper '+(s.paperTerrain?.visiblePaperChunks||0)+' chunks / '+(s.paperTerrain?.paperTriangles||0)+' tris'))+' · '+ts.loadedChunks+' logical chunks'+
 ' · '+terrainToolMode.toUpperCase()+
 ' · 舞台 '+(stage.enabled?stage.axis.toUpperCase()+'轴':'自由镜头')+
 ' · '+(s.fps||0)+' FPS · '+(s.drawCalls||0)+' draws';
@@ -1447,6 +1449,9 @@ const result=runDebugCommand(debugCommandInput.value);
 if(result)writeDebug(result);
 updateDebugStatus();
 });
+debugPanel.querySelectorAll('[data-paper-setting]').forEach(input=>{
+input.addEventListener('input',()=>window.Paperchalk3D?.configurePaperTerrain?.({[input.dataset.paperSetting]:Number(input.value)}));
+});
 debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
 button.addEventListener('click',()=>{
 const a=button.dataset.debugAction;
@@ -1460,6 +1465,8 @@ else if(a==='colliders'){
 debugColliders=!debugColliders;
 window.Paperchalk3D?.setDebugColliders?.(debugColliders);
 button.textContent='Collider：'+(debugColliders?'开':'关');
+}else if(a==='paperstyle'){
+window.Paperchalk3D?.setPaperStyle?.(!(window.Paperchalk3D?.stats?.paperStyle?.enabled!==false));
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
