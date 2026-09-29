@@ -733,9 +733,6 @@ shadowMesh.name='player-soft-paper-contact-shadow';shadowMesh.rotation.x=-Math.P
 shadowMesh.castShadow=false;shadowMesh.receiveShadow=false;this.scene.add(shadowMesh);
 this.playerGroundShadow={mesh:shadowMesh,texture:shadowTexture,material:shadowMaterial};
 }
-_seedFromId(id){
-let h=2166136261;for(const ch of String(id||'')){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0;
-}
 _installCameraInput(){
 const canvas=this.renderer.domElement;
 canvas.addEventListener('pointerdown',event=>{
