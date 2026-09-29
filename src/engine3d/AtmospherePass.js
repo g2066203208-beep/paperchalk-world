@@ -11,10 +11,10 @@ export class AtmospherePass{
     this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
       enabled:true,volumetric:true,
-      intensity:this.mobileLike?.56:.72,
-      fogDensity:this.mobileLike?.0065:.0075,
-      heightFalloff:.105,anisotropy:.68,maxDistance:this.mobileLike?46:62,
-      qualityScale:this.mobileLike?.30:.46,steps:this.mobileLike?11:19
+      intensity:this.mobileLike?.42:.58,
+      fogDensity:this.mobileLike?.0036:.0042,
+      heightFalloff:.15,anisotropy:.74,maxDistance:this.mobileLike?42:58,
+      qualityScale:this.mobileLike?.34:.50,steps:this.mobileLike?10:17
     };
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
     this.size={width:1,height:1,pixelRatio:1,bufferWidth:1,bufferHeight:1};
@@ -120,8 +120,8 @@ export class AtmospherePass{
           float maxDist=min(uMaxDistance,depth>.9997?uMaxDistance:surfaceDist);
           float steps=max(1.0,uSteps);
           float stepLen=maxDist/steps;
-          float noise=hash21(gl_FragCoord.xy+vec2(uTime*17.0,uTime*7.0));
-          float t=(.22+noise*.72)*stepLen;
+          float noise=hash21(floor(gl_FragCoord.xy));
+          float t=(.43+noise*.18)*stepLen;
           float trans=1.0;
           float sunScatter=0.0;
           float mu=clamp(dot(rayDir,normalize(uSunDir)),-1.0,1.0);
@@ -130,18 +130,18 @@ export class AtmospherePass{
             if(float(i)>=uSteps||t>=maxDist)break;
             vec3 p=uCameraPos+rayDir*t;
             float height=max(0.0,p.y-uFogBase);
-            float density=uFogDensity*(.28+.72*exp(-height*uHeightFalloff));
+            float density=uFogDensity*(.14+.86*exp(-height*uHeightFalloff));
             float lit=shadowAt(p,noise+float(i)*.6180339);
             float absorb=exp(-density*stepLen*1.18);
             sunScatter+=trans*lit*density*phase*stepLen;
             trans*=absorb;
             t+=stepLen;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.42);
-          float forwardBoost=smoothstep(.15,.96,mu);
-          vec3 scatter=uSunColor*sunScatter*uIntensity*(.72+forwardBoost*.85);
-          vec3 premul=uFogColor*fogAlpha+scatter;
-          gl_FragColor=vec4(premul,fogAlpha);
+          float fogAlpha=clamp(1.0-trans,0.0,.18);
+          float forwardBoost=smoothstep(.35,.985,mu);
+          vec3 scatter=uSunColor*sunScatter*uIntensity*(.46+forwardBoost*1.55);
+          vec3 premul=uFogColor*fogAlpha*.22+scatter;
+          gl_FragColor=vec4(premul,fogAlpha*.22);
         }
       `
     });
@@ -202,7 +202,7 @@ export class AtmospherePass{
           float mu=max(0.0,dot(d,normalize(uSunDir)));
           float glow=pow(mu,9.0)*(.32+uTwilight*.34);
           float disc=pow(mu,620.0)*1.25;
-          float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.012;
+          float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.006;
           col+=uSunColor*(glow+disc);
           col*=1.0+grain;
           gl_FragColor=vec4(toSRGB(max(col,vec3(0.0))),1.0);
@@ -282,7 +282,7 @@ export class AtmospherePass{
     this.volumeUniforms.uMaxDistance.value=this.settings.maxDistance;
     this.volumeUniforms.uSteps.value=this.settings.steps;
     this.volumeUniforms.uTime.value=this.state.time;
-    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.19*(1+tw*.18)*(1-under*.8):0;
+    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.10*(1+tw*.18)*(1-under*.8):0;
     this.scene.fog.color.copy(this.fogColor);
   }
 
