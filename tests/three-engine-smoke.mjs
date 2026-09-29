@@ -29,7 +29,7 @@ try{
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===true&&initial.camera.stageView.axis==='z','paper-stage side camera must be default '+JSON.stringify(initial.camera));
   assert(initial.flatShading===true,'flat shading renderer flag missing');
-  assert(initial.ocean?.mode==='analytic-ocean-plane','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
+  assert(initial.ocean?.mode==='analytic-ocean-stage-strip','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
