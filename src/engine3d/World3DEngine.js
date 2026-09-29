@@ -6,6 +6,7 @@ createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
 import {OceanRenderer} from './OceanRenderer.js?v=big-voxel-r4';
+import {FishingRenderer} from './FishingRenderer.js?v=big-voxel-r4';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -676,6 +677,7 @@ anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
 this.oceanRenderer=new OceanRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
+this.fishingRenderer=new FishingRenderer(THREE,this.scene);
 const cursorGeometry=new THREE.BoxGeometry(
 this.terrain.tileSize*1.035,
 this.terrain.tileSize*1.035,
@@ -951,6 +953,7 @@ const p=current?.player;
 this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
 this.oceanRenderer?.update(dt,p);
 this.waterRenderer?.update(dt);
+this.fishingRenderer?.update(current,this.camera,dt);
 this.healthBar?.update(this.camera,dt);
 }
 render(){
@@ -1032,7 +1035,7 @@ entityMode:'paper-sprites-in-3d',
 drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,
+debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,
 lighting:{mode:'paper-pbr-sun-sky-moon-torch-weather',backgroundMode:'dynamic-atmosphere',backgroundColor:'#'+this.fixedBackgroundColor.getHexString(),skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -1047,6 +1050,7 @@ dispose(){
 this.terrainRenderer?.dispose();
 this.oceanRenderer?.dispose();
 this.waterRenderer?.dispose();
+this.fishingRenderer?.dispose();
 if(this.terrainCursor){
 this.terrainCursor.geometry.dispose();
 this.terrainCursor.material.dispose();
