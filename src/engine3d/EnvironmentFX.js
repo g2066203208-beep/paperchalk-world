@@ -2,7 +2,7 @@
 export class EnvironmentFX{
   constructor(THREE,engine){
     this.THREE=THREE;this.engine=engine;this.scene=engine.scene;this.time=0;this.state='clear';this.epoch=-1;
-    this.wind=.22;this.mobile=!!engine.mobileLike;this._build();
+    this.wind=.22;this.groundWetness=0;this.snowCover=0;this.mobile=!!engine.mobileLike;this._build();
   }
   _build(){
     const T=this.THREE;
@@ -123,12 +123,19 @@ export class EnvironmentFX{
     if(L?.sun)L.sun.intensity*=q.light;
     if(L?.skyFill)L.skyFill.intensity*=.68+.32*q.light;
     if(L?.ambient)L.ambient.intensity*=.78+.22*q.light;
+    const wetTarget=Math.max(q.rain*.95,q.cloud*.12);
+    const snowTarget=q.snow;
+    const wetRate=wetTarget>this.groundWetness?dt*.55:dt*.08;
+    const snowRate=snowTarget>this.snowCover?dt*.18:dt*.035;
+    this.groundWetness+=(wetTarget-this.groundWetness)*Math.min(1,wetRate);
+    this.snowCover+=(snowTarget-this.snowCover)*Math.min(1,snowRate);
+    if(q.rain>.2)this.snowCover=Math.max(0,this.snowCover-dt*.06);
     this.engine.oceanRenderer?.setWeather?.(this.state,this.wind);
-    this.engine.terrainRenderer?.setWeatherVisuals?.({wetness:q.rain,snow:q.snow});
+    this.engine.terrainRenderer?.setWeatherVisuals?.({wetness:this.groundWetness,snow:this.snowCover});
   }
   stats(){
     return {state:this.state,fogDensity:this.scene.fog?.density||0,wind:this.wind,
-      rain:this.rain.visible,snow:this.snow.visible,particleMode:'gpu-vertex-shader',skyMode:'shader-gradient-dome',
+      rain:this.rain.visible,snow:this.snow.visible,groundWetness:this.groundWetness,snowCover:this.snowCover,particleMode:'gpu-vertex-shader',skyMode:'shader-gradient-dome',
       rainParticles:this.rain.geometry.attributes.position.count,snowParticles:this.snow.geometry.attributes.position.count};
   }
   dispose(){
