@@ -1,6 +1,6 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
 import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r4';
-import {AtmospherePass} from './AtmospherePass.js?v=atmos-r1';
+import {AtmospherePass} from './AtmospherePass.js?v=atmos-r2';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
@@ -734,7 +734,7 @@ shadowMesh.name='player-soft-paper-contact-shadow';shadowMesh.rotation.x=-Math.P
 shadowMesh.castShadow=false;shadowMesh.receiveShadow=false;this.scene.add(shadowMesh);
 this.playerGroundShadow={mesh:shadowMesh,texture:shadowTexture,material:shadowMaterial};
 
-this.atmosphere=new AtmospherePass(THREE,this.scene,{mobileLike:this.mobileLike});
+this.atmosphere=new AtmospherePass(THREE,this.scene,{mobileLike:this.mobileLike,sun});
 this.atmosphere.setExclusions([
   sunDisc,moonDisc,this.playerSprite.root,this.waterRenderer.root,
   this.fishingRenderer.root,this.fishSchoolRenderer.root,this.terrainCursor,
@@ -943,7 +943,7 @@ this.undergroundDepth=undergroundDepth;
 this.undergroundFactor=undergroundFactor;
 this.atmosphere?.update({
   sunPosition:sunDisc?.position,daylight,twilight,skyExposure:exposure,underground:undergroundFactor,time:n*1440,
-  sunLight:sun,skyLight:skyFill,sunDisc
+  fogBaseHeight:p.y-1.8,sunLight:sun,skyLight:skyFill,sunDisc
 });
 }
 update(dt,snapshot=this.lastSnapshot){
