@@ -17,7 +17,7 @@ this.tick=0;
 this.levels=8;
     this.needsSettle=false;
     this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
-    this.horizontalDirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
+    this.horizontalDirs=[[1,0,0],[-1,0,0]];
   }
   key(gx,gy,gz){return gx+','+gy+','+gz}
   columnKey(gx,gz){return gx+','+gz}
@@ -53,7 +53,10 @@ this.levels=8;
   _terrainBlocksWater(gx,gy,gz){
     return this.terrain.isSolidPeek(gx,gy,gz);
   }
-  _canOccupy(gx,gy,gz){return !this._terrainBlocksWater(gx,gy,gz)}
+  _canOccupy(gx,gy,gz){
+    if(Number(gz)!==Number(this.terrain.interactionRowZ))return false;
+    return !this._terrainBlocksWater(gx,gy,gz);
+  }
   _writeLevel(gx,gy,gz,level){
     level=Math.max(0,Math.min(8,Math.round(Number(level)||0)));
     const key=this.key(gx,gy,gz),prev=this.cells.get(key)||0;
@@ -434,7 +437,7 @@ this.levels=8;
       layerHeight:this.terrain.tileSize/8,dirtyChunks:this.dirtyChunks.size,
       version:this.version,needsSettle:this.needsSettle,
       flowModel:'connected-body-priority-flood-v5',
-      flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
+      flowPlane:'single-stage-depth-with-y-gravity',threeDimensional:true,
       exactHydrostatic:true,lastSettle:this.lastSettle
     };
   }
