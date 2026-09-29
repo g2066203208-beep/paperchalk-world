@@ -76,6 +76,9 @@ body{touch-action:manipulation}
 .debug-status{padding:7px 8px;margin-bottom:9px;border-radius:6px;background:rgba(255,255,255,.08);font-size:12px;line-height:1.5}
 .debug-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .debug-actions button{min-height:34px}
+.paper-debug-controls{display:grid;gap:5px;margin-top:8px;padding:8px;border-radius:7px;background:rgba(255,255,255,.055)}
+.paper-debug-controls label{display:grid;grid-template-columns:58px 1fr;align-items:center;gap:7px;font-size:11px}
+.paper-debug-controls input[type=range]{width:100%;min-width:0}
 .debug-command-form{display:flex;gap:6px;margin-top:9px}
 .debug-command-form input{
   flex:1;min-width:0;height:36px;border:1px solid rgba(255,255,255,.22);border-radius:6px;
