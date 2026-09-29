@@ -10,9 +10,9 @@ export class AtmospherePass{
     this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
       enabled:true,volumetric:true,
-      intensity:this.mobileLike?.48:.66,
-      fogDensity:this.mobileLike?.0060:.0068,
-      heightFalloff:.095,anisotropy:.70,multiScattering:.32,
+      intensity:this.mobileLike?.30:.42,
+      fogDensity:this.mobileLike?.0036:.0042,
+      heightFalloff:.090,anisotropy:.68,multiScattering:.24,
       maxDistance:this.mobileLike?44:60,
       qualityScale:this.mobileLike?.28:.44,
       steps:this.mobileLike?10:18
@@ -108,7 +108,8 @@ export class AtmospherePass{
           vec3 delta=endWorld-uCameraPos;
           float surfaceDist=length(delta);
           vec3 rayDir=surfaceDist>1e-5?delta/surfaceDist:vec3(0.0,0.0,-1.0);
-          float maxDist=min(uMaxDistance,depth>.9997?uMaxDistance:surfaceDist);
+          float skyRay=step(.9997,depth);
+          float maxDist=min(uMaxDistance,skyRay>.5?uMaxDistance:surfaceDist);
           float steps=max(1.0,uSteps),stepLen=maxDist/steps;
           float noise=hash21(gl_FragCoord.xy+vec2(uTime*11.7,uTime*4.3));
           float t=(.18+noise*.78)*stepLen;
@@ -122,7 +123,7 @@ export class AtmospherePass{
             float rel=p.y-uFogBase;
             float heightDensity=exp(-max(rel,-5.0)*uHeightFalloff);
             float distanceLift=mix(.82,1.12,smoothstep(0.0,uMaxDistance,t));
-            float density=uFogDensity*heightDensity*distanceLift;
+            float density=uFogDensity*heightDensity*distanceLift*mix(1.0,.20,skyRay);
             float lit=shadowAt(p,noise+float(i)*.6180339);
             float absorb=exp(-density*stepLen*1.12);
             float directPhase=forward*(.74+.26*lit);
@@ -130,11 +131,14 @@ export class AtmospherePass{
             ambientScatter+=trans*density*broad*stepLen*(.42+.58*(1.0-lit)*uMulti);
             trans*=absorb;t+=stepLen;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.46);
-          float shaft=clamp(sunScatter*uIntensity*8.0,0.0,.72);
-          float ambient=clamp(ambientScatter*(.62+uMulti*.8),0.0,.32);
-          vec3 linear=uFogColor*(fogAlpha*.72+ambient)+uSunColor*shaft;
-          gl_FragColor=vec4(toSRGB(max(linear,vec3(0.0))),fogAlpha);
+          float fogAlpha=clamp(1.0-trans,0.0,.32);
+          float forwardMask=smoothstep(-.10,.94,mu);
+          float shaft=clamp(sunScatter*uIntensity*1.35*forwardMask,0.0,.16);
+          float ambient=clamp(ambientScatter*(.20+uMulti*.24),0.0,.055);
+          float haze=fogAlpha*mix(.18,.055,skyRay);
+          float outAlpha=clamp(haze+ambient*.45,0.0,.12);
+          vec3 linear=uFogColor*(haze+ambient)+uSunColor*shaft;
+          gl_FragColor=vec4(toSRGB(max(linear,vec3(0.0))),outAlpha);
         }
       `
     });
@@ -193,8 +197,8 @@ export class AtmospherePass{
     this.settings.intensity=clamp(Number(this.settings.intensity)||0,0,1.4);
     this.settings.fogDensity=clamp(Number(this.settings.fogDensity)||0,0,.022);
     this.settings.heightFalloff=clamp(Number(this.settings.heightFalloff)||.095,.02,.30);
-    this.settings.anisotropy=clamp(Number(this.settings.anisotropy)||.70,0,.86);
-    this.settings.multiScattering=clamp(Number(this.settings.multiScattering)||.32,0,.8);
+    this.settings.anisotropy=clamp(Number(this.settings.anisotropy)||.68,0,.86);
+    this.settings.multiScattering=clamp(Number(this.settings.multiScattering)||.24,0,.8);
     this.settings.maxDistance=clamp(Number(this.settings.maxDistance)||52,20,90);
     this.settings.qualityScale=clamp(Number(this.settings.qualityScale)||.35,.20,.62);
     this.settings.steps=Math.round(clamp(Number(this.settings.steps)||12,6,20));
