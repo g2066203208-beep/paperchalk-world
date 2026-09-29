@@ -124,6 +124,7 @@ export class EnvironmentFX{
     if(L?.skyFill)L.skyFill.intensity*=.68+.32*q.light;
     if(L?.ambient)L.ambient.intensity*=.78+.22*q.light;
     this.engine.oceanRenderer?.setWeather?.(this.state,this.wind);
+    this.engine.terrainRenderer?.setWeatherVisuals?.({wetness:q.rain,snow:q.snow});
   }
   stats(){
     return {state:this.state,fogDensity:this.scene.fog?.density||0,wind:this.wind,
