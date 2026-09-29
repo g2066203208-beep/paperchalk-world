@@ -580,7 +580,7 @@ this.renderer.setClearColor(this.fixedBackgroundColor,1);
 this.renderer.toneMapping=THREE.ACESFilmicToneMapping;
 this.renderer.toneMappingExposure=1.08;
 this.renderer.shadowMap.enabled=true;
-this.renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+this.renderer.shadowMap.type=this.mobileLike?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;
 this.renderer.domElement.className='three-world-canvas';
 this.renderer.domElement.setAttribute('aria-label','Paperchalk infinite 3D voxel world');
 this.renderer.domElement.tabIndex=0;this.renderer.domElement.style.touchAction='none';
@@ -602,6 +602,8 @@ sun.shadow.camera.left=-32;sun.shadow.camera.right=32;
 sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;
 sun.shadow.bias=-0.0002;
 sun.shadow.normalBias=.025;
+sun.shadow.radius=this.mobileLike?1:1.85;
+sun.shadow.intensity=.84;
 this.scene.add(sun);
 this.scene.add(sun.target);
 const skyFill=new THREE.HemisphereLight(0xdce9f4,0x7a6049,1.0);
@@ -620,6 +622,8 @@ moon.shadow.camera.left=-28;moon.shadow.camera.right=28;
 moon.shadow.camera.top=28;moon.shadow.camera.bottom=-28;
 moon.shadow.bias=-0.00025;
 moon.shadow.normalBias=.02;
+moon.shadow.radius=this.mobileLike?1:1.45;
+moon.shadow.intensity=.72;
 this.scene.add(moon);
 this.scene.add(moon.target);
 const sunDisc=new THREE.Mesh(
@@ -910,19 +914,19 @@ const sz=22;
 if(sun){
 const paperLight=this.paperStyle?.enabled!==false;
 const horizonSun=twilight*Math.max(0,1-night*4.2);
-sun.intensity=paperLight?(daylight*2.35+horizonSun*.48):(daylight*3.4+horizonSun*.34);
+sun.intensity=paperLight?(daylight*2.30+horizonSun*.64):(daylight*3.35+horizonSun*.44);
 sun.position.set(p.x+sx,p.y+sy,p.z+sz);
 sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
 }
 if(skyFill){
 const outdoor=this.paperStyle?.enabled!==false
-?(.95+daylight*.62+twilight*.33+night*.08)
-:(.68+daylight*.94+twilight*.32+night*.16);
+?(1.02+daylight*.48+twilight*.50+night*.10)
+:(.72+daylight*.88+twilight*.40+night*.16);
 skyFill.intensity=outdoor;
 }
 if(ambient){
-ambient.intensity=(this.paperStyle?.enabled!==false ? .18 : .12)+daylight*(this.paperStyle?.enabled!==false ? .08 : .10)+twilight*(this.paperStyle?.enabled!==false ? .07 : .04)+night*.045;
+ambient.intensity=(this.paperStyle?.enabled!==false ? .20 : .13)+daylight*(this.paperStyle?.enabled!==false ? .06 : .09)+twilight*(this.paperStyle?.enabled!==false ? .12 : .06)+night*.05;
 }
 if(moon){
 moon.intensity=night*.56;
@@ -935,7 +939,7 @@ sunDisc.visible=daylight>.02;
 sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
 sunDisc.scale.setScalar(.8+daylight*.35);
 }
-this.renderer.toneMappingExposure=.98+daylight*.08+twilight*.12+night*.025;
+this.renderer.toneMappingExposure=1.02+twilight*.24+night*.04;
 if(moonDisc){
 moonDisc.visible=night>.03;
 moonDisc.position.set(p.x-sx*1.45,p.y+Math.max(14,sy*1.2),p.z-sz*1.1);
