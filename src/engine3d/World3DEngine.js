@@ -250,7 +250,9 @@ uOcclusionPlayer:{value:new THREE.Vector3()},
 uOcclusionEnabled:{value:1},
 uInteractionRowCenterZ:{value:this.terrain.interactionRowZ*this.terrain.tileSize},
 uBlackBackRowCenterZ:{value:this.terrain.blackBackRowZ*this.terrain.tileSize},
-uVoxelSize:{value:this.terrain.tileSize}
+uVoxelSize:{value:this.terrain.tileSize},
+uWeatherWetness:{value:0},
+uWeatherSnow:{value:0}
 };
 this.material.onBeforeCompile=shader=>{
 shader.uniforms.uDarkPlayer=this.darknessUniforms.uDarkPlayer;
@@ -265,11 +267,13 @@ shader.uniforms.uOcclusionEnabled=this.darknessUniforms.uOcclusionEnabled;
 shader.uniforms.uInteractionRowCenterZ=this.darknessUniforms.uInteractionRowCenterZ;
 shader.uniforms.uBlackBackRowCenterZ=this.darknessUniforms.uBlackBackRowCenterZ;
 shader.uniforms.uVoxelSize=this.darknessUniforms.uVoxelSize;
+shader.uniforms.uWeatherWetness=this.darknessUniforms.uWeatherWetness;
+shader.uniforms.uWeatherSnow=this.darknessUniforms.uWeatherSnow;
 shader.vertexShader=shader.vertexShader
 .replace('#include <common>','#include <common>\nattribute float darkness;\nattribute float voxelAO;\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;')
 .replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelAO=voxelAO;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvVoxelWorldNormal=normalize(mat3(modelMatrix)*normal);');
 shader.fragmentShader=shader.fragmentShader
-.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
+.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;\nuniform float uWeatherWetness;\nuniform float uWeatherSnow;')
 .replace('#include <opaque_fragment>',`
 vec2 lightUv=(vVoxelWorldPos.xy-uVoxelLightOrigin)/uVoxelLightSpan;
 float inside=step(0.0,lightUv.x)*step(lightUv.x,1.0)*step(0.0,lightUv.y)*step(lightUv.y,1.0);
@@ -281,6 +285,11 @@ outgoingLight*=darknessVisibility;
 // View-independent voxel AO: cheap contact darkening baked at greedy-mesh vertices.
 float voxelAoLight=mix(.52,1.0,smoothstep(0.0,1.0,vVoxelAO));
 outgoingLight*=voxelAoLight;
+float topWeather=smoothstep(.52,.92,max(vVoxelWorldNormal.y,0.0));
+outgoingLight*=mix(1.0,.72,uWeatherWetness);
+float snowMask=clamp(uWeatherSnow*topWeather,0.0,1.0);
+float snowLum=max(max(outgoingLight.r,outgoingLight.g),max(outgoingLight.b,.72));
+outgoingLight=mix(outgoingLight,vec3(snowLum*.98,snowLum, snowLum*1.02),snowMask*.82);
 vec3 voxelCell=floor((vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01))/uVoxelSize);
 float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
 float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
@@ -383,6 +392,10 @@ reveal=Math.max(.08,Math.pow(falloff,.72));
 this.lightGridData[j*n+i]=Math.max(0,Math.min(255,Math.round(reveal*255)));
 }
 this.lightGridTexture.needsUpdate=true;
+}
+setWeatherVisuals({wetness=0,snow=0}={}){
+this.darknessUniforms.uWeatherWetness.value=Math.max(0,Math.min(1,Number(wetness)||0));
+this.darknessUniforms.uWeatherSnow.value=Math.max(0,Math.min(1,Number(snow)||0));
 }
 setCameraOcclusion(cameraPosition,playerPosition,enabled=true){
 if(cameraPosition)this.darknessUniforms.uOcclusionCamera.value.copy(cameraPosition);
