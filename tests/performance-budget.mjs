@@ -14,6 +14,8 @@ assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
 assert(fs.existsSync('assets/player/protagonist.webp'),'authored protagonist paper asset missing');
 assert(size('assets/player/protagonist.webp')<100000,'protagonist paper asset exceeds 100KB budget');
+assert(fs.existsSync('assets/materials/grass-reference.webp'),'grass reference paper texture missing');
+assert(size('assets/materials/grass-reference.webp')<70000,'grass reference texture exceeds 70KB budget');
 assert(!fs.existsSync('vendor/pixi'),'Pixi vendor tree should remain removed');
 console.log(JSON.stringify({
   ok:true,
@@ -28,5 +30,6 @@ console.log(JSON.stringify({
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
   html:size('index.html'),
-  protagonist:size('assets/player/protagonist.webp')
+  protagonist:size('assets/player/protagonist.webp'),
+  grassReference:size('assets/materials/grass-reference.webp')
 }));
