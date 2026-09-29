@@ -25,7 +25,6 @@ const hungerFill=byId('hungerFill');
 const hungerValue=byId('hungerValue');
 const staminaFill=byId('staminaFill');
 const staminaValue=byId('staminaValue');
-const fishingStatusHud=byId('fishingStatusHud');
 const profileNote=byId('profileNote');
 const continueBtn=byId('continueBtn');
 const enterBtn=byId('enterBtn');
@@ -94,7 +93,6 @@ const HUNGER_MAX=100;
 const HUNGER_DRAIN_PER_SECOND=.055;
 const HUNGER_ZERO_DAMAGE_INTERVAL=6;
 const STAMINA_MAX=100;
-const EMPTY_FISH_SNAPSHOT=Object.freeze([]);
 const INVENTORY_CAPACITY=20;
 const FIXED_DT=1/60;
 const MAX_FRAME_DT=.06;
@@ -240,12 +238,9 @@ Velocity:velocity,
 Health:health,
 Player:controller
 });
-const DISABLED_FISHING_STATE=Object.freeze({state:'disabled',timer:0,biteWindow:0,x:0,y:0,z:0,fishId:null,fishName:'',result:'',targetFishEntityId:null});
-function fishingSnapshot(){return DISABLED_FISHING_STATE}
-function fishSnapshot(){return EMPTY_FISH_SNAPSHOT}
 function hungerSnapshot(){return {current:hunger.current,max:hunger.max,ratio:hunger.current/hunger.max}}
 function staminaSnapshot(){return {current:stamina.current,max:stamina.max,ratio:stamina.current/stamina.max}}
-let lastHungerHud=-1,lastStaminaHud=-1,lastFishingHud='';
+let lastHungerHud=-1,lastStaminaHud=-1;
 function updateSurvivalHud(){
 const ratio=Math.max(0,Math.min(1,hunger.current/hunger.max));
 const quantized=Math.round(ratio*200)/200;
@@ -259,9 +254,6 @@ if(Math.abs(sq-lastStaminaHud)>.0001){
 lastStaminaHud=sq;
 if(staminaFill)staminaFill.style.transform='scaleX('+sq.toFixed(3)+')';
 if(staminaValue)staminaValue.textContent=String(Math.round(stamina.current));
-}
-if(fishingStatusHud&&lastFishingHud!==''){
-lastFishingHud='';fishingStatusHud.textContent='';fishingStatusHud.classList.remove('is-show');
 }
 }
 const buildingColliders=[];
@@ -325,8 +317,6 @@ player:playerSnapshot(),
 health:{current:health.current,max:health.max},
 hunger:hungerSnapshot(),
 stamina:staminaSnapshot(),
-fishing:fishingSnapshot(),
-fish:fishSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
 scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
 terrain:terrainStatsSnapshot(),
@@ -581,13 +571,6 @@ window.PaperchalkCombat=Object.freeze({
 get player(){return playerSnapshot()},
 jump,attack,setCrouch,toggleTorch,
 damagePlayer,healPlayer,setPlayerHp
-});
-window.PaperchalkFishEcology=Object.freeze({
-get fish(){return EMPTY_FISH_SNAPSHOT},get enabled(){return false},
-get stats(){return {enabled:false,active:0,maxActive:0,spatialCells:0,simulationHz:0}}
-});
-window.PaperchalkFishing=Object.freeze({
-get state(){return fishingSnapshot()},cast(){return false},reel(){return false},use(){return false}
 });
 function safeSpawnY(x=sceneData.spawn.x,z=sceneData.spawn.z||0){
 return terrain.highestGroundY(x,z)+PLAYER_HALF_H+.03;
