@@ -1463,6 +1463,8 @@ input.addEventListener('input',()=>window.Paperchalk3D?.configurePaperTerrain?.(
 debugPanel.querySelectorAll('[data-atmos-setting]').forEach(input=>{
 input.addEventListener('input',()=>window.Paperchalk3D?.configureAtmosphere?.({[input.dataset.atmosSetting]:Number(input.value)}));
 });
+debugPanel.querySelectorAll('[data-photon-setting]').forEach(input=>input.addEventListener('input',()=>window.Paperchalk3D?.configurePhoton?.({[input.dataset.photonSetting]:Number(input.value)})));
+debugPanel.querySelectorAll('[data-photon-weather-setting]').forEach(input=>input.addEventListener('input',()=>window.Paperchalk3D?.configurePhoton?.({weatherOptions:{[input.dataset.photonWeatherSetting]:Number(input.value),autoWeather:false}})));
 debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
 button.addEventListener('click',()=>{
 const a=button.dataset.debugAction;
@@ -1481,6 +1483,8 @@ window.Paperchalk3D?.setPaperStyle?.(!(window.Paperchalk3D?.stats?.paperStyle?.e
 }else if(a==='volumetric'){
 const current=window.Paperchalk3D?.stats?.atmosphere?.volumetric!==false;
 window.Paperchalk3D?.configureAtmosphere?.({volumetric:!current});
+}else if(a==='photon'){
+window.Paperchalk3D?.configurePhoton?.({enabled:window.Paperchalk3D?.stats?.photon?.enabled===false});
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
