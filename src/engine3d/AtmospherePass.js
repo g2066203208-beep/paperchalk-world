@@ -121,7 +121,7 @@ export class AtmospherePass{
           float steps=max(1.0,uSteps);
           float stepLen=maxDist/steps;
           float noise=hash21(floor(gl_FragCoord.xy));
-          float t=(.43+noise*.18)*stepLen;
+          float t=(.485+noise*.03)*stepLen;
           float trans=1.0;
           float sunScatter=0.0;
           float mu=clamp(dot(rayDir,normalize(uSunDir)),-1.0,1.0);
@@ -142,7 +142,7 @@ export class AtmospherePass{
           // aligns with sunlight and shadow-map visibility changes along the
           // ray. Suppress broad forward haze so it never becomes a glow dome.
           float shaftGate=smoothstep(.975,.998,mu);
-          float skyWeight=depth>.9997?.055:1.0;
+          float skyWeight=depth>.9997?0.0:1.0;
           vec3 scatter=uSunColor*sunScatter*uIntensity*(.018+shaftGate*.46)*skyWeight;
           scatter=min(scatter,vec3(.105));
           vec3 premul=uFogColor*fogAlpha*.075+scatter;
