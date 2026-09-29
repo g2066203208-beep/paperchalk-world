@@ -23,7 +23,7 @@ try{
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
   assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
   assert(initial.paperStyle?.enabled===true&&initial.paperStyle?.visualOnly===true,'paper style not active '+JSON.stringify(initial.paperStyle));
-  assert(initial.paperTerrain?.mode==='visual-only-paper-diorama-v1','paper terrain renderer missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.mode==='visual-only-paper-diorama-v2','paper terrain renderer missing '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.visiblePaperChunks>0,'no visible paper chunks '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.paperVertices>0&&initial.paperTerrain?.paperTriangles>0,'paper terrain geometry empty '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.topRects>0&&initial.paperTerrain?.sideQuads>0&&initial.paperTerrain?.bevelQuads>0,'paper top/side/bevel geometry incomplete '+JSON.stringify(initial.paperTerrain));
