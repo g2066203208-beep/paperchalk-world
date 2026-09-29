@@ -154,17 +154,19 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
 return prefix+encodeURIComponent(String(account||''));
 }
 const defaultCamera=Object.freeze({
-yaw:.72,pitch:.38,distance:12,height:.65,fov:42,
-stageView:Object.freeze({enabled:false,axis:'z',side:1})
+preset:'paper-stage-v4',yaw:0,pitch:0,distance:15,height:.45,fov:42,
+stageView:Object.freeze({enabled:true,axis:'z',side:1})
 });
 function getSettings(){
 const defaults={language:'zh-CN',timeScale:1,preferLandscape:true,camera3d:{...defaultCamera}};
 try{
 const parsed=JSON.parse(storageGet(KEY_SETTINGS)||'{}');
-const parsedCamera=parsed.camera3d||{};
+const savedCamera=parsed.camera3d||{};
+const parsedCamera=savedCamera.preset==='paper-stage-v4'?savedCamera:{};
 const camera3d={
 ...defaultCamera,
 ...parsedCamera,
+preset:'paper-stage-v4',
 fov:42,
 stageView:{...defaultCamera.stageView,...(parsedCamera.stageView||{})}
 };
