@@ -7,6 +7,23 @@ export class EnvironmentFX{
   _build(){
     const T=this.THREE;
     this.scene.fog=new T.FogExp2(0x9fb2bd,.0065);
+    this.skyUniforms={
+      uZenith:{value:new T.Color(0x6688aa)},uHorizon:{value:new T.Color(0xb7c5c9)},
+      uSunDir:{value:new T.Vector3(0,1,.2)},uDaylight:{value:1},uCloud:{value:0}
+    };
+    this.skyGeometry=new T.SphereGeometry(470,this.mobile?20:32,this.mobile?12:18);
+    this.skyMaterial=new T.ShaderMaterial({
+      side:T.BackSide,depthWrite:false,depthTest:false,toneMapped:false,
+      uniforms:this.skyUniforms,
+      vertexShader:`varying vec3 vDir;void main(){vDir=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`varying vec3 vDir;uniform vec3 uZenith;uniform vec3 uHorizon;uniform vec3 uSunDir;uniform float uDaylight;uniform float uCloud;
+        void main(){float h=smoothstep(-.12,.82,vDir.y);vec3 col=mix(uHorizon,uZenith,h);
+          float sun=pow(max(dot(normalize(vDir),normalize(uSunDir)),0.0),180.0);
+          col+=vec3(1.0,.72,.35)*sun*uDaylight*(1.0-uCloud*.75);
+          vec3 night=mix(vec3(.018,.025,.055),vec3(.055,.075,.12),h);
+          col=mix(night,col,uDaylight);gl_FragColor=vec4(col,1.0);}`
+    });
+    this.sky=new T.Mesh(this.skyGeometry,this.skyMaterial);this.sky.name='atmosphere-sky-dome';this.sky.frustumCulled=false;this.sky.renderOrder=-1000;this.scene.add(this.sky);
     this.rain=this._precip(false,this.mobile?900:1900);
     this.snow=this._precip(true,this.mobile?550:1100);
     this.rain.visible=false;this.snow.visible=false;this.scene.add(this.rain,this.snow);
@@ -73,6 +90,16 @@ export class EnvironmentFX{
     const epoch=Math.floor(this.time/75);
     if(epoch!==this.epoch){this.epoch=epoch;this.state=this._choose(snapshot,epoch)}
     const p=snapshot?.player||{x:0,y:0,z:0},q=this._profile(this.state),T=this.THREE;
+    const minutes=((Number(snapshot?.world?.minutes)||0)%1440+1440)%1440;
+    const angle=(minutes/1440-.25)*Math.PI*2,solar=Math.sin(angle);
+    const daylight=Math.max(0,Math.min(1,(solar+.08)/.24));
+    this.sky.position.set(p.x,p.y,p.z);
+    this.skyUniforms.uSunDir.value.set(Math.cos(angle),solar,.28).normalize();
+    this.skyUniforms.uDaylight.value=daylight;
+    this.skyUniforms.uCloud.value=q.cloud;
+    const zenith=new T.Color(q.sky),horizon=new T.Color(q.sky).lerp(new T.Color(0xe6c9a9),daylight*.28*(1-q.cloud));
+    this.skyUniforms.uZenith.value.lerp(zenith,Math.min(1,dt*.45));
+    this.skyUniforms.uHorizon.value.lerp(horizon,Math.min(1,dt*.45));
     this.wind+=(q.wind-this.wind)*Math.min(1,dt*1.2);
     this.scene.fog.density+=(q.fog-this.scene.fog.density)*Math.min(1,dt*.75);
     const fogTarget=new T.Color(q.sky);this.scene.fog.color.lerp(fogTarget,Math.min(1,dt*.65));
@@ -100,12 +127,13 @@ export class EnvironmentFX{
   }
   stats(){
     return {state:this.state,fogDensity:this.scene.fog?.density||0,wind:this.wind,
-      rain:this.rain.visible,snow:this.snow.visible,particleMode:'gpu-vertex-shader',
+      rain:this.rain.visible,snow:this.snow.visible,particleMode:'gpu-vertex-shader',skyMode:'shader-gradient-dome',
       rainParticles:this.rain.geometry.attributes.position.count,snowParticles:this.snow.geometry.attributes.position.count};
   }
   dispose(){
     for(const o of [this.rain,this.snow]){this.scene.remove(o);o.geometry.dispose();o.material.dispose()}
     for(const c of [...this.clouds.children])c.material.dispose();
     this.cloudGeometry.dispose();this.scene.remove(this.clouds);
+    this.scene.remove(this.sky);this.skyGeometry.dispose();this.skyMaterial.dispose();
   }
 }
