@@ -275,12 +275,24 @@ class TerrainWorld{
     const minX=Math.floor((x-halfW+.001)/s),maxX=Math.floor((x+halfW-.001)/s);
     const minY=Math.floor((y-halfH+.001)/s),maxY=Math.floor((y+halfH-.001)/s);
     const minZ=Math.floor((z-halfD+.001)/s+.5),maxZ=Math.floor((z+halfD-.001)/s+.5);
-    for(let gy=minY;gy<=maxY;gy++)for(let gz=minZ;gz<=maxZ;gz++)for(let gx=minX;gx<=maxX;gx++)if(this.isSolid(gx,gy,gz))return true;
+    for(let gy=minY;gy<=maxY;gy++)for(let gz=minZ;gz<=maxZ;gz++)for(let gx=minX;gx<=maxX;gx++)if(this.isSolidPeek(gx,gy,gz))return true;
     return false;
   }
   highestGroundY(worldX,worldZ=0,{fromCell=96,toCell=-256}={}){
     const s=this.tileSize,gx=Math.floor(worldX/s),gz=Math.floor(worldZ/s+.5);
-    for(let gy=fromCell;gy>=toCell;gy--)if(this.isSolid(gx,gy,gz))return (gy+1)*s;
+    const surface=this.surfaceCell(gx,gz),n=this.chunkSize;
+    // Above the generated surface only explicit placed edits can be solid.
+    // Check those cheaply without generating or retaining any chunks.
+    for(let gy=fromCell;gy>surface;gy--){
+      const cx=this._floorDiv(gx,n),cy=this._floorDiv(gy,n),cz=this._floorDiv(gz,n);
+      const patch=this.edits.get(this.chunkKey(cx,cy,cz));if(!patch)continue;
+      const lx=this._mod(gx,n),ly=this._mod(gy,n),lz=this._mod(gz,n);
+      const value=patch.get((ly*n+lz)*n+lx);
+      if(value!=null&&this.isSolidTile(value))return (gy+1)*s;
+    }
+    // Normally the first test is the surface voxel. Peek preserves edits/caves
+    // without polluting the streamed chunk cache.
+    for(let gy=Math.min(fromCell,surface);gy>=toCell;gy--)if(this.isSolidPeek(gx,gy,gz))return (gy+1)*s;
     return toCell*s;
   }
   subscribe(listener){if(typeof listener!=='function')return ()=>{};this.listeners.add(listener);return ()=>this.listeners.delete(listener)}
