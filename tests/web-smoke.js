@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('voxel3d-r42'),'build key missing');
+assert(html.includes('voxel3d-r43'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
@@ -60,6 +60,12 @@ assert(engine.includes('InstancedMesh'),'instanced fish rendering missing');
 assert(engine.includes("renderMode:'pooled-instanced-paper-fish'"),'pooled fish render mode missing');
 assert(engine.includes("renderMode:'line+bobber+worldspace-bite-ui-v2'"),'world-space bite UI missing');
 assert(engine.includes('flatShading:true'),'flat shading missing');
+assert(mesher.includes('vertexAO(side1,side2,corner)'),'voxel ambient occlusion missing');
+assert(mesher.includes("ambientOcclusionMode:'0fps-style-vertex-ao'"),'voxel AO metadata missing');
+assert(engine.includes('MeshStandardMaterial'),'PBR terrain material missing');
+assert(engine.includes('roughnessMap:this.paperSurfaceTexture'),'paper roughness map missing');
+assert(engine.includes('bumpMap:this.paperSurfaceTexture'),'paper bump map missing');
+assert(engine.includes('THREE.ACESFilmicToneMapping'),'ACES tone mapping missing');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
 assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
@@ -67,7 +73,7 @@ assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
 
-assert(engine.includes("paperchalk-whole-voxel-color-v15"),'whole voxel tint cache key missing');
+assert(engine.includes("paperchalk-pbr-voxel-ao-v16"),'PBR voxel AO shader cache key missing');
 assert(engine.includes("vVoxelWorldNormal"),'whole voxel owner normal missing');
 assert(engine.includes("vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01)"),'whole voxel tint ownership missing');
 assert(game.includes("fishing.state='landed'"),'land cast fishing state missing');
