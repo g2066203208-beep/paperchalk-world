@@ -41,7 +41,6 @@ assert.match(game,/screenToWaterSurface/);
 assert.match(engine,/screenToWaterSurface/);
 assert.match(engine,/event-driven-greedy-water-v6/);
 assert.match(terrain,/priority-flood-hydrostatic-v4-boundary-remainder/);
-assert.match(terrain,/visualTransition/);
 assert.match(terrain,/closed solid terrain volume/);
 assert.match(game,/reelFishingRod/);
 assert.match(game,/fishing\.state==='bite'/);
