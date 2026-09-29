@@ -126,7 +126,7 @@ export class AtmospherePass{
     this.settings.rayIntensity=clamp(Number(this.settings.rayIntensity)||0,0,2);
     this.settings.rayDensity=clamp(Number(this.settings.rayDensity)||.93,.3,1.3);
     this.settings.rayDecay=clamp(Number(this.settings.rayDecay)||.965,.88,.995);
-    this.settings.rayWeight=clamp(Number(this.settings.rayWeight)||.17,.04,.35);
+    this.settings.rayWeight=clamp(Number(this.settings.rayWeight)||.058,.04,.35);
     this.settings.fogDensity=clamp(Number(this.settings.fogDensity)||0,0,.04);
     this.radialUniforms.uDensity.value=this.settings.rayDensity;
     this.radialUniforms.uDecay.value=this.settings.rayDecay;
