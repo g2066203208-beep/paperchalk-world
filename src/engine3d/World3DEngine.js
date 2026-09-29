@@ -7,6 +7,7 @@ DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
 import {OceanRenderer} from './OceanRenderer.js?v=world-core-r2';
 import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=world-core-r2';
+import {EcologyRenderer} from './EcologyRenderer.js?v=world-core-r2';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -543,13 +544,14 @@ this.scene.add(moonDisc);
 this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
 this.backdrop=null;
 this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
-radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
-radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
-maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?3:5),
+radiusXZ:this.mobileLike?Math.min(2,this.sceneData.terrain?.visibleChunkRadiusXZ??3):(this.sceneData.terrain?.visibleChunkRadiusXZ??3),
+radiusY:this.mobileLike?1:(this.sceneData.terrain?.visibleChunkRadiusY??2),
+maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?2:5),
 texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128,
 anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
 this.farTerrainRenderer=new FarTerrainRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
+this.ecologyRenderer=new EcologyRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.oceanRenderer=new OceanRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
 const cursorGeometry=new THREE.BoxGeometry(
@@ -825,6 +827,7 @@ this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCamera
 const p=current?.player;
 this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
 this.farTerrainRenderer?.update(p);
+this.ecologyRenderer?.update(p);
 this.oceanRenderer?.update(dt,p);
 this.waterRenderer?.update(dt);
 this.healthBar?.update(this.camera,dt);
@@ -905,7 +908,7 @@ entityMode:'paper-sprites-in-3d',
 drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),farTerrain:this.farTerrainRenderer?.stats?.()||null,ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,fishEcology:{active:0,drawCalls:0,disabled:true},
+debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),farTerrain:this.farTerrainRenderer?.stats?.()||null,ecology:this.ecologyRenderer?.stats?.()||null,ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,fishEcology:{active:0,drawCalls:0,disabled:true},
 lighting:{mode:'paper-pbr-sun-sky-moon-torch-weather',backgroundMode:'dynamic-atmosphere',backgroundColor:'#'+this.fixedBackgroundColor.getHexString(),skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -919,6 +922,7 @@ terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneM
 dispose(){
 this.terrainRenderer?.dispose();
 this.farTerrainRenderer?.dispose();
+this.ecologyRenderer?.dispose();
 this.oceanRenderer?.dispose();
 this.waterRenderer?.dispose();
 if(this.terrainCursor){
