@@ -46,6 +46,7 @@ try{
   assert(initial.atmosphere?.jitteredRaymarch===true&&initial.atmosphere?.minecraftShaderInspired===true,'Minecraft-style volumetric integration missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.stableDither===true&&initial.atmosphere?.nonlinearRaySteps===true,'stable nonlinear volumetric sampling missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.filteredShadowSamples===3,'filtered volumetric shadow samples missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.bilateralBlur===true&&initial.atmosphere?.depthAwareBlur===true&&initial.atmosphere?.blurPasses===2,'depth-aware bilateral filtering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.directionalScatterOnly===true&&initial.atmosphere?.baseFogSeparated===true,'volumetric shafts must not wash out base paper colours '+JSON.stringify(initial.atmosphere));
   assert((initial.atmosphere?.mieAnisotropy||0)>.5,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
