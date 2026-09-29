@@ -46,6 +46,7 @@ class WaterWorld{
     this.dirtyChunks=new Set();
     this.surfaceCache=new Map();
     this.boundsCache=new Map();
+    this.columnIndex=new Map();
     this.version=0;
 this.tick=0;
 this.levels=8;
@@ -69,6 +70,20 @@ this.levels=8;
     this._markDirty(gx,gy+1,gz);this._markDirty(gx,gy-1,gz);
     for(const [dx,,dz] of this.horizontalDirs)this._markDirty(gx+dx,gy,gz+dz);
   }
+  _indexAdd(gx,gz,key){
+    const ck=this.columnKey(gx,gz);let set=this.columnIndex.get(ck);
+    if(!set){set=new Set();this.columnIndex.set(ck,set)}
+    set.add(key);
+  }
+  _indexDelete(gx,gz,key){
+    const ck=this.columnKey(gx,gz),set=this.columnIndex.get(ck);
+    if(!set)return;
+    set.delete(key);if(!set.size)this.columnIndex.delete(ck);
+  }
+  _rebuildColumnIndex(){
+    this.columnIndex.clear();
+    for(const key of this.cells.keys()){const [gx,,gz]=this.parse(key);this._indexAdd(gx,gz,key)}
+  }
   consumeDirtyChunks(){const out=[...this.dirtyChunks];this.dirtyChunks.clear();return out}
   _terrainBlocksWater(gx,gy,gz){
     return this.terrain.isSolidPeek(gx,gy,gz);
@@ -78,7 +93,13 @@ this.levels=8;
     level=Math.max(0,Math.min(8,Math.round(Number(level)||0)));
     const key=this.key(gx,gy,gz),prev=this.cells.get(key)||0;
     if(prev===level)return false;
-    if(level<=0)this.cells.delete(key);else this.cells.set(key,level);
+    if(level<=0){
+      this.cells.delete(key);
+      if(prev>0)this._indexDelete(gx,gz,key);
+    }else{
+      this.cells.set(key,level);
+      if(prev<=0)this._indexAdd(gx,gz,key);
+    }
     this.surfaceCache.delete(this.columnKey(gx,gz));
     this.boundsCache.delete(this.columnKey(gx,gz));
     this.version++;this._markNeighborhoodDirty(gx,gy,gz);
@@ -217,8 +238,7 @@ this.levels=8;
       states.set(ck,state);this._heapPush(heap,[state.next,ck]);
       return state;
     };
-    for(const [ck,near] of seeds){
-      const [gx,gz]=this.parseColumn(ck);activate(gx,gz,near,true);
+    for(const [ck,near] of seeds){      const [gx,gz]=this.parseColumn(ck);activate(gx,gz,near,true);
     }
 
     let placed=0,safety=Math.max(4096,total*40);
@@ -266,6 +286,25 @@ this.levels=8;
     }
     return {cells:out,columns:states.size,layers:placed,heapPops,edgePackedLayers:edgePack.moved,surfaceAudit};
   }
+  _connectedBodies(source){
+    const bodies=[],unvisited=new Set(source.keys());
+    const dirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    while(unvisited.size){
+      const first=unvisited.values().next().value,queue=[first],entries=[];
+      unvisited.delete(first);
+      for(let qi=0;qi<queue.length;qi++){
+        const key=queue[qi],level=source.get(key)||0;if(!level)continue;
+        entries.push([key,level]);
+        const [gx,gy,gz]=this.parse(key);
+        for(const [dx,dy,dz] of dirs){
+          const nk=this.key(gx+dx,gy+dy,gz+dz);
+          if(unvisited.has(nk)){unvisited.delete(nk);queue.push(nk)}
+        }
+      }
+      if(entries.length)bodies.push(entries);
+    }
+    return bodies;
+  }
   settleAll(){
     if(!this.needsSettle)return {changed:false,...this.lastSettle};
     this.needsSettle=false;
@@ -276,23 +315,38 @@ this.levels=8;
 
     const before=new Map(this.cells);
     const beforeLayers=[...before.values()].reduce((sum,v)=>sum+v,0);
-    const settled=this._settleBody([...before.entries()],null);
-    const next=settled.cells;
+    const bodies=this._connectedBodies(before),next=new Map();
+    const bodyColumns=bodies.map(body=>{
+      const set=new Set();
+      for(const [key] of body){const [gx,,gz]=this.parse(key);set.add(this.columnKey(gx,gz))}
+      return set;
+    });
+    let columns=0,layers=0,heapPops=0,edgePackedLayers=0;
+    const audits=[];
+
+    for(let i=0;i<bodies.length;i++){
+      const blocked=new Set();
+      for(let j=0;j<bodyColumns.length;j++)if(j!==i)for(const ck of bodyColumns[j])blocked.add(ck);
+      const settled=this._settleBody(bodies[i],blocked);
+      columns+=settled.columns;layers+=settled.layers;heapPops+=settled.heapPops;
+      edgePackedLayers+=settled.edgePackedLayers||0;
+      if(settled.surfaceAudit)audits.push(settled.surfaceAudit);
+      for(const [key,level] of settled.cells){
+        if(!next.has(key))next.set(key,level);
+        else next.set(key,Math.max(next.get(key),level));
+      }
+    }
+
     const afterLayers=[...next.values()].reduce((sum,v)=>sum+v,0);
     if(afterLayers!==beforeLayers){
-      this.cells=before;
-      this.needsSettle=true;
-      this.lastSettle={
-        bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
-        edgePackedLayers:settled.edgePackedLayers||0,surfaceAudit:settled.surfaceAudit||null,
-        beforeLayers,afterLayers:beforeLayers,conserved:false,rollback:true
-      };
+      this.cells=before;this._rebuildColumnIndex();this.needsSettle=true;
+      this.lastSettle={bodies:bodies.length,columns,layers,heapPops,edgePackedLayers,surfaceAudit:audits,beforeLayers,afterLayers:beforeLayers,conserved:false,rollback:true};
       return {changed:false,...this.lastSettle,totalLayers:beforeLayers,exactHydrostatic:false};
     }
 
     let changed=before.size!==next.size;
     const keys=new Set([...before.keys(),...next.keys()]);
-    this.cells=next;this.surfaceCache.clear();this.boundsCache.clear();
+    this.cells=next;this._rebuildColumnIndex();this.surfaceCache.clear();this.boundsCache.clear();
     for(const key of keys){
       const old=before.get(key)||0,now=next.get(key)||0;
       if(old!==now){
@@ -302,11 +356,7 @@ this.levels=8;
     }
     if(changed)this.version++;
     this.tick++;
-    this.lastSettle={
-      bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
-      edgePackedLayers:settled.edgePackedLayers||0,surfaceAudit:settled.surfaceAudit||null,
-      beforeLayers,afterLayers,conserved:true,rollback:false
-    };
+    this.lastSettle={bodies:bodies.length,columns,layers,heapPops,edgePackedLayers,surfaceAudit:audits,beforeLayers,afterLayers,conserved:true,rollback:false};
     return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
   }
   step(){
@@ -317,10 +367,10 @@ this.levels=8;
     const ck=this.columnKey(gx,gz),cached=this.surfaceCache.get(ck);
     if(cached!==undefined)return cached;
     let top=-Infinity;
-    for(const [key,level] of this.cells){
-      if(!level)continue;
-      const [x,gy,z]=this.parse(key);
-      if(x!==gx||z!==gz)continue;
+    const keys=this.columnIndex.get(ck);
+    if(keys)for(const key of keys){
+      const level=this.cells.get(key)||0;if(!level)continue;
+      const [,gy]=this.parse(key);
       top=Math.max(top,gy*this.terrain.tileSize+(level/8)*this.terrain.tileSize);
     }
     this.surfaceCache.set(ck,top);
@@ -336,11 +386,10 @@ this.levels=8;
     const ck=this.columnKey(gx,gz),cached=this.boundsCache.get(ck);
     if(cached!==undefined)return cached;
     let bottom=Infinity,top=-Infinity,cells=0,layers=0;
-    const s=this.terrain.tileSize;
-    for(const [key,level] of this.cells){
-      if(!level)continue;
-      const [x,gy,z]=this.parse(key);
-      if(x!==gx||z!==gz)continue;
+    const s=this.terrain.tileSize,keys=this.columnIndex.get(ck);
+    if(keys)for(const key of keys){
+      const level=this.cells.get(key)||0;if(!level)continue;
+      const [,gy]=this.parse(key);
       cells++;layers+=level;
       bottom=Math.min(bottom,gy*s);
       top=Math.max(top,gy*s+(level/8)*s);
@@ -382,13 +431,15 @@ this.levels=8;
     return rows;
   }
   importState(rows){
-    this.cells.clear();this.dirtyChunks.clear();this.surfaceCache.clear();this.boundsCache.clear();
+    this.cells.clear();this.columnIndex.clear();this.dirtyChunks.clear();this.surfaceCache.clear();this.boundsCache.clear();
     for(const row of Array.isArray(rows)?rows:[]){
       if(!Array.isArray(row)||row.length<4)continue;
       const [gx,gy,gz,level]=row.map(Number);
       if(![gx,gy,gz,level].every(Number.isFinite))continue;
       if(level>0&&this._canOccupy(gx|0,gy|0,gz|0)){
-        this.cells.set(this.key(gx|0,gy|0,gz|0),Math.max(1,Math.min(8,Math.round(level))));
+        const key=this.key(gx|0,gy|0,gz|0);
+        this.cells.set(key,Math.max(1,Math.min(8,Math.round(level))));
+        this._indexAdd(gx|0,gz|0,key);
         this._markNeighborhoodDirty(gx|0,gy|0,gz|0);
       }
     }
@@ -399,7 +450,7 @@ this.levels=8;
       cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,
       layerHeight:this.terrain.tileSize/8,dirtyChunks:this.dirtyChunks.size,
       version:this.version,needsSettle:this.needsSettle,
-      flowModel:'priority-flood-hydrostatic-v4-boundary-remainder',
+      flowModel:'connected-body-priority-flood-v5',
       flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
       exactHydrostatic:true,lastSettle:this.lastSettle
     };
@@ -437,7 +488,6 @@ class TerrainWorld{
       this.caveNoise.SetFrequency(.048);
       this.caveNoise.SetFractalType(Fractal.FBm||1);
       this.caveNoise.SetFractalOctaves(3);
-
       this.caveWarp=new F(this.seed+211);
       this.caveWarp.SetNoiseType(Noise.Perlin||4);
       this.caveWarp.SetFrequency(.085);
@@ -657,8 +707,7 @@ class TerrainWorld{
       else continue;
       if(![cx,cy,cz,index,value].every(Number.isFinite))continue;
       const key=this.chunkKey(cx,cy,cz);let patch=this.edits.get(key);
-      if(!patch){patch=new Map();this.edits.set(key,patch)}
-      patch.set(index|0,value|0);
+      if(!patch){patch=new Map();this.edits.set(key,patch)}      patch.set(index|0,value|0);
     }
     this.changeVersion++;for(const listener of this.listeners)listener({reload:true,version:this.changeVersion});
   }
