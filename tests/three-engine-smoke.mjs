@@ -28,6 +28,9 @@ try{
   assert(initial.paperTerrain?.paperVertices>0&&initial.paperTerrain?.paperTriangles>0,'paper terrain geometry empty '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.topRects>0&&initial.paperTerrain?.sideQuads>0&&initial.paperTerrain?.bevelQuads>0,'paper top/side/bevel geometry incomplete '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.renderGridExposed===false,'render grid is still exposed');
+  assert(initial.paperTerrain?.lowPolyBoundaryRing===true,'low-poly paper boundary ring missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.neighbourhood==='3x3','3x3 boundary classification missing '+JSON.stringify(initial.paperTerrain));
+  assert((initial.paperTerrain?.boundaryCells||0)>0&&(initial.paperTerrain?.edgeFacets||0)>0,'no deformed boundary cells/facets '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.authority==='TerrainWorld-gameplay-grid-unchanged','gameplay authority changed');
   assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.textureResolution===512,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
