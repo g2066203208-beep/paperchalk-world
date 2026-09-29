@@ -54,7 +54,8 @@ this.levels=8;
     return this.terrain.isSolidPeek(gx,gy,gz);
   }
   _canOccupy(gx,gy,gz){
-    if(Number(gz)!==Number(this.terrain.interactionRowZ))return false;
+    const row=Number(this.terrain.interactionRowZ);
+    if(Number.isFinite(row)&&Number(gz)!==row)return false;
     return !this._terrainBlocksWater(gx,gy,gz);
   }
   _writeLevel(gx,gy,gz,level){
