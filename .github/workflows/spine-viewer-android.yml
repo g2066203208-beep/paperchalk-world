@@ -76,6 +76,7 @@ jobs:
           curl -L --fail --retry 3             -o public/models/dw-ll_ucoco_384.onnx             https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx
 
           python3 "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/patch_stretchy.py" /tmp/stretchystudio
+          cp "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/SkeletonOverlay.jsx"              /tmp/stretchystudio/src/components/canvas/SkeletonOverlay.jsx
           npm run build
 
           test -f dist/ort/ort-wasm-simd-threaded.mjs
