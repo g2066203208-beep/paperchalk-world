@@ -11,6 +11,7 @@ assert(size('src/engine3d/EnvironmentFX.js')<14000,'weather FX exceeds 14KB budg
 assert(size('src/engine3d/FarTerrainRenderer.js')<8000,'far terrain renderer exceeds 8KB budget');
 assert(size('src/engine3d/OceanRenderer.js')<8000,'ocean renderer exceeds 8KB budget');
 assert(size('src/engine3d/EcologyRenderer.js')<8000,'ecology renderer exceeds 8KB budget');
+assert(size('src/engine3d/FishingRenderer.js')<7000,'fishing renderer exceeds 7KB budget');
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
@@ -30,6 +31,7 @@ console.log(JSON.stringify({
   farTerrain:size('src/engine3d/FarTerrainRenderer.js'),
   ocean:size('src/engine3d/OceanRenderer.js'),
   ecology:size('src/engine3d/EcologyRenderer.js'),
+  fishing:size('src/engine3d/FishingRenderer.js'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),

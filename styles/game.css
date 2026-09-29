@@ -43,6 +43,14 @@ body{touch-action:manipulation}
   transition:.18s ease;box-shadow:0 5px 18px rgba(0,0,0,.2)
 }
 .map-notice.is-show{opacity:1;transform:translate(-50%,0)}
+.fishing-status-hud{
+  position:absolute;z-index:18;left:50%;top:19%;transform:translate(-50%,-8px);
+  min-width:170px;max-width:min(70vw,520px);padding:8px 14px;border:1px solid rgba(239,217,174,.62);
+  border-radius:9px;background:rgba(25,27,29,.82);color:#ffe6a1;text-align:center;font-weight:900;
+  opacity:0;pointer-events:none;transition:opacity .12s,transform .12s
+}
+.fishing-status-hud.is-show{opacity:1;transform:translate(-50%,0)}
+
 
 .world-toolbar{
   position:absolute;z-index:14;right:max(14px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));

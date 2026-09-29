@@ -5,9 +5,8 @@ createVoxelGridTexture,
 createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
-import {OceanRenderer} from './OceanRenderer.js?v=stage-fix-r3';
-import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=stage-fix-r3';
-import {EcologyRenderer} from './EcologyRenderer.js?v=stage-fix-r3';
+import {OceanRenderer} from './OceanRenderer.js?v=big-voxel-r4';
+import {FishingRenderer} from './FishingRenderer.js?v=big-voxel-r4';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -228,7 +227,7 @@ this.meshes.clear();this.material.dispose();this.scene.remove(this.root);
 class TerrainChunkRenderer{
 constructor(THREE,terrain,scene,settings={}){
 this.THREE=THREE;this.terrain=terrain;this.scene=scene;
-this.settings={radiusXZ:3,radiusY:2,texturePixels:terrain.pixelsPerMeter||128,maxBuildsPerFrame:5,...settings};
+this.settings={radiusX:5,radiusY:2,texturePixels:terrain.pixelsPerMeter||128,maxBuildsPerFrame:4,...settings};
 this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
 this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
 this.meshWorker=null;this.meshInFlight=new Map();this.meshRequestId=0;
@@ -351,7 +350,7 @@ this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
 _initMeshWorker(){
 if(typeof Worker==='undefined')return;
 try{
-this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=stage-fix-r3',import.meta.url),{type:'module'});
+this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=big-voxel-r4',import.meta.url),{type:'module'});
 this.meshWorker.onmessage=event=>this._onMeshWorkerMessage(event.data);
 this.meshWorker.onerror=error=>{
 console.warn('[paperchalk] voxel mesh worker disabled',error);
@@ -503,20 +502,24 @@ this.darknessUniforms.uDarkPlayer.value.set(player.x,player.y,player.z);
 this.darknessUniforms.uDarkTorchOn.value=torchOn?1:0;
 this.darknessUniforms.uDarkTime.value=Number(time)||0;
 const span=this.terrain.chunkSize*this.terrain.tileSize;
-const ccx=Math.floor(player.x/span),ccy=Math.floor(player.y/span),ccz=Math.floor(player.z/span);
+const ccx=Math.floor(player.x/span),ccy=Math.floor(player.y/span);
 const next=new Set(),queue=[];
-const rx=Math.max(1,this.settings.radiusXZ|0),ry=Math.max(1,this.settings.radiusY|0);
-for(let dy=-ry;dy<=ry;dy++)for(let dz=-rx;dz<=rx;dz++)for(let dx=-rx;dx<=rx;dx++){
-const cx=ccx+dx,cy=ccy+dy,cz=ccz+dz;
+const rx=Math.max(2,this.settings.radiusX|0),ry=Math.max(1,this.settings.radiusY|0);
+const zChunks=[...new Set([
+Math.floor(this.terrain.interactionRowZ/this.terrain.chunkSize),
+Math.floor(this.terrain.blackBackRowZ/this.terrain.chunkSize)
+])];
+for(let dy=-ry;dy<=ry;dy++)for(let dx=-rx;dx<=rx;dx++)for(const cz of zChunks){
+const cx=ccx+dx,cy=ccy+dy;
 if(this.terrain.chunkMayContainTerrain&&!this.terrain.chunkMayContainTerrain(cx,cy,cz))continue;
 const key=this.terrain.chunkKey(cx,cy,cz);
 next.add(key);
 const record=this.meshes.get(key);
 if(!record){
-  if(!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+  if(!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy});
 }else{
   record.mesh.visible=true;
-  if(record.version<0&&!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+  if(record.version<0&&!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy});
 }
 }
 queue.sort((a,b)=>a.d-b.d);
@@ -570,8 +573,8 @@ this.scene=new THREE.Scene();
 this.fixedBackgroundColor=new THREE.Color(0x6f7fa8);
 this.scene.background=this.fixedBackgroundColor.clone();
 this.camera=new THREE.PerspectiveCamera(42,1,.05,520);
-this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,height:.65,fov:42};
-this.stageView={enabled:false,axis:'z',side:1};
+this.cameraRig={yaw:0,pitch:0,distance:15,minDistance:9,maxDistance:26,height:.45,fov:42};
+this.stageView={enabled:true,axis:'z',side:1};
 this.cameraTarget=new THREE.Vector3();
 this.cameraTargetSmooth=new THREE.Vector3();
 this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.paperEntities=[];
@@ -666,16 +669,15 @@ moonDisc.name='visible-moon';moonDisc.scale.set(3.7,3.7,1);moonDisc.renderOrder=
 this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
 this.backdrop=null;
 this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
-radiusXZ:Math.min(2,this.sceneData.terrain?.visibleChunkRadiusXZ??3),
-radiusY:1,
-maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,2),
+radiusX:this.mobileLike?3:6,
+radiusY:this.mobileLike?1:2,
+maxBuildsPerFrame:this.mobileLike?2:4,
 texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128,
 anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
-this.farTerrainRenderer=new FarTerrainRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
-this.ecologyRenderer=new EcologyRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.oceanRenderer=new OceanRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
+this.fishingRenderer=new FishingRenderer(THREE,this.scene);
 const cursorGeometry=new THREE.BoxGeometry(
 this.terrain.tileSize*1.035,
 this.terrain.tileSize*1.035,
@@ -695,7 +697,7 @@ this.terrainCursor.visible=false;
 this.terrainCursor.renderOrder=1000;
 this.scene.add(this.terrainCursor);
 for(const def of this.sceneData.stageEntities||[]){
-const ground=def.grounded?this.terrain.highestGroundY(def.x,Number(def.z)||0):Number(def.y)||0;
+const ground=def.grounded?this.terrain.highestGroundY(def.x,this.interactionRowZ*this.terrain.tileSize):Number(def.y)||0;
 const entity=new PaperSpriteEntity(THREE,{
 ...def,y:ground,z:Number.isFinite(Number(def.z))?Number(def.z):0,seed:this._seedFromId(def.id)
 });
@@ -795,7 +797,7 @@ setStageView(enabled,axis=this.stageView.axis){this.stageView.enabled=!!enabled;
 toggleStageView(){return this.setStageView(!this.stageView.enabled,this.stageView.axis)}
 setStageAxis(axis){this.stageView.axis=axis==='x'?'x':'z';this._notifyCamera();return {...this.stageView}}
 resetCamera(){
-Object.assign(this.cameraRig,{yaw:0,pitch:0,distance:18,height:.35,fov:42});
+Object.assign(this.cameraRig,{yaw:0,pitch:0,distance:15,height:.45,fov:42});
 Object.assign(this.stageView,{enabled:true,axis:'z',side:1});
 this.camera.fov=42;this.camera.updateProjectionMatrix();this._notifyCamera();return this.cameraConfig();
 }
@@ -949,10 +951,9 @@ const current=this.lastSnapshot;
 this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
 const p=current?.player;
 this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
-this.farTerrainRenderer?.update(p);
-this.ecologyRenderer?.update(p);
 this.oceanRenderer?.update(dt,p);
 this.waterRenderer?.update(dt);
+this.fishingRenderer?.update(current,this.camera,dt);
 this.healthBar?.update(this.camera,dt);
 }
 render(){
@@ -1034,7 +1035,7 @@ entityMode:'paper-sprites-in-3d',
 drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),farTerrain:this.farTerrainRenderer?.stats?.()||null,ecology:this.ecologyRenderer?.stats?.()||null,ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,
+debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,
 lighting:{mode:'paper-pbr-sun-sky-moon-torch-weather',backgroundMode:'dynamic-atmosphere',backgroundColor:'#'+this.fixedBackgroundColor.getHexString(),skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -1047,10 +1048,9 @@ terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneM
 }
 dispose(){
 this.terrainRenderer?.dispose();
-this.farTerrainRenderer?.dispose();
-this.ecologyRenderer?.dispose();
 this.oceanRenderer?.dispose();
 this.waterRenderer?.dispose();
+this.fishingRenderer?.dispose();
 if(this.terrainCursor){
 this.terrainCursor.geometry.dispose();
 this.terrainCursor.material.dispose();

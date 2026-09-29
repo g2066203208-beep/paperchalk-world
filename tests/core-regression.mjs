@@ -89,9 +89,19 @@ try{
     };
   });
   assert(foundation.h1===60,'hunger system failed '+JSON.stringify(foundation));
-  assert(foundation.rod===null,'fishing rod should not be a starter item '+JSON.stringify(foundation));
+  assert(foundation.rod?.action==='fishing-rod','starter fishing rod missing '+JSON.stringify(foundation));
   assert(foundation.settled.bodies===2&&foundation.high===8&&foundation.low===8,'disconnected ponds exchanged water '+JSON.stringify(foundation));
   assert(foundation.flowModel==='connected-body-priority-flood-v5','wrong water solver '+JSON.stringify(foundation));
+  const fishing=await page.evaluate(()=>{
+    const p=window.PaperchalkRuntime.getSnapshot().player;
+    const cast=window.PaperchalkFishing.cast({x:p.x+2,y:p.y+1,z:p.z});
+    const flying=window.PaperchalkFishing.state;
+    const reel=window.PaperchalkFishing.reel();
+    const reeling=window.PaperchalkFishing.state;
+    return {cast,flying,reel,reeling};
+  });
+  assert(fishing.cast===true&&fishing.flying.state==='flying','fishing rod did not cast '+JSON.stringify(fishing));
+  assert(fishing.reel===true&&fishing.reeling.state==='reeling','fishing rod did not reel '+JSON.stringify(fishing));
 
   assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
   console.log('INFINITE_VOXEL_3D_CORE_OK');

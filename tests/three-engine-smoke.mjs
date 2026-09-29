@@ -26,12 +26,10 @@ try{
   assert(initial.terrain?.greedyRatio>=1,'greedy mesher stats missing');
   assert(initial.terrain?.workerMeshing===true,'voxel meshing worker did not start '+JSON.stringify(initial.terrain));
   assert((initial.terrain?.workerStats?.completed||0)>0,'worker produced no chunk meshes '+JSON.stringify(initial.terrain?.workerStats));
-  assert(initial.ecology?.mode==='instanced-paper-ecology','instanced ecology missing '+JSON.stringify(initial.ecology));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
-  assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
+  assert(initial.camera.stageView?.enabled===true&&initial.camera.stageView.axis==='z','paper-stage side camera must be default '+JSON.stringify(initial.camera));
   assert(initial.flatShading===true,'flat shading renderer flag missing');
-  assert(initial.ocean?.mode==='analytic-ocean-plane','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
-  assert(initial.farTerrain?.mode==='layered-paper-backdrop','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
+  assert(initial.ocean?.mode==='analytic-ocean-stage-strip','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
@@ -41,11 +39,14 @@ try{
   await page.mouse.up();
   await page.waitForTimeout(100);
   const after=await page.evaluate(()=>window.Paperchalk3D.stats.camera.yaw);
-  assert(Math.abs(after-before)>.1,'3D camera did not orbit');
+  assert(Math.abs(after-before)<.01,'paper-stage camera should stay side-on '+JSON.stringify({before,after}));
   await page.evaluate(()=>window.PaperchalkHealth.set(5));
   await page.waitForTimeout(100);
   const hp=await page.evaluate(()=>window.Paperchalk3D.stats.health);
   assert(hp?.value===5,'health bar failed');
+  assert(initial.fishing?.renderMode==='paper-line-bobber-bite-ui','fishing renderer missing '+JSON.stringify(initial.fishing));
+  const rodItem=await page.evaluate(()=>window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null);
+  assert(rodItem?.action==='fishing-rod','starter fishing rod missing');
   const torchItem=await page.evaluate(()=>window.PaperchalkInventory.items.find(i=>i?.id==='hand-torch')||null);
   assert(torchItem?.action==='toggle-torch','starter torch missing');
   const torchState=await page.evaluate(()=>({

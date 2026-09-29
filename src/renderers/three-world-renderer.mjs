@@ -1,5 +1,5 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=stage-fix-r3';
-import {EnvironmentFX} from '../engine3d/EnvironmentFX.js?v=stage-fix-r3';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=big-voxel-r4';
+import {EnvironmentFX} from '../engine3d/EnvironmentFX.js?v=big-voxel-r4';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
