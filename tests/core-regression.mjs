@@ -31,7 +31,17 @@ try{
   assert(afterW.x-before.x>.25,'D did not move on X '+JSON.stringify({before,afterW}));
   assert(Math.abs(afterW.z)<1e-6,'Z movement is not locked '+JSON.stringify(afterW));
 
-  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
+  try{
+    await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
+  }catch(error){
+    const diag=await page.evaluate(()=>{
+      const snap=window.PaperchalkRuntime.getSnapshot(),p=snap.player,t=window.PaperchalkTerrain;
+      const c=t.worldToCell(p.x,p.y,p.z),profile=t.terrainProfile(c.gx,c.gz);
+      return {player:p,cell:c,profile,submersion:t.water.submersionAABB(p.x,p.y,p.z,.34,.95,.28),
+        ground:t.highestGroundY(p.x,p.z),terrain:t.stats()};
+    });
+    throw new Error('player failed to ground '+JSON.stringify(diag)+' :: '+error.message);
+  }
   const groundedY=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player.y);
   const jumped=await page.evaluate(()=>window.PaperchalkCombat.jump());assert(jumped===true,'jump rejected');
   await page.waitForFunction(y=>window.PaperchalkRuntime.getSnapshot().player.y>y+.04,groundedY,{timeout:1500});
