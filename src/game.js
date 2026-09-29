@@ -391,6 +391,23 @@ return terrain.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D);
 function groundProbe(x=transform.x,y=transform.y,z=transform.z){
 return terrain.collidesAABB(x,y-.035,z,PLAYER_HALF_W*.92,PLAYER_HALF_H,PLAYER_HALF_D*.92);
 }
+function snapDownToGround(maxDrop=1.05){
+if(groundProbe()){controller.grounded=true;return true}
+const startY=transform.y,step=.055;
+let firstCollision=-1;
+for(let d=step;d<=maxDrop+1e-6;d+=step){
+if(collidesAt(transform.x,startY-d,transform.z)){firstCollision=d;break}
+}
+if(firstCollision<0)return false;
+let safe=Math.max(0,firstCollision-step),hit=firstCollision;
+for(let i=0;i<7;i++){
+const mid=(safe+hit)*.5;
+if(collidesAt(transform.x,startY-mid,transform.z))hit=mid;else safe=mid;
+}
+transform.y=startY-safe;
+velocity.y=0;controller.grounded=true;
+return true;
+}
 function moveAxis(axis,delta){
 if(!delta)return;
 const next={x:transform.x,y:transform.y,z:transform.z};
@@ -459,7 +476,9 @@ velocity.z=0;
 transform.z=PLAYER_ROW_CENTER_Z;
 controller.moving=input.magnitude>.05;
 if(controller.moving)transform.yaw=velocity.x<0?Math.PI:0;
+const wasGrounded=controller.grounded;
 moveAxis('x',velocity.x*dt);
+if(wasGrounded&&!controller.inWater&&!groundProbe())snapDownToGround(1.05);
 }
 });
 ecs.registerSystem('player-gravity',{
@@ -503,11 +522,13 @@ else controller.action='idle';
 });
 function jump(){
 if(!worldInteractive())return false;
-const jumpCost=(controller.inWater||playerWaterContact())?4:8;
-if(stamina.current<jumpCost){showMapNotice('体力不足',500);return false}
-stamina.current=Math.max(0,stamina.current-jumpCost);
 const submerged=playerSubmersion();
 const waterContact=playerWaterContact();
+const canJump=controller.grounded||waterContact||submerged>.015;
+if(!canJump)return false;
+const jumpCost=(waterContact||submerged>.015)?4:8;
+if(stamina.current<jumpCost){showMapNotice('体力不足',500);return false}
+stamina.current=Math.max(0,stamina.current-jumpCost);
 if(controller.grounded){
 controller.grounded=false;
 velocity.y=JUMP_SPEED*(((waterContact?.depthInside||0)>.25)?0.90:1);
