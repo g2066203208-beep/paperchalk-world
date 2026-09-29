@@ -76,6 +76,11 @@ export class AtmospherePass{
         float hash21(vec2 p){
           p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);
         }
+        float valueNoise(vec2 p){
+          vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+          float a=hash21(i),b=hash21(i+vec2(1.0,0.0)),c=hash21(i+vec2(0.0,1.0)),d=hash21(i+vec2(1.0,1.0));
+          return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+        }
         vec3 reconstructWorld(vec2 uv,float depth){
           vec4 clip=vec4(uv*2.0-1.0,depth*2.0-1.0,1.0);
           vec4 view=uInvProjection*clip;view/=max(1e-6,view.w);
@@ -123,18 +128,19 @@ export class AtmospherePass{
             float rel=p.y-uFogBase;
             float heightDensity=exp(-max(rel,-5.0)*uHeightFalloff);
             float distanceLift=mix(.82,1.12,smoothstep(0.0,uMaxDistance,t));
-            float density=uFogDensity*heightDensity*distanceLift*mix(1.0,.20,skyRay);
+            float wisps=mix(.72,1.22,valueNoise(p.xz*.075+vec2(p.y*.026,-p.y*.019)+uTime*.00018));
+            float density=uFogDensity*heightDensity*distanceLift*wisps*mix(1.0,.18,skyRay);
             float lit=shadowAt(p,noise+float(i)*.6180339);
-            float absorb=exp(-density*stepLen*1.12);
-            float directPhase=forward*(.74+.26*lit);
-            sunScatter+=trans*lit*density*directPhase*stepLen;
-            ambientScatter+=trans*density*broad*stepLen*(.42+.58*(1.0-lit)*uMulti);
+            float litContrast=smoothstep(.18,.88,lit);
+            float absorb=exp(-density*stepLen*1.10);
+            sunScatter+=trans*litContrast*density*forward*stepLen;
+            ambientScatter+=trans*density*broad*stepLen*(.34+.66*(1.0-litContrast)*uMulti);
             trans*=absorb;t+=stepLen;
           }
           float fogAlpha=clamp(1.0-trans,0.0,.32);
           float forwardMask=smoothstep(-.10,.94,mu);
-          float shaft=clamp(sunScatter*uIntensity*1.35*forwardMask,0.0,.16);
-          float ambient=clamp(ambientScatter*(.20+uMulti*.24),0.0,.055);
+          float shaft=clamp(sunScatter*uIntensity*2.05*forwardMask,0.0,.18);
+          float ambient=clamp(ambientScatter*(.17+uMulti*.22),0.0,.050);
           float haze=fogAlpha*mix(.18,.055,skyRay);
           float outAlpha=clamp(haze+ambient*.45,0.0,.12);
           vec3 linear=uFogColor*(haze+ambient)+uSunColor*shaft;
@@ -217,23 +223,27 @@ export class AtmospherePass{
     const minute=((Number(time)||0)%1440+1440)%1440,morning=minute<720,lowSun=clamp(1-d*1.18,0,1);
     const active=d>.005?(d*.70+tw*.16)*(.66+lowSun*.52)*sky*(1-under):0;
     this.state={strength:active*this.settings.intensity,daylight:d,twilight:tw,skyExposure:sky,underground:under,time:Number(time)||0,fogBase:Number(fogBaseHeight)||0};
-    const warm=morning?this.dawnColor:this.duskColor,dayMix=clamp((d-.04)/.82,0,1);
+    const warm=morning?this.dawnColor:this.duskColor;
     if(d>.004){
-      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0xb0bec3),dayMix);
-      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x6489b8),dayMix);
+      const horizonMix=clamp(d*1.18,0,1),zenithMix=clamp(.34+d*2.45,0,1);
+      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0xb5c2c7),horizonMix);
+      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x6389ba),zenithMix);
     }else{
       this.horizonColor.copy(this.nightHorizon).lerp(warm,tw*.44);
       this.zenithColor.copy(this.nightColor).lerp(warm,tw*.18);
     }
     this.skyColor.copy(this.horizonColor).lerp(this.zenithColor,.56);
     const sunColor=this.sunHorizon.clone().lerp(this.sunDay,clamp(d*1.36,0,1));
-    this.fogColor.copy(this.horizonColor).lerp(this.zenithColor,.24);
+    this.fogColor.copy(this.horizonColor).lerp(this.zenithColor,.14);
     if(sunLight){
       sunLight.color.copy(sunColor);
       const target=sunLight.target?.position||new this.THREE.Vector3();
       this.sunDirection.copy(sunLight.position).sub(target).normalize();
     }else if(sunPosition)this.sunDirection.copy(sunPosition).normalize();
-    if(skyLight){skyLight.color.copy(this.zenithColor).lerp(this.sunDay,.08);skyLight.groundColor.set(0x765f49)}
+    if(skyLight){
+      skyLight.color.copy(this.zenithColor).lerp(this.sunDay,.06);
+      skyLight.groundColor.copy(this.horizonColor).lerp(new this.THREE.Color(0x987458),.62);
+    }
     if(sunDisc?.material?.color)sunDisc.material.color.copy(sunColor);
     this.skyUniforms.uSunColor.value.copy(sunColor);this.skyUniforms.uTwilight.value=tw;this.skyUniforms.uSunDir.value.copy(this.sunDirection);
     this.volumeUniforms.uSunColor.value.copy(sunColor);this.volumeUniforms.uFogColor.value.copy(this.fogColor);
