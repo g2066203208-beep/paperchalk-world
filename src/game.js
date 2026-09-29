@@ -23,6 +23,8 @@ const paperClock=byId('paperClock');
 const mapNotice=byId('mapNotice');
 const hungerFill=byId('hungerFill');
 const hungerValue=byId('hungerValue');
+const staminaFill=byId('staminaFill');
+const staminaValue=byId('staminaValue');
 const fishingStatusHud=byId('fishingStatusHud');
 const profileNote=byId('profileNote');
 const continueBtn=byId('continueBtn');
@@ -91,6 +93,7 @@ const PLAYER_MAX_HP=10;
 const HUNGER_MAX=100;
 const HUNGER_DRAIN_PER_SECOND=.055;
 const HUNGER_ZERO_DAMAGE_INTERVAL=6;
+const STAMINA_MAX=100;
 const FISHING_CAST_SPEED=9.2;
 const FISHING_GRAVITY=13.5;
 const FISH_SIM_DT=.10;
@@ -233,6 +236,7 @@ const transform={x:sceneData.spawn.x,y:sceneData.spawn.y,z:sceneData.spawn.z,yaw
 const velocity={x:0,y:0,z:0};
 const health={current:PLAYER_MAX_HP,max:PLAYER_MAX_HP};
 const hunger={current:HUNGER_MAX,max:HUNGER_MAX,zeroDamageTimer:0};
+const stamina={current:STAMINA_MAX,max:STAMINA_MAX};
 const controller={
 grounded:true,crouching:false,attacking:false,attackTimer:0,attackCooldown:0,
 action:'idle',moving:false,torchOn:false,inWater:false,submerged:0,facingX:1
@@ -263,13 +267,14 @@ targetFishEntityId:fishing.targetFishEntityId
 };
 }
 function hungerSnapshot(){return {current:hunger.current,max:hunger.max,ratio:hunger.current/hunger.max}}
+function staminaSnapshot(){return {current:stamina.current,max:stamina.max,ratio:stamina.current/stamina.max}}
 function fishSnapshot(){
 return fishWorld.entities.map(f=>({
 id:f.id,species:f.species,x:f.x,y:f.y,z:f.z,
 vx:f.vx,vy:f.vy,vz:f.vz,state:f.state,size:f.size
 }));
 }
-let lastHungerHud=-1,lastFishingHud='';
+let lastHungerHud=-1,lastStaminaHud=-1,lastFishingHud='';
 function updateSurvivalHud(){
 const ratio=Math.max(0,Math.min(1,hunger.current/hunger.max));
 const quantized=Math.round(ratio*200)/200;
@@ -277,6 +282,12 @@ if(Math.abs(quantized-lastHungerHud)>.0001){
 lastHungerHud=quantized;
 if(hungerFill)hungerFill.style.transform='scaleX('+quantized.toFixed(3)+')';
 if(hungerValue)hungerValue.textContent=String(Math.round(hunger.current));
+}
+const staminaRatio=Math.max(0,Math.min(1,stamina.current/stamina.max)),sq=Math.round(staminaRatio*200)/200;
+if(Math.abs(sq-lastStaminaHud)>.0001){
+lastStaminaHud=sq;
+if(staminaFill)staminaFill.style.transform='scaleX('+sq.toFixed(3)+')';
+if(staminaValue)staminaValue.textContent=String(Math.round(stamina.current));
 }
 if(fishingStatusHud){
 let text='';
@@ -341,6 +352,7 @@ active,
 player:playerSnapshot(),
 health:{current:health.current,max:health.max},
 hunger:hungerSnapshot(),
+stamina:staminaSnapshot(),
 fishing:fishingSnapshot(),
 fish:fishSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
@@ -491,6 +503,9 @@ else controller.action='idle';
 });
 function jump(){
 if(!worldInteractive())return false;
+const jumpCost=(controller.inWater||playerWaterContact())?4:8;
+if(stamina.current<jumpCost){showMapNotice('体力不足',500);return false}
+stamina.current=Math.max(0,stamina.current-jumpCost);
 const submerged=playerSubmersion();
 const waterContact=playerWaterContact();
 if(controller.grounded){
@@ -514,6 +529,8 @@ if(!worldInteractive())return false;
 const selected=typeof inventorySelected==='number'?inventoryItems?.[inventorySelected]:null;
 if(fishing.state!=='idle'||selected?.action==='fishing-rod')return reelFishingRod();
 if(controller.attackCooldown>0)return false;
+if(stamina.current<10){showMapNotice('体力不足',500);return false}
+stamina.current=Math.max(0,stamina.current-10);
 controller.attacking=true;
 controller.attackTimer=.28;
 controller.attackCooldown=.42;
@@ -559,6 +576,9 @@ return hunger.current;
 function feedPlayer(amount=1,options){return setHunger(hunger.current+Math.max(0,Number(amount)||0),options)}
 window.PaperchalkHunger=Object.freeze({
 max:HUNGER_MAX,get state(){return hungerSnapshot()},set:setHunger,feed:feedPlayer
+});
+window.PaperchalkStamina=Object.freeze({
+max:STAMINA_MAX,get state(){return staminaSnapshot()}
 });
 window.PaperchalkHealth=Object.freeze({
 maxHp:PLAYER_MAX_HP,
@@ -1555,6 +1575,8 @@ updateFishEcology(dt);
 updateFishing(dt);
 const hungerDrain=HUNGER_DRAIN_PER_SECOND*dt*(controller.moving?1.35:1)*(controller.inWater?1.22:1);
 hunger.current=clampHunger(hunger.current-hungerDrain);
+const staminaDelta=(controller.inWater&&controller.moving?-5.5:(controller.moving?5.2:9.5))*dt*(.45+.55*(hunger.current/HUNGER_MAX));
+stamina.current=Math.max(0,Math.min(STAMINA_MAX,stamina.current+staminaDelta));
 if(hunger.current<=0){
 hunger.zeroDamageTimer+=dt;
 if(hunger.zeroDamageTimer>=HUNGER_ZERO_DAMAGE_INTERVAL){
@@ -1601,6 +1623,7 @@ worldMinutes:360,
 player:{...sceneData.spawn},
 playerHp:PLAYER_MAX_HP,
 hunger:HUNGER_MAX,
+stamina:STAMINA_MAX,
 terrainEdits:[],
 waterCells:[],
 torchOn:false,
@@ -1654,6 +1677,7 @@ save.worldMinutes=worldMinutes;
 save.player={x:transform.x,y:transform.y,z:PLAYER_ROW_CENTER_Z,yaw:transform.yaw};
 save.playerHp=health.current;
 save.hunger=hunger.current;
+save.stamina=stamina.current;
 save.torchOn=controller.torchOn;
 save.terrainEdits=terrain.exportEdits();
 save.waterCells=terrain.water.exportState();
@@ -1679,6 +1703,7 @@ controller.grounded=groundProbe();
 controller.crouching=false;controller.attacking=false;controller.action='idle';controller.inWater=false;controller.submerged=0;
 health.current=clampHp(save.playerHp);
 hunger.current=clampHunger(save.hunger??HUNGER_MAX);hunger.zeroDamageTimer=0;
+stamina.current=Math.max(0,Math.min(STAMINA_MAX,Number(save.stamina??STAMINA_MAX)||0));
 resetFishing();
 fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
 controller.torchOn=!!save.torchOn;
