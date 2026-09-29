@@ -23,6 +23,9 @@ try{
   assert(initial.terrain?.visibleChunks>0&&initial.terrain?.renderedSolidVoxels>0,'no streamed voxel geometry');
   assert(initial.terrain?.dimensions===3&&initial.terrain?.infinite===true,'not true 3D terrain');
   assert(initial.terrain?.greedyRatio>=1,'greedy mesher stats missing');
+  assert(initial.terrain?.workerMeshing===true,'voxel meshing worker did not start '+JSON.stringify(initial.terrain));
+  assert((initial.terrain?.workerStats?.completed||0)>0,'worker produced no chunk meshes '+JSON.stringify(initial.terrain?.workerStats));
+  assert(initial.ecology?.mode==='instanced-paper-ecology','instanced ecology missing '+JSON.stringify(initial.ecology));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
@@ -52,6 +55,7 @@ try{
   assert(torchState.result===true&&torchState.player.torchOn===true,'torch gameplay state did not activate '+JSON.stringify(torchState));
   const atmosphere=await page.evaluate(()=>window.Paperchalk3D.stats.environment);
   assert(atmosphere&&typeof atmosphere.fogDensity==='number','weather atmosphere missing '+JSON.stringify(atmosphere));
+  assert(atmosphere.skyMode==='shader-gradient-dome','dynamic atmosphere sky missing '+JSON.stringify(atmosphere));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('INFINITE_VOXEL_3D_ENGINE_OK');
 }finally{await browser.close()}
