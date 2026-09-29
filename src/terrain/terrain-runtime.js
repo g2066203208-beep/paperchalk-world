@@ -229,7 +229,6 @@ class WaterWorld{
       if(!state||height!==state.next)continue;
       const gy=Math.floor(height/8);
       if(!this._canOccupy(state.gx,gy,state.gz)){
-        // A ceiling/solid interrupted this column. Do not teleport through it.
         state.next=Infinity;continue;
       }
 
@@ -237,10 +236,6 @@ class WaterWorld{
       const topHeight=height+1;
       state.next=state.floor+state.filled;
       this._heapPush(heap,[state.next,ck]);
-
-      // A filled layer can spill sideways at its top elevation. Newly reached
-      // columns are inserted by floor elevation, so the heap automatically
-      // sends the next units to the lowest reachable places first.
       for(const [dx,,dz] of this.horizontalDirs){
         const nx=state.gx+dx,nz=state.gz+dz,nck=this.columnKey(nx,nz);
         if(states.has(nck)||(!seeds.has(nck)&&blockedColumns?.has(nck)))continue;
@@ -248,9 +243,6 @@ class WaterWorld{
         if(floor<=topHeight)activate(nx,nz,height,seeds.has(nck));
       }
     }
-
-    // If exotic enclosed geometry exhausted the frontier, keep the remaining
-    // conserved volume in the original seed columns rather than deleting it.
     if(placed<total){
       const seedStates=[...seeds.keys()].map(k=>states.get(k)).filter(Boolean);
       let si=0;
@@ -261,10 +253,6 @@ class WaterWorld{
         else break;
       }
     }
-
-    // Quantized water can leave one extra 1/8-layer when volume is not divisible
-    // by the wetted footprint. Keep that remainder on the shoreline instead of
-    // creating isolated high patches in the interior of an otherwise level pool.
     const edgePack=this._packRemainderToBoundary(states);
     const surfaceAudit=this._surfaceAuditFromStates(states);
 
@@ -288,15 +276,9 @@ class WaterWorld{
 
     const before=new Map(this.cells);
     const beforeLayers=[...before.values()].reduce((sum,v)=>sum+v,0);
-
-    // Solve the whole current water volume in one shared priority-flood pass.
-    // This is crucial when a second bucket joins water that was already present:
-    // all old and new water participates in the same equilibrium calculation.
     const settled=this._settleBody([...before.entries()],null);
     const next=settled.cells;
     const afterLayers=[...next.values()].reduce((sum,v)=>sum+v,0);
-
-    // Never create or delete water because of a solver edge case.
     if(afterLayers!==beforeLayers){
       this.cells=before;
       this.needsSettle=true;
