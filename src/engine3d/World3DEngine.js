@@ -1,4 +1,5 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
+import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r1';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
@@ -566,6 +567,7 @@ this.cameraTarget=new THREE.Vector3();
 this.cameraTargetSmooth=new THREE.Vector3();
 this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.fishingRenderer=null;this.fishSchoolRenderer=null;this.paperEntities=[];
 this.cameraOcclusion={enabled:true,radius:1.15,minOpacity:.18,entityStates:new Map(),terrainShader:true};
+this.paperStyle={enabled:true};
 this.debugColliders=false;this.pointerState=null;
 this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
 const coarse=matchMedia('(pointer:coarse)').matches;
@@ -640,6 +642,18 @@ radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
 maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?3:5),
 texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128
 });
+this.paperTerrainRenderer=new PaperTerrainRenderer(THREE,this.terrain,this.scene,{
+radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
+maxBuildsPerFrame:this.mobileLike?1:2,
+paperLayerHeight:.5,
+paperThickness:.30,
+bevelWidth:.045,
+bevelHeight:.055,
+fiberStrength:.035,
+printNoiseStrength:.025,
+sideDarkness:.78
+});
+this.terrainRenderer.root.visible=false;
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
 this.fishingRenderer=new FishingRenderer(THREE,this.scene);
 this.fishSchoolRenderer=new FishSchoolRenderer(THREE,this.scene,{capacity:this.mobileLike?24:32});
@@ -915,7 +929,15 @@ if(snapshot)this.lastSnapshot=snapshot;
 const current=this.lastSnapshot;
 this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
 const p=current?.player;
+if(this.paperStyle.enabled){
+this.terrainRenderer.root.visible=false;
+this.paperTerrainRenderer?.setEnabled(true);
+this.paperTerrainRenderer?.update(p);
+}else{
+this.paperTerrainRenderer?.setEnabled(false);
+this.terrainRenderer.root.visible=true;
 this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
+}
 this.waterRenderer?.update(dt);
 const renderTime=performance.now()/1000;
 this.fishSchoolRenderer?.update(current,this.camera,renderTime);
@@ -998,7 +1020,11 @@ entityMode:'paper-sprites-in-3d',
 drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
+debugColliders:this.debugColliders,
+terrain:this.paperStyle.enabled?this.paperTerrainRenderer?.snapshot?.():this.terrainRenderer.stats(),
+paperTerrain:this.paperTerrainRenderer?.snapshot?.()||null,
+voxelTerrain:this.terrainRenderer.stats(),
+water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
 lighting:{mode:'sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -1006,10 +1032,22 @@ cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusi
 undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
 paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
 playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
-terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true
+terrainBlockGeometry:this.paperStyle.enabled?'merged extruded cardboard slabs':'3-axis greedy voxel BufferGeometry',
+paperStyle:{enabled:this.paperStyle.enabled,visualOnly:true,gameplayGridUnchanged:true},
+flatShading:true
 };
 }
+setPaperStyle(enabled=true){
+this.paperStyle.enabled=!!enabled;
+this.paperTerrainRenderer?.setEnabled(this.paperStyle.enabled);
+if(this.terrainRenderer?.root)this.terrainRenderer.root.visible=!this.paperStyle.enabled;
+return this.paperStyle.enabled;
+}
+configurePaperTerrain(patch={}){
+return this.paperTerrainRenderer?.configure?.(patch)||null;
+}
 dispose(){
+this.paperTerrainRenderer?.dispose();
 this.terrainRenderer?.dispose();
 this.waterRenderer?.dispose();
 this.fishingRenderer?.dispose();
