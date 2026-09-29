@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),paperEntity=read('src/entities/PaperSpriteEntity.js');
 
-assert(html.includes('voxel3d-r45'),'build key missing');
+assert(html.includes('voxel3d-r46'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="staminaFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
@@ -40,6 +40,7 @@ assert(terrain.includes('columnBounds(gx,gz)'),'water column bounds query missin
 assert(game.includes('const hunger={current:HUNGER_MAX'),'hunger state missing');
 assert(game.includes('HUNGER_DRAIN_PER_SECOND'),'hunger drain missing');
 assert(game.includes('STAMINA_MAX=100'),'stamina state missing');
+assert(game.includes('snapDownToGround(1.05)'),'voxel ground snap missing');
 assert(game.includes('window.PaperchalkStamina'),'stamina API missing');
 assert(game.includes('save.stamina=stamina.current'),'stamina persistence missing');
 assert(game.includes("item.action==='eat'"),'fish eating missing');
