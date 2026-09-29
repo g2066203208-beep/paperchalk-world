@@ -5,9 +5,9 @@ createVoxelGridTexture,
 createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
-import {OceanRenderer} from './OceanRenderer.js?v=world-core-r2';
-import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=world-core-r2';
-import {EcologyRenderer} from './EcologyRenderer.js?v=world-core-r2';
+import {OceanRenderer} from './OceanRenderer.js?v=stage-fix-r3';
+import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=stage-fix-r3';
+import {EcologyRenderer} from './EcologyRenderer.js?v=stage-fix-r3';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -351,7 +351,7 @@ this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
 _initMeshWorker(){
 if(typeof Worker==='undefined')return;
 try{
-this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=world-core-r2',import.meta.url),{type:'module'});
+this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=stage-fix-r3',import.meta.url),{type:'module'});
 this.meshWorker.onmessage=event=>this._onMeshWorkerMessage(event.data);
 this.meshWorker.onerror=error=>{
 console.warn('[paperchalk] voxel mesh worker disabled',error);
@@ -747,7 +747,8 @@ let h=2166136261;for(const ch of String(id||'')){h^=ch.charCodeAt(0);h=Math.imul
 _installCameraInput(){
 const canvas=this.renderer.domElement;
 canvas.addEventListener('pointerdown',event=>{
-this.pointerState={id:event.pointerId,lastX:event.clientX,lastY:event.clientY,moved:false};
+canvas.focus({preventScroll:true});
+this.pointerState={id:event.pointerId,lastX:event.clientX,lastY:event.clientY,moved:false,button:event.button};
 try{canvas.setPointerCapture(event.pointerId)}catch{}
 });
 canvas.addEventListener('pointermove',event=>{
@@ -987,8 +988,11 @@ else{z+=sz;dist=tz;tz+=dz}
 }
 return null;
 }
+_interactionRayDistance(){
+return Math.max(24,this.cameraRig.distance+14);
+}
 screenToWorld(clientX,clientY){
-const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10,{interactionOnly:true});
+const hit=this._raycastVoxel(this._screenRay(clientX,clientY),this._interactionRayDistance(),{interactionOnly:true});
 if(!hit)return null;
 return this.terrain.cellCenter(hit.gx,hit.gy,hit.gz);
 }
@@ -1007,7 +1011,7 @@ return {x:p.x,y:surface.y,z:p.z,gx:surface.gx,gz:surface.gz,distance:d};
 return null;
 }
 screenToTerrainCell(clientX,clientY,{showCursor=true}={}){
-const hit=this._raycastVoxel(this._screenRay(clientX,clientY),10,{interactionOnly:true});
+const hit=this._raycastVoxel(this._screenRay(clientX,clientY),this._interactionRayDistance(),{interactionOnly:true});
 if(!hit){if(this.terrainCursor)this.terrainCursor.visible=false;return null}
 const center=this.terrain.cellCenter(hit.gx,hit.gy,hit.gz);
 const previousOnRow=hit.previous.gz===this.interactionRowZ;

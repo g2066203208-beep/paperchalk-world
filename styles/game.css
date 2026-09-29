@@ -17,7 +17,7 @@ body{touch-action:manipulation}
 .stage{position:fixed;inset:0;overflow:hidden;background:#6f7fa8}
 .three-world-layer{position:absolute;inset:0;z-index:0;background:#6f7fa8}
 .three-world-layer[hidden]{display:none}
-.three-world-canvas{display:block;width:100%;height:100%;outline:0;touch-action:none}
+.three-world-canvas{display:block;width:100%;height:100%;outline:0;touch-action:none;cursor:crosshair}
 .world-clock{
   position:absolute;z-index:10;left:max(14px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));
   min-width:74px;padding:7px 11px;border:1px solid rgba(255,255,255,.22);border-radius:7px;
@@ -97,7 +97,7 @@ body{touch-action:manipulation}
 
 .combat-controls{
   position:absolute;z-index:13;right:max(18px,env(safe-area-inset-right));bottom:max(20px,calc(env(safe-area-inset-bottom) + 14px));
-  display:flex;align-items:flex-end;gap:8px
+  display:none;align-items:flex-end;gap:8px
 }
 .combat-btn{width:64px;height:64px;border-radius:50%;font-size:17px;background:rgba(236,224,198,.9)}
 .combat-btn.terrain-tool{width:52px;height:52px;font-size:15px;background:rgba(217,203,170,.9)}
@@ -216,6 +216,8 @@ body{touch-action:manipulation}
 .orientation-hint span{font-size:13px;font-weight:500;opacity:.7}
 
 @media (pointer:coarse){
+  .combat-controls{display:flex}
+  .three-world-canvas{cursor:default}
   .quickbar{left:max(8px,env(safe-area-inset-left));top:43%;bottom:auto;transform:translateY(-50%);flex-direction:column;gap:5px;padding:5px}
   .quick-slot{width:48px;height:48px}
 

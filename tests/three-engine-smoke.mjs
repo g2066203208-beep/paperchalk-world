@@ -16,6 +16,7 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
+  await page.waitForFunction(()=>((window.Paperchalk3D?.stats?.terrain?.workerStats?.completed)||0)>0,null,{timeout:7000});
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
   assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
@@ -30,7 +31,7 @@ try{
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.ocean?.mode==='analytic-ocean-plane','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
-  assert(initial.farTerrain?.mode==='coarse-heightfield-ring','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
+  assert(initial.farTerrain?.mode==='layered-paper-backdrop','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;

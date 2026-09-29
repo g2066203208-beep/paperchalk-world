@@ -27,10 +27,23 @@ try{
 
   assert(await page.locator('#terrainDigBtn').count()===1&&await page.locator('#terrainPlaceBtn').count()===1,'dig/place controls missing');
   assert(await page.locator('#hungerFill').count()===1&&await page.locator('#staminaFill').count()===1,'survival HUD missing');
-  await page.locator('#terrainPlaceBtn').click();
+  const touchControlsDisplay=await page.locator('.combat-controls').evaluate(el=>getComputedStyle(el).display);
+  assert(touchControlsDisplay==='none','desktop must hide touch combat controls, got '+touchControlsDisplay);
+  await page.evaluate(()=>window.PaperchalkTerrainActions.setTool('place'));
   assert((await page.evaluate(()=>window.PaperchalkTerrainActions.tool))==='place','place tool did not activate');
-  await page.locator('#terrainDigBtn').click();
+  await page.evaluate(()=>window.PaperchalkTerrainActions.setTool('dig'));
   assert((await page.evaluate(()=>window.PaperchalkTerrainActions.tool))==='dig','dig tool did not reactivate');
+  const mouseTerrainHit=await page.evaluate(()=>{
+    for(let y=Math.floor(innerHeight*.38);y<Math.floor(innerHeight*.88);y+=24){
+      for(let x=Math.floor(innerWidth*.16);x<Math.floor(innerWidth*.84);x+=24){
+        const hit=window.PaperchalkTerrainActions.targetAtScreen(x,y);
+        if(hit)return {x,y,distance:hit.distance,gx:hit.gx,gy:hit.gy,gz:hit.gz};
+      }
+    }
+    return null;
+  });
+  assert(mouseTerrainHit,'PC mouse ray did not hit visible terrain');
+  assert(mouseTerrainHit.distance>10,'PC mouse ray still appears capped at 10m: '+JSON.stringify(mouseTerrainHit));
 
     await page.locator('#backpackBtn').click();
   assert(await page.locator('#backpackOverlay').evaluate(el=>el.classList.contains('is-open')),'backpack did not open');

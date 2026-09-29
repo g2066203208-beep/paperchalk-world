@@ -137,13 +137,6 @@ export function buildVoxelChunkGeometry(THREE,terrain,chunk,{palette=DEFAULT_TER
             const encoded=renderCode+(aoSig<<6);
             face=positive?encoded:-encoded;
           }
-          if(face&&d===2){
-            const solidLocalZ=sa?x[2]:x[2]+1;
-            const gx=chunk.cx*n+x[0];
-            const gy=chunk.cy*n+x[1];
-            const gz=chunk.cz*n+solidLocalZ;
-            if(gz===terrain.interactionRowZ&&gy<terrain.surfaceCell(gx,gz))face=0;
-          }
           mask[mi++]=face;
         }
       }

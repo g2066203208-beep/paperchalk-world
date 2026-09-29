@@ -1,5 +1,5 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=world-core-r2';
-import {EnvironmentFX} from '../engine3d/EnvironmentFX.js?v=world-core-r2';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=stage-fix-r3';
+import {EnvironmentFX} from '../engine3d/EnvironmentFX.js?v=stage-fix-r3';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;

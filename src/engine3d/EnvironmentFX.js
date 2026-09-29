@@ -20,7 +20,7 @@ export class EnvironmentFX{
         void main(){float h=smoothstep(-.12,.82,vDir.y);vec3 col=mix(uHorizon,uZenith,h);
           float sun=pow(max(dot(normalize(vDir),normalize(uSunDir)),0.0),180.0);
           col+=vec3(1.0,.72,.35)*sun*uDaylight*(1.0-uCloud*.75);
-          vec3 night=mix(vec3(.018,.025,.055),vec3(.055,.075,.12),h);
+          vec3 night=mix(vec3(.045,.060,.115),vec3(.105,.135,.205),h);
           col=mix(night,col,uDaylight);gl_FragColor=vec4(col,1.0);}`
     });
     this.sky=new T.Mesh(this.skyGeometry,this.skyMaterial);this.sky.name='atmosphere-sky-dome';this.sky.frustumCulled=false;this.sky.renderOrder=-1000;this.scene.add(this.sky);
