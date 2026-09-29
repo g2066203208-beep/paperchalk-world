@@ -29,9 +29,19 @@ export class EnvironmentFX{
     this.rain.visible=false;this.snow.visible=false;this.scene.add(this.rain,this.snow);
 
     this.clouds=new T.Group();this.clouds.name='weather-cloud-deck';
+    const cloudCanvas=document.createElement('canvas');cloudCanvas.width=256;cloudCanvas.height=96;
+    const ctx=cloudCanvas.getContext('2d');ctx.clearRect(0,0,256,96);
+    const blobs=[[38,54,34],[75,42,42],[118,51,48],[164,39,38],[205,54,36],[137,31,30]];
+    for(const [x,y,r] of blobs){
+      const g=ctx.createRadialGradient(x,y,r*.10,x,y,r);
+      g.addColorStop(0,'rgba(255,255,255,.96)');g.addColorStop(.58,'rgba(255,255,255,.72)');g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    }
+    this.cloudTexture=new T.CanvasTexture(cloudCanvas);this.cloudTexture.colorSpace=T.SRGBColorSpace;
+    this.cloudTexture.minFilter=T.LinearMipmapLinearFilter;this.cloudTexture.magFilter=T.LinearFilter;
     const geo=new T.PlaneGeometry(34,12);
     for(let i=0;i<(this.mobile?6:10);i++){
-      const mat=new T.MeshBasicMaterial({color:0xd9dedf,transparent:true,opacity:.08,depthWrite:false,side:T.DoubleSide,toneMapped:false,fog:true});
+      const mat=new T.MeshBasicMaterial({map:this.cloudTexture,color:0xd9dedf,transparent:true,opacity:.08,depthWrite:false,alphaTest:.015,side:T.DoubleSide,toneMapped:false,fog:true});
       const m=new T.Mesh(geo,mat);m.rotation.x=-Math.PI/2;
       m.position.set((i%5-2)*26+(i%2)*7,24+(i%3)*1.3,Math.floor(i/5)*34-17);
       m.scale.set(1+(i%3)*.28,1,1);this.clouds.add(m);
@@ -55,7 +65,7 @@ export class EnvironmentFX{
           p.y=mod(p.y-uTime*fall+aSeed*26.0,26.0)-5.0;
           p.x+=sin(uTime*${snow?'1.6':'0.75'}+aSeed*31.0)*${snow?'1.35':'.20'}+uWind*(21.0-p.y)*.10;
           p+=uOrigin;vec4 mv=modelViewMatrix*vec4(p,1.0);gl_Position=projectionMatrix*mv;
-          gl_PointSize=${snow?'4.0':'2.0'};}`,
+          gl_PointSize=${snow?'4.6':'5.2'};}`,
       fragmentShader:`uniform float uOpacity;void main(){vec2 q=gl_PointCoord-.5;
         ${snow?'if(dot(q,q)>.24)discard;':'if(abs(q.x)>.20)discard;'}
         gl_FragColor=vec4(${snow?'0.95,0.98,1.0':'0.70,0.84,0.96'},uOpacity);}`
@@ -141,7 +151,7 @@ export class EnvironmentFX{
   dispose(){
     for(const o of [this.rain,this.snow]){this.scene.remove(o);o.geometry.dispose();o.material.dispose()}
     for(const c of [...this.clouds.children])c.material.dispose();
-    this.cloudGeometry.dispose();this.scene.remove(this.clouds);
+    this.cloudGeometry.dispose();this.cloudTexture?.dispose?.();this.scene.remove(this.clouds);
     this.scene.remove(this.sky);this.skyGeometry.dispose();this.skyMaterial.dispose();
   }
 }
