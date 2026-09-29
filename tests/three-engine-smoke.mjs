@@ -96,13 +96,19 @@ try{
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
 
-  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:false,fogDensity:.0085}));
+  const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
+  assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({yaw:-2.05,pitch:.34,distance:20,height:3.4}));
+  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:false,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
   assert(atmosphereOff?.godRays===false,'god rays did not disable '+JSON.stringify(atmosphereOff));
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(700);
   await page.screenshot({path:'artifacts/atmosphere-godrays-off.png'});
-  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:true,rayIntensity:1.05,rayDensity:.95,fogDensity:.0095}));
+  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:true,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
   assert(atmosphereOn?.godRays===true,'god rays did not enable '+JSON.stringify(atmosphereOn));
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(850);
+  const liveAtmosphere=await page.evaluate(()=>window.Paperchalk3D.stats.atmosphere);
+  assert(liveAtmosphere?.visibleLastFrame===true,'god rays are not visible in dawn validation view '+JSON.stringify(liveAtmosphere));
+  assert((liveAtmosphere?.currentStrength||0)>.01,'god-ray strength stayed near zero '+JSON.stringify(liveAtmosphere));
   await page.screenshot({path:'artifacts/atmosphere-godrays-on.png'});
 
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
@@ -113,7 +119,7 @@ try{
   assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   assert(raysOffBytes!==raysOnBytes,'god-ray on/off framebuffers are byte-identical');
-  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:initial.atmosphere,tuned},null,2));
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,tuned},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}
