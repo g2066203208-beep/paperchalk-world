@@ -82,30 +82,31 @@ export class EcologyRenderer{
     this.dummy.updateMatrix();m.setMatrixAt(i,this.dummy.matrix);return true;
   }
   rebuild(player){
-    const snap=8,ax=Math.round(player.x/snap)*snap,az=Math.round(player.z/snap)*snap;
-    if(Math.abs(ax-this.anchorX)<snap&&Math.abs(az-this.anchorZ)<snap)return;
-    this.anchorX=ax;this.anchorZ=az;
+    const snap=8,ax=Math.round(player.x/snap)*snap;
+    if(Math.abs(ax-this.anchorX)<snap)return;
+    this.anchorX=ax;this.anchorZ=this.terrain.interactionRowZ;
     const counts={deciduous:0,pine:0,shrub:0,rock:0},s=this.terrain.tileSize;
-    for(let dz=-this.radius;dz<=this.radius;dz+=this.step)for(let dx=-this.radius;dx<=this.radius;dx+=this.step){
-      const wx=ax+dx,wz=az+dz,gx=Math.floor(wx/s),gz=Math.floor(wz/s+.5),p=this.terrain.terrainProfile(gx,gz);
-      if(p.height<this.terrain.seaLevel||Math.abs(dx)<3&&Math.abs(dz)<3)continue;
+    const stageZ=this.terrain.interactionRowZ*s-.16;
+    for(let dx=-this.radius;dx<=this.radius;dx+=this.step){
+      const wx=ax+dx,gx=Math.floor(wx/s),gz=this.terrain.interactionRowZ,p=this.terrain.terrainProfile(gx,gz);
+      if(p.height<this.terrain.seaLevel||Math.abs(dx)<3)continue;
       const h=this._hash(gx,gz,113),r=this._hash(gx,gz,229),y=(p.height+1)*s;
       let kind=null,prob=0;
-      if(p.biome==='forest'){kind='deciduous';prob=.55}
-      else if(p.biome==='pine-forest'){kind='pine';prob=.62}
-      else if(p.biome==='meadow'){kind='shrub';prob=.18}
-      else if(p.biome==='marsh'){kind='shrub';prob=.26}
-      else if(p.biome==='alpine'||p.biome==='snowfield'||p.landform==='cliff'){kind='rock';prob=.28}
+      if(p.biome==='forest'){kind='deciduous';prob=.58}
+      else if(p.biome==='pine-forest'){kind='pine';prob=.64}
+      else if(p.biome==='meadow'){kind='shrub';prob=.16}
+      else if(p.biome==='marsh'){kind='shrub';prob=.24}
+      else if(p.biome==='alpine'||p.biome==='snowfield'||p.landform==='cliff'){kind='rock';prob=.30}
       if(!kind||h>prob||counts[kind]>=this.capacity)continue;
-      const tall=kind==='deciduous'||kind==='pine',sc=.75+r*.55;
-      const scale=tall?{x:2.25*sc,y:4.25*sc,z:2.25*sc}:kind==='rock'?{x:1.25*sc,y:.95*sc,z:1.1*sc}:{x:1.35*sc,y:1.55*sc,z:1.35*sc};
-      this._place(kind,counts[kind]++,wx+(r-.5)*1.6,y,wz+(h-.5)*.34,scale,r*Math.PI);
+      const tall=kind==='deciduous'||kind==='pine',sc=.82+r*.45;
+      const scale=tall?{x:2.0*sc,y:3.9*sc,z:2.0*sc}:kind==='rock'?{x:1.18*sc,y:.88*sc,z:.9*sc}:{x:1.22*sc,y:1.35*sc,z:1.22*sc};
+      this._place(kind,counts[kind]++,wx+(r-.5)*1.25,y,stageZ,scale,0);
     }
     let active=0,drawCalls=0;
     for(const [kind,m] of Object.entries(this.meshes)){
       m.count=counts[kind];m.instanceMatrix.needsUpdate=true;active+=m.count;if(m.count)drawCalls++;
     }
-    this.statsState={active,drawCalls,counts,mode:'instanced-paper-ecology',paperTextures:true,rebuildDistance:snap,radius:this.radius};
+    this.statsState={active,drawCalls,counts,mode:'instanced-paper-ecology',paperTextures:true,stageLocked:true,rebuildDistance:snap,radius:this.radius};
   }
   update(player){if(player)this.rebuild(player)}
   stats(){return this.statsState}
