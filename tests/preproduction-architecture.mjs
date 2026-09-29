@@ -74,7 +74,8 @@ assert.match(engine,/workerMeshing/);
 assert.match(meshWorker,/stale-result-safe/);
 assert.match(meshWorker,/workerMeshed:true/);
 assert.match(ecology,/InstancedMesh/);
-assert.match(environment,/uWeatherSnow/);
+assert.match(engine,/uWeatherSnow/);
+assert.match(environment,/setWeatherVisuals/);
 console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
 
 assert.match(engine,/paperchalk-pbr-voxel-ao-v17-weather/);
