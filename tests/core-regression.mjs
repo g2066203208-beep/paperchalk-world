@@ -11,7 +11,8 @@ try{
   await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.PaperchalkTerrainActions,{timeout:7000});
   const cold=await page.evaluate(()=>window.PaperchalkTerrainActions.stats);
   assert(cold.dimensions===3&&cold.infinite===true&&cold.chunkSize===16,'3D terrain config wrong '+JSON.stringify(cold));
-  assert(cold.generatorVersion===4&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
+  assert(cold.generatorVersion===5&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
+  assert(cold.analyticOcean===true&&cold.biomeGenerator?.version===2,'macro world/ocean generator missing '+JSON.stringify(cold));
 
   await page.locator('#authBtn').click();await page.locator('#tabRegister').click();
   await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
@@ -46,25 +47,43 @@ try{
   assert(edit.before!==0&&edit.dug.changed&&edit.placed.changed,'3D edit failed '+JSON.stringify(edit));
   assert(edit.stats.editedVoxels>=0,'3D edit stats missing '+JSON.stringify(edit.stats));
 
-  const survival=await page.evaluate(()=>{
+  const foundation=await page.evaluate(()=>{
     const h0=window.PaperchalkHunger.state.current;
     window.PaperchalkHunger.set(50,{persist:false});
     window.PaperchalkHunger.feed(10,{persist:false});
     const h1=window.PaperchalkHunger.state.current;
     const rod=window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null;
-    const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain,s=t.tileSize;
-    const gx=Math.floor(p.x/s)+2,gz=t.stats().interactionRowZ,gy=t.surfaceCell(gx,gz)+1;
-    t.water.setLevel(gx,gy,gz,8,{settle:false});
-    const target={x:(gx+.5)*s,y:gy*s+s,z:gz*s};
-    const cast=window.PaperchalkFishing.cast(target);
-    const fishingState=window.PaperchalkFishing.state.state;
-    const reel=window.PaperchalkFishing.reel();
-    return {h0,h1,rod,cast,fishingState,reel,end:window.PaperchalkFishing.state.state};
+    const fish=window.PaperchalkFishEcology.stats;
+
+    const WaterWorld=window.PaperchalkTerrainRuntime.WaterWorld;
+    const floors=new Map([['0,0',0],['10,0',-5]]);
+    const fake={
+      tileSize:1,chunkSize:16,
+      isSolidPeek(gx,gy,gz){
+        const own=floors.get(gx+','+gz);
+        if(own!=null)return gy<=own;
+        if(Math.abs(gx)<=1&&Math.abs(gz)<=1)return gy<=3;
+        if(Math.abs(gx-10)<=1&&Math.abs(gz)<=1)return gy<=0;
+        return gy<=6;
+      }
+    };
+    const water=new WaterWorld(fake);
+    water.setLevel(0,1,0,8,{settle:false});
+    water.setLevel(10,-4,0,8,{settle:false});
+    water.requestSettle();
+    const settled=water.settleAll();
+    return {
+      h0,h1,rod,fish,settled,
+      high:water.getLevel(0,1,0),
+      low:water.getLevel(10,-4,0),
+      flowModel:water.stats().flowModel
+    };
   });
-  assert(survival.h1===60,'hunger system failed '+JSON.stringify(survival));
-  assert(survival.rod?.action==='fishing-rod','starter fishing rod missing '+JSON.stringify(survival));
-  assert(survival.cast===true&&survival.fishingState==='flying','fishing cast state failed '+JSON.stringify(survival));
-  assert(survival.reel===true&&survival.end==='idle','early reel did not reset fishing '+JSON.stringify(survival));
+  assert(foundation.h1===60,'hunger system failed '+JSON.stringify(foundation));
+  assert(foundation.rod===null,'fishing rod should not be a starter item '+JSON.stringify(foundation));
+  assert(foundation.fish?.enabled===false&&foundation.fish.active===0,'fish ecology must be disabled '+JSON.stringify(foundation));
+  assert(foundation.settled.bodies===2&&foundation.high===8&&foundation.low===8,'disconnected ponds exchanged water '+JSON.stringify(foundation));
+  assert(foundation.flowModel==='connected-body-priority-flood-v5','wrong water solver '+JSON.stringify(foundation));
 
   assert(errors.length===0,'runtime errors:\n'+errors.join('\n'));
   console.log('INFINITE_VOXEL_3D_CORE_OK');
