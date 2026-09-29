@@ -938,7 +938,7 @@ const outdoor=this.paperStyle?.enabled!==false
 skyFill.intensity=outdoor;
 }
 if(ambient){
-ambient.intensity=(this.paperStyle?.enabled!==false?.13:.10)+daylight*(this.paperStyle?.enabled!==false?.09:.11)+night*.07;
+ambient.intensity=(this.paperStyle?.enabled!==false ? .13 : .10)+daylight*(this.paperStyle?.enabled!==false ? .09 : .11)+night*.07;
 }
 if(moon){
 moon.intensity=night*.72;
