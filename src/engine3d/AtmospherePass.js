@@ -31,7 +31,8 @@ export class AtmospherePass{
     this.sunHorizon=new THREE.Color(0xffb66d);
     this.fogColor=new THREE.Color(0x91a3b0);
     this.sunDirection=new THREE.Vector3(0,1,0);
-    this.exclusions=[];this.renderCount=0;this.lastVisible=false;
+    this.exclusions=[];this.renderCount=0;this.lastVisible=false;this.frameIndex=0;
+    this.updateEvery=this.mobileLike?3:2;
 
     const low={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
     this.depthTarget=new THREE.WebGLRenderTarget(1,1,{...low,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
@@ -261,6 +262,12 @@ export class AtmospherePass{
     if(!this.settings.enabled||!this.settings.volumetric||this.state.strength<=.001||!this.sun?.shadow?.map?.texture){
       this.lastVisible=false;return false;
     }
+    this.frameIndex++;
+    if(this.renderCount>0&&this.frameIndex%this.updateEvery!==0){
+      const auto=renderer.autoClear;renderer.autoClear=false;
+      renderer.render(this.compositeScene,this.fsCamera);renderer.autoClear=auto;
+      this.lastVisible=true;return true;
+    }
     const oldTarget=renderer.getRenderTarget(),oldAutoClear=renderer.autoClear,oldOverride=scene.overrideMaterial,oldBackground=scene.background;
     const oldShadowAuto=renderer.shadowMap.autoUpdate;renderer.getClearColor(this.clearColor);const oldAlpha=renderer.getClearAlpha();
     const visibility=[this.skyMesh,...this.exclusions].map(o=>[o,o.visible]);
@@ -290,7 +297,8 @@ export class AtmospherePass{
       intensity:this.settings.intensity,currentStrength:this.state.strength,fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,multiScattering:this.settings.multiScattering,
       shadowMapOcclusion:true,jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
-      minecraftShaderInspired:true,mobileOptimized:this.mobileLike,visibleLastFrame:this.lastVisible,renders:this.renderCount
+      minecraftShaderInspired:true,mobileOptimized:this.mobileLike,temporalReuse:true,updateEvery:this.updateEvery,
+      visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
   dispose(){
