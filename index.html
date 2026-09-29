@@ -71,8 +71,15 @@
       <button type="button" data-debug-action="full">满血</button>
       <button type="button" data-debug-action="resetpos">重置位置</button>
       <button type="button" data-debug-action="colliders">Collider：关</button>
+      <button type="button" data-debug-action="paperstyle">Paper Style：开</button>
       <button type="button" data-debug-action="stageview">纸片舞台视角：开</button>
       <button type="button" data-debug-action="stageaxis">舞台观察轴：Z</button>
+    </div>
+    <div class="paper-debug-controls">
+      <label>纸层高 <input data-paper-setting="paperLayerHeight" type="range" min="0.25" max="0.60" step="0.05" value="0.50"></label>
+      <label>纸厚 <input data-paper-setting="paperThickness" type="range" min="0.12" max="0.50" step="0.02" value="0.30"></label>
+      <label>倒角 <input data-paper-setting="bevelWidth" type="range" min="0.01" max="0.10" step="0.005" value="0.045"></label>
+      <label>纤维 <input data-paper-setting="fiberStrength" type="range" min="0" max="0.08" step="0.005" value="0.035"></label>
     </div>
     <form id="debugCommandForm" class="debug-command-form">
       <input id="debugCommandInput" type="text" autocomplete="off" spellcheck="false" placeholder="help / tp 0 -8 / terrain / stage off / stats">
