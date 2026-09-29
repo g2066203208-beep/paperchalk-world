@@ -1,10 +1,4 @@
-/* Lightweight atmospheric scattering for the paper diorama.
- * Technique: low-resolution occlusion mask + radial light scattering, then
- * additive upscale over the already-rendered scene. No heavy full-screen
- * volumetric raymarch is used on the default/mobile path.
- */
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-
 export class AtmospherePass{
   constructor(THREE,scene,{mobileLike=false}={}){
     this.THREE=THREE;this.scene=scene;this.mobileLike=!!mobileLike;
@@ -30,17 +24,14 @@ export class AtmospherePass{
     this.sunDay=new THREE.Color(0xffedcf);this.sunHorizon=new THREE.Color(0xffbd78);
     this.skyGround=new THREE.Color(0x745b43);
     this.scene.fog=new THREE.FogExp2(this.fogColor,this.settings.fogDensity);
-
     const rtOpts={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
     this.occlusionTarget=new THREE.WebGLRenderTarget(1,1,rtOpts);
     this.occlusionTarget.texture.name='paperchalk-godray-occlusion';
     this.raysTarget=new THREE.WebGLRenderTarget(1,1,{...rtOpts,depthBuffer:false});
     this.raysTarget.texture.name='paperchalk-godray-scattering';
-
     this.blockerMaterial=new THREE.MeshBasicMaterial({
       color:0x000000,side:THREE.DoubleSide,fog:false,toneMapped:false
     });
-
     const sourceCanvas=document.createElement('canvas');sourceCanvas.width=sourceCanvas.height=128;
     const ctx=sourceCanvas.getContext('2d');
     const g=ctx.createRadialGradient(64,64,0,64,64,64);
@@ -60,7 +51,6 @@ export class AtmospherePass{
     this.sourceSprite.name='atmosphere-sun-scattering-source';
     this.sourceSprite.scale.set(6.4,6.4,1);
     this.sourceScene=new THREE.Scene();this.sourceScene.add(this.sourceSprite);
-
     this.fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
     this.fsScene=new THREE.Scene();
     this.fsGeometry=new THREE.PlaneGeometry(2,2);
@@ -113,7 +103,6 @@ export class AtmospherePass{
     });
     this.radialQuad=new THREE.Mesh(this.fsGeometry,this.radialMaterial);
     this.fsScene.add(this.radialQuad);
-
     this.compositeMaterial=new THREE.MeshBasicMaterial({
       map:this.raysTarget.texture,color:0xffe2ad,transparent:true,opacity:1,
       blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,toneMapped:false
@@ -123,7 +112,6 @@ export class AtmospherePass{
     this.exclusions=[];
     this.renderCount=0;this.lastVisible=false;
   }
-
   setExclusions(objects=[]){this.exclusions=(objects||[]).filter(Boolean);return this}
   configure(patch={}){
     Object.assign(this.settings,patch||{});
@@ -138,7 +126,6 @@ export class AtmospherePass{
     this.resize(this.size.width,this.size.height,this.size.pixelRatio);
     return this.stats();
   }
-
   resize(width,height,pixelRatio=1){
     const w=Math.max(1,Math.round(width||1)),h=Math.max(1,Math.round(height||1));
     const pr=clamp(Number(pixelRatio)||1,1,2);
@@ -149,11 +136,9 @@ export class AtmospherePass{
     }
     this.size={width:w,height:h,pixelRatio:pr,bufferWidth:bw,bufferHeight:bh};
   }
-
   update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0,fogColor=null,sunLight=null,skyLight=null,sunDisc=null}={}){
     if(sunPosition)this.sunWorld.copy(sunPosition);
     const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
-    // Stronger near sunrise/sunset and in hazier air, but never visible underground.
     const lowSun=clamp(1-Math.max(0,(d-.18)/.82),0,1);
     const atmospheric=(d*.72+tw*.28)*(.48+lowSun*.52)*sky*(1-under);
     this.state={strength:atmospheric*this.settings.rayIntensity,daylight:d,twilight:tw,skyExposure:sky,underground:under,time:Number(time)||0};
@@ -170,7 +155,6 @@ export class AtmospherePass{
     if(fogColor)this.fogColor.copy(fogColor);else this.fogColor.copy(this.skyColor);
     this.fogColor.lerp(this.warmFog,warm*.10);this.scene.fog.color.copy(this.fogColor);
   }
-
   _projectSun(camera){
     this.sunNdc.copy(this.sunWorld).project(camera);
     const maxEdge=Math.max(Math.abs(this.sunNdc.x),Math.abs(this.sunNdc.y));
@@ -179,13 +163,11 @@ export class AtmospherePass{
     this.sunUv.set(this.sunNdc.x*.5+.5,this.sunNdc.y*.5+.5);
     return depthVisible?edgeFade:0;
   }
-
   render(renderer,scene,camera){
     const edgeFade=this._projectSun(camera);
     const strength=this.settings.enabled&&this.settings.godRays?this.state.strength*edgeFade:0;
     this.lastVisible=strength>.002;
     if(!this.lastVisible)return false;
-
     const oldTarget=renderer.getRenderTarget();
     const oldAutoClear=renderer.autoClear;
     const oldOverride=scene.overrideMaterial;
@@ -193,20 +175,17 @@ export class AtmospherePass{
     renderer.getClearColor(this.clearColor);
     const oldAlpha=renderer.getClearAlpha();
     const visibility=this.exclusions.map(o=>[o,o.visible]);
-
     try{
       for(const [o] of visibility)o.visible=false;
       scene.overrideMaterial=this.blockerMaterial;scene.background=null;
       renderer.setRenderTarget(this.occlusionTarget);
       renderer.setClearColor(0x000000,1);renderer.autoClear=true;renderer.clear(true,true,true);
       renderer.render(scene,camera);
-
       scene.overrideMaterial=oldOverride;
       this.sourceSprite.position.copy(this.sunWorld);
       this.sourceSprite.scale.setScalar(6.4+this.state.twilight*1.6);
       renderer.autoClear=false;
       renderer.render(this.sourceScene,camera);
-
       for(const [o,v] of visibility)o.visible=v;
       this.radialUniforms.uLightPos.value.copy(this.sunUv);
       this.radialUniforms.uStrength.value=strength;
@@ -214,7 +193,6 @@ export class AtmospherePass{
       renderer.setRenderTarget(this.raysTarget);
       renderer.setClearColor(0x000000,0);renderer.autoClear=true;renderer.clear(true,false,false);
       renderer.render(this.fsScene,this.fsCamera);
-
       renderer.setRenderTarget(oldTarget);
       renderer.autoClear=false;
       this.compositeMaterial.opacity=clamp(.38+this.state.twilight*.10,.34,.50);
@@ -229,7 +207,6 @@ export class AtmospherePass{
       renderer.setClearColor(this.clearColor,oldAlpha);
     }
   }
-
   stats(){
     return {
       enabled:!!this.settings.enabled,godRays:!!this.settings.godRays,
@@ -242,7 +219,6 @@ export class AtmospherePass{
       mobileOptimized:this.mobileLike,visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
-
   dispose(){
     this.occlusionTarget.dispose();this.raysTarget.dispose();
     this.blockerMaterial.dispose();this.sourceMaterial.dispose();this.sourceTexture.dispose();
