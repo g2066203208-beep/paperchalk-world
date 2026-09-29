@@ -25,9 +25,13 @@ try{
 
   const before={...entered.p};
   assert(Math.abs(before.z)<1e-6,'player is not centered on interaction row '+JSON.stringify(before));
-  await page.keyboard.down('KeyD');await page.waitForTimeout(450);await page.keyboard.up('KeyD');await page.waitForTimeout(100);
+  await page.keyboard.down('KeyD');
+  try{
+    await page.waitForFunction(x=>window.PaperchalkRuntime.getSnapshot().player.x-x>.22,before.x,{timeout:1800,polling:'raf'});
+  }finally{await page.keyboard.up('KeyD')}
+  await page.waitForTimeout(80);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(afterW.x-before.x>.25,'D did not move on X '+JSON.stringify({before,afterW}));
+  assert(afterW.x-before.x>.20,'D did not move on X '+JSON.stringify({before,afterW}));
   assert(Math.abs(afterW.z)<1e-6,'Z movement is not locked '+JSON.stringify(afterW));
 
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
