@@ -96,8 +96,12 @@ const HUNGER_ZERO_DAMAGE_INTERVAL=6;
 const STAMINA_MAX=100;
 const FISHING_CAST_SPEED=9.2;
 const FISHING_GRAVITY=13.5;
+// Ecology is intentionally disabled while the world/physics foundation is stabilised.
+// Keeping the dormant code allows later reactivation without paying any runtime cost now.
+const ENABLE_FISH_ECOLOGY=false;
+const EMPTY_FISH_SNAPSHOT=Object.freeze([]);
 const FISH_SIM_DT=.10;
-const FISH_MAX_ACTIVE=24;
+const FISH_MAX_ACTIVE=ENABLE_FISH_ECOLOGY?24:0;
 const FISH_ACTIVE_RADIUS=16;
 const FISH_DESPAWN_RADIUS=23;
 const FISH_APPROACH_RADIUS=7;
@@ -269,6 +273,7 @@ targetFishEntityId:fishing.targetFishEntityId
 function hungerSnapshot(){return {current:hunger.current,max:hunger.max,ratio:hunger.current/hunger.max}}
 function staminaSnapshot(){return {current:stamina.current,max:stamina.max,ratio:stamina.current/stamina.max}}
 function fishSnapshot(){
+if(!ENABLE_FISH_ECOLOGY)return EMPTY_FISH_SNAPSHOT;
 return fishWorld.entities.map(f=>({
 id:f.id,species:f.species,x:f.x,y:f.y,z:f.z,
 vx:f.vx,vy:f.vy,vz:f.vz,state:f.state,size:f.size
@@ -313,6 +318,10 @@ let lastNow=0;
 let accumulator=0;
 let saveAccumulator=0;
 let waterStepAccumulator=0;
+let runtimePublishAccumulator=0;
+let lastClockText='';
+let terrainStatsCache=null;
+let terrainStatsCacheAt=0;
 let cameraYaw=settings.camera3d.yaw;
 let keyboardCrouch=false;
 let mobileCrouch=false;
@@ -344,6 +353,13 @@ attacking:controller.attacking,action:controller.action,torchOn:controller.torch
 inWater:controller.inWater,submerged:controller.submerged,facingX:controller.facingX
 };
 }
+function terrainStatsSnapshot(force=false){
+const now=performance.now();
+if(force||!terrainStatsCache||now-terrainStatsCacheAt>=500){
+terrainStatsCache=terrain.stats();terrainStatsCacheAt=now;
+}
+return terrainStatsCache;
+}
 function buildSnapshot(){
 const environment=terrain.sampleAtWorld(transform.x,transform.z);
 return {
@@ -357,7 +373,7 @@ fishing:fishingSnapshot(),
 fish:fishSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
 scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
-terrain:terrain.stats(),
+terrain:terrainStatsSnapshot(),
 debug:{colliders:debugColliders},
 ecs:ecs.stats()
 };
@@ -497,8 +513,7 @@ velocity.y*=drag;
 velocity.x*=Math.exp(-1.8*submerged*dt);
 velocity.y=Math.max(-3.2,Math.min(4.8,velocity.y));
 controller.grounded=false;
-}else if(!controller.grounded){
-velocity.y-=GRAVITY*dt;
+}else if(!controller.grounded){velocity.y-=GRAVITY*dt;
 }
 moveVertical(velocity.y*dt);
 }
@@ -820,7 +835,8 @@ fish.y=Math.max(bounds.bottom+.08,Math.min(bounds.top-.08,fish.y));
 }
 window.PaperchalkFishEcology=Object.freeze({
 get fish(){return fishSnapshot()},
-get stats(){return {active:fishWorld.entities.length,maxActive:fishWorld.maxActive,spatialCells:fishWorld.spatial.size,simulationHz:Math.round(1/FISH_SIM_DT)}}
+get enabled(){return ENABLE_FISH_ECOLOGY},
+get stats(){return {enabled:ENABLE_FISH_ECOLOGY,active:ENABLE_FISH_ECOLOGY?fishWorld.entities.length:0,maxActive:fishWorld.maxActive,spatialCells:ENABLE_FISH_ECOLOGY?fishWorld.spatial.size:0,simulationHz:ENABLE_FISH_ECOLOGY?Math.round(1/FISH_SIM_DT):0}}
 });
 function castFishingRod(target=null){
 if(!worldInteractive())return false;
@@ -997,8 +1013,7 @@ const center=terrain.cellCenter(gx,gy,gz);
 if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 const half=terrain.tileSize*.49;
 const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half&&Math.abs(center.z-transform.z)<PLAYER_HALF_D+half;
-if(overlapsPlayer)return {changed:false,reason:'player-overlap'};
-const result=terrain.placeCell(gx,gy,gz,tile);
+if(overlapsPlayer)return {changed:false,reason:'player-overlap'};const result=terrain.placeCell(gx,gy,gz,tile);
 if(result.changed){
 const waterSettle=terrain.water.settleAll();
 window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place',waterSettle});
@@ -1497,8 +1512,7 @@ if(a==='damage1')damagePlayer(1);
 else if(a==='heal1')healPlayer(1);
 else if(a==='damage3')damagePlayer(3);
 else if(a==='zero')setPlayerHp(0);
-else if(a==='full')setPlayerHp(PLAYER_MAX_HP);
-else if(a==='resetpos')window.PaperchalkMap.reset();
+else if(a==='full')setPlayerHp(PLAYER_MAX_HP);else if(a==='resetpos')window.PaperchalkMap.reset();
 else if(a==='colliders'){
 debugColliders=!debugColliders;
 window.Paperchalk3D?.setDebugColliders?.(debugColliders);
@@ -1585,7 +1599,8 @@ controller.crouching=keyboardCrouch||mobileCrouch;
 ecs.runPhase('fixed',dt,{interactive});
 if(active){
 worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
-paperClock.textContent=formatClock();
+const clockText=formatClock();
+if(clockText!==lastClockText){lastClockText=clockText;paperClock.textContent=clockText}
 waterStepAccumulator+=dt;
 if(waterStepAccumulator>=.10){
 waterStepAccumulator=0;
@@ -1594,7 +1609,7 @@ const liquidStep=terrain.water.step();
 if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
 }
 }
-updateFishEcology(dt);
+if(ENABLE_FISH_ECOLOGY)updateFishEcology(dt);
 updateFishing(dt);
 const hungerDrain=HUNGER_DRAIN_PER_SECOND*dt*(controller.moving?1.35:1)*(controller.inWater?1.22:1);
 hunger.current=clampHunger(hunger.current-hungerDrain);
@@ -1610,7 +1625,11 @@ updateSurvivalHud();
 }
 saveAccumulator+=dt;
 if(active&&saveAccumulator>=5){saveAccumulator=0;saveWorldState()}
+runtimePublishAccumulator+=dt;
+if(runtimePublishAccumulator>=1/30){
+runtimePublishAccumulator%=1/30;
 publish();
+}
 }
 function gameFrame(now){
 if(!active){frameHandle=0;return}
@@ -1651,7 +1670,7 @@ terrainEdits:[],
 waterCells:[],
 torchOn:false,
 mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
-inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:i===1?{...CONTENT.items['water-bucket'],count:1}:i===2?{...CONTENT.items['fishing-rod'],count:1}:null)
+inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:i===1?{...CONTENT.items['water-bucket'],count:1}:null)
 };
 }
 function importLegacySave(session,targetKey){
@@ -1741,11 +1760,7 @@ const waterSlot=inventoryItems.findIndex(v=>!v);
 if(waterSlot>=0)inventoryItems[waterSlot]={...itemClone(CONTENT.items['water-bucket']),count:1};
 renderInventory();
 }
-if(!inventoryItems.some(item=>item?.id==='fishing-rod')){
-const rodSlot=inventoryItems.findIndex(v=>!v);
-if(rodSlot>=0)inventoryItems[rodSlot]={...itemClone(CONTENT.items['fishing-rod']),count:1};
-renderInventory();
-}
+// Fishing ecology/rod onboarding is paused until the world foundation is stable.
 updateSurvivalHud();
 paperClock.textContent=formatClock();
 publish();
