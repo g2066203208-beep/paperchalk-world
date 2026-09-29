@@ -34,7 +34,7 @@ assert.match(engine,/event-driven-greedy-water-v7/);
 assert.match(engine,/internalFacesCulled:true/);
 
 assert.match(content,/'fishing-rod'/);
-assert.doesNotMatch(content,/'paper-carp'/);
+assert.match(content,/'paper-carp'/);
 assert.match(game,/PaperchalkFishing/);
 assert.match(game,/castFishingRod/);
 assert.match(game,/updateFishing/);
