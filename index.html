@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-r4";
+  const BUILD="paper-r5";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="paper-r4">
+<meta name="paperchalk-build" content="paper-r5">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-r4">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r5">
 </head>
 <body>
 
@@ -72,7 +72,7 @@
       <button type="button" data-debug-action="resetpos">重置位置</button>
       <button type="button" data-debug-action="colliders">Collider：关</button>
       <button type="button" data-debug-action="paperstyle">Paper Style：开</button>
-      <button type="button" data-debug-action="godrays">丁达尔：开</button>
+      <button type="button" data-debug-action="volumetric">丁达尔：开</button>
       <button type="button" data-debug-action="stageview">纸片舞台视角：开</button>
       <button type="button" data-debug-action="stageaxis">舞台观察轴：Z</button>
     </div>
@@ -89,9 +89,9 @@
       <label>纸芯亮度 <input data-paper-setting="sideDarkness" type="range" min="0.55" max="1.10" step="0.025" value="0.92"></label>
     </div>
     <div class="paper-debug-controls atmos-debug-controls">
-      <label>丁达尔强度 <input data-atmos-setting="rayIntensity" type="range" min="0" max="1.6" step="0.05" value="0.52"></label>
-      <label>光束密度 <input data-atmos-setting="rayDensity" type="range" min="0.45" max="1.20" step="0.025" value="0.93"></label>
-      <label>空气雾 <input data-atmos-setting="fogDensity" type="range" min="0" max="0.025" step="0.0005" value="0.0068"></label>
+      <label>丁达尔强度 <input data-atmos-setting="intensity" type="range" min="0" max="1.2" step="0.05" value="0.58"></label>
+      <label>前向散射 <input data-atmos-setting="anisotropy" type="range" min="0" max="0.86" step="0.02" value="0.74"></label>
+      <label>空气雾 <input data-atmos-setting="fogDensity" type="range" min="0" max="0.012" step="0.0005" value="0.0042"></label>
     </div>
     <form id="debugCommandForm" class="debug-command-form">
       <input id="debugCommandInput" type="text" autocomplete="off" spellcheck="false" placeholder="help / tp 0 -8 / terrain / stage off / stats">
@@ -234,15 +234,15 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-r4"></script>
-<script src="./src/core/game-state.js?v=paper-r4"></script>
-<script src="./src/core/save-runtime.js?v=paper-r4"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-r4"></script>
-<script src="./src/content/game-content.js?v=paper-r4"></script>
+<script src="./src/core/event-bus.js?v=paper-r5"></script>
+<script src="./src/core/game-state.js?v=paper-r5"></script>
+<script src="./src/core/save-runtime.js?v=paper-r5"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r5"></script>
+<script src="./src/content/game-content.js?v=paper-r5"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=paper-r4"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-r4"></script>
-<script src="./src/game.js?v=paper-r4"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r4"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r5"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r5"></script>
+<script src="./src/game.js?v=paper-r5"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r5"></script>
 </body>
 </html>
