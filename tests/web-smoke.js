@@ -27,7 +27,7 @@ assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
 assert(mesher.includes('buildVoxelChunkGeometry'),'voxel mesher missing');
 assert(water.includes('class WaterWorld'),'WaterWorld missing');
 assert(water.includes("flowModel:'connected-body-priority-flood-v5'"),'connected water solver missing');
-assert(water.includes("flowPlane:'full-x-z-with-y-gravity'"),'full 3D water plane missing');
+assert(water.includes("flowPlane:'single-stage-depth-with-y-gravity'"),'full 3D water plane missing');
 assert(water.includes('settleAll()'),'water settle missing');
 assert(water.includes('_heapPush'),'priority flood heap missing');
 assert(water.includes('afterLayers!==beforeLayers')&&water.includes('rollback:true'),'water conservation rollback missing');
