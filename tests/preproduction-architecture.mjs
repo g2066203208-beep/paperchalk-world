@@ -78,7 +78,7 @@ assert.match(ecology,/InstancedMesh/);
 assert.match(environment,/uWeatherSnow/);
 console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
 
-assert.match(engine,/paperchalk-pbr-voxel-ao-v16/);
+assert.match(engine,/paperchalk-pbr-voxel-ao-v17-weather/);
 assert.match(engine,/vVoxelWorldNormal/);
 assert.match(water,/_packRemainderToBoundary/);
 assert.match(water,/_surfaceAuditFromStates/);
