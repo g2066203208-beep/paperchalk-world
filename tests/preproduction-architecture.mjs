@@ -74,6 +74,7 @@ assert.match(atmos,/jitteredRaymarch:true/);
 assert.match(atmos,/mieAnisotropy/);
 assert.match(atmos,/multiScattering/);
 assert.match(atmos,/dynamicSky:true/);
+assert.match(atmos,/temporalReuse:true/);
 assert.match(atmos,/FogExp2/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
