@@ -101,11 +101,16 @@ export class AtmospherePass{
           sc.xyz/=max(1e-6,sc.w);
           if(sc.x<=0.001||sc.x>=0.999||sc.y<=0.001||sc.y>=0.999||sc.z<=0.0||sc.z>=1.0)return 1.0;
           vec2 texel=1.0/max(uShadowMapSize,vec2(1.0));
-          vec2 o=(vec2(fract(jitter*7.13),fract(jitter*13.71))-.5)*texel*1.35;
-          float d0=unpackDepth(texture2D(tShadow,sc.xy+o));
-          float d1=unpackDepth(texture2D(tShadow,sc.xy-o*.73));
+          float a=6.2831853*fract(jitter*1.6180339);
+          mat2 rot=mat2(cos(a),-sin(a),sin(a),cos(a));
+          vec2 o0=rot*vec2(.62,.14)*texel*1.45;
+          vec2 o1=rot*vec2(-.31,.54)*texel*1.45;
+          vec2 o2=rot*vec2(-.42,-.46)*texel*1.45;
           float cmp=sc.z+uShadowBias;
-          return (step(cmp,d0)+step(cmp,d1))*.5;
+          float s0=step(cmp,unpackDepth(texture2D(tShadow,sc.xy+o0)));
+          float s1=step(cmp,unpackDepth(texture2D(tShadow,sc.xy+o1)));
+          float s2=step(cmp,unpackDepth(texture2D(tShadow,sc.xy+o2)));
+          return (s0+s1+s2)/3.0;
         }
         float hg(float mu,float g){
           float g2=g*g;
@@ -119,23 +124,27 @@ export class AtmospherePass{
           vec3 rayDir=surfaceDist>1e-5?delta/surfaceDist:vec3(0.0,0.0,-1.0);
           float maxDist=min(uMaxDistance,depth>.9997?uMaxDistance:surfaceDist);
           float steps=max(1.0,uSteps);
-          float stepLen=maxDist/steps;
-          float noise=hash21(gl_FragCoord.xy+vec2(uTime*17.0,uTime*7.0));
-          float t=(.22+noise*.72)*stepLen;
+          float noise=hash21(gl_FragCoord.xy);
           float trans=1.0;
           float sunScatter=0.0;
           float mu=clamp(dot(rayDir,normalize(uSunDir)),-1.0,1.0);
           float phase=hg(mu,uAnisotropy);
           for(int i=0;i<20;i++){
-            if(float(i)>=uSteps||t>=maxDist)break;
+            if(float(i)>=uSteps)break;
+            float q0=clamp((float(i)+noise*.72)/steps,0.0,1.0);
+            float q1=clamp((float(i)+1.0+noise*.72)/steps,0.0,1.0);
+            float t0=maxDist*pow(q0,1.55);
+            float t1=maxDist*pow(q1,1.55);
+            float ds=max(.001,t1-t0);
+            float t=(t0+t1)*.5;
+            if(t>=maxDist)break;
             vec3 p=uCameraPos+rayDir*t;
             float height=max(0.0,p.y-uFogBase);
             float density=uFogDensity*(.28+.72*exp(-height*uHeightFalloff));
             float lit=shadowAt(p,noise+float(i)*.6180339);
-            float absorb=exp(-density*stepLen*1.18);
-            sunScatter+=trans*lit*density*phase*stepLen;
+            float absorb=exp(-density*ds*1.18);
+            sunScatter+=trans*lit*density*phase*ds;
             trans*=absorb;
-            t+=stepLen;
           }
           float fogAlpha=clamp(1.0-trans,0.0,.42);
           float forwardBoost=smoothstep(.15,.96,mu);
@@ -344,7 +353,8 @@ export class AtmospherePass{
       intensity:this.settings.intensity,currentStrength:this.state.strength,
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
-      jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
+      jitteredRaymarch:true,stableDither:true,nonlinearRaySteps:true,filteredShadowSamples:3,
+      premultipliedComposite:true,dynamicSky:true,
       minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
