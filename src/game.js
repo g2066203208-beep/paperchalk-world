@@ -1015,7 +1015,9 @@ if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 if(terrain.isSolidPeek(gx,gy,gz))return {changed:false,reason:'solid'};
 const result=terrain.water.placeFull(gx,gy,gz);
 if(result.changed){
-window.PaperchalkEvents?.emit('liquid:changed',{...result,action:'place-water',levels:8});
+const waterSettle=terrain.water.settleAll();
+result.waterSettle=waterSettle;
+window.PaperchalkEvents?.emit('liquid:changed',{...result,action:'place-water',levels:8,waterSettle});
 publish();if(persist)saveWorldState();
 }
 return result;
