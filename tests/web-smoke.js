@@ -64,7 +64,7 @@ assert(engine.includes('new PaperTerrainRenderer'),'paper terrain renderer integ
 assert(engine.includes("terrainBlockGeometry:this.paperStyle.enabled?'merged extruded cardboard slabs'"),'paper terrain stats mode missing');
 assert(renderer.includes('setPaperStyle')&&renderer.includes('configurePaperTerrain'),'paper terrain runtime controls missing');
 assert(paper.includes("mode:'paper-diorama-slab-v3-lowpoly-edge-ring'"),'paper slab geometry missing');
-assert(paper.includes('Greedy merged top surfaces'),'coplanar top merging missing');
+assert(paper.includes('boundary[idx]')&&paper.includes('used[(z+zz)*n+x+xx]=1')&&paper.includes('edgeTopCells'),'interior greedy merge + boundary-cell split missing');
 assert(paper.includes('topSideMaterialSplit:true'),'top/side material split missing');
 assert(paper.includes('realThickness:true'),'real paper thickness missing');
 assert(paper.includes('bevelQuads'),'paper bevel geometry missing');
