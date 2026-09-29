@@ -92,7 +92,7 @@ try{
   }));
   assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','paper material tuning API failed '+JSON.stringify(tuned));
   await page.waitForTimeout(350);
-  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-8}));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-0.14}));
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
 
