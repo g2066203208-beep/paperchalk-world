@@ -1,0 +1,148 @@
+name: Build PaperChalk Android Studio
+
+on:
+  push:
+    branches:
+      - spine-android-apk
+    paths:
+      - 'tools/spine-android-viewer/**'
+      - '.github/workflows/spine-viewer-android.yml'
+      - 'src/animation/paperchalk-motion.js'
+      - 'index.html'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'tools/spine-android-viewer/**'
+      - '.github/workflows/spine-viewer-android.yml'
+      - 'src/animation/paperchalk-motion.js'
+      - 'index.html'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Mobile Offline APK
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Android SDK
+        shell: bash
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$ANDROID_HOME/cmdline-tools/12.0/bin/sdkmanager"
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build embedded offline editor
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/stretchystudio
+          git clone https://github.com/MangoLion/stretchystudio.git /tmp/stretchystudio
+          cd /tmp/stretchystudio
+          git checkout 24a83a27ba43e43e9d2e3de5e33994594e6199c2
+
+          npm ci
+          npm install --no-save @mediapipe/tasks-vision@0.10.35
+
+          mkdir -p public/ort public/mediapipe public/models
+          cp node_modules/onnxruntime-web/dist/*.wasm public/ort/
+          cp node_modules/onnxruntime-web/dist/*.mjs public/ort/
+          cp -R node_modules/@mediapipe/tasks-vision/wasm/. public/mediapipe/
+
+          curl -L --fail --retry 3             -o public/models/pose_landmarker_lite.task             https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+          curl -L --fail --retry 3             -o public/models/dw-ll_ucoco_384.onnx             https://huggingface.co/yzd-v/DWPose/resolve/main/dw-ll_ucoco_384.onnx
+
+          python3 "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/patch_stretchy.py" /tmp/stretchystudio
+          cp "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/SkeletonOverlay.jsx" \
+            /tmp/stretchystudio/src/components/canvas/SkeletonOverlay.jsx
+          cp "$GITHUB_WORKSPACE/tools/spine-android-viewer/ci/ArmaturePanel.mobile.jsx" \
+            /tmp/stretchystudio/src/components/armature/ArmaturePanel.jsx
+          npm run build
+
+          test -f dist/ort/ort-wasm-simd-threaded.mjs
+          test -f dist/ort/ort-wasm-simd-threaded.wasm
+          test -f dist/models/dw-ll_ucoco_384.onnx
+          test -f dist/models/pose_landmarker_lite.task
+
+          if grep -R -E             'cdn\.jsdelivr\.net/npm/onnxruntime|huggingface\.co/yzd-v/DWPose|storage\.googleapis\.com/mediapipe-models'             dist/assets dist/index.html; then
+            echo 'Runtime network dependency detected in embedded editor.'
+            exit 1
+          fi
+
+          TARGET="$GITHUB_WORKSPACE/tools/spine-android-viewer/app/src/main/assets/studio"
+          rm -rf "$TARGET"
+          mkdir -p "$TARGET"
+          cp -R dist/. "$TARGET/"
+          cp LICENSE "$TARGET/LICENSE.StretchyStudio.txt"
+
+      - name: Bundle local cutout model
+        working-directory: tools/spine-android-viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p app/src/main/assets
+          curl -L --fail --retry 3             -o app/src/main/assets/selfie_segmenter.tflite             https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite
+
+      - name: Build APK
+        working-directory: tools/spine-android-viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          gradle :app:assembleDebug -PspineVersion=4.3.5 --stacktrace
+
+      - name: Audit APK offline permissions and bundled assets
+        working-directory: tools/spine-android-viewer
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$AAPT" dump permissions "$APK" | tee /tmp/apk-permissions.txt
+          if grep -q 'android.permission.INTERNET' /tmp/apk-permissions.txt; then
+            echo 'APK unexpectedly requests INTERNET permission.'
+            exit 1
+          fi
+          unzip -l "$APK" > /tmp/apk-files.txt
+          grep -q 'assets/studio/models/dw-ll_ucoco_384.onnx' /tmp/apk-files.txt
+          grep -q 'assets/studio/ort/ort-wasm-simd-threaded.mjs' /tmp/apk-files.txt
+          grep -q 'assets/studio/ort/ort-wasm-simd-threaded.wasm' /tmp/apk-files.txt
+          grep -q 'assets/studio/models/pose_landmarker_lite.task' /tmp/apk-files.txt
+          grep -q 'assets/selfie_segmenter.tflite' /tmp/apk-files.txt
+
+      - name: Stage APK
+        working-directory: tools/spine-android-viewer
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PaperChalk-SpineStudio-Mobile-V4-Offline.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaperChalk-SpineStudio-Mobile-V4-Offline
+          path: tools/spine-android-viewer/artifacts/PaperChalk-SpineStudio-Mobile-V4-Offline.apk
+          if-no-files-found: error
+          retention-days: 30
