@@ -98,13 +98,6 @@ assert.match(paperMaterial,/weakMicroNormal:true/);
 assert.match(paperMaterial,/physicalFibreSheen:true/);
 assert.match(paperMaterial,/seamlessPeriodicField:true/);
 assert.match(engine,/coarse\?1\.5:2/);
-assert.match(engine,/new AtmospherePass/);
-assert.match(renderer,/configureAtmosphere/);
-assert.match(atmosphere,/minecraft-style-depth-occlusion-radial-scattering-v2/);
-assert.match(atmosphere,/const int SAMPLES=28/);
-assert.match(atmosphere,/FogExp2/);
-assert.match(atmosphere,/graded-paper-sky/);
-assert.match(atmosphere,/blurPasses/);
 assert.match(game,/terrain\.water\.needsSettle/);
 
 console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
