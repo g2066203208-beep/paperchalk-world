@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),photon=read('src/engine3d/PhotonPipeline.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),photon=read('src/engine3d/PhotonPipeline.js'),photonWater=read('src/engine3d/PhotonWaterPass.js'),photonLight=read('src/engine3d/PhotonVoxelLightVolume.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
 
 assert.match(html,/paper-r5/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
@@ -85,6 +85,15 @@ assert.match(photon,/Halton|halton/);
 assert.match(photon,/uPrevViewProj/);
 assert.match(photon,/cloudShadowSteps/);
 assert.match(photon,/sampleFxaa/);
+assert.match(photon,/PAPERCHALK_PHOTON_PCSS/);
+assert.match(photon,/variablePenumbra:true/);
+assert.match(photonWater,/photon-water-ssr-r1/);
+assert.match(photonWater,/screenSpaceRaymarch:true/);
+assert.match(photonWater,/variableFresnel:true/);
+assert.match(photonWater,/gerstnerStyleWaves:true/);
+assert.match(photonLight,/photon-rgb-voxel-light-volume-r1/);
+assert.match(photonLight,/sixNeighbourPropagation:true/);
+assert.match(photonLight,/pointLightEmitters:true/);
 assert.match(engine,/new PaperTerrainRenderer/);
 assert.match(engine,/new AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
