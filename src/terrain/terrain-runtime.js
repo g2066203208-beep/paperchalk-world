@@ -170,6 +170,53 @@ class WaterWorld{
     }
     return root;
   }
+  _packRemainderToBoundary(states){
+    const wet=[...states.values()].filter(st=>st.filled>0);
+    if(wet.length<2)return {moved:0,minTop:wet[0]?wet[0].floor+wet[0].filled:0,maxTop:wet[0]?wet[0].floor+wet[0].filled:0};
+    const top=st=>st.floor+st.filled;
+    let minTop=Math.min(...wet.map(top)),maxTop=Math.max(...wet.map(top));
+    if(maxTop-minTop!==1)return {moved:0,minTop,maxTop};
+    const boundary=st=>{
+      for(const [dx,,dz] of this.horizontalDirs){
+        const n=states.get(this.columnKey(st.gx+dx,st.gz+dz));
+        if(!n||n.filled<=0)return true;
+      }
+      return false;
+    };
+    const donors=wet.filter(st=>top(st)===maxTop&&!boundary(st));
+    const receivers=wet.filter(st=>top(st)===minTop&&boundary(st));
+    let moved=0,ri=0;
+    for(const donor of donors){
+      while(donor.filled>0&&top(donor)===maxTop&&ri<receivers.length){
+        const rec=receivers[ri];
+        if(top(rec)!==minTop){ri++;continue}
+        const abs=rec.floor+rec.filled,gy=Math.floor(abs/8);
+        if(!this._canOccupy(rec.gx,gy,rec.gz)){ri++;continue}
+        donor.filled--;rec.filled++;moved++;
+        ri++;
+      }
+      if(ri>=receivers.length)break;
+    }
+    minTop=Math.min(...wet.filter(st=>st.filled>0).map(top));
+    maxTop=Math.max(...wet.filter(st=>st.filled>0).map(top));
+    return {moved,minTop,maxTop};
+  }
+  _surfaceAuditFromStates(states){
+    const wet=[...states.values()].filter(st=>st.filled>0);
+    if(!wet.length)return {wetColumns:0,minTop:0,maxTop:0,spreadLayers:0,interiorSpreadLayers:0,boundaryColumns:0};
+    const top=st=>st.floor+st.filled;
+    const isBoundary=st=>this.horizontalDirs.some(([dx,,dz])=>{
+      const n=states.get(this.columnKey(st.gx+dx,st.gz+dz));return !n||n.filled<=0;
+    });
+    const boundary=wet.filter(isBoundary),interior=wet.filter(st=>!isBoundary(st));
+    const minTop=Math.min(...wet.map(top)),maxTop=Math.max(...wet.map(top));
+    let interiorSpreadLayers=0;
+    if(interior.length>1){
+      const a=interior.map(top);interiorSpreadLayers=Math.max(...a)-Math.min(...a);
+    }
+    return {wetColumns:wet.length,minTop,maxTop,spreadLayers:maxTop-minTop,interiorSpreadLayers,boundaryColumns:boundary.length};
+  }
+
   _settleBody(body,blockedColumns){
     let total=0,heapPops=0;
     const seeds=new Map();
@@ -237,6 +284,12 @@ class WaterWorld{
       }
     }
 
+    // Quantized water can leave one extra 1/8-layer when volume is not divisible
+    // by the wetted footprint. Keep that remainder on the shoreline instead of
+    // creating isolated high patches in the interior of an otherwise level pool.
+    const edgePack=this._packRemainderToBoundary(states);
+    const surfaceAudit=this._surfaceAuditFromStates(states);
+
     const out=new Map();
     for(const state of states.values()){
       for(let i=0;i<state.filled;i++){
@@ -245,7 +298,7 @@ class WaterWorld{
         if(layer>(out.get(key)||0))out.set(key,layer);
       }
     }
-    return {cells:out,columns:states.size,layers:placed,heapPops};
+    return {cells:out,columns:states.size,layers:placed,heapPops,edgePackedLayers:edgePack.moved,surfaceAudit};
   }
   settleAll(){
     if(!this.needsSettle)return {changed:false,...this.lastSettle};
@@ -271,6 +324,7 @@ class WaterWorld{
       this.needsSettle=true;
       this.lastSettle={
         bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
+        edgePackedLayers:settled.edgePackedLayers||0,surfaceAudit:settled.surfaceAudit||null,
         beforeLayers,afterLayers:beforeLayers,conserved:false,rollback:true
       };
       return {changed:false,...this.lastSettle,totalLayers:beforeLayers,exactHydrostatic:false};
@@ -290,6 +344,7 @@ class WaterWorld{
     this.tick++;
     this.lastSettle={
       bodies:1,columns:settled.columns,layers:settled.layers,heapPops:settled.heapPops,
+      edgePackedLayers:settled.edgePackedLayers||0,surfaceAudit:settled.surfaceAudit||null,
       beforeLayers,afterLayers,conserved:true,rollback:false
     };
     if(changed){
@@ -398,7 +453,7 @@ class WaterWorld{
       cells:this.cells.size,totalLayers:this.totalLayers(),levels:8,
       layerHeight:this.terrain.tileSize/8,dirtyChunks:this.dirtyChunks.size,
       version:this.version,needsSettle:this.needsSettle,
-      flowModel:'priority-flood-shared-volume-hydrostatic-v3-visible-flow',
+      flowModel:'priority-flood-hydrostatic-v4-boundary-remainder',
       flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
       exactHydrostatic:true,lastSettle:this.lastSettle,visualTransitionId:this.visualTransition?.id||0
     };
