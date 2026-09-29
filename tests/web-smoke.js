@@ -1,9 +1,9 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r3'),'build key missing');
+assert(html.includes('paper-r4'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -69,6 +69,13 @@ assert(engine.includes('flatShading:true'),'flat shading missing');
 assert(engine.includes('new PaperTerrainRenderer'),'paper terrain renderer integration missing');
 assert(engine.includes("terrainBlockGeometry:this.paperStyle.enabled?'merged extruded cardboard slabs'"),'paper terrain stats mode missing');
 assert(renderer.includes('setPaperStyle')&&renderer.includes('configurePaperTerrain'),'paper terrain runtime controls missing');
+assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
+assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
+assert(atmos.includes("technique:'quarter-res-occlusion-radial-scattering'"),'low-res god-ray technique missing');
+assert(atmos.includes('const int SAMPLES=24'),'god-ray radial sampling missing');
+assert(atmos.includes('FogExp2'),'distance atmosphere fog missing');
+assert(atmos.includes('terrainOcclusion:true'),'terrain-occluded Tyndall gate missing');
+assert(atmos.includes('mobileOptimized:this.mobileLike'),'mobile atmosphere quality path missing');
 assert(paper.includes("mode:'paper-diorama-slab-v3-lowpoly-edge-ring'"),'paper slab geometry missing');
 assert(paper.includes('boundary[idx]')&&paper.includes('used[(z+zz)*n+x+xx]=1')&&paper.includes('edgeTopCells'),'interior greedy merge + boundary-cell split missing');
 assert(paper.includes('topSideMaterialSplit:true'),'top/side material split missing');
