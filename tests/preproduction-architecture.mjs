@@ -33,6 +33,10 @@ assert.match(terrain,/columnBounds\(gx,gz\)/);
 assert.match(engine,/chunked-visible-surface-water-v5-wavefront/);
 assert.match(engine,/internalFacesCulled:true/);
 
+assert.match(content,/stageEntities:\[\]/);
+assert.doesNotMatch(content,/far-hills-|village-shop|village-house-a|village-workshop|tree-[abc]|rock-[ab]/);
+assert.doesNotMatch(engine,/sceneData\.stageEntities|this\.paperEntities=\[\]/);
+assert.match(engine,/legacyStagePlaceholders:0/);
 assert.match(content,/'fishing-rod'/);
 assert.match(content,/'paper-carp'/);
 assert.match(game,/castFishingRod/);
