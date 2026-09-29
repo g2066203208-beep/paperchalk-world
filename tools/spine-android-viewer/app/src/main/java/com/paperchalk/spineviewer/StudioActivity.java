@@ -146,6 +146,9 @@ public class StudioActivity extends Activity {
             "window.PaperChalkMobile?PaperChalkMobile.setMode('animation'):'bridge-loading'"
         )));
 
+        actions.addView(button("骨骼管理", v -> runJs(
+            "window.PaperChalkBones?PaperChalkBones.open():'bridge-loading'"
+        )));
         actions.addView(button("PSD/图片", v -> runJs(
             "(function(){const i=document.querySelector('input[type=file]');if(i){i.click();return 'ok'}return 'no-input'})()"
         )));
