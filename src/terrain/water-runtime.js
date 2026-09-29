@@ -321,10 +321,13 @@ this.levels=8;
         const [gx,gy,gz]=this.parse(key);this._markNeighborhoodDirty(gx,gy,gz);
       }
     }
+    const nextBodyCount=this._connectedBodies(next).length;
+    const mergedBodies=nextBodyCount<bodies.length;
+    if(mergedBodies)this.needsSettle=true;
     if(changed)this.version++;
     this.tick++;
-    this.lastSettle={bodies:bodies.length,columns,layers,heapPops,edgePackedLayers,surfaceAudit:audits,beforeLayers,afterLayers,conserved:true,rollback:false};
-    return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
+    this.lastSettle={bodies:bodies.length,nextBodies:nextBodyCount,mergedBodies,columns,layers,heapPops,edgePackedLayers,surfaceAudit:audits,beforeLayers,afterLayers,conserved:true,rollback:false};
+    return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:!mergedBodies};
   }
   step(){
     return this.settleAll();
