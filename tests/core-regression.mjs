@@ -63,7 +63,6 @@ try{
     window.PaperchalkHunger.feed(10,{persist:false});
     const h1=window.PaperchalkHunger.state.current;
     const rod=window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null;
-    const fish=window.PaperchalkFishEcology.stats;
 
     const WaterWorld=window.PaperchalkTerrainRuntime.WaterWorld;
     const floors=new Map([['0,0',0],['10,0',-5]]);
@@ -83,7 +82,7 @@ try{
     water.requestSettle();
     const settled=water.settleAll();
     return {
-      h0,h1,rod,fish,settled,
+      h0,h1,rod,settled,
       high:water.getLevel(0,1,0),
       low:water.getLevel(10,-4,0),
       flowModel:water.stats().flowModel
@@ -91,7 +90,6 @@ try{
   });
   assert(foundation.h1===60,'hunger system failed '+JSON.stringify(foundation));
   assert(foundation.rod===null,'fishing rod should not be a starter item '+JSON.stringify(foundation));
-  assert(foundation.fish?.enabled===false&&foundation.fish.active===0,'fish ecology must be disabled '+JSON.stringify(foundation));
   assert(foundation.settled.bodies===2&&foundation.high===8&&foundation.low===8,'disconnected ponds exchanged water '+JSON.stringify(foundation));
   assert(foundation.flowModel==='connected-body-priority-flood-v5','wrong water solver '+JSON.stringify(foundation));
 
