@@ -61,7 +61,7 @@ assert(engine.includes('THREE.PMREMGenerator'),'PMREM environment lighting missi
 assert(engine.includes("imageBasedLighting:'PMREM-studio-paper'"),'IBL stats missing');
 assert(engine.includes("materialMode:'MeshStandardMaterial-paper-PBR'"),'terrain PBR stats missing');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
-assert(engine.includes("renderMode:'event-driven-greedy-water-v6'"),'3D water renderer missing');
+assert(engine.includes("renderMode:'event-driven-greedy-water-v7'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 
