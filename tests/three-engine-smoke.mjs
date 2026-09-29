@@ -19,17 +19,6 @@ try{
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
 
-  // Real framebuffer A/B: old render-grid path first, then Paper Diorama.
-  const paperOff=await page.evaluate(()=>window.Paperchalk3D.setPaperStyle(false));
-  assert(paperOff===false,'paper style did not switch off');
-  await page.waitForTimeout(1200);
-  await page.screenshot({path:'artifacts/paper-phase1-before.png'});
-
-  const paperOn=await page.evaluate(()=>window.Paperchalk3D.setPaperStyle(true));
-  assert(paperOn===true,'paper style did not switch on');
-  await page.waitForTimeout(1600);
-  await page.screenshot({path:'artifacts/paper-phase1-after.png'});
-
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
   assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
@@ -71,6 +60,19 @@ try{
   const fishing=await page.evaluate(()=>window.Paperchalk3D.stats.fishing);
   assert(fishing?.visible===true&&fishing?.state==='flying','fishing render did not activate '+JSON.stringify(fishing));
   await page.evaluate(()=>window.PaperchalkFishing.reel());
+
+  // Real framebuffer A/B runs after all existing gameplay checks so it cannot
+  // perturb fishing/water timing. Old voxel visual and new paper visual use the
+  // same authoritative TerrainWorld state.
+  const paperOff=await page.evaluate(()=>window.Paperchalk3D.setPaperStyle(false));
+  assert(paperOff===false,'paper style did not switch off');
+  await page.waitForTimeout(1200);
+  await page.screenshot({path:'artifacts/paper-phase1-before.png'});
+
+  const paperOn=await page.evaluate(()=>window.Paperchalk3D.setPaperStyle(true));
+  assert(paperOn===true,'paper style did not switch on');
+  await page.waitForTimeout(1600);
+  await page.screenshot({path:'artifacts/paper-phase1-after.png'});
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
   assert(beforeBytes>10000&&afterBytes>10000,'A/B framebuffer screenshots missing');
