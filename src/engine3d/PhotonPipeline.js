@@ -83,6 +83,7 @@ export class PhotonPipeline{
     this.THREE=THREE;this.renderer=renderer;this.scene=scene;this.camera=camera;this.mobileLike=!!mobileLike;this.pcssInstalled=installPhotonPCSS(THREE);
     this.settings={
       enabled:true,
+      profile:'balanced',
       taa:!this.mobileLike,
       taau:true,
       renderScale:this.mobileLike?.68:.76,
@@ -227,7 +228,15 @@ export class PhotonPipeline{
   _syncShadowSoftness(){this.scene?.traverse?.(o=>{if(o?.isDirectionalLight&&o.castShadow&&o.shadow)o.shadow.radius=this.settings.pcssLightSize});}
 
   configure(patch={}){
-    Object.assign(this.settings,patch||{});
+    const requested=String(patch?.profile||this.settings.profile||'balanced').toLowerCase();
+    const presets={
+      ultra:{profile:'ultra',renderScale:1,specularSSR:true,cloudSteps:18,cloudShadowSteps:4,aoStrength:.62,bloomStrength:.20,waterOptions:{steps:18},specularOptions:{steps:14},weatherOptions:{lowCloudSteps:18,cloudShadowSteps:4}},
+      balanced:{profile:'balanced',renderScale:this.mobileLike?.68:.76,specularSSR:false,cloudSteps:this.mobileLike?8:12,cloudShadowSteps:this.mobileLike?2:3,aoStrength:this.mobileLike?.42:.55,bloomStrength:this.mobileLike?.12:.18,waterOptions:{steps:this.mobileLike?8:12},specularOptions:{steps:this.mobileLike?7:10},weatherOptions:{lowCloudSteps:this.mobileLike?8:12,cloudShadowSteps:this.mobileLike?2:3}},
+      mobile:{profile:'mobile',renderScale:.62,specularSSR:false,cloudSteps:7,cloudShadowSteps:1,aoStrength:.34,bloomStrength:.10,waterOptions:{steps:7},specularOptions:{steps:6},weatherOptions:{lowCloudSteps:7,cloudShadowSteps:1}}
+    };
+    const preset=presets[requested]||presets.balanced,raw=patch||{};
+    patch={...preset,...raw,waterOptions:{...preset.waterOptions,...(raw.waterOptions||{})},specularOptions:{...preset.specularOptions,...(raw.specularOptions||{})},weatherOptions:{...preset.weatherOptions,...(raw.weatherOptions||{})}};
+    Object.assign(this.settings,patch);
     this.settings.aoStrength=clamp(Number(this.settings.aoStrength)||0,0,1.4);
     this.settings.aoRadius=clamp(Number(this.settings.aoRadius)||1,.25,3);
     this.settings.bloomStrength=clamp(Number(this.settings.bloomStrength)||0,0,1.2);
@@ -301,7 +310,7 @@ export class PhotonPipeline{
     }
   }
 
-  stats(){return {enabled:!!this.settings.enabled,mode:'photon-feature-port-r1',source:'sixthsurge/photon',featurePort:true,taau:!!this.settings.taau,temporalUpscaling:!!this.settings.taau,renderScale:this.settings.taau?this.settings.renderScale:1,pcss:!!this.pcssInstalled,variablePenumbra:true,water:this.waterPass.stats(),specularSSR:this.specularSSR.stats(),coloredLighting:this.voxelLight.stats(),weather:this.weatherPass.stats(),taa:!!this.settings.taa,gtao:!!this.settings.gtao,bloom:!!this.settings.bloom,volumetricClouds:!!this.settings.clouds,fxaa:!!this.settings.fxaa,cas:!!this.settings.cas,dof:!!this.settings.dof,motionBlur:!!this.settings.motionBlur,historyReprojection:true,depthAwareAO:true,weatherCloudCoverage:this.settings.cloudCoverage,buffers:{scene:[this.size.renderWidth||this.size.bufferWidth,this.size.renderHeight||this.size.bufferHeight],output:[this.size.bufferWidth,this.size.bufferHeight],ao:this.size.ao||[1,1],bloom:this.size.bloom||[1,1]},renders:this.renderCount};}
+  stats(){return {enabled:!!this.settings.enabled,mode:'photon-feature-port-r1',source:'sixthsurge/photon',featurePort:true,profile:this.settings.profile,taau:!!this.settings.taau,temporalUpscaling:!!this.settings.taau,renderScale:this.settings.taau?this.settings.renderScale:1,pcss:!!this.pcssInstalled,variablePenumbra:true,water:this.waterPass.stats(),specularSSR:this.specularSSR.stats(),coloredLighting:this.voxelLight.stats(),weather:this.weatherPass.stats(),taa:!!this.settings.taa,gtao:!!this.settings.gtao,bloom:!!this.settings.bloom,volumetricClouds:!!this.settings.clouds,fxaa:!!this.settings.fxaa,cas:!!this.settings.cas,dof:!!this.settings.dof,motionBlur:!!this.settings.motionBlur,historyReprojection:true,depthAwareAO:true,weatherCloudCoverage:this.settings.cloudCoverage,buffers:{scene:[this.size.renderWidth||this.size.bufferWidth,this.size.renderHeight||this.size.bufferHeight],output:[this.size.bufferWidth,this.size.bufferHeight],ao:this.size.ao||[1,1],bloom:this.size.bloom||[1,1]},renders:this.renderCount};}
 
   dispose(){this.waterPass.dispose();this.voxelLight.dispose();this.weatherPass.dispose();this.specularSSR.dispose();for(const t of [this.sceneTarget,this.workA,this.workB,this.aoA,this.aoB,this.bloomA,this.bloomB,this.historyA,this.historyB])t.dispose();for(const p of [this.copyPass,this.aoPass,this.blurPass,this.bloomExtractPass,this.gaussPass,this.compositePass,this.temporalPass,this.finalPass])p.geometry.dispose();for(const m of [this.copyMaterial,this.aoMaterial,this.blurMaterial,this.bloomExtractMaterial,this.gaussMaterial,this.compositeMaterial,this.temporalMaterial,this.finalMaterial])m.dispose();}
 }
