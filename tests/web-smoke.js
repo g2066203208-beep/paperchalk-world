@@ -110,6 +110,8 @@ assert(paperMaterial.includes('physicalFibreSheen:true'),'paper fibre sheen miss
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
 assert(paperMaterial.includes('userGrassReference:true'),'uploaded grass reference texture is not wired');
 assert(paperMaterial.includes("grassReferenceAsset:'assets/materials/grass-reference.webp'"),'grass reference asset path missing');
+assert(paperMaterial.includes('grassPowerOfTwoRuntime:true'),'grass texture must be promoted to a power-of-two runtime texture');
+assert(paperMaterial.includes("grassFallback.name='grass-reference-fallback'"),'nonblack grass loading fallback missing');
 assert(fs.existsSync('assets/materials/grass-reference.webp'),'grass reference texture file missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
 assert(paperMaterial.includes('perFrameHeavyNoise:false'),'paper material must not run heavy noise per frame');
