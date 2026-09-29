@@ -182,14 +182,14 @@ export class PhotonPipeline{
       depthTest:false,depthWrite:false,toneMapped:false,vertexShader:FS_VERT,
       fragmentShader:`
         precision highp float;varying vec2 vUv;uniform sampler2D tInput,tDepth;uniform vec2 uResolution;uniform float uSharpen,uFXAA,uCAS,uDOF,uMotionBlur,uFocusDistance,uFocusRange,uMotionStrength;uniform mat4 uInvViewProj,uPrevViewProj;
-        float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
+        float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}vec3 toSRGB(vec3 c){vec3 lo=c*12.92;vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;return mix(lo,hi,step(vec3(.0031308),c));}
         vec3 sampleFxaa(vec2 uv){vec2 px=1.0/uResolution;vec3 c=texture2D(tInput,uv).rgb;float m=luma(c),n=luma(texture2D(tInput,uv+vec2(0,px.y)).rgb),s=luma(texture2D(tInput,uv-vec2(0,px.y)).rgb),e=luma(texture2D(tInput,uv+vec2(px.x,0)).rgb),w=luma(texture2D(tInput,uv-vec2(px.x,0)).rgb);float lo=min(m,min(min(n,s),min(e,w))),hi=max(m,max(max(n,s),max(e,w)));if(hi-lo<max(.035,hi*.125))return c;vec2 dir=vec2(-(n-s),e-w);dir=clamp(dir/(abs(dir.x)+abs(dir.y)+1e-5),vec2(-1),vec2(1))*px;return (texture2D(tInput,uv+dir*.5).rgb+texture2D(tInput,uv-dir*.5).rgb)*.5;}
         vec3 worldPos(vec2 uv,float d){vec4 c=vec4(uv*2.0-1.0,d*2.0-1.0,1.0);vec4 w=uInvViewProj*c;return w.xyz/max(1e-6,w.w);}
         void main(){vec2 px=1.0/uResolution;vec3 c=uFXAA>.5?sampleFxaa(vUv):texture2D(tInput,vUv).rgb;float d=texture2D(tDepth,vUv).x;
           if(uMotionBlur>.5&&d<.9999){vec3 wp=worldPos(vUv,d);vec4 pc=uPrevViewProj*vec4(wp,1.0);vec2 puv=pc.xy/max(1e-6,pc.w)*.5+.5;vec2 vel=clamp(vUv-puv,vec2(-.03),vec2(.03))*uMotionStrength;vec3 mb=c;for(int i=1;i<=4;i++)mb+=texture2D(tInput,vUv-vel*(float(i)/4.0)).rgb;c=mb/5.0;}
           if(uDOF>.5&&d<.9999){vec3 wp=worldPos(vUv,d);float dist=length(wp);float coc=clamp(abs(dist-uFocusDistance)/max(.1,uFocusRange),0.0,1.0);vec2 r=px*(1.0+4.0*coc);vec3 b=c;b+=texture2D(tInput,vUv+vec2(r.x,0)).rgb;b+=texture2D(tInput,vUv-vec2(r.x,0)).rgb;b+=texture2D(tInput,vUv+vec2(0,r.y)).rgb;b+=texture2D(tInput,vUv-vec2(0,r.y)).rgb;c=mix(c,b/5.0,coc*.7);}
           if(uCAS>.5){vec3 avg=(texture2D(tInput,vUv+vec2(px.x,0)).rgb+texture2D(tInput,vUv-vec2(px.x,0)).rgb+texture2D(tInput,vUv+vec2(0,px.y)).rgb+texture2D(tInput,vUv-vec2(0,px.y)).rgb)*.25;c+=clamp(c-avg,-.18,.18)*uSharpen;}
-          gl_FragColor=vec4(max(c,vec3(0.0)),1.0);}
+          gl_FragColor=vec4(toSRGB(max(c,vec3(0.0))),1.0);}
       `
     });
     this.finalPass=fullScreenScene(THREE,this.finalMaterial);
