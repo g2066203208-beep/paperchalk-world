@@ -25,6 +25,7 @@ export class AtmospherePass{
     this.sunUv=new THREE.Vector2(.5,.5);
     this.clearColor=new THREE.Color();
     this.fogColor=new THREE.Color(0x7487a5);
+    this.warmFog=new THREE.Color(0xd6b49a);
     this.scene.fog=new THREE.FogExp2(this.fogColor,this.settings.fogDensity);
 
     const rtOpts={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
@@ -146,7 +147,7 @@ export class AtmospherePass{
     this.size={width:w,height:h,pixelRatio:pr,bufferWidth:bw,bufferHeight:bh};
   }
 
-  update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0}={}){
+  update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0,fogColor=null}={}){
     if(sunPosition)this.sunWorld.copy(sunPosition);
     const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
     // Stronger near sunrise/sunset and in hazier air, but never visible underground.
@@ -156,7 +157,8 @@ export class AtmospherePass{
     const fogBoost=1+tw*.38+lowSun*.18;
     this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*fogBoost*(1-under*.72):0;
     const warm=clamp(tw+lowSun*.45,0,1);
-    this.fogColor.setRGB(.43+warm*.09,.52+warm*.045,.65-warm*.035);
+    if(fogColor)this.fogColor.copy(fogColor);else this.fogColor.setRGB(.43,.52,.65);
+    this.fogColor.lerp(this.warmFog,warm*.10);
     this.scene.fog.color.copy(this.fogColor);
   }
 
