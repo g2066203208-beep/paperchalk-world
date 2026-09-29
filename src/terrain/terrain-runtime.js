@@ -51,9 +51,7 @@ class WaterWorld{
     this.levels=8;
     this.needsSettle=false;
     this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
-    this.visualTransition=null;this.visualTransitionId=0;
     this.horizontalDirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
-    this.neighborDirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
   }
   key(gx,gy,gz){return gx+','+gy+','+gz}
   columnKey(gx,gz){return gx+','+gz}
@@ -126,26 +124,6 @@ class WaterWorld{
     guard=0;
     while(guard++<192&&this._canOccupy(gx,gy-1,gz))gy--;
     return gy*8;
-  }
-  _collectBodies(){
-    const remaining=new Set(this.cells.keys()),bodies=[];
-    while(remaining.size){
-      const first=remaining.values().next().value;
-      const queue=[first],cells=[];
-      remaining.delete(first);
-      for(let qi=0;qi<queue.length;qi++){
-        const key=queue[qi],level=this.cells.get(key)||0;
-        if(!level)continue;
-        cells.push([key,level]);
-        const [gx,gy,gz]=this.parse(key);
-        for(const [dx,dy,dz] of this.neighborDirs){
-          const nk=this.key(gx+dx,gy+dy,gz+dz);
-          if(remaining.has(nk)){remaining.delete(nk);queue.push(nk)}
-        }
-      }
-      if(cells.length)bodies.push(cells);
-    }
-    return bodies;
   }
   _heapPush(heap,node){
     let i=heap.length;heap.push(node);
@@ -347,20 +325,6 @@ class WaterWorld{
       edgePackedLayers:settled.edgePackedLayers||0,surfaceAudit:settled.surfaceAudit||null,
       beforeLayers,afterLayers,conserved:true,rollback:false
     };
-    if(changed){
-      const sources=[];
-      for(const [key,oldLevel] of before){
-        const newLevel=next.get(key)||0;
-        if(oldLevel>newLevel)sources.push(this.parse(key));
-      }
-      this.visualTransition={
-        id:++this.visualTransitionId,
-        from:before,
-        to:new Map(next),
-        duration:1.35,
-        sources:sources.slice(0,24)
-      };
-    }
     return {changed,...this.lastSettle,totalLayers:afterLayers,exactHydrostatic:true};
   }
   step(){
@@ -455,7 +419,7 @@ class WaterWorld{
       version:this.version,needsSettle:this.needsSettle,
       flowModel:'priority-flood-hydrostatic-v4-boundary-remainder',
       flowPlane:'full-x-z-with-y-gravity',threeDimensional:true,
-      exactHydrostatic:true,lastSettle:this.lastSettle,visualTransitionId:this.visualTransition?.id||0
+      exactHydrostatic:true,lastSettle:this.lastSettle
     };
   }
 }
