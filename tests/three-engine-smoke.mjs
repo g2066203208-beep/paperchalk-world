@@ -29,8 +29,11 @@ try{
   assert(initial.paperTerrain?.topRects>0&&initial.paperTerrain?.sideQuads>0&&initial.paperTerrain?.bevelQuads>0,'paper top/side/bevel geometry incomplete '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.renderGridExposed===false,'render grid is still exposed');
   assert(initial.paperTerrain?.authority==='TerrainWorld-gameplay-grid-unchanged','gameplay authority changed');
-  assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v2','PaperMaterial v2 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
-  assert(initial.paperTerrain?.paperMaterial?.textureResolution===256,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.textureResolution===512,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
+  assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
+  assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
@@ -76,17 +79,17 @@ try{
   await page.screenshot({path:'artifacts/paper-phase1-after.png'});
 
   const tuned=await page.evaluate(()=>window.Paperchalk3D.configurePaperTerrain({
-    fiberStrength:.09,microNormalStrength:.92,roughnessVariation:.075,printNoiseStrength:.06
+    fiberStrength:.055,microNormalStrength:.38,roughnessVariation:.04,printNoiseStrength:.07
   }));
   assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v2','paper material tuning API failed '+JSON.stringify(tuned));
   await page.waitForTimeout(350);
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-8}));
   await page.waitForTimeout(250);
-  await page.screenshot({path:'artifacts/paper-material-v2-closeup.png'});
+  await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
 
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
-  const materialBytes=fs.statSync('artifacts/paper-material-v2-closeup.png').size;
+  const materialBytes=fs.statSync('artifacts/paper-material-v3-reference-closeup.png').size;
   assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000,'paper framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,stats:initial.paperTerrain,tuned},null,2));
