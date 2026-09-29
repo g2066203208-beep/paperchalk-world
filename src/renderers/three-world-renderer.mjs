@@ -144,6 +144,16 @@ function setDebugColliders(enabled){
   emit();
   return value;
 }
+function setPaperStyle(enabled=true){
+  const value=engine?.setPaperStyle?.(enabled)??!!enabled;
+  emit();
+  return value;
+}
+function configurePaperTerrain(patch={}){
+  const value=engine?.configurePaperTerrain?.(patch)||null;
+  emit();
+  return value;
+}
 
 function setStageView(enabled,axis){
   const value=engine?.setStageView(enabled,axis)||{enabled:!!enabled,axis:axis==='x'?'x':'z',side:1};
@@ -178,6 +188,7 @@ window.Paperchalk3D=Object.freeze({
   version:8,
   engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
+  setPaperStyle,configurePaperTerrain,
   setStageView,toggleStageView,setStageAxis,
   screenToWorld(clientX,clientY){return engine?.screenToWorld?.(clientX,clientY)||null},
   screenToWaterSurface(clientX,clientY,options){return engine?.screenToWaterSurface?.(clientX,clientY,options)||null},
