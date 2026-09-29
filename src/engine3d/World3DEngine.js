@@ -565,7 +565,7 @@ this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,heigh
 this.stageView={enabled:false,axis:'z',side:1};
 this.cameraTarget=new THREE.Vector3();
 this.cameraTargetSmooth=new THREE.Vector3();
-this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.fishingRenderer=null;this.fishSchoolRenderer=null;this.paperEntities=[];
+this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.fishingRenderer=null;this.fishSchoolRenderer=null;
 this.cameraOcclusion={enabled:true,radius:1.15,minOpacity:.18,entityStates:new Map(),terrainShader:true};
 this.paperStyle={enabled:true};
 this.debugColliders=false;this.pointerState=null;
@@ -678,13 +678,6 @@ this.terrainCursor.name='terrain-block-cursor';
 this.terrainCursor.visible=false;
 this.terrainCursor.renderOrder=1000;
 this.scene.add(this.terrainCursor);
-for(const def of this.sceneData.stageEntities||[]){
-const ground=def.grounded?this.terrain.highestGroundY(def.x,Number(def.z)||0):Number(def.y)||0;
-const entity=new PaperSpriteEntity(THREE,{
-...def,y:ground,z:Number.isFinite(Number(def.z))?Number(def.z):0,seed:this._seedFromId(def.id)
-});
-this.paperEntities.push(entity);this.scene.add(entity.root);
-}
 const playerTexture=new THREE.TextureLoader().load('assets/player/protagonist.webp?v=voxel3d-r1');
 playerTexture.colorSpace=THREE.SRGBColorSpace;
 playerTexture.magFilter=THREE.LinearFilter;
@@ -872,24 +865,8 @@ const playerPos=new this.THREE.Vector3(p.x,p.y,p.z);
 this.terrainRenderer?.setCameraOcclusion(this.camera.position,playerPos,true);
 const a=this.camera.position,b=playerPos,ab=b.clone().sub(a),len2=Math.max(.0001,ab.lengthSq());
 const k=1-Math.pow(.00003,Math.max(0,dt));
-let faded=0;
-for(const entity of this.paperEntities){
-if(!entity?.root||!entity.material)continue;
-const pos=new this.THREE.Vector3();entity.root.getWorldPosition(pos);
-const t=Math.max(0,Math.min(1,pos.clone().sub(a).dot(ab)/len2));
-const nearest=a.clone().addScaledVector(ab,t);
-const radius=Math.max(this.cameraOcclusion.radius,Math.min(2.2,(entity.width||1)*.32));
-const blocks=t>.03&&t<.97&&pos.distanceTo(nearest)<radius;
-const target=blocks?this.cameraOcclusion.minOpacity:1;
-const state=this.cameraOcclusion.entityStates.get(entity.id)||{opacity:1};
-state.opacity+=(target-state.opacity)*k;
-this.cameraOcclusion.entityStates.set(entity.id,state);
-entity.material.transparent=true;
-entity.material.opacity=state.opacity;
-entity.material.depthWrite=state.opacity>.92;
-if(state.opacity<.95)faded++;
-}
-this.cameraOcclusion.fadedEntities=faded;
+this.cameraOcclusion.fadedEntities=0;
+
 }
 _skyExposureAt(player){
 if(!player)return 1;
@@ -1065,7 +1042,7 @@ interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terr
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
 cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.15,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
 undergroundOcclusion:{mode:'two-layer-black-back-v10',backgroundProvidesBlack:false,noBuriedDepthFaces:true,blackProvidedByRearVoxelRow:true},
-paperEntities:this.paperEntities.length+1,playerGeometry:'PlaneGeometry',
+paperEntities:1,legacyStagePlaceholders:0,playerGeometry:'PlaneGeometry',
 playerTextureSize:{width:this.playerSprite?.texture?.image?.naturalWidth||this.playerSprite?.texture?.image?.width||0,height:this.playerSprite?.texture?.image?.naturalHeight||this.playerSprite?.texture?.image?.height||0},
 terrainBlockGeometry:this.paperStyle.enabled?'merged extruded cardboard slabs':'3-axis greedy voxel BufferGeometry',
 paperStyle:{enabled:this.paperStyle.enabled,visualOnly:true,gameplayGridUnchanged:true},
@@ -1100,7 +1077,7 @@ this.playerGroundShadow.mesh.geometry.dispose();
 this.playerGroundShadow.material.dispose();
 this.playerGroundShadow.texture.dispose();
 }
-this.playerSprite?.dispose();for(const entity of this.paperEntities)entity.dispose();
+this.playerSprite?.dispose();
 this.renderer.dispose();this.host.replaceChildren();
 }
 }
