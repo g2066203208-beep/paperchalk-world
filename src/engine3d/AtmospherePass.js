@@ -151,7 +151,7 @@ export class AtmospherePass{
     const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
     // Stronger near sunrise/sunset and in hazier air, but never visible underground.
     const lowSun=clamp(1-Math.max(0,(d-.18)/.82),0,1);
-    const atmospheric=d*(.34+lowSun*.56+tw*.28)*sky*(1-under);
+    const atmospheric=(d*.72+tw*.28)*(.48+lowSun*.52)*sky*(1-under);
     this.state={strength:atmospheric*this.settings.rayIntensity,daylight:d,twilight:tw,skyExposure:sky,underground:under,time:Number(time)||0};
     const fogBoost=1+tw*.38+lowSun*.18;
     this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*fogBoost*(1-under*.72):0;
