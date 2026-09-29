@@ -65,7 +65,8 @@ assert.match(game,/terrain\.water\.needsSettle/);
 
 assert.match(html,/water-runtime\.js/);
 assert.match(terrain,/analyticOcean:true/);
-assert.match(ocean,/analytic-ocean-surface/);
+assert.match(ocean,/analytic-ocean-stage-strip/);
+assert.match(ocean,/singleVoxelDepth:true/);
 assert.match(engine,/_interactionRayDistance/);
 assert.match(engine,/cameraRig\.distance\+14/);
 assert.doesNotMatch(engine,/FarTerrainRenderer|EcologyRenderer/);
