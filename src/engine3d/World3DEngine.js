@@ -1,6 +1,6 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
 import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r4';
-import {AtmospherePass} from './AtmospherePass.js?v=paper-r4';
+import {AtmospherePass} from './AtmospherePass.js?v=atmos-r1';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
@@ -899,6 +899,8 @@ const exposure=this._skyExposureAt(p);
 const localSurfaceY=(this.terrain.surfaceCell(Math.floor(p.x/this.terrain.tileSize),Math.floor(p.z/this.terrain.tileSize))+1)*this.terrain.tileSize;
 const undergroundDepth=Math.max(0,localSurfaceY-p.y);
 const undergroundFactor=Math.max(0,Math.min(1,(undergroundDepth-.35)/2.4));
+this.scene.background.copy(this.fixedBackgroundColor);
+this.renderer.setClearColor(this.fixedBackgroundColor,1);
 const sun=this.terrainLights?.sun,skyFill=this.terrainLights?.skyFill,ambient=this.terrainLights?.ambient,moon=this.terrainLights?.moon;
 const sunDisc=this.terrainLights?.sunDisc,moonDisc=this.terrainLights?.moonDisc;
 const radius=42;
@@ -907,8 +909,7 @@ const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
 const sz=22;
 if(sun){
 const paperLight=this.paperStyle?.enabled!==false;
-sun.intensity=daylight*(paperLight?2.55:3.35);
-sun.color.setRGB(1,.78+daylight*.16,.56+daylight*.28);
+sun.intensity=daylight*(paperLight?2.65:3.4);
 sun.position.set(p.x+sx,p.y+sy,p.z+sz);
 sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
@@ -918,14 +919,12 @@ const outdoor=this.paperStyle?.enabled!==false
 ?(.84+daylight*.74+twilight*.24+night*.14)
 :(.62+daylight*1.05+twilight*.28+night*.18);
 skyFill.intensity=outdoor;
-skyFill.color.setRGB(.72+daylight*.12,.80+daylight*.10,.94);
-skyFill.groundColor.setRGB(.38+twilight*.08,.29+twilight*.055,.22+twilight*.035);
 }
 if(ambient){
 ambient.intensity=(this.paperStyle?.enabled!==false ? .13 : .10)+daylight*(this.paperStyle?.enabled!==false ? .09 : .11)+night*.07;
 }
 if(moon){
-moon.intensity=night*.62;
+moon.intensity=night*.72;
 moon.position.set(p.x-sx,p.y+Math.max(10,sy*.8),p.z-sz*.7);
 moon.target.position.set(p.x,p.y-1,p.z);
 moon.target.updateMatrixWorld();
@@ -942,10 +941,9 @@ moonDisc.position.set(p.x-sx*1.45,p.y+Math.max(14,sy*1.2),p.z-sz*1.1);
 this.skyExposure=exposure;
 this.undergroundDepth=undergroundDepth;
 this.undergroundFactor=undergroundFactor;
-this.renderer.toneMappingExposure=(1.00+daylight*.08+twilight*.055-night*.07)*(1-undergroundFactor*.10);
 this.atmosphere?.update({
-  sunPosition:sunDisc?.position,daylight,twilight,night,skyExposure:exposure,
-  underground:undergroundFactor,time:n*1440
+  sunPosition:sunDisc?.position,daylight,twilight,skyExposure:exposure,underground:undergroundFactor,time:n*1440,
+  fogBaseHeight:p.y-1.8,sunLight:sun,skyLight:skyFill,sunDisc
 });
 }
 update(dt,snapshot=this.lastSnapshot){
@@ -969,6 +967,8 @@ this.fishingRenderer?.update(current,this.camera,renderTime);
 this.healthBar?.update(this.camera,dt);
 }
 render(){
+const bg=this.atmosphere?.skyColor||this.fixedBackgroundColor;
+this.scene.background.copy(bg);this.renderer.setClearColor(bg,1);
 this.renderer.render(this.scene,this.camera);
 this.atmosphere?.render(this.renderer,this.scene,this.camera);
 }
@@ -1049,7 +1049,7 @@ paperTerrain:this.paperTerrainRenderer?.snapshot?.()||null,
 voxelTerrain:this.terrainRenderer.stats(),
 water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
 atmosphere:this.atmosphere?.stats?.()||null,
-lighting:{mode:'soft-cardstock+atmosphere',contactShadow:'soft-worldspace-player-shadow',backgroundMode:'graded-paper-sky',backgroundColor:'dynamic',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+lighting:{mode:'soft-cardstock+atmosphere',contactShadow:'soft-worldspace-player-shadow',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
 cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.15,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
