@@ -47,6 +47,7 @@ jobs:
         run: |
           node --check src/game.js
           node --check src/engine3d/World3DEngine.js
+          node --check src/engine3d/PaperTerrainRenderer.js
           node --check src/renderers/three-world-renderer.mjs
           node --check src/terrain/terrain-runtime.js
           node --check src/terrain/voxel-block-mesh.js
@@ -77,3 +78,10 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/three-engine-smoke.mjs
+      - name: Upload Paper Terrain A/B framebuffer
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-terrain-phase1-ab
+          path: artifacts/
+          if-no-files-found: warn
