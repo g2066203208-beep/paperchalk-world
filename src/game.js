@@ -1460,9 +1460,6 @@ updateDebugStatus();
 debugPanel.querySelectorAll('[data-paper-setting]').forEach(input=>{
 input.addEventListener('input',()=>window.Paperchalk3D?.configurePaperTerrain?.({[input.dataset.paperSetting]:Number(input.value)}));
 });
-debugPanel.querySelectorAll('[data-atmosphere-setting]').forEach(input=>{
-input.addEventListener('input',()=>window.Paperchalk3D?.configureAtmosphere?.({[input.dataset.atmosphereSetting]:Number(input.value)}));
-});
 debugPanel.querySelectorAll('[data-atmos-setting]').forEach(input=>{
 input.addEventListener('input',()=>window.Paperchalk3D?.configureAtmosphere?.({[input.dataset.atmosSetting]:Number(input.value)}));
 });
