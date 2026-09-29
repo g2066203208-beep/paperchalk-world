@@ -267,7 +267,7 @@ export class PaperTerrainRenderer{
           const outer=points(y,bevelBottom,offset);
           const inner=points(y,y,0);
           // Connect the exact top contour to the slightly proud cardboard edge.
-          const a=inner[0],b=inner[1],c=outer[1],d=outer[0];
+          const a=inner[0],b=inner[1],c=outer[2],d=outer[3];
           const bn=normalized(dx*bevelHeight,offset,dz*bevelHeight);
           addQuad(data,a,b,c,d,bn,this._topColor(desc.tile),2);data.bevelQuads++;
           if(bevelBottom>bandBottom+.001){
