@@ -50,6 +50,7 @@ jobs:
           node --check src/engine3d/PaperTerrainRenderer.js
           node --check src/engine3d/PaperMaterial.js
           node --check src/engine3d/AtmospherePass.js
+          node --check src/engine3d/AtmospherePass.js
           node --check src/renderers/three-world-renderer.mjs
           node --check src/terrain/terrain-runtime.js
           node --check src/terrain/voxel-block-mesh.js
