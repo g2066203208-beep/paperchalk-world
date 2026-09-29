@@ -39,11 +39,16 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
+  assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true,'uploaded grass reference texture not active '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassReferenceAsset==='assets/materials/grass-reference.webp','wrong grass reference asset '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'grass reference image did not finish loading '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassReferenceSize?.[0]===512&&initial.paperTerrain?.paperMaterial?.grassReferenceSize?.[1]===512,'grass reference runtime texture is not 512x512 '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.samples===17,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.jitteredRaymarch===true&&initial.atmosphere?.minecraftShaderInspired===true,'Minecraft-style volumetric integration missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.dynamicNightSky===true&&initial.atmosphere?.nightFillDecoupled===true,'night sky/fill separation missing '+JSON.stringify(initial.atmosphere));
   assert((initial.atmosphere?.mieAnisotropy||0)>.6,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
@@ -113,15 +118,27 @@ try{
   assert((liveAtmosphere?.currentStrength||0)>.01&&(liveAtmosphere?.renders||0)>0,'world-space volumetric pass did not render '+JSON.stringify(liveAtmosphere));
   await page.screenshot({path:'artifacts/atmosphere-volumetric-on.png'});
 
+  const eveningSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 1136'));
+  assert(String(eveningSet).includes('18:56'),'18:56 debug time failed '+String(eveningSet));
+  await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({yaw:.72,pitch:.18,distance:16,height:1.1}));
+  await page.waitForTimeout(850);
+  const evening=await page.evaluate(()=>window.Paperchalk3D.stats);
+  assert((evening.lighting?.skyFillIntensity||0)>1.0,'18:56 sky fill too dark '+JSON.stringify(evening.lighting));
+  assert((evening.lighting?.ambientIntensity||0)>.22,'18:56 ambient floor too dark '+JSON.stringify(evening.lighting));
+  assert((evening.lighting?.moonIntensity||0)>.20,'18:56 moon fill too weak '+JSON.stringify(evening.lighting));
+  assert(evening.atmosphere?.dynamicNightSky===true&&evening.atmosphere?.nightFillDecoupled===true,'18:56 dynamic sky missing '+JSON.stringify(evening.atmosphere));
+  await page.screenshot({path:'artifacts/night-1856-grass-reference.png'});
+
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
   const materialBytes=fs.statSync('artifacts/paper-material-v3-reference-closeup.png').size;
   const raysOffBytes=fs.statSync('artifacts/atmosphere-volumetric-off.png').size;
   const raysOnBytes=fs.statSync('artifacts/atmosphere-volumetric-on.png').size;
-  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
+  const nightBytes=fs.statSync('artifacts/night-1856-grass-reference.png').size;
+  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000&&nightBytes>10000,'paper/atmosphere framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   assert(raysOffBytes!==raysOnBytes,'volumetric on/off framebuffers are byte-identical');
-  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,tuned},null,2));
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,nightBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,eveningLighting:evening.lighting,tuned},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}

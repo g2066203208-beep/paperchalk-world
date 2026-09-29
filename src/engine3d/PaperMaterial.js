@@ -140,6 +140,22 @@ export function createPaperMaterialSet(THREE,settings){
     top:deriveSet(THREE,{size:resolution,seed:0x31f2a7,side:false}),
     side:deriveSet(THREE,{size:resolution,seed:0xa9417d,side:true})
   };
+  const grassFallback=new THREE.DataTexture(new Uint8Array([174,196,112,255]),1,1,THREE.RGBAFormat,THREE.UnsignedByteType);
+  grassFallback.name='grass-reference-fallback';grassFallback.colorSpace=THREE.SRGBColorSpace;grassFallback.needsUpdate=true;
+  let grassReference=grassFallback,grassLoaded=false,grassReferenceSize=[1,1],grassMaterial=null;
+  new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-ref-r3',source=>{
+    const canvas=document.createElement('canvas');canvas.width=canvas.height=512;
+    const ctx=canvas.getContext('2d');ctx.drawImage(source.image,0,0,512,512);
+    const tex=new THREE.CanvasTexture(canvas);
+    tex.name='user-grass-reference-512';tex.colorSpace=THREE.SRGBColorSpace;
+    tex.wrapS=tex.wrapT=THREE.MirroredRepeatWrapping;
+    tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
+    tex.generateMipmaps=true;tex.anisotropy=4;tex.needsUpdate=true;
+    tex.repeat.set(.16,.16);
+    grassReference=tex;grassLoaded=true;grassReferenceSize=[512,512];
+    if(grassMaterial){grassMaterial.map=tex;grassMaterial.needsUpdate=true}
+    source.dispose();
+  });
 
   const make=({side=false,bevel=false}={})=>{
     const source=side?sets.side:sets.top;
@@ -204,6 +220,14 @@ export function createPaperMaterialSet(THREE,settings){
   };
 
   const materials=[make(),make({side:true}),make({bevel:true})];
+  grassMaterial=new THREE.MeshPhysicalMaterial({
+    map:grassReference,normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
+    normalScale:new THREE.Vector2(.28,.28),roughness:.98,metalness:0,side:THREE.DoubleSide,
+    specularIntensity:.09,ior:1.34,sheen:.075,sheenRoughness:.97,
+    sheenColor:new THREE.Color(0xe9efbd)
+  });
+  grassMaterial.name='grass-reference-paper-top';grassMaterial.userData.paperRole='grass-top';
+  materials.push(grassMaterial);
   const sync=next=>{
     const micro=clamp(Number(next.microNormalStrength)||.34,.08,.85);
     const rough=clamp(Number(next.roughnessVariation)||.035,0,.10);
@@ -218,6 +242,8 @@ export function createPaperMaterialSet(THREE,settings){
       mat.sheenRoughness=.96;
       mat.specularIntensity=sideRole?.08:.11;
     }
+    grassMaterial.normalScale.setScalar(micro*.82);
+    grassMaterial.roughness=clamp(.985-rough*.16,.95,.995);
   };
   sync(settings);
 
@@ -228,10 +254,14 @@ export function createPaperMaterialSet(THREE,settings){
     visualPriority:['pulp-albedo','contact-shadow','cut-edge-fibre','micro-normal'],
     diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
-    seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
+    userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
+    grassReferenceLoaded:grassLoaded,grassReferenceSize,grassPowerOfTwoRuntime:true,
+    grassMaterialGroup:true,grassWorldScale:.115,seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
     for(const m of materials)m.dispose();
+    if(grassReference!==grassFallback)grassReference.dispose();
+    grassFallback.dispose();
     for(const set of Object.values(sets)){set.albedo.dispose();set.normal.dispose();set.roughness.dispose()}
   };
   return {sets,materials,sync,stats,dispose};

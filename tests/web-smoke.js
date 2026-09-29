@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r5'),'build key missing');
+assert(html.includes('paper-r7'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -70,7 +70,7 @@ assert(engine.includes('new PaperTerrainRenderer'),'paper terrain renderer integ
 assert(engine.includes("terrainBlockGeometry:this.paperStyle.enabled?'merged extruded cardboard slabs'"),'paper terrain stats mode missing');
 assert(renderer.includes('setPaperStyle')&&renderer.includes('configurePaperTerrain'),'paper terrain runtime controls missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime control missing');
-assert(engine.includes("from './AtmospherePass.js?v=atmos-r2'"),'AtmospherePass integration missing');
+assert(engine.includes("from './AtmospherePass.js?v=atmos-r3'"),'AtmospherePass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
 assert(atmos.includes('for(int i=0;i<20;i++)'),'bounded volumetric raymarch loop missing');
 assert(atmos.includes('scene.overrideMaterial=this.depthMaterial'),'depth occlusion pass missing');
@@ -108,6 +108,11 @@ assert(paperMaterial.includes('diffusePulpDominant:true'),'paper albedo/pulp mus
 assert(paperMaterial.includes('weakMicroNormal:true'),'paper normal detail must remain weak');
 assert(paperMaterial.includes('physicalFibreSheen:true'),'paper fibre sheen missing');
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
+assert(paperMaterial.includes('userGrassReference:true'),'uploaded grass reference texture is not wired');
+assert(paperMaterial.includes("grassReferenceAsset:'assets/materials/grass-reference.webp'"),'grass reference asset path missing');
+assert(paperMaterial.includes('grassPowerOfTwoRuntime:true'),'grass texture must be promoted to a power-of-two runtime texture');
+assert(paperMaterial.includes("grassFallback.name='grass-reference-fallback'"),'nonblack grass loading fallback missing');
+assert(fs.existsSync('assets/materials/grass-reference.webp'),'grass reference texture file missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
 assert(paperMaterial.includes('perFrameHeavyNoise:false'),'paper material must not run heavy noise per frame');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
