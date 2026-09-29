@@ -120,8 +120,6 @@ export class PaperTerrainRenderer{
 
   _buildChunk(cx,cz){
     const t0=performance.now(),THREE=this.THREE,n=this.settings.chunkCells,s=this.terrain.tileSize;
-    // One-cell halo is sampled once. All contour/side tests below are pure
-    // array lookups instead of repeatedly re-running terrain height queries.
     const h=n+2,halo=new Array(h*h);
     for(let z=-1;z<=n;z++)for(let x=-1;x<=n;x++)halo[(z+1)*h+(x+1)]=this._columnTop(cx*n+x,cz*n+z);
     const getHalo=(x,z)=>halo[(z+1)*h+(x+1)];
@@ -147,8 +145,6 @@ export class PaperTerrainRenderer{
       if(isBoundaryCell(x,z)){boundary[z*n+x]=1;data.boundaryCells++}
     }
     const cornerExposed=(cell,vx,vz)=>{
-      // Four cells touch a grid vertex. If any one falls below this plateau,
-      // that vertex belongs to the hand-cut outer contour and may move.
       for(const oz of [-1,0])for(const ox of [-1,0]){
         const c=getHalo(vx+ox,vz+oz);
         if(lowerThan(cell,c))return true;
@@ -169,8 +165,6 @@ export class PaperTerrainRenderer{
       return [px+jx,cell.y+jy,pz+jz];
     };
 
-    // Interior cells are still greedily merged. Boundary cells are deliberately
-    // excluded and rebuilt as low-poly paper cells using a 3x3 neighbourhood.
     for(let z=0;z<n;z++)for(let x=0;x<n;x++){
       const idx=z*n+x;if(used[idx]||boundary[idx])continue;
       const cell=getLocal(x,z);if(!cell)continue;
@@ -194,8 +188,6 @@ export class PaperTerrainRenderer{
       data.topRects++;
     }
 
-    // Low-poly outer ring. Four contour corners are deterministic world-space
-    // points, so adjacent edge cells share exactly the same deformed vertex.
     for(let z=0;z<n;z++)for(let x=0;x<n;x++){
       if(!boundary[z*n+x])continue;
       const cell=getLocal(x,z),col=this._topColor(cell.tile);
@@ -210,10 +202,8 @@ export class PaperTerrainRenderer{
 
     const bevelWidth=clamp(Number(this.settings.bevelWidth)||.045,.006,.14)*s;
     const bevelHeight=clamp(Number(this.settings.bevelHeight)||.055,.008,.16)*s;
-    // paperThickness controls the visible stacked-card edge band spacing.
     const bandHeight=clamp(Number(this.settings.paperThickness)||.30,.08,.55)*s;
     const worldCell=(lx,lz)=>lx>=-1&&lx<=n&&lz>=-1&&lz<=n?getHalo(lx,lz):this._columnTop(cx*n+lx,cz*n+lz);
-    const sameEdge=(a,b)=>!!a&&!!b&&a.tile===b.tile&&near(a.top,b.top)&&near(a.bottom,b.bottom);
 
     const edgeDesc=(x,z,dx,dz)=>{
       const cell=getLocal(x,z);if(!cell)return null;
@@ -238,8 +228,7 @@ export class PaperTerrainRenderer{
         const make=(vx,vz,yy)=>{
           if(topBand){
             const p=topCorner(vx,vz);
-            const scale=(top-yy)/Math.max(.0001,top-bottom);
-            return [p[0]+dx*offset,p[1]-(top-yy),p[2]+dz*offset];
+              return [p[0]+dx*offset,p[1]-(top-yy),p[2]+dz*offset];
           }
           const wx=vx*s+dx*offset,wz=vz*s+dz*offset;
           return [wx,yy,wz];
@@ -303,8 +292,6 @@ export class PaperTerrainRenderer{
       }
     };
 
-    // Merge contiguous exposed edges before extrusion. This removes the blue
-    // one-pixel cracks that appear when every gameplay cell owns a side quad.
     for(let x=0;x<n;x++){
       for(const dx of [-1,1]){
         let z=0;
