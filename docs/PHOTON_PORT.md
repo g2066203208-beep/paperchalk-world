@@ -34,7 +34,8 @@ Implemented on `feat/photon-full-port-r1`:
 - **Ambient / reflections**
   - GTAO-style depth reconstructed ambient occlusion;
   - depth-aware bilateral AO filtering;
-  - screen-space water reflections.
+  - screen-space water reflections;
+  - material-masked screen-space reflections driven by Three.js roughness/metalness, with paper surfaces naturally suppressed by high roughness.
 - **Camera / image quality**
   - bloom extraction + separable blur;
   - depth of field;
@@ -48,6 +49,7 @@ Implemented on `feat/photon-full-port-r1`:
   - offscreen scene/depth pipeline;
   - subsampled AO and bloom buffers;
   - adjustable TAAU render scale;
+  - in-game Photon debug controls for TAAU scale, GTAO, bloom, PCSS softness, cloud coverage and procedural weather strength;
   - rendering systems split into independent modules to keep `World3DEngine.js` inside its original 56 KB architecture budget.
 
 ## Photon-to-Paperchalk translation notes
@@ -74,10 +76,9 @@ The branch has static architecture and size-budget assertions for every Photon m
 
 The remaining items are integration/tuning parity rather than missing headline Photon feature families:
 
-- richer per-material SSR masks beyond water;
-- additional cloud morphology/tuning to more closely match Photon screenshots;
+- additional cloud morphology/tuning to more closely match individual Photon cloud presets;
 - weather state driven by a future Paperchalk gameplay weather system rather than only renderer-side procedural fronts;
-- exposing the full Photon settings matrix in the in-game debug UI;
+- expanding the debug controls to expose every low-level tuning constant rather than the current high-value subset;
 - device profiling/tuning of Ultra/Balanced/Mobile presets.
 
 These are intentionally kept separate from Minecraft-only labPBR, Iris, Distant Horizons and Voxy compatibility code.
