@@ -25,7 +25,7 @@ assert.match(terrain,/generatorVersion=5/);
 assert.match(game,/PaperchalkBiomes/);
 
 assert.match(water,/connected-body-priority-flood-v5/);
-assert.match(water,/full-x-z-with-y-gravity/);
+assert.match(water,/single-stage-depth-with-y-gravity/);
 assert.match(water,/exactHydrostatic:true/);
 assert.match(water,/surfaceCache/);
 assert.match(water,/boundsCache/);
