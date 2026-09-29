@@ -6,7 +6,7 @@ export class PhotonSkyWeatherPass{
   constructor(THREE,{renderer,camera,mobileLike=false}={}){
     this.THREE=THREE;this.renderer=renderer;this.camera=camera;this.mobileLike=!!mobileLike;
     this.settings={
-      enabled:true,autoWeather:true,weather:0.18,cloudCoverage:.48,cloudDensity:this.mobileLike?.56:.72,
+      enabled:true,autoWeather:true,weather:0.12,cloudCoverage:.34,cloudDensity:this.mobileLike?.48:.56,
       lowCloudSteps:this.mobileLike?9:17,cloudShadowSteps:this.mobileLike?2:4,
       cirrus:true,altocumulus:true,noctilucent:true,cloudShadows:true,
       rain:true,aurora:true,rainbow:true,lightning:true
@@ -43,7 +43,7 @@ float lowCloud(vec3 p,float weather){
   float h=smoothstep(13.0,17.2,p.y)*(1.0-smoothstep(27.0,31.5,p.y));
   vec3 wind=vec3(uTime*.0065,0.0,uTime*.0022);
   float macro=fbm3(p*.052+wind),detail=fbm3(p*.137+wind*1.7+31.0);
-  float threshold=mix(.75,.36,clamp(uCoverage+weather*.22,0.0,1.0));
+  float threshold=mix(.82,.46,clamp(uCoverage+weather*.14,0.0,1.0));
   return max(0.0,macro+detail*.22-threshold)*uDensity*2.7*h;
 }
 float cloudLight(vec3 p){
@@ -61,9 +61,9 @@ vec4 raymarchLowClouds(vec3 ro,vec3 rd){
     vec3 p=ro+rd*t;float den=lowCloud(p,uWeather);
     if(den>.002){
       float sh=cloudLight(p),mu=max(0.0,dot(rd,normalize(uSunDir))),phase=.38+.62*pow(mu,6.0);
-      vec3 warm=mix(vec3(.34,.39,.47),uSunColor,.72),storm=mix(warm,vec3(.16,.19,.25),uWeather*.78);
+      vec3 warm=mix(vec3(.58,.63,.70),uSunColor,.62),storm=mix(warm,vec3(.28,.32,.39),uWeather*.48);
       float silver=pow(max(0.0,dot(-rd,normalize(uSunDir))),10.0)*.32;
-      vec3 light=storm*(.25+.75*sh)*phase+uSunColor*silver*sh;
+      vec3 light=storm*(.48+.52*sh)*phase+uSunColor*silver*sh;
       float a=1.0-exp(-den*dt*.74);col+=trans*light*a;trans*=1.0-a;
     }t+=dt;
   }
@@ -75,13 +75,13 @@ vec4 highClouds(vec3 rd){
   float cir=fbm2(p*1.15);cir=smoothstep(.58,.78,cir+noise2(p*4.1)*.18)*uCirrus;
   vec2 q=p*.72+vec2(19.2,-4.4);float cells=fbm2(q*3.0);float alto=smoothstep(.57,.72,cells)*smoothstep(.22,.65,noise2(q*.68))*uAlto;
   float night=clamp(1.0-uDaylight-uTwilight*.35,0.0,1.0);float nlc=smoothstep(.62,.82,fbm2(p*2.6+43.0))*uNoct*night;
-  float a=clamp(cir*.28+alto*.24+nlc*.16,0.0,.48);
+  float a=clamp(cir*.18+alto*.16+nlc*.13,0.0,.34);
   vec3 dayCol=mix(vec3(.72,.78,.85),uSunColor,.38);vec3 nightCol=vec3(.28,.40,.65);
   vec3 c=mix(dayCol,nightCol,night*.75)+vec3(.16,.25,.52)*nlc;
   return vec4(c*a,a);
 }
 float cloudShadowAt(vec3 p){
-  vec2 q=(p.xz+vec2(uTime*.39,uTime*.13))*.027;float n=fbm2(q);float cover=smoothstep(mix(.72,.44,uCoverage+uWeather*.18),.82,n+.17*noise2(q*3.2));return mix(1.0,.58,cover*(.45+.55*uWeather))*uCloudShadows+(1.0-uCloudShadows);
+  vec2 q=(p.xz+vec2(uTime*.39,uTime*.13))*.027;float n=fbm2(q);float cover=smoothstep(mix(.72,.44,uCoverage+uWeather*.18),.82,n+.17*noise2(q*3.2));return mix(1.0,.76,cover*(.36+.50*uWeather))*uCloudShadows+(1.0-uCloudShadows);
 }
 vec3 aurora(vec3 rd,float night){
   if(rd.y<=.04)return vec3(0.0);
@@ -100,7 +100,7 @@ vec3 rainbow(vec3 rd,float weather){
   return spectral*(primary+secondary)*rainAmt*sunVisible*.48*uRainbow;
 }
 vec3 rainStreaks(vec2 uv,float weather){
-  if(weather<.52)return vec3(0.0);vec2 p=uv*uResolution/vec2(8.0,18.0);p.x+=p.y*.22;float id=floor(p.x);float y=fract(p.y+uTime*(1.8+hash11(id)*1.5)+hash11(id*7.31));float x=abs(fract(p.x)-.5);float streak=smoothstep(.08,.0,x)*smoothstep(.62,.08,y)*smoothstep(.0,.22,y);return vec3(.62,.72,.82)*streak*(weather-.5)*.24*uRain;
+  if(weather<.66)return vec3(0.0);vec2 p=uv*uResolution/vec2(8.0,18.0);p.x+=p.y*.22;float id=floor(p.x);float y=fract(p.y+uTime*(1.8+hash11(id)*1.5)+hash11(id*7.31));float x=abs(fract(p.x)-.5);float streak=smoothstep(.08,.0,x)*smoothstep(.62,.08,y)*smoothstep(.0,.22,y);return vec3(.62,.72,.82)*streak*(weather-.64)*.20*uRain;
 }
 void main(){
   vec3 base=texture2D(tScene,vUv).rgb;float depth=texture2D(tDepth,vUv).x;
@@ -120,8 +120,8 @@ void main(){
   configure(patch={}){
     Object.assign(this.settings,patch||{});
     this.settings.weather=clamp(Number(this.settings.weather)||0,0,1);
-    this.settings.cloudCoverage=clamp(Number(this.settings.cloudCoverage)||.48,.05,.95);
-    this.settings.cloudDensity=clamp(Number(this.settings.cloudDensity)||.7,.05,2);
+    this.settings.cloudCoverage=clamp(Number(this.settings.cloudCoverage)||.34,.05,.95);
+    this.settings.cloudDensity=clamp(Number(this.settings.cloudDensity)||.56,.05,2);
     this.settings.lowCloudSteps=Math.round(clamp(Number(this.settings.lowCloudSteps)||12,6,24));
     this.settings.cloudShadowSteps=Math.round(clamp(Number(this.settings.cloudShadowSteps)||3,1,4));
     return this.stats();
@@ -130,7 +130,7 @@ void main(){
   _weather(time,daylight){
     const t=Number(time)||0;if(!this.settings.autoWeather)return this.settings.weather;
     const slow=.5+.5*Math.sin(t*.0071+1.7),front=.5+.5*Math.sin(t*.0193-2.4),noise=.5+.5*Math.sin(t*.0037+Math.sin(t*.00091)*4.0);
-    return clamp(this.settings.weather*.55+slow*.22+front*.14+noise*.12-(daylight>.65?.03:0),0,1);
+    return clamp(this.settings.weather*.55+slow*.10+front*.07+noise*.06-(daylight>.65?.025:0),0,1);
   }
   render({sceneTexture,sceneDepth,atmosphere=null}={}){
     if(!this.settings.enabled||!sceneTexture||!sceneDepth)return sceneTexture;
