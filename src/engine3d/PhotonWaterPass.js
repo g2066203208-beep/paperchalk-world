@@ -4,7 +4,7 @@ function target(THREE,depth=false){const t=new THREE.WebGLRenderTarget(1,1,{minF
 export class PhotonWaterPass{
  constructor(THREE,{renderer,scene,camera,mobileLike=false}={}){
   this.THREE=THREE;this.renderer=renderer;this.scene=scene;this.camera=camera;this.mobileLike=!!mobileLike;
-  this.settings={enabled:true,ssr:true,refraction:true,waves:true,steps:this.mobileLike?10:18,thickness:.018,reflectionStrength:.58,refractionStrength:.018,roughness:.16};
+  this.settings={enabled:true,ssr:true,refraction:true,waves:true,steps:this.mobileLike?8:12,thickness:.018,reflectionStrength:.58,refractionStrength:.018,roughness:.16};
   this.size={w:1,h:1};this.maskTarget=target(THREE,true);this.outputTarget=target(THREE,false);this.fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);this.geometry=new THREE.PlaneGeometry(2,2);
   this.maskMaterial=new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide,depthWrite:true,depthTest:true,toneMapped:false});
   this.invViewProj=new THREE.Matrix4();this.viewProj=new THREE.Matrix4();
