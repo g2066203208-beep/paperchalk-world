@@ -27,6 +27,9 @@ try{
 
   assert(await page.locator('#terrainDigBtn').count()===1&&await page.locator('#terrainPlaceBtn').count()===1,'dig/place controls missing');
   assert(await page.locator('#hungerFill').count()===1&&await page.locator('#staminaFill').count()===1,'survival HUD missing');
+  assert(await page.locator('#fishingStatusHud').count()===1,'fishing bite HUD missing');
+  const rod=await page.evaluate(()=>window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null);
+  assert(rod?.action==='fishing-rod','starter fishing rod missing');
   const touchControlsDisplay=await page.locator('.combat-controls').evaluate(el=>getComputedStyle(el).display);
   assert(touchControlsDisplay==='none','desktop must hide touch combat controls, got '+touchControlsDisplay);
   await page.evaluate(()=>window.PaperchalkTerrainActions.setTool('place'));
@@ -72,14 +75,13 @@ try{
   assert((await page.evaluate(()=>window.PaperchalkHealth.state.hp))===9,'debug health control failed');
 
   const stageDefault=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageDefault.enabled===false,'3D voxel world must default to free orbit camera '+JSON.stringify(stageDefault));
+  assert(stageDefault.enabled===true&&stageDefault.axis==='z','big voxel world must default to side-on paper stage '+JSON.stringify(stageDefault));
   await page.locator('[data-debug-action="stageview"]').click();
-  const stageOn=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageOn.enabled===true,'debug stage-view toggle did not lock camera '+JSON.stringify(stageOn));
-  await page.locator('[data-debug-action="stageaxis"]').click();
-  const stageX=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
-  assert(stageX.axis==='x','debug stage-axis toggle did not switch to X '+JSON.stringify(stageX));
+  const stageOff=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageOff.enabled===false,'debug stage-view toggle did not unlock camera '+JSON.stringify(stageOff));
   await page.locator('[data-debug-action="stageview"]').click();
+  const stageRestored=await page.evaluate(()=>window.Paperchalk3D.stats.stageView);
+  assert(stageRestored.enabled===true&&stageRestored.axis==='z','stage view did not restore '+JSON.stringify(stageRestored));
   await page.locator('#debugCloseBtn').click();
 
   const handled=await page.evaluate(()=>window.PaperchalkHandleBack());
