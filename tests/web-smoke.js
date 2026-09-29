@@ -1,9 +1,9 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r1'),'build key missing');
+assert(html.includes('paper-r2'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
@@ -71,6 +71,14 @@ assert(paper.includes('bevelQuads'),'paper bevel geometry missing');
 assert(paper.includes('renderGridExposed:false'),'render grid must be hidden');
 assert(paper.includes('continuousMergedEdges:true'),'paper side edges must be merged');
 assert(paper.includes('stackedCardboardBands:true'),'stacked cardboard edge bands missing');
+assert(paper.includes('paperPbrV2:true'),'PaperMaterial v2 integration missing');
+assert(paperMaterial.includes("mode:'procedural-paper-pbr-v2'"),'procedural paper PBR v2 missing');
+assert(paperMaterial.includes('normalMap:source.normal'),'paper micro-normal map missing');
+assert(paperMaterial.includes('roughnessMap:source.roughness'),'paper roughness map missing');
+assert(paperMaterial.includes('directionalCelluloseFibres:true'),'directional cellulose fibres missing');
+assert(paperMaterial.includes('correlatedNormalRoughness:true'),'normal/roughness correlation missing');
+assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
+assert(paperMaterial.includes('perFrameHeavyNoise:false'),'paper material must not run heavy noise per frame');
 assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing');
 assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
