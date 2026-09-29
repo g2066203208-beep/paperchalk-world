@@ -166,8 +166,12 @@ export class PaperTerrainRenderer{
 
   _buildChunk(cx,cz){
     const t0=performance.now(),THREE=this.THREE,n=this.settings.chunkCells,s=this.terrain.tileSize;
-    const cells=new Array(n*n),getLocal=(x,z)=>cells[z*n+x];
-    for(let z=0;z<n;z++)for(let x=0;x<n;x++)cells[z*n+x]=this._columnTop(cx*n+x,cz*n+z);
+    // One-cell halo is sampled once. All contour/side tests below are pure
+    // array lookups instead of repeatedly re-running terrain height queries.
+    const h=n+2,halo=new Array(h*h);
+    for(let z=-1;z<=n;z++)for(let x=-1;x<=n;x++)halo[(z+1)*h+(x+1)]=this._columnTop(cx*n+x,cz*n+z);
+    const getHalo=(x,z)=>halo[(z+1)*h+(x+1)];
+    const getLocal=(x,z)=>getHalo(x,z);
 
     const data={
       positions:[],normals:[],colors:[],indices:[[],[],[]],
@@ -205,7 +209,7 @@ export class PaperTerrainRenderer{
     const bevelHeight=clamp(Number(this.settings.bevelHeight)||.055,.008,.16)*s;
     // paperThickness controls the visible stacked-card edge band spacing.
     const bandHeight=clamp(Number(this.settings.paperThickness)||.30,.08,.55)*s;
-    const worldCell=(lx,lz)=>this._columnTop(cx*n+lx,cz*n+lz);
+    const worldCell=(lx,lz)=>lx>=-1&&lx<=n&&lz>=-1&&lz<=n?getHalo(lx,lz):this._columnTop(cx*n+lx,cz*n+lz);
     const sameEdge=(a,b)=>!!a&&!!b&&a.tile===b.tile&&near(a.top,b.top)&&near(a.bottom,b.bottom);
 
     const edgeDesc=(x,z,dx,dz)=>{
@@ -397,7 +401,7 @@ export class PaperTerrainRenderer{
       paperLayerHeight:this.settings.paperLayerHeight,paperThickness:this.settings.paperThickness,
       bevelWidth:this.settings.bevelWidth,fiberStrength:this.settings.fiberStrength,
       sideDarkness:this.settings.sideDarkness,
-      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true
+      renderGridExposed:false,continuousMergedEdges:true,stackedCardboardBands:true,haloCached:true
     };
   }
   dispose(){
