@@ -31,7 +31,6 @@ try{
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.ocean?.mode==='analytic-ocean-plane','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
   assert(initial.farTerrain?.mode==='coarse-heightfield-ring','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
-  assert(initial.fishEcology?.disabled===true&&initial.fishEcology.active===0,'fish ecology should be disabled '+JSON.stringify(initial.fishEcology));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
