@@ -649,9 +649,9 @@ paperLayerHeight:.5,
 paperThickness:.30,
 bevelWidth:.045,
 bevelHeight:.055,
-fiberStrength:.035,
-printNoiseStrength:.025,
-sideDarkness:.78
+fiberStrength:.050,
+printNoiseStrength:.040,
+sideDarkness:.92
 });
 this.terrainRenderer.root.visible=false;
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
