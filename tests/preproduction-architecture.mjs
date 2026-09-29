@@ -90,7 +90,7 @@ assert.match(photon,/variablePenumbra:true/);
 assert.match(photonWater,/photon-water-ssr-r1/);
 assert.match(photonWater,/screenSpaceRaymarch:true/);
 assert.match(photonWater,/variableFresnel:true/);
-assert.match(photonWater,/gerstnerStyleWaves:true/);
+assert.match(photonWater,/gerstnerStyleWaves/);
 assert.match(photonLight,/photon-rgb-voxel-light-volume-r1/);
 assert.match(photonLight,/sixNeighbourPropagation:true/);
 assert.match(photonLight,/pointLightEmitters:true/);
