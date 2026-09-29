@@ -102,15 +102,15 @@ try{
   assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:-.17,distance:12,height:.45}));
   await page.waitForTimeout(2200);
-  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:false,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
-  assert(atmosphereOff?.godRays===false,'god rays did not disable '+JSON.stringify(atmosphereOff));
+  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.88,anisotropy:.72,fogDensity:.008}));
+  assert(atmosphereOff?.volumetric===false,'volumetric atmosphere did not disable '+JSON.stringify(atmosphereOff));
   await page.waitForTimeout(180);
   await page.screenshot({path:'artifacts/atmosphere-volumetric-off.png'});
-  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({godRays:true,rayIntensity:.92,rayDensity:.93,fogDensity:.0085}));
-  assert(atmosphereOn?.godRays===true,'god rays did not enable '+JSON.stringify(atmosphereOn));
+  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:true,intensity:.88,anisotropy:.72,fogDensity:.008}));
+  assert(atmosphereOn?.volumetric===true,'volumetric atmosphere did not enable '+JSON.stringify(atmosphereOn));
   await page.waitForFunction(()=>window.Paperchalk3D.stats.atmosphere?.visibleLastFrame===true,{timeout:3000,polling:'raf'});
   const liveAtmosphere=await page.evaluate(()=>({...window.Paperchalk3D.stats.atmosphere}));
-  assert((liveAtmosphere?.currentStrength||0)>.01&&(liveAtmosphere?.renders||0)>0,'god-ray pass did not render '+JSON.stringify(liveAtmosphere));
+  assert((liveAtmosphere?.currentStrength||0)>.01&&(liveAtmosphere?.renders||0)>0,'volumetric pass did not render '+JSON.stringify(liveAtmosphere));
   await page.screenshot({path:'artifacts/atmosphere-volumetric-on.png'});
 
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
