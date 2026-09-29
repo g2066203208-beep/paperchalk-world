@@ -922,7 +922,7 @@ skyFill.intensity=outdoor;
 }
 if(ambient){
 ambient.color.set(daylight>.08?0xa9a59d:0xa9bad8);
-ambient.intensity=(this.paperStyle?.enabled!==false?.19:.15)+daylight*.06+twilight*.08+night*.11;
+ambient.intensity=(this.paperStyle?.enabled!==false ? .19 : .15)+daylight*.06+twilight*.08+night*.11;
 }
 this.renderer.toneMappingExposure=1.08+twilight*.07+night*.10;
 if(moon){
