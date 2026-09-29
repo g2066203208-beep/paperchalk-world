@@ -46,6 +46,7 @@ try{
   assert(initial.atmosphere?.jitteredRaymarch===true&&initial.atmosphere?.minecraftShaderInspired===true,'Minecraft-style volumetric integration missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.stableDither===true&&initial.atmosphere?.nonlinearRaySteps===true,'stable nonlinear volumetric sampling missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.filteredShadowSamples===3,'filtered volumetric shadow samples missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.directionalScatterOnly===true&&initial.atmosphere?.baseFogSeparated===true,'volumetric shafts must not wash out base paper colours '+JSON.stringify(initial.atmosphere));
   assert((initial.atmosphere?.mieAnisotropy||0)>.5,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
@@ -103,11 +104,11 @@ try{
   const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
   assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({yaw:-2.05,pitch:.34,distance:20,height:3.4}));
-  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.88,anisotropy:.72,fogDensity:.008}));
+  const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.52,anisotropy:.64,fogDensity:.005}));
   assert(atmosphereOff?.volumetric===false,'volumetric atmosphere did not disable '+JSON.stringify(atmosphereOff));
   await page.waitForTimeout(700);
   await page.screenshot({path:'artifacts/atmosphere-volumetric-off.png'});
-  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:true,intensity:.88,anisotropy:.72,fogDensity:.008}));
+  const atmosphereOn=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:true,intensity:.52,anisotropy:.64,fogDensity:.005}));
   assert(atmosphereOn?.volumetric===true,'volumetric atmosphere did not enable '+JSON.stringify(atmosphereOn));
   await page.waitForTimeout(900);
   const liveAtmosphere=await page.evaluate(()=>window.Paperchalk3D.stats.atmosphere);
