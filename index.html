@@ -73,6 +73,7 @@
       <button type="button" data-debug-action="colliders">Collider：关</button>
       <button type="button" data-debug-action="paperstyle">Paper Style：开</button>
       <button type="button" data-debug-action="volumetric">丁达尔：开</button>
+      <button type="button" data-debug-action="photon">Photon：开</button>
       <button type="button" data-debug-action="stageview">纸片舞台视角：开</button>
       <button type="button" data-debug-action="stageaxis">舞台观察轴：Z</button>
     </div>
@@ -92,6 +93,14 @@
       <label>丁达尔强度 <input data-atmos-setting="intensity" type="range" min="0" max="1.0" step="0.025" value="0.30"></label>
       <label>前向散射 <input data-atmos-setting="anisotropy" type="range" min="0" max="0.86" step="0.02" value="0.72"></label>
       <label>空气雾 <input data-atmos-setting="fogDensity" type="range" min="0" max="0.010" step="0.00025" value="0.0026"></label>
+    </div>
+    <div class="paper-debug-controls photon-debug-controls">
+      <label>TAAU 分辨率 <input data-photon-setting="renderScale" type="range" min="0.50" max="1" step="0.02" value="0.82"></label>
+      <label>GTAO <input data-photon-setting="aoStrength" type="range" min="0" max="1.4" step="0.05" value="0.55"></label>
+      <label>Bloom <input data-photon-setting="bloomStrength" type="range" min="0" max="0.8" step="0.025" value="0.18"></label>
+      <label>太阳软影 <input data-photon-setting="pcssLightSize" type="range" min="0.5" max="6" step="0.25" value="2.8"></label>
+      <label>云量 <input data-photon-setting="cloudCoverage" type="range" min="0.05" max="0.95" step="0.025" value="0.48"></label>
+      <label>天气强度 <input data-photon-weather-setting="weather" type="range" min="0" max="1" step="0.025" value="0.18"></label>
     </div>
     <form id="debugCommandForm" class="debug-command-form">
       <input id="debugCommandInput" type="text" autocomplete="off" spellcheck="false" placeholder="help / tp 0 -8 / terrain / stage off / stats">
