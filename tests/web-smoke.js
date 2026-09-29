@@ -1,10 +1,13 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),water=read('src/terrain/water-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),paperEntity=read('src/entities/PaperSpriteEntity.js'),environment=read('src/engine3d/EnvironmentFX.js'),ocean=read('src/engine3d/OceanRenderer.js'),farTerrain=read('src/engine3d/FarTerrainRenderer.js');
+const html=read('index.html'),css=read('styles/game.css'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),water=read('src/terrain/water-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),paperEntity=read('src/entities/PaperSpriteEntity.js'),environment=read('src/engine3d/EnvironmentFX.js'),ocean=read('src/engine3d/OceanRenderer.js'),farTerrain=read('src/engine3d/FarTerrainRenderer.js');
 
 assert(html.includes('stage-fix-r3'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="staminaFill"'),'survival HUD missing');
+assert(/\.combat-controls\{[\s\S]*?display:none/.test(css),'desktop touch controls should be hidden');
+assert(/@media \(pointer:coarse\)[\s\S]*?\.combat-controls\{display:flex\}/.test(css),'touch controls should return on coarse pointers');
+assert(css.includes('cursor:crosshair'),'desktop terrain cursor missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(!content.includes("'fishing-rod'")&&!content.includes("'paper-carp'"),'fishing/fish content should be absent during foundation phase');
 
