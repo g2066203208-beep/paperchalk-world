@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),paperEntity=read('src/entities/PaperSpriteEntity.js');
 
-assert.match(html,/voxel3d-r45/);
+assert.match(html,/voxel3d-r46/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -58,6 +58,7 @@ assert.match(game,/HUNGER_DRAIN_PER_SECOND/);
 assert.match(game,/PaperchalkHunger/);
 assert.match(game,/PaperchalkStamina/);
 assert.match(game,/STAMINA_MAX=100/);
+assert.match(game,/snapDownToGround\(1\.05\)/);
 assert.match(html,/staminaFill/);
 assert.match(game,/item\.action==='eat'/);
 assert.match(html,/hungerFill/);
