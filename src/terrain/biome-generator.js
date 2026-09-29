@@ -133,9 +133,9 @@ class BiomeLandformGenerator{
     height=clamp(height,-24,56);
 
     const temperatureAdjusted=f.temperature-clamp((height-8)/52,0,.55);
-    const landform=this._selectLandform({...f,height,riverMask,mountainMask,coastMask,cliffMask,plateauMask});
+    let landform=this._selectLandform({...f,height,riverMask,mountainMask,coastMask,cliffMask,plateauMask});
     let biome=this._selectBiome({...f,height,riverMask,mountainMask,coastMask,cliffMask,plateauMask,temperatureAdjusted,landform});
-    if(safeBlend>.62)biome=BIOME.MEADOW;
+    if(safeBlend>.62){biome=BIOME.MEADOW;landform=LANDFORM.PLAIN}
 
     const surfaceKind=
       biome===BIOME.OCEAN||biome===BIOME.BEACH||biome===BIOME.DESERT?'sand':
