@@ -89,6 +89,7 @@ assert(atmos.includes('jitteredRaymarch:true'),'jittered raymarch missing');
 assert(atmos.includes('stableDither:true'),'stable no-TAA dither missing');
 assert(atmos.includes('nonlinearRaySteps:true'),'nonlinear view-ray spacing missing');
 assert(atmos.includes('filteredShadowSamples:3'),'filtered shadow sampling missing');
+assert(atmos.includes('directionalScatterOnly:true')&&atmos.includes('baseFogSeparated:true'),'directional shafts/base haze separation missing');
 assert(atmos.includes('minecraftShaderInspired:true'),'Minecraft shader inspired atmosphere gate missing');
 assert(atmos.includes("new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking"),'packed camera depth prepass missing');
 assert(atmos.includes('uShadowMatrix'),'sun shadow matrix sampling missing');
