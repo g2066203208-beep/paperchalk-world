@@ -4,7 +4,7 @@ const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),water=read('src/terrain/water-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),paperEntity=read('src/entities/PaperSpriteEntity.js'),environment=read('src/engine3d/EnvironmentFX.js'),ocean=read('src/engine3d/OceanRenderer.js'),farTerrain=read('src/engine3d/FarTerrainRenderer.js');
 
 assert(html.includes('world-core-r2'),'build key missing');
-assert(html.includes('id="hungerFill"')&&html.includes('id="staminaFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
+assert(html.includes('id="hungerFill"')&&html.includes('id="staminaFill"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(!content.includes("'fishing-rod'")&&!content.includes("'paper-carp'"),'fishing/fish content should be absent during foundation phase');
 
@@ -42,11 +42,10 @@ assert(game.includes('STAMINA_MAX=100'),'stamina state missing');
 assert(game.includes('snapDownToGround(1.05)'),'voxel ground snap missing');
 assert(game.includes('window.PaperchalkStamina'),'stamina API missing');
 assert(game.includes('save.stamina=stamina.current'),'stamina persistence missing');
-assert(game.includes("item.action==='eat'"),'fish eating missing');
+assert(game.includes("item.action==='eat'"),'food consumption action missing');
 assert(!/PaperchalkFish|PaperchalkFishing|fishing-rod|paper-carp/.test(game),'fish/fishing runtime should be absent');
 assert(game.includes('terrain.water.needsSettle'),'idle water solver optimization missing');
 assert(game.includes('save.hunger=hunger.current'),'hunger persistence missing');
-assert(game.includes('Fishing ecology/rod onboarding is paused'),'starter fishing disabled marker missing');
 
 assert(!engine.includes('class FishSchoolRenderer')&&!engine.includes('class FishingRenderer'),'fish/fishing renderers should be removed');
 assert(engine.includes('flatShading:true'),'flat shading missing');
