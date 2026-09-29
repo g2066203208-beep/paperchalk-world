@@ -26,7 +26,7 @@ try{
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:12000});
 
   assert(await page.locator('#terrainDigBtn').count()===1&&await page.locator('#terrainPlaceBtn').count()===1,'dig/place controls missing');
-  assert(await page.locator('#hungerFill').count()===1&&await page.locator('#fishingStatusHud').count()===1,'survival HUD missing');
+  assert(await page.locator('#hungerFill').count()===1&&await page.locator('#staminaFill').count()===1,'survival HUD missing');
   await page.locator('#terrainPlaceBtn').click();
   assert((await page.evaluate(()=>window.PaperchalkTerrainActions.tool))==='place','place tool did not activate');
   await page.locator('#terrainDigBtn').click();
