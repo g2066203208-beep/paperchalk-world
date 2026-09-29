@@ -33,26 +33,11 @@ assert.match(water,/columnBounds\(gx,gz\)/);
 assert.match(engine,/event-driven-greedy-water-v6/);
 assert.match(engine,/internalFacesCulled:true/);
 
-assert.match(content,/'fishing-rod'/);
-assert.match(content,/'paper-carp'/);
-assert.match(game,/castFishingRod/);
-assert.match(game,/playerWaterContact/);
-assert.match(game,/screenToWaterSurface/);
-assert.match(engine,/screenToWaterSurface/);
-assert.match(engine,/event-driven-greedy-water-v6/);
-assert.match(water,/connected-body-priority-flood-v5/);
-assert.match(terrain,/closed solid terrain volume/);
-assert.match(game,/reelFishingRod/);
-assert.match(game,/fishing\.state==='bite'/);
-assert.match(engine,/class FishingRenderer/);
+assert.doesNotMatch(content,/'fishing-rod'/);
+assert.doesNotMatch(content,/'paper-carp'/);
 assert.match(game,/PaperchalkFishEcology/);
-assert.match(game,/ENABLE_FISH_ECOLOGY=false/);
-assert.match(game,/rebuildFishSpatial/);
-assert.match(game,/acquireFishForBobber/);
-assert.match(engine,/class FishSchoolRenderer/);
+assert.match(game,/enabled:false,active:0/);
 assert.match(engine,/fishEcology:\{active:0,drawCalls:0,disabled:true\}/);
-assert.match(engine,/worldspace-bite-ui/);
-
 assert.match(game,/HUNGER_DRAIN_PER_SECOND/);
 assert.match(game,/PaperchalkHunger/);
 assert.match(game,/PaperchalkStamina/);
@@ -89,8 +74,6 @@ console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
 
 assert.match(engine,/paperchalk-pbr-voxel-ao-v16/);
 assert.match(engine,/vVoxelWorldNormal/);
-assert.match(game,/fishing\.state='landed'/);
-assert.match(game,/waterTarget\|\|\(terrainTarget\?/);
 assert.match(water,/_packRemainderToBoundary/);
 assert.match(water,/_surfaceAuditFromStates/);
 assert.match(engine,/greedyTopSurface:true/);
