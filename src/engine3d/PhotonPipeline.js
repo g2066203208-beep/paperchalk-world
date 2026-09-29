@@ -1,4 +1,5 @@
 import {PhotonWaterPass} from './PhotonWaterPass.js?v=photon-r1';
+import {PhotonVoxelLightVolume} from './PhotonVoxelLightVolume.js?v=photon-r1';
 function installPhotonPCSS(THREE){
   const key='shadowmap_pars_fragment',source=THREE.ShaderChunk?.[key];if(!source||source.includes('PAPERCHALK_PHOTON_PCSS'))return false;
   const a=source.indexOf('#elif defined( SHADOWMAP_TYPE_PCF_SOFT )'),b=source.indexOf('#elif defined( SHADOWMAP_TYPE_VSM )',a);if(a<0||b<0)return false;
@@ -90,6 +91,7 @@ export class PhotonPipeline{
       motionBlur:false,
       water:true,
       ssr:true,
+      coloredLighting:true,
       aoStrength:this.mobileLike?.42:.55,
       aoRadius:this.mobileLike?.75:1.05,
       bloomStrength:this.mobileLike?.12:.18,
@@ -112,7 +114,7 @@ export class PhotonPipeline{
     this.clearColor=new THREE.Color();
     this.fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 
-    this.waterPass=new PhotonWaterPass(THREE,{renderer,scene,camera,mobileLike:this.mobileLike});
+    this.waterPass=new PhotonWaterPass(THREE,{renderer,scene,camera,mobileLike:this.mobileLike});this.voxelLight=new PhotonVoxelLightVolume(THREE,{renderer,scene,camera,mobileLike:this.mobileLike});
     this.sceneTarget=makeTarget(THREE,1,1,{depth:true});
     this.sceneTarget.texture.name='paperchalk-photon-scene';
     this.workA=makeTarget(THREE);this.workB=makeTarget(THREE);
@@ -263,7 +265,7 @@ export class PhotonPipeline{
   resize(width,height,pixelRatio=1){
     const w=Math.max(1,Math.round(width||1)),h=Math.max(1,Math.round(height||1)),pr=clamp(Number(pixelRatio)||1,1,2);
     const bw=Math.max(1,Math.round(w*pr)),bh=Math.max(1,Math.round(h*pr));if(bw===this.size.bufferWidth&&bh===this.size.bufferHeight)return;
-    this.sceneTarget.setSize(bw,bh);this.waterPass.resize(bw,bh);this.workA.setSize(bw,bh);this.workB.setSize(bw,bh);this.historyA.setSize(bw,bh);this.historyB.setSize(bw,bh);
+    this.sceneTarget.setSize(bw,bh);this.waterPass.resize(bw,bh);this.voxelLight.resize(bw,bh);this.workA.setSize(bw,bh);this.workB.setSize(bw,bh);this.historyA.setSize(bw,bh);this.historyB.setSize(bw,bh);
     const aw=Math.max(1,Math.round(bw*(this.mobileLike?.5:.65))),ah=Math.max(1,Math.round(bh*(this.mobileLike?.5:.65)));this.aoA.setSize(aw,ah);this.aoB.setSize(aw,ah);
     const blw=Math.max(1,Math.round(bw*.25)),blh=Math.max(1,Math.round(bh*.25));this.bloomA.setSize(blw,blh);this.bloomB.setSize(blw,blh);
     const cw=Math.max(1,Math.round(bw*(this.mobileLike?.32:.46))),ch=Math.max(1,Math.round(bh*(this.mobileLike?.32:.46)));this.cloudTarget.setSize(cw,ch);
@@ -289,7 +291,8 @@ export class PhotonPipeline{
     r.getClearColor(this.clearColor);const oldAlpha=r.getClearAlpha();
     try{
       r.setRenderTarget(this.sceneTarget);r.autoClear=true;r.clear(true,true,true);r.render(this.scene,this.camera);atmosphere?.render?.(r,this.scene,this.camera);
-      const baseTexture=this.settings.water?this.waterPass.render({sceneTexture:this.sceneTarget.texture,sceneDepth:this.sceneTarget.depthTexture,time:(atmosphere?.state?.time||0)/60}):this.sceneTarget.texture;
+      let baseTexture=this.settings.water?this.waterPass.render({sceneTexture:this.sceneTarget.texture,sceneDepth:this.sceneTarget.depthTexture,time:(atmosphere?.state?.time||0)/60}):this.sceneTarget.texture;
+      if(this.settings.coloredLighting)baseTexture=this.voxelLight.render({sceneTexture:baseTexture,sceneDepth:this.sceneTarget.depthTexture});
       this.bloomExtractMaterial.uniforms.tInput.value=baseTexture;this.compositeMaterial.uniforms.tScene.value=baseTexture;
 
       if(this.settings.gtao){
@@ -322,7 +325,7 @@ export class PhotonPipeline{
     }
   }
 
-  stats(){return {enabled:!!this.settings.enabled,mode:'photon-feature-port-r1',source:'sixthsurge/photon',featurePort:true,pcss:!!this.pcssInstalled,variablePenumbra:true,water:this.waterPass.stats(),taa:!!this.settings.taa,gtao:!!this.settings.gtao,bloom:!!this.settings.bloom,volumetricClouds:!!this.settings.clouds,fxaa:!!this.settings.fxaa,cas:!!this.settings.cas,dof:!!this.settings.dof,motionBlur:!!this.settings.motionBlur,historyReprojection:true,depthAwareAO:true,weatherCloudCoverage:this.settings.cloudCoverage,buffers:{scene:[this.size.bufferWidth,this.size.bufferHeight],ao:this.size.ao||[1,1],bloom:this.size.bloom||[1,1],cloud:this.size.cloud||[1,1]},renders:this.renderCount};}
+  stats(){return {enabled:!!this.settings.enabled,mode:'photon-feature-port-r1',source:'sixthsurge/photon',featurePort:true,pcss:!!this.pcssInstalled,variablePenumbra:true,water:this.waterPass.stats(),coloredLighting:this.voxelLight.stats(),taa:!!this.settings.taa,gtao:!!this.settings.gtao,bloom:!!this.settings.bloom,volumetricClouds:!!this.settings.clouds,fxaa:!!this.settings.fxaa,cas:!!this.settings.cas,dof:!!this.settings.dof,motionBlur:!!this.settings.motionBlur,historyReprojection:true,depthAwareAO:true,weatherCloudCoverage:this.settings.cloudCoverage,buffers:{scene:[this.size.bufferWidth,this.size.bufferHeight],ao:this.size.ao||[1,1],bloom:this.size.bloom||[1,1],cloud:this.size.cloud||[1,1]},renders:this.renderCount};}
 
-  dispose(){this.waterPass.dispose();for(const t of [this.sceneTarget,this.workA,this.workB,this.aoA,this.aoB,this.bloomA,this.bloomB,this.cloudTarget,this.historyA,this.historyB])t.dispose();for(const p of [this.copyPass,this.aoPass,this.blurPass,this.bloomExtractPass,this.gaussPass,this.cloudPass,this.compositePass,this.temporalPass,this.finalPass])p.geometry.dispose();for(const m of [this.copyMaterial,this.aoMaterial,this.blurMaterial,this.bloomExtractMaterial,this.gaussMaterial,this.cloudMaterial,this.compositeMaterial,this.temporalMaterial,this.finalMaterial])m.dispose();}
+  dispose(){this.waterPass.dispose();this.voxelLight.dispose();for(const t of [this.sceneTarget,this.workA,this.workB,this.aoA,this.aoB,this.bloomA,this.bloomB,this.cloudTarget,this.historyA,this.historyB])t.dispose();for(const p of [this.copyPass,this.aoPass,this.blurPass,this.bloomExtractPass,this.gaussPass,this.cloudPass,this.compositePass,this.temporalPass,this.finalPass])p.geometry.dispose();for(const m of [this.copyMaterial,this.aoMaterial,this.blurMaterial,this.bloomExtractMaterial,this.gaussMaterial,this.cloudMaterial,this.compositeMaterial,this.temporalMaterial,this.finalMaterial])m.dispose();}
 }
