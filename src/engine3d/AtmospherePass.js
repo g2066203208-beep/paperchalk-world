@@ -38,6 +38,8 @@ export class AtmospherePass{
     this.depthTarget.texture.name='paperchalk-atmosphere-view-depth';
     this.volumeTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,depthBuffer:false});
     this.volumeTarget.texture.name='paperchalk-atmosphere-volume';
+    this.blurTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,depthBuffer:false});
+    this.blurTarget.texture.name='paperchalk-atmosphere-bilateral';
     this.depthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,side:THREE.DoubleSide});
     this.depthMaterial.blending=THREE.NoBlending;
 
@@ -163,6 +165,48 @@ export class AtmospherePass{
     this.volumeScene=new THREE.Scene();
     this.volumeScene.add(new THREE.Mesh(this.fsGeometry,this.volumeMaterial));
 
+    this.blurUniforms={
+      tInput:{value:this.volumeTarget.texture},tDepth:{value:this.depthTarget.texture},
+      uTexel:{value:new THREE.Vector2(1,1)},uDirection:{value:new THREE.Vector2(1,0)}
+    };
+    this.blurMaterial=new THREE.ShaderMaterial({
+      uniforms:this.blurUniforms,depthTest:false,depthWrite:false,toneMapped:false,
+      vertexShader:`
+        varying vec2 vUv;
+        void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
+      `,
+      fragmentShader:`
+        precision highp float;
+        varying vec2 vUv;
+        uniform sampler2D tInput,tDepth;
+        uniform vec2 uTexel,uDirection;
+        float unpackDepth(vec4 v){
+          return dot(v,vec4(0.99609375,0.00389099121,0.00001519918,0.0000000596046));
+        }
+        void main(){
+          float dc=unpackDepth(texture2D(tDepth,vUv));
+          vec4 sum=texture2D(tInput,vUv)*.4026;
+          float wsum=.4026;
+          for(int i=1;i<=2;i++){
+            float fi=float(i);
+            float kw=i==1?.2442:.0545;
+            vec2 off=uTexel*uDirection*fi;
+            vec2 ua=clamp(vUv+off,vec2(.001),vec2(.999));
+            vec2 ub=clamp(vUv-off,vec2(.001),vec2(.999));
+            float da=unpackDepth(texture2D(tDepth,ua));
+            float db=unpackDepth(texture2D(tDepth,ub));
+            float wa=kw*exp(-abs(da-dc)*180.0);
+            float wb=kw*exp(-abs(db-dc)*180.0);
+            sum+=texture2D(tInput,ua)*wa+texture2D(tInput,ub)*wb;
+            wsum+=wa+wb;
+          }
+          gl_FragColor=sum/max(.0001,wsum);
+        }
+      `
+    });
+    this.blurScene=new THREE.Scene();
+    this.blurScene.add(new THREE.Mesh(this.fsGeometry,this.blurMaterial));
+
     this.compositeMaterial=new THREE.ShaderMaterial({
       uniforms:{tVolume:{value:this.volumeTarget.texture}},
       transparent:true,depthTest:false,depthWrite:false,toneMapped:false,
@@ -251,7 +295,8 @@ export class AtmospherePass{
     const pr=clamp(Number(pixelRatio)||1,1,2),q=this.settings.qualityScale;
     const bw=Math.max(120,Math.round(w*pr*q)),bh=Math.max(72,Math.round(h*pr*q));
     if(bw!==this.size.bufferWidth||bh!==this.size.bufferHeight){
-      this.depthTarget.setSize(bw,bh);this.volumeTarget.setSize(bw,bh);
+      this.depthTarget.setSize(bw,bh);this.volumeTarget.setSize(bw,bh);this.blurTarget.setSize(bw,bh);
+      this.blurUniforms.uTexel.value.set(1/bw,1/bh);
     }
     this.size={width:w,height:h,pixelRatio:pr,bufferWidth:bw,bufferHeight:bh};
     this.volumeUniforms.uResolution.value.set(bw,bh);
@@ -338,6 +383,15 @@ export class AtmospherePass{
       renderer.setClearColor(0x000000,0);renderer.clear(true,false,false);
       renderer.render(this.volumeScene,this.fsCamera);
 
+      this.blurUniforms.tInput.value=this.volumeTarget.texture;
+      this.blurUniforms.uDirection.value.set(1,0);
+      renderer.setRenderTarget(this.blurTarget);renderer.clear(true,false,false);
+      renderer.render(this.blurScene,this.fsCamera);
+      this.blurUniforms.tInput.value=this.blurTarget.texture;
+      this.blurUniforms.uDirection.value.set(0,1);
+      renderer.setRenderTarget(this.volumeTarget);renderer.clear(true,false,false);
+      renderer.render(this.blurScene,this.fsCamera);
+
       renderer.setRenderTarget(oldTarget);renderer.autoClear=false;
       renderer.render(this.compositeScene,this.fsCamera);
       this.renderCount++;this.lastVisible=true;return true;
@@ -360,6 +414,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,stableDither:true,nonlinearRaySteps:true,filteredShadowSamples:3,
+      bilateralBlur:true,blurPasses:2,depthAwareBlur:true,
       directionalScatterOnly:true,baseFogSeparated:true,premultipliedComposite:true,dynamicSky:true,
       minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
@@ -369,8 +424,8 @@ export class AtmospherePass{
   dispose(){
     this.scene.remove(this.skyMesh);
     this.skyMesh.geometry.dispose();this.skyMaterial.dispose();
-    this.depthTarget.dispose();this.volumeTarget.dispose();this.depthMaterial.dispose();
-    this.volumeMaterial.dispose();this.compositeMaterial.dispose();this.fsGeometry.dispose();
+    this.depthTarget.dispose();this.volumeTarget.dispose();this.blurTarget.dispose();this.depthMaterial.dispose();
+    this.volumeMaterial.dispose();this.blurMaterial.dispose();this.compositeMaterial.dispose();this.fsGeometry.dispose();
     if(this.scene.fog)this.scene.fog=null;
   }
 }
