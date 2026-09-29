@@ -47,8 +47,8 @@ class WaterWorld{
     this.surfaceCache=new Map();
     this.boundsCache=new Map();
     this.version=0;
-    this.tick=0;
-    this.levels=8;
+this.tick=0;
+this.levels=8;
     this.needsSettle=false;
     this.lastSettle={bodies:0,columns:0,layers:0,heapPops:0};
     this.horizontalDirs=[[1,0,0],[-1,0,0],[0,0,1],[0,0,-1]];
@@ -405,7 +405,6 @@ class WaterWorld{
     };
   }
 }
-
 class TerrainWorld{
   constructor({tileSize=1,pixelsPerMeter=128,chunkSize=16,seed=24681357,interactionRowZ=0,blackBackRowZ=null,biomeConfig=null}={}){
     this.tileSize=Number(tileSize)||1;
