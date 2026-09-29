@@ -11,9 +11,9 @@ export class AtmospherePass{
     this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
       enabled:true,volumetric:true,
-      intensity:this.mobileLike?.56:.72,
-      fogDensity:this.mobileLike?.0065:.0075,
-      heightFalloff:.105,anisotropy:.68,maxDistance:this.mobileLike?46:62,
+      intensity:this.mobileLike?.28:.36,
+      fogDensity:this.mobileLike?.0032:.0038,
+      heightFalloff:.14,anisotropy:.64,maxDistance:this.mobileLike?28:36,
       qualityScale:this.mobileLike?.30:.46,steps:this.mobileLike?11:19
     };
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
@@ -99,7 +99,7 @@ export class AtmospherePass{
         float shadowAt(vec3 p,float jitter){
           vec4 sc=uShadowMatrix*vec4(p,1.0);
           sc.xyz/=max(1e-6,sc.w);
-          if(sc.x<=0.001||sc.x>=0.999||sc.y<=0.001||sc.y>=0.999||sc.z<=0.0||sc.z>=1.0)return 1.0;
+          if(sc.x<=0.001||sc.x>=0.999||sc.y<=0.001||sc.y>=0.999||sc.z<=0.0||sc.z>=1.0)return 0.0;
           vec2 texel=1.0/max(uShadowMapSize,vec2(1.0));
           vec2 o=(vec2(fract(jitter*7.13),fract(jitter*13.71))-.5)*texel*1.35;
           float d0=unpackDepth(texture2D(tShadow,sc.xy+o));
@@ -125,21 +125,22 @@ export class AtmospherePass{
           float trans=1.0;
           float sunScatter=0.0;
           float mu=clamp(dot(rayDir,normalize(uSunDir)),-1.0,1.0);
-          float phase=hg(mu,uAnisotropy);
+          float phase=clamp(hg(mu,uAnisotropy),.018,.62);
           for(int i=0;i<20;i++){
             if(float(i)>=uSteps||t>=maxDist)break;
             vec3 p=uCameraPos+rayDir*t;
             float height=max(0.0,p.y-uFogBase);
-            float density=uFogDensity*(.28+.72*exp(-height*uHeightFalloff));
+            float density=uFogDensity*(.12+.88*exp(-height*uHeightFalloff));
             float lit=shadowAt(p,noise+float(i)*.6180339);
-            float absorb=exp(-density*stepLen*1.18);
+            lit*=lit;
+            float absorb=exp(-density*stepLen*.58);
             sunScatter+=trans*lit*density*phase*stepLen;
             trans*=absorb;
             t+=stepLen;
           }
-          float fogAlpha=clamp(1.0-trans,0.0,.42);
-          float forwardBoost=smoothstep(.15,.96,mu);
-          vec3 scatter=uSunColor*sunScatter*uIntensity*(.72+forwardBoost*.85);
+          float fogAlpha=clamp((1.0-trans)*.34,0.0,.115);
+          float forwardBoost=smoothstep(.30,.97,mu);
+          vec3 scatter=uSunColor*sunScatter*uIntensity*.16*(.74+forwardBoost*.62);
           vec3 premul=uFogColor*fogAlpha+scatter;
           gl_FragColor=vec4(premul,fogAlpha);
         }
@@ -196,12 +197,12 @@ export class AtmospherePass{
         }
         void main(){
           vec3 d=normalize(vDir);
-          float h=clamp(d.y*.72+.28,0.0,1.0);
-          float grad=smoothstep(0.0,1.0,pow(h,.72));
+          float h=clamp(d.y*.75+.40,0.0,1.0);
+          float grad=smoothstep(.04,.92,pow(h,.76));
           vec3 col=mix(uHorizon,uZenith,grad);
           float mu=max(0.0,dot(d,normalize(uSunDir)));
-          float glow=pow(mu,9.0)*(.32+uTwilight*.34);
-          float disc=pow(mu,620.0)*1.25;
+          float glow=pow(mu,10.0)*(.105+uTwilight*.075);
+          float disc=pow(mu,720.0)*.72;
           float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.012;
           col+=uSunColor*(glow+disc);
           col*=1.0+grain;
@@ -250,13 +251,14 @@ export class AtmospherePass{
     this.state={strength:active*this.settings.intensity,daylight:d,twilight:tw,skyExposure:sky,underground:under,time:Number(time)||0,fogBase:Number(fogBaseHeight)||0};
 
     const warm=morning?this.dawnColor:this.duskColor;
-    const dayMix=clamp((d-.05)/.82,0,1);
+    const horizonDay=new this.THREE.Color(0x94afc3),zenithDay=new this.THREE.Color(0x527cab);
+    const horizonMix=clamp((d-.06)/.48,0,1),zenithMix=clamp((d+.035)/.42,0,1);
     if(d>.005){
-      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0xa8bac8),dayMix);
-      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x6288b6),dayMix);
+      this.horizonColor.copy(warm).lerp(horizonDay,horizonMix);
+      this.zenithColor.copy(this.nightColor).lerp(zenithDay,zenithMix).lerp(warm,tw*.045);
     }else{
-      this.horizonColor.copy(this.nightHorizon).lerp(warm,tw*.42);
-      this.zenithColor.copy(this.nightColor).lerp(warm,tw*.18);
+      this.horizonColor.copy(this.nightHorizon).lerp(warm,tw*.36);
+      this.zenithColor.copy(this.nightColor).lerp(zenithDay,tw*.08);
     }
     this.skyColor.copy(this.horizonColor).lerp(this.zenithColor,.55);
     const sunColor=this.sunHorizon.clone().lerp(this.sunDay,clamp(d*1.35,0,1));
@@ -268,21 +270,24 @@ export class AtmospherePass{
       this.sunDirection.copy(sunLight.position).sub(target).normalize();
     }else if(sunPosition)this.sunDirection.copy(sunPosition).normalize();
     if(skyLight){skyLight.color.copy(this.zenithColor);skyLight.groundColor.set(0x74604b)}
-    if(sunDisc?.material?.color)sunDisc.material.color.copy(sunColor);
+    if(sunDisc?.material?.color){
+      sunDisc.material.color.copy(sunColor);
+      sunDisc.visible=!this.settings.enabled&&d>.02;
+    }
 
     this.skyUniforms.uSunColor.value.copy(sunColor);
     this.skyUniforms.uTwilight.value=tw;this.skyUniforms.uTime.value=Number(time)||0;
     this.volumeUniforms.uSunColor.value.copy(sunColor);
     this.volumeUniforms.uFogColor.value.copy(this.fogColor);
     this.volumeUniforms.uIntensity.value=this.state.strength;
-    this.volumeUniforms.uFogDensity.value=this.settings.fogDensity*(1+tw*.22+lowSun*.16)*(1-under*.82);
+    this.volumeUniforms.uFogDensity.value=this.settings.fogDensity*(1+tw*.14+lowSun*.08)*(1-under*.86);
     this.volumeUniforms.uFogBase.value=this.state.fogBase;
     this.volumeUniforms.uHeightFalloff.value=this.settings.heightFalloff;
     this.volumeUniforms.uAnisotropy.value=this.settings.anisotropy;
     this.volumeUniforms.uMaxDistance.value=this.settings.maxDistance;
     this.volumeUniforms.uSteps.value=this.settings.steps;
     this.volumeUniforms.uTime.value=this.state.time;
-    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.19*(1+tw*.18)*(1-under*.8):0;
+    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.10*(1+tw*.12)*(1-under*.86):0;
     this.scene.fog.color.copy(this.fogColor);
   }
 
