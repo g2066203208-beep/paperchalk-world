@@ -11,11 +11,11 @@ export class AtmospherePass{
     this.settings={
       enabled:true,
       godRays:true,
-      rayIntensity:.78,
+      rayIntensity:.52,
       rayDensity:.93,
       rayDecay:.965,
-      rayWeight:.17,
-      fogDensity:.0085,
+      rayWeight:.058,
+      fogDensity:.0068,
       qualityScale:this.mobileLike?.28:.42
     };
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0};
@@ -54,7 +54,7 @@ export class AtmospherePass{
     });
     this.sourceSprite=new THREE.Sprite(this.sourceMaterial);
     this.sourceSprite.name='atmosphere-sun-scattering-source';
-    this.sourceSprite.scale.set(15,15,1);
+    this.sourceSprite.scale.set(6.4,6.4,1);
     this.sourceScene=new THREE.Scene();this.sourceScene.add(this.sourceSprite);
 
     this.fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
@@ -101,8 +101,8 @@ export class AtmospherePass{
             light+=s*illumination*uWeight;
             illumination*=uDecay;
           }
-          float core=texture2D(tOcclusion,vUv).r*.16;
-          float v=clamp((light+core)*uStrength,0.0,1.35);
+          float core=texture2D(tOcclusion,vUv).r*.07;
+          float v=clamp((light+core)*uStrength,0.0,.48);
           gl_FragColor=vec4(vec3(v),1.0);
         }
       `
@@ -192,7 +192,7 @@ export class AtmospherePass{
 
       scene.overrideMaterial=oldOverride;
       this.sourceSprite.position.copy(this.sunWorld);
-      this.sourceSprite.scale.setScalar(15+this.state.twilight*4);
+      this.sourceSprite.scale.setScalar(6.4+this.state.twilight*1.6);
       renderer.autoClear=false;
       renderer.render(this.sourceScene,camera);
 
@@ -206,8 +206,8 @@ export class AtmospherePass{
 
       renderer.setRenderTarget(oldTarget);
       renderer.autoClear=false;
-      this.compositeMaterial.opacity=clamp(.72+this.state.twilight*.18,.6,.92);
-      this.compositeMaterial.color.setRGB(1,.86+this.state.twilight*.02,.67+this.state.twilight*.08);
+      this.compositeMaterial.opacity=clamp(.38+this.state.twilight*.10,.34,.50);
+      this.compositeMaterial.color.setRGB(1,.84+this.state.twilight*.025,.66+this.state.twilight*.07);
       renderer.render(this.compositeScene,this.fsCamera);
       this.renderCount++;
       return true;
