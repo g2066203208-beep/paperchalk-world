@@ -7,7 +7,7 @@
  * - all custom bones get rotation handles
  * - joint rigging drag is previewed locally and committed once on pointer-up,
  *   avoiding full Immer/project rebuilds for every touch-move event
- * - generic mesh joint binding: any bone may drive a mesh with jointBoneId
+ * - generic multi-bone mesh binding: any bone may drive weighted mesh vertices
  */
 import React, { useCallback, useRef, useEffect, useMemo, useState } from 'react';
 import { useProjectStore } from '@/store/projectStore';
@@ -229,15 +229,26 @@ export default function SkeletonOverlay({ view, editorMode, showSkeleton, skelet
       const endMs = (animEndFrame / animFps) * 1000;
       const overrides = computePoseOverrides(activeAnim, animCurrentTime, animLoopKeyframes, endMs);
       for (const pt of currentNodes) {
-        if (pt.type !== 'part' || !pt.mesh || pt.mesh.jointBoneId !== node.id) continue;
+        if (pt.type !== 'part' || !pt.mesh) continue;
+        const genericInfluence = Array.isArray(pt.mesh.skinBones)
+          ? pt.mesh.skinBones.find(sb => sb.id === node.id)
+          : null;
+        const legacyInfluence = pt.mesh.jointBoneId === node.id
+          ? { id: node.id, weights: pt.mesh.boneWeights ?? [] }
+          : null;
+        const influence = genericInfluence ?? legacyInfluence;
+        if (!influence) continue;
+
         let startVerts = pt.mesh.vertices;
         if (editorModeRef.current === 'animation') {
           startVerts = animDraftPose.get(pt.id)?.mesh_verts ?? overrides?.get(pt.id)?.mesh_verts ?? pt.mesh.vertices;
+        } else {
+          startVerts = animDraftPose.get(pt.id)?.mesh_verts ?? pt.mesh.vertices;
         }
         dependentParts.push({
           partId: pt.id,
           startVerts: startVerts.map(v => ({ ...v })),
-          boneWeights: pt.mesh.boneWeights,
+          boneWeights: Array.from(influence.weights ?? []),
           imgPivotX: node.transform.pivotX,
           imgPivotY: node.transform.pivotY,
         });
