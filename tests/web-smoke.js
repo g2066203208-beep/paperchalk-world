@@ -6,6 +6,12 @@ const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d
 assert(html.includes('paper-r3'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
+assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
+assert(!/far-hills-|village-shop|village-house-a|village-workshop|tree-[abc]|rock-[ab]/.test(content),'legacy 2D stage placeholders still present');
+const sprite=read('src/entities/PaperSpriteEntity.js');
+assert(!/kind==='(?:tree|building|rock)'/.test(sprite),'generated tree/building/rock art must stay removed');
+assert(!engine.includes('this.paperEntities=[]')&&!engine.includes('sceneData.stageEntities'),'legacy stage entity runtime still present');
+assert(engine.includes('legacyStagePlaceholders:0'),'legacy placeholder runtime stat missing');
 assert(content.includes("'fishing-rod'"),'fishing rod item missing');
 assert(content.includes("'paper-carp'")&&content.includes("'bluefin-minnow'")&&content.includes("'golden-paperfish'"),'fish items missing');
 
