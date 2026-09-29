@@ -36,7 +36,7 @@ export class AtmospherePass{
     const lowOpts={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
     this.depthTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
     this.depthTarget.texture.name='paperchalk-atmosphere-view-depth';
-    this.volumeTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,depthBuffer:false});
+    this.volumeTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,type:this.mobileLike?THREE.UnsignedByteType:THREE.HalfFloatType,depthBuffer:false});
     this.volumeTarget.texture.name='paperchalk-atmosphere-volume';
     this.depthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,side:THREE.DoubleSide});
     this.depthMaterial.blending=THREE.NoBlending;
@@ -141,8 +141,10 @@ export class AtmospherePass{
           float fogAlpha=clamp((1.0-trans)*.34,0.0,.115);
           float forwardBoost=smoothstep(.30,.97,mu);
           vec3 scatter=uSunColor*sunScatter*uIntensity*.16*(.74+forwardBoost*.62);
-          vec3 premul=uFogColor*fogAlpha+scatter;
-          gl_FragColor=vec4(premul,fogAlpha);
+          float dither=(hash21(gl_FragCoord.xy*.713+vec2(uTime*.019,-uTime*.013))-.5)/255.0;
+          fogAlpha=clamp(fogAlpha+dither*.42,0.0,.115);
+          vec3 premul=uFogColor*fogAlpha+scatter+vec3(dither)*.18;
+          gl_FragColor=vec4(max(premul,vec3(0.0)),fogAlpha);
         }
       `
     });
@@ -350,7 +352,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
-      minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
+      minecraftShaderInspired:true,volumePrecision:this.mobileLike?'rgba8-dithered':'rgba16f',mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
