@@ -265,3 +265,34 @@ html, body, #root {
     border-radius: 14px 14px 0 0;
   }
 }
+
+
+/* V4 universal bone editor controls */
+.pc-bone-btn {
+  min-height: 44px;
+  border: 1px solid rgba(148,163,184,.28);
+  border-radius: 8px;
+  background: rgba(255,255,255,.035);
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 9px;
+  font-size: 12px;
+  line-height: 1.15;
+  touch-action: manipulation;
+}
+.pc-bone-btn:active { background: rgba(34,211,238,.12); }
+.pc-bone-btn:disabled { opacity: .38; }
+.pc-bone-btn.pc-danger { border-color: rgba(248,113,113,.34); color: rgb(248,113,113); }
+.pc-mobile-input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(148,163,184,.28);
+  border-radius: 8px;
+  background: rgba(0,0,0,.18);
+  color: inherit;
+  padding: 7px 9px;
+  font-size: 16px;
+}
