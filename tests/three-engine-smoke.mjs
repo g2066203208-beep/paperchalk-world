@@ -41,6 +41,8 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true,'uploaded grass reference texture not active '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassReferenceAsset==='assets/materials/grass-reference.webp','wrong grass reference asset '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'grass reference image did not finish loading '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassReferenceSize?.[0]===512&&initial.paperTerrain?.paperMaterial?.grassReferenceSize?.[1]===512,'grass reference runtime texture is not 512x512 '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.samples===17,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
