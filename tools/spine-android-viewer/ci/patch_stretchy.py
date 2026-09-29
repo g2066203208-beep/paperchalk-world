@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import sys
+import re
 
 root = Path(sys.argv[1] if len(sys.argv) > 1 else "/tmp/stretchystudio")
 
@@ -316,4 +317,326 @@ for rel in [
     s = s.replace("Download from HuggingFace", "使用 APK 内置模型")
     write(rel, s)
 
-# SkeletonOverlay is replaced by the maintained Android/mobile version after this patch script runs.\n\nprint("[patch_stretchy] OK")
+# Generic multi-bone skinning when a mesh is generated. Any custom bone branch
+# (fingers, toes, hair, clothes, tail, ears...) can influence the mesh.
+s = read("src/components/canvas/CanvasViewport.jsx")
+old_skin = """          // Compute skin weights if this part belongs to a limb
+          const parentGroup = proj.nodes.find(n => n.id === node.parent);
+          if (parentGroup && parentGroup.boneRole) {
+            const roleMap = {
+              'leftArm': 'leftElbow', 'rightArm': 'rightElbow',
+              'leftLeg': 'leftKnee', 'rightLeg': 'rightKnee'
+            };
+            const childRole = roleMap[parentGroup.boneRole];
+            if (childRole) {
+              const jointBone = proj.nodes.find(n => n.parent === parentGroup.id && n.boneRole === childRole);
+              if (jointBone) {
+                const jx = jointBone.transform.pivotX;
+                const jy = jointBone.transform.pivotY;
+
+                // Build a direction vector from the shoulder (parentGroup pivot) → elbow (jointBone pivot).
+                // Projecting vertices onto this axis gives correct weights regardless of arm orientation.
+                const sx = parentGroup.transform.pivotX;
+                const sy = parentGroup.transform.pivotY;
+                const axDx = jx - sx;
+                const axDy = jy - sy;
+                const axLen = Math.sqrt(axDx * axDx + axDy * axDy) || 1;
+                const axX = axDx / axLen;
+                const axY = axDy / axLen;
+
+                // Blend zone: 40px centred on the elbow pivot along the arm axis
+                const blend = 40;
+                node.mesh.boneWeights = vertices.map(v => {
+                  // Signed distance of vertex past the elbow pivot (along the arm axis)
+                  const proj2 = (v.x - jx) * axX + (v.y - jy) * axY;
+                  // proj2 < 0 → upper arm (rigid to shoulder), > 0 → lower arm (follows elbow)
+                  const w = proj2 / blend + 0.5;
+                  return Math.max(0, Math.min(1, w));
+                });
+                node.mesh.jointBoneId = jointBone.id;
+                console.log(\`[Skinning] \${node.name} → \${childRole} (\${vertices.length} verts, pivot \${jx.toFixed(0)},\${jy.toFixed(0)})\`);
+              }
+            }
+          }
+"""
+new_skin = """          // Generic multi-bone weights for any armature branch.
+          const parentGroup = proj.nodes.find(n => n.id === node.parent);
+          if (parentGroup && parentGroup.boneRole) {
+            const byId = new Map(proj.nodes.map(n => [n.id, n]));
+            const branch = [];
+            const queue = [parentGroup.id];
+            const seen = new Set();
+            while (queue.length) {
+              const id = queue.shift();
+              if (seen.has(id)) continue;
+              seen.add(id);
+              const bn = byId.get(id);
+              if (bn?.type === 'group' && bn.boneRole) branch.push(bn);
+              for (const ch of proj.nodes) {
+                if (ch.parent === id && ch.type === 'group' && ch.boneRole) queue.push(ch.id);
+              }
+            }
+
+            const pointSegDist = (px,py,ax,ay,bx,by) => {
+              const vx=bx-ax, vy=by-ay, wx=px-ax, wy=py-ay;
+              const vv=vx*vx+vy*vy;
+              let t=vv>1e-6?(wx*vx+wy*vy)/vv:0;
+              t=Math.max(0,Math.min(1,t));
+              const qx=ax+vx*t, qy=ay+vy*t;
+              return Math.hypot(px-qx,py-qy);
+            };
+
+            const weightsByBone = new Map(branch.map(b => [b.id, new Array(vertices.length).fill(0)]));
+            for (let vi=0; vi<vertices.length; vi++) {
+              const v=vertices[vi];
+              const scored=[];
+              for (const b of branch) {
+                const p=b.parent ? byId.get(b.parent) : null;
+                const ax=p?.transform?.pivotX ?? b.transform?.pivotX ?? 0;
+                const ay=p?.transform?.pivotY ?? b.transform?.pivotY ?? 0;
+                const bx=b.transform?.pivotX ?? ax;
+                const by=b.transform?.pivotY ?? ay;
+                const len=Math.max(18,Math.hypot(bx-ax,by-ay));
+                const d=pointSegDist(v.x,v.y,ax,ay,bx,by);
+                const sigma=Math.max(18,len*0.55);
+                scored.push([b.id,Math.exp(-(d*d)/(2*sigma*sigma))]);
+              }
+              scored.sort((a,b)=>b[1]-a[1]);
+              const top=scored.slice(0,4);
+              const sum=top.reduce((acc,x)=>acc+x[1],0)||1;
+              for (const [bid,score] of top) weightsByBone.get(bid)[vi]=score/sum;
+            }
+            node.mesh.skinBones=[...weightsByBone.entries()]
+              .map(([id,weights])=>({id,weights}))
+              .filter(sb=>sb.weights.some(w=>w>0.001));
+
+            // Backward-compatible strongest influence for legacy exporters.
+            const strongest=node.mesh.skinBones
+              .map(sb=>({sb,total:sb.weights.reduce((a,b)=>a+b,0)}))
+              .sort((a,b)=>b.total-a.total)[0]?.sb;
+            if (strongest) {
+              node.mesh.jointBoneId=strongest.id;
+              node.mesh.boneWeights=[...strongest.weights];
+            }
+          }
+"""
+if old_skin not in s:
+    raise SystemExit("[patch_stretchy] required pattern missing: generic skinning")
+s=s.replace(old_skin,new_skin,1)
+write("src/components/canvas/CanvasViewport.jsx", s)
+
+# Save/load all multi-bone weights losslessly.
+s = read("src/io/projectFile.js")
+needle = """        ...(n.mesh.jointBoneId ? { jointBoneId: n.mesh.jointBoneId } : {}),
+"""
+if needle in s and "skinBones:" not in s:
+    s=s.replace(needle, needle + """        ...(n.mesh.skinBones ? { skinBones: n.mesh.skinBones.map(sb => ({ id: sb.id, weights: Array.from(sb.weights ?? []) })) } : {}),
+""",1)
+write("src/io/projectFile.js", s)
+
+# Professional universal skeleton overlay:
+# - every group with boneRole is a valid bone
+# - edges come from actual parent IDs, not a fixed human template
+# - tapered bone bodies plus large touch handles
+# - rAF-throttled joint dragging to avoid store updates on every raw touch event
+# - arbitrary skinBones can drive mesh deformation.
+s = read("src/components/canvas/SkeletonOverlay.jsx")
+s=s.replace("import { SKELETON_CONNECTIONS } from '@/io/armatureOrganizer';\n","")
+s=s.replace(
+"const LINE_COLOUR   = 'rgba(34,211,238,0.55)';",
+"""const LINE_COLOUR   = 'rgba(34,211,238,0.72)';
+const BONE_FILL_EDIT = 'rgba(250,204,21,0.32)';
+const BONE_FILL_NORMAL = 'rgba(34,211,238,0.24)';
+const BONE_STROKE_EDIT = 'rgba(250,204,21,0.98)';
+const BONE_STROKE_NORMAL = 'rgba(34,211,238,0.92)';"""
+)
+
+s=s.replace(
+"  const dragRef  = useRef(null); // { type: 'joint'|'rotate', nodeId, ... }\n  const svgRef   = useRef(null);",
+"""  const dragRef  = useRef(null); // { type: 'joint'|'rotate', nodeId, ... }
+  const svgRef   = useRef(null);
+  const jointRafRef = useRef(0);
+  const jointPendingRef = useRef(null);"""
+)
+
+# Remove hard-coded limb-only warning effect; arbitrary bones are legal.
+s=re.sub(
+r"""  const \{ toast \} = useToast\(\);\n  useEffect\(\(\) => \{\n    if \(selection\.length !== 1\) return;[\s\S]*?  \}, \[selection, nodes, toast\]\);\n""",
+"""  const { toast } = useToast();
+""", s, count=1
+)
+
+# Begin a single undo batch when a joint drag starts.
+s=s.replace(
+"""      if (!skeletonEditMode) return;
+      dragRef.current = { type: 'joint', nodeId };""",
+"""      if (!skeletonEditMode) return;
+      beginBatch(useProjectStore.getState().project);
+      dragRef.current = { type: 'joint', nodeId };"""
+)
+
+# Generic weighted dependent meshes for every bone, not just elbow/knee roles.
+pat=r"""      const JSKinningRoles = new Set\(\['leftElbow', 'rightElbow', 'leftKnee', 'rightKnee'\]\);\n      const dependentParts = \[\];\n      if \(JSKinningRoles\.has\(node\.boneRole\)\) \{[\s\S]*?      \}\n\n      dragRef\.current = \{"""
+m=re.search(pat,s)
+if not m:
+    raise SystemExit("[patch_stretchy] rotate dependent-parts block missing")
+generic="""      const dependentParts = [];
+      for (const pt of effectiveNodes) {
+        if (pt.type !== 'part' || !pt.mesh) continue;
+        const generic = Array.isArray(pt.mesh.skinBones)
+          ? pt.mesh.skinBones.find(sb => sb.id === node.id)
+          : null;
+        const legacy = pt.mesh.jointBoneId === node.id
+          ? { id: node.id, weights: pt.mesh.boneWeights ?? [] }
+          : null;
+        const influence = generic ?? legacy;
+        if (!influence) continue;
+
+        let startVerts = pt.mesh.vertices;
+        if (editorModeRef.current === 'animation') {
+          startVerts = animDraftPose.get(pt.id)?.mesh_verts ?? overrides?.get(pt.id)?.mesh_verts ?? pt.mesh.vertices;
+        } else {
+          startVerts = animDraftPose.get(pt.id)?.mesh_verts ?? pt.mesh.vertices;
+        }
+        dependentParts.push({
+          partId: pt.id,
+          startVerts: startVerts.map(v => ({...v})),
+          boneWeights: Array.from(influence.weights ?? []),
+          imgPivotX: node.transform.pivotX,
+          imgPivotY: node.transform.pivotY,
+        });
+      }
+
+      dragRef.current = {"""
+s=s[:m.start()]+generic+s[m.end():]
+
+# Joint drags: one project update per animation frame instead of every pointer event.
+joint_pat=r"""    if \(drag\.type === 'joint'\) \{\n      // Joint position drag[\s\S]*?    \} else if \(drag\.type === 'rotate'\) \{"""
+jm=re.search(joint_pat,s)
+if not jm:
+    raise SystemExit("[patch_stretchy] joint move block missing")
+joint_new="""    if (drag.type === 'joint') {
+      const cssX = e.clientX - rect.left;
+      const cssY = e.clientY - rect.top;
+      const { zoom, panX, panY } = viewRef.current;
+      const [imgX, imgY] = toImage(cssX, cssY, zoom, panX, panY);
+      jointPendingRef.current = { nodeId: drag.nodeId, imgX, imgY };
+      if (!jointRafRef.current) {
+        jointRafRef.current = requestAnimationFrame(() => {
+          jointRafRef.current = 0;
+          const p = jointPendingRef.current;
+          jointPendingRef.current = null;
+          if (!p) return;
+          updateProject((proj) => {
+            const n = proj.nodes.find(x => x.id === p.nodeId);
+            if (n?.transform) {
+              n.transform.pivotX = p.imgX;
+              n.transform.pivotY = p.imgY;
+            }
+          }, { skipHistory: true });
+        });
+      }
+    } else if (drag.type === 'rotate') {"""
+s=s[:jm.start()]+joint_new+s[jm.end():]
+
+# Flush the last pending joint position at drag end.
+s=s.replace(
+"""  const onPointerUp = useCallback(() => {
+    endBatch();
+    const drag = dragRef.current;""",
+"""  const onPointerUp = useCallback(() => {
+    if (jointRafRef.current) {
+      cancelAnimationFrame(jointRafRef.current);
+      jointRafRef.current = 0;
+    }
+    const pending = jointPendingRef.current;
+    jointPendingRef.current = null;
+    if (pending) {
+      updateProject((proj) => {
+        const n = proj.nodes.find(x => x.id === pending.nodeId);
+        if (n?.transform) {
+          n.transform.pivotX = pending.imgX;
+          n.transform.pivotY = pending.imgY;
+        }
+      }, { skipHistory: true });
+    }
+    endBatch();
+    const drag = dragRef.current;"""
+)
+
+# Dynamic tapered bone geometry from actual parent-child hierarchy.
+lines_pat=r"""  const lines = \[\];\n  for \(const \[fromRole, toRole\] of SKELETON_CONNECTIONS\) \{[\s\S]*?  \}\n\n  const circles = \[\];"""
+lm=re.search(lines_pat,s)
+if not lm:
+    raise SystemExit("[patch_stretchy] skeleton line block missing")
+bone_shapes="""  const boneShapes = [];
+  const boneById = new Map(effectiveNodes
+    .filter(n => n.type === 'group' && n.boneRole)
+    .map(n => [n.id, n]));
+  for (const child of boneById.values()) {
+    const parent = child.parent ? boneById.get(child.parent) : null;
+    if (!parent) continue;
+    const [x1,y1]=pivotScreenPos(parent);
+    const [x2,y2]=pivotScreenPos(child);
+    const dx=x2-x1, dy=y2-y1;
+    const len=Math.max(1,Math.hypot(dx,dy));
+    const px=-dy/len, py=dx/len;
+    const baseW=Math.max(6,Math.min(13,len*0.11));
+    const neckW=Math.max(3,baseW*0.34);
+    const sx=x1+dx*0.22, sy=y1+dy*0.22;
+    const tipInset=Math.min(0.08,8/len);
+    const tx=x2-dx*tipInset, ty=y2-dy*tipInset;
+    const points=[
+      \`\${x1+px*neckW},\${y1+py*neckW}\`,
+      \`\${sx+px*baseW},\${sy+py*baseW}\`,
+      \`\${tx+px*2.5},\${ty+py*2.5}\`,
+      \`\${x2},\${y2}\`,
+      \`\${tx-px*2.5},\${ty-py*2.5}\`,
+      \`\${sx-px*baseW},\${sy-py*baseW}\`,
+      \`\${x1-px*neckW},\${y1-py*neckW}\`,
+    ].join(' ');
+    boneShapes.push(
+      <g key={\`bone-\${parent.id}-\${child.id}\`} pointerEvents="none">
+        <polygon points={points}
+          fill={skeletonEditMode ? BONE_FILL_EDIT : BONE_FILL_NORMAL}
+          stroke={skeletonEditMode ? BONE_STROKE_EDIT : BONE_STROKE_NORMAL}
+          strokeWidth={1.6} strokeLinejoin="round" />
+        <line x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke={LINE_COLOUR} strokeWidth={1} />
+      </g>
+    );
+  }
+
+  const circles = [];"""
+s=s[:lm.start()]+bone_shapes+s[lm.end():]
+
+# Large invisible joint hit zones and readable labels.
+circle_pat=r"""    circles\.push\(\n      <circle key=\{role\}[\s\S]*?      />\n    \);"""
+cm=re.search(circle_pat,s)
+if not cm:
+    raise SystemExit("[patch_stretchy] joint circle block missing")
+circle_new="""    circles.push(
+      <g key={role}>
+        <circle cx={cx} cy={cy} r={Math.max(21, radius + 12)}
+          fill="transparent"
+          style={{ cursor: skeletonEditMode ? 'grab' : 'pointer', pointerEvents:'auto', touchAction:'none' }}
+          onPointerDown={(e) => onPointerDown(e, node.id, 'joint')}
+          onClick={() => !skeletonEditMode && setSelection([node.id])} />
+        <circle cx={cx} cy={cy} r={radius}
+          fill={fill} stroke="#111827" strokeWidth={2} pointerEvents="none" />
+        <circle cx={cx} cy={cy} r={Math.max(1.8, radius*0.28)}
+          fill="#111827" opacity={0.75} pointerEvents="none" />
+      </g>
+    );"""
+s=s[:cm.start()]+circle_new+s[cm.end():]
+s=s.replace("{role}\\n          </text>", "{node.name || role}\\n          </text>")
+
+# All non-root bones can rotate; special eye trackpad remains.
+s=s.replace("    if (!ARC_BONE_ROLES.has(role) || skeletonEditMode) continue;",
+            "    if (role === 'root' || skeletonEditMode) continue;")
+s=s.replace("        {lines}", "        {boneShapes}")
+s=s.replace(">Adjust Joints</span>", ">调整骨骼</span>")
+s=s.replace("Drag yellow dots to reposition joints.", "拖动关节端点调整骨骼；骨段、子骨链和网格权重会实时跟随。")
+write("src/components/canvas/SkeletonOverlay.jsx", s)
+
+print("[patch_stretchy] OK")
