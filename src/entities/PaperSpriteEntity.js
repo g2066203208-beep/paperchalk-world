@@ -1,5 +1,5 @@
-/* Flat paper entities for the Three.js stage. Every visible world object except terrain
- * is rendered on a textured PlaneGeometry.
+/* Authored flat paper actors for the Three.js stage.
+ * Procedural tree/building/rock placeholder art has been removed.
  */
 export function makePaperTexture(THREE,{kind='prop',primary='#7b6a56',secondary='#d8c7a3'}={}){
   const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
