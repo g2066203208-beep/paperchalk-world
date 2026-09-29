@@ -33,10 +33,13 @@ assert.match(water,/columnBounds\(gx,gz\)/);
 assert.match(engine,/event-driven-greedy-water-v7/);
 assert.match(engine,/internalFacesCulled:true/);
 
-assert.doesNotMatch(content,/'fishing-rod'/);
+assert.match(content,/'fishing-rod'/);
 assert.doesNotMatch(content,/'paper-carp'/);
-assert.doesNotMatch(game,/PaperchalkFish|PaperchalkFishing|fishing-rod|paper-carp/);
-assert.doesNotMatch(engine,/FishSchoolRenderer|FishingRenderer|fishEcology/);
+assert.match(game,/PaperchalkFishing/);
+assert.match(game,/castFishingRod/);
+assert.match(game,/updateFishing/);
+assert.doesNotMatch(engine,/FishSchoolRenderer|fishEcology/);
+assert.match(engine,/FishingRenderer/);
 assert.match(game,/HUNGER_DRAIN_PER_SECOND/);
 assert.match(game,/PaperchalkHunger/);
 assert.match(game,/PaperchalkStamina/);
