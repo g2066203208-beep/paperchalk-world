@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),paperEntity=read('src/entities/PaperSpriteEntity.js');
 
-assert.match(html,/voxel3d-r44/);
+assert.match(html,/voxel3d-r45/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -69,6 +69,8 @@ assert.match(engine,/MeshStandardMaterial/);
 assert.match(engine,/roughnessMap:this\.paperSurfaceTexture/);
 assert.match(engine,/bumpMap:this\.paperSurfaceTexture/);
 assert.match(engine,/ACESFilmicToneMapping/);
+assert.match(engine,/PMREMGenerator/);
+assert.match(engine,/PMREM-studio-paper/);
 assert.match(paperEntity,/MeshStandardMaterial/);
 assert.match(paperEntity,/castShadow=true/);
 assert.match(engine,/coarse\?1\.5:2/);
