@@ -1,223 +1,360 @@
-/* Paperchalk atmosphere v2.
- * Minecraft-shader-inspired structure: cheap occlusion/depth-style light shafts,
- * dithered radial sampling, low-resolution filtering, atmospheric fog, graded sky.
- * Original implementation; no third-party shader code is copied.
+/* Minecraft-shader-inspired atmosphere for the paper diorama.
+ * Default path is world-space volumetric scattering:
+ * low-res camera depth + the real directional-light shadow map + jittered
+ * raymarch + height haze + Henyey-Greenstein Mie phase.
+ * This replaces the old screen-space radial-blur "god ray" look.
  */
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 
 export class AtmospherePass{
-  constructor(THREE,scene,{mobileLike=false}={}){
-    this.THREE=THREE;this.scene=scene;this.mobileLike=!!mobileLike;
+  constructor(THREE,scene,{mobileLike=false,sun=null}={}){
+    this.THREE=THREE;this.scene=scene;this.sun=sun;this.mobileLike=!!mobileLike;
     this.settings={
-      enabled:true,godRays:true,
-      rayIntensity:this.mobileLike?.62:.76,
-      rayDensity:.90,rayDecay:.965,rayWeight:.16,
-      fogDensity:this.mobileLike?.0062:.0072,
-      qualityScale:this.mobileLike?.27:.40,
-      blur:true
+      enabled:true,volumetric:true,
+      intensity:this.mobileLike?.56:.72,
+      fogDensity:this.mobileLike?.0065:.0075,
+      heightFalloff:.105,anisotropy:.68,maxDistance:this.mobileLike?46:62,
+      qualityScale:this.mobileLike?.30:.46,steps:this.mobileLike?11:19
     };
-    this.state={strength:0,daylight:0,twilight:0,night:0,skyExposure:1,underground:0,time:0};
+    this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
     this.size={width:1,height:1,pixelRatio:1,bufferWidth:1,bufferHeight:1};
-    this.sunWorld=new THREE.Vector3();this.sunNdc=new THREE.Vector3();this.sunUv=new THREE.Vector2(.5,.5);
-    this.clearColor=new THREE.Color();this.fogColor=new THREE.Color(0x8191a8);
-    this.scene.fog=new THREE.FogExp2(this.fogColor,this.settings.fogDensity);
+    this.clearColor=new THREE.Color();
+    this.skyColor=new THREE.Color(0x7897be);
+    this.zenithColor=new THREE.Color(0x6689b5);
+    this.horizonColor=new THREE.Color(0xa8b8c4);
+    this.dawnColor=new THREE.Color(0xd6a181);
+    this.duskColor=new THREE.Color(0xc28f91);
+    this.nightColor=new THREE.Color(0x18243d);
+    this.nightHorizon=new THREE.Color(0x344158);
+    this.sunDay=new THREE.Color(0xffedcf);
+    this.sunHorizon=new THREE.Color(0xffb76c);
+    this.fogColor=new THREE.Color(0x8da1b2);
+    this.sunDirection=new THREE.Vector3(0,1,0);
+    this.exclusions=[];
+    this.renderCount=0;this.lastVisible=false;
 
-    this.skyCanvas=document.createElement('canvas');this.skyCanvas.width=32;this.skyCanvas.height=256;
-    this.skyCtx=this.skyCanvas.getContext('2d');
-    this.skyTexture=new THREE.CanvasTexture(this.skyCanvas);
-    this.skyTexture.colorSpace=THREE.SRGBColorSpace;
-    this.skyTexture.minFilter=THREE.LinearFilter;this.skyTexture.magFilter=THREE.LinearFilter;
-    this.skyKey='';this.scene.background=this.skyTexture;
+    const lowOpts={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
+    this.depthTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+    this.depthTarget.texture.name='paperchalk-atmosphere-view-depth';
+    this.volumeTarget=new THREE.WebGLRenderTarget(1,1,{...lowOpts,depthBuffer:false});
+    this.volumeTarget.texture.name='paperchalk-atmosphere-volume';
+    this.depthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,side:THREE.DoubleSide});
+    this.depthMaterial.blending=THREE.NoBlending;
 
-    const rt={minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false};
-    this.occlusionTarget=new THREE.WebGLRenderTarget(1,1,rt);
-    this.raysTarget=new THREE.WebGLRenderTarget(1,1,{...rt,depthBuffer:false});
-    this.blurTarget=new THREE.WebGLRenderTarget(1,1,{...rt,depthBuffer:false});
-    this.occlusionTarget.texture.name='paperchalk-atmosphere-occlusion';
-    this.raysTarget.texture.name='paperchalk-atmosphere-rays';
-    this.blurTarget.texture.name='paperchalk-atmosphere-blur';
-
-    this.blockerMaterial=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.DoubleSide,fog:false,toneMapped:false});
-
-    const sourceCanvas=document.createElement('canvas');sourceCanvas.width=sourceCanvas.height=128;
-    const ctx=sourceCanvas.getContext('2d'),g=ctx.createRadialGradient(64,64,0,64,64,64);
-    g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.12,'rgba(255,255,255,.98)');
-    g.addColorStop(.34,'rgba(255,255,255,.60)');g.addColorStop(.70,'rgba(255,255,255,.13)');
-    g.addColorStop(1,'rgba(255,255,255,0)');ctx.fillStyle=g;ctx.fillRect(0,0,128,128);
-    this.sourceTexture=new THREE.CanvasTexture(sourceCanvas);this.sourceTexture.colorSpace=THREE.SRGBColorSpace;
-    this.sourceMaterial=new THREE.SpriteMaterial({map:this.sourceTexture,color:0xffffff,transparent:true,depthTest:true,depthWrite:false,fog:false,toneMapped:false});
-    this.sourceSprite=new THREE.Sprite(this.sourceMaterial);this.sourceScene=new THREE.Scene();this.sourceScene.add(this.sourceSprite);
-
-    this.fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);this.fsGeometry=new THREE.PlaneGeometry(2,2);
-    this.radialUniforms={
-      tOcclusion:{value:this.occlusionTarget.texture},uLightPos:{value:this.sunUv},
-      uDensity:{value:this.settings.rayDensity},uDecay:{value:this.settings.rayDecay},
-      uWeight:{value:this.settings.rayWeight},uStrength:{value:0},uTime:{value:0},uAspect:{value:1}
+    this.fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    this.fsGeometry=new THREE.PlaneGeometry(2,2);
+    this.volumeUniforms={
+      tDepth:{value:this.depthTarget.texture},tShadow:{value:null},
+      uInvProjection:{value:new THREE.Matrix4()},uCameraWorld:{value:new THREE.Matrix4()},
+      uCameraPos:{value:new THREE.Vector3()},uShadowMatrix:{value:new THREE.Matrix4()},
+      uShadowMapSize:{value:new THREE.Vector2(1,1)},uSunDir:{value:this.sunDirection},
+      uSunColor:{value:this.sunDay.clone()},uFogColor:{value:this.fogColor},
+      uShadowBias:{value:-.0002},uIntensity:{value:0},
+      uFogDensity:{value:this.settings.fogDensity},uFogBase:{value:0},
+      uHeightFalloff:{value:this.settings.heightFalloff},uAnisotropy:{value:this.settings.anisotropy},
+      uMaxDistance:{value:this.settings.maxDistance},uSteps:{value:this.settings.steps},
+      uTime:{value:0},uResolution:{value:new THREE.Vector2(1,1)}
     };
-    this.radialMaterial=new THREE.ShaderMaterial({
-      uniforms:this.radialUniforms,depthTest:false,depthWrite:false,toneMapped:false,
-      vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`,
+    this.volumeMaterial=new THREE.ShaderMaterial({
+      uniforms:this.volumeUniforms,depthTest:false,depthWrite:false,toneMapped:false,
+      vertexShader:`
+        varying vec2 vUv;
+        void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
+      `,
       fragmentShader:`
         precision highp float;
         varying vec2 vUv;
-        uniform sampler2D tOcclusion;
-        uniform vec2 uLightPos;
-        uniform float uDensity,uDecay,uWeight,uStrength,uTime,uAspect;
-        float hash21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+        uniform sampler2D tDepth;
+        uniform sampler2D tShadow;
+        uniform mat4 uInvProjection;
+        uniform mat4 uCameraWorld;
+        uniform mat4 uShadowMatrix;
+        uniform vec3 uCameraPos;
+        uniform vec3 uSunDir;
+        uniform vec3 uSunColor;
+        uniform vec3 uFogColor;
+        uniform vec2 uShadowMapSize;
+        uniform vec2 uResolution;
+        uniform float uShadowBias;
+        uniform float uIntensity;
+        uniform float uFogDensity;
+        uniform float uFogBase;
+        uniform float uHeightFalloff;
+        uniform float uAnisotropy;
+        uniform float uMaxDistance;
+        uniform float uSteps;
+        uniform float uTime;
+
+        float unpackDepth(vec4 v){
+          return dot(v,vec4(0.99609375,0.00389099121,0.00001519918,0.0000000596046));
+        }
+        float hash21(vec2 p){
+          p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);
+        }
+        vec3 reconstructWorld(vec2 uv,float depth){
+          vec4 clip=vec4(uv*2.0-1.0,depth*2.0-1.0,1.0);
+          vec4 view=uInvProjection*clip;view/=max(1e-6,view.w);
+          return (uCameraWorld*view).xyz;
+        }
+        float shadowAt(vec3 p,float jitter){
+          vec4 sc=uShadowMatrix*vec4(p,1.0);
+          sc.xyz/=max(1e-6,sc.w);
+          if(sc.x<=0.001||sc.x>=0.999||sc.y<=0.001||sc.y>=0.999||sc.z<=0.0||sc.z>=1.0)return 1.0;
+          vec2 texel=1.0/max(uShadowMapSize,vec2(1.0));
+          vec2 o=(vec2(fract(jitter*7.13),fract(jitter*13.71))-.5)*texel*1.35;
+          float d0=unpackDepth(texture2D(tShadow,sc.xy+o));
+          float d1=unpackDepth(texture2D(tShadow,sc.xy-o*.73));
+          float cmp=sc.z+uShadowBias;
+          return (step(cmp,d0)+step(cmp,d1))*.5;
+        }
+        float hg(float mu,float g){
+          float g2=g*g;
+          return (1.0-g2)/(12.56637*pow(max(0.025,1.0+g2-2.0*g*mu),1.5));
+        }
         void main(){
-          const int SAMPLES=28;
-          vec2 toLight=uLightPos-vUv;
-          vec2 delta=toLight*(uDensity/float(SAMPLES));
-          float jitter=hash21(gl_FragCoord.xy+floor(uTime*17.0))-.5;
-          vec2 uv=vUv+delta*(jitter*.85);
-          float illumination=1.0;
-          float scatter=0.0;
-          for(int i=0;i<SAMPLES;i++){
-            uv+=delta;
-            float openSky=texture2D(tOcclusion,clamp(uv,vec2(.001),vec2(.999))).r;
-            scatter+=openSky*illumination*uWeight;
-            illumination*=uDecay;
+          float depth=unpackDepth(texture2D(tDepth,vUv));
+          vec3 endWorld=reconstructWorld(vUv,min(depth,.999999));
+          vec3 delta=endWorld-uCameraPos;
+          float surfaceDist=length(delta);
+          vec3 rayDir=surfaceDist>1e-5?delta/surfaceDist:vec3(0.0,0.0,-1.0);
+          float maxDist=min(uMaxDistance,depth>.9997?uMaxDistance:surfaceDist);
+          float steps=max(1.0,uSteps);
+          float stepLen=maxDist/steps;
+          float noise=hash21(gl_FragCoord.xy+vec2(uTime*17.0,uTime*7.0));
+          float t=(.22+noise*.72)*stepLen;
+          float trans=1.0;
+          float sunScatter=0.0;
+          float mu=clamp(dot(rayDir,normalize(uSunDir)),-1.0,1.0);
+          float phase=hg(mu,uAnisotropy);
+          for(int i=0;i<20;i++){
+            if(float(i)>=uSteps||t>=maxDist)break;
+            vec3 p=uCameraPos+rayDir*t;
+            float height=max(0.0,p.y-uFogBase);
+            float density=uFogDensity*(.28+.72*exp(-height*uHeightFalloff));
+            float lit=shadowAt(p,noise+float(i)*.6180339);
+            float absorb=exp(-density*stepLen*1.18);
+            sunScatter+=trans*lit*density*phase*stepLen;
+            trans*=absorb;
+            t+=stepLen;
           }
-          vec2 ar=vec2((vUv.x-uLightPos.x)*uAspect,vUv.y-uLightPos.y);
-          float sunDistance=length(ar);
-          float forwardPhase=exp(-sunDistance*2.35);
-          float halo=exp(-sunDistance*sunDistance*18.0);
-          float air=0.94+hash21(vUv*vec2(713.,421.)+floor(uTime*5.0))*.06;
-          float shafts=scatter*(.72+forwardPhase*.28)+halo*.10;
-          float v=clamp(shafts*uStrength*air,0.,1.15);
-          gl_FragColor=vec4(vec3(v),1.);
+          float fogAlpha=clamp(1.0-trans,0.0,.42);
+          float forwardBoost=smoothstep(.15,.96,mu);
+          vec3 scatter=uSunColor*sunScatter*uIntensity*(.72+forwardBoost*.85);
+          vec3 premul=uFogColor*fogAlpha+scatter;
+          gl_FragColor=vec4(premul,fogAlpha);
         }
       `
     });
-    this.radialScene=new THREE.Scene();this.radialScene.add(new THREE.Mesh(this.fsGeometry,this.radialMaterial));
+    this.volumeScene=new THREE.Scene();
+    this.volumeScene.add(new THREE.Mesh(this.fsGeometry,this.volumeMaterial));
 
-    this.blurUniforms={tInput:{value:this.raysTarget.texture},uTexel:{value:new THREE.Vector2(1,1)},uDirection:{value:new THREE.Vector2(1,0)}};
-    this.blurMaterial=new THREE.ShaderMaterial({
-      uniforms:this.blurUniforms,depthTest:false,depthWrite:false,toneMapped:false,
-      vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`,
+    this.compositeMaterial=new THREE.ShaderMaterial({
+      uniforms:{tVolume:{value:this.volumeTarget.texture}},
+      transparent:true,depthTest:false,depthWrite:false,toneMapped:false,
+      blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,
+      blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor,
+      vertexShader:`
+        varying vec2 vUv;
+        void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
+      `,
       fragmentShader:`
-        precision highp float;varying vec2 vUv;uniform sampler2D tInput;uniform vec2 uTexel,uDirection;
+        varying vec2 vUv;uniform sampler2D tVolume;
+        vec3 toSRGB(vec3 c){
+          vec3 lo=c*12.92;
+          vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;
+          return mix(lo,hi,step(vec3(.0031308),c));
+        }
         void main(){
-          vec2 o=uTexel*uDirection;
-          vec3 c=texture2D(tInput,vUv).rgb*.28;
-          c+=texture2D(tInput,vUv+o).rgb*.22;c+=texture2D(tInput,vUv-o).rgb*.22;
-          c+=texture2D(tInput,vUv+o*2.2).rgb*.11;c+=texture2D(tInput,vUv-o*2.2).rgb*.11;
-          c+=texture2D(tInput,vUv+o*3.8).rgb*.03;c+=texture2D(tInput,vUv-o*3.8).rgb*.03;
-          gl_FragColor=vec4(c,1.);
+          vec4 v=texture2D(tVolume,vUv);
+          gl_FragColor=vec4(toSRGB(max(v.rgb,vec3(0.0))),v.a);
         }
       `
     });
-    this.blurScene=new THREE.Scene();this.blurScene.add(new THREE.Mesh(this.fsGeometry,this.blurMaterial));
+    this.compositeScene=new THREE.Scene();
+    this.compositeScene.add(new THREE.Mesh(this.fsGeometry,this.compositeMaterial));
 
-    this.compositeMaterial=new THREE.MeshBasicMaterial({
-      map:this.raysTarget.texture,color:0xffdfaa,transparent:true,opacity:1,
-      blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false,toneMapped:false
+    this.skyUniforms={
+      uZenith:{value:this.zenithColor},uHorizon:{value:this.horizonColor},
+      uSunColor:{value:this.sunDay.clone()},uSunDir:{value:this.sunDirection},
+      uTwilight:{value:0},uTime:{value:0}
+    };
+    this.skyMaterial=new THREE.ShaderMaterial({
+      uniforms:this.skyUniforms,side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false,toneMapped:false,
+      vertexShader:`
+        varying vec3 vDir;
+        void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}
+      `,
+      fragmentShader:`
+        precision highp float;
+        varying vec3 vDir;
+        uniform vec3 uZenith,uHorizon,uSunColor,uSunDir;
+        uniform float uTwilight,uTime;
+        float hash21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
+        vec3 toSRGB(vec3 c){
+          vec3 lo=c*12.92;vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;
+          return mix(lo,hi,step(vec3(.0031308),c));
+        }
+        void main(){
+          vec3 d=normalize(vDir);
+          float h=clamp(d.y*.72+.28,0.0,1.0);
+          float grad=smoothstep(0.0,1.0,pow(h,.72));
+          vec3 col=mix(uHorizon,uZenith,grad);
+          float mu=max(0.0,dot(d,normalize(uSunDir)));
+          float glow=pow(mu,9.0)*(.32+uTwilight*.34);
+          float disc=pow(mu,620.0)*1.25;
+          float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.012;
+          col+=uSunColor*(glow+disc);
+          col*=1.0+grain;
+          gl_FragColor=vec4(toSRGB(max(col,vec3(0.0))),1.0);
+        }
+      `
     });
-    this.compositeScene=new THREE.Scene();this.compositeScene.add(new THREE.Mesh(this.fsGeometry,this.compositeMaterial));
-    this.exclusions=[];this.renderCount=0;this.lastVisible=false;this._updateSky(1,0,0);
+    this.skyMesh=new THREE.Mesh(new THREE.SphereGeometry(96,28,18),this.skyMaterial);
+    this.skyMesh.name='minecraft-inspired-atmosphere-sky';
+    this.skyMesh.frustumCulled=false;this.skyMesh.renderOrder=-10000;
+    this.scene.add(this.skyMesh);
+
+    this.scene.fog=new THREE.FogExp2(this.fogColor,.0015);
   }
 
   setExclusions(objects=[]){this.exclusions=(objects||[]).filter(Boolean);return this}
   configure(patch={}){
     Object.assign(this.settings,patch||{});
-    this.settings.rayIntensity=clamp(Number(this.settings.rayIntensity)||0,0,1.6);
-    this.settings.rayDensity=clamp(Number(this.settings.rayDensity)||.9,.45,1.2);
-    this.settings.rayDecay=clamp(Number(this.settings.rayDecay)||.965,.90,.992);
-    this.settings.rayWeight=clamp(Number(this.settings.rayWeight)||.16,.04,.30);
+    this.settings.intensity=clamp(Number(this.settings.intensity)||0,0,1.6);
     this.settings.fogDensity=clamp(Number(this.settings.fogDensity)||0,0,.025);
-    this.settings.qualityScale=clamp(Number(this.settings.qualityScale)||.35,.18,.55);
-    this.radialUniforms.uDensity.value=this.settings.rayDensity;this.radialUniforms.uDecay.value=this.settings.rayDecay;this.radialUniforms.uWeight.value=this.settings.rayWeight;
-    this.resize(this.size.width,this.size.height,this.size.pixelRatio);return this.stats();
+    this.settings.heightFalloff=clamp(Number(this.settings.heightFalloff)||.1,.02,.35);
+    this.settings.anisotropy=clamp(Number(this.settings.anisotropy)||.68,.0,.86);
+    this.settings.maxDistance=clamp(Number(this.settings.maxDistance)||50,20,100);
+    this.settings.qualityScale=clamp(Number(this.settings.qualityScale)||.35,.2,.65);
+    this.settings.steps=Math.round(clamp(Number(this.settings.steps)||12,6,20));
+    this.resize(this.size.width,this.size.height,this.size.pixelRatio);
+    return this.stats();
   }
 
   resize(width,height,pixelRatio=1){
     const w=Math.max(1,Math.round(width||1)),h=Math.max(1,Math.round(height||1));
     const pr=clamp(Number(pixelRatio)||1,1,2),q=this.settings.qualityScale;
-    const bw=Math.max(96,Math.round(w*pr*q)),bh=Math.max(64,Math.round(h*pr*q));
+    const bw=Math.max(120,Math.round(w*pr*q)),bh=Math.max(72,Math.round(h*pr*q));
     if(bw!==this.size.bufferWidth||bh!==this.size.bufferHeight){
-      this.occlusionTarget.setSize(bw,bh);this.raysTarget.setSize(bw,bh);this.blurTarget.setSize(bw,bh);
-      this.blurUniforms.uTexel.value.set(1/bw,1/bh);
+      this.depthTarget.setSize(bw,bh);this.volumeTarget.setSize(bw,bh);
     }
-    this.radialUniforms.uAspect.value=w/Math.max(1,h);this.size={width:w,height:h,pixelRatio:pr,bufferWidth:bw,bufferHeight:bh};
+    this.size={width:w,height:h,pixelRatio:pr,bufferWidth:bw,bufferHeight:bh};
+    this.volumeUniforms.uResolution.value.set(bw,bh);
   }
 
-  _mixColor(a,b,t){return new this.THREE.Color(a).lerp(new this.THREE.Color(b),clamp(t,0,1))}
-  _updateSky(daylight,twilight,night){
-    const key=[daylight,twilight,night].map(v=>Math.round(v*30)).join(':');if(key===this.skyKey)return;this.skyKey=key;
-    const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),n=clamp(night,0,1);
-    let top=this._mixColor(0x202d4c,0x7087aa,d),horizon=this._mixColor(0x40506b,0xa8bcc4,d);
-    top.lerp(new this.THREE.Color(0x596a91),tw*.52);horizon.lerp(new this.THREE.Color(0xe3ae7f),tw*.82);
-    top.multiplyScalar(1-n*.18);horizon.multiplyScalar(1-n*.12);
-    const ctx=this.skyCtx,g=ctx.createLinearGradient(0,0,0,this.skyCanvas.height);
-    g.addColorStop(0,'#'+top.getHexString());g.addColorStop(.55,'#'+top.clone().lerp(horizon,.42).getHexString());g.addColorStop(1,'#'+horizon.getHexString());
-    ctx.fillStyle=g;ctx.fillRect(0,0,this.skyCanvas.width,this.skyCanvas.height);
-    for(let y=0;y<256;y+=2){const a=.008+((y*37)%17)/5000;ctx.fillStyle='rgba(255,255,255,'+a.toFixed(4)+')';ctx.fillRect(0,y,32,1)}
-    this.skyTexture.needsUpdate=true;this.scene.background=this.skyTexture;
-  }
+  update({sunPosition,daylight=0,twilight=0,skyExposure=1,underground=0,time=0,fogBaseHeight=0,sunLight=null,skyLight=null,sunDisc=null}={}){
+    const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
+    const minute=((Number(time)||0)%1440+1440)%1440,morning=minute<720;
+    const lowSun=clamp(1-d*1.18,0,1);
+    const active=d>.01?(d*.68+tw*.18)*(.64+lowSun*.58)*sky*(1-under):0;
+    this.state={strength:active*this.settings.intensity,daylight:d,twilight:tw,skyExposure:sky,underground:under,time:Number(time)||0,fogBase:Number(fogBaseHeight)||0};
 
-  update({sunPosition,daylight=0,twilight=0,night=0,skyExposure=1,underground=0,time=0}={}){
-    if(sunPosition)this.sunWorld.copy(sunPosition);
-    const d=clamp(daylight,0,1),tw=clamp(twilight,0,1),n=clamp(night,0,1),sky=clamp(skyExposure,0,1),under=clamp(underground,0,1);
-    const lowSun=1-clamp((d-.18)/.70,0,1);
-    const atmospheric=d*(.30+lowSun*.66+tw*.22)*sky*(1-under);
-    this.state={strength:atmospheric*this.settings.rayIntensity,daylight:d,twilight:tw,night:n,skyExposure:sky,underground:under,time:Number(time)||0};
-    const fogBoost=1+tw*.34+lowSun*.15+n*.10;
-    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*fogBoost*(1-under*.72):0;
-    const warm=clamp(tw+lowSun*.36,0,1);this.fogColor.setRGB(.46+warm*.09,.54+warm*.045,.66-warm*.045);this.scene.fog.color.copy(this.fogColor);
-    this._updateSky(d,tw,n);
-  }
+    const warm=morning?this.dawnColor:this.duskColor;
+    const dayMix=clamp((d-.05)/.82,0,1);
+    if(d>.005){
+      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0xa8bac8),dayMix);
+      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x6288b6),dayMix);
+    }else{
+      this.horizonColor.copy(this.nightHorizon).lerp(warm,tw*.42);
+      this.zenithColor.copy(this.nightColor).lerp(warm,tw*.18);
+    }
+    this.skyColor.copy(this.horizonColor).lerp(this.zenithColor,.55);
+    const sunColor=this.sunHorizon.clone().lerp(this.sunDay,clamp(d*1.35,0,1));
+    this.fogColor.copy(this.horizonColor).lerp(this.zenithColor,.22);
 
-  _projectSun(camera){
-    this.sunNdc.copy(this.sunWorld).project(camera);
-    const edgeFade=clamp((1.30-Math.max(Math.abs(this.sunNdc.x),Math.abs(this.sunNdc.y)))/.30,0,1);
-    const visible=this.sunNdc.z>=-1&&this.sunNdc.z<=1;this.sunUv.set(this.sunNdc.x*.5+.5,this.sunNdc.y*.5+.5);return visible?edgeFade:0;
+    if(sunLight){
+      sunLight.color.copy(sunColor);
+      const target=sunLight.target?.position||new this.THREE.Vector3();
+      this.sunDirection.copy(sunLight.position).sub(target).normalize();
+    }else if(sunPosition)this.sunDirection.copy(sunPosition).normalize();
+    if(skyLight){skyLight.color.copy(this.zenithColor);skyLight.groundColor.set(0x74604b)}
+    if(sunDisc?.material?.color)sunDisc.material.color.copy(sunColor);
+
+    this.skyUniforms.uSunColor.value.copy(sunColor);
+    this.skyUniforms.uTwilight.value=tw;this.skyUniforms.uTime.value=Number(time)||0;
+    this.volumeUniforms.uSunColor.value.copy(sunColor);
+    this.volumeUniforms.uFogColor.value.copy(this.fogColor);
+    this.volumeUniforms.uIntensity.value=this.state.strength;
+    this.volumeUniforms.uFogDensity.value=this.settings.fogDensity*(1+tw*.22+lowSun*.16)*(1-under*.82);
+    this.volumeUniforms.uFogBase.value=this.state.fogBase;
+    this.volumeUniforms.uHeightFalloff.value=this.settings.heightFalloff;
+    this.volumeUniforms.uAnisotropy.value=this.settings.anisotropy;
+    this.volumeUniforms.uMaxDistance.value=this.settings.maxDistance;
+    this.volumeUniforms.uSteps.value=this.settings.steps;
+    this.volumeUniforms.uTime.value=this.state.time;
+    this.scene.fog.density=this.settings.enabled?this.settings.fogDensity*.19*(1+tw*.18)*(1-under*.8):0;
+    this.scene.fog.color.copy(this.fogColor);
   }
 
   render(renderer,scene,camera){
-    const strength=this.settings.enabled&&this.settings.godRays?this.state.strength*this._projectSun(camera):0;
-    this.lastVisible=strength>.002;if(!this.lastVisible)return false;
-    const oldTarget=renderer.getRenderTarget(),oldAutoClear=renderer.autoClear,oldOverride=scene.overrideMaterial,oldBackground=scene.background;
-    renderer.getClearColor(this.clearColor);const oldAlpha=renderer.getClearAlpha(),visibility=this.exclusions.map(o=>[o,o.visible]);
+    this.skyMesh.position.copy(camera.position);
+    if(!this.settings.enabled||!this.settings.volumetric||this.state.strength<=.001||!this.sun?.shadow?.map?.texture){
+      this.lastVisible=false;return false;
+    }
+
+    const oldTarget=renderer.getRenderTarget(),oldAutoClear=renderer.autoClear;
+    const oldOverride=scene.overrideMaterial,oldBackground=scene.background;
+    const oldShadowAuto=renderer.shadowMap.autoUpdate;
+    renderer.getClearColor(this.clearColor);const oldAlpha=renderer.getClearAlpha();
+    const visibility=[this.skyMesh,...this.exclusions].map(o=>[o,o.visible]);
+
     try{
       for(const [o] of visibility)o.visible=false;
-      scene.overrideMaterial=this.blockerMaterial;scene.background=null;
-      renderer.setRenderTarget(this.occlusionTarget);renderer.setClearColor(0x000000,1);renderer.autoClear=true;renderer.clear(true,true,true);renderer.render(scene,camera);
-      scene.overrideMaterial=oldOverride;this.sourceSprite.position.copy(this.sunWorld);this.sourceSprite.scale.setScalar(12+this.state.twilight*5);
-      renderer.autoClear=false;renderer.render(this.sourceScene,camera);for(const [o,v] of visibility)o.visible=v;
+      scene.overrideMaterial=this.depthMaterial;scene.background=null;
+      renderer.shadowMap.autoUpdate=false;
+      renderer.setRenderTarget(this.depthTarget);renderer.autoClear=true;
+      renderer.setClearColor(0xffffff,1);renderer.clear(true,true,true);
+      renderer.render(scene,camera);
 
-      this.radialUniforms.uLightPos.value.copy(this.sunUv);this.radialUniforms.uStrength.value=strength;this.radialUniforms.uTime.value=this.state.time;
-      renderer.setRenderTarget(this.raysTarget);renderer.setClearColor(0x000000,0);renderer.autoClear=true;renderer.clear(true,false,false);renderer.render(this.radialScene,this.fsCamera);
-      if(this.settings.blur){
-        this.blurUniforms.tInput.value=this.raysTarget.texture;this.blurUniforms.uDirection.value.set(1,0);
-        renderer.setRenderTarget(this.blurTarget);renderer.clear(true,false,false);renderer.render(this.blurScene,this.fsCamera);
-        this.blurUniforms.tInput.value=this.blurTarget.texture;this.blurUniforms.uDirection.value.set(0,1);
-        renderer.setRenderTarget(this.raysTarget);renderer.clear(true,false,false);renderer.render(this.blurScene,this.fsCamera);
-      }
+      for(const [o,v] of visibility)o.visible=v;
+      scene.overrideMaterial=oldOverride;scene.background=oldBackground;
+
+      const u=this.volumeUniforms;
+      u.tShadow.value=this.sun.shadow.map.texture;
+      u.uInvProjection.value.copy(camera.projectionMatrixInverse);
+      u.uCameraWorld.value.copy(camera.matrixWorld);
+      u.uCameraPos.value.copy(camera.position);
+      u.uShadowMatrix.value.copy(this.sun.shadow.matrix);
+      u.uShadowMapSize.value.copy(this.sun.shadow.mapSize);
+      u.uShadowBias.value=this.sun.shadow.bias;
+      u.uSunDir.value.copy(this.sunDirection);
+
+      renderer.setRenderTarget(this.volumeTarget);renderer.autoClear=true;
+      renderer.setClearColor(0x000000,0);renderer.clear(true,false,false);
+      renderer.render(this.volumeScene,this.fsCamera);
+
       renderer.setRenderTarget(oldTarget);renderer.autoClear=false;
-      const warm=clamp(this.state.twilight+(1-this.state.daylight)*.20,0,1);
-      this.compositeMaterial.opacity=clamp(.64+this.state.twilight*.16,.58,.84);this.compositeMaterial.color.setRGB(1,.90-warm*.06,.76-warm*.08);
-      renderer.render(this.compositeScene,this.fsCamera);this.renderCount++;return true;
+      renderer.render(this.compositeScene,this.fsCamera);
+      this.renderCount++;this.lastVisible=true;return true;
     }finally{
-      scene.overrideMaterial=oldOverride;scene.background=oldBackground;for(const [o,v] of visibility)o.visible=v;
-      renderer.setRenderTarget(oldTarget);renderer.autoClear=oldAutoClear;renderer.setClearColor(this.clearColor,oldAlpha);
+      for(const [o,v] of visibility)o.visible=v;
+      scene.overrideMaterial=oldOverride;scene.background=oldBackground;
+      renderer.shadowMap.autoUpdate=oldShadowAuto;
+      renderer.setRenderTarget(oldTarget);renderer.autoClear=oldAutoClear;
+      renderer.setClearColor(this.clearColor,oldAlpha);
     }
   }
 
   stats(){
     return {
-      enabled:!!this.settings.enabled,godRays:!!this.settings.godRays,
-      technique:'minecraft-style-depth-occlusion-radial-scattering-v2',
-      samples:28,blurPasses:this.settings.blur?2:0,qualityScale:this.settings.qualityScale,
-      buffer:[this.size.bufferWidth,this.size.bufferHeight],rayIntensity:this.settings.rayIntensity,currentStrength:this.state.strength,
-      fog:'dynamic-FogExp2-air-perspective',fogDensity:this.scene.fog?.density||0,sky:'graded-paper-sky',
-      dynamicSun:true,terrainOcclusion:true,dithered:true,filtered:true,additiveComposite:true,
-      mobileOptimized:this.mobileLike,visibleLastFrame:this.lastVisible,renders:this.renderCount
+      enabled:!!this.settings.enabled,volumetric:!!this.settings.volumetric,
+      technique:'shadowmap-worldspace-heightfog-mie-raymarch',
+      samples:this.settings.steps,qualityScale:this.settings.qualityScale,
+      buffer:[this.size.bufferWidth,this.size.bufferHeight],
+      intensity:this.settings.intensity,currentStrength:this.state.strength,
+      fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
+      mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
+      jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
+      minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
+      visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
 
   dispose(){
-    this.occlusionTarget.dispose();this.raysTarget.dispose();this.blurTarget.dispose();this.blockerMaterial.dispose();
-    this.sourceMaterial.dispose();this.sourceTexture.dispose();this.radialMaterial.dispose();this.blurMaterial.dispose();this.compositeMaterial.dispose();
-    this.fsGeometry.dispose();this.skyTexture.dispose();if(this.scene.fog)this.scene.fog=null;
+    this.scene.remove(this.skyMesh);
+    this.skyMesh.geometry.dispose();this.skyMaterial.dispose();
+    this.depthTarget.dispose();this.volumeTarget.dispose();this.depthMaterial.dispose();
+    this.volumeMaterial.dispose();this.compositeMaterial.dispose();this.fsGeometry.dispose();
+    if(this.scene.fog)this.scene.fog=null;
   }
 }
