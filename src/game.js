@@ -25,7 +25,6 @@ const hungerFill=byId('hungerFill');
 const hungerValue=byId('hungerValue');
 const staminaFill=byId('staminaFill');
 const staminaValue=byId('staminaValue');
-const fishingStatusHud=byId('fishingStatusHud');
 const profileNote=byId('profileNote');
 const continueBtn=byId('continueBtn');
 const enterBtn=byId('enterBtn');
@@ -94,14 +93,6 @@ const HUNGER_MAX=100;
 const HUNGER_DRAIN_PER_SECOND=.055;
 const HUNGER_ZERO_DAMAGE_INTERVAL=6;
 const STAMINA_MAX=100;
-const FISHING_CAST_SPEED=9.2;
-const FISHING_GRAVITY=13.5;
-const FISH_SIM_DT=.10;
-const FISH_MAX_ACTIVE=24;
-const FISH_ACTIVE_RADIUS=16;
-const FISH_DESPAWN_RADIUS=23;
-const FISH_APPROACH_RADIUS=7;
-const FISH_BITE_RADIUS=.34;
 const INVENTORY_CAPACITY=20;
 const FIXED_DT=1/60;
 const MAX_FRAME_DT=.06;
@@ -247,34 +238,9 @@ Velocity:velocity,
 Health:health,
 Player:controller
 });
-const fishing={
-state:'idle',timer:0,biteWindow:0,nextBite:0,
-x:0,y:0,z:0,vx:0,vy:0,vz:0,
-castX:0,castY:0,castZ:0,
-fishId:null,fishName:'',result:'',targetFishEntityId:null,
-seed:1
-};
-const fishWorld={
-entities:[],nextId:1,accumulator:0,spawnAccumulator:0,
-maxActive:FISH_MAX_ACTIVE,spatial:new Map(),lastWaterVersion:-1
-};
-function fishingSnapshot(){
-return {
-state:fishing.state,timer:fishing.timer,biteWindow:fishing.biteWindow,
-x:fishing.x,y:fishing.y,z:fishing.z,
-fishId:fishing.fishId,fishName:fishing.fishName,result:fishing.result,
-targetFishEntityId:fishing.targetFishEntityId
-};
-}
 function hungerSnapshot(){return {current:hunger.current,max:hunger.max,ratio:hunger.current/hunger.max}}
 function staminaSnapshot(){return {current:stamina.current,max:stamina.max,ratio:stamina.current/stamina.max}}
-function fishSnapshot(){
-return fishWorld.entities.map(f=>({
-id:f.id,species:f.species,x:f.x,y:f.y,z:f.z,
-vx:f.vx,vy:f.vy,vz:f.vz,state:f.state,size:f.size
-}));
-}
-let lastHungerHud=-1,lastStaminaHud=-1,lastFishingHud='';
+let lastHungerHud=-1,lastStaminaHud=-1;
 function updateSurvivalHud(){
 const ratio=Math.max(0,Math.min(1,hunger.current/hunger.max));
 const quantized=Math.round(ratio*200)/200;
@@ -289,19 +255,6 @@ lastStaminaHud=sq;
 if(staminaFill)staminaFill.style.transform='scaleX('+sq.toFixed(3)+')';
 if(staminaValue)staminaValue.textContent=String(Math.round(stamina.current));
 }
-if(fishingStatusHud){
-let text='';
-if(fishing.state==='flying')text='🎣 浮漂飞行中';
-else if(fishing.state==='waiting')text='🎣 等待咬钩…';
-else if(fishing.state==='landed')text='🎣 浮漂落地，点击收杆';
-else if(fishing.state==='bite')text='❗ 有鱼咬钩，立即收杆！';
-else if(fishing.state==='reeling')text='🎣 收杆中…';
-if(text!==lastFishingHud){
-lastFishingHud=text;
-fishingStatusHud.textContent=text;
-fishingStatusHud.classList.toggle('is-show',!!text);
-}
-}
 }
 const buildingColliders=[];
 let active=false;
@@ -313,6 +266,10 @@ let lastNow=0;
 let accumulator=0;
 let saveAccumulator=0;
 let waterStepAccumulator=0;
+let runtimePublishAccumulator=0;
+let lastClockText='';
+let terrainStatsCache=null;
+let terrainStatsCacheAt=0;
 let cameraYaw=settings.camera3d.yaw;
 let keyboardCrouch=false;
 let mobileCrouch=false;
@@ -344,6 +301,13 @@ attacking:controller.attacking,action:controller.action,torchOn:controller.torch
 inWater:controller.inWater,submerged:controller.submerged,facingX:controller.facingX
 };
 }
+function terrainStatsSnapshot(force=false){
+const now=performance.now();
+if(force||!terrainStatsCache||now-terrainStatsCacheAt>=500){
+terrainStatsCache=terrain.stats();terrainStatsCacheAt=now;
+}
+return terrainStatsCache;
+}
 function buildSnapshot(){
 const environment=terrain.sampleAtWorld(transform.x,transform.z);
 return {
@@ -353,11 +317,9 @@ player:playerSnapshot(),
 health:{current:health.current,max:health.max},
 hunger:hungerSnapshot(),
 stamina:staminaSnapshot(),
-fishing:fishingSnapshot(),
-fish:fishSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
 scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
-terrain:terrain.stats(),
+terrain:terrainStatsSnapshot(),
 debug:{colliders:debugColliders},
 ecs:ecs.stats()
 };
@@ -497,8 +459,7 @@ velocity.y*=drag;
 velocity.x*=Math.exp(-1.8*submerged*dt);
 velocity.y=Math.max(-3.2,Math.min(4.8,velocity.y));
 controller.grounded=false;
-}else if(!controller.grounded){
-velocity.y-=GRAVITY*dt;
+}else if(!controller.grounded){velocity.y-=GRAVITY*dt;
 }
 moveVertical(velocity.y*dt);
 }
@@ -547,8 +508,6 @@ return false;
 }
 function attack(){
 if(!worldInteractive())return false;
-const selected=typeof inventorySelected==='number'?inventoryItems?.[inventorySelected]:null;
-if(fishing.state!=='idle'||selected?.action==='fishing-rod')return reelFishingRod();
 if(controller.attackCooldown>0)return false;
 if(stamina.current<10){showMapNotice('体力不足',500);return false}
 stamina.current=Math.max(0,stamina.current-10);
@@ -613,346 +572,6 @@ get player(){return playerSnapshot()},
 jump,attack,setCrouch,toggleTorch,
 damagePlayer,healPlayer,setPlayerHp
 });
-function random01(){
-fishing.seed=(Math.imul(fishing.seed|0,1664525)+1013904223)|0;
-return (fishing.seed>>>0)/4294967296;
-}
-function chooseFishSpecies(){
-const phase=worldPhase(),env=terrain.sampleAtWorld(transform.x,transform.z),r=random01();
-const rareBoost=(phase==='dawn'||phase==='dusk'?0.05:0)+(env.biome==='marsh'?0.03:0);
-if(r<.09+rareBoost)return 'golden-paperfish';
-if(r<.48)return 'bluefin-minnow';
-return 'paper-carp';
-}
-function waterSurfaceNear(x,z,radius=1){
-const s=terrain.tileSize,gx=Math.floor(x/s),gz=Math.floor(z/s+.5);
-let best=null,bestD=Infinity;
-for(let dz=-radius;dz<=radius;dz++)for(let dx=-radius;dx<=radius;dx++){
-const b=terrain.water.columnBounds(gx+dx,gz+dz);
-if(!b)continue;
-const wx=(gx+dx+.5)*s,wz=(gz+dz)*s,d=Math.hypot(wx-x,wz-z);
-if(d<bestD){bestD=d;best={x:wx,y:b.top,z:wz,gx:gx+dx,gz:gz+dz,bottom:b.bottom,top:b.top,depth:b.depth}}
-}
-return best;
-}
-function fishById(id){return fishWorld.entities.find(f=>f.id===id)||null}
-function removeFishEntity(id){
-const i=fishWorld.entities.findIndex(f=>f.id===id);
-if(i>=0)fishWorld.entities.splice(i,1);
-}
-function releaseFishingTarget({flee=true,remove=false}={}){
-const id=fishing.targetFishEntityId;
-if(id!=null){
-const fish=fishById(id);
-if(remove)removeFishEntity(id);
-else if(fish){
-fish.state=flee?'flee':'wander';fish.stateTimer=flee?2.2:0;
-fish.targetX=fish.x+(random01()-.5)*4;fish.targetZ=fish.z+(random01()-.5)*3;
-}
-}
-fishing.targetFishEntityId=null;
-}
-function resetFishing(result=''){
-releaseFishingTarget({flee:result!=='caught',remove:false});
-fishing.state='idle';fishing.timer=0;fishing.biteWindow=0;fishing.nextBite=0;
-fishing.vx=fishing.vy=fishing.vz=0;fishing.fishId=null;fishing.fishName='';fishing.result=result;
-updateSurvivalHud();publish();
-}
-function rebuildFishSpatial(){
-const cell=3,grid=fishWorld.spatial;grid.clear();
-for(const fish of fishWorld.entities){
-const key=Math.floor(fish.x/cell)+','+Math.floor(fish.z/cell);
-let bucket=grid.get(key);if(!bucket){bucket=[];grid.set(key,bucket)}
-bucket.push(fish);
-}
-}
-function nearbyFish(x,z,radius){
-const cell=3,cx=Math.floor(x/cell),cz=Math.floor(z/cell),r=Math.ceil(radius/cell),out=[];
-for(let dz=-r;dz<=r;dz++)for(let dx=-r;dx<=r;dx++){
-const bucket=fishWorld.spatial.get((cx+dx)+','+(cz+dz));
-if(!bucket)continue;
-for(const fish of bucket)if(Math.hypot(fish.x-x,fish.z-z)<=radius)out.push(fish);
-}
-return out;
-}
-function fishWaterTargetNear(x,z,radius=4){
-const s=terrain.tileSize,gx=Math.floor(x/s),gz=Math.floor(z/s+.5),tries=18;
-for(let i=0;i<tries;i++){
-const dx=Math.round((random01()*2-1)*radius),dz=Math.round((random01()*2-1)*radius);
-const b=terrain.water.columnBounds(gx+dx,gz+dz);
-if(!b||b.depth<.28)continue;
-const margin=Math.min(.22,b.depth*.3);
-return {
-x:(gx+dx+.5)*s,z:(gz+dz)*s,
-y:b.bottom+margin+random01()*Math.max(.05,b.depth-margin*2),
-bounds:b
-};
-}
-return null;
-}
-function spawnFishAtColumn(gx,gz,bounds){
-if(!bounds||bounds.depth<.28||fishWorld.entities.length>=fishWorld.maxActive)return null;
-const species=chooseFishSpecies();
-const size=species==='golden-paperfish' ? .72 : species==='bluefin-minnow' ? .46 : .62;
-const margin=Math.min(.22,bounds.depth*.3);
-const fish={
-id:fishWorld.nextId++,species,
-x:(gx+.5)*terrain.tileSize+(random01()-.5)*.35,
-z:gz*terrain.tileSize+(random01()-.5)*.35,
-y:bounds.bottom+margin+random01()*Math.max(.05,bounds.depth-margin*2),
-vx:(random01()-.5)*.7,vy:0,vz:(random01()-.5)*.55,
-state:'wander',stateTimer:0,wanderTimer:.5+random01()*2,
-targetX:0,targetY:0,targetZ:0,size
-};
-fishWorld.entities.push(fish);return fish;
-}
-function ensureFishPopulation(){
-const s=terrain.tileSize,seen=new Set(),candidates=[];
-for(const key of terrain.water.cells.keys()){
-const [gx,,gz]=key.split(',').map(Number),ck=gx+','+gz;
-if(seen.has(ck))continue;seen.add(ck);
-const wx=(gx+.5)*s,wz=gz*s,d=Math.hypot(wx-transform.x,wz-transform.z);
-if(d>FISH_ACTIVE_RADIUS)continue;
-const b=terrain.water.columnBounds(gx,gz);
-if(b&&b.depth>=.28)candidates.push({gx,gz,b,d});
-}
-const desired=Math.min(FISH_MAX_ACTIVE,candidates.length?Math.max(1,Math.floor(candidates.length*.32)):0);
-let guard=80;
-while(fishWorld.entities.length<desired&&candidates.length&&guard-->0){
-const c=candidates[Math.floor(random01()*candidates.length)];
-if(fishWorld.entities.some(f=>Math.hypot(f.x-(c.gx+.5)*s,f.z-c.gz*s)<.8))continue;
-spawnFishAtColumn(c.gx,c.gz,c.b);
-}
-}
-function acquireFishForBobber(){
-if(fishing.state!=='waiting'||fishing.targetFishEntityId!=null)return null;
-rebuildFishSpatial();
-let best=null,bestD=Infinity;
-for(const fish of nearbyFish(fishing.x,fishing.z,FISH_APPROACH_RADIUS)){
-if(fish.state==='flee'||fish.state==='hooked')continue;
-const d=Math.hypot(fish.x-fishing.x,fish.y-(fishing.y-.24),fish.z-fishing.z);
-if(d<bestD){best=fish;bestD=d}
-}
-if(best){
-best.state='approach';best.stateTimer=0;fishing.targetFishEntityId=best.id;
-window.PaperchalkEvents?.emit('fishing:fish-approach',{fishId:best.id,species:best.species});
-}
-return best;
-}
-function updateFishEcology(dt){
-fishWorld.accumulator+=dt;fishWorld.spawnAccumulator+=dt;
-if(fishWorld.spawnAccumulator>=1){
-fishWorld.spawnAccumulator=0;
-fishWorld.entities=fishWorld.entities.filter(f=>{
-if(f.id===fishing.targetFishEntityId)return true;
-return Math.hypot(f.x-transform.x,f.z-transform.z)<=FISH_DESPAWN_RADIUS&&!!terrain.water.boundsAtWorld(f.x,f.z);
-});
-ensureFishPopulation();
-}
-if(fishWorld.accumulator<FISH_SIM_DT)return;
-const step=Math.min(.2,fishWorld.accumulator);fishWorld.accumulator=0;
-rebuildFishSpatial();
-acquireFishForBobber();
-for(const fish of fishWorld.entities){
-if(fish.state==='hooked')continue;
-fish.stateTimer=Math.max(0,(fish.stateTimer||0)-step);
-const bounds=terrain.water.boundsAtWorld(fish.x,fish.z);
-if(!bounds){
-const target=fishWaterTargetNear(fish.x,fish.z,2);
-if(target){fish.x=target.x;fish.y=target.y;fish.z=target.z}
-continue;
-}
-let tx=fish.targetX,ty=fish.targetY,tz=fish.targetZ,speed=.65;
-if(fish.state==='approach'&&fishing.state==='waiting'&&fishing.targetFishEntityId===fish.id){
-tx=fishing.x;tz=fishing.z;ty=Math.max(bounds.bottom+.12,Math.min(bounds.top-.12,fishing.y-.24));speed=1.35;
-const d=Math.hypot(fish.x-tx,fish.y-ty,fish.z-tz);
-if(d<=FISH_BITE_RADIUS){
-fish.state='nibbling';fish.vx=fish.vy=fish.vz=0;
-fishing.state='bite';fishing.timer=0;fishing.biteWindow=1.7;
-fishing.fishId=fish.species;fishing.fishName=CONTENT.items[fish.species]?.name||'鱼';
-window.PaperchalkEvents?.emit('fishing:bite',{...fishingSnapshot(),fishEntityId:fish.id});
-updateSurvivalHud();publish();continue;
-}
-}else if(fish.state==='flee'){
-speed=1.7;
-if(fish.stateTimer<=0){fish.state='wander';fish.wanderTimer=0}
-tx=fish.targetX||fish.x+(fish.vx>=0?2:-2);tz=fish.targetZ||fish.z;
-ty=Math.min(bounds.top-.14,Math.max(bounds.bottom+.14,fish.y));
-}else if(fish.state==='nibbling'){
-fish.x+=(fishing.x-fish.x)*Math.min(1,step*5);
-fish.z+=(fishing.z-fish.z)*Math.min(1,step*5);
-fish.y+=(fishing.y-.22-fish.y)*Math.min(1,step*5);
-continue;
-}else{
-fish.state='wander';fish.wanderTimer=(fish.wanderTimer||0)-step;
-if(fish.wanderTimer<=0||!Number.isFinite(tx)){
-const target=fishWaterTargetNear(fish.x,fish.z,4);
-if(target){fish.targetX=tx=target.x;fish.targetY=ty=target.y;fish.targetZ=tz=target.z}
-fish.wanderTimer=.8+random01()*2.8;
-}
-speed=fish.species==='bluefin-minnow' ? .92 : fish.species==='golden-paperfish' ? .72 : .62;
-}
-if(!Number.isFinite(tx)||!Number.isFinite(ty)||!Number.isFinite(tz))continue;
-let dx=tx-fish.x,dy=ty-fish.y,dz=tz-fish.z;
-const len=Math.max(.001,Math.hypot(dx,dy,dz));dx/=len;dy/=len;dz/=len;
-let sx=0,sz=0;
-for(const other of nearbyFish(fish.x,fish.z,1.1)){
-if(other===fish)continue;
-const ox=fish.x-other.x,oz=fish.z-other.z,d2=Math.max(.04,ox*ox+oz*oz);
-sx+=ox/d2;sz+=oz/d2;
-}
-dx+=sx*.08;dz+=sz*.08;
-const norm=Math.max(.001,Math.hypot(dx,dy,dz));dx/=norm;dy/=norm;dz/=norm;
-const response=Math.min(1,step*4);
-fish.vx+=(dx*speed-fish.vx)*response;
-fish.vy+=(dy*speed*.55-fish.vy)*response;
-fish.vz+=(dz*speed-fish.vz)*response;
-const nx=fish.x+fish.vx*step,ny=fish.y+fish.vy*step,nz=fish.z+fish.vz*step;
-const nb=terrain.water.boundsAtWorld(nx,nz);
-if(nb&&ny>nb.bottom+.07&&ny<nb.top-.05){
-fish.x=nx;fish.y=ny;fish.z=nz;
-}else{
-fish.vx*=-.65;fish.vz*=-.65;
-fish.wanderTimer=0;
-fish.y=Math.max(bounds.bottom+.08,Math.min(bounds.top-.08,fish.y));
-}
-}
-}
-window.PaperchalkFishEcology=Object.freeze({
-get fish(){return fishSnapshot()},
-get stats(){return {active:fishWorld.entities.length,maxActive:fishWorld.maxActive,spatialCells:fishWorld.spatial.size,simulationHz:Math.round(1/FISH_SIM_DT)}}
-});
-function castFishingRod(target=null){
-if(!worldInteractive())return false;
-if(fishing.state!=='idle')return reelFishingRod();
-const dir=controller.facingX||1;
-const startX=transform.x+dir*.28,startY=transform.y+.55,startZ=transform.z;
-let tx,ty,tz;
-if(target&&[target.x,target.y,target.z].every(Number.isFinite)){
-tx=Number(target.x);ty=Number(target.y)+.06;tz=Number(target.z);
-const distance=Math.hypot(tx-startX,tz-startZ);
-if(distance>16){showMapNotice('这个位置太远了。',700);return false}
-}else{
-let best=null;
-for(let d=2;d<=10;d+=.5){
-const x=transform.x+dir*d;
-const w=terrain.water.surfaceAtWorld(x,transform.z);
-if(w){best={x,y:w.y,z:transform.z};break}
-}
-if(!best){showMapNotice('请点击水面选择抛竿位置。',900);return false}
-tx=best.x;ty=best.y+.06;tz=best.z;
-}
-const dx=tx-startX,dz=tz-startZ;
-const horizontal=Math.hypot(dx,dz);
-const flightTime=Math.max(.48,Math.min(1.05,.46+horizontal*.055));
-fishing.state='flying';fishing.timer=0;fishing.result='';
-fishing.x=startX;fishing.y=startY;fishing.z=startZ;
-fishing.castX=tx;fishing.castY=ty;fishing.castZ=tz;
-fishing.flightTime=flightTime;
-fishing.vx=dx/flightTime;
-fishing.vz=dz/flightTime;
-fishing.vy=(ty-startY+.5*FISHING_GRAVITY*flightTime*flightTime)/flightTime;
-fishing.nextBite=0;fishing.biteWindow=0;
-window.PaperchalkEvents?.emit('fishing:cast',fishingSnapshot());
-showMapNotice('抛竿！',550);updateSurvivalHud();publish();
-return true;
-}
-function reelFishingRod(){
-if(fishing.state==='idle')return castFishingRod();
-if(fishing.state==='bite'){
-const entity=fishById(fishing.targetFishEntityId);
-const species=entity?.species||fishing.fishId||'paper-carp';
-const fish=CONTENT.items[species]||CONTENT.items['paper-carp'];
-fishing.fishId=fish.id;fishing.fishName=fish.name;fishing.state='reeling';fishing.timer=0;
-fishing.result='catch';
-if(entity)entity.state='hooked';
-window.PaperchalkEvents?.emit('fishing:hooked',{...fishingSnapshot(),fishId:fish.id,fishEntityId:entity?.id??null});
-updateSurvivalHud();publish();
-return true;
-}
-if(fishing.state==='waiting'||fishing.state==='flying'||fishing.state==='landed'){
-showMapNotice('提前收杆，没有鱼。',700);
-window.PaperchalkEvents?.emit('fishing:reel-empty',fishingSnapshot());
-resetFishing('empty');
-return true;
-}
-return false;
-}
-function updateFishing(dt){
-if(fishing.state==='idle')return;
-fishing.timer+=dt;
-if(fishing.state==='flying'){
-fishing.vy-=FISHING_GRAVITY*dt;
-fishing.x+=fishing.vx*dt;fishing.y+=fishing.vy*dt;fishing.z+=fishing.vz*dt;
-const targetWater=terrain.water.surfaceAtWorld(fishing.castX,fishing.castZ);
-const reachedTarget=fishing.timer>=Math.max(.2,(fishing.flightTime||.7)*.92);
-if(targetWater&&reachedTarget){
-fishing.x=fishing.castX;fishing.y=targetWater.y+.06;fishing.z=fishing.castZ;
-fishing.vx=fishing.vy=fishing.vz=0;fishing.state='waiting';fishing.timer=0;
-fishing.nextBite=2.2+random01()*4.8;
-window.PaperchalkEvents?.emit('fishing:bobber-water',fishingSnapshot());
-updateSurvivalHud();return;
-}
-const ground=terrain.highestGroundY(fishing.x,fishing.z);
-const validTargetWater=terrain.water.surfaceAtWorld(fishing.castX,fishing.castZ);
-const castTimeout=Math.max(1.4,(fishing.flightTime||.7)+.75);
-// If the player explicitly clicked a valid water surface, keep the ballistic cast
-// committed to that target instead of letting intervening terrain cancel it.
-if(!validTargetWater&&((fishing.y<=ground+.05&&fishing.timer>.12)||fishing.timer>castTimeout)){
-const targetGround=terrain.highestGroundY(fishing.castX,fishing.castZ);
-fishing.x=fishing.castX;fishing.z=fishing.castZ;
-fishing.y=(Number.isFinite(targetGround)?targetGround:ground)+.08;
-fishing.vx=fishing.vy=fishing.vz=0;fishing.state='landed';fishing.timer=0;
-window.PaperchalkEvents?.emit('fishing:bobber-land',fishingSnapshot());
-showMapNotice('浮漂落地，没有水就不会有鱼咬钩。',900);
-updateSurvivalHud();publish();return;
-}
-if(validTargetWater&&fishing.timer>castTimeout){
-fishing.x=fishing.castX;fishing.y=validTargetWater.y+.06;fishing.z=fishing.castZ;
-fishing.vx=fishing.vy=fishing.vz=0;fishing.state='waiting';fishing.timer=0;
-window.PaperchalkEvents?.emit('fishing:bobber-water',fishingSnapshot());
-updateSurvivalHud();publish();return;
-}
-}else if(fishing.state==='landed'){
-const ground=terrain.highestGroundY(fishing.x,fishing.z);
-if(Number.isFinite(ground))fishing.y=ground+.08;
-}else if(fishing.state==='waiting'){
-const water=waterSurfaceNear(fishing.x,fishing.z,1);
-if(!water){showMapNotice('水退走了，自动收杆。',800);resetFishing('dry');return}
-fishing.x=water.x;fishing.z=water.z;fishing.y=water.y+.06+Math.sin(performance.now()*.004)*.025;
-acquireFishForBobber();
-}else if(fishing.state==='bite'){
-const water=waterSurfaceNear(fishing.x,fishing.z,1);
-if(water){fishing.x=water.x;fishing.z=water.z;fishing.y=water.y-.025+Math.sin(performance.now()*.016)*.045}
-if(fishing.timer>=fishing.biteWindow){
-const missed=fishById(fishing.targetFishEntityId);
-if(missed){missed.state='flee';missed.stateTimer=2.4;missed.targetX=missed.x+(missed.x<fishing.x?-4:4);missed.targetZ=missed.z+(random01()-.5)*2}
-fishing.targetFishEntityId=null;fishing.fishId=null;fishing.fishName='';
-fishing.state='waiting';fishing.timer=0;
-window.PaperchalkEvents?.emit('fishing:bite-missed',fishingSnapshot());
-updateSurvivalHud();publish();return;
-}
-}else if(fishing.state==='reeling'){
-const t=Math.min(1,fishing.timer/.55),ease=1-Math.pow(1-t,3);
-const targetX=transform.x+(controller.facingX||1)*.35,targetY=transform.y+.45,targetZ=transform.z;
-fishing.x+=(targetX-fishing.x)*Math.min(1,dt*12);
-fishing.y+=(targetY-fishing.y)*Math.min(1,dt*12);
-fishing.z+=(targetZ-fishing.z)*Math.min(1,dt*12);
-if(t>=1){
-const fish=CONTENT.items[fishing.fishId]||CONTENT.items['paper-carp'];
-const ok=addInventoryItem({...fish,count:1});
-showMapNotice(ok?('钓到了 '+fish.name+'！'):'鱼上钩了，但背包已满！',1200);
-window.PaperchalkEvents?.emit('fishing:caught',{fishId:fish.id,name:fish.name,fishEntityId:fishing.targetFishEntityId});
-if(ok&&fishing.targetFishEntityId!=null)removeFishEntity(fishing.targetFishEntityId);
-fishing.targetFishEntityId=null;
-resetFishing(ok?'caught':'inventory-full');
-}
-}
-}
-window.PaperchalkFishing=Object.freeze({
-get state(){return fishingSnapshot()},
-cast:castFishingRod,reel:reelFishingRod,use:reelFishingRod
-});
 function safeSpawnY(x=sceneData.spawn.x,z=sceneData.spawn.z||0){
 return terrain.highestGroundY(x,z)+PLAYER_HALF_H+.03;
 }
@@ -997,8 +616,7 @@ const center=terrain.cellCenter(gx,gy,gz);
 if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 const half=terrain.tileSize*.49;
 const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half&&Math.abs(center.z-transform.z)<PLAYER_HALF_D+half;
-if(overlapsPlayer)return {changed:false,reason:'player-overlap'};
-const result=terrain.placeCell(gx,gy,gz,tile);
+if(overlapsPlayer)return {changed:false,reason:'player-overlap'};const result=terrain.placeCell(gx,gy,gz,tile);
 if(result.changed){
 const waterSettle=terrain.water.settleAll();
 window.PaperchalkEvents?.emit('terrain:changed',{...result,action:'place',waterSettle});
@@ -1076,19 +694,6 @@ if(!worldInteractive()||!event.target?.closest?.('.three-world-canvas'))return;
 if(pointer?.moved)return;
 if(event.button!==0&&event.button!==2)return;
 const selectedItem=inventoryItems[inventorySelected]||null;
-if(selectedItem?.action==='fishing-rod'){
-if(fishing.state!=='idle'){reelFishingRod();return}
-const waterTarget=window.Paperchalk3D?.screenToWaterSurface?.(event.clientX,event.clientY,{maxDistance:32});
-const terrainTarget=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:false});
-const castTarget=waterTarget||(terrainTarget?{
-x:terrainTarget.x,
-y:terrainTarget.y+terrain.tileSize*.52,
-z:terrainTarget.z
-}:null);
-if(!castTarget){showMapNotice('这里太远，换个位置抛竿。',750);return}
-castFishingRod(castTarget);
-return;
-}
 const target=window.Paperchalk3D?.screenToTerrainCell?.(event.clientX,event.clientY,{showCursor:true});
 if(!target)return;
 const waterMode=terrainToolMode==='water';
@@ -1122,7 +727,7 @@ const glyph=button.querySelector('.quick-glyph'),count=button.querySelector('.qu
 glyph.textContent=item?.glyph||item?.name?.slice(0,1)||'';
 count.textContent=item&&Number(item.count||1)>1?String(item.count):'';
 button.classList.toggle('is-selected',inventorySelected===i);
-button.classList.toggle('is-active',(item?.action==='toggle-torch'&&controller.torchOn)||(item?.action==='water-tool'&&terrainToolMode==='water')||(item?.action==='fishing-rod'&&fishing.state!=='idle'));
+button.classList.toggle('is-active',(item?.action==='toggle-torch'&&controller.torchOn)||(item?.action==='water-tool'&&terrainToolMode==='water'));
 button.setAttribute('aria-label',item?('快捷栏 '+(i+1)+'：'+item.name+(item.action==='toggle-torch'?(controller.torchOn?'，已点亮':'，已熄灭'):''))
 :('快捷栏 '+(i+1)+'：空'));
 }
@@ -1135,12 +740,6 @@ renderInventory();
 if(!item)return false;
 if(item.action==='toggle-torch')return toggleTorch();
 if(item.action==='water-tool')return setTerrainTool('water',{notice:true});
-if(item.action==='fishing-rod'){
-setTerrainTool('dig');
-showMapNotice(fishing.state==='idle'?'钓鱼竿已装备：点击任意可见位置抛竿。':'再次点击画面即可收杆。',900);
-renderQuickbar();
-return true;
-}
 return useSelectedItem();
 }
 quickSlots.forEach((button,index)=>button.addEventListener('click',()=>activateQuickSlot(index)));
@@ -1233,14 +832,6 @@ if(item.action==='water-tool'){
 setTerrainTool('water',{notice:true});
 renderInventory();
 return true;
-}
-if(item.action==='fishing-rod'){
-setTerrainTool('dig');
-if(fishing.state==='idle'){
-showMapNotice('点击任意可见位置抛竿；落水后才会钓到鱼。',900);
-renderInventory();renderQuickbar();return true;
-}
-const ok=reelFishingRod();renderInventory();renderQuickbar();return ok;
 }
 if(item.action==='eat'){
 const amount=Math.max(1,Number(item.hunger)||1);
@@ -1497,8 +1088,7 @@ if(a==='damage1')damagePlayer(1);
 else if(a==='heal1')healPlayer(1);
 else if(a==='damage3')damagePlayer(3);
 else if(a==='zero')setPlayerHp(0);
-else if(a==='full')setPlayerHp(PLAYER_MAX_HP);
-else if(a==='resetpos')window.PaperchalkMap.reset();
+else if(a==='full')setPlayerHp(PLAYER_MAX_HP);else if(a==='resetpos')window.PaperchalkMap.reset();
 else if(a==='colliders'){
 debugColliders=!debugColliders;
 window.Paperchalk3D?.setDebugColliders?.(debugColliders);
@@ -1562,13 +1152,6 @@ if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
 keys.add(event.code);event.preventDefault();return;
 }
 if(event.code==='Space'){if(!event.repeat||controller.inWater||!!playerWaterContact())jump();event.preventDefault();return}
-if(event.code==='KeyF'){
-if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod')){
-if(fishing.state==='idle')showMapNotice('装备钓鱼竿后，点击任意可见位置抛竿。',900);
-else reelFishingRod();
-}
-event.preventDefault();return;
-}
 if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
 if(event.code==='KeyC'){keyboardCrouch=true;setCrouch(true);event.preventDefault()}
 });
@@ -1585,7 +1168,8 @@ controller.crouching=keyboardCrouch||mobileCrouch;
 ecs.runPhase('fixed',dt,{interactive});
 if(active){
 worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
-paperClock.textContent=formatClock();
+const clockText=formatClock();
+if(clockText!==lastClockText){lastClockText=clockText;paperClock.textContent=clockText}
 waterStepAccumulator+=dt;
 if(waterStepAccumulator>=.10){
 waterStepAccumulator=0;
@@ -1594,8 +1178,6 @@ const liquidStep=terrain.water.step();
 if(liquidStep.changed)window.PaperchalkEvents?.emit('liquid:flow',liquidStep);
 }
 }
-updateFishEcology(dt);
-updateFishing(dt);
 const hungerDrain=HUNGER_DRAIN_PER_SECOND*dt*(controller.moving?1.35:1)*(controller.inWater?1.22:1);
 hunger.current=clampHunger(hunger.current-hungerDrain);
 const staminaDelta=(controller.inWater&&controller.moving?-5.5:(controller.moving?5.2:9.5))*dt*(.45+.55*(hunger.current/HUNGER_MAX));
@@ -1610,7 +1192,11 @@ updateSurvivalHud();
 }
 saveAccumulator+=dt;
 if(active&&saveAccumulator>=5){saveAccumulator=0;saveWorldState()}
+runtimePublishAccumulator+=dt;
+if(runtimePublishAccumulator>=1/30){
+runtimePublishAccumulator%=1/30;
 publish();
+}
 }
 function gameFrame(now){
 if(!active){frameHandle=0;return}
@@ -1643,7 +1229,7 @@ account:session.account,
 location:'Paperchalk · 无限3D体素世界',
 createdAt:Date.now(),
 worldMinutes:360,
-player:{...sceneData.spawn},
+player:{...sceneData.spawn,y:safeSpawnY(sceneData.spawn.x,PLAYER_ROW_CENTER_Z)},
 playerHp:PLAYER_MAX_HP,
 hunger:HUNGER_MAX,
 stamina:STAMINA_MAX,
@@ -1651,7 +1237,7 @@ terrainEdits:[],
 waterCells:[],
 torchOn:false,
 mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
-inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:i===1?{...CONTENT.items['water-bucket'],count:1}:i===2?{...CONTENT.items['fishing-rod'],count:1}:null)
+inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:i===1?{...CONTENT.items['water-bucket'],count:1}:null)
 };
 }
 function importLegacySave(session,targetKey){
@@ -1727,8 +1313,6 @@ controller.crouching=false;controller.attacking=false;controller.action='idle';c
 health.current=clampHp(save.playerHp);
 hunger.current=clampHunger(save.hunger??HUNGER_MAX);hunger.zeroDamageTimer=0;
 stamina.current=Math.max(0,Math.min(STAMINA_MAX,Number(save.stamina??STAMINA_MAX)||0));
-resetFishing();
-fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
 controller.torchOn=!!save.torchOn;
 worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
 setInventoryFromSave(save.inventory);
@@ -1741,11 +1325,7 @@ const waterSlot=inventoryItems.findIndex(v=>!v);
 if(waterSlot>=0)inventoryItems[waterSlot]={...itemClone(CONTENT.items['water-bucket']),count:1};
 renderInventory();
 }
-if(!inventoryItems.some(item=>item?.id==='fishing-rod')){
-const rodSlot=inventoryItems.findIndex(v=>!v);
-if(rodSlot>=0)inventoryItems[rodSlot]={...itemClone(CONTENT.items['fishing-rod']),count:1};
-renderInventory();
-}
+// Fishing ecology/rod onboarding is paused until the world foundation is stable.
 updateSurvivalHud();
 paperClock.textContent=formatClock();
 publish();

@@ -5,6 +5,9 @@ createVoxelGridTexture,
 createVoxelPaperSurfaceTexture,
 DEFAULT_TERRAIN_PALETTE
 } from '../terrain/voxel-block-mesh.js';
+import {OceanRenderer} from './OceanRenderer.js?v=world-core-r2';
+import {FarTerrainRenderer} from './FarTerrainRenderer.js?v=world-core-r2';
+import {EcologyRenderer} from './EcologyRenderer.js?v=world-core-r2';
 export class WorldSpaceHealthBar{
 constructor(THREE,{max=10}={}){
 this.THREE=THREE;this.max=max;this.value=max;
@@ -74,10 +77,27 @@ class WaterRenderer{
 constructor(THREE,terrain,scene){
 this.THREE=THREE;this.terrain=terrain;this.scene=scene;
 this.meshes=new Map();this.initialized=false;this.waterVersion=-1;this.dirty=new Set();
-this.material=new THREE.MeshPhongMaterial({
-color:0x49a9df,transparent:true,opacity:.62,depthWrite:false,
-shininess:78,specular:0xc8eeff,side:THREE.DoubleSide,flatShading:true
+this.waterTime=0;this.waterUniforms={uWaterTime:{value:0}};
+this.material=new THREE.MeshStandardMaterial({
+color:0x4aa4c7,transparent:true,opacity:.60,depthWrite:false,
+roughness:.22,metalness:0,side:THREE.DoubleSide,flatShading:false
 });
+this.material.onBeforeCompile=shader=>{
+shader.uniforms.uWaterTime=this.waterUniforms.uWaterTime;
+shader.vertexShader=shader.vertexShader
+.replace('#include <common>','#include <common>\nuniform float uWaterTime; varying float vWaterTop;')
+.replace('#include <begin_vertex>',`#include <begin_vertex>
+vWaterTop=smoothstep(.45,.82,normal.y);
+float waterWave=(sin(position.x*1.35+uWaterTime*1.9)+cos(position.z*1.15-uWaterTime*1.45)+sin((position.x+position.z)*.52+uWaterTime*.8))*.010;
+transformed.y+=waterWave*vWaterTop;`);
+shader.fragmentShader=shader.fragmentShader
+.replace('#include <common>','#include <common>\nvarying float vWaterTop;')
+.replace('#include <color_fragment>',`#include <color_fragment>
+diffuseColor.rgb*=mix(vec3(.68,.80,.86),vec3(1.04,1.08,1.10),vWaterTop);
+diffuseColor.a*=mix(.86,1.0,vWaterTop);`);
+this.waterShader=shader;
+};
+this.material.customProgramCacheKey=()=> 'paperchalk-water-v7';
 this.root=new THREE.Group();this.root.name='eight-layer-water-surface-meshes';scene.add(this.root);
 }
 _key(gx,gy,gz){return gx+','+gy+','+gz}
@@ -172,7 +192,9 @@ out.add(Math.floor(gx/n)+','+Math.floor(gy/n)+','+Math.floor(gz/n));
 }
 return out;
 }
-update(){
+update(dt=0){
+this.waterTime+=Math.max(0,Math.min(.05,Number(dt)||0));
+this.waterUniforms.uWaterTime.value=this.waterTime;
 const water=this.terrain.water;if(!water)return;
 if(!this.initialized){
 this.initialized=true;
@@ -195,7 +217,7 @@ let faces=0,renderedCells=0,topRects=0,topCells=0;
 for(const mesh of this.meshes.values()){
 const u=mesh.geometry.userData||{};faces+=u.faces||0;renderedCells+=u.cells||0;topRects+=u.topRects||0;topCells+=u.topCells||0;
 }
-return {...w,renderMode:'event-driven-greedy-water-v6',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,topRects,topCells,topMergeRatio:topRects?topCells/topRects:1,internalFacesCulled:true,greedyTopSurface:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:false};
+return {...w,renderMode:'event-driven-greedy-water-v7',renderedChunks:this.meshes.size,renderedCells,visibleFaces:faces,topRects,topCells,topMergeRatio:topRects?topCells/topRects:1,internalFacesCulled:true,greedyTopSurface:true,threeDimensional:true,drawCalls:this.meshes.size,visualFlow:true,waveShader:true};
 }
 dispose(){
 for(const mesh of this.meshes.values()){this.root.remove(mesh);mesh.geometry.dispose()}
@@ -209,6 +231,13 @@ this.THREE=THREE;this.terrain=terrain;this.scene=scene;
 this.settings={radiusXZ:3,radiusY:2,texturePixels:terrain.pixelsPerMeter||128,maxBuildsPerFrame:5,...settings};
 this.root=new THREE.Group();this.root.name='infinite-3d-voxel-terrain';scene.add(this.root);
 this.meshes=new Map();this.visibleKeys=new Set();this.pending=[];
+this.meshWorker=null;this.meshInFlight=new Map();this.meshRequestId=0;
+this.meshWorkerStats={requested:0,completed:0,staleRejected:0,errors:0};
+this.workerPalette=new Float32Array(6*3);
+for(const [tile,value] of Object.entries(DEFAULT_TERRAIN_PALETTE)){
+const c=new THREE.Color(value),i=(Number(tile)||0)*3;
+this.workerPalette[i]=c.r;this.workerPalette[i+1]=c.g;this.workerPalette[i+2]=c.b;
+}
 this.texture=createVoxelGridTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
 this.paperSurfaceTexture=createVoxelPaperSurfaceTexture(THREE,{size:Math.max(16,Math.round(Number(this.settings.texturePixels)||128))});
 const anisotropy=Math.max(1,Math.min(8,Number(this.settings.anisotropy)||1));
@@ -247,7 +276,9 @@ uOcclusionPlayer:{value:new THREE.Vector3()},
 uOcclusionEnabled:{value:1},
 uInteractionRowCenterZ:{value:this.terrain.interactionRowZ*this.terrain.tileSize},
 uBlackBackRowCenterZ:{value:this.terrain.blackBackRowZ*this.terrain.tileSize},
-uVoxelSize:{value:this.terrain.tileSize}
+uVoxelSize:{value:this.terrain.tileSize},
+uWeatherWetness:{value:0},
+uWeatherSnow:{value:0}
 };
 this.material.onBeforeCompile=shader=>{
 shader.uniforms.uDarkPlayer=this.darknessUniforms.uDarkPlayer;
@@ -262,11 +293,13 @@ shader.uniforms.uOcclusionEnabled=this.darknessUniforms.uOcclusionEnabled;
 shader.uniforms.uInteractionRowCenterZ=this.darknessUniforms.uInteractionRowCenterZ;
 shader.uniforms.uBlackBackRowCenterZ=this.darknessUniforms.uBlackBackRowCenterZ;
 shader.uniforms.uVoxelSize=this.darknessUniforms.uVoxelSize;
+shader.uniforms.uWeatherWetness=this.darknessUniforms.uWeatherWetness;
+shader.uniforms.uWeatherSnow=this.darknessUniforms.uWeatherSnow;
 shader.vertexShader=shader.vertexShader
 .replace('#include <common>','#include <common>\nattribute float darkness;\nattribute float voxelAO;\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;')
 .replace('#include <begin_vertex>','#include <begin_vertex>\nvVoxelDarkness=darkness;\nvVoxelAO=voxelAO;\nvVoxelWorldPos=(modelMatrix*vec4(position,1.0)).xyz;\nvVoxelWorldNormal=normalize(mat3(modelMatrix)*normal);');
 shader.fragmentShader=shader.fragmentShader
-.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;')
+.replace('#include <common>','#include <common>\nvarying float vVoxelDarkness;\nvarying float vVoxelAO;\nvarying vec3 vVoxelWorldPos;\nvarying vec3 vVoxelWorldNormal;\nuniform vec3 uDarkPlayer;\nuniform float uDarkTorchOn;\nuniform float uDarkTime;\nuniform sampler2D uVoxelLightMap;\nuniform vec2 uVoxelLightOrigin;\nuniform float uVoxelLightSpan;\nuniform vec3 uOcclusionCamera;\nuniform vec3 uOcclusionPlayer;\nuniform float uOcclusionEnabled;\nuniform float uInteractionRowCenterZ;\nuniform float uBlackBackRowCenterZ;\nuniform float uVoxelSize;\nuniform float uWeatherWetness;\nuniform float uWeatherSnow;')
 .replace('#include <opaque_fragment>',`
 vec2 lightUv=(vVoxelWorldPos.xy-uVoxelLightOrigin)/uVoxelLightSpan;
 float inside=step(0.0,lightUv.x)*step(lightUv.x,1.0)*step(0.0,lightUv.y)*step(lightUv.y,1.0);
@@ -278,6 +311,11 @@ outgoingLight*=darknessVisibility;
 // View-independent voxel AO: cheap contact darkening baked at greedy-mesh vertices.
 float voxelAoLight=mix(.52,1.0,smoothstep(0.0,1.0,vVoxelAO));
 outgoingLight*=voxelAoLight;
+float topWeather=smoothstep(.52,.92,max(vVoxelWorldNormal.y,0.0));
+outgoingLight*=mix(1.0,.72,uWeatherWetness);
+float snowMask=clamp(uWeatherSnow*topWeather,0.0,1.0);
+float snowLum=max(max(outgoingLight.r,outgoingLight.g),max(outgoingLight.b,.72));
+outgoingLight=mix(outgoingLight,vec3(snowLum*.98,snowLum, snowLum*1.02),snowMask*.82);
 vec3 voxelCell=floor((vVoxelWorldPos-vVoxelWorldNormal*(uVoxelSize*0.01))/uVoxelSize);
 float colorHash=fract(sin(dot(voxelCell,vec3(12.9898,78.233,37.719)))*43758.5453);
 float colorHash2=fract(sin(dot(voxelCell+17.0,vec3(39.3468,11.135,83.155)))*24634.6345);
@@ -306,8 +344,76 @@ gl_FragColor.a*=occlusionAlpha;
 `);
 this.terrainShader=shader;
 };
-this.material.customProgramCacheKey=()=> 'paperchalk-pbr-voxel-ao-v16';
+this.material.customProgramCacheKey=()=> 'paperchalk-pbr-voxel-ao-v17-weather';
+this._initMeshWorker();
 this.unsubscribe=terrain.subscribe(event=>this._onTerrainChanged(event));
+}
+_initMeshWorker(){
+if(typeof Worker==='undefined')return;
+try{
+this.meshWorker=new Worker(new URL('../terrain/voxel-mesh-worker.js?v=world-core-r2',import.meta.url),{type:'module'});
+this.meshWorker.onmessage=event=>this._onMeshWorkerMessage(event.data);
+this.meshWorker.onerror=error=>{
+console.warn('[paperchalk] voxel mesh worker disabled',error);
+this.meshWorkerStats.errors++;this.meshWorker?.terminate?.();this.meshWorker=null;this.meshInFlight.clear();
+};
+}catch(error){console.warn('[paperchalk] voxel mesh worker unavailable',error);this.meshWorker=null}
+}
+_workerGeometry(data){
+const T=this.THREE,g=new T.BufferGeometry();
+g.setAttribute('position',new T.BufferAttribute(data.positions,3));
+g.setAttribute('normal',new T.BufferAttribute(data.normals,3));
+g.setAttribute('color',new T.BufferAttribute(data.colors,3));
+g.setAttribute('darkness',new T.BufferAttribute(data.darkness,1));
+g.setAttribute('voxelAO',new T.BufferAttribute(data.ao,1));
+g.setAttribute('uv',new T.BufferAttribute(data.uvs,2));
+g.setIndex(new T.BufferAttribute(data.indices,1));
+if(data.positions.length){g.computeBoundingBox();g.computeBoundingSphere()}
+g.userData=data.userData||{};return g;
+}
+_requestWorkerBuild(cx,cy,cz){
+if(!this.meshWorker)return this._ensure(cx,cy,cz);
+const key=this.terrain.chunkKey(cx,cy,cz),chunk=this.terrain.getChunk(cx,cy,cz);
+const existing=this.meshInFlight.get(key);
+if(existing?.version===chunk.version)return null;
+const n=chunk.size,H=n+2,halo=new Uint8Array(H*H*H),s=this.terrain.tileSize;
+for(let y=-1;y<=n;y++)for(let z=-1;z<=n;z++)for(let x=-1;x<=n;x++){
+const value=(x>=0&&x<n&&y>=0&&y<n&&z>=0&&z<n)
+?chunk.get(x,y,z)
+:this.terrain.peekVoxel(cx*n+x,cy*n+y,cz*n+z);
+halo[((y+1)*H+(z+1))*H+(x+1)]=value;
+}
+const surfaces=new Int16Array(n);
+for(let x=0;x<n;x++)surfaces[x]=this.terrain.surfaceCell(cx*n+x,this.terrain.interactionRowZ);
+const id=++this.meshRequestId,version=chunk.version;
+this.meshInFlight.set(key,{id,version,cx,cy,cz});this.meshWorkerStats.requested++;
+this.meshWorker.postMessage({
+type:'mesh',id,key,version,n,s,cx,cy,cz,
+interactionRowZ:this.terrain.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,
+voxels:halo.buffer,surfaces:surfaces.buffer,palette:this.workerPalette
+},[halo.buffer,surfaces.buffer]);
+return null;
+}
+_onMeshWorkerMessage(data){
+if(!data||!data.key)return;
+const pending=this.meshInFlight.get(data.key);
+if(!pending||pending.id!==data.id){this.meshWorkerStats.staleRejected++;return}
+this.meshInFlight.delete(data.key);
+if(data.type==='mesh-error'){
+this.meshWorkerStats.errors++;console.warn('[paperchalk] voxel mesh worker error',data.message);return;
+}
+const chunk=this.terrain.chunks.get(data.key);
+if(!chunk||chunk.version!==data.version||!this.visibleKeys.has(data.key)){
+this.meshWorkerStats.staleRejected++;return;
+}
+const geometry=this._workerGeometry(data),old=this.meshes.get(data.key);
+if(old){this.root.remove(old.mesh);old.mesh.geometry.dispose()}
+const span=chunk.size*this.terrain.tileSize,mesh=new this.THREE.Mesh(geometry,this.material);
+mesh.name='voxel-chunk:'+data.cx+','+data.cy+','+data.cz;
+mesh.position.set(data.cx*span,data.cy*span,data.cz*span-this.terrain.tileSize*.5);
+mesh.receiveShadow=true;mesh.castShadow=true;mesh.userData={cx:data.cx,cy:data.cy,cz:data.cz,...geometry.userData};
+this.meshes.set(data.key,{mesh,version:data.version,cx:data.cx,cy:data.cy,cz:data.cz});this.root.add(mesh);
+this.meshWorkerStats.completed++;
 }
 _markDirty(cx,cy,cz){
 const record=this.meshes.get(this.terrain.chunkKey(cx,cy,cz));
@@ -381,6 +487,10 @@ this.lightGridData[j*n+i]=Math.max(0,Math.min(255,Math.round(reveal*255)));
 }
 this.lightGridTexture.needsUpdate=true;
 }
+setWeatherVisuals({wetness=0,snow=0}={}){
+this.darknessUniforms.uWeatherWetness.value=Math.max(0,Math.min(1,Number(wetness)||0));
+this.darknessUniforms.uWeatherSnow.value=Math.max(0,Math.min(1,Number(snow)||0));
+}
 setCameraOcclusion(cameraPosition,playerPosition,enabled=true){
 if(cameraPosition)this.darknessUniforms.uOcclusionCamera.value.copy(cameraPosition);
 if(playerPosition)this.darknessUniforms.uOcclusionPlayer.value.copy(playerPosition);
@@ -402,18 +512,31 @@ if(this.terrain.chunkMayContainTerrain&&!this.terrain.chunkMayContainTerrain(cx,
 const key=this.terrain.chunkKey(cx,cy,cz);
 next.add(key);
 const record=this.meshes.get(key);
-if(!record||record.version<0)queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
-else record.mesh.visible=true;
+if(!record){
+  if(!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+}else{
+  record.mesh.visible=true;
+  if(record.version<0&&!this.meshInFlight.has(key))queue.push({cx,cy,cz,d:dx*dx+dy*dy+dz*dz});
+}
 }
 queue.sort((a,b)=>a.d-b.d);
 const budget=Math.max(1,this.settings.maxBuildsPerFrame|0);
 for(let i=0;i<Math.min(budget,queue.length);i++){
-const q=queue[i],r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+const q=queue[i];
+// Bootstrap exactly one nearest chunk synchronously so the world is visible
+// immediately. All subsequent chunk rebuilds stay off the main thread.
+if(this.meshWorker&&this.meshes.size===0&&i===0){
+  const r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+}else if(this.meshWorker){
+  this._requestWorkerBuild(q.cx,q.cy,q.cz);
+}else{
+  const r=this._ensure(q.cx,q.cy,q.cz);r.mesh.visible=true;
+}
 }
 for(const [key,record] of [...this.meshes]){
 if(next.has(key))continue;
 this.root.remove(record.mesh);record.mesh.geometry.dispose();this.meshes.delete(key);
-this.terrain.unloadChunk(record.cx,record.cy,record.cz);
+this.meshInFlight.delete(key);this.terrain.unloadChunk(record.cx,record.cy,record.cz);
 }
 this.visibleKeys=next;
 }
@@ -424,121 +547,12 @@ for(const key of this.visibleKeys){
 const r=this.meshes.get(key);if(!r?.mesh.visible)continue;visible++;
 const u=r.mesh.userData||{};solid+=u.solidVoxels||0;quads+=u.quads||0;unitFaces+=u.unitFaces||0;triangles+=u.triangles||0;
 }
-return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,materialMode:'MeshStandardMaterial-paper-PBR',voxelAmbientOcclusion:'0fps-style-vertex-ao',paperBump:true,...this.terrain.stats()};
+return {visibleChunks:visible,renderedSolidVoxels:solid,renderedSolidTiles:solid,renderedQuads:quads,representedUnitFaces:unitFaces,terrainTriangles:triangles,dimensions:3,infinite:true,blockGeometry:'3d-cube',texturePixels:this.texture?.image?.width||this.settings.texturePixels||128,greedyRatio:quads?unitFaces/quads:1,materialMode:'MeshStandardMaterial-paper-PBR',voxelAmbientOcclusion:'0fps-style-vertex-ao',paperBump:true,workerMeshing:!!this.meshWorker,workerInFlight:this.meshInFlight.size,workerStats:{...this.meshWorkerStats},...this.terrain.stats()};
 }
 dispose(){
-this.unsubscribe?.();for(const r of this.meshes.values())r.mesh.geometry.dispose()
+this.unsubscribe?.();this.meshWorker?.terminate?.();this.meshWorker=null;this.meshInFlight.clear();
+for(const r of this.meshes.values())r.mesh.geometry.dispose()
 this.texture.dispose();this.paperSurfaceTexture?.dispose?.();this.lightGridTexture.dispose();this.material.dispose();this.scene.remove(this.root);
-}
-}
-class FishSchoolRenderer{
-constructor(THREE,scene,{capacity=32}={}){
-this.THREE=THREE;this.scene=scene;this.capacity=capacity;this.root=new THREE.Group();this.root.name='fish-ecology-instanced';scene.add(this.root);
-const shape=new THREE.Shape();
-shape.moveTo(-.34,0);shape.quadraticCurveTo(-.08,.20,.24,.12);shape.lineTo(.39,.25);shape.lineTo(.34,0);shape.lineTo(.39,-.25);shape.lineTo(.24,-.12);shape.quadraticCurveTo(-.08,-.20,-.34,0);shape.closePath();
-this.geometry=new THREE.ShapeGeometry(shape);
-this.materials={
-'paper-carp':new THREE.MeshLambertMaterial({color:0xb77b55,side:THREE.DoubleSide,flatShading:true}),
-'bluefin-minnow':new THREE.MeshLambertMaterial({color:0x5b89a5,side:THREE.DoubleSide,flatShading:true}),
-'golden-paperfish':new THREE.MeshLambertMaterial({color:0xd9b64b,side:THREE.DoubleSide,flatShading:true})
-};
-this.meshes={};
-for(const [species,material] of Object.entries(this.materials)){
-const mesh=new THREE.InstancedMesh(this.geometry,material,capacity);
-mesh.name='fish-school:'+species;mesh.count=0;mesh.frustumCulled=false;mesh.castShadow=false;mesh.receiveShadow=false;
-this.root.add(mesh);this.meshes[species]=mesh;
-}
-this.dummy=new THREE.Object3D();this.statsState={active:0,drawCalls:0,species:{}};
-}
-update(snapshot,camera,time=0){
-const fish=Array.isArray(snapshot?.fish)?snapshot.fish:[];
-const buckets={'paper-carp':[],'bluefin-minnow':[],'golden-paperfish':[]};
-for(const f of fish){
-if(!buckets[f.species]||f.state==='hooked')continue;
-buckets[f.species].push(f);
-}
-let active=0,drawCalls=0;const speciesStats={};
-for(const [species,mesh] of Object.entries(this.meshes)){
-const list=buckets[species],count=Math.min(this.capacity,list.length);mesh.count=count;
-if(count)drawCalls++;
-for(let i=0;i<count;i++){
-const f=list[i],speed=Math.hypot(f.vx||0,f.vz||0),face=(f.vx||0)>=0?1:-1;
-this.dummy.position.set(f.x,f.y,f.z);
-this.dummy.quaternion.copy(camera.quaternion);
-const bob=1+Math.sin(time*5+f.id*.73)*.035;
-const size=(Number(f.size)||.6)*bob;
-this.dummy.scale.set(face*size,size*.66,size);
-this.dummy.updateMatrix();mesh.setMatrixAt(i,this.dummy.matrix);
-}
-mesh.instanceMatrix.needsUpdate=true;
-active+=count;speciesStats[species]=count;
-}
-this.statsState={active,drawCalls,species:speciesStats,renderMode:'pooled-instanced-paper-fish'};
-}
-stats(){return this.statsState}
-dispose(){
-for(const mesh of Object.values(this.meshes))this.root.remove(mesh);
-this.geometry.dispose();for(const material of Object.values(this.materials))material.dispose();
-this.scene.remove(this.root);
-}
-}
-class FishingRenderer{
-constructor(THREE,scene){
-this.THREE=THREE;this.scene=scene;this.root=new THREE.Group();this.root.name='fishing-system';scene.add(this.root);
-this.lineGeometry=new THREE.BufferGeometry();
-this.lineMaterial=new THREE.LineBasicMaterial({color:0xe6ddc9,transparent:true,opacity:.9,depthTest:true});
-this.line=new THREE.Line(this.lineGeometry,this.lineMaterial);this.line.visible=false;this.root.add(this.line);
-this.rodGeometry=new THREE.BufferGeometry();
-this.rodMaterial=new THREE.LineBasicMaterial({color:0x5b3824,depthTest:true});
-this.rod=new THREE.Line(this.rodGeometry,this.rodMaterial);this.rod.visible=false;this.root.add(this.rod);
-const bobber=new THREE.Group();
-const body=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),new THREE.MeshLambertMaterial({color:0xf0eee5,flatShading:true}));
-body.scale.y=1.25;
-const cap=new THREE.Mesh(new THREE.SphereGeometry(.075,8,6),new THREE.MeshLambertMaterial({color:0xd64f42,flatShading:true}));
-cap.position.y=.08;bobber.add(body,cap);bobber.visible=false;this.root.add(bobber);this.bobber=bobber;
-const canvas=document.createElement('canvas');canvas.width=256;canvas.height=128;
-const ctx=canvas.getContext('2d');ctx.clearRect(0,0,256,128);
-ctx.fillStyle='rgba(40,34,28,.9)';ctx.strokeStyle='#f3d36b';ctx.lineWidth=8;
-if(ctx.roundRect){ctx.beginPath();ctx.roundRect(8,8,240,112,24);ctx.fill();ctx.stroke()}else{ctx.fillRect(8,8,240,112);ctx.strokeRect(8,8,240,112)}
-ctx.fillStyle='#fff4dd';ctx.font='900 58px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('！收杆',128,67);
-const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
-this.prompt=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));
-this.prompt.scale.set(1.35,.68,1);this.prompt.visible=false;this.prompt.renderOrder=2000;this.root.add(this.prompt);this.promptTexture=tex;
-const fishCanvas=document.createElement('canvas');fishCanvas.width=128;fishCanvas.height=128;
-const fctx=fishCanvas.getContext('2d');fctx.font='86px sans-serif';fctx.textAlign='center';fctx.textBaseline='middle';fctx.fillText('🐟',64,70);
-const ftex=new THREE.CanvasTexture(fishCanvas);ftex.colorSpace=THREE.SRGBColorSpace;
-this.fishSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:ftex,transparent:true,depthTest:false,depthWrite:false,toneMapped:false}));
-this.fishSprite.scale.set(.62,.62,1);this.fishSprite.visible=false;this.fishSprite.renderOrder=1999;this.root.add(this.fishSprite);this.fishTexture=ftex;
-this.statsState={visible:false,state:'idle',prompt:false,targetFishEntityId:null};
-}
-update(snapshot,camera,time=0){
-const f=snapshot?.fishing,p=snapshot?.player;
-if(!f||f.state==='idle'||!p){
-this.line.visible=false;this.rod.visible=false;this.bobber.visible=false;this.prompt.visible=false;this.fishSprite.visible=false;
-this.statsState={visible:false,state:'idle',prompt:false,targetFishEntityId:null};return;
-}
-const THREE=this.THREE,dir=p.facingX||1;
-const hand=new THREE.Vector3(p.x+dir*.18,p.y+.32,p.z+.06),tip=new THREE.Vector3(p.x+dir*.78,p.y+.92,p.z+.06),end=new THREE.Vector3(f.x,f.y,f.z);
-this.rodGeometry.setFromPoints([hand,tip]);this.rod.visible=true;
-this.lineGeometry.setFromPoints([tip,end]);this.line.visible=true;
-this.bobber.visible=true;this.bobber.position.copy(end);
-const bite=f.state==='bite',floatScale=bite?1+Math.sin(time*15)*.16:1+Math.sin(time*4)*.03;
-this.bobber.scale.set(floatScale,floatScale,floatScale);
-this.prompt.visible=bite;
-if(bite){
-this.prompt.position.set(f.x,f.y+.72,f.z);
-const pulse=1+Math.sin(time*12)*.08;this.prompt.scale.set(1.35*pulse,.68*pulse,1);this.prompt.quaternion.copy(camera.quaternion);
-}
-this.fishSprite.visible=f.state==='reeling';
-if(this.fishSprite.visible){this.fishSprite.position.set(f.x,f.y-.28,f.z+.02);this.fishSprite.quaternion.copy(camera.quaternion)}
-this.statsState={visible:true,state:f.state,prompt:bite,targetFishEntityId:f.targetFishEntityId??null};
-}
-stats(){return {...this.statsState,renderMode:'line+bobber+worldspace-bite-ui-v2'}}
-dispose(){
-this.lineGeometry.dispose();this.lineMaterial.dispose();this.rodGeometry.dispose();this.rodMaterial.dispose();
-this.bobber.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
-this.prompt.material.dispose();this.promptTexture.dispose();this.fishSprite.material.dispose();this.fishTexture.dispose();
-this.scene.remove(this.root);
 }
 }
 export class World3DEngine{
@@ -555,12 +569,12 @@ this.layers=this.sceneData.layers||{far:-8,rear:-3,terrain:0,actor:.45,front:2.5
 this.scene=new THREE.Scene();
 this.fixedBackgroundColor=new THREE.Color(0x6f7fa8);
 this.scene.background=this.fixedBackgroundColor.clone();
-this.camera=new THREE.PerspectiveCamera(42,1,.05,140);
+this.camera=new THREE.PerspectiveCamera(42,1,.05,520);
 this.cameraRig={yaw:.72,pitch:.38,distance:12,minDistance:4,maxDistance:28,height:.65,fov:42};
 this.stageView={enabled:false,axis:'z',side:1};
 this.cameraTarget=new THREE.Vector3();
 this.cameraTargetSmooth=new THREE.Vector3();
-this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.fishingRenderer=null;this.fishSchoolRenderer=null;this.paperEntities=[];
+this.lastSnapshot=null;this.playerSprite=null;this.healthBar=null;this.paperEntities=[];
 this.cameraOcclusion={enabled:true,radius:1.15,minOpacity:.18,entityStates:new Map(),terrainShader:true};
 this.debugColliders=false;this.pointerState=null;
 this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
@@ -634,32 +648,34 @@ moon.shadow.bias=-0.00025;
 moon.shadow.normalBias=.02;
 this.scene.add(moon);
 this.scene.add(moon.target);
-const sunDisc=new THREE.Mesh(
-new THREE.SphereGeometry(2.6,24,16),
-new THREE.MeshBasicMaterial({color:0xffe49a,toneMapped:false,depthWrite:false})
-);
-sunDisc.name='visible-sun';
-sunDisc.renderOrder=-50;
-this.scene.add(sunDisc);
-const moonDisc=new THREE.Mesh(
-new THREE.SphereGeometry(1.8,20,14),
-new THREE.MeshBasicMaterial({color:0xdce7ff,toneMapped:false,depthWrite:false})
-);
-moonDisc.name='visible-moon';
-moonDisc.renderOrder=-50;
-this.scene.add(moonDisc);
+const paperDiscTexture=(inner,outer)=>{
+const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
+const ctx=canvas.getContext('2d'),g=ctx.createRadialGradient(64,64,34,64,64,61);
+g.addColorStop(0,inner);g.addColorStop(.72,inner);g.addColorStop(.93,outer);g.addColorStop(1,'rgba(255,255,255,0)');
+ctx.fillStyle=g;ctx.beginPath();ctx.arc(64,64,62,0,Math.PI*2);ctx.fill();
+ctx.globalAlpha=.15;ctx.fillStyle='#fff';
+for(let i=0;i<180;i++){const a=i*2.399,r=8+(i*37)%48;ctx.fillRect(64+Math.cos(a)*r,64+Math.sin(a)*r,1.2,1.2)}
+const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;return tex;
+};
+this.sunDiscTexture=paperDiscTexture('#ffe49a','rgba(255,205,112,.2)');
+this.moonDiscTexture=paperDiscTexture('#dce7ff','rgba(170,195,235,.18)');
+const sunDisc=new THREE.Sprite(new THREE.SpriteMaterial({map:this.sunDiscTexture,transparent:true,depthWrite:false,depthTest:false,toneMapped:false,fog:false}));
+sunDisc.name='visible-sun';sunDisc.scale.set(5.2,5.2,1);sunDisc.renderOrder=-50;this.scene.add(sunDisc);
+const moonDisc=new THREE.Sprite(new THREE.SpriteMaterial({map:this.moonDiscTexture,transparent:true,depthWrite:false,depthTest:false,toneMapped:false,fog:false}));
+moonDisc.name='visible-moon';moonDisc.scale.set(3.7,3.7,1);moonDisc.renderOrder=-50;this.scene.add(moonDisc);
 this.terrainLights={sun,skyFill,ambient,moon,sunDisc,moonDisc};
 this.backdrop=null;
 this.terrainRenderer=new TerrainChunkRenderer(THREE,this.terrain,this.scene,{
-radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
-radiusY:this.sceneData.terrain?.visibleChunkRadiusY??2,
-maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,this.mobileLike?3:5),
+radiusXZ:Math.min(2,this.sceneData.terrain?.visibleChunkRadiusXZ??3),
+radiusY:1,
+maxBuildsPerFrame:Math.min(this.sceneData.terrain?.maxBuildsPerFrame??5,2),
 texturePixels:this.sceneData.terrain?.texturePixels??this.terrain.pixelsPerMeter??128,
 anisotropy:Math.min(8,this.renderer.capabilities.getMaxAnisotropy?.()||1)
 });
+this.farTerrainRenderer=new FarTerrainRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
+this.ecologyRenderer=new EcologyRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
+this.oceanRenderer=new OceanRenderer(THREE,this.terrain,this.scene,{mobile:this.mobileLike});
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
-this.fishingRenderer=new FishingRenderer(THREE,this.scene);
-this.fishSchoolRenderer=new FishSchoolRenderer(THREE,this.scene,{capacity:this.mobileLike?24:32});
 const cursorGeometry=new THREE.BoxGeometry(
 this.terrain.tileSize*1.035,
 this.terrain.tileSize*1.035,
@@ -897,8 +913,7 @@ const sy=Math.max(6,Math.abs(Math.sin(angle))*radius);
 const sz=22;
 if(sun){
 sun.intensity=daylight*3.05;
-sun.position.set(p.x+sx,p.y+sy,p.z+sz);
-sun.target.position.set(p.x,p.y-2,p.z);
+sun.position.set(p.x+sx,p.y+sy,p.z+sz);sun.target.position.set(p.x,p.y-2,p.z);
 sun.target.updateMatrixWorld();
 }
 if(skyFill){
@@ -917,7 +932,7 @@ moon.target.updateMatrixWorld();
 if(sunDisc){
 sunDisc.visible=daylight>.02;
 sunDisc.position.set(p.x+sx*1.55,p.y+sy*1.55,p.z+sz*1.55);
-sunDisc.scale.setScalar(.8+daylight*.35);
+sunDisc.scale.setScalar(4.6+daylight*1.1);
 }
 if(moonDisc){
 moonDisc.visible=night>.03;
@@ -933,10 +948,10 @@ const current=this.lastSnapshot;
 this._updatePlayer(dt,current);this._updateCamera(dt,current);this._updateCameraOcclusion(dt,current);this._updateWorldTime(current);
 const p=current?.player;
 this.terrainRenderer.update(p,{torchOn:!!p?.torchOn,time:performance.now()/1000});
+this.farTerrainRenderer?.update(p);
+this.ecologyRenderer?.update(p);
+this.oceanRenderer?.update(dt,p);
 this.waterRenderer?.update(dt);
-const renderTime=performance.now()/1000;
-this.fishSchoolRenderer?.update(current,this.camera,renderTime);
-this.fishingRenderer?.update(current,this.camera,renderTime);
 this.healthBar?.update(this.camera,dt);
 }
 render(){
@@ -1015,8 +1030,8 @@ entityMode:'paper-sprites-in-3d',
 drawCalls:Number(info.calls)||0,triangles:Number(info.triangles)||0,
 sceneChildren:this.scene.children.length,pixelRatio:this.pixelRatio,mobileQualityProfile:this.mobileLike?'balanced-mobile':'desktop',
 health:this.healthBar?.snapshot()||null,camera:this.cameraConfig(),stageView:{...this.stageView},
-debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
-lighting:{mode:'paper-pbr-sun-sky-moon-torch',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
+debugColliders:this.debugColliders,terrain:this.terrainRenderer.stats(),farTerrain:this.farTerrainRenderer?.stats?.()||null,ecology:this.ecologyRenderer?.stats?.()||null,ocean:this.oceanRenderer?.stats?.()||null,water:this.waterRenderer?.stats?.()||null,
+lighting:{mode:'paper-pbr-sun-sky-moon-torch-weather',backgroundMode:'dynamic-atmosphere',backgroundColor:'#'+this.fixedBackgroundColor.getHexString(),skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
 cameraOcclusion:{mode:'camera-player-capsule-fade-v2',enabled:this.cameraOcclusion?.enabled!==false,radius:this.cameraOcclusion?.radius??1.15,minOpacity:this.cameraOcclusion?.minOpacity??.18,fadedEntities:this.cameraOcclusion?.fadedEntities??0,protectInteractionRow:true,protectBlackBackRow:true,terrainShader:true},
@@ -1028,9 +1043,10 @@ terrainBlockGeometry:'3-axis greedy voxel BufferGeometry',flatShading:true,toneM
 }
 dispose(){
 this.terrainRenderer?.dispose();
+this.farTerrainRenderer?.dispose();
+this.ecologyRenderer?.dispose();
+this.oceanRenderer?.dispose();
 this.waterRenderer?.dispose();
-this.fishingRenderer?.dispose();
-this.fishSchoolRenderer?.dispose();
 if(this.terrainCursor){
 this.terrainCursor.geometry.dispose();
 this.terrainCursor.material.dispose();
@@ -1040,6 +1056,8 @@ this.torch.root.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.()});
 }
 this.playerSprite?.dispose();for(const entity of this.paperEntities)entity.dispose();
 this.environmentTarget?.dispose?.();
+this.sunDiscTexture?.dispose?.();this.moonDiscTexture?.dispose?.();
+this.terrainLights?.sunDisc?.material?.dispose?.();this.terrainLights?.moonDisc?.material?.dispose?.();
 this.renderer.dispose();this.host.replaceChildren();
 }
 }

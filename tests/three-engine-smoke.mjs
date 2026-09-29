@@ -23,11 +23,14 @@ try{
   assert(initial.terrain?.visibleChunks>0&&initial.terrain?.renderedSolidVoxels>0,'no streamed voxel geometry');
   assert(initial.terrain?.dimensions===3&&initial.terrain?.infinite===true,'not true 3D terrain');
   assert(initial.terrain?.greedyRatio>=1,'greedy mesher stats missing');
+  assert(initial.terrain?.workerMeshing===true,'voxel meshing worker did not start '+JSON.stringify(initial.terrain));
+  assert((initial.terrain?.workerStats?.completed||0)>0,'worker produced no chunk meshes '+JSON.stringify(initial.terrain?.workerStats));
+  assert(initial.ecology?.mode==='instanced-paper-ecology','instanced ecology missing '+JSON.stringify(initial.ecology));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
-  assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui-v2','fishing renderer missing '+JSON.stringify(initial.fishing));
-  assert(initial.fishEcology?.renderMode==='pooled-instanced-paper-fish','fish ecology renderer missing '+JSON.stringify(initial.fishEcology));
+  assert(initial.ocean?.mode==='analytic-ocean-plane','analytic ocean renderer missing '+JSON.stringify(initial.ocean));
+  assert(initial.farTerrain?.mode==='coarse-heightfield-ring','far terrain LOD missing '+JSON.stringify(initial.farTerrain));
   const canvas=page.locator('#threeWorldLayer canvas'),box=await canvas.boundingBox();
   assert(box,'canvas missing');
   const before=initial.camera.yaw;
@@ -49,11 +52,9 @@ try{
     player:window.PaperchalkRuntime.getSnapshot().player
   }));
   assert(torchState.result===true&&torchState.player.torchOn===true,'torch gameplay state did not activate '+JSON.stringify(torchState));
-  const cast=await page.evaluate(()=>{const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain,s=t.tileSize;const gx=Math.floor(p.x/s)+1,gz=t.stats().interactionRowZ,gy=Math.ceil(p.y/s)+1;t.water.setLevel(gx,gy,gz,8,{settle:false});t.water.needsSettle=false;return window.PaperchalkFishing.cast({x:(gx+.5)*s,y:gy*s+s,z:gz*s})});assert(cast===true,'fishing cast rejected');
-  await page.waitForTimeout(80);
-  const fishing=await page.evaluate(()=>window.Paperchalk3D.stats.fishing);
-  assert(fishing?.visible===true&&fishing?.state==='flying','fishing render did not activate '+JSON.stringify(fishing));
-  await page.evaluate(()=>window.PaperchalkFishing.reel());
+  const atmosphere=await page.evaluate(()=>window.Paperchalk3D.stats.environment);
+  assert(atmosphere&&typeof atmosphere.fogDensity==='number','weather atmosphere missing '+JSON.stringify(atmosphere));
+  assert(atmosphere.skyMode==='shader-gradient-dome','dynamic atmosphere sky missing '+JSON.stringify(atmosphere));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('INFINITE_VOXEL_3D_ENGINE_OK');
 }finally{await browser.close()}

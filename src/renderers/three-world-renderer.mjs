@@ -1,4 +1,5 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=voxel3d-r47';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=world-core-r2';
+import {EnvironmentFX} from '../engine3d/EnvironmentFX.js?v=world-core-r2';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -7,6 +8,7 @@ const THREE_MODULE='../../vendor/three/three.module.js';
 
 let THREE=null;
 let engine=null;
+let environmentFX=null;
 let active=false;
 let ready=false;
 let raf=0;
@@ -27,7 +29,8 @@ function emit(){
 function snapshot(){
   return {
     active,ready,error:errorMessage,loopActive:!!raf,
-    stats:engine?.stats?.()||null
+    stats:engine?.stats?.()||null,
+    environment:environmentFX?.stats?.()||null
   };
 }
 
@@ -48,6 +51,7 @@ async function ensureReady(){
       content:CONTENT,
       onCameraChanged:syncCameraControls
     });
+    environmentFX=new EnvironmentFX(THREE,engine);
     latestSnapshot=RUNTIME.getSnapshot();
     engine.setSnapshot(latestSnapshot);
     const settings=window.PaperchalkSettings?.get?.();
@@ -77,6 +81,7 @@ function frame(now){
   const dt=Math.min(.05,lastNow?(now-lastNow)/1000:1/60);
   lastNow=now;
   engine.update(dt,latestSnapshot||RUNTIME.getSnapshot());
+  environmentFX?.update(dt,latestSnapshot);
   engine.render();
   frames++;
   fpsFrames++;
@@ -188,7 +193,8 @@ window.Paperchalk3D=Object.freeze({
   get stats(){
     return {
       fps,frames,active,ready,loopActive:!!raf,error:errorMessage,
-      ...(engine?.stats?.()||{})
+      ...(engine?.stats?.()||{}),
+      environment:environmentFX?.stats?.()||null
     };
   },
   snapshot

@@ -18,9 +18,10 @@ const scene3d={
     visibleChunkRadiusY:2,
     maxBuildsPerFrame:5,
     biome:{
-      version:1,
+      version:2,
+      seaLevel:0,
       spawnSafeRadius:22,
-      generator:'multi-noise-landform-v1'
+      generator:'multi-noise-macro-landform-v2'
     }
   },
   layers:{
@@ -108,22 +109,6 @@ const content={
       id:'water-bucket',name:'水桶',desc:'选择后进入放水模式。每次放下一整格水，内部按 8 层离散水位向下和四周流动直到平衡。',
       weight:1.0,consumable:false,action:'water-tool',glyph:'💧'
     },
-    'fishing-rod':{
-      id:'fishing-rod',name:'钓鱼竿',desc:'再次使用即可抛竿或收杆。浮漂落入水中后会漂在液面，出现“！”时立即收杆。',
-      weight:.65,consumable:false,action:'fishing-rod',glyph:'🎣'
-    },
-    'paper-carp':{
-      id:'paper-carp',name:'纸鲤鱼',desc:'常见淡水鱼。可以直接食用，恢复 22 点饥饿值。',
-      weight:.8,consumable:true,action:'eat',hunger:22,glyph:'🐟',fish:true,rarity:'common'
-    },
-    'bluefin-minnow':{
-      id:'bluefin-minnow',name:'蓝鳍小鱼',desc:'游速很快的小型鱼。食用恢复 15 点饥饿值。',
-      weight:.35,consumable:true,action:'eat',hunger:15,glyph:'🐠',fish:true,rarity:'common'
-    },
-    'golden-paperfish':{
-      id:'golden-paperfish',name:'金纸鱼',desc:'较少见的金色纸鱼。食用恢复 35 点饥饿值。',
-      weight:.95,consumable:true,action:'eat',hunger:35,glyph:'🐡',fish:true,rarity:'rare'
-    }
   }
 };
 
