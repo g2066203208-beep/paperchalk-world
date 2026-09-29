@@ -81,7 +81,7 @@ try{
   const tuned=await page.evaluate(()=>window.Paperchalk3D.configurePaperTerrain({
     fiberStrength:.055,microNormalStrength:.38,roughnessVariation:.04,printNoiseStrength:.07
   }));
-  assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v2','paper material tuning API failed '+JSON.stringify(tuned));
+  assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','paper material tuning API failed '+JSON.stringify(tuned));
   await page.waitForTimeout(350);
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-8}));
   await page.waitForTimeout(250);
