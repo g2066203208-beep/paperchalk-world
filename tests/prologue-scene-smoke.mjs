@@ -83,8 +83,11 @@ try{
  assert(collision.fence===true&&collision.gate===false&&collision.sidewalk===false,'school fence/gate collision wrong '+JSON.stringify(collision));
  assert(collision.car===true&&collision.clearRoad===false,'paper sedan collision wrong '+JSON.stringify(collision));
  assert(collision.oldBuilding===false,'rejected building collision still present '+JSON.stringify(collision));
- await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({yaw:Math.PI,pitch:.10,distance:18,height:3.2,fov:42}));
- await page.waitForTimeout(350);
+ await page.evaluate(()=>{
+   window.PaperchalkMap.teleport(36.5,4);
+   window.Paperchalk3D.setCameraConfig({yaw:0,pitch:.10,distance:18,height:3.2,fov:42});
+ });
+ await page.waitForTimeout(850);
  await page.screenshot({path:'artifacts/prologue-school-street.png'});
  if(errors.length)throw new Error(errors.join('\n'));
  console.log('PROLOGUE_CITY_SCENE_OK');
