@@ -19,8 +19,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v2</h1>
-  <p>这版除了太阳/月亮直射光，还加入了“地面反射光”：草地与泥土的颜色会作为局部二次漫反射回填到角色和附近物体。可关闭按钮直接对比。</p>
+  <h1>纸艺世界视觉 Demo v3</h1>
+  <p>风格化舒适度优先：清晨/黄昏保留冷暖层次但不压黑，夜晚保持蓝色氛围同时保证角色与纸纹可读；天空填充、镜头柔光和地面反射光共同参与。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -268,8 +268,8 @@ contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.487,.13);scene
 
 let playerMesh=null,playerMat=null,playerDepthMat=null;
 const playerDayTint=new THREE.Color(0xffffff);
-const playerDuskTint=new THREE.Color(0xffe2ca);
-const playerNightTint=new THREE.Color(0xb9c9e8);
+const playerDuskTint=new THREE.Color(0xffead8);
+const playerNightTint=new THREE.Color(0xc9d6ee);
 const playerTintTmp=new THREE.Color();
 
 new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
@@ -312,13 +312,13 @@ const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe1b1,3.0);
 sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=11;sun.shadow.camera.bottom=-8;
-sun.shadow.camera.near=.1;sun.shadow.camera.far=42;sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;
+sun.shadow.camera.near=.1;sun.shadow.camera.far=42;sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;sun.shadow.radius=3.5;
 scene.add(sun);scene.add(sun.target);sun.target.position.set(0,0,0);
 
 const moon=new THREE.DirectionalLight(0xa9c4ff,0);
 moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);
 moon.shadow.camera.left=-12;moon.shadow.camera.right=12;moon.shadow.camera.top=11;moon.shadow.camera.bottom=-8;
-moon.shadow.camera.near=.1;moon.shadow.camera.far=42;moon.shadow.bias=-.0004;moon.shadow.normalBias=.02;
+moon.shadow.camera.near=.1;moon.shadow.camera.far=42;moon.shadow.bias=-.0004;moon.shadow.normalBias=.02;moon.shadow.radius=3;
 scene.add(moon);scene.add(moon.target);moon.target.position.set(0,0,0);
 
 // Approximate local diffuse GI / colour bleeding.
@@ -331,6 +331,17 @@ grassBounce.position.set(-.75,.72,1.0);
 dirtBounce.position.set(.72,.58,1.1);
 grassBounce.castShadow=false;dirtBounce.castShadow=false;
 scene.add(grassBounce,dirtBounce);
+
+// Art-directed fill for a comfortable stylized game look.
+// AmbientFill prevents deep blacks; viewFill is a very soft camera-side light
+// so the player and terrain silhouettes stay readable without looking self-lit.
+const ambientFill=new THREE.AmbientLight(0xdde8f2,.38);
+scene.add(ambientFill);
+
+const viewFill=new THREE.DirectionalLight(0xf5efe5,.24);
+viewFill.castShadow=false;
+scene.add(viewFill);scene.add(viewFill.target);
+viewFill.target.position.copy(target);
 
 const skyMat=new THREE.MeshBasicMaterial({map:skyTexture('day'),side:THREE.BackSide,fog:false,toneMapped:false});
 const sky=new THREE.Mesh(new THREE.SphereGeometry(48,32,18),skyMat);sky.scale.y=.72;scene.add(sky);
@@ -353,32 +364,64 @@ function updateLighting(t){
   state.time=((t%1)+1)%1;
   const a=state.time*Math.PI*2-Math.PI/2;
   const rawSun=Math.sin(a),sunUp=Math.max(rawSun,0),moonUp=Math.max(-rawSun,0);
-  const twilight=1-smoothstep(.02,.28,Math.abs(rawSun));
-  const sx=Math.cos(a)*18,sy=2+Math.max(rawSun,.02)*16,sz=Math.sin(a)*8;
-  const ma=a+Math.PI,mx=Math.cos(ma)*18,my=2+Math.max(-rawSun,.02)*16,mz=Math.sin(ma)*8;
+  const twilight=1-smoothstep(.025,.34,Math.abs(rawSun));
+
+  // Sun and moon still move physically around the scene, but the intensity
+  // curves are deliberately art-directed: dawn/dusk/night remain readable.
+  const sx=Math.cos(a)*18,sy=2.8+Math.max(rawSun,.03)*15,sz=Math.sin(a)*8;
+  const ma=a+Math.PI,mx=Math.cos(ma)*18,my=3+Math.max(-rawSun,.03)*15,mz=Math.sin(ma)*8;
   sun.position.set(sx,sy,sz);moon.position.set(mx,my,mz);
 
-  const sunWarm=new THREE.Color(0xffaa75),sunDay=new THREE.Color(0xffe3b8);
-  sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
-  sun.intensity=.10+sunUp*3.15+twilight*.35;
-  moon.color.set(0xaec8ff);moon.intensity=moonUp*.92;
-  hemi.intensity=.34+sunUp*1.18+moonUp*.18;
-  hemi.color.set(sunUp>.08?0xdbeeff:0x6d83aa);
-  hemi.groundColor.set(sunUp>.08?0x8c654a:0x383b4b);
+  const sunWarm=new THREE.Color(0xffa96f);
+  const sunDay=new THREE.Color(0xffe5bd);
+  sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.10,.72,sunUp));
+  sun.intensity=.18+sunUp*2.55+twilight*.82;
 
-  const horizonDay=new THREE.Color(0xb8d4dc),horizonNight=new THREE.Color(0x415169),horizonWarm=new THREE.Color(0xd7b08d);
-  const fogColor=horizonNight.clone().lerp(horizonDay,Math.pow(sunUp,.45)).lerp(horizonWarm,twilight*.42);
-  if(state.fog)scene.fog=new THREE.Fog(fogColor,13+(1-twilight)*2,32+sunUp*5);
+  moon.color.set(0xb7cfff);
+  moon.intensity=.08+moonUp*1.18;
 
-  renderer.toneMappingExposure=state.tone?(.68+sunUp*.38+twilight*.08):1;
+  // Stronger sky/ground diffuse fill: this is intentionally more generous than
+  // reality so the handmade-paper colours never collapse into black.
+  hemi.intensity=.78+sunUp*.62+moonUp*.15+twilight*.18;
+  const hemiDay=new THREE.Color(0xdceeff);
+  const hemiNight=new THREE.Color(0x9fb8df);
+  const hemiWarm=new THREE.Color(0xffd8bd);
+  hemi.color.copy(hemiNight).lerp(hemiDay,Math.pow(sunUp,.45)).lerp(hemiWarm,twilight*.24);
+
+  const groundDay=new THREE.Color(0x9c7656);
+  const groundNight=new THREE.Color(0x606b7d);
+  const groundWarm=new THREE.Color(0xb37b58);
+  hemi.groundColor.copy(groundNight).lerp(groundDay,Math.pow(sunUp,.45)).lerp(groundWarm,twilight*.24);
+
+  // Global fill + camera-side key keep all gameplay-critical shapes readable.
+  ambientFill.intensity=.30+sunUp*.12+moonUp*.11+twilight*.08;
+  const ambientDay=new THREE.Color(0xe7edf0);
+  const ambientNight=new THREE.Color(0x9daccc);
+  const ambientWarm=new THREE.Color(0xffd9c1);
+  ambientFill.color.copy(ambientNight).lerp(ambientDay,Math.pow(sunUp,.4)).lerp(ambientWarm,twilight*.18);
+
+  viewFill.intensity=.16+(1-sunUp)*.20+twilight*.12;
+  const viewDay=new THREE.Color(0xf7f0e6);
+  const viewNight=new THREE.Color(0xa9bfe4);
+  const viewWarm=new THREE.Color(0xffc9aa);
+  viewFill.color.copy(viewNight).lerp(viewDay,Math.pow(sunUp,.5)).lerp(viewWarm,twilight*.34);
+
+  const horizonDay=new THREE.Color(0xb9d9e2);
+  const horizonNight=new THREE.Color(0x667d9b);
+  const horizonWarm=new THREE.Color(0xe6c2a4);
+  const fogColor=horizonNight.clone().lerp(horizonDay,Math.pow(sunUp,.38)).lerp(horizonWarm,twilight*.38);
+  if(state.fog)scene.fog=new THREE.Fog(fogColor,15,38+sunUp*4);
+
+  // Narrow exposure range = comfortable stylized game image instead of
+  // physically dark dawn/night.
+  renderer.toneMappingExposure=state.tone?(.90+sunUp*.12+twilight*.045):1;
   scene.background.copy(fogColor);
 
   let mode='night';
-  if(sunUp>.28)mode='day';
+  if(sunUp>.30)mode='day';
   else if(rawSun>=0)mode=state.time<.5?'dawn':'sunset';
   setSkyMode(mode);
 
-  // Disc positions are sky decorations, independent from actual light distance.
   const sunDir=new THREE.Vector3(sx,sy,sz).normalize();
   const moonDir=new THREE.Vector3(mx,my,mz).normalize();
   sunDisc.position.copy(camera.position).addScaledVector(sunDir,34);
@@ -387,36 +430,29 @@ function updateLighting(t){
   sunDisc.visible=state.sky&&rawSun>-0.08;moonDisc.visible=state.sky&&rawSun<0.12;
   sunDisc.material.opacity=.72+sunUp*.26;moonDisc.material.opacity=.72+moonUp*.22;
 
-  // The paper-doll belongs to the same lighting environment as the terrain.
-  // Direct/hemisphere lights do the real shading; this subtle tint only carries
-  // the ambient time-of-day colour so the sprite never looks pasted on top.
   if(playerMat){
-    const dayAmount=smoothstep(.02,.72,sunUp);
+    const dayAmount=smoothstep(.02,.68,sunUp);
     playerTintTmp.copy(playerNightTint).lerp(playerDayTint,dayAmount);
-    if(twilight>0){
-      playerTintTmp.lerp(playerDuskTint,twilight*.45);
-    }
+    if(twilight>0)playerTintTmp.lerp(playerDuskTint,twilight*.32);
     playerMat.color.copy(playerTintTmp);
 
-    // Keep the sprite matte and readable. This is not self-lighting: most of
-    // the brightness still comes from Lambert diffuse + hemisphere/moon light.
-    // The small mapped emissive floor approximates indirect diffuse bounce that
-    // a real paper cutout would receive from the sky and surrounding ground.
-    playerMat.emissiveIntensity=.018+(1-sunUp)*.035+twilight*.01;
+    // Only a tiny safety floor remains; readable brightness now mainly comes
+    // from world diffuse fill + terrain bounce.
+    playerMat.emissiveIntensity=.012+(1-sunUp)*.018;
   }
 
-  // Local colour bleeding: bright grass/dirt under the sun throws a soft
-  // green/warm second bounce upward. At night the moon bounce becomes cooler.
-  const bounceDay=.28+sunUp*1.18+twilight*.18;
-  const bounceNight=moonUp*.34;
+  // Stylized local colour bleeding from grass/dirt. Keep it visible even at
+  // dawn/night so the character belongs to the terrain palette.
+  const bounceDay=.42+sunUp*.92+twilight*.28;
+  const bounceNight=moonUp*.48;
   grassBounce.intensity=state.bounce?(bounceDay+bounceNight):0;
-  dirtBounce.intensity=state.bounce?(bounceDay*.58+bounceNight*.22):0;
-  grassBounce.color.set(sunUp>.05?0xc7d99a:0x8fa7c8);
-  dirtBounce.color.set(sunUp>.05?0xcf9b72:0x7184a5);
+  dirtBounce.intensity=state.bounce?(bounceDay*.62+bounceNight*.28):0;
+  grassBounce.color.set(sunUp>.05?0xd0dfa4:0x9fb3ce);
+  dirtBounce.color.set(sunUp>.05?0xd8a47d:0x7f91ad);
 
-  // Contact shadow follows available light instead of staying equally dark.
   if(contactShadow?.material){
-    contactShadow.material.opacity=.42+sunUp*.48+moonUp*.10;
+    // Never crush the feet into a black blob at dawn/night.
+    contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
   }
 }
 function preset(name){
@@ -445,7 +481,7 @@ function setFinal(v){
   if(v){updateLighting(state.time)}
   else{
     state.auto=false;document.getElementById('cycle').classList.remove('active');
-    scene.background.set(0xaaa5b1);scene.fog=null;hemi.intensity=1;sun.intensity=2.0;moon.intensity=0;grassBounce.intensity=0;dirtBounce.intensity=0;
+    scene.background.set(0xaaa5b1);scene.fog=null;hemi.intensity=1;sun.intensity=2.0;moon.intensity=0;grassBounce.intensity=0;dirtBounce.intensity=0;ambientFill.intensity=.18;viewFill.intensity=.10;
     renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;
   }
   syncButtons();
@@ -521,6 +557,11 @@ function animate(now){
       playerMesh.position.z+fz*.75-sz*.72
     );
   }
+
+  // Soft viewer-side fill follows the camera, a common stylized-game lighting
+  // trick that protects readability while the sun/moon still define the scene.
+  viewFill.position.copy(camera.position);
+  viewFill.target.position.set(0,1.1,0);
 
   renderer.render(scene,camera);
 }
