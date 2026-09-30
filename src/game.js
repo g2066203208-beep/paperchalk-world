@@ -122,6 +122,7 @@ const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
 const INTERACTION_ROW_Z=Number(sceneData.terrain?.interactionRowZ??0);
 const bounds=sceneData.bounds;
+const WORLD_LAYOUT_ID=sceneData.terrain?.prologueRoad?.id||sceneData.mode;
 const terrain=new TerrainRuntime.TerrainWorld({
 tileSize:sceneData.terrain?.tileSize??1,
 pixelsPerMeter:sceneData.terrain?.pixelsPerMeter??128,
@@ -1669,6 +1670,7 @@ account:session.account,
 location:'Paperchalk · 无限3D体素世界',
 createdAt:Date.now(),
 worldMinutes:360,
+worldLayout:WORLD_LAYOUT_ID,
 player:{...sceneData.spawn},
 playerHp:PLAYER_MAX_HP,
 hunger:HUNGER_MAX,
@@ -1723,6 +1725,7 @@ if(!session)return false;
 const save=readSaveForSession(session)||defaultSave(session);
 save.location='Paperchalk · 无限3D体素世界';
 save.worldMinutes=worldMinutes;
+save.worldLayout=WORLD_LAYOUT_ID;
 save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
 save.playerHp=health.current;
 save.hunger=hunger.current;
@@ -1742,8 +1745,8 @@ const save=readSaveForSession(session)||defaultSave(session);
 terrain.importEdits(save.terrainEdits);
 terrain.water.importState(save.waterCells);
 const p=save.player||sceneData.spawn;
-transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
-transform.z=Number.isFinite(Number(p.z))?Number(p.z):(sceneData.spawn.z||0);
+transform.x=clamp(Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x,bounds.minX+PLAYER_HALF_W,bounds.maxX-PLAYER_HALF_W);
+transform.z=INTERACTION_ROW_Z*terrain.tileSize;
 transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x,transform.z);
 transform.yaw=Number.isFinite(p.yaw)?p.yaw:sceneData.spawn.yaw;
 if(collidesAt(transform.x,transform.y,transform.z))transform.y=safeSpawnY(transform.x,transform.z);
@@ -1756,7 +1759,11 @@ resetFishing();
 fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
 controller.torchOn=!!save.torchOn;
 worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
-npcWorld.importState(save.npcState);
+if(save.worldLayout!==WORLD_LAYOUT_ID&&save.npcState?.actors){
+const defs=new Map(CONTENT.npcs.map(n=>[n.id,n]));
+for(const row of save.npcState.actors){const d=defs.get(row.id);if(d?.spawn){row.x=d.spawn.x;row.z=d.spawn.z;row.y=safeSpawnY(row.x,row.z)}}
+}
+npcWorld.importState(save.npcState);save.worldLayout=WORLD_LAYOUT_ID;
 setInventoryFromSave(save.inventory);
 if(!inventoryItems.some(item=>item?.id==='hand-torch')){
 inventoryItems[0]={...itemClone(CONTENT.items['hand-torch']),count:1};
