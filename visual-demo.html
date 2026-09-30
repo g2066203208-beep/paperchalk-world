@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.21</h1>
-  <p>v12.21 Paper003 强化：标准 1×1×1 立方体轮廓完全不变。Color、NormalGL、Roughness 正常使用，并把 Paper003 的 Displacement 作为表面高度/凹凸参与着色，而不是推动顶点；这样保留标准方块，同时把纸褶皱明显做出来。</p>
+  <h1>纸艺世界视觉 Demo v12.22</h1>
+  <p>v12.22 单层纸草：小草不再十字交叉，每一丛只有一张剪纸几何并始终只绕 Y 轴面朝相机。绿色正面直接使用 Paper003；厚度不建模，只用同一张几何做一个极薄的黑色程序厚度渲染 pass，黑边只露一点点。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -602,8 +602,10 @@ function rebuildMaterialRandomness(on=true){
   terrainPaper003Mat.needsUpdate=true;
 }
 
-// Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
-// Two crossed sheets plus a dark offset backing make the paper thickness readable.
+// Cut-paper grass v12.22:
+// one single cut-paper sheet per tuft, always billboarded toward the camera.
+// Thickness is NOT modeled. The exact same source geometry is rendered once more
+// as a tiny black backing pass, slightly expanded and shifted behind the sheet.
 function cutGrassGeometry(){
   const s=new THREE.Shape();
   s.moveTo(-.36,0);
@@ -626,100 +628,101 @@ function cutGrassGeometry(){
   s.lineTo(.38,.12);
   s.lineTo(.34,0);
   s.closePath();
-  const geo=new THREE.ShapeGeometry(s,2);
-  geo.translate(0,0,0);
-  return geo;
+  return new THREE.ShapeGeometry(s,2);
 }
 
 const paperGrassGroup=new THREE.Group();
 scene.add(paperGrassGroup);
 
 const grassCutGeo=cutGrassGeometry();
+
+// Green paper face: Paper003 is the paper stock, grass green is the intrinsic colour.
 const grassFrontMat=new THREE.MeshStandardMaterial({
-  map:paperGrassSet.color,
-  normalMap:paperGrassSet.normal,
-  roughnessMap:paperGrassSet.roughness,
-  normalScale:new THREE.Vector2(.30,.30),
-  roughness:.95,metalness:0,
-  color:0xa8c970,
-  side:THREE.DoubleSide,
-  transparent:false
-});
-const grassEdgeMat=new THREE.MeshLambertMaterial({
-  color:0x5d713f,
+  color:0x98b86d,
+  map:paper003Color,
+  normalMap:paper003Normal,
+  roughnessMap:paper003Roughness,
+  normalScale:new THREE.Vector2(1.25,1.25),
+  roughness:1,
+  metalness:0,
   side:THREE.DoubleSide
 });
+grassFrontMat.name='grass-single-sheet-paper003';
+
+// Program thickness pass: same geometry, no second modeled sheet.
+// It only peeks out by ~1.6% around the silhouette and sits a hair behind.
+const grassThicknessMat=new THREE.MeshStandardMaterial({
+  color:0x111111,
+  roughness:1,
+  metalness:0,
+  side:THREE.DoubleSide
+});
+grassThicknessMat.name='grass-program-black-thickness';
 
 const grassSpots=[
-  [-3.30,-1.70,.51,.63,.10],[-2.25,.95,.51,.50,.68],[-1.55,1.90,.51,.45,1.30],
-  [-.75,-2.18,.51,.48,2.05],[1.20,-2.05,.51,.43,.35],[2.35,1.72,.51,.58,1.05],
-  [3.42,-1.45,.51,.47,2.45],[4.55,.85,.51,.44,.82],
-  [-5.72,1.55,1.51,.60,.25],[-5.45,-1.65,1.51,.48,1.54],
-  [5.42,-.72,1.51,.54,.95],[5.65,1.72,1.51,.50,2.20],
-  [-4.05,2.30,1.51,.46,.42],[4.08,2.22,1.51,.52,1.76],
-  [-6.55,2.18,2.51,.45,.72],[6.38,1.52,2.51,.44,2.48]
+  [-3.30,-1.70,.51,.63],[-2.25,.95,.51,.50],[-1.55,1.90,.51,.45],
+  [-.75,-2.18,.51,.48],[1.20,-2.05,.51,.43],[2.35,1.72,.51,.58],
+  [3.42,-1.45,.51,.47],[4.55,.85,.51,.44],
+  [-5.72,1.55,1.51,.60],[-5.45,-1.65,1.51,.48],
+  [5.42,-.72,1.51,.54],[5.65,1.72,1.51,.50],
+  [-4.05,2.30,1.51,.46],[4.08,2.22,1.51,.52],
+  [-6.55,2.18,2.51,.45],[6.38,1.52,2.51,.44]
 ];
 
-const GRASS_PLANES=grassSpots.length*2;
-const grassFront=new THREE.InstancedMesh(grassCutGeo,grassFrontMat,GRASS_PLANES);
-const grassEdge=new THREE.InstancedMesh(grassCutGeo,grassEdgeMat,GRASS_PLANES);
-grassFront.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-grassEdge.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-grassFront.castShadow=true;grassFront.receiveShadow=true;
-grassEdge.castShadow=true;grassEdge.receiveShadow=true;
-grassFront.frustumCulled=false;grassEdge.frustumCulled=false;
-paperGrassGroup.add(grassEdge,grassFront);
+const GRASS_COUNT=grassSpots.length;
+const grassFront=new THREE.InstancedMesh(grassCutGeo,grassFrontMat,GRASS_COUNT);
+const grassThicknessPass=new THREE.InstancedMesh(grassCutGeo,grassThicknessMat,GRASS_COUNT);
+
+for(const mesh of [grassFront,grassThicknessPass]){
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  mesh.frustumCulled=false;
+}
+grassFront.castShadow=true;
+grassFront.receiveShadow=true;
+// Avoid a second enlarged shadow silhouette from the fake thickness pass.
+grassThicknessPass.castShadow=false;
+grassThicknessPass.receiveShadow=true;
+grassThicknessPass.renderOrder=0;
+grassFront.renderOrder=1;
+paperGrassGroup.add(grassThicknessPass,grassFront);
 
 const grassDummy=new THREE.Object3D();
-const grassBladeData=[];
-{
-  let idx=0;
-  for(let s=0;s<grassSpots.length;s++){
-    const [x,z,y,scale,baseAngle]=grassSpots[s];
-    for(let layer=0;layer<2;layer++){
-      const angle=baseAngle+layer*(Math.PI*.47);
-      const sc=scale*(layer===0?1:.82);
-      grassBladeData.push({x,z,y,scale:sc,angle,phase:s*.73+layer*1.3});
-      const nx=Math.sin(angle),nz=Math.cos(angle);
-
-      grassDummy.position.set(x,y,z);
-      grassDummy.rotation.set(0,angle,0);
-      grassDummy.scale.set(sc,sc,sc);
-      grassDummy.updateMatrix();
-      grassFront.setMatrixAt(idx,grassDummy.matrix);
-
-      // A tiny offset behind the green sheet reads as the darker cut-paper edge.
-      grassDummy.position.set(x-nx*.018,y-.008,z-nz*.018);
-      grassDummy.updateMatrix();
-      grassEdge.setMatrixAt(idx,grassDummy.matrix);
-      idx++;
-    }
-  }
-  grassFront.instanceMatrix.needsUpdate=true;
-  grassEdge.instanceMatrix.needsUpdate=true;
-}
+const grassBladeData=grassSpots.map(([x,z,y,scale],i)=>({
+  x,z,y,scale,
+  phase:i*.73+hash3(i,91,17)*2.3
+}));
 
 function updatePaperGrass(t){
   for(let i=0;i<grassBladeData.length;i++){
     const d=grassBladeData[i];
-    // Very restrained paper-card sway: the clump remains visibly rigid/cut-out.
-    const sway=Math.sin(t*.72+d.phase)*.035;
-    const angle=d.angle+sway;
+
+    // Strict single-layer billboard: only yaw toward the camera.
+    const dx=camera.position.x-d.x;
+    const dz=camera.position.z-d.z;
+    const angle=Math.atan2(dx,dz);
     const nx=Math.sin(angle),nz=Math.cos(angle);
 
+    // Tiny in-plane sway keeps the sheet handmade without breaking billboard facing.
+    const roll=Math.sin(t*.62+d.phase)*.012;
+
     grassDummy.position.set(d.x,d.y,d.z);
-    grassDummy.rotation.set(0,angle,Math.sin(t*.54+d.phase)*.018);
+    grassDummy.rotation.set(0,angle,roll);
     grassDummy.scale.set(d.scale,d.scale,d.scale);
     grassDummy.updateMatrix();
     grassFront.setMatrixAt(i,grassDummy.matrix);
 
-    grassDummy.position.set(d.x-nx*.018,d.y-.008,d.z-nz*.018);
+    // Program thickness: same silhouette, only 1.6% larger and ~0.007 units
+    // behind the front face. This reads as a very thin black paper edge.
+    grassDummy.position.set(d.x-nx*.007,d.y-.002,d.z-nz*.007);
+    grassDummy.rotation.set(0,angle,roll);
+    grassDummy.scale.set(d.scale*1.016,d.scale*1.016,d.scale);
     grassDummy.updateMatrix();
-    grassEdge.setMatrixAt(i,grassDummy.matrix);
+    grassThicknessPass.setMatrixAt(i,grassDummy.matrix);
   }
   grassFront.instanceMatrix.needsUpdate=true;
-  grassEdge.instanceMatrix.needsUpdate=true;
+  grassThicknessPass.instanceMatrix.needsUpdate=true;
 }
+updatePaperGrass(0);
 
 const stoneMat=new THREE.MeshLambertMaterial({color:0xa69a8d});
 function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stoneMat);m.position.set(x,y,z);m.scale.y=.62;m.rotation.set(.2,.4,.1);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
@@ -2162,12 +2165,13 @@ function animate(now){
     lastMistTick=now;mistClock+=Math.min(.12,step);
     fogUniforms.time.value=mistClock;
     updateFogInstances(mistClock);
-    if(state.papergrass)updatePaperGrass(mistClock);
     volumeUniforms.time.value=mistClock;
     renderDirty=true;
   }
 
   if(!state.auto&&!timeTransition.active&&!renderDirty)return;
+
+  if(state.papergrass)updatePaperGrass(now*.001);
 
   sky.position.copy(camera.position);starField.position.copy(camera.position);starUniforms.time.value=now*.001;
 
