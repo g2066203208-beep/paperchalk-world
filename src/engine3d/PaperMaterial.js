@@ -92,7 +92,7 @@ function buildStock(size,{seed=1,side=false}={}){
 
 function texture(THREE,data,size,{srgb=false,name='paper-map'}={}){
   const t=new THREE.DataTexture(data,size,size,THREE.RGBAFormat,THREE.UnsignedByteType);
-  t.name=name;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;t.anisotropy=16;
+  t.name=name;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;t.anisotropy=8;
   if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t;
 }
 
@@ -135,7 +135,7 @@ function deriveSet(THREE,{size=512,seed=1,side=false}={}){
 }
 
 export function createPaperMaterialSet(THREE,settings){
-  const resolution=512;
+  const resolution=256;
   const sets={
     top:deriveSet(THREE,{size:resolution,seed:0x31f2a7,side:false}),
     side:deriveSet(THREE,{size:resolution,seed:0xa9417d,side:true})
@@ -150,7 +150,7 @@ export function createPaperMaterialSet(THREE,settings){
     tex.name='user-supplied-grass-paper-512';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-    tex.generateMipmaps=true;tex.anisotropy=16;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     grassReference=tex;grassLoaded=true;grassReferenceSize=[tex.image?.width||512,tex.image?.height||512];
     if(grassMaterial){grassMaterial.map=tex;grassMaterial.needsUpdate=true}
   });
@@ -158,7 +158,7 @@ export function createPaperMaterialSet(THREE,settings){
     tex.name='user-supplied-dirt-paper-256';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-    tex.generateMipmaps=true;tex.anisotropy=16;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     dirtReference=tex;dirtLoaded=true;dirtReferenceSize=[tex.image?.width||256,tex.image?.height||256];
     if(dirtMaterial){dirtMaterial.map=tex;dirtMaterial.needsUpdate=true}
   });
@@ -227,19 +227,21 @@ export function createPaperMaterialSet(THREE,settings){
   };
 
   const materials=[make(),make({side:true}),make({bevel:true})];
-  grassMaterial=new THREE.MeshPhysicalMaterial({
+  grassMaterial=new THREE.MeshStandardMaterial({
     color:0xffffff,map:grassReference,vertexColors:false,
-    roughness:.995,metalness:0,side:THREE.DoubleSide,
-    specularIntensity:.05,ior:1.33,sheen:.04,sheenRoughness:.99,
-    sheenColor:new THREE.Color(0xf4f0cf)
+    normalMap:sets.top.normal,
+    roughnessMap:sets.top.roughness,
+    normalScale:new THREE.Vector2(.28,.28),
+    roughness:.96,metalness:0,side:THREE.DoubleSide
   });
   grassMaterial.name='user-grass-native-resolution';grassMaterial.userData.paperRole='grass-top';
-  dirtMaterial=new THREE.MeshPhysicalMaterial({
+  dirtMaterial=new THREE.MeshStandardMaterial({
     color:0xffffff,map:dirtReference,vertexColors:false,
-    emissive:new THREE.Color(0x6c412b),emissiveMap:dirtReference,emissiveIntensity:.28,
-    roughness:.995,metalness:0,side:THREE.DoubleSide,
-    specularIntensity:.045,ior:1.33,sheen:.035,sheenRoughness:.99,
-    sheenColor:new THREE.Color(0xe0b38a)
+    normalMap:sets.side.normal,
+    roughnessMap:sets.side.roughness,
+    normalScale:new THREE.Vector2(.44,.44),
+    emissive:new THREE.Color(0x5b3828),emissiveMap:dirtReference,emissiveIntensity:.14,
+    roughness:.975,metalness:0,side:THREE.DoubleSide
   });
   dirtMaterial.name='user-dirt-native-resolution';dirtMaterial.userData.paperRole='dirt';
   materials.push(grassMaterial,dirtMaterial);
@@ -257,18 +259,20 @@ export function createPaperMaterialSet(THREE,settings){
       mat.sheenRoughness=.96;
       mat.specularIntensity=sideRole?.08:.11;
     }
-    grassMaterial.roughness=clamp(.996-rough*.025,.985,.998);
-    dirtMaterial.roughness=clamp(.996-rough*.025,.985,.998);
-    dirtMaterial.emissiveIntensity=.28;
+    grassMaterial.normalScale.setScalar(micro*.42);
+    dirtMaterial.normalScale.setScalar(micro*.64);
+    grassMaterial.roughness=clamp(.965-rough*.08,.94,.98);
+    dirtMaterial.roughness=clamp(.978-rough*.06,.955,.99);
+    dirtMaterial.emissiveIntensity=.14;
   };
   sync(settings);
 
   const stats=()=>({
-    mode:'procedural-paper-pbr-v3-reference',
-    generatedOnceOnCPU:true,textureResolution:resolution,
+    mode:'procedural-paper-pbr-v4-normalmapped',
+    generatedOnceOnCPU:true,textureResolution:resolution,microMapResolution:resolution,
     maps:['albedo','normal','roughness'],
     visualPriority:['pulp-albedo','contact-shadow','cut-edge-fibre','micro-normal'],
-    diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,
+    diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,grassNormalMap:true,dirtNormalMap:true,
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
     userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
     grassReferenceLoaded:grassLoaded,grassReferenceSize,grassMaterialGroup:true,
@@ -277,7 +281,7 @@ export function createPaperMaterialSet(THREE,settings){
     dirtReferenceLoaded:dirtLoaded,dirtReferenceSize,dirtMaterialGroup:true,
     dirtColorSource:'user-texture-only',dirtTextureTransform:'native-world-uv-repeat-1x',
     liftedCardboardShadow:true,sideShadowLift:.25,dirtShadowLift:.28,
-    groundAnisotropy:16,allPaperAnisotropy:16,authoredSurfaceMicroMaps:false,genericTopMicroMaps:false,
+    groundAnisotropy:8,allPaperAnisotropy:8,authoredSurfaceMicroMaps:true,genericTopMicroMaps:true,
     topPrintNoiseScale:.20,
     seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
