@@ -65,8 +65,8 @@ function createBrain(def={}){
 
   function updateNeeds(dt,minutes){
     const activeDay=minuteIn(minutes,360,1260);
-    needs.hunger=clamp(needs.hunger+dt*(activeDay?.00075:.00035));
-    needs.fatigue=clamp(needs.fatigue+dt*(activeDay?.00062:-.0014));
+    needs.hunger=clamp(needs.hunger+dt*(activeDay ? .00075 : .00035));
+    needs.fatigue=clamp(needs.fatigue+dt*(activeDay ? .00062 : -.0014));
     needs.social=clamp(needs.social+dt*.00048);
     needs.safety=clamp(needs.safety-dt*.022);
     relationship.fear=clamp(relationship.fear-dt*.002);
@@ -102,15 +102,15 @@ function createBrain(def={}){
   function choose(ctx){
     const slot=schedule(ctx.worldMinutes),visible=perception.playerVisible;
     scheduleSlot=slot.id||slot.goal||'free';
-    const threat=clamp(needs.safety+relationship.fear+(perception.heardThreat?.3:0));
+    const threat=clamp(needs.safety+relationship.fear+(perception.heardThreat ? .3 : 0));
     const scores={
       flee:threat*.98,
       eat:needs.hunger*.74,
-      rest:needs.fatigue*.82+(slot.goal==='rest'?.28:0),
-      socialize:needs.social*.62+(slot.goal==='socialize'?.30:0)+(visible&&perception.playerDistance<3.2?.22:0),
-      observe:visible&&perception.playerDistance<5.5?.48:0,
-      work:slot.goal==='work'?.58*(1-Math.max(needs.hunger,needs.fatigue)*.55):0,
-      home:slot.goal==='home'?.45:0,
+      rest:needs.fatigue*.82+(slot.goal==='rest' ? .28 : 0),
+      socialize:needs.social*.62+(slot.goal==='socialize' ? .30 : 0)+(visible&&perception.playerDistance<3.2 ? .22 : 0),
+      observe:visible&&perception.playerDistance<5.5 ? .48 : 0,
+      work:slot.goal==='work' ? .58*(1-Math.max(needs.hunger,needs.fatigue)*.55) : 0,
+      home:slot.goal==='home' ? .45 : 0,
       wander:.15+num(personality.curiosity,.4)*.12
     };
     let pick='wander',best=-1;
