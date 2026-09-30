@@ -26,7 +26,7 @@ const C={
       id:'home',name:'家',
       spawn:{x:0,z:-6,yaw:0},
       bounds:{minX:-9,maxX:9,minZ:-7,maxZ:7},
-      bedroom:{x:6,z:4.2,radius:1.15}
+      bedroom:{x:4.6,z:4.25,radius:1.0}
     }
   },
   objectives:[
@@ -34,8 +34,8 @@ const C={
     {id:'to-crossing',zone:'city',text:'沿着人行道走到十字路口。',target:{x:8,z:7.4},radius:2.0},
     {id:'cross-road',zone:'city',text:'等行人灯变绿，穿过马路。',target:{x:16,z:-7.4},radius:2.0},
     {id:'to-home',zone:'city',text:'穿过住宅区，回家。',target:{x:54,z:-20.5},radius:1.4},
-    {id:'to-bedroom',zone:'home',text:'到家了。回自己的房间。',target:{x:6,z:4.2},radius:1.3},
-    {id:'complete',zone:'home',text:'到家了。今天也只是普通的一天。',target:{x:6,z:4.2},radius:1.3}
+    {id:'to-bedroom',zone:'home',text:'到家了。回自己的房间。',target:{x:4.6,z:4.25},radius:1.0},
+    {id:'complete',zone:'home',text:'到家了。今天也只是普通的一天。',target:{x:4.6,z:4.25},radius:1.0}
   ],
   city:{
     roads:[
@@ -96,7 +96,7 @@ const C={
       {kind:'sofa',x:-4.5,z:-1.2,w:3.2,d:1.4,h:.9},
       {kind:'table',x:-4.2,z:1.1,w:2.2,d:1.3,h:.75},
       {kind:'kitchen',x:-6.8,z:4.8,w:5,d:1.4,h:1.1},
-      {kind:'bed',x:5.4,z:4.7,w:2.7,d:1.8,h:.55},
+      {kind:'bed',x:7.0,z:5.25,w:2.4,d:1.7,h:.55},
       {kind:'desk',x:6.7,z:1.3,w:2.0,d:1.0,h:.8}
     ]
   },
