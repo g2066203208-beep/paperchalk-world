@@ -32,8 +32,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.31</h1>
-  <p>v12.31 纸张材质重构：装饰小草全部删除。草地顶面不再以 Paper003 当主材质，改为 Paper001 粗纤维纸作为主体，Paper002 负责纸浆颗粒与高粗糙度，Paper003 只保留极弱的大尺度褶皱；泥土侧面改用 Paper006 牛皮卡纸底色，再叠 Paper001 微纤维与 Paper002 粗糙度。所有层仍使用连续世界 UV，并用不同非整数尺度混合来减少大面积重复。</p>
+  <h1>纸艺世界视觉 Demo v12.32</h1>
+  <p>v12.32 材质恢复：撤掉 v12.31 失效的多层纸材质链路，恢复到已确认能正常显示的 Paper003 地形材质。顶面为绿色 Paper003，侧面为泥土棕 Paper003；Color、NormalGL、Roughness、Displacement 全部重新接回。保留连续世界 UV、体素隐藏面剔除，并继续删除装饰小草与石头。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -51,26 +51,26 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </div>
 
 <div class="materialPanel">
-  <div class="title"><span>纸张地形调试</span><span>实时</span></div>
+  <div class="title"><span>Paper003 地形调试</span><span>实时</span></div>
   <div class="row">
     <span>纸纹大小</span>
-    <input id="paperScale" type="range" min="50" max="300" step="5" value="120">
-    <span id="paperScaleVal" class="val">1.20×</span>
+    <input id="paperScale" type="range" min="50" max="400" step="5" value="200">
+    <span id="paperScaleVal" class="val">2.00×</span>
   </div>
   <div class="row">
-    <span>纤维强度</span>
-    <input id="paperNormal" type="range" min="0" max="300" step="5" value="165">
-    <span id="paperNormalVal" class="val">1.65</span>
+    <span>法线强度</span>
+    <input id="paperNormal" type="range" min="0" max="300" step="5" value="185">
+    <span id="paperNormalVal" class="val">1.85</span>
   </div>
   <div class="row">
-    <span>大褶皱</span>
-    <input id="paperHeight" type="range" min="0" max="300" step="5" value="90">
-    <span id="paperHeightVal" class="val">0.90</span>
+    <span>高度凹凸</span>
+    <input id="paperHeight" type="range" min="0" max="800" step="10" value="480">
+    <span id="paperHeightVal" class="val">4.80</span>
   </div>
   <div class="row">
-    <span>纸浆混合</span>
-    <input id="paperBlend" type="range" min="0" max="60" step="2" value="22">
-    <span id="paperBlendVal" class="val">22%</span>
+    <span>连续去重</span>
+    <input id="paperBlend" type="range" min="0" max="100" step="5" value="85">
+    <span id="paperBlendVal" class="val">85%</span>
   </div>
   <button id="paperReset">恢复默认</button>
 </div>
@@ -81,7 +81,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="shadow" class="active">软阴影</button>
   <button id="fog" class="active">动态纸雾</button>
   <button id="tone" class="active">统一色调</button>
-  <button id="random" class="active">纸张材质</button>
+  <button id="random" class="active">Paper003</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active" style="display:none">剪纸小草</button>
   <button id="godrays" class="active">受光体积雾</button>
@@ -515,114 +515,138 @@ const paper003Color=loadPaper003Texture(PAPER003_COLOR_URL,{srgb:true});
 const paper003Normal=loadPaper003Texture(PAPER003_NORMAL_GL_URL);
 const paper003Roughness=loadPaper003Texture(PAPER003_ROUGHNESS_URL);
 const paper003Displacement=loadPaper003Texture(PAPER003_DISPLACEMENT_URL);
-const PAPER001_COLOR_URL='data:image/webp;base64,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';
-const PAPER001_NORMAL_URL='data:image/webp;base64,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';
-const PAPER002_COLOR_URL='data:image/webp;base64,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';
-const PAPER002_ROUGH_URL='data:image/webp;base64,UklGRtgBAABXRUJQVlA4IMwBAABwBwCdASqAAIAAAAAAJaWhFBnuzxXHwQllQWKUA/bRj5k8abRMaanOGsslkqMLce+6TRj5k8aa76DKLRj5k8aUn5sZAAD+/905jcXJOvEjlxsdGmd+/BVr51VuWsi63kiwsWAuSfCUTK216C5In66Uy2FYl25WuxzkhZayDcoFGdUWDAGg1Fj2ZrLrTUUTGxicP6mRif5Bomir7jOHpTho6xy2/lpIRAmtMVssKKdgMCbEoto/322mqF0im93gQXuvQkwCbjh3ShN0MdPbZNxc+pqXkW0T8/YePIa9PMECrA2ykZJ3G4ydcgXopxx87n43tte5S7lQbvW6wZ4UPn1c1JjurkfDy59s24UpdCj6d/HIOqnGcuBOMSwB0YVkKnM3Bi8XmEEZBEpUe0zkKpXsFE99EuKK50lZjcCPVyW30tUEZgbEHVSVmN7zcYHzE7OjsaSpMGyllyPgE7L6dz0lOPHD6xY8pX0q42pCfs6Hbh/inLEzQ+9ckBsEMZ0wwfVaBngn8v1HcLwOgYwqsEUVPrj0hTSoemXAy+unwWTI8PHlSVY5JT0V9aGuLBSfeuR0fs01Sc6XPgPTYsym9HcjiVGSSw/XOwrSgAAA';
-const PAPER006_COLOR_URL='data:image/webp;base64,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';
 
-function loadRuntimePaperTexture(url,{srgb=false}={}){
-  const t=new THREE.TextureLoader().load(url,()=>{renderDirty=true;});
-  if(srgb)t.colorSpace=THREE.SRGBColorSpace;
+function cloneTerrainPaper003Texture(source){
+  const t=source.clone();
+  t.needsUpdate=true;
   t.wrapS=t.wrapT=THREE.RepeatWrapping;
-  t.minFilter=THREE.LinearMipmapLinearFilter;
-  t.magFilter=THREE.LinearFilter;
-  t.generateMipmaps=true;
-  t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
   return t;
 }
-
-const paper001Color=loadRuntimePaperTexture(PAPER001_COLOR_URL,{srgb:true});
-const paper001Normal=loadRuntimePaperTexture(PAPER001_NORMAL_URL);
-const paper002Color=loadRuntimePaperTexture(PAPER002_COLOR_URL,{srgb:true});
-const paper002Rough=loadRuntimePaperTexture(PAPER002_ROUGH_URL);
-const paper006Color=loadRuntimePaperTexture(PAPER006_COLOR_URL,{srgb:true});
-
-
-// ---------------------------------------------------------------------------
-// Layered paper terrain v12.31.
-// Paper001 = dense handmade fibres, Paper002 = recycled-pulp / matte breakup,
-// Paper003 = only a very weak low-frequency fold, Paper006 = kraft-card dirt.
-// ---------------------------------------------------------------------------
-const TERRAIN_TOP_COLOR=0x96ad72;
-const TERRAIN_DIRT_COLOR=0x9a6b4d;
-
-const terrainPaperTextures=[
-  paper001Color,paper001Normal,paper002Color,paper002Rough,paper006Color
+const terrainPaper003Color=cloneTerrainPaper003Texture(paper003Color);
+const terrainPaper003Normal=cloneTerrainPaper003Texture(paper003Normal);
+const terrainPaper003Roughness=cloneTerrainPaper003Texture(paper003Roughness);
+const terrainPaper003Displacement=cloneTerrainPaper003Texture(paper003Displacement);
+const terrainPaper003Textures=[
+  terrainPaper003Color,
+  terrainPaper003Normal,
+  terrainPaper003Roughness,
+  terrainPaper003Displacement
 ];
-const terrainPaperPulpUniform={value:.22};
 
 function setTerrainPaperScale(size){
   const repeat=1/Math.max(.05,size);
-  for(const t of terrainPaperTextures)t.repeat.set(repeat,repeat);
+  for(const t of terrainPaper003Textures)t.repeat.set(repeat,repeat);
 }
-setTerrainPaperScale(1.20);
+setTerrainPaperScale(2.0);
+const terrainPaperBlendUniform={value:.85};
 
-function makeLayeredTerrainMaterial(kind){
-  const isTop=kind==='top';
+
+// ---------------------------------------------------------------------------
+// Terrain v12.18 — strict standard cubes.
+// Geometry is exactly 1×1×1. No cap, no edge layer, no extra thickness and no
+// displacement. Paper003 is used only as a surface material on all six faces.
+// ---------------------------------------------------------------------------
+const TERRAIN_TOP_COLOR=0x8fae68;
+const TERRAIN_DIRT_COLOR=0x8b654c;
+
+function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
   const mat=new THREE.MeshStandardMaterial({
-    color:isTop?TERRAIN_TOP_COLOR:TERRAIN_DIRT_COLOR,
-    map:isTop?paper001Color:paper006Color,
-    normalMap:paper001Normal,
-    roughnessMap:paper002Rough,
-    normalScale:new THREE.Vector2(isTop?1.65:.58,isTop?1.65:.58),
-    roughness:isTop?1.0:.98,
+    color,
+    map:terrainPaper003Color,
+    normalMap:terrainPaper003Normal,
+    roughnessMap:terrainPaper003Roughness,
+    normalScale:new THREE.Vector2(normalScale,normalScale),
+    roughness:1.08,
     metalness:0
   });
-  mat.name=isTop?'terrain-grass-paper001-fibre':'terrain-dirt-paper006-kraft';
+  mat.name=name;
 
-  const macroUniform={value:isTop?.90:1.18};
-  mat.userData.paperMacroUniform=macroUniform;
-  mat.userData.paperMacroOn=macroUniform.value;
+  const heightUniform={value:heightStrength};
+  mat.userData.paper003HeightUniform=heightUniform;
+  mat.userData.paper003HeightOn=heightStrength;
 
   mat.onBeforeCompile=shader=>{
-    shader.uniforms.paperPulpMap={value:paper002Color};
-    shader.uniforms.paperMacroMap={value:paper003Displacement};
-    shader.uniforms.paperPulpStrength=terrainPaperPulpUniform;
-    shader.uniforms.paperMacroStrength=macroUniform;
+    shader.uniforms.paper003HeightMap={value:terrainPaper003Displacement};
+    shader.uniforms.paper003HeightStrength=heightUniform;
+    shader.uniforms.paper003Blend=terrainPaperBlendUniform;
 
     shader.fragmentShader=shader.fragmentShader.replace(
       'void main() {',
       `
-uniform sampler2D paperPulpMap;
-uniform sampler2D paperMacroMap;
-uniform float paperPulpStrength;
-uniform float paperMacroStrength;
+uniform sampler2D paper003HeightMap;
+uniform float paper003HeightStrength;
+uniform float paper003Blend;
 
-vec4 layeredBaseColor(vec2 uv){
-  // Same paper sampled again at an irrational scale: continuous everywhere,
-  // but its short repeat cycle no longer lines up with the primary sample.
-  vec4 a=texture2D(map,uv);
-  vec4 b=texture2D(map,uv*1.071+vec2(.417,.263));
-  vec4 base=mix(a,b,.24);
-
-  // Paper002 contributes only subtle pulp/fleck brightness variation.
-  vec3 pulp=texture2D(paperPulpMap,uv*1.83+vec2(.173,.619)).rgb;
-  float pg=dot(pulp,vec3(.299,.587,.114));
-  base.rgb*=1.0+(pg-.82)*paperPulpStrength*.42;
-  return base;
+vec3 paperBlendWeights(vec2 uv){
+  // Slow continuous macro weights: no cells, no hard boundaries.
+  vec3 w=vec3(
+    0.60+0.40*sin(dot(uv,vec2(0.31,0.17))+0.2),
+    0.60+0.40*sin(dot(uv,vec2(-0.19,0.37))+2.3),
+    0.60+0.40*sin(dot(uv,vec2(0.23,-0.29))+4.7)
+  );
+  w*=w;
+  return w/max(dot(w,vec3(1.0)),0.00001);
 }
 
-float layeredRoughness(vec2 uv){
-  float a=texture2D(roughnessMap,uv*1.61).g;
-  float b=texture2D(roughnessMap,uv*1.93+vec2(.31,.57)).g;
-  return mix(a,b,.38);
+void paperUvs(vec2 uv,out vec2 a,out vec2 b,out vec2 c){
+  // Non-matching scales mean the same source paper does not line up on a short
+  // obvious grid. All transforms are global and continuous across voxel edges.
+  a=uv;
+  b=uv*1.113+vec2(0.371,0.613);
+  c=uv*0.887+vec2(0.719,0.281);
 }
 
-vec3 layeredNormal(vec2 uv){
-  // Paper001 normal is intentionally sampled much finer than its colour so the
-  // surface reads as fuzzy handmade fibre rather than a smooth wrinkled sheet.
-  vec2 fuv=uv*2.35;
-  vec3 a=texture2D(normalMap,fuv).xyz*2.0-1.0;
-  vec3 b=texture2D(normalMap,fuv*1.117+vec2(.431,.217)).xyz*2.0-1.0;
-  return normalize(mix(a,b,.43));
+vec4 paperColorSample(vec2 uv){
+#ifdef USE_MAP
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  vec4 mixed=
+    texture2D(map,a)*w.x+
+    texture2D(map,b)*w.y+
+    texture2D(map,c)*w.z;
+  return mix(texture2D(map,uv),mixed,paper003Blend);
+#else
+  return vec4(1.0);
+#endif
 }
 
-float macroHeight(vec2 uv){
-  // Paper003 is no longer the material itself: it is just a faint broad fold.
-  float a=texture2D(paperMacroMap,uv*.145+vec2(.13,.41)).r;
-  float b=texture2D(paperMacroMap,uv*.097+vec2(.71,.22)).r;
-  return mix(a,b,.36);
+float paperRoughnessSample(vec2 uv){
+#ifdef USE_ROUGHNESSMAP
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  float mixed=
+    texture2D(roughnessMap,a).g*w.x+
+    texture2D(roughnessMap,b).g*w.y+
+    texture2D(roughnessMap,c).g*w.z;
+  return mix(texture2D(roughnessMap,uv).g,mixed,paper003Blend);
+#else
+  return 1.0;
+#endif
+}
+
+vec3 paperNormalSample(vec2 uv){
+#ifdef USE_NORMALMAP
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  vec3 na=texture2D(normalMap,a).xyz*2.0-1.0;
+  vec3 nb=texture2D(normalMap,b).xyz*2.0-1.0;
+  vec3 nc=texture2D(normalMap,c).xyz*2.0-1.0;
+  vec3 mixed=normalize(na*w.x+nb*w.y+nc*w.z);
+  vec3 plain=texture2D(normalMap,uv).xyz*2.0-1.0;
+  return normalize(mix(plain,mixed,paper003Blend));
+#else
+  return vec3(0.0,0.0,1.0);
+#endif
+}
+
+float paperHeightSample(vec2 uv){
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  float mixed=
+    texture2D(paper003HeightMap,a).r*w.x+
+    texture2D(paper003HeightMap,b).r*w.y+
+    texture2D(paper003HeightMap,c).r*w.z;
+  return mix(texture2D(paper003HeightMap,uv).r,mixed,paper003Blend);
 }
 
 void main() {
@@ -633,7 +657,8 @@ void main() {
       '#include <map_fragment>',
       `
 #ifdef USE_MAP
-  diffuseColor*=layeredBaseColor(vMapUv);
+  vec4 sampledDiffuseColor=paperColorSample(vMapUv);
+  diffuseColor*=sampledDiffuseColor;
 #endif
 `
     );
@@ -643,7 +668,7 @@ void main() {
       `
 float roughnessFactor=roughness;
 #ifdef USE_ROUGHNESSMAP
-  roughnessFactor*=layeredRoughness(vRoughnessMapUv);
+  roughnessFactor*=paperRoughnessSample(vRoughnessMapUv);
 #endif
 `
     );
@@ -652,29 +677,41 @@ float roughnessFactor=roughness;
       '#include <normal_fragment_maps>',
       `
 #ifdef USE_NORMALMAP_TANGENTSPACE
-  vec3 mapN=layeredNormal(vNormalMapUv);
+  vec3 mapN=paperNormalSample(vNormalMapUv);
   mapN.xy*=normalScale;
 
-  if(paperMacroStrength>0.0001){
-    const float eps=.004;
-    float h0=macroHeight(vNormalMapUv);
-    float hx=macroHeight(vNormalMapUv+vec2(eps,0.0))-h0;
-    float hy=macroHeight(vNormalMapUv+vec2(0.0,eps))-h0;
-    mapN.xy-=vec2(hx,hy)*paperMacroStrength;
+  if(paper003HeightStrength>0.0001){
+    const float eps=0.0035;
+    float h0=paperHeightSample(vNormalMapUv);
+    float hx=paperHeightSample(vNormalMapUv+vec2(eps,0.0))-h0;
+    float hy=paperHeightSample(vNormalMapUv+vec2(0.0,eps))-h0;
+    mapN.xy-=vec2(hx,hy)*paper003HeightStrength*1.55;
   }
 
   normal=normalize(tbn*mapN);
+#elif defined( USE_BUMPMAP )
+  normal=perturbNormalArb(-vViewPosition,normal,dHdxy_fwd(),faceDirection);
 #endif
 `
     );
   };
 
-  mat.customProgramCacheKey=()=>mat.name+'-layered-paper-v1';
+  mat.customProgramCacheKey=()=>name+'-continuous-paper003-safe-v1';
   return mat;
 }
 
-const terrainDirtMat=makeLayeredTerrainMaterial('dirt');
-const terrainTopMat=makeLayeredTerrainMaterial('top');
+const terrainDirtMat=makeTerrainPaper003Material(
+  TERRAIN_DIRT_COLOR,
+  'terrain-dirt-paper003',
+  1.55,
+  4.0
+);
+const terrainTopMat=makeTerrainPaper003Material(
+  TERRAIN_TOP_COLOR,
+  'terrain-green-top-paper003',
+  1.85,
+  4.8
+);
 
 // Voxel surface meshing v12.27:
 // keep exact 1x1x1 voxel silhouettes, but DO NOT submit faces touching another
@@ -824,23 +861,24 @@ const rims=[];
 const paperObjects=[terrainBlocks];
 
 function rebuildMaterialRandomness(on=true){
+  const blendEl=document.getElementById('paperBlend');
+  terrainPaperBlendUniform.value=on&&blendEl?(+blendEl.value/100):0;
   const mats=[terrainTopMat,terrainDirtMat];
   for(const mat of mats){
-    const top=mat===terrainTopMat;
-    mat.map=on?(top?paper001Color:paper006Color):null;
-    mat.normalMap=on?paper001Normal:null;
-    mat.roughnessMap=on?paper002Rough:null;
-    mat.normalScale.setScalar(on?(top?1.65:.58):1);
-    mat.roughness=on?(top?1.0:.98):.92;
-    if(mat.userData.paperMacroUniform){
-      mat.userData.paperMacroUniform.value=on?mat.userData.paperMacroOn:0;
+    mat.map=on?terrainPaper003Color:null;
+    mat.normalMap=on?terrainPaper003Normal:null;
+    mat.roughnessMap=on?terrainPaper003Roughness:null;
+    mat.normalScale.setScalar(on?(mat===terrainTopMat?1.85:1.55):1);
+    mat.roughness=on?1.08:.92;
+    if(mat.userData.paper003HeightUniform){
+      mat.userData.paper003HeightUniform.value=on?mat.userData.paper003HeightOn:0;
     }
     mat.needsUpdate=true;
   }
-  terrainPaperPulpUniform.value=on?(+document.getElementById('paperBlend').value/100):0;
   terrainTopMat.color.setHex(TERRAIN_TOP_COLOR);
   terrainDirtMat.color.setHex(TERRAIN_DIRT_COLOR);
 }
+
 
 // Decorative grass intentionally removed. The target look is carried by the
 // fibrous terrain itself; keep an empty group/no-op for existing UI plumbing.
@@ -2069,7 +2107,7 @@ function preset(name){
   renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 }
 function syncButtons(){
-  sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
+  sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=false;canopyGroup.visible=true;
   terrainBlocks.visible=state.layers;
   renderer.shadowMap.enabled=state.shadow;
   // Lighting remains dual-source; zero-contribution shadow passes are culled.
@@ -2113,7 +2151,7 @@ document.getElementById('bounce').onclick=()=>{
   updateLighting(state.time);syncButtons();
 };
 document.getElementById('papergrass').onclick=()=>{
-  state.papergrass=!state.papergrass;
+  state.papergrass=false;
   state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass&&state.godrays;
   paperGrassGroup.visible=state.papergrass;
   depthDirty=true;volumeShadowDirty=true;renderDirty=true;shadowDirty=true;
@@ -2144,29 +2182,29 @@ document.getElementById('sunFollow').onclick=()=>{
 
 function applyPaperDebug(){
   const size=+document.getElementById('paperScale').value/100;
-  const fibre=+document.getElementById('paperNormal').value/100;
-  const macro=+document.getElementById('paperHeight').value/100;
-  const pulp=+document.getElementById('paperBlend').value/100;
+  const normal=+document.getElementById('paperNormal').value/100;
+  const height=+document.getElementById('paperHeight').value/100;
+  const blend=+document.getElementById('paperBlend').value/100;
 
   setTerrainPaperScale(size);
-  terrainPaperPulpUniform.value=state.random?pulp:0;
+  terrainPaperBlendUniform.value=state.random?blend:0;
+  terrainTopMat.normalScale.setScalar(normal);
+  terrainDirtMat.normalScale.setScalar(normal*.84);
 
-  terrainTopMat.normalScale.setScalar(state.random?fibre:1);
-  terrainDirtMat.normalScale.setScalar(state.random?fibre*.35:1);
+  if(terrainTopMat.userData.paper003HeightUniform){
+    terrainTopMat.userData.paper003HeightUniform.value=state.random?height:0;
+  }
+  if(terrainDirtMat.userData.paper003HeightUniform){
+    terrainDirtMat.userData.paper003HeightUniform.value=state.random?height*.83:0;
+  }
 
-  if(terrainTopMat.userData.paperMacroUniform){
-    terrainTopMat.userData.paperMacroUniform.value=state.random?macro:0;
-    terrainTopMat.userData.paperMacroOn=macro;
-  }
-  if(terrainDirtMat.userData.paperMacroUniform){
-    terrainDirtMat.userData.paperMacroUniform.value=state.random?macro*1.30:0;
-    terrainDirtMat.userData.paperMacroOn=macro*1.30;
-  }
+  terrainTopMat.userData.paper003HeightOn=height;
+  terrainDirtMat.userData.paper003HeightOn=height*.83;
 
   document.getElementById('paperScaleVal').textContent=size.toFixed(2)+'×';
-  document.getElementById('paperNormalVal').textContent=fibre.toFixed(2);
-  document.getElementById('paperHeightVal').textContent=macro.toFixed(2);
-  document.getElementById('paperBlendVal').textContent=Math.round(pulp*100)+'%';
+  document.getElementById('paperNormalVal').textContent=normal.toFixed(2);
+  document.getElementById('paperHeightVal').textContent=height.toFixed(2);
+  document.getElementById('paperBlendVal').textContent=Math.round(blend*100)+'%';
   renderDirty=true;
 }
 
@@ -2174,10 +2212,10 @@ function applyPaperDebug(){
   document.getElementById(id).addEventListener('input',applyPaperDebug);
 });
 document.getElementById('paperReset').onclick=()=>{
-  document.getElementById('paperScale').value=120;
-  document.getElementById('paperNormal').value=165;
-  document.getElementById('paperHeight').value=90;
-  document.getElementById('paperBlend').value=22;
+  document.getElementById('paperScale').value=200;
+  document.getElementById('paperNormal').value=185;
+  document.getElementById('paperHeight').value=480;
+  document.getElementById('paperBlend').value=85;
   applyPaperDebug();
 };
 
