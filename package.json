@@ -9,7 +9,8 @@
     "test:ui": "node tests/ui-smoke.mjs",
     "test:3d": "node tests/three-engine-smoke.mjs",
     "test:architecture": "node tests/preproduction-architecture.mjs",
-    "test:performance": "node tests/performance-budget.mjs"
+    "test:performance": "node tests/performance-budget.mjs",
+    "test:prologue": "node tests/prologue-smoke.mjs"
   },
   "engines": {
     "node": ">=20"

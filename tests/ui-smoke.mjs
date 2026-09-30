@@ -8,7 +8,7 @@ const browser=await chromium.launch({
 });
 try{
   const page=await browser.newPage({viewport:{width:1280,height:720}});
-  await page.goto('http://127.0.0.1:4173/?ci=ui-3d',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:4173/?ci=ui-3d&skipPrologue=1',{waitUntil:'networkidle'});
   assert(await page.locator('#pageMenu').evaluate(el=>el.classList.contains('active')),'menu not active');
 
   await page.locator('#settingsBtn').click();

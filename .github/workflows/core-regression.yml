@@ -59,3 +59,14 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/core-regression.mjs
+      - name: Run standalone prologue city regression
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: node tests/prologue-smoke.mjs
+      - name: Upload prologue scene framebuffers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prologue-city-r1
+          path: artifacts/prologue-*.png
+          if-no-files-found: warn

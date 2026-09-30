@@ -1805,23 +1805,19 @@ closeDebugPanel();closeWorldMap();closeBackpack();closeCameraPanel();
 const session=getSession();
 if(!session){showPage('auth');return false}
 if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
-loadWorldState();
-active=true;
 const appState=window.PaperchalkAppState;
 if(appState&&appState.state!=='world'&&appState.can('world'))appState.transition('world',{source:'enterWorld'});
-uiShell.classList.add('is-hidden');
-uiShell.setAttribute('inert','');
-worldEl.removeAttribute('inert');
+uiShell.classList.add('is-hidden');uiShell.setAttribute('inert','');worldEl.removeAttribute('inert');
+const P=window.PaperchalkPrologue;
+if(P?.shouldRun?.(session.account)){active=false;dispatchEvent(new CustomEvent('paperchalk-prologue-enter',{detail:{account:session.account}}));publish();return true}
+loadWorldState();active=true;
 window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:'village-paper-stage'});
-window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
-startGameLoop();
-publish();
-backpackBtn.focus({preventScroll:true});
-return true;
+window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));startGameLoop();publish();
+backpackBtn.focus({preventScroll:true});return true;
 }
 function openUI(fromWorld=false){
 closeDebugPanel();closeWorldMap();closeBackpack();closeCameraPanel();
-if(fromWorld)saveWorldState();
+if(fromWorld&&active)saveWorldState();
 active=false;
 stopGameLoop();
 uiShell.removeAttribute('inert');
@@ -1919,7 +1915,7 @@ event.preventDefault();
 toggleTorch();
 }
 });
-addEventListener('pagehide',saveWorldState);
+addEventListener('pagehide',()=>{if(active)saveWorldState()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)saveWorldState()});
 addEventListener('unhandledrejection',event=>{
 console.error('UNHANDLED_REJECTION',event.reason);

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 function assert(c,m){if(!c)throw new Error(m)}
 const size=p=>fs.statSync(p).size;
-assert(size('src/game.js')<83000,'gameplay runtime exceeds 83KB budget');
+assert(size('src/game.js')<83500,'gameplay runtime exceeds 83.5KB budget');
 assert(size('src/engine3d/World3DEngine.js')<56000,'paper-stage engine exceeds 56KB budget');
 assert(size('src/terrain/terrain-runtime.js')<30000,'terrain+water runtime exceeds 30KB budget');
 assert(size('src/terrain/voxel-block-mesh.js')<24000,'cube mesher exceeds 24KB budget');
@@ -15,6 +15,11 @@ assert(size('src/entities/NPCActorRenderer.js')<8000,'NPC actor renderer exceeds
 assert(size('src/ai/npc-navigation.js')<9000,'NPC navigation exceeds 9KB budget');
 assert(size('src/ai/npc-brain.js')<13000,'NPC brain exceeds 13KB budget');
 assert(size('src/ai/npc-dialogue.js')<7000,'NPC dialogue/quest runtime exceeds 7KB budget');
+assert(size('src/prologue/prologue-content.js')<12000,'prologue content exceeds 12KB budget');
+assert(size('src/prologue/prologue-runtime.js')<14000,'prologue simulation exceeds 14KB budget');
+assert(size('src/prologue/PrologueScene.js')<20000,'prologue 3D scene exceeds 20KB budget');
+assert(size('src/prologue/prologue-renderer.mjs')<10000,'prologue renderer/controller exceeds 10KB budget');
+assert(size('styles/prologue.css')<7000,'prologue UI stylesheet exceeds 7KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
@@ -51,6 +56,11 @@ console.log(JSON.stringify({
   npcNavigation:size('src/ai/npc-navigation.js'),
   npcBrain:size('src/ai/npc-brain.js'),
   npcDialogue:size('src/ai/npc-dialogue.js'),
+  prologueContent:size('src/prologue/prologue-content.js'),
+  prologueRuntime:size('src/prologue/prologue-runtime.js'),
+  prologueScene:size('src/prologue/PrologueScene.js'),
+  prologueRenderer:size('src/prologue/prologue-renderer.mjs'),
+  prologueCss:size('styles/prologue.css'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
   html:size('index.html'),
