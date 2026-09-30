@@ -1,15 +1,18 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js');
 
-assert(html.includes('paper-r13'),'build key missing');
+assert(html.includes('paper-r14'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
-assert(content.includes("id:'village-resident-01'")&&content.includes("name:'A村村民'"),'first village NPC content missing');
+assert(content.includes("id:'village-resident-01'")&&content.includes("id:'village-resident-05'"),'five village NPC definitions missing');
+assert(content.includes("id:'village-intro'")&&content.includes("type:'talk'"),'village intro quest missing');
+assert(html.includes('src/ai/npc-navigation.js')&&html.includes('src/ai/npc-brain.js')&&html.includes('src/ai/npc-dialogue.js'),'NPC AI module scripts missing');
 assert(html.includes('src/entities/npc-runtime.js'),'NPC runtime script missing');
-assert(npcRuntime.includes("require:['Transform','Velocity','Actor','NPC']"),'NPC ECS actor system missing');
+assert(html.includes('id="npcInteractBtn"'),'NPC talk control missing');
+assert(npcRuntime.includes("require:['Transform','Velocity','Actor','NPC','Brain']"),'NPC ECS AI actor system missing');
 assert(npcRuntime.includes('sameActorComponentsAsPlayer:true'),'NPC/player actor parity missing');
 assert(game.includes('PaperchalkNPCRuntime')&&game.includes('npcs:npcWorld.snapshot()'),'NPC gameplay integration missing');
 assert(game.includes("Actor:{kind:'player'}"),'player Actor component missing');
@@ -17,6 +20,13 @@ assert(engine.includes('NPCActorRenderer')&&npcRenderer.includes('new PaperSprit
 assert(npcRenderer.includes('sharedEntityClassWithPlayer:true'),'NPC renderer actor parity stat missing');
 assert(npcRenderer.includes('sharedPlayerTexture:true')&&npcRenderer.includes("actorAsset:'assets/player/protagonist.webp'"),'NPCs must use the player character asset');
 assert(engine.includes('actorTexture:playerTexture'),'NPCs are not sharing the player texture object');
+assert(npcNav.includes("algorithm:'dynamic-voxel-a-star'")&&npcNav.includes('separateLocalAvoidance:true'),'voxel A-star / avoidance missing');
+assert(npcBrain.includes('perceptionSystem:true')&&npcBrain.includes('memorySystem:true')&&npcBrain.includes('utilityAI:true')&&npcBrain.includes('fsm:true'),'NPC perception/memory/utility/FSM missing');
+assert(npcBrain.includes('needsSystem:true')&&npcBrain.includes('scheduleSystem:true')&&npcBrain.includes('socialSystem:true'),'NPC needs/schedule/social systems missing');
+assert(npcDialogue.includes('dialogueSystem:true')&&npcDialogue.includes('questSystem:true')&&npcDialogue.includes('llmAuthority:false'),'deterministic dialogue/quest system missing');
+assert(npcRuntime.includes('offscreenLOD:true')&&npcRuntime.includes('voxelAStar:true'),'NPC offscreen LOD/AI stack stats missing');
+assert(game.includes('npcDialogue:npcWorld.dialogueSnapshot()')&&game.includes('npcState=npcWorld.exportState()'),'NPC dialogue/save integration missing');
+assert(game.includes("event.code==='KeyE'")&&game.includes('interactNPC()'),'NPC keyboard interaction missing');
 assert(!/far-hills-|village-shop|village-house-a|village-workshop|tree-[abc]|rock-[ab]/.test(content),'legacy 2D stage placeholders still present');
 const sprite=read('src/entities/PaperSpriteEntity.js');
 assert(!/kind==='(?:tree|building|rock)'/.test(sprite),'generated tree/building/rock art must stay removed');

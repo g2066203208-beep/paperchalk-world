@@ -19,14 +19,32 @@ try{
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1400);
   const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats,n:window.PaperchalkRuntime.getSnapshot().npcs,ns:window.PaperchalkNPCs.stats}));
-  assert(entered.n?.length===1&&entered.n[0].id==='village-resident-01','first NPC runtime missing '+JSON.stringify(entered.n));
+  assert(entered.n?.length===5&&entered.n.some(n=>n.id==='village-resident-05'),'five NPC actors missing '+JSON.stringify(entered.n));
   assert(entered.ns?.ecsActors===true&&entered.ns?.sameActorComponentsAsPlayer===true,'NPC ECS actor parity missing '+JSON.stringify(entered.ns));
+  assert(entered.ns?.aiStack?.perception&&entered.ns?.aiStack?.memory&&entered.ns?.aiStack?.voxelAStar&&entered.ns?.aiStack?.steeringAvoidance&&entered.ns?.aiStack?.fsm&&entered.ns?.aiStack?.utility&&entered.ns?.aiStack?.needs&&entered.ns?.aiStack?.schedule&&entered.ns?.aiStack?.social&&entered.ns?.aiStack?.dialogue&&entered.ns?.aiStack?.quests&&entered.ns?.aiStack?.offscreenLOD,'NPC AI stack incomplete '+JSON.stringify(entered.ns?.aiStack));
   const ecsCounts=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().ecs.components);
-  assert(ecsCounts?.Actor===2&&ecsCounts?.NPC===1&&ecsCounts?.Player===1,'NPC/player ECS components wrong '+JSON.stringify(ecsCounts));
-  assert(entered.s?.npcs?.count===1&&entered.s?.npcs?.sharedEntityClassWithPlayer===true,'NPC renderer missing '+JSON.stringify(entered.s?.npcs));
+  assert(ecsCounts?.Actor===6&&ecsCounts?.NPC===5&&ecsCounts?.Brain===5&&ecsCounts?.Player===1,'NPC/player ECS components wrong '+JSON.stringify(ecsCounts));
+  assert(entered.s?.npcs?.count===5&&entered.s?.npcs?.sharedEntityClassWithPlayer===true&&entered.s?.npcs?.sharedPlayerTexture===true,'NPC renderer missing/shared skin wrong '+JSON.stringify(entered.s?.npcs));
+  await page.waitForTimeout(900);
+  const aiLive=await page.evaluate(()=>({stats:window.PaperchalkNPCs.stats,npcs:window.PaperchalkNPCs.list}));
+  assert((aiLive.stats?.navigation?.searches||0)>0,'NPC A* never searched '+JSON.stringify(aiLive.stats));
+  assert(aiLive.npcs.every(n=>n.brain?.utilityAI&&n.brain?.perceptionSystem&&n.brain?.memorySystem),'NPC brain snapshots incomplete '+JSON.stringify(aiLive.npcs.map(n=>n.brain)));
   assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
   assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
   assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
+
+  const dialogue=await page.evaluate(()=>{
+    const first=window.PaperchalkNPCs.interact('village-resident-01');
+    window.PaperchalkNPCs.interact('village-resident-02');
+    window.PaperchalkNPCs.interact('village-resident-03');
+    const mid=window.PaperchalkNPCs.interact('village-resident-04');
+    const ready=window.PaperchalkNPCs.dialogue.quests.find(q=>q.id==='village-intro');
+    const done=window.PaperchalkNPCs.interact('village-resident-01');
+    return {first,mid,ready,done,final:window.PaperchalkNPCs.dialogue.quests.find(q=>q.id==='village-intro')};
+  });
+  assert(dialogue.first?.quest?.status==='active','intro quest did not activate '+JSON.stringify(dialogue));
+  assert(dialogue.ready?.status==='ready'&&(dialogue.ready?.progress?.['meet-three']||0)>=3,'talk objective did not become ready '+JSON.stringify(dialogue.ready));
+  assert(dialogue.final?.status==='complete','intro quest did not complete '+JSON.stringify(dialogue.final));
 
   const before={...entered.p};
   assert(entered.s.interaction?.threeDimensional===true&&entered.s.interaction?.zMovementLocked===false,'renderer still reports row-locked movement '+JSON.stringify(entered.s.interaction));

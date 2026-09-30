@@ -81,6 +81,7 @@ const terrainPlaceBtn=byId('terrainPlaceBtn');
 const jumpBtn=byId('jumpBtn');
 const crouchBtn=byId('crouchBtn');
 const attackBtn=byId('attackBtn');
+const npcInteractBtn=byId('npcInteractBtn');
 const joystickZone=byId('joystickZone');
 const joystick=byId('joystick');
 const joystickKnob=joystick.querySelector('.joystick-knob');
@@ -247,12 +248,15 @@ Actor:{kind:'player'},
 Player:controller
 });
 const npcWorld=NPCRuntime.createNPCWorld({
-definitions:CONTENT.npcs,terrain,ecs,gravity:GRAVITY
+definitions:CONTENT.npcs,quests:CONTENT.quests||[],terrain,ecs,gravity:GRAVITY
 });
 window.PaperchalkNPCs=Object.freeze({
 get list(){return npcWorld.snapshot()},
 get stats(){return npcWorld.stats()},
-get(id){return npcWorld.snapshot().find(npc=>npc.id===String(id))||null}
+get dialogue(){return npcWorld.dialogueSnapshot()},
+get(id){return npcWorld.snapshot().find(npc=>npc.id===String(id))||null},
+nearest(range=2.5){const hit=npcWorld.nearestInteractable(transform,range);return hit?{id:hit.actor.id,distance:hit.distance}:null},
+interact(id){const out=npcWorld.interact(id,{player:transform,worldMinutes});if(out){showNPCDialogue(out);saveWorldState()}return out}
 });
 const fishing={
 state:'idle',timer:0,biteWindow:0,nextBite:0,
@@ -354,6 +358,7 @@ hunger:hungerSnapshot(),
 fishing:fishingSnapshot(),
 fish:fishSnapshot(),
 npcs:npcWorld.snapshot(),
+npcDialogue:npcWorld.dialogueSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
 scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
 terrain:terrain.stats(),
@@ -368,7 +373,7 @@ for(const listener of [...runtimeListeners])listener(snap);
 return snap;
 }
 window.PaperchalkRuntime=Object.freeze({
-version:8,
+version:9,
 getSnapshot:buildSnapshot,
 subscribe(listener){
 if(typeof listener!=='function')throw new TypeError('runtime listener must be a function');
@@ -382,6 +387,23 @@ mapNotice.textContent=String(message||'');
 mapNotice.classList.add('is-show');
 clearTimeout(noticeTimer);
 noticeTimer=setTimeout(()=>mapNotice.classList.remove('is-show'),duration);
+}
+function showNPCDialogue(packet){
+if(!packet)return false;
+let text=(packet.name||'NPC')+'：'+(packet.text||'');
+const q=packet.quest;
+if(q){const o=q.objectives?.[0];text+=' 【'+q.name+(q.status==='active'&&o?' '+(o.current||0)+'/'+(o.count||1):' '+q.status)+'】'}
+showMapNotice(text,2600);
+window.PaperchalkEvents?.emit('npc:dialogue',packet);
+publish();return true;
+}
+function interactNPC(){
+if(!worldInteractive())return false;
+const hit=npcWorld.nearestInteractable(transform,2.65);
+if(!hit){showMapNotice('附近没人',650);return false}
+const packet=npcWorld.interact(hit.actor.id,{player:transform,worldMinutes});
+if(!packet)return false;
+showNPCDialogue(packet);saveWorldState();return packet;
 }
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function collidesAt(x,y,z){
@@ -531,6 +553,7 @@ controller.attacking=true;
 controller.attackTimer=.28;
 controller.attackCooldown=.42;
 window.PaperchalkEvents?.emit('player:attack',{x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw});
+npcWorld.emitStimulus('attack',transform,{radius:8,threat:true,ttl:5});
 publish();
 return true;
 }
@@ -1551,6 +1574,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture'])joystickZon
 jumpBtn.addEventListener('pointerdown',event=>{event.preventDefault();if(controller.flying)mobileFlyUp=true;else jump()});
 for(const type of ['pointerup','pointercancel','pointerleave'])jumpBtn.addEventListener(type,()=>{mobileFlyUp=false});
 attackBtn.addEventListener('pointerdown',event=>{event.preventDefault();attack()});
+npcInteractBtn.addEventListener('pointerdown',event=>{event.preventDefault();interactNPC()});
 crouchBtn.addEventListener('pointerdown',event=>{event.preventDefault();if(controller.flying)mobileFlyDown=true;else{mobileCrouch=true;setCrouch(true)}});
 for(const type of ['pointerup','pointercancel','pointerleave'])crouchBtn.addEventListener(type,()=>{mobileFlyDown=false;mobileCrouch=false;if(!controller.flying)setCrouch(keyboardCrouch)});
 function shouldIgnoreKey(event){
@@ -1577,6 +1601,7 @@ else reelFishingRod();
 event.preventDefault();return;
 }
 if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
+if(event.code==='KeyE'){if(!event.repeat)interactNPC();event.preventDefault();return}
 if(event.code==='KeyC'){keys.add('KeyC');if(!controller.flying){keyboardCrouch=true;setCrouch(true)}event.preventDefault()}
 });
 window.addEventListener('keyup',event=>{
@@ -1587,7 +1612,7 @@ window.addEventListener('blur',()=>{keys.clear();keyboardCrouch=false;mobileFlyU
 function fixedUpdate(dt){
 const interactive=worldInteractive();
 controller.crouching=!controller.flying&&(keyboardCrouch||mobileCrouch);
-ecs.runPhase('fixed',dt,{interactive,player:transform});
+ecs.runPhase('fixed',dt,{interactive,player:transform,worldMinutes});
 if(active){
 worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
 paperClock.textContent=formatClock();
@@ -1651,6 +1676,7 @@ playerHp:PLAYER_MAX_HP,
 hunger:HUNGER_MAX,
 terrainEdits:[],
 waterCells:[],
+npcState:null,
 torchOn:false,
 mapState:{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false},
 inventory:Array.from({length:INVENTORY_CAPACITY},(_,i)=>i===0?{...CONTENT.items['hand-torch'],count:1}:i===1?{...CONTENT.items['water-bucket'],count:1}:i===2?{...CONTENT.items['fishing-rod'],count:1}:null)
@@ -1705,6 +1731,7 @@ save.hunger=hunger.current;
 save.torchOn=controller.torchOn;
 save.terrainEdits=terrain.exportEdits();
 save.waterCells=terrain.water.exportState();
+save.npcState=npcWorld.exportState();
 save.inventory=inventorySnapshot();
 save.mapState=save.mapState||{broken:[],collected:[],visitedRoutes:[0],visitedNodes:['village'],exitReached:false};
 save.updatedAt=Date.now();
@@ -1731,6 +1758,7 @@ resetFishing();
 fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
 controller.torchOn=!!save.torchOn;
 worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
+npcWorld.importState(save.npcState);
 setInventoryFromSave(save.inventory);
 if(!inventoryItems.some(item=>item?.id==='hand-torch')){
 inventoryItems[0]={...itemClone(CONTENT.items['hand-torch']),count:1};

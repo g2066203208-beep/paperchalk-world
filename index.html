@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-r13";
+  const BUILD="paper-r14";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 3D开放纸艺世界</title>
-<meta name="paperchalk-build" content="paper-r13">
+<meta name="paperchalk-build" content="paper-r14">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-r13">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r14">
 </head>
 <body>
 
@@ -124,9 +124,10 @@
     <button id="terrainPlaceBtn" class="combat-btn terrain-tool" type="button" aria-pressed="false">放</button>
     <button id="crouchBtn" class="combat-btn" type="button">蹲</button>
     <button id="jumpBtn" class="combat-btn" type="button">跳</button>
+    <button id="npcInteractBtn" class="combat-btn" type="button">聊</button>
     <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
   </div>
-  <div class="desktop-control-hint">WASD 3D移动 · Space 跳跃 · V 飞行 · 飞行时 Space上升 / Shift或C下降 · 左键挖 · 右键放</div>
+  <div class="desktop-control-hint">WASD 3D移动 · E 交谈 · Space 跳跃 · V 飞行 · 飞行时 Space上升 / Shift或C下降 · 左键挖 · 右键放</div>
   <div class="joystick-hint">左侧摇杆：360°移动 · 飞行时“跳/蹲”=上升/下降</div>
   <div id="joystickZone" class="joystick-zone" aria-label="360度移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
@@ -245,17 +246,20 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-r13"></script>
-<script src="./src/core/game-state.js?v=paper-r13"></script>
-<script src="./src/core/save-runtime.js?v=paper-r13"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-r13"></script>
-<script src="./src/entities/npc-runtime.js?v=paper-r13"></script>
-<script src="./src/content/game-content.js?v=paper-r13"></script>
+<script src="./src/core/event-bus.js?v=paper-r14"></script>
+<script src="./src/core/game-state.js?v=paper-r14"></script>
+<script src="./src/core/save-runtime.js?v=paper-r14"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r14"></script>
+<script src="./src/ai/npc-navigation.js?v=paper-r14"></script>
+<script src="./src/ai/npc-brain.js?v=paper-r14"></script>
+<script src="./src/ai/npc-dialogue.js?v=paper-r14"></script>
+<script src="./src/entities/npc-runtime.js?v=paper-r14"></script>
+<script src="./src/content/game-content.js?v=paper-r14"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=paper-r13"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-r13"></script>
-<script src="./src/game.js?v=paper-r13"></script>
-<script src="./src/debug/world-debug.js?v=paper-r13"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r13"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r14"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r14"></script>
+<script src="./src/game.js?v=paper-r14"></script>
+<script src="./src/debug/world-debug.js?v=paper-r14"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r14"></script>
 </body>
 </html>
