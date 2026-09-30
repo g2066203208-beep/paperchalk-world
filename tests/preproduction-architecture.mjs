@@ -195,7 +195,7 @@ assert.ok(!fs.existsSync('src/engine3d/PhotonSkyWeatherPass.js'),'Photon cloud/w
 assert.doesNotMatch(engine,/PhotonPipeline/);
 assert.doesNotMatch(html,/photon/i);
 
-console.log('FINITE_SIDE_SCROLL_VOXEL_ARCHITECTURE_OK');
+console.log('INFINITE_VOXEL_3D_ARCHITECTURE_OK');
 
 assert.match(engine,/paperchalk-whole-voxel-color-v15/);
 assert.match(engine,/vVoxelWorldNormal/);
