@@ -28,12 +28,14 @@ try{
   assert(initial.terrainMode==='finite-voxel-road','finite voxel road renderer mode missing '+JSON.stringify(initial));
   assert(initial.paperStage?.enabled===true&&initial.paperStage?.mode==='instanced-2d-multilayer-paper-school'&&initial.paperStage?.source==='python-generated-school-paper-atlas','96-card paper school missing '+JSON.stringify(initial.paperStage));
   assert(initial.paperStage?.cards===96&&initial.paperStage?.assetTypes===28&&initial.paperStage?.noCollision===true&&initial.paperStage?.real3DBuilding===false,'paper school card contract wrong '+JSON.stringify(initial.paperStage));
+  assert(initial.paperStage?.groundTopY===1&&Math.abs(initial.paperStage?.facadeZ+10.24)<.001&&initial.paperStage?.attachmentGapMeters===.04,'school is not grounded / facade attachments too far '+JSON.stringify(initial.paperStage));
   assert(Array.isArray(initial.paperStage?.layers)&&initial.paperStage.layers.length===8&&initial.paperStage.layers.map(x=>x.count).join(',')==='6,8,10,12,28,16,10,6','paper school layer counts wrong '+JSON.stringify(initial.paperStage));
   await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperStage?.atlasReady===true,{timeout:6000,polling:'raf'});
   await page.screenshot({path:'artifacts/prologue-paper-layers.png'});
   assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
+  assert(initial.voxelTerrain?.worldBounds?.minZ===-16&&initial.voxelTerrain?.worldBounds?.maxZ===9&&initial.voxelTerrain?.worldBounds?.minY===-8,'expanded city/underground bounds missing '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.gameplayDimensions===2&&initial.voxelTerrain?.zMovementLocked===true,'voxel road gameplay plane wrong '+JSON.stringify(initial.voxelTerrain));
   assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v6-macro-relief-ao','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.textureResolution===256,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
