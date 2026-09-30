@@ -36,6 +36,20 @@ function deposit(field,size,x,y,radius,amount){
     field[wy*size+wx]+=amount*fall*fall;
   }
 }
+
+function patchRect(field,size,cx,cy,w,h,amount){
+  const x0=Math.floor(cx-w*.5),x1=Math.ceil(cx+w*.5);
+  const y0=Math.floor(cy-h*.5),y1=Math.ceil(cy+h*.5);
+  const feather=Math.max(1,Math.min(w,h)*.13);
+  for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){
+    const dx=Math.max(Math.abs((xx+.5)-cx)-w*.5+feather,0)/feather;
+    const dy=Math.max(Math.abs((yy+.5)-cy)-h*.5+feather,0)/feather;
+    const fall=(1-clamp(Math.max(dx,dy),0,1));
+    if(fall<=0)continue;
+    const wx=((xx%size)+size)%size,wy=((yy%size)+size)%size;
+    field[wy*size+wx]+=amount*(.38+.62*fall);
+  }
+}
 function stroke(field,size,rng,{count,minLength,maxLength,minRadius,maxRadius,angle=0,jitter=Math.PI,strength=.04}){
   for(let i=0;i<count;i++){
     const x=rng()*size,y=rng()*size,a=angle+(rng()+rng()+rng()-1.5)*jitter;
@@ -57,13 +71,26 @@ function normalizeField(field){
 
 function buildStock(size,{seed=1,side=false}={}){
   const rng=makeRng(seed);
-  const height=new Float32Array(size*size),macro=new Float32Array(size*size),pulp=new Float32Array(size*size),flecks=new Float32Array(size*size);
+  const height=new Float32Array(size*size),macro=new Float32Array(size*size),pulp=new Float32Array(size*size),flecks=new Float32Array(size*size),patches=new Float32Array(size*size);
 
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const i=y*size+x,u=x/size,v=y/size;
     const m=fbm01(u,v,seed+101),p=periodicNoise01(u,v,32,seed+211)*.58+periodicNoise01(u,v,64,seed+307)*.42;
     macro[i]=m;pulp[i]=p;
     height[i]=m*.15+p*.045;
+  }
+
+  // Near-square paper patches: light/raised and dark/recessed areas share the
+  // same mask, so albedo, normals and roughness describe one physical feature.
+  const patchCount=side?72:48;
+  for(let i=0;i<patchCount;i++){
+    const w=size*((side?.030:.024)+rng()*(side?.090:.072));
+    const h=w*(.72+rng()*.56);
+    const cx=rng()*size,cy=rng()*size;
+    const raised=rng()>.49;
+    const amp=(raised?1:-1)*(side?.20:.115)*(.58+rng()*.58);
+    patchRect(patches,size,cx,cy,w,h,amp);
+    patchRect(height,size,cx,cy,w,h,amp*(side?.62:.42));
   }
 
   if(side){
@@ -87,7 +114,7 @@ function buildStock(size,{seed=1,side=false}={}){
 
   normalizeField(height);
   // flecks deliberately remain signed; clamp at sampling time.
-  return {height,macro,pulp,flecks};
+  return {height,macro,pulp,flecks,patches};
 }
 
 function texture(THREE,data,size,{srgb=false,name='paper-map'}={}){
@@ -97,39 +124,39 @@ function texture(THREE,data,size,{srgb=false,name='paper-map'}={}){
 }
 
 function deriveSet(THREE,{size=512,seed=1,side=false}={}){
-  const {height,macro,pulp,flecks}=buildStock(size,{seed,side});
+  const {height,macro,pulp,flecks,patches}=buildStock(size,{seed,side});
   const albedo=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4),roughness=new Uint8Array(size*size*4);
   const at=(x,y)=>height[(((y%size)+size)%size)*size+(((x%size)+size)%size)];
 
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
-    const i=y*size+x,o=i*4,h=height[i],m=macro[i],p=pulp[i],f=clamp(flecks[i],-.12,.12);
+    const i=y*size+x,o=i*4,h=height[i],m=macro[i],p=pulp[i],f=clamp(flecks[i],-.12,.12),block=clamp(patches[i],-.28,.28);
     const dx=(at(x+1,y)-at(x-1,y))*.5,dy=(at(x,y+1)-at(x,y-1))*.5;
 
     // Reference: almost-flat paper. Normal detail should be sensed in grazing
     // light, never read as engraved/bumpy terrain.
-    const micro=side?.72:.58;
+    const micro=side?.88:.68;
     let nx=-dx*micro,ny=-dy*micro,nz=1,inv=1/Math.max(1e-6,Math.hypot(nx,ny,nz));
     nx*=inv;ny*=inv;nz*=inv;
     normal[o]=Math.round((nx*.5+.5)*255);normal[o+1]=Math.round((ny*.5+.5)*255);normal[o+2]=Math.round((nz*.5+.5)*255);normal[o+3]=255;
 
     // Paper identity is primarily diffuse pulp variation. The side stock is
     // warmer/darker and more particulate; the top is soft and low contrast.
-    const broad=(m-.5)*(side?.090:.060),mid=(p-.5)*(side?.065:.040),fine=(h-.5)*(side?.035:.018);
+    const broad=(m-.5)*(side?.090:.060),mid=(p-.5)*(side?.065:.040),fine=(h-.5)*(side?.035:.018),paperBlock=block*(side?.34:.22);
     const warm=side?.045:.007;
-    const base=clamp((side?.955:.985)+broad+mid+fine+f,.76,1.0);
+    const base=clamp((side?.955:.985)+broad+mid+fine+f+paperBlock,.72,1.0);
     albedo[o]=Math.round(clamp(base,0,1)*255);
     albedo[o+1]=Math.round(clamp(base-warm*.34,0,1)*255);
     albedo[o+2]=Math.round(clamp(base-warm,0,1)*255);albedo[o+3]=255;
 
     const slope=clamp(Math.hypot(dx,dy)*3.2,0,1);
-    const rr=clamp((side?.965:.945)+(h-.5)*(side?.030:.022)+slope*.018+(m-.5)*.018-f*.12,.86,.998);
+    const rr=clamp((side?.965:.945)+(h-.5)*(side?.030:.022)+slope*.018+(m-.5)*.018-f*.12-block*(side?.16:.10),.84,.998);
     const rv=Math.round(rr*255);roughness[o]=rv;roughness[o+1]=rv;roughness[o+2]=rv;roughness[o+3]=255;
   }
 
   return {
-    albedo:texture(THREE,albedo,size,{srgb:true,name:side?'paper-core-albedo-v3':'paper-face-albedo-v3'}),
-    normal:texture(THREE,normal,size,{name:side?'paper-core-normal-v3':'paper-face-normal-v3'}),
-    roughness:texture(THREE,roughness,size,{name:side?'paper-core-roughness-v3':'paper-face-roughness-v3'}),
+    albedo:texture(THREE,albedo,size,{srgb:true,name:side?'paper-core-albedo-v5':'paper-face-albedo-v5'}),
+    normal:texture(THREE,normal,size,{name:side?'paper-core-normal-v5':'paper-face-normal-v5'}),
+    roughness:texture(THREE,roughness,size,{name:side?'paper-core-roughness-v5':'paper-face-roughness-v5'}),
     size,seed,side
   };
 }
@@ -268,11 +295,11 @@ export function createPaperMaterialSet(THREE,settings){
   sync(settings);
 
   const stats=()=>({
-    mode:'procedural-paper-pbr-v4-normalmapped',
+    mode:'procedural-paper-pbr-v5-patch-relief',
     generatedOnceOnCPU:true,textureResolution:resolution,microMapResolution:resolution,
     maps:['albedo','normal','roughness'],
-    visualPriority:['pulp-albedo','contact-shadow','cut-edge-fibre','micro-normal'],
-    diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,grassNormalMap:true,dirtNormalMap:true,
+    visualPriority:['paper-block-patches','pulp-albedo','contact-shadow','cut-edge-fibre','micro-normal'],
+    diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,grassNormalMap:true,dirtNormalMap:true,raisedRecessedPaperPatches:true,patchesAffectAlbedoNormalRoughness:true,
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
     userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
     grassReferenceLoaded:grassLoaded,grassReferenceSize,grassMaterialGroup:true,
