@@ -56,6 +56,7 @@ jobs:
           node --check src/renderers/three-world-renderer.mjs
           node --check src/terrain/terrain-runtime.js
           node --check src/prologue/voxel-road.js
+          node --check src/prologue/PrologueSchoolScene.js
           node --check src/terrain/voxel-block-mesh.js
           node --check src/entities/PaperSpriteEntity.js
           node --check vendor/fastnoise-lite/FastNoiseLite.js
