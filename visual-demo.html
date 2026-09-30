@@ -14,13 +14,33 @@ button{appearance:none;border:2px solid rgba(89,63,42,.42);background:#f3e5c2;co
 button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 .groupBreak{flex-basis:100%;height:0}
 .badge{position:fixed;z-index:6;left:18px;bottom:18px;padding:8px 12px;border-radius:999px;background:rgba(47,39,32,.72);color:#fff7e6;font-size:12px;backdrop-filter:blur(6px)}
-@media(max-width:720px){.panel{left:10px;top:10px;padding:11px 12px}.panel h1{font-size:16px}.panel p{font-size:11px}.controls{right:10px;bottom:10px;gap:6px}button{padding:9px 10px;font-size:12px}.badge{display:none}}
+.sunPanel{position:fixed;z-index:7;right:16px;top:18px;width:min(300px,calc(100vw - 32px));padding:11px 12px;border:2px solid rgba(89,63,42,.38);border-radius:16px;background:rgba(244,231,199,.92);box-shadow:0 5px 0 rgba(77,54,37,.13),0 14px 30px rgba(43,31,23,.10);backdrop-filter:blur(8px)}
+.sunPanel .title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;font-size:13px;font-weight:800}
+.sunPanel .sunRow{display:grid;grid-template-columns:72px 1fr 48px;align-items:center;gap:7px;margin:6px 0;font-size:12px}
+.sunPanel input[type="range"]{width:100%;accent-color:#c58c34}
+.sunPanel .sunVal{font-variant-numeric:tabular-nums;text-align:right;font-weight:750}
+.sunPanel button{width:100%;margin-top:5px;padding:7px 9px;font-size:11px;border-radius:11px}
+@media(max-width:720px){.panel{left:10px;top:10px;padding:11px 12px;max-width:calc(100vw - 150px)}.panel h1{font-size:16px}.panel p{font-size:10px}.controls{right:10px;bottom:10px;gap:6px}button{padding:9px 10px;font-size:12px}.badge{display:none}.sunPanel{right:10px;top:10px;width:132px;padding:8px}.sunPanel .title{font-size:11px}.sunPanel .sunRow{grid-template-columns:1fr;gap:2px;margin:4px 0}.sunPanel .sunVal{text-align:left;font-size:10px}.sunPanel button{font-size:10px;padding:6px}.sunPanel input[type="range"]{width:100%}}
 </style>
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v11</h1>
-  <p>深林树后透光 v11：背景改成三层成片树林，太阳/月亮固定在树林后方朝前景照射。体积光继续用真实 Shadow-map Raymarch；树干和树冠形成大量不规则缝隙，光从背景穿过这些缝隙射到玩家和前景空气里。</p>
+  <h1>纸艺世界视觉 Demo v12</h1>
+  <p>深林树后透光 v12：新增太阳光方向控制。可以实时调“左右方向”和“高度角”，体积光、树影、地面受光和太阳圆盘都会跟着同一主光方向变化；也可以一键恢复跟随昼夜。</p>
+</div>
+<div class="sunPanel">
+  <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
+  <div class="sunRow">
+    <span>左右方向</span>
+    <input id="sunAzimuth" type="range" min="-75" max="75" step="1" value="-36">
+    <span id="sunAzimuthVal" class="sunVal">-36°</span>
+  </div>
+  <div class="sunRow">
+    <span>高度角</span>
+    <input id="sunElevation" type="range" min="5" max="60" step="1" value="13">
+    <span id="sunElevationVal" class="sunVal">13°</span>
+  </div>
+  <button id="sunFollow">恢复跟随昼夜</button>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -1095,7 +1115,7 @@ function renderWithVolumetrics(){
   renderer.render(compositeScene,fsCamera);
 }
 
-const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27};
+const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
 let skyMode='day';
 
 function setSkyMode(mode){
@@ -1112,8 +1132,22 @@ function updateLighting(t){
 
   // Sun and moon still move physically around the scene, but the intensity
   // curves are deliberately art-directed: dawn/dusk/night remain readable.
-  const sx=-Math.cos(a)*14,sy=3.2+Math.max(rawSun,.03)*13.5,sz=-18;
-  const ma=a+Math.PI,mx=Math.cos(a)*12,my=3.2+Math.max(-rawSun,.03)*12.0,mz=-18;
+  let sx=-Math.cos(a)*14,sy=3.2+Math.max(rawSun,.03)*13.5,sz=-18;
+  const ma=a+Math.PI;
+  let mx=Math.cos(a)*12,my=3.2+Math.max(-rawSun,.03)*12.0,mz=-18;
+
+  // Manual sun direction: keep the light behind the forest, but let the user
+  // steer it left/right and up/down. All shadows + volumetric scattering use
+  // this exact same DirectionalLight position.
+  if(state.manualSun){
+    const az=THREE.MathUtils.degToRad(state.sunAzimuth);
+    const el=THREE.MathUtils.degToRad(state.sunElevation);
+    const radius=23;
+    const horizontal=Math.cos(el)*radius;
+    sx=Math.sin(az)*horizontal;
+    sy=3.0+Math.sin(el)*radius;
+    sz=-Math.cos(az)*horizontal;
+  }
   sun.position.set(sx,sy,sz);moon.position.set(mx,my,mz);
 
   const sunWarm=new THREE.Color(0xffa96f);
@@ -1213,18 +1247,43 @@ function updateLighting(t){
     contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
   }
   updateVolumetricSettings(state.time);
+  syncSunControls();
   volumeShadowDirty=true;
   renderDirty=true;
   shadowDirty=true;
 }
+function syncSunControls(){
+  const az=document.getElementById('sunAzimuth');
+  const el=document.getElementById('sunElevation');
+  const azv=document.getElementById('sunAzimuthVal');
+  const elv=document.getElementById('sunElevationVal');
+  const mode=document.getElementById('sunMode');
+  if(!az||!el)return;
+  az.value=String(state.sunAzimuth);
+  el.value=String(state.sunElevation);
+  azv.textContent=Math.round(state.sunAzimuth)+'°';
+  elv.textContent=Math.round(state.sunElevation)+'°';
+  mode.textContent=state.manualSun?'手动':'跟随昼夜';
+  document.getElementById('sunFollow').classList.toggle('active',!state.manualSun);
+}
+function applyManualSun(){
+  state.manualSun=true;
+  state.auto=false;
+  state.timePreset='';
+  document.getElementById('cycle').classList.remove('active');
+  updateLighting(state.time);
+  syncSunControls();
+  syncButtons();
+  renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
+}
 function preset(name){
-  state.auto=false;document.getElementById('cycle').classList.remove('active');
+  state.auto=false;state.manualSun=false;document.getElementById('cycle').classList.remove('active');
   state.timePreset=name;
   if(name==='dawn')state.time=.27;
   else if(name==='sunset')state.time=.73;
   else if(name==='night')state.time=.0;
   else state.time=.5;
-  updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
+  updateLighting(state.time);syncSunControls();syncButtons();renderDirty=true;shadowDirty=true;
 }
 function syncButtons(){
   sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
@@ -1284,13 +1343,30 @@ document.getElementById('godrays').onclick=()=>{
   volumeShadowDirty=true;renderDirty=true;
   updateVolumetricSettings(state.time);syncButtons();
 };
+document.getElementById('sunAzimuth').oninput=e=>{
+  state.sunAzimuth=+e.target.value;
+  document.getElementById('sunAzimuthVal').textContent=state.sunAzimuth+'°';
+  applyManualSun();
+};
+document.getElementById('sunElevation').oninput=e=>{
+  state.sunElevation=+e.target.value;
+  document.getElementById('sunElevationVal').textContent=state.sunElevation+'°';
+  applyManualSun();
+};
+document.getElementById('sunFollow').onclick=()=>{
+  state.manualSun=false;
+  updateLighting(state.time);
+  syncSunControls();syncButtons();
+  renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
+};
 document.getElementById('dawn').onclick=()=>preset('dawn');
 document.getElementById('noon').onclick=()=>preset('noon');
 document.getElementById('sunset').onclick=()=>preset('sunset');
 document.getElementById('night').onclick=()=>preset('night');
 document.getElementById('cycle').onclick=()=>{
   state.auto=!state.auto;document.getElementById('cycle').classList.toggle('active',state.auto);
-  if(state.auto)state.timePreset='';syncButtons();renderDirty=true;shadowDirty=true;
+  if(state.auto){state.timePreset='';state.manualSun=false;}
+  syncSunControls();syncButtons();renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 };
 
 let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0,lastMistTick=0,mistClock=0;
@@ -1370,7 +1446,7 @@ function animate(now){
   }
   renderDirty=false;
 }
-updateLighting(.5);syncButtons();animate(performance.now());
+updateLighting(state.time);syncSunControls();syncButtons();animate(performance.now());
 </script>
 </body>
 </html>
