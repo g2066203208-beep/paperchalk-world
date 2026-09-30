@@ -17,32 +17,36 @@ try{
   await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
-  await page.evaluate(()=>window.Paperchalk3D.configurePhoton?.({enabled:false}));
-  await page.waitForTimeout(900);
+  await page.waitForTimeout(1400);
   const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats}));
   assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
   assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
   assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
 
   const before={...entered.p};
-  assert(Math.abs(before.z)<1e-6,'player is not centered on interaction row '+JSON.stringify(before));
-  await page.keyboard.down('KeyD');
-  try{
-    await page.waitForFunction(x=>window.PaperchalkRuntime.getSnapshot().player.x-x>.16,before.x,{timeout:4000,polling:50});
-  }finally{await page.keyboard.up('KeyD')}
-  await page.waitForTimeout(80);
+  assert(entered.s.interaction?.threeDimensional===true&&entered.s.interaction?.zMovementLocked===false,'renderer still reports row-locked movement '+JSON.stringify(entered.s.interaction));
+  await page.keyboard.down('KeyD');await page.waitForTimeout(420);await page.keyboard.up('KeyD');await page.waitForTimeout(80);
+  const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
+  assert(Math.hypot(afterD.x-before.x,afterD.z-before.z)>.22,'D did not move in horizontal 3D plane '+JSON.stringify({before,afterD}));
+  await page.keyboard.down('KeyW');await page.waitForTimeout(420);await page.keyboard.up('KeyW');await page.waitForTimeout(80);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(afterW.x-before.x>.14,'D did not move on X '+JSON.stringify({before,afterW}));
-  assert(Math.abs(afterW.z)<1e-6,'Z movement is not locked '+JSON.stringify(afterW));
+  assert(Math.hypot(afterW.x-afterD.x,afterW.z-afterD.z)>.22,'W did not move in horizontal 3D plane '+JSON.stringify({afterD,afterW}));
+  assert(Math.abs(afterW.z-before.z)>.12,'Z coordinate did not unlock '+JSON.stringify({before,afterW}));
 
+  const flightStart=await page.evaluate(()=>({ok:window.PaperchalkCombat.setFlight(true,{notice:false}),p:window.PaperchalkRuntime.getSnapshot().player}));
+  assert(flightStart.ok===true&&flightStart.p.flying===true,'flight mode did not enable '+JSON.stringify(flightStart));
+  await page.keyboard.down('Space');await page.waitForTimeout(320);await page.keyboard.up('Space');await page.waitForTimeout(80);
+  const flightUp=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
+  assert(flightUp.y-flightStart.p.y>.20,'flight ascend failed '+JSON.stringify({flightStart,flightUp}));
+  await page.evaluate(()=>window.PaperchalkCombat.setFlight(false,{notice:false}));
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
   const groundedY=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player.y);
   const jumped=await page.evaluate(()=>window.PaperchalkCombat.jump());assert(jumped===true,'jump rejected');
   await page.waitForFunction(y=>window.PaperchalkRuntime.getSnapshot().player.y>y+.04,groundedY,{timeout:1500});
 
   const edit=await page.evaluate(()=>{
-    const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain;
-    const gx=Math.floor(p.x),gz=t.stats().interactionRowZ,surface=Math.floor(t.highestGroundY(p.x,gz)/t.tileSize)-1;
+    const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain,s=t.tileSize;
+    const gx=Math.floor(p.x/s),gz=Math.floor(p.z/s+.5),surface=t.surfaceCell(gx,gz);
     const before=t.getVoxel(gx,surface,gz);
     const dug=window.PaperchalkTerrainActions.digCell(gx,surface,gz,{persist:false});
     const placed=window.PaperchalkTerrainActions.placeCell(gx,surface,gz,before,{persist:false});
@@ -58,7 +62,7 @@ try{
     const h1=window.PaperchalkHunger.state.current;
     const rod=window.PaperchalkInventory.items.find(i=>i?.id==='fishing-rod')||null;
     const p=window.PaperchalkRuntime.getSnapshot().player,t=window.PaperchalkTerrain,s=t.tileSize;
-    const gx=Math.floor(p.x/s)+2,gz=t.stats().interactionRowZ,gy=t.surfaceCell(gx,gz)+1;
+    const gx=Math.floor(p.x/s)+2,gz=Math.floor(p.z/s+.5),gy=t.surfaceCell(gx,gz)+1;
     t.water.setLevel(gx,gy,gz,8,{settle:false});
     const target={x:(gx+.5)*s,y:gy*s+s,z:gz*s};
     const cast=window.PaperchalkFishing.cast(target);

@@ -1,9 +1,9 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderDebug=read('src/debug/render-debug.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r5'),'build key missing');
+assert(html.includes('paper-r8'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -28,6 +28,11 @@ assert(terrain.includes('surfaceTile(gx,gz=0)'),'biome surface material missing'
 assert(terrain.includes('biomeSummaryForChunk(cx,cz)'),'biome chunk summary missing');
 assert(terrain.includes('generatorVersion=4'),'legacy terrain generator compatibility missing');
 assert(game.includes('window.PaperchalkBiomes'),'biome runtime API missing');
+assert(game.includes('FLY_SPEED')&&game.includes('setFlight'),'3D flight runtime missing');
+assert(game.includes("'KeyW'")&&game.includes("'KeyS'"),'W/S 3D movement missing');
+assert(game.includes("moveAxis('z'"),'Z-axis movement missing');
+assert(game.includes('threeDimensionalInteraction:true'),'3D terrain interaction flag missing');
+assert(!game.includes('PLAYER_ROW_CENTER_Z'),'legacy player-row lock still present');
 assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
@@ -80,10 +85,6 @@ assert(atmos.includes('uShadowMatrix'),'shadow-map volumetric occlusion missing'
 assert(atmos.includes('mieAnisotropy'),'Mie scattering stats missing');
 assert(atmos.includes('jitteredRaymarch:true'),'jittered volumetric raymarch missing');
 assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmos-setting="intensity"')&&html.includes('data-atmos-setting="anisotropy"'),'volumetric debug controls missing');
-assert(html.includes('data-debug-action="photon"')&&html.includes('data-photon-setting="renderScale"')&&html.includes('data-photon-weather-setting="weather"'),'Photon debug controls missing');
-assert(html.includes('data-world-time')&&html.includes('data-world-timescale')&&html.includes('data-time-preset="1136"'),'world time debug controls missing');
-assert(html.includes('data-paper-setting="grassTextureScale"'),'grass texture scale control missing');
-assert(renderDebug.includes('PaperchalkTimeDebug')&&renderDebug.includes('data-photon-toggle'),'renderer debug controller missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
 assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
@@ -104,7 +105,7 @@ assert(paper.includes('deterministicEdgeJitter:true'),'deterministic low-poly ed
 assert(paper.includes('edgeTopCells'),'edge-cell top geometry missing');
 assert(paper.includes('edgeFacets'),'low-poly edge facets missing');
 assert(paper.includes('paperPbrV3:true'),'PaperMaterial v3 integration missing');
-assert(paper.includes('grassTopMaterialGroup:true'),'grass top material group missing');
+assert(paper.includes('grassTopMaterialGroup:true'),'dedicated grass top material group missing');
 assert(paperMaterial.includes("mode:'procedural-paper-pbr-v3-reference'"),'procedural paper PBR v3 missing');
 assert(paperMaterial.includes('normalMap:source.normal'),'paper micro-normal map missing');
 assert(paperMaterial.includes('roughnessMap:source.roughness'),'paper roughness map missing');
@@ -112,7 +113,8 @@ assert(paperMaterial.includes('correlatedNormalRoughness:true'),'normal/roughnes
 assert(paperMaterial.includes('diffusePulpDominant:true'),'paper albedo/pulp must dominate the look');
 assert(paperMaterial.includes('weakMicroNormal:true'),'paper normal detail must remain weak');
 assert(paperMaterial.includes('physicalFibreSheen:true'),'paper fibre sheen missing');
-assert(paperMaterial.includes('userGrassReference:true')&&paperMaterial.includes("grassColorSource:'user-texture-only'"),'user grass reference material missing');
+assert(paperMaterial.includes('userGrassReference:true')&&paperMaterial.includes("grassColorSource:'user-texture-only'"),'supplied grass texture material missing');
+assert(paperMaterial.includes("grassTextureTransform:'native-world-uv-repeat-1x'"),'grass texture is still scaled/blurred');
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
 assert(paperMaterial.includes('perFrameHeavyNoise:false'),'paper material must not run heavy noise per frame');
@@ -120,6 +122,16 @@ assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing')
 assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
+assert(engine.includes('zMovementLocked:false')&&engine.includes('raycastIgnoresOtherRows:false'),'renderer still locks gameplay to one Z row');
+assert(engine.includes('Math.min(Number(devicePixelRatio)||1,2)'),'native DPR mobile rendering missing');
+assert(engine.includes('playerTexture.generateMipmaps=false'),'sharp protagonist texture path missing');
+
+assert(html.includes('data-debug-action="flight"'),'flight debug button missing');
+assert(html.includes('data-world-time')&&html.includes('data-world-timescale'),'time debug controls missing');
+assert(html.includes('data-time-preset="1136"'),'18:56 time preset missing');
+assert(fs.existsSync('assets/materials/grass-reference.webp'),'supplied grass asset missing');
+assert(!fs.existsSync('src/engine3d/PhotonPipeline.js')&&!fs.existsSync('src/engine3d/PhotonSkyWeatherPass.js'),'Photon renderer/cloud code must stay removed');
+assert(!engine.includes('PhotonPipeline')&&!html.toLowerCase().includes('photon'),'Photon runtime leaked into production');
 
 console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
 

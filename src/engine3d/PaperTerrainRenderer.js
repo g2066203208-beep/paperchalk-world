@@ -1,4 +1,4 @@
-import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r6';
+import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r7';
 /* Phase 1 visual-only paper terrain.
  * TerrainWorld remains the gameplay/collision authority. The render grid is
  * hidden by merged paper tops plus batched layered-cardboard edge geometry.
@@ -70,7 +70,6 @@ export class PaperTerrainRenderer{
       edgeJitter:settings.edgeJitter??.038,
       edgeHeightJitter:settings.edgeHeightJitter??.010,
       edgeFacetCenterJitter:settings.edgeFacetCenterJitter??.006,
-      grassTextureScale:settings.grassTextureScale??.16,
       ...settings
     };
     this.root=new THREE.Group();
@@ -185,8 +184,7 @@ export class PaperTerrainRenderer{
       }
       for(let zz=0;zz<hh;zz++)for(let xx=0;xx<w;xx++)used[(z+zz)*n+x+xx]=1;
       const x0=x*s,x1=(x+w)*s,z0=z*s,z1=(z+hh)*s,y=cell.y;
-      const topGroup=cell.tile===1?3:0;
-      addQuad(data,[x0,y,z0],[x0,y,z1],[x1,y,z1],[x1,y,z0],[0,1,0],this._topColor(cell.tile),topGroup);
+      addQuad(data,[x0,y,z0],[x0,y,z1],[x1,y,z1],[x1,y,z0],[0,1,0],this._topColor(cell.tile),cell.tile===1?3:0);
       data.topRects++;
     }
 
