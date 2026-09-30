@@ -34,7 +34,7 @@ const scene3d={
 };
 
 const content={
-  version:4,
+  version:5,
   world:{
     nodes:[
       {id:'village',name:'A村',x:170,y:650,kind:'village'},
@@ -78,7 +78,15 @@ const content={
     ]
   },
   scene3d,
-  npcs:[],
+  npcs:[
+    {
+      id:'village-resident-01',name:'A村村民',role:'villager',
+      spawn:{x:3.25,z:1.75,yaw:0},width:1,height:2,facingX:-1,maxHp:10,
+      invulnerable:true,interactable:true,
+      collider:{halfW:.34,halfH:.95,halfD:.28},
+      appearance:{primary:'#8c6248',secondary:'#dfc9aa'}
+    }
+  ],
   enemySpawns:[],
   enemyArchetypes:{
     'rag-drifter':{id:'rag-drifter',maxHp:3,patrolSpeed:1.6,chaseSpeed:3.6,aggroRange:9,attackRange:1.4}
@@ -133,6 +141,10 @@ function validate(value=content){
     assertUnique(value.scene3d.stageEntities,'scene3d.stageEntities');
     assertUnique(value.npcs,'npcs');
     assertUnique(value.enemySpawns,'enemySpawns');
+    for(const npc of value.npcs){
+      if(!npc.spawn||!Number.isFinite(Number(npc.spawn.x))||!Number.isFinite(Number(npc.spawn.z)))errors.push('npc '+npc.id+' spawn invalid');
+      if(!(Number(npc.width)>0&&Number(npc.height)>0))errors.push('npc '+npc.id+' dimensions invalid');
+    }
     for(const route of value.world.routes){
       if(!nodeIds.has(route.from))errors.push('route '+route.id+' missing from node '+route.from);
       if(!nodeIds.has(route.to))errors.push('route '+route.id+' missing to node '+route.to);

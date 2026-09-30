@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js');
 
-assert.match(html,/paper-r11/);
+assert.match(html,/paper-r12/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -47,6 +47,14 @@ assert.match(engine,/chunked-visible-surface-water-v5-wavefront/);
 assert.match(engine,/internalFacesCulled:true/);
 
 assert.match(content,/stageEntities:\[\]/);
+assert.match(content,/village-resident-01/);
+assert.match(game,/PaperchalkNPCRuntime/);
+assert.match(game,/Actor:\{kind:'player'\}/);
+assert.match(game,/npcs:npcWorld\.snapshot\(\)/);
+assert.match(engine,/NPCActorRenderer/);
+assert.match(npcRuntime,/sameActorComponentsAsPlayer:true/);
+assert.match(npcRuntime,/physicalColliders:true/);
+assert.match(npcRenderer,/new PaperSpriteEntity/);
 assert.doesNotMatch(content,/far-hills-|village-shop|village-house-a|village-workshop|tree-[abc]|rock-[ab]/);
 assert.doesNotMatch(engine,/sceneData\.stageEntities|this\.paperEntities=\[\]/);
 assert.match(engine,/legacyStagePlaceholders:0/);

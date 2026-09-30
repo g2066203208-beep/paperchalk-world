@@ -2,15 +2,24 @@
  * Procedural tree/building/rock placeholder art has been removed.
  */
 export function makePaperTexture(THREE,{kind='prop',primary='#7b6a56',secondary='#d8c7a3'}={}){
-  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
-  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,64,64);
-  // Safety fallback only. World props must use authored assets or real geometry;
-  // the old generated tree/building/rock silhouettes were intentionally removed.
-  ctx.fillStyle=kind==='player'?secondary:primary;
-  ctx.beginPath();ctx.roundRect(10,8,44,48,8);ctx.fill();
+  const actor=kind==='player'||kind==='npc';
+  const canvas=document.createElement('canvas');canvas.width=actor?128:64;canvas.height=actor?256:64;
+  const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(kind==='npc'){
+    ctx.fillStyle='rgba(65,48,38,.18)';ctx.beginPath();ctx.ellipse(64,238,35,9,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=secondary||'#d8c7a3';ctx.beginPath();ctx.arc(64,58,34,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=primary||'#7b6a56';ctx.beginPath();ctx.arc(64,48,35,Math.PI,Math.PI*2);ctx.lineTo(98,64);ctx.quadraticCurveTo(64,41,30,64);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.roundRect(35,91,58,84,18);ctx.fill();
+    ctx.fillStyle=secondary||'#d8c7a3';ctx.beginPath();ctx.roundRect(20,103,18,68,9);ctx.roundRect(90,103,18,68,9);ctx.fill();
+    ctx.fillStyle=primary||'#7b6a56';ctx.beginPath();ctx.roundRect(40,166,18,63,8);ctx.roundRect(70,166,18,63,8);ctx.fill();
+    ctx.fillStyle='#3d342f';ctx.beginPath();ctx.arc(52,59,4,0,Math.PI*2);ctx.arc(76,59,4,0,Math.PI*2);ctx.fill();
+  }else{
+    ctx.fillStyle=kind==='player'?secondary:primary;
+    ctx.beginPath();ctx.roundRect(10,8,44,48,8);ctx.fill();
+  }
   const texture=new THREE.CanvasTexture(canvas);
   texture.colorSpace=THREE.SRGBColorSpace;texture.magFilter=THREE.LinearFilter;
-  texture.minFilter=THREE.LinearMipmapLinearFilter;texture.needsUpdate=true;
+  texture.minFilter=THREE.LinearMipmapLinearFilter;texture.generateMipmaps=true;texture.needsUpdate=true;
   return texture;
 }
 

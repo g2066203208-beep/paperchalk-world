@@ -18,7 +18,12 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1400);
-  const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats}));
+  const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats,n:window.PaperchalkRuntime.getSnapshot().npcs,ns:window.PaperchalkNPCs.stats}));
+  assert(entered.n?.length===1&&entered.n[0].id==='village-resident-01','first NPC runtime missing '+JSON.stringify(entered.n));
+  assert(entered.ns?.ecsActors===true&&entered.ns?.sameActorComponentsAsPlayer===true,'NPC ECS actor parity missing '+JSON.stringify(entered.ns));
+  const ecsCounts=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().ecs.components);
+  assert(ecsCounts?.Actor===2&&ecsCounts?.NPC===1&&ecsCounts?.Player===1,'NPC/player ECS components wrong '+JSON.stringify(ecsCounts));
+  assert(entered.s?.npcs?.count===1&&entered.s?.npcs?.sharedEntityClassWithPlayer===true,'NPC renderer missing '+JSON.stringify(entered.s?.npcs));
   assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
   assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
   assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
