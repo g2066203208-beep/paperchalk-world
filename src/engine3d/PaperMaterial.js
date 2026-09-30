@@ -150,7 +150,7 @@ export function createPaperMaterialSet(THREE,settings){
     tex.name='user-supplied-grass-paper-512';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    tex.generateMipmaps=true;tex.anisotropy=16;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     grassReference=tex;grassLoaded=true;grassReferenceSize=[tex.image?.width||512,tex.image?.height||512];
     if(grassMaterial){grassMaterial.map=tex;grassMaterial.needsUpdate=true}
   });
@@ -158,7 +158,7 @@ export function createPaperMaterialSet(THREE,settings){
     tex.name='user-supplied-dirt-paper-256';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    tex.generateMipmaps=true;tex.anisotropy=16;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     dirtReference=tex;dirtLoaded=true;dirtReferenceSize=[tex.image?.width||256,tex.image?.height||256];
     if(dirtMaterial){dirtMaterial.map=tex;dirtMaterial.needsUpdate=true}
   });
@@ -229,17 +229,15 @@ export function createPaperMaterialSet(THREE,settings){
   const materials=[make(),make({side:true}),make({bevel:true})];
   grassMaterial=new THREE.MeshPhysicalMaterial({
     color:0xffffff,map:grassReference,vertexColors:false,
-    normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
-    normalScale:new THREE.Vector2(.20,.20),roughness:.99,metalness:0,side:THREE.DoubleSide,
+    roughness:.995,metalness:0,side:THREE.DoubleSide,
     specularIntensity:.05,ior:1.33,sheen:.04,sheenRoughness:.99,
     sheenColor:new THREE.Color(0xf4f0cf)
   });
   grassMaterial.name='user-grass-native-resolution';grassMaterial.userData.paperRole='grass-top';
   dirtMaterial=new THREE.MeshPhysicalMaterial({
     color:0xffffff,map:dirtReference,vertexColors:false,
-    normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
     emissive:new THREE.Color(0x6c412b),emissiveMap:dirtReference,emissiveIntensity:.28,
-    normalScale:new THREE.Vector2(.18,.18),roughness:.992,metalness:0,side:THREE.DoubleSide,
+    roughness:.995,metalness:0,side:THREE.DoubleSide,
     specularIntensity:.045,ior:1.33,sheen:.035,sheenRoughness:.99,
     sheenColor:new THREE.Color(0xe0b38a)
   });
@@ -259,10 +257,8 @@ export function createPaperMaterialSet(THREE,settings){
       mat.sheenRoughness=.96;
       mat.specularIntensity=sideRole?.08:.11;
     }
-    grassMaterial.normalScale.setScalar(micro*.58);
-    grassMaterial.roughness=clamp(.994-rough*.06,.978,.996);
-    dirtMaterial.normalScale.setScalar(micro*.52);
-    dirtMaterial.roughness=clamp(.995-rough*.05,.982,.997);
+    grassMaterial.roughness=clamp(.996-rough*.025,.985,.998);
+    dirtMaterial.roughness=clamp(.996-rough*.025,.985,.998);
     dirtMaterial.emissiveIntensity=.28;
   };
   sync(settings);
@@ -281,6 +277,7 @@ export function createPaperMaterialSet(THREE,settings){
     dirtReferenceLoaded:dirtLoaded,dirtReferenceSize,dirtMaterialGroup:true,
     dirtColorSource:'user-texture-only',dirtTextureTransform:'native-world-uv-repeat-1x',
     liftedCardboardShadow:true,sideShadowLift:.25,dirtShadowLift:.28,
+    groundAnisotropy:16,authoredSurfaceMicroMaps:false,
     seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
