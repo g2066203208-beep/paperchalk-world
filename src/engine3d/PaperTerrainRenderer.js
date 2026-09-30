@@ -1,8 +1,4 @@
 import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r9';
-/* Phase 1 visual-only paper terrain.
- * TerrainWorld remains the gameplay/collision authority. The render grid is
- * hidden by merged paper tops plus batched layered-cardboard edge geometry.
- */
 const TOP_COLORS=Object.freeze({
   1:0x6f895c, // grass paper (authored texture overrides this)
   2:0xb9845f, // earth paper
@@ -261,11 +257,6 @@ export class PaperTerrainRenderer{
 
       while(y>bottom+.001&&band<96){
         const bandBottom=Math.max(bottom,y-bandHeight);
-        // Tiny deterministic mis-registration makes stacked sheets read as
-        // physical cut cards without exposing cell seams.
-        // Keep every side plane on the exact authoritative contour. Earlier
-        // outward per-run offsets created sky-colored cracks at run/corner joins.
-        // Layer separation now comes from real vertical bands + material seams.
         const offset=0;
         const sideColor=this._sideColor(desc.tile,band,runSeedA,runSeedB);
 
@@ -273,7 +264,6 @@ export class PaperTerrainRenderer{
           const bevelBottom=Math.max(bandBottom,y-bevelHeight);
           const outer=points(y,bevelBottom,offset);
           const inner=points(y,y,0);
-          // Connect the exact top contour to the slightly proud cardboard edge.
           const a=inner[0],b=inner[1],c=outer[2],d=outer[3];
           const bevelNormalStrength=clamp(bevelWidth/Math.max(.001,bevelHeight),.35,1.25);
           const bn=normalized(dx*bevelNormalStrength,1,dz*bevelNormalStrength);
