@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js'),paperStage=read('src/prologue/ProloguePaperLayerScene.js');
 
-assert(html.includes('paper-r23'),'build key missing');
+assert(html.includes('paper-r24'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'finite-side-scroll-voxel'"),'finite side-scroll world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -60,14 +60,14 @@ assert(paperStage.includes("mode:'instanced-2d-multilayer-paper-school'")&&paper
 assert(paperStage.includes("source:L.source")&&fs.existsSync('src/prologue/school-paper-layout.js'),'school paper layout missing');
 const schoolLayout=read('src/prologue/school-paper-layout.js');
 assert(schoolLayout.includes("source:'python-generated-school-paper-atlas'"),'school must use Python-generated paper atlas');
-assert(schoolLayout.includes("cards.length!==96"),'96-card school contract missing');
+assert(schoolLayout.includes("cards.length!==96")&&schoolLayout.includes('groundTopY:1')&&schoolLayout.includes('attachmentGapMeters:.04'),'grounded 96-card school contract missing');
 assert(schoolLayout.includes("'window_blue'")&&schoolLayout.includes("'gate_panel'")&&schoolLayout.includes("'tree_round'"),'school card families missing');
 assert(fs.existsSync('assets/prologue/generated-school/school-paper-atlas.svg'),'Python school atlas missing');
 assert(fs.existsSync('tools/generate_school_paper_assets.py'),'Python school generator missing');
 assert(!fs.existsSync('src/prologue/PrologueSchoolScene.js'),'obsolete 3D school model must stay deleted');
-assert(content.includes('prologueRoad:{')&&content.includes('lengthMeters:96,widthMeters:10')&&content.includes('farSidewalkMinZ:-5,farSidewalkMaxZ:-4')&&content.includes('farLaneMinZ:-3,farLaneMaxZ:-1')&&content.includes('nearLaneMinZ:0,nearLaneMaxZ:2')&&content.includes('nearSidewalkMinZ:3,nearSidewalkMaxZ:4'),'96m x 10m road scale missing');
+assert(content.includes('prologueRoad:{')&&content.includes('lengthMeters:96,widthMeters:10,sceneDepthMeters:26')&&content.includes('farGroundMinZ:-16,farGroundMaxZ:-6')&&content.includes('nearGroundMinZ:5,nearGroundMaxZ:9')&&content.includes('farSidewalkMinZ:-5,farSidewalkMaxZ:-4')&&content.includes('nearSidewalkMinZ:3,nearSidewalkMaxZ:4'),'96m street + 26m city depth missing');
 assert(road.includes("gameplayPlane:'x-y'")&&road.includes("zRole:'finite-visual-depth'"),'side-scroll road contract missing');
-assert(road.includes('finite-prologue-voxel-road-96x10-v2'),'finite voxel road generator missing');
+assert(road.includes('finite-prologue-city-ground-96x26-v3'),'finite city ground generator missing');
 assert(game.includes('return {x:horizontal,z:0'),'horizontal-only input missing');
 assert(game.includes('transform.z=INTERACTION_ROW_Z*terrain.tileSize;velocity.z=0'),'Z gameplay lock missing');
 assert(renderer.includes('zMovementLocked:true'),'renderer side-scroll interaction stats missing');
@@ -125,8 +125,8 @@ assert(atmos.includes('jitteredRaymarch:true'),'jittered volumetric raymarch mis
 assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmos-setting="intensity"')&&html.includes('data-atmos-setting="anisotropy"'),'volumetric debug controls missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
 assert(road.includes("volumetric:false")&&road.includes('qualityScale:.25')&&road.includes('steps:6'),'prologue atmosphere performance profile missing');
-assert(content.includes('visibleChunkRadiusXZ:1')&&content.includes('visibleChunkRadiusY:0')&&content.includes('maxBuildsPerFrame:2'),'prologue chunk budget missing');
-assert(content.includes('groundMinY:0,surfaceY:0'),'prologue road must stay one voxel thick');
+assert(content.includes('visibleChunkRadiusXZ:1')&&content.includes('visibleChunkRadiusY:1')&&content.includes('maxBuildsPerFrame:4'),'prologue chunk budget missing');
+assert(content.includes('groundMinY:-8,surfaceY:0'),'solid underground depth missing');
 assert(game.includes("if(!terrain.water.cells.size&&fishing.state==='idle'&&!fishWorld.entities.length)return"),'dry-scene fish early-out missing');
 assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
