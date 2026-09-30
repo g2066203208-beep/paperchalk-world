@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.20</h1>
-  <p>v12.20 触控镜头：保留鼠标拖动和滚轮缩放，同时加入手机/平板双指捏合缩放。双指靠近会拉远，双指张开会拉近；单指仍然负责 360° 环绕，双指结束后可无跳变继续单指旋转。</p>
+  <h1>纸艺世界视觉 Demo v12.21</h1>
+  <p>v12.21 Paper003 强化：标准 1×1×1 立方体轮廓完全不变。Color、NormalGL、Roughness 正常使用，并把 Paper003 的 Displacement 作为表面高度/凹凸参与着色，而不是推动顶点；这样保留标准方块，同时把纸褶皱明显做出来。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -482,6 +482,7 @@ function loadPaper003Texture(url,{srgb=false}={}){
 const paper003Color=loadPaper003Texture(PAPER003_COLOR_URL,{srgb:true});
 const paper003Normal=loadPaper003Texture(PAPER003_NORMAL_GL_URL);
 const paper003Roughness=loadPaper003Texture(PAPER003_ROUGHNESS_URL);
+const paper003Displacement=loadPaper003Texture(PAPER003_DISPLACEMENT_URL);
 
 // ---------------------------------------------------------------------------
 // Terrain v12.18 — strict standard cubes.
@@ -494,11 +495,57 @@ const terrainPaper003Mat=new THREE.MeshStandardMaterial({
   map:paper003Color,
   normalMap:paper003Normal,
   roughnessMap:paper003Roughness,
-  normalScale:new THREE.Vector2(1.10,1.10),
-  roughness:1,
+  normalScale:new THREE.Vector2(1.85,1.85),
+  roughness:1.12,
   metalness:0
 });
-terrainPaper003Mat.name='terrain-standard-cube-paper003';
+terrainPaper003Mat.name='terrain-standard-cube-paper003-full-surface';
+
+// Strict cube + full Paper003 channels:
+// true vertex displacement would deform the 1×1×1 silhouette, which the
+// current art direction explicitly forbids. Instead, the pack's Displacement
+// texture is sampled at fragment level and combined AFTER NormalGL. It therefore
+// contributes real per-pixel height gradients / light response while geometry
+// remains exactly cubic.
+terrainPaper003Mat.onBeforeCompile=shader=>{
+  shader.uniforms.paper003HeightMap={value:paper003Displacement};
+  shader.uniforms.paper003HeightStrength={value:4.8};
+
+  shader.fragmentShader=shader.fragmentShader.replace(
+    'void main() {',
+    `
+uniform sampler2D paper003HeightMap;
+uniform float paper003HeightStrength;
+
+vec2 paper003HeightDerivatives(){
+  vec2 dSTdx=dFdx(vMapUv);
+  vec2 dSTdy=dFdy(vMapUv);
+  float H=paper003HeightStrength*texture2D(paper003HeightMap,vMapUv).r;
+  float dHx=paper003HeightStrength*texture2D(paper003HeightMap,vMapUv+dSTdx).r-H;
+  float dHy=paper003HeightStrength*texture2D(paper003HeightMap,vMapUv+dSTdy).r-H;
+  return vec2(dHx,dHy);
+}
+vec3 paper003PerturbNormal(vec3 surfPos,vec3 surfNorm,vec2 dHdxy,float sideSign){
+  vec3 sigmaX=normalize(dFdx(surfPos.xyz));
+  vec3 sigmaY=normalize(dFdy(surfPos.xyz));
+  vec3 R1=cross(sigmaY,surfNorm);
+  vec3 R2=cross(surfNorm,sigmaX);
+  float det=dot(sigmaX,R1)*sideSign;
+  vec3 grad=sign(det)*(dHdxy.x*R1+dHdxy.y*R2);
+  return normalize(abs(det)*surfNorm-grad);
+}
+
+void main() {
+`
+  );
+
+  shader.fragmentShader=shader.fragmentShader.replace(
+    '#include <normal_fragment_maps>',
+    `#include <normal_fragment_maps>
+normal=paper003PerturbNormal(-vViewPosition,normal,paper003HeightDerivatives(),faceDirection);`
+  );
+};
+terrainPaper003Mat.customProgramCacheKey=()=> 'paper003-normal-plus-height-v1';
 
 const blockGeo=new THREE.BoxGeometry(1,1,1);
 
@@ -548,6 +595,8 @@ function rebuildMaterialRandomness(on=true){
   terrainPaper003Mat.map=on?paper003Color:null;
   terrainPaper003Mat.normalMap=on?paper003Normal:null;
   terrainPaper003Mat.roughnessMap=on?paper003Roughness:null;
+  terrainPaper003Mat.normalScale.setScalar(on?1.85:1);
+  terrainPaper003Mat.roughness=on?1.12:.92;
   // Paper003 is only the paper surface; the terrain's intrinsic colour stays green.
   terrainPaper003Mat.color.setHex(TERRAIN_BASE_COLOR);
   terrainPaper003Mat.needsUpdate=true;
