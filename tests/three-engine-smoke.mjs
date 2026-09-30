@@ -18,7 +18,7 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
-  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,{timeout:6000,polling:'raf'});
+  await page.waitForFunction(()=>{const p=window.Paperchalk3D?.stats?.paperTerrain?.paperMaterial;return p?.grassReferenceLoaded===true&&p?.dirtReferenceLoaded===true},{timeout:6000,polling:'raf'});
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
@@ -40,8 +40,12 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.grassTopMaterialGroup===true,'dedicated grass material group missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.dirtMaterialGroup===true,'dedicated dirt material group missing '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true&&initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'supplied grass texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassColorSource==='user-texture-only','grass still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.userDirtReference===true&&initial.paperTerrain?.paperMaterial?.dirtReferenceLoaded===true,'supplied dirt texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.dirtColorSource==='user-texture-only','dirt still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.dirtTextureTransform==='native-world-uv-repeat-1x','dirt texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassTextureTransform==='native-world-uv-repeat-1x','grass texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
