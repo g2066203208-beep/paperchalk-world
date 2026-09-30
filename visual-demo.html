@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.4</h1>
-  <p>v12.4 双光源昼夜：太阳和月亮现在是两盏同时存在、相差 180° 连续旋转的真实方向光。夕阳落下时太阳不会被开关切掉，月光会在暮色中逐渐接手；天空、雾、环境光、光辉和太阳/月亮体积光全部跟同一条连续时间轴交叉过渡。</p>
+  <h1>纸艺世界视觉 Demo v12.5</h1>
+  <p>v12.5 戏剧天空与月光：保留双光源连续旋转，进一步拉开各时段的视觉差异。黄昏改成紫红→玫红→橙金的纸天空，夜晚改成更深的冷蓝并加入纸点星光；月光体积散射和光辉明显加强，但仍只在真正受月光照到的雾里显形。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -157,16 +157,16 @@ function skyTexture(mode='day'){
   const w=1024,h=512,c=document.createElement('canvas');c.width=w;c.height=h;
   const g=c.getContext('2d'),r=rng(mode==='night'?4721:mode==='sunset'?8813:mode==='dawn'?6113:9173);
   const grad=g.createLinearGradient(0,0,0,h);
-  if(mode==='night'){grad.addColorStop(0,'#1c2b46');grad.addColorStop(.55,'#314765');grad.addColorStop(1,'#536b83')}
-  else if(mode==='sunset'){grad.addColorStop(0,'#5475a4');grad.addColorStop(.5,'#91b7d1');grad.addColorStop(1,'#e1b88f')}
-  else if(mode==='dawn'){grad.addColorStop(0,'#718db6');grad.addColorStop(.5,'#a6c2d8');grad.addColorStop(1,'#ded0bb')}
-  else{grad.addColorStop(0,'#73a8cf');grad.addColorStop(.58,'#91bed9');grad.addColorStop(1,'#bdd8df')}
+  if(mode==='night'){grad.addColorStop(0,'#0f1830');grad.addColorStop(.34,'#20345e');grad.addColorStop(.66,'#3b4f79');grad.addColorStop(1,'#7587aa')}
+  else if(mode==='sunset'){grad.addColorStop(0,'#362044');grad.addColorStop(.27,'#6f2f6f');grad.addColorStop(.53,'#b7436e');grad.addColorStop(.78,'#ee815e');grad.addColorStop(1,'#f2bd82')}
+  else if(mode==='dawn'){grad.addColorStop(0,'#4c4f83');grad.addColorStop(.30,'#7772ad');grad.addColorStop(.58,'#c18eb6');grad.addColorStop(.82,'#ecc1aa');grad.addColorStop(1,'#f6d9bd')}
+  else{grad.addColorStop(0,'#5f9fce');grad.addColorStop(.50,'#8fc2df');grad.addColorStop(.78,'#bedce8');grad.addColorStop(1,'#e3eee9')}
   g.fillStyle=grad;g.fillRect(0,0,w,h);
 
   // Large overlapping handmade-paper sheets, but still quiet enough for sky.
   for(let band=0;band<8;band++){
     const y=band*(h/7)-34+r()*38;
-    g.fillStyle=band%3===0?'rgba(225,239,241,.11)':band%3===1?'rgba(62,121,163,.075)':'rgba(247,241,225,.055)';
+    g.fillStyle=mode==='sunset'?(band%3===0?'rgba(255,216,205,.14)':band%3===1?'rgba(99,42,102,.105)':'rgba(255,177,133,.075)'):mode==='night'?(band%3===0?'rgba(210,224,255,.075)':band%3===1?'rgba(57,78,129,.10)':'rgba(160,184,225,.055)'):(band%3===0?'rgba(225,239,241,.11)':band%3===1?'rgba(62,121,163,.075)':'rgba(247,241,225,.055)');
     g.beginPath();g.moveTo(-50,y);
     for(let x=-50;x<=w+60;x+=38)g.lineTo(x,y+(r()-.5)*25);
     g.lineTo(w+60,y+74+r()*50);
@@ -175,8 +175,19 @@ function skyTexture(mode='day'){
   }
   for(let i=0;i<3300;i++){
     const x=r()*w,y=r()*h,len=.8+r()*6,a=r()*Math.PI;
-    g.strokeStyle=r()>.5?'rgba(255,255,245,.105)':'rgba(30,73,105,.065)';
+    g.strokeStyle=mode==='sunset'?(r()>.5?'rgba(255,236,218,.13)':'rgba(87,32,84,.085)'):mode==='night'?(r()>.5?'rgba(237,244,255,.12)':'rgba(62,91,148,.075)'):(r()>.5?'rgba(255,255,245,.105)':'rgba(30,73,105,.065)');
     g.lineWidth=.4+r()*.55;g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);g.stroke();
+  }
+  if(mode==='night'){
+    // Sparse paper-dot stars: not a separate bitmap layer, just tiny bright
+    // fibers/pulp flecks baked into the handmade night sheet.
+    for(let i=0;i<150;i++){
+      const x=r()*w,y=r()*h*.70,rr=.45+r()*1.25;
+      g.globalAlpha=.28+r()*.48;
+      g.fillStyle=r()>.82?'#dbe8ff':'#f4f7ff';
+      g.beginPath();g.arc(x,y,rr,0,Math.PI*2);g.fill();
+    }
+    g.globalAlpha=1;
   }
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;
   t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.ClampToEdgeWrapping;t.anisotropy=4;return t;
@@ -1039,7 +1050,7 @@ const volumeMat=new THREE.ShaderMaterial({
         float sCos=clamp(dot(dir,-normalize(sunLightDir)),-1.0,1.0);
         float mCos=clamp(dot(dir,-normalize(moonLightDir)),-1.0,1.0);
         float sPhase=.34+.66*pow(max(sCos,0.0),5.0);
-        float mPhase=.40+.60*pow(max(mCos,0.0),4.0);
+        float mPhase=.30+.70*pow(max(mCos,0.0),4.6);
 
         // Both celestial lights coexist. Only shadow-map-visible fog glows.
         sunAccum+=medium*sunDensity*sVis*stepLen*nearFade*sPhase;
@@ -1047,7 +1058,7 @@ const volumeMat=new THREE.ShaderMaterial({
       }
 
       float sunScatter=(1.0-exp(-sunAccum*2.15))*sunIntensity;
-      float moonScatter=(1.0-exp(-moonAccum*1.90))*moonIntensity;
+      float moonScatter=(1.0-exp(-moonAccum*2.45))*moonIntensity;
       vec3 rays=sunScatteringColor*sunScatter+moonScatteringColor*moonScatter;
       gl_FragColor=vec4(rays,max(sunScatter,moonScatter));
     }
@@ -1078,7 +1089,7 @@ const compositeMat=new THREE.ShaderMaterial({
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
       vec3 core=texture2D(volumeColor,vUv).rgb;
-      vec3 rays=core*volumeStrength*1.08;
+      vec3 rays=core*volumeStrength*1.16;
 
       // Cheap ray-only bloom: it samples ONLY the already shadow-tested
       // volumetric buffer, so dark air stays clear and only real shafts glow.
@@ -1089,8 +1100,8 @@ const compositeMat=new THREE.ShaderMaterial({
         texture2D(volumeColor,vUv+vec2(0.0,r.y)).rgb+
         texture2D(volumeColor,vUv-vec2(0.0,r.y)).rgb
       )*.25;
-      halo=max(halo-vec3(.018),vec3(0.0));
-      vec3 glow=halo*.22*volumeStrength;
+      halo=max(halo-vec3(.012),vec3(0.0));
+      vec3 glow=halo*.30*volumeStrength;
 
       gl_FragColor=vec4(base.rgb+rays+glow,base.a);
       #include <colorspace_fragment>
@@ -1161,20 +1172,21 @@ function updateVolumetricSettings(t){
   volumeUniforms.sunLightDir.value.copy(volumeLightTarget).sub(sun.position).normalize();
   volumeUniforms.moonLightDir.value.copy(volumeLightTarget).sub(moon.position).normalize();
 
-  const dayColor=new THREE.Color(0xffefc8);
-  const dawnColor=new THREE.Color(0xffa05f);
-  const sunsetColor=new THREE.Color(0xff7f4f);
-  const moonColor=new THREE.Color(0x7ea9ff);
+  const dayColor=new THREE.Color(0xfff0cc);
+  const dawnColor=new THREE.Color(0xff9a64);
+  const sunsetColor=new THREE.Color(0xff7054);
+  const moonColor=new THREE.Color(0x72a3ff);
   const warmColor=state.time<.5?dawnColor:sunsetColor;
 
-  volumeUniforms.sunScatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.96);
+  volumeUniforms.sunScatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.98);
   volumeUniforms.moonScatteringColor.value.copy(moonColor);
 
-  // No sun/moon switch: both contributions coexist and crossfade smoothly.
-  volumeUniforms.sunIntensity.value=sunFade*(.34+sunUp*.22+twilight*.62);
-  volumeUniforms.moonIntensity.value=moonFade*(.10+moonUp*.17+twilight*.06);
-  volumeUniforms.sunDensity.value=.020+twilight*.028;
-  volumeUniforms.moonDensity.value=.013+moonUp*.005;
+  // Both real volumetric contributions coexist. Night gets a deliberately
+  // stronger cold-blue in-scattering so moon shafts are actually readable.
+  volumeUniforms.sunIntensity.value=sunFade*(.38+sunUp*.24+twilight*.78);
+  volumeUniforms.moonIntensity.value=moonFade*(.22+moonUp*.36+twilight*.10);
+  volumeUniforms.sunDensity.value=.021+twilight*.030;
+  volumeUniforms.moonDensity.value=.018+moonUp*.010;
 }
 
 function updateVolumeShadowCamera(lightPos,cam,matrix,uniformMatrix,targetRT){
@@ -1267,7 +1279,7 @@ function updateSkyBlend(t){
 
   // Wide overlaps avoid the sunset -> night snap. The sky always dissolves
   // through paper layers instead of switching a mode.
-  if(t<.16||t>=.90){
+  if(t<.15||t>=.92){
     wn=1;
   }else if(t<.25){
     q=ramp(.16,.25,t);wn=1-q;wd=q;
@@ -1278,7 +1290,7 @@ function updateSkyBlend(t){
   }else if(t<.72){
     q=ramp(.62,.72,t);wday=1-q;ws=q;
   }else{
-    q=ramp(.72,.90,t);ws=1-q;wn=q;
+    q=ramp(.72,.92,t);ws=1-q;wn=q;
   }
   skyUniforms.weights.value.set(wn,wd,wday,ws);
 }
@@ -1328,45 +1340,46 @@ function updateLighting(t){
   moon.position.set(mx,my,mz);
 
   const sunDawn=new THREE.Color(0xff9b5f);
-  const sunSunset=new THREE.Color(0xff7650);
+  const sunSunset=new THREE.Color(0xff654d);
   const sunWarm=state.time<.5?sunDawn:sunSunset;
   const sunDay=new THREE.Color(0xffe8c4);
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
   sun.intensity=sunFade*(.14+sunUp*2.62+twilight*.96);
 
-  moon.color.set(0x84adff);
-  moon.intensity=moonFade*(.08+moonUp*1.16+twilight*.10);
+  moon.color.set(0x72a4ff);
+  moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
 
   // Environment fill follows both celestial lights continuously.
   const dayMix=sunFade;
   const nightMix=moonFade*(1-sunFade*.55);
   hemi.intensity=.66+dayMix*.72+nightMix*.18+twilight*.10;
   const hemiDay=new THREE.Color(0xdceeff);
-  const hemiNight=new THREE.Color(0x8ea9d8);
+  const hemiNight=new THREE.Color(0x7897d0);
   const hemiWarm=new THREE.Color(0xffcfb0);
   hemi.color.copy(hemiNight).lerp(hemiDay,dayMix).lerp(hemiWarm,twilight*.22*sunFade);
 
   const groundDay=new THREE.Color(0x9c7656);
-  const groundNight=new THREE.Color(0x59677d);
+  const groundNight=new THREE.Color(0x455777);
   const groundWarm=new THREE.Color(0xb86f50);
   hemi.groundColor.copy(groundNight).lerp(groundDay,dayMix).lerp(groundWarm,twilight*.22*sunFade);
 
   ambientFill.intensity=.29+dayMix*.14+nightMix*.11+twilight*.05;
   const ambientDay=new THREE.Color(0xe7edf0);
-  const ambientNight=new THREE.Color(0x91a8d4);
+  const ambientNight=new THREE.Color(0x789bd5);
   const ambientWarm=new THREE.Color(0xffd2b8);
   ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.16*sunFade);
 
   viewFill.intensity=.17+(1-dayMix)*.18+twilight*.08;
   const viewDay=new THREE.Color(0xf7f0e6);
-  const viewNight=new THREE.Color(0x9eb9ea);
+  const viewNight=new THREE.Color(0x88aff0);
   const viewWarm=new THREE.Color(0xffc3a1);
   viewFill.color.copy(viewNight).lerp(viewDay,dayMix).lerp(viewWarm,twilight*.28*sunFade);
 
   const horizonDay=new THREE.Color(0xb9d9e2);
-  const horizonNight=new THREE.Color(0x5f7393);
-  const horizonWarm=new THREE.Color(0xe6a77f);
-  const fogColor=horizonNight.clone().lerp(horizonDay,dayMix).lerp(horizonWarm,twilight*.40*sunFade);
+  const horizonNight=new THREE.Color(0x445b88);
+  const horizonWarm=new THREE.Color(0xdf6a83);
+  const horizonGold=new THREE.Color(0xf2a06a);
+  const fogColor=horizonNight.clone().lerp(horizonDay,dayMix).lerp(horizonWarm,twilight*.42*sunFade).lerp(horizonGold,twilight*.18*sunFade);
 
   if(state.fog){
     const density=.0070+twilight*.0022+nightMix*.0014;
@@ -1374,13 +1387,13 @@ function updateLighting(t){
   }
 
   const mistDay=new THREE.Color(0xe4ece3);
-  const mistNight=new THREE.Color(0xaec4df);
-  const mistWarm=new THREE.Color(0xf0c8a8);
+  const mistNight=new THREE.Color(0x94b4e8);
+  const mistWarm=new THREE.Color(0xefb0b7);
   const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
   fogUniforms.opacity.value=.15+twilight*.055*sunFade+nightMix*.025;
 
-  renderer.toneMappingExposure=state.tone?(.86+dayMix*.15+twilight*.035):1;
+  renderer.toneMappingExposure=state.tone?(.88+dayMix*.13+twilight*.045):1;
   scene.background.copy(fogColor);
   updateSkyBlend(state.time);
 
@@ -1401,11 +1414,11 @@ function updateLighting(t){
   sunDisc.material.opacity=sunFade*(.42+sunUp*.55);
   moonDisc.material.opacity=moonFade*(.42+moonUp*.46);
   sunDisc.material.color.copy(sun.color).lerp(new THREE.Color(0xfff0c7),.22);
-  moonDisc.material.color.set(0xb5ceff);
+  moonDisc.material.color.set(0xc4d8ff);
   sunGlow.material.color.copy(sun.color);
-  moonGlow.material.color.set(0x739fff);
-  sunGlow.material.opacity=sunFade*(.09+twilight*.30+sunUp*.07);
-  moonGlow.material.opacity=moonFade*(.08+moonUp*.18);
+  moonGlow.material.color.set(0x6797ff);
+  sunGlow.material.opacity=sunFade*(.11+twilight*.38+sunUp*.08);
+  moonGlow.material.opacity=moonFade*(.14+moonUp*.28);
 
   if(playerMat){
     const dayAmount=dayMix;
