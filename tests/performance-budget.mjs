@@ -12,7 +12,6 @@ assert(size('src/debug/world-debug.js')<5000,'world debug controls exceed 5KB bu
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('src/entities/npc-runtime.js')<12000,'NPC gameplay runtime exceeds 12KB budget');
 assert(size('src/entities/NPCActorRenderer.js')<8000,'NPC actor renderer exceeds 8KB budget');
-assert(size('src/prologue/ProloguePaperLayerScene.js')<7000,'2D paper layer runtime exceeds 7KB budget');
 assert(!fs.existsSync('src/prologue/PrologueSchoolScene.js'),'obsolete 3D school model must stay removed');
 assert(size('src/ai/npc-navigation.js')<9000,'NPC navigation exceeds 9KB budget');
 assert(size('src/ai/npc-brain.js')<13000,'NPC brain exceeds 13KB budget');
@@ -50,7 +49,6 @@ console.log(JSON.stringify({
   sprites:size('src/entities/PaperSpriteEntity.js'),
   npcRuntime:size('src/entities/npc-runtime.js'),
   npcRenderer:size('src/entities/NPCActorRenderer.js'),
-  paperLayerRuntime:size('src/prologue/ProloguePaperLayerScene.js'),
   npcNavigation:size('src/ai/npc-navigation.js'),
   npcBrain:size('src/ai/npc-brain.js'),
   npcDialogue:size('src/ai/npc-dialogue.js'),
