@@ -1,4 +1,5 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
+import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -9,6 +10,7 @@ const THREE_MODULE='../../vendor/three/three.module.js';
 
 let THREE=null;
 let engine=null;
+let schoolFence=null;
 let active=false;
 let ready=false;
 let raf=0;
@@ -51,6 +53,7 @@ async function ensureReady(){
       onCameraChanged:syncCameraControls
     });
     engine.configureAtmosphere?.({volumetric:false,qualityScale:.35,steps:8});
+    schoolFence=new PrologueSchoolFence(THREE,engine.scene,ACTIVE_SCENE);
     latestSnapshot=RUNTIME.getSnapshot();
     engine.setSnapshot(latestSnapshot);
     const settings=window.PaperchalkSettings?.get?.();
@@ -212,7 +215,8 @@ window.Paperchalk3D=Object.freeze({
       fps,frames,active,ready,loopActive:!!raf,error:errorMessage,
       worldMode:ACTIVE_SCENE?.mode||base.worldMode,
       terrainMode:base.terrainMode||'streamed-3d-voxel-chunks',
-      interaction:base.interaction||{threeDimensional:true,zMovementLocked:false,raycastIgnoresOtherRows:false}
+      interaction:base.interaction||{threeDimensional:true,zMovementLocked:false,raycastIgnoresOtherRows:false},
+      schoolFence:schoolFence?.stats?.()||null
     };
   },
   snapshot
