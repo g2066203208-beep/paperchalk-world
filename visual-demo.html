@@ -19,8 +19,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v10</h1>
-  <p>深林真实体积光 v10：已删除上一版的透明“纸片光柱”。现在从真实太阳/月亮方向做屏幕空间 Raymarch，逐步采样树冠/枝干的光源深度图；哪里被树挡住哪里就没有散射，树缝会自然形成光束。</p>
+  <h1>纸艺世界视觉 Demo v11</h1>
+  <p>深林树后透光 v11：背景改成三层成片树林，太阳/月亮固定在树林后方朝前景照射。体积光继续用真实 Shadow-map Raymarch；树干和树冠形成大量不规则缝隙，光从背景穿过这些缝隙射到玩家和前景空气里。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -34,8 +34,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="papergrass" class="active">剪纸小草</button>
   <button id="godrays" class="active">真实体积光</button>
   <div class="groupBreak"></div>
-  <button id="dawn">清晨</button>
-  <button id="noon" class="active">正午</button>
+  <button id="dawn" class="active">清晨</button>
+  <button id="noon">正午</button>
   <button id="sunset">黄昏</button>
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
@@ -62,8 +62,8 @@ scene.background=new THREE.Color(0x9ca1ad);
 scene.fog=new THREE.Fog(0xaec8d3,15,36);
 
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
-const target=new THREE.Vector3(0,1.25,0);
-let yaw=.03,pitch=.24,dist=17.5;
+const target=new THREE.Vector3(0,1.75,-.35);
+let yaw=.02,pitch=.18,dist=19.2;
 function placeCamera(){
   camera.position.set(
     target.x+Math.sin(yaw)*Math.cos(pitch)*dist,
@@ -427,58 +427,97 @@ function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,
 stone(-1.8,1.4,.49,.26);stone(1.2,-2.2,.46,.18);
 
 // ---------------------------------------------------------------------------
-// Cut-paper forest ceiling / real occluders.
-// These meshes are ordinary lit scene geometry. They cast actual shadows, and
-// the volumetric pass samples their light-space depth. The holes between these
-// pieces are therefore the real source of the visible forest light shafts.
+// Background forest wall / real occluders.
+// The camera looks THROUGH three layers of trees. The sun/moon live behind them,
+// so the holes between trunks and crowns are the actual source of the shafts.
 // ---------------------------------------------------------------------------
 const canopyGroup=new THREE.Group();
 scene.add(canopyGroup);
 
-const canopyLeafMat=new THREE.MeshLambertMaterial({
-  map:grassTextures[3],color:0x38523c,side:THREE.DoubleSide
-});
-const canopyLeafDarkMat=new THREE.MeshLambertMaterial({
-  map:grassTextures[4],color:0x263d2e,side:THREE.DoubleSide
-});
-const trunkMat=new THREE.MeshLambertMaterial({
-  map:dirtTextures[2],color:0x624533,side:THREE.DoubleSide
-});
+const forestLeafMats=[
+  new THREE.MeshLambertMaterial({map:grassTextures[3],color:0x314b36,side:THREE.DoubleSide}),
+  new THREE.MeshLambertMaterial({map:grassTextures[4],color:0x425d47,side:THREE.DoubleSide}),
+  new THREE.MeshLambertMaterial({map:grassTextures[5],color:0x5a7065,side:THREE.DoubleSide})
+];
+const forestTrunkMats=[
+  new THREE.MeshLambertMaterial({map:dirtTextures[2],color:0x5a4233,side:THREE.DoubleSide}),
+  new THREE.MeshLambertMaterial({map:dirtTextures[3],color:0x635044,side:THREE.DoubleSide}),
+  new THREE.MeshLambertMaterial({map:dirtTextures[4],color:0x6d5b50,side:THREE.DoubleSide})
+];
 
-function canopyShape(seed=1){
-  const r=rng(3100+seed*73),s=new THREE.Shape(),pts=[],n=14;
+function forestCrownGeometry(seed=1){
+  const r=rng(9100+seed*97),s=new THREE.Shape(),pts=[],n=16;
   for(let i=0;i<n;i++){
-    const a=Math.PI*2*i/n,rr=.78+r()*.28;
-    pts.push([Math.cos(a)*rr,Math.sin(a)*(.58+r()*.18)]);
+    const a=Math.PI*2*i/n;
+    const rr=.80+r()*.30;
+    pts.push([Math.cos(a)*rr,Math.sin(a)*(.60+r()*.19)]);
   }
   s.moveTo(pts[0][0],pts[0][1]);
   for(let i=1;i<pts.length;i++)s.lineTo(pts[i][0],pts[i][1]);
   s.closePath();
   return new THREE.ShapeGeometry(s,2);
 }
-function addCanopyBlob(x,y,z,sx,sy,seed,dark=false,rot=0){
-  const m=new THREE.Mesh(canopyShape(seed),dark?canopyLeafDarkMat:canopyLeafMat);
-  m.position.set(x,y,z);m.scale.set(sx,sy,1);m.rotation.z=rot;
-  m.castShadow=true;m.receiveShadow=true;canopyGroup.add(m);return m;
-}
-function addPaperTrunk(x,y,z,w,h,lean=0){
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),trunkMat);
-  m.position.set(x,y,z);m.rotation.z=lean;
-  m.castShadow=true;m.receiveShadow=true;canopyGroup.add(m);return m;
+const forestCrownGeos=[
+  forestCrownGeometry(1),forestCrownGeometry(2),
+  forestCrownGeometry(3),forestCrownGeometry(4)
+];
+
+function addForestTree(x,z,layer,seed,scale=1){
+  const r=rng(12000+seed*41);
+  const g=new THREE.Group();
+  g.position.set(x,0,z);
+  g.scale.setScalar(scale);
+
+  const trunk=new THREE.Mesh(
+    new THREE.PlaneGeometry(.38+r()*.20,3.8+r()*1.8),
+    forestTrunkMats[layer]
+  );
+  trunk.position.set((r()-.5)*.12,1.95,0);
+  trunk.rotation.z=(r()-.5)*.045;
+  trunk.castShadow=true;trunk.receiveShadow=true;
+  g.add(trunk);
+
+  // Three overlapping cut-paper crown pieces create irregular holes instead of
+  // one solid blob. Those holes are preserved in the light-space depth map.
+  for(let i=0;i<3;i++){
+    const crown=new THREE.Mesh(
+      forestCrownGeos[(seed+i)%forestCrownGeos.length],
+      forestLeafMats[layer]
+    );
+    crown.position.set((r()-.5)*.52,3.65+i*.55+(r()-.5)*.16,(i-1)*.035);
+    crown.scale.set(1.30+r()*.55,1.02+r()*.42,1);
+    crown.rotation.z=(r()-.5)*.30;
+    crown.castShadow=true;crown.receiveShadow=true;
+    g.add(crown);
+  }
+
+  canopyGroup.add(g);
+  return g;
 }
 
-// Dense framing with deliberate physical holes between leaf clusters.
-addCanopyBlob(-6.4,5.55,-2.8,3.3,2.2,1,true,-.10);
-addCanopyBlob(-3.8,5.85,-2.9,3.1,2.0,2,false,.07);
-addCanopyBlob(-1.0,6.05,-3.0,2.8,1.9,3,true,-.04);
-addCanopyBlob( 2.0,5.92,-2.9,3.0,2.0,4,false,.06);
-addCanopyBlob( 5.2,5.62,-2.8,3.2,2.1,5,true,-.08);
-addCanopyBlob(-7.1,4.30, .35,2.25,2.35,6,true,-.14);
-addCanopyBlob( 7.0,4.35, .55,2.30,2.35,7,true,.14);
-addCanopyBlob(-5.7,3.85,-1.0,1.65,1.45,8,false,.12);
-addCanopyBlob( 5.7,3.95,-1.2,1.75,1.50,9,false,-.10);
-addPaperTrunk(-6.35,2.65,.55,.72,5.0,-.055);
-addPaperTrunk( 6.15,2.70,.75,.68,4.9,.060);
+// Three staggered layers. Positions are intentionally irregular so the gaps form
+// broad, medium and hairline shafts rather than a regular fence pattern.
+const forestLayers=[
+  {z:-5.0,count:10,span:20,jitter:.95,scale:1.16},
+  {z:-8.4,count:13,span:24,jitter:1.35,scale:1.06},
+  {z:-12.6,count:16,span:28,jitter:1.75,scale:.96}
+];
+forestLayers.forEach((L,layer)=>{
+  for(let i=0;i<L.count;i++){
+    const t=i/(L.count-1);
+    const x=(t-.5)*L.span+(hash3(layer*97+i*17,31,11)-.5)*L.jitter;
+    const z=L.z+(hash3(i*23,layer*61,19)-.5)*.72;
+    const s=L.scale+(hash3(i,layer,88)-.5)*.14;
+    addForestTree(x,z,layer,layer*100+i*13+7,s);
+  }
+});
+
+// Heavy side framing makes the player feel inside the forest, while the center
+// stays perforated enough for several visible beams.
+[
+  [-9.2,-2.2,0,1.45],[-8.6,.8,0,1.35],
+  [ 9.0,-2.0,0,1.45],[ 8.5,1.2,0,1.35]
+].forEach((d,i)=>addForestTree(d[0],d[1],d[2],700+i*29,d[3]));
 
 // GPU-friendly instanced paper fog cards.
 // We use two InstancedMeshes (upright banks + ground sheets), update instance
@@ -579,7 +618,7 @@ function seedFogData(){
     const spread=lane===0?7.5:lane===1?11.0:14.5;
     fogBankData.push({
       baseX:(r()-.5)*spread*1.8,
-      baseZ: lane===0 ? 2.2+r()*1.4 : lane===1 ? -1.0+r()*2.4 : -4.5+r()*2.4,
+      baseZ: lane===0 ? 1.8+r()*1.5 : lane===1 ? -3.8+r()*2.8 : -8.8+r()*4.2,
       baseY: lane===0 ? .78+r()*.45 : lane===1 ? .92+r()*.65 : 1.05+r()*.8,
       width:(lane===0?3.8:lane===1?5.4:7.0)+r()*(lane===0?2.3:3.2),
       height:(lane===0?1.2:1.5)+r()*(lane===2?1.2:.8),
@@ -735,15 +774,15 @@ new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
 const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe1b1,3.0);
 sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
-sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=11;sun.shadow.camera.bottom=-8;
+sun.shadow.camera.left=-18;sun.shadow.camera.right=18;sun.shadow.camera.top=15;sun.shadow.camera.bottom=-6;
 sun.shadow.camera.near=.1;sun.shadow.camera.far=42;sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;sun.shadow.radius=3.5;
-scene.add(sun);scene.add(sun.target);sun.target.position.set(0,0,0);
+scene.add(sun);scene.add(sun.target);sun.target.position.set(0,1.0,.6);
 
 const moon=new THREE.DirectionalLight(0xa9c4ff,0);
 moon.castShadow=true;moon.shadow.mapSize.set(512,512);
-moon.shadow.camera.left=-12;moon.shadow.camera.right=12;moon.shadow.camera.top=11;moon.shadow.camera.bottom=-8;
+moon.shadow.camera.left=-18;moon.shadow.camera.right=18;moon.shadow.camera.top=15;moon.shadow.camera.bottom=-6;
 moon.shadow.camera.near=.1;moon.shadow.camera.far=42;moon.shadow.bias=-.0004;moon.shadow.normalBias=.02;moon.shadow.radius=3;
-scene.add(moon);scene.add(moon.target);moon.target.position.set(0,0,0);
+scene.add(moon);scene.add(moon.target);moon.target.position.set(0,1.0,.6);
 
 // Cheap stylized ground bounce.
 // The previous version used two PointLights close to the floor. Those created the
@@ -788,9 +827,9 @@ let sceneTarget=null,volumeTarget=null,volumeShadowTarget=null;
 const VOLUME_SCALE=.46;
 const VOLUME_SHADOW_SIZE=512;
 
-const volumeLightCamera=new THREE.OrthographicCamera(-12,12,11,-8,.1,42);
+const volumeLightCamera=new THREE.OrthographicCamera(-18,18,15,-6,.1,60);
 const volumeShadowMatrix=new THREE.Matrix4();
-const volumeLightTarget=new THREE.Vector3(0,1.0,0);
+const volumeLightTarget=new THREE.Vector3(0,1.0,.6);
 const volumeActiveLightPos=new THREE.Vector3();
 
 const volumeDepthMat=new THREE.MeshBasicMaterial({side:THREE.DoubleSide});
@@ -809,7 +848,7 @@ const volumeUniforms={
   scatteringColor:{value:new THREE.Color(0xffe6ad)},
   density:{value:.030},
   intensity:{value:.62},
-  maxDistance:{value:34.0},
+  maxDistance:{value:46.0},
   time:{value:0},
   shadowBias:{value:.0022},
   steps:{value:22.0}
@@ -891,7 +930,7 @@ const volumeMat=new THREE.ShaderMaterial({
         float nearFade=smoothstep(.6,3.2,t);
 
         float cosTheta=clamp(dot(dir,-normalize(lightDir)),-1.0,1.0);
-        float phase=.62+.38*pow(max(cosTheta,0.0),3.0);
+        float phase=.50+.50*pow(max(cosTheta,0.0),4.0);
 
         accum+=visible*localDensity*stepLen*nearFade*phase;
       }
@@ -1056,7 +1095,7 @@ function renderWithVolumetrics(){
   renderer.render(compositeScene,fsCamera);
 }
 
-const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,godrays:true,final:true,timePreset:'noon',auto:false,time:.5};
+const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27};
 let skyMode='day';
 
 function setSkyMode(mode){
@@ -1073,8 +1112,8 @@ function updateLighting(t){
 
   // Sun and moon still move physically around the scene, but the intensity
   // curves are deliberately art-directed: dawn/dusk/night remain readable.
-  const sx=Math.cos(a)*18,sy=2.8+Math.max(rawSun,.03)*15,sz=Math.sin(a)*8;
-  const ma=a+Math.PI,mx=Math.cos(ma)*18,my=3+Math.max(-rawSun,.03)*15,mz=Math.sin(ma)*8;
+  const sx=-Math.cos(a)*14,sy=3.2+Math.max(rawSun,.03)*13.5,sz=-18;
+  const ma=a+Math.PI,mx=Math.cos(a)*12,my=3.2+Math.max(-rawSun,.03)*12.0,mz=-18;
   sun.position.set(sx,sy,sz);moon.position.set(mx,my,mz);
 
   const sunWarm=new THREE.Color(0xffa96f);
