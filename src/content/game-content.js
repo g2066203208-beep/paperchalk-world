@@ -4,8 +4,8 @@
 
 const scene3d={
   mode:'finite-side-scroll-voxel',
-  spawn:{x:-40,y:3,z:2,yaw:0},
-  bounds:{minX:-48,maxX:64,minY:-16,maxY:32,minZ:-6,maxZ:6},
+  spawn:{x:8.5,y:2,z:3,yaw:0},
+  bounds:{minX:0,maxX:96,minY:-16,maxY:32,minZ:-5,maxZ:4},
   terrain:{
     tileSize:1,
     pixelsPerMeter:128,
@@ -13,20 +13,25 @@ const scene3d={
     chunkSize:16,
     seed:24681357,
     visibleChunkRadiusXZ:2,
-    interactionRowZ:2,
+    interactionRowZ:3,
     blackBackRowZ:-64,
     visibleChunkRadiusY:1,
     maxBuildsPerFrame:5,
     prologueRoad:{
-      id:'prologue-city-road-v1',
-      minX:-48,maxX:64,
-      minZ:-6,maxZ:6,
+      id:'prologue-city-road-96x10-v2',
+      minX:0,maxX:95,
+      minZ:-5,maxZ:4,
+      lengthMeters:96,widthMeters:10,
       groundMinY:-4,surfaceY:0,
-      roadMinZ:-3,roadMaxZ:0,
-      curbNearZ:1,curbFarZ:-4,
-      sidewalkNearMinZ:2,sidewalkFarMaxZ:-5,
-      laneMarkerZ:-1,
-      crosswalkMinX:6,crosswalkMaxX:16
+      farSidewalkMinZ:-5,farSidewalkMaxZ:-4,
+      farLaneMinZ:-3,farLaneMaxZ:-1,
+      nearLaneMinZ:0,nearLaneMaxZ:2,
+      nearSidewalkMinZ:3,nearSidewalkMaxZ:4,
+      crosswalkMinX:44,crosswalkMaxX:51,
+      schoolZoneMinX:0,schoolZoneMaxX:23,
+      streetZoneMinX:24,streetZoneMaxX:43,
+      residentialZoneMinX:52,residentialZoneMaxX:79,
+      exitZoneMinX:80,exitZoneMaxX:95
     },
     biome:{
       version:1,
