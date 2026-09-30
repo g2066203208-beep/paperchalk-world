@@ -32,8 +32,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.33</h1>
-  <p>v12.33 地形纸材质：保留 Paper003 大折痕，并叠加真实 Paper001 / 002 / 004 / 006 的细纤维与粗糙度。顶面使用 001+006，侧面使用 004+002+006；细节层不覆盖固有色，也不参与几何位移。</p>
+  <h1>纸艺世界视觉 Demo v12.34</h1>
+  <p>v12.34 地形纸材质调试：Paper003 大折痕保持独立；Paper001 / 006 顶面细节和 Paper004 / 002 / 006 侧面细节均可实时单独调节。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -51,7 +51,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </div>
 
 <div class="materialPanel">
-  <div class="title"><span>Paper003 地形调试</span><span>实时</span></div>
+  <div class="title"><span>地形纸材质调试</span><span>实时</span></div>
   <div class="row">
     <span>纸纹大小</span>
     <input id="paperScale" type="range" min="50" max="400" step="5" value="200">
@@ -73,9 +73,34 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
     <span id="paperBlendVal" class="val">85%</span>
   </div>
   <div class="row">
-    <span>真实纸纤维</span>
+    <span>细节总强度</span>
     <input id="paperFiber" type="range" min="0" max="100" step="1" value="70">
     <span id="paperFiberVal" class="val">70%</span>
+  </div>
+  <div class="row">
+    <span>顶面 001 纤维</span>
+    <input id="paper001Top" type="range" min="0" max="100" step="1" value="46">
+    <span id="paper001TopVal" class="val">46%</span>
+  </div>
+  <div class="row">
+    <span>顶面 006 微糙</span>
+    <input id="paper006Top" type="range" min="0" max="100" step="1" value="12">
+    <span id="paper006TopVal" class="val">12%</span>
+  </div>
+  <div class="row">
+    <span>侧面 004 牛皮纹</span>
+    <input id="paper004Side" type="range" min="0" max="100" step="1" value="58">
+    <span id="paper004SideVal" class="val">58%</span>
+  </div>
+  <div class="row">
+    <span>侧面 002 纸浆</span>
+    <input id="paper002Side" type="range" min="0" max="100" step="1" value="18">
+    <span id="paper002SideVal" class="val">18%</span>
+  </div>
+  <div class="row">
+    <span>侧面 006 微糙</span>
+    <input id="paper006Side" type="range" min="0" max="100" step="1" value="8">
+    <span id="paper006SideVal" class="val">8%</span>
   </div>
   <button id="paperReset">恢复默认</button>
 </div>
@@ -545,6 +570,11 @@ function setTerrainPaperScale(size){
 setTerrainPaperScale(2.0);
 const terrainPaperBlendUniform={value:.85};
 const terrainPaperFiberUniform={value:.70};
+const terrainPaper001TopUniform={value:.46};
+const terrainPaper006TopUniform={value:.12};
+const terrainPaper004SideUniform={value:.58};
+const terrainPaper002SideUniform={value:.18};
+const terrainPaper006SideUniform={value:.08};
 
 
 const PAPER001_NORMALGL_URL='data:image/webp;base64,UklGRvABAABXRUJQVlA4IOQBAADwFgCdASoAAQABPolEm0ulI6IhoCoYoBEJaW4t/+uFLxn6FO8E+Gx8kegAoSzHyWQn/fd5/UgwhSEzSCDz4D8chZLqgKc9ubSeLKCCGqUha1QhnOB9vrHQ0CN+TDO+4eK4OBcbWjJgUe+ehGJM5MM8lK9fb66W6VZGja2jWE/uWl6w9kdSPxkkLQqNAtz28AJPMOPt1iLjkfS2S6n/yOztB8qgP84LAam0epuDlcbwd8BaKsoGvnIM9gIS3j7b2gAA/vter//LP/+y3/st4z+JvuxBOABNA1uBCfmoE7I313GS4E/4hTQiopkG3r0rN/QFYfvJGC2C/p+FMBZ0yyy2lk1CJje5N7yBu+RS+jGyUyiY0iP8PHzER/bZUTAW+gYkYgXRTxMgSPl/+D67Ug/K88jTqHAJ1VzNFXK/wGwqeKuQh2rNijwgrYRiSPSZhUxaGhNH2ddLQ7vXbuynsw6n/QQdXYGLArorwzrDf7so1emiipRj6sVgcg3YE/8SajXm0H26rkayYxKKyBEDqZZqlIWjwZNlH38rtxghclENiQb8fFT6heJWO1ms2lOjF89pLax46qvStmhFPZnxtjfgYImXl3gqztxgWYC1K+yfwU2WA5FFPFNymCFxdnaihClBwAAA';
@@ -596,6 +626,11 @@ function makeTerrainPaper003Material(color,name,normalScale,heightStrength,detai
     shader.uniforms.paper003HeightStrength=heightUniform;
     shader.uniforms.paper003Blend=terrainPaperBlendUniform;
     shader.uniforms.paper003FiberStrength=terrainPaperFiberUniform;
+    shader.uniforms.paper001TopStrength=terrainPaper001TopUniform;
+    shader.uniforms.paper006TopStrength=terrainPaper006TopUniform;
+    shader.uniforms.paper004SideStrength=terrainPaper004SideUniform;
+    shader.uniforms.paper002SideStrength=terrainPaper002SideUniform;
+    shader.uniforms.paper006SideStrength=terrainPaper006SideUniform;
     shader.uniforms.paperDetailKind=detailKindUniform;
     shader.uniforms.paper001NormalMap={value:paper001Normal};
     shader.uniforms.paper001RoughMap={value:paper001Rough};
@@ -613,6 +648,11 @@ uniform sampler2D paper003HeightMap;
 uniform float paper003HeightStrength;
 uniform float paper003Blend;
 uniform float paper003FiberStrength;
+uniform float paper001TopStrength;
+uniform float paper006TopStrength;
+uniform float paper004SideStrength;
+uniform float paper002SideStrength;
+uniform float paper006SideStrength;
 uniform float paperDetailKind;
 uniform sampler2D paper001NormalMap;
 uniform sampler2D paper001RoughMap;
@@ -708,18 +748,20 @@ void main() {
   vec4 sampledDiffuseColor=paperColorSample(vMapUv);
   diffuseColor*=sampledDiffuseColor;
   if(paper003FiberStrength>0.0001){
-    float detailTone=0.5;
     if(paperDetailKind>0.5){
       float d1=texture2D(paper001RoughMap,vMapUv*9.0+vec2(0.17,0.31)).g;
       float d6=texture2D(paper006RoughMap,vMapUv*18.0+vec2(0.61,0.23)).g;
-      detailTone=d1*0.72+d6*0.28;
-      diffuseColor.rgb*=1.0+(detailTone-0.5)*0.050*paper003FiberStrength;
+      diffuseColor.rgb*=1.0+
+        (d1-0.5)*0.070*paper001TopStrength*paper003FiberStrength+
+        (d6-0.5)*0.050*paper006TopStrength*paper003FiberStrength;
     }else{
       float d4=texture2D(paper004RoughMap,vMapUv*vec2(6.5,5.2)+vec2(0.21,0.07)).g;
       float d2=texture2D(paper002RoughMap,vMapUv*12.0+vec2(0.47,0.63)).g;
       float d6=texture2D(paper006RoughMap,vMapUv*20.0+vec2(0.13,0.79)).g;
-      detailTone=d4*0.58+d2*0.27+d6*0.15;
-      diffuseColor.rgb*=1.0+(detailTone-0.5)*0.075*paper003FiberStrength;
+      diffuseColor.rgb*=1.0+
+        (d4-0.5)*0.090*paper004SideStrength*paper003FiberStrength+
+        (d2-0.5)*0.075*paper002SideStrength*paper003FiberStrength+
+        (d6-0.5)*0.050*paper006SideStrength*paper003FiberStrength;
     }
   }
 #endif
@@ -733,20 +775,20 @@ float roughnessFactor=roughness;
 #ifdef USE_ROUGHNESSMAP
   roughnessFactor*=paperRoughnessSample(vRoughnessMapUv);
   if(paper003FiberStrength>0.0001){
-    float detailR=0.5;
     if(paperDetailKind>0.5){
       float r1=texture2D(paper001RoughMap,vRoughnessMapUv*9.0+vec2(0.17,0.31)).g;
       float r6=texture2D(paper006RoughMap,vRoughnessMapUv*18.0+vec2(0.61,0.23)).g;
-      detailR=r1*0.72+r6*0.28;
-      roughnessFactor=mix(roughnessFactor,0.955,0.10*paper003FiberStrength);
-      roughnessFactor+=(detailR-0.5)*0.10*paper003FiberStrength;
+      roughnessFactor+=
+        (r1-0.5)*0.16*paper001TopStrength*paper003FiberStrength+
+        (r6-0.5)*0.12*paper006TopStrength*paper003FiberStrength;
     }else{
       float r4=texture2D(paper004RoughMap,vRoughnessMapUv*vec2(6.5,5.2)+vec2(0.21,0.07)).g;
       float r2=texture2D(paper002RoughMap,vRoughnessMapUv*12.0+vec2(0.47,0.63)).g;
       float r6=texture2D(paper006RoughMap,vRoughnessMapUv*20.0+vec2(0.13,0.79)).g;
-      detailR=r4*0.58+r2*0.27+r6*0.15;
-      roughnessFactor=mix(roughnessFactor,0.975,0.14*paper003FiberStrength);
-      roughnessFactor+=(detailR-0.5)*0.13*paper003FiberStrength;
+      roughnessFactor+=
+        (r4-0.5)*0.18*paper004SideStrength*paper003FiberStrength+
+        (r2-0.5)*0.15*paper002SideStrength*paper003FiberStrength+
+        (r6-0.5)*0.10*paper006SideStrength*paper003FiberStrength;
     }
     roughnessFactor=clamp(roughnessFactor,0.72,1.0);
   }
@@ -773,12 +815,19 @@ float roughnessFactor=roughness;
     if(paperDetailKind>0.5){
       vec3 n1=texture2D(paper001NormalMap,vNormalMapUv*9.0+vec2(0.17,0.31)).xyz*2.0-1.0;
       vec3 n6=texture2D(paper006NormalMap,vNormalMapUv*18.0+vec2(0.61,0.23)).xyz*2.0-1.0;
-      mapN.xy+=(n1.xy*0.46+n6.xy*0.12)*paper003FiberStrength;
+      mapN.xy+=(
+        n1.xy*paper001TopStrength+
+        n6.xy*paper006TopStrength
+      )*paper003FiberStrength;
     }else{
       vec3 n4=texture2D(paper004NormalMap,vNormalMapUv*vec2(6.5,5.2)+vec2(0.21,0.07)).xyz*2.0-1.0;
       vec3 n2=texture2D(paper002NormalMap,vNormalMapUv*12.0+vec2(0.47,0.63)).xyz*2.0-1.0;
       vec3 n6=texture2D(paper006NormalMap,vNormalMapUv*20.0+vec2(0.13,0.79)).xyz*2.0-1.0;
-      mapN.xy+=(n4.xy*0.58+n2.xy*0.18+n6.xy*0.08)*paper003FiberStrength;
+      mapN.xy+=(
+        n4.xy*paper004SideStrength+
+        n2.xy*paper002SideStrength+
+        n6.xy*paper006SideStrength
+      )*paper003FiberStrength;
     }
     mapN=normalize(mapN);
   }
@@ -791,7 +840,7 @@ float roughnessFactor=roughness;
     );
   };
 
-  mat.customProgramCacheKey=()=>name+'-paper003-real-detail-v33';
+  mat.customProgramCacheKey=()=>name+'-paper003-real-detail-v34';
   return mat;
 }
 
@@ -2285,10 +2334,20 @@ function applyPaperDebug(){
   const height=+document.getElementById('paperHeight').value/100;
   const blend=+document.getElementById('paperBlend').value/100;
   const fiber=+document.getElementById('paperFiber').value/100;
+  const p001=+document.getElementById('paper001Top').value/100;
+  const p006t=+document.getElementById('paper006Top').value/100;
+  const p004=+document.getElementById('paper004Side').value/100;
+  const p002=+document.getElementById('paper002Side').value/100;
+  const p006s=+document.getElementById('paper006Side').value/100;
 
   setTerrainPaperScale(size);
   terrainPaperBlendUniform.value=state.random?blend:0;
   terrainPaperFiberUniform.value=state.random?fiber:0;
+  terrainPaper001TopUniform.value=p001;
+  terrainPaper006TopUniform.value=p006t;
+  terrainPaper004SideUniform.value=p004;
+  terrainPaper002SideUniform.value=p002;
+  terrainPaper006SideUniform.value=p006s;
   terrainTopMat.normalScale.setScalar(normal);
   terrainDirtMat.normalScale.setScalar(normal*.84);
 
@@ -2307,10 +2366,15 @@ function applyPaperDebug(){
   document.getElementById('paperHeightVal').textContent=height.toFixed(2);
   document.getElementById('paperBlendVal').textContent=Math.round(blend*100)+'%';
   document.getElementById('paperFiberVal').textContent=Math.round(fiber*100)+'%';
+  document.getElementById('paper001TopVal').textContent=Math.round(p001*100)+'%';
+  document.getElementById('paper006TopVal').textContent=Math.round(p006t*100)+'%';
+  document.getElementById('paper004SideVal').textContent=Math.round(p004*100)+'%';
+  document.getElementById('paper002SideVal').textContent=Math.round(p002*100)+'%';
+  document.getElementById('paper006SideVal').textContent=Math.round(p006s*100)+'%';
   renderDirty=true;
 }
 
-['paperScale','paperNormal','paperHeight','paperBlend','paperFiber'].forEach(id=>{
+['paperScale','paperNormal','paperHeight','paperBlend','paperFiber','paper001Top','paper006Top','paper004Side','paper002Side','paper006Side'].forEach(id=>{
   document.getElementById(id).addEventListener('input',applyPaperDebug);
 });
 document.getElementById('paperReset').onclick=()=>{
@@ -2319,6 +2383,11 @@ document.getElementById('paperReset').onclick=()=>{
   document.getElementById('paperHeight').value=370;
   document.getElementById('paperBlend').value=85;
   document.getElementById('paperFiber').value=70;
+  document.getElementById('paper001Top').value=46;
+  document.getElementById('paper006Top').value=12;
+  document.getElementById('paper004Side').value=58;
+  document.getElementById('paper002Side').value=18;
+  document.getElementById('paper006Side').value=8;
   applyPaperDebug();
 };
 
