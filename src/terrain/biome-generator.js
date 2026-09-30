@@ -147,33 +147,51 @@ class BiomeLandformGenerator{
 
     let height=3+continentalLift+hills+mountainLift+highlandLift-basinDrop-riverCarve;
 
-    // Keep the starting area readable and traversable without flattening the wider world.
+    // Target-ground staging around spawn: broad handcrafted terraces instead
+    // of cell-to-cell noise. Low-frequency fields define large shelves while
+    // the rest of the infinite world still uses the full landform generator.
     const spawnDistance=Math.hypot(gx-this.spawnX,gz-this.spawnZ);
-    const safeBlend=1-smoothstep(this.spawnSafeRadius*.45,this.spawnSafeRadius,spawnDistance);
-    const spawnTarget=3+f.detail*1.25;
+    const safeBlend=1-smoothstep(this.spawnSafeRadius*.70,this.spawnSafeRadius*2.40,spawnDistance);
+    const terraceField=f.continental*.58+f.ridge*.28-f.erosion*.14;
+    const terraceStep=Math.round(terraceField*2.15);
+    const shelfWave=Math.round((Math.sin((gx-this.spawnX)*.115)+Math.cos((gz-this.spawnZ)*.102))*.34);
+    const spawnTarget=3+terraceStep+shelfWave;
     height=height*(1-safeBlend)+spawnTarget*safeBlend;
 
     height=Math.max(-18,Math.min(34,height));
-    const landform=this._selectLandform({...f,riverMask,mountainMask,height});
+    let landform=this._selectLandform({...f,riverMask,mountainMask,height});
     let biome=this._selectBiome({...f,riverMask,height,landform});
-    if(safeBlend>.62)biome=BIOME.MEADOW;
 
-    const surfaceKind=
-      biome===BIOME.DESERT?'sand':
-      biome===BIOME.ALPINE?'stone':
-      biome===BIOME.CLAYLANDS?'clay':
-      biome===BIOME.MARSH&&riverMask>.72?'clay':'grass';
-    const subsurfaceKind=
-      biome===BIOME.DESERT?'sand':
-      biome===BIOME.CLAYLANDS?'clay':
-      biome===BIOME.ALPINE?'stone':'dirt';
+    // Recreate the target composition: grassy paper shelves enter from the
+    // left/front while a warm kraft-paper dryland dominates center/right.
+    // The wavy transition avoids a perfectly straight biome cut.
+    const transition=(gx-this.spawnX)+7.5+Math.sin((gz-this.spawnZ)*.20)*2.35+f.ridge*.85;
+    const stagedGround=safeBlend>.08;
+    const stagedDry=stagedGround&&transition>0;
+    if(safeBlend>.30){
+      biome=stagedDry?BIOME.DESERT:BIOME.MEADOW;
+      landform=Math.abs(terraceStep)>=2?LANDFORM.ROLLING_HILLS:LANDFORM.PLAIN;
+    }
+
+    const surfaceKind=stagedGround
+      ?(stagedDry?'sand':'grass')
+      :biome===BIOME.DESERT?'sand':
+       biome===BIOME.ALPINE?'stone':
+       biome===BIOME.CLAYLANDS?'clay':
+       biome===BIOME.MARSH&&riverMask>.72?'clay':'grass';
+    const subsurfaceKind=stagedGround
+      ?'dirt'
+      :biome===BIOME.DESERT?'sand':
+       biome===BIOME.CLAYLANDS?'clay':
+       biome===BIOME.ALPINE?'stone':'dirt';
 
     const result=Object.freeze({
       gx,gz,height:Math.floor(height),heightFloat:height,
       biome,landform,surfaceKind,subsurfaceKind,
       continental:f.continental,erosion:f.erosion,ridge:f.ridge,
       temperature:f.temperature,moisture:f.moisture,
-      riverMask,mountainMask,safeBlend
+      riverMask,mountainMask,safeBlend,
+      targetGroundStage:stagedGround,targetGroundDry:stagedDry,terraceStep
     });
     if(this.cache.size>=this.cacheLimit)this.cache.clear();
     this.cache.set(key,result);
@@ -187,7 +205,7 @@ class BiomeLandformGenerator{
       version:1,backend:this.backend,cacheEntries:this.cache.size,cacheLimit:this.cacheLimit,
       biomes:Object.values(BIOME),landforms:Object.values(LANDFORM),
       fields:['continentalness','erosion','ridge','temperature','moisture','river','detail'],
-      spawnSafeRadius:this.spawnSafeRadius
+      spawnSafeRadius:this.spawnSafeRadius,targetGroundStyle:'broad-paper-terraces-r1',spawnSurfaceTransition:true
     };
   }
 }

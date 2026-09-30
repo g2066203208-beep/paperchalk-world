@@ -41,6 +41,9 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.grassTopMaterialGroup===true,'dedicated grass material group missing '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.dirtMaterialGroup===true,'dedicated dirt material group missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.targetGroundStyle==='terraced-paper-stage-r1','target ground renderer missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.continuousMergedEdges===true,'terrain sides are still cell-by-cell '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.paperMaterial?.liftedCardboardShadow===true,'cardboard side shadow lift missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true&&initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'supplied grass texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassColorSource==='user-texture-only','grass still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.userDirtReference===true&&initial.paperTerrain?.paperMaterial?.dirtReferenceLoaded===true,'supplied dirt texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
