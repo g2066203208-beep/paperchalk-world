@@ -18,7 +18,7 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
-  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.npcs?.count===1,{timeout:5000,polling:'raf'});
+  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.npcs?.count===5,{timeout:5000,polling:'raf'});
   await page.waitForFunction(()=>{const s=window.Paperchalk3D?.stats,p=s?.paperTerrain?.paperMaterial;return p?.grassReferenceLoaded===true&&p?.dirtReferenceLoaded===true&&s?.atmosphere?.paperSkyLoaded===true},{timeout:6000,polling:'raf'});
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
@@ -54,9 +54,11 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.groundAnisotropy===16&&initial.paperTerrain?.paperMaterial?.authoredSurfaceMicroMaps===false&&initial.paperTerrain?.paperMaterial?.genericTopMicroMaps===false,'ground anti-shimmer sampling missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.topUvScale===.06,'ground UV scale regression '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
-  assert(initial.paperEntities===2&&initial.npcActors===1&&initial.legacyStagePlaceholders===0,'paper actor counts wrong '+JSON.stringify({paperEntities:initial.paperEntities,npcActors:initial.npcActors,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
-  assert(initial.npcs?.count===1&&initial.npcs?.sharedEntityClassWithPlayer===true,'NPC PaperSpriteEntity renderer missing '+JSON.stringify(initial.npcs));
+  assert(initial.paperEntities===6&&initial.npcActors===5&&initial.legacyStagePlaceholders===0,'paper actor counts wrong '+JSON.stringify({paperEntities:initial.paperEntities,npcActors:initial.npcActors,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
+  assert(initial.npcs?.count===5&&initial.npcs?.sharedEntityClassWithPlayer===true,'NPC PaperSpriteEntity renderer missing '+JSON.stringify(initial.npcs));
   assert(initial.npcs?.sharedPlayerTexture===true&&initial.npcs?.actorAsset==='assets/player/protagonist.webp','NPC is not using player character asset '+JSON.stringify(initial.npcs));
+  const npcAI=await page.evaluate(()=>window.PaperchalkNPCs.stats);
+  assert(npcAI?.aiStack?.voxelAStar&&npcAI?.aiStack?.utility&&npcAI?.aiStack?.offscreenLOD,'NPC AI renderer/runtime bridge missing '+JSON.stringify(npcAI));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.samples===17,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
