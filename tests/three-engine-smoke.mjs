@@ -39,6 +39,10 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
   assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
+  assert(initial.paperTerrain?.grassTopMaterialGroup===true,'dedicated grass material group missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true&&initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'supplied grass texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassColorSource==='user-texture-only','grass still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassTextureTransform==='native-world-uv-repeat-1x','grass texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
