@@ -59,10 +59,12 @@ try{
  assert(entered.stats.worldMode==='prologue-city-3d','renderer is not using prologue scene '+JSON.stringify(entered.stats));
  assert(Math.abs(entered.stats.camera.yaw)<.01&&Math.abs(entered.stats.camera.distance-18)<.05&&Math.abs(entered.stats.camera.fov-42)<.05,'prologue camera preset missing '+JSON.stringify(entered.stats.camera));
  const car=entered.stats.paperCar;
- assert(car?.enabled===true&&car.style==='simple-3d+2d-paper-texture','paper sedan renderer missing '+JSON.stringify(car));
+ assert(car?.enabled===true&&car.style==='side-profile-extrude+projected-uv','paper sedan renderer missing '+JSON.stringify(car));
  assert(car.count===1&&car.voxelAligned===true&&car.lane==='rear-motor','paper sedan placement wrong '+JSON.stringify(car));
  assert(car.dimensions.length===4.4&&car.dimensions.width===1.9&&car.dimensions.height===1.6,'paper sedan render dimensions wrong '+JSON.stringify(car.dimensions));
- assert(car.geometry.boxes===7&&car.geometry.wheels===4&&car.geometry.decals===5&&car.geometry.wheelSegments===12,'paper sedan geometry is no longer simple '+JSON.stringify(car.geometry));
+ assert(car.geometry.extrudedProfiles===1&&car.geometry.boxes===0&&car.geometry.wheels===4&&car.geometry.wheelSegments===12,'paper sedan must be one extruded side profile plus wheels '+JSON.stringify(car.geometry));
+ assert(car.geometry.profilePoints>=25&&car.geometry.frontRearDecals===2,'paper sedan profile/decals missing '+JSON.stringify(car.geometry));
+ assert(car.uv.side==='profile-cap-x-y'&&car.uv.top==='extrusion-wall-x-z','paper sedan UV projection wrong '+JSON.stringify(car.uv));
  const fence=entered.stats.schoolFence;
  assert(fence?.enabled===true&&fence.gridAligned===true&&fence.installation==='voxel-grid-edge','school fence grid installation missing '+JSON.stringify(fence));
  assert(fence.lineZ===-16.5&&fence.rearCellZ===-17&&fence.sidewalkCellZ===-16,'fence is not on voxel edge '+JSON.stringify(fence));
