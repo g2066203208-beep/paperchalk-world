@@ -13,7 +13,7 @@ function minuteIn(m,start,end){m=((num(m)%1440)+1440)%1440;return start<=end?m>=
 function createBrain(def={}){
   let seed=(hashText(def.id||'npc')||1)|0;
   const ai=def.ai||{},personality=def.personality||{};
-  const memory=[],relationship={trust:num(def.relationship?.trust,.05),familiarity:0,fear:0};
+  const memory=[],relationship={trust:num(def.relationship?.trust,.05),familiarity:0,fear:0},peerRelations={};
   const needs={
     hunger:clamp(num(def.needs?.hunger,.12)),
     fatigue:clamp(num(def.needs?.fatigue,.10)),
@@ -57,6 +57,15 @@ function createBrain(def={}){
       if(sd<=num(stimulus.radius,6)){
         remember('stimulus',{key:stimulus.type||'sound',position:copyPos(stimulus),kind:stimulus.type||'sound',distance:sd},num(stimulus.ttl,8));
         if(stimulus.threat){heard=true;needs.safety=clamp(needs.safety+.45);relationship.fear=clamp(relationship.fear+.08)}
+      }
+    }
+    for(const other of ctx.actors||[]){
+      if(other===ctx.actor)continue;
+      const od=Math.hypot(num(other.transform?.x)-num(ctx.actor.transform.x),num(other.transform?.z)-num(ctx.actor.transform.z));
+      if(od<2.1){
+        remember('npc-near',{key:other.id,position:copyPos(other.transform)},6);
+        peerRelations[other.id]=clamp((peerRelations[other.id]||0)+.002);
+        needs.social=clamp(needs.social-.004);
       }
     }
     const lastSeen=recall('player-seen');
@@ -170,15 +179,15 @@ function createBrain(def={}){
   function snapshot(){
     return {
       state,goal,lastGoal,scheduleSlot,offscreen,target:target?{...target}:null,
-      needs:{...needs},relationship:{...relationship},perception:{...perception},
+      needs:{...needs},relationship:{...relationship},peerRelations:{...peerRelations},perception:{...perception},
       memory:memory.slice(-6).map(m=>({type:m.type,key:m.key,time:m.time,kind:m.kind,position:m.position?{...m.position}:undefined})),
       utilityAI:true,fsm:true,perceptionSystem:true,memorySystem:true,needsSystem:true,scheduleSystem:true,socialSystem:true
     };
   }
-  function exportState(){return {seed,needs:{...needs},relationship:{...relationship},memory:memory.slice(-12),state,goal,lastGoal,scheduleSlot,target,simTime,wanderIndex}}
+  function exportState(){return {seed,needs:{...needs},relationship:{...relationship},peerRelations:{...peerRelations},memory:memory.slice(-12),state,goal,lastGoal,scheduleSlot,target,simTime,wanderIndex}}
   function importState(data){
     if(!data||typeof data!=='object')return false;
-    seed=num(data.seed,seed)|0;Object.assign(needs,data.needs||{});Object.assign(relationship,data.relationship||{});
+    seed=num(data.seed,seed)|0;Object.assign(needs,data.needs||{});Object.assign(relationship,data.relationship||{});Object.assign(peerRelations,data.peerRelations||{});
     memory.length=0;for(const m of Array.isArray(data.memory)?data.memory.slice(-12):[])memory.push({...m});
     state=String(data.state||state);goal=String(data.goal||goal);lastGoal=String(data.lastGoal||lastGoal);
     scheduleSlot=String(data.scheduleSlot||scheduleSlot);target=data.target?{...data.target}:null;simTime=num(data.simTime,simTime);wanderIndex=num(data.wanderIndex,wanderIndex);
