@@ -35,7 +35,7 @@ try{
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.gameplayDimensions===2&&initial.voxelTerrain?.zMovementLocked===true,'voxel road gameplay plane wrong '+JSON.stringify(initial.voxelTerrain));
   assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v6-macro-relief-ao','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
-  assert(initial.paperTerrain?.paperMaterial?.textureResolution===512,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.textureResolution===256,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
   assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
   assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
