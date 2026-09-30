@@ -146,7 +146,7 @@ assert(paper.includes('edgeFacets'),'low-poly edge facets missing');
 assert(paper.includes('paperPbrV3:true'),'PaperMaterial v3 integration missing');
 assert(paper.includes('grassTopMaterialGroup:true'),'dedicated grass top material group missing');
 assert(paper.includes('dirtMaterialGroup:true'),'dedicated dirt material group missing');
-assert(paperMaterial.includes("mode:'procedural-paper-pbr-v3-reference'"),'procedural paper PBR v3 missing');
+assert(paperMaterial.includes("mode:'procedural-paper-pbr-v6-macro-relief-ao'"),'procedural paper PBR v3 missing');
 assert(paperMaterial.includes('normalMap:side||bevel?source.normal:null'),'paper side/bevel micro-normal map missing');
 assert(paperMaterial.includes('roughnessMap:side||bevel?source.roughness:null'),'paper side/bevel roughness map missing');
 assert(paperMaterial.includes('correlatedNormalRoughness:true'),'normal/roughness correlation missing');
@@ -157,7 +157,7 @@ assert(paperMaterial.includes('userGrassReference:true')&&paperMaterial.includes
 assert(paperMaterial.includes('userDirtReference:true')&&paperMaterial.includes("dirtColorSource:'user-texture-only'"),'supplied dirt texture material missing');
 assert(paperMaterial.includes("dirtTextureTransform:'native-world-uv-repeat-1x'"),'dirt texture is still scaled/blurred');
 assert(paperMaterial.includes("grassTextureTransform:'native-world-uv-repeat-1x'"),'grass texture is still scaled/blurred');
-assert(paperMaterial.includes('groundAnisotropy:16')&&paperMaterial.includes('authoredSurfaceMicroMaps:false')&&paperMaterial.includes('genericTopMicroMaps:false'),'ground anti-shimmer sampling missing');
+assert(paperMaterial.includes('groundAnisotropy:8')&&paperMaterial.includes('authoredSurfaceMicroMaps:true')&&paperMaterial.includes('genericTopMicroMaps:true'),'ground anti-shimmer sampling missing');
 assert(paper.includes('data.uvs.push(wx*.06,wz*.06)'),'ground UV frequency is still too high');
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
