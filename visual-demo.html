@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v14</h1>
-  <p>深林纸艺体积光 v14：光路仍由真实树木遮挡 + Shadow-map Raymarch 算出来，但体积光本身加入世界空间纸纤维、半透明纸层明度和轻微剪纸边缘。不是贴一张光柱平面，而是把真实体积散射的结果做成纸艺语言。</p>
+  <h1>纸艺世界视觉 Demo v15</h1>
+  <p>深林纸艺体积光 v15：保留真实树木遮挡 + Shadow-map Raymarch 的漂亮树缝光束，但把“全屏雾蒙蒙”压下去：普通雾和纸雾更轻，体积介质只集中在低空树林光路；弱散射被压掉，并用场景深度做边缘感知上采样，让树、人物和地面保持清晰。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -79,7 +79,7 @@ document.body.prepend(renderer.domElement);
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x9ca1ad);
-scene.fog=new THREE.Fog(0xaec8d3,15,36);
+scene.fog=new THREE.Fog(0xaec8d3,20,58);
 
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
 const target=new THREE.Vector3(0,1.75,-.35);
@@ -551,7 +551,7 @@ const fogTex=mistTexture(11);
 const fogUniforms={
   map:{value:fogTex},
   tint:{value:new THREE.Color(0xe4ebe2)},
-  opacity:{value:.82},
+  opacity:{value:.48},
   time:{value:0},
   tDepth:{value:null},
   resolution:{value:new THREE.Vector2(1,1)},
@@ -866,9 +866,9 @@ const volumeUniforms={
   cameraPos:{value:new THREE.Vector3()},
   lightDir:{value:new THREE.Vector3(0,-1,0)},
   scatteringColor:{value:new THREE.Color(0xffe6ad)},
-  density:{value:.018},
+  density:{value:.012},
   intensity:{value:.56},
-  maxDistance:{value:46.0},
+  maxDistance:{value:42.0},
   time:{value:0},
   shadowBias:{value:.0022},
   steps:{value:22.0}
@@ -977,7 +977,7 @@ const volumeMat=new THREE.ShaderMaterial({
         float forestEntry=smoothstep(-16.0,-10.5,p.z);
         float foregroundExit=1.0-smoothstep(4.0,9.0,p.z);
         float corridor=forestEntry*foregroundExit;
-        float localDensity=density*(.045+.955*lowMist)*corridor;
+        float localDensity=density*(.018+.982*lowMist)*corridor;
         localDensity*=paperMedium(p);
 
         float nearFade=smoothstep(1.0,3.5,t);
@@ -988,7 +988,7 @@ const volumeMat=new THREE.ShaderMaterial({
         float phase=.34+.66*pow(max(cosTheta,0.0),4.5);
 
         scatterAccum+=visible*localDensity*stepLen*nearFade*phase;
-        extinctionAccum+=localDensity*stepLen*.16;
+        extinctionAccum+=localDensity*stepLen*.10;
       }
 
       // Kill weak uniform haze; preserve stronger continuous shafts.
@@ -1024,7 +1024,11 @@ const volumeScene=new THREE.Scene();
 volumeScene.add(new THREE.Mesh(fsGeo,volumeMat));
 
 const compositeUniforms={
-  sceneColor:{value:null},volumeColor:{value:null},volumeStrength:{value:1.0}
+  sceneColor:{value:null},
+  sceneDepth:{value:null},
+  volumeColor:{value:null},
+  volumeTexel:{value:new THREE.Vector2(1,1)},
+  volumeStrength:{value:1.0}
 };
 const compositeMat=new THREE.ShaderMaterial({
   uniforms:compositeUniforms,
@@ -1036,19 +1040,43 @@ const compositeMat=new THREE.ShaderMaterial({
   fragmentShader:`
     varying vec2 vUv;
     uniform sampler2D sceneColor;
+    uniform sampler2D sceneDepth;
     uniform sampler2D volumeColor;
+    uniform vec2 volumeTexel;
     uniform float volumeStrength;
+
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
-      vec4 vol=texture2D(volumeColor,vUv);
+      float d0=texture2D(sceneDepth,vUv).r;
+
+      // Joint bilateral upsample: soften rays inside the air, but do not blur
+      // them across foreground silhouettes or tree/terrain depth edges.
+      vec4 sum=texture2D(volumeColor,vUv);
+      float wsum=1.0;
+      vec2 ox=vec2(volumeTexel.x,0.0);
+      vec2 oy=vec2(0.0,volumeTexel.y);
+      vec2 uv1=clamp(vUv+ox,vec2(0.0),vec2(1.0));
+      vec2 uv2=clamp(vUv-ox,vec2(0.0),vec2(1.0));
+      vec2 uv3=clamp(vUv+oy,vec2(0.0),vec2(1.0));
+      vec2 uv4=clamp(vUv-oy,vec2(0.0),vec2(1.0));
+
+      float w1=.50*exp(-abs(texture2D(sceneDepth,uv1).r-d0)*520.0);
+      float w2=.50*exp(-abs(texture2D(sceneDepth,uv2).r-d0)*520.0);
+      float w3=.50*exp(-abs(texture2D(sceneDepth,uv3).r-d0)*520.0);
+      float w4=.50*exp(-abs(texture2D(sceneDepth,uv4).r-d0)*520.0);
+      sum+=texture2D(volumeColor,uv1)*w1;wsum+=w1;
+      sum+=texture2D(volumeColor,uv2)*w2;wsum+=w2;
+      sum+=texture2D(volumeColor,uv3)*w3;wsum+=w3;
+      sum+=texture2D(volumeColor,uv4)*w4;wsum+=w4;
+
+      vec4 vol=sum/max(wsum,.0001);
       float trans=clamp(vol.a,0.0,1.0);
 
-      // Suppress low-level veil while retaining the brighter shafts.
-      vec3 rays=max(vol.rgb-vec3(.005),vec3(0.0))*volumeStrength*1.08;
+      // Suppress the low-amplitude white veil. Bright tree-gap shafts remain.
+      vec3 rays=max(vol.rgb-vec3(.010),vec3(0.0))*volumeStrength*1.16;
 
-      // Physically-inspired structure: transmitted scene + in-scattering.
-      // Extinction is intentionally restrained so paper textures stay crisp.
-      vec3 transmitted=base.rgb*mix(.985,1.0,trans);
+      // Restrained transmittance + in-scattering: keep paper texture contrast.
+      vec3 transmitted=base.rgb*mix(.992,1.0,trans);
       gl_FragColor=vec4(transmitted+rays,base.a);
       #include <colorspace_fragment>
     }
@@ -1094,7 +1122,9 @@ function resizeVolumetricTargets(){
   volumeUniforms.sceneDepth.value=sceneTarget.depthTexture;
   volumeUniforms.lightDepth.value=volumeShadowTarget.depthTexture;
   compositeUniforms.sceneColor.value=sceneTarget.texture;
+  compositeUniforms.sceneDepth.value=sceneTarget.depthTexture;
   compositeUniforms.volumeColor.value=volumeTarget.texture;
+  compositeUniforms.volumeTexel.value.set(1/vw,1/vh);
 }
 resizeVolumetricTargets();
 
@@ -1116,16 +1146,16 @@ function updateVolumetricSettings(t){
 
   if(volumeUseMoon){
     volumeUniforms.scatteringColor.value.copy(moonColor);
-    volumeUniforms.intensity.value=.17+.12*moonUp;
-    volumeUniforms.density.value=.010+.004*moonUp;
+    volumeUniforms.intensity.value=.15+.10*moonUp;
+    volumeUniforms.density.value=.007+.003*moonUp;
   }else{
     volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.82);
-    volumeUniforms.intensity.value=.34+sunUp*.23+twilight*.30;
-    volumeUniforms.density.value=.012+twilight*.008;
+    volumeUniforms.intensity.value=.36+sunUp*.24+twilight*.32;
+    volumeUniforms.density.value=.008+twilight*.005;
   }
   if(state.fog){
-    volumeUniforms.intensity.value*=1.06;
-    volumeUniforms.density.value*=1.02;
+    volumeUniforms.intensity.value*=1.04;
+    volumeUniforms.density.value*=1.01;
   }
 }
 
@@ -1260,7 +1290,7 @@ function updateLighting(t){
   // Forest air: exponential distance haze gives a softer "air volume" than
   // a hard linear start/end fog. Keep it stylized and readable.
   if(state.fog){
-    const density=.014+twilight*.004+moonUp*.003;
+    const density=.0065+twilight*.0020+moonUp*.0015;
     scene.fog=new THREE.FogExp2(fogColor,density);
   }
 
@@ -1269,11 +1299,11 @@ function updateLighting(t){
   const mistWarm=new THREE.Color(0xecd8c1);
   const mistColor=mistNight.clone().lerp(mistDay,Math.pow(sunUp,.42)).lerp(mistWarm,twilight*.30);
   fogUniforms.tint.value.copy(mistColor);
-  fogUniforms.opacity.value=.52+twilight*.06+moonUp*.04;
+  fogUniforms.opacity.value=.30+twilight*.045+moonUp*.025;
 
   // Narrow exposure range = comfortable stylized game image instead of
   // physically dark dawn/night.
-  renderer.toneMappingExposure=state.tone?(.86+sunUp*.11+twilight*.035):1;
+  renderer.toneMappingExposure=state.tone?(.84+sunUp*.10+twilight*.025):1;
   scene.background.copy(fogColor);
 
   let mode='night';
