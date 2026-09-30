@@ -123,8 +123,8 @@ assert(paperMaterial.includes('userGrassReference:true')&&paperMaterial.includes
 assert(paperMaterial.includes('userDirtReference:true')&&paperMaterial.includes("dirtColorSource:'user-texture-only'"),'supplied dirt texture material missing');
 assert(paperMaterial.includes("dirtTextureTransform:'native-world-uv-repeat-1x'"),'dirt texture is still scaled/blurred');
 assert(paperMaterial.includes("grassTextureTransform:'native-world-uv-repeat-1x'"),'grass texture is still scaled/blurred');
-assert(paperMaterial.includes('groundAnisotropy:16')&&paperMaterial.includes('authoredSurfaceMicroMaps:false'),'ground anti-shimmer sampling missing');
-assert(paper.includes('data.uvs.push(wx*.12,wz*.12)'),'ground UV frequency is still too high');
+assert(paperMaterial.includes('groundAnisotropy:16')&&paperMaterial.includes('authoredSurfaceMicroMaps:false')&&paperMaterial.includes('genericTopMicroMaps:false'),'ground anti-shimmer sampling missing');
+assert(paper.includes('data.uvs.push(wx*.06,wz*.06)'),'ground UV frequency is still too high');
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
 assert(paperMaterial.includes('perFrameHeavyNoise:false'),'paper material must not run heavy noise per frame');
