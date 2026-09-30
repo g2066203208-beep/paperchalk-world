@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r8'),'build key missing');
+assert(html.includes('paper-r9'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -106,6 +106,7 @@ assert(paper.includes('edgeTopCells'),'edge-cell top geometry missing');
 assert(paper.includes('edgeFacets'),'low-poly edge facets missing');
 assert(paper.includes('paperPbrV3:true'),'PaperMaterial v3 integration missing');
 assert(paper.includes('grassTopMaterialGroup:true'),'dedicated grass top material group missing');
+assert(paper.includes('dirtMaterialGroup:true'),'dedicated dirt material group missing');
 assert(paperMaterial.includes("mode:'procedural-paper-pbr-v3-reference'"),'procedural paper PBR v3 missing');
 assert(paperMaterial.includes('normalMap:source.normal'),'paper micro-normal map missing');
 assert(paperMaterial.includes('roughnessMap:source.roughness'),'paper roughness map missing');
@@ -114,6 +115,8 @@ assert(paperMaterial.includes('diffusePulpDominant:true'),'paper albedo/pulp mus
 assert(paperMaterial.includes('weakMicroNormal:true'),'paper normal detail must remain weak');
 assert(paperMaterial.includes('physicalFibreSheen:true'),'paper fibre sheen missing');
 assert(paperMaterial.includes('userGrassReference:true')&&paperMaterial.includes("grassColorSource:'user-texture-only'"),'supplied grass texture material missing');
+assert(paperMaterial.includes('userDirtReference:true')&&paperMaterial.includes("dirtColorSource:'user-texture-only'"),'supplied dirt texture material missing');
+assert(paperMaterial.includes("dirtTextureTransform:'native-world-uv-repeat-1x'"),'dirt texture is still scaled/blurred');
 assert(paperMaterial.includes("grassTextureTransform:'native-world-uv-repeat-1x'"),'grass texture is still scaled/blurred');
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
@@ -130,6 +133,7 @@ assert(html.includes('data-debug-action="flight"'),'flight debug button missing'
 assert(html.includes('data-world-time')&&html.includes('data-world-timescale'),'time debug controls missing');
 assert(html.includes('data-time-preset="1136"'),'18:56 time preset missing');
 assert(fs.existsSync('assets/materials/grass-reference.webp'),'supplied grass asset missing');
+assert(fs.existsSync('assets/materials/dirt-reference.webp'),'supplied dirt asset missing');
 assert(!fs.existsSync('src/engine3d/PhotonPipeline.js')&&!fs.existsSync('src/engine3d/PhotonSkyWeatherPass.js'),'Photon renderer/cloud code must stay removed');
 assert(!engine.includes('PhotonPipeline')&&!html.toLowerCase().includes('photon'),'Photon runtime leaked into production');
 
