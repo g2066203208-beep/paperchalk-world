@@ -1,11 +1,16 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js'),prologue=read('src/scenes/prologue-city.js');
 
-assert.match(html,/paper-r27/);
+assert.match(html,/paper-r28/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(html,/open-world-runtime\.js/);
+assert.match(html,/src\/scenes\/prologue-city\.js/);
+assert.match(prologue,/id:'prologue-school-street'/);
+assert.match(prologue,/rearSidewalk:Object\.freeze\(\{minZ:-16,maxZ:-13,width:4\}\)/);
+assert.match(prologue,/spawn:Object\.freeze\(\{x:24\.5,y:2,z:-14\.5/);
+assert.match(prologue,/lengthMeters:180,depthMeters:56/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
 assert.doesNotMatch(game,/PLAYER_ROW_CENTER_Z/);
