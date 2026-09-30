@@ -26,6 +26,8 @@ try{
   assert(initial.worldMode==='finite-side-scroll-voxel','wrong world mode');
   assert(initial.paperStyle?.enabled===false,'prologue road must use cube voxels '+JSON.stringify(initial.paperStyle));
   assert(initial.terrainMode==='finite-voxel-road','finite voxel road renderer mode missing '+JSON.stringify(initial));
+  assert(initial.school?.enabled===true&&initial.school?.realGeometry===true,'real school model missing '+JSON.stringify(initial.school));
+  assert(initial.school?.floors===3&&(initial.school?.meshCount||0)>20&&(initial.school?.instanceCount||0)>=20,'school model geometry incomplete '+JSON.stringify(initial.school));
   assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
