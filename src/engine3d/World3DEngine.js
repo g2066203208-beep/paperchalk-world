@@ -648,14 +648,18 @@ this.paperTerrainRenderer=new PaperTerrainRenderer(THREE,this.terrain,this.scene
 radiusXZ:this.sceneData.terrain?.visibleChunkRadiusXZ??3,
 maxBuildsPerFrame:1,
 paperLayerHeight:.5,
-paperThickness:.30,
-bevelWidth:.045,
-bevelHeight:.055,
+paperThickness:.24,
+bevelWidth:.022,
+bevelHeight:.030,
 fiberStrength:.050,
-printNoiseStrength:.065,
-microNormalStrength:.34,
-roughnessVariation:.035,
-sideDarkness:.92
+printNoiseStrength:.052,
+microNormalStrength:.30,
+roughnessVariation:.030,
+sideDarkness:1.03,
+edgeJitter:.014,
+edgeHeightJitter:.0035,
+edgeFacetCenterJitter:.0025,
+maxEdgeRunCells:6
 });
 this.terrainRenderer.root.visible=false;
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
