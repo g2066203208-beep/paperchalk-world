@@ -9,7 +9,7 @@ try{
   const page=await browser.newPage({viewport:{width:1365,height:768}});
   page.on('pageerror',e=>errors.push(String(e)));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
-  await page.goto('http://127.0.0.1:8080/?ci=voxel3d-engine',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:8080/?ci=voxel3d-engine&skipPrologue=1',{waitUntil:'networkidle'});
   await page.locator('#authBtn').click();
   await page.locator('#tabRegister').click();
   await page.locator('#regUser').fill('voxel3d_engine');
