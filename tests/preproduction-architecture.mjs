@@ -63,7 +63,7 @@ assert.match(engine,/NPCActorRenderer/);
 assert.match(npcRuntime,/sameActorComponentsAsPlayer:true/);
 assert.match(npcRuntime,/physicalColliders:true/);
 assert.match(npcRuntime,/simulationHz:20/);
-assert.doesNotMatch(game,/function collidesAt[\s\S]*?npcWorld\.collidesAABB/);
+assert.doesNotMatch(game.slice(game.indexOf('function collidesAt'),game.indexOf('function groundProbe')),/npcWorld\.collidesAABB/);
 assert.match(npcRenderer,/new PaperSpriteEntity/);
 assert.match(npcRenderer,/sharedPlayerTexture:true/);
 assert.match(npcRenderer,/actorAsset:'assets\/player\/protagonist\.webp'/);
