@@ -32,8 +32,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.28</h1>
-  <p>v12.28 连续去重复 Paper003：保留 v12.27 的体素面剔除。材质改成世界坐标连续投影，相邻同向方块共用同一张连续纸面；再用三采样 stochastic tiling 在连续三角域里混合 Paper003 的不同偏移、90°旋转和镜像。Color、NormalGL、Roughness、Displacement 共用完全相同的随机变换，并叠加极轻的大尺度明暗变化，所以不会再按方块割裂。</p>
+  <h1>纸艺世界视觉 Demo v12.29</h1>
+  <p>v12.29 修复透明地板并安全去重复：回退 v12.28 的高风险世界投影 shader，保留 v12.27 面剔除。现在由体素网格直接生成连续世界 UV，相邻同向方块天然无缝；Paper003 再用三个不同尺度/偏移的连续采样平滑混合来打散周期，Color、NormalGL、Roughness、Displacement 全部同步，避免按方块割裂。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -69,8 +69,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   </div>
   <div class="row">
     <span>连续去重</span>
-    <input id="paperStochastic" type="range" min="0" max="100" step="5" value="100">
-    <span id="paperStochasticVal" class="val">100%</span>
+    <input id="paperBlend" type="range" min="0" max="100" step="5" value="85">
+    <span id="paperBlendVal" class="val">85%</span>
   </div>
   <button id="paperReset">恢复默认</button>
 </div>
@@ -533,16 +533,12 @@ const terrainPaper003Textures=[
   terrainPaper003Displacement
 ];
 
-// Terrain Paper003 is sampled in continuous voxel/world coordinates.
-// Keep the source textures at 1x repeat and control physical paper size in shader.
-for(const t of terrainPaper003Textures)t.repeat.set(1,1);
-const terrainPaperRepeatUniform={value:.5};
-const terrainPaperStochasticUniform={value:1.0};
-
 function setTerrainPaperScale(size){
-  terrainPaperRepeatUniform.value=1/Math.max(.05,size);
+  const repeat=1/Math.max(.05,size);
+  for(const t of terrainPaper003Textures)t.repeat.set(repeat,repeat);
 }
 setTerrainPaperScale(2.0);
+const terrainPaperBlendUniform={value:.85};
 
 
 // ---------------------------------------------------------------------------
@@ -572,271 +568,97 @@ function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
   mat.onBeforeCompile=shader=>{
     shader.uniforms.paper003HeightMap={value:terrainPaper003Displacement};
     shader.uniforms.paper003HeightStrength=heightUniform;
-    shader.uniforms.paper003Repeat=terrainPaperRepeatUniform;
-    shader.uniforms.paper003Stochastic=terrainPaperStochasticUniform;
-
-    shader.vertexShader=shader.vertexShader.replace(
-      '#include <common>',
-      `#include <common>
-varying vec3 vPaperObjectPos;
-varying vec3 vPaperObjectNormal;`
-    );
-
-    shader.vertexShader=shader.vertexShader.replace(
-      '#include <begin_vertex>',
-      `#include <begin_vertex>
-vPaperObjectPos=position;
-vPaperObjectNormal=normal;`
-    );
-
-    shader.fragmentShader=shader.fragmentShader.replace(
-      '#include <common>',
-      `#include <common>
-varying vec3 vPaperObjectPos;
-varying vec3 vPaperObjectNormal;`
-    );
+    shader.uniforms.paper003Blend=terrainPaperBlendUniform;
 
     shader.fragmentShader=shader.fragmentShader.replace(
       'void main() {',
       `
 uniform sampler2D paper003HeightMap;
 uniform float paper003HeightStrength;
-uniform float paper003Repeat;
-uniform float paper003Stochastic;
+uniform float paper003Blend;
 
-float paperHash1(vec2 p){
-  return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);
+vec3 paperBlendWeights(vec2 uv){
+  // Slow continuous macro weights: no cells, no hard boundaries.
+  vec3 w=vec3(
+    0.60+0.40*sin(dot(uv,vec2(0.31,0.17))+0.2),
+    0.60+0.40*sin(dot(uv,vec2(-0.19,0.37))+2.3),
+    0.60+0.40*sin(dot(uv,vec2(0.23,-0.29))+4.7)
+  );
+  w*=w;
+  return w/max(dot(w,vec3(1.0)),0.00001);
 }
 
-vec2 paperHash2(vec2 p){
-  return fract(sin(vec2(
-    dot(p,vec2(127.1,311.7)),
-    dot(p,vec2(269.5,183.3))
-  ))*43758.5453123);
+void paperUvs(vec2 uv,out vec2 a,out vec2 b,out vec2 c){
+  // Non-matching scales mean the same source paper does not line up on a short
+  // obvious grid. All transforms are global and continuous across voxel edges.
+  a=uv;
+  b=uv*1.113+vec2(0.371,0.613);
+  c=uv*0.887+vec2(0.719,0.281);
 }
 
-// Continuous triangular stochastic domain. At every triangle boundary the
-// outgoing sample already has zero weight, so neighbouring regions join smoothly.
-void paperTriangle(
-  vec2 uv,
-  out vec2 id0,out vec2 id1,out vec2 id2,
-  out vec3 w
-){
-  vec2 skew=mat2(1.0,0.0,-0.57735027,1.15470054)*uv;
-  vec2 base=floor(skew);
-  vec2 f=fract(skew);
-  float z=1.0-f.x-f.y;
-
-  if(z>0.0){
-    id0=base;
-    id1=base+vec2(0.0,1.0);
-    id2=base+vec2(1.0,0.0);
-    w=vec3(z,f.y,f.x);
-  }else{
-    id0=base+vec2(1.0,1.0);
-    id1=base+vec2(1.0,0.0);
-    id2=base+vec2(0.0,1.0);
-    w=vec3(-z,1.0-f.y,1.0-f.x);
-  }
-
-  // Slightly favour one paper sample so folds stay crisp instead of looking blurred.
-  w=pow(max(w,vec3(0.0)),vec3(1.35));
-  w/=max(dot(w,vec3(1.0)),0.00001);
-}
-
-float paperTransformCode(vec2 id){
-  return floor(paperHash1(id+vec2(19.17,7.31))*8.0);
-}
-
-float paperTransformScale(vec2 id){
-  return 0.90+0.20*paperHash1(id+vec2(41.73,93.11));
-}
-
-vec2 paperTransformUv(vec2 uv,vec2 id){
-  vec2 h=paperHash2(id);
-  float code=paperTransformCode(id);
-  float rot=mod(code,4.0);
-
-  vec2 q=uv*paperTransformScale(id);
-  if(code>=4.0)q.x=-q.x;
-
-  if(rot<0.5){
-  }else if(rot<1.5){
-    q=vec2(-q.y,q.x);
-  }else if(rot<2.5){
-    q=-q;
-  }else{
-    q=vec2(q.y,-q.x);
-  }
-
-  // Large irrational-looking offset picks another part of the same Paper003.
-  return q+h*13.731+paperHash2(id+vec2(5.37,17.91))*3.117;
-}
-
-// Undo each UV rotation/mirror on tangent-space XY so NormalGL remains aligned
-// with the same transformed Color/Roughness/Height sample.
-vec3 paperTransformNormal(vec3 n,vec2 id){
-  float code=paperTransformCode(id);
-  float rot=mod(code,4.0);
-  vec2 v=n.xy;
-
-  if(rot<0.5){
-  }else if(rot<1.5){
-    v=vec2(v.y,-v.x);
-  }else if(rot<2.5){
-    v=-v;
-  }else{
-    v=vec2(-v.y,v.x);
-  }
-
-  if(code>=4.0)v.x=-v.x;
-  v*=paperTransformScale(id);
-  return vec3(v,n.z);
-}
-
-vec4 paperSampleColor(vec2 uv){
+vec4 paperColorSample(vec2 uv){
 #ifdef USE_MAP
-  vec4 plain=texture2D(map,uv);
-  if(paper003Stochastic<=0.001)return plain;
-
-  vec2 a,b,c;vec3 w;
-  paperTriangle(uv,a,b,c,w);
-  vec4 stoch=
-    texture2D(map,paperTransformUv(uv,a))*w.x+
-    texture2D(map,paperTransformUv(uv,b))*w.y+
-    texture2D(map,paperTransformUv(uv,c))*w.z;
-
-  if(paper003Stochastic>=0.999)return stoch;
-  return mix(plain,stoch,paper003Stochastic);
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  vec4 mixed=
+    texture2D(map,a)*w.x+
+    texture2D(map,b)*w.y+
+    texture2D(map,c)*w.z;
+  return mix(texture2D(map,uv),mixed,paper003Blend);
 #else
   return vec4(1.0);
 #endif
 }
 
-float paperSampleRoughness(vec2 uv){
+float paperRoughnessSample(vec2 uv){
 #ifdef USE_ROUGHNESSMAP
-  float plain=texture2D(roughnessMap,uv).g;
-  if(paper003Stochastic<=0.001)return plain;
-
-  vec2 a,b,c;vec3 w;
-  paperTriangle(uv,a,b,c,w);
-  float stoch=
-    texture2D(roughnessMap,paperTransformUv(uv,a)).g*w.x+
-    texture2D(roughnessMap,paperTransformUv(uv,b)).g*w.y+
-    texture2D(roughnessMap,paperTransformUv(uv,c)).g*w.z;
-
-  if(paper003Stochastic>=0.999)return stoch;
-  return mix(plain,stoch,paper003Stochastic);
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  float mixed=
+    texture2D(roughnessMap,a).g*w.x+
+    texture2D(roughnessMap,b).g*w.y+
+    texture2D(roughnessMap,c).g*w.z;
+  return mix(texture2D(roughnessMap,uv).g,mixed,paper003Blend);
 #else
   return 1.0;
 #endif
 }
 
-vec3 paperSampleNormal(vec2 uv){
+vec3 paperNormalSample(vec2 uv){
 #ifdef USE_NORMALMAP
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  vec3 na=texture2D(normalMap,a).xyz*2.0-1.0;
+  vec3 nb=texture2D(normalMap,b).xyz*2.0-1.0;
+  vec3 nc=texture2D(normalMap,c).xyz*2.0-1.0;
+  vec3 mixed=normalize(na*w.x+nb*w.y+nc*w.z);
   vec3 plain=texture2D(normalMap,uv).xyz*2.0-1.0;
-  if(paper003Stochastic<=0.001)return plain;
-
-  vec2 a,b,c;vec3 w;
-  paperTriangle(uv,a,b,c,w);
-
-  vec3 na=paperTransformNormal(texture2D(normalMap,paperTransformUv(uv,a)).xyz*2.0-1.0,a);
-  vec3 nb=paperTransformNormal(texture2D(normalMap,paperTransformUv(uv,b)).xyz*2.0-1.0,b);
-  vec3 nc=paperTransformNormal(texture2D(normalMap,paperTransformUv(uv,c)).xyz*2.0-1.0,c);
-  vec3 stoch=normalize(na*w.x+nb*w.y+nc*w.z);
-
-  if(paper003Stochastic>=0.999)return stoch;
-  return normalize(mix(plain,stoch,paper003Stochastic));
+  return normalize(mix(plain,mixed,paper003Blend));
 #else
   return vec3(0.0,0.0,1.0);
 #endif
 }
 
-float paperSampleHeight(vec2 uv){
-  float plain=texture2D(paper003HeightMap,uv).r;
-  if(paper003Stochastic<=0.001)return plain;
-
-  vec2 a,b,c;vec3 w;
-  paperTriangle(uv,a,b,c,w);
-  float stoch=
-    texture2D(paper003HeightMap,paperTransformUv(uv,a)).r*w.x+
-    texture2D(paper003HeightMap,paperTransformUv(uv,b)).r*w.y+
-    texture2D(paper003HeightMap,paperTransformUv(uv,c)).r*w.z;
-
-  if(paper003Stochastic>=0.999)return stoch;
-  return mix(plain,stoch,paper003Stochastic);
-}
-
-// Axis-aligned world/object-space paper projection.
-// Coplanar neighbouring voxel faces therefore use identical coordinates and
-// are perfectly continuous across voxel boundaries.
-void paperFrame(
-  vec3 p,vec3 rawN,
-  out vec2 uv,out vec3 T,out vec3 B,out vec3 N
-){
-  vec3 n=normalize(rawN);
-  vec3 an=abs(n);
-
-  if(an.y>=an.x&&an.y>=an.z){
-    if(n.y>=0.0){
-      uv=vec2(p.x,-p.z);
-      T=vec3(1.0,0.0,0.0);
-      B=vec3(0.0,0.0,-1.0);
-      N=vec3(0.0,1.0,0.0);
-    }else{
-      uv=vec2(p.x,p.z);
-      T=vec3(1.0,0.0,0.0);
-      B=vec3(0.0,0.0,1.0);
-      N=vec3(0.0,-1.0,0.0);
-    }
-  }else if(an.x>=an.z){
-    if(n.x>=0.0){
-      uv=vec2(-p.z,p.y);
-      T=vec3(0.0,0.0,-1.0);
-      B=vec3(0.0,1.0,0.0);
-      N=vec3(1.0,0.0,0.0);
-    }else{
-      uv=vec2(p.z,p.y);
-      T=vec3(0.0,0.0,1.0);
-      B=vec3(0.0,1.0,0.0);
-      N=vec3(-1.0,0.0,0.0);
-    }
-  }else{
-    if(n.z>=0.0){
-      uv=vec2(p.x,p.y);
-      T=vec3(1.0,0.0,0.0);
-      B=vec3(0.0,1.0,0.0);
-      N=vec3(0.0,0.0,1.0);
-    }else{
-      uv=vec2(-p.x,p.y);
-      T=vec3(-1.0,0.0,0.0);
-      B=vec3(0.0,1.0,0.0);
-      N=vec3(0.0,0.0,-1.0);
-    }
-  }
-
-  uv*=paper003Repeat;
-}
-
-float paperMacro(vec3 p){
-  float a=sin(p.x*0.37+sin(p.z*0.29));
-  float b=sin(p.z*0.23+p.y*0.31+1.7);
-  return 1.0+0.018*a+0.012*b;
+float paperHeightSample(vec2 uv){
+  vec2 a,b,c;paperUvs(uv,a,b,c);
+  vec3 w=paperBlendWeights(uv);
+  float mixed=
+    texture2D(paper003HeightMap,a).r*w.x+
+    texture2D(paper003HeightMap,b).r*w.y+
+    texture2D(paper003HeightMap,c).r*w.z;
+  return mix(texture2D(paper003HeightMap,uv).r,mixed,paper003Blend);
 }
 
 void main() {
 `
     );
 
-    // Replace the stock UV map sampling with continuous world-space stochastic paper.
     shader.fragmentShader=shader.fragmentShader.replace(
       '#include <map_fragment>',
       `
 #ifdef USE_MAP
-  vec2 paperUvForColor;vec3 paperTColor,paperBColor,paperNColor;
-  paperFrame(vPaperObjectPos,vPaperObjectNormal,paperUvForColor,paperTColor,paperBColor,paperNColor);
-  diffuseColor*=paperSampleColor(paperUvForColor);
-  diffuseColor.rgb*=paperMacro(vPaperObjectPos);
+  vec4 sampledDiffuseColor=paperColorSample(vMapUv);
+  diffuseColor*=sampledDiffuseColor;
 #endif
 `
     );
@@ -846,10 +668,7 @@ void main() {
       `
 float roughnessFactor=roughness;
 #ifdef USE_ROUGHNESSMAP
-  vec2 paperUvForRough;vec3 paperTRough,paperBRough,paperNRough;
-  paperFrame(vPaperObjectPos,vPaperObjectNormal,paperUvForRough,paperTRough,paperBRough,paperNRough);
-  roughnessFactor*=paperSampleRoughness(paperUvForRough);
-  roughnessFactor*=mix(1.04,0.96,clamp(paperMacro(vPaperObjectPos),0.96,1.04));
+  roughnessFactor*=paperRoughnessSample(vRoughnessMapUv);
 #endif
 `
     );
@@ -857,35 +676,27 @@ float roughnessFactor=roughness;
     shader.fragmentShader=shader.fragmentShader.replace(
       '#include <normal_fragment_maps>',
       `
-{
-  vec2 paperUvForNormal;vec3 paperT,paperB,paperN;
-  paperFrame(vPaperObjectPos,vPaperObjectNormal,paperUvForNormal,paperT,paperB,paperN);
-
-  vec3 paperMapN=paperSampleNormal(paperUvForNormal);
-#ifdef USE_NORMALMAP
-  paperMapN.xy*=normalScale;
-#endif
+#ifdef USE_NORMALMAP_TANGENTSPACE
+  vec3 mapN=paperNormalSample(vNormalMapUv);
+  mapN.xy*=normalScale;
 
   if(paper003HeightStrength>0.0001){
     const float eps=0.0035;
-    float h0=paperSampleHeight(paperUvForNormal);
-    float hx=paperSampleHeight(paperUvForNormal+vec2(eps,0.0))-h0;
-    float hy=paperSampleHeight(paperUvForNormal+vec2(0.0,eps))-h0;
-    paperMapN.xy-=vec2(hx,hy)*paper003HeightStrength*1.65;
+    float h0=paperHeightSample(vNormalMapUv);
+    float hx=paperHeightSample(vNormalMapUv+vec2(eps,0.0))-h0;
+    float hy=paperHeightSample(vNormalMapUv+vec2(0.0,eps))-h0;
+    mapN.xy-=vec2(hx,hy)*paper003HeightStrength*1.55;
   }
 
-  vec3 objectPaperNormal=normalize(
-    paperT*paperMapN.x+
-    paperB*paperMapN.y+
-    paperN*paperMapN.z
-  );
-  normal=normalize(normalMatrix*objectPaperNormal);
-}
+  normal=normalize(tbn*mapN);
+#elif defined( USE_BUMPMAP )
+  normal=perturbNormalArb(-vViewPosition,normal,dHdxy_fwd(),faceDirection);
+#endif
 `
     );
   };
 
-  mat.customProgramCacheKey=()=>name+'-world-stochastic-paper003-v1';
+  mat.customProgramCacheKey=()=>name+'-continuous-paper003-safe-v1';
   return mat;
 }
 
@@ -961,11 +772,20 @@ const VOXEL_FACES=[
   ]}
 ];
 
-const faceUv=[[0,0],[0,1],[1,1],[1,0]];
 const triOrder=[0,1,2,0,2,3];
 const dirtPos=[],dirtNorm=[],dirtUv=[];
 const topPos=[],topNorm=[],topUv=[];
 let terrainVisibleFaceCount=0;
+
+function worldUvForVoxelFace(px,py,pz,n){
+  if(Math.abs(n[1])>.5){
+    return n[1]>0?[px,-pz]:[px,pz];
+  }
+  if(Math.abs(n[0])>.5){
+    return n[0]>0?[-pz,py]:[pz,py];
+  }
+  return n[2]>0?[px,py]:[-px,py];
+}
 
 function emitVoxelFace(x,y,z,face){
   const pos=face.top?topPos:dirtPos;
@@ -974,9 +794,11 @@ function emitVoxelFace(x,y,z,face){
 
   for(const qi of triOrder){
     const p=face.c[qi];
-    pos.push(x+p[0],y+p[1],z+p[2]);
+    const px=x+p[0],py=y+p[1],pz=z+p[2];
+    const tuv=worldUvForVoxelFace(px,py,pz,face.n);
+    pos.push(px,py,pz);
     nor.push(face.n[0],face.n[1],face.n[2]);
-    uv.push(faceUv[qi][0],faceUv[qi][1]);
+    uv.push(tuv[0],tuv[1]);
   }
   terrainVisibleFaceCount++;
 }
@@ -1039,8 +861,8 @@ const rims=[];
 const paperObjects=[terrainBlocks];
 
 function rebuildMaterialRandomness(on=true){
-  const stochasticEl=document.getElementById('paperStochastic');
-  terrainPaperStochasticUniform.value=on&&stochasticEl?(+stochasticEl.value/100):0;
+  const blendEl=document.getElementById('paperBlend');
+  terrainPaperBlendUniform.value=on&&blendEl?(+blendEl.value/100):0;
   const mats=[terrainTopMat,terrainDirtMat];
   for(const mat of mats){
     mat.map=on?terrainPaper003Color:null;
@@ -2521,10 +2343,10 @@ function applyPaperDebug(){
   const size=+document.getElementById('paperScale').value/100;
   const normal=+document.getElementById('paperNormal').value/100;
   const height=+document.getElementById('paperHeight').value/100;
-  const stochastic=+document.getElementById('paperStochastic').value/100;
+  const blend=+document.getElementById('paperBlend').value/100;
 
   setTerrainPaperScale(size);
-  terrainPaperStochasticUniform.value=state.random?stochastic:0;
+  terrainPaperBlendUniform.value=state.random?blend:0;
   terrainTopMat.normalScale.setScalar(normal);
   terrainDirtMat.normalScale.setScalar(normal*.84);
 
@@ -2541,18 +2363,18 @@ function applyPaperDebug(){
   document.getElementById('paperScaleVal').textContent=size.toFixed(2)+'×';
   document.getElementById('paperNormalVal').textContent=normal.toFixed(2);
   document.getElementById('paperHeightVal').textContent=height.toFixed(2);
-  document.getElementById('paperStochasticVal').textContent=Math.round(stochastic*100)+'%';
+  document.getElementById('paperBlendVal').textContent=Math.round(blend*100)+'%';
   renderDirty=true;
 }
 
-['paperScale','paperNormal','paperHeight','paperStochastic'].forEach(id=>{
+['paperScale','paperNormal','paperHeight','paperBlend'].forEach(id=>{
   document.getElementById(id).addEventListener('input',applyPaperDebug);
 });
 document.getElementById('paperReset').onclick=()=>{
   document.getElementById('paperScale').value=200;
   document.getElementById('paperNormal').value=185;
   document.getElementById('paperHeight').value=480;
-  document.getElementById('paperStochastic').value=100;
+  document.getElementById('paperBlend').value=85;
   applyPaperDebug();
 };
 
