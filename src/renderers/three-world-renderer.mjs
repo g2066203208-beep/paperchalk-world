@@ -1,6 +1,6 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
 import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r2';
-import {ProloguePaperCar} from '../scenes/ProloguePaperCar.js?v=paper-r1';
+import {ProloguePaperCar} from '../scenes/ProloguePaperCar.js?v=paper-r2';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
