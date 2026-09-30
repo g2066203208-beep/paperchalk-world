@@ -35,7 +35,8 @@ try{
 
   const flightStart=await page.evaluate(()=>({ok:window.PaperchalkCombat.setFlight(true,{notice:false}),p:window.PaperchalkRuntime.getSnapshot().player}));
   assert(flightStart.ok===true&&flightStart.p.flying===true,'flight mode did not enable '+JSON.stringify(flightStart));
-  await page.keyboard.down('Space');await page.waitForTimeout(320);await page.keyboard.up('Space');await page.waitForTimeout(80);
+  await page.locator('#threeWorldLayer canvas').focus();
+  await page.keyboard.down('Space');await page.waitForTimeout(420);await page.keyboard.up('Space');await page.waitForTimeout(80);
   const flightUp=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
   assert(flightUp.y-flightStart.p.y>.20,'flight ascend failed '+JSON.stringify({flightStart,flightUp}));
   await page.evaluate(()=>window.PaperchalkCombat.setFlight(false,{notice:false}));
