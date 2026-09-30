@@ -1,17 +1,16 @@
-import {PaperSpriteEntity} from './PaperSpriteEntity.js?v=paper-r12';
+import {PaperSpriteEntity} from './PaperSpriteEntity.js?v=paper-r13';
 
 export class NPCActorRenderer{
-  constructor(THREE,scene){
-    this.THREE=THREE;this.scene=scene;
+  constructor(THREE,scene,{actorTexture=null}={}){
+    this.THREE=THREE;this.scene=scene;this.actorTexture=actorTexture;
     this.root=new THREE.Group();this.root.name='npc-paper-actors';scene.add(this.root);
     this.actors=new Map();this.version=0;
   }
   _create(npc){
-    const appearance=npc?.appearance||{};
     const actor=new PaperSpriteEntity(this.THREE,{
       id:npc.id,kind:'npc',label:npc.name||'',x:npc.x||0,y:npc.y||0,z:npc.z||0,
       width:Number(npc.width)||1,height:Number(npc.height)||2,anchorY:(Number(npc.height)||2)*.5,
-      primary:appearance.primary||'#8b6249',secondary:appearance.secondary||'#ddc6a4'
+      texture:this.actorTexture,disposeTexture:false
     });
     actor.root.userData={entityKind:'npc',npcId:npc.id,ecsEntity:npc.entity||null};
     this.root.add(actor.root);this.actors.set(npc.id,actor);this.version++;return actor;
@@ -34,7 +33,7 @@ export class NPCActorRenderer{
       this.root.remove(actor.root);actor.dispose();this.actors.delete(id);this.version++;
     }
   }
-  stats(){return {count:this.actors.size,ids:[...this.actors.keys()],renderMode:'PaperSpriteEntity-actor-layer',sharedEntityClassWithPlayer:true,root:'npc-paper-actors'}}
+  stats(){return {count:this.actors.size,ids:[...this.actors.keys()],renderMode:'PaperSpriteEntity-actor-layer',sharedEntityClassWithPlayer:true,sharedPlayerTexture:true,actorAsset:'assets/player/protagonist.webp',root:'npc-paper-actors'}}
   dispose(){
     for(const actor of this.actors.values())actor.dispose();
     this.actors.clear();this.scene.remove(this.root);
