@@ -51,7 +51,7 @@ try{
  assert(Math.abs(entered.snap.player.z+14.5)<.01,'player is not on rear sidewalk '+JSON.stringify(entered.snap.player));
  assert(entered.snap.player.x>24&&entered.snap.player.x<25,'wrong prologue spawn X '+JSON.stringify(entered.snap.player));
  assert(entered.stats.worldMode==='prologue-city-3d','renderer is not using prologue scene '+JSON.stringify(entered.stats));
- assert(Math.abs(entered.stats.camera.yaw)<.01&&Math.abs(entered.stats.camera.distance-18)<.05&&Math.abs(entered.stats.camera.fov-55)<.05,'prologue camera preset missing '+JSON.stringify(entered.stats.camera));
+ assert(Math.abs(entered.stats.camera.yaw)<.01&&Math.abs(entered.stats.camera.distance-18)<.05&&Math.abs(entered.stats.camera.fov-42)<.05,'prologue camera preset missing '+JSON.stringify(entered.stats.camera));
  await page.screenshot({path:'artifacts/prologue-school-street.png'});
  if(errors.length)throw new Error(errors.join('\n'));
  console.log('PROLOGUE_CITY_SCENE_OK');
