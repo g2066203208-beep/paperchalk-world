@@ -56,6 +56,7 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===2&&initial.npcActors===1&&initial.legacyStagePlaceholders===0,'paper actor counts wrong '+JSON.stringify({paperEntities:initial.paperEntities,npcActors:initial.npcActors,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
   assert(initial.npcs?.count===1&&initial.npcs?.sharedEntityClassWithPlayer===true,'NPC PaperSpriteEntity renderer missing '+JSON.stringify(initial.npcs));
+  assert(initial.npcs?.sharedPlayerTexture===true&&initial.npcs?.actorAsset==='assets/player/protagonist.webp','NPC is not using player character asset '+JSON.stringify(initial.npcs));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.samples===17,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));

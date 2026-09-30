@@ -1,4 +1,4 @@
-import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r12';
+import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r13';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;

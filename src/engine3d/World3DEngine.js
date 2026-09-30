@@ -1,5 +1,5 @@
-import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js?v=paper-r12';
-import {NPCActorRenderer} from '../entities/NPCActorRenderer.js?v=paper-r12';
+import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js?v=paper-r13';
+import {NPCActorRenderer} from '../entities/NPCActorRenderer.js?v=paper-r13';
 import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r11';
 import {AtmospherePass} from './AtmospherePass.js?v=atmos-r3';
 import {
@@ -668,7 +668,6 @@ this.terrainRenderer.root.visible=false;
 this.waterRenderer=new WaterRenderer(THREE,this.terrain,this.scene);
 this.fishingRenderer=new FishingRenderer(THREE,this.scene);
 this.fishSchoolRenderer=new FishSchoolRenderer(THREE,this.scene,{capacity:this.mobileLike?24:32});
-this.npcRenderer=new NPCActorRenderer(THREE,this.scene);
 const cursorGeometry=new THREE.BoxGeometry(
 this.terrain.tileSize*1.035,
 this.terrain.tileSize*1.035,
@@ -694,9 +693,9 @@ playerTexture.minFilter=THREE.LinearFilter;
 playerTexture.generateMipmaps=false;
 playerTexture.anisotropy=8;
 this.playerSprite=new PaperSpriteEntity(THREE,{
-id:'player',kind:'player',label:'',x:0,y:0,z:0,
-width:1,height:2,anchorY:1,texture:playerTexture
+id:'player',kind:'player',width:1,height:2,anchorY:1,texture:playerTexture
 });
+this.npcRenderer=new NPCActorRenderer(THREE,this.scene,{actorTexture:playerTexture});
 this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
 this.playerSprite.root.add(this.healthBar.group);
 const torchRoot=new THREE.Group();
