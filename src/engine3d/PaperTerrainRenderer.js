@@ -4,14 +4,14 @@ const TOP_COLORS=Object.freeze({
   1:0x6f895c, // grass paper (authored texture overrides this)
   2:0xb9845f, // earth paper
   3:0x9d9890, // stone paper
-  4:0xffdca5, // warm kraft/sand paper
+  4:0xffe5b6, // warm kraft/sand paper
   5:0xb98a72  // clay paper
 });
 const SIDE_COLORS=Object.freeze({
   1:0xb1774f,
   2:0xaa704c,
   3:0x817970,
-  4:0xb77d52,
+  4:0xc38a60,
   5:0x9a6651
 });
 
