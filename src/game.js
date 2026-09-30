@@ -2,6 +2,7 @@
 'use strict';
 const CONTENT=window.PaperchalkContent;
 if(!CONTENT)throw new Error('Paperchalk authored content failed to load');
+const SCENE_RUNTIME=window.PaperchalkSceneRuntime;
 const SAVE_RUNTIME=window.PaperchalkSaveRuntime;
 if(!SAVE_RUNTIME)throw new Error('PaperchalkSaveRuntime missing');
 const ECS=window.PaperchalkECS;
@@ -115,7 +116,8 @@ const KEY_SAVE_PREFIX='paperchalk.save.v6.';
 const LEGACY_SAVE_PREFIXES=['paperchalk.save.v5.','paperchalk.save.v4.','paperchalk.save.v3.','paperchalk.save.v2.'];
 const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
-const sceneData=CONTENT.scene3d;
+const sceneData=SCENE_RUNTIME?.select(CONTENT.scene3d)||CONTENT.scene3d;
+window.PaperchalkActiveScene=sceneData;
 const INTERACTION_ROW_Z=Number(sceneData.terrain?.interactionRowZ??0);
 const bounds=sceneData.bounds;
 const terrain=new TerrainRuntime.TerrainWorld({
@@ -127,6 +129,7 @@ interactionRowZ:INTERACTION_ROW_Z,
 blackBackRowZ:sceneData.terrain?.blackBackRowZ??(INTERACTION_ROW_Z-1),
 biomeConfig:sceneData.terrain?.biome||null
 });
+SCENE_RUNTIME?.configureTerrain(terrain,sceneData);
 window.PaperchalkTerrain=terrain;
 window.PaperchalkBiomes=Object.freeze({
 sampleCell(gx,gz=0){return terrain.terrainProfile(gx,gz)},
@@ -156,7 +159,7 @@ try{return JSON.parse(storageGet(KEY_SESSION)||'null')}catch{return null}
 }
 function setSession(session){return storageSet(KEY_SESSION,JSON.stringify(session))}
 function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
-return prefix+encodeURIComponent(String(account||''));
+return prefix+encodeURIComponent(String(account||''))+(SCENE_RUNTIME?.saveSuffix(sceneData)||'');
 }
 const defaultCamera=Object.freeze({
 yaw:.72,pitch:.38,distance:12,height:.65,fov:42,
@@ -244,7 +247,7 @@ Actor:{kind:'player'},
 Player:controller
 });
 const npcWorld=NPCRuntime.createNPCWorld({
-definitions:CONTENT.npcs,quests:CONTENT.quests||[],terrain,ecs,gravity:GRAVITY
+definitions:SCENE_RUNTIME?.entities(CONTENT.npcs,sceneData)||CONTENT.npcs,quests:SCENE_RUNTIME?.quests(CONTENT.quests||[],sceneData)||CONTENT.quests||[],terrain,ecs,gravity:GRAVITY
 });
 window.PaperchalkNPCs=Object.freeze({
 get list(){return npcWorld.snapshot()},
@@ -356,7 +359,7 @@ fish:fishSnapshot(),
 npcs:npcWorld.snapshot(),
 npcDialogue:npcWorld.dialogueSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
-scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
+scene:{id:sceneData.id||sceneData.mode,name:sceneData.name||sceneData.mode},
 terrain:terrain.stats(),
 debug:{colliders:debugColliders},
 ecs:ecs.stats()
@@ -468,7 +471,7 @@ velocity.x=input.x*speed;velocity.z=input.z*speed;
 controller.moving=input.magnitude>.05;
 if(Math.abs(velocity.x)>.08)controller.facingX=velocity.x>0?1:-1;
 if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
-moveAxis('x',velocity.x*dt);moveAxis('z',velocity.z*dt);
+moveAxis('x',velocity.x*dt);moveAxis('z',velocity.z*dt);SCENE_RUNTIME?.clampPlayer(transform,sceneData,PLAYER_HALF_W,PLAYER_HALF_D);
 }
 });
 ecs.registerSystem('player-gravity',{
@@ -952,12 +955,12 @@ if(notice)showMapNotice(notice);publish();return true;
 window.PaperchalkMap=Object.freeze({
 get player(){return playerSnapshot()},
 get scene3d(){return sceneData},
-get nodes(){return CONTENT.world.nodes},
-get routes(){return CONTENT.world.routes},
+get nodes(){return (SCENE_RUNTIME?.world(CONTENT.world,sceneData)||CONTENT.world).nodes},
+get routes(){return (SCENE_RUNTIME?.world(CONTENT.world,sceneData)||CONTENT.world).routes},
 teleport,
 reset(){return teleport(sceneData.spawn.x,sceneData.spawn.z||0,null,{notice:'已返回出生点'})}
 });
-window.PaperchalkScene=Object.freeze({get location(){return 'infinite-voxel-world'},get transitioning(){return false}});
+window.PaperchalkScene=Object.freeze({get location(){return sceneData.id||sceneData.mode},get transitioning(){return false}});
 function terrainTargetInReach(point){
 if(!point)return false;
 return Math.hypot(point.x-transform.x,point.y-transform.y,point.z-transform.z)<=TERRAIN_REACH;
@@ -1654,7 +1657,7 @@ return {
 schemaVersion:SAVE_RUNTIME.schemaVersion,
 gameVersion:SAVE_RUNTIME.gameVersion,
 account:session.account,
-location:'Paperchalk · 无限3D体素世界',
+location:sceneData.name||sceneData.mode,
 createdAt:Date.now(),
 worldMinutes:360,
 player:{...sceneData.spawn},
@@ -1709,7 +1712,7 @@ function saveWorldState(){
 const session=getSession();
 if(!session)return false;
 const save=readSaveForSession(session)||defaultSave(session);
-save.location='Paperchalk · 无限3D体素世界';
+save.location=sceneData.name||sceneData.mode;
 save.worldMinutes=worldMinutes;
 save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
 save.playerHp=health.current;
@@ -1799,7 +1802,7 @@ if(appState&&appState.state!=='world'&&appState.can('world'))appState.transition
 uiShell.classList.add('is-hidden');
 uiShell.setAttribute('inert','');
 worldEl.removeAttribute('inert');
-window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:'village-paper-stage'});
+window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:sceneData.id||sceneData.mode});
 window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
 startGameLoop();
 publish();
