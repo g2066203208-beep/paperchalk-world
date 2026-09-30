@@ -110,6 +110,8 @@ assert.match(paper,/grassTopMaterialGroup:true/);
 assert.match(paper,/dirtMaterialGroup:true/);
 assert.match(paperMaterial,/procedural-paper-pbr-v3-reference/);
 assert.match(paperMaterial,/correlatedNormalRoughness:true/);
+assert.match(paperMaterial,/normalMap:side\|\|bevel\?source\.normal:null/);
+assert.match(paperMaterial,/roughnessMap:side\|\|bevel\?source\.roughness:null/);
 assert.match(paperMaterial,/diffusePulpDominant:true/);
 assert.match(paperMaterial,/weakMicroNormal:true/);
 assert.match(paperMaterial,/physicalFibreSheen:true/);
