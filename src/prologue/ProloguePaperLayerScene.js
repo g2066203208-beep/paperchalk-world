@@ -1,4 +1,4 @@
-import {SCHOOL_PAPER_LAYOUT as L} from './school-paper-layout.js?v=py-school-r1';
+import {SCHOOL_PAPER_LAYOUT as L} from './school-paper-layout.js?v=py-school-r2';
 export class ProloguePaperLayerScene{
 constructor(THREE,scene,content){
 this.THREE=THREE;this.scene=scene;this.content=content;this.root=new THREE.Group();
@@ -26,7 +26,7 @@ new T.TextureLoader().load(L.atlas,atlas=>{
 }
 stats(){
 return{enabled:true,mode:'instanced-2d-multilayer-paper-school',source:L.source,pythonGenerated:true,visualOnly:true,noCollision:true,real3DBuilding:false,
-cards:L.cards.length,assetTypes:L.assets.length,layers:L.layers,batches:this.meshes.length,atlasReady:this.ready,
+cards:L.cards.length,assetTypes:L.assets.length,layers:L.layers,batches:this.meshes.length,atlasReady:this.ready,groundTopY:L.groundTopY,facadeZ:L.facadeZ,attachmentGapMeters:L.attachmentGapMeters,
 zOrder:'L0 far skyline <- L7 foreground school <- far sidewalk/road/player'};
 }
 dispose(){
