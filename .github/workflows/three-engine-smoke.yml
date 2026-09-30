@@ -57,6 +57,8 @@ jobs:
           node --check src/renderers/three-world-renderer.mjs
           node --check src/terrain/terrain-runtime.js
           node --check src/prologue/voxel-road.js
+          python3 tools/generate_school_paper_assets.py
+          git diff --exit-code -- assets/prologue/generated-school/school-paper-atlas.svg
           node --check src/prologue/ProloguePaperLayerScene.js
           test -s assets/prologue/school-skyline.webp
           test -s assets/prologue/school-back.webp
