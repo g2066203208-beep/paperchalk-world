@@ -191,7 +191,7 @@ window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
   version:10,
-  engine:'three-r180-infinite-voxel-3d',
+  engine:'three-r180-finite-side-scroll-voxel',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setPaperStyle,configurePaperTerrain,configureAtmosphere,
   setStageView,toggleStageView,setStageAxis,
@@ -202,9 +202,13 @@ window.Paperchalk3D=Object.freeze({
   get active(){return active},
   get ready(){return ready},
   get stats(){
+    const base=engine?.stats?.()||{};
     return {
+      ...base,
       fps,frames,active,ready,loopActive:!!raf,error:errorMessage,
-      ...(engine?.stats?.()||{})
+      worldMode:CONTENT.scene3d?.mode||base.worldMode,
+      terrainMode:'finite-voxel-road',
+      interaction:{...(base.interaction||{}),threeDimensional:false,zMovementLocked:true}
     };
   },
   snapshot
