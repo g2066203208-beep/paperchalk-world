@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.23</h1>
-  <p>v12.23 可爱纸草：仍然坚持每丛只有一张纸片、只绕 Y 轴面朝相机、厚度不建模。把原来又尖又碎的草叶轮廓重画成三种圆润、矮胖、宽叶的手工剪纸造型，并用三种柔和绿色搭配 Paper003；黑色程序厚度只在纸片右下侧露极细一点，不再形成一圈硬描边。</p>
+  <h1>纸艺世界视觉 Demo v12.24</h1>
+  <p>v12.24 草地方块分面：方块仍然严格 1×1×1，不增加任何厚度几何。顶面继续是绿色 Paper003，四个侧面和底面先换成泥土棕色 Paper003；两种表面都保留 NormalGL、Roughness 和高度凹凸着色，先看这种“绿顶 + 泥土侧面”的层次。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -489,31 +489,33 @@ const paper003Displacement=loadPaper003Texture(PAPER003_DISPLACEMENT_URL);
 // Geometry is exactly 1×1×1. No cap, no edge layer, no extra thickness and no
 // displacement. Paper003 is used only as a surface material on all six faces.
 // ---------------------------------------------------------------------------
-const TERRAIN_BASE_COLOR=0x8fae68;
-const terrainPaper003Mat=new THREE.MeshStandardMaterial({
-  color:TERRAIN_BASE_COLOR,
-  map:paper003Color,
-  normalMap:paper003Normal,
-  roughnessMap:paper003Roughness,
-  normalScale:new THREE.Vector2(1.85,1.85),
-  roughness:1.12,
-  metalness:0
-});
-terrainPaper003Mat.name='terrain-standard-cube-paper003-full-surface';
+const TERRAIN_TOP_COLOR=0x8fae68;
+const TERRAIN_DIRT_COLOR=0x8b654c;
 
-// Strict cube + full Paper003 channels:
-// true vertex displacement would deform the 1×1×1 silhouette, which the
-// current art direction explicitly forbids. Instead, the pack's Displacement
-// texture is sampled at fragment level and combined AFTER NormalGL. It therefore
-// contributes real per-pixel height gradients / light response while geometry
-// remains exactly cubic.
-terrainPaper003Mat.onBeforeCompile=shader=>{
-  shader.uniforms.paper003HeightMap={value:paper003Displacement};
-  shader.uniforms.paper003HeightStrength={value:4.8};
+function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
+  const mat=new THREE.MeshStandardMaterial({
+    color,
+    map:paper003Color,
+    normalMap:paper003Normal,
+    roughnessMap:paper003Roughness,
+    normalScale:new THREE.Vector2(normalScale,normalScale),
+    roughness:1.08,
+    metalness:0
+  });
+  mat.name=name;
 
-  shader.fragmentShader=shader.fragmentShader.replace(
-    'void main() {',
-    `
+  // Keep the cube silhouette perfectly standard. Paper003's displacement map
+  // is used only as per-pixel height relief on top of NormalGL.
+  const heightUniform={value:heightStrength};
+  mat.userData.paper003HeightUniform=heightUniform;
+  mat.userData.paper003HeightOn=heightStrength;
+  mat.onBeforeCompile=shader=>{
+    shader.uniforms.paper003HeightMap={value:paper003Displacement};
+    shader.uniforms.paper003HeightStrength=heightUniform;
+
+    shader.fragmentShader=shader.fragmentShader.replace(
+      'void main() {',
+      `
 uniform sampler2D paper003HeightMap;
 uniform float paper003HeightStrength;
 
@@ -537,20 +539,42 @@ vec3 paper003PerturbNormal(vec3 surfPos,vec3 surfNorm,vec2 dHdxy,float sideSign)
 
 void main() {
 `
-  );
+    );
 
-  shader.fragmentShader=shader.fragmentShader.replace(
-    '#include <normal_fragment_maps>',
-    `#include <normal_fragment_maps>
+    shader.fragmentShader=shader.fragmentShader.replace(
+      '#include <normal_fragment_maps>',
+      `#include <normal_fragment_maps>
 normal=paper003PerturbNormal(-vViewPosition,normal,paper003HeightDerivatives(),faceDirection);`
-  );
-};
-terrainPaper003Mat.customProgramCacheKey=()=> 'paper003-normal-plus-height-v1';
+    );
+  };
+  mat.customProgramCacheKey=()=>name+'-paper003-height-v2';
+  return mat;
+}
 
+const terrainDirtMat=makeTerrainPaper003Material(
+  TERRAIN_DIRT_COLOR,
+  'terrain-dirt-paper003',
+  1.55,
+  4.0
+);
+const terrainTopMat=makeTerrainPaper003Material(
+  TERRAIN_TOP_COLOR,
+  'terrain-green-top-paper003',
+  1.85,
+  4.8
+);
+
+// Standard cube. Three material groups only:
+// +X/-X sides = dirt, +Y top = green, -Y/+Z/-Z = dirt.
+// No separate top sheet and no thickness geometry.
 const blockGeo=new THREE.BoxGeometry(1,1,1);
+blockGeo.clearGroups();
+blockGeo.addGroup(0,12,0);
+blockGeo.addGroup(12,6,1);
+blockGeo.addGroup(18,18,0);
 
 const terrain=new THREE.Group();
-terrain.name='terrain-standard-paper003-cubes';
+terrain.name='terrain-standard-grass-top-dirt-side-cubes';
 scene.add(terrain);
 
 const columnRecords=[];
@@ -566,7 +590,11 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   terrainBlockCount+=h+1;
 }
 
-const terrainBlocks=new THREE.InstancedMesh(blockGeo,terrainPaper003Mat,terrainBlockCount);
+const terrainBlocks=new THREE.InstancedMesh(
+  blockGeo,
+  [terrainDirtMat,terrainTopMat],
+  terrainBlockCount
+);
 terrainBlocks.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 terrainBlocks.castShadow=true;
 terrainBlocks.receiveShadow=true;
@@ -586,20 +614,25 @@ for(const rec of columnRecords){
 }
 terrainBlocks.instanceMatrix.needsUpdate=true;
 
-// Existing UI/depth code still expects these compatibility arrays.
 const caps=[];
 const rims=[];
 const paperObjects=[terrainBlocks];
 
 function rebuildMaterialRandomness(on=true){
-  terrainPaper003Mat.map=on?paper003Color:null;
-  terrainPaper003Mat.normalMap=on?paper003Normal:null;
-  terrainPaper003Mat.roughnessMap=on?paper003Roughness:null;
-  terrainPaper003Mat.normalScale.setScalar(on?1.85:1);
-  terrainPaper003Mat.roughness=on?1.12:.92;
-  // Paper003 is only the paper surface; the terrain's intrinsic colour stays green.
-  terrainPaper003Mat.color.setHex(TERRAIN_BASE_COLOR);
-  terrainPaper003Mat.needsUpdate=true;
+  const mats=[terrainTopMat,terrainDirtMat];
+  for(const mat of mats){
+    mat.map=on?paper003Color:null;
+    mat.normalMap=on?paper003Normal:null;
+    mat.roughnessMap=on?paper003Roughness:null;
+    mat.normalScale.setScalar(on?(mat===terrainTopMat?1.85:1.55):1);
+    mat.roughness=on?1.08:.92;
+    if(mat.userData.paper003HeightUniform){
+      mat.userData.paper003HeightUniform.value=on?mat.userData.paper003HeightOn:0;
+    }
+    mat.needsUpdate=true;
+  }
+  terrainTopMat.color.setHex(TERRAIN_TOP_COLOR);
+  terrainDirtMat.color.setHex(TERRAIN_DIRT_COLOR);
 }
 
 // Cut-paper grass v12.23:
