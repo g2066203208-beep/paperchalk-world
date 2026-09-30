@@ -1,6 +1,6 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
-import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r10';
-import {AtmospherePass} from './AtmospherePass.js?v=atmos-r2';
+import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r11';
+import {AtmospherePass} from './AtmospherePass.js?v=atmos-r3';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
