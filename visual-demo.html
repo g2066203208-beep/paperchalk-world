@@ -481,8 +481,10 @@ updateFogInstances(0);
 let depthTarget=null,depthDirty=true;
 function resizeDepthTarget(){
   const scale=.45;
-  const w=Math.max(256,Math.floor(innerWidth*(devicePixelRatio||1)*scale));
-  const h=Math.max(144,Math.floor(innerHeight*(devicePixelRatio||1)*scale));
+  const drawSize=new THREE.Vector2();
+  renderer.getDrawingBufferSize(drawSize);
+  const w=Math.max(256,Math.floor(drawSize.x*scale));
+  const h=Math.max(144,Math.floor(drawSize.y*scale));
   if(depthTarget)depthTarget.dispose();
   depthTarget=new THREE.WebGLRenderTarget(w,h,{
     minFilter:THREE.NearestFilter,
@@ -491,7 +493,8 @@ function resizeDepthTarget(){
   depthTarget.depthTexture=new THREE.DepthTexture(w,h);
   depthTarget.depthTexture.type=THREE.UnsignedShortType;
   fogUniforms.tDepth.value=depthTarget.depthTexture;
-  fogUniforms.resolution.value.set(w,h);
+  // gl_FragCoord is in the main framebuffer's pixel coordinates.
+  fogUniforms.resolution.value.copy(drawSize);
   depthDirty=true;
 }
 resizeDepthTarget();
@@ -729,7 +732,7 @@ function updateLighting(t){
     contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
   }
   renderDirty=true;
-  shadowDirty=true;depthDirty=true;
+  shadowDirty=true;
 }
 function preset(name){
   state.auto=false;document.getElementById('cycle').classList.remove('active');
@@ -738,7 +741,7 @@ function preset(name){
   else if(name==='sunset')state.time=.73;
   else if(name==='night')state.time=.0;
   else state.time=.5;
-  updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
+  updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
 }
 function syncButtons(){
   sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;
@@ -748,7 +751,7 @@ function syncButtons(){
   const sunIsDominant=state.time>.18&&state.time<.82;
   sun.castShadow=state.shadow&&sunIsDominant;
   moon.castShadow=state.shadow&&!sunIsDominant;
-  shadowDirty=true;depthDirty=true;
+  shadowDirty=true;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
   ['sky','layers','shadow','fog','tone','random','bounce'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
@@ -758,6 +761,7 @@ function syncButtons(){
 }
 function setFinal(v){
   state.final=v;state.sky=v;state.layers=v;state.shadow=v;state.fog=v;state.tone=v;state.random=v;state.bounce=v;
+  depthDirty=true;
   rebuildMaterialRandomness(v);
   if(v){updateLighting(state.time)}
   else{
@@ -770,14 +774,14 @@ function setFinal(v){
 document.getElementById('compare').onclick=()=>{setFinal(!state.final);renderDirty=true;shadowDirty=true};
 ['sky','layers','shadow','fog','tone'].forEach(id=>{
   document.getElementById(id).onclick=()=>{
-    state[id]=!state[id];if(id==='fog')depthDirty=true;
+    state[id]=!state[id];if(id==='layers')depthDirty=true;
     state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
-    updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
+    updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
   };
 });
 document.getElementById('random').onclick=()=>{
   state.random=!state.random;rebuildMaterialRandomness(state.random);
-  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();renderDirty=true;shadowDirty=true;
 };
 document.getElementById('bounce').onclick=()=>{
   state.bounce=!state.bounce;
@@ -790,7 +794,7 @@ document.getElementById('sunset').onclick=()=>preset('sunset');
 document.getElementById('night').onclick=()=>preset('night');
 document.getElementById('cycle').onclick=()=>{
   state.auto=!state.auto;document.getElementById('cycle').classList.toggle('active',state.auto);
-  if(state.auto)state.timePreset='';syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
+  if(state.auto)state.timePreset='';syncButtons();renderDirty=true;shadowDirty=true;
 };
 
 let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0,lastMistTick=0,mistClock=0;
@@ -798,13 +802,13 @@ renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.cli
 renderer.domElement.addEventListener('pointermove',e=>{
   if(!dragging)return;
   yaw-=(e.clientX-lastX)*.006;pitch=clamp(pitch+(e.clientY-lastY)*.004,.08,.62);
-  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;
+  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;depthDirty=true;
 });
 renderer.domElement.addEventListener('pointerup',()=>dragging=false);
-renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true},{passive:true});
+renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();renderDirty=true;shadowDirty=true;depthDirty=true;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();renderDirty=true;shadowDirty=true;depthDirty=true;depthDirty=true;
 });
 
 let prev=performance.now();
