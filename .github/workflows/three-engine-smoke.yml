@@ -11,8 +11,6 @@ on:
       - "src/content/**"
       - "src/terrain/**"
       - "src/entities/**"
-      - "src/prologue/**"
-      - "assets/prologue/**"
       - "styles/**"
       - "vendor/three/**"
       - "vendor/fastnoise-lite/**"
@@ -27,7 +25,6 @@ on:
       - "src/content/**"
       - "src/terrain/**"
       - "src/entities/**"
-      - "src/prologue/**"
       - "styles/**"
       - "vendor/three/**"
       - "vendor/fastnoise-lite/**"
@@ -56,11 +53,6 @@ jobs:
           node --check src/engine3d/AtmospherePass.js
           node --check src/renderers/three-world-renderer.mjs
           node --check src/terrain/terrain-runtime.js
-          node --check src/prologue/voxel-road.js
-          test ! -e assets/prologue/paper-school-back.svg
-          test ! -e assets/prologue/paper-school-trees.svg
-          test ! -e assets/prologue/paper-school-gate.svg
-          test ! -e assets/prologue/paper-school-pole.svg
           node --check src/terrain/voxel-block-mesh.js
           node --check src/entities/PaperSpriteEntity.js
           node --check vendor/fastnoise-lite/FastNoiseLite.js
