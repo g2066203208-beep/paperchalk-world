@@ -29,13 +29,12 @@ try{
 
   async function patchState(patch){
     await page.evaluate(({patch})=>{
-      window.PaperchalkPrologue.save();
+      window.PaperchalkPrologue.leave();
       const key='paperchalk.prologue.v1.prologue_ci';
       const s=JSON.parse(localStorage.getItem(key));
       Object.assign(s,patch);
       if(patch.player)s.player={...s.player,...patch.player};
       localStorage.setItem(key,JSON.stringify(s));
-      window.PaperchalkPrologue.leave();
       window.PaperchalkPrologue.enter('prologue_ci');
     },{patch});
   }
