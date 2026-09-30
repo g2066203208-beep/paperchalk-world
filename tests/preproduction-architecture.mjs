@@ -129,6 +129,8 @@ assert.match(paper,/data\.uvs\.push\(wx\*\.06,wz\*\.06\)/);
 assert.match(paperMaterial,/seamlessPeriodicField:true/);
 assert.doesNotMatch(engine,/coarse\?1\.5:2/);
 assert.match(engine,/Math\.min\(Number\(devicePixelRatio\)\|\|1,2\)/);
+assert.match(engine,/sun\.shadow\.normalBias=\.055/);
+assert.match(engine,/shadowAcneGuard:true/);
 assert.match(engine,/generateMipmaps=false/);
 assert.match(game,/terrain\.water\.needsSettle/);
 
