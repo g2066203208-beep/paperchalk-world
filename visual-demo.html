@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.5</h1>
-  <p>v12.5 戏剧天空与月光：保留双光源连续旋转，进一步拉开各时段的视觉差异。黄昏改成紫红→玫红→橙金的纸天空，夜晚改成更深的冷蓝并加入纸点星光；月光体积散射和光辉明显加强，但仍只在真正受月光照到的雾里显形。</p>
+  <h1>纸艺世界视觉 Demo v12.6</h1>
+  <p>v12.6 程序星空：天空背景不再使用任何天空素材或 Canvas 贴图，改为纯 Shader 原色渐变；夜晚星空用程序化 Points 直接生成，带独立大小、亮度、冷暖色、轻微闪烁和月亮附近抑制，并随太阳高度连续淡入淡出。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -44,7 +44,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
-  <button id="sky" class="active">纸天空</button>
+  <button id="sky" class="active">程序天空</button>
   <button id="layers" class="active">纸层厚度</button>
   <button id="shadow" class="active">软阴影</button>
   <button id="fog" class="active">动态纸雾</button>
@@ -735,7 +735,8 @@ function updateDepthTexture(){
   const skyWasVisible=sky.visible;
   const sunWasVisible=sunDisc.visible;
   const moonWasVisible=moonDisc.visible;
-  forestMist.visible=false;sky.visible=false;sunDisc.visible=false;moonDisc.visible=false;
+  const starsWereVisible=starField.visible;
+  forestMist.visible=false;sky.visible=false;starField.visible=false;sunDisc.visible=false;moonDisc.visible=false;
 
   renderer.setRenderTarget(depthTarget);
   renderer.clear();
@@ -743,7 +744,7 @@ function updateDepthTexture(){
   renderer.setRenderTarget(null);
 
   forestMist.visible=mistWasVisible;sky.visible=skyWasVisible;
-  sunDisc.visible=sunWasVisible;moonDisc.visible=moonWasVisible;
+  sunDisc.visible=sunWasVisible;moonDisc.visible=moonWasVisible;starField.visible=starsWereVisible;
   depthDirty=false;
 }
 
@@ -836,16 +837,13 @@ viewFill.castShadow=false;
 scene.add(viewFill);scene.add(viewFill.target);
 viewFill.target.position.copy(target);
 
-const skyTexNight=skyTexture('night');
-const skyTexDawn=skyTexture('dawn');
-const skyTexDay=skyTexture('day');
-const skyTexSunset=skyTexture('sunset');
+// ---------------------------------------------------------------------------
+// Pure procedural sky: NO sky texture, NO bitmap background.
+// The sphere only blends original colours in shader space.
+// ---------------------------------------------------------------------------
 const skyUniforms={
-  nightMap:{value:skyTexNight},
-  dawnMap:{value:skyTexDawn},
-  dayMap:{value:skyTexDay},
-  sunsetMap:{value:skyTexSunset},
-  weights:{value:new THREE.Vector4(0,1,0,0)}
+  time01:{value:.27},
+  drama:{value:1.0}
 };
 const skyMat=new THREE.ShaderMaterial({
   uniforms:skyUniforms,
@@ -854,31 +852,215 @@ const skyMat=new THREE.ShaderMaterial({
   fog:false,
   toneMapped:false,
   vertexShader:`
-    varying vec2 vUv;
+    varying vec3 vSkyPos;
     void main(){
-      vUv=uv;
+      vSkyPos=position;
       gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
     }
   `,
   fragmentShader:`
-    varying vec2 vUv;
-    uniform sampler2D nightMap;
-    uniform sampler2D dawnMap;
-    uniform sampler2D dayMap;
-    uniform sampler2D sunsetMap;
-    uniform vec4 weights;
+    varying vec3 vSkyPos;
+    uniform float time01;
+    uniform float drama;
+
+    float ease01(float x){
+      x=clamp(x,0.0,1.0);
+      return x*x*x*(x*(x*6.0-15.0)+10.0);
+    }
+    float ramp(float a,float b,float x){
+      return ease01((x-a)/(b-a));
+    }
+    vec3 vertical3(vec3 top,vec3 mid,vec3 bottom,float y){
+      return y<0.52
+        ? mix(bottom,mid,ease01(y/0.52))
+        : mix(mid,top,ease01((y-0.52)/0.48));
+    }
+
     void main(){
-      vec3 c=
-        texture2D(nightMap,vUv).rgb*weights.x+
-        texture2D(dawnMap,vUv).rgb*weights.y+
-        texture2D(dayMap,vUv).rgb*weights.z+
-        texture2D(sunsetMap,vUv).rgb*weights.w;
-      gl_FragColor=vec4(c,1.0);
+      float t=fract(time01);
+      float y=clamp(normalize(vSkyPos).y*.5+.5,0.0,1.0);
+
+      float wn=0.0,wd=0.0,wday=0.0,ws=0.0;
+      if(t<.15||t>=.92){
+        wn=1.0;
+      }else if(t<.27){
+        float q=ramp(.15,.27,t);wn=1.0-q;wd=q;
+      }else if(t<.42){
+        float q=ramp(.27,.42,t);wd=1.0-q;wday=q;
+      }else if(t<.60){
+        wday=1.0;
+      }else if(t<.76){
+        float q=ramp(.60,.76,t);wday=1.0-q;ws=q;
+      }else{
+        float q=ramp(.76,.92,t);ws=1.0-q;wn=q;
+      }
+
+      vec3 night=vertical3(
+        vec3(.055,.085,.17),
+        vec3(.13,.21,.38),
+        vec3(.29,.37,.54),y
+      );
+      vec3 dawn=vertical3(
+        vec3(.28,.29,.49),
+        vec3(.58,.44,.65),
+        vec3(.94,.73,.60),y
+      );
+      vec3 day=vertical3(
+        vec3(.34,.61,.82),
+        vec3(.55,.77,.89),
+        vec3(.87,.93,.91),y
+      );
+      vec3 sunset=vertical3(
+        vec3(.20,.105,.29),
+        vec3(.67,.20,.39),
+        vec3(.97,.54,.31),y
+      );
+
+      vec3 col=night*wn+dawn*wd+day*wday+sunset*ws;
+
+      // Original-colour horizon glow only; no texture blur.
+      float horizon=pow(max(0.0,1.0-abs(y-.48)*2.0),3.0);
+      col+=horizon*vec3(.12,.025,.055)*ws*.55*drama;
+      col+=horizon*vec3(.07,.025,.018)*wd*.20*drama;
+
+      gl_FragColor=vec4(col,1.0);
       #include <colorspace_fragment>
     }
   `
 });
-const sky=new THREE.Mesh(new THREE.SphereGeometry(48,32,18),skyMat);sky.scale.y=.72;scene.add(sky);
+const sky=new THREE.Mesh(new THREE.SphereGeometry(48,32,18),skyMat);
+sky.scale.y=.72;
+scene.add(sky);
+
+// ---------------------------------------------------------------------------
+// Procedural star field: NO star texture.
+// 900 point stars with independent size, brightness, tint and twinkle.
+// ---------------------------------------------------------------------------
+const STAR_COUNT=900;
+const starPositions=new Float32Array(STAR_COUNT*3);
+const starSizes=new Float32Array(STAR_COUNT);
+const starBrightness=new Float32Array(STAR_COUNT);
+const starPhases=new Float32Array(STAR_COUNT);
+const starSpeeds=new Float32Array(STAR_COUNT);
+const starTints=new Float32Array(STAR_COUNT*3);
+const starRand=rng(20260930);
+
+for(let i=0;i<STAR_COUNT;i++){
+  const theta=starRand()*Math.PI*2;
+  const y=.10+starRand()*.88;
+  const radial=Math.sqrt(Math.max(0,1-y*y));
+  const x=Math.cos(theta)*radial;
+  const z=Math.sin(theta)*radial;
+  const radius=42;
+
+  starPositions[i*3]=x*radius;
+  starPositions[i*3+1]=y*radius;
+  starPositions[i*3+2]=z*radius;
+
+  const big=starRand()<.055;
+  starSizes[i]=big?3.2+starRand()*2.0:1.05+starRand()*1.55;
+  starBrightness[i]=big?.72+starRand()*.28:.28+starRand()*.48;
+  starPhases[i]=starRand()*Math.PI*2;
+  starSpeeds[i]=.45+starRand()*.95;
+
+  const pick=starRand();
+  const tint=pick<.72
+    ?new THREE.Color(0xf7f9ff)
+    :pick<.93
+      ?new THREE.Color(0xd8e8ff)
+      :new THREE.Color(0xffead3);
+  starTints[i*3]=tint.r;
+  starTints[i*3+1]=tint.g;
+  starTints[i*3+2]=tint.b;
+}
+
+const starGeometry=new THREE.BufferGeometry();
+starGeometry.setAttribute('position',new THREE.BufferAttribute(starPositions,3));
+starGeometry.setAttribute('aSize',new THREE.BufferAttribute(starSizes,1));
+starGeometry.setAttribute('aBrightness',new THREE.BufferAttribute(starBrightness,1));
+starGeometry.setAttribute('aPhase',new THREE.BufferAttribute(starPhases,1));
+starGeometry.setAttribute('aSpeed',new THREE.BufferAttribute(starSpeeds,1));
+starGeometry.setAttribute('aTint',new THREE.BufferAttribute(starTints,3));
+
+const starUniforms={
+  time:{value:0},
+  strength:{value:0},
+  twinkle:{value:.18},
+  moonDir:{value:new THREE.Vector3(0,1,0)},
+  pixelRatio:{value:Math.min(devicePixelRatio||1,1.35)}
+};
+
+const starMaterial=new THREE.ShaderMaterial({
+  uniforms:starUniforms,
+  transparent:true,
+  depthWrite:false,
+  depthTest:false,
+  blending:THREE.AdditiveBlending,
+  toneMapped:false,
+  vertexShader:`
+    attribute float aSize;
+    attribute float aBrightness;
+    attribute float aPhase;
+    attribute float aSpeed;
+    attribute vec3 aTint;
+    varying float vBrightness;
+    varying float vPhase;
+    varying float vSpeed;
+    varying vec3 vTint;
+    varying vec3 vDir;
+    uniform float time;
+    uniform float pixelRatio;
+    void main(){
+      vBrightness=aBrightness;
+      vPhase=aPhase;
+      vSpeed=aSpeed;
+      vTint=aTint;
+      vDir=normalize(position);
+
+      vec4 mv=modelViewMatrix*vec4(position,1.0);
+      gl_Position=projectionMatrix*mv;
+
+      float breath=1.0+sin(time*(.42+aSpeed)+aPhase)*.09;
+      float perspective=clamp(38.0/max(18.0,-mv.z),.55,1.35);
+      gl_PointSize=aSize*pixelRatio*breath*perspective;
+    }
+  `,
+  fragmentShader:`
+    varying float vBrightness;
+    varying float vPhase;
+    varying float vSpeed;
+    varying vec3 vTint;
+    varying vec3 vDir;
+    uniform float time;
+    uniform float strength;
+    uniform float twinkle;
+    uniform vec3 moonDir;
+
+    void main(){
+      vec2 p=gl_PointCoord-.5;
+      float d=length(p);
+      if(d>.5)discard;
+
+      float core=smoothstep(.28,0.0,d);
+      float halo=smoothstep(.50,.10,d)*.32;
+      float flicker=1.0+sin(time*(.55+vSpeed)+vPhase)*twinkle;
+
+      // Bright moon washes out nearby stars.
+      float moonDot=dot(normalize(vDir),normalize(moonDir));
+      float moonMask=1.0-smoothstep(.955,.997,moonDot);
+
+      // Tiny irregularity keeps the dots from feeling perfectly digital.
+      float grain=fract(sin(dot(gl_PointCoord,vec2(12.9898,78.233)))*43758.5453);
+      float alpha=(core+halo)*vBrightness*flicker*strength*moonMask*(.94+grain*.06);
+
+      gl_FragColor=vec4(vTint*(.92+core*.42),alpha);
+    }
+  `
+});
+const starField=new THREE.Points(starGeometry,starMaterial);
+starField.frustumCulled=false;
+starField.renderOrder=-8;
+scene.add(starField);
 
 // Visible sun/moon discs so the lighting direction reads immediately.
 const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(.72,40),new THREE.MeshBasicMaterial({color:0xffe5a8,toneMapped:false,transparent:true,opacity:.96}));
@@ -1209,10 +1391,11 @@ function updateVolumetricShadow(force=false){
   const fogVisible=forestMist.visible,skyVisible=sky.visible;
   const sunDiscVisible=sunDisc.visible,moonDiscVisible=moonDisc.visible;
   const sunGlowVisible=sunGlow.visible,moonGlowVisible=moonGlow.visible;
+  const starVisible=starField.visible;
   const contactVisible=contactShadow.visible;
   const playerVisible=playerMesh?playerMesh.visible:false;
 
-  forestMist.visible=false;sky.visible=false;
+  forestMist.visible=false;sky.visible=false;starField.visible=false;
   sunDisc.visible=false;moonDisc.visible=false;
   sunGlow.visible=false;moonGlow.visible=false;
   contactShadow.visible=false;
@@ -1235,7 +1418,7 @@ function updateVolumetricShadow(force=false){
 
   forestMist.visible=fogVisible;sky.visible=skyVisible;
   sunDisc.visible=sunDiscVisible;moonDisc.visible=moonDiscVisible;
-  sunGlow.visible=sunGlowVisible;moonGlow.visible=moonGlowVisible;
+  sunGlow.visible=sunGlowVisible;moonGlow.visible=moonGlowVisible;starField.visible=starVisible;
   contactShadow.visible=contactVisible;
   if(playerMesh)playerMesh.visible=playerVisible;
 
@@ -1272,27 +1455,7 @@ const timeTransition={
 };
 
 function updateSkyBlend(t){
-  t=((t%1)+1)%1;
-  let wn=0,wd=0,wday=0,ws=0,q=0;
-  const ease=x=>x*x*x*(x*(x*6-15)+10);
-  const ramp=(a,b,x)=>ease(clamp((x-a)/(b-a),0,1));
-
-  // Wide overlaps avoid the sunset -> night snap. The sky always dissolves
-  // through paper layers instead of switching a mode.
-  if(t<.15||t>=.92){
-    wn=1;
-  }else if(t<.25){
-    q=ramp(.16,.25,t);wn=1-q;wd=q;
-  }else if(t<.38){
-    q=ramp(.25,.38,t);wd=1-q;wday=q;
-  }else if(t<.62){
-    wday=1;
-  }else if(t<.72){
-    q=ramp(.62,.72,t);wday=1-q;ws=q;
-  }else{
-    q=ramp(.72,.92,t);ws=1-q;wn=q;
-  }
-  skyUniforms.weights.value.set(wn,wd,wday,ws);
+  skyUniforms.time01.value=((t%1)+1)%1;
 }
 
 function beginTimeTransition(targetTime){
@@ -1399,6 +1562,13 @@ function updateLighting(t){
 
   const sunDir=new THREE.Vector3().copy(sun.position).sub(volumeLightTarget).normalize();
   const moonDir=new THREE.Vector3().copy(moon.position).sub(volumeLightTarget).normalize();
+
+  // Stars appear only after civil twilight, then deepen smoothly into night.
+  // No hard night switch and no sky/star image assets.
+  const starStrength=1-smoothstep(-.30,-.045,rawSun);
+  starUniforms.strength.value=starStrength*1.22;
+  starUniforms.moonDir.value.copy(moonDir);
+  starField.visible=state.sky&&starStrength>.002;
   sunDisc.position.copy(camera.position).addScaledVector(sunDir,34);
   moonDisc.position.copy(camera.position).addScaledVector(moonDir,34);
   sunGlow.position.copy(sunDisc.position);
@@ -1480,7 +1650,7 @@ function preset(name){
   renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 }
 function syncButtons(){
-  sky.visible=state.sky;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
+  sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
   renderer.shadowMap.enabled=state.shadow;
   // Both celestial lights remain real lights through dusk. Their smoothly
@@ -1574,7 +1744,7 @@ renderer.domElement.addEventListener('pointerup',()=>dragging=false);
 renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));starUniforms.pixelRatio.value=Math.min(devicePixelRatio||1,1.35);resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
 });
 
 let prev=performance.now();
@@ -1632,7 +1802,7 @@ function animate(now){
 
   if(!state.auto&&!timeTransition.active&&!renderDirty)return;
 
-  sky.position.copy(camera.position);
+  sky.position.copy(camera.position);starField.position.copy(camera.position);starUniforms.time.value=now*.001;
 
   if(playerMesh){
     const dx=camera.position.x-playerMesh.position.x;
