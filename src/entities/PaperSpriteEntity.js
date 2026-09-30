@@ -24,7 +24,7 @@ export function makePaperTexture(THREE,{kind='prop',primary='#7b6a56',secondary=
 }
 
 export class PaperSpriteEntity{
-  constructor(THREE,{id,kind='prop',label='',x=0,y=0,z=0,width=2,height=2,primary,secondary,seed=1,texture=null,anchorY=0}={}){
+  constructor(THREE,{id,kind='prop',label='',x=0,y=0,z=0,width=2,height=2,primary,secondary,seed=1,texture=null,anchorY=0,disposeTexture=true}={}){
     this.THREE=THREE;
     this.id=id||kind;
     this.kind=kind;
@@ -34,6 +34,7 @@ export class PaperSpriteEntity{
     this.root.name='paper:'+this.id;
     const map=texture||makePaperTexture(THREE,{kind,label,primary,secondary,seed});
     this.texture=map;
+    this.disposeTexture=disposeTexture!==false;
     this.material=new THREE.MeshBasicMaterial({
       map,
       transparent:true,
@@ -63,6 +64,6 @@ export class PaperSpriteEntity{
   dispose(){
     this.mesh.geometry.dispose();
     this.material.dispose();
-    this.texture?.dispose?.();
+    if(this.disposeTexture)this.texture?.dispose?.();
   }
 }
