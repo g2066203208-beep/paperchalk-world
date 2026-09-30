@@ -41,6 +41,7 @@ try{
 
   await patchState({zone:'city',objectiveIndex:1,player:{x:-40,z:17,yaw:0},segmentComplete:false,completed:false});
   await page.waitForFunction(()=>window.PaperchalkPrologue.snapshot().zone==='city');
+  await page.waitForTimeout(350);
   const cityA=await page.evaluate(()=>window.PaperchalkPrologue.snapshot());
   assert(cityA.people.length>=12,'city pedestrian population too small '+cityA.people.length);
   assert(cityA.cars.length===8,'city traffic population wrong '+cityA.cars.length);
@@ -63,6 +64,7 @@ try{
 
   await patchState({zone:'home',objectiveIndex:4,player:{x:0,z:-6,yaw:0},segmentComplete:false,completed:false});
   await page.waitForFunction(()=>window.PaperchalkPrologue.snapshot().zone==='home');
+  await page.waitForTimeout(350);
   const home=await page.evaluate(()=>window.PaperchalkPrologue.snapshot());
   assert(home.people.length===1&&home.people[0].id==='parent','home life NPC missing '+JSON.stringify(home.people));
   assert(home.cars.length===0,'cars leaked into home interior');
