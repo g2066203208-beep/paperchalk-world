@@ -115,6 +115,8 @@ try{
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-0.14}));
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
+  await page.evaluate(()=>window.PaperchalkTimeDebug.set(900));
+  await page.waitForTimeout(240);
   await page.screenshot({path:'artifacts/paper-sky-ground-antialias.png'});
 
   const timeSet=await page.evaluate(()=>window.PaperchalkTimeDebug.set(390));
