@@ -1,18 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="190" viewBox="0 0 440 160">
-<defs><pattern id="g" width="23" height="19" patternUnits="userSpaceOnUse"><path d="M2 5l12-2M7 15l10 1" stroke="#7f715d" stroke-width=".7" opacity=".14"/></pattern></defs>
-<g stroke="#463f36" stroke-width="4" stroke-linejoin="round">
-<path fill="#ded3bb" d="M20 111L31 79l67-19 40-42h151l48 42 65 13 16 38-12 28H27z"/>
-<path fill="#c9bda4" d="M28 113h386v24H24z"/>
-<path fill="#6f8387" d="M147 27h65v49h-105z"/>
-<path fill="#66797d" d="M220 27h62l42 49H220z"/>
-<path fill="#d8cdb5" d="M99 60h236v50H89z" stroke="none"/>
-<path fill="url(#g)" d="M20 111L31 79l67-19 40-42h151l48 42 65 13 16 38-12 28H27z" stroke="none"/>
-<path fill="#34383a" d="M17 111h60v17H18zM363 111h60v17h-7z"/>
-<path fill="#e29b4d" d="M22 87h15v23H17z"/>
-<path fill="#a94c43" d="M395 82h17v28h-17z"/>
-<circle cx="104" cy="124" r="31" fill="#3c3b39"/><circle cx="104" cy="124" r="16" fill="#a79c87"/>
-<circle cx="339" cy="124" r="31" fill="#3c3b39"/><circle cx="339" cy="124" r="16" fill="#a79c87"/>
-<path d="M171 26v87M219 26v87M285 76v37" fill="none"/>
-<rect x="167" y="86" width="16" height="6" rx="1" fill="#5a5144" stroke="none"/>
-<rect x="270" y="86" width="16" height="6" rx="1" fill="#5a5144" stroke="none"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="130" viewBox="0 0 440 130">
+<defs><pattern id="p" width="22" height="17" patternUnits="userSpaceOnUse"><path d="M2 5l11-2M7 14l9 1" stroke="#756955" stroke-width=".7" opacity=".13"/></pattern></defs>
+<rect width="440" height="130" fill="#ded3bb"/><rect width="440" height="130" fill="url(#p)"/>
+<g fill="none" stroke="#494238" stroke-width="4" stroke-linejoin="round">
+<path d="M15 96L31 70 82 60 150 18H287L333 59 401 70 424 96"/>
+<path d="M149 20v58M219 19v95M287 20v94M85 60h250M19 101h401"/>
+</g>
+<path fill="#6c8084" stroke="#494238" stroke-width="4" d="M151 24h60v48H105z"/>
+<path fill="#65787c" stroke="#494238" stroke-width="4" d="M221 24h62l42 48H221z"/>
+<rect x="162" y="86" width="18" height="7" rx="1" fill="#51493e"/>
+<rect x="269" y="86" width="18" height="7" rx="1" fill="#51493e"/>
+<rect x="17" y="75" width="17" height="20" fill="#e1a04e" stroke="#494238" stroke-width="3"/>
+<rect x="401" y="76" width="17" height="20" fill="#a94d44" stroke="#494238" stroke-width="3"/>
+<path d="M66 108q38-37 76 0M299 108q38-37 76 0" fill="none" stroke="#51493e" stroke-width="4"/>
+</svg>
