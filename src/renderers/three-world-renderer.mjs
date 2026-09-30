@@ -1,5 +1,5 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
-import {PrologueSchoolScene} from '../prologue/PrologueSchoolScene.js?v=school-r1';
+import {ProloguePaperLayerScene} from '../prologue/ProloguePaperLayerScene.js?v=paper-school-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -8,7 +8,7 @@ const THREE_MODULE='../../vendor/three/three.module.js';
 
 let THREE=null;
 let engine=null;
-let school=null;
+let paperStage=null;
 let active=false;
 let ready=false;
 let raf=0;
@@ -51,7 +51,7 @@ async function ensureReady(){
       onCameraChanged:syncCameraControls
     });
     if(CONTENT.scene3d?.mode==='finite-side-scroll-voxel'){
-      school=new PrologueSchoolScene(THREE,engine.scene,CONTENT);
+      paperStage=new ProloguePaperLayerScene(THREE,engine.scene,CONTENT);
     }
     latestSnapshot=RUNTIME.getSnapshot();
     engine.setSnapshot(latestSnapshot);
@@ -213,7 +213,7 @@ window.Paperchalk3D=Object.freeze({
       fps,frames,active,ready,loopActive:!!raf,error:errorMessage,
       worldMode:CONTENT.scene3d?.mode||base.worldMode,
       terrainMode:'finite-voxel-road',
-      school:school?.stats?.()||null,
+      paperStage:paperStage?.stats?.()||null,
       interaction:{...(base.interaction||{}),threeDimensional:false,zMovementLocked:true}
     };
   },
