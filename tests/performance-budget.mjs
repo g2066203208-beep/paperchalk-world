@@ -12,6 +12,8 @@ assert(size('src/debug/world-debug.js')<5000,'world debug controls exceed 5KB bu
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('src/entities/npc-runtime.js')<10000,'NPC gameplay runtime exceeds 10KB budget');
 assert(size('src/entities/NPCActorRenderer.js')<8000,'NPC actor renderer exceeds 8KB budget');
+assert(size('src/entities/npc-runtime.js')<10000,'NPC gameplay runtime exceeds 10KB budget');
+assert(size('src/entities/NPCActorRenderer.js')<8000,'NPC actor renderer exceeds 8KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
@@ -43,6 +45,8 @@ console.log(JSON.stringify({
   dirtReference:size('assets/materials/dirt-reference.webp'),
   skyPaper:size('assets/materials/sky-paper-blue.webp'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
+  npcRuntime:size('src/entities/npc-runtime.js'),
+  npcRenderer:size('src/entities/NPCActorRenderer.js'),
   npcRuntime:size('src/entities/npc-runtime.js'),
   npcRenderer:size('src/entities/NPCActorRenderer.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
