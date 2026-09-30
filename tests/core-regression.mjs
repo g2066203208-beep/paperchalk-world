@@ -46,6 +46,9 @@ try{
   assert(entered.s.worldMode==='finite-side-scroll-voxel','wrong world mode '+JSON.stringify(entered.s));
   assert(entered.s.terrainMode==='finite-voxel-road','wrong terrain mode '+JSON.stringify(entered.s));
   assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===false&&entered.s.terrain?.gameplayDimensions===2,'terrain is not finite side-scroll voxel '+JSON.stringify(entered.s.terrain));
+  assert(entered.s.pixelRatio<=1.35,'DPR cap missing '+JSON.stringify(entered.s.pixelRatio));
+  assert(entered.s.atmosphere?.volumetric===false&&entered.s.atmosphere?.samples===6,'prologue volumetric pass should be disabled by default '+JSON.stringify(entered.s.atmosphere));
+  assert(entered.ns?.simulationHz===20,'NPC AI throttle missing '+JSON.stringify(entered.ns));
 
   const dialogue=await page.evaluate(()=>{
     const first=window.PaperchalkNPCs.interact('village-resident-01');
