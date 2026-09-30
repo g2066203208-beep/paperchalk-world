@@ -1,5 +1,5 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
-import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r1';
+import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r2';
 import {PrologueSchoolBuilding} from '../scenes/PrologueSchoolBuilding.js?v=paper-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
