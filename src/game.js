@@ -1463,8 +1463,6 @@ input.addEventListener('input',()=>window.Paperchalk3D?.configurePaperTerrain?.(
 debugPanel.querySelectorAll('[data-atmos-setting]').forEach(input=>{
 input.addEventListener('input',()=>window.Paperchalk3D?.configureAtmosphere?.({[input.dataset.atmosSetting]:Number(input.value)}));
 });
-debugPanel.querySelectorAll('[data-photon-setting]').forEach(input=>input.addEventListener('input',()=>window.Paperchalk3D?.configurePhoton?.({[input.dataset.photonSetting]:Number(input.value)})));
-debugPanel.querySelectorAll('[data-photon-weather-setting]').forEach(input=>input.addEventListener('input',()=>window.Paperchalk3D?.configurePhoton?.({weatherOptions:{[input.dataset.photonWeatherSetting]:Number(input.value),autoWeather:false}})));
 debugPanel.querySelectorAll('[data-debug-action]').forEach(button=>{
 button.addEventListener('click',()=>{
 const a=button.dataset.debugAction;
@@ -1483,10 +1481,6 @@ window.Paperchalk3D?.setPaperStyle?.(!(window.Paperchalk3D?.stats?.paperStyle?.e
 }else if(a==='volumetric'){
 const current=window.Paperchalk3D?.stats?.atmosphere?.volumetric!==false;
 window.Paperchalk3D?.configureAtmosphere?.({volumetric:!current});
-}else if(a==='photon'){
-window.Paperchalk3D?.configurePhoton?.({enabled:window.Paperchalk3D?.stats?.photon?.enabled===false});
-}else if(a==='photonprofile'){
-const p=window.Paperchalk3D?.stats?.photon?.profile||'balanced',next=p==='balanced'?'ultra':p==='ultra'?'mobile':'balanced';window.Paperchalk3D?.configurePhoton?.({profile:next});button.textContent='Photon：'+next[0].toUpperCase()+next.slice(1);
 }else if(a==='stageview'){
 const current=stageViewState();
 window.Paperchalk3D?.setStageView?.(!current.enabled,current.axis);
@@ -1500,11 +1494,6 @@ updateDebugStatus();
 window.PaperchalkDebug=Object.freeze({
 perf(){return {runtime:buildSnapshot(),renderer:window.Paperchalk3D?.stats||null}},
 command:runDebugCommand
-});
-window.PaperchalkTimeDebug=Object.freeze({
-get(){return {minutes:worldMinutes,scale:worldTimeScale,clock:formatClock(),phase:worldPhase()}},
-set(v){const n=Number(v);if(Number.isFinite(n)){worldMinutes=((n%1440)+1440)%1440;paperClock.textContent=formatClock();publish()}return this.get()},
-scale(v){const n=Number(v);if(Number.isFinite(n))worldTimeScale=clamp(n,0,20);return this.get()}
 });
 function resetJoystick(){
 joystickPointer=null;joystickAxisX=0;joystickAxisY=0;

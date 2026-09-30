@@ -1,7 +1,6 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
-import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r6';
+import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r5';
 import {AtmospherePass} from './AtmospherePass.js?v=atmos-r2';
-import {PhotonPipeline} from './PhotonPipeline.js?v=photon-r1';
 import {
 buildVoxelChunkGeometry,
 createVoxelGridTexture,
@@ -741,7 +740,6 @@ this.atmosphere.setExclusions([
   this.fishingRenderer.root,this.fishSchoolRenderer.root,this.terrainCursor,
   this.playerGroundShadow.mesh
 ]);
-this.photonPipeline=new PhotonPipeline(THREE,{renderer:this.renderer,scene:this.scene,camera:this.camera,mobileLike:this.mobileLike});
 }
 _installCameraInput(){
 const canvas=this.renderer.domElement;
@@ -808,7 +806,7 @@ resize(){
 const rect=this.host.getBoundingClientRect();
 const w=Math.max(1,Math.round(rect.width||innerWidth||1280)),h=Math.max(1,Math.round(rect.height||innerHeight||720));
 this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();
-this.atmosphere?.resize(w,h,this.renderer.getPixelRatio());this.photonPipeline?.resize(w,h,this.renderer.getPixelRatio());
+this.atmosphere?.resize(w,h,this.renderer.getPixelRatio());
 }
 _groundYBelowPlayer(p){
 const s=this.terrain.tileSize,gx=Math.floor(p.x/s),gz=Math.floor(p.z/s+.5);
@@ -971,7 +969,8 @@ this.healthBar?.update(this.camera,dt);
 render(){
 const bg=this.atmosphere?.skyColor||this.fixedBackgroundColor;
 this.scene.background.copy(bg);this.renderer.setClearColor(bg,1);
-if(!this.photonPipeline?.render({atmosphere:this.atmosphere})){this.renderer.render(this.scene,this.camera);this.atmosphere?.render(this.renderer,this.scene,this.camera)}
+this.renderer.render(this.scene,this.camera);
+this.atmosphere?.render(this.renderer,this.scene,this.camera);
 }
 _screenRay(clientX,clientY){
 const rect=this.renderer.domElement.getBoundingClientRect();
@@ -1049,7 +1048,7 @@ terrain:this.terrainRenderer.stats(),
 paperTerrain:this.paperTerrainRenderer?.snapshot?.()||null,
 voxelTerrain:this.terrainRenderer.stats(),
 water:this.waterRenderer?.stats?.()||null,fishing:this.fishingRenderer?.stats?.()||null,fishEcology:this.fishSchoolRenderer?.stats?.()||null,
-atmosphere:this.atmosphere?.stats?.()||null,photon:this.photonPipeline?.stats?.()||null,
+atmosphere:this.atmosphere?.stats?.()||null,
 lighting:{mode:'soft-cardstock+shadowmap-volumetrics',contactShadow:'soft-worldspace-player-shadow',backgroundMode:'fixed-uniform-blue',backgroundColor:'#6f7fa8',skyExposure:this.skyExposure??1,undergroundDepth:this.undergroundDepth??0,undergroundFactor:this.undergroundFactor??0,visibleSun:!!this.terrainLights?.sunDisc?.visible,visibleMoon:!!this.terrainLights?.moonDisc?.visible,sunIntensity:this.terrainLights?.sun?.intensity??0,skyFillIntensity:this.terrainLights?.skyFill?.intensity??0,ambientIntensity:this.terrainLights?.ambient?.intensity??0,moonIntensity:this.terrainLights?.moon?.intensity??0,torchOn:!!this.torch?.root?.visible,torchIntensity:this.torch?.light?.intensity??0,shadows:this.renderer.shadowMap.enabled},
 interaction:{rowZ:this.interactionRowZ,rowCenterZ:this.interactionRowZ*this.terrain.tileSize,zMovementLocked:true,raycastIgnoresOtherRows:true},
 undergroundLayers:{count:2,interactionRowZ:this.interactionRowZ,blackBackRowZ:this.terrain.blackBackRowZ,rearAbsoluteBlack:true,rearSolidBelowSurface:true},
@@ -1074,9 +1073,7 @@ return this.paperTerrainRenderer?.configure?.(patch)||null;
 configureAtmosphere(patch={}){
 return this.atmosphere?.configure?.(patch)||null;
 }
-configurePhoton(patch={}){return this.photonPipeline?.configure?.(patch)||null}
 dispose(){
-this.photonPipeline?.dispose();
 this.atmosphere?.dispose();
 this.paperTerrainRenderer?.dispose();
 this.terrainRenderer?.dispose();

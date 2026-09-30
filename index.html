@@ -73,22 +73,8 @@
       <button type="button" data-debug-action="colliders">Collider：关</button>
       <button type="button" data-debug-action="paperstyle">Paper Style：开</button>
       <button type="button" data-debug-action="volumetric">丁达尔：开</button>
-      <button type="button" data-debug-action="photon">Photon：开</button>
-      <button type="button" data-debug-action="photonprofile">Photon：Balanced</button>
-      <button type="button" data-debug-action="timepause">时间：流动</button>
-      <button type="button" data-debug-action="autoweather">天气：自动</button>
       <button type="button" data-debug-action="stageview">纸片舞台视角：开</button>
       <button type="button" data-debug-action="stageaxis">舞台观察轴：Z</button>
-    </div>
-    <div class="paper-debug-controls time-debug-controls">
-      <label>世界时间 <input data-world-time type="range" min="0" max="1439" step="1" value="360"></label>
-      <label>时间倍率 <input data-world-timescale type="range" min="0" max="20" step="0.25" value="1"></label>
-    </div>
-    <div class="debug-actions time-preset-actions">
-      <button type="button" data-time-preset="330">05:30 黎明</button>
-      <button type="button" data-time-preset="720">12:00 正午</button>
-      <button type="button" data-time-preset="1136">18:56 黄昏</button>
-      <button type="button" data-time-preset="1320">22:00 夜晚</button>
     </div>
     <div class="paper-debug-controls">
       <label>纸层高 <input data-paper-setting="paperLayerHeight" type="range" min="0.25" max="0.60" step="0.05" value="0.50"></label>
@@ -101,28 +87,11 @@
       <label>边缘变形 <input data-paper-setting="edgeJitter" type="range" min="0" max="0.08" step="0.005" value="0.038"></label>
       <label>边缘起伏 <input data-paper-setting="edgeHeightJitter" type="range" min="0" max="0.025" step="0.0025" value="0.010"></label>
       <label>纸芯亮度 <input data-paper-setting="sideDarkness" type="range" min="0.55" max="1.10" step="0.025" value="0.92"></label>
-      <label>草纹尺度 <input data-paper-setting="grassTextureScale" type="range" min="0.04" max="0.40" step="0.01" value="0.16"></label>
     </div>
     <div class="paper-debug-controls atmos-debug-controls">
       <label>丁达尔强度 <input data-atmos-setting="intensity" type="range" min="0" max="1.0" step="0.025" value="0.30"></label>
       <label>前向散射 <input data-atmos-setting="anisotropy" type="range" min="0" max="0.86" step="0.02" value="0.72"></label>
       <label>空气雾 <input data-atmos-setting="fogDensity" type="range" min="0" max="0.010" step="0.00025" value="0.0026"></label>
-    </div>
-    <div class="debug-actions photon-toggle-actions">
-      <button type="button" data-photon-toggle="gtao">GTAO：开</button>
-      <button type="button" data-photon-toggle="bloom">Bloom：开</button>
-      <button type="button" data-photon-toggle="clouds">云层：开</button>
-      <button type="button" data-photon-toggle="taa">TAA/TAAU：开</button>
-      <button type="button" data-photon-toggle="water">水面SSR：开</button>
-      <button type="button" data-photon-toggle="coloredLighting">彩色光：开</button>
-    </div>
-    <div class="paper-debug-controls photon-debug-controls">
-      <label>TAAU 分辨率 <input data-photon-setting="renderScale" type="range" min="0.50" max="1" step="0.02" value="0.76"></label>
-      <label>GTAO <input data-photon-setting="aoStrength" type="range" min="0" max="1.4" step="0.05" value="0.55"></label>
-      <label>Bloom <input data-photon-setting="bloomStrength" type="range" min="0" max="0.8" step="0.025" value="0.18"></label>
-      <label>太阳软影 <input data-photon-setting="pcssLightSize" type="range" min="0.5" max="6" step="0.25" value="2.8"></label>
-      <label>云量 <input data-photon-setting="cloudCoverage" type="range" min="0.05" max="0.95" step="0.025" value="0.34"></label>
-      <label>天气强度 <input data-photon-weather-setting="weather" type="range" min="0" max="1" step="0.025" value="0.12"></label>
     </div>
     <form id="debugCommandForm" class="debug-command-form">
       <input id="debugCommandInput" type="text" autocomplete="off" spellcheck="false" placeholder="help / tp 0 -8 / terrain / stage off / stats">
@@ -274,7 +243,6 @@
 <script src="./src/terrain/biome-generator.js?v=paper-r5"></script>
 <script src="./src/terrain/terrain-runtime.js?v=paper-r5"></script>
 <script src="./src/game.js?v=paper-r5"></script>
-<script src="./src/debug/render-debug.js?v=photon-r2"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=photon-r1"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r5"></script>
 </body>
 </html>

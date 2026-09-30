@@ -18,7 +18,6 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
-  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,{timeout:6000,polling:'raf'});
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
@@ -38,9 +37,6 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
   assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
   assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
-  assert(initial.paperTerrain?.grassTopMaterialGroup===true,'grass top material group missing '+JSON.stringify(initial.paperTerrain));
-  assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true&&initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'user grass texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
-  assert(initial.paperTerrain?.paperMaterial?.grassColorSource==='user-texture-only','grass color still mixed with old procedural albedo '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
@@ -51,20 +47,6 @@ try{
   assert((initial.atmosphere?.mieAnisotropy||0)>.6,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
-  assert(initial.photon?.mode==='photon-feature-port-r1','Photon feature pipeline missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.gtao===true&&initial.photon?.bloom===true&&initial.photon?.volumetricClouds===true,'Photon core post stack missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.historyReprojection===true&&initial.photon?.depthAwareAO===true,'Photon temporal/AO path missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.temporalUpscaling===true&&initial.photon?.renderScale<1,'Photon TAAU path missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.fxaa===true&&initial.photon?.cas===true,'Photon AA/sharpen path missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.pcss===true&&initial.photon?.variablePenumbra===true,'Photon PCSS path missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.water?.ssr===true&&initial.photon?.water?.screenSpaceRaymarch===true,'Photon water SSR missing '+JSON.stringify(initial.photon?.water));
-  assert(initial.photon?.water?.gerstnerStyleWaves===true&&initial.photon?.water?.variableFresnel===true,'Photon water waves/Fresnel missing '+JSON.stringify(initial.photon?.water));
-  assert(initial.photon?.specularSSR?.materialMask===true&&initial.photon?.specularSSR?.roughnessMetalnessMask===true,'Photon material SSR missing '+JSON.stringify(initial.photon?.specularSSR));
-  assert(initial.photon?.coloredLighting?.sixNeighbourPropagation===true&&initial.photon?.coloredLighting?.pointLightEmitters===true,'Photon RGB voxel lighting missing '+JSON.stringify(initial.photon?.coloredLighting));
-  assert(initial.photon?.buffers?.scene?.[0]>0&&initial.photon?.buffers?.output?.[0]>0&&initial.photon?.buffers?.ao?.[0]>0,'Photon render targets missing '+JSON.stringify(initial.photon));
-  assert(initial.photon?.weather?.mode==='photon-multilayer-weather-sky-r1'&&initial.photon?.weather?.volumetricLowClouds===true,'Photon weather sky missing '+JSON.stringify(initial.photon?.weather));
-  assert(initial.photon?.weather?.cloudTypes?.includes('cirrus')&&initial.photon?.weather?.cloudTypes?.includes('altocumulus'),'Photon cloud families missing '+JSON.stringify(initial.photon?.weather));
-  assert(initial.photon?.weather?.aurora===true&&initial.photon?.weather?.rainbow===true&&initial.photon?.weather?.lightning===true,'Photon weather optics missing '+JSON.stringify(initial.photon?.weather));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
@@ -116,13 +98,8 @@ try{
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
 
-  const timeSet=await page.evaluate(()=>window.PaperchalkTimeDebug.set(390));
-  assert(timeSet?.clock==='06:30','debug time API failed '+JSON.stringify(timeSet));
-  const duskSet=await page.evaluate(()=>window.PaperchalkRenderDebug.setTime(1136));
-  assert(duskSet?.clock==='18:56','18:56 debug preset failed '+JSON.stringify(duskSet));
-  await page.waitForTimeout(420);
-  await page.screenshot({path:'artifacts/photon-dusk-1856.png'});
-  await page.evaluate(()=>window.PaperchalkTimeDebug.set(390));
+  const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
+  assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:-.17,distance:12,height:.45}));
   await page.waitForTimeout(2200);
   const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.32,anisotropy:.72,fogDensity:.0026}));
@@ -136,29 +113,15 @@ try{
   assert((liveAtmosphere?.currentStrength||0)>.01&&(liveAtmosphere?.renders||0)>0,'world-space volumetric pass did not render '+JSON.stringify(liveAtmosphere));
   await page.screenshot({path:'artifacts/atmosphere-volumetric-on.png'});
 
-  const photonOff=await page.evaluate(()=>window.Paperchalk3D.configurePhoton({enabled:false}));
-  assert(photonOff?.enabled===false,'Photon pipeline did not disable '+JSON.stringify(photonOff));
-  await page.waitForTimeout(260);
-  await page.screenshot({path:'artifacts/photon-pipeline-off.png'});
-  const photonOn=await page.evaluate(()=>window.Paperchalk3D.configurePhoton({enabled:true,gtao:true,bloom:true,clouds:true,taa:true,fxaa:true,cas:true}));
-  assert(photonOn?.enabled===true&&photonOn?.gtao===true&&photonOn?.volumetricClouds===true,'Photon pipeline did not restore '+JSON.stringify(photonOn));
-  await page.waitForFunction(()=>window.Paperchalk3D.stats.photon?.renders>0,{timeout:3500,polling:'raf'});
-  await page.waitForTimeout(320);
-  await page.screenshot({path:'artifacts/photon-pipeline-on.png'});
-
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
   const materialBytes=fs.statSync('artifacts/paper-material-v3-reference-closeup.png').size;
   const raysOffBytes=fs.statSync('artifacts/atmosphere-volumetric-off.png').size;
   const raysOnBytes=fs.statSync('artifacts/atmosphere-volumetric-on.png').size;
-  const photonOffBytes=fs.statSync('artifacts/photon-pipeline-off.png').size;
-  const photonOnBytes=fs.statSync('artifacts/photon-pipeline-on.png').size;
-  const duskBytes=fs.statSync('artifacts/photon-dusk-1856.png').size;
-  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000&&photonOffBytes>10000&&photonOnBytes>10000&&duskBytes>10000,'paper/atmosphere/Photon framebuffer screenshots missing');
+  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   assert(raysOffBytes!==raysOnBytes,'volumetric on/off framebuffers are byte-identical');
-  assert(photonOffBytes!==photonOnBytes,'Photon on/off framebuffers are byte-identical');
-  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,photonOffBytes,photonOnBytes,duskBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,photon:initial.photon,tuned},null,2));
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,tuned},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}
