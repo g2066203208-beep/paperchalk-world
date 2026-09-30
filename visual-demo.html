@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.9</h1>
-  <p>v12.9 纸块压纹：地形纸材质新增随机大小/位置的浅色与深色小纸块，而且不是只改颜色——同一批纸块同步写入高度场、法线贴图和粗糙度贴图。亮块轻微凸起、暗块轻微凹陷；泥土纸板更明显，草纸更克制，仍然只生成一次纹理，不增加每帧开销。</p>
+  <h1>纸艺世界视觉 Demo v12.10</h1>
+  <p>v12.10 宏观纸压纹：把随机纸块做大并明显增强高度梯度；新增 AO 凹槽遮蔽，让暗块的凹陷边缘真正压暗。法线仍然是真实 tangent-space normal map，同时额外用一批 InstancedMesh 薄纸片做少量真实凸起，让近景和斜光下不再只是“颜色变化”。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -301,22 +301,22 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
   // Random pressed-paper blocks. These are deliberately near-square rather
   // than generic noise: the SAME masks change albedo + height, so their edges
   // catch real light through the derived normal map.
-  const patchCount=cutEdge?76:(green?46:58);
+  const patchCount=cutEdge?44:(green?30:36);
   for(let i=0;i<patchCount;i++){
-    const w=Math.round((cutEdge?7:6)+r()*(cutEdge?25:20));
+    const w=Math.round((cutEdge?16:11)+r()*(cutEdge?44:34));
     const h=Math.round(w*(.72+r()*.56));
     const x=Math.floor(r()*size-w*.35);
     const y=Math.floor(r()*size-h*.35);
     const raised=r()>.48;
 
-    const alpha=(cutEdge?.055:.040)+r()*(cutEdge?.085:.055);
+    const alpha=(cutEdge?.085:.060)+r()*(cutEdge?.105:.075);
     const dark=green?'rgba(64,92,48,':cutEdge?'rgba(79,46,31,':'rgba(76,63,43,';
     const light=green?'rgba(224,239,167,':cutEdge?'rgba(232,181,139,':'rgba(238,220,174,';
     fillWrappedRect(cg,size,x,y,w,h,(raised?light:dark)+alpha.toFixed(3)+')');
 
     // Feathered outer shelf + stronger inner plateau/depression.
-    const outer=raised?(143+(r()*10|0)):(113-(r()*8|0));
-    const inner=raised?(164+(r()*15|0)):(91-(r()*12|0));
+    const outer=raised?(168+(r()*14|0)):(88-(r()*10|0));
+    const inner=raised?(218+(r()*24|0)):(40-(r()*18|0));
     fillWrappedRect(hg,size,x,y,w,h,`rgb(${outer},${outer},${outer})`);
     const inset=Math.max(1,Math.round(Math.min(w,h)*.12));
     fillWrappedRect(hg,size,x+inset,y+inset,Math.max(2,w-inset*2),Math.max(2,h-inset*2),`rgb(${inner},${inner},${inner})`);
@@ -359,8 +359,9 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
   const hdata=hg.getImageData(0,0,size,size).data;
   const ndata=new Uint8Array(size*size*4);
   const rdata=new Uint8Array(size*size*4);
+  const aodata=new Uint8Array(size*size*4);
   const sample=(x,y)=>hdata[((Math.max(0,Math.min(size-1,y))*size+Math.max(0,Math.min(size-1,x)))*4)]/255;
-  const normalStrength=cutEdge?2.75:(green?1.75:1.95);
+  const normalStrength=cutEdge?4.8:(green?3.15:3.55);
 
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const o=(y*size+x)*4;
@@ -378,6 +379,14 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
     const rough=clamp((cutEdge?.968:.942)-(h-.5)*(cutEdge?.12:.085),.86,.995);
     const rv=Math.round(rough*255);
     rdata[o]=rdata[o+1]=rdata[o+2]=rv;rdata[o+3]=255;
+
+    // Cavity AO from height + local curvature. It is subtle on grass, stronger
+    // on exposed cardboard so recessed paper blocks read even under fill light.
+    const around=(sample(x+2,y)+sample(x-2,y)+sample(x,y+2)+sample(x,y-2))*.25;
+    const cavity=clamp((around-h)*2.2+(.48-h)*1.45,0,1);
+    const ao=clamp(1-cavity*(cutEdge?.46:.28),.50,1);
+    const av=Math.round(ao*255);
+    aodata[o]=aodata[o+1]=aodata[o+2]=av;aodata[o+3]=255;
   }
 
   const color=new THREE.CanvasTexture(colorCanvas);
@@ -400,7 +409,13 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
   roughness.generateMipmaps=true;roughness.needsUpdate=true;
   roughness.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
 
-  return {color,normal,roughness};
+  const ao=new THREE.DataTexture(aodata,size,size,THREE.RGBAFormat,THREE.UnsignedByteType);
+  ao.wrapS=ao.wrapT=THREE.RepeatWrapping;
+  ao.minFilter=THREE.LinearMipmapLinearFilter;ao.magFilter=THREE.LinearFilter;
+  ao.generateMipmaps=true;ao.needsUpdate=true;
+  ao.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+
+  return {color,normal,roughness,ao};
 }
 
 const paperGrassSet=makePaperSurface(
@@ -422,12 +437,14 @@ const grassTextures=Array(6).fill(paperGrassSet.color);
 const edgeTextures=Array(6).fill(paperGreenEdgeSet.color);
 const dirtTextures=Array(6).fill(paperDirtSet.color);
 
-function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff,side=THREE.FrontSide}={}){
+function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff,side=THREE.FrontSide,ao=.55}={}){
   const m=new THREE.MeshStandardMaterial({
     color,
     map:set.color,
     normalMap:set.normal,
     roughnessMap:set.roughness,
+    aoMap:set.ao,
+    aoMapIntensity:ao,
     normalScale:new THREE.Vector2(normalScale,normalScale),
     roughness,
     metalness:0,
@@ -436,14 +453,17 @@ function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff
   return m;
 }
 
-const terrainDirtMat=standardPaperMaterial(paperDirtSet,{normalScale:.68,roughness:.97});
-const terrainGrassMat=standardPaperMaterial(paperGrassSet,{normalScale:.42,roughness:.95});
-const terrainGreenEdgeMat=standardPaperMaterial(paperGreenEdgeSet,{normalScale:.70,roughness:.978});
-const terrainKraftLipMat=standardPaperMaterial(paperDirtSet,{normalScale:.72,roughness:.985,color:0xe0b68d});
+const terrainDirtMat=standardPaperMaterial(paperDirtSet,{normalScale:1.55,roughness:.97,ao:.82});
+const terrainGrassMat=standardPaperMaterial(paperGrassSet,{normalScale:.88,roughness:.95,ao:.48});
+const terrainGreenEdgeMat=standardPaperMaterial(paperGreenEdgeSet,{normalScale:1.35,roughness:.978,ao:.72});
+const terrainKraftLipMat=standardPaperMaterial(paperDirtSet,{normalScale:1.45,roughness:.985,color:0xe0b68d,ao:.78});
 
 const blockGeo=new THREE.BoxGeometry(1,.78,1);
 const rimGeo=new THREE.BoxGeometry(1.045,.030,1.045);
 const capGeo=new THREE.BoxGeometry(1.055,.070,1.055);
+for(const g of [blockGeo,rimGeo,capGeo]){
+  if(g.attributes.uv&&!g.attributes.uv2)g.setAttribute('uv2',g.attributes.uv.clone());
+}
 const terrain=new THREE.Group();scene.add(terrain);
 
 const columnRecords=[];
@@ -520,6 +540,87 @@ function rebuildMaterialRandomness(on){
   if(terrainRims.instanceColor)terrainRims.instanceColor.needsUpdate=true;
 }
 rebuildMaterialRandomness(true);
+
+// Sparse real macro relief. Normal mapping cannot change silhouette/depth, so a
+// handful of raised paper rectangles are actual thin geometry. Kept instanced:
+// two draw calls total, no per-patch Mesh/material allocation.
+const heightByXZ=new Map(columnRecords.map(r=>[`${r.x},${r.z}`,r.h]));
+const sideRelief=[],topRelief=[];
+const reliefRand=rng(771233);
+const neighbourHeight=(x,z)=>heightByXZ.get(`${x},${z}`)??-1;
+
+for(const b of terrainBlockRecords){
+  const faces=[
+    ['px',neighbourHeight(b.x+1,b.z)<b.y],
+    ['nx',neighbourHeight(b.x-1,b.z)<b.y],
+    ['pz',neighbourHeight(b.x,b.z+1)<b.y],
+    ['nz',neighbourHeight(b.x,b.z-1)<b.y]
+  ];
+  for(const [face,exposed] of faces){
+    if(!exposed||reliefRand()>.30)continue;
+    sideRelief.push({
+      face,x:b.x,y:b.y*.78+(reliefRand()-.5)*.36,z:b.z,
+      w:.16+reliefRand()*.34,h:.10+reliefRand()*.23,
+      depth:.012+reliefRand()*.018,
+      tone:.92+reliefRand()*.16
+    });
+  }
+}
+for(const rec of columnRecords){
+  if(reliefRand()>.42)continue;
+  topRelief.push({
+    x:rec.x+(reliefRand()-.5)*.38,
+    y:rec.h*.78+.486,
+    z:rec.z+(reliefRand()-.5)*.38,
+    w:.15+reliefRand()*.34,
+    h:.15+reliefRand()*.31,
+    depth:.009+reliefRand()*.014,
+    tone:.96+reliefRand()*.11
+  });
+}
+
+const reliefGeo=new THREE.BoxGeometry(1,1,1);
+if(reliefGeo.attributes.uv&&!reliefGeo.attributes.uv2)reliefGeo.setAttribute('uv2',reliefGeo.attributes.uv.clone());
+const dirtReliefMat=standardPaperMaterial(paperDirtSet,{normalScale:1.35,roughness:.965,color:0xe0a77c,ao:.72});
+const grassReliefMat=standardPaperMaterial(paperGrassSet,{normalScale:.82,roughness:.95,color:0xc0d987,ao:.44});
+const sideReliefMesh=new THREE.InstancedMesh(reliefGeo,dirtReliefMat,sideRelief.length);
+const topReliefMesh=new THREE.InstancedMesh(reliefGeo,grassReliefMat,topRelief.length);
+sideReliefMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+topReliefMesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+sideReliefMesh.castShadow=true;sideReliefMesh.receiveShadow=true;
+topReliefMesh.castShadow=true;topReliefMesh.receiveShadow=true;
+
+sideRelief.forEach((p,i)=>{
+  terrainDummy.rotation.set(0,0,0);
+  if(p.face==='px'){
+    terrainDummy.position.set(p.x+.506,p.y,p.z);
+    terrainDummy.rotation.y=Math.PI*.5;
+  }else if(p.face==='nx'){
+    terrainDummy.position.set(p.x-.506,p.y,p.z);
+    terrainDummy.rotation.y=-Math.PI*.5;
+  }else if(p.face==='pz'){
+    terrainDummy.position.set(p.x,p.y,p.z+.506);
+  }else{
+    terrainDummy.position.set(p.x,p.y,p.z-.506);
+    terrainDummy.rotation.y=Math.PI;
+  }
+  terrainDummy.scale.set(p.w,p.h,p.depth);
+  terrainDummy.updateMatrix();sideReliefMesh.setMatrixAt(i,terrainDummy.matrix);
+  sideReliefMesh.setColorAt(i,new THREE.Color(p.tone,p.tone*.94,p.tone*.89));
+});
+topRelief.forEach((p,i)=>{
+  terrainDummy.position.set(p.x,p.y,p.z);
+  terrainDummy.rotation.set(-Math.PI*.5,0,0);
+  terrainDummy.scale.set(p.w,p.h,p.depth);
+  terrainDummy.updateMatrix();topReliefMesh.setMatrixAt(i,terrainDummy.matrix);
+  topReliefMesh.setColorAt(i,new THREE.Color(p.tone,p.tone,p.tone*.94));
+});
+sideReliefMesh.instanceMatrix.needsUpdate=true;
+topReliefMesh.instanceMatrix.needsUpdate=true;
+if(sideReliefMesh.instanceColor)sideReliefMesh.instanceColor.needsUpdate=true;
+if(topReliefMesh.instanceColor)topReliefMesh.instanceColor.needsUpdate=true;
+terrain.add(sideReliefMesh,topReliefMesh);
+paperObjects.push(sideReliefMesh,topReliefMesh);
 
 // Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
 // Two crossed sheets plus a dark offset backing make the paper thickness readable.
@@ -1866,7 +1967,7 @@ function preset(name){
 }
 function syncButtons(){
   sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
-  caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
+  caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);sideReliefMesh.visible=state.layers;topReliefMesh.visible=state.layers;
   renderer.shadowMap.enabled=state.shadow;
   // Lighting remains dual-source; zero-contribution shadow passes are culled.
   sun.castShadow=state.shadow&&sun.intensity>.10;
