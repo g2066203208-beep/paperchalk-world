@@ -11,8 +11,11 @@ function createNPCWorld({definitions=[],terrain,ecs,gravity=22}={}){
   const actors=[];
   const byId=new Map(),byEntity=new Map();
 
-  function groundCenterY(x,z,halfH){
-    return terrain.highestGroundY(x,z,{fromCell:96,toCell:-256})+halfH;
+  function groundCenterY(x,z,halfH,fromY=null){
+    const fromCell=Number.isFinite(Number(fromY))
+      ?Math.floor((Number(fromY)+halfH+.35)/terrain.tileSize)
+      :96;
+    return terrain.highestGroundY(x,z,{fromCell,toCell:-256})+halfH;
   }
   function make(def,index){
     const id=String(def?.id||('npc-'+index));
@@ -47,7 +50,7 @@ function createNPCWorld({definitions=[],terrain,ecs,gravity=22}={}){
 
   function updateOne(a,dt,player){
     const step=Math.max(0,Math.min(.08,num(dt,0)));
-    const ground=groundCenterY(a.transform.x,a.transform.z,a.collider.halfH);
+    const ground=groundCenterY(a.transform.x,a.transform.z,a.collider.halfH,a.transform.y);
     if(a.transform.y>ground+.015){
       a.velocity.y=Math.max(-18,a.velocity.y-gravity*step);
       a.transform.y=Math.max(ground,a.transform.y+a.velocity.y*step);
