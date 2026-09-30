@@ -85,7 +85,7 @@ try{
   });
   assert(walkedHome.segmentComplete===true,'home bedroom objective did not complete '+JSON.stringify(walkedHome.player));
   assert(walkedHome.player.x>4&&walkedHome.player.z>3.1,'home bedroom path is not actually walkable '+JSON.stringify(walkedHome.player));
-  assert(await page.locator('[data-prologue-end]').evaluate(el=>el.classList.contains('is-show')),'prologue ending card missing');
+  await page.waitForFunction(()=>document.querySelector('[data-prologue-end]')?.classList.contains('is-show'),{timeout:2500});
   await page.locator('[data-prologue-finish]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.active===true,{timeout:15000});
   const final=await page.evaluate(()=>({prologue:window.PaperchalkPrologue.active,world:window.Paperchalk3D.active,completed:JSON.parse(localStorage.getItem('paperchalk.prologue.v1.prologue_ci')).completed}));
