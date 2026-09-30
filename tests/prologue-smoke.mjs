@@ -62,6 +62,12 @@ try{
   assert(after.phase!==before.phase,'traffic signal clock did not advance');
   await page.screenshot({path:'artifacts/prologue-city.png'});
 
+  await patchState({zone:'city',objectiveIndex:2,player:{x:7.5,z:7.4,yaw:0},segmentComplete:false,completed:false});
+  await page.waitForTimeout(400);
+  const crossing=await page.evaluate(()=>window.PaperchalkPrologue.snapshot());
+  assert(crossing.objective?.id==='cross-road'&&crossing.cars.length===8,'crosswalk state missing '+JSON.stringify(crossing.objective));
+  await page.screenshot({path:'artifacts/prologue-crossing.png'});
+
   await patchState({zone:'home',objectiveIndex:4,player:{x:0,z:-6,yaw:0},segmentComplete:false,completed:false});
   await page.waitForFunction(()=>window.PaperchalkPrologue.snapshot().zone==='home');
   await page.waitForTimeout(350);
@@ -70,8 +76,13 @@ try{
   assert(home.cars.length===0,'cars leaked into home interior');
   await page.screenshot({path:'artifacts/prologue-home.png'});
 
-  await patchState({zone:'home',objectiveIndex:4,player:{x:6,z:3.05,yaw:0},segmentComplete:false,completed:false});
-  await page.waitForFunction(()=>window.PaperchalkPrologue.snapshot().segmentComplete===true,{timeout:3000});
+  await patchState({zone:'home',objectiveIndex:4,player:{x:0,z:-6,yaw:0},segmentComplete:false,completed:false});
+  await page.keyboard.down('KeyD');await page.waitForTimeout(1100);await page.keyboard.up('KeyD');
+  await page.keyboard.down('KeyS');await page.waitForTimeout(2500);await page.keyboard.up('KeyS');
+  await page.keyboard.down('KeyD');await page.waitForTimeout(420);await page.keyboard.up('KeyD');
+  await page.waitForFunction(()=>window.PaperchalkPrologue.snapshot().segmentComplete===true,{timeout:3500});
+  const walkedHome=await page.evaluate(()=>window.PaperchalkPrologue.snapshot().player);
+  assert(walkedHome.x>5&&walkedHome.z>3.4,'home bedroom path is not actually walkable '+JSON.stringify(walkedHome));
   assert(await page.locator('[data-prologue-end]').evaluate(el=>el.classList.contains('is-show')),'prologue ending card missing');
   await page.locator('[data-prologue-finish]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.active===true,{timeout:15000});
