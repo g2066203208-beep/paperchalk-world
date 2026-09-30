@@ -4,18 +4,18 @@ import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r9';
  * hidden by merged paper tops plus batched layered-cardboard edge geometry.
  */
 const TOP_COLORS=Object.freeze({
-  1:0x6f895c, // grass paper
-  2:0xa17b5d, // earth paper
-  3:0x95918a, // stone paper
-  4:0xd4b275, // sand paper
-  5:0xae7f69  // clay paper
+  1:0x6f895c, // grass paper (authored texture overrides this)
+  2:0xb9845f, // earth paper
+  3:0x9d9890, // stone paper
+  4:0xe2c38d, // warm kraft/sand paper
+  5:0xb98a72  // clay paper
 });
 const SIDE_COLORS=Object.freeze({
-  1:0x8d5e40,
-  2:0x8f6245,
-  3:0x77716b,
-  4:0x95613f,
-  5:0x855947
+  1:0xb1774f,
+  2:0xaa704c,
+  3:0x817970,
+  4:0xb77d52,
+  5:0x9a6651
 });
 
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
@@ -59,17 +59,18 @@ export class PaperTerrainRenderer{
       radiusXZ:settings.radiusXZ??3,
       maxBuildsPerFrame:settings.maxBuildsPerFrame??2,
       paperLayerHeight:settings.paperLayerHeight??.50,
-      paperThickness:settings.paperThickness??.30,
-      bevelWidth:settings.bevelWidth??.045,
-      bevelHeight:settings.bevelHeight??.055,
+      paperThickness:settings.paperThickness??.24,
+      bevelWidth:settings.bevelWidth??.022,
+      bevelHeight:settings.bevelHeight??.030,
       fiberStrength:settings.fiberStrength??.050,
       printNoiseStrength:settings.printNoiseStrength??.065,
       microNormalStrength:settings.microNormalStrength??.34,
       roughnessVariation:settings.roughnessVariation??.035,
-      sideDarkness:settings.sideDarkness??.92,
-      edgeJitter:settings.edgeJitter??.038,
-      edgeHeightJitter:settings.edgeHeightJitter??.010,
-      edgeFacetCenterJitter:settings.edgeFacetCenterJitter??.006,
+      sideDarkness:settings.sideDarkness??1.03,
+      edgeJitter:settings.edgeJitter??.014,
+      edgeHeightJitter:settings.edgeHeightJitter??.0035,
+      edgeFacetCenterJitter:settings.edgeFacetCenterJitter??.0025,
+      maxEdgeRunCells:settings.maxEdgeRunCells??6,
       ...settings
     };
     this.root=new THREE.Group();
@@ -296,12 +297,15 @@ export class PaperTerrainRenderer{
       }
     };
 
+    const sameEdge=(a,b)=>!!a&&!!b&&a.tile===b.tile&&near(a.top,b.top,.0001)&&near(a.bottom,b.bottom,.0001);
+    const maxRun=Math.max(1,Math.min(8,this.settings.maxEdgeRunCells|0||6));
     for(let x=0;x<n;x++){
       for(const dx of [-1,1]){
         let z=0;
         while(z<n){
           const d=edgeDesc(x,z,dx,0);if(!d){z++;continue}
-          const len=1;
+          let len=1;
+          while(z+len<n&&len<maxRun&&sameEdge(d,edgeDesc(x,z+len,dx,0)))len++;
           emitRun([dx,0],dx===1?x+1:x,z,len,d);z+=len;
         }
       }
@@ -311,7 +315,8 @@ export class PaperTerrainRenderer{
         let x=0;
         while(x<n){
           const d=edgeDesc(x,z,0,dz);if(!d){x++;continue}
-          const len=1;
+          let len=1;
+          while(x+len<n&&len<maxRun&&sameEdge(d,edgeDesc(x+len,z,0,dz)))len++;
           emitRun([0,dz],dz===1?z+1:z,x,len,d);x+=len;
         }
       }
@@ -338,7 +343,7 @@ export class PaperTerrainRenderer{
       edgeRuns:data.edgeRuns,layerBands:data.layerBands,layerLips:data.layerLips,
       vertices:data.positions.length/3,triangles:all.length/3,drawGroups:groups.length,
       gameplayGridHidden:true,realThickness:true,topSideMaterialSplit:true,grassTopMaterialGroup:true,dirtMaterialGroup:true,
-      continuousMergedEdges:false,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,stackedCardboardBands:true,
+      continuousMergedEdges:true,maxEdgeRunCells:maxRun,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,stackedCardboardBands:true,targetGroundStyle:'terraced-paper-stage-r1',
       paperLayerHeight:this.settings.paperLayerHeight,paperThickness:this.settings.paperThickness,
       bevelWidth:this.settings.bevelWidth
     };
@@ -410,7 +415,9 @@ export class PaperTerrainRenderer{
       microNormalStrength:this.settings.microNormalStrength,roughnessVariation:this.settings.roughnessVariation,
       sideDarkness:this.settings.sideDarkness,paperMaterial:this.paperMaterialSet.stats?.()||null,
       renderGridExposed:false,grassTopMaterialGroup:true,dirtMaterialGroup:true,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,
-      stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV3:true,referenceStyle:'pressed-cardstock-diorama'
+      stackedCardboardBands:true,continuousMergedEdges:true,maxEdgeRunCells:this.settings.maxEdgeRunCells,
+      haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV3:true,
+      targetGroundStyle:'terraced-paper-stage-r1',referenceStyle:'pressed-cardstock-diorama'
     };
   }
   dispose(){
