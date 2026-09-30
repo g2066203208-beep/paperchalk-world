@@ -1817,7 +1817,7 @@ backpackBtn.focus({preventScroll:true});return true;
 }
 function openUI(fromWorld=false){
 closeDebugPanel();closeWorldMap();closeBackpack();closeCameraPanel();
-if(fromWorld)saveWorldState();
+if(fromWorld&&active)saveWorldState();
 active=false;
 stopGameLoop();
 uiShell.removeAttribute('inert');
@@ -1915,7 +1915,7 @@ event.preventDefault();
 toggleTorch();
 }
 });
-addEventListener('pagehide',saveWorldState);
+addEventListener('pagehide',()=>{if(active)saveWorldState()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&active)saveWorldState()});
 addEventListener('unhandledrejection',event=>{
 console.error('UNHANDLED_REJECTION',event.reason);
