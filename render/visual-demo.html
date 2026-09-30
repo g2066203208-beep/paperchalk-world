@@ -72,6 +72,11 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
     <input id="paperBlend" type="range" min="0" max="100" step="5" value="85">
     <span id="paperBlendVal" class="val">85%</span>
   </div>
+  <div class="row">
+    <span>纸浆细纤维</span>
+    <input id="paperFiber" type="range" min="0" max="100" step="1" value="32">
+    <span id="paperFiberVal" class="val">32%</span>
+  </div>
   <button id="paperReset">恢复默认</button>
 </div>
 <div class="controls">
@@ -539,6 +544,7 @@ function setTerrainPaperScale(size){
 }
 setTerrainPaperScale(2.0);
 const terrainPaperBlendUniform={value:.85};
+const terrainPaperFiberUniform={value:.32};
 
 
 // ---------------------------------------------------------------------------
@@ -569,6 +575,7 @@ function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
     shader.uniforms.paper003HeightMap={value:terrainPaper003Displacement};
     shader.uniforms.paper003HeightStrength=heightUniform;
     shader.uniforms.paper003Blend=terrainPaperBlendUniform;
+    shader.uniforms.paper003FiberStrength=terrainPaperFiberUniform;
 
     shader.fragmentShader=shader.fragmentShader.replace(
       'void main() {',
@@ -576,6 +583,7 @@ function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
 uniform sampler2D paper003HeightMap;
 uniform float paper003HeightStrength;
 uniform float paper003Blend;
+uniform float paper003FiberStrength;
 
 vec3 paperBlendWeights(vec2 uv){
   // Slow continuous macro weights: no cells, no hard boundaries.
@@ -649,6 +657,16 @@ float paperHeightSample(vec2 uv){
   return mix(texture2D(paper003HeightMap,uv).r,mixed,paper003Blend);
 }
 
+// Micro pulp fibers are an additive surface layer only. They never replace
+// Paper003 albedo or its macro folds; they only perturb normal + roughness.
+float paperFiberHeight(vec2 uv){
+  vec2 p=uv*vec2(115.0,115.0);
+  float a=sin(dot(p,vec2(0.97,0.24))+sin(p.y*0.061)*1.60);
+  float b=sin(dot(p,vec2(-0.18,1.07))*1.13+sin(p.x*0.073)*1.25);
+  float cc=sin(dot(p,vec2(0.64,-0.77))*1.31+sin((p.x+p.y)*0.047));
+  return 0.5+0.5*(a*0.46+b*0.34+cc*0.20);
+}
+
 void main() {
 `
     );
@@ -670,6 +688,10 @@ float roughnessFactor=roughness;
 #ifdef USE_ROUGHNESSMAP
   roughnessFactor*=paperRoughnessSample(vRoughnessMapUv);
 #endif
+if(paper003FiberStrength>0.0001){
+  float fiberR=paperFiberHeight(vRoughnessMapUv);
+  roughnessFactor*=mix(1.0,0.96+fiberR*0.08,paper003FiberStrength);
+}
 `
     );
 
@@ -688,6 +710,14 @@ float roughnessFactor=roughness;
     mapN.xy-=vec2(hx,hy)*paper003HeightStrength*1.55;
   }
 
+  if(paper003FiberStrength>0.0001){
+    const float fiberEps=0.00115;
+    float f0=paperFiberHeight(vNormalMapUv);
+    float fx=paperFiberHeight(vNormalMapUv+vec2(fiberEps,0.0))-f0;
+    float fy=paperFiberHeight(vNormalMapUv+vec2(0.0,fiberEps))-f0;
+    mapN.xy-=vec2(fx,fy)*paper003FiberStrength*5.2;
+  }
+
   normal=normalize(tbn*mapN);
 #elif defined( USE_BUMPMAP )
   normal=perturbNormalArb(-vViewPosition,normal,dHdxy_fwd(),faceDirection);
@@ -696,7 +726,7 @@ float roughnessFactor=roughness;
     );
   };
 
-  mat.customProgramCacheKey=()=>name+'-continuous-paper003-safe-v1';
+  mat.customProgramCacheKey=()=>name+'-continuous-paper003-fiber-v2';
   return mat;
 }
 
@@ -862,7 +892,9 @@ const paperObjects=[terrainBlocks];
 
 function rebuildMaterialRandomness(on=true){
   const blendEl=document.getElementById('paperBlend');
+  const fiberEl=document.getElementById('paperFiber');
   terrainPaperBlendUniform.value=on&&blendEl?(+blendEl.value/100):0;
+  terrainPaperFiberUniform.value=on&&fiberEl?(+fiberEl.value/100):0;
   const mats=[terrainTopMat,terrainDirtMat];
   for(const mat of mats){
     mat.map=on?terrainPaper003Color:null;
@@ -2185,9 +2217,11 @@ function applyPaperDebug(){
   const normal=+document.getElementById('paperNormal').value/100;
   const height=+document.getElementById('paperHeight').value/100;
   const blend=+document.getElementById('paperBlend').value/100;
+  const fiber=+document.getElementById('paperFiber').value/100;
 
   setTerrainPaperScale(size);
   terrainPaperBlendUniform.value=state.random?blend:0;
+  terrainPaperFiberUniform.value=state.random?fiber:0;
   terrainTopMat.normalScale.setScalar(normal);
   terrainDirtMat.normalScale.setScalar(normal*.84);
 
@@ -2205,10 +2239,11 @@ function applyPaperDebug(){
   document.getElementById('paperNormalVal').textContent=normal.toFixed(2);
   document.getElementById('paperHeightVal').textContent=height.toFixed(2);
   document.getElementById('paperBlendVal').textContent=Math.round(blend*100)+'%';
+  document.getElementById('paperFiberVal').textContent=Math.round(fiber*100)+'%';
   renderDirty=true;
 }
 
-['paperScale','paperNormal','paperHeight','paperBlend'].forEach(id=>{
+['paperScale','paperNormal','paperHeight','paperBlend','paperFiber'].forEach(id=>{
   document.getElementById(id).addEventListener('input',applyPaperDebug);
 });
 document.getElementById('paperReset').onclick=()=>{
@@ -2216,6 +2251,7 @@ document.getElementById('paperReset').onclick=()=>{
   document.getElementById('paperNormal').value=185;
   document.getElementById('paperHeight').value=480;
   document.getElementById('paperBlend').value=85;
+  document.getElementById('paperFiber').value=32;
   applyPaperDebug();
 };
 
