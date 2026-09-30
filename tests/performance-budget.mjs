@@ -4,6 +4,9 @@ const size=p=>fs.statSync(p).size;
 assert(size('src/game.js')<83000,'gameplay runtime exceeds 83KB budget');
 assert(size('src/core/open-world-runtime.js')<2500,'open-world helper exceeds 2.5KB budget');
 assert(size('src/scenes/prologue-city.js')<7000,'prologue city scene exceeds 7KB budget');
+assert(size('src/scenes/PrologueSchoolFence.js')<5000,'school fence renderer exceeds 5KB budget');
+assert(fs.existsSync('assets/prologue/school-fence-panel.svg'),'school fence texture missing');
+assert(fs.existsSync('assets/prologue/school-gate-leaf.svg'),'school gate texture missing');
 assert(size('src/engine3d/World3DEngine.js')<56000,'paper-stage engine exceeds 56KB budget');
 assert(size('src/terrain/terrain-runtime.js')<30000,'terrain+water runtime exceeds 30KB budget');
 assert(size('src/terrain/voxel-block-mesh.js')<24000,'cube mesher exceeds 24KB budget');
@@ -40,6 +43,9 @@ console.log(JSON.stringify({
   game:size('src/game.js'),
   openWorld:size('src/core/open-world-runtime.js'),
   prologueScene:size('src/scenes/prologue-city.js'),
+  schoolFence:size('src/scenes/PrologueSchoolFence.js'),
+  fenceTexture:size('assets/prologue/school-fence-panel.svg'),
+  gateTexture:size('assets/prologue/school-gate-leaf.svg'),
   engine:size('src/engine3d/World3DEngine.js'),
   terrain:size('src/terrain/terrain-runtime.js'),
   cubeMesher:size('src/terrain/voxel-block-mesh.js'),
