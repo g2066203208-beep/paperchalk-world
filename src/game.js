@@ -392,12 +392,7 @@ function showNPCDialogue(packet){
 if(!packet)return false;
 let text=(packet.name||'NPC')+'：'+(packet.text||'');
 const q=packet.quest;
-if(q){
-const objective=q.objectives?.[0];
-if(q.status==='active'&&objective)text+='  【'+q.name+' '+(objective.current||0)+'/'+(objective.count||1)+'】';
-else if(q.status==='ready')text+='  【'+q.name+'：回去交谈】';
-else if(q.status==='complete')text+='  【'+q.name+'：完成】';
-}
+if(q){const o=q.objectives?.[0];text+=' 【'+q.name+(q.status==='active'&&o?' '+(o.current||0)+'/'+(o.count||1):' '+q.status)+'】'}
 showMapNotice(text,2600);
 window.PaperchalkEvents?.emit('npc:dialogue',packet);
 publish();return true;
@@ -405,7 +400,7 @@ publish();return true;
 function interactNPC(){
 if(!worldInteractive())return false;
 const hit=npcWorld.nearestInteractable(transform,2.65);
-if(!hit){showMapNotice('附近没有可以交谈的人。',750);return false}
+if(!hit){showMapNotice('附近没人',650);return false}
 const packet=npcWorld.interact(hit.actor.id,{player:transform,worldMinutes});
 if(!packet)return false;
 showNPCDialogue(packet);saveWorldState();return packet;
