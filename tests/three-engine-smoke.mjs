@@ -23,16 +23,13 @@ try{
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
-  assert(initial.worldMode==='finite-side-scroll-voxel','wrong world mode');
-  assert(initial.paperStyle?.enabled===false,'prologue road must use cube voxels '+JSON.stringify(initial.paperStyle));
-  assert(initial.terrainMode==='finite-voxel-road','finite voxel road renderer mode missing '+JSON.stringify(initial));
-  assert(initial.paperStage==null,'school paper stage must be absent '+JSON.stringify(initial.paperStage));
-  await page.screenshot({path:'artifacts/city-ground-only.png'});
-  assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
-  assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
-  assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
-  assert(initial.voxelTerrain?.worldBounds?.minZ===-16&&initial.voxelTerrain?.worldBounds?.maxZ===9&&initial.voxelTerrain?.worldBounds?.minY===-8,'expanded city/underground bounds missing '+JSON.stringify(initial.voxelTerrain));
-  assert(initial.voxelTerrain?.gameplayDimensions===2&&initial.voxelTerrain?.zMovementLocked===true,'voxel road gameplay plane wrong '+JSON.stringify(initial.voxelTerrain));
+  assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
+  assert(initial.paperStyle?.enabled===true&&initial.paperStyle?.visualOnly===true,'paper style not active '+JSON.stringify(initial.paperStyle));
+  assert(initial.terrainMode==='streamed-3d-voxel-chunks','streamed 3D terrain mode missing '+JSON.stringify(initial));
+  assert(initial.paperTerrain?.visiblePaperChunks>0,'no visible paper chunks '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.paperVertices>0&&initial.paperTerrain?.paperTriangles>0,'paper terrain geometry empty '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.authority==='TerrainWorld-gameplay-grid-unchanged','gameplay authority changed');
+  await page.screenshot({path:'artifacts/open-world-paper-terrain.png'});
   assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v6-macro-relief-ao','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.textureResolution===256,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
@@ -59,7 +56,7 @@ try{
   const npcAI=await page.evaluate(()=>window.PaperchalkNPCs.stats);
   assert(npcAI?.aiStack?.voxelAStar&&npcAI?.aiStack?.utility&&npcAI?.aiStack?.offscreenLOD&&npcAI?.simulationHz===20,'NPC AI renderer/runtime bridge/performance throttle missing '+JSON.stringify(npcAI));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
-  assert(initial.atmosphere?.volumetric===false&&initial.atmosphere?.samples===6,'prologue atmosphere performance profile missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.volumetric===false&&initial.atmosphere?.samples===8,'open-world atmosphere performance profile missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.paperSky===true&&initial.atmosphere?.paperSkyLoaded===true,'supplied blue paper sky not loaded '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.paperSkyAsset==='assets/materials/sky-paper-blue.webp'&&initial.atmosphere?.skyClouds===false,'paper sky asset/cloud gate wrong '+JSON.stringify(initial.atmosphere));
@@ -69,11 +66,11 @@ try{
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
-  assert(initial.interaction?.threeDimensional===false&&initial.interaction?.zMovementLocked===true,'side-scroll interaction did not lock Z '+JSON.stringify(initial.interaction));
-  assert(initial.pixelRatio>=1&&initial.pixelRatio<=1.35,'prologue DPR cap missing '+JSON.stringify(initial.pixelRatio));
+  assert(initial.interaction?.threeDimensional===true&&initial.interaction?.zMovementLocked===false&&initial.interaction?.raycastIgnoresOtherRows===false,'3D interaction is still row locked '+JSON.stringify(initial.interaction));
+  assert(initial.pixelRatio>=1&&initial.pixelRatio<=1.35,'open-world DPR cap missing '+JSON.stringify(initial.pixelRatio));
   assert(initial.lighting?.shadowAcneGuard===true&&(initial.lighting?.sunShadowNormalBias||0)>=.05,'ground shadow-acne protection missing '+JSON.stringify(initial.lighting));
   assert(!Object.prototype.hasOwnProperty.call(initial,'photon'),'removed renderer stack leaked into stats');
-  assert(initial.camera.stageView?.enabled===false,'side-scroll camera stage view should start disabled '+JSON.stringify(initial.camera));
+  assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default '+JSON.stringify(initial.camera));
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui-v2','fishing renderer missing '+JSON.stringify(initial.fishing));
   assert(initial.fishEcology?.renderMode==='pooled-instanced-paper-fish','fish ecology renderer missing '+JSON.stringify(initial.fishEcology));
