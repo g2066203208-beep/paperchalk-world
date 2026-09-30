@@ -1,11 +1,11 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js');
 
-assert(html.includes('paper-r14'),'build key missing');
+assert(html.includes('paper-r15'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
-assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
+assert(content.includes("mode:'finite-side-scroll-voxel'"),'finite side-scroll world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
 assert(content.includes("id:'village-resident-01'")&&content.includes("id:'village-resident-05'"),'five village NPC definitions missing');
 assert(content.includes("id:'village-intro'")&&content.includes("type:'talk'"),'village intro quest missing');
@@ -51,11 +51,14 @@ assert(terrain.includes('surfaceTile(gx,gz=0)'),'biome surface material missing'
 assert(terrain.includes('biomeSummaryForChunk(cx,cz)'),'biome chunk summary missing');
 assert(terrain.includes('generatorVersion=4'),'legacy terrain generator compatibility missing');
 assert(game.includes('window.PaperchalkBiomes'),'biome runtime API missing');
-assert(game.includes('FLY_SPEED')&&game.includes('setFlight'),'3D flight runtime missing');
-assert(game.includes("'KeyW'")&&game.includes("'KeyS'"),'W/S 3D movement missing');
-assert(game.includes("moveAxis('z'"),'Z-axis movement missing');
-assert(game.includes('threeDimensionalInteraction:true'),'3D terrain interaction flag missing');
-assert(!game.includes('PLAYER_ROW_CENTER_Z'),'legacy player-row lock still present');
+assert(game.includes('FLY_SPEED')&&game.includes('setFlight'),'debug flight runtime missing');
+assert(html.includes('src/prologue/voxel-road.js'),'voxel prologue road module missing');
+assert(content.includes('prologueRoad:{')&&content.includes('minZ:-4,maxZ:4'),'finite road depth config missing');
+assert(road.includes("gameplayPlane:'x-y'")&&road.includes("zRole:'finite-visual-depth'"),'side-scroll road contract missing');
+assert(road.includes('finite-prologue-voxel-road-v1'),'finite voxel road generator missing');
+assert(game.includes('return {x:horizontal,z:0'),'horizontal-only input missing');
+assert(game.includes('transform.z=INTERACTION_ROW_Z*terrain.tileSize;velocity.z=0'),'Z gameplay lock missing');
+assert(renderer.includes('zMovementLocked:true'),'renderer side-scroll interaction stats missing');
 assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
@@ -152,7 +155,7 @@ assert(engine.includes("mobileQualityProfile"),'mobile quality profile missing')
 assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"),'3D water renderer missing');
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
-assert(engine.includes('zMovementLocked:false')&&engine.includes('raycastIgnoresOtherRows:false'),'renderer still locks gameplay to one Z row');
+assert(renderer.includes('zMovementLocked:true'),'renderer must report locked gameplay Z');
 assert(engine.includes('Math.min(Number(devicePixelRatio)||1,2)'),'native DPR mobile rendering missing');
 assert(engine.includes('playerTexture.generateMipmaps=false'),'sharp protagonist texture path missing');
 assert(engine.includes('sun.shadow.normalBias=.055')&&engine.includes('shadowAcneGuard:true'),'ground shadow-acne guard missing');
@@ -166,7 +169,7 @@ assert(fs.existsSync('assets/materials/sky-paper-blue.webp'),'supplied blue pape
 assert(!fs.existsSync('src/engine3d/PhotonPipeline.js')&&!fs.existsSync('src/engine3d/PhotonSkyWeatherPass.js'),'Photon renderer/cloud code must stay removed');
 assert(!engine.includes('PhotonPipeline')&&!html.toLowerCase().includes('photon'),'Photon runtime leaked into production');
 
-console.log('WEB_INFINITE_VOXEL_3D_SMOKE_OK');
+console.log('WEB_FINITE_SIDE_SCROLL_VOXEL_SMOKE_OK');
 
 assert(engine.includes("paperchalk-whole-voxel-color-v15"),'whole voxel tint cache key missing');
 assert(engine.includes("vVoxelWorldNormal"),'whole voxel owner normal missing');
