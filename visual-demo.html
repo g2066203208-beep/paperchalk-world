@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.22</h1>
-  <p>v12.22 单层纸草：小草不再十字交叉，每一丛只有一张剪纸几何并始终只绕 Y 轴面朝相机。绿色正面直接使用 Paper003；厚度不建模，只用同一张几何做一个极薄的黑色程序厚度渲染 pass，黑边只露一点点。</p>
+  <h1>纸艺世界视觉 Demo v12.23</h1>
+  <p>v12.23 可爱纸草：仍然坚持每丛只有一张纸片、只绕 Y 轴面朝相机、厚度不建模。把原来又尖又碎的草叶轮廓重画成三种圆润、矮胖、宽叶的手工剪纸造型，并用三种柔和绿色搭配 Paper003；黑色程序厚度只在纸片右下侧露极细一点，不再形成一圈硬描边。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -602,125 +602,165 @@ function rebuildMaterialRandomness(on=true){
   terrainPaper003Mat.needsUpdate=true;
 }
 
-// Cut-paper grass v12.22:
-// one single cut-paper sheet per tuft, always billboarded toward the camera.
-// Thickness is NOT modeled. The exact same source geometry is rendered once more
-// as a tiny black backing pass, slightly expanded and shifted behind the sheet.
-function cutGrassGeometry(){
+// Cut-paper grass v12.23:
+// one modeled sheet per tuft, no crossed cards.  Three rounded/chubby silhouette
+// variants keep the scene playful instead of looking like sharp realistic weeds.
+function cuteGrassGeometry(variant=0){
   const s=new THREE.Shape();
-  s.moveTo(-.36,0);
-  s.lineTo(-.32,.12);
-  s.lineTo(-.29,.40);
-  s.lineTo(-.24,.58);
-  s.lineTo(-.19,.22);
-  s.lineTo(-.14,.34);
-  s.lineTo(-.10,.78);
-  s.lineTo(-.045,.91);
-  s.lineTo(-.01,.36);
-  s.lineTo(.035,.24);
-  s.lineTo(.075,.63);
-  s.lineTo(.12,.73);
-  s.lineTo(.155,.31);
-  s.lineTo(.21,.20);
-  s.lineTo(.255,.48);
-  s.lineTo(.30,.57);
-  s.lineTo(.315,.24);
-  s.lineTo(.38,.12);
-  s.lineTo(.34,0);
+
+  if(variant===0){
+    // Five soft leaves, tall rounded middle leaf.
+    s.moveTo(-.44,0);
+    s.quadraticCurveTo(-.45,.23,-.31,.40);
+    s.quadraticCurveTo(-.25,.48,-.21,.35);
+    s.quadraticCurveTo(-.17,.22,-.12,.36);
+    s.quadraticCurveTo(-.08,.61,0,.70);
+    s.quadraticCurveTo(.08,.61,.11,.37);
+    s.quadraticCurveTo(.14,.23,.19,.36);
+    s.quadraticCurveTo(.26,.51,.31,.45);
+    s.quadraticCurveTo(.43,.32,.44,0);
+  }else if(variant===1){
+    // Lower/wider clump with a cute off-centre crown.
+    s.moveTo(-.47,0);
+    s.quadraticCurveTo(-.44,.25,-.33,.33);
+    s.quadraticCurveTo(-.26,.39,-.23,.29);
+    s.quadraticCurveTo(-.18,.16,-.13,.31);
+    s.quadraticCurveTo(-.08,.53,-.01,.58);
+    s.quadraticCurveTo(.06,.54,.10,.33);
+    s.quadraticCurveTo(.14,.18,.20,.30);
+    s.quadraticCurveTo(.28,.45,.34,.39);
+    s.quadraticCurveTo(.45,.27,.47,0);
+  }else{
+    // Small asymmetric tuft: broad leaves, no needle-like tips.
+    s.moveTo(-.42,0);
+    s.quadraticCurveTo(-.40,.20,-.29,.31);
+    s.quadraticCurveTo(-.22,.38,-.19,.27);
+    s.quadraticCurveTo(-.14,.14,-.09,.30);
+    s.quadraticCurveTo(-.03,.50,.05,.55);
+    s.quadraticCurveTo(.12,.49,.15,.30);
+    s.quadraticCurveTo(.18,.20,.24,.31);
+    s.quadraticCurveTo(.31,.42,.36,.35);
+    s.quadraticCurveTo(.42,.24,.42,0);
+  }
+
+  s.lineTo(-.44,0);
   s.closePath();
-  return new THREE.ShapeGeometry(s,2);
+  return new THREE.ShapeGeometry(s,10);
 }
 
 const paperGrassGroup=new THREE.Group();
 scene.add(paperGrassGroup);
 
-const grassCutGeo=cutGrassGeometry();
+const grassGeos=[
+  cuteGrassGeometry(0),
+  cuteGrassGeometry(1),
+  cuteGrassGeometry(2)
+];
 
-// Green paper face: Paper003 is the paper stock, grass green is the intrinsic colour.
-const grassFrontMat=new THREE.MeshStandardMaterial({
-  color:0x98b86d,
-  map:paper003Color,
-  normalMap:paper003Normal,
-  roughnessMap:paper003Roughness,
-  normalScale:new THREE.Vector2(1.25,1.25),
-  roughness:1,
-  metalness:0,
-  side:THREE.DoubleSide
-});
-grassFrontMat.name='grass-single-sheet-paper003';
+const grassFrontMats=[
+  new THREE.MeshStandardMaterial({
+    color:0xa8c978,map:paper003Color,normalMap:paper003Normal,roughnessMap:paper003Roughness,
+    normalScale:new THREE.Vector2(1.05,1.05),roughness:1,metalness:0,side:THREE.DoubleSide
+  }),
+  new THREE.MeshStandardMaterial({
+    color:0x96bb69,map:paper003Color,normalMap:paper003Normal,roughnessMap:paper003Roughness,
+    normalScale:new THREE.Vector2(1.05,1.05),roughness:1,metalness:0,side:THREE.DoubleSide
+  }),
+  new THREE.MeshStandardMaterial({
+    color:0xb0cd80,map:paper003Color,normalMap:paper003Normal,roughnessMap:paper003Roughness,
+    normalScale:new THREE.Vector2(1.05,1.05),roughness:1,metalness:0,side:THREE.DoubleSide
+  })
+];
+grassFrontMats.forEach((m,i)=>m.name='grass-cute-paper003-'+i);
 
-// Program thickness pass: same geometry, no second modeled sheet.
-// It only peeks out by ~1.6% around the silhouette and sits a hair behind.
 const grassThicknessMat=new THREE.MeshStandardMaterial({
   color:0x111111,
   roughness:1,
   metalness:0,
   side:THREE.DoubleSide
 });
-grassThicknessMat.name='grass-program-black-thickness';
+grassThicknessMat.name='grass-program-black-side';
 
 const grassSpots=[
-  [-3.30,-1.70,.51,.63],[-2.25,.95,.51,.50],[-1.55,1.90,.51,.45],
-  [-.75,-2.18,.51,.48],[1.20,-2.05,.51,.43],[2.35,1.72,.51,.58],
-  [3.42,-1.45,.51,.47],[4.55,.85,.51,.44],
-  [-5.72,1.55,1.51,.60],[-5.45,-1.65,1.51,.48],
-  [5.42,-.72,1.51,.54],[5.65,1.72,1.51,.50],
-  [-4.05,2.30,1.51,.46],[4.08,2.22,1.51,.52],
-  [-6.55,2.18,2.51,.45],[6.38,1.52,2.51,.44]
+  [-3.30,-1.70,.51,.60],[-2.25,.95,.51,.48],[-1.55,1.90,.51,.44],
+  [-.75,-2.18,.51,.47],[1.20,-2.05,.51,.42],[2.35,1.72,.51,.55],
+  [3.42,-1.45,.51,.45],[4.55,.85,.51,.43],
+  [-5.72,1.55,1.51,.57],[-5.45,-1.65,1.51,.46],
+  [5.42,-.72,1.51,.51],[5.65,1.72,1.51,.47],
+  [-4.05,2.30,1.51,.44],[4.08,2.22,1.51,.49],
+  [-6.55,2.18,2.51,.43],[6.38,1.52,2.51,.42]
 ];
 
-const GRASS_COUNT=grassSpots.length;
-const grassFront=new THREE.InstancedMesh(grassCutGeo,grassFrontMat,GRASS_COUNT);
-const grassThicknessPass=new THREE.InstancedMesh(grassCutGeo,grassThicknessMat,GRASS_COUNT);
-
-for(const mesh of [grassFront,grassThicknessPass]){
-  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  mesh.frustumCulled=false;
-}
-grassFront.castShadow=true;
-grassFront.receiveShadow=true;
-// Avoid a second enlarged shadow silhouette from the fake thickness pass.
-grassThicknessPass.castShadow=false;
-grassThicknessPass.receiveShadow=true;
-grassThicknessPass.renderOrder=0;
-grassFront.renderOrder=1;
-paperGrassGroup.add(grassThicknessPass,grassFront);
-
-const grassDummy=new THREE.Object3D();
 const grassBladeData=grassSpots.map(([x,z,y,scale],i)=>({
   x,z,y,scale,
-  phase:i*.73+hash3(i,91,17)*2.3
+  variant:i%3,
+  phase:i*.73+hash3(i,91,17)*2.3,
+  slot:0
 }));
 
-function updatePaperGrass(t){
-  for(let i=0;i<grassBladeData.length;i++){
-    const d=grassBladeData[i];
+const variantCounts=[0,0,0];
+for(const d of grassBladeData)d.slot=variantCounts[d.variant]++;
 
-    // Strict single-layer billboard: only yaw toward the camera.
+const grassFrontMeshes=[];
+const grassThicknessMeshes=[];
+for(let v=0;v<3;v++){
+  const front=new THREE.InstancedMesh(grassGeos[v],grassFrontMats[v],variantCounts[v]);
+  const thick=new THREE.InstancedMesh(grassGeos[v],grassThicknessMat,variantCounts[v]);
+  for(const mesh of [front,thick]){
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.frustumCulled=false;
+  }
+  front.castShadow=true;
+  front.receiveShadow=true;
+  thick.castShadow=false;
+  thick.receiveShadow=true;
+  thick.renderOrder=0;
+  front.renderOrder=1;
+  grassFrontMeshes.push(front);
+  grassThicknessMeshes.push(thick);
+  paperGrassGroup.add(thick,front);
+}
+
+const grassDummy=new THREE.Object3D();
+
+function updatePaperGrass(t){
+  for(const d of grassBladeData){
+    // Strict single-sheet billboard: only yaw toward the camera.
     const dx=camera.position.x-d.x;
     const dz=camera.position.z-d.z;
     const angle=Math.atan2(dx,dz);
     const nx=Math.sin(angle),nz=Math.cos(angle);
 
-    // Tiny in-plane sway keeps the sheet handmade without breaking billboard facing.
-    const roll=Math.sin(t*.62+d.phase)*.012;
+    // Billboard-local right vector. Used to reveal the black "paper side" only
+    // on the right/bottom edge instead of drawing a black halo around the tuft.
+    const rx=Math.cos(angle),rz=-Math.sin(angle);
+
+    // Cute paper card movement: barely noticeable, no realistic grass whipping.
+    const roll=Math.sin(t*.55+d.phase)*.008;
 
     grassDummy.position.set(d.x,d.y,d.z);
     grassDummy.rotation.set(0,angle,roll);
     grassDummy.scale.set(d.scale,d.scale,d.scale);
     grassDummy.updateMatrix();
-    grassFront.setMatrixAt(i,grassDummy.matrix);
+    grassFrontMeshes[d.variant].setMatrixAt(d.slot,grassDummy.matrix);
 
-    // Program thickness: same silhouette, only 1.6% larger and ~0.007 units
-    // behind the front face. This reads as a very thin black paper edge.
-    grassDummy.position.set(d.x-nx*.007,d.y-.002,d.z-nz*.007);
+    // Program-only thickness: same source sheet, ~0.4% scale difference and a
+    // tiny right/down/back offset. The result is just a black paper side sliver.
+    grassDummy.position.set(
+      d.x+rx*.0045-nx*.0035,
+      d.y-.003,
+      d.z+rz*.0045-nz*.0035
+    );
     grassDummy.rotation.set(0,angle,roll);
-    grassDummy.scale.set(d.scale*1.016,d.scale*1.016,d.scale);
+    grassDummy.scale.set(d.scale*1.004,d.scale*1.004,d.scale);
     grassDummy.updateMatrix();
-    grassThicknessPass.setMatrixAt(i,grassDummy.matrix);
+    grassThicknessMeshes[d.variant].setMatrixAt(d.slot,grassDummy.matrix);
   }
-  grassFront.instanceMatrix.needsUpdate=true;
-  grassThicknessPass.instanceMatrix.needsUpdate=true;
+
+  for(let v=0;v<3;v++){
+    grassFrontMeshes[v].instanceMatrix.needsUpdate=true;
+    grassThicknessMeshes[v].instanceMatrix.needsUpdate=true;
+  }
 }
 updatePaperGrass(0);
 
