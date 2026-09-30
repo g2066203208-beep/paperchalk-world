@@ -151,7 +151,7 @@ class BiomeLandformGenerator{
     // of cell-to-cell noise. Low-frequency fields define large shelves while
     // the rest of the infinite world still uses the full landform generator.
     const spawnDistance=Math.hypot(gx-this.spawnX,gz-this.spawnZ);
-    const safeBlend=1-smoothstep(this.spawnSafeRadius*.55,this.spawnSafeRadius*1.22,spawnDistance);
+    const safeBlend=1-smoothstep(this.spawnSafeRadius*.70,this.spawnSafeRadius*2.40,spawnDistance);
     const terraceField=f.continental*.58+f.ridge*.28-f.erosion*.14;
     const terraceStep=Math.round(terraceField*2.15);
     const shelfWave=Math.round((Math.sin((gx-this.spawnX)*.115)+Math.cos((gz-this.spawnZ)*.102))*.34);
@@ -166,7 +166,7 @@ class BiomeLandformGenerator{
     // left/front while a warm kraft-paper dryland dominates center/right.
     // The wavy transition avoids a perfectly straight biome cut.
     const transition=(gx-this.spawnX)+7.5+Math.sin((gz-this.spawnZ)*.20)*2.35+f.ridge*.85;
-    const stagedGround=safeBlend>.16;
+    const stagedGround=safeBlend>.08;
     const stagedDry=stagedGround&&transition>0;
     if(safeBlend>.30){
       biome=stagedDry?BIOME.DESERT:BIOME.MEADOW;
