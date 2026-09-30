@@ -51,7 +51,7 @@ try{
   await page.keyboard.down('KeyD');await page.waitForTimeout(420);await page.keyboard.up('KeyD');await page.waitForTimeout(80);
   const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
   assert(afterD.x-before.x>.22,'D did not move right on side-scroll X axis '+JSON.stringify({before,afterD}));
-  assert(Math.abs(afterD.z-3)<.001,'player left the prologue gameplay row '+JSON.stringify({before,afterD}));
+  assert(Math.abs(afterD.z-2)<.001,'player left the prologue gameplay row '+JSON.stringify({before,afterD}));
   await page.keyboard.down('KeyW');await page.waitForTimeout(420);await page.keyboard.up('KeyW');await page.waitForTimeout(80);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
   assert(Math.abs(afterW.x-afterD.x)<.08&&Math.abs(afterW.z-afterD.z)<.001,'W must not move in finite visual Z depth '+JSON.stringify({afterD,afterW}));
