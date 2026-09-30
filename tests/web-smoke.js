@@ -135,6 +135,7 @@ assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 assert(engine.includes('zMovementLocked:false')&&engine.includes('raycastIgnoresOtherRows:false'),'renderer still locks gameplay to one Z row');
 assert(engine.includes('Math.min(Number(devicePixelRatio)||1,2)'),'native DPR mobile rendering missing');
 assert(engine.includes('playerTexture.generateMipmaps=false'),'sharp protagonist texture path missing');
+assert(engine.includes('sun.shadow.normalBias=.055')&&engine.includes('shadowAcneGuard:true'),'ground shadow-acne guard missing');
 
 assert(html.includes('data-debug-action="flight"'),'flight debug button missing');
 assert(html.includes('data-world-time')&&html.includes('data-world-timescale'),'time debug controls missing');
