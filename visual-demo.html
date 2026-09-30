@@ -802,13 +802,13 @@ renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.cli
 renderer.domElement.addEventListener('pointermove',e=>{
   if(!dragging)return;
   yaw-=(e.clientX-lastX)*.006;pitch=clamp(pitch+(e.clientY-lastY)*.004,.08,.62);
-  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;depthDirty=true;
+  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;
 });
 renderer.domElement.addEventListener('pointerup',()=>dragging=false);
 renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();renderDirty=true;shadowDirty=true;depthDirty=true;depthDirty=true;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();renderDirty=true;shadowDirty=true;depthDirty=true;
 });
 
 let prev=performance.now();
