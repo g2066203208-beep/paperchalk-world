@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="340" viewBox="0 0 1600 340">
+<defs>
+<filter id="paper" x="-10%" y="-10%" width="120%" height="120%">
+ <feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="7" result="n"/>
+ <feColorMatrix in="n" values="1 0 0 0 .58 0 1 0 0 .52 0 0 1 0 .44 0 0 0 .16 0" result="p"/>
+ <feBlend in="SourceGraphic" in2="p" mode="multiply"/>
+</filter>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+ <feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#39291e" flood-opacity=".28"/>
+</filter>
+</defs>
+<g filter="url(#shadow)">
+ <g filter="url(#paper)">
+  <rect x="0" y="156" width="1600" height="164" fill="#b95643" stroke="#7e4537" stroke-width="8"/>
+  <rect x="0" y="124" width="1600" height="42" fill="#b9aa90" stroke="#7e6f5e" stroke-width="7"/>
+  <g fill="#d5c4a4" stroke="#88745e" stroke-width="7">
+   <rect x="34" y="58" width="88" height="262"/><rect x="365" y="42" width="96" height="278"/>
+   <rect x="783" y="42" width="96" height="278"/><rect x="1458" y="58" width="88" height="262"/>
+  </g>
+  <rect x="133" y="80" width="218" height="240" fill="#d3c09f" stroke="#8c765f" stroke-width="7"/>
+  <rect x="151" y="115" width="92" height="82" fill="#758f9a" stroke="#554f45" stroke-width="6"/>
+  <rect x="263" y="114" width="60" height="206" fill="#9f896f" stroke="#665447" stroke-width="6"/>
+  <rect x="125" y="64" width="238" height="30" fill="#9b856c" stroke="#6f5b4b" stroke-width="6"/>
+  <g fill="#2f3435" stroke="#222" stroke-width="3">
+   <rect x="466" y="104" width="145" height="216"/><rect x="616" y="104" width="145" height="216"/>
+  </g>
+  <g stroke="#84745f" stroke-width="9">
+   <path d="M488 116v190M520 116v190M552 116v190M584 116v190M638 116v190M670 116v190M702 116v190M734 116v190"/>
+  </g>
+  <rect x="890" y="120" width="374" height="144" fill="#cbb99a" stroke="#89745d" stroke-width="7"/>
+  <rect x="955" y="150" width="246" height="64" rx="4" fill="#4a4038" stroke="#76634e" stroke-width="6"/>
+  <text x="1078" y="194" fill="#e6c87b" font-size="38" text-anchor="middle" font-family="serif">市立第一中学</text>
+  <rect x="1280" y="112" width="164" height="208" fill="#b95643" stroke="#7e4537" stroke-width="7"/>
+  <g fill="#6c8355">
+   <path d="M905 320c17-61 91-65 114-5 26-54 105-49 122 5Z"/>
+   <path d="M1287 320c18-55 84-61 108-10 20-35 69-33 82 10Z"/>
+  </g>
+ </g>
+</g>
+</svg>
