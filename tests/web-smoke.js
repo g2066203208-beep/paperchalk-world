@@ -1,9 +1,9 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js'),school=read('src/prologue/PrologueSchoolScene.js');
 
-assert(html.includes('paper-r19'),'build key missing');
+assert(html.includes('paper-r20'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'finite-side-scroll-voxel'"),'finite side-scroll world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -55,6 +55,8 @@ assert(terrain.includes('generatorVersion=4'),'legacy terrain generator compatib
 assert(game.includes('window.PaperchalkBiomes'),'biome runtime API missing');
 assert(game.includes('FLY_SPEED')&&game.includes('setFlight'),'debug flight runtime missing');
 assert(html.includes('src/prologue/voxel-road.js'),'voxel prologue road module missing');
+assert(renderer.includes('PrologueSchoolScene')&&school.includes("prologue-school-real-model"),'real prologue school model missing');
+assert(school.includes("realGeometry:true")&&school.includes("floors:3")&&school.includes("school-window-frames"),'school geometry contract missing');
 assert(content.includes('prologueRoad:{')&&content.includes('lengthMeters:96,widthMeters:10')&&content.includes('farSidewalkMinZ:-5,farSidewalkMaxZ:-4')&&content.includes('farLaneMinZ:-3,farLaneMaxZ:-1')&&content.includes('nearLaneMinZ:0,nearLaneMaxZ:2')&&content.includes('nearSidewalkMinZ:3,nearSidewalkMaxZ:4'),'96m x 10m road scale missing');
 assert(road.includes("gameplayPlane:'x-y'")&&road.includes("zRole:'finite-visual-depth'"),'side-scroll road contract missing');
 assert(road.includes('finite-prologue-voxel-road-96x10-v2'),'finite voxel road generator missing');
