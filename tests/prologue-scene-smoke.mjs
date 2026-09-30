@@ -10,16 +10,19 @@ try{
  page.on('pageerror',e=>errors.push('PAGE '+String(e)));
  page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
  await page.goto('http://127.0.0.1:8080/?world=prologue&prologue-smoke=1',{waitUntil:'networkidle'});
- await page.waitForFunction(()=>window.PaperchalkSceneRuntime&&window.PaperchalkRuntime&&window.PaperchalkTerrain,{timeout:7000});
+ await page.waitForFunction(()=>window.PaperchalkSceneRuntime&&window.PaperchalkPrologueCars&&window.PaperchalkRuntime&&window.PaperchalkTerrain,{timeout:7000});
  const cold=await page.evaluate(()=>({
    scene:window.PaperchalkMap.scene3d,
    terrain:window.PaperchalkTerrain.stats(),
-   zones:window.PaperchalkSceneRuntime.prologue.terrain.crossSection
+   zones:window.PaperchalkSceneRuntime.prologue.terrain.crossSection,
+   car:window.PaperchalkPrologueCars.CAR
  }));
  assert(cold.scene.id==='prologue-school-street'&&cold.scene.mode==='prologue-city-3d','wrong prologue scene '+JSON.stringify(cold.scene));
  assert(cold.scene.bounds.minX===0&&cold.scene.bounds.maxX===180&&cold.scene.bounds.minZ===-28&&cold.scene.bounds.maxZ===28,'wrong prologue bounds '+JSON.stringify(cold.scene.bounds));
  assert(cold.terrain.infinite===false&&cold.terrain.finite===true,'prologue terrain must be finite '+JSON.stringify(cold.terrain));
  assert(cold.terrain.street?.lengthMeters===180&&cold.terrain.street?.depthMeters===56,'wrong street dimensions '+JSON.stringify(cold.terrain.street));
+ assert(cold.car.x===36.5&&cold.car.z===-5&&cold.car.groundY===1,'paper sedan not voxel-aligned '+JSON.stringify(cold.car));
+ assert(cold.car.length===4.4&&cold.car.width===1.9&&cold.car.height===1.6&&cold.car.lane==='rear-motor','paper sedan dimensions/lane wrong '+JSON.stringify(cold.car));
  assert(cold.terrain.campus===undefined,'rejected school campus terrain still present '+JSON.stringify(cold.terrain));
  const z=cold.zones;
  assert(z.rearBuilding.width===12&&z.rearSidewalk.width===4&&z.rearBike.width===3&&z.rearBuffer.width===1&&z.rearMotor.width===7&&z.median.width===2&&z.frontMotor.width===7&&z.frontBuffer.width===1&&z.frontBike.width===3&&z.frontSidewalk.width===4&&z.frontBuilding.width===12,'street cross-section widths wrong '+JSON.stringify(z));
@@ -55,6 +58,11 @@ try{
  assert(entered.snap.player.x>24&&entered.snap.player.x<25,'wrong prologue spawn X '+JSON.stringify(entered.snap.player));
  assert(entered.stats.worldMode==='prologue-city-3d','renderer is not using prologue scene '+JSON.stringify(entered.stats));
  assert(Math.abs(entered.stats.camera.yaw)<.01&&Math.abs(entered.stats.camera.distance-18)<.05&&Math.abs(entered.stats.camera.fov-42)<.05,'prologue camera preset missing '+JSON.stringify(entered.stats.camera));
+ const car=entered.stats.paperCar;
+ assert(car?.enabled===true&&car.style==='simple-3d+2d-paper-texture','paper sedan renderer missing '+JSON.stringify(car));
+ assert(car.count===1&&car.voxelAligned===true&&car.lane==='rear-motor','paper sedan placement wrong '+JSON.stringify(car));
+ assert(car.dimensions.length===4.4&&car.dimensions.width===1.9&&car.dimensions.height===1.6,'paper sedan render dimensions wrong '+JSON.stringify(car.dimensions));
+ assert(car.geometry.boxes===7&&car.geometry.wheels===4&&car.geometry.decals===5&&car.geometry.wheelSegments===12,'paper sedan geometry is no longer simple '+JSON.stringify(car.geometry));
  const fence=entered.stats.schoolFence;
  assert(fence?.enabled===true&&fence.gridAligned===true&&fence.installation==='voxel-grid-edge','school fence grid installation missing '+JSON.stringify(fence));
  assert(fence.lineZ===-16.5&&fence.rearCellZ===-17&&fence.sidewalkCellZ===-16,'fence is not on voxel edge '+JSON.stringify(fence));
@@ -67,10 +75,13 @@ try{
      fence:S.collidesAABB(scene,10,1.95,-16.5,.34,.95,.28),
      gate:S.collidesAABB(scene,24,1.95,-16.5,.34,.95,.28),
      sidewalk:S.collidesAABB(scene,24,1.95,-14.5,.34,.95,.28),
+     car:S.collidesAABB(scene,36.5,1.8,-5,.34,.95,.28),
+     clearRoad:S.collidesAABB(scene,45.5,1.8,-5,.34,.95,.28),
      oldBuilding:S.collidesAABB(scene,32,1.95,-20.5,.34,.95,.28)
    };
  });
  assert(collision.fence===true&&collision.gate===false&&collision.sidewalk===false,'school fence/gate collision wrong '+JSON.stringify(collision));
+ assert(collision.car===true&&collision.clearRoad===false,'paper sedan collision wrong '+JSON.stringify(collision));
  assert(collision.oldBuilding===false,'rejected building collision still present '+JSON.stringify(collision));
  await page.screenshot({path:'artifacts/prologue-school-street.png'});
  if(errors.length)throw new Error(errors.join('\n'));
