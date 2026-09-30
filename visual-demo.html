@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.19</h1>
-  <p>v12.19 固有色：继续保持严格 1×1×1 标准立方体，只给 Paper003 增加地形本身的绿色固有色。Paper003 负责纸张纹理、法线和粗糙度，绿色由材质本身提供；关闭 Paper003 时仍然保留相同绿色，不会退回白色。</p>
+  <h1>纸艺世界视觉 Demo v12.20</h1>
+  <p>v12.20 触控镜头：保留鼠标拖动和滚轮缩放，同时加入手机/平板双指捏合缩放。双指靠近会拉远，双指张开会拉近；单指仍然负责 360° 环绕，双指结束后可无跳变继续单指旋转。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -60,7 +60,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动 360° 环绕 · 可俯视/仰视 · 滚轮缩放 · 星空真实深度遮挡</div>
+<div class="badge">单指/鼠标拖动 360° · 双指捏合缩放 · 滚轮缩放 · 星空真实深度遮挡</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -1980,17 +1980,86 @@ document.getElementById('cycle').onclick=()=>{
 };
 
 let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0,lastMistTick=0,mistClock=0;
-renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
+
+// Unified pointer handling:
+// 1 pointer = orbit, 2 pointers = pinch zoom. Pointer Events also keeps this
+// working for mouse, pen, iOS Safari and Android Chrome without separate touch code.
+const activePointers=new Map();
+let pinchStartDistance=0;
+let pinchStartCameraDistance=dist;
+
+function markCameraDirty(){
+  placeCamera();
+  renderDirty=true;
+  shadowDirty=true;
+  depthDirty=true;
+  volumeShadowDirty=true;
+}
+function pointerPairDistance(){
+  const pts=[...activePointers.values()];
+  if(pts.length<2)return 0;
+  return Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+}
+function beginPinch(){
+  if(activePointers.size<2)return;
+  pinchStartDistance=Math.max(1,pointerPairDistance());
+  pinchStartCameraDistance=dist;
+  dragging=false;
+}
+function finishPointer(pointerId){
+  activePointers.delete(pointerId);
+  if(activePointers.size===1){
+    const p=activePointers.values().next().value;
+    lastX=p.x;lastY=p.y;
+    dragging=true;
+  }else{
+    dragging=false;
+  }
+  if(activePointers.size<2)pinchStartDistance=0;
+}
+
+renderer.domElement.addEventListener('pointerdown',e=>{
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  renderer.domElement.setPointerCapture(e.pointerId);
+
+  if(activePointers.size===1){
+    dragging=true;
+    lastX=e.clientX;lastY=e.clientY;
+  }else if(activePointers.size===2){
+    beginPinch();
+  }
+});
+
 renderer.domElement.addEventListener('pointermove',e=>{
+  if(!activePointers.has(e.pointerId))return;
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+
+  if(activePointers.size>=2){
+    if(!pinchStartDistance)beginPinch();
+    const current=Math.max(1,pointerPairDistance());
+    // Spread fingers = zoom in; pinch fingers together = zoom out.
+    dist=clamp(pinchStartCameraDistance*(pinchStartDistance/current),8,32);
+    markCameraDirty();
+    return;
+  }
+
   if(!dragging)return;
   yaw-=(e.clientX-lastX)*.006;
   pitch=clamp(pitch+(e.clientY-lastY)*.005,-PITCH_LIMIT,PITCH_LIMIT);
   lastX=e.clientX;lastY=e.clientY;
-  placeCamera();
-  renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
+  markCameraDirty();
 });
-renderer.domElement.addEventListener('pointerup',()=>dragging=false);
-renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,8,32);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true},{passive:true});
+
+renderer.domElement.addEventListener('pointerup',e=>finishPointer(e.pointerId));
+renderer.domElement.addEventListener('pointercancel',e=>finishPointer(e.pointerId));
+renderer.domElement.addEventListener('lostpointercapture',e=>{
+  if(activePointers.has(e.pointerId))finishPointer(e.pointerId);
+});
+
+renderer.domElement.addEventListener('wheel',e=>{
+  dist=clamp(dist+e.deltaY*.012,8,32);
+  markCameraDirty();
+},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,DPR_CAP));starUniforms.pixelRatio.value=Math.min(devicePixelRatio||1,DPR_CAP);resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
