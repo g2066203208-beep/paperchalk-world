@@ -142,7 +142,10 @@ export function createPaperMaterialSet(THREE,settings){
   };
   const grassFallback=new THREE.DataTexture(new Uint8Array([198,214,126,255]),1,1,THREE.RGBAFormat,THREE.UnsignedByteType);
   grassFallback.name='grass-reference-fallback';grassFallback.colorSpace=THREE.SRGBColorSpace;grassFallback.needsUpdate=true;
+  const dirtFallback=new THREE.DataTexture(new Uint8Array([167,105,65,255]),1,1,THREE.RGBAFormat,THREE.UnsignedByteType);
+  dirtFallback.name='dirt-reference-fallback';dirtFallback.colorSpace=THREE.SRGBColorSpace;dirtFallback.needsUpdate=true;
   let grassReference=grassFallback,grassLoaded=false,grassReferenceSize=[1,1],grassMaterial=null;
+  let dirtReference=dirtFallback,dirtLoaded=false,dirtReferenceSize=[1,1],dirtMaterial=null;
   new THREE.TextureLoader().load('assets/materials/grass-reference.webp?v=grass-native-r1',tex=>{
     tex.name='user-supplied-grass-paper-512';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
@@ -150,6 +153,14 @@ export function createPaperMaterialSet(THREE,settings){
     tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     grassReference=tex;grassLoaded=true;grassReferenceSize=[tex.image?.width||512,tex.image?.height||512];
     if(grassMaterial){grassMaterial.map=tex;grassMaterial.needsUpdate=true}
+  });
+  new THREE.TextureLoader().load('assets/materials/dirt-reference.webp?v=dirt-native-r1',tex=>{
+    tex.name='user-supplied-dirt-paper-256';tex.colorSpace=THREE.SRGBColorSpace;
+    tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+    tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
+    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    dirtReference=tex;dirtLoaded=true;dirtReferenceSize=[tex.image?.width||256,tex.image?.height||256];
+    if(dirtMaterial){dirtMaterial.map=tex;dirtMaterial.needsUpdate=true}
   });
 
   const make=({side=false,bevel=false}={})=>{
@@ -223,7 +234,15 @@ export function createPaperMaterialSet(THREE,settings){
     sheenColor:new THREE.Color(0xf4f0cf)
   });
   grassMaterial.name='user-grass-native-resolution';grassMaterial.userData.paperRole='grass-top';
-  materials.push(grassMaterial);
+  dirtMaterial=new THREE.MeshPhysicalMaterial({
+    color:0xffffff,map:dirtReference,vertexColors:false,
+    normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
+    normalScale:new THREE.Vector2(.18,.18),roughness:.992,metalness:0,side:THREE.DoubleSide,
+    specularIntensity:.045,ior:1.33,sheen:.035,sheenRoughness:.99,
+    sheenColor:new THREE.Color(0xe0b38a)
+  });
+  dirtMaterial.name='user-dirt-native-resolution';dirtMaterial.userData.paperRole='dirt';
+  materials.push(grassMaterial,dirtMaterial);
   const sync=next=>{
     const micro=clamp(Number(next.microNormalStrength)||.34,.08,.85);
     const rough=clamp(Number(next.roughnessVariation)||.035,0,.10);
@@ -240,6 +259,8 @@ export function createPaperMaterialSet(THREE,settings){
     }
     grassMaterial.normalScale.setScalar(micro*.58);
     grassMaterial.roughness=clamp(.994-rough*.06,.978,.996);
+    dirtMaterial.normalScale.setScalar(micro*.52);
+    dirtMaterial.roughness=clamp(.995-rough*.05,.982,.997);
   };
   sync(settings);
 
@@ -253,12 +274,16 @@ export function createPaperMaterialSet(THREE,settings){
     userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
     grassReferenceLoaded:grassLoaded,grassReferenceSize,grassMaterialGroup:true,
     grassColorSource:'user-texture-only',grassTextureTransform:'native-world-uv-repeat-1x',
+    userDirtReference:true,dirtReferenceAsset:'assets/materials/dirt-reference.webp',
+    dirtReferenceLoaded:dirtLoaded,dirtReferenceSize,dirtMaterialGroup:true,
+    dirtColorSource:'user-texture-only',dirtTextureTransform:'native-world-uv-repeat-1x',
     seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
     for(const m of materials)m.dispose();
     if(grassReference!==grassFallback)grassReference.dispose();
-    grassFallback.dispose();
+    if(dirtReference!==dirtFallback)dirtReference.dispose();
+    grassFallback.dispose();dirtFallback.dispose();
     for(const set of Object.values(sets)){set.albedo.dispose();set.normal.dispose();set.roughness.dispose()}
   };
   return {sets,materials,sync,stats,dispose};
