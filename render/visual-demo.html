@@ -95,7 +95,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 <div class="badge">单指/鼠标拖动 360° · 双指捏合缩放 · 滚轮缩放 · 星空真实深度遮挡</div>
 
 <script type="module">
-import * as THREE from './vendor/three/three.module.js';
+import * as THREE from '../vendor/three/three.module.js';
 
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
 const DPR_CAP=innerWidth<760?1.05:1.22;
@@ -1217,7 +1217,7 @@ const playerDuskTint=new THREE.Color(0xffead8);
 const playerNightTint=new THREE.Color(0xc9d6ee);
 const playerTintTmp=new THREE.Color();
 
-new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
+new THREE.TextureLoader().load('../assets/player/protagonist.webp',t=>{
   t.colorSpace=THREE.SRGBColorSpace;
   t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
 
