@@ -4,8 +4,8 @@
 
 const scene3d={
   mode:'finite-side-scroll-voxel',
-  spawn:{x:-40,y:3,z:3,yaw:0},
-  bounds:{minX:-48,maxX:64,minY:-16,maxY:32,minZ:-4,maxZ:4},
+  spawn:{x:-40,y:3,z:2,yaw:0},
+  bounds:{minX:-48,maxX:64,minY:-16,maxY:32,minZ:-6,maxZ:6},
   terrain:{
     tileSize:1,
     pixelsPerMeter:128,
@@ -13,19 +13,19 @@ const scene3d={
     chunkSize:16,
     seed:24681357,
     visibleChunkRadiusXZ:2,
-    interactionRowZ:3,
+    interactionRowZ:2,
     blackBackRowZ:-64,
     visibleChunkRadiusY:1,
     maxBuildsPerFrame:5,
     prologueRoad:{
       id:'prologue-city-road-v1',
       minX:-48,maxX:64,
-      minZ:-4,maxZ:4,
+      minZ:-6,maxZ:6,
       groundMinY:-4,surfaceY:0,
-      roadMinZ:-2,roadMaxZ:1,
-      curbNearZ:2,curbFarZ:-3,
-      sidewalkNearMinZ:3,sidewalkFarMaxZ:-4,
-      laneMarkerZ:0,
+      roadMinZ:-3,roadMaxZ:0,
+      curbNearZ:1,curbFarZ:-4,
+      sidewalkNearMinZ:2,sidewalkFarMaxZ:-5,
+      laneMarkerZ:-1,
       crosswalkMinX:6,crosswalkMaxX:16
     },
     biome:{
