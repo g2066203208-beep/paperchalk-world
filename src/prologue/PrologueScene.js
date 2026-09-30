@@ -196,11 +196,31 @@ export class PrologueScene{
       s.lamp.material=green?this.materials.signalGreen:this.materials.signalRed;
     }
   }
+  _cityCamera(player){
+    const T=this.THREE,r=15.5,y=9.2;
+    const blockers=this.content.city.buildings;
+    const candidates=[[.62,.78],[.78,-.62],[-.78,-.62],[-.62,.78],[1,0],[-1,0],[0,-1],[0,1]];
+    const clear=(x,z)=>{
+      for(let i=1;i<=18;i++){
+        const t=i/18,px=player.x+(x-player.x)*t,pz=player.z+(z-player.z)*t;
+        for(const b of blockers){
+          if(px>b.x-.7&&px<b.x+b.w+.7&&pz>b.z-.7&&pz<b.z+b.d+.7)return false;
+        }
+      }
+      return true;
+    };
+    for(const [ax,az] of candidates){
+      const m=Math.hypot(ax,az)||1,x=player.x+ax/m*r,z=player.z+az/m*r;
+      if(clear(x,z))return new T.Vector3(x,y,z);
+    }
+    return new T.Vector3(player.x,15,player.z+8);
+  }
   update(snapshot,dt){
     if(!snapshot)return;
     this.clockTime+=dt;
     for(const [id,g] of Object.entries(this.groups))g.visible=id===snapshot.zone;
-    if(this.lastZone!==snapshot.zone){
+    const zoneChanged=this.lastZone!==snapshot.zone;
+    if(zoneChanged){
       this.lastZone=snapshot.zone;
       for(const actor of this.people.values())actor.root.visible=false;
       for(const car of this.cars.values())car.visible=snapshot.zone==='city';
@@ -222,9 +242,14 @@ export class PrologueScene{
       const pulse=1+Math.sin(this.clockTime*4)*.08;this.marker.scale.set(pulse,pulse,pulse);
     }else this.marker.visible=false;
 
-    const offset=snapshot.zone==='city'?new this.THREE.Vector3(9.5,8.0,12.5):new this.THREE.Vector3(7.0,6.0,8.0);
-    const desired=new this.THREE.Vector3(snapshot.player.x+offset.x,offset.y,snapshot.player.z+offset.z);
-    const k=1-Math.pow(.001,Math.max(0,dt));this.camera.position.lerp(desired,k);
+    let desired;
+    if(snapshot.zone==='city')desired=this._cityCamera(snapshot.player);
+    else{
+      const offset=snapshot.zone==='home'?new this.THREE.Vector3(5.2,7.6,6.2):new this.THREE.Vector3(7.0,6.0,8.0);
+      desired=new this.THREE.Vector3(snapshot.player.x+offset.x,offset.y,snapshot.player.z+offset.z);
+    }
+    const k=zoneChanged?1:1-Math.pow(.001,Math.max(0,dt));
+    this.camera.position.lerp(desired,k);
     this.cameraTarget.lerp(new this.THREE.Vector3(snapshot.player.x,.8,snapshot.player.z),k);
     this.camera.lookAt(this.cameraTarget);
     const yaw=Math.atan2(this.camera.position.x-snapshot.player.x,this.camera.position.z-snapshot.player.z);
