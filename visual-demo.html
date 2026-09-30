@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.7</h1>
-  <p>v12.7 镜头与星空修正：镜头俯仰范围放开到接近完整上下半球，可从高处、低处、背面任意环绕观察；星星恢复真实深度测试，只会出现在天空后方，会被树、地形和角色正确遮挡，不再像 UI 一样压在树顶和屏幕上。</p>
+  <h1>纸艺世界视觉 Demo v12.8</h1>
+  <p>v12.8 真实纸地形 + 性能重构：地形改成真正的纸张 PBR——草纸、纸板芯、切边都有程序法线贴图和粗糙度贴图；绿色薄纸层真正浮在棕色压缩纸板上。地形由大量独立 Mesh/材质重构成共享材质 + InstancedMesh，森林也批量实例化；同时削减无效阴影、体积光分辨率和超额 DPR。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -66,7 +66,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 import * as THREE from './vendor/three/three.module.js';
 
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));
+const DPR_CAP=innerWidth<760?1.05:1.22;
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,DPR_CAP));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -263,62 +264,158 @@ function mistTexture(seed=1){
   return t;
 }
 
-const variantCount=6;
-const grassTextures=[],edgeTextures=[],dirtTextures=[];
-for(let i=0;i<variantCount;i++){
-  grassTextures.push(paperTexture('#accb74',['#c0d987','#92b961','#b7d47a','#9fc36b','#a5c96f'],731,false,i));
-  edgeTextures.push(paperTexture('#98b95d',['#aecf6e','#86a950','#a2c568','#91b357'],381,false,i));
-  dirtTextures.push(paperTexture('#aa693f',['#c18150','#935431','#b97548','#cb8a5a','#a55f39'],991,true,i));
+// ---------------------------------------------------------------------------
+// Real paper terrain material system.
+// One shared PBR set = albedo + NORMAL + roughness.  The height field is built
+// once on CPU, then converted into a tangent-space normal map.  No per-block
+// material allocation and no 18x 512px texture farm.
+// ---------------------------------------------------------------------------
+function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}){
+  const size=256;
+  const colorCanvas=document.createElement('canvas');
+  const heightCanvas=document.createElement('canvas');
+  colorCanvas.width=colorCanvas.height=heightCanvas.width=heightCanvas.height=size;
+  const cg=colorCanvas.getContext('2d'),hg=heightCanvas.getContext('2d');
+  const r=rng(seed);
+
+  cg.fillStyle=baseHex;cg.fillRect(0,0,size,size);
+  hg.fillStyle='rgb(128,128,128)';hg.fillRect(0,0,size,size);
+
+  // Broad pulp clouds: low frequency, quiet and handmade instead of noisy.
+  for(let i=0;i<34;i++){
+    const x=r()*size,y=r()*size,rx=18+r()*54,ry=12+r()*38;
+    cg.globalAlpha=.055+r()*.075;
+    cg.fillStyle=patchHexes[(r()*patchHexes.length)|0];
+    cg.beginPath();cg.ellipse(x,y,rx,ry,r()*Math.PI,0,Math.PI*2);cg.fill();
+  }
+  cg.globalAlpha=1;
+
+  // Visible fibres. Cut cardboard fibres run mostly horizontally; face stock
+  // stays much finer and more randomly oriented.
+  const fibreCount=cutEdge?900:620;
+  for(let i=0;i<fibreCount;i++){
+    const x=r()*size,y=r()*size;
+    const a=cutEdge?(r()-.5)*.34:r()*Math.PI;
+    const len=cutEdge?2+r()*12:1+r()*7;
+    const w=cutEdge?.42+r()*.78:.28+r()*.52;
+    const light=r()>.48;
+
+    cg.strokeStyle=light
+      ?(green?'rgba(245,250,215,.20)':'rgba(255,239,212,.20)')
+      :'rgba(61,42,31,.13)';
+    cg.lineWidth=w;
+    cg.beginPath();cg.moveTo(x,y);cg.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);cg.stroke();
+
+    const hv=light?150+(r()*18|0):105+(r()*18|0);
+    hg.strokeStyle=`rgb(${hv},${hv},${hv})`;
+    hg.lineWidth=w*(cutEdge?1.35:1.0);
+    hg.beginPath();hg.moveTo(x,y);hg.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);hg.stroke();
+  }
+
+  if(cutEdge){
+    // Compressed lamination lines make the exposed edge read as real paper
+    // stock rather than a brown game texture.
+    for(let y=8;y<size;y+=11+(r()*7|0)){
+      const a=.08+r()*.09;
+      cg.fillStyle=`rgba(62,37,25,${a.toFixed(3)})`;
+      cg.fillRect(0,y,size,1+r()*1.4);
+      hg.fillStyle='rgb(108,108,108)';
+      hg.fillRect(0,y,size,1);
+    }
+  }
+
+  const hdata=hg.getImageData(0,0,size,size).data;
+  const ndata=new Uint8Array(size*size*4);
+  const rdata=new Uint8Array(size*size*4);
+  const sample=(x,y)=>hdata[((Math.max(0,Math.min(size-1,y))*size+Math.max(0,Math.min(size-1,x)))*4)]/255;
+  const normalStrength=cutEdge?2.15:1.45;
+
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const o=(y*size+x)*4;
+    const dx=(sample(x+1,y)-sample(x-1,y))*normalStrength;
+    const dy=(sample(x,y+1)-sample(x,y-1))*normalStrength;
+    let nx=-dx,ny=dy,nz=1;
+    const inv=1/Math.max(1e-5,Math.hypot(nx,ny,nz));
+    nx*=inv;ny*=inv;nz*=inv;
+    ndata[o]=(nx*.5+.5)*255;
+    ndata[o+1]=(ny*.5+.5)*255;
+    ndata[o+2]=(nz*.5+.5)*255;
+    ndata[o+3]=255;
+
+    const h=sample(x,y);
+    const rough=clamp((cutEdge?.965:.935)+(h-.5)*.06,.87,.995);
+    const rv=Math.round(rough*255);
+    rdata[o]=rdata[o+1]=rdata[o+2]=rv;rdata[o+3]=255;
+  }
+
+  const color=new THREE.CanvasTexture(colorCanvas);
+  color.colorSpace=THREE.SRGBColorSpace;
+  color.wrapS=color.wrapT=THREE.RepeatWrapping;
+  color.minFilter=THREE.LinearMipmapLinearFilter;
+  color.magFilter=THREE.LinearFilter;
+  color.generateMipmaps=true;
+  color.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+
+  const normal=new THREE.DataTexture(ndata,size,size,THREE.RGBAFormat,THREE.UnsignedByteType);
+  normal.wrapS=normal.wrapT=THREE.RepeatWrapping;
+  normal.minFilter=THREE.LinearMipmapLinearFilter;normal.magFilter=THREE.LinearFilter;
+  normal.generateMipmaps=true;normal.needsUpdate=true;
+  normal.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+
+  const roughness=new THREE.DataTexture(rdata,size,size,THREE.RGBAFormat,THREE.UnsignedByteType);
+  roughness.wrapS=roughness.wrapT=THREE.RepeatWrapping;
+  roughness.minFilter=THREE.LinearMipmapLinearFilter;roughness.magFilter=THREE.LinearFilter;
+  roughness.generateMipmaps=true;roughness.needsUpdate=true;
+  roughness.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+
+  return {color,normal,roughness};
 }
 
-const blockGeo=new THREE.BoxGeometry(1,.78,1);
-const rimGeo=new THREE.BoxGeometry(1.035,.035,1.035);
-const capGeo=new THREE.BoxGeometry(1.055,.085,1.055);
-const terrain=new THREE.Group();scene.add(terrain);
-const caps=[],rims=[],paperObjects=[];
-const materialCache=new Map();
+const paperGrassSet=makePaperSurface(
+  '#a9c974',['#bfd987','#91b75f','#b5d379','#9ec16a'],
+  731,{green:true}
+);
+const paperDirtSet=makePaperSurface(
+  '#a96b45',['#c38357','#8d5237','#bb7750','#c98c63'],
+  991,{cutEdge:true}
+);
+const paperGreenEdgeSet=makePaperSurface(
+  '#8fae5e',['#aac976','#77954d','#9fbd69','#86a856'],
+  381,{cutEdge:true,green:true}
+);
 
-function makeMaterial(tex,tint=1,sat=0){
-  const m=new THREE.MeshLambertMaterial({map:tex});
-  m.color.setRGB(tint,tint,tint);m.color.offsetHSL(0,sat,0);
+// Compatibility arrays for cut grass / forest materials. All share GPU maps;
+// colour variation now comes from instance/material tint, not duplicate textures.
+const grassTextures=Array(6).fill(paperGrassSet.color);
+const edgeTextures=Array(6).fill(paperGreenEdgeSet.color);
+const dirtTextures=Array(6).fill(paperDirtSet.color);
+
+function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff,side=THREE.FrontSide}={}){
+  const m=new THREE.MeshStandardMaterial({
+    color,
+    map:set.color,
+    normalMap:set.normal,
+    roughnessMap:set.roughness,
+    normalScale:new THREE.Vector2(normalScale,normalScale),
+    roughness,
+    metalness:0,
+    side
+  });
   return m;
 }
-function materialSet(x,y,z,topGrass=true,randomOn=true){
-  const rv=randomOn?hash3(x,y,z):.22;
-  const gv=randomOn?hash3(x+91,y+31,z+61):.22;
-  const idx=Math.min(variantCount-1,Math.floor(rv*variantCount));
-  const gidx=Math.min(variantCount-1,Math.floor(gv*variantCount));
-  const jitter=randomOn?.94+hash3(x+11,y+7,z+3)*.12:1;
-  const sat=randomOn?(hash3(x+37,y+17,z+47)-.5)*.05:0;
-  const key=[idx,gidx,Math.round(jitter*100),Math.round(sat*1000),topGrass?1:0].join(':');
-  if(materialCache.has(key))return materialCache.get(key);
-  const dirt=makeMaterial(dirtTextures[idx],jitter,sat);
-  const top=topGrass?makeMaterial(grassTextures[gidx],clamp(jitter*1.015,.94,1.08),sat*.7):dirt;
-  const edge=makeMaterial(edgeTextures[gidx],clamp(jitter*.98,.92,1.05),sat*.6);
-  const set={dirt,top,edge};materialCache.set(key,set);return set;
-}
 
-const bottomMat=new THREE.MeshLambertMaterial({color:0x78472e});
+const terrainDirtMat=standardPaperMaterial(paperDirtSet,{normalScale:.52,roughness:.97});
+const terrainGrassMat=standardPaperMaterial(paperGrassSet,{normalScale:.33,roughness:.94});
+const terrainGreenEdgeMat=standardPaperMaterial(paperGreenEdgeSet,{normalScale:.58,roughness:.975});
+const terrainKraftLipMat=standardPaperMaterial(paperDirtSet,{normalScale:.62,roughness:.985,color:0xe0b68d});
+
+const blockGeo=new THREE.BoxGeometry(1,.78,1);
+const rimGeo=new THREE.BoxGeometry(1.045,.030,1.045);
+const capGeo=new THREE.BoxGeometry(1.055,.070,1.055);
+const terrain=new THREE.Group();scene.add(terrain);
+
 const columnRecords=[];
-
-function addColumn(x,z,h){
-  const rec={x,z,h,blocks:[],cap:null,rim:null};
-  for(let y=0;y<=h;y++){
-    const s=materialSet(x,y,z,y===h,true);
-    const mesh=new THREE.Mesh(blockGeo,[s.dirt,s.dirt,y===h?s.top:s.dirt,bottomMat,s.dirt,s.dirt]);
-    mesh.position.set(x,y*.78,z);mesh.castShadow=true;mesh.receiveShadow=true;
-    terrain.add(mesh);paperObjects.push(mesh);rec.blocks.push(mesh);
-  }
-  const s=materialSet(x,h,z,true,true);
-  const rim=new THREE.Mesh(rimGeo,[s.edge,s.edge,s.edge,s.edge,s.edge,s.edge]);
-  rim.position.set(x,h*.78+.386,z);rim.castShadow=true;rim.receiveShadow=true;
-  terrain.add(rim);rims.push(rim);paperObjects.push(rim);
-  const cap=new THREE.Mesh(capGeo,[s.edge,s.edge,s.top,s.edge,s.edge,s.edge]);
-  cap.position.set(x,h*.78+.445,z);cap.castShadow=true;cap.receiveShadow=true;
-  terrain.add(cap);caps.push(cap);paperObjects.push(cap);
-  rec.rim=rim;rec.cap=cap;columnRecords.push(rec);
-}
-
+let terrainBlockCount=0;
 for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   let h=0;
   if(x<-5||x>5)h=1;
@@ -326,21 +423,71 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   if((x===-4||x===4)&&Math.abs(z)>1)h=1;
   if(z===3&&Math.abs(x)>2)h++;
   if((x===-2&&z===-2)||(x===3&&z===2))h++;
-  addColumn(x,z,h);
+  columnRecords.push({x,z,h,columnIndex:columnRecords.length,blockStart:terrainBlockCount});
+  terrainBlockCount+=h+1;
 }
 
-function rebuildMaterialRandomness(on){
-  materialCache.clear();
-  for(const rec of columnRecords){
-    rec.blocks.forEach((mesh,y)=>{
-      const s=materialSet(rec.x,y,rec.z,y===rec.h,on);
-      mesh.material=[s.dirt,s.dirt,y===rec.h?s.top:s.dirt,bottomMat,s.dirt,s.dirt];
-    });
-    const s=materialSet(rec.x,rec.h,rec.z,true,on);
-    rec.rim.material=[s.edge,s.edge,s.edge,s.edge,s.edge,s.edge];
-    rec.cap.material=[s.edge,s.edge,s.top,s.edge,s.edge,s.edge];
+const terrainBlocks=new THREE.InstancedMesh(blockGeo,terrainDirtMat,terrainBlockCount);
+const terrainRims=new THREE.InstancedMesh(rimGeo,terrainKraftLipMat,columnRecords.length);
+const terrainCaps=new THREE.InstancedMesh(
+  capGeo,
+  [terrainGreenEdgeMat,terrainGreenEdgeMat,terrainGrassMat,terrainGreenEdgeMat,terrainGreenEdgeMat,terrainGreenEdgeMat],
+  columnRecords.length
+);
+terrainBlocks.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+terrainRims.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+terrainCaps.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+terrainBlocks.castShadow=true;terrainBlocks.receiveShadow=true;
+// The body already casts the same silhouette; skip duplicate cap/lip shadow work.
+terrainRims.castShadow=false;terrainCaps.castShadow=false;
+terrainRims.receiveShadow=true;terrainCaps.receiveShadow=true;
+terrain.add(terrainBlocks,terrainRims,terrainCaps);
+
+const terrainDummy=new THREE.Object3D();
+const terrainBlockRecords=[];
+let blockIndex=0;
+for(const rec of columnRecords){
+  for(let y=0;y<=rec.h;y++){
+    terrainDummy.position.set(rec.x,y*.78,rec.z);
+    terrainDummy.rotation.set(0,0,0);terrainDummy.scale.set(1,1,1);terrainDummy.updateMatrix();
+    terrainBlocks.setMatrixAt(blockIndex,terrainDummy.matrix);
+    terrainBlockRecords.push({x:rec.x,y,z:rec.z,index:blockIndex});
+    blockIndex++;
   }
+
+  // Brown compressed paper lip under a thin green cut-paper sheet.
+  terrainDummy.position.set(rec.x,rec.h*.78+.392,rec.z);
+  terrainDummy.updateMatrix();terrainRims.setMatrixAt(rec.columnIndex,terrainDummy.matrix);
+
+  terrainDummy.position.set(rec.x,rec.h*.78+.442,rec.z);
+  terrainDummy.updateMatrix();terrainCaps.setMatrixAt(rec.columnIndex,terrainDummy.matrix);
 }
+terrainBlocks.instanceMatrix.needsUpdate=true;
+terrainRims.instanceMatrix.needsUpdate=true;
+terrainCaps.instanceMatrix.needsUpdate=true;
+
+const caps=[terrainCaps],rims=[terrainRims],paperObjects=[terrainBlocks,terrainRims,terrainCaps];
+
+function rebuildMaterialRandomness(on){
+  const white=new THREE.Color(1,1,1);
+  for(const b of terrainBlockRecords){
+    const variation=on?.92+hash3(b.x+13,b.y+7,b.z+29)*.13:1;
+    const warm=on?(hash3(b.x+31,b.y+19,b.z+5)-.5)*.045:0;
+    const col=white.clone().multiplyScalar(variation);
+    col.offsetHSL(warm*.10,warm*.15,warm*.08);
+    terrainBlocks.setColorAt(b.index,col);
+  }
+  for(const rec of columnRecords){
+    const variation=on?.94+hash3(rec.x+61,rec.h+11,rec.z+17)*.10:1;
+    const capCol=white.clone().multiplyScalar(variation);
+    terrainCaps.setColorAt(rec.columnIndex,capCol);
+    terrainRims.setColorAt(rec.columnIndex,white.clone().multiplyScalar(.96+variation*.035));
+  }
+  if(terrainBlocks.instanceColor)terrainBlocks.instanceColor.needsUpdate=true;
+  if(terrainCaps.instanceColor)terrainCaps.instanceColor.needsUpdate=true;
+  if(terrainRims.instanceColor)terrainRims.instanceColor.needsUpdate=true;
+}
+rebuildMaterialRandomness(true);
 
 // Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
 // Two crossed sheets plus a dark offset backing make the paper thickness readable.
@@ -375,8 +522,12 @@ const paperGrassGroup=new THREE.Group();
 scene.add(paperGrassGroup);
 
 const grassCutGeo=cutGrassGeometry();
-const grassFrontMat=new THREE.MeshLambertMaterial({
-  map:grassTextures[1],
+const grassFrontMat=new THREE.MeshStandardMaterial({
+  map:paperGrassSet.color,
+  normalMap:paperGrassSet.normal,
+  roughnessMap:paperGrassSet.roughness,
+  normalScale:new THREE.Vector2(.30,.30),
+  roughness:.95,metalness:0,
   color:0xa8c970,
   side:THREE.DoubleSide,
   transparent:false
@@ -470,14 +621,14 @@ const canopyGroup=new THREE.Group();
 scene.add(canopyGroup);
 
 const forestLeafMats=[
-  new THREE.MeshLambertMaterial({map:grassTextures[3],color:0x314b36,side:THREE.DoubleSide}),
-  new THREE.MeshLambertMaterial({map:grassTextures[4],color:0x425d47,side:THREE.DoubleSide}),
-  new THREE.MeshLambertMaterial({map:grassTextures[5],color:0x5a7065,side:THREE.DoubleSide})
+  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x314b36,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x425d47,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x5a7065,side:THREE.DoubleSide})
 ];
 const forestTrunkMats=[
-  new THREE.MeshLambertMaterial({map:dirtTextures[2],color:0x5a4233,side:THREE.DoubleSide}),
-  new THREE.MeshLambertMaterial({map:dirtTextures[3],color:0x635044,side:THREE.DoubleSide}),
-  new THREE.MeshLambertMaterial({map:dirtTextures[4],color:0x6d5b50,side:THREE.DoubleSide})
+  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x5a4233,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x635044,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x6d5b50,side:THREE.DoubleSide})
 ];
 
 function forestCrownGeometry(seed=1){
@@ -497,41 +648,34 @@ const forestCrownGeos=[
   forestCrownGeometry(3),forestCrownGeometry(4)
 ];
 
-function addForestTree(x,z,layer,seed,scale=1){
+const forestTreeData=[];
+function queueForestTree(x,z,layer,seed,scale=1){
   const r=rng(12000+seed*41);
-  const g=new THREE.Group();
-  g.position.set(x,0,z);
-  g.scale.setScalar(scale);
-
-  const trunk=new THREE.Mesh(
-    new THREE.PlaneGeometry(.38+r()*.20,3.8+r()*1.8),
-    forestTrunkMats[layer]
-  );
-  trunk.position.set((r()-.5)*.12,1.95,0);
-  trunk.rotation.z=(r()-.5)*.045;
-  trunk.castShadow=true;trunk.receiveShadow=true;
-  g.add(trunk);
-
-  // Three overlapping cut-paper crown pieces create irregular holes instead of
-  // one solid blob. Those holes are preserved in the light-space depth map.
+  const trunk={
+    x:x+(r()-.5)*.12*scale,
+    y:1.95*scale,
+    z,
+    w:(.38+r()*.20)*scale,
+    h:(3.8+r()*1.8)*scale,
+    rot:(r()-.5)*.045,
+    layer
+  };
+  const crowns=[];
   for(let i=0;i<3;i++){
-    const crown=new THREE.Mesh(
-      forestCrownGeos[(seed+i)%forestCrownGeos.length],
-      forestLeafMats[layer]
-    );
-    crown.position.set((r()-.5)*.52,3.65+i*.55+(r()-.5)*.16,(i-1)*.035);
-    crown.scale.set(1.30+r()*.55,1.02+r()*.42,1);
-    crown.rotation.z=(r()-.5)*.30;
-    crown.castShadow=true;crown.receiveShadow=true;
-    g.add(crown);
+    crowns.push({
+      geo:(seed+i)%forestCrownGeos.length,
+      x:x+(r()-.5)*.52*scale,
+      y:(3.65+i*.55+(r()-.5)*.16)*scale,
+      z:z+(i-1)*.035*scale,
+      sx:(1.30+r()*.55)*scale,
+      sy:(1.02+r()*.42)*scale,
+      rot:(r()-.5)*.30,
+      layer
+    });
   }
-
-  canopyGroup.add(g);
-  return g;
+  forestTreeData.push({trunk,crowns});
 }
 
-// Three staggered layers. Positions are intentionally irregular so the gaps form
-// broad, medium and hairline shafts rather than a regular fence pattern.
 const forestLayers=[
   {z:-5.0,count:10,span:20,jitter:.95,scale:1.16},
   {z:-8.4,count:13,span:24,jitter:1.35,scale:1.06},
@@ -543,16 +687,44 @@ forestLayers.forEach((L,layer)=>{
     const x=(t-.5)*L.span+(hash3(layer*97+i*17,31,11)-.5)*L.jitter;
     const z=L.z+(hash3(i*23,layer*61,19)-.5)*.72;
     const s=L.scale+(hash3(i,layer,88)-.5)*.14;
-    addForestTree(x,z,layer,layer*100+i*13+7,s);
+    queueForestTree(x,z,layer,layer*100+i*13+7,s);
   }
 });
-
-// Heavy side framing makes the player feel inside the forest, while the center
-// stays perforated enough for several visible beams.
 [
   [-9.2,-2.2,0,1.45],[-8.6,.8,0,1.35],
   [ 9.0,-2.0,0,1.45],[ 8.5,1.2,0,1.35]
-].forEach((d,i)=>addForestTree(d[0],d[1],d[2],700+i*29,d[3]));
+].forEach((d,i)=>queueForestTree(d[0],d[1],d[2],700+i*29,d[3]));
+
+const forestDummy=new THREE.Object3D();
+const unitTrunkGeo=new THREE.PlaneGeometry(1,1);
+for(let layer=0;layer<3;layer++){
+  const trunks=forestTreeData.map(d=>d.trunk).filter(t=>t.layer===layer);
+  const im=new THREE.InstancedMesh(unitTrunkGeo,forestTrunkMats[layer],trunks.length);
+  im.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
+  trunks.forEach((t,i)=>{
+    forestDummy.position.set(t.x,t.y,t.z);
+    forestDummy.rotation.set(0,0,t.rot);
+    forestDummy.scale.set(t.w,t.h,1);
+    forestDummy.updateMatrix();im.setMatrixAt(i,forestDummy.matrix);
+  });
+  im.instanceMatrix.needsUpdate=true;canopyGroup.add(im);
+
+  for(let gi=0;gi<forestCrownGeos.length;gi++){
+    const crowns=forestTreeData.flatMap(d=>d.crowns).filter(q=>q.layer===layer&&q.geo===gi);
+    if(!crowns.length)continue;
+    const cm=new THREE.InstancedMesh(forestCrownGeos[gi],forestLeafMats[layer],crowns.length);
+    cm.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+    cm.castShadow=true;cm.receiveShadow=true;cm.frustumCulled=false;
+    crowns.forEach((q,i)=>{
+      forestDummy.position.set(q.x,q.y,q.z);
+      forestDummy.rotation.set(0,0,q.rot);
+      forestDummy.scale.set(q.sx,q.sy,1);
+      forestDummy.updateMatrix();cm.setMatrixAt(i,forestDummy.matrix);
+    });
+    cm.instanceMatrix.needsUpdate=true;canopyGroup.add(cm);
+  }
+}
 
 // GPU-friendly instanced paper fog cards.
 // We use two InstancedMeshes (upright banks + ground sheets), update instance
@@ -714,7 +886,7 @@ updatePaperGrass(0);
 // Cached low-resolution scene depth for soft intersection fading.
 let depthTarget=null,depthDirty=true;
 function resizeDepthTarget(){
-  const scale=.45;
+  const scale=innerWidth<760?.32:.38;
   const drawSize=new THREE.Vector2();
   renderer.getDrawingBufferSize(drawSize);
   const w=Math.max(256,Math.floor(drawSize.x*scale));
@@ -940,7 +1112,7 @@ scene.add(sky);
 // Procedural star field: NO star texture.
 // 900 point stars with independent size, brightness, tint and twinkle.
 // ---------------------------------------------------------------------------
-const STAR_COUNT=900;
+const STAR_COUNT=650;
 const starPositions=new Float32Array(STAR_COUNT*3);
 const starSizes=new Float32Array(STAR_COUNT);
 const starBrightness=new Float32Array(STAR_COUNT);
@@ -991,7 +1163,7 @@ const starUniforms={
   strength:{value:0},
   twinkle:{value:.18},
   moonDir:{value:new THREE.Vector3(0,1,0)},
-  pixelRatio:{value:Math.min(devicePixelRatio||1,1.35)}
+  pixelRatio:{value:Math.min(devicePixelRatio||1,DPR_CAP)}
 };
 
 const starMaterial=new THREE.ShaderMaterial({
@@ -1105,7 +1277,7 @@ const fsGeo=new THREE.PlaneGeometry(2,2);
 
 let sceneTarget=null,volumeTarget=null;
 let sunVolumeShadowTarget=null,moonVolumeShadowTarget=null;
-const VOLUME_SCALE=.46;
+const VOLUME_SCALE=innerWidth<760?.34:.40;
 const VOLUME_SHADOW_SIZE=512;
 
 const sunVolumeCamera=new THREE.OrthographicCamera(-18,18,15,-6,.1,60);
@@ -1408,14 +1580,18 @@ function updateVolumetricShadow(force=false){
   const oldOverride=scene.overrideMaterial;
   scene.overrideMaterial=volumeDepthMat;
 
-  updateVolumeShadowCamera(
-    sun.position,sunVolumeCamera,sunVolumeMatrix,
-    volumeUniforms.sunLightMatrix,sunVolumeShadowTarget
-  );
-  updateVolumeShadowCamera(
-    moon.position,moonVolumeCamera,moonVolumeMatrix,
-    volumeUniforms.moonLightMatrix,moonVolumeShadowTarget
-  );
+  if(volumeUniforms.sunIntensity.value>.015){
+    updateVolumeShadowCamera(
+      sun.position,sunVolumeCamera,sunVolumeMatrix,
+      volumeUniforms.sunLightMatrix,sunVolumeShadowTarget
+    );
+  }
+  if(volumeUniforms.moonIntensity.value>.015){
+    updateVolumeShadowCamera(
+      moon.position,moonVolumeCamera,moonVolumeMatrix,
+      volumeUniforms.moonLightMatrix,moonVolumeShadowTarget
+    );
+  }
 
   renderer.setRenderTarget(null);
   scene.overrideMaterial=oldOverride;
@@ -1515,6 +1691,9 @@ function updateLighting(t){
 
   moon.color.set(0x72a4ff);
   moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
+
+  sun.castShadow=state.shadow&&sun.intensity>.10;
+  moon.castShadow=state.shadow&&moon.intensity>.10;
 
   // Environment fill follows both celestial lights continuously.
   const dayMix=sunFade;
@@ -1657,10 +1836,9 @@ function syncButtons(){
   sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
   renderer.shadowMap.enabled=state.shadow;
-  // Both celestial lights remain real lights through dusk. Their smoothly
-  // changing intensities make the shadow hand-off continuous too.
-  sun.castShadow=state.shadow;
-  moon.castShadow=state.shadow;
+  // Lighting remains dual-source; zero-contribution shadow passes are culled.
+  sun.castShadow=state.shadow&&sun.intensity>.10;
+  moon.castShadow=state.shadow&&moon.intensity>.10;
   shadowDirty=true;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
@@ -1751,7 +1929,7 @@ renderer.domElement.addEventListener('pointerup',()=>dragging=false);
 renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,8,32);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));starUniforms.pixelRatio.value=Math.min(devicePixelRatio||1,1.35);resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,DPR_CAP));starUniforms.pixelRatio.value=Math.min(devicePixelRatio||1,DPR_CAP);resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
 });
 
 let prev=performance.now();
