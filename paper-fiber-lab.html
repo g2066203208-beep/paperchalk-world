@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Paperchalk Visual Lab v12.33</title>
+<title>Paperchalk Visual Lab v12.33.1</title>
 <style>
   :root{--paper:#f3e6c5;--ink:#443226;--edge:#826445;--accent:#e6bd4b}
   *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#91b6ce;font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;color:var(--ink)}
@@ -22,7 +22,7 @@
 </head>
 <body>
 <div class="hud">
-  <h1>Paperchalk 纸艺世界独立视觉 Demo v12.33</h1>
+  <h1>Paperchalk 纸艺世界独立视觉 Demo v12.33.1</h1>
   <p>这版只做地板：在原来类似 Paper003 的大折纸基础上，加入更高频的纸纤维和纸浆颗粒，让草地更接近“毛毛的牛皮手工纸”。已删除装饰小草和石头。</p>
 </div>
 <div class="controls">
@@ -41,7 +41,7 @@
   <div class="row"><span>纤维强度</span><input id="normalSlider" type="range" min="0" max="130" value="84"><span id="normalVal" class="tag">0.84</span></div>
 </div>
 <script type="module">
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import * as THREE from './vendor/three/three.module.js';
 const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;document.body.appendChild(renderer.domElement);
 const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb8d4dc,13,34);
 const camera=new THREE.PerspectiveCamera(46,innerWidth/innerHeight,.1,120);
