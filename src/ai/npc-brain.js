@@ -116,8 +116,8 @@ function createBrain(def={}){
       flee:threat*.98,
       eat:needs.hunger*.74,
       rest:needs.fatigue*.82+(slot.goal==='rest' ? .28 : 0),
-      socialize:needs.social*.62+(slot.goal==='socialize' ? .30 : 0)+(visible&&perception.playerDistance<3.2 ? .22 : 0),
-      observe:visible&&perception.playerDistance<5.5 ? .48 : 0,
+      socialize:needs.social*.62+(slot.goal==='socialize' ? .30 : 0)+(visible&&perception.playerDistance<2.6 ? .18 : 0),
+      observe:visible&&perception.playerDistance<2.8 ? .50 : 0,
       work:slot.goal==='work' ? .58*(1-Math.max(needs.hunger,needs.fatigue)*.55) : 0,
       home:slot.goal==='home' ? .45 : 0,
       wander:.15+num(personality.curiosity,.4)*.12
@@ -128,7 +128,7 @@ function createBrain(def={}){
     if(goal==='flee')target=awayFromPlayer(ctx);
     else if(goal==='eat'||goal==='rest'||goal==='home')target=anchor('home');
     else if(goal==='work')target=anchor('work')||anchor('home');
-    else if(goal==='socialize')target=(visible&&perception.playerDistance<5)?copyPos(ctx.player):(anchor('plaza')||anchor('home'));
+    else if(goal==='socialize')target=(visible&&perception.playerDistance<2.6)?copyPos(ctx.player):(anchor('plaza')||anchor('home'));
     else if(goal==='observe')target=null;
     else target=wanderTarget();
     state=goal==='observe'?'observe':goal==='flee'?'flee':target?'navigate':'idle';
