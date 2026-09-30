@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.17</h1>
-  <p>v12.17 Paper003 正确接入：仍然是原来的视觉 Demo、原来的镜头和森林，只重做地面方块表面。Paper003 的 Color / NormalGL / Roughness / Displacement 全部接入；方块主体、绿色切边和顶纸都改成有足够细分的几何，因此高度图现在会真正推动表面，而不是只贴在平面立方体上。</p>
+  <h1>纸艺世界视觉 Demo v12.18</h1>
+  <p>v12.18 标准立方体：地形全部恢复成严格 1×1×1 标准立方体，不再有绿色顶纸、切边、厚度层、额外顶面或几何位移。每个方块六个面直接使用 Paper003 的 Color + NormalGL + Roughness；只保留材质表面细节，不改变立方体轮廓。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -45,7 +45,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
   <button id="sky" class="active">程序天空</button>
-  <button id="layers" class="active">纸板地板</button>
+  <button id="layers" class="active">标准立方体</button>
   <button id="shadow" class="active">软阴影</button>
   <button id="fog" class="active">动态纸雾</button>
   <button id="tone" class="active">统一色调</button>
@@ -482,43 +482,27 @@ function loadPaper003Texture(url,{srgb=false}={}){
 const paper003Color=loadPaper003Texture(PAPER003_COLOR_URL,{srgb:true});
 const paper003Normal=loadPaper003Texture(PAPER003_NORMAL_GL_URL);
 const paper003Roughness=loadPaper003Texture(PAPER003_ROUGHNESS_URL);
-const paper003Displacement=loadPaper003Texture(PAPER003_DISPLACEMENT_URL);
 
-const PAPER003_HEIGHT_MEAN=.1508;
-function paper003Material(color,normalScale,displacementScale){
-  return new THREE.MeshStandardMaterial({
-    color,
-    map:paper003Color,
-    normalMap:paper003Normal,
-    roughnessMap:paper003Roughness,
-    displacementMap:paper003Displacement,
-    normalScale:new THREE.Vector2(normalScale,normalScale),
-    displacementScale,
-    displacementBias:-PAPER003_HEIGHT_MEAN*displacementScale,
-    roughness:1,
-    metalness:0
-  });
-}
+// ---------------------------------------------------------------------------
+// Terrain v12.18 — strict standard cubes.
+// Geometry is exactly 1×1×1. No cap, no edge layer, no extra thickness and no
+// displacement. Paper003 is used only as a surface material on all six faces.
+// ---------------------------------------------------------------------------
+const terrainPaper003Mat=new THREE.MeshStandardMaterial({
+  color:0xffffff,
+  map:paper003Color,
+  normalMap:paper003Normal,
+  roughnessMap:paper003Roughness,
+  normalScale:new THREE.Vector2(1.10,1.10),
+  roughness:1,
+  metalness:0
+});
+terrainPaper003Mat.name='terrain-standard-cube-paper003';
 
-const floorBodyMat=paper003Material(0xb9825e,1.05,.045);
-floorBodyMat.name='floor-paper003-kraft-body-displaced';
-
-const floorEdgeMat=paper003Material(0x657a49,.78,.020);
-floorEdgeMat.name='floor-paper003-green-edge-displaced';
-
-const floorTopMat=paper003Material(0x91aa68,1.38,.072);
-floorTopMat.name='floor-paper003-green-face-displaced';
-
-// Displacement only works when there are vertices to move.
-// These are still shared InstancedMesh geometries, so the demo keeps the same
-// draw-call structure; only the shared base geometry is tessellated.
-const blockGeo=new THREE.BoxGeometry(1,1,1,10,10,10);
-const topEdgeGeo=new THREE.BoxGeometry(1.035,.045,1.035,10,2,10);
-const topFaceGeo=new THREE.PlaneGeometry(1.018,1.018,24,24);
-topFaceGeo.rotateX(-Math.PI/2);
+const blockGeo=new THREE.BoxGeometry(1,1,1);
 
 const terrain=new THREE.Group();
-terrain.name='terrain-layered-paper-floor';
+terrain.name='terrain-standard-paper003-cubes';
 scene.add(terrain);
 
 const columnRecords=[];
@@ -534,74 +518,37 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   terrainBlockCount+=h+1;
 }
 
-const terrainBlocks=new THREE.InstancedMesh(blockGeo,floorBodyMat,terrainBlockCount);
-const terrainEdges=new THREE.InstancedMesh(topEdgeGeo,floorEdgeMat,columnRecords.length);
-const terrainTops=new THREE.InstancedMesh(topFaceGeo,floorTopMat,columnRecords.length);
-
-for(const mesh of [terrainBlocks,terrainEdges,terrainTops]){
-  mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-  mesh.receiveShadow=true;
-  mesh.frustumCulled=false;
-}
+const terrainBlocks=new THREE.InstancedMesh(blockGeo,terrainPaper003Mat,terrainBlockCount);
+terrainBlocks.instanceMatrix.setUsage(THREE.StaticDrawUsage);
 terrainBlocks.castShadow=true;
-terrainEdges.castShadow=true;
-terrainTops.castShadow=true;
-terrain.add(terrainBlocks,terrainEdges,terrainTops);
+terrainBlocks.receiveShadow=true;
+terrainBlocks.frustumCulled=false;
+terrain.add(terrainBlocks);
 
 const terrainDummy=new THREE.Object3D();
 let terrainIndex=0;
 for(const rec of columnRecords){
   for(let y=0;y<=rec.h;y++){
-    const topmost=y===rec.h;
-
-    // Interior cells stay full cubes. Only the exposed top cell gives up its
-    // upper 0.06 units to two actual paper layers, so there are no gaps.
-    terrainDummy.position.set(rec.x,topmost?y-.03:y,rec.z);
+    terrainDummy.position.set(rec.x,y,rec.z);
     terrainDummy.rotation.set(0,0,0);
-    terrainDummy.scale.set(1,topmost?.94:1,1);
+    terrainDummy.scale.set(1,1,1);
     terrainDummy.updateMatrix();
     terrainBlocks.setMatrixAt(terrainIndex++,terrainDummy.matrix);
   }
-
-  // y + .44 .. .485 : darker green paper cut edge
-  terrainDummy.position.set(rec.x,rec.h+.4625,rec.z);
-  terrainDummy.rotation.set(0,0,0);
-  terrainDummy.scale.set(1,1,1);
-  terrainDummy.updateMatrix();
-  terrainEdges.setMatrixAt(rec.columnIndex,terrainDummy.matrix);
-
-  // y + .485 .. .500 : visible green paper face. Final top remains exactly .5.
-  terrainDummy.position.set(rec.x,rec.h+.4925,rec.z);
-  terrainDummy.updateMatrix();
-  terrainTops.setMatrixAt(rec.columnIndex,terrainDummy.matrix);
 }
 terrainBlocks.instanceMatrix.needsUpdate=true;
-terrainEdges.instanceMatrix.needsUpdate=true;
-terrainTops.instanceMatrix.needsUpdate=true;
 
-// Compatibility hooks used elsewhere by the existing UI/depth pipeline.
-const caps=[terrainTops];
-const rims=[terrainEdges];
-const paperObjects=[terrainBlocks,terrainEdges,terrainTops];
+// Existing UI/depth code still expects these compatibility arrays.
+const caps=[];
+const rims=[];
+const paperObjects=[terrainBlocks];
 
 function rebuildMaterialRandomness(on=true){
-  const settings=[
-    [floorBodyMat,.045],
-    [floorEdgeMat,.020],
-    [floorTopMat,.072]
-  ];
-  for(const [mat,height] of settings){
-    mat.map=on?paper003Color:null;
-    mat.normalMap=on?paper003Normal:null;
-    mat.roughnessMap=on?paper003Roughness:null;
-    mat.displacementMap=on?paper003Displacement:null;
-    mat.displacementScale=on?height:0;
-    mat.displacementBias=on?-PAPER003_HEIGHT_MEAN*height:0;
-    mat.needsUpdate=true;
-  }
-  floorBodyMat.color.setHex(0xb9825e);
-  floorEdgeMat.color.setHex(0x657a49);
-  floorTopMat.color.setHex(0x91aa68);
+  terrainPaper003Mat.map=on?paper003Color:null;
+  terrainPaper003Mat.normalMap=on?paper003Normal:null;
+  terrainPaper003Mat.roughnessMap=on?paper003Roughness:null;
+  terrainPaper003Mat.color.setHex(on?0xffffff:0xe2ded5);
+  terrainPaper003Mat.needsUpdate=true;
 }
 
 // Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
@@ -1949,7 +1896,7 @@ function preset(name){
 }
 function syncButtons(){
   sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
-  terrainBlocks.visible=state.layers;terrainEdges.visible=state.layers;terrainTops.visible=state.layers;
+  terrainBlocks.visible=state.layers;
   renderer.shadowMap.enabled=state.shadow;
   // Lighting remains dual-source; zero-contribution shadow passes are culled.
   sun.castShadow=state.shadow&&sun.intensity>.10;
