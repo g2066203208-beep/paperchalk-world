@@ -19,8 +19,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v9</h1>
-  <p>深林树缝光 v9：顶部加入剪纸树冠与枝干遮挡，阳光从缝隙斜穿动态纸雾形成多道半透明“宣纸光束”，并在地面留下柔和受光斑。清晨/黄昏最强，夜晚变成很弱的冷月光。</p>
+  <h1>纸艺世界视觉 Demo v10</h1>
+  <p>深林真实体积光 v10：已删除上一版的透明“纸片光柱”。现在从真实太阳/月亮方向做屏幕空间 Raymarch，逐步采样树冠/枝干的光源深度图；哪里被树挡住哪里就没有散射，树缝会自然形成光束。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -32,7 +32,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="random" class="active">随机材质</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active">剪纸小草</button>
-  <button id="godrays" class="active">树缝光柱</button>
+  <button id="godrays" class="active">真实体积光</button>
   <div class="groupBreak"></div>
   <button id="dawn">清晨</button>
   <button id="noon" class="active">正午</button>
@@ -40,7 +40,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · 树缝光穿过动态纸雾</div>
+<div class="badge">拖动旋转 · 滚轮缩放 · Shadow-map Raymarch 体积散射</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -226,61 +226,6 @@ function mistTexture(seed=1){
   t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.minFilter=THREE.LinearFilter;t.magFilter=THREE.LinearFilter;
   return t;
-}
-
-function beamTexture(seed=1){
-  const w=192,h=768,c=document.createElement('canvas');c.width=w;c.height=h;
-  const g=c.getContext('2d'),r=rng(18100+seed*149);
-  g.clearRect(0,0,w,h);
-
-  // A tapered strip of translucent handmade paper: narrow at the canopy gap,
-  // broad near the ground, with slightly torn edges and visible fibres.
-  const left=[],right=[];
-  for(let y=0;y<=h;y+=18){
-    const t=y/h;
-    const half=11+t*72;
-    const wob=(r()-.5)*(4+t*7)+Math.sin(y*.035+seed)*2.2;
-    left.push([w*.5-half+wob,y]);
-    right.push([w*.5+half+wob*.35,y]);
-  }
-  g.beginPath();
-  g.moveTo(left[0][0],left[0][1]);
-  for(const p of left)g.lineTo(p[0],p[1]);
-  for(let i=right.length-1;i>=0;i--)g.lineTo(right[i][0],right[i][1]);
-  g.closePath();
-
-  const vg=g.createLinearGradient(0,0,0,h);
-  vg.addColorStop(0,'rgba(255,249,217,.12)');
-  vg.addColorStop(.10,'rgba(255,247,207,.78)');
-  vg.addColorStop(.48,'rgba(255,242,192,.48)');
-  vg.addColorStop(.86,'rgba(255,235,171,.22)');
-  vg.addColorStop(1,'rgba(255,230,165,0)');
-  g.fillStyle=vg;g.fill();
-
-  g.save();g.clip();
-  // Inner brighter streaks make it read as light scattered inside fog.
-  for(let i=0;i<6;i++){
-    const x=w*(.30+r()*.40),ww=5+r()*14;
-    const lg=g.createLinearGradient(x,0,x+ww,0);
-    lg.addColorStop(0,'rgba(255,255,238,0)');
-    lg.addColorStop(.5,'rgba(255,255,238,'+(.055+r()*.07).toFixed(3)+')');
-    lg.addColorStop(1,'rgba(255,255,238,0)');
-    g.fillStyle=lg;g.fillRect(x,55,ww,h-90);
-  }
-  // Paper fibres.
-  for(let i=0;i<420;i++){
-    const x=r()*w,y=r()*h,len=2+r()*10,a=r()*Math.PI;
-    g.strokeStyle=r()>.5?'rgba(255,255,244,.14)':'rgba(150,127,90,.055)';
-    g.lineWidth=.35+r()*.65;
-    g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);g.stroke();
-  }
-  g.restore();
-
-  const tex=new THREE.CanvasTexture(c);
-  tex.colorSpace=THREE.SRGBColorSpace;
-  tex.wrapS=tex.wrapT=THREE.ClampToEdgeWrapping;
-  tex.minFilter=THREE.LinearFilter;tex.magFilter=THREE.LinearFilter;
-  return tex;
 }
 
 const variantCount=6;
@@ -482,39 +427,28 @@ function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,
 stone(-1.8,1.4,.49,.26);stone(1.2,-2.2,.46,.18);
 
 // ---------------------------------------------------------------------------
-// Cut-paper forest ceiling + stylized light shafts.
-// The opaque canopy pieces cast real shadow-map silhouettes. The visible shafts
-// are cheap translucent vellum-like cards; they follow the sun direction and
-// are deliberately art-directed rather than physically ray-marched.
+// Cut-paper forest ceiling / real occluders.
+// These meshes are ordinary lit scene geometry. They cast actual shadows, and
+// the volumetric pass samples their light-space depth. The holes between these
+// pieces are therefore the real source of the visible forest light shafts.
 // ---------------------------------------------------------------------------
 const canopyGroup=new THREE.Group();
-const godrayGroup=new THREE.Group();
-const lightPatchGroup=new THREE.Group();
-scene.add(godrayGroup,lightPatchGroup,canopyGroup);
+scene.add(canopyGroup);
 
 const canopyLeafMat=new THREE.MeshLambertMaterial({
-  map:grassTextures[3],
-  color:0x38523c,
-  side:THREE.DoubleSide
+  map:grassTextures[3],color:0x38523c,side:THREE.DoubleSide
 });
 const canopyLeafDarkMat=new THREE.MeshLambertMaterial({
-  map:grassTextures[4],
-  color:0x263d2e,
-  side:THREE.DoubleSide
+  map:grassTextures[4],color:0x263d2e,side:THREE.DoubleSide
 });
 const trunkMat=new THREE.MeshLambertMaterial({
-  map:dirtTextures[2],
-  color:0x624533,
-  side:THREE.DoubleSide
+  map:dirtTextures[2],color:0x624533,side:THREE.DoubleSide
 });
 
 function canopyShape(seed=1){
-  const r=rng(3100+seed*73),s=new THREE.Shape();
-  const pts=[];
-  const n=14;
+  const r=rng(3100+seed*73),s=new THREE.Shape(),pts=[],n=14;
   for(let i=0;i<n;i++){
-    const a=Math.PI*2*i/n;
-    const rr=.78+r()*.28;
+    const a=Math.PI*2*i/n,rr=.78+r()*.28;
     pts.push([Math.cos(a)*rr,Math.sin(a)*(.58+r()*.18)]);
   }
   s.moveTo(pts[0][0],pts[0][1]);
@@ -525,18 +459,15 @@ function canopyShape(seed=1){
 function addCanopyBlob(x,y,z,sx,sy,seed,dark=false,rot=0){
   const m=new THREE.Mesh(canopyShape(seed),dark?canopyLeafDarkMat:canopyLeafMat);
   m.position.set(x,y,z);m.scale.set(sx,sy,1);m.rotation.z=rot;
-  m.castShadow=true;m.receiveShadow=false;
-  canopyGroup.add(m);return m;
+  m.castShadow=true;m.receiveShadow=true;canopyGroup.add(m);return m;
 }
 function addPaperTrunk(x,y,z,w,h,lean=0){
-  const geo=new THREE.PlaneGeometry(w,h);
-  const m=new THREE.Mesh(geo,trunkMat);
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),trunkMat);
   m.position.set(x,y,z);m.rotation.z=lean;
-  m.castShadow=true;m.receiveShadow=false;
-  canopyGroup.add(m);return m;
+  m.castShadow=true;m.receiveShadow=true;canopyGroup.add(m);return m;
 }
 
-// Dense top/side forest framing with deliberate gaps where shafts can appear.
+// Dense framing with deliberate physical holes between leaf clusters.
 addCanopyBlob(-6.4,5.55,-2.8,3.3,2.2,1,true,-.10);
 addCanopyBlob(-3.8,5.85,-2.9,3.1,2.0,2,false,.07);
 addCanopyBlob(-1.0,6.05,-3.0,2.8,1.9,3,true,-.04);
@@ -548,98 +479,6 @@ addCanopyBlob(-5.7,3.85,-1.0,1.65,1.45,8,false,.12);
 addCanopyBlob( 5.7,3.95,-1.2,1.75,1.50,9,false,-.10);
 addPaperTrunk(-6.35,2.65,.55,.72,5.0,-.055);
 addPaperTrunk( 6.15,2.70,.75,.68,4.9,.060);
-
-// Visible shafts.
-const beamTex=beamTexture(4);
-const beamSpecs=[
-  {x:-3.20,z:-1.80,w:1.55,h:7.1,phase:.2},
-  {x:-.85,z:-2.00,w:1.85,h:7.8,phase:1.4},
-  {x: 1.75,z:-1.65,w:1.65,h:7.4,phase:2.6},
-  {x: 4.10,z:-1.35,w:1.35,h:6.7,phase:3.8}
-];
-const godrays=[];
-for(const d of beamSpecs){
-  const mat=new THREE.MeshBasicMaterial({
-    map:beamTex,
-    color:0xffe7ad,
-    transparent:true,
-    opacity:.38,
-    depthWrite:false,
-    depthTest:true,
-    side:THREE.DoubleSide,
-    blending:THREE.AdditiveBlending,
-    toneMapped:true,
-    fog:false
-  });
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1),mat);
-  mesh.position.set(d.x,3.55,d.z);
-  mesh.scale.set(d.w,d.h,1);
-  mesh.renderOrder=3;
-  godrayGroup.add(mesh);
-  godrays.push({...d,mesh});
-}
-
-// Warm/cool pools on the ground where the shafts land.
-function lightPatchTexture(){
-  const c=document.createElement('canvas');c.width=c.height=256;
-  const g=c.getContext('2d');
-  const rg=g.createRadialGradient(128,128,5,128,128,122);
-  rg.addColorStop(0,'rgba(255,244,188,.65)');
-  rg.addColorStop(.34,'rgba(255,233,164,.32)');
-  rg.addColorStop(.72,'rgba(255,222,143,.10)');
-  rg.addColorStop(1,'rgba(255,215,135,0)');
-  g.fillStyle=rg;g.fillRect(0,0,256,256);
-  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
-}
-const patchTex=lightPatchTexture();
-const lightPatches=[];
-for(const d of beamSpecs){
-  const mat=new THREE.MeshBasicMaterial({
-    map:patchTex,color:0xffdda0,transparent:true,opacity:.18,
-    depthWrite:false,depthTest:true,blending:THREE.AdditiveBlending,toneMapped:true
-  });
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(2.25,1.45),mat);
-  mesh.rotation.x=-Math.PI/2;mesh.position.set(d.x,.505,d.z+.35);
-  mesh.renderOrder=2;
-  lightPatchGroup.add(mesh);
-  lightPatches.push({phase:d.phase,mesh});
-}
-
-function updateGodRays(time,sunUp,moonUp,twilight,sx,sy){
-  if(!state.godrays)return;
-
-  // Project the moving sun direction into an easy-to-read screen-space lean.
-  // Noon is near vertical; dawn/sunset sweep sideways.
-  const sunLean=clamp((-sx/Math.max(4,sy))*.26,-.42,.42);
-  const night=moonUp>.10&&sunUp<.02;
-  const dayStrength=.20+sunUp*.27+twilight*.34;
-  const strength=night ? (.055+moonUp*.065) : dayStrength;
-
-  const beamDay=new THREE.Color(0xffedbd);
-  const beamWarm=new THREE.Color(0xffc17f);
-  const beamNight=new THREE.Color(0xb4cfff);
-  const beamColor=night?beamNight:beamDay.clone().lerp(beamWarm,twilight*.72);
-
-  for(let i=0;i<godrays.length;i++){
-    const g=godrays[i],m=g.mesh;
-    const shimmer=.94+Math.sin(time*.55+g.phase)*.06;
-    m.material.color.copy(beamColor);
-    m.material.opacity=strength*shimmer*(state.fog?1.25:.62);
-    m.position.x=g.x+Math.sin(time*.16+g.phase)*.08;
-    m.rotation.z=sunLean+Math.sin(time*.11+g.phase)*.012;
-
-    // Keep the shaft mostly facing the viewer while remaining a world object.
-    const dx=camera.position.x-m.position.x,dz=camera.position.z-m.position.z;
-    m.rotation.y=Math.atan2(dx,dz);
-  }
-
-  for(let i=0;i<lightPatches.length;i++){
-    const p=lightPatches[i],pulse=.95+Math.sin(time*.43+p.phase)*.05;
-    p.mesh.material.color.copy(beamColor);
-    p.mesh.material.opacity=(night?.025:.11+twilight*.075+sunUp*.035)*pulse;
-    p.mesh.position.x=beamSpecs[i].x+sunLean*4.8;
-  }
-}
 
 // GPU-friendly instanced paper fog cards.
 // We use two InstancedMeshes (upright banks + ground sheets), update instance
@@ -826,10 +665,7 @@ function updateDepthTexture(){
   const skyWasVisible=sky.visible;
   const sunWasVisible=sunDisc.visible;
   const moonWasVisible=moonDisc.visible;
-  const raysWereVisible=godrayGroup.visible;
-  const patchesWereVisible=lightPatchGroup.visible;
   forestMist.visible=false;sky.visible=false;sunDisc.visible=false;moonDisc.visible=false;
-  godrayGroup.visible=false;lightPatchGroup.visible=false;
 
   renderer.setRenderTarget(depthTarget);
   renderer.clear();
@@ -838,7 +674,6 @@ function updateDepthTexture(){
 
   forestMist.visible=mistWasVisible;sky.visible=skyWasVisible;
   sunDisc.visible=sunWasVisible;moonDisc.visible=moonWasVisible;
-  godrayGroup.visible=raysWereVisible;lightPatchGroup.visible=patchesWereVisible;
   depthDirty=false;
 }
 
@@ -939,6 +774,288 @@ const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(.72,40),new THREE.MeshBasi
 const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(.54,40),new THREE.MeshBasicMaterial({color:0xe4ecff,toneMapped:false,transparent:true,opacity:.9}));
 scene.add(sunDisc,moonDisc);
 
+// ---------------------------------------------------------------------------
+// Real shadow-map raymarched volumetric light.
+// Core technique follows the open-source goodGodRays approach:
+// reconstruct a world-space camera ray from depth, march through the atmosphere,
+// project every sample into a light-space depth map, and accumulate scattering
+// only when the sample is actually visible from the sun/moon.
+// ---------------------------------------------------------------------------
+const fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const fsGeo=new THREE.PlaneGeometry(2,2);
+
+let sceneTarget=null,volumeTarget=null,volumeShadowTarget=null;
+const VOLUME_SCALE=.46;
+const VOLUME_SHADOW_SIZE=512;
+
+const volumeLightCamera=new THREE.OrthographicCamera(-12,12,11,-8,.1,42);
+const volumeShadowMatrix=new THREE.Matrix4();
+const volumeLightTarget=new THREE.Vector3(0,1.0,0);
+const volumeActiveLightPos=new THREE.Vector3();
+
+const volumeDepthMat=new THREE.MeshBasicMaterial({side:THREE.DoubleSide});
+volumeDepthMat.colorWrite=false;
+volumeDepthMat.depthWrite=true;
+volumeDepthMat.depthTest=true;
+
+const volumeUniforms={
+  sceneDepth:{value:null},
+  lightDepth:{value:null},
+  cameraProjectionInv:{value:new THREE.Matrix4()},
+  cameraMatrixWorld:{value:new THREE.Matrix4()},
+  lightMatrix:{value:new THREE.Matrix4()},
+  cameraPos:{value:new THREE.Vector3()},
+  lightDir:{value:new THREE.Vector3(0,-1,0)},
+  scatteringColor:{value:new THREE.Color(0xffe6ad)},
+  density:{value:.030},
+  intensity:{value:.62},
+  maxDistance:{value:34.0},
+  time:{value:0},
+  shadowBias:{value:.0022},
+  steps:{value:22.0}
+};
+
+const volumeMat=new THREE.ShaderMaterial({
+  uniforms:volumeUniforms,
+  depthWrite:false,depthTest:false,toneMapped:false,
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){
+      vUv=uv;
+      gl_Position=vec4(position.xy,0.0,1.0);
+    }
+  `,
+  fragmentShader:`
+    precision highp float;
+    varying vec2 vUv;
+    uniform sampler2D sceneDepth;
+    uniform sampler2D lightDepth;
+    uniform mat4 cameraProjectionInv;
+    uniform mat4 cameraMatrixWorld;
+    uniform mat4 lightMatrix;
+    uniform vec3 cameraPos;
+    uniform vec3 lightDir;
+    uniform vec3 scatteringColor;
+    uniform float density;
+    uniform float intensity;
+    uniform float maxDistance;
+    uniform float time;
+    uniform float shadowBias;
+    uniform float steps;
+
+    float hash12(vec2 p){
+      vec3 p3=fract(vec3(p.xyx)*.1031);
+      p3+=dot(p3,p3.yzx+33.33);
+      return fract((p3.x+p3.y)*p3.z);
+    }
+
+    vec3 worldFromDepth(vec2 uv,float depth){
+      vec4 clip=vec4(uv*2.0-1.0,depth*2.0-1.0,1.0);
+      vec4 view=cameraProjectionInv*clip;
+      view/=max(view.w,1e-6);
+      return (cameraMatrixWorld*view).xyz;
+    }
+
+    float shadowVisibility(vec3 worldPos){
+      vec4 lp=lightMatrix*vec4(worldPos,1.0);
+      vec3 ndc=lp.xyz/max(lp.w,1e-6);
+      vec3 uvz=ndc*.5+.5;
+      if(uvz.x<=0.0||uvz.x>=1.0||uvz.y<=0.0||uvz.y>=1.0||uvz.z<=0.0||uvz.z>=1.0){
+        return 0.0;
+      }
+      float blocker=texture2D(lightDepth,uvz.xy).x;
+      return step(uvz.z-shadowBias,blocker);
+    }
+
+    void main(){
+      float depth=texture2D(sceneDepth,vUv).x;
+      vec3 endPos=worldFromDepth(vUv,depth);
+      vec3 ray=endPos-cameraPos;
+      float fullDist=length(ray);
+      if(fullDist<.001){gl_FragColor=vec4(0.0);return;}
+
+      vec3 dir=ray/fullDist;
+      float rayDist=min(fullDist,maxDistance);
+      float stepLen=rayDist/max(steps,1.0);
+      float jitter=fract(hash12(gl_FragCoord.xy)+time*.071);
+      float accum=0.0;
+
+      for(int i=0;i<32;i++){
+        if(float(i)>=steps)break;
+        float t=(float(i)+jitter)*stepLen;
+        vec3 p=cameraPos+dir*t;
+        float visible=shadowVisibility(p);
+
+        float lowMist=1.0-smoothstep(.5,7.2,p.y);
+        float localDensity=density*(.38+.62*lowMist);
+        float nearFade=smoothstep(.6,3.2,t);
+
+        float cosTheta=clamp(dot(dir,-normalize(lightDir)),-1.0,1.0);
+        float phase=.62+.38*pow(max(cosTheta,0.0),3.0);
+
+        accum+=visible*localDensity*stepLen*nearFade*phase;
+      }
+
+      float scatter=(1.0-exp(-accum*1.75))*intensity;
+      gl_FragColor=vec4(scatteringColor*scatter,scatter);
+    }
+  `
+});
+const volumeScene=new THREE.Scene();
+volumeScene.add(new THREE.Mesh(fsGeo,volumeMat));
+
+const compositeUniforms={
+  sceneColor:{value:null},volumeColor:{value:null},volumeStrength:{value:1.0}
+};
+const compositeMat=new THREE.ShaderMaterial({
+  uniforms:compositeUniforms,
+  depthWrite:false,depthTest:false,toneMapped:false,
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
+  `,
+  fragmentShader:`
+    varying vec2 vUv;
+    uniform sampler2D sceneColor;
+    uniform sampler2D volumeColor;
+    uniform float volumeStrength;
+    void main(){
+      vec4 base=texture2D(sceneColor,vUv);
+      vec3 rays=texture2D(volumeColor,vUv).rgb*volumeStrength;
+      gl_FragColor=vec4(base.rgb+rays,base.a);
+      #include <colorspace_fragment>
+    }
+  `
+});
+const compositeScene=new THREE.Scene();
+compositeScene.add(new THREE.Mesh(fsGeo,compositeMat));
+
+function resizeVolumetricTargets(){
+  const size=new THREE.Vector2();
+  renderer.getDrawingBufferSize(size);
+  const w=Math.max(2,Math.floor(size.x)),h=Math.max(2,Math.floor(size.y));
+  const vw=Math.max(160,Math.floor(w*VOLUME_SCALE));
+  const vh=Math.max(90,Math.floor(h*VOLUME_SCALE));
+
+  if(sceneTarget)sceneTarget.dispose();
+  sceneTarget=new THREE.WebGLRenderTarget(w,h,{
+    minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
+    format:THREE.RGBAFormat,type:THREE.UnsignedByteType
+  });
+  sceneTarget.depthTexture=new THREE.DepthTexture(w,h);
+  sceneTarget.depthTexture.type=THREE.UnsignedShortType;
+
+  if(volumeTarget)volumeTarget.dispose();
+  volumeTarget=new THREE.WebGLRenderTarget(vw,vh,{
+    minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
+    format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:false
+  });
+
+  if(!volumeShadowTarget){
+    volumeShadowTarget=new THREE.WebGLRenderTarget(VOLUME_SHADOW_SIZE,VOLUME_SHADOW_SIZE,{
+      minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,
+      format:THREE.RGBAFormat,type:THREE.UnsignedByteType
+    });
+    volumeShadowTarget.depthTexture=new THREE.DepthTexture(VOLUME_SHADOW_SIZE,VOLUME_SHADOW_SIZE);
+    volumeShadowTarget.depthTexture.type=THREE.UnsignedIntType;
+    volumeShadowTarget.depthTexture.format=THREE.DepthFormat;
+    volumeShadowTarget.depthTexture.compareFunction=null;
+    volumeShadowTarget.depthTexture.minFilter=THREE.NearestFilter;
+    volumeShadowTarget.depthTexture.magFilter=THREE.NearestFilter;
+  }
+
+  volumeUniforms.sceneDepth.value=sceneTarget.depthTexture;
+  volumeUniforms.lightDepth.value=volumeShadowTarget.depthTexture;
+  compositeUniforms.sceneColor.value=sceneTarget.texture;
+  compositeUniforms.volumeColor.value=volumeTarget.texture;
+}
+resizeVolumetricTargets();
+
+let volumeShadowDirty=true,volumeShadowFrame=0,volumeUseMoon=false;
+
+function updateVolumetricSettings(t){
+  const a=((t%1)+1)%1*Math.PI*2-Math.PI/2;
+  const rawSun=Math.sin(a),sunUp=Math.max(rawSun,0),moonUp=Math.max(-rawSun,0);
+  const twilight=1-smoothstep(.025,.34,Math.abs(rawSun));
+  volumeUseMoon=sunUp<.025&&moonUp>.02;
+
+  const active=volumeUseMoon?moon:sun;
+  volumeActiveLightPos.copy(active.position);
+  volumeUniforms.lightDir.value.copy(volumeLightTarget).sub(volumeActiveLightPos).normalize();
+
+  const dayColor=new THREE.Color(0xffe7b5);
+  const warmColor=new THREE.Color(0xffb878);
+  const moonColor=new THREE.Color(0xa9c7ff);
+
+  if(volumeUseMoon){
+    volumeUniforms.scatteringColor.value.copy(moonColor);
+    volumeUniforms.intensity.value=.22+.18*moonUp;
+    volumeUniforms.density.value=.020+.008*moonUp;
+  }else{
+    volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.82);
+    volumeUniforms.intensity.value=.40+sunUp*.28+twilight*.33;
+    volumeUniforms.density.value=.024+twilight*.014;
+  }
+  if(state.fog){
+    volumeUniforms.intensity.value*=1.18;
+    volumeUniforms.density.value*=1.10;
+  }
+}
+
+function updateVolumetricShadow(force=false){
+  if(!state.godrays||(!force&&!volumeShadowDirty))return;
+
+  volumeLightCamera.position.copy(volumeActiveLightPos);
+  volumeLightCamera.lookAt(volumeLightTarget);
+  volumeLightCamera.updateMatrixWorld(true);
+  volumeLightCamera.matrixWorldInverse.copy(volumeLightCamera.matrixWorld).invert();
+  volumeLightCamera.updateProjectionMatrix();
+  volumeShadowMatrix.multiplyMatrices(volumeLightCamera.projectionMatrix,volumeLightCamera.matrixWorldInverse);
+  volumeUniforms.lightMatrix.value.copy(volumeShadowMatrix);
+
+  const fogVisible=forestMist.visible,skyVisible=sky.visible;
+  const sunVisible=sunDisc.visible,moonVisible=moonDisc.visible;
+  const contactVisible=contactShadow.visible;
+  const playerVisible=playerMesh?playerMesh.visible:false;
+
+  forestMist.visible=false;sky.visible=false;
+  sunDisc.visible=false;moonDisc.visible=false;contactShadow.visible=false;
+  if(playerMesh)playerMesh.visible=false;
+
+  const oldOverride=scene.overrideMaterial;
+  scene.overrideMaterial=volumeDepthMat;
+  renderer.setRenderTarget(volumeShadowTarget);
+  renderer.clear();
+  renderer.render(scene,volumeLightCamera);
+  renderer.setRenderTarget(null);
+  scene.overrideMaterial=oldOverride;
+
+  forestMist.visible=fogVisible;sky.visible=skyVisible;
+  sunDisc.visible=sunVisible;moonDisc.visible=moonVisible;
+  contactShadow.visible=contactVisible;
+  if(playerMesh)playerMesh.visible=playerVisible;
+
+  volumeShadowDirty=false;
+}
+
+function renderWithVolumetrics(){
+  renderer.setRenderTarget(sceneTarget);
+  renderer.clear();
+  renderer.render(scene,camera);
+
+  updateVolumetricShadow(false);
+  volumeUniforms.cameraProjectionInv.value.copy(camera.projectionMatrixInverse);
+  volumeUniforms.cameraMatrixWorld.value.copy(camera.matrixWorld);
+  volumeUniforms.cameraPos.value.copy(camera.position);
+
+  renderer.setRenderTarget(volumeTarget);
+  renderer.clear();
+  renderer.render(volumeScene,fsCamera);
+
+  renderer.setRenderTarget(null);
+  renderer.render(compositeScene,fsCamera);
+}
+
 const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,godrays:true,final:true,timePreset:'noon',auto:false,time:.5};
 let skyMode='day';
 
@@ -1023,8 +1140,6 @@ function updateLighting(t){
   else if(rawSun>=0)mode=state.time<.5?'dawn':'sunset';
   setSkyMode(mode);
 
-  updateGodRays(mistClock||0,sunUp,moonUp,twilight,sx,sy);
-
   const sunDir=new THREE.Vector3(sx,sy,sz).normalize();
   const moonDir=new THREE.Vector3(mx,my,mz).normalize();
   sunDisc.position.copy(camera.position).addScaledVector(sunDir,34);
@@ -1058,6 +1173,8 @@ function updateLighting(t){
     // Never crush the feet into a black blob at dawn/night.
     contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
   }
+  updateVolumetricSettings(state.time);
+  volumeShadowDirty=true;
   renderDirty=true;
   shadowDirty=true;
 }
@@ -1071,7 +1188,7 @@ function preset(name){
   updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
 }
 function syncButtons(){
-  sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=state.godrays;godrayGroup.visible=state.godrays;lightPatchGroup.visible=state.godrays;
+  sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
   renderer.shadowMap.enabled=state.shadow;
   // Only one shadow-casting directional light at a time.
@@ -1088,7 +1205,7 @@ function syncButtons(){
 }
 function setFinal(v){
   state.final=v;state.sky=v;state.layers=v;state.shadow=v;state.fog=v;state.tone=v;state.random=v;state.bounce=v;state.papergrass=v;state.godrays=v;
-  depthDirty=true;
+  depthDirty=true;volumeShadowDirty=true;
   rebuildMaterialRandomness(v);
   if(v){updateLighting(state.time)}
   else{
@@ -1101,7 +1218,7 @@ function setFinal(v){
 document.getElementById('compare').onclick=()=>{setFinal(!state.final);renderDirty=true;shadowDirty=true};
 ['sky','layers','shadow','fog','tone'].forEach(id=>{
   document.getElementById(id).onclick=()=>{
-    state[id]=!state[id];if(id==='layers')depthDirty=true;
+    state[id]=!state[id];if(id==='layers'){depthDirty=true;volumeShadowDirty=true;}
     state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass&&state.godrays;
     updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
   };
@@ -1119,15 +1236,14 @@ document.getElementById('papergrass').onclick=()=>{
   state.papergrass=!state.papergrass;
   state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass&&state.godrays;
   paperGrassGroup.visible=state.papergrass;
-  depthDirty=true;renderDirty=true;shadowDirty=true;
+  depthDirty=true;volumeShadowDirty=true;renderDirty=true;shadowDirty=true;
   syncButtons();
 };
 document.getElementById('godrays').onclick=()=>{
   state.godrays=!state.godrays;
   state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass&&state.godrays;
-  canopyGroup.visible=state.godrays;godrayGroup.visible=state.godrays;lightPatchGroup.visible=state.godrays;
-  depthDirty=true;renderDirty=true;shadowDirty=true;
-  updateLighting(state.time);syncButtons();
+  volumeShadowDirty=true;renderDirty=true;
+  updateVolumetricSettings(state.time);syncButtons();
 };
 document.getElementById('dawn').onclick=()=>preset('dawn');
 document.getElementById('noon').onclick=()=>preset('noon');
@@ -1149,7 +1265,7 @@ renderer.domElement.addEventListener('pointerup',()=>dragging=false);
 renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();renderDirty=true;shadowDirty=true;depthDirty=true;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
 });
 
 let prev=performance.now();
@@ -1163,23 +1279,20 @@ function animate(now){
     // Updating a 1k shadow map every frame is wasteful. In auto-cycle mode
     // refresh it at ~7.5 fps; the colour/sky motion still renders smoothly.
     autoShadowFrame=(autoShadowFrame+1)%8;
+    volumeShadowFrame=(volumeShadowFrame+1)%8;
     if(autoShadowFrame!==0)shadowDirty=false;
+    if(volumeShadowFrame===0)volumeShadowDirty=true;
+    updateVolumetricSettings(state.time);
   }
 
-  // Dynamic paper fog: ~20 fps motion is enough to read clearly and stays light.
+  // Dynamic paper fog + low-cost temporal volumetric jitter (~20 fps).
   if(state.fog&&now-lastMistTick>50){
     const step=(now-lastMistTick)/1000;
     lastMistTick=now;mistClock+=Math.min(.12,step);
     fogUniforms.time.value=mistClock;
     updateFogInstances(mistClock);
     if(state.papergrass)updatePaperGrass(mistClock);
-    if(state.godrays){
-      const a=state.time*Math.PI*2-Math.PI/2;
-      const rawSun=Math.sin(a),sunUp=Math.max(rawSun,0),moonUp=Math.max(-rawSun,0);
-      const twilight=1-smoothstep(.025,.34,Math.abs(rawSun));
-      const sx=Math.cos(a)*18,sy=2.8+Math.max(rawSun,.03)*15;
-      updateGodRays(mistClock,sunUp,moonUp,twilight,sx,sy);
-    }
+    volumeUniforms.time.value=mistClock;
     renderDirty=true;
   }
 
@@ -1211,7 +1324,11 @@ function animate(now){
   }
 
   updateDepthTexture();
-  renderer.render(scene,camera);
+  if(state.godrays)renderWithVolumetrics();
+  else{
+    renderer.setRenderTarget(null);
+    renderer.render(scene,camera);
+  }
   renderDirty=false;
 }
 updateLighting(.5);syncButtons();animate(performance.now());
