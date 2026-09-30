@@ -50,7 +50,8 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.dirtColorSource==='user-texture-only','dirt still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.dirtTextureTransform==='native-world-uv-repeat-1x','dirt texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassTextureTransform==='native-world-uv-repeat-1x','grass texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
-  assert(initial.paperTerrain?.paperMaterial?.groundAnisotropy===16&&initial.paperTerrain?.paperMaterial?.authoredSurfaceMicroMaps===false,'ground anti-shimmer sampling missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.groundAnisotropy===16&&initial.paperTerrain?.paperMaterial?.authoredSurfaceMicroMaps===false&&initial.paperTerrain?.paperMaterial?.genericTopMicroMaps===false,'ground anti-shimmer sampling missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.topUvScale===.06,'ground UV scale regression '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
@@ -58,6 +59,7 @@ try{
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.paperSky===true&&initial.atmosphere?.paperSkyLoaded===true,'supplied blue paper sky not loaded '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.paperSkyAsset==='assets/materials/sky-paper-blue.webp'&&initial.atmosphere?.skyClouds===false,'paper sky asset/cloud gate wrong '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.paperSkyStrength===.58,'paper sky texture is too weak '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.jitteredRaymarch===true&&initial.atmosphere?.minecraftShaderInspired===true,'Minecraft-style volumetric integration missing '+JSON.stringify(initial.atmosphere));
   assert((initial.atmosphere?.mieAnisotropy||0)>.6,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
