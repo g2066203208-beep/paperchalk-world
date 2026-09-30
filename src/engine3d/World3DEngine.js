@@ -693,8 +693,7 @@ playerTexture.minFilter=THREE.LinearFilter;
 playerTexture.generateMipmaps=false;
 playerTexture.anisotropy=8;
 this.playerSprite=new PaperSpriteEntity(THREE,{
-id:'player',kind:'player',label:'',x:0,y:0,z:0,
-width:1,height:2,anchorY:1,texture:playerTexture
+id:'player',kind:'player',width:1,height:2,anchorY:1,texture:playerTexture
 });
 this.npcRenderer=new NPCActorRenderer(THREE,this.scene,{actorTexture:playerTexture});
 this.healthBar=new WorldSpaceHealthBar(THREE,{max:10});
