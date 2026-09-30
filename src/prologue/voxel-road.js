@@ -31,8 +31,13 @@ function isFarSidewalk(c,gz){return inRange(gz,c.farSidewalkMinZ,c.farSidewalkMa
 function isFarLane(c,gz){return inRange(gz,c.farLaneMinZ,c.farLaneMaxZ)}
 function isNearLane(c,gz){return inRange(gz,c.nearLaneMinZ,c.nearLaneMaxZ)}
 function isNearSidewalk(c,gz){return inRange(gz,c.nearSidewalkMinZ,c.nearSidewalkMaxZ)}
+function isFarGround(c,gz){return inRange(gz,c.farGroundMinZ,c.farGroundMaxZ)}
+function isNearGround(c,gz){return inRange(gz,c.nearGroundMinZ,c.nearGroundMaxZ)}
 function isRoad(c,gz){return isFarLane(c,gz)||isNearLane(c,gz)}
 function isSidewalk(c,gz){return isFarSidewalk(c,gz)||isNearSidewalk(c,gz)}
+function isSchoolGround(c,gx,gz){
+  return gx>=c.schoolZoneMinX&&gx<=c.schoolZoneMaxX&&inRange(gz,c.schoolGroundMinZ,c.schoolGroundMaxZ);
+}
 function isCrosswalk(c,gx,gz){
   if(!isRoad(c,gz)||gx<c.crosswalkMinX||gx>c.crosswalkMaxX)return false;
   return ((gx-c.crosswalkMinX)&1)===0;
@@ -47,7 +52,9 @@ function surfaceKind(c,gx,gz){
   if(isCrosswalk(c,gx,gz)||isCenterDash(c,gx,gz))return 'sand';
   if(isRoad(c,gz))return 'stone';
   if(isSidewalk(c,gz))return 'clay';
-  return 'stone';
+  if(isSchoolGround(c,gx,gz))return 'clay';
+  if(isFarGround(c,gz)||isNearGround(c,gz))return 'grass';
+  return 'grass';
 }
 function profile(c,gx,gz){
   const valid=inside(c,gx,gz);
@@ -108,7 +115,7 @@ P.stats=function(){
     zMovementLocked:true,
     finiteDepth:true,
     worldBounds:{minX:c.minX,maxX:c.maxX,minZ:c.minZ,maxZ:c.maxZ,minY:c.groundMinY,maxY:c.surfaceY},
-    generator:'finite-prologue-voxel-road-96x10-v2'
+    generator:'finite-prologue-city-ground-96x26-v3'
   };
 };
 
@@ -131,7 +138,7 @@ global.addEventListener('paperchalk-3d-change',applyPresentation);
 global.addEventListener('paperchalk-world-leave',()=>{presentationApplied=false});
 
 global.PaperchalkPrologueRoad=Object.freeze({
-  version:2,
+  version:3,
   get enabled(){return enabled()},
   get config(){const c=config();return c?{...c}:null},
   stats(){
@@ -146,7 +153,13 @@ global.PaperchalkPrologueRoad=Object.freeze({
       sidewalkMaterial:'clay-voxel',
       markingMaterial:'sand-voxel',
       metersPerVoxel:1,
-      dimensions:c?{lengthMeters:c.lengthMeters,widthMeters:c.widthMeters}:null,
+      dimensions:c?{lengthMeters:c.lengthMeters,roadWidthMeters:c.widthMeters,sceneDepthMeters:c.sceneDepthMeters}:null,
+      underground:c?{surfaceY:c.surfaceY,groundMinY:c.groundMinY,solidLayers:c.surfaceY-c.groundMinY+1}:null,
+      outerGround:c?{
+        farMeters:c.farGroundMaxZ-c.farGroundMinZ+1,
+        nearMeters:c.nearGroundMaxZ-c.nearGroundMinZ+1,
+        schoolPad:{minZ:c.schoolGroundMinZ,maxZ:c.schoolGroundMaxZ}
+      }:null,
       crossSection:c?{
         farSidewalkMeters:c.farSidewalkMaxZ-c.farSidewalkMinZ+1,
         farLaneMeters:c.farLaneMaxZ-c.farLaneMinZ+1,
