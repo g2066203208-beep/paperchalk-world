@@ -97,11 +97,11 @@ const content={
   npcs:[
     {
       id:'village-resident-01',name:'村中长者',role:'elder',
-      spawn:{x:3.25,z:1.75,yaw:0},home:{x:4,z:3},work:{x:2,z:1},plaza:{x:1,z:1},
+      spawn:{x:16,z:3,yaw:0},home:{x:14,z:3},work:{x:18,z:3},plaza:{x:20,z:3},
       width:1,height:2,facingX:-1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.35,sociability:.72,caution:.55},
-      ai:{walkSpeed:1.35,visionRange:9,fullSimRange:28,wanderRadius:3.6},
+      ai:{walkSpeed:1.35,visionRange:9,fullSimRange:16,wanderRadius:3.6},
       dialogue:{
         greeting:['早。村里还算安静。','你又回来了。'],
         questStart:'先认识一下A村吧。和三位村民说说话，再回来找我。',
@@ -111,38 +111,38 @@ const content={
     },
     {
       id:'village-resident-02',name:'田地照看人',role:'farmer',
-      spawn:{x:-3.0,z:1.6},home:{x:-4,z:3},work:{x:-6,z:2},plaza:{x:1,z:1},
+      spawn:{x:30,z:3},home:{x:28,z:3},work:{x:34,z:3},plaza:{x:20,z:3},
       width:1,height:2,facingX:1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.42,sociability:.48,caution:.45},
-      ai:{walkSpeed:1.55,visionRange:8,fullSimRange:26,wanderRadius:4.2},
+      ai:{walkSpeed:1.55,visionRange:8,fullSimRange:16,wanderRadius:4.2},
       dialogue:{greeting:['地面每天都不太一样。','我得先看看今天哪块地能走。']}
     },
     {
       id:'village-resident-03',name:'木工',role:'crafter',
-      spawn:{x:1.2,z:-3.0},home:{x:3,z:-4},work:{x:5,z:-3},plaza:{x:1,z:1},
+      spawn:{x:48,z:-4},home:{x:46,z:-4},work:{x:50,z:-4},plaza:{x:52,z:-4},
       width:1,height:2,facingX:-1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.28,sociability:.38,caution:.50},
-      ai:{walkSpeed:1.45,visionRange:8,fullSimRange:26,wanderRadius:3.5},
+      ai:{walkSpeed:1.45,visionRange:8,fullSimRange:16,wanderRadius:3.5},
       dialogue:{greeting:['工具还没做齐，先凑合着干。','别踩我刚看好的那块木料。']}
     },
     {
       id:'village-resident-04',name:'溪边人',role:'fisher',
-      spawn:{x:-4.2,z:-2.4},home:{x:-3,z:-4},work:{x:-7,z:-4},plaza:{x:1,z:1},
+      spawn:{x:68,z:-4},home:{x:66,z:-4},work:{x:72,z:-4},plaza:{x:52,z:-4},
       width:1,height:2,facingX:1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.58,sociability:.60,caution:.40},
-      ai:{walkSpeed:1.50,visionRange:9,fullSimRange:30,wanderRadius:4.8},
+      ai:{walkSpeed:1.50,visionRange:9,fullSimRange:16,wanderRadius:4.8},
       dialogue:{greeting:['有水的地方，总能找到点东西。','今天的风向不太像昨天。']}
     },
     {
       id:'village-resident-05',name:'搬运人',role:'carrier',
-      spawn:{x:4.8,z:-2.1},home:{x:6,z:-1},work:{x:7,z:2},plaza:{x:1,z:1},
+      spawn:{x:84,z:3},home:{x:82,z:3},work:{x:88,z:3},plaza:{x:76,z:3},
       width:1,height:2,facingX:-1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.46,sociability:.52,caution:.62},
-      ai:{walkSpeed:1.72,visionRange:8.5,fullSimRange:28,wanderRadius:4.0},
+      ai:{walkSpeed:1.72,visionRange:8.5,fullSimRange:16,wanderRadius:4.0},
       dialogue:{greeting:['路要是被挖断，我就得重新绕。','东西不重，路不好走才麻烦。']}
     }
   ],
