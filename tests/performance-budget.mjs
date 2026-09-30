@@ -13,10 +13,13 @@ assert(size('src/engine3d/PhotonWaterPass.js')<12000,'Photon water pass exceeds 
 assert(size('src/engine3d/PhotonVoxelLightVolume.js')<10000,'Photon RGB voxel light volume exceeds 10KB budget');
 assert(size('src/engine3d/PhotonSkyWeatherPass.js')<16000,'Photon weather sky pass exceeds 16KB budget');
 assert(size('src/engine3d/PhotonSpecularSSRPass.js')<10000,'Photon material SSR pass exceeds 10KB budget');
+assert(size('src/debug/render-debug.js')<10000,'renderer debug controls exceed 10KB budget');
 assert(size('src/entities/PaperSpriteEntity.js')<16000,'paper entity runtime exceeds 16KB budget');
 assert(size('vendor/fastnoise-lite/FastNoiseLite.js')<125000,'FastNoiseLite vendor exceeds 125KB budget');
 assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
+assert(fs.existsSync('assets/materials/grass-reference.webp'),'user grass reference asset missing');
+assert(size('assets/materials/grass-reference.webp')<30000,'grass reference asset exceeds 30KB budget');
 assert(fs.existsSync('assets/player/protagonist.webp'),'authored protagonist paper asset missing');
 assert(size('assets/player/protagonist.webp')<100000,'protagonist paper asset exceeds 100KB budget');
 assert(!fs.existsSync('vendor/pixi'),'Pixi vendor tree should remain removed');
@@ -34,6 +37,8 @@ console.log(JSON.stringify({
   photonVoxelLight:size('src/engine3d/PhotonVoxelLightVolume.js'),
   photonWeather:size('src/engine3d/PhotonSkyWeatherPass.js'),
   photonSpecularSSR:size('src/engine3d/PhotonSpecularSSRPass.js'),
+  renderDebug:size('src/debug/render-debug.js'),
+  grassReference:size('assets/materials/grass-reference.webp'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
