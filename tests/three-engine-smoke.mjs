@@ -23,7 +23,7 @@ try{
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
-  assert(initial.worldMode==='infinite-voxel-3d','wrong world mode');
+  assert(initial.worldMode==='finite-side-scroll-voxel','wrong world mode');
   assert(initial.paperStyle?.enabled===true&&initial.paperStyle?.visualOnly===true,'paper style not active '+JSON.stringify(initial.paperStyle));
   assert(initial.paperTerrain?.mode==='visual-only-paper-diorama-v2','paper terrain renderer missing '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.visiblePaperChunks>0,'no visible paper chunks '+JSON.stringify(initial.paperTerrain));
@@ -70,11 +70,11 @@ try{
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
-  assert(initial.interaction?.threeDimensional===true&&initial.interaction?.zMovementLocked===false&&initial.interaction?.raycastIgnoresOtherRows===false,'3D interaction is still row locked '+JSON.stringify(initial.interaction));
+  assert(initial.interaction?.threeDimensional===false&&initial.interaction?.zMovementLocked===true,'side-scroll interaction did not lock Z '+JSON.stringify(initial.interaction));
   assert(initial.pixelRatio>=1,'native renderer pixel ratio missing');
   assert(initial.lighting?.shadowAcneGuard===true&&(initial.lighting?.sunShadowNormalBias||0)>=.05,'ground shadow-acne protection missing '+JSON.stringify(initial.lighting));
   assert(!Object.prototype.hasOwnProperty.call(initial,'photon'),'removed renderer stack leaked into stats');
-  assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
+  assert(initial.camera.stageView?.enabled===false&&Math.abs(initial.camera.pitch-.18)<.01&&Math.abs(initial.camera.distance-19.2)<.05,'demo-style side camera missing '+JSON.stringify(initial.camera));
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui-v2','fishing renderer missing '+JSON.stringify(initial.fishing));
   assert(initial.fishEcology?.renderMode==='pooled-instanced-paper-fish','fish ecology renderer missing '+JSON.stringify(initial.fishEcology));
@@ -87,7 +87,7 @@ try{
   await page.mouse.up();
   await page.waitForTimeout(100);
   const after=await page.evaluate(()=>window.Paperchalk3D.stats.camera.yaw);
-  assert(Math.abs(after-before)>.1,'3D camera did not orbit');
+  assert(Math.abs(after-before)<.01,'side-scroll camera must stay locked '+JSON.stringify({before,after}));
   await page.evaluate(()=>window.PaperchalkHealth.set(5));
   await page.waitForTimeout(100);
   const hp=await page.evaluate(()=>window.Paperchalk3D.stats.health);
