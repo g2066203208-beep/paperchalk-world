@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-r5";
+  const BUILD="paper-r8";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 单层体素纸片舞台</title>
-<meta name="paperchalk-build" content="paper-r5">
+<meta name="paperchalk-build" content="paper-r8">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-r5">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r8">
 </head>
 <body>
 
@@ -70,11 +70,22 @@
       <button type="button" data-debug-action="zero">0 HP</button>
       <button type="button" data-debug-action="full">满血</button>
       <button type="button" data-debug-action="resetpos">重置位置</button>
+      <button type="button" data-debug-action="flight">飞行：关</button>
       <button type="button" data-debug-action="colliders">Collider：关</button>
       <button type="button" data-debug-action="paperstyle">Paper Style：开</button>
       <button type="button" data-debug-action="volumetric">丁达尔：开</button>
       <button type="button" data-debug-action="stageview">纸片舞台视角：开</button>
       <button type="button" data-debug-action="stageaxis">舞台观察轴：Z</button>
+    </div>
+    <div class="paper-debug-controls">
+      <label>世界时间 <input data-world-time type="range" min="0" max="1439" step="1" value="360"></label>
+      <label>时间倍率 <input data-world-timescale type="range" min="0" max="20" step="0.25" value="1"></label>
+    </div>
+    <div class="debug-actions">
+      <button type="button" data-time-preset="330">05:30</button>
+      <button type="button" data-time-preset="720">12:00</button>
+      <button type="button" data-time-preset="1136">18:56</button>
+      <button type="button" data-time-preset="1320">22:00</button>
     </div>
     <div class="paper-debug-controls">
       <label>纸层高 <input data-paper-setting="paperLayerHeight" type="range" min="0.25" max="0.60" step="0.05" value="0.50"></label>
@@ -115,8 +126,8 @@
     <button id="jumpBtn" class="combat-btn" type="button">跳</button>
     <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
   </div>
-  <div class="desktop-control-hint">A/D 左右移动 · Space 跳跃/游泳 · 左键挖 · 右键放 · 1–5 快捷栏 · F 抛竿/收杆 · T 火把 · C 蹲下 · J 攻击</div>
-  <div class="joystick-hint">左侧摇杆：左右移动</div>
+  <div class="desktop-control-hint">WASD 3D移动 · Space 跳跃 · V 飞行 · 飞行时 Space上升 / Shift或C下降 · 左键挖 · 右键放</div>
+  <div class="joystick-hint">左侧摇杆：360°移动 · 飞行时“跳/蹲”=上升/下降</div>
   <div id="joystickZone" class="joystick-zone" aria-label="横向移动摇杆">
     <div id="joystick" class="joystick" aria-hidden="true">
       <div class="joystick-base"></div>
@@ -234,15 +245,16 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-r5"></script>
-<script src="./src/core/game-state.js?v=paper-r5"></script>
-<script src="./src/core/save-runtime.js?v=paper-r5"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-r5"></script>
-<script src="./src/content/game-content.js?v=paper-r5"></script>
+<script src="./src/core/event-bus.js?v=paper-r8"></script>
+<script src="./src/core/game-state.js?v=paper-r8"></script>
+<script src="./src/core/save-runtime.js?v=paper-r8"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r8"></script>
+<script src="./src/content/game-content.js?v=paper-r8"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=paper-r5"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-r5"></script>
-<script src="./src/game.js?v=paper-r5"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r5"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r8"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r8"></script>
+<script src="./src/game.js?v=paper-r8"></script>
+<script src="./src/debug/world-debug.js?v=paper-r8"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r8"></script>
 </body>
 </html>
