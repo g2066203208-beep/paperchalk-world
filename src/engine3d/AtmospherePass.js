@@ -19,9 +19,9 @@ export class AtmospherePass{
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
     this.size={width:1,height:1,pixelRatio:1,bufferWidth:1,bufferHeight:1};
     this.clearColor=new THREE.Color();
-    this.skyColor=new THREE.Color(0x7897be);
-    this.zenithColor=new THREE.Color(0x6689b5);
-    this.horizonColor=new THREE.Color(0xa8b8c4);
+    this.skyColor=new THREE.Color(0x69afe0);
+    this.zenithColor=new THREE.Color(0x4f9ed4);
+    this.horizonColor=new THREE.Color(0x8bc7ea);
     this.dawnColor=new THREE.Color(0xd6a181);
     this.duskColor=new THREE.Color(0xc28f91);
     this.nightColor=new THREE.Color(0x18243d);
@@ -272,8 +272,8 @@ export class AtmospherePass{
     const warm=morning?this.dawnColor:this.duskColor;
     const dayMix=clamp((d-.05)/.82,0,1);
     if(d>.005){
-      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0xa8bac8),dayMix);
-      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x6288b6),dayMix);
+      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0x8bc7ea),dayMix);
+      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x4f9ed4),dayMix);
     }else{
       this.horizonColor.copy(this.nightHorizon).lerp(warm,tw*.42);
       this.zenithColor.copy(this.nightColor).lerp(warm,tw*.18);
@@ -365,7 +365,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
-      paperSky:true,paperSkyLoaded:this.paperSkyLoaded,paperSkyAsset:'assets/materials/sky-paper-blue.webp',paperSkyStrength:.58,skyClouds:false,
+      paperSky:true,paperSkyLoaded:this.paperSkyLoaded,paperSkyAsset:'assets/materials/sky-paper-blue.webp',paperSkyStrength:.58,paperSkyDayBlue:true,skyClouds:false,
       minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
