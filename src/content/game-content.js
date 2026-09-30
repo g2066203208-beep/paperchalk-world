@@ -3,39 +3,20 @@
 'use strict';
 
 const scene3d={
-  mode:'finite-side-scroll-voxel',
-  spawn:{x:8.5,y:2,z:3,yaw:0},
-  bounds:{minX:0,maxX:96,minY:-16,maxY:32,minZ:-16,maxZ:9},
+  mode:'infinite-voxel-3d',
+  spawn:{x:0,y:12,z:0,yaw:0},
+  bounds:{minX:-100000,maxX:100000,minY:-100000,maxY:100000},
   terrain:{
     tileSize:1,
     pixelsPerMeter:128,
     texturePixels:128,
     chunkSize:16,
     seed:24681357,
-    visibleChunkRadiusXZ:1,
-    interactionRowZ:3,
-    blackBackRowZ:-64,
+    visibleChunkRadiusXZ:2,
+    interactionRowZ:0,
+    blackBackRowZ:-1,
     visibleChunkRadiusY:1,
-    maxBuildsPerFrame:4,
-    prologueRoad:{
-      id:'prologue-city-street-96x26-v3',
-      minX:0,maxX:95,
-      minZ:-16,maxZ:9,
-      lengthMeters:96,widthMeters:10,sceneDepthMeters:26,
-      groundMinY:-8,surfaceY:0,
-      farGroundMinZ:-16,farGroundMaxZ:-6,
-      farSidewalkMinZ:-5,farSidewalkMaxZ:-4,
-      farLaneMinZ:-3,farLaneMaxZ:-1,
-      nearLaneMinZ:0,nearLaneMaxZ:2,
-      nearSidewalkMinZ:3,nearSidewalkMaxZ:4,
-      nearGroundMinZ:5,nearGroundMaxZ:9,
-      schoolGroundMinZ:-16,schoolGroundMaxZ:-6,
-      crosswalkMinX:44,crosswalkMaxX:51,
-      schoolZoneMinX:0,schoolZoneMaxX:23,
-      streetZoneMinX:24,streetZoneMaxX:43,
-      residentialZoneMinX:52,residentialZoneMaxX:79,
-      exitZoneMinX:80,exitZoneMaxX:95
-    },
+    maxBuildsPerFrame:3,
     biome:{
       version:1,
       spawnSafeRadius:22,
@@ -100,7 +81,7 @@ const content={
   npcs:[
     {
       id:'village-resident-01',name:'村中长者',role:'elder',
-      spawn:{x:16,z:3,yaw:0},home:{x:14,z:3},work:{x:18,z:3},plaza:{x:20,z:3},
+      spawn:{x:3.25,z:1.75,yaw:0},home:{x:4,z:3},work:{x:2,z:1},plaza:{x:1,z:1},
       width:1,height:2,facingX:-1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.35,sociability:.72,caution:.55},
@@ -114,7 +95,7 @@ const content={
     },
     {
       id:'village-resident-02',name:'田地照看人',role:'farmer',
-      spawn:{x:30,z:3},home:{x:28,z:3},work:{x:34,z:3},plaza:{x:20,z:3},
+      spawn:{x:-3.0,z:1.6},home:{x:-4,z:3},work:{x:-6,z:2},plaza:{x:1,z:1},
       width:1,height:2,facingX:1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.42,sociability:.48,caution:.45},
@@ -123,7 +104,7 @@ const content={
     },
     {
       id:'village-resident-03',name:'木工',role:'crafter',
-      spawn:{x:48,z:-4},home:{x:46,z:-4},work:{x:50,z:-4},plaza:{x:52,z:-4},
+      spawn:{x:1.2,z:-3.0},home:{x:3,z:-4},work:{x:5,z:-3},plaza:{x:1,z:1},
       width:1,height:2,facingX:-1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.28,sociability:.38,caution:.50},
@@ -132,7 +113,7 @@ const content={
     },
     {
       id:'village-resident-04',name:'溪边人',role:'fisher',
-      spawn:{x:68,z:-4},home:{x:66,z:-4},work:{x:72,z:-4},plaza:{x:52,z:-4},
+      spawn:{x:-4.2,z:-2.4},home:{x:-3,z:-4},work:{x:-7,z:-4},plaza:{x:1,z:1},
       width:1,height:2,facingX:1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.58,sociability:.60,caution:.40},
@@ -141,7 +122,7 @@ const content={
     },
     {
       id:'village-resident-05',name:'搬运人',role:'carrier',
-      spawn:{x:84,z:3},home:{x:82,z:3},work:{x:88,z:3},plaza:{x:76,z:3},
+      spawn:{x:4.8,z:-2.1},home:{x:6,z:-1},work:{x:7,z:2},plaza:{x:1,z:1},
       width:1,height:2,facingX:-1,maxHp:10,invulnerable:true,interactable:true,
       collider:{halfW:.34,halfH:.95,halfD:.28},
       personality:{curiosity:.46,sociability:.52,caution:.62},
@@ -220,7 +201,7 @@ function validate(value=content){
     }
     const terrain=value.scene3d.terrain;
     if(!(terrain.tileSize===1&&terrain.pixelsPerMeter===128&&terrain.texturePixels===128&&terrain.chunkSize>=16))errors.push('scene3d terrain scale must be 1m / 128px');
-    if(value.scene3d.mode!=='finite-side-scroll-voxel')errors.push('scene3d mode must be finite-side-scroll-voxel');
+    if(value.scene3d.mode!=='infinite-voxel-3d')errors.push('scene3d mode must be infinite-voxel-3d');
     for(const entity of value.scene3d.stageEntities){
       if(!(entity.width>0&&entity.height>0))errors.push('stage entity '+entity.id+' dimensions invalid');
     }
