@@ -67,6 +67,7 @@ try{
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.interaction?.threeDimensional===true&&initial.interaction?.zMovementLocked===false&&initial.interaction?.raycastIgnoresOtherRows===false,'3D interaction is still row locked '+JSON.stringify(initial.interaction));
   assert(initial.pixelRatio>=1,'native renderer pixel ratio missing');
+  assert(initial.lighting?.shadowAcneGuard===true&&(initial.lighting?.sunShadowNormalBias||0)>=.05,'ground shadow-acne protection missing '+JSON.stringify(initial.lighting));
   assert(!Object.prototype.hasOwnProperty.call(initial,'photon'),'removed renderer stack leaked into stats');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
