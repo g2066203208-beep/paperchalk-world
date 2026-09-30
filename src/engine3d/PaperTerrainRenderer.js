@@ -1,4 +1,4 @@
-import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r9';
+import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r11';
 /* visual-only paper terrain */
 const TOP_COLORS=Object.freeze({
   1:0x6f895c, // grass paper (authored texture overrides this)
