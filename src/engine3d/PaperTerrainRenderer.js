@@ -4,7 +4,7 @@ const TOP_COLORS=Object.freeze({
   1:0x6f895c, // grass paper (authored texture overrides this)
   2:0xb9845f, // earth paper
   3:0x9d9890, // stone paper
-  4:0xe2c38d, // warm kraft/sand paper
+  4:0xffdca5, // warm kraft/sand paper
   5:0xb98a72  // clay paper
 });
 const SIDE_COLORS=Object.freeze({
@@ -63,7 +63,7 @@ export class PaperTerrainRenderer{
       printNoiseStrength:settings.printNoiseStrength??.065,
       microNormalStrength:settings.microNormalStrength??.34,
       roughnessVariation:settings.roughnessVariation??.035,
-      sideDarkness:settings.sideDarkness??1.03,
+      sideDarkness:settings.sideDarkness??1.08,
       edgeJitter:settings.edgeJitter??.014,
       edgeHeightJitter:settings.edgeHeightJitter??.0035,
       edgeFacetCenterJitter:settings.edgeFacetCenterJitter??.0025,
