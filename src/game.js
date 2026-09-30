@@ -406,7 +406,7 @@ showNPCDialogue(packet);saveWorldState();return packet;
 }
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function collidesAt(x,y,z){
-return terrain.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D);
+return terrain.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D)||SCENE_RUNTIME?.collidesAABB?.(sceneData,x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D);
 }
 function groundProbe(x=transform.x,y=transform.y,z=transform.z){
 return terrain.collidesAABB(x,y-.035,z,PLAYER_HALF_W*.92,PLAYER_HALF_H,PLAYER_HALF_D*.92);
