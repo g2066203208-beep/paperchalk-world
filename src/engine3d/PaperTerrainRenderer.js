@@ -28,7 +28,7 @@ function pushVertex(data,p,normal,color){
   const off=data.worldOffset||[0,0,0],ax=Math.abs(normal[0]),ay=Math.abs(normal[1]),az=Math.abs(normal[2]);
   data.positions.push(p[0],p[1],p[2]);data.normals.push(normal[0],normal[1],normal[2]);data.colors.push(color.r,color.g,color.b);
   const wx=p[0]+off[0],wy=p[1]+off[1],wz=p[2]+off[2];
-  if(ay>=ax&&ay>=az)data.uvs.push(wx*.12,wz*.12);
+  if(ay>=ax&&ay>=az)data.uvs.push(wx*.06,wz*.06);
   else if(ax>=az)data.uvs.push(wz*.62,wy*.62);
   else data.uvs.push(wx*.62,wy*.62);
 }
@@ -408,7 +408,7 @@ export class PaperTerrainRenderer{
       renderGridExposed:false,grassTopMaterialGroup:true,dirtMaterialGroup:true,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,
       stackedCardboardBands:true,continuousMergedEdges:true,maxEdgeRunCells:this.settings.maxEdgeRunCells,
       haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV3:true,
-      targetGroundStyle:'terraced-paper-stage-r1',referenceStyle:'pressed-cardstock-diorama'
+      targetGroundStyle:'terraced-paper-stage-r1',topUvScale:.06,referenceStyle:'pressed-cardstock-diorama'
     };
   }
   dispose(){
