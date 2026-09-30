@@ -1,4 +1,4 @@
-/* Authored content for the Paperchalk side-on 3D paper stage. */
+/* Authored content for the Paperchalk open 3D voxel world. */
 (function(global){
 'use strict';
 
