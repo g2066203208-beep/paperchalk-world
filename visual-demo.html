@@ -32,8 +32,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.25</h1>
-  <p>v12.25 Paper003 调试：地形继续保持标准立方体和“绿顶 + 泥土侧面”。为地形单独克隆一套 Paper003 纹理，不再影响小草；新增实时调试面板，可直接调整纸纹大小、法线强度和高度凹凸。默认把纸纹放大到 2.0×。</p>
+  <h1>纸艺世界视觉 Demo v12.27</h1>
+  <p>v12.27 体素面剔除：Paper003 连续映射保持 v12.25 不变。地形不再给每个方块提交完整六个面，而是先检查六个相邻体素，只生成真正暴露在空气中的面；内部相贴的面完全不存在。当前 163 个方块从原本 978 个面降到 362 个可见面，同时材质仍显式使用 FrontSide 背面剔除。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -615,21 +615,22 @@ const terrainTopMat=makeTerrainPaper003Material(
   4.8
 );
 
-// Standard cube. Three material groups only:
-// +X/-X sides = dirt, +Y top = green, -Y/+Z/-Z = dirt.
-// No separate top sheet and no thickness geometry.
-const blockGeo=new THREE.BoxGeometry(1,1,1);
-blockGeo.clearGroups();
-blockGeo.addGroup(0,12,0);
-blockGeo.addGroup(12,6,1);
-blockGeo.addGroup(18,18,0);
+// Voxel surface meshing v12.27:
+// keep exact 1x1x1 voxel silhouettes, but DO NOT submit faces touching another
+// solid voxel. GPU back-face culling stays on as well (FrontSide materials).
+terrainDirtMat.side=THREE.FrontSide;
+terrainTopMat.side=THREE.FrontSide;
 
 const terrain=new THREE.Group();
-terrain.name='terrain-standard-grass-top-dirt-side-cubes';
+terrain.name='terrain-culled-grass-top-dirt-side-cubes';
 scene.add(terrain);
 
 const columnRecords=[];
+const terrainVoxels=new Set();
 let terrainBlockCount=0;
+
+function voxelKey(x,y,z){return x+','+y+','+z}
+
 for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   let h=0;
   if(x<-5||x>5)h=1;
@@ -637,33 +638,114 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   if((x===-4||x===4)&&Math.abs(z)>1)h=1;
   if(z===3&&Math.abs(x)>2)h++;
   if((x===-2&&z===-2)||(x===3&&z===2))h++;
+
   columnRecords.push({x,z,h,columnIndex:columnRecords.length});
-  terrainBlockCount+=h+1;
-}
-
-const terrainBlocks=new THREE.InstancedMesh(
-  blockGeo,
-  [terrainDirtMat,terrainTopMat],
-  terrainBlockCount
-);
-terrainBlocks.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-terrainBlocks.castShadow=true;
-terrainBlocks.receiveShadow=true;
-terrainBlocks.frustumCulled=false;
-terrain.add(terrainBlocks);
-
-const terrainDummy=new THREE.Object3D();
-let terrainIndex=0;
-for(const rec of columnRecords){
-  for(let y=0;y<=rec.h;y++){
-    terrainDummy.position.set(rec.x,y,rec.z);
-    terrainDummy.rotation.set(0,0,0);
-    terrainDummy.scale.set(1,1,1);
-    terrainDummy.updateMatrix();
-    terrainBlocks.setMatrixAt(terrainIndex++,terrainDummy.matrix);
+  for(let y=0;y<=h;y++){
+    terrainVoxels.add(voxelKey(x,y,z));
+    terrainBlockCount++;
   }
 }
-terrainBlocks.instanceMatrix.needsUpdate=true;
+
+const HALF=.5;
+const VOXEL_FACES=[
+  // +X
+  {d:[ 1, 0, 0],n:[ 1, 0, 0],top:false,c:[
+    [ HALF,-HALF,-HALF],[ HALF, HALF,-HALF],[ HALF, HALF, HALF],[ HALF,-HALF, HALF]
+  ]},
+  // -X
+  {d:[-1, 0, 0],n:[-1, 0, 0],top:false,c:[
+    [-HALF,-HALF, HALF],[-HALF, HALF, HALF],[-HALF, HALF,-HALF],[-HALF,-HALF,-HALF]
+  ]},
+  // +Y grass top
+  {d:[ 0, 1, 0],n:[ 0, 1, 0],top:true,c:[
+    [-HALF, HALF, HALF],[ HALF, HALF, HALF],[ HALF, HALF,-HALF],[-HALF, HALF,-HALF]
+  ]},
+  // -Y dirt underside
+  {d:[ 0,-1, 0],n:[ 0,-1, 0],top:false,c:[
+    [-HALF,-HALF,-HALF],[ HALF,-HALF,-HALF],[ HALF,-HALF, HALF],[-HALF,-HALF, HALF]
+  ]},
+  // +Z
+  {d:[ 0, 0, 1],n:[ 0, 0, 1],top:false,c:[
+    [ HALF,-HALF, HALF],[ HALF, HALF, HALF],[-HALF, HALF, HALF],[-HALF,-HALF, HALF]
+  ]},
+  // -Z
+  {d:[ 0, 0,-1],n:[ 0, 0,-1],top:false,c:[
+    [-HALF,-HALF,-HALF],[-HALF, HALF,-HALF],[ HALF, HALF,-HALF],[ HALF,-HALF,-HALF]
+  ]}
+];
+
+const faceUv=[[0,0],[0,1],[1,1],[1,0]];
+const triOrder=[0,1,2,0,2,3];
+const dirtPos=[],dirtNorm=[],dirtUv=[];
+const topPos=[],topNorm=[],topUv=[];
+let terrainVisibleFaceCount=0;
+
+function emitVoxelFace(x,y,z,face){
+  const pos=face.top?topPos:dirtPos;
+  const nor=face.top?topNorm:dirtNorm;
+  const uv=face.top?topUv:dirtUv;
+
+  for(const qi of triOrder){
+    const p=face.c[qi];
+    pos.push(x+p[0],y+p[1],z+p[2]);
+    nor.push(face.n[0],face.n[1],face.n[2]);
+    uv.push(faceUv[qi][0],faceUv[qi][1]);
+  }
+  terrainVisibleFaceCount++;
+}
+
+for(const rec of columnRecords){
+  for(let y=0;y<=rec.h;y++){
+    for(const face of VOXEL_FACES){
+      const nx=rec.x+face.d[0];
+      const ny=y+face.d[1];
+      const nz=rec.z+face.d[2];
+      if(!terrainVoxels.has(voxelKey(nx,ny,nz))){
+        emitVoxelFace(rec.x,y,rec.z,face);
+      }
+    }
+  }
+}
+
+const terrainSurfaceGeo=new THREE.BufferGeometry();
+terrainSurfaceGeo.setAttribute(
+  'position',
+  new THREE.Float32BufferAttribute([...dirtPos,...topPos],3)
+);
+terrainSurfaceGeo.setAttribute(
+  'normal',
+  new THREE.Float32BufferAttribute([...dirtNorm,...topNorm],3)
+);
+terrainSurfaceGeo.setAttribute(
+  'uv',
+  new THREE.Float32BufferAttribute([...dirtUv,...topUv],2)
+);
+
+const dirtVertexCount=dirtPos.length/3;
+const topVertexCount=topPos.length/3;
+terrainSurfaceGeo.clearGroups();
+terrainSurfaceGeo.addGroup(0,dirtVertexCount,0);
+terrainSurfaceGeo.addGroup(dirtVertexCount,topVertexCount,1);
+terrainSurfaceGeo.computeBoundingBox();
+terrainSurfaceGeo.computeBoundingSphere();
+
+const terrainBlocks=new THREE.Mesh(
+  terrainSurfaceGeo,
+  [terrainDirtMat,terrainTopMat]
+);
+terrainBlocks.castShadow=true;
+terrainBlocks.receiveShadow=true;
+terrainBlocks.frustumCulled=true;
+terrain.add(terrainBlocks);
+
+const terrainOriginalFaceCount=terrainBlockCount*6;
+const terrainCulledFaceCount=terrainOriginalFaceCount-terrainVisibleFaceCount;
+console.info(
+  '[terrain] voxel face culling:',
+  terrainBlockCount+' blocks,',
+  terrainVisibleFaceCount+'/'+terrainOriginalFaceCount+' faces submitted,',
+  terrainCulledFaceCount+' hidden faces removed'
+);
 
 const caps=[];
 const rims=[];
