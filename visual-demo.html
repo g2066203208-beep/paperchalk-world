@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v13</h1>
-  <p>深林清晰体积光 v13：保留树缝光束，但降低全局空气泛白。体积介质只集中在树林到前景的湿润空气带，并改成“透射率 + 入射散射”合成；弱散射会被压掉，只有真正穿过树缝的光束明显发亮。</p>
+  <h1>纸艺世界视觉 Demo v14</h1>
+  <p>深林纸艺体积光 v14：光路仍由真实树木遮挡 + Shadow-map Raymarch 算出来，但体积光本身加入世界空间纸纤维、半透明纸层明度和轻微剪纸边缘。不是贴一张光柱平面，而是把真实体积散射的结果做成纸艺语言。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -52,7 +52,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="random" class="active">随机材质</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active">剪纸小草</button>
-  <button id="godrays" class="active">清晰体积光</button>
+  <button id="godrays" class="active">纸艺体积光</button>
   <div class="groupBreak"></div>
   <button id="dawn" class="active">清晨</button>
   <button id="noon">正午</button>
@@ -60,7 +60,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · Shadow-map Raymarch 体积散射</div>
+<div class="badge">拖动旋转 · 滚轮缩放 · 真实树缝 Raymarch · 世界空间纸纤维</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -908,6 +908,29 @@ const volumeMat=new THREE.ShaderMaterial({
       return fract((p3.x+p3.y)*p3.z);
     }
 
+    float hash31(vec3 p){
+      p=fract(p*.1031);
+      p+=dot(p,p.yzx+33.33);
+      return fract((p.x+p.y)*p.z);
+    }
+
+    // World-space handmade-paper structure. It stays attached to the atmosphere
+    // instead of sticking to the screen when the camera moves.
+    float paperMedium(vec3 p){
+      float longFiber=.5+.5*sin(p.x*17.0+p.z*9.0+sin(p.y*2.1)*1.7);
+      float crossFiber=.5+.5*sin(p.y*31.0+p.x*4.0-p.z*3.0);
+      float pulp=hash31(floor(p*13.0));
+      float coarse=hash31(floor(p*2.4));
+      return clamp(.80+longFiber*.10+crossFiber*.055+(pulp-.5)*.09+(coarse-.5)*.06,.68,1.16);
+    }
+
+    float paperTear(vec3 p){
+      float a=sin(p.x*2.15+p.y*.82-p.z*1.55);
+      float b=sin(p.x*.72-p.y*1.34+p.z*2.45+1.7);
+      float c=hash31(floor(p*1.8))-.5;
+      return (a*.52+b*.30+c*.65);
+    }
+
     vec3 worldFromDepth(vec2 uv,float depth){
       vec4 clip=vec4(uv*2.0-1.0,depth*2.0-1.0,1.0);
       vec4 view=cameraProjectionInv*clip;
@@ -955,6 +978,7 @@ const volumeMat=new THREE.ShaderMaterial({
         float foregroundExit=1.0-smoothstep(4.0,9.0,p.z);
         float corridor=forestEntry*foregroundExit;
         float localDensity=density*(.045+.955*lowMist)*corridor;
+        localDensity*=paperMedium(p);
 
         float nearFade=smoothstep(1.0,3.5,t);
 
@@ -969,11 +993,30 @@ const volumeMat=new THREE.ShaderMaterial({
 
       // Kill weak uniform haze; preserve stronger continuous shafts.
       float scatter=(1.0-exp(-scatterAccum*2.45))*intensity;
-      scatter=max(scatter-.022,0.0)*1.18;
+      scatter=max(scatter-.020,0.0)*1.24;
+
+      // Give the already-physical shaft a translucent layered-paper response.
+      // Thresholds are perturbed in WORLD SPACE so the torn/layered structure
+      // does not swim over the screen when the camera rotates.
+      vec3 paperPoint=cameraPos+dir*(rayDist*.54);
+      float tear=paperTear(paperPoint);
+      float fib=paperMedium(paperPoint);
+      float paperInput=clamp(scatter+tear*.018,0.0,1.0);
+      float stepped=floor(paperInput*5.0+.5)/5.0;
+      scatter=mix(scatter,stepped,.30);
+      scatter*=mix(.92,1.08,clamp((fib-.68)/.48,0.0,1.0));
+
+      // A tiny darker golden edge where the ray layer changes reads like the
+      // edge of thin translucent paper rather than a Gaussian CG glow.
+      float grad=abs(dFdx(scatter))+abs(dFdy(scatter));
+      float paperEdge=smoothstep(.012,.055,grad);
+      vec3 coreColor=scatteringColor*scatter;
+      vec3 edgeColor=scatteringColor*vec3(.70,.58,.42)*scatter;
+      vec3 paperLight=mix(coreColor,edgeColor,paperEdge*.28);
 
       // Store transmittance separately from in-scattering.
       float transmittance=exp(-extinctionAccum);
-      gl_FragColor=vec4(scatteringColor*scatter,transmittance);
+      gl_FragColor=vec4(paperLight,transmittance);
     }
   `
 });
@@ -1001,7 +1044,7 @@ const compositeMat=new THREE.ShaderMaterial({
       float trans=clamp(vol.a,0.0,1.0);
 
       // Suppress low-level veil while retaining the brighter shafts.
-      vec3 rays=max(vol.rgb-vec3(.006),vec3(0.0))*volumeStrength;
+      vec3 rays=max(vol.rgb-vec3(.005),vec3(0.0))*volumeStrength*1.08;
 
       // Physically-inspired structure: transmitted scene + in-scattering.
       // Extinction is intentionally restrained so paper textures stay crisp.
@@ -1067,17 +1110,17 @@ function updateVolumetricSettings(t){
   volumeActiveLightPos.copy(active.position);
   volumeUniforms.lightDir.value.copy(volumeLightTarget).sub(volumeActiveLightPos).normalize();
 
-  const dayColor=new THREE.Color(0xffe7b5);
-  const warmColor=new THREE.Color(0xffb878);
-  const moonColor=new THREE.Color(0xa9c7ff);
+  const dayColor=new THREE.Color(0xffefc7);
+  const warmColor=new THREE.Color(0xffb45f);
+  const moonColor=new THREE.Color(0xb7ceff);
 
   if(volumeUseMoon){
     volumeUniforms.scatteringColor.value.copy(moonColor);
-    volumeUniforms.intensity.value=.14+.10*moonUp;
+    volumeUniforms.intensity.value=.17+.12*moonUp;
     volumeUniforms.density.value=.010+.004*moonUp;
   }else{
     volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.82);
-    volumeUniforms.intensity.value=.28+sunUp*.20+twilight*.24;
+    volumeUniforms.intensity.value=.34+sunUp*.23+twilight*.30;
     volumeUniforms.density.value=.012+twilight*.008;
   }
   if(state.fog){
