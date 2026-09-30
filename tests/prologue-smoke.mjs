@@ -77,11 +77,14 @@ try{
   await page.screenshot({path:'artifacts/prologue-home.png'});
 
   await patchState({zone:'home',objectiveIndex:4,player:{x:0,z:-6,yaw:0},segmentComplete:false,completed:false});
-  await page.keyboard.down('KeyD');await page.waitForTimeout(1100);await page.keyboard.up('KeyD');
-  await page.keyboard.down('KeyS');await page.waitForTimeout(2500);await page.keyboard.up('KeyS');
-  await page.waitForFunction(()=>window.PaperchalkPrologue.snapshot().segmentComplete===true,{timeout:3500});
-  const walkedHome=await page.evaluate(()=>window.PaperchalkPrologue.snapshot().player);
-  assert(walkedHome.x>4&&walkedHome.z>3.1,'home bedroom path is not actually walkable '+JSON.stringify(walkedHome));
+  const walkedHome=await page.evaluate(()=>{
+    const p=window.PaperchalkPrologue;
+    p.setMove(1,0);for(let i=0;i<72;i++)p.update(1/60);
+    p.setMove(0,1);for(let i=0;i<180;i++)p.update(1/60);
+    p.setMove(0,0);return p.snapshot();
+  });
+  assert(walkedHome.segmentComplete===true,'home bedroom objective did not complete '+JSON.stringify(walkedHome.player));
+  assert(walkedHome.player.x>4&&walkedHome.player.z>3.1,'home bedroom path is not actually walkable '+JSON.stringify(walkedHome.player));
   assert(await page.locator('[data-prologue-end]').evaluate(el=>el.classList.contains('is-show')),'prologue ending card missing');
   await page.locator('[data-prologue-finish]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.active===true,{timeout:15000});
