@@ -16,16 +16,22 @@ try{
     const t=window.PaperchalkTerrain;
     return {
       spec:window.PaperchalkPrologueRoad.stats(),
-      row:[-6,-5,-4,-3,-2,-1,0,1,2,3,4,5].map(z=>[z,t.peekVoxel(8,0,z)]),
+      schoolRow:[-17,-16,-10,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,9,10].map(z=>[z,t.peekVoxel(8,0,z)]),
+      cityRow:[-16,-10,-6,5,9].map(z=>[z,t.peekVoxel(30,0,z)]),
+      underground:[-9,-8,-3,-2,-1,0,1].map(y=>[y,t.peekVoxel(8,y,3)]),
       outsideX:t.peekVoxel(96,0,3)
     };
   });
-  assert(roadScale.spec?.dimensions?.lengthMeters===96&&roadScale.spec?.dimensions?.widthMeters===10,'road dimensions are not 96m x 10m '+JSON.stringify(roadScale));
+  assert(roadScale.spec?.dimensions?.lengthMeters===96&&roadScale.spec?.dimensions?.roadWidthMeters===10&&roadScale.spec?.dimensions?.sceneDepthMeters===26,'city dimensions are not 96m x 26m with 10m road '+JSON.stringify(roadScale));
   assert(JSON.stringify(roadScale.spec?.crossSection)===JSON.stringify({farSidewalkMeters:2,farLaneMeters:3,nearLaneMeters:3,nearSidewalkMeters:2}),'road cross-section is not 2+3+3+2m '+JSON.stringify(roadScale));
-  const row=new Map(roadScale.row);
-  assert(row.get(-6)===0&&row.get(5)===0&&roadScale.outsideX===0,'terrain leaked outside the 96m x 10m road footprint '+JSON.stringify(roadScale));
+  assert(roadScale.spec?.underground?.solidLayers===9&&roadScale.spec?.underground?.groundMinY===-8,'underground depth wrong '+JSON.stringify(roadScale.spec));
+  const row=new Map(roadScale.schoolRow),city=new Map(roadScale.cityRow),underground=new Map(roadScale.underground);
+  assert(row.get(-17)===0&&row.get(10)===0&&roadScale.outsideX===0,'terrain leaked outside finite city bounds '+JSON.stringify(roadScale));
+  assert(row.get(-16)===5&&row.get(-10)===5&&row.get(-6)===5,'school pad is not solid clay ground '+JSON.stringify(roadScale));
+  assert(city.get(-16)===1&&city.get(-10)===1&&city.get(-6)===1&&city.get(5)===1&&city.get(9)===1,'outer city ground is not grass voxel terrain '+JSON.stringify(roadScale));
   assert(row.get(-5)===5&&row.get(-4)===5&&row.get(3)===5&&row.get(4)===5,'2m sidewalks are not clay voxels '+JSON.stringify(roadScale));
   assert(row.get(-3)===3&&row.get(-2)===3&&row.get(0)===3&&row.get(1)===3&&row.get(2)===3,'3m traffic lanes are not stone voxels '+JSON.stringify(roadScale));
+  assert(underground.get(0)===5&&underground.get(-1)===2&&underground.get(-2)===2&&underground.get(-3)===3&&underground.get(-8)===3&&underground.get(-9)===0&&underground.get(1)===0,'underground voxel column wrong '+JSON.stringify(roadScale));
 
   await page.locator('#authBtn').click();await page.locator('#tabRegister').click();
   await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
