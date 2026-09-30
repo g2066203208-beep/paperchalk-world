@@ -52,6 +52,23 @@ try{
  assert(entered.snap.player.x>24&&entered.snap.player.x<25,'wrong prologue spawn X '+JSON.stringify(entered.snap.player));
  assert(entered.stats.worldMode==='prologue-city-3d','renderer is not using prologue scene '+JSON.stringify(entered.stats));
  assert(Math.abs(entered.stats.camera.yaw)<.01&&Math.abs(entered.stats.camera.distance-18)<.05&&Math.abs(entered.stats.camera.fov-42)<.05,'prologue camera preset missing '+JSON.stringify(entered.stats.camera));
+ const fence=entered.stats.schoolFence;
+ assert(fence?.enabled===true&&fence.gridAligned===true&&fence.installation==='voxel-grid-edge','school fence grid installation missing '+JSON.stringify(fence));
+ assert(fence.lineZ===-16.5&&fence.rearCellZ===-17&&fence.sidewalkCellZ===-16,'fence is not on rear-building/sidewalk voxel edge '+JSON.stringify(fence));
+ assert(fence.groundTop===1,'fence ground height must come from voxel top '+JSON.stringify(fence));
+ assert(fence.frontageMeters===80&&fence.gateMeters===8&&fence.panelMeters===4,'school fence dimensions wrong '+JSON.stringify(fence));
+ assert(fence.panelCount===18&&fence.postCount===18&&fence.gatePillars===2&&fence.gateLeaves===2,'school fence part counts wrong '+JSON.stringify(fence));
+ assert(fence.panelThickness===.12&&fence.frontBackTexture===true&&fence.realThickness===true,'school fence model/texture construction wrong '+JSON.stringify(fence));
+ assert(JSON.stringify(fence.xEdges)===JSON.stringify({start:4,gateStart:20,gateEnd:28,end:84}),'school fence X voxel edges wrong '+JSON.stringify(fence.xEdges));
+ const fenceCollision=await page.evaluate(()=>{
+   const S=window.PaperchalkSceneRuntime,scene=window.PaperchalkMap.scene3d;
+   return {
+     onFence:S.collidesAABB(scene,24,1.95,-16.5,.34,.95,.28),
+     sidewalk:S.collidesAABB(scene,24,1.95,-14.5,.34,.95,.28),
+     pastSchool:S.collidesAABB(scene,90,1.95,-16.5,.34,.95,.28)
+   };
+ });
+ assert(fenceCollision.onFence===true&&fenceCollision.sidewalk===false&&fenceCollision.pastSchool===false,'school fence collision not aligned to voxel grid '+JSON.stringify(fenceCollision));
  await page.screenshot({path:'artifacts/prologue-school-street.png'});
  if(errors.length)throw new Error(errors.join('\n'));
  console.log('PROLOGUE_CITY_SCENE_OK');
