@@ -113,8 +113,8 @@ assert(paper.includes('paperPbrV3:true'),'PaperMaterial v3 integration missing')
 assert(paper.includes('grassTopMaterialGroup:true'),'dedicated grass top material group missing');
 assert(paper.includes('dirtMaterialGroup:true'),'dedicated dirt material group missing');
 assert(paperMaterial.includes("mode:'procedural-paper-pbr-v3-reference'"),'procedural paper PBR v3 missing');
-assert(paperMaterial.includes('normalMap:source.normal'),'paper micro-normal map missing');
-assert(paperMaterial.includes('roughnessMap:source.roughness'),'paper roughness map missing');
+assert(paperMaterial.includes('normalMap:side||bevel?source.normal:null'),'paper side/bevel micro-normal map missing');
+assert(paperMaterial.includes('roughnessMap:side||bevel?source.roughness:null'),'paper side/bevel roughness map missing');
 assert(paperMaterial.includes('correlatedNormalRoughness:true'),'normal/roughness correlation missing');
 assert(paperMaterial.includes('diffusePulpDominant:true'),'paper albedo/pulp must dominate the look');
 assert(paperMaterial.includes('weakMicroNormal:true'),'paper normal detail must remain weak');
