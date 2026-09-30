@@ -84,7 +84,7 @@ assert.match(html,/npcInteractBtn/);
 assert.match(html,/prologue-content\.js/);
 assert.match(html,/prologue-runtime\.js/);
 assert.match(html,/prologue-renderer\.mjs/);
-assert.match(game,/PaperchalkPrologue\?\.shouldRun/);
+assert.match(game,/P\?\.shouldRun\?\./);
 assert.match(game,/paperchalk-prologue-enter/);
 assert.match(prologueContent,/prologue-city-day1/);
 assert.match(prologueContent,/市立青叶中学/);
