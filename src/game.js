@@ -167,7 +167,8 @@ const defaults={language:'zh-CN',timeScale:1,preferLandscape:true,camera3d:{...d
 try{
 const parsed=JSON.parse(storageGet(KEY_SETTINGS)||'{}');
 const parsedCamera=parsed.camera3d||{};
-const camera3d={
+const legacySideCamera=Math.abs(Number(parsedCamera.yaw)||0)<.001&&Math.abs((Number(parsedCamera.pitch)||0)-.18)<.001&&Math.abs((Number(parsedCamera.distance)||0)-19.2)<.01;
+const camera3d=legacySideCamera?{...defaultCamera,stageView:{...defaultCamera.stageView}}:{
 ...defaultCamera,
 ...parsedCamera,
 fov:42,
@@ -1737,7 +1738,8 @@ if(!session)return false;
 const save=readSaveForSession(session)||defaultSave(session);
 terrain.importEdits(save.terrainEdits);
 terrain.water.importState(save.waterCells);
-const p=save.player||sceneData.spawn;
+const legacyPrologue=String(save.worldLayout||'').includes('prologue')||save.location==='序幕 · 城市马路';
+const p=legacyPrologue?sceneData.spawn:(save.player||sceneData.spawn);
 transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
 transform.z=Number.isFinite(Number(p.z))?Number(p.z):(sceneData.spawn.z||0);
 transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x,transform.z);
@@ -1752,7 +1754,12 @@ resetFishing();
 fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
 controller.torchOn=!!save.torchOn;
 worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
+if(legacyPrologue&&save.npcState?.actors){
+const defs=new Map(CONTENT.npcs.map(n=>[n.id,n]));
+for(const row of save.npcState.actors){const d=defs.get(row.id);if(d?.spawn){row.x=d.spawn.x;row.z=d.spawn.z;row.y=safeSpawnY(row.x,row.z)}}
+}
 npcWorld.importState(save.npcState);
+if(legacyPrologue){save.location='Paperchalk · 无限3D体素世界';delete save.worldLayout}
 setInventoryFromSave(save.inventory);
 if(!inventoryItems.some(item=>item?.id==='hand-torch')){
 inventoryItems[0]={...itemClone(CONTENT.items['hand-torch']),count:1};
