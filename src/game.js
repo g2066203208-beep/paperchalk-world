@@ -10,6 +10,8 @@ const SAVE_RUNTIME=window.PaperchalkSaveRuntime;
 if(!SAVE_RUNTIME)throw new Error('PaperchalkSaveRuntime missing');
 const ECS=window.PaperchalkECS;
 if(!ECS)throw new Error('PaperchalkECS missing');
+const NPCRuntime=window.PaperchalkNPCRuntime;
+if(!NPCRuntime)throw new Error('PaperchalkNPCRuntime missing');
 const TerrainRuntime=window.PaperchalkTerrainRuntime;
 if(!TerrainRuntime)throw new Error('PaperchalkTerrainRuntime missing');
 const byId=id=>{
@@ -241,7 +243,16 @@ const playerEntity=ecs.create({
 Transform:transform,
 Velocity:velocity,
 Health:health,
+Actor:{kind:'player'},
 Player:controller
+});
+const npcWorld=NPCRuntime.createNPCWorld({
+definitions:CONTENT.npcs,terrain,ecs,gravity:GRAVITY
+});
+window.PaperchalkNPCs=Object.freeze({
+get list(){return npcWorld.snapshot()},
+get stats(){return npcWorld.stats()},
+get(id){return npcWorld.snapshot().find(npc=>npc.id===String(id))||null}
 });
 const fishing={
 state:'idle',timer:0,biteWindow:0,nextBite:0,
@@ -342,6 +353,7 @@ health:{current:health.current,max:health.max},
 hunger:hungerSnapshot(),
 fishing:fishingSnapshot(),
 fish:fishSnapshot(),
+npcs:npcWorld.snapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
 scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
 terrain:terrain.stats(),
@@ -356,7 +368,7 @@ for(const listener of [...runtimeListeners])listener(snap);
 return snap;
 }
 window.PaperchalkRuntime=Object.freeze({
-version:7,
+version:8,
 getSnapshot:buildSnapshot,
 subscribe(listener){
 if(typeof listener!=='function')throw new TypeError('runtime listener must be a function');
@@ -373,7 +385,8 @@ noticeTimer=setTimeout(()=>mapNotice.classList.remove('is-show'),duration);
 }
 function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
 function collidesAt(x,y,z){
-return terrain.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D);
+return terrain.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D)||
+!!npcWorld.collidesAABB(x,y,z,PLAYER_HALF_W,PLAYER_HALF_H,PLAYER_HALF_D);
 }
 function groundProbe(x=transform.x,y=transform.y,z=transform.z){
 return terrain.collidesAABB(x,y-.035,z,PLAYER_HALF_W*.92,PLAYER_HALF_H,PLAYER_HALF_D*.92);
@@ -957,6 +970,7 @@ if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 const half=terrain.tileSize*.49;
 const overlapsPlayer=Math.abs(center.x-transform.x)<PLAYER_HALF_W+half&&Math.abs(center.y-transform.y)<PLAYER_HALF_H+half&&Math.abs(center.z-transform.z)<PLAYER_HALF_D+half;
 if(overlapsPlayer)return {changed:false,reason:'player-overlap'};
+if(npcWorld.collidesAABB(center.x,center.y,center.z,half,half,half))return {changed:false,reason:'npc-overlap'};
 const result=terrain.placeCell(gx,gy,gz,tile);
 if(result.changed){
 const waterSettle=terrain.water.settleAll();
@@ -1573,7 +1587,7 @@ window.addEventListener('blur',()=>{keys.clear();keyboardCrouch=false;mobileFlyU
 function fixedUpdate(dt){
 const interactive=worldInteractive();
 controller.crouching=!controller.flying&&(keyboardCrouch||mobileCrouch);
-ecs.runPhase('fixed',dt,{interactive});
+ecs.runPhase('fixed',dt,{interactive,player:transform});
 if(active){
 worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
 paperClock.textContent=formatClock();
