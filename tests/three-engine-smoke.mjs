@@ -53,6 +53,9 @@ try{
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
+  assert(initial.interaction?.threeDimensional===true&&initial.interaction?.zMovementLocked===false&&initial.interaction?.raycastIgnoresOtherRows===false,'3D interaction is still row locked '+JSON.stringify(initial.interaction));
+  assert(initial.pixelRatio>=1,'native renderer pixel ratio missing');
+  assert(!Object.prototype.hasOwnProperty.call(initial,'photon'),'removed renderer stack leaked into stats');
   assert(initial.camera.stageView?.enabled===false,'3D orbit camera must be default');
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui-v2','fishing renderer missing '+JSON.stringify(initial.fishing));
