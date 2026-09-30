@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.8</h1>
-  <p>v12.8 真实纸地形 + 性能重构：地形改成真正的纸张 PBR——草纸、纸板芯、切边都有程序法线贴图和粗糙度贴图；绿色薄纸层真正浮在棕色压缩纸板上。地形由大量独立 Mesh/材质重构成共享材质 + InstancedMesh，森林也批量实例化；同时削减无效阴影、体积光分辨率和超额 DPR。</p>
+  <h1>纸艺世界视觉 Demo v12.9</h1>
+  <p>v12.9 纸块压纹：地形纸材质新增随机大小/位置的浅色与深色小纸块，而且不是只改颜色——同一批纸块同步写入高度场、法线贴图和粗糙度贴图。亮块轻微凸起、暗块轻微凹陷；泥土纸板更明显，草纸更克制，仍然只生成一次纹理，不增加每帧开销。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -264,6 +264,14 @@ function mistTexture(seed=1){
   return t;
 }
 
+function fillWrappedRect(ctx,size,x,y,w,h,fillStyle){
+  ctx.fillStyle=fillStyle;
+  const xs=[x],ys=[y];
+  if(x<0)xs.push(x+size); if(x+w>size)xs.push(x-size);
+  if(y<0)ys.push(y+size); if(y+h>size)ys.push(y-size);
+  for(const xx of xs)for(const yy of ys)ctx.fillRect(xx,yy,w,h);
+}
+
 // ---------------------------------------------------------------------------
 // Real paper terrain material system.
 // One shared PBR set = albedo + NORMAL + roughness.  The height field is built
@@ -289,6 +297,30 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
     cg.beginPath();cg.ellipse(x,y,rx,ry,r()*Math.PI,0,Math.PI*2);cg.fill();
   }
   cg.globalAlpha=1;
+
+  // Random pressed-paper blocks. These are deliberately near-square rather
+  // than generic noise: the SAME masks change albedo + height, so their edges
+  // catch real light through the derived normal map.
+  const patchCount=cutEdge?76:(green?46:58);
+  for(let i=0;i<patchCount;i++){
+    const w=Math.round((cutEdge?7:6)+r()*(cutEdge?25:20));
+    const h=Math.round(w*(.72+r()*.56));
+    const x=Math.floor(r()*size-w*.35);
+    const y=Math.floor(r()*size-h*.35);
+    const raised=r()>.48;
+
+    const alpha=(cutEdge?.055:.040)+r()*(cutEdge?.085:.055);
+    const dark=green?'rgba(64,92,48,':cutEdge?'rgba(79,46,31,':'rgba(76,63,43,';
+    const light=green?'rgba(224,239,167,':cutEdge?'rgba(232,181,139,':'rgba(238,220,174,';
+    fillWrappedRect(cg,size,x,y,w,h,(raised?light:dark)+alpha.toFixed(3)+')');
+
+    // Feathered outer shelf + stronger inner plateau/depression.
+    const outer=raised?(143+(r()*10|0)):(113-(r()*8|0));
+    const inner=raised?(164+(r()*15|0)):(91-(r()*12|0));
+    fillWrappedRect(hg,size,x,y,w,h,`rgb(${outer},${outer},${outer})`);
+    const inset=Math.max(1,Math.round(Math.min(w,h)*.12));
+    fillWrappedRect(hg,size,x+inset,y+inset,Math.max(2,w-inset*2),Math.max(2,h-inset*2),`rgb(${inner},${inner},${inner})`);
+  }
 
   // Visible fibres. Cut cardboard fibres run mostly horizontally; face stock
   // stays much finer and more randomly oriented.
@@ -328,7 +360,7 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
   const ndata=new Uint8Array(size*size*4);
   const rdata=new Uint8Array(size*size*4);
   const sample=(x,y)=>hdata[((Math.max(0,Math.min(size-1,y))*size+Math.max(0,Math.min(size-1,x)))*4)]/255;
-  const normalStrength=cutEdge?2.15:1.45;
+  const normalStrength=cutEdge?2.75:(green?1.75:1.95);
 
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
     const o=(y*size+x)*4;
@@ -343,7 +375,7 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
     ndata[o+3]=255;
 
     const h=sample(x,y);
-    const rough=clamp((cutEdge?.965:.935)+(h-.5)*.06,.87,.995);
+    const rough=clamp((cutEdge?.968:.942)-(h-.5)*(cutEdge?.12:.085),.86,.995);
     const rv=Math.round(rough*255);
     rdata[o]=rdata[o+1]=rdata[o+2]=rv;rdata[o+3]=255;
   }
@@ -404,10 +436,10 @@ function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff
   return m;
 }
 
-const terrainDirtMat=standardPaperMaterial(paperDirtSet,{normalScale:.52,roughness:.97});
-const terrainGrassMat=standardPaperMaterial(paperGrassSet,{normalScale:.33,roughness:.94});
-const terrainGreenEdgeMat=standardPaperMaterial(paperGreenEdgeSet,{normalScale:.58,roughness:.975});
-const terrainKraftLipMat=standardPaperMaterial(paperDirtSet,{normalScale:.62,roughness:.985,color:0xe0b68d});
+const terrainDirtMat=standardPaperMaterial(paperDirtSet,{normalScale:.68,roughness:.97});
+const terrainGrassMat=standardPaperMaterial(paperGrassSet,{normalScale:.42,roughness:.95});
+const terrainGreenEdgeMat=standardPaperMaterial(paperGreenEdgeSet,{normalScale:.70,roughness:.978});
+const terrainKraftLipMat=standardPaperMaterial(paperDirtSet,{normalScale:.72,roughness:.985,color:0xe0b68d});
 
 const blockGeo=new THREE.BoxGeometry(1,.78,1);
 const rimGeo=new THREE.BoxGeometry(1.045,.030,1.045);
