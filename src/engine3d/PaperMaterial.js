@@ -82,15 +82,15 @@ function buildStock(size,{seed=1,side=false}={}){
 
   // Near-square paper patches: light/raised and dark/recessed areas share the
   // same mask, so albedo, normals and roughness describe one physical feature.
-  const patchCount=side?72:48;
+  const patchCount=side?44:32;
   for(let i=0;i<patchCount;i++){
-    const w=size*((side?.030:.024)+rng()*(side?.090:.072));
+    const w=size*((side?.060:.045)+rng()*(side?.150:.120));
     const h=w*(.72+rng()*.56);
     const cx=rng()*size,cy=rng()*size;
     const raised=rng()>.49;
-    const amp=(raised?1:-1)*(side?.20:.115)*(.58+rng()*.58);
+    const amp=(raised?1:-1)*(side?.31:.19)*(.68+rng()*.62);
     patchRect(patches,size,cx,cy,w,h,amp);
-    patchRect(height,size,cx,cy,w,h,amp*(side?.62:.42));
+    patchRect(height,size,cx,cy,w,h,amp*(side?.82:.62));
   }
 
   if(side){
@@ -125,7 +125,7 @@ function texture(THREE,data,size,{srgb=false,name='paper-map'}={}){
 
 function deriveSet(THREE,{size=512,seed=1,side=false}={}){
   const {height,macro,pulp,flecks,patches}=buildStock(size,{seed,side});
-  const albedo=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4),roughness=new Uint8Array(size*size*4);
+  const albedo=new Uint8Array(size*size*4),normal=new Uint8Array(size*size*4),roughness=new Uint8Array(size*size*4),ao=new Uint8Array(size*size*4);
   const at=(x,y)=>height[(((y%size)+size)%size)*size+(((x%size)+size)%size)];
 
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
@@ -134,7 +134,7 @@ function deriveSet(THREE,{size=512,seed=1,side=false}={}){
 
     // Reference: almost-flat paper. Normal detail should be sensed in grazing
     // light, never read as engraved/bumpy terrain.
-    const micro=side?.88:.68;
+    const micro=side?1.34:1.05;
     let nx=-dx*micro,ny=-dy*micro,nz=1,inv=1/Math.max(1e-6,Math.hypot(nx,ny,nz));
     nx*=inv;ny*=inv;nz*=inv;
     normal[o]=Math.round((nx*.5+.5)*255);normal[o+1]=Math.round((ny*.5+.5)*255);normal[o+2]=Math.round((nz*.5+.5)*255);normal[o+3]=255;
@@ -149,14 +149,20 @@ function deriveSet(THREE,{size=512,seed=1,side=false}={}){
     albedo[o+2]=Math.round(clamp(base-warm,0,1)*255);albedo[o+3]=255;
 
     const slope=clamp(Math.hypot(dx,dy)*3.2,0,1);
-    const rr=clamp((side?.965:.945)+(h-.5)*(side?.030:.022)+slope*.018+(m-.5)*.018-f*.12-block*(side?.16:.10),.84,.998);
+    const rr=clamp((side?.965:.945)+(h-.5)*(side?.030:.022)+slope*.018+(m-.5)*.018-f*.12-block*(side?.20:.13),.82,.998);
     const rv=Math.round(rr*255);roughness[o]=rv;roughness[o+1]=rv;roughness[o+2]=rv;roughness[o+3]=255;
+
+    const around=(at(x+2,y)+at(x-2,y)+at(x,y+2)+at(x,y-2))*.25;
+    const cavity=clamp((around-h)*2.15+(.48-h)*1.35,0,1);
+    const aoV=clamp(1-cavity*(side?.46:.28),.50,1);
+    const av=Math.round(aoV*255);ao[o]=av;ao[o+1]=av;ao[o+2]=av;ao[o+3]=255;
   }
 
   return {
-    albedo:texture(THREE,albedo,size,{srgb:true,name:side?'paper-core-albedo-v5':'paper-face-albedo-v5'}),
-    normal:texture(THREE,normal,size,{name:side?'paper-core-normal-v5':'paper-face-normal-v5'}),
-    roughness:texture(THREE,roughness,size,{name:side?'paper-core-roughness-v5':'paper-face-roughness-v5'}),
+    albedo:texture(THREE,albedo,size,{srgb:true,name:side?'paper-core-albedo-v6':'paper-face-albedo-v6'}),
+    normal:texture(THREE,normal,size,{name:side?'paper-core-normal-v6':'paper-face-normal-v6'}),
+    roughness:texture(THREE,roughness,size,{name:side?'paper-core-roughness-v6':'paper-face-roughness-v6'}),
+    ao:texture(THREE,ao,size,{name:side?'paper-core-ao-v6':'paper-face-ao-v6'}),
     size,seed,side
   };
 }
@@ -198,8 +204,8 @@ export function createPaperMaterialSet(THREE,settings){
       uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)}
     };
     const mat=new THREE.MeshPhysicalMaterial({
-      vertexColors:true,map:source.albedo,normalMap:side||bevel?source.normal:null,roughnessMap:side||bevel?source.roughness:null,
-      normalScale:new THREE.Vector2(side?.24:.18,side?.24:.18),
+      vertexColors:true,map:source.albedo,normalMap:source.normal,roughnessMap:source.roughness,aoMap:source.ao,aoMapIntensity:side?0.82:0.52,
+      normalScale:new THREE.Vector2(side?1.10:.72,side?1.10:.72),
       roughness:side||bevel?.98:.995,metalness:0,side:THREE.DoubleSide,flatShading:!!side,
       emissive:new THREE.Color(side?0x7b472b:0x9b754d),emissiveIntensity:side?.25:.14,
       specularIntensity:side?.08:.11,ior:1.34,
@@ -258,7 +264,8 @@ export function createPaperMaterialSet(THREE,settings){
     color:0xffffff,map:grassReference,vertexColors:false,
     normalMap:sets.top.normal,
     roughnessMap:sets.top.roughness,
-    normalScale:new THREE.Vector2(.28,.28),
+    aoMap:sets.top.ao,aoMapIntensity:.48,
+    normalScale:new THREE.Vector2(.78,.78),
     roughness:.96,metalness:0,side:THREE.DoubleSide
   });
   grassMaterial.name='user-grass-native-resolution';grassMaterial.userData.paperRole='grass-top';
@@ -266,7 +273,8 @@ export function createPaperMaterialSet(THREE,settings){
     color:0xffffff,map:dirtReference,vertexColors:false,
     normalMap:sets.side.normal,
     roughnessMap:sets.side.roughness,
-    normalScale:new THREE.Vector2(.44,.44),
+    aoMap:sets.side.ao,aoMapIntensity:.82,
+    normalScale:new THREE.Vector2(1.28,1.28),
     emissive:new THREE.Color(0x5b3828),emissiveMap:dirtReference,emissiveIntensity:.14,
     roughness:.975,metalness:0,side:THREE.DoubleSide
   });
@@ -280,14 +288,14 @@ export function createPaperMaterialSet(THREE,settings){
       const role=mat.userData.paperRole,sideRole=role==='side',topRole=role==='top';
       u.uPaperPrint.value=(Number(next.printNoiseStrength)||0)*(topRole?.20:1);
       u.uPaperBandHeight.value=Math.max(.08,Number(next.paperThickness)||.30);
-      mat.normalScale.setScalar(micro*(sideRole?.72:.52));
+      mat.normalScale.setScalar(micro*(sideRole?1.18:.78));
       mat.roughness=topRole?.995:clamp(.985-rough*(sideRole?.10:.18),.95,.995);
       mat.sheen=sideRole?.035:.085;
       mat.sheenRoughness=.96;
       mat.specularIntensity=sideRole?.08:.11;
     }
-    grassMaterial.normalScale.setScalar(micro*.42);
-    dirtMaterial.normalScale.setScalar(micro*.64);
+    grassMaterial.normalScale.setScalar(micro*.88);
+    dirtMaterial.normalScale.setScalar(micro*1.38);
     grassMaterial.roughness=clamp(.965-rough*.08,.94,.98);
     dirtMaterial.roughness=clamp(.978-rough*.06,.955,.99);
     dirtMaterial.emissiveIntensity=.14;
@@ -295,11 +303,11 @@ export function createPaperMaterialSet(THREE,settings){
   sync(settings);
 
   const stats=()=>({
-    mode:'procedural-paper-pbr-v5-patch-relief',
+    mode:'procedural-paper-pbr-v6-macro-relief-ao',
     generatedOnceOnCPU:true,textureResolution:resolution,microMapResolution:resolution,
-    maps:['albedo','normal','roughness'],
+    maps:['albedo','normal','roughness','ao'],
     visualPriority:['paper-block-patches','pulp-albedo','contact-shadow','cut-edge-fibre','micro-normal'],
-    diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,grassNormalMap:true,dirtNormalMap:true,raisedRecessedPaperPatches:true,patchesAffectAlbedoNormalRoughness:true,
+    diffusePulpDominant:true,weakMicroNormal:true,denseCardboardPulp:true,grassNormalMap:true,dirtNormalMap:true,raisedRecessedPaperPatches:true,patchesAffectAlbedoNormalRoughness:true,patchCavityAO:true,macroNormalRelief:true,
     physicalFibreSheen:true,lowSpecular:true,correlatedNormalRoughness:true,
     userGrassReference:true,grassReferenceAsset:'assets/materials/grass-reference.webp',
     grassReferenceLoaded:grassLoaded,grassReferenceSize,grassMaterialGroup:true,
@@ -317,7 +325,7 @@ export function createPaperMaterialSet(THREE,settings){
     if(grassReference!==grassFallback)grassReference.dispose();
     if(dirtReference!==dirtFallback)dirtReference.dispose();
     grassFallback.dispose();dirtFallback.dispose();
-    for(const set of Object.values(sets)){set.albedo.dispose();set.normal.dispose();set.roughness.dispose()}
+    for(const set of Object.values(sets)){set.albedo.dispose();set.normal.dispose();set.roughness.dispose();set.ao.dispose()}
   };
   return {sets,materials,sync,stats,dispose};
 }
