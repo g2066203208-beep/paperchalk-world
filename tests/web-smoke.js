@@ -1,7 +1,7 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js');
 
 assert(html.includes('paper-r12'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
@@ -17,7 +17,6 @@ assert(engine.includes('NPCActorRenderer')&&npcRenderer.includes('new PaperSprit
 assert(npcRenderer.includes('sharedEntityClassWithPlayer:true'),'NPC renderer actor parity stat missing');
 assert(!/far-hills-|village-shop|village-house-a|village-workshop|tree-[abc]|rock-[ab]/.test(content),'legacy 2D stage placeholders still present');
 const sprite=read('src/entities/PaperSpriteEntity.js');
-const npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js');
 assert(!/kind==='(?:tree|building|rock)'/.test(sprite),'generated tree/building/rock art must stay removed');
 assert(!engine.includes('this.paperEntities=[]')&&!engine.includes('sceneData.stageEntities'),'legacy stage entity runtime still present');
 assert(engine.includes('legacyStagePlaceholders:0'),'legacy placeholder runtime stat missing');
