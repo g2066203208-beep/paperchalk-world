@@ -26,8 +26,10 @@ try{
   assert(initial.worldMode==='finite-side-scroll-voxel','wrong world mode');
   assert(initial.paperStyle?.enabled===false,'prologue road must use cube voxels '+JSON.stringify(initial.paperStyle));
   assert(initial.terrainMode==='finite-voxel-road','finite voxel road renderer mode missing '+JSON.stringify(initial));
-  assert(initial.school?.enabled===true&&initial.school?.realGeometry===true,'real school model missing '+JSON.stringify(initial.school));
-  assert(initial.school?.floors===3&&(initial.school?.meshCount||0)>20&&(initial.school?.instanceCount||0)>=20,'school model geometry incomplete '+JSON.stringify(initial.school));
+  assert(initial.paperStage?.enabled===true&&initial.paperStage?.mode==='true-2d-multilayer-paper','2D paper stage missing '+JSON.stringify(initial.paperStage));
+  assert(initial.paperStage?.planes===4&&initial.paperStage?.noCollision===true&&initial.paperStage?.real3DBuilding===false,'paper stage plane/collision contract wrong '+JSON.stringify(initial.paperStage));
+  assert(Array.isArray(initial.paperStage?.layers)&&initial.paperStage.layers.map(x=>x.z).join(',')==='-9.2,-7.75,-6.15,-4.85','paper stage Z ordering wrong '+JSON.stringify(initial.paperStage));
+  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperStage?.texturesReady===4,{timeout:6000,polling:'raf'});
   assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
