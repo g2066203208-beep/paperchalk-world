@@ -1,6 +1,6 @@
 /* Paperchalk World gameplay runtime.
-* Gameplay is Terraria-style 2D (X/Y) on one voxel layer.
-* Three.js provides the 3D paper-stage depth; Z is presentation-only.
+* Gameplay uses the full X/Y/Z voxel world. Ground movement is camera-relative
+* and debug flight can move freely through 3D space.
 */
 (function(){
 'use strict';
@@ -105,6 +105,7 @@ const MAX_FRAME_DT=.06;
 const GRAVITY=22;
 const JUMP_SPEED=7.4;
 const PLAYER_SPEED=4.6;
+const FLY_SPEED=7.2;
 const PLAYER_HALF_W=.34;
 const PLAYER_HALF_H=.95;
 const PLAYER_HALF_D=.28;
@@ -117,7 +118,6 @@ const LEGACY_SINGLE_SAVE='paperchalk.save.v1';
 const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
 const INTERACTION_ROW_Z=Number(sceneData.terrain?.interactionRowZ??0);
-const PLAYER_ROW_CENTER_Z=INTERACTION_ROW_Z*(sceneData.terrain?.tileSize??1);
 const bounds=sceneData.bounds;
 const terrain=new TerrainRuntime.TerrainWorld({
 tileSize:sceneData.terrain?.tileSize??1,
@@ -234,7 +234,7 @@ const velocity={x:0,y:0,z:0};
 const health={current:PLAYER_MAX_HP,max:PLAYER_MAX_HP};
 const hunger={current:HUNGER_MAX,max:HUNGER_MAX,zeroDamageTimer:0};
 const controller={
-grounded:true,crouching:false,attacking:false,attackTimer:0,attackCooldown:0,
+grounded:true,crouching:false,flying:false,attacking:false,attackTimer:0,attackCooldown:0,
 action:'idle',moving:false,torchOn:false,inWater:false,submerged:0,facingX:1
 };
 const playerEntity=ecs.create({
@@ -303,7 +303,7 @@ let saveAccumulator=0;
 let waterStepAccumulator=0;
 let cameraYaw=settings.camera3d.yaw;
 let keyboardCrouch=false;
-let mobileCrouch=false;
+let mobileCrouch=false,mobileFlyUp=false,mobileFlyDown=false;
 const keys=new Set();
 let joystickPointer=null;
 let joystickAxisX=0;
@@ -327,7 +327,7 @@ function playerSnapshot(){
 return {
 x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw,
 vx:velocity.x,vy:velocity.y,vz:velocity.z,
-grounded:controller.grounded,crouching:controller.crouching,
+grounded:controller.grounded,crouching:controller.crouching,flying:controller.flying,
 attacking:controller.attacking,action:controller.action,torchOn:controller.torchOn,
 inWater:controller.inWater,submerged:controller.submerged,facingX:controller.facingX
 };
@@ -402,12 +402,15 @@ velocity.y=0;
 }else if(dy!==0)controller.grounded=false;
 }
 function rawMoveInput(){
-let horizontal=0;
-if(keys.has('KeyA')||keys.has('ArrowLeft'))horizontal-=1;
-if(keys.has('KeyD')||keys.has('ArrowRight'))horizontal+=1;
-horizontal+=joystickAxisX;
-horizontal=Math.max(-1,Math.min(1,horizontal));
-return {horizontal,magnitude:Math.abs(horizontal)};
+let strafe=0,forward=0;
+if(keys.has('KeyA')||keys.has('ArrowLeft'))strafe-=1;
+if(keys.has('KeyD')||keys.has('ArrowRight'))strafe+=1;
+if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
+if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
+strafe+=joystickAxisX;forward-=joystickAxisY;
+const mag=Math.hypot(strafe,forward);if(mag>1){strafe/=mag;forward/=mag}
+const sy=Math.sin(cameraYaw),cy=Math.cos(cameraYaw);
+return {x:strafe*cy-forward*sy,z:-strafe*sy-forward*cy,magnitude:Math.min(1,mag)};
 }
 function overlayOpen(){
 return backpackOverlay.classList.contains('is-open')||
@@ -435,39 +438,36 @@ ecs.registerSystem('player-movement',{
 require:['Transform','Velocity','Player'],phase:'fixed',priority:10,
 update(entity,world,dt,context){
 if(entity!==playerEntity)return;
-const input=context.interactive?rawMoveInput():{horizontal:0,magnitude:0};
+const input=context.interactive?rawMoveInput():{x:0,z:0,magnitude:0};
 const submerged=playerSubmersion();
 controller.submerged=submerged;controller.inWater=submerged>.06;
-const swimFactor=controller.inWater ? .58 : 1;
-const speed=PLAYER_SPEED*(controller.crouching?.48:1)*swimFactor;
-velocity.x=input.horizontal*speed;
-if(Math.abs(input.horizontal)>.12)controller.facingX=input.horizontal>0?1:-1;
-velocity.z=0;
-transform.z=PLAYER_ROW_CENTER_Z;
+const speed=(controller.flying?FLY_SPEED:PLAYER_SPEED)*(controller.crouching?.48:1)*(controller.inWater&&!controller.flying?.58:1);
+velocity.x=input.x*speed;velocity.z=input.z*speed;
 controller.moving=input.magnitude>.05;
-if(controller.moving)transform.yaw=velocity.x<0?Math.PI:0;
-moveAxis('x',velocity.x*dt);
+if(Math.abs(velocity.x)>.08)controller.facingX=velocity.x>0?1:-1;
+if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
+moveAxis('x',velocity.x*dt);moveAxis('z',velocity.z*dt);
 }
 });
 ecs.registerSystem('player-gravity',{
 require:['Transform','Velocity','Player'],phase:'fixed',priority:20,
-update(entity,world,dt){
+update(entity,world,dt,context){
 if(entity!==playerEntity)return;
+if(controller.flying){
+const down=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyC')||mobileFlyDown;
+const up=keys.has('Space')||mobileFlyUp;
+velocity.y=((up?1:0)-(down?1:0))*FLY_SPEED;controller.grounded=false;controller.inWater=false;controller.submerged=0;
+moveAxis('y',velocity.y*dt);return;
+}
 const submerged=playerSubmersion();
 controller.submerged=submerged;controller.inWater=submerged>.06;
 if(!groundProbe())controller.grounded=false;
 if(controller.inWater){
-const buoyancy=GRAVITY*1.18*submerged;
-const gravity=GRAVITY*(1-submerged*.82);
+const buoyancy=GRAVITY*1.18*submerged,gravity=GRAVITY*(1-submerged*.82);
 velocity.y+=(buoyancy-gravity)*dt;
-const drag=Math.exp(-3.4*submerged*dt);
-velocity.y*=drag;
-velocity.x*=Math.exp(-1.8*submerged*dt);
-velocity.y=Math.max(-3.2,Math.min(4.8,velocity.y));
-controller.grounded=false;
-}else if(!controller.grounded){
-velocity.y-=GRAVITY*dt;
-}
+const drag=Math.exp(-3.4*submerged*dt);velocity.y*=drag;velocity.x*=Math.exp(-1.8*submerged*dt);velocity.z*=Math.exp(-1.8*submerged*dt);
+velocity.y=Math.max(-3.2,Math.min(4.8,velocity.y));controller.grounded=false;
+}else if(!controller.grounded)velocity.y-=GRAVITY*dt;
 moveVertical(velocity.y*dt);
 }
 });
@@ -481,6 +481,7 @@ controller.attackTimer=Math.max(0,controller.attackTimer-dt);
 controller.attacking=controller.attackTimer>0;
 }else controller.attacking=false;
 if(controller.attacking)controller.action='attack';
+else if(controller.flying)controller.action=controller.moving||Math.abs(velocity.y)>.05?'fly-move':'fly';
 else if(controller.inWater)controller.action=controller.moving||Math.abs(velocity.y)>.15?'swim':'float';
 else if(!controller.grounded)controller.action=velocity.y>=0?'jump-up':'jump-down';
 else if(controller.crouching)controller.action='crouch';
@@ -489,7 +490,7 @@ else controller.action='idle';
 }
 });
 function jump(){
-if(!worldInteractive())return false;
+if(!worldInteractive()||controller.flying)return false;
 const submerged=playerSubmersion();
 const waterContact=playerWaterContact();
 if(controller.grounded){
@@ -521,9 +522,12 @@ publish();
 return true;
 }
 function setCrouch(enabled){
-controller.crouching=!!enabled;
-publish();
-return controller.crouching;
+controller.crouching=!!enabled;publish();return controller.crouching;
+}
+function setFlight(enabled=!controller.flying,{notice=true}={}){
+controller.flying=!!enabled;velocity.y=0;controller.grounded=controller.flying?false:groundProbe();
+if(notice)showMapNotice(controller.flying?'飞行模式：WASD移动，Space上升，Shift/C下降':'飞行模式：关闭',1100);
+publish();return controller.flying;
 }
 function clampHp(value){
 const n=Number(value);
@@ -568,7 +572,7 @@ heal:healPlayer
 });
 window.PaperchalkCombat=Object.freeze({
 get player(){return playerSnapshot()},
-jump,attack,setCrouch,toggleTorch,
+jump,attack,setCrouch,setFlight,toggleTorch,
 damagePlayer,healPlayer,setPlayerHp
 });
 function random01(){
@@ -914,9 +918,9 @@ cast:castFishingRod,reel:reelFishingRod,use:reelFishingRod
 function safeSpawnY(x=sceneData.spawn.x,z=sceneData.spawn.z||0){
 return terrain.highestGroundY(x,z)+PLAYER_HALF_H+.03;
 }
-function teleport(x,z=PLAYER_ROW_CENTER_Z,y=null,{notice=''}={}){
+function teleport(x,z=sceneData.spawn.z||0,y=null,{notice=''}={}){
 const nx=Number.isFinite(Number(x))?Number(x):sceneData.spawn.x;
-const nz=PLAYER_ROW_CENTER_Z;
+const nz=Number.isFinite(Number(z))?Number(z):(sceneData.spawn.z||0);
 let ny=Number.isFinite(Number(y))?Number(y):safeSpawnY(nx,nz);
 if(collidesAt(nx,ny,nz))ny=safeSpawnY(nx,nz);
 transform.x=nx;transform.y=ny;transform.z=nz;
@@ -936,9 +940,7 @@ function terrainTargetInReach(point){
 if(!point)return false;
 return Math.hypot(point.x-transform.x,point.y-transform.y,point.z-transform.z)<=TERRAIN_REACH;
 }
-function isInteractionRow(gz){return Number(gz)===INTERACTION_ROW_Z}
 function digTerrainCell(gx,gy,gz,{persist=true}={}){
-if(!isInteractionRow(gz))return {changed:false,reason:'interaction-row-only',interactionRowZ:INTERACTION_ROW_Z};
 const center=terrain.cellCenter(gx,gy,gz);
 if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 const result=terrain.digCell(gx,gy,gz);
@@ -950,7 +952,6 @@ publish();if(persist)saveWorldState()
 return result;
 }
 function placeTerrainCell(gx,gy,gz,tile=TerrainRuntime.TILE.DIRT,{persist=true}={}){
-if(!isInteractionRow(gz))return {changed:false,reason:'interaction-row-only',interactionRowZ:INTERACTION_ROW_Z};
 const center=terrain.cellCenter(gx,gy,gz);
 if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 const half=terrain.tileSize*.49;
@@ -967,7 +968,6 @@ return result;
 function digTerrainAt(x,y,z=transform.z,options){const c=terrain.worldToCell(x,y,z);return digTerrainCell(c.gx,c.gy,c.gz,options)}
 function placeTerrainAt(x,y,z=transform.z,tile=TerrainRuntime.TILE.DIRT,options){const c=terrain.worldToCell(x,y,z);return placeTerrainCell(c.gx,c.gy,c.gz,tile,options)}
 function placeWaterCell(gx,gy,gz,{persist=true}={}){
-if(!isInteractionRow(gz))return {changed:false,reason:'interaction-row-only',interactionRowZ:INTERACTION_ROW_Z};
 const center=terrain.cellCenter(gx,gy,gz);
 if(!terrainTargetInReach(center))return {changed:false,reason:'out-of-reach'};
 if(terrain.isSolidPeek(gx,gy,gz))return {changed:false,reason:'solid'};
@@ -1003,8 +1003,8 @@ setTool:setTerrainTool,
 targetAtScreen(x,y){return window.Paperchalk3D?.screenToTerrainCell?.(x,y,{showCursor:false})||null},
 waterTargetAtScreen(x,y){return window.Paperchalk3D?.screenToWaterSurface?.(x,y,{maxDistance:32})||null},
 get tool(){return terrainToolMode},
-get interactionRowZ(){return INTERACTION_ROW_Z},
-get stats(){return {...terrain.stats(),interactionRowZ:INTERACTION_ROW_Z}},
+get interactionRowZ(){return null},
+get stats(){return {...terrain.stats(),threeDimensionalInteraction:true}},
 get edits(){return terrain.exportEdits()},
 get water(){return terrain.water.exportState()}
 });
@@ -1059,7 +1059,6 @@ showMapNotice(waterMode?'已放下 1 立方米水（8 层）':placing?'已放置
 return;
 }
 if(result.reason==='out-of-reach')showMapNotice('太远了');
-else if(result.reason==='interaction-row-only')showMapNotice('只能交互指定这一排方块');
 else if(result.reason==='player-overlap')showMapNotice('不能把方块放在自己身上');
 else if(result.reason==='solid')showMapNotice('这里被方块占据');
 else if(result.reason==='full')showMapNotice('这里的水已经是 8 层');
@@ -1472,6 +1471,7 @@ else if(a==='damage3')damagePlayer(3);
 else if(a==='zero')setPlayerHp(0);
 else if(a==='full')setPlayerHp(PLAYER_MAX_HP);
 else if(a==='resetpos')window.PaperchalkMap.reset();
+else if(a==='flight'){setFlight();button.textContent='飞行：'+(controller.flying?'开':'关')}
 else if(a==='colliders'){
 debugColliders=!debugColliders;
 window.Paperchalk3D?.setDebugColliders?.(debugColliders);
@@ -1522,10 +1522,11 @@ const rect=joystick.getBoundingClientRect();
 updateJoystick(event.clientX-(rect.left+rect.width*.5),event.clientY-(rect.top+rect.height*.5));
 });
 for(const type of ['pointerup','pointercancel','lostpointercapture'])joystickZone.addEventListener(type,resetJoystick);
-jumpBtn.addEventListener('pointerdown',event=>{event.preventDefault();jump()});
+jumpBtn.addEventListener('pointerdown',event=>{event.preventDefault();if(controller.flying)mobileFlyUp=true;else jump()});
+for(const type of ['pointerup','pointercancel','pointerleave'])jumpBtn.addEventListener(type,()=>{mobileFlyUp=false});
 attackBtn.addEventListener('pointerdown',event=>{event.preventDefault();attack()});
-crouchBtn.addEventListener('pointerdown',event=>{event.preventDefault();mobileCrouch=true;setCrouch(true)});
-for(const type of ['pointerup','pointercancel','pointerleave'])crouchBtn.addEventListener(type,()=>{mobileCrouch=false;setCrouch(keyboardCrouch)});
+crouchBtn.addEventListener('pointerdown',event=>{event.preventDefault();if(controller.flying)mobileFlyDown=true;else{mobileCrouch=true;setCrouch(true)}});
+for(const type of ['pointerup','pointercancel','pointerleave'])crouchBtn.addEventListener(type,()=>{mobileFlyDown=false;mobileCrouch=false;if(!controller.flying)setCrouch(keyboardCrouch)});
 function shouldIgnoreKey(event){
 const tag=event.target?.tagName?.toLowerCase();
 return tag==='input'||tag==='textarea'||tag==='select'||event.target?.isContentEditable;
@@ -1536,10 +1537,12 @@ if(event.code==='KeyB'&&active){event.preventDefault();backpackOverlay.classList
 if(event.code==='KeyM'&&active){event.preventDefault();worldMapOverlay.classList.contains('is-open')?closeWorldMap():openWorldMap();return}
 if(event.code==='Escape'){if(window.PaperchalkHandleBack())event.preventDefault();return}
 if(!worldInteractive())return;
-if(['KeyA','KeyD','ArrowLeft','ArrowRight'].includes(event.code)){
+if(['KeyA','KeyD','KeyW','KeyS','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.code)){
 keys.add(event.code);event.preventDefault();return;
 }
-if(event.code==='Space'){if(!event.repeat||controller.inWater||!!playerWaterContact())jump();event.preventDefault();return}
+if(event.code==='Space'){keys.add('Space');if(!controller.flying&&(!event.repeat||controller.inWater||!!playerWaterContact()))jump();event.preventDefault();return}
+if(event.code==='ShiftLeft'||event.code==='ShiftRight'){keys.add(event.code);event.preventDefault();return}
+if(event.code==='KeyV'){if(!event.repeat)setFlight();event.preventDefault();return}
 if(event.code==='KeyF'){
 if(!event.repeat&&inventoryItems.some(item=>item?.id==='fishing-rod')){
 if(fishing.state==='idle')showMapNotice('装备钓鱼竿后，点击任意可见位置抛竿。',900);
@@ -1548,18 +1551,16 @@ else reelFishingRod();
 event.preventDefault();return;
 }
 if(event.code==='KeyJ'){if(!event.repeat)attack();event.preventDefault();return}
-if(event.code==='KeyC'){keyboardCrouch=true;setCrouch(true);event.preventDefault()}
+if(event.code==='KeyC'){keys.add('KeyC');if(!controller.flying){keyboardCrouch=true;setCrouch(true)}event.preventDefault()}
 });
 window.addEventListener('keyup',event=>{
 keys.delete(event.code);
-if(event.code==='KeyC'){keyboardCrouch=false;setCrouch(mobileCrouch)}
+if(event.code==='KeyC'){keyboardCrouch=false;if(!controller.flying)setCrouch(mobileCrouch)}
 });
-window.addEventListener('blur',()=>{keys.clear();keyboardCrouch=false;resetJoystick();setCrouch(mobileCrouch)});
+window.addEventListener('blur',()=>{keys.clear();keyboardCrouch=false;mobileFlyUp=mobileFlyDown=false;resetJoystick();if(!controller.flying)setCrouch(mobileCrouch)});
 function fixedUpdate(dt){
 const interactive=worldInteractive();
-transform.z=PLAYER_ROW_CENTER_Z;
-velocity.z=0;
-controller.crouching=keyboardCrouch||mobileCrouch;
+controller.crouching=!controller.flying&&(keyboardCrouch||mobileCrouch);
 ecs.runPhase('fixed',dt,{interactive});
 if(active){
 worldMinutes=(worldMinutes+worldTimeScale*dt)%1440;
@@ -1672,7 +1673,7 @@ if(!session)return false;
 const save=readSaveForSession(session)||defaultSave(session);
 save.location='Paperchalk · 无限3D体素世界';
 save.worldMinutes=worldMinutes;
-save.player={x:transform.x,y:transform.y,z:PLAYER_ROW_CENTER_Z,yaw:transform.yaw};
+save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
 save.playerHp=health.current;
 save.hunger=hunger.current;
 save.torchOn=controller.torchOn;
@@ -1691,13 +1692,13 @@ terrain.importEdits(save.terrainEdits);
 terrain.water.importState(save.waterCells);
 const p=save.player||sceneData.spawn;
 transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
-transform.z=PLAYER_ROW_CENTER_Z;
+transform.z=Number.isFinite(Number(p.z))?Number(p.z):(sceneData.spawn.z||0);
 transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x,transform.z);
 transform.yaw=Number.isFinite(p.yaw)?p.yaw:sceneData.spawn.yaw;
 if(collidesAt(transform.x,transform.y,transform.z))transform.y=safeSpawnY(transform.x,transform.z);
 velocity.x=velocity.y=velocity.z=0;
 controller.grounded=groundProbe();
-controller.crouching=false;controller.attacking=false;controller.action='idle';controller.inWater=false;controller.submerged=0;
+controller.crouching=false;controller.flying=false;controller.attacking=false;controller.action='idle';controller.inWater=false;controller.submerged=0;
 health.current=clampHp(save.playerHp);
 hunger.current=clampHunger(save.hunger??HUNGER_MAX);hunger.zeroDamageTimer=0;
 resetFishing();
