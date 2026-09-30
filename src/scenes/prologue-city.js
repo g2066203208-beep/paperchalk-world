@@ -8,7 +8,7 @@ const PROLOGUE=Object.freeze({
  finite:true,
  spawn:Object.freeze({x:24.5,y:2,z:-14.5,yaw:Math.PI*.5}),
  bounds:Object.freeze({minX:0,maxX:180,minY:-16,maxY:32,minZ:-28,maxZ:28}),
- camera:Object.freeze({yaw:0,pitch:.12,distance:18,height:3.2,fov:55,stageView:{enabled:false,axis:'z',side:1}}),
+ camera:Object.freeze({yaw:0,pitch:.12,distance:18,height:3.2,fov:42,stageView:{enabled:false,axis:'z',side:1}}),
  view:Object.freeze({detailMeters:30,midMeters:60,maxMeters:120}),
  terrain:Object.freeze({
   tileSize:1,pixelsPerMeter:128,texturePixels:128,chunkSize:16,seed:1357911,
