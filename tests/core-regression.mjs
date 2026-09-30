@@ -21,7 +21,7 @@ try{
   const entered=await page.evaluate(()=>({p:window.PaperchalkRuntime.getSnapshot().player,s:window.Paperchalk3D.stats,n:window.PaperchalkRuntime.getSnapshot().npcs,ns:window.PaperchalkNPCs.stats}));
   assert(entered.n?.length===1&&entered.n[0].id==='village-resident-01','first NPC runtime missing '+JSON.stringify(entered.n));
   assert(entered.ns?.ecsActors===true&&entered.ns?.sameActorComponentsAsPlayer===true,'NPC ECS actor parity missing '+JSON.stringify(entered.ns));
-  const ecsCounts=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().ecs.componentCounts);
+  const ecsCounts=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().ecs.components);
   assert(ecsCounts?.Actor===2&&ecsCounts?.NPC===1&&ecsCounts?.Player===1,'NPC/player ECS components wrong '+JSON.stringify(ecsCounts));
   assert(entered.s?.npcs?.count===1&&entered.s?.npcs?.sharedEntityClassWithPlayer===true,'NPC renderer missing '+JSON.stringify(entered.s?.npcs));
   assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
