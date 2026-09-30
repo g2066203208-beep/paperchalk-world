@@ -13,7 +13,7 @@ assert(html.includes('src/ai/npc-navigation.js')&&html.includes('src/ai/npc-brai
 assert(html.includes('src/entities/npc-runtime.js'),'NPC runtime script missing');
 assert(html.includes('id="npcInteractBtn"'),'NPC talk control missing');
 assert(html.includes('styles/prologue.css')&&html.includes('src/prologue/prologue-content.js')&&html.includes('src/prologue/prologue-runtime.js')&&html.includes('src/prologue/prologue-renderer.mjs'),'standalone prologue loading missing');
-assert(game.includes('PaperchalkPrologue?.shouldRun')&&game.includes('paperchalk-prologue-enter'),'new-game prologue scene routing missing');
+assert(game.includes('P?.shouldRun?.')&&game.includes('paperchalk-prologue-enter'),'new-game prologue scene routing missing');
 assert(prologueContent.includes("id:'prologue-city-day1'")&&prologueContent.includes("id:'school'")&&prologueContent.includes("id:'city'")&&prologueContent.includes("id:'home'"),'school/city/home prologue content missing');
 assert(prologueContent.includes("id:'leave-school'")&&prologueContent.includes("id:'to-home'")&&prologueContent.includes("id:'to-bedroom'"),'prologue objective chain missing');
 assert(prologueContent.includes("role:'student'")&&prologueContent.includes("role:'worker'")&&prologueContent.includes("role:'resident'"),'living city pedestrian roles missing');
