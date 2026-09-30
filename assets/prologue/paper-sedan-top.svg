@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="240" height="520" viewBox="0 0 190 440">
-<defs><pattern id="g" width="22" height="20" patternUnits="userSpaceOnUse"><path d="M2 6l13-3M7 16l8 1" stroke="#7f715d" stroke-width=".7" opacity=".14"/></pattern></defs>
-<g stroke="#463f36" stroke-width="4" stroke-linejoin="round">
-<path fill="#ded3bb" d="M33 16h124l22 75-9 258-22 75H42l-22-75-9-258z"/>
-<path fill="#697e83" d="M44 102h102l17 64H27z"/>
-<path fill="#667a7e" d="M28 278h135l-17 64H44z"/>
-<path fill="url(#g)" d="M33 16h124l22 75-9 258-22 75H42l-22-75-9-258z" stroke="none"/>
-<path d="M27 166h136M28 278h135M95 102v240" fill="none"/>
-</g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="190" viewBox="0 0 440 190">
+<defs><pattern id="p" width="23" height="19" patternUnits="userSpaceOnUse"><path d="M2 6l12-3M7 16l9 1" stroke="#756955" stroke-width=".7" opacity=".13"/></pattern></defs>
+<rect width="440" height="190" fill="#ded3bb"/><rect width="440" height="190" fill="url(#p)"/>
+<g stroke="#494238" stroke-width="4" stroke-linejoin="round">
+<path fill="#d8cdb5" d="M8 54L38 24h364l30 30v82l-30 30H38L8 136z"/>
+<path fill="#687d82" d="M135 28h165l32 38H103z"/>
+<path fill="#66797e" d="M105 124h225l-31 38H136z"/>
+<path d="M102 66h230M105 124h225M219 28v134" fill="none"/>
+</g>
+</svg>
