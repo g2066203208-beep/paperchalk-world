@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.14</h1>
-  <p>v12.14 纸张底纹：去掉像像素迷彩一样的规则浅深方块，仍然保持最基础的 1×1×1 立方体和纯颜色材质逻辑；现在只用大面积低对比纸浆斑、短纤维和极少量纸屑颗粒做纸张底纹。没有法线、AO、凹凸或额外几何，右侧可直接切回纯色。</p>
+  <h1>纸艺世界视觉 Demo v12.15</h1>
+  <p>v12.15 先只重做地板：不动镜头、角色、树、雾和构图。地形改成真正的剪纸结构——棕色厚纸板主体 + 独立深绿切边 + 最上面一张薄绿色纸面；顶面高度仍保持原来的 0.5，不改变角色和小草站位。材质只做低对比纸浆与短纤维，不加法线、AO 或随机凸起。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -45,11 +45,11 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
   <button id="sky" class="active">程序天空</button>
-  <button id="layers" class="active">立方体地形</button>
+  <button id="layers" class="active">纸板地板</button>
   <button id="shadow" class="active">软阴影</button>
   <button id="fog" class="active">动态纸雾</button>
   <button id="tone" class="active">统一色调</button>
-  <button id="random" class="active">纸张底纹</button>
+  <button id="random" class="active">纸纹开关</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active">剪纸小草</button>
   <button id="godrays" class="active">受光体积雾</button>
@@ -454,34 +454,32 @@ function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff
 }
 
 // ---------------------------------------------------------------------------
-// Terrain RESET baseline.
-// No texture, no normal map, no AO, no roughness map, no cap, no rim, no relief.
-// Just one exact cube geometry + one solid colour material, instanced.
+// Terrain v12.15 — layered cut-paper floor only.
+// The cell footprint/top height remains exactly the same as the reset baseline.
+// Topmost cells are physically split into kraft body + dark cut edge + green face.
 // ---------------------------------------------------------------------------
 const SIMPLE_TERRAIN_COLOR=0x91b274;
 
-function makeSimpleTerrainColorTexture(){
+function makeFloorPaperTexture(base,light,dark,seed,{fiberWarm=false}={}){
   const size=256,c=document.createElement('canvas');
   c.width=c.height=size;
   const g=c.getContext('2d');
-  const r=rng(128731);
+  const r=rng(seed);
 
-  g.fillStyle='#91b274';
+  g.fillStyle=base;
   g.fillRect(0,0,size,size);
 
-  // Broad irregular pulp patches.  These are low contrast and soft-edged in
-  // value, so the surface reads as dyed paper stock rather than pixel camo.
-  const pulpColors=['#a8c287','#7e9f68','#9fbb7d','#88a96d'];
-  for(let i=0;i<26;i++){
+  // Quiet pulp clouds: irregular and low contrast, never pixel blocks.
+  for(let i=0;i<24;i++){
     const cx=r()*size,cy=r()*size;
-    const rx=18+r()*48,ry=12+r()*34;
-    const n=12+(r()*7|0);
-    g.globalAlpha=.035+r()*.055;
-    g.fillStyle=pulpColors[(r()*pulpColors.length)|0];
+    const rx=18+r()*50,ry=12+r()*35;
+    const pts=12+(r()*8|0);
+    g.globalAlpha=.035+r()*.05;
+    g.fillStyle=r()>.48?light:dark;
     g.beginPath();
-    for(let j=0;j<n;j++){
-      const a=Math.PI*2*j/n;
-      const rr=1+(r()-.5)*.26;
+    for(let j=0;j<pts;j++){
+      const a=Math.PI*2*j/pts;
+      const rr=1+(r()-.5)*.24;
       const x=cx+Math.cos(a)*rx*rr;
       const y=cy+Math.sin(a)*ry*rr;
       if(j===0)g.moveTo(x,y);else g.lineTo(x,y);
@@ -489,40 +487,30 @@ function makeSimpleTerrainColorTexture(){
     g.closePath();g.fill();
   }
 
-  // Short cellulose fibres: restrained, broken and mostly invisible until
-  // close-up.  This is the main visual cue for real coloured paper.
-  for(let i=0;i<760;i++){
+  // Short cellulose fibres like the player cut-paper artwork.
+  const fibreCount=fiberWarm?980:760;
+  for(let i=0;i<fibreCount;i++){
     const x=r()*size,y=r()*size;
-    const a=r()*Math.PI;
-    const len=.7+r()*4.8;
-    const light=r()>.52;
-    g.globalAlpha=.055+r()*.085;
-    g.strokeStyle=light?'#eef2d8':'#536b47';
-    g.lineWidth=.28+r()*.52;
+    const a=fiberWarm?(r()-.5)*.48:r()*Math.PI;
+    const len=.8+r()*(fiberWarm?6.2:4.8);
+    const bright=r()>.53;
+    g.globalAlpha=.05+r()*.085;
+    g.strokeStyle=bright
+      ?(fiberWarm?'#efd0aa':'#eef0d2')
+      :(fiberWarm?'#6f412b':'#526b45');
+    g.lineWidth=.3+r()*.55;
     g.beginPath();
     g.moveTo(x,y);
     g.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);
     g.stroke();
   }
 
-  // Sparse pulp flecks; intentionally tiny and non-uniform.
-  for(let i=0;i<145;i++){
+  // Sparse pulp specks. These are tiny enough to read as paper inclusions.
+  for(let i=0;i<(fiberWarm?190:130);i++){
     const q=.35+r()*1.25;
-    g.globalAlpha=.035+r()*.075;
-    g.fillStyle=r()>.5?'#edf1d6':'#536946';
+    g.globalAlpha=.035+r()*.065;
+    g.fillStyle=r()>.5?(fiberWarm?'#f0d5b3':'#edf0d4'):(fiberWarm?'#74452f':'#566d49');
     g.fillRect(r()*size,r()*size,q,q);
-  }
-
-  // One or two very faint large sheets stop tiling from looking synthetic.
-  for(let i=0;i<5;i++){
-    const x=r()*size,y=r()*size,w=45+r()*80,h=36+r()*68;
-    const grad=g.createRadialGradient(x,y,0,x,y,Math.max(w,h));
-    const light=r()>.5;
-    grad.addColorStop(0,light?'rgba(218,230,184,.055)':'rgba(87,111,70,.045)');
-    grad.addColorStop(1,'rgba(0,0,0,0)');
-    g.globalAlpha=1;
-    g.fillStyle=grad;
-    g.fillRect(x-w,y-h,w*2,h*2);
   }
 
   g.globalAlpha=1;
@@ -536,17 +524,38 @@ function makeSimpleTerrainColorTexture(){
   return t;
 }
 
-const simpleTerrainTexture=makeSimpleTerrainColorTexture();
-const terrainMat=new THREE.MeshLambertMaterial({
+const floorGreenTexture=makeFloorPaperTexture('#9bb873','#b7ca8f','#79955f',128731);
+const floorKraftTexture=makeFloorPaperTexture('#aa7350','#c7926b','#835036',991731,{fiberWarm:true});
+
+const floorBodyMat=new THREE.MeshStandardMaterial({
   color:0xffffff,
-  map:simpleTerrainTexture,
-  flatShading:true
+  map:floorKraftTexture,
+  roughness:.97,
+  metalness:0
 });
-terrainMat.name='terrain-simple-paper-albedo';
+floorBodyMat.name='floor-kraft-cardboard-body';
+
+const floorEdgeMat=new THREE.MeshStandardMaterial({
+  color:0x718852,
+  roughness:.985,
+  metalness:0
+});
+floorEdgeMat.name='floor-green-cut-edge';
+
+const floorTopMat=new THREE.MeshStandardMaterial({
+  color:0xffffff,
+  map:floorGreenTexture,
+  roughness:.965,
+  metalness:0
+});
+floorTopMat.name='floor-green-paper-face';
 
 const blockGeo=new THREE.BoxGeometry(1,1,1);
+const topEdgeGeo=new THREE.BoxGeometry(1.035,.045,1.035);
+const topFaceGeo=new THREE.BoxGeometry(1.018,.015,1.018);
+
 const terrain=new THREE.Group();
-terrain.name='terrain-reset-cubes';
+terrain.name='terrain-layered-paper-floor';
 scene.add(terrain);
 
 const columnRecords=[];
@@ -562,36 +571,63 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   terrainBlockCount+=h+1;
 }
 
-const terrainBlocks=new THREE.InstancedMesh(blockGeo,terrainMat,terrainBlockCount);
-terrainBlocks.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+const terrainBlocks=new THREE.InstancedMesh(blockGeo,floorBodyMat,terrainBlockCount);
+const terrainEdges=new THREE.InstancedMesh(topEdgeGeo,floorEdgeMat,columnRecords.length);
+const terrainTops=new THREE.InstancedMesh(topFaceGeo,floorTopMat,columnRecords.length);
+
+for(const mesh of [terrainBlocks,terrainEdges,terrainTops]){
+  mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
+  mesh.receiveShadow=true;
+  mesh.frustumCulled=false;
+}
 terrainBlocks.castShadow=true;
-terrainBlocks.receiveShadow=true;
-terrainBlocks.frustumCulled=false;
-terrain.add(terrainBlocks);
+terrainEdges.castShadow=true;
+terrainTops.castShadow=false;
+terrain.add(terrainBlocks,terrainEdges,terrainTops);
 
 const terrainDummy=new THREE.Object3D();
 let terrainIndex=0;
 for(const rec of columnRecords){
   for(let y=0;y<=rec.h;y++){
-    terrainDummy.position.set(rec.x,y,rec.z);
+    const topmost=y===rec.h;
+
+    // Interior cells stay full cubes. Only the exposed top cell gives up its
+    // upper 0.06 units to two actual paper layers, so there are no gaps.
+    terrainDummy.position.set(rec.x,topmost?y-.03:y,rec.z);
     terrainDummy.rotation.set(0,0,0);
-    terrainDummy.scale.set(1,1,1);
+    terrainDummy.scale.set(1,topmost?.94:1,1);
     terrainDummy.updateMatrix();
     terrainBlocks.setMatrixAt(terrainIndex++,terrainDummy.matrix);
   }
+
+  // y + .44 .. .485 : darker green paper cut edge
+  terrainDummy.position.set(rec.x,rec.h+.4625,rec.z);
+  terrainDummy.rotation.set(0,0,0);
+  terrainDummy.scale.set(1,1,1);
+  terrainDummy.updateMatrix();
+  terrainEdges.setMatrixAt(rec.columnIndex,terrainDummy.matrix);
+
+  // y + .485 .. .500 : visible green paper face. Final top remains exactly .5.
+  terrainDummy.position.set(rec.x,rec.h+.4925,rec.z);
+  terrainDummy.updateMatrix();
+  terrainTops.setMatrixAt(rec.columnIndex,terrainDummy.matrix);
 }
 terrainBlocks.instanceMatrix.needsUpdate=true;
-rebuildMaterialRandomness?.(true);
+terrainEdges.instanceMatrix.needsUpdate=true;
+terrainTops.instanceMatrix.needsUpdate=true;
 
-// Compatibility hooks for the existing comparison UI. There are intentionally
-// no extra terrain layers/material variants in this reset.
-const caps=[];
-const rims=[];
-const paperObjects=[terrainBlocks];
+// Compatibility hooks used elsewhere by the existing UI/depth pipeline.
+const caps=[terrainTops];
+const rims=[terrainEdges];
+const paperObjects=[terrainBlocks,terrainEdges,terrainTops];
+
 function rebuildMaterialRandomness(on=true){
-  terrainMat.map=on?simpleTerrainTexture:null;
-  terrainMat.color.setHex(on?0xffffff:SIMPLE_TERRAIN_COLOR);
-  terrainMat.needsUpdate=true;
+  floorBodyMat.map=on?floorKraftTexture:null;
+  floorTopMat.map=on?floorGreenTexture:null;
+  floorBodyMat.color.setHex(on?0xffffff:0xaa7350);
+  floorTopMat.color.setHex(on?0xffffff:0x9bb873);
+  floorBodyMat.needsUpdate=true;
+  floorTopMat.needsUpdate=true;
 }
 
 // Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
@@ -1939,7 +1975,7 @@ function preset(name){
 }
 function syncButtons(){
   sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
-  terrainBlocks.visible=state.layers;
+  terrainBlocks.visible=state.layers;terrainEdges.visible=state.layers;terrainTops.visible=state.layers;
   renderer.shadowMap.enabled=state.shadow;
   // Lighting remains dual-source; zero-contribution shadow passes are culled.
   sun.castShadow=state.shadow&&sun.intensity>.10;
