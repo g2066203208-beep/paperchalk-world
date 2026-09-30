@@ -58,10 +58,14 @@ jobs:
           node --check src/terrain/terrain-runtime.js
           node --check src/prologue/voxel-road.js
           node --check src/prologue/ProloguePaperLayerScene.js
-          test -s assets/prologue/paper-school-back.svg
-          test -s assets/prologue/paper-school-trees.svg
-          test -s assets/prologue/paper-school-gate.svg
-          test -s assets/prologue/paper-school-pole.svg
+          test -s assets/prologue/school-skyline.webp
+          test -s assets/prologue/school-back.webp
+          test -s assets/prologue/school-trees.webp
+          test -s assets/prologue/school-gate.webp
+          test ! -e assets/prologue/paper-school-back.svg
+          test ! -e assets/prologue/paper-school-trees.svg
+          test ! -e assets/prologue/paper-school-gate.svg
+          test ! -e assets/prologue/paper-school-pole.svg
           node --check src/terrain/voxel-block-mesh.js
           node --check src/entities/PaperSpriteEntity.js
           node --check vendor/fastnoise-lite/FastNoiseLite.js
