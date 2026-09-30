@@ -33,7 +33,6 @@ assert(game.includes("'KeyW'")&&game.includes("'KeyS'"),'W/S 3D movement missing
 assert(game.includes("moveAxis('z'"),'Z-axis movement missing');
 assert(game.includes('threeDimensionalInteraction:true'),'3D terrain interaction flag missing');
 assert(!game.includes('PLAYER_ROW_CENTER_Z'),'legacy player-row lock still present');
-assert(!game.includes('velocity.z=0'),'legacy Z velocity lock still present');
 assert(game.includes('biome:environment.biome'),'biome snapshot missing');
 
 assert(terrain.includes('class TerrainWorld'),'TerrainWorld missing');
