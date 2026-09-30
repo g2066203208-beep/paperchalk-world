@@ -20,7 +20,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 <body>
 <div class="panel">
   <h1>纸艺世界视觉 Demo v2</h1>
-  <p>每格材质随机变化 + 草皮纸层厚度 + 纸浆侧面 + 柔光软阴影 + 日/月方向光 + 角色受光/受雾/投影 + 纸天空 + 空气雾 + 统一色调。白天、黄昏和夜晚观察角色颜色与明暗一起变化。</p>
+  <p>每格材质随机变化 + 草皮纸层厚度 + 纸浆侧面 + 柔光软阴影 + 日/月方向光。角色现在使用漫反射纸片材质，并加入很弱的环境反弹光，白天/黄昏/夜晚会变色变暗但不会黑成剪影。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -267,8 +267,8 @@ contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.487,.13);scene
 
 let playerMesh=null,playerMat=null,playerDepthMat=null;
 const playerDayTint=new THREE.Color(0xffffff);
-const playerDuskTint=new THREE.Color(0xffd2b1);
-const playerNightTint=new THREE.Color(0x8498c4);
+const playerDuskTint=new THREE.Color(0xffe2ca);
+const playerNightTint=new THREE.Color(0xb9c9e8);
 const playerTintTmp=new THREE.Color();
 
 new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
@@ -277,14 +277,18 @@ new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
 
   // The protagonist is a real paper object in the scene now: it receives
   // sunlight/moonlight, fog, tone mapping and shadows instead of glowing like UI.
-  playerMat=new THREE.MeshStandardMaterial({
+  playerMat=new THREE.MeshLambertMaterial({
     map:t,
     transparent:true,
     alphaTest:.06,
     side:THREE.DoubleSide,
-    roughness:1,
-    metalness:0,
     color:0xffffff,
+    // Matte paper should receive diffuse light, but a flat billboard has only
+    // one normal. A very small texture-matched emissive term represents soft
+    // sky/ground bounce so the printed character never collapses into black.
+    emissive:0xffffff,
+    emissiveMap:t,
+    emissiveIntensity:.07,
     depthWrite:true
   });
 
@@ -378,9 +382,15 @@ function updateLighting(t){
     const dayAmount=smoothstep(.02,.72,sunUp);
     playerTintTmp.copy(playerNightTint).lerp(playerDayTint,dayAmount);
     if(twilight>0){
-      playerTintTmp.lerp(playerDuskTint,twilight*.58);
+      playerTintTmp.lerp(playerDuskTint,twilight*.45);
     }
     playerMat.color.copy(playerTintTmp);
+
+    // Keep the sprite matte and readable. This is not self-lighting: most of
+    // the brightness still comes from Lambert diffuse + hemisphere/moon light.
+    // The small mapped emissive floor approximates indirect diffuse bounce that
+    // a real paper cutout would receive from the sky and surrounding ground.
+    playerMat.emissiveIntensity=.05+(1-sunUp)*.11+twilight*.025;
   }
 
   // Contact shadow follows available light instead of staying equally dark.
