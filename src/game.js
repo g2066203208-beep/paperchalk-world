@@ -163,7 +163,7 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
 return prefix+encodeURIComponent(String(account||''));
 }
 const defaultCamera=Object.freeze({
-yaw:.72,pitch:.38,distance:12,height:.65,fov:42,
+yaw:0,pitch:.18,distance:19.2,height:.72,fov:36,
 stageView:Object.freeze({enabled:false,axis:'z',side:1})
 });
 function getSettings(){
@@ -437,15 +437,11 @@ velocity.y=0;
 }else if(dy!==0)controller.grounded=false;
 }
 function rawMoveInput(){
-let strafe=0,forward=0;
-if(keys.has('KeyA')||keys.has('ArrowLeft'))strafe-=1;
-if(keys.has('KeyD')||keys.has('ArrowRight'))strafe+=1;
-if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
-if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
-strafe+=joystickAxisX;forward-=joystickAxisY;
-const mag=Math.hypot(strafe,forward);if(mag>1){strafe/=mag;forward/=mag}
-const sy=Math.sin(cameraYaw),cy=Math.cos(cameraYaw);
-return {x:strafe*cy-forward*sy,z:-strafe*sy-forward*cy,magnitude:Math.min(1,mag)};
+let horizontal=0;
+if(keys.has('KeyA')||keys.has('ArrowLeft'))horizontal-=1;
+if(keys.has('KeyD')||keys.has('ArrowRight'))horizontal+=1;
+horizontal=clamp(horizontal+joystickAxisX,-1,1);
+return {x:horizontal,z:0,magnitude:Math.abs(horizontal)};
 }
 function overlayOpen(){
 return backpackOverlay.classList.contains('is-open')||
@@ -481,7 +477,9 @@ velocity.x=input.x*speed;velocity.z=input.z*speed;
 controller.moving=input.magnitude>.05;
 if(Math.abs(velocity.x)>.08)controller.facingX=velocity.x>0?1:-1;
 if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
-moveAxis('x',velocity.x*dt);moveAxis('z',velocity.z*dt);
+moveAxis('x',velocity.x*dt);
+transform.x=clamp(transform.x,bounds.minX+PLAYER_HALF_W,bounds.maxX-PLAYER_HALF_W);
+transform.z=INTERACTION_ROW_Z*terrain.tileSize;velocity.z=0;
 }
 });
 ecs.registerSystem('player-gravity',{
