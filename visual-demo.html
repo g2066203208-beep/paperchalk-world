@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.18</h1>
-  <p>v12.18 标准立方体：地形全部恢复成严格 1×1×1 标准立方体，不再有绿色顶纸、切边、厚度层、额外顶面或几何位移。每个方块六个面直接使用 Paper003 的 Color + NormalGL + Roughness；只保留材质表面细节，不改变立方体轮廓。</p>
+  <h1>纸艺世界视觉 Demo v12.19</h1>
+  <p>v12.19 固有色：继续保持严格 1×1×1 标准立方体，只给 Paper003 增加地形本身的绿色固有色。Paper003 负责纸张纹理、法线和粗糙度，绿色由材质本身提供；关闭 Paper003 时仍然保留相同绿色，不会退回白色。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -488,8 +488,9 @@ const paper003Roughness=loadPaper003Texture(PAPER003_ROUGHNESS_URL);
 // Geometry is exactly 1×1×1. No cap, no edge layer, no extra thickness and no
 // displacement. Paper003 is used only as a surface material on all six faces.
 // ---------------------------------------------------------------------------
+const TERRAIN_BASE_COLOR=0x8fae68;
 const terrainPaper003Mat=new THREE.MeshStandardMaterial({
-  color:0xffffff,
+  color:TERRAIN_BASE_COLOR,
   map:paper003Color,
   normalMap:paper003Normal,
   roughnessMap:paper003Roughness,
@@ -547,7 +548,8 @@ function rebuildMaterialRandomness(on=true){
   terrainPaper003Mat.map=on?paper003Color:null;
   terrainPaper003Mat.normalMap=on?paper003Normal:null;
   terrainPaper003Mat.roughnessMap=on?paper003Roughness:null;
-  terrainPaper003Mat.color.setHex(on?0xffffff:0xe2ded5);
+  // Paper003 is only the paper surface; the terrain's intrinsic colour stays green.
+  terrainPaper003Mat.color.setHex(TERRAIN_BASE_COLOR);
   terrainPaper003Mat.needsUpdate=true;
 }
 
