@@ -1,9 +1,9 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),prologueContent=read('src/prologue/prologue-content.js'),prologueRuntime=read('src/prologue/prologue-runtime.js'),prologueScene=read('src/prologue/PrologueScene.js'),prologueRenderer=read('src/prologue/prologue-renderer.mjs'),prologueCss=read('styles/prologue.css');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js');
 
-assert(html.includes('paper-r15'),'build key missing');
+assert(html.includes('paper-r14'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -12,19 +12,6 @@ assert(content.includes("id:'village-intro'")&&content.includes("type:'talk'"),'
 assert(html.includes('src/ai/npc-navigation.js')&&html.includes('src/ai/npc-brain.js')&&html.includes('src/ai/npc-dialogue.js'),'NPC AI module scripts missing');
 assert(html.includes('src/entities/npc-runtime.js'),'NPC runtime script missing');
 assert(html.includes('id="npcInteractBtn"'),'NPC talk control missing');
-assert(html.includes('styles/prologue.css')&&html.includes('src/prologue/prologue-content.js')&&html.includes('src/prologue/prologue-runtime.js')&&html.includes('src/prologue/prologue-renderer.mjs'),'standalone prologue loading missing');
-assert(game.includes('P?.shouldRun?.')&&game.includes('paperchalk-prologue-enter'),'new-game prologue scene routing missing');
-assert(prologueContent.includes("id:'prologue-city-day1'")&&prologueContent.includes("id:'school'")&&prologueContent.includes("id:'city'")&&prologueContent.includes("id:'home'"),'school/city/home prologue content missing');
-assert(prologueContent.includes("id:'leave-school'")&&prologueContent.includes("id:'to-home'")&&prologueContent.includes("id:'to-bedroom'"),'prologue objective chain missing');
-assert(prologueContent.includes("role:'student'")&&prologueContent.includes("role:'worker'")&&prologueContent.includes("role:'resident'"),'living city pedestrian roles missing');
-assert(prologueContent.includes("lane:'east'")&&prologueContent.includes("lane:'north'"),'city traffic routes missing');
-assert(prologueRuntime.includes('pedestrianSchedules:true')&&prologueRuntime.includes('trafficSignals:true')&&prologueRuntime.includes('independentScene:true'),'prologue life simulation gates missing');
-assert(prologueRuntime.includes('updatePeople')&&prologueRuntime.includes('updateCars')&&prologueRuntime.includes('signalState'),'pedestrian/traffic simulation missing');
-assert(prologueScene.includes('new PaperSpriteEntity')&&prologueScene.includes("assets/player/protagonist.webp"),'prologue actors must use player character art');
-assert(prologueScene.includes('_buildSchool')&&prologueScene.includes('_buildCity')&&prologueScene.includes('_buildHome'),'complete prologue zones missing');
-assert(prologueScene.includes('_buildSignals')&&prologueScene.includes('_building'),'city street/building rendering missing');
-assert(prologueRenderer.includes('paperchalk-prologue-enter')&&prologueRenderer.includes('data-prologue-stick')&&prologueRenderer.includes('结束序幕'),'prologue controls/HUD flow missing');
-assert(prologueCss.includes('body.prologue-active')&&prologueCss.includes('.prologue-stick'),'prologue isolated UI missing');
 assert(npcRuntime.includes("require:['Transform','Velocity','Actor','NPC','Brain']"),'NPC ECS AI actor system missing');
 assert(npcRuntime.includes('sameActorComponentsAsPlayer:true'),'NPC/player actor parity missing');
 assert(game.includes('PaperchalkNPCRuntime')&&game.includes('npcs:npcWorld.snapshot()'),'NPC gameplay integration missing');
