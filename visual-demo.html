@@ -32,8 +32,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.29</h1>
-  <p>v12.29 修复透明地板并安全去重复：回退 v12.28 的高风险世界投影 shader，保留 v12.27 面剔除。现在由体素网格直接生成连续世界 UV，相邻同向方块天然无缝；Paper003 再用三个不同尺度/偏移的连续采样平滑混合来打散周期，Color、NormalGL、Roughness、Displacement 全部同步，避免按方块割裂。</p>
+  <h1>纸艺世界视觉 Demo v12.30</h1>
+  <p>v12.30 小草落地规则：小草不再使用手写世界坐标和高度，而是直接从当前体素地形的顶层草方块生成，根部永远贴在方块顶面；每丛限制在自己的 1×1 方块内部。取消始终朝向相机，改为固定世界朝向加极轻微摆动，避免转镜头时纸片扫进相邻方块。场景里的石头已全部删除。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -958,22 +958,32 @@ const grassThicknessMat=new THREE.MeshStandardMaterial({
 });
 grassThicknessMat.name='grass-program-black-side';
 
-const grassSpots=[
-  [-3.30,-1.70,.51,.60],[-2.25,.95,.51,.48],[-1.55,1.90,.51,.44],
-  [-.75,-2.18,.51,.47],[1.20,-2.05,.51,.42],[2.35,1.72,.51,.55],
-  [3.42,-1.45,.51,.45],[4.55,.85,.51,.43],
-  [-5.72,1.55,1.51,.57],[-5.45,-1.65,1.51,.46],
-  [5.42,-.72,1.51,.51],[5.65,1.72,1.51,.47],
-  [-4.05,2.30,1.51,.44],[4.08,2.22,1.51,.49],
-  [-6.55,2.18,2.51,.43],[6.38,1.52,2.51,.42]
-];
+// Grass placement v12.30:
+// derive every tuft from a real terrain column. No hand-authored Y values.
+// Root Y is exactly the exposed grass top (column height + 0.5), and each tuft
+// stays well inside its own 1x1 voxel footprint.
+const grassSurfaceCandidates=columnRecords.filter(rec=>{
+  const density=hash3(rec.x*17+11,rec.h*31+7,rec.z*23-5);
+  return density>.82;
+});
 
-const grassBladeData=grassSpots.map(([x,z,y,scale],i)=>({
-  x,z,y,scale,
-  variant:i%3,
-  phase:i*.73+hash3(i,91,17)*2.3,
-  slot:0
-}));
+const grassBladeData=grassSurfaceCandidates.map((rec,i)=>{
+  const ox=(hash3(rec.x+101,rec.h+17,rec.z-53)-.5)*.18;
+  const oz=(hash3(rec.x-41,rec.h+73,rec.z+89)-.5)*.18;
+  const scale=.40+hash3(rec.x+7,rec.h+29,rec.z+13)*.10;
+  const baseAngle=hash3(rec.x+211,rec.h+19,rec.z-127)*Math.PI*2;
+
+  return {
+    x:rec.x+ox,
+    z:rec.z+oz,
+    y:rec.h+.503,
+    scale,
+    baseAngle,
+    variant:i%3,
+    phase:i*.73+hash3(rec.x,rec.h,rec.z)*2.3,
+    slot:0
+  };
+});
 
 const variantCounts=[0,0,0];
 for(const d of grassBladeData)d.slot=variantCounts[d.variant]++;
@@ -1002,18 +1012,12 @@ const grassDummy=new THREE.Object3D();
 
 function updatePaperGrass(t){
   for(const d of grassBladeData){
-    // Strict single-sheet billboard: only yaw toward the camera.
-    const dx=camera.position.x-d.x;
-    const dz=camera.position.z-d.z;
-    const angle=Math.atan2(dx,dz);
+    // No camera-facing billboard: orbiting the camera never rotates grass
+    // through neighbouring voxels.
+    const angle=d.baseAngle+Math.sin(t*.43+d.phase)*.012;
     const nx=Math.sin(angle),nz=Math.cos(angle);
-
-    // Billboard-local right vector. Used to reveal the black "paper side" only
-    // on the right/bottom edge instead of drawing a black halo around the tuft.
     const rx=Math.cos(angle),rz=-Math.sin(angle);
-
-    // Cute paper card movement: barely noticeable, no realistic grass whipping.
-    const roll=Math.sin(t*.55+d.phase)*.008;
+    const roll=Math.sin(t*.55+d.phase)*.006;
 
     grassDummy.position.set(d.x,d.y,d.z);
     grassDummy.rotation.set(0,angle,roll);
@@ -1021,12 +1025,10 @@ function updatePaperGrass(t){
     grassDummy.updateMatrix();
     grassFrontMeshes[d.variant].setMatrixAt(d.slot,grassDummy.matrix);
 
-    // Program-only thickness: same source sheet, ~0.4% scale difference and a
-    // tiny right/down/back offset. The result is just a black paper side sliver.
     grassDummy.position.set(
-      d.x+rx*.0045-nx*.0035,
-      d.y-.003,
-      d.z+rz*.0045-nz*.0035
+      d.x+rx*.0035-nx*.0025,
+      d.y-.0025,
+      d.z+rz*.0035-nz*.0025
     );
     grassDummy.rotation.set(0,angle,roll);
     grassDummy.scale.set(d.scale*1.004,d.scale*1.004,d.scale);
@@ -1040,10 +1042,6 @@ function updatePaperGrass(t){
   }
 }
 updatePaperGrass(0);
-
-const stoneMat=new THREE.MeshLambertMaterial({color:0xa69a8d});
-function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stoneMat);m.position.set(x,y,z);m.scale.y=.62;m.rotation.set(.2,.4,.1);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
-stone(-1.8,1.4,.52,.26);stone(1.2,-2.2,.52,.18);
 
 // ---------------------------------------------------------------------------
 // Background forest wall / real occluders.
