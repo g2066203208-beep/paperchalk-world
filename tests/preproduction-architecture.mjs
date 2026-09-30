@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js');
 
 assert.match(html,/paper-r27/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
@@ -14,8 +14,8 @@ assert.match(game,/setFlight/);
 assert.match(content,/mode:'infinite-voxel-3d'/);
 assert.doesNotMatch(content,/prologueRoad:/);
 assert.ok(!fs.existsSync('src/prologue'),'prologue runtime directory must stay removed');
-assert.match(game,/'KeyW'/);
-assert.match(game,/'KeyS'/);
+assert.match(openWorld,/'KeyW'/);
+assert.match(openWorld,/'KeyS'/);
 assert.match(game,/moveAxis\('z'/);
 assert.match(engine,/zMovementLocked:false/);
 assert.match(engine,/raycastIgnoresOtherRows:false/);
