@@ -19,15 +19,15 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v6</h1>
-  <p>深林纸片浓雾版：雾不是写实烟，而是多层半透明“撕边白纸雾带”叠在场景里；近景绕脚、中景切层、远景封林，雾本身也能看出纸纤维和纸片边缘。</p>
+  <h1>纸艺世界视觉 Demo v7</h1>
+  <p>深林动态纸雾 v7：改成实例化纸雾卡 + 深度软交界 + 风场漂移。雾会明显流动、绕地形、分前中远三层；仍然是撕边纸片，不是写实烟。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
   <button id="sky" class="active">纸天空</button>
   <button id="layers" class="active">纸层厚度</button>
   <button id="shadow" class="active">软阴影</button>
-  <button id="fog" class="active">纸片浓雾</button>
+  <button id="fog" class="active">动态纸雾</button>
   <button id="tone" class="active">统一色调</button>
   <button id="random" class="active">随机材质</button>
   <button id="bounce" class="active">地面反射光</button>
@@ -38,7 +38,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · 多层撕边纸雾缓慢漂移</div>
+<div class="badge">拖动旋转 · 滚轮缩放 · GPU纸雾动态漂移</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -161,66 +161,59 @@ function skyTexture(mode='day'){
 }
 
 function mistTexture(seed=1){
-  const w=512,h=160,c=document.createElement('canvas');c.width=w;c.height=h;
-  const g=c.getContext('2d'),r=rng(7000+seed*131);
+  const w=512,h=192,c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d'),r=rng(7400+seed*131);
   g.clearRect(0,0,w,h);
 
-  // Build 2-3 overlapping torn-paper strips. This should look like actual
-  // translucent white paper layers, not soft smoke particles.
-  const stripCount=2+(seed%2);
-  for(let s=0;s<stripCount;s++){
-    const top=22+s*22+r()*10;
-    const thickness=52+r()*34;
+  // One strong torn-paper silhouette plus one lighter offset layer.
+  for(let s=0;s<2;s++){
+    const top=28+s*30+r()*8;
+    const thickness=74+r()*34;
     const bottom=top+thickness;
 
     g.beginPath();
-    g.moveTo(-20,top);
-    for(let x=-20;x<=w+20;x+=18){
-      const y=top+(r()-.5)*15+Math.sin((x+seed*37)*.038)*4;
+    g.moveTo(-24,top);
+    for(let x=-24;x<=w+24;x+=16){
+      const y=top+(r()-.5)*18+Math.sin((x+seed*37)*.034)*5;
       g.lineTo(x,y);
     }
-    for(let x=w+20;x>=-20;x-=18){
-      const y=bottom+(r()-.5)*16+Math.sin((x+seed*19)*.031)*5;
+    for(let x=w+24;x>=-24;x-=16){
+      const y=bottom+(r()-.5)*20+Math.sin((x+seed*19)*.029)*6;
       g.lineTo(x,y);
     }
     g.closePath();
 
     const grad=g.createLinearGradient(0,top,0,bottom);
-    const a=.52+s*.08;
-    grad.addColorStop(0,'rgba(255,255,248,'+(a*.74).toFixed(3)+')');
-    grad.addColorStop(.22,'rgba(250,252,245,'+a.toFixed(3)+')');
-    grad.addColorStop(.72,'rgba(240,246,240,'+(a*.92).toFixed(3)+')');
-    grad.addColorStop(1,'rgba(222,233,228,'+(a*.64).toFixed(3)+')');
-    g.fillStyle=grad;
-    g.fill();
+    const a=s===0?.88:.62;
+    grad.addColorStop(0,'rgba(255,255,248,'+(a*.68).toFixed(3)+')');
+    grad.addColorStop(.18,'rgba(252,253,247,'+a.toFixed(3)+')');
+    grad.addColorStop(.74,'rgba(236,245,239,'+(a*.94).toFixed(3)+')');
+    grad.addColorStop(1,'rgba(205,221,214,'+(a*.60).toFixed(3)+')');
+    g.fillStyle=grad;g.fill();
 
-    // Slight darker underside: reads as a separate cut-paper layer.
-    g.strokeStyle='rgba(108,126,120,.16)';
-    g.lineWidth=2;
-    g.stroke();
+    // Paper underside/edge.
+    g.strokeStyle='rgba(91,112,104,.25)';
+    g.lineWidth=1.6+s*.5;g.stroke();
 
-    // Fibres and compressed paper specks.
-    g.save();
-    g.clip();
-    for(let i=0;i<220;i++){
-      const x=r()*w,y=top+r()*thickness;
-      const len=2+r()*9,a2=r()*Math.PI;
-      g.strokeStyle=r()>.5?'rgba(255,255,255,.18)':'rgba(94,113,104,.10)';
-      g.lineWidth=.45+r()*.65;
+    g.save();g.clip();
+    for(let i=0;i<320;i++){
+      const x=r()*w,y=top+r()*thickness,len=2+r()*11,a2=r()*Math.PI;
+      g.strokeStyle=r()>.5?'rgba(255,255,255,.24)':'rgba(78,100,91,.14)';
+      g.lineWidth=.45+r()*.75;
       g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a2)*len,y+Math.sin(a2)*len);g.stroke();
     }
-    for(let i=0;i<38;i++){
-      g.fillStyle=r()>.5?'rgba(255,255,255,.10)':'rgba(80,100,92,.07)';
-      const q=1+r()*3;g.fillRect(r()*w,top+r()*thickness,q,q);
+    for(let i=0;i<54;i++){
+      g.fillStyle=r()>.5?'rgba(255,255,255,.13)':'rgba(66,88,80,.10)';
+      const q=.8+r()*3.2;g.fillRect(r()*w,top+r()*thickness,q,q);
     }
     g.restore();
   }
 
-  // Fade only the left/right edges so the horizontal torn silhouette stays solid.
+  // Fade only at horizontal ends; keep the torn top/bottom crisp.
   const sideFade=g.createLinearGradient(0,0,w,0);
   sideFade.addColorStop(0,'rgba(255,255,255,0)');
-  sideFade.addColorStop(.07,'rgba(255,255,255,1)');
-  sideFade.addColorStop(.93,'rgba(255,255,255,1)');
+  sideFade.addColorStop(.045,'rgba(255,255,255,1)');
+  sideFade.addColorStop(.955,'rgba(255,255,255,1)');
   sideFade.addColorStop(1,'rgba(255,255,255,0)');
   g.globalCompositeOperation='destination-in';
   g.fillStyle=sideFade;g.fillRect(0,0,w,h);
@@ -328,64 +321,198 @@ const stoneMat=new THREE.MeshLambertMaterial({color:0xa69a8d});
 function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stoneMat);m.position.set(x,y,z);m.scale.y=.62;m.rotation.set(.2,.4,.1);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
 stone(-1.8,1.4,.49,.26);stone(1.2,-2.2,.46,.18);
 
-// Dense stylized paper fog: layered torn paper sheets, not volumetric smoke.
-// It is deliberately visible as a material object in the handmade world.
+// GPU-friendly instanced paper fog cards.
+// We use two InstancedMeshes (upright banks + ground sheets), update instance
+// matrices at low frequency, and sample a cached scene depth texture to soften
+// intersections with terrain ("soft particles" technique).
+
 const forestMist=new THREE.Group();
 scene.add(forestMist);
-const mistLayers=[];
-const mistBanks=[];
 
-function makeMistMaterial(seed,opacity){
-  const tex=mistTexture(seed);
-  tex.repeat.set(1.0+(seed%3)*.12,1);
-  const mat=new THREE.MeshBasicMaterial({
-    map:tex,
-    color:0xe3ebe3,
-    transparent:true,
-    opacity,
-    depthWrite:false,
-    depthTest:true,
-    side:THREE.DoubleSide,
-    toneMapped:true,
-    alphaTest:.018
+const fogTex=mistTexture(11);
+const fogUniforms={
+  map:{value:fogTex},
+  tint:{value:new THREE.Color(0xe4ebe2)},
+  opacity:{value:.82},
+  time:{value:0},
+  tDepth:{value:null},
+  resolution:{value:new THREE.Vector2(1,1)},
+  depthFade:{value:.0045}
+};
+
+const fogVertex=`
+  varying vec2 vUv;
+  void main(){
+    vUv=uv;
+    vec4 mvPosition=modelViewMatrix*instanceMatrix*vec4(position,1.0);
+    gl_Position=projectionMatrix*mvPosition;
+  }
+`;
+
+const fogFragment=`
+  uniform sampler2D map;
+  uniform sampler2D tDepth;
+  uniform vec3 tint;
+  uniform float opacity;
+  uniform float time;
+  uniform vec2 resolution;
+  uniform float depthFade;
+  varying vec2 vUv;
+
+  void main(){
+    // Gentle wind ripple inside the paper strip.
+    vec2 uv=vUv;
+    uv.x += sin(uv.y*10.0 + time*.55)*.008;
+    uv.y += sin(uv.x*8.0 - time*.38)*.004;
+
+    vec4 paper=texture2D(map,uv);
+    float a=paper.a;
+
+    // Visible breathing in the fibres, without becoming smoke.
+    a *= .91 + .09*sin(time*.72 + uv.x*11.0);
+
+    // Soft-particle depth fade: remove the hard card/terrain intersection.
+    vec2 suv=gl_FragCoord.xy/resolution;
+    float sceneDepth=texture2D(tDepth,suv).x;
+    float delta=sceneDepth-gl_FragCoord.z;
+    float soft=smoothstep(.00035,depthFade,max(delta,0.0));
+
+    a *= soft*opacity;
+    if(a<.025) discard;
+
+    gl_FragColor=vec4(paper.rgb*tint,a);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`;
+
+const fogMat=new THREE.ShaderMaterial({
+  uniforms:fogUniforms,
+  vertexShader:fogVertex,
+  fragmentShader:fogFragment,
+  transparent:true,
+  depthWrite:false,
+  depthTest:true,
+  side:THREE.DoubleSide,
+  toneMapped:true
+});
+
+const BANK_COUNT=18;
+const GROUND_COUNT=10;
+const bankGeo=new THREE.PlaneGeometry(1,1);
+const groundGeo=new THREE.PlaneGeometry(1,1);
+const fogBanks=new THREE.InstancedMesh(bankGeo,fogMat,BANK_COUNT);
+const groundFog=new THREE.InstancedMesh(groundGeo,fogMat,GROUND_COUNT);
+fogBanks.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+groundFog.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+fogBanks.frustumCulled=false;groundFog.frustumCulled=false;
+fogBanks.renderOrder=4;groundFog.renderOrder=5;
+forestMist.add(fogBanks,groundFog);
+
+const fogDummy=new THREE.Object3D();
+const fogBankData=[];
+const groundFogData=[];
+
+function seedFogData(){
+  const r=rng(99127);
+  for(let i=0;i<BANK_COUNT;i++){
+    const lane=i%3; // near/mid/far
+    const spread=lane===0?7.5:lane===1?11.0:14.5;
+    fogBankData.push({
+      baseX:(r()-.5)*spread*1.8,
+      baseZ: lane===0 ? 2.2+r()*1.4 : lane===1 ? -1.0+r()*2.4 : -4.5+r()*2.4,
+      baseY: lane===0 ? .78+r()*.45 : lane===1 ? .92+r()*.65 : 1.05+r()*.8,
+      width:(lane===0?3.8:lane===1?5.4:7.0)+r()*(lane===0?2.3:3.2),
+      height:(lane===0?1.2:1.5)+r()*(lane===2?1.2:.8),
+      speed:(lane===0?.22:lane===1?.13:.075)*(r()>.5?1:-1),
+      phase:r()*Math.PI*2,
+      bob:.035+r()*.06
+    });
+  }
+  for(let i=0;i<GROUND_COUNT;i++){
+    groundFogData.push({
+      baseX:(r()-.5)*13,
+      baseZ:(r()-.5)*6,
+      baseY:.49+r()*.30,
+      width:4.2+r()*4.4,
+      depth:2.0+r()*2.8,
+      speed:.055+r()*.085,
+      phase:r()*Math.PI*2,
+      bob:.018+r()*.035
+    });
+  }
+}
+seedFogData();
+
+function updateFogInstances(t){
+  for(let i=0;i<BANK_COUNT;i++){
+    const d=fogBankData[i];
+    const x=d.baseX+Math.sin(t*d.speed+d.phase)*.65;
+    const y=d.baseY+Math.sin(t*.36+d.phase)*d.bob;
+    const z=d.baseZ+Math.cos(t*d.speed*.43+d.phase)*.14;
+
+    fogDummy.position.set(x,y,z);
+    // Upright billboard to camera.
+    const dx=camera.position.x-x,dz=camera.position.z-z;
+    fogDummy.rotation.set(0,Math.atan2(dx,dz),0);
+    fogDummy.scale.set(d.width,d.height,1);
+    fogDummy.updateMatrix();
+    fogBanks.setMatrixAt(i,fogDummy.matrix);
+  }
+  fogBanks.instanceMatrix.needsUpdate=true;
+
+  for(let i=0;i<GROUND_COUNT;i++){
+    const d=groundFogData[i];
+    fogDummy.position.set(
+      d.baseX+Math.sin(t*d.speed+d.phase)*.48,
+      d.baseY+Math.sin(t*.28+d.phase)*d.bob,
+      d.baseZ+Math.cos(t*d.speed*.5+d.phase)*.28
+    );
+    fogDummy.rotation.set(-Math.PI/2,0,Math.sin(t*.12+d.phase)*.035);
+    fogDummy.scale.set(d.width,d.depth,1);
+    fogDummy.updateMatrix();
+    groundFog.setMatrixAt(i,fogDummy.matrix);
+  }
+  groundFog.instanceMatrix.needsUpdate=true;
+}
+updateFogInstances(0);
+
+// Cached low-resolution scene depth for soft intersection fading.
+let depthTarget=null,depthDirty=true;
+function resizeDepthTarget(){
+  const scale=.45;
+  const w=Math.max(256,Math.floor(innerWidth*(devicePixelRatio||1)*scale));
+  const h=Math.max(144,Math.floor(innerHeight*(devicePixelRatio||1)*scale));
+  if(depthTarget)depthTarget.dispose();
+  depthTarget=new THREE.WebGLRenderTarget(w,h,{
+    minFilter:THREE.NearestFilter,
+    magFilter:THREE.NearestFilter
   });
-  return {tex,mat};
+  depthTarget.depthTexture=new THREE.DepthTexture(w,h);
+  depthTarget.depthTexture.type=THREE.UnsignedShortType;
+  fogUniforms.tDepth.value=depthTarget.depthTexture;
+  fogUniforms.resolution.value.set(w,h);
+  depthDirty=true;
 }
+resizeDepthTarget();
 
-function addGroundMist(x,z,y,w,d,opacity,seed,speed){
-  const {tex,mat}=makeMistMaterial(seed,opacity);
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),mat);
-  mesh.rotation.x=-Math.PI/2;
-  mesh.position.set(x,y,z);
-  mesh.renderOrder=4;
-  forestMist.add(mesh);
-  mistLayers.push({mesh,tex,mat,baseOpacity:opacity,speed,phase:seed*.31,kind:'ground'});
+function updateDepthTexture(){
+  if(!depthDirty||!state.fog)return;
+  const mistWasVisible=forestMist.visible;
+  const skyWasVisible=sky.visible;
+  const sunWasVisible=sunDisc.visible;
+  const moonWasVisible=moonDisc.visible;
+  forestMist.visible=false;sky.visible=false;sunDisc.visible=false;moonDisc.visible=false;
+
+  renderer.setRenderTarget(depthTarget);
+  renderer.clear();
+  renderer.render(scene,camera);
+  renderer.setRenderTarget(null);
+
+  forestMist.visible=mistWasVisible;sky.visible=skyWasVisible;
+  sunDisc.visible=sunWasVisible;moonDisc.visible=moonWasVisible;
+  depthDirty=false;
 }
-function addMistBank(x,z,y,w,h,opacity,seed,speed,order=3){
-  const {tex,mat}=makeMistMaterial(seed,opacity);
-  const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);
-  mesh.position.set(x,y,z);
-  mesh.renderOrder=order;
-  forestMist.add(mesh);
-  const rec={mesh,tex,mat,baseOpacity:opacity,speed,phase:seed*.37,kind:'bank'};
-  mistLayers.push(rec);mistBanks.push(rec);
-}
-
-// Thick ground sheets: overlap enough to read as "fog surrounding the feet".
-addGroundMist(-3.8, 1.0,.54,7.2,3.6,.62,1,.006);
-addGroundMist( 3.7,  .3,.61,7.0,3.8,.58,2,-.005);
-addGroundMist( 0.0,-1.3,.70,10.8,3.8,.48,3,.004);
-addGroundMist(-.3,  2.0,.79,10.0,3.2,.40,4,-.003);
-
-// Mid-distance torn paper banks. These visibly cut across the blocks.
-addMistBank(-4.7,-2.4,1.08,6.8,2.2,.58,5,.004,2);
-addMistBank( 0.0,-2.9,1.20,8.6,2.5,.54,6,-.0035,2);
-addMistBank( 4.8,-2.3,1.02,6.5,2.0,.56,7,.0045,2);
-
-// Foreground edge sheets wrap around the player without covering the face.
-addMistBank(-4.4, 2.4,.84,6.2,1.55,.46,8,.003,5);
-addMistBank( 4.5, 2.2,.88,6.0,1.65,.44,9,-.003,5);
-addMistBank( 0.0, 2.8,.58,5.2,1.10,.34,10,.0025,6);
 
 // Soft fake contact shadow below the paper-doll, in addition to the real shadow map.
 const sc=document.createElement('canvas');sc.width=sc.height=256;
@@ -551,15 +678,12 @@ function updateLighting(t){
     scene.fog=new THREE.FogExp2(fogColor,density);
   }
 
-  const mistDay=new THREE.Color(0xe3ebe2);
-  const mistNight=new THREE.Color(0xb7c8d8);
-  const mistWarm=new THREE.Color(0xead8c4);
+  const mistDay=new THREE.Color(0xe4ece3);
+  const mistNight=new THREE.Color(0xb6c8da);
+  const mistWarm=new THREE.Color(0xecd8c1);
   const mistColor=mistNight.clone().lerp(mistDay,Math.pow(sunUp,.42)).lerp(mistWarm,twilight*.30);
-  for(const layer of mistLayers){
-    layer.mat.color.copy(mistColor);
-    const timeBoost=.94+twilight*.12+moonUp*.08;
-    layer.mat.opacity=Math.min(.78,layer.baseOpacity*timeBoost);
-  }
+  fogUniforms.tint.value.copy(mistColor);
+  fogUniforms.opacity.value=.78+twilight*.08+moonUp*.05;
 
   // Narrow exposure range = comfortable stylized game image instead of
   // physically dark dawn/night.
@@ -605,7 +729,7 @@ function updateLighting(t){
     contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
   }
   renderDirty=true;
-  shadowDirty=true;
+  shadowDirty=true;depthDirty=true;
 }
 function preset(name){
   state.auto=false;document.getElementById('cycle').classList.remove('active');
@@ -614,7 +738,7 @@ function preset(name){
   else if(name==='sunset')state.time=.73;
   else if(name==='night')state.time=.0;
   else state.time=.5;
-  updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
+  updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
 }
 function syncButtons(){
   sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;
@@ -624,7 +748,7 @@ function syncButtons(){
   const sunIsDominant=state.time>.18&&state.time<.82;
   sun.castShadow=state.shadow&&sunIsDominant;
   moon.castShadow=state.shadow&&!sunIsDominant;
-  shadowDirty=true;
+  shadowDirty=true;depthDirty=true;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
   ['sky','layers','shadow','fog','tone','random','bounce'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
@@ -646,14 +770,14 @@ function setFinal(v){
 document.getElementById('compare').onclick=()=>{setFinal(!state.final);renderDirty=true;shadowDirty=true};
 ['sky','layers','shadow','fog','tone'].forEach(id=>{
   document.getElementById(id).onclick=()=>{
-    state[id]=!state[id];
+    state[id]=!state[id];if(id==='fog')depthDirty=true;
     state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
-    updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
+    updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
   };
 });
 document.getElementById('random').onclick=()=>{
   state.random=!state.random;rebuildMaterialRandomness(state.random);
-  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();renderDirty=true;shadowDirty=true;
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
 };
 document.getElementById('bounce').onclick=()=>{
   state.bounce=!state.bounce;
@@ -666,7 +790,7 @@ document.getElementById('sunset').onclick=()=>preset('sunset');
 document.getElementById('night').onclick=()=>preset('night');
 document.getElementById('cycle').onclick=()=>{
   state.auto=!state.auto;document.getElementById('cycle').classList.toggle('active',state.auto);
-  if(state.auto)state.timePreset='';syncButtons();renderDirty=true;shadowDirty=true;
+  if(state.auto)state.timePreset='';syncButtons();renderDirty=true;shadowDirty=true;depthDirty=true;
 };
 
 let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0,lastMistTick=0,mistClock=0;
@@ -674,13 +798,13 @@ renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.cli
 renderer.domElement.addEventListener('pointermove',e=>{
   if(!dragging)return;
   yaw-=(e.clientX-lastX)*.006;pitch=clamp(pitch+(e.clientY-lastY)*.004,.08,.62);
-  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;
+  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;
 });
 renderer.domElement.addEventListener('pointerup',()=>dragging=false);
 renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderDirty=true;shadowDirty=true;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));resizeDepthTarget();renderDirty=true;shadowDirty=true;depthDirty=true;
 });
 
 let prev=performance.now();
@@ -697,15 +821,12 @@ function animate(now){
     if(autoShadowFrame!==0)shadowDirty=false;
   }
 
-  // Mist only needs a slow 10 fps update. This keeps the air alive without
-  // forcing expensive 60 fps fog animation on mobile.
-  if(state.fog&&now-lastMistTick>160){
+  // Dynamic paper fog: ~20 fps motion is enough to read clearly and stays light.
+  if(state.fog&&now-lastMistTick>50){
     const step=(now-lastMistTick)/1000;
-    lastMistTick=now;mistClock+=Math.min(.2,step);
-    for(const layer of mistLayers){
-      layer.tex.offset.x=(layer.phase+mistClock*layer.speed)%1;
-      layer.tex.offset.y=.012*Math.sin(mistClock*.16+layer.phase);
-    }
+    lastMistTick=now;mistClock+=Math.min(.12,step);
+    fogUniforms.time.value=mistClock;
+    updateFogInstances(mistClock);
     renderDirty=true;
   }
 
@@ -731,16 +852,12 @@ function animate(now){
   viewFill.position.copy(camera.position);
   viewFill.target.position.set(0,1.1,0);
 
-  for(const bank of mistBanks){
-    const dx=camera.position.x-bank.mesh.position.x;
-    const dz=camera.position.z-bank.mesh.position.z;
-    bank.mesh.rotation.y=Math.atan2(dx,dz);
-  }
-
   if(state.shadow&&shadowDirty){
     renderer.shadowMap.needsUpdate=true;
     shadowDirty=false;
   }
+
+  updateDepthTexture();
   renderer.render(scene,camera);
   renderDirty=false;
 }
