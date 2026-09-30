@@ -5,45 +5,61 @@ const cars=window.PaperchalkPrologueCars?.cars?.(sceneData)||[];
 if(!cars.length)return;
 const loader=new THREE.TextureLoader();
 const tex=(url)=>loader.load(url,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;t.generateMipmaps=false});
-const side=tex('assets/prologue/paper-sedan-side.svg');
-const front=tex('assets/prologue/paper-sedan-front.svg');
-const rear=tex('assets/prologue/paper-sedan-rear.svg');
-const top=tex('assets/prologue/paper-sedan-top.svg');
-const paper=new THREE.MeshStandardMaterial({color:0xd8cdb5,roughness:.97,metalness:0});
-const dark=new THREE.MeshStandardMaterial({color:0x3f403d,roughness:.92,metalness:.02});
-const trim=new THREE.MeshStandardMaterial({color:0xb8aa91,roughness:.95,metalness:0});
-const decal=t=>new THREE.MeshStandardMaterial({map:t,color:0xffffff,roughness:.9,metalness:0,alphaTest:.08,side:THREE.DoubleSide});
-const addBox=(root,name,sx,sy,sz,x,y,z,mat=paper)=>{
- const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);m.name=name;m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;root.add(m);return m;
+const sideTex=tex('assets/prologue/paper-sedan-side.svg');
+const topTex=tex('assets/prologue/paper-sedan-top.svg');
+const frontTex=tex('assets/prologue/paper-sedan-front.svg');
+const rearTex=tex('assets/prologue/paper-sedan-rear.svg');
+const sideMat=new THREE.MeshStandardMaterial({map:sideTex,color:0xffffff,roughness:.94,metalness:0});
+const topMat=new THREE.MeshStandardMaterial({map:topTex,color:0xffffff,roughness:.94,metalness:0});
+const tireMat=new THREE.MeshStandardMaterial({color:0x3a3936,roughness:.95,metalness:0});
+const decal=t=>new THREE.MeshStandardMaterial({map:t,color:0xffffff,roughness:.9,metalness:0,side:THREE.DoubleSide});
+const profile=[
+ [-2.20,.34],[-2.18,.72],[-2.02,1.00],[-1.55,1.10],[-1.10,1.18],
+ [-.72,1.54],[-.48,1.64],[.74,1.64],[1.18,1.50],[1.45,1.18],
+ [1.95,1.10],[2.17,.92],[2.20,.34]
+];
+const makeShape=()=>{
+ const s=new THREE.Shape();s.moveTo(profile[0][0],profile[0][1]);
+ for(let i=1;i<profile.length;i++)s.lineTo(profile[i][0],profile[i][1]);
+ s.lineTo(profile[0][0],profile[0][1]);
+ for(const wx of [-1.35,1.35]){
+  const h=new THREE.Path();h.absarc(wx,.38,.37,0,Math.PI*2,false);s.holes.push(h);
+ }
+ return s;
 };
-const addPlane=(root,name,w,h,x,y,z,rx,ry,mat)=>{
- const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.name=name;m.position.set(x,y,z);m.rotation.set(rx,ry,0);m.receiveShadow=true;root.add(m);return m;
+const minX=-2.2,maxX=2.2,minY=.34,maxY=1.64,width=1.9;
+const uvGen={
+ generateTopUV:(g,v,a,b,c)=>[a,b,c].map(i=>new THREE.Vector2((v[i*3]-minX)/(maxX-minX),(v[i*3+1]-minY)/(maxY-minY))),
+ generateSideWallUV:(g,v,a,b,c,d)=>{
+  const ids=[a,b,c,d],pts=ids.map(i=>({x:v[i*3],y:v[i*3+1],z:v[i*3+2]}));
+  const horizontal=Math.abs(pts[0].x-pts[1].x)>=Math.abs(pts[0].y-pts[1].y);
+  return pts.map(p=>horizontal
+   ?new THREE.Vector2((p.x-minX)/(maxX-minX),p.z/width)
+   :new THREE.Vector2((p.y-minY)/(maxY-minY),p.z/width));
+ }
 };
 for(const c of cars){
  const root=new THREE.Group();root.name=c.id;root.position.set(c.x,c.groundY,c.z);root.rotation.y=c.yaw||0;scene.add(root);
- addBox(root,'body',4.18,.72,1.78,0,.68,0);
- addBox(root,'cabin',2.18,.73,1.62,.12,1.17,0);
- addBox(root,'hood',1.18,.28,1.74,-1.51,1.02,0);
- addBox(root,'trunk',.82,.30,1.72,1.69,1.01,0);
- addBox(root,'roof',1.88,.12,1.54,.14,1.57,0,trim);
- addBox(root,'front-bumper',.18,.26,1.86,-2.16,.48,0,dark);
- addBox(root,'rear-bumper',.18,.26,1.86,2.16,.48,0,dark);
- const wheelGeo=new THREE.CylinderGeometry(.34,.34,.16,12);
- for(const x of [-1.35,1.35])for(const z of [-.94,.94]){
-  const w=new THREE.Mesh(wheelGeo,dark);w.name='wheel';w.position.set(x,.34,z);w.rotation.x=Math.PI*.5;w.castShadow=true;w.receiveShadow=true;root.add(w);
+ const geo=new THREE.ExtrudeGeometry(makeShape(),{depth:width,bevelEnabled:false,steps:1,curveSegments:4,UVGenerator:uvGen});
+ geo.translate(0,0,-width*.5);
+ const body=new THREE.Mesh(geo,[sideMat,topMat]);body.name='extruded-car-body';body.castShadow=true;body.receiveShadow=true;root.add(body);
+ const wheelGeo=new THREE.CylinderGeometry(.34,.34,.18,12);
+ for(const x of [-1.35,1.35])for(const z of [-.96,.96]){
+  const w=new THREE.Mesh(wheelGeo,tireMat);w.name='wheel';w.position.set(x,.38,z);w.rotation.x=Math.PI*.5;w.castShadow=true;w.receiveShadow=true;root.add(w);
  }
- const sideMat=decal(side),frontMat=decal(front),rearMat=decal(rear),topMat=decal(top);
- addPlane(root,'side-near',4.45,1.62,0,.80,-1.005,0,0,sideMat);
- addPlane(root,'side-far',4.45,1.62,0,.80,1.005,0,Math.PI,sideMat);
- addPlane(root,'front',1.92,1.62,-2.225,.80,0,0,-Math.PI*.5,frontMat);
- addPlane(root,'rear',1.92,1.62,2.225,.80,0,0,Math.PI*.5,rearMat);
- addPlane(root,'top',4.35,1.88,0,1.645,0,-Math.PI*.5,0,topMat);
+ const addPlane=(name,w,h,x,y,z,ry,mat)=>{
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);m.name=name;m.position.set(x,y,z);m.rotation.y=ry;m.renderOrder=2;root.add(m);
+ };
+ addPlane('front-decal',1.82,1.18,-2.205,.91,0,-Math.PI*.5,decal(frontTex));
+ addPlane('rear-decal',1.82,1.18,2.205,.91,0,Math.PI*.5,decal(rearTex));
 }
 const c=cars[0];
-this.state={enabled:true,style:'simple-3d+2d-paper-texture',count:cars.length,
- id:c.id,position:{x:c.x,y:c.groundY,z:c.z},dimensions:{length:c.length,width:c.width,height:c.height},
- lane:c.lane,voxelAligned:c.voxelAligned,geometry:{boxes:7,wheels:4,decals:5,wheelSegments:12},
- assets:['assets/prologue/paper-sedan-side.svg','assets/prologue/paper-sedan-front.svg','assets/prologue/paper-sedan-rear.svg','assets/prologue/paper-sedan-top.svg']};
+this.state={enabled:true,style:'side-profile-extrude+projected-uv',count:cars.length,id:c.id,
+ position:{x:c.x,y:c.groundY,z:c.z},dimensions:{length:c.length,width:c.width,height:c.height},
+ lane:c.lane,voxelAligned:c.voxelAligned,
+ geometry:{extrudedProfiles:1,boxes:0,wheels:4,wheelSegments:12,profilePoints:profile.length,frontRearDecals:2},
+ uv:{side:'profile-cap-x-y',top:'extrusion-wall-x-z',frontRear:'planar-decals'},
+ assets:['assets/prologue/paper-sedan-side.svg','assets/prologue/paper-sedan-top.svg','assets/prologue/paper-sedan-front.svg','assets/prologue/paper-sedan-rear.svg']};
 }
 stats(){return {...this.state}}
 }
