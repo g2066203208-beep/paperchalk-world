@@ -18,6 +18,7 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
+  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,{timeout:6000,polling:'raf'});
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
@@ -37,6 +38,9 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
   assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
   assert(initial.paperTerrain?.paperMaterial?.physicalFibreSheen===true,'paper fibre sheen missing');
+  assert(initial.paperTerrain?.grassTopMaterialGroup===true,'grass top material group missing '+JSON.stringify(initial.paperTerrain));
+  assert(initial.paperTerrain?.paperMaterial?.userGrassReference===true&&initial.paperTerrain?.paperMaterial?.grassReferenceLoaded===true,'user grass texture not loaded '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.grassColorSource==='user-texture-only','grass color still mixed with old procedural albedo '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.correlatedNormalRoughness===true,'paper normal/roughness correlation missing');
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
@@ -112,8 +116,13 @@ try{
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
 
-  const timeSet=await page.evaluate(()=>window.PaperchalkDebug.command('time 390'));
-  assert(String(timeSet).includes('06:30'),'debug time control failed '+String(timeSet));
+  const timeSet=await page.evaluate(()=>window.PaperchalkTimeDebug.set(390));
+  assert(timeSet?.clock==='06:30','debug time API failed '+JSON.stringify(timeSet));
+  const duskSet=await page.evaluate(()=>window.PaperchalkRenderDebug.setTime(1136));
+  assert(duskSet?.clock==='18:56','18:56 debug preset failed '+JSON.stringify(duskSet));
+  await page.waitForTimeout(420);
+  await page.screenshot({path:'artifacts/photon-dusk-1856.png'});
+  await page.evaluate(()=>window.PaperchalkTimeDebug.set(390));
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({orbitYaw:-2.05,pitch:-.17,distance:12,height:.45}));
   await page.waitForTimeout(2200);
   const atmosphereOff=await page.evaluate(()=>window.Paperchalk3D.configureAtmosphere({volumetric:false,intensity:.32,anisotropy:.72,fogDensity:.0026}));
@@ -144,11 +153,12 @@ try{
   const raysOnBytes=fs.statSync('artifacts/atmosphere-volumetric-on.png').size;
   const photonOffBytes=fs.statSync('artifacts/photon-pipeline-off.png').size;
   const photonOnBytes=fs.statSync('artifacts/photon-pipeline-on.png').size;
-  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000&&photonOffBytes>10000&&photonOnBytes>10000,'paper/atmosphere/Photon framebuffer screenshots missing');
+  const duskBytes=fs.statSync('artifacts/photon-dusk-1856.png').size;
+  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000&&photonOffBytes>10000&&photonOnBytes>10000&&duskBytes>10000,'paper/atmosphere/Photon framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   assert(raysOffBytes!==raysOnBytes,'volumetric on/off framebuffers are byte-identical');
   assert(photonOffBytes!==photonOnBytes,'Photon on/off framebuffers are byte-identical');
-  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,photonOffBytes,photonOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,photon:initial.photon,tuned},null,2));
+  fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,photonOffBytes,photonOnBytes,duskBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,photon:initial.photon,tuned},null,2));
   assert(errors.length===0,'engine errors: '+errors.join(' | '));
   console.log('PAPER_TERRAIN_PHASE1_ENGINE_OK');
 }finally{await browser.close()}
