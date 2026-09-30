@@ -26,22 +26,28 @@ function enabled(){
 function inside(c,gx,gz){
   return gx>=c.minX&&gx<=c.maxX&&gz>=c.minZ&&gz<=c.maxZ;
 }
-function isRoad(c,gz){return gz>=c.roadMinZ&&gz<=c.roadMaxZ}
+function inRange(v,min,max){return v>=min&&v<=max}
+function isFarSidewalk(c,gz){return inRange(gz,c.farSidewalkMinZ,c.farSidewalkMaxZ)}
+function isFarLane(c,gz){return inRange(gz,c.farLaneMinZ,c.farLaneMaxZ)}
+function isNearLane(c,gz){return inRange(gz,c.nearLaneMinZ,c.nearLaneMaxZ)}
+function isNearSidewalk(c,gz){return inRange(gz,c.nearSidewalkMinZ,c.nearSidewalkMaxZ)}
+function isRoad(c,gz){return isFarLane(c,gz)||isNearLane(c,gz)}
+function isSidewalk(c,gz){return isFarSidewalk(c,gz)||isNearSidewalk(c,gz)}
 function isCrosswalk(c,gx,gz){
   if(!isRoad(c,gz)||gx<c.crosswalkMinX||gx>c.crosswalkMaxX)return false;
-  return ((gx-c.crosswalkMinX)%2)===0;
+  return ((gx-c.crosswalkMinX)&1)===0;
 }
-function isLaneDash(c,gx,gz){
-  if(gz!==c.laneMarkerZ||gx>=c.crosswalkMinX-2&&gx<=c.crosswalkMaxX+2)return false;
-  const p=((gx-c.minX)%8+8)%8;
-  return p<4;
+function isCenterDash(c,gx,gz){
+  // A full voxel is one metre wide, so use the inner far-lane row as the
+  // coarse voxel centre marking instead of stealing another metre from either lane.
+  if(gz!==c.farLaneMaxZ||gx>=c.crosswalkMinX-2&&gx<=c.crosswalkMaxX+2)return false;
+  return ((gx-c.minX)%8)<4;
 }
 function surfaceKind(c,gx,gz){
-  if(isCrosswalk(c,gx,gz)||isLaneDash(c,gx,gz))return 'sand';
+  if(isCrosswalk(c,gx,gz)||isCenterDash(c,gx,gz))return 'sand';
   if(isRoad(c,gz))return 'stone';
-  if(gz===c.curbNearZ||gz===c.curbFarZ)return 'stone';
-  if(gz>=c.sidewalkNearMinZ||gz<=c.sidewalkFarMaxZ)return 'clay';
-  return 'grass';
+  if(isSidewalk(c,gz))return 'clay';
+  return 'stone';
 }
 function profile(c,gx,gz){
   const valid=inside(c,gx,gz);
@@ -102,7 +108,7 @@ P.stats=function(){
     zMovementLocked:true,
     finiteDepth:true,
     worldBounds:{minX:c.minX,maxX:c.maxX,minZ:c.minZ,maxZ:c.maxZ,minY:c.groundMinY,maxY:c.surfaceY},
-    generator:'finite-prologue-voxel-road-v1'
+    generator:'finite-prologue-voxel-road-96x10-v2'
   };
 };
 
@@ -124,7 +130,7 @@ global.addEventListener('paperchalk-3d-change',applyPresentation);
 global.addEventListener('paperchalk-world-leave',()=>{presentationApplied=false});
 
 global.PaperchalkPrologueRoad=Object.freeze({
-  version:1,
+  version:2,
   get enabled(){return enabled()},
   get config(){const c=config();return c?{...c}:null},
   stats(){
@@ -138,6 +144,15 @@ global.PaperchalkPrologueRoad=Object.freeze({
       roadMaterial:'stone-voxel',
       sidewalkMaterial:'clay-voxel',
       markingMaterial:'sand-voxel',
+      metersPerVoxel:1,
+      dimensions:c?{lengthMeters:c.lengthMeters,widthMeters:c.widthMeters}:null,
+      crossSection:c?{
+        farSidewalkMeters:c.farSidewalkMaxZ-c.farSidewalkMinZ+1,
+        farLaneMeters:c.farLaneMaxZ-c.farLaneMinZ+1,
+        nearLaneMeters:c.nearLaneMaxZ-c.nearLaneMinZ+1,
+        nearSidewalkMeters:c.nearSidewalkMaxZ-c.nearSidewalkMinZ+1
+      }:null,
+      crosswalk:c?{minX:c.crosswalkMinX,maxX:c.crosswalkMaxX,lengthMeters:c.crosswalkMaxX-c.crosswalkMinX+1}:null,
       bounds:c?{minX:c.minX,maxX:c.maxX,minZ:c.minZ,maxZ:c.maxZ}:null
     };
   }
