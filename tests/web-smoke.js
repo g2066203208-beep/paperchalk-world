@@ -1,9 +1,9 @@
 const fs=require('fs');
 function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js'),paperStage=read('src/prologue/ProloguePaperLayerScene.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js');
 
-assert(html.includes('paper-r24'),'build key missing');
+assert(html.includes('paper-r25'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'finite-side-scroll-voxel'"),'finite side-scroll world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -55,16 +55,12 @@ assert(terrain.includes('generatorVersion=4'),'legacy terrain generator compatib
 assert(game.includes('window.PaperchalkBiomes'),'biome runtime API missing');
 assert(game.includes('FLY_SPEED')&&game.includes('setFlight'),'debug flight runtime missing');
 assert(html.includes('src/prologue/voxel-road.js'),'voxel prologue road module missing');
-assert(renderer.includes('ProloguePaperLayerScene')&&paperStage.includes("prologue-paper-layer-stage"),'2D paper stage missing');
-assert(paperStage.includes("mode:'instanced-2d-multilayer-paper-school'")&&paperStage.includes('new T.PlaneGeometry')&&paperStage.includes('noCollision:true'),'school must be instanced visual-only paper cards');
-assert(paperStage.includes("source:L.source")&&fs.existsSync('src/prologue/school-paper-layout.js'),'school paper layout missing');
-const schoolLayout=read('src/prologue/school-paper-layout.js');
-assert(schoolLayout.includes("source:'python-generated-school-paper-atlas'"),'school must use Python-generated paper atlas');
-assert(schoolLayout.includes("cards.length!==96")&&schoolLayout.includes('groundTopY:1')&&schoolLayout.includes('attachmentGapMeters:.04'),'grounded 96-card school contract missing');
-assert(schoolLayout.includes("'window_blue'")&&schoolLayout.includes("'gate_panel'")&&schoolLayout.includes("'tree_round'"),'school card families missing');
-assert(fs.existsSync('assets/prologue/generated-school/school-paper-atlas.svg'),'Python school atlas missing');
-assert(fs.existsSync('tools/generate_school_paper_assets.py'),'Python school generator missing');
-assert(!fs.existsSync('src/prologue/PrologueSchoolScene.js'),'obsolete 3D school model must stay deleted');
+assert(!renderer.includes('ProloguePaperLayerScene'),'school paper stage still wired into renderer');
+assert(!fs.existsSync('src/prologue/ProloguePaperLayerScene.js'),'school paper stage file must be deleted');
+assert(!fs.existsSync('src/prologue/school-paper-layout.js'),'school paper layout must be deleted');
+assert(!fs.existsSync('assets/prologue/generated-school/school-paper-atlas.svg'),'generated school atlas must be deleted');
+assert(!fs.existsSync('tools/generate_school_paper_assets.py'),'school Python generator must be deleted');
+for(const p of ['assets/prologue/school-skyline.webp','assets/prologue/school-back.webp','assets/prologue/school-trees.webp','assets/prologue/school-gate.webp'])assert(!fs.existsSync(p),'school asset must be deleted '+p);
 assert(content.includes('prologueRoad:{')&&content.includes('lengthMeters:96,widthMeters:10,sceneDepthMeters:26')&&content.includes('farGroundMinZ:-16,farGroundMaxZ:-6')&&content.includes('nearGroundMinZ:5,nearGroundMaxZ:9')&&content.includes('farSidewalkMinZ:-5,farSidewalkMaxZ:-4')&&content.includes('nearSidewalkMinZ:3,nearSidewalkMaxZ:4'),'96m street + 26m city depth missing');
 assert(road.includes("gameplayPlane:'x-y'")&&road.includes("zRole:'finite-visual-depth'"),'side-scroll road contract missing');
 assert(road.includes('finite-prologue-city-ground-96x26-v3'),'finite city ground generator missing');
