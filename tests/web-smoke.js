@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r10'),'build key missing');
+assert(html.includes('paper-r11'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -94,6 +94,8 @@ assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'")
 assert(atmos.includes('for(int i=0;i<20;i++)'),'volumetric raymarch sampling missing');
 assert(atmos.includes('FogExp2'),'distance atmosphere fog missing');
 assert(atmos.includes('shadowMapOcclusion:true'),'shadow-map Tyndall occlusion gate missing');
+assert(atmos.includes('paperSky:true')&&atmos.includes('sky-paper-blue.webp'),'paper sky texture integration missing');
+assert(atmos.includes('skyClouds:false'),'sky must not add cloud rendering');
 assert(atmos.includes('mobileOptimized:this.mobileLike'),'mobile atmosphere quality path missing');
 assert(paper.includes("mode:'paper-diorama-slab-v3-lowpoly-edge-ring'"),'paper slab geometry missing');
 assert(paper.includes('boundary[idx]')&&paper.includes('used[(z+zz)*n+x+xx]=1')&&paper.includes('edgeTopCells'),'interior greedy merge + boundary-cell split missing');
@@ -121,6 +123,8 @@ assert(paperMaterial.includes('userGrassReference:true')&&paperMaterial.includes
 assert(paperMaterial.includes('userDirtReference:true')&&paperMaterial.includes("dirtColorSource:'user-texture-only'"),'supplied dirt texture material missing');
 assert(paperMaterial.includes("dirtTextureTransform:'native-world-uv-repeat-1x'"),'dirt texture is still scaled/blurred');
 assert(paperMaterial.includes("grassTextureTransform:'native-world-uv-repeat-1x'"),'grass texture is still scaled/blurred');
+assert(paperMaterial.includes('groundAnisotropy:16')&&paperMaterial.includes('authoredSurfaceMicroMaps:false'),'ground anti-shimmer sampling missing');
+assert(paper.includes('data.uvs.push(wx*.12,wz*.12)'),'ground UV frequency is still too high');
 assert(paperMaterial.includes('denseCardboardPulp:true'),'cardboard pulp treatment missing');
 assert(paperMaterial.includes('seamlessPeriodicField:true'),'seamless paper field missing');
 assert(paperMaterial.includes('perFrameHeavyNoise:false'),'paper material must not run heavy noise per frame');
@@ -137,6 +141,7 @@ assert(html.includes('data-world-time')&&html.includes('data-world-timescale'),'
 assert(html.includes('data-time-preset="1136"'),'18:56 time preset missing');
 assert(fs.existsSync('assets/materials/grass-reference.webp'),'supplied grass asset missing');
 assert(fs.existsSync('assets/materials/dirt-reference.webp'),'supplied dirt asset missing');
+assert(fs.existsSync('assets/materials/sky-paper-blue.webp'),'supplied blue paper sky missing');
 assert(!fs.existsSync('src/engine3d/PhotonPipeline.js')&&!fs.existsSync('src/engine3d/PhotonSkyWeatherPass.js'),'Photon renderer/cloud code must stay removed');
 assert(!engine.includes('PhotonPipeline')&&!html.toLowerCase().includes('photon'),'Photon runtime leaked into production');
 
