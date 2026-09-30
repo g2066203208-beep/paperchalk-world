@@ -1501,6 +1501,11 @@ window.PaperchalkDebug=Object.freeze({
 perf(){return {runtime:buildSnapshot(),renderer:window.Paperchalk3D?.stats||null}},
 command:runDebugCommand
 });
+window.PaperchalkTimeDebug=Object.freeze({
+get(){return {minutes:worldMinutes,scale:worldTimeScale,clock:formatClock(),phase:worldPhase()}},
+set(v){const n=Number(v);if(Number.isFinite(n)){worldMinutes=((n%1440)+1440)%1440;paperClock.textContent=formatClock();publish()}return this.get()},
+scale(v){const n=Number(v);if(Number.isFinite(n))worldTimeScale=clamp(n,0,20);return this.get()}
+});
 function resetJoystick(){
 joystickPointer=null;joystickAxisX=0;joystickAxisY=0;
 joystick.classList.remove('is-active');
