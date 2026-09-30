@@ -153,7 +153,7 @@ export class AtmospherePass{
     this.volumeScene.add(new THREE.Mesh(this.fsGeometry,this.volumeMaterial));
 
     this.compositeMaterial=new THREE.ShaderMaterial({
-      uniforms:{tVolume:{value:this.volumeTarget.texture}},
+      uniforms:{tVolume:{value:this.volumeTarget.texture},uLinearOutput:{value:0}},
       transparent:true,depthTest:false,depthWrite:false,toneMapped:false,
       blending:THREE.CustomBlending,blendEquation:THREE.AddEquation,
       blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor,
@@ -162,7 +162,7 @@ export class AtmospherePass{
         void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
       `,
       fragmentShader:`
-        varying vec2 vUv;uniform sampler2D tVolume;
+        varying vec2 vUv;uniform sampler2D tVolume;uniform float uLinearOutput;
         vec3 toSRGB(vec3 c){
           vec3 lo=c*12.92;
           vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;
@@ -170,7 +170,7 @@ export class AtmospherePass{
         }
         void main(){
           vec4 v=texture2D(tVolume,vUv);
-          gl_FragColor=vec4(toSRGB(max(v.rgb,vec3(0.0))),v.a);
+          vec3 linear=max(v.rgb,vec3(0.0));gl_FragColor=vec4(mix(toSRGB(linear),linear,uLinearOutput),v.a);
         }
       `
     });
@@ -180,7 +180,7 @@ export class AtmospherePass{
     this.skyUniforms={
       uZenith:{value:this.zenithColor},uHorizon:{value:this.horizonColor},
       uSunColor:{value:this.sunDay.clone()},uSunDir:{value:this.sunDirection},
-      uTwilight:{value:0},uTime:{value:0}
+      uTwilight:{value:0},uTime:{value:0},uLinearOutput:{value:0}
     };
     this.skyMaterial=new THREE.ShaderMaterial({
       uniforms:this.skyUniforms,side:THREE.BackSide,depthWrite:false,depthTest:false,fog:false,toneMapped:false,
@@ -192,7 +192,7 @@ export class AtmospherePass{
         precision highp float;
         varying vec3 vDir;
         uniform vec3 uZenith,uHorizon,uSunColor,uSunDir;
-        uniform float uTwilight,uTime;
+        uniform float uTwilight,uTime,uLinearOutput;
         float hash21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
         vec3 toSRGB(vec3 c){
           vec3 lo=c*12.92;vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;
@@ -209,7 +209,7 @@ export class AtmospherePass{
           float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.006;
           col+=uSunColor*(glow+disc);
           col*=1.0+grain;
-          gl_FragColor=vec4(toSRGB(max(col,vec3(0.0))),1.0);
+          vec3 linear=max(col,vec3(0.0));gl_FragColor=vec4(mix(toSRGB(linear),linear,uLinearOutput),1.0);
         }
       `
     });
@@ -222,6 +222,7 @@ export class AtmospherePass{
   }
 
   setExclusions(objects=[]){this.exclusions=(objects||[]).filter(Boolean);return this}
+  setLinearOutput(enabled=false){const v=enabled?1:0;this.compositeMaterial.uniforms.uLinearOutput.value=v;this.skyUniforms.uLinearOutput.value=v;return !!enabled}
   configure(patch={}){
     Object.assign(this.settings,patch||{});
     this.settings.intensity=clamp(Number(this.settings.intensity)||0,0,1.6);
@@ -349,7 +350,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
-      minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
+      minecraftShaderInspired:true,linearTargetAware:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
   }
