@@ -7,7 +7,7 @@ const PROLOGUE=Object.freeze({
  mode:'prologue-city-3d',
  finite:true,
  spawn:Object.freeze({x:24.5,y:2,z:-14.5,yaw:Math.PI*.5}),
- bounds:Object.freeze({minX:0,maxX:180,minY:-16,maxY:32,minZ:-28,maxZ:28}),
+ bounds:Object.freeze({minX:0,maxX:180,minY:-16,maxY:32,minZ:-144.5,maxZ:28}),
  camera:Object.freeze({yaw:0,pitch:.12,distance:18,height:3.2,fov:42,stageView:{enabled:false,axis:'z',side:1}}),
  view:Object.freeze({detailMeters:30,midMeters:60,maxMeters:120}),
  terrain:Object.freeze({
@@ -56,8 +56,13 @@ function zone(scene,gz){
  if(range(gz,c.rearMotor)||range(gz,c.frontMotor))return'road';
  return'outside';
 }
-function inBounds(scene,gx,gz){return gx>=0&&gx<180&&gz>=-28&&gz<=27}
+function inBounds(scene,gx,gz){
+ const street=gx>=0&&gx<180&&gz>=-28&&gz<=27;
+ const campus=gx>=4&&gx<84&&gz>=-144&&gz<=-29;
+ return street||campus;
+}
 function surfaceKind(scene,gx,gz){
+ if(gz<=-29&&gx>=4&&gx<84)return'grass';
  const z=zone(scene,gz);
  if(z==='road'){
   const divider=gz===-5||gz===4;
@@ -85,12 +90,13 @@ function configureTerrain(t,scene){
  t.generateBlackBackdropVoxel=(gx,gy,gz)=>t.generateVoxel(gx,gy,gz);
  t.chunkMayContainTerrain=(cx,cy,cz)=>{
   const n=t.chunkSize,x0=cx*n,x1=x0+n-1,z0=cz*n,z1=z0+n-1,y0=cy*n,y1=y0+n-1;
-  return !(x1<0||x0>179||z1<-28||z0>27||y1<minY||y0>maxY);
+  return !(x1<0||x0>179||z1<-144||z0>27||y1<minY||y0>maxY);
  };
  t.surfaceRangeCache.clear();t.biomeChunkCache.clear();
  t.stats=()=>({...baseStats(),infinite:false,finite:true,sceneId:scene.id,mode:scene.mode,
-  worldBounds:{minX:0,maxX:179,minY,maxY,minZ:-28,maxZ:27},
-  street:{lengthMeters:180,depthMeters:56,playerSide:'rear-sidewalk',spawnZ:scene.spawn.z,crossSection:scene.terrain.crossSection}
+  worldBounds:{minX:0,maxX:179,minY,maxY,minZ:-144,maxZ:27},
+  street:{lengthMeters:180,depthMeters:56,playerSide:'rear-sidewalk',spawnZ:scene.spawn.z,crossSection:scene.terrain.crossSection},
+  campus:{widthMeters:80,depthMeters:128,xEdges:[4,84],zEdges:[-144.5,-16.5]}
  });
  return true;
 }
@@ -105,8 +111,13 @@ function schoolFenceMetrics(scene){
 }
 function collidesScene(scene,x,y,z,hw,hh,hd){
  const m=schoolFenceMetrics(scene),f=scene.schoolFence;if(!m)return false;
- const x0=f.grid.startXEdge,x1=f.grid.endXEdge,z0=m.z-f.panel.thickness*.5,z1=m.z+f.panel.thickness*.5,y0=m.groundTop,y1=y0+f.panel.height;
- return x+hw>x0&&x-hw<x1&&z+hd>z0&&z-hd<z1&&y+hh>y0&&y-hh<y1;
+ const z0=m.z-f.panel.thickness*.5,z1=m.z+f.panel.thickness*.5,y0=m.groundTop,y1=y0+f.panel.height;
+ const fenceY=y+hh>y0&&y-hh<y1,fenceZ=z+hd>z0&&z-hd<z1;
+ if(fenceY&&fenceZ){
+  for(const [a,b] of m.panels)if(x+hw>a&&x-hw<b)return true;
+  for(const px of m.gate)if(x+hw>px-f.gate.pillarWidth*.5&&x-hw<px+f.gate.pillarWidth*.5)return true;
+ }
+ return global.PaperchalkSchoolLayout?.collidesAABB?.(scene,x,y,z,hw,hh,hd)||false;
 }
 function entities(defaults,scene){return scene.id===PROLOGUE.id?[]:defaults}
 function quests(defaults,scene){return scene.id===PROLOGUE.id?[]:defaults}
