@@ -19,15 +19,15 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v5</h1>
-  <p>深林空气氛围版：远处用指数空气雾拉开层次，地表加入低成本的流动薄雾与雾带，围绕角色但不遮脸；颜色随清晨、正午、黄昏、夜晚变化，并保持移动端性能。</p>
+  <h1>纸艺世界视觉 Demo v6</h1>
+  <p>深林纸片浓雾版：雾不是写实烟，而是多层半透明“撕边白纸雾带”叠在场景里；近景绕脚、中景切层、远景封林，雾本身也能看出纸纤维和纸片边缘。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
   <button id="sky" class="active">纸天空</button>
   <button id="layers" class="active">纸层厚度</button>
   <button id="shadow" class="active">软阴影</button>
-  <button id="fog" class="active">深林雾气</button>
+  <button id="fog" class="active">纸片浓雾</button>
   <button id="tone" class="active">统一色调</button>
   <button id="random" class="active">随机材质</button>
   <button id="bounce" class="active">地面反射光</button>
@@ -38,7 +38,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · 深林薄雾低频流动</div>
+<div class="badge">拖动旋转 · 滚轮缩放 · 多层撕边纸雾缓慢漂移</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -161,35 +161,69 @@ function skyTexture(mode='day'){
 }
 
 function mistTexture(seed=1){
-  const w=256,h=128,c=document.createElement('canvas');c.width=w;c.height=h;
-  const g=c.getContext('2d'),r=rng(5000+seed*97);
+  const w=512,h=160,c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d'),r=rng(7000+seed*131);
   g.clearRect(0,0,w,h);
 
-  // A few broad soft islands are enough for drifting forest mist.
-  for(let i=0;i<28;i++){
-    const x=r()*w,y=h*(.28+r()*.48);
-    const rx=18+r()*58,ry=8+r()*24;
-    const grad=g.createRadialGradient(x,y,0,x,y,Math.max(rx,ry));
-    const alpha=.035+r()*.075;
-    grad.addColorStop(0,'rgba(255,255,255,'+alpha.toFixed(3)+')');
-    grad.addColorStop(.48,'rgba(255,255,255,'+(alpha*.55).toFixed(3)+')');
-    grad.addColorStop(1,'rgba(255,255,255,0)');
+  // Build 2-3 overlapping torn-paper strips. This should look like actual
+  // translucent white paper layers, not soft smoke particles.
+  const stripCount=2+(seed%2);
+  for(let s=0;s<stripCount;s++){
+    const top=22+s*22+r()*10;
+    const thickness=52+r()*34;
+    const bottom=top+thickness;
+
+    g.beginPath();
+    g.moveTo(-20,top);
+    for(let x=-20;x<=w+20;x+=18){
+      const y=top+(r()-.5)*15+Math.sin((x+seed*37)*.038)*4;
+      g.lineTo(x,y);
+    }
+    for(let x=w+20;x>=-20;x-=18){
+      const y=bottom+(r()-.5)*16+Math.sin((x+seed*19)*.031)*5;
+      g.lineTo(x,y);
+    }
+    g.closePath();
+
+    const grad=g.createLinearGradient(0,top,0,bottom);
+    const a=.52+s*.08;
+    grad.addColorStop(0,'rgba(255,255,248,'+(a*.74).toFixed(3)+')');
+    grad.addColorStop(.22,'rgba(250,252,245,'+a.toFixed(3)+')');
+    grad.addColorStop(.72,'rgba(240,246,240,'+(a*.92).toFixed(3)+')');
+    grad.addColorStop(1,'rgba(222,233,228,'+(a*.64).toFixed(3)+')');
     g.fillStyle=grad;
+    g.fill();
+
+    // Slight darker underside: reads as a separate cut-paper layer.
+    g.strokeStyle='rgba(108,126,120,.16)';
+    g.lineWidth=2;
+    g.stroke();
+
+    // Fibres and compressed paper specks.
     g.save();
-    g.translate(x,y);
-    g.scale(rx/Math.max(rx,ry),ry/Math.max(rx,ry));
-    g.beginPath();g.arc(0,0,Math.max(rx,ry),0,Math.PI*2);g.fill();
+    g.clip();
+    for(let i=0;i<220;i++){
+      const x=r()*w,y=top+r()*thickness;
+      const len=2+r()*9,a2=r()*Math.PI;
+      g.strokeStyle=r()>.5?'rgba(255,255,255,.18)':'rgba(94,113,104,.10)';
+      g.lineWidth=.45+r()*.65;
+      g.beginPath();g.moveTo(x,y);g.lineTo(x+Math.cos(a2)*len,y+Math.sin(a2)*len);g.stroke();
+    }
+    for(let i=0;i<38;i++){
+      g.fillStyle=r()>.5?'rgba(255,255,255,.10)':'rgba(80,100,92,.07)';
+      const q=1+r()*3;g.fillRect(r()*w,top+r()*thickness,q,q);
+    }
     g.restore();
   }
 
-  // Feather the top/bottom so planes never read as rectangles.
-  const fade=g.createLinearGradient(0,0,0,h);
-  fade.addColorStop(0,'rgba(255,255,255,0)');
-  fade.addColorStop(.25,'rgba(255,255,255,.72)');
-  fade.addColorStop(.72,'rgba(255,255,255,.72)');
-  fade.addColorStop(1,'rgba(255,255,255,0)');
+  // Fade only the left/right edges so the horizontal torn silhouette stays solid.
+  const sideFade=g.createLinearGradient(0,0,w,0);
+  sideFade.addColorStop(0,'rgba(255,255,255,0)');
+  sideFade.addColorStop(.07,'rgba(255,255,255,1)');
+  sideFade.addColorStop(.93,'rgba(255,255,255,1)');
+  sideFade.addColorStop(1,'rgba(255,255,255,0)');
   g.globalCompositeOperation='destination-in';
-  g.fillStyle=fade;g.fillRect(0,0,w,h);
+  g.fillStyle=sideFade;g.fillRect(0,0,w,h);
   g.globalCompositeOperation='source-over';
 
   const t=new THREE.CanvasTexture(c);
@@ -294,8 +328,8 @@ const stoneMat=new THREE.MeshLambertMaterial({color:0xa69a8d});
 function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stoneMat);m.position.set(x,y,z);m.scale.y=.62;m.rotation.set(.2,.4,.1);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
 stone(-1.8,1.4,.49,.26);stone(1.2,-2.2,.46,.18);
 
-// Layered forest mist: no volumetric raymarching, no extra shadow maps.
-// A few transparent textured planes give near/mid/distant fog depth cheaply.
+// Dense stylized paper fog: layered torn paper sheets, not volumetric smoke.
+// It is deliberately visible as a material object in the handmade world.
 const forestMist=new THREE.Group();
 scene.add(forestMist);
 const mistLayers=[];
@@ -303,16 +337,17 @@ const mistBanks=[];
 
 function makeMistMaterial(seed,opacity){
   const tex=mistTexture(seed);
-  tex.repeat.set(1.15+(seed%3)*.17,1);
+  tex.repeat.set(1.0+(seed%3)*.12,1);
   const mat=new THREE.MeshBasicMaterial({
     map:tex,
-    color:0xd7e4dd,
+    color:0xe3ebe3,
     transparent:true,
     opacity,
     depthWrite:false,
     depthTest:true,
     side:THREE.DoubleSide,
-    toneMapped:true
+    toneMapped:true,
+    alphaTest:.018
   });
   return {tex,mat};
 }
@@ -322,30 +357,35 @@ function addGroundMist(x,z,y,w,d,opacity,seed,speed){
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,d),mat);
   mesh.rotation.x=-Math.PI/2;
   mesh.position.set(x,y,z);
-  mesh.renderOrder=3;
+  mesh.renderOrder=4;
   forestMist.add(mesh);
-  mistLayers.push({mesh,tex,mat,baseOpacity:opacity,speed,phase:seed*.31});
+  mistLayers.push({mesh,tex,mat,baseOpacity:opacity,speed,phase:seed*.31,kind:'ground'});
 }
-function addMistBank(x,z,y,w,h,opacity,seed,speed){
+function addMistBank(x,z,y,w,h,opacity,seed,speed,order=3){
   const {tex,mat}=makeMistMaterial(seed,opacity);
   const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);
   mesh.position.set(x,y,z);
-  mesh.renderOrder=2;
+  mesh.renderOrder=order;
   forestMist.add(mesh);
-  const rec={mesh,tex,mat,baseOpacity:opacity,speed,phase:seed*.37};
+  const rec={mesh,tex,mat,baseOpacity:opacity,speed,phase:seed*.37,kind:'bank'};
   mistLayers.push(rec);mistBanks.push(rec);
 }
 
-// Ground-hugging wisps around the walkable area.
-addGroundMist(-2.8,.8,.55,5.8,3.1,.24,1,.010);
-addGroundMist( 2.7,-.4,.64,5.4,3.3,.20,2,-.008);
-addGroundMist( 0.0,-1.8,.78,9.5,3.0,.14,3,.006);
-addGroundMist( 0.2, 1.7,.92,8.0,2.5,.10,4,-.005);
+// Thick ground sheets: overlap enough to read as "fog surrounding the feet".
+addGroundMist(-3.8, 1.0,.54,7.2,3.6,.62,1,.006);
+addGroundMist( 3.7,  .3,.61,7.0,3.8,.58,2,-.005);
+addGroundMist( 0.0,-1.3,.70,10.8,3.8,.48,3,.004);
+addGroundMist(-.3,  2.0,.79,10.0,3.2,.40,4,-.003);
 
-// Distant low fog banks make the forest feel enclosed without hiding the player.
-addMistBank(-3.8,-2.8,1.05,5.8,1.8,.13,5,.006);
-addMistBank( 0.0,-3.2,1.15,6.6,2.0,.11,6,-.005);
-addMistBank( 3.9,-2.7,1.00,5.2,1.7,.12,7,.007);
+// Mid-distance torn paper banks. These visibly cut across the blocks.
+addMistBank(-4.7,-2.4,1.08,6.8,2.2,.58,5,.004,2);
+addMistBank( 0.0,-2.9,1.20,8.6,2.5,.54,6,-.0035,2);
+addMistBank( 4.8,-2.3,1.02,6.5,2.0,.56,7,.0045,2);
+
+// Foreground edge sheets wrap around the player without covering the face.
+addMistBank(-4.4, 2.4,.84,6.2,1.55,.46,8,.003,5);
+addMistBank( 4.5, 2.2,.88,6.0,1.65,.44,9,-.003,5);
+addMistBank( 0.0, 2.8,.58,5.2,1.10,.34,10,.0025,6);
 
 // Soft fake contact shadow below the paper-doll, in addition to the real shadow map.
 const sc=document.createElement('canvas');sc.width=sc.height=256;
@@ -507,17 +547,18 @@ function updateLighting(t){
   // Forest air: exponential distance haze gives a softer "air volume" than
   // a hard linear start/end fog. Keep it stylized and readable.
   if(state.fog){
-    const density=.0175+twilight*.0045+moonUp*.0035;
+    const density=.030+twilight*.008+moonUp*.006;
     scene.fog=new THREE.FogExp2(fogColor,density);
   }
 
-  const mistDay=new THREE.Color(0xd9e6de);
-  const mistNight=new THREE.Color(0xa8bdd2);
-  const mistWarm=new THREE.Color(0xe6d3bd);
-  const mistColor=mistNight.clone().lerp(mistDay,Math.pow(sunUp,.42)).lerp(mistWarm,twilight*.28);
+  const mistDay=new THREE.Color(0xe3ebe2);
+  const mistNight=new THREE.Color(0xb7c8d8);
+  const mistWarm=new THREE.Color(0xead8c4);
+  const mistColor=mistNight.clone().lerp(mistDay,Math.pow(sunUp,.42)).lerp(mistWarm,twilight*.30);
   for(const layer of mistLayers){
     layer.mat.color.copy(mistColor);
-    layer.mat.opacity=layer.baseOpacity*(.82+twilight*.24+moonUp*.14);
+    const timeBoost=.94+twilight*.12+moonUp*.08;
+    layer.mat.opacity=Math.min(.78,layer.baseOpacity*timeBoost);
   }
 
   // Narrow exposure range = comfortable stylized game image instead of
@@ -658,12 +699,12 @@ function animate(now){
 
   // Mist only needs a slow 10 fps update. This keeps the air alive without
   // forcing expensive 60 fps fog animation on mobile.
-  if(state.fog&&now-lastMistTick>100){
+  if(state.fog&&now-lastMistTick>160){
     const step=(now-lastMistTick)/1000;
     lastMistTick=now;mistClock+=Math.min(.2,step);
     for(const layer of mistLayers){
       layer.tex.offset.x=(layer.phase+mistClock*layer.speed)%1;
-      layer.tex.offset.y=.03*Math.sin(mistClock*.22+layer.phase);
+      layer.tex.offset.y=.012*Math.sin(mistClock*.16+layer.phase);
     }
     renderDirty=true;
   }
