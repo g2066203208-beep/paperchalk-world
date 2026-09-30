@@ -3,20 +3,31 @@
 'use strict';
 
 const scene3d={
-  mode:'infinite-voxel-3d',
-  spawn:{x:0,y:12,z:0,yaw:0},
-  bounds:{minX:-100000,maxX:100000,minY:-100000,maxY:100000},
+  mode:'finite-side-scroll-voxel',
+  spawn:{x:-40,y:3,z:3,yaw:0},
+  bounds:{minX:-48,maxX:64,minY:-16,maxY:32,minZ:-4,maxZ:4},
   terrain:{
     tileSize:1,
     pixelsPerMeter:128,
     texturePixels:128,
     chunkSize:16,
     seed:24681357,
-    visibleChunkRadiusXZ:3,
-    interactionRowZ:0,
-    blackBackRowZ:-1,
-    visibleChunkRadiusY:2,
+    visibleChunkRadiusXZ:2,
+    interactionRowZ:3,
+    blackBackRowZ:-64,
+    visibleChunkRadiusY:1,
     maxBuildsPerFrame:5,
+    prologueRoad:{
+      id:'prologue-city-road-v1',
+      minX:-48,maxX:64,
+      minZ:-4,maxZ:4,
+      groundMinY:-4,surfaceY:0,
+      roadMinZ:-2,roadMaxZ:1,
+      curbNearZ:2,curbFarZ:-3,
+      sidewalkNearMinZ:3,sidewalkFarMaxZ:-4,
+      laneMarkerZ:0,
+      crosswalkMinX:6,crosswalkMaxX:16
+    },
     biome:{
       version:1,
       spawnSafeRadius:22,
@@ -201,7 +212,7 @@ function validate(value=content){
     }
     const terrain=value.scene3d.terrain;
     if(!(terrain.tileSize===1&&terrain.pixelsPerMeter===128&&terrain.texturePixels===128&&terrain.chunkSize>=16))errors.push('scene3d terrain scale must be 1m / 128px');
-    if(value.scene3d.mode!=='infinite-voxel-3d')errors.push('scene3d mode must be infinite-voxel-3d');
+    if(value.scene3d.mode!=='finite-side-scroll-voxel')errors.push('scene3d mode must be finite-side-scroll-voxel');
     for(const entity of value.scene3d.stageEntities){
       if(!(entity.width>0&&entity.height>0))errors.push('stage entity '+entity.id+' dimensions invalid');
     }
