@@ -11,6 +11,7 @@ on:
       - "src/content/**"
       - "src/terrain/**"
       - "src/entities/**"
+      - "src/prologue/**"
       - "styles/**"
       - "vendor/three/**"
       - "vendor/fastnoise-lite/**"
@@ -55,6 +56,10 @@ jobs:
           node --check src/terrain/terrain-runtime.js
           node --check src/terrain/voxel-block-mesh.js
           node --check src/entities/PaperSpriteEntity.js
+          node --check src/prologue/prologue-content.js
+          node --check src/prologue/prologue-runtime.js
+          node --check src/prologue/PrologueScene.js
+          node --check src/prologue/prologue-renderer.mjs
           node --check vendor/fastnoise-lite/FastNoiseLite.js
           test -s vendor/three/three.module.js
           test -s vendor/three/three.core.js
