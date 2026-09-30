@@ -1808,9 +1808,8 @@ if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session)
 const appState=window.PaperchalkAppState;
 if(appState&&appState.state!=='world'&&appState.can('world'))appState.transition('world',{source:'enterWorld'});
 uiShell.classList.add('is-hidden');uiShell.setAttribute('inert','');worldEl.removeAttribute('inert');
-if(window.PaperchalkPrologue?.shouldRun?.(session.account)){
-active=false;window.dispatchEvent(new CustomEvent('paperchalk-prologue-enter',{detail:{account:session.account}}));publish();return true
-}
+const P=window.PaperchalkPrologue;
+if(P?.shouldRun?.(session.account)){active=false;dispatchEvent(new CustomEvent('paperchalk-prologue-enter',{detail:{account:session.account}}));publish();return true}
 loadWorldState();active=true;
 window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:'village-paper-stage'});
 window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));startGameLoop();publish();
