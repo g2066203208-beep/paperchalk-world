@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js');
 
-assert(html.includes('paper-r12'),'build key missing');
+assert(html.includes('paper-r13'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -15,6 +15,8 @@ assert(game.includes('PaperchalkNPCRuntime')&&game.includes('npcs:npcWorld.snaps
 assert(game.includes("Actor:{kind:'player'}"),'player Actor component missing');
 assert(engine.includes('NPCActorRenderer')&&npcRenderer.includes('new PaperSpriteEntity'),'NPC must render with PaperSpriteEntity');
 assert(npcRenderer.includes('sharedEntityClassWithPlayer:true'),'NPC renderer actor parity stat missing');
+assert(npcRenderer.includes('sharedPlayerTexture:true')&&npcRenderer.includes("actorAsset:'assets/player/protagonist.webp'"),'NPCs must use the player character asset');
+assert(engine.includes('actorTexture:playerTexture'),'NPCs are not sharing the player texture object');
 assert(!/far-hills-|village-shop|village-house-a|village-workshop|tree-[abc]|rock-[ab]/.test(content),'legacy 2D stage placeholders still present');
 const sprite=read('src/entities/PaperSpriteEntity.js');
 assert(!/kind==='(?:tree|building|rock)'/.test(sprite),'generated tree/building/rock art must stay removed');
