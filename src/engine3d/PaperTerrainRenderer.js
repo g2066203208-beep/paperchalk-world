@@ -1,4 +1,4 @@
-import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r4';
+import {createPaperMaterialSet} from './PaperMaterial.js?v=paper-r7';
 /* Phase 1 visual-only paper terrain.
  * TerrainWorld remains the gameplay/collision authority. The render grid is
  * hidden by merged paper tops plus batched layered-cardboard edge geometry.
@@ -126,7 +126,7 @@ export class PaperTerrainRenderer{
     const getLocal=(x,z)=>getHalo(x,z);
 
     const data={
-      positions:[],normals:[],colors:[],uvs:[],worldOffset:[cx*n*s,0,cz*n*s-s*.5],indices:[[],[],[]],
+      positions:[],normals:[],colors:[],uvs:[],worldOffset:[cx*n*s,0,cz*n*s-s*.5],indices:[[],[],[],[]],
       topRects:0,edgeTopCells:0,edgeFacets:0,sideQuads:0,bevelQuads:0,edgeRuns:0,layerBands:0,layerLips:0,
       boundaryCells:0,deformedBoundaryCorners:0
     };
@@ -184,7 +184,7 @@ export class PaperTerrainRenderer{
       }
       for(let zz=0;zz<hh;zz++)for(let xx=0;xx<w;xx++)used[(z+zz)*n+x+xx]=1;
       const x0=x*s,x1=(x+w)*s,z0=z*s,z1=(z+hh)*s,y=cell.y;
-      addQuad(data,[x0,y,z0],[x0,y,z1],[x1,y,z1],[x1,y,z0],[0,1,0],this._topColor(cell.tile),0);
+      addQuad(data,[x0,y,z0],[x0,y,z1],[x1,y,z1],[x1,y,z0],[0,1,0],this._topColor(cell.tile),cell.tile===1?3:0);
       data.topRects++;
     }
 
@@ -195,8 +195,9 @@ export class PaperTerrainRenderer{
       const p11=jitteredCorner(cell,x+1,z+1),p10=jitteredCorner(cell,x+1,z);
       const cy=cell.y+(hash01(cx*n+x,cz*n+z,3001)-.5)*2*clamp(Number(this.settings.edgeFacetCenterJitter)||.006,0,.018)*s;
       const pc=[(p00[0]+p01[0]+p11[0]+p10[0])*.25,cy,(p00[2]+p01[2]+p11[2]+p10[2])*.25];
-      addTri(data,p00,p01,pc,col,0);addTri(data,p01,p11,pc,col,0);
-      addTri(data,p11,p10,pc,col,0);addTri(data,p10,p00,pc,col,0);
+      const topGroup=cell.tile===1?3:0;
+      addTri(data,p00,p01,pc,col,topGroup);addTri(data,p01,p11,pc,col,topGroup);
+      addTri(data,p11,p10,pc,col,topGroup);addTri(data,p10,p00,pc,col,topGroup);
       data.edgeTopCells++;data.edgeFacets+=4;
     }
 
@@ -319,7 +320,7 @@ export class PaperTerrainRenderer{
     geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.colors,3));
     geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uvs,2));
     const all=[],groups=[];
-    for(let g=0;g<3;g++){
+    for(let g=0;g<4;g++){
       const start=all.length;all.push(...data.indices[g]);
       if(data.indices[g].length)groups.push({start,count:data.indices[g].length,materialIndex:g});
     }
@@ -333,7 +334,7 @@ export class PaperTerrainRenderer{
       sideQuads:data.sideQuads,bevelQuads:data.bevelQuads,
       edgeRuns:data.edgeRuns,layerBands:data.layerBands,layerLips:data.layerLips,
       vertices:data.positions.length/3,triangles:all.length/3,drawGroups:groups.length,
-      gameplayGridHidden:true,realThickness:true,topSideMaterialSplit:true,
+      gameplayGridHidden:true,realThickness:true,topSideMaterialSplit:true,grassTopMaterialGroup:true,
       continuousMergedEdges:false,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,stackedCardboardBands:true,
       paperLayerHeight:this.settings.paperLayerHeight,paperThickness:this.settings.paperThickness,
       bevelWidth:this.settings.bevelWidth
@@ -405,7 +406,7 @@ export class PaperTerrainRenderer{
       bevelWidth:this.settings.bevelWidth,fiberStrength:this.settings.fiberStrength,
       microNormalStrength:this.settings.microNormalStrength,roughnessVariation:this.settings.roughnessVariation,
       sideDarkness:this.settings.sideDarkness,paperMaterial:this.paperMaterialSet.stats?.()||null,
-      renderGridExposed:false,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,
+      renderGridExposed:false,grassTopMaterialGroup:true,lowPolyBoundaryRing:true,neighbourhood:'3x3',deterministicEdgeJitter:true,
       stackedCardboardBands:true,haloCached:true,seamFreeSidePlanes:true,paperFiberTexture:true,paperPbrV3:true,referenceStyle:'pressed-cardstock-diorama'
     };
   }
