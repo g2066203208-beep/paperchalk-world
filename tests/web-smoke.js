@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js');
 
-assert(html.includes('paper-r29'),'build key missing');
+assert(html.includes('paper-r30'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(html.includes('src/core/open-world-runtime.js'),'open-world helper module missing');
 assert(html.includes('src/scenes/prologue-city.js'),'prologue scene module missing');
@@ -11,6 +11,11 @@ assert(fs.existsSync('src/scenes/prologue-city.js'),'prologue scene file missing
 assert(fs.existsSync('src/scenes/PrologueSchoolFence.js'),'school fence renderer missing');
 assert(fs.existsSync('assets/prologue/school-fence-panel.svg'),'school fence texture missing');
 assert(fs.existsSync('assets/prologue/school-gate-leaf.svg'),'school gate texture missing');
+assert(html.includes('src/scenes/school-layout.js'),'school floor-template runtime missing');
+assert(fs.existsSync('src/scenes/school-layout.js'),'school layout file missing');
+assert(fs.existsSync('src/scenes/PrologueSchoolBuilding.js'),'school building renderer missing');
+assert(renderer.includes('PrologueSchoolBuilding'),'school building renderer not wired');
+for(const asset of ['school-wall-paper.svg','school-window.svg','school-door.svg','school-sign.svg'])assert(fs.existsSync('assets/prologue/'+asset),'school building asset missing '+asset);
 assert(content.includes("mode:'infinite-voxel-3d'"),'infinite 3D world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
 assert(content.includes("id:'village-resident-01'")&&content.includes("id:'village-resident-05'"),'five village NPC definitions missing');
