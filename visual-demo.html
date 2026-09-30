@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.15</h1>
-  <p>v12.15 先只重做地板：不动镜头、角色、树、雾和构图。地形改成真正的剪纸结构——棕色厚纸板主体 + 独立深绿切边 + 最上面一张薄绿色纸面；顶面高度仍保持原来的 0.5，不改变角色和小草站位。材质只做低对比纸浆与短纤维，不加法线、AO 或随机凸起。</p>
+  <h1>纸艺世界视觉 Demo v12.16</h1>
+  <p>v12.16 Paper003 实材质：保持地板几何、镜头、角色、树、雾全部不变，只把方块表面正式换成你提供的 Paper003。Color、NormalGL、Roughness 都来自 Paper003；绿色顶纸和棕色纸板共用同一套真实纸面结构，只通过染色区分。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -49,7 +49,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="shadow" class="active">软阴影</button>
   <button id="fog" class="active">动态纸雾</button>
   <button id="tone" class="active">统一色调</button>
-  <button id="random" class="active">纸纹开关</button>
+  <button id="random" class="active">Paper003</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active">剪纸小草</button>
   <button id="godrays" class="active">受光体积雾</button>
@@ -460,62 +460,16 @@ function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff
 // ---------------------------------------------------------------------------
 const SIMPLE_TERRAIN_COLOR=0x91b274;
 
-function makeFloorPaperTexture(base,light,dark,seed,{fiberWarm=false}={}){
-  const size=256,c=document.createElement('canvas');
-  c.width=c.height=size;
-  const g=c.getContext('2d');
-  const r=rng(seed);
+// Paper003 — embedded preview maps derived directly from the user supplied
+// Paper003_1K-JPG set.  The demo embeds compact 256px WebP versions so GitHub
+// Pages can show the material immediately without changing the rest of the scene.
+const PAPER003_COLOR_URL='data:image/webp;base64,UklGRtIDAABXRUJQVlA4IMYDAABwIgCdASoAAQABPmEuk0gkJ6inoJQJWRAMCWlu2VdBnkqKHow30iL6k50nziYB//70p/CP/3yx+9RqzXyAeVQ8zXbEWdM73nWLl8nQZjntzEmKUFo6HOeONaUlwVwzKKvzYV2/FLHqRKWQGDff787mooIYn1blAsBnRAmAfMToEPvs0vH/NEz/iZL/h8i7e+9/2QFAwkLWKy3NaNcYpQKI/Q+Vwh/Md+zZXHzKzUGUBoWptMK8FMbXMvb4oiRP9qtqfDRdy1v3I4AIh+CKTubZGZEFIy+fKkYjBIUyh841UEM4LHq+4DBGDRMcF8hVlmhKkvurkbOqC2omjjgDR6uCRPUwJg0V6rJ/LX27Yn7L/pEM20B0XAtIDHIIUAD++RRWYLs/fukvB6KpWz0XZeu1Eh5rY8RMUFdirva0Iv5nSccMcJ59OQxEHmod5RLXzJJtegXJPFrDoOfHOI61GEr9i4kXc8YpOHKpfWcV7c5kfQh2iGHHaEQr3OKNPGqCvSJdFbZvM5HVGw7oNaiJYlyWfCUVPFKBcxI2M9F+fMOw5fZsgPpmZkitVAKBtq5JqqxaDvowRpXGHfN6s9EGJ8zAQrS1FI/yq3cBQ5nZ6kKwMNkm6hnnGMw7UhEyv+vYn2lCj/kGWWfTbUQrbImX0xkwz4VUjytyxdulUA9cxkgxJNju5He8AczDcHHQt4pJT0WxA81M6zEDvMtgWABbu4Q9OoWwjrpImZggSbc5bc6ZXh/qhSE30i7zKGlyJYDM3SQTRLbQcbN3V0m/Q6OPYQsTDuMnRL5vwnTKq/xyM2Q63WR7+9Qi9iLljJrTYCoAC/FURazPP5sazJK9TVMKGDz/DK+FVOO+zL/uhiJPUyeypy10n7m2+mqFhLPFiz9I7BYUj1m3CDuFILJagnuOMs/yH52lpBScpcEaTw7gbgu+0bv/myc+SHqMQIvhieRlSjbdLW+OZBv/V7pm7ItusRjDfioKLfgQy2kOvXcHwKlVrSZO4ArdXMbAY9tzINxZWqyyfHXpyAD8FjgzkJP1BOnfzhaybPy+6GdSl8857wt+ZN1F0s8cXt+TV4FEoffkowA82a3WaODgBJXHQ90LQx0UT5Nw9XWLlKJhE8mLo0hiIMrzrVxc/zcKdXN4HFBIsMLij4sCHNfoZjgMFk/NjVWbUzh0W7gPevQlhGIEmKPHcdXcd5o/hGoJsPO5vDAgP9b3v9EzCESoPu8hPx3iE9ph4OjJLPyZPv89Lp6FkGPRYrjpjhFi5oIYA29aaRbPKd0CTc0QEAA=';
+const PAPER003_NORMAL_GL_URL='data:image/webp;base64,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';
+const PAPER003_ROUGHNESS_URL='data:image/webp;base64,UklGRrQCAABXRUJQVlA4IKgCAADwHQCdASoAAQABPmEwlEikIyIiIFgImIAMCWlu2TIj7B1W63EKlN3wToACdeWCt9Tf7mvl21wSEf69hY2axXsUoSy1dPIMbSLxN06TCQSiE2XsfW2vaQjhT6MAtcjwbQVDT7Y3Eafl7VHwvjPm7n5d8coD6hsqmN2fnMxdZGrvTAdIZcfQm2OZi0jjHAht2Q3ZQ7YSZ60rmPP1IhRAXUzuYruaIhCOrIQpzrnktlAApQW3Jk/rGV+cXkD1h7UWHqSEIkfkGpm27vVLUvdK9fQtNvke09MazOvG/GNe7p1CWPeydTtAhLjQBGhCjg0U/qOplg5J1DSt4AD++JEA1841rXZM2aZro47JEUBVRuZD7A3nMS8sYazJgYl8dZsEez5CTyHNWSDLrnp2XKwbXqiD1CnGqrL/9U87o8q97Bxs5TfYxqzytteTTarPOCWg00STzemjrVEXeLQW8/rLHEEF31fScDdw38vsSpgbY7BU3zEVAlikRvemNICZZJ3Kr6OQAYBtVdzEPnBVU+BvjGPu14Nap227a0Vr4F7IS4UIHzCudyc4IcAyXnYCkWy2rx60ldEOhoklbwDI1iQz2uaLxSaGTtaqkWOU37O5j1iaRVaL7oS1q0MYiHli4d1fkduEz/gLNlFBCm3X+b+jbR7FRlxMVJhBtLxdAzuOF9KKUfsheF9bYXxEEIPORXyAwZyOv8rRub8leEq71YUarh+lh9PJnnX4PSGpKucZQ6r2Os5oCIWjzDAMLEBzjfPdziMzp3RKBW4Jg7/eIH+jjOx1E+OodAPNue2ZCxAEckl4IBsHbG8H5aJ4GSFRCTkV5DeBPh3ceKzZsPk0fbuEp0UhTioBQwG3nGo3cUa+RDsZsRYFR4gh/38mPqHCs8X4x+fqccTPicgAAA==';
 
-  g.fillStyle=base;
-  g.fillRect(0,0,size,size);
-
-  // Quiet pulp clouds: irregular and low contrast, never pixel blocks.
-  for(let i=0;i<24;i++){
-    const cx=r()*size,cy=r()*size;
-    const rx=18+r()*50,ry=12+r()*35;
-    const pts=12+(r()*8|0);
-    g.globalAlpha=.035+r()*.05;
-    g.fillStyle=r()>.48?light:dark;
-    g.beginPath();
-    for(let j=0;j<pts;j++){
-      const a=Math.PI*2*j/pts;
-      const rr=1+(r()-.5)*.24;
-      const x=cx+Math.cos(a)*rx*rr;
-      const y=cy+Math.sin(a)*ry*rr;
-      if(j===0)g.moveTo(x,y);else g.lineTo(x,y);
-    }
-    g.closePath();g.fill();
-  }
-
-  // Short cellulose fibres like the player cut-paper artwork.
-  const fibreCount=fiberWarm?980:760;
-  for(let i=0;i<fibreCount;i++){
-    const x=r()*size,y=r()*size;
-    const a=fiberWarm?(r()-.5)*.48:r()*Math.PI;
-    const len=.8+r()*(fiberWarm?6.2:4.8);
-    const bright=r()>.53;
-    g.globalAlpha=.05+r()*.085;
-    g.strokeStyle=bright
-      ?(fiberWarm?'#efd0aa':'#eef0d2')
-      :(fiberWarm?'#6f412b':'#526b45');
-    g.lineWidth=.3+r()*.55;
-    g.beginPath();
-    g.moveTo(x,y);
-    g.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);
-    g.stroke();
-  }
-
-  // Sparse pulp specks. These are tiny enough to read as paper inclusions.
-  for(let i=0;i<(fiberWarm?190:130);i++){
-    const q=.35+r()*1.25;
-    g.globalAlpha=.035+r()*.065;
-    g.fillStyle=r()>.5?(fiberWarm?'#f0d5b3':'#edf0d4'):(fiberWarm?'#74452f':'#566d49');
-    g.fillRect(r()*size,r()*size,q,q);
-  }
-
-  g.globalAlpha=1;
-  const t=new THREE.CanvasTexture(c);
-  t.colorSpace=THREE.SRGBColorSpace;
+function loadPaper003Texture(url,{srgb=false}={}){
+  const t=new THREE.TextureLoader().load(url,()=>{renderDirty=true;});
+  if(srgb)t.colorSpace=THREE.SRGBColorSpace;
   t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.minFilter=THREE.LinearMipmapLinearFilter;
   t.magFilter=THREE.LinearFilter;
@@ -524,31 +478,42 @@ function makeFloorPaperTexture(base,light,dark,seed,{fiberWarm=false}={}){
   return t;
 }
 
-const floorGreenTexture=makeFloorPaperTexture('#9bb873','#b7ca8f','#79955f',128731);
-const floorKraftTexture=makeFloorPaperTexture('#aa7350','#c7926b','#835036',991731,{fiberWarm:true});
+const paper003Color=loadPaper003Texture(PAPER003_COLOR_URL,{srgb:true});
+const paper003Normal=loadPaper003Texture(PAPER003_NORMAL_GL_URL);
+const paper003Roughness=loadPaper003Texture(PAPER003_ROUGHNESS_URL);
 
 const floorBodyMat=new THREE.MeshStandardMaterial({
-  color:0xffffff,
-  map:floorKraftTexture,
-  roughness:.97,
+  color:0xb9825e,
+  map:paper003Color,
+  normalMap:paper003Normal,
+  roughnessMap:paper003Roughness,
+  normalScale:new THREE.Vector2(.78,.78),
+  roughness:1,
   metalness:0
 });
-floorBodyMat.name='floor-kraft-cardboard-body';
+floorBodyMat.name='floor-paper003-kraft-body';
 
 const floorEdgeMat=new THREE.MeshStandardMaterial({
-  color:0x718852,
-  roughness:.985,
+  color:0x657a49,
+  map:paper003Color,
+  normalMap:paper003Normal,
+  roughnessMap:paper003Roughness,
+  normalScale:new THREE.Vector2(.42,.42),
+  roughness:1,
   metalness:0
 });
-floorEdgeMat.name='floor-green-cut-edge';
+floorEdgeMat.name='floor-paper003-green-edge';
 
 const floorTopMat=new THREE.MeshStandardMaterial({
-  color:0xffffff,
-  map:floorGreenTexture,
-  roughness:.965,
+  color:0x91aa68,
+  map:paper003Color,
+  normalMap:paper003Normal,
+  roughnessMap:paper003Roughness,
+  normalScale:new THREE.Vector2(.62,.62),
+  roughness:1,
   metalness:0
 });
-floorTopMat.name='floor-green-paper-face';
+floorTopMat.name='floor-paper003-green-face';
 
 const blockGeo=new THREE.BoxGeometry(1,1,1);
 const topEdgeGeo=new THREE.BoxGeometry(1.035,.045,1.035);
@@ -622,12 +587,15 @@ const rims=[terrainEdges];
 const paperObjects=[terrainBlocks,terrainEdges,terrainTops];
 
 function rebuildMaterialRandomness(on=true){
-  floorBodyMat.map=on?floorKraftTexture:null;
-  floorTopMat.map=on?floorGreenTexture:null;
-  floorBodyMat.color.setHex(on?0xffffff:0xaa7350);
-  floorTopMat.color.setHex(on?0xffffff:0x9bb873);
-  floorBodyMat.needsUpdate=true;
-  floorTopMat.needsUpdate=true;
+  for(const mat of [floorBodyMat,floorEdgeMat,floorTopMat]){
+    mat.map=on?paper003Color:null;
+    mat.normalMap=on?paper003Normal:null;
+    mat.roughnessMap=on?paper003Roughness:null;
+    mat.needsUpdate=true;
+  }
+  floorBodyMat.color.setHex(0xb9825e);
+  floorEdgeMat.color.setHex(0x657a49);
+  floorTopMat.color.setHex(0x91aa68);
 }
 
 // Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
