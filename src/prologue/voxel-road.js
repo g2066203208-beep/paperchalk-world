@@ -123,6 +123,7 @@ function applyPresentation(){
   if(!api?.ready)return;
   presentationApplied=true;
   api.setPaperStyle?.(false);
+  api.configureAtmosphere?.({volumetric:false,qualityScale:.25,steps:6});
   const current=api.stats?.camera;
   if(!current)api.setCameraConfig?.({...defaultCamera,stageView:{...defaultCamera.stageView}});
 }
