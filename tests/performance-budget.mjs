@@ -15,6 +15,8 @@ assert(size('styles/game.css')<30000,'UI stylesheet exceeds 30KB budget');
 assert(size('index.html')<19000,'HTML shell exceeds 19KB budget');
 assert(fs.existsSync('assets/materials/grass-reference.webp'),'supplied grass texture missing');
 assert(size('assets/materials/grass-reference.webp')<30000,'grass texture exceeds 30KB budget');
+assert(fs.existsSync('assets/materials/dirt-reference.webp'),'supplied dirt texture missing');
+assert(size('assets/materials/dirt-reference.webp')<30000,'dirt texture exceeds 30KB budget');
 assert(!fs.existsSync('src/engine3d/PhotonPipeline.js'),'Photon pipeline must stay removed');
 assert(!fs.existsSync('src/engine3d/PhotonSkyWeatherPass.js'),'Photon weather/cloud pass must stay removed');
 assert(!fs.existsSync('src/engine3d/PhotonWaterPass.js'),'Photon water pass must stay removed');
@@ -34,6 +36,7 @@ console.log(JSON.stringify({
   atmosphere:size('src/engine3d/AtmospherePass.js'),
   worldDebug:size('src/debug/world-debug.js'),
   grassReference:size('assets/materials/grass-reference.webp'),
+  dirtReference:size('assets/materials/dirt-reference.webp'),
   sprites:size('src/entities/PaperSpriteEntity.js'),
   fastNoise:size('vendor/fastnoise-lite/FastNoiseLite.js'),
   css:size('styles/game.css'),
