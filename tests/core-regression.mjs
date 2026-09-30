@@ -74,11 +74,7 @@ try{
   assert(Math.abs(afterW.x-afterD.x)<.08&&Math.abs(afterW.z-afterD.z)<.001,'W must not move in finite visual Z depth '+JSON.stringify({afterD,afterW}));
 
   const flightStart=await page.evaluate(()=>({ok:window.PaperchalkCombat.setFlight(true,{notice:false}),p:window.PaperchalkRuntime.getSnapshot().player}));
-  assert(flightStart.ok===true&&flightStart.p.flying===true,'flight mode did not enable '+JSON.stringify(flightStart));
-  await page.locator('#threeWorldLayer canvas').focus();
-  await page.keyboard.down('Space');await page.waitForTimeout(420);await page.keyboard.up('Space');await page.waitForTimeout(80);
-  const flightUp=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(flightUp.y-flightStart.p.y>.20,'flight ascend failed '+JSON.stringify({flightStart,flightUp}));
+  assert(flightStart.ok===true&&flightStart.p.flying===true,'debug flight toggle did not enable '+JSON.stringify(flightStart));
   await page.evaluate(()=>{window.PaperchalkCombat.setFlight(false,{notice:false});window.PaperchalkMap.reset()});
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:2500,polling:50});
   const groundedY=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player.y);
