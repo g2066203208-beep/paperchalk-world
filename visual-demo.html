@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12</h1>
-  <p>深林树后透光 v12：新增太阳光方向控制。可以实时调“左右方向”和“高度角”，体积光、树影、地面受光和太阳圆盘都会跟着同一主光方向变化；也可以一键恢复跟随昼夜。</p>
+  <h1>纸艺世界视觉 Demo v13</h1>
+  <p>深林清晰体积光 v13：保留树缝光束，但降低全局空气泛白。体积介质只集中在树林到前景的湿润空气带，并改成“透射率 + 入射散射”合成；弱散射会被压掉，只有真正穿过树缝的光束明显发亮。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -52,7 +52,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="random" class="active">随机材质</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active">剪纸小草</button>
-  <button id="godrays" class="active">真实体积光</button>
+  <button id="godrays" class="active">清晰体积光</button>
   <div class="groupBreak"></div>
   <button id="dawn" class="active">清晨</button>
   <button id="noon">正午</button>
@@ -866,8 +866,8 @@ const volumeUniforms={
   cameraPos:{value:new THREE.Vector3()},
   lightDir:{value:new THREE.Vector3(0,-1,0)},
   scatteringColor:{value:new THREE.Color(0xffe6ad)},
-  density:{value:.030},
-  intensity:{value:.62},
+  density:{value:.018},
+  intensity:{value:.56},
   maxDistance:{value:46.0},
   time:{value:0},
   shadowBias:{value:.0022},
@@ -931,32 +931,49 @@ const volumeMat=new THREE.ShaderMaterial({
       vec3 endPos=worldFromDepth(vUv,depth);
       vec3 ray=endPos-cameraPos;
       float fullDist=length(ray);
-      if(fullDist<.001){gl_FragColor=vec4(0.0);return;}
+      if(fullDist<.001){gl_FragColor=vec4(0.0,0.0,0.0,1.0);return;}
 
       vec3 dir=ray/fullDist;
       float rayDist=min(fullDist,maxDistance);
       float stepLen=rayDist/max(steps,1.0);
       float jitter=fract(hash12(gl_FragCoord.xy)+time*.071);
-      float accum=0.0;
+
+      float scatterAccum=0.0;
+      float extinctionAccum=0.0;
 
       for(int i=0;i<32;i++){
         if(float(i)>=steps)break;
+
         float t=(float(i)+jitter)*stepLen;
         vec3 p=cameraPos+dir*t;
         float visible=shadowVisibility(p);
 
-        float lowMist=1.0-smoothstep(.5,7.2,p.y);
-        float localDensity=density*(.38+.62*lowMist);
-        float nearFade=smoothstep(.6,3.2,t);
+        // Keep the foreground and upper air clear. Most participating medium
+        // exists from the background forest through the lower play space.
+        float lowMist=1.0-smoothstep(.55,5.8,p.y);
+        float forestEntry=smoothstep(-16.0,-10.5,p.z);
+        float foregroundExit=1.0-smoothstep(4.0,9.0,p.z);
+        float corridor=forestEntry*foregroundExit;
+        float localDensity=density*(.045+.955*lowMist)*corridor;
 
+        float nearFade=smoothstep(1.0,3.5,t);
+
+        // Strong forward scattering makes actual tree-gap shafts pop without
+        // raising the brightness of the entire image.
         float cosTheta=clamp(dot(dir,-normalize(lightDir)),-1.0,1.0);
-        float phase=.50+.50*pow(max(cosTheta,0.0),4.0);
+        float phase=.34+.66*pow(max(cosTheta,0.0),4.5);
 
-        accum+=visible*localDensity*stepLen*nearFade*phase;
+        scatterAccum+=visible*localDensity*stepLen*nearFade*phase;
+        extinctionAccum+=localDensity*stepLen*.16;
       }
 
-      float scatter=(1.0-exp(-accum*1.75))*intensity;
-      gl_FragColor=vec4(scatteringColor*scatter,scatter);
+      // Kill weak uniform haze; preserve stronger continuous shafts.
+      float scatter=(1.0-exp(-scatterAccum*2.45))*intensity;
+      scatter=max(scatter-.022,0.0)*1.18;
+
+      // Store transmittance separately from in-scattering.
+      float transmittance=exp(-extinctionAccum);
+      gl_FragColor=vec4(scatteringColor*scatter,transmittance);
     }
   `
 });
@@ -980,8 +997,16 @@ const compositeMat=new THREE.ShaderMaterial({
     uniform float volumeStrength;
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
-      vec3 rays=texture2D(volumeColor,vUv).rgb*volumeStrength;
-      gl_FragColor=vec4(base.rgb+rays,base.a);
+      vec4 vol=texture2D(volumeColor,vUv);
+      float trans=clamp(vol.a,0.0,1.0);
+
+      // Suppress low-level veil while retaining the brighter shafts.
+      vec3 rays=max(vol.rgb-vec3(.006),vec3(0.0))*volumeStrength;
+
+      // Physically-inspired structure: transmitted scene + in-scattering.
+      // Extinction is intentionally restrained so paper textures stay crisp.
+      vec3 transmitted=base.rgb*mix(.985,1.0,trans);
+      gl_FragColor=vec4(transmitted+rays,base.a);
       #include <colorspace_fragment>
     }
   `
@@ -1048,16 +1073,16 @@ function updateVolumetricSettings(t){
 
   if(volumeUseMoon){
     volumeUniforms.scatteringColor.value.copy(moonColor);
-    volumeUniforms.intensity.value=.22+.18*moonUp;
-    volumeUniforms.density.value=.020+.008*moonUp;
+    volumeUniforms.intensity.value=.14+.10*moonUp;
+    volumeUniforms.density.value=.010+.004*moonUp;
   }else{
     volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.82);
-    volumeUniforms.intensity.value=.40+sunUp*.28+twilight*.33;
-    volumeUniforms.density.value=.024+twilight*.014;
+    volumeUniforms.intensity.value=.28+sunUp*.20+twilight*.24;
+    volumeUniforms.density.value=.012+twilight*.008;
   }
   if(state.fog){
-    volumeUniforms.intensity.value*=1.18;
-    volumeUniforms.density.value*=1.10;
+    volumeUniforms.intensity.value*=1.06;
+    volumeUniforms.density.value*=1.02;
   }
 }
 
@@ -1192,7 +1217,7 @@ function updateLighting(t){
   // Forest air: exponential distance haze gives a softer "air volume" than
   // a hard linear start/end fog. Keep it stylized and readable.
   if(state.fog){
-    const density=.030+twilight*.008+moonUp*.006;
+    const density=.014+twilight*.004+moonUp*.003;
     scene.fog=new THREE.FogExp2(fogColor,density);
   }
 
@@ -1201,11 +1226,11 @@ function updateLighting(t){
   const mistWarm=new THREE.Color(0xecd8c1);
   const mistColor=mistNight.clone().lerp(mistDay,Math.pow(sunUp,.42)).lerp(mistWarm,twilight*.30);
   fogUniforms.tint.value.copy(mistColor);
-  fogUniforms.opacity.value=.78+twilight*.08+moonUp*.05;
+  fogUniforms.opacity.value=.52+twilight*.06+moonUp*.04;
 
   // Narrow exposure range = comfortable stylized game image instead of
   // physically dark dawn/night.
-  renderer.toneMappingExposure=state.tone?(.90+sunUp*.12+twilight*.045):1;
+  renderer.toneMappingExposure=state.tone?(.86+sunUp*.11+twilight*.035):1;
   scene.background.copy(fogColor);
 
   let mode='night';
