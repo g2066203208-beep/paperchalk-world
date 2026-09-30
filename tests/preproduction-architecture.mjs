@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
-const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js'),prologue=read('src/scenes/prologue-city.js'),schoolFence=read('src/scenes/PrologueSchoolFence.js');
+const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js'),prologue=read('src/scenes/prologue-city.js'),schoolFence=read('src/scenes/PrologueSchoolFence.js'),carLayout=read('src/scenes/prologue-car-layout.js'),paperCar=read('src/scenes/ProloguePaperCar.js');
 
-assert.match(html,/paper-r32/);
+assert.match(html,/paper-r33/);
 assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(html,/open-world-runtime\.js/);
 assert.match(html,/src\/scenes\/prologue-city\.js/);
@@ -19,6 +19,16 @@ assert.match(schoolFence,/new THREE\.BoxGeometry/);
 assert.match(schoolFence,/InstancedMesh/);
 assert.match(schoolFence,/school-fence-panel\.svg/);
 assert.match(schoolFence,/school-gate-leaf\.svg/);
+assert.match(html,/src\/scenes\/prologue-car-layout\.js/);
+assert.match(carLayout,/x:36\.5,z:-5,groundY:1,yaw:0/);
+assert.match(carLayout,/length:4\.4,width:1\.9,height:1\.6/);
+assert.match(carLayout,/lane:'rear-motor',voxelAligned:true/);
+assert.match(prologue,/PaperchalkPrologueCars/);
+assert.match(paperCar,/simple-3d\+2d-paper-texture/);
+assert.match(paperCar,/CylinderGeometry\(\.34,\.34,\.16,12\)/);
+assert.match(paperCar,/paper-sedan-side\.svg/);
+assert.match(paperCar,/paper-sedan-front\.svg/);
+assert.match(renderer,/ProloguePaperCar/);
 assert.ok(!fs.existsSync('src/scenes/school-layout.js'),'rejected school layout returned');
 assert.ok(!fs.existsSync('src/scenes/PrologueSchoolBuilding.js'),'rejected school building renderer returned');
 assert.doesNotMatch(renderer,/PrologueSchoolBuilding/);
