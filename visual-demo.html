@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.1</h1>
-  <p>v12.1 受光雾：保留 v12 的树缝体积光，只解决雾导致的泛白。全局雾和纸雾压到很轻，真正明显的雾只在太阳能照到的体积采样点产生散射；树影里的空气基本透明。</p>
+  <h1>纸艺世界视觉 Demo v12.2</h1>
+  <p>v12.2 色彩光辉：保留 v12.1 的“只让受光雾显形”，只轻微加强光的固有色和光辉。日出偏橙红、夕阳更红橙、月光更冷蓝；光辉只围绕太阳/月亮和真正的体积光束出现，不给整张画面套滤镜。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -831,7 +831,29 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(48,32,18),skyMat);sky.scale.y=
 // Visible sun/moon discs so the lighting direction reads immediately.
 const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(.72,40),new THREE.MeshBasicMaterial({color:0xffe5a8,toneMapped:false,transparent:true,opacity:.96}));
 const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(.54,40),new THREE.MeshBasicMaterial({color:0xe4ecff,toneMapped:false,transparent:true,opacity:.9}));
-scene.add(sunDisc,moonDisc);
+
+function glowTexture(){
+  const size=256,c=document.createElement('canvas');c.width=c.height=size;
+  const g=c.getContext('2d');
+  const r=g.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);
+  r.addColorStop(0,'rgba(255,255,255,.92)');
+  r.addColorStop(.16,'rgba(255,255,255,.48)');
+  r.addColorStop(.46,'rgba(255,255,255,.13)');
+  r.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=r;g.fillRect(0,0,size,size);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
+}
+const celestialGlowTex=glowTexture();
+const sunGlow=new THREE.Sprite(new THREE.SpriteMaterial({
+  map:celestialGlowTex,color:0xffa75c,transparent:true,opacity:.28,
+  blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,toneMapped:false
+}));
+const moonGlow=new THREE.Sprite(new THREE.SpriteMaterial({
+  map:celestialGlowTex,color:0x85adff,transparent:true,opacity:.22,
+  blending:THREE.AdditiveBlending,depthWrite:false,depthTest:false,toneMapped:false
+}));
+sunGlow.scale.set(6.2,6.2,1);moonGlow.scale.set(4.5,4.5,1);
+scene.add(sunGlow,moonGlow,sunDisc,moonDisc);
 
 // ---------------------------------------------------------------------------
 // Real shadow-map raymarched volumetric light.
@@ -970,7 +992,10 @@ const volumeScene=new THREE.Scene();
 volumeScene.add(new THREE.Mesh(fsGeo,volumeMat));
 
 const compositeUniforms={
-  sceneColor:{value:null},volumeColor:{value:null},volumeStrength:{value:1.0}
+  sceneColor:{value:null},
+  volumeColor:{value:null},
+  volumeTexel:{value:new THREE.Vector2(1,1)},
+  volumeStrength:{value:1.0}
 };
 const compositeMat=new THREE.ShaderMaterial({
   uniforms:compositeUniforms,
@@ -983,11 +1008,26 @@ const compositeMat=new THREE.ShaderMaterial({
     varying vec2 vUv;
     uniform sampler2D sceneColor;
     uniform sampler2D volumeColor;
+    uniform vec2 volumeTexel;
     uniform float volumeStrength;
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
-      vec3 rays=texture2D(volumeColor,vUv).rgb*volumeStrength*1.08;
-      gl_FragColor=vec4(base.rgb+rays,base.a);
+      vec3 core=texture2D(volumeColor,vUv).rgb;
+      vec3 rays=core*volumeStrength*1.08;
+
+      // Cheap ray-only bloom: it samples ONLY the already shadow-tested
+      // volumetric buffer, so dark air stays clear and only real shafts glow.
+      vec2 r=volumeTexel*2.2;
+      vec3 halo=(
+        texture2D(volumeColor,vUv+vec2(r.x,0.0)).rgb+
+        texture2D(volumeColor,vUv-vec2(r.x,0.0)).rgb+
+        texture2D(volumeColor,vUv+vec2(0.0,r.y)).rgb+
+        texture2D(volumeColor,vUv-vec2(0.0,r.y)).rgb
+      )*.25;
+      halo=max(halo-vec3(.018),vec3(0.0));
+      vec3 glow=halo*.22*volumeStrength;
+
+      gl_FragColor=vec4(base.rgb+rays+glow,base.a);
       #include <colorspace_fragment>
     }
   `
@@ -1033,6 +1073,7 @@ function resizeVolumetricTargets(){
   volumeUniforms.lightDepth.value=volumeShadowTarget.depthTexture;
   compositeUniforms.sceneColor.value=sceneTarget.texture;
   compositeUniforms.volumeColor.value=volumeTarget.texture;
+  compositeUniforms.volumeTexel.value.set(1/vw,1/vh);
 }
 resizeVolumetricTargets();
 
@@ -1048,19 +1089,21 @@ function updateVolumetricSettings(t){
   volumeActiveLightPos.copy(active.position);
   volumeUniforms.lightDir.value.copy(volumeLightTarget).sub(volumeActiveLightPos).normalize();
 
-  const dayColor=new THREE.Color(0xffe7b5);
-  const warmColor=new THREE.Color(0xffb878);
-  const moonColor=new THREE.Color(0xa9c7ff);
+  const dayColor=new THREE.Color(0xffefc8);
+  const dawnColor=new THREE.Color(0xffa05f);
+  const sunsetColor=new THREE.Color(0xff7f4f);
+  const moonColor=new THREE.Color(0x88b2ff);
 
   if(volumeUseMoon){
     volumeUniforms.scatteringColor.value.copy(moonColor);
-    volumeUniforms.intensity.value=.18+.12*moonUp;
+    volumeUniforms.intensity.value=.19+.13*moonUp;
     volumeUniforms.density.value=.016+.005*moonUp;
   }else{
-    // Dawn/sunset: more humid local medium + warmer in-scattering.
-    // Noon: cleaner air, but shafts still remain where geometry creates gaps.
-    volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.90);
-    volumeUniforms.intensity.value=.46+sunUp*.20+twilight*.48;
+    // A little more intrinsic colour: dawn is orange-red, sunset is deeper
+    // red-orange, while noon remains warm paper-white.
+    const warmColor=state.time<.5?dawnColor:sunsetColor;
+    volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.94);
+    volumeUniforms.intensity.value=.46+sunUp*.20+twilight*.50;
     volumeUniforms.density.value=.022+twilight*.026;
   }
 }
@@ -1154,13 +1197,15 @@ function updateLighting(t){
   }
   sun.position.set(sx,sy,sz);moon.position.set(mx,my,mz);
 
-  const sunWarm=new THREE.Color(0xffa96f);
-  const sunDay=new THREE.Color(0xffe5bd);
+  const sunDawn=new THREE.Color(0xff9b5f);
+  const sunSunset=new THREE.Color(0xff7c52);
+  const sunWarm=state.time<.5?sunDawn:sunSunset;
+  const sunDay=new THREE.Color(0xffe8c4);
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.10,.72,sunUp));
-  sun.intensity=.18+sunUp*2.55+twilight*.82;
+  sun.intensity=.18+sunUp*2.55+twilight*.84;
 
-  moon.color.set(0xb7cfff);
-  moon.intensity=.08+moonUp*1.18;
+  moon.color.set(0x91b7ff);
+  moon.intensity=.08+moonUp*1.20;
 
   // Stronger sky/ground diffuse fill: this is intentionally more generous than
   // reality so the handmade-paper colours never collapse into black.
@@ -1221,9 +1266,17 @@ function updateLighting(t){
   const moonDir=new THREE.Vector3(mx,my,mz).normalize();
   sunDisc.position.copy(camera.position).addScaledVector(sunDir,34);
   moonDisc.position.copy(camera.position).addScaledVector(moonDir,34);
+  sunGlow.position.copy(sunDisc.position);moonGlow.position.copy(moonDisc.position);
   sunDisc.lookAt(camera.position);moonDisc.lookAt(camera.position);
   sunDisc.visible=state.sky&&rawSun>-0.08;moonDisc.visible=state.sky&&rawSun<0.12;
+  sunGlow.visible=sunDisc.visible;moonGlow.visible=moonDisc.visible;
   sunDisc.material.opacity=.72+sunUp*.26;moonDisc.material.opacity=.72+moonUp*.22;
+  sunDisc.material.color.copy(sun.color).lerp(new THREE.Color(0xfff0c7),.25);
+  moonDisc.material.color.set(0xb8d0ff);
+  sunGlow.material.color.copy(sun.color);
+  moonGlow.material.color.set(0x7fa7ff);
+  sunGlow.material.opacity=.18+twilight*.20+sunUp*.08;
+  moonGlow.material.opacity=.13+moonUp*.15;
 
   if(playerMat){
     const dayAmount=smoothstep(.02,.68,sunUp);
@@ -1290,7 +1343,7 @@ function preset(name){
   updateLighting(state.time);syncSunControls();syncButtons();renderDirty=true;shadowDirty=true;
 }
 function syncButtons(){
-  sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
+  sky.visible=state.sky;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
   renderer.shadowMap.enabled=state.shadow;
   // Only one shadow-casting directional light at a time.
