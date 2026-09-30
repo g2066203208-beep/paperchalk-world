@@ -3,6 +3,8 @@ import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
 const CONTENT=window.PaperchalkContent;
+const ACTIVE_SCENE=window.PaperchalkActiveScene||CONTENT.scene3d;
+const ENGINE_CONTENT={...CONTENT,scene3d:ACTIVE_SCENE};
 const THREE_MODULE='../../vendor/three/three.module.js';
 
 let THREE=null;
@@ -45,7 +47,7 @@ async function ensureReady(){
     engine=new World3DEngine({
       THREE,
       host:HOST,
-      content:CONTENT,
+      content:ENGINE_CONTENT,
       onCameraChanged:syncCameraControls
     });
     engine.configureAtmosphere?.({volumetric:false,qualityScale:.35,steps:8});
@@ -53,6 +55,7 @@ async function ensureReady(){
     engine.setSnapshot(latestSnapshot);
     const settings=window.PaperchalkSettings?.get?.();
     if(settings?.camera3d)engine.setCameraConfig(settings.camera3d);
+    if(ACTIVE_SCENE?.camera)engine.setCameraConfig(ACTIVE_SCENE.camera);
     unsubscribeRuntime=RUNTIME.subscribe(next=>{
       latestSnapshot=next;
     });
@@ -207,7 +210,7 @@ window.Paperchalk3D=Object.freeze({
     return {
       ...base,
       fps,frames,active,ready,loopActive:!!raf,error:errorMessage,
-      worldMode:CONTENT.scene3d?.mode||base.worldMode,
+      worldMode:ACTIVE_SCENE?.mode||base.worldMode,
       terrainMode:base.terrainMode||'streamed-3d-voxel-chunks',
       interaction:base.interaction||{threeDimensional:true,zMovementLocked:false,raycastIgnoresOtherRows:false}
     };
