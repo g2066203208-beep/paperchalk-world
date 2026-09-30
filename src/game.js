@@ -1,7 +1,3 @@
-/* Paperchalk World gameplay runtime.
-* Gameplay uses the full X/Y/Z voxel world. Ground movement is camera-relative
-* and debug flight can move freely through 3D space.
-*/
 (function(){
 'use strict';
 const CONTENT=window.PaperchalkContent;
@@ -361,7 +357,7 @@ fish:fishSnapshot(),
 npcs:npcWorld.snapshot(),
 npcDialogue:npcWorld.dialogueSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
-scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
+scene:{id:'infinite-voxel-world',name:'序幕 · 城市马路'},
 terrain:terrain.stats(),
 debug:{colliders:debugColliders},
 ecs:ecs.stats()
@@ -893,8 +889,6 @@ updateSurvivalHud();return;
 const ground=terrain.highestGroundY(fishing.x,fishing.z);
 const validTargetWater=terrain.water.surfaceAtWorld(fishing.castX,fishing.castZ);
 const castTimeout=Math.max(1.4,(fishing.flightTime||.7)+.75);
-// If the player explicitly clicked a valid water surface, keep the ballistic cast
-// committed to that target instead of letting intervening terrain cancel it.
 if(!validTargetWater&&((fishing.y<=ground+.05&&fishing.timer>.12)||fishing.timer>castTimeout)){
 const targetGround=terrain.highestGroundY(fishing.castX,fishing.castZ);
 fishing.x=fishing.castX;fishing.z=fishing.castZ;
@@ -1667,7 +1661,7 @@ return {
 schemaVersion:SAVE_RUNTIME.schemaVersion,
 gameVersion:SAVE_RUNTIME.gameVersion,
 account:session.account,
-location:'Paperchalk · 无限3D体素世界',
+location:'序幕 · 城市马路',
 createdAt:Date.now(),
 worldMinutes:360,
 worldLayout:WORLD_LAYOUT_ID,
@@ -1723,7 +1717,7 @@ function saveWorldState(){
 const session=getSession();
 if(!session)return false;
 const save=readSaveForSession(session)||defaultSave(session);
-save.location='Paperchalk · 无限3D体素世界';
+save.location='序幕 · 城市马路';
 save.worldMinutes=worldMinutes;
 save.worldLayout=WORLD_LAYOUT_ID;
 save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
