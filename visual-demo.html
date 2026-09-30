@@ -19,8 +19,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v7</h1>
-  <p>深林动态纸雾 v7：改成实例化纸雾卡 + 深度软交界 + 风场漂移。雾会明显流动、绕地形、分前中远三层；仍然是撕边纸片，不是写实烟。</p>
+  <h1>纸艺世界视觉 Demo v8</h1>
+  <p>深林动态纸雾 + 剪纸小草：草丛不再是普通叶片，而是整片剪出的纸草轮廓，带纸纤维、深色纸边、交叉层叠和轻微高低差，和雾、地形统一成手工纸艺。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -31,6 +31,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="tone" class="active">统一色调</button>
   <button id="random" class="active">随机材质</button>
   <button id="bounce" class="active">地面反射光</button>
+  <button id="papergrass" class="active">剪纸小草</button>
   <div class="groupBreak"></div>
   <button id="dawn">清晨</button>
   <button id="noon" class="active">正午</button>
@@ -38,7 +39,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · GPU纸雾动态漂移</div>
+<div class="badge">拖动旋转 · 滚轮缩放 · 动态纸雾 + 剪纸草丛</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -305,17 +306,120 @@ function rebuildMaterialRandomness(on){
   }
 }
 
-function tuft(x,z,y,scale=.42){
-  const group=new THREE.Group();
-  const pm=new THREE.MeshLambertMaterial({map:grassTextures[(hash3((x*10)|0,0,(z*10)|0)*variantCount)|0],color:0x71984d,side:THREE.DoubleSide});
-  for(let i=0;i<3;i++){
-    const shape=new THREE.Shape();shape.moveTo(-.11,0);shape.quadraticCurveTo(0,.55,.09,0);
-    const geo=new THREE.ShapeGeometry(shape,5),m=new THREE.Mesh(geo,pm);
-    m.scale.setScalar(scale);m.rotation.y=i*Math.PI/3;m.castShadow=true;m.receiveShadow=true;group.add(m);
-  }
-  group.position.set(x,y,z);scene.add(group);
+// Cut-paper grass: each clump is one hand-cut silhouette from a paper sheet.
+// Two crossed sheets plus a dark offset backing make the paper thickness readable.
+function cutGrassGeometry(){
+  const s=new THREE.Shape();
+  s.moveTo(-.36,0);
+  s.lineTo(-.32,.12);
+  s.lineTo(-.29,.40);
+  s.lineTo(-.24,.58);
+  s.lineTo(-.19,.22);
+  s.lineTo(-.14,.34);
+  s.lineTo(-.10,.78);
+  s.lineTo(-.045,.91);
+  s.lineTo(-.01,.36);
+  s.lineTo(.035,.24);
+  s.lineTo(.075,.63);
+  s.lineTo(.12,.73);
+  s.lineTo(.155,.31);
+  s.lineTo(.21,.20);
+  s.lineTo(.255,.48);
+  s.lineTo(.30,.57);
+  s.lineTo(.315,.24);
+  s.lineTo(.38,.12);
+  s.lineTo(.34,0);
+  s.closePath();
+  const geo=new THREE.ShapeGeometry(s,2);
+  geo.translate(0,0,0);
+  return geo;
 }
-tuft(-3.2,-1.7,.47,.55);tuft(2.3,1.7,.47,.48);tuft(5.2,-.6,1.25,.46);tuft(-5.8,1.8,1.25,.5);
+
+const paperGrassGroup=new THREE.Group();
+scene.add(paperGrassGroup);
+
+const grassCutGeo=cutGrassGeometry();
+const grassFrontMat=new THREE.MeshLambertMaterial({
+  map:grassTextures[1],
+  color:0xa8c970,
+  side:THREE.DoubleSide,
+  transparent:false
+});
+const grassEdgeMat=new THREE.MeshLambertMaterial({
+  color:0x5d713f,
+  side:THREE.DoubleSide
+});
+
+const grassSpots=[
+  [-3.30,-1.70,.49,.63,.10],[-2.25,.95,.49,.50,.68],[-1.55,1.90,.49,.45,1.30],
+  [-.75,-2.18,.49,.48,2.05],[1.20,-2.05,.49,.43,.35],[2.35,1.72,.49,.58,1.05],
+  [3.42,-1.45,.49,.47,2.45],[4.55,.85,.49,.44,.82],
+  [-5.72,1.55,1.27,.60,.25],[-5.45,-1.65,1.27,.48,1.54],
+  [5.42,-.72,1.27,.54,.95],[5.65,1.72,1.27,.50,2.20],
+  [-4.05,2.30,1.27,.46,.42],[4.08,2.22,1.27,.52,1.76],
+  [-6.55,2.18,2.05,.45,.72],[6.38,1.52,2.05,.44,2.48]
+];
+
+const GRASS_PLANES=grassSpots.length*2;
+const grassFront=new THREE.InstancedMesh(grassCutGeo,grassFrontMat,GRASS_PLANES);
+const grassEdge=new THREE.InstancedMesh(grassCutGeo,grassEdgeMat,GRASS_PLANES);
+grassFront.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+grassEdge.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+grassFront.castShadow=true;grassFront.receiveShadow=true;
+grassEdge.castShadow=true;grassEdge.receiveShadow=true;
+grassFront.frustumCulled=false;grassEdge.frustumCulled=false;
+paperGrassGroup.add(grassEdge,grassFront);
+
+const grassDummy=new THREE.Object3D();
+const grassBladeData=[];
+{
+  let idx=0;
+  for(let s=0;s<grassSpots.length;s++){
+    const [x,z,y,scale,baseAngle]=grassSpots[s];
+    for(let layer=0;layer<2;layer++){
+      const angle=baseAngle+layer*(Math.PI*.47);
+      const sc=scale*(layer===0?1:.82);
+      grassBladeData.push({x,z,y,scale:sc,angle,phase:s*.73+layer*1.3});
+      const nx=Math.sin(angle),nz=Math.cos(angle);
+
+      grassDummy.position.set(x,y,z);
+      grassDummy.rotation.set(0,angle,0);
+      grassDummy.scale.set(sc,sc,sc);
+      grassDummy.updateMatrix();
+      grassFront.setMatrixAt(idx,grassDummy.matrix);
+
+      // A tiny offset behind the green sheet reads as the darker cut-paper edge.
+      grassDummy.position.set(x-nx*.018,y-.008,z-nz*.018);
+      grassDummy.updateMatrix();
+      grassEdge.setMatrixAt(idx,grassDummy.matrix);
+      idx++;
+    }
+  }
+  grassFront.instanceMatrix.needsUpdate=true;
+  grassEdge.instanceMatrix.needsUpdate=true;
+}
+
+function updatePaperGrass(t){
+  for(let i=0;i<grassBladeData.length;i++){
+    const d=grassBladeData[i];
+    // Very restrained paper-card sway: the clump remains visibly rigid/cut-out.
+    const sway=Math.sin(t*.72+d.phase)*.035;
+    const angle=d.angle+sway;
+    const nx=Math.sin(angle),nz=Math.cos(angle);
+
+    grassDummy.position.set(d.x,d.y,d.z);
+    grassDummy.rotation.set(0,angle,Math.sin(t*.54+d.phase)*.018);
+    grassDummy.scale.set(d.scale,d.scale,d.scale);
+    grassDummy.updateMatrix();
+    grassFront.setMatrixAt(i,grassDummy.matrix);
+
+    grassDummy.position.set(d.x-nx*.018,d.y-.008,d.z-nz*.018);
+    grassDummy.updateMatrix();
+    grassEdge.setMatrixAt(i,grassDummy.matrix);
+  }
+  grassFront.instanceMatrix.needsUpdate=true;
+  grassEdge.instanceMatrix.needsUpdate=true;
+}
 
 const stoneMat=new THREE.MeshLambertMaterial({color:0xa69a8d});
 function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stoneMat);m.position.set(x,y,z);m.scale.y=.62;m.rotation.set(.2,.4,.1);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
@@ -476,6 +580,7 @@ function updateFogInstances(t){
   groundFog.instanceMatrix.needsUpdate=true;
 }
 updateFogInstances(0);
+updatePaperGrass(0);
 
 // Cached low-resolution scene depth for soft intersection fading.
 let depthTarget=null,depthDirty=true;
@@ -614,7 +719,7 @@ const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(.72,40),new THREE.MeshBasi
 const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(.54,40),new THREE.MeshBasicMaterial({color:0xe4ecff,toneMapped:false,transparent:true,opacity:.9}));
 scene.add(sunDisc,moonDisc);
 
-const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,final:true,timePreset:'noon',auto:false,time:.5};
+const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,final:true,timePreset:'noon',auto:false,time:.5};
 let skyMode='day';
 
 function setSkyMode(mode){
@@ -744,7 +849,7 @@ function preset(name){
   updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
 }
 function syncButtons(){
-  sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;
+  sky.visible=state.sky;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
   renderer.shadowMap.enabled=state.shadow;
   // Only one shadow-casting directional light at a time.
@@ -754,13 +859,13 @@ function syncButtons(){
   shadowDirty=true;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
-  ['sky','layers','shadow','fog','tone','random','bounce'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
+  ['sky','layers','shadow','fog','tone','random','bounce','papergrass'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
   document.getElementById('compare').classList.toggle('active',state.final);
   document.getElementById('compare').textContent=state.final?'目标效果':'基础方块';
   ['dawn','noon','sunset','night'].forEach(id=>document.getElementById(id).classList.toggle('active',state.timePreset===id&&!state.auto));
 }
 function setFinal(v){
-  state.final=v;state.sky=v;state.layers=v;state.shadow=v;state.fog=v;state.tone=v;state.random=v;state.bounce=v;
+  state.final=v;state.sky=v;state.layers=v;state.shadow=v;state.fog=v;state.tone=v;state.random=v;state.bounce=v;state.papergrass=v;
   depthDirty=true;
   rebuildMaterialRandomness(v);
   if(v){updateLighting(state.time)}
@@ -775,18 +880,25 @@ document.getElementById('compare').onclick=()=>{setFinal(!state.final);renderDir
 ['sky','layers','shadow','fog','tone'].forEach(id=>{
   document.getElementById(id).onclick=()=>{
     state[id]=!state[id];if(id==='layers')depthDirty=true;
-    state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
+    state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass;
     updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
   };
 });
 document.getElementById('random').onclick=()=>{
   state.random=!state.random;rebuildMaterialRandomness(state.random);
-  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();renderDirty=true;shadowDirty=true;
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass;syncButtons();renderDirty=true;shadowDirty=true;
 };
 document.getElementById('bounce').onclick=()=>{
   state.bounce=!state.bounce;
-  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass;
   updateLighting(state.time);syncButtons();
+};
+document.getElementById('papergrass').onclick=()=>{
+  state.papergrass=!state.papergrass;
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce&&state.papergrass;
+  paperGrassGroup.visible=state.papergrass;
+  depthDirty=true;renderDirty=true;shadowDirty=true;
+  syncButtons();
 };
 document.getElementById('dawn').onclick=()=>preset('dawn');
 document.getElementById('noon').onclick=()=>preset('noon');
@@ -831,6 +943,7 @@ function animate(now){
     lastMistTick=now;mistClock+=Math.min(.12,step);
     fogUniforms.time.value=mistClock;
     updateFogInstances(mistClock);
+    if(state.papergrass)updatePaperGrass(mistClock);
     renderDirty=true;
   }
 
