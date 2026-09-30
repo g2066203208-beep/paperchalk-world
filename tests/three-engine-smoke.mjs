@@ -54,9 +54,9 @@ try{
   assert(initial.npcs?.count===5&&initial.npcs?.sharedEntityClassWithPlayer===true,'NPC PaperSpriteEntity renderer missing '+JSON.stringify(initial.npcs));
   assert(initial.npcs?.sharedPlayerTexture===true&&initial.npcs?.actorAsset==='assets/player/protagonist.webp','NPC is not using player character asset '+JSON.stringify(initial.npcs));
   const npcAI=await page.evaluate(()=>window.PaperchalkNPCs.stats);
-  assert(npcAI?.aiStack?.voxelAStar&&npcAI?.aiStack?.utility&&npcAI?.aiStack?.offscreenLOD,'NPC AI renderer/runtime bridge missing '+JSON.stringify(npcAI));
+  assert(npcAI?.aiStack?.voxelAStar&&npcAI?.aiStack?.utility&&npcAI?.aiStack?.offscreenLOD&&npcAI?.simulationHz===20,'NPC AI renderer/runtime bridge/performance throttle missing '+JSON.stringify(npcAI));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
-  assert(initial.atmosphere?.samples===17,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.volumetric===false&&initial.atmosphere?.samples===6,'prologue atmosphere performance profile missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.paperSky===true&&initial.atmosphere?.paperSkyLoaded===true,'supplied blue paper sky not loaded '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.paperSkyAsset==='assets/materials/sky-paper-blue.webp'&&initial.atmosphere?.skyClouds===false,'paper sky asset/cloud gate wrong '+JSON.stringify(initial.atmosphere));
@@ -67,7 +67,7 @@ try{
   assert(initial.atmosphere?.fogDensity>0,'distance air/fog missing '+JSON.stringify(initial.atmosphere));
   assert(initial.playerTextureSize?.width===768&&initial.playerTextureSize?.height===1536,'HD player texture missing');
   assert(initial.interaction?.threeDimensional===false&&initial.interaction?.zMovementLocked===true,'side-scroll interaction did not lock Z '+JSON.stringify(initial.interaction));
-  assert(initial.pixelRatio>=1,'native renderer pixel ratio missing');
+  assert(initial.pixelRatio>=1&&initial.pixelRatio<=1.35,'prologue DPR cap missing '+JSON.stringify(initial.pixelRatio));
   assert(initial.lighting?.shadowAcneGuard===true&&(initial.lighting?.sunShadowNormalBias||0)>=.05,'ground shadow-acne protection missing '+JSON.stringify(initial.lighting));
   assert(!Object.prototype.hasOwnProperty.call(initial,'photon'),'removed renderer stack leaked into stats');
   assert(initial.camera.stageView?.enabled===false,'side-scroll camera stage view should start disabled '+JSON.stringify(initial.camera));
