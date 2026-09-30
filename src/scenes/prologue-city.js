@@ -30,6 +30,12 @@ const PROLOGUE=Object.freeze({
   })
  }),
  layers:Object.freeze({far:-8,rear:-3,terrain:0,actor:.45,front:2.5}),
+ schoolFence:Object.freeze({
+  grid:Object.freeze({rearCellZ:-17,sidewalkCellZ:-16,surfaceCellY:0,startXEdge:4,endXEdge:84,gateStartXEdge:20,gateEndXEdge:28,panelCells:4}),
+  panel:Object.freeze({height:1.8,metalHeight:1.45,baseHeight:.35,thickness:.12}),
+  post:Object.freeze({width:.28,height:2.05}),
+  gate:Object.freeze({openingCells:8,pillarWidth:.65,pillarHeight:2.8,leafHeight:1.8})
+ }),
  stageEntities:Object.freeze([])
 });
 function isTestRequest(){
@@ -88,6 +94,20 @@ function configureTerrain(t,scene){
  });
  return true;
 }
+function schoolFenceMetrics(scene){
+ const f=scene.schoolFence,g=f?.grid,s=scene.terrain.tileSize||1;
+ if(!f||!g)return null;
+ const z=(g.rearCellZ+g.sidewalkCellZ)*.5*s,groundTop=(g.surfaceCellY+1)*s;
+ const panels=[];
+ for(let x=g.startXEdge;x<g.gateStartXEdge;x+=g.panelCells)panels.push([x,x+g.panelCells]);
+ for(let x=g.gateEndXEdge;x<g.endXEdge;x+=g.panelCells)panels.push([x,x+g.panelCells]);
+ return{z,groundTop,panels,posts:[g.startXEdge,...panels.map(p=>p[1])].filter((v,i,a)=>a.indexOf(v)===i&&v!==g.gateEndXEdge),gate:[g.gateStartXEdge,g.gateEndXEdge],frontageCells:g.endXEdge-g.startXEdge,gateCells:g.gateEndXEdge-g.gateStartXEdge};
+}
+function collidesScene(scene,x,y,z,hw,hh,hd){
+ const m=schoolFenceMetrics(scene),f=scene.schoolFence;if(!m)return false;
+ const x0=f.grid.startXEdge,x1=f.grid.endXEdge,z0=m.z-f.panel.thickness*.5,z1=m.z+f.panel.thickness*.5,y0=m.groundTop,y1=y0+f.panel.height;
+ return x+hw>x0&&x-hw<x1&&z+hd>z0&&z-hd<z1&&y+hh>y0&&y-hh<y1;
+}
 function entities(defaults,scene){return scene.id===PROLOGUE.id?[]:defaults}
 function quests(defaults,scene){return scene.id===PROLOGUE.id?[]:defaults}
 function world(defaultWorld,scene){return scene.id===PROLOGUE.id?{nodes:[],routes:[]}:defaultWorld}
@@ -97,5 +117,5 @@ function clampPlayer(p,scene,halfW=.34,halfD=.28){
  p.z=Math.max(scene.bounds.minZ+halfD,Math.min(scene.bounds.maxZ-halfD,p.z));
 }
 function saveSuffix(scene){return'@'+(scene.id||scene.mode||'world')}
-global.PaperchalkSceneRuntime=Object.freeze({prologue:PROLOGUE,select,configureTerrain,entities,quests,world,clampPlayer,saveSuffix});
+global.PaperchalkSceneRuntime=Object.freeze({prologue:PROLOGUE,select,configureTerrain,schoolFenceMetrics,collidesAABB:collidesScene,entities,quests,world,clampPlayer,saveSuffix});
 })(window);
