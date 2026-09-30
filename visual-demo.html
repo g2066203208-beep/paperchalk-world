@@ -20,7 +20,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 <body>
 <div class="panel">
   <h1>纸艺世界视觉 Demo v2</h1>
-  <p>每格材质随机变化 + 草皮纸层厚度 + 纸浆侧面 + 柔光软阴影 + 日/月方向光 + 纸天空 + 空气雾 + 统一色调。拖动镜头直接看侧面层次。</p>
+  <p>每格材质随机变化 + 草皮纸层厚度 + 纸浆侧面 + 柔光软阴影 + 日/月方向光 + 角色受光/受雾/投影 + 纸天空 + 空气雾 + 统一色调。白天、黄昏和夜晚观察角色颜色与明暗一起变化。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -265,11 +265,42 @@ const contactShadow=new THREE.Mesh(
 );
 contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.487,.13);scene.add(contactShadow);
 
+let playerMesh=null,playerMat=null,playerDepthMat=null;
+const playerDayTint=new THREE.Color(0xffffff);
+const playerDuskTint=new THREE.Color(0xffd2b1);
+const playerNightTint=new THREE.Color(0x8498c4);
+const playerTintTmp=new THREE.Color();
+
 new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
   t.colorSpace=THREE.SRGBColorSpace;
-  const m=new THREE.MeshBasicMaterial({map:t,transparent:true,alphaTest:.12,side:THREE.DoubleSide,toneMapped:false});
-  const p=new THREE.Mesh(new THREE.PlaneGeometry(1.12,2.24),m);
-  p.position.set(0,1.59,.15);p.castShadow=true;scene.add(p);
+  t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+
+  // The protagonist is a real paper object in the scene now: it receives
+  // sunlight/moonlight, fog, tone mapping and shadows instead of glowing like UI.
+  playerMat=new THREE.MeshStandardMaterial({
+    map:t,
+    transparent:true,
+    alphaTest:.06,
+    side:THREE.DoubleSide,
+    roughness:1,
+    metalness:0,
+    color:0xffffff,
+    depthWrite:true
+  });
+
+  playerMesh=new THREE.Mesh(new THREE.PlaneGeometry(1.12,2.24),playerMat);
+  playerMesh.position.set(0,1.59,.15);
+  playerMesh.castShadow=true;
+  playerMesh.receiveShadow=true;
+
+  // Make the alpha silhouette cast a proper paper-doll shadow.
+  playerDepthMat=new THREE.MeshDepthMaterial({
+    depthPacking:THREE.RGBADepthPacking,
+    map:t,
+    alphaTest:.06
+  });
+  playerMesh.customDepthMaterial=playerDepthMat;
+  scene.add(playerMesh);
 });
 
 const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
@@ -339,6 +370,23 @@ function updateLighting(t){
   sunDisc.lookAt(camera.position);moonDisc.lookAt(camera.position);
   sunDisc.visible=state.sky&&rawSun>-0.08;moonDisc.visible=state.sky&&rawSun<0.12;
   sunDisc.material.opacity=.72+sunUp*.26;moonDisc.material.opacity=.72+moonUp*.22;
+
+  // The paper-doll belongs to the same lighting environment as the terrain.
+  // Direct/hemisphere lights do the real shading; this subtle tint only carries
+  // the ambient time-of-day colour so the sprite never looks pasted on top.
+  if(playerMat){
+    const dayAmount=smoothstep(.02,.72,sunUp);
+    playerTintTmp.copy(playerNightTint).lerp(playerDayTint,dayAmount);
+    if(twilight>0){
+      playerTintTmp.lerp(playerDuskTint,twilight*.58);
+    }
+    playerMat.color.copy(playerTintTmp);
+  }
+
+  // Contact shadow follows available light instead of staying equally dark.
+  if(contactShadow?.material){
+    contactShadow.material.opacity=.42+sunUp*.48+moonUp*.10;
+  }
 }
 function preset(name){
   state.auto=false;document.getElementById('cycle').classList.remove('active');
@@ -413,6 +461,15 @@ function animate(now){
   if(state.auto){state.time=(state.time+dt/48)%1;updateLighting(state.time)}
   else updateLighting(state.time);
   sky.position.copy(camera.position);
+
+  // Upright billboard: rotate only around Y so the character faces the camera
+  // without becoming a screen-space overlay. It still receives world lighting.
+  if(playerMesh){
+    const dx=camera.position.x-playerMesh.position.x;
+    const dz=camera.position.z-playerMesh.position.z;
+    playerMesh.rotation.y=Math.atan2(dx,dz);
+  }
+
   renderer.render(scene,camera);
 }
 updateLighting(.5);syncButtons();animate(performance.now());
