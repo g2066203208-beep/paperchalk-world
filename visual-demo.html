@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.6</h1>
-  <p>v12.6 程序星空：天空背景不再使用任何天空素材或 Canvas 贴图，改为纯 Shader 原色渐变；夜晚星空用程序化 Points 直接生成，带独立大小、亮度、冷暖色、轻微闪烁和月亮附近抑制，并随太阳高度连续淡入淡出。</p>
+  <h1>纸艺世界视觉 Demo v12.7</h1>
+  <p>v12.7 镜头与星空修正：镜头俯仰范围放开到接近完整上下半球，可从高处、低处、背面任意环绕观察；星星恢复真实深度测试，只会出现在天空后方，会被树、地形和角色正确遮挡，不再像 UI 一样压在树顶和屏幕上。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -60,7 +60,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · Shadow-map Raymarch 体积散射</div>
+<div class="badge">拖动 360° 环绕 · 可俯视/仰视 · 滚轮缩放 · 星空真实深度遮挡</div>
 
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -84,12 +84,16 @@ scene.fog=new THREE.Fog(0xaec8d3,15,36);
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
 const target=new THREE.Vector3(0,1.75,-.35);
 let yaw=.02,pitch=.18,dist=19.2;
+const PITCH_LIMIT=Math.PI*.5-.015;
 function placeCamera(){
   camera.position.set(
     target.x+Math.sin(yaw)*Math.cos(pitch)*dist,
     target.y+Math.sin(pitch)*dist,
     target.z+Math.cos(yaw)*Math.cos(pitch)*dist
   );
+  // Keep the camera upright while allowing the orbit itself to cover the
+  // entire upper/lower viewing sphere.
+  camera.up.set(0,1,0);
   camera.lookAt(target);
 }
 placeCamera();
@@ -951,7 +955,7 @@ for(let i=0;i<STAR_COUNT;i++){
   const radial=Math.sqrt(Math.max(0,1-y*y));
   const x=Math.cos(theta)*radial;
   const z=Math.sin(theta)*radial;
-  const radius=42;
+  const radius=45.5;
 
   starPositions[i*3]=x*radius;
   starPositions[i*3+1]=y*radius;
@@ -994,7 +998,7 @@ const starMaterial=new THREE.ShaderMaterial({
   uniforms:starUniforms,
   transparent:true,
   depthWrite:false,
-  depthTest:false,
+  depthTest:true,
   blending:THREE.AdditiveBlending,
   toneMapped:false,
   vertexShader:`
@@ -1059,7 +1063,7 @@ const starMaterial=new THREE.ShaderMaterial({
 });
 const starField=new THREE.Points(starGeometry,starMaterial);
 starField.frustumCulled=false;
-starField.renderOrder=-8;
+starField.renderOrder=10;
 scene.add(starField);
 
 // Visible sun/moon discs so the lighting direction reads immediately.
@@ -1737,11 +1741,14 @@ let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0,lastMistTi
 renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointermove',e=>{
   if(!dragging)return;
-  yaw-=(e.clientX-lastX)*.006;pitch=clamp(pitch+(e.clientY-lastY)*.004,.08,.62);
-  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;
+  yaw-=(e.clientX-lastX)*.006;
+  pitch=clamp(pitch+(e.clientY-lastY)*.005,-PITCH_LIMIT,PITCH_LIMIT);
+  lastX=e.clientX;lastY=e.clientY;
+  placeCamera();
+  renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
 });
 renderer.domElement.addEventListener('pointerup',()=>dragging=false);
-renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true},{passive:true});
+renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,8,32);placeCamera();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));starUniforms.pixelRatio.value=Math.min(devicePixelRatio||1,1.35);resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
