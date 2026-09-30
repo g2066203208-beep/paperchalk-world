@@ -20,13 +20,20 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 .sunPanel input[type="range"]{width:100%;accent-color:#c58c34}
 .sunPanel .sunVal{font-variant-numeric:tabular-nums;text-align:right;font-weight:750}
 .sunPanel button{width:100%;margin-top:5px;padding:7px 9px;font-size:11px;border-radius:11px}
-@media(max-width:720px){.panel{left:10px;top:10px;padding:11px 12px;max-width:calc(100vw - 150px)}.panel h1{font-size:16px}.panel p{font-size:10px}.controls{right:10px;bottom:10px;gap:6px}button{padding:9px 10px;font-size:12px}.badge{display:none}.sunPanel{right:10px;top:10px;width:132px;padding:8px}.sunPanel .title{font-size:11px}.sunPanel .sunRow{grid-template-columns:1fr;gap:2px;margin:4px 0}.sunPanel .sunVal{text-align:left;font-size:10px}.sunPanel button{font-size:10px;padding:6px}.sunPanel input[type="range"]{width:100%}}
+.materialPanel{position:fixed;z-index:7;left:18px;bottom:18px;width:238px;padding:10px 11px;border-radius:14px;background:rgba(245,233,207,.94);border:2px solid #8e7358;box-shadow:0 10px 26px #0004}
+.materialPanel .title{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:12px;font-weight:850}
+.materialPanel .row{display:grid;grid-template-columns:74px 1fr 48px;align-items:center;gap:7px;margin:6px 0;font-size:11px}
+.materialPanel input[type="range"]{width:100%;accent-color:#6f8d4e}
+.materialPanel .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
+.materialPanel button{width:100%;margin-top:4px;padding:6px 8px;border-radius:10px;font-size:10px}
+
+@media(max-width:720px){.panel{left:10px;top:10px;padding:11px 12px;max-width:calc(100vw - 150px)}.panel h1{font-size:16px}.panel p{font-size:10px}.controls{right:10px;bottom:10px;gap:6px}button{padding:9px 10px;font-size:12px}.badge{display:none}.sunPanel{right:10px;top:10px;width:132px;padding:8px}.sunPanel .title{font-size:11px}.sunPanel .sunRow{grid-template-columns:1fr;gap:2px;margin:4px 0}.sunPanel .sunVal{text-align:left;font-size:10px}.sunPanel button{font-size:10px;padding:6px}.sunPanel input[type="range"]{width:100%}.materialPanel{left:10px;bottom:10px;width:190px;padding:8px}.materialPanel .row{grid-template-columns:64px 1fr 42px;gap:5px;font-size:10px}}
 </style>
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.24</h1>
-  <p>v12.24 草地方块分面：方块仍然严格 1×1×1，不增加任何厚度几何。顶面继续是绿色 Paper003，四个侧面和底面先换成泥土棕色 Paper003；两种表面都保留 NormalGL、Roughness 和高度凹凸着色，先看这种“绿顶 + 泥土侧面”的层次。</p>
+  <h1>纸艺世界视觉 Demo v12.25</h1>
+  <p>v12.25 Paper003 调试：地形继续保持标准立方体和“绿顶 + 泥土侧面”。为地形单独克隆一套 Paper003 纹理，不再影响小草；新增实时调试面板，可直接调整纸纹大小、法线强度和高度凹凸。默认把纸纹放大到 2.0×。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -41,6 +48,26 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
     <span id="sunElevationVal" class="sunVal">13°</span>
   </div>
   <button id="sunFollow">恢复跟随昼夜</button>
+</div>
+
+<div class="materialPanel">
+  <div class="title"><span>Paper003 地形调试</span><span>实时</span></div>
+  <div class="row">
+    <span>纸纹大小</span>
+    <input id="paperScale" type="range" min="50" max="400" step="5" value="200">
+    <span id="paperScaleVal" class="val">2.00×</span>
+  </div>
+  <div class="row">
+    <span>法线强度</span>
+    <input id="paperNormal" type="range" min="0" max="300" step="5" value="185">
+    <span id="paperNormalVal" class="val">1.85</span>
+  </div>
+  <div class="row">
+    <span>高度凹凸</span>
+    <input id="paperHeight" type="range" min="0" max="800" step="10" value="480">
+    <span id="paperHeightVal" class="val">4.80</span>
+  </div>
+  <button id="paperReset">恢复默认</button>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -484,6 +511,30 @@ const paper003Normal=loadPaper003Texture(PAPER003_NORMAL_GL_URL);
 const paper003Roughness=loadPaper003Texture(PAPER003_ROUGHNESS_URL);
 const paper003Displacement=loadPaper003Texture(PAPER003_DISPLACEMENT_URL);
 
+function cloneTerrainPaper003Texture(source){
+  const t=source.clone();
+  t.needsUpdate=true;
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  return t;
+}
+const terrainPaper003Color=cloneTerrainPaper003Texture(paper003Color);
+const terrainPaper003Normal=cloneTerrainPaper003Texture(paper003Normal);
+const terrainPaper003Roughness=cloneTerrainPaper003Texture(paper003Roughness);
+const terrainPaper003Displacement=cloneTerrainPaper003Texture(paper003Displacement);
+const terrainPaper003Textures=[
+  terrainPaper003Color,
+  terrainPaper003Normal,
+  terrainPaper003Roughness,
+  terrainPaper003Displacement
+];
+
+function setTerrainPaperScale(size){
+  const repeat=1/Math.max(.05,size);
+  for(const t of terrainPaper003Textures)t.repeat.set(repeat,repeat);
+}
+setTerrainPaperScale(2.0);
+
+
 // ---------------------------------------------------------------------------
 // Terrain v12.18 — strict standard cubes.
 // Geometry is exactly 1×1×1. No cap, no edge layer, no extra thickness and no
@@ -495,9 +546,9 @@ const TERRAIN_DIRT_COLOR=0x8b654c;
 function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
   const mat=new THREE.MeshStandardMaterial({
     color,
-    map:paper003Color,
-    normalMap:paper003Normal,
-    roughnessMap:paper003Roughness,
+    map:terrainPaper003Color,
+    normalMap:terrainPaper003Normal,
+    roughnessMap:terrainPaper003Roughness,
     normalScale:new THREE.Vector2(normalScale,normalScale),
     roughness:1.08,
     metalness:0
@@ -510,7 +561,7 @@ function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
   mat.userData.paper003HeightUniform=heightUniform;
   mat.userData.paper003HeightOn=heightStrength;
   mat.onBeforeCompile=shader=>{
-    shader.uniforms.paper003HeightMap={value:paper003Displacement};
+    shader.uniforms.paper003HeightMap={value:terrainPaper003Displacement};
     shader.uniforms.paper003HeightStrength=heightUniform;
 
     shader.fragmentShader=shader.fragmentShader.replace(
@@ -621,9 +672,9 @@ const paperObjects=[terrainBlocks];
 function rebuildMaterialRandomness(on=true){
   const mats=[terrainTopMat,terrainDirtMat];
   for(const mat of mats){
-    mat.map=on?paper003Color:null;
-    mat.normalMap=on?paper003Normal:null;
-    mat.roughnessMap=on?paper003Roughness:null;
+    mat.map=on?terrainPaper003Color:null;
+    mat.normalMap=on?terrainPaper003Normal:null;
+    mat.roughnessMap=on?terrainPaper003Roughness:null;
     mat.normalScale.setScalar(on?(mat===terrainTopMat?1.85:1.55):1);
     mat.roughness=on?1.08:.92;
     if(mat.userData.paper003HeightUniform){
@@ -2094,6 +2145,42 @@ document.getElementById('sunFollow').onclick=()=>{
   syncSunControls();syncButtons();
   renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 };
+
+function applyPaperDebug(){
+  const size=+document.getElementById('paperScale').value/100;
+  const normal=+document.getElementById('paperNormal').value/100;
+  const height=+document.getElementById('paperHeight').value/100;
+
+  setTerrainPaperScale(size);
+  terrainTopMat.normalScale.setScalar(normal);
+  terrainDirtMat.normalScale.setScalar(normal*.84);
+
+  if(terrainTopMat.userData.paper003HeightUniform){
+    terrainTopMat.userData.paper003HeightUniform.value=state.random?height:0;
+  }
+  if(terrainDirtMat.userData.paper003HeightUniform){
+    terrainDirtMat.userData.paper003HeightUniform.value=state.random?height*.83:0;
+  }
+
+  terrainTopMat.userData.paper003HeightOn=height;
+  terrainDirtMat.userData.paper003HeightOn=height*.83;
+
+  document.getElementById('paperScaleVal').textContent=size.toFixed(2)+'×';
+  document.getElementById('paperNormalVal').textContent=normal.toFixed(2);
+  document.getElementById('paperHeightVal').textContent=height.toFixed(2);
+  renderDirty=true;
+}
+
+['paperScale','paperNormal','paperHeight'].forEach(id=>{
+  document.getElementById(id).addEventListener('input',applyPaperDebug);
+});
+document.getElementById('paperReset').onclick=()=>{
+  document.getElementById('paperScale').value=200;
+  document.getElementById('paperNormal').value=185;
+  document.getElementById('paperHeight').value=480;
+  applyPaperDebug();
+};
+
 document.getElementById('dawn').onclick=()=>preset('dawn');
 document.getElementById('noon').onclick=()=>preset('noon');
 document.getElementById('sunset').onclick=()=>preset('sunset');
