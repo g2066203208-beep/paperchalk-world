@@ -32,8 +32,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.26</h1>
-  <p>v12.26 Paper003 去重复：地形仍是标准立方体和“绿顶 + 泥土侧面”，但每个方块会从 Paper003 的不同区域取纸纹，并固定随机 90° 旋转、镜像和轻微尺寸变化；Color、NormalGL、Roughness、Displacement 全部共用同一套随机 UV，不会互相错位。附近方块共享部分区域种子，并加入极轻的区域明暗差，减少瓷砖式重复。</p>
+  <h1>纸艺世界视觉 Demo v12.25</h1>
+  <p>v12.25 Paper003 调试：地形继续保持标准立方体和“绿顶 + 泥土侧面”。为地形单独克隆一套 Paper003 纹理，不再影响小草；新增实时调试面板，可直接调整纸纹大小、法线强度和高度凹凸。默认把纸纹放大到 2.0×。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -66,11 +66,6 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
     <span>高度凹凸</span>
     <input id="paperHeight" type="range" min="0" max="800" step="10" value="480">
     <span id="paperHeightVal" class="val">4.80</span>
-  </div>
-  <div class="row">
-    <span>随机变化</span>
-    <input id="paperVariation" type="range" min="0" max="100" step="5" value="100">
-    <span id="paperVariationVal" class="val">100%</span>
   </div>
   <button id="paperReset">恢复默认</button>
 </div>
@@ -532,14 +527,10 @@ const terrainPaper003Textures=[
   terrainPaper003Roughness,
   terrainPaper003Displacement
 ];
-for(const t of terrainPaper003Textures)t.repeat.set(1,1);
 
-// All four Paper003 channels use this exact same UV window size.
-// size=2.0 means one cube shows roughly half the source texture width/height.
-const terrainPaperRepeatUniform={value:.5};
-const terrainPaperVariationUniform={value:1.0};
 function setTerrainPaperScale(size){
-  terrainPaperRepeatUniform.value=1/Math.max(.05,size);
+  const repeat=1/Math.max(.05,size);
+  for(const t of terrainPaper003Textures)t.repeat.set(repeat,repeat);
 }
 setTerrainPaperScale(2.0);
 
@@ -564,88 +555,27 @@ function makeTerrainPaper003Material(color,name,normalScale,heightStrength){
   });
   mat.name=name;
 
+  // Keep the cube silhouette perfectly standard. Paper003's displacement map
+  // is used only as per-pixel height relief on top of NormalGL.
   const heightUniform={value:heightStrength};
   mat.userData.paper003HeightUniform=heightUniform;
   mat.userData.paper003HeightOn=heightStrength;
-
   mat.onBeforeCompile=shader=>{
     shader.uniforms.paper003HeightMap={value:terrainPaper003Displacement};
     shader.uniforms.paper003HeightStrength=heightUniform;
-    shader.uniforms.paper003Repeat=terrainPaperRepeatUniform;
-    shader.uniforms.paperVariationStrength=terrainPaperVariationUniform;
-
-    // One instance attribute controls every Paper003 channel together:
-    // xy = crop offset, z = 0..3 rotation + 4 mirror flag, w = local scale.
-    shader.vertexShader=shader.vertexShader.replace(
-      '#include <common>',
-      `#include <common>
-attribute vec4 instancePaper;
-varying vec2 vPaperUv;
-varying float vPaperTint;
-uniform float paper003Repeat;
-uniform float paperVariationStrength;
-
-vec2 paper003InstanceUv(vec2 baseUv){
-  vec2 plainUv=baseUv*paper003Repeat;
-
-  vec2 p=baseUv-0.5;
-  float code=floor(instancePaper.z+0.5);
-  float rot=mod(code,4.0);
-
-  if(code>=4.0)p.x=-p.x;
-
-  if(rot<0.5){
-    // 0 degrees
-  }else if(rot<1.5){
-    p=vec2(-p.y,p.x);
-  }else if(rot<2.5){
-    p=-p;
-  }else{
-    p=vec2(p.y,-p.x);
-  }
-
-  p*=paper003Repeat*instancePaper.w;
-  vec2 variedUv=p+instancePaper.xy;
-  return mix(plainUv,variedUv,paperVariationStrength);
-}
-`
-    );
-
-    shader.vertexShader=shader.vertexShader.replace(
-      '#include <uv_vertex>',
-      `#include <uv_vertex>
-vPaperUv=paper003InstanceUv(uv);
-vPaperTint=mix(
-  1.0,
-  0.975+0.05*fract(instancePaper.x*5.173+instancePaper.y*9.317),
-  paperVariationStrength
-);
-#ifdef USE_MAP
-  vMapUv=vPaperUv;
-#endif
-#ifdef USE_NORMALMAP
-  vNormalMapUv=vPaperUv;
-#endif
-#ifdef USE_ROUGHNESSMAP
-  vRoughnessMapUv=vPaperUv;
-#endif
-`
-    );
 
     shader.fragmentShader=shader.fragmentShader.replace(
       'void main() {',
       `
-varying vec2 vPaperUv;
-varying float vPaperTint;
 uniform sampler2D paper003HeightMap;
 uniform float paper003HeightStrength;
 
 vec2 paper003HeightDerivatives(){
-  vec2 dSTdx=dFdx(vPaperUv);
-  vec2 dSTdy=dFdy(vPaperUv);
-  float H=paper003HeightStrength*texture2D(paper003HeightMap,vPaperUv).r;
-  float dHx=paper003HeightStrength*texture2D(paper003HeightMap,vPaperUv+dSTdx).r-H;
-  float dHy=paper003HeightStrength*texture2D(paper003HeightMap,vPaperUv+dSTdy).r-H;
+  vec2 dSTdx=dFdx(vMapUv);
+  vec2 dSTdy=dFdy(vMapUv);
+  float H=paper003HeightStrength*texture2D(paper003HeightMap,vMapUv).r;
+  float dHx=paper003HeightStrength*texture2D(paper003HeightMap,vMapUv+dSTdx).r-H;
+  float dHy=paper003HeightStrength*texture2D(paper003HeightMap,vMapUv+dSTdy).r-H;
   return vec2(dHx,dHy);
 }
 vec3 paper003PerturbNormal(vec3 surfPos,vec3 surfNorm,vec2 dHdxy,float sideSign){
@@ -662,21 +592,13 @@ void main() {
 `
     );
 
-    // Color also uses the same varied UV, then receives only a tiny regional tint.
-    shader.fragmentShader=shader.fragmentShader.replace(
-      '#include <map_fragment>',
-      `#include <map_fragment>
-diffuseColor.rgb*=vPaperTint;`
-    );
-
     shader.fragmentShader=shader.fragmentShader.replace(
       '#include <normal_fragment_maps>',
       `#include <normal_fragment_maps>
 normal=paper003PerturbNormal(-vViewPosition,normal,paper003HeightDerivatives(),faceDirection);`
     );
   };
-
-  mat.customProgramCacheKey=()=>name+'-paper003-random-uv-v3';
+  mat.customProgramCacheKey=()=>name+'-paper003-height-v2';
   return mat;
 }
 
@@ -719,12 +641,6 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   terrainBlockCount+=h+1;
 }
 
-// Per-cube Paper003 sampling. This is deterministic from voxel coordinates,
-// so the paper pattern never swims or changes between frames.
-const terrainPaperData=new Float32Array(terrainBlockCount*4);
-const terrainPaperAttr=new THREE.InstancedBufferAttribute(terrainPaperData,4);
-blockGeo.setAttribute('instancePaper',terrainPaperAttr);
-
 const terrainBlocks=new THREE.InstancedMesh(
   blockGeo,
   [terrainDirtMat,terrainTopMat],
@@ -744,47 +660,16 @@ for(const rec of columnRecords){
     terrainDummy.rotation.set(0,0,0);
     terrainDummy.scale.set(1,1,1);
     terrainDummy.updateMatrix();
-    terrainBlocks.setMatrixAt(terrainIndex,terrainDummy.matrix);
-
-    // 2x2 areas share most of a crop seed, then each voxel gets a small offset.
-    // This avoids both perfect tiling and noisy "every cube is unrelated" mosaics.
-    const regionX=Math.floor(rec.x/2);
-    const regionZ=Math.floor(rec.z/2);
-    const regionA=hash3(regionX,71,regionZ);
-    const regionB=hash3(regionX,193,regionZ);
-    const cellA=hash3(rec.x,y*17+11,rec.z);
-    const cellB=hash3(rec.x*13+7,y,rec.z*19-3);
-
-    const offsetX=(regionA*.78+cellA*.22)%1;
-    const offsetY=(regionB*.78+cellB*.22)%1;
-
-    const quarterTurn=Math.min(3,Math.floor(hash3(rec.x+31,y+17,rec.z-23)*4));
-    const mirror=hash3(rec.x-41,y+29,rec.z+37)>.5?4:0;
-
-    // ±12% local paper-size variation around the global debug size.
-    const localScale=.88+hash3(rec.x+5,y+101,rec.z-7)*.24;
-
-    terrainPaperAttr.setXYZW(
-      terrainIndex,
-      offsetX,
-      offsetY,
-      quarterTurn+mirror,
-      localScale
-    );
-
-    terrainIndex++;
+    terrainBlocks.setMatrixAt(terrainIndex++,terrainDummy.matrix);
   }
 }
 terrainBlocks.instanceMatrix.needsUpdate=true;
-terrainPaperAttr.needsUpdate=true;
 
 const caps=[];
 const rims=[];
 const paperObjects=[terrainBlocks];
 
 function rebuildMaterialRandomness(on=true){
-  const variationEl=document.getElementById('paperVariation');
-  terrainPaperVariationUniform.value=on&&variationEl?(+variationEl.value/100):0;
   const mats=[terrainTopMat,terrainDirtMat];
   for(const mat of mats){
     mat.map=on?terrainPaper003Color:null;
@@ -2265,10 +2150,8 @@ function applyPaperDebug(){
   const size=+document.getElementById('paperScale').value/100;
   const normal=+document.getElementById('paperNormal').value/100;
   const height=+document.getElementById('paperHeight').value/100;
-  const variation=+document.getElementById('paperVariation').value/100;
 
   setTerrainPaperScale(size);
-  terrainPaperVariationUniform.value=state.random?variation:0;
   terrainTopMat.normalScale.setScalar(normal);
   terrainDirtMat.normalScale.setScalar(normal*.84);
 
@@ -2285,18 +2168,16 @@ function applyPaperDebug(){
   document.getElementById('paperScaleVal').textContent=size.toFixed(2)+'×';
   document.getElementById('paperNormalVal').textContent=normal.toFixed(2);
   document.getElementById('paperHeightVal').textContent=height.toFixed(2);
-  document.getElementById('paperVariationVal').textContent=Math.round(variation*100)+'%';
   renderDirty=true;
 }
 
-['paperScale','paperNormal','paperHeight','paperVariation'].forEach(id=>{
+['paperScale','paperNormal','paperHeight'].forEach(id=>{
   document.getElementById(id).addEventListener('input',applyPaperDebug);
 });
 document.getElementById('paperReset').onclick=()=>{
   document.getElementById('paperScale').value=200;
   document.getElementById('paperNormal').value=185;
   document.getElementById('paperHeight').value=480;
-  document.getElementById('paperVariation').value=100;
   applyPaperDebug();
 };
 
