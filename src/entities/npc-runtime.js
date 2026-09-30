@@ -29,7 +29,7 @@ function createNPCWorld({definitions=[],quests=[],terrain,ecs,gravity=22}={}){
     const npc={id,name:String(def?.name||'NPC'),role:String(def?.role||'villager'),invulnerable:def?.invulnerable!==false,interactable:def?.interactable!==false,appearance:{...(def?.appearance||{})}};
     const brain=AI.createBrain(def),brainComponent={runtime:brain};
     const entity=ecs.create({Transform:transform,Velocity:velocity,Health:health,Actor:actor,NPC:npc,Brain:brainComponent});
-    const record={entity,id,transform,velocity,health,actor,npc,brain,collider,definition:def,path:[],pathIndex:0,pathKey:'',repath:0,brainSense:0,lodAccumulator:0,lastTerrainVersion:terrain.changeVersion||0};
+    const record={entity,id,transform,velocity,health,actor,npc,brain,collider,definition:def,path:[],pathIndex:0,pathKey:'',repath:0,brainSense:0,lodAccumulator:0,simAccumulator:0,lastTerrainVersion:terrain.changeVersion||0};
     actors.push(record);byId.set(id,record);byEntity.set(entity,record);return record;
   }
   for(let i=0;i<definitions.length;i++)make(definitions[i],i);
@@ -87,6 +87,9 @@ function createNPCWorld({definitions=[],quests=[],terrain,ecs,gravity=22}={}){
 
   function updateOne(a,dt,context){
     const step=Math.max(0,Math.min(.12,num(dt,0))),player=context?.player||null;
+    a.simAccumulator+=step;
+    if(a.simAccumulator<.05)return;
+    dt=Math.min(.12,a.simAccumulator);a.simAccumulator=0;
     const pd=player?Math.hypot(player.x-a.transform.x,player.z-a.transform.z):Infinity;
     const far=pd>num(a.definition?.ai?.fullSimRange,26);
     if(far){
@@ -155,7 +158,7 @@ function createNPCWorld({definitions=[],quests=[],terrain,ecs,gravity=22}={}){
     const offscreen=actors.filter(a=>a.brain.snapshot().offscreen).length;
     return {count:actors.length,ids:actors.map(a=>a.id),ecsActors:true,ecsSystem:'npc-ai-actor',sameActorComponentsAsPlayer:true,physicalColliders:true,
       aiStack:{perception:true,memory:true,voxelAStar:true,steeringAvoidance:true,fsm:true,utility:true,needs:true,schedule:true,social:true,dialogue:true,quests:true,offscreenLOD:true},
-      offscreen,tickCount,repaths,coarseTicks,navigation:navigator.stats(),dialogue:dialogue.stats()};
+      offscreen,tickCount,repaths,coarseTicks,simulationHz:20,navigation:navigator.stats(),dialogue:dialogue.stats()};
   }
   return Object.freeze({actors,collidesAABB,snapshot,get,stats,emitStimulus,nearestInteractable,interact,interactNearest,exportState,importState,dialogueSnapshot:dialogue.snapshot});
 }
