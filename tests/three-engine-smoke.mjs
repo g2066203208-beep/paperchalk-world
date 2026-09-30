@@ -26,12 +26,8 @@ try{
   assert(initial.worldMode==='finite-side-scroll-voxel','wrong world mode');
   assert(initial.paperStyle?.enabled===false,'prologue road must use cube voxels '+JSON.stringify(initial.paperStyle));
   assert(initial.terrainMode==='finite-voxel-road','finite voxel road renderer mode missing '+JSON.stringify(initial));
-  assert(initial.paperStage?.enabled===true&&initial.paperStage?.mode==='instanced-2d-multilayer-paper-school'&&initial.paperStage?.source==='python-generated-school-paper-atlas','96-card paper school missing '+JSON.stringify(initial.paperStage));
-  assert(initial.paperStage?.cards===96&&initial.paperStage?.assetTypes===28&&initial.paperStage?.noCollision===true&&initial.paperStage?.real3DBuilding===false,'paper school card contract wrong '+JSON.stringify(initial.paperStage));
-  assert(initial.paperStage?.groundTopY===1&&Math.abs(initial.paperStage?.facadeZ+10.24)<.001&&initial.paperStage?.attachmentGapMeters===.04,'school is not grounded / facade attachments too far '+JSON.stringify(initial.paperStage));
-  assert(Array.isArray(initial.paperStage?.layers)&&initial.paperStage.layers.length===8&&initial.paperStage.layers.map(x=>x.count).join(',')==='6,8,10,12,28,16,10,6','paper school layer counts wrong '+JSON.stringify(initial.paperStage));
-  await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperStage?.atlasReady===true,{timeout:6000,polling:'raf'});
-  await page.screenshot({path:'artifacts/prologue-paper-layers.png'});
+  assert(initial.paperStage==null,'school paper stage must be absent '+JSON.stringify(initial.paperStage));
+  await page.screenshot({path:'artifacts/city-ground-only.png'});
   assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
