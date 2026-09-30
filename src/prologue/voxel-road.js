@@ -106,31 +106,21 @@ P.stats=function(){
   };
 };
 
-const fixedCamera=Object.freeze({
+const defaultCamera=Object.freeze({
   yaw:0,pitch:.18,distance:19.2,height:.72,fov:36,
   stageView:Object.freeze({enabled:false,axis:'z',side:1})
 });
 let presentationApplied=false;
-let correctingCamera=false;
 function applyPresentation(){
   if(presentationApplied||!enabled())return;
   const api=global.Paperchalk3D;
   if(!api?.ready)return;
   presentationApplied=true;
   api.setPaperStyle?.(false);
-  api.setCameraConfig?.({...fixedCamera,stageView:{...fixedCamera.stageView}});
-}
-function enforceCamera(event){
-  if(!enabled()||correctingCamera||!presentationApplied)return;
-  const c=event?.detail||{};
-  if(Math.abs((c.yaw??0)-fixedCamera.yaw)<.001&&Math.abs((c.pitch??0)-fixedCamera.pitch)<.001&&
-     Math.abs((c.distance??0)-fixedCamera.distance)<.01&&Math.abs((c.height??0)-fixedCamera.height)<.01)return;
-  correctingCamera=true;
-  global.Paperchalk3D?.setCameraConfig?.({...fixedCamera,stageView:{...fixedCamera.stageView}});
-  correctingCamera=false;
+  const current=api.stats?.camera;
+  if(!current)api.setCameraConfig?.({...defaultCamera,stageView:{...defaultCamera.stageView}});
 }
 global.addEventListener('paperchalk-3d-change',applyPresentation);
-global.addEventListener('paperchalk-3d-camera-change',enforceCamera);
 global.addEventListener('paperchalk-world-leave',()=>{presentationApplied=false});
 
 global.PaperchalkPrologueRoad=Object.freeze({
