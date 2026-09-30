@@ -30,6 +30,7 @@ try{
   assert(initial.paperStage?.planes===4&&initial.paperStage?.noCollision===true&&initial.paperStage?.real3DBuilding===false,'paper stage plane/collision contract wrong '+JSON.stringify(initial.paperStage));
   assert(Array.isArray(initial.paperStage?.layers)&&initial.paperStage.layers.map(x=>x.z).join(',')==='-9.2,-7.75,-6.15,-4.85','paper stage Z ordering wrong '+JSON.stringify(initial.paperStage));
   await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperStage?.texturesReady===4,{timeout:6000,polling:'raf'});
+  await page.screenshot({path:'artifacts/prologue-paper-layers.png'});
   assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
