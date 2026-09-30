@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.13</h1>
-  <p>v12.13 浅深纸块：继续保持最基础的 1×1×1 立方体，只在绿色底色上叠加小/中/大三档随机浅色与深色方块。没有法线、AO、凹凸、纸层或额外几何；右侧“浅深方块”按钮可以直接切回纯色对比。</p>
+  <h1>纸艺世界视觉 Demo v12.14</h1>
+  <p>v12.14 纸张底纹：去掉像像素迷彩一样的规则浅深方块，仍然保持最基础的 1×1×1 立方体和纯颜色材质逻辑；现在只用大面积低对比纸浆斑、短纤维和极少量纸屑颗粒做纸张底纹。没有法线、AO、凹凸或额外几何，右侧可直接切回纯色。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -49,7 +49,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="shadow" class="active">软阴影</button>
   <button id="fog" class="active">动态纸雾</button>
   <button id="tone" class="active">统一色调</button>
-  <button id="random" class="active">浅深方块</button>
+  <button id="random" class="active">纸张底纹</button>
   <button id="bounce" class="active">地面反射光</button>
   <button id="papergrass" class="active">剪纸小草</button>
   <button id="godrays" class="active">受光体积雾</button>
@@ -469,30 +469,61 @@ function makeSimpleTerrainColorTexture(){
   g.fillStyle='#91b274';
   g.fillRect(0,0,size,size);
 
-  const pickSize=()=>{
-    const t=r();
-    if(t<.44)return 6+r()*6;      // small 6..12
-    if(t<.84)return 12+r()*12;    // medium 12..24
-    return 24+r()*18;             // large 24..42
-  };
-
-  const drawBlocks=(count,colors,minAlpha,maxAlpha)=>{
-    for(let i=0;i<count;i++){
-      const w=Math.round(pickSize());
-      const h=Math.round(Math.max(5,w*(.72+r()*.56)));
-      const x=Math.floor(r()*(size-w));
-      const y=Math.floor(r()*(size-h));
-      const color=colors[(r()*colors.length)|0];
-      const alpha=minAlpha+r()*(maxAlpha-minAlpha);
-      g.globalAlpha=alpha;
-      g.fillStyle=color;
-      g.fillRect(x,y,w,h);
+  // Broad irregular pulp patches.  These are low contrast and soft-edged in
+  // value, so the surface reads as dyed paper stock rather than pixel camo.
+  const pulpColors=['#a8c287','#7e9f68','#9fbb7d','#88a96d'];
+  for(let i=0;i<26;i++){
+    const cx=r()*size,cy=r()*size;
+    const rx=18+r()*48,ry=12+r()*34;
+    const n=12+(r()*7|0);
+    g.globalAlpha=.035+r()*.055;
+    g.fillStyle=pulpColors[(r()*pulpColors.length)|0];
+    g.beginPath();
+    for(let j=0;j<n;j++){
+      const a=Math.PI*2*j/n;
+      const rr=1+(r()-.5)*.26;
+      const x=cx+Math.cos(a)*rx*rr;
+      const y=cy+Math.sin(a)*ry*rr;
+      if(j===0)g.moveTo(x,y);else g.lineTo(x,y);
     }
-  };
+    g.closePath();g.fill();
+  }
 
-  // Colour only: deliberately no height/normal/AO correlation yet.
-  drawBlocks(44,['#a6c487','#b2cf93'],.08,.16);
-  drawBlocks(34,['#7e9f63','#6f9157'],.06,.14);
+  // Short cellulose fibres: restrained, broken and mostly invisible until
+  // close-up.  This is the main visual cue for real coloured paper.
+  for(let i=0;i<760;i++){
+    const x=r()*size,y=r()*size;
+    const a=r()*Math.PI;
+    const len=.7+r()*4.8;
+    const light=r()>.52;
+    g.globalAlpha=.055+r()*.085;
+    g.strokeStyle=light?'#eef2d8':'#536b47';
+    g.lineWidth=.28+r()*.52;
+    g.beginPath();
+    g.moveTo(x,y);
+    g.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len);
+    g.stroke();
+  }
+
+  // Sparse pulp flecks; intentionally tiny and non-uniform.
+  for(let i=0;i<145;i++){
+    const q=.35+r()*1.25;
+    g.globalAlpha=.035+r()*.075;
+    g.fillStyle=r()>.5?'#edf1d6':'#536946';
+    g.fillRect(r()*size,r()*size,q,q);
+  }
+
+  // One or two very faint large sheets stop tiling from looking synthetic.
+  for(let i=0;i<5;i++){
+    const x=r()*size,y=r()*size,w=45+r()*80,h=36+r()*68;
+    const grad=g.createRadialGradient(x,y,0,x,y,Math.max(w,h));
+    const light=r()>.5;
+    grad.addColorStop(0,light?'rgba(218,230,184,.055)':'rgba(87,111,70,.045)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    g.globalAlpha=1;
+    g.fillStyle=grad;
+    g.fillRect(x-w,y-h,w*2,h*2);
+  }
 
   g.globalAlpha=1;
   const t=new THREE.CanvasTexture(c);
@@ -511,7 +542,7 @@ const terrainMat=new THREE.MeshLambertMaterial({
   map:simpleTerrainTexture,
   flatShading:true
 });
-terrainMat.name='terrain-simple-color-blocks';
+terrainMat.name='terrain-simple-paper-albedo';
 
 const blockGeo=new THREE.BoxGeometry(1,1,1);
 const terrain=new THREE.Group();
