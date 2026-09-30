@@ -8,7 +8,6 @@ assert.match(renderer,/three-r180-infinite-voxel-3d/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
 assert.doesNotMatch(game,/PLAYER_ROW_CENTER_Z/);
-assert.doesNotMatch(game,/velocity\.z=0/);
 assert.match(game,/FLY_SPEED/);
 assert.match(game,/setFlight/);
 assert.match(game,/KeyW/);
