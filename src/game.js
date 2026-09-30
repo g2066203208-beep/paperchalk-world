@@ -735,6 +735,7 @@ window.PaperchalkEvents?.emit('fishing:fish-approach',{fishId:best.id,species:be
 return best;
 }
 function updateFishEcology(dt){
+if(!terrain.water.cells.size&&fishing.state==='idle'&&!fishWorld.entities.length)return;
 fishWorld.accumulator+=dt;fishWorld.spawnAccumulator+=dt;
 if(fishWorld.spawnAccumulator>=1){
 fishWorld.spawnAccumulator=0;
