@@ -75,7 +75,7 @@ export class PrologueSchoolScene{
     for(const y of [baseY+2.45,baseY+4.7])this._box('school-floor-band',14.9,.18,.18,15.45,y,-7.30,trim,{cast:false});
 
     // Recessed central entrance and canopy.
-    this._box('school-entry-recess',3.2,3.15,.18,15.45,baseY+1.58,-7.30,wallSide,false);
+    this._box('school-entry-recess',3.2,3.15,.18,15.45,baseY+1.58,-7.30,wallSide,{cast:false});
     this._box('school-entry-left-door',1.05,2.45,.13,14.86,baseY+1.23,-7.17,door);
     this._box('school-entry-right-door',1.05,2.45,.13,16.04,baseY+1.23,-7.17,door);
     this._box('school-entry-glass-left',.62,1.52,.05,14.86,baseY+1.48,-7.09,glass,{cast:false});
@@ -118,9 +118,9 @@ export class PrologueSchoolScene{
     this._box('school-accent-plaque',1.75,.30,.08,5.6,baseY+2.20,-5.66,accent,{cast:false});
 
     // Thin paper trees behind wall, built from real crossed cards plus trunks.
+    const leaf=this._mat('leaf-paper',0x667e56);
     for(const [x,s] of [[.4,.9],[7.8,1.0],[23.1,.95]]){
       this._box('school-tree-trunk',.28,2.8,.28,x,baseY+2.0,-7.3,door);
-      const leaf=this._mat('leaf-paper-'+x,0x667e56);
       const a=this._box('school-tree-card',2.2*s,3.4*s,.08,x,baseY+4.0,-7.3,leaf,{cast:true});
       const b=this._box('school-tree-card-cross',2.2*s,3.4*s,.08,x,baseY+4.0,-7.3,leaf,{cast:true});b.rotation.y=Math.PI/2;
     }
