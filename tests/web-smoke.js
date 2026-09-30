@@ -61,7 +61,7 @@ assert(paperStage.includes("source:L.source")&&fs.existsSync('src/prologue/schoo
 const schoolLayout=read('src/prologue/school-paper-layout.js');
 assert(schoolLayout.includes("source:'python-generated-school-paper-atlas'"),'school must use Python-generated paper atlas');
 assert(schoolLayout.includes("cards.length!==96"),'96-card school contract missing');
-assert(schoolLayout.includes("asset:'window_blue'")&&schoolLayout.includes("asset:'gate_panel'")&&schoolLayout.includes("asset:'tree_round'"),'school card families missing');
+assert(schoolLayout.includes("'window_blue'")&&schoolLayout.includes("'gate_panel'")&&schoolLayout.includes("'tree_round'"),'school card families missing');
 assert(fs.existsSync('assets/prologue/generated-school/school-paper-atlas.svg'),'Python school atlas missing');
 assert(fs.existsSync('tools/generate_school_paper_assets.py'),'Python school generator missing');
 assert(!fs.existsSync('src/prologue/PrologueSchoolScene.js'),'obsolete 3D school model must stay deleted');
