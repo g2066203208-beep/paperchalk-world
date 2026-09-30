@@ -92,7 +92,7 @@ function buildStock(size,{seed=1,side=false}={}){
 
 function texture(THREE,data,size,{srgb=false,name='paper-map'}={}){
   const t=new THREE.DataTexture(data,size,size,THREE.RGBAFormat,THREE.UnsignedByteType);
-  t.name=name;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;
+  t.name=name;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.generateMipmaps=true;t.anisotropy=16;
   if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;return t;
 }
 
@@ -150,7 +150,7 @@ export function createPaperMaterialSet(THREE,settings){
     tex.name='user-supplied-grass-paper-512';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    tex.generateMipmaps=true;tex.anisotropy=16;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     grassReference=tex;grassLoaded=true;grassReferenceSize=[tex.image?.width||512,tex.image?.height||512];
     if(grassMaterial){grassMaterial.map=tex;grassMaterial.needsUpdate=true}
   });
@@ -158,7 +158,7 @@ export function createPaperMaterialSet(THREE,settings){
     tex.name='user-supplied-dirt-paper-256';tex.colorSpace=THREE.SRGBColorSpace;
     tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
     tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;
-    tex.generateMipmaps=true;tex.anisotropy=8;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
+    tex.generateMipmaps=true;tex.anisotropy=16;tex.repeat.set(1,1);tex.offset.set(0,0);tex.needsUpdate=true;
     dirtReference=tex;dirtLoaded=true;dirtReferenceSize=[tex.image?.width||256,tex.image?.height||256];
     if(dirtMaterial){dirtMaterial.map=tex;dirtMaterial.needsUpdate=true}
   });
@@ -166,14 +166,14 @@ export function createPaperMaterialSet(THREE,settings){
   const make=({side=false,bevel=false}={})=>{
     const source=side?sets.side:sets.top;
     const uniforms={
-      uPaperPrint:{value:Number(settings.printNoiseStrength)||0},
+      uPaperPrint:{value:(Number(settings.printNoiseStrength)||0)*(side||bevel?1:.20)},
       uPaperSide:{value:side?1:0},uPaperBevel:{value:bevel?1:0},
       uPaperBandHeight:{value:Math.max(.08,Number(settings.paperThickness)||.30)}
     };
     const mat=new THREE.MeshPhysicalMaterial({
-      vertexColors:true,map:source.albedo,normalMap:source.normal,roughnessMap:source.roughness,
-      normalScale:new THREE.Vector2(side?.24:.30,side?.24:.30),
-      roughness:.98,metalness:0,side:THREE.DoubleSide,flatShading:!!side,
+      vertexColors:true,map:source.albedo,normalMap:side||bevel?source.normal:null,roughnessMap:side||bevel?source.roughness:null,
+      normalScale:new THREE.Vector2(side?.24:.18,side?.24:.18),
+      roughness:side||bevel?.98:.995,metalness:0,side:THREE.DoubleSide,flatShading:!!side,
       emissive:new THREE.Color(side?0x7b472b:0x9b754d),emissiveIntensity:side?.25:.14,
       specularIntensity:side?.08:.11,ior:1.34,
       sheen:side?.035:.085,sheenRoughness:.96,
@@ -229,17 +229,15 @@ export function createPaperMaterialSet(THREE,settings){
   const materials=[make(),make({side:true}),make({bevel:true})];
   grassMaterial=new THREE.MeshPhysicalMaterial({
     color:0xffffff,map:grassReference,vertexColors:false,
-    normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
-    normalScale:new THREE.Vector2(.20,.20),roughness:.99,metalness:0,side:THREE.DoubleSide,
+    roughness:.995,metalness:0,side:THREE.DoubleSide,
     specularIntensity:.05,ior:1.33,sheen:.04,sheenRoughness:.99,
     sheenColor:new THREE.Color(0xf4f0cf)
   });
   grassMaterial.name='user-grass-native-resolution';grassMaterial.userData.paperRole='grass-top';
   dirtMaterial=new THREE.MeshPhysicalMaterial({
     color:0xffffff,map:dirtReference,vertexColors:false,
-    normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
     emissive:new THREE.Color(0x6c412b),emissiveMap:dirtReference,emissiveIntensity:.28,
-    normalScale:new THREE.Vector2(.18,.18),roughness:.992,metalness:0,side:THREE.DoubleSide,
+    roughness:.995,metalness:0,side:THREE.DoubleSide,
     specularIntensity:.045,ior:1.33,sheen:.035,sheenRoughness:.99,
     sheenColor:new THREE.Color(0xe0b38a)
   });
@@ -250,19 +248,17 @@ export function createPaperMaterialSet(THREE,settings){
     const rough=clamp(Number(next.roughnessVariation)||.035,0,.10);
     for(const mat of materials){
       const u=mat.userData.paperUniforms;if(!u)continue;
-      u.uPaperPrint.value=Number(next.printNoiseStrength)||0;
+      const role=mat.userData.paperRole,sideRole=role==='side',topRole=role==='top';
+      u.uPaperPrint.value=(Number(next.printNoiseStrength)||0)*(topRole?.20:1);
       u.uPaperBandHeight.value=Math.max(.08,Number(next.paperThickness)||.30);
-      const sideRole=mat.userData.paperRole==='side';
-      mat.normalScale.setScalar(micro*(sideRole?.72:1));
-      mat.roughness=clamp(.985-rough*(sideRole?.10:.18),.95,.995);
+      mat.normalScale.setScalar(micro*(sideRole?.72:.52));
+      mat.roughness=topRole?.995:clamp(.985-rough*(sideRole?.10:.18),.95,.995);
       mat.sheen=sideRole?.035:.085;
       mat.sheenRoughness=.96;
       mat.specularIntensity=sideRole?.08:.11;
     }
-    grassMaterial.normalScale.setScalar(micro*.58);
-    grassMaterial.roughness=clamp(.994-rough*.06,.978,.996);
-    dirtMaterial.normalScale.setScalar(micro*.52);
-    dirtMaterial.roughness=clamp(.995-rough*.05,.982,.997);
+    grassMaterial.roughness=clamp(.996-rough*.025,.985,.998);
+    dirtMaterial.roughness=clamp(.996-rough*.025,.985,.998);
     dirtMaterial.emissiveIntensity=.28;
   };
   sync(settings);
@@ -281,6 +277,8 @@ export function createPaperMaterialSet(THREE,settings){
     dirtReferenceLoaded:dirtLoaded,dirtReferenceSize,dirtMaterialGroup:true,
     dirtColorSource:'user-texture-only',dirtTextureTransform:'native-world-uv-repeat-1x',
     liftedCardboardShadow:true,sideShadowLift:.25,dirtShadowLift:.28,
+    groundAnisotropy:16,allPaperAnisotropy:16,authoredSurfaceMicroMaps:false,genericTopMicroMaps:false,
+    topPrintNoiseScale:.20,
     seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{

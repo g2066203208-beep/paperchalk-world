@@ -19,9 +19,9 @@ export class AtmospherePass{
     this.state={strength:0,daylight:0,twilight:0,skyExposure:1,underground:0,time:0,fogBase:0};
     this.size={width:1,height:1,pixelRatio:1,bufferWidth:1,bufferHeight:1};
     this.clearColor=new THREE.Color();
-    this.skyColor=new THREE.Color(0x7897be);
-    this.zenithColor=new THREE.Color(0x6689b5);
-    this.horizonColor=new THREE.Color(0xa8b8c4);
+    this.skyColor=new THREE.Color(0x69afe0);
+    this.zenithColor=new THREE.Color(0x4f9ed4);
+    this.horizonColor=new THREE.Color(0x8bc7ea);
     this.dawnColor=new THREE.Color(0xd6a181);
     this.duskColor=new THREE.Color(0xc28f91);
     this.nightColor=new THREE.Color(0x18243d);
@@ -177,9 +177,16 @@ export class AtmospherePass{
     this.compositeScene=new THREE.Scene();
     this.compositeScene.add(new THREE.Mesh(this.fsGeometry,this.compositeMaterial));
 
+    this.paperSkyLoaded=false;
+    this.paperSkyTexture=new THREE.TextureLoader().load('assets/materials/sky-paper-blue.webp?v=paper-sky-r1',tex=>{
+      tex.colorSpace=THREE.SRGBColorSpace;tex.wrapS=tex.wrapT=THREE.MirroredRepeatWrapping;
+      tex.minFilter=THREE.LinearMipmapLinearFilter;tex.magFilter=THREE.LinearFilter;tex.generateMipmaps=true;this.paperSkyLoaded=true;
+    });
+    this.paperSkyTexture.colorSpace=THREE.SRGBColorSpace;this.paperSkyTexture.wrapS=this.paperSkyTexture.wrapT=THREE.MirroredRepeatWrapping;
     this.skyUniforms={
       uZenith:{value:this.zenithColor},uHorizon:{value:this.horizonColor},
       uSunColor:{value:this.sunDay.clone()},uSunDir:{value:this.sunDirection},
+      tPaper:{value:this.paperSkyTexture},uPaperStrength:{value:.58},
       uTwilight:{value:0},uTime:{value:0}
     };
     this.skyMaterial=new THREE.ShaderMaterial({
@@ -192,8 +199,15 @@ export class AtmospherePass{
         precision highp float;
         varying vec3 vDir;
         uniform vec3 uZenith,uHorizon,uSunColor,uSunDir;
-        uniform float uTwilight,uTime;
-        float hash21(vec2 p){p=fract(p*vec2(123.34,345.45));p+=dot(p,p+34.345);return fract(p.x*p.y);}
+        uniform sampler2D tPaper;
+        uniform float uTwilight,uTime,uPaperStrength;
+        vec3 paperSample(vec3 d){
+          vec3 w=pow(abs(d),vec3(4.0));w/=max(.0001,w.x+w.y+w.z);
+          vec3 a=texture2D(tPaper,d.zy*.62+.5).rgb;
+          vec3 b=texture2D(tPaper,d.xz*.62+.5).rgb;
+          vec3 c=texture2D(tPaper,d.xy*.62+.5).rgb;
+          return a*w.x+b*w.y+c*w.z;
+        }
         vec3 toSRGB(vec3 c){
           vec3 lo=c*12.92;vec3 hi=1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-.055;
           return mix(lo,hi,step(vec3(.0031308),c));
@@ -206,15 +220,17 @@ export class AtmospherePass{
           float mu=max(0.0,dot(d,normalize(uSunDir)));
           float glow=pow(mu,9.0)*(.32+uTwilight*.34);
           float disc=pow(mu,620.0)*1.25;
-          float grain=(hash21(floor(d.xz*850.0)+floor(d.y*410.0))-.5)*.006;
-          col+=uSunColor*(glow+disc);
-          col*=1.0+grain;
+          vec3 paper=paperSample(d);
+          float paperLuma=dot(paper,vec3(.299,.587,.114));
+          float paperMod=mix(1.0,clamp(.55+paperLuma*.90,.82,1.18),uPaperStrength);
+          vec3 paperHue=clamp(paper/max(.12,paperLuma),vec3(.82),vec3(1.18));
+          col=(col+uSunColor*(glow+disc))*paperMod*mix(vec3(1.0),paperHue,.10);
           gl_FragColor=vec4(toSRGB(max(col,vec3(0.0))),1.0);
         }
       `
     });
     this.skyMesh=new THREE.Mesh(new THREE.SphereGeometry(96,28,18),this.skyMaterial);
-    this.skyMesh.name='minecraft-inspired-atmosphere-sky';
+    this.skyMesh.name='paper-textured-atmosphere-sky';
     this.skyMesh.frustumCulled=false;this.skyMesh.renderOrder=-10000;
     this.scene.add(this.skyMesh);
 
@@ -256,8 +272,8 @@ export class AtmospherePass{
     const warm=morning?this.dawnColor:this.duskColor;
     const dayMix=clamp((d-.05)/.82,0,1);
     if(d>.005){
-      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0xa8bac8),dayMix);
-      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x6288b6),dayMix);
+      this.horizonColor.copy(warm).lerp(new this.THREE.Color(0x8bc7ea),dayMix);
+      this.zenithColor.copy(warm).lerp(new this.THREE.Color(0x4f9ed4),dayMix);
     }else{
       this.horizonColor.copy(this.nightHorizon).lerp(warm,tw*.42);
       this.zenithColor.copy(this.nightColor).lerp(warm,tw*.18);
@@ -349,6 +365,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
+      paperSky:true,paperSkyLoaded:this.paperSkyLoaded,paperSkyAsset:'assets/materials/sky-paper-blue.webp',paperSkyStrength:.58,paperSkyDayBlue:true,skyClouds:false,
       minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
@@ -356,7 +373,7 @@ export class AtmospherePass{
 
   dispose(){
     this.scene.remove(this.skyMesh);
-    this.skyMesh.geometry.dispose();this.skyMaterial.dispose();
+    this.skyMesh.geometry.dispose();this.skyMaterial.dispose();this.paperSkyTexture.dispose();
     this.depthTarget.dispose();this.volumeTarget.dispose();this.depthMaterial.dispose();
     this.volumeMaterial.dispose();this.compositeMaterial.dispose();this.fsGeometry.dispose();
     if(this.scene.fog)this.scene.fog=null;

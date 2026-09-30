@@ -35,11 +35,12 @@ try{
 
   const flightStart=await page.evaluate(()=>({ok:window.PaperchalkCombat.setFlight(true,{notice:false}),p:window.PaperchalkRuntime.getSnapshot().player}));
   assert(flightStart.ok===true&&flightStart.p.flying===true,'flight mode did not enable '+JSON.stringify(flightStart));
-  await page.keyboard.down('Space');await page.waitForTimeout(320);await page.keyboard.up('Space');await page.waitForTimeout(80);
+  await page.locator('#threeWorldLayer canvas').focus();
+  await page.keyboard.down('Space');await page.waitForTimeout(420);await page.keyboard.up('Space');await page.waitForTimeout(80);
   const flightUp=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
   assert(flightUp.y-flightStart.p.y>.20,'flight ascend failed '+JSON.stringify({flightStart,flightUp}));
-  await page.evaluate(()=>window.PaperchalkCombat.setFlight(false,{notice:false}));
-  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:5000});
+  await page.evaluate(()=>{window.PaperchalkCombat.setFlight(false,{notice:false});window.PaperchalkMap.reset()});
+  await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:2500,polling:50});
   const groundedY=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player.y);
   const jumped=await page.evaluate(()=>window.PaperchalkCombat.jump());assert(jumped===true,'jump rejected');
   await page.waitForFunction(y=>window.PaperchalkRuntime.getSnapshot().player.y>y+.04,groundedY,{timeout:1500});
