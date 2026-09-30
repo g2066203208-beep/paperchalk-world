@@ -1805,19 +1805,16 @@ closeDebugPanel();closeWorldMap();closeBackpack();closeCameraPanel();
 const session=getSession();
 if(!session){showPage('auth');return false}
 if(!readSaveForSession(session))writeSaveForSession(session,defaultSave(session));
-loadWorldState();
-active=true;
 const appState=window.PaperchalkAppState;
 if(appState&&appState.state!=='world'&&appState.can('world'))appState.transition('world',{source:'enterWorld'});
-uiShell.classList.add('is-hidden');
-uiShell.setAttribute('inert','');
-worldEl.removeAttribute('inert');
+uiShell.classList.add('is-hidden');uiShell.setAttribute('inert','');worldEl.removeAttribute('inert');
+if(window.PaperchalkPrologue?.shouldRun?.(session.account)){
+active=false;window.dispatchEvent(new CustomEvent('paperchalk-prologue-enter',{detail:{account:session.account}}));publish();return true
+}
+loadWorldState();active=true;
 window.PaperchalkEvents?.emit('world:entered',{account:session.account,location:'village-paper-stage'});
-window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));
-startGameLoop();
-publish();
-backpackBtn.focus({preventScroll:true});
-return true;
+window.dispatchEvent(new CustomEvent('paperchalk-world-enter'));startGameLoop();publish();
+backpackBtn.focus({preventScroll:true});return true;
 }
 function openUI(fromWorld=false){
 closeDebugPanel();closeWorldMap();closeBackpack();closeCameraPanel();
