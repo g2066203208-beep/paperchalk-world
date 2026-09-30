@@ -48,6 +48,7 @@ async function ensureReady(){
       content:CONTENT,
       onCameraChanged:syncCameraControls
     });
+    engine.configureAtmosphere?.({volumetric:false,qualityScale:.35,steps:8});
     latestSnapshot=RUNTIME.getSnapshot();
     engine.setSnapshot(latestSnapshot);
     const settings=window.PaperchalkSettings?.get?.();
@@ -191,7 +192,7 @@ window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
   version:10,
-  engine:'three-r180-finite-side-scroll-voxel',
+  engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setPaperStyle,configurePaperTerrain,configureAtmosphere,
   setStageView,toggleStageView,setStageAxis,
@@ -207,8 +208,8 @@ window.Paperchalk3D=Object.freeze({
       ...base,
       fps,frames,active,ready,loopActive:!!raf,error:errorMessage,
       worldMode:CONTENT.scene3d?.mode||base.worldMode,
-      terrainMode:'finite-voxel-road',
-      interaction:{...(base.interaction||{}),threeDimensional:false,zMovementLocked:true}
+      terrainMode:base.terrainMode||'streamed-3d-voxel-chunks',
+      interaction:base.interaction||{threeDimensional:true,zMovementLocked:false,raycastIgnoresOtherRows:false}
     };
   },
   snapshot
