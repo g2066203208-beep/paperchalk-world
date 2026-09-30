@@ -18,7 +18,7 @@ try{
   await page.locator('#registerForm button[type=submit]').click();
   await page.waitForFunction(()=>window.Paperchalk3D?.ready&&window.Paperchalk3D?.active,{timeout:15000});
   await page.waitForTimeout(1800);
-  await page.waitForFunction(()=>{const p=window.Paperchalk3D?.stats?.paperTerrain?.paperMaterial;return p?.grassReferenceLoaded===true&&p?.dirtReferenceLoaded===true},{timeout:6000,polling:'raf'});
+  await page.waitForFunction(()=>{const s=window.Paperchalk3D?.stats,p=s?.paperTerrain?.paperMaterial;return p?.grassReferenceLoaded===true&&p?.dirtReferenceLoaded===true&&s?.atmosphere?.paperSkyLoaded===true},{timeout:6000,polling:'raf'});
 
   const initial=await page.evaluate(()=>window.Paperchalk3D.stats);
   assert(initial.renderer==='WebGLRenderer','not WebGLRenderer');
@@ -50,11 +50,14 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.dirtColorSource==='user-texture-only','dirt still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.dirtTextureTransform==='native-world-uv-repeat-1x','dirt texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassTextureTransform==='native-world-uv-repeat-1x','grass texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.groundAnisotropy===16&&initial.paperTerrain?.paperMaterial?.authoredSurfaceMicroMaps===false,'ground anti-shimmer sampling missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===1&&initial.legacyStagePlaceholders===0,'legacy 2D stage placeholders still active '+JSON.stringify({paperEntities:initial.paperEntities,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
   assert(initial.atmosphere?.technique==='shadowmap-worldspace-heightfog-mie-raymarch','world-space atmosphere missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.samples===17,'desktop volumetric sample gate failed '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.shadowMapOcclusion===true&&initial.atmosphere?.dynamicSky===true,'shadow-map volumetric lighting missing '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.paperSky===true&&initial.atmosphere?.paperSkyLoaded===true,'supplied blue paper sky not loaded '+JSON.stringify(initial.atmosphere));
+  assert(initial.atmosphere?.paperSkyAsset==='assets/materials/sky-paper-blue.webp'&&initial.atmosphere?.skyClouds===false,'paper sky asset/cloud gate wrong '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.jitteredRaymarch===true&&initial.atmosphere?.minecraftShaderInspired===true,'Minecraft-style volumetric integration missing '+JSON.stringify(initial.atmosphere));
   assert((initial.atmosphere?.mieAnisotropy||0)>.6,'Mie forward scattering missing '+JSON.stringify(initial.atmosphere));
   assert(initial.atmosphere?.buffer?.[0]>0&&initial.atmosphere?.buffer?.[1]>0,'atmosphere render target missing '+JSON.stringify(initial.atmosphere));
@@ -112,6 +115,7 @@ try{
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-0.14}));
   await page.waitForTimeout(250);
   await page.screenshot({path:'artifacts/paper-material-v3-reference-closeup.png'});
+  await page.screenshot({path:'artifacts/paper-sky-ground-antialias.png'});
 
   const timeSet=await page.evaluate(()=>window.PaperchalkTimeDebug.set(390));
   assert(timeSet?.clock==='06:30','visual debug time control failed '+JSON.stringify(timeSet));
@@ -135,9 +139,10 @@ try{
   const beforeBytes=fs.statSync('artifacts/paper-phase1-before.png').size;
   const afterBytes=fs.statSync('artifacts/paper-phase1-after.png').size;
   const materialBytes=fs.statSync('artifacts/paper-material-v3-reference-closeup.png').size;
+  const skyGroundBytes=fs.statSync('artifacts/paper-sky-ground-antialias.png').size;
   const raysOffBytes=fs.statSync('artifacts/atmosphere-volumetric-off.png').size;
   const raysOnBytes=fs.statSync('artifacts/atmosphere-volumetric-on.png').size;
-  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
+  assert(beforeBytes>10000&&afterBytes>10000&&materialBytes>10000&&skyGroundBytes>10000&&raysOffBytes>10000&&raysOnBytes>10000,'paper/atmosphere framebuffer screenshots missing');
   assert(beforeBytes!==afterBytes,'paper A/B screenshots are byte-identical');
   assert(raysOffBytes!==raysOnBytes,'volumetric on/off framebuffers are byte-identical');
   fs.writeFileSync('artifacts/paper-phase1-stats.json',JSON.stringify({beforeBytes,afterBytes,materialBytes,raysOffBytes,raysOnBytes,stats:initial.paperTerrain,atmosphere:liveAtmosphere,tuned},null,2));
