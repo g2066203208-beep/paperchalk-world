@@ -6,7 +6,6 @@ on:
     paths:
       - "index.html"
       - "src/**"
-      - "assets/prologue/**"
       - "styles/**"
       - "tests/**"
       - "package.json"
