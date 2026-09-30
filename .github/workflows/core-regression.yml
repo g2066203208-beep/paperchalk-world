@@ -59,3 +59,7 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/core-regression.mjs
+      - name: Run standalone prologue city regression
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: node tests/prologue-smoke.mjs
