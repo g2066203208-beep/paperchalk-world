@@ -15,7 +15,7 @@ assert(html.includes('id="npcInteractBtn"'),'NPC talk control missing');
 assert(npcRuntime.includes("require:['Transform','Velocity','Actor','NPC','Brain']"),'NPC ECS AI actor system missing');
 assert(npcRuntime.includes('sameActorComponentsAsPlayer:true'),'NPC/player actor parity missing');
 assert(game.includes('PaperchalkNPCRuntime')&&game.includes('npcs:npcWorld.snapshot()'),'NPC gameplay integration missing');
-assert(!/function collidesAt[\s\S]*?npcWorld\.collidesAABB/.test(game),'player must not physically collide with NPCs');
+assert(!game.slice(game.indexOf('function collidesAt'),game.indexOf('function groundProbe')).includes('npcWorld.collidesAABB'),'player must not physically collide with NPCs');
 assert(npcRuntime.includes('simulationHz:20'),'NPC AI 20Hz throttle missing');
 assert(game.includes("Actor:{kind:'player'}"),'player Actor component missing');
 assert(engine.includes('NPCActorRenderer')&&npcRenderer.includes('new PaperSpriteEntity'),'NPC must render with PaperSpriteEntity');
