@@ -17,8 +17,8 @@ const panelFace=face(panelTex),gateFace=face(gateTex);
 const mats=t=>[edge,edge,edge,edge,t,t];
 const addInstances=(name,geometry,material,rows)=>{
  const mesh=new THREE.InstancedMesh(geometry,material,rows.length);mesh.name=name;mesh.castShadow=true;mesh.receiveShadow=true;
- const m=new THREE.Matrix4();
- rows.forEach((p,i)=>{m.makeTranslation(p[0],p[1],p[2]);mesh.setMatrixAt(i,m)});
+ const m=new THREE.Matrix4(),q=new THREE.Quaternion(),pos=new THREE.Vector3(),one=new THREE.Vector3(1,1,1),axis=new THREE.Vector3(0,1,0);
+ rows.forEach((p,i)=>{pos.set(p[0],p[1],p[2]);q.setFromAxisAngle(axis,p[3]||0);m.compose(pos,q,one);mesh.setMatrixAt(i,m)});
  mesh.instanceMatrix.needsUpdate=true;this.root.add(mesh);return mesh;
 };
 const panelW=f.grid.panelCells*s,z=metrics.z,ground=metrics.groundTop;
@@ -32,8 +32,8 @@ const gp=f.gate,gateY=ground+gp.pillarHeight*.5;
 addInstances('school-gate-pillars',new THREE.BoxGeometry(gp.pillarWidth,gp.pillarHeight,gp.pillarWidth),pillarMat,metrics.gate.map(x=>[x*s,gateY,z]));
 const leafW=(metrics.gate[1]-metrics.gate[0])*s*.5,leafY=ground+gp.leafHeight*.5;
 addInstances('school-gate-leaves',new THREE.BoxGeometry(leafW,gp.leafHeight,f.panel.thickness),mats(gateFace),[
- [(metrics.gate[0]+(metrics.gate[1]-metrics.gate[0])*.25)*s,leafY,z],
- [(metrics.gate[0]+(metrics.gate[1]-metrics.gate[0])*.75)*s,leafY,z]
+ [metrics.gate[0]*s+f.panel.thickness*.5,leafY,z-leafW*.5,Math.PI*.5],
+ [metrics.gate[1]*s-f.panel.thickness*.5,leafY,z-leafW*.5,-Math.PI*.5]
 ]);
 this.state={enabled:true,installation:'voxel-grid-edge',gridAligned:true,lineZ:z,groundTop:ground,
  frontageMeters:metrics.frontageCells*s,gateMeters:metrics.gateCells*s,panelMeters:panelW,
