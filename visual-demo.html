@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.11</h1>
-  <p>v12.11 地形重置：先把之前所有地形纸层、法线、AO、随机凸起和切边全部从地形方块上撤掉。现在地形只剩最基础的 1×1×1 立方体 + 单一纯色材质，继续保留光照、阴影和 InstancedMesh，先把几何基准彻底做干净。</p>
+  <h1>纸艺世界视觉 Demo v12.12</h1>
+  <p>v12.12 纯色纸块：保留最基础的 1×1×1 立方体，不加法线、AO、凹凸或额外几何；只在原本绿色底色上加入随机位置、随机大小的浅色与深色方块，让材质更丰富但仍保持干净。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -459,11 +459,67 @@ function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff
 // Just one exact cube geometry + one solid colour material, instanced.
 // ---------------------------------------------------------------------------
 const SIMPLE_TERRAIN_COLOR=0x91b274;
+
+function makeSimpleTerrainColorTexture(){
+  const size=256,c=document.createElement('canvas');
+  c.width=c.height=size;
+  const g=c.getContext('2d');
+  const r=rng(128731);
+
+  // Flat base colour.
+  g.fillStyle='#91b274';
+  g.fillRect(0,0,size,size);
+
+  // Only colour patches: no height/normal/AO. Rectangles are deliberately
+  // different sizes so the paper surface feels assembled rather than noisy.
+  const blocks=72;
+  for(let i=0;i<blocks;i++){
+    const w=Math.round(7+r()*34);
+    const h=Math.round(7+r()*30);
+    const x=Math.round(r()*(size-w));
+    const y=Math.round(r()*(size-h));
+    const light=r()>.49;
+
+    if(light){
+      const alpha=.16+r()*.22;
+      g.fillStyle=`rgba(218,232,165,${alpha.toFixed(3)})`;
+    }else{
+      const alpha=.13+r()*.20;
+      g.fillStyle=`rgba(75,104,61,${alpha.toFixed(3)})`;
+    }
+    g.fillRect(x,y,w,h);
+  }
+
+  // A few larger, softer-value blocks stop the pattern becoming uniformly tiny.
+  for(let i=0;i<14;i++){
+    const w=Math.round(30+r()*48);
+    const h=Math.round(22+r()*42);
+    const x=Math.round(r()*(size-w));
+    const y=Math.round(r()*(size-h));
+    const light=r()>.5;
+    g.fillStyle=light
+      ?`rgba(204,222,148,${(.055+r()*.075).toFixed(3)})`
+      :`rgba(69,94,56,${(.045+r()*.065).toFixed(3)})`;
+    g.fillRect(x,y,w,h);
+  }
+
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace;
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.minFilter=THREE.LinearMipmapLinearFilter;
+  t.magFilter=THREE.LinearFilter;
+  t.generateMipmaps=true;
+  t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+
+const simpleTerrainTexture=makeSimpleTerrainColorTexture();
 const terrainMat=new THREE.MeshLambertMaterial({
-  color:SIMPLE_TERRAIN_COLOR,
+  color:0xffffff,
+  map:simpleTerrainTexture,
   flatShading:true
 });
-terrainMat.name='terrain-reset-solid-color';
+terrainMat.name='terrain-simple-color-blocks';
 
 const blockGeo=new THREE.BoxGeometry(1,1,1);
 const terrain=new THREE.Group();
@@ -509,7 +565,7 @@ const caps=[];
 const rims=[];
 const paperObjects=[terrainBlocks];
 function rebuildMaterialRandomness(){
-  terrainMat.color.setHex(SIMPLE_TERRAIN_COLOR);
+  terrainMat.color.setHex(0xffffff);
   terrainMat.needsUpdate=true;
 }
 
