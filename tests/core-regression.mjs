@@ -10,28 +10,8 @@ try{
   await page.goto('http://127.0.0.1:8080/?ci=voxel3d-core',{waitUntil:'networkidle'});
   await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.PaperchalkTerrainActions,{timeout:7000});
   const cold=await page.evaluate(()=>window.PaperchalkTerrainActions.stats);
-  assert(cold.dimensions===3&&cold.infinite===false&&cold.gameplayDimensions===2&&cold.zMovementLocked===true&&cold.chunkSize===16,'finite side-scroll terrain config wrong '+JSON.stringify(cold));
+  assert(cold.dimensions===3&&cold.infinite===true&&cold.chunkSize===16,'3D terrain config wrong '+JSON.stringify(cold));
   assert(cold.generatorVersion===4&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
-  const roadScale=await page.evaluate(()=>{
-    const t=window.PaperchalkTerrain;
-    return {
-      spec:window.PaperchalkPrologueRoad.stats(),
-      schoolRow:[-17,-16,-10,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,9,10].map(z=>[z,t.peekVoxel(8,0,z)]),
-      cityRow:[-16,-10,-6,5,9].map(z=>[z,t.peekVoxel(30,0,z)]),
-      underground:[-9,-8,-3,-2,-1,0,1].map(y=>[y,t.peekVoxel(8,y,3)]),
-      outsideX:t.peekVoxel(96,0,3)
-    };
-  });
-  assert(roadScale.spec?.dimensions?.lengthMeters===96&&roadScale.spec?.dimensions?.roadWidthMeters===10&&roadScale.spec?.dimensions?.sceneDepthMeters===26,'city dimensions are not 96m x 26m with 10m road '+JSON.stringify(roadScale));
-  assert(JSON.stringify(roadScale.spec?.crossSection)===JSON.stringify({farSidewalkMeters:2,farLaneMeters:3,nearLaneMeters:3,nearSidewalkMeters:2}),'road cross-section is not 2+3+3+2m '+JSON.stringify(roadScale));
-  assert(roadScale.spec?.underground?.solidLayers===9&&roadScale.spec?.underground?.groundMinY===-8,'underground depth wrong '+JSON.stringify(roadScale.spec));
-  const row=new Map(roadScale.schoolRow),city=new Map(roadScale.cityRow),underground=new Map(roadScale.underground);
-  assert(row.get(-17)===0&&row.get(10)===0&&roadScale.outsideX===0,'terrain leaked outside finite city bounds '+JSON.stringify(roadScale));
-  assert(row.get(-16)===5&&row.get(-10)===5&&row.get(-6)===5,'school pad is not solid clay ground '+JSON.stringify(roadScale));
-  assert(city.get(-16)===1&&city.get(-10)===1&&city.get(-6)===1&&city.get(5)===1&&city.get(9)===1,'outer city ground is not grass voxel terrain '+JSON.stringify(roadScale));
-  assert(row.get(-5)===5&&row.get(-4)===5&&row.get(3)===5&&row.get(4)===5,'2m sidewalks are not clay voxels '+JSON.stringify(roadScale));
-  assert(row.get(-3)===3&&row.get(-2)===3&&row.get(0)===3&&row.get(1)===3&&row.get(2)===3,'3m traffic lanes are not stone voxels '+JSON.stringify(roadScale));
-  assert(underground.get(0)===5&&underground.get(-1)===2&&underground.get(-2)===2&&underground.get(-3)===3&&underground.get(-8)===3&&underground.get(-9)===0&&underground.get(1)===0,'underground voxel column wrong '+JSON.stringify(roadScale));
 
   await page.locator('#authBtn').click();await page.locator('#tabRegister').click();
   await page.locator('#regUser').fill('voxel3d_core');await page.locator('#regName').fill('Voxel');await page.locator('#regPass').fill('test1234');
@@ -49,11 +29,11 @@ try{
   const aiLive=await page.evaluate(()=>({stats:window.PaperchalkNPCs.stats,npcs:window.PaperchalkNPCs.list}));
   assert((aiLive.stats?.navigation?.searches||0)>0,'NPC A* never searched '+JSON.stringify(aiLive.stats));
   assert(aiLive.npcs.every(n=>n.brain?.utilityAI&&n.brain?.perceptionSystem&&n.brain?.memorySystem),'NPC brain snapshots incomplete '+JSON.stringify(aiLive.npcs.map(n=>n.brain)));
-  assert(entered.s.worldMode==='finite-side-scroll-voxel','wrong world mode '+JSON.stringify(entered.s));
-  assert(entered.s.terrainMode==='finite-voxel-road','wrong terrain mode '+JSON.stringify(entered.s));
-  assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===false&&entered.s.terrain?.gameplayDimensions===2,'terrain is not finite side-scroll voxel '+JSON.stringify(entered.s.terrain));
+  assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
+  assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
+  assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
   assert(entered.s.pixelRatio<=1.35,'DPR cap missing '+JSON.stringify(entered.s.pixelRatio));
-  assert(entered.s.atmosphere?.volumetric===false&&entered.s.atmosphere?.samples===6,'prologue volumetric pass should be disabled by default '+JSON.stringify(entered.s.atmosphere));
+  assert(entered.s.atmosphere?.volumetric===false&&entered.s.atmosphere?.samples===8,'open-world atmosphere performance profile wrong '+JSON.stringify(entered.s.atmosphere));
   assert(entered.ns?.simulationHz===20,'NPC AI throttle missing '+JSON.stringify(entered.ns));
 
   const dialogue=await page.evaluate(()=>{
@@ -71,17 +51,20 @@ try{
 
   const before={...entered.p};
   await page.locator('#threeWorldLayer canvas').focus();
-  assert(entered.s.interaction?.threeDimensional===false&&entered.s.interaction?.zMovementLocked===true,'renderer did not report side-scroll Z lock '+JSON.stringify(entered.s.interaction));
+  assert(entered.s.interaction?.threeDimensional===true&&entered.s.interaction?.zMovementLocked===false,'renderer still reports row-locked movement '+JSON.stringify(entered.s.interaction));
   await page.keyboard.down('KeyD');await page.waitForTimeout(420);await page.keyboard.up('KeyD');await page.waitForTimeout(80);
   const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(afterD.x-before.x>.22,'D did not move right on side-scroll X axis '+JSON.stringify({before,afterD}));
-  assert(Math.abs(afterD.z-3)<.001,'player left the prologue gameplay row '+JSON.stringify({before,afterD}));
+  assert(Math.hypot(afterD.x-before.x,afterD.z-before.z)>.22,'D did not move in horizontal 3D plane '+JSON.stringify({before,afterD}));
   await page.keyboard.down('KeyW');await page.waitForTimeout(420);await page.keyboard.up('KeyW');await page.waitForTimeout(80);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(Math.abs(afterW.x-afterD.x)<.08&&Math.abs(afterW.z-afterD.z)<.001,'W must not move in finite visual Z depth '+JSON.stringify({afterD,afterW}));
+  assert(Math.hypot(afterW.x-afterD.x,afterW.z-afterD.z)>.22,'W did not move in horizontal 3D plane '+JSON.stringify({afterD,afterW}));
+  assert(Math.abs(afterW.z-before.z)>.12,'Z coordinate did not unlock '+JSON.stringify({before,afterW}));
 
   const flightStart=await page.evaluate(()=>({ok:window.PaperchalkCombat.setFlight(true,{notice:false}),p:window.PaperchalkRuntime.getSnapshot().player}));
-  assert(flightStart.ok===true&&flightStart.p.flying===true,'debug flight toggle did not enable '+JSON.stringify(flightStart));
+  assert(flightStart.ok===true&&flightStart.p.flying===true,'flight mode did not enable '+JSON.stringify(flightStart));
+  await page.keyboard.down('Space');await page.waitForTimeout(420);await page.keyboard.up('Space');await page.waitForTimeout(80);
+  const flightUp=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
+  assert(flightUp.y-flightStart.p.y>.20,'flight ascend failed '+JSON.stringify({flightStart,flightUp}));
   await page.evaluate(()=>{window.PaperchalkCombat.setFlight(false,{notice:false});window.PaperchalkMap.reset()});
   await page.waitForFunction(()=>window.PaperchalkRuntime.getSnapshot().player.grounded===true,null,{timeout:2500,polling:50});
   const groundedY=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player.y);
