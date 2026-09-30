@@ -19,8 +19,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v3</h1>
-  <p>风格化舒适度优先：清晨/黄昏保留冷暖层次但不压黑，夜晚保持蓝色氛围同时保证角色与纸纹可读；天空填充、镜头柔光和地面反射光共同参与。</p>
+  <h1>纸艺世界视觉 Demo v4</h1>
+  <p>性能优化版：移除会在地面形成两个白色热点的局部点光源，改成无热点的低成本地面漫反射；纸材质改用哑光 Lambert，并降低阴影与像素开销。昼夜仍保持舒适可读。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -44,10 +44,12 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 import * as THREE from './vendor/three/three.module.js';
 
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate=false;
+let shadowDirty=true;
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.03;
@@ -158,7 +160,7 @@ function skyTexture(mode='day'){
   t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.ClampToEdgeWrapping;t.anisotropy=4;return t;
 }
 
-const variantCount=8;
+const variantCount=6;
 const grassTextures=[],edgeTextures=[],dirtTextures=[];
 for(let i=0;i<variantCount;i++){
   grassTextures.push(paperTexture('#accb74',['#c0d987','#92b961','#b7d47a','#9fc36b','#a5c96f'],731,false,i));
@@ -174,7 +176,7 @@ const caps=[],rims=[],paperObjects=[];
 const materialCache=new Map();
 
 function makeMaterial(tex,tint=1,sat=0){
-  const m=new THREE.MeshStandardMaterial({map:tex,roughness:.985,metalness:0});
+  const m=new THREE.MeshLambertMaterial({map:tex});
   m.color.setRGB(tint,tint,tint);m.color.offsetHSL(0,sat,0);
   return m;
 }
@@ -193,7 +195,7 @@ function materialSet(x,y,z,topGrass=true,randomOn=true){
   const set={dirt,top,edge};materialCache.set(key,set);return set;
 }
 
-const bottomMat=new THREE.MeshStandardMaterial({color:0x78472e,roughness:1});
+const bottomMat=new THREE.MeshLambertMaterial({color:0x78472e});
 const columnRecords=[];
 
 function addColumn(x,z,h){
@@ -239,7 +241,7 @@ function rebuildMaterialRandomness(on){
 
 function tuft(x,z,y,scale=.42){
   const group=new THREE.Group();
-  const pm=new THREE.MeshStandardMaterial({map:grassTextures[(hash3((x*10)|0,0,(z*10)|0)*variantCount)|0],color:0x71984d,roughness:1,side:THREE.DoubleSide});
+  const pm=new THREE.MeshLambertMaterial({map:grassTextures[(hash3((x*10)|0,0,(z*10)|0)*variantCount)|0],color:0x71984d,side:THREE.DoubleSide});
   for(let i=0;i<3;i++){
     const shape=new THREE.Shape();shape.moveTo(-.11,0);shape.quadraticCurveTo(0,.55,.09,0);
     const geo=new THREE.ShapeGeometry(shape,5),m=new THREE.Mesh(geo,pm);
@@ -249,7 +251,7 @@ function tuft(x,z,y,scale=.42){
 }
 tuft(-3.2,-1.7,.47,.55);tuft(2.3,1.7,.47,.48);tuft(5.2,-.6,1.25,.46);tuft(-5.8,1.8,1.25,.5);
 
-const stoneMat=new THREE.MeshStandardMaterial({color:0xa69a8d,roughness:1,metalness:0});
+const stoneMat=new THREE.MeshLambertMaterial({color:0xa69a8d});
 function stone(x,z,y,s){const m=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),stoneMat);m.position.set(x,y,z);m.scale.y=.62;m.rotation.set(.2,.4,.1);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
 stone(-1.8,1.4,.49,.26);stone(1.2,-2.2,.46,.18);
 
@@ -310,27 +312,26 @@ new THREE.TextureLoader().load('./assets/player/protagonist.webp',t=>{
 
 const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe1b1,3.0);
-sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
 sun.shadow.camera.left=-12;sun.shadow.camera.right=12;sun.shadow.camera.top=11;sun.shadow.camera.bottom=-8;
 sun.shadow.camera.near=.1;sun.shadow.camera.far=42;sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;sun.shadow.radius=3.5;
 scene.add(sun);scene.add(sun.target);sun.target.position.set(0,0,0);
 
 const moon=new THREE.DirectionalLight(0xa9c4ff,0);
-moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);
+moon.castShadow=true;moon.shadow.mapSize.set(512,512);
 moon.shadow.camera.left=-12;moon.shadow.camera.right=12;moon.shadow.camera.top=11;moon.shadow.camera.bottom=-8;
 moon.shadow.camera.near=.1;moon.shadow.camera.far=42;moon.shadow.bias=-.0004;moon.shadow.normalBias=.02;moon.shadow.radius=3;
 scene.add(moon);scene.add(moon.target);moon.target.position.set(0,0,0);
 
-// Approximate local diffuse GI / colour bleeding.
-// MeshStandard/Lambert materials reflect the direct sun/moon, but WebGLRenderer
-// does not automatically bounce that reflected light into neighbouring objects.
-// These low, soft point lights approximate the second bounce from grass and dirt.
-const grassBounce=new THREE.PointLight(0xc5d79a,1.15,5.5,2);
-const dirtBounce=new THREE.PointLight(0xc99268,.72,4.8,2);
-grassBounce.position.set(-.75,.72,1.0);
-dirtBounce.position.set(.72,.58,1.1);
-grassBounce.castShadow=false;dirtBounce.castShadow=false;
-scene.add(grassBounce,dirtBounce);
+// Cheap stylized ground bounce.
+// The previous version used two PointLights close to the floor. Those created the
+// two visible white hotspots and were expensive on every paper fragment.
+// A single no-shadow DirectionalLight gives broad colour bleed with no hotspot.
+const groundBounce=new THREE.DirectionalLight(0xc6cf9a,.34);
+groundBounce.position.set(0,-3,6);
+groundBounce.castShadow=false;
+scene.add(groundBounce);scene.add(groundBounce.target);
+groundBounce.target.position.set(0,1.0,0);
 
 // Art-directed fill for a comfortable stylized game look.
 // AmbientFill prevents deep blacks; viewFill is a very soft camera-side light
@@ -441,19 +442,22 @@ function updateLighting(t){
     playerMat.emissiveIntensity=.012+(1-sunUp)*.018;
   }
 
-  // Stylized local colour bleeding from grass/dirt. Keep it visible even at
-  // dawn/night so the character belongs to the terrain palette.
-  const bounceDay=.42+sunUp*.92+twilight*.28;
-  const bounceNight=moonUp*.48;
-  grassBounce.intensity=state.bounce?(bounceDay+bounceNight):0;
-  dirtBounce.intensity=state.bounce?(bounceDay*.62+bounceNight*.28):0;
-  grassBounce.color.set(sunUp>.05?0xd0dfa4:0x9fb3ce);
-  dirtBounce.color.set(sunUp>.05?0xd8a47d:0x7f91ad);
+  // Broad ground colour bleed: intentionally subtle and uniform so it reads
+  // as reflected environment light rather than a lamp shining on the floor.
+  const bounceDay=.22+sunUp*.28+twilight*.10;
+  const bounceNight=moonUp*.16;
+  groundBounce.intensity=state.bounce?(bounceDay+bounceNight):0;
+  const bounceDayColor=new THREE.Color(0xc8d49b);
+  const bounceNightColor=new THREE.Color(0x91a7c8);
+  const bounceWarmColor=new THREE.Color(0xd3a47b);
+  groundBounce.color.copy(bounceNightColor).lerp(bounceDayColor,Math.pow(sunUp,.45)).lerp(bounceWarmColor,twilight*.18);
 
   if(contactShadow?.material){
     // Never crush the feet into a black blob at dawn/night.
     contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
   }
+  renderDirty=true;
+  shadowDirty=true;
 }
 function preset(name){
   state.auto=false;document.getElementById('cycle').classList.remove('active');
@@ -462,12 +466,17 @@ function preset(name){
   else if(name==='sunset')state.time=.73;
   else if(name==='night')state.time=.0;
   else state.time=.5;
-  updateLighting(state.time);syncButtons();
+  updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
 }
 function syncButtons(){
   sky.visible=state.sky;contactShadow.visible=state.shadow;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
-  renderer.shadowMap.enabled=state.shadow;sun.castShadow=state.shadow;moon.castShadow=state.shadow;
+  renderer.shadowMap.enabled=state.shadow;
+  // Only one shadow-casting directional light at a time.
+  const sunIsDominant=state.time>.18&&state.time<.82;
+  sun.castShadow=state.shadow&&sunIsDominant;
+  moon.castShadow=state.shadow&&!sunIsDominant;
+  shadowDirty=true;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
   ['sky','layers','shadow','fog','tone','random','bounce'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
@@ -481,22 +490,22 @@ function setFinal(v){
   if(v){updateLighting(state.time)}
   else{
     state.auto=false;document.getElementById('cycle').classList.remove('active');
-    scene.background.set(0xaaa5b1);scene.fog=null;hemi.intensity=1;sun.intensity=2.0;moon.intensity=0;grassBounce.intensity=0;dirtBounce.intensity=0;ambientFill.intensity=.18;viewFill.intensity=.10;
+    scene.background.set(0xaaa5b1);scene.fog=null;hemi.intensity=1;sun.intensity=2.0;moon.intensity=0;groundBounce.intensity=0;ambientFill.intensity=.18;viewFill.intensity=.10;
     renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;
   }
   syncButtons();
 }
-document.getElementById('compare').onclick=()=>setFinal(!state.final);
+document.getElementById('compare').onclick=()=>{setFinal(!state.final);renderDirty=true;shadowDirty=true};
 ['sky','layers','shadow','fog','tone'].forEach(id=>{
   document.getElementById(id).onclick=()=>{
     state[id]=!state[id];
     state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
-    updateLighting(state.time);syncButtons();
+    updateLighting(state.time);syncButtons();renderDirty=true;shadowDirty=true;
   };
 });
 document.getElementById('random').onclick=()=>{
   state.random=!state.random;rebuildMaterialRandomness(state.random);
-  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();renderDirty=true;shadowDirty=true;
 };
 document.getElementById('bounce').onclick=()=>{
   state.bounce=!state.bounce;
@@ -509,61 +518,65 @@ document.getElementById('sunset').onclick=()=>preset('sunset');
 document.getElementById('night').onclick=()=>preset('night');
 document.getElementById('cycle').onclick=()=>{
   state.auto=!state.auto;document.getElementById('cycle').classList.toggle('active',state.auto);
-  if(state.auto)state.timePreset='';syncButtons();
+  if(state.auto)state.timePreset='';syncButtons();renderDirty=true;shadowDirty=true;
 };
 
-let dragging=false,lastX=0,lastY=0;
+let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0;
 renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
 renderer.domElement.addEventListener('pointermove',e=>{
   if(!dragging)return;
   yaw-=(e.clientX-lastX)*.006;pitch=clamp(pitch+(e.clientY-lastY)*.004,.08,.62);
-  lastX=e.clientX;lastY=e.clientY;placeCamera();
+  lastX=e.clientX;lastY=e.clientY;placeCamera();renderDirty=true;shadowDirty=true;
 });
 renderer.domElement.addEventListener('pointerup',()=>dragging=false);
-renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera()},{passive:true});
+renderer.domElement.addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.012,10,27);placeCamera();renderDirty=true;shadowDirty=true},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.35));renderDirty=true;shadowDirty=true;
 });
 
 let prev=performance.now();
 function animate(now){
   requestAnimationFrame(animate);
   const dt=Math.min(.05,(now-prev)/1000);prev=now;
-  if(state.auto){state.time=(state.time+dt/48)%1;updateLighting(state.time)}
-  else updateLighting(state.time);
+
+  if(state.auto){
+    state.time=(state.time+dt/48)%1;
+    updateLighting(state.time);
+    // Updating a 1k shadow map every frame is wasteful. In auto-cycle mode
+    // refresh it at ~7.5 fps; the colour/sky motion still renders smoothly.
+    autoShadowFrame=(autoShadowFrame+1)%8;
+    if(autoShadowFrame!==0)shadowDirty=false;
+  }
+
+  if(!state.auto&&!renderDirty)return;
+
   sky.position.copy(camera.position);
 
-  // Upright billboard: rotate only around Y so the character faces the camera
-  // without becoming a screen-space overlay. It still receives world lighting.
   if(playerMesh){
     const dx=camera.position.x-playerMesh.position.x;
     const dz=camera.position.z-playerMesh.position.z;
     playerMesh.rotation.y=Math.atan2(dx,dz);
 
-    // Keep the reflected-light sources low over the local terrain and on the
-    // camera-facing side of the paper doll so the bounce actually reaches it.
     const len=Math.max(.001,Math.hypot(dx,dz));
     const fx=dx/len,fz=dz/len;
-    const sx=-fz,sz=fx;
-    grassBounce.position.set(
-      playerMesh.position.x+fx*.9+sx*.7,
-      .68,
-      playerMesh.position.z+fz*.9+sz*.7
+    groundBounce.position.set(
+      playerMesh.position.x+fx*4,
+      -3,
+      playerMesh.position.z+fz*4
     );
-    dirtBounce.position.set(
-      playerMesh.position.x+fx*.75-sx*.72,
-      .52,
-      playerMesh.position.z+fz*.75-sz*.72
-    );
+    groundBounce.target.position.set(playerMesh.position.x,1.1,playerMesh.position.z);
   }
 
-  // Soft viewer-side fill follows the camera, a common stylized-game lighting
-  // trick that protects readability while the sun/moon still define the scene.
   viewFill.position.copy(camera.position);
   viewFill.target.position.set(0,1.1,0);
 
+  if(state.shadow&&shadowDirty){
+    renderer.shadowMap.needsUpdate=true;
+    shadowDirty=false;
+  }
   renderer.render(scene,camera);
+  renderDirty=false;
 }
 updateLighting(.5);syncButtons();animate(performance.now());
 </script>
