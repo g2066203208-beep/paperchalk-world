@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js');
 
-assert.match(html,/paper-r15/);
+assert.match(html,/paper-r16/);
 assert.match(renderer,/three-r180-finite-side-scroll-voxel/);
 assert.match(terrain,/class TerrainWorld/);
 assert.match(mesher,/buildVoxelChunkGeometry/);
@@ -12,7 +12,7 @@ assert.match(game,/FLY_SPEED/);
 assert.match(game,/setFlight/);
 assert.match(content,/mode:'finite-side-scroll-voxel'/);
 assert.match(content,/prologueRoad:\{/);
-assert.match(content,/minZ:-4,maxZ:4/);
+assert.match(content,/minZ:-6,maxZ:6/);
 assert.match(html,/src\/prologue\/voxel-road\.js/);
 assert.match(road,/finite-prologue-voxel-road-v1/);
 assert.match(road,/gameplayPlane:'x-y'/);
