@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),road=read('src/prologue/voxel-road.js');
 
-assert(html.includes('paper-r17'),'build key missing');
+assert(html.includes('paper-r18'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'finite-side-scroll-voxel'"),'finite side-scroll world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -15,6 +15,8 @@ assert(html.includes('id="npcInteractBtn"'),'NPC talk control missing');
 assert(npcRuntime.includes("require:['Transform','Velocity','Actor','NPC','Brain']"),'NPC ECS AI actor system missing');
 assert(npcRuntime.includes('sameActorComponentsAsPlayer:true'),'NPC/player actor parity missing');
 assert(game.includes('PaperchalkNPCRuntime')&&game.includes('npcs:npcWorld.snapshot()'),'NPC gameplay integration missing');
+assert(!/function collidesAt[\s\S]*?npcWorld\.collidesAABB/.test(game),'player must not physically collide with NPCs');
+assert(npcRuntime.includes('simulationHz:20'),'NPC AI 20Hz throttle missing');
 assert(game.includes("Actor:{kind:'player'}"),'player Actor component missing');
 assert(engine.includes('NPCActorRenderer')&&npcRenderer.includes('new PaperSpriteEntity'),'NPC must render with PaperSpriteEntity');
 assert(npcRenderer.includes('sharedEntityClassWithPlayer:true'),'NPC renderer actor parity stat missing');
@@ -112,6 +114,10 @@ assert(atmos.includes('mieAnisotropy'),'Mie scattering stats missing');
 assert(atmos.includes('jitteredRaymarch:true'),'jittered volumetric raymarch missing');
 assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmos-setting="intensity"')&&html.includes('data-atmos-setting="anisotropy"'),'volumetric debug controls missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
+assert(road.includes("volumetric:false")&&road.includes('qualityScale:.25')&&road.includes('steps:6'),'prologue atmosphere performance profile missing');
+assert(content.includes('visibleChunkRadiusXZ:1')&&content.includes('visibleChunkRadiusY:0')&&content.includes('maxBuildsPerFrame:2'),'prologue chunk budget missing');
+assert(content.includes('groundMinY:0,surfaceY:0'),'prologue road must stay one voxel thick');
+assert(game.includes("if(!terrain.water.cells.size&&fishing.state==='idle'&&!fishWorld.entities.length)return"),'dry-scene fish early-out missing');
 assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
 assert(atmos.includes('for(int i=0;i<20;i++)'),'volumetric raymarch sampling missing');
@@ -156,7 +162,7 @@ assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 assert(renderer.includes('zMovementLocked:true'),'renderer must report locked gameplay Z');
-assert(engine.includes('Math.min(Number(devicePixelRatio)||1,2)'),'native DPR mobile rendering missing');
+assert(engine.includes('Math.min(Number(devicePixelRatio)||1,1.35)'),'native DPR mobile rendering missing');
 assert(engine.includes('playerTexture.generateMipmaps=false'),'sharp protagonist texture path missing');
 assert(engine.includes('sun.shadow.normalBias=.055')&&engine.includes('shadowAcneGuard:true'),'ground shadow-acne guard missing');
 
