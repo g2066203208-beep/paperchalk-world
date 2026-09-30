@@ -20,7 +20,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 <body>
 <div class="panel">
   <h1>纸艺世界视觉 Demo v2</h1>
-  <p>每格材质随机变化 + 草皮纸层厚度 + 纸浆侧面 + 柔光软阴影 + 日/月方向光。角色现在使用漫反射纸片材质，并加入很弱的环境反弹光，白天/黄昏/夜晚会变色变暗但不会黑成剪影。</p>
+  <p>这版除了太阳/月亮直射光，还加入了“地面反射光”：草地与泥土的颜色会作为局部二次漫反射回填到角色和附近物体。可关闭按钮直接对比。</p>
 </div>
 <div class="controls">
   <button id="compare" class="active">目标效果</button>
@@ -30,6 +30,7 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
   <button id="fog" class="active">空气雾</button>
   <button id="tone" class="active">统一色调</button>
   <button id="random" class="active">随机材质</button>
+  <button id="bounce" class="active">地面反射光</button>
   <div class="groupBreak"></div>
   <button id="dawn">清晨</button>
   <button id="noon" class="active">正午</button>
@@ -320,6 +321,17 @@ moon.shadow.camera.left=-12;moon.shadow.camera.right=12;moon.shadow.camera.top=1
 moon.shadow.camera.near=.1;moon.shadow.camera.far=42;moon.shadow.bias=-.0004;moon.shadow.normalBias=.02;
 scene.add(moon);scene.add(moon.target);moon.target.position.set(0,0,0);
 
+// Approximate local diffuse GI / colour bleeding.
+// MeshStandard/Lambert materials reflect the direct sun/moon, but WebGLRenderer
+// does not automatically bounce that reflected light into neighbouring objects.
+// These low, soft point lights approximate the second bounce from grass and dirt.
+const grassBounce=new THREE.PointLight(0xc5d79a,1.15,5.5,2);
+const dirtBounce=new THREE.PointLight(0xc99268,.72,4.8,2);
+grassBounce.position.set(-.75,.72,1.0);
+dirtBounce.position.set(.72,.58,1.1);
+grassBounce.castShadow=false;dirtBounce.castShadow=false;
+scene.add(grassBounce,dirtBounce);
+
 const skyMat=new THREE.MeshBasicMaterial({map:skyTexture('day'),side:THREE.BackSide,fog:false,toneMapped:false});
 const sky=new THREE.Mesh(new THREE.SphereGeometry(48,32,18),skyMat);sky.scale.y=.72;scene.add(sky);
 
@@ -328,7 +340,7 @@ const sunDisc=new THREE.Mesh(new THREE.CircleGeometry(.72,40),new THREE.MeshBasi
 const moonDisc=new THREE.Mesh(new THREE.CircleGeometry(.54,40),new THREE.MeshBasicMaterial({color:0xe4ecff,toneMapped:false,transparent:true,opacity:.9}));
 scene.add(sunDisc,moonDisc);
 
-const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,final:true,timePreset:'noon',auto:false,time:.5};
+const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,final:true,timePreset:'noon',auto:false,time:.5};
 let skyMode='day';
 
 function setSkyMode(mode){
@@ -390,8 +402,17 @@ function updateLighting(t){
     // the brightness still comes from Lambert diffuse + hemisphere/moon light.
     // The small mapped emissive floor approximates indirect diffuse bounce that
     // a real paper cutout would receive from the sky and surrounding ground.
-    playerMat.emissiveIntensity=.05+(1-sunUp)*.11+twilight*.025;
+    playerMat.emissiveIntensity=.018+(1-sunUp)*.035+twilight*.01;
   }
+
+  // Local colour bleeding: bright grass/dirt under the sun throws a soft
+  // green/warm second bounce upward. At night the moon bounce becomes cooler.
+  const bounceDay=.28+sunUp*1.18+twilight*.18;
+  const bounceNight=moonUp*.34;
+  grassBounce.intensity=state.bounce?(bounceDay+bounceNight):0;
+  dirtBounce.intensity=state.bounce?(bounceDay*.58+bounceNight*.22):0;
+  grassBounce.color.set(sunUp>.05?0xc7d99a:0x8fa7c8);
+  dirtBounce.color.set(sunUp>.05?0xcf9b72:0x7184a5);
 
   // Contact shadow follows available light instead of staying equally dark.
   if(contactShadow?.material){
@@ -413,18 +434,18 @@ function syncButtons(){
   renderer.shadowMap.enabled=state.shadow;sun.castShadow=state.shadow;moon.castShadow=state.shadow;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
-  ['sky','layers','shadow','fog','tone','random'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
+  ['sky','layers','shadow','fog','tone','random','bounce'].forEach(id=>document.getElementById(id).classList.toggle('active',state[id]));
   document.getElementById('compare').classList.toggle('active',state.final);
   document.getElementById('compare').textContent=state.final?'目标效果':'基础方块';
   ['dawn','noon','sunset','night'].forEach(id=>document.getElementById(id).classList.toggle('active',state.timePreset===id&&!state.auto));
 }
 function setFinal(v){
-  state.final=v;state.sky=v;state.layers=v;state.shadow=v;state.fog=v;state.tone=v;state.random=v;
+  state.final=v;state.sky=v;state.layers=v;state.shadow=v;state.fog=v;state.tone=v;state.random=v;state.bounce=v;
   rebuildMaterialRandomness(v);
   if(v){updateLighting(state.time)}
   else{
     state.auto=false;document.getElementById('cycle').classList.remove('active');
-    scene.background.set(0xaaa5b1);scene.fog=null;hemi.intensity=1;sun.intensity=2.0;moon.intensity=0;
+    scene.background.set(0xaaa5b1);scene.fog=null;hemi.intensity=1;sun.intensity=2.0;moon.intensity=0;grassBounce.intensity=0;dirtBounce.intensity=0;
     renderer.toneMapping=THREE.NoToneMapping;renderer.toneMappingExposure=1;
   }
   syncButtons();
@@ -433,13 +454,18 @@ document.getElementById('compare').onclick=()=>setFinal(!state.final);
 ['sky','layers','shadow','fog','tone'].forEach(id=>{
   document.getElementById(id).onclick=()=>{
     state[id]=!state[id];
-    state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random;
+    state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
     updateLighting(state.time);syncButtons();
   };
 });
 document.getElementById('random').onclick=()=>{
   state.random=!state.random;rebuildMaterialRandomness(state.random);
-  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random;syncButtons();
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;syncButtons();
+};
+document.getElementById('bounce').onclick=()=>{
+  state.bounce=!state.bounce;
+  state.final=state.sky&&state.layers&&state.shadow&&state.fog&&state.tone&&state.random&&state.bounce;
+  updateLighting(state.time);syncButtons();
 };
 document.getElementById('dawn').onclick=()=>preset('dawn');
 document.getElementById('noon').onclick=()=>preset('noon');
@@ -478,6 +504,22 @@ function animate(now){
     const dx=camera.position.x-playerMesh.position.x;
     const dz=camera.position.z-playerMesh.position.z;
     playerMesh.rotation.y=Math.atan2(dx,dz);
+
+    // Keep the reflected-light sources low over the local terrain and on the
+    // camera-facing side of the paper doll so the bounce actually reaches it.
+    const len=Math.max(.001,Math.hypot(dx,dz));
+    const fx=dx/len,fz=dz/len;
+    const sx=-fz,sz=fx;
+    grassBounce.position.set(
+      playerMesh.position.x+fx*.9+sx*.7,
+      .68,
+      playerMesh.position.z+fz*.9+sz*.7
+    );
+    dirtBounce.position.set(
+      playerMesh.position.x+fx*.75-sx*.72,
+      .52,
+      playerMesh.position.z+fz*.75-sz*.72
+    );
   }
 
   renderer.render(scene,camera);
