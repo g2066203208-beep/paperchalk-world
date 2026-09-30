@@ -34,7 +34,7 @@ try{
   assert(initial.voxelTerrain?.blockGeometry==='3d-cube','road is not cube voxel geometry '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.infinite===false&&initial.voxelTerrain?.finiteDepth===true,'voxel road is not finite '+JSON.stringify(initial.voxelTerrain));
   assert(initial.voxelTerrain?.gameplayDimensions===2&&initial.voxelTerrain?.zMovementLocked===true,'voxel road gameplay plane wrong '+JSON.stringify(initial.voxelTerrain));
-  assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.mode==='procedural-paper-pbr-v6-macro-relief-ao','PaperMaterial v3 missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.textureResolution===512,'paper texture resolution wrong '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.diffusePulpDominant===true,'paper pulp/albedo must dominate');
   assert(initial.paperTerrain?.paperMaterial?.weakMicroNormal===true,'paper micro normal must remain weak');
@@ -51,7 +51,7 @@ try{
   assert(initial.paperTerrain?.paperMaterial?.dirtColorSource==='user-texture-only','dirt still uses procedural tint '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.dirtTextureTransform==='native-world-uv-repeat-1x','dirt texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.paperMaterial?.grassTextureTransform==='native-world-uv-repeat-1x','grass texture scaling regression '+JSON.stringify(initial.paperTerrain?.paperMaterial));
-  assert(initial.paperTerrain?.paperMaterial?.groundAnisotropy===16&&initial.paperTerrain?.paperMaterial?.authoredSurfaceMicroMaps===false&&initial.paperTerrain?.paperMaterial?.genericTopMicroMaps===false,'ground anti-shimmer sampling missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
+  assert(initial.paperTerrain?.paperMaterial?.groundAnisotropy===8&&initial.paperTerrain?.paperMaterial?.authoredSurfaceMicroMaps===true&&initial.paperTerrain?.paperMaterial?.genericTopMicroMaps===true,'ground anti-shimmer sampling missing '+JSON.stringify(initial.paperTerrain?.paperMaterial));
   assert(initial.paperTerrain?.topUvScale===.06,'ground UV scale regression '+JSON.stringify(initial.paperTerrain));
   assert(initial.paperTerrain?.paperMaterial?.perFrameHeavyNoise===false,'paper material should be precomputed, not heavy per-frame noise');
   assert(initial.paperEntities===6&&initial.npcActors===5&&initial.legacyStagePlaceholders===0,'paper actor counts wrong '+JSON.stringify({paperEntities:initial.paperEntities,npcActors:initial.npcActors,legacyStagePlaceholders:initial.legacyStagePlaceholders}));
@@ -118,7 +118,7 @@ try{
   const tuned=await page.evaluate(()=>window.Paperchalk3D.configurePaperTerrain({
     fiberStrength:.055,microNormalStrength:.38,roughnessVariation:.04,printNoiseStrength:.07
   }));
-  assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v3-reference','paper material tuning API failed '+JSON.stringify(tuned));
+  assert(tuned?.paperMaterial?.mode==='procedural-paper-pbr-v6-macro-relief-ao','paper material tuning API failed '+JSON.stringify(tuned));
   await page.waitForTimeout(350);
   await page.evaluate(()=>window.Paperchalk3D.setCameraConfig({distance:9.5,height:.15,pitch:-0.14}));
   await page.waitForTimeout(250);
