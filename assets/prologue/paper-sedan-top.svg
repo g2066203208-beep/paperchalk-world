@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="520" viewBox="0 0 190 440">
+<defs><pattern id="g" width="22" height="20" patternUnits="userSpaceOnUse"><path d="M2 6l13-3M7 16l8 1" stroke="#7f715d" stroke-width=".7" opacity=".14"/></pattern></defs>
+<g stroke="#463f36" stroke-width="4" stroke-linejoin="round">
+<path fill="#ded3bb" d="M33 16h124l22 75-9 258-22 75H42l-22-75-9-258z"/>
+<path fill="#697e83" d="M44 102h102l17 64H27z"/>
+<path fill="#667a7e" d="M28 278h135l-17 64H44z"/>
+<path fill="url(#g)" d="M33 16h124l22 75-9 258-22 75H42l-22-75-9-258z" stroke="none"/>
+<path d="M27 166h136M28 278h135M95 102v240" fill="none"/>
+</g></svg>
