@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.2</h1>
-  <p>v12.2 色彩光辉：保留 v12.1 的“只让受光雾显形”，只轻微加强光的固有色和光辉。日出偏橙红、夕阳更红橙、月光更冷蓝；光辉只围绕太阳/月亮和真正的体积光束出现，不给整张画面套滤镜。</p>
+  <h1>纸艺世界视觉 Demo v12.3</h1>
+  <p>v12.3 丝滑天空：天空不再按“清晨/白天/黄昏/夜晚”瞬间换贴图，而是四套纸天空在 GPU 中连续交叉融合；点击时间预设时，整套时间与光照也会缓动过渡，自动昼夜则持续无缝变化。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -825,7 +825,48 @@ viewFill.castShadow=false;
 scene.add(viewFill);scene.add(viewFill.target);
 viewFill.target.position.copy(target);
 
-const skyMat=new THREE.MeshBasicMaterial({map:skyTexture('day'),side:THREE.BackSide,fog:false,toneMapped:false});
+const skyTexNight=skyTexture('night');
+const skyTexDawn=skyTexture('dawn');
+const skyTexDay=skyTexture('day');
+const skyTexSunset=skyTexture('sunset');
+const skyUniforms={
+  nightMap:{value:skyTexNight},
+  dawnMap:{value:skyTexDawn},
+  dayMap:{value:skyTexDay},
+  sunsetMap:{value:skyTexSunset},
+  weights:{value:new THREE.Vector4(0,1,0,0)}
+};
+const skyMat=new THREE.ShaderMaterial({
+  uniforms:skyUniforms,
+  side:THREE.BackSide,
+  depthWrite:false,
+  fog:false,
+  toneMapped:false,
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){
+      vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);
+    }
+  `,
+  fragmentShader:`
+    varying vec2 vUv;
+    uniform sampler2D nightMap;
+    uniform sampler2D dawnMap;
+    uniform sampler2D dayMap;
+    uniform sampler2D sunsetMap;
+    uniform vec4 weights;
+    void main(){
+      vec3 c=
+        texture2D(nightMap,vUv).rgb*weights.x+
+        texture2D(dawnMap,vUv).rgb*weights.y+
+        texture2D(dayMap,vUv).rgb*weights.z+
+        texture2D(sunsetMap,vUv).rgb*weights.w;
+      gl_FragColor=vec4(c,1.0);
+      #include <colorspace_fragment>
+    }
+  `
+});
 const sky=new THREE.Mesh(new THREE.SphereGeometry(48,32,18),skyMat);sky.scale.y=.72;scene.add(sky);
 
 // Visible sun/moon discs so the lighting direction reads immediately.
@@ -1163,14 +1204,54 @@ function renderWithVolumetrics(){
 }
 
 const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,papergrass:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
-let skyMode='day';
 
-function setSkyMode(mode){
-  if(mode===skyMode)return;
-  skyMode=mode;
-  if(skyMat.map)skyMat.map.dispose();
-  skyMat.map=skyTexture(mode);skyMat.needsUpdate=true;
+const timeTransition={
+  active:false,
+  start:.27,
+  target:.27,
+  delta:0,
+  elapsed:0,
+  duration:1.8
+};
+
+function updateSkyBlend(t){
+  t=((t%1)+1)%1;
+  let wn=0,wd=0,wday=0,ws=0,q=0;
+
+  // Midnight -> sunrise -> day -> sunset -> night.
+  // The overlap ranges are deliberately broad so paper fibres and torn layers
+  // dissolve into one another instead of visibly switching texture sets.
+  if(t<.18||t>=.82){
+    wn=1;
+  }else if(t<.25){
+    q=smoothstep(.18,.25,t);wn=1-q;wd=q;
+  }else if(t<.34){
+    q=smoothstep(.25,.34,t);wd=1-q;wday=q;
+  }else if(t<.66){
+    wday=1;
+  }else if(t<.75){
+    q=smoothstep(.66,.75,t);wday=1-q;ws=q;
+  }else{
+    q=smoothstep(.75,.82,t);ws=1-q;wn=q;
+  }
+  skyUniforms.weights.value.set(wn,wd,wday,ws);
 }
+
+function beginTimeTransition(targetTime){
+  const target=((targetTime%1)+1)%1;
+  let delta=target-state.time;
+  if(delta>.5)delta-=1;
+  if(delta<-.5)delta+=1;
+
+  timeTransition.active=true;
+  timeTransition.start=state.time;
+  timeTransition.target=target;
+  timeTransition.delta=delta;
+  timeTransition.elapsed=0;
+  timeTransition.duration=1.55+Math.min(Math.abs(delta),.35)*2.4;
+  renderDirty=true;
+}
+
 function updateLighting(t){
   state.time=((t%1)+1)%1;
   const a=state.time*Math.PI*2-Math.PI/2;
@@ -1257,10 +1338,7 @@ function updateLighting(t){
   renderer.toneMappingExposure=state.tone?(.90+sunUp*.12+twilight*.045):1;
   scene.background.copy(fogColor);
 
-  let mode='night';
-  if(sunUp>.30)mode='day';
-  else if(rawSun>=0)mode=state.time<.5?'dawn':'sunset';
-  setSkyMode(mode);
+  updateSkyBlend(state.time);
 
   const sunDir=new THREE.Vector3(sx,sy,sz).normalize();
   const moonDir=new THREE.Vector3(mx,my,mz).normalize();
@@ -1324,6 +1402,7 @@ function syncSunControls(){
   document.getElementById('sunFollow').classList.toggle('active',!state.manualSun);
 }
 function applyManualSun(){
+  timeTransition.active=false;
   state.manualSun=true;
   state.auto=false;
   state.timePreset='';
@@ -1336,11 +1415,10 @@ function applyManualSun(){
 function preset(name){
   state.auto=false;state.manualSun=false;document.getElementById('cycle').classList.remove('active');
   state.timePreset=name;
-  if(name==='dawn')state.time=.27;
-  else if(name==='sunset')state.time=.73;
-  else if(name==='night')state.time=.0;
-  else state.time=.5;
-  updateLighting(state.time);syncSunControls();syncButtons();renderDirty=true;shadowDirty=true;
+  const targetTime=name==='dawn'?.27:name==='sunset'?.73:name==='night'?0:.5;
+  beginTimeTransition(targetTime);
+  syncSunControls();syncButtons();
+  renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 }
 function syncButtons(){
   sky.visible=state.sky;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
@@ -1422,7 +1500,7 @@ document.getElementById('sunset').onclick=()=>preset('sunset');
 document.getElementById('night').onclick=()=>preset('night');
 document.getElementById('cycle').onclick=()=>{
   state.auto=!state.auto;document.getElementById('cycle').classList.toggle('active',state.auto);
-  if(state.auto){state.timePreset='';state.manualSun=false;}
+  if(state.auto){timeTransition.active=false;state.timePreset='';state.manualSun=false;}
   syncSunControls();syncButtons();renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 };
 
@@ -1444,6 +1522,31 @@ let prev=performance.now();
 function animate(now){
   requestAnimationFrame(animate);
   const dt=Math.min(.05,(now-prev)/1000);prev=now;
+
+  if(timeTransition.active&&!state.auto){
+    timeTransition.elapsed+=dt;
+    const u=clamp(timeTransition.elapsed/timeTransition.duration,0,1);
+    // Smootherstep: zero velocity at both ends, so there is no visible jerk
+    // when a preset starts or finishes.
+    const e=u*u*u*(u*(u*6-15)+10);
+    state.time=(timeTransition.start+timeTransition.delta*e+1)%1;
+    updateLighting(state.time);
+
+    // Light direction follows the same smooth clock. Refresh expensive shadow
+    // maps at a lower cadence while colours/sky still render every frame.
+    autoShadowFrame=(autoShadowFrame+1)%4;
+    volumeShadowFrame=(volumeShadowFrame+1)%4;
+    if(autoShadowFrame!==0)shadowDirty=false;
+    if(volumeShadowFrame!==0)volumeShadowDirty=false;
+
+    renderDirty=true;
+    if(u>=1){
+      state.time=timeTransition.target;
+      timeTransition.active=false;
+      updateLighting(state.time);
+      shadowDirty=true;volumeShadowDirty=true;renderDirty=true;
+    }
+  }
 
   if(state.auto){
     state.time=(state.time+dt/48)%1;
@@ -1468,7 +1571,7 @@ function animate(now){
     renderDirty=true;
   }
 
-  if(!state.auto&&!renderDirty)return;
+  if(!state.auto&&!timeTransition.active&&!renderDirty)return;
 
   sky.position.copy(camera.position);
 
