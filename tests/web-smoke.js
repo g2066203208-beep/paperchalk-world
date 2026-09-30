@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js');
 
-assert(html.includes('paper-r9'),'build key missing');
+assert(html.includes('paper-r10'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(content.includes("mode:'infinite-voxel-3d'"),'world mode missing');
 assert(content.includes('stageEntities:[]'),'legacy stage placeholder list must be empty');
@@ -21,6 +21,9 @@ assert(biome.includes('class BiomeLandformGenerator'),'BiomeLandformGenerator mi
 assert(biome.includes("MEADOW:'meadow'")&&biome.includes("ALPINE:'alpine'")&&biome.includes("MARSH:'marsh'"),'biome catalogue missing');
 assert(biome.includes("MOUNTAIN:'mountain'")&&biome.includes("VALLEY:'river-valley'"),'landform catalogue missing');
 assert(biome.includes('mountainMask')&&biome.includes('riverMask'),'mountain/river fields missing');
+assert(biome.includes("targetGroundStyle:'broad-paper-terraces-r1'")&&biome.includes('spawnSurfaceTransition:true'),'target broad terrace ground missing');
+assert(paper.includes("targetGroundStyle:'terraced-paper-stage-r1'")&&paper.includes('continuousMergedEdges:true'),'merged paper terrace renderer missing');
+assert(paperMaterial.includes('liftedCardboardShadow:true'),'cardboard shadow lift missing');
 assert(biome.includes("fields:['continentalness','erosion','ridge','temperature','moisture','river','detail']"),'multi-noise fields missing');
 assert(terrain.includes('this.biomeGenerator=BiomeGenerator'),'terrain biome integration missing');
 assert(terrain.includes('terrainProfile(gx,gz=0)'),'terrain biome profile missing');
