@@ -26,9 +26,9 @@ try{
   assert(initial.worldMode==='finite-side-scroll-voxel','wrong world mode');
   assert(initial.paperStyle?.enabled===false,'prologue road must use cube voxels '+JSON.stringify(initial.paperStyle));
   assert(initial.terrainMode==='finite-voxel-road','finite voxel road renderer mode missing '+JSON.stringify(initial));
-  assert(initial.paperStage?.enabled===true&&initial.paperStage?.mode==='true-2d-multilayer-paper','2D paper stage missing '+JSON.stringify(initial.paperStage));
+  assert(initial.paperStage?.enabled===true&&initial.paperStage?.mode==='true-2d-multilayer-paper-user-assets'&&initial.paperStage?.source==='user-supplied-school-sprite-sheet','2D paper stage missing '+JSON.stringify(initial.paperStage));
   assert(initial.paperStage?.planes===4&&initial.paperStage?.noCollision===true&&initial.paperStage?.real3DBuilding===false,'paper stage plane/collision contract wrong '+JSON.stringify(initial.paperStage));
-  assert(Array.isArray(initial.paperStage?.layers)&&initial.paperStage.layers.map(x=>x.z).join(',')==='-9.2,-7.75,-6.15,-4.85','paper stage Z ordering wrong '+JSON.stringify(initial.paperStage));
+  assert(Array.isArray(initial.paperStage?.layers)&&initial.paperStage.layers.map(x=>x.z).join(',')==='-10.2,-8.8,-7.2,-5.8','paper stage Z ordering wrong '+JSON.stringify(initial.paperStage));
   await page.waitForFunction(()=>window.Paperchalk3D?.stats?.paperStage?.texturesReady===4,{timeout:6000,polling:'raf'});
   await page.screenshot({path:'artifacts/prologue-paper-layers.png'});
   assert(initial.voxelTerrain?.visibleChunks>0,'no visible voxel chunks '+JSON.stringify(initial.voxelTerrain));
