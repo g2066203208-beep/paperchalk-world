@@ -174,7 +174,7 @@ export function createPaperMaterialSet(THREE,settings){
       vertexColors:true,map:source.albedo,normalMap:source.normal,roughnessMap:source.roughness,
       normalScale:new THREE.Vector2(side?.24:.30,side?.24:.30),
       roughness:.98,metalness:0,side:THREE.DoubleSide,flatShading:!!side,
-      emissive:new THREE.Color(side?0x2b170d:0x000000),emissiveIntensity:side?.11:0,
+      emissive:new THREE.Color(side?0x57311d:0x140b05),emissiveIntensity:side?.18:.035,
       specularIntensity:side?.08:.11,ior:1.34,
       sheen:side?.035:.085,sheenRoughness:.96,
       sheenColor:new THREE.Color(side?0xc9a980:0xfff0cf)
@@ -238,7 +238,7 @@ export function createPaperMaterialSet(THREE,settings){
   dirtMaterial=new THREE.MeshPhysicalMaterial({
     color:0xffffff,map:dirtReference,vertexColors:false,
     normalMap:sets.top.normal,roughnessMap:sets.top.roughness,
-    emissive:new THREE.Color(0x3a1d10),emissiveMap:dirtReference,emissiveIntensity:.18,
+    emissive:new THREE.Color(0x57301b),emissiveMap:dirtReference,emissiveIntensity:.25,
     normalScale:new THREE.Vector2(.18,.18),roughness:.992,metalness:0,side:THREE.DoubleSide,
     specularIntensity:.045,ior:1.33,sheen:.035,sheenRoughness:.99,
     sheenColor:new THREE.Color(0xe0b38a)
@@ -263,7 +263,7 @@ export function createPaperMaterialSet(THREE,settings){
     grassMaterial.roughness=clamp(.994-rough*.06,.978,.996);
     dirtMaterial.normalScale.setScalar(micro*.52);
     dirtMaterial.roughness=clamp(.995-rough*.05,.982,.997);
-    dirtMaterial.emissiveIntensity=.18;
+    dirtMaterial.emissiveIntensity=.25;
   };
   sync(settings);
 
@@ -280,7 +280,7 @@ export function createPaperMaterialSet(THREE,settings){
     userDirtReference:true,dirtReferenceAsset:'assets/materials/dirt-reference.webp',
     dirtReferenceLoaded:dirtLoaded,dirtReferenceSize,dirtMaterialGroup:true,
     dirtColorSource:'user-texture-only',dirtTextureTransform:'native-world-uv-repeat-1x',
-    liftedCardboardShadow:true,sideShadowLift:.11,dirtShadowLift:.18,
+    liftedCardboardShadow:true,sideShadowLift:.18,dirtShadowLift:.25,
     seamlessPeriodicField:true,worldSpaceMacroVariation:true,perFrameHeavyNoise:false
   });
   const dispose=()=>{
