@@ -441,7 +441,7 @@ if(entity!==playerEntity)return;
 const input=context.interactive?rawMoveInput():{x:0,z:0,magnitude:0};
 const submerged=playerSubmersion();
 controller.submerged=submerged;controller.inWater=submerged>.06;
-const speed=(controller.flying?FLY_SPEED:PLAYER_SPEED)*(controller.crouching?.48:1)*(controller.inWater&&!controller.flying?.58:1);
+const speed=(controller.flying?FLY_SPEED:PLAYER_SPEED)*(controller.crouching?.48:1)*(controller.inWater&&!controller.flying ? .58 : 1);
 velocity.x=input.x*speed;velocity.z=input.z*speed;
 controller.moving=input.magnitude>.05;
 if(Math.abs(velocity.x)>.08)controller.facingX=velocity.x>0?1:-1;
