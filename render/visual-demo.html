@@ -732,25 +732,25 @@ void main() {
 float roughnessFactor=roughness;
 #ifdef USE_ROUGHNESSMAP
   roughnessFactor*=paperRoughnessSample(vRoughnessMapUv);
-#endif
-if(paper003FiberStrength>0.0001){
-  float detailR=0.5;
-  if(paperDetailKind>0.5){
-    float r1=texture2D(paper001RoughMap,vRoughnessMapUv*9.0+vec2(0.17,0.31)).g;
-    float r6=texture2D(paper006RoughMap,vRoughnessMapUv*18.0+vec2(0.61,0.23)).g;
-    detailR=r1*0.72+r6*0.28;
-    roughnessFactor=mix(roughnessFactor,0.955,0.10*paper003FiberStrength);
-    roughnessFactor+= (detailR-0.5)*0.10*paper003FiberStrength;
-  }else{
-    float r4=texture2D(paper004RoughMap,vRoughnessMapUv*vec2(6.5,5.2)+vec2(0.21,0.07)).g;
-    float r2=texture2D(paper002RoughMap,vRoughnessMapUv*12.0+vec2(0.47,0.63)).g;
-    float r6=texture2D(paper006RoughMap,vRoughnessMapUv*20.0+vec2(0.13,0.79)).g;
-    detailR=r4*0.58+r2*0.27+r6*0.15;
-    roughnessFactor=mix(roughnessFactor,0.975,0.14*paper003FiberStrength);
-    roughnessFactor+=(detailR-0.5)*0.13*paper003FiberStrength;
+  if(paper003FiberStrength>0.0001){
+    float detailR=0.5;
+    if(paperDetailKind>0.5){
+      float r1=texture2D(paper001RoughMap,vRoughnessMapUv*9.0+vec2(0.17,0.31)).g;
+      float r6=texture2D(paper006RoughMap,vRoughnessMapUv*18.0+vec2(0.61,0.23)).g;
+      detailR=r1*0.72+r6*0.28;
+      roughnessFactor=mix(roughnessFactor,0.955,0.10*paper003FiberStrength);
+      roughnessFactor+=(detailR-0.5)*0.10*paper003FiberStrength;
+    }else{
+      float r4=texture2D(paper004RoughMap,vRoughnessMapUv*vec2(6.5,5.2)+vec2(0.21,0.07)).g;
+      float r2=texture2D(paper002RoughMap,vRoughnessMapUv*12.0+vec2(0.47,0.63)).g;
+      float r6=texture2D(paper006RoughMap,vRoughnessMapUv*20.0+vec2(0.13,0.79)).g;
+      detailR=r4*0.58+r2*0.27+r6*0.15;
+      roughnessFactor=mix(roughnessFactor,0.975,0.14*paper003FiberStrength);
+      roughnessFactor+=(detailR-0.5)*0.13*paper003FiberStrength;
+    }
+    roughnessFactor=clamp(roughnessFactor,0.72,1.0);
   }
-  roughnessFactor=clamp(roughnessFactor,0.72,1.0);
-}
+#endif
 `
     );
 
