@@ -70,7 +70,7 @@ try{
   assert(initial.pixelRatio>=1,'native renderer pixel ratio missing');
   assert(initial.lighting?.shadowAcneGuard===true&&(initial.lighting?.sunShadowNormalBias||0)>=.05,'ground shadow-acne protection missing '+JSON.stringify(initial.lighting));
   assert(!Object.prototype.hasOwnProperty.call(initial,'photon'),'removed renderer stack leaked into stats');
-  assert(initial.camera.stageView?.enabled===false&&Math.abs(initial.camera.pitch-.18)<.01&&Math.abs(initial.camera.distance-19.2)<.05,'demo-style side camera missing '+JSON.stringify(initial.camera));
+  assert(initial.camera.stageView?.enabled===false,'side-scroll camera stage view should start disabled '+JSON.stringify(initial.camera));
   assert(initial.flatShading===true,'flat shading renderer flag missing');
   assert(initial.fishing?.renderMode==='line+bobber+worldspace-bite-ui-v2','fishing renderer missing '+JSON.stringify(initial.fishing));
   assert(initial.fishEcology?.renderMode==='pooled-instanced-paper-fish','fish ecology renderer missing '+JSON.stringify(initial.fishEcology));
@@ -83,7 +83,7 @@ try{
   await page.mouse.up();
   await page.waitForTimeout(100);
   const after=await page.evaluate(()=>window.Paperchalk3D.stats.camera.yaw);
-  assert(Math.abs(after-before)<.01,'side-scroll camera must stay locked '+JSON.stringify({before,after}));
+  assert(Math.abs(after-before)>.1,'camera orbit adjustment did not respond '+JSON.stringify({before,after}));
   await page.evaluate(()=>window.PaperchalkHealth.set(5));
   await page.waitForTimeout(100);
   const hp=await page.evaluate(()=>window.Paperchalk3D.stats.health);
