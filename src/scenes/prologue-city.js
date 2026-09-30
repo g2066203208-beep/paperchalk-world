@@ -111,7 +111,7 @@ function collidesScene(scene,x,y,z,hw,hh,hd){
   for(const [a,b] of m.panels)if(x+hw>a&&x-hw<b)return true;
   for(const px of m.gate)if(x+hw>px-f.gate.pillarWidth*.5&&x-hw<px+f.gate.pillarWidth*.5)return true;
  }
- return false;
+ return global.PaperchalkPrologueCars?.collidesAABB?.(scene,x,y,z,hw,hh,hd)||false;
 }
 function entities(defaults,scene){return scene.id===PROLOGUE.id?[]:defaults}
 function quests(defaults,scene){return scene.id===PROLOGUE.id?[]:defaults}
