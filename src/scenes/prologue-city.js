@@ -101,7 +101,7 @@ function schoolFenceMetrics(scene){
  const panels=[];
  for(let x=g.startXEdge;x<g.gateStartXEdge;x+=g.panelCells)panels.push([x,x+g.panelCells]);
  for(let x=g.gateEndXEdge;x<g.endXEdge;x+=g.panelCells)panels.push([x,x+g.panelCells]);
- return{z,groundTop,panels,posts:[g.startXEdge,...panels.map(p=>p[1])].filter((v,i,a)=>a.indexOf(v)===i&&v!==g.gateEndXEdge),gate:[g.gateStartXEdge,g.gateEndXEdge],frontageCells:g.endXEdge-g.startXEdge,gateCells:g.gateEndXEdge-g.gateStartXEdge};
+ return{z,groundTop,panels,posts:[g.startXEdge,...panels.map(p=>p[1])].filter((v,i,a)=>a.indexOf(v)===i&&v!==g.gateStartXEdge&&v!==g.gateEndXEdge),gate:[g.gateStartXEdge,g.gateEndXEdge],frontageCells:g.endXEdge-g.startXEdge,gateCells:g.gateEndXEdge-g.gateStartXEdge};
 }
 function collidesScene(scene,x,y,z,hw,hh,hd){
  const m=schoolFenceMetrics(scene),f=scene.schoolFence;if(!m)return false;
