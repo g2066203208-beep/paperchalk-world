@@ -118,7 +118,6 @@ const KEY_SETTINGS='paperchalk.settings.v2';
 const sceneData=CONTENT.scene3d;
 const INTERACTION_ROW_Z=Number(sceneData.terrain?.interactionRowZ??0);
 const bounds=sceneData.bounds;
-const WORLD_LAYOUT_ID=sceneData.terrain?.prologueRoad?.id||sceneData.mode;
 const terrain=new TerrainRuntime.TerrainWorld({
 tileSize:sceneData.terrain?.tileSize??1,
 pixelsPerMeter:sceneData.terrain?.pixelsPerMeter??128,
@@ -160,7 +159,7 @@ function accountSaveKey(account,prefix=KEY_SAVE_PREFIX){
 return prefix+encodeURIComponent(String(account||''));
 }
 const defaultCamera=Object.freeze({
-yaw:0,pitch:.18,distance:19.2,height:.72,fov:36,
+yaw:.72,pitch:.38,distance:12,height:.65,fov:42,
 stageView:Object.freeze({enabled:false,axis:'z',side:1})
 });
 function getSettings(){
@@ -357,7 +356,7 @@ fish:fishSnapshot(),
 npcs:npcWorld.snapshot(),
 npcDialogue:npcWorld.dialogueSnapshot(),
 world:{minutes:worldMinutes,clock:formatClock(),phase:worldPhase(),biome:environment.biome,landform:environment.landform,elevation:environment.height},
-scene:{id:'infinite-voxel-world',name:'序幕 · 城市马路'},
+scene:{id:'infinite-voxel-world',name:'Paperchalk · 无限3D体素世界'},
 terrain:terrain.stats(),
 debug:{colliders:debugColliders},
 ecs:ecs.stats()
@@ -433,11 +432,15 @@ velocity.y=0;
 }else if(dy!==0)controller.grounded=false;
 }
 function rawMoveInput(){
-let horizontal=0;
-if(keys.has('KeyA')||keys.has('ArrowLeft'))horizontal-=1;
-if(keys.has('KeyD')||keys.has('ArrowRight'))horizontal+=1;
-horizontal=clamp(horizontal+joystickAxisX,-1,1);
-return {x:horizontal,z:0,magnitude:Math.abs(horizontal)};
+let strafe=0,forward=0;
+if(keys.has('KeyA')||keys.has('ArrowLeft'))strafe-=1;
+if(keys.has('KeyD')||keys.has('ArrowRight'))strafe+=1;
+if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
+if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
+strafe+=joystickAxisX;forward-=joystickAxisY;
+const mag=Math.hypot(strafe,forward);if(mag>1){strafe/=mag;forward/=mag}
+const sy=Math.sin(cameraYaw),cy=Math.cos(cameraYaw);
+return {x:strafe*cy-forward*sy,z:-strafe*sy-forward*cy,magnitude:Math.min(1,mag)};
 }
 function overlayOpen(){
 return backpackOverlay.classList.contains('is-open')||
@@ -473,9 +476,7 @@ velocity.x=input.x*speed;velocity.z=input.z*speed;
 controller.moving=input.magnitude>.05;
 if(Math.abs(velocity.x)>.08)controller.facingX=velocity.x>0?1:-1;
 if(controller.moving)transform.yaw=Math.atan2(velocity.x,velocity.z);
-moveAxis('x',velocity.x*dt);
-transform.x=clamp(transform.x,bounds.minX+PLAYER_HALF_W,bounds.maxX-PLAYER_HALF_W);
-transform.z=INTERACTION_ROW_Z*terrain.tileSize;velocity.z=0;
+moveAxis('x',velocity.x*dt);moveAxis('z',velocity.z*dt);
 }
 });
 ecs.registerSystem('player-gravity',{
@@ -1661,10 +1662,9 @@ return {
 schemaVersion:SAVE_RUNTIME.schemaVersion,
 gameVersion:SAVE_RUNTIME.gameVersion,
 account:session.account,
-location:'序幕 · 城市马路',
+location:'Paperchalk · 无限3D体素世界',
 createdAt:Date.now(),
 worldMinutes:360,
-worldLayout:WORLD_LAYOUT_ID,
 player:{...sceneData.spawn},
 playerHp:PLAYER_MAX_HP,
 hunger:HUNGER_MAX,
@@ -1717,9 +1717,8 @@ function saveWorldState(){
 const session=getSession();
 if(!session)return false;
 const save=readSaveForSession(session)||defaultSave(session);
-save.location='序幕 · 城市马路';
+save.location='Paperchalk · 无限3D体素世界';
 save.worldMinutes=worldMinutes;
-save.worldLayout=WORLD_LAYOUT_ID;
 save.player={x:transform.x,y:transform.y,z:transform.z,yaw:transform.yaw};
 save.playerHp=health.current;
 save.hunger=hunger.current;
@@ -1739,8 +1738,8 @@ const save=readSaveForSession(session)||defaultSave(session);
 terrain.importEdits(save.terrainEdits);
 terrain.water.importState(save.waterCells);
 const p=save.player||sceneData.spawn;
-transform.x=clamp(Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x,bounds.minX+PLAYER_HALF_W,bounds.maxX-PLAYER_HALF_W);
-transform.z=INTERACTION_ROW_Z*terrain.tileSize;
+transform.x=Number.isFinite(Number(p.x))?Number(p.x):sceneData.spawn.x;
+transform.z=Number.isFinite(Number(p.z))?Number(p.z):(sceneData.spawn.z||0);
 transform.y=Number.isFinite(Number(p.y))?Number(p.y):safeSpawnY(transform.x,transform.z);
 transform.yaw=Number.isFinite(p.yaw)?p.yaw:sceneData.spawn.yaw;
 if(collidesAt(transform.x,transform.y,transform.z))transform.y=safeSpawnY(transform.x,transform.z);
@@ -1753,11 +1752,7 @@ resetFishing();
 fishWorld.entities.length=0;fishWorld.spatial.clear();fishWorld.accumulator=0;fishWorld.spawnAccumulator=1;
 controller.torchOn=!!save.torchOn;
 worldMinutes=Number.isFinite(save.worldMinutes)?save.worldMinutes:360;
-if(save.worldLayout!==WORLD_LAYOUT_ID&&save.npcState?.actors){
-const defs=new Map(CONTENT.npcs.map(n=>[n.id,n]));
-for(const row of save.npcState.actors){const d=defs.get(row.id);if(d?.spawn){row.x=d.spawn.x;row.z=d.spawn.z;row.y=safeSpawnY(row.x,row.z)}}
-}
-npcWorld.importState(save.npcState);save.worldLayout=WORLD_LAYOUT_ID;
+npcWorld.importState(save.npcState);
 setInventoryFromSave(save.inventory);
 if(!inventoryItems.some(item=>item?.id==='hand-torch')){
 inventoryItems[0]={...itemClone(CONTENT.items['hand-torch']),count:1};
