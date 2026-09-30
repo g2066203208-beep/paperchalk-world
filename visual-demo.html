@@ -25,8 +25,8 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.3</h1>
-  <p>v12.3 丝滑天空：天空不再按“清晨/白天/黄昏/夜晚”瞬间换贴图，而是四套纸天空在 GPU 中连续交叉融合；点击时间预设时，整套时间与光照也会缓动过渡，自动昼夜则持续无缝变化。</p>
+  <h1>纸艺世界视觉 Demo v12.4</h1>
+  <p>v12.4 双光源昼夜：太阳和月亮现在是两盏同时存在、相差 180° 连续旋转的真实方向光。夕阳落下时太阳不会被开关切掉，月光会在暮色中逐渐接手；天空、雾、环境光、光辉和太阳/月亮体积光全部跟同一条连续时间轴交叉过渡。</p>
 </div>
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
@@ -906,14 +906,16 @@ scene.add(sunGlow,moonGlow,sunDisc,moonDisc);
 const fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const fsGeo=new THREE.PlaneGeometry(2,2);
 
-let sceneTarget=null,volumeTarget=null,volumeShadowTarget=null;
+let sceneTarget=null,volumeTarget=null;
+let sunVolumeShadowTarget=null,moonVolumeShadowTarget=null;
 const VOLUME_SCALE=.46;
 const VOLUME_SHADOW_SIZE=512;
 
-const volumeLightCamera=new THREE.OrthographicCamera(-18,18,15,-6,.1,60);
-const volumeShadowMatrix=new THREE.Matrix4();
+const sunVolumeCamera=new THREE.OrthographicCamera(-18,18,15,-6,.1,60);
+const moonVolumeCamera=new THREE.OrthographicCamera(-18,18,15,-6,.1,60);
+const sunVolumeMatrix=new THREE.Matrix4();
+const moonVolumeMatrix=new THREE.Matrix4();
 const volumeLightTarget=new THREE.Vector3(0,1.0,.6);
-const volumeActiveLightPos=new THREE.Vector3();
 
 const volumeDepthMat=new THREE.MeshBasicMaterial({side:THREE.DoubleSide});
 volumeDepthMat.colorWrite=false;
@@ -922,15 +924,21 @@ volumeDepthMat.depthTest=true;
 
 const volumeUniforms={
   sceneDepth:{value:null},
-  lightDepth:{value:null},
+  sunLightDepth:{value:null},
+  moonLightDepth:{value:null},
   cameraProjectionInv:{value:new THREE.Matrix4()},
   cameraMatrixWorld:{value:new THREE.Matrix4()},
-  lightMatrix:{value:new THREE.Matrix4()},
+  sunLightMatrix:{value:new THREE.Matrix4()},
+  moonLightMatrix:{value:new THREE.Matrix4()},
   cameraPos:{value:new THREE.Vector3()},
-  lightDir:{value:new THREE.Vector3(0,-1,0)},
-  scatteringColor:{value:new THREE.Color(0xffe6ad)},
-  density:{value:.038},
-  intensity:{value:.76},
+  sunLightDir:{value:new THREE.Vector3(0,-1,0)},
+  moonLightDir:{value:new THREE.Vector3(0,-1,0)},
+  sunScatteringColor:{value:new THREE.Color(0xffa05f)},
+  moonScatteringColor:{value:new THREE.Color(0x88b2ff)},
+  sunDensity:{value:.038},
+  moonDensity:{value:.016},
+  sunIntensity:{value:.76},
+  moonIntensity:{value:.18},
   maxDistance:{value:46.0},
   time:{value:0},
   shadowBias:{value:.0022},
@@ -951,15 +959,21 @@ const volumeMat=new THREE.ShaderMaterial({
     precision highp float;
     varying vec2 vUv;
     uniform sampler2D sceneDepth;
-    uniform sampler2D lightDepth;
+    uniform sampler2D sunLightDepth;
+    uniform sampler2D moonLightDepth;
     uniform mat4 cameraProjectionInv;
     uniform mat4 cameraMatrixWorld;
-    uniform mat4 lightMatrix;
+    uniform mat4 sunLightMatrix;
+    uniform mat4 moonLightMatrix;
     uniform vec3 cameraPos;
-    uniform vec3 lightDir;
-    uniform vec3 scatteringColor;
-    uniform float density;
-    uniform float intensity;
+    uniform vec3 sunLightDir;
+    uniform vec3 moonLightDir;
+    uniform vec3 sunScatteringColor;
+    uniform vec3 moonScatteringColor;
+    uniform float sunDensity;
+    uniform float moonDensity;
+    uniform float sunIntensity;
+    uniform float moonIntensity;
     uniform float maxDistance;
     uniform float time;
     uniform float shadowBias;
@@ -978,14 +992,21 @@ const volumeMat=new THREE.ShaderMaterial({
       return (cameraMatrixWorld*view).xyz;
     }
 
-    float shadowVisibility(vec3 worldPos){
-      vec4 lp=lightMatrix*vec4(worldPos,1.0);
+    float sunVisibility(vec3 worldPos){
+      vec4 lp=sunLightMatrix*vec4(worldPos,1.0);
       vec3 ndc=lp.xyz/max(lp.w,1e-6);
       vec3 uvz=ndc*.5+.5;
-      if(uvz.x<=0.0||uvz.x>=1.0||uvz.y<=0.0||uvz.y>=1.0||uvz.z<=0.0||uvz.z>=1.0){
-        return 0.0;
-      }
-      float blocker=texture2D(lightDepth,uvz.xy).x;
+      if(uvz.x<=0.0||uvz.x>=1.0||uvz.y<=0.0||uvz.y>=1.0||uvz.z<=0.0||uvz.z>=1.0)return 0.0;
+      float blocker=texture2D(sunLightDepth,uvz.xy).x;
+      return step(uvz.z-shadowBias,blocker);
+    }
+
+    float moonVisibility(vec3 worldPos){
+      vec4 lp=moonLightMatrix*vec4(worldPos,1.0);
+      vec3 ndc=lp.xyz/max(lp.w,1e-6);
+      vec3 uvz=ndc*.5+.5;
+      if(uvz.x<=0.0||uvz.x>=1.0||uvz.y<=0.0||uvz.y>=1.0||uvz.z<=0.0||uvz.z>=1.0)return 0.0;
+      float blocker=texture2D(moonLightDepth,uvz.xy).x;
       return step(uvz.z-shadowBias,blocker);
     }
 
@@ -1000,32 +1021,35 @@ const volumeMat=new THREE.ShaderMaterial({
       float rayDist=min(fullDist,maxDistance);
       float stepLen=rayDist/max(steps,1.0);
       float jitter=fract(hash12(gl_FragCoord.xy)+time*.071);
-      float accum=0.0;
+      float sunAccum=0.0;
+      float moonAccum=0.0;
 
       for(int i=0;i<32;i++){
         if(float(i)>=steps)break;
         float t=(float(i)+jitter)*stepLen;
         vec3 p=cameraPos+dir*t;
-        float visible=shadowVisibility(p);
 
-        // The humid medium exists in the forest, but it is visually revealed
-        // only where the sun actually reaches it. Shadowed fog contributes
-        // essentially no visible haze.
         float lowMist=1.0-smoothstep(.45,6.6,p.y);
-        float localDensity=density*(.10+.90*lowMist);
-        float sunlitDensity=localDensity*visible;
+        float medium=.10+.90*lowMist;
         float nearFade=smoothstep(.8,3.0,t);
 
-        // Stronger forward scattering makes illuminated mist read as a shaft
-        // while leaving the rest of the image clear.
-        float cosTheta=clamp(dot(dir,-normalize(lightDir)),-1.0,1.0);
-        float phase=.36+.64*pow(max(cosTheta,0.0),5.0);
+        float sVis=sunVisibility(p);
+        float mVis=moonVisibility(p);
 
-        accum+=sunlitDensity*stepLen*nearFade*phase;
+        float sCos=clamp(dot(dir,-normalize(sunLightDir)),-1.0,1.0);
+        float mCos=clamp(dot(dir,-normalize(moonLightDir)),-1.0,1.0);
+        float sPhase=.34+.66*pow(max(sCos,0.0),5.0);
+        float mPhase=.40+.60*pow(max(mCos,0.0),4.0);
+
+        // Both celestial lights coexist. Only shadow-map-visible fog glows.
+        sunAccum+=medium*sunDensity*sVis*stepLen*nearFade*sPhase;
+        moonAccum+=medium*moonDensity*mVis*stepLen*nearFade*mPhase;
       }
 
-      float scatter=(1.0-exp(-accum*2.15))*intensity;
-      gl_FragColor=vec4(scatteringColor*scatter,scatter);
+      float sunScatter=(1.0-exp(-sunAccum*2.15))*sunIntensity;
+      float moonScatter=(1.0-exp(-moonAccum*1.90))*moonIntensity;
+      vec3 rays=sunScatteringColor*sunScatter+moonScatteringColor*moonScatter;
+      gl_FragColor=vec4(rays,max(sunScatter,moonScatter));
     }
   `
 });
@@ -1076,6 +1100,20 @@ const compositeMat=new THREE.ShaderMaterial({
 const compositeScene=new THREE.Scene();
 compositeScene.add(new THREE.Mesh(fsGeo,compositeMat));
 
+function makeVolumeShadowTarget(){
+  const rt=new THREE.WebGLRenderTarget(VOLUME_SHADOW_SIZE,VOLUME_SHADOW_SIZE,{
+    minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,
+    format:THREE.RGBAFormat,type:THREE.UnsignedByteType
+  });
+  rt.depthTexture=new THREE.DepthTexture(VOLUME_SHADOW_SIZE,VOLUME_SHADOW_SIZE);
+  rt.depthTexture.type=THREE.UnsignedIntType;
+  rt.depthTexture.format=THREE.DepthFormat;
+  rt.depthTexture.compareFunction=null;
+  rt.depthTexture.minFilter=THREE.NearestFilter;
+  rt.depthTexture.magFilter=THREE.NearestFilter;
+  return rt;
+}
+
 function resizeVolumetricTargets(){
   const size=new THREE.Vector2();
   renderer.getDrawingBufferSize(size);
@@ -1097,88 +1135,95 @@ function resizeVolumetricTargets(){
     format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:false
   });
 
-  if(!volumeShadowTarget){
-    volumeShadowTarget=new THREE.WebGLRenderTarget(VOLUME_SHADOW_SIZE,VOLUME_SHADOW_SIZE,{
-      minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,
-      format:THREE.RGBAFormat,type:THREE.UnsignedByteType
-    });
-    volumeShadowTarget.depthTexture=new THREE.DepthTexture(VOLUME_SHADOW_SIZE,VOLUME_SHADOW_SIZE);
-    volumeShadowTarget.depthTexture.type=THREE.UnsignedIntType;
-    volumeShadowTarget.depthTexture.format=THREE.DepthFormat;
-    volumeShadowTarget.depthTexture.compareFunction=null;
-    volumeShadowTarget.depthTexture.minFilter=THREE.NearestFilter;
-    volumeShadowTarget.depthTexture.magFilter=THREE.NearestFilter;
-  }
+  if(!sunVolumeShadowTarget)sunVolumeShadowTarget=makeVolumeShadowTarget();
+  if(!moonVolumeShadowTarget)moonVolumeShadowTarget=makeVolumeShadowTarget();
 
   volumeUniforms.sceneDepth.value=sceneTarget.depthTexture;
-  volumeUniforms.lightDepth.value=volumeShadowTarget.depthTexture;
+  volumeUniforms.sunLightDepth.value=sunVolumeShadowTarget.depthTexture;
+  volumeUniforms.moonLightDepth.value=moonVolumeShadowTarget.depthTexture;
   compositeUniforms.sceneColor.value=sceneTarget.texture;
   compositeUniforms.volumeColor.value=volumeTarget.texture;
   compositeUniforms.volumeTexel.value.set(1/vw,1/vh);
 }
 resizeVolumetricTargets();
 
-let volumeShadowDirty=true,volumeShadowFrame=0,volumeUseMoon=false;
+let volumeShadowDirty=true,volumeShadowFrame=0;
 
 function updateVolumetricSettings(t){
   const a=((t%1)+1)%1*Math.PI*2-Math.PI/2;
-  const rawSun=Math.sin(a),sunUp=Math.max(rawSun,0),moonUp=Math.max(-rawSun,0);
+  const ma=a+Math.PI;
+  const rawSun=Math.sin(a),rawMoon=Math.sin(ma);
+  const sunUp=Math.max(rawSun,0),moonUp=Math.max(rawMoon,0);
+  const sunFade=smoothstep(-.16,.18,rawSun);
+  const moonFade=smoothstep(-.16,.18,rawMoon);
   const twilight=1-smoothstep(.025,.34,Math.abs(rawSun));
-  volumeUseMoon=sunUp<.025&&moonUp>.02;
 
-  const active=volumeUseMoon?moon:sun;
-  volumeActiveLightPos.copy(active.position);
-  volumeUniforms.lightDir.value.copy(volumeLightTarget).sub(volumeActiveLightPos).normalize();
+  volumeUniforms.sunLightDir.value.copy(volumeLightTarget).sub(sun.position).normalize();
+  volumeUniforms.moonLightDir.value.copy(volumeLightTarget).sub(moon.position).normalize();
 
   const dayColor=new THREE.Color(0xffefc8);
   const dawnColor=new THREE.Color(0xffa05f);
   const sunsetColor=new THREE.Color(0xff7f4f);
-  const moonColor=new THREE.Color(0x88b2ff);
+  const moonColor=new THREE.Color(0x7ea9ff);
+  const warmColor=state.time<.5?dawnColor:sunsetColor;
 
-  if(volumeUseMoon){
-    volumeUniforms.scatteringColor.value.copy(moonColor);
-    volumeUniforms.intensity.value=.19+.13*moonUp;
-    volumeUniforms.density.value=.016+.005*moonUp;
-  }else{
-    // A little more intrinsic colour: dawn is orange-red, sunset is deeper
-    // red-orange, while noon remains warm paper-white.
-    const warmColor=state.time<.5?dawnColor:sunsetColor;
-    volumeUniforms.scatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.94);
-    volumeUniforms.intensity.value=.46+sunUp*.20+twilight*.50;
-    volumeUniforms.density.value=.022+twilight*.026;
-  }
+  volumeUniforms.sunScatteringColor.value.copy(dayColor).lerp(warmColor,twilight*.96);
+  volumeUniforms.moonScatteringColor.value.copy(moonColor);
+
+  // No sun/moon switch: both contributions coexist and crossfade smoothly.
+  volumeUniforms.sunIntensity.value=sunFade*(.34+sunUp*.22+twilight*.62);
+  volumeUniforms.moonIntensity.value=moonFade*(.10+moonUp*.17+twilight*.06);
+  volumeUniforms.sunDensity.value=.020+twilight*.028;
+  volumeUniforms.moonDensity.value=.013+moonUp*.005;
+}
+
+function updateVolumeShadowCamera(lightPos,cam,matrix,uniformMatrix,targetRT){
+  cam.position.copy(lightPos);
+  cam.lookAt(volumeLightTarget);
+  cam.updateMatrixWorld(true);
+  cam.matrixWorldInverse.copy(cam.matrixWorld).invert();
+  cam.updateProjectionMatrix();
+  matrix.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);
+  uniformMatrix.value.copy(matrix);
+
+  renderer.setRenderTarget(targetRT);
+  renderer.clear();
+  renderer.render(scene,cam);
 }
 
 function updateVolumetricShadow(force=false){
   if(!state.godrays||(!force&&!volumeShadowDirty))return;
 
-  volumeLightCamera.position.copy(volumeActiveLightPos);
-  volumeLightCamera.lookAt(volumeLightTarget);
-  volumeLightCamera.updateMatrixWorld(true);
-  volumeLightCamera.matrixWorldInverse.copy(volumeLightCamera.matrixWorld).invert();
-  volumeLightCamera.updateProjectionMatrix();
-  volumeShadowMatrix.multiplyMatrices(volumeLightCamera.projectionMatrix,volumeLightCamera.matrixWorldInverse);
-  volumeUniforms.lightMatrix.value.copy(volumeShadowMatrix);
-
   const fogVisible=forestMist.visible,skyVisible=sky.visible;
-  const sunVisible=sunDisc.visible,moonVisible=moonDisc.visible;
+  const sunDiscVisible=sunDisc.visible,moonDiscVisible=moonDisc.visible;
+  const sunGlowVisible=sunGlow.visible,moonGlowVisible=moonGlow.visible;
   const contactVisible=contactShadow.visible;
   const playerVisible=playerMesh?playerMesh.visible:false;
 
   forestMist.visible=false;sky.visible=false;
-  sunDisc.visible=false;moonDisc.visible=false;contactShadow.visible=false;
+  sunDisc.visible=false;moonDisc.visible=false;
+  sunGlow.visible=false;moonGlow.visible=false;
+  contactShadow.visible=false;
   if(playerMesh)playerMesh.visible=false;
 
   const oldOverride=scene.overrideMaterial;
   scene.overrideMaterial=volumeDepthMat;
-  renderer.setRenderTarget(volumeShadowTarget);
-  renderer.clear();
-  renderer.render(scene,volumeLightCamera);
+
+  updateVolumeShadowCamera(
+    sun.position,sunVolumeCamera,sunVolumeMatrix,
+    volumeUniforms.sunLightMatrix,sunVolumeShadowTarget
+  );
+  updateVolumeShadowCamera(
+    moon.position,moonVolumeCamera,moonVolumeMatrix,
+    volumeUniforms.moonLightMatrix,moonVolumeShadowTarget
+  );
+
   renderer.setRenderTarget(null);
   scene.overrideMaterial=oldOverride;
 
   forestMist.visible=fogVisible;sky.visible=skyVisible;
-  sunDisc.visible=sunVisible;moonDisc.visible=moonVisible;
+  sunDisc.visible=sunDiscVisible;moonDisc.visible=moonDiscVisible;
+  sunGlow.visible=sunGlowVisible;moonGlow.visible=moonGlowVisible;
   contactShadow.visible=contactVisible;
   if(playerMesh)playerMesh.visible=playerVisible;
 
@@ -1217,22 +1262,23 @@ const timeTransition={
 function updateSkyBlend(t){
   t=((t%1)+1)%1;
   let wn=0,wd=0,wday=0,ws=0,q=0;
+  const ease=x=>x*x*x*(x*(x*6-15)+10);
+  const ramp=(a,b,x)=>ease(clamp((x-a)/(b-a),0,1));
 
-  // Midnight -> sunrise -> day -> sunset -> night.
-  // The overlap ranges are deliberately broad so paper fibres and torn layers
-  // dissolve into one another instead of visibly switching texture sets.
-  if(t<.18||t>=.82){
+  // Wide overlaps avoid the sunset -> night snap. The sky always dissolves
+  // through paper layers instead of switching a mode.
+  if(t<.16||t>=.90){
     wn=1;
   }else if(t<.25){
-    q=smoothstep(.18,.25,t);wn=1-q;wd=q;
-  }else if(t<.34){
-    q=smoothstep(.25,.34,t);wd=1-q;wday=q;
-  }else if(t<.66){
+    q=ramp(.16,.25,t);wn=1-q;wd=q;
+  }else if(t<.38){
+    q=ramp(.25,.38,t);wd=1-q;wday=q;
+  }else if(t<.62){
     wday=1;
-  }else if(t<.75){
-    q=smoothstep(.66,.75,t);wday=1-q;ws=q;
+  }else if(t<.72){
+    q=ramp(.62,.72,t);wday=1-q;ws=q;
   }else{
-    q=smoothstep(.75,.82,t);ws=1-q;wn=q;
+    q=ramp(.72,.90,t);ws=1-q;wn=q;
   }
   skyUniforms.weights.value.set(wn,wd,wday,ws);
 }
@@ -1248,25 +1294,27 @@ function beginTimeTransition(targetTime){
   timeTransition.target=target;
   timeTransition.delta=delta;
   timeTransition.elapsed=0;
-  timeTransition.duration=1.55+Math.min(Math.abs(delta),.35)*2.4;
+  timeTransition.duration=2.35+Math.min(Math.abs(delta),.40)*5.0;
   renderDirty=true;
 }
 
 function updateLighting(t){
   state.time=((t%1)+1)%1;
   const a=state.time*Math.PI*2-Math.PI/2;
-  const rawSun=Math.sin(a),sunUp=Math.max(rawSun,0),moonUp=Math.max(-rawSun,0);
+  const ma=a+Math.PI;
+  const rawSun=Math.sin(a),rawMoon=Math.sin(ma);
+  const sunUp=Math.max(rawSun,0),moonUp=Math.max(rawMoon,0);
+  const sunFade=smoothstep(-.16,.18,rawSun);
+  const moonFade=smoothstep(-.16,.18,rawMoon);
   const twilight=1-smoothstep(.025,.34,Math.abs(rawSun));
 
-  // Sun and moon still move physically around the scene, but the intensity
-  // curves are deliberately art-directed: dawn/dusk/night remain readable.
-  let sx=-Math.cos(a)*14,sy=3.2+Math.max(rawSun,.03)*13.5,sz=-18;
-  const ma=a+Math.PI;
-  let mx=Math.cos(a)*12,my=3.2+Math.max(-rawSun,.03)*12.0,mz=-18;
+  // Two real directional lights orbit continuously, 180 degrees apart.
+  // Nothing is turned on/off at sunset: only their smooth intensities change.
+  const orbitX=18,orbitY=18,orbitBaseY=1.1,orbitZ=-18;
+  let sx=-Math.cos(a)*orbitX,sy=orbitBaseY+Math.sin(a)*orbitY,sz=orbitZ;
+  let mx=-Math.cos(ma)*orbitX,my=orbitBaseY+Math.sin(ma)*orbitY,mz=orbitZ;
 
-  // Manual sun direction: keep the light behind the forest, but let the user
-  // steer it left/right and up/down. All shadows + volumetric scattering use
-  // this exact same DirectionalLight position.
+  // Manual control still steers the sun; the moon continues its clock orbit.
   if(state.manualSun){
     const az=THREE.MathUtils.degToRad(state.sunAzimuth);
     const el=THREE.MathUtils.degToRad(state.sunElevation);
@@ -1276,111 +1324,109 @@ function updateLighting(t){
     sy=3.0+Math.sin(el)*radius;
     sz=-Math.cos(az)*horizontal;
   }
-  sun.position.set(sx,sy,sz);moon.position.set(mx,my,mz);
+  sun.position.set(sx,sy,sz);
+  moon.position.set(mx,my,mz);
 
   const sunDawn=new THREE.Color(0xff9b5f);
-  const sunSunset=new THREE.Color(0xff7c52);
+  const sunSunset=new THREE.Color(0xff7650);
   const sunWarm=state.time<.5?sunDawn:sunSunset;
   const sunDay=new THREE.Color(0xffe8c4);
-  sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.10,.72,sunUp));
-  sun.intensity=.18+sunUp*2.55+twilight*.84;
+  sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
+  sun.intensity=sunFade*(.14+sunUp*2.62+twilight*.96);
 
-  moon.color.set(0x91b7ff);
-  moon.intensity=.08+moonUp*1.20;
+  moon.color.set(0x84adff);
+  moon.intensity=moonFade*(.08+moonUp*1.16+twilight*.10);
 
-  // Stronger sky/ground diffuse fill: this is intentionally more generous than
-  // reality so the handmade-paper colours never collapse into black.
-  hemi.intensity=.78+sunUp*.62+moonUp*.15+twilight*.18;
+  // Environment fill follows both celestial lights continuously.
+  const dayMix=sunFade;
+  const nightMix=moonFade*(1-sunFade*.55);
+  hemi.intensity=.66+dayMix*.72+nightMix*.18+twilight*.10;
   const hemiDay=new THREE.Color(0xdceeff);
-  const hemiNight=new THREE.Color(0x9fb8df);
-  const hemiWarm=new THREE.Color(0xffd8bd);
-  hemi.color.copy(hemiNight).lerp(hemiDay,Math.pow(sunUp,.45)).lerp(hemiWarm,twilight*.24);
+  const hemiNight=new THREE.Color(0x8ea9d8);
+  const hemiWarm=new THREE.Color(0xffcfb0);
+  hemi.color.copy(hemiNight).lerp(hemiDay,dayMix).lerp(hemiWarm,twilight*.22*sunFade);
 
   const groundDay=new THREE.Color(0x9c7656);
-  const groundNight=new THREE.Color(0x606b7d);
-  const groundWarm=new THREE.Color(0xb37b58);
-  hemi.groundColor.copy(groundNight).lerp(groundDay,Math.pow(sunUp,.45)).lerp(groundWarm,twilight*.24);
+  const groundNight=new THREE.Color(0x59677d);
+  const groundWarm=new THREE.Color(0xb86f50);
+  hemi.groundColor.copy(groundNight).lerp(groundDay,dayMix).lerp(groundWarm,twilight*.22*sunFade);
 
-  // Global fill + camera-side key keep all gameplay-critical shapes readable.
-  ambientFill.intensity=.30+sunUp*.12+moonUp*.11+twilight*.08;
+  ambientFill.intensity=.29+dayMix*.14+nightMix*.11+twilight*.05;
   const ambientDay=new THREE.Color(0xe7edf0);
-  const ambientNight=new THREE.Color(0x9daccc);
-  const ambientWarm=new THREE.Color(0xffd9c1);
-  ambientFill.color.copy(ambientNight).lerp(ambientDay,Math.pow(sunUp,.4)).lerp(ambientWarm,twilight*.18);
+  const ambientNight=new THREE.Color(0x91a8d4);
+  const ambientWarm=new THREE.Color(0xffd2b8);
+  ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.16*sunFade);
 
-  viewFill.intensity=.16+(1-sunUp)*.20+twilight*.12;
+  viewFill.intensity=.17+(1-dayMix)*.18+twilight*.08;
   const viewDay=new THREE.Color(0xf7f0e6);
-  const viewNight=new THREE.Color(0xa9bfe4);
-  const viewWarm=new THREE.Color(0xffc9aa);
-  viewFill.color.copy(viewNight).lerp(viewDay,Math.pow(sunUp,.5)).lerp(viewWarm,twilight*.34);
+  const viewNight=new THREE.Color(0x9eb9ea);
+  const viewWarm=new THREE.Color(0xffc3a1);
+  viewFill.color.copy(viewNight).lerp(viewDay,dayMix).lerp(viewWarm,twilight*.28*sunFade);
 
   const horizonDay=new THREE.Color(0xb9d9e2);
-  const horizonNight=new THREE.Color(0x667d9b);
-  const horizonWarm=new THREE.Color(0xe6c2a4);
-  const fogColor=horizonNight.clone().lerp(horizonDay,Math.pow(sunUp,.38)).lerp(horizonWarm,twilight*.38);
+  const horizonNight=new THREE.Color(0x5f7393);
+  const horizonWarm=new THREE.Color(0xe6a77f);
+  const fogColor=horizonNight.clone().lerp(horizonDay,dayMix).lerp(horizonWarm,twilight*.40*sunFade);
 
-  // Forest air: exponential distance haze gives a softer "air volume" than
-  // a hard linear start/end fog. Keep it stylized and readable.
   if(state.fog){
-    const density=.0075+twilight*.0020+moonUp*.0015;
+    const density=.0070+twilight*.0022+nightMix*.0014;
     scene.fog=new THREE.FogExp2(fogColor,density);
   }
 
   const mistDay=new THREE.Color(0xe4ece3);
-  const mistNight=new THREE.Color(0xb6c8da);
-  const mistWarm=new THREE.Color(0xecd8c1);
-  const mistColor=mistNight.clone().lerp(mistDay,Math.pow(sunUp,.42)).lerp(mistWarm,twilight*.30);
+  const mistNight=new THREE.Color(0xaec4df);
+  const mistWarm=new THREE.Color(0xf0c8a8);
+  const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
-  fogUniforms.opacity.value=.16+twilight*.055+moonUp*.025;
+  fogUniforms.opacity.value=.15+twilight*.055*sunFade+nightMix*.025;
 
-  // Narrow exposure range = comfortable stylized game image instead of
-  // physically dark dawn/night.
-  renderer.toneMappingExposure=state.tone?(.90+sunUp*.12+twilight*.045):1;
+  renderer.toneMappingExposure=state.tone?(.86+dayMix*.15+twilight*.035):1;
   scene.background.copy(fogColor);
-
   updateSkyBlend(state.time);
 
-  const sunDir=new THREE.Vector3(sx,sy,sz).normalize();
-  const moonDir=new THREE.Vector3(mx,my,mz).normalize();
+  const sunDir=new THREE.Vector3().copy(sun.position).sub(volumeLightTarget).normalize();
+  const moonDir=new THREE.Vector3().copy(moon.position).sub(volumeLightTarget).normalize();
   sunDisc.position.copy(camera.position).addScaledVector(sunDir,34);
   moonDisc.position.copy(camera.position).addScaledVector(moonDir,34);
-  sunGlow.position.copy(sunDisc.position);moonGlow.position.copy(moonDisc.position);
-  sunDisc.lookAt(camera.position);moonDisc.lookAt(camera.position);
-  sunDisc.visible=state.sky&&rawSun>-0.08;moonDisc.visible=state.sky&&rawSun<0.12;
-  sunGlow.visible=sunDisc.visible;moonGlow.visible=moonDisc.visible;
-  sunDisc.material.opacity=.72+sunUp*.26;moonDisc.material.opacity=.72+moonUp*.22;
-  sunDisc.material.color.copy(sun.color).lerp(new THREE.Color(0xfff0c7),.25);
-  moonDisc.material.color.set(0xb8d0ff);
+  sunGlow.position.copy(sunDisc.position);
+  moonGlow.position.copy(moonDisc.position);
+  sunDisc.lookAt(camera.position);
+  moonDisc.lookAt(camera.position);
+
+  // Discs never hard-toggle at the horizon. Opacity does the continuous fade.
+  sunDisc.visible=state.sky;
+  moonDisc.visible=state.sky;
+  sunGlow.visible=state.sky;
+  moonGlow.visible=state.sky;
+  sunDisc.material.opacity=sunFade*(.42+sunUp*.55);
+  moonDisc.material.opacity=moonFade*(.42+moonUp*.46);
+  sunDisc.material.color.copy(sun.color).lerp(new THREE.Color(0xfff0c7),.22);
+  moonDisc.material.color.set(0xb5ceff);
   sunGlow.material.color.copy(sun.color);
-  moonGlow.material.color.set(0x7fa7ff);
-  sunGlow.material.opacity=.18+twilight*.20+sunUp*.08;
-  moonGlow.material.opacity=.13+moonUp*.15;
+  moonGlow.material.color.set(0x739fff);
+  sunGlow.material.opacity=sunFade*(.09+twilight*.30+sunUp*.07);
+  moonGlow.material.opacity=moonFade*(.08+moonUp*.18);
 
   if(playerMat){
-    const dayAmount=smoothstep(.02,.68,sunUp);
+    const dayAmount=dayMix;
     playerTintTmp.copy(playerNightTint).lerp(playerDayTint,dayAmount);
-    if(twilight>0)playerTintTmp.lerp(playerDuskTint,twilight*.32);
+    if(twilight>0)playerTintTmp.lerp(playerDuskTint,twilight*.28*sunFade);
     playerMat.color.copy(playerTintTmp);
-
-    // Only a tiny safety floor remains; readable brightness now mainly comes
-    // from world diffuse fill + terrain bounce.
-    playerMat.emissiveIntensity=.012+(1-sunUp)*.018;
+    playerMat.emissiveIntensity=.012+(1-dayMix)*.018;
   }
 
-  // Broad ground colour bleed: intentionally subtle and uniform so it reads
-  // as reflected environment light rather than a lamp shining on the floor.
-  const bounceDay=.22+sunUp*.28+twilight*.10;
-  const bounceNight=moonUp*.16;
+  const bounceDay=.20+dayMix*.30+twilight*.08*sunFade;
+  const bounceNight=nightMix*.16;
   groundBounce.intensity=state.bounce?(bounceDay+bounceNight):0;
   const bounceDayColor=new THREE.Color(0xc8d49b);
-  const bounceNightColor=new THREE.Color(0x91a7c8);
-  const bounceWarmColor=new THREE.Color(0xd3a47b);
-  groundBounce.color.copy(bounceNightColor).lerp(bounceDayColor,Math.pow(sunUp,.45)).lerp(bounceWarmColor,twilight*.18);
+  const bounceNightColor=new THREE.Color(0x849dc8);
+  const bounceWarmColor=new THREE.Color(0xd3946e);
+  groundBounce.color.copy(bounceNightColor).lerp(bounceDayColor,dayMix).lerp(bounceWarmColor,twilight*.18*sunFade);
 
   if(contactShadow?.material){
-    // Never crush the feet into a black blob at dawn/night.
-    contactShadow.material.opacity=.25+sunUp*.32+moonUp*.08+twilight*.06;
+    contactShadow.material.opacity=.24+dayMix*.32+nightMix*.08+twilight*.05;
   }
+
   updateVolumetricSettings(state.time);
   syncSunControls();
   volumeShadowDirty=true;
@@ -1424,10 +1470,10 @@ function syncButtons(){
   sky.visible=state.sky;sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;contactShadow.visible=state.shadow;forestMist.visible=state.fog;paperGrassGroup.visible=state.papergrass;canopyGroup.visible=true;
   caps.forEach(c=>c.visible=state.layers);rims.forEach(r=>r.visible=state.layers);
   renderer.shadowMap.enabled=state.shadow;
-  // Only one shadow-casting directional light at a time.
-  const sunIsDominant=state.time>.18&&state.time<.82;
-  sun.castShadow=state.shadow&&sunIsDominant;
-  moon.castShadow=state.shadow&&!sunIsDominant;
+  // Both celestial lights remain real lights through dusk. Their smoothly
+  // changing intensities make the shadow hand-off continuous too.
+  sun.castShadow=state.shadow;
+  moon.castShadow=state.shadow;
   shadowDirty=true;
   if(!state.fog)scene.fog=null;
   renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
