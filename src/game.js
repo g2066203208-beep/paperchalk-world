@@ -1348,17 +1348,20 @@ const stageButton=debugPanel.querySelector('[data-debug-action="stageview"]');
 const axisButton=debugPanel.querySelector('[data-debug-action="stageaxis"]');
 const paperButton=debugPanel.querySelector('[data-debug-action="paperstyle"]');
 const raysButton=debugPanel.querySelector('[data-debug-action="volumetric"]');
+const flightButton=debugPanel.querySelector('[data-debug-action="flight"]');
 if(stageButton)stageButton.textContent='纸片舞台视角：'+(stage.enabled?'开':'关');
 if(axisButton)axisButton.textContent='舞台观察轴：'+stage.axis.toUpperCase();
 if(paperButton)paperButton.textContent='Paper Style：'+(window.Paperchalk3D?.stats?.paperStyle?.enabled===false?'关':'开');
 if(raysButton)raysButton.textContent='丁达尔：'+(window.Paperchalk3D?.stats?.atmosphere?.volumetric===false?'关':'开');
+if(flightButton)flightButton.textContent='飞行：'+(controller.flying?'开':'关');
 }
 function updateDebugStatus(){
 const s=window.Paperchalk3D?.stats||{};
 const stage=stageViewState();
 const ts=terrain.stats();
 debugStatus.textContent='HP '+health.current+'/'+health.max+
-' · XY '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+
+' · XYZ '+transform.x.toFixed(1)+', '+transform.y.toFixed(1)+', '+transform.z.toFixed(1)+
+' · '+(controller.flying?'飞行':'步行')+
 ' · '+(s.paperStyle?.enabled===false?('3D方块 '+(s.terrain?.renderedQuads||0)+' quads'):('Paper '+(s.paperTerrain?.visiblePaperChunks||0)+' chunks / '+(s.paperTerrain?.paperTriangles||0)+' tris'))+' · '+ts.loadedChunks+' logical chunks'+
 ' · '+terrainToolMode.toUpperCase()+
 ' · Vol '+((s.atmosphere?.currentStrength||0).toFixed?.(2)||'0.00')+
@@ -1382,7 +1385,7 @@ function runDebugCommand(command){
 const raw=String(command||'').trim();
 if(!raw)return '';
 const [cmd,...args]=raw.split(/\s+/);
-if(cmd==='help')return 'hp 5 | hp +1 | tp X Z [Y] | time 分钟(0-1439) | dig X Y Z | put X Y Z | tool dig/place | reset | collider | stage on/off | axis x/z | terrain | stats | save';
+if(cmd==='help')return 'hp 5 | tp X Z [Y] | time 分钟 | flight on/off | dig X Y Z | put X Y Z | reset | collider | terrain | stats | save';
 if(cmd==='hp'){
 const token=args[0]||'';
 const n=Number(token);
@@ -1401,6 +1404,10 @@ const m=Number(args[0]);
 if(!Number.isFinite(m))return '用法：time 390（06:30）';
 worldMinutes=((m%1440)+1440)%1440;paperClock.textContent=formatClock();publish();
 return '世界时间 -> '+formatClock();
+}
+if(cmd==='flight'){
+const token=String(args[0]||'toggle').toLowerCase(),next=token==='on'?true:token==='off'?false:!controller.flying;
+return '飞行 -> '+(setFlight(next,{notice:false})?'开':'关');
 }
 if(cmd==='dig'){
 const x=Number(args[0]),y=Number(args[1]),z=Number(args[2]);
@@ -1494,6 +1501,11 @@ updateDebugStatus();
 window.PaperchalkDebug=Object.freeze({
 perf(){return {runtime:buildSnapshot(),renderer:window.Paperchalk3D?.stats||null}},
 command:runDebugCommand
+});
+window.PaperchalkTimeDebug=Object.freeze({
+get(){return {minutes:worldMinutes,scale:worldTimeScale,clock:formatClock()}},
+set(v){const n=Number(v);if(Number.isFinite(n)){worldMinutes=((n%1440)+1440)%1440;paperClock.textContent=formatClock();publish()}return this.get()},
+scale(v){const n=Number(v);if(Number.isFinite(n))worldTimeScale=clamp(n,0,20);return this.get()}
 });
 function resetJoystick(){
 joystickPointer=null;joystickAxisX=0;joystickAxisY=0;
