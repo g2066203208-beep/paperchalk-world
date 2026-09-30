@@ -18,16 +18,17 @@ h1{font-size:19px;margin:0 0 5px}.panel p{font-size:12px;line-height:1.55;margin
 </style>
 </head>
 <body>
-<div class="panel"><h1>Paper003 方块材质工作室</h1><p>这是单独的网页实验室，不改正式游戏。这里直接识别 Paper003 的 Color / NormalGL / Roughness / Displacement，并把它们分别接到正确的 PBR 槽位。默认用低角度侧光，专门让纸褶皱看得见。</p></div>
+<div class="panel"><h1>Paper003 方块材质工作室 v2</h1><p>只改这个独立网页，不碰正式游戏。按材质包自己的 MaterialX / Godot 配置来接：Color→Base Color，NormalGL→Normal，Roughness→Roughness，Displacement→真正的几何位移。方块表面已经细分，位移图现在会真的推顶点，不再是平面。</p></div>
 <div class="tools">
-  <div class="row"><span>Normal</span><input id="normal" type="range" min="0" max="250" value="145"><b id="normalV">1.45</b></div>
-  <div class="row"><span>Displace</span><input id="disp" type="range" min="0" max="140" value="65"><b id="dispV">0.065</b></div>
+  <div class="row"><span>Normal</span><input id="normal" type="range" min="0" max="220" value="120"><b id="normalV">1.20</b></div>
+  <div class="row"><span>Displace</span><input id="disp" type="range" min="0" max="180" value="105"><b id="dispV">0.105</b></div>
   <div class="row"><span>纸面重复</span><input id="repeat" type="range" min="50" max="220" value="100"><b id="repeatV">1.00</b></div>
   <div class="row"><span>侧光角度</span><input id="light" type="range" min="-80" max="80" value="-38"><b id="lightV">-38°</b></div>
   <div class="buttons">
     <button id="all" class="active">全部 PBR</button>
     <button id="flat">纯色对比</button>
-    <button id="normalOnly">只看法线</button>
+    <button id="normalOnly">只看法线+高度</button>
+    <button id="wire">看细分网格</button>
     <button id="rotate" class="active">自动旋转</button>
   </div>
   <div class="maps">
@@ -37,7 +38,7 @@ h1{font-size:19px;margin:0 0 5px}.panel p{font-size:12px;line-height:1.55;margin
     <div class="map"><img id="mDisp">Displacement</div>
   </div>
 </div>
-<div class="badge">拖动旋转 · 滚轮缩放 · 这是材质工作室，不是正式游戏页面</div>
+<div class="badge">Paper003：64×40×64 细分方块 + 128×128 顶纸 · Displacement 真正改变几何</div>
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
 
@@ -62,40 +63,101 @@ function tex(url,srgb=false){const t=loader.load(url);if(srgb)t.colorSpace=THREE
 const ctex=tex(COLOR,true),ntex=tex(NORMAL),rtex=tex(ROUGH),dtex=tex(DISP);
 for(const t of [ctex,ntex,rtex,dtex])t.repeat.set(1,1);
 
-const brown=new THREE.MeshStandardMaterial({color:0xb57f58,map:ctex,normalMap:ntex,roughnessMap:rtex,normalScale:new THREE.Vector2(1.15,1.15),roughness:1,metalness:0});
-const edge=new THREE.MeshStandardMaterial({color:0x627849,map:ctex,normalMap:ntex,roughnessMap:rtex,normalScale:new THREE.Vector2(.9,.9),roughness:1,metalness:0});
-const green=new THREE.MeshStandardMaterial({color:0x91aa68,map:ctex,normalMap:ntex,roughnessMap:rtex,displacementMap:dtex,normalScale:new THREE.Vector2(1.45,1.45),roughness:1,metalness:0,displacementScale:.065,displacementBias:-.010});
+// Paper003 is not "just a texture". Its own .mtlx and .tres both enable
+// displacement/height. Therefore every surface that should show paper relief
+// needs enough vertices for the height map to move.
+const DISP_MEAN=.1508;
+
+function makePaper003Material(color,normalScale,dispScale){
+  return new THREE.MeshStandardMaterial({
+    color,
+    map:ctex,
+    normalMap:ntex,
+    roughnessMap:rtex,
+    displacementMap:dtex,
+    normalScale:new THREE.Vector2(normalScale,normalScale),
+    displacementScale:dispScale,
+    displacementBias:-DISP_MEAN*dispScale,
+    roughness:1,
+    metalness:0
+  });
+}
+
+const brown=makePaper003Material(0xb57f58,.96,.084);
+const edge=makePaper003Material(0x627849,.72,.042);
+const green=makePaper003Material(0x91aa68,1.20,.105);
 
 const group=new THREE.Group();scene.add(group);
-const body=new THREE.Mesh(new THREE.BoxGeometry(4.3,2.55,4.3,1,1,1),brown);body.position.y=-.08;body.castShadow=true;body.receiveShadow=true;group.add(body);
-const edgeMesh=new THREE.Mesh(new THREE.BoxGeometry(4.42,.13,4.42),edge);edgeMesh.position.y=1.255;edgeMesh.castShadow=true;edgeMesh.receiveShadow=true;group.add(edgeMesh);
-const topGeo=new THREE.PlaneGeometry(4.38,4.38,96,96);topGeo.rotateX(-Math.PI/2);
+
+// Dense box: unlike the old 1×1×1 segmented BoxGeometry, this can actually
+// respond to Paper003_Displacement on ALL six faces.
+const bodyGeo=new THREE.BoxGeometry(4.3,2.55,4.3,64,40,64);
+const body=new THREE.Mesh(bodyGeo,brown);
+body.position.y=-.08;body.castShadow=true;body.receiveShadow=true;group.add(body);
+
+// The dark green paper edge also receives a smaller physical displacement.
+const edgeGeo=new THREE.BoxGeometry(4.42,.13,4.42,64,4,64);
+const edgeMesh=new THREE.Mesh(edgeGeo,edge);
+edgeMesh.position.y=1.255;edgeMesh.castShadow=true;edgeMesh.receiveShadow=true;group.add(edgeMesh);
+
+// Separate thin top sheet, heavily subdivided because this is where Paper003's
+// creases should be most visible.
+const topGeo=new THREE.PlaneGeometry(4.38,4.38,128,128);topGeo.rotateX(-Math.PI/2);
 const top=new THREE.Mesh(topGeo,green);top.position.y=1.335;top.castShadow=true;top.receiveShadow=true;group.add(top);
+
+// Wireframe overlay exists only as proof that displacement has actual vertices.
+const wireMat=new THREE.MeshBasicMaterial({color:0x2a211b,wireframe:true,transparent:true,opacity:.14,depthWrite:false});
+const wireBody=new THREE.Mesh(bodyGeo,wireMat);wireBody.position.copy(body.position);wireBody.visible=false;group.add(wireBody);
+const wireTop=new THREE.Mesh(topGeo,wireMat);wireTop.position.copy(top.position);wireTop.visible=false;group.add(wireTop);
 
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,40),new THREE.MeshStandardMaterial({color:0xbca98a,roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.y=-1.37;floor.receiveShadow=true;scene.add(floor);
 
-const hemi=new THREE.HemisphereLight(0xfff3d4,0x584c41,.72);scene.add(hemi);
-const key=new THREE.DirectionalLight(0xffd18b,4.2);key.position.set(-6,3.2,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-7;key.shadow.camera.right=7;key.shadow.camera.top=7;key.shadow.camera.bottom=-7;scene.add(key);
+const hemi=new THREE.HemisphereLight(0xfff3d4,0x584c41,.42);scene.add(hemi);
+const key=new THREE.DirectionalLight(0xffd18b,5.0);key.position.set(-7,2.1,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.camera.left=-7;key.shadow.camera.right=7;key.shadow.camera.top=7;key.shadow.camera.bottom=-7;scene.add(key);
 const fill=new THREE.DirectionalLight(0x9bbcff,.35);fill.position.set(4,4,-4);scene.add(fill);
 
 function setRepeat(v){for(const t of [ctex,ntex,rtex,dtex])t.repeat.set(v,v)}
+function setDisplacement(mat,scale){
+  mat.displacementMap=dtex;
+  mat.displacementScale=scale;
+  mat.displacementBias=-DISP_MEAN*scale;
+}
 function mode(kind){
   all.classList.toggle('active',kind==='all');flat.classList.toggle('active',kind==='flat');normalOnly.classList.toggle('active',kind==='normal');
   if(kind==='flat'){
-    brown.map=edge.map=green.map=null;brown.normalMap=edge.normalMap=green.normalMap=null;brown.roughnessMap=edge.roughnessMap=green.roughnessMap=null;green.displacementMap=null;
+    for(const mat of [brown,edge,green]){
+      mat.map=null;mat.normalMap=null;mat.roughnessMap=null;mat.displacementMap=null;
+    }
   }else if(kind==='normal'){
-    brown.map=edge.map=green.map=null;brown.normalMap=edge.normalMap=green.normalMap=ntex;brown.roughnessMap=edge.roughnessMap=green.roughnessMap=null;green.displacementMap=dtex;
+    for(const mat of [brown,edge,green]){
+      mat.map=null;mat.normalMap=ntex;mat.roughnessMap=null;
+    }
+    setDisplacement(brown,+disp.value/1000*.80);
+    setDisplacement(edge,+disp.value/1000*.40);
+    setDisplacement(green,+disp.value/1000);
   }else{
-    brown.map=edge.map=green.map=ctex;brown.normalMap=edge.normalMap=green.normalMap=ntex;brown.roughnessMap=edge.roughnessMap=green.roughnessMap=rtex;green.displacementMap=dtex;
+    for(const mat of [brown,edge,green]){
+      mat.map=ctex;mat.normalMap=ntex;mat.roughnessMap=rtex;
+    }
+    setDisplacement(brown,+disp.value/1000*.80);
+    setDisplacement(edge,+disp.value/1000*.40);
+    setDisplacement(green,+disp.value/1000);
   }
   [brown,edge,green].forEach(m=>m.needsUpdate=true);
 }
 all.onclick=()=>mode('all');flat.onclick=()=>mode('flat');normalOnly.onclick=()=>mode('normal');
+wire.onclick=()=>{const on=!wireBody.visible;wireBody.visible=wireTop.visible=on;wire.classList.toggle('active',on)};
 
-normal.oninput=e=>{const v=+e.target.value/100;green.normalScale.setScalar(v);brown.normalScale.setScalar(v*.8);edge.normalScale.setScalar(v*.65);normalV.textContent=v.toFixed(2)};
-disp.oninput=e=>{const v=+e.target.value/1000;green.displacementScale=v;green.displacementBias=-v*.15;dispV.textContent=v.toFixed(3)};
+normal.oninput=e=>{const v=+e.target.value/100;green.normalScale.setScalar(v);brown.normalScale.setScalar(v*.80);edge.normalScale.setScalar(v*.60);normalV.textContent=v.toFixed(2)};
+disp.oninput=e=>{
+  const v=+e.target.value/1000;
+  setDisplacement(green,v);
+  setDisplacement(brown,v*.80);
+  setDisplacement(edge,v*.40);
+  dispV.textContent=v.toFixed(3);
+};
 repeat.oninput=e=>{const v=+e.target.value/100;setRepeat(v);repeatV.textContent=v.toFixed(2)};
-light.oninput=e=>{const d=+e.target.value;const a=THREE.MathUtils.degToRad(d);key.position.set(Math.sin(a)*7,2.3,Math.cos(a)*7);lightV.textContent=d+'°'};
+light.oninput=e=>{const d=+e.target.value;const a=THREE.MathUtils.degToRad(d);key.position.set(Math.sin(a)*7,1.8,Math.cos(a)*7);lightV.textContent=d+'°'};
 
 let auto=true;rotate.onclick=()=>{auto=!auto;rotate.classList.toggle('active',auto)};
 let drag=false,lx=0,ly=0;
