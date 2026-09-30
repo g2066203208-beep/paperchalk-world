@@ -7,7 +7,7 @@ try{
   const page=await browser.newPage({viewport:{width:1280,height:720}});
   page.on('pageerror',e=>errors.push('PAGE '+String(e)));
   page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
-  await page.goto('http://127.0.0.1:8080/?ci=voxel3d-core&skipPrologue=1',{waitUntil:'networkidle'});
+  await page.goto('http://127.0.0.1:8080/?ci=voxel3d-core',{waitUntil:'networkidle'});
   await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.PaperchalkTerrainActions,{timeout:7000});
   const cold=await page.evaluate(()=>window.PaperchalkTerrainActions.stats);
   assert(cold.dimensions===3&&cold.infinite===true&&cold.chunkSize===16,'3D terrain config wrong '+JSON.stringify(cold));
