@@ -1,5 +1,5 @@
 import {PaperSpriteEntity} from '../entities/PaperSpriteEntity.js';
-import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r5';
+import {PaperTerrainRenderer} from './PaperTerrainRenderer.js?v=paper-r6';
 import {AtmospherePass} from './AtmospherePass.js?v=atmos-r2';
 import {PhotonPipeline} from './PhotonPipeline.js?v=photon-r1';
 import {
