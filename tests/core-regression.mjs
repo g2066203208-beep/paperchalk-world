@@ -10,7 +10,7 @@ try{
   await page.goto('http://127.0.0.1:8080/?ci=voxel3d-core',{waitUntil:'networkidle'});
   await page.waitForFunction(()=>!!window.PaperchalkRuntime&&!!window.PaperchalkTerrainActions,{timeout:7000});
   const cold=await page.evaluate(()=>window.PaperchalkTerrainActions.stats);
-  assert(cold.dimensions===3&&cold.infinite===true&&cold.chunkSize===16,'3D terrain config wrong '+JSON.stringify(cold));
+  assert(cold.dimensions===3&&cold.infinite===false&&cold.gameplayDimensions===2&&cold.zMovementLocked===true&&cold.chunkSize===16,'finite side-scroll terrain config wrong '+JSON.stringify(cold));
   assert(cold.generatorVersion===4&&cold.noiseBackend==='FastNoiseLite-1.1.1','3D generator missing '+JSON.stringify(cold));
 
   await page.locator('#authBtn').click();await page.locator('#tabRegister').click();
@@ -29,9 +29,9 @@ try{
   const aiLive=await page.evaluate(()=>({stats:window.PaperchalkNPCs.stats,npcs:window.PaperchalkNPCs.list}));
   assert((aiLive.stats?.navigation?.searches||0)>0,'NPC A* never searched '+JSON.stringify(aiLive.stats));
   assert(aiLive.npcs.every(n=>n.brain?.utilityAI&&n.brain?.perceptionSystem&&n.brain?.memorySystem),'NPC brain snapshots incomplete '+JSON.stringify(aiLive.npcs.map(n=>n.brain)));
-  assert(entered.s.worldMode==='infinite-voxel-3d','wrong world mode '+JSON.stringify(entered.s));
-  assert(entered.s.terrainMode==='streamed-3d-voxel-chunks','wrong terrain mode '+JSON.stringify(entered.s));
-  assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===true,'terrain is not infinite 3D '+JSON.stringify(entered.s.terrain));
+  assert(entered.s.worldMode==='finite-side-scroll-voxel','wrong world mode '+JSON.stringify(entered.s));
+  assert(entered.s.terrainMode==='finite-voxel-road','wrong terrain mode '+JSON.stringify(entered.s));
+  assert(entered.s.terrain?.dimensions===3&&entered.s.terrain?.infinite===false&&entered.s.terrain?.gameplayDimensions===2,'terrain is not finite side-scroll voxel '+JSON.stringify(entered.s.terrain));
 
   const dialogue=await page.evaluate(()=>{
     const first=window.PaperchalkNPCs.interact('village-resident-01');
@@ -47,14 +47,14 @@ try{
   assert(dialogue.final?.status==='complete','intro quest did not complete '+JSON.stringify(dialogue.final));
 
   const before={...entered.p};
-  assert(entered.s.interaction?.threeDimensional===true&&entered.s.interaction?.zMovementLocked===false,'renderer still reports row-locked movement '+JSON.stringify(entered.s.interaction));
+  assert(entered.s.interaction?.threeDimensional===false&&entered.s.interaction?.zMovementLocked===true,'renderer did not report side-scroll Z lock '+JSON.stringify(entered.s.interaction));
   await page.keyboard.down('KeyD');await page.waitForTimeout(420);await page.keyboard.up('KeyD');await page.waitForTimeout(80);
   const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(Math.hypot(afterD.x-before.x,afterD.z-before.z)>.22,'D did not move in horizontal 3D plane '+JSON.stringify({before,afterD}));
+  assert(afterD.x-before.x>.22,'D did not move right on side-scroll X axis '+JSON.stringify({before,afterD}));
+  assert(Math.abs(afterD.z-3)<.001,'player left the prologue gameplay row '+JSON.stringify({before,afterD}));
   await page.keyboard.down('KeyW');await page.waitForTimeout(420);await page.keyboard.up('KeyW');await page.waitForTimeout(80);
   const afterW=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
-  assert(Math.hypot(afterW.x-afterD.x,afterW.z-afterD.z)>.22,'W did not move in horizontal 3D plane '+JSON.stringify({afterD,afterW}));
-  assert(Math.abs(afterW.z-before.z)>.12,'Z coordinate did not unlock '+JSON.stringify({before,afterW}));
+  assert(Math.abs(afterW.x-afterD.x)<.08&&Math.abs(afterW.z-afterD.z)<.001,'W must not move in finite visual Z depth '+JSON.stringify({afterD,afterW}));
 
   const flightStart=await page.evaluate(()=>({ok:window.PaperchalkCombat.setFlight(true,{notice:false}),p:window.PaperchalkRuntime.getSnapshot().player}));
   assert(flightStart.ok===true&&flightStart.p.flying===true,'flight mode did not enable '+JSON.stringify(flightStart));
