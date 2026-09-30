@@ -64,6 +64,7 @@ try{
   assert(dialogue.final?.status==='complete','intro quest did not complete '+JSON.stringify(dialogue.final));
 
   const before={...entered.p};
+  await page.locator('#threeWorldLayer canvas').focus();
   assert(entered.s.interaction?.threeDimensional===false&&entered.s.interaction?.zMovementLocked===true,'renderer did not report side-scroll Z lock '+JSON.stringify(entered.s.interaction));
   await page.keyboard.down('KeyD');await page.waitForTimeout(420);await page.keyboard.up('KeyD');await page.waitForTimeout(80);
   const afterD=await page.evaluate(()=>window.PaperchalkRuntime.getSnapshot().player);
