@@ -78,7 +78,7 @@ assert(engine.includes('new PaperTerrainRenderer'),'paper terrain renderer integ
 assert(engine.includes("terrainBlockGeometry:this.paperStyle.enabled?'merged extruded cardboard slabs'"),'paper terrain stats mode missing');
 assert(renderer.includes('setPaperStyle')&&renderer.includes('configurePaperTerrain'),'paper terrain runtime controls missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime control missing');
-assert(engine.includes("from './AtmospherePass.js?v=atmos-r2'"),'AtmospherePass integration missing');
+assert(engine.includes("from './AtmospherePass.js?v=atmos-r3'"),'AtmospherePass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
 assert(atmos.includes('for(int i=0;i<20;i++)'),'bounded volumetric raymarch loop missing');
 assert(atmos.includes('scene.overrideMaterial=this.depthMaterial'),'depth occlusion pass missing');
