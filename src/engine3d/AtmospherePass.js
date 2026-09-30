@@ -186,7 +186,7 @@ export class AtmospherePass{
     this.skyUniforms={
       uZenith:{value:this.zenithColor},uHorizon:{value:this.horizonColor},
       uSunColor:{value:this.sunDay.clone()},uSunDir:{value:this.sunDirection},
-      tPaper:{value:this.paperSkyTexture},uPaperStrength:{value:.30},
+      tPaper:{value:this.paperSkyTexture},uPaperStrength:{value:.58},
       uTwilight:{value:0},uTime:{value:0}
     };
     this.skyMaterial=new THREE.ShaderMaterial({
@@ -220,9 +220,11 @@ export class AtmospherePass{
           float mu=max(0.0,dot(d,normalize(uSunDir)));
           float glow=pow(mu,9.0)*(.32+uTwilight*.34);
           float disc=pow(mu,620.0)*1.25;
-          float paperLuma=dot(paperSample(d),vec3(.299,.587,.114));
-          float paperMod=mix(1.0,.84+paperLuma*.32,uPaperStrength);
-          col=(col+uSunColor*(glow+disc))*paperMod;
+          vec3 paper=paperSample(d);
+          float paperLuma=dot(paper,vec3(.299,.587,.114));
+          float paperMod=mix(1.0,clamp(.55+paperLuma*.90,.82,1.18),uPaperStrength);
+          vec3 paperHue=clamp(paper/max(.12,paperLuma),vec3(.82),vec3(1.18));
+          col=(col+uSunColor*(glow+disc))*paperMod*mix(vec3(1.0),paperHue,.10);
           gl_FragColor=vec4(toSRGB(max(col,vec3(0.0))),1.0);
         }
       `
@@ -363,7 +365,7 @@ export class AtmospherePass{
       fog:'height+haze+FogExp2-fallback',fogDensity:this.settings.fogDensity,
       mieAnisotropy:this.settings.anisotropy,shadowMapOcclusion:true,
       jitteredRaymarch:true,premultipliedComposite:true,dynamicSky:true,
-      paperSky:true,paperSkyLoaded:this.paperSkyLoaded,paperSkyAsset:'assets/materials/sky-paper-blue.webp',skyClouds:false,
+      paperSky:true,paperSkyLoaded:this.paperSkyLoaded,paperSkyAsset:'assets/materials/sky-paper-blue.webp',paperSkyStrength:.58,skyClouds:false,
       minecraftShaderInspired:true,mobileOptimized:this.mobileLike,
       visibleLastFrame:this.lastVisible,renders:this.renderCount
     };
