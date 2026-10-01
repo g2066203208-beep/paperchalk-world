@@ -26,7 +26,7 @@ try{
    heading:document.querySelector('.panel h1')?.textContent||'',
    buttons:[...document.querySelectorAll('button')].map(b=>b.textContent.trim())
  }));
- assert(before.heading.includes('v12.32'),'visual-demo baseline heading missing '+JSON.stringify(before));
+ assert(before.heading.includes('v13.0.0'),'v13 production heading missing '+JSON.stringify(before));
  assert(before.stats.runtime.systems===1,'player controller not registered '+JSON.stringify(before.stats));
  assert(before.stats.terrain.columns===105,'terrain query must cover authored demo columns '+JSON.stringify(before.stats.terrain));
  for(const label of ['目标效果','程序天空','标准立方体','动态纸雾','Paper003','受光体积雾'])assert(before.buttons.includes(label),'demo control missing '+label);
