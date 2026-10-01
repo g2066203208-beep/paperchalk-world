@@ -132,10 +132,10 @@ function updateLighting(t){
 
   const mistDay=new THREE.Color(0xe4ece3);
   const mistNight=new THREE.Color(0x94b4e8);
-  const mistWarm=new THREE.Color(0xefb0b7);
+  const mistWarm=new THREE.Color(0xe7a99e);
   const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
-  fogUniforms.opacity.value=.15+twilight*.055*sunFade+nightMix*.025;
+  fogUniforms.opacity.value=.055+twilight*.025*sunFade+nightMix*.012;
 
   // Dawn rays stay warm, but never wash the pulp layers to white on a phone.
   renderer.toneMappingExposure=state.tone?(.80+dayMix*.10+twilight*.025):1;

@@ -10,7 +10,8 @@ const fogTex=mistTexture(11);
 const fogUniforms={
   map:{value:fogTex},
   tint:{value:new THREE.Color(0xe4ebe2)},
-  opacity:{value:.82},
+  // Thin warm haze keeps the handmade layers visible on small screens.
+  opacity:{value:.055},
   time:{value:0},
   tDepth:{value:null},
   resolution:{value:new THREE.Vector2(1,1)},
