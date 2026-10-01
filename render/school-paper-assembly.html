@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>PaperWorld School · 硬纸板拼装实验</title>
+<style>
+:root{--ink:#26221f;--paper:#eee5d2;--panel:rgba(239,230,210,.94);--gold:#d09a38}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0b1020;font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink)}
+#app{position:fixed;inset:0}canvas{display:block;width:100%;height:100%}
+.panel{position:fixed;z-index:4;background:var(--panel);border:1px solid rgba(70,55,38,.34);box-shadow:0 10px 34px rgba(0,0,0,.28);backdrop-filter:blur(10px);border-radius:16px}
+#info{left:18px;top:18px;width:min(470px,calc(100vw - 36px));padding:15px 17px}
+#info h1{font-size:19px;margin:0 0 5px}#info p{font-size:12px;line-height:1.55;margin:0;color:#5e5145}
+#controls{right:18px;top:18px;width:280px;padding:14px}
+.row{display:grid;grid-template-columns:84px 1fr 42px;gap:8px;align-items:center;margin:8px 0;font-size:12px}
+input[type=range]{width:100%;accent-color:#b88432}.val{text-align:right;font-variant-numeric:tabular-nums}
+.buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:11px}
+button{border:1px solid #8c7049;background:#f5ecd8;color:#3a3028;border-radius:9px;padding:9px 7px;font-weight:700;cursor:pointer}
+button.active{background:#42382f;color:#fff0cf;border-color:#d5a64f}
+#legend{left:18px;bottom:18px;padding:9px 13px;font-size:11px;background:rgba(35,31,29,.82);color:#eee4cf;border-color:rgba(255,255,255,.15)}
+#part{right:18px;bottom:18px;padding:10px 13px;font-size:11px;min-width:220px}
+#part b{font-size:12px}
+@media(max-width:760px){#controls{top:auto;bottom:16px;right:12px;width:250px}#legend,#part{display:none}#info{left:12px;top:12px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="panel" id="info">
+  <h1>学校硬纸板拼装实验 · v0.1</h1>
+  <p>不是完整3D建筑：学校由一张张有厚度的硬纸板立面、窗户、屋檐、钟楼和校门拼装。拖动旋转，滚轮缩放；可切换爆炸图检查每一层纸片。</p>
+</div>
+<div class="panel" id="controls">
+  <div class="row"><span>爆炸程度</span><input id="explode" type="range" min="0" max="100" value="0"><span id="explodeV" class="val">0%</span></div>
+  <div class="row"><span>纸板厚度</span><input id="thickness" type="range" min="30" max="180" value="82"><span id="thicknessV" class="val">0.082</span></div>
+  <div class="row"><span>边缘深度</span><input id="edge" type="range" min="0" max="100" value="64"><span id="edgeV" class="val">64%</span></div>
+  <div class="buttons">
+    <button id="assembled" class="active">完整组装</button>
+    <button id="exploded">爆炸结构</button>
+    <button id="front">正视</button>
+    <button id="side">侧视</button>
+    <button id="night" class="active">冷色夜景</button>
+    <button id="neutral">中性棚拍</button>
+  </div>
+</div>
+<div class="panel" id="legend">拖动：360°旋转 · 滚轮：缩放 · 点击纸片：查看零件</div>
+<div class="panel" id="part"><b>当前零件</b><div id="partName">未选择</div></div>
+<script type="module">
+import * as THREE from '../vendor/three/three.module.js';
+
+const host=document.getElementById('app');
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.05;
+host.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x10172b);
+scene.fog=new THREE.FogExp2(0x10172b,.017);
+
+const camera=new THREE.PerspectiveCamera(34,innerWidth/innerHeight,.1,120);
+let yaw=0,pitch=-.08,dist=25.5,targetY=4.15;
+const target=new THREE.Vector3(0,targetY,0);
+function updateCamera(){
+  const cp=Math.cos(pitch);
+  camera.position.set(Math.sin(yaw)*cp*dist,targetY+Math.sin(-pitch)*dist,Math.cos(yaw)*cp*dist);
+  camera.lookAt(target);
+}
+updateCamera();
+
+scene.add(new THREE.HemisphereLight(0x8aa6dc,0x2b2430,1.35));
+const moon=new THREE.DirectionalLight(0x9ebcff,2.25);moon.position.set(-7,13,9);moon.castShadow=true;moon.shadow.mapSize.set(2048,2048);moon.shadow.camera.left=-18;moon.shadow.camera.right=18;moon.shadow.camera.top=15;moon.shadow.camera.bottom=-6;scene.add(moon);
+const warm=new THREE.DirectionalLight(0xffbf73,.75);warm.position.set(8,5,7);scene.add(warm);
+
+const floor=new THREE.Mesh(new THREE.BoxGeometry(30,.45,16),new THREE.MeshStandardMaterial({color:0x59616a,roughness:.96,metalness:0}));
+floor.position.set(0,-.25,0);floor.receiveShadow=true;scene.add(floor);
+const seams=new THREE.GridHelper(30,18,0x737983,0x454b55);seams.position.y=.005;seams.material.opacity=.24;seams.material.transparent=true;scene.add(seams);
+
+function paperNoise(ctx,w,h,amount=.08){
+  const id=ctx.getImageData(0,0,w,h),d=id.data;
+  for(let i=0;i<d.length;i+=4){
+    const n=(Math.random()-.5)*255*amount;
+    d[i]=Math.max(0,Math.min(255,d[i]+n));
+    d[i+1]=Math.max(0,Math.min(255,d[i+1]+n*.88));
+    d[i+2]=Math.max(0,Math.min(255,d[i+2]+n*.72));
+  }
+  ctx.putImageData(id,0,0);
+}
+function texCanvas(w=512,h=256,draw){
+  const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+  draw(x,w,h);paperNoise(x,w,h,.045);
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;t.needsUpdate=true;return t;
+}
+const wallTex=texCanvas(512,512,(x,w,h)=>{
+  x.fillStyle='#b7b0a2';x.fillRect(0,0,w,h);
+  for(let i=0;i<140;i++){x.fillStyle=i%2?'rgba(255,244,220,.035)':'rgba(70,62,55,.025)';x.fillRect(Math.random()*w,Math.random()*h,18+Math.random()*70,3+Math.random()*14)}
+});
+const trimTex=texCanvas(512,128,(x,w,h)=>{x.fillStyle='#d5cbbb';x.fillRect(0,0,w,h);x.fillStyle='rgba(255,255,255,.16)';x.fillRect(0,10,w,7)});
+const darkTex=texCanvas(512,256,(x,w,h)=>{x.fillStyle='#263444';x.fillRect(0,0,w,h);});
+const glassTex=texCanvas(512,256,(x,w,h)=>{
+  x.fillStyle='#18283e';x.fillRect(0,0,w,h);
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,'rgba(255,216,145,.84)');g.addColorStop(.55,'rgba(237,177,96,.62)');g.addColorStop(1,'rgba(89,100,126,.3)');x.fillStyle=g;x.fillRect(8,8,w-16,h-16);
+  x.strokeStyle='#4a4f58';x.lineWidth=12;x.strokeRect(6,6,w-12,h-12);x.beginPath();x.moveTo(w/2,8);x.lineTo(w/2,h-8);x.moveTo(8,h/2);x.lineTo(w-8,h/2);x.stroke();
+});
+const doorTex=texCanvas(512,512,(x,w,h)=>{
+  x.fillStyle='#4a3f38';x.fillRect(0,0,w,h);x.strokeStyle='#b4a68f';x.lineWidth=14;x.strokeRect(18,18,w-36,h-36);x.beginPath();x.moveTo(w/2,18);x.lineTo(w/2,h-18);x.stroke();
+  x.fillStyle='#d4b067';x.beginPath();x.arc(w*.44,h*.55,8,0,Math.PI*2);x.arc(w*.56,h*.55,8,0,Math.PI*2);x.fill();
+});
+
+const root=new THREE.Group();scene.add(root);
+const pieces=[];
+let THICK=.082,EDGE=.64,EXPLODE=0;
+
+function edgeColor(base){
+  const c=new THREE.Color(base);
+  c.multiplyScalar(.42+(.30*(1-EDGE)));
+  return c;
+}
+function card({name,w,h,d=THICK,color=0xb7b0a2,map=null,pos=[0,0,0],rot=[0,0,0],explode=[0,0,1],glow=false}){
+  const face=new THREE.MeshStandardMaterial({color,map,roughness:.9,metalness:0,emissive:glow?0x6c421c:0x000000,emissiveIntensity:glow?.32:0});
+  const edge=new THREE.MeshStandardMaterial({color:edgeColor(color),roughness:.98,metalness:0});
+  const geo=new THREE.BoxGeometry(w,h,d);
+  const m=new THREE.Mesh(geo,[edge,edge,edge,edge,face,face]);
+  m.castShadow=true;m.receiveShadow=true;m.name=name;m.userData.base=pos.slice();m.userData.explode=explode.slice();m.userData.kind='paper-card';
+  m.position.set(...pos);m.rotation.set(...rot);root.add(m);pieces.push(m);return m;
+}
+function addWall(x,y,w,h,z=0){
+  card({name:'教学楼墙板',w,h,color:0xb7b0a2,map:wallTex,pos:[x,y,z],explode:[Math.sign(x)*.55,.06,.55]});
+  card({name:'屋檐纸条',w:w+.22,h:.22,d:THICK*.78,color:0xd5cbbb,map:trimTex,pos:[x,y+h*.5+.08,z+.055],explode:[Math.sign(x)*.7,.18,.85]});
+}
+function windowCard(x,y,w=.92,h=.72,z=.07){
+  return card({name:'发光窗户纸片',w,h,d:THICK*.45,color:0x9a7f62,map:glassTex,pos:[x,y,z],explode:[x*.055,(y-3.2)*.11,1.45],glow:true});
+}
+function rowWindows(xs,y,z=.08){xs.forEach(x=>windowCard(x,y,1.0,.72,z));}
+
+// Three major vertical cardboard slabs.
+addWall(-4.35,3.35,6.9,5.6,0);
+addWall( 4.35,3.35,6.9,5.6,0);
+addWall(0,3.1,2.05,5.1,.10);
+card({name:'中央钟楼',w:2.3,h:7.0,color:0xa9a59b,map:wallTex,pos:[0,4.15,.02],explode:[0,.5,.95]});
+card({name:'钟楼顶部压条',w:2.55,h:.25,d:THICK*.8,color:0xd5cbbb,map:trimTex,pos:[0,7.66,.10],explode:[0,.8,1.2]});
+
+// Windows.
+rowWindows([-6.5,-5.15,-3.8,-2.45],4.55);
+rowWindows([2.45,3.8,5.15,6.5],4.55);
+rowWindows([-6.5,-5.15,-3.8,-2.45],2.75);
+rowWindows([2.45,3.8,5.15,6.5],2.75);
+windowCard(-.55,4.45,.72,.8,.18);windowCard(.55,4.45,.72,.8,.18);
+
+// Entrance layers.
+card({name:'入口门廊背板',w:3.2,h:2.25,color:0x9f9c95,map:wallTex,pos:[0,1.55,.18],explode:[0,-.15,1.1]});
+card({name:'学校正门',w:1.58,h:1.58,d:THICK*.52,color:0x4b423a,map:doorTex,pos:[0,1.03,.30],explode:[0,-.28,1.7]});
+card({name:'门廊顶纸条',w:3.55,h:.31,d:THICK*.75,color:0x344454,map:darkTex,pos:[0,2.75,.31],explode:[0,.12,1.65]});
+
+// Clock made from layered circular cardboard.
+function disc(name,r,depth,color,z,y){
+ const geo=new THREE.CylinderGeometry(r,r,depth,64);
+ const mat=new THREE.MeshStandardMaterial({color,roughness:.9,metalness:0});
+ const m=new THREE.Mesh(geo,mat);m.rotation.x=Math.PI/2;m.position.set(0,y,z);m.castShadow=true;m.name=name;
+ m.userData.base=[0,y,z];m.userData.explode=[0,.2,2];root.add(m);pieces.push(m);return m;
+}
+disc('时钟外圈',.63,THICK*.72,0x303746,.23,6.37);
+disc('时钟纸面',.53,THICK*.55,0xe5ddcc,.28,6.37);
+const handMat=new THREE.MeshStandardMaterial({color:0x343136,roughness:.85});
+function clockHand(len,ang){
+ const m=new THREE.Mesh(new THREE.BoxGeometry(.055,len,.025),handMat);m.position.set(Math.sin(ang)*len*.25,6.37+Math.cos(ang)*len*.25,.34);m.rotation.z=-ang;m.userData.base=m.position.toArray();m.userData.explode=[0,.2,2.3];m.name='时钟指针';root.add(m);pieces.push(m)
+}
+clockHand(.60,-.08);clockHand(.43,1.75);
+
+// Front school sign strip.
+card({name:'校名纸牌',w:3.1,h:.54,d:THICK*.42,color:0x293847,map:darkTex,pos:[0,3.26,.24],explode:[0,0,1.5]});
+
+// Gate & posts, also thin cardboard.
+card({name:'左校门柱',w:1.05,h:4.15,color:0xa9a293,map:wallTex,pos:[-8.4,2.08,1.5],explode:[-1.4,0,1.5]});
+card({name:'右校门柱',w:1.05,h:4.15,color:0xa9a293,map:wallTex,pos:[ 8.4,2.08,1.5],explode:[ 1.4,0,1.5]});
+for(const side of [-1,1]){
+ const g=new THREE.Group();g.name=side<0?'左铁门纸片':'右铁门纸片';root.add(g);
+ const baseX=side<0?-4.35:4.35;
+ const barMat=new THREE.MeshStandardMaterial({color:0x26313a,roughness:.88,metalness:.12});
+ for(let i=0;i<8;i++){
+   const b=new THREE.Mesh(new THREE.BoxGeometry(.085,2.45,THICK*.62),barMat);
+   b.position.set(baseX+side*i*.48,1.55,1.55);b.castShadow=true;b.name='铁门竖条';b.userData.base=b.position.toArray();b.userData.explode=[side*(1.0+i*.05),0,1.8];root.add(b);pieces.push(b);
+ }
+ const rail=card({name:'铁门横梁',w:3.7,h:.10,d:THICK*.65,color:0x26313a,pos:[side*6.0,2.58,1.56],explode:[side*1.4,.15,1.8]});
+}
+
+// Paper trees: layered flat crowns and thin trunks.
+function paperTree(x,z,s=1){
+ card({name:'树干纸片',w:.42*s,h:2.35*s,d:THICK*.65,color:0x5d4939,pos:[x,1.18*s,z],explode:[Math.sign(x)*.75,.1,.65]});
+ const greens=[0x263f3b,0x345149,0x41634e];
+ [[0,2.55,1.4],[ -.48,2.5,1.05],[.48,2.52,1.05],[0,3.08,1.05]].forEach((a,i)=>{
+   const geo=new THREE.CircleGeometry(a[2]*s,28);
+   const mat=new THREE.MeshStandardMaterial({color:greens[i%greens.length],roughness:.98,side:THREE.DoubleSide});
+   const m=new THREE.Mesh(geo,mat);m.position.set(x+a[0]*s,a[1]*s,z+.025*i);m.name='树冠纸片';m.castShadow=true;m.userData.base=m.position.toArray();m.userData.explode=[Math.sign(x)*(.75+i*.08),.25+i*.08,.7+i*.15];root.add(m);pieces.push(m);
+ });
+}
+paperTree(-10.4,.8,1.05);paperTree(10.4,.8,1.05);paperTree(-7.8,.2,.78);paperTree(7.8,.2,.78);
+
+// Lamps as thin cards with warm emissive center.
+function lamp(x,z){
+ card({name:'路灯杆纸片',w:.18,h:2.45,d:THICK*.52,color:0x26313a,pos:[x,1.22,z],explode:[Math.sign(x)*.55,.1,.55]});
+ const l=card({name:'路灯发光纸片',w:.56,h:.58,d:THICK*.5,color:0xe9c17c,pos:[x,2.66,z+.02],explode:[Math.sign(x)*.65,.25,.9],glow:true});
+ l.material[4].emissive.setHex(0xffa840);l.material[4].emissiveIntensity=1.7;
+}
+lamp(-7.1,2.2);lamp(7.1,2.2);
+
+// Cardboard ground sign / small shrubs.
+for(let i=-5;i<=5;i+=2){
+ const m=card({name:'低矮灌木纸片',w:1.25,h:.64,d:THICK*.45,color:i%4?0x355347:0x46634d,pos:[i,0.37,.72],explode:[i*.06,.05,.75]});
+ m.rotation.z=(i%3-.5)*.04;
+}
+
+function applyExplode(v){
+ EXPLODE=v;
+ pieces.forEach(p=>{
+   const b=p.userData.base||[p.position.x,p.position.y,p.position.z],e=p.userData.explode||[0,0,0];
+   p.position.set(b[0]+e[0]*v,b[1]+e[1]*v,b[2]+e[2]*v);
+ });
+}
+function applyThickness(v){
+ THICK=v;
+ // Existing geometry is rebuilt only along local Z by scale; source thickness .082.
+ pieces.forEach(p=>{if(p.userData.kind==='paper-card')p.scale.z=v/.082;});
+}
+function applyEdge(){
+ pieces.forEach(p=>{
+   if(Array.isArray(p.material)){
+     const col=p.material[4]?.color?.clone?.()||new THREE.Color(0xaaa39a);
+     const ec=col.clone().multiplyScalar(.42+(.30*(1-EDGE)));
+     for(let i=0;i<4;i++)p.material[i].color.copy(ec);
+   }
+ });
+}
+
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+renderer.domElement.addEventListener('click',e=>{
+ const r=renderer.domElement.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+ ray.setFromCamera(mouse,camera);const hit=ray.intersectObjects(pieces,false)[0];
+ document.getElementById('partName').textContent=hit?hit.object.name:'未选择';
+});
+
+let drag=false,lastX=0,lastY=0;
+renderer.domElement.addEventListener('pointerdown',e=>{drag=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture?.(e.pointerId)});
+renderer.domElement.addEventListener('pointermove',e=>{if(!drag)return;yaw-=(e.clientX-lastX)*.006;pitch=Math.max(-.65,Math.min(.42,pitch+(e.clientY-lastY)*.004));lastX=e.clientX;lastY=e.clientY;updateCamera()});
+renderer.domElement.addEventListener('pointerup',()=>drag=false);
+renderer.domElement.addEventListener('wheel',e=>{dist=Math.max(13,Math.min(40,dist+e.deltaY*.012));updateCamera();e.preventDefault()},{passive:false});
+
+const explode=document.getElementById('explode'),thick=document.getElementById('thickness'),edge=document.getElementById('edge');
+explode.oninput=()=>{const v=+explode.value/100;document.getElementById('explodeV').textContent=Math.round(v*100)+'%';applyExplode(v)};
+thick.oninput=()=>{const v=+thick.value/1000;document.getElementById('thicknessV').textContent=v.toFixed(3);applyThickness(v)};
+edge.oninput=()=>{EDGE=+edge.value/100;document.getElementById('edgeV').textContent=Math.round(EDGE*100)+'%';applyEdge()};
+function setBtn(id){['assembled','exploded','front','side','night','neutral'].forEach(k=>document.getElementById(k).classList.remove('active'));document.getElementById(id).classList.add('active')}
+document.getElementById('assembled').onclick=()=>{explode.value=0;explode.oninput();setBtn('assembled')};
+document.getElementById('exploded').onclick=()=>{explode.value=72;explode.oninput();setBtn('exploded')};
+document.getElementById('front').onclick=()=>{yaw=0;pitch=-.06;dist=25.5;updateCamera();setBtn('front')};
+document.getElementById('side').onclick=()=>{yaw=Math.PI*.48;pitch=-.04;dist=25.5;updateCamera();setBtn('side')};
+document.getElementById('night').onclick=()=>{scene.background.setHex(0x10172b);scene.fog.color.setHex(0x10172b);moon.color.setHex(0x9ebcff);moon.intensity=2.25;warm.intensity=.75;setBtn('night')};
+document.getElementById('neutral').onclick=()=>{scene.background.setHex(0xbab0a2);scene.fog.color.setHex(0xbab0a2);moon.color.setHex(0xffffff);moon.intensity=2.7;warm.intensity=.18;setBtn('neutral')};
+
+function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
+addEventListener('resize',resize);
+function tick(t){root.rotation.y+=0;renderer.render(scene,camera);requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
