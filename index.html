@@ -11,6 +11,7 @@
   <h1>纸艺世界视觉 Demo v12.32</h1>
   <p>v12.32 材质恢复：撤掉 v12.31 失效的多层纸材质链路，恢复到已确认能正常显示的 Paper003 地形材质。顶面为绿色 Paper003，侧面为泥土棕 Paper003；Color、NormalGL、Roughness、Displacement 全部重新接回。保留连续世界 UV、体素隐藏面剔除，并继续删除装饰小草与石头。</p>
 </div>
+<div id="debugSheet" class="debugSheet">
 <div class="sunPanel">
   <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
   <div class="sunRow">
@@ -68,7 +69,13 @@
   <button id="night">夜晚</button>
   <button id="cycle">自动昼夜</button>
 </div>
+</div>
 <div class="badge">单指/鼠标拖动 360° · 双指捏合缩放 · 滚轮缩放 · 星空真实深度遮挡</div>
+<button id="uiToggle" class="uiToggle" type="button" aria-controls="debugSheet" aria-expanded="false">设置</button>
+<div id="mobileMove" class="mobileMove" aria-label="移动">
+  <button id="moveLeft" class="moveButton" type="button" aria-label="向左移动">◀</button>
+  <button id="moveRight" class="moveButton" type="button" aria-label="向右移动">▶</button>
+</div>
 
 <script type="module" src="./src/main.js"></script>
 
