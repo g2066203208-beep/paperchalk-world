@@ -1,6 +1,23 @@
 // Paperchalk Demo v12.32 visual baseline. Extracted without changing shader or art parameters.
 import {smoothstep} from './math.js';
 
+// The volumetric path renders the scene once into an HDR buffer before adding
+// the shafts.  Three.js does not tone-map ordinary render targets, so an
+// RGBA8 target would clamp the lit paper before the final output pass.  Keep
+// this probe deliberately small and capability based: unsupported WebGL
+// contexts use the regular renderer output instead of risking a broken
+// framebuffer on mobile browsers.
+export function supportsHdrRenderTarget(renderer){
+  try{
+    if(renderer?.capabilities?.isWebGL2===false)return false;
+    const extensions=renderer?.extensions;
+    if(!extensions||typeof extensions.has!=='function')return false;
+    return extensions.has('EXT_color_buffer_float')||extensions.has('EXT_color_buffer_half_float');
+  }catch{
+    return false;
+  }
+}
+
 export function createVolumetrics({THREE,scene,renderer,camera,state,flags,getSize,lights,celestials,fog,actor}){
 const {sun,moon}=lights;
 const {sky,starField,sunDisc,moonDisc,sunGlow,moonGlow}=celestials;
@@ -167,7 +184,11 @@ const compositeUniforms={
 };
 const compositeMat=new THREE.ShaderMaterial({
   uniforms:compositeUniforms,
-  depthWrite:false,depthTest:false,toneMapped:false,
+  // This is the only pass that maps the linear HDR scene to the display.
+  // ShaderMaterial uses the renderer's tone mapping only when drawing to the
+  // default framebuffer; the explicit include below makes the ordering clear
+  // and keeps the color-space conversion as the final operation.
+  depthWrite:false,depthTest:false,toneMapped:true,
   vertexShader:`
     varying vec2 vUv;
     void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}
@@ -196,6 +217,7 @@ const compositeMat=new THREE.ShaderMaterial({
       vec3 glow=halo*.30*volumeStrength;
 
       gl_FragColor=vec4(base.rgb+rays+glow,base.a);
+      #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }
   `
@@ -228,7 +250,7 @@ function resizeVolumetricTargets(){
   if(sceneTarget)sceneTarget.dispose();
   sceneTarget=new THREE.WebGLRenderTarget(w,h,{
     minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
-    format:THREE.RGBAFormat,type:THREE.UnsignedByteType
+    format:THREE.RGBAFormat,type:HDR_ENABLED?THREE.HalfFloatType:THREE.UnsignedByteType
   });
   sceneTarget.depthTexture=new THREE.DepthTexture(w,h);
   sceneTarget.depthTexture.type=THREE.UnsignedShortType;
@@ -249,6 +271,7 @@ function resizeVolumetricTargets(){
   compositeUniforms.volumeColor.value=volumeTarget.texture;
   compositeUniforms.volumeTexel.value.set(1/vw,1/vh);
 }
+const HDR_ENABLED=supportsHdrRenderTarget(renderer);
 resizeVolumetricTargets();
 
 flags.volumeShadow=true;
@@ -341,6 +364,17 @@ function updateVolumetricShadow(force=false){
 }
 
 function renderWithVolumetrics(){
+  // Half-float color attachments are not universally renderable (notably on
+  // older WebViews).  Let Three.js perform its normal ACES + sRGB output in
+  // that case; this preserves the scene rather than compositing a clipped
+  // RGBA8 intermediate.
+  if(!HDR_ENABLED){
+    renderer.setRenderTarget(null);
+    renderer.clear();
+    renderer.render(scene,camera);
+    return;
+  }
+
   renderer.setRenderTarget(sceneTarget);
   renderer.clear();
   renderer.render(scene,camera);
@@ -363,5 +397,8 @@ return {volumeUniforms,volumeLightTarget,updateVolumetricSettings,renderWithVolu
 resize:resizeVolumetricTargets,dispose(){
   sceneTarget?.dispose();volumeTarget?.dispose();sunVolumeShadowTarget?.dispose();moonVolumeShadowTarget?.dispose();
   volumeMat.dispose();compositeMat.dispose();volumeDepthMat.dispose();fsGeo.dispose();
-},stats(){return {steps:volumeUniforms.steps.value,scale:VOLUME_SCALE,shadowSize:VOLUME_SHADOW_SIZE}}};
+},stats(){return {
+  steps:volumeUniforms.steps.value,scale:VOLUME_SCALE,shadowSize:VOLUME_SHADOW_SIZE,
+  hdr:HDR_ENABLED,sceneTargetType:HDR_ENABLED?'half-float':'rgba8-fallback'
+}}};
 }

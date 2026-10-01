@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three/three.module.js';
 import {createTerrain} from '../studio/rendering/terrain.js';
+import {createGrassRimGeometry} from '../studio/rendering/terrain-geometry.js';
 import {createWorld} from '../studio/world/PaperWorld.mjs';
 
 const surfaceMaps=['map','normalMap','roughnessMap','aoMap','bumpMap','displacementMap'];
@@ -23,6 +24,7 @@ function fixture(t){
   const [sides,top]=mesh.material;
   t.after(()=>{
     mesh.geometry.dispose();
+    terrain.terrainGrassRim.geometry.dispose();
     for(const material of mesh.material)material.dispose();
     for(const texture of terrain.textures)texture.dispose();
     scene.clear();
@@ -47,7 +49,7 @@ function collisionSnapshot(terrain){
   };
 }
 
-test('Olive Fiber uses sRGB color and linear normal/ORM only on grass tops',t=>{
+test('Olive Fiber uses sRGB grass plus linear soil maps with dedicated torn rim',t=>{
   const {terrain,mesh,sides,top,requests,flags}=fixture(t);
   assert.equal(terrain.getSurfaceMode(),'pulp');
   assert.equal(top.isMeshStandardMaterial,true);
@@ -63,10 +65,12 @@ test('Olive Fiber uses sRGB color and linear normal/ORM only on grass tops',t=>{
   assert.equal(top.displacementMap,null);
   assert.equal(top.normalScale.x,.85);
   assert.equal(top.normalScale.y,.85,'OpenGL normal green channel must not be flipped');
-  assertNoSurfaceMaps(sides);
-  assert.equal(sides.color.getHex(),0x8b654c);
-  assert.equal(terrain.textures.length,3);
-  assert.equal(requests.length,3);
+  assert.equal(sides.map.colorSpace,THREE.SRGBColorSpace);
+  assert.equal(sides.normalMap.colorSpace,THREE.NoColorSpace);
+  assert.equal(sides.roughnessMap.colorSpace,THREE.NoColorSpace);
+  assert.equal(sides.color.getHex(),0xffffff);
+  assert.equal(terrain.textures.length,6);
+  assert.equal(requests.length,6);
   for(const texture of terrain.textures){
     assert.equal(texture.wrapS,THREE.RepeatWrapping);
     assert.equal(texture.wrapT,THREE.RepeatWrapping);
@@ -84,6 +88,9 @@ test('Olive Fiber uses sRGB color and linear normal/ORM only on grass tops',t=>{
   flags.render=false;
   requests[0].onLoad(requests[0].texture);
   assert.equal(flags.render,true,'Loaded surface images must invalidate the frame');
+  assert.equal(terrain.terrainGrassRim.visible,true);
+  assert.ok(terrain.stats().grassRimEdges>0);
+  assert.ok(terrain.stats().grassRimTriangles<terrain.stats().baseTriangles*20,'Rim stays within a bounded geometry budget');
 });
 
 test('solid-color mode removes every terrain surface map',t=>{
@@ -98,6 +105,7 @@ test('solid-color mode removes every terrain surface map',t=>{
     assertNoSurfaceMaps(material);
     assert.equal(material.metalness,0);
   }
+  assert.equal(terrain.terrainGrassRim.visible,false);
   assert.equal(flags.render,true);
 });
 
@@ -114,7 +122,7 @@ test('switching material modes preserves cube geometry and gameplay collisions',
     for(const [name,array] of Object.entries(attributes))assert.deepEqual(geometry.attributes[name].array,array,name);
     assert.deepEqual(geometry.groups,groups);
     assert.deepEqual(collisionSnapshot(terrain),collisions);
-    assertNoSurfaceMaps(sides);
+    assert.equal(terrain.terrainGrassRim.visible,mode==='pulp');
   }
   for(const [property,map] of Object.entries(maps))assert.equal(top[property],map,'Mode switches reuse '+property);
   assert.throws(()=>terrain.setSurfaceMode('unknown'),RangeError);
@@ -129,7 +137,8 @@ test('texture settings update scale and relief without turning the material on',
   terrain.setPaper({scale:1.25,normal:.4,height:8,blend:1});
   assert.equal(terrain.getSurfaceMode(),'color');
   assertNoSurfaceMaps(top);
-  assertNoSurfaceMaps(sides);
+  assert.equal(sides.map,null);
+  assert.equal(sides.normalMap,null);
   assert.equal(paperConfig.height,0,'Extra height effects must not return through older saved settings');
   assert.equal(paperConfig.blend,0,'Old procedural blending must remain disabled');
   terrain.setSurfaceMode('pulp');
@@ -143,7 +152,8 @@ test('texture settings update scale and relief without turning the material on',
     assert.equal(texture.repeat.y,2);
   }
   assert.equal(top.normalScale.y,.6);
-  assertNoSurfaceMaps(sides);
+  assert.equal(sides.map.colorSpace,THREE.SRGBColorSpace);
+  assert.equal(sides.normalMap.colorSpace,THREE.NoColorSpace);
 });
 
 test('terrain remains exact cubes with continuous world UVs and hidden-face culling',t=>{
@@ -163,7 +173,23 @@ test('terrain remains exact cubes with continuous world UVs and hidden-face cull
   }
   const stats=terrain.stats();
   assert.ok(stats.visibleFaces<stats.blocks*6,'Shared internal faces must not be submitted');
-  assert.equal(stats.triangles,stats.visibleFaces*2);
-  assert.equal(positions.count,stats.triangles*3);
+  assert.equal(stats.baseTriangles,stats.visibleFaces*2);
+  assert.equal(positions.count,stats.baseTriangles*3);
+  assert.equal(terrain.terrainGrassRim.geometry.getAttribute('position').count,stats.grassRimTriangles*3);
   assert.equal(mesh.frustumCulled,true);
+});
+
+test('grass rim is deterministic, keeps top surface and never changes collision height',t=>{
+  const {terrain}=fixture(t);
+  const geometry=terrain.terrainGrassRim.geometry;
+  const positions=geometry.getAttribute('position');
+  assert.ok(positions.count>0);
+  assert.equal(geometry.userData.segments,12);
+  assert.ok(geometry.userData.maxDepth<.2);
+  assert.ok(geometry.userData.maxOverhang<.05);
+  assert.deepEqual(terrain.columnRecords.map(({x,z})=>terrain.surfaceY(x,z)),
+    terrain.columnRecords.map(({x,z})=>terrain.surfaceY(x,z)));
+  for(let i=0;i<positions.count;i++){
+    assert.ok(Number.isFinite(positions.getX(i))&&Number.isFinite(positions.getY(i))&&Number.isFinite(positions.getZ(i)));
+  }
 });

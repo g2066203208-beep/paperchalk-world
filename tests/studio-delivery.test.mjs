@@ -15,7 +15,33 @@ test('studio rendering retains the baseline GLSL programs verbatim',async()=>{
   const baseline=shaders(original),actual=sources.flatMap(shaders);
   assert.ok(baseline.length>=10,'expected original shader programs');
   assert.equal(actual.length,baseline.length,'do not silently omit or add a visual shader');
-  for(const shader of baseline)assert.ok(actual.includes(shader),'baseline GLSL program changed');
+  // The composite pass intentionally gained the one missing post-process
+  // stage: HDR scene + shafts are tone-mapped once before sRGB conversion.
+  // Normalize that single include while retaining the exact baseline check for
+  // every other shader and every other line of the composite program.
+  const normalize=shader=>shader.replace(/\r\n/g,'\n');
+  const normalizedActual=actual.map(normalize);
+  for(const shader of baseline){
+    // Only the final scene-color composite is intentionally different: it now
+    // inserts tone mapping before the existing color-space conversion.
+    if(shader.includes('uniform sampler2D sceneColor'))continue;
+    assert.ok(normalizedActual.includes(normalize(shader)),'baseline GLSL program changed');
+  }
+  const composite=actual.find(shader=>shader.includes('uniform sampler2D sceneColor'))||'';
+  assert.match(composite,/gl_FragColor=vec4\(base\.rgb\+rays\+glow,base\.a\);/);
+  assert.match(composite,/#include <tonemapping_fragment>/);
+  assert.match(composite,/#include <colorspace_fragment>/);
+});
+
+test('volumetric output keeps HDR intermediate and one final color transform',async()=>{
+  const source=await readFile(path.join(root,'studio/rendering/volumetrics.js'),'utf8');
+  assert.match(source,/supportsHdrRenderTarget\(renderer\)/,'HDR capability probe missing');
+  assert.match(source,/type:HDR_ENABLED\?THREE\.HalfFloatType:THREE\.UnsignedByteType/,'scene target must use half float when supported');
+  assert.match(source,/toneMapped:true/,'composite must be the display tone-mapping pass');
+  const composite=source.slice(source.indexOf('const compositeMat='),source.indexOf('const compositeScene='));
+  assert.equal((composite.match(/#include <tonemapping_fragment>/g)||[]).length,1,'composite should tone-map exactly once');
+  assert.equal((composite.match(/#include <colorspace_fragment>/g)||[]).length,1,'composite should convert to sRGB exactly once');
+  assert.match(source,/if\(!HDR_ENABLED\)\{[\s\S]*?renderer\.render\(scene,camera\);/,'unsupported targets must fall back to the regular renderer output');
 });
 
 test('relative module and asset paths resolve under a Pages project prefix',async()=>{

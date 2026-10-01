@@ -8,7 +8,7 @@ import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
 
 const $=id=>document.getElementById(id);
 const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','jumpButton','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector'].map(id=>[id,$(id)]));
-const defaults={scale:.65,normal:.85,height:0,blend:0};
+const defaults={scale:1.4,normal:.72,height:0,blend:0};
 const paperInputs={paperScale:'scale',paperNormal:'normal'};
 const saves=new SaveStore();
 const events=new AbortController();

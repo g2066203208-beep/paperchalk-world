@@ -137,7 +137,8 @@ function updateLighting(t){
   fogUniforms.tint.value.copy(mistColor);
   fogUniforms.opacity.value=.15+twilight*.055*sunFade+nightMix*.025;
 
-  renderer.toneMappingExposure=state.tone?(.88+dayMix*.13+twilight*.045):1;
+  // Dawn rays stay warm, but never wash the pulp layers to white on a phone.
+  renderer.toneMappingExposure=state.tone?(.80+dayMix*.10+twilight*.025):1;
   scene.background.copy(fogColor);
   updateSkyBlend(state.time);
 

@@ -1,17 +1,24 @@
-/** Standard cubes with clean sides and the user-provided Olive Fiber grass. */
+/** Culled collision cubes dressed with layered pulp and torn turf edges. */
 import {createOliveFiberMaps} from './olive-fiber-maps.js';
+import {createGrassRimGeometry} from './terrain-geometry.js';
+import {createTerrainDressing} from './terrain-dressing.js';
 
 export function createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig}){
 const TERRAIN_TOP_COLOR=0x8fae68;
 const TERRAIN_DIRT_COLOR=0x8b654c;
 const olive=createOliveFiberMaps({THREE,renderer,flags,loadTexture});
+// During a staged asset rollout old maps may still be served once; keep the
+// renderer readable by borrowing the grass maps until the soil set arrives.
+const dirtColor=olive.dirtColor??olive.color;
+const dirtNormal=olive.dirtNormal??olive.normal;
+const dirtOrm=olive.dirtOrm??olive.orm;
 
-// Geometry and sunlight/shadows stay unchanged. Only the top surface gets the
-// supplied PBR maps; dirt sides and undersides contain no texture or bump layer.
 const terrainDirtMat=new THREE.MeshStandardMaterial({
-  color:TERRAIN_DIRT_COLOR,roughness:.94,metalness:0,side:THREE.FrontSide
+  color:0xffffff,map:dirtColor,normalMap:dirtNormal,
+  normalScale:new THREE.Vector2(.65,.65),roughnessMap:dirtOrm,
+  aoMap:dirtOrm,aoMapIntensity:.25,roughness:1,metalness:0,side:THREE.FrontSide
 });
-terrainDirtMat.name='terrain-dirt-solid-color';
+terrainDirtMat.name='terrain-dirt-fibrous-pulp';
 const terrainTopMat=new THREE.MeshStandardMaterial({
   color:0xffffff,
   map:olive.color,
@@ -28,7 +35,7 @@ terrainTopMat.name='terrain-grass-olive-fiber';
 let surfaceMode='pulp';
 
 const terrain=new THREE.Group();
-terrain.name='terrain-culled-grass-top-dirt-side-cubes';
+terrain.name='terrain-layered-paper-pulp-plateaus';
 scene.add(terrain);
 
 const columnRecords=[];
@@ -157,6 +164,16 @@ terrainBlocks.receiveShadow=true;
 terrainBlocks.frustumCulled=true;
 terrain.add(terrainBlocks);
 
+// One merged boundary mesh, inherited visibility from the base terrain. Its
+// grass skirt is render-only: footsteps and platform collisions stay exact.
+const grassRimGeometry=createGrassRimGeometry({THREE,columnRecords});
+const terrainGrassRim=new THREE.Mesh(grassRimGeometry,terrainTopMat);
+terrainGrassRim.name='terrain-torn-grass-rim';
+terrainGrassRim.castShadow=true;
+terrainGrassRim.receiveShadow=true;
+terrainBlocks.add(terrainGrassRim);
+const dressing=createTerrainDressing({THREE,parent:terrain,columnRecords,grassMaterial:terrainTopMat});
+
 const terrainOriginalFaceCount=terrainBlockCount*6;
 const terrainCulledFaceCount=terrainOriginalFaceCount-terrainVisibleFaceCount;
 console.info(
@@ -178,7 +195,16 @@ function setSurfaceMode(mode){
   terrainTopMat.aoMap=pulp?olive.orm:null;
   terrainTopMat.roughness=pulp?1:.94;
   terrainTopMat.needsUpdate=true;
-  flags.render=true;
+  terrainDirtMat.name=pulp?'terrain-dirt-fibrous-pulp':'terrain-dirt-solid-color';
+  terrainDirtMat.color.setHex(pulp?0xffffff:TERRAIN_DIRT_COLOR);
+  terrainDirtMat.map=pulp?dirtColor:null;
+  terrainDirtMat.normalMap=pulp?dirtNormal:null;
+  terrainDirtMat.roughnessMap=pulp?dirtOrm:null;
+  terrainDirtMat.aoMap=pulp?dirtOrm:null;
+  terrainDirtMat.roughness=pulp?1:.94;
+  terrainDirtMat.needsUpdate=true;
+  terrainGrassRim.visible=pulp;
+  flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;
   return surfaceMode;
 }
 
@@ -193,17 +219,24 @@ function surfaceY(x,z=0){
 function setPaper(next={}){
   if(Number.isFinite(next.scale))paperConfig.scale=Math.max(.05,next.scale);
   if(Number.isFinite(next.normal))paperConfig.normal=Math.max(0,Math.min(3,next.normal));
-  // Source relief comes exclusively from NormalGL. No extra height sampling,
-  // displacement, macro noise, fake seams or repeated color multiplication.
+  // The normal maps hold fiber relief. Grass-edge thickness is actual geometry;
+  // it does not offset or disturb the collision height field.
   paperConfig.height=0;
   paperConfig.blend=0;
   olive.setScale(paperConfig.scale);
   terrainTopMat.normalScale.setScalar(paperConfig.normal);
+  terrainDirtMat.normalScale.setScalar(paperConfig.normal*.8);
   flags.render=true;
 }
 setPaper(paperConfig);
-return {terrain,terrainBlocks,columnRecords,surfaceY,setPaper,setSurfaceMode,
+return {terrain,terrainBlocks,terrainGrassRim,grassRim:terrainGrassRim,dressing,columnRecords,surfaceY,setPaper,setSurfaceMode,
   getSurfaceMode:()=>surfaceMode,rebuildMaterialRandomness,
   textures:olive.textures,
-  stats:()=>({columns:columnRecords.length,blocks:terrainBlockCount,visibleFaces:terrainVisibleFaceCount,triangles:terrainVisibleFaceCount*2,surfaceMode,textureSet:'Olive Fiber',textureResolution:1024})};
+  stats:()=>({columns:columnRecords.length,blocks:terrainBlockCount,visibleFaces:terrainVisibleFaceCount,
+    triangles:terrainVisibleFaceCount*2+(terrainGrassRim.visible?grassRimGeometry.userData.triangles:0),
+    baseTriangles:terrainVisibleFaceCount*2,grassRimTriangles:grassRimGeometry.userData.triangles,
+    rimFaces:grassRimGeometry.userData.triangles/2,
+    grassRimEdges:grassRimGeometry.userData.boundaryEdges,
+    tufts:dressing.tufts,stones:dressing.stones,
+    surfaceMode,textureSet:'Layered Olive Pulp',textureResolution:1024})};
 }

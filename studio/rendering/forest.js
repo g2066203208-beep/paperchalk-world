@@ -6,14 +6,14 @@ const canopyGroup=new THREE.Group();
 scene.add(canopyGroup);
 
 const forestLeafMats=[
-  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x314b36,side:THREE.DoubleSide}),
-  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x425d47,side:THREE.DoubleSide}),
-  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x5a7065,side:THREE.DoubleSide})
+  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x4f6d43,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x617a4f,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperGrassSet,{normalScale:.28,roughness:.96,color:0x788e5b,side:THREE.DoubleSide})
 ];
 const forestTrunkMats=[
-  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x5a4233,side:THREE.DoubleSide}),
-  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x635044,side:THREE.DoubleSide}),
-  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x6d5b50,side:THREE.DoubleSide})
+  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x7b5137,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x8b5c3e,side:THREE.DoubleSide}),
+  standardPaperMaterial(paperDirtSet,{normalScale:.46,roughness:.98,color:0x98674d,side:THREE.DoubleSide})
 ];
 
 function forestCrownGeometry(seed=1){

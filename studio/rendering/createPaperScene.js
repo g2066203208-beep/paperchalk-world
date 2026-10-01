@@ -24,7 +24,9 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   const flags={render:true,shadow:true,depth:true,volumeShadow:true};
   const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
-  const paperConfig={scale:.65,normal:.85,height:0,blend:0};
+  // The layered pulp flakes are intentionally broad enough to read on a
+  // phone screen; keep the diagnostic control available for finer repeats.
+  const paperConfig={scale:1.4,normal:.72,height:0,blend:0};
   const pending=[],pendingRejects=new Set(),loadedTextures=new Set();
   const events=new AbortController();
   function status(state,message,error){onStatus({state,message,...(error?{error}: {})});}
@@ -59,7 +61,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   renderer.shadowMap.autoUpdate=false;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.03;
+  renderer.toneMappingExposure=.90;
   renderer.info.autoReset=false;
   container.appendChild(renderer.domElement);
 
