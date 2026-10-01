@@ -20,4 +20,112 @@ button.active{background:#5f5142;color:#fff3cf;border-color:#e8c65c}
 .materialPanel .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:800}
 .materialPanel button{width:100%;margin-top:4px;padding:6px 8px;border-radius:10px;font-size:10px}
 
-@media(max-width:720px){.panel{left:10px;top:10px;padding:11px 12px;max-width:calc(100vw - 150px)}.panel h1{font-size:16px}.panel p{font-size:10px}.controls{right:10px;bottom:10px;gap:6px}button{padding:9px 10px;font-size:12px}.badge{display:none}.sunPanel{right:10px;top:10px;width:132px;padding:8px}.sunPanel .title{font-size:11px}.sunPanel .sunRow{grid-template-columns:1fr;gap:2px;margin:4px 0}.sunPanel .sunVal{text-align:left;font-size:10px}.sunPanel button{font-size:10px;padding:6px}.sunPanel input[type="range"]{width:100%}.materialPanel{left:10px;bottom:10px;width:190px;padding:8px}.materialPanel .row{grid-template-columns:64px 1fr 42px;gap:5px;font-size:10px}}
+
+.debugSheet{display:contents}
+.uiToggle,.mobileMove{display:none}
+
+@media(max-width:720px){
+  .panel{
+    left:max(10px,env(safe-area-inset-left));
+    top:max(10px,env(safe-area-inset-top));
+    right:auto;
+    max-width:calc(100vw - 92px - env(safe-area-inset-left) - env(safe-area-inset-right));
+    padding:8px 11px;
+    border-radius:13px;
+    box-shadow:0 4px 0 rgba(76,55,41,.14),0 10px 24px rgba(43,31,23,.10)
+  }
+  .panel h1{margin:0;font-size:14px;line-height:1.15}
+  .panel p{display:none}
+  .badge{display:none}
+
+  .uiToggle{
+    display:block;
+    position:fixed;
+    z-index:20;
+    right:max(10px,env(safe-area-inset-right));
+    top:max(10px,env(safe-area-inset-top));
+    min-width:68px;
+    padding:8px 11px;
+    border-radius:13px;
+    font-size:12px
+  }
+
+  .debugSheet{display:none}
+  body.ui-open .debugSheet{
+    display:block;
+    position:fixed;
+    z-index:18;
+    left:max(8px,env(safe-area-inset-left));
+    right:max(8px,env(safe-area-inset-right));
+    bottom:calc(88px + env(safe-area-inset-bottom));
+    max-height:min(58vh,520px);
+    overflow:auto;
+    padding:10px;
+    border:2px solid rgba(89,63,42,.42);
+    border-radius:18px;
+    background:rgba(241,229,204,.96);
+    box-shadow:0 12px 40px rgba(30,23,18,.28);
+    backdrop-filter:blur(12px);
+    overscroll-behavior:contain
+  }
+  body.ui-open .sunPanel,
+  body.ui-open .materialPanel,
+  body.ui-open .controls{
+    position:static;
+    width:auto;
+    max-width:none;
+    margin:0;
+    padding:0;
+    border:0;
+    background:transparent;
+    box-shadow:none;
+    backdrop-filter:none
+  }
+  body.ui-open .sunPanel{margin-bottom:10px}
+  body.ui-open .materialPanel{margin-bottom:10px}
+  .sunPanel .title,.materialPanel .title{font-size:11px;margin-bottom:5px}
+  .sunPanel .sunRow{grid-template-columns:68px 1fr 42px;gap:6px;margin:5px 0;font-size:10px}
+  .materialPanel .row{grid-template-columns:68px 1fr 42px;gap:6px;margin:5px 0;font-size:10px}
+  .sunPanel button,.materialPanel button{padding:7px 8px;font-size:10px;border-radius:10px}
+  .controls{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:6px!important
+  }
+  .controls button{min-width:0;padding:8px 5px;font-size:10px;border-radius:10px;white-space:nowrap}
+  .groupBreak{display:none}
+
+  .mobileMove{
+    display:flex;
+    position:fixed;
+    z-index:16;
+    left:max(14px,env(safe-area-inset-left));
+    bottom:max(14px,env(safe-area-inset-bottom));
+    gap:12px;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none
+  }
+  .moveButton{
+    width:64px;
+    height:64px;
+    padding:0;
+    border-radius:22px;
+    font-size:24px;
+    line-height:1;
+    background:rgba(243,229,194,.90);
+    backdrop-filter:blur(8px);
+    box-shadow:0 5px 0 rgba(77,54,37,.18),0 10px 22px rgba(30,24,18,.14)
+  }
+  .moveButton:active,.moveButton.pressed{
+    transform:translateY(3px);
+    box-shadow:0 2px 0 rgba(77,54,37,.18)
+  }
+}
+
+@media(max-width:720px) and (orientation:landscape){
+  .panel{max-width:44vw}
+  body.ui-open .debugSheet{left:42%;max-height:70vh;bottom:max(10px,env(safe-area-inset-bottom))}
+  .mobileMove{bottom:max(10px,env(safe-area-inset-bottom))}
+  .moveButton{width:56px;height:56px;border-radius:19px}
+}
