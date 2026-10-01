@@ -17,7 +17,9 @@ assert(fs.existsSync('src/scenes/ProloguePaperCar.js'),'paper sedan renderer mis
 assert(renderer.includes('ProloguePaperCar'),'paper sedan renderer not wired');
 assert(paperCar.includes('2d-side-sprite+black-paper-thickness-r1'),'2D side sprite car missing');
 assert(paperCar.includes('flat-side-sprite')&&paperCar.includes('blackThicknessPlanes:2'),'2D sprite + black thickness pipeline missing');
-for(const asset of ['paper-sedan-side.svg','paper-sedan-front.svg','paper-sedan-rear.svg','paper-sedan-top.svg'])assert(fs.existsSync('assets/prologue/'+asset),'paper sedan texture missing '+asset);\nconst carSprite=read('assets/prologue/paper-sedan-side.svg');\nassert(carSprite.includes('viewBox="0 0 1200 450"')&&carSprite.includes('filter id="paper"'),'side sprite asset must be transparent SVG with paper texture');
+for(const asset of ['paper-sedan-side.svg','paper-sedan-front.svg','paper-sedan-rear.svg','paper-sedan-top.svg'])assert(fs.existsSync('assets/prologue/'+asset),'paper sedan texture missing '+asset);
+const carSprite=read('assets/prologue/paper-sedan-side.svg');
+assert(carSprite.includes('viewBox="0 0 1200 450"')&&carSprite.includes('filter id="paper"'),'side sprite asset must be transparent SVG with paper texture');
 assert(!fs.existsSync('src/scenes/school-layout.js'),'rejected school layout must stay removed');
 assert(!fs.existsSync('src/scenes/PrologueSchoolBuilding.js'),'rejected school building renderer must stay removed');
 for(const asset of ['school-wall-paper.svg','school-window.svg','school-door.svg','school-sign.svg'])assert(!fs.existsSync('assets/prologue/'+asset),'rejected school building asset returned '+asset);

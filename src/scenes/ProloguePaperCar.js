@@ -1,3 +1,4 @@
+// Side-view sprite car: intentionally flat art with only a tiny dark-paper depth stack.
 export class ProloguePaperCar{
 constructor(THREE,scene,sceneData){
 this.state={enabled:false};
