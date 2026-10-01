@@ -1,6 +1,7 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
 import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r2';
 import {ProloguePaperCar} from '../scenes/ProloguePaperCar.js?v=paper-r4';
+import {PrologueStreetProps} from '../scenes/PrologueStreetProps.js?v=paper-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -13,6 +14,7 @@ let THREE=null;
 let engine=null;
 let schoolFence=null;
 let paperCar=null;
+let streetProps=null;
 let active=false;
 let ready=false;
 let raf=0;
@@ -56,6 +58,7 @@ async function ensureReady(){
     });
     engine.configureAtmosphere?.({volumetric:false,qualityScale:.35,steps:8});
     schoolFence=new PrologueSchoolFence(THREE,engine.scene,ACTIVE_SCENE);
+    streetProps=new PrologueStreetProps(THREE,engine.scene,ACTIVE_SCENE);
     paperCar=new ProloguePaperCar(THREE,engine.scene,ACTIVE_SCENE);
     latestSnapshot=RUNTIME.getSnapshot();
     engine.setSnapshot(latestSnapshot);
@@ -200,7 +203,7 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:12,
+  version:13,
   engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setPaperStyle,configurePaperTerrain,configureAtmosphere,
@@ -220,6 +223,7 @@ window.Paperchalk3D=Object.freeze({
       terrainMode:base.terrainMode||'streamed-3d-voxel-chunks',
       interaction:base.interaction||{threeDimensional:true,zMovementLocked:false,raycastIgnoresOtherRows:false},
       schoolFence:schoolFence?.stats?.()||null,
+      streetProps:streetProps?.stats?.()||null,
       paperCar:paperCar?.stats?.()||null
     };
   },
