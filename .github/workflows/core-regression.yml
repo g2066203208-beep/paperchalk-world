@@ -59,7 +59,7 @@ jobs:
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/core-regression.mjs
-      - name: Run prologue city scene regression
+      - name: Run visual-demo prologue regression
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/prologue-scene-smoke.mjs
@@ -67,6 +67,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: prologue-city-scene
-          path: artifacts/prologue-school-street.png
+          name: prologue-paper-diorama
+          path: artifacts/prologue-paper-diorama.png
           if-no-files-found: ignore
