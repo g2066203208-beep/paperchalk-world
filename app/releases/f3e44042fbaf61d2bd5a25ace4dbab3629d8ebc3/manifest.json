@@ -1,0 +1,176 @@
+{
+  "schemaVersion": 1,
+  "version": "f3e44042fbaf61d2bd5a25ace4dbab3629d8ebc3",
+  "publishedAt": "2026-10-01T13:04:49.000Z",
+  "channel": "mobile-test",
+  "files": {
+    "assets/player/protagonist.webp": {
+      "sha256": "237201bb1fbbf9c6075d7e2e6e1e218ad0f127d10caca6b43e98382e205e7a62",
+      "bytes": 11808
+    },
+    "studio/README.md": {
+      "sha256": "5c502c5717e06e5c239edef66eb68631535a8f5595c8f25a11631216d54461ba",
+      "bytes": 4082
+    },
+    "studio/app.js": {
+      "sha256": "2d32b236c6dc51e8b2a5eb6fc514a3d2cdcfd8b1ae44418cefe54aadbc7a7111",
+      "bytes": 17000
+    },
+    "studio/assets/olive-fiber/base-color.webp": {
+      "sha256": "8d6a9e132292c6439d2c7df2b3c97673159248d366a1b00c6b75c60b23deee79",
+      "bytes": 523704
+    },
+    "studio/assets/olive-fiber/dirt-color.webp": {
+      "sha256": "5bf80845da8077530a6495607969ccf7ca5698c0a008031707ffeff31da359c4",
+      "bytes": 458866
+    },
+    "studio/assets/olive-fiber/dirt-normal-gl.webp": {
+      "sha256": "5d5567efe3a336bde42263f0855208e7e144608225a147afe5928af3f95cf313",
+      "bytes": 2087210
+    },
+    "studio/assets/olive-fiber/dirt-orm.webp": {
+      "sha256": "b536657d2c7c10f6a1171af932d14d05bab3ad816c302a4a1aecc076f8077de3",
+      "bytes": 707330
+    },
+    "studio/assets/olive-fiber/normal-gl.webp": {
+      "sha256": "8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958",
+      "bytes": 2460726
+    },
+    "studio/assets/olive-fiber/orm.webp": {
+      "sha256": "1445a649af0cb1b29c1bfa81e6fd3a6e9b0ca725b2bc8f014b27b2231ae3aa56",
+      "bytes": 735704
+    },
+    "studio/assets/olive-fiber/source.json": {
+      "sha256": "f2c596203515401cbda5de79351fde34d5372089054de8c9570fae0a9dcd8359",
+      "bytes": 2958
+    },
+    "studio/build-info.json": {
+      "sha256": "5f0988184f02b955194b7738126073702b6095f92c3014c6aaee80c90b000c72",
+      "bytes": 133
+    },
+    "studio/core/Lifecycle.mjs": {
+      "sha256": "4a528dd530870ef60c059d0d35a2fce9a0d8755997ca768cab731603a1836dfc",
+      "bytes": 2391
+    },
+    "studio/core/PlayerSimulation.mjs": {
+      "sha256": "cc358cc9d860bf02cdadb5dea0b050c77245245b2f130313fe5d1d33e4867d1d",
+      "bytes": 6181
+    },
+    "studio/core/SaveStore.mjs": {
+      "sha256": "0fe117b6fe61a2921e4df04aac7c0e5b5d228e60e3fd3f5e17fb618caccdc35f",
+      "bytes": 4342
+    },
+    "studio/index.html": {
+      "sha256": "0e38b9f9a383a4079c2797f4a9dd09e7926391add31865b2060d4e7e355cd84e",
+      "bytes": 10911
+    },
+    "studio/input/InputActions.mjs": {
+      "sha256": "4a94c7815b811965bbc7c489b07c12c689887e7ecdb474dfa11e885d01062e0b",
+      "bytes": 4647
+    },
+    "studio/package.json": {
+      "sha256": "e6afd4e565613c7ba64847c49f1628653c373244d0d8ddf17b32631bc0ff9921",
+      "bytes": 81
+    },
+    "studio/rendering/actor.js": {
+      "sha256": "c681d3e8792b77945259b5028919593ee6518b2d2632c37e96c864a7b02526d6",
+      "bytes": 7998
+    },
+    "studio/rendering/contact-ao.js": {
+      "sha256": "a85556fd4cdebd995c2d1866e8e8b4b3005582e0befd48d54b13655c9e45cd3f",
+      "bytes": 6579
+    },
+    "studio/rendering/createPaperScene.js": {
+      "sha256": "a12a2b8d14ac8c1130727d64057cb96a46d85f1304603ffd3560841e9f7ab37b",
+      "bytes": 14622
+    },
+    "studio/rendering/fog.js": {
+      "sha256": "9400613c2c41bd0631bd186457ef78ac8916c3168e885e84a2a097aa9a6ef8fb",
+      "bytes": 7036
+    },
+    "studio/rendering/forest.js": {
+      "sha256": "a8066d91cdd76a863a7867c037d494a4ed1293a00cf84b0c91dfd7c31e81e358",
+      "bytes": 11579
+    },
+    "studio/rendering/index.js": {
+      "sha256": "9cf0b1e8a682b4caf456a648bcfce526748118ba02ca693eec8b9f6af36ad88e",
+      "bytes": 56
+    },
+    "studio/rendering/lighting.js": {
+      "sha256": "cd095f1a5544bbbd70cf92919b24841fbc039125393a01b6f5b7305285b98903",
+      "bytes": 10266
+    },
+    "studio/rendering/math.js": {
+      "sha256": "36aa9061e5a77a52668f2fba44b2a3509e20656c93c7e07059b9d2bbd39c7204",
+      "bytes": 563
+    },
+    "studio/rendering/olive-fiber-maps.js": {
+      "sha256": "3b7fb69771df425b3c94cf22bf00525bdcbf8e102103a0c574333580ffcffa91",
+      "bytes": 2187
+    },
+    "studio/rendering/orbit-camera.js": {
+      "sha256": "2c8a75abb4f98166760c57aa9cbb229bf87a2f5d840b6a5929f709322149292f",
+      "bytes": 4395
+    },
+    "studio/rendering/paper-materials.js": {
+      "sha256": "2b93e928ac82eafb1a47f66f92e23dfbcea38504b89b27992b42cde374cc9c68",
+      "bytes": 10405
+    },
+    "studio/rendering/resources.js": {
+      "sha256": "def1591214349d1dcaba553cccccbf1a973ae2b554d2517d27c2e9a11ab16bd0",
+      "bytes": 931
+    },
+    "studio/rendering/sky.js": {
+      "sha256": "5bcbaeac6d705b8027e661173dc042aab2f2dbb12cfc06a2b847470194ddc96d",
+      "bytes": 9695
+    },
+    "studio/rendering/terrain-dressing.js": {
+      "sha256": "91638964b512e66d93de328a6aa200c7a8413698ae52d240b681f2093f4a55df",
+      "bytes": 4976
+    },
+    "studio/rendering/terrain-geometry.js": {
+      "sha256": "bc1f94720523ed14fa34eaeac8123518e51b4cfdf7a821cc36958163d7484976",
+      "bytes": 12312
+    },
+    "studio/rendering/terrain.js": {
+      "sha256": "79151fff4dbd120bb0552becbd5acf1397f6afb5fd131e209e0f0d415651820a",
+      "bytes": 7925
+    },
+    "studio/rendering/volumetrics.js": {
+      "sha256": "492c8421aa6ad8a5fbee3043ac18e7dbb810eb985341f822c51a52ffca79753f",
+      "bytes": 18038
+    },
+    "studio/studio.css": {
+      "sha256": "8fbf527949c83dd0082adab447eb6e151041bf5d88bfad3835074b39d03fdc7d",
+      "bytes": 29790
+    },
+    "studio/ui/GamePresentation.mjs": {
+      "sha256": "093f29b36e35650ffb546d7b69557b26e3808eddfcc3110ea76feebbb55f7d3c",
+      "bytes": 845
+    },
+    "studio/world/PaperWorld.mjs": {
+      "sha256": "18e2b152e8c725064d1ddcf7cacb9d8b82f12739f9862c80a9a33acee2af2d23",
+      "bytes": 3088
+    },
+    "vendor/three/LICENSE": {
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "bytes": 1081
+    },
+    "vendor/three/README.txt": {
+      "sha256": "dba0f840c4b804b7a4e7f5f833f485b3ee2e6ac06ef9822e0f0cd07e597a9e50",
+      "bytes": 123
+    },
+    "vendor/three/three.core.js": {
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "bytes": 1403455
+    },
+    "vendor/three/three.module.js": {
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "bytes": 603113
+    },
+    "visual-demo.html": {
+      "sha256": "632bcf0b8224f069b3a6d15a2a8e28a48ad1522ed56bbc28ee47cf116967188c",
+      "bytes": 108367
+    }
+  }
+}
