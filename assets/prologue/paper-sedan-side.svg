@@ -1,15 +1,90 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="440" height="130" viewBox="0 0 440 130">
-<defs><pattern id="p" width="22" height="17" patternUnits="userSpaceOnUse"><path d="M2 5l11-2M7 14l9 1" stroke="#756955" stroke-width=".7" opacity=".13"/></pattern></defs>
-<rect width="440" height="130" fill="#ded3bb"/><rect width="440" height="130" fill="url(#p)"/>
-<g fill="none" stroke="#494238" stroke-width="4" stroke-linejoin="round">
-<path d="M15 96L31 70 82 60 150 18H287L333 59 401 70 424 96"/>
-<path d="M149 20v58M219 19v95M287 20v94M85 60h250M19 101h401"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450">
+<defs>
+  <filter id="paper" x="-4%" y="-8%" width="108%" height="116%">
+    <feTurbulence type="fractalNoise" baseFrequency=".015 .055" numOctaves="3" seed="17" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0.23 0 0 0 .68  0 .19 0 0 .60  0 0 .14 0 .48  0 0 0 .16 0" result="t"/>
+    <feBlend in="SourceGraphic" in2="t" mode="multiply"/>
+  </filter>
+  <pattern id="fibres" width="64" height="48" patternUnits="userSpaceOnUse">
+    <path d="M3 9l24-4M18 31l29 3M45 15l15-2M4 42l18-2" fill="none" stroke="#785f48" stroke-width="1.2" opacity=".11"/>
+    <path d="M10 18l13 2M39 38l18-4M31 6l11 2" fill="none" stroke="#fff8e8" stroke-width=".8" opacity=".18"/>
+  </pattern>
+  <clipPath id="bodyClip">
+    <path d="M58 327L83 275 214 248 310 139 368 86 748 86 830 136 898 218 1087 252 1146 286 1160 338 1122 367 1024 369 994 329 916 326 874 371 334 371 293 329 210 326 171 371 89 369 54 347Z"/>
+  </clipPath>
+</defs>
+
+<!-- small offset dark paper rim, part of the drawn cut-paper asset -->
+<g transform="translate(5 6)" fill="#2d241f" stroke="#211a17" stroke-width="8" stroke-linejoin="round">
+  <path d="M58 327L83 275 214 248 310 139 368 86 748 86 830 136 898 218 1087 252 1146 286 1160 338 1122 367 1024 369 994 329 916 326 874 371 334 371 293 329 210 326 171 371 89 369 54 347Z"/>
+  <path d="M83 275L35 270 27 234 116 226 187 244Z"/>
 </g>
-<path fill="#6c8084" stroke="#494238" stroke-width="4" d="M151 24h60v48H105z"/>
-<path fill="#65787c" stroke="#494238" stroke-width="4" d="M221 24h62l42 48H221z"/>
-<rect x="162" y="86" width="18" height="7" rx="1" fill="#51493e"/>
-<rect x="269" y="86" width="18" height="7" rx="1" fill="#51493e"/>
-<rect x="17" y="75" width="17" height="20" fill="#e1a04e" stroke="#494238" stroke-width="3"/>
-<rect x="401" y="76" width="17" height="20" fill="#a94d44" stroke="#494238" stroke-width="3"/>
-<path d="M66 108q38-37 76 0M299 108q38-37 76 0" fill="none" stroke="#51493e" stroke-width="4"/>
+
+<!-- main cream cut-paper body -->
+<g filter="url(#paper)" stroke="#382d27" stroke-linejoin="round">
+  <path d="M58 327L83 275 214 248 310 139 368 86 748 86 830 136 898 218 1087 252 1146 286 1160 338 1122 367 1024 369 994 329 916 326 874 371 334 371 293 329 210 326 171 371 89 369 54 347Z"
+        fill="#dfc49f" stroke-width="7"/>
+  <path d="M81 277L215 251 298 157 361 99 748 99 819 142 887 225 1083 260 1134 291 1144 327 1117 348 1028 349 998 309 910 307 867 351 340 351 299 308 203 307 165 349 94 348 70 334Z"
+        fill="#ead1ad" stroke="#b28e69" stroke-width="3" opacity=".96"/>
+  <rect x="0" y="0" width="1200" height="450" fill="url(#fibres)" clip-path="url(#bodyClip)" opacity=".55"/>
+
+  <!-- rear spoiler -->
+  <path d="M83 275L35 270 27 234 116 226 187 244 174 263Z" fill="#4a3930" stroke-width="6"/>
+  <path d="M41 236L111 231 162 244 88 246Z" fill="#665044" stroke="#2e241f" stroke-width="4"/>
+
+  <!-- windows as separate dark paper pieces -->
+  <path d="M333 149L380 106 544 106 555 218 269 218Z" fill="#383a3a" stroke-width="9"/>
+  <path d="M572 106H739L802 147 864 218H584Z" fill="#343737" stroke-width="9"/>
+  <path d="M350 156L388 121H523L529 202H298Z" fill="#424746" stroke="#26201c" stroke-width="4"/>
+  <path d="M593 121H731L790 159 826 202H600Z" fill="#414645" stroke="#26201c" stroke-width="4"/>
+
+  <!-- roof/top paper strip -->
+  <path d="M356 88L369 72H756L771 87 748 99H366Z" fill="#edd7b5" stroke-width="5"/>
+  <path d="M310 139L368 86H748L830 136" fill="none" stroke="#5a4639" stroke-width="12" opacity=".82"/>
+
+  <!-- doors and cut seams -->
+  <path d="M269 218H572V350H340L300 307 201 306 185 278 214 248Z" fill="none" stroke="#42342c" stroke-width="5"/>
+  <path d="M572 218H864L899 250 910 306 867 350H572Z" fill="none" stroke="#42342c" stroke-width="5"/>
+  <path d="M572 218V349M301 218V315M864 218L889 315" fill="none" stroke="#3c302a" stroke-width="5"/>
+
+  <!-- long beltline -->
+  <path d="M74 283L211 262 272 245H899L1084 272 1135 299" fill="none" stroke="#59463d" stroke-width="9"/>
+  <path d="M94 331H1118" fill="none" stroke="#4c3a33" stroke-width="10"/>
+
+  <!-- handles/mirror -->
+  <rect x="430" y="246" width="46" height="18" rx="4" fill="#4a3830" stroke-width="4"/>
+  <rect x="662" y="246" width="46" height="18" rx="4" fill="#4a3830" stroke-width="4"/>
+  <path d="M843 210L874 202 889 218 874 239 842 235Z" fill="#4b3b33" stroke-width="5"/>
+
+  <!-- lamps/bumpers -->
+  <rect x="75" y="274" width="55" height="54" rx="6" fill="#b94b43" stroke-width="6"/>
+  <rect x="1093" y="276" width="48" height="50" rx="5" fill="#d98935" stroke-width="6"/>
+  <path d="M58 324H142V360H88L57 345Z" fill="#4c3c34" stroke-width="5"/>
+  <path d="M1094 325H1156L1159 339 1121 365H1094Z" fill="#493932" stroke-width="5"/>
+
+  <!-- wheel arch reinforcement -->
+  <path d="M171 347Q174 279 251 279Q326 279 334 347" fill="none" stroke="#40322c" stroke-width="15"/>
+  <path d="M874 347Q882 279 958 279Q1035 279 1040 347" fill="none" stroke="#40322c" stroke-width="15"/>
+</g>
+
+<!-- wheels are also flat cut-paper layers -->
+<g stroke="#302620" stroke-width="8">
+  <circle cx="252" cy="340" r="78" fill="#2f2926"/>
+  <circle cx="252" cy="340" r="53" fill="#8f7d68"/>
+  <circle cx="252" cy="340" r="37" fill="#b9a78f"/>
+  <circle cx="252" cy="340" r="18" fill="#5b4c43"/>
+  <path d="M252 303V319M252 361V377M215 340H231M273 340H289" stroke="#5b4c43" stroke-width="12" stroke-linecap="round"/>
+
+  <circle cx="958" cy="340" r="78" fill="#2f2926"/>
+  <circle cx="958" cy="340" r="53" fill="#8f7d68"/>
+  <circle cx="958" cy="340" r="37" fill="#b9a78f"/>
+  <circle cx="958" cy="340" r="18" fill="#5b4c43"/>
+  <path d="M958 303V319M958 361V377M921 340H937M979 340H995" stroke="#5b4c43" stroke-width="12" stroke-linecap="round"/>
+</g>
+
+<!-- subtle paper highlights -->
+<g fill="none" stroke="#fff0d7" stroke-width="3" opacity=".48">
+  <path d="M104 285L218 265 313 151 370 100H744"/>
+  <path d="M351 348H856"/>
+</g>
 </svg>

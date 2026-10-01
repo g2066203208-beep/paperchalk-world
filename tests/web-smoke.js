@@ -3,7 +3,7 @@ function assert(c,m){if(!c)throw new Error(m)}
 const read=p=>fs.readFileSync(p,'utf8');
 const html=read('index.html'),paperCar=read('src/scenes/ProloguePaperCar.js'),game=read('src/game.js'),engine=read('src/engine3d/World3DEngine.js'),paper=read('src/engine3d/PaperTerrainRenderer.js'),paperMaterial=read('src/engine3d/PaperMaterial.js'),atmos=read('src/engine3d/AtmospherePass.js'),renderer=read('src/renderers/three-world-renderer.mjs'),content=read('src/content/game-content.js'),terrain=read('src/terrain/terrain-runtime.js'),biome=read('src/terrain/biome-generator.js'),mesher=read('src/terrain/voxel-block-mesh.js'),npcRuntime=read('src/entities/npc-runtime.js'),npcRenderer=read('src/entities/NPCActorRenderer.js'),npcNav=read('src/ai/npc-navigation.js'),npcBrain=read('src/ai/npc-brain.js'),npcDialogue=read('src/ai/npc-dialogue.js'),openWorld=read('src/core/open-world-runtime.js');
 
-assert(html.includes('paper-r35'),'build key missing');
+assert(html.includes('paper-r36'),'build key missing');
 assert(html.includes('id="hungerFill"')&&html.includes('id="fishingStatusHud"'),'survival HUD missing');
 assert(html.includes('src/core/open-world-runtime.js'),'open-world helper module missing');
 assert(html.includes('src/scenes/prologue-city.js'),'prologue scene module missing');
@@ -14,8 +14,10 @@ assert(fs.existsSync('assets/prologue/school-gate-leaf.svg'),'school gate textur
 assert(html.includes('src/scenes/prologue-car-layout.js'),'paper sedan layout runtime missing');
 assert(fs.existsSync('src/scenes/prologue-car-layout.js'),'paper sedan layout file missing');
 assert(fs.existsSync('src/scenes/ProloguePaperCar.js'),'paper sedan renderer missing');
-assert(renderer.includes('ProloguePaperCar'),'paper sedan renderer not wired');\nassert(paperCar.includes('layered-3d-cut-paper-sedan-r1'),'layered 3D cut-paper sedan missing');\nassert(paperCar.includes('true-3d-layered-cut-paper')&&paperCar.includes('CanvasTexture'),'3D paper car geometry/material pipeline missing');
-for(const asset of ['paper-sedan-side.svg','paper-sedan-front.svg','paper-sedan-rear.svg','paper-sedan-top.svg'])assert(fs.existsSync('assets/prologue/'+asset),'paper sedan texture missing '+asset);
+assert(renderer.includes('ProloguePaperCar'),'paper sedan renderer not wired');
+assert(paperCar.includes('2d-side-sprite+black-paper-thickness-r1'),'2D side sprite car missing');
+assert(paperCar.includes('flat-side-sprite')&&paperCar.includes('blackThicknessPlanes:2'),'2D sprite + black thickness pipeline missing');
+for(const asset of ['paper-sedan-side.svg','paper-sedan-front.svg','paper-sedan-rear.svg','paper-sedan-top.svg'])assert(fs.existsSync('assets/prologue/'+asset),'paper sedan texture missing '+asset);\nconst carSprite=read('assets/prologue/paper-sedan-side.svg');\nassert(carSprite.includes('viewBox="0 0 1200 450"')&&carSprite.includes('filter id="paper"'),'side sprite asset must be transparent SVG with paper texture');
 assert(!fs.existsSync('src/scenes/school-layout.js'),'rejected school layout must stay removed');
 assert(!fs.existsSync('src/scenes/PrologueSchoolBuilding.js'),'rejected school building renderer must stay removed');
 for(const asset of ['school-wall-paper.svg','school-window.svg','school-door.svg','school-sign.svg'])assert(!fs.existsSync('assets/prologue/'+asset),'rejected school building asset returned '+asset);

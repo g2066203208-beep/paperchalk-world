@@ -1,6 +1,6 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
 import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r2';
-import {ProloguePaperCar} from '../scenes/ProloguePaperCar.js?v=paper-r3';
+import {ProloguePaperCar} from '../scenes/ProloguePaperCar.js?v=paper-r4';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -200,7 +200,7 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:11,
+  version:12,
   engine:'three-r180-infinite-voxel-3d',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setPaperStyle,configurePaperTerrain,configureAtmosphere,
