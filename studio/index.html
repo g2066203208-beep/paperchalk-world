@@ -47,7 +47,7 @@
       </section>
 
       <aside id="inspector" class="inspector" aria-label="场景设置">
-        <div class="inspector-heading"><div><p class="eyebrow">SCENE SETTINGS</p><h2>调整此刻的世界</h2></div><span class="inspector-note">即时预览</span></div>
+        <div class="inspector-heading"><div><p class="eyebrow">SCENE SETTINGS</p><h2>调整此刻的世界</h2></div><div class="inspector-heading-tools"><span class="inspector-note">即时预览</span><button id="closeInspector" class="inspector-close" type="button" aria-label="关闭场景设置" title="关闭场景设置">×</button></div></div>
         <div class="inspector-content">
           <section class="settings-section">
             <div class="section-heading"><h3>一天的光线</h3><span>时间</span></div>
@@ -92,6 +92,7 @@
       <div class="status-item"><span class="status-label">角色</span><span id="playerState">准备中</span></div>
       <div class="status-item position-status"><span class="status-label">位置</span><span id="playerPosition">—</span></div>
       <div class="status-item save-status"><span class="save-dot" aria-hidden="true"></span><span id="saveStatus" role="status" aria-live="polite">尚未保存</span></div>
+      <div class="status-item build-status"><span id="buildVersion" title="正在读取版本">读取版本…</span></div>
       <div class="status-item fps-status"><span id="fps">—</span><span class="status-label">FPS</span></div>
       <details class="render-details"><summary>性能详情</summary><div class="render-popover"><p class="eyebrow">RENDER STATUS</p><div id="renderStats">等待场景载入</div></div></details>
     </footer>

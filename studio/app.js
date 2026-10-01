@@ -3,16 +3,31 @@ import {createWorld} from './world/PaperWorld.mjs';
 import {PlayerSimulation} from './core/PlayerSimulation.mjs';
 import {SaveStore} from './core/SaveStore.mjs';
 import {InputActions} from './input/InputActions.mjs';
+import {installStudioLifecycle} from './core/Lifecycle.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','renderStats','moveLeft','moveRight','jumpButton'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','jumpButton'].map(id=>[id,$(id)]));
 const defaults={scale:2,normal:1.85,height:4.8,blend:.85};
 const paperInputs={paperScale:'scale',paperNormal:'normal',paperHeight:'height',paperBlend:'blend'};
 const saves=new SaveStore();
 const events=new AbortController();
-let scene,simulation,input,ready=false,failed=false,paused=false,disposed=false;
+const heldControls=new Set();
+let scene,simulation,input,ready=false,failed=false,paused=false,disposed=false,nativeSuspended=false;
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0;
 const STEP=1/60;
+const disposeLifecycle=installStudioLifecycle({
+  saveNow:()=>saveProgress(true),
+  resetClock,
+  handleBack:()=>{
+    if(!document.body.classList.contains('inspector-hidden')){setInspector(false);return true;}
+    const details=document.querySelector('.render-details[open]');
+    if(details){details.open=false;return true;}
+    return false;
+  },
+  setNativeSuspended:value=>{nativeSuspended=value;},
+  resumeView:()=>window.dispatchEvent(new Event('resize')),
+  discard:dispose,
+});
 
 function listen(element,event,callback,options={}){
   element.addEventListener(event,callback,{...options,signal:events.signal});
@@ -62,12 +77,13 @@ function refreshStatus(now,force=false){
   ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n${stats.terrain.columns} 列地形 · ${stats.terrain.visibleFaces} 个可见面\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
   lastRendered=stats.renderedFrames;statusTime=now;
 }
-function resetClock(){lastTime=0;accumulator=0;input?.cancel();}
-function saveProgress(){
-  if(!ready)return;
+function resetClock(){lastTime=0;accumulator=0;for(const cancel of heldControls)cancel();input?.cancel();}
+function saveProgress(automatic=false){
+  if(!ready||disposed)return false;
   const result=saves.save(simulation.snapshot());
-  ui.saveStatus.textContent=result.ok?`已保存 ${new Date(result.savedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`:'保存失败：浏览器存储不可用';
-  toast(result.ok?'已保存角色进度到此浏览器':'无法保存，请检查浏览器是否允许本站使用本地存储');
+  ui.saveStatus.textContent=result.ok?`已${automatic?'自动':''}保存 ${new Date(result.savedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`:'保存失败：本地存储不可用';
+  if(!automatic)toast(result.ok?'已保存角色进度到此设备':'无法保存，请检查是否允许本站使用本地存储');
+  return result.ok;
 }
 function loadProgress(automatic=false){
   const result=saves.load();
@@ -82,12 +98,15 @@ function loadProgress(automatic=false){
 }
 function heldButton(element,setHeld){
   const active=new Set();let keyboardHeld=false,pulseHeld=false,pulseTimer=0;
-  const update=()=>setHeld(active.size>0||keyboardHeld||pulseHeld);
+  const update=()=>{const held=active.size>0||keyboardHeld||pulseHeld;element.classList.toggle('pressed',held);setHeld(held);};
   const cancel=()=>{active.clear();keyboardHeld=false;pulseHeld=false;clearTimeout(pulseTimer);update();};
+  heldControls.add(cancel);
   listen(element,'pointerdown',event=>{
     if(event.pointerType==='mouse'&&event.button!==0)return;
     event.preventDefault();ui.viewport.focus({preventScroll:true});
-    active.add(event.pointerId);element.setPointerCapture(event.pointerId);update();
+    active.add(event.pointerId);
+    try{element.setPointerCapture(event.pointerId);}catch{/* A platform cancellation can precede capture. */}
+    update();
   });
   const release=event=>{active.delete(event.pointerId);update();};
   for(const event of ['pointerup','pointercancel','lostpointercapture'])listen(element,event,release);
@@ -108,19 +127,41 @@ function heldButton(element,setHeld){
   listen(element,'blur',()=>{keyboardHeld=false;update();});
   listen(window,'blur',cancel);
   listen(document,'visibilitychange',()=>{if(document.hidden)cancel();});
-  events.signal.addEventListener('abort',cancel,{once:true});
+  events.signal.addEventListener('abort',()=>{cancel();heldControls.delete(cancel);},{once:true});
+}
+function setInspector(open){
+  document.body.classList.toggle('inspector-hidden',!open);
+  ui.toggleInspector.setAttribute('aria-expanded',String(open));
+  resetClock();
+  if(!open)ui.toggleInspector.focus({preventScroll:true});
+}
+async function loadBuildInfo(){
+  try{
+    const response=await fetch(new URL('./build-info.json',import.meta.url),{cache:'no-store',signal:events.signal});
+    if(!response.ok)throw new Error('Build information unavailable');
+    const info=await response.json();
+    if(info.version==='dev'){
+      ui.buildVersion.textContent='开发预览';ui.buildVersion.title='本机开发版本';return;
+    }
+    if(typeof info.version!=='string'||!/^[a-f0-9]{7,40}$/.test(info.version))throw new Error('Invalid build information');
+    ui.buildVersion.textContent=`构建 ${info.version.slice(0,7)}`;
+    const date=new Date(info.publishedAt);
+    ui.buildVersion.title=`版本 ${info.version}${Number.isFinite(date.getTime())?` · 发布 ${date.toLocaleString('zh-CN')}`:''}`;
+  }catch{
+    if(disposed)return;
+    ui.buildVersion.textContent='版本待确认';ui.buildVersion.title='暂时无法读取此构建的版本信息';
+  }
 }
 function wireControls(){
   listen(ui.viewport,'pointerdown',()=>ui.viewport.focus({preventScroll:true}));
   listen(ui.playPause,'click',()=>{paused=!paused;resetClock();setStatus();refreshStatus(performance.now(),true);});
   listen(ui.resetPlayer,'click',()=>{simulation.reset();resetClock();toast('角色已回到起点');refreshStatus(performance.now(),true);});
-  listen(ui.saveProgress,'click',saveProgress);
+  listen(ui.saveProgress,'click',()=>saveProgress());
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
-  listen(ui.toggleInspector,'click',()=>{
-    const closed=document.body.classList.toggle('inspector-hidden');
-    ui.toggleInspector.setAttribute('aria-expanded',String(!closed));
-  });
+  listen(ui.toggleInspector,'click',()=>setInspector(document.body.classList.contains('inspector-hidden')));
+  listen(ui.closeInspector,'click',()=>setInspector(false));
+  listen(window,'keydown',event=>{if(event.key==='Escape'&&window.PaperchalkHandleBack())event.preventDefault();});
   for(const button of document.querySelectorAll('[data-preset]'))listen(button,'click',()=>{scene.setTimePreset(button.dataset.preset);updateControls();if(paused)toast('场景已暂停；继续后光线会过渡到所选时间');});
   listen(ui.autoCycle,'change',()=>{scene.setAutoCycle(ui.autoCycle.checked);updateControls();});
   for(const checkbox of document.querySelectorAll('[data-feature]'))listen(checkbox,'change',()=>{scene.setFeature(checkbox.dataset.feature,checkbox.checked);updateControls();});
@@ -131,12 +172,11 @@ function wireControls(){
   heldButton(ui.moveLeft,value=>input.setVirtualLeft(value));
   heldButton(ui.moveRight,value=>input.setVirtualRight(value));
   heldButton(ui.jumpButton,value=>input.setVirtualJump(value));
-  listen(document,'visibilitychange',resetClock);
 }
 function tick(now){
   if(disposed)return;
   const elapsed=lastTime?Math.min(.1,Math.max(0,(now-lastTime)/1000)):0;lastTime=now;
-  if(ready&&!failed&&!document.hidden){
+  if(ready&&!failed&&!nativeSuspended&&!document.hidden){
     try{
       if(!paused){
         accumulator+=elapsed;
@@ -150,21 +190,20 @@ function tick(now){
 }
 function dispose(){
   if(disposed)return;disposed=true;cancelAnimationFrame(raf);clearTimeout(toastTimer);
-  events.abort();input?.dispose();scene?.dispose();
+  disposeLifecycle();events.abort();input?.dispose();scene?.dispose();
 }
 async function start(){
+  loadBuildInfo();
   for(const button of document.querySelectorAll('.toolbar button'))button.disabled=true;
   try{
     scene=createPaperScene({container:ui.viewport,onStatus:sceneStatus});
     const world=createWorld(scene.getTerrainColumns(),{laneZ:0});
     simulation=new PlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;
+    if(disposed)return;
     ready=true;loadProgress(true);wireControls();updateControls();setStatus();
     for(const button of document.querySelectorAll('.toolbar button'))button.disabled=false;
-    // Keep a bfcache page alive; tear down only when navigation discards it.
-    listen(window,'pagehide',event=>{if(!event.persisted)dispose();else resetClock();});
-    listen(window,'pageshow',resetClock);
     raf=requestAnimationFrame(tick);
-  }catch(error){sceneStatus({state:'error',message:error.message||'无法载入纸艺场景，请刷新重试。'});console.error(error);}
+  }catch(error){if(disposed)return;sceneStatus({state:'error',message:error.message||'无法载入纸艺场景，请刷新重试。'});console.error(error);}
 }
 start();

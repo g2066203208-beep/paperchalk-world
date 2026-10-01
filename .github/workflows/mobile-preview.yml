@@ -1,0 +1,139 @@
+name: Publish Mobile Test Channel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "studio/**"
+      - "src/**"
+      - "assets/**"
+      - "vendor/**"
+      - "styles/**"
+      - "index.html"
+      - "visual-demo.html"
+      - "legacy-main.html"
+      - "manifest.webmanifest"
+      - "sw.js"
+      - "package.json"
+      - "tools/build-mobile-release.mjs"
+      - "tools/studio-server.mjs"
+      - "tests/mobile-*.test.mjs"
+      - "tests/studio-*.test.mjs"
+      - ".github/workflows/mobile-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize the retained release branch and Pages deployment as one transaction.
+# New commits may replace a pending run, but never interrupt a running publisher.
+concurrency:
+  group: paperchalk-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      pages: read
+    outputs:
+      publish: ${{ steps.current.outputs.publish }}
+    steps:
+      - name: Checkout accepted source
+        uses: actions/checkout@v7.0.1
+        with:
+          path: source
+      - name: Set up Node
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+      - name: Validate game, studio and mobile delivery
+        working-directory: source
+        run: |
+          npm test
+          npm run test:studio
+          node --test tests/mobile-*.test.mjs
+      - name: Skip superseded commits
+        id: current
+        working-directory: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          current_sha="$(git ls-remote origin refs/heads/main | cut -f1)"
+          if [ "$current_sha" = "$GITHUB_SHA" ]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'publish=false' >> "$GITHUB_OUTPUT"
+            echo 'A newer main commit is waiting; keep the current public release.'
+          fi
+      - name: Configure Pages
+        if: steps.current.outputs.publish == 'true'
+        uses: actions/configure-pages@v6.0.0
+      - name: Stage the whole website and retain immutable mobile releases
+        if: steps.current.outputs.publish == 'true'
+        id: stage
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir _site
+          git -C source archive HEAD | tar -x -C _site
+          history_ref="$(git -C source ls-remote --heads origin refs/heads/mobile-releases)"
+          if [ -n "$history_ref" ]; then
+            git -C source fetch --depth=1 origin refs/heads/mobile-releases:refs/remotes/origin/mobile-releases
+            git -C source archive refs/remotes/origin/mobile-releases app/releases | tar -x -C _site
+            echo 'history=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'history=false' >> "$GITHUB_OUTPUT"
+          fi
+          published_at="$(git -C source show -s --format=%cI HEAD)"
+          node source/tools/build-mobile-release.mjs --source source --output _site --version "$GITHUB_SHA" --published-at "$published_at"
+          touch _site/.nojekyll
+      - name: Preserve releases outside the source branch
+        if: steps.current.outputs.publish == 'true'
+        shell: bash
+        env:
+          HAS_HISTORY: ${{ steps.stage.outputs.history }}
+        run: |
+          set -euo pipefail
+          history_dir="$RUNNER_TEMP/paperchalk-mobile-releases"
+          if [ "$HAS_HISTORY" = 'true' ]; then
+            git -C source worktree add --detach "$history_dir" refs/remotes/origin/mobile-releases
+          else
+            git -C source worktree add --detach "$history_dir" HEAD
+            git -C "$history_dir" switch --orphan mobile-releases
+          fi
+          mkdir -p "$history_dir/app"
+          cp -a _site/app/. "$history_dir/app/"
+          git -C "$history_dir" config user.name 'github-actions[bot]'
+          git -C "$history_dir" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$history_dir" add -- app
+          if ! git -C "$history_dir" diff --cached --quiet; then
+            git -C "$history_dir" commit -m "Publish mobile test $GITHUB_SHA"
+            git -C "$history_dir" push origin HEAD:refs/heads/mobile-releases
+          fi
+      - name: Upload complete Pages artifact
+        if: steps.current.outputs.publish == 'true'
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: _site
+
+  deploy:
+    if: needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publish the tested website
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1

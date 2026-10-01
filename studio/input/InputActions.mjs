@@ -17,6 +17,7 @@ export class InputActions {
   constructor({ target = globalThis.window, viewport = null } = {}) {
     if (!target?.addEventListener) throw new TypeError('An input event target is required.');
     this.keys = new Set(); this.virtualLeft = false; this.virtualRight = false;
+    this.virtualLeftQueued = false; this.virtualRightQueued = false;
     this.virtualHorizontal = 0; this.virtualJump = false; this.jumpQueued = false;
     this.disposed = false; this.listeners = [];
     const listen = (object, type, handler, options) => {
@@ -49,8 +50,16 @@ export class InputActions {
   }
 
   setVirtualHorizontal(value) { if (!this.disposed) this.virtualHorizontal = Number.isFinite(value) ? Math.max(-1, Math.min(1, value)) : 0; }
-  setVirtualLeft(pressed) { if (!this.disposed) this.virtualLeft = Boolean(pressed); }
-  setVirtualRight(pressed) { if (!this.disposed) this.virtualRight = Boolean(pressed); }
+  setVirtualLeft(pressed) {
+    if (this.disposed) return;
+    if (pressed && !this.virtualLeft) this.virtualLeftQueued = true;
+    this.virtualLeft = Boolean(pressed);
+  }
+  setVirtualRight(pressed) {
+    if (this.disposed) return;
+    if (pressed && !this.virtualRight) this.virtualRightQueued = true;
+    this.virtualRight = Boolean(pressed);
+  }
   pressJump() { if (!this.disposed) this.jumpQueued = true; }
   setVirtualJump(pressed) {
     if (this.disposed) return;
@@ -59,13 +68,19 @@ export class InputActions {
   }
 
   consume() {
-    const result = { horizontal: this.horizontal(), jumpPressed: this.jumpQueued };
+    // A short touch released between physics ticks still moves for one tick.
+    const hasHeldDirection = this.virtualLeft || this.virtualRight || this.virtualHorizontal !== 0
+      || ['KeyA', 'KeyD', 'ArrowLeft', 'ArrowRight'].some(key => this.keys.has(key));
+    const horizontal = hasHeldDirection ? this.horizontal() : Number(this.virtualRightQueued) - Number(this.virtualLeftQueued);
+    const result = { horizontal, jumpPressed: this.jumpQueued };
     this.jumpQueued = false;
+    this.virtualLeftQueued = false; this.virtualRightQueued = false;
     return result;
   }
 
   cancel() {
     this.keys.clear(); this.virtualLeft = false; this.virtualRight = false;
+    this.virtualLeftQueued = false; this.virtualRightQueued = false;
     this.virtualHorizontal = 0; this.virtualJump = false; this.jumpQueued = false;
   }
 

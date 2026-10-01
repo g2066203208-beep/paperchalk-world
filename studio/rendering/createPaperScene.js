@@ -68,7 +68,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   scene.fog=new THREE.Fog(0xaec8d3,15,36);
   const camera=new THREE.PerspectiveCamera(36,size.width/size.height,.1,100);
   const target=new THREE.Vector3(0,1.75,-.35);
-  const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidate});
+  const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidate,viewport:size});
   const materials=createPaperMaterials({THREE,renderer});
   const terrain=createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig});
   const forest=createForest({THREE,scene,...materials});
@@ -229,6 +229,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(disposed)return;
     size=getSize();
     camera.aspect=size.width/size.height;camera.updateProjectionMatrix();
+    orbitCamera.resize(size);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.width<760?1.05:1.22));
     renderer.setSize(size.width,size.height,false);
     starUniforms.pixelRatio.value=renderer.getPixelRatio();
