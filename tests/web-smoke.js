@@ -127,7 +127,7 @@ assert(atmos.includes('jitteredRaymarch:true'),'jittered volumetric raymarch mis
 assert(html.includes('data-debug-action="volumetric"')&&html.includes('data-atmos-setting="intensity"')&&html.includes('data-atmos-setting="anisotropy"'),'volumetric debug controls missing');
 assert(renderer.includes('configureAtmosphere'),'atmosphere runtime controls missing');
 assert(content.includes('visibleChunkRadiusXZ:2')&&content.includes('visibleChunkRadiusY:1')&&content.includes('maxBuildsPerFrame:3'),'open-world streaming budget missing');
-assert(renderer.includes("configureAtmosphere?.({volumetric:false,qualityScale:.35,steps:8})"),'low-cost atmosphere default missing');
+assert(renderer.includes('volumetric:renderProfile.volumetric===true')&&renderer.includes('qualityScale:renderProfile.qualityScale??.35')&&renderer.includes('steps:renderProfile.steps??8'),'scene-aware atmosphere profile missing');
 assert(game.includes("if(!terrain.water.cells.size&&fishing.state==='idle'&&!fishWorld.entities.length)return"),'dry-scene fish early-out missing');
 assert(engine.includes('new AtmospherePass'),'atmosphere pass integration missing');
 assert(atmos.includes("technique:'shadowmap-worldspace-heightfog-mie-raymarch'"),'world-space volumetric technique missing');
