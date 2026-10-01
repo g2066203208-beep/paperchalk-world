@@ -3,21 +3,9 @@ function assert(c,m){if(!c)throw new Error(m)}
 const size=p=>fs.statSync(p).size;
 assert(size('src/game.js')<83000,'gameplay runtime exceeds 83KB budget');
 assert(size('src/core/open-world-runtime.js')<2500,'open-world helper exceeds 2.5KB budget');
-assert(size('src/scenes/prologue-city.js')<7000,'prologue city scene exceeds 7KB budget');
-assert(size('src/scenes/prologue-street-props.js')<9000,'street prop runtime exceeds 9KB budget');
-assert(size('src/scenes/PrologueStreetProps.js')<7000,'street prop renderer exceeds 7KB budget');
-assert(size('src/scenes/PrologueSchoolFence.js')<5000,'school fence renderer exceeds 5KB budget');
-assert(size('src/scenes/prologue-car-layout.js')<1500,'prologue car layout exceeds 1.5KB budget');
-assert(size('src/scenes/ProloguePaperCar.js')<5000,'paper car renderer exceeds 5KB budget');
-assert(fs.existsSync('assets/prologue/school-fence-panel.svg'),'school fence texture missing');
-assert(fs.existsSync('assets/prologue/school-gate-leaf.svg'),'school gate texture missing');
-for(const asset of ['paper-sedan-side.svg','paper-sedan-front.svg','paper-sedan-rear.svg','paper-sedan-top.svg']){
- assert(fs.existsSync('assets/prologue/'+asset),'paper sedan texture missing '+asset);
- assert(size('assets/prologue/'+asset)<5000,'paper sedan texture too large '+asset);
-}
-assert(!fs.existsSync('src/scenes/school-layout.js'),'rejected school layout must stay removed');
-assert(!fs.existsSync('src/scenes/PrologueSchoolBuilding.js'),'rejected school building renderer must stay removed');
-for(const asset of ['school-wall-paper.svg','school-window.svg','school-door.svg','school-sign.svg'])assert(!fs.existsSync('assets/prologue/'+asset),'rejected school building asset returned '+asset);
+assert(size('src/scenes/prologue-diorama.js')<8000,'demo prologue scene exceeds 8KB budget');
+assert(size('src/scenes/PrologueDioramaSet.js')<9000,'demo composition renderer exceeds 9KB budget');
+for(const old of ['prologue-city.js','prologue-street-props.js','PrologueStreetProps.js','PrologueSchoolFence.js','prologue-car-layout.js','ProloguePaperCar.js'])assert(!fs.existsSync('src/scenes/'+old),'old school-street prologue file returned '+old);
 assert(size('src/engine3d/World3DEngine.js')<56000,'paper-stage engine exceeds 56KB budget');
 assert(size('src/terrain/terrain-runtime.js')<30000,'terrain+water runtime exceeds 30KB budget');
 assert(size('src/terrain/voxel-block-mesh.js')<24000,'cube mesher exceeds 24KB budget');
@@ -53,14 +41,8 @@ console.log(JSON.stringify({
   ok:true,
   game:size('src/game.js'),
   openWorld:size('src/core/open-world-runtime.js'),
-  prologueScene:size('src/scenes/prologue-city.js'),
-  streetProps:size('src/scenes/prologue-street-props.js'),
-  streetPropRenderer:size('src/scenes/PrologueStreetProps.js'),
-  schoolFence:size('src/scenes/PrologueSchoolFence.js'),
-  carLayout:size('src/scenes/prologue-car-layout.js'),
-  paperCar:size('src/scenes/ProloguePaperCar.js'),
-  fenceTexture:size('assets/prologue/school-fence-panel.svg'),
-  gateTexture:size('assets/prologue/school-gate-leaf.svg'),
+  prologueScene:size('src/scenes/prologue-diorama.js'),
+  prologueComposition:size('src/scenes/PrologueDioramaSet.js'),
   engine:size('src/engine3d/World3DEngine.js'),
   terrain:size('src/terrain/terrain-runtime.js'),
   cubeMesher:size('src/terrain/voxel-block-mesh.js'),
