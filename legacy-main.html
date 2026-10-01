@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="theme-color" content="#1e2427">
+<script>
+(() => {
+  const BUILD="paper-r38";
+  const url=new URL(location.href);
+  if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
+    url.searchParams.set("build",BUILD);
+    location.replace(url.toString());
+  }
+})();
+</script>
+<title>Paperchalk World · 3D开放纸艺世界</title>
+<meta name="paperchalk-build" content="paper-r38">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r38">
+</head>
+<body>
+
+<main id="world" class="stage" aria-label="Paperchalk World 3D开放纸艺世界" inert>
+  <div id="threeWorldLayer" class="three-world-layer" aria-hidden="true" hidden></div>
+
+  <div id="paperClock" class="world-clock" aria-label="世界时间">06:00</div>
+  <div id="survivalHud" class="survival-hud" aria-label="生存状态">
+    <div class="survival-row hunger-row" title="饥饿值">
+      <span class="survival-icon" aria-hidden="true">🍖</span>
+      <div class="survival-meter"><i id="hungerFill"></i></div>
+      <b id="hungerValue">100</b>
+    </div>
+    <div id="fishingStatusHud" class="fishing-status-hud" aria-live="polite"></div>
+  </div>
+  <div id="mapNotice" class="map-notice" role="status" aria-live="polite"></div>
+
+  <div class="world-toolbar">
+    <button id="worldMenuBtn" class="world-tool" type="button" aria-label="主菜单">≡</button>
+    <button id="backpackBtn" class="world-tool" type="button" aria-label="打开背包">背包</button>
+    <button id="worldMapBtn" class="world-tool" type="button" aria-label="打开世界地图">地图</button>
+    <button id="cameraControlBtn" class="world-tool" type="button" aria-controls="cameraControlPanel" aria-expanded="false">镜头</button>
+    <button id="debugToggleBtn" class="world-tool" type="button" aria-controls="debugPanel" aria-expanded="false">调试</button>
+  </div>
+
+  <section id="cameraControlPanel" class="floating-panel camera-panel" aria-hidden="true" aria-label="3D镜头调整">
+    <header><strong>纸片舞台镜头</strong><button id="cameraControlClose" type="button" aria-label="关闭">×</button></header>
+    <label>
+      <span>自由镜头俯仰 <b id="cameraPitchValue">0.0°</b></span>
+      <input id="cameraPitch" type="range" min="-65" max="65" step="0.1" value="0">
+    </label>
+    <label>
+      <span>距离 <b id="cameraDistanceValue">18.0 m</b></span>
+      <input id="cameraDistance" type="range" min="7" max="34" step="0.5" value="18">
+    </label>
+    <label>
+      <span>镜头高度 <b id="cameraHeightValue">0.4 m</b></span>
+      <input id="cameraHeight" type="range" min="-4" max="8" step="0.1" value="0.35">
+    </label>
+    <button id="cameraReset" class="panel-action" type="button">恢复默认镜头</button>
+  </section>
+
+  <section id="debugPanel" class="floating-panel debug-panel" aria-hidden="true" aria-label="纸片舞台开发调试">
+    <header><strong>纸片舞台调试</strong><button id="debugCloseBtn" type="button" aria-label="关闭">×</button></header>
+    <div id="debugStatus" class="debug-status">等待进入世界</div>
+    <div class="debug-actions">
+      <button type="button" data-debug-action="damage1">-1 HP</button>
+      <button type="button" data-debug-action="heal1">+1 HP</button>
+      <button type="button" data-debug-action="damage3">-3 HP</button>
+      <button type="button" data-debug-action="zero">0 HP</button>
+      <button type="button" data-debug-action="full">满血</button>
+      <button type="button" data-debug-action="resetpos">重置位置</button>
+      <button type="button" data-debug-action="flight">飞行：关</button>
+      <button type="button" data-debug-action="colliders">Collider：关</button>
+      <button type="button" data-debug-action="paperstyle">Paper Style：开</button>
+      <button type="button" data-debug-action="volumetric">丁达尔：开</button>
+      <button type="button" data-debug-action="stageview">纸片舞台视角：开</button>
+      <button type="button" data-debug-action="stageaxis">舞台观察轴：Z</button>
+    </div>
+    <div class="paper-debug-controls">
+      <label>世界时间 <input data-world-time type="range" min="0" max="1439" step="1" value="360"></label>
+      <label>时间倍率 <input data-world-timescale type="range" min="0" max="20" step="0.25" value="1"></label>
+    </div>
+    <div class="debug-actions">
+      <button type="button" data-time-preset="330">05:30</button>
+      <button type="button" data-time-preset="720">12:00</button>
+      <button type="button" data-time-preset="1136">18:56</button>
+      <button type="button" data-time-preset="1320">22:00</button>
+    </div>
+    <div class="paper-debug-controls">
+      <label>纸层高 <input data-paper-setting="paperLayerHeight" type="range" min="0.25" max="0.60" step="0.05" value="0.50"></label>
+      <label>纸厚 <input data-paper-setting="paperThickness" type="range" min="0.12" max="0.50" step="0.02" value="0.30"></label>
+      <label>倒角 <input data-paper-setting="bevelWidth" type="range" min="0.01" max="0.10" step="0.005" value="0.065"></label>
+      <label>纸浆色差 <input data-paper-setting="printNoiseStrength" type="range" min="0" max="0.10" step="0.005" value="0.045"></label>
+      <label>纤维 <input data-paper-setting="fiberStrength" type="range" min="0" max="0.12" step="0.005" value="0.050"></label>
+      <label>微法线 <input data-paper-setting="microNormalStrength" type="range" min="0.08" max="0.85" step="0.025" value="0.34"></label>
+      <label>粗糙变化 <input data-paper-setting="roughnessVariation" type="range" min="0" max="0.12" step="0.005" value="0.035"></label>
+      <label>边缘变形 <input data-paper-setting="edgeJitter" type="range" min="0" max="0.08" step="0.005" value="0.038"></label>
+      <label>边缘起伏 <input data-paper-setting="edgeHeightJitter" type="range" min="0" max="0.025" step="0.0025" value="0.010"></label>
+      <label>纸芯亮度 <input data-paper-setting="sideDarkness" type="range" min="0.55" max="1.10" step="0.025" value="0.92"></label>
+    </div>
+    <div class="paper-debug-controls atmos-debug-controls">
+      <label>丁达尔强度 <input data-atmos-setting="intensity" type="range" min="0" max="1.0" step="0.025" value="0.30"></label>
+      <label>前向散射 <input data-atmos-setting="anisotropy" type="range" min="0" max="0.86" step="0.02" value="0.72"></label>
+      <label>空气雾 <input data-atmos-setting="fogDensity" type="range" min="0" max="0.010" step="0.00025" value="0.0026"></label>
+    </div>
+    <form id="debugCommandForm" class="debug-command-form">
+      <input id="debugCommandInput" type="text" autocomplete="off" spellcheck="false" placeholder="help / tp 0 -8 / terrain / stage off / stats">
+      <button type="submit">执行</button>
+    </form>
+    <pre id="debugOutput" class="debug-output">输入 help 查看命令。</pre>
+  </section>
+
+  <div id="quickbar" class="quickbar" aria-label="快捷物品栏">
+    <button class="quick-slot" type="button" data-quick-slot="0" aria-label="快捷栏 1"><span class="quick-key">1</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="1" aria-label="快捷栏 2"><span class="quick-key">2</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="2" aria-label="快捷栏 3"><span class="quick-key">3</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="3" aria-label="快捷栏 4"><span class="quick-key">4</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+    <button class="quick-slot" type="button" data-quick-slot="4" aria-label="快捷栏 5"><span class="quick-key">5</span><span class="quick-glyph"></span><span class="quick-count"></span></button>
+  </div>
+
+  <div class="combat-controls" aria-label="地形与战斗操作">
+    <button id="terrainDigBtn" class="combat-btn terrain-tool is-active" type="button" aria-pressed="true">挖</button>
+    <button id="terrainPlaceBtn" class="combat-btn terrain-tool" type="button" aria-pressed="false">放</button>
+    <button id="crouchBtn" class="combat-btn" type="button">蹲</button>
+    <button id="jumpBtn" class="combat-btn" type="button">跳</button>
+    <button id="npcInteractBtn" class="combat-btn" type="button">聊</button>
+    <button id="attackBtn" class="combat-btn primary" type="button">攻</button>
+  </div>
+  <div class="desktop-control-hint">WASD 3D移动 · E 交谈 · Space 跳跃 · V 飞行 · 飞行时 Space上升 / Shift或C下降 · 左键挖 · 右键放</div>
+  <div class="joystick-hint">左侧摇杆：360°移动 · 飞行时“跳/蹲”=上升/下降</div>
+  <div id="joystickZone" class="joystick-zone" aria-label="360度移动摇杆">
+    <div id="joystick" class="joystick" aria-hidden="true">
+      <div class="joystick-base"></div>
+      <div class="joystick-knob"></div>
+    </div>
+  </div>
+</main>
+
+<section id="worldMapOverlay" class="overlay" aria-hidden="true">
+  <div class="map-shell" role="dialog" aria-modal="true" aria-label="世界地图">
+    <header class="overlay-head">
+      <div>
+        <strong>纸境世界网络</strong>
+        <span id="worldMapLocation">当前位置：序幕 · 纸境林地</span>
+      </div>
+      <button id="worldMapClose" type="button" aria-label="关闭">×</button>
+    </header>
+    <div class="map-toolbar">
+      <button id="worldMapZoomOut" type="button">－</button>
+      <span id="worldMapZoomLabel">100%</span>
+      <button id="worldMapZoomIn" type="button">＋</button>
+      <button id="worldMapFit" type="button">全图</button>
+      <button id="worldMapLocate" type="button">定位我</button>
+    </div>
+    <div class="map-canvas-wrap"><canvas id="worldMapCanvas" width="2700" height="1200"></canvas></div>
+  </div>
+</section>
+
+<section id="backpackOverlay" class="overlay" aria-hidden="true">
+  <div id="backpackFrame" class="inventory-shell" role="dialog" aria-modal="true" aria-label="背包">
+    <header class="overlay-head"><strong>背包</strong><button id="backpackClose" type="button" aria-label="关闭">×</button></header>
+    <div class="inventory-layout">
+      <div id="backpackSlots" class="inventory-grid" aria-label="背包格子"></div>
+      <aside class="inventory-detail">
+        <div class="inventory-preview"><img id="inventoryPreviewImage" alt=""></div>
+        <h3 id="inventoryItemName">未选择物品</h3>
+        <p id="inventoryItemDesc"></p>
+        <div class="inventory-meta"><span>重量 <b id="inventoryItemWeight">0.0</b></span><span>数量 <b id="inventoryItemCount">0</b></span></div>
+        <div class="inventory-actions">
+          <button id="inventoryUse" type="button" disabled>使用</button>
+          <button id="inventoryDrop" type="button" disabled>丢弃</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<div id="orientationHint" class="orientation-hint" role="status" aria-live="polite">
+  <div>建议横屏游玩<br><span>旋转设备后继续</span></div>
+</div>
+
+<section id="uiShell" class="ui-shell">
+  <div class="ui-board">
+    <section id="pageMenu" class="ui-page active">
+      <div class="menu-layout">
+        <div class="brand">
+          <div class="brand-mark">PAPERCHALK WORLD · PAPER STAGE</div>
+          <h1>纸境世界</h1>
+          <p>Three.js 纸艺世界 · Visual Demo 构图序幕</p>
+        </div>
+        <div class="menu-panel">
+          <div id="profileNote" class="profile-note"></div>
+          <button id="continueBtn" class="menu-btn">继续游戏</button>
+          <button id="enterBtn" class="menu-btn">进入世界</button>
+          <button id="authBtn" class="menu-btn">本地档案</button>
+          <button id="settingsBtn" class="menu-btn secondary">设置</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="pageAuth" class="ui-page">
+      <button class="back-link" data-back="menu">← 返回</button>
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <h2>本地旅人档案</h2>
+          <p>档案和存档保存在当前设备。</p>
+          <div class="tabs">
+            <button id="tabLogin" class="tab active" type="button">已有档案</button>
+            <button id="tabRegister" class="tab" type="button">新建档案</button>
+          </div>
+          <form id="loginForm">
+            <label>档案 ID<input id="loginUser" autocomplete="username" maxlength="24" required></label>
+            <label>本机口令<input id="loginPass" type="password" autocomplete="current-password" maxlength="64" required></label>
+            <div class="form-actions"><button type="submit">打开并进入</button><button type="button" data-back="menu">取消</button></div>
+          </form>
+          <form id="registerForm" class="hidden">
+            <label>档案 ID<input id="regUser" autocomplete="username" minlength="2" maxlength="24" required></label>
+            <label>旅人名称<input id="regName" maxlength="16" required></label>
+            <label>本机口令<input id="regPass" type="password" autocomplete="new-password" minlength="4" maxlength="64" required></label>
+            <div class="form-actions"><button type="submit">创建档案并进入</button><button type="button" data-back="menu">取消</button></div>
+          </form>
+          <div id="authMsg" class="auth-msg"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pageSettings" class="ui-page">
+      <button class="back-link" data-back="menu">← 返回</button>
+      <div class="auth-wrap">
+        <div class="auth-card">
+          <h2>设置</h2>
+          <div class="settings-list">
+            <label><span>界面语言</span><select id="settingLanguage"><option value="zh-CN">简体中文</option></select></label>
+            <label><span>世界时间速度</span>
+              <select id="settingTimeScale">
+                <option value="0">暂停</option><option value="0.5">0.5×</option><option value="1">1×</option><option value="2">2×</option><option value="5">5×</option>
+              </select>
+            </label>
+            <label class="toggle"><span>横屏优先</span><input id="settingLandscape" type="checkbox"></label>
+          </div>
+          <div id="settingsStatus" class="settings-status"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+
+<script src="./src/core/event-bus.js?v=paper-r38"></script>
+<script src="./src/core/game-state.js?v=paper-r38"></script>
+<script src="./src/core/save-runtime.js?v=paper-r38"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r38"></script>
+<script src="./src/ai/npc-navigation.js?v=paper-r38"></script>
+<script src="./src/ai/npc-brain.js?v=paper-r38"></script>
+<script src="./src/ai/npc-dialogue.js?v=paper-r38"></script>
+<script src="./src/entities/npc-runtime.js?v=paper-r38"></script>
+<script src="./src/content/game-content.js?v=paper-r38"></script>
+<script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r38"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r38"></script>
+<script src="./src/core/open-world-runtime.js?v=paper-r38"></script>
+<script src="./src/scenes/prologue-diorama.js?v=paper-r38"></script>
+<script src="./src/game.js?v=paper-r38"></script>
+<script src="./src/debug/world-debug.js?v=paper-r38"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r38"></script>
+</body>
+</html>
