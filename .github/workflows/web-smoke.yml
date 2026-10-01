@@ -1,23 +1,21 @@
-name: Web Paper Stage Static Smoke
+name: Visual Demo Main Static Smoke
 
 on:
   push:
     branches: [main]
     paths:
       - "index.html"
-      - "src/**"
-      - "styles/**"
-      - "tests/web-smoke.js"
-      - "tests/performance-budget.mjs"
+      - "visual-demo.html"
+      - "legacy-main.html"
+      - "tests/demo-main-smoke.mjs"
+      - "package.json"
       - ".github/workflows/web-smoke.yml"
   pull_request:
     paths:
       - "index.html"
-      - "src/**"
-      - "styles/**"
-      - "tests/web-smoke.js"
-      - "tests/performance-budget.mjs"
-      - ".github/workflows/web-smoke.yml"
+      - "visual-demo.html"
+      - "tests/demo-main-smoke.mjs"
+      - "package.json"
 
 permissions:
   contents: read
@@ -30,5 +28,4 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-      - run: node tests/web-smoke.js
-      - run: node tests/performance-budget.mjs
+      - run: npm test
