@@ -83,12 +83,12 @@ function updateLighting(t){
   sun.position.set(sx,sy,sz);
   moon.position.set(mx,my,mz);
 
-  const sunDawn=new THREE.Color(0xffdf99);
+  const sunDawn=new THREE.Color(0xffd385);
   const sunSunset=new THREE.Color(0xff654d);
   const sunWarm=state.time<.5?sunDawn:sunSunset;
   const sunDay=new THREE.Color(0xffe8c4);
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
-  sun.intensity=sunFade*(.30+sunUp*4.4+twilight*11.0);
+  sun.intensity=sunFade*(.30+sunUp*4.4+twilight*15.0);
 
   moon.color.set(0x72a4ff);
   moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
@@ -103,7 +103,7 @@ function updateLighting(t){
   const hemiDay=new THREE.Color(0xdceeff);
   const hemiNight=new THREE.Color(0x7897d0);
   const hemiWarm=new THREE.Color(0xffcfb0);
-  hemi.color.copy(hemiNight).lerp(hemiDay,dayMix).lerp(hemiWarm,twilight*.22*sunFade);
+  hemi.color.copy(hemiNight).lerp(hemiDay,dayMix).lerp(hemiWarm,twilight*.45*sunFade);
 
   const groundDay=new THREE.Color(0x9c7656);
   const groundNight=new THREE.Color(0x455777);
@@ -114,13 +114,13 @@ function updateLighting(t){
   const ambientDay=new THREE.Color(0xe7edf0);
   const ambientNight=new THREE.Color(0x789bd5);
   const ambientWarm=new THREE.Color(0xffd2b8);
-  ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.16*sunFade);
+  ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.45*sunFade);
 
-  viewFill.intensity=.62+(1-dayMix)*.10+twilight*.18*sunFade;
+  viewFill.intensity=.38+(1-dayMix)*.34+twilight*.06*sunFade;
   const viewDay=new THREE.Color(0xf7f0e6);
   const viewNight=new THREE.Color(0x88aff0);
-  const viewWarm=new THREE.Color(0xffc3a1);
-  viewFill.color.copy(viewNight).lerp(viewDay,dayMix).lerp(viewWarm,twilight*.28*sunFade);
+  const viewWarm=new THREE.Color(0xffc17e);
+  viewFill.color.copy(viewNight).lerp(viewDay,dayMix).lerp(viewWarm,twilight*.65*sunFade);
 
   const horizonDay=new THREE.Color(0xb9d9e2);
   const horizonNight=new THREE.Color(0x445b88);

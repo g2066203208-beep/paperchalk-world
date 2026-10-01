@@ -7,9 +7,10 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   scene.add(canopyGroup);
 
   // Source maps already contain pigment; another green/brown tint made them black.
-  const forestLeafMats=[0xffffff,0xfffcf4,0xf4f6df].map(color=>
-    standardPaperMaterial(paperGrassSet,{normalScale:.62,roughness:1,color,ao:.24})
-  );
+  const forestLeafMats=[0xffffff,0xfffcf4,0xf4f6df].map(color=>{
+    const material=standardPaperMaterial(paperGrassSet,{normalScale:.62,roughness:1,color,ao:.24});
+    material.vertexColors=true;return material;
+  });
   const forestTrunkMats=[0xffffff,0xfff4e9,0xffecd8].map(color=>
     standardPaperMaterial(paperDirtSet,{normalScale:.35,roughness:1,color,ao:.28})
   );
@@ -18,8 +19,8 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   });
 
   function geometryWriter(){
-    const positions=[],normals=[],uvs=[];
-    function triangle(a,b,c,normal){
+    const positions=[],normals=[],uvs=[],colors=[];
+    function triangle(a,b,c,normal,color=[1,1,1]){
       if(!normal){
         const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2];
         const vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
@@ -29,15 +30,16 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       }
       for(const point of [a,b,c]){
         positions.push(point[0],point[1],point[2]);
-        normals.push(...normal);uvs.push(point[3],point[4]);
+        normals.push(...normal);uvs.push(point[3],point[4]);colors.push(...color);
       }
     }
-    function quad(a,b,c,d){triangle(a,b,d);triangle(b,c,d);}
+    function quad(a,b,c,d,color){triangle(a,b,d,undefined,color);triangle(b,c,d,undefined,color);}
     function finish(){
       const geometry=new THREE.BufferGeometry();
       geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
       geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
       geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+      geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
       geometry.computeBoundingBox();geometry.computeBoundingSphere();
       return geometry;
     }
@@ -92,7 +94,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       const j=(i+1)%count;
       writer.triangle(front,rings[0][i],rings[0][j],[0,0,1]);
       writer.triangle(back,rings[3][j],rings[3][i],[0,0,-1]);
-      for(let ring=0;ring<3;ring++)writer.quad(rings[ring][i],rings[ring+1][i],rings[ring+1][j],rings[ring][j]);
+      for(let ring=0;ring<3;ring++)writer.quad(rings[ring][i],rings[ring+1][i],rings[ring+1][j],rings[ring][j],[1.65,1.12,.66]);
     }
     return writer.finish();
   }
@@ -129,17 +131,17 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
     const random=rng(12000+seed*41);
     // Keep three distinct raised layers, with a lower canopy that frames the
     // scene while preserving the open illuminated gaps between the trunks.
-    const crownBase=(3.25+layer*.62)*scale;
+    const crownBase=(3.25+layer*.62+(random()-.5)*.35)*scale;
     const bottom=-.4*scale,top=crownBase+.92*scale;
     const trunk={x:x+(random()-.5)*.10*scale,y:(bottom+top)*.5,z:z-.32*scale,
       width:(.39+random()*.17)*scale,height:top-bottom,rot:(random()-.5)*.022,layer};
     const crowns=[];
-    for(let tier=0;tier<3;tier++){
+    for(let tier=0;tier<5;tier++){
       crowns.push({geo:(seed+tier)%crownGeometries.length,
-        x:x+[-.32,.34,-.06][tier]*scale+(random()-.5)*.15*scale,
-        y:crownBase+[0,.44,.98][tier]*scale,
-        z:z+[.18,.025,-.16][tier]*scale,
-        sx:(1.10+random()*.23)*scale,sy:(.89+random()*.19)*scale,
+        x:x+[-.60,.60,-.30,.32,0][tier]*scale+(random()-.5)*.16*scale,
+        y:crownBase+[0,.07,.48,.59,1.10][tier]*scale,
+        z:z+[.28,.24,.09,.04,-.16][tier]*scale,
+        sx:(.73+random()*.14)*scale,sy:(.75+random()*.14)*scale,
         depth:scale,rot:(random()-.5)*.24,tilt:(random()-.5)*.12,layer});
     }
     trees.push({trunk,crowns});
@@ -188,8 +190,8 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       });
     }
   }
-  canopyGroup.userData.forest={trees:trees.length,crowns:trees.length*3,
+  canopyGroup.userData.forest={trees:trees.length,crowns:trees.length*5,
     floorTriangles:forestFloorGeometry.attributes.position.count/3,
-    triangles:trees.length*(64+3*224)+forestFloorGeometry.attributes.position.count/3};
+    triangles:trees.length*(64+5*224)+forestFloorGeometry.attributes.position.count/3};
   return {canopyGroup};
 }
