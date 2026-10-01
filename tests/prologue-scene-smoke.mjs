@@ -35,7 +35,7 @@ try{
   return{
    centerTop:t.peekVoxel(0,0,2),centerBelow:t.peekVoxel(0,-1,2),
    edgeTop:t.peekVoxel(-22,2,0),outside:t.peekVoxel(-25,0,0),
-   rearTop:t.peekVoxel(-18,1,-18),deep:t.peekVoxel(0,-4,2)
+   rearTop:t.peekVoxel(-18,2,-18),deep:t.peekVoxel(0,-4,2)
   };
  });
  assert(vox.centerTop===1&&vox.centerBelow===2,'center grass/dirt stack wrong '+JSON.stringify(vox));
