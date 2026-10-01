@@ -17,26 +17,41 @@ try{
  page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('Failed to load resource'))errors.push('CONSOLE '+m.text())});
  await page.goto('http://127.0.0.1:8080/',{waitUntil:'networkidle'});
  await page.waitForSelector('canvas',{timeout:10000});
- await page.waitForTimeout(1800);
- const state=await page.evaluate(()=>({
-   title:document.title,
+ await page.waitForFunction(()=>window.PaperchalkGame?.player,{timeout:10000});
+ await page.waitForTimeout(800);
+
+ const before=await page.evaluate(()=>({
+   player:window.PaperchalkGame.player,
+   stats:window.PaperchalkGame.stats(),
    heading:document.querySelector('.panel h1')?.textContent||'',
-   canvases:document.querySelectorAll('canvas').length,
-   width:document.querySelector('canvas')?.width||0,
-   height:document.querySelector('canvas')?.height||0,
-   buttons:[...document.querySelectorAll('button')].map(b=>b.textContent.trim()),
-   materialPanel:!!document.querySelector('.materialPanel'),
-   sunPanel:!!document.querySelector('.sunPanel')
+   buttons:[...document.querySelectorAll('button')].map(b=>b.textContent.trim())
  }));
- assert(state.title.includes('Paperchalk 纸艺世界视觉 Demo'),'demo title missing '+JSON.stringify(state));
- assert(state.heading.includes('v12.32'),'demo version heading missing '+JSON.stringify(state));
- assert(state.canvases>=1&&state.width>500&&state.height>300,'Three.js render canvas missing '+JSON.stringify(state));
- assert(state.materialPanel&&state.sunPanel,'demo control panels missing');
- for(const label of ['目标效果','程序天空','标准立方体','动态纸雾','Paper003','受光体积雾'])assert(state.buttons.includes(label),'demo control missing '+label);
+ assert(before.heading.includes('v12.32'),'visual-demo baseline heading missing '+JSON.stringify(before));
+ assert(before.stats.runtime.systems===1,'player controller not registered '+JSON.stringify(before.stats));
+ assert(before.stats.terrain.columns===105,'terrain query must cover authored demo columns '+JSON.stringify(before.stats.terrain));
+ for(const label of ['目标效果','程序天空','标准立方体','动态纸雾','Paper003','受光体积雾'])assert(before.buttons.includes(label),'demo control missing '+label);
+
+ await page.keyboard.down('KeyD');
+ await page.waitForTimeout(650);
+ await page.keyboard.up('KeyD');
+ await page.waitForTimeout(100);
+ const right=await page.evaluate(()=>window.PaperchalkGame.player);
+ assert(Math.hypot(right.x-before.player.x,right.z-before.player.z)>.8,'D/right movement did not move player '+JSON.stringify({before:before.player,right}));
+ assert(right.distance>.8,'player travel distance not tracked '+JSON.stringify(right));
+
+ await page.keyboard.down('KeyA');
+ await page.waitForTimeout(650);
+ await page.keyboard.up('KeyA');
+ await page.waitForTimeout(100);
+ const back=await page.evaluate(()=>window.PaperchalkGame.player);
+ assert(Math.hypot(back.x-before.player.x,back.z-before.player.z)<.35,'A/left movement did not return player near start '+JSON.stringify({before:before.player,back}));
+
+ const canvas=page.locator('canvas').first(),box=await canvas.boundingBox();
+ assert(box&&box.width>500&&box.height>300,'Three.js canvas missing');
  await page.screenshot({path:'artifacts/new-main-visual-demo.png'});
  assert(fs.statSync('artifacts/new-main-visual-demo.png').size>10000,'render screenshot too small');
  if(errors.length)throw new Error(errors.join('\n'));
- console.log('DEMO_MAIN_BROWSER_OK');
+ console.log('DEMO_MODULAR_MAIN_BROWSER_OK');
 }finally{
  await browser.close();
 }
