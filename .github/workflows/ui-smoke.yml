@@ -1,28 +1,33 @@
-name: UI + 3D Overlay Smoke
+name: Mobile UI + Touch Smoke
 
 on:
   push:
     branches: [main]
     paths:
       - "index.html"
-      - "src/**"
-      - "styles/**"
-      - "tests/ui-smoke.mjs"
+      - "src/main.js"
+      - "src/input/**"
+      - "src/player/**"
+      - "styles/main.css"
+      - "assets/player/**"
+      - "tests/demo-main-browser.mjs"
       - ".github/workflows/ui-smoke.yml"
   pull_request:
     paths:
       - "index.html"
-      - "src/**"
-      - "styles/**"
-      - "tests/ui-smoke.mjs"
-      - ".github/workflows/ui-smoke.yml"
+      - "src/main.js"
+      - "src/input/**"
+      - "src/player/**"
+      - "styles/main.css"
+      - "assets/player/**"
+      - "tests/demo-main-browser.mjs"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  chromium-smoke:
+  chromium-mobile:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -30,6 +35,8 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
+      - name: Static main check
+        run: npm test
       - name: Install browser driver
         run: npm install --no-save playwright-core
       - name: Detect Chrome
@@ -48,7 +55,19 @@ jobs:
           done
           cat /tmp/paperchalk-ui-http.log
           exit 1
-      - name: Run UI smoke
+      - name: Run responsive UI and touch movement regression
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
-        run: node tests/ui-smoke.mjs
+        run: |
+          sed 's|127.0.0.1:8080|127.0.0.1:4173|g' tests/demo-main-browser.mjs > /tmp/demo-main-browser.mjs
+          cp /tmp/demo-main-browser.mjs tests/demo-main-browser-4173.mjs
+          node tests/demo-main-browser-4173.mjs
+      - name: Upload desktop and mobile screenshots
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: responsive-main-screenshots
+          path: |
+            artifacts/new-main-visual-demo.png
+            artifacts/new-main-mobile.png
+          if-no-files-found: ignore
