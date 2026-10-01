@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Paperchalk 纸艺世界视觉 Demo</title>
-<link rel="stylesheet" href="./styles/main.css">
+<title>Paperchalk World v13.0.0</title>
+<link id="mainStyle" rel="stylesheet">
 </head>
 <body>
 <div class="panel">
-  <h1>纸艺世界视觉 Demo v12.32</h1>
-  <p>v12.32 材质恢复：撤掉 v12.31 失效的多层纸材质链路，恢复到已确认能正常显示的 Paper003 地形材质。顶面为绿色 Paper003，侧面为泥土棕 Paper003；Color、NormalGL、Roughness、Displacement 全部重新接回。保留连续世界 UV、体素隐藏面剔除，并继续删除装饰小草与石头。</p>
+  <h1>Paperchalk World <span id="buildVersion">v13.0.0</span></h1>
+  <p>正式主程序 v13.0.0：Visual Demo 视觉基线 + 模块化游戏地基 + 手机 UI + 新玩家角色。</p>
 </div>
 <div id="debugSheet" class="debugSheet">
 <div class="sunPanel">
@@ -77,7 +77,13 @@
   <button id="moveRight" class="moveButton" type="button" aria-label="向右移动">▶</button>
 </div>
 
-<script type="module" src="./src/main.js"></script>
+<script type="module">
+const buildKey=Date.now().toString(36);
+window.__PAPERCHALK_BUILD__=buildKey;
+const style=document.getElementById('mainStyle');
+style.href='./styles/main.css?b='+buildKey;
+await import('./src/main.js?b='+buildKey);
+</script>
 
 </body>
 </html>
