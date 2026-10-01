@@ -13,7 +13,8 @@ const browser=await chromium.launch({
 try{
  const page=await browser.newPage({viewport:{width:1365,height:768}});
  page.on('pageerror',e=>errors.push('PAGE '+String(e)));
- page.on('console',m=>{if(m.type()==='error')errors.push('CONSOLE '+m.text())});
+ page.on('response',res=>{if(res.status()>=400&&!res.url().endsWith('/favicon.ico'))errors.push('HTTP '+res.status()+' '+res.url())});
+ page.on('console',m=>{if(m.type()==='error'&&!m.text().includes('Failed to load resource'))errors.push('CONSOLE '+m.text())});
  await page.goto('http://127.0.0.1:8080/',{waitUntil:'networkidle'});
  await page.waitForSelector('canvas',{timeout:10000});
  await page.waitForTimeout(1800);
