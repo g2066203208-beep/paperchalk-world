@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#252c24">
+  <title>纸艺世界 · 重构工作室</title>
+  <link rel="stylesheet" href="./studio.css">
+</head>
+<body class="inspector-hidden">
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <div><p class="eyebrow">PAPERCHALK WORLD</p><h1>纸艺世界 <span>·</span> 重构工作室</h1></div>
+      </div>
+      <div class="header-status"><span class="status-dot" aria-hidden="true"></span><span id="appStatus" role="status" aria-live="polite">准备载入</span></div>
+    </header>
+
+    <nav class="toolbar" aria-label="工作室操作">
+      <div class="tool-group primary-tools">
+        <button id="playPause" class="button button-primary" type="button" title="暂停或继续场景">暂停</button>
+        <button id="resetPlayer" class="button" type="button" title="将角色送回起点">回到起点</button>
+        <button id="resetCamera" class="button" type="button" title="恢复初始观察角度">重置视角</button>
+      </div>
+      <div class="tool-group file-tools">
+        <button id="saveProgress" class="button" type="button" title="保存当前进度到此浏览器">保存进度</button>
+        <button id="loadProgress" class="button" type="button" title="读取此浏览器保存的进度">读取进度</button>
+      </div>
+      <div class="tool-group view-tools">
+        <a class="demo-link" href="../visual-demo.html" target="_blank" rel="noopener noreferrer" title="在新标签页查看原始 Demo">原始 Demo <span aria-hidden="true">↗</span></a>
+        <button id="toggleInspector" class="button button-inspector" type="button" aria-controls="inspector" aria-expanded="false"><span class="sliders-icon" aria-hidden="true">☷</span>场景设置</button>
+      </div>
+    </nav>
+
+    <main class="workspace" aria-label="纸艺世界工作区">
+      <section class="stage" aria-label="实时游戏场景">
+        <div class="stage-label"><span class="live-dot" aria-hidden="true"></span>实时场景<span class="stage-label-divider" aria-hidden="true"></span><span class="baseline-label">Demo 光影沿用</span></div>
+        <div id="viewport" class="viewport" tabindex="0" aria-label="游戏画面；A 或 D 左右移动，空格跳跃，拖动观察，滚轮缩放"></div>
+        <div id="loadingStatus" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span>正在准备纸艺场景…</span></div>
+        <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+        <button id="openGameMenu" class="game-only game-pause" type="button" aria-label="暂停并打开菜单" aria-haspopup="dialog" aria-controls="gameMenu" disabled><span aria-hidden="true">Ⅱ</span></button>
+        <div class="game-only rotate-hint" role="status"><span aria-hidden="true">↻</span> 横屏玩，视野更宽</div>
+        <div id="gameMenu" class="game-only game-menu" hidden>
+          <section class="game-menu-card" role="dialog" aria-modal="true" aria-labelledby="gameMenuTitle">
+            <div class="game-menu-heading"><p class="eyebrow">PAPERCHALK WORLD</p><h2 id="gameMenuTitle">稍作停留</h2><p>游戏已暂停</p></div>
+            <button id="resumeGame" class="game-menu-button game-menu-primary" type="button">继续冒险 <span aria-hidden="true">→</span></button>
+            <div class="game-menu-actions"><button id="gameReset" class="game-menu-button" type="button">回到起点</button><button id="gameResetCamera" class="game-menu-button" type="button">重置视角</button><button id="gameSave" class="game-menu-button" type="button">保存进度</button><button id="gameLoad" class="game-menu-button" type="button">读取进度</button></div>
+            <button id="gameSettings" class="game-menu-button game-menu-settings" type="button">画面设置 <span aria-hidden="true">›</span></button>
+            <div class="game-menu-footer"><span id="gameSaveStatus">进度会自动保存</span><span id="gameBuildVersion">纸艺世界</span></div>
+          </section>
+        </div>
+        <div class="stage-hint"><span><kbd>A</kbd><kbd>D</kbd> 左右</span><span><kbd>空格</kbd> 跳跃</span><span class="desktop-hint">拖动观察 · 滚轮缩放</span><span class="mobile-hint">单指观察 · 双指缩放</span></div>
+        <div class="touch-controls" aria-label="触屏角色控制">
+          <div class="touch-move"><button id="moveLeft" class="touch-button" type="button" aria-label="向左移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg></button><button id="moveRight" class="touch-button" type="button" aria-label="向右移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg></button></div>
+          <button id="jumpButton" class="touch-button touch-jump" type="button" aria-label="跳跃"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 7-7 7 7M12 4v16"/></svg><span>跳跃</span></button>
+        </div>
+      </section>
+
+      <aside id="inspector" class="inspector" aria-label="场景设置">
+        <div class="inspector-heading"><div><p class="eyebrow">SCENE SETTINGS</p><h2>调整此刻的世界</h2></div><div class="inspector-heading-tools"><span class="inspector-note">即时预览</span><button id="closeInspector" class="inspector-close" type="button" aria-label="关闭场景设置" title="关闭场景设置">×</button></div></div>
+        <div class="inspector-content">
+          <section class="settings-section surface-settings">
+            <div class="section-heading"><h3>方块表面</h3><span>材质对比</span></div>
+            <div class="surface-options" role="group" aria-label="方块材质"><button class="surface-option active" type="button" data-surface="pulp" aria-pressed="true">纸浆材质</button><button class="surface-option" type="button" data-surface="color" aria-pressed="false">固有色</button></div>
+          </section>
+          <section class="settings-section">
+            <div class="section-heading"><h3>一天的光线</h3><span>时间</span></div>
+            <div class="preset-grid" role="group" aria-label="昼夜预设">
+              <button type="button" class="preset-button active" data-preset="dawn" aria-pressed="true"><span class="preset-swatch dawn" aria-hidden="true"></span>清晨</button>
+              <button type="button" class="preset-button" data-preset="noon" aria-pressed="false"><span class="preset-swatch noon" aria-hidden="true"></span>正午</button>
+              <button type="button" class="preset-button" data-preset="sunset" aria-pressed="false"><span class="preset-swatch sunset" aria-hidden="true"></span>黄昏</button>
+              <button type="button" class="preset-button" data-preset="night" aria-pressed="false"><span class="preset-swatch night" aria-hidden="true"></span>夜晚</button>
+            </div>
+            <label class="switch-row"><span>自动昼夜</span><input id="autoCycle" class="switch" type="checkbox" aria-label="自动昼夜"></label>
+          </section>
+
+          <section class="settings-section">
+            <div class="section-heading"><h3>纸与空气</h3><span>视觉效果</span></div>
+            <label class="switch-row"><span>柔和阴影</span><input class="switch" type="checkbox" data-feature="shadow" checked></label>
+            <label class="switch-row"><span>流动纸雾</span><input class="switch" type="checkbox" data-feature="fog" checked></label>
+            <label class="switch-row"><span>地面反射光</span><input class="switch" type="checkbox" data-feature="bounce" checked></label>
+            <label class="switch-row"><span>受光体积雾</span><input class="switch" type="checkbox" data-feature="godrays" checked></label>
+          </section>
+
+          <section class="settings-section">
+            <div class="section-heading"><h3>纸浆质感</h3><span>Olive Fiber</span></div>
+            <div class="range-control"><label for="paperScale">纸纹大小</label><output id="paperScaleValue" for="paperScale">1.40×</output><input id="paperScale" type="range" min="15" max="250" step="5" value="140"></div>
+            <div class="range-control"><label for="paperNormal">凹凸强度</label><output id="paperNormalValue" for="paperNormal">0.72</output><input id="paperNormal" type="range" min="0" max="200" step="5" value="72"></div>
+            <button id="resetPaper" class="text-button" type="button">恢复纸张默认值 <span aria-hidden="true">↺</span></button>
+          </section>
+
+          <section class="settings-section">
+            <div class="section-heading"><h3>太阳方向</h3><span>手动调整</span></div>
+            <div class="range-control"><label for="sunAzimuth">左右方向</label><output id="sunAzimuthValue" for="sunAzimuth">−36°</output><input id="sunAzimuth" type="range" min="-75" max="75" step="1" value="-36"></div>
+            <div class="range-control"><label for="sunElevation">高度角</label><output id="sunElevationValue" for="sunElevation">13°</output><input id="sunElevation" type="range" min="5" max="60" step="1" value="13"></div>
+            <button id="followSun" class="text-button" type="button">恢复跟随昼夜 <span aria-hidden="true">↺</span></button>
+          </section>
+          <p class="settings-footnote">调整纸张的纹理、凹凸和受光，查看它们在不同时间的变化。</p>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="status-strip" aria-label="当前场景状态">
+      <div class="status-item"><span class="status-label">角色</span><span id="playerState">准备中</span></div>
+      <div class="status-item position-status"><span class="status-label">位置</span><span id="playerPosition">—</span></div>
+      <div class="status-item save-status"><span class="save-dot" aria-hidden="true"></span><span id="saveStatus" role="status" aria-live="polite">尚未保存</span></div>
+      <div class="status-item build-status"><span id="buildVersion" title="正在读取版本">读取版本…</span></div>
+      <div class="status-item fps-status"><span id="fps">—</span><span class="status-label">FPS</span></div>
+      <details class="render-details"><summary>性能详情</summary><div class="render-popover"><p class="eyebrow">RENDER STATUS</p><div id="renderStats">等待场景载入</div></div></details>
+    </footer>
+  </div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
