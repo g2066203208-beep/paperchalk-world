@@ -1,4 +1,25 @@
-# Paperchalk World — 3D 开放纸艺体素世界
+# Paperchalk World — 纸艺横版冒险
+
+## 当前重构方向（2026-10-01）
+
+项目的新方向为 **2.5D 横版冒险**：角色主要沿 X/Y 移动与跳跃，Z 固定；3D 场景提供纵深、光影和环绕镜头。原始 Demo 的纸张材质、光线、雾与体积光是视觉基准。
+
+新的独立入口为 [`studio/`](studio/README.md)。在仓库根目录运行 `npm run dev:studio`，打开 `http://127.0.0.1:4173/studio/`。
+
+| 入口 | 用途 |
+| --- | --- |
+| `studio/` | 新架构开发工作室：横版模拟、真实碰撞、存档、场景调节 |
+| `visual-demo.html` | 保留的原始视觉基准 |
+| `index.html`、`src/`、`legacy-main.html` | 现有主站与历史实现，尚未切换为新工作室 |
+
+采用本地开发预览、GitHub Pages 发布稳定版本的工作方式。工作室为静态网页；发布后无需个人电脑持续开机。当前工作室只完成基础框架，正式关卡、互动、战斗和角色骨骼动画尚待迁移或实现。
+
+验证：`npm run test:studio` 检查新架构；`npm test` 检查现有主站。详见[工作室说明](studio/README.md)。
+
+<details>
+<summary>历史存档：旧 3D 开放世界方案（不再代表重构方向）</summary>
+
+## 旧 Paperchalk World — 3D 开放纸艺体素世界
 
 Paperchalk World 当前主线是 **Three.js 3D 开放世界 + 流式三维体素地形 + 2D 纸片角色/实体**。序章、横版城市马路和有限 Z 舞台已经从正式运行时删除。
 
@@ -68,3 +89,5 @@ https://g2066203208-beep.github.io/paperchalk-world/
 4. PaperSpriteEntity 可继续承载角色和需要纸片风格的实体，不妨碍 3D 地形和 3D 导航。
 5. 体素编辑只保存 delta；其余区域始终从 seed 重建。
 6. 高成本效果必须能降级或关闭，新增系统不得破坏性能预算。
+
+</details>

@@ -1,0 +1,21 @@
+name: Rebuild Studio Regression
+
+on:
+  push:
+    paths: ["studio/**", "tools/studio-server.mjs", "tests/studio-*.mjs", ".github/workflows/studio-regression.yml"]
+  pull_request:
+    paths: ["studio/**", "tools/studio-server.mjs", "tests/studio-*.mjs", "assets/player/**", "vendor/three/**", "src/main.js", ".github/workflows/studio-regression.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  studio-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+      - run: npm run test:studio
