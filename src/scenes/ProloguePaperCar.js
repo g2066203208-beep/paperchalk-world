@@ -6,7 +6,7 @@ const cars=window.PaperchalkPrologueCars?.cars?.(sceneData)||[];
 if(!cars.length)return;
 
 const loader=new THREE.TextureLoader();
-const side=loader.load('assets/prologue/paper-sedan-side.svg?v=sprite-r2',t=>{
+const side=loader.load('assets/prologue/paper-sedan-side.svg?v=sprite-r3',t=>{
  t.colorSpace=THREE.SRGBColorSpace;
  t.anisotropy=8;
  t.generateMipmaps=false;
