@@ -10,7 +10,7 @@ trap capture_evidence EXIT
 adb install -r android-app/app/build/outputs/apk/debug/app-debug.apk
 adb install -r android-app/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
 adb logcat -c
-adb shell am instrument -w -e expectedVersion "$EXPECTED_VERSION" com.paperchalk.world.test.test/com.paperchalk.world.SmokeInstrumentation | tee artifacts/android/instrumentation.txt
+timeout 220s adb shell am instrument -w -e expectedVersion "$EXPECTED_VERSION" com.paperchalk.world.test.test/com.paperchalk.world.SmokeInstrumentation | tee artifacts/android/instrumentation.txt
 grep -q 'status=PASS' artifacts/android/instrumentation.txt
 adb shell am start -n com.paperchalk.world.test/com.paperchalk.world.MainActivity
 sleep 8
