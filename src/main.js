@@ -1,9 +1,10 @@
-import * as THREE from '../vendor/three/three.module.js';
-import {GameRuntime} from './core/GameRuntime.js';
-import {InputManager} from './input/InputManager.js';
-import {TerrainQuery} from './world/TerrainQuery.js';
-import {PlayerController} from './player/PlayerController.js';
-import {OrbitCameraController} from './camera/OrbitCameraController.js';
+const BUILD=window.__PAPERCHALK_BUILD__||Date.now().toString(36);
+const THREE=await import('../vendor/three/three.module.js');
+const {GameRuntime}=await import('./core/GameRuntime.js?b='+BUILD);
+const {InputManager}=await import('./input/InputManager.js?b='+BUILD);
+const {TerrainQuery}=await import('./world/TerrainQuery.js?b='+BUILD);
+const {PlayerController}=await import('./player/PlayerController.js?b='+BUILD);
+const {OrbitCameraController}=await import('./camera/OrbitCameraController.js?b='+BUILD);
 
 const input=new InputManager(window);
 const gameRuntime=new GameRuntime();
@@ -1148,7 +1149,7 @@ const playerDuskTint=new THREE.Color(0xffead8);
 const playerNightTint=new THREE.Color(0xc9d6ee);
 const playerTintTmp=new THREE.Color();
 
-new THREE.TextureLoader().load('../assets/player/protagonist.webp',t=>{
+new THREE.TextureLoader().load('../assets/player/protagonist.webp?b='+BUILD,t=>{
   t.colorSpace=THREE.SRGBColorSpace;
   t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
 
