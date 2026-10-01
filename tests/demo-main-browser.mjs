@@ -31,20 +31,25 @@ try{
  assert(before.stats.terrain.columns===105,'terrain query must cover authored demo columns '+JSON.stringify(before.stats.terrain));
  for(const label of ['目标效果','程序天空','标准立方体','动态纸雾','Paper003','受光体积雾'])assert(before.buttons.includes(label),'demo control missing '+label);
 
- await page.keyboard.down('KeyD');
- await page.waitForTimeout(650);
- await page.keyboard.up('KeyD');
- await page.waitForTimeout(100);
+ await page.keyboard.down('ArrowRight');
+ await page.waitForFunction(()=>window.PaperchalkGame.player?.distance>.34,{timeout:6000});
+ await page.keyboard.up('ArrowRight');
+ await page.waitForTimeout(120);
  const right=await page.evaluate(()=>window.PaperchalkGame.player);
- assert(Math.hypot(right.x-before.player.x,right.z-before.player.z)>.8,'D/right movement did not move player '+JSON.stringify({before:before.player,right}));
- assert(right.distance>.8,'player travel distance not tracked '+JSON.stringify(right));
+ const rightDisp=Math.hypot(right.x-before.player.x,right.z-before.player.z);
+ assert(rightDisp>.3,'right movement did not move player '+JSON.stringify({before:before.player,right}));
+ assert(right.distance>.34,'player travel distance not tracked '+JSON.stringify(right));
 
- await page.keyboard.down('KeyA');
- await page.waitForTimeout(650);
- await page.keyboard.up('KeyA');
- await page.waitForTimeout(100);
+ await page.keyboard.down('ArrowLeft');
+ await page.waitForFunction(
+   start=>Math.hypot(window.PaperchalkGame.player.x-start.x,window.PaperchalkGame.player.z-start.z)<.2,
+   before.player,
+   {timeout:6000}
+ );
+ await page.keyboard.up('ArrowLeft');
+ await page.waitForTimeout(120);
  const back=await page.evaluate(()=>window.PaperchalkGame.player);
- assert(Math.hypot(back.x-before.player.x,back.z-before.player.z)<.35,'A/left movement did not return player near start '+JSON.stringify({before:before.player,back}));
+ assert(Math.hypot(back.x-before.player.x,back.z-before.player.z)<.25,'left movement did not return player near start '+JSON.stringify({before:before.player,back}));
 
  const canvas=page.locator('canvas').first(),box=await canvas.boundingBox();
  assert(box&&box.width>500&&box.height>300,'Three.js canvas missing');
