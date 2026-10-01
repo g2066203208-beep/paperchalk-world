@@ -20,6 +20,7 @@ async function openLatest(){
     if(data.schemaVersion!==1||!(/^[0-9a-f]{7,40}$/).test(data.version)||data.entry!==`releases/${data.version}/studio/index.html`)throw Error('发布信息不完整，请稍后重试');
     const target=new URL(data.entry,new URL('./',location.href));
     if(target.origin!==location.origin)throw Error('发布地址不正确');
+    target.searchParams.set('play','1');
     status.textContent='正在打开版本 '+data.version.slice(0,8)+'…';
     location.replace(target.href);
   }catch(error){status.textContent=error.name==='AbortError'?'连接超时，请检查网络后重试':error.message;retry.hidden=false;}
