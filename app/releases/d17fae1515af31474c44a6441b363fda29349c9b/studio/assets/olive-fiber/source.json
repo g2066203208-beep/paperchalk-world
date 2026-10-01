@@ -1,0 +1,67 @@
+{
+  "name": "Olive Fiber | Layered Matte — mobile terrain derivative",
+  "sourceArchive": "Olive_Fiber_Blender_Asset.zip",
+  "sourceArchiveSha256": "20d1a68283ae64109223b6103029b3951388664e3954ddd76a4b53832f7a89be",
+  "sourceMaterialInfo": "Olive_Fiber_Material/material_info.json",
+  "source": "User-provided Blender asset texture set, not a screenshot or sphere render.",
+  "derivation": "2048px to 1024px Lanczos resampling. Normal vectors renormalized after downsampling. Base color is not recolored. Data maps use lossless encoding and no color conversion.",
+  "usage": "Grass top faces only, continuous world-space X/-Z UV coordinates. Cube sides and bottoms use plain solid color materials.",
+  "surface": "Standard metallic-roughness PBR; no geometric displacement, extra bump, old Paper003 maps or procedural paper overlay.",
+  "tileWorldUnits": 0.65,
+  "normalStrength": 0.85,
+  "aoIntensity": 0.3,
+  "textures": [
+    {
+      "sourceMember": "Olive_Fiber_Material/textures/OliveFiber_BaseColor.png",
+      "sourceSha256": "02bdfcee3a4cf1e53fed586669574828ba16b5df1e669f56649ccbbeb9b4634d",
+      "sourceDimensions": [
+        2048,
+        2048
+      ],
+      "file": "base-color.webp",
+      "sha256": "872785e4fb75a7ef6f010f90f7635394b662aade440290fb5546bbe939ed6534",
+      "bytes": 404962,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "sRGB base color",
+      "encoding": "WebP quality 91"
+    },
+    {
+      "sourceMember": "Olive_Fiber_Material/textures/OliveFiber_NormalGL.png",
+      "sourceSha256": "35463c4508e476a2334bb426bde2ccab46d3b9e717a8e59fa32360243ee3406c",
+      "sourceDimensions": [
+        2048,
+        2048
+      ],
+      "file": "normal-gl.webp",
+      "sha256": "36dd2af61c7a9e1870d55ef97847520bb2a356f1c4ceae2ec1e35064457d0929",
+      "bytes": 1535952,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear OpenGL tangent-space normal +Y",
+      "encoding": "WebP lossless"
+    },
+    {
+      "sourceMember": "Olive_Fiber_Material/textures/OliveFiber_ORM.png",
+      "sourceSha256": "728488b2b17c0e51b1f57ee09e5cae40d8bf6add10b20ae9c46715783328afcc",
+      "sourceDimensions": [
+        2048,
+        2048
+      ],
+      "file": "orm.webp",
+      "sha256": "6b45e6e683260cd8da60e3162eec6906bc2ef2824a2926773e2fbc3e7f64a408",
+      "bytes": 935704,
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear R=ambient occlusion, G=roughness, B=metalness",
+      "encoding": "WebP lossless"
+    }
+  ],
+  "totalTextureBytes": 2876618
+}
