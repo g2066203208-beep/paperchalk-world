@@ -30,6 +30,6 @@ test('opening and closing a menu during gameplay resumes without a stuck pause',
 test('landscape gameplay frames the character closer while desktop keeps its established view',()=>{
   assert.equal(defaultOrbitDistance({width:1440,height:900}),19.2);
   assert.ok(defaultOrbitDistance({width:915,height:412,gameplay:true})<19.2);
-  assert.ok(defaultOrbitDistance({width:844,height:320,gameplay:true})>=11);
+  assert.ok(defaultOrbitDistance({width:844,height:320,gameplay:true})>=6.4);
   assert.equal(defaultOrbitDistance({width:390,height:844,gameplay:true}),19.2);
 });
