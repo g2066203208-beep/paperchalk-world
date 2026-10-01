@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#1e2427">
 <script>
 (() => {
-  const BUILD="paper-r37";
+  const BUILD="paper-r38";
   const url=new URL(location.href);
   if((url.protocol==="http:"||url.protocol==="https:")&&url.searchParams.get("build")!==BUILD){
     url.searchParams.set("build",BUILD);
@@ -15,9 +15,9 @@
 })();
 </script>
 <title>Paperchalk World · 3D开放纸艺世界</title>
-<meta name="paperchalk-build" content="paper-r37">
+<meta name="paperchalk-build" content="paper-r38">
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="./styles/game.css?v=paper-r37">
+<link rel="stylesheet" href="./styles/game.css?v=paper-r38">
 </head>
 <body>
 
@@ -142,7 +142,7 @@
     <header class="overlay-head">
       <div>
         <strong>纸境世界网络</strong>
-        <span id="worldMapLocation">当前位置：序章 · 学校街区</span>
+        <span id="worldMapLocation">当前位置：序幕 · 纸境林地</span>
       </div>
       <button id="worldMapClose" type="button" aria-label="关闭">×</button>
     </header>
@@ -187,7 +187,7 @@
         <div class="brand">
           <div class="brand-mark">PAPERCHALK WORLD · PAPER STAGE</div>
           <h1>纸境世界</h1>
-          <p>Three.js 纸艺世界 · 序章独立城市空间</p>
+          <p>Three.js 纸艺世界 · Visual Demo 构图序幕</p>
         </div>
         <div class="menu-panel">
           <div id="profileNote" class="profile-note"></div>
@@ -246,24 +246,22 @@
   </div>
 </section>
 
-<script src="./src/core/event-bus.js?v=paper-r37"></script>
-<script src="./src/core/game-state.js?v=paper-r37"></script>
-<script src="./src/core/save-runtime.js?v=paper-r37"></script>
-<script src="./src/core/ecs-runtime.js?v=paper-r37"></script>
-<script src="./src/ai/npc-navigation.js?v=paper-r37"></script>
-<script src="./src/ai/npc-brain.js?v=paper-r37"></script>
-<script src="./src/ai/npc-dialogue.js?v=paper-r37"></script>
-<script src="./src/entities/npc-runtime.js?v=paper-r37"></script>
-<script src="./src/content/game-content.js?v=paper-r37"></script>
+<script src="./src/core/event-bus.js?v=paper-r38"></script>
+<script src="./src/core/game-state.js?v=paper-r38"></script>
+<script src="./src/core/save-runtime.js?v=paper-r38"></script>
+<script src="./src/core/ecs-runtime.js?v=paper-r38"></script>
+<script src="./src/ai/npc-navigation.js?v=paper-r38"></script>
+<script src="./src/ai/npc-brain.js?v=paper-r38"></script>
+<script src="./src/ai/npc-dialogue.js?v=paper-r38"></script>
+<script src="./src/entities/npc-runtime.js?v=paper-r38"></script>
+<script src="./src/content/game-content.js?v=paper-r38"></script>
 <script src="./vendor/fastnoise-lite/FastNoiseLite.js?v=1.1.1"></script>
-<script src="./src/terrain/biome-generator.js?v=paper-r37"></script>
-<script src="./src/terrain/terrain-runtime.js?v=paper-r37"></script>
-<script src="./src/core/open-world-runtime.js?v=paper-r37"></script>
-<script src="./src/scenes/prologue-city.js?v=paper-r37"></script>
-<script src="./src/scenes/prologue-street-props.js?v=paper-r37"></script>
-<script src="./src/scenes/prologue-car-layout.js?v=paper-r37"></script>
-<script src="./src/game.js?v=paper-r37"></script>
-<script src="./src/debug/world-debug.js?v=paper-r37"></script>
-<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r37"></script>
+<script src="./src/terrain/biome-generator.js?v=paper-r38"></script>
+<script src="./src/terrain/terrain-runtime.js?v=paper-r38"></script>
+<script src="./src/core/open-world-runtime.js?v=paper-r38"></script>
+<script src="./src/scenes/prologue-diorama.js?v=paper-r38"></script>
+<script src="./src/game.js?v=paper-r38"></script>
+<script src="./src/debug/world-debug.js?v=paper-r38"></script>
+<script type="module" src="./src/renderers/three-world-renderer.mjs?v=paper-r38"></script>
 </body>
 </html>
