@@ -7,11 +7,12 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.paperchalk.world"
+        applicationId = "com.paperchalk.world.test"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.0.0-3d-alpha"
+        versionCode = 5
+        versionName = "1.1.0-studio-test"
+        testInstrumentationRunner = "com.paperchalk.world.SmokeInstrumentation"
     }
 
     buildTypes {

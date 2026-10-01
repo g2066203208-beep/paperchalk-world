@@ -4,14 +4,15 @@
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
-        android:label="Paperchalk World"
+        android:enableOnBackInvokedCallback="true"
+        android:label="纸艺世界·测试版"
         android:usesCleartextTraffic="false"
         android:theme="@style/Theme.PaperchalkWorld">
         <activity
             android:name=".MainActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:configChanges="keyboardHidden|orientation|screenSize|smallestScreenSize"
             android:exported="true"
-            android:screenOrientation="landscape">
+            android:screenOrientation="sensorLandscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

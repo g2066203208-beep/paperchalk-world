@@ -3,7 +3,7 @@ name: Build Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, rebuild/paperworld-studio]
     paths:
       - "android-app/**"
       - ".github/workflows/android-apk.yml"
@@ -33,9 +33,14 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
-      - name: Build debug APK
+      - name: Test shell and build installable APKs
         working-directory: android-app
-        run: gradle assembleDebug --no-daemon
+        run: gradle testDebugUnitTest assembleDebug assembleRelease --no-daemon
+
+      - name: Validate release channel rules
+        run: |
+          javac -d android-app/build/channel-tests android-app/app/src/main/java/com/paperchalk/world/ChannelRelease.java android-app/tests/ChannelReleaseTest.java
+          java -cp android-app/build/channel-tests com.paperchalk.world.ChannelReleaseTest
 
       - name: Upload APK
         uses: actions/upload-artifact@v7.0.1
@@ -43,3 +48,18 @@ jobs:
           name: paperchalk-world-debug-apk
           path: android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+
+      - name: Upload unsigned release for local signing
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: paperchalk-world-test-unsigned
+          path: android-app/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: android-test-results
+          path: android-app/app/build/reports/tests/
+          if-no-files-found: ignore
