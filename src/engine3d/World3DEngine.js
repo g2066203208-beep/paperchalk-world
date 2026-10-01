@@ -574,7 +574,9 @@ this.debugColliders=false;this.pointerState=null;
 this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
 const coarse=matchMedia('(pointer:coarse)').matches;
 this.mobileLike=coarse;
-this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,1.35));
+const renderProfile=this.sceneData.render||{};
+const dprCap=this.mobileLike?(renderProfile.dprMobile??1.35):(renderProfile.dprDesktop??1.35);
+this.pixelRatio=Math.max(1,Math.min(Number(devicePixelRatio)||1,dprCap));
 this.renderer.setPixelRatio(this.pixelRatio);
 this.renderer.outputColorSpace=THREE.SRGBColorSpace;
 this.renderer.setClearColor(this.fixedBackgroundColor,1);
@@ -787,7 +789,8 @@ else if(Number.isFinite(config.yaw)&&!config.stageView?.enabled)this.cameraRig.y
 if(Number.isFinite(config.pitch))this.cameraRig.pitch=Math.max(-1.15,Math.min(1.15,config.pitch));
 if(Number.isFinite(config.distance))this.cameraRig.distance=Math.max(this.cameraRig.minDistance,Math.min(this.cameraRig.maxDistance,config.distance));
 if(Number.isFinite(config.height))this.cameraRig.height=Math.max(-4,Math.min(8,config.height));
-this.cameraRig.fov=42;this.camera.fov=42;this.camera.updateProjectionMatrix();
+const fov=Number.isFinite(config.fov)?Math.max(30,Math.min(60,config.fov)):this.cameraRig.fov;
+this.cameraRig.fov=fov;this.camera.fov=fov;this.camera.updateProjectionMatrix();
 if(config.stageView&&typeof config.stageView==='object'){
 this.stageView.enabled=config.stageView.enabled!==false;
 this.stageView.axis=config.stageView.axis==='x'?'x':'z';
@@ -799,9 +802,10 @@ setStageView(enabled,axis=this.stageView.axis){this.stageView.enabled=!!enabled;
 toggleStageView(){return this.setStageView(!this.stageView.enabled,this.stageView.axis)}
 setStageAxis(axis){this.stageView.axis=axis==='x'?'x':'z';this._notifyCamera();return {...this.stageView}}
 resetCamera(){
-Object.assign(this.cameraRig,{yaw:0,pitch:0,distance:18,height:.35,fov:42});
-Object.assign(this.stageView,{enabled:true,axis:'z',side:1});
-this.camera.fov=42;this.camera.updateProjectionMatrix();this._notifyCamera();return this.cameraConfig();
+const preset=this.sceneData.camera||{yaw:.72,pitch:.38,distance:12,height:.65,fov:42,stageView:{enabled:false,axis:'z',side:1}};
+Object.assign(this.cameraRig,{yaw:preset.orbitYaw??preset.yaw??.72,pitch:preset.pitch??.38,distance:preset.distance??12,height:preset.height??.65,fov:preset.fov??42});
+Object.assign(this.stageView,{enabled:preset.stageView?.enabled===true,axis:preset.stageView?.axis==='x'?'x':'z',side:preset.stageView?.side===-1?-1:1});
+this.camera.fov=this.cameraRig.fov;this.camera.updateProjectionMatrix();this._notifyCamera();return this.cameraConfig();
 }
 cameraConfig(){return {yaw:this._stageYaw(),orbitYaw:this.cameraRig.yaw,pitch:this.cameraRig.pitch,distance:this.cameraRig.distance,height:this.cameraRig.height,fov:this.cameraRig.fov,stageView:{...this.stageView}}}
 setDebugColliders(enabled){this.debugColliders=!!enabled;this.terrainRenderer.setDebug(this.debugColliders);return this.debugColliders}
