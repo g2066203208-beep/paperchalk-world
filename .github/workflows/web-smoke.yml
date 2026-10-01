@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "index.html"
+      - "src/**"
+      - "styles/main.css"
       - "visual-demo.html"
       - "legacy-main.html"
       - "tests/demo-main-smoke.mjs"
