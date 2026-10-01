@@ -55,6 +55,40 @@ try{
  assert(box&&box.width>500&&box.height>300,'Three.js canvas missing');
  await page.screenshot({path:'artifacts/new-main-visual-demo.png'});
  assert(fs.statSync('artifacts/new-main-visual-demo.png').size>10000,'render screenshot too small');
+
+ const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+ mobile.on('pageerror',e=>errors.push('MOBILE PAGE '+String(e)));
+ await mobile.goto('http://127.0.0.1:8080/',{waitUntil:'networkidle'});
+ await mobile.waitForFunction(()=>window.PaperchalkGame?.player,{timeout:10000});
+ await mobile.waitForTimeout(500);
+ const mobileState=await mobile.evaluate(()=>({
+   debugDisplay:getComputedStyle(document.getElementById('debugSheet')).display,
+   toggleDisplay:getComputedStyle(document.getElementById('uiToggle')).display,
+   moveDisplay:getComputedStyle(document.getElementById('mobileMove')).display,
+   introDisplay:getComputedStyle(document.querySelector('.panel p')).display,
+   player:window.PaperchalkGame.player
+ }));
+ assert(mobileState.debugDisplay==='none','mobile debug sheet should start collapsed '+JSON.stringify(mobileState));
+ assert(mobileState.toggleDisplay!=='none','mobile settings toggle missing '+JSON.stringify(mobileState));
+ assert(mobileState.moveDisplay!=='none','mobile movement controls missing '+JSON.stringify(mobileState));
+ assert(mobileState.introDisplay==='none','long demo copy should be hidden on mobile '+JSON.stringify(mobileState));
+
+ await mobile.locator('#uiToggle').click();
+ const opened=await mobile.evaluate(()=>getComputedStyle(document.getElementById('debugSheet')).display);
+ assert(opened!=='none','mobile settings sheet did not open');
+
+ await mobile.locator('#uiToggle').click();
+ const startMobile=await mobile.evaluate(()=>window.PaperchalkGame.player.distance);
+ await mobile.locator('#moveRight').dispatchEvent('pointerdown',{pointerId:21,pointerType:'touch'});
+ await mobile.waitForFunction(d=>window.PaperchalkGame.player.distance>d+.18,startMobile,{timeout:6000});
+ await mobile.locator('#moveRight').dispatchEvent('pointerup',{pointerId:21,pointerType:'touch'});
+ await mobile.waitForTimeout(100);
+ const movedMobile=await mobile.evaluate(()=>window.PaperchalkGame.player.distance);
+ assert(movedMobile>startMobile+.18,'touch right control did not move player');
+ await mobile.screenshot({path:'artifacts/new-main-mobile.png'});
+ assert(fs.statSync('artifacts/new-main-mobile.png').size>10000,'mobile screenshot too small');
+ await mobile.close();
+
  if(errors.length)throw new Error(errors.join('\n'));
  console.log('DEMO_MODULAR_MAIN_BROWSER_OK');
 }finally{
