@@ -160,8 +160,10 @@ const volumeMat=new THREE.ShaderMaterial({
         // A localized bank preserves the diagonal gaps in the canopy shadow.
         // Broad uniform mist integrates across many alternating shadow bands,
         // averaging the shafts into a flat veil even with correct occlusion.
-        float forestBank=exp(-pow((p.z+3.8)/2.6,2.0));
-        float medium=(.10+.90*lowMist)*(.035+.965*forestAir)*airVariation*(.05+forestBank*3.5);
+        // Put the bank between the first two tree rows: foreground trunks
+        // stay dark against illuminated air instead of being washed over.
+        float forestBank=exp(-pow((p.z+6.6)/1.7,2.0));
+        float medium=(.10+.90*lowMist)*(.035+.965*forestAir)*airVariation*(.035+forestBank*5.0);
         // The gameplay camera is only 5.5 units from the actor. The former
         // 3.5..8 fade removed most of the observable illuminated air.
         float nearFade=smoothstep(1.2,4.2,t);
