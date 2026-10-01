@@ -151,7 +151,7 @@ const volumeMat=new THREE.ShaderMaterial({
 
         float lowMist=1.0-smoothstep(.45,6.6,p.y);
         float medium=.10+.90*lowMist;
-        float nearFade=smoothstep(.8,3.0,t);
+        float nearFade=smoothstep(3.5,8.0,t);
 
         float sVis=sunVisibility(p);
         float mVis=moonVisibility(p);
@@ -180,7 +180,7 @@ const compositeUniforms={
   sceneColor:{value:null},
   volumeColor:{value:null},
   volumeTexel:{value:new THREE.Vector2(1,1)},
-  volumeStrength:{value:1.0}
+  volumeStrength:{value:.24}
 };
 const compositeMat=new THREE.ShaderMaterial({
   uniforms:compositeUniforms,
@@ -289,7 +289,7 @@ function updateVolumetricSettings(t){
   volumeUniforms.moonLightDir.value.copy(volumeLightTarget).sub(moon.position).normalize();
 
   const dayColor=new THREE.Color(0xfff0cc);
-  const dawnColor=new THREE.Color(0xff9a64);
+  const dawnColor=new THREE.Color(0xffe3a0);
   const sunsetColor=new THREE.Color(0xff7054);
   const moonColor=new THREE.Color(0x72a3ff);
   const warmColor=state.time<.5?dawnColor:sunsetColor;
@@ -335,6 +335,13 @@ function updateVolumetricShadow(force=false){
   contactShadow.visible=false;
   if(actor.playerMesh)actor.playerMesh.visible=false;
 
+  // Use the same caster set as the surface shadow pass. In particular, porous
+  // canopy cards must not close the sky only in the volumetric calculation.
+  const nonCasters=[];
+  scene.traverse(object=>{
+    if(object.isMesh&&object.visible&&!object.castShadow){nonCasters.push(object);object.visible=false;}
+  });
+
   const oldOverride=scene.overrideMaterial;
   scene.overrideMaterial=volumeDepthMat;
 
@@ -353,6 +360,7 @@ function updateVolumetricShadow(force=false){
 
   renderer.setRenderTarget(null);
   scene.overrideMaterial=oldOverride;
+  for(const object of nonCasters)object.visible=true;
 
   forestMist.visible=fogVisible;sky.visible=skyVisible;
   sunDisc.visible=sunDiscVisible;moonDisc.visible=moonDiscVisible;

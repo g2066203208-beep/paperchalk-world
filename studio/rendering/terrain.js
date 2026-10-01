@@ -51,6 +51,13 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   if((x===-4||x===4)&&Math.abs(z)>1)h=1;
   if(z===3&&Math.abs(x)>2)h++;
   if((x===-2&&z===-2)||(x===3&&z===2))h++;
+  // Scenic plateaus sit behind and in front of the fixed z=0 walking lane.
+  // Broad 2-cell shelves frame the subject like the reference paper diorama.
+  if(z!==0){
+    if(z===-1&&x>=-4&&x<=-3)h=1;
+    if((z===-1||z===-2)&&x>=3&&x<=4)h=1;
+    if(z>=2&&(x===-3||x===3))h=1;
+  }
 
   columnRecords.push({x,z,h,columnIndex:columnRecords.length});
   for(let y=0;y<=h;y++){
@@ -172,7 +179,7 @@ terrainGrassRim.name='terrain-torn-grass-rim';
 terrainGrassRim.castShadow=true;
 terrainGrassRim.receiveShadow=true;
 terrainBlocks.add(terrainGrassRim);
-const dressing=createTerrainDressing({THREE,parent:terrain,columnRecords,grassMaterial:terrainTopMat});
+const dressing=createTerrainDressing({THREE,parent:terrainBlocks,columnRecords,grassMaterial:terrainTopMat});
 
 const terrainOriginalFaceCount=terrainBlockCount*6;
 const terrainCulledFaceCount=terrainOriginalFaceCount-terrainVisibleFaceCount;
@@ -225,11 +232,12 @@ function setPaper(next={}){
   paperConfig.blend=0;
   olive.setScale(paperConfig.scale);
   terrainTopMat.normalScale.setScalar(paperConfig.normal);
-  terrainDirtMat.normalScale.setScalar(paperConfig.normal*.8);
+  terrainDirtMat.normalScale.setScalar(paperConfig.normal*.50);
   flags.render=true;
 }
 setPaper(paperConfig);
 return {terrain,terrainBlocks,terrainGrassRim,grassRim:terrainGrassRim,dressing,columnRecords,surfaceY,setPaper,setSurfaceMode,
+  pulpSets:{paperGrassSet:{color:olive.color,normal:olive.normal,roughness:olive.orm,ao:olive.orm},paperDirtSet:{color:dirtColor,normal:dirtNormal,roughness:dirtOrm,ao:dirtOrm}},
   getSurfaceMode:()=>surfaceMode,rebuildMaterialRandomness,
   textures:olive.textures,
   stats:()=>({columns:columnRecords.length,blocks:terrainBlockCount,visibleFaces:terrainVisibleFaceCount,

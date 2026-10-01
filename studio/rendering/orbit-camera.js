@@ -4,7 +4,7 @@ import {clamp} from './math.js';
 export function defaultOrbitDistance({width,height,gameplay=false}={}){
   // The target is a close diorama shot: the playable landscape fills the
   // phone viewport and the actor remains a readable focal point.
-  if(gameplay&&width>height&&height>0)return clamp(6.4*height/380,6.4,8.2);
+  if(gameplay&&width>height&&height>0)return 5.5;
   return width>height&&height>0&&height<380?clamp(19.2*height/380,12,19.2):19.2;
 }
 
@@ -13,8 +13,10 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   const defaults={yaw:.02,pitch:.18,distance:defaultOrbitDistance(viewport)};
   let {yaw,pitch,distance}=defaults;
   let followX=target.x;
+  const restingTargetY=target.y;
+  let followY=restingTargetY;
   let manuallyAdjusted=false;
-  const minDistance=8,maxDistance=32,pitchLimit=Math.PI*.5-.015;
+  const minDistance=4.6,maxDistance=32,pitchLimit=Math.PI*.5-.015;
   const pointers=new Map(),events=new AbortController();
   let dragging=false,lastX=0,lastY=0,pinchStartDistance=0,pinchStartCameraDistance=distance;
   const options={signal:events.signal};
@@ -32,13 +34,16 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
     changed();
     return true;
   }
-  function follow(x,dt){
+  function follow(x,dt,verticalOffset=0){
     if(!Number.isFinite(x))return false;
     followX=x;
+    if(Number.isFinite(verticalOffset))followY=restingTargetY+verticalOffset;
     if(!(dt>0))return false;
     const delta=followX-target.x;
-    if(delta===0)return false;
+    const deltaY=followY-target.y;
+    if(delta===0&&deltaY===0)return false;
     target.x=Math.abs(delta)<.0001?followX:target.x+delta*(1-Math.exp(-8*dt));
+    target.y=Math.abs(deltaY)<.0001?followY:target.y+deltaY*(1-Math.exp(-20*dt));
     changed();
     return true;
   }
@@ -76,7 +81,7 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   place();
   return {
     follow,resize,
-    reset(){({yaw,pitch,distance}=defaults);manuallyAdjusted=false;target.x=followX;pointers.clear();dragging=false;pinchStartDistance=0;changed();},
+    reset(){({yaw,pitch,distance}=defaults);manuallyAdjusted=false;target.x=followX;target.y=followY;pointers.clear();dragging=false;pinchStartDistance=0;changed();},
     snapshot:()=>({yaw,pitch,distance,target:{x:target.x,y:target.y,z:target.z}}),
     dispose(){events.abort();pointers.clear();}
   };

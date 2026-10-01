@@ -68,8 +68,10 @@ export function createGrassRimGeometry({THREE,columnRecords,segments=12}){
     const nz=edge.n[1]*(1-s-e)+start[1]*s+end[1]*e;
     const broad=noise(x*6.2+edge.y*1.1,z*6.2-edge.y*.7);
     const torn=noise(x*19.7+17,z*19.7-13);
-    const overhang=.026+.018*broad;
-    const depth=.098+.072*broad+.018*torn;
+    // The reference has a visible compressed grass stock, not a one-pixel
+    // bevel: let the torn lip hang 6–11 cm and drop 13–27 cm below the top.
+    const overhang=.060+.050*broad;
+    const depth=.130+.110*broad+.030*torn;
     const bevel=.013+.008*torn;
     return {
       inner:[x,edge.y+.0007,z],
@@ -111,6 +113,6 @@ export function createGrassRimGeometry({THREE,columnRecords,segments=12}){
   geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
   geometry.computeBoundingBox();geometry.computeBoundingSphere();
   geometry.userData={boundaryEdges:edges.length,segments,triangles:positions.length/9,
-    maxOverhang:.044,maxDepth:.188};
+    maxOverhang:.110,maxDepth:.270};
   return geometry;
 }

@@ -11,7 +11,7 @@ const fogUniforms={
   map:{value:fogTex},
   tint:{value:new THREE.Color(0xe4ebe2)},
   // Thin warm haze keeps the handmade layers visible on small screens.
-  opacity:{value:.055},
+  opacity:{value:.015},
   time:{value:0},
   tDepth:{value:null},
   resolution:{value:new THREE.Vector2(1,1)},
@@ -56,7 +56,7 @@ const fogFragment=`
     float soft=smoothstep(.00035,depthFade,max(delta,0.0));
 
     a *= soft*opacity;
-    if(a<.025) discard;
+    if(a<.002) discard;
 
     gl_FragColor=vec4(paper.rgb*tint,a);
     #include <tonemapping_fragment>

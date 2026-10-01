@@ -10,7 +10,7 @@ const contactShadow=new THREE.Mesh(
   new THREE.PlaneGeometry(1.45,.62),
   new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false,toneMapped:false})
 );
-contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.487,.13);scene.add(contactShadow);
+contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.507,.13);scene.add(contactShadow);
 
 let playerMesh=null,playerMat=null,playerDepthMat=null;
 loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href,t=>{
@@ -67,7 +67,7 @@ function sync(snapshot){
   const changed=!last||last.x!==x||last.y!==y;
   playerMesh.position.set(x,y+1.12,0);
   const surface=terrain.surfaceY(x,0)??.5;
-  contactShadow.position.set(x,surface-.013,-.02);
+  contactShadow.position.set(x,surface+.007,-.02);
   last={x,y,z:0,grounded:!!snapshot.grounded,facing:snapshot.facing??1};
   return changed;
 }

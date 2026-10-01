@@ -30,7 +30,9 @@ export function createOliveFiberMaps({THREE,renderer,flags,loadTexture}){
   const textures=[color,normal,orm,dirtColor,dirtNormal,dirtOrm];
   function setScale(worldUnits){
     const scale=Math.max(.05,Number(worldUnits)||1.4);
-    for(const texture of textures) texture.repeat.set(1/scale,1/scale);
+    for(const texture of [color,normal,orm]) texture.repeat.set(1/scale,1/scale);
+    // Soil is finely compressed pulp rather than the broad flakes of turf.
+    for(const texture of [dirtColor,dirtNormal,dirtOrm]) texture.repeat.set(2/scale,2/scale);
     flags.render=true;
   }
   return {color,normal,orm,dirtColor,dirtNormal,dirtOrm,textures,setScale};

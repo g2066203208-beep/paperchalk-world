@@ -63,9 +63,12 @@ function updateLighting(t){
 
   // Two real directional lights orbit continuously, 180 degrees apart.
   // Nothing is turned on/off at sunset: only their smooth intensities change.
-  const orbitX=18,orbitY=18,orbitBaseY=1.1,orbitZ=-18;
+  const orbitX=18,orbitY=18,orbitBaseY=1.1,orbitZ=-9;
   let sx=-Math.cos(a)*orbitX,sy=orbitBaseY+Math.sin(a)*orbitY,sz=orbitZ;
   let mx=-Math.cos(ma)*orbitX,my=orbitBaseY+Math.sin(ma)*orbitY,mz=orbitZ;
+  // Keep the dawn palette while lifting the key above the tree-line. At the
+  // default dawn the old orbit was only 5 degrees high and never lit the pulp.
+  sy+=7.6*twilight*sunFade;
 
   // Manual control still steers the sun; the moon continues its clock orbit.
   if(state.manualSun){
@@ -80,12 +83,12 @@ function updateLighting(t){
   sun.position.set(sx,sy,sz);
   moon.position.set(mx,my,mz);
 
-  const sunDawn=new THREE.Color(0xff9b5f);
+  const sunDawn=new THREE.Color(0xffdf99);
   const sunSunset=new THREE.Color(0xff654d);
   const sunWarm=state.time<.5?sunDawn:sunSunset;
   const sunDay=new THREE.Color(0xffe8c4);
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
-  sun.intensity=sunFade*(.14+sunUp*2.62+twilight*.96);
+  sun.intensity=sunFade*(.30+sunUp*4.4+twilight*11.0);
 
   moon.color.set(0x72a4ff);
   moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
@@ -113,7 +116,7 @@ function updateLighting(t){
   const ambientWarm=new THREE.Color(0xffd2b8);
   ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.16*sunFade);
 
-  viewFill.intensity=.17+(1-dayMix)*.18+twilight*.08;
+  viewFill.intensity=.62+(1-dayMix)*.10+twilight*.18*sunFade;
   const viewDay=new THREE.Color(0xf7f0e6);
   const viewNight=new THREE.Color(0x88aff0);
   const viewWarm=new THREE.Color(0xffc3a1);
@@ -121,24 +124,24 @@ function updateLighting(t){
 
   const horizonDay=new THREE.Color(0xb9d9e2);
   const horizonNight=new THREE.Color(0x445b88);
-  const horizonWarm=new THREE.Color(0xdf6a83);
-  const horizonGold=new THREE.Color(0xf2a06a);
+  const horizonWarm=new THREE.Color(0xf0b692);
+  const horizonGold=new THREE.Color(0xffde9c);
   const fogColor=horizonNight.clone().lerp(horizonDay,dayMix).lerp(horizonWarm,twilight*.42*sunFade).lerp(horizonGold,twilight*.18*sunFade);
 
   if(state.fog){
-    const density=.0070+twilight*.0022+nightMix*.0014;
+    const density=.013+twilight*.019+nightMix*.0014;
     scene.fog=new THREE.FogExp2(fogColor,density);
   }
 
-  const mistDay=new THREE.Color(0xe4ece3);
+  const mistDay=new THREE.Color(0xf0d6a8);
   const mistNight=new THREE.Color(0x94b4e8);
-  const mistWarm=new THREE.Color(0xe7a99e);
+  const mistWarm=new THREE.Color(0xf3a06d);
   const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
-  fogUniforms.opacity.value=.055+twilight*.025*sunFade+nightMix*.012;
+  fogUniforms.opacity.value=.015+twilight*.010*sunFade+nightMix*.006;
 
   // Dawn rays stay warm, but never wash the pulp layers to white on a phone.
-  renderer.toneMappingExposure=state.tone?(.80+dayMix*.10+twilight*.025):1;
+  renderer.toneMappingExposure=state.tone?(.88+dayMix*.13+twilight*.025):1;
   scene.background.copy(fogColor);
   updateSkyBlend(state.time);
 

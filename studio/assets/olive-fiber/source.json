@@ -1,67 +1,69 @@
 {
-  "name": "Olive fiber + terracotta pulp | mobile terrain derivative v2",
+  "name": "Olive fiber + terracotta pulp | mobile terrain derivative v5",
   "sourceArchive": "Olive_Fiber_Blender_Asset.zip",
   "sourceArchiveSha256": "20d1a68283ae64109223b6103029b3951388664e3954ddd76a4b53832f7a89be",
-  "source": "User-provided Olive Fiber texture set; source sphere render is never used as a texture.",
-  "derivation": "Deterministic 2048px source downsampled to 1024px, periodic edge crossfade, source fiber signal retained. Macro flake relief and warm terracotta dirt derived from source luminance. Normal vectors rebuilt from wrapped height; ORM is linear non-color.",
+  "source": "User-provided Olive Fiber texture set. Base color, normal and roughness structure are retained; the sphere render is never used as a texture.",
+  "derivation": "Deterministic 2048px user texture downsampled to 1024px with Lanczos; top color receives a restrained warm lift. Dirt color is a luminance-preserving terracotta remap of the same layered pulp. Normal vectors are renormalized after resize; ORM remains linear and metalness is zero.",
   "usage": "Olive maps for grass tops and exposed pulp lip; dirt maps for cube sides/bottom. World-space UVs; no baked lighting.",
   "tileWorldUnits": 1.4,
-  "normalStrength": 0.7,
-  "aoIntensity": 0.24,
+  "normalStrength": 0.72,
+  "soilTileWorldUnits": 0.7,
+  "soilNormalStrength": 0.36,
+  "aoIntensity": 0.3,
   "textures": [
     {
       "file": "base-color.webp",
-      "sha256": "7b25546b981e2191debf60f3d7a36565d1545b98d05b9f113c49416bec62a5d4",
+      "sha256": "d30e5820b9abf33949b59a1ae69448104ce8208c48a1c2547971679f7d1a6aa0",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "sRGB olive top pulp base color",
-      "encoding": "WebP quality 93"
+      "role": "sRGB olive layered pulp top base color",
+      "encoding": "WebP quality 95"
     },
     {
       "file": "normal-gl.webp",
-      "sha256": "8e12603776ce4cca4b441935fc598f2b177dcfb8d8775096bf748c9e47efd6ba",
+      "sha256": "bde2b045235b3d19a979c3c6b15029bf293031df1465559916d40a760eb292ff",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear OpenGL +Y top flake normal",
+      "role": "linear OpenGL +Y source pulp flake normal",
       "encoding": "WebP lossless"
     },
     {
       "file": "orm.webp",
-      "sha256": "7fec12fd1a63acc7fa178d9a1c8745748c9a87c4af4a5d0fefe4ca86fc899da8",
+      "sha256": "cd5a21a7b50d852cab1bbfb34adc110f435a61bb4c4aaa4cb9a2ac5071be8ae7",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear top R=AO G=roughness B=metalness",
+      "role": "linear source R=AO G=roughness B=metalness",
       "encoding": "WebP lossless"
     },
     {
       "file": "dirt-color.webp",
-      "sha256": "8c486ecd1319a2a0525587cb5036058341e49b6387ff2543bfcc49124a646973",
+      "sha256": "ae27504f0706203c5ade58a272eadaa05b618f9798286ca79331c8cacdeff74a",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "sRGB warm terracotta dirt pulp base color",
-      "encoding": "WebP quality 93"
+      "role": "sRGB terracotta remap of layered pulp dirt base color",
+      "encoding": "WebP quality 95"
     },
     {
       "file": "dirt-normal-gl.webp",
-      "sha256": "768f75defac61a97de5b1e08f88807c408c0e9c1ec2c578164b045dbf9e053c7",
+      "sha256": "bde2b045235b3d19a979c3c6b15029bf293031df1465559916d40a760eb292ff",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear OpenGL +Y dirt fiber normal",
+      "role": "linear OpenGL +Y source pulp dirt fiber normal",
       "encoding": "WebP lossless"
     },
     {
       "file": "dirt-orm.webp",
-      "sha256": "0e3e0ebaf13667fceff3ad1527dd3b7f4c7b9c9339f42daf6c30a730ec636327",
+      "sha256": "cd5a21a7b50d852cab1bbfb34adc110f435a61bb4c4aaa4cb9a2ac5071be8ae7",
       "dimensions": [
         1024,
         1024
@@ -70,5 +72,5 @@
       "encoding": "WebP lossless"
     }
   ],
-  "totalTextureBytes": 4923842
+  "totalTextureBytes": 5999892
 }

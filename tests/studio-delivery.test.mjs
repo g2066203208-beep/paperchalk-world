@@ -7,7 +7,7 @@ import path from 'node:path';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 
-test('studio rendering retains the baseline GLSL programs verbatim',async()=>{
+test('studio retains baseline GLSL outside the approved sky, fog threshold and final composite changes',async()=>{
   const original=await readFile(path.join(root,'src/main.js'),'utf8');
   const names=(await readdir(path.join(root,'studio/rendering'))).filter(n=>n.endsWith('.js'));
   const sources=await Promise.all(names.map(n=>readFile(path.join(root,'studio/rendering',n),'utf8')));
@@ -15,22 +15,52 @@ test('studio rendering retains the baseline GLSL programs verbatim',async()=>{
   const baseline=shaders(original),actual=sources.flatMap(shaders);
   assert.ok(baseline.length>=10,'expected original shader programs');
   assert.equal(actual.length,baseline.length,'do not silently omit or add a visual shader');
-  // The composite pass intentionally gained the one missing post-process
-  // stage: HDR scene + shafts are tone-mapped once before sRGB conversion.
-  // Normalize that single include while retaining the exact baseline check for
-  // every other shader and every other line of the composite program.
-  const normalize=shader=>shader.replace(/\r\n/g,'\n');
+  // The thinner fog now falls below the old discard threshold. Normalize only
+  // that threshold; the rest of its depth-aware shader stays baseline exact.
+  const normalize=shader=>{
+    let text=shader.replace(/\r\n/g,'\n');
+    if(text.includes('uniform float depthFade;'))text=text.replace('if(a<.002) discard;','if(a<.025) discard;');
+    if(text.includes('uniform sampler2D sunLightDepth;'))text=text.replace('smoothstep(3.5,8.0,t)','smoothstep(.8,3.0,t)');
+    return text;
+  };
   const normalizedActual=actual.map(normalize);
   for(const shader of baseline){
-    // Only the final scene-color composite is intentionally different: it now
-    // inserts tone mapping before the existing color-space conversion.
-    if(shader.includes('uniform sampler2D sceneColor'))continue;
+    // Sky palette and the final HDR display composite have separate checks.
+    if(shader.includes('uniform sampler2D sceneColor')||shader.includes('uniform float time01'))continue;
     assert.ok(normalizedActual.includes(normalize(shader)),'baseline GLSL program changed');
   }
   const composite=actual.find(shader=>shader.includes('uniform sampler2D sceneColor'))||'';
   assert.match(composite,/gl_FragColor=vec4\(base\.rgb\+rays\+glow,base\.a\);/);
   assert.match(composite,/#include <tonemapping_fragment>/);
   assert.match(composite,/#include <colorspace_fragment>/);
+});
+
+test('art-directed sky preserves the baseline day-night timing and its non-twilight palettes',async()=>{
+  const baseline=await readFile(path.join(root,'src/main.js'),'utf8');
+  const source=await readFile(path.join(root,'studio/rendering/sky.js'),'utf8');
+  const normalize=text=>text.replace(/\r\n/g,'\n');
+  const timing=text=>text.match(/float wn=0\.0,wd=0\.0,wday=0\.0,ws=0\.0;[\s\S]*?(?=\s*vec3 night=)/)?.[0];
+  assert.ok(timing(source),'day-night blend weights must remain present');
+  assert.equal(normalize(timing(source)),normalize(timing(baseline)),'art changes must not change the day-night clock');
+  for(const palette of ['night','day','sunset']){
+    const pattern=new RegExp('vec3 '+palette+'=vertical3\\([\\s\\S]*?\\);');
+    assert.equal(normalize(source.match(pattern)?.[0]||''),normalize(baseline.match(pattern)?.[0]||''),palette+' palette changed');
+  }
+  const skyFragment=source.slice(source.indexOf('fragmentShader:`'),source.indexOf('const sky=new'));
+  assert.match(skyFragment,/col=night\*wn\+dawn\*wd\+day\*wday\+sunset\*ws/);
+  assert.match(skyFragment,/gl_FragColor=vec4\(col,1\.0\)/);
+  assert.equal((skyFragment.match(/#include <colorspace_fragment>/g)||[]).length,1);
+  assert.doesNotMatch(skyFragment,/#include <tonemapping_fragment>/,'sky must not add a second HDR display transform');
+});
+
+test('thin fog keeps its depth fade and survives the alpha discard threshold',async()=>{
+  const source=await readFile(path.join(root,'studio/rendering/fog.js'),'utf8');
+  const opacity=Number(source.match(/opacity:\{value:([.\d]+)\}/)?.[1]);
+  const threshold=Number(source.match(/if\(a<([.\d]+)\) discard/)?.[1]);
+  assert.ok(opacity>0&&opacity<.05,'fog remains a thin veil');
+  assert.ok(threshold>0&&threshold<opacity*.25,'opacity must not be discarded wholesale');
+  assert.match(source,/a \*= soft\*opacity/,'geometry intersections still use depth fading');
+  assert.match(source,/depthWrite:false/,'thin fog must not occlude the remaining scene');
 });
 
 test('volumetric output keeps HDR intermediate and one final color transform',async()=>{
@@ -42,6 +72,9 @@ test('volumetric output keeps HDR intermediate and one final color transform',as
   assert.equal((composite.match(/#include <tonemapping_fragment>/g)||[]).length,1,'composite should tone-map exactly once');
   assert.equal((composite.match(/#include <colorspace_fragment>/g)||[]).length,1,'composite should convert to sRGB exactly once');
   assert.match(source,/if\(!HDR_ENABLED\)\{[\s\S]*?renderer\.render\(scene,camera\);/,'unsupported targets must fall back to the regular renderer output');
+  assert.match(source,/nearFade=smoothstep\(3\.5,8\.0,t\)/,'the player and close paper surfaces stay clear of the distant volumetric haze');
+  assert.match(source,/object\.isMesh&&object\.visible&&!object\.castShadow/,'volume shadows use the same caster set as the surface shadows');
+  assert.match(source,/for\(const object of nonCasters\)object\.visible=true/,'temporary caster visibility is restored');
 });
 
 test('relative module and asset paths resolve under a Pages project prefix',async()=>{

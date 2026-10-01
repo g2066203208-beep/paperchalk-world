@@ -62,9 +62,9 @@ const skyMat=new THREE.ShaderMaterial({
         vec3(.29,.37,.54),y
       );
       vec3 dawn=vertical3(
-        vec3(.28,.29,.49),
-        vec3(.58,.44,.65),
-        vec3(.94,.73,.60),y
+        vec3(.34,.24,.48),
+        vec3(.78,.37,.59),
+        vec3(.99,.61,.30),y
       );
       vec3 day=vertical3(
         vec3(.34,.61,.82),
@@ -78,6 +78,14 @@ const skyMat=new THREE.ShaderMaterial({
       );
 
       vec3 col=night*wn+dawn*wd+day*wday+sunset*ws;
+
+      // A handmade diorama has a warm sun-side horizon and a pink-violet
+      // paper sky on the opposite side; a purely vertical ramp reads flat.
+      float side=clamp(vSkyPos.x/22.0*.5+.5,0.0,1.0);
+      float horizonBand=smoothstep(.10,.72,1.0-abs(y-.50)*2.0);
+      vec3 warmSide=vec3(1.0,.76,.32);
+      vec3 roseSide=vec3(.70,.28,.56);
+      col=mix(col,mix(warmSide,roseSide,side),horizonBand*(wd*.88+ws*.30));
 
       // Original-colour horizon glow only; no texture blur.
       float horizon=pow(max(0.0,1.0-abs(y-.48)*2.0),3.0);

@@ -73,7 +73,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidate,viewport:size});
   const materials=createPaperMaterials({THREE,renderer});
   const terrain=createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig});
-  const forest=createForest({THREE,scene,...materials});
+  const forest=createForest({THREE,scene,...materials,...terrain.pulpSets});
   const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture});
   const lights=createLights({THREE,scene,target});
   const celestials=createSky({THREE,scene,renderer,camera});
@@ -128,7 +128,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   dt=Math.min(.05,Math.max(0,Number(dt)||0));
   now=Number.isFinite(now)?now:performance.now();
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
-  orbitCamera.follow(lastSnapshot.x,dt);
+  orbitCamera.follow(lastSnapshot.x,dt,lastSnapshot.y-.5);
   const playerMesh=actor.playerMesh;
   frameCalls++;
 
