@@ -2,7 +2,9 @@ import {clamp} from './math.js';
 
 /** Keep the Demo framing except where a short landscape stage hides its detail. */
 export function defaultOrbitDistance({width,height,gameplay=false}={}){
-  if(gameplay&&width>height&&height>0)return clamp(15*height/380,11,18);
+  // The target is a close diorama shot: the playable landscape fills the
+  // phone viewport and the actor remains a readable focal point.
+  if(gameplay&&width>height&&height>0)return clamp(8.4*height/380,11,14);
   return width>height&&height>0&&height<380?clamp(19.2*height/380,12,19.2):19.2;
 }
 
