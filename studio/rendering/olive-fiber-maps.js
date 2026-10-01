@@ -31,8 +31,9 @@ export function createOliveFiberMaps({THREE,renderer,flags,loadTexture}){
   function setScale(worldUnits){
     const scale=Math.max(.05,Number(worldUnits)||1.4);
     for(const texture of [color,normal,orm]) texture.repeat.set(1/scale,1/scale);
-    // Soil is finely compressed pulp rather than the broad flakes of turf.
-    for(const texture of [dirtColor,dirtNormal,dirtOrm]) texture.repeat.set(2/scale,2/scale);
+    // Keep the compressed fibres, but let their mid-sized torn islands survive
+    // a phone-sized wall. Doubling this repeat erased them into uniform clay.
+    for(const texture of [dirtColor,dirtNormal,dirtOrm]) texture.repeat.set(1.05/scale,1.05/scale);
     flags.render=true;
   }
   return {color,normal,orm,dirtColor,dirtNormal,dirtOrm,textures,setScale};

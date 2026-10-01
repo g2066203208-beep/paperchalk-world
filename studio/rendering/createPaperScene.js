@@ -15,22 +15,22 @@ import {createActor} from './actor.js';
 import {createOrbitCamera} from './orbit-camera.js';
 import {disposeSceneResources} from './resources.js';
 
-const FEATURES=['sky','layers','shadow','fog','tone','random','bounce','godrays'];
+const FEATURES=['sky','layers','shadow','fog','tone','random','bounce','godrays','ao'];
 const PRESETS={dawn:.27,noon:.5,sunset:.73,night:0};
 
 export function createPaperScene({container,onStatus=()=>{}}={}){
   if(!container||typeof container.appendChild!=='function')throw new TypeError('Paper scene requires a container element.');
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
-  const flags={render:true,shadow:true,depth:true,volumeShadow:true};
-  const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
+  const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
+  const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
   // The layered pulp flakes are intentionally broad enough to read on a
   // phone screen; keep the diagnostic control available for finer repeats.
   const paperConfig={scale:1.4,normal:.72,height:0,blend:0};
   const pending=[],pendingRejects=new Set(),loadedTextures=new Set();
   const events=new AbortController();
   function status(state,message,error){onStatus({state,message,...(error?{error}: {})});}
-  function invalidate(){flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;}
+  function invalidate(){flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;}
   function getSize(){return {width:Math.max(1,container.clientWidth),height:Math.max(1,container.clientHeight),gameplay:document.body.classList.contains('game-mode')};}
   function loadTexture(url,onLoad){
     let resolve,reject;
@@ -57,7 +57,9 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.domElement.style.display='block';
   renderer.domElement.setAttribute('aria-label','可环绕观察的纸艺世界');
   renderer.shadowMap.enabled=true;
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  // PCF honours the light's filter radius: the former fixed soft kernel left
+  // razor-sharp repeated trunk stripes across the close mobile composition.
+  renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate=false;
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
@@ -138,6 +140,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     flags.shadow=true;
     flags.depth=true;
     flags.volumeShadow=true;
+    flags.ao=true;
   }
 
   if(timeTransition.active&&!state.auto){
@@ -217,7 +220,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
 
   renderer.info.reset();
   updateDepthTexture();
-  if(state.godrays)renderWithVolumetrics();
+  if(state.godrays||state.ao)renderWithVolumetrics();
   else{
     renderer.setRenderTarget(null);
     renderer.render(scene,camera);

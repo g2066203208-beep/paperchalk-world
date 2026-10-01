@@ -1,5 +1,6 @@
 // Paperchalk Demo v12.32 visual baseline. Extracted without changing shader or art parameters.
 import {smoothstep} from './math.js';
+import {createContactAO} from './contact-ao.js';
 
 // The volumetric path renders the scene once into an HDR buffer before adding
 // the shafts.  Three.js does not tone-map ordinary render targets, so an
@@ -25,6 +26,7 @@ const {forestMist}=fog;
 const {contactShadow}=actor;
 const fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const fsGeo=new THREE.PlaneGeometry(2,2);
+const contactAO=createContactAO({THREE,renderer,camera,screenCamera:fsCamera,screenGeometry:fsGeo});
 
 let sceneTarget=null,volumeTarget=null;
 let sunVolumeShadowTarget=null,moonVolumeShadowTarget=null;
@@ -180,7 +182,9 @@ const compositeUniforms={
   sceneColor:{value:null},
   volumeColor:{value:null},
   volumeTexel:{value:new THREE.Vector2(1,1)},
-  volumeStrength:{value:.24}
+  volumeStrength:{value:.24},
+  aoTexture:{value:null},sceneDepth:{value:null},aoTexel:{value:new THREE.Vector2(1,1)},
+  cameraNearFar:{value:new THREE.Vector2(camera.near,camera.far)},aoEnabled:{value:1}
 };
 const compositeMat=new THREE.ShaderMaterial({
   uniforms:compositeUniforms,
@@ -199,6 +203,31 @@ const compositeMat=new THREE.ShaderMaterial({
     uniform sampler2D volumeColor;
     uniform vec2 volumeTexel;
     uniform float volumeStrength;
+    uniform sampler2D aoTexture;
+    uniform sampler2D sceneDepth;
+    uniform vec2 aoTexel;
+    uniform vec2 cameraNearFar;
+    uniform float aoEnabled;
+    float contactVisibility(){
+      if(aoEnabled<.5)return 1.0;
+      float depth=texture2D(sceneDepth,vUv).x;
+      if(depth>=.99999)return 1.0;
+      float viewDepth=-(cameraNearFar.x*cameraNearFar.y)/((cameraNearFar.y-cameraNearFar.x)*depth-cameraNearFar.y);
+      vec2 grid=vUv/aoTexel-.5;
+      vec2 corner=(floor(grid)+.5)*aoTexel;
+      vec2 f=fract(grid);
+      float sum=0.0,weight=0.0;
+      // Depth-aware bilinear reconstruction keeps the low-resolution AO from
+      // bleeding off the cutout character or over a foreground paper edge.
+      for(int i=0;i<4;i++){
+        vec2 offset=vec2(mod(float(i),2.0),floor(float(i)/2.0));
+        vec2 sampleValue=textureLod(aoTexture,corner+offset*aoTexel,0.0).rg;
+        vec2 bilinear=mix(vec2(1.0)-f,f,offset);
+        float w=bilinear.x*bilinear.y*exp(-abs(sampleValue.y-viewDepth)/max(.018,viewDepth*.004));
+        sum+=sampleValue.x*w;weight+=w;
+      }
+      return weight>.00001?mix(1.0,sum/weight,.85):1.0;
+    }
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
       vec3 core=texture2D(volumeColor,vUv).rgb;
@@ -216,7 +245,7 @@ const compositeMat=new THREE.ShaderMaterial({
       halo=max(halo-vec3(.012),vec3(0.0));
       vec3 glow=halo*.30*volumeStrength;
 
-      gl_FragColor=vec4(base.rgb+rays+glow,base.a);
+      gl_FragColor=vec4(base.rgb*contactVisibility()+rays+glow,base.a);
       #include <tonemapping_fragment>
       #include <colorspace_fragment>
     }
@@ -252,8 +281,15 @@ function resizeVolumetricTargets(){
     minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
     format:THREE.RGBAFormat,type:HDR_ENABLED?THREE.HalfFloatType:THREE.UnsignedByteType
   });
+  // Canvas antialiasing does not apply inside the HDR render target. Resolve a
+  // small hardware multisample buffer before AO and final output, including its
+  // depth, so cut-paper silhouettes retain smooth edges without a blur pass.
+  sceneTarget.samples=HDR_ENABLED?Math.min(2,renderer.capabilities.maxSamples??2):0;
   sceneTarget.depthTexture=new THREE.DepthTexture(w,h);
-  sceneTarget.depthTexture.type=THREE.UnsignedShortType;
+  sceneTarget.depthTexture.type=THREE.UnsignedIntType;
+  sceneTarget.depthTexture.minFilter=sceneTarget.depthTexture.magFilter=THREE.NearestFilter;
+  contactAO.resize(w,h);
+  flags.ao=true;
 
   if(volumeTarget)volumeTarget.dispose();
   volumeTarget=new THREE.WebGLRenderTarget(vw,vh,{
@@ -270,6 +306,9 @@ function resizeVolumetricTargets(){
   compositeUniforms.sceneColor.value=sceneTarget.texture;
   compositeUniforms.volumeColor.value=volumeTarget.texture;
   compositeUniforms.volumeTexel.value.set(1/vw,1/vh);
+  compositeUniforms.sceneDepth.value=sceneTarget.depthTexture;
+  compositeUniforms.aoTexture.value=contactAO.texture;
+  compositeUniforms.aoTexel.value.copy(contactAO.texel);
 }
 const HDR_ENABLED=supportsHdrRenderTarget(renderer);
 resizeVolumetricTargets();
@@ -387,14 +426,19 @@ function renderWithVolumetrics(){
   renderer.clear();
   renderer.render(scene,camera);
 
-  updateVolumetricShadow(false);
-  volumeUniforms.cameraProjectionInv.value.copy(camera.projectionMatrixInverse);
-  volumeUniforms.cameraMatrixWorld.value.copy(camera.matrixWorld);
-  volumeUniforms.cameraPos.value.copy(camera.position);
-
-  renderer.setRenderTarget(volumeTarget);
-  renderer.clear();
-  renderer.render(volumeScene,fsCamera);
+  if(state.ao&&flags.ao){contactAO.render(sceneTarget.depthTexture);flags.ao=false;}
+  compositeUniforms.aoEnabled.value=state.ao?1:0;
+  compositeUniforms.cameraNearFar.value.set(camera.near,camera.far);
+  compositeUniforms.volumeStrength.value=state.godrays?.24:0;
+  if(state.godrays){
+    updateVolumetricShadow(false);
+    volumeUniforms.cameraProjectionInv.value.copy(camera.projectionMatrixInverse);
+    volumeUniforms.cameraMatrixWorld.value.copy(camera.matrixWorld);
+    volumeUniforms.cameraPos.value.copy(camera.position);
+    renderer.setRenderTarget(volumeTarget);
+    renderer.clear();
+    renderer.render(volumeScene,fsCamera);
+  }
 
   renderer.setRenderTarget(null);
   renderer.render(compositeScene,fsCamera);
@@ -405,8 +449,9 @@ return {volumeUniforms,volumeLightTarget,updateVolumetricSettings,renderWithVolu
 resize:resizeVolumetricTargets,dispose(){
   sceneTarget?.dispose();volumeTarget?.dispose();sunVolumeShadowTarget?.dispose();moonVolumeShadowTarget?.dispose();
   volumeMat.dispose();compositeMat.dispose();volumeDepthMat.dispose();fsGeo.dispose();
+  contactAO.dispose();
 },stats(){return {
   steps:volumeUniforms.steps.value,scale:VOLUME_SCALE,shadowSize:VOLUME_SHADOW_SIZE,
-  hdr:HDR_ENABLED,sceneTargetType:HDR_ENABLED?'half-float':'rgba8-fallback'
+  hdr:HDR_ENABLED,sceneTargetType:HDR_ENABLED?'half-float':'rgba8-fallback',ao:{supported:HDR_ENABLED,...contactAO.stats()}
 }}};
 }

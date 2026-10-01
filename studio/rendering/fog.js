@@ -20,9 +20,12 @@ const fogUniforms={
 
 const fogVertex=`
   varying vec2 vUv;
+  varying vec3 vMistWorld;
   void main(){
     vUv=uv;
-    vec4 mvPosition=modelViewMatrix*instanceMatrix*vec4(position,1.0);
+    vec4 worldPosition=modelMatrix*instanceMatrix*vec4(position,1.0);
+    vMistWorld=worldPosition.xyz;
+    vec4 mvPosition=viewMatrix*worldPosition;
     gl_Position=projectionMatrix*mvPosition;
   }
 `;
@@ -36,6 +39,7 @@ const fogFragment=`
   uniform vec2 resolution;
   uniform float depthFade;
   varying vec2 vUv;
+  varying vec3 vMistWorld;
 
   void main(){
     // Gentle wind ripple inside the paper strip.
@@ -55,10 +59,17 @@ const fogFragment=`
     float delta=sceneDepth-gl_FragCoord.z;
     float soft=smoothstep(.00035,depthFade,max(delta,0.0));
 
-    a *= soft*opacity;
+    // Haze belongs between forest layers. Foreground cards used to wash over
+    // the character and erase precisely the small fibre contrast we need.
+    float backgroundLayer=1.0-smoothstep(-12.0,-.8,vMistWorld.z);
+    float layerOpacity=.08+backgroundLayer*1.42;
+    float heightFalloff=1.0-smoothstep(1.45,3.8,vMistWorld.y);
+    a *= soft*opacity*layerOpacity*heightFalloff;
     if(a<.002) discard;
 
-    gl_FragColor=vec4(paper.rgb*tint,a);
+    float sunSide=1.0-smoothstep(-7.0,6.0,vMistWorld.x);
+    vec3 localTint=mix(tint*vec3(.96,.96,1.04),tint*vec3(1.045,1.0,.90),sunSide);
+    gl_FragColor=vec4(paper.rgb*localTint,a);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -98,8 +109,8 @@ function seedFogData(){
     const spread=lane===0?7.5:lane===1?11.0:14.5;
     fogBankData.push({
       baseX:(r()-.5)*spread*1.8,
-      baseZ: lane===0 ? 1.8+r()*1.5 : lane===1 ? -3.8+r()*2.8 : -8.8+r()*4.2,
-      baseY: lane===0 ? .78+r()*.45 : lane===1 ? .92+r()*.65 : 1.05+r()*.8,
+      baseZ: lane===0 ? -1.4-r()*1.5 : lane===1 ? -5.8+r()*1.7 : -11.8+r()*2.8,
+      baseY: lane===0 ? .64+r()*.38 : lane===1 ? .85+r()*.55 : 1.10+r()*.75,
       width:(lane===0?3.8:lane===1?5.4:7.0)+r()*(lane===0?2.3:3.2),
       height:(lane===0?1.2:1.5)+r()*(lane===2?1.2:.8),
       speed:(lane===0?.22:lane===1?.13:.075)*(r()>.5?1:-1),
@@ -110,7 +121,7 @@ function seedFogData(){
   for(let i=0;i<GROUND_COUNT;i++){
     groundFogData.push({
       baseX:(r()-.5)*13,
-      baseZ:(r()-.5)*6,
+      baseZ:-2-r()*8,
       baseY:.49+r()*.30,
       width:4.2+r()*4.4,
       depth:2.0+r()*2.8,

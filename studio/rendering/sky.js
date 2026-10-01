@@ -92,6 +92,22 @@ const skyMat=new THREE.ShaderMaterial({
       col+=horizon*vec3(.12,.025,.055)*ws*.55*drama;
       col+=horizon*vec3(.07,.025,.018)*wd*.20*drama;
 
+      // Far paper banks break up the empty strip under the tree canopy. They
+      // remain fixed in world direction, behind every real tree and surface.
+      // Three overlapping silhouettes are deliberately broad, not noisy clouds.
+      vec3 skyDir=normalize(vSkyPos);
+      float azimuth=atan(skyDir.x,-skyDir.z);
+      float bank0=.025+.025*sin(azimuth*8.0+.5)+.012*sin(azimuth*21.0+1.0);
+      float bank1=-.004+.022*sin(azimuth*10.0+2.2)+.009*sin(azimuth*25.0);
+      float bank2=-.036+.018*sin(azimuth*12.0-.9)+.011*sin(azimuth*19.0+.8);
+      float twilightBanks=wd+ws*.65;
+      vec3 farPaper=mix(vec3(.91,.61,.39),vec3(.64,.34,.47),side);
+      vec3 midPaper=mix(vec3(.86,.53,.30),vec3(.61,.32,.43),side);
+      vec3 nearPaper=mix(vec3(.79,.51,.30),vec3(.53,.31,.39),side);
+      col=mix(col,farPaper,(1.0-smoothstep(bank0-.008,bank0+.008,skyDir.y))*.28*twilightBanks);
+      col=mix(col,midPaper,(1.0-smoothstep(bank1-.006,bank1+.006,skyDir.y))*.27*twilightBanks);
+      col=mix(col,nearPaper,(1.0-smoothstep(bank2-.005,bank2+.005,skyDir.y))*.24*twilightBanks);
+
       gl_FragColor=vec4(col,1.0);
       #include <colorspace_fragment>
     }

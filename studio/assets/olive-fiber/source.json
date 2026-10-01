@@ -1,19 +1,19 @@
 {
-  "name": "Olive fiber + terracotta pulp | mobile terrain derivative v5",
+  "name": "Compressed olive and terracotta paper pulp | mobile terrain derivative v6",
   "sourceArchive": "Olive_Fiber_Blender_Asset.zip",
   "sourceArchiveSha256": "20d1a68283ae64109223b6103029b3951388664e3954ddd76a4b53832f7a89be",
   "source": "User-provided Olive Fiber texture set. Base color, normal and roughness structure are retained; the sphere render is never used as a texture.",
-  "derivation": "Deterministic 2048px user texture downsampled to 1024px with Lanczos; top color receives a restrained warm lift. Dirt color is a luminance-preserving terracotta remap of the same layered pulp. Normal vectors are renormalized after resize; ORM remains linear and metalness is zero.",
+  "derivation": "Deterministic periodic filtering of user-provided 2048px color and +Y normal maps to 1024px. Reduced broad normal lobes, retained source fibers and layer boundaries, added seeded short fiber and micropore detail. Soil has its own reduced flake normal; no sphere render, photographed lighting or reference screenshot is sampled. ORM is authored micro-pore AO, roughness at least .94, zero metalness.",
   "usage": "Olive maps for grass tops and exposed pulp lip; dirt maps for cube sides/bottom. World-space UVs; no baked lighting.",
   "tileWorldUnits": 1.4,
   "normalStrength": 0.72,
-  "soilTileWorldUnits": 0.7,
-  "soilNormalStrength": 0.36,
-  "aoIntensity": 0.3,
+  "soilTileWorldUnits": 1.3333333333333333,
+  "soilNormalStrength": 0.6624,
+  "aoIntensity": 0.38,
   "textures": [
     {
       "file": "base-color.webp",
-      "sha256": "d30e5820b9abf33949b59a1ae69448104ce8208c48a1c2547971679f7d1a6aa0",
+      "sha256": "8d6a9e132292c6439d2c7df2b3c97673159248d366a1b00c6b75c60b23deee79",
       "dimensions": [
         1024,
         1024
@@ -23,27 +23,27 @@
     },
     {
       "file": "normal-gl.webp",
-      "sha256": "bde2b045235b3d19a979c3c6b15029bf293031df1465559916d40a760eb292ff",
+      "sha256": "8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear OpenGL +Y source pulp flake normal",
+      "role": "linear tangent-space OpenGL +Y grass fiber normal; blue channel faces forward",
       "encoding": "WebP lossless"
     },
     {
       "file": "orm.webp",
-      "sha256": "cd5a21a7b50d852cab1bbfb34adc110f435a61bb4c4aaa4cb9a2ac5071be8ae7",
+      "sha256": "1445a649af0cb1b29c1bfa81e6fd3a6e9b0ca725b2bc8f014b27b2231ae3aa56",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear source R=AO G=roughness B=metalness",
+      "role": "linear R=micropore AO G=high paper roughness B=zero metalness",
       "encoding": "WebP lossless"
     },
     {
       "file": "dirt-color.webp",
-      "sha256": "ae27504f0706203c5ade58a272eadaa05b618f9798286ca79331c8cacdeff74a",
+      "sha256": "5bf80845da8077530a6495607969ccf7ca5698c0a008031707ffeff31da359c4",
       "dimensions": [
         1024,
         1024
@@ -53,24 +53,24 @@
     },
     {
       "file": "dirt-normal-gl.webp",
-      "sha256": "bde2b045235b3d19a979c3c6b15029bf293031df1465559916d40a760eb292ff",
+      "sha256": "5d5567efe3a336bde42263f0855208e7e144608225a147afe5928af3f95cf313",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear OpenGL +Y source pulp dirt fiber normal",
+      "role": "linear tangent-space OpenGL +Y compressed soil fiber normal; blue channel faces forward",
       "encoding": "WebP lossless"
     },
     {
       "file": "dirt-orm.webp",
-      "sha256": "cd5a21a7b50d852cab1bbfb34adc110f435a61bb4c4aaa4cb9a2ac5071be8ae7",
+      "sha256": "b536657d2c7c10f6a1171af932d14d05bab3ad816c302a4a1aecc076f8077de3",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear dirt R=AO G=roughness B=metalness",
+      "role": "linear R=micropore AO G=high paper roughness B=zero metalness",
       "encoding": "WebP lossless"
     }
   ],
-  "totalTextureBytes": 5999892
+  "totalTextureBytes": 6973540
 }

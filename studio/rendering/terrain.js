@@ -1,6 +1,6 @@
 /** Culled collision cubes dressed with layered pulp and torn turf edges. */
 import {createOliveFiberMaps} from './olive-fiber-maps.js';
-import {createGrassRimGeometry} from './terrain-geometry.js';
+import {createGrassRimGeometry,createBeveledTerrainGeometry} from './terrain-geometry.js';
 import {createTerrainDressing} from './terrain-dressing.js';
 
 export function createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig}){
@@ -13,22 +13,25 @@ const dirtColor=olive.dirtColor??olive.color;
 const dirtNormal=olive.dirtNormal??olive.normal;
 const dirtOrm=olive.dirtOrm??olive.orm;
 
-const terrainDirtMat=new THREE.MeshStandardMaterial({
+const terrainDirtMat=new THREE.MeshPhysicalMaterial({
   color:0xffffff,map:dirtColor,normalMap:dirtNormal,
   normalScale:new THREE.Vector2(.65,.65),roughnessMap:dirtOrm,
-  aoMap:dirtOrm,aoMapIntensity:.25,roughness:1,metalness:0,side:THREE.FrontSide
+  aoMap:dirtOrm,aoMapIntensity:.42,roughness:1,metalness:0,
+  specularIntensity:.20,ior:1.38,sheen:.055,sheenColor:0xd6b996,sheenRoughness:1,
+  side:THREE.FrontSide
 });
 terrainDirtMat.name='terrain-dirt-fibrous-pulp';
-const terrainTopMat=new THREE.MeshStandardMaterial({
+const terrainTopMat=new THREE.MeshPhysicalMaterial({
   color:0xffffff,
   map:olive.color,
   normalMap:olive.normal,
   normalScale:new THREE.Vector2(.85,.85),
   roughnessMap:olive.orm,
   aoMap:olive.orm,
-  aoMapIntensity:.3,
+  aoMapIntensity:.38,
   roughness:1,
   metalness:0,
+  specularIntensity:.18,ior:1.38,sheen:.07,sheenColor:0xc7c79a,sheenRoughness:1,
   side:THREE.FrontSide
 });
 terrainTopMat.name='terrain-grass-olive-fiber';
@@ -39,10 +42,7 @@ terrain.name='terrain-layered-paper-pulp-plateaus';
 scene.add(terrain);
 
 const columnRecords=[];
-const terrainVoxels=new Set();
 let terrainBlockCount=0;
-
-function voxelKey(x,y,z){return x+','+y+','+z}
 
 for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   let h=0;
@@ -60,107 +60,15 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
   }
 
   columnRecords.push({x,z,h,columnIndex:columnRecords.length});
-  for(let y=0;y<=h;y++){
-    terrainVoxels.add(voxelKey(x,y,z));
-    terrainBlockCount++;
-  }
+  terrainBlockCount+=h+1;
 }
 
 
 
-const HALF=.5;
-const VOXEL_FACES=[
-  // +X
-  {d:[ 1, 0, 0],n:[ 1, 0, 0],top:false,c:[
-    [ HALF,-HALF,-HALF],[ HALF, HALF,-HALF],[ HALF, HALF, HALF],[ HALF,-HALF, HALF]
-  ]},
-  // -X
-  {d:[-1, 0, 0],n:[-1, 0, 0],top:false,c:[
-    [-HALF,-HALF, HALF],[-HALF, HALF, HALF],[-HALF, HALF,-HALF],[-HALF,-HALF,-HALF]
-  ]},
-  // +Y grass top
-  {d:[ 0, 1, 0],n:[ 0, 1, 0],top:true,c:[
-    [-HALF, HALF, HALF],[ HALF, HALF, HALF],[ HALF, HALF,-HALF],[-HALF, HALF,-HALF]
-  ]},
-  // -Y dirt underside
-  {d:[ 0,-1, 0],n:[ 0,-1, 0],top:false,c:[
-    [-HALF,-HALF,-HALF],[ HALF,-HALF,-HALF],[ HALF,-HALF, HALF],[-HALF,-HALF, HALF]
-  ]},
-  // +Z
-  {d:[ 0, 0, 1],n:[ 0, 0, 1],top:false,c:[
-    [ HALF,-HALF, HALF],[ HALF, HALF, HALF],[-HALF, HALF, HALF],[-HALF,-HALF, HALF]
-  ]},
-  // -Z
-  {d:[ 0, 0,-1],n:[ 0, 0,-1],top:false,c:[
-    [-HALF,-HALF,-HALF],[-HALF, HALF,-HALF],[ HALF, HALF,-HALF],[ HALF,-HALF,-HALF]
-  ]}
-];
-
-const triOrder=[0,1,2,0,2,3];
-const dirtPos=[],dirtNorm=[],dirtUv=[];
-const topPos=[],topNorm=[],topUv=[];
-let terrainVisibleFaceCount=0;
-
-function worldUvForVoxelFace(px,py,pz,n){
-  if(Math.abs(n[1])>.5){
-    return n[1]>0?[px,-pz]:[px,pz];
-  }
-  if(Math.abs(n[0])>.5){
-    return n[0]>0?[-pz,py]:[pz,py];
-  }
-  return n[2]>0?[px,py]:[-px,py];
-}
-
-function emitVoxelFace(x,y,z,face){
-  const pos=face.top?topPos:dirtPos;
-  const nor=face.top?topNorm:dirtNorm;
-  const uv=face.top?topUv:dirtUv;
-
-  for(const qi of triOrder){
-    const p=face.c[qi];
-    const px=x+p[0],py=y+p[1],pz=z+p[2];
-    const tuv=worldUvForVoxelFace(px,py,pz,face.n);
-    pos.push(px,py,pz);
-    nor.push(face.n[0],face.n[1],face.n[2]);
-    uv.push(tuv[0],tuv[1]);
-  }
-  terrainVisibleFaceCount++;
-}
-
-for(const rec of columnRecords){
-  for(let y=0;y<=rec.h;y++){
-    for(const face of VOXEL_FACES){
-      const nx=rec.x+face.d[0];
-      const ny=y+face.d[1];
-      const nz=rec.z+face.d[2];
-      if(!terrainVoxels.has(voxelKey(nx,ny,nz))){
-        emitVoxelFace(rec.x,y,rec.z,face);
-      }
-    }
-  }
-}
-
-const terrainSurfaceGeo=new THREE.BufferGeometry();
-terrainSurfaceGeo.setAttribute(
-  'position',
-  new THREE.Float32BufferAttribute([...dirtPos,...topPos],3)
-);
-terrainSurfaceGeo.setAttribute(
-  'normal',
-  new THREE.Float32BufferAttribute([...dirtNorm,...topNorm],3)
-);
-terrainSurfaceGeo.setAttribute(
-  'uv',
-  new THREE.Float32BufferAttribute([...dirtUv,...topUv],2)
-);
-
-const dirtVertexCount=dirtPos.length/3;
-const topVertexCount=topPos.length/3;
-terrainSurfaceGeo.clearGroups();
-terrainSurfaceGeo.addGroup(0,dirtVertexCount,0);
-terrainSurfaceGeo.addGroup(dirtVertexCount,topVertexCount,1);
-terrainSurfaceGeo.computeBoundingBox();
-terrainSurfaceGeo.computeBoundingSphere();
+// Render geometry gets narrow convex chamfers; columnRecords remain the exact
+// collision contract. Coplanar tiles merge visually with uninterrupted UVs.
+const terrainSurfaceGeo=createBeveledTerrainGeometry({THREE,columnRecords});
+const terrainVisibleFaceCount=terrainSurfaceGeo.userData.visibleFaces;
 
 const terrainBlocks=new THREE.Mesh(
   terrainSurfaceGeo,
@@ -174,7 +82,17 @@ terrain.add(terrainBlocks);
 // One merged boundary mesh, inherited visibility from the base terrain. Its
 // grass skirt is render-only: footsteps and platform collisions stay exact.
 const grassRimGeometry=createGrassRimGeometry({THREE,columnRecords});
-const terrainGrassRim=new THREE.Mesh(grassRimGeometry,terrainTopMat);
+const terrainRimMat=terrainTopMat.clone();
+terrainRimMat.name='terrain-torn-fibre-core';
+terrainRimMat.onBeforeCompile=shader=>{
+  shader.uniforms.pulpCoreColor={value:new THREE.Color(0xafa56c)};
+  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float pulpCore;\nvarying float vPulpCore;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\nvPulpCore=pulpCore;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nuniform vec3 pulpCoreColor;\nvarying float vPulpCore;')
+    .replace('#include <map_fragment>','#include <map_fragment>\ndiffuseColor.rgb=mix(diffuseColor.rgb,pulpCoreColor,vPulpCore*.48);');
+};
+terrainRimMat.customProgramCacheKey=()=> 'terrain-torn-fibre-core-v1';
+const terrainGrassRim=new THREE.Mesh(grassRimGeometry,terrainRimMat);
 terrainGrassRim.name='terrain-torn-grass-rim';
 terrainGrassRim.castShadow=true;
 terrainGrassRim.receiveShadow=true;
@@ -202,6 +120,10 @@ function setSurfaceMode(mode){
   terrainTopMat.aoMap=pulp?olive.orm:null;
   terrainTopMat.roughness=pulp?1:.94;
   terrainTopMat.needsUpdate=true;
+  for(const name of ['map','normalMap','roughnessMap','aoMap'])terrainRimMat[name]=terrainTopMat[name];
+  terrainRimMat.color.copy(terrainTopMat.color);
+  terrainRimMat.roughness=terrainTopMat.roughness;
+  terrainRimMat.needsUpdate=true;
   terrainDirtMat.name=pulp?'terrain-dirt-fibrous-pulp':'terrain-dirt-solid-color';
   terrainDirtMat.color.setHex(pulp?0xffffff:TERRAIN_DIRT_COLOR);
   terrainDirtMat.map=pulp?dirtColor:null;
@@ -232,7 +154,8 @@ function setPaper(next={}){
   paperConfig.blend=0;
   olive.setScale(paperConfig.scale);
   terrainTopMat.normalScale.setScalar(paperConfig.normal);
-  terrainDirtMat.normalScale.setScalar(paperConfig.normal*.50);
+  terrainDirtMat.normalScale.setScalar(paperConfig.normal*.92);
+  terrainRimMat.normalScale.copy(terrainTopMat.normalScale);
   flags.render=true;
 }
 setPaper(paperConfig);
@@ -241,8 +164,8 @@ return {terrain,terrainBlocks,terrainGrassRim,grassRim:terrainGrassRim,dressing,
   getSurfaceMode:()=>surfaceMode,rebuildMaterialRandomness,
   textures:olive.textures,
   stats:()=>({columns:columnRecords.length,blocks:terrainBlockCount,visibleFaces:terrainVisibleFaceCount,
-    triangles:terrainVisibleFaceCount*2+(terrainGrassRim.visible?grassRimGeometry.userData.triangles:0),
-    baseTriangles:terrainVisibleFaceCount*2,grassRimTriangles:grassRimGeometry.userData.triangles,
+    triangles:terrainSurfaceGeo.userData.triangles+(terrainGrassRim.visible?grassRimGeometry.userData.triangles:0),
+    baseTriangles:terrainSurfaceGeo.userData.triangles,bevelTriangles:terrainSurfaceGeo.userData.bevelTriangles,grassRimTriangles:grassRimGeometry.userData.triangles,
     rimFaces:grassRimGeometry.userData.triangles/2,
     grassRimEdges:grassRimGeometry.userData.boundaryEdges,
     tufts:dressing.tufts,stones:dressing.stones,

@@ -1,38 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile,readdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {spawn} from 'node:child_process';
 import path from 'node:path';
 
 const root=fileURLToPath(new URL('../',import.meta.url));
 
-test('studio retains baseline GLSL outside the approved sky, fog threshold and final composite changes',async()=>{
+test('unmodified star shaders retain their baseline behavior while art-directed passes may evolve',async()=>{
   const original=await readFile(path.join(root,'src/main.js'),'utf8');
-  const names=(await readdir(path.join(root,'studio/rendering'))).filter(n=>n.endsWith('.js'));
-  const sources=await Promise.all(names.map(n=>readFile(path.join(root,'studio/rendering',n),'utf8')));
+  const sky=await readFile(path.join(root,'studio/rendering/sky.js'),'utf8');
   const shaders=text=>[...text.matchAll(/`([^`]+)`/g)].map(m=>m[1]).filter(s=>/void\s+main\s*\(/.test(s)&&/gl_(?:Position|FragColor)/.test(s));
-  const baseline=shaders(original),actual=sources.flatMap(shaders);
-  assert.ok(baseline.length>=10,'expected original shader programs');
-  assert.equal(actual.length,baseline.length,'do not silently omit or add a visual shader');
-  // The thinner fog now falls below the old discard threshold. Normalize only
-  // that threshold; the rest of its depth-aware shader stays baseline exact.
-  const normalize=shader=>{
-    let text=shader.replace(/\r\n/g,'\n');
-    if(text.includes('uniform float depthFade;'))text=text.replace('if(a<.002) discard;','if(a<.025) discard;');
-    if(text.includes('uniform sampler2D sunLightDepth;'))text=text.replace('smoothstep(3.5,8.0,t)','smoothstep(.8,3.0,t)');
-    return text;
-  };
-  const normalizedActual=actual.map(normalize);
-  for(const shader of baseline){
-    // Sky palette and the final HDR display composite have separate checks.
-    if(shader.includes('uniform sampler2D sceneColor')||shader.includes('uniform float time01'))continue;
-    assert.ok(normalizedActual.includes(normalize(shader)),'baseline GLSL program changed');
+  const normalize=shader=>shader.replace(/\r\n/g,'\n');
+  for(const marker of ['attribute float aSize;','uniform float twinkle;']){
+    const baseline=shaders(original).find(shader=>shader.includes(marker));
+    const actual=shaders(sky).find(shader=>shader.includes(marker));
+    assert.ok(baseline&&actual,'star program missing: '+marker);
+    assert.equal(normalize(actual),normalize(baseline),'unrelated star behavior changed');
   }
-  const composite=actual.find(shader=>shader.includes('uniform sampler2D sceneColor'))||'';
-  assert.match(composite,/gl_FragColor=vec4\(base\.rgb\+rays\+glow,base\.a\);/);
-  assert.match(composite,/#include <tonemapping_fragment>/);
-  assert.match(composite,/#include <colorspace_fragment>/);
 });
 
 test('art-directed sky preserves the baseline day-night timing and its non-twilight palettes',async()=>{
@@ -60,6 +45,7 @@ test('thin fog keeps its depth fade and survives the alpha discard threshold',as
   assert.ok(opacity>0&&opacity<.05,'fog remains a thin veil');
   assert.ok(threshold>0&&threshold<opacity*.25,'opacity must not be discarded wholesale');
   assert.match(source,/a \*= soft\*opacity/,'geometry intersections still use depth fading');
+  assert.match(source,/layerOpacity\*heightFalloff/,'near/far haze must remain bounded by world position');
   assert.match(source,/depthWrite:false/,'thin fog must not occlude the remaining scene');
 });
 

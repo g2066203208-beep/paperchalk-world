@@ -1,4 +1,4 @@
-import {rng,hash3} from './math.js';
+import {rng,hash3,smoothstep} from './math.js';
 
 /** A forest assembled from thick pressed-pulp pieces, with shared PBR maps. */
 export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPaperMaterial}){
@@ -8,8 +8,25 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
 
   // Source maps already contain pigment; another green/brown tint made them black.
   const forestLeafMats=[0xffffff,0xfffcf4,0xf4f6df].map(color=>{
-    const material=standardPaperMaterial(paperGrassSet,{normalScale:.62,roughness:1,color,ao:.24});
-    material.vertexColors=true;return material;
+    const material=standardPaperMaterial(paperGrassSet,{normalScale:.52,roughness:1,color,ao:.38});
+    material.vertexColors=true;
+    // Pulp fibres scatter the light; a glossy texture texel must not turn an
+    // entire pressed leaf into coated plastic. Local overlap occlusion affects
+    // indirect light only, leaving narrow cut edges free to catch the key light.
+    material.onBeforeCompile=shader=>{
+      shader.vertexShader=shader.vertexShader.replace('#include <common>',
+        '#include <common>\nattribute float pulpOcclusion;\nvarying float vPulpOcclusion;');
+      shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+        '#include <begin_vertex>\nvPulpOcclusion = pulpOcclusion;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+        '#include <common>\nvarying float vPulpOcclusion;');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
+        '#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, 0.95);');
+      shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>',
+        '#include <aomap_fragment>\nreflectedLight.indirectDiffuse *= vPulpOcclusion;');
+    };
+    material.customProgramCacheKey=()=> 'pulp-crown-contact-v2';
+    return material;
   });
   const forestTrunkMats=[0xffffff,0xfff4e9,0xffecd8].map(color=>
     standardPaperMaterial(paperDirtSet,{normalScale:.35,roughness:1,color,ao:.28})
@@ -19,7 +36,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   });
 
   function geometryWriter(){
-    const positions=[],normals=[],uvs=[],colors=[];
+    const positions=[],normals=[],uvs=[],colors=[],occlusion=[];
     function triangle(a,b,c,normal,color=[1,1,1]){
       if(!normal){
         const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2];
@@ -31,6 +48,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       for(const point of [a,b,c]){
         positions.push(point[0],point[1],point[2]);
         normals.push(...normal);uvs.push(point[3],point[4]);colors.push(...color);
+        occlusion.push(point[5]??1);
       }
     }
     function quad(a,b,c,d,color){triangle(a,b,d,undefined,color);triangle(b,c,d,undefined,color);}
@@ -40,6 +58,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
       geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
       geometry.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+      geometry.setAttribute('pulpOcclusion',new THREE.Float32BufferAttribute(occlusion,1));
       geometry.computeBoundingBox();geometry.computeBoundingSphere();
       return geometry;
     }
@@ -53,7 +72,10 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   function floorPoint(x,z){
     const distance=Math.max(0,Math.min(1,(-z-3.5)/22.5));
     const rise=distance*distance*(3-2*distance);
-    const y=.48+rise*.34;
+    // An irregular rise hides the old straight horizon without a backdrop card.
+    // Keep the meeting edge at exactly the terrain's ground level.
+    const roll=(Math.sin(x*.25+z*.11)*.12+Math.sin(x*.57-z*.07)*.075)*rise;
+    const y=.48+rise*.60+roll;
     return [x,y,z,x,-z];
   }
   function floorPatch(minX,maxX,minZ,maxZ,columns,rows){
@@ -74,27 +96,36 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   forestFloor.receiveShadow=true;
   canopyGroup.add(forestFloor);
 
-  // Four rings: front face, rounded bevel, cut edge and rear bevel.
-  // Seven gentle scallops make a hand-torn outline without polygon spikes.
+  // Small, almost circular pressed leaves overlap instead of forming one wide
+  // horizontal roof. The bevel is only 2.4% of the radius, not a padded rim.
   function crownGeometry(seed){
-    const random=rng(9100+seed*97),writer=geometryWriter(),count=28;
+    const random=rng(9100+seed*97),writer=geometryWriter(),count=32;
     const phase=random()*Math.PI*2;
-    const rings=[[],[],[],[]];
-    const radii=[.945,1,1,.945],depths=[.072,.032,-.032,-.072];
-    for(let ring=0;ring<4;ring++)for(let i=0;i<count;i++){
+    const rings=[[],[],[],[],[]];
+    const radii=[.54,.976,1,1,.976],depths=[.043,.043,.025,-.022,-.039];
+    const aspect=.78+random()*.10;
+    for(let ring=0;ring<5;ring++)for(let i=0;i<count;i++){
       const angle=Math.PI*2*i/count;
-      const outline=1+.044*Math.cos(angle*7+phase)+.025*Math.sin(angle*3+phase*.63);
+      const outline=1+.032*Math.cos(angle*7+phase)+.024*Math.sin(angle*3+phase*.63)+.009*Math.sin(angle*13+phase);
       const x=Math.cos(angle)*outline*radii[ring];
-      const y=Math.sin(angle)*outline*radii[ring]*.66;
-      const z=depths[ring]+Math.sin(angle*3+phase)*.009;
-      rings[ring].push([x,y,z,x*.55+.5,y*.55+.5]);
+      const y=Math.sin(angle)*outline*radii[ring]*aspect;
+      const z=depths[ring]+Math.sin(angle*3+phase)*.006;
+      const tucked=smoothstep(.12,.62,y/aspect)*(1-smoothstep(.48,1,Math.abs(x)));
+      // The upper inner face is under the leaf above it. Exposed bottom and
+      // side edges remain unoccluded; never draw a dirty circle round a leaf.
+      const ao=ring<2?1-tucked*.34:1;
+      rings[ring].push([x,y,z,x*.85+.5,y*.85+.5,ao]);
     }
-    const front=[0,0,.072,.5,.5],back=[0,0,-.072,.5,.5];
+    const front=[0,0,.043,.5,.5,1],back=[0,0,-.039,.5,.5,1];
     for(let i=0;i<count;i++){
       const j=(i+1)%count;
       writer.triangle(front,rings[0][i],rings[0][j],[0,0,1]);
-      writer.triangle(back,rings[3][j],rings[3][i],[0,0,-1]);
-      for(let ring=0;ring<3;ring++)writer.quad(rings[ring][i],rings[ring+1][i],rings[ring+1][j],rings[ring][j],[1.65,1.12,.66]);
+      writer.triangle(back,rings[4][j],rings[4][i],[0,0,-1]);
+      writer.quad(rings[0][i],rings[1][i],rings[1][j],rings[0][j]);
+      for(let ring=1;ring<4;ring++){
+        const edgeColor=ring===1?[1.15,1.045,.82]:ring===2?[.96,.91,.76]:[1,1,1];
+        writer.quad(rings[ring][i],rings[ring+1][i],rings[ring+1][j],rings[ring][j],edgeColor);
+      }
     }
     return writer.finish();
   }
@@ -104,9 +135,9 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   function trunkGeometry(){
     const writer=geometryWriter();
     const perimeter=[[-.43,-.29],[.43,-.29],[.5,-.22],[.5,.22],[.43,.29],[-.43,.29],[-.5,.22],[-.5,-.22]];
-    const heights=[0,.28,.66,1],rings=[];
+    const heights=[0,.035,.13,.43,.73,1],rootFlare=[1.62,1.23,1.015,.97,.93,.86],rings=[];
     for(let level=0;level<heights.length;level++){
-      const y=heights[level],taper=1-y*.105;
+      const y=heights[level],taper=rootFlare[level];
       rings.push(perimeter.map(([x,z],i)=>{
         const wobble=1+Math.sin(i*2.1+level*1.8)*.014;
         return [x*taper*wobble,y-.5,z*taper*wobble,i/8*1.8,y*4.8];
@@ -121,7 +152,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
         writer.quad(a,b,c,d);
       }
       writer.triangle([0,-.5,0,.5,.5],rings[0][i],rings[0][j],[0,-1,0]);
-      writer.triangle([0,.5,0,.5,.5],rings[3][j],rings[3][i],[0,1,0]);
+        writer.triangle([0,.5,0,.5,.5],rings.at(-1)[j],rings.at(-1)[i],[0,1,0]);
     }
     return writer.finish();
   }
@@ -131,32 +162,34 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
     const random=rng(12000+seed*41);
     // Keep three distinct raised layers, with a lower canopy that frames the
     // scene while preserving the open illuminated gaps between the trunks.
-    const crownBase=(3.25+layer*.62+(random()-.5)*.35)*scale;
-    const bottom=-.4*scale,top=crownBase+.92*scale;
-    const trunk={x:x+(random()-.5)*.10*scale,y:(bottom+top)*.5,z:z-.32*scale,
-      width:(.39+random()*.17)*scale,height:top-bottom,rot:(random()-.5)*.022,layer};
+    const crownBase=(3.38+layer*.38+(random()-.5)*.78)*scale;
+    const bottom=floorPoint(x,z)[1]-.075,top=crownBase+1.28*scale;
+    const trunk={x:x+(random()-.5)*.15*scale,y:(bottom+top)*.5,z:z-.26*scale,
+      width:(.29+random()*.28)*scale,height:top-bottom,rot:(random()-.5)*.034,layer};
     const crowns=[];
-    for(let tier=0;tier<5;tier++){
+    const tiers=[[-.56,.10,.31],[.43,-.02,.37],[-.09,.37,.49],[-.67,.71,.08],[.54,.73,.12],[.03,1.05,.29],[.05,1.59,-.11]];
+    for(let tier=0;tier<tiers.length;tier++){
+      const [dx,dy,dz]=tiers[tier];
       crowns.push({geo:(seed+tier)%crownGeometries.length,
-        x:x+[-.60,.60,-.30,.32,0][tier]*scale+(random()-.5)*.16*scale,
-        y:crownBase+[0,.07,.48,.59,1.10][tier]*scale,
-        z:z+[.28,.24,.09,.04,-.16][tier]*scale,
-        sx:(.73+random()*.14)*scale,sy:(.75+random()*.14)*scale,
-        depth:scale,rot:(random()-.5)*.24,tilt:(random()-.5)*.12,layer});
+        x:x+dx*scale+(random()-.5)*.20*scale,
+        y:crownBase+dy*scale+(random()-.5)*.13*scale,
+        z:z+dz*scale,
+        sx:(.53+random()*.18)*scale,sy:(.63+random()*.19)*scale,
+        depth:scale,rot:(random()-.5)*.36,tilt:(random()-.5)*.20,layer});
     }
     trees.push({trunk,crowns});
   }
 
   const layers=[
-    {z:-5.0,count:10,span:20,jitter:.68,scale:1.16},
-    {z:-8.4,count:12,span:24,jitter:.92,scale:1.06},
-    {z:-12.6,count:14,span:28,jitter:1.18,scale:.98}
+    {z:-5.0,count:10,span:20,jitter:1.16,scale:1.16},
+    {z:-8.7,count:12,span:24,jitter:1.48,scale:1.05},
+    {z:-13.7,count:14,span:29,jitter:1.88,scale:.98}
   ];
   layers.forEach((config,layer)=>{
     for(let i=0;i<config.count;i++){
       const x=(i/(config.count-1)-.5)*config.span+(hash3(layer*97+i*17,31,11)-.5)*config.jitter;
-      const z=config.z+(hash3(i*23,layer*61,19)-.5)*.64;
-      const scale=config.scale+(hash3(i,layer,88)-.5)*.08;
+      const z=config.z+(hash3(i*23,layer*61,19)-.5)*1.60;
+      const scale=config.scale+(hash3(i,layer,88)-.5)*.15;
       queueTree(x,z,layer,layer*100+i*13+7,scale);
     }
   });
@@ -168,9 +201,9 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
     if(!items.length)return;
     const mesh=new THREE.InstancedMesh(geometry,material,items.length);
     mesh.name=name;mesh.instanceMatrix.setUsage(THREE.StaticDrawUsage);
-    // These opaque crown cards stand for porous foliage. Trunks provide the
-    // clearing's long shadows; solid canopy silhouettes would seal its sky.
-    mesh.castShadow=!name.startsWith('Layered crowns ');mesh.receiveShadow=true;mesh.frustumCulled=false;
+    // Each separated pulp leaf can shadow its neighbours. Smaller overlapping
+    // leaves retain the gaps that the old continuous roof had closed.
+    mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;
     items.forEach((item,index)=>{
       configure(item);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
     });
@@ -190,8 +223,9 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       });
     }
   }
-  canopyGroup.userData.forest={trees:trees.length,crowns:trees.length*5,
+  const allCrowns=trees.flatMap(tree=>tree.crowns);
+  canopyGroup.userData.forest={trees:trees.length,crowns:allCrowns.length,
     floorTriangles:forestFloorGeometry.attributes.position.count/3,
-    triangles:trees.length*(64+5*224)+forestFloorGeometry.attributes.position.count/3};
+    triangles:trees.length*(trunkGeo.attributes.position.count/3)+allCrowns.reduce((sum,crown)=>sum+crownGeometries[crown.geo].attributes.position.count/3,0)+forestFloorGeometry.attributes.position.count/3};
   return {canopyGroup};
 }

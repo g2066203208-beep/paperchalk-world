@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import * as THREE from '../vendor/three/three.module.js';
 import {createTerrain} from '../studio/rendering/terrain.js';
-import {createGrassRimGeometry} from '../studio/rendering/terrain-geometry.js';
+import {createGrassRimGeometry,createBeveledTerrainGeometry} from '../studio/rendering/terrain-geometry.js';
 import {createWorld} from '../studio/world/PaperWorld.mjs';
 
 const surfaceMaps=['map','normalMap','roughnessMap','aoMap','bumpMap','displacementMap'];
@@ -27,6 +27,7 @@ function fixture(t){
   t.after(()=>{
     mesh.geometry.dispose();
     terrain.terrainGrassRim.geometry.dispose();
+    terrain.terrainGrassRim.material.dispose();
     for(const material of mesh.material)material.dispose();
     for(const texture of terrain.textures)texture.dispose();
     scene.clear();
@@ -55,6 +56,10 @@ test('Olive Fiber uses sRGB grass plus linear soil maps with dedicated torn rim'
   const {terrain,mesh,sides,top,requests,flags}=fixture(t);
   assert.equal(terrain.getSurfaceMode(),'pulp');
   assert.equal(top.isMeshStandardMaterial,true);
+  assert.equal(top.isMeshPhysicalMaterial,true,'paper reflection controls require the physical material');
+  assert.ok(top.specularIntensity<=.25&&sides.specularIntensity<=.25,'uncoated paper has restrained dielectric reflections');
+  assert.ok(top.roughness>=.94&&sides.roughness>=.94);
+  assert.equal(top.clearcoat,0,'paper must not gain a plastic coating');
   assert.equal(top.color.getHex(),0xffffff,'The source color must not be multiplied by green');
   assert.equal(top.map.colorSpace,THREE.SRGBColorSpace);
   assert.equal(top.normalMap.colorSpace,THREE.NoColorSpace);
@@ -77,7 +82,7 @@ test('Olive Fiber uses sRGB grass plus linear soil maps with dedicated torn rim'
     assert.equal(texture.wrapS,THREE.RepeatWrapping);
     assert.equal(texture.wrapT,THREE.RepeatWrapping);
     assert.equal(texture.minFilter,THREE.LinearMipmapLinearFilter);
-    const repeat=texture.name.includes('Dirt')?2/.65:1/.65;
+    const repeat=texture.name.includes('Dirt')?1.05/.65:1/.65;
     assert.equal(texture.repeat.x,repeat);
     assert.equal(texture.repeat.y,repeat);
     assert.ok(texture.anisotropy<=4);
@@ -85,7 +90,7 @@ test('Olive Fiber uses sRGB grass plus linear soil maps with dedicated torn rim'
   const normal=mesh.geometry.getAttribute('normal');
   for(const group of mesh.geometry.groups){
     for(let index=group.start;index<group.start+group.count;index++){
-      assert.equal(group.materialIndex===1,normal.getY(index)===1,'Only top-facing vertices use the pulp material');
+      assert.equal(group.materialIndex===1,normal.getY(index)>0,'Top faces and their upward bevels use grass pigment');
     }
   }
   flags.render=false;
@@ -109,6 +114,7 @@ test('solid-color mode removes every terrain surface map',t=>{
     assert.equal(material.metalness,0);
   }
   assert.equal(terrain.terrainGrassRim.visible,false);
+  assertNoSurfaceMaps(terrain.terrainGrassRim.material);
   assert.equal(flags.render,true);
 });
 
@@ -151,33 +157,37 @@ test('texture settings update scale and relief without turning the material on',
   terrain.setPaper({scale:.5,normal:.6});
   assert.equal(terrain.getSurfaceMode(),'pulp');
   for(const texture of terrain.textures){
-    const repeat=texture.name.includes('Dirt')?4:2;
+    const repeat=texture.name.includes('Dirt')?2.1:2;
     assert.equal(texture.repeat.x,repeat);
     assert.equal(texture.repeat.y,repeat);
   }
   assert.equal(top.normalScale.y,.6);
+  assert.equal(sides.normalScale.y,.6*.92);
+  assert.equal(terrain.terrainGrassRim.material.normalScale.y,.6);
   assert.equal(sides.map.colorSpace,THREE.SRGBColorSpace);
   assert.equal(sides.normalMap.colorSpace,THREE.NoColorSpace);
 });
 
-test('terrain remains exact cubes with continuous world UVs and hidden-face culling',t=>{
+test('render chamfers remain inside exact collision cubes with continuous world UVs and hidden-face culling',t=>{
   const {terrain,mesh}=fixture(t);
   const positions=mesh.geometry.getAttribute('position');
   const normals=mesh.geometry.getAttribute('normal');
   const uv=mesh.geometry.getAttribute('uv');
   for(let index=0;index<positions.count;index++){
     for(const value of [positions.getX(index),positions.getY(index),positions.getZ(index)]){
-      assert.equal(value+.5,Math.round(value+.5),'Cube corners stay on the half-unit grid');
+      const distance=Math.abs(value+.5-Math.round(value+.5));
+      assert.ok(distance<=.018+1e-6,'bevel and concave corner patch vertices remain within the narrow chamfer band');
     }
-    assert.equal(Math.hypot(normals.getX(index),normals.getY(index),normals.getZ(index)),1);
-    if(normals.getY(index)===1){
+    assert.ok(Math.abs(Math.hypot(normals.getX(index),normals.getY(index),normals.getZ(index))-1)<1e-6,'normals remain normalized after float32 conversion');
+    if(normals.getY(index)>0){
       assert.equal(uv.getX(index),positions.getX(index));
       assert.equal(uv.getY(index),-positions.getZ(index));
     }
   }
   const stats=terrain.stats();
   assert.ok(stats.visibleFaces<stats.blocks*6,'Shared internal faces must not be submitted');
-  assert.equal(stats.baseTriangles,stats.visibleFaces*2);
+  assert.equal(stats.baseTriangles,stats.visibleFaces*2+stats.bevelTriangles);
+  assert.ok(stats.bevelTriangles>0,'a bevel must exist in actual geometry, not a painted highlight');
   assert.equal(positions.count,stats.baseTriangles*3);
   assert.equal(terrain.terrainGrassRim.geometry.getAttribute('position').count,stats.grassRimTriangles*3);
   assert.equal(mesh.frustumCulled,true);
@@ -188,16 +198,60 @@ test('grass rim is deterministic, keeps top surface and never changes collision 
   const geometry=terrain.terrainGrassRim.geometry;
   const positions=geometry.getAttribute('position');
   assert.ok(positions.count>0);
-  assert.equal(geometry.userData.segments,12);
-  assert.ok(geometry.userData.maxDepth<.28);
-  assert.ok(geometry.userData.maxOverhang<.12);
+  assert.equal(geometry.userData.segments,18);
+  assert.ok(geometry.userData.maxDepth<.19);
+  assert.ok(geometry.userData.maxOverhang<.065);
+  assert.ok(geometry.userData.maxLift<.024,'lifted fibres cannot turn the lip into a padded rim');
   const rebuilt=createGrassRimGeometry({THREE,columnRecords:terrain.columnRecords});
   t.after(()=>rebuilt.dispose());
-  for(const name of ['position','normal','uv'])assert.deepEqual(rebuilt.getAttribute(name).array,geometry.getAttribute(name).array,name+' must be deterministic');
+  for(const name of ['position','normal','uv','pulpCore'])assert.deepEqual(rebuilt.getAttribute(name).array,geometry.getAttribute(name).array,name+' must be deterministic');
   assert.deepEqual(terrain.columnRecords.map(({x,z})=>terrain.surfaceY(x,z)),
     terrain.columnRecords.map(({h})=>h+.5),'pulp thickness cannot lift the walking surface');
   for(let i=0;i<positions.count;i++){
     assert.ok(Number.isFinite(positions.getX(i))&&Number.isFinite(positions.getY(i))&&Number.isFinite(positions.getZ(i)));
+  }
+});
+
+test('torn grass core uses a separate lit pigment without changing other grass',t=>{
+  const {terrain,top}=fixture(t);
+  const rim=terrain.terrainGrassRim;
+  assert.notEqual(rim.material,top,'a paper-edge pigment must not bleed onto every grass mesh');
+  assert.equal(rim.material.emissive.getHex(),0);
+  assert.equal(rim.material.map,top.map);
+  const cores=rim.geometry.getAttribute('pulpCore');
+  assert.equal(cores.count,rim.geometry.getAttribute('position').count);
+  assert.ok(cores.array.some(value=>value===0),'the inner uncut grass keeps its source pigment');
+  assert.ok(cores.array.some(value=>value>.5),'the real folded rim exposes compressed fibre colour');
+  for(const value of cores.array)assert.ok(value>=0&&value<=.81);
+  const shader={uniforms:{},vertexShader:THREE.ShaderLib.physical.vertexShader,fragmentShader:THREE.ShaderLib.physical.fragmentShader};
+  rim.material.onBeforeCompile(shader);
+  assert.ok(shader.vertexShader.includes('vPulpCore=pulpCore;'));
+  assert.ok(shader.fragmentShader.includes('diffuseColor.rgb=mix(diffuseColor.rgb,pulpCoreColor'));
+  assert.ok(shader.fragmentShader.includes('#include <lights_fragment_begin>'),'the core pigment remains part of the ordinary lit surface');
+  for(const mode of ['color','pulp']){
+    terrain.setSurfaceMode(mode);
+    for(const name of ['map','normalMap','roughnessMap','aoMap'])assert.equal(rim.material[name],top[name]);
+  }
+});
+
+test('convex chamfers have outward normals and never bevel an internal coplanar join',t=>{
+  const geometry=createBeveledTerrainGeometry({THREE,columnRecords:[{x:0,z:0,h:0},{x:1,z:0,h:0}]});
+  t.after(()=>geometry.dispose());
+  const p=geometry.getAttribute('position'),n=geometry.getAttribute('normal');
+  assert.equal(geometry.userData.visibleFaces,10,'the shared wall must be culled');
+  assert.deepEqual(geometry.boundingBox.min.toArray(),[-.5,-.5,-.5]);
+  assert.deepEqual(geometry.boundingBox.max.toArray(),[1.5,.5,.5]);
+  for(let i=0;i<p.count;i++){
+    const x=p.getX(i);
+    if(x>.45&&x<.55)assert.equal(x,.5,'an internal tile join must not shrink or gain a highlight seam');
+  }
+  const a=new THREE.Vector3(),b=new THREE.Vector3(),c=new THREE.Vector3(),cross=new THREE.Vector3(),normal=new THREE.Vector3();
+  for(let i=0;i<p.count;i+=3){
+    a.fromBufferAttribute(p,i);b.fromBufferAttribute(p,i+1).sub(a);c.fromBufferAttribute(p,i+2).sub(a);
+    cross.crossVectors(b,c);normal.fromBufferAttribute(n,i);
+    assert.ok(cross.length()>1e-8,'no degenerate bevel triangles');
+    assert.ok(cross.dot(normal)>0,'triangle winding must face the same direction as its normal');
+    assert.ok(!(p.getX(i)===.5&&p.getX(i+1)===.5&&p.getX(i+2)===.5&&Math.abs(normal.x)>.99),'no hidden shared wall');
   }
 });
 
@@ -243,10 +297,14 @@ test('pulp maps match the provenance manifest and retain the audited forward-blu
   const names=['base-color.webp','dirt-color.webp','normal-gl.webp','dirt-normal-gl.webp','orm.webp','dirt-orm.webp'];
   assert.deepEqual(manifest.textures.map(texture=>texture.file).sort(),names.sort());
   let total=0;
-  // This export was pixel-audited: mean RGB [126.46,128.44,235.13], with
-  // positive tangent Z in B. Pinning its digest catches the previous [x,1,z]
-  // channel error even when someone regenerates the provenance manifest.
-  const auditedNormal='bde2b045235b3d19a979c3c6b15029bf293031df1465559916d40a760eb292ff';
+  // Both v6 exports were independently pixel-audited: the dominant channel is
+  // forward tangent Z (blue), XY are centered, maximum unit error < .013.
+  // Pinning each audited digest catches the prior [x,1,z] channel error even
+  // if a generator also rewrites the manifest. Soil is no longer grass relief.
+  const auditedNormals={
+    'normal-gl.webp':'8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958',
+    'dirt-normal-gl.webp':'5d5567efe3a336bde42263f0855208e7e144608225a147afe5928af3f95cf313'
+  };
   for(const entry of manifest.textures){
     const bytes=await readFile(new URL(entry.file,directory));
     const digest=createHash('sha256').update(bytes).digest('hex');
@@ -255,7 +313,7 @@ test('pulp maps match the provenance manifest and retain the audited forward-blu
     assert.deepEqual(webpDimensions(bytes),[1024,1024],entry.file+' must retain mobile-sized source detail');
     assert.deepEqual(entry.dimensions,[1024,1024]);
     if(entry.file.includes('normal-gl')){
-      assert.equal(digest,auditedNormal,entry.file+' changed: audit tangent XYZ channels before accepting a new normal export');
+      assert.equal(digest,auditedNormals[entry.file],entry.file+' changed: audit tangent XYZ channels before accepting a new normal export');
       assert.equal(entry.encoding,'WebP lossless','normal components must not receive lossy color compression');
     }
   }

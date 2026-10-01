@@ -12,7 +12,26 @@ export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}
     const neighbors=new Set(columnRecords.map(q=>q.x+','+q.z));
     return [[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dz])=>!neighbors.has((column.x+dx)+','+(column.z+dz)));
   };
-  const tuftGeo=new THREE.ConeGeometry(.14,.46,4,1);
+  // A folded sheet has two lit faces and a narrow physical edge. A cone reads
+  // as solid plastic even when its colour map says paper.
+  const tuftPositions=[],tuftUvs=[];
+  const bladeFront=[[-.105,-.23,0],[0,-.23,.044],[.097,-.23,0],[.014,.23,.014]];
+  const bladeBack=bladeFront.map(p=>[p[0],p[1],p[2]-.009]);
+  function bladeTriangle(a,b,c){
+    for(const p of [a,b,c]){tuftPositions.push(...p);tuftUvs.push(p[0]*2,p[1]*2);}
+  }
+  bladeTriangle(bladeFront[0],bladeFront[1],bladeFront[3]);
+  bladeTriangle(bladeFront[1],bladeFront[2],bladeFront[3]);
+  bladeTriangle(bladeBack[3],bladeBack[1],bladeBack[0]);
+  bladeTriangle(bladeBack[3],bladeBack[2],bladeBack[1]);
+  for(const [a,b] of [[0,1],[1,2],[2,3],[3,0]]){
+    bladeTriangle(bladeFront[b],bladeFront[a],bladeBack[a]);
+    bladeTriangle(bladeFront[b],bladeBack[a],bladeBack[b]);
+  }
+  const tuftGeo=new THREE.BufferGeometry();
+  tuftGeo.setAttribute('position',new THREE.Float32BufferAttribute(tuftPositions,3));
+  tuftGeo.setAttribute('uv',new THREE.Float32BufferAttribute(tuftUvs,2));
+  tuftGeo.computeVertexNormals();tuftGeo.computeBoundingSphere();
   const tufts=[];
   for(const c of columnRecords){
     if(!exposed(c)||c.h<1)continue;
@@ -39,14 +58,15 @@ export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}
     const mesh=new THREE.InstancedMesh(tuftGeo,grassMaterial,tufts.length);
     mesh.name='terrain-folded-paper-grass';mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;
     for(let i=0;i<tufts.length;i++){
-      const q=tufts[i];dummy.position.set(q.x,q.y,q.z);dummy.rotation.set(0,q.rot,0);dummy.scale.set(q.scale, q.scale*(.9+hash(q.x,q.z,13)*.25), q.scale);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+      const q=tufts[i];dummy.position.set(q.x,q.y,q.z);dummy.rotation.set((hash(q.x,q.z,14)-.5)*.16,q.rot,(hash(q.x,q.z,15)-.5)*.18);dummy.scale.set(q.scale, q.scale*(.9+hash(q.x,q.z,13)*.25), q.scale);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
     }
     mesh.instanceMatrix.needsUpdate=true;group.add(mesh);
   }
   const stoneGeo=new THREE.IcosahedronGeometry(.24,0);
-  const stoneMat=new THREE.MeshStandardMaterial({color:0xcbbbaf,normalMap:grassMaterial.normalMap,
+  const stoneMat=new THREE.MeshPhysicalMaterial({color:0xcbbbaf,normalMap:grassMaterial.normalMap,
     normalScale:new THREE.Vector2(.28,.28),roughnessMap:grassMaterial.roughnessMap,
-    roughness:1,metalness:0,flatShading:true});
+    aoMap:grassMaterial.aoMap,aoMapIntensity:.35,
+    roughness:1,metalness:0,specularIntensity:.18,ior:1.38,flatShading:true});
   stoneMat.name='terrain-pale-paper-stones';
   const stones=[];
   for(const c of columnRecords){
