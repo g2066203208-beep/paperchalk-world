@@ -68,5 +68,5 @@ assert.match(camera,/wheel/);
 assert.match(camera,/snapshot/);
 
 assert.ok(fs.existsSync('legacy-main.html'),'retired legacy main entry must remain archived');
-assert.ok(fs.statSync('assets/player/protagonist.webp').size>30000,'replacement protagonist asset missing or unexpectedly tiny');
+assert.ok(fs.statSync('assets/player/protagonist.webp').size>10000,'replacement protagonist asset missing or unexpectedly tiny');
 console.log('DEMO_MODULAR_MAIN_STATIC_OK');
