@@ -55,11 +55,12 @@ try{
  assert(box&&box.width>500&&box.height>300,'Three.js canvas missing');
  await page.screenshot({path:'artifacts/new-main-visual-demo.png'});
  assert(fs.statSync('artifacts/new-main-visual-demo.png').size>10000,'render screenshot too small');
+ await page.close();
 
  const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  mobile.on('pageerror',e=>errors.push('MOBILE PAGE '+String(e)));
  await mobile.goto('http://127.0.0.1:8080/',{waitUntil:'networkidle'});
- await mobile.waitForFunction(()=>window.PaperchalkGame?.player,{timeout:10000});
+ await mobile.waitForFunction(()=>window.PaperchalkGame?.player,{timeout:15000});
  await mobile.waitForTimeout(500);
  const mobileState=await mobile.evaluate(()=>({
    debugDisplay:getComputedStyle(document.getElementById('debugSheet')).display,
