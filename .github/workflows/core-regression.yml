@@ -1,26 +1,25 @@
-name: Core Paper Stage Runtime Regression
+name: Visual Demo Main Regression
 
 on:
   push:
     branches: [main]
     paths:
       - "index.html"
-      - "src/**"
-      - "styles/**"
-      - "tests/**"
-      - "package.json"
+      - "visual-demo.html"
+      - "legacy-main.html"
+      - "assets/**"
       - "vendor/three/**"
-      - "vendor/fastnoise-lite/**"
+      - "tests/demo-main-*.mjs"
+      - "package.json"
       - ".github/workflows/core-regression.yml"
   pull_request:
     paths:
       - "index.html"
-      - "src/**"
-      - "styles/**"
-      - "tests/**"
-      - "package.json"
+      - "visual-demo.html"
+      - "assets/**"
       - "vendor/three/**"
-      - "vendor/fastnoise-lite/**"
+      - "tests/demo-main-*.mjs"
+      - "package.json"
 
 permissions:
   contents: read
@@ -34,7 +33,7 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-      - name: Run paper-stage static architecture checks
+      - name: Verify root exactly matches visual demo
         run: npm test
       - name: Install browser driver
         run: npm install --no-save playwright-core
@@ -55,18 +54,14 @@ jobs:
           done
           cat /tmp/paperchalk-http.log
           exit 1
-      - name: Run real browser paper-stage gameplay regression
+      - name: Run new main browser regression
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
-        run: node tests/core-regression.mjs
-      - name: Run visual-demo prologue regression
-        env:
-          CHROME_PATH: ${{ steps.chrome.outputs.path }}
-        run: node tests/prologue-scene-smoke.mjs
-      - name: Upload prologue scene screenshot
+        run: npm run test:browser
+      - name: Upload new main screenshot
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: prologue-paper-diorama
-          path: artifacts/prologue-paper-diorama.png
+          name: new-main-visual-demo
+          path: artifacts/new-main-visual-demo.png
           if-no-files-found: ignore
