@@ -3,6 +3,7 @@ import {GameRuntime} from './core/GameRuntime.js';
 import {InputManager} from './input/InputManager.js';
 import {TerrainQuery} from './world/TerrainQuery.js';
 import {PlayerController} from './player/PlayerController.js';
+import {OrbitCameraController} from './camera/OrbitCameraController.js';
 
 const input=new InputManager(window);
 const gameRuntime=new GameRuntime();
@@ -26,20 +27,7 @@ scene.fog=new THREE.Fog(0xaec8d3,15,36);
 
 const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.1,100);
 const target=new THREE.Vector3(0,1.75,-.35);
-let yaw=.02,pitch=.18,dist=19.2;
-const PITCH_LIMIT=Math.PI*.5-.015;
-function placeCamera(){
-  camera.position.set(
-    target.x+Math.sin(yaw)*Math.cos(pitch)*dist,
-    target.y+Math.sin(pitch)*dist,
-    target.z+Math.cos(yaw)*Math.cos(pitch)*dist
-  );
-  // Keep the camera upright while allowing the orbit itself to cover the
-  // entire upper/lower viewing sphere.
-  camera.up.set(0,1,0);
-  camera.lookAt(target);
-}
-placeCamera();
+let orbitCamera=null;
 
 function rng(seed){let s=seed>>>0;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296}}
 function hash3(x,y,z){
@@ -2149,87 +2137,25 @@ document.getElementById('cycle').onclick=()=>{
   syncSunControls();syncButtons();renderDirty=true;shadowDirty=true;volumeShadowDirty=true;
 };
 
-let dragging=false,lastX=0,lastY=0,renderDirty=true,autoShadowFrame=0,lastMistTick=0,mistClock=0;
+let renderDirty=true,autoShadowFrame=0,lastMistTick=0,mistClock=0;
 
-// Unified pointer handling:
-// 1 pointer = orbit, 2 pointers = pinch zoom. Pointer Events also keeps this
-// working for mouse, pen, iOS Safari and Android Chrome without separate touch code.
-const activePointers=new Map();
-let pinchStartDistance=0;
-let pinchStartCameraDistance=dist;
-
-function markCameraDirty(){
-  placeCamera();
-  renderDirty=true;
-  shadowDirty=true;
-  depthDirty=true;
-  volumeShadowDirty=true;
-}
-function pointerPairDistance(){
-  const pts=[...activePointers.values()];
-  if(pts.length<2)return 0;
-  return Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
-}
-function beginPinch(){
-  if(activePointers.size<2)return;
-  pinchStartDistance=Math.max(1,pointerPairDistance());
-  pinchStartCameraDistance=dist;
-  dragging=false;
-}
-function finishPointer(pointerId){
-  activePointers.delete(pointerId);
-  if(activePointers.size===1){
-    const p=activePointers.values().next().value;
-    lastX=p.x;lastY=p.y;
-    dragging=true;
-  }else{
-    dragging=false;
-  }
-  if(activePointers.size<2)pinchStartDistance=0;
-}
-
-renderer.domElement.addEventListener('pointerdown',e=>{
-  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  renderer.domElement.setPointerCapture(e.pointerId);
-
-  if(activePointers.size===1){
-    dragging=true;
-    lastX=e.clientX;lastY=e.clientY;
-  }else if(activePointers.size===2){
-    beginPinch();
+orbitCamera=new OrbitCameraController({
+  camera,
+  domElement:renderer.domElement,
+  target,
+  yaw:.02,
+  pitch:.18,
+  distance:19.2,
+  minDistance:8,
+  maxDistance:32,
+  onChange(){
+    renderDirty=true;
+    shadowDirty=true;
+    depthDirty=true;
+    volumeShadowDirty=true;
   }
 });
 
-renderer.domElement.addEventListener('pointermove',e=>{
-  if(!activePointers.has(e.pointerId))return;
-  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-
-  if(activePointers.size>=2){
-    if(!pinchStartDistance)beginPinch();
-    const current=Math.max(1,pointerPairDistance());
-    // Spread fingers = zoom in; pinch fingers together = zoom out.
-    dist=clamp(pinchStartCameraDistance*(pinchStartDistance/current),8,32);
-    markCameraDirty();
-    return;
-  }
-
-  if(!dragging)return;
-  yaw-=(e.clientX-lastX)*.006;
-  pitch=clamp(pitch+(e.clientY-lastY)*.005,-PITCH_LIMIT,PITCH_LIMIT);
-  lastX=e.clientX;lastY=e.clientY;
-  markCameraDirty();
-});
-
-renderer.domElement.addEventListener('pointerup',e=>finishPointer(e.pointerId));
-renderer.domElement.addEventListener('pointercancel',e=>finishPointer(e.pointerId));
-renderer.domElement.addEventListener('lostpointercapture',e=>{
-  if(activePointers.has(e.pointerId))finishPointer(e.pointerId);
-});
-
-renderer.domElement.addEventListener('wheel',e=>{
-  dist=clamp(dist+e.deltaY*.012,8,32);
-  markCameraDirty();
-},{passive:true});
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio||1,DPR_CAP));starUniforms.pixelRatio.value=Math.min(devicePixelRatio||1,DPR_CAP);resizeDepthTarget();resizeVolumetricTargets();renderDirty=true;shadowDirty=true;depthDirty=true;volumeShadowDirty=true;
@@ -2338,6 +2264,6 @@ window.PaperchalkGame=Object.freeze({
   input,
   terrain:terrainQuery,
   get player(){return playerController?.snapshot()||null},
-  stats(){return{runtime:gameRuntime.stats(),terrain:terrainQuery.stats(),player:playerController?.snapshot()||null}}
+  stats(){return{runtime:gameRuntime.stats(),terrain:terrainQuery.stats(),player:playerController?.snapshot()||null,camera:orbitCamera?.snapshot()||null}}
 });
 updateLighting(state.time);syncSunControls();syncButtons();animate(performance.now());
