@@ -1,7 +1,5 @@
 import {World3DEngine} from '../engine3d/World3DEngine.js?v=paper-r14';
-import {PrologueSchoolFence} from '../scenes/PrologueSchoolFence.js?v=paper-r2';
-import {ProloguePaperCar} from '../scenes/ProloguePaperCar.js?v=paper-r4';
-import {PrologueStreetProps} from '../scenes/PrologueStreetProps.js?v=paper-r1';
+import {PrologueDioramaSet} from '../scenes/PrologueDioramaSet.js?v=paper-r1';
 
 const HOST=document.getElementById('threeWorldLayer');
 const RUNTIME=window.PaperchalkRuntime;
@@ -12,9 +10,7 @@ const THREE_MODULE='../../vendor/three/three.module.js';
 
 let THREE=null;
 let engine=null;
-let schoolFence=null;
-let paperCar=null;
-let streetProps=null;
+let diorama=null;
 let active=false;
 let ready=false;
 let raf=0;
@@ -56,10 +52,13 @@ async function ensureReady(){
       content:ENGINE_CONTENT,
       onCameraChanged:syncCameraControls
     });
-    engine.configureAtmosphere?.({volumetric:false,qualityScale:.35,steps:8});
-    schoolFence=new PrologueSchoolFence(THREE,engine.scene,ACTIVE_SCENE);
-    streetProps=new PrologueStreetProps(THREE,engine.scene,ACTIVE_SCENE);
-    paperCar=new ProloguePaperCar(THREE,engine.scene,ACTIVE_SCENE);
+    const renderProfile=ACTIVE_SCENE?.render||{};
+    engine.configureAtmosphere?.({
+      volumetric:renderProfile.volumetric!==false,
+      qualityScale:renderProfile.qualityScale??.35,
+      steps:renderProfile.steps??10
+    });
+    diorama=new PrologueDioramaSet(THREE,engine,ACTIVE_SCENE);
     latestSnapshot=RUNTIME.getSnapshot();
     engine.setSnapshot(latestSnapshot);
     const settings=window.PaperchalkSettings?.get?.();
@@ -89,7 +88,9 @@ function frame(now){
   if(!active||!engine){raf=0;return}
   const dt=Math.min(.05,lastNow?(now-lastNow)/1000:1/60);
   lastNow=now;
-  engine.update(dt,latestSnapshot||RUNTIME.getSnapshot());
+  const snap=latestSnapshot||RUNTIME.getSnapshot();
+  engine.update(dt,snap);
+  diorama?.update(dt,snap,engine.camera);
   engine.render();
   frames++;
   fpsFrames++;
@@ -203,8 +204,8 @@ window.addEventListener('paperchalk-world-leave',()=>{disable()});
 window.addEventListener('pagehide',()=>{disable()});
 
 window.Paperchalk3D=Object.freeze({
-  version:13,
-  engine:'three-r180-infinite-voxel-3d',
+  version:14,
+  engine:'three-r180-paper-diorama-voxel',
   enable,disable,setCameraConfig,resetCamera,setDebugColliders,
   setPaperStyle,configurePaperTerrain,configureAtmosphere,
   setStageView,toggleStageView,setStageAxis,
@@ -222,9 +223,7 @@ window.Paperchalk3D=Object.freeze({
       worldMode:ACTIVE_SCENE?.mode||base.worldMode,
       terrainMode:base.terrainMode||'streamed-3d-voxel-chunks',
       interaction:base.interaction||{threeDimensional:true,zMovementLocked:false,raycastIgnoresOtherRows:false},
-      schoolFence:schoolFence?.stats?.()||null,
-      streetProps:streetProps?.stats?.()||null,
-      paperCar:paperCar?.stats?.()||null
+      diorama:diorama?.stats?.()||null
     };
   },
   snapshot
