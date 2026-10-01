@@ -22,9 +22,9 @@ function bindMoveButton(button,value){
   if(!button)return;
   const press=e=>{
     e.preventDefault();
-    button.setPointerCapture?.(e.pointerId);
-    button.classList.add('pressed');
     input.setVirtualHorizontal(value);
+    button.classList.add('pressed');
+    try{button.setPointerCapture?.(e.pointerId)}catch{}
   };
   const release=e=>{
     e?.preventDefault?.();
