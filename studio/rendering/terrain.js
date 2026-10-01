@@ -57,6 +57,7 @@ for(let z=-3;z<=3;z++)for(let x=-7;x<=7;x++){
     if(z===-1&&x>=-4&&x<=-3)h=1;
     if((z===-1||z===-2)&&x>=3&&x<=4)h=1;
     if(z>=2&&(x===-3||x===3))h=1;
+    if(z===2&&(x===-2||x===2))h=1;
   }
 
   columnRecords.push({x,z,h,columnIndex:columnRecords.length});

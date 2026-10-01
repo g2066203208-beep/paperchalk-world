@@ -303,7 +303,7 @@ test('pulp maps match the provenance manifest and retain the audited forward-blu
   // if a generator also rewrites the manifest. Soil is no longer grass relief.
   const auditedNormals={
     'normal-gl.webp':'8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958',
-    'dirt-normal-gl.webp':'5d5567efe3a336bde42263f0855208e7e144608225a147afe5928af3f95cf313'
+    'dirt-normal-gl.webp':'66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c'
   };
   for(const entry of manifest.textures){
     const bytes=await readFile(new URL(entry.file,directory));

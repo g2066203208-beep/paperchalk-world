@@ -44,13 +44,13 @@ export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}
   }
   // Small groups of folded leaves break up the shelves without crossing the
   // z=0 walking lane. Their bases sit on the exact height of their columns.
-  for(const [cx,cz] of [[-2.1,1.3],[1.7,-1.3],[2.8,1.7],[-3.8,-1.8],[-1.9,-2.5],[4.5,-2.5],[.8,2.7]]){
+  for(const [cx,cz] of [[-.95,.90],[1.45,.90],[-2.1,2.2],[1.7,-1.3],[2.8,1.7],[-3.8,-1.8],[-1.9,-2.5],[4.5,-2.5],[.8,2.7]]){
     const c=columnRecords.find(q=>q.x===Math.round(cx)&&q.z===Math.round(cz));
     if(!c)continue;
     for(let i=0;i<5;i++){
       const scale=.68+hash(cx+i,cz,37)*.7;
       tufts.push({x:cx+(i-2)*.115,y:c.h+.5+.23*scale,z:cz+(hash(cx+i,cz,38)-.5)*.26,
-        scale,rot:hash(cx,cz+i,39)*Math.PI});
+        scale,rot:(hash(cx,cz+i,39)-.5)*1.2});
     }
   }
   const dummy=new THREE.Object3D();
@@ -75,7 +75,7 @@ export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}
     stones.push({x:c.x+.22-hash(c.x,c.z,23)*.44,y:c.h+.68,z:c.z+.22-hash(c.x,c.z,24)*.44,
       sx:.75+hash(c.x,c.z,25)*.8,sy:.55+hash(c.x,c.z,26)*.5,sz:.7+hash(c.x,c.z,27)*.65,rot:hash(c.x,c.z,28)*Math.PI});
   }
-  for(const [x,z,sx,sy,sz] of [[-2.2,1.7,1.45,.82,1.0],[2.25,-1.6,1.0,.7,.9]]){
+  for(const [x,z,sx,sy,sz] of [[-1.55,.60,1.45,.82,1.0],[2.25,-1.6,1.0,.7,.9]]){
     const c=columnRecords.find(q=>q.x===Math.round(x)&&q.z===Math.round(z));
     if(c)stones.push({x,y:c.h+.5+.16*sy,z,sx,sy,sz,rot:hash(x,z,52)*Math.PI});
   }

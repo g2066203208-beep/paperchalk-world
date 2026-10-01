@@ -88,7 +88,7 @@ loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href
       // Printed black ink still reflects the paper substrate. A tiny linear
       // pigment floor keeps the original drawing readable under backlight;
       // it is lit with the sheet, not added as emissive display color.
-      diffuseColor.rgb=diffuseColor.rgb*.985+vec3(.012,.009,.006);
+      diffuseColor.rgb=diffuseColor.rgb*.91+vec3(.030,.022,.017);
     `).replace('#include <shadowmap_pars_fragment>',`#include <shadowmap_pars_fragment>
       #include <shadowmask_pars_fragment>
     `).replace('#include <opaque_fragment>',`

@@ -182,7 +182,7 @@ const compositeUniforms={
   sceneColor:{value:null},
   volumeColor:{value:null},
   volumeTexel:{value:new THREE.Vector2(1,1)},
-  volumeStrength:{value:.24},
+  volumeStrength:{value:.44},
   aoTexture:{value:null},sceneDepth:{value:null},aoTexel:{value:new THREE.Vector2(1,1)},
   cameraNearFar:{value:new THREE.Vector2(camera.near,camera.far)},aoEnabled:{value:1}
 };
@@ -429,7 +429,7 @@ function renderWithVolumetrics(){
   if(state.ao&&flags.ao){contactAO.render(sceneTarget.depthTexture);flags.ao=false;}
   compositeUniforms.aoEnabled.value=state.ao?1:0;
   compositeUniforms.cameraNearFar.value.set(camera.near,camera.far);
-  compositeUniforms.volumeStrength.value=state.godrays?.24:0;
+  compositeUniforms.volumeStrength.value=state.godrays?.44:0;
   if(state.godrays){
     updateVolumetricShadow(false);
     volumeUniforms.cameraProjectionInv.value.copy(camera.projectionMatrixInverse);

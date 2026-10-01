@@ -43,34 +43,47 @@
     },
     {
       "file": "dirt-color.webp",
-      "sha256": "5bf80845da8077530a6495607969ccf7ca5698c0a008031707ffeff31da359c4",
+      "sha256": "fcfed3ec3818e05bab65e9554df328ce4c7db31f4cd39344642a6e5a65f0c23b",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "sRGB terracotta remap of layered pulp dirt base color",
-      "encoding": "WebP quality 95"
+      "role": "sRGB yellow-brown compressed cellulose stock; unlit base color",
+      "encoding": "WebP quality 97"
     },
     {
       "file": "dirt-normal-gl.webp",
-      "sha256": "5d5567efe3a336bde42263f0855208e7e144608225a147afe5928af3f95cf313",
+      "sha256": "66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear tangent-space OpenGL +Y compressed soil fiber normal; blue channel faces forward",
+      "role": "linear tangent-space OpenGL +Y short-fiber/granule/pore normal; positive forward blue",
       "encoding": "WebP lossless"
     },
     {
       "file": "dirt-orm.webp",
-      "sha256": "b536657d2c7c10f6a1171af932d14d05bab3ad816c302a4a1aecc076f8077de3",
+      "sha256": "1098b95e8a3c00b8121a6d2330752896ada5679389adc1abdf768bf3cbeba009",
       "dimensions": [
         1024,
         1024
       ],
-      "role": "linear R=micropore AO G=high paper roughness B=zero metalness",
+      "role": "linear R=micropore AO G=high cellulose roughness B=zero metalness",
       "encoding": "WebP lossless"
     }
   ],
-  "totalTextureBytes": 6973540
+  "totalTextureBytes": 6513324,
+  "soilDerivation": {
+    "version": "v7 compressed cellulose stock",
+    "seed": 735901,
+    "input": "Existing v6 soil color derivative plus user OliveFiber_NormalGL.png; original grass maps unchanged.",
+    "method": "Deterministic periodic numpy/scipy filtering and wraparound irregular cellulose chips, short fibers and micropores. Two scales: fine stock detail plus 9-28-texel fragments, 8-21-texel short fiber bundles and sparse 3-8-texel pores survive mobile mipmaps. Strong suppression of broad flake color/normal lobes. Source color microstructure retained at reduced amplitude.",
+    "color": "Unlit yellow-brown kraft stock, intended RGB median 145,102,59 in sRGB. No photographic lighting or reference/render image sampled.",
+    "normal": "Independent height-derived tangent-space OpenGL +Y; positive blue/Z, periodic central differences; fine source normal detail retained.",
+    "orm": "Linear R=micropore AO G=high matte paper roughness B=zero metalness; no screen-space lighting baked.",
+    "dimensions": [
+      1024,
+      1024
+    ]
+  }
 }
