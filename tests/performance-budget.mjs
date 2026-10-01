@@ -4,6 +4,8 @@ const size=p=>fs.statSync(p).size;
 assert(size('src/game.js')<83000,'gameplay runtime exceeds 83KB budget');
 assert(size('src/core/open-world-runtime.js')<2500,'open-world helper exceeds 2.5KB budget');
 assert(size('src/scenes/prologue-city.js')<7000,'prologue city scene exceeds 7KB budget');
+assert(size('src/scenes/prologue-street-props.js')<9000,'street prop runtime exceeds 9KB budget');
+assert(size('src/scenes/PrologueStreetProps.js')<7000,'street prop renderer exceeds 7KB budget');
 assert(size('src/scenes/PrologueSchoolFence.js')<5000,'school fence renderer exceeds 5KB budget');
 assert(size('src/scenes/prologue-car-layout.js')<1500,'prologue car layout exceeds 1.5KB budget');
 assert(size('src/scenes/ProloguePaperCar.js')<5000,'paper car renderer exceeds 5KB budget');
@@ -52,6 +54,8 @@ console.log(JSON.stringify({
   game:size('src/game.js'),
   openWorld:size('src/core/open-world-runtime.js'),
   prologueScene:size('src/scenes/prologue-city.js'),
+  streetProps:size('src/scenes/prologue-street-props.js'),
+  streetPropRenderer:size('src/scenes/PrologueStreetProps.js'),
   schoolFence:size('src/scenes/PrologueSchoolFence.js'),
   carLayout:size('src/scenes/prologue-car-layout.js'),
   paperCar:size('src/scenes/ProloguePaperCar.js'),
