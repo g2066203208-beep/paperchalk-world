@@ -1,21 +1,48 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
-const index=fs.readFileSync('index.html','utf8');
-const demo=fs.readFileSync('visual-demo.html','utf8');
+const read=p=>fs.readFileSync(p,'utf8');
+const index=read('index.html');
+const demo=read('visual-demo.html');
+const main=read('src/main.js');
+const css=read('styles/main.css');
+const runtime=read('src/core/GameRuntime.js');
+const input=read('src/input/InputManager.js');
+const terrain=read('src/world/TerrainQuery.js');
+const player=read('src/player/PlayerController.js');
 
-assert.equal(index,demo,'root index.html must remain an exact copy of visual-demo.html');
+const demoStyle=demo.slice(demo.indexOf('<style>')+7,demo.indexOf('</style>')).trim();
+assert.equal(css.trim(),demoStyle,'production CSS must preserve the visual-demo stylesheet exactly');
+
+assert.match(index,/href="\.\/styles\/main\.css"/);
+assert.match(index,/src="\.\/src\/main\.js"/);
+assert.doesNotMatch(index,/<script type="module">\s*import \* as THREE/);
+assert.doesNotMatch(index,/<style>[\s\S]{1000}/);
+
+assert.match(main,/from '\.\.\/vendor\/three\/three\.module\.js'/);
+assert.match(main,/from '\.\/core\/GameRuntime\.js'/);
+assert.match(main,/from '\.\/input\/InputManager\.js'/);
+assert.match(main,/from '\.\/world\/TerrainQuery\.js'/);
+assert.match(main,/from '\.\/player\/PlayerController\.js'/);
+assert.match(main,/PerspectiveCamera\(36/);
+assert.match(main,/let yaw=\.02,pitch=\.18,dist=19\.2/);
+assert.match(main,/DPR_CAP=innerWidth<760\?1\.05:1\.22/);
+assert.match(main,/\.\.\/assets\/player\/protagonist\.webp/);
+assert.match(main,/architecture:'visual-demo-modular-game-foundation'/);
+assert.match(main,/gameRuntime\.register\(playerController\)/);
+assert.match(main,/gameRuntime\.update\(dt,\{camera\}\)/);
+
+assert.match(runtime,/class GameRuntime/);
+assert.match(input,/ArrowLeft/);
+assert.match(input,/ArrowRight/);
+assert.match(input,/KeyA/);
+assert.match(input,/KeyD/);
+assert.match(terrain,/class TerrainQuery/);
+assert.match(terrain,/surfaceY/);
+assert.match(player,/class PlayerController/);
+assert.match(player,/this\.input\.horizontal\(\)/);
+assert.match(player,/terrain\.clamp/);
+assert.match(player,/syncShadow/);
+
 assert.ok(fs.existsSync('legacy-main.html'),'retired legacy main entry must remain archived');
-assert.match(index,/Paperchalk 纸艺世界视觉 Demo/);
-assert.match(index,/纸艺世界视觉 Demo v12\.32/);
-assert.match(index,/import \* as THREE from '\.\/vendor\/three\/three\.module\.js'/);
-assert.match(index,/\.\/assets\/player\/protagonist\.webp/);
-assert.match(index,/PerspectiveCamera\(36/);
-assert.match(index,/let yaw=\.02,pitch=\.18,dist=19\.2/);
-assert.match(index,/DPR_CAP=innerWidth<760\?1\.05:1\.22/);
-assert.match(index,/Paper003/);
-assert.match(index,/受光体积雾/);
-assert.match(index,/标准立方体/);
-assert.match(index,/动态纸雾/);
-
-console.log('DEMO_MAIN_STATIC_OK');
+console.log('DEMO_MODULAR_MAIN_STATIC_OK');
