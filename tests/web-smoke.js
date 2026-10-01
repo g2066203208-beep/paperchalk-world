@@ -173,7 +173,7 @@ assert(engine.includes("renderMode:'chunked-visible-surface-water-v5-wavefront'"
 assert(engine.includes('internalFacesCulled:true'),'water internal face culling missing');
 assert(engine.includes('screenToWaterSurface'),'water click raycast missing');
 assert(engine.includes('zMovementLocked:false')&&engine.includes('raycastIgnoresOtherRows:false'),'renderer must expose full 3D interaction');
-assert(engine.includes('Math.min(Number(devicePixelRatio)||1,1.35)'),'native DPR mobile rendering missing');
+assert(engine.includes('const dprCap=this.mobileLike'),'scene-aware DPR cap missing');
 assert(engine.includes('playerTexture.generateMipmaps=false'),'sharp protagonist texture path missing');
 assert(engine.includes('sun.shadow.normalBias=.055')&&engine.includes('shadowAcneGuard:true'),'ground shadow-acne guard missing');
 
