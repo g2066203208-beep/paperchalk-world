@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Insets;
+import android.graphics.drawable.GradientDrawable;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
@@ -58,11 +59,20 @@ public class MainActivity extends Activity {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService network = Executors.newSingleThreadExecutor();
 
-    private LinearLayout root;
+    private FrameLayout root;
     private FrameLayout viewport;
+    private LinearLayout statusStrip;
     private TextView status;
     private ProgressBar progress;
     private Button retry;
+    private Button dismissStatus;
+    private int safeLeft;
+    private int safeTop;
+    private int safeRight;
+    private int safeBottom;
+    private final Runnable hideStatus = () -> {
+        if (statusStrip != null) statusStrip.setVisibility(View.GONE);
+    };
     private WebView webView;
     private SharedPreferences preferences;
     private ChannelRelease currentRelease;
@@ -87,6 +97,17 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (Build.VERSION.SDK_INT >= 30) getWindow().setDecorFitsSystemWindows(false);
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams attributes = getWindow().getAttributes();
+            attributes.layoutInDisplayCutoutMode = Build.VERSION.SDK_INT >= 30
+                    ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(attributes);
+        }
+        if (Build.VERSION.SDK_INT >= 29) {
+            getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarContrastEnforced(false);
+        }
         preferences = getSharedPreferences("paperchalk-test-channel", MODE_PRIVATE);
         cachedRelease = readCachedRelease();
         createLayout();
@@ -100,21 +121,32 @@ public class MainActivity extends Activity {
     }
 
     private void createLayout() {
-        root = new LinearLayout(this);
-        root.setOrientation(LinearLayout.VERTICAL);
+        root = new FrameLayout(this);
+        root.setFitsSystemWindows(false);
         root.setBackgroundColor(PAPER);
-        LinearLayout strip = new LinearLayout(this);
-        strip.setGravity(Gravity.CENTER_VERTICAL);
-        strip.setPadding(dp(12), dp(2), dp(8), dp(2));
-        strip.setMinimumHeight(dp(44));
+        viewport = new FrameLayout(this);
+        root.addView(viewport, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
+        // Status is a floating sibling: showing it must never resize the game canvas.
+        statusStrip = new LinearLayout(this);
+        statusStrip.setGravity(Gravity.CENTER_VERTICAL);
+        statusStrip.setPadding(dp(10), dp(2), dp(6), dp(2));
+        statusStrip.setMinimumHeight(dp(44));
+        GradientDrawable card = new GradientDrawable();
+        card.setColor(Color.argb(244, 238, 232, 217));
+        card.setCornerRadius(dp(12));
+        statusStrip.setBackground(card);
+        statusStrip.setElevation(dp(6));
+        statusStrip.setVisibility(View.GONE);
         progress = new ProgressBar(this, null, android.R.attr.progressBarStyleSmall);
-        strip.addView(progress, new LinearLayout.LayoutParams(dp(18), dp(18)));
+        statusStrip.addView(progress, new LinearLayout.LayoutParams(dp(18), dp(18)));
         status = new TextView(this);
         status.setTextColor(INK);
         status.setTextSize(12);
         status.setPadding(dp(8), 0, dp(4), 0);
         status.setMaxLines(2);
-        strip.addView(status, new LinearLayout.LayoutParams(0,
+        statusStrip.addView(status, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1));
         retry = new Button(this);
         retry.setText("重试");
@@ -132,17 +164,29 @@ public class MainActivity extends Activity {
             }
             checkForUpdates();
         });
-        strip.addView(retry, new LinearLayout.LayoutParams(dp(60), dp(44)));
-        root.addView(strip, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        viewport = new FrameLayout(this);
-        root.addView(viewport, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1));
+        statusStrip.addView(retry, new LinearLayout.LayoutParams(dp(60), dp(44)));
+        dismissStatus = new Button(this);
+        dismissStatus.setText("收起");
+        dismissStatus.setContentDescription("收起网络提示，继续当前游戏");
+        dismissStatus.setTextSize(12);
+        dismissStatus.setTextColor(INK);
+        dismissStatus.setMinHeight(0);
+        dismissStatus.setMinimumHeight(0);
+        dismissStatus.setMinWidth(0);
+        dismissStatus.setMinimumWidth(0);
+        dismissStatus.setPadding(dp(6), 0, dp(6), 0);
+        dismissStatus.setOnClickListener(ignored -> hideStatus.run());
+        statusStrip.addView(dismissStatus, new LinearLayout.LayoutParams(dp(56), dp(44)));
+        root.addView(statusStrip, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP | Gravity.LEFT));
+        root.addOnLayoutChangeListener((view, left, top, right, bottom,
+                oldLeft, oldTop, oldRight, oldBottom) -> positionStatusOverlay());
         root.setOnApplyWindowInsetsListener((view, insets) -> {
             if (Build.VERSION.SDK_INT >= 30) {
                 Insets safe = insets.getInsets(WindowInsets.Type.systemBars()
-                        | WindowInsets.Type.displayCutout());
-                view.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+                        | WindowInsets.Type.displayCutout() | WindowInsets.Type.mandatorySystemGestures());
+                updateSafeInsets(safe.left, safe.top, safe.right, safe.bottom);
             } else {
                 int left = insets.getSystemWindowInsetLeft();
                 int top = insets.getSystemWindowInsetTop();
@@ -154,12 +198,57 @@ public class MainActivity extends Activity {
                     right = Math.max(right, insets.getDisplayCutout().getSafeInsetRight());
                     bottom = Math.max(bottom, insets.getDisplayCutout().getSafeInsetBottom());
                 }
-                view.setPadding(left, top, right, bottom);
+                if (Build.VERSION.SDK_INT >= 29) {
+                    Insets mandatory = insets.getMandatorySystemGestureInsets();
+                    left = Math.max(left, mandatory.left);
+                    top = Math.max(top, mandatory.top);
+                    right = Math.max(right, mandatory.right);
+                    bottom = Math.max(bottom, mandatory.bottom);
+                }
+                updateSafeInsets(left, top, right, bottom);
             }
             return insets;
         });
         setContentView(root);
         root.requestApplyInsets();
+    }
+
+    private void updateSafeInsets(int left, int top, int right, int bottom) {
+        if (safeLeft == left && safeTop == top && safeRight == right && safeBottom == bottom) return;
+        safeLeft = left;
+        safeTop = top;
+        safeRight = right;
+        safeBottom = bottom;
+        positionStatusOverlay();
+        publishSafeInsets();
+    }
+
+    private void positionStatusOverlay() {
+        int available = root.getWidth() - safeLeft - safeRight - dp(24);
+        if (available <= 0) return;
+        int width = Math.min(available, dp(520));
+        int left = safeLeft + dp(12) + (available - width) / 2;
+        int top = safeTop + dp(8);
+        FrameLayout.LayoutParams layout = (FrameLayout.LayoutParams) statusStrip.getLayoutParams();
+        if (layout.width == width && layout.leftMargin == left && layout.topMargin == top) return;
+        layout.width = width;
+        layout.leftMargin = left;
+        layout.topMargin = top;
+        statusStrip.setLayoutParams(layout);
+    }
+
+    private void publishSafeInsets() {
+        if (webView == null || !loaded) return;
+        // The scene remains edge-to-edge; only HTML controls consume these CSS pixels.
+        // Neither the native root nor the WebView adds another layer of safe-area padding.
+        String script = "(function(){try{var d=window.devicePixelRatio||1,s=document.documentElement.style;"
+                + "var v={left:" + safeLeft + "/d,top:" + safeTop
+                + "/d,right:" + safeRight + "/d,bottom:" + safeBottom + "/d};"
+                + "Object.keys(v).forEach(function(k){s.setProperty('--paperchalk-safe-'+k,v[k]+'px');});"
+                + "window.dispatchEvent(new CustomEvent('paperchalk:insets',{detail:v}));}catch(e){}})()";
+        try {
+            webView.evaluateJavascript(script, null);
+        } catch (RuntimeException ignored) { }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -168,6 +257,9 @@ public class MainActivity extends Activity {
             WebView next = new WebView(this);
             webView = next;
             next.setBackgroundColor(PAPER);
+            next.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            next.setVerticalScrollBarEnabled(false);
+            next.setHorizontalScrollBarEnabled(false);
             WebSettings settings = next.getSettings();
             settings.setJavaScriptEnabled(true);
             settings.setDomStorageEnabled(true);
@@ -186,7 +278,7 @@ public class MainActivity extends Activity {
             settings.setLoadWithOverviewMode(true);
             settings.setUseWideViewPort(true);
             settings.setUserAgentString(settings.getUserAgentString()
-                    + " PaperchalkShell/" + ChannelRelease.SHELL_VERSION);
+                    + " PaperchalkShell/" + ChannelRelease.SHELL_VERSION + " PaperchalkApp/1.1.1");
             next.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
             next.setWebViewClient(new GameClient());
             next.setWebChromeClient(new WebChromeClient());
@@ -392,6 +484,7 @@ public class MainActivity extends Activity {
             loaded = true;
             rememberRelease(currentRelease);
             view.clearHistory();
+            publishSafeInsets();
             notifyPage(resumed ? "resume" : "pause");
             showCurrentStatus();
         }
@@ -468,13 +561,25 @@ public class MainActivity extends Activity {
 
     private void setStatus(String message, boolean busy, boolean warning, boolean retryVisible) {
         if (destroyed || status == null) return;
+        boolean wasVisible = statusStrip.getVisibility() == View.VISIBLE;
+        main.removeCallbacks(hideStatus);
         status.setText(message);
         status.setTextColor(warning ? WARNING : INK);
         progress.setVisibility(busy ? View.VISIBLE : View.GONE);
         retry.setVisibility(retryVisible ? View.VISIBLE : View.GONE);
         retry.setEnabled(!checking);
+        dismissStatus.setVisibility(warning && loaded ? View.VISIBLE : View.GONE);
         status.setContentDescription(message);
         status.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);
+        if (warning || retryVisible || !loaded) {
+            statusStrip.setVisibility(View.VISIBLE);
+        } else if (busy || !wasVisible) {
+            // Routine foreground checks stay silent while the existing game keeps running.
+            statusStrip.setVisibility(View.GONE);
+        } else {
+            statusStrip.setVisibility(View.VISIBLE);
+            main.postDelayed(hideStatus, 1400);
+        }
     }
 
     private int dp(int value) {
@@ -521,6 +626,7 @@ public class MainActivity extends Activity {
         hideSystemBars();
         if (webView != null) {
             webView.onResume();
+            publishSafeInsets();
             notifyPage("resume");
             checkForUpdates();
         }

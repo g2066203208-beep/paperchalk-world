@@ -14,6 +14,7 @@ import android.webkit.WebView;
 import android.widget.TextView;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -104,11 +105,23 @@ public final class SmokeInstrumentation extends Instrumentation {
             markPhase("check-game-canvas");
             require("true".equals(evaluate(page,
                     "Boolean(document.querySelector('#viewport canvas'))")), "Game canvas is absent");
+            markPhase("check-fullscreen-game");
+            require("true".equals(evaluate(page,
+                    "Boolean(document.body.classList.contains('game-mode') && getComputedStyle(document.querySelector('.app-header')).display === 'none' && document.querySelector('#viewport').clientHeight === innerHeight)")),
+                    "Game did not use the full viewport");
+            SystemClock.sleep(1600);
+            runMainBounded("check native fullscreen layout", () -> {
+                View root = (View) field("root");
+                View strip = (View) field("statusStrip");
+                require(page.getWidth() == root.getWidth() && page.getHeight() == root.getHeight(),
+                        "Native chrome reduced the game area");
+                require(strip.getVisibility() == View.GONE, "Successful status overlay did not hide");
+            });
 
             Bundle result = new Bundle();
             result.putString("status", "PASS");
             result.putString("url", url);
-            result.putString("checks", "native launch; latest channel; immutable URL; save hook; resume without reload; canvas");
+            result.putString("checks", "native launch; latest channel; immutable URL; save hook; resume without reload; fullscreen canvas; hidden native overlay");
             complete(Activity.RESULT_OK, result);
         } catch (Throwable error) {
             fail(error);
@@ -174,10 +187,15 @@ public final class SmokeInstrumentation extends Instrumentation {
         boolean diagnosed = false;
         while (SystemClock.elapsedRealtime() < deadline) {
             AtomicReference<String> text = new AtomicReference<>("");
-            runMainBounded("read native status",
-                    () -> text.set(visibleText(activity.getWindow().getDecorView())));
+            AtomicBoolean confirmed = new AtomicBoolean();
+            runMainBounded("read native status", () -> {
+                text.set(((TextView) field("status")).getText().toString());
+                confirmed.set(Boolean.TRUE.equals(field("loaded"))
+                        && Boolean.TRUE.equals(field("latestConfirmed"))
+                        && Boolean.FALSE.equals(field("checking")));
+            });
             last = text.get();
-            if (last.contains("已连接最新测试版本")) return;
+            if (confirmed.get() && last.contains("已连接最新测试版本")) return;
             if (!diagnosed && (last.contains("无法检查最新版本")
                     || last.contains("新版内容需要更新 App 安装包"))) {
                 diagnosed = true;
@@ -314,16 +332,14 @@ public final class SmokeInstrumentation extends Instrumentation {
         return null;
     }
 
-    private static String visibleText(View view) {
-        if (view.getVisibility() != View.VISIBLE) return "";
-        if (view instanceof TextView) return ((TextView) view).getText().toString();
-        if (!(view instanceof ViewGroup)) return "";
-        StringBuilder result = new StringBuilder();
-        ViewGroup group = (ViewGroup) view;
-        for (int i = 0; i < group.getChildCount(); i++) {
-            result.append(visibleText(group.getChildAt(i))).append(' ');
+    private Object field(String name) {
+        try {
+            Field field = MainActivity.class.getDeclaredField(name);
+            field.setAccessible(true);
+            return field.get(activity);
+        } catch (ReflectiveOperationException error) {
+            throw new AssertionError("Missing native state: " + name, error);
         }
-        return result.toString();
     }
 
     private static void require(boolean condition, String message) {

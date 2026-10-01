@@ -24,12 +24,12 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   const flags={render:true,shadow:true,depth:true,volumeShadow:true};
   const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
-  const paperConfig={scale:2,normal:1.85,height:4.8,blend:.85};
+  const paperConfig={scale:.65,normal:.85,height:0,blend:0};
   const pending=[],pendingRejects=new Set(),loadedTextures=new Set();
   const events=new AbortController();
   function status(state,message,error){onStatus({state,message,...(error?{error}: {})});}
   function invalidate(){flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;}
-  function getSize(){return {width:Math.max(1,container.clientWidth),height:Math.max(1,container.clientHeight)};}
+  function getSize(){return {width:Math.max(1,container.clientWidth),height:Math.max(1,container.clientHeight),gameplay:document.body.classList.contains('game-mode')};}
   function loadTexture(url,onLoad){
     let resolve,reject;
     const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});
@@ -40,7 +40,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
       try{onLoad?.(result);resolve(result);}catch(error){reject(error);}
     },undefined,error=>{
       pendingRejects.delete(reject);
-      reject(new Error('纸艺场景资源加载失败：'+(url.startsWith('data:')?'Paper003 纸材质':url),{cause:error}));
+      reject(new Error('纸艺场景资源加载失败：'+(url.startsWith('data:')?'场景贴图':url),{cause:error}));
     });
     loadedTextures.add(texture);
     return texture;
@@ -266,11 +266,15 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
   function setPaper(patch={}){
     const next={...paperConfig};
-    if(Number.isFinite(patch.scale))next.scale=clamp(patch.scale,.5,4);
+    if(Number.isFinite(patch.scale))next.scale=clamp(patch.scale,.15,2.5);
     if(Number.isFinite(patch.normal))next.normal=clamp(patch.normal,0,3);
-    if(Number.isFinite(patch.height))next.height=clamp(patch.height,0,8);
-    if(Number.isFinite(patch.blend))next.blend=clamp(patch.blend,0,1);
+    next.height=0;next.blend=0;
     terrain.setPaper(next,state.random);
+  }
+  function setSurfaceMode(mode){
+    terrain.setSurfaceMode(mode);
+    state.random=mode==='pulp';
+    invalidate();
   }
   function setSun({azimuth,elevation,manual=true}={}){
     if(Number.isFinite(azimuth))state.sunAzimuth=clamp(azimuth,-75,75);
@@ -279,7 +283,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(state.manualSun){timeTransition.active=false;state.auto=false;state.timePreset='';}
     updateLighting(state.time);syncFeatures();
   }
-  function getState(){return {...state,paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
+  function getState(){return {...state,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
   function getStats(){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
@@ -308,6 +312,6 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(!disposed)status('error',error.message,error);
     throw error;
   });
-  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSun,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,resetCamera:()=>orbitCamera.reset(),getState,getStats,
     getTerrainColumns:()=>terrain.columnRecords.map(column=>({...column})),dispose};
 }

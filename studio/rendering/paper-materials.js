@@ -77,7 +77,7 @@ function fillWrappedRect(ctx,size,x,y,w,h,fillStyle){
 }
 
 // ---------------------------------------------------------------------------
-// Real paper terrain material system.
+// Original Demo forest material system; terrain has its own Olive Fiber maps.
 // One shared PBR set = albedo + NORMAL + roughness.  The height field is built
 // once on CPU, then converted into a tangent-space normal map.  No per-block
 // material allocation and no 18x 512px texture farm.
@@ -230,11 +230,6 @@ const paperDirtSet=makePaperSurface(
   '#a96b45',['#c38357','#8d5237','#bb7750','#c98c63'],
   991,{cutEdge:true}
 );
-const paperGreenEdgeSet=makePaperSurface(
-  '#8fae5e',['#aac976','#77954d','#9fbd69','#86a856'],
-  381,{cutEdge:true,green:true}
-);
-
 // Compatibility arrays for cut grass / forest materials. All share GPU maps;
 // colour variation now comes from instance/material tint, not duplicate textures.
 
@@ -256,5 +251,5 @@ function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff
 }
 
 
-return {paperGrassSet,paperDirtSet,paperGreenEdgeSet,standardPaperMaterial,mistTexture,textures:[...Object.values(paperGrassSet),...Object.values(paperDirtSet),...Object.values(paperGreenEdgeSet)]};
+return {paperGrassSet,paperDirtSet,standardPaperMaterial,mistTexture,textures:[...Object.values(paperGrassSet),...Object.values(paperDirtSet)]};
 }

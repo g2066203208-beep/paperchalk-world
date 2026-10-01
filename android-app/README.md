@@ -1,6 +1,6 @@
 # Android 测试版
 
-包名：`com.paperchalk.world.test`。它与旧版 `com.paperchalk.world` 独立安装，不覆盖旧 App 或旧存档。当前外壳版本为 `1.1.0-studio-test`（versionCode 5），最低 Android 8.0 / API 26。
+包名：`com.paperchalk.world.test`。它与旧版 `com.paperchalk.world` 独立安装，不覆盖旧 App 或旧存档。当前外壳版本为 `1.1.1`（versionCode 6），最低 Android 8.0 / API 26。沿用测试版包名及签名，可覆盖升级 1.1.0 测试版；频道兼容级别仍为 5。
 
 ## 打开即测试已发布内容
 
@@ -30,8 +30,10 @@
 - `window.PaperchalkHandleBack()`：关闭展开的面板时返回 `true`；没有待关闭面板时返回 `false`，外壳保存后退到后台。
 - `paperchalk:pause`、`paperchalk:resume`：窗口事件，通知网页暂停/恢复交互和渲染。恢复时还会触发 `resize`。
 - User-Agent 附加 `PaperchalkShell/5`，供页面展示 App 适配布局。
+- 当前 App 另附加 `PaperchalkApp/1.1.1`。它直接打开线上发布内容，不要求手机连接开发电脑或本地服务器。
+- 原生将安全区注入为 CSS 变量 `--paperchalk-safe-top/right/bottom/left`（单位 CSS px），并发出 `paperchalk:insets` 事件。网页控件使用这些值或与 `env(safe-area-inset-*)` 取最大值，不能两者相加。
 
-横屏支持两个方向，原生容器避开刘海、摄像头和系统栏。画面组件崩溃在五分钟内最多自动恢复两次，之后停下并提供手动重试。
+横屏支持两个方向。WebView 和游戏画面铺满屏幕，安全区只影响操作控件的位置，原生容器不再预留顶部状态条或重复添加安全区 padding。加载提示是短暂浮层；成功后隐藏，返回前台的正常检查不改变画面尺寸，也不重新弹出顶条。网络异常保留浮层提示和重试按钮；已有游戏时可收起提示继续当前版本。画面组件崩溃在五分钟内最多自动恢复两次，之后停下并提供手动重试。
 
 ## 验证
 
