@@ -239,3 +239,8 @@ body.game-mode{
   .game-mode .inspector-content{display:block}.game-mode .inspector-heading{padding:14px 18px}.game-mode .inspector-content{padding:0 18px 18px}
   .game-mode .toast{top:calc(82px + var(--safe-top));max-width:calc(100% - 40px - var(--safe-left) - var(--safe-right))}
 }
+
+/* Keep mobile HUD edges crisp above the continuously rendered WebGL canvas. */
+.game-mode :is(.touch-button,.game-pause,.game-menu,.inspector,.rotate-hint,.toast),
+.game-mode:not(.inspector-hidden) .workspace::after{backdrop-filter:none;-webkit-backdrop-filter:none}
+.game-mode .touch-button svg{filter:none}
