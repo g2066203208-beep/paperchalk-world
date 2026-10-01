@@ -142,7 +142,7 @@ assert.match(engine,/flatShading:true/);
 assert.match(engine,/AtmospherePass/);
 assert.match(renderer,/configureAtmosphere/);
 assert.match(renderer,/volumetric:renderProfile\.volumetric===true/);
-assert.match(renderer,/qualityScale:\.35/);
+assert.match(renderer,/qualityScale:renderProfile\.qualityScale\?\?\.35/);
 assert.match(renderer,/steps:renderProfile\.steps\?\?8/);
 assert.match(content,/visibleChunkRadiusXZ:2/);
 assert.match(content,/visibleChunkRadiusY:1/);
