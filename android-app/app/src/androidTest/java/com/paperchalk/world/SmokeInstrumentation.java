@@ -13,10 +13,16 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.widget.TextView;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,6 +37,7 @@ public final class SmokeInstrumentation extends Instrumentation {
     private volatile Activity activity;
     private volatile String phase = "runner-create";
     private volatile long startedAt;
+    private volatile String channelDiagnostic = "not requested";
     private Bundle arguments;
 
     @Override
@@ -124,6 +131,7 @@ public final class SmokeInstrumentation extends Instrumentation {
         Bundle result = new Bundle();
         result.putString("status", "FAIL");
         result.putString("error", error.getClass().getSimpleName() + ": " + error.getMessage());
+        result.putString("channel_probe", channelDiagnostic);
         complete(Activity.RESULT_CANCELED, result);
     }
 
@@ -162,15 +170,99 @@ public final class SmokeInstrumentation extends Instrumentation {
     private void awaitCurrentVersion() throws Exception {
         long deadline = SystemClock.elapsedRealtime() + 60000;
         String last = "";
+        boolean diagnosed = false;
         while (SystemClock.elapsedRealtime() < deadline) {
             AtomicReference<String> text = new AtomicReference<>("");
             runMainBounded("read native status",
                     () -> text.set(visibleText(activity.getWindow().getDecorView())));
             last = text.get();
             if (last.contains("已连接最新测试版本")) return;
+            if (!diagnosed && (last.contains("无法检查最新版本")
+                    || last.contains("新版内容需要更新 App 安装包"))) {
+                diagnosed = true;
+                String waitingPhase = phase;
+                markPhase(waitingPhase + "-probe-channel");
+                boolean channelReachable = probeChannel();
+                if (channelReachable) {
+                    AtomicBoolean clicked = new AtomicBoolean();
+                    runMainBounded("retry native channel after successful diagnostic probe", () -> {
+                        View button = findRetry(activity.getWindow().getDecorView());
+                        if (button != null) clicked.set(button.performClick());
+                    });
+                    diagnostic("channel_retry", clicked.get()
+                            ? "Clicked visible native retry once after successful probe"
+                            : "Native retry was unavailable; still waiting for real UI state");
+                }
+                markPhase(waitingPhase);
+            }
             SystemClock.sleep(200);
         }
         throw new AssertionError("Native channel did not become ready: " + last);
+    }
+
+    private boolean probeChannel() throws Exception {
+        // Reuse the exact production fetch/validation code but do not change App state.
+        // The diagnostic worker cannot occupy the UI thread or wait indefinitely on DNS.
+        ExecutorService probe = Executors.newSingleThreadExecutor(task -> {
+            Thread thread = new Thread(task, "PaperchalkChannelDiagnostic");
+            thread.setDaemon(true);
+            return thread;
+        });
+        Future<ChannelRelease> pending = probe.submit(() -> {
+            Method fetch = MainActivity.class.getDeclaredMethod("fetchRelease");
+            fetch.setAccessible(true);
+            return (ChannelRelease) fetch.invoke(activity);
+        });
+        try {
+            ChannelRelease release = pending.get(20, TimeUnit.SECONDS);
+            channelDiagnostic = "SUCCESS version=" + release.version + " entry=" + release.entry;
+            diagnostic("channel_probe", channelDiagnostic);
+            return true;
+        } catch (TimeoutException error) {
+            channelDiagnostic = "TIMEOUT: production channel fetch did not complete within 20 seconds";
+            diagnostic("channel_probe", channelDiagnostic);
+            return false;
+        } catch (ExecutionException error) {
+            Throwable cause = error.getCause();
+            while (cause instanceof InvocationTargetException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            StringBuilder detail = new StringBuilder("FAILURE: ");
+            for (int depth = 0; cause != null && depth < 4; depth++, cause = cause.getCause()) {
+                if (depth > 0) detail.append("; caused by ");
+                detail.append(cause.getClass().getName()).append(": ").append(cause.getMessage());
+            }
+            channelDiagnostic = detail.toString();
+            diagnostic("channel_probe", channelDiagnostic);
+            return false;
+        } finally {
+            pending.cancel(true);
+            probe.shutdownNow();
+        }
+    }
+
+    private void diagnostic(String key, String message) {
+        if (finished.get()) return;
+        Log.i(TAG, key + ": " + message);
+        Bundle update = new Bundle();
+        update.putString("phase", phase);
+        update.putString(key, message);
+        update.putString("stream", "\nDIAGNOSTIC " + key + ": " + message + "\n");
+        sendStatus(0, update);
+    }
+
+    private static View findRetry(View view) {
+        if (!view.isShown() || !view.isEnabled()) return null;
+        if (view instanceof TextView && "重试".contentEquals(((TextView) view).getText())
+                && view.isClickable()) return view;
+        if (view instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) view;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View found = findRetry(group.getChildAt(i));
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private void awaitScript(WebView page, String script, String expected) throws Exception {
