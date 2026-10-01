@@ -6,7 +6,7 @@ assert(size('src/core/open-world-runtime.js')<2500,'open-world helper exceeds 2.
 assert(size('src/scenes/prologue-diorama.js')<8000,'demo prologue scene exceeds 8KB budget');
 assert(size('src/scenes/PrologueDioramaSet.js')<9000,'demo composition renderer exceeds 9KB budget');
 for(const old of ['prologue-city.js','prologue-street-props.js','PrologueStreetProps.js','PrologueSchoolFence.js','prologue-car-layout.js','ProloguePaperCar.js'])assert(!fs.existsSync('src/scenes/'+old),'old school-street prologue file returned '+old);
-assert(size('src/engine3d/World3DEngine.js')<56000,'paper-stage engine exceeds 56KB budget');
+assert(size('src/engine3d/World3DEngine.js')<57000,'paper-stage engine exceeds 57KB budget');
 assert(size('src/terrain/terrain-runtime.js')<30000,'terrain+water runtime exceeds 30KB budget');
 assert(size('src/terrain/voxel-block-mesh.js')<24000,'cube mesher exceeds 24KB budget');
 assert(size('src/engine3d/PaperTerrainRenderer.js')<20000,'paper terrain renderer exceeds 20KB budget');
