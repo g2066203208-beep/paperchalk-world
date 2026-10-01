@@ -8,6 +8,37 @@ import {OrbitCameraController} from './camera/OrbitCameraController.js';
 const input=new InputManager(window);
 const gameRuntime=new GameRuntime();
 
+const uiToggle=document.getElementById('uiToggle');
+const moveLeft=document.getElementById('moveLeft');
+const moveRight=document.getElementById('moveRight');
+if(uiToggle){
+  uiToggle.addEventListener('click',()=>{
+    const open=document.body.classList.toggle('ui-open');
+    uiToggle.setAttribute('aria-expanded',String(open));
+    uiToggle.textContent=open?'关闭':'设置';
+  });
+}
+function bindMoveButton(button,value){
+  if(!button)return;
+  const press=e=>{
+    e.preventDefault();
+    button.setPointerCapture?.(e.pointerId);
+    button.classList.add('pressed');
+    input.setVirtualHorizontal(value);
+  };
+  const release=e=>{
+    e?.preventDefault?.();
+    button.classList.remove('pressed');
+    if(input.virtualHorizontal===value)input.setVirtualHorizontal(0);
+  };
+  button.addEventListener('pointerdown',press,{passive:false});
+  button.addEventListener('pointerup',release,{passive:false});
+  button.addEventListener('pointercancel',release,{passive:false});
+  button.addEventListener('lostpointercapture',release,{passive:false});
+}
+bindMoveButton(moveLeft,-1);
+bindMoveButton(moveRight,1);
+
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
 const DPR_CAP=innerWidth<760?1.05:1.22;
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,DPR_CAP));
@@ -1138,8 +1169,13 @@ new THREE.TextureLoader().load('../assets/player/protagonist.webp',t=>{
     depthWrite:true
   });
 
-  playerMesh=new THREE.Mesh(new THREE.PlaneGeometry(1.12,2.24),playerMat);
-  playerMesh.position.set(0,1.59,.15);
+  const playerHeight=2.24;
+  const textureAspect=(t.image?.width||1)/(t.image?.height||1);
+  const playerWidth=playerHeight*textureAspect;
+  const spawnZ=.15;
+  const spawnSurface=terrainQuery.surfaceY(0,spawnZ)??.5;
+  playerMesh=new THREE.Mesh(new THREE.PlaneGeometry(playerWidth,playerHeight),playerMat);
+  playerMesh.position.set(0,spawnSurface+playerHeight*.5,spawnZ);
   playerMesh.castShadow=true;
   playerMesh.receiveShadow=true;
 
@@ -1159,6 +1195,10 @@ new THREE.TextureLoader().load('../assets/player/protagonist.webp',t=>{
     speed:3.4
   });
   gameRuntime.register(playerController);
+  renderDirty=true;
+  shadowDirty=true;
+  depthDirty=true;
+  volumeShadowDirty=true;
 });
 
 const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
@@ -2258,7 +2298,7 @@ function animate(now){
   renderDirty=false;
 }
 window.PaperchalkGame=Object.freeze({
-  version:1,
+  version:2,
   architecture:'visual-demo-modular-game-foundation',
   runtime:gameRuntime,
   input,
