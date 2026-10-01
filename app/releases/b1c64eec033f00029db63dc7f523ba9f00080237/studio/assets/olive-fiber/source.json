@@ -1,0 +1,74 @@
+{
+  "name": "Olive fiber + terracotta pulp | mobile terrain derivative v2",
+  "sourceArchive": "Olive_Fiber_Blender_Asset.zip",
+  "sourceArchiveSha256": "20d1a68283ae64109223b6103029b3951388664e3954ddd76a4b53832f7a89be",
+  "source": "User-provided Olive Fiber texture set; source sphere render is never used as a texture.",
+  "derivation": "Deterministic 2048px source downsampled to 1024px, periodic edge crossfade, source fiber signal retained. Macro flake relief and warm terracotta dirt derived from source luminance. Normal vectors rebuilt from wrapped height; ORM is linear non-color.",
+  "usage": "Olive maps for grass tops and exposed pulp lip; dirt maps for cube sides/bottom. World-space UVs; no baked lighting.",
+  "tileWorldUnits": 1.4,
+  "normalStrength": 0.7,
+  "aoIntensity": 0.24,
+  "textures": [
+    {
+      "file": "base-color.webp",
+      "sha256": "7b25546b981e2191debf60f3d7a36565d1545b98d05b9f113c49416bec62a5d4",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "sRGB olive top pulp base color",
+      "encoding": "WebP quality 93"
+    },
+    {
+      "file": "normal-gl.webp",
+      "sha256": "8e12603776ce4cca4b441935fc598f2b177dcfb8d8775096bf748c9e47efd6ba",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear OpenGL +Y top flake normal",
+      "encoding": "WebP lossless"
+    },
+    {
+      "file": "orm.webp",
+      "sha256": "7fec12fd1a63acc7fa178d9a1c8745748c9a87c4af4a5d0fefe4ca86fc899da8",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear top R=AO G=roughness B=metalness",
+      "encoding": "WebP lossless"
+    },
+    {
+      "file": "dirt-color.webp",
+      "sha256": "8c486ecd1319a2a0525587cb5036058341e49b6387ff2543bfcc49124a646973",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "sRGB warm terracotta dirt pulp base color",
+      "encoding": "WebP quality 93"
+    },
+    {
+      "file": "dirt-normal-gl.webp",
+      "sha256": "768f75defac61a97de5b1e08f88807c408c0e9c1ec2c578164b045dbf9e053c7",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear OpenGL +Y dirt fiber normal",
+      "encoding": "WebP lossless"
+    },
+    {
+      "file": "dirt-orm.webp",
+      "sha256": "0e3e0ebaf13667fceff3ad1527dd3b7f4c7b9c9339f42daf6c30a730ec636327",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear dirt R=AO G=roughness B=metalness",
+      "encoding": "WebP lossless"
+    }
+  ],
+  "totalTextureBytes": 4923842
+}
