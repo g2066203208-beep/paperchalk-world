@@ -59,12 +59,13 @@ try{
  assert(entered.stats.worldMode==='prologue-city-3d','renderer is not using prologue scene '+JSON.stringify(entered.stats));
  assert(Math.abs(entered.stats.camera.yaw)<.01&&Math.abs(entered.stats.camera.distance-18)<.05&&Math.abs(entered.stats.camera.fov-42)<.05,'prologue camera preset missing '+JSON.stringify(entered.stats.camera));
  const car=entered.stats.paperCar;
- assert(car?.enabled===true&&car.style==='side-profile-extrude+projected-uv','paper sedan renderer missing '+JSON.stringify(car));
+ assert(car?.enabled===true&&car.style==='2d-side-sprite+black-paper-thickness-r1','paper sedan renderer missing '+JSON.stringify(car));
  assert(car.count===1&&car.voxelAligned===true&&car.lane==='rear-motor','paper sedan placement wrong '+JSON.stringify(car));
  assert(car.dimensions.length===4.4&&car.dimensions.width===1.9&&car.dimensions.height===1.6,'paper sedan render dimensions wrong '+JSON.stringify(car.dimensions));
- assert(car.geometry.extrudedProfiles===1&&car.geometry.boxes===0&&car.geometry.wheels===4&&car.geometry.wheelSegments===12,'paper sedan must be one extruded side profile plus wheels '+JSON.stringify(car.geometry));
- assert(car.geometry.profilePoints>=25&&car.geometry.frontRearDecals===2,'paper sedan profile/decals missing '+JSON.stringify(car.geometry));
- assert(car.uv.side==='profile-cap-x-y'&&car.uv.top==='extrusion-wall-x-z','paper sedan UV projection wrong '+JSON.stringify(car.uv));
+ assert(car.geometry.spritePlanes===1&&car.geometry.blackThicknessPlanes===2&&car.geometry.extrusions===0&&car.geometry.wheels3d===0,'paper sedan must stay flat sprite + tiny paper thickness '+JSON.stringify(car.geometry));
+ const props=entered.stats.streetProps;
+ assert(props?.enabled===true&&props.count>=70,'street props missing '+JSON.stringify(props));
+ assert(props.proxyInstances>0&&props.drawGroups>=8&&props.collisionAuthority==='PaperchalkStreetProps','street prop render/collision bridge missing '+JSON.stringify(props));
  const fence=entered.stats.schoolFence;
  assert(fence?.enabled===true&&fence.gridAligned===true&&fence.installation==='voxel-grid-edge','school fence grid installation missing '+JSON.stringify(fence));
  assert(fence.lineZ===-16.5&&fence.rearCellZ===-17&&fence.sidewalkCellZ===-16,'fence is not on voxel edge '+JSON.stringify(fence));
@@ -78,12 +79,15 @@ try{
      gate:S.collidesAABB(scene,24,1.95,-16.5,.34,.95,.28),
      sidewalk:S.collidesAABB(scene,24,1.95,-14.5,.34,.95,.28),
      car:S.collidesAABB(scene,36.5,1.8,-5,.34,.95,.28),
+     streetProp:S.collidesAABB(scene,8,2,-13.2,.34,.95,.28),
+     clearStreet:S.collidesAABB(scene,10,2,-13.2,.34,.95,.28),
      clearRoad:S.collidesAABB(scene,45.5,1.8,-5,.34,.95,.28),
      oldBuilding:S.collidesAABB(scene,32,1.95,-20.5,.34,.95,.28)
    };
  });
  assert(collision.fence===true&&collision.gate===false&&collision.sidewalk===false,'school fence/gate collision wrong '+JSON.stringify(collision));
  assert(collision.car===true&&collision.clearRoad===false,'paper sedan collision wrong '+JSON.stringify(collision));
+ assert(collision.streetProp===true&&collision.clearStreet===false,'street prop collision wrong '+JSON.stringify(collision));
  assert(collision.oldBuilding===false,'rejected building collision still present '+JSON.stringify(collision));
  await page.evaluate(()=>{
    window.PaperchalkMap.teleport(36.5,4);
