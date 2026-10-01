@@ -29,7 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
 /** Real-WebView smoke checks with bounded waits and no external test framework. */
 public final class SmokeInstrumentation extends Instrumentation {
     private static final String TAG = "PaperchalkSmoke";
-    private static final long MAIN_STEP_SECONDS = 8;
+    // Cold CI WebView/GLES initialization shares CPUs with Android first-boot jobs.
+    private static final long MAIN_STEP_SECONDS = 30;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final CountDownLatch activityResumed = new CountDownLatch(1);
     private final AtomicBoolean finished = new AtomicBoolean();
