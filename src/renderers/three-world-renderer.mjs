@@ -54,9 +54,9 @@ async function ensureReady(){
     });
     const renderProfile=ACTIVE_SCENE?.render||{};
     engine.configureAtmosphere?.({
-      volumetric:renderProfile.volumetric!==false,
+      volumetric:renderProfile.volumetric===true,
       qualityScale:renderProfile.qualityScale??.35,
-      steps:renderProfile.steps??10
+      steps:renderProfile.steps??8
     });
     diorama=new PrologueDioramaSet(THREE,engine,ACTIVE_SCENE);
     latestSnapshot=RUNTIME.getSnapshot();
