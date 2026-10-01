@@ -69,6 +69,9 @@ function updateLighting(t){
   // Keep the dawn palette while lifting the key above the tree-line. At the
   // default dawn the old orbit was only 5 degrees high and never lit the pulp.
   sy+=14.4*twilight*sunFade;
+  // Dawn enters from behind the left-hand tree gaps, not almost sideways.
+  // Surface shadows and volumetric occlusion share this exact light position.
+  sz-=10.0*twilight*sunFade;
 
   // Manual control still steers the sun; the moon continues its clock orbit.
   if(state.manualSun){
@@ -136,7 +139,7 @@ function updateLighting(t){
     // A clear near field and a deliberately separated distant forest. An
     // exponential veil starting at the camera greyed the character and pulp.
     const fogNear=11.5-twilight*.5;
-    const fogFar=29.0-twilight*5.0+nightMix*3.0;
+    const fogFar=35.0-twilight*4.0+nightMix*3.0;
     if(!scene.fog?.isFog)scene.fog=new THREE.Fog(fogColor,fogNear,fogFar);
     else{scene.fog.color.copy(fogColor);scene.fog.near=fogNear;scene.fog.far=fogFar;}
   }
@@ -146,7 +149,7 @@ function updateLighting(t){
   const mistWarm=new THREE.Color(0xe9be8f);
   const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
-  fogUniforms.opacity.value=.022+twilight*.029*sunFade+nightMix*.006;
+  fogUniforms.opacity.value=.014+twilight*.017*sunFade+nightMix*.006;
 
   // Dawn rays stay warm, but never wash the pulp layers to white on a phone.
   renderer.toneMappingExposure=state.tone?(.91+dayMix*.12+twilight*.012):1;

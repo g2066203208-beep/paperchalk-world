@@ -72,6 +72,9 @@ function updateControls(){
     button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
   }
   ui.autoCycle.checked=state.auto;
+  $('shaftStrength').value=String(Math.round(state.shaftStrength*100));
+  $('shaftStrengthValue').textContent=state.shaftStrength.toFixed(2)+'×';
+  $('shaftStrength').disabled=!state.godrays;
   for(const checkbox of document.querySelectorAll('[data-feature]'))checkbox.checked=state[checkbox.dataset.feature];
   for(const [id,key] of Object.entries(paperInputs)){
     const value=state.paper[key];$(id).value=String(Math.round(value*100));
@@ -88,6 +91,8 @@ function refreshStatus(now,force=false){
   ui.playerState.textContent=pauseReasons.active?'已暂停':!state.grounded?(state.vy>0?'跃起':'落下'):Math.abs(state.vx)>.05?'移动中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
   ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n${stats.terrain.columns} 列地形 · ${stats.terrain.visibleFaces} 个可见面\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
+  const shafts=stats.volumetrics;
+  ui.renderStats.textContent+='\n丁达尔光柱：'+(!shafts.supported?'此设备图形能力不支持':!shafts.enabled?'已关闭':shafts.effectiveStrength.toFixed(2)+'× · 已渲染 '+shafts.renderedFrames+' 帧');
   lastRendered=stats.renderedFrames;statusTime=now;
 }
 function resetClock(){lastTime=0;accumulator=0;for(const cancel of heldControls)cancel();input?.cancel();}
@@ -229,6 +234,7 @@ function wireControls(){
   for(const button of document.querySelectorAll('[data-preset]'))listen(button,'click',()=>{scene.setTimePreset(button.dataset.preset);updateControls();if(pauseReasons.active)toast('已选择光线，继续游戏后开始过渡');});
   listen(ui.autoCycle,'change',()=>{scene.setAutoCycle(ui.autoCycle.checked);updateControls();});
   for(const checkbox of document.querySelectorAll('[data-feature]'))listen(checkbox,'change',()=>{scene.setFeature(checkbox.dataset.feature,checkbox.checked);updateControls();});
+  listen($('shaftStrength'),'input',()=>{scene.setShaftStrength(Number($('shaftStrength').value)/100);updateControls();});
   for(const [id,key] of Object.entries(paperInputs))listen($(id),'input',()=>{scene.setPaper({[key]:Number($(id).value)/100});updateControls();});
   listen(ui.resetPaper,'click',()=>{scene.setPaper(defaults);updateControls();});
   for(const id of ['sunAzimuth','sunElevation'])listen($(id),'input',()=>{scene.setSun({azimuth:Number($('sunAzimuth').value),elevation:Number($('sunElevation').value),manual:true});updateControls();});

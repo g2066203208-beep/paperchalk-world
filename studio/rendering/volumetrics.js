@@ -27,6 +27,7 @@ const {contactShadow}=actor;
 const fsCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
 const fsGeo=new THREE.PlaneGeometry(2,2);
 const contactAO=createContactAO({THREE,renderer,camera,screenCamera:fsCamera,screenGeometry:fsGeo});
+let shaftStrength=1,shaftFrames=0;
 
 let sceneTarget=null,volumeTarget=null;
 let sunVolumeShadowTarget=null,moonVolumeShadowTarget=null;
@@ -64,7 +65,7 @@ const volumeUniforms={
   maxDistance:{value:46.0},
   time:{value:0},
   shadowBias:{value:.0022},
-  steps:{value:24.0}
+  steps:{value:32.0}
 };
 
 const volumeMat=new THREE.ShaderMaterial({
@@ -142,7 +143,7 @@ const volumeMat=new THREE.ShaderMaterial({
       vec3 dir=ray/fullDist;
       float rayDist=min(fullDist,maxDistance);
       float stepLen=rayDist/max(steps,1.0);
-      float jitter=fract(hash12(gl_FragCoord.xy)+time*.071);
+      float jitter=hash12(gl_FragCoord.xy);
       float sunAccum=0.0;
       float moonAccum=0.0;
 
@@ -152,8 +153,18 @@ const volumeMat=new THREE.ShaderMaterial({
         vec3 p=cameraPos+dir*t;
 
         float lowMist=1.0-smoothstep(.45,6.6,p.y);
-        float medium=.10+.90*lowMist;
-        float nearFade=smoothstep(3.5,8.0,t);
+        // Air lives between the forest layers. The clear playable foreground
+        // must not acquire a uniform yellow veil when shafts are restored.
+        float forestAir=1.0-smoothstep(-3.8,1.2,p.z);
+        float airVariation=.78+.22*sin(p.x*.46+p.z*.19)*sin(p.y*.61-p.z*.29);
+        // A localized bank preserves the diagonal gaps in the canopy shadow.
+        // Broad uniform mist integrates across many alternating shadow bands,
+        // averaging the shafts into a flat veil even with correct occlusion.
+        float forestBank=exp(-pow((p.z+3.8)/2.6,2.0));
+        float medium=(.10+.90*lowMist)*(.035+.965*forestAir)*airVariation*(.05+forestBank*3.5);
+        // The gameplay camera is only 5.5 units from the actor. The former
+        // 3.5..8 fade removed most of the observable illuminated air.
+        float nearFade=smoothstep(1.2,4.2,t);
 
         float sVis=sunVisibility(p);
         float mVis=moonVisibility(p);
@@ -171,7 +182,8 @@ const volumeMat=new THREE.ShaderMaterial({
       float sunScatter=(1.0-exp(-sunAccum*2.15))*sunIntensity;
       float moonScatter=(1.0-exp(-moonAccum*2.45))*moonIntensity;
       vec3 rays=sunScatteringColor*sunScatter+moonScatteringColor*moonScatter;
-      gl_FragColor=vec4(rays,max(sunScatter,moonScatter));
+      // Linear ray length lets the final filter reject silhouette crossings.
+      gl_FragColor=vec4(rays,fullDist);
     }
   `
 });
@@ -182,7 +194,7 @@ const compositeUniforms={
   sceneColor:{value:null},
   volumeColor:{value:null},
   volumeTexel:{value:new THREE.Vector2(1,1)},
-  volumeStrength:{value:.44},
+  volumeStrength:{value:1.0},
   aoTexture:{value:null},sceneDepth:{value:null},aoTexel:{value:new THREE.Vector2(1,1)},
   cameraNearFar:{value:new THREE.Vector2(camera.near,camera.far)},aoEnabled:{value:1}
 };
@@ -208,6 +220,17 @@ const compositeMat=new THREE.ShaderMaterial({
     uniform vec2 aoTexel;
     uniform vec2 cameraNearFar;
     uniform float aoEnabled;
+    vec3 filteredShafts(vec2 uv){
+      vec4 center=texture2D(volumeColor,uv);
+      vec3 sum=vec3(0.0);float weights=0.0;
+      for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){
+        vec4 sampleValue=texture2D(volumeColor,uv+vec2(float(x),float(y))*volumeTexel);
+        float spatial=(x==0?2.0:1.0)*(y==0?2.0:1.0);
+        float w=spatial*exp(-abs(sampleValue.a-center.a)/max(.12,center.a*.018));
+        sum+=sampleValue.rgb*w;weights+=w;
+      }
+      return sum/max(weights,.0001);
+    }
     float contactVisibility(){
       if(aoEnabled<.5)return 1.0;
       float depth=texture2D(sceneDepth,vUv).x;
@@ -230,7 +253,7 @@ const compositeMat=new THREE.ShaderMaterial({
     }
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
-      vec3 core=texture2D(volumeColor,vUv).rgb;
+      vec3 core=filteredShafts(vUv);
       vec3 rays=core*volumeStrength*1.16;
 
       // Cheap ray-only bloom: it samples ONLY the already shadow-tested
@@ -294,7 +317,7 @@ function resizeVolumetricTargets(){
   if(volumeTarget)volumeTarget.dispose();
   volumeTarget=new THREE.WebGLRenderTarget(vw,vh,{
     minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,
-    format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:false
+    format:THREE.RGBAFormat,type:HDR_ENABLED?THREE.HalfFloatType:THREE.UnsignedByteType,depthBuffer:false
   });
 
   if(!sunVolumeShadowTarget)sunVolumeShadowTarget=makeVolumeShadowTarget();
@@ -328,7 +351,7 @@ function updateVolumetricSettings(t){
   volumeUniforms.moonLightDir.value.copy(volumeLightTarget).sub(moon.position).normalize();
 
   const dayColor=new THREE.Color(0xfff0cc);
-  const dawnColor=new THREE.Color(0xffe3a0);
+  const dawnColor=new THREE.Color(0xffc86c);
   const sunsetColor=new THREE.Color(0xff7054);
   const moonColor=new THREE.Color(0x72a3ff);
   const warmColor=state.time<.5?dawnColor:sunsetColor;
@@ -429,7 +452,7 @@ function renderWithVolumetrics(){
   if(state.ao&&flags.ao){contactAO.render(sceneTarget.depthTexture);flags.ao=false;}
   compositeUniforms.aoEnabled.value=state.ao?1:0;
   compositeUniforms.cameraNearFar.value.set(camera.near,camera.far);
-  compositeUniforms.volumeStrength.value=state.godrays?.44:0;
+  compositeUniforms.volumeStrength.value=state.godrays?shaftStrength:0;
   if(state.godrays){
     updateVolumetricShadow(false);
     volumeUniforms.cameraProjectionInv.value.copy(camera.projectionMatrixInverse);
@@ -438,6 +461,7 @@ function renderWithVolumetrics(){
     renderer.setRenderTarget(volumeTarget);
     renderer.clear();
     renderer.render(volumeScene,fsCamera);
+    shaftFrames++;
   }
 
   renderer.setRenderTarget(null);
@@ -445,12 +469,24 @@ function renderWithVolumetrics(){
 }
 
 
-return {volumeUniforms,volumeLightTarget,updateVolumetricSettings,renderWithVolumetrics,
+function setShaftStrength(value){
+  if(Number.isFinite(value)){
+    shaftStrength=Math.max(0,Math.min(2,value));
+    state.shaftStrength=shaftStrength;
+    flags.render=true;
+  }
+  return shaftStrength;
+}
+
+return {volumeUniforms,volumeLightTarget,updateVolumetricSettings,renderWithVolumetrics,setShaftStrength,
 resize:resizeVolumetricTargets,dispose(){
   sceneTarget?.dispose();volumeTarget?.dispose();sunVolumeShadowTarget?.dispose();moonVolumeShadowTarget?.dispose();
   volumeMat.dispose();compositeMat.dispose();volumeDepthMat.dispose();fsGeo.dispose();
   contactAO.dispose();
 },stats(){return {
+  supported:HDR_ENABLED,enabled:!!state.godrays&&HDR_ENABLED,
+  fallback:HDR_ENABLED?null:'hdr-unavailable',
+  effectiveStrength:HDR_ENABLED&&state.godrays?shaftStrength:0,renderedFrames:shaftFrames,
   steps:volumeUniforms.steps.value,scale:VOLUME_SCALE,shadowSize:VOLUME_SHADOW_SIZE,
   hdr:HDR_ENABLED,sceneTargetType:HDR_ENABLED?'half-float':'rgba8-fallback',ao:{supported:HDR_ENABLED,...contactAO.stats()}
 }}};

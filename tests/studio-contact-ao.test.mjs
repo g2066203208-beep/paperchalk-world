@@ -26,7 +26,9 @@ function harness(){
       const material=scene.children.find(child=>child.material?.uniforms)?.material;
       const uniforms=material?.uniforms;
       const pass=uniforms?.radius?'ao':uniforms?.source?'filter':uniforms?.sceneColor?'composite':uniforms?.sunLightDepth?'volume':'scene';
+      const visibility=new Map();scene.traverse(object=>visibility.set(object,object.visible));
       calls.push({pass,scene,camera,target:currentTarget,material,
+        overrideMaterial:scene.overrideMaterial,visibility,
         depth:uniforms?.sceneDepth?.value,source:uniforms?.source?.value,
         aoEnabled:uniforms?.aoEnabled?.value,volumeStrength:uniforms?.volumeStrength?.value});
     }
@@ -95,7 +97,7 @@ function pipeline(t,{hdr=true}={}){
   const effect=createVolumetrics({THREE:h.three,scene,renderer:h.renderer,camera,state,flags,
     getSize:()=>({width:h.size.x,height:h.size.y}),lights:{sun,moon},celestials,fog:{forestMist},actor:{contactShadow,playerMesh}});
   t.after(()=>effect.dispose());
-  return {...h,effect,state,flags,scene,camera};
+  return {...h,effect,state,flags,scene,camera,lights:{sun,moon},celestials,forestMist,contactShadow,playerMesh};
 }
 
 test('AO works with rays disabled, is cached until invalidated and can toggle without changing scene rendering',t=>{
@@ -145,4 +147,150 @@ test('unsupported HDR contexts bypass AO and retain the regular scene output',t=
   assert.equal(p.calls[0].target,null);
   assert.equal(p.calls[0].scene,p.scene);
   assert.equal(p.effect.stats().ao.supported,false);
+});
+
+const shadowCalls=p=>p.calls.filter(call=>call.scene===p.scene&&call.camera.isOrthographicCamera);
+
+test('disabled shafts retain pending shadow updates and refresh both light maps when enabled',t=>{
+  const p=pipeline(t);p.state.ao=false;
+  p.effect.updateVolumetricSettings(.25);
+  p.flags.volumeShadow=true;
+  p.effect.renderWithVolumetrics();
+  assert.equal(shadowCalls(p).length,0);
+  assert.equal(p.flags.volumeShadow,true,'disabling shafts must not discard a pending scene or light change');
+  p.calls.length=0;p.state.godrays=true;
+  p.effect.renderWithVolumetrics();
+  const refreshed=shadowCalls(p);
+  assert.equal(refreshed.length,2,'sun and moon both contribute during the dawn transition');
+  assert.notEqual(refreshed[0].target,refreshed[1].target);
+  const volume=p.calls.find(call=>call.pass==='volume');
+  assert.equal(volume.material.uniforms.sunLightDepth.value,refreshed[0].target.depthTexture);
+  assert.equal(volume.material.uniforms.moonLightDepth.value,refreshed[1].target.depthTexture);
+  assert.equal(p.flags.volumeShadow,false);
+  p.calls.length=0;p.effect.renderWithVolumetrics();
+  assert.equal(shadowCalls(p).length,0,'unchanged geometry reuses the valid light depth maps');
+  p.state.godrays=false;p.flags.volumeShadow=true;p.calls.length=0;
+  p.effect.renderWithVolumetrics();
+  assert.equal(shadowCalls(p).length,0);
+  assert.equal(p.flags.volumeShadow,true);
+  p.state.godrays=true;p.calls.length=0;p.effect.renderWithVolumetrics();
+  assert.equal(shadowCalls(p).length,2,'reopening after an invalidation must not reuse the stale shadows');
+});
+
+test('shaft depth submissions use only shadow casters and restore visibility and the original override',t=>{
+  const p=pipeline(t);p.state.ao=false;p.state.godrays=true;
+  p.effect.updateVolumetricSettings(.25);
+  const geometry=new THREE.BoxGeometry(),material=new THREE.MeshBasicMaterial(),oldOverride=new THREE.MeshNormalMaterial();
+  t.after(()=>{geometry.dispose();material.dispose();oldOverride.dispose();});
+  const caster=new THREE.Mesh(geometry,material);caster.castShadow=true;
+  const nonCaster=new THREE.Mesh(geometry,material);
+  const hiddenCaster=new THREE.Mesh(geometry,material);hiddenCaster.castShadow=true;hiddenCaster.visible=false;
+  const hiddenNonCaster=new THREE.Mesh(geometry,material);hiddenNonCaster.visible=false;
+  p.scene.add(caster,nonCaster,hiddenCaster,hiddenNonCaster);
+  p.celestials.moonGlow.visible=false;p.forestMist.visible=false;
+  p.scene.overrideMaterial=oldOverride;
+  const originalVisibility=new Map();p.scene.traverse(object=>originalVisibility.set(object,object.visible));
+  p.effect.renderWithVolumetrics();
+  const shadows=shadowCalls(p);assert.equal(shadows.length,2);
+  for(const call of shadows){
+    assert.notEqual(call.overrideMaterial,oldOverride);
+    assert.equal(call.overrideMaterial.colorWrite,false);
+    assert.equal(call.overrideMaterial.depthWrite,true);
+    assert.equal(call.visibility.get(caster),true);
+    for(const object of [nonCaster,hiddenCaster,hiddenNonCaster,...Object.values(p.celestials),p.forestMist,p.contactShadow,p.playerMesh]){
+      assert.equal(call.visibility.get(object),false,'decorations, hidden objects and the alpha character must not become solid shaft blockers');
+    }
+  }
+  assert.equal(p.scene.overrideMaterial,oldOverride);
+  for(const [object,visible] of originalVisibility)assert.equal(object.visible,visible,'temporary shadow setup must preserve every original visibility value');
+  assert.equal(p.calls[0].overrideMaterial,oldOverride,'the main scene submission keeps the caller override');
+});
+
+test('moving and resizing the camera updates shaft reconstruction without stale projection or world matrices',t=>{
+  const p=pipeline(t);p.state.ao=false;p.state.godrays=true;p.flags.volumeShadow=false;
+  p.camera.position.set(1,3,6);p.camera.lookAt(0,1,0);p.camera.updateMatrixWorld(true);
+  p.effect.renderWithVolumetrics();
+  const first=p.calls.find(call=>call.pass==='volume').material.uniforms;
+  const oldProjection=first.cameraProjectionInv.value.clone(),oldWorld=first.cameraMatrixWorld.value.clone();
+  p.camera.fov=48;p.camera.aspect=1.4;p.camera.near=.2;p.camera.far=80;p.camera.updateProjectionMatrix();
+  p.camera.position.set(-2,4,8);p.camera.lookAt(1,1,-1);p.camera.updateMatrixWorld(true);
+  p.calls.length=0;p.effect.renderWithVolumetrics();
+  const scene=p.calls.find(call=>call.scene===p.scene);
+  const current=p.calls.find(call=>call.pass==='volume').material.uniforms;
+  assert.equal(current.sceneDepth.value,scene.target.depthTexture);
+  assert.deepEqual(current.cameraProjectionInv.value.elements,p.camera.projectionMatrixInverse.elements);
+  assert.deepEqual(current.cameraMatrixWorld.value.elements,p.camera.matrixWorld.elements);
+  assert.deepEqual(current.cameraPos.value.toArray(),p.camera.position.toArray());
+  assert.notDeepEqual(current.cameraProjectionInv.value.elements,oldProjection.elements);
+  assert.notDeepEqual(current.cameraMatrixWorld.value.elements,oldWorld.elements);
+  assert.deepEqual(p.calls.at(-1).material.uniforms.cameraNearFar.value.toArray(),[.2,80]);
+});
+
+test('sun and moon scattering remain finite and continuous across day, twilight and the clock wrap',t=>{
+  const p=pipeline(t),u=p.effect.volumeUniforms;
+  for(const time of [-.01,0,.12,.25,.27,.5,.73,.75,.9,1,1.01]){
+    p.state.time=time;p.effect.updateVolumetricSettings(time);
+    for(const name of ['sunIntensity','moonIntensity','sunDensity','moonDensity']){
+      assert.ok(Number.isFinite(u[name].value)&&u[name].value>=0,`${name} must be a finite nonnegative value at ${time}`);
+    }
+    for(const name of ['sunLightDir','moonLightDir']){
+      assert.ok(u[name].value.toArray().every(Number.isFinite));
+      assert.ok(Math.abs(u[name].value.length()-1)<1e-10);
+    }
+    for(const name of ['sunScatteringColor','moonScatteringColor'])assert.ok(u[name].value.toArray().every(value=>Number.isFinite(value)&&value>=0));
+  }
+  p.state.time=.5;p.effect.updateVolumetricSettings(.5);
+  assert.ok(u.sunIntensity.value>u.moonIntensity.value,'daylight is dominated by sun scattering');
+  p.state.time=0;p.effect.updateVolumetricSettings(0);
+  assert.ok(u.moonIntensity.value>u.sunIntensity.value,'night retains moon scattering instead of disabling the whole effect');
+  for(const boundary of [0,.25,.75,1]){
+    p.state.time=boundary-.0001;p.effect.updateVolumetricSettings(p.state.time);
+    const before=[u.sunIntensity.value,u.moonIntensity.value,u.sunDensity.value,u.moonDensity.value];
+    p.state.time=boundary+.0001;p.effect.updateVolumetricSettings(p.state.time);
+    const after=[u.sunIntensity.value,u.moonIntensity.value,u.sunDensity.value,u.moonDensity.value];
+    assert.ok(before.every((value,index)=>Math.abs(value-after[index])<.02),'crossing a clock boundary must not pop the shaft contribution');
+  }
+});
+
+test('shaft strength is bounded, invalid inputs cannot poison uniforms, and diagnostics report actual renders',t=>{
+  const p=pipeline(t);p.state.ao=false;p.state.godrays=true;p.flags.volumeShadow=false;
+  assert.equal(typeof p.effect.setShaftStrength,'function');
+  assert.equal(p.effect.stats().supported,true);
+  assert.equal(p.effect.stats().renderedFrames,0);
+  p.effect.renderWithVolumetrics();
+  const defaultStrength=p.calls.at(-1).volumeStrength;
+  assert.ok(defaultStrength>0);
+  p.effect.setShaftStrength(1);p.effect.renderWithVolumetrics();
+  assert.equal(p.calls.at(-1).volumeStrength,defaultStrength,'the default strength is one');
+  assert.equal(p.effect.stats().effectiveStrength,p.calls.at(-1).volumeStrength);
+  assert.equal(p.effect.stats().enabled,true);
+  assert.equal(p.effect.stats().renderedFrames,2);
+  p.effect.setShaftStrength(2);p.effect.renderWithVolumetrics();
+  const maximum=p.calls.at(-1).volumeStrength;
+  assert.ok(maximum>defaultStrength);
+  p.effect.setShaftStrength(99);p.effect.renderWithVolumetrics();
+  assert.equal(p.calls.at(-1).volumeStrength,maximum,'values above two must clamp');
+  for(const invalid of [NaN,Infinity,-Infinity]){
+    p.effect.setShaftStrength(invalid);p.effect.renderWithVolumetrics();
+    assert.equal(p.calls.at(-1).volumeStrength,maximum,'nonfinite input must preserve the last valid setting');
+  }
+  p.effect.setShaftStrength(-1);p.effect.renderWithVolumetrics();
+  assert.equal(p.calls.at(-1).volumeStrength,0);
+  p.effect.setShaftStrength(1);p.state.godrays=false;
+  const priorRenders=p.effect.stats().renderedFrames;p.effect.renderWithVolumetrics();
+  assert.equal(p.effect.stats().enabled,false);
+  assert.equal(p.effect.stats().effectiveStrength,0);
+  assert.equal(p.effect.stats().renderedFrames,priorRenders,'AO/compositing without shafts must not count as a volumetric render');
+  assert.equal(p.calls.at(-1).volumeStrength,0);
+});
+
+test('unsupported HDR devices report unavailable shafts without claiming a volumetric render',t=>{
+  const p=pipeline(t,{hdr:false});p.state.godrays=true;
+  p.effect.renderWithVolumetrics();
+  const stats=p.effect.stats();
+  assert.equal(stats.supported,false);
+  assert.ok(stats.fallback,'the fallback reason must be visible instead of silently advertising active shafts');
+  assert.equal(stats.effectiveStrength,0);
+  assert.equal(stats.renderedFrames,0);
+  assert.equal(p.calls.length,1);assert.equal(p.calls[0].target,null);
 });

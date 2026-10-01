@@ -58,7 +58,8 @@ test('volumetric output keeps HDR intermediate and one final color transform',as
   assert.equal((composite.match(/#include <tonemapping_fragment>/g)||[]).length,1,'composite should tone-map exactly once');
   assert.equal((composite.match(/#include <colorspace_fragment>/g)||[]).length,1,'composite should convert to sRGB exactly once');
   assert.match(source,/if\(!HDR_ENABLED\)\{[\s\S]*?renderer\.render\(scene,camera\);/,'unsupported targets must fall back to the regular renderer output');
-  assert.match(source,/nearFade=smoothstep\(3\.5,8\.0,t\)/,'the player and close paper surfaces stay clear of the distant volumetric haze');
+  const fade=source.match(/nearFade=smoothstep\(([\d.]+),([\d.]+),t\)/);
+  assert.ok(fade&&+fade[1]>0&&+fade[1]<+fade[2]&&+fade[2]<5.5,'light shafts must become visible before the close gameplay focal plane');
   assert.match(source,/object\.isMesh&&object\.visible&&!object\.castShadow/,'volume shadows use the same caster set as the surface shadows');
   assert.match(source,/for\(const object of nonCasters\)object\.visible=true/,'temporary caster visibility is restored');
 });

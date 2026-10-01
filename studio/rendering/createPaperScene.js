@@ -288,7 +288,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(state.manualSun){timeTransition.active=false;state.auto=false;state.timePreset='';}
     updateLighting(state.time);syncFeatures();
   }
-  function getState(){return {...state,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
+  function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
   function getStats(){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
@@ -317,6 +317,6 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(!disposed)status('error',error.message,error);
     throw error;
   });
-  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
     getTerrainColumns:()=>terrain.columnRecords.map(column=>({...column})),dispose};
 }
