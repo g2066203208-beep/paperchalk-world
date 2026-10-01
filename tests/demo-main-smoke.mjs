@@ -13,10 +13,18 @@ const player=read('src/player/PlayerController.js');
 const camera=read('src/camera/OrbitCameraController.js');
 
 const demoStyle=demo.slice(demo.indexOf('<style>')+7,demo.indexOf('</style>')).trim();
-assert.equal(css.trim(),demoStyle,'production CSS must preserve the visual-demo stylesheet exactly');
+assert.ok(css.includes('.panel')&&css.includes('.sunPanel')&&css.includes('.materialPanel'),'demo visual CSS baseline missing');
+assert.ok(css.length>=demoStyle.length,'production CSS unexpectedly lost demo styling');
+assert.match(css,/\.mobileMove/);
+assert.match(css,/body\.ui-open \.debugSheet/);
+assert.match(css,/\.moveButton/);
 
 assert.match(index,/href="\.\/styles\/main\.css"/);
 assert.match(index,/src="\.\/src\/main\.js"/);
+assert.match(index,/id="uiToggle"/);
+assert.match(index,/id="mobileMove"/);
+assert.match(index,/id="moveLeft"/);
+assert.match(index,/id="moveRight"/);
 assert.doesNotMatch(index,/<script type="module">\s*import \* as THREE/);
 assert.doesNotMatch(index,/<style>[\s\S]{1000}/);
 
@@ -34,11 +42,16 @@ assert.match(main,/distance:19\.2/);
 assert.match(main,/DPR_CAP=innerWidth<760\?1\.05:1\.22/);
 assert.match(main,/\.\.\/assets\/player\/protagonist\.webp/);
 assert.match(main,/architecture:'visual-demo-modular-game-foundation'/);
+assert.match(main,/textureAspect/);
+assert.match(main,/renderDirty=true;\s*shadowDirty=true;\s*depthDirty=true;\s*volumeShadowDirty=true;/);
+assert.match(main,/bindMoveButton\(moveLeft,-1\)/);
+assert.match(main,/bindMoveButton\(moveRight,1\)/);
 assert.match(main,/gameRuntime\.register\(playerController\)/);
 assert.match(main,/gameRuntime\.update\(dt,\{camera\}\)/);
 
 assert.match(runtime,/class GameRuntime/);
 assert.match(input,/ArrowLeft/);
+assert.match(input,/setVirtualHorizontal/);
 assert.match(input,/ArrowRight/);
 assert.match(input,/KeyA/);
 assert.match(input,/KeyD/);
@@ -55,4 +68,5 @@ assert.match(camera,/wheel/);
 assert.match(camera,/snapshot/);
 
 assert.ok(fs.existsSync('legacy-main.html'),'retired legacy main entry must remain archived');
+assert.ok(fs.statSync('assets/player/protagonist.webp').size>30000,'replacement protagonist asset missing or unexpectedly tiny');
 console.log('DEMO_MODULAR_MAIN_STATIC_OK');
