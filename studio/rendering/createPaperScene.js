@@ -7,6 +7,7 @@ import {clamp} from './math.js';
 import {createPaperMaterials} from './paper-materials.js';
 import {createTerrain} from './terrain.js';
 import {createForest} from './forest.js';
+import {createStageScenery} from './stage-scenery.js';
 import {createSky} from './sky.js';
 import {createPaperFog} from './fog.js';
 import {createLights,createLightingController} from './lighting.js';
@@ -55,7 +56,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.width<760?1.05:1.22));
   renderer.setSize(size.width,size.height,false);
   renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.domElement.style.display='block';
-  renderer.domElement.setAttribute('aria-label','可环绕观察的纸艺世界');
+  renderer.domElement.setAttribute('aria-label','横版开放纸艺世界');
   renderer.shadowMap.enabled=true;
   // PCF honours the light's filter radius: the former fixed soft kernel left
   // razor-sharp repeated trunk stripes across the close mobile composition.
@@ -79,6 +80,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
     paperLeafSet:materials.paperLeafSet,paperTrunkSet:materials.paperTrunkSet,
     paperMapController:materials.storybookMaps});
   const forest=createForest({THREE,scene,...materials,...terrain.pulpSets,terrainWorld:terrain.world});
+  createStageScenery({THREE,scene,world:terrain.world});
   const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture});
   const lights=createLights({THREE,scene,target});
   const celestials=createSky({THREE,scene,renderer,camera});
@@ -134,6 +136,13 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   now=Number.isFinite(now)?now:performance.now();
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
   orbitCamera.follow(lastSnapshot.x,dt,lastSnapshot.y-.5);
+  // Keep directional shadow coverage centred on the explored part of the land.
+  const lightShift=target.x-atmosphere.volumeLightTarget.x;
+  if(Math.abs(lightShift)>.0001){
+    for(const light of [sun,moon]){light.position.x+=lightShift;light.target.position.x+=lightShift;}
+    atmosphere.volumeLightTarget.x=target.x;
+    flags.shadow=flags.volumeShadow=true;
+  }
   const playerMesh=actor.playerMesh;
   frameCalls++;
 
@@ -214,7 +223,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
 
   viewFill.position.copy(camera.position);
-  viewFill.target.position.set(0,1.1,0);
+  viewFill.target.position.set(lastSnapshot.x,lastSnapshot.y+1.1,0);
 
   if(state.shadow&&flags.shadow){
     renderer.shadowMap.needsUpdate=true;
@@ -274,7 +283,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
   function setPaper(patch={}){
     const next={...paperConfig};
-    if(Number.isFinite(patch.scale))next.scale=clamp(patch.scale,.15,2.5);
+    if(Number.isFinite(patch.scale))next.scale=clamp(patch.scale,.5,3);
     if(Number.isFinite(patch.normal))next.normal=clamp(patch.normal,0,3);
     next.height=0;next.blend=0;
     terrain.setPaper(next,state.random);
@@ -321,6 +330,5 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     throw error;
   });
   return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
-    rebuildTerrain:()=>{terrain.rebuild();forest.updateGround();invalidate();},
     getWorld:()=>terrain.world,dispose};
 }

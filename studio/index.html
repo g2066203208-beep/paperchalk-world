@@ -21,8 +21,6 @@
       <div class="tool-group primary-tools">
         <button id="playPause" class="button button-primary" type="button" title="暂停或继续场景">暂停</button>
         <button id="resetPlayer" class="button" type="button" title="将角色送回起点">回到起点</button>
-        <button id="terrainDigBtn" class="button terrain-edit-button" type="button" title="挖开角色前方的土地">挖掘</button>
-        <button id="terrainPlaceBtn" class="button terrain-edit-button" type="button" title="在角色前方填土">放置</button>
         <button id="resetCamera" class="button" type="button" title="恢复初始观察角度">重置视角</button>
       </div>
       <div class="tool-group file-tools">
@@ -37,8 +35,8 @@
 
     <main class="workspace" aria-label="纸艺世界工作区">
       <section class="stage" aria-label="实时游戏场景">
-        <div class="stage-label"><span class="live-dot" aria-hidden="true"></span>实时场景<span class="stage-label-divider" aria-hidden="true"></span><span class="baseline-label">Demo 光影沿用</span></div>
-        <div id="viewport" class="viewport" tabindex="0" aria-label="游戏画面；A 或 D 左右移动，空格跳跃，拖动观察，滚轮缩放"></div>
+        <div class="stage-label"><span class="live-dot" aria-hidden="true"></span>纸艺世界<span class="stage-label-divider" aria-hidden="true"></span><span class="baseline-label">自由漫游</span></div>
+        <div id="viewport" class="viewport" tabindex="0" aria-label="横版开放纸艺世界；A 或 D 或方向键左右漫游"></div>
         <div id="loadingStatus" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span>正在准备纸艺场景…</span></div>
         <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
         <button id="openGameMenu" class="game-only game-pause" type="button" aria-label="暂停并打开菜单" aria-haspopup="dialog" aria-controls="gameMenu" disabled><span aria-hidden="true">Ⅱ</span></button>
@@ -52,11 +50,9 @@
             <div class="game-menu-footer"><span id="gameSaveStatus">进度会自动保存</span><span id="gameBuildVersion">纸艺世界</span></div>
           </section>
         </div>
-        <div class="stage-hint"><span><kbd>A</kbd><kbd>D</kbd> 左右</span><span><kbd>空格</kbd> 跳跃</span><span class="desktop-hint">拖动观察 · 滚轮缩放</span><span class="mobile-hint">单指观察 · 双指缩放</span></div>
+        <div class="stage-hint"><span><kbd>A</kbd><kbd>D</kbd> 自由漫游</span><span class="desktop-hint">工作室：拖动观察 · 滚轮缩放</span><span class="mobile-hint">按住方向键左右漫游</span></div>
         <div class="touch-controls" aria-label="触屏角色控制">
           <div class="touch-move"><button id="moveLeft" class="touch-button" type="button" aria-label="向左移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg></button><button id="moveRight" class="touch-button" type="button" aria-label="向右移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg></button></div>
-          <div class="touch-edit"><button id="terrainDigTouch" class="touch-button touch-edit-button" type="button" aria-label="挖掘前方地形">挖</button><button id="terrainPlaceTouch" class="touch-button touch-edit-button" type="button" aria-label="放置前方地形">放</button></div>
-          <button id="jumpButton" class="touch-button touch-jump" type="button" aria-label="跳跃"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 7-7 7 7M12 4v16"/></svg><span>跳跃</span></button>
         </div>
       </section>
 
@@ -91,7 +87,6 @@
           <section class="settings-section">
             <div class="section-heading"><h3>绘本色纸</h3><span>Storybook Paper</span></div>
             <div class="range-control"><label for="paperScale">纸张色斑尺度</label><output id="paperScaleValue" for="paperScale">1.80×</output><input id="paperScale" type="range" min="50" max="300" step="5" value="180"></div>
-            <div class="range-control"><label for="paperNormal">纸面凹凸</label><output id="paperNormalValue" for="paperNormal">0.00</output><input id="paperNormal" type="range" min="0" max="20" step="1" value="0"></div>
             <button id="resetPaper" class="text-button" type="button">恢复纸张默认值 <span aria-hidden="true">↺</span></button>
           </section>
 
@@ -101,7 +96,7 @@
             <div class="range-control"><label for="sunElevation">高度角</label><output id="sunElevationValue" for="sunElevation">13°</output><input id="sunElevation" type="range" min="5" max="60" step="1" value="13"></div>
             <button id="followSun" class="text-button" type="button">恢复跟随昼夜 <span aria-hidden="true">↺</span></button>
           </section>
-          <p class="settings-footnote">调整纸张的纹理、凹凸和受光，查看它们在不同时间的变化。</p>
+          <p class="settings-footnote">调整纸张的色斑与受光，查看它们在不同时间的变化。</p>
         </div>
       </aside>
     </main>

@@ -100,7 +100,7 @@ test('development server delivers both studio and project-prefixed paths',async 
     });
   });
   for(const prefix of ['', '/paperchalk-world']){
-    for(const [url,type] of [['/studio/','text/html'],['/studio/app.js','text/javascript'],['/studio/core/PlayerSimulation.mjs','text/javascript'],['/studio/rendering/index.js','text/javascript'],['/vendor/three/three.module.js','text/javascript'],['/assets/player/protagonist.webp','image/webp']]){
+    for(const [url,type] of [['/studio/','text/html'],['/studio/app.js','text/javascript'],['/studio/core/StagePlayerSimulation.mjs','text/javascript'],['/studio/rendering/index.js','text/javascript'],['/vendor/three/three.module.js','text/javascript'],['/assets/player/protagonist.webp','image/webp']]){
       const response=await fetch(address+prefix+url);
       assert.equal(response.status,200,url);assert.ok(response.headers.get('content-type').startsWith(type),url);await response.arrayBuffer();
     }

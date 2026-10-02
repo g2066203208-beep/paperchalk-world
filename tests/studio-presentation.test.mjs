@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import {wantsGamePresentation,PauseReasons} from '../studio/ui/GamePresentation.mjs';
 import {defaultOrbitDistance,createOrbitCamera} from '../studio/rendering/orbit-camera.js';
 import * as THREE from '../vendor/three/three.module.js';
-import {createWorld} from '../studio/world/PaperWorld.mjs';
-import {PlayerSimulation} from '../studio/core/PlayerSimulation.mjs';
+import {createPaperStageWorld} from '../studio/world/PaperStageWorld.mjs';
+import {StagePlayerSimulation} from '../studio/core/StagePlayerSimulation.mjs';
 
 test('native shell always uses game presentation, even with a stale desktop override',()=>{
   assert.equal(wantsGamePresentation({userAgent:'Android PaperchalkShell/5',search:'?play=0',width:1920,height:1080}),true);
@@ -34,7 +34,8 @@ test('landscape gameplay frames the character closer while desktop keeps its est
   assert.equal(defaultOrbitDistance({width:1440,height:900}),19.2);
   assert.ok(defaultOrbitDistance({width:915,height:412,gameplay:true})<19.2);
   assert.ok(defaultOrbitDistance({width:844,height:320,gameplay:true})>=5.4);
-  assert.equal(defaultOrbitDistance({width:390,height:844,gameplay:true}),19.2);
+  const portrait=defaultOrbitDistance({width:390,height:844,gameplay:true});
+  assert.ok(portrait>defaultOrbitDistance({width:844,height:390,gameplay:true})&&portrait<19.2,'portrait keeps readable stage detail with more vertical room');
 });
 
 test('landscape composition is independent of device pixel resolution',()=>{
@@ -44,7 +45,7 @@ test('landscape composition is independent of device pixel resolution',()=>{
   }
 });
 
-test('close landscape camera keeps the entire character visible throughout a jump',t=>{
+test('close landscape camera follows free exploration in both directions without clipping the character',t=>{
   const previousWindow=globalThis.window;
   globalThis.window=new EventTarget();
   t.after(()=>{if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;});
@@ -53,22 +54,22 @@ test('close landscape camera keeps the entire character visible throughout a jum
   const orbit=createOrbitCamera({camera,domElement,target:new THREE.Vector3(0,1.75,-.35),
     onChange(){},viewport:{width:912,height:431,gameplay:true}});
   t.after(()=>orbit.dispose());
-  const simulation=new PlayerSimulation(createWorld(Array.from({length:15},(_,i)=>({x:i-7,z:0,h:0}))));
-  let highest=.5;
-  for(let frame=0;frame<180;frame++){
-    const snapshot=simulation.update(1/60,{jumpPressed:frame===0});
-    highest=Math.max(highest,snapshot.y);
-    orbit.follow(snapshot.x,1/60,snapshot.y-.5);camera.updateMatrixWorld(true);
-    const head=new THREE.Vector3(snapshot.x,snapshot.y+2.24,0).project(camera);
-    const feet=new THREE.Vector3(snapshot.x,snapshot.y,0).project(camera);
-    assert.ok(head.y<.98,'jump frame '+frame+' cuts off the head');
-    assert.ok(feet.y>-.98,'jump frame '+frame+' cuts off the feet');
+  const simulation=new StagePlayerSimulation(createPaperStageWorld());
+  for(const horizontal of [1,-1]){
+    for(let frame=0;frame<900;frame++){
+      const snapshot=simulation.update(1/60,{horizontal});
+      orbit.follow(snapshot.x,1/60,snapshot.y-.5);camera.updateMatrixWorld(true);
+      const head=new THREE.Vector3(snapshot.x,snapshot.y+2.24,0).project(camera);
+      const feet=new THREE.Vector3(snapshot.x,snapshot.y,0).project(camera);
+      assert.ok(head.y<.98,'walk frame '+frame+' cuts off the head');
+      assert.ok(feet.y>-.98,'walk frame '+frame+' cuts off the feet');
+      assert.ok(Math.abs(feet.x)<.98,'actor must stay inside the horizontal frame');
+    }
   }
-  assert.ok(highest>1.5,'test must include an actual jump');
-  assert.ok(Math.abs(orbit.snapshot().target.y-1.75)<.001,'camera returns to the grounded composition');
+  assert.ok(simulation.distance>60,'test must cover the whole explorable terrain');
 });
 
-test('first game-camera wheel input does not jump to the old distant zoom limit',t=>{
+test('gameplay camera keeps stage framing while studio wheel zoom remains available',t=>{
   const previousWindow=globalThis.window;
   globalThis.window=new EventTarget();
   t.after(()=>{if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;});
@@ -84,9 +85,13 @@ test('first game-camera wheel input does not jump to the old distant zoom limit'
   domElement.dispatchEvent(wheel);
   const afterWheel=orbit.snapshot().distance;
   assert.equal(wheel.defaultPrevented,true);
-  assert.ok(afterWheel<initial&&afterWheel>initial-.1,'one small wheel step should zoom smoothly inward');
+  assert.equal(afterWheel,initial,'gameplay framing stays fixed');
   orbit.reset();
   assert.equal(orbit.snapshot().distance,initial);
   assert.equal(orbit.resize({width:1824,height:862,gameplay:true}),false);
   assert.equal(orbit.snapshot().distance,initial,'resolution-only changes must not alter framing');
+  orbit.resize({width:1440,height:900,gameplay:false});
+  const studioDistance=orbit.snapshot().distance;
+  domElement.dispatchEvent(wheel);
+  assert.ok(orbit.snapshot().distance<studioDistance,'studio wheel still zooms');
 });

@@ -100,7 +100,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
     // An irregular rise hides the old straight horizon without a backdrop card.
     // Keep the meeting edge at exactly the terrain's ground level.
     const roll=(Math.sin(x*.25+z*.11)*.12+Math.sin(x*.57-z*.07)*.075)*rise;
-    const y=.48+rise*.60+roll;
+    const y=(terrainWorld?.surfaceY(x,0)??.5)-.035+rise*.60+roll;
     return [x,y,z,x,-z];
   }
   function floorPatch(minX,maxX,minZ,maxZ,columns,rows){
@@ -112,7 +112,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
       floorWriter.quad(floorPoint(x0,z1),floorPoint(x1,z1),floorPoint(x1,z0),floorPoint(x0,z0));
     }
   }
-  floorPatch(-42,42,-65,-18.2,28,16);
+  floorPatch(-42,54,-65,-39.8,48,8);
   const forestFloorGeometry=floorWriter.finish();
   const forestFloor=new THREE.Mesh(forestFloorGeometry,forestFloorMat);
   forestFloor.name='Continuous pulp forest floor';
@@ -217,19 +217,20 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
   }
 
   const layers=[
-    {z:-5.0,count:10,span:20,jitter:1.16,scale:1.16},
-    {z:-8.7,count:12,span:24,jitter:1.48,scale:1.05},
-    {z:-13.7,count:14,span:29,jitter:1.88,scale:.98}
+    {z:-6.8,count:18,span:44,jitter:1.16,scale:1.16},
+    {z:-10.2,count:21,span:48,jitter:1.48,scale:1.05},
+    {z:-15.0,count:24,span:54,jitter:1.88,scale:.98}
   ];
   layers.forEach((config,layer)=>{
     for(let i=0;i<config.count;i++){
-      const x=(i/(config.count-1)-.5)*config.span+(hash3(layer*97+i*17,31,11)-.5)*config.jitter;
+      const x=6+(i/(config.count-1)-.5)*config.span+(hash3(layer*97+i*17,31,11)-.5)*config.jitter;
+      if(layer===0&&((x>4&&x<8.5)||(x>16&&x<22)))continue;
       const z=config.z+(hash3(i*23,layer*61,19)-.5)*1.60;
       const scale=config.scale+(hash3(i,layer,88)-.5)*.15;
       queueTree(x,z,layer,layer*100+i*13+7,scale);
     }
   });
-  [[-9.2,-2.2,0,1.45],[-8.6,.8,0,1.35],[9,-2,0,1.45],[8.5,1.2,0,1.35]]
+  [[-9.2,-2.2,0,1.45],[-8.6,.8,0,1.35],[10,-4.5,0,1.22],[24,-3,0,1.4]]
     .forEach((data,i)=>queueTree(data[0],data[1],data[2],700+i*29,data[3]));
 
   // Low, thick paper silhouettes fill selected distant gaps between trunks.
@@ -281,13 +282,13 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
     for(let i=0;i<count;i++){
       const x=(i-(count-1)*.5)*4.2+(random()-.5)*1.4;
       const z=-14.6-layer*4.8+(random()-.5)*1.5;
-      distantPapers.push({x,z,y:floorPoint(x,z)[1]-.10,
+      distantPapers.push({x,z,y:(terrainWorld?.surfaceY(x,z)??floorPoint(x,z)[1])-.10,
         sx:4.7+random()*2.1,sy:1.15+random()*1.35,geo:(i+layer)%2,
         mat:x<0?layer:layer+2,rot:(random()-.5)*.035});
     }
   }
 
-  const dummy=new THREE.Object3D(),groundedInstances=[];
+  const dummy=new THREE.Object3D();
   function instances(geometry,material,items,name,configure){
     if(!items.length)return;
     const mesh=new THREE.InstancedMesh(geometry,material,items.length);
@@ -299,7 +300,6 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
       configure(item);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate=true;canopyGroup.add(mesh);
-    groundedInstances.push({mesh,items,configure});
   }
   for(let layer=0;layer<3;layer++){
     const trunks=trees.map(tree=>tree.trunk).filter(trunk=>trunk.layer===layer);
@@ -335,20 +335,5 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
     distantPapers:distantPapers.length,distantTriangles,
     floorTriangles:forestFloorGeometry.attributes.position.count/3,
     triangles:trees.length*(trunkGeo.attributes.position.count/3)+allCrowns.reduce((sum,crown)=>sum+crownGeometries[crown.geo].attributes.position.count/3,0)+forestFloorGeometry.attributes.position.count/3+distantTriangles};
-  function updateGround(){
-    if(!terrainWorld)return;
-    const heights=new Map();
-    for(const {mesh,items,configure} of groundedInstances){
-      items.forEach((item,index)=>{
-        const key=item.rootX+','+item.rootZ;
-        if(!heights.has(key))heights.set(key,terrainWorld.surfaceY(item.rootX,item.rootZ));
-        const y=heights.get(key);
-        configure(item);
-        if(y===null)dummy.scale.setScalar(0);else dummy.position.y+=y-item.ground;
-        dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
-      });
-      mesh.instanceMatrix.needsUpdate=true;
-    }
-  }
-  return {canopyGroup,updateGround};
+  return {canopyGroup};
 }

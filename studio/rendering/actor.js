@@ -149,14 +149,18 @@ function sync(snapshot){
   if(!playerMesh||!snapshot)return false;
   const x=Number(snapshot.x),y=Number(snapshot.y);
   if(!Number.isFinite(x)||!Number.isFinite(y))return false;
-  const changed=!last||last.x!==x||last.y!==y;
+  const facing=snapshot.facing??1;
+  const stride=snapshot.grounded?Math.sin((snapshot.distance??0)*10)*Math.min(.024,Math.abs(snapshot.vx??0)*.009):-(snapshot.vx??0)*.012;
+  const changed=!last||last.x!==x||last.y!==y||last.facing!==facing||playerMesh.rotation.z!==stride;
   playerMesh.position.set(x,y+1.12,0);
+  playerMesh.scale.x=facing;
+  playerMesh.rotation.z=stride;
   const ground=terrain.groundBelow?.(x,y,0);
   const surface=ground?.y??y-5;
   contactShadow.position.set(x,surface+.007,-.02);
   if(ground){
     contactShadow.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),
-      new THREE.Vector3(ground.normal.x,ground.normal.y,ground.normal.z).normalize());
+      new THREE.Vector3(ground.normal.x,ground.normal.y,ground.normal.z??0).normalize());
   }
   const aboveGround=Math.max(0,y-surface);
   contactShadow.userData.groundFactor=1/(1+aboveGround*1.5);

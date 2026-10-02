@@ -5,6 +5,7 @@ export function defaultOrbitDistance({width,height,gameplay=false}={}){
   // The target is a close diorama shot: the playable landscape fills the
   // phone viewport and the actor remains a readable focal point.
   if(gameplay&&width>height&&height>0)return 9.6;
+  if(gameplay)return 11.5;
   return width>height&&height>0&&height<380?clamp(19.2*height/380,12,19.2):19.2;
 }
 
@@ -16,6 +17,7 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   const restingTargetY=target.y;
   let followY=restingTargetY;
   let manuallyAdjusted=false;
+  let gameplay=!!viewport?.gameplay;
   const minDistance=4.6,maxDistance=32,pitchLimit=Math.PI*.5-.015;
   const pointers=new Map(),events=new AbortController();
   let dragging=false,lastX=0,lastY=0,pinchStartDistance=0,pinchStartCameraDistance=distance;
@@ -27,7 +29,13 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   }
   function changed(manual=false){if(manual)manuallyAdjusted=true;place();onChange();}
   function resize(viewport){
+    const modeChanged=gameplay!==!!viewport.gameplay;
+    gameplay=!!viewport.gameplay;
     defaults.distance=defaultOrbitDistance(viewport);
+    if(modeChanged&&gameplay){
+      ({yaw,pitch,distance}=defaults);manuallyAdjusted=false;pointers.clear();dragging=false;
+      changed();return true;
+    }
     if(manuallyAdjusted||pointers.size||distance===defaults.distance)return false;
     distance=defaults.distance;
     pinchStartCameraDistance=distance;
@@ -57,6 +65,7 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   }
   domElement.style.touchAction='none';
   domElement.addEventListener('pointerdown',e=>{
+    if(gameplay)return;
     if(e.pointerType==='mouse'&&e.button!==0)return;
     pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     try{domElement.setPointerCapture(e.pointerId);}catch{}
@@ -76,7 +85,7 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
     lastX=e.clientX;lastY=e.clientY;changed(true);
   },options);
   for(const name of ['pointerup','pointercancel','lostpointercapture'])domElement.addEventListener(name,e=>finishPointer(e.pointerId),options);
-  domElement.addEventListener('wheel',e=>{e.preventDefault();distance=clamp(distance+e.deltaY*.012,minDistance,maxDistance);changed(true);},{...options,passive:false});
+  domElement.addEventListener('wheel',e=>{e.preventDefault();if(gameplay)return;distance=clamp(distance+e.deltaY*.012,minDistance,maxDistance);changed(true);},{...options,passive:false});
   window.addEventListener('blur',()=>{pointers.clear();dragging=false;pinchStartDistance=0;},options);
   place();
   return {

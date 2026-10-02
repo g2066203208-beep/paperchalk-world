@@ -1,21 +1,20 @@
 import {createPaperScene} from './rendering/index.js';
-import {TerrainPlayerSimulation} from './core/TerrainPlayerSimulation.mjs';
+import {StagePlayerSimulation} from './core/StagePlayerSimulation.mjs';
 import {SaveStore} from './core/SaveStore.mjs';
 import {InputActions} from './input/InputActions.mjs';
 import {installStudioLifecycle} from './core/Lifecycle.mjs';
 import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','terrainDigBtn','terrainPlaceBtn','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','jumpButton','terrainDigTouch','terrainPlaceTouch','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector'].map(id=>[id,$(id)]));
 const defaults={scale:1.8,normal:0,height:0,blend:0};
-const paperInputs={paperScale:'scale',paperNormal:'normal'};
-const saves=new SaveStore();
+const paperInputs={paperScale:'scale'};
+const saves=new SaveStore({key:'paperworld.stage.save.v1'});
 const events=new AbortController();
 const heldControls=new Set();
 const pauseReasons=new PauseReasons();
 const coarsePointer=window.matchMedia('(any-pointer: coarse)');
 let scene,world,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
-const WORLD_SAVE_KEY='paperchalk-world-density-v1';
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0;
 const STEP=1/60;
 const disposeLifecycle=installStudioLifecycle({
@@ -42,7 +41,7 @@ function toast(message){
 }
 function setStatus(){
   const paused=pauseReasons.active;
-  ui.appStatus.textContent=failed?'画面待恢复':!ready?'正在载入':paused?'场景已暂停':'横版世界 · 运行中';
+  ui.appStatus.textContent=failed?'画面待恢复':!ready?'正在载入':paused?'场景已暂停':'纸艺世界 · 自由漫游';
   ui.playPause.textContent=paused?'继续':'暂停';
   ui.playPause.setAttribute('aria-pressed',String(paused));
   ui.openGameMenu.setAttribute('aria-expanded',String(pauseReasons.menu));
@@ -88,9 +87,9 @@ function refreshStatus(now,force=false){
   if(!ready||(!force&&now-statusTime<350))return;
   const state=simulation.snapshot(),stats=scene.getStats();
   ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z 0`;
-  ui.playerState.textContent=pauseReasons.active?'已暂停':!state.grounded?(state.vy>0?'跃起':'落下'):Math.abs(state.vx)>.05?'移动中':'站立';
+  ui.playerState.textContent=pauseReasons.active?'已暂停':Math.abs(state.vx)>.05?'漫游中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
-  ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n连续地形 ${stats.terrain.baseTriangles.toLocaleString()} 个三角面 · ${stats.terrain.editedSamples} 处编辑\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
+  ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n纸艺大地 · 连续地面\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
   const shafts=stats.volumetrics;
   ui.renderStats.textContent+='\n丁达尔光柱：'+(!shafts.supported?'此设备图形能力不支持':!shafts.enabled?'已关闭':shafts.effectiveStrength.toFixed(2)+'× · 已渲染 '+shafts.renderedFrames+' 帧');
   lastRendered=stats.renderedFrames;statusTime=now;
@@ -98,7 +97,7 @@ function refreshStatus(now,force=false){
 function resetClock(){lastTime=0;accumulator=0;for(const cancel of heldControls)cancel();input?.cancel();}
 function saveProgress(automatic=false){
   if(!ready||disposed)return false;
-  const result=saveWorldState()?saves.save(simulation.snapshot()):{ok:false};
+  const result=saves.save(simulation.snapshot());
   ui.saveStatus.textContent=result.ok?`已${automatic?'自动':''}保存 ${new Date(result.savedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`:'保存失败：本地存储不可用';
   ui.gameSaveStatus.textContent=ui.saveStatus.textContent;
   if(!automatic)toast(result.ok?'已保存角色进度到此设备':'无法保存，请检查是否允许本站使用本地存储');
@@ -109,35 +108,12 @@ function loadProgress(automatic=false){
   if(result.ok&&result.snapshot){
     const restored=simulation.restore(result.snapshot);resetClock();
     ui.saveStatus.textContent=restored?'已读取保存的进度':'存档位置已失效，角色返回起点';
-    if(!automatic)toast(restored?'已读取角色进度':'该位置已不适合当前地形，已安全回到起点');
+    if(!automatic)toast(restored?'已读取角色进度':'该位置已不适合当前舞台，已回到起点');
   }else{
     const message={empty:'尚未保存',corrupt:'存档损坏，当前场景可继续使用',unsupported:'此存档版本暂不支持',unavailable:'本地存储不可用'}[result.status]||'无法读取进度';
     ui.saveStatus.textContent=message;if(!automatic)toast(message);
   }
   ui.gameSaveStatus.textContent=ui.saveStatus.textContent;
-}
-function saveWorldState(){
-  try{localStorage.setItem(WORLD_SAVE_KEY,world.serialize());return true;}catch{return false;}
-}
-function loadWorldState(){
-  try{
-    const raw=localStorage.getItem(WORLD_SAVE_KEY);
-    if(!raw)return false;
-    const restored=world.restore(raw);
-    if(restored)scene.rebuildTerrain();
-    return restored;
-  }catch{return false;}
-}
-function editWorld(action){
-  if(!ready||pauseReasons.active)return;
-  const player=simulation.snapshot(),facing=player.facing||1;
-  const center={x:player.x+facing*(action==='dig'?1.1:1.35),y:player.y-.27,z:0};
-  const radius=.85;
-  if(action==='place'&&simulation.intersectsBrush(center,radius)){toast('角色站在放置位置');return;}
-  const result=world.brush(center,{radius,mode:action==='dig'?'dig':'add'});
-  if(result.changed){scene.rebuildTerrain();saveWorldState();toast(action==='dig'?'已挖开一片土地':'已填上一片土地');}
-  else toast(action==='dig'?'这里已经挖空':'这里没有可填的位置');
-  refreshStatus(performance.now(),true);
 }
 function heldButton(element,setHeld){
   const active=new Set();let keyboardHeld=false,pulseHeld=false,pulseTimer=0;
@@ -240,10 +216,6 @@ function wireControls(){
   listen(ui.viewport,'pointerdown',()=>ui.viewport.focus({preventScroll:true}));
   listen(ui.playPause,'click',()=>{pauseReasons.toggleUser();resetClock();setStatus();refreshStatus(performance.now(),true);});
   listen(ui.resetPlayer,'click',()=>{simulation.reset();resetClock();toast('角色已回到起点');refreshStatus(performance.now(),true);});
-  listen(ui.terrainDigBtn,'click',()=>editWorld('dig'));
-  listen(ui.terrainPlaceBtn,'click',()=>editWorld('place'));
-  listen(ui.terrainDigTouch,'click',()=>editWorld('dig'));
-  listen(ui.terrainPlaceTouch,'click',()=>editWorld('place'));
   listen(ui.saveProgress,'click',()=>saveProgress());
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
@@ -268,7 +240,6 @@ function wireControls(){
   listen(ui.followSun,'click',()=>{scene.setSun({manual:false});updateControls();toast('太阳方向已恢复跟随昼夜');});
   heldButton(ui.moveLeft,value=>input.setVirtualLeft(value));
   heldButton(ui.moveRight,value=>input.setVirtualRight(value));
-  heldButton(ui.jumpButton,value=>input.setVirtualJump(value));
 }
 function tick(now){
   if(disposed)return;
@@ -297,10 +268,10 @@ async function start(){
   try{
     scene=createPaperScene({container:ui.viewport,onStatus:sceneStatus});
     world=scene.getWorld();
-    simulation=new TerrainPlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
+    simulation=new StagePlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;
     if(disposed)return;
-    ready=true;loadWorldState();loadProgress(true);wireControls();updateControls();setStatus();
+    ready=true;loadProgress(true);wireControls();updateControls();setStatus();
     for(const button of document.querySelectorAll('.toolbar button'))button.disabled=false;
     ui.openGameMenu.disabled=false;
     raf=requestAnimationFrame(tick);

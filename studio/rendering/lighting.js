@@ -83,8 +83,8 @@ function updateLighting(t){
     sy=3.0+Math.sin(el)*radius;
     sz=-Math.cos(az)*horizontal;
   }
-  sun.position.set(sx,sy,sz);
-  moon.position.set(mx,my,mz);
+  sun.position.set(sx+volumeLightTarget.x,sy,sz);
+  moon.position.set(mx+volumeLightTarget.x,my,mz);
 
   const sunDawn=new THREE.Color(0xffd894);
   const sunSunset=new THREE.Color(0xff654d);
