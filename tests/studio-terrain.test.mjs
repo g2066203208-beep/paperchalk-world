@@ -52,9 +52,8 @@ test('the paper stage has closed authored scenery with rendered tops matching co
       assert.ok(hits[0].face.normal.y>.9,'the creased walkway has the correct outward normal');
     }
     for(const material of mesh.material){
-      assert.equal(material.roughness,1);assert.equal(material.metalness,0);assert.equal(material.clearcoat,0);
-      assert.ok(material.specularIntensity<.1);assert.equal(material.flatShading,true);
-      assert.equal(material.normalMap,null);assert.equal(material.displacementMap,null);
+      assert.equal(material.isMeshLambertMaterial,true,'matte paper uses a diffuse shader without plastic specular');
+      assert.equal(material.flatShading,true);
     }
   }
   assert.equal(terrain.stats().platforms,1);assert.ok(terrain.stats().baseTriangles<1500);

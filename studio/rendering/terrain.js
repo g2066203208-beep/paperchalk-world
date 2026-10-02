@@ -13,8 +13,8 @@ export function createTerrain({THREE,scene,renderer,flags,paperConfig,
   const terrainBlocks=new THREE.Group();terrainBlocks.name='authored-stage-platforms';terrain.add(terrainBlocks);
   const pigmentMaterials=[];
   function paper(name,color,map=null){
-    const material=new THREE.MeshPhysicalMaterial({color:map?0xffffff:color,map,
-      roughness:1,metalness:0,specularIntensity:.045,flatShading:true,side:THREE.FrontSide});
+    const material=new THREE.MeshLambertMaterial({color:map?0xffffff:color,map,
+      flatShading:true,side:THREE.FrontSide});
     material.name=name;
     pigmentMaterials.push({material,color,map});return material;
   }
@@ -55,14 +55,37 @@ export function createTerrain({THREE,scene,renderer,flags,paperConfig,
     const mesh=new THREE.Mesh(geometry,material);mesh.name=name;mesh.castShadow=true;mesh.receiveShadow=true;
     details.add(mesh);return mesh;
   }
+  // One pale cut-paper ribbon gives the open land a readable walking lane.
+  const pathMat=paper('warm-ivory-paper-path',0xd9c8a0);
+  const pathPositions=[],pathUV=[];
+  const ground=world.platforms[0],pathXs=new Set(ground.profile.map(p=>p.x));
+  for(let x=ground.profile[0].x;x<ground.profile.at(-1).x;x+=.4)pathXs.add(Number(x.toFixed(4)));
+  const pathSections=[...pathXs].sort((a,b)=>a-b).map(x=>{
+    const center=-.04+Math.sin(x*.19)*.15,width=.75+Math.sin(x*.49+.7)*.075;
+    const notch=Math.sin(x*7.3)*.014;
+    const y=world.surfaceY(x,0)+.008;
+    return [[x,y,center-width+notch],[x,y,center+width+notch]];
+  });
+  function pathTri(a,b,c){for(const p of [a,b,c]){pathPositions.push(...p);pathUV.push(p[0],p[2]);}}
+  for(let i=1;i<pathSections.length;i++){
+    const [ab,af]=pathSections[i-1],[bb,bf]=pathSections[i];
+    pathTri(af,bf,ab);pathTri(bf,bb,ab);
+  }
+  const pathGeometry=new THREE.BufferGeometry();
+  pathGeometry.setAttribute('position',new THREE.Float32BufferAttribute(pathPositions,3));
+  pathGeometry.setAttribute('uv',new THREE.Float32BufferAttribute(pathUV,2));pathGeometry.computeVertexNormals();
+  const pathMesh=add(pathGeometry,pathMat,'continuous-paper-walking-ribbon');pathMesh.castShadow=false;
   const tuftMaterials=[paper('folded-sage-grass',0x6c8e63),paper('folded-lime-grass',0xa6ba77),paper('folded-grass-light-edge',0xc7c48c)];
   function foldedLeafGeometry(){
     const geo=new THREE.BufferGeometry();
-    const p=[-.13,0,0, 0,0,.052, .015,.52,.012, 0,0,.052, .13,0,0, .015,.52,.012];
+    const p=[-.06,0,0, 0,.18,.045, -.14,.22,0,
+      -.14,.22,0, 0,.18,.045, .07,.50,.005,
+      0,.18,.045, .06,0,0, .13,.23,0,
+      0,.18,.045, .13,.23,0, .07,.50,.005];
     const front=[...p];
     for(let i=0;i<front.length;i+=9)p.push(front[i+6],front[i+7],front[i+8]-.009,front[i+3],front[i+4],front[i+5]-.009,front[i],front[i+1],front[i+2]-.009);
     geo.setAttribute('position',new THREE.Float32BufferAttribute(p,3));geo.computeVertexNormals();
-    geo.addGroup(0,3,0);geo.addGroup(3,3,1);geo.addGroup(6,6,0);return geo;
+    geo.addGroup(0,6,0);geo.addGroup(6,6,1);geo.addGroup(12,12,0);return geo;
   }
   const leafGeometry=foldedLeafGeometry();let tufts=0;
   for(const [x,z,size] of [[-8.8,1.75,1.05],[-6.1,-1.8,.85],[-4.7,2.0,1.1],[-2.6,-1.6,.9],[-1.35,1.9,.75],
@@ -93,6 +116,21 @@ export function createTerrain({THREE,scene,renderer,flags,paperConfig,
   for(const [x,z,scale] of [[-7.6,1.7,.8],[-3.7,-1.55,.7],[-1.9,1.55,.8],[3.4,-1.5,.65],[9.7,2.15,.7],[13.2,-1.7,.95],[18.0,2.5,.85],[23.5,-1.5,1.1]]){
     const y=world.surfaceY(x,z);if(y===null)continue;
     const stone=add(rockGeometry,[stoneMat,stoneLight,stoneEdge],'folded-paper-stone');stone.position.set(x,y,z);stone.scale.setScalar(scale);stones++;
+  }
+  const petalMats=[paper('buttercream-paper-petals',0xefdfb5),paper('blush-paper-petals',0xc99786)];
+  const flowerPositions=[],flowerGeometry=new THREE.BufferGeometry();
+  for(let i=0;i<10;i++){
+    const a=i*Math.PI/5,b=(i+1)*Math.PI/5,ra=i%2?.040:.077,rb=(i+1)%2?.040:.077;
+    flowerPositions.push(0,0,.005,Math.cos(a)*ra,Math.sin(a)*ra,0,Math.cos(b)*rb,Math.sin(b)*rb,0);
+  }
+  flowerGeometry.setAttribute('position',new THREE.Float32BufferAttribute(flowerPositions,3));flowerGeometry.computeVertexNormals();
+  for(const [x,z] of [[-5.3,1.1],[-.5,-1.1],[2.6,1.03],[8.4,-1.3],[12.2,1.15],[18.8,-1.1],[22.3,1.1]]){
+    for(let i=0;i<3;i++){
+      const px=x+(i-1)*.15,pz=z+Math.sin(i)*.08,y=world.surfaceY(px,pz),height=.20+i*.035;
+      const stem=add(new THREE.PlaneGeometry(.012,height),tuftMaterials[0],'paper-flower-stem');stem.position.set(px,y+height*.5,pz);
+      const flower=add(flowerGeometry,petalMats[i%2],'small-paper-blossom');flower.position.set(px,y+height,pz+.003);
+      flower.rotation.z=i*.55;
+    }
   }
 
   // These set pieces never move. One draw per paper stock keeps the phone

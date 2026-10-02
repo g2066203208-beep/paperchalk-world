@@ -15,6 +15,10 @@ test('the whole explorable route is one continuous full-depth paper ground',()=>
     }
   }
   assert.equal(world.surfaceY(0),world.spawn.y);
+  for(const cameraX of [world.bounds.minX,world.bounds.maxX]){
+    for(const offset of [-40,40])assert.notEqual(world.surfaceY(cameraX+offset,-35),null,
+      'the far landscape corners must remain inside the continuous ground sheet');
+  }
 });
 
 test('every fold is position-continuous with unit outward support normals',()=>{
@@ -31,7 +35,7 @@ test('world geometry is immutable and invalid positions cannot supply a floor',(
   assert.throws(()=>{world.platforms[0].profile[0].y=99;},TypeError);
   assert.deepEqual(world.floorCandidates(NaN),[]);
   assert.deepEqual(world.floorCandidates(0,-1),[]);
-  assert.equal(world.surfaceY(40),null);
+  assert.equal(world.surfaceY(1000),null);
   assert.equal(world.surfaceY(0,4),null);
   assert.equal(world.platformAt('missing'),null);
 });

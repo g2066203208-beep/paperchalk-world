@@ -31,7 +31,8 @@ let shaftStrength=1,shaftFrames=0;
 
 let sceneTarget=null,volumeTarget=null;
 let sunVolumeShadowTarget=null,moonVolumeShadowTarget=null;
-let VOLUME_SCALE=getSize().width<760?.34:.40;
+const volumeScale=()=>{const size=getSize();return (size.compact??(Math.min(size.width,size.height)<600||size.width<760)) ? .34 : .40;};
+let VOLUME_SCALE=volumeScale();
 const VOLUME_SHADOW_SIZE=512;
 
 const sunVolumeCamera=new THREE.OrthographicCamera(-18,18,15,-6,.1,60);
@@ -299,7 +300,7 @@ function makeVolumeShadowTarget(){
 }
 
 function resizeVolumetricTargets(){
-  VOLUME_SCALE=getSize().width<760?.34:.40;
+  VOLUME_SCALE=volumeScale();
   const size=new THREE.Vector2();
   renderer.getDrawingBufferSize(size);
   const w=Math.max(2,Math.floor(size.x)),h=Math.max(2,Math.floor(size.y));

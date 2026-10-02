@@ -171,7 +171,8 @@ updateFogInstances(0);
 let depthTarget=null;
 flags.depth=true;
 function resizeDepthTarget(){
-  const scale=getSize().width<760?.32:.38;
+  const size=getSize();
+  const scale=(size.compact??(Math.min(size.width,size.height)<600||size.width<760)) ? .32 : .38;
   const drawSize=new THREE.Vector2();
   renderer.getDrawingBufferSize(drawSize);
   const w=Math.max(256,Math.floor(drawSize.x*scale));

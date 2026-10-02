@@ -9,9 +9,10 @@ const platform = (id, name, kind, profile, options = {}) => Object.freeze({
 export function createPaperStageWorld() {
   const platforms = Object.freeze([
     platform('ground', '连续纸艺大地', 'ground', [
-      [-16, .35], [-12, .35], [-9.8, .52], [-7.2, .42], [-4.8, .62], [-2.2, .5],
+      // Wide paper margins also cover the far corners of the landscape camera.
+      [-72, .35], [-16, .35], [-12, .35], [-9.8, .52], [-7.2, .42], [-4.8, .62], [-2.2, .5],
       [1, .5], [4.4, .65], [7, .72], [10, .64], [13, .68], [16, .72],
-      [19.5, .62], [22, .55], [25, .6], [29, .67], [32, .67],
+      [19.5, .62], [22, .55], [25, .6], [29, .67], [32, .67], [84, .67],
     ]),
   ]);
   const bounds = Object.freeze({ minX: -12, maxX: 25, minY: -5, maxY: 8 });

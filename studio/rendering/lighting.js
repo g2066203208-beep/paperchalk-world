@@ -68,7 +68,7 @@ function updateLighting(t){
   let mx=-Math.cos(ma)*orbitX,my=orbitBaseY+Math.sin(ma)*orbitY,mz=orbitZ;
   // Keep the dawn palette while lifting the key above the tree-line. At the
   // default dawn the old orbit was only 5 degrees high and never lit the pulp.
-  sy+=8.0*twilight*sunFade;
+  sy+=12.0*twilight*sunFade;
   // Dawn enters from behind the left-hand tree gaps, not almost sideways.
   // Surface shadows and volumetric occlusion share this exact light position.
   sz-=10.0*twilight*sunFade;
@@ -93,7 +93,7 @@ function updateLighting(t){
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
   // Golden grazing light has to reveal fibre relief, not clip a broad area of
   // rough paper to yellow-white. The bevels supply the narrow bright accents.
-  sun.intensity=sunFade*(.45+sunUp*3.6+twilight*4.5);
+  sun.intensity=sunFade*(.45+sunUp*3.6+twilight*3.8);
 
   moon.color.set(0x72a4ff);
   moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
@@ -104,7 +104,7 @@ function updateLighting(t){
   // Environment fill follows both celestial lights continuously.
   const dayMix=sunFade;
   const nightMix=moonFade*(1-sunFade*.55);
-  hemi.intensity=.40+dayMix*.50+nightMix*.16+twilight*.10*sunFade;
+  hemi.intensity=.40+dayMix*.76+nightMix*.16+twilight*.10*sunFade;
   const hemiDay=new THREE.Color(0xcbd8d5);
   const hemiNight=new THREE.Color(0x7897d0);
   const hemiWarm=new THREE.Color(0xdce1bd);
@@ -123,7 +123,7 @@ function updateLighting(t){
 
   // A broad warm bounce opens printed ink and vertical soil faces in the
   // backlit dawn. Contact AO, rather than black fill, supplies recess depth.
-  viewFill.intensity=.40+(1-dayMix)*.12+twilight*.22*sunFade;
+  viewFill.intensity=.50+(1-dayMix)*.12+twilight*.24*sunFade;
   const viewDay=new THREE.Color(0xf7f0e6);
   const viewNight=new THREE.Color(0x88aff0);
   const viewWarm=new THREE.Color(0xffdfb5);

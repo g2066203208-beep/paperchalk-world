@@ -1,6 +1,6 @@
 /** Quiet dyed-paper pigment. Shape, light and contact shadows carry the detail. */
 export const STORYBOOK_PAPER_PALETTE=Object.freeze({
-  grass:0x93aa76,dirt:0xc99c79,leaf:0x61734c,trunk:0x9c7865,
+  grass:0x93aa76,dirt:0xc99c79,leaf:0x668879,trunk:0x9c7865,
   stone:0xbcb5c0,edge:0xd8cdad
 });
 

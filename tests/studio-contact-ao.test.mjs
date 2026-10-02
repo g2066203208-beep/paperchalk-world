@@ -140,6 +140,19 @@ test('pipeline resize invalidates AO and disposal releases both AO and HDR resou
   });
 });
 
+test('landscape phone shafts use the compact budget and resize to desktop quality',t=>{
+  const p=pipeline(t);p.state.godrays=true;p.flags.volumeShadow=false;
+  p.effect.renderWithVolumetrics();
+  assert.equal(p.effect.stats().scale,.34);
+  let volume=p.calls.find(call=>call.pass==='volume');
+  assert.deepEqual([volume.target.width,volume.target.height],[310,146]);
+  assert.equal(p.effect.stats().ao.samples,16,'phone quality retains contact shadows');
+  p.size.set(1280,720);p.effect.resize();p.calls.length=0;p.effect.renderWithVolumetrics();
+  assert.equal(p.effect.stats().scale,.40);
+  volume=p.calls.find(call=>call.pass==='volume');
+  assert.deepEqual([volume.target.width,volume.target.height],[512,288]);
+});
+
 test('unsupported HDR contexts bypass AO and retain the regular scene output',t=>{
   const p=pipeline(t,{hdr:false});p.state.godrays=true;
   p.effect.renderWithVolumetrics();

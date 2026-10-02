@@ -47,6 +47,7 @@ loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href
     transparent:true,
     alphaTest:.06,
     side:THREE.DoubleSide,
+    forceSinglePass:true,
     color:0xffffff,
     emissive:0x000000,
     emissiveIntensity:0,
@@ -157,7 +158,8 @@ function sync(snapshot){
   playerMesh.rotation.z=stride;
   const ground=terrain.groundBelow?.(x,y,0);
   const surface=ground?.y??y-5;
-  contactShadow.position.set(x,surface+.007,-.02);
+  // Sit above the thin path overlay as well as the base ground sheet.
+  contactShadow.position.set(x,surface+.018,-.02);
   if(ground){
     contactShadow.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),
       new THREE.Vector3(ground.normal.x,ground.normal.y,ground.normal.z??0).normalize());

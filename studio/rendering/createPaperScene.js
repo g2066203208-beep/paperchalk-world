@@ -32,7 +32,13 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   const events=new AbortController();
   function status(state,message,error){onStatus({state,message,...(error?{error}: {})});}
   function invalidate(){flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;}
-  function getSize(){return {width:Math.max(1,container.clientWidth),height:Math.max(1,container.clientHeight),gameplay:document.body.classList.contains('game-mode')};}
+  function invalidateView(){flags.render=flags.depth=flags.ao=true;}
+  function getSize(){
+    const width=Math.max(1,container.clientWidth),height=Math.max(1,container.clientHeight);
+    const coarse=window.matchMedia?.('(pointer: coarse)').matches??false;
+    return {width,height,compact:width<760||height<600||coarse,
+      gameplay:document.body.classList.contains('game-mode')};
+  }
   function loadTexture(url,onLoad){
     let resolve,reject;
     const promise=new Promise((yes,no)=>{resolve=yes;reject=no;});
@@ -53,7 +59,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}
   catch(error){status('error','无法启动图形画面，请检查浏览器的图形加速。',error);throw error;}
   let size=getSize();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.width<760?1.05:1.22));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?1.05:1.22));
   renderer.setSize(size.width,size.height,false);
   renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.domElement.style.display='block';
   renderer.domElement.setAttribute('aria-label','横版开放纸艺世界');
@@ -73,14 +79,14 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   scene.fog=new THREE.Fog(0xaec8d3,15,36);
   const camera=new THREE.PerspectiveCamera(36,size.width/size.height,.1,100);
   const target=new THREE.Vector3(0,1.75,-.35);
-  const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidate,viewport:size});
+  const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidateView,viewport:size});
   const materials=createPaperMaterials({THREE,renderer});
   const terrain=createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig,
     paperGrassSet:materials.paperGrassSet,paperDirtSet:materials.paperDirtSet,
     paperLeafSet:materials.paperLeafSet,paperTrunkSet:materials.paperTrunkSet,
     paperMapController:materials.storybookMaps});
   const forest=createForest({THREE,scene,...materials,...terrain.pulpSets,terrainWorld:terrain.world});
-  createStageScenery({THREE,scene,world:terrain.world});
+  const scenery=createStageScenery({THREE,scene,world:terrain.world});
   const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture});
   const lights=createLights({THREE,scene,target});
   const celestials=createSky({THREE,scene,renderer,camera});
@@ -136,11 +142,12 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   now=Number.isFinite(now)?now:performance.now();
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
   orbitCamera.follow(lastSnapshot.x,dt,lastSnapshot.y-.5);
-  // Keep directional shadow coverage centred on the explored part of the land.
-  const lightShift=target.x-atmosphere.volumeLightTarget.x;
-  if(Math.abs(lightShift)>.0001){
+  // The shadow coverage has ample margin. Move its origin in two-unit steps
+  // instead of invalidating static forest occlusion for every camera drift.
+  const lightShift=Math.trunc((target.x-atmosphere.volumeLightTarget.x)/2)*2;
+  if(lightShift!==0){
     for(const light of [sun,moon]){light.position.x+=lightShift;light.target.position.x+=lightShift;}
-    atmosphere.volumeLightTarget.x=target.x;
+    atmosphere.volumeLightTarget.x+=lightShift;
     flags.shadow=flags.volumeShadow=true;
   }
   const playerMesh=actor.playerMesh;
@@ -151,9 +158,12 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     flags.render=true;
     flags.shadow=true;
     flags.depth=true;
-    flags.volumeShadow=true;
     flags.ao=true;
   }
+
+  // Geometry changes and the moving actor take priority over the slower
+  // light-clock cadence. The actor is excluded from volumetric shadow maps.
+  const sceneShadowDirty=flags.shadow,sceneVolumeShadowDirty=flags.volumeShadow;
 
   if(timeTransition.active&&!state.auto){
     timeTransition.elapsed+=dt;
@@ -168,8 +178,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     // maps at a lower cadence while colours/sky still render every frame.
     autoShadowFrame=(autoShadowFrame+1)%4;
     volumeShadowFrame=(volumeShadowFrame+1)%4;
-    if(autoShadowFrame!==0)flags.shadow=false;
-    if(volumeShadowFrame!==0)flags.volumeShadow=false;
+    flags.shadow=sceneShadowDirty||autoShadowFrame===0;
+    flags.volumeShadow=sceneVolumeShadowDirty||volumeShadowFrame===0;
 
     flags.render=true;
     if(u>=1){
@@ -187,8 +197,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     // refresh it at ~7.5 fps; the colour/sky motion still renders smoothly.
     autoShadowFrame=(autoShadowFrame+1)%8;
     volumeShadowFrame=(volumeShadowFrame+1)%8;
-    if(autoShadowFrame!==0)flags.shadow=false;
-    if(volumeShadowFrame===0)flags.volumeShadow=true;
+    flags.shadow=sceneShadowDirty||autoShadowFrame===0;
+    flags.volumeShadow=sceneVolumeShadowDirty||volumeShadowFrame===0;
     updateVolumetricSettings(state.time);
   }
 
@@ -210,7 +220,9 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   if(playerMesh){
     const dx=camera.position.x-playerMesh.position.x;
     const dz=camera.position.z-playerMesh.position.z;
-    playerMesh.rotation.y=Math.atan2(dx,dz);
+    const facingCamera=Math.atan2(dx,dz);
+    if(Math.abs(playerMesh.rotation.y-facingCamera)>.000001)flags.shadow=true;
+    playerMesh.rotation.y=facingCamera;
 
     const len=Math.max(.001,Math.hypot(dx,dz));
     const fx=dx/len,fz=dz/len;
@@ -247,7 +259,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     size=getSize();
     camera.aspect=size.width/size.height;camera.updateProjectionMatrix();
     orbitCamera.resize(size);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.width<760?1.05:1.22));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?1.05:1.22));
     renderer.setSize(size.width,size.height,false);
     starUniforms.pixelRatio.value=renderer.getPixelRatio();
     fog.resize();atmosphere.resize();invalidate();
@@ -305,7 +317,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
-      terrain:terrain.stats(),player:actor.snapshot(),camera:orbitCamera.snapshot(),
+      terrain:terrain.stats(),forest:forest.stats?.(),scenery:{...scenery.group.userData},
+      player:actor.snapshot(),camera:orbitCamera.snapshot(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
   function dispose(){
