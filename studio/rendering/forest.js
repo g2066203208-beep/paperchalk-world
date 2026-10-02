@@ -2,7 +2,7 @@ import {rng,hash3,smoothstep} from './math.js';
 
 /** A forest assembled from softly coloured sheets, with shared paper pigment. */
 export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
-  paperLeafSet=paperGrassSet,paperTrunkSet=paperDirtSet,standardPaperMaterial}){
+  paperLeafSet=paperGrassSet,paperTrunkSet=paperDirtSet,standardPaperMaterial,terrainWorld}){
   const canopyGroup=new THREE.Group();
   canopyGroup.name='Layered pulp forest';
   scene.add(canopyGroup);
@@ -39,8 +39,13 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
         'diffuseColor.rgb += vec3(.065,.050,.026)*pulpEdgeLight;');
       shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>',
         '#include <aomap_fragment>\nreflectedLight.indirectDiffuse *= vPulpOcclusion;');
+      // High canopy retains its dyed-paper silhouette while low mist supplies
+      // atmospheric separation between the trunks.
+      shader.fragmentShader=shader.fragmentShader.replace('#include <fog_fragment>',
+        '#ifdef USE_FOG\nfloat canopyFog=smoothstep(fogNear,fogFar,vFogDepth);\n'+
+        'gl_FragColor.rgb=mix(gl_FragColor.rgb,fogColor,min(canopyFog,.045));\n#endif');
     };
-    material.customProgramCacheKey=()=> 'storybook-crown-contact-v1';
+    material.customProgramCacheKey=()=> 'storybook-crown-contact-v2';
     return material;
   });
   const forestTrunkMats=[0xffffff,0xfff8ef,0xf2f8f8].map((color,layer)=>{
@@ -107,9 +112,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
       floorWriter.quad(floorPoint(x0,z1),floorPoint(x1,z1),floorPoint(x1,z0),floorPoint(x0,z0));
     }
   }
-  floorPatch(-42,42,-65,-3.5,28,16);
-  floorPatch(-24,-7.5,-3.5,4,9,4);
-  floorPatch(7.5,24,-3.5,4,9,4);
+  floorPatch(-42,42,-65,-18.2,28,16);
   const forestFloorGeometry=floorWriter.finish();
   const forestFloor=new THREE.Mesh(forestFloorGeometry,forestFloorMat);
   forestFloor.name='Continuous pulp forest floor';
@@ -189,10 +192,11 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
     const random=rng(12000+seed*41);
     // Keep three distinct raised layers, with a lower canopy that frames the
     // scene while preserving the open illuminated gaps between the trunks.
-    const crownBase=(3.43+layer*.38+(random()-.5)*.97)*scale;
-    const bottom=floorPoint(x,z)[1]-.075,top=crownBase+1.28*scale;
+    const ground=terrainWorld?.surfaceY(x,z)??floorPoint(x,z)[1];
+    const crownBase=(3.43+layer*.38+(random()-.5)*.97)*scale+ground-.5;
+    const bottom=ground-.075,top=crownBase+1.28*scale;
     const trunk={x:x+(random()-.5)*.15*scale,y:(bottom+top)*.5,z:z-.26*scale,
-      width:(.30+random()*.28)*scale,height:top-bottom,rot:(random()-.5)*.047,layer};
+      width:(.30+random()*.28)*scale,height:top-bottom,rot:(random()-.5)*.047,layer,rootX:x,rootZ:z,ground};
     const crowns=[];
     // Interleaved short rows retain the crown's overall spread while breaking
     // the old single row of large scallops into individually readable leaves.
@@ -207,7 +211,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
         y:crownBase+dy*scale+(random()-.5)*.22*scale,
         z:z+(dz+(random()-.5)*.13)*scale,
         sx:(.53+random()*.18)*scale*.74,sy:(.63+random()*.19)*scale*.74,
-        depth:scale*.82,rot:(random()-.5)*.48,tilt:(random()-.5)*.30,layer});
+        depth:scale*.82,rot:(random()-.5)*.48,tilt:(random()-.5)*.30,layer,rootX:x,rootZ:z,ground});
     }
     trees.push({trunk,crowns});
   }
@@ -283,7 +287,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
     }
   }
 
-  const dummy=new THREE.Object3D();
+  const dummy=new THREE.Object3D(),groundedInstances=[];
   function instances(geometry,material,items,name,configure){
     if(!items.length)return;
     const mesh=new THREE.InstancedMesh(geometry,material,items.length);
@@ -295,6 +299,7 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
       configure(item);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
     });
     mesh.instanceMatrix.needsUpdate=true;canopyGroup.add(mesh);
+    groundedInstances.push({mesh,items,configure});
   }
   for(let layer=0;layer<3;layer++){
     const trunks=trees.map(tree=>tree.trunk).filter(trunk=>trunk.layer===layer);
@@ -330,5 +335,20 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
     distantPapers:distantPapers.length,distantTriangles,
     floorTriangles:forestFloorGeometry.attributes.position.count/3,
     triangles:trees.length*(trunkGeo.attributes.position.count/3)+allCrowns.reduce((sum,crown)=>sum+crownGeometries[crown.geo].attributes.position.count/3,0)+forestFloorGeometry.attributes.position.count/3+distantTriangles};
-  return {canopyGroup};
+  function updateGround(){
+    if(!terrainWorld)return;
+    const heights=new Map();
+    for(const {mesh,items,configure} of groundedInstances){
+      items.forEach((item,index)=>{
+        const key=item.rootX+','+item.rootZ;
+        if(!heights.has(key))heights.set(key,terrainWorld.surfaceY(item.rootX,item.rootZ));
+        const y=heights.get(key);
+        configure(item);
+        if(y===null)dummy.scale.setScalar(0);else dummy.position.y+=y-item.ground;
+        dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
+      });
+      mesh.instanceMatrix.needsUpdate=true;
+    }
+  }
+  return {canopyGroup,updateGround};
 }

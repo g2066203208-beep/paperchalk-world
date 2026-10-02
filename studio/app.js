@@ -1,6 +1,5 @@
 import {createPaperScene} from './rendering/index.js';
-import {createWorld} from './world/PaperWorld.mjs';
-import {PlayerSimulation} from './core/PlayerSimulation.mjs';
+import {TerrainPlayerSimulation} from './core/TerrainPlayerSimulation.mjs';
 import {SaveStore} from './core/SaveStore.mjs';
 import {InputActions} from './input/InputActions.mjs';
 import {installStudioLifecycle} from './core/Lifecycle.mjs';
@@ -16,7 +15,7 @@ const heldControls=new Set();
 const pauseReasons=new PauseReasons();
 const coarsePointer=window.matchMedia('(any-pointer: coarse)');
 let scene,world,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
-const WORLD_SAVE_KEY='paperchalk-world-grid-v1';
+const WORLD_SAVE_KEY='paperchalk-world-density-v1';
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0;
 const STEP=1/60;
 const disposeLifecycle=installStudioLifecycle({
@@ -91,7 +90,7 @@ function refreshStatus(now,force=false){
   ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z 0`;
   ui.playerState.textContent=pauseReasons.active?'已暂停':!state.grounded?(state.vy>0?'跃起':'落下'):Math.abs(state.vx)>.05?'移动中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
-  ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n${stats.terrain.columns} 列地形 · ${stats.terrain.visibleFaces} 个可见面\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
+  ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n连续地形 ${stats.terrain.baseTriangles.toLocaleString()} 个三角面 · ${stats.terrain.editedSamples} 处编辑\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
   const shafts=stats.volumetrics;
   ui.renderStats.textContent+='\n丁达尔光柱：'+(!shafts.supported?'此设备图形能力不支持':!shafts.enabled?'已关闭':shafts.effectiveStrength.toFixed(2)+'× · 已渲染 '+shafts.renderedFrames+' 帧');
   lastRendered=stats.renderedFrames;statusTime=now;
@@ -99,8 +98,7 @@ function refreshStatus(now,force=false){
 function resetClock(){lastTime=0;accumulator=0;for(const cancel of heldControls)cancel();input?.cancel();}
 function saveProgress(automatic=false){
   if(!ready||disposed)return false;
-  const result=saves.save(simulation.snapshot());
-  saveWorldState();
+  const result=saveWorldState()?saves.save(simulation.snapshot()):{ok:false};
   ui.saveStatus.textContent=result.ok?`已${automatic?'自动':''}保存 ${new Date(result.savedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`:'保存失败：本地存储不可用';
   ui.gameSaveStatus.textContent=ui.saveStatus.textContent;
   if(!automatic)toast(result.ok?'已保存角色进度到此设备':'无法保存，请检查是否允许本站使用本地存储');
@@ -126,22 +124,19 @@ function loadWorldState(){
     const raw=localStorage.getItem(WORLD_SAVE_KEY);
     if(!raw)return false;
     const restored=world.restore(raw);
-    if(restored)scene.syncWorldColumns(world.getColumnRecords());
+    if(restored)scene.rebuildTerrain();
     return restored;
   }catch{return false;}
 }
 function editWorld(action){
   if(!ready||pauseReasons.active)return;
-  const facing=simulation.snapshot().facing||1;
-  const x=Math.round(simulation.snapshot().x+facing*.92);
-  let result;
-  if(action==='dig'){
-    const top=world.topCell(x);
-    if(top&&x===world.spawn.x&&top.y===0){toast('出生纸台需要保留');return;}
-    result=world.digColumn(x);
-  }else result=world.placeColumn(x);
-  if(result.changed){scene.syncWorldColumns(world.getColumnRecords());saveWorldState();toast(action==='dig'?'已挖掉前方一层纸片':'已放置一层纸片');}
-  else toast(action==='dig'?'这里已经没有可挖的纸片':'前方无法继续放置');
+  const player=simulation.snapshot(),facing=player.facing||1;
+  const center={x:player.x+facing*(action==='dig'?1.1:1.35),y:player.y-.27,z:0};
+  const radius=.85;
+  if(action==='place'&&simulation.intersectsBrush(center,radius)){toast('角色站在放置位置');return;}
+  const result=world.brush(center,{radius,mode:action==='dig'?'dig':'add'});
+  if(result.changed){scene.rebuildTerrain();saveWorldState();toast(action==='dig'?'已挖开一片土地':'已填上一片土地');}
+  else toast(action==='dig'?'这里已经挖空':'这里没有可填的位置');
   refreshStatus(performance.now(),true);
 }
 function heldButton(element,setHeld){
@@ -301,8 +296,8 @@ async function start(){
   for(const button of document.querySelectorAll('.toolbar button'))button.disabled=true;
   try{
     scene=createPaperScene({container:ui.viewport,onStatus:sceneStatus});
-    world=createWorld(scene.getTerrainColumns(),{laneZ:0});
-    simulation=new PlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
+    world=scene.getWorld();
+    simulation=new TerrainPlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;
     if(disposed)return;
     ready=true;loadWorldState();loadProgress(true);wireControls();updateControls();setStatus();

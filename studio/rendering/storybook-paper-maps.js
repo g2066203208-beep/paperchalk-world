@@ -1,6 +1,6 @@
 /** Quiet dyed-paper pigment. Shape, light and contact shadows carry the detail. */
 export const STORYBOOK_PAPER_PALETTE=Object.freeze({
-  grass:0x93aa76,dirt:0xc99c79,leaf:0x668879,trunk:0x9c7865,
+  grass:0x93aa76,dirt:0xc99c79,leaf:0x61734c,trunk:0x9c7865,
   stone:0xbcb5c0,edge:0xd8cdad
 });
 
@@ -40,8 +40,8 @@ function pigmentPixels(hex,seed){
     const index=y*SIZE+x,offset=index*4;
     // Broad variation is at most a few percent. Grain is under one byte even
     // before quantization, so it cannot turn backlit surfaces into sandpaper.
-    const tone=1+(pigment[index]-mean)*.055;
-    const grain=(hash(x,y,seed+197)-.5)*.24;
+    const tone=1+(pigment[index]-mean)*.13;
+    const grain=(hash(x,y,seed+197)-.5)*.7;
     for(let channel=0;channel<3;channel++){
       data[offset+channel]=Math.max(0,Math.min(255,Math.round(base[channel]*tone+grain)));
     }

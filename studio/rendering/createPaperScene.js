@@ -78,7 +78,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
     paperGrassSet:materials.paperGrassSet,paperDirtSet:materials.paperDirtSet,
     paperLeafSet:materials.paperLeafSet,paperTrunkSet:materials.paperTrunkSet,
     paperMapController:materials.storybookMaps});
-  const forest=createForest({THREE,scene,...materials,...terrain.pulpSets});
+  const forest=createForest({THREE,scene,...materials,...terrain.pulpSets,terrainWorld:terrain.world});
   const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture});
   const lights=createLights({THREE,scene,target});
   const celestials=createSky({THREE,scene,renderer,camera});
@@ -321,6 +321,6 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     throw error;
   });
   return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
-    syncWorldColumns:columns=>{terrain.syncColumns(columns);invalidate();},
-    getTerrainColumns:()=>terrain.columnRecords.map(column=>({...column})),dispose};
+    rebuildTerrain:()=>{terrain.rebuild();forest.updateGround();invalidate();},
+    getWorld:()=>terrain.world,dispose};
 }

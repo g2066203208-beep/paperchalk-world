@@ -152,7 +152,7 @@ const volumeMat=new THREE.ShaderMaterial({
         float t=(float(i)+jitter)*stepLen;
         vec3 p=cameraPos+dir*t;
 
-        float lowMist=1.0-smoothstep(.45,6.6,p.y);
+        float lowMist=1.0-smoothstep(1.3,4.5,p.y);
         // Air lives between the forest layers. The clear playable foreground
         // must not acquire a uniform yellow veil when shafts are restored.
         float forestAir=1.0-smoothstep(-3.8,1.2,p.z);
@@ -169,9 +169,8 @@ const volumeMat=new THREE.ShaderMaterial({
         float canopyGaps=.58+.42*(.5+.5*sin(p.x*1.31+p.z*.77+p.y*.42+time*.04));
         float forestVeil=forestBank*(.58+.42*canopyGaps);
         float pulpMotes=.94+.06*sin(p.x*4.0+p.y*7.0+p.z*2.4+time*.15);
-        float medium=(.10+.90*lowMist)*(.035+.965*forestAir)*airVariation*pulpMotes*(.035+forestVeil*5.8);
-        // The gameplay camera is only 5.5 units from the actor. The former
-        // 3.5..8 fade removed most of the observable illuminated air.
+        float medium=lowMist*(.035+.965*forestAir)*airVariation*pulpMotes*(.025+forestVeil*4.0);
+        // Keep foreground air clear; light accumulates in the low forest bank.
         float nearFade=smoothstep(1.2,4.2,t);
 
         float sVis=sunVisibility(p);

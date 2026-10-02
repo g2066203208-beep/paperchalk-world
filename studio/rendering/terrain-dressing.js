@@ -1,6 +1,5 @@
-/** Small folded-paper tufts and stones that make the voxel platforms read as a
- * handmade diorama. They are render-only; gameplay still uses columnRecords. */
-export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}){
+/** Thin paper props resampled onto the current editable surface. */
+export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial,surfaceY,isVegetated=()=>true}){
   const group=new THREE.Group();
   group.name='terrain-paper-tufts-and-stones';
   parent.add(group);
@@ -52,6 +51,11 @@ export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}
       tufts.push({x:cx+(i-2)*.115,y:c.h+.5+.23*scale,z:cz+(hash(cx+i,cz,38)-.5)*.26,
         scale,rot:(hash(cx,cz+i,39)-.5)*1.2});
     }
+  }
+  for(let i=tufts.length-1;i>=0;i--){
+    const q=tufts[i];
+    if(!isVegetated(q.x,q.z)){tufts.splice(i,1);continue;}
+    if(surfaceY)q.y=(surfaceY(q.x,q.z)??q.y)+.23*q.scale;
   }
   const dummy=new THREE.Object3D();
   function addFoldedPaperEdge(material,key,edgeColor=[.08,.07,.045],strength=.20){
@@ -129,6 +133,11 @@ export function createTerrainDressing({THREE,parent,columnRecords,grassMaterial}
   for(const [x,z,sx,sy,sz] of [[-1.55,.60,1.45,.82,1.0],[2.25,-1.6,1.0,.7,.9]]){
     const c=columnRecords.find(q=>q.x===Math.round(x)&&q.z===Math.round(z));
     if(c)stones.push({x,y:c.h+.5+.16*sy,z,sx,sy,sz,rot:hash(x,z,52)*Math.PI});
+  }
+  for(let i=stones.length-1;i>=0;i--){
+    const q=stones[i];
+    if(!isVegetated(q.x,q.z)){stones.splice(i,1);continue;}
+    if(surfaceY)q.y=(surfaceY(q.x,q.z)??q.y)+.16*q.sy;
   }
   if(stones.length){
     const mesh=new THREE.InstancedMesh(stoneGeo,stoneMat,stones.length);

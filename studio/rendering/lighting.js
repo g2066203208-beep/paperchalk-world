@@ -4,9 +4,9 @@ import {smoothstep} from './math.js';
 export function createLights({THREE,scene,target}){
 const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffe1b1,3.0);
-sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);
+sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-18;sun.shadow.camera.right=18;sun.shadow.camera.top=15;sun.shadow.camera.bottom=-6;
-sun.shadow.camera.near=.1;sun.shadow.camera.far=42;sun.shadow.bias=-.0005;sun.shadow.normalBias=.025;sun.shadow.radius=2.4;
+sun.shadow.camera.near=.1;sun.shadow.camera.far=52;sun.shadow.bias=-.0007;sun.shadow.normalBias=.045;sun.shadow.radius=2.4;
 scene.add(sun);scene.add(sun.target);sun.target.position.set(0,1.0,.6);
 
 const moon=new THREE.DirectionalLight(0xa9c4ff,0);
@@ -68,7 +68,7 @@ function updateLighting(t){
   let mx=-Math.cos(ma)*orbitX,my=orbitBaseY+Math.sin(ma)*orbitY,mz=orbitZ;
   // Keep the dawn palette while lifting the key above the tree-line. At the
   // default dawn the old orbit was only 5 degrees high and never lit the pulp.
-  sy+=14.4*twilight*sunFade;
+  sy+=8.0*twilight*sunFade;
   // Dawn enters from behind the left-hand tree gaps, not almost sideways.
   // Surface shadows and volumetric occlusion share this exact light position.
   sz-=10.0*twilight*sunFade;
@@ -93,7 +93,7 @@ function updateLighting(t){
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
   // Golden grazing light has to reveal fibre relief, not clip a broad area of
   // rough paper to yellow-white. The bevels supply the narrow bright accents.
-  sun.intensity=sunFade*(.45+sunUp*4.8+twilight*9.5);
+  sun.intensity=sunFade*(.45+sunUp*3.6+twilight*4.5);
 
   moon.color.set(0x72a4ff);
   moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
@@ -104,7 +104,7 @@ function updateLighting(t){
   // Environment fill follows both celestial lights continuously.
   const dayMix=sunFade;
   const nightMix=moonFade*(1-sunFade*.55);
-  hemi.intensity=.49+dayMix*.63+nightMix*.16+twilight*.26*sunFade;
+  hemi.intensity=.40+dayMix*.50+nightMix*.16+twilight*.10*sunFade;
   const hemiDay=new THREE.Color(0xcbd8d5);
   const hemiNight=new THREE.Color(0x7897d0);
   const hemiWarm=new THREE.Color(0xdce1bd);
@@ -123,7 +123,7 @@ function updateLighting(t){
 
   // A broad warm bounce opens printed ink and vertical soil faces in the
   // backlit dawn. Contact AO, rather than black fill, supplies recess depth.
-  viewFill.intensity=.58+(1-dayMix)*.12+twilight*.85*sunFade;
+  viewFill.intensity=.40+(1-dayMix)*.12+twilight*.22*sunFade;
   const viewDay=new THREE.Color(0xf7f0e6);
   const viewNight=new THREE.Color(0x88aff0);
   const viewWarm=new THREE.Color(0xffdfb5);
@@ -138,8 +138,8 @@ function updateLighting(t){
   if(state.fog){
     // A clear near field and a deliberately separated distant forest. An
     // exponential veil starting at the camera greyed the character and pulp.
-    const fogNear=11.5-twilight*.5;
-    const fogFar=35.0-twilight*4.0+nightMix*3.0;
+    const fogNear=16.0-twilight*.5;
+    const fogFar=53.0-twilight*3.0+nightMix*3.0;
     if(!scene.fog?.isFog)scene.fog=new THREE.Fog(fogColor,fogNear,fogFar);
     else{scene.fog.color.copy(fogColor);scene.fog.near=fogNear;scene.fog.far=fogFar;}
   }

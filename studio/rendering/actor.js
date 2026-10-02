@@ -151,8 +151,13 @@ function sync(snapshot){
   if(!Number.isFinite(x)||!Number.isFinite(y))return false;
   const changed=!last||last.x!==x||last.y!==y;
   playerMesh.position.set(x,y+1.12,0);
-  const surface=terrain.surfaceY(x,0)??.5;
+  const ground=terrain.groundBelow?.(x,y,0);
+  const surface=ground?.y??y-5;
   contactShadow.position.set(x,surface+.007,-.02);
+  if(ground){
+    contactShadow.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),
+      new THREE.Vector3(ground.normal.x,ground.normal.y,ground.normal.z).normalize());
+  }
   const aboveGround=Math.max(0,y-surface);
   contactShadow.userData.groundFactor=1/(1+aboveGround*1.5);
   contactShadow.material.opacity=contactShadow.userData.baseOpacity*contactShadow.userData.groundFactor;
