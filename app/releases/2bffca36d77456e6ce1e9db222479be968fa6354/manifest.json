@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "version": "2bffca36d77456e6ce1e9db222479be968fa6354",
+  "publishedAt": "2026-10-02T05:43:04.000Z",
+  "channel": "mobile-test",
+  "files": {
+    "assets/player/protagonist.webp": {
+      "sha256": "237201bb1fbbf9c6075d7e2e6e1e218ad0f127d10caca6b43e98382e205e7a62",
+      "bytes": 11808
+    },
+    "studio/README.md": {
+      "sha256": "2bd540227294f50d1be158eab48026148d412355e77003c7483b03de752ce81a",
+      "bytes": 5015
+    },
+    "studio/app.js": {
+      "sha256": "1641eceb9c017652d9ed441597b08d85cfa02a89544b1363e8bb8789aac94511",
+      "bytes": 18987
+    },
+    "studio/assets/olive-fiber/base-color.webp": {
+      "sha256": "8d6a9e132292c6439d2c7df2b3c97673159248d366a1b00c6b75c60b23deee79",
+      "bytes": 523704
+    },
+    "studio/assets/olive-fiber/dirt-color.webp": {
+      "sha256": "fcfed3ec3818e05bab65e9554df328ce4c7db31f4cd39344642a6e5a65f0c23b",
+      "bytes": 389882
+    },
+    "studio/assets/olive-fiber/dirt-normal-gl.webp": {
+      "sha256": "66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c",
+      "bytes": 1821212
+    },
+    "studio/assets/olive-fiber/dirt-orm.webp": {
+      "sha256": "1098b95e8a3c00b8121a6d2330752896ada5679389adc1abdf768bf3cbeba009",
+      "bytes": 582096
+    },
+    "studio/assets/olive-fiber/normal-gl.webp": {
+      "sha256": "8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958",
+      "bytes": 2460726
+    },
+    "studio/assets/olive-fiber/orm.webp": {
+      "sha256": "1445a649af0cb1b29c1bfa81e6fd3a6e9b0ca725b2bc8f014b27b2231ae3aa56",
+      "bytes": 735704
+    },
+    "studio/assets/olive-fiber/source.json": {
+      "sha256": "c485b601d6e45f94005d04b3048f53dedeb990697242b296b7eb0cd2be5cfdda",
+      "bytes": 4029
+    },
+    "studio/build-info.json": {
+      "sha256": "8cf7183b1f73d1d76d87502d16b912f6da90bc5c8b4b863aaef877482b37ff36",
+      "bytes": 133
+    },
+    "studio/core/Lifecycle.mjs": {
+      "sha256": "4a528dd530870ef60c059d0d35a2fce9a0d8755997ca768cab731603a1836dfc",
+      "bytes": 2391
+    },
+    "studio/core/PlayerSimulation.mjs": {
+      "sha256": "cc358cc9d860bf02cdadb5dea0b050c77245245b2f130313fe5d1d33e4867d1d",
+      "bytes": 6181
+    },
+    "studio/core/SaveStore.mjs": {
+      "sha256": "0fe117b6fe61a2921e4df04aac7c0e5b5d228e60e3fd3f5e17fb618caccdc35f",
+      "bytes": 4342
+    },
+    "studio/core/TerrainPlayerSimulation.mjs": {
+      "sha256": "bd63e834b16b7483e607c0afecac91f53e1e7dc7bf18b21cbd7ce2ffb3d81f2b",
+      "bytes": 9576
+    },
+    "studio/index.html": {
+      "sha256": "2a1f63e825d039d2d69bfd6a92f80898882d581a333239312ebd26d85b11d1f7",
+      "bytes": 11720
+    },
+    "studio/input/InputActions.mjs": {
+      "sha256": "4a94c7815b811965bbc7c489b07c12c689887e7ecdb474dfa11e885d01062e0b",
+      "bytes": 4647
+    },
+    "studio/package.json": {
+      "sha256": "e6afd4e565613c7ba64847c49f1628653c373244d0d8ddf17b32631bc0ff9921",
+      "bytes": 81
+    },
+    "studio/rendering/actor.js": {
+      "sha256": "17fe80abdcfcd204c4da93f11e560b68e1a0ec565c88104a0e725fb7c1b079e3",
+      "bytes": 8210
+    },
+    "studio/rendering/contact-ao.js": {
+      "sha256": "a85556fd4cdebd995c2d1866e8e8b4b3005582e0befd48d54b13655c9e45cd3f",
+      "bytes": 6579
+    },
+    "studio/rendering/createPaperScene.js": {
+      "sha256": "af5beca91d783525b79059ea4d245ec3336041867e77c83752523e70cc6b972a",
+      "bytes": 14973
+    },
+    "studio/rendering/density-mesh.js": {
+      "sha256": "cfb850a6cb3e703d8daf61a8cdd88b156f5eae923b15256a1cd59749b8780598",
+      "bytes": 5976
+    },
+    "studio/rendering/fog.js": {
+      "sha256": "9400613c2c41bd0631bd186457ef78ac8916c3168e885e84a2a097aa9a6ef8fb",
+      "bytes": 7036
+    },
+    "studio/rendering/forest.js": {
+      "sha256": "67359b1a2c0488d84803007e673dd6b55fd493fe66b0d0b650797f1adf0b9ffe",
+      "bytes": 18733
+    },
+    "studio/rendering/index.js": {
+      "sha256": "9cf0b1e8a682b4caf456a648bcfce526748118ba02ca693eec8b9f6af36ad88e",
+      "bytes": 56
+    },
+    "studio/rendering/lighting.js": {
+      "sha256": "43dee97ce35357d8150cd2047f76dc3e1e4de3845cc2c3936b05386e756a3f81",
+      "bytes": 10448
+    },
+    "studio/rendering/math.js": {
+      "sha256": "36aa9061e5a77a52668f2fba44b2a3509e20656c93c7e07059b9d2bbd39c7204",
+      "bytes": 563
+    },
+    "studio/rendering/olive-fiber-maps.js": {
+      "sha256": "3b7fb69771df425b3c94cf22bf00525bdcbf8e102103a0c574333580ffcffa91",
+      "bytes": 2187
+    },
+    "studio/rendering/orbit-camera.js": {
+      "sha256": "0b1879d5e505a46b40993ec53d37de435dbfe40acc20ba061152275840ed34dd",
+      "bytes": 4395
+    },
+    "studio/rendering/paper-materials.js": {
+      "sha256": "d812979a9d9d5dd698fe824617f2e3eb1be8be7a85f059a84d5fc13676828513",
+      "bytes": 10799
+    },
+    "studio/rendering/resources.js": {
+      "sha256": "def1591214349d1dcaba553cccccbf1a973ae2b554d2517d27c2e9a11ab16bd0",
+      "bytes": 931
+    },
+    "studio/rendering/sky.js": {
+      "sha256": "5bcbaeac6d705b8027e661173dc042aab2f2dbb12cfc06a2b847470194ddc96d",
+      "bytes": 9695
+    },
+    "studio/rendering/storybook-paper-maps.js": {
+      "sha256": "f37e454cf144e37e632e13affb6afd270ff21b27bbed25039f527ea43c97f59b",
+      "bytes": 3548
+    },
+    "studio/rendering/terrain-dressing.js": {
+      "sha256": "f8d7a25a907371fef79ec5db1be3c7f8387d801bcc0027c48a72935e9ea18a7c",
+      "bytes": 8646
+    },
+    "studio/rendering/terrain-geometry.js": {
+      "sha256": "6410736a8fd03611dad545240957a6507e823213869dd03c9bd2a399a7c11b19",
+      "bytes": 18051
+    },
+    "studio/rendering/terrain.js": {
+      "sha256": "79bc5f57bc4c435f797632c290c36cc51c2cc28d90567941e3a4c58ac5d8d0f4",
+      "bytes": 5930
+    },
+    "studio/rendering/volumetrics.js": {
+      "sha256": "91a96c5d302e8a1c458d1873b9a8c357e165be4a10ce3f40dbf4ddf78528763f",
+      "bytes": 20356
+    },
+    "studio/studio.css": {
+      "sha256": "4931d5ba50edf506cd7c980ab53e3ac3443a486aac77a9640f497076b6896373",
+      "bytes": 30115
+    },
+    "studio/ui/GamePresentation.mjs": {
+      "sha256": "093f29b36e35650ffb546d7b69557b26e3808eddfcc3110ea76feebbb55f7d3c",
+      "bytes": 845
+    },
+    "studio/world/DensityTerrainWorld.mjs": {
+      "sha256": "8737fc369d5a7a76a855790a0db7a8e7b2e618e9bd9c63e31752085eca115078",
+      "bytes": 13514
+    },
+    "studio/world/PaperWorld.mjs": {
+      "sha256": "aa3470845fe43515fd017c83204cc4ba8dc64e0d4a7aafb58f106d28b65c61f2",
+      "bytes": 9519
+    },
+    "vendor/three/LICENSE": {
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "bytes": 1081
+    },
+    "vendor/three/README.txt": {
+      "sha256": "dba0f840c4b804b7a4e7f5f833f485b3ee2e6ac06ef9822e0f0cd07e597a9e50",
+      "bytes": 123
+    },
+    "vendor/three/three.core.js": {
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "bytes": 1403455
+    },
+    "vendor/three/three.module.js": {
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "bytes": 603113
+    },
+    "visual-demo.html": {
+      "sha256": "632bcf0b8224f069b3a6d15a2a8e28a48ad1522ed56bbc28ee47cf116967188c",
+      "bytes": 108367
+    }
+  }
+}
