@@ -163,7 +163,13 @@ const volumeMat=new THREE.ShaderMaterial({
         // Put the bank between the first two tree rows: foreground trunks
         // stay dark against illuminated air instead of being washed over.
         float forestBank=exp(-pow((p.z+6.6)/1.7,2.0));
-        float medium=(.10+.90*lowMist)*(.035+.965*forestAir)*airVariation*(.035+forestBank*5.0);
+        // Break the bank into broad, hand-painted gaps. The modulation is
+        // deliberately low frequency so shafts read as paper diorama light
+        // bands instead of noisy volumetric fog.
+        float canopyGaps=.58+.42*(.5+.5*sin(p.x*1.31+p.z*.77+p.y*.42+time*.04));
+        float forestVeil=forestBank*(.58+.42*canopyGaps);
+        float pulpMotes=.94+.06*sin(p.x*4.0+p.y*7.0+p.z*2.4+time*.15);
+        float medium=(.10+.90*lowMist)*(.035+.965*forestAir)*airVariation*pulpMotes*(.035+forestVeil*5.8);
         // The gameplay camera is only 5.5 units from the actor. The former
         // 3.5..8 fade removed most of the observable illuminated air.
         float nearFade=smoothstep(1.2,4.2,t);
@@ -181,7 +187,7 @@ const volumeMat=new THREE.ShaderMaterial({
         moonAccum+=medium*moonDensity*mVis*stepLen*nearFade*mPhase;
       }
 
-      float sunScatter=(1.0-exp(-sunAccum*2.15))*sunIntensity;
+      float sunScatter=(1.0-exp(-sunAccum*2.28))*sunIntensity;
       float moonScatter=(1.0-exp(-moonAccum*2.45))*moonIntensity;
       vec3 rays=sunScatteringColor*sunScatter+moonScatteringColor*moonScatter;
       // Linear ray length lets the final filter reject silhouette crossings.
@@ -256,7 +262,7 @@ const compositeMat=new THREE.ShaderMaterial({
     void main(){
       vec4 base=texture2D(sceneColor,vUv);
       vec3 core=filteredShafts(vUv);
-      vec3 rays=core*volumeStrength*1.16;
+      vec3 rays=core*volumeStrength*1.22;
 
       // Cheap ray-only bloom: it samples ONLY the already shadow-tested
       // volumetric buffer, so dark air stays clear and only real shafts glow.
@@ -268,7 +274,7 @@ const compositeMat=new THREE.ShaderMaterial({
         texture2D(volumeColor,vUv-vec2(0.0,r.y)).rgb
       )*.25;
       halo=max(halo-vec3(.012),vec3(0.0));
-      vec3 glow=halo*.30*volumeStrength;
+      vec3 glow=halo*.34*volumeStrength;
 
       gl_FragColor=vec4(base.rgb*contactVisibility()+rays+glow,base.a);
       #include <tonemapping_fragment>

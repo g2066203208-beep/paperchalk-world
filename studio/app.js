@@ -7,15 +7,16 @@ import {installStudioLifecycle} from './core/Lifecycle.mjs';
 import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','jumpButton','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector'].map(id=>[id,$(id)]));
-const defaults={scale:1.4,normal:.72,height:0,blend:0};
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','terrainDigBtn','terrainPlaceBtn','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','jumpButton','terrainDigTouch','terrainPlaceTouch','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector'].map(id=>[id,$(id)]));
+const defaults={scale:1.8,normal:0,height:0,blend:0};
 const paperInputs={paperScale:'scale',paperNormal:'normal'};
 const saves=new SaveStore();
 const events=new AbortController();
 const heldControls=new Set();
 const pauseReasons=new PauseReasons();
 const coarsePointer=window.matchMedia('(any-pointer: coarse)');
-let scene,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
+let scene,world,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
+const WORLD_SAVE_KEY='paperchalk-world-grid-v1';
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0;
 const STEP=1/60;
 const disposeLifecycle=installStudioLifecycle({
@@ -99,6 +100,7 @@ function resetClock(){lastTime=0;accumulator=0;for(const cancel of heldControls)
 function saveProgress(automatic=false){
   if(!ready||disposed)return false;
   const result=saves.save(simulation.snapshot());
+  saveWorldState();
   ui.saveStatus.textContent=result.ok?`已${automatic?'自动':''}保存 ${new Date(result.savedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}`:'保存失败：本地存储不可用';
   ui.gameSaveStatus.textContent=ui.saveStatus.textContent;
   if(!automatic)toast(result.ok?'已保存角色进度到此设备':'无法保存，请检查是否允许本站使用本地存储');
@@ -115,6 +117,32 @@ function loadProgress(automatic=false){
     ui.saveStatus.textContent=message;if(!automatic)toast(message);
   }
   ui.gameSaveStatus.textContent=ui.saveStatus.textContent;
+}
+function saveWorldState(){
+  try{localStorage.setItem(WORLD_SAVE_KEY,world.serialize());return true;}catch{return false;}
+}
+function loadWorldState(){
+  try{
+    const raw=localStorage.getItem(WORLD_SAVE_KEY);
+    if(!raw)return false;
+    const restored=world.restore(raw);
+    if(restored)scene.syncWorldColumns(world.getColumnRecords());
+    return restored;
+  }catch{return false;}
+}
+function editWorld(action){
+  if(!ready||pauseReasons.active)return;
+  const facing=simulation.snapshot().facing||1;
+  const x=Math.round(simulation.snapshot().x+facing*.92);
+  let result;
+  if(action==='dig'){
+    const top=world.topCell(x);
+    if(top&&x===world.spawn.x&&top.y===0){toast('出生纸台需要保留');return;}
+    result=world.digColumn(x);
+  }else result=world.placeColumn(x);
+  if(result.changed){scene.syncWorldColumns(world.getColumnRecords());saveWorldState();toast(action==='dig'?'已挖掉前方一层纸片':'已放置一层纸片');}
+  else toast(action==='dig'?'这里已经没有可挖的纸片':'前方无法继续放置');
+  refreshStatus(performance.now(),true);
 }
 function heldButton(element,setHeld){
   const active=new Set();let keyboardHeld=false,pulseHeld=false,pulseTimer=0;
@@ -217,6 +245,10 @@ function wireControls(){
   listen(ui.viewport,'pointerdown',()=>ui.viewport.focus({preventScroll:true}));
   listen(ui.playPause,'click',()=>{pauseReasons.toggleUser();resetClock();setStatus();refreshStatus(performance.now(),true);});
   listen(ui.resetPlayer,'click',()=>{simulation.reset();resetClock();toast('角色已回到起点');refreshStatus(performance.now(),true);});
+  listen(ui.terrainDigBtn,'click',()=>editWorld('dig'));
+  listen(ui.terrainPlaceBtn,'click',()=>editWorld('place'));
+  listen(ui.terrainDigTouch,'click',()=>editWorld('dig'));
+  listen(ui.terrainPlaceTouch,'click',()=>editWorld('place'));
   listen(ui.saveProgress,'click',()=>saveProgress());
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
@@ -269,11 +301,11 @@ async function start(){
   for(const button of document.querySelectorAll('.toolbar button'))button.disabled=true;
   try{
     scene=createPaperScene({container:ui.viewport,onStatus:sceneStatus});
-    const world=createWorld(scene.getTerrainColumns(),{laneZ:0});
+    world=createWorld(scene.getTerrainColumns(),{laneZ:0});
     simulation=new PlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;
     if(disposed)return;
-    ready=true;loadProgress(true);wireControls();updateControls();setStatus();
+    ready=true;loadWorldState();loadProgress(true);wireControls();updateControls();setStatus();
     for(const button of document.querySelectorAll('.toolbar button'))button.disabled=false;
     ui.openGameMenu.disabled=false;
     raf=requestAnimationFrame(tick);

@@ -21,6 +21,8 @@
       <div class="tool-group primary-tools">
         <button id="playPause" class="button button-primary" type="button" title="暂停或继续场景">暂停</button>
         <button id="resetPlayer" class="button" type="button" title="将角色送回起点">回到起点</button>
+        <button id="terrainDigBtn" class="button terrain-edit-button" type="button" title="挖掉角色前方的一层纸片地形">挖掘</button>
+        <button id="terrainPlaceBtn" class="button terrain-edit-button" type="button" title="在角色前方放置一层纸片地形">放置</button>
         <button id="resetCamera" class="button" type="button" title="恢复初始观察角度">重置视角</button>
       </div>
       <div class="tool-group file-tools">
@@ -53,6 +55,7 @@
         <div class="stage-hint"><span><kbd>A</kbd><kbd>D</kbd> 左右</span><span><kbd>空格</kbd> 跳跃</span><span class="desktop-hint">拖动观察 · 滚轮缩放</span><span class="mobile-hint">单指观察 · 双指缩放</span></div>
         <div class="touch-controls" aria-label="触屏角色控制">
           <div class="touch-move"><button id="moveLeft" class="touch-button" type="button" aria-label="向左移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg></button><button id="moveRight" class="touch-button" type="button" aria-label="向右移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg></button></div>
+          <div class="touch-edit"><button id="terrainDigTouch" class="touch-button touch-edit-button" type="button" aria-label="挖掘前方地形">挖</button><button id="terrainPlaceTouch" class="touch-button touch-edit-button" type="button" aria-label="放置前方地形">放</button></div>
           <button id="jumpButton" class="touch-button touch-jump" type="button" aria-label="跳跃"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 11 7-7 7 7M12 4v16"/></svg><span>跳跃</span></button>
         </div>
       </section>
@@ -62,7 +65,7 @@
         <div class="inspector-content">
           <section class="settings-section surface-settings">
             <div class="section-heading"><h3>方块表面</h3><span>材质对比</span></div>
-            <div class="surface-options" role="group" aria-label="方块材质"><button class="surface-option active" type="button" data-surface="pulp" aria-pressed="true">纸浆材质</button><button class="surface-option" type="button" data-surface="color" aria-pressed="false">固有色</button></div>
+            <div class="surface-options" role="group" aria-label="方块材质"><button class="surface-option active" type="button" data-surface="pulp" aria-pressed="true">绘本色纸</button><button class="surface-option" type="button" data-surface="color" aria-pressed="false">固有色</button></div>
           </section>
           <section class="settings-section">
             <div class="section-heading"><h3>一天的光线</h3><span>时间</span></div>
@@ -86,9 +89,9 @@
           </section>
 
           <section class="settings-section">
-            <div class="section-heading"><h3>纸浆质感</h3><span>Olive Fiber</span></div>
-            <div class="range-control"><label for="paperScale">纸纹大小</label><output id="paperScaleValue" for="paperScale">1.40×</output><input id="paperScale" type="range" min="15" max="250" step="5" value="140"></div>
-            <div class="range-control"><label for="paperNormal">凹凸强度</label><output id="paperNormalValue" for="paperNormal">0.72</output><input id="paperNormal" type="range" min="0" max="200" step="5" value="72"></div>
+            <div class="section-heading"><h3>绘本色纸</h3><span>Storybook Paper</span></div>
+            <div class="range-control"><label for="paperScale">纸张色斑尺度</label><output id="paperScaleValue" for="paperScale">1.80×</output><input id="paperScale" type="range" min="50" max="300" step="5" value="180"></div>
+            <div class="range-control"><label for="paperNormal">纸面凹凸</label><output id="paperNormalValue" for="paperNormal">0.00</output><input id="paperNormal" type="range" min="0" max="20" step="1" value="0"></div>
             <button id="resetPaper" class="text-button" type="button">恢复纸张默认值 <span aria-hidden="true">↺</span></button>
           </section>
 

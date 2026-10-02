@@ -31,6 +31,8 @@ h1 span{color:#a5aa98;font-weight:400;margin:0 3px}
 .button:hover{background:#fffdf7;border-color:#b7c0a4}
 .button:active{transform:translateY(1px)}
 .button-primary{background:var(--olive);color:#fffef4;border-color:var(--olive);min-width:72px;box-shadow:0 2px 5px #52613e14}
+.terrain-edit-button{background:#f1eadb;border-color:#d8c6a5;color:#715f40}
+.terrain-edit-button:hover{background:#fff7e8;border-color:#bd9d6b}
 .button-primary:hover{background:var(--olive-dark);border-color:var(--olive-dark)}
 .button-inspector{background:#e9ecdf;border-color:#d3dbc2}
 body:not(.inspector-hidden) .button-inspector{background:#dce4cd;border-color:#afbf92}
@@ -60,6 +62,8 @@ kbd{font:9px/1.2 var(--font);border:1px solid #f2f5e947;border-radius:3px;min-wi
 .toast:empty{display:none}
 .touch-controls{display:none;position:absolute;z-index:3;left:16px;right:16px;bottom:16px;align-items:flex-end;justify-content:space-between;pointer-events:none}
 .touch-move{display:flex;gap:9px}
+.touch-edit{display:flex;gap:8px;position:absolute;right:92px;bottom:0}
+.touch-edit-button{width:42px;height:42px;font-size:12px;font-weight:700;background:#efe3c7c9;color:#67543c}
 .touch-button{width:51px;height:51px;border:1px solid #eef3df77;border-radius:13px;background:#eff3dbb0;color:#35492c;backdrop-filter:blur(10px);font-size:26px;line-height:1;user-select:none;touch-action:none;pointer-events:auto;box-shadow:0 2px 9px #21302112}
 .touch-button:active,.touch-button.pressed{background:#d1dfb6;transform:translateY(1px)}
 .touch-jump{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}

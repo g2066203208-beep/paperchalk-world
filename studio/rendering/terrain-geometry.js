@@ -124,6 +124,115 @@ export function createBeveledTerrainGeometry({THREE,columnRecords,bevel=.018}){
   return geometry;
 }
 
+/**
+ * Render the voxel height field as stacked paperboard slabs. The columns remain
+ * unit cells for gameplay, while every occupied height level is unioned into a
+ * single deterministic outer contour. This removes tile seams from the broad
+ * top face and leaves only the thick cut-paper perimeter at each layer.
+ */
+export function createPolygonalTerrainGeometry({THREE,columnRecords,jitter=.075,fold=.028}){
+  const heights=new Map(columnRecords.map(({x,z,h})=>[`${x},${z}`,Math.floor(h)]));
+  const maxHeight=Math.max(-1,...columnRecords.map(({h})=>Math.floor(h)));
+  const hash=(x,z,level,seed=0)=>{
+    const n=Math.sin(x*127.1+z*311.7+level*71.3+seed*19.17+9.73)*43758.5453123;
+    return n-Math.floor(n);
+  };
+  const streams=[{p:[],n:[],uv:[]},{p:[],n:[],uv:[]}];
+  let visibleFaces=0,foldTriangles=0,layerCount=0,boundaryEdges=0,topTriangles=0;
+  const emit=(a,b,c,hint,material,top=false)=>{
+    const ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],ac=[c[0]-a[0],c[1]-a[1],c[2]-a[2]];
+    let n=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]];
+    if(n[0]*hint[0]+n[1]*hint[1]+n[2]*hint[2]<0){[b,c]=[c,b];n=n.map(value=>-value);}
+    const length=Math.hypot(...n);if(length<1e-9)return;
+    n=n.map(value=>value/length);const stream=streams[material];
+    for(const p of [a,b,c]){
+      stream.p.push(...p);stream.n.push(...n);
+      if(top)stream.uv.push(p[0],-p[2]);
+      else if(Math.abs(hint[0])>.5)stream.uv.push(-hint[0]*p[2],p[1]);
+      else stream.uv.push(hint[2]*p[0],p[1]);
+    }
+  };
+  const key=(x,z)=>`${x},${z}`;
+  const pointKey=([x,z])=>`${x},${z}`;
+  function layerEdges(level){
+    const occupied=(x,z)=>(heights.get(key(x,z))??-1)>=level;
+    const edges=[];
+    for(const {x,z,h} of columnRecords){
+      if(h<level)continue;
+      if(!occupied(x+1,z))edges.push({a:[x+.5,z+.5],b:[x+.5,z-.5]});
+      if(!occupied(x-1,z))edges.push({a:[x-.5,z-.5],b:[x-.5,z+.5]});
+      if(!occupied(x,z+1))edges.push({a:[x-.5,z+.5],b:[x+.5,z+.5]});
+      if(!occupied(x,z-1))edges.push({a:[x+.5,z-.5],b:[x-.5,z-.5]});
+    }
+    return edges;
+  }
+  function traceLoops(edges){
+    const starts=new Map();
+    for(const edge of edges){const k=pointKey(edge.a);if(!starts.has(k))starts.set(k,[]);starts.get(k).push(edge);}
+    const remaining=new Set(edges),loops=[];
+    while(remaining.size){
+      const first=remaining.values().next().value,loop=[first.a];remaining.delete(first);
+      let cursor=first.b,guard=0;
+      while(pointKey(cursor)!==pointKey(first.a)&&guard++<edges.length+2){
+        loop.push(cursor);
+        const candidates=(starts.get(pointKey(cursor))??[]).filter(edge=>remaining.has(edge));
+        const next=candidates[0];
+        if(!next)break;
+        remaining.delete(next);cursor=next.b;
+      }
+      if(pointKey(cursor)===pointKey(first.a)&&loop.length>=3)loops.push(loop);
+    }
+    return loops;
+  }
+  function jitterNode(point,level){
+    const [x,z]=point;
+    return [x+(hash(x,z,level,1)-.5)*jitter*2,z+(hash(x,z,level,2)-.5)*jitter*2];
+  }
+  for(let level=0;level<=maxHeight;level++){
+    const loops=traceLoops(layerEdges(level));
+    for(const loop of loops){
+      const area=loop.reduce((sum,[x,z],i)=>{const [nx,nz]=loop[(i+1)%loop.length];return sum+x*nz-nx*z;},0)*.5;
+      if(Math.abs(area)<.01)continue;
+      const points=loop.map(point=>jitterNode(point,level));
+      const topY=level+.5, bottomY=topY-.94;
+      const contour=points.map(([x,z])=>new THREE.Vector2(x,z));
+      const triangles=THREE.ShapeUtils.triangulateShape(contour,[]);
+      topTriangles+=triangles.length;
+      for(const triangle of triangles){
+        const a=points[triangle[0]],b=points[triangle[1]],c=points[triangle[2]];
+        emit([a[0],topY,a[1]],[b[0],topY,b[1]],[c[0],topY,c[1]],[0,1,0],1,true);
+      }
+      const center=points.reduce((sum,p)=>[sum[0]+p[0]/points.length,sum[1]+p[1]/points.length],[0,0]);
+      for(let i=0;i<points.length;i++){
+        const a=points[i],b=points[(i+1)%points.length];
+        const topA=[a[0],topY,a[1]],topB=[b[0],topY,b[1]],bottomA=[a[0],bottomY,a[1]],bottomB=[b[0],bottomY,b[1]];
+        const dx=b[0]-a[0],dz=b[1]-a[1],outward=[-dz,0,dx];
+        emit(topA,bottomB,topB,outward,0,false);emit(topA,bottomA,bottomB,outward,0,false);
+        // Narrow folded lip catches the warm key light and makes the board
+        // read as paper even when the diffuse colour is almost flat.
+        const ix=a[0]+(center[0]-a[0])*.035,iz=a[1]+(center[1]-a[1])*.035;
+        const jx=b[0]+(center[0]-b[0])*.035,jz=b[1]+(center[1]-b[1])*.035;
+        emit(topA,topB,[jx,topY+.008,jz],[0,1,0],1,true);
+        emit(topA,[jx,topY+.008,jz],[ix,topY+.008,iz],[0,1,0],1,true);
+        foldTriangles+=2;boundaryEdges++;
+      }
+      visibleFaces+=triangles.length+points.length;
+      layerCount++;
+    }
+  }
+  const positions=streams[0].p.concat(streams[1].p),normals=streams[0].n.concat(streams[1].n),uvs=streams[0].uv.concat(streams[1].uv);
+  const dirtVertices=streams[0].p.length/3,grassVertices=streams[1].p.length/3,total=dirtVertices+grassVertices;
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geometry.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+  geometry.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geometry.addGroup(0,dirtVertices,0);geometry.addGroup(dirtVertices,grassVertices,1);
+  geometry.computeBoundingBox();geometry.computeBoundingSphere();
+  geometry.userData={polygonal:true,layeredPaperboard:true,visibleFaces,bevelTriangles:foldTriangles,cornerPatchTriangles:0,
+    triangles:total/3,foldTriangles,boundaryEdges,layerCount,topTriangles,paperThickness:.94};
+  return geometry;
+}
+
 /** Render-only torn paper turf. Collision columns remain exact unit cubes. */
 export function createGrassRimGeometry({THREE,columnRecords,segments=18}){
   const heights=new Map(columnRecords.map(({x,z,h})=>[`${x},${z}`,h]));
@@ -135,6 +244,7 @@ export function createGrassRimGeometry({THREE,columnRecords,segments=18}){
     {dx:0,dz:-1,a:[.5,-.5],b:[-.5,-.5]}
   ];
   for(const {x,z,h} of columnRecords){
+    if(h<0)continue;
     for(const side of directions){
       if((heights.get(`${x+side.dx},${z+side.dz}`)??-Infinity)>=h)continue;
       edges.push({a:[x+side.a[0],z+side.a[1]],b:[x+side.b[0],z+side.b[1]],

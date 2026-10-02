@@ -24,9 +24,9 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
-  // The layered pulp flakes are intentionally broad enough to read on a
-  // phone screen; keep the diagnostic control available for finer repeats.
-  const paperConfig={scale:1.4,normal:.72,height:0,blend:0};
+  // Storybook stock is intentionally flat: the paper geometry and shadows
+  // carry the depth, while the pigment only varies by a few quiet percent.
+  const paperConfig={scale:1.8,normal:0,height:0,blend:0};
   const pending=[],pendingRejects=new Set(),loadedTextures=new Set();
   const events=new AbortController();
   function status(state,message,error){onStatus({state,message,...(error?{error}: {})});}
@@ -74,7 +74,10 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   const target=new THREE.Vector3(0,1.75,-.35);
   const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidate,viewport:size});
   const materials=createPaperMaterials({THREE,renderer});
-  const terrain=createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig});
+  const terrain=createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig,
+    paperGrassSet:materials.paperGrassSet,paperDirtSet:materials.paperDirtSet,
+    paperLeafSet:materials.paperLeafSet,paperTrunkSet:materials.paperTrunkSet,
+    paperMapController:materials.storybookMaps});
   const forest=createForest({THREE,scene,...materials,...terrain.pulpSets});
   const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture});
   const lights=createLights({THREE,scene,target});
@@ -318,5 +321,6 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     throw error;
   });
   return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+    syncWorldColumns:columns=>{terrain.syncColumns(columns);invalidate();},
     getTerrainColumns:()=>terrain.columnRecords.map(column=>({...column})),dispose};
 }

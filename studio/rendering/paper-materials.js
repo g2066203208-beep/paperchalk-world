@@ -1,5 +1,6 @@
 // Paperchalk Demo v12.32 visual baseline. Extracted without changing shader or art parameters.
 import {rng,clamp} from './math.js';
+import {createStorybookPaperMaps,STORYBOOK_PAPER_PALETTE,STORYBOOK_PAPER_DEFAULTS} from './storybook-paper-maps.js';
 
 export function createPaperMaterials({THREE,renderer}){
 function mistTexture(seed=1){
@@ -222,34 +223,37 @@ function makePaperSurface(baseHex,patchHexes,seed,{cutEdge=false,green=false}={}
   return {color,normal,roughness,ao};
 }
 
-const paperGrassSet=makePaperSurface(
-  '#a9c974',['#bfd987','#91b75f','#b5d379','#9ec16a'],
-  731,{green:true}
-);
-const paperDirtSet=makePaperSurface(
-  '#a96b45',['#c38357','#8d5237','#bb7750','#c98c63'],
-  991,{cutEdge:true}
-);
+// The gameplay scene uses a deliberately quieter stock than the old Olive
+// Fiber scan. Large colour fields and real paper thickness carry the form;
+// micro texture belongs in the reference board, not on every visible face.
+const storybook=createStorybookPaperMaps({THREE,renderer});
+const {paperGrassSet,paperDirtSet,paperLeafSet,paperTrunkSet}=storybook;
 // Compatibility arrays for cut grass / forest materials. All share GPU maps;
 // colour variation now comes from instance/material tint, not duplicate textures.
 
 
-function standardPaperMaterial(set,{normalScale=.35,roughness=.94,color=0xffffff,side=THREE.FrontSide,ao=.55}={}){
-  const m=new THREE.MeshStandardMaterial({
+function standardPaperMaterial(set,{normalScale=0,roughness=1,color=0xffffff,side=THREE.FrontSide,ao=0}={}){
+  const m=new THREE.MeshPhysicalMaterial({
     color,
     map:set.color,
-    normalMap:set.normal,
-    roughnessMap:set.roughness,
-    aoMap:set.ao,
+    normalMap:null,
+    roughnessMap:null,
+    aoMap:null,
     aoMapIntensity:ao,
     normalScale:new THREE.Vector2(normalScale,normalScale),
     roughness,
     metalness:0,
+    specularIntensity:.05,
+    clearcoat:0,
+    sheen:0,
+    ior:1.38,
     side
   });
   return m;
 }
 
 
-return {paperGrassSet,paperDirtSet,standardPaperMaterial,mistTexture,textures:[...Object.values(paperGrassSet),...Object.values(paperDirtSet)]};
+return {paperGrassSet,paperDirtSet,paperLeafSet,paperTrunkSet,standardPaperMaterial,mistTexture,
+  storybookPalette:STORYBOOK_PAPER_PALETTE,storybookDefaults:STORYBOOK_PAPER_DEFAULTS,
+  storybookMaps:storybook,textures:[...storybook.textures]};
 }

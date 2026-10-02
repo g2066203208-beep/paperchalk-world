@@ -1,21 +1,23 @@
 import {rng,hash3,smoothstep} from './math.js';
 
-/** A forest assembled from thick pressed-pulp pieces, with shared PBR maps. */
-export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPaperMaterial}){
+/** A forest assembled from softly coloured sheets, with shared paper pigment. */
+export function createForest({THREE,scene,paperGrassSet,paperDirtSet,
+  paperLeafSet=paperGrassSet,paperTrunkSet=paperDirtSet,standardPaperMaterial}){
   const canopyGroup=new THREE.Group();
   canopyGroup.name='Layered pulp forest';
   scene.add(canopyGroup);
 
-  // A restrained cooler olive tint separates crown pigment from the yellow
-  // sunlit turf. Distant layers become a little paler, never black silhouettes.
-  const forestLeafMats=[0xc5d5cc,0xd0ddd5,0xdce4d8].map(color=>{
-    const material=standardPaperMaterial(paperGrassSet,{normalScale:.52,roughness:1,color,ao:.38});
+  // Colour lives in each paper stock. Subtle cool shifts keep the tree layers
+  // distinct without darkening the leaf pigment for a second time.
+  const forestLeafMats=[0xfffef9,0xf8ffff,0xf2faf8].map((color,layer)=>{
+    const material=standardPaperMaterial(paperLeafSet,{normalScale:0,roughness:1,color,ao:0});
+    material.name=`storybook-sage-leaf-paper-${layer}`;
     material.vertexColors=true;
     // Pulp fibres scatter the light; a glossy texture texel must not turn an
     // entire pressed leaf into coated plastic. Local overlap occlusion affects
     // indirect light only, leaving narrow cut edges free to catch the key light.
     material.onBeforeCompile=shader=>{
-      shader.uniforms.pulpCutColor={value:new THREE.Color(0xb7a664)};
+      shader.uniforms.pulpCutColor={value:new THREE.Color(0xd8cdad)};
       shader.vertexShader=shader.vertexShader.replace('#include <common>',
         '#include <common>\nattribute float pulpOcclusion;\nattribute float pulpCut;\nvarying float vPulpOcclusion;\nvarying float vPulpCut;');
       shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
@@ -23,21 +25,33 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
         '#include <common>\nuniform vec3 pulpCutColor;\nvarying float vPulpOcclusion;\nvarying float vPulpCut;');
       shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
-        '#include <color_fragment>\ndiffuseColor.rgb=mix(diffuseColor.rgb,pulpCutColor,vPulpCut*.48);');
+        '#include <color_fragment>\ndiffuseColor.rgb=mix(diffuseColor.rgb,pulpCutColor,vPulpCut*.18);');
       shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>',
         '#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, 0.95);');
+      // A pressed sheet catches a quiet warm glint on the cut edge. The rim is
+      // driven by the real face normal and view direction, so it appears only
+      // on silhouettes and never turns the broad leaf faces into plastic.
+      shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',
+        '#include <normal_fragment_maps>\n'+
+        'vec3 pulpViewDir=normalize(vViewPosition);\n'+
+        'float pulpEdgeFacing=pow(1.0-abs(dot(normal,pulpViewDir)),2.2);\n'+
+        'float pulpEdgeLight=vPulpCut*pulpEdgeFacing*.16;\n'+
+        'diffuseColor.rgb += vec3(.065,.050,.026)*pulpEdgeLight;');
       shader.fragmentShader=shader.fragmentShader.replace('#include <aomap_fragment>',
         '#include <aomap_fragment>\nreflectedLight.indirectDiffuse *= vPulpOcclusion;');
     };
-    material.customProgramCacheKey=()=> 'pulp-crown-contact-v3';
+    material.customProgramCacheKey=()=> 'storybook-crown-contact-v1';
     return material;
   });
-  const forestTrunkMats=[0xffffff,0xfff4e9,0xffecd8].map(color=>
-    standardPaperMaterial(paperDirtSet,{normalScale:.35,roughness:1,color,ao:.28})
-  );
-  const forestFloorMat=standardPaperMaterial(paperGrassSet,{
-    normalScale:.85,roughness:1,color:0xffffff,ao:.3
+  const forestTrunkMats=[0xffffff,0xfff8ef,0xf2f8f8].map((color,layer)=>{
+    const material=standardPaperMaterial(paperTrunkSet,{normalScale:0,roughness:1,color,ao:0});
+    material.name=`storybook-warm-trunk-paper-${layer}`;
+    return material;
   });
+  const forestFloorMat=standardPaperMaterial(paperGrassSet,{
+    normalScale:0,roughness:1,color:0xffffff,ao:0
+  });
+  forestFloorMat.name='storybook-meadow-paper-floor';
 
   function geometryWriter(){
     const positions=[],normals=[],uvs=[],colors=[],occlusion=[],cuts=[];
@@ -119,8 +133,11 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       const tucked=smoothstep(.12,.62,y/aspect)*(1-smoothstep(.48,1,Math.abs(x)));
       // The upper inner face is under the leaf above it. Exposed bottom and
       // side edges remain unoccluded; never draw a dirty circle round a leaf.
-      const ao=ring<2?1-tucked*.38:1;
-      const cut=ring===2?.85:ring===3?.18:0;
+      // Lower, tucked layers receive stronger local occlusion. It keeps the
+      // overlapping paper leaves readable in the soft fill light and gives
+      // the canopy the small contact shadows visible in the target style.
+      const ao=ring<2?1-tucked*(ring===0?.52:.42):1;
+      const cut=ring===2?.92:ring===3?.22:0;
       rings[ring].push([x,y,z,x*.85+.5,y*.85+.5,ao,cut]);
     }
     const front=[0,0,.043,.5,.5,1],back=[0,0,-.039,.5,.5,1];
@@ -141,7 +158,10 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
   // Broad paper faces and narrow bevels, with actual depth and stable shadows.
   function trunkGeometry(){
     const writer=geometryWriter();
-    const perimeter=[[-.43,-.29],[.43,-.29],[.5,-.22],[.5,.22],[.43,.29],[-.43,.29],[-.5,.22],[-.5,-.22]];
+    // Trunks are folded paper strips rather than round 3D logs. A narrow
+    // extrusion keeps the card readable when the camera orbits and still
+    // gives the warm edge a real silhouette for shadows.
+    const perimeter=[[-.43,-.060],[.43,-.060],[.5,-.045],[.5,.045],[.43,.060],[-.43,.060],[-.5,.045],[-.5,-.045]];
     const heights=[0,.035,.13,.43,.73,1],rootFlare=[1.62,1.23,1.015,.97,.93,.86],rings=[];
     for(let level=0;level<heights.length;level++){
       const y=heights[level],taper=rootFlare[level];
@@ -234,8 +254,9 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
     return writer.finish();
   }
   const distantPaperGeometries=[1,2].map(distantPaperGeometry);
-  const distantPaperMats=[0xe3c3a6,0xd4afa9,0xc8b7d4,0xb8b2ca].map(color=>{
-    const material=standardPaperMaterial(paperDirtSet,{normalScale:.22,roughness:1,color,ao:.22});
+  const distantPaperMats=[0xe3c3a6,0xd4afa9,0xc8b7d4,0xb8b2ca].map((color,layer)=>{
+    const material=standardPaperMaterial(paperDirtSet,{normalScale:0,roughness:1,color,ao:0});
+    material.name=`storybook-pastel-distance-paper-${layer}`;
     material.vertexColors=true;
     // Preserve the source paper's pigment variation in a pale distant colour
     // rather than multiplying a pink silhouette by brown soil albedo.
@@ -243,11 +264,11 @@ export function createForest({THREE,scene,paperGrassSet,paperDirtSet,standardPap
       shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
         #ifdef USE_MAP
           float paperPigment=dot(sampledDiffuseColor.rgb,vec3(.2126,.7152,.0722));
-          diffuseColor.rgb=diffuse*mix(.83,1.10,smoothstep(.03,.45,paperPigment));
+          diffuseColor.rgb=diffuse*mix(.98,1.02,smoothstep(.03,.45,paperPigment));
         #endif
       `);
     };
-    material.customProgramCacheKey=()=> 'distant-pulp-pigment-v1';
+    material.customProgramCacheKey=()=> 'distant-storybook-pigment-v1';
     return material;
   });
   const distantPapers=[];

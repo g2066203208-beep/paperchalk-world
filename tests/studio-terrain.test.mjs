@@ -1,26 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
-import {createHash} from 'node:crypto';
 import * as THREE from '../vendor/three/three.module.js';
 import {createTerrain} from '../studio/rendering/terrain.js';
-import {createGrassRimGeometry,createBeveledTerrainGeometry} from '../studio/rendering/terrain-geometry.js';
+import {createGrassRimGeometry,createBeveledTerrainGeometry,createPolygonalTerrainGeometry} from '../studio/rendering/terrain-geometry.js';
 import {createWorld} from '../studio/world/PaperWorld.mjs';
+import {STORYBOOK_PAPER_PALETTE,STORYBOOK_PAPER_DEFAULTS} from '../studio/rendering/storybook-paper-maps.js';
 
 const surfaceMaps=['map','normalMap','roughnessMap','aoMap','bumpMap','displacementMap'];
 
 function fixture(t){
   const scene=new THREE.Scene();
   const flags={render:false};
-  const paperConfig={scale:.65,normal:.85,height:0,blend:0};
-  const requests=[];
+  const paperConfig={scale:STORYBOOK_PAPER_DEFAULTS.scale,normal:0,height:0,blend:0};
   const terrain=createTerrain({THREE,scene,flags,paperConfig,
     renderer:{capabilities:{getMaxAnisotropy:()=>8}},
-    loadTexture(url,onLoad){
-      const texture=new THREE.Texture();
-      requests.push({url,texture,onLoad});
-      return texture;
-    }
   });
   const mesh=terrain.terrainBlocks;
   const [sides,top]=mesh.material;
@@ -32,7 +25,7 @@ function fixture(t){
     for(const texture of terrain.textures)texture.dispose();
     scene.clear();
   });
-  return {terrain,mesh,sides,top,flags,paperConfig,requests};
+  return {terrain,mesh,sides,top,flags,paperConfig};
 }
 
 function assertNoSurfaceMaps(material){
@@ -52,53 +45,42 @@ function collisionSnapshot(terrain){
   };
 }
 
-test('Olive Fiber uses sRGB grass plus linear soil maps with dedicated torn rim',t=>{
-  const {terrain,mesh,sides,top,requests,flags}=fixture(t);
+test('storybook paper uses quiet sRGB pigment with matte physical response',t=>{
+  const {terrain,mesh,sides,top,flags}=fixture(t);
   assert.equal(terrain.getSurfaceMode(),'pulp');
-  assert.equal(top.isMeshStandardMaterial,true);
   assert.equal(top.isMeshPhysicalMaterial,true,'paper reflection controls require the physical material');
-  assert.ok(top.specularIntensity<=.25&&sides.specularIntensity<=.25,'uncoated paper has restrained dielectric reflections');
-  assert.ok(top.roughness>=.94&&sides.roughness>=.94);
+  assert.ok(top.specularIntensity<=.06&&sides.specularIntensity<=.06,'uncoated paper has restrained dielectric reflections');
+  assert.equal(top.roughness,1);assert.equal(sides.roughness,1);
   assert.equal(top.clearcoat,0,'paper must not gain a plastic coating');
-  assert.equal(top.color.getHex(),0xffffff,'The source color must not be multiplied by green');
+  assert.equal(top.color.getHex(),0xffffff,'colour is carried by a quiet storybook map');
   assert.equal(top.map.colorSpace,THREE.SRGBColorSpace);
-  assert.equal(top.normalMap.colorSpace,THREE.NoColorSpace);
-  assert.equal(top.normalMapType,THREE.TangentSpaceNormalMap);
-  assert.equal(top.roughnessMap.colorSpace,THREE.NoColorSpace);
-  assert.equal(top.aoMap,top.roughnessMap,'ORM shares one texture for R=AO and G=roughness');
-  assert.equal(top.aoMap.channel,0,'AO must use the world UVs present on the geometry');
+  assert.equal(top.normalMap,null);assert.equal(top.roughnessMap,null);assert.equal(top.aoMap,null);
   assert.equal(top.metalness,0);
   assert.equal(top.bumpMap,null);
   assert.equal(top.displacementMap,null);
-  assert.equal(top.normalScale.x,.85);
-  assert.equal(top.normalScale.y,.85,'OpenGL normal green channel must not be flipped');
+  assert.equal(top.normalScale.x,0);assert.equal(top.normalScale.y,0);
   assert.equal(sides.map.colorSpace,THREE.SRGBColorSpace);
-  assert.equal(sides.normalMap.colorSpace,THREE.NoColorSpace);
-  assert.equal(sides.roughnessMap.colorSpace,THREE.NoColorSpace);
+  assert.equal(sides.normalMap,null);assert.equal(sides.roughnessMap,null);
   assert.equal(sides.color.getHex(),0xffffff);
-  assert.equal(terrain.textures.length,6);
-  assert.equal(requests.length,6);
+  assert.equal(terrain.textures.length,4);
   for(const texture of terrain.textures){
     assert.equal(texture.wrapS,THREE.RepeatWrapping);
     assert.equal(texture.wrapT,THREE.RepeatWrapping);
     assert.equal(texture.minFilter,THREE.LinearMipmapLinearFilter);
-    const repeat=texture.name.includes('Dirt')?1.05/.65:1/.65;
-    assert.equal(texture.repeat.x,repeat);
-    assert.equal(texture.repeat.y,repeat);
+    assert.equal(texture.repeat.x,1/STORYBOOK_PAPER_DEFAULTS.scale);
+    assert.equal(texture.repeat.y,1/STORYBOOK_PAPER_DEFAULTS.scale);
     assert.ok(texture.anisotropy<=4);
   }
   const normal=mesh.geometry.getAttribute('normal');
   for(const group of mesh.geometry.groups){
     for(let index=group.start;index<group.start+group.count;index++){
-      assert.equal(group.materialIndex===1,normal.getY(index)>0,'Top faces and their upward bevels use grass pigment');
+      if(group.materialIndex===1)assert.ok(normal.getY(index)>.25,'top and folded paper edges use grass pigment');
+      else assert.ok(Math.abs(normal.getY(index))<.25,'dirt side faces stay close to vertical');
     }
   }
-  flags.render=false;
-  requests[0].onLoad(requests[0].texture);
-  assert.equal(flags.render,true,'Loaded surface images must invalidate the frame');
   assert.equal(terrain.terrainGrassRim.visible,true);
   assert.ok(terrain.stats().grassRimEdges>0);
-  assert.ok(terrain.stats().grassRimTriangles<terrain.stats().baseTriangles*20,'Rim stays within a bounded geometry budget');
+  assert.ok(terrain.stats().grassRimTriangles<terrain.stats().baseTriangles*24,'Rim stays within a bounded geometry budget');
 });
 
 test('solid-color mode removes every terrain surface map',t=>{
@@ -106,10 +88,10 @@ test('solid-color mode removes every terrain surface map',t=>{
   flags.render=false;
   terrain.setSurfaceMode('color');
   assert.equal(terrain.getSurfaceMode(),'color');
-  assert.equal(top.color.getHex(),0x8fae68);
-  assert.equal(sides.color.getHex(),0x8b654c);
+  assert.equal(top.color.getHex(),STORYBOOK_PAPER_PALETTE.grass);
+  assert.equal(sides.color.getHex(),STORYBOOK_PAPER_PALETTE.dirt);
   for(const material of mesh.material){
-    assert.equal(material.isMeshStandardMaterial,true);
+    assert.equal(material.isMeshPhysicalMaterial,true);
     assertNoSurfaceMaps(material);
     assert.equal(material.metalness,0);
   }
@@ -140,7 +122,7 @@ test('switching material modes preserves cube geometry and gameplay collisions',
   assert.equal(mesh.receiveShadow,true);
 });
 
-test('texture settings update scale and relief without turning the material on',t=>{
+test('paper settings update colour scale while relief stays intentionally flat',t=>{
   const {terrain,top,sides,paperConfig}=fixture(t);
   terrain.setSurfaceMode('color');
   terrain.setPaper({scale:1.25,normal:.4,height:8,blend:1});
@@ -151,46 +133,44 @@ test('texture settings update scale and relief without turning the material on',
   assert.equal(paperConfig.height,0,'Extra height effects must not return through older saved settings');
   assert.equal(paperConfig.blend,0,'Old procedural blending must remain disabled');
   terrain.setSurfaceMode('pulp');
-  assert.equal(top.map.repeat.x,.8);
-  assert.equal(top.map.repeat.y,.8);
-  assert.equal(top.normalScale.x,.4);
+  assert.equal(top.map.repeat.x,1/1.25);
+  assert.equal(top.map.repeat.y,1/1.25);
+  assert.equal(top.normalScale.x,0);
   terrain.setPaper({scale:.5,normal:.6});
   assert.equal(terrain.getSurfaceMode(),'pulp');
   for(const texture of terrain.textures){
-    const repeat=texture.name.includes('Dirt')?2.1:2;
-    assert.equal(texture.repeat.x,repeat);
-    assert.equal(texture.repeat.y,repeat);
+    assert.equal(texture.repeat.x,2);
+    assert.equal(texture.repeat.y,2);
   }
-  assert.equal(top.normalScale.y,.6);
-  assert.equal(sides.normalScale.y,.6*.92);
-  assert.equal(terrain.terrainGrassRim.material.normalScale.y,.6);
+  assert.equal(top.normalScale.y,0);
+  assert.equal(sides.normalScale.y,0);
+  assert.equal(terrain.terrainGrassRim.material.normalScale.y,0);
   assert.equal(sides.map.colorSpace,THREE.SRGBColorSpace);
-  assert.equal(sides.normalMap.colorSpace,THREE.NoColorSpace);
+  assert.equal(sides.normalMap,null);
 });
 
-test('render chamfers remain inside exact collision cubes with continuous world UVs and hidden-face culling',t=>{
+test('polygonal paper terrain keeps collision grid while adding a deterministic cut outline',t=>{
   const {terrain,mesh}=fixture(t);
   const positions=mesh.geometry.getAttribute('position');
   const normals=mesh.geometry.getAttribute('normal');
   const uv=mesh.geometry.getAttribute('uv');
   for(let index=0;index<positions.count;index++){
-    for(const value of [positions.getX(index),positions.getY(index),positions.getZ(index)]){
-      const distance=Math.abs(value+.5-Math.round(value+.5));
-      assert.ok(distance<=.018+1e-6,'bevel and concave corner patch vertices remain within the narrow chamfer band');
-    }
     assert.ok(Math.abs(Math.hypot(normals.getX(index),normals.getY(index),normals.getZ(index))-1)<1e-6,'normals remain normalized after float32 conversion');
     if(normals.getY(index)>0){
-      assert.equal(uv.getX(index),positions.getX(index));
-      assert.equal(uv.getY(index),-positions.getZ(index));
+      assert.ok(Number.isFinite(uv.getX(index))&&Number.isFinite(uv.getY(index)),'paper top UVs are finite');
     }
   }
   const stats=terrain.stats();
   assert.ok(stats.visibleFaces<stats.blocks*6,'Shared internal faces must not be submitted');
-  assert.equal(stats.baseTriangles,stats.visibleFaces*2+stats.bevelTriangles);
-  assert.ok(stats.bevelTriangles>0,'a bevel must exist in actual geometry, not a painted highlight');
+  assert.ok(stats.bevelTriangles>0,'fold triangles must exist in actual geometry');
   assert.equal(positions.count,stats.baseTriangles*3);
   assert.equal(terrain.terrainGrassRim.geometry.getAttribute('position').count,stats.grassRimTriangles*3);
   assert.equal(mesh.frustumCulled,true);
+  const rebuilt=createPolygonalTerrainGeometry({THREE,columnRecords:terrain.columnRecords});
+  t.after(()=>rebuilt.dispose());
+  for(const name of ['position','normal','uv'])assert.deepEqual(rebuilt.getAttribute(name).array,mesh.geometry.getAttribute(name).array,name+' must be deterministic');
+  assert.equal(rebuilt.userData.polygonal,true);
+  assert.ok(rebuilt.boundingBox.min.x<-.5&&rebuilt.boundingBox.max.x>7.5,'exposed paper outline gets a small cut wobble');
 });
 
 test('grass rim is deterministic, keeps top surface and never changes collision height',t=>{
@@ -255,6 +235,21 @@ test('convex chamfers have outward normals and never bevel an internal coplanar 
   }
 });
 
+test('equal-height cells become one continuous layered paperboard contour',t=>{
+  const columns=[];
+  for(let x=0;x<2;x++)for(let z=0;z<2;z++)columns.push({x,z,h:0});
+  const geometry=createPolygonalTerrainGeometry({THREE,columnRecords:columns});
+  t.after(()=>geometry.dispose());
+  assert.equal(geometry.userData.layeredPaperboard,true);
+  assert.equal(geometry.userData.layerCount,1);
+  assert.equal(geometry.userData.boundaryEdges,8,'the 2x2 island has one 8-edge outer contour');
+  assert.equal(geometry.userData.paperThickness,.94);
+  assert.equal(geometry.groups.length,2);
+  assert.equal(geometry.userData.topTriangles,6,'one contour is triangulated as a single polygon');
+  assert.equal(geometry.groups[1].count/3,geometry.userData.topTriangles+geometry.userData.foldTriangles,
+    'grass stream contains one top polygon plus the folded outer lip');
+});
+
 test('scenic plateaus preserve the established z=0 walking lane and collisions',t=>{
   const {terrain}=fixture(t);
   // Captured from the established gameplay layout, independently of the new
@@ -290,33 +285,3 @@ function webpDimensions(bytes){
   }
   throw new Error('WebP has no image chunk');
 }
-
-test('pulp maps match the provenance manifest and retain the audited forward-blue normals',async()=>{
-  const directory=new URL('../studio/assets/olive-fiber/',import.meta.url);
-  const manifest=JSON.parse(await readFile(new URL('source.json',directory),'utf8'));
-  const names=['base-color.webp','dirt-color.webp','normal-gl.webp','dirt-normal-gl.webp','orm.webp','dirt-orm.webp'];
-  assert.deepEqual(manifest.textures.map(texture=>texture.file).sort(),names.sort());
-  let total=0;
-  // Both v6 exports were independently pixel-audited: the dominant channel is
-  // forward tangent Z (blue), XY are centered, maximum unit error < .013.
-  // Pinning each audited digest catches the prior [x,1,z] channel error even
-  // if a generator also rewrites the manifest. Soil is no longer grass relief.
-  const auditedNormals={
-    'normal-gl.webp':'8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958',
-    'dirt-normal-gl.webp':'66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c'
-  };
-  for(const entry of manifest.textures){
-    const bytes=await readFile(new URL(entry.file,directory));
-    const digest=createHash('sha256').update(bytes).digest('hex');
-    total+=bytes.length;
-    assert.equal(digest,entry.sha256,entry.file+' does not match its provenance digest');
-    assert.deepEqual(webpDimensions(bytes),[1024,1024],entry.file+' must retain mobile-sized source detail');
-    assert.deepEqual(entry.dimensions,[1024,1024]);
-    if(entry.file.includes('normal-gl')){
-      assert.equal(digest,auditedNormals[entry.file],entry.file+' changed: audit tangent XYZ channels before accepting a new normal export');
-      assert.equal(entry.encoding,'WebP lossless','normal components must not receive lossy color compression');
-    }
-  }
-  assert.equal(total,manifest.totalTextureBytes);
-  assert.ok(total<8*1024*1024,'the complete six-map set must remain within its mobile download budget');
-});

@@ -60,6 +60,8 @@ test('volumetric output keeps HDR intermediate and one final color transform',as
   assert.match(source,/if\(!HDR_ENABLED\)\{[\s\S]*?renderer\.render\(scene,camera\);/,'unsupported targets must fall back to the regular renderer output');
   const fade=source.match(/nearFade=smoothstep\(([\d.]+),([\d.]+),t\)/);
   assert.ok(fade&&+fade[1]>0&&+fade[1]<+fade[2]&&+fade[2]<5.5,'light shafts must become visible before the close gameplay focal plane');
+  assert.match(source,/canopyGaps/,'storybook shafts should retain broad canopy gaps');
+  assert.match(source,/pulpMotes/,'storybook shafts should carry a restrained paper-dust variation');
   assert.match(source,/object\.isMesh&&object\.visible&&!object\.castShadow/,'volume shadows use the same caster set as the surface shadows');
   assert.match(source,/for\(const object of nonCasters\)object\.visible=true/,'temporary caster visibility is restored');
 });
