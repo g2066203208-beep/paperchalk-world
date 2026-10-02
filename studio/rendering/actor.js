@@ -1,6 +1,6 @@
 // The printed actor keeps its original pixels and alpha silhouette. Only the
 // paper's lighting response is added here; gameplay still moves a flat cutout.
-export function createActor({THREE,scene,renderer,terrain,flags,loadTexture}){
+export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId='forest'}){
 const sc=document.createElement('canvas');sc.width=sc.height=256;
 {
   const g=sc.getContext('2d');
@@ -49,8 +49,8 @@ loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href
     side:THREE.DoubleSide,
     forceSinglePass:true,
     color:0xffffff,
-    emissive:0x000000,
-    emissiveIntensity:0,
+    emissive:sceneId==='city-prologue'?0x8294aa:0x000000,
+    emissiveIntensity:sceneId==='city-prologue'?.14:0,
     dithering:true,
     depthWrite:true
   });

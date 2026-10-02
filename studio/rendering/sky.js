@@ -1,10 +1,11 @@
 // Paperchalk Demo v12.32 visual baseline. Extracted without changing shader or art parameters.
 import {rng} from './math.js';
 
-export function createSky({THREE,scene,renderer,camera}){
+export function createSky({THREE,scene,renderer,camera,sceneId='forest'}){
 const skyUniforms={
   time01:{value:.27},
-  drama:{value:1.0}
+  drama:{value:1.0},
+  cityScene:{value:sceneId==='city-prologue'?1:0}
 };
 const skyMat=new THREE.ShaderMaterial({
   uniforms:skyUniforms,
@@ -23,6 +24,7 @@ const skyMat=new THREE.ShaderMaterial({
     varying vec3 vSkyPos;
     uniform float time01;
     uniform float drama;
+    uniform float cityScene;
 
     float ease01(float x){
       x=clamp(x,0.0,1.0);
@@ -100,7 +102,7 @@ const skyMat=new THREE.ShaderMaterial({
       float bank0=.025+.025*sin(azimuth*8.0+.5)+.012*sin(azimuth*21.0+1.0);
       float bank1=-.004+.022*sin(azimuth*10.0+2.2)+.009*sin(azimuth*25.0);
       float bank2=-.036+.018*sin(azimuth*12.0-.9)+.011*sin(azimuth*19.0+.8);
-      float twilightBanks=wd+ws*.65;
+      float twilightBanks=(wd+ws*.65)*(1.0-cityScene);
       vec3 farPaper=mix(vec3(.91,.61,.39),vec3(.64,.34,.47),side);
       vec3 midPaper=mix(vec3(.86,.53,.30),vec3(.61,.32,.43),side);
       vec3 nearPaper=mix(vec3(.79,.51,.30),vec3(.53,.31,.39),side);
@@ -108,6 +110,8 @@ const skyMat=new THREE.ShaderMaterial({
       col=mix(col,midPaper,(1.0-smoothstep(bank1-.006,bank1+.006,skyDir.y))*.27*twilightBanks);
       col=mix(col,nearPaper,(1.0-smoothstep(bank2-.005,bank2+.005,skyDir.y))*.24*twilightBanks);
 
+      // A low, dark urban sky leaves room for bright cold street shafts.
+      col=mix(col,col*vec3(.55,.62,.75),cityScene*wn);
       gl_FragColor=vec4(col,1.0);
       #include <colorspace_fragment>
     }

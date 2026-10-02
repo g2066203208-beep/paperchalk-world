@@ -8,6 +8,9 @@ import {createPaperMaterials} from './paper-materials.js';
 import {createTerrain} from './terrain.js';
 import {createForest} from './forest.js';
 import {createStageScenery} from './stage-scenery.js';
+import {createCityTerrain} from './city-terrain.js';
+import {createCityScenery} from './city-scenery.js';
+import {createCityTraffic} from './city-traffic.js';
 import {createSky} from './sky.js';
 import {createPaperFog} from './fog.js';
 import {createLights,createLightingController} from './lighting.js';
@@ -17,14 +20,15 @@ import {createOrbitCamera} from './orbit-camera.js';
 import {disposeSceneResources} from './resources.js';
 
 const FEATURES=['sky','layers','shadow','fog','tone','random','bounce','godrays','ao'];
-const PRESETS={dawn:.27,noon:.5,sunset:.73,night:0};
+const PRESETS={dawn:.27,noon:.5,sunset:.73,night:.875};
 
-export function createPaperScene({container,onStatus=()=>{}}={}){
+export function createPaperScene({container,onStatus=()=>{},sceneId='city-prologue'}={}){
   if(!container||typeof container.appendChild!=='function')throw new TypeError('Paper scene requires a container element.');
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
-  const state={sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:'dawn',auto:false,time:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
+  const isCity=sceneId!=='forest';
+  const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
   // Storybook stock is intentionally flat: the paper geometry and shadows
   // carry the depth, while the pigment only varies by a few quiet percent.
   const paperConfig={scale:1.8,normal:0,height:0,blend:0};
@@ -62,7 +66,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?1.05:1.22));
   renderer.setSize(size.width,size.height,false);
   renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.domElement.style.display='block';
-  renderer.domElement.setAttribute('aria-label','横版开放纸艺世界');
+  renderer.domElement.setAttribute('aria-label',isCity?'晚上九点的纸艺城市街道':'横版开放纸艺世界');
   renderer.shadowMap.enabled=true;
   // PCF honours the light's filter radius: the former fixed soft kernel left
   // razor-sharp repeated trunk stripes across the close mobile composition.
@@ -81,15 +85,18 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   const target=new THREE.Vector3(0,1.75,-.35);
   const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidateView,viewport:size});
   const materials=createPaperMaterials({THREE,renderer});
-  const terrain=createTerrain({THREE,scene,renderer,flags,loadTexture,paperConfig,
+  const terrain=(isCity?createCityTerrain:createTerrain)({THREE,scene,renderer,flags,loadTexture,paperConfig,
     paperGrassSet:materials.paperGrassSet,paperDirtSet:materials.paperDirtSet,
     paperLeafSet:materials.paperLeafSet,paperTrunkSet:materials.paperTrunkSet,
     paperMapController:materials.storybookMaps});
-  const forest=createForest({THREE,scene,...materials,...terrain.pulpSets,terrainWorld:terrain.world});
-  const scenery=createStageScenery({THREE,scene,world:terrain.world});
-  const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture});
+  const forest=isCity?null:createForest({THREE,scene,...materials,...terrain.pulpSets,terrainWorld:terrain.world});
+  const scenery=(isCity?createCityScenery:createStageScenery)({THREE,scene,world:terrain.world,flags});
+  const traffic=isCity?createCityTraffic({THREE,scene}):null;
+  traffic?.group.traverse(object=>{if(object.isMesh)object.userData.volumeShadow=false;});
+const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:state.sceneId});
   const lights=createLights({THREE,scene,target});
-  const celestials=createSky({THREE,scene,renderer,camera});
+  lights.locals=scenery.localLights??[];
+  const celestials=createSky({THREE,scene,renderer,camera,sceneId:state.sceneId});
   const fog=createPaperFog({THREE,scene,renderer,camera,state,flags,getSize,mistTexture:materials.mistTexture,celestials});
   const atmosphere=createVolumetrics({THREE,scene,renderer,camera,state,flags,getSize,lights,celestials,fog,actor});
   const {updateLighting}=createLightingController({THREE,scene,camera,renderer,state,flags,lights,celestials,fog,atmosphere,actor});
@@ -102,7 +109,7 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   function syncFeatures(){
     sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;
     sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;
-    contactShadow.visible=state.shadow;forestMist.visible=state.fog;forest.canopyGroup.visible=true;
+    contactShadow.visible=state.shadow;forestMist.visible=state.fog;if(forest)forest.canopyGroup.visible=true;
     terrain.terrainBlocks.visible=state.layers;renderer.shadowMap.enabled=state.shadow;
     sun.castShadow=state.shadow&&sun.intensity>.10;moon.castShadow=state.shadow&&moon.intensity>.10;
     if(!state.fog)scene.fog=null;
@@ -112,8 +119,8 @@ export function createPaperScene({container,onStatus=()=>{}}={}){
   }
 const timeTransition={
   active:false,
-  start:.27,
-  target:.27,
+  start:state.time,
+  target:state.time,
   delta:0,
   elapsed:0,
   duration:1.8
@@ -135,7 +142,7 @@ function beginTimeTransition(targetTime){
 }
 
 
-let autoShadowFrame=0,volumeShadowFrame=0,lastMistTick=0,mistClock=0;
+let autoShadowFrame=0,volumeShadowFrame=0,lastMistTick=0,mistClock=0,trafficShadowClock=0;
 function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   if(disposed||contextLost)return false;
   dt=Math.min(.05,Math.max(0,Number(dt)||0));
@@ -152,6 +159,15 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
   const playerMesh=actor.playerMesh;
   frameCalls++;
+
+  if(traffic?.update(dt)){
+    flags.render=flags.depth=flags.ao=true;
+    trafficShadowClock+=dt;
+    if(trafficShadowClock>=1/30){
+      flags.shadow=true;
+      trafficShadowClock%=1/30;
+    }
+  }
 
 
   if(actor.sync(lastSnapshot)){
@@ -317,7 +333,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
-      terrain:terrain.stats(),forest:forest.stats?.(),scenery:{...scenery.group.userData},
+      terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},traffic:traffic?.stats?.(),
       player:actor.snapshot(),camera:orbitCamera.snapshot(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }

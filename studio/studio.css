@@ -244,3 +244,22 @@ body.game-mode{
 .game-mode :is(.touch-button,.game-pause,.game-menu,.inspector,.rotate-hint,.toast),
 .game-mode:not(.inspector-hidden) .workspace::after{backdrop-filter:none;-webkit-backdrop-filter:none}
 .game-mode .touch-button svg{filter:none}
+
+.prologue-hud{position:absolute;z-index:3;left:22px;top:56px;color:#f7e7ca;text-shadow:0 2px 8px #14213599;pointer-events:none;user-select:none}
+.prologue-hud p{margin:0 0 7px;font-size:12px;font-weight:600;letter-spacing:.14em}
+.prologue-hud>div{display:flex;align-items:center;gap:9px;color:#d4d9d3;font-size:10px;letter-spacing:.09em}
+.prologue-hud i{width:2px;height:2px;border-radius:50%;background:#e3d5b9}
+.inspect-action{position:absolute;z-index:4;right:24px;bottom:23px;display:flex;align-items:center;gap:9px;padding:11px 17px;border:1px solid #f5ddb57a;border-radius:25px;background:#233347bf;color:#f5e7cc;font:inherit;font-size:12px;box-shadow:0 3px 15px #1017253d;cursor:pointer}
+.inspect-action kbd{display:grid;place-items:center;width:20px;height:20px;border:1px solid #dacbae75;border-radius:5px;font:inherit;font-size:10px}
+.inspection-overlay{position:absolute;inset:0;z-index:25;display:flex;align-items:flex-end;justify-content:center;padding:24px;background:linear-gradient(transparent 30%,#14203366);pointer-events:auto}
+.inspection-card{position:relative;width:min(420px,100%);border:1px solid #ecd8b09c;border-radius:12px;background:#f5e8d1f5;padding:24px 28px;color:#4d5660;box-shadow:0 9px 40px #10182e4a}
+.inspection-card .inspection-eyebrow{margin:0 0 9px;font-size:10px;letter-spacing:.16em;color:#927d63}
+.inspection-card h2{margin:0 30px 11px 0;font-size:17px;font-weight:600;color:#44525c}
+.inspection-card>p:last-child{margin:0;line-height:1.85;font-size:13px}
+.inspection-card>button{position:absolute;right:11px;top:9px;display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:#6d736f;font-size:25px;cursor:pointer}
+.inspection-open .touch-controls,.inspection-open .game-pause,.inspection-open .inspect-action{visibility:hidden;pointer-events:none}
+.game-mode .prologue-hud{top:calc(20px + var(--safe-top));left:calc(24px + var(--safe-left))}
+.game-mode .inspect-action{right:calc(28px + var(--safe-right));bottom:calc(25px + var(--safe-bottom));min-height:52px}
+.game-mode .inspection-overlay{padding:calc(20px + var(--safe-top)) calc(22px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(22px + var(--safe-left))}
+@media(pointer:coarse){.inspect-action kbd{display:none}.inspect-action{min-height:48px}}
+@media(orientation:portrait){.city-prologue.game-mode .rotate-hint{top:calc(83px + var(--safe-top))}.game-mode .prologue-hud{left:calc(20px + var(--safe-left))}.inspection-card{padding:21px}}

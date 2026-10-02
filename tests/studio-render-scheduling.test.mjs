@@ -70,7 +70,7 @@ async function setup({width=932,height=430,coarse=false}={}){
     disposeSceneResources(){},
   };
   const create=vm.runInNewContext(source+'\ncreatePaperScene;',sandbox);
-  const scene=create({container});await scene.ready;calls.length=0;
+  const scene=create({container,sceneId:'forest'});await scene.ready;calls.length=0;
   let tick=0;
   const frame=(patch={})=>scene.frame(1/60,1000+(++tick)*17,
     {x:0,y:.5,facing:1,distance:0,grounded:true,...patch});

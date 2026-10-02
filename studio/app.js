@@ -4,23 +4,27 @@ import {SaveStore} from './core/SaveStore.mjs';
 import {InputActions} from './input/InputActions.mjs';
 import {installStudioLifecycle} from './core/Lifecycle.mjs';
 import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
+import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,acceptsInspectionKey} from './ui/CityPrologue.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
 const defaults={scale:1.8,normal:0,height:0,blend:0};
 const paperInputs={paperScale:'scale'};
-const saves=new SaveStore({key:'paperworld.stage.save.v1'});
+const sceneId=sceneFromSearch(location.search),isCity=sceneId===CITY_SCENE_ID;
+const saves=new SaveStore({key:sceneSaveKey(sceneId)});
 const events=new AbortController();
 const heldControls=new Set();
 const pauseReasons=new PauseReasons();
 const coarsePointer=window.matchMedia('(any-pointer: coarse)');
 let scene,world,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
+let inspectionOpen=false;
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0;
 const STEP=1/60;
 const disposeLifecycle=installStudioLifecycle({
   saveNow:()=>saveProgress(true),
   resetClock,
   handleBack:()=>{
+    if(inspectionOpen){closeInspection();return true;}
     if(!document.body.classList.contains('inspector-hidden')){setInspector(false);return true;}
     if(gameMode){setGameMenu(!pauseReasons.menu);return true;}
     const details=document.querySelector('.render-details[open]');
@@ -41,10 +45,34 @@ function toast(message){
 }
 function setStatus(){
   const paused=pauseReasons.active;
-  ui.appStatus.textContent=failed?'画面待恢复':!ready?'正在载入':paused?'场景已暂停':'纸艺世界 · 自由漫游';
+  ui.appStatus.textContent=failed?'画面待恢复':!ready?'正在载入':paused?'场景已暂停':isCity?'序幕 · 放学归途':'纸艺世界 · 自由漫游';
   ui.playPause.textContent=paused?'继续':'暂停';
   ui.playPause.setAttribute('aria-pressed',String(paused));
-  ui.openGameMenu.setAttribute('aria-expanded',String(pauseReasons.menu));
+  ui.openGameMenu.setAttribute('aria-expanded',String(pauseReasons.menu&&!inspectionOpen));
+  refreshCityHud();
+}
+function refreshCityHud(){
+  ui.prologueHud.hidden=!isCity;
+  const x=simulation?.snapshot().x??0,sight=nearbyCitySight(x);
+  ui.locationLabel.textContent=cityLocation(x);
+  ui.inspectAction.hidden=!isCity||!ready||failed||pauseReasons.active||!sight||!document.body.classList.contains('inspector-hidden');
+  if(sight)ui.inspectActionLabel.textContent=sight.label;
+}
+function openInspection(){
+  if(!isCity||!ready||failed||pauseReasons.active||!document.body.classList.contains('inspector-hidden'))return;
+  const sight=nearbyCitySight(simulation.snapshot().x);if(!sight)return;
+  inspectionOpen=true;pauseReasons.openMenu();resetClock();
+  ui.inspectionTitle.textContent=sight.title;ui.inspectionText.textContent=sight.text;
+  ui.inspectionOverlay.hidden=false;document.body.classList.add('inspection-open');
+  document.querySelector('.toolbar').inert=true;
+  setStatus();ui.closeInspection.focus({preventScroll:true});
+}
+function closeInspection(){
+  if(!inspectionOpen)return;
+  inspectionOpen=false;pauseReasons.closeMenu();resetClock();
+  ui.inspectionOverlay.hidden=true;document.body.classList.remove('inspection-open');
+  document.querySelector('.toolbar').inert=false;
+  setStatus();ui.viewport.focus({preventScroll:true});
 }
 function sceneStatus({state,message}){
   if(disposed)return;
@@ -86,6 +114,7 @@ function updateControls(){
 function refreshStatus(now,force=false){
   if(!ready||(!force&&now-statusTime<350))return;
   const state=simulation.snapshot(),stats=scene.getStats();
+  refreshCityHud();
   ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z 0`;
   ui.playerState.textContent=pauseReasons.active?'已暂停':Math.abs(state.vx)>.05?'漫游中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
@@ -149,6 +178,7 @@ function heldButton(element,setHeld){
   events.signal.addEventListener('abort',()=>{cancel();heldControls.delete(cancel);},{once:true});
 }
 function setInspector(open){
+  if(inspectionOpen)closeInspection();
   if(gameMode&&open)pauseReasons.openMenu();
   document.body.classList.toggle('inspector-hidden',!open);
   ui.toggleInspector.setAttribute('aria-expanded',String(open));
@@ -165,6 +195,7 @@ function setInspector(open){
 }
 function setGameMenu(open,{resume=false}={}){
   if(!gameMode)return;
+  if(inspectionOpen)closeInspection();
   if(resume)pauseReasons.resume();else if(open)pauseReasons.openMenu();else pauseReasons.closeMenu();
   document.body.classList.add('inspector-hidden');
   ui.toggleInspector.setAttribute('aria-expanded','false');
@@ -176,6 +207,7 @@ function setGameMenu(open,{resume=false}={}){
 function refreshPresentation(){
   const next=wantsGamePresentation({userAgent:navigator.userAgent,search:location.search,coarse:coarsePointer.matches,width:innerWidth,height:innerHeight});
   if(next===gameMode)return;
+  if(inspectionOpen)closeInspection();
   gameMode=next;document.body.classList.toggle('game-mode',gameMode);
   document.body.classList.add('inspector-hidden');document.body.classList.remove('game-menu-open');
   pauseReasons.closeMenu();ui.gameMenu.hidden=true;ui.toggleInspector.setAttribute('aria-expanded','false');
@@ -184,8 +216,8 @@ function refreshPresentation(){
   resetClock();setStatus();
 }
 function keepModalFocus(event){
-  if(event.key!=='Tab'||!gameMode||!pauseReasons.menu)return;
-  const root=document.body.classList.contains('inspector-hidden')?ui.gameMenu:ui.inspector;
+  if(event.key!=='Tab'||(!inspectionOpen&&(!gameMode||!pauseReasons.menu)))return;
+  const root=inspectionOpen?ui.inspectionOverlay:document.body.classList.contains('inspector-hidden')?ui.gameMenu:ui.inspector;
   const items=[...root.querySelectorAll('button:not(:disabled),input:not(:disabled),a[href]')].filter(element=>element.getClientRects().length);
   if(!items.length)return;
   const first=items[0],last=items[items.length-1];
@@ -228,7 +260,14 @@ function wireControls(){
   listen(ui.gameSave,'click',()=>saveProgress());
   listen(ui.gameLoad,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.gameSettings,'click',()=>setInspector(true));
-  listen(window,'keydown',event=>{keepModalFocus(event);if(event.key==='Escape'&&window.PaperchalkHandleBack())event.preventDefault();});
+  listen(ui.inspectAction,'click',openInspection);
+  listen(ui.closeInspection,'click',closeInspection);
+  listen(ui.inspectionOverlay,'click',event=>{if(event.target===ui.inspectionOverlay)closeInspection();});
+  listen(window,'keydown',event=>{
+    keepModalFocus(event);
+    if(event.key==='Escape'&&window.PaperchalkHandleBack())event.preventDefault();
+    if(acceptsInspectionKey(event)&&isCity&&!pauseReasons.active&&nearbyCitySight(simulation.snapshot().x)){event.preventDefault();openInspection();}
+  });
   for(const button of document.querySelectorAll('[data-surface]'))listen(button,'click',()=>{surfaceMode=button.dataset.surface;scene.setSurfaceMode(surfaceMode);updateControls();});
   for(const button of document.querySelectorAll('[data-preset]'))listen(button,'click',()=>{scene.setTimePreset(button.dataset.preset);updateControls();if(pauseReasons.active)toast('已选择光线，继续游戏后开始过渡');});
   listen(ui.autoCycle,'change',()=>{scene.setAutoCycle(ui.autoCycle.checked);updateControls();});
@@ -262,11 +301,12 @@ function dispose(){
   disposeLifecycle();events.abort();input?.dispose();scene?.dispose();
 }
 async function start(){
+  document.body.classList.toggle('city-prologue',isCity);refreshCityHud();
   refreshPresentation();listen(window,'resize',refreshPresentation);listen(coarsePointer,'change',refreshPresentation);
   loadBuildInfo();
   for(const button of document.querySelectorAll('.toolbar button'))button.disabled=true;
   try{
-    scene=createPaperScene({container:ui.viewport,onStatus:sceneStatus});
+    scene=createPaperScene({container:ui.viewport,onStatus:sceneStatus,sceneId});
     world=scene.getWorld();
     simulation=new StagePlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;

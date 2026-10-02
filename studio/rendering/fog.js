@@ -2,6 +2,7 @@
 import {rng} from './math.js';
 
 export function createPaperFog({THREE,scene,renderer,camera,state,flags,getSize,mistTexture,celestials}){
+const city=state.sceneId==='city-prologue';
 const {sky,starField,sunDisc,moonDisc}=celestials;
 const forestMist=new THREE.Group();
 scene.add(forestMist);
@@ -15,7 +16,7 @@ const fogUniforms={
   time:{value:0},
   tDepth:{value:null},
   resolution:{value:new THREE.Vector2(1,1)},
-  depthFade:{value:.0045}
+  depthFade:{value:.0045},cityMode:{value:city?1:0}
 };
 
 const fogVertex=`
@@ -38,6 +39,7 @@ const fogFragment=`
   uniform float time;
   uniform vec2 resolution;
   uniform float depthFade;
+  uniform float cityMode;
   varying vec2 vUv;
   varying vec3 vMistWorld;
 
@@ -64,11 +66,16 @@ const fogFragment=`
     float backgroundLayer=1.0-smoothstep(-12.0,-.8,vMistWorld.z);
     float layerOpacity=.08+backgroundLayer*1.42;
     float heightFalloff=1.0-smoothstep(1.45,3.8,vMistWorld.y);
+    if(cityMode>.5){
+      layerOpacity=(1.0-smoothstep(-.3,1.2,vMistWorld.z))*.85;
+      heightFalloff=1.0-smoothstep(.9,2.1,vMistWorld.y);
+    }
     a *= soft*opacity*layerOpacity*heightFalloff;
     if(a<.002) discard;
 
     float sunSide=1.0-smoothstep(-7.0,6.0,vMistWorld.x);
     vec3 localTint=mix(tint*vec3(.96,.96,1.04),tint*vec3(1.045,1.0,.90),sunSide);
+    localTint=mix(localTint,tint,cityMode);
     gl_FragColor=vec4(paper.rgb*localTint,a);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -86,8 +93,8 @@ const fogMat=new THREE.ShaderMaterial({
   toneMapped:true
 });
 
-const BANK_COUNT=18;
-const GROUND_COUNT=10;
+const BANK_COUNT=city?8:18;
+const GROUND_COUNT=city?4:10;
 const bankGeo=new THREE.PlaneGeometry(1,1);
 const groundGeo=new THREE.PlaneGeometry(1,1);
 const fogBanks=new THREE.InstancedMesh(bankGeo,fogMat,BANK_COUNT);
@@ -105,6 +112,12 @@ const groundFogData=[];
 function seedFogData(){
   const r=rng(99127);
   for(let i=0;i<BANK_COUNT;i++){
+    if(city){
+      fogBankData.push({baseX:-4+i*4+(r()-.5),baseZ:-1.35-r()*1.4,
+        baseY:.70+r()*.16,width:4.2+r(),height:.70+r()*.35,
+        speed:.065,phase:r()*Math.PI*2,bob:.018});
+      continue;
+    }
     const lane=i%3; // near/mid/far
     const spread=lane===0?7.5:lane===1?11.0:14.5;
     fogBankData.push({
@@ -119,6 +132,11 @@ function seedFogData(){
     });
   }
   for(let i=0;i<GROUND_COUNT;i++){
+    if(city){
+      groundFogData.push({baseX:-2+i*8,baseZ:-1.1-r()*.8,baseY:.525,
+        width:5+r(),depth:1.7+r()*.5,speed:.045,phase:r()*Math.PI*2,bob:.005});
+      continue;
+    }
     groundFogData.push({
       baseX:(r()-.5)*13,
       baseZ:-2-r()*8,

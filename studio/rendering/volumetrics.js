@@ -1,6 +1,7 @@
 // Paperchalk Demo v12.32 visual baseline. Extracted without changing shader or art parameters.
 import {smoothstep} from './math.js';
 import {createContactAO} from './contact-ao.js';
+import {cityLightProfile} from './city-light-profile.js';
 
 // The volumetric path renders the scene once into an HDR buffer before adding
 // the shafts.  Three.js does not tone-map ordinary render targets, so an
@@ -45,6 +46,10 @@ const volumeDepthMat=new THREE.MeshBasicMaterial({side:THREE.DoubleSide});
 volumeDepthMat.colorWrite=false;
 volumeDepthMat.depthWrite=true;
 volumeDepthMat.depthTest=true;
+const localShadowSlots=[0,1].map(()=>({light:null,target:null,camera:new THREE.PerspectiveCamera(),
+  matrix:new THREE.Matrix4(),signature:'',sceneSignature:'',renders:0}));
+const alphaDepthMaterials=new Map();
+let casterSignature='';
 
 const volumeUniforms={
   sceneDepth:{value:null},
@@ -63,11 +68,21 @@ const volumeUniforms={
   moonDensity:{value:.016},
   sunIntensity:{value:.76},
   moonIntensity:{value:.18},
+  cityMode:{value:state.sceneId==='city-prologue'?1:0},
   maxDistance:{value:46.0},
   time:{value:0},
   shadowBias:{value:.0022},
   steps:{value:32.0}
 };
+for(let i=0;i<2;i++){
+  volumeUniforms['localDepth'+i]={value:null};
+  volumeUniforms['localMatrix'+i]={value:new THREE.Matrix4()};
+  volumeUniforms['localPosition'+i]={value:new THREE.Vector3()};
+  volumeUniforms['localDirection'+i]={value:new THREE.Vector3(0,-1,0)};
+  volumeUniforms['localColor'+i]={value:new THREE.Color()};
+  volumeUniforms['localCone'+i]={value:new THREE.Vector3(.9,.96,14)};
+  volumeUniforms['localIntensity'+i]={value:0};
+}
 
 const volumeMat=new THREE.ShaderMaterial({
   uniforms:volumeUniforms,
@@ -98,6 +113,21 @@ const volumeMat=new THREE.ShaderMaterial({
     uniform float moonDensity;
     uniform float sunIntensity;
     uniform float moonIntensity;
+    uniform float cityMode;
+    uniform sampler2D localDepth0;
+    uniform sampler2D localDepth1;
+    uniform mat4 localMatrix0;
+    uniform mat4 localMatrix1;
+    uniform vec3 localPosition0;
+    uniform vec3 localPosition1;
+    uniform vec3 localDirection0;
+    uniform vec3 localDirection1;
+    uniform vec3 localColor0;
+    uniform vec3 localColor1;
+    uniform vec3 localCone0;
+    uniform vec3 localCone1;
+    uniform float localIntensity0;
+    uniform float localIntensity1;
     uniform float maxDistance;
     uniform float time;
     uniform float shadowBias;
@@ -134,6 +164,26 @@ const volumeMat=new THREE.ShaderMaterial({
       return step(uvz.z-shadowBias,blocker);
     }
 
+    float spotVisibility(sampler2D depthMap,mat4 lightMatrix,vec3 p){
+      vec4 projected=lightMatrix*vec4(p,1.0);
+      if(projected.w<=0.0)return 0.0;
+      vec3 uvz=projected.xyz/projected.w*.5+.5;
+      if(uvz.x<=0.0||uvz.x>=1.0||uvz.y<=0.0||uvz.y>=1.0||uvz.z<=0.0||uvz.z>=1.0)return 0.0;
+      return step(uvz.z-.0007,texture2D(depthMap,uvz.xy).x);
+    }
+    float spotScatter(sampler2D depthMap,mat4 lightMatrix,vec3 lightPosition,
+      vec3 lightDirection,vec3 cone,vec3 p,vec3 viewRay){
+      vec3 fromLight=p-lightPosition;
+      float distanceToLight=length(fromLight);
+      if(distanceToLight<.02||distanceToLight>=cone.z)return 0.0;
+      vec3 incoming=fromLight/distanceToLight;
+      float angle=smoothstep(cone.x,cone.y,dot(incoming,lightDirection));
+      if(angle<.001)return 0.0;
+      float falloff=pow(max(0.0,1.0-distanceToLight/cone.z),1.5)/(1.0+distanceToLight*distanceToLight*.025);
+      float phase=.52+.48*pow(max(0.0,dot(viewRay,-incoming)),3.0);
+      return angle*falloff*phase*spotVisibility(depthMap,lightMatrix,p);
+    }
+
     void main(){
       float depth=texture2D(sceneDepth,vUv).x;
       vec3 endPos=worldFromDepth(vUv,depth);
@@ -147,6 +197,7 @@ const volumeMat=new THREE.ShaderMaterial({
       float jitter=hash12(gl_FragCoord.xy);
       float sunAccum=0.0;
       float moonAccum=0.0;
+      float localAccum0=0.0,localAccum1=0.0;
 
       for(int i=0;i<32;i++){
         if(float(i)>=steps)break;
@@ -171,25 +222,37 @@ const volumeMat=new THREE.ShaderMaterial({
         float forestVeil=forestBank*(.58+.42*canopyGaps);
         float pulpMotes=.94+.06*sin(p.x*4.0+p.y*7.0+p.z*2.4+time*.15);
         float medium=lowMist*(.035+.965*forestAir)*airVariation*pulpMotes*(.025+forestVeil*4.0);
+        if(cityMode>.5){
+          // Suspended street air reaches the lamps. Clear camera-side air and
+          // a narrow depth envelope prevent an additive blue sheet over town.
+          float streetDepth=exp(-pow((p.z+1.4)/3.0,2.0));
+          float streetHeight=smoothstep(-.1,.35,p.y)*(1.0-smoothstep(5.3,7.0,p.y));
+          float clearForeground=1.0-smoothstep(1.5,3.4,p.z);
+          float pockets=.72+.28*pow(.5+.5*sin(p.x*.59-p.z*.31),2.0);
+          medium=streetDepth*streetHeight*clearForeground*pockets*.92;
+        }
         // Keep foreground air clear; light accumulates in the low forest bank.
         float nearFade=smoothstep(1.2,4.2,t);
-
-        float sVis=sunVisibility(p);
-        float mVis=moonVisibility(p);
 
         float sCos=clamp(dot(dir,-normalize(sunLightDir)),-1.0,1.0);
         float mCos=clamp(dot(dir,-normalize(moonLightDir)),-1.0,1.0);
         float sPhase=.34+.66*pow(max(sCos,0.0),5.0);
-        float mPhase=.30+.70*pow(max(mCos,0.0),4.6);
+        float mPhase=mix(.30+.70*pow(max(mCos,0.0),4.6),.48+.52*pow(max(mCos,0.0),3.0),cityMode);
 
         // Both celestial lights coexist. Only shadow-map-visible fog glows.
-        sunAccum+=medium*sunDensity*sVis*stepLen*nearFade*sPhase;
-        moonAccum+=medium*moonDensity*mVis*stepLen*nearFade*mPhase;
+        if(sunIntensity>.001)sunAccum+=medium*sunDensity*sunVisibility(p)*stepLen*nearFade*sPhase;
+        if(moonIntensity>.001)moonAccum+=medium*moonDensity*moonVisibility(p)*stepLen*nearFade*mPhase;
+        if(localIntensity0>.001)localAccum0+=medium*.075*stepLen*nearFade*
+          spotScatter(localDepth0,localMatrix0,localPosition0,localDirection0,localCone0,p,dir);
+        if(localIntensity1>.001)localAccum1+=medium*.075*stepLen*nearFade*
+          spotScatter(localDepth1,localMatrix1,localPosition1,localDirection1,localCone1,p,dir);
       }
 
       float sunScatter=(1.0-exp(-sunAccum*2.28))*sunIntensity;
       float moonScatter=(1.0-exp(-moonAccum*2.45))*moonIntensity;
       vec3 rays=sunScatteringColor*sunScatter+moonScatteringColor*moonScatter;
+      rays+=localColor0*(1.0-exp(-localAccum0*2.4))*localIntensity0;
+      rays+=localColor1*(1.0-exp(-localAccum1*2.4))*localIntensity1;
       // Linear ray length lets the final filter reject silhouette crossings.
       gl_FragColor=vec4(rays,fullDist);
     }
@@ -373,11 +436,22 @@ function updateVolumetricSettings(t){
   volumeUniforms.moonIntensity.value=moonFade*(.22+moonUp*.36+twilight*.10);
   volumeUniforms.sunDensity.value=.021+twilight*.030;
   volumeUniforms.moonDensity.value=.018+moonUp*.010;
+  const city=state.sceneId==='city-prologue';
+  volumeUniforms.cityMode.value=city?1:0;
+  if(city){
+    const profile=cityLightProfile(t);
+    volumeUniforms.sunScatteringColor.value.copy(dayColor).lerp(new THREE.Color(profile.sunWarm),twilight*.98);
+    volumeUniforms.moonScatteringColor.value.setHex(profile.moonScatterColor);
+    volumeUniforms.sunIntensity.value=profile.sunScattering;
+    volumeUniforms.moonIntensity.value=profile.moonScattering;
+    volumeUniforms.sunDensity.value=profile.sunDensity;
+    volumeUniforms.moonDensity.value=profile.moonDensity;
+  }
 }
 
-function updateVolumeShadowCamera(lightPos,cam,matrix,uniformMatrix,targetRT){
+function updateVolumeShadowCamera(lightPos,cam,matrix,uniformMatrix,targetRT,lookTarget=volumeLightTarget){
   cam.position.copy(lightPos);
-  cam.lookAt(volumeLightTarget);
+  cam.lookAt(lookTarget);
   cam.updateMatrixWorld(true);
   cam.matrixWorldInverse.copy(cam.matrixWorld).invert();
   cam.updateProjectionMatrix();
@@ -389,8 +463,65 @@ function updateVolumeShadowCamera(lightPos,cam,matrix,uniformMatrix,targetRT){
   renderer.render(scene,cam);
 }
 
+function syncLocalLights(){
+  const locals=state.sceneId==='city-prologue'?(lights.locals??[]).filter(light=>light.isSpotLight&&light.visible).slice(0,2):[];
+  const active=[];
+  for(let i=0;i<2;i++){
+    const light=locals[i],slot=localShadowSlots[i];
+    volumeUniforms['localIntensity'+i].value=0;
+    if(!light)continue;
+    if(slot.light!==light){slot.light=light;slot.signature='';slot.sceneSignature='';}
+    slot.target??=makeVolumeShadowTarget();
+    const position=light.getWorldPosition(new THREE.Vector3());
+    const target=light.target.getWorldPosition(new THREE.Vector3());
+    const direction=target.clone().sub(position).normalize();
+    const angle=Math.max(.02,Math.min(Math.PI*.49,light.angle));
+    const range=Math.max(.2,light.distance||20),outer=Math.cos(angle);
+    const inner=Math.max(outer+.0001,Math.cos(angle*(1-light.penumbra)));
+    volumeUniforms['localDepth'+i].value=slot.target.depthTexture;
+    volumeUniforms['localPosition'+i].value.copy(position);
+    volumeUniforms['localDirection'+i].value.copy(direction);
+    volumeUniforms['localColor'+i].value.copy(light.color).lerp(new THREE.Color(0x709deb),.62);
+    volumeUniforms['localCone'+i].value.set(outer,inner,range);
+    const base=Math.max(.001,light.userData.cityBaseIntensity??light.intensity);
+    volumeUniforms['localIntensity'+i].value=Math.min(2,Math.max(0,
+      (light.userData.volumetricIntensity??.85)*light.intensity/base*.38));
+    const signature=[...position.toArray(),...target.toArray(),angle,range].map(value=>value.toFixed(4)).join(',');
+    active.push({i,slot,position,target,angle,range,signature});
+  }
+  return active;
+}
+
+function getCasterSignature(){
+  const signature=[];scene.updateMatrixWorld(true);
+  scene.traverseVisible(object=>{
+    if(!object.isMesh||!object.castShadow||object===actor.playerMesh||object.userData.volumeShadow===false)return;
+    const geometry=object.geometry,materials=Array.isArray(object.material)?object.material:[object.material];
+    signature.push(object.uuid,geometry?.uuid,geometry?.attributes.position?.version,geometry?.index?.version,
+      ...object.matrixWorld.elements.map(value=>value.toFixed(4)),
+      ...materials.map(material=>[material?.uuid,material?.alphaTest,material?.map?.version].join(':')));
+  });
+  return signature.join('|');
+}
+
+function alphaDepthMaterial(material){
+  if(!(material?.alphaTest>0)||(!material.map&&!material.alphaMap))return material;
+  let depth=alphaDepthMaterials.get(material);
+  if(!depth){
+    depth=new THREE.MeshBasicMaterial({map:material.map,alphaMap:material.alphaMap,
+      alphaTest:material.alphaTest,opacity:material.opacity,side:THREE.DoubleSide});
+    depth.colorWrite=false;depth.allowOverride=false;
+    alphaDepthMaterials.set(material,depth);
+  }
+  return depth;
+}
+
 function updateVolumetricShadow(force=false){
-  if(!state.godrays||(!force&&!flags.volumeShadow))return;
+  if(!state.godrays)return;
+  const localLights=syncLocalLights(),celestialDirty=force||flags.volumeShadow;
+  if(celestialDirty||(!casterSignature&&localLights.length))casterSignature=getCasterSignature();
+  const localDirty=localLights.filter(local=>force||local.slot.signature!==local.signature||local.slot.sceneSignature!==casterSignature);
+  if(!celestialDirty&&!localDirty.length)return;
 
   const fogVisible=forestMist.visible,skyVisible=sky.visible;
   const sunDiscVisible=sunDisc.visible,moonDiscVisible=moonDisc.visible;
@@ -410,26 +541,43 @@ function updateVolumetricShadow(force=false){
   const nonCasters=[];
   scene.traverse(object=>{
     if(object.isMesh&&object.visible&&!object.castShadow){nonCasters.push(object);object.visible=false;}
+    if(object.isMesh&&object.visible&&object.userData.volumeShadow===false){nonCasters.push(object);object.visible=false;}
   });
 
   const oldOverride=scene.overrideMaterial;
+  const replacedMaterials=[];
+  scene.traverseVisible(object=>{
+    if(!object.isMesh||!object.castShadow)return;
+    const original=object.material;
+    const replacement=Array.isArray(original)?original.map(alphaDepthMaterial):alphaDepthMaterial(original);
+    if(replacement!==original){replacedMaterials.push([object,original]);object.material=replacement;}
+  });
   scene.overrideMaterial=volumeDepthMat;
 
-  if(volumeUniforms.sunIntensity.value>.015){
+  try{
+  if(celestialDirty&&volumeUniforms.sunIntensity.value>.015){
     updateVolumeShadowCamera(
       sun.position,sunVolumeCamera,sunVolumeMatrix,
       volumeUniforms.sunLightMatrix,sunVolumeShadowTarget
     );
   }
-  if(volumeUniforms.moonIntensity.value>.015){
+  if(celestialDirty&&volumeUniforms.moonIntensity.value>.015){
     updateVolumeShadowCamera(
       moon.position,moonVolumeCamera,moonVolumeMatrix,
       volumeUniforms.moonLightMatrix,moonVolumeShadowTarget
     );
   }
-
+  for(const {i,slot,position,target,angle,range,signature} of localDirty){
+    slot.camera.fov=THREE.MathUtils.radToDeg(angle*2);slot.camera.aspect=1;
+    slot.camera.near=.06;slot.camera.far=range;
+    updateVolumeShadowCamera(position,slot.camera,slot.matrix,
+      volumeUniforms['localMatrix'+i],slot.target,target);
+    slot.signature=signature;slot.sceneSignature=casterSignature;slot.renders++;
+  }
+  }finally{
   renderer.setRenderTarget(null);
   scene.overrideMaterial=oldOverride;
+  for(const [object,material] of replacedMaterials)object.material=material;
   for(const object of nonCasters)object.visible=true;
 
   forestMist.visible=fogVisible;sky.visible=skyVisible;
@@ -437,6 +585,7 @@ function updateVolumetricShadow(force=false){
   sunGlow.visible=sunGlowVisible;moonGlow.visible=moonGlowVisible;starField.visible=starVisible;
   contactShadow.visible=contactVisible;
   if(actor.playerMesh)actor.playerMesh.visible=playerVisible;
+  }
 
   flags.volumeShadow=false;
 }
@@ -489,6 +638,8 @@ function setShaftStrength(value){
 return {volumeUniforms,volumeLightTarget,updateVolumetricSettings,renderWithVolumetrics,setShaftStrength,
 resize:resizeVolumetricTargets,dispose(){
   sceneTarget?.dispose();volumeTarget?.dispose();sunVolumeShadowTarget?.dispose();moonVolumeShadowTarget?.dispose();
+  for(const slot of localShadowSlots)slot.target?.dispose();
+  for(const material of alphaDepthMaterials.values())material.dispose();
   volumeMat.dispose();compositeMat.dispose();volumeDepthMat.dispose();fsGeo.dispose();
   contactAO.dispose();
 },stats(){return {
@@ -496,6 +647,8 @@ resize:resizeVolumetricTargets,dispose(){
   fallback:HDR_ENABLED?null:'hdr-unavailable',
   effectiveStrength:HDR_ENABLED&&state.godrays?shaftStrength:0,renderedFrames:shaftFrames,
   steps:volumeUniforms.steps.value,scale:VOLUME_SCALE,shadowSize:VOLUME_SHADOW_SIZE,
+  city:state.sceneId==='city-prologue',localLights:localShadowSlots.filter(slot=>slot.light).length,
+  localShadowRenders:localShadowSlots.reduce((sum,slot)=>sum+slot.renders,0),
   hdr:HDR_ENABLED,sceneTargetType:HDR_ENABLED?'half-float':'rgba8-fallback',ao:{supported:HDR_ENABLED,...contactAO.stats()}
 }}};
 }

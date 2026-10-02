@@ -1,5 +1,6 @@
 // Paperchalk Demo v12.32 visual baseline. Extracted without changing shader or art parameters.
 import {smoothstep} from './math.js';
+import {cityLightProfile} from './city-light-profile.js';
 
 export function createLights({THREE,scene,target}){
 const hemi=new THREE.HemisphereLight(0xdceeff,0x8b6549,1.45);scene.add(hemi);
@@ -53,6 +54,7 @@ const playerTintTmp=new THREE.Color();
 function updateSkyBlend(t){skyUniforms.time01.value=((t%1)+1)%1;}
 function updateLighting(t){
   state.time=((t%1)+1)%1;
+  const city=state.sceneId==='city-prologue',cityProfile=city?cityLightProfile(state.time):null;
   const a=state.time*Math.PI*2-Math.PI/2;
   const ma=a+Math.PI;
   const rawSun=Math.sin(a),rawMoon=Math.sin(ma);
@@ -72,6 +74,11 @@ function updateLighting(t){
   // Dawn enters from behind the left-hand tree gaps, not almost sideways.
   // Surface shadows and volumetric occlusion share this exact light position.
   sz-=10.0*twilight*sunFade;
+  if(city){
+    // A stable diagonal reads through alleys and roof gaps. Only its strength
+    // follows the clock; sunrise still turns the moon off continuously.
+    mx=-13;my=15;mz=-14;
+  }
 
   // Manual control still steers the sun; the moon continues its clock orbit.
   if(state.manualSun){
@@ -86,8 +93,8 @@ function updateLighting(t){
   sun.position.set(sx+volumeLightTarget.x,sy,sz);
   moon.position.set(mx+volumeLightTarget.x,my,mz);
 
-  const sunDawn=new THREE.Color(0xffd894);
-  const sunSunset=new THREE.Color(0xff654d);
+  const sunDawn=new THREE.Color(city?0xff8bc5:0xffd894);
+  const sunSunset=new THREE.Color(city?0xff668f:0xff654d);
   const sunWarm=state.time<.5?sunDawn:sunSunset;
   const sunDay=new THREE.Color(0xffe8c4);
   sun.color.copy(sunWarm).lerp(sunDay,smoothstep(.08,.72,sunUp));
@@ -97,6 +104,19 @@ function updateLighting(t){
 
   moon.color.set(0x72a4ff);
   moon.intensity=moonFade*(.16+moonUp*1.46+twilight*.12);
+  if(city){
+    sun.intensity=cityProfile.sunIntensity;
+    moon.color.setHex(cityProfile.moonColor);moon.intensity=cityProfile.moonIntensity;
+    if(moon.shadow.mapSize.x!==1024){
+      moon.shadow.mapSize.set(1024,1024);moon.shadow.map?.dispose();moon.shadow.map=null;
+      moon.shadow.camera.far=58;moon.shadow.bias=-.0006;moon.shadow.normalBias=.04;
+      moon.shadow.camera.updateProjectionMatrix();
+    }
+    for(const local of lights.locals??[]){
+      local.userData.cityBaseIntensity??=local.intensity;
+      local.intensity=local.userData.cityBaseIntensity*cityProfile.localLightFactor;
+    }
+  }
 
   sun.castShadow=state.shadow&&sun.intensity>.10;
   moon.castShadow=state.shadow&&moon.intensity>.10;
@@ -105,9 +125,10 @@ function updateLighting(t){
   const dayMix=sunFade;
   const nightMix=moonFade*(1-sunFade*.55);
   hemi.intensity=.40+dayMix*.76+nightMix*.16+twilight*.10*sunFade;
+  if(city)hemi.intensity=cityProfile.hemiIntensity;
   const hemiDay=new THREE.Color(0xcbd8d5);
-  const hemiNight=new THREE.Color(0x7897d0);
-  const hemiWarm=new THREE.Color(0xdce1bd);
+  const hemiNight=new THREE.Color(city?0x62779e:0x7897d0);
+  const hemiWarm=new THREE.Color(city?0x9b79b4:0xdce1bd);
   hemi.color.copy(hemiNight).lerp(hemiDay,dayMix).lerp(hemiWarm,twilight*.18*sunFade);
 
   const groundDay=new THREE.Color(0x9c7656);
@@ -116,43 +137,47 @@ function updateLighting(t){
   hemi.groundColor.copy(groundNight).lerp(groundDay,dayMix).lerp(groundWarm,twilight*.22*sunFade);
 
   ambientFill.intensity=.16+dayMix*.14+nightMix*.10;
+  if(city)ambientFill.intensity=cityProfile.ambientIntensity;
   const ambientDay=new THREE.Color(0xe7edf0);
   const ambientNight=new THREE.Color(0x789bd5);
-  const ambientWarm=new THREE.Color(0xffd2b8);
+  const ambientWarm=new THREE.Color(city?0xd896c9:0xffd2b8);
   ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.20*sunFade);
 
   // A broad warm bounce opens printed ink and vertical soil faces in the
   // backlit dawn. Contact AO, rather than black fill, supplies recess depth.
   viewFill.intensity=.50+(1-dayMix)*.12+twilight*.24*sunFade;
+  if(city)viewFill.intensity=cityProfile.viewIntensity;
   const viewDay=new THREE.Color(0xf7f0e6);
-  const viewNight=new THREE.Color(0x88aff0);
-  const viewWarm=new THREE.Color(0xffdfb5);
+  const viewNight=new THREE.Color(city?0xb1c6e1:0x88aff0);
+  const viewWarm=new THREE.Color(city?0xe7b5d6:0xffdfb5);
   viewFill.color.copy(viewNight).lerp(viewDay,dayMix).lerp(viewWarm,twilight*.48*sunFade);
 
   const horizonDay=new THREE.Color(0xb9d0d6);
-  const horizonNight=new THREE.Color(0x445b88);
-  const horizonWarm=new THREE.Color(0xf3b6a0);
+  const horizonNight=new THREE.Color(city?0x17243e:0x445b88);
+  const horizonWarm=new THREE.Color(city?0x9c6f9c:0xf3b6a0);
   const horizonGold=new THREE.Color(0xffdfa5);
   const fogColor=horizonNight.clone().lerp(horizonDay,dayMix).lerp(horizonWarm,twilight*.88*sunFade).lerp(horizonGold,twilight*.28*sunFade);
 
   if(state.fog){
     // A clear near field and a deliberately separated distant forest. An
     // exponential veil starting at the camera greyed the character and pulp.
-    const fogNear=16.0-twilight*.5;
-    const fogFar=53.0-twilight*3.0+nightMix*3.0;
+    const fogNear=city?19:16.0-twilight*.5;
+    const fogFar=city?68:53.0-twilight*3.0+nightMix*3.0;
     if(!scene.fog?.isFog)scene.fog=new THREE.Fog(fogColor,fogNear,fogFar);
     else{scene.fog.color.copy(fogColor);scene.fog.near=fogNear;scene.fog.far=fogFar;}
   }
 
   const mistDay=new THREE.Color(0xe2d5b3);
-  const mistNight=new THREE.Color(0x94b4e8);
-  const mistWarm=new THREE.Color(0xe9be8f);
+  const mistNight=new THREE.Color(city?0x536d9f:0x94b4e8);
+  const mistWarm=new THREE.Color(city?0xc588b1:0xe9be8f);
   const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
   fogUniforms.opacity.value=.014+twilight*.017*sunFade+nightMix*.006;
+  if(city)fogUniforms.opacity.value=.004+twilight*.003;
 
   // Dawn rays stay warm, but never wash the pulp layers to white on a phone.
   renderer.toneMappingExposure=state.tone?(.91+dayMix*.12+twilight*.012):1;
+  if(city&&state.tone)renderer.toneMappingExposure=cityProfile.exposure;
   scene.background.copy(fogColor);
   updateSkyBlend(state.time);
 
@@ -196,11 +221,12 @@ function updateLighting(t){
   // Store lighting before the asynchronous character texture is ready too.
   const keyIsSun=sun.intensity>=moon.intensity;
   actor.setPaperLighting?.(keyIsSun?sunDir:moonDir,keyIsSun?sun.color:moon.color,
-    keyIsSun?sun.intensity*.16:moon.intensity*.28);
+    keyIsSun?sun.intensity*.16:moon.intensity*(city?.44:.28));
 
   const bounceDay=.20+dayMix*.30+twilight*.08*sunFade;
   const bounceNight=nightMix*.16;
   groundBounce.intensity=state.bounce?(bounceDay+bounceNight):0;
+  if(city)groundBounce.intensity=state.bounce?cityProfile.bounceIntensity:0;
   const bounceDayColor=new THREE.Color(0xc8d49b);
   const bounceNightColor=new THREE.Color(0x849dc8);
   const bounceWarmColor=new THREE.Color(0xd3946e);
