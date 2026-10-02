@@ -95,3 +95,24 @@ test('gameplay camera keeps stage framing while studio wheel zoom remains availa
   domElement.dispatchEvent(wheel);
   assert.ok(orbit.snapshot().distance<studioDistance,'studio wheel still zooms');
 });
+
+test('city composition retains the actor, school roof and open sky while following the whole route',t=>{
+  const previousWindow=globalThis.window;globalThis.window=new EventTarget();
+  t.after(()=>{if(previousWindow===undefined)delete globalThis.window;else globalThis.window=previousWindow;});
+  for(const [width,height] of [[1440,900],[932,430],[390,844]]){
+    const domElement=new EventTarget();domElement.style={};
+    const camera=new THREE.PerspectiveCamera(36,width/height,.1,100);
+    const orbit=createOrbitCamera({camera,domElement,target:new THREE.Vector3(0,3,-.35),onChange(){},
+      viewport:{width,height,gameplay:true,sceneId:'city-prologue'}});
+    t.after(()=>orbit.dispose());
+    for(const x of [-8,0,6,12,24]){
+      orbit.follow(x,1,0);camera.updateMatrixWorld(true);
+      const head=new THREE.Vector3(x,2.74,0).project(camera),feet=new THREE.Vector3(x,.5,0).project(camera);
+      const roof=new THREE.Vector3(x,5.3,-5).project(camera);
+      assert.ok(feet.y>-.8&&head.y<.5,'actor must remain readable above the touch controls');
+      assert.ok(Math.abs(head.x)<.2,'actor remains centred throughout the route');
+      assert.ok(roof.y<.65,'roofline must leave sky visible above it');
+      assert.ok(head.y-feet.y>.30,'character remains large enough to read on handheld screens');
+    }
+  }
+});

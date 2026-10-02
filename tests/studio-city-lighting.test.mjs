@@ -14,12 +14,13 @@ function skyObjects(){
   return result;
 }
 
-test('21:00 has strong blue shafts and restrained fill; noon turns lunar light off smoothly',()=>{
+test('21:00 keeps paper colours readable with restrained haze; noon fades lunar light smoothly',()=>{
   const night=cityLightProfile(21/24),day=cityLightProfile(.5);
-  assert.ok(night.moonScattering>1.5&&night.moonIntensity>1.3);
+  assert.ok(night.moonScattering>0&&night.moonScattering<.35&&night.moonIntensity>1.3);
   assert.equal(night.sunIntensity,0);
-  assert.ok(night.viewIntensity>=1&&night.viewIntensity<1.15,'front ink remains readable under the cool white fill');
-  assert.ok(night.hemiIntensity<=.4&&night.ambientIntensity<.16);
+  assert.ok(night.viewIntensity>=1&&night.viewIntensity<1.4,'front ink remains readable');
+  assert.ok(night.hemiIntensity>.6&&night.hemiIntensity<1&&night.ambientIntensity<.35);
+  assert.ok(night.moonDensity<.015,'haze must not erase the painted facade palette');
   assert.equal(day.moonIntensity,0);assert.equal(day.moonScattering,0);
   assert.ok(day.sunIntensity>3&&day.localLightFactor<.1);
   for(const time of [0,.25,.75,1]){
@@ -46,11 +47,11 @@ test('city surface light and actor rim share the actual diagonal moon direction 
     fog:{fogUniforms:{tint:{value:new THREE.Color()},opacity:{value:0}}},
     atmosphere:{volumeLightTarget,updateVolumetricSettings(){}},actor});
   controller.updateLighting(.875);
-  assert.deepEqual(lights.moon.position.toArray(),[-1,15,-14]);
+  assert.deepEqual(lights.moon.position.toArray(),[2,16,8]);
   assert.ok(rim.direction.distanceTo(lights.moon.position.clone().sub(volumeLightTarget).normalize())<1e-10);
   assert.ok(rim.color.b>rim.color.r&&rim.strength>.5);
   assert.equal(local.intensity,4);assert.equal(lights.moon.shadow.mapSize.x,1024);
-  assert.equal(scene.fog.near,19);assert.equal(scene.fog.far,68);
+  assert.equal(scene.fog.near,26);assert.equal(scene.fog.far,85);
   controller.updateLighting(.5);
   assert.equal(lights.moon.intensity,0);assert.ok(local.intensity<.3);
   controller.updateLighting(.875);assert.equal(local.intensity,4,'clock updates never compound the saved lamp intensity');
