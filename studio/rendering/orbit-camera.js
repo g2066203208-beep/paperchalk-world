@@ -1,9 +1,9 @@
 import {clamp} from './math.js';
 
 /** Keep the Demo framing except where a short landscape stage hides its detail. */
-export function defaultOrbitDistance({width,height,gameplay=false}={}){
-  // The target is a close diorama shot: the playable landscape fills the
-  // phone viewport and the actor remains a readable focal point.
+export function defaultOrbitDistance({width,height,gameplay=false,sceneId='forest'}={}){
+  // City roofs and the distant skyline belong in the same composed frame.
+  if(sceneId==='city-prologue')return width>height?16.2:18;
   if(gameplay&&width>height&&height>0)return 9.6;
   if(gameplay)return 11.5;
   return width>height&&height>0&&height<380?clamp(19.2*height/380,12,19.2):19.2;
@@ -11,7 +11,8 @@ export function defaultOrbitDistance({width,height,gameplay=false}={}){
 
 /** Presentation-only orbit. It never changes the XY gameplay plane. */
 export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
-  const defaults={yaw:.02,pitch:.18,distance:defaultOrbitDistance(viewport)};
+  const city=viewport?.sceneId==='city-prologue';
+  const defaults={yaw:city?-.045:.02,pitch:city?.09:.18,distance:defaultOrbitDistance(viewport)};
   let {yaw,pitch,distance}=defaults;
   let followX=target.x;
   const restingTargetY=target.y;

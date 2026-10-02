@@ -8,15 +8,15 @@ export function cityLightProfile(time=.875){
   const twilight=1-smoothstep(.025,.34,Math.abs(rawSun));
   return {day,night,twilight,sunUp,moonUp,
     sunIntensity:day*(.45+sunUp*3.6+twilight*4.6),
-    moonIntensity:night*(.60+moonUp*1.15),
-    hemiIntensity:.38+day*.62,ambientIntensity:.14+day*.15,
-    viewIntensity:1.02+day*.12,bounceIntensity:.18+day*.22,
+    moonIntensity:night*(1.10+moonUp*.48),
+    hemiIntensity:.78+day*.22,ambientIntensity:.26+day*.03,
+    viewIntensity:1.14+day*.06,bounceIntensity:.28+day*.12,
     localLightFactor:1-day*.94,
     sunScattering:day*(.45+sunUp*.32+twilight*1.18),
-    moonScattering:night*(1.15+moonUp*.70),
-    sunDensity:.027+twilight*.022,moonDensity:.033,
+    moonScattering:night*(.14+moonUp*.12),
+    sunDensity:.020+twilight*.012,moonDensity:.009,
     sunWarm:clock<.5?0xff8bc5:0xff668f,
-    moonColor:0x8bb4ff,moonScatterColor:0x709cf5,
-    exposure:.98+day*.08,
+    moonColor:0xd7defa,moonScatterColor:0xb4bce0,
+    exposure:1.05+day*.01,
   };
 }

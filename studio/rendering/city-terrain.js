@@ -1,5 +1,6 @@
 import {createCityPrologueWorld} from '../world/CityPrologueWorld.mjs';
 import {createStagePlatformGeometry} from './stage-geometry.js';
+import {CITY_GROUND} from '../world/CityLayout.mjs';
 
 /** Continuous paper pavement and road. All visible lane markings are batched. */
 export function createCityTerrain({THREE,scene,flags,paperConfig}){
@@ -19,10 +20,10 @@ export function createCityTerrain({THREE,scene,flags,paperConfig}){
     const material=new THREE.MeshLambertMaterial({color:map?0xffffff:color,map,flatShading:true});material.name=name;
     materials.push({material,color,map});return material;
   }
-  const pavement=paper('Blue grey paving paper',0x8994a5,pigment('Quiet paper paving',0x8994a5,true));
-  const asphalt=paper('Midnight blue asphalt paper',0x46566a,pigment('Quiet road paper',0x46566a));
-  const backing=paper('Rear city ground',0x4d6074),edge=paper('Cold cut cardboard edge',0x8995a2);
-  const core=paper('City cardboard core',0x3c4659),strata=paper('City folded paper liner',0x536176);
+  const pavement=paper('Cream limestone paving paper',0xd2c4aa,pigment('Quiet paper paving',0xd2c4aa,true));
+  const asphalt=paper('Slate blue road paper',0x65728f,pigment('Quiet road paper',0x65728f));
+  const backing=paper('Rear city ground',0x788393),edge=paper('Ivory cut cardboard edge',0xf3dbb1);
+  const core=paper('Warm cardboard core',0xa88260),strata=paper('City folded kraft liner',0xc3a37c);
   core.onBeforeCompile=shader=>{
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float paperDepth;varying float vCityPaperDepth;varying vec3 vCityPaperPosition;')
       .replace('#include <begin_vertex>','#include <begin_vertex>\nvCityPaperDepth=paperDepth;vCityPaperPosition=position;');
@@ -32,8 +33,8 @@ export function createCityTerrain({THREE,scene,flags,paperConfig}){
   core.customProgramCacheKey=()=> 'city-paperboard-cut-v1';
   const platforms=[
     {...world.platforms[0]},
-    {id:'road',kind:'ground',profile:[{x:-90,y:.05},{x:110,y:.05}],frontZ:9,backZ:1.65},
-    {id:'rear-ground',kind:'ground',profile:[{x:-90,y:.38},{x:110,y:.38}],frontZ:-2.8,backZ:-45},
+    {id:'road',kind:'ground',profile:[{x:CITY_GROUND.minX,y:.05},{x:CITY_GROUND.maxX,y:.05}],frontZ:9,backZ:1.65},
+    {id:'rear-ground',kind:'ground',profile:[{x:CITY_GROUND.minX,y:.38},{x:CITY_GROUND.maxX,y:.38}],frontZ:-2.8,backZ:-45},
   ];
   let triangles=0;
   platforms.forEach((platform,index)=>{
@@ -46,9 +47,9 @@ export function createCityTerrain({THREE,scene,flags,paperConfig}){
     const p=[[x1,y,z1],[x1,y,z2],[x2,y,z1],[x2,y,z1],[x1,y,z2],[x2,y,z2]];
     for(const point of p){roadMarks.push(...point);uv.push(point[0],point[2]);}
   }
-  for(let x=-40;x<60;x+=4.4)patch(x,x+2.1,4.9,4.97,.056);
+  for(let x=CITY_GROUND.minX;x<CITY_GROUND.maxX-2.1;x+=4.4)patch(x,x+2.1,4.9,4.97,.056);
   // Painted kerb strokes remain a single material submission.
-  for(let x=-30;x<50;x+=3)patch(x,x+.60,1.29,1.35,.506);
+  for(let x=CITY_GROUND.minX;x<CITY_GROUND.maxX-.60;x+=3)patch(x,x+.60,1.29,1.35,.506);
   const markingGeo=new THREE.BufferGeometry();markingGeo.setAttribute('position',new THREE.Float32BufferAttribute(roadMarks,3));
   markingGeo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));markingGeo.computeVertexNormals();markingGeo.computeBoundingSphere();
   const markingMaterial=paper('Faded road marking paper',0xabb5ba),marks=new THREE.Mesh(markingGeo,markingMaterial);

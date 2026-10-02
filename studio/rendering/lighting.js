@@ -77,7 +77,7 @@ function updateLighting(t){
   if(city){
     // A stable diagonal reads through alleys and roof gaps. Only its strength
     // follows the clock; sunrise still turns the moon off continuously.
-    mx=-13;my=15;mz=-14;
+    mx=-10;my=16;mz=8;
   }
 
   // Manual control still steers the sun; the moon continues its clock orbit.
@@ -127,7 +127,7 @@ function updateLighting(t){
   hemi.intensity=.40+dayMix*.76+nightMix*.16+twilight*.10*sunFade;
   if(city)hemi.intensity=cityProfile.hemiIntensity;
   const hemiDay=new THREE.Color(0xcbd8d5);
-  const hemiNight=new THREE.Color(city?0x62779e:0x7897d0);
+  const hemiNight=new THREE.Color(city?0xbfc5e2:0x7897d0);
   const hemiWarm=new THREE.Color(city?0x9b79b4:0xdce1bd);
   hemi.color.copy(hemiNight).lerp(hemiDay,dayMix).lerp(hemiWarm,twilight*.18*sunFade);
 
@@ -139,7 +139,7 @@ function updateLighting(t){
   ambientFill.intensity=.16+dayMix*.14+nightMix*.10;
   if(city)ambientFill.intensity=cityProfile.ambientIntensity;
   const ambientDay=new THREE.Color(0xe7edf0);
-  const ambientNight=new THREE.Color(0x789bd5);
+  const ambientNight=new THREE.Color(city?0xe5dce3:0x789bd5);
   const ambientWarm=new THREE.Color(city?0xd896c9:0xffd2b8);
   ambientFill.color.copy(ambientNight).lerp(ambientDay,dayMix).lerp(ambientWarm,twilight*.20*sunFade);
 
@@ -148,12 +148,12 @@ function updateLighting(t){
   viewFill.intensity=.50+(1-dayMix)*.12+twilight*.24*sunFade;
   if(city)viewFill.intensity=cityProfile.viewIntensity;
   const viewDay=new THREE.Color(0xf7f0e6);
-  const viewNight=new THREE.Color(city?0xb1c6e1:0x88aff0);
+  const viewNight=new THREE.Color(city?0xffe9cf:0x88aff0);
   const viewWarm=new THREE.Color(city?0xe7b5d6:0xffdfb5);
   viewFill.color.copy(viewNight).lerp(viewDay,dayMix).lerp(viewWarm,twilight*.48*sunFade);
 
   const horizonDay=new THREE.Color(0xb9d0d6);
-  const horizonNight=new THREE.Color(city?0x17243e:0x445b88);
+  const horizonNight=new THREE.Color(city?0x717ba1:0x445b88);
   const horizonWarm=new THREE.Color(city?0x9c6f9c:0xf3b6a0);
   const horizonGold=new THREE.Color(0xffdfa5);
   const fogColor=horizonNight.clone().lerp(horizonDay,dayMix).lerp(horizonWarm,twilight*.88*sunFade).lerp(horizonGold,twilight*.28*sunFade);
@@ -161,8 +161,8 @@ function updateLighting(t){
   if(state.fog){
     // A clear near field and a deliberately separated distant forest. An
     // exponential veil starting at the camera greyed the character and pulp.
-    const fogNear=city?19:16.0-twilight*.5;
-    const fogFar=city?68:53.0-twilight*3.0+nightMix*3.0;
+    const fogNear=city?26:16.0-twilight*.5;
+    const fogFar=city?85:53.0-twilight*3.0+nightMix*3.0;
     if(!scene.fog?.isFog)scene.fog=new THREE.Fog(fogColor,fogNear,fogFar);
     else{scene.fog.color.copy(fogColor);scene.fog.near=fogNear;scene.fog.far=fogFar;}
   }
@@ -173,7 +173,7 @@ function updateLighting(t){
   const mistColor=mistNight.clone().lerp(mistDay,dayMix).lerp(mistWarm,twilight*.34*sunFade);
   fogUniforms.tint.value.copy(mistColor);
   fogUniforms.opacity.value=.014+twilight*.017*sunFade+nightMix*.006;
-  if(city)fogUniforms.opacity.value=.004+twilight*.003;
+  if(city)fogUniforms.opacity.value=.0015+twilight*.002;
 
   // Dawn rays stay warm, but never wash the pulp layers to white on a phone.
   renderer.toneMappingExposure=state.tone?(.91+dayMix*.12+twilight*.012):1;
@@ -199,9 +199,9 @@ function updateLighting(t){
 
   // Discs never hard-toggle at the horizon. Opacity does the continuous fade.
   sunDisc.visible=state.sky;
-  moonDisc.visible=state.sky;
+  moonDisc.visible=state.sky&&!city;
   sunGlow.visible=state.sky;
-  moonGlow.visible=state.sky;
+  moonGlow.visible=state.sky&&!city;
   sunDisc.material.opacity=sunFade*(.42+sunUp*.55);
   moonDisc.material.opacity=moonFade*(.42+moonUp*.46);
   sunDisc.material.color.copy(sun.color).lerp(new THREE.Color(0xfff0c7),.22);
@@ -213,7 +213,7 @@ function updateLighting(t){
 
   if(actor.playerMat){
     const dayAmount=dayMix;
-    playerTintTmp.copy(playerNightTint).lerp(playerDayTint,dayAmount);
+    playerTintTmp.copy(city?playerDayTint:playerNightTint).lerp(playerDayTint,dayAmount);
     if(twilight>0)playerTintTmp.lerp(playerDuskTint,twilight*.28*sunFade);
     actor.playerMat.color.copy(playerTintTmp);
     actor.playerMat.emissiveIntensity=0;

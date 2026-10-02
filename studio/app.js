@@ -5,6 +5,8 @@ import {InputActions} from './input/InputActions.mjs';
 import {installStudioLifecycle} from './core/Lifecycle.mjs';
 import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
 import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,acceptsInspectionKey} from './ui/CityPrologue.mjs';
+import {createCityExplorer} from './ui/CityExplorer.mjs';
+import {nearbyTransit,travelDuration} from './world/CityLayout.mjs';
 
 const $=id=>document.getElementById(id);
 const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
@@ -18,12 +20,14 @@ const pauseReasons=new PauseReasons();
 const coarsePointer=window.matchMedia('(any-pointer: coarse)');
 let scene,world,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
 let inspectionOpen=false;
+let cityExplorer=null,cityRide=null;
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0;
 const STEP=1/60;
 const disposeLifecycle=installStudioLifecycle({
   saveNow:()=>saveProgress(true),
   resetClock,
   handleBack:()=>{
+    if(cityExplorer?.close())return true;
     if(inspectionOpen){closeInspection();return true;}
     if(!document.body.classList.contains('inspector-hidden')){setInspector(false);return true;}
     if(gameMode){setGameMenu(!pauseReasons.menu);return true;}
@@ -53,14 +57,39 @@ function setStatus(){
 }
 function refreshCityHud(){
   ui.prologueHud.hidden=!isCity;
-  const x=simulation?.snapshot().x??0,sight=nearbyCitySight(x);
+  const x=simulation?.snapshot().x??0,sight=cityInteraction();
   ui.locationLabel.textContent=cityLocation(x);
-  ui.inspectAction.hidden=!isCity||!ready||failed||pauseReasons.active||!sight||!document.body.classList.contains('inspector-hidden');
+  ui.inspectAction.hidden=!isCity||!ready||failed||pauseReasons.active||!!cityRide||!sight||!document.body.classList.contains('inspector-hidden');
   if(sight)ui.inspectActionLabel.textContent=sight.label;
+}
+function cityInteraction(){
+  if(!isCity||!simulation||cityRide)return null;
+  const x=simulation.snapshot().x,stop=nearbyTransit(x);
+  if(stop)return {...stop,type:'transit',label:stop.kind==='metro'?'乘坐地铁':'乘坐公交'};
+  const sight=nearbyCitySight(x);if(sight)return sight;
+  const person=scene?.nearbyCityPerson?.(x);
+  return person?{...person,type:'person',label:'交谈 · '+person.name,title:person.name+' · '+person.role,text:person.line}:null;
+}
+function beginCityTravel(from,to){
+  if(!ready||cityRide||Math.abs(simulation.snapshot().x-from.x)>from.radius+.2)return;
+  cityRide={kind:from.kind,fromX:from.x,toX:to.x,fromName:from.name,toName:to.name,
+    direction:to.x>from.x?1:-1,progress:0,elapsed:0,duration:travelDuration(from,to)};
+  resetClock();scene.setCityRide(cityRide);document.body.classList.add('city-riding');
+  cityExplorer.update(from.x,cityRide);ui.viewport.focus({preventScroll:true});refreshCityHud();
+}
+function finishCityTravel(cancelled=false){
+  if(!cityRide)return;
+  const {fromX,toX,fromName,toName,direction}=cityRide;
+  const x=cancelled?fromX:toX;
+  simulation.restore({x,y:world.surfaceY(x),facing:direction,vx:0,distance:simulation.snapshot().distance});
+  cityRide=null;scene.setCityRide(null);document.body.classList.remove('city-riding');resetClock();
+  scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
+  cityExplorer.update(x,null);saveProgress(true);refreshCityHud();toast('已到达 '+(cancelled?fromName:toName));
 }
 function openInspection(){
   if(!isCity||!ready||failed||pauseReasons.active||!document.body.classList.contains('inspector-hidden'))return;
-  const sight=nearbyCitySight(simulation.snapshot().x);if(!sight)return;
+  const sight=cityInteraction();if(!sight)return;
+  if(sight.type==='transit'){cityExplorer.openTransit(sight);return;}
   inspectionOpen=true;pauseReasons.openMenu();resetClock();
   ui.inspectionTitle.textContent=sight.title;ui.inspectionText.textContent=sight.text;
   ui.inspectionOverlay.hidden=false;document.body.classList.add('inspection-open');
@@ -135,7 +164,11 @@ function saveProgress(automatic=false){
 function loadProgress(automatic=false){
   const result=saves.load();
   if(result.ok&&result.snapshot){
+    if(cityRide){cityRide=null;scene.setCityRide(null);document.body.classList.remove('city-riding');}
     const restored=simulation.restore(result.snapshot);resetClock();
+    // Loading a far-away district must move the view before another modal can
+    // pause its follow interpolation, otherwise both speakers sit off screen.
+    scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
     ui.saveStatus.textContent=restored?'已读取保存的进度':'存档位置已失效，角色返回起点';
     if(!automatic)toast(restored?'已读取角色进度':'该位置已不适合当前舞台，已回到起点');
   }else{
@@ -178,6 +211,7 @@ function heldButton(element,setHeld){
   events.signal.addEventListener('abort',()=>{cancel();heldControls.delete(cancel);},{once:true});
 }
 function setInspector(open){
+  cityExplorer?.close();
   if(inspectionOpen)closeInspection();
   if(gameMode&&open)pauseReasons.openMenu();
   document.body.classList.toggle('inspector-hidden',!open);
@@ -195,6 +229,7 @@ function setInspector(open){
 }
 function setGameMenu(open,{resume=false}={}){
   if(!gameMode)return;
+  cityExplorer?.close();
   if(inspectionOpen)closeInspection();
   if(resume)pauseReasons.resume();else if(open)pauseReasons.openMenu();else pauseReasons.closeMenu();
   document.body.classList.add('inspector-hidden');
@@ -244,10 +279,14 @@ async function loadBuildInfo(){
     ui.gameBuildVersion.textContent=ui.buildVersion.textContent;
   }
 }
+function resetCityPlayer(){
+  if(cityRide){cityRide=null;scene.setCityRide(null);document.body.classList.remove('city-riding');}
+  simulation.reset();resetClock();scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
+}
 function wireControls(){
   listen(ui.viewport,'pointerdown',()=>ui.viewport.focus({preventScroll:true}));
   listen(ui.playPause,'click',()=>{pauseReasons.toggleUser();resetClock();setStatus();refreshStatus(performance.now(),true);});
-  listen(ui.resetPlayer,'click',()=>{simulation.reset();resetClock();toast('角色已回到起点');refreshStatus(performance.now(),true);});
+  listen(ui.resetPlayer,'click',()=>{resetCityPlayer();toast('角色已回到起点');refreshStatus(performance.now(),true);});
   listen(ui.saveProgress,'click',()=>saveProgress());
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
@@ -255,7 +294,7 @@ function wireControls(){
   listen(ui.closeInspector,'click',()=>setInspector(false));
   listen(ui.openGameMenu,'click',()=>setGameMenu(true));
   listen(ui.resumeGame,'click',()=>setGameMenu(false,{resume:true}));
-  listen(ui.gameReset,'click',()=>{simulation.reset();setGameMenu(false,{resume:true});toast('角色已回到起点');});
+  listen(ui.gameReset,'click',()=>{resetCityPlayer();setGameMenu(false,{resume:true});toast('角色已回到起点');});
   listen(ui.gameResetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
   listen(ui.gameSave,'click',()=>saveProgress());
   listen(ui.gameLoad,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
@@ -264,9 +303,10 @@ function wireControls(){
   listen(ui.closeInspection,'click',closeInspection);
   listen(ui.inspectionOverlay,'click',event=>{if(event.target===ui.inspectionOverlay)closeInspection();});
   listen(window,'keydown',event=>{
+    if((cityExplorer?.isOpen||!pauseReasons.active)&&cityExplorer?.handleKey(event))return;
     keepModalFocus(event);
     if(event.key==='Escape'&&window.PaperchalkHandleBack())event.preventDefault();
-    if(acceptsInspectionKey(event)&&isCity&&!pauseReasons.active&&nearbyCitySight(simulation.snapshot().x)){event.preventDefault();openInspection();}
+    if(acceptsInspectionKey(event)&&isCity&&!pauseReasons.active&&cityInteraction()){event.preventDefault();openInspection();}
   });
   for(const button of document.querySelectorAll('[data-surface]'))listen(button,'click',()=>{surfaceMode=button.dataset.surface;scene.setSurfaceMode(surfaceMode);updateControls();});
   for(const button of document.querySelectorAll('[data-preset]'))listen(button,'click',()=>{scene.setTimePreset(button.dataset.preset);updateControls();if(pauseReasons.active)toast('已选择光线，继续游戏后开始过渡');});
@@ -287,18 +327,26 @@ function tick(now){
     try{
       const paused=pauseReasons.active;
       if(!paused){
-        accumulator+=elapsed;
-        while(accumulator>=STEP){simulation.update(STEP,input.consume());accumulator-=STEP;}
+        if(cityRide){
+          cityRide.elapsed+=elapsed;cityRide.progress=Math.min(1,cityRide.elapsed/cityRide.duration);
+          const x=cityRide.fromX+(cityRide.toX-cityRide.fromX)*cityRide.progress;
+          simulation.restore({x,y:world.surfaceY(x),facing:cityRide.direction,vx:0,distance:simulation.snapshot().distance});
+          scene.setCityRide(cityRide);input.cancel();accumulator=0;
+          if(cityRide.progress>=1)finishCityTravel();
+        }else{
+          accumulator+=elapsed;
+          while(accumulator>=STEP){simulation.update(STEP,input.consume());accumulator-=STEP;}
+        }
         renderClock+=elapsed*1000;
       }else{accumulator=0;input.cancel();}
-      scene.frame(paused?0:elapsed,renderClock,simulation.snapshot());refreshStatus(now);
+      scene.frame(paused?0:elapsed,renderClock,simulation.snapshot());cityExplorer?.update(simulation.snapshot().x,cityRide);refreshStatus(now);
     }catch(error){sceneStatus({state:'error',message:'场景运行出现错误，请刷新重试。'});console.error(error);}
   }
   raf=requestAnimationFrame(tick);
 }
 function dispose(){
   if(disposed)return;disposed=true;cancelAnimationFrame(raf);clearTimeout(toastTimer);
-  disposeLifecycle();events.abort();input?.dispose();scene?.dispose();
+  disposeLifecycle();events.abort();input?.dispose();cityExplorer?.dispose();scene?.dispose();
 }
 async function start(){
   document.body.classList.toggle('city-prologue',isCity);refreshCityHud();
@@ -311,7 +359,12 @@ async function start(){
     simulation=new StagePlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;
     if(disposed)return;
-    ready=true;loadProgress(true);wireControls();updateControls();setStatus();
+    ready=true;
+    if(isCity)cityExplorer=createCityExplorer({getPlayer:()=>simulation.snapshot(),
+      onPause:()=>{pauseReasons.openMenu();resetClock();setStatus();},
+      onResume:()=>{pauseReasons.closeMenu();resetClock();setStatus();},
+      onTravel:beginCityTravel,onCancelTravel:()=>finishCityTravel(true)});
+    loadProgress(true);wireControls();updateControls();setStatus();
     for(const button of document.querySelectorAll('.toolbar button'))button.disabled=false;
     ui.openGameMenu.disabled=false;
     raf=requestAnimationFrame(tick);

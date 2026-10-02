@@ -110,8 +110,11 @@ const skyMat=new THREE.ShaderMaterial({
       col=mix(col,midPaper,(1.0-smoothstep(bank1-.006,bank1+.006,skyDir.y))*.27*twilightBanks);
       col=mix(col,nearPaper,(1.0-smoothstep(bank2-.005,bank2+.005,skyDir.y))*.24*twilightBanks);
 
-      // A low, dark urban sky leaves room for bright cold street shafts.
-      col=mix(col,col*vec3(.55,.62,.75),cityScene*wn);
+      // Indigo paper sky above a lavender horizon; preserve a clean silhouette
+      // behind the separately cut rooftops instead of flooding them with blue.
+      vec3 cityNight=mix(vec3(.067,.078,.16),vec3(.013,.020,.058),smoothstep(-.08,.64,skyDir.y));
+      float cityNightAmount=1.0-smoothstep(-.16,.18,-cos(t*6.28318530718));
+      col=mix(col,cityNight,cityScene*cityNightAmount);
       gl_FragColor=vec4(col,1.0);
       #include <colorspace_fragment>
     }

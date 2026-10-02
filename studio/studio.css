@@ -261,5 +261,12 @@ body.game-mode{
 .game-mode .prologue-hud{top:calc(20px + var(--safe-top));left:calc(24px + var(--safe-left))}
 .game-mode .inspect-action{right:calc(28px + var(--safe-right));bottom:calc(25px + var(--safe-bottom));min-height:52px}
 .game-mode .inspection-overlay{padding:calc(20px + var(--safe-top)) calc(22px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(22px + var(--safe-left))}
+.game-mode .inspection-card{max-height:100%;overflow-y:auto;overscroll-behavior:contain}
+.game-mode .inspection-card>button{width:44px;height:44px;right:7px;top:5px}
+.game-mode .inspection-card h2{margin-right:36px}
+.game-mode .inspector-close{min-width:44px;min-height:44px}
+.game-mode .switch-row,.game-mode .text-button,.game-mode .surface-option{min-height:44px}
+.game-mode .game-menu-button{min-height:44px}
+.game-mode .inspect-action{max-width:calc(100% - 185px - var(--safe-left) - var(--safe-right));font-size:14px;text-align:center}
 @media(pointer:coarse){.inspect-action kbd{display:none}.inspect-action{min-height:48px}}
 @media(orientation:portrait){.city-prologue.game-mode .rotate-hint{top:calc(83px + var(--safe-top))}.game-mode .prologue-hud{left:calc(20px + var(--safe-left))}.inspection-card{padding:21px}}

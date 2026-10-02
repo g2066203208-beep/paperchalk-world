@@ -1,3 +1,4 @@
+import {districtAt} from '../world/CityLayout.mjs';
 export const CITY_SCENE_ID='city-prologue';
 export function sceneFromSearch(search=''){
   return new URLSearchParams(search).get('scene')==='forest'?'forest':CITY_SCENE_ID;
@@ -11,6 +12,7 @@ const sights=Object.freeze([
 ]);
 export function cityLocation(x){
   if(!Number.isFinite(x))return '校门';
+  if(x< -10||x>30)return districtAt(x).name;
   return x<4.8?'校门':x>=9.5&&x<15.5?'便利店':'街边';
 }
 export function nearbyCitySight(x){

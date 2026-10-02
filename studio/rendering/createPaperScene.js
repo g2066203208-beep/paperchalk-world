@@ -10,6 +10,10 @@ import {createForest} from './forest.js';
 import {createStageScenery} from './stage-scenery.js';
 import {createCityTerrain} from './city-terrain.js';
 import {createCityScenery} from './city-scenery.js';
+import {createCityBackdrop} from './city-backdrop.js';
+import {createCityDistricts} from './city-districts.js';
+import {createCityPopulation} from './city-population.js';
+import {createCityTransit} from './city-transit.js';
 import {createCityTraffic} from './city-traffic.js';
 import {createSky} from './sky.js';
 import {createPaperFog} from './fog.js';
@@ -26,6 +30,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   if(!container||typeof container.appendChild!=='function')throw new TypeError('Paper scene requires a container element.');
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
+  let cityRide=null,lastUnderground=false;
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const isCity=sceneId!=='forest';
   const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
@@ -40,7 +45,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   function getSize(){
     const width=Math.max(1,container.clientWidth),height=Math.max(1,container.clientHeight);
     const coarse=window.matchMedia?.('(pointer: coarse)').matches??false;
-    return {width,height,compact:width<760||height<600||coarse,
+    return {width,height,sceneId:state.sceneId,compact:width<760||height<600||coarse,
       gameplay:document.body.classList.contains('game-mode')};
   }
   function loadTexture(url,onLoad){
@@ -82,7 +87,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   scene.background=new THREE.Color(0x9ca1ad);
   scene.fog=new THREE.Fog(0xaec8d3,15,36);
   const camera=new THREE.PerspectiveCamera(36,size.width/size.height,.1,100);
-  const target=new THREE.Vector3(0,1.75,-.35);
+  const target=new THREE.Vector3(0,isCity?3.0:1.75,-.35);
   const orbitCamera=createOrbitCamera({camera,domElement:renderer.domElement,target,onChange:invalidateView,viewport:size});
   const materials=createPaperMaterials({THREE,renderer});
   const terrain=(isCity?createCityTerrain:createTerrain)({THREE,scene,renderer,flags,loadTexture,paperConfig,
@@ -91,6 +96,10 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
     paperMapController:materials.storybookMaps});
   const forest=isCity?null:createForest({THREE,scene,...materials,...terrain.pulpSets,terrainWorld:terrain.world});
   const scenery=(isCity?createCityScenery:createStageScenery)({THREE,scene,world:terrain.world,flags});
+  const backdrop=isCity?createCityBackdrop({THREE,scene,flags}):null;
+  const districts=isCity?createCityDistricts({THREE,scene,flags}):null;
+  const population=isCity?createCityPopulation({THREE,scene,flags}):null;
+  const transit=isCity?createCityTransit({THREE,scene,flags}):null;
   const traffic=isCity?createCityTraffic({THREE,scene}):null;
   traffic?.group.traverse(object=>{if(object.isMesh)object.userData.volumeShadow=false;});
 const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:state.sceneId});
@@ -99,7 +108,8 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
   const celestials=createSky({THREE,scene,renderer,camera,sceneId:state.sceneId});
   const fog=createPaperFog({THREE,scene,renderer,camera,state,flags,getSize,mistTexture:materials.mistTexture,celestials});
   const atmosphere=createVolumetrics({THREE,scene,renderer,camera,state,flags,getSize,lights,celestials,fog,actor});
-  const {updateLighting}=createLightingController({THREE,scene,camera,renderer,state,flags,lights,celestials,fog,atmosphere,actor});
+  const lighting=createLightingController({THREE,scene,camera,renderer,state,flags,lights,celestials,fog,atmosphere,actor});
+  function updateLighting(time){lighting.updateLighting(time);backdrop?.updateLighting(time);}
   const {sky,starField,starUniforms,sunDisc,moonDisc,sunGlow,moonGlow}=celestials;
   const {sun,moon,groundBounce,viewFill}=lights;
   const {contactShadow}=actor;
@@ -111,6 +121,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
     sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;
     contactShadow.visible=state.shadow;forestMist.visible=state.fog;if(forest)forest.canopyGroup.visible=true;
     terrain.terrainBlocks.visible=state.layers;renderer.shadowMap.enabled=state.shadow;
+    if(backdrop){backdrop.group.visible=state.layers;backdrop.setSkyVisible?.(state.sky);}
     sun.castShadow=state.shadow&&sun.intensity>.10;moon.castShadow=state.shadow&&moon.intensity>.10;
     if(!state.fog)scene.fog=null;
     renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
@@ -148,7 +159,22 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   dt=Math.min(.05,Math.max(0,Number(dt)||0));
   now=Number.isFinite(now)?now:performance.now();
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
-  orbitCamera.follow(lastSnapshot.x,dt,lastSnapshot.y-.5);
+  orbitCamera.follow(lastSnapshot.x,cityRide?1:dt,lastSnapshot.y-.5);
+  if(isCity){
+    const underground=cityRide?.kind==='metro';
+    if(underground!==lastUnderground){invalidate();lastUnderground=underground;}
+    // The distant paper town scrolls slowly while authored street districts
+    // remain at fixed world positions. The moon reads as a distant sky object.
+    backdrop.group.position.x=lastSnapshot.x*.985;
+    backdrop.group.visible=state.layers&&!underground;
+    scenery.group.visible=!underground&&lastSnapshot.x<75;
+    terrain.terrainBlocks.visible=state.layers&&!underground;
+    districts.group.visible=!underground;population.group.visible=!underground;
+    traffic.group.visible=!underground;
+    districts.update(lastSnapshot.x);
+    if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
+    if(transit.update(dt,lastSnapshot.x,cityRide))flags.render=flags.depth=flags.ao=true;
+  }
   // The shadow coverage has ample margin. Move its origin in two-unit steps
   // instead of invalidating static forest occlusion for every camera drift.
   const lightShift=Math.trunc((target.x-atmosphere.volumeLightTarget.x)/2)*2;
@@ -158,6 +184,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     flags.shadow=flags.volumeShadow=true;
   }
   const playerMesh=actor.playerMesh;
+  if(playerMesh)playerMesh.visible=!cityRide;
+  contactShadow.visible=state.shadow&&!cityRide;
   frameCalls++;
 
   if(traffic?.update(dt)){
@@ -259,8 +287,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
 
   renderer.info.reset();
-  updateDepthTexture();
-  if(state.godrays||state.ao)renderWithVolumetrics();
+  if(!lastUnderground)updateDepthTexture();
+  if(!lastUnderground&&(state.godrays||state.ao))renderWithVolumetrics();
   else{
     renderer.setRenderTarget(null);
     renderer.render(scene,camera);
@@ -333,7 +361,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
-      terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},traffic:traffic?.stats?.(),
+      terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
+      districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),
       player:actor.snapshot(),camera:orbitCamera.snapshot(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
@@ -359,5 +388,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     throw error;
   });
   return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+    nearbyCityPerson:x=>population?.nearby(x)??null,
+    setCityRide:ride=>{cityRide=ride?{...ride}:null;flags.render=flags.depth=flags.ao=true;},
     getWorld:()=>terrain.world,dispose};
 }
