@@ -48,16 +48,44 @@ jobs:
             git -C production archive refs/remotes/origin/mobile-releases app | tar -x -C _site
           fi
 
+          lab_sha="$(git -C laboratory rev-parse HEAD)"
+          lab_published_at="$(git -C laboratory show -s --format=%cI HEAD)"
+          production_sha="$(git -C production rev-parse HEAD)"
+
           rm -rf _site/demo-lab
           mkdir -p _site/demo-lab
           cp -a laboratory/demo-lab/. _site/demo-lab/
+
+          cat > _site/demo-lab/build-info.json <<EOF
+          {
+            "version": "$lab_sha",
+            "publishedAt": "$lab_published_at",
+            "channel": "experiment",
+            "sourceMain": "$production_sha"
+          }
+          EOF
+
+          # Keep an immutable copy of every published Demo Lab version.
+          # The nested demo-lab/ directory preserves the same ../../vendor and
+          # ../../assets relative paths used by the live lab.
+          release_root="_site/demo-lab/releases/$lab_sha"
+          mkdir -p "$release_root/demo-lab" "$release_root/vendor" "$release_root/assets"
+          cp -a laboratory/demo-lab/. "$release_root/demo-lab/"
+          cp -a production/vendor/three "$release_root/vendor/three"
+          cp -a production/assets/player "$release_root/assets/player"
+          cp production/visual-demo.html "$release_root/visual-demo.html"
+          cp _site/demo-lab/build-info.json "$release_root/demo-lab/build-info.json"
+
           touch _site/.nojekyll
 
           test -f _site/demo-lab/index.html
-          grep -q 'DEMO LAB · EXPERIMENT ONLY' _site/demo-lab/index.html
+          grep -q 'id="demoLabVersion"' _site/demo-lab/index.html
+          test -f "$release_root/demo-lab/index.html"
+          grep -q "\"version\": \"$lab_sha\"" _site/demo-lab/build-info.json
           test -f _site/app/channel.json
-          echo "Production source: $(git -C production rev-parse HEAD)"
-          echo "Demo Lab source: $(git -C laboratory rev-parse HEAD)"
+          echo "Production source: $production_sha"
+          echo "Demo Lab source: $lab_sha"
+          echo "Demo Lab immutable URL: /demo-lab/releases/$lab_sha/demo-lab/"
       - name: Configure Pages
         uses: actions/configure-pages@v6.0.0
       - name: Upload combined site
