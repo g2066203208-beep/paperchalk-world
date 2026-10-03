@@ -6,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {createCityPrologueWorld} from '../demo-lab/world/CityPrologueWorld.mjs';
 import {StagePlayerSimulation} from '../demo-lab/core/StagePlayerSimulation.mjs';
 import {sceneSaveKey,CITY_SCENE_ID} from '../demo-lab/ui/CityPrologue.mjs';
+import {createPaperScene} from '../demo-lab/rendering/createPaperScene.js';
 
 const root=fileURLToPath(new URL('../demo-lab/',import.meta.url));
 async function files(dir=root){
@@ -61,11 +62,10 @@ test('stage clear switch removes only scene props and is wired to the lab UI',as
   assert.match(html,/撤掉全部道具/);
   assert.match(sceneSource,/function setStagePropsVisible/);
   assert.match(sceneSource,/stagePropsVisible:true/);
-  assert.match(sceneSource,/scenery\.group\.visible=visible/);
-  assert.match(sceneSource,/districts\.group\.visible=visible/);
-  assert.match(sceneSource,/population\.group\.visible=visible/);
-  assert.match(sceneSource,/transit\.group\.visible=visible/);
-  assert.match(sceneSource,/traffic\.group\.visible=visible/);
+  assert.equal(typeof createPaperScene,'function');
+  for(const name of ['traffic','population','transit','scenery','districts','backdrop'])assert.match(sceneSource,new RegExp("name:'"+name+"'"));
+  assert.match(sceneSource,/item\.group\.rotation\.x=/);
+  assert.match(sceneSource,/item\.group\.visible=item\.baseVisible\(\)&&local<\.999/);
   assert.match(sceneSource,/for\(const light of lights\.locals/);
   assert.match(appSource,/scene\.setStagePropsVisible\(!visible\)/);
 });
