@@ -71,3 +71,8 @@ h1{margin:0;font-size:22px;letter-spacing:.01em}
   .timeline-row input[type="range"]{grid-column:1/-1;grid-row:2}
   .inspector{padding:17px}
 }
+
+.world-position{margin-top:14px;padding:12px;border:1px solid #3d3934;border-radius:10px;background:#1b1a18}
+.world-position .control-row{margin-top:0}
+.world-position input[type="range"]{width:100%;margin-top:10px}
+.world-position button{padding:6px 9px;font-size:10px}
