@@ -53,8 +53,8 @@ test('timeline is game choreography rather than mechanical simulation',()=>{
   assert.ok(LAB_DURATION>=1.3&&LAB_DURATION<=1.6);
   const a=samplePaperWorld(0),b=samplePaperWorld(.25),c=samplePaperWorld(.5),d=samplePaperWorld(.75),e=samplePaperWorld(1);
   assert.equal(a.cityRelease,0);assert.equal(a.destinationRise,0);
-  assert.ok(b.cityRelease>.35);assert.equal(b.destinationRise,0);
-  assert.ok(c.cityRelease>.99);assert.ok(c.destinationRise>.1);assert.ok(c.shadowPass>.2);
+  assert.ok(b.cityRelease>.1);assert.equal(b.destinationRise,0);
+  assert.ok(c.cityRelease>.8&&c.cityRelease<.98);assert.ok(c.destinationRise>.1&&c.destinationRise<.5);assert.ok(c.shadowPass>.4&&c.shadowPass<.8);
   assert.ok(d.destinationRise>.9);assert.ok(d.details>.4);
   assert.equal(e.destinationRise,1);assert.equal(e.details,1);assert.equal(e.lights,1);assert.equal(e.settle,1);
 });
