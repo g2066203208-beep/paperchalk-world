@@ -21,7 +21,7 @@ let progress=0;
 let last=performance.now();
 let raf=0;
 let speed=1;
-const fallbackVersion='DL-2026.10.03.7';
+const fallbackVersion='DL-2026.10.03.8';
 
 function percent(value){
   return String(Math.round(clamp01(value)*100)).padStart(3,'0')+'%';
