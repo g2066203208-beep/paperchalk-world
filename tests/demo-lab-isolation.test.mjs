@@ -51,7 +51,7 @@ test('lab identity is visibly different from production',async()=>{
   const pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
   const meta=JSON.parse(await readFile(path.join(root,'lab-meta.json'),'utf8'));
   assert.match(html,/DEMO LAB · .*demoLabVersion.* · EXPERIMENT ONLY/s);
-  assert.equal(pkg.name,'paperchalk-demo-lab');assert.equal(meta.directMergeToMain,false);assert.equal(meta.productionPath,'studio/');
+  assert.equal(pkg.name,'paperchalk-demo-lab');assert.equal(meta.directMergeToMain,false);assert.equal(meta.productionPath,'studio/');assert.match(meta.displayVersion,/^DL-\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d+$/);
 });
 
 test('stage architecture is split into director, timeline and stage rigs',async()=>{
