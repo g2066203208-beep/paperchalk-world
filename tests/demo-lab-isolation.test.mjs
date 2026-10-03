@@ -47,7 +47,7 @@ test('lab identity is visibly different from production',async()=>{
   const html=await readFile(path.join(root,'index.html'),'utf8');
   const pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
   const meta=JSON.parse(await readFile(path.join(root,'lab-meta.json'),'utf8'));
-  assert.match(html,/DEMO LAB · EXPERIMENT ONLY/);
+  assert.match(html,/DEMO LAB · .*demoLabVersion.* · EXPERIMENT ONLY/s);
   assert.equal(pkg.name,'paperchalk-demo-lab');
   assert.equal(meta.directMergeToMain,false);
   assert.equal(meta.productionPath,'studio/');
