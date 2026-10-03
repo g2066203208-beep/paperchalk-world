@@ -6,7 +6,7 @@
   "productionPath": "studio/",
   "labPath": "demo-lab/",
   "directMergeToMain": false,
-  "displayVersion": "DL-2026.10.03.2",
-  "releaseLabel": "paper-stage-rebuild-r1",
+  "displayVersion": "DL-2026.10.03.3",
+  "releaseLabel": "paper-stage-rebuild-r2",
   "focus": "paper-stage-transition-lab"
 }
