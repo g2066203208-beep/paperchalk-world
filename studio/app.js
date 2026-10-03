@@ -121,26 +121,25 @@ function enterCityInterior(interior){
   resetClock();input?.cancel();hideScenePrompt();
   // The facade itself is the stage curtain: it hinges down from its base while
   // the room waits behind it. No full-screen card or city-wide slide is used.
-  simulation.restore({x,y:world.surfaceY(x),facing:simulation.snapshot().facing,vx:0,distance:simulation.snapshot().distance});
-  // Keep the room in the same world immediately behind the facade. The only
-  // animation is the house folding away; there is no midpoint scene swap.
-  scene.setCityInterior(interior);scene.frame(0,renderClock,simulation.snapshot());
+  const midpoint=()=>{
+    simulation.restore({x,y:world.surfaceY(x),facing:simulation.snapshot().facing,vx:0,distance:simulation.snapshot().distance});
+    scene.setCityInterior(interior);scene.frame(0,renderClock,simulation.snapshot());
+  };
   worldHandoff=true;
-  const handoff=scene.playHouseHandoff?.({id:interior.id,onComplete:()=>{saveProgress(true);refreshCityHud();}});
-  if(!handoff)worldHandoff=false;
+  const handoff=scene.playHouseHandoff?.({id:interior.id,onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
+  if(!handoff){midpoint();worldHandoff=false;}
   return true;
 }
 function leaveCityInterior(){
   if(!scene?.cityInterior?.())return false;
   resetClock();input?.cancel();hideScenePrompt();
+  const midpoint=()=>{
+    scene.leaveCityInterior();scene.frame(0,renderClock,simulation.snapshot());
+  };
   worldHandoff=true;
   const activeId=scene.cityInterior?.();
-  const handoff=scene.playHouseHandoff?.({id:activeId,reverse:true,onComplete:()=>{
-    // The facade is upright again, so removing the room layer is covered by
-    // the same paper object and does not read as a scene change.
-    scene.leaveCityInterior();saveProgress(true);refreshCityHud();
-  }});
-  if(!handoff){scene.leaveCityInterior();worldHandoff=false;}
+  const handoff=scene.playHouseHandoff?.({id:activeId,reverse:true,onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
+  if(!handoff){midpoint();worldHandoff=false;}
   return true;
 }
 function openInspection({explicit=false}={}){

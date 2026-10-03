@@ -201,14 +201,11 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     // The distant paper town scrolls slowly while authored street districts
     // remain at fixed world positions. The moon reads as a distant sky object.
     backdrop.group.position.x=lastSnapshot.x*.985;
-    // Indoor rooms are another layer in the same authored world.  Keep the
-    // street, ground, traffic and neighbours alive while the doorway facade
-    // folds away; hiding these groups would create a scene cut.
-    backdrop.group.visible=state.layers&&!underground;
-    scenery.group.visible=!underground&&lastSnapshot.x<75;
-    terrain.terrainBlocks.visible=state.layers&&!underground;
-    districts.group.visible=!underground;population.group.visible=!underground;
-    traffic.group.visible=!underground;
+    backdrop.group.visible=state.layers&&!underground&&!indoor;
+    scenery.group.visible=!underground&&!indoor&&lastSnapshot.x<75;
+    terrain.terrainBlocks.visible=state.layers&&!underground&&!indoor;
+    districts.group.visible=!underground&&!indoor;population.group.visible=!underground&&!indoor;
+    traffic.group.visible=!underground&&!indoor;
     interiors.group.visible=indoor;
     districts.update(lastSnapshot.x);
     interiors.update(dt);
@@ -435,11 +432,12 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     nearbyCityInterior:x=>interiors?.nearby(x)??null,
     setCityInterior:value=>{
       cityInterior=interiors?.setActive(value)?(typeof value==='string'?value:value?.id):null;
+      if(cityInterior)orbitCamera.setDistance(size.width>size.height?9.6:10.8);
       flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;
     },
     leaveCityInterior:()=>{
       if(interiors?.leave()){
-        cityInterior=null;flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;return true;
+        cityInterior=null;orbitCamera.reset();flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;return true;
       }
       return false;
     },
