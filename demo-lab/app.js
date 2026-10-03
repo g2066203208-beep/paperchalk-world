@@ -308,7 +308,7 @@ async function loadBuildInfo(){
     ]);
     if(!buildResponse.ok||!metaResponse.ok)throw new Error('Build information unavailable');
     const [info,meta]=await Promise.all([buildResponse.json(),metaResponse.json()]);
-    const release=typeof meta.displayVersion==='string'&&/^DL-\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d+$/.test(meta.displayVersion)?meta.displayVersion:null;
+    const release=typeof meta.displayVersion==='string'&&/^DL-\d{4}\.\d{2}\.\d{2}\.\d+$/.test(meta.displayVersion)?meta.displayVersion:null;
     const isDev=info.version==='dev'||info.version==='demo-lab';
     if(!isDev&&(typeof info.version!=='string'||!/^[a-f0-9]{7,40}$/.test(info.version)))throw new Error('Invalid build information');
     const short=isDev?'DEV':info.version.slice(0,8);
