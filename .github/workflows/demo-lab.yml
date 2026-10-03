@@ -13,6 +13,12 @@ on:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: paperchalk-pages
+  cancel-in-progress: false
 
 jobs:
   isolated-lab:
@@ -28,4 +34,56 @@ jobs:
       - name: Confirm production publish workflow is not in this job
         run: |
           test "$GITHUB_REF" = "refs/heads/demo-lab"
-          echo "Demo Lab validated. No Pages/mobile/APK deployment is performed."
+          echo "Demo Lab validated. Production mobile channel is untouched."
+
+  publish-lab:
+    needs: isolated-lab
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}demo-lab/
+    steps:
+      - name: Checkout current production main
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: main
+          path: production
+          fetch-depth: 1
+      - name: Checkout tested Demo Lab
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: demo-lab
+          path: laboratory
+          fetch-depth: 1
+      - name: Assemble production site plus isolated lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir _site
+          git -C production archive HEAD | tar -x -C _site
+
+          if git -C production ls-remote --exit-code --heads origin refs/heads/mobile-releases >/dev/null 2>&1; then
+            git -C production fetch --depth=1 origin refs/heads/mobile-releases:refs/remotes/origin/mobile-releases
+            git -C production archive refs/remotes/origin/mobile-releases app | tar -x -C _site
+          fi
+
+          rm -rf _site/demo-lab
+          mkdir -p _site/demo-lab
+          cp -a laboratory/demo-lab/. _site/demo-lab/
+          touch _site/.nojekyll
+
+          test -f _site/demo-lab/index.html
+          grep -q 'DEMO LAB · EXPERIMENT ONLY' _site/demo-lab/index.html
+          test -f _site/app/channel.json
+          echo "Production source: $(git -C production rev-parse HEAD)"
+          echo "Demo Lab source: $(git -C laboratory rev-parse HEAD)"
+      - name: Configure Pages
+        uses: actions/configure-pages@v6.0.0
+      - name: Upload combined site
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: _site
+      - name: Deploy isolated Demo Lab path
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1
