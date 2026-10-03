@@ -58,6 +58,12 @@ kbd{font:9px/1.2 var(--font);border:1px solid #f2f5e947;border-radius:3px;min-wi
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:absolute;z-index:6;top:58px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);padding:10px 17px;border:1px solid #d7dfc6;border-radius:8px;background:#fbfcefef;color:#485c37;font-size:12px;box-shadow:0 4px 18px #17251a15;backdrop-filter:blur(10px);text-align:center;pointer-events:none}
 .toast:empty{display:none}
+/* Exploration text is part of the stage atmosphere, never a blocking card. */
+.scene-prompt{position:absolute;z-index:7;left:50%;bottom:58px;transform:translateX(-50%);display:flex;align-items:baseline;gap:9px;width:max-content;max-width:calc(100% - 36px);padding:8px 18px 9px;border-top:1px solid #f6e9c766;border-bottom:1px solid #f6e9c744;background:linear-gradient(90deg,transparent,#142438b8 14%,#142438b8 86%,transparent);color:#f7ebd4;text-shadow:0 2px 8px #101827aa;pointer-events:none;user-select:none;text-align:center}
+.scene-prompt-kicker{color:#edc987;font-size:9px;letter-spacing:.15em;white-space:nowrap}
+.scene-prompt strong{font-size:12px;font-weight:600;white-space:nowrap}
+.scene-prompt>span:last-child{max-width:min(440px,56vw);font-size:11px;line-height:1.45;color:#e5dfcf;white-space:normal}
+.scene-prompt[hidden]{display:none}
 .touch-controls{display:none;position:absolute;z-index:3;left:16px;right:16px;bottom:16px;align-items:flex-end;justify-content:space-between;pointer-events:none}
 .touch-move{display:flex;gap:9px}
 .touch-button{width:51px;height:51px;border:1px solid #eef3df77;border-radius:13px;background:#eff3dbb0;color:#35492c;backdrop-filter:blur(10px);font-size:26px;line-height:1;user-select:none;touch-action:none;pointer-events:auto;box-shadow:0 2px 9px #21302112}
@@ -174,6 +180,9 @@ body.game-mode{
 
 .game-mode.game-menu-open .touch-controls,.game-mode.game-menu-open .game-pause,.game-mode.game-menu-open .rotate-hint{visibility:hidden;pointer-events:none}
 .game-mode .toast{z-index:30;top:calc(20px + var(--safe-top));max-width:min(70%,440px);padding:10px 17px;font-size:12px;border-radius:22px;background:#fbfcefec;box-shadow:0 3px 18px #14281621}
+.game-mode .scene-prompt{bottom:calc(102px + var(--safe-bottom));max-width:min(78%,620px);padding:9px 22px 10px}
+.game-mode .scene-prompt strong{font-size:13px}
+.game-mode .scene-prompt>span:last-child{font-size:12px;max-width:min(520px,58vw)}
 .game-mode .loading-status{background:#e9e7d8;color:#58644b;font-size:14px;padding:30px}
 .game-mode .game-menu{display:flex;align-items:center;justify-content:center;position:absolute;inset:0;z-index:10;background:#17271f66;backdrop-filter:blur(9px);padding:calc(14px + var(--safe-top)) calc(18px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(18px + var(--safe-left));overflow:auto;overscroll-behavior:contain}
 .game-menu-card{width:min(350px,100%);max-height:100%;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:24px 26px 18px;background:#f6f3e8f7;border:1px solid #ffffe6a6;border-radius:19px;box-shadow:0 16px 70px #14231942;color:#374931}
@@ -238,6 +247,10 @@ body.game-mode{
   .game-mode .inspector{top:calc(22px + var(--safe-top));bottom:calc(22px + var(--safe-bottom))}
   .game-mode .inspector-content{display:block}.game-mode .inspector-heading{padding:14px 18px}.game-mode .inspector-content{padding:0 18px 18px}
   .game-mode .toast{top:calc(82px + var(--safe-top));max-width:calc(100% - 40px - var(--safe-left) - var(--safe-right))}
+    .game-mode .scene-prompt{bottom:calc(112px + var(--safe-bottom));max-width:calc(100% - 28px - var(--safe-left) - var(--safe-right));padding:8px 14px;display:grid;grid-template-columns:auto 1fr;gap:3px 8px;text-align:left}
+    .game-mode .scene-prompt-kicker{grid-row:1 / span 2;align-self:start;padding-top:2px}
+    .game-mode .scene-prompt strong{font-size:12px}
+    .game-mode .scene-prompt>span:last-child{grid-column:2;max-width:none;font-size:11px}
 }
 
 /* Keep mobile HUD edges crisp above the continuously rendered WebGL canvas. */

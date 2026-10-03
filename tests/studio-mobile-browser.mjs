@@ -69,12 +69,9 @@ try{
     await safe(page,'.city-navigation',config.insets);await targets(page,'.city-navigation button');
     await page.getByRole('button',{name:'取消步行导航'}).tap();
     await page.locator('#inspectAction').tap();
-    assert.equal(await page.locator('.city-destination').count(),11);
-    await safe(page,'.city-explorer-card',config.insets);await targets(page,'.city-explorer-overlay button');
-    await shot(page,config.name+'-destinations');
-    // Tap the last destination to exercise scrolling inside the modal.
-    await page.getByRole('button',{name:/星灯住宅区.*向东/}).tap();
     await page.waitForFunction(()=>__cityQA.getStats().transit.rideKind==='bus');
+    assert.equal(await page.locator('.city-explorer-overlay').isVisible(),false);
+    assert.equal(await page.locator('#scenePrompt').isVisible(),true);
     await safe(page,'.city-ride-panel',config.insets);await targets(page,'.city-ride-heading button');
     await page.locator('#openGameMenu').tap();
     assert.equal(await page.locator('.city-ride-panel').isVisible(),false);
@@ -83,6 +80,7 @@ try{
     await page.locator('#resumeGame').tap();
     await shot(page,config.name+'-bus');
     await page.getByRole('button',{name:'返回出发站',exact:true}).tap();
+    await page.waitForFunction(()=>!__cityQA.getStats().transition.active);
     assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),36);
     // Native background/resume bridge must freeze movement and preserve content.
     await page.evaluate(()=>dispatchEvent(new Event('paperchalk:pause')));await tick(page);
@@ -109,14 +107,25 @@ try{
     await context.close();
   }
   const config=scenarios[0],{page,context}=await load(config,531);
-  await page.locator('#inspectAction').tap();await page.getByRole('button',{name:/星灯住宅区.*向东/}).tap();
+  await page.locator('#inspectAction').tap();
   await page.waitForFunction(()=>__cityQA.getStats().transit.underground&&__cityQA.getStats().transit.rideProgress>.25);
   await shot(page,'android-landscape-metro');
   await page.waitForFunction(()=>__cityQA.getStats().transit.rideKind===null,null,{timeout:45000});
-  assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),1371);
-  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('paperworld.city-prologue.save.v1')).player.x),1371);
+  assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),891);
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('paperworld.city-prologue.save.v1')).player.x),891);
   checks.push('touch metro boarding, underground journey, destination arrival and save');
   await context.close();
+  const interior=await load(config,-42);
+  await interior.page.locator('#inspectAction').tap();
+  await interior.page.waitForFunction(()=>__cityQA.getStats().interiors.active&&__cityQA.getStats().transition.active);
+  await interior.page.waitForFunction(()=>__cityQA.getStats().interiors.active&&!__cityQA.getStats().transition.active);
+  assert.equal(await interior.page.locator('#inspectionOverlay').isVisible(),false);
+  assert.equal(await interior.page.locator('#scenePrompt').isVisible(),false);
+  await shot(interior.page,'android-landscape-interior');
+  assert.equal(await interior.page.evaluate(()=>PaperchalkHandleBack()),true);
+  await interior.page.waitForFunction(()=>!__cityQA.getStats().interiors.active&&!__cityQA.getStats().transition.active);
+  checks.push('touch house doorway enters a real paper interior and Esc returns through the same fold');
+  await interior.context.close();
   const forest=await load(config,0,'?scene=forest');
   assert.equal(await forest.page.locator('.city-explorer').count(),0);
   await forest.page.locator('#openGameMenu').tap();await forest.page.locator('#resumeGame').tap();

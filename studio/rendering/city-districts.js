@@ -85,6 +85,7 @@ export function createCityDistricts({THREE,scene,flags={}}){
   const color=new THREE.Color(),districts=[],buildings=[],landmarks=[],features=[];
   let source,activeDistrict,totalTriangles=0,totalCards=0;
   const paper=0xffedcd,ink=0x42576a;
+  let buildingOrdinal=0;
   const rectangle=(w,h)=>[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]];
   function tri(batch,a,b,c,hex=0xffffff,uv=[[0,0],[0,0],[0,0]]){
     const ab=[b[0]-a[0],b[1]-a[1],b[2]-a[2]],ac=[c[0]-a[0],c[1]-a[1],c[2]-a[2]],n=[ab[1]*ac[2]-ab[2]*ac[1],ab[2]*ac[0]-ab[0]*ac[2],ab[0]*ac[1]-ab[1]*ac[0]],len=Math.hypot(...n)||1;
@@ -133,7 +134,12 @@ export function createCityDistricts({THREE,scene,flags={}}){
   }
   function building(name,x,{w=7,h=4,z=-4.5,variant=0,label=1,roofType=0,roofHeight=.95,bodyColor=null,shop=true,signVisible=true}={}){
     const [body,roofColor]=PALETTES[activeDistrict.index],base=.5,wall=bodyColor??body;
-    const record=panel(name,x,base,z,w,h,wall,{depth:.16});buildings.push({...record,districtId:activeDistrict.id,roofType,roofHeight});
+    const record=panel(name,x,base,z,w,h,wall,{depth:.16});
+    // Keep a stable doorway identity beside every authored facade.  The
+    // interior renderer uses this small record instead of trying to infer
+    // entrances from triangles after the city has been batched.
+    buildings.push({...record,id:`house-${buildingOrdinal++}`,districtId:activeDistrict.id,
+      districtName:activeDistrict.name,entranceX:x,entranceY:base,roofType,roofHeight});
     panel('Left folded wall return',x-w/2-.09,base,z-.23,.55,h,PALETTES[activeDistrict.index][2],{angle:.6});
     panel('Right folded wall return',x+w/2+.08,base,z-.26,.58,h,roofColor,{angle:-.55});
     for(const side of [-1,1])panel('Cream corner masonry',x+side*(w/2-.08),base,z+.14,.16,h,paper);

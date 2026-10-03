@@ -40,8 +40,13 @@
         <div id="viewport" class="viewport" tabindex="0" aria-label="横版开放纸艺世界；A 或 D 或方向键左右漫游"></div>
         <div id="loadingStatus" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span>正在准备纸艺场景…</span></div>
         <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+        <div id="scenePrompt" class="scene-prompt" role="status" aria-live="polite" aria-atomic="true" hidden>
+          <span class="scene-prompt-kicker">场景回声</span>
+          <strong id="scenePromptTitle"></strong>
+          <span id="scenePromptText"></span>
+        </div>
         <div id="prologueHud" class="prologue-hud" hidden><p>序幕 · 放学归途</p><div><span>21:00</span><i aria-hidden="true"></i><span id="locationLabel">校门</span></div></div>
-        <button id="inspectAction" class="inspect-action" type="button" aria-haspopup="dialog" aria-controls="inspectionOverlay" hidden><kbd aria-hidden="true">E</kbd><span id="inspectActionLabel">查看校牌</span></button>
+        <button id="inspectAction" class="inspect-action" type="button" hidden><kbd aria-hidden="true">E</kbd><span id="inspectActionLabel">查看校牌</span></button>
         <div id="inspectionOverlay" class="inspection-overlay" hidden><section class="inspection-card" role="dialog" aria-modal="true" aria-labelledby="inspectionTitle" aria-describedby="inspectionText"><button id="closeInspection" type="button" aria-label="关闭查看">×</button><p class="inspection-eyebrow">放学归途</p><h2 id="inspectionTitle"></h2><p id="inspectionText"></p></section></div>
         <button id="openGameMenu" class="game-only game-pause" type="button" aria-label="暂停并打开菜单" aria-haspopup="dialog" aria-controls="gameMenu" disabled><span aria-hidden="true">Ⅱ</span></button>
         <div class="game-only rotate-hint" role="status"><span aria-hidden="true">↻</span> 横屏玩，视野更宽</div>
