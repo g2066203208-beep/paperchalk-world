@@ -22,7 +22,8 @@ export function paperSettle(value,amount=.045){
 export function samplePaperStage(progress){
   const p=clamp01(progress);
   const cityFold=paperSettle(phase(p,.015,.20),.018);
-  const page=paperSettle(phase(p,.105,.505),.022);
+  const page=paperSettle(phase(p,.105,.505),.020);
+  const bifold=paperSettle(phase(p,.235,.595),.032);
   const reveal=phase(p,.18,.42);
   const wall=paperSettle(phase(p,.33,.665),.028);
   const brace=paperSettle(phase(p,.41,.71),.042);
@@ -35,7 +36,7 @@ export function samplePaperStage(progress){
   if(p>=.535)act='纸制设施展开';
   if(p>=.805)act='灯光逐盏唤醒';
   if(p>=.965)act='舞台完成';
-  return {progress:p,cityFold,page,reveal,wall,brace,fixture,light,life,act};
+  return {progress:p,cityFold,page,bifold,reveal,wall,brace,fixture,light,life,act};
 }
 
 export function lampWave(globalProgress,index,count){
