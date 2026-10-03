@@ -60,7 +60,7 @@
         <section>
           <p class="eyebrow">MECHANISM FIRST</p>
           <h2>先做纸机构，不做正式美术</h2>
-          <p>这页只验证折痕、铰链、厚度、V-fold、遮挡与灯光顺序。任何一块纸如果说不清“连在哪里、为什么会动”，就不进入正式城市。</p>
+          <p>这页现在同时验证纸机构和真实游戏视角。角色使用游戏里的实际纸片素材，站在不参与主翻页的入口舌片上；周围街道退开后，下方纸楼梯被揭开，角色始终有明确支撑。</p>
         </section>
 
         <section>
@@ -70,7 +70,26 @@
             <dt>地下墙体</dt><dd id="wallValue">000%</dd>
             <dt>纸制设施</dt><dd id="fixtureValue">000%</dd>
             <dt>灯光唤醒</dt><dd id="lightValue">000%</dd>
+            <dt>角色世界坐标</dt><dd id="playerXValue">X 0.0</dd>
+            <dt>当前高细节格</dt><dd id="chunkValue">CHUNK 0</dd>
+            <dt>邻接常驻格</dt><dd id="residentValue">4 PROXY</dd>
           </div>
+        </section>
+
+        <section>
+          <p class="eyebrow">GAMEPLAY TEST</p>
+          <div class="control-row"><span>观察视角</span>
+            <select id="viewMode" aria-label="观察视角">
+              <option value="game" selected>游戏视角</option>
+              <option value="mechanism">机构视角</option>
+            </select>
+          </div>
+          <label class="control-row"><span>大地图分段预览</span><span class="switch"><input id="largeWorld" type="checkbox" checked> ON</span></label>
+          <div class="world-position">
+            <div class="control-row"><span>角色世界位置</span><button id="resetPlayerX" type="button">回到节点</button></div>
+            <input id="playerX" type="range" min="-60" max="60" step=".1" value="0" aria-label="角色世界位置">
+          </div>
+          <p>拖动角色位置时，高细节转场机构只跟随当前格；相邻格保留低成本纸景代理，远处格休眠。这就是大场景不会整张一起折的基础。</p>
         </section>
 
         <section>
@@ -82,7 +101,7 @@
               <option value="1" selected>1×</option>
             </select>
           </div>
-          <label class="control-row"><span>显示折痕 / 铰链</span><span class="switch"><input id="showGuides" type="checkbox" checked> ON</span></label>
+          <label class="control-row"><span>显示折痕 / 铰链</span><span class="switch"><input id="showGuides" type="checkbox"> ON</span></label>
           <label class="control-row"><span>真实阴影</span><span class="switch"><input id="showShadows" type="checkbox" checked> ON</span></label>
           <p class="build-note">空格：播放/暂停 · ←/→：逐帧 · Shift + ←/→：5 帧 · 0–4：跳到关键帧</p>
         </section>
