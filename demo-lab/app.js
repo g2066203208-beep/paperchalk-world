@@ -65,8 +65,8 @@ function hideScenePrompt(){
   if(ui.scenePrompt)ui.scenePrompt.hidden=true;
 }
 function setStatus(){
-  const paused=pauseReasons.active,activeStage=scene?.getState?.().activeStage??'city';
-  ui.appStatus.textContent=failed?'画面待恢复':!ready?'正在载入':paused?'场景已暂停':activeStage==='subway'?'月灯中央站 · 月河线':isCity?'序幕 · 放学归途':'纸艺世界 · 自由漫游';
+  const paused=pauseReasons.active,sceneState=scene?.getState?.(),activeStage=sceneState?.activeStage??'city';
+  ui.appStatus.textContent=failed?'画面待恢复':!ready?'正在载入':paused?'场景已暂停':sceneState?.stageTransitioning?'纸片舞台换景中':activeStage==='subway'?'月灯中央站 · 月河线':isCity?'序幕 · 放学归途':'纸艺世界 · 自由漫游';
   ui.playPause.textContent=paused?'继续':'暂停';
   ui.playPause.setAttribute('aria-pressed',String(paused));
   ui.openGameMenu.setAttribute('aria-expanded',String(pauseReasons.menu&&!inspectionOpen));
@@ -139,25 +139,27 @@ function updateControls(){
     $(id).value=String(state[key]);$(id+'Value').textContent=`${Math.round(state[key])}°`;
   }
   if(ui.toggleStageScene){
-    const subway=state.activeStage==='subway';
-    ui.toggleStageScene.textContent=state.stageTransitioning?(subway?'正在进入地铁…':'正在回到城市…'):(subway?'切回城市':'切换到地铁');
+    const target=state.stageTarget??state.activeStage,subway=target==='subway';
+    ui.toggleStageScene.textContent=state.stageTransitioning?(subway?'舞台正在进入地铁…':'舞台正在回到城市…'):(subway?'切回城市':'切换到地铁');
     ui.toggleStageScene.classList.toggle('active',subway);
     ui.toggleStageScene.setAttribute('aria-pressed',String(subway));
+    ui.toggleStageScene.disabled=state.stageTransitioning;
   }
-  if(ui.stageSceneLabel)ui.stageSceneLabel.textContent=state.activeStage==='subway'?'月灯中央站 · 月河线':'城市街道';
+  if(ui.stageSceneLabel)ui.stageSceneLabel.textContent=state.stageTransitioning?'舞台换景中':state.activeStage==='subway'?'月灯中央站 · 月河线':'城市街道';
 }
 function refreshStatus(now,force=false){
   if(!ready||(!force&&now-statusTime<350))return;
   const state=simulation.snapshot(),stats=scene.getStats(),sceneState=scene.getState();
   if(ui.toggleStageScene){
-    const subway=sceneState.activeStage==='subway';
-    ui.toggleStageScene.textContent=sceneState.stageTransitioning?(subway?'正在进入地铁…':'正在回到城市…'):(subway?'切回城市':'切换到地铁');
+    const target=sceneState.stageTarget??sceneState.activeStage,subway=target==='subway';
+    ui.toggleStageScene.textContent=sceneState.stageTransitioning?(subway?'舞台正在进入地铁…':'舞台正在回到城市…'):(subway?'切回城市':'切换到地铁');
     ui.toggleStageScene.classList.toggle('active',subway);
+    ui.toggleStageScene.disabled=sceneState.stageTransitioning;
   }
-  if(ui.stageSceneLabel)ui.stageSceneLabel.textContent=sceneState.activeStage==='subway'?'月灯中央站 · 月河线':'城市街道';
+  if(ui.stageSceneLabel)ui.stageSceneLabel.textContent=sceneState.stageTransitioning?'舞台换景中':sceneState.activeStage==='subway'?'月灯中央站 · 月河线':'城市街道';
   refreshCityHud();
   ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z 0`;
-  ui.playerState.textContent=pauseReasons.active?'已暂停':Math.abs(state.vx)>.05?'漫游中':'站立';
+  ui.playerState.textContent=pauseReasons.active?'已暂停':sceneState.stageTransitioning?'看舞台换景':Math.abs(state.vx)>.05?'漫游中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
   ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n纸艺大地 · 连续地面\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
   const shafts=stats.volumetrics;
@@ -306,11 +308,12 @@ function wireControls(){
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
   listen(ui.toggleStageScene,'click',()=>{
-    const next=scene.getState().activeStage==='subway'?'city':'subway';
+    const current=scene.getState();if(current.stageTransitioning)return;
+    const next=current.activeStage==='subway'?'city':'subway';
     cityExplorer?.close();
-    scene.setStage(next);
-    updateControls();
-    toast(next==='subway'?'城市舞台撤下：地板下沉，月灯中央站从台下升起':'地铁舞台撤下：城市地板与街景重新升起');
+    if(!scene.setStage(next))return;
+    input?.cancel();resetClock();updateControls();
+    toast(next==='subway'?'从你脚下开始换景：城市收起，月灯中央站展开':'从你脚下开始换景：地铁收起，城市重新展开');
     refreshStatus(performance.now(),true);
   });
   listen(ui.toggleInspector,'click',()=>setInspector(document.body.classList.contains('inspector-hidden')));
@@ -348,14 +351,15 @@ function tick(now){
   const elapsed=lastTime?Math.min(.1,Math.max(0,(now-lastTime)/1000)):0;lastTime=now;
   if(ready&&!failed&&!nativeSuspended&&!document.hidden){
     try{
-      const paused=pauseReasons.active;
-      if(!paused){
+      const paused=pauseReasons.active,stageChanging=scene.getState().stageTransitioning;
+      if(!paused&&!stageChanging){
         accumulator+=elapsed;
         while(accumulator>=STEP){simulation.update(STEP,input.consume());accumulator-=STEP;}
-        renderClock+=elapsed*1000;
       }else{accumulator=0;input.cancel();}
+      if(!paused)renderClock+=elapsed*1000;
       scene.frame(paused?0:elapsed,renderClock,simulation.snapshot());
-      if(scene.getState().activeStage==='city')cityExplorer?.update(simulation.snapshot().x);
+      const sceneState=scene.getState();
+      if(!sceneState.stageTransitioning&&sceneState.activeStage==='city')cityExplorer?.update(simulation.snapshot().x);
       refreshStatus(now);
     }catch(error){sceneStatus({state:'error',message:'场景运行出现错误，请刷新重试。'});console.error(error);}
   }

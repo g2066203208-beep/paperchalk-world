@@ -69,20 +69,33 @@ test('full stage switch is wired to the Demo Lab UI',async()=>{
   assert.match(subwaySource,/月河线/);
 });
 
-test('full stage switch replaces props, floor, background and subway set with theatre animation',async()=>{
+test('full stage switch uses coordinated carriers and player-centred ripple choreography',async()=>{
   const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
   const subwaySource=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
-  assert.match(sceneSource,/stageTransition=\{progress:0,target:0,active:false,duration:1\.48/);
-  assert.match(sceneSource,/terrain\.terrainBlocks\.position\.y=cityTerrainBaseY-cityFloorDrop\*2\.45/);
-  assert.match(sceneSource,/subwayStage\.root\.position\.y=-2\.55\*\(1-rise\)/);
-  assert.match(sceneSource,/scene\.background\.copy\(outdoorBackground\)\.lerp\(subwayBackground,indoorMix\)/);
-  assert.match(sceneSource,/direction\*fold\*Math\.PI\*\.5/);
-  assert.match(sceneSource,/direction\*\(1-unfold\)\*Math\.PI\*\.5/);
-  assert.match(subwaySource,/Subway platform slab/);
-  assert.match(subwaySource,/Recessed track bed/);
-  assert.match(subwaySource,/Subway rear paper wall/);
-  assert.match(subwaySource,/Subway train paper body/);
-  assert.match(subwaySource,/Subway ceiling sheet/);
+  const appSource=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
+  assert.match(sceneSource,/duration:1\.92/);
+  assert.match(sceneSource,/City floor lift carrier/);
+  assert.match(sceneSource,/cityRipple=.*stageTransition\.anchorX/);
+  assert.match(sceneSource,/subwayRipple=/);
+  assert.match(sceneSource,/cityFloorCarrier\.position\.y=cityFloorBaseY-cityDrop\*3\.25/);
+  assert.match(sceneSource,/subwayStage\.floorCarrier\.position\.y=-3\.25\*\(1-floorRise\)/);
+  assert.match(sceneSource,/subwayStage\.ceilingCarrier\.position\.y=\(1-ceilingDown\)\*3\.45/);
+  assert.match(sceneSource,/subwayStage\.trainGroup\.position\.x=/);
+  assert.match(subwaySource,/trainGroup\.parent===floorCarrier/);
+  assert.match(subwaySource,/ceilingCarrier\.parent===root/);
+  assert.match(subwaySource,/wallPieces/);
+  assert.match(subwaySource,/fixturePieces/);
+  assert.match(appSource,/stageChanging=scene\.getState\(\)\.stageTransitioning/);
+  assert.match(appSource,/if\(!paused&&!stageChanging\)/);
+});
+
+test('city paper scenery owns local floor hinges instead of rotating around world zero',async()=>{
+  const districts=await readFile(new URL('../demo-lab/rendering/city-districts.js',import.meta.url),'utf8');
+  const scenery=await readFile(new URL('../demo-lab/rendering/city-scenery.js',import.meta.url),'utf8');
+  assert.match(districts,/stageHinge:true/);
+  assert.match(districts,/geometry\.translate\(-district\.x,-\.5,3\.7\)/);
+  assert.match(scenery,/stageHinge:true/);
+  assert.match(scenery,/geometry\.translate\(-pivotX,-\.5,-pivotZ\)/);
 });
 
 
