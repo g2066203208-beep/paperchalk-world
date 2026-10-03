@@ -25,7 +25,7 @@ test('Demo Lab root is the greeting-card page-turn study',async()=>{
   assert.match(html,/城市封面翻开/);
   assert.match(html,/地铁内页弹起/);
   assert.equal(meta.focus,'greeting-card-page-turn');
-  assert.equal(meta.displayVersion,'DL-2026.10.03.7');
+  assert.equal(meta.displayVersion,'DL-2026.10.03.8');
   assert.equal(meta.directMergeToMain,false);
 });
 
