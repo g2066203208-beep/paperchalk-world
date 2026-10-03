@@ -1,0 +1,404 @@
+{
+  "schemaVersion": 1,
+  "version": "a16b7b5477ff0a7d5eb255013c9e6d0ca1270ad9",
+  "publishedAt": "2026-10-03T05:54:59.000Z",
+  "channel": "mobile-test",
+  "files": {
+    "assets/player/protagonist.webp": {
+      "sha256": "237201bb1fbbf9c6075d7e2e6e1e218ad0f127d10caca6b43e98382e205e7a62",
+      "bytes": 11808
+    },
+    "studio/README.md": {
+      "sha256": "cbe520a4c21a57f8d2eafb188f69853082fd4c4fed9af0b4e5a2bfdedf31c5be",
+      "bytes": 8613
+    },
+    "studio/app.js": {
+      "sha256": "2cb45a8d269d2272ffedf1f761aae6cfd53e6aef06d561c4e06f392f515aa69c",
+      "bytes": 21568
+    },
+    "studio/assets/olive-fiber/base-color.webp": {
+      "sha256": "8d6a9e132292c6439d2c7df2b3c97673159248d366a1b00c6b75c60b23deee79",
+      "bytes": 523704
+    },
+    "studio/assets/olive-fiber/dirt-color.webp": {
+      "sha256": "fcfed3ec3818e05bab65e9554df328ce4c7db31f4cd39344642a6e5a65f0c23b",
+      "bytes": 389882
+    },
+    "studio/assets/olive-fiber/dirt-normal-gl.webp": {
+      "sha256": "66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c",
+      "bytes": 1821212
+    },
+    "studio/assets/olive-fiber/dirt-orm.webp": {
+      "sha256": "1098b95e8a3c00b8121a6d2330752896ada5679389adc1abdf768bf3cbeba009",
+      "bytes": 582096
+    },
+    "studio/assets/olive-fiber/normal-gl.webp": {
+      "sha256": "8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958",
+      "bytes": 2460726
+    },
+    "studio/assets/olive-fiber/orm.webp": {
+      "sha256": "1445a649af0cb1b29c1bfa81e6fd3a6e9b0ca725b2bc8f014b27b2231ae3aa56",
+      "bytes": 735704
+    },
+    "studio/assets/olive-fiber/source.json": {
+      "sha256": "c485b601d6e45f94005d04b3048f53dedeb990697242b296b7eb0cd2be5cfdda",
+      "bytes": 4029
+    },
+    "studio/assets/player/spine/images/arm_fore_L.png": {
+      "sha256": "6d82190f2f4ca14ed6ed6f1f0a1f852344c83749727e03ccb2554ba313e609a0",
+      "bytes": 28373
+    },
+    "studio/assets/player/spine/images/arm_fore_R.png": {
+      "sha256": "2f3c4dd7925582251c8cb13abb3ecc46f3ef5a58297a3b5d3a472e598f3e7418",
+      "bytes": 23309
+    },
+    "studio/assets/player/spine/images/arm_upper_L.png": {
+      "sha256": "942ecd3bd7e44a8dc98a1914ca44da5270cb42f6524e1ec9c95ab78713f4694f",
+      "bytes": 14311
+    },
+    "studio/assets/player/spine/images/arm_upper_R.png": {
+      "sha256": "1a4166f8473939fa9d9809f05f05b6f54ca92962aa4917edbb737755d8966fca",
+      "bytes": 13105
+    },
+    "studio/assets/player/spine/images/back-hair.png": {
+      "sha256": "10ab9b41bef69b7d513850906b84ad88122e0a74772cdf0c277d833d57694ab0",
+      "bytes": 121541
+    },
+    "studio/assets/player/spine/images/boot_shaft_L.png": {
+      "sha256": "a9c690b6974b0e30a8964f8a3e543947743b1b26fd773d5baa2c81bb1f074e63",
+      "bytes": 74855
+    },
+    "studio/assets/player/spine/images/boot_shaft_R.png": {
+      "sha256": "55a638017454c66c0e62fd8b6b6672512ed36e529d6186c6b86e650e2fd0aab0",
+      "bytes": 74704
+    },
+    "studio/assets/player/spine/images/bottomwear.png": {
+      "sha256": "7bbccac416e62d64049820c57521749afc463307b449492c5f41b8ccd76835af",
+      "bytes": 71226
+    },
+    "studio/assets/player/spine/images/calf_L.png": {
+      "sha256": "9efdb6dfbdb7a34742d9714b2e577fa0faea83e2b7d74078f90b0b535f4e177c",
+      "bytes": 54913
+    },
+    "studio/assets/player/spine/images/calf_R.png": {
+      "sha256": "27eec178427d57c6180327e7acf9d28100e35160ba57d71e7b87895220366856",
+      "bytes": 54828
+    },
+    "studio/assets/player/spine/images/cape_back-completed.png": {
+      "sha256": "939652577e4883f6b08f5ad2331066c850558d6d160576043f9f9a243da7108f",
+      "bytes": 42342
+    },
+    "studio/assets/player/spine/images/cape_back.png": {
+      "sha256": "e0d4096deba77984aab09a5d672ccf838de7e7a5b508ec24664424fde056b3b3",
+      "bytes": 18609
+    },
+    "studio/assets/player/spine/images/cape_front-completed.png": {
+      "sha256": "5a0062b13941d55b721f11a437399d9c3e32678a63c5707e08039e47376c5edc",
+      "bytes": 49666
+    },
+    "studio/assets/player/spine/images/cape_front.png": {
+      "sha256": "5a0062b13941d55b721f11a437399d9c3e32678a63c5707e08039e47376c5edc",
+      "bytes": 49666
+    },
+    "studio/assets/player/spine/images/ears.png": {
+      "sha256": "80ab3d0d12515b5f545fdf7d19a7dc91a1ee954828b97f15ec3e9538447bac59",
+      "bytes": 9136
+    },
+    "studio/assets/player/spine/images/eyebrow.png": {
+      "sha256": "3df14f4ef5ec556651c6645d7c9d04b6d4e2bf46c8e7f1c00cd530ec76eb98a0",
+      "bytes": 1774
+    },
+    "studio/assets/player/spine/images/eyelash.png": {
+      "sha256": "e4c146ac89ee2e54526ca10f1f4a4fce975bc86f719f3b5ca1862c739dec4b4e",
+      "bytes": 6819
+    },
+    "studio/assets/player/spine/images/eyewhite.png": {
+      "sha256": "cf2f1086f84d9b978205d594adcc116631e3db4f23eb16d5f7e66fac80a0264e",
+      "bytes": 6757
+    },
+    "studio/assets/player/spine/images/face.png": {
+      "sha256": "0374bc9b68bb9538ad89b8e0f9927fc49a9e0590537fa1bf9cced6a166519376",
+      "bytes": 60566
+    },
+    "studio/assets/player/spine/images/foot_L.png": {
+      "sha256": "fd9c0dc8e120a9a11f49891838956c5f76a87d1d611f175d9223da2e166cea44",
+      "bytes": 66554
+    },
+    "studio/assets/player/spine/images/foot_R.png": {
+      "sha256": "c25a6397a0adaa1f8fc0c6d6c453e12b00bcc05adc525beb329b7ecc83ff8611",
+      "bytes": 71406
+    },
+    "studio/assets/player/spine/images/footwear.png": {
+      "sha256": "4c8e3bc8a6343c0192938f6d9a3f2bab1db1295b9d803440e370dbdee8b0fa2a",
+      "bytes": 65518
+    },
+    "studio/assets/player/spine/images/front-hair.png": {
+      "sha256": "2b5f96160df25c261ff35c8c06439fdc018576686b24adac135e7f49c571cb73",
+      "bytes": 149650
+    },
+    "studio/assets/player/spine/images/hand_L.png": {
+      "sha256": "e00e69faa25e13ed45bb7104c96bcee537c92e57300e3cb8345bcf66285c9a26",
+      "bytes": 15856
+    },
+    "studio/assets/player/spine/images/hand_R.png": {
+      "sha256": "fd8efba7a38251394bee76834498703197c4b1da10649f15c6c6fabb40c53435",
+      "bytes": 13578
+    },
+    "studio/assets/player/spine/images/handwear.png": {
+      "sha256": "06be5cef6bbca34146bad59746b4f2494f28b1bc37b9c7395169d2ad4fd8ed19",
+      "bytes": 80027
+    },
+    "studio/assets/player/spine/images/irides.png": {
+      "sha256": "44c442dc6646c7e18608eed19fc3c57ace248dc54df9987deedf4d64aff6a7dd",
+      "bytes": 5318
+    },
+    "studio/assets/player/spine/images/legwear.png": {
+      "sha256": "5638fe959f92597dfc76576150ace46937e457b21c997a52753945ebb5f83c71",
+      "bytes": 58996
+    },
+    "studio/assets/player/spine/images/mouth.png": {
+      "sha256": "370df1fd31554771305b8db6e44c41363df8bc0b8d9613de6c1fcfd737584783",
+      "bytes": 1604
+    },
+    "studio/assets/player/spine/images/neck.png": {
+      "sha256": "67690706b160b953aed4cbaa845f25e63b1f90ded0eec085724448816ca1569a",
+      "bytes": 5242
+    },
+    "studio/assets/player/spine/images/nose.png": {
+      "sha256": "65b55c8bac9e120f69998ee09b36e9c6ecb6628c36c7a211d1c994f8568db482",
+      "bytes": 297
+    },
+    "studio/assets/player/spine/images/thigh_L.png": {
+      "sha256": "4df2d86248ff1454fda429a545b7aecaa58d98e2714125acdabc1bf7d196e990",
+      "bytes": 54254
+    },
+    "studio/assets/player/spine/images/thigh_R.png": {
+      "sha256": "67a9f841291d5c4648ec79d04f9ee14b5af856524e67e7d98544ed1405533f01",
+      "bytes": 54266
+    },
+    "studio/assets/player/spine/images/thigh_outline_L.png": {
+      "sha256": "6077c887d81fb030f376860ef749907c7833c6cce0f33bb41b4aa46a4552437e",
+      "bytes": 4639
+    },
+    "studio/assets/player/spine/images/thigh_outline_R.png": {
+      "sha256": "eac3441c02527f9ef54763aeebdb9c1620f2a674917df4c798d100ab2b721121",
+      "bytes": 4798
+    },
+    "studio/assets/player/spine/images/topwear.png": {
+      "sha256": "425161a5321e0761ef53c566b634e3790f7b0ed7256787e8e21401449e621f27",
+      "bytes": 77896
+    },
+    "studio/assets/player/spine/images/torso_core-completed.png": {
+      "sha256": "51c52b0d728f62de2fc28ec60099ab4785020f49f63b989942949ec03919034f",
+      "bytes": 37175
+    },
+    "studio/assets/player/spine/images/torso_core.png": {
+      "sha256": "c12762a98921e867cc979d2c7ad86dbce3a769eb9949f9b1a1163106b73bc998",
+      "bytes": 28300
+    },
+    "studio/assets/player/spine/magic_g.atlas": {
+      "sha256": "282d3075b8e7ef25bbd59330418b07567aa5a83366b5ccdb51bd3a667e7baeb2",
+      "bytes": 6139
+    },
+    "studio/assets/player/spine/magic_g.json": {
+      "sha256": "a6f9b19c63f5ec0c3d87fa31f99ebe7c49378a671143badf1b5855d7840d42c0",
+      "bytes": 13212224
+    },
+    "studio/assets/player/spine/spine43.js": {
+      "sha256": "58aea42c0765cb518667681fa4a580b1d809a62a94423cd4d28f90783325a676",
+      "bytes": 636206
+    },
+    "studio/build-info.json": {
+      "sha256": "ed17ffb91da214d391c4e89ef3a8d0fd87d1e2e6e69757f1c61a31a8eb364730",
+      "bytes": 133
+    },
+    "studio/city-explorer.css": {
+      "sha256": "51ebfcd799e6851720f49e6c32284276428ad22e3048f6fd35c6155f5c95f1b6",
+      "bytes": 13958
+    },
+    "studio/core/Lifecycle.mjs": {
+      "sha256": "4a528dd530870ef60c059d0d35a2fce9a0d8755997ca768cab731603a1836dfc",
+      "bytes": 2391
+    },
+    "studio/core/SaveStore.mjs": {
+      "sha256": "0fe117b6fe61a2921e4df04aac7c0e5b5d228e60e3fd3f5e17fb618caccdc35f",
+      "bytes": 4342
+    },
+    "studio/core/StagePlayerSimulation.mjs": {
+      "sha256": "b8a18068ffff873b4d0fa2584ec6457a6fe5c44f5f6988158db78a8d33809c50",
+      "bytes": 2853
+    },
+    "studio/index.html": {
+      "sha256": "e2ee1c0a4ffbbc3d52f3453907afd1932e896395996ba6e984731beed48e7c49",
+      "bytes": 11762
+    },
+    "studio/input/InputActions.mjs": {
+      "sha256": "4a94c7815b811965bbc7c489b07c12c689887e7ecdb474dfa11e885d01062e0b",
+      "bytes": 4647
+    },
+    "studio/package.json": {
+      "sha256": "e6afd4e565613c7ba64847c49f1628653c373244d0d8ddf17b32631bc0ff9921",
+      "bytes": 81
+    },
+    "studio/rendering/actor.js": {
+      "sha256": "3179e7563e7ecf0a1b26759a6c4f2dc53f0527add81156d35beb2580b605bfdd",
+      "bytes": 11601
+    },
+    "studio/rendering/city-art.js": {
+      "sha256": "8ba98c69c9d80ad82ca947c7bb4f20c0f0ac99c179f3c80bf2749e3b89e7f577",
+      "bytes": 18539
+    },
+    "studio/rendering/city-backdrop.js": {
+      "sha256": "5191342137ca381016257697c5fafb496cd0db4f6b2d832bcec2f2fbe43249f7",
+      "bytes": 12431
+    },
+    "studio/rendering/city-districts.js": {
+      "sha256": "c9635a409ed61114ac2ae544fbd27956c48c536a1cfc6a6364d6bd632b6ef34f",
+      "bytes": 27883
+    },
+    "studio/rendering/city-light-profile.js": {
+      "sha256": "123e7e05f7971b09848bef9836b2e2a95655a57f509d886f11dc914077db24bc",
+      "bytes": 976
+    },
+    "studio/rendering/city-population.js": {
+      "sha256": "2116d01ffdff198a224c547487be903005d623fdb78a051d7536f3cf19998c43",
+      "bytes": 21110
+    },
+    "studio/rendering/city-scenery.js": {
+      "sha256": "5171924168df1e6a269ce0e8ba95e2c3666d5ef6e9fb33ed3072ee0a862bd3bf",
+      "bytes": 20353
+    },
+    "studio/rendering/city-terrain.js": {
+      "sha256": "8e41c8a922462a9846e90d925622666815bb0e678735e98f50f1fc0c5be73e61",
+      "bytes": 5501
+    },
+    "studio/rendering/city-traffic.js": {
+      "sha256": "8f6258094a8a7fb681e5f67f3c19ada32de23d524f64e5de6d2f9d66af10e02b",
+      "bytes": 5347
+    },
+    "studio/rendering/city-transit.js": {
+      "sha256": "96797aee72454e9c5fc758420881473a3386886ff08d157fcf09dd47b5c72c8b",
+      "bytes": 14873
+    },
+    "studio/rendering/contact-ao.js": {
+      "sha256": "a85556fd4cdebd995c2d1866e8e8b4b3005582e0befd48d54b13655c9e45cd3f",
+      "bytes": 6579
+    },
+    "studio/rendering/createPaperScene.js": {
+      "sha256": "cfa3f5bdbbee7f1559cb2bd6627eea5503794609092af5b1dfe8209d1c51416c",
+      "bytes": 19169
+    },
+    "studio/rendering/fog.js": {
+      "sha256": "1cc66fd1057de5ca7b539cb2213c97d29968700aedbd652b1aa86805b079eeb4",
+      "bytes": 7815
+    },
+    "studio/rendering/forest-art.js": {
+      "sha256": "d8cd6c836c86390bb8fedc32cc4b0db26969f72fce997c0dcf6f2d27f4cca056",
+      "bytes": 9847
+    },
+    "studio/rendering/forest.js": {
+      "sha256": "4a31cf2feb1e66cda6f7bdef1ec9c327071321247dc007b14e58d865149059cf",
+      "bytes": 7545
+    },
+    "studio/rendering/index.js": {
+      "sha256": "9cf0b1e8a682b4caf456a648bcfce526748118ba02ca693eec8b9f6af36ad88e",
+      "bytes": 56
+    },
+    "studio/rendering/lighting.js": {
+      "sha256": "62371ca9d4453044252830408c44ad08d566f4972ef137b909c32a639495c8d2",
+      "bytes": 12048
+    },
+    "studio/rendering/math.js": {
+      "sha256": "36aa9061e5a77a52668f2fba44b2a3509e20656c93c7e07059b9d2bbd39c7204",
+      "bytes": 563
+    },
+    "studio/rendering/olive-fiber-maps.js": {
+      "sha256": "3b7fb69771df425b3c94cf22bf00525bdcbf8e102103a0c574333580ffcffa91",
+      "bytes": 2187
+    },
+    "studio/rendering/orbit-camera.js": {
+      "sha256": "ce989e975119f049336973e5783bd74efe9a8b349a410b76d32bb0e18c20ac7f",
+      "bytes": 5024
+    },
+    "studio/rendering/paper-materials.js": {
+      "sha256": "d812979a9d9d5dd698fe824617f2e3eb1be8be7a85f059a84d5fc13676828513",
+      "bytes": 10799
+    },
+    "studio/rendering/resources.js": {
+      "sha256": "def1591214349d1dcaba553cccccbf1a973ae2b554d2517d27c2e9a11ab16bd0",
+      "bytes": 931
+    },
+    "studio/rendering/sky.js": {
+      "sha256": "b76d7b6cc34b44a097f7f415a0b8b4bf4c7ff881ef8fbc6420410fd4e1d93416",
+      "bytes": 10200
+    },
+    "studio/rendering/stage-geometry.js": {
+      "sha256": "c7bcdeca084eee5d40caab43bc82693e577f968972440198adc38ae2e4e03273",
+      "bytes": 3027
+    },
+    "studio/rendering/stage-scenery.js": {
+      "sha256": "a2ae0c416d039a81f83766c7eba95c06b1932d93687138670346b65529d66c19",
+      "bytes": 10367
+    },
+    "studio/rendering/storybook-paper-maps.js": {
+      "sha256": "d03f3e8b5482a04297adb55efeb050485dd3f6a4924e2af8bf8995b13ad9ecf0",
+      "bytes": 3548
+    },
+    "studio/rendering/terrain.js": {
+      "sha256": "81eff59abd5dde66d5c6f83a5e1a60c586a094b40e490928967ff1ceb9198687",
+      "bytes": 12247
+    },
+    "studio/rendering/volumetrics.js": {
+      "sha256": "bf009852a91ec71fea6f56e4981027749604e6c1a9d0c0858866ac18326f6159",
+      "bytes": 28953
+    },
+    "studio/studio.css": {
+      "sha256": "e2aadf04170ed7fc3c60faa82835bef81d2efac93c7061a7b8505d13e1ba6a53",
+      "bytes": 33770
+    },
+    "studio/ui/CityExplorer.mjs": {
+      "sha256": "9a953614a8b83374abc99684eb3d5da25b3977d71c8b7de43fc8f17786492ead",
+      "bytes": 6998
+    },
+    "studio/ui/CityPrologue.mjs": {
+      "sha256": "438d72fa9cf7f83339b27a14aed035065bad082922635a3763526e0298f498b3",
+      "bytes": 1480
+    },
+    "studio/ui/GamePresentation.mjs": {
+      "sha256": "093f29b36e35650ffb546d7b69557b26e3808eddfcc3110ea76feebbb55f7d3c",
+      "bytes": 845
+    },
+    "studio/world/CityLayout.mjs": {
+      "sha256": "4f03ebbcbdc9f5ee2783b0cc32990b80ab1c36b98f2ca637d70eb91099b60dd0",
+      "bytes": 1861
+    },
+    "studio/world/CityPrologueWorld.mjs": {
+      "sha256": "8c750a7400d60c0ab97be1bcfa0fd5621691d5a618f8888c087ed8160d4633ab",
+      "bytes": 1239
+    },
+    "studio/world/PaperStageWorld.mjs": {
+      "sha256": "1c1144c1af3e718a37a231dfa04db6763f7999e33ec90f60e38742ae793b1880",
+      "bytes": 2355
+    },
+    "vendor/three/LICENSE": {
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "bytes": 1081
+    },
+    "vendor/three/README.txt": {
+      "sha256": "dba0f840c4b804b7a4e7f5f833f485b3ee2e6ac06ef9822e0f0cd07e597a9e50",
+      "bytes": 123
+    },
+    "vendor/three/three.core.js": {
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "bytes": 1403455
+    },
+    "vendor/three/three.module.js": {
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "bytes": 603113
+    },
+    "visual-demo.html": {
+      "sha256": "632bcf0b8224f069b3a6d15a2a8e28a48ad1522ed56bbc28ee47cf116967188c",
+      "bytes": 108367
+    }
+  }
+}
