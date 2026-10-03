@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#171716">
-  <title>Paper Stage Transition Lab · Demo Lab</title>
-  <link rel="stylesheet" href="./transition-lab.css?v=DL-2026.10.03.4">
+  <title>White Paper World Transition · Demo Lab</title>
+  <link rel="stylesheet" href="./transition-lab.css?v=DL-2026.10.03.5">
 </head>
 <body>
   <main class="lab-shell">
@@ -13,27 +13,27 @@
       <div class="lab-brand">
         <span class="lab-mark" aria-hidden="true"><i></i><i></i></span>
         <div>
-          <p class="eyebrow">PAPERCHALK · MECHANISM STUDY</p>
-          <h1>Paper Stage Transition Lab</h1>
+          <p class="eyebrow">PAPERCHALK · GAME TRANSITION WHITEBOX</p>
+          <h1>纯白纸游戏转场 Demo</h1>
         </div>
       </div>
       <div class="header-meta">
-        <span class="version-chip">DEMO LAB · <span id="demoLabVersion">DL-2026.10.03.4</span></span>
+        <span class="version-chip">DEMO LAB · <span id="demoLabVersion">DL-2026.10.03.5</span></span>
         <span id="buildId">BUILD …</span>
       </div>
     </header>
 
     <div class="lab-grid">
-      <section class="stage-column" aria-label="纸舞台转场实验">
+      <section class="stage-column" aria-label="纯白纸游戏转场">
         <div class="viewport-wrap">
           <div id="labViewport"></div>
           <div class="viewport-caption">
-            <strong>WHITE CARD MECHANISM · 01</strong>
-            <span>城市街道 → 地下纸舞台 · 不使用淡入淡出</span>
+            <strong>GAME VIEW · WHITE PAPER ONLY</strong>
+            <span>城市 → 地铁 · 游戏化纸片魔法，不做现实机械模拟</span>
           </div>
           <div class="act-card" aria-live="polite">
-            <small>CURRENT PAPER ACT</small>
-            <strong id="actLabel">城市纸景收拢</strong>
+            <small>CURRENT ACT</small>
+            <strong id="actLabel">原场景保持</strong>
           </div>
         </div>
 
@@ -41,86 +41,82 @@
           <div class="timeline-row">
             <button id="playToggle" class="primary" type="button" aria-pressed="false">播放</button>
             <button id="resetTimeline" type="button">复位</button>
-            <input id="timeline" type="range" min="0" max="1000" step="1" value="0" aria-label="纸舞台时间轴">
+            <input id="timeline" type="range" min="0" max="1000" step="1" value="0" aria-label="纸世界转场时间轴">
             <span id="progressLabel" class="progress-readout">000%</span>
           </div>
           <div class="keyframes" aria-label="关键帧">
-            <button type="button" data-jump="0">0% · 原场景</button>
-            <button type="button" data-jump=".25">25% · 翻页</button>
-            <button type="button" data-jump=".5">50% · 墙体立起</button>
-            <button type="button" data-jump=".75">75% · 设施展开</button>
+            <button type="button" data-jump="0">0% · 城市</button>
+            <button type="button" data-jump=".25">25% · 纸景散开</button>
+            <button type="button" data-jump=".5">50% · 双场景交叠</button>
+            <button type="button" data-jump=".75">75% · 地铁成立</button>
             <button type="button" data-jump="1">100% · 完成</button>
-            <button id="stepBack" type="button" title="后退 1 帧">− 1 frame</button>
-            <button id="stepForward" type="button" title="前进 1 帧">+ 1 frame</button>
+            <button id="stepBack" type="button">− 1 frame</button>
+            <button id="stepForward" type="button">+ 1 frame</button>
           </div>
         </div>
       </section>
 
-      <aside class="inspector" aria-label="机构检查">
+      <aside class="inspector" aria-label="Demo 控制">
         <section>
-          <p class="eyebrow">MECHANISM FIRST</p>
-          <h2>先做纸机构，不做正式美术</h2>
-          <p>这页现在同时验证纸机构和真实游戏视角。角色使用游戏里的实际纸片素材，站在不参与主翻页的入口舌片上；周围街道退开后，下方纸楼梯被揭开，角色始终有明确支撑。</p>
+          <p class="eyebrow">DESIGN RULE</p>
+          <h2>纸感是视觉语法，不是物理规则</h2>
+          <p>所有场景只用白纸、灰色切边与阴影。人物保留真实游戏素材，用来检查比例、遮挡与镜头。允许现实中不可能的纸片运动，只要游戏里自然、漂亮、连贯。</p>
+          <p class="build-note"><a href="./PAPER_WORLD_WHITEBOX_PROMPT.md" target="_blank" rel="noopener">查看完整 2000 字制作提示词 ↗</a></p>
         </section>
 
         <section>
           <p class="eyebrow">LIVE READOUT</p>
           <div class="metric-grid">
-            <dt>主街道纸页</dt><dd id="pageValue">000%</dd>
-            <dt>地下墙体</dt><dd id="wallValue">000%</dd>
-            <dt>纸制设施</dt><dd id="fixtureValue">000%</dd>
+            <dt>城市散开</dt><dd id="cityValue">000%</dd>
+            <dt>纸影掠过</dt><dd id="sweepValue">000%</dd>
+            <dt>地铁建立</dt><dd id="destinationValue">000%</dd>
             <dt>灯光唤醒</dt><dd id="lightValue">000%</dd>
             <dt>角色世界坐标</dt><dd id="playerXValue">X 0.0</dd>
-            <dt>当前高细节格</dt><dd id="chunkValue">CHUNK 0</dd>
-            <dt>邻接常驻格</dt><dd id="residentValue">4 PROXY</dd>
+            <dt>当前场景块</dt><dd id="chunkValue">CHUNK 0</dd>
+            <dt>邻接代理块</dt><dd id="residentValue">4</dd>
+            <dt>Draw Calls</dt><dd id="drawCallValue">0</dd>
           </div>
         </section>
 
         <section>
-          <p class="eyebrow">GAMEPLAY TEST</p>
-          <div class="control-row"><span>观察视角</span>
-            <select id="viewMode" aria-label="观察视角">
-              <option value="game" selected>游戏视角</option>
-              <option value="mechanism">机构视角</option>
+          <p class="eyebrow">GAMEPLAY / SCALE TEST</p>
+          <div class="control-row"><span>观察模式</span>
+            <select id="viewMode">
+              <option value="game" selected>实际游戏视角</option>
+              <option value="breakdown">分层检查视角</option>
             </select>
           </div>
-          <label class="control-row"><span>大地图分段预览</span><span class="switch"><input id="largeWorld" type="checkbox" checked> ON</span></label>
-          <div class="world-position">
-            <div class="control-row"><span>角色世界位置</span><button id="resetPlayerX" type="button">回到节点</button></div>
-            <input id="playerX" type="range" min="-60" max="60" step=".1" value="0" aria-label="角色世界位置">
-          </div>
-          <p>拖动角色位置时，高细节转场机构只跟随当前格；相邻格保留低成本纸景代理，远处格休眠。这就是大场景不会整张一起折的基础。</p>
-        </section>
-
-        <section>
-          <p class="eyebrow">INSPECTION</p>
           <div class="control-row"><span>播放速度</span>
-            <select id="speedSelect" aria-label="播放速度">
+            <select id="speedSelect">
               <option value=".25">0.25×</option>
               <option value=".5">0.5×</option>
               <option value="1" selected>1×</option>
             </select>
           </div>
-          <label class="control-row"><span>显示折痕 / 铰链</span><span class="switch"><input id="showGuides" type="checkbox"> ON</span></label>
-          <label class="control-row"><span>真实阴影</span><span class="switch"><input id="showShadows" type="checkbox" checked> ON</span></label>
-          <p class="build-note">空格：播放/暂停 · ←/→：逐帧 · Shift + ←/→：5 帧 · 0–4：跳到关键帧</p>
+          <label class="control-row"><span>显示大地图邻接块</span><span class="switch"><input id="largeWorld" type="checkbox" checked> ON</span></label>
+
+          <div class="world-position">
+            <div class="control-row"><span>角色世界 X</span><button id="resetPlayerX" type="button">回到 0</button></div>
+            <input id="playerX" type="range" min="-90" max="90" step=".1" value="0">
+          </div>
+          <p>拖动 X 时，只有玩家附近的当前块参与高细节转场；左右邻接块用低成本实例化白纸代理，远处块休眠。转场不是让整张世界一起动。</p>
         </section>
 
         <section>
-          <p class="eyebrow">NON-NEGOTIABLE RULES</p>
+          <p class="eyebrow">WHITEBOX ACCEPTANCE</p>
           <ul class="rule-list">
-            <li><strong>一个主动作：</strong>街道纸页沿前缘主折痕翻下。</li>
-            <li><strong>地下舞台不升降：</strong>它一直在下面，只被纸页遮住。</li>
-            <li><strong>墙体有底部折痕：</strong>中心先起，两侧随后。</li>
-            <li><strong>V-fold 是从属机构：</strong>墙体抬起以后才被拉开。</li>
-            <li><strong>设施有材料差异：</strong>长椅、机器、导视牌回弹量不同。</li>
-            <li><strong>灯逐盏亮：</strong>最后才给舞台“生命”。</li>
+            <li><strong>人物优先：</strong>0/25/50/75/100% 都必须看清角色。</li>
+            <li><strong>50% 最重要：</strong>旧城市残留和新地铁必须同时存在，画面最有戏。</li>
+            <li><strong>不做真实机械：</strong>可以滑、卷、压扁、飞向景深、从景深站起。</li>
+            <li><strong>不用黑屏：</strong>靠纸层、遮挡和景深完成视觉接力。</li>
+            <li><strong>可扩展：</strong>大量重复场景用 InstancedMesh，动画只发生在当前可见块。</li>
           </ul>
+          <p class="build-note">空格：播放/暂停 · ←/→：逐帧 · Shift + ←/→：5 帧 · 0–4：关键帧</p>
         </section>
       </aside>
     </div>
   </main>
 
-  <script type="module" src="./transition-lab.js?v=DL-2026.10.03.4"></script>
+  <script type="module" src="./transition-lab.js?v=DL-2026.10.03.5"></script>
 </body>
 </html>
