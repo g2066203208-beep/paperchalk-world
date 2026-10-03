@@ -9,6 +9,10 @@
   <link rel="stylesheet" href="./city-explorer.css">
   <style>
     .demo-lab-ribbon{position:fixed;z-index:9999;left:50%;top:8px;transform:translateX(-50%);pointer-events:none;padding:6px 12px;border-radius:999px;background:#5d2633;color:#fff2da;font:800 11px/1 system-ui;letter-spacing:.08em;box-shadow:0 4px 14px #0004}
+    .demo-lab-stage-switch{position:fixed;z-index:10000;right:max(14px,env(safe-area-inset-right));bottom:max(92px,calc(env(safe-area-inset-bottom) + 92px));min-width:132px;padding:11px 14px;border:2px solid #6e4a37;border-radius:16px;background:#f4dfad;color:#38281f;font:800 13px/1 system-ui;box-shadow:0 5px 0 #5d3a2a44,0 12px 24px #0002}
+    .demo-lab-stage-switch.active{background:#6e2631;color:#fff5dc;border-color:#e8c16b}
+    .demo-lab-stage-switch:disabled{opacity:.45}
+    @media(max-width:720px){.demo-lab-stage-switch{right:max(12px,env(safe-area-inset-right));bottom:max(86px,calc(env(safe-area-inset-bottom) + 86px));min-width:118px;padding:10px 12px;font-size:12px}}
   </style>
 </head>
 <body class="inspector-hidden"><div class="demo-lab-ribbon">DEMO LAB · EXPERIMENT ONLY</div>
@@ -40,6 +44,7 @@
     <main class="workspace" aria-label="纸艺世界工作区">
       <section class="stage" aria-label="实时游戏场景">
         <div class="stage-label"><span class="live-dot" aria-hidden="true"></span>纸艺世界<span class="stage-label-divider" aria-hidden="true"></span><span class="baseline-label">实验功能 · 不直接上线</span></div>
+        <button id="toggleStageProps" class="demo-lab-stage-switch" type="button" aria-pressed="false" disabled>撤掉全部道具</button>
         <div id="viewport" class="viewport" tabindex="0" aria-label="横版开放纸艺世界；A 或 D 或方向键左右漫游"></div>
         <div id="loadingStatus" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span>正在准备纸艺场景…</span></div>
         <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
