@@ -2,131 +2,106 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#252c24">
-  <title>纸艺世界 · Demo Lab</title>
-  <link rel="stylesheet" href="./studio.css">
-  <link rel="stylesheet" href="./city-explorer.css">
-  <style>
-    .demo-lab-ribbon{position:fixed;z-index:9999;left:50%;top:8px;transform:translateX(-50%);pointer-events:none;padding:6px 12px;border-radius:999px;background:#5d2633;color:#fff2da;font:800 11px/1 system-ui;letter-spacing:.08em;box-shadow:0 4px 14px #0004}
-    .demo-lab-stage-switch{position:fixed;z-index:10000;right:max(14px,env(safe-area-inset-right));bottom:max(92px,calc(env(safe-area-inset-bottom) + 92px));min-width:132px;padding:11px 14px;border:2px solid #6e4a37;border-radius:16px;background:#f4dfad;color:#38281f;font:800 13px/1 system-ui;box-shadow:0 5px 0 #5d3a2a44,0 12px 24px #0002}
-    .demo-lab-stage-switch.active{background:#294c55;color:#fff5dc;border-color:#d8b657}
-    .demo-lab-stage-switch:disabled{opacity:.45}
-    @media(max-width:720px){.demo-lab-stage-switch{right:max(12px,env(safe-area-inset-right));bottom:max(86px,calc(env(safe-area-inset-bottom) + 86px));min-width:118px;padding:10px 12px;font-size:12px}}
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#171716">
+  <title>Paper Stage Transition Lab · Demo Lab</title>
+  <link rel="stylesheet" href="./transition-lab.css?v=DL-2026.10.03.2">
 </head>
-<body class="inspector-hidden"><div class="demo-lab-ribbon">DEMO LAB · <span id="demoLabVersion">DL-2026.10.03.1</span> · EXPERIMENT ONLY</div>
-  <div class="app-shell">
-    <header class="app-header">
-      <div class="brand">
-        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
-        <div><p class="eyebrow">PAPERCHALK DEMO LAB</p><h1>纸艺世界 <span>·</span> Demo Lab</h1></div>
+<body>
+  <main class="lab-shell">
+    <header class="lab-header">
+      <div class="lab-brand">
+        <span class="lab-mark" aria-hidden="true"><i></i><i></i></span>
+        <div>
+          <p class="eyebrow">PAPERCHALK · MECHANISM STUDY</p>
+          <h1>Paper Stage Transition Lab</h1>
+        </div>
       </div>
-      <div class="header-status"><span class="status-dot" aria-hidden="true"></span><span id="appStatus" role="status" aria-live="polite">准备载入</span></div>
+      <div class="header-meta">
+        <span class="version-chip">DEMO LAB · <span id="demoLabVersion">DL-2026.10.03.2</span></span>
+        <span id="buildId">BUILD …</span>
+      </div>
     </header>
 
-    <nav class="toolbar" aria-label="工作室操作">
-      <div class="tool-group primary-tools">
-        <button id="playPause" class="button button-primary" type="button" title="暂停或继续场景">暂停</button>
-        <button id="resetPlayer" class="button" type="button" title="将角色送回起点">回到起点</button>
-        <button id="resetCamera" class="button" type="button" title="恢复初始观察角度">重置视角</button>
-      </div>
-      <div class="tool-group file-tools">
-        <button id="saveProgress" class="button" type="button" title="保存当前进度到此浏览器">保存进度</button>
-        <button id="loadProgress" class="button" type="button" title="读取此浏览器保存的进度">读取进度</button>
-      </div>
-      <div class="tool-group view-tools">
-        <a class="demo-link" href="../visual-demo.html" target="_blank" rel="noopener noreferrer" title="在新标签页查看原始 Demo">原始 Demo <span aria-hidden="true">↗</span></a>
-        <button id="toggleInspector" class="button button-inspector" type="button" aria-controls="inspector" aria-expanded="false"><span class="sliders-icon" aria-hidden="true">☷</span>场景设置</button>
-      </div>
-    </nav>
+    <div class="lab-grid">
+      <section class="stage-column" aria-label="纸舞台转场实验">
+        <div class="viewport-wrap">
+          <div id="labViewport"></div>
+          <div class="viewport-caption">
+            <strong>WHITE CARD MECHANISM · 01</strong>
+            <span>城市街道 → 地下纸舞台 · 不使用淡入淡出</span>
+          </div>
+          <div class="act-card" aria-live="polite">
+            <small>CURRENT PAPER ACT</small>
+            <strong id="actLabel">城市纸景收拢</strong>
+          </div>
+        </div>
 
-    <main class="workspace" aria-label="纸艺世界工作区">
-      <section class="stage" aria-label="实时游戏场景">
-        <div class="stage-label"><span class="live-dot" aria-hidden="true"></span>纸艺世界<span class="stage-label-divider" aria-hidden="true"></span><span id="stageSceneLabel" class="baseline-label">城市街道</span></div>
-        <button id="toggleStageScene" class="demo-lab-stage-switch" type="button" aria-pressed="false" disabled>切换到地铁</button>
-        <div id="viewport" class="viewport" tabindex="0" aria-label="横版开放纸艺世界；A 或 D 或方向键左右漫游"></div>
-        <div id="loadingStatus" class="loading-status" role="status" aria-live="polite"><span class="loading-spinner" aria-hidden="true"></span><span>正在准备纸艺场景…</span></div>
-        <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
-        <div id="scenePrompt" class="scene-prompt" role="status" aria-live="polite" aria-atomic="true" hidden>
-          <span class="scene-prompt-kicker">场景回声</span>
-          <strong id="scenePromptTitle"></strong>
-          <span id="scenePromptText"></span>
-        </div>
-        <div id="prologueHud" class="prologue-hud" hidden><p>序幕 · 放学归途</p><div><span>21:00</span><i aria-hidden="true"></i><span id="locationLabel">校门</span></div></div>
-        <button id="inspectAction" class="inspect-action" type="button" hidden><kbd aria-hidden="true">E</kbd><span id="inspectActionLabel">查看校牌</span></button>
-        <div id="inspectionOverlay" class="inspection-overlay" hidden><section class="inspection-card" role="dialog" aria-modal="true" aria-labelledby="inspectionTitle" aria-describedby="inspectionText"><button id="closeInspection" type="button" aria-label="关闭查看">×</button><p class="inspection-eyebrow">放学归途</p><h2 id="inspectionTitle"></h2><p id="inspectionText"></p></section></div>
-        <button id="openGameMenu" class="game-only game-pause" type="button" aria-label="暂停并打开菜单" aria-haspopup="dialog" aria-controls="gameMenu" disabled><span aria-hidden="true">Ⅱ</span></button>
-        <div class="game-only rotate-hint" role="status"><span aria-hidden="true">↻</span> 横屏玩，视野更宽</div>
-        <div id="gameMenu" class="game-only game-menu" hidden>
-          <section class="game-menu-card" role="dialog" aria-modal="true" aria-labelledby="gameMenuTitle">
-            <div class="game-menu-heading"><p class="eyebrow">PAPERCHALK WORLD</p><h2 id="gameMenuTitle">稍作停留</h2><p>游戏已暂停</p></div>
-            <button id="resumeGame" class="game-menu-button game-menu-primary" type="button">继续冒险 <span aria-hidden="true">→</span></button>
-            <div class="game-menu-actions"><button id="gameReset" class="game-menu-button" type="button">回到起点</button><button id="gameResetCamera" class="game-menu-button" type="button">重置视角</button><button id="gameSave" class="game-menu-button" type="button">保存进度</button><button id="gameLoad" class="game-menu-button" type="button">读取进度</button></div>
-            <button id="gameSettings" class="game-menu-button game-menu-settings" type="button">画面设置 <span aria-hidden="true">›</span></button>
-            <div class="game-menu-footer"><span id="gameSaveStatus">进度会自动保存</span><span id="gameBuildVersion">纸艺世界</span></div>
-          </section>
-        </div>
-        <div class="stage-hint"><span><kbd>A</kbd><kbd>D</kbd> 自由漫游</span><span class="desktop-hint">工作室：拖动观察 · 滚轮缩放</span><span class="mobile-hint">按住方向键左右漫游</span></div>
-        <div class="touch-controls" aria-label="触屏角色控制">
-          <div class="touch-move"><button id="moveLeft" class="touch-button" type="button" aria-label="向左移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7"/></svg></button><button id="moveRight" class="touch-button" type="button" aria-label="向右移动"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 5 7 7-7 7"/></svg></button></div>
+        <div class="timeline-panel">
+          <div class="timeline-row">
+            <button id="playToggle" class="primary" type="button" aria-pressed="false">播放</button>
+            <button id="resetTimeline" type="button">复位</button>
+            <input id="timeline" type="range" min="0" max="1000" step="1" value="0" aria-label="纸舞台时间轴">
+            <span id="progressLabel" class="progress-readout">000%</span>
+          </div>
+          <div class="keyframes" aria-label="关键帧">
+            <button type="button" data-jump="0">0% · 原场景</button>
+            <button type="button" data-jump=".25">25% · 翻页</button>
+            <button type="button" data-jump=".5">50% · 墙体立起</button>
+            <button type="button" data-jump=".75">75% · 设施展开</button>
+            <button type="button" data-jump="1">100% · 完成</button>
+            <button id="stepBack" type="button" title="后退 1 帧">− 1 frame</button>
+            <button id="stepForward" type="button" title="前进 1 帧">+ 1 frame</button>
+          </div>
         </div>
       </section>
 
-      <aside id="inspector" class="inspector" aria-label="场景设置">
-        <div class="inspector-heading"><div><p class="eyebrow">SCENE SETTINGS</p><h2>调整此刻的世界</h2></div><div class="inspector-heading-tools"><span class="inspector-note">即时预览</span><button id="closeInspector" class="inspector-close" type="button" aria-label="关闭场景设置" title="关闭场景设置">×</button></div></div>
-        <div class="inspector-content">
-          <section class="settings-section surface-settings">
-            <div class="section-heading"><h3>地形表面</h3><span>材质对比</span></div>
-            <div class="surface-options" role="group" aria-label="地形材质"><button class="surface-option active" type="button" data-surface="pulp" aria-pressed="true">绘本色纸</button><button class="surface-option" type="button" data-surface="color" aria-pressed="false">固有色</button></div>
-          </section>
-          <section class="settings-section">
-            <div class="section-heading"><h3>一天的光线</h3><span>时间</span></div>
-            <div class="preset-grid" role="group" aria-label="昼夜预设">
-              <button type="button" class="preset-button active" data-preset="dawn" aria-pressed="true"><span class="preset-swatch dawn" aria-hidden="true"></span>清晨</button>
-              <button type="button" class="preset-button" data-preset="noon" aria-pressed="false"><span class="preset-swatch noon" aria-hidden="true"></span>正午</button>
-              <button type="button" class="preset-button" data-preset="sunset" aria-pressed="false"><span class="preset-swatch sunset" aria-hidden="true"></span>黄昏</button>
-              <button type="button" class="preset-button" data-preset="night" aria-pressed="false"><span class="preset-swatch night" aria-hidden="true"></span>夜晚</button>
-            </div>
-            <label class="switch-row"><span>自动昼夜</span><input id="autoCycle" class="switch" type="checkbox" aria-label="自动昼夜"></label>
-          </section>
+      <aside class="inspector" aria-label="机构检查">
+        <section>
+          <p class="eyebrow">MECHANISM FIRST</p>
+          <h2>先做纸机构，不做正式美术</h2>
+          <p>这页只验证折痕、铰链、厚度、V-fold、遮挡与灯光顺序。任何一块纸如果说不清“连在哪里、为什么会动”，就不进入正式城市。</p>
+        </section>
 
-          <section class="settings-section">
-            <div class="section-heading"><h3>纸与空气</h3><span>视觉效果</span></div>
-            <label class="switch-row"><span>柔和阴影</span><input class="switch" type="checkbox" data-feature="shadow" checked></label>
-            <label class="switch-row"><span>层间遮蔽（AO）</span><input class="switch" type="checkbox" data-feature="ao" checked></label>
-            <label class="switch-row"><span>流动纸雾</span><input class="switch" type="checkbox" data-feature="fog" checked></label>
-            <label class="switch-row"><span>地面反射光</span><input class="switch" type="checkbox" data-feature="bounce" checked></label>
-            <label class="switch-row"><span>丁达尔光柱</span><input class="switch" type="checkbox" data-feature="godrays" checked></label>
-            <div class="range-control"><label for="shaftStrength">光柱强度</label><output id="shaftStrengthValue" for="shaftStrength">1.00×</output><input id="shaftStrength" type="range" min="0" max="200" step="5" value="100"></div>
-          </section>
+        <section>
+          <p class="eyebrow">LIVE READOUT</p>
+          <div class="metric-grid">
+            <dt>主街道纸页</dt><dd id="pageValue">000%</dd>
+            <dt>地下墙体</dt><dd id="wallValue">000%</dd>
+            <dt>纸制设施</dt><dd id="fixtureValue">000%</dd>
+            <dt>灯光唤醒</dt><dd id="lightValue">000%</dd>
+          </div>
+        </section>
 
-          <section class="settings-section">
-            <div class="section-heading"><h3>绘本色纸</h3><span>Storybook Paper</span></div>
-            <div class="range-control"><label for="paperScale">纸张色斑尺度</label><output id="paperScaleValue" for="paperScale">1.80×</output><input id="paperScale" type="range" min="50" max="300" step="5" value="180"></div>
-            <button id="resetPaper" class="text-button" type="button">恢复纸张默认值 <span aria-hidden="true">↺</span></button>
-          </section>
+        <section>
+          <p class="eyebrow">INSPECTION</p>
+          <div class="control-row"><span>播放速度</span>
+            <select id="speedSelect" aria-label="播放速度">
+              <option value=".25">0.25×</option>
+              <option value=".5">0.5×</option>
+              <option value="1" selected>1×</option>
+            </select>
+          </div>
+          <label class="control-row"><span>显示折痕 / 铰链</span><span class="switch"><input id="showGuides" type="checkbox" checked> ON</span></label>
+          <label class="control-row"><span>真实阴影</span><span class="switch"><input id="showShadows" type="checkbox" checked> ON</span></label>
+          <p class="build-note">空格：播放/暂停 · ←/→：逐帧 · Shift + ←/→：5 帧 · 0–4：跳到关键帧</p>
+        </section>
 
-          <section class="settings-section">
-            <div class="section-heading"><h3>太阳方向</h3><span>手动调整</span></div>
-            <div class="range-control"><label for="sunAzimuth">左右方向</label><output id="sunAzimuthValue" for="sunAzimuth">−36°</output><input id="sunAzimuth" type="range" min="-75" max="75" step="1" value="-36"></div>
-            <div class="range-control"><label for="sunElevation">高度角</label><output id="sunElevationValue" for="sunElevation">13°</output><input id="sunElevation" type="range" min="5" max="60" step="1" value="13"></div>
-            <button id="followSun" class="text-button" type="button">恢复跟随昼夜 <span aria-hidden="true">↺</span></button>
-          </section>
-          <p class="settings-footnote">调整纸张的色斑与受光，查看它们在不同时间的变化。</p>
-        </div>
+        <section>
+          <p class="eyebrow">NON-NEGOTIABLE RULES</p>
+          <ul class="rule-list">
+            <li><strong>一个主动作：</strong>街道纸页沿前缘主折痕翻下。</li>
+            <li><strong>地下舞台不升降：</strong>它一直在下面，只被纸页遮住。</li>
+            <li><strong>墙体有底部折痕：</strong>中心先起，两侧随后。</li>
+            <li><strong>V-fold 是从属机构：</strong>墙体抬起以后才被拉开。</li>
+            <li><strong>设施有材料差异：</strong>长椅、机器、导视牌回弹量不同。</li>
+            <li><strong>灯逐盏亮：</strong>最后才给舞台“生命”。</li>
+          </ul>
+        </section>
       </aside>
-    </main>
+    </div>
+  </main>
 
-    <footer class="status-strip" aria-label="当前场景状态">
-      <div class="status-item"><span class="status-label">角色</span><span id="playerState">准备中</span></div>
-      <div class="status-item position-status"><span class="status-label">位置</span><span id="playerPosition">—</span></div>
-      <div class="status-item save-status"><span class="save-dot" aria-hidden="true"></span><span id="saveStatus" role="status" aria-live="polite">尚未保存</span></div>
-      <div class="status-item build-status"><span id="buildVersion" title="正在读取版本">读取版本…</span></div>
-      <div class="status-item fps-status"><span id="fps">—</span><span class="status-label">FPS</span></div>
-      <details class="render-details"><summary>性能详情</summary><div class="render-popover"><p class="eyebrow">RENDER STATUS</p><div id="renderStats">等待场景载入</div></div></details>
-    </footer>
-  </div>
-  <script type="module" src="./app.js?v=DL-2026.10.03.1"></script>
+  <script type="module" src="./transition-lab.js?v=DL-2026.10.03.2"></script>
 </body>
 </html>
