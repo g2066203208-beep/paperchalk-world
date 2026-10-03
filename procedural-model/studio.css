@@ -35,6 +35,16 @@ body{min-height:100vh}
 .button-primary:hover{background:#e5f7a8;border-color:#e5f7a8}
 .file-button{position:relative;overflow:hidden}
 .file-button input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.button[hidden]{display:none}
+.fbx-info{
+  min-height:74px;margin-bottom:14px;padding:10px 11px;border:1px solid var(--line);border-radius:9px;
+  background:#11151b;color:#aeb7c3;font-size:11px;line-height:1.55;white-space:pre-line
+}
+.fbx-info strong{color:var(--text)}
+.compact-control{margin-bottom:0}
+#fbxBadge.ready{color:var(--accent);border-color:#607143;background:rgba(217,242,139,.06)}
+#fbxBadge.error{color:var(--danger);border-color:#6f4c45;background:rgba(255,182,164,.06)}
+select:disabled,button:disabled,input:disabled{opacity:.48;cursor:not-allowed}
 .workspace{min-height:0;display:grid;grid-template-columns:280px minmax(0,1fr) 300px;gap:12px;padding:12px}
 .panel,.stage-card{min-height:0;border:1px solid var(--line);background:var(--panel);border-radius:12px;overflow:hidden}
 .panel{padding:16px;overflow:auto}
@@ -94,7 +104,7 @@ input[type="range"]{accent-color:var(--accent)}
 #statusText{color:var(--accent)}
 @media(max-width:1100px){
   .workspace{grid-template-columns:240px minmax(0,1fr)}
-  .right-panel{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .right-panel{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
   .right-panel section+section{margin-top:0;padding-top:0;border-top:0;border-left:1px solid var(--line);padding-left:18px}
 }
 @media(max-width:760px){
