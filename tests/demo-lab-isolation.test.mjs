@@ -25,7 +25,7 @@ test('Demo Lab root is the dedicated Paper Stage mechanism study',async()=>{
   assert.match(html,/data-jump="\.25"/);
   assert.doesNotMatch(html,/toggleStageScene/);
   assert.equal(meta.focus,'paper-stage-transition-lab');
-  assert.equal(meta.displayVersion,'DL-2026.10.03.3');
+  assert.equal(meta.displayVersion,'DL-2026.10.03.4');
   assert.equal(meta.directMergeToMain,false);
 });
 
@@ -62,6 +62,8 @@ test('new scene encodes physical paper relationships explicitly',async()=>{
   assert.match(scene,/MASTER HINGE · STREET PAGE/);
   assert.match(scene,/Fixed underground pop-up deck/);
   assert.match(scene,/SECONDARY SCORE · STREET PAGE/);assert.match(scene,/triangular V-fold card/);
+  assert.match(scene,/PLAYER SAFE THRESHOLD/);assert.match(scene,/STREAMED WORLD PROXY STRIP/);
+  assert.match(scene,/ACTIVE HIGH-DETAIL PAPER WINDOW/);assert.match(scene,/residentChunks/);
   assert.match(scene,/pageHinge\.rotation\.x/);assert.match(scene,/secondaryHinge\.rotation\.x/);
   assert.match(scene,/pivot\.rotation\.x=-Math\.PI\*\.5\*\(1-local\)/);
   assert.match(scene,/lampWave/);
@@ -76,6 +78,19 @@ test('lab UI exposes slow motion, keyframes and frame stepping',async()=>{
   for(const value of ['.25','.5','1'])assert.match(html,new RegExp('value="'+value.replace('.','\\.')+'"'));
   for(const value of ['0','.25','.5','.75','1'])assert.match(html,new RegExp('data-jump="'+value.replace('.','\\.')+'"'));
   assert.match(html,/stepBack/);assert.match(html,/stepForward/);
+  assert.match(html,/id="viewMode"/);assert.match(html,/id="largeWorld"/);assert.match(html,/id="playerX"/);
   assert.match(app,/oneFrame=1\/\(60\*LAB_DURATION\)/);
   assert.match(app,/window\.PaperStageLab/);
 });
+
+
+test('gameplay proof uses the actual protagonist asset and a non-folding threshold',async()=>{
+  const player=await readFile(new URL('../demo-lab/transition/PaperStagePlayer.js',import.meta.url),'utf8');
+  const scene=await readFile(new URL('../demo-lab/transition/PaperStageScene.js',import.meta.url),'utf8');
+  assert.match(player,/assets\/player\/protagonist\.webp/);
+  assert.match(player,/Actual game protagonist paper cutout/);
+  assert.match(scene,/Non-folding entrance tongue/);
+  assert.match(scene,/Revealed fixed paper stairs/);
+  assert.match(scene,/CHUNK_SIZE=13\.6/);
+  assert.match(scene,/distance<=2/);
+}
