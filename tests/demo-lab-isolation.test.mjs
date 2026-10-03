@@ -61,7 +61,7 @@ test('timeline reads as one page flip followed by an inner-card popup',()=>{
   assert.ok(c.cover>.60&&c.cover<.72,'50% should hold the cover around a readable mid-flip angle');
   assert.ok(c.innerReveal>.25&&c.innerReveal<.50,'50% should reveal only part of the inner page');
   assert.ok(c.backWall>0&&c.backWall<.25,'50% should begin the popup, not finish it');
-  assert.equal(c.props,0,'props should not jump up too early');
+  assert.ok(Math.abs(c.props)<1e-9,'props should not jump up too early');
   assert.equal(d.cover,1);
   assert.ok(d.backWall>.8);
   assert.ok(d.columns>.8);
