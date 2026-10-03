@@ -296,7 +296,7 @@ export function createGreetingCardScene({container}={}){
   let lastSample=sampleGreetingCard(0);
 
   const player=createGreetingCardPlayer({THREE,renderer,scene});
-  player.setWorldPosition(0,.03,.82);
+  player.setWorldPosition(0,.03,2.35);
   player.readyPromise.then(()=>apply(progress)).catch(()=>{});
 
   function chunkForX(x){
@@ -346,12 +346,19 @@ export function createGreetingCardScene({container}={}){
     activeChunk=chunkForX(playerX);
     const origin=activeChunk*CHUNK_WIDTH;
     activeRoot.position.x=origin;
-    player.setWorldPosition(playerX,.03,.82);
+    player.setWorldPosition(playerX,.03,2.35);
 
-    // ONE unmistakable greeting-card page turn.
-    coverHinge.rotation.x=-Math.PI*.58*s.cover;
-    coverHinge.position.y=.055-s.cover*.08;
-    coverHinge.visible=s.cover<.9995;
+    // ONE unmistakable greeting-card page turn. The cover opens TOWARD the
+    // viewer and remains as the horizontal front leaf of the open card.
+    // The player is deliberately placed in front of its entire sweep.
+    coverHinge.rotation.x=Math.PI*.505*s.cover;
+    coverHinge.position.y=.055;
+    coverHinge.visible=true;
+
+    // The raised city relief visually compresses into the paper as the cover
+    // finishes opening, so the final foreground reads as a clean card leaf.
+    const cityFlatten=clamp01((s.cover-.46)/.50);
+    cityRelief.scale.z=1-cityFlatten*.94;
 
     // Destination never leaks before the card has opened.
     innerPage.visible=s.innerReveal>.002;
