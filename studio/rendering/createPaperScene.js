@@ -23,7 +23,7 @@ import {createVolumetrics} from './volumetrics.js';
 import {createActor} from './actor.js';
 import {createOrbitCamera} from './orbit-camera.js';
 import {disposeSceneResources} from './resources.js';
-import {createPaperSceneTransition} from './paper-scene-transition.js';
+import {createWorldHandoff} from './world-handoff.js';
 
 const FEATURES=['sky','layers','shadow','fog','tone','random','bounce','godrays','ao'];
 const PRESETS={dawn:.27,noon:.5,sunset:.73,night:.875};
@@ -32,7 +32,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   if(!container||typeof container.appendChild!=='function')throw new TypeError('Paper scene requires a container element.');
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
-  let cityRide=null,lastUnderground=false,cityInterior=null;
+  let cityRide=null,pendingCityRide=undefined,lastUnderground=false,cityInterior=null;
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const isCity=sceneId!=='forest';
   const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
@@ -84,16 +84,6 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   renderer.toneMappingExposure=.90;
   renderer.info.autoReset=false;
   container.appendChild(renderer.domElement);
-  // Transit handoffs are rendered as inert paper sheets above the canvas.  The
-  // transition is driven from frame() so pausing the game pauses the fold too.
-  // The renderer scheduling harness evaluates this module in isolation and
-  // intentionally strips imports. Keep a tiny no-op fallback for that context;
-  // production always receives the paper transition implementation above.
-  const sceneTransition=typeof createPaperSceneTransition==='function'
-    ? createPaperSceneTransition({container})
-    : {start:()=>Promise.resolve(false),update:()=>false,cancel:()=>false,isActive:()=>false,
-      getState:()=>({active:false,elapsed:0,duration:0,progress:0,kind:null}),dispose:()=>{}};
-
   const scene=new THREE.Scene();
   scene.background=new THREE.Color(0x9ca1ad);
   scene.fog=new THREE.Fog(0xaec8d3,15,36);
@@ -115,6 +105,15 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   const transit=isCity?createCityTransit({THREE,scene,flags}):null;
   const traffic=isCity?createCityTraffic({THREE,scene}):null;
   traffic?.group.traverse(object=>{if(object.isMesh)object.userData.volumeShadow=false;});
+  // Keep the authored world visible throughout a handoff.  These are the
+  // actual Three.js groups that make the city; the handoff controller moves
+  // them in place, so no screen-space paper or DOM overlay can cover the game.
+  const handoffGroups=isCity?[backdrop?.group,scenery.group,terrain.terrainBlocks,
+    districts.group,population.group,transit.group,traffic.group,interiors.group].filter(Boolean):[];
+  const worldHandoff=typeof createWorldHandoff==='function'
+    ? createWorldHandoff({groups:handoffGroups})
+    : {start:()=>Promise.resolve(false),update:()=>false,cancel:()=>false,isActive:()=>false,
+      getState:()=>({active:false,elapsed:0,duration:0,progress:0,kind:null}),dispose:()=>{}};
 const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:state.sceneId});
   const lights=createLights({THREE,scene,target});
   lights.locals=scenery.localLights??[];
@@ -171,7 +170,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   if(disposed||contextLost)return false;
   dt=Math.min(.05,Math.max(0,Number(dt)||0));
   now=Number.isFinite(now)?now:performance.now();
-  const transitionAnimating=sceneTransition.update(dt);
+  const transitionAnimating=worldHandoff.update(dt);
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
   orbitCamera.follow(lastSnapshot.x,cityRide?1:dt,lastSnapshot.y-.5);
   if(isCity){
@@ -380,7 +379,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
       districts:districts?.stats(),interiors:interiors?.stats(),population:population?.stats(),transit:transit?.stats(),
-      player:actor.snapshot(),camera:orbitCamera.snapshot(),transition:sceneTransition.getState(),
+      player:actor.snapshot(),camera:orbitCamera.snapshot(),transition:worldHandoff.getState(),handoff:worldHandoff.getState(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
   function dispose(){
@@ -388,7 +387,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     disposed=true;resizeObserver?.disconnect();events.abort();orbitCamera.dispose();
     for(const reject of pendingRejects)reject(new Error('Paper scene disposed during loading.'));
     pendingRejects.clear();
-    sceneTransition.dispose();fog.dispose();atmosphere.dispose();
+    worldHandoff.dispose();fog.dispose();atmosphere.dispose();
     disposeSceneResources(scene,[...materials.textures,...terrain.textures,...loadedTextures]);
     renderer.renderLists.dispose();renderer.dispose();renderer.domElement.remove();
     status('disposed','纸艺场景已关闭');
@@ -420,15 +419,24 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     },
     cityInterior:()=>interiors?.active()??null,
     setCityRide:ride=>{
-      const previousKind=cityRide?.kind??null,nextKind=ride?.kind??null;
-      cityRide=ride?{...ride}:null;flags.render=flags.depth=flags.ao=true;
-      // A new transit ride swaps the visible paper set immediately underneath
-      // the handoff; the crease animation keeps that implementation detail out
-      // of the player's view.  Leaving a ride reverses the same fold.
-      if(isCity&&previousKind!==nextKind){
-        sceneTransition.start({kind:nextKind==='metro'?'metro':nextKind==='bus'?'bus':'surface'});
-      }
+      const next=ride?{...ride}:null;
+      const currentKey=cityRide?`${cityRide.kind}:${cityRide.fromX}:${cityRide.toX}`:'surface';
+      const nextKey=next?`${next.kind}:${next.fromX}:${next.toX}`:'surface';
+      // During a ride the simulation updates progress every frame.  That is
+      // the same handoff state, so only a route change starts a new fold.
+      if(currentKey===nextKey){cityRide=next;return;}
+      pendingCityRide=next;
+      flags.render=flags.depth=flags.ao=true;
+      if(!isCity){cityRide=next;pendingCityRide=undefined;return;}
+      worldHandoff.start({
+        kind:next?.kind==='metro'?'metro':next?.kind==='bus'?'bus':'surface',
+        onMidpoint:()=>{
+          cityRide=pendingCityRide===undefined?next:pendingCityRide;
+          pendingCityRide=undefined;
+          flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
+        }
+      });
     },
-    playSceneTransition:options=>sceneTransition.start(options),
+    playSceneTransition:options=>worldHandoff.start(options),
     getWorld:()=>terrain.world,dispose};
 }
