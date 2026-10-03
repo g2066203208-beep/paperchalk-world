@@ -60,7 +60,7 @@ jobs:
           exit 1
       - name: Capture transition keyframes
         env:
-          CHROME_PATH: \${{ steps.chrome.outputs.path }}
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: node tests/demo-lab-browser.mjs
       - name: Upload transition proof
         if: always()
@@ -77,9 +77,9 @@ jobs:
     steps:
       - name: Ask the main-only Pages publisher to refresh Demo Lab
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh api --method POST \
-            "repos/\${GITHUB_REPOSITORY}/actions/workflows/demo-lab-pages.yml/dispatches" \
+            "repos/${GITHUB_REPOSITORY}/actions/workflows/demo-lab-pages.yml/dispatches" \
             -f ref=main
           echo "Requested isolated Demo Lab website publication from main."
