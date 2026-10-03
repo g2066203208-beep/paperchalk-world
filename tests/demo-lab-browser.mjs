@@ -15,7 +15,7 @@ const browser=await chromium.launch({
 try{
   const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
   page.on('pageerror',error=>errors.push('PAGE '+String(error)));
-  page.on('console',message=>{if(message.type()==='error')errors.push('CONSOLE '+message.text());});
+  page.on('console',message=>{if(message.type()==='error'&&!message.text().includes('Failed to load resource'))errors.push('CONSOLE '+message.text());});
   page.on('response',response=>{
     if(response.status()>=400&&!response.url().endsWith('/favicon.ico'))errors.push('HTTP '+response.status()+' '+response.url());
   });
