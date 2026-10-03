@@ -24,23 +24,62 @@ jobs:
       - uses: actions/setup-node@v7.0.0
         with:
           node-version: "22"
-      - name: Verify isolated experiment baseline
+      - name: Verify clean Paper Stage laboratory
         run: node --test tests/demo-lab-isolation.test.mjs
       - name: Confirm production channel is outside this workflow
         run: |
           test "$GITHUB_REF" = "refs/heads/demo-lab"
           echo "Demo Lab validated. Production mobile channel is untouched."
 
-  request-pages-publish:
+  visual-proof:
     needs: isolated-lab
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+      - name: Install browser driver
+        run: npm install --no-save playwright-core
+      - name: Detect Chrome
+        id: chrome
+        shell: bash
+        run: |
+          CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
+          test -n "$CHROME_PATH"
+          echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
+      - name: Start Demo Lab server
+        run: |
+          python3 -m http.server 8080 > /tmp/paper-stage-lab-http.log 2>&1 &
+          for i in {1..50}; do
+            curl -fsS http://127.0.0.1:8080/demo-lab/ >/dev/null && exit 0
+            sleep 0.2
+          done
+          cat /tmp/paper-stage-lab-http.log
+          exit 1
+      - name: Capture transition keyframes
+        env:
+          CHROME_PATH: \${{ steps.chrome.outputs.path }}
+        run: node tests/demo-lab-browser.mjs
+      - name: Upload transition proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-lab-transition-frames
+          path: artifacts/demo-lab-transition/
+          if-no-files-found: error
+
+  request-pages-publish:
+    needs: [isolated-lab, visual-proof]
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
       - name: Ask the main-only Pages publisher to refresh Demo Lab
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: \${{ github.token }}
         run: |
           gh api --method POST \
-            "repos/${GITHUB_REPOSITORY}/actions/workflows/demo-lab-pages.yml/dispatches" \
+            "repos/\${GITHUB_REPOSITORY}/actions/workflows/demo-lab-pages.yml/dispatches" \
             -f ref=main
           echo "Requested isolated Demo Lab website publication from main."
