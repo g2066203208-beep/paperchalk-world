@@ -1,0 +1,407 @@
+images/arm_fore_L.png
+size: 143,143
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+arm_fore_L
+  bounds: 0,0,143,143
+  offsets: 0,0,143,143
+  rotate: false
+  index: -1
+
+images/arm_fore_R.png
+size: 129,131
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+arm_fore_R
+  bounds: 0,0,129,131
+  offsets: 0,0,129,131
+  rotate: false
+  index: -1
+
+images/arm_upper_L.png
+size: 123,161
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+arm_upper_L
+  bounds: 0,0,123,161
+  offsets: 0,0,123,161
+  rotate: false
+  index: -1
+
+images/arm_upper_R.png
+size: 118,163
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+arm_upper_R
+  bounds: 0,0,118,163
+  offsets: 0,0,118,163
+  rotate: false
+  index: -1
+
+images/boot_shaft_L.png
+size: 332,175
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+boot_shaft_L
+  bounds: 0,0,332,175
+  offsets: 0,0,332,175
+  rotate: false
+  index: -1
+
+images/boot_shaft_R.png
+size: 332,175
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+boot_shaft_R
+  bounds: 0,0,332,175
+  offsets: 0,0,332,175
+  rotate: false
+  index: -1
+
+images/calf_L.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+calf_L
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/calf_R.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+calf_R
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/ears.png
+size: 207,83
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+ears
+  bounds: 0,0,207,83
+  offsets: 0,0,207,83
+  rotate: false
+  index: -1
+
+images/eyebrow.png
+size: 134,16
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+eyebrow
+  bounds: 0,0,134,16
+  offsets: 0,0,134,16
+  rotate: false
+  index: -1
+
+images/eyelash.png
+size: 163,57
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+eyelash
+  bounds: 0,0,163,57
+  offsets: 0,0,163,57
+  rotate: false
+  index: -1
+
+images/eyewhite.png
+size: 134,48
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+eyewhite
+  bounds: 0,0,134,48
+  offsets: 0,0,134,48
+  rotate: false
+  index: -1
+
+images/face.png
+size: 205,256
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+face
+  bounds: 0,0,205,256
+  offsets: 0,0,205,256
+  rotate: false
+  index: -1
+
+images/foot_L.png
+size: 332,175
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+foot_L
+  bounds: 0,0,332,175
+  offsets: 0,0,332,175
+  rotate: false
+  index: -1
+
+images/foot_R.png
+size: 332,175
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+foot_R
+  bounds: 0,0,332,175
+  offsets: 0,0,332,175
+  rotate: false
+  index: -1
+
+images/hand_L.png
+size: 100,93
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+hand_L
+  bounds: 0,0,100,93
+  offsets: 0,0,100,93
+  rotate: false
+  index: -1
+
+images/hand_R.png
+size: 96,87
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+hand_R
+  bounds: 0,0,96,87
+  offsets: 0,0,96,87
+  rotate: false
+  index: -1
+
+images/irides.png
+size: 98,46
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+irides
+  bounds: 0,0,98,46
+  offsets: 0,0,98,46
+  rotate: false
+  index: -1
+
+images/mouth.png
+size: 33,25
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+mouth
+  bounds: 0,0,33,25
+  offsets: 0,0,33,25
+  rotate: false
+  index: -1
+
+images/neck.png
+size: 53,75
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+neck
+  bounds: 0,0,53,75
+  offsets: 0,0,53,75
+  rotate: false
+  index: -1
+
+images/nose.png
+size: 10,9
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+nose
+  bounds: 0,0,10,9
+  offsets: 0,0,10,9
+  rotate: false
+  index: -1
+
+images/thigh_L.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+thigh_L
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/thigh_R.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+thigh_R
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/thigh_outline_L.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+thigh_outline_L
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/thigh_outline_R.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+thigh_outline_R
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/front-hair.png
+size: 328,367
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+front-hair
+  bounds: 0,0,328,367
+  offsets: 0,0,328,367
+  rotate: false
+  index: -1
+
+images/back-hair.png
+size: 326,392
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+back-hair
+  bounds: 0,0,326,392
+  offsets: 0,0,326,392
+  rotate: false
+  index: -1
+
+images/cape_front-completed.png
+size: 302,185
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+cape_front-completed
+  bounds: 0,0,302,185
+  offsets: 0,0,302,185
+  rotate: false
+  index: -1
+
+images/cape_back-completed.png
+size: 302,185
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+cape_back-completed
+  bounds: 0,0,302,185
+  offsets: 0,0,302,185
+  rotate: false
+  index: -1
+
+images/footwear.png
+size: 332,175
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+footwear
+  bounds: 0,0,332,175
+  offsets: 0,0,332,175
+  rotate: false
+  index: -1
+
+images/handwear.png
+size: 427,280
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+handwear
+  bounds: 0,0,427,280
+  offsets: 0,0,427,280
+  rotate: false
+  index: -1
+
+images/legwear.png
+size: 229,247
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+legwear
+  bounds: 0,0,229,247
+  offsets: 0,0,229,247
+  rotate: false
+  index: -1
+
+images/torso_core-completed.png
+size: 302,185
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+torso_core-completed
+  bounds: 0,0,302,185
+  offsets: 0,0,302,185
+  rotate: false
+  index: -1
+
+images/bottomwear.png
+size: 273,177
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+pma: false
+bottomwear
+  bounds: 0,0,273,177
+  offsets: 0,0,273,177
+  rotate: false
+  index: -1
