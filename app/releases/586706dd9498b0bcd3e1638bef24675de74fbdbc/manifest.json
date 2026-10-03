@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "version": "586706dd9498b0bcd3e1638bef24675de74fbdbc",
+  "publishedAt": "2026-10-03T00:48:46.000Z",
+  "channel": "mobile-test",
+  "files": {
+    "assets/player/protagonist.webp": {
+      "sha256": "237201bb1fbbf9c6075d7e2e6e1e218ad0f127d10caca6b43e98382e205e7a62",
+      "bytes": 11808
+    },
+    "studio/README.md": {
+      "sha256": "cbe520a4c21a57f8d2eafb188f69853082fd4c4fed9af0b4e5a2bfdedf31c5be",
+      "bytes": 8613
+    },
+    "studio/app.js": {
+      "sha256": "7493f393bbfcac440d7ec4b491ca91d91c3ece79b26fc0eff95ae44e4d7f159f",
+      "bytes": 23023
+    },
+    "studio/assets/olive-fiber/base-color.webp": {
+      "sha256": "8d6a9e132292c6439d2c7df2b3c97673159248d366a1b00c6b75c60b23deee79",
+      "bytes": 523704
+    },
+    "studio/assets/olive-fiber/dirt-color.webp": {
+      "sha256": "fcfed3ec3818e05bab65e9554df328ce4c7db31f4cd39344642a6e5a65f0c23b",
+      "bytes": 389882
+    },
+    "studio/assets/olive-fiber/dirt-normal-gl.webp": {
+      "sha256": "66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c",
+      "bytes": 1821212
+    },
+    "studio/assets/olive-fiber/dirt-orm.webp": {
+      "sha256": "1098b95e8a3c00b8121a6d2330752896ada5679389adc1abdf768bf3cbeba009",
+      "bytes": 582096
+    },
+    "studio/assets/olive-fiber/normal-gl.webp": {
+      "sha256": "8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958",
+      "bytes": 2460726
+    },
+    "studio/assets/olive-fiber/orm.webp": {
+      "sha256": "1445a649af0cb1b29c1bfa81e6fd3a6e9b0ca725b2bc8f014b27b2231ae3aa56",
+      "bytes": 735704
+    },
+    "studio/assets/olive-fiber/source.json": {
+      "sha256": "c485b601d6e45f94005d04b3048f53dedeb990697242b296b7eb0cd2be5cfdda",
+      "bytes": 4029
+    },
+    "studio/build-info.json": {
+      "sha256": "01980fe964c937302dd6e58d758852a3185006361ac4a0e46a9bd5740a89fb9d",
+      "bytes": 133
+    },
+    "studio/city-explorer.css": {
+      "sha256": "51ebfcd799e6851720f49e6c32284276428ad22e3048f6fd35c6155f5c95f1b6",
+      "bytes": 13958
+    },
+    "studio/core/Lifecycle.mjs": {
+      "sha256": "4a528dd530870ef60c059d0d35a2fce9a0d8755997ca768cab731603a1836dfc",
+      "bytes": 2391
+    },
+    "studio/core/SaveStore.mjs": {
+      "sha256": "0fe117b6fe61a2921e4df04aac7c0e5b5d228e60e3fd3f5e17fb618caccdc35f",
+      "bytes": 4342
+    },
+    "studio/core/StagePlayerSimulation.mjs": {
+      "sha256": "b8a18068ffff873b4d0fa2584ec6457a6fe5c44f5f6988158db78a8d33809c50",
+      "bytes": 2853
+    },
+    "studio/index.html": {
+      "sha256": "0ae7967ba79fae93e6c31be4ddf0cf85c10d54acc715049a527110fc8ea941d7",
+      "bytes": 11534
+    },
+    "studio/input/InputActions.mjs": {
+      "sha256": "4a94c7815b811965bbc7c489b07c12c689887e7ecdb474dfa11e885d01062e0b",
+      "bytes": 4647
+    },
+    "studio/package.json": {
+      "sha256": "e6afd4e565613c7ba64847c49f1628653c373244d0d8ddf17b32631bc0ff9921",
+      "bytes": 81
+    },
+    "studio/rendering/actor.js": {
+      "sha256": "42146537d75e171bdc665c1c816a16b4a4d22737527d1f42dd3e07e30ffc5cc1",
+      "bytes": 8680
+    },
+    "studio/rendering/city-art.js": {
+      "sha256": "8ba98c69c9d80ad82ca947c7bb4f20c0f0ac99c179f3c80bf2749e3b89e7f577",
+      "bytes": 18539
+    },
+    "studio/rendering/city-backdrop.js": {
+      "sha256": "5191342137ca381016257697c5fafb496cd0db4f6b2d832bcec2f2fbe43249f7",
+      "bytes": 12431
+    },
+    "studio/rendering/city-districts.js": {
+      "sha256": "5d4774b7337ebb888cdd5953f62cbef04c53cf9c8cd85e09d61a22b46266b432",
+      "bytes": 27541
+    },
+    "studio/rendering/city-light-profile.js": {
+      "sha256": "123e7e05f7971b09848bef9836b2e2a95655a57f509d886f11dc914077db24bc",
+      "bytes": 976
+    },
+    "studio/rendering/city-population.js": {
+      "sha256": "b8c99a42c8b0a2e99998302c82b8136f0a3dca461d94c80e635db29e5a79b230",
+      "bytes": 21134
+    },
+    "studio/rendering/city-scenery.js": {
+      "sha256": "5171924168df1e6a269ce0e8ba95e2c3666d5ef6e9fb33ed3072ee0a862bd3bf",
+      "bytes": 20353
+    },
+    "studio/rendering/city-terrain.js": {
+      "sha256": "8e41c8a922462a9846e90d925622666815bb0e678735e98f50f1fc0c5be73e61",
+      "bytes": 5501
+    },
+    "studio/rendering/city-traffic.js": {
+      "sha256": "8f6258094a8a7fb681e5f67f3c19ada32de23d524f64e5de6d2f9d66af10e02b",
+      "bytes": 5347
+    },
+    "studio/rendering/city-transit.js": {
+      "sha256": "f4be23f5a7950b78e7410abcaa47b6ffeb64514f025bd0b73837625f5df9959b",
+      "bytes": 18432
+    },
+    "studio/rendering/contact-ao.js": {
+      "sha256": "a85556fd4cdebd995c2d1866e8e8b4b3005582e0befd48d54b13655c9e45cd3f",
+      "bytes": 6579
+    },
+    "studio/rendering/createPaperScene.js": {
+      "sha256": "2cd7753e4ce97e744122617a6c979f2cfe40a1a45d26c73e9fbbef134a50d39a",
+      "bytes": 19112
+    },
+    "studio/rendering/fog.js": {
+      "sha256": "1cc66fd1057de5ca7b539cb2213c97d29968700aedbd652b1aa86805b079eeb4",
+      "bytes": 7815
+    },
+    "studio/rendering/forest-art.js": {
+      "sha256": "d8cd6c836c86390bb8fedc32cc4b0db26969f72fce997c0dcf6f2d27f4cca056",
+      "bytes": 9847
+    },
+    "studio/rendering/forest.js": {
+      "sha256": "4a31cf2feb1e66cda6f7bdef1ec9c327071321247dc007b14e58d865149059cf",
+      "bytes": 7545
+    },
+    "studio/rendering/index.js": {
+      "sha256": "9cf0b1e8a682b4caf456a648bcfce526748118ba02ca693eec8b9f6af36ad88e",
+      "bytes": 56
+    },
+    "studio/rendering/lighting.js": {
+      "sha256": "62371ca9d4453044252830408c44ad08d566f4972ef137b909c32a639495c8d2",
+      "bytes": 12048
+    },
+    "studio/rendering/math.js": {
+      "sha256": "36aa9061e5a77a52668f2fba44b2a3509e20656c93c7e07059b9d2bbd39c7204",
+      "bytes": 563
+    },
+    "studio/rendering/olive-fiber-maps.js": {
+      "sha256": "3b7fb69771df425b3c94cf22bf00525bdcbf8e102103a0c574333580ffcffa91",
+      "bytes": 2187
+    },
+    "studio/rendering/orbit-camera.js": {
+      "sha256": "5c58e7047809990953707b04aacaac2045dee0870fbc4aa20c5f572572433d69",
+      "bytes": 4832
+    },
+    "studio/rendering/paper-materials.js": {
+      "sha256": "d812979a9d9d5dd698fe824617f2e3eb1be8be7a85f059a84d5fc13676828513",
+      "bytes": 10799
+    },
+    "studio/rendering/resources.js": {
+      "sha256": "def1591214349d1dcaba553cccccbf1a973ae2b554d2517d27c2e9a11ab16bd0",
+      "bytes": 931
+    },
+    "studio/rendering/sky.js": {
+      "sha256": "b76d7b6cc34b44a097f7f415a0b8b4bf4c7ff881ef8fbc6420410fd4e1d93416",
+      "bytes": 10200
+    },
+    "studio/rendering/stage-geometry.js": {
+      "sha256": "c7bcdeca084eee5d40caab43bc82693e577f968972440198adc38ae2e4e03273",
+      "bytes": 3027
+    },
+    "studio/rendering/stage-scenery.js": {
+      "sha256": "a2ae0c416d039a81f83766c7eba95c06b1932d93687138670346b65529d66c19",
+      "bytes": 10367
+    },
+    "studio/rendering/storybook-paper-maps.js": {
+      "sha256": "d03f3e8b5482a04297adb55efeb050485dd3f6a4924e2af8bf8995b13ad9ecf0",
+      "bytes": 3548
+    },
+    "studio/rendering/terrain.js": {
+      "sha256": "81eff59abd5dde66d5c6f83a5e1a60c586a094b40e490928967ff1ceb9198687",
+      "bytes": 12247
+    },
+    "studio/rendering/volumetrics.js": {
+      "sha256": "bf009852a91ec71fea6f56e4981027749604e6c1a9d0c0858866ac18326f6159",
+      "bytes": 28953
+    },
+    "studio/studio.css": {
+      "sha256": "548f74d1898fa86e20f7464681d9ebf37a697f16059aea2a45ff9b8df7b9053f",
+      "bytes": 32217
+    },
+    "studio/ui/CityExplorer.mjs": {
+      "sha256": "0c0d63ddf2d2b976850ada80c3f161bf186124c7dad659ab6e7c2446a21ee0b7",
+      "bytes": 10970
+    },
+    "studio/ui/CityPrologue.mjs": {
+      "sha256": "438d72fa9cf7f83339b27a14aed035065bad082922635a3763526e0298f498b3",
+      "bytes": 1480
+    },
+    "studio/ui/GamePresentation.mjs": {
+      "sha256": "093f29b36e35650ffb546d7b69557b26e3808eddfcc3110ea76feebbb55f7d3c",
+      "bytes": 845
+    },
+    "studio/world/CityLayout.mjs": {
+      "sha256": "17151ae7231608b34fd3c4b0df42f7d0c08ecc55deabc4480c5637ca8367325f",
+      "bytes": 2360
+    },
+    "studio/world/CityPrologueWorld.mjs": {
+      "sha256": "8c750a7400d60c0ab97be1bcfa0fd5621691d5a618f8888c087ed8160d4633ab",
+      "bytes": 1239
+    },
+    "studio/world/PaperStageWorld.mjs": {
+      "sha256": "1c1144c1af3e718a37a231dfa04db6763f7999e33ec90f60e38742ae793b1880",
+      "bytes": 2355
+    },
+    "vendor/three/LICENSE": {
+      "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601",
+      "bytes": 1081
+    },
+    "vendor/three/README.txt": {
+      "sha256": "dba0f840c4b804b7a4e7f5f833f485b3ee2e6ac06ef9822e0f0cd07e597a9e50",
+      "bytes": 123
+    },
+    "vendor/three/three.core.js": {
+      "sha256": "eb077d2417f61d3e6d9264c317cabc4ea35769ed6b0ab533067292a550784c20",
+      "bytes": 1403455
+    },
+    "vendor/three/three.module.js": {
+      "sha256": "c8211c69345d2e9949dc7a8ac969380497aa0600a5a8ac6a459c8cd02dd9cb8a",
+      "bytes": 603113
+    },
+    "visual-demo.html": {
+      "sha256": "632bcf0b8224f069b3a6d15a2a8e28a48ad1522ed56bbc28ee47cf116967188c",
+      "bytes": 108367
+    }
+  }
+}
