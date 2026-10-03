@@ -14,6 +14,7 @@ import {createCityBackdrop} from './city-backdrop.js';
 import {createCityDistricts} from './city-districts.js';
 import {createCityPopulation} from './city-population.js';
 import {createCityTransit} from './city-transit.js';
+import {createCityFoldedStage} from './city-folded-stage.js';
 import {createCityTraffic} from './city-traffic.js';
 import {createSky} from './sky.js';
 import {createPaperFog} from './fog.js';
@@ -31,6 +32,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   let cityRide=null,lastUnderground=false;
+  const cityLayerState={layer:1,seam:false,progress:1};
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const isCity=sceneId!=='forest';
   const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
@@ -100,6 +102,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   const districts=isCity?createCityDistricts({THREE,scene,flags}):null;
   const population=isCity?createCityPopulation({THREE,scene,flags}):null;
   const transit=isCity?createCityTransit({THREE,scene,flags}):null;
+  const foldedStage=isCity?createCityFoldedStage({THREE,scene,flags}):null;
   const traffic=isCity?createCityTraffic({THREE,scene}):null;
   traffic?.group.traverse(object=>{if(object.isMesh)object.userData.volumeShadow=false;});
 const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:state.sceneId});
@@ -122,6 +125,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
     contactShadow.visible=state.shadow;forestMist.visible=state.fog;if(forest)forest.canopyGroup.visible=true;
     terrain.terrainBlocks.visible=state.layers;renderer.shadowMap.enabled=state.shadow;
     if(backdrop){backdrop.group.visible=state.layers;backdrop.setSkyVisible?.(state.sky);}
+    if(foldedStage)foldedStage.group.visible=state.layers;
     sun.castShadow=state.shadow&&sun.intensity>.10;moon.castShadow=state.shadow&&moon.intensity>.10;
     if(!state.fog)scene.fog=null;
     renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
@@ -170,8 +174,10 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     scenery.group.visible=!underground&&lastSnapshot.x<75;
     terrain.terrainBlocks.visible=state.layers&&!underground;
     districts.group.visible=!underground;population.group.visible=!underground;
+    foldedStage.group.visible=state.layers&&!underground;
     traffic.group.visible=!underground;
     districts.update(lastSnapshot.x);
+    foldedStage.update(lastSnapshot.x,dt,cityLayerState);
     if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
     if(transit.update(dt,lastSnapshot.x,cityRide))flags.render=flags.depth=flags.ao=true;
   }
@@ -356,13 +362,19 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(state.manualSun){timeTransition.active=false;state.auto=false;state.timePreset='';}
     updateLighting(state.time);syncFeatures();
   }
+  function setCityLayer(layer,options={}){
+    if(!foldedStage)return {layer:0,seam:false,progress:1};
+    const next=foldedStage.setLayer(layer,options);
+    cityLayerState.layer=next.layer;cityLayerState.progress=next.progress;cityLayerState.seam=false;
+    invalidate();return next;
+  }
   function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
   function getStats(){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
-      districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),
+      districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),foldedStage:foldedStage?.stats(),
       player:actor.snapshot(),camera:orbitCamera.snapshot(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
@@ -372,6 +384,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     for(const reject of pendingRejects)reject(new Error('Paper scene disposed during loading.'));
     pendingRejects.clear();
     fog.dispose();atmosphere.dispose();
+    foldedStage?.dispose();
     disposeSceneResources(scene,[...materials.textures,...terrain.textures,...loadedTextures]);
     renderer.renderLists.dispose();renderer.dispose();renderer.domElement.remove();
     status('disposed','纸艺场景已关闭');
@@ -387,7 +400,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(!disposed)status('error',error.message,error);
     throw error;
   });
-  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setCityLayer,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
     nearbyCityPerson:x=>population?.nearby(x)??null,
     setCityRide:ride=>{cityRide=ride?{...ride}:null;flags.render=flags.depth=flags.ao=true;},
     getWorld:()=>terrain.world,dispose};

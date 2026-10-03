@@ -1,6 +1,7 @@
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const approach = (value, target, delta) => value < target ? Math.min(value + delta, target) : Math.max(value - delta, target);
 const DEFAULTS = Object.freeze({ speed: 3.4, acceleration: 28, deceleration: 32, halfWidth: .28 });
+const PAPER_LAYER_COUNT = 3;
 
 /** Free horizontal exploration on the authored continuous paper ground. */
 export class StagePlayerSimulation {
@@ -20,6 +21,7 @@ export class StagePlayerSimulation {
     this.x = this.world.spawn.x;
     this.y = this.world.surfaceY(this.x) ?? this.world.spawn.y;
     this.vx = 0; this.facing = 1; this.distance = 0;
+    this.paperLayer = 0;
     return this.snapshot();
   }
 
@@ -37,6 +39,15 @@ export class StagePlayerSimulation {
     this.vx = clamp(value.vx ?? 0, -this.options.speed, this.options.speed);
     this.facing = value.facing === -1 ? -1 : 1;
     this.distance = Math.max(0, value.distance ?? 0);
+    this.paperLayer = Number.isInteger(value.paperLayer) && value.paperLayer >= 0 && value.paperLayer < PAPER_LAYER_COUNT
+      ? value.paperLayer : 0;
+    return true;
+  }
+
+  setPaperLayer(layer) {
+    if (!Number.isInteger(layer) || layer < 0 || layer >= PAPER_LAYER_COUNT) return false;
+    if (this.paperLayer === layer) return false;
+    this.paperLayer = layer;
     return true;
   }
 
@@ -58,6 +69,6 @@ export class StagePlayerSimulation {
 
   snapshot() {
     return { x: this.x, y: this.y, z: 0, vx: this.vx, vy: 0, grounded: true,
-      facing: this.facing, distance: this.distance, groundY: this.y };
+      facing: this.facing, distance: this.distance, groundY: this.y, paperLayer: this.paperLayer };
   }
 }

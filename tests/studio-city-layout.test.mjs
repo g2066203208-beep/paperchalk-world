@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CITY_BOUNDS,CITY_DISTRICTS,BUS_STOPS,METRO_STATIONS,districtAt,nearbyTransit,transitDestinations,travelDuration} from '../studio/world/CityLayout.mjs';
+import {CITY_BOUNDS,CITY_DISTRICTS,BUS_STOPS,METRO_STATIONS,PAPER_LAYERS,PAPER_SEAMS,districtAt,nearbyTransit,nearbyPaperSeam,nextPaperLayer,transitDestinations,travelDuration} from '../studio/world/CityLayout.mjs';
 import {createCityPrologueWorld} from '../studio/world/CityPrologueWorld.mjs';
 import {StagePlayerSimulation} from '../studio/core/StagePlayerSimulation.mjs';
 import {SaveStore} from '../studio/core/SaveStore.mjs';
@@ -34,4 +34,18 @@ test('positions in the farthest district survive the existing save format and re
   player.restore({x:1371,y:.5});assert.equal(saves.save(player.snapshot()).ok,true);
   player.reset();assert.equal(player.restore(saves.load().snapshot),true);assert.equal(player.snapshot().x,1371);
   assert.ok(player.update(1/60,{horizontal:-1}).x<1371);
+});
+
+test('paper seams cycle three theatrical layers without creating collision gaps',()=>{
+  const world=createCityPrologueWorld(),player=new StagePlayerSimulation(world);
+  assert.equal(PAPER_LAYERS.length,3);assert.equal(PAPER_SEAMS.length,12);
+  assert.equal(nearbyPaperSeam(6).id,'academy-fold');assert.equal(nearbyPaperSeam(6.1).x,6);assert.equal(nearbyPaperSeam(0),null);
+  assert.equal(nextPaperLayer(0),1);assert.equal(nextPaperLayer(1),2);assert.equal(nextPaperLayer(2),0);assert.equal(nextPaperLayer(99),1);
+  assert.equal(player.snapshot().paperLayer,0);assert.equal(player.setPaperLayer(1),true);assert.equal(player.snapshot().paperLayer,1);
+  assert.equal(player.setPaperLayer(3),false);assert.equal(player.snapshot().paperLayer,1);
+  assert.equal(world.surfaceY(6),.5);assert.equal(player.update(1/60,{horizontal:1}).y,.5);
+  assert.equal(player.restore({...player.snapshot(),paperLayer:2}),true);assert.equal(player.snapshot().paperLayer,2);
+  const records=new Map(),storage={getItem:key=>records.get(key)??null,setItem:(key,value)=>records.set(key,value),removeItem:key=>records.delete(key)};
+  const saves=new SaveStore({storage,key:'paper-layer'});assert.equal(saves.save(player.snapshot()).ok,true);
+  assert.equal(saves.load().snapshot.paperLayer,2);
 });

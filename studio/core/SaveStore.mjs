@@ -7,11 +7,14 @@ function validPlayer(player) {
   return player && typeof player === 'object'
     && ['x', 'y', 'z', 'vx', 'vy', 'distance'].every(key => typeof player[key] === 'number' && Number.isFinite(player[key]) && Math.abs(player[key]) <= 1e7)
     && player.z === 0 && player.distance >= 0 && typeof player.grounded === 'boolean'
-    && (player.facing === 1 || player.facing === -1);
+    && (player.facing === 1 || player.facing === -1)
+    && (player.paperLayer === undefined || (Number.isInteger(player.paperLayer) && player.paperLayer >= 0 && player.paperLayer <= 2));
 }
 
 function copyPlayer(player) {
-  return { x: player.x, y: player.y, z: 0, vx: player.vx, vy: player.vy, grounded: player.grounded, facing: player.facing, distance: player.distance };
+  const copy={ x: player.x, y: player.y, z: 0, vx: player.vx, vy: player.vy, grounded: player.grounded, facing: player.facing, distance: player.distance };
+  if(Number.isInteger(player.paperLayer))copy.paperLayer=player.paperLayer;
+  return copy;
 }
 
 /** V1 stored feet x/y and facing only. V2 stores a complete simulation snapshot. */
