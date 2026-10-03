@@ -93,4 +93,4 @@ test('gameplay proof uses the actual protagonist asset and a non-folding thresho
   assert.match(scene,/Revealed fixed paper stairs/);
   assert.match(scene,/CHUNK_SIZE=13\.6/);
   assert.match(scene,/distance<=2/);
-}
+});
