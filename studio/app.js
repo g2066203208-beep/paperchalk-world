@@ -6,9 +6,10 @@ import {installStudioLifecycle} from './core/Lifecycle.mjs';
 import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
 import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,acceptsInspectionKey} from './ui/CityPrologue.mjs';
 import {createCityExplorer} from './ui/CityExplorer.mjs';
+import {CityPrologueQuest} from './ui/CityQuest.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','cameraVertical','cameraVerticalValue','resetCameraDebug','gameCameraVertical','gameCameraVerticalValue','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','cameraVertical','cameraVerticalValue','resetCameraDebug','gameCameraVertical','gameCameraVerticalValue','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','questHud','questTitle','questText','questProgress','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
 const defaults={scale:1.8,normal:0,height:0,blend:0};
 const paperInputs={paperScale:'scale'};
 const sceneId=sceneFromSearch(location.search),isCity=sceneId===CITY_SCENE_ID;
@@ -19,7 +20,7 @@ const pauseReasons=new PauseReasons();
 const coarsePointer=window.matchMedia('(any-pointer: coarse)');
 let scene,world,simulation,input,ready=false,failed=false,disposed=false,nativeSuspended=false,gameMode=false,surfaceMode='pulp';
 let inspectionOpen=false;
-let cityExplorer=null;
+let cityExplorer=null,cityQuest=isCity?new CityPrologueQuest():null;
 let raf=0,lastTime=0,accumulator=0,renderClock=performance.now(),statusTime=0,lastRendered=0,toastTimer=0,scenePromptTimer=0;
 const STEP=1/60;
 const disposeLifecycle=installStudioLifecycle({
@@ -74,10 +75,17 @@ function setStatus(){
 }
 function refreshCityHud(){
   ui.prologueHud.hidden=!isCity;
+  ui.questHud.hidden=!isCity;
   const x=simulation?.snapshot().x??0,sight=cityInteraction();
   ui.locationLabel.textContent=cityLocation(x);
   ui.inspectAction.hidden=!isCity||!ready||failed||pauseReasons.active||!sight||!document.body.classList.contains('inspector-hidden');
   if(sight)ui.inspectActionLabel.textContent=sight.label;
+  if(cityQuest){
+    const quest=cityQuest.snapshot();
+    ui.questTitle.textContent=quest.title;ui.questText.textContent=quest.text;
+    ui.questProgress.textContent=quest.completed?'完成':quest.progress;
+    ui.questHud.classList.toggle('complete',quest.completed);
+  }
 }
 function cityInteraction(){
   if(!isCity||!simulation)return null;
@@ -166,6 +174,7 @@ function loadProgress(automatic=false){
     // Loading a far-away district must move the view before another modal can
     // pause its follow interpolation, otherwise both speakers sit off screen.
     scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
+    cityQuest?.update(simulation.snapshot().x);
     ui.saveStatus.textContent=restored?'已读取保存的进度':'存档位置已失效，角色返回起点';
     if(!automatic)toast(restored?'已读取角色进度':'该位置已不适合当前舞台，已回到起点');
   }else{
@@ -333,6 +342,11 @@ function tick(now){
         while(accumulator>=STEP){simulation.update(STEP,input.consume());accumulator-=STEP;}
         renderClock+=elapsed*1000;
       }else{accumulator=0;input.cancel();}
+      const questUpdate=!paused&&isCity?cityQuest?.update(simulation.snapshot().x):null;
+      if(questUpdate?.advanced){
+        scenePrompt(questUpdate.completedNow?'序幕完成':'目标完成',
+          questUpdate.completedNow?'你已经回到星灯住宅区。月灯市仍然可以继续自由漫游。':'下一目标：'+questUpdate.snapshot.title);
+      }
       scene.frame(paused?0:elapsed,renderClock,simulation.snapshot());cityExplorer?.update(simulation.snapshot().x);refreshStatus(now);
     }catch(error){sceneStatus({state:'error',message:'场景运行出现错误，请刷新重试。'});console.error(error);}
   }
@@ -353,7 +367,7 @@ async function start(){
     simulation=new StagePlayerSimulation(world);input=new InputActions({target:window,viewport:ui.viewport});
     await scene.ready;
     if(disposed)return;
-    ready=true;
+    ready=true;cityQuest?.load();
     if(isCity)cityExplorer=createCityExplorer({getPlayer:()=>simulation.snapshot(),
       onPause:()=>{pauseReasons.openMenu();resetClock();setStatus();},
       onResume:()=>{pauseReasons.closeMenu();resetClock();setStatus();},
