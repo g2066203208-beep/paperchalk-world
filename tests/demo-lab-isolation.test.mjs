@@ -25,7 +25,7 @@ test('Demo Lab root is the dedicated Paper Stage mechanism study',async()=>{
   assert.match(html,/data-jump="\.25"/);
   assert.doesNotMatch(html,/toggleStageScene/);
   assert.equal(meta.focus,'paper-stage-transition-lab');
-  assert.equal(meta.displayVersion,'DL-2026.10.03.2');
+  assert.equal(meta.displayVersion,'DL-2026.10.03.3');
   assert.equal(meta.directMergeToMain,false);
 });
 
