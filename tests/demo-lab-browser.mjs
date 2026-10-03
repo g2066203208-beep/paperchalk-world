@@ -26,7 +26,7 @@ try{
   await page.waitForTimeout(500);
 
   const version=await page.locator('#demoLabVersion').textContent();
-  assert(version==='DL-2026.10.03.2','wrong visible Demo Lab version: '+version);
+  assert(version==='DL-2026.10.03.3','wrong visible Demo Lab version: '+version);
 
   const states=[];
   for(const [label,value] of [['00',0],['25',.25],['50',.5],['75',.75],['100',1]]){
