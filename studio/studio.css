@@ -262,6 +262,8 @@ body.game-mode{
 .prologue-hud p{margin:0 0 7px;font-size:12px;font-weight:600;letter-spacing:.14em}
 .prologue-hud>div{display:flex;align-items:center;gap:9px;color:#d4d9d3;font-size:10px;letter-spacing:.09em}
 .prologue-hud i{width:2px;height:2px;border-radius:50%;background:#e3d5b9}
+.city-quest-hud{position:absolute;z-index:3;left:22px;top:112px;width:min(360px,44%);padding:10px 13px 11px;border-left:2px solid #e4bd78;background:linear-gradient(90deg,#17283cc9,#17283c78 76%,transparent);color:#f5ead3;text-shadow:0 2px 7px #0d172599;pointer-events:none;user-select:none}
+.city-quest-hud>div{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px}.city-quest-kicker{font-size:9px;letter-spacing:.16em;color:#ddbd82}.city-quest-progress{font-size:9px;color:#c9d2cb}.city-quest-hud strong{display:block;font-size:12px;letter-spacing:.04em}.city-quest-hud>span:last-child{display:block;margin-top:4px;color:#cdd5ce;font-size:10px;line-height:1.55}.city-quest-hud.complete{border-left-color:#9ec69d;background:linear-gradient(90deg,#18362ec9,#18362e73 76%,transparent)}.city-quest-hud.complete .city-quest-kicker{color:#b9d9ad}
 .inspect-action{position:absolute;z-index:4;right:24px;bottom:23px;display:flex;align-items:center;gap:9px;padding:11px 17px;border:1px solid #f5ddb57a;border-radius:25px;background:#233347bf;color:#f5e7cc;font:inherit;font-size:12px;box-shadow:0 3px 15px #1017253d;cursor:pointer}
 .inspect-action kbd{display:grid;place-items:center;width:20px;height:20px;border:1px solid #dacbae75;border-radius:5px;font:inherit;font-size:10px}
 .inspection-overlay{position:absolute;inset:0;z-index:25;display:flex;align-items:flex-end;justify-content:center;padding:24px;background:linear-gradient(transparent 30%,#14203366);pointer-events:auto}
@@ -272,6 +274,7 @@ body.game-mode{
 .inspection-card>button{position:absolute;right:11px;top:9px;display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:50%;background:transparent;color:#6d736f;font-size:25px;cursor:pointer}
 .inspection-open .touch-controls,.inspection-open .game-pause,.inspection-open .inspect-action{visibility:hidden;pointer-events:none}
 .game-mode .prologue-hud{top:calc(20px + var(--safe-top));left:calc(24px + var(--safe-left))}
+.game-mode .city-quest-hud{top:calc(68px + var(--safe-top));left:calc(24px + var(--safe-left));width:min(360px,48%)}
 .game-mode .inspect-action{right:calc(28px + var(--safe-right));bottom:calc(25px + var(--safe-bottom));min-height:52px}
 .game-mode .inspection-overlay{padding:calc(20px + var(--safe-top)) calc(22px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(22px + var(--safe-left))}
 .game-mode .inspection-card{max-height:100%;overflow-y:auto;overscroll-behavior:contain}
