@@ -75,20 +75,20 @@ try{
   const s75=states[3].snapshot;
   const s100=states[4].snapshot;
 
-  assert(s25.coverAngle<-.40&&s25.coverAngle>-.60,'25% must already read as a page turn: '+s25.coverAngle);
+  assert(s25.coverAngle>.35&&s25.coverAngle<.50,'25% must already read as a page turn: '+s25.coverAngle);
   assert(s25.innerVisible===false,'25% must still be the city cover, without destination leakage');
 
   assert(s50.coverVisible===true,'50% cover must still be visibly turning');
-  assert(s50.coverAngle<-1.05&&s50.coverAngle>-1.35,'50% needs a readable mid-flip cover angle: '+s50.coverAngle);
+  assert(s50.coverAngle>.95&&s50.coverAngle<1.15,'50% needs a readable mid-flip cover angle: '+s50.coverAngle);
   assert(s50.innerVisible&&s50.popupVisible,'50% must reveal the greeting-card interior');
   assert(s50.wallAngles.some(angle=>angle<-1.2),'50% subway walls should still be mostly folded');
   assert(s50.wallAngles.some(angle=>angle>-1.52),'50% must show the first popup wall beginning to rise');
 
-  assert(s75.coverVisible===false,'75% city cover should have cleared the game view');
+  assert(s75.coverVisible===true&&s75.coverAngle>1.50,'75% cover should read as the horizontal front leaf of an open card');
   assert(s75.innerVisible&&s75.popupVisible,'75% inner card must be established');
   assert(s75.wallAngles.every(angle=>Math.abs(angle)<.15),'75% popup walls should be nearly upright');
 
-  assert(s100.coverVisible===false,'100% cover must stay out of the game view');
+  assert(s100.coverVisible===true&&s100.coverAngle>1.55,'100% cover must remain as the open greeting-card front leaf');
   assert(s100.innerVisible&&s100.popupVisible,'100% inner card must be fully present');
   assert(s100.wallAngles.every(angle=>Math.abs(angle)<.02),'100% walls must settle upright');
   assert(s100.columnAngles.every(angle=>Math.abs(angle)<.02),'100% columns must settle upright');
