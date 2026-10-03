@@ -1,7 +1,7 @@
 export const PAPER_STAGE_TIMING=Object.freeze({
   // Deliberately long enough for the eye to read the mechanism, but short
   // enough to feel like one theatrical gesture rather than a loading screen.
-  duration:2.12,
+  duration:1.76,
   city:{
     actors:[.00,.18],
     vertical:[.035,.33],
