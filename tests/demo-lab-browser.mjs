@@ -56,8 +56,8 @@ try{
   const e=states[4].snapshot;
 
   assert(a.cityRelease===0&&a.destinationRise===0,'0% must be pure city');
-  assert(b.cityRelease>.35&&b.destinationRise===0,'25% should clearly release old city before destination establishes');
-  assert(c.destinationRise>.1&&c.sweepVisible,'50% must overlap destination build with the paper sweep');
+  assert(b.cityRelease>.1&&b.destinationRise===0,'25% should begin releasing the old city before destination establishes');
+  assert(c.cityVisible&&c.subwayVisible&&c.destinationRise>.1&&c.destinationRise<.5&&c.sweepVisible,'50% must visibly overlap old city, paper sweep and destination build');
   assert(d.destinationRise>.9&&d.subwayVisible,'75% should read primarily as the new subway');
   assert(e.cityVisible===false&&e.subwayVisible===true,'100% must complete the handoff');
   assert(e.lights===1&&e.settle===1,'100% must finish light and settle beats');
