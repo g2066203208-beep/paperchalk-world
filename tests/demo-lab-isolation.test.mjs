@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile,readdir,stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {LAB_DURATION,lampWave,paperSettle,samplePaperStage} from '../demo-lab/transition/PaperStageTimeline.mjs';
+import {LAB_DURATION,samplePaperWorld} from '../demo-lab/transition/PaperWorldTimeline.mjs';
 
 const root=fileURLToPath(new URL('../demo-lab/',import.meta.url));
 
@@ -16,17 +16,28 @@ async function files(dir=root){
   return out;
 }
 
-test('Demo Lab root is the dedicated Paper Stage mechanism study',async()=>{
+test('Demo Lab root is the game-first white-paper transition study',async()=>{
   const html=await readFile(path.join(root,'index.html'),'utf8');
   const meta=JSON.parse(await readFile(path.join(root,'lab-meta.json'),'utf8'));
-  assert.match(html,/Paper Stage Transition Lab/);
-  assert.match(html,/WHITE CARD MECHANISM/);
-  assert.match(html,/id="timeline"/);
-  assert.match(html,/data-jump="\.25"/);
-  assert.doesNotMatch(html,/toggleStageScene/);
-  assert.equal(meta.focus,'paper-stage-transition-lab');
-  assert.equal(meta.displayVersion,'DL-2026.10.03.4');
+  assert.match(html,/纯白纸游戏转场 Demo/);
+  assert.match(html,/GAME VIEW · WHITE PAPER ONLY/);
+  assert.match(html,/纸感是视觉语法，不是物理规则/);
+  assert.match(html,/PAPER_WORLD_WHITEBOX_PROMPT\.md/);
+  assert.equal(meta.focus,'game-first-white-paper-transition');
+  assert.equal(meta.displayVersion,'DL-2026.10.03.5');
   assert.equal(meta.directMergeToMain,false);
+});
+
+test('the detailed production prompt is substantial and cites the chosen open techniques',async()=>{
+  const prompt=await readFile(path.join(root,'PAPER_WORLD_WHITEBOX_PROMPT.md'),'utf8');
+  assert.ok(prompt.length>4000,'whitebox prompt should be detailed, not a short note');
+  assert.match(prompt,/Tearaway/);
+  assert.match(prompt,/InstancedMesh/);
+  assert.match(prompt,/clipping \/ stencil/);
+  assert.match(prompt,/Theatre\.js/);
+  assert.match(prompt,/游戏镜头/);
+  assert.match(prompt,/大地图与很多场景/);
+  assert.match(prompt,/禁止把场景做成真实纸机械教学模型/);
 });
 
 test('Demo Lab remains isolated from production application code',async()=>{
@@ -38,59 +49,38 @@ test('Demo Lab remains isolated from production application code',async()=>{
   }
 });
 
-test('paper timeline has one master page action followed by pop-up stages',()=>{
-  assert.ok(LAB_DURATION>=1.4&&LAB_DURATION<=1.8);
-  const a=samplePaperStage(0),b=samplePaperStage(.25),c=samplePaperStage(.5),d=samplePaperStage(.75),e=samplePaperStage(1);
-  assert.equal(a.page,0);assert.equal(a.wall,0);assert.equal(a.light,0);
-  assert.ok(b.page>.1);assert.equal(b.fixture,0);
-  assert.ok(c.page>.8);assert.ok(c.wall>0);assert.equal(c.light,0);
-  assert.ok(d.wall>.85);assert.ok(d.fixture>0);
-  assert.equal(e.page,1);assert.equal(e.wall,1);assert.equal(e.fixture,1);assert.equal(e.light,1);
-  assert.equal(paperSettle(0),0);assert.equal(paperSettle(1),1);
-  assert.ok(paperSettle(.82,.06)>.82);
+test('timeline is game choreography rather than mechanical simulation',()=>{
+  assert.ok(LAB_DURATION>=1.3&&LAB_DURATION<=1.6);
+  const a=samplePaperWorld(0),b=samplePaperWorld(.25),c=samplePaperWorld(.5),d=samplePaperWorld(.75),e=samplePaperWorld(1);
+  assert.equal(a.cityRelease,0);assert.equal(a.destinationRise,0);
+  assert.ok(b.cityRelease>.35);assert.equal(b.destinationRise,0);
+  assert.ok(c.cityRelease>.99);assert.ok(c.destinationRise>.1);assert.ok(c.shadowPass>.2);
+  assert.ok(d.destinationRise>.9);assert.ok(d.details>.4);
+  assert.equal(e.destinationRise,1);assert.equal(e.details,1);assert.equal(e.lights,1);assert.equal(e.settle,1);
 });
 
-test('station lamps wake from centre outward instead of global fading',()=>{
-  const early=[0,1,2,3,4].map(i=>lampWave(.2,i,5));
-  assert.ok(early[2]>early[1]);assert.equal(early[0],early[4]);assert.equal(early[1],early[3]);
-  const done=[0,1,2,3,4].map(i=>lampWave(1,i,5));
-  assert.deepEqual(done,[1,1,1,1,1]);
+test('scene uses paper magic, actual protagonist and scalable repeated rendering',async()=>{
+  const scene=await readFile(new URL('../demo-lab/transition/PaperWorldScene.js',import.meta.url),'utf8');
+  const player=await readFile(new URL('../demo-lab/transition/PaperWorldPlayer.js',import.meta.url),'utf8');
+  assert.match(scene,/GAME PAPER SWEEP/);
+  assert.match(scene,/NEW SUBWAY PAPER LAYERS/);
+  assert.match(scene,/OLD CITY PAPER LAYERS/);
+  assert.match(scene,/InstancedMesh/);
+  assert.match(scene,/ACTIVE GAMEPLAY PAPER CELL/);
+  assert.match(scene,/PROXY_RADIUS=2/);
+  assert.match(player,/assets\/player\/protagonist\.webp/);
+  assert.match(player,/Actual game protagonist/);
+  assert.doesNotMatch(scene,/V-fold|MASTER HINGE|PLAYER SAFE THRESHOLD|real paper mechanism/i);
 });
 
-test('new scene encodes physical paper relationships explicitly',async()=>{
-  const scene=await readFile(new URL('../demo-lab/transition/PaperStageScene.js',import.meta.url),'utf8');
-  assert.match(scene,/MASTER HINGE · STREET PAGE/);
-  assert.match(scene,/Fixed underground pop-up deck/);
-  assert.match(scene,/SECONDARY SCORE · STREET PAGE/);assert.match(scene,/triangular V-fold card/);
-  assert.match(scene,/PLAYER SAFE THRESHOLD/);assert.match(scene,/GAMEPLAY STREET CUTAWAY FASCIA/);assert.match(scene,/STREAMED WORLD PROXY STRIP/);
-  assert.match(scene,/ACTIVE HIGH-DETAIL PAPER WINDOW/);assert.match(scene,/residentChunks/);
-  assert.match(scene,/pageHinge\.rotation\.x/);assert.match(scene,/secondaryHinge\.rotation\.x/);assert.match(scene,/leftFascia\.rotation\.y/);
-  assert.match(scene,/pivot\.rotation\.x=-Math\.PI\*\.5\*\(1-local\)/);
-  assert.match(scene,/lampWave/);
-  assert.doesNotMatch(scene,/opacity\s*=/);
-  assert.doesNotMatch(scene,/floorCarrier\.position\.y/);
-  assert.doesNotMatch(scene,/backdropCarrier\.position\.y/);
-});
-
-test('lab UI exposes slow motion, keyframes and frame stepping',async()=>{
+test('lab UI exposes game view, large-world movement, keyframes and frame stepping',async()=>{
   const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
   const app=await readFile(new URL('../demo-lab/transition-lab.js',import.meta.url),'utf8');
   for(const value of ['.25','.5','1'])assert.match(html,new RegExp('value="'+value.replace('.','\\.')+'"'));
   for(const value of ['0','.25','.5','.75','1'])assert.match(html,new RegExp('data-jump="'+value.replace('.','\\.')+'"'));
-  assert.match(html,/stepBack/);assert.match(html,/stepForward/);
-  assert.match(html,/id="viewMode"/);assert.match(html,/id="largeWorld"/);assert.match(html,/id="playerX"/);
+  assert.match(html,/id="viewMode"/);assert.match(html,/实际游戏视角/);
+  assert.match(html,/id="largeWorld"/);assert.match(html,/id="playerX"/);
+  assert.match(html,/Draw Calls/);
   assert.match(app,/oneFrame=1\/\(60\*LAB_DURATION\)/);
-  assert.match(app,/window\.PaperStageLab/);
-});
-
-
-test('gameplay proof uses the actual protagonist asset and a non-folding threshold',async()=>{
-  const player=await readFile(new URL('../demo-lab/transition/PaperStagePlayer.js',import.meta.url),'utf8');
-  const scene=await readFile(new URL('../demo-lab/transition/PaperStageScene.js',import.meta.url),'utf8');
-  assert.match(player,/assets\/player\/protagonist\.webp/);
-  assert.match(player,/Actual game protagonist paper cutout/);
-  assert.match(scene,/Non-folding entrance tongue/);
-  assert.match(scene,/Revealed fixed paper stairs/);
-  assert.match(scene,/CHUNK_SIZE=13\.6/);
-  assert.match(scene,/distance<=2/);
+  assert.match(app,/window\.PaperWorldLab/);
 });
