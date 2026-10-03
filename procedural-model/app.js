@@ -1,952 +1,252 @@
 import * as THREE from "../vendor/three/three.module.js";
 import { FBXLoader } from "./addons/loaders/FBXLoader.js";
+import { gunzipSync } from "./addons/libs/fflate.module.js";
 
+const DEFAULT_MANIFEST = "../model-data/ellen/manifest.json";
 const viewport = document.getElementById("viewport");
 const statusText = document.getElementById("statusText");
-const jointSelect = document.getElementById("jointSelect");
-const selectedJointLabel = document.getElementById("selectedJointLabel");
-const importFbxInput = document.getElementById("importFbx");
-const clearFbxButton = document.getElementById("clearFbx");
+const modelStats = document.getElementById("modelStats");
 const fbxInfo = document.getElementById("fbxInfo");
 const fbxBadge = document.getElementById("fbxBadge");
+const boneCount = document.getElementById("boneCount");
+const boneList = document.getElementById("boneList");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const loadingTitle = document.getElementById("loadingTitle");
+const loadingDetail = document.getElementById("loadingDetail");
 const animationSelect = document.getElementById("animationSelect");
-const playAnimationButton = document.getElementById("playAnimation");
-const stopAnimationButton = document.getElementById("stopAnimation");
-const animationSpeed = document.getElementById("animationSpeed");
-const animationSpeedValue = document.getElementById("animationSpeedValue");
-
-const defaults = {
-  headSize: 0.82,
-  upperTorsoHeight: 1.15,
-  lowerTorsoHeight: 0.88,
-  shoulderWidth: 1.72,
-  hipWidth: 1.04,
-  upperArmLength: 1.05,
-  forearmLength: 0.96,
-  palmLength: 0.46,
-  thighLength: 1.38,
-  shinLength: 1.30,
-  footLength: 0.66,
-  bodyDepth: 0.48,
-  limbThickness: 0.30
-};
-
-const proportionDefs = [
-  ["headSize", "头部尺寸", 0.55, 1.20, 0.01, "m"],
-  ["upperTorsoHeight", "上身体长度", 0.75, 1.60, 0.01, "m"],
-  ["lowerTorsoHeight", "下身体长度", 0.55, 1.25, 0.01, "m"],
-  ["shoulderWidth", "肩宽", 1.10, 2.30, 0.01, "m"],
-  ["hipWidth", "胯宽", 0.70, 1.55, 0.01, "m"],
-  ["upperArmLength", "大臂长度", 0.65, 1.45, 0.01, "m"],
-  ["forearmLength", "小臂长度", 0.60, 1.35, 0.01, "m"],
-  ["palmLength", "手掌长度", 0.28, 0.70, 0.01, "m"],
-  ["thighLength", "大腿长度", 0.85, 1.80, 0.01, "m"],
-  ["shinLength", "小腿长度", 0.80, 1.70, 0.01, "m"],
-  ["footLength", "脚掌长度", 0.38, 0.95, 0.01, "m"],
-  ["bodyDepth", "躯干厚度", 0.28, 0.80, 0.01, "m"],
-  ["limbThickness", "四肢粗细", 0.16, 0.52, 0.01, "m"]
-];
-
-const jointDefs = [
-  ["lowerTorso", "下身体 / 骨盆根节点", 0],
-  ["upperTorso", "上身体", 1],
-  ["head", "头部", 2],
-  ["leftUpperArm", "左 · 大臂", 2],
-  ["leftForearm", "左 · 小臂", 3],
-  ["leftPalm", "左 · 手掌", 3],
-  ["rightUpperArm", "右 · 大臂", 2],
-  ["rightForearm", "右 · 小臂", 3],
-  ["rightPalm", "右 · 手掌", 3],
-  ["leftThigh", "左 · 大腿", 1],
-  ["leftShin", "左 · 小腿", 2],
-  ["leftFoot", "左 · 脚掌", 3],
-  ["rightThigh", "右 · 大腿", 1],
-  ["rightShin", "右 · 小腿", 2],
-  ["rightFoot", "右 · 脚掌", 3]
-];
-
-let params = { ...defaults };
-let pose = Object.fromEntries(jointDefs.map(([key]) => [key, { x: 0, y: 0, z: 0 }]));
-let selectedJoint = "lowerTorso";
-let rig = null;
-let groups = {};
-let jointMarkers = {};
-let solidObjects = [];
-let skeletonObjects = [];
-let importedContainer = null;
-let importedObject = null;
-let importedSkeletonHelper = null;
-let animationMixer = null;
-let activeAnimationAction = null;
-const animationClock = new THREE.Clock();
-const fbxLoader = new FBXLoader();
+const playButton = document.getElementById("playAnimation");
+const stopButton = document.getElementById("stopAnimation");
+const speedInput = document.getElementById("animationSpeed");
+const speedValue = document.getElementById("animationSpeedValue");
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111419);
-scene.fog = new THREE.Fog(0x111419, 10, 24);
+scene.background = new THREE.Color(0x101318);
+scene.fog = new THREE.Fog(0x101318, 16, 34);
 
-const camera = new THREE.PerspectiveCamera(42, 1, 0.05, 100);
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+const camera = new THREE.PerspectiveCamera(40, 1, 0.02, 120);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) {
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-}
+if ("outputColorSpace" in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
 viewport.prepend(renderer.domElement);
 
-scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x22272d, 1.7));
-const keyLight = new THREE.DirectionalLight(0xfff2da, 3.2);
-keyLight.position.set(5, 8, 5);
-keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(1024, 1024);
-keyLight.shadow.camera.left = -6;
-keyLight.shadow.camera.right = 6;
-keyLight.shadow.camera.top = 8;
-keyLight.shadow.camera.bottom = -2;
-scene.add(keyLight);
-
-const rim = new THREE.DirectionalLight(0x9ec8ff, 1.35);
-rim.position.set(-4, 5, -5);
+scene.add(new THREE.HemisphereLight(0xe8efff, 0x24272d, 2.1));
+const key = new THREE.DirectionalLight(0xfff1dd, 3.4);
+key.position.set(5, 9, 6);
+key.castShadow = true;
+key.shadow.mapSize.set(1024,1024);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xa9cfff, 1.7);
+rim.position.set(-5,6,-5);
 scene.add(rim);
 
-const grid = new THREE.GridHelper(14, 28, 0x46515f, 0x252b33);
+const grid = new THREE.GridHelper(14,28,0x46515f,0x242a32);
 grid.material.transparent = true;
-grid.material.opacity = 0.52;
+grid.material.opacity = .48;
 scene.add(grid);
-
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(20, 20),
-  new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.22 })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.002;
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20,20), new THREE.ShadowMaterial({color:0x000000,opacity:.24}));
+ground.rotation.x = -Math.PI/2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-const orbit = {
-  target: new THREE.Vector3(0, 3.0, 0),
-  radius: 9.4,
-  theta: Math.PI * 0.22,
-  phi: Math.PI * 0.39
-};
-
-function updateCamera() {
-  const sinPhi = Math.sin(orbit.phi);
+const orbit = {target:new THREE.Vector3(0,3,0),radius:9,theta:Math.PI*.22,phi:Math.PI*.43};
+function updateCamera(){
+  const s=Math.sin(orbit.phi);
   camera.position.set(
-    orbit.target.x + orbit.radius * sinPhi * Math.sin(orbit.theta),
-    orbit.target.y + orbit.radius * Math.cos(orbit.phi),
-    orbit.target.z + orbit.radius * sinPhi * Math.cos(orbit.theta)
+    orbit.target.x+orbit.radius*s*Math.sin(orbit.theta),
+    orbit.target.y+orbit.radius*Math.cos(orbit.phi),
+    orbit.target.z+orbit.radius*s*Math.cos(orbit.theta)
   );
   camera.lookAt(orbit.target);
 }
 updateCamera();
 
-const pointer = { active: false, mode: "rotate", x: 0, y: 0 };
-
-renderer.domElement.addEventListener("contextmenu", event => event.preventDefault());
-renderer.domElement.addEventListener("pointerdown", event => {
-  pointer.active = true;
-  pointer.mode = event.button === 2 || event.shiftKey ? "pan" : "rotate";
-  pointer.x = event.clientX;
-  pointer.y = event.clientY;
-  renderer.domElement.setPointerCapture?.(event.pointerId);
+const pointer={active:false,mode:"rotate",x:0,y:0};
+renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
+renderer.domElement.addEventListener("pointerdown",e=>{
+  pointer.active=true;pointer.mode=e.button===2||e.shiftKey?"pan":"rotate";pointer.x=e.clientX;pointer.y=e.clientY;
+  renderer.domElement.setPointerCapture?.(e.pointerId);
 });
-renderer.domElement.addEventListener("pointerup", event => {
-  pointer.active = false;
-  renderer.domElement.releasePointerCapture?.(event.pointerId);
-});
-renderer.domElement.addEventListener("pointercancel", () => { pointer.active = false; });
-renderer.domElement.addEventListener("pointermove", event => {
-  if (!pointer.active) return;
-  const dx = event.clientX - pointer.x;
-  const dy = event.clientY - pointer.y;
-  pointer.x = event.clientX;
-  pointer.y = event.clientY;
-
-  if (pointer.mode === "rotate") {
-    orbit.theta -= dx * 0.007;
-    orbit.phi = THREE.MathUtils.clamp(orbit.phi + dy * 0.007, 0.12, Math.PI - 0.12);
-  } else {
-    const distanceScale = orbit.radius * 0.0018;
-    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
-    const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
-    orbit.target.addScaledVector(right, -dx * distanceScale);
-    orbit.target.addScaledVector(up, dy * distanceScale);
+renderer.domElement.addEventListener("pointerup",e=>{pointer.active=false;renderer.domElement.releasePointerCapture?.(e.pointerId)});
+renderer.domElement.addEventListener("pointercancel",()=>pointer.active=false);
+renderer.domElement.addEventListener("pointermove",e=>{
+  if(!pointer.active)return;
+  const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;pointer.x=e.clientX;pointer.y=e.clientY;
+  if(pointer.mode==="rotate"){orbit.theta-=dx*.007;orbit.phi=THREE.MathUtils.clamp(orbit.phi+dy*.007,.12,Math.PI-.12)}
+  else{
+    const k=orbit.radius*.0018;
+    const right=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);
+    const up=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,1);
+    orbit.target.addScaledVector(right,-dx*k);orbit.target.addScaledVector(up,dy*k);
   }
   updateCamera();
 });
-renderer.domElement.addEventListener("wheel", event => {
-  event.preventDefault();
-  orbit.radius = THREE.MathUtils.clamp(orbit.radius * Math.exp(event.deltaY * 0.001), 3.8, 20);
+renderer.domElement.addEventListener("wheel",e=>{e.preventDefault();orbit.radius=THREE.MathUtils.clamp(orbit.radius*Math.exp(e.deltaY*.001),2.5,28);updateCamera()},{passive:false});
+
+const loader = new FBXLoader();
+const clock = new THREE.Clock();
+let container = null;
+let model = null;
+let skeleton = null;
+let mixer = null;
+let action = null;
+
+function setLoading(title,detail,visible=true){
+  loadingTitle.textContent=title;loadingDetail.textContent=detail;
+  loadingOverlay.classList.toggle("hidden",!visible);
+}
+function disposeMaterial(material){
+  for(const m of (Array.isArray(material)?material:[material])) {
+    if(!m) continue;
+    for(const value of Object.values(m)) if(value?.isTexture) value.dispose?.();
+    m.dispose?.();
+  }
+}
+function clearModel(){
+  mixer?.stopAllAction();mixer=null;action=null;
+  if(skeleton){scene.remove(skeleton);skeleton.geometry?.dispose?.();skeleton.material?.dispose?.();skeleton=null}
+  if(container){
+    container.traverse(n=>{n.geometry?.dispose?.();if(n.material)disposeMaterial(n.material)});
+    scene.remove(container);container=null;model=null;
+  }
+}
+function materialFallback(material){
+  const mats=Array.isArray(material)?material:[material];
+  for(const m of mats){
+    if(!m)continue;
+    // Bundled FBX is stored without the original embedded PNG payloads.
+    // Remove failed placeholder maps so geometry always renders cleanly.
+    if(m.map){m.map.dispose?.();m.map=null}
+    const n=(m.name||"").toLowerCase();
+    if(/face|skin|body.*skin/.test(n)) m.color?.setHex(0xe6b8a0);
+    else if(/hair/.test(n)) m.color?.setHex(0x2b2a31);
+    else if(/weapon|blade|knife/.test(n)) m.color?.setHex(0x8f1f1f);
+    else if(/eye/.test(n)) m.color?.setHex(0x9adfda);
+    else if(/cloth|dress|skirt|stock|shoe|boot/.test(n)) m.color?.setHex(0x3a3b43);
+    else if(m.color && m.color.r>.95 && m.color.g>.95 && m.color.b>.95) m.color.setHex(0x8b8f99);
+    m.needsUpdate=true;
+  }
+}
+function fitModel(){
+  container.scale.setScalar(1);container.position.set(0,0,0);container.updateWorldMatrix(true,true);
+  const raw=new THREE.Box3().setFromObject(container);
+  if(raw.isEmpty())return;
+  const size=raw.getSize(new THREE.Vector3());
+  const scale=size.y>.0001?5.8/size.y:1;
+  container.scale.setScalar(scale);container.updateWorldMatrix(true,true);
+  const box=new THREE.Box3().setFromObject(container);
+  const center=box.getCenter(new THREE.Vector3());
+  container.position.x-=center.x;container.position.z-=center.z;container.position.y-=box.min.y;
+  container.updateWorldMatrix(true,true);
+  const finalBox=new THREE.Box3().setFromObject(container);
+  const finalSize=finalBox.getSize(new THREE.Vector3()),finalCenter=finalBox.getCenter(new THREE.Vector3());
+  orbit.target.set(finalCenter.x,finalBox.min.y+finalSize.y*.52,finalCenter.z);
+  orbit.radius=THREE.MathUtils.clamp(Math.max(finalSize.y*1.42,finalSize.x*2.1,5),4,18);
   updateCamera();
-}, { passive: false });
-
-const colors = {
-  torso: 0xd9f28b,
-  limb: 0xa7c7e7,
-  hand: 0xf0c7a5,
-  head: 0xf1d6bd,
-  skeleton: 0xf6fbff,
-  selected: 0xffdf72
-};
-
-function makeMaterial(color) {
-  return new THREE.MeshStandardMaterial({
-    color,
-    roughness: 0.72,
-    metalness: 0.02
+}
+function fillBones(){
+  const bones=[];
+  model.traverse(n=>{if(n.isBone)bones.push(n)});
+  boneCount.textContent=String(bones.length);
+  boneList.innerHTML="";
+  for(const b of bones.slice(0,100)){
+    let depth=0,p=b.parent;while(p&&p!==model){if(p.isBone)depth++;p=p.parent}
+    const row=document.createElement("div");row.className="bone-node";row.style.paddingLeft=(7+Math.min(depth,8)*10)+"px";
+    row.innerHTML="<b>•</b> "+(b.name||"(unnamed)");
+    boneList.appendChild(row);
+  }
+  if(bones.length>100){const more=document.createElement("div");more.className="bone-node";more.textContent="… 其余 "+(bones.length-100)+" 根骨骼";boneList.appendChild(more)}
+}
+function fillAnimations(){
+  const clips=model.animations||[];animationSelect.innerHTML="";
+  if(!clips.length){
+    animationSelect.innerHTML='<option value="">无动画</option>';animationSelect.disabled=true;playButton.disabled=true;stopButton.disabled=true;return;
+  }
+  clips.forEach((clip,i)=>{const o=document.createElement("option");o.value=String(i);o.textContent=clip.name||("Animation "+(i+1));animationSelect.appendChild(o)});
+  animationSelect.disabled=false;playButton.disabled=false;stopButton.disabled=false;animationSelect.value="0";
+}
+function playSelected(){
+  if(!mixer||!model)return;
+  const clip=(model.animations||[])[Number(animationSelect.value)];if(!clip)return;
+  mixer.stopAllAction();action=mixer.clipAction(clip);action.reset().setLoop(THREE.LoopRepeat,Infinity).play();
+  statusText.textContent="播放："+(clip.name||"Animation");
+}
+function installModel(object,label,sizeBytes=0){
+  clearModel();
+  model=object;container=new THREE.Group();container.name="EllenFBX";container.add(model);scene.add(container);
+  let meshes=0,skinned=0,bones=0;
+  model.traverse(n=>{
+    if(n.isMesh){meshes++;n.castShadow=true;n.receiveShadow=true;materialFallback(n.material)}
+    if(n.isSkinnedMesh)skinned++;
+    if(n.isBone)bones++;
   });
-}
-
-function addJointMarker(parent, name, radius) {
-  const marker = new THREE.Mesh(
-    new THREE.SphereGeometry(radius, 18, 12),
-    new THREE.MeshBasicMaterial({ color: colors.skeleton, transparent: true, opacity: 0.92 })
-  );
-  marker.userData.kind = "skeleton";
-  marker.userData.joint = name;
-  parent.add(marker);
-  skeletonObjects.push(marker);
-  jointMarkers[name] = marker;
-  return marker;
-}
-
-function addCylinderBone(parent, length, radius, direction = -1, axis = "y") {
-  const geometry = new THREE.CylinderGeometry(radius, radius, length, 10);
-  const material = new THREE.MeshBasicMaterial({ color: colors.skeleton, transparent: true, opacity: 0.66 });
-  const bone = new THREE.Mesh(geometry, material);
-  bone.userData.kind = "skeleton";
-
-  if (axis === "y") {
-    bone.position.y = direction * length * 0.5;
-  } else if (axis === "z") {
-    bone.rotation.x = Math.PI / 2;
-    bone.position.z = direction * length * 0.5;
-  }
-  parent.add(bone);
-  skeletonObjects.push(bone);
-  return bone;
-}
-
-function addBoxSegment(parent, width, length, depth, color, direction = -1) {
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(width, length, depth),
-    makeMaterial(color)
-  );
-  mesh.position.y = direction * length * 0.5;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData.kind = "solid";
-  parent.add(mesh);
-  solidObjects.push(mesh);
-  return mesh;
-}
-
-function applyStoredRotation(group, key) {
-  const rotation = pose[key] || { x: 0, y: 0, z: 0 };
-  group.rotation.set(
-    THREE.MathUtils.degToRad(rotation.x),
-    THREE.MathUtils.degToRad(rotation.y),
-    THREE.MathUtils.degToRad(rotation.z)
-  );
-}
-
-function makeLinearJoint(parent, key, position, length, width, depth, color, direction = -1) {
-  const group = new THREE.Group();
-  group.name = key;
-  group.position.copy(position);
-  parent.add(group);
-  groups[key] = group;
-  addJointMarker(group, key, Math.max(0.055, width * 0.22));
-  addCylinderBone(group, length, Math.max(0.025, width * 0.08), direction, "y");
-  addBoxSegment(group, width, length, depth, color, direction);
-  applyStoredRotation(group, key);
-  return group;
-}
-
-function makePalm(parent, key, position, length, width, depth) {
-  const group = new THREE.Group();
-  group.name = key;
-  group.position.copy(position);
-  parent.add(group);
-  groups[key] = group;
-  addJointMarker(group, key, Math.max(0.05, width * 0.24));
-  addCylinderBone(group, length, Math.max(0.022, width * 0.07), -1, "y");
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, length, depth), makeMaterial(colors.hand));
-  mesh.position.y = -length * 0.5;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData.kind = "solid";
-  group.add(mesh);
-  solidObjects.push(mesh);
-  applyStoredRotation(group, key);
-  return group;
-}
-
-function makeFoot(parent, key, position, length, width, height) {
-  const group = new THREE.Group();
-  group.name = key;
-  group.position.copy(position);
-  parent.add(group);
-  groups[key] = group;
-  addJointMarker(group, key, Math.max(0.055, width * 0.22));
-  addCylinderBone(group, length, Math.max(0.024, width * 0.07), 1, "z");
-
-  const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, length), makeMaterial(colors.hand));
-  mesh.position.set(0, -height * 0.42, length * 0.42);
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  mesh.userData.kind = "solid";
-  group.add(mesh);
-  solidObjects.push(mesh);
-  applyStoredRotation(group, key);
-  return group;
-}
-
-function buildRig() {
-  if (rig) scene.remove(rig);
-  groups = {};
-  jointMarkers = {};
-  solidObjects = [];
-  skeletonObjects = [];
-
-  rig = new THREE.Group();
-  rig.name = "ProceduralHumanRig";
-  scene.add(rig);
-
-  const limb = params.limbThickness;
-  const armWidth = limb;
-  const legWidth = limb * 1.18;
-  const handWidth = limb * 1.25;
-  const footWidth = limb * 1.45;
-  const footHeight = limb * 0.62;
-  const legHeight = params.thighLength + params.shinLength + footHeight;
-  rig.position.y = legHeight;
-
-  const lowerTorso = makeLinearJoint(
-    rig,
-    "lowerTorso",
-    new THREE.Vector3(0, 0, 0),
-    params.lowerTorsoHeight,
-    params.hipWidth * 0.92,
-    params.bodyDepth,
-    colors.torso,
-    1
-  );
-
-  const upperTorso = makeLinearJoint(
-    lowerTorso,
-    "upperTorso",
-    new THREE.Vector3(0, params.lowerTorsoHeight, 0),
-    params.upperTorsoHeight,
-    params.shoulderWidth * 0.72,
-    params.bodyDepth * 0.94,
-    colors.torso,
-    1
-  );
-
-  const head = new THREE.Group();
-  head.name = "head";
-  head.position.set(0, params.upperTorsoHeight + params.headSize * 0.18, 0);
-  upperTorso.add(head);
-  groups.head = head;
-  addJointMarker(head, "head", Math.max(0.06, params.headSize * 0.1));
-
-  const headMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(params.headSize * 0.5, 28, 20),
-    makeMaterial(colors.head)
-  );
-  headMesh.position.y = params.headSize * 0.42;
-  headMesh.scale.set(0.88, 1.0, 0.84);
-  headMesh.castShadow = true;
-  headMesh.receiveShadow = true;
-  headMesh.userData.kind = "solid";
-  head.add(headMesh);
-  solidObjects.push(headMesh);
-  addCylinderBone(head, params.headSize * 0.48, Math.max(0.025, params.headSize * 0.035), 1, "y");
-  applyStoredRotation(head, "head");
-
-  const shoulderY = params.upperTorsoHeight * 0.78;
-  const leftUpperArm = makeLinearJoint(
-    upperTorso,
-    "leftUpperArm",
-    new THREE.Vector3(-params.shoulderWidth * 0.5, shoulderY, 0),
-    params.upperArmLength,
-    armWidth,
-    armWidth * 0.9,
-    colors.limb,
-    -1
-  );
-  const leftForearm = makeLinearJoint(
-    leftUpperArm,
-    "leftForearm",
-    new THREE.Vector3(0, -params.upperArmLength, 0),
-    params.forearmLength,
-    armWidth * 0.9,
-    armWidth * 0.84,
-    colors.limb,
-    -1
-  );
-  makePalm(
-    leftForearm,
-    "leftPalm",
-    new THREE.Vector3(0, -params.forearmLength, 0),
-    params.palmLength,
-    handWidth,
-    handWidth * 0.55
-  );
-
-  const rightUpperArm = makeLinearJoint(
-    upperTorso,
-    "rightUpperArm",
-    new THREE.Vector3(params.shoulderWidth * 0.5, shoulderY, 0),
-    params.upperArmLength,
-    armWidth,
-    armWidth * 0.9,
-    colors.limb,
-    -1
-  );
-  const rightForearm = makeLinearJoint(
-    rightUpperArm,
-    "rightForearm",
-    new THREE.Vector3(0, -params.upperArmLength, 0),
-    params.forearmLength,
-    armWidth * 0.9,
-    armWidth * 0.84,
-    colors.limb,
-    -1
-  );
-  makePalm(
-    rightForearm,
-    "rightPalm",
-    new THREE.Vector3(0, -params.forearmLength, 0),
-    params.palmLength,
-    handWidth,
-    handWidth * 0.55
-  );
-
-  const leftThigh = makeLinearJoint(
-    rig,
-    "leftThigh",
-    new THREE.Vector3(-params.hipWidth * 0.28, 0, 0),
-    params.thighLength,
-    legWidth,
-    legWidth * 0.92,
-    colors.limb,
-    -1
-  );
-  const leftShin = makeLinearJoint(
-    leftThigh,
-    "leftShin",
-    new THREE.Vector3(0, -params.thighLength, 0),
-    params.shinLength,
-    legWidth * 0.88,
-    legWidth * 0.82,
-    colors.limb,
-    -1
-  );
-  makeFoot(
-    leftShin,
-    "leftFoot",
-    new THREE.Vector3(0, -params.shinLength, -params.footLength * 0.16),
-    params.footLength,
-    footWidth,
-    footHeight
-  );
-
-  const rightThigh = makeLinearJoint(
-    rig,
-    "rightThigh",
-    new THREE.Vector3(params.hipWidth * 0.28, 0, 0),
-    params.thighLength,
-    legWidth,
-    legWidth * 0.92,
-    colors.limb,
-    -1
-  );
-  const rightShin = makeLinearJoint(
-    rightThigh,
-    "rightShin",
-    new THREE.Vector3(0, -params.thighLength, 0),
-    params.shinLength,
-    legWidth * 0.88,
-    legWidth * 0.82,
-    colors.limb,
-    -1
-  );
-  makeFoot(
-    rightShin,
-    "rightFoot",
-    new THREE.Vector3(0, -params.shinLength, -params.footLength * 0.16),
-    params.footLength,
-    footWidth,
-    footHeight
-  );
-
+  skeleton=new THREE.SkeletonHelper(model);skeleton.visible=document.getElementById("showSkeleton").checked;skeleton.material.transparent=true;skeleton.material.opacity=.82;scene.add(skeleton);
+  mixer=new THREE.AnimationMixer(model);mixer.timeScale=Number(speedInput.value)||1;
+  fitModel();fillBones();fillAnimations();
+  document.getElementById("showMesh").checked=true;
+  modelStats.textContent=`网格 ${meshes} · 蒙皮 ${skinned} · 骨骼 ${bones} · 动画 ${model.animations?.length||0}`;
+  fbxInfo.textContent=`${label}\n${sizeBytes?(sizeBytes/1024/1024).toFixed(1)+" MB · ":""}FBX 7400`;
+  fbxBadge.textContent="已载入";
+  statusText.textContent="Ellen 模型已载入";
   applyVisibility();
-  updateSelectionVisual();
-  updateOrbitTarget();
-  statusText.textContent = "模型已重新生成";
+  setLoading("完成","",false);
+  if(model.animations?.length) playSelected();
 }
-
-function disposeMaterial(material) {
-  if (!material) return;
-  const materials = Array.isArray(material) ? material : [material];
-  for (const item of materials) {
-    for (const value of Object.values(item)) {
-      if (value?.isTexture) value.dispose?.();
+async function parseBuffer(buffer,label,sizeBytes){
+  setLoading("解析 FBX",label,true);
+  await new Promise(r=>requestAnimationFrame(r));
+  const object=loader.parse(buffer,"");
+  installModel(object,label,sizeBytes);
+}
+async function loadBundledModel(){
+  try{
+    setLoading("加载 Ellen 模型","正在读取 GitHub Pages 模型资源…",true);
+    const response=await fetch(DEFAULT_MANIFEST,{cache:"no-store"});
+    if(!response.ok)throw new Error("manifest "+response.status);
+    const manifest=await response.json();
+    const parts=[];
+    for(let i=0;i<manifest.parts.length;i+=6){
+      const group=manifest.parts.slice(i,i+6);
+      const loaded=await Promise.all(group.map(async name=>{
+        const r=await fetch(new URL(name,response.url));if(!r.ok)throw new Error(name+" "+r.status);return r.text();
+      }));
+      parts.push(...loaded);
+      const done=Math.min(i+group.length,manifest.parts.length);
+      loadingDetail.textContent=`下载模型 ${done}/${manifest.parts.length}`;
     }
-    item.dispose?.();
-  }
-}
-
-function clearImportedModel({ restoreStatus = true } = {}) {
-  animationMixer?.stopAllAction();
-  activeAnimationAction = null;
-  animationMixer = null;
-
-  if (importedSkeletonHelper) {
-    scene.remove(importedSkeletonHelper);
-    importedSkeletonHelper.geometry?.dispose?.();
-    importedSkeletonHelper.material?.dispose?.();
-    importedSkeletonHelper = null;
-  }
-
-  if (importedContainer) {
-    importedContainer.traverse(node => {
-      node.geometry?.dispose?.();
-      if (node.material) disposeMaterial(node.material);
-    });
-    scene.remove(importedContainer);
-  }
-
-  importedContainer = null;
-  importedObject = null;
-  clearFbxButton.hidden = true;
-  fbxBadge.textContent = "未载入";
-  fbxBadge.classList.remove("ready", "error");
-  fbxInfo.textContent = "选择顶部“导入 FBX”，模型会直接在浏览器本地解析，不上传到服务器。";
-  animationSelect.innerHTML = '<option value="">无动画</option>';
-  animationSelect.disabled = true;
-  playAnimationButton.disabled = true;
-  stopAnimationButton.disabled = true;
-  if (rig) rig.visible = true;
-  applyVisibility();
-  updateOrbitTarget();
-  if (restoreStatus) statusText.textContent = "已返回程序化模型";
-}
-
-function describeFbx(object, file) {
-  let meshCount = 0;
-  let skinnedMeshCount = 0;
-  let boneCount = 0;
-  object.traverse(node => {
-    if (node.isMesh) meshCount++;
-    if (node.isSkinnedMesh) skinnedMeshCount++;
-    if (node.isBone) boneCount++;
-  });
-  const clips = object.animations || [];
-  const megabytes = (file.size / 1024 / 1024).toFixed(1);
-  return { meshCount, skinnedMeshCount, boneCount, clips, megabytes };
-}
-
-function fitImportedObject() {
-  if (!importedContainer || !importedObject) return;
-  importedContainer.scale.setScalar(1);
-  importedContainer.position.set(0, 0, 0);
-  importedObject.updateWorldMatrix(true, true);
-
-  const rawBox = new THREE.Box3().setFromObject(importedObject);
-  if (rawBox.isEmpty()) return;
-  const rawSize = rawBox.getSize(new THREE.Vector3());
-  const targetHeight = 5.8;
-  const scale = rawSize.y > 0.0001 ? targetHeight / rawSize.y : 1;
-  importedContainer.scale.setScalar(scale);
-  importedContainer.updateWorldMatrix(true, true);
-
-  const box = new THREE.Box3().setFromObject(importedContainer);
-  const center = box.getCenter(new THREE.Vector3());
-  importedContainer.position.x -= center.x;
-  importedContainer.position.z -= center.z;
-  importedContainer.position.y -= box.min.y;
-  importedContainer.updateWorldMatrix(true, true);
-
-  const finalBox = new THREE.Box3().setFromObject(importedContainer);
-  const finalSize = finalBox.getSize(new THREE.Vector3());
-  const finalCenter = finalBox.getCenter(new THREE.Vector3());
-  orbit.target.set(finalCenter.x, finalBox.min.y + finalSize.y * 0.5, finalCenter.z);
-  orbit.radius = THREE.MathUtils.clamp(Math.max(finalSize.y * 1.45, finalSize.x * 2.2, 5.2), 4.2, 18);
-  updateCamera();
-}
-
-function populateAnimationControls(clips) {
-  animationSelect.innerHTML = "";
-  if (!clips.length) {
-    animationSelect.innerHTML = '<option value="">无动画</option>';
-    animationSelect.disabled = true;
-    playAnimationButton.disabled = true;
-    stopAnimationButton.disabled = true;
-    return;
-  }
-
-  clips.forEach((clip, index) => {
-    const option = document.createElement("option");
-    option.value = String(index);
-    option.textContent = clip.name || `Animation ${index + 1}`;
-    animationSelect.appendChild(option);
-  });
-  animationSelect.disabled = false;
-  playAnimationButton.disabled = false;
-  stopAnimationButton.disabled = false;
-  animationSelect.value = "0";
-}
-
-function playSelectedAnimation() {
-  if (!animationMixer || !importedObject) return;
-  const clips = importedObject.animations || [];
-  const clip = clips[Number(animationSelect.value)];
-  if (!clip) return;
-  animationMixer.stopAllAction();
-  activeAnimationAction = animationMixer.clipAction(clip);
-  activeAnimationAction.reset();
-  activeAnimationAction.setLoop(THREE.LoopRepeat, Infinity);
-  activeAnimationAction.play();
-  statusText.textContent = `播放动画：${clip.name || "Animation"}`;
-}
-
-async function importFbxFile(file) {
-  if (!file) return;
-  statusText.textContent = `正在解析 ${file.name}…`;
-  fbxBadge.textContent = "解析中";
-  fbxBadge.classList.remove("ready", "error");
-
-  try {
-    const buffer = await file.arrayBuffer();
-    const object = fbxLoader.parse(buffer, "");
-    clearImportedModel({ restoreStatus: false });
-
-    importedContainer = new THREE.Group();
-    importedContainer.name = "ImportedFBXContainer";
-    importedObject = object;
-    importedContainer.add(importedObject);
-    scene.add(importedContainer);
-
-    importedObject.traverse(node => {
-      if (node.isMesh) {
-        node.castShadow = true;
-        node.receiveShadow = true;
-      }
-    });
-
-    importedSkeletonHelper = new THREE.SkeletonHelper(importedObject);
-    importedSkeletonHelper.material.transparent = true;
-    importedSkeletonHelper.material.opacity = 0.82;
-    scene.add(importedSkeletonHelper);
-
-    animationMixer = new THREE.AnimationMixer(importedObject);
-    animationMixer.timeScale = Number(animationSpeed.value) || 1;
-
-    const info = describeFbx(importedObject, file);
-    populateAnimationControls(info.clips);
-    fitImportedObject();
-
-    if (rig) rig.visible = false;
-    clearFbxButton.hidden = false;
-    fbxBadge.textContent = "已载入";
-    fbxBadge.classList.add("ready");
-    fbxInfo.innerHTML =
-      `<strong>${file.name}</strong>\n` +
-      `${info.megabytes} MB · 网格 ${info.meshCount} · 蒙皮网格 ${info.skinnedMeshCount}\n` +
-      `骨骼 ${info.boneCount} · 动画 ${info.clips.length}`;
-    statusText.textContent = `FBX 已载入：${info.boneCount} 根骨骼 / ${info.clips.length} 个动画`;
-    applyVisibility();
-
-    if (info.clips.length) playSelectedAnimation();
-  } catch (error) {
+    const base64=parts.join("").trim();
+    const binary=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));
+    loadingDetail.textContent="解压并解析骨骼/动画…";
+    const bytes=gunzipSync(binary);
+    await parseBuffer(bytes.buffer,manifest.label||"Avatar_Female_Size02_Ellen_Ani_Attack_AssaultAid.fbx",manifest.originalBytes||bytes.length);
+  }catch(error){
     console.error(error);
-    clearImportedModel({ restoreStatus: false });
-    fbxBadge.textContent = "载入失败";
-    fbxBadge.classList.add("error");
-    fbxInfo.textContent = "FBX 解析失败。请确认文件是 FBX 7.x，或检查浏览器控制台中的具体错误。";
-    statusText.textContent = "FBX 载入失败";
+    fbxBadge.textContent="等待资源";
+    statusText.textContent="默认 FBX 尚未同步完成";
+    setLoading("Ellen FBX","默认模型资源加载失败，可先用右上角“导入其他 FBX”打开原文件。",true);
   }
 }
-
-function updateOrbitTarget() {
-  const totalHeight =
-    params.thighLength +
-    params.shinLength +
-    params.lowerTorsoHeight +
-    params.upperTorsoHeight +
-    params.headSize +
-    params.limbThickness * 0.62;
-  orbit.target.set(0, totalHeight * 0.50, 0);
-  updateCamera();
+async function importLocal(file){
+  try{await parseBuffer(await file.arrayBuffer(),file.name,file.size)}
+  catch(error){console.error(error);statusText.textContent="FBX 载入失败";setLoading("载入失败",String(error?.message||error),true)}
 }
-
-function applyVisibility() {
-  const showMesh = document.getElementById("showMesh").checked;
-  const showSkeleton = document.getElementById("showSkeleton").checked;
-  solidObjects.forEach(object => { object.visible = showMesh; });
-  skeletonObjects.forEach(object => { object.visible = showSkeleton; });
-  if (importedObject) {
-    importedObject.traverse(node => {
-      if (node.isMesh) node.visible = showMesh;
-    });
-  }
-  if (importedSkeletonHelper) importedSkeletonHelper.visible = showSkeleton;
-  grid.visible = document.getElementById("showGrid").checked;
+function applyVisibility(){
+  const showMesh=document.getElementById("showMesh").checked;
+  if(model)model.traverse(n=>{if(n.isMesh)n.visible=showMesh});
+  if(skeleton)skeleton.visible=document.getElementById("showSkeleton").checked;
+  grid.visible=document.getElementById("showGrid").checked;
 }
-
-function updateSelectionVisual() {
-  Object.entries(jointMarkers).forEach(([key, marker]) => {
-    const active = key === selectedJoint;
-    marker.scale.setScalar(active ? 1.65 : 1);
-    marker.material.color.setHex(active ? colors.selected : colors.skeleton);
-    marker.material.opacity = active ? 1 : 0.92;
-  });
-
-  document.querySelectorAll(".rig-node").forEach(node => {
-    node.classList.toggle("active", node.dataset.joint === selectedJoint);
-  });
-
-  const def = jointDefs.find(([key]) => key === selectedJoint);
-  selectedJointLabel.textContent = def ? def[1] : selectedJoint;
-}
-
-function setSelectedJoint(key) {
-  if (!groups[key]) return;
-  selectedJoint = key;
-  jointSelect.value = key;
-  updatePoseUI();
-  updateSelectionVisual();
-}
-
-function updatePoseUI() {
-  const rotation = pose[selectedJoint] || { x: 0, y: 0, z: 0 };
-  for (const axis of ["X", "Y", "Z"]) {
-    const key = axis.toLowerCase();
-    const input = document.getElementById("rot" + axis);
-    const output = document.getElementById("rot" + axis + "Value");
-    input.value = String(rotation[key]);
-    output.textContent = Math.round(rotation[key]) + "°";
-  }
-}
-
-function applyPoseAxis(axis, value) {
-  pose[selectedJoint][axis] = value;
-  const group = groups[selectedJoint];
-  if (!group) return;
-  group.rotation[axis] = THREE.MathUtils.degToRad(value);
-  document.getElementById("rot" + axis.toUpperCase() + "Value").textContent = Math.round(value) + "°";
-  statusText.textContent = selectedJointLabel.textContent + " 已调整";
-}
-
-function buildProportionControls() {
-  const container = document.getElementById("proportionControls");
-  container.innerHTML = "";
-
-  proportionDefs.forEach(([key, label, min, max, step, unit]) => {
-    const wrapper = document.createElement("div");
-    wrapper.className = "control";
-    wrapper.innerHTML = `
-      <label for="param-${key}">${label}</label>
-      <output id="value-${key}">${params[key].toFixed(2)}${unit}</output>
-      <input id="param-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${params[key]}">
-    `;
-    const input = wrapper.querySelector("input");
-    const output = wrapper.querySelector("output");
-    input.addEventListener("input", () => {
-      params[key] = Number(input.value);
-      output.textContent = params[key].toFixed(2) + unit;
-      buildRig();
-    });
-    container.appendChild(wrapper);
-  });
-}
-
-function buildJointUI() {
-  jointSelect.innerHTML = "";
-  const hierarchy = document.getElementById("hierarchy");
-  hierarchy.innerHTML = "";
-
-  jointDefs.forEach(([key, label, depth]) => {
-    const option = document.createElement("option");
-    option.value = key;
-    option.textContent = label;
-    jointSelect.appendChild(option);
-
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `rig-node depth-${Math.min(depth, 3)}`;
-    button.dataset.joint = key;
-    button.innerHTML = `<i aria-hidden="true"></i><span>${label}</span>`;
-    button.addEventListener("click", () => setSelectedJoint(key));
-    hierarchy.appendChild(button);
-  });
-
-  jointSelect.value = selectedJoint;
-  jointSelect.addEventListener("change", () => setSelectedJoint(jointSelect.value));
-}
-
-function resetPose() {
-  pose = Object.fromEntries(jointDefs.map(([key]) => [key, { x: 0, y: 0, z: 0 }]));
-  Object.entries(groups).forEach(([key, group]) => {
-    if (pose[key]) group.rotation.set(0, 0, 0);
-  });
-  updatePoseUI();
-  statusText.textContent = "全部关节已归零";
-}
-
-function resetAll() {
-  params = { ...defaults };
-  pose = Object.fromEntries(jointDefs.map(([key]) => [key, { x: 0, y: 0, z: 0 }]));
-  selectedJoint = "lowerTorso";
-  buildProportionControls();
-  buildRig();
-  setSelectedJoint(selectedJoint);
-  statusText.textContent = "已恢复默认模型";
-}
-
-function exportJson() {
-  const payload = {
-    format: "paperchalk-procedural-human",
-    version: 1,
-    params,
-    pose
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "paperchalk-procedural-human.json";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-  statusText.textContent = "JSON 已导出";
-}
-
-async function importJsonFile(file) {
-  try {
-    const payload = JSON.parse(await file.text());
-    if (payload.format !== "paperchalk-procedural-human") throw new Error("格式不匹配");
-
-    if (payload.params) {
-      for (const [key] of proportionDefs) {
-        if (Number.isFinite(Number(payload.params[key]))) params[key] = Number(payload.params[key]);
-      }
-    }
-    if (payload.pose) {
-      for (const [key] of jointDefs) {
-        const incoming = payload.pose[key];
-        if (!incoming) continue;
-        pose[key] = {
-          x: Number(incoming.x) || 0,
-          y: Number(incoming.y) || 0,
-          z: Number(incoming.z) || 0
-        };
-      }
-    }
-
-    buildProportionControls();
-    buildRig();
-    setSelectedJoint(selectedJoint);
-    statusText.textContent = "JSON 已载入";
-  } catch (error) {
-    console.error(error);
-    statusText.textContent = "载入失败：JSON 格式不正确";
-  }
-}
-
-for (const axis of ["X", "Y", "Z"]) {
-  const input = document.getElementById("rot" + axis);
-  input.addEventListener("input", () => applyPoseAxis(axis.toLowerCase(), Number(input.value)));
-}
-
-document.getElementById("zeroJoint").addEventListener("click", () => {
-  pose[selectedJoint] = { x: 0, y: 0, z: 0 };
-  groups[selectedJoint]?.rotation.set(0, 0, 0);
-  updatePoseUI();
-  statusText.textContent = selectedJointLabel.textContent + " 已归零";
-});
-document.getElementById("resetPose").addEventListener("click", resetPose);
-document.getElementById("resetAll").addEventListener("click", resetAll);
-document.getElementById("exportJson").addEventListener("click", exportJson);
-document.getElementById("importJson").addEventListener("change", event => {
-  const file = event.target.files?.[0];
-  if (file) importJsonFile(file);
-  event.target.value = "";
-});
-
-importFbxInput.addEventListener("change", event => {
-  const file = event.target.files?.[0];
-  if (file) importFbxFile(file);
-  event.target.value = "";
-});
-clearFbxButton.addEventListener("click", () => clearImportedModel());
-playAnimationButton.addEventListener("click", playSelectedAnimation);
-stopAnimationButton.addEventListener("click", () => {
-  animationMixer?.stopAllAction();
-  activeAnimationAction = null;
-  statusText.textContent = "动画已停止";
-});
-animationSelect.addEventListener("change", playSelectedAnimation);
-animationSpeed.addEventListener("input", () => {
-  const speed = Number(animationSpeed.value) || 1;
-  animationSpeedValue.textContent = speed.toFixed(2) + "×";
-  if (animationMixer) animationMixer.timeScale = speed;
-});
-
-viewport.addEventListener("dragover", event => {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "copy";
-});
-viewport.addEventListener("drop", event => {
-  event.preventDefault();
-  const file = [...(event.dataTransfer.files || [])].find(item => item.name.toLowerCase().endsWith(".fbx"));
-  if (file) importFbxFile(file);
-});
-
-for (const id of ["showMesh", "showSkeleton", "showGrid"]) {
-  document.getElementById(id).addEventListener("change", applyVisibility);
-}
-
-const views = {
-  threeQuarter: { theta: Math.PI * 0.22, phi: Math.PI * 0.39, radius: 9.4 },
-  front: { theta: 0, phi: Math.PI * 0.46, radius: 9.0 },
-  side: { theta: Math.PI * 0.5, phi: Math.PI * 0.46, radius: 9.0 }
-};
-
-document.querySelectorAll("[data-view]").forEach(button => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll("[data-view]").forEach(item => item.classList.remove("active"));
-    button.classList.add("active");
-    Object.assign(orbit, views[button.dataset.view]);
-    updateCamera();
-  });
-});
-
-const resizeObserver = new ResizeObserver(() => {
-  const width = Math.max(1, viewport.clientWidth);
-  const height = Math.max(1, viewport.clientHeight);
-  renderer.setSize(width, height, false);
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
-});
-resizeObserver.observe(viewport);
-
-buildProportionControls();
-buildJointUI();
-buildRig();
-setSelectedJoint(selectedJoint);
-
-function animate() {
-  const delta = Math.min(animationClock.getDelta(), 0.05);
-  animationMixer?.update(delta);
-  importedSkeletonHelper?.update();
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
-animate();
+document.getElementById("importFbx").addEventListener("change",e=>{const file=e.target.files?.[0];if(file)importLocal(file);e.target.value=""});
+for(const id of ["showMesh","showSkeleton","showGrid"])document.getElementById(id).addEventListener("change",applyVisibility);
+playButton.addEventListener("click",playSelected);
+stopButton.addEventListener("click",()=>{mixer?.stopAllAction();action=null;statusText.textContent="动画已停止"});
+animationSelect.addEventListener("change",playSelected);
+speedInput.addEventListener("input",()=>{const v=Number(speedInput.value)||1;speedValue.textContent=v.toFixed(2)+"×";if(mixer)mixer.timeScale=v});
+viewport.addEventListener("dragover",e=>{e.preventDefault();e.dataTransfer.dropEffect="copy"});
+viewport.addEventListener("drop",e=>{e.preventDefault();const file=[...(e.dataTransfer.files||[])].find(f=>f.name.toLowerCase().endsWith(".fbx"));if(file)importLocal(file)});
+const views={threeQuarter:{theta:Math.PI*.22,phi:Math.PI*.43},front:{theta:0,phi:Math.PI*.47},side:{theta:Math.PI*.5,phi:Math.PI*.47}};
+document.querySelectorAll("[data-view]").forEach(button=>button.addEventListener("click",()=>{document.querySelectorAll("[data-view]").forEach(b=>b.classList.remove("active"));button.classList.add("active");Object.assign(orbit,views[button.dataset.view]);updateCamera()}));
+new ResizeObserver(()=>{const w=Math.max(1,viewport.clientWidth),h=Math.max(1,viewport.clientHeight);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}).observe(viewport);
+function animate(){const dt=Math.min(clock.getDelta(),.05);mixer?.update(dt);skeleton?.update();renderer.render(scene,camera);requestAnimationFrame(animate)}animate();
+loadBundledModel();
