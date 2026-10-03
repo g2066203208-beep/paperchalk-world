@@ -42,7 +42,7 @@ try{
   await page.waitForTimeout(500);
 
   const version=await page.locator('#demoLabVersion').textContent();
-  assert(version==='DL-2026.10.03.7','wrong visible Demo version: '+version);
+  assert(version==='DL-2026.10.03.8','wrong visible Demo version: '+version);
 
   const initial=await page.evaluate(()=>window.GreetingCardLab.snapshot());
   assert(initial.viewMode==='game','Demo must open in actual game view');
