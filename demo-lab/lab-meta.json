@@ -6,7 +6,7 @@
   "productionPath": "studio/",
   "labPath": "demo-lab/",
   "directMergeToMain": false,
-  "displayVersion": "DL-2026.10.03.5",
-  "releaseLabel": "white-paper-game-transition-r1",
+  "displayVersion": "DL-2026.10.03.6",
+  "releaseLabel": "white-paper-game-transition-r2",
   "focus": "game-first-white-paper-transition"
 }
