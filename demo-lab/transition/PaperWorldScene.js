@@ -151,7 +151,7 @@ export function createPaperWorldScene({container}={}){
   }
 
   // -------------------------------------------------------------------------
-  // PAPER SWEEP — deliberately game-magic, not a real paper mechanism.
+  // PAPER SWEEP — deliberately game-magic, designed for the camera rather than construction realism.
   // -------------------------------------------------------------------------
   const sweepRoot=new THREE.Group();
   sweepRoot.name='GAME PAPER SWEEP';
