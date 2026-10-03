@@ -31,8 +31,17 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
   playerMesh.userData.skeletonRuntime='spine-4.3-native';
   scene.add(playerMesh);
 
+  // Spine renders into a private WebGL canvas which is then sampled by the
+  // world renderer. Keep this buffer dense enough for a full-screen phone
+  // composition; the old 320x512 target was visibly soft after scaling.
   const cardCanvas=document.createElement('canvas');
-  cardCanvas.width=320;cardCanvas.height=512;
+  const cardResolution=()=>{
+    const compact=window.matchMedia?.('(pointer: coarse)').matches||Math.min(innerWidth||0,innerHeight||0)<760;
+    const dpr=Math.min(window.devicePixelRatio||1,compact?2:2.5);
+    return {width:Math.round(640*dpr/2),height:Math.round(1024*dpr/2)};
+  };
+  const initialResolution=cardResolution();
+  cardCanvas.width=initialResolution.width;cardCanvas.height=initialResolution.height;
   const cardTexture=new THREE.CanvasTexture(cardCanvas);
   cardTexture.colorSpace=THREE.SRGBColorSpace;
   cardTexture.minFilter=THREE.LinearFilter;cardTexture.magFilter=THREE.LinearFilter;cardTexture.generateMipmaps=false;
@@ -95,8 +104,13 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
   }
   function layoutCard(){
     const padding=1.14,viewWidth=bounds.width*padding,viewHeight=bounds.height*padding;
-    const height=512,width=Math.max(192,Math.min(512,Math.round(height*viewWidth/viewHeight)));
-    cardCanvas.width=width;cardCanvas.height=height;
+    const height=cardCanvas.height,width=Math.max(256,Math.min(cardCanvas.width,Math.round(height*viewWidth/viewHeight)));
+    // Resize only when the aspect ratio changes. Reassigning canvas dimensions
+    // for every layout would reset the WebGL context and invalidate Spine's
+    // texture objects.
+    if(cardCanvas.width!==width||cardCanvas.height!==height){
+      cardCanvas.width=width;cardCanvas.height=height;
+    }
     spineRenderer.camera.position.set(bounds.x+bounds.width*.5,bounds.y+bounds.height*.5,0);
     spineRenderer.camera.setViewport(viewWidth,viewHeight);
     spineRenderer.camera.update();
@@ -114,6 +128,13 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
     spineRenderer.begin();spineRenderer.drawSkeleton(skeleton);spineRenderer.end();
     cardTexture.needsUpdate=true;
   }
+  function resizeCardBuffer(){
+    if(!spineRenderer||!bounds||disposed)return;
+    const next=cardResolution();
+    if(next.width===cardCanvas.width&&next.height===cardCanvas.height)return;
+    cardCanvas.width=next.width;cardCanvas.height=next.height;
+    layoutCard();renderSpine();flags.render=flags.shadow=flags.depth=true;
+  }
   async function load(){
     spine=await loadSpineRuntime(runtimeUrl);
     spineCanvasGL=cardCanvas.getContext('webgl',{alpha:true,antialias:true,premultipliedAlpha:false,preserveDrawingBuffer:false});
@@ -130,6 +151,7 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
     return playerMesh;
   }
   const ready=load().catch(error=>{loaded=false;throw error;});
+  window.addEventListener?.('resize',resizeCardBuffer,{passive:true});
 
   function sync(snapshot,dt=0){
     if(disposed||!loaded||!snapshot)return false;
@@ -138,7 +160,10 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
     const changedAnimation=next!==animationId;if(changedAnimation)setClip(next);
     const elapsed=Math.max(0,Math.min(.05,Number(dt)||0));
     if(animationEntry&&!changedAnimation){animationTime+=elapsed;animationState.update(elapsed);applyPose();renderSpine();}
-    const facing=snapshot.facing??1,stride=snapshot.grounded?Math.sin((snapshot.distance??0)*10)*Math.min(.024,Math.abs(snapshot.vx??0)*.009):-(snapshot.vx??0)*.012;
+    // The authored Spine walk already contains the body sway and foot timing.
+    // An additional world-space sinusoidal roll made the whole cutout wobble
+    // against the camera, especially on a low-frame-rate mobile WebView.
+    const facing=snapshot.facing??1,stride=0;
     const changed=!last||last.x!==x||last.y!==y||last.facing!==facing||playerMesh.rotation.z!==stride||last.animation!==animationId;
     playerMesh.position.set(x,y,0);playerMesh.scale.x=facing;playerMesh.rotation.z=stride;
     const ground=terrain.groundBelow?.(x,y,0),surface=ground?.y??y-5;contactShadow.position.set(x,surface+.018,-.02);
@@ -148,6 +173,7 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
   }
   function dispose(){
     disposed=true;
+    window.removeEventListener?.('resize',resizeCardBuffer);
     try{spineRenderer?.dispose?.();}catch{}
     try{assetManager?.dispose?.();}catch{}
   }
