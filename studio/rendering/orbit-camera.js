@@ -70,7 +70,6 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   }
   domElement.style.touchAction='none';
   domElement.addEventListener('pointerdown',e=>{
-    if(gameplay)return;
     if(e.pointerType==='mouse'&&e.button!==0)return;
     pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     try{domElement.setPointerCapture(e.pointerId);}catch{}
@@ -85,6 +84,7 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
       distance=clamp(pinchStartCameraDistance*pinchStartDistance/Math.max(1,pointerDistance()),minDistance,maxDistance);
       changed(true);return;
     }
+    if(gameplay)return;
     if(!dragging)return;
     yaw-=(e.clientX-lastX)*.006;pitch=clamp(pitch+(e.clientY-lastY)*.005,-pitchLimit,pitchLimit);
     lastX=e.clientX;lastY=e.clientY;changed(true);

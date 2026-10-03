@@ -120,7 +120,7 @@ function createResidentAtlas(THREE){
     }
   }
   const texture=canvas?new THREE.CanvasTexture(canvas):new THREE.Texture({width,height});
-  texture.name='Twenty-four hand-cut city neighbours';texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=2;
+  texture.name='Twenty-four player-model city neighbours';texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=2;
   return texture;
 }
 
@@ -132,8 +132,8 @@ export function createCityPopulation({THREE,scene,flags={}}){
   const gait=new THREE.InstancedBufferAttribute(new Float32Array(capacity),1);
   geometry.setAttribute('residentTile',tiles);
   geometry.setAttribute('residentGait',gait);
-  const material=new THREE.MeshLambertMaterial({map:texture,alphaTest:.14,side:THREE.DoubleSide,
-    forceSinglePass:true,color:0xffffff,emissive:0x74889c,emissiveIntensity:.12,depthWrite:true});
+  const material=new THREE.MeshBasicMaterial({map:texture,alphaTest:.14,side:THREE.DoubleSide,
+    forceSinglePass:true,color:0xffffff,depthWrite:true});
   function atlasShader(shader){
     shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute vec2 residentTile;\nattribute float residentGait;\nvarying vec2 vResidentTile;')
       .replace('#include <begin_vertex>',`#include <begin_vertex>
@@ -149,8 +149,8 @@ export function createCityPopulation({THREE,scene,flags={}}){
         diffuseColor*=sampledDiffuseColor;
       #endif`);
   }
-  material.onBeforeCompile=atlasShader;material.customProgramCacheKey=()=> 'city-neighbour-atlas-v1';
-  const people=new THREE.InstancedMesh(geometry,material,capacity);people.name='Illustrated paper neighbours';
+  material.onBeforeCompile=atlasShader;material.customProgramCacheKey=()=> 'city-neighbour-player-model-atlas-v2';
+  const people=new THREE.InstancedMesh(geometry,material,capacity);people.name='Player-model paper neighbours';
   people.instanceMatrix.setUsage(THREE.DynamicDrawUsage);people.frustumCulled=false;people.receiveShadow=true;
   // Their own small contact shadows move with their feet. They are excluded
   // from the expensive static city volumetric shadow cache.
