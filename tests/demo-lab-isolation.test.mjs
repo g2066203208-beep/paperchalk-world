@@ -61,8 +61,8 @@ test('new scene encodes physical paper relationships explicitly',async()=>{
   const scene=await readFile(new URL('../demo-lab/transition/PaperStageScene.js',import.meta.url),'utf8');
   assert.match(scene,/MASTER HINGE · STREET PAGE/);
   assert.match(scene,/Fixed underground pop-up deck/);
-  assert.match(scene,/V-fold left gusset/);
-  assert.match(scene,/pageHinge\.rotation\.x/);
+  assert.match(scene,/SECONDARY SCORE · STREET PAGE/);assert.match(scene,/triangular V-fold card/);
+  assert.match(scene,/pageHinge\.rotation\.x/);assert.match(scene,/secondaryHinge\.rotation\.x/);
   assert.match(scene,/pivot\.rotation\.x=-Math\.PI\*\.5\*\(1-local\)/);
   assert.match(scene,/lampWave/);
   assert.doesNotMatch(scene,/opacity\s*=/);
