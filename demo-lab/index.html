@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#171716">
-  <title>White Paper World Transition · Demo Lab</title>
-  <link rel="stylesheet" href="./transition-lab.css?v=DL-2026.10.03.6">
+  <title>Greeting Card Page Turn · Demo Lab</title>
+  <link rel="stylesheet" href="./transition-lab.css?v=DL-2026.10.03.7">
 </head>
 <body>
   <main class="lab-shell">
@@ -14,26 +14,26 @@
         <span class="lab-mark" aria-hidden="true"><i></i><i></i></span>
         <div>
           <p class="eyebrow">PAPERCHALK · GAME TRANSITION WHITEBOX</p>
-          <h1>纯白纸游戏转场 Demo</h1>
+          <h1>贺卡式翻页转场 Demo</h1>
         </div>
       </div>
       <div class="header-meta">
-        <span class="version-chip">DEMO LAB · <span id="demoLabVersion">DL-2026.10.03.6</span></span>
+        <span class="version-chip">DEMO LAB · <span id="demoLabVersion">DL-2026.10.03.7</span></span>
         <span id="buildId">BUILD …</span>
       </div>
     </header>
 
     <div class="lab-grid">
-      <section class="stage-column" aria-label="纯白纸游戏转场">
+      <section class="stage-column" aria-label="贺卡式游戏转场">
         <div class="viewport-wrap">
           <div id="labViewport"></div>
           <div class="viewport-caption">
-            <strong>GAME VIEW · WHITE PAPER ONLY</strong>
-            <span>城市 → 地铁 · 游戏化纸片魔法，不做现实机械模拟</span>
+            <strong>GAME VIEW · GREETING CARD FLIP</strong>
+            <span>城市封面翻开 → 地铁内页弹起 · 全程真实人物在场</span>
           </div>
           <div class="act-card" aria-live="polite">
             <small>CURRENT ACT</small>
-            <strong id="actLabel">原场景保持</strong>
+            <strong id="actLabel">城市贺卡封面</strong>
           </div>
         </div>
 
@@ -41,15 +41,15 @@
           <div class="timeline-row">
             <button id="playToggle" class="primary" type="button" aria-pressed="false">播放</button>
             <button id="resetTimeline" type="button">复位</button>
-            <input id="timeline" type="range" min="0" max="1000" step="1" value="0" aria-label="纸世界转场时间轴">
+            <input id="timeline" type="range" min="0" max="1000" step="1" value="0" aria-label="贺卡转场时间轴">
             <span id="progressLabel" class="progress-readout">000%</span>
           </div>
           <div class="keyframes" aria-label="关键帧">
-            <button type="button" data-jump="0">0% · 城市</button>
-            <button type="button" data-jump=".25">25% · 纸景散开</button>
-            <button type="button" data-jump=".5">50% · 双场景交叠</button>
-            <button type="button" data-jump=".75">75% · 地铁成立</button>
-            <button type="button" data-jump="1">100% · 完成</button>
+            <button type="button" data-jump="0">0% · 城市封面</button>
+            <button type="button" data-jump=".25">25% · 开始翻页</button>
+            <button type="button" data-jump=".5">50% · 内页露出</button>
+            <button type="button" data-jump=".75">75% · 地铁弹起</button>
+            <button type="button" data-jump="1">100% · 完全打开</button>
             <button id="stepBack" type="button">− 1 frame</button>
             <button id="stepForward" type="button">+ 1 frame</button>
           </div>
@@ -58,18 +58,17 @@
 
       <aside class="inspector" aria-label="Demo 控制">
         <section>
-          <p class="eyebrow">DESIGN RULE</p>
-          <h2>纸感是视觉语法，不是物理规则</h2>
-          <p>所有场景只用白纸、灰色切边与阴影。人物保留真实游戏素材，用来检查比例、遮挡与镜头。允许现实中不可能的纸片运动，只要游戏里自然、漂亮、连贯。</p>
-          <p class="build-note"><a href="./PAPER_WORLD_WHITEBOX_PROMPT.md" target="_blank" rel="noopener">查看完整 2000 字制作提示词 ↗</a></p>
+          <p class="eyebrow">ONE CLEAR IDEA</p>
+          <h2>像贺卡一样翻开</h2>
+          <p>旧城市全部属于同一张封面页。触发后整页沿底部折线翻开，后面的地铁内页才出现；站台、柱子、长椅、售票机再像立体贺卡一样弹起。人物和可走地面不参与翻页。</p>
         </section>
 
         <section>
           <p class="eyebrow">LIVE READOUT</p>
           <div class="metric-grid">
-            <dt>城市散开</dt><dd id="cityValue">000%</dd>
-            <dt>纸影掠过</dt><dd id="sweepValue">000%</dd>
-            <dt>地铁建立</dt><dd id="destinationValue">000%</dd>
+            <dt>封面翻开</dt><dd id="coverValue">000%</dd>
+            <dt>内页显现</dt><dd id="innerValue">000%</dd>
+            <dt>立体场景弹起</dt><dd id="popupValue">000%</dd>
             <dt>灯光唤醒</dt><dd id="lightValue">000%</dd>
             <dt>角色世界坐标</dt><dd id="playerXValue">X 0.0</dd>
             <dt>当前场景块</dt><dd id="chunkValue">CHUNK 0</dd>
@@ -99,17 +98,17 @@
             <div class="control-row"><span>角色世界 X</span><button id="resetPlayerX" type="button">回到 0</button></div>
             <input id="playerX" type="range" min="-90" max="90" step=".1" value="0">
           </div>
-          <p>拖动 X 时，只有玩家附近的当前块参与高细节转场；左右邻接块用低成本实例化白纸代理，远处块休眠。转场不是让整张世界一起动。</p>
+          <p>大地图时只让玩家所在 chunk 拥有完整贺卡转场；左右邻接块用实例化白纸代理，远处休眠。不会让整张地图一起翻。</p>
         </section>
 
         <section>
-          <p class="eyebrow">WHITEBOX ACCEPTANCE</p>
+          <p class="eyebrow">ACCEPTANCE</p>
           <ul class="rule-list">
-            <li><strong>人物优先：</strong>0/25/50/75/100% 都必须看清角色。</li>
-            <li><strong>50% 最重要：</strong>旧城市残留和新地铁必须同时存在，画面最有戏。</li>
-            <li><strong>不做真实机械：</strong>可以滑、卷、压扁、飞向景深、从景深站起。</li>
-            <li><strong>不用黑屏：</strong>靠纸层、遮挡和景深完成视觉接力。</li>
-            <li><strong>可扩展：</strong>大量重复场景用 InstancedMesh，动画只发生在当前可见块。</li>
+            <li><strong>第一眼就是翻页：</strong>25% 必须已经明确读出整张封面正在翻。</li>
+            <li><strong>人物不被带走：</strong>角色和游戏地面始终留在原世界坐标。</li>
+            <li><strong>50% 最关键：</strong>要同时看到封面翻到中途和地铁内页第一次出现。</li>
+            <li><strong>75% 像立体贺卡：</strong>地铁墙、柱、设施从内页逐层弹起。</li>
+            <li><strong>100% 是打开的贺卡：</strong>封面退出视线，地铁完整成立，暖灯亮起。</li>
           </ul>
           <p class="build-note">空格：播放/暂停 · ←/→：逐帧 · Shift + ←/→：5 帧 · 0–4：关键帧</p>
         </section>
@@ -117,6 +116,6 @@
     </div>
   </main>
 
-  <script type="module" src="./transition-lab.js?v=DL-2026.10.03.6"></script>
+  <script type="module" src="./transition-lab.js?v=DL-2026.10.03.7"></script>
 </body>
 </html>
