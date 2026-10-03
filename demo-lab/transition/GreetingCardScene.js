@@ -26,7 +26,7 @@ export function createGreetingCardScene({container}={}){
   const camera=new THREE.PerspectiveCamera(36,1,.1,140);
   const cameraTarget=new THREE.Vector3();
 
-  const hemi=new THREE.HemisphereLight(0xfffdf7,0x4c4944,1.72);
+  const hemi=new THREE.HemisphereLight(0xfffdf7,0x9b958b,1.78);
   scene.add(hemi);
 
   const key=new THREE.DirectionalLight(0xfff0d6,3.4);
@@ -85,8 +85,9 @@ export function createGreetingCardScene({container}={}){
   activeRoot.name='ACTIVE GREETING CARD CELL';
   scene.add(activeRoot);
 
-  const ground=box(activeRoot,'Stable gameplay ground',17.2,.14,7.5,0,-.07,.18,paperWarm);
-  box(activeRoot,'Gameplay ground cut edge',17.2,.22,.14,0,-.11,3.74,edge);
+  const ground=box(activeRoot,'Stable gameplay ground',17.2,.14,1.42,0,-.07,2.68,paperWarm);
+  box(activeRoot,'Gameplay ground rear edge',17.2,.18,.12,0,-.10,1.98,edge);
+  box(activeRoot,'Gameplay ground front cut edge',17.2,.22,.14,0,-.11,3.37,edge);
 
   // -------------------------------------------------------------------------
   // THE CARD ITSELF
