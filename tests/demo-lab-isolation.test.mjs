@@ -8,7 +8,7 @@ import {createSubwayWorld} from '../demo-lab/world/SubwayWorld.mjs';
 import {StagePlayerSimulation} from '../demo-lab/core/StagePlayerSimulation.mjs';
 import {sceneSaveKey,CITY_SCENE_ID} from '../demo-lab/ui/CityPrologue.mjs';
 import {StageLifecycle} from '../demo-lab/stage/StageRig.js';
-import {PAPER_STAGE_TIMING,rippleDelay} from '../demo-lab/stage/StageTransitionTimeline.js';
+import {PAPER_STAGE_TIMING,paperSettle,rippleDelay} from '../demo-lab/stage/StageTransitionTimeline.js';
 
 const root=fileURLToPath(new URL('../demo-lab/',import.meta.url));
 async function files(dir=root){
@@ -66,7 +66,7 @@ test('stage architecture is split into director, timeline and stage rigs',async(
   assert.match(city,/CityNpcRoot/);assert.match(city,/CityBackdropCarrier/);assert.match(subway,/ceilingCarrier\.position\.y/);
 });
 
-test('stage choreography uses true per-object bottom pivots, vertical lifts and player-centred ripple delays',async()=>{
+test('stage choreography uses paper hinges, a hero street page and player-centred ripple delays',async()=>{
   const city=await readFile(new URL('../demo-lab/stage/CityStageRig.js',import.meta.url),'utf8');
   const subwayRig=await readFile(new URL('../demo-lab/stage/SubwayStageRig.js',import.meta.url),'utf8');
   const stageRig=await readFile(new URL('../demo-lab/stage/StageRig.js',import.meta.url),'utf8');
@@ -75,9 +75,10 @@ test('stage choreography uses true per-object bottom pivots, vertical lifts and 
   const subway=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
   assert.ok(PAPER_STAGE_TIMING.duration>=1.3&&PAPER_STAGE_TIMING.duration<=1.8);
   assert.ok(rippleDelay(0,0)<rippleDelay(80,0));
+  assert.equal(paperSettle(0),0);assert.equal(paperSettle(1),1);assert.ok(paperSettle(.82,{overshoot:.06})>.82);
   assert.match(city,/piece\.group\.rotation\.x=piece\.baseRotationX-fold\*Math\.PI\*\.5/);
-  assert.match(city,/floorCarrier\.position\.y/);assert.match(city,/backdropCarrier\.position\.y/);
-  assert.match(subwayRig,/stage\.floorCarrier\.position\.y/);assert.match(subwayRig,/stage\.backdropCarrier\.position\.y/);assert.match(subwayRig,/stage\.ceilingCarrier\.position\.y/);
+  assert.match(city,/City street hero page hinge/);assert.match(city,/Hero street fold crease/);assert.match(city,/paperSettle/);
+  assert.match(subwayRig,/deckLift:false/);assert.match(subwayRig,/backdropLift:false/);assert.match(subwayRig,/paperSettle/);assert.match(subwayRig,/stage\.ceilingCarrier\.position\.y/);
   assert.doesNotMatch(subwayRig,/ceilingCarrier\.rotation/);
   assert.match(stageRig,/function hingeAudit/);
   assert.match(districts,/pivotY=minY/);assert.match(districts,/pivotZ=\(minZ\+maxZ\)\/2/);
