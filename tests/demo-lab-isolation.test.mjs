@@ -24,7 +24,7 @@ test('Demo Lab root is the game-first white-paper transition study',async()=>{
   assert.match(html,/纸感是视觉语法，不是物理规则/);
   assert.match(html,/PAPER_WORLD_WHITEBOX_PROMPT\.md/);
   assert.equal(meta.focus,'game-first-white-paper-transition');
-  assert.equal(meta.displayVersion,'DL-2026.10.03.5');
+  assert.equal(meta.displayVersion,'DL-2026.10.03.6');
   assert.equal(meta.directMergeToMain,false);
 });
 
