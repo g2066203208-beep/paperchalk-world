@@ -295,7 +295,9 @@ export function createCityDistricts({THREE,scene,flags={}}){
 
   for(const district of CITY_DISTRICTS){
     activeDistrict=district;source=[0,1].map(()=>({p:[],n:[],c:[],uv:[]}));
-    const node=new THREE.Group();node.name=district.name+' · folded paper district';node.userData.districtId=district.id;
+    const node=new THREE.Group();node.name=district.name+' · folded paper district';
+    node.position.set(district.x,.5,-3.7);
+    node.userData={districtId:district.id,stageX:district.x,stageHinge:true,stageBaseRotationX:node.rotation.x};
     const startTriangles=totalTriangles;
     if(district.id==='academy'){
       for(const [i,dx] of [-42,-30,-18,33,45,56].entries())building(SHOP_NAMES[0][i+1],dx,{w:7.1,h:3.65+i%2*.65,z:-5.2,variant:i,label:i+1,roofType:i%3});
@@ -323,7 +325,10 @@ export function createCityDistricts({THREE,scene,flags={}}){
     sign(district.name+' street sign',roadX,2.72,-1.19,3.45,.58,96+district.index);
     for(const [i,data] of source.entries()){
       if(!data.p.length)continue;
-      const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.p,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(data.n,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.c,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uv,2));geometry.computeBoundingBox();geometry.computeBoundingSphere();
+      const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.p,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(data.n,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.c,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uv,2));
+      // Geometry was authored in world coordinates. Rebase it around a local
+      // floor hinge so the whole district can fold without orbiting world zero.
+      geometry.translate(-district.x,-.5,3.7);geometry.computeBoundingBox();geometry.computeBoundingSphere();
       const mesh=new THREE.Mesh(geometry,i?printed:stock);mesh.name=district.name+(i?' · printed windows and Chinese signs':' · folded architectural paper');mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=true;
       node.add(mesh);totalTriangles+=data.p.length/9;
     }

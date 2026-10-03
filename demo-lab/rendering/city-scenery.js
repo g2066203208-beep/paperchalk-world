@@ -252,10 +252,14 @@ export function createCityScenery({THREE,scene,world,flags={}}){
     if(!batch.positions.length)continue;
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(batch.positions,3));
     geometry.setAttribute('normal',new THREE.Float32BufferAttribute(batch.normals,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(batch.uvs,2));
-    geometry.setAttribute('color',new THREE.Float32BufferAttribute(batch.colors,3));geometry.computeBoundingBox();geometry.computeBoundingSphere();
+    geometry.setAttribute('color',new THREE.Float32BufferAttribute(batch.colors,3));geometry.computeBoundingBox();
+    const bounds=geometry.boundingBox,pivotX=(bounds.min.x+bounds.max.x)/2,pivotZ=(bounds.min.z+bounds.max.z)/2;
+    // Each chunk gets its own physical foot hinge. This keeps the fold local
+    // and also gives the director an X coordinate for the player-centred ripple.
+    geometry.translate(-pivotX,-.5,-pivotZ);geometry.computeBoundingBox();geometry.computeBoundingSphere();
     const mesh=new THREE.Mesh(geometry,batch.material===0?facadeMaterial:paperMaterial);mesh.name=`City paper batch ${batch.chunk}/${batch.material}/${batch.distant}`;
-    mesh.castShadow=batch.castShadow;mesh.receiveShadow=batch.receiveShadow;mesh.frustumCulled=true;
-    mesh.userData={cityPaperBatch:true,chunk:batch.chunk,distant:batch.distant,parts:[...batch.names]};group.add(mesh);triangles+=batch.positions.length/9;
+    mesh.position.set(pivotX,.5,pivotZ);mesh.castShadow=batch.castShadow;mesh.receiveShadow=batch.receiveShadow;mesh.frustumCulled=true;
+    mesh.userData={cityPaperBatch:true,chunk:batch.chunk,distant:batch.distant,parts:[...batch.names],stageX:pivotX,stageHinge:true,stageBaseRotationX:mesh.rotation.x};group.add(mesh);triangles+=batch.positions.length/9;
   }
   function localLight(name,x,y,z,tx,ty,tz,hex){
     const light=new THREE.SpotLight(hex,4,14,.46,.38,1.5);light.name=name;light.position.set(x,y,z);
