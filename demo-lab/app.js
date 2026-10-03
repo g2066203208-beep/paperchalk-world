@@ -73,11 +73,11 @@ function setStatus(){
   refreshCityHud();
 }
 function refreshCityHud(){
-  const cityActive=(scene?.getState?.().activeStage??'city')==='city';
+  const sceneState=scene?.getState?.()??{},cityActive=(sceneState.activeStage??'city')==='city';
   ui.prologueHud.hidden=!isCity||!cityActive;
-  const x=simulation?.snapshot().x??0,sight=cityInteraction();
-  ui.locationLabel.textContent=cityLocation(x);
-  ui.inspectAction.hidden=!isCity||!cityActive||!ready||failed||pauseReasons.active||!sight||!document.body.classList.contains('inspector-hidden');
+  const player=simulation?.snapshot()??{x:0},sight=worldInteraction();
+  ui.locationLabel.textContent=cityActive?cityLocation(player.x):'月灯中央站';
+  ui.inspectAction.hidden=!isCity||!ready||failed||pauseReasons.active||sceneState.stageTransitioning||!sight||!document.body.classList.contains('inspector-hidden');
   if(sight)ui.inspectActionLabel.textContent=sight.label;
 }
 function cityInteraction(){
@@ -87,11 +87,26 @@ function cityInteraction(){
   const person=scene?.nearbyCityPerson?.(x);
   return person?{...person,type:'person',label:'交谈 · '+person.name,title:person.name+' · '+person.role,text:person.line}:null;
 }
-function openInspection({explicit=false}={}){
-  if(!isCity||!ready||failed||pauseReasons.active||!document.body.classList.contains('inspector-hidden'))return;
-  const sight=cityInteraction();if(!sight)return;
+function worldInteraction(){
+  const state=scene?.getState?.();
+  if(!state||state.stageTransitioning)return null;
+  if(state.activeStage==='subway')return scene?.getTrainInteraction?.(simulation?.snapshot())??null;
+  return cityInteraction();
+}
+function handlePrimaryInteraction(){
+  if(!ready||failed||pauseReasons.active||!document.body.classList.contains('inspector-hidden'))return;
+  const state=scene.getState(),sight=worldInteraction();if(!sight)return;
+  if(state.activeStage==='subway'&&sight.type==='train'){
+    if(sight.action==='board'){
+      const pose=scene.boardTrain();if(pose){simulation.setExternalPose(pose);toast('已上车 · 月河线');}
+    }else if(sight.action==='exit'){
+      const pose=scene.disembarkTrain();if(pose){simulation.setExternalPose(pose);simulation.setWorld(scene.getWorld(),{preserve:true});toast('已下车 · 月灯中央站');}
+    }else scenePrompt('月河线',sight.label);
+    refreshCityHud();return;
+  }
   scenePrompt(sight.title,sight.text);
 }
+function openInspection(){handlePrimaryInteraction();}
 function closeInspection(){
   if(!inspectionOpen){
     hideScenePrompt();
@@ -158,10 +173,17 @@ function refreshStatus(now,force=false){
   }
   if(ui.stageSceneLabel)ui.stageSceneLabel.textContent=sceneState.stageTransitioning?'舞台换景中':sceneState.activeStage==='subway'?'月灯中央站 · 月河线':'城市街道';
   refreshCityHud();
-  ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z 0`;
-  ui.playerState.textContent=pauseReasons.active?'已暂停':sceneState.stageTransitioning?'看舞台换景':Math.abs(state.vx)>.05?'漫游中':'站立';
+  ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z ${(state.z??0).toFixed(2)}`;
+  ui.playerState.textContent=pauseReasons.active?'已暂停':sceneState.stageTransitioning?'看舞台换景':state.onVehicle?'列车内':Math.abs(state.vx)>.05?'漫游中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
-  ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形\n纸艺大地 · 连续地面\n${stats.size.width} × ${stats.size.height} · 像素倍率 ${stats.pixelRatio.toFixed(2)}\n固定物理步 60 Hz · 渲染按需更新`;
+  const transition=stats.stageTransition?.active?Math.round((stats.stageTransition.t??0)*100)+'%':'—';
+  ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形
+纹理 ${stats.textures} · 几何体 ${stats.geometries}
+DPR ${stats.pixelRatio.toFixed(2)} / 原生 ${stats.nativePixelRatio.toFixed(2)} · 帧耗时 ${stats.frameTimeMs.toFixed(1)} ms
+Drawing Buffer ${stats.drawingBuffer.width} × ${stats.drawingBuffer.height}
+当前舞台 ${stats.activeStage} · 换景 ${transition}
+NPC 活动 ${stats.activeNpc} · 休眠 ${stats.dormantNpc} · 活动车辆 ${stats.activeVehicles}
+固定物理步 60 Hz · 隐藏舞台停止 AI/交通更新`;
   const shafts=stats.volumetrics;
   ui.renderStats.textContent+='\n丁达尔光柱：'+(!shafts.supported?'此设备图形能力不支持':!shafts.enabled?'已关闭':shafts.effectiveStrength.toFixed(2)+'× · 已渲染 '+shafts.renderedFrames+' 帧');
   lastRendered=stats.renderedFrames;statusTime=now;
@@ -298,7 +320,8 @@ async function loadBuildInfo(){
   }
 }
 function resetCityPlayer(){
-  simulation.reset();resetClock();scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
+  if(scene?.getState?.().trainBoarded)scene.disembarkTrain?.();
+  simulation.setWorld(scene.getWorld(),{preserve:false});resetClock();scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
 }
 function wireControls(){
   listen(ui.viewport,'pointerdown',()=>ui.viewport.focus({preventScroll:true}));
@@ -309,6 +332,7 @@ function wireControls(){
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
   listen(ui.toggleStageScene,'click',()=>{
     const current=scene.getState();if(current.stageTransitioning)return;
+    if(current.trainBoarded){toast('请先从列车下车再切换舞台');return;}
     const next=current.activeStage==='subway'?'city':'subway';
     cityExplorer?.close();
     if(!scene.setStage(next))return;
@@ -325,14 +349,14 @@ function wireControls(){
   listen(ui.gameSave,'click',()=>saveProgress());
   listen(ui.gameLoad,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.gameSettings,'click',()=>setInspector(true));
-  listen(ui.inspectAction,'click',()=>openInspection({explicit:true}));
+  listen(ui.inspectAction,'click',handlePrimaryInteraction);
   listen(ui.closeInspection,'click',closeInspection);
   listen(ui.inspectionOverlay,'click',event=>{if(event.target===ui.inspectionOverlay)closeInspection();});
   listen(window,'keydown',event=>{
     if(scene?.getState?.().activeStage==='city'&&(cityExplorer?.isOpen||!pauseReasons.active)&&cityExplorer?.handleKey(event))return;
     keepModalFocus(event);
     if(event.key==='Escape'&&window.PaperchalkHandleBack())event.preventDefault();
-    if(acceptsInspectionKey(event)&&isCity&&!pauseReasons.active&&cityInteraction()){event.preventDefault();openInspection();}
+    if(acceptsInspectionKey(event)&&isCity&&!pauseReasons.active&&worldInteraction()){event.preventDefault();handlePrimaryInteraction();}
   });
   for(const button of document.querySelectorAll('[data-surface]'))listen(button,'click',()=>{surfaceMode=button.dataset.surface;scene.setSurfaceMode(surfaceMode);updateControls();});
   for(const button of document.querySelectorAll('[data-preset]'))listen(button,'click',()=>{scene.setTimePreset(button.dataset.preset);updateControls();if(pauseReasons.active)toast('已选择光线，继续游戏后开始过渡');});
@@ -351,14 +375,23 @@ function tick(now){
   const elapsed=lastTime?Math.min(.1,Math.max(0,(now-lastTime)/1000)):0;lastTime=now;
   if(ready&&!failed&&!nativeSuspended&&!document.hidden){
     try{
-      const paused=pauseReasons.active,stageChanging=scene.getState().stageTransitioning;
+      const before=scene.getState(),paused=pauseReasons.active,stageChanging=before.stageTransitioning;
       if(!paused&&!stageChanging){
         accumulator+=elapsed;
-        while(accumulator>=STEP){simulation.update(STEP,input.consume());accumulator-=STEP;}
+        while(accumulator>=STEP){
+          const action=input.consume();
+          if(scene.getState().trainBoarded){
+            const pose=scene.updateTrainPassenger(STEP,action);if(pose)simulation.setExternalPose(pose);
+          }else simulation.update(STEP,action);
+          accumulator-=STEP;
+        }
       }else{accumulator=0;input.cancel();}
       if(!paused)renderClock+=elapsed*1000;
       scene.frame(paused?0:elapsed,renderClock,simulation.snapshot());
-      const sceneState=scene.getState();
+      const sceneState=scene.getState(),activeWorld=scene.getWorld();
+      if(!sceneState.stageTransitioning&&!sceneState.trainBoarded&&activeWorld?.id!==simulation.world?.id){
+        simulation.setWorld(activeWorld,{preserve:true});
+      }
       if(!sceneState.stageTransitioning&&sceneState.activeStage==='city')cityExplorer?.update(simulation.snapshot().x);
       refreshStatus(now);
     }catch(error){sceneStatus({state:'error',message:'场景运行出现错误，请刷新重试。'});console.error(error);}

@@ -120,7 +120,7 @@ function createResidentAtlas(THREE){
     }
   }
   const texture=canvas?new THREE.CanvasTexture(canvas):new THREE.Texture({width,height});
-  texture.name='Twenty-four hand-cut city neighbours';texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=2;
+  texture.name='Twenty-four hand-cut city neighbours';texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;texture.generateMipmaps=true;texture.minFilter=THREE.LinearMipmapLinearFilter;texture.magFilter=THREE.LinearFilter;
   return texture;
 }
 
@@ -162,7 +162,7 @@ export function createCityPopulation({THREE,scene,flags={}}){
   });
   const shadows=new THREE.InstancedMesh(shadowGeometry,shadowMaterial,capacity);shadows.name='Neighbour sole shadows';
   shadows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);shadows.frustumCulled=false;shadows.userData.volumeShadow=false;group.add(shadows);
-  const transform=new THREE.Object3D();let clock=0,lastPlayerX=NaN,visible=[],previousSignature='';
+  const transform=new THREE.Object3D();let clock=0,lastPlayerX=NaN,visible=[],previousSignature='',lifecycle='active';
   let stageWave={progress:1,anchorX:0,revealing:true,revision:0},lastStageRevision=-1;
   const stageEase=value=>{const t=Math.max(0,Math.min(1,value));return t*t*(3-2*t);};
   function residentFold(x){
@@ -171,6 +171,7 @@ export function createCityPopulation({THREE,scene,flags={}}){
     return stageWave.revealing?1-ripple:ripple;
   }
   function update(dt,playerX=0){
+    if(lifecycle==='dormant'||lifecycle==='inactive'){people.count=shadows.count=0;people.visible=shadows.visible=false;return false;}
     const elapsed=Number.isFinite(dt)&&dt>0?dt:0;
     if(!Number.isFinite(playerX))playerX=Number.isFinite(lastPlayerX)?lastPlayerX:0;
     if(!elapsed&&playerX===lastPlayerX&&lastStageRevision===stageWave.revision)return false;
@@ -209,6 +210,14 @@ export function createCityPopulation({THREE,scene,flags={}}){
   }
   update(0,0);
   return {group,update,
+    setLifecycle(next){
+      if(!['inactive','preloading','ready','entering','active','exiting','dormant'].includes(next))throw new RangeError('Invalid NPC lifecycle: '+next);
+      if(lifecycle===next)return false;lifecycle=next;
+      if(next==='dormant'||next==='inactive'){
+        people.count=shadows.count=0;people.visible=shadows.visible=false;group.visible=false;visible=[];previousSignature='';
+      }else group.visible=true;
+      flags.render=flags.depth=flags.ao=true;return true;
+    },
     setStageWave({progress=stageWave.progress,anchorX=stageWave.anchorX,revealing=stageWave.revealing}={}){
       const nextProgress=Math.max(0,Math.min(1,Number(progress)||0));
       const nextAnchor=Number.isFinite(anchorX)?anchorX:stageWave.anchorX;
@@ -218,7 +227,7 @@ export function createCityPopulation({THREE,scene,flags={}}){
       return update(0,Number.isFinite(lastPlayerX)?lastPlayerX:nextAnchor);
     },
     nearby(playerX){
-      if(!Number.isFinite(playerX))return null;
+      if(lifecycle!=='active'||!Number.isFinite(playerX))return null;
       let nearest=null,distance=2.5;
       for(const resident of CITY_RESIDENTS){
         if(Math.abs(resident.homeX-playerX)>11)continue;
@@ -228,7 +237,7 @@ export function createCityPopulation({THREE,scene,flags={}}){
       }
       return nearest;
     },
-    stats(){return {residents:capacity,districts:CITY_DISTRICTS.length,visible:visible.length,clock,
+    stats(){return {residents:capacity,districts:CITY_DISTRICTS.length,visible:lifecycle==='active'?visible.length:0,dormant:lifecycle==='dormant'?capacity:0,lifecycle,clock,
       atlasVariants:24,atlasWidth:2048,atlasHeight:1024,batches:2,visibleDistance:VISIBLE_DISTANCE,
       people:CITY_RESIDENTS.map(r=>({id:r.id,name:r.name,role:r.role,districtId:r.districtId,
         minX:r.minX,maxX:r.maxX,z:r.z,height:r.height,...walkingState(r,clock)}))};},

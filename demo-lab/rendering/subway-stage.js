@@ -1,3 +1,5 @@
+import {createTrainVehicle} from '../stage/VehicleSystem.js';
+
 /** Coordinated Demo Lab subway stage. Horizontal deck/ceiling use lifts; vertical paper sets use local hinges. */
 export function createSubwayStage({THREE,scene,flags={}}={}){
   const root=new THREE.Group();root.name='Demo Lab · Moon River subway stage';root.visible=false;scene.add(root);
@@ -9,6 +11,11 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
   const wallRoot=new THREE.Group();wallRoot.name='Subway wall paper hinges';floorCarrier.add(wallRoot);
   const fixtureRoot=new THREE.Group();fixtureRoot.name='Subway fixture paper hinges';floorCarrier.add(fixtureRoot);
   const trainGroup=new THREE.Group();trainGroup.name='Subway train bound to track deck';floorCarrier.add(trainGroup);
+  const npcRoot=new THREE.Group();npcRoot.name='SubwayNpcRoot';floorCarrier.add(npcRoot);
+
+  // Distant tunnel/background has its own vertical carrier: it never rotates.
+  const backdropCarrier=new THREE.Group();backdropCarrier.name='SubwayBackdropCarrier';root.add(backdropCarrier);
+  const backdropGroup=new THREE.Group();backdropGroup.name='Subway far tunnel paper';backdropCarrier.add(backdropGroup);
 
   // The ceiling is intentionally NOT parented to the floor. It has its own fly-system.
   const ceilingCarrier=new THREE.Group();ceilingCarrier.name='Subway ceiling fly carrier';root.add(ceilingCarrier);
@@ -63,6 +70,15 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
     const g=new THREE.Group();g.name=name;g.position.set(x,.5,z);g.userData.stageX=x;parent.add(g);return g;
   }
 
+  // FAR TUNNEL — dark paper depth behind the station wall. It moves only by lift.
+  box(backdropGroup,'Far tunnel matte',width,6.8,.10,0,2.9,-9.4,mats.ink,{cast:false,receive:false});
+  for(let x=-108;x<=108;x+=18){
+    box(backdropGroup,'Far tunnel rib',.22,6.2,.08,x,2.7,-9.22,mats.tealDark,{cast:false,receive:false});
+  }
+  for(let x=-99;x<=99;x+=22){
+    box(backdropGroup,'Distant platform lamp',4.2,.09,.05,x,4.55,-9.08,mats.ivory,{cast:false,receive:false});
+  }
+
   // FLOOR — one rigid horizontal lift. Nothing here rotates.
   box(floorGroup,'Subway platform slab',width,.12,4.35,0,.44,.15,mats.cream);
   box(floorGroup,'Subway platform front cut edge',width,.28,.20,0,.33,-1.98,mats.tealDark);
@@ -109,16 +125,30 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
     box(p,'Clock hour hand',.38,.055,.025,.17,3.65,.06,new THREE.MeshBasicMaterial({color:0x28333d}),{cast:false,receive:false});
   }
 
-  // TRAIN — child of floorCarrier: it can slide along the track, but can never detach vertically.
-  trainGroup.position.set(6,0,0);trainGroup.userData.baseX=6;
-  box(trainGroup,'Subway train paper body',86,2.75,.18,0,1.55,-5.12,mats.ivory);
-  box(trainGroup,'Subway train teal skirt',86,.42,.20,0,.34,-5.02,mats.tealDark);
-  box(trainGroup,'Subway train route stripe',86,.18,.205,0,2.57,-5.01,mats.red);
-  for(let x=-39;x<=39;x+=6.5){
-    box(trainGroup,'Train window',3.55,1.05,.03,x,1.78,-4.99,mats.ink,{cast:false});
-    box(trainGroup,'Train door seam',.10,2.15,.035,x+2.25,1.40,-4.98,mats.teal,{cast:false});
+
+  // Small readable station props: fewer pieces, stronger silhouettes, all on their own foot hinges.
+  for(const [x,label] of [[-17,'A'],[22,'B']]){
+    const p=hinge(fixtureRoot,'Ticket machine hinge '+label,x,-1.36);fixturePieces.push({group:p,x});
+    box(p,'Ticket machine body',1.25,1.75,.58,0,.875,0,mats.teal);
+    box(p,'Ticket machine paper screen',.82,.46,.035,0,1.28,.31,mats.ink,{cast:false});
+    box(p,'Ticket slot',.58,.08,.04,0,.72,.32,mats.gold,{cast:false});
+    box(p,'Card reader',.26,.22,.04,.34,.48,.32,mats.red,{cast:false});
   }
-  sign(trainGroup,'Train destination','月河线','MOON RIVER LINE · 星灯方向',-34,2.40,-4.96,6.6,.68,'#557f7e');
+  for(const x of [-42,42]){
+    const p=hinge(fixtureRoot,'Route map stand hinge',x,-1.55);fixturePieces.push({group:p,x});
+    box(p,'Route map stand',.16,2.15,.16,0,1.075,0,mats.tealDark);
+    sign(p,'Moon River route map','月河线','月灯中央站 · 星灯住宅区',0,2.12,.03,5.2,.92,'#d8b657');
+  }
+  {
+    const p=hinge(fixtureRoot,'Platform emergency cabinet hinge',31,-2.1);fixturePieces.push({group:p,x:31});
+    box(p,'Emergency cabinet',1.0,1.28,.28,0,.64,0,mats.red);
+    box(p,'Emergency cabinet label',.72,.30,.03,0,.88,.16,mats.ivory,{cast:false});
+  }
+
+  // TRAIN — one playable carriage, physically parented to the rail deck.
+  // The vehicle owns real doors, boarding zones, passenger anchors and a route state machine.
+  trainGroup.position.set(0,0,0);
+  const trainVehicle=createTrainVehicle({THREE,parent:trainGroup,box,sign,mats,onInvalidate:()=>{flags.render=flags.depth=flags.ao=true;}});
 
   // CEILING — a separate fly bar. It only moves vertically, never rotates through the camera.
   box(ceilingGroup,'Subway ceiling sheet',width,.18,6.3,0,5.85,-2.92,mats.tealDark);
@@ -137,9 +167,10 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
   root.userData.subway={name:'月灯中央站',line:'月河线',width};
   flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;
   return {
-    root,floorCarrier,floorGroup,wallRoot,fixtureRoot,trainGroup,ceilingCarrier,ceilingGroup,
-    wallPieces,fixturePieces,lights,textures,materials,setAnchorX,setLightFactor,
+    root,floorCarrier,floorGroup,wallRoot,fixtureRoot,trainGroup,npcRoot,backdropCarrier,backdropGroup,ceilingCarrier,ceilingGroup,
+    wallPieces,fixturePieces,lights,textures,materials,trainVehicle,setAnchorX,setLightFactor,
     stats:()=>({name:'月灯中央站',line:'月河线',width,wallPieces:wallPieces.length,fixturePieces:fixturePieces.length,
-      lights:lights.length,trainBoundToFloor:trainGroup.parent===floorCarrier,ceilingIndependent:ceilingCarrier.parent===root})
+      lights:lights.length,trainBoundToFloor:trainGroup.parent===floorCarrier,ceilingIndependent:ceilingCarrier.parent===root,
+      backdropVerticalOnly:backdropCarrier.parent===root,subwayNpcRoot:npcRoot.name,vehicle:trainVehicle.stats()})
   };
 }

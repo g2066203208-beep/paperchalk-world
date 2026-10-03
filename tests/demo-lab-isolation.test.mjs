@@ -4,38 +4,41 @@ import {readFile,readdir,stat} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createCityPrologueWorld} from '../demo-lab/world/CityPrologueWorld.mjs';
+import {createSubwayWorld} from '../demo-lab/world/SubwayWorld.mjs';
 import {StagePlayerSimulation} from '../demo-lab/core/StagePlayerSimulation.mjs';
 import {sceneSaveKey,CITY_SCENE_ID} from '../demo-lab/ui/CityPrologue.mjs';
-import {createPaperScene} from '../demo-lab/rendering/createPaperScene.js';
+import {StageLifecycle} from '../demo-lab/stage/StageRig.js';
+import {PAPER_STAGE_TIMING,rippleDelay} from '../demo-lab/stage/StageTransitionTimeline.js';
 
 const root=fileURLToPath(new URL('../demo-lab/',import.meta.url));
 async function files(dir=root){
   const out=[];
   for(const name of await readdir(dir)){
     const p=path.join(dir,name),s=await stat(p);
-    if(s.isDirectory())out.push(...await files(p));
-    else out.push(p);
+    if(s.isDirectory())out.push(...await files(p)); else out.push(p);
   }
   return out;
 }
 
 test('demo lab is a playable snapshot with isolated saves',()=>{
-  const world=createCityPrologueWorld();
-  const player=new StagePlayerSimulation(world);
-  const start=player.snapshot().x;
+  const world=createCityPrologueWorld(),player=new StagePlayerSimulation(world),start=player.snapshot().x;
   for(let i=0;i<60;i++)player.update(1/60,{horizontal:1});
   assert.ok(player.snapshot().x>start+1);
   assert.match(sceneSaveKey(CITY_SCENE_ID),/^paperworld\.demo-lab\./);
   assert.match(sceneSaveKey('forest'),/^paperworld\.demo-lab\./);
 });
 
+test('player physics can hand off between city, subway and a moving vehicle pose',()=>{
+  const city=createCityPrologueWorld(),subway=createSubwayWorld({anchorX:12});
+  const player=new StagePlayerSimulation(city);player.setExternalPose({x:12,y:.5,z:-4.6,supportY:.5,onVehicle:true});
+  assert.equal(player.snapshot().onVehicle,true);assert.equal(player.snapshot().z,-4.6);
+  player.setWorld(subway,{preserve:true});
+  assert.equal(player.world.id,'subway-moonlight-central');assert.equal(player.snapshot().z,0);assert.equal(player.snapshot().y,.5);
+  player.setWorld(city,{preserve:true});assert.equal(player.world.id,'city-prologue');
+});
+
 test('demo lab never imports production application code',async()=>{
-  const forbidden=[
-    /(?:^|[/'"])\.\.\/studio(?:\/|['"])/,
-    /(?:^|[/'"])\.\.\/src(?:\/|['"])/,
-    /(?:^|[/'"])\.\.\/app(?:\/|['"])/,
-    /(?:^|[/'"])\.\.\/styles(?:\/|['"])/,
-  ];
+  const forbidden=[/(?:^|[/'"])\.\.\/studio(?:\/|['"])/,/(?:^|[/'"])\.\.\/src(?:\/|['"])/,/(?:^|[/'"])\.\.\/app(?:\/|['"])/,/(?:^|[/'"])\.\.\/styles(?:\/|['"])/];
   for(const filename of await files()){
     if(!/\.(?:js|mjs|html|css|json|md)$/.test(filename))continue;
     const source=await readFile(filename,'utf8');
@@ -48,67 +51,81 @@ test('lab identity is visibly different from production',async()=>{
   const pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
   const meta=JSON.parse(await readFile(path.join(root,'lab-meta.json'),'utf8'));
   assert.match(html,/DEMO LAB · .*demoLabVersion.* · EXPERIMENT ONLY/s);
-  assert.equal(pkg.name,'paperchalk-demo-lab');
-  assert.equal(meta.directMergeToMain,false);
-  assert.equal(meta.productionPath,'studio/');
+  assert.equal(pkg.name,'paperchalk-demo-lab');assert.equal(meta.directMergeToMain,false);assert.equal(meta.productionPath,'studio/');
 });
 
-
-test('full stage switch is wired to the Demo Lab UI',async()=>{
-  const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
-  const subwaySource=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
-  const appSource=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
-  const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
-  assert.match(html,/id="toggleStageScene"/);
-  assert.match(html,/切换到地铁/);
-  assert.match(sceneSource,/function setStage\(name\)/);
-  assert.match(sceneSource,/activeStage:'city'/);
-  assert.match(sceneSource,/createSubwayStage/);
-  assert.match(appSource,/scene\.setStage\(next\)/);
-  assert.match(subwaySource,/月灯中央站/);
-  assert.match(subwaySource,/月河线/);
+test('stage architecture is split into director, timeline and stage rigs',async()=>{
+  const scene=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
+  const director=await readFile(new URL('../demo-lab/stage/StageDirector.js',import.meta.url),'utf8');
+  const city=await readFile(new URL('../demo-lab/stage/CityStageRig.js',import.meta.url),'utf8');
+  const subway=await readFile(new URL('../demo-lab/stage/SubwayStageRig.js',import.meta.url),'utf8');
+  assert.match(scene,/createStageDirector/);assert.match(scene,/createCityStageRig/);assert.match(scene,/createSubwayStageRig/);
+  assert.doesNotMatch(scene,/function cityToSubway/);assert.doesNotMatch(scene,/function subwayToCity/);
+  for(const state of ['inactive','preloading','ready','entering','active','exiting','dormant'])assert.equal(StageLifecycle[state],state);
+  assert.match(director,/switchTo\(name,anchorX\)/);assert.match(city,/CityFloorCarrier/);assert.match(city,/CityVerticalSets/);
+  assert.match(city,/CityNpcRoot/);assert.match(city,/CityBackdropCarrier/);assert.match(subway,/ceilingCarrier\.position\.y/);
 });
 
-test('full stage switch uses coordinated carriers and player-centred ripple choreography',async()=>{
-  const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
-  const subwaySource=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
-  const appSource=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
-  assert.match(sceneSource,/duration:1\.92/);
-  assert.match(sceneSource,/City floor lift carrier/);
-  assert.match(sceneSource,/\[terrain\.terrainBlocks,traffic\?\.group,transit\?\.group\]/);
-  assert.doesNotMatch(sceneSource,/traffic\?\.group,transit\?\.group,population\?\.group/);
-  assert.match(sceneSource,/population\?\.setStageWave/);
-  assert.match(sceneSource,/cityRipple=.*stageTransition\.anchorX/);
-  assert.match(sceneSource,/subwayRipple=/);
-  assert.match(sceneSource,/cityFloorCarrier\.position\.y=cityFloorBaseY-cityDrop\*3\.25/);
-  assert.match(sceneSource,/subwayStage\.floorCarrier\.position\.y=-3\.25\*\(1-floorRise\)/);
-  assert.match(sceneSource,/subwayStage\.ceilingCarrier\.position\.y=\(1-ceilingDown\)\*3\.45/);
-  assert.match(sceneSource,/subwayStage\.trainGroup\.position\.x=/);
-  assert.match(subwaySource,/trainGroup\.parent===floorCarrier/);
-  assert.match(subwaySource,/ceilingCarrier\.parent===root/);
-  assert.match(subwaySource,/wallPieces/);
-  assert.match(subwaySource,/fixturePieces/);
-  assert.match(appSource,/stageChanging=scene\.getState\(\)\.stageTransitioning/);
-  assert.match(appSource,/if\(!paused&&!stageChanging\)/);
-  const populationSource=await readFile(new URL('../demo-lab/rendering/city-population.js',import.meta.url),'utf8');
-  assert.match(populationSource,/function residentFold\(x\)/);
-  assert.match(populationSource,/setStageWave/);
-  assert.match(populationSource,/transform\.rotation\.set\(-fold\*Math\.PI\*\.5/);
-});
-
-test('city paper scenery owns local floor hinges instead of rotating around world zero',async()=>{
+test('stage choreography uses local hinges, vertical lifts and player-centred ripple delays',async()=>{
+  const city=await readFile(new URL('../demo-lab/stage/CityStageRig.js',import.meta.url),'utf8');
+  const subway=await readFile(new URL('../demo-lab/stage/SubwayStageRig.js',import.meta.url),'utf8');
   const districts=await readFile(new URL('../demo-lab/rendering/city-districts.js',import.meta.url),'utf8');
   const scenery=await readFile(new URL('../demo-lab/rendering/city-scenery.js',import.meta.url),'utf8');
-  assert.match(districts,/stageHinge:true/);
-  assert.match(districts,/geometry\.translate\(-district\.x,-\.5,3\.7\)/);
-  assert.match(scenery,/stageHinge:true/);
-  assert.match(scenery,/geometry\.translate\(-pivotX,-\.5,-pivotZ\)/);
+  assert.ok(PAPER_STAGE_TIMING.duration>=1.3&&PAPER_STAGE_TIMING.duration<=1.8);
+  assert.ok(rippleDelay(0,0)<rippleDelay(80,0));
+  assert.match(city,/piece\.group\.rotation\.x=piece\.baseRotationX-fold\*Math\.PI\*\.5/);
+  assert.match(city,/floorCarrier\.position\.y/);assert.match(city,/backdropCarrier\.position\.y/);
+  assert.match(subway,/stage\.floorCarrier\.position\.y/);assert.match(subway,/stage\.backdropCarrier\.position\.y/);assert.match(subway,/stage\.ceilingCarrier\.position\.y/);
+  assert.doesNotMatch(subway,/ceilingCarrier\.rotation/);
+  assert.match(districts,/stageHinge:true/);assert.match(districts,/geometry\.translate\(-district\.x,-\.5,3\.7\)/);
+  assert.match(scenery,/stageHinge:true/);assert.match(scenery,/geometry\.translate\(-pivotX,-\.5,-pivotZ\)/);
 });
 
+test('city NPCs enter a true dormant lifecycle with zero active instances and no interaction',async()=>{
+  const population=await readFile(new URL('../demo-lab/rendering/city-population.js',import.meta.url),'utf8');
+  const cityRig=await readFile(new URL('../demo-lab/stage/CityStageRig.js',import.meta.url),'utf8');
+  assert.match(population,/lifecycle==='dormant'\|\|lifecycle==='inactive'/);
+  assert.match(population,/people\.count=shadows\.count=0/);
+  assert.match(population,/group\.visible=false/);
+  assert.match(population,/if\(lifecycle!=='active'\|\|!Number\.isFinite\(playerX\)\)return null/);
+  assert.match(cityRig,/if\(lifecycle\.state!==StageLifecycle\.active\)return false/);
+});
+
+test('subway owns a playable single-car train bound to the floor carrier',async()=>{
+  const subway=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
+  const vehicle=await readFile(new URL('../demo-lab/stage/VehicleSystem.js',import.meta.url),'utf8');
+  assert.match(subway,/createTrainVehicle/);assert.match(subway,/trainGroup\.parent===floorCarrier/);
+  assert.doesNotMatch(subway,/Subway train paper body',86/);
+  for(const name of ['CarriageRoot','Exterior','Interior','DoorLeft','DoorRight','VehiclePassengerRoot'])assert.match(vehicle,new RegExp(name));
+  for(const state of ['approaching','arriving','doorsOpening','boarding','doorsClosing','departing','travelling'])assert.match(vehicle,new RegExp(state));
+  assert.match(vehicle,/boardingZones/);assert.match(vehicle,/standingAnchors/);assert.match(vehicle,/seatAnchors/);
+  assert.match(vehicle,/function board\(/);assert.match(vehicle,/function disembark\(/);assert.match(vehicle,/function updatePassenger\(/);
+});
+
+test('subway stage has independent floor, backdrop, NPC and ceiling carriers',async()=>{
+  const subway=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
+  for(const name of ['Subway floor lift carrier','SubwayBackdropCarrier','SubwayNpcRoot','Subway ceiling fly carrier','Far tunnel matte'])assert.match(subway,new RegExp(name));
+  assert.match(subway,/backdropVerticalOnly/);assert.match(subway,/ceilingIndependent/);
+});
+
+test('render resolution is adaptive and no longer hard-capped at blurry 1.05/1.22 DPR',async()=>{
+  const scene=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
+  const adaptive=await readFile(new URL('../demo-lab/rendering/AdaptiveResolutionManager.js',import.meta.url),'utf8');
+  const actor=await readFile(new URL('../demo-lab/rendering/actor.js',import.meta.url),'utf8');
+  assert.doesNotMatch(scene,/compact\?1\.05:1\.22/);
+  assert.match(adaptive,/compact\?1\.75:2/);assert.match(adaptive,/averageFrameMs/);
+  assert.match(scene,/drawingBuffer/);assert.match(scene,/nativePixelRatio/);assert.match(scene,/frameTimeMs/);
+  assert.match(actor,/anisotropy=Math\.min\(16/);assert.match(actor,/LinearMipmapLinearFilter/);assert.match(actor,/snapshot\.z/);
+});
+
+test('performance UI exposes stage, buffer, NPC and vehicle diagnostics',async()=>{
+  const app=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
+  assert.match(app,/Drawing Buffer/);assert.match(app,/NPC 活动/);assert.match(app,/休眠/);assert.match(app,/活动车辆/);
+  assert.match(app,/updateTrainPassenger/);assert.match(app,/boardTrain/);assert.match(app,/setWorld\(activeWorld/);
+});
 
 test('Demo Lab exposes a visible build version in the stage chrome',async()=>{
   const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
   const app=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
-  assert.match(html,/id="demoLabVersion"/);
-  assert.match(app,/ui\.demoLabVersion\.textContent='v'\+short/);
+  assert.match(html,/id="demoLabVersion"/);assert.match(app,/ui\.demoLabVersion\.textContent='v'\+short/);
 });

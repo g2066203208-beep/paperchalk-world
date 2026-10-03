@@ -1,6 +1,6 @@
 // The printed actor keeps its original pixels and alpha silhouette. Only the
 // paper's lighting response is added here; gameplay still moves a flat cutout.
-export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId='forest'}){
+export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId='forest',parent=scene}){
 const sc=document.createElement('canvas');sc.width=sc.height=256;
 {
   const g=sc.getContext('2d');
@@ -19,7 +19,7 @@ const contactShadow=new THREE.Mesh(
   new THREE.PlaneGeometry(1.18,.52),
   new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false,toneMapped:false})
 );
-contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.507,.13);scene.add(contactShadow);
+contactShadow.rotation.x=-Math.PI/2;contactShadow.position.set(0,.507,.13);parent.add(contactShadow);
 contactShadow.userData.baseOpacity=.62;
 contactShadow.userData.groundFactor=1;
 
@@ -38,7 +38,10 @@ function setPaperLighting(direction,color,strength){
 let playerMesh=null,playerMat=null,playerDepthMat=null;
 loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href,t=>{
   t.colorSpace=THREE.SRGBColorSpace;
-  t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  t.generateMipmaps=true;
+  t.minFilter=THREE.LinearMipmapLinearFilter;
+  t.magFilter=THREE.LinearFilter;
+  t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());
 
   // The protagonist is a real paper object in the scene now: it receives
   // sunlight/moonlight, fog, tone mapping and shadows instead of glowing like UI.
@@ -137,7 +140,7 @@ loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href
     alphaTest:.06
   });
   playerMesh.customDepthMaterial=playerDepthMat;
-  scene.add(playerMesh);
+  parent.add(playerMesh);
   flags.render=true;
   flags.shadow=true;
   flags.depth=true;
@@ -148,18 +151,19 @@ loadTexture(new URL('../../assets/player/protagonist.webp',import.meta.url).href
 let last=null;
 function sync(snapshot){
   if(!playerMesh||!snapshot)return false;
-  const x=Number(snapshot.x),y=Number(snapshot.y);
+  const x=Number(snapshot.x),y=Number(snapshot.y),z=Number.isFinite(snapshot.z)?Number(snapshot.z):0;
   if(!Number.isFinite(x)||!Number.isFinite(y))return false;
   const facing=snapshot.facing??1;
   const stride=snapshot.grounded?Math.sin((snapshot.distance??0)*10)*Math.min(.024,Math.abs(snapshot.vx??0)*.009):-(snapshot.vx??0)*.012;
-  const changed=!last||last.x!==x||last.y!==y||last.facing!==facing||playerMesh.rotation.z!==stride;
-  playerMesh.position.set(x,y+1.12,0);
+  const changed=!last||last.x!==x||last.y!==y||last.z!==z||last.facing!==facing||playerMesh.rotation.z!==stride;
+  playerMesh.position.set(x,y+1.12,z);
   playerMesh.scale.x=facing;
   playerMesh.rotation.z=stride;
-  const ground=terrain.groundBelow?.(x,y,0);
+  const explicitSupport=Number.isFinite(snapshot.supportY)?snapshot.supportY:null;
+  const ground=explicitSupport===null?terrain.groundBelow?.(x,y,z):{y:explicitSupport,normal:{x:0,y:1,z:0}};
   const surface=ground?.y??y-5;
   // Sit above the thin path overlay as well as the base ground sheet.
-  contactShadow.position.set(x,surface+.018,-.02);
+  contactShadow.position.set(x,surface+.018,z+.02);
   if(ground){
     contactShadow.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),
       new THREE.Vector3(ground.normal.x,ground.normal.y,ground.normal.z??0).normalize());
@@ -169,7 +173,7 @@ function sync(snapshot){
   contactShadow.material.opacity=contactShadow.userData.baseOpacity*contactShadow.userData.groundFactor;
   const shadowSpread=1+Math.min(1,aboveGround)*.38;
   contactShadow.scale.set(shadowSpread,shadowSpread,1);
-  last={x,y,z:0,grounded:!!snapshot.grounded,facing:snapshot.facing??1};
+  last={x,y,z,grounded:!!snapshot.grounded,facing:snapshot.facing??1,onVehicle:!!snapshot.onVehicle};
   return changed;
 }
 return {contactShadow,sync,setPaperLighting,get playerMesh(){return playerMesh},get playerMat(){return playerMat},get playerDepthMat(){return playerDepthMat},
