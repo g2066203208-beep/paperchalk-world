@@ -75,6 +75,9 @@ test('full stage switch uses coordinated carriers and player-centred ripple chor
   const appSource=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
   assert.match(sceneSource,/duration:1\.92/);
   assert.match(sceneSource,/City floor lift carrier/);
+  assert.match(sceneSource,/\[terrain\.terrainBlocks,traffic\?\.group,transit\?\.group\]/);
+  assert.doesNotMatch(sceneSource,/traffic\?\.group,transit\?\.group,population\?\.group/);
+  assert.match(sceneSource,/population\?\.setStageWave/);
   assert.match(sceneSource,/cityRipple=.*stageTransition\.anchorX/);
   assert.match(sceneSource,/subwayRipple=/);
   assert.match(sceneSource,/cityFloorCarrier\.position\.y=cityFloorBaseY-cityDrop\*3\.25/);
@@ -87,6 +90,10 @@ test('full stage switch uses coordinated carriers and player-centred ripple chor
   assert.match(subwaySource,/fixturePieces/);
   assert.match(appSource,/stageChanging=scene\.getState\(\)\.stageTransitioning/);
   assert.match(appSource,/if\(!paused&&!stageChanging\)/);
+  const populationSource=await readFile(new URL('../demo-lab/rendering/city-population.js',import.meta.url),'utf8');
+  assert.match(populationSource,/function residentFold\(x\)/);
+  assert.match(populationSource,/setStageWave/);
+  assert.match(populationSource,/transform\.rotation\.set\(-fold\*Math\.PI\*\.5/);
 });
 
 test('city paper scenery owns local floor hinges instead of rotating around world zero',async()=>{

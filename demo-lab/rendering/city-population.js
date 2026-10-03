@@ -163,10 +163,18 @@ export function createCityPopulation({THREE,scene,flags={}}){
   const shadows=new THREE.InstancedMesh(shadowGeometry,shadowMaterial,capacity);shadows.name='Neighbour sole shadows';
   shadows.instanceMatrix.setUsage(THREE.DynamicDrawUsage);shadows.frustumCulled=false;shadows.userData.volumeShadow=false;group.add(shadows);
   const transform=new THREE.Object3D();let clock=0,lastPlayerX=NaN,visible=[],previousSignature='';
+  let stageWave={progress:1,anchorX:0,revealing:true,revision:0},lastStageRevision=-1;
+  const stageEase=value=>{const t=Math.max(0,Math.min(1,value));return t*t*(3-2*t);};
+  function residentFold(x){
+    const distance=Math.min(1,Math.abs(x-stageWave.anchorX)/34);
+    const ripple=stageEase(Math.max(0,Math.min(1,(stageWave.progress-distance*.22)/.78)));
+    return stageWave.revealing?1-ripple:ripple;
+  }
   function update(dt,playerX=0){
     const elapsed=Number.isFinite(dt)&&dt>0?dt:0;
     if(!Number.isFinite(playerX))playerX=Number.isFinite(lastPlayerX)?lastPlayerX:0;
-    if(!elapsed&&playerX===lastPlayerX)return false;
+    if(!elapsed&&playerX===lastPlayerX&&lastStageRevision===stageWave.revision)return false;
+    lastStageRevision=stageWave.revision;
     clock+=elapsed;lastPlayerX=playerX;
     const next=[];
     for(const resident of CITY_RESIDENTS){
@@ -182,21 +190,33 @@ export function createCityPopulation({THREE,scene,flags={}}){
       const r=n.resident,step=n.walking?Math.sin((clock+r.phase)*7.3):0;
       const bob=n.walking?Math.abs(step)*.022:0;
       // The drawn sole sits at 244/256. Correct the card's small bottom margin.
+      const fold=residentFold(n.x);
       transform.position.set(n.x,.5-r.height*(12/256)+bob,r.z);
-      transform.rotation.set(0,n.facing*.12,step*.018);
+      transform.rotation.set(-fold*Math.PI*.5,n.facing*.12,step*.018);
       transform.scale.set(r.height*.94,r.height,1);transform.updateMatrix();people.setMatrixAt(slot,transform.matrix);
       tiles.setXY(slot,(r.variant%8)/8,(3-Math.floor(r.variant/8))/4);
       gait.setX(slot,step);
       transform.position.set(n.x,.510,r.z+.04);transform.rotation.set(-Math.PI/2,0,0);
-      transform.scale.set(r.height*.48,.36,1);transform.updateMatrix();shadows.setMatrixAt(slot,transform.matrix);
+      const contact=Math.max(.02,1-fold);
+      transform.scale.set(r.height*.48*contact,.36*contact,1);transform.updateMatrix();shadows.setMatrixAt(slot,transform.matrix);
     }
-    people.count=shadows.count=next.length;people.visible=shadows.visible=next.length>0;
+    people.count=shadows.count=next.length;
+    const stageVisible=stageWave.revealing||stageWave.progress<.999;
+    people.visible=next.length>0&&stageVisible;shadows.visible=next.length>0&&stageVisible;
     people.instanceMatrix.needsUpdate=shadows.instanceMatrix.needsUpdate=tiles.needsUpdate=gait.needsUpdate=true;
     flags.render=flags.depth=flags.ao=true;
     return true;
   }
   update(0,0);
   return {group,update,
+    setStageWave({progress=stageWave.progress,anchorX=stageWave.anchorX,revealing=stageWave.revealing}={}){
+      const nextProgress=Math.max(0,Math.min(1,Number(progress)||0));
+      const nextAnchor=Number.isFinite(anchorX)?anchorX:stageWave.anchorX;
+      const nextReveal=!!revealing;
+      if(Math.abs(nextProgress-stageWave.progress)<1e-5&&nextAnchor===stageWave.anchorX&&nextReveal===stageWave.revealing)return false;
+      stageWave={progress:nextProgress,anchorX:nextAnchor,revealing:nextReveal,revision:stageWave.revision+1};
+      return update(0,Number.isFinite(lastPlayerX)?lastPlayerX:nextAnchor);
+    },
     nearby(playerX){
       if(!Number.isFinite(playerX))return null;
       let nearest=null,distance=2.5;

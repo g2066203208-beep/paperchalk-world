@@ -113,7 +113,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
   // Horizontal planes use fly/lift motion only; only upright paper scenery folds.
   const cityFloorCarrier=new THREE.Group();cityFloorCarrier.name='City floor lift carrier';scene.add(cityFloorCarrier);
   if(isCity){
-    for(const object of [terrain.terrainBlocks,traffic?.group,transit?.group,population?.group].filter(Boolean))cityFloorCarrier.attach(object);
+    for(const object of [terrain.terrainBlocks,traffic?.group,transit?.group].filter(Boolean))cityFloorCarrier.attach(object);
   }
   const cityFloorBaseY=cityFloorCarrier.position.y;
   const backdropBaseY=backdrop?.group.position.y??0;
@@ -165,6 +165,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
     cityFloorCarrier.visible=true;cityFloorCarrier.position.y=cityFloorBaseY;
     scenery.group.visible=lastSnapshot.x<75;districts.group.visible=true;districts.update(lastSnapshot.x);
     for(const piece of cityPieces){piece.group.rotation.x=piece.baseRotationX;if(piece.kind==='scenery')piece.group.visible=true;}
+    population?.setStageWave?.({progress:1,anchorX:lastSnapshot.x,revealing:true});
     if(backdrop){backdrop.group.visible=state.layers;backdrop.group.position.y=backdropBaseY;}
     if(subwayStage){
       subwayStage.root.visible=false;subwayStage.floorCarrier.position.y=-3.25;subwayStage.ceilingCarrier.position.y=3.45;
@@ -176,6 +177,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
     cityFloorCarrier.position.y=cityFloorBaseY-3.25;cityFloorCarrier.visible=false;
     scenery.group.visible=false;districts.group.visible=false;
     for(const piece of cityPieces)setCityPieceFold(piece,1,false);
+    population?.setStageWave?.({progress:1,anchorX:stageTransition.anchorX,revealing:false});
     if(backdrop){backdrop.group.visible=false;backdrop.group.position.y=backdropBaseY-1.25;}
     if(subwayStage){
       subwayStage.root.visible=true;subwayStage.floorCarrier.position.y=0;subwayStage.ceilingCarrier.position.y=0;
@@ -191,6 +193,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
       const delay=cityRipple(piece.x,.115),fold=phase(t,.025+delay,.245+delay);
       setCityPieceFold(piece,fold,piece.transitionVisible);
     }
+    population?.setStageWave?.({progress:phase(t,.00,.30),anchorX:stageTransition.anchorX,revealing:false});
     setCityLightFactor(1-phase(t,.04,.30));
     if(backdrop){
       const sink=phase(t,.16,.38);backdrop.group.position.y=backdropBaseY-sink*1.25;
@@ -243,6 +246,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
       const delay=cityRipple(piece.x,.115),open=phase(t,.62+delay,.84+delay);
       setCityPieceFold(piece,1-open,piece.transitionVisible&&open>.002);
     }
+    population?.setStageWave?.({progress:phase(t,.64,.94),anchorX:stageTransition.anchorX,revealing:true});
     setCityLightFactor(phase(t,.78,.98));
   }
   function applyStagePose(){
@@ -492,7 +496,10 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     stageTransition.from=state.activeStage;stageTransition.to=name;stageTransition.t=0;stageTransition.active=true;stageTransition.anchorX=lastSnapshot.x;
     if(subwayStage)subwayStage.setAnchorX(stageTransition.anchorX);
     if(name==='subway')captureCityVisibility();
-    else{scenery.group.visible=stageTransition.anchorX<75;districts.group.visible=true;districts.update(stageTransition.anchorX);captureCityVisibility();}
+    else{
+      if(backdrop)backdrop.group.position.x=stageTransition.anchorX*.985;
+      scenery.group.visible=stageTransition.anchorX<75;districts.group.visible=true;districts.update(stageTransition.anchorX);captureCityVisibility();
+    }
     applyStagePose();invalidate();return true;
   }
   function toggleStage(){return setStage(state.activeStage==='subway'?'city':'subway');}
