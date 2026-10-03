@@ -82,3 +82,18 @@ test('districts share bounded GPU resources and release invisible geometry and t
   for(const texture of textures)texture.addEventListener('dispose',()=>disposedTexture++);
   disposeSceneResources(scene);assert.equal(disposedGeometry,24);assert.equal(disposedMaterial,2);assert.equal(disposedTexture,2);assert.equal(scene.children.length,0);
 });
+
+test('a house facade hinges down in its shared paper batch and restores cleanly',t=>{
+  const {city}=fixture(t);
+  const house=city.group.userData.cityDistricts.buildings[0];
+  const district=city.group.children.find(node=>node.userData.districtId===house.districtId);
+  const mesh=district.children[0],positions=mesh.geometry.attributes.position;
+  const index=house.ranges.find(range=>range.index===0).start;
+  const initial={y:positions.array[index+1],z:positions.array[index+2]};
+  assert.equal(city.setBuildingFall(house.id,1.22),true);
+  assert.ok(positions.array[index+1]<initial.y,'facade top should fall toward the ground');
+  assert.ok(positions.array[index+2]>initial.z,'facade should hinge toward the player');
+  city.resetBuildingFalls();
+  assert.equal(positions.array[index+1],initial.y);
+  assert.equal(positions.array[index+2],initial.z);
+});

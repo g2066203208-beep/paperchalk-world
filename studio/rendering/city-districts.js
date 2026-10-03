@@ -134,12 +134,18 @@ export function createCityDistricts({THREE,scene,flags={}}){
   }
   function building(name,x,{w=7,h=4,z=-4.5,variant=0,label=1,roofType=0,roofHeight=.95,bodyColor=null,shop=true,signVisible=true}={}){
     const [body,roofColor]=PALETTES[activeDistrict.index],base=.5,wall=bodyColor??body;
+    const captureStart=source.map(batch=>batch.p.length);
     const record=panel(name,x,base,z,w,h,wall,{depth:.16});
     // Keep a stable doorway identity beside every authored facade.  The
     // interior renderer uses this small record instead of trying to infer
     // entrances from triangles after the city has been batched.
-    buildings.push({...record,id:`house-${buildingOrdinal++}`,districtId:activeDistrict.id,
-      districtName:activeDistrict.name,entranceX:x,entranceY:base,roofType,roofHeight});
+    const buildingEntry={...record,id:`house-${buildingOrdinal++}`,districtId:activeDistrict.id,
+      districtName:activeDistrict.name,entranceX:x,entranceY:base,roofType,roofHeight,
+      // The facade remains in the district's two shared meshes. Keeping the
+      // vertex ranges lets the stage hinge one house without adding a mesh or
+      // breaking the mobile geometry budget.
+      pivot:{x,y:base,z},ranges:source.map((batch,index)=>({index,start:captureStart[index],end:batch.p.length,data:batch}))};
+    buildings.push(buildingEntry);
     panel('Left folded wall return',x-w/2-.09,base,z-.23,.55,h,PALETTES[activeDistrict.index][2],{angle:.6});
     panel('Right folded wall return',x+w/2+.08,base,z-.26,.58,h,roofColor,{angle:-.55});
     for(const side of [-1,1])panel('Cream corner masonry',x+side*(w/2-.08),base,z+.14,.16,h,paper);
@@ -171,6 +177,7 @@ export function createCityDistricts({THREE,scene,flags={}}){
     }
     // Visible brick slips on the old town and port walls.
     if(activeDistrict.id==='oldtown'||activeDistrict.id==='harbor')for(let row=0;row<3;row++)for(const side of [-1,1])panel('Printed brick corner',x+side*(w/2-.28),base+.45+row*.48,z+.24,.35,.065,paper,{depth:.018});
+    buildingEntry.ranges.forEach((range,index)=>{range.end=source[index].p.length;});
     return record;
   }
   function tree(x,z=-3.1,scale=1,kind=0){
@@ -296,6 +303,7 @@ export function createCityDistricts({THREE,scene,flags={}}){
   for(const district of CITY_DISTRICTS){
     activeDistrict=district;source=[0,1].map(()=>({p:[],n:[],c:[],uv:[]}));
     const node=new THREE.Group();node.name=district.name+' · folded paper district';node.userData.districtId=district.id;
+    const districtBuildingStart=buildings.length;
     const startTriangles=totalTriangles;
     if(district.id==='academy'){
       for(const [i,dx] of [-42,-30,-18,33,45,56].entries())building(SHOP_NAMES[0][i+1],dx,{w:7.1,h:3.65+i%2*.65,z:-5.2,variant:i,label:i+1,roofType:i%3});
@@ -321,14 +329,43 @@ export function createCityDistricts({THREE,scene,flags={}}){
     const roadX=district.x-44;
     panel('Neighbourhood wayfinding post',roadX,.5,-1.25,.07,2.73,ink,{depth:.06});
     sign(district.name+' street sign',roadX,2.72,-1.19,3.45,.58,96+district.index);
+    const batchMeshes=[];
     for(const [i,data] of source.entries()){
       if(!data.p.length)continue;
       const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.p,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(data.n,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.c,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uv,2));geometry.computeBoundingBox();geometry.computeBoundingSphere();
       const mesh=new THREE.Mesh(geometry,i?printed:stock);mesh.name=district.name+(i?' · printed windows and Chinese signs':' · folded architectural paper');mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=true;
-      node.add(mesh);totalTriangles+=data.p.length/9;
+      node.add(mesh);batchMeshes[i]=mesh;totalTriangles+=data.p.length/9;
     }
+    for(const building of buildings.slice(districtBuildingStart))building.meshes=batchMeshes;
     group.add(node);districts.push({...district,node,triangles:totalTriangles-startTriangles});
   }
+  function applyBuildingAngle(building,angle){
+    if(!building?.ranges)return false;
+    const c=Math.cos(angle),s=Math.sin(angle);
+    for(const range of building.ranges){
+      const mesh=building.meshes?.[range.index],data=range.data;
+      if(!mesh||!data||range.end<=range.start)continue;
+      const positions=mesh.geometry.attributes.position.array;
+      const normals=mesh.geometry.attributes.normal?.array;
+      for(let i=range.start;i<range.end;i+=3){
+        const dx=data.p[i]-building.pivot.x,dy=data.p[i+1]-building.pivot.y,dz=data.p[i+2]-building.pivot.z;
+        positions[i]=building.pivot.x+dx;
+        positions[i+1]=building.pivot.y+dy*c-dz*s;
+        positions[i+2]=building.pivot.z+dy*s+dz*c;
+        if(normals){const ny=data.n[i+1],nz=data.n[i+2];normals[i]=data.n[i];normals[i+1]=ny*c-nz*s;normals[i+2]=ny*s+nz*c;}
+      }
+      mesh.geometry.attributes.position.needsUpdate=true;
+      if(normals)mesh.geometry.attributes.normal.needsUpdate=true;
+      mesh.geometry.computeBoundingSphere();
+    }
+    building.fallAngle=angle;return true;
+  }
+  function setBuildingFall(id,angle=0){
+    const building=buildings.find(item=>item.id===id);const changed=applyBuildingAngle(building,Number(angle)||0);
+    if(changed)flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
+    return changed;
+  }
+  function resetBuildingFalls(){for(const building of buildings)if(building.fallAngle){applyBuildingAngle(building,0);flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;}}
   group.userData.cityDistricts={buildings,landmarks,features};
   function update(playerX=0){
     if(!Number.isFinite(playerX))return false;
@@ -338,7 +375,7 @@ export function createCityDistricts({THREE,scene,flags={}}){
     return changed;
   }
   update(0);flags.render=true;flags.depth=true;flags.shadow=true;flags.volumeShadow=true;
-  return {group,update,stats:()=>({districts:districts.length,visibleDistricts:districts.filter(d=>d.node.visible).map(d=>d.id),
+  return {group,update,setBuildingFall,resetBuildingFalls,stats:()=>({districts:districts.length,visibleDistricts:districts.filter(d=>d.node.visible).map(d=>d.id),
     batches:group.children.reduce((sum,d)=>sum+d.children.length,0),visibleBatches:districts.filter(d=>d.node.visible).reduce((sum,d)=>sum+d.node.children.length,0),
     triangles:totalTriangles,visibleTriangles:districts.filter(d=>d.node.visible).reduce((sum,d)=>sum+d.triangles,0),materials:2,textures:2,atlasBytes:atlas.bytes,cards:totalCards,
     buildings:buildings.length,landmarks:landmarks.map(l=>({...l})),features:features.length,signText:[...atlas.labels]})};

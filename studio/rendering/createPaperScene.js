@@ -33,6 +33,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   let cityRide=null,pendingCityRide=undefined,lastUnderground=false,cityInterior=null;
+  let houseMotion=null;
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const isCity=sceneId!=='forest';
   const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
@@ -164,6 +165,25 @@ function beginTimeTransition(targetTime){
   flags.render=true;
 }
 
+  function startHouseHandoff({id,reverse=false,onMidpoint,onComplete}={}){
+    if(!districts?.setBuildingFall||!id)return Promise.resolve(false);
+    if(houseMotion?.resolve)houseMotion.resolve(false);
+    districts.resetBuildingFalls?.();
+    houseMotion={id,reverse,elapsed:0,duration:.86,midpoint:false,onMidpoint,onComplete,resolve:null};
+    districts.setBuildingFall(id,reverse?1.22:0);
+    return new Promise(resolve=>{houseMotion.resolve=resolve;});
+  }
+  function updateHouseHandoff(dt){
+    if(!houseMotion)return false;
+    const motion=houseMotion;motion.elapsed+=Math.max(0,Math.min(.1,Number(dt)||0));
+    const p=clamp(motion.elapsed/motion.duration,0,1),e=p*p*(3-2*p);
+    const angle=motion.reverse?1.22*(1-e):1.22*e;
+    districts.setBuildingFall(motion.id,angle);
+    if(!motion.midpoint&&p>=.5){motion.midpoint=true;motion.onMidpoint?.();}
+    if(p>=1){districts.setBuildingFall(motion.id,motion.reverse?0:1.22);motion.onComplete?.();const resolve=motion.resolve;houseMotion=null;resolve?.(true);}
+    return true;
+  }
+
 
 let autoShadowFrame=0,volumeShadowFrame=0,lastMistTick=0,mistClock=0,trafficShadowClock=0;
 function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
@@ -171,6 +191,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   dt=Math.min(.05,Math.max(0,Number(dt)||0));
   now=Number.isFinite(now)?now:performance.now();
   const transitionAnimating=worldHandoff.update(dt);
+  const houseAnimating=updateHouseHandoff(dt);
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
   orbitCamera.follow(lastSnapshot.x,cityRide?1:dt,lastSnapshot.y-.5);
   if(isCity){
@@ -272,7 +293,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     flags.render=true;
   }
 
-  if(!state.auto&&!timeTransition.active&&!flags.render&&!transitionAnimating)return;
+  if(!state.auto&&!timeTransition.active&&!flags.render&&!transitionAnimating&&!houseAnimating)return;
 
 
   sky.position.copy(camera.position);starField.position.copy(camera.position);starUniforms.time.value=now*.001;
@@ -374,12 +395,15 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
   function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
   function getStats(){
+    const handoff=worldHandoff.getState();
+    const house={active:!!houseMotion,elapsed:houseMotion?.elapsed??0,duration:houseMotion?.duration??0,
+      progress:houseMotion?clamp(houseMotion.elapsed/houseMotion.duration,0,1):0,kind:houseMotion?'house':null,domOverlay:false};
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
       districts:districts?.stats(),interiors:interiors?.stats(),population:population?.stats(),transit:transit?.stats(),
-      player:actor.snapshot(),camera:orbitCamera.snapshot(),transition:worldHandoff.getState(),handoff:worldHandoff.getState(),
+      player:actor.snapshot(),camera:orbitCamera.snapshot(),transition:{...handoff,active:handoff.active||house.active,kind:house.active?'house':handoff.kind},handoff,house,
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
   function dispose(){
@@ -387,7 +411,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     disposed=true;resizeObserver?.disconnect();events.abort();orbitCamera.dispose();
     for(const reject of pendingRejects)reject(new Error('Paper scene disposed during loading.'));
     pendingRejects.clear();
-    worldHandoff.dispose();fog.dispose();atmosphere.dispose();
+    worldHandoff.dispose();houseMotion?.resolve?.(false);houseMotion=null;districts?.resetBuildingFalls?.();fog.dispose();atmosphere.dispose();
     disposeSceneResources(scene,[...materials.textures,...terrain.textures,...loadedTextures]);
     renderer.renderLists.dispose();renderer.dispose();renderer.domElement.remove();
     status('disposed','纸艺场景已关闭');
@@ -438,5 +462,6 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
       });
     },
     playSceneTransition:options=>worldHandoff.start(options),
+    playHouseHandoff:options=>startHouseHandoff(options),
     getWorld:()=>terrain.world,dispose};
 }
