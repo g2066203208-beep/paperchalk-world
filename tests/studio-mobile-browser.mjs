@@ -117,14 +117,13 @@ try{
   await context.close();
   const interior=await load(config,-42);
   await interior.page.locator('#inspectAction').tap();
-  await interior.page.waitForFunction(()=>__cityQA.getStats().interiors.active&&__cityQA.getStats().transition.active);
   await interior.page.waitForFunction(()=>__cityQA.getStats().interiors.active&&!__cityQA.getStats().transition.active);
   assert.equal(await interior.page.locator('#inspectionOverlay').isVisible(),false);
   assert.equal(await interior.page.locator('#scenePrompt').isVisible(),false);
   await shot(interior.page,'android-landscape-interior');
   assert.equal(await interior.page.evaluate(()=>PaperchalkHandleBack()),true);
   await interior.page.waitForFunction(()=>!__cityQA.getStats().interiors.active&&!__cityQA.getStats().transition.active);
-  checks.push('touch house doorway enters a real paper interior and Esc returns through the same fold');
+  checks.push('touch house doorway enters a real paper interior immediately and Esc returns without a handoff');
   await interior.context.close();
   const forest=await load(config,0,'?scene=forest');
   assert.equal(await forest.page.locator('.city-explorer').count(),0);

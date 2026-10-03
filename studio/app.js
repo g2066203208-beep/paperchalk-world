@@ -119,26 +119,18 @@ function enterCityInterior(interior){
   if(!interior||!scene?.setCityInterior||scene.cityInterior?.()||cityRide)return false;
   const x=interior.entranceX??interior.x;
   resetClock();input?.cancel();hideScenePrompt();
-  // The same centre-crease paper handoff used by transit reveals the room.
-  // The midpoint is the only instant at which street geometry is swapped.
-  const midpoint=()=>{
-    simulation.restore({x,y:world.surfaceY(x),facing:simulation.snapshot().facing,vx:0,distance:simulation.snapshot().distance});
-    scene.setCityInterior(interior);scene.frame(0,renderClock,simulation.snapshot());
-  };
-  worldHandoff=true;
-  const handoff=scene.playSceneTransition?.({kind:'surface',onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
-  if(!handoff){midpoint();worldHandoff=false;}
+  simulation.restore({x,y:world.surfaceY(x),facing:simulation.snapshot().facing,vx:0,distance:simulation.snapshot().distance});
+  // House entry is immediate. Transit owns the only travelling handoff; an
+  // interior is simply the already-loaded room layer at the current position.
+  scene.setCityInterior(interior);scene.frame(0,renderClock,simulation.snapshot());
+  saveProgress(true);refreshCityHud();
   return true;
 }
 function leaveCityInterior(){
   if(!scene?.cityInterior?.())return false;
   resetClock();input?.cancel();hideScenePrompt();
-  const midpoint=()=>{
-    scene.leaveCityInterior();scene.frame(0,renderClock,simulation.snapshot());
-  };
-  worldHandoff=true;
-  const handoff=scene.playSceneTransition?.({kind:'surface',onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
-  if(!handoff){midpoint();worldHandoff=false;}
+  scene.leaveCityInterior();scene.frame(0,renderClock,simulation.snapshot());
+  saveProgress(true);refreshCityHud();
   return true;
 }
 function openInspection({explicit=false}={}){

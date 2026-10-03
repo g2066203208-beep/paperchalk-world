@@ -21,7 +21,7 @@ export function createCityInteriors({THREE,scene,flags={},buildings=[]}={}){
   const inks=[0xf1dfbd,0xe4c9a7,0xc7d5c7,0x9dbbc0,0xd39b8c,0xb8a8c1,0x7e8f9d]
     .map((hex,index)=>{const material=new THREE.MeshLambertMaterial({color:hex,side:THREE.DoubleSide});material.name=`Interior paper ink ${index}`;return material;});
   const rooms=[];
-  let active=null,elapsed=0,transitioning=false;
+  let active=null;
   const changed=()=>{flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;};
   const hash=value=>{let h=0;for(const char of String(value??''))h=(h*31+char.charCodeAt(0))>>>0;return h;};
   const materialFor=(index=0)=>inks[Math.abs(index)%inks.length];
@@ -112,18 +112,12 @@ export function createCityInteriors({THREE,scene,flags={},buildings=[]}={}){
     if(id===active)return !!active;
     for(const item of rooms)item.room.visible=!!id&&item.id===id;
     active=id&&rooms.some(item=>item.id===id)?id:null;
-    group.visible=!!active;elapsed=0;transitioning=!!active;
-    if(active){const item=rooms.find(room=>room.id===active);item.room.scale.set(.96,.96,.96);item.room.position.y=-.18;}
+    group.visible=!!active;
+    if(active){const item=rooms.find(room=>room.id===active);item.room.scale.set(1,1,1);item.room.position.y=0;}
     changed();return !!active;
   }
-  function leave(){if(!active)return false;for(const item of rooms)item.room.visible=false;active=null;group.visible=false;transitioning=false;changed();return true;}
-  function update(dt=0){
-    if(!active||!transitioning)return false;
-    elapsed+=Math.max(0,Number(dt)||0);const t=Math.min(1,elapsed/.42),e=t*t*(3-2*t);
-    const item=rooms.find(room=>room.id===active);if(!item)return false;
-    item.room.scale.set(.96+.04*e,.96+.04*e,.96+.04*e);item.room.position.y=-.18+.18*e;
-    if(t>=1)transitioning=false;changed();return true;
-  }
+  function leave(){if(!active)return false;for(const item of rooms)item.room.visible=false;active=null;group.visible=false;changed();return true;}
+  function update(){return false;}
   function stats(){return {rooms:rooms.length,active,visible:group.visible,triangles:rooms.length*0,interiorArt:'paper-room-v1'};}
   return {group,rooms,nearby,find,setActive,enter:setActive,leave,update,active:()=>active,stats,dispose(){for(const material of inks)material.dispose();cardGeometry.dispose();floorGeometry.dispose();}};
 }
