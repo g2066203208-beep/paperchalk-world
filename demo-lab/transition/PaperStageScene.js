@@ -1,5 +1,6 @@
 import * as THREE from '../../vendor/three/three.module.js';
 import {clamp01,lampWave,paperSettle,samplePaperStage} from './PaperStageTimeline.mjs';
+import {createPaperStagePlayer} from './PaperStagePlayer.js';
 
 const DEG=Math.PI/180;
 
@@ -27,10 +28,10 @@ export function createPaperStageScene({container}={}){
   const scene=new THREE.Scene();
   scene.background=new THREE.Color(0x262522);
 
-  const camera=new THREE.PerspectiveCamera(33,1,.1,80);
-  camera.position.set(9.6,6.25,13.4);
-  const cameraTarget=new THREE.Vector3(0,-.15,-.85);
-  camera.lookAt(cameraTarget);
+  const camera=new THREE.PerspectiveCamera(36,1,.1,120);
+  const cameraTarget=new THREE.Vector3();
+  const CHUNK_SIZE=13.6,CHUNK_MIN=-5,CHUNK_MAX=5;
+  let viewMode='game',largeWorld=true,playerX=0,activeChunk=0;
 
   const hemi=new THREE.HemisphereLight(0xfff9e8,0x2b2a28,1.58);
   scene.add(hemi);
@@ -67,19 +68,39 @@ export function createPaperStageScene({container}={}){
     const object=line(parent,name,[a,b],material);object.computeLineDistances();return object;
   }
 
-  const world=new THREE.Group();world.name='Paper Stage Metamorphosis';scene.add(world);
+  const world=new THREE.Group();world.name='ACTIVE HIGH-DETAIL PAPER WINDOW';scene.add(world);
 
-  // A physical theatre plinth. The dark apron hides most of the lower stage
-  // until the main street sheet swings away.
-  box(world,'Stage plinth',13.6,.34,8.6,0,-2.58,-.25,edge);
-  box(world,'Front theatre apron',13.6,2.35,.34,0,-1.38,4.03,dark);
-  box(world,'Left theatre cheek',.34,2.35,8.2,-6.63,-1.38,-.05,dark);
-  box(world,'Right theatre cheek',.34,2.35,8.2,6.63,-1.38,-.05,dark);
+  // Mechanism-view shell. In gameplay view it is hidden so the same rig can
+  // sit inside a continuous side-scrolling world instead of looking like a box.
+  const theatreShell=new THREE.Group();theatreShell.name='Mechanism inspection theatre shell';world.add(theatreShell);
+  box(theatreShell,'Stage plinth',13.6,.34,8.6,0,-2.58,-.25,edge);
+  box(theatreShell,'Front theatre apron',13.6,2.35,.34,0,-1.38,4.03,dark);
+  box(theatreShell,'Left theatre cheek',.34,2.35,8.2,-6.63,-1.38,-.05,dark);
+  box(theatreShell,'Right theatre cheek',.34,2.35,8.2,6.63,-1.38,-.05,dark);
 
-  const stageFrame=new THREE.Group();stageFrame.name='White card theatre frame';world.add(stageFrame);
+  const stageFrame=new THREE.Group();stageFrame.name='White card theatre frame';theatreShell.add(stageFrame);
   box(stageFrame,'Left proscenium paper flat',.42,6.0,.52,-6.15,.35,-.25,paperWarm);
   box(stageFrame,'Right proscenium paper flat',.42,6.0,.52,6.15,.35,-.25,paperWarm);
   box(stageFrame,'Top proscenium paper flat',12.72,.42,.52,0,3.18,-.25,paperWarm);
+
+  // LARGE-WORLD PROOF -------------------------------------------------------
+  // The real world can be kilometres long; the expensive transition rig is
+  // never duplicated across it. Only one high-detail cell follows the player.
+  // Nearby cells are cheap proxies and far cells are fully dormant.
+  const worldStrip=new THREE.Group();worldStrip.name='STREAMED WORLD PROXY STRIP';scene.add(worldStrip);
+  const chunkProxies=[];
+  for(let index=CHUNK_MIN;index<=CHUNK_MAX;index++){
+    const group=new THREE.Group();group.name='World proxy chunk '+index;group.position.x=index*CHUNK_SIZE;worldStrip.add(group);
+    box(group,'Proxy street card',CHUNK_SIZE-.18,.10,6.6,0,.00,-.15,paperWarm,{cast:false});
+    const heights=[1.85,2.45,2.10,2.72];
+    const offsets=[-4.6,-1.55,1.55,4.55];
+    for(let j=0;j<offsets.length;j++){
+      const height=heights[(j+Math.abs(index))%heights.length];
+      box(group,'Proxy building '+j,2.35,height,.08,offsets[j],height*.5+.08,-4.95,paper,{cast:false});
+      box(group,'Proxy building base '+j,2.42,.10,.13,offsets[j],.12,-4.93,edge,{cast:false});
+    }
+    chunkProxies.push({index,group});
+  }
 
   // HERO STREET PAGE ---------------------------------------------------------
   // The front edge is the only master hinge. City flats are physically
@@ -186,6 +207,24 @@ export function createPaperStageScene({container}={}){
     box(pivot,'Route board graphite line',1.55,.04,.028,0,1.94,.055,graphite,{cast:false});
   });
 
+  // GAMEPLAY ANCHOR ---------------------------------------------------------
+  // The protagonist never stands on the sheet that is about to fold away.
+  // A small die-cut threshold remains connected to the station entrance while
+  // the surrounding street page retreats. Fixed stairs underneath are revealed
+  // by the fold, giving the player a real route into the new space afterwards.
+  const playerAnchor=new THREE.Group();playerAnchor.name='PLAYER SAFE THRESHOLD';playerAnchor.position.set(0,.18,2.55);world.add(playerAnchor);
+  box(playerAnchor,'Non-folding entrance tongue',1.58,.12,1.62,0,0,0,paper);
+  box(playerAnchor,'Entrance tongue cut edge',1.64,.20,.09,0,-.03,.77,edge);
+  const stairRoot=new THREE.Group();stairRoot.name='Revealed fixed paper stairs';playerAnchor.add(stairRoot);
+  for(let i=1;i<=6;i++){
+    const stepY=-i*.36,stepZ=-.70-i*.28;
+    box(stairRoot,'Paper stair '+i,1.35,.10,.46,0,stepY,stepZ,i%2?paperWarm:paper);
+  }
+  const player=createPaperStagePlayer({THREE,renderer,parent:playerAnchor});
+  player.setPosition(0,.08,.18);
+  let playerLoadError=false;
+  player.readyPromise.then(()=>apply(progress)).catch(()=>{playerLoadError=true;});
+
   // A tiny final-life cue: not a train model, just two distant practical
   // lights arriving after the paper architecture has finished speaking.
   const lifeCue=new THREE.Group();lifeCue.name='First life cue';underground.add(lifeCue);
@@ -207,8 +246,34 @@ export function createPaperStageScene({container}={}){
   setShadow(world,true);
   guides.traverse(o=>{if(o.isLine){o.castShadow=false;o.receiveShadow=false;}});
 
-  let progress=0,guidesVisible=true,shadows=true,lastSample=samplePaperStage(0);
+  let progress=0,guidesVisible=false,shadows=true,lastSample=samplePaperStage(0);
 
+  function clampChunk(index){return Math.max(CHUNK_MIN,Math.min(CHUNK_MAX,index));}
+  function chunkForX(x){return clampChunk(Math.floor((x+CHUNK_SIZE*.5)/CHUNK_SIZE));}
+  function updateStreamingWindow(){
+    activeChunk=chunkForX(playerX);
+    const origin=activeChunk*CHUNK_SIZE;
+    world.position.x=origin;
+    playerAnchor.position.x=playerX-origin;
+    for(const entry of chunkProxies){
+      const distance=Math.abs(entry.index-activeChunk);
+      entry.group.visible=largeWorld&&distance<=2&&entry.index!==activeChunk;
+    }
+    worldStrip.visible=largeWorld&&viewMode==='game';
+  }
+  function placeCamera(){
+    const origin=activeChunk*CHUNK_SIZE;
+    if(viewMode==='game'){
+      theatreShell.visible=false;
+      camera.position.set(playerX+.15,1.50,13.4);
+      cameraTarget.set(playerX,-.45,-1.05);
+    }else{
+      theatreShell.visible=true;
+      camera.position.set(origin+9.6,6.25,13.4);
+      cameraTarget.set(origin,-.15,-.85);
+    }
+    camera.up.set(0,1,0);camera.lookAt(cameraTarget);
+  }
   function apply(next){
     progress=clamp01(next);
     const s=samplePaperStage(progress);lastSample=s;
@@ -259,6 +324,8 @@ export function createPaperStageScene({container}={}){
     lifeCue.position.x=-5.2+s.life*.72;
     lifeMaterials.forEach(material=>{material.emissiveIntensity=s.life*2.8;});
 
+    updateStreamingWindow();
+    placeCamera();
     guides.visible=guidesVisible;
     renderer.shadowMap.enabled=shadows;
     renderer.render(scene,camera);
@@ -274,6 +341,12 @@ export function createPaperStageScene({container}={}){
 
   function setGuides(value){guidesVisible=!!value;apply(progress);}
   function setShadows(value){shadows=!!value;key.castShadow=shadows;apply(progress);}
+  function setView(mode){viewMode=mode==='mechanism'?'mechanism':'game';apply(progress);return viewMode;}
+  function setLargeWorld(value){largeWorld=!!value;apply(progress);return largeWorld;}
+  function setPlayerX(value){
+    const limit=(Math.max(Math.abs(CHUNK_MIN),Math.abs(CHUNK_MAX))-.15)*CHUNK_SIZE;
+    playerX=Math.max(-limit,Math.min(limit,Number(value)||0));apply(progress);return playerX;
+  }
   function snapshot(){
     return {
       ...lastSample,
@@ -285,15 +358,21 @@ export function createPaperStageScene({container}={}){
       lampIntensity:lightPoints.map(l=>l.intensity),
       guidesVisible:guides.visible,
       shadows,
+      viewMode,largeWorld,playerX,playerReady:player.ready,playerLoadError,
+      activeChunk,activeChunkOrigin:activeChunk*CHUNK_SIZE,
+      residentChunks:chunkProxies.filter(entry=>entry.group.visible).map(entry=>entry.index),
+      playerAnchorWorldX:world.position.x+playerAnchor.position.x,
     };
   }
   function dispose(){
     observer.disconnect();window.removeEventListener('resize',resize);
     scene.traverse(object=>{object.geometry?.dispose?.();});
+    player.dispose();
     for(const material of materials)material.dispose?.();
     renderer.dispose();renderer.domElement.remove();
   }
 
-  resize();apply(0);
-  return {renderer,scene,camera,setProgress:apply,setGuides,setShadows,snapshot,resize,dispose};
+  updateStreamingWindow();resize();apply(0);
+  return {renderer,scene,camera,setProgress:apply,setGuides,setShadows,setView,setLargeWorld,setPlayerX,snapshot,resize,dispose,
+    get playerReady(){return player.ready;}};
 }
