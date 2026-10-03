@@ -29,7 +29,11 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
   }
   function buildRuntime(){
     minY=Math.min(...manifest.attachments.map(item=>item.bbox?.[1]??item.y-item.height*.5));
-    for(const bone of manifest.bones){const object=new THREE.Bone();object.name=`Coolbones bone · ${bone.id}`;object.position.set(bone.x*scale,bone.y*scale,0);object.rotation.z=bone.rotation*Math.PI/180;object.scale.set(bone.scaleX,bone.scaleY,1);bones.set(bone.id,object);const parent=bone.parentId?bones.get(bone.parentId):playerMesh;(parent||playerMesh).add(object);}
+    // Cane files do not guarantee parent-before-child ordering. Build the
+    // complete map first, then attach each bone so every authored hierarchy is
+    // preserved even when a child appears earlier in the serialized array.
+    for(const bone of manifest.bones){const object=new THREE.Bone();object.name=`Coolbones bone · ${bone.id}`;object.position.set(bone.x*scale,bone.y*scale,0);object.rotation.z=bone.rotation*Math.PI/180;object.scale.set(bone.scaleX,bone.scaleY,1);bones.set(bone.id,object);}
+    for(const bone of manifest.bones){const object=bones.get(bone.id),parent=bone.parentId?bones.get(bone.parentId):playerMesh;(parent||playerMesh).add(object);}
     for(const slot of [...manifest.slots].sort((a,b)=>a.zIndex-b.zIndex)){const attachment=manifest.attachments.find(item=>item.id===slot.attachmentId);if(attachment)createAttachment(attachment,slot);}
     applyBoneFrame(manifest.animations.ark_relax.frames[0]);playerMesh.position.y=-minY*scale;
   }
