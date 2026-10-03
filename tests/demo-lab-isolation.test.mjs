@@ -54,31 +54,35 @@ test('lab identity is visibly different from production',async()=>{
 });
 
 
-test('stage clear switch removes only scene props and is wired to the lab UI',async()=>{
+test('full stage switch is wired to the Demo Lab UI',async()=>{
   const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
+  const subwaySource=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
   const appSource=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
   const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
-  assert.match(html,/id="toggleStageProps"/);
-  assert.match(html,/撤掉全部道具/);
-  assert.match(sceneSource,/function setStagePropsVisible/);
-  assert.match(sceneSource,/stagePropsVisible:true/);
-  assert.equal(typeof createPaperScene,'function');
-  for(const name of ['traffic','population','transit','scenery','districts','backdrop'])assert.match(sceneSource,new RegExp("name:'"+name+"'"));
-  assert.match(sceneSource,/item\.group\.rotation\.x=/);
-  assert.match(sceneSource,/item\.group\.visible=item\.baseVisible\(\)&&local<\.999/);
-  assert.match(sceneSource,/for\(const light of lights\.locals/);
-  assert.match(appSource,/scene\.setStagePropsVisible\(!visible\)/);
+  assert.match(html,/id="toggleStageScene"/);
+  assert.match(html,/切换到地铁/);
+  assert.match(sceneSource,/function setStage\(name\)/);
+  assert.match(sceneSource,/activeStage:'city'/);
+  assert.match(sceneSource,/createSubwayStage/);
+  assert.match(appSource,/scene\.setStage\(next\)/);
+  assert.match(subwaySource,/月灯中央站/);
+  assert.match(subwaySource,/月河线/);
 });
 
-
-test('stage clear uses a staggered paper fall animation instead of instant hiding',async()=>{
+test('full stage switch replaces props, floor, background and subway set with theatre animation',async()=>{
   const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
-  assert.match(sceneSource,/stageTransition=\{progress:0,target:0,active:false,duration:\.92\}/);
+  const subwaySource=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
+  assert.match(sceneSource,/stageTransition=\{progress:0,target:0,active:false,duration:1\.48/);
+  assert.match(sceneSource,/terrain\.terrainBlocks\.position\.y=cityTerrainBaseY-cityFloorDrop\*2\.45/);
+  assert.match(sceneSource,/subwayStage\.root\.position\.y=-2\.55\*\(1-rise\)/);
+  assert.match(sceneSource,/scene\.background\.copy\(outdoorBackground\)\.lerp\(subwayBackground,indoorMix\)/);
   assert.match(sceneSource,/direction\*fold\*Math\.PI\*\.5/);
-  assert.match(sceneSource,/start:0\.00/);
-  assert.match(sceneSource,/start:0\.24/);
-  assert.match(sceneSource,/local<\.999/);
-  assert.match(sceneSource,/stageTransitionProgress:stageTransition\.progress/);
+  assert.match(sceneSource,/direction\*\(1-unfold\)\*Math\.PI\*\.5/);
+  assert.match(subwaySource,/Subway platform slab/);
+  assert.match(subwaySource,/Recessed track bed/);
+  assert.match(subwaySource,/Subway rear paper wall/);
+  assert.match(subwaySource,/Subway train paper body/);
+  assert.match(subwaySource,/Subway ceiling sheet/);
 });
 
 
