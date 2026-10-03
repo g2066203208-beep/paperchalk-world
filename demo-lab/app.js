@@ -8,7 +8,7 @@ import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,
 import {createCityExplorer} from './ui/CityExplorer.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection','toggleStageProps'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection','toggleStageProps','demoLabVersion'].map(id=>[id,$(id)]));
 const defaults={scale:1.8,normal:0,height:0,blend:0};
 const paperInputs={paperScale:'scale'};
 const sceneId=sceneFromSearch(location.search),isCity=sceneId===CITY_SCENE_ID;
@@ -276,16 +276,19 @@ async function loadBuildInfo(){
     if(!response.ok)throw new Error('Build information unavailable');
     const info=await response.json();
     if(info.version==='dev'){
-      ui.buildVersion.textContent='开发预览';ui.buildVersion.title='本机开发版本';ui.gameBuildVersion.textContent=ui.buildVersion.textContent;return;
+      ui.buildVersion.textContent='开发预览';ui.buildVersion.title='本机开发版本';ui.gameBuildVersion.textContent=ui.buildVersion.textContent;
+      if(ui.demoLabVersion)ui.demoLabVersion.textContent='DEV';return;
     }
     if(typeof info.version!=='string'||!/^[a-f0-9]{7,40}$/.test(info.version))throw new Error('Invalid build information');
-    ui.buildVersion.textContent=`构建 ${info.version.slice(0,7)}`;
+    const short=info.version.slice(0,8);
+    ui.buildVersion.textContent=`构建 ${short}`;
+    if(ui.demoLabVersion)ui.demoLabVersion.textContent='v'+short;
     const date=new Date(info.publishedAt);
     ui.buildVersion.title=`版本 ${info.version}${Number.isFinite(date.getTime())?` · 发布 ${date.toLocaleString('zh-CN')}`:''}`;
     ui.gameBuildVersion.textContent=ui.buildVersion.textContent;
   }catch{
     if(disposed)return;
-    ui.buildVersion.textContent='版本待确认';ui.buildVersion.title='暂时无法读取此构建的版本信息';
+    ui.buildVersion.textContent='版本待确认';ui.buildVersion.title='暂时无法读取此构建的版本信息';if(ui.demoLabVersion)ui.demoLabVersion.textContent='UNKNOWN';
     ui.gameBuildVersion.textContent=ui.buildVersion.textContent;
   }
 }

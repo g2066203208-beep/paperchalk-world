@@ -80,3 +80,11 @@ test('stage clear uses a staggered paper fall animation instead of instant hidin
   assert.match(sceneSource,/local<\.999/);
   assert.match(sceneSource,/stageTransitionProgress:stageTransition\.progress/);
 });
+
+
+test('Demo Lab exposes a visible build version in the stage chrome',async()=>{
+  const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
+  const app=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
+  assert.match(html,/id="demoLabVersion"/);
+  assert.match(app,/ui\.demoLabVersion\.textContent='v'\+short/);
+});
