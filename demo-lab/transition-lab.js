@@ -17,7 +17,7 @@ const ui={
 
 const scene=createPaperWorldScene({container:ui.viewport});
 let playing=false,progress=0,last=performance.now(),raf=0,speed=1;
-const fallbackVersion='DL-2026.10.03.5';
+const fallbackVersion='DL-2026.10.03.6';
 
 function percent(value){return String(Math.round(value*100)).padStart(3,'0')+'%';}
 function sync(){
