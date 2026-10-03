@@ -25,12 +25,12 @@ export function stagger(index,count,amount=.16){
 
 export function samplePaperWorld(progress){
   const p=clamp01(progress);
-  const cityRelease=phase(p,.06,.38);
-  const streetSweep=phase(p,.15,.52);
-  const shadowPass=phase(p,.24,.56);
-  const destinationRise=phase(p,.34,.72);
-  const details=phase(p,.54,.84);
-  const lights=phase(p,.76,.97,easeOut);
+  const cityRelease=phase(p,.02,.68);
+  const streetSweep=phase(p,.14,.66);
+  const shadowPass=phase(p,.24,.72);
+  const destinationRise=phase(p,.34,.76);
+  const details=phase(p,.56,.86);
+  const lights=phase(p,.78,.98,easeOut);
   const settle=phase(p,.88,1);
   let act='原场景保持';
   if(p>=.06)act='城市纸景散开';
