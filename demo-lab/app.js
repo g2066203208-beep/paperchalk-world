@@ -8,7 +8,7 @@ import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,
 import {createCityExplorer} from './ui/CityExplorer.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection','toggleStageProps'].map(id=>[id,$(id)]));
 const defaults={scale:1.8,normal:0,height:0,blend:0};
 const paperInputs={paperScale:'scale'};
 const sceneId=sceneFromSearch(location.search),isCity=sceneId===CITY_SCENE_ID;
@@ -136,6 +136,12 @@ function updateControls(){
   }
   for(const [id,key] of [['sunAzimuth','sunAzimuth'],['sunElevation','sunElevation']]){
     $(id).value=String(state[key]);$(id+'Value').textContent=`${Math.round(state[key])}°`;
+  }
+  if(ui.toggleStageProps){
+    const cleared=state.stagePropsVisible===false;
+    ui.toggleStageProps.textContent=cleared?'恢复全部道具':'撤掉全部道具';
+    ui.toggleStageProps.classList.toggle('active',cleared);
+    ui.toggleStageProps.setAttribute('aria-pressed',String(cleared));
   }
 }
 function refreshStatus(now,force=false){
@@ -288,6 +294,13 @@ function wireControls(){
   listen(ui.saveProgress,'click',()=>saveProgress());
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
+  listen(ui.toggleStageProps,'click',()=>{
+    const visible=scene.getState().stagePropsVisible!==false;
+    scene.setStagePropsVisible(!visible);
+    updateControls();
+    toast(visible?'舞台道具已全部撤下，只保留玩家、基础地面与灯光':'舞台道具已原样恢复');
+    refreshStatus(performance.now(),true);
+  });
   listen(ui.toggleInspector,'click',()=>setInspector(document.body.classList.contains('inspector-hidden')));
   listen(ui.closeInspector,'click',()=>setInspector(false));
   listen(ui.openGameMenu,'click',()=>setGameMenu(true));
@@ -357,6 +370,7 @@ async function start(){
     loadProgress(true);wireControls();updateControls();setStatus();
     for(const button of document.querySelectorAll('.toolbar button'))button.disabled=false;
     ui.openGameMenu.disabled=false;
+    ui.toggleStageProps.disabled=false;
     raf=requestAnimationFrame(tick);
   }catch(error){if(disposed)return;sceneStatus({state:'error',message:error.message||'无法载入纸艺场景，请刷新重试。'});console.error(error);}
 }
