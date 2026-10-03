@@ -44,7 +44,10 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
   cardCanvas.width=initialResolution.width;cardCanvas.height=initialResolution.height;
   const cardTexture=new THREE.CanvasTexture(cardCanvas);
   cardTexture.colorSpace=THREE.SRGBColorSpace;
-  cardTexture.minFilter=THREE.LinearFilter;cardTexture.magFilter=THREE.LinearFilter;cardTexture.generateMipmaps=false;
+  // The cutout is sampled at near-native size in the final framebuffer. A
+  // nearest minification path avoids a second bilinear soften when the Spine
+  // canvas is projected onto the paper card.
+  cardTexture.minFilter=THREE.NearestFilter;cardTexture.magFilter=THREE.LinearFilter;cardTexture.generateMipmaps=false;
   const cardMaterial=new THREE.MeshBasicMaterial({map:cardTexture,transparent:true,alphaTest:.02,side:THREE.DoubleSide,forceSinglePass:true,color:0xffffff,depthWrite:true,toneMapped:false});
   const card=new THREE.Mesh(new THREE.PlaneGeometry(1,1),cardMaterial);
   card.name='Spine 4.3 mesh card · magic_g';card.castShadow=true;card.receiveShadow=true;card.userData.volumeShadow=false;

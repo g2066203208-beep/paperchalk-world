@@ -119,12 +119,12 @@ test('geometry invalidation survives a non-cadence auto frame',async()=>{
 test('landscape phones and coarse tablets use compact quality, large desktop remains full quality',async()=>{
   for(const options of [{width:932,height:430},{width:430,height:932},{width:1180,height:820,coarse:true}]){
     const h=await setup(options);
-    assert.equal(h.refs.renderer.pixelRatio,1.05);assert.equal(h.scene.getStats().size.compact,true);
+    assert.equal(h.refs.renderer.pixelRatio,2);assert.equal(h.scene.getStats().size.compact,true);
     h.scene.dispose();
   }
   const h=await setup({width:1440,height:900});
-  assert.equal(h.refs.renderer.pixelRatio,1.22);assert.equal(h.scene.getStats().size.compact,false);
+  assert.equal(h.refs.renderer.pixelRatio,1.5);assert.equal(h.scene.getStats().size.compact,false);
   h.container.clientWidth=932;h.container.clientHeight=430;h.window.dispatchEvent(new Event('resize'));
-  assert.equal(h.refs.renderer.pixelRatio,1.05);assert.equal(h.scene.getStats().size.compact,true);
+  assert.equal(h.refs.renderer.pixelRatio,2);assert.equal(h.scene.getStats().size.compact,true);
   h.scene.dispose();
 });

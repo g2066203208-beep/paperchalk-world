@@ -70,7 +70,10 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   // Keep the scene at its established budget; the character gets its own
   // high-resolution buffer below, so the whole world does not need a costly
   // mobile-wide supersample.
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?1.05:1.22));
+  // Preserve the device pixel density on handhelds. The previous 1.05 cap
+  // forced the complete scene through a low-resolution framebuffer, then the
+  // volumetric composite enlarged it again and softened every edge.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?2:1.5));
   renderer.setSize(size.width,size.height,false);
   renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.domElement.style.display='block';
   renderer.domElement.setAttribute('aria-label',isCity?'晚上九点的纸艺城市街道':'横版开放纸艺世界');
@@ -303,7 +306,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     size=getSize();
     camera.aspect=size.width/size.height;camera.updateProjectionMatrix();
     orbitCamera.resize(size);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?1.05:1.22));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?2:1.5));
     renderer.setSize(size.width,size.height,false);
     starUniforms.pixelRatio.value=renderer.getPixelRatio();
     fog.resize();atmosphere.resize();invalidate();
