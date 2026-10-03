@@ -6,7 +6,7 @@
   "productionPath": "studio/",
   "labPath": "demo-lab/",
   "directMergeToMain": false,
-  "displayVersion": "DL-2026.10.03.7",
-  "releaseLabel": "greeting-card-page-turn-r1",
+  "displayVersion": "DL-2026.10.03.8",
+  "releaseLabel": "greeting-card-page-turn-r2",
   "focus": "greeting-card-page-turn"
 }
