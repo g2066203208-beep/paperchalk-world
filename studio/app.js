@@ -6,7 +6,7 @@ import {installStudioLifecycle} from './core/Lifecycle.mjs';
 import {wantsGamePresentation,PauseReasons} from './ui/GamePresentation.mjs';
 import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,acceptsInspectionKey} from './ui/CityPrologue.mjs';
 import {createCityExplorer} from './ui/CityExplorer.mjs';
-import {nearbyTransit,nearbyPaperSeam,nextPaperLayer,PAPER_LAYERS,travelDuration} from './world/CityLayout.mjs';
+import {nearbyTransit,travelDuration} from './world/CityLayout.mjs';
 
 const $=id=>document.getElementById(id);
 const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
@@ -67,30 +67,8 @@ function cityInteraction(){
   const x=simulation.snapshot().x,stop=nearbyTransit(x);
   if(stop)return {...stop,type:'transit',label:stop.kind==='metro'?'乘坐地铁':'乘坐公交'};
   const sight=nearbyCitySight(x);if(sight)return sight;
-  const seam=nearbyPaperSeam(x);
-  if(seam){
-    const current=simulation.snapshot().paperLayer??0,next=nextPaperLayer(current);
-    return {...seam,type:'paper-seam',label:`${seam.prompt} · ${PAPER_LAYERS[next].shortName}`,
-      title:seam.name,text:`纸板边缘露出一条细细的折痕。翻开它，${PAPER_LAYERS[next].description}。`};
-  }
   const person=scene?.nearbyCityPerson?.(x);
   return person?{...person,type:'person',label:'交谈 · '+person.name,title:person.name+' · '+person.role,text:person.line}:null;
-}
-function syncCityLayer({instant=true,seam=null}={}){
-  if(!isCity||!simulation)return;
-  const layer=simulation.snapshot().paperLayer??0;
-  scene?.setCityLayer?.(layer,{instant,seam});
-}
-function shiftPaperLayer(seam=nearbyPaperSeam(simulation?.snapshot().x??NaN)){
-  if(!isCity||!ready||failed||pauseReasons.active||cityRide||!seam)return false;
-  const current=simulation.snapshot().paperLayer??0,next=nextPaperLayer(current);
-  resetClock();
-  if(!simulation.setPaperLayer?.(next))return false;
-  scene?.setCityLayer?.(next,{seam,from:current});
-  scene?.frame(0,renderClock,simulation.snapshot());
-  saveProgress(true);refreshCityHud();
-  toast(`${seam.name} · 已翻到${PAPER_LAYERS[next].name}`);
-  return true;
 }
 function beginCityTravel(from,to){
   if(!ready||cityRide||Math.abs(simulation.snapshot().x-from.x)>from.radius+.2)return;
@@ -103,7 +81,7 @@ function finishCityTravel(cancelled=false){
   if(!cityRide)return;
   const {fromX,toX,fromName,toName,direction}=cityRide;
   const x=cancelled?fromX:toX;
-  simulation.restore({x,y:world.surfaceY(x),facing:direction,vx:0,distance:simulation.snapshot().distance,paperLayer:simulation.snapshot().paperLayer});
+  simulation.restore({x,y:world.surfaceY(x),facing:direction,vx:0,distance:simulation.snapshot().distance});
   cityRide=null;scene.setCityRide(null);document.body.classList.remove('city-riding');resetClock();
   scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
   cityExplorer.update(x,null);saveProgress(true);refreshCityHud();toast('已到达 '+(cancelled?fromName:toName));
@@ -112,7 +90,6 @@ function openInspection(){
   if(!isCity||!ready||failed||pauseReasons.active||!document.body.classList.contains('inspector-hidden'))return;
   const sight=cityInteraction();if(!sight)return;
   if(sight.type==='transit'){cityExplorer.openTransit(sight);return;}
-  if(sight.type==='paper-seam'){shiftPaperLayer(sight);return;}
   inspectionOpen=true;pauseReasons.openMenu();resetClock();
   ui.inspectionTitle.textContent=sight.title;ui.inspectionText.textContent=sight.text;
   ui.inspectionOverlay.hidden=false;document.body.classList.add('inspection-open');
@@ -198,7 +175,6 @@ function loadProgress(automatic=false){
     const message={empty:'尚未保存',corrupt:'存档损坏，当前场景可继续使用',unsupported:'此存档版本暂不支持',unavailable:'本地存储不可用'}[result.status]||'无法读取进度';
     ui.saveStatus.textContent=message;if(!automatic)toast(message);
   }
-  syncCityLayer();
   ui.gameSaveStatus.textContent=ui.saveStatus.textContent;
 }
 function heldButton(element,setHeld){
@@ -305,7 +281,7 @@ async function loadBuildInfo(){
 }
 function resetCityPlayer(){
   if(cityRide){cityRide=null;scene.setCityRide(null);document.body.classList.remove('city-riding');}
-  simulation.reset();resetClock();scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();syncCityLayer();
+  simulation.reset();resetClock();scene.frame(0,renderClock,simulation.snapshot());scene.resetCamera();
 }
 function wireControls(){
   listen(ui.viewport,'pointerdown',()=>ui.viewport.focus({preventScroll:true}));
@@ -354,7 +330,7 @@ function tick(now){
         if(cityRide){
           cityRide.elapsed+=elapsed;cityRide.progress=Math.min(1,cityRide.elapsed/cityRide.duration);
           const x=cityRide.fromX+(cityRide.toX-cityRide.fromX)*cityRide.progress;
-          simulation.restore({x,y:world.surfaceY(x),facing:cityRide.direction,vx:0,distance:simulation.snapshot().distance,paperLayer:simulation.snapshot().paperLayer});
+          simulation.restore({x,y:world.surfaceY(x),facing:cityRide.direction,vx:0,distance:simulation.snapshot().distance});
           scene.setCityRide(cityRide);input.cancel();accumulator=0;
           if(cityRide.progress>=1)finishCityTravel();
         }else{

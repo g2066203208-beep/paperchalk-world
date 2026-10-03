@@ -20,41 +20,7 @@ export const METRO_STATIONS=Object.freeze([0,3,4,7,9,11].map(i=>{
   const d=CITY_DISTRICTS[i];return Object.freeze({id:'metro-'+d.id,kind:'metro',districtId:d.id,name:d.name,x:d.x+51,radius:4});
 }));
 export const TRANSIT_STOPS=Object.freeze([...BUS_STOPS,...METRO_STATIONS]);
-// Paper seams are authored stage joins rather than collision barriers.  They
-// let the player turn the same street into a small paper theatre: each join
-// exposes the next depth layer while the walking surface stays continuous.
-export const PAPER_LAYERS=Object.freeze([
-  Object.freeze({id:0,name:'街面层',shortName:'街面',description:'沿着城市主街展开的近景纸层'}),
-  Object.freeze({id:1,name:'桥廊层',shortName:'桥廊',description:'抬起一折纸板，露出天桥和屋顶连廊'}),
-  Object.freeze({id:2,name:'巷幕后景',shortName:'幕后',description:'翻到纸景背面，看到藏在建筑后的窄巷剪影'}),
-]);
-const SEAM_SPECS=[
-  ['academy-fold',6,'校门折页'],
-  ['oldtown-fold',60,'老城拱廊折页'],
-  ['market-fold',180,'集市棚顶折页'],
-  ['shopping-fold',300,'商业街橱窗折页'],
-  ['central-fold',420,'车站大厅折页'],
-  ['business-fold',540,'商务楼桥廊折页'],
-  ['civic-fold',660,'市民广场折页'],
-  ['riverside-fold',780,'月河步桥折页'],
-  ['harbor-fold',900,'港口仓页折页'],
-  ['arts-fold',1020,'艺术街舞台折页'],
-  ['medical-fold',1140,'医院花园折页'],
-  ['residential-fold',1260,'星灯庭院折页'],
-];
-export const PAPER_SEAMS=Object.freeze(SEAM_SPECS.map(([id,x,name],index)=>Object.freeze({
-  id,x,name,radius:2.8,index,
-  prompt:'切换纸层',
-})));
 export function districtAt(x){return CITY_DISTRICTS.find(d=>x>=d.minX&&x<d.maxX)??(x<0?CITY_DISTRICTS[0]:CITY_DISTRICTS.at(-1));}
 export function nearbyTransit(x){return TRANSIT_STOPS.filter(s=>Math.abs(s.x-x)<=s.radius).sort((a,b)=>Math.abs(a.x-x)-Math.abs(b.x-x))[0]??null;}
-export function nearbyPaperSeam(x){
-  if(!Number.isFinite(x))return null;
-  return PAPER_SEAMS.filter(seam=>Math.abs(seam.x-x)<=seam.radius).sort((a,b)=>Math.abs(a.x-x)-Math.abs(b.x-x))[0]??null;
-}
-export function nextPaperLayer(layer=0){
-  const current=Number.isInteger(layer)&&layer>=0&&layer<PAPER_LAYERS.length?layer:0;
-  return (current+1)%PAPER_LAYERS.length;
-}
 export function transitDestinations(stop){return (stop?.kind==='metro'?METRO_STATIONS:BUS_STOPS).filter(s=>s.id!==stop?.id);}
 export function travelDuration(from,to){return Math.max(3,Math.min(from.kind==='metro'?16:38,Math.abs(to.x-from.x)/(from.kind==='metro'?105:38)+3));}

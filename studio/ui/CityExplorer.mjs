@@ -18,7 +18,7 @@ export function createCityExplorer({getPlayer,onPause,onResume,onTravel,onCancel
   let touch=touchDevice||coarsePointer.matches;
   function refreshInput(){
     touch=touchDevice||coarsePointer.matches;root.classList.toggle('city-touch',touch);
-    $('.city-explorer-card footer').textContent=touch?'按住屏幕方向按钮行走 · 靠近接缝、人物或车站后，点右下角按钮交互':'方向键 / A D 步行 · E 与接缝、人物或车站交互 · M 地图';
+    $('.city-explorer-card footer').textContent=touch?'按住屏幕方向按钮行走 · 靠近人物或车站后，点右下角按钮交互':'方向键 / A D 步行 · E 与身边的人或车站交互 · M 地图';
   }
   listen(coarsePointer,'change',refreshInput);refreshInput();
   function setBackgroundInert(value){
