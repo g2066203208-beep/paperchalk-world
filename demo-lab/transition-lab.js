@@ -12,7 +12,7 @@ const ui={
 };
 const scene=createPaperStageScene({container:ui.viewport});
 let playing=false,progress=0,last=performance.now(),raf=0,speed=1;
-const fallbackVersion='DL-2026.10.03.2';
+const fallbackVersion='DL-2026.10.03.3';
 
 function percent(value){return String(Math.round(value*100)).padStart(3,'0')+'%';}
 function sync(){
