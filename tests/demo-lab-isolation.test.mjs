@@ -62,9 +62,9 @@ test('new scene encodes physical paper relationships explicitly',async()=>{
   assert.match(scene,/MASTER HINGE · STREET PAGE/);
   assert.match(scene,/Fixed underground pop-up deck/);
   assert.match(scene,/SECONDARY SCORE · STREET PAGE/);assert.match(scene,/triangular V-fold card/);
-  assert.match(scene,/PLAYER SAFE THRESHOLD/);assert.match(scene,/STREAMED WORLD PROXY STRIP/);
+  assert.match(scene,/PLAYER SAFE THRESHOLD/);assert.match(scene,/GAMEPLAY STREET CUTAWAY FASCIA/);assert.match(scene,/STREAMED WORLD PROXY STRIP/);
   assert.match(scene,/ACTIVE HIGH-DETAIL PAPER WINDOW/);assert.match(scene,/residentChunks/);
-  assert.match(scene,/pageHinge\.rotation\.x/);assert.match(scene,/secondaryHinge\.rotation\.x/);
+  assert.match(scene,/pageHinge\.rotation\.x/);assert.match(scene,/secondaryHinge\.rotation\.x/);assert.match(scene,/leftFascia\.rotation\.y/);
   assert.match(scene,/pivot\.rotation\.x=-Math\.PI\*\.5\*\(1-local\)/);
   assert.match(scene,/lampWave/);
   assert.doesNotMatch(scene,/opacity\s*=/);
