@@ -1,0 +1,89 @@
+{
+  "name": "Compressed olive and terracotta paper pulp | mobile terrain derivative v6",
+  "sourceArchive": "Olive_Fiber_Blender_Asset.zip",
+  "sourceArchiveSha256": "20d1a68283ae64109223b6103029b3951388664e3954ddd76a4b53832f7a89be",
+  "source": "User-provided Olive Fiber texture set. Base color, normal and roughness structure are retained; the sphere render is never used as a texture.",
+  "derivation": "Deterministic periodic filtering of user-provided 2048px color and +Y normal maps to 1024px. Reduced broad normal lobes, retained source fibers and layer boundaries, added seeded short fiber and micropore detail. Soil has its own reduced flake normal; no sphere render, photographed lighting or reference screenshot is sampled. ORM is authored micro-pore AO, roughness at least .94, zero metalness.",
+  "usage": "Olive maps for grass tops and exposed pulp lip; dirt maps for cube sides/bottom. World-space UVs; no baked lighting.",
+  "tileWorldUnits": 1.4,
+  "normalStrength": 0.72,
+  "soilTileWorldUnits": 1.3333333333333333,
+  "soilNormalStrength": 0.6624,
+  "aoIntensity": 0.38,
+  "textures": [
+    {
+      "file": "base-color.webp",
+      "sha256": "8d6a9e132292c6439d2c7df2b3c97673159248d366a1b00c6b75c60b23deee79",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "sRGB olive layered pulp top base color",
+      "encoding": "WebP quality 95"
+    },
+    {
+      "file": "normal-gl.webp",
+      "sha256": "8e5c02391040bdf2f73b02527d68f647e036bf9dbc2c68a8ab3697c2f7f74958",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear tangent-space OpenGL +Y grass fiber normal; blue channel faces forward",
+      "encoding": "WebP lossless"
+    },
+    {
+      "file": "orm.webp",
+      "sha256": "1445a649af0cb1b29c1bfa81e6fd3a6e9b0ca725b2bc8f014b27b2231ae3aa56",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear R=micropore AO G=high paper roughness B=zero metalness",
+      "encoding": "WebP lossless"
+    },
+    {
+      "file": "dirt-color.webp",
+      "sha256": "fcfed3ec3818e05bab65e9554df328ce4c7db31f4cd39344642a6e5a65f0c23b",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "sRGB yellow-brown compressed cellulose stock; unlit base color",
+      "encoding": "WebP quality 97"
+    },
+    {
+      "file": "dirt-normal-gl.webp",
+      "sha256": "66c27c9f352818a037b6d716adeb4c97a0b873d90ca9eccc5dd04fdf54858a9c",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear tangent-space OpenGL +Y short-fiber/granule/pore normal; positive forward blue",
+      "encoding": "WebP lossless"
+    },
+    {
+      "file": "dirt-orm.webp",
+      "sha256": "1098b95e8a3c00b8121a6d2330752896ada5679389adc1abdf768bf3cbeba009",
+      "dimensions": [
+        1024,
+        1024
+      ],
+      "role": "linear R=micropore AO G=high cellulose roughness B=zero metalness",
+      "encoding": "WebP lossless"
+    }
+  ],
+  "totalTextureBytes": 6513324,
+  "soilDerivation": {
+    "version": "v7 compressed cellulose stock",
+    "seed": 735901,
+    "input": "Existing v6 soil color derivative plus user OliveFiber_NormalGL.png; original grass maps unchanged.",
+    "method": "Deterministic periodic numpy/scipy filtering and wraparound irregular cellulose chips, short fibers and micropores. Two scales: fine stock detail plus 9-28-texel fragments, 8-21-texel short fiber bundles and sparse 3-8-texel pores survive mobile mipmaps. Strong suppression of broad flake color/normal lobes. Source color microstructure retained at reduced amplitude.",
+    "color": "Unlit yellow-brown kraft stock, intended RGB median 145,102,59 in sRGB. No photographic lighting or reference/render image sampled.",
+    "normal": "Independent height-derived tangent-space OpenGL +Y; positive blue/Z, periodic central differences; fine source normal detail retained.",
+    "orm": "Linear R=micropore AO G=high matte paper roughness B=zero metalness; no screen-space lighting baked.",
+    "dimensions": [
+      1024,
+      1024
+    ]
+  }
+}
