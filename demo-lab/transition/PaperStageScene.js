@@ -374,5 +374,5 @@ export function createPaperStageScene({container}={}){
 
   updateStreamingWindow();resize();apply(0);
   return {renderer,scene,camera,setProgress:apply,setGuides,setShadows,setView,setLargeWorld,setPlayerX,snapshot,resize,dispose,
-    get playerReady(){return player.ready;}};
+    whenPlayerReady:player.readyPromise,get playerReady(){return player.ready;}};
 }
