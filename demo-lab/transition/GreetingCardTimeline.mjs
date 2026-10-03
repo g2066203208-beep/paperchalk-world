@@ -23,25 +23,25 @@ export function sampleGreetingCard(progress){
   const p=clamp01(progress);
 
   // One clear primary action: the city cover opens like a top-fold greeting card.
-  const cover=phase(p,.08,.60);
+  const cover=phase(p,.08,.72,value=>value);
 
-  // The inner page becomes readable only after the cover has moved enough.
-  const innerReveal=phase(p,.24,.66);
+  // The inner page becomes readable while the cover is still visibly turning.
+  const innerReveal=phase(p,.28,.74);
 
-  // Pop-up layers rise in a simple sequence after the reveal begins.
-  const backWall=phase(p,.34,.72);
-  const columns=phase(p,.44,.79,value=>easeOutBack(value,.75));
-  const props=phase(p,.55,.87,value=>easeOutBack(value,1.05));
-  const lights=phase(p,.78,.97);
-  const settle=phase(p,.90,1);
+  // Pop-up layers rise after the player has already read the page turn.
+  const backWall=phase(p,.42,.80);
+  const columns=phase(p,.50,.86,value=>easeOutBack(value,.75));
+  const props=phase(p,.60,.92,value=>easeOutBack(value,1.05));
+  const lights=phase(p,.80,.985);
+  const settle=phase(p,.91,1);
 
   let act='城市贺卡封面';
   if(p>=.08)act='封面整页翻开';
-  if(p>=.34)act='地铁内页显现';
-  if(p>=.44)act='立体站台弹起';
-  if(p>=.55)act='设施接力展开';
-  if(p>=.78)act='暖灯逐盏亮起';
-  if(p>=.97)act='贺卡完全打开';
+  if(p>=.28)act='地铁内页显现';
+  if(p>=.42)act='立体站台弹起';
+  if(p>=.60)act='设施接力展开';
+  if(p>=.80)act='暖灯逐盏亮起';
+  if(p>=.985)act='贺卡完全打开';
 
   return {progress:p,cover,innerReveal,backWall,columns,props,lights,settle,act};
 }
