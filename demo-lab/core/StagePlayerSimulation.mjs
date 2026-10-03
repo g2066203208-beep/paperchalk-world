@@ -12,7 +12,7 @@ export class StagePlayerSimulation {
     assertWorld(world); this.world = world; this.options = { ...DEFAULTS };
     for (const name of Object.keys(DEFAULTS)) {
       if (options[name] === undefined) continue;
-      if (!Number.isFinite(options[name]) || options[name] <= 0) throw new RangeError(\`Invalid movement option: \${name}\`);
+      if (!Number.isFinite(options[name]) || options[name] <= 0) throw new RangeError(`Invalid movement option: ${name}`);
       this.options[name] = options[name];
     }
     this.reset();
