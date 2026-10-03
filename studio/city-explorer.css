@@ -47,7 +47,7 @@
 }
 .city-ride-heading button{min-height:44px;min-width:88px;padding:8px 10px;border:1px solid #d8dec14a;border-radius:7px;font-size:12px}
 .city-ride-route{min-width:0}
-.city-explorer-open :is(.game-pause,.touch-controls,.inspect-action,.rotate-hint,.prologue-hud),
+.city-explorer-open :is(.game-pause,.touch-controls,.inspect-action,.rotate-hint,.prologue-hud,.city-quest-hud),
 .city-explorer-open .city-explorer :is(.city-map-button,.city-navigation,.city-district-arrival){visibility:hidden;pointer-events:none}
 .game-menu-open .city-explorer,.inspection-open .city-explorer,
 .game-mode:not(.inspector-hidden) .city-explorer{visibility:hidden;pointer-events:none}
