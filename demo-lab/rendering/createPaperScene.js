@@ -109,73 +109,151 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
   const fog=createPaperFog({THREE,scene,renderer,camera,state,flags,getSize,mistTexture:materials.mistTexture,celestials});
   const atmosphere=createVolumetrics({THREE,scene,renderer,camera,state,flags,getSize,lights,celestials,fog,actor});
   const lighting=createLightingController({THREE,scene,camera,renderer,state,flags,lights,celestials,fog,atmosphere,actor});
-  // Full Demo Lab stage machinery. Progress 0 is the outdoor city, 1 is the
-  // underground Moon River Line station. The city folds away, its floor drops,
-  // then an entirely different floor/background/prop set rises and unfolds.
-  const cityStageProps=[
-    {name:'traffic',group:traffic?.group,start:0.00,direction:1,baseVisible:()=>true},
-    {name:'population',group:population?.group,start:0.035,direction:-1,baseVisible:()=>true},
-    {name:'transit',group:transit?.group,start:0.07,direction:-1,baseVisible:()=>true},
-    {name:'scenery',group:scenery.group,start:0.105,direction:-1,baseVisible:()=>!isCity||lastSnapshot.x<75},
-    {name:'forest',group:forest?.canopyGroup,start:0.13,direction:-1,baseVisible:()=>true},
-    {name:'districts',group:districts?.group,start:0.165,direction:-1,baseVisible:()=>true},
-    {name:'backdrop',group:backdrop?.group,start:0.20,direction:-1,baseVisible:()=>state.layers},
-  ].filter(item=>item.group).map(item=>({...item,baseRotationX:item.group.rotation.x}));
-  const stagePropGroups=[...cityStageProps,...(subwayStage?.verticalGroups?.map(item=>item.group)??[])];
-  const cityTerrainBaseY=terrain.terrainBlocks.position.y;
+  // Demo Lab stage director. The player is the visual origin of every ripple.
+  // Horizontal planes use fly/lift motion only; only upright paper scenery folds.
+  const cityFloorCarrier=new THREE.Group();cityFloorCarrier.name='City floor lift carrier';scene.add(cityFloorCarrier);
+  if(isCity){
+    for(const object of [terrain.terrainBlocks,traffic?.group,transit?.group,population?.group].filter(Boolean))cityFloorCarrier.attach(object);
+  }
+  const cityFloorBaseY=cityFloorCarrier.position.y;
+  const backdropBaseY=backdrop?.group.position.y??0;
   const outdoorBackground=new THREE.Color(0x9ca1ad),subwayBackground=new THREE.Color(0x27333d);
-  const stageTransition={progress:0,target:0,active:false,duration:1.48,anchorX:0};
-  const stageEase=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
-  function applyStageAnimation(){
-    const p=stageTransition.progress;
+  const cityPieces=[
+    ...(scenery?.group?.children??[]).filter(o=>o.userData?.stageHinge).map(group=>({kind:'scenery',group,x:group.userData.stageX,baseRotationX:group.userData.stageBaseRotationX??group.rotation.x})),
+    ...(districts?.group?.children??[]).filter(o=>o.userData?.stageHinge).map(group=>({kind:'district',group,x:group.userData.stageX,baseRotationX:group.userData.stageBaseRotationX??group.rotation.x})),
+  ];
+  const stageTransition={active:false,from:'city',to:'city',t:0,duration:1.92,anchorX:0};
+  const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+  const smoother=t=>{t=clamp(t,0,1);return t*t*t*(t*(t*6-15)+10);};
+  const phase=(t,a,b,ease=smoother)=>ease(clamp((t-a)/(b-a),0,1));
+  const cityRipple=(x,max=.12)=>Math.min(1,Math.abs((Number.isFinite(x)?x:stageTransition.anchorX)-stageTransition.anchorX)/92)*max;
+  const subwayRipple=(x,max=.11)=>Math.min(1,Math.abs(Number.isFinite(x)?x:0)/96)*max;
 
-    // 1) Outdoor vertical scenery collapses in shallow waves.
-    for(const item of cityStageProps){
-      const local=clamp((p-item.start)/.43,0,1),fold=stageEase(local);
-      item.group.rotation.x=item.baseRotationX+item.direction*fold*Math.PI*.5;
-      item.group.visible=item.baseVisible()&&local<.999;
-    }
-
-    // 2) The entire city floor panel lowers out of the proscenium.
-    const cityFloorDrop=stageEase(clamp((p-.18)/.27,0,1));
-    terrain.terrainBlocks.position.y=cityTerrainBaseY-cityFloorDrop*2.45;
-    terrain.terrainBlocks.visible=state.layers&&p<.53;
-
-    // 3) The independent subway deck rises from below.
-    if(subwayStage){
-      const rise=stageEase(clamp((p-.34)/.24,0,1));
-      subwayStage.root.visible=p>.315;
-      subwayStage.root.position.y=-2.55*(1-rise);
-
-      // 4) Subway wall/train/fixtures/ceiling unfold after the deck arrives.
-      for(const item of subwayStage.verticalGroups){
-        const local=clamp((p-(.49+item.start))/.31,0,1),unfold=stageEase(local);
-        item.group.rotation.x=item.baseRotationX+item.direction*(1-unfold)*Math.PI*.5;
-        item.group.visible=local>.001;
-      }
-      subwayStage.setLightFactor(stageEase(clamp((p-.63)/.24,0,1)));
-    }
-
-    // The outdoor sky disappears behind the rising underground set.
-    const indoorMix=stageEase(clamp((p-.43)/.23,0,1));
-    scene.background.copy(outdoorBackground).lerp(subwayBackground,indoorMix);
-    sky.visible=state.sky&&p<.60;
-    starField.visible=state.sky&&starUniforms.strength.value>.002&&p<.58;
-    sunGlow.visible=state.sky&&sunDisc.visible&&p<.58;
-    moonGlow.visible=state.sky&&moonDisc.visible&&p<.58;
-    forestMist.visible=state.fog&&p<.48;
-
-    const cityLightFactor=1-stageEase(clamp((p-.02)/.42,0,1));
+  function setCityPieceFold(piece,fold,visible=true){
+    piece.group.rotation.x=piece.baseRotationX-fold*Math.PI*.5;
+    piece.group.visible=!!visible&&fold<.9995;
+  }
+  function setSubwayPieceFold(piece,fold,visible=true){
+    const base=piece.baseRotationX??0;
+    piece.group.rotation.x=base-fold*Math.PI*.5;
+    piece.group.visible=!!visible&&fold<.9995;
+  }
+  function captureCityVisibility(){
+    if(!isCity)return;
+    districts.group.visible=true;
+    scenery.group.visible=stageTransition.anchorX<75;
+    districts.update(stageTransition.anchorX);
+    for(const piece of cityPieces)piece.transitionVisible=piece.group.visible&&(piece.kind!=='scenery'||scenery.group.visible);
+  }
+  function setCityLightFactor(value){
+    const factor=clamp(value,0,1);
     for(const light of lights.locals??[]){
       const base=light.userData.stageLitIntensity??light.userData.cityBaseIntensity??light.intensity;
-      light.intensity=base*cityLightFactor;
-      light.visible=cityLightFactor>.015;
+      light.intensity=base*factor;light.visible=factor>.015;
     }
+  }
+  function setOutdoorSkyFactor(value){
+    const factor=clamp(value,0,1),visible=factor>.08;
+    sky.visible=state.sky&&visible;
+    starField.visible=state.sky&&starUniforms.strength.value>.002&&visible;
+    sunGlow.visible=state.sky&&sunDisc.visible&&factor>.12;
+    moonGlow.visible=state.sky&&moonDisc.visible&&factor>.12;
+    forestMist.visible=state.fog&&factor>.20;
+    scene.background.copy(subwayBackground).lerp(outdoorBackground,factor);
+  }
+  function stableCity(){
+    cityFloorCarrier.visible=true;cityFloorCarrier.position.y=cityFloorBaseY;
+    scenery.group.visible=lastSnapshot.x<75;districts.group.visible=true;districts.update(lastSnapshot.x);
+    for(const piece of cityPieces){piece.group.rotation.x=piece.baseRotationX;if(piece.kind==='scenery')piece.group.visible=true;}
+    if(backdrop){backdrop.group.visible=state.layers;backdrop.group.position.y=backdropBaseY;}
+    if(subwayStage){
+      subwayStage.root.visible=false;subwayStage.floorCarrier.position.y=-3.25;subwayStage.ceilingCarrier.position.y=3.45;
+      subwayStage.trainGroup.visible=false;subwayStage.setLightFactor(0);
+    }
+    setOutdoorSkyFactor(1);setCityLightFactor(1);
+  }
+  function stableSubway(){
+    cityFloorCarrier.position.y=cityFloorBaseY-3.25;cityFloorCarrier.visible=false;
+    scenery.group.visible=false;districts.group.visible=false;
+    for(const piece of cityPieces)setCityPieceFold(piece,1,false);
+    if(backdrop){backdrop.group.visible=false;backdrop.group.position.y=backdropBaseY-1.25;}
+    if(subwayStage){
+      subwayStage.root.visible=true;subwayStage.floorCarrier.position.y=0;subwayStage.ceilingCarrier.position.y=0;
+      for(const piece of subwayStage.wallPieces)setSubwayPieceFold(piece,0,true);
+      for(const piece of subwayStage.fixturePieces)setSubwayPieceFold(piece,0,true);
+      subwayStage.trainGroup.position.x=subwayStage.trainGroup.userData.baseX??6;subwayStage.trainGroup.visible=true;subwayStage.setLightFactor(1);
+    }
+    setOutdoorSkyFactor(0);setCityLightFactor(0);
+  }
+  function cityToSubway(t){
+    scenery.group.visible=true;districts.group.visible=true;
+    for(const piece of cityPieces){
+      const delay=cityRipple(piece.x,.115),fold=phase(t,.025+delay,.245+delay);
+      setCityPieceFold(piece,fold,piece.transitionVisible);
+    }
+    setCityLightFactor(1-phase(t,.04,.30));
+    if(backdrop){
+      const sink=phase(t,.16,.38);backdrop.group.position.y=backdropBaseY-sink*1.25;
+      backdrop.group.visible=state.layers&&t<.48;
+    }
+    const cityDrop=phase(t,.235,.43);
+    cityFloorCarrier.visible=t<.47;cityFloorCarrier.position.y=cityFloorBaseY-cityDrop*3.25;
+    if(subwayStage){
+      subwayStage.root.visible=t>.31;
+      const floorRise=phase(t,.34,.56);subwayStage.floorCarrier.position.y=-3.25*(1-floorRise);
+      for(const piece of subwayStage.wallPieces){
+        const delay=subwayRipple(piece.x,.10),open=phase(t,.49+delay,.69+delay);
+        setSubwayPieceFold(piece,1-open,open>.002);
+      }
+      for(const piece of subwayStage.fixturePieces){
+        const delay=subwayRipple(piece.x,.105),open=phase(t,.56+delay,.76+delay);
+        setSubwayPieceFold(piece,1-open,open>.002);
+      }
+      const trainIn=phase(t,.61,.80);
+      subwayStage.trainGroup.visible=trainIn>.01;
+      subwayStage.trainGroup.position.x=(subwayStage.trainGroup.userData.baseX??6)+(1-trainIn)*9.5;
+      const ceilingDown=phase(t,.68,.87);subwayStage.ceilingCarrier.position.y=(1-ceilingDown)*3.45;
+      subwayStage.setLightFactor(phase(t,.78,.98));
+    }
+    setOutdoorSkyFactor(1-phase(t,.30,.55));
+  }
+  function subwayToCity(t){
+    if(subwayStage){
+      subwayStage.root.visible=true;subwayStage.setLightFactor(1-phase(t,.00,.16));
+      const ceilingUp=phase(t,.045,.235);subwayStage.ceilingCarrier.position.y=ceilingUp*3.45;
+      const trainOut=phase(t,.075,.27);
+      subwayStage.trainGroup.position.x=(subwayStage.trainGroup.userData.baseX??6)+trainOut*9.5;subwayStage.trainGroup.visible=trainOut<.995;
+      for(const piece of subwayStage.fixturePieces){
+        const delay=subwayRipple(piece.x,.095),fold=phase(t,.14+delay,.33+delay);setSubwayPieceFold(piece,fold,true);
+      }
+      for(const piece of subwayStage.wallPieces){
+        const delay=subwayRipple(piece.x,.10),fold=phase(t,.19+delay,.39+delay);setSubwayPieceFold(piece,fold,true);
+      }
+      const floorDrop=phase(t,.38,.56);subwayStage.floorCarrier.position.y=-floorDrop*3.25;
+      if(t>.59)subwayStage.root.visible=false;
+    }
+    cityFloorCarrier.visible=t>.43;
+    const cityRise=phase(t,.45,.65);cityFloorCarrier.position.y=cityFloorBaseY-3.25*(1-cityRise);
+    if(backdrop){
+      const rise=phase(t,.50,.70);backdrop.group.visible=state.layers&&t>.48;backdrop.group.position.y=backdropBaseY-1.25*(1-rise);
+    }
+    setOutdoorSkyFactor(phase(t,.50,.74));
+    scenery.group.visible=true;districts.group.visible=true;
+    for(const piece of cityPieces){
+      const delay=cityRipple(piece.x,.115),open=phase(t,.62+delay,.84+delay);
+      setCityPieceFold(piece,1-open,piece.transitionVisible&&open>.002);
+    }
+    setCityLightFactor(phase(t,.78,.98));
+  }
+  function applyStagePose(){
+    if(!isCity)return;
+    if(!stageTransition.active){if(state.activeStage==='subway')stableSubway();else stableCity();return;}
+    if(stageTransition.to==='subway')cityToSubway(stageTransition.t);else subwayToCity(stageTransition.t);
   }
   function updateLighting(time){
     lighting.updateLighting(time);backdrop?.updateLighting(time);
     for(const light of lights.locals??[])light.userData.stageLitIntensity=light.intensity;
-    applyStageAnimation();
+    applyStagePose();
   }
   const {sky,starField,starUniforms,sunDisc,moonDisc,sunGlow,moonGlow}=celestials;
   const {sun,moon,groundBounce,viewFill}=lights;
@@ -189,7 +267,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
     contactShadow.visible=state.shadow;forestMist.visible=state.fog;
     terrain.terrainBlocks.visible=state.layers;renderer.shadowMap.enabled=state.shadow;
     if(backdrop)backdrop.setSkyVisible?.(state.sky);
-    applyStageAnimation();
+    applyStagePose();
     sun.castShadow=state.shadow&&sun.intensity>.10;moon.castShadow=state.shadow&&moon.intensity>.10;
     if(!state.fog)scene.fog=null;
     renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
@@ -229,27 +307,20 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
   orbitCamera.follow(lastSnapshot.x,dt,lastSnapshot.y-.5);
   if(isCity){
-    // The distant paper town scrolls slowly while authored street districts
-    // remain at fixed world positions. The moon reads as a distant sky object.
-    backdrop.group.position.x=lastSnapshot.x*.985;
-    applyStageAnimation();
-    if(stageTransition.progress<.58){
-      districts.update(lastSnapshot.x);
+    if(!stageTransition.active&&state.activeStage==='city'){
+      backdrop.group.position.x=lastSnapshot.x*.985;scenery.group.visible=lastSnapshot.x<75;districts.update(lastSnapshot.x);
       if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
       if(transit.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
+      if(traffic?.update(dt)){
+        flags.render=flags.depth=flags.ao=true;trafficShadowClock+=dt;
+        if(trafficShadowClock>=1/30){flags.shadow=true;trafficShadowClock%=1/30;}
+      }
     }
-  }
-
-  if(stageTransition.active){
-    const direction=Math.sign(stageTransition.target-stageTransition.progress);
-    const next=stageTransition.progress+direction*(dt/stageTransition.duration);
-    stageTransition.progress=direction>0?Math.min(stageTransition.target,next):Math.max(stageTransition.target,next);
-    if(Math.abs(stageTransition.progress-stageTransition.target)<1e-5){
-      stageTransition.progress=stageTransition.target;
-      stageTransition.active=false;
+    if(stageTransition.active){
+      stageTransition.t=Math.min(1,stageTransition.t+dt/stageTransition.duration);applyStagePose();
+      if(stageTransition.t>=1){stageTransition.active=false;state.activeStage=stageTransition.to;applyStagePose();}
+      flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
     }
-    applyStageAnimation();
-    flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
   }
   // The shadow coverage has ample margin. Move its origin in two-unit steps
   // instead of invalidating static forest occlusion for every camera drift.
@@ -263,15 +334,6 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   if(playerMesh)playerMesh.visible=true;
   contactShadow.visible=state.shadow;
   frameCalls++;
-
-  if(stageTransition.progress<.55&&traffic?.update(dt)){
-    flags.render=flags.depth=flags.ao=true;
-    trafficShadowClock+=dt;
-    if(trafficShadowClock>=1/30){
-      flags.shadow=true;
-      trafficShadowClock%=1/30;
-    }
-  }
 
 
   if(actor.sync(lastSnapshot)){
@@ -426,25 +488,12 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     invalidate();
   }
   function setStage(name){
-    if(!isCity||!['city','subway'].includes(name))return false;
-    const target=name==='subway'?1:0;
-    if(state.activeStage===name&&!stageTransition.active&&Math.abs(stageTransition.progress-target)<1e-5)return false;
-    state.activeStage=name;
-    stageTransition.target=target;
-    stageTransition.active=Math.abs(stageTransition.progress-target)>=1e-5;
-    if(name==='subway'&&subwayStage){
-      stageTransition.anchorX=lastSnapshot.x;
-      subwayStage.setAnchorX(stageTransition.anchorX);
-    }
-    if(name==='city'){
-      districts?.update(lastSnapshot.x);
-      population?.update(0,lastSnapshot.x);
-      transit?.update(0,lastSnapshot.x);
-      traffic?.update(0);
-    }
-    applyStageAnimation();
-    flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
-    return true;
+    if(!isCity||!['city','subway'].includes(name)||stageTransition.active||state.activeStage===name)return false;
+    stageTransition.from=state.activeStage;stageTransition.to=name;stageTransition.t=0;stageTransition.active=true;stageTransition.anchorX=lastSnapshot.x;
+    if(subwayStage)subwayStage.setAnchorX(stageTransition.anchorX);
+    if(name==='subway')captureCityVisibility();
+    else{scenery.group.visible=stageTransition.anchorX<75;districts.group.visible=true;districts.update(stageTransition.anchorX);captureCityVisibility();}
+    applyStagePose();invalidate();return true;
   }
   function toggleStage(){return setStage(state.activeStage==='subway'?'city':'subway');}
   function setSun({azimuth,elevation,manual=true}={}){
@@ -454,15 +503,15 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(state.manualSun){timeTransition.active=false;state.auto=false;state.timePreset='';}
     updateLighting(state.time);syncFeatures();
   }
-  function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active,stageTransitioning:stageTransition.active,stageTransitionProgress:stageTransition.progress};}
+  function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active,stageTransitioning:stageTransition.active,stageTransitionProgress:stageTransition.t,stageTarget:stageTransition.active?stageTransition.to:state.activeStage};}
   function getStats(){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
       districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),
-      player:actor.snapshot(),camera:orbitCamera.snapshot(),activeStage:state.activeStage,stagePropGroups:stagePropGroups.length,
-      stageTransition:{active:stageTransition.active,progress:stageTransition.progress,target:stageTransition.target,anchorX:stageTransition.anchorX},
+      player:actor.snapshot(),camera:orbitCamera.snapshot(),activeStage:state.activeStage,stagePropGroups:cityPieces.length+(subwayStage?.wallPieces.length??0)+(subwayStage?.fixturePieces.length??0),
+      stageTransition:{active:stageTransition.active,t:stageTransition.t,from:stageTransition.from,to:stageTransition.to,anchorX:stageTransition.anchorX},
       subway:subwayStage?.stats?.(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
