@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "purpose": "feature-experiment",
+  "branch": "demo-lab",
+  "sourceMain": "b052a0ea410610d7d73acbfcb63c72eb823973a4",
+  "productionPath": "studio/",
+  "labPath": "demo-lab/",
+  "directMergeToMain": false
+}

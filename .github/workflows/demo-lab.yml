@@ -1,0 +1,31 @@
+name: Demo Lab Regression
+
+on:
+  push:
+    branches: [demo-lab]
+    paths:
+      - "demo-lab/**"
+      - "tests/demo-lab-*.mjs"
+      - ".github/workflows/demo-lab.yml"
+      - "vendor/three/**"
+      - "assets/player/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "22"
+      - name: Verify isolated experiment baseline
+        run: node --test tests/demo-lab-isolation.test.mjs
+      - name: Confirm production publish workflow is not in this job
+        run: |
+          test "$GITHUB_REF" = "refs/heads/demo-lab"
+          echo "Demo Lab validated. No Pages/mobile/APK deployment is performed."
