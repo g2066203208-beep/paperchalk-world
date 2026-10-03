@@ -32,7 +32,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const isCity=sceneId!=='forest';
-  const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
+  const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,stagePropsVisible:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
   // Storybook stock is intentionally flat: the paper geometry and shadows
   // carry the depth, while the pigment only varies by a few quiet percent.
   const paperConfig={scale:1.8,normal:0,height:0,blend:0};
@@ -107,7 +107,30 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
   const fog=createPaperFog({THREE,scene,renderer,camera,state,flags,getSize,mistTexture:materials.mistTexture,celestials});
   const atmosphere=createVolumetrics({THREE,scene,renderer,camera,state,flags,getSize,lights,celestials,fog,actor});
   const lighting=createLightingController({THREE,scene,camera,renderer,state,flags,lights,celestials,fog,atmosphere,actor});
-  function updateLighting(time){lighting.updateLighting(time);backdrop?.updateLighting(time);}
+  const stagePropGroups=[
+    forest?.canopyGroup,
+    scenery.group,
+    backdrop?.group,
+    districts?.group,
+    population?.group,
+    transit?.group,
+    traffic?.group,
+  ].filter(Boolean);
+  function applyStagePropVisibility(){
+    const visible=state.stagePropsVisible;
+    if(forest?.canopyGroup)forest.canopyGroup.visible=visible;
+    scenery.group.visible=visible&&(!isCity||lastSnapshot.x<75);
+    if(backdrop)backdrop.group.visible=visible&&state.layers;
+    if(districts)districts.group.visible=visible;
+    if(population)population.group.visible=visible;
+    if(transit)transit.group.visible=visible;
+    if(traffic)traffic.group.visible=visible;
+    for(const light of lights.locals??[])light.visible=visible;
+  }
+  function updateLighting(time){
+    lighting.updateLighting(time);backdrop?.updateLighting(time);
+    if(!state.stagePropsVisible)for(const light of lights.locals??[])light.visible=false;
+  }
   const {sky,starField,starUniforms,sunDisc,moonDisc,sunGlow,moonGlow}=celestials;
   const {sun,moon,groundBounce,viewFill}=lights;
   const {contactShadow}=actor;
@@ -117,9 +140,10 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
   function syncFeatures(){
     sky.visible=state.sky;starField.visible=state.sky&&starUniforms.strength.value>.002;
     sunGlow.visible=state.sky&&sunDisc.visible;moonGlow.visible=state.sky&&moonDisc.visible;
-    contactShadow.visible=state.shadow;forestMist.visible=state.fog;if(forest)forest.canopyGroup.visible=true;
+    contactShadow.visible=state.shadow;forestMist.visible=state.fog;
     terrain.terrainBlocks.visible=state.layers;renderer.shadowMap.enabled=state.shadow;
-    if(backdrop){backdrop.group.visible=state.layers;backdrop.setSkyVisible?.(state.sky);}
+    if(backdrop)backdrop.setSkyVisible?.(state.sky);
+    applyStagePropVisibility();
     sun.castShadow=state.shadow&&sun.intensity>.10;moon.castShadow=state.shadow&&moon.intensity>.10;
     if(!state.fog)scene.fog=null;
     renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
@@ -162,14 +186,13 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     // The distant paper town scrolls slowly while authored street districts
     // remain at fixed world positions. The moon reads as a distant sky object.
     backdrop.group.position.x=lastSnapshot.x*.985;
-    backdrop.group.visible=state.layers;
-    scenery.group.visible=lastSnapshot.x<75;
     terrain.terrainBlocks.visible=state.layers;
-    districts.group.visible=true;population.group.visible=true;
-    traffic.group.visible=true;
-    districts.update(lastSnapshot.x);
-    if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
-    if(transit.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
+    applyStagePropVisibility();
+    if(state.stagePropsVisible){
+      districts.update(lastSnapshot.x);
+      if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
+      if(transit.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
+    }
   }
   // The shadow coverage has ample margin. Move its origin in two-unit steps
   // instead of invalidating static forest occlusion for every camera drift.
@@ -184,7 +207,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   contactShadow.visible=state.shadow;
   frameCalls++;
 
-  if(traffic?.update(dt)){
+  if(state.stagePropsVisible&&traffic?.update(dt)){
     flags.render=flags.depth=flags.ao=true;
     trafficShadowClock+=dt;
     if(trafficShadowClock>=1/30){
@@ -345,6 +368,20 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     state.random=mode==='pulp';
     invalidate();
   }
+  function setStagePropsVisible(value){
+    const next=!!value;
+    if(state.stagePropsVisible===next)return false;
+    state.stagePropsVisible=next;
+    if(next&&isCity){
+      districts?.update(lastSnapshot.x);
+      population?.update(0,lastSnapshot.x);
+      transit?.update(0,lastSnapshot.x);
+      traffic?.update(0);
+    }
+    applyStagePropVisibility();
+    flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
+    return true;
+  }
   function setSun({azimuth,elevation,manual=true}={}){
     if(Number.isFinite(azimuth))state.sunAzimuth=clamp(azimuth,-75,75);
     if(Number.isFinite(elevation))state.sunElevation=clamp(elevation,5,60);
@@ -359,7 +396,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
       districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),
-      player:actor.snapshot(),camera:orbitCamera.snapshot(),
+      player:actor.snapshot(),camera:orbitCamera.snapshot(),stagePropsVisible:state.stagePropsVisible,stagePropGroups:stagePropGroups.length,
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
   function dispose(){
@@ -383,7 +420,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(!disposed)status('error',error.message,error);
     throw error;
   });
-  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setStagePropsVisible,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
     nearbyCityPerson:x=>population?.nearby(x)??null,
     getWorld:()=>terrain.world,dispose};
 }
