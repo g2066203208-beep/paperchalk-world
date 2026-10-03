@@ -107,29 +107,39 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
   const fog=createPaperFog({THREE,scene,renderer,camera,state,flags,getSize,mistTexture:materials.mistTexture,celestials});
   const atmosphere=createVolumetrics({THREE,scene,renderer,camera,state,flags,getSize,lights,celestials,fog,actor});
   const lighting=createLightingController({THREE,scene,camera,renderer,state,flags,lights,celestials,fog,atmosphere,actor});
-  const stagePropGroups=[
-    forest?.canopyGroup,
-    scenery.group,
-    backdrop?.group,
-    districts?.group,
-    population?.group,
-    transit?.group,
-    traffic?.group,
-  ].filter(Boolean);
-  function applyStagePropVisibility(){
-    const visible=state.stagePropsVisible;
-    if(forest?.canopyGroup)forest.canopyGroup.visible=visible;
-    scenery.group.visible=visible&&(!isCity||lastSnapshot.x<75);
-    if(backdrop)backdrop.group.visible=visible&&state.layers;
-    if(districts)districts.group.visible=visible;
-    if(population)population.group.visible=visible;
-    if(transit)transit.group.visible=visible;
-    if(traffic)traffic.group.visible=visible;
-    for(const light of lights.locals??[])light.visible=visible;
+  // Demo Lab stage machinery. Each root group behaves like one physical paper
+  // set piece hinged to the floor. Staggered windows make the foreground fall
+  // first and the distant backdrop last; restoring naturally reverses that order.
+  const stageProps=[
+    {name:'traffic',group:traffic?.group,start:0.00,direction:1,baseVisible:()=>true},
+    {name:'population',group:population?.group,start:0.04,direction:-1,baseVisible:()=>true},
+    {name:'transit',group:transit?.group,start:0.08,direction:-1,baseVisible:()=>true},
+    {name:'scenery',group:scenery.group,start:0.12,direction:-1,baseVisible:()=>!isCity||lastSnapshot.x<75},
+    {name:'forest',group:forest?.canopyGroup,start:0.14,direction:-1,baseVisible:()=>true},
+    {name:'districts',group:districts?.group,start:0.18,direction:-1,baseVisible:()=>true},
+    {name:'backdrop',group:backdrop?.group,start:0.24,direction:-1,baseVisible:()=>state.layers},
+  ].filter(item=>item.group).map(item=>({...item,baseRotationX:item.group.rotation.x}));
+  const stagePropGroups=stageProps.map(item=>item.group);
+  const stageTransition={progress:0,target:0,active:false,duration:.92};
+  const stageEase=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+  function applyStagePropAnimation(){
+    const p=stageTransition.progress,span=.72;
+    for(const item of stageProps){
+      const local=clamp((p-item.start)/span,0,1),fold=stageEase(local);
+      item.group.rotation.x=item.baseRotationX+item.direction*fold*Math.PI*.5;
+      item.group.visible=item.baseVisible()&&local<.999;
+    }
+    const lightFactor=1-stageEase(clamp((p-.03)/.64,0,1));
+    for(const light of lights.locals??[]){
+      const base=light.userData.stageLitIntensity??light.userData.cityBaseIntensity??light.intensity;
+      light.intensity=base*lightFactor;
+      light.visible=lightFactor>.015;
+    }
   }
   function updateLighting(time){
     lighting.updateLighting(time);backdrop?.updateLighting(time);
-    if(!state.stagePropsVisible)for(const light of lights.locals??[])light.visible=false;
+    for(const light of lights.locals??[])light.userData.stageLitIntensity=light.intensity;
+    applyStagePropAnimation();
   }
   const {sky,starField,starUniforms,sunDisc,moonDisc,sunGlow,moonGlow}=celestials;
   const {sun,moon,groundBounce,viewFill}=lights;
@@ -143,7 +153,7 @@ const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:
     contactShadow.visible=state.shadow;forestMist.visible=state.fog;
     terrain.terrainBlocks.visible=state.layers;renderer.shadowMap.enabled=state.shadow;
     if(backdrop)backdrop.setSkyVisible?.(state.sky);
-    applyStagePropVisibility();
+    applyStagePropAnimation();
     sun.castShadow=state.shadow&&sun.intensity>.10;moon.castShadow=state.shadow&&moon.intensity>.10;
     if(!state.fog)scene.fog=null;
     renderer.toneMapping=state.tone?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
@@ -187,12 +197,24 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     // remain at fixed world positions. The moon reads as a distant sky object.
     backdrop.group.position.x=lastSnapshot.x*.985;
     terrain.terrainBlocks.visible=state.layers;
-    applyStagePropVisibility();
+    applyStagePropAnimation();
     if(state.stagePropsVisible){
       districts.update(lastSnapshot.x);
       if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
       if(transit.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
     }
+  }
+
+  if(stageTransition.active){
+    const direction=Math.sign(stageTransition.target-stageTransition.progress);
+    const next=stageTransition.progress+direction*(dt/stageTransition.duration);
+    stageTransition.progress=direction>0?Math.min(stageTransition.target,next):Math.max(stageTransition.target,next);
+    if(Math.abs(stageTransition.progress-stageTransition.target)<1e-5){
+      stageTransition.progress=stageTransition.target;
+      stageTransition.active=false;
+    }
+    applyStagePropAnimation();
+    flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
   }
   // The shadow coverage has ample margin. Move its origin in two-unit steps
   // instead of invalidating static forest occlusion for every camera drift.
@@ -369,16 +391,18 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     invalidate();
   }
   function setStagePropsVisible(value){
-    const next=!!value;
-    if(state.stagePropsVisible===next)return false;
+    const next=!!value,target=next?0:1;
+    if(state.stagePropsVisible===next&&!stageTransition.active&&Math.abs(stageTransition.progress-target)<1e-5)return false;
     state.stagePropsVisible=next;
+    stageTransition.target=target;
+    stageTransition.active=Math.abs(stageTransition.progress-target)>=1e-5;
     if(next&&isCity){
       districts?.update(lastSnapshot.x);
       population?.update(0,lastSnapshot.x);
       transit?.update(0,lastSnapshot.x);
       traffic?.update(0);
     }
-    applyStagePropVisibility();
+    applyStagePropAnimation();
     flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
     return true;
   }
@@ -389,7 +413,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(state.manualSun){timeTransition.active=false;state.auto=false;state.timePreset='';}
     updateLighting(state.time);syncFeatures();
   }
-  function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active};}
+  function getState(){return {...state,shaftStrength:state.shaftStrength??1,surfaceMode:terrain.getSurfaceMode(),paper:{...paperConfig},camera:orbitCamera.snapshot(),transitioning:timeTransition.active,stageTransitioning:stageTransition.active,stageTransitionProgress:stageTransition.progress};}
   function getStats(){
     return {ready:!!actor.playerMesh,disposed,contextLost,frames:frameCalls,renderedFrames,
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
@@ -397,6 +421,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
       districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),
       player:actor.snapshot(),camera:orbitCamera.snapshot(),stagePropsVisible:state.stagePropsVisible,stagePropGroups:stagePropGroups.length,
+      stageTransition:{active:stageTransition.active,progress:stageTransition.progress,target:stageTransition.target},
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
   function dispose(){

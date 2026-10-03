@@ -69,3 +69,14 @@ test('stage clear switch removes only scene props and is wired to the lab UI',as
   assert.match(sceneSource,/for\(const light of lights\.locals/);
   assert.match(appSource,/scene\.setStagePropsVisible\(!visible\)/);
 });
+
+
+test('stage clear uses a staggered paper fall animation instead of instant hiding',async()=>{
+  const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
+  assert.match(sceneSource,/stageTransition=\{progress:0,target:0,active:false,duration:\.92\}/);
+  assert.match(sceneSource,/direction\*fold\*Math\.PI\*\.5/);
+  assert.match(sceneSource,/start:0\.00/);
+  assert.match(sceneSource,/start:0\.24/);
+  assert.match(sceneSource,/local<\.999/);
+  assert.match(sceneSource,/stageTransitionProgress:stageTransition\.progress/);
+});

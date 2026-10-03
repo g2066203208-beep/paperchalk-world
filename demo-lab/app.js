@@ -80,7 +80,7 @@ function refreshCityHud(){
   if(sight)ui.inspectActionLabel.textContent=sight.label;
 }
 function cityInteraction(){
-  if(!isCity||!simulation)return null;
+  if(!isCity||!simulation||scene?.getState?.().stagePropsVisible===false)return null;
   const x=simulation.snapshot().x;
   const sight=nearbyCitySight(x);if(sight)return sight;
   const person=scene?.nearbyCityPerson?.(x);
@@ -139,14 +139,19 @@ function updateControls(){
   }
   if(ui.toggleStageProps){
     const cleared=state.stagePropsVisible===false;
-    ui.toggleStageProps.textContent=cleared?'恢复全部道具':'撤掉全部道具';
+    ui.toggleStageProps.textContent=state.stageTransitioning?(cleared?'正在撤台…':'正在立起…'):(cleared?'恢复全部道具':'撤掉全部道具');
     ui.toggleStageProps.classList.toggle('active',cleared);
     ui.toggleStageProps.setAttribute('aria-pressed',String(cleared));
   }
 }
 function refreshStatus(now,force=false){
   if(!ready||(!force&&now-statusTime<350))return;
-  const state=simulation.snapshot(),stats=scene.getStats();
+  const state=simulation.snapshot(),stats=scene.getStats(),sceneState=scene.getState();
+  if(ui.toggleStageProps){
+    const cleared=sceneState.stagePropsVisible===false;
+    ui.toggleStageProps.textContent=sceneState.stageTransitioning?(cleared?'正在撤台…':'正在立起…'):(cleared?'恢复全部道具':'撤掉全部道具');
+    ui.toggleStageProps.classList.toggle('active',cleared);
+  }
   refreshCityHud();
   ui.playerPosition.textContent=`X ${state.x.toFixed(2)} · Y ${state.y.toFixed(2)} · Z 0`;
   ui.playerState.textContent=pauseReasons.active?'已暂停':Math.abs(state.vx)>.05?'漫游中':'站立';
@@ -298,7 +303,7 @@ function wireControls(){
     const visible=scene.getState().stagePropsVisible!==false;
     scene.setStagePropsVisible(!visible);
     updateControls();
-    toast(visible?'舞台道具已全部撤下，只保留玩家、基础地面与灯光':'舞台道具已原样恢复');
+    toast(visible?'开始撤台：前景、建筑、远景依次倒平':'开始复台：远景、建筑、前景依次立起');
     refreshStatus(performance.now(),true);
   });
   listen(ui.toggleInspector,'click',()=>setInspector(document.body.classList.contains('inspector-hidden')));
