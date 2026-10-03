@@ -51,7 +51,7 @@ test('lab identity is visibly different from production',async()=>{
   const pkg=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
   const meta=JSON.parse(await readFile(path.join(root,'lab-meta.json'),'utf8'));
   assert.match(html,/DEMO LAB · .*demoLabVersion.* · EXPERIMENT ONLY/s);
-  assert.equal(pkg.name,'paperchalk-demo-lab');assert.equal(meta.directMergeToMain,false);assert.equal(meta.productionPath,'studio/');assert.match(meta.displayVersion,/^DL-\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d+$/);
+  assert.equal(pkg.name,'paperchalk-demo-lab');assert.equal(meta.directMergeToMain,false);assert.equal(meta.productionPath,'studio/');assert.match(meta.displayVersion,/^DL-\d{4}\.\d{2}\.\d{2}\.\d+$/);
 });
 
 test('stage architecture is split into director, timeline and stage rigs',async()=>{
@@ -135,5 +135,5 @@ test('performance UI exposes stage, buffer, NPC, vehicle and pivot diagnostics',
 test('Demo Lab exposes a visible build version in the stage chrome',async()=>{
   const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
   const app=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
-  assert.match(html,/id="demoLabVersion"/);assert.match(app,/ui\.demoLabVersion\.textContent='v'\+short/);
+  assert.match(html,/id="demoLabVersion">DL-\d{4}\.\d{2}\.\d{2}\.\d+</);assert.match(app,/meta\.displayVersion/);assert.match(app,/Demo 版本/);assert.doesNotMatch(app,/demoLabVersion\.textContent='v'\+short/);
 });
