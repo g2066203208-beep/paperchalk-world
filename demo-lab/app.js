@@ -302,20 +302,23 @@ function keepModalFocus(event){
 }
 async function loadBuildInfo(){
   try{
-    const response=await fetch(new URL('./build-info.json',import.meta.url),{cache:'no-store',signal:events.signal});
-    if(!response.ok)throw new Error('Build information unavailable');
-    const info=await response.json();
-    if(info.version==='dev'){
-      ui.buildVersion.textContent='开发预览';ui.buildVersion.title='本机开发版本';ui.gameBuildVersion.textContent=ui.buildVersion.textContent;
-      if(ui.demoLabVersion)ui.demoLabVersion.textContent='DEV';return;
-    }
-    if(typeof info.version!=='string'||!/^[a-f0-9]{7,40}$/.test(info.version))throw new Error('Invalid build information');
-    const short=info.version.slice(0,8);
-    ui.buildVersion.textContent=`构建 ${short}`;
-    if(ui.demoLabVersion)ui.demoLabVersion.textContent='v'+short;
+    const [buildResponse,metaResponse]=await Promise.all([
+      fetch(new URL('./build-info.json',import.meta.url),{cache:'no-store',signal:events.signal}),
+      fetch(new URL('./lab-meta.json',import.meta.url),{cache:'no-store',signal:events.signal}),
+    ]);
+    if(!buildResponse.ok||!metaResponse.ok)throw new Error('Build information unavailable');
+    const [info,meta]=await Promise.all([buildResponse.json(),metaResponse.json()]);
+    const release=typeof meta.displayVersion==='string'&&/^DL-\\d{4}\\.\\d{2}\\.\\d{2}\\.\\d+$/.test(meta.displayVersion)?meta.displayVersion:null;
+    const isDev=info.version==='dev'||info.version==='demo-lab';
+    if(!isDev&&(typeof info.version!=='string'||!/^[a-f0-9]{7,40}$/.test(info.version)))throw new Error('Invalid build information');
+    const short=isDev?'DEV':info.version.slice(0,8);
+    const visible=release??(isDev?'DEV':`BUILD-${short}`);
+    if(ui.demoLabVersion)ui.demoLabVersion.textContent=visible;
+    ui.buildVersion.textContent=release?`${release} · 构建 ${short}`:(isDev?'开发预览':`构建 ${short}`);
     const date=new Date(info.publishedAt);
-    ui.buildVersion.title=`版本 ${info.version}${Number.isFinite(date.getTime())?` · 发布 ${date.toLocaleString('zh-CN')}`:''}`;
-    ui.gameBuildVersion.textContent=ui.buildVersion.textContent;
+    const buildDetail=isDev?'本机开发构建':`构建 ${info.version}`;
+    ui.buildVersion.title=`${release?`Demo 版本 ${release} · `:''}${buildDetail}${Number.isFinite(date.getTime())?` · 发布 ${date.toLocaleString('zh-CN')}`:''}`;
+    ui.gameBuildVersion.textContent=release??ui.buildVersion.textContent;
   }catch{
     if(disposed)return;
     ui.buildVersion.textContent='版本待确认';ui.buildVersion.title='暂时无法读取此构建的版本信息';if(ui.demoLabVersion)ui.demoLabVersion.textContent='UNKNOWN';
