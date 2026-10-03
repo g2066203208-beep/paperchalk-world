@@ -24,7 +24,7 @@ let speed=1;
 const fallbackVersion='DL-2026.10.03.7';
 
 function percent(value){
-  return String(Math.round(value*100)).padStart(3,'0')+'%';
+  return String(Math.round(clamp01(value)*100)).padStart(3,'0')+'%';
 }
 
 function sync(){
