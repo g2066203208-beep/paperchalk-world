@@ -60,6 +60,10 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
     if(!Number.isFinite(value))return false;
     distance=clamp(value,minDistance,maxDistance);manuallyAdjusted=true;changed();return true;
   }
+  function setVerticalOffset(value){
+    if(!Number.isFinite(value))return false;
+    followY=restingTargetY+clamp(value,-4.5,4.5);target.y=followY;changed(true);return true;
+  }
   function pointerDistance(){const p=[...pointers.values()];return p.length<2?0:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);}
   function beginPinch(){pinchStartDistance=Math.max(1,pointerDistance());pinchStartCameraDistance=distance;dragging=false;}
   function finishPointer(id){
@@ -95,7 +99,7 @@ export function createOrbitCamera({camera,domElement,target,onChange,viewport}){
   place();
   return {
     follow,resize,
-    setDistance,
+    setDistance,setVerticalOffset,
     reset(){({yaw,pitch,distance}=defaults);manuallyAdjusted=false;target.x=followX;target.y=followY;pointers.clear();dragging=false;pinchStartDistance=0;changed();},
     snapshot:()=>({yaw,pitch,distance,target:{x:target.x,y:target.y,z:target.z}}),
     dispose(){events.abort();pointers.clear();}

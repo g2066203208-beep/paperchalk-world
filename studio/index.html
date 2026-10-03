@@ -56,6 +56,7 @@
             <button id="resumeGame" class="game-menu-button game-menu-primary" type="button">继续冒险 <span aria-hidden="true">→</span></button>
             <div class="game-menu-actions"><button id="gameReset" class="game-menu-button" type="button">回到起点</button><button id="gameResetCamera" class="game-menu-button" type="button">重置视角</button><button id="gameSave" class="game-menu-button" type="button">保存进度</button><button id="gameLoad" class="game-menu-button" type="button">读取进度</button></div>
             <button id="gameSettings" class="game-menu-button game-menu-settings" type="button">画面设置 <span aria-hidden="true">›</span></button>
+            <div class="game-camera-debug"><label for="gameCameraVertical">镜头上下</label><input id="gameCameraVertical" type="range" min="-450" max="450" step="5" value="0"><output id="gameCameraVerticalValue">0.00</output></div>
             <div class="game-menu-footer"><span id="gameSaveStatus">进度会自动保存</span><span id="gameBuildVersion">纸艺世界</span></div>
           </section>
         </div>
@@ -71,6 +72,11 @@
           <section class="settings-section surface-settings">
             <div class="section-heading"><h3>地形表面</h3><span>材质对比</span></div>
             <div class="surface-options" role="group" aria-label="地形材质"><button class="surface-option active" type="button" data-surface="pulp" aria-pressed="true">绘本色纸</button><button class="surface-option" type="button" data-surface="color" aria-pressed="false">固有色</button></div>
+          </section>
+          <section class="settings-section">
+            <div class="section-heading"><h3>镜头调试</h3><span>构图</span></div>
+            <div class="range-control"><label for="cameraVertical">镜头上下</label><output id="cameraVerticalValue" for="cameraVertical">0.00</output><input id="cameraVertical" type="range" min="-450" max="450" step="5" value="0"></div>
+            <button id="resetCameraDebug" class="text-button" type="button">恢复镜头位置 <span aria-hidden="true">↺</span></button>
           </section>
           <section class="settings-section">
             <div class="section-heading"><h3>一天的光线</h3><span>时间</span></div>

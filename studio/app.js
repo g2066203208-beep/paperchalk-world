@@ -8,7 +8,7 @@ import {CITY_SCENE_ID,sceneFromSearch,sceneSaveKey,cityLocation,nearbyCitySight,
 import {createCityExplorer} from './ui/CityExplorer.mjs';
 
 const $=id=>document.getElementById(id);
-const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
+const ui=Object.fromEntries(['viewport','appStatus','loadingStatus','toast','scenePrompt','scenePromptTitle','scenePromptText','playPause','resetPlayer','saveProgress','loadProgress','resetCamera','toggleInspector','closeInspector','autoCycle','resetPaper','followSun','cameraVertical','cameraVerticalValue','resetCameraDebug','gameCameraVertical','gameCameraVerticalValue','fps','playerPosition','playerState','saveStatus','buildVersion','renderStats','moveLeft','moveRight','openGameMenu','gameMenu','resumeGame','gameReset','gameResetCamera','gameSave','gameLoad','gameSettings','gameSaveStatus','gameBuildVersion','inspector','prologueHud','locationLabel','inspectAction','inspectActionLabel','inspectionOverlay','inspectionTitle','inspectionText','closeInspection'].map(id=>[id,$(id)]));
 const defaults={scale:1.8,normal:0,height:0,blend:0};
 const paperInputs={paperScale:'scale'};
 const sceneId=sceneFromSearch(location.search),isCity=sceneId===CITY_SCENE_ID;
@@ -287,13 +287,17 @@ function wireControls(){
   listen(ui.resetPlayer,'click',()=>{resetCityPlayer();toast('角色已回到起点');refreshStatus(performance.now(),true);});
   listen(ui.saveProgress,'click',()=>saveProgress());
   listen(ui.loadProgress,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
-  listen(ui.resetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
+  listen(ui.resetCamera,'click',()=>{scene.resetCamera();setCameraVertical(0);toast('已恢复初始观察角度');});
+  const setCameraVertical=value=>{const offset=Number(value)/100;scene.setCameraVerticalOffset(offset);ui.cameraVertical.value=String(value);ui.cameraVerticalValue.textContent=offset.toFixed(2);ui.gameCameraVertical.value=String(value);ui.gameCameraVerticalValue.textContent=offset.toFixed(2);};
+  listen(ui.cameraVertical,'input',()=>setCameraVertical(ui.cameraVertical.value));
+  listen(ui.gameCameraVertical,'input',()=>setCameraVertical(ui.gameCameraVertical.value));
+  listen(ui.resetCameraDebug,'click',()=>{scene.resetCamera();setCameraVertical(0);toast('镜头位置已恢复');});
   listen(ui.toggleInspector,'click',()=>setInspector(document.body.classList.contains('inspector-hidden')));
   listen(ui.closeInspector,'click',()=>setInspector(false));
   listen(ui.openGameMenu,'click',()=>setGameMenu(true));
   listen(ui.resumeGame,'click',()=>setGameMenu(false,{resume:true}));
   listen(ui.gameReset,'click',()=>{resetCityPlayer();setGameMenu(false,{resume:true});toast('角色已回到起点');});
-  listen(ui.gameResetCamera,'click',()=>{scene.resetCamera();toast('已恢复初始观察角度');});
+  listen(ui.gameResetCamera,'click',()=>{scene.resetCamera();setCameraVertical(0);toast('已恢复初始观察角度');});
   listen(ui.gameSave,'click',()=>saveProgress());
   listen(ui.gameLoad,'click',()=>{loadProgress();refreshStatus(performance.now(),true);});
   listen(ui.gameSettings,'click',()=>setInspector(true));

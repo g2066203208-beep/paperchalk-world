@@ -391,7 +391,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     if(!disposed)status('error',error.message,error);
     throw error;
   });
-  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
+  return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,setCameraVerticalOffset:value=>orbitCamera.setVerticalOffset(value),resetCamera:()=>orbitCamera.reset(),getState,getStats,
     nearbyCityPerson:x=>population?.nearby(x)??null,
     getWorld:()=>terrain.world,dispose};
 }
