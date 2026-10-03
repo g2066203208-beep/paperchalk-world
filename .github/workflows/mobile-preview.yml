@@ -6,7 +6,6 @@ on:
     paths:
       - "app/**"
       - "studio/**"
-      - "procedural-model/**"
       - "src/**"
       - "assets/**"
       - "vendor/**"
