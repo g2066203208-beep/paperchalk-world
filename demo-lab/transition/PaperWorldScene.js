@@ -158,9 +158,9 @@ export function createPaperWorldScene({container}={}){
   activeRoot.add(sweepRoot);
   const sweeps=[];
   [
-    {w:7.8,h:5.4,y:2.15,z:-.32,tilt:-10},
-    {w:5.8,h:4.8,y:1.90,z:-.46,tilt:8},
-    {w:3.9,h:4.2,y:2.35,z:-.58,tilt:-4}
+    {w:10.2,h:1.62,y:3.18,z:-.32,tilt:-9},
+    {w:7.6,h:1.28,y:1.62,z:-.46,tilt:10},
+    {w:5.4,h:1.08,y:2.42,z:-.58,tilt:-4}
   ].forEach((spec,index)=>{
     const root=new THREE.Group();
     const sheet=box(root,'Impossible white paper sweep '+index,spec.w,spec.h,.065,0,0,0,index===1?paperBack:paper);
