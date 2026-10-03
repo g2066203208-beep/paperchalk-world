@@ -157,6 +157,18 @@ export function createPaperStageScene({container}={}){
   box(underground,'Underground front cut edge',11.38,.30,.16,0,-.08,2.98,edge);
   box(underground,'Track shadow slot',9.8,.035,1.10,0,.09,1.62,dark,{cast:false});
 
+  // Gameplay-only street cross-section. It physically hides the lower stage
+  // before the street sheet has cleared the camera, then opens sideways like
+  // two paper theatre doors. This is geometry, never a screen fade.
+  const gameplayFascia=new THREE.Group();gameplayFascia.name='GAMEPLAY STREET CUTAWAY FASCIA';world.add(gameplayFascia);
+  const leftFascia=new THREE.Group();leftFascia.name='Left street fascia vertical hinge';leftFascia.position.set(-5.62,.02,3.49);gameplayFascia.add(leftFascia);
+  box(leftFascia,'Left layered street cross-section',4.78,2.42,.16,2.39,-1.20,0,paperWarm);
+  const rightFascia=new THREE.Group();rightFascia.name='Right street fascia vertical hinge';rightFascia.position.set(5.62,.02,3.49);gameplayFascia.add(rightFascia);
+  box(rightFascia,'Right layered street cross-section',4.78,2.42,.16,-2.39,-1.20,0,paperWarm);
+  for(const hinge of [leftFascia,rightFascia]){
+    for(const y of [-.52,-1.08,-1.64])box(hinge,'Printed earth-layer score',4.45,.035,.022,hinge===leftFascia?2.39:-2.39,y,.095,edge,{cast:false});
+  }
+
   const wallPivots=[],wallWings=[],lightCards=[],lightPoints=[];
   const wallXs=[-4.4,-2.2,0,2.2,4.4];
   wallXs.forEach((x,index)=>{
@@ -264,10 +276,14 @@ export function createPaperStageScene({container}={}){
   function placeCamera(){
     const origin=activeChunk*CHUNK_SIZE;
     if(viewMode==='game'){
-      theatreShell.visible=false;
-      camera.position.set(playerX+.15,1.50,13.4);
-      cameraTarget.set(playerX,-.45,-1.05);
+      theatreShell.visible=false;gameplayFascia.visible=true;
+      // The camera only follows the newly revealed vertical space; the stage
+      // mechanism remains the visual event.
+      const drop=lastSample.reveal;
+      camera.position.set(playerX+.15,2.55-drop*1.10,13.8);
+      cameraTarget.set(playerX,.52-drop*1.02,-.92);
     }else{
+      gameplayFascia.visible=false;
       theatreShell.visible=true;
       camera.position.set(origin+9.6,6.25,13.4);
       cameraTarget.set(origin,-.15,-.85);
@@ -287,8 +303,13 @@ export function createPaperStageScene({container}={}){
 
     // The one master movement: street sheet turns downward through its front
     // crease. Its reverse stock and cut edge stay visible throughout.
-    pageHinge.rotation.x=-Math.PI*.445*s.page;
-    secondaryHinge.rotation.x=-Math.PI*.555*s.bifold;
+    // Full stow: the first half rotates all the way underneath the street.
+    // The second score counter-folds so both halves stack instead of leaving a
+    // permanent vertical board in the gameplay camera.
+    pageHinge.rotation.x=-Math.PI*s.page;
+    secondaryHinge.rotation.x=Math.PI*.96*s.bifold;
+    leftFascia.rotation.y=-Math.PI*.5*s.reveal;
+    rightFascia.rotation.y=Math.PI*.5*s.reveal;
 
     // Wall cards are already below the street. They rise from their own bottom
     // creases, centre first, with small deterministic paper settle.
@@ -359,7 +380,7 @@ export function createPaperStageScene({container}={}){
       guidesVisible:guides.visible,
       shadows,
       viewMode,largeWorld,playerX,playerReady:player.ready,playerVisible:!!player.mesh?.visible,playerLoadError,
-      activeChunk,activeChunkOrigin:activeChunk*CHUNK_SIZE,
+      activeChunk,activeChunkOrigin:activeChunk*CHUNK_SIZE,fasciaOpen:lastSample.reveal,
       residentChunks:chunkProxies.filter(entry=>entry.group.visible).map(entry=>entry.index),
       playerAnchorWorldX:world.position.x+playerAnchor.position.x,
     };
