@@ -1,5 +1,5 @@
 
-import {createStageLifecycle,StageLifecycle} from './StageRig.js';
+import {createStageLifecycle,StageLifecycle,hingeAudit} from './StageRig.js';
 import {PAPER_STAGE_TIMING,phase,ripplePhase} from './StageTransitionTimeline.js';
 
 export function createSubwayStageRig({stage,world,flags}={}){
@@ -64,7 +64,8 @@ export function createSubwayStageRig({stage,world,flags}={}){
   function board(){return stage.trainVehicle?.board?.()??null;}
   function disembark(){return stage.trainVehicle?.disembark?.()??null;}
   function updatePassenger(dt,input){return stage.trainVehicle?.updatePassenger?.(dt,input)??null;}
-  function stats(){return {lifecycle:lifecycle.state,anchorX,...stage.stats(),vehicle:stage.trainVehicle?.stats?.()??null};}
+  function stats(){return {lifecycle:lifecycle.state,anchorX,...stage.stats(),vehicle:stage.trainVehicle?.stats?.()??null,
+    pivotAudit:hingeAudit([stage.wallRoot,stage.fixtureRoot])};}
   return {stage,world,lifecycle,setAnchorX,setLifecycle,stableActive,stableDormant,poseEnter,poseExit,updateDynamics,interaction,board,disembark,updatePassenger,stats,
     get boarded(){return !!stage.trainVehicle?.boarded;}};
 }

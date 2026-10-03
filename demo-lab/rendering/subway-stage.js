@@ -66,8 +66,10 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
     m.name=name+' illuminated printed paper';materials.push(m);
     const mesh=new THREE.Mesh(new THREE.PlaneGeometry(w,h),m);mesh.name=name;mesh.position.set(x,y,z);parent.add(mesh);return mesh;
   }
-  function hinge(parent,name,x,z=.0){
-    const g=new THREE.Group();g.name=name;g.position.set(x,.5,z);g.userData.stageX=x;parent.add(g);return g;
+  function hinge(parent,name,x,z=.0,y=.5){
+    const g=new THREE.Group();g.name=name;g.position.set(x,y,z);
+    g.userData={stageHinge:true,stageSource:'subway',stageX:x,stagePivotY:y,stagePivotZ:z,stageUnitName:name,stageBaseRotationX:0};
+    parent.add(g);return g;
   }
 
   // FAR TUNNEL — dark paper depth behind the station wall. It moves only by lift.
@@ -91,9 +93,9 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
   sleepers.count=si;sleepers.receiveShadow=true;floorGroup.add(sleepers);
 
   // BACK WALL — seven independent hinged paper bays. Their pivots are at platform height.
-  const bayWidth=34;
+  const bayWidth=34;let centralWallBay=null;
   for(let x=-102;x<=102;x+=34){
-    const bay=hinge(wallRoot,'Subway wall bay hinge',x,-7.0);wallPieces.push({group:bay,x});
+    const bay=hinge(wallRoot,'Subway wall bay hinge',x,-7.0);wallPieces.push({group:bay,x});if(x===0)centralWallBay=bay;
     box(bay,'Subway rear paper wall bay',bayWidth+.15,5.55,.16,0,2.775,0,mats.cream);
     box(bay,'Moon River Line teal band',bayWidth+.15,.56,.08,0,3.12,.11,mats.teal);
     box(bay,'Lower wall shadow band',bayWidth+.15,.46,.09,0,.23,.12,mats.tealDark);
@@ -113,16 +115,17 @@ export function createSubwayStage({THREE,scene,flags={}}={}){
     box(p,'Bench seat',4,.20,.75,0,.82,0,mats.seat);box(p,'Bench back',4,1.05,.16,0,1.33,-.28,mats.seat);
     for(const sx of [-1.55,1.55])box(p,'Bench folded leg',.16,.80,.16,sx,.40,0,mats.ink);
   }
+  // Hanging signs belong to the ceiling fly-system. They never rotate from the floor.
   for(const [x,title,sub,accent] of [[-8,'出口  EXIT','A · CENTRAL CONCOURSE','#557f7e'],[10,'换乘  TRANSFER','01 城市环线 / 月河线','#b65d59']]){
-    const p=hinge(fixtureRoot,'Hanging guide hinge',x,-2.52);fixturePieces.push({group:p,x});
-    sign(p,'Platform guide',title,sub,0,4.15,0,7.2,1.05,accent);
+    sign(ceilingGroup,'Ceiling suspended guide',title,sub,x,4.72,-2.52,7.2,1.05,accent);
   }
+  // The clock is wall-mounted, so it shares the central wall bay's hinge instead of inventing a floor pivot.
   {
-    const p=hinge(fixtureRoot,'Station clock hinge',1.2,-2.48);fixturePieces.push({group:p,x:1.2});
+    const p=centralWallBay??wallRoot;
     const face=new THREE.Mesh(new THREE.CircleGeometry(.62,32),new THREE.MeshLambertMaterial({color:0xf0e4c8}));
-    face.name='Paper station clock';face.position.set(0,3.65,0);p.add(face);
-    box(p,'Clock minute hand',.055,.48,.025,0,3.81,.05,new THREE.MeshBasicMaterial({color:0x28333d}),{cast:false,receive:false});
-    box(p,'Clock hour hand',.38,.055,.025,.17,3.65,.06,new THREE.MeshBasicMaterial({color:0x28333d}),{cast:false,receive:false});
+    face.name='Paper station clock';face.position.set(1.2,3.65,.24);p.add(face);
+    box(p,'Clock minute hand',.055,.48,.025,1.2,3.81,.29,new THREE.MeshBasicMaterial({color:0x28333d}),{cast:false,receive:false});
+    box(p,'Clock hour hand',.38,.055,.025,1.37,3.65,.30,new THREE.MeshBasicMaterial({color:0x28333d}),{cast:false,receive:false});
   }
 
 

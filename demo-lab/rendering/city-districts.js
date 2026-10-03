@@ -83,7 +83,14 @@ export function createCityDistricts({THREE,scene,flags={}}){
   const printed=new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true,map:atlas.color,emissiveMap:atlas.emissive,emissive:0xffffff,emissiveIntensity:.68,side:THREE.FrontSide});
   printed.name='City district shared printed paper';
   const color=new THREE.Color(),districts=[],buildings=[],landmarks=[],features=[];
-  let source,activeDistrict,totalTriangles=0,totalCards=0;
+  let source,activeDistrict,totalTriangles=0,totalCards=0,activeStageUnit=null,unitSources=[],stageUnitOrdinal=0;
+  const emptySource=()=>[0,1].map(()=>({p:[],n:[],c:[],uv:[]}));
+  function withStageUnit(name,x,z,fn,{fold=true}={}){
+    const previousSource=source,previousUnit=activeStageUnit;
+    const unit={id:'district-unit-'+(++stageUnitOrdinal),name,x:Number.isFinite(x)?x:0,z:Number.isFinite(z)?z:0,fold,source:emptySource()};
+    unitSources.push(unit);activeStageUnit=unit;source=unit.source;
+    try{return fn();}finally{source=previousSource;activeStageUnit=previousUnit;}
+  }
   const paper=0xffedcd,ink=0x42576a;
   let buildingOrdinal=0;
   const rectangle=(w,h)=>[[-w/2,0],[w/2,0],[w/2,h],[-w/2,h]];
@@ -92,6 +99,7 @@ export function createCityDistricts({THREE,scene,flags={}}){
     color.setHex(hex);for(const [i,p] of [a,b,c].entries()){batch.p.push(...p);batch.n.push(...n.map(v=>v/len));batch.c.push(color.r,color.g,color.b);batch.uv.push(...uv[i]);}
   }
   function card(name,x,y,z,points,hex=paper,{depth=.085,region=null,angle=0}={}){
+    if(!activeStageUnit)return withStageUnit(name,x,z,()=>card(name,x,y,z,points,hex,{depth,region,angle}));
     const outline=points.map(p=>new THREE.Vector2(...p));if(THREE.ShapeUtils.isClockWise(outline))outline.reverse();
     const minX=Math.min(...points.map(p=>p[0])),minY=Math.min(...points.map(p=>p[1])),w=Math.max(...points.map(p=>p[0]))-minX,h=Math.max(...points.map(p=>p[1]))-minY;
     const transform=(p,d)=>[x+p.x*Math.cos(angle)+d*Math.sin(angle),y+p.y,z-p.x*Math.sin(angle)+d*Math.cos(angle)];
@@ -132,7 +140,8 @@ export function createCityDistricts({THREE,scene,flags={}}){
     panel('Printed glass and interior',x,y,z+.08,w,h,0xffffff,{depth:.035,region:atlas.regions[kind]});
     panel('Folded window sill',x,y-.08,z+.16,w+.24,.09,paper,{depth:.23});
   }
-  function building(name,x,{w=7,h=4,z=-4.5,variant=0,label=1,roofType=0,roofHeight=.95,bodyColor=null,shop=true,signVisible=true}={}){
+  function building(name,x,{w=7,h=4,z=-4.5,variant=0,label=1,roofType=0,roofHeight=.95,bodyColor=null,shop=true,signVisible=true,_stageWrapped=false}={}){
+    if(!_stageWrapped)return withStageUnit('Building · '+name,x,z,()=>building(name,x,{w,h,z,variant,label,roofType,roofHeight,bodyColor,shop,signVisible,_stageWrapped:true}));
     const [body,roofColor]=PALETTES[activeDistrict.index],base=.5,wall=bodyColor??body;
     const record=panel(name,x,base,z,w,h,wall,{depth:.16});
     // Keep a stable doorway identity beside every authored facade.  The
@@ -173,7 +182,8 @@ export function createCityDistricts({THREE,scene,flags={}}){
     if(activeDistrict.id==='oldtown'||activeDistrict.id==='harbor')for(let row=0;row<3;row++)for(const side of [-1,1])panel('Printed brick corner',x+side*(w/2-.28),base+.45+row*.48,z+.24,.35,.065,paper,{depth:.018});
     return record;
   }
-  function tree(x,z=-3.1,scale=1,kind=0){
+  function tree(x,z=-3.1,scale=1,kind=0,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Tree',x,z,()=>tree(x,z,scale,kind,true));
     panel('Tree folded trunk',x,.5,z,.24*scale,2*scale,0x988166,{depth:.13});
     for(const side of [-1,1])card('Tree branch',x,.5,z+.04,[[0,1.1*scale],[side*.8*scale,1.75*scale],[side*.74*scale,1.91*scale],[0,1.35*scale]],0x988166);
     const leaf=kind%2?0x91a875:0x729888;
@@ -181,34 +191,40 @@ export function createCityDistricts({THREE,scene,flags={}}){
     card('Foliage fold',x,.5+1.48*scale,z+.045,[[.0,-.15*scale],[-.4*scale,1.63*scale],[.15*scale,1.82*scale],[.65*scale,.7*scale]],0xb0bd8c,{depth:.025});
     features.push({kind:'tree',districtId:activeDistrict.id,x,z});
   }
-  function bench(x,z=-1.8){
+  function bench(x,z=-1.8,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Bench',x,z,()=>bench(x,z,true));
     panel('Bench back',x,.92,z,1.85,.43,0xc4a27a,{depth:.12});panel('Bench folded seat',x,.85,z+.15,1.95,.12,paper,{depth:.48});
     for(const side of [-1,1])panel('Bench leg',x+side*.68,.5,z+.1,.12,.38,ink,{depth:.13});
     features.push({kind:'bench',districtId:activeDistrict.id,x,z});
   }
-  function planter(x,z=-1.65){
+  function planter(x,z=-1.65,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Planter',x,z,()=>planter(x,z,true));
     card('Paper planter',x,.5,z,[[-.65,0],[.65,0],[.78,.4],[-.78,.4]],0xc4a48b,{depth:.2});
     for(let i=0;i<5;i++){panel('Flower stem',x-.5+i*.25,.85,z,.025,.25,0x76946e);disk('Cut paper flower',x-.5+i*.25,1.1+(i%2)*.12,z+.02,.1,[0xe5b27d,0xc77f8e,0xffdfac][i%3]);}
   }
   function clock(x,y,z,r=.63){disk('Station clock rim',x,y,z,r,0xd5b67b);disk('Ivory clock dial',x,y,z+.06,r*.85,paper);panel('Clock hand upright',x,y,z+.11,.045,r*.63,ink);panel('Clock hand across',x-r*.23,y-.02,z+.11,r*.47,.045,ink);}
-  function water(x,w,z=-5,depth=9){
+  function water(x,w,z=-5,depth=9,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Water sheet',x,z,()=>water(x,w,z,depth,true),{fold:false});
     // Wide horizontal sheets sit entirely behind the pedestrian path.
     const a=[x-w/2,.54,z],b=[x+w/2,.54,z],c=[x+w/2,.54,z-depth],d=[x-w/2,.54,z-depth];
     tri(source[0],a,b,c,0x7ea7aa);tri(source[0],a,c,d,0x7ea7aa);
     for(let i=0;i<12;i++){const dx=x-w*.44+i*w*.075,dz=z-1-(i%3)*2;tri(source[0],[dx,.555,dz],[dx+1.4,.555,dz],[dx+1.4,.555,dz-.045],0xb9cfc5);tri(source[0],[dx,.555,dz],[dx+1.4,.555,dz-.045],[dx,.555,dz-.045],0xb9cfc5);}
     panel('Waterfront cream bank',x,.5,z+.12,w,.28,paper,{depth:.25});features.push({kind:'water',districtId:activeDistrict.id,x,z,width:w});
   }
-  function railing(x,w,z=-2.9){
+  function railing(x,w,z=-2.9,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Riverside railing',x,z,()=>railing(x,w,z,true));
     panel('Riverside handrail',x,1.43,z,w,.075,0x74918b);
     for(let dx=-w/2;dx<=w/2;dx+=1.35)panel('Riverside rail upright',x+dx,.5,z,.07,1,0x91aa9a,{depth:.045});
   }
-  function fountain(x){
+  function fountain(x,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Fountain',x,-2.35,()=>fountain(x,true));
     card('Fountain broad folded bowl',x,.55,-2.35,[[-2.15,.13],[2.15,.13],[1.72,.68],[-1.72,.68]],0xbfcac4,{depth:.3});
     panel('Fountain blue water',x,1.03,-2.11,3.38,.12,0x92b8c2,{depth:.08});panel('Fountain pedestal',x,1.12,-2.6,.32,1.22,paper);
     card('Cut paper fountain jet',x,1.65,-2.48,[[-1.1,-.32],[-.68,.57],[-.22,.92],[0,1.07],[.22,.92],[.68,.57],[1.1,-.32],[.84,-.29],[.48,.40],[.1,.64],[.1,-.1],[-.1,-.1],[-.1,.64],[-.48,.40],[-.84,-.29]],0xaad2d0,{depth:.035});
     features.push({kind:'fountain',districtId:activeDistrict.id,x,z:-2.35});
   }
-  function landmark(d){
+  function landmark(d,_stageWrapped=false){
+    if(!_stageWrapped)return withStageUnit('Landmark · '+d.name,d.x,-4.5,()=>landmark(d,true));
     const x=d.x,[body,top]=PALETTES[d.index];let name=SHOP_NAMES[d.index][1],width=18;
     if(d.id==='academy')return;
     if(d.id==='oldtown'){
@@ -294,10 +310,11 @@ export function createCityDistricts({THREE,scene,flags={}}){
   }
 
   for(const district of CITY_DISTRICTS){
-    activeDistrict=district;source=[0,1].map(()=>({p:[],n:[],c:[],uv:[]}));
-    const node=new THREE.Group();node.name=district.name+' · folded paper district';
-    node.position.set(district.x,.5,-3.7);
-    node.userData={districtId:district.id,stageX:district.x,stageHinge:true,stageBaseRotationX:node.rotation.x};
+    activeDistrict=district;unitSources=[];
+    const fallback={id:'district-loose-'+district.id,name:district.name+' loose details',x:district.x,z:-3.7,fold:true,source:emptySource()};
+    unitSources.push(fallback);source=fallback.source;activeStageUnit=null;
+    const node=new THREE.Group();node.name=district.name+' · stage unit container';
+    node.userData={districtId:district.id};
     const startTriangles=totalTriangles;
     if(district.id==='academy'){
       for(const [i,dx] of [-42,-30,-18,33,45,56].entries())building(SHOP_NAMES[0][i+1],dx,{w:7.1,h:3.65+i%2*.65,z:-5.2,variant:i,label:i+1,roofType:i%3});
@@ -323,14 +340,26 @@ export function createCityDistricts({THREE,scene,flags={}}){
     const roadX=district.x-44;
     panel('Neighbourhood wayfinding post',roadX,.5,-1.25,.07,2.73,ink,{depth:.06});
     sign(district.name+' street sign',roadX,2.72,-1.19,3.45,.58,96+district.index);
-    for(const [i,data] of source.entries()){
-      if(!data.p.length)continue;
-      const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.p,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(data.n,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.c,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uv,2));
-      // Geometry was authored in world coordinates. Rebase it around a local
-      // floor hinge so the whole district can fold without orbiting world zero.
-      geometry.translate(-district.x,-.5,3.7);geometry.computeBoundingBox();geometry.computeBoundingSphere();
-      const mesh=new THREE.Mesh(geometry,i?printed:stock);mesh.name=district.name+(i?' · printed windows and Chinese signs':' · folded architectural paper');mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=true;
-      node.add(mesh);totalTriangles+=data.p.length/9;
+    for(const unit of unitSources){
+      const positions=unit.source.flatMap(data=>data.p);
+      if(!positions.length)continue;
+      let minX=Infinity,minY=Infinity,minZ=Infinity,maxX=-Infinity,maxY=-Infinity,maxZ=-Infinity;
+      for(let p=0;p<positions.length;p+=3){
+        const x=positions[p],y=positions[p+1],z=positions[p+2];
+        minX=Math.min(minX,x);minY=Math.min(minY,y);minZ=Math.min(minZ,z);
+        maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);maxZ=Math.max(maxZ,z);
+      }
+      const pivotX=(minX+maxX)/2,pivotY=minY,pivotZ=(minZ+maxZ)/2;
+      const hinge=new THREE.Group();hinge.name=unit.name+' · own bounds pivot';hinge.position.set(pivotX,pivotY,pivotZ);
+      hinge.userData={stageHinge:unit.fold,stageSource:'district',stageX:pivotX,stagePivotY:pivotY,stagePivotZ:pivotZ,stageUnitName:unit.name,stageBaseRotationX:0};
+      for(const [i,data] of unit.source.entries()){
+        if(!data.p.length)continue;
+        const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(data.p,3));geometry.setAttribute('normal',new THREE.Float32BufferAttribute(data.n,3));geometry.setAttribute('color',new THREE.Float32BufferAttribute(data.c,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(data.uv,2));
+        geometry.translate(-pivotX,-pivotY,-pivotZ);geometry.computeBoundingBox();geometry.computeBoundingSphere();
+        const mesh=new THREE.Mesh(geometry,i?printed:stock);mesh.name=unit.name+(i?' · printed layer':' · paper layer');mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=true;
+        hinge.add(mesh);totalTriangles+=data.p.length/9;
+      }
+      node.add(hinge);
     }
     group.add(node);districts.push({...district,node,triangles:totalTriangles-startTriangles});
   }
@@ -344,7 +373,7 @@ export function createCityDistricts({THREE,scene,flags={}}){
   }
   update(0);flags.render=true;flags.depth=true;flags.shadow=true;flags.volumeShadow=true;
   return {group,update,stats:()=>({districts:districts.length,visibleDistricts:districts.filter(d=>d.node.visible).map(d=>d.id),
-    batches:group.children.reduce((sum,d)=>sum+d.children.length,0),visibleBatches:districts.filter(d=>d.node.visible).reduce((sum,d)=>sum+d.node.children.length,0),
+    hingeUnits:group.children.reduce((sum,d)=>sum+d.children.length,0),batches:group.children.reduce((sum,d)=>sum+d.children.reduce((n,h)=>n+h.children.length,0),0),visibleBatches:districts.filter(d=>d.node.visible).reduce((sum,d)=>sum+d.node.children.reduce((n,h)=>n+h.children.length,0),0),
     triangles:totalTriangles,visibleTriangles:districts.filter(d=>d.node.visible).reduce((sum,d)=>sum+d.triangles,0),materials:2,textures:2,atlasBytes:atlas.bytes,cards:totalCards,
     buildings:buildings.length,landmarks:landmarks.map(l=>({...l})),features:features.length,signText:[...atlas.labels]})};
 }

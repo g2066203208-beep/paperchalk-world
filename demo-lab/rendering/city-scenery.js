@@ -10,12 +10,20 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   const paperMaterial=new THREE.MeshLambertMaterial({color:0xffffff,vertexColors:true,side:THREE.FrontSide});
   paperMaterial.name='Coloured folded card with warm exposed cut edges';
   const batches=new Map(),cards=[],color=new THREE.Color();
+  let stageUnit=null,stageUnitOrdinal=0;
+  function withStageUnit(name,x,z,fn){
+    const previous=stageUnit;
+    stageUnit={id:'unit-'+(++stageUnitOrdinal),name,x:Number.isFinite(x)?x:0,z:Number.isFinite(z)?z:0};
+    try{return fn();}finally{stageUnit=previous;}
+  }
   const P={cream:0xeadbb9,edge:0xffedc8,ivory:0xf7e9c9,teal:0x477f78,tealLight:0x75a497,tealDark:0x305d5d,
     sage:0x91a885,leaf:0x638c77,peach:0xd6a17f,rose:0xa56e75,ink:0x39485d,gold:0xc7a66c};
   const baseY=x=>world?.surfaceY(x,0)??.5;
   function batchFor(x,material,{castShadow=true,receiveShadow=true,distant=false}={}){
-    const chunk=Math.floor(x/14),key=[chunk,material,castShadow,receiveShadow,distant].join('/');
-    if(!batches.has(key))batches.set(key,{chunk,material,castShadow,receiveShadow,distant,positions:[],normals:[],uvs:[],colors:[],names:new Set()});
+    const chunk=Math.floor(x/14);
+    const unit=stageUnit??{id:'loose-'+chunk,name:'Loose street paper '+chunk,x:chunk*14+7,z:-3};
+    const key=[unit.id,material,castShadow,receiveShadow,distant].join('/');
+    if(!batches.has(key))batches.set(key,{chunk,unitId:unit.id,unitName:unit.name,unitX:unit.x,unitZ:unit.z,material,castShadow,receiveShadow,distant,positions:[],normals:[],uvs:[],colors:[],names:new Set()});
     return batches.get(key);
   }
   function triangle(batch,a,b,c,uvA=[0,0],uvB=[0,0],uvC=[0,0],hex=0xffffff){
@@ -27,6 +35,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
     }
   }
   function card({name,points,x=0,y=.5,z=-3,depth=.065,region=null,tint=0xffffff,stock=P.cream,edge=P.edge,angle=0,...options}){
+    if(!stageUnit)return withStageUnit(name,x,z,()=>card({name,points,x,y,z,depth,region,tint,stock,edge,angle,...options}));
     const outline=points.map(([px,py])=>new THREE.Vector2(px,py));
     if(THREE.ShapeUtils.isClockWise(outline))outline.reverse();
     const xs=outline.map(p=>p.x),ys=outline.map(p=>p.y),minX=Math.min(...xs),minY=Math.min(...ys),spanX=Math.max(...xs)-minX,spanY=Math.max(...ys)-minY;
@@ -51,6 +60,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   const disk=(name,x,y,z,r,stock,segments=20)=>card({name,x,y,z,depth:.04,stock,
     points:Array.from({length:segments},(_,i)=>[Math.cos(i*Math.PI*2/segments)*r,Math.sin(i*Math.PI*2/segments)*r])});
   function line(name,points,z,width,stock=P.tealDark){
+    if(!stageUnit)return withStageUnit(name,points[0]?.[0]??0,z,()=>line(name,points,z,width,stock));
     const batch=batchFor(points[0][0],1);batch.names.add(name);
     for(let i=1;i<points.length;i++){
       const a=points[i-1],b=points[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);if(!len)continue;
@@ -61,6 +71,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
     }
   }
   function canopy(name,x,y,z,width,depth,stock=P.teal,stripe=P.tealLight){
+    if(!stageUnit)return withStageUnit(name,x,z,()=>canopy(name,x,y,z,width,depth,stock,stripe));
     const batch=batchFor(x,1);batch.names.add(name);
     const divisions=8;
     for(let i=0;i<divisions;i++){
@@ -75,6 +86,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
     card({name:name+' scalloped paper edge',x,y:y-.4,z:z+depth,points:scallop,stock,depth:.035});
   }
   function roof(name,x,y,z,w,h,stock=P.teal){
+    if(!stageUnit)return withStageUnit(name,x,z,()=>roof(name,x,y,z,w,h,stock));
     card({name:name+' cream cut silhouette',x,y:y-.05,z:z-.025,depth:.1,stock:P.ivory,
       points:[[-w/2-.08,0],[w/2+.08,0],[w*.34,h+.06],[-w*.32,h+.06]]});
     card({name:name+' broad folded roof',x,y,z:z+.055,depth:.06,stock,
@@ -88,6 +100,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
     for(const fraction of [-.12,.12])line(name+' restrained roof crease',[[x+w*fraction,y+.08],[x+w*fraction*.90,y+h-.07]],z+.13,.023,P.tealLight);
   }
   function facade(name,x,y,z,w,h,region,stock=P.cream){
+    if(!stageUnit)return withStageUnit(name,x,z,()=>facade(name,x,y,z,w,h,region,stock));
     panel(name,x,y,z,w,h,region,{stock,depth:.13});
     panel(name+' left folded return',x-w/2-.09,y,z-.18,.38,h,null,{stock,angle:.58,depth:.07});
     panel(name+' right folded return',x+w/2+.04,y,z-.23,.48,h,null,{stock:P.peach,angle:-.56,depth:.07});
@@ -100,6 +113,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
 
   // A generous two-storey academy gives the character a believable scale.
   const schoolY=baseY(-5.2);
+  withStageUnit('School main complex',-5.2,-4.55,()=>{
   facade('School main teaching building',-5.2,schoolY,-4.8,9,3.65,atlas.regions.school);
   roof('School jade mansard',-5.2,schoolY+3.58,-4.57,9.7,1.08);
   panel('School central string course',-5.2,schoolY+1.81,-4.59,8.88,.09,null,{stock:P.cream,depth:.10});
@@ -121,7 +135,9 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   line('School clock nine o clock hands',[[-7.52,schoolY+4.47],[-7.3,schoolY+4.47],[-7.3,schoolY+4.74]],-4.10,.035,P.ink);
   disk('School clock centre pin',-7.3,schoolY+4.47,-4.07,.048,P.gold,10);
 
-  // A light open gate. Its low rails never turn into a wall across the school.
+  });
+  // A light open gate. Its low rails never turn into a wall across the school. 
+  withStageUnit('School gate ensemble',0,-2.65,()=>{
   for(const x of [-2.1,2.1]){
     panel('School gate cream pillar',x,baseY(x),-2.76,.27,2.48,null,{stock:P.cream,depth:.14});
     panel('School gate pillar foot',x,baseY(x),-2.72,.44,.21,null,{stock:P.peach,depth:.16});
@@ -141,8 +157,10 @@ export function createCityScenery({THREE,scene,world,flags={}}){
     panel('School low boundary stock',center,schoolY,-2.64,width,.14,null,{stock:P.cream,depth:.1});
   }
 
+  });
   // Three low individual shop silhouettes, each with a warm window and its own roof.
   const storeY=baseY(12);
+  withStageUnit('Convenience store',12,-3.1,()=>{
   facade('Convenience store illuminated facade',12,storeY,-3.16,6,2.84,atlas.regions.store,P.peach);
   roof('Convenience store broad jade roof',12,storeY+2.82,-3.00,6.52,1.03);
   canopy('Convenience store striped folded awning',12,storeY+2.18,-2.94,6.16,.56,0xce8057,P.ivory);
@@ -154,7 +172,9 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   line('Store dormer cut roof',[ [12.32,storeY+3.49],[12.85,storeY+3.96],[13.38,storeY+3.49]],-2.68,.09,P.tealDark);
   panel('Store dormer mullion',12.85,storeY+3.15,-2.67,.035,.40,null,{stock:P.cream,depth:.03});
 
+  });
   const pharmacyY=baseY(18.15);
+  withStageUnit('Pharmacy',18.15,-3.3,()=>{
   facade('Pharmacy illuminated facade',18.15,pharmacyY,-3.43,4.35,2.95,atlas.regions.pharmacy);
   card({name:'Pharmacy stepped sage parapet',x:18.15,y:pharmacyY+2.90,z:-3.24,stock:P.sage,depth:.12,
     points:[[-2.37,0],[2.37,0],[2.37,.4],[1.51,.4],[1.51,.72],[-1.51,.72],[-1.51,.4],[-2.37,.4]]});
@@ -167,7 +187,9 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   panel('Pharmacy hanging sign cross vertical',20.35,pharmacyY+2.43,-2.53,.10,.36,null,{stock:P.ivory,depth:.035});
   line('Pharmacy sign folded bracket',[[20.03,pharmacyY+3.02],[20.35,pharmacyY+3.02],[20.35,pharmacyY+2.91]],-2.73,.044,P.ink);
 
+  });
   const bookY=baseY(23);
+  withStageUnit('Closed stationery store',23,-3.5,()=>{
   facade('Closed stationery store',23,bookY,-3.61,4.43,3.30,atlas.regions.closed,P.peach);
   card({name:'Bookshop pointed ivory gable',x:23,y:bookY+3.18,z:-3.43,stock:P.ivory,depth:.1,
     points:[[-2.32,0],[2.32,0],[0,1.41]]});
@@ -180,28 +202,33 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   panel('Bookshop round window crossbar',23,bookY+3.79,-3.10,.52,.04,null,{stock:P.cream,depth:.02});
   canopy('Bookshop little jade canopy',23,bookY+2.46,-3.34,4.59,.45,P.tealDark);
 
+  });
   // Broad leaf silhouettes and separated foliage layers keep the scene legible.
   function leaf(name,x,y,z,w,h,stock,flip=1){
     card({name,x,y,z,stock,depth:.055,points:[[0,0],[w*.42*flip,h*.08],[w*.66*flip,h*.40],[w*.53*flip,h*.76],[w*.13*flip,h],[-w*.25*flip,h*.77],[-w*.33*flip,h*.42]]});
     line(name+' central paper fold',[[x,y+.10],[x+w*.13*flip,y+h*.84]],z+.043,.018,P.sage);
   }
   function tree(name,x,z,scale=1){
-    const y=baseY(x);
-    card({name:name+' cut trunk',x,y,z,depth:.085,stock:0x947559,
-      points:[[-.11,0],[.15,0],[.10,1.78*scale],[.68*scale,2.25*scale],[.61*scale,2.31*scale],[.045,1.98*scale],[-.25*scale,2.49*scale],[-.32*scale,2.43*scale],[-.08,1.58*scale]]});
-    leaf(name+' left sage crown',x-.49*scale,y+1.48*scale,z-.04,1.46*scale,1.48*scale,P.sage,-1);
-    leaf(name+' right teal crown',x+.11*scale,y+1.66*scale,z+.04,1.59*scale,1.77*scale,P.leaf);
-    leaf(name+' front jade crown',x-.22*scale,y+1.42*scale,z+.16,1.40*scale,1.55*scale,P.tealLight);
+    return withStageUnit(name,x,z,()=>{
+      const y=baseY(x);
+      card({name:name+' cut trunk',x,y,z,depth:.085,stock:0x947559,
+        points:[[-.11,0],[.15,0],[.10,1.78*scale],[.68*scale,2.25*scale],[.61*scale,2.31*scale],[.045,1.98*scale],[-.25*scale,2.49*scale],[-.32*scale,2.43*scale],[-.08,1.58*scale]]});
+      leaf(name+' left sage crown',x-.49*scale,y+1.48*scale,z-.04,1.46*scale,1.48*scale,P.sage,-1);
+      leaf(name+' right teal crown',x+.11*scale,y+1.66*scale,z+.04,1.59*scale,1.77*scale,P.leaf);
+      leaf(name+' front jade crown',x-.22*scale,y+1.42*scale,z+.16,1.40*scale,1.55*scale,P.tealLight);
+    });
   }
   tree('School west paper tree',-10.82,-3.3,1.05);
   tree('Alley young paper tree',7.50,-3.25,.75);
   tree('Bookshop garden paper tree',26.45,-3.11,.94);
   function planter(name,x,z,width=.7,height=.4){
-    const y=baseY(x);
-    card({name:name+' terracotta folded pot',x,y,z,depth:.13,stock:P.peach,
-      points:[[-width*.40,0],[width*.40,0],[width/2,height],[-width/2,height]]});
-    panel(name+' cream rim',x,y+height-.055,z+.10,width+.06,.10,null,{stock:P.cream,depth:.12});
-    for(const [dx,flip,h] of [[-.17,-1,.42],[.10,1,.53],[.01,-1,.35]])leaf(name+' clipped leaves',x+dx,y+height-.03,z-.03+dx*.1,.29,h,P.leaf,flip);
+    return withStageUnit(name,x,z,()=>{
+      const y=baseY(x);
+      card({name:name+' terracotta folded pot',x,y,z,depth:.13,stock:P.peach,
+        points:[[-width*.40,0],[width*.40,0],[width/2,height],[-width/2,height]]});
+      panel(name+' cream rim',x,y+height-.055,z+.10,width+.06,.10,null,{stock:P.cream,depth:.12});
+      for(const [dx,flip,h] of [[-.17,-1,.42],[.10,1,.53],[.01,-1,.35]])leaf(name+' clipped leaves',x+dx,y+height-.03,z-.03+dx*.1,.29,h,P.leaf,flip);
+    });
   }
   planter('Store welcome planter',8.61,-2.47,.69,.35);
   planter('Pharmacy herb pot',16.0,-2.47,.56,.35);
@@ -219,47 +246,69 @@ export function createCityScenery({THREE,scene,world,flags={}}){
 
   // A quiet bench and a small red postbox animate the open alley without filling it.
   const benchY=baseY(4.7);
+  withStageUnit('Alley bench',4.7,-2.0,()=>{
   for(const dx of [-.62,.62])panel('Alley bench folded foot',4.7+dx,benchY,-1.99,.09,.48,null,{stock:P.ink,depth:.08});
   panel('Alley bench wood seat',4.7,benchY+.37,-1.83,1.60,.12,null,{stock:P.gold,depth:.25});
   panel('Alley bench wood back',4.7,benchY+.67,-2.13,1.62,.23,null,{stock:P.cream,depth:.09});
   panel('Alley bench back lower slat',4.7,benchY+.48,-2.13,1.62,.12,null,{stock:P.gold,depth:.075});
+  });
+  withStageUnit('Small red postbox',14.9,-1.95,()=>{
   panel('Small red postbox stand',14.9,storeY,-1.95,.12,.48,null,{stock:P.ink,depth:.08});
   card({name:'Small red folded postbox',x:14.9,y:storeY+.42,z:-1.95,stock:P.rose,depth:.17,
     points:[[-.25,0],[.25,0],[.25,.61],[.15,.73],[-.15,.73],[-.25,.61]]});
   panel('Postbox cream address card',14.9,storeY+.60,-1.83,.25,.16,null,{stock:P.ivory,depth:.02});
   panel('Postbox letter slot',14.9,storeY+.94,-1.81,.30,.045,null,{stock:P.ink,depth:.018});
+  });
 
   function lantern(name,x,y,z){
-    const ground=baseY(x);
-    panel(name+' folded standard',x+.44,ground,z,.07,y-ground-.13,null,{stock:P.tealDark,depth:.045});
-    panel(name+' broad foot',x+.44,ground,z,.22,.15,null,{stock:P.teal,depth:.09});
-    line(name+' crooked bracket',[[x+.44,y-.18],[x+.33,y+.08],[x,y+.08],[x,y-.08]],z,.065,P.tealDark);
-    card({name:name+' cream lantern glass',x,y:y-.49,z:z+.025,stock:0xf4ca8b,depth:.075,
-      points:[[-.15,0],[.15,0],[.19,.38],[-.19,.38]]});
-    card({name:name+' folded lantern hood',x,y:y-.11,z:z+.08,stock:P.teal,depth:.055,
-      points:[[-.25,0],[.25,0],[.13,.15],[-.13,.15]]});
-    panel(name+' lantern base',x,y-.53,z+.075,.33,.07,null,{stock:P.tealDark,depth:.075});
-    for(const dx of [-.145,.145])line(name+' lantern mullion',[[x+dx,y-.48],[x+dx*1.27,y-.14]],z+.09,.028,P.tealDark);
+    return withStageUnit(name,x,z,()=>{
+      const ground=baseY(x);
+      panel(name+' folded standard',x+.44,ground,z,.07,y-ground-.13,null,{stock:P.tealDark,depth:.045});
+      panel(name+' broad foot',x+.44,ground,z,.22,.15,null,{stock:P.teal,depth:.09});
+      line(name+' crooked bracket',[[x+.44,y-.18],[x+.33,y+.08],[x,y+.08],[x,y-.08]],z,.065,P.tealDark);
+      card({name:name+' cream lantern glass',x,y:y-.49,z:z+.025,stock:0xf4ca8b,depth:.075,
+        points:[[-.15,0],[.15,0],[.19,.38],[-.19,.38]]});
+      card({name:name+' folded lantern hood',x,y:y-.11,z:z+.08,stock:P.teal,depth:.055,
+        points:[[-.25,0],[.25,0],[.13,.15],[-.13,.15]]});
+      panel(name+' lantern base',x,y-.53,z+.075,.33,.07,null,{stock:P.tealDark,depth:.075});
+      for(const dx of [-.145,.145])line(name+' lantern mullion',[[x+dx,y-.48],[x+dx*1.27,y-.14]],z+.09,.028,P.tealDark);
+    });
   }
   lantern('School road lantern',1,4.35,-1.16);
   lantern('Store road lantern',12,3.93,-1.25);
   const detail=atlas.regions.detail;
+  withStageUnit('School road sign',6.43,-2.12,()=>{
   panel('School road sign post',6.43,baseY(6.43),-2.15,.055,1.65,null,{stock:P.tealDark,depth:.035});
   panel('School road sign',6.43,baseY(6.43)+1.32,-2.09,1.11,.45,crop(detail,12/768,14/192,247/768,180/192),{depth:.065});
+  });
 
-  let triangles=0;
+  let triangles=0,drawBatches=0;
+  const units=new Map();
   for(const batch of batches.values()){
     if(!batch.positions.length)continue;
-    const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(batch.positions,3));
-    geometry.setAttribute('normal',new THREE.Float32BufferAttribute(batch.normals,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(batch.uvs,2));
-    geometry.setAttribute('color',new THREE.Float32BufferAttribute(batch.colors,3));geometry.computeBoundingBox();
-    const bounds=geometry.boundingBox,pivotX=(bounds.min.x+bounds.max.x)/2,pivotZ=(bounds.min.z+bounds.max.z)/2;
-    // Each chunk gets its own physical foot hinge. This keeps the fold local
-    // and also gives the director an X coordinate for the player-centred ripple.
-    geometry.translate(-pivotX,-.5,-pivotZ);geometry.computeBoundingBox();geometry.computeBoundingSphere();
-    const mesh=new THREE.Mesh(geometry,batch.material===0?facadeMaterial:paperMaterial);mesh.name=`City paper batch ${batch.chunk}/${batch.material}/${batch.distant}`;
-    mesh.position.set(pivotX,.5,pivotZ);mesh.castShadow=batch.castShadow;mesh.receiveShadow=batch.receiveShadow;mesh.frustumCulled=true;
-    mesh.userData={cityPaperBatch:true,chunk:batch.chunk,distant:batch.distant,parts:[...batch.names],stageX:pivotX,stageHinge:true,stageBaseRotationX:mesh.rotation.x};group.add(mesh);triangles+=batch.positions.length/9;
+    if(!units.has(batch.unitId))units.set(batch.unitId,{id:batch.unitId,name:batch.unitName,batches:[],minX:Infinity,minY:Infinity,minZ:Infinity,maxX:-Infinity,maxY:-Infinity,maxZ:-Infinity});
+    const unit=units.get(batch.unitId);unit.batches.push(batch);
+    for(let i=0;i<batch.positions.length;i+=3){
+      const x=batch.positions[i],y=batch.positions[i+1],z=batch.positions[i+2];
+      unit.minX=Math.min(unit.minX,x);unit.minY=Math.min(unit.minY,y);unit.minZ=Math.min(unit.minZ,z);
+      unit.maxX=Math.max(unit.maxX,x);unit.maxY=Math.max(unit.maxY,y);unit.maxZ=Math.max(unit.maxZ,z);
+    }
+  }
+  for(const unit of units.values()){
+    const pivotX=(unit.minX+unit.maxX)/2,pivotY=unit.minY,pivotZ=(unit.minZ+unit.maxZ)/2;
+    const hinge=new THREE.Group();hinge.name=unit.name+' · own floor hinge';hinge.position.set(pivotX,pivotY,pivotZ);
+    hinge.userData={stageHinge:true,stageSource:'scenery',stageX:pivotX,stagePivotY:pivotY,stagePivotZ:pivotZ,stageUnitName:unit.name,stageBaseRotationX:0};
+    for(const batch of unit.batches){
+      const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(batch.positions,3));
+      geometry.setAttribute('normal',new THREE.Float32BufferAttribute(batch.normals,3));geometry.setAttribute('uv',new THREE.Float32BufferAttribute(batch.uvs,2));
+      geometry.setAttribute('color',new THREE.Float32BufferAttribute(batch.colors,3));
+      geometry.translate(-pivotX,-pivotY,-pivotZ);geometry.computeBoundingBox();geometry.computeBoundingSphere();
+      const mesh=new THREE.Mesh(geometry,batch.material===0?facadeMaterial:paperMaterial);mesh.name=`City paper unit ${unit.name}/${batch.material}`;
+      mesh.castShadow=batch.castShadow;mesh.receiveShadow=batch.receiveShadow;mesh.frustumCulled=true;
+      mesh.userData={cityPaperBatch:true,chunk:batch.chunk,distant:batch.distant,parts:[...batch.names]};hinge.add(mesh);
+      triangles+=batch.positions.length/9;drawBatches++;
+    }
+    group.add(hinge);
   }
   function localLight(name,x,y,z,tx,ty,tz,hex){
     const light=new THREE.SpotLight(hex,4,14,.46,.38,1.5);light.name=name;light.position.set(x,y,z);
@@ -269,7 +318,7 @@ export function createCityScenery({THREE,scene,world,flags={}}){
   }
   const localLights=[localLight('School gate warm streetlight',1,4.03,-1.06,1,.5,.05,0xffd2a1),
     localLight('Convenience store warm streetlight',12,3.61,-1.15,12,.5,.10,0xffc58f)];
-  const stats={cards:cards.length,triangles,batches:group.children.length,materials:2,localLights:localLights.length,
+  const stats={cards:cards.length,triangles,batches:drawBatches,hingeUnits:group.children.length,materials:2,localLights:localLights.length,
     atlasWidth:atlas.stats.width,atlasHeight:atlas.stats.height,atlasBytes:atlas.stats.textureBytes,illustratedTiles:atlas.stats.tiles,
     regions:atlas.regions,signText:atlas.stats.signText,
     stageFrame:{layers:0,backdrop:0,sideWings:0,topBeam:0,foreground:0,parts:[]}};

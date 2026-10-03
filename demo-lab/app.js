@@ -177,12 +177,15 @@ function refreshStatus(now,force=false){
   ui.playerState.textContent=pauseReasons.active?'已暂停':sceneState.stageTransitioning?'看舞台换景':state.onVehicle?'列车内':Math.abs(state.vx)>.05?'漫游中':'站立';
   if(statusTime&&now>statusTime)ui.fps.textContent=String(Math.round((stats.renderedFrames-lastRendered)*1000/(now-statusTime)));
   const transition=stats.stageTransition?.active?Math.round((stats.stageTransition.t??0)*100)+'%':'—';
+  const pivotMissing=(stats.stage?.city?.pivotAudit?.missingOwnPivot?.length??0)+(stats.stage?.subway?.pivotAudit?.missingOwnPivot?.length??0);
+  const pivotCount=(stats.stage?.city?.pivotAudit?.hinges??0)+(stats.stage?.subway?.pivotAudit?.hinges??0);
   ui.renderStats.textContent=`${stats.drawCalls} 次绘制 · ${stats.triangles.toLocaleString()} 个三角形
 纹理 ${stats.textures} · 几何体 ${stats.geometries}
 DPR ${stats.pixelRatio.toFixed(2)} / 原生 ${stats.nativePixelRatio.toFixed(2)} · 帧耗时 ${stats.frameTimeMs.toFixed(1)} ms
 Drawing Buffer ${stats.drawingBuffer.width} × ${stats.drawingBuffer.height}
 当前舞台 ${stats.activeStage} · 换景 ${transition}
 NPC 活动 ${stats.activeNpc} · 休眠 ${stats.dormantNpc} · 活动车辆 ${stats.activeVehicles}
+Pivot Audit ${pivotCount-pivotMissing}/${pivotCount} 正确 · 错误 ${pivotMissing}
 固定物理步 60 Hz · 隐藏舞台停止 AI/交通更新`;
   const shafts=stats.volumetrics;
   ui.renderStats.textContent+='\n丁达尔光柱：'+(!shafts.supported?'此设备图形能力不支持':!shafts.enabled?'已关闭':shafts.effectiveStrength.toFixed(2)+'× · 已渲染 '+shafts.renderedFrames+' 帧');

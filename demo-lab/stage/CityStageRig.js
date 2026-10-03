@@ -1,5 +1,5 @@
 
-import {createStageLifecycle,StageLifecycle,collectLocalHinges} from './StageRig.js';
+import {createStageLifecycle,StageLifecycle,collectLocalHinges,hingeAudit} from './StageRig.js';
 import {PAPER_STAGE_TIMING,phase,ripplePhase} from './StageTransitionTimeline.js';
 
 export function createCityStageRig({THREE,scene,terrain,traffic,transit,scenery,districts,population,backdrop,lights,state,flags}={}){
@@ -104,7 +104,8 @@ export function createCityStageRig({THREE,scene,terrain,traffic,transit,scenery,
     const activeVehicles=lifecycle.state===StageLifecycle.active?((trafficStats.cars??0)+(transitStats.buses?.length??0)):0;
     return {lifecycle:lifecycle.state,hinges:pieces.length,activeNpc:lifecycle.state===StageLifecycle.active?(p.visible??0):0,
       dormantNpc:lifecycle.state===StageLifecycle.dormant?(p.residents??0):0,activeVehicles,
-      floorBoundVehicleGroups:[traffic?.group,transit?.group].filter(Boolean).length,rootVisible:root.visible};
+      floorBoundVehicleGroups:[traffic?.group,transit?.group].filter(Boolean).length,rootVisible:root.visible,
+      pivotAudit:hingeAudit([scenery?.group,districts?.group])};
   }
   return {root,floorCarrier,verticalRoot,npcRoot,backdropCarrier,pieces,lifecycle,capture,setLifecycle,stableActive,stableDormant,poseExit,poseEnter,updateDynamics,nearbyPerson,stats};
 }

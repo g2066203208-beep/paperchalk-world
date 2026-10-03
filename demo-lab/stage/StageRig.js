@@ -27,16 +27,29 @@ export function createStageLifecycle(name,initial=StageLifecycle.inactive){
 }
 
 export function collectLocalHinges(groups=[]){
-  const result=[];
-  for(const group of groups){
-    for(const object of group?.children??[]){
-      if(!object.userData?.stageHinge)continue;
+  const result=[],seen=new Set();
+  for(const root of groups){
+    root?.traverse?.(object=>{
+      if(!object.userData?.stageHinge||seen.has(object))return;
+      seen.add(object);
       result.push({
         group:object,
         x:Number.isFinite(object.userData.stageX)?object.userData.stageX:object.position.x,
         baseRotationX:Number.isFinite(object.userData.stageBaseRotationX)?object.userData.stageBaseRotationX:object.rotation.x,
+        pivotY:object.userData.stagePivotY,
+        pivotZ:object.userData.stagePivotZ,
+        unitName:object.userData.stageUnitName??object.name,
       });
-    }
+    });
   }
   return result;
+}
+
+export function hingeAudit(groups=[]){
+  const hinges=collectLocalHinges(groups);
+  return {
+    hinges:hinges.length,
+    missingOwnPivot:hinges.filter(item=>!Number.isFinite(item.pivotY)||!Number.isFinite(item.pivotZ)).map(item=>item.unitName),
+    units:hinges.map(item=>({name:item.unitName,x:item.x,y:item.pivotY,z:item.pivotZ})),
+  };
 }

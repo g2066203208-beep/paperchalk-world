@@ -66,19 +66,26 @@ test('stage architecture is split into director, timeline and stage rigs',async(
   assert.match(city,/CityNpcRoot/);assert.match(city,/CityBackdropCarrier/);assert.match(subway,/ceilingCarrier\.position\.y/);
 });
 
-test('stage choreography uses local hinges, vertical lifts and player-centred ripple delays',async()=>{
+test('stage choreography uses true per-object bottom pivots, vertical lifts and player-centred ripple delays',async()=>{
   const city=await readFile(new URL('../demo-lab/stage/CityStageRig.js',import.meta.url),'utf8');
-  const subway=await readFile(new URL('../demo-lab/stage/SubwayStageRig.js',import.meta.url),'utf8');
+  const subwayRig=await readFile(new URL('../demo-lab/stage/SubwayStageRig.js',import.meta.url),'utf8');
+  const stageRig=await readFile(new URL('../demo-lab/stage/StageRig.js',import.meta.url),'utf8');
   const districts=await readFile(new URL('../demo-lab/rendering/city-districts.js',import.meta.url),'utf8');
   const scenery=await readFile(new URL('../demo-lab/rendering/city-scenery.js',import.meta.url),'utf8');
+  const subway=await readFile(new URL('../demo-lab/rendering/subway-stage.js',import.meta.url),'utf8');
   assert.ok(PAPER_STAGE_TIMING.duration>=1.3&&PAPER_STAGE_TIMING.duration<=1.8);
   assert.ok(rippleDelay(0,0)<rippleDelay(80,0));
   assert.match(city,/piece\.group\.rotation\.x=piece\.baseRotationX-fold\*Math\.PI\*\.5/);
   assert.match(city,/floorCarrier\.position\.y/);assert.match(city,/backdropCarrier\.position\.y/);
-  assert.match(subway,/stage\.floorCarrier\.position\.y/);assert.match(subway,/stage\.backdropCarrier\.position\.y/);assert.match(subway,/stage\.ceilingCarrier\.position\.y/);
-  assert.doesNotMatch(subway,/ceilingCarrier\.rotation/);
-  assert.match(districts,/stageHinge:true/);assert.match(districts,/geometry\.translate\(-district\.x,-\.5,3\.7\)/);
-  assert.match(scenery,/stageHinge:true/);assert.match(scenery,/geometry\.translate\(-pivotX,-\.5,-pivotZ\)/);
+  assert.match(subwayRig,/stage\.floorCarrier\.position\.y/);assert.match(subwayRig,/stage\.backdropCarrier\.position\.y/);assert.match(subwayRig,/stage\.ceilingCarrier\.position\.y/);
+  assert.doesNotMatch(subwayRig,/ceilingCarrier\.rotation/);
+  assert.match(stageRig,/function hingeAudit/);
+  assert.match(districts,/pivotY=minY/);assert.match(districts,/pivotZ=\(minZ\+maxZ\)\/2/);
+  assert.match(districts,/stageUnitName:unit\.name/);assert.doesNotMatch(districts,/geometry\.translate\(-district\.x,-\.5,3\.7\)/);
+  assert.match(scenery,/pivotY=unit\.minY/);assert.match(scenery,/stageUnitName:unit\.name/);assert.doesNotMatch(scenery,/geometry\.translate\(-pivotX,-\.5,-pivotZ\)/);
+  assert.match(subway,/stagePivotY:y/);assert.match(subway,/stagePivotZ:z/);
+  assert.doesNotMatch(subway,/Hanging guide hinge/);assert.doesNotMatch(subway,/Station clock hinge/);
+  assert.match(subway,/Ceiling suspended guide/);assert.match(subway,/centralWallBay/);
 });
 
 test('city NPCs enter a true dormant lifecycle with zero active instances and no interaction',async()=>{
@@ -118,9 +125,9 @@ test('render resolution is adaptive and no longer hard-capped at blurry 1.05/1.2
   assert.match(actor,/anisotropy=Math\.min\(16/);assert.match(actor,/LinearMipmapLinearFilter/);assert.match(actor,/snapshot\.z/);
 });
 
-test('performance UI exposes stage, buffer, NPC and vehicle diagnostics',async()=>{
+test('performance UI exposes stage, buffer, NPC, vehicle and pivot diagnostics',async()=>{
   const app=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
-  assert.match(app,/Drawing Buffer/);assert.match(app,/NPC 活动/);assert.match(app,/休眠/);assert.match(app,/活动车辆/);
+  assert.match(app,/Drawing Buffer/);assert.match(app,/NPC 活动/);assert.match(app,/休眠/);assert.match(app,/活动车辆/);assert.match(app,/Pivot Audit/);
   assert.match(app,/updateTrainPassenger/);assert.match(app,/boardTrain/);assert.match(app,/setWorld\(activeWorld/);
 });
 
