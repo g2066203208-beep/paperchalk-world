@@ -48,11 +48,13 @@ try{
   assert(start.fixtureAngles.every(angle=>angle<-1.45),'fixtures must begin folded onto deck');
   assert(start.lampIntensity.every(value=>value<.05),'station lights must begin dark');
 
-  assert(middle.pageAngle<-1.1,'main street page must be visibly turning by midpoint');
+  assert(middle.pageAngle<-1.0,'main street page must be visibly turning by midpoint');
+  assert(middle.bifoldAngle<-.25,'secondary street score must already be concertina-folding by midpoint');
   assert(middle.wallAngles[2]>middle.wallAngles[0],'centre wall should lead outer wall during pop-up');
   assert(middle.wallAngles.some(angle=>angle>-1.1),'at least one wall must be rising at midpoint');
 
-  assert(end.pageAngle<-1.6,'street page must finish below the stage opening');
+  assert(end.pageAngle<-1.3,'street page front half must finish below the stage opening');
+  assert(end.bifoldAngle<-1.6,'street page rear half must fold under on the secondary score');
   assert(end.wallAngles.every(angle=>Math.abs(angle)<.08),'all wall cards must settle upright');
   assert(end.fixtureAngles.every(angle=>Math.abs(angle)<.12),'all fixtures must settle upright');
   assert(end.lampIntensity[2]>1&&end.lampIntensity[0]>1,'practical lamps must finish lit');
