@@ -37,15 +37,15 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
   const cardCanvas=document.createElement('canvas');
   const cardResolution=()=>{
     const compact=window.matchMedia?.('(pointer: coarse)').matches||Math.min(innerWidth||0,innerHeight||0)<760;
-    const dpr=Math.min(window.devicePixelRatio||1,compact?2:2.5);
-    return {width:Math.round(640*dpr/2),height:Math.round(1024*dpr/2)};
+    const dpr=Math.min(window.devicePixelRatio||1,compact?3:3);
+    return {width:Math.round(768*dpr/2),height:Math.round(1228*dpr/2)};
   };
   const initialResolution=cardResolution();
   cardCanvas.width=initialResolution.width;cardCanvas.height=initialResolution.height;
   const cardTexture=new THREE.CanvasTexture(cardCanvas);
   cardTexture.colorSpace=THREE.SRGBColorSpace;
   cardTexture.minFilter=THREE.LinearFilter;cardTexture.magFilter=THREE.LinearFilter;cardTexture.generateMipmaps=false;
-  const cardMaterial=new THREE.MeshLambertMaterial({map:cardTexture,transparent:true,alphaTest:.02,side:THREE.DoubleSide,forceSinglePass:true,color:0xffffff,emissive:sceneId==='city-prologue'?0x778aa0:0x000000,emissiveIntensity:sceneId==='city-prologue'?.08:0,dithering:true,depthWrite:true});
+  const cardMaterial=new THREE.MeshBasicMaterial({map:cardTexture,transparent:true,alphaTest:.02,side:THREE.DoubleSide,forceSinglePass:true,color:0xffffff,depthWrite:true,toneMapped:false});
   const card=new THREE.Mesh(new THREE.PlaneGeometry(1,1),cardMaterial);
   card.name='Spine 4.3 mesh card · magic_g';card.castShadow=true;card.receiveShadow=true;card.userData.volumeShadow=false;
   card.customDepthMaterial=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,map:cardTexture,alphaTest:.02});
@@ -64,8 +64,7 @@ export function createActor({THREE,scene,renderer,terrain,flags,loadTexture,scen
     paperLight.direction.value.copy(direction).normalize();
     paperLight.color.value.copy(color);
     paperLight.strength.value=Math.min(1.45,Math.max(0,strength));
-    cardMaterial.color.copy(color).lerp(new THREE.Color(0xffffff),.72);
-    cardMaterial.emissiveIntensity=sceneId==='city-prologue'?Math.min(.16,strength*.035):0;
+    cardMaterial.color.set(0xffffff);
   }
   function applyPose(){
     if(!skeleton||!animationState)return;

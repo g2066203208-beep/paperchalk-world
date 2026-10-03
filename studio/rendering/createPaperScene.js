@@ -67,6 +67,9 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}
   catch(error){status('error','无法启动图形画面，请检查浏览器的图形加速。',error);throw error;}
   let size=getSize();
+  // Keep the scene at its established budget; the character gets its own
+  // high-resolution buffer below, so the whole world does not need a costly
+  // mobile-wide supersample.
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,size.compact?1.05:1.22));
   renderer.setSize(size.width,size.height,false);
   renderer.domElement.style.width='100%';renderer.domElement.style.height='100%';renderer.domElement.style.display='block';
