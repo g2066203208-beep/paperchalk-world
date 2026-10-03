@@ -119,14 +119,14 @@ function enterCityInterior(interior){
   if(!interior||!scene?.setCityInterior||scene.cityInterior?.()||cityRide)return false;
   const x=interior.entranceX??interior.x;
   resetClock();input?.cancel();hideScenePrompt();
-  // The facade itself is the stage curtain: it hinges down from its base while
-  // the room waits behind it. No full-screen card or city-wide slide is used.
+  // The same centre-crease paper handoff used by transit reveals the room.
+  // The midpoint is the only instant at which street geometry is swapped.
   const midpoint=()=>{
     simulation.restore({x,y:world.surfaceY(x),facing:simulation.snapshot().facing,vx:0,distance:simulation.snapshot().distance});
     scene.setCityInterior(interior);scene.frame(0,renderClock,simulation.snapshot());
   };
   worldHandoff=true;
-  const handoff=scene.playHouseHandoff?.({id:interior.id,onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
+  const handoff=scene.playSceneTransition?.({kind:'surface',onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
   if(!handoff){midpoint();worldHandoff=false;}
   return true;
 }
@@ -137,8 +137,7 @@ function leaveCityInterior(){
     scene.leaveCityInterior();scene.frame(0,renderClock,simulation.snapshot());
   };
   worldHandoff=true;
-  const activeId=scene.cityInterior?.();
-  const handoff=scene.playHouseHandoff?.({id:activeId,reverse:true,onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
+  const handoff=scene.playSceneTransition?.({kind:'surface',onMidpoint:midpoint,onComplete:()=>{saveProgress(true);refreshCityHud();}});
   if(!handoff){midpoint();worldHandoff=false;}
   return true;
 }
