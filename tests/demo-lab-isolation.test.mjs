@@ -51,3 +51,21 @@ test('lab identity is visibly different from production',async()=>{
   assert.equal(meta.directMergeToMain,false);
   assert.equal(meta.productionPath,'studio/');
 });
+
+
+test('stage clear switch removes only scene props and is wired to the lab UI',async()=>{
+  const sceneSource=await readFile(new URL('../demo-lab/rendering/createPaperScene.js',import.meta.url),'utf8');
+  const appSource=await readFile(new URL('../demo-lab/app.js',import.meta.url),'utf8');
+  const html=await readFile(new URL('../demo-lab/index.html',import.meta.url),'utf8');
+  assert.match(html,/id="toggleStageProps"/);
+  assert.match(html,/撤掉全部道具/);
+  assert.match(sceneSource,/function setStagePropsVisible/);
+  assert.match(sceneSource,/stagePropsVisible:true/);
+  assert.match(sceneSource,/scenery\.group\.visible=visible/);
+  assert.match(sceneSource,/districts\.group\.visible=visible/);
+  assert.match(sceneSource,/population\.group\.visible=visible/);
+  assert.match(sceneSource,/transit\.group\.visible=visible/);
+  assert.match(sceneSource,/traffic\.group\.visible=visible/);
+  assert.match(sceneSource,/for\(const light of lights\.locals/);
+  assert.match(appSource,/scene\.setStagePropsVisible\(!visible\)/);
+});
