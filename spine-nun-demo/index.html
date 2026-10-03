@@ -11,7 +11,7 @@
   <header class="topbar">
     <div>
       <p>PAPERCHALK WORLD · ANIMATION LAB</p>
-      <h1>修女角色 · Spine 骨骼动画 Demo <span>4.3 Runtime</span></h1>
+      <h1>修女原画拆件 · Spine 骨骼动画 Demo <span>原画像素 · Spine 4.3</span></h1>
     </div>
     <a href="../studio/" class="link-button">返回工作室</a>
   </header>
@@ -20,9 +20,9 @@
     <section class="stage">
       <div class="toolbar">
         <div class="segmented" id="animationButtons">
-          <button class="active" data-animation="idle">待机</button>
-          <button data-animation="walk">走路</button>
-          <button data-animation="blessing">祝祷</button>
+          <button class="active" data-animation="idle">待机呼吸</button>
+          <button data-animation="sway">轻摆</button>
+          <button data-animation="nod">点头</button>
         </div>
         <div class="toggles">
           <label><input id="showBones" type="checkbox"> 骨骼</label>
@@ -31,12 +31,12 @@
       </div>
       <div class="canvas-wrap">
         <canvas id="stageCanvas"></canvas>
-        <div class="stage-note">真实 Spine 4.3 骨骼负责层级与动画；角色零件由独立矢量层挂到骨骼上。</div>
+        <div class="stage-note">直接使用你画好的原图像素拆件；Spine 4.3 只负责骨骼层级与动画，不重新绘制角色。</div>
       </div>
       <footer>
         <span id="runtimeStatus">正在载入 Spine 4.3…</span>
-        <span id="boneStatus">27 Bones</span>
-        <span id="partStatus">23 Parts</span>
+        <span id="boneStatus">19 Bones</span>
+        <span id="partStatus">13 Parts</span>
       </footer>
     </section>
 
@@ -51,7 +51,7 @@
       </section>
 
       <section>
-        <div class="section-head"><div><p>PARTS</p><h2>拆分零件</h2></div><span>点击高亮</span></div>
+        <div class="section-head"><div><p>ORIGINAL ART PARTS</p><h2>原画拆分零件</h2></div><span>点击高亮</span></div>
         <div id="partList" class="part-list"></div>
       </section>
 
