@@ -358,7 +358,7 @@ export function createPaperStageScene({container}={}){
       lampIntensity:lightPoints.map(l=>l.intensity),
       guidesVisible:guides.visible,
       shadows,
-      viewMode,largeWorld,playerX,playerReady:player.ready,playerLoadError,
+      viewMode,largeWorld,playerX,playerReady:player.ready,playerVisible:!!player.mesh?.visible,playerLoadError,
       activeChunk,activeChunkOrigin:activeChunk*CHUNK_SIZE,
       residentChunks:chunkProxies.filter(entry=>entry.group.visible).map(entry=>entry.index),
       playerAnchorWorldX:world.position.x+playerAnchor.position.x,
