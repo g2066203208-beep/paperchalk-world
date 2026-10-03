@@ -50,8 +50,8 @@ async function tick(page,n=3){await page.evaluate(n=>new Promise(resolve=>{funct
 try{
   for(const config of scenarios){
     const {page,context}=await load(config);
-    for(const selector of ['#openGameMenu','.city-map-button','#moveLeft','#moveRight','#inspectAction'])await safe(page,selector,config.insets);
-    await targets(page,'#openGameMenu,.city-map-button,#moveLeft,#moveRight,#inspectAction');
+    for(const selector of ['#openGameMenu','.city-map-button','#moveLeft','#moveRight'])await safe(page,selector,config.insets);
+    await targets(page,'#openGameMenu,.city-map-button,#moveLeft,#moveRight');
     await shot(page,config.name+'-street');
     await page.locator('#openGameMenu').tap();
     assert.equal(await page.locator('#gameMenu').isVisible(),true);
@@ -68,23 +68,17 @@ try{
     await page.locator('.city-district-card').filter({hasText:'星灯住宅区'}).getByRole('button',{name:'街区导航'}).tap();
     await safe(page,'.city-navigation',config.insets);await targets(page,'.city-navigation button');
     await page.getByRole('button',{name:'取消步行导航'}).tap();
-    await page.locator('#inspectAction').tap();
-    await page.waitForFunction(()=>__cityQA.getStats().transit.rideKind==='bus');
-    assert.equal(await page.locator('.city-explorer-overlay').isVisible(),false);
-    assert.equal(await page.locator('#scenePrompt').isVisible(),true);
-    await safe(page,'.city-ride-panel',config.insets);await targets(page,'.city-ride-heading button');
+    // Transit stops are scenery only. They never open a boarding panel or a route.
+    assert.equal(await page.locator('.city-ride-panel').count(),0);
+    assert.equal(await page.locator('#inspectionOverlay').isVisible(),false);
     await page.locator('#openGameMenu').tap();
-    assert.equal(await page.locator('.city-ride-panel').isVisible(),false);
     const paused=await page.evaluate(()=>__cityQA.getStats().player.x);await tick(page);
     assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),paused);
     await page.locator('#resumeGame').tap();
-    await shot(page,config.name+'-bus');
-    await page.getByRole('button',{name:'返回出发站',exact:true}).tap();
-    await page.waitForFunction(()=>!__cityQA.getStats().transition.active);
-    assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),36);
+    await shot(page,config.name+'-street-after-menu');
     // Native background/resume bridge must freeze movement and preserve content.
     await page.evaluate(()=>dispatchEvent(new Event('paperchalk:pause')));await tick(page);
-    assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),36);
+    assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),paused);
     await page.evaluate(()=>dispatchEvent(new Event('paperchalk:resume')));
     // Trusted touch input tests pointer capture and release, without a keyboard.
     const moveRight=page.locator('#moveRight');
@@ -97,7 +91,7 @@ try{
     assert.ok(Math.abs(settled-stopped)<.5,'touch release should stop movement promptly');
     await page.locator('.city-map-button').tap();assert.equal(await page.evaluate(()=>PaperchalkHandleBack()),true);
     assert.equal(await page.locator('.city-explorer-overlay').isVisible(),false);
-    checks.push(config.name+': automatic game presentation, safe areas, 44px controls, scroll, navigation, bus, pause/settings, native back/resume, real touch movement');
+    checks.push(config.name+': automatic game presentation, safe areas, 44px controls, scroll, walking navigation, pause/settings, native back/resume, real touch movement, transit scenery without boarding');
     if(!config.native&&config.width===390){
       await page.locator('.city-map-button').tap();await page.setViewportSize({width:844,height:390});
       await setInsets(page,[0,47,21,47]);await safe(page,'.city-explorer-card',[0,47,21,47]);
@@ -107,24 +101,22 @@ try{
     await context.close();
   }
   const config=scenarios[0],{page,context}=await load(config,531);
-  await page.locator('#inspectAction').tap();
-  await page.waitForFunction(()=>__cityQA.getStats().transit.underground&&__cityQA.getStats().transit.rideProgress>.25);
-  await shot(page,'android-landscape-metro');
-  await page.waitForFunction(()=>__cityQA.getStats().transit.rideKind===null,null,{timeout:45000});
-  assert.equal(await page.evaluate(()=>__cityQA.getStats().player.x),891);
-  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('paperworld.city-prologue.save.v1')).player.x),891);
-  checks.push('touch metro boarding, underground journey, destination arrival and save');
+  assert.equal(await page.locator('.city-ride-panel').count(),0);
+  assert.equal(await page.locator('#inspectionOverlay').isVisible(),false);
+  const stationStats=await page.evaluate(()=>__cityQA.getStats());
+  assert.equal(stationStats.transit.underground??false,false);
+  assert.equal(stationStats.transit.rideKind??null,null);
+  await shot(page,'android-landscape-transit-scenery');
+  checks.push('touch metro and bus stops remain visible scenery without boarding or underground travel');
   await context.close();
-  const interior=await load(config,-42);
-  await interior.page.locator('#inspectAction').tap();
-  await interior.page.waitForFunction(()=>__cityQA.getStats().interiors.active&&!__cityQA.getStats().transition.active);
-  assert.equal(await interior.page.locator('#inspectionOverlay').isVisible(),false);
-  assert.equal(await interior.page.locator('#scenePrompt').isVisible(),false);
-  await shot(interior.page,'android-landscape-interior');
-  assert.equal(await interior.page.evaluate(()=>PaperchalkHandleBack()),true);
-  await interior.page.waitForFunction(()=>!__cityQA.getStats().interiors.active&&!__cityQA.getStats().transition.active);
-  checks.push('touch house doorway enters a real paper interior immediately and Esc returns without a handoff');
-  await interior.context.close();
+  const house=await load(config,-42);
+  assert.equal(await house.page.locator('.city-ride-panel').count(),0);
+  const houseStats=await house.page.evaluate(()=>__cityQA.getStats());
+  assert.equal('interiors' in houseStats,false);
+  assert.equal(await house.page.locator('#inspectionOverlay').isVisible(),false);
+  await shot(house.page,'android-landscape-house-street');
+  checks.push('touch house frontage remains the same continuous street with no interior entry');
+  await house.context.close();
   const forest=await load(config,0,'?scene=forest');
   assert.equal(await forest.page.locator('.city-explorer').count(),0);
   await forest.page.locator('#openGameMenu').tap();await forest.page.locator('#resumeGame').tap();

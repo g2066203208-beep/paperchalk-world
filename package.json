@@ -5,7 +5,7 @@
   "description": "Paperchalk World production main built from the visual-demo rendering baseline",
   "scripts": {
     "dev:studio": "node tools/studio-server.mjs",
-    "test:studio": "node --test tests/studio-core.test.mjs tests/studio-lifecycle.test.mjs tests/studio-delivery.test.mjs tests/studio-presentation.test.mjs tests/studio-terrain.test.mjs tests/studio-contact-ao.test.mjs tests/studio-stage-world.test.mjs tests/studio-stage-player.test.mjs tests/forest-paper-style.test.mjs tests/studio-scenery.test.mjs tests/studio-render-scheduling.test.mjs tests/studio-city-world.test.mjs tests/studio-city-scenery.test.mjs tests/studio-city-backdrop.test.mjs tests/studio-city-visibility.test.mjs tests/studio-city-lighting.test.mjs tests/city-traffic.test.mjs tests/city-prologue-ui.test.mjs tests/studio-world-handoff.test.mjs tests/studio-city-interiors.test.mjs && npm run test:city",
+    "test:studio": "node --test tests/studio-core.test.mjs tests/studio-lifecycle.test.mjs tests/studio-delivery.test.mjs tests/studio-presentation.test.mjs tests/studio-terrain.test.mjs tests/studio-contact-ao.test.mjs tests/studio-stage-world.test.mjs tests/studio-stage-player.test.mjs tests/forest-paper-style.test.mjs tests/studio-scenery.test.mjs tests/studio-render-scheduling.test.mjs tests/studio-city-world.test.mjs tests/studio-city-scenery.test.mjs tests/studio-city-backdrop.test.mjs tests/studio-city-visibility.test.mjs tests/studio-city-lighting.test.mjs tests/city-traffic.test.mjs tests/city-prologue-ui.test.mjs && npm run test:city",
     "test:mobile": "node --test tests/mobile-release.test.mjs",
     "test": "node tests/demo-main-smoke.mjs",
     "test:browser": "node tests/demo-main-browser.mjs",
@@ -13,7 +13,7 @@
     "test:legacy:core": "node tests/core-regression.mjs",
     "test:legacy:ui": "node tests/ui-smoke.mjs",
     "test:legacy:3d": "node tests/three-engine-smoke.mjs",
-    "test:city": "node --test tests/studio-city-layout.test.mjs tests/studio-city-districts.test.mjs tests/studio-city-transit.test.mjs tests/studio-city-population.test.mjs tests/studio-city-interiors.test.mjs"
+    "test:city": "node --test tests/studio-city-layout.test.mjs tests/studio-city-districts.test.mjs tests/studio-city-transit.test.mjs tests/studio-city-population.test.mjs"
   },
   "engines": {
     "node": ">=20"

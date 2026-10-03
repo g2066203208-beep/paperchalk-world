@@ -1,10 +1,9 @@
 import {BUS_STOPS,METRO_STATIONS,CITY_BOUNDS} from '../world/CityLayout.mjs';
 
-/** Shared paper transit stock, visible station cells, and a real underground travel set. */
+/** Shared paper transit stock for the continuous street scene. Transit is scenery only: stations and ambient buses never board or change scenes. */
 export function createCityTransit({THREE,scene,flags={}}){
   const group=new THREE.Group();group.name='City public transport';scene.add(group);
   const surface=new THREE.Group();surface.name='Street transit';group.add(surface);
-  const underground=new THREE.Group();underground.name='Underground paper railway';underground.visible=false;group.add(underground);
   const atlasWidth=2048,atlasHeight=1024,regions={};
   const canvas=typeof document!=='undefined'?document.createElement('canvas'):null;
   if(canvas){canvas.width=atlasWidth;canvas.height=atlasHeight;}
@@ -105,7 +104,6 @@ export function createCityTransit({THREE,scene,flags={}}){
   const texture=ctx?new THREE.CanvasTexture(canvas):new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);
   texture.name='Shared bilingual public transit paper atlas';texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;
   const material=new THREE.MeshLambertMaterial({map:texture,vertexColors:true,side:THREE.DoubleSide,emissive:0x5c6257,emissiveIntensity:.32});
-  const undergroundMaterial=new THREE.MeshBasicMaterial({map:texture,vertexColors:true,side:THREE.DoubleSide,fog:false,toneMapped:false});
   let triangles=0;
   const color=new THREE.Color();
   function builder(parent,name,mat=material){
@@ -164,46 +162,18 @@ export function createCityTransit({THREE,scene,flags={}}){
     b.box(-2.35,1.67,4.58,.07,.03,0xf4e5be,.18);b.finish();return bus;
   }
   const buses=Array.from({length:4},(_,i)=>{const bus=makeBus(i<2?'Eastbound city bus':'Westbound city bus');bus.position.set(0,.05,i<2?3.5:2.75);return {group:bus,direction:i<2?1:-1,offset:i%2*10,atStop:false};});
-  const rideBus=makeBus('Your city bus');rideBus.visible=false;rideBus.position.set(0,.05,3.5);
-  const wall=builder(underground,'Underground tiled wall and route',undergroundMaterial);
-  wall.box(-52,-5,104,25,-.2,0x283f4b,0);
-  wall.box(-52,.5,104,7.0,.02,0xc5ccba,0);wall.box(-52,4.9,104,.20,.035,0x649b92,0);
-  wall.box(-52,6.9,104,.31,.06,0x6b8e89,0);wall.box(-52,.52,104,.63,.05,0x567777,0);
-  for(let x=-51;x<52;x+=2){wall.box(x,1.2,.018,3.62,.045,0xabb9ac,0);wall.box(x,5.2,.018,1.58,.045,0xa8b4aa,0);}
-  for(let y=1.8;y<6.8;y+=.6)wall.box(-52,y,104,.016,.05,0xb2beb0,0);
-  wall.box(-5.30,5.29,10.60,.93,.12,0xffffff,.05,'route');
-  wall.box(-52,-2.5,104,3.06,2.9,0x526b71,0);wall.box(-52,.48,104,.14,3.15,0xe1b764,0);
-  wall.box(-52,.30,104,.15,3.17,0x9b9f86,0);
-  for(let x=-52;x<52;x+=.55)wall.box(x,.55,.29,.055,3.20,0xf1d491,0);
-  wall.finish();
-  const train=new THREE.Group();train.name='Riding in the city line';underground.add(train);train.position.set(0,.67,.75);
-  const t=builder(train,'Metro car with passengers and grab handles',undergroundMaterial);
-  t.card([[-12.4,.24],[-12.4,3.06],[-11.92,3.50],[11.92,3.50],[12.40,3.06],[12.40,.24]],.16,0xf2e6c7,.18);
-  for(let i=-1;i<=1;i++)t.box(i*7.98-3.99,.48,7.98,2.80,.21,0xffffff,.015,'metro');
-  t.box(-12.4,.14,24.8,.24,.28,0x456e70);t.box(-12.1,3.35,24.2,.14,.30,0xffe8b9);
-  for(const x of [-10,-7,7,10]){t.circle(x,.12,.27,.15,0x314b53);t.circle(x,.12,.12,.20,0x8a9a92);}
-  t.finish();
-  const pillars=new THREE.Group();pillars.name='Passing station columns';underground.add(pillars);
-  const p=builder(pillars,'Layered metro platform columns',undergroundMaterial);
-  // Slim station columns pass behind the train and station lettering. In a
-  // narrow phone view they retain movement without concealing the passengers.
-  for(let x=-48;x<=48;x+=12){p.box(x-.14,.50,.28,6.39,.07,0x9db6aa,.045);p.box(x-.14,.50,.055,6.39,.095,0xc6d5bd,.018);p.box(x-.21,.50,.42,.26,.11,0x829f96,.035);p.box(x-.23,6.59,.46,.28,.11,0xb6c8b8,.035);}
-  p.finish();
-  const stationSigns=METRO_STATIONS.map(stop=>{const sign=new THREE.Group();sign.name='Platform · '+stop.name;underground.add(sign);sign.visible=false;const b=builder(sign,'Current station name',undergroundMaterial);b.box(-3.60,6.28,7.2,.70,.25,0xffffff,.035,'platform-'+stop.id);b.finish();return {stop,group:sign};});
-  let elapsed=0,lastPlayerX=NaN,lastRideKey='',rideProgress=0,rideKind=null;
-  function nearestMetro(x){return METRO_STATIONS.reduce((a,b)=>Math.abs(b.x-x)<Math.abs(a.x-x)?b:a);}
-  function update(dt,playerX=0,ride=null){
+  // Buses are ambient paper props that travel along the road. There is no
+  // player vehicle, boarding state, second scene, or route handoff.
+  let elapsed=0,lastPlayerX=NaN;
+  function update(dt,playerX=0){
     const safeX=Number.isFinite(playerX)?playerX:0;
     const step=Number.isFinite(dt)&&dt>0?Math.min(dt,.25):0;
-    elapsed+=step;
-    const validRide=ride&&(ride.kind==='bus'||ride.kind==='metro')&&Number.isFinite(ride.fromX)&&Number.isFinite(ride.toX)&&Number.isFinite(ride.progress);
-    const progress=validRide?Math.max(0,Math.min(1,ride.progress)):0;
-    const kind=validRide?ride.kind:null;
-    const rideKey=kind?`${kind}:${ride.fromX}:${ride.toX}:${progress}`:'';
-    const changed=step>0||safeX!==lastPlayerX||rideKey!==lastRideKey;
+    const changed=step>0||safeX!==lastPlayerX;
     if(!changed)return false;
-    lastPlayerX=safeX;lastRideKey=rideKey;rideKind=kind;rideProgress=progress;
-    surface.visible=kind!=='metro';underground.visible=kind==='metro';rideBus.visible=kind==='bus';
+    elapsed+=step;lastPlayerX=safeX;
+    // Keep every layer in the same street scene. Metro portals are paper
+    // scenery only and never hide the city or start a journey.
+    surface.visible=true;
     for(const cell of stationGroups)cell.visible=Math.abs(cell.position.x-safeX)<78;
     for(const [i,bus] of buses.entries()){
       const phase=(elapsed+bus.offset+(bus.direction<0?5:0))%20;
@@ -212,16 +182,7 @@ export function createCityTransit({THREE,scene,flags={}}){
       let x=origin+Math.round((safeX-origin)/120)*120;
       if(i%2)x+=safeX>=x?120:-120;
       bus.group.position.x=x;bus.atStop=phase>=15;
-      bus.group.visible=kind!=='bus'&&x>=CITY_BOUNDS.minX-20&&x<=CITY_BOUNDS.maxX+20&&Math.abs(x-safeX)<105;
-    }
-    if(kind==='bus')rideBus.position.x=ride.fromX+(ride.toX-ride.fromX)*progress;
-    if(kind==='metro'){
-      underground.position.x=ride.fromX+(ride.toX-ride.fromX)*progress;
-      const direction=ride.direction===-1?-1:1;
-      pillars.position.x=(6-(progress*72)%12)*direction;
-      const station=nearestMetro(progress<.5?ride.fromX:ride.toX);
-      for(const sign of stationSigns)sign.group.visible=sign.stop.id===station.id;
-      train.position.x=Math.sin(progress*Math.PI*2)*.07;
+      bus.group.visible=x>=CITY_BOUNDS.minX-20&&x<=CITY_BOUNDS.maxX+20&&Math.abs(x-safeX)<105;
     }
     flags.render=flags.depth=flags.ao=true;return true;
   }
@@ -229,9 +190,9 @@ export function createCityTransit({THREE,scene,flags={}}){
   update(0,0);
   return {group,update,stats:()=>({busStops:BUS_STOPS.length,metroStations:METRO_STATIONS.length,visibleStations:stationGroups.filter(s=>s.visible).length,
     buses:buses.map(bus=>({x:bus.group.position.x,z:bus.group.position.z,direction:bus.direction,atStop:bus.atStop,visible:surface.visible&&bus.group.visible})),
-    elapsed,rideKind,rideProgress,rideX:rideKind==='metro'?underground.position.x:rideBus.position.x,underground:underground.visible,
+    elapsed,
     timetable:{phase:elapsed%20,atStop:elapsed%20>=15,nextArrivalSeconds:elapsed%20>=15?0:Math.ceil(15-elapsed%20),dwellSeconds:5,cycleSeconds:20},
-    triangles,materials:2,atlasWidth,atlasHeight,stationCullDistance:78,busHeight:1.76,roadY:.05,roadZ:3.5,
+    triangles,materials:1,atlasWidth,atlasHeight,stationCullDistance:78,busHeight:1.76,roadY:.05,roadZ:3.5,
     signText:[...stops.map(s=>s.name),'01 城市环线','月灯公交','月河线','月灯城市轨道'],
   })};
 }

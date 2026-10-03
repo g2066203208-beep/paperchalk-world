@@ -30,7 +30,7 @@ test('transit gives every district a paper bus shelter and all six metro portals
       assert.ok(Math.abs(Math.hypot(n.getX(i),n.getY(i),n.getZ(i))-1)<1e-5);
     }
   });
-  assert.equal(lights,0);assert.equal(materials.size,2);assert.equal(textures.size,1);
+  assert.equal(lights,0);assert.equal(materials.size,1);assert.equal(textures.size,1);
   assert.ok(stats.signText.includes('中央车站'));assert.ok(stats.signText.includes('01 城市环线'));
 });
 
@@ -52,19 +52,19 @@ test('ambient buses move in both directions, pause, and stop on authored platfor
   assert.equal(transit.stats().timetable.nextArrivalSeconds,15);
 });
 
-test('bus schedules and journeys animate without reuploading the shared transit atlas',t=>{
+test('ambient bus schedules animate without reuploading the shared transit atlas',t=>{
   const {transit,flags}=fixture(t),textures=new Set();
   transit.group.traverse(object=>{if(object.material?.map)textures.add(object.material.map);});
   const versions=new Map([...textures].map(texture=>[texture,texture.version]));
   advance(transit,45,516);
   assert.equal(transit.stats().elapsed,45);
   assert.equal(transit.stats().timetable.nextArrivalSeconds,10);
-  for(const kind of ['bus','metro']){
-    flags.render=flags.depth=flags.ao=false;
-    assert.equal(transit.update(.25,711,{kind,fromX:51,toX:1371,progress:.5,direction:1}),true);
-    assert.equal(transit.stats().rideX,711);
-    assert.ok(flags.render&&flags.depth&&flags.ao,'vehicle movement still refreshes the visible scene');
-  }
+  flags.render=flags.depth=flags.ao=false;
+  // Extra arguments are ignored: the player stays in the continuous street.
+  assert.equal(transit.update(0,711,{kind:'metro',fromX:51,toX:1371,progress:.5,direction:1}),true);
+  assert.equal(transit.stats().elapsed,45);
+  assert.ok(!('rideKind' in transit.stats())&&!('underground' in transit.stats()));
+  assert.ok(flags.render&&flags.depth&&flags.ao,'street movement still refreshes the visible scene');
   for(const [texture,version] of versions)assert.equal(texture.version,version,
     'printed route signs must not invalidate the entire shared GPU texture each second');
 });
@@ -81,22 +81,26 @@ test('station cells follow the camera without keeping the whole city drawn',t=>{
   }
 });
 
-test('bus and metro journeys share exact camera coordinates and reset cleanly',t=>{
-  const {transit}=fixture(t),ride={kind:'bus',fromX:36,toX:1356,progress:.4,direction:1};
-  transit.update(0,564,ride);assert.equal(transit.stats().rideX,564);assert.equal(transit.stats().rideKind,'bus');
-  assert.equal(transit.group.getObjectByName('Your city bus').visible,true);
-  assert.equal(transit.stats().underground,false);assert.ok(transit.stats().buses.every(b=>!b.visible));
-  const metro={kind:'metro',fromX:1371,toX:51,progress:.5,direction:-1};
-  transit.update(0,711,metro);assert.equal(transit.stats().rideX,711);assert.equal(transit.stats().underground,true);
-  assert.equal(transit.group.getObjectByName('Street transit').visible,false);
-  assert.equal(transit.group.getObjectByName('Platform · 学园街').visible,true);
-  const columns=transit.group.getObjectByName('Passing station columns'),columnX=columns.position.x;
-  assert.equal(transit.update(0,711,metro),false);assert.equal(columns.position.x,columnX);
-  transit.update(0,51,null);assert.equal(transit.stats().underground,false);assert.equal(transit.stats().rideKind,null);
+test('station scenery stays in the street layer and cannot start a journey',t=>{
+  const {transit}=fixture(t);
+  transit.update(0,564,{kind:'bus',fromX:36,toX:1356,progress:.4,direction:1});
+  let stats=transit.stats();
+  assert.equal(stats.elapsed,0);
+  assert.ok(!('rideX' in stats)&&!('rideKind' in stats)&&!('underground' in stats));
   assert.equal(transit.group.getObjectByName('Street transit').visible,true);
-  assert.equal(transit.group.getObjectByName('Your city bus').visible,false);
+  assert.ok(!transit.group.getObjectByName('Your city bus'));
+  assert.ok(!transit.group.getObjectByName('Underground paper railway'));
+  transit.update(0,711,{kind:'metro',fromX:1371,toX:51,progress:.5,direction:-1});
+  stats=transit.stats();
+  assert.equal(stats.elapsed,0);
+  assert.equal(transit.group.getObjectByName('Street transit').visible,true);
+  assert.ok(!transit.group.getObjectByName('Passing station columns'));
+  transit.update(0,51,null);
+  assert.equal(transit.stats().elapsed,0);
+  assert.equal(transit.group.getObjectByName('Street transit').visible,true);
   transit.update(NaN,NaN,{kind:'metro',fromX:51,toX:NaN,progress:Infinity});
-  assert.equal(transit.stats().underground,false);assert.ok(transit.stats().buses.every(b=>Number.isFinite(b.x)));
+  assert.equal(transit.stats().elapsed,0);
+  assert.ok(transit.stats().buses.every(b=>Number.isFinite(b.x)));
 });
 
 test('all transit geometry, both materials and the shared atlas belong to scene disposal',()=>{

@@ -15,7 +15,6 @@ import {createCityDistricts} from './city-districts.js';
 import {createCityPopulation} from './city-population.js';
 import {createCityTransit} from './city-transit.js';
 import {createCityTraffic} from './city-traffic.js';
-import {createCityInteriors} from './city-interiors.js';
 import {createSky} from './sky.js';
 import {createPaperFog} from './fog.js';
 import {createLights,createLightingController} from './lighting.js';
@@ -23,7 +22,6 @@ import {createVolumetrics} from './volumetrics.js';
 import {createActor} from './actor.js';
 import {createOrbitCamera} from './orbit-camera.js';
 import {disposeSceneResources} from './resources.js';
-import {createWorldHandoff} from './world-handoff.js';
 
 const FEATURES=['sky','layers','shadow','fog','tone','random','bounce','godrays','ao'];
 const PRESETS={dawn:.27,noon:.5,sunset:.73,night:.875};
@@ -32,7 +30,6 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   if(!container||typeof container.appendChild!=='function')throw new TypeError('Paper scene requires a container element.');
   let disposed=false,contextLost=false,frameCalls=0,renderedFrames=0;
   let lastSnapshot={x:0,y:.5,z:0,grounded:true,facing:1};
-  let cityRide=null,pendingCityRide=undefined,lastUnderground=false,cityInterior=null;
   const flags={render:true,shadow:true,depth:true,volumeShadow:true,ao:true};
   const isCity=sceneId!=='forest';
   const state={sceneId:isCity?'city-prologue':'forest',sky:true,layers:true,shadow:true,fog:true,tone:true,random:true,bounce:true,godrays:true,ao:true,final:true,timePreset:isCity?'night':'dawn',auto:false,time:isCity?.875:.27,manualSun:false,sunAzimuth:-36,sunElevation:13};
@@ -99,21 +96,10 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   const scenery=(isCity?createCityScenery:createStageScenery)({THREE,scene,world:terrain.world,flags});
   const backdrop=isCity?createCityBackdrop({THREE,scene,flags}):null;
   const districts=isCity?createCityDistricts({THREE,scene,flags}):null;
-  const interiors=isCity?createCityInteriors({THREE,scene,flags,
-    buildings:districts.group.userData.cityDistricts?.buildings??[]}):null;
   const population=isCity?createCityPopulation({THREE,scene,flags}):null;
   const transit=isCity?createCityTransit({THREE,scene,flags}):null;
   const traffic=isCity?createCityTraffic({THREE,scene}):null;
   traffic?.group.traverse(object=>{if(object.isMesh)object.userData.volumeShadow=false;});
-  // Keep the authored world visible throughout a handoff.  These are the
-  // actual Three.js groups that make the city; the handoff controller moves
-  // them in place, so no screen-space paper or DOM overlay can cover the game.
-  const handoffGroups=isCity?[backdrop?.group,scenery.group,terrain.terrainBlocks,
-    districts.group,population.group,transit.group,traffic.group,interiors.group].filter(Boolean):[];
-  const worldHandoff=typeof createWorldHandoff==='function'
-    ? createWorldHandoff({groups:handoffGroups})
-    : {start:()=>Promise.resolve(false),update:()=>false,cancel:()=>false,isActive:()=>false,
-      getState:()=>({active:false,elapsed:0,duration:0,progress:0,kind:null}),dispose:()=>{}};
 const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:state.sceneId});
   const lights=createLights({THREE,scene,target});
   lights.locals=scenery.localLights??[];
@@ -170,26 +156,20 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   if(disposed||contextLost)return false;
   dt=Math.min(.05,Math.max(0,Number(dt)||0));
   now=Number.isFinite(now)?now:performance.now();
-  const transitionAnimating=worldHandoff.update(dt);
   if(playerSnapshot)lastSnapshot={...playerSnapshot,z:0};
-  orbitCamera.follow(lastSnapshot.x,cityRide?1:dt,lastSnapshot.y-.5);
+  orbitCamera.follow(lastSnapshot.x,dt,lastSnapshot.y-.5);
   if(isCity){
-    const underground=cityRide?.kind==='metro';
-    const indoor=!!cityInterior;
-    if(underground!==lastUnderground){invalidate();lastUnderground=underground;}
     // The distant paper town scrolls slowly while authored street districts
     // remain at fixed world positions. The moon reads as a distant sky object.
     backdrop.group.position.x=lastSnapshot.x*.985;
-    backdrop.group.visible=state.layers&&!underground&&!indoor;
-    scenery.group.visible=!underground&&!indoor&&lastSnapshot.x<75;
-    terrain.terrainBlocks.visible=state.layers&&!underground&&!indoor;
-    districts.group.visible=!underground&&!indoor;population.group.visible=!underground&&!indoor;
-    traffic.group.visible=!underground&&!indoor;
-    interiors.group.visible=indoor;
+    backdrop.group.visible=state.layers;
+    scenery.group.visible=lastSnapshot.x<75;
+    terrain.terrainBlocks.visible=state.layers;
+    districts.group.visible=true;population.group.visible=true;
+    traffic.group.visible=true;
     districts.update(lastSnapshot.x);
-    interiors.update(dt);
     if(population.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
-    if(transit.update(dt,lastSnapshot.x,cityRide))flags.render=flags.depth=flags.ao=true;
+    if(transit.update(dt,lastSnapshot.x))flags.render=flags.depth=flags.ao=true;
   }
   // The shadow coverage has ample margin. Move its origin in two-unit steps
   // instead of invalidating static forest occlusion for every camera drift.
@@ -200,8 +180,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     flags.shadow=flags.volumeShadow=true;
   }
   const playerMesh=actor.playerMesh;
-  if(playerMesh)playerMesh.visible=!cityRide;
-  contactShadow.visible=state.shadow&&!cityRide;
+  if(playerMesh)playerMesh.visible=true;
+  contactShadow.visible=state.shadow;
   frameCalls++;
 
   if(traffic?.update(dt)){
@@ -272,7 +252,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     flags.render=true;
   }
 
-  if(!state.auto&&!timeTransition.active&&!flags.render&&!transitionAnimating)return;
+  if(!state.auto&&!timeTransition.active&&!flags.render)return;
 
 
   sky.position.copy(camera.position);starField.position.copy(camera.position);starUniforms.time.value=now*.001;
@@ -303,8 +283,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
 
   renderer.info.reset();
-  if(!lastUnderground)updateDepthTexture();
-  if(!lastUnderground&&(state.godrays||state.ao))renderWithVolumetrics();
+  updateDepthTexture();
+  if(state.godrays||state.ao)renderWithVolumetrics();
   else{
     renderer.setRenderTarget(null);
     renderer.render(scene,camera);
@@ -378,8 +358,8 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
       drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,points:renderer.info.render.points,
       textures:renderer.info.memory.textures,geometries:renderer.info.memory.geometries,
       terrain:terrain.stats(),forest:forest?.stats?.(),scenery:scenery.stats?.()??{...scenery.group.userData},backdrop:backdrop?.stats(),traffic:traffic?.stats?.(),
-      districts:districts?.stats(),interiors:interiors?.stats(),population:population?.stats(),transit:transit?.stats(),
-      player:actor.snapshot(),camera:orbitCamera.snapshot(),transition:worldHandoff.getState(),handoff:worldHandoff.getState(),
+      districts:districts?.stats(),population:population?.stats(),transit:transit?.stats(),
+      player:actor.snapshot(),camera:orbitCamera.snapshot(),
       pixelRatio:renderer.getPixelRatio(),size:{...size},volumetrics:atmosphere.stats()};
   }
   function dispose(){
@@ -387,7 +367,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     disposed=true;resizeObserver?.disconnect();events.abort();orbitCamera.dispose();
     for(const reject of pendingRejects)reject(new Error('Paper scene disposed during loading.'));
     pendingRejects.clear();
-    worldHandoff.dispose();fog.dispose();atmosphere.dispose();
+    fog.dispose();atmosphere.dispose();
     disposeSceneResources(scene,[...materials.textures,...terrain.textures,...loadedTextures]);
     renderer.renderLists.dispose();renderer.dispose();renderer.domElement.remove();
     status('disposed','纸艺场景已关闭');
@@ -405,38 +385,5 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   });
   return {ready,frame,setTimePreset,setAutoCycle,setFeature,setPaper,setSurfaceMode,setSun,setShaftStrength:atmosphere.setShaftStrength,resetCamera:()=>orbitCamera.reset(),getState,getStats,
     nearbyCityPerson:x=>population?.nearby(x)??null,
-    nearbyCityInterior:x=>interiors?.nearby(x)??null,
-    setCityInterior:value=>{
-      cityInterior=interiors?.setActive(value)?(typeof value==='string'?value:value?.id):null;
-      if(cityInterior)orbitCamera.setDistance(size.width>size.height?9.6:10.8);
-      flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;
-    },
-    leaveCityInterior:()=>{
-      if(interiors?.leave()){
-        cityInterior=null;orbitCamera.reset();flags.render=flags.shadow=flags.depth=flags.volumeShadow=true;return true;
-      }
-      return false;
-    },
-    cityInterior:()=>interiors?.active()??null,
-    setCityRide:ride=>{
-      const next=ride?{...ride}:null;
-      const currentKey=cityRide?`${cityRide.kind}:${cityRide.fromX}:${cityRide.toX}`:'surface';
-      const nextKey=next?`${next.kind}:${next.fromX}:${next.toX}`:'surface';
-      // During a ride the simulation updates progress every frame.  That is
-      // the same handoff state, so only a route change starts a new fold.
-      if(currentKey===nextKey){cityRide=next;return;}
-      pendingCityRide=next;
-      flags.render=flags.depth=flags.ao=true;
-      if(!isCity){cityRide=next;pendingCityRide=undefined;return;}
-      worldHandoff.start({
-        kind:next?.kind==='metro'?'metro':next?.kind==='bus'?'bus':'surface',
-        onMidpoint:()=>{
-          cityRide=pendingCityRide===undefined?next:pendingCityRide;
-          pendingCityRide=undefined;
-          flags.render=flags.shadow=flags.depth=flags.volumeShadow=flags.ao=true;
-        }
-      });
-    },
-    playSceneTransition:options=>worldHandoff.start(options),
     getWorld:()=>terrain.world,dispose};
 }

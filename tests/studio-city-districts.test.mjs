@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from '../vendor/three/three.module.js';
 import {createCityDistricts} from '../studio/rendering/city-districts.js';
-import {CITY_DISTRICTS,CITY_BOUNDS,TRANSIT_STOPS} from '../studio/world/CityLayout.mjs';
+import {CITY_DISTRICTS,CITY_BOUNDS,BUS_STOPS,METRO_STATIONS} from '../studio/world/CityLayout.mjs';
 import {disposeSceneResources} from '../studio/rendering/resources.js';
 
 function fixture(t){
@@ -55,7 +55,7 @@ test('new district architecture leaves the character path and all transit entran
       assert.equal(ray.intersectObjects(city.group.children,true).length,0,`actor is obscured at ${x}, ${y}`);
     }
   }
-  for(const stop of TRANSIT_STOPS){
+  for(const stop of [...BUS_STOPS,...METRO_STATIONS]){
     const tallFront=[];
     city.group.traverse(object=>{
       if(!object.geometry)return;const p=object.geometry.getAttribute('position');

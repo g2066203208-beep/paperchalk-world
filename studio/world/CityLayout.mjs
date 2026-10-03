@@ -19,8 +19,4 @@ export const BUS_STOPS=Object.freeze(CITY_DISTRICTS.map(d=>Object.freeze({id:'bu
 export const METRO_STATIONS=Object.freeze([0,3,4,7,9,11].map(i=>{
   const d=CITY_DISTRICTS[i];return Object.freeze({id:'metro-'+d.id,kind:'metro',districtId:d.id,name:d.name,x:d.x+51,radius:4});
 }));
-export const TRANSIT_STOPS=Object.freeze([...BUS_STOPS,...METRO_STATIONS]);
 export function districtAt(x){return CITY_DISTRICTS.find(d=>x>=d.minX&&x<d.maxX)??(x<0?CITY_DISTRICTS[0]:CITY_DISTRICTS.at(-1));}
-export function nearbyTransit(x){return TRANSIT_STOPS.filter(s=>Math.abs(s.x-x)<=s.radius).sort((a,b)=>Math.abs(a.x-x)-Math.abs(b.x-x))[0]??null;}
-export function transitDestinations(stop){return (stop?.kind==='metro'?METRO_STATIONS:BUS_STOPS).filter(s=>s.id!==stop?.id);}
-export function travelDuration(from,to){return Math.max(3,Math.min(from.kind==='metro'?16:38,Math.abs(to.x-from.x)/(from.kind==='metro'?105:38)+3));}
