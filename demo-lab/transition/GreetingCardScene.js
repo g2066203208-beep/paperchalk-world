@@ -145,6 +145,7 @@ export function createGreetingCardScene({container}={}){
   coverHinge.add(coverPanel);
 
   box(coverHinge,'Cover bottom crease',16.35,.08,.20,0,.04,.02,edge);
+  box(coverHinge,'Cover free cut edge',16.35,.14,.22,0,6.28,.01,edge);
 
   const cityRelief=new THREE.Group();
   cityRelief.name='CITY RELIEF ON COVER';
