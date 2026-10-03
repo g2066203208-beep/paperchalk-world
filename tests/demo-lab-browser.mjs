@@ -50,7 +50,7 @@ try{
 
   assert(middle.pageAngle<-1.1,'main street page must be visibly turning by midpoint');
   assert(middle.wallAngles[2]>middle.wallAngles[0],'centre wall should lead outer wall during pop-up');
-  assert(middle.wallAngles.some(angle>-1.1),'at least one wall must be rising at midpoint');
+  assert(middle.wallAngles.some(angle=>angle>-1.1),'at least one wall must be rising at midpoint');
 
   assert(end.pageAngle<-1.6,'street page must finish below the stage opening');
   assert(end.wallAngles.every(angle=>Math.abs(angle)<.08),'all wall cards must settle upright');
