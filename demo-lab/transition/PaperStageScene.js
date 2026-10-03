@@ -87,22 +87,35 @@ export function createPaperStageScene({container}={}){
   const pageHinge=new THREE.Group();pageHinge.name='MASTER HINGE · STREET PAGE';
   pageHinge.position.set(0,.05,3.35);world.add(pageHinge);
 
-  const pageGeometry=new THREE.BoxGeometry(11.3,.13,6.7);
-  const pageBody=new THREE.Mesh(pageGeometry,[edge,edge,paper,underside,edge,edge]);
-  pageBody.name='Street page · front paper / reverse stock';
-  pageBody.position.set(0,0,-3.35);pageBody.castShadow=true;pageBody.receiveShadow=true;pageHinge.add(pageBody);
-  box(pageHinge,'Street page cut edge',11.34,.22,.085,0,-.02,-6.67,edge);
-  box(pageHinge,'Master crease',11.34,.045,.075,0,.085,-.035,edge,{cast:false});
+  const frontPageGeometry=new THREE.BoxGeometry(11.3,.13,3.35);
+  const frontPage=new THREE.Mesh(frontPageGeometry,[edge,edge,paper,underside,edge,edge]);
+  frontPage.name='Street page · front half';frontPage.position.set(0,0,-1.675);
+  frontPage.castShadow=true;frontPage.receiveShadow=true;pageHinge.add(frontPage);
 
-  // Quiet printed street marks: still white-model language, only graphite.
-  for(const z of [-1.15,-2.42,-3.69]){
-    box(pageHinge,'Street registration mark',8.6,.018,.045,0,.086,z,graphite,{cast:false});
+  // A second real score line lets the broad street sheet concertina instead
+  // of hanging like one giant rigid board in front of the lower stage.
+  const secondaryHinge=new THREE.Group();secondaryHinge.name='SECONDARY SCORE · STREET PAGE';
+  secondaryHinge.position.set(0,0,-3.35);pageHinge.add(secondaryHinge);
+  const backPageGeometry=new THREE.BoxGeometry(11.3,.13,3.35);
+  const backPage=new THREE.Mesh(backPageGeometry,[edge,edge,paper,underside,edge,edge]);
+  backPage.name='Street page · rear half';backPage.position.set(0,0,-1.675);
+  backPage.castShadow=true;backPage.receiveShadow=true;secondaryHinge.add(backPage);
+  box(secondaryHinge,'Street page rear cut edge',11.34,.22,.085,0,-.02,-3.32,edge);
+  box(pageHinge,'Master crease',11.34,.045,.075,0,.085,-.035,edge,{cast:false});
+  box(pageHinge,'Secondary score line',11.34,.038,.065,0,.087,-3.35,edge,{cast:false});
+
+  // Quiet printed registration marks live on both halves, so the fold line
+  // stays legible even when the reverse stock turns toward the camera.
+  for(const z of [-.88,-1.78,-2.68])box(pageHinge,'Street registration mark',8.6,.018,.045,0,.086,z,graphite,{cast:false});
+  for(const z of [-.78,-1.68,-2.58])box(secondaryHinge,'Street registration mark',8.6,.018,.045,0,.086,z,graphite,{cast:false});
+  for(const x of [-4.65,4.65]){
+    box(pageHinge,'Street crop mark',.055,.018,2.75,x,.088,-1.65,graphite,{cast:false});
+    box(secondaryHinge,'Street crop mark',.055,.018,2.75,x,.088,-1.65,graphite,{cast:false});
   }
-  for(const x of [-4.65,4.65])box(pageHinge,'Street crop mark',.055,.018,5.55,x,.088,-3.15,graphite,{cast:false});
 
   const cityFlatPivots=[];
   function cityFlat(x,width,height,depthShift=0){
-    const pivot=new THREE.Group();pivot.name='City flat bottom hinge';pivot.position.set(x,.085,-5.72+depthShift);pageHinge.add(pivot);
+    const pivot=new THREE.Group();pivot.name='City flat bottom hinge';pivot.position.set(x,.085,-2.37+depthShift);secondaryHinge.add(pivot);
     const face=box(pivot,'City white-card flat',width,height,.09,0,height/2,0,paper);
     box(pivot,'City flat cut edge',width+.06,.12,.14,0,.06,.01,edge);
     const door=box(pivot,'City flat graphite door',width*.18,height*.42,.025,width*.20,height*.21,.065,graphite,{cast:false});
@@ -131,10 +144,17 @@ export function createPaperStageScene({container}={}){
     box(pivot,'Wall lower cut edge',2.16,.11,.14,0,.055,.01,edge);
     box(pivot,'Wall printed seam',.035,2.06,.025,0,1.18,.065,graphite,{cast:false});
 
-    const left=new THREE.Group();left.name='V-fold left gusset '+index;left.position.set(-1.03,.19,.055);pivot.add(left);
-    box(left,'Left V-fold card',.78,1.60,.055,-.39,.80,0,paperWarm);
-    const right=new THREE.Group();right.name='V-fold right gusset '+index;right.position.set(1.03,.19,.055);pivot.add(right);
-    box(right,'Right V-fold card',.78,1.60,.055,.39,.80,0,paperWarm);
+    const makeGusset=(side,label)=>{
+      const group=new THREE.Group();group.name='V-fold '+label+' gusset '+index;group.position.set(side*1.03,.19,.055);pivot.add(group);
+      const shape=new THREE.Shape();shape.moveTo(0,0);shape.lineTo(side*.80,0);shape.lineTo(0,1.58);shape.closePath();
+      const geometry=new THREE.ExtrudeGeometry(shape,{depth:.05,bevelEnabled:false,steps:1});geometry.translate(0,0,-.025);
+      const mesh=new THREE.Mesh(geometry,paperWarm);mesh.name=label+' triangular V-fold card';mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);
+      const scoreMaterial=new THREE.LineBasicMaterial({color:0x777166});materials.push(scoreMaterial);
+      line(group,label+' diagonal V-fold score',[[0,1.50,.032],[side*.73,.08,.032]],scoreMaterial);
+      return group;
+    };
+    const left=makeGusset(-1,'Left');
+    const right=makeGusset(1,'Right');
     wallWings.push({left,right,index});
 
     const lightMat=amber.clone();materials.push(lightMat);
@@ -202,7 +222,8 @@ export function createPaperStageScene({container}={}){
 
     // The one master movement: street sheet turns downward through its front
     // crease. Its reverse stock and cut edge stay visible throughout.
-    pageHinge.rotation.x=-Math.PI*.535*s.page;
+    pageHinge.rotation.x=-Math.PI*.445*s.page;
+    secondaryHinge.rotation.x=-Math.PI*.555*s.bifold;
 
     // Wall cards are already below the street. They rise from their own bottom
     // creases, centre first, with small deterministic paper settle.
@@ -257,6 +278,7 @@ export function createPaperStageScene({container}={}){
     return {
       ...lastSample,
       pageAngle:pageHinge.rotation.x,
+      bifoldAngle:secondaryHinge.rotation.x,
       cityAngles:cityFlatPivots.map(p=>p.rotation.x),
       wallAngles:wallPivots.map(({pivot})=>pivot.rotation.x),
       fixtureAngles:fixturePivots.map(({pivot})=>pivot.rotation.x),
