@@ -368,6 +368,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
     disposed=true;resizeObserver?.disconnect();events.abort();orbitCamera.dispose();
     for(const reject of pendingRejects)reject(new Error('Paper scene disposed during loading.'));
     pendingRejects.clear();
+    actor.dispose?.();
     fog.dispose();atmosphere.dispose();
     disposeSceneResources(scene,[...materials.textures,...terrain.textures,...loadedTextures]);
     renderer.renderLists.dispose();renderer.dispose();renderer.domElement.remove();

@@ -4,20 +4,25 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../studio/assets/player/coolbones');
-const manifest=JSON.parse(await fs.readFile(path.join(root,'player.json'),'utf8'));
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../studio/assets/player/spine');
+const data=JSON.parse(await fs.readFile(path.join(root,'magic_g.json'),'utf8'));
 
-test('Coolbones player import contains the authored skeleton and gameplay actions',async()=>{
-  assert.equal(manifest.format,'coolbones-runtime-v1');
-  assert.equal(manifest.name,'magic_g');
-  assert.equal(manifest.bones.length,16);
-  assert.ok(manifest.bones.some(bone=>bone.id==='upper_body'&&bone.parentId==='body'));
-  assert.equal(manifest.slots.length,31);
-  assert.ok(manifest.attachments.some(attachment=>attachment.id==='front-hair'));
-  for(const animation of ['ark_relax','ark_move','ark_interact','amiya_run']){
-    assert.ok(manifest.animations[animation]);
-    assert.ok(manifest.animations[animation].frames.length>1);
-    assert.ok(manifest.animations[animation].duration>0);
+test('native Coolbones import keeps the lossless Spine 4.3 package',async()=>{
+  assert.equal(data.skeleton.name,'magic_g');
+  assert.equal(data.skeleton.spine,'4.3');
+  assert.equal(data.bones.length,16);
+  assert.equal(data.slots.length,37);
+  const skin=Object.values(data.skins).find(item=>item.name==='default');
+  assert.ok(skin?.attachments);
+  const mesh=Object.values(skin.attachments).map(group=>Object.values(group)).flat().find(item=>item.type==='mesh');
+  assert.ok(mesh?.triangles?.length>0);
+  assert.ok(mesh?.vertices?.length>0);
+  for(const name of ['10_明日方舟原动作/Move','10_明日方舟原动作/Relax','10_明日方舟原动作/Interact','20_参考扩展动作/Run']){
+    assert.ok(data.animations[name],name);
   }
-  for(const image of manifest.images){const stat=await fs.stat(path.join(root,'images',image.file));assert.ok(stat.size>0,image.file);}
+  const atlas=await fs.readFile(path.join(root,'magic_g.atlas'),'utf8');
+  assert.match(atlas,/images\/front-hair\.png/);
+  const images=await fs.readdir(path.join(root,'images'));
+  assert.equal(images.filter(file=>file.endsWith('.png')).length,38);
+  assert.ok((await fs.stat(path.join(root,'spine43.js'))).size>500_000);
 });
