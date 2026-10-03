@@ -1,4 +1,3 @@
-
 import {StageLifecycle} from './StageRig.js';
 import {PAPER_STAGE_TIMING,phase} from './StageTransitionTimeline.js';
 
@@ -32,9 +31,13 @@ export function createStageDirector({THREE,scene,state,cityRig,subwayRig,cityWor
     if(!transition.active){stable();return;}
     const t=transition.t;
     if(transition.to==='subway'){
-      cityRig.poseExit(t,transition.anchorX);subwayRig.poseEnter(t);environmentFactor(1-phase(t,.30,.58));
+      cityRig.poseExit(t,transition.anchorX);subwayRig.poseEnter(t);
+      // Keep the outdoor light until the street sheet is visibly turning.
+      // Darkness belongs to the revealed underside, not to a pre-emptive fade.
+      environmentFactor(1-phase(t,.40,.70));
     }else{
-      subwayRig.poseExit(t);cityRig.poseEnter(t,transition.anchorX);environmentFactor(phase(t,.48,.76));
+      subwayRig.poseExit(t);cityRig.poseEnter(t,transition.anchorX);
+      environmentFactor(phase(t,.45,.76));
     }
   }
   function update(dt,playerX){
