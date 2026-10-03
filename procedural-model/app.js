@@ -1,9 +1,19 @@
 import * as THREE from "../vendor/three/three.module.js";
+import { FBXLoader } from "./addons/loaders/FBXLoader.js";
 
 const viewport = document.getElementById("viewport");
 const statusText = document.getElementById("statusText");
 const jointSelect = document.getElementById("jointSelect");
 const selectedJointLabel = document.getElementById("selectedJointLabel");
+const importFbxInput = document.getElementById("importFbx");
+const clearFbxButton = document.getElementById("clearFbx");
+const fbxInfo = document.getElementById("fbxInfo");
+const fbxBadge = document.getElementById("fbxBadge");
+const animationSelect = document.getElementById("animationSelect");
+const playAnimationButton = document.getElementById("playAnimation");
+const stopAnimationButton = document.getElementById("stopAnimation");
+const animationSpeed = document.getElementById("animationSpeed");
+const animationSpeedValue = document.getElementById("animationSpeedValue");
 
 const defaults = {
   headSize: 0.82,
@@ -63,6 +73,13 @@ let groups = {};
 let jointMarkers = {};
 let solidObjects = [];
 let skeletonObjects = [];
+let importedContainer = null;
+let importedObject = null;
+let importedSkeletonHelper = null;
+let animationMixer = null;
+let activeAnimationAction = null;
+const animationClock = new THREE.Clock();
+const fbxLoader = new FBXLoader();
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111419);
@@ -473,6 +490,189 @@ function buildRig() {
   statusText.textContent = "模型已重新生成";
 }
 
+function disposeMaterial(material) {
+  if (!material) return;
+  const materials = Array.isArray(material) ? material : [material];
+  for (const item of materials) {
+    for (const value of Object.values(item)) {
+      if (value?.isTexture) value.dispose?.();
+    }
+    item.dispose?.();
+  }
+}
+
+function clearImportedModel({ restoreStatus = true } = {}) {
+  animationMixer?.stopAllAction();
+  activeAnimationAction = null;
+  animationMixer = null;
+
+  if (importedSkeletonHelper) {
+    scene.remove(importedSkeletonHelper);
+    importedSkeletonHelper.geometry?.dispose?.();
+    importedSkeletonHelper.material?.dispose?.();
+    importedSkeletonHelper = null;
+  }
+
+  if (importedContainer) {
+    importedContainer.traverse(node => {
+      node.geometry?.dispose?.();
+      if (node.material) disposeMaterial(node.material);
+    });
+    scene.remove(importedContainer);
+  }
+
+  importedContainer = null;
+  importedObject = null;
+  clearFbxButton.hidden = true;
+  fbxBadge.textContent = "未载入";
+  fbxBadge.classList.remove("ready", "error");
+  fbxInfo.textContent = "选择顶部“导入 FBX”，模型会直接在浏览器本地解析，不上传到服务器。";
+  animationSelect.innerHTML = '<option value="">无动画</option>';
+  animationSelect.disabled = true;
+  playAnimationButton.disabled = true;
+  stopAnimationButton.disabled = true;
+  if (rig) rig.visible = true;
+  applyVisibility();
+  updateOrbitTarget();
+  if (restoreStatus) statusText.textContent = "已返回程序化模型";
+}
+
+function describeFbx(object, file) {
+  let meshCount = 0;
+  let skinnedMeshCount = 0;
+  let boneCount = 0;
+  object.traverse(node => {
+    if (node.isMesh) meshCount++;
+    if (node.isSkinnedMesh) skinnedMeshCount++;
+    if (node.isBone) boneCount++;
+  });
+  const clips = object.animations || [];
+  const megabytes = (file.size / 1024 / 1024).toFixed(1);
+  return { meshCount, skinnedMeshCount, boneCount, clips, megabytes };
+}
+
+function fitImportedObject() {
+  if (!importedContainer || !importedObject) return;
+  importedContainer.scale.setScalar(1);
+  importedContainer.position.set(0, 0, 0);
+  importedObject.updateWorldMatrix(true, true);
+
+  const rawBox = new THREE.Box3().setFromObject(importedObject);
+  if (rawBox.isEmpty()) return;
+  const rawSize = rawBox.getSize(new THREE.Vector3());
+  const targetHeight = 5.8;
+  const scale = rawSize.y > 0.0001 ? targetHeight / rawSize.y : 1;
+  importedContainer.scale.setScalar(scale);
+  importedContainer.updateWorldMatrix(true, true);
+
+  const box = new THREE.Box3().setFromObject(importedContainer);
+  const center = box.getCenter(new THREE.Vector3());
+  importedContainer.position.x -= center.x;
+  importedContainer.position.z -= center.z;
+  importedContainer.position.y -= box.min.y;
+  importedContainer.updateWorldMatrix(true, true);
+
+  const finalBox = new THREE.Box3().setFromObject(importedContainer);
+  const finalSize = finalBox.getSize(new THREE.Vector3());
+  const finalCenter = finalBox.getCenter(new THREE.Vector3());
+  orbit.target.set(finalCenter.x, finalBox.min.y + finalSize.y * 0.5, finalCenter.z);
+  orbit.radius = THREE.MathUtils.clamp(Math.max(finalSize.y * 1.45, finalSize.x * 2.2, 5.2), 4.2, 18);
+  updateCamera();
+}
+
+function populateAnimationControls(clips) {
+  animationSelect.innerHTML = "";
+  if (!clips.length) {
+    animationSelect.innerHTML = '<option value="">无动画</option>';
+    animationSelect.disabled = true;
+    playAnimationButton.disabled = true;
+    stopAnimationButton.disabled = true;
+    return;
+  }
+
+  clips.forEach((clip, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = clip.name || `Animation ${index + 1}`;
+    animationSelect.appendChild(option);
+  });
+  animationSelect.disabled = false;
+  playAnimationButton.disabled = false;
+  stopAnimationButton.disabled = false;
+  animationSelect.value = "0";
+}
+
+function playSelectedAnimation() {
+  if (!animationMixer || !importedObject) return;
+  const clips = importedObject.animations || [];
+  const clip = clips[Number(animationSelect.value)];
+  if (!clip) return;
+  animationMixer.stopAllAction();
+  activeAnimationAction = animationMixer.clipAction(clip);
+  activeAnimationAction.reset();
+  activeAnimationAction.setLoop(THREE.LoopRepeat, Infinity);
+  activeAnimationAction.play();
+  statusText.textContent = `播放动画：${clip.name || "Animation"}`;
+}
+
+async function importFbxFile(file) {
+  if (!file) return;
+  statusText.textContent = `正在解析 ${file.name}…`;
+  fbxBadge.textContent = "解析中";
+  fbxBadge.classList.remove("ready", "error");
+
+  try {
+    const buffer = await file.arrayBuffer();
+    const object = fbxLoader.parse(buffer, "");
+    clearImportedModel({ restoreStatus: false });
+
+    importedContainer = new THREE.Group();
+    importedContainer.name = "ImportedFBXContainer";
+    importedObject = object;
+    importedContainer.add(importedObject);
+    scene.add(importedContainer);
+
+    importedObject.traverse(node => {
+      if (node.isMesh) {
+        node.castShadow = true;
+        node.receiveShadow = true;
+      }
+    });
+
+    importedSkeletonHelper = new THREE.SkeletonHelper(importedObject);
+    importedSkeletonHelper.material.transparent = true;
+    importedSkeletonHelper.material.opacity = 0.82;
+    scene.add(importedSkeletonHelper);
+
+    animationMixer = new THREE.AnimationMixer(importedObject);
+    animationMixer.timeScale = Number(animationSpeed.value) || 1;
+
+    const info = describeFbx(importedObject, file);
+    populateAnimationControls(info.clips);
+    fitImportedObject();
+
+    if (rig) rig.visible = false;
+    clearFbxButton.hidden = false;
+    fbxBadge.textContent = "已载入";
+    fbxBadge.classList.add("ready");
+    fbxInfo.innerHTML =
+      `<strong>${file.name}</strong>\n` +
+      `${info.megabytes} MB · 网格 ${info.meshCount} · 蒙皮网格 ${info.skinnedMeshCount}\n` +
+      `骨骼 ${info.boneCount} · 动画 ${info.clips.length}`;
+    statusText.textContent = `FBX 已载入：${info.boneCount} 根骨骼 / ${info.clips.length} 个动画`;
+    applyVisibility();
+
+    if (info.clips.length) playSelectedAnimation();
+  } catch (error) {
+    console.error(error);
+    clearImportedModel({ restoreStatus: false });
+    fbxBadge.textContent = "载入失败";
+    fbxBadge.classList.add("error");
+    fbxInfo.textContent = "FBX 解析失败。请确认文件是 FBX 7.x，或检查浏览器控制台中的具体错误。";
+    statusText.textContent = "FBX 载入失败";
+  }
+}
+
 function updateOrbitTarget() {
   const totalHeight =
     params.thighLength +
@@ -490,6 +690,12 @@ function applyVisibility() {
   const showSkeleton = document.getElementById("showSkeleton").checked;
   solidObjects.forEach(object => { object.visible = showMesh; });
   skeletonObjects.forEach(object => { object.visible = showSkeleton; });
+  if (importedObject) {
+    importedObject.traverse(node => {
+      if (node.isMesh) node.visible = showMesh;
+    });
+  }
+  if (importedSkeletonHelper) importedSkeletonHelper.visible = showSkeleton;
   grid.visible = document.getElementById("showGrid").checked;
 }
 
@@ -674,6 +880,35 @@ document.getElementById("importJson").addEventListener("change", event => {
   event.target.value = "";
 });
 
+importFbxInput.addEventListener("change", event => {
+  const file = event.target.files?.[0];
+  if (file) importFbxFile(file);
+  event.target.value = "";
+});
+clearFbxButton.addEventListener("click", () => clearImportedModel());
+playAnimationButton.addEventListener("click", playSelectedAnimation);
+stopAnimationButton.addEventListener("click", () => {
+  animationMixer?.stopAllAction();
+  activeAnimationAction = null;
+  statusText.textContent = "动画已停止";
+});
+animationSelect.addEventListener("change", playSelectedAnimation);
+animationSpeed.addEventListener("input", () => {
+  const speed = Number(animationSpeed.value) || 1;
+  animationSpeedValue.textContent = speed.toFixed(2) + "×";
+  if (animationMixer) animationMixer.timeScale = speed;
+});
+
+viewport.addEventListener("dragover", event => {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "copy";
+});
+viewport.addEventListener("drop", event => {
+  event.preventDefault();
+  const file = [...(event.dataTransfer.files || [])].find(item => item.name.toLowerCase().endsWith(".fbx"));
+  if (file) importFbxFile(file);
+});
+
 for (const id of ["showMesh", "showSkeleton", "showGrid"]) {
   document.getElementById(id).addEventListener("change", applyVisibility);
 }
@@ -708,6 +943,9 @@ buildRig();
 setSelectedJoint(selectedJoint);
 
 function animate() {
+  const delta = Math.min(animationClock.getDelta(), 0.05);
+  animationMixer?.update(delta);
+  importedSkeletonHelper?.update();
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
