@@ -101,6 +101,7 @@ export function createPaperScene({container,onStatus=()=>{},sceneId='city-prolog
   const traffic=isCity?createCityTraffic({THREE,scene}):null;
   traffic?.group.traverse(object=>{if(object.isMesh)object.userData.volumeShadow=false;});
 const actor=createActor({THREE,scene,renderer,terrain,flags,loadTexture,sceneId:state.sceneId});
+  pending.push(actor.ready);
   const lights=createLights({THREE,scene,target});
   lights.locals=scenery.localLights??[];
   const celestials=createSky({THREE,scene,renderer,camera,sceneId:state.sceneId});
@@ -194,7 +195,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   }
 
 
-  if(actor.sync(lastSnapshot)){
+  if(actor.sync(lastSnapshot,dt)){
     flags.render=true;
     flags.shadow=true;
     flags.depth=true;
@@ -375,7 +376,7 @@ function frame(dt=0,now=performance.now(),playerSnapshot=lastSnapshot){
   updateLighting(state.time);syncFeatures();
   const ready=Promise.all(pending).then(()=>{
     if(disposed)throw new Error('Paper scene disposed during loading.');
-    if(!actor.playerMesh?.material.map?.image)throw new Error('玩家纸片未能加载。');
+    if(actor.isReady&&!actor.isReady())throw new Error('Coolbones 主角未能加载。');
     invalidate();frame(0,performance.now(),lastSnapshot);
     status('ready','纸艺世界准备好了');
     return getStats();
