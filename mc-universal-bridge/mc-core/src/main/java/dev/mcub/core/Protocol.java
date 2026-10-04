@@ -18,7 +18,13 @@ final class Protocol {
     static final long OFF_COLLISION_RING = 0x20000;
     static final long COLLISION_RING_BYTES = 4L * 1024L * 1024L;
     static final long RING_DATA = 0x80;
+
     static final int MAX_ENTITIES = 512;
+    static final int INPUT_RING_ENTRIES = 1024;
+    static final int HOST_EVENT_RING_ENTRIES = 512;
+    static final int MC_EVENT_RING_ENTRIES = 512;
+    static final int INPUT_BYTES = 24;
+    static final int EVENT_BYTES = 48;
 
     static final long H_MAGIC = 0;
     static final long H_VERSION = 4;
@@ -37,6 +43,16 @@ final class Protocol {
     static final int HOST_STATE_BYTES = 128;
     static final int MC_STATE_BYTES = 128;
     static final int ENTITY_BYTES = 64;
+
+    static final int HOST_EVENT_PLAYER_HURT = 1;
+    static final int HOST_EVENT_TELEPORT = 2;
+    static final int HOST_EVENT_WORLD_CHANGED = 3;
+
+    static final int MC_EVENT_HIT_ENTITY = 1;
+    static final int MC_EVENT_USE_ENTITY = 2;
+    static final int MC_EVENT_PLAYER_DIED = 3;
+    static final int MC_EVENT_EXPLOSION = 4;
+    static final int MC_EVENT_BLOCK_CHANGED = 5;
 
     static final int COLLISION_PAD = 0;
     static final int COLLISION_CLEAR = 1;
