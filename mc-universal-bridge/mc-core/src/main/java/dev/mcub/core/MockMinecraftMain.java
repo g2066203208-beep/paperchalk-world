@@ -43,6 +43,25 @@ public final class MockMinecraftMain {
                     e.id(), e.x(), e.y(), e.z(), e.health(), e.healthMax());
             }
 
+            if (!entities.isEmpty() && frame > 0 && frame % 300 == 0) {
+                var e = entities.getFirst();
+                boolean sent = link.pushMcEvent(new SharedMemoryLink.GameEvent(
+                    Protocol.MC_EVENT_HIT_ENTITY, 0, e.id(), 0,
+                    3.0f, 0.0f, 0.0f, 0.4f, 0, 0
+                ));
+                System.out.println("sent mock MC hit -> host: " + sent);
+            }
+
+            SharedMemoryLink.InputEvent input;
+            while ((input = link.pollInput()) != null) {
+                System.out.println("input type=" + input.type() + " code=" + input.code());
+            }
+
+            SharedMemoryLink.GameEvent hostEvent;
+            while ((hostEvent = link.pollHostEvent()) != null) {
+                System.out.println("host event type=" + hostEvent.type() + " amount=" + hostEvent.a());
+            }
+
             SharedMemoryLink.CollisionBatch batch;
             while ((batch = link.pollCollision()) != null) {
                 System.out.println("collision batch type=" + batch.type() + " bytes=" + batch.payload().length);
