@@ -22,6 +22,11 @@ final class SharedMemoryLink {
                   float yaw, float halfX, float halfY, float halfZ,
                   float health, float healthMax, int level, int nameHash) {}
 
+    record InputEvent(int type, int code, int a, int b, int c, int d, int frame) {}
+
+    record GameEvent(int type, int flags, long target, long source,
+                     float a, float b, float c, float d, int data0, int data1) {}
+
     record CollisionBatch(int type, byte[] payload) {}
 
     static final class McState {
@@ -197,6 +202,81 @@ final class SharedMemoryLink {
             if ((int) INT.getAcquire(shm, b) == s1) return result;
         }
         return List.of();
+    }
+
+    InputEvent pollInput() {
+        if (shm == null) return null;
+        long ring = Protocol.OFF_INPUT_RING;
+        long head = (long) LONG.getAcquire(shm, ring);
+        long tail = (long) LONG.getAcquire(shm, ring + 0x40);
+        if (tail >= head) return null;
+        long p = ring + Protocol.RING_DATA + (tail % Protocol.INPUT_RING_ENTRIES) * Protocol.INPUT_BYTES;
+        InputEvent event = new InputEvent(
+            Short.toUnsignedInt(shm.get(JAVA_SHORT, p)),
+            Short.toUnsignedInt(shm.get(JAVA_SHORT, p + 2)),
+            shm.get(JAVA_INT, p + 4),
+            shm.get(JAVA_INT, p + 8),
+            shm.get(JAVA_INT, p + 12),
+            shm.get(JAVA_INT, p + 16),
+            shm.get(JAVA_INT, p + 20)
+        );
+        LONG.setRelease(shm, ring + 0x40, tail + 1);
+        return event;
+    }
+
+    GameEvent pollHostEvent() {
+        return popGameEvent(Protocol.OFF_HOST_EVENT_RING, Protocol.HOST_EVENT_RING_ENTRIES);
+    }
+
+    boolean pushMcEvent(GameEvent event) {
+        if (shm == null || event == null) return false;
+        long ring = Protocol.OFF_MC_EVENT_RING;
+        long head = (long) LONG.getAcquire(shm, ring);
+        long tail = (long) LONG.getAcquire(shm, ring + 0x40);
+        if (head - tail >= Protocol.MC_EVENT_RING_ENTRIES) return false;
+        long p = ring + Protocol.RING_DATA + (head % Protocol.MC_EVENT_RING_ENTRIES) * Protocol.EVENT_BYTES;
+        writeGameEvent(p, event);
+        LONG.setRelease(shm, ring, head + 1);
+        return true;
+    }
+
+    private GameEvent popGameEvent(long ring, int entries) {
+        if (shm == null) return null;
+        long head = (long) LONG.getAcquire(shm, ring);
+        long tail = (long) LONG.getAcquire(shm, ring + 0x40);
+        if (tail >= head) return null;
+        long p = ring + Protocol.RING_DATA + (tail % entries) * Protocol.EVENT_BYTES;
+        GameEvent event = readGameEvent(p);
+        LONG.setRelease(shm, ring + 0x40, tail + 1);
+        return event;
+    }
+
+    private GameEvent readGameEvent(long p) {
+        return new GameEvent(
+            shm.get(JAVA_INT, p),
+            shm.get(JAVA_INT, p + 4),
+            shm.get(JAVA_LONG, p + 8),
+            shm.get(JAVA_LONG, p + 16),
+            shm.get(JAVA_FLOAT, p + 24),
+            shm.get(JAVA_FLOAT, p + 28),
+            shm.get(JAVA_FLOAT, p + 32),
+            shm.get(JAVA_FLOAT, p + 36),
+            shm.get(JAVA_INT, p + 40),
+            shm.get(JAVA_INT, p + 44)
+        );
+    }
+
+    private void writeGameEvent(long p, GameEvent e) {
+        shm.set(JAVA_INT, p, e.type());
+        shm.set(JAVA_INT, p + 4, e.flags());
+        shm.set(JAVA_LONG, p + 8, e.target());
+        shm.set(JAVA_LONG, p + 16, e.source());
+        shm.set(JAVA_FLOAT, p + 24, e.a());
+        shm.set(JAVA_FLOAT, p + 28, e.b());
+        shm.set(JAVA_FLOAT, p + 32, e.c());
+        shm.set(JAVA_FLOAT, p + 36, e.d());
+        shm.set(JAVA_INT, p + 40, e.data0());
+        shm.set(JAVA_INT, p + 44, e.data1());
     }
 
     CollisionBatch pollCollision() {
