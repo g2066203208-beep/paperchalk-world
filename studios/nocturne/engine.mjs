@@ -34,7 +34,10 @@ function validSave(value){
     Object.prototype.hasOwnProperty.call(PLACES,value.location) &&
     Array.isArray(value.clues) && value.clues.every(id=>Object.prototype.hasOwnProperty.call(CLUES,id)) &&
     value.flags && typeof value.flags==='object' &&
-    value.trust && typeof value.trust==='object' &&
+    value.trust && typeof value.trust==='object' && ['natsu','xu','operator'].every(k=>Number.isFinite(value.trust[k])&&value.trust[k]>=0&&value.trust[k]<=10) &&
+    Array.isArray(value.journal) && value.journal.length<=100 && value.journal.every(s=>typeof s==='string'&&s.length<1000) &&
+    Array.isArray(value.history) && value.history.length<=100 &&
+    value.settings && typeof value.settings==='object' &&
     ['offered','active','refused','resolved'].includes(value.mission) &&
     Number.isFinite(value.energy) && Number.isFinite(value.cash) && Number.isFinite(value.study) && Number.isFinite(value.stress);
 }
