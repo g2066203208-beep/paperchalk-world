@@ -48,6 +48,8 @@ function dialog(data){
   if(!data)return;
   modal=data;
   $('dialogTitle').textContent=data.title||'消息';
+  const actor=/林见夏/.test(data.title)?'natsu':/许渡/.test(data.title)?'xu':/接线员/.test(data.title)?'operator':'';
+  $('dialogPortrait').className='portrait-mini'+(actor?' portrait-'+actor:'');
   $('dialogText').textContent=data.text||'';
   $('dialogKicker').textContent=data.kicker||'STORY / NOCTURNE';
   el.choices.innerHTML=(data.choices||[{label:'继续',id:'dismiss'}]).map((c,i)=>'<button type="button" data-dialog-choice="'+safe(c.id)+'">'+(i===0?'✦　':'　　')+safe(c.label)+'</button>').join('');
@@ -142,7 +144,7 @@ function socialPanel(){
     '<p class="section-description">亲近或疏远都会在之后的场景中留下痕迹。关系不仅仅是加一个数字。</p>'+
     PEOPLE.map(p=>{
       const trust=Math.max(0,Math.min(10,state.trust[p.key]||0));
-      return '<div class="social-row"><span class="avatar">'+safe(p.initial)+'</span><div class="social-info"><strong>'+safe(p.name)+'</strong><p>'+safe(p.role)+' · 信任 '+trust+'/10</p><p>'+safe(p.description)+'</p><div class="meter"><i style="width:'+(trust*10)+'%"></i></div></div></div>';
+      return '<div class="social-row"><span class="avatar avatar-'+safe(p.key)+'">'+safe(p.initial)+'</span><div class="social-info"><strong>'+safe(p.name)+'</strong><p>'+safe(p.role)+' · 信任 '+trust+'/10</p><p>'+safe(p.description)+'</p><div class="meter"><i style="width:'+(trust*10)+'%"></i></div></div></div>';
     }).join('');
 }
 function renderPanel(){
