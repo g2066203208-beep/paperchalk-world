@@ -2,74 +2,79 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#121e2d">
-<meta name="description" content="夜行档案｜校园生活与秘密委托交织的原创点击式叙事冒险。">
-<title>夜行档案 · NOCTURNE FILES</title>
-<link rel="stylesheet" href="./game.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090e19">
+<link rel="icon" href="data:,">
+<meta name="description" content="夜行档案：横屏手机原生感视觉小说、桌面互动、日程与秘密委托">
+<title>夜行档案 / NOCTURNE FILES · 横屏游戏</title>
+<link rel="stylesheet" href="./landscape.css">
 </head>
 <body>
-<div id="app" class="app">
-  <header class="topbar">
-    <div class="brand"><span class="brand-symbol">✧</span><span><b>夜行档案</b><small>NOCTURNE FILES · PAPERWORLD</small></span></div>
-    <div class="clock" id="clock" aria-live="polite"></div>
-    <button class="iconbutton" id="settingsButton" aria-label="设置" title="设置">☷</button>
+<div id="shell" class="shell">
+  <header class="system-bar">
+    <button class="game-wordmark" data-app="home" aria-label="打开主界面"><span class="wordmark-symbol">✦</span><b>夜行档案</b><small>NOCTURNE FILES</small></button>
+    <div class="clock-chip"><span class="clock-moon">☾</span><span id="dateText">04 / 06 · MON</span><span class="clock-divider"></span><b id="periodText">放学后</b></div>
+    <div class="game-stats"><span>☕ <b id="energyText">4</b><small> 精力</small></span><span>✧ <b id="studyText">50</b><small> 学业</small></span><span>¥ <b id="moneyText">120</b></span></div>
+    <button class="system-icon" id="audioButton" title="提示音开关" aria-label="切换提示音">♪</button>
+    <button class="system-icon" data-app="settings" title="设置" aria-label="设置">⚙</button>
   </header>
-  <main id="gameScreen" class="game-screen" hidden>
-    <section class="stage" aria-label="当前场景">
-      <div id="scenery" class="scenery campus" aria-hidden="true">
-        <div class="sky-orb"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div>
-        <div class="back-building b1"></div><div class="back-building b2"></div><div class="back-building b3"></div>
-        <div class="main-building"><div class="building-roof"></div><div class="building-windows"></div><div class="building-door"></div></div>
-        <div class="tree tree-a"></div><div class="tree tree-b"></div><div class="ground-line"></div>
-        <div class="character" id="character"><span class="character-hair"></span><span class="character-face"></span><span class="character-neck"></span><span class="character-coat"></span><span class="character-shirt"></span><span class="character-tie"></span><span class="character-bag"></span></div>
-        <div class="scene-shade"></div>
+
+  <div class="desktop">
+    <nav class="app-dock" aria-label="游戏操作菜单">
+      <button data-app="home" class="selected" title="桌面"><span>⌂</span><small>房间</small></button>
+      <button data-app="schedule" title="日程"><span>▦</span><small>日程</small></button>
+      <button data-app="messages" title="消息"><span>▤</span><small>消息</small><i id="unreadDot"></i></button>
+      <button data-app="map" title="地图"><span>◇</span><small>城市</small></button>
+      <button data-app="case" title="调查"><span>⌕</span><small>线索</small></button>
+      <button data-app="mission" title="委托"><span>✣</span><small>委托</small></button>
+      <button data-app="social" title="联系人"><span>♡</span><small>关系</small></button>
+      <button data-app="save" title="存档"><span>▥</span><small>存档</small></button>
+    </nav>
+
+    <main id="stage" class="visual-stage room" aria-label="游戏当前场景">
+      <div class="room-graphics" aria-hidden="true">
+        <div class="skyline"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="window-horizon"></div><div class="window-grid"></div>
+        <div class="poster poster-a">NO<br>ONE<br>SLEEPS</div><div class="poster poster-b">✕</div>
+        <div class="shelf"><i></i><i></i><i></i></div>
+        <div class="desk-surface"></div><div class="desk-laptop"><div>22:18<br><small>NEW MESSAGE</small></div></div>
+        <div class="desk-cup">☕</div><div class="city-glow"></div>
       </div>
-      <div class="stage-upper">
-        <span id="sceneEyebrow" class="scene-eyebrow">DAY 01 · AFTER CLASS</span>
-        <button class="glassbtn" id="toggleHotspots" aria-pressed="false" title="显示可交互物件">◎ 探索</button>
+      <div class="scene-backdrop" id="sceneBackdrop" aria-hidden="true"></div>
+      <div class="character-stage" id="characterStage">
+        <div class="character-halo"></div>
+        <img id="characterArt" class="character-art" src="./assets/hero-portrait.svg" alt="主角立绘：深色头发的大学生">
+        <div class="portrait-credit">Mika / character prototype</div>
       </div>
-      <div class="hotspot-layer" id="hotspots" aria-label="场景调查热点"></div>
-      <div id="sceneFilm" class="scene-film" hidden aria-live="polite"><div class="film-grain"></div><p id="filmCaption">四月六日 · 雾港</p><button id="skipFilm" type="button">跳过演出 ↗</button></div>
-      <div class="scene-caption"><span class="caption-slash"></span><div><h1 id="sceneTitle">学园街</h1><p id="sceneDescription">暮色在玻璃上留下最后一线光。</p></div></div>
-    </section>
-    <section class="play-side">
-      <div class="side-intro">
-        <span class="chapter-code">CHAPTER 01 / THE PHOTOGRAPH</span>
-        <h2>陌生人的照片<span class="star">✳</span></h2>
-        <p id="objective">今天放学后，去看看这座城市。</p>
+
+      <div class="stage-top">
+        <span id="locationChip" class="scene-location">⌖ 主角公寓 · 深夜</span>
+        <button id="inspectButton" class="inspect-button" aria-pressed="false">◉ 场景互动</button>
       </div>
-      <nav id="nav" class="nav" aria-label="游戏栏目">
-        <button data-tab="day" class="active">◷<span>日程</span></button>
-        <button data-tab="map">⌖<span>地图</span></button>
-        <button data-tab="case">▤<span>线索</span></button>
-        <button data-tab="mission">✧<span>委托</span></button>
-        <button data-tab="social">♡<span>人物</span></button>
-      </nav>
-      <div id="panel" class="panel" aria-live="polite"></div>
-      <div class="play-footer"><span id="statusLine">一个城市，两种身份。</span><button id="saveButton">保存进度 <span aria-hidden="true">↗</span></button></div>
-    </section>
-  </main>
-  <footer class="footline"><span>PAPERWORLD STUDIO / PROJECT 02</span><span>PLAYABLE PROTOTYPE · v0.1</span></footer>
-  <section id="titleScreen" class="title-screen">
-    <div class="title-art" aria-hidden="true"><div class="title-moon"></div><img class="title-hero-portrait" src="./assets/hero-portrait.svg" alt="" decoding="async"><div class="title-silhouette"></div><div class="title-window"></div></div>
-    <div class="title-content">
-      <span class="overline">PAPERWORLD STUDIO PRESENTS</span>
-      <div class="title-ornament">✦　—　✦</div>
-      <h1>夜行<span>档案</span></h1>
-      <p class="roman">N O C T U R N E &nbsp; F I L E S</p>
-      <p class="title-subtitle">白天，你是一名普通学生。<br>夜晚，你必须决定自己究竟是谁。</p>
-      <div class="title-actions"><button id="newGameButton" class="primary">开始新生活 <span>→</span></button><button id="continueButton" class="secondary">继续游戏</button></div>
-      <small>点击式探索 · 自由日程 · 人物关系 · 分支委托</small>
-    </div>
-  </section>
-  <div id="dialogBackdrop" class="dialog-backdrop" hidden><section class="dialog-box" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
-    <header><span id="dialogKicker">SCENE</span><button id="closeDialog" aria-label="关闭对话">✕</button></header>
-    <div class="dialog-content"><div class="portrait-mini" id="dialogPortrait" aria-hidden="true">✧</div><div><h2 id="dialogTitle"></h2><p id="dialogText"></p></div></div>
-    <div id="dialogChoices" class="dialog-choices"></div>
-  </section></div>
-  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+      <div id="sceneHotspots" class="scene-hotspots" aria-label="可点击调查热点"></div>
+      <div class="stage-caption" id="sceneCaption"><span class="caption-rule"></span><span id="sceneCaptionText">窗外的灯都还亮着，书桌上的消息也没有停过。</span></div>
+      <section class="dialogue" aria-label="剧情对话区域">
+        <div class="dialogue-label"><b id="speaker">米卡</b><span id="speakerRole">INTERNAL MONOLOGUE</span><button id="historyButton" title="对话记录" aria-label="查看剧情记录">☷ 日志</button></div>
+        <p id="line" class="dialogue-line">“今天的课总算结束了。晚上……还有一件必须决定的事。”</p>
+        <div id="choices" class="dialogue-choices"><button data-choice="begin" class="choice-main">看看今天的计划 <span>↗</span></button></div>
+      </section>
+    </main>
+
+    <aside class="desktop-panel" aria-label="互动桌面">
+      <header class="window-header"><div class="window-lights"><i></i><i></i><i></i></div><span id="windowTitle">MY DESKTOP / DAY 01</span><button id="minimizeButton" aria-label="收起当前面板" title="返回桌面">—</button></header>
+      <div id="windowContent" class="window-content" tabindex="-1"></div>
+      <footer class="window-footer"><span id="taskHint">◈ 还没有安排今晚的活动</span><button id="quickNext" aria-label="进入下一时段">下一时段 ›</button></footer>
+    </aside>
+  </div>
+
+  <div class="bottom-strip"><span>✦　THE NIGHT IS STILL YOUNG</span><span id="autosaveState">自动保存开启</span><span>v0.2 · LANDSCAPE ALPHA</span></div>
+  <div class="title-layer" id="titleLayer">
+    <div class="title-center"><span>AN ORIGINAL INTERACTIVE FICTION</span><h1>夜行档案</h1><p>N O C T U R N E　 F I L E S</p><div class="title-quote">白天，你是普通的大学生。<br>深夜，你收到一条不属于这个世界的消息。</div><div class="title-buttons"><button id="startNew">新游戏 · NEW GAME →</button><button id="startContinue">继续 · CONTINUE</button></div><small>将手机横过来，以获得最佳视觉演出。</small></div>
+  </div>
+  <div id="modal" class="modal-shade" hidden><section class="modal-window" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><header><span id="modalKicker">NOTIFICATION</span><button id="closeModal" aria-label="关闭">×</button></header><h2 id="modalTitle">消息</h2><p id="modalText"></p><div id="modalOptions"></div></section></div>
+  <div id="rotateHint" class="rotate-hint" hidden><div>↻</div><strong>横过手机，进入雾港的夜晚</strong><p>本游戏以横屏为主要设计，竖屏仍可继续访问。</p><button id="dismissRotate">继续使用竖屏</button></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 </div>
-<script type="module" src="./game.js"></script>
+<script type="module" src="./landscape.js"></script>
 </body>
 </html>

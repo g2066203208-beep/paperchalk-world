@@ -1,4 +1,4 @@
-name: Nocturne Prototype Checks
+name: Nocturne Game CI
 on:
   push:
     paths:
@@ -11,23 +11,54 @@ on:
 permissions:
   contents: read
 jobs:
-  state-regressions:
+  game-regression:
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate JavaScript module syntax
+      - name: Parse game code and validate critical paths
         run: |
           node --check studios/nocturne/engine.mjs
+          node --check studios/nocturne/landscape.js
           node --check studios/nocturne/game.js
-      - name: Verify game state and narrative branches
+          grep -q './landscape.js' studios/nocturne/index.html
+          grep -q './landscape.css' studios/nocturne/index.html
+          test -f studios/nocturne/assets/hero-portrait.svg
+          test -f studios/nocturne/assets/character-avatars.svg
+      - name: Verify RPG state, clues, endings and save compatibility
         run: node --test studios/nocturne/tests/engine.test.mjs
-      - name: Check isolated deployment paths
+      - name: Install headless browser driver
+        run: npm install --no-save playwright-core
+      - name: Detect Chromium
+        id: chrome
+        shell: bash
         run: |
-          test -f studios/nocturne/index.html
-          test -f studios/nocturne/game.css
-          test -f studios/nocturne/MASTER_PROMPT.md
-          grep -q './game.js' studios/nocturne/index.html
-          grep -q './game.css' studios/nocturne/index.html
+          CHROME_PATH="$(which google-chrome || which google-chrome-stable || which chromium || which chromium-browser || true)"
+          test -n "$CHROME_PATH"
+          echo "path=$CHROME_PATH" >> "$GITHUB_OUTPUT"
+          "$CHROME_PATH" --version
+      - name: Start static Pages-style server
+        run: |
+          python3 -m http.server 8080 >/tmp/nocturne-server.log 2>&1 &
+          for i in {1..50}; do
+            if curl -fsS http://127.0.0.1:8080/studios/nocturne/index.html >/dev/null; then exit 0; fi
+            sleep 0.2
+          done
+          cat /tmp/nocturne-server.log
+          exit 1
+      - name: Run landscape mobile touch interaction test
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.path }}
+        run: |
+          mkdir -p artifacts
+          node studios/nocturne/tests/landscape.browser.mjs
+      - name: Keep browser screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nocturne-landscape-visual-check
+          path: artifacts/nocturne-*.png
+          if-no-files-found: ignore
