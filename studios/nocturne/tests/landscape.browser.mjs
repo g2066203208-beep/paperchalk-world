@@ -53,7 +53,7 @@ try{
     await page.locator('.app-dock [data-app="mission"]').click();
     await page.locator('#windowContent [data-act="resolve"]').click();
     await page.locator('#modalOptions [data-modal-action="outcome-protect"]').click();
-    assert.ok((await page.locator('#modalText').innerText()).includes('组织'));
+    assert.ok((await page.locator('#modalText').innerText()).includes('事务所'));
     await page.locator('#closeModal').click();
     await page.locator('.app-dock [data-app="save"]').click();
     await page.locator('#windowContent [data-save="1"]').click();
