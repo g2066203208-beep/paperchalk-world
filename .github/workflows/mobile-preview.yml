@@ -94,16 +94,15 @@ jobs:
           published_at="$(git -C source show -s --format=%cI HEAD)"
           node source/tools/build-mobile-release.mjs --source source --output _site --version "$GITHUB_SHA" --published-at "$published_at"
           touch _site/.nojekyll
-          # Explicitly validate the independent visual-novel studio in Pages output.
+          # Independent game scene and asset must be shipped together.
           test -s _site/studios/nocturne/index.html
-          test -s _site/studios/nocturne/game.js
-          test -s _site/studios/nocturne/game.css
-          test -s _site/studios/nocturne/engine.mjs
-          grep -q 'id="gameScreen"' _site/studios/nocturne/index.html
-          grep -q 'src="./game.js"' _site/studios/nocturne/index.html
-          node --check _site/studios/nocturne/game.js
-          node --check _site/studios/nocturne/engine.mjs
-          echo 'Nocturne studio staged: /studios/nocturne/'
+          test -s _site/studios/nocturne/v3.js
+          test -s _site/studios/nocturne/v3.css
+          test -s _site/studios/nocturne/assets/room-cinematic.webp
+          grep -q 'id="roomMode"' _site/studios/nocturne/index.html
+          grep -q 'src="./v3.js"' _site/studios/nocturne/index.html
+          node --check _site/studios/nocturne/v3.js
+          echo 'Cinematic Nocturne studio staged: /studios/nocturne/'
       - name: Preserve releases outside the source branch
         if: steps.current.outputs.publish == 'true'
         shell: bash
@@ -158,14 +157,14 @@ jobs:
           site="${SITE_URL%/}"
           base="$site/studios/nocturne"
           mkdir -p /tmp/nocturne-pages-check
-          for resource in / /game.js /game.css /engine.mjs; do
+          for resource in / /v3.js /v3.css /assets/room-cinematic.webp; do
             url="$base$resource"
             echo "Checking deployed asset: $url"
             ok=false
             for attempt in $(seq 1 20); do
               if curl --fail --silent --show-error --location --connect-timeout 10 --max-time 25 --output /tmp/nocturne-pages-check/file "$url"; then
                 if test -s /tmp/nocturne-pages-check/file; then
-                  if [ "$resource" != "/" ] || grep -q 'id="gameScreen"' /tmp/nocturne-pages-check/file; then
+                  if [ "$resource" != "/" ] || grep -q 'id="roomMode"' /tmp/nocturne-pages-check/file; then
                     ok=true
                     break
                   fi
