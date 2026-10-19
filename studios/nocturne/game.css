@@ -22,3 +22,16 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+
+/* Skippable opening camera beats. The stage art remains interactive afterward. */
+.scene-film{position:absolute;inset:0;z-index:12;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:25px 28px 34px;background:linear-gradient(0deg,#0a1528d6,#182b4650 55%,#07152b5a);pointer-events:none;overflow:hidden}
+.scene-film:before,.scene-film:after{content:"";position:absolute;left:0;width:100%;height:10%;background:#060d17;transition:height 1.1s ease}
+.scene-film:before{top:0}.scene-film:after{bottom:0}
+.scene-film p{position:relative;z-index:2;margin:0 0 8px;font:19px "Noto Serif SC",serif;letter-spacing:.18em;text-shadow:0 4px 12px #000c}
+.scene-film button{position:relative;z-index:2;pointer-events:auto;border:1px solid #e3dfd5aa;color:#fff;font-size:12px;padding:11px 13px;border-radius:6px;background:#14263cad}
+.film-grain{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,#ffffff06 4px 4px);opacity:.55}
+.is-filming .play-side,.is-filming .hotspot-layer,.is-filming .stage-upper{pointer-events:none}
+.game-screen.film-wide .scenery{transform:scale(1.02) translateX(-1%);transition:transform 2s ease}
+.game-screen.film-close .scenery{transform:scale(1.18) translateX(2%);transition:transform 2.3s ease}
+@media(max-width:720px){.scene-film{padding:19px 15px 22px}.scene-film p{font-size:14px;line-height:1.8}.scene-film button{white-space:nowrap;font-size:11px}}
+.reduce-motion .scene-film:before,.reduce-motion .scene-film:after{transition:none!important}
