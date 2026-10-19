@@ -17,12 +17,30 @@ function save(slot='auto',quiet=false){
 function toast(message){
   el.toast.textContent=message;el.toast.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{el.toast.hidden=true;},3300);
 }
+let filmTimers=[],filmActive=false;
+function stopFilm(){
+  filmTimers.forEach(clearTimeout);filmTimers=[];filmActive=false;
+  $('sceneFilm').hidden=true;el.game.classList.remove('is-filming','film-wide','film-close');
+}
+function introDialogue(){
+  dialog({title:'第一天 · 放学之后',text:'雾港大学的下课铃声响了。\n从今天开始，你可以自己安排时间。去校园里看看，或者打开委托档案。城市似乎藏着一个不愿被人发现的秘密。',choices:[{label:'开始探索',id:'dismiss'}]});
+}
+function finishFilm(){if(!filmActive)return;stopFilm();introDialogue();}
+function playOpening(){
+  if(state.settings.reducedMotion||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){introDialogue();return;}
+  stopFilm();filmActive=true;
+  const screen=$('sceneFilm');screen.hidden=false;el.game.classList.add('is-filming','film-wide');
+  $('filmCaption').textContent='四月六日 · 雾港市';
+  filmTimers.push(setTimeout(()=>{$('filmCaption').textContent='17:24　放学的铃声';el.game.classList.remove('film-wide');el.game.classList.add('film-close');},1300));
+  filmTimers.push(setTimeout(()=>{$('filmCaption').textContent='一条陌生消息，改变了今天的计划。';},2650));
+  filmTimers.push(setTimeout(finishFilm,3800));
+}
 function startGame(loaded=false){
   if(!loaded)state=createGame();
   if(!state)return;
   el.title.hidden=true;el.game.hidden=false;tab='day';
   render();save('auto',true);
-  if(!loaded)dialog({title:'第一天 · 放学之后',text:'雾港大学的下课铃声响了。\n从今天开始，你可以自己安排时间。去校园里看看，或者打开委托档案。城市似乎藏着一个不愿被人发现的秘密。',choices:[{label:'开始探索',id:'dismiss'}]});
+  if(!loaded)playOpening();
   else toast('欢迎回来。你的进度已经恢复。');
 }
 function lineBreak(text){return safe(text).replace(/\n/g,'<br>');}
@@ -192,6 +210,7 @@ $('panel').addEventListener('click',event=>{
 });
 el.hotspots.addEventListener('click',event=>{const btn=event.target.closest('[data-action]');if(btn&&state)action(btn.dataset.action);});
 el.toggleHotspots.addEventListener('click',()=>{if(!state)return;state.settings.hotspots=!state.settings.hotspots;renderStage();save('auto',true);});
+$('skipFilm').addEventListener('click',finishFilm);
 $('saveButton').addEventListener('click',()=>{if(state)save('1');});
 $('settingsButton').addEventListener('click',()=>{if(state)openSettings();else toast('请先开始游戏。');});
 el.choices.addEventListener('click',event=>{
@@ -201,7 +220,7 @@ el.choices.addEventListener('click',event=>{
   handleStory(id);
 });
 $('closeDialog').addEventListener('click',closeDialog);
-window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!el.dialog.hidden)closeDialog();});
+window.addEventListener('keydown',event=>{if(event.key==='Escape'){if(filmActive)finishFilm();else if(!el.dialog.hidden)closeDialog();}});
 window.addEventListener('pagehide',()=>{if(state)save('auto',true);});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&state)save('auto',true);});
 renderTitle();
