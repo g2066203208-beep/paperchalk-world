@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121e2d">
+<meta name="description" content="夜行档案｜校园生活与秘密委托交织的原创点击式叙事冒险。">
+<title>夜行档案 · NOCTURNE FILES</title>
+<link rel="stylesheet" href="./game.css">
+</head>
+<body>
+<div id="app" class="app">
+  <header class="topbar">
+    <div class="brand"><span class="brand-symbol">✧</span><span><b>夜行档案</b><small>NOCTURNE FILES · PAPERWORLD</small></span></div>
+    <div class="clock" id="clock" aria-live="polite"></div>
+    <button class="iconbutton" id="settingsButton" aria-label="设置" title="设置">☷</button>
+  </header>
+  <main id="gameScreen" class="game-screen" hidden>
+    <section class="stage" aria-label="当前场景">
+      <div id="scenery" class="scenery campus" aria-hidden="true">
+        <div class="sky-orb"></div><div class="cloud cloud-a"></div><div class="cloud cloud-b"></div>
+        <div class="back-building b1"></div><div class="back-building b2"></div><div class="back-building b3"></div>
+        <div class="main-building"><div class="building-roof"></div><div class="building-windows"></div><div class="building-door"></div></div>
+        <div class="tree tree-a"></div><div class="tree tree-b"></div><div class="ground-line"></div>
+        <div class="character" id="character"><span class="character-hair"></span><span class="character-face"></span><span class="character-neck"></span><span class="character-coat"></span><span class="character-shirt"></span><span class="character-tie"></span><span class="character-bag"></span></div>
+        <div class="scene-shade"></div>
+      </div>
+      <div class="stage-upper">
+        <span id="sceneEyebrow" class="scene-eyebrow">DAY 01 · AFTER CLASS</span>
+        <button class="glassbtn" id="toggleHotspots" aria-pressed="false" title="显示可交互物件">◎ 探索</button>
+      </div>
+      <div class="hotspot-layer" id="hotspots" aria-label="场景调查热点"></div>
+      <div class="scene-caption"><span class="caption-slash"></span><div><h1 id="sceneTitle">学园街</h1><p id="sceneDescription">暮色在玻璃上留下最后一线光。</p></div></div>
+    </section>
+    <section class="play-side">
+      <div class="side-intro">
+        <span class="chapter-code">CHAPTER 01 / THE PHOTOGRAPH</span>
+        <h2>陌生人的照片<span class="star">✳</span></h2>
+        <p id="objective">今天放学后，去看看这座城市。</p>
+      </div>
+      <nav id="nav" class="nav" aria-label="游戏栏目">
+        <button data-tab="day" class="active">◷<span>日程</span></button>
+        <button data-tab="map">⌖<span>地图</span></button>
+        <button data-tab="case">▤<span>线索</span></button>
+        <button data-tab="mission">✧<span>委托</span></button>
+        <button data-tab="social">♡<span>人物</span></button>
+      </nav>
+      <div id="panel" class="panel" aria-live="polite"></div>
+      <div class="play-footer"><span id="statusLine">一个城市，两种身份。</span><button id="saveButton">保存进度 <span aria-hidden="true">↗</span></button></div>
+    </section>
+  </main>
+  <footer class="footline"><span>PAPERWORLD STUDIO / PROJECT 02</span><span>PLAYABLE PROTOTYPE · v0.1</span></footer>
+  <section id="titleScreen" class="title-screen">
+    <div class="title-art" aria-hidden="true"><div class="title-moon"></div><div class="title-silhouette"></div><div class="title-window"></div></div>
+    <div class="title-content">
+      <span class="overline">PAPERWORLD STUDIO PRESENTS</span>
+      <div class="title-ornament">✦　—　✦</div>
+      <h1>夜行<span>档案</span></h1>
+      <p class="roman">N O C T U R N E &nbsp; F I L E S</p>
+      <p class="title-subtitle">白天，你是一名普通学生。<br>夜晚，你必须决定自己究竟是谁。</p>
+      <div class="title-actions"><button id="newGameButton" class="primary">开始新生活 <span>→</span></button><button id="continueButton" class="secondary">继续游戏</button></div>
+      <small>点击式探索 · 自由日程 · 人物关系 · 分支委托</small>
+    </div>
+  </section>
+  <div id="dialogBackdrop" class="dialog-backdrop" hidden><section class="dialog-box" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+    <header><span id="dialogKicker">SCENE</span><button id="closeDialog" aria-label="关闭对话">✕</button></header>
+    <div class="dialog-content"><div class="portrait-mini" aria-hidden="true">✧</div><div><h2 id="dialogTitle"></h2><p id="dialogText"></p></div></div>
+    <div id="dialogChoices" class="dialog-choices"></div>
+  </section></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>
