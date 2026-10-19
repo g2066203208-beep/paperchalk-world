@@ -22,12 +22,12 @@ jobs:
       - name: Parse game code and validate critical paths
         run: |
           node --check studios/nocturne/engine.mjs
-          node --check studios/nocturne/landscape.js
+          node --check studios/nocturne/v3.js
           node --check studios/nocturne/game.js
-          grep -q './landscape.js' studios/nocturne/index.html
-          grep -q './landscape.css' studios/nocturne/index.html
+          grep -q './v3.js' studios/nocturne/index.html
+          grep -q './v3.css' studios/nocturne/index.html
           test -f studios/nocturne/assets/hero-portrait.svg
-          test -f studios/nocturne/assets/character-avatars.svg
+          test -s studios/nocturne/assets/room-cinematic.webp
       - name: Verify RPG state, clues, endings and save compatibility
         run: node --test studios/nocturne/tests/engine.test.mjs
       - name: Install headless browser driver
@@ -49,16 +49,16 @@ jobs:
           done
           cat /tmp/nocturne-server.log
           exit 1
-      - name: Run landscape mobile touch interaction test
+      - name: Run cinematic mobile full investigation and choice test
         env:
           CHROME_PATH: ${{ steps.chrome.outputs.path }}
         run: |
           mkdir -p artifacts
-          node studios/nocturne/tests/landscape.browser.mjs
+          node studios/nocturne/tests/cinematic.browser.mjs
       - name: Keep browser screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nocturne-landscape-visual-check
-          path: artifacts/nocturne-*.png
+          name: nocturne-cinematic-visual-check
+          path: artifacts/nocturne-cinematic-*.png
           if-no-files-found: ignore
