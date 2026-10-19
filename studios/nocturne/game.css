@@ -35,3 +35,9 @@
 .game-screen.film-close .scenery{transform:scale(1.18) translateX(2%);transition:transform 2.3s ease}
 @media(max-width:720px){.scene-film{padding:19px 15px 22px}.scene-film p{font-size:14px;line-height:1.8}.scene-film button{white-space:nowrap;font-size:11px}}
 .reduce-motion .scene-film:before,.reduce-motion .scene-film:after{transition:none!important}
+
+/* GPTimg portrait reference — optimized image embedded inside local SVG asset.
+   Visual bridge only: final full-body, expression-consistent sprite is a later deliverable. */
+.title-hero-portrait{position:absolute;z-index:1;right:6%;top:7%;width:min(49vw,625px);height:min(83vh,720px);object-fit:cover;object-position:center 43%;opacity:.96;filter:saturate(.81) contrast(1.04) brightness(.86);-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 27%,#000 73%,transparent 100%),linear-gradient(0deg,transparent 0%,#000 25%,#000 85%,transparent 100%);mask-image:radial-gradient(ellipse at 54% 38%,#000 27%,transparent 73%);pointer-events:none}
+.title-window{z-index:2;pointer-events:none}.title-silhouette{opacity:.22}
+@media(max-width:720px){.title-hero-portrait{width:93vw;height:56vh;right:-14vw;top:3%;object-position:53% 42%;opacity:.9;-webkit-mask-image:linear-gradient(0deg,transparent,#000 34%,#000 86%,transparent);mask-image:radial-gradient(ellipse at 49% 36%,#000 33%,transparent 77%)}.title-silhouette{opacity:.05}}
