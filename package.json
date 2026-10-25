@@ -1,12 +1,12 @@
 {
-  "name": "cryptbound-coop",
+  "name": "lampkeep-night-shop",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Original browser-based co-op roguelike hosted on GitHub Pages",
+  "description": "Original portrait-first cooperative shop mystery for web and Android",
   "scripts": {
     "test": "node --test src/*.test.js",
     "check": "node --check src/logic.js && node --check src/network.js && node --check src/client.js"
   },
-  "engines": { "node": ">=22" }
+  "engines": {"node": ">=22"}
 }

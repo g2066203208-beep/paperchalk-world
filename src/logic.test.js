@@ -1,68 +1,67 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createGame,makeFloor,addPlayer,removePlayer,step,inputSanitize,hash} from "./logic.js";
+import {createGame,makeQueue,joinGame,leaveGame,act,currentVisitor,revealedClue,testPatterns,STATIONS} from "./logic.js";
 
-test("procedural floors are deterministic, connected, and contain exactly one boss",()=>{
- for(let seed=0;seed<50;seed++){
-  const a=makeFloor(seed,1),b=makeFloor(seed,1);
-  assert.deepEqual(a,b);
-  assert.equal(Object.values(a).filter(r=>r.type==="boss").length,1);
-  assert.equal(Object.values(a).filter(r=>r.type==="treasure").length,1);
-  const visited=new Set(["0,0"]),queue=[a["0,0"]];
-  while(queue.length){const r=queue.pop();for(const [d,x,y] of [["n",0,-1],["s",0,1],["e",1,0],["w",-1,0]]){
-    if(!r.doors.includes(d))continue;const k=(r.x+x)+","+(r.y+y);assert.ok(a[k]);if(!visited.has(k)){visited.add(k);queue.push(a[k]);}
-  }}
-  assert.equal(visited.size,Object.keys(a).length);
+test("nights are seeded reproducibly, with nine distinct visitor events",()=>{
+ for(let i=1;i<=120;i++){const q=makeQueue(i);assert.deepEqual(q,makeQueue(i));assert.equal(q.length,9);assert.equal(new Set(q).size,9);
+  assert.ok(q.indexOf("umbrella")<q.indexOf("knock"),"copy appears after original");
  }
 });
-test("unique player IDs and max four player party enforced",()=>{
- const g=createGame(41);
- for(let i=0;i<4;i++)assert.equal(addPlayer(g,"p"+i,"成员"+i),true);
- assert.equal(addPlayer(g,"p5","额外玩家"),false);
- assert.equal(addPlayer(g,"p0","重复"),false);
- removePlayer(g,"p2");assert.equal(addPlayer(g,"p5","新队友"),true);
+test("all visitors have an answer and each distinct station reveals contextual evidence",()=>{
+ const ids=testPatterns();assert.equal(ids.length,9);
+ assert.ok(ids.some(x=>x.human));assert.ok(ids.some(x=>!x.human));
+ for(let s of [1,2,3]){const g=createGame(s);joinGame(g,"solo","测试");for(const station of STATIONS){
+   assert.equal(revealedClue(g,station),null);
+   assert.equal(act(g,"solo",{type:"inspect",station}),true);
+   assert.ok(revealedClue(g,station)?.length>10);
+ }}
 });
-test("untrusted network inputs are clamped and nonfinite numbers ignored",()=>{
- const i=inputSanitize({mx:999,my:-999,fx:Infinity,fy:0,bomb:"true"});
- assert.ok(Math.hypot(i.mx,i.my)<=1.000001);
- assert.equal(i.fx,0);assert.equal(i.fy,0);assert.equal(i.bomb,false);
- assert.deepEqual(inputSanitize(null),{mx:0,my:0,fx:0,fy:0,bomb:false});
+test("shared investigation and clue pinning work, with per-player role selection",()=>{
+ const g=createGame(345);joinGame(g,"a","柜员");joinGame(g,"b","窗边");
+ assert.equal(act(g,"a",{type:"station",station:"ledger"}),true);
+ assert.equal(act(g,"b",{type:"station",station:"window"}),true);
+ assert.equal(g.players.a.station,"ledger");assert.equal(g.players.b.station,"window");
+ assert.equal(act(g,"a",{type:"pin",station:"ledger"}),false);
+ assert.equal(act(g,"a",{type:"inspect",station:"ledger"}),true);
+ assert.equal(act(g,"b",{type:"pin",station:"ledger"}),true);
+ assert.deepEqual(g.pins,["ledger"]);
+ assert.equal(act(g,"a",{type:"inspect",station:"invalid"}),false);
 });
-test("game starts in cleared sanctuary with no enemies and a valid room",()=>{
- const g=createGame(777);addPlayer(g,"host","房主");
- assert.equal(g.floor,1);assert.equal(g.room,"0,0");assert.equal(g.rooms[g.room].cleared,true);
- step(g,{host:{mx:0,my:0,fx:0,fy:0}},1/60);
- assert.equal(g.enemies.length,0);assert.equal(g.players.host.hp,6);
+test("2-player judgments need agreement and advance the same shared visitor",()=>{
+ const g=createGame(123);joinGame(g,"a","甲");joinGame(g,"b","乙");
+ assert.equal(act(g,"a",{type:"vote",choice:"welcome"}),true);
+ assert.equal(g.index,0);
+ assert.equal(act(g,"b",{type:"vote",choice:"refuse"}),true);
+ assert.equal(g.index,0,"disagreement remains unresolved");
+ assert.equal(act(g,"b",{type:"vote",choice:"welcome"}),true);
+ assert.equal(g.index,1);assert.equal(g.history.length,1);
+ assert.deepEqual(g.votes,{});assert.deepEqual(g.pins,{} instanceof Array?[]:[]);
 });
-test("clear room doors transfer the entire party into the same encounter",()=>{
- const g=createGame(1234);addPlayer(g,"host");addPlayer(g,"peer");
- const r=g.rooms[g.room],d=r.doors[0];assert.ok(d);
- const p=g.players.host;
- if(d==="n"){p.x=480;p.y=116;}
- if(d==="s"){p.x=480;p.y=485;}
- if(d==="w"){p.x=105;p.y=300;}
- if(d==="e"){p.x=855;p.y=300;}
- step(g,{host:{}},1/60);
- assert.notEqual(g.room,"0,0");
- assert.equal(g.rooms[g.room].visited,true);
- assert.ok(Object.values(g.players).every(p=>p.x>90&&p.x<870&&p.y>110&&p.y<490));
- if(g.rooms[g.room].type!=="treasure")assert.ok(g.enemies.length>0);
+test("visitors can't forge actions from strangers or inject invalid choices",()=>{
+ const g=createGame(93);joinGame(g,"host","值班员");
+ assert.equal(act(g,"intruder",{type:"vote",choice:"welcome"}),false);
+ assert.equal(act(g,"host",{type:"vote",choice:"overwrite"}),false);
+ assert.equal(act(g,"host",{type:"inspect",station:"../test"}),false);
+ assert.equal(act(g,"host",null),false);
+ assert.equal(g.index,0);
 });
-test("shooting spawns host-controlled projectiles with finite velocity",()=>{
- const g=createGame(512);addPlayer(g,"a");
- step(g,{a:{fx:1,fy:0}},1/60);
- assert.equal(g.shots.length,1);assert.equal(g.shots[0].team,"player");
- assert.equal(g.shots[0].vx,520);
+test("four is the party maximum and a leave changes majority quorum",()=>{
+ const g=createGame(455);
+ for(let i=0;i<4;i++)assert.equal(joinGame(g,"p"+i,"玩家"+i),true);
+ assert.equal(joinGame(g,"fifth","后来者"),false);
+ assert.equal(joinGame(g,"p1","重复"),false);
+ act(g,"p0",{type:"vote",choice:"refuse"});act(g,"p1",{type:"vote",choice:"refuse"});
+ assert.equal(g.index,0,"two of four is not enough");
+ leaveGame(g,"p3");assert.equal(g.index,0);
+ act(g,"p2",{type:"vote",choice:"refuse"});assert.equal(g.index,1);
 });
-test("bomb consumes stock once when held down, and damage is host resolved",()=>{
- const g=createGame(512);addPlayer(g,"a");
- const p=g.players.a;
- g.enemies.push({id:100,type:"crawler",x:p.x+30,y:p.y+30,r:18,hp:15,maxHp:15,speed:0,cd:10,phase:0});
- step(g,{a:{bomb:true}},1/60);assert.equal(p.bombs,1);assert.equal(g.enemies[0].hp,4);
- step(g,{a:{bomb:true}},1/60);assert.equal(p.bombs,1);
+test("after nine visits the night ends, saves a journal, and keeps scores in bounds",()=>{
+ const g=createGame(17);joinGame(g,"a","唯一店员");
+ for(let i=0;i<9&&g.phase==="running";i++){
+  const c=currentVisitor(g);assert.ok(c);act(g,"a",{type:"vote",choice:testPatterns().find(x=>x.id===c.id).human?"welcome":"refuse"});
+ }
+ assert.equal(g.phase,"complete");assert.equal(g.index,9);assert.equal(g.history.length,9);
+ assert.ok(g.points>=9*60);
+ assert.ok(g.trust>=0&&g.trust<=8);
+ assert.equal(act(g,"a",{type:"inspect",station:"counter"}),false);
 });
-test("all fallen players cause defeat, not a silent frozen session",()=>{
- const g=createGame(13);addPlayer(g,"a");g.players.a.alive=false;g.players.a.hp=0;
- step(g,{},1/60);assert.equal(g.status,"defeat");
-});
-test("seed hash is stable",()=>{assert.equal(hash(12,-2,4),hash(12,-2,4));assert.notEqual(hash(12,-2,4),hash(13,-2,4));});

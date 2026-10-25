@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 590" aria-label="客人的单独立绘">
+<defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse"><path d="M0 8L8 0" stroke="#202b30" stroke-width=".5" opacity=".26"/></pattern></defs>
+<!-- whole body, not baked into shop background -->
+<path d="M149 257Q124 260 96 289L57 532L73 574H323L345 530L306 293Q274 258 248 255Z" fill="#7c6861" stroke="#23272c" stroke-width="10" stroke-linejoin="round"/>
+<path d="M158 249L194 322L229 247" fill="#dbcbb2" stroke="#23272c" stroke-width="6"/>
+<path d="M162 217V276Q194 299 236 270V216" fill="#d3ac83" stroke="#24292d" stroke-width="8"/>
+<path d="M127 135Q134 82 197 82Q257 88 270 141L264 215Q238 261 194 259Q145 248 128 207Z" fill="#d3ac83" stroke="#23272b" stroke-width="8"/>
+<path d="M136 173L154 176M230 176L250 171" stroke="#5f4c49" stroke-width="6" stroke-linecap="round"/>
+<path d="M149 185q14 -7 27 0M215 184q13 -7 28 -1" fill="none" stroke="#2b2b2f" stroke-width="5" stroke-linecap="round"/>
+<path d="M192 193l-5 23 10 2M184 230q14 8 29-1" stroke="#865f58" stroke-width="3" fill="none" stroke-linecap="round"/>
+<path d="M112 151Q116 62 198 66Q285 68 269 161L246 132Q215 118 175 130L139 174Z" fill="#48423c"/>
+<path d="M96 292L132 274L174 348L193 573H72L57 529Z" fill="url(#hatch)" opacity=".56"/>
+<path d="M299 291L268 274L225 350L209 574H327L345 529Z" fill="url(#hatch)" opacity=".5"/>
+<path d="M147 267L192 331L163 378L134 315M244 264L203 333L230 379L269 317" fill="none" stroke="#343338" stroke-width="7"/>
+<path d="M95 354L72 465M300 357L327 472" stroke="#c3aa87" stroke-width="3" opacity=".65"/>
+<path d="M193 329L196 552" stroke="#c9a76b" stroke-width="5"/>
+<g fill="#c9a76b" stroke="#23272c" stroke-width="3"><circle cx="196" cy="373" r="5"/><circle cx="196" cy="426" r="5"/><circle cx="196" cy="478" r="5"/></g>
+</svg>
