@@ -138,3 +138,5 @@ setInterval(()=>{
 $("resumeButton").hidden=!readSave();
 if(window.LAMPKEEP_E2E===true)window.lampkeepState=()=>game?structuredClone(game):null;
 refresh();
+
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(e=>console.warn('Offline cache unavailable',e)));}

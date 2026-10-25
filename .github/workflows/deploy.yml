@@ -68,7 +68,7 @@ jobs:
       - name: Stage public site
         run: |
           mkdir -p _site/src _site/assets
-          cp index.html style.css .nojekyll _site/
+          cp index.html style.css sw.js .nojekyll _site/
           cp src/logic.js src/client.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
       - uses: actions/configure-pages@v5
