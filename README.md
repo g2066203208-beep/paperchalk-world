@@ -11,7 +11,7 @@
 - WebRTC 点对点传输 + 房主权威模拟：房主负责碰撞、敌人 AI、生命、伤害、战利品、房间切换、随机地牢种子与通关判定；客人发送输入并接收状态快照。
 - 3 层程序化连通地图，每层含战斗、遗物、Boss 房间；战斗胜利解锁门、拾取金币/红心、炸弹范围伤害、遗物升级、首领传送阵及结局。
 - 电脑 WASD 移动、方向键或按住鼠标射击、B/空格使用炸弹；触屏提供移动和射击方向键。
-- GitHub Actions 使用 Node 内置测试器跑规则回归，并部署 GitHub Pages。
+- GitHub Actions 使用 Node 内置测试器跑规则回归，并运行两个真正 Chromium 客户端 + 本地 PeerServer 的联机端到端测试，保留屏幕截图后部署 GitHub Pages。
 
 ## 联机使用
 
@@ -42,6 +42,7 @@ python3 -m http.server 8000
 - `src/network.js`：房间码、P2P 连接和快照
 - `src/client.js`：渲染、键鼠/触屏输入、UI、游戏循环
 - `src/logic.test.js`：地图连通性、操作校验、战斗与房间回归
+- `tests/browser-e2e.mjs`：Chromium + 本地 PeerServer 双客户端联机和状态同步测试
 - `.github/workflows/deploy.yml`：CI 和 Pages 部署
 
 ## 仓库迁移说明

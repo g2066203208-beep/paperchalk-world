@@ -15,7 +15,7 @@ export class RoomNetwork{
     for(const v of bytes)room+=alphabet[v%alphabet.length];
     this.room=room;this.status("正在创建 WebRTC 房间…");
     return new Promise((resolve,reject)=>{
-      const peer=this.peer=new window.Peer(PREFIX+room,{debug:0});
+      const peer=this.peer=new window.Peer(PREFIX+room,{debug:0,...(window.CRYPTBOUND_PEER_OPTIONS||{})});
       let settled=false;
       peer.on("open",id=>{if(settled)return;settled=true;this.id=id;this.ready=true;this.status("房间已创建，等待队友加入");peer.on("connection",c=>this.accept(c));resolve(room);});
       peer.on("error",e=>{this.status("联机异常："+e.type);if(!settled){settled=true;this.clean();reject(e);}});
@@ -51,7 +51,7 @@ export class RoomNetwork{
     return new Promise((resolve,reject)=>{
       let settled=false;
       const fail=e=>{if(!settled){settled=true;this.clean();reject(e instanceof Error?e:new Error(String(e)));}};
-      const peer=this.peer=new window.Peer(undefined,{debug:0});
+      const peer=this.peer=new window.Peer(undefined,{debug:0,...(window.CRYPTBOUND_PEER_OPTIONS||{})});
       peer.on("open",id=>{
         this.id=id;
         const conn=this.conn=peer.connect(PREFIX+this.room,{reliable:true});

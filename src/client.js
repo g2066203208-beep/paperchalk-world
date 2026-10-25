@@ -218,4 +218,5 @@ function loop(now){
   uiTimer+=dt;if(uiTimer>.18){refreshUi();uiTimer=0;}
   draw();requestAnimationFrame(loop);
 }
+if(window.CRYPTBOUND_E2E===true)window.cryptboundSnapshot=()=>game?structuredClone(game):null;
 reset();requestAnimationFrame(loop);
