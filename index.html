@@ -1,89 +1,84 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Paperchalk World v13.0.0</title>
-<link id="mainStyle" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#13151d">
+  <meta name="description" content="深渊共鸣 Cryptbound：原创俯视角 Roguelike 地牢，最多四人 WebRTC 在线合作。">
+  <title>深渊共鸣 · Cryptbound — 多人合作地牢</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js"></script>
+  <script type="module" src="./src/client.js"></script>
 </head>
 <body>
-<div class="panel">
-  <h1>Paperchalk World <span id="buildVersion">v13.0.0</span></h1>
-  <p>正式主程序 v13.0.0：Visual Demo 视觉基线 + 模块化游戏地基 + 手机 UI + 新玩家角色。</p>
-</div>
-<div id="debugSheet" class="debugSheet">
-<div class="sunPanel">
-  <div class="title"><span>太阳光方向</span><span id="sunMode">跟随昼夜</span></div>
-  <div class="sunRow">
-    <span>左右方向</span>
-    <input id="sunAzimuth" type="range" min="-75" max="75" step="1" value="-36">
-    <span id="sunAzimuthVal" class="sunVal">-36°</span>
+  <div class="ambient"></div>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="深渊共鸣首页"><span class="brand-seal">✧</span><span><strong>CRYPTBOUND</strong><small>深 渊 共 鸣</small></span></a>
+      <div class="top-right"><span class="eyebrow">AN ORIGINAL CO-OP ROGUELIKE</span><span class="status"><span class="led"></span><span id="statusText" aria-live="polite">离线 · 准备开始</span></span></div>
+    </header>
+    <main class="layout">
+      <section class="game-column">
+        <div class="stage-top"><span>✦ THE FORGOTTEN CRYPT</span><span>CHAPTER I — THE DESCENT</span></div>
+        <div class="stage">
+          <canvas id="gameCanvas" width="960" height="600" aria-label="俯视角地牢游戏画面"></canvas>
+          <div id="menu" class="menu-screen">
+            <div class="menu-motif">✧ · ✧ · ✧</div>
+            <div class="menu-label">THE ABYSS IS CALLING</div>
+            <h1>深渊<br><em>共鸣</em></h1>
+            <p class="menu-sub">在不断变化的地牢中，与朋友共赴一场危险而美丽的冒险。</p>
+            <div class="lobby-form">
+              <label for="nameInput">冒险者名字</label>
+              <input id="nameInput" type="text" maxlength="14" placeholder="输入你的名字" value="旅人" autocomplete="nickname">
+              <button id="soloBtn" class="btn btn-primary">✦ 单人开始</button>
+              <div class="twin-actions">
+                <button id="createBtn" class="btn btn-outline">创建联机房间</button>
+                <button id="joinBtn" class="btn btn-outline">加入房间</button>
+              </div>
+              <input id="roomInput" aria-label="输入八位房间码" maxlength="8" placeholder="好友的 8 位房间码" autocomplete="off" spellcheck="false">
+            </div>
+            <p class="small-print">最多 4 人实时合作 · 无需注册 · 房主必须保持在线</p>
+          </div>
+          <div id="toast" class="toast hide" role="status" aria-live="polite"></div>
+          <div id="touchControls" class="touch-controls hide" aria-label="触控操作区">
+            <div class="touch-group"><span>移动</span><div class="pad"><button data-pad="mu" aria-label="向上移动">▲</button><button data-pad="ml" aria-label="向左移动">◀</button><button data-pad="md" aria-label="向下移动">▼</button><button data-pad="mr" aria-label="向右移动">▶</button></div></div>
+            <button id="bombButton" class="touch-bomb">💣</button>
+            <div class="touch-group"><span>射击</span><div class="pad"><button data-pad="fu" aria-label="向上射击">▲</button><button data-pad="fl" aria-label="向左射击">◀</button><button data-pad="fd" aria-label="向下射击">▼</button><button data-pad="fr" aria-label="向右射击">▶</button></div></div>
+          </div>
+        </div>
+        <div class="stage-footer"><span>W A S D 移动 <i>·</i> 方向键 / 鼠标按住射击 <i>·</i> B / 空格 炸弹</span><span>清除怪物 → 解锁房门 → 探索更深处</span></div>
+        <div id="roomBar" class="room-bar hide"><span>房间邀请码</span><strong id="roomCode">--------</strong><button id="copyBtn" class="btn btn-small">复制邀请码</button><small>把邀请码发送给好友；双方打开此页面即可联机</small></div>
+      </section>
+      <aside class="sidebar">
+        <div class="side-section summary">
+          <div class="section-label">ADVENTURE RECORD <span>01</span></div>
+          <h2>命运手记</h2>
+          <div class="stat-grid"><div><small>当前层数</small><strong id="floorText">—</strong></div><div><small>队伍得分</small><strong id="scoreText">0</strong></div></div>
+          <div class="room-title"><span>◈ 当前房间</span><strong id="roomText">尚未开始</strong></div>
+        </div>
+        <div class="side-section">
+          <div class="section-label">EXPLORER PARTY <span>02</span></div>
+          <h3>同行之人 <small>1 — 4 PLAYERS</small></h3>
+          <div id="partyList" class="party-list"><div class="empty-party">尚未进入地牢</div></div>
+        </div>
+        <div class="side-section">
+          <div class="section-label">DUNGEON MAP <span>03</span></div>
+          <h3>探索地图</h3>
+          <canvas id="miniMap" width="272" height="148" aria-label="已探索的房间地图"></canvas>
+          <p class="hint">地图只展示到访过的房间。金色代表当前位置。</p>
+        </div>
+        <div class="side-section tips">
+          <div class="section-label">SURVIVAL GUIDE <span>04</span></div>
+          <h3>幸存者手册</h3>
+          <p><b>✧</b> 房间中消灭所有怪物才能开门。</p>
+          <p><b>✧</b> 遗物密室强化你的攻击和体力。</p>
+          <p><b>✧</b> 击败首领，踏入金色光环。</p>
+          <p><b>✧</b> 三层地牢后迎来最终结局。</p>
+        </div>
+        <div id="playActions" class="play-actions hide"><button id="restartBtn" class="btn btn-small">↻ 重新开始</button><button id="backBtn" class="btn btn-small btn-outline">← 返回菜单</button></div>
+      </aside>
+    </main>
+    <footer class="footer"><span>CRYPTBOUND · ORIGINAL PROTOTYPE · 2026</span><span>GitHub Pages + WebRTC · P2P 房主权威同步</span></footer>
   </div>
-  <div class="sunRow">
-    <span>高度角</span>
-    <input id="sunElevation" type="range" min="5" max="60" step="1" value="13">
-    <span id="sunElevationVal" class="sunVal">13°</span>
-  </div>
-  <button id="sunFollow">恢复跟随昼夜</button>
-</div>
-
-<div class="materialPanel">
-  <div class="title"><span>Paper003 地形调试</span><span>实时</span></div>
-  <div class="row">
-    <span>纸纹大小</span>
-    <input id="paperScale" type="range" min="50" max="400" step="5" value="200">
-    <span id="paperScaleVal" class="val">2.00×</span>
-  </div>
-  <div class="row">
-    <span>法线强度</span>
-    <input id="paperNormal" type="range" min="0" max="300" step="5" value="185">
-    <span id="paperNormalVal" class="val">1.85</span>
-  </div>
-  <div class="row">
-    <span>高度凹凸</span>
-    <input id="paperHeight" type="range" min="0" max="800" step="10" value="480">
-    <span id="paperHeightVal" class="val">4.80</span>
-  </div>
-  <div class="row">
-    <span>连续去重</span>
-    <input id="paperBlend" type="range" min="0" max="100" step="5" value="85">
-    <span id="paperBlendVal" class="val">85%</span>
-  </div>
-  <button id="paperReset">恢复默认</button>
-</div>
-<div class="controls">
-  <button id="compare" class="active">目标效果</button>
-  <button id="sky" class="active">程序天空</button>
-  <button id="layers" class="active">标准立方体</button>
-  <button id="shadow" class="active">软阴影</button>
-  <button id="fog" class="active">动态纸雾</button>
-  <button id="tone" class="active">统一色调</button>
-  <button id="random" class="active">Paper003</button>
-  <button id="bounce" class="active">地面反射光</button>
-  <button id="papergrass" class="active" style="display:none">剪纸小草</button>
-  <button id="godrays" class="active">受光体积雾</button>
-  <div class="groupBreak"></div>
-  <button id="dawn" class="active">清晨</button>
-  <button id="noon">正午</button>
-  <button id="sunset">黄昏</button>
-  <button id="night">夜晚</button>
-  <button id="cycle">自动昼夜</button>
-</div>
-</div>
-<div class="badge">单指/鼠标拖动 360° · 双指捏合缩放 · 滚轮缩放 · 星空真实深度遮挡</div>
-<button id="uiToggle" class="uiToggle" type="button" aria-controls="debugSheet" aria-expanded="false">设置</button>
-<div id="mobileMove" class="mobileMove" aria-label="移动">
-  <button id="moveLeft" class="moveButton" type="button" aria-label="向左移动">◀</button>
-  <button id="moveRight" class="moveButton" type="button" aria-label="向右移动">▶</button>
-</div>
-
-<script type="module">
-const buildKey=Date.now().toString(36);
-window.__PAPERCHALK_BUILD__=buildKey;
-const style=document.getElementById('mainStyle');
-style.href='./styles/main.css?b='+buildKey;
-await import('./src/main.js?b='+buildKey);
-</script>
-
 </body>
 </html>

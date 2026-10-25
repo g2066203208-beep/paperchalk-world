@@ -1,0 +1,62 @@
+name: Test and publish Cryptbound
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cryptbound-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Game logic and syntax
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run check
+      - run: npm test
+      - name: Confirm a clean new site
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f index.html
+          test -f src/network.js
+          test -f src/logic.js
+          test ! -d android-app
+          test ! -d studio
+          test ! -f legacy-main.html
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: tests
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build minimal static website
+        run: |
+          mkdir -p _site/src
+          cp index.html style.css .nojekyll _site/
+          cp src/logic.js src/network.js src/client.js _site/src/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4
