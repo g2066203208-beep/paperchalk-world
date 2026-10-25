@@ -58,5 +58,13 @@ async function main(){
   assert.deepEqual(errors,[],"No unhandled browser exceptions");
   console.log("PASS: two real WebRTC clients joined, received matching rooms, and synced remote movement. Screenshots saved.");
 }
+let exitCode=0;
 try{await main();}
-finally{await browser?.close();staticServer.kill();await new Promise(resolve=>signal.close(resolve));}
+catch(e){console.error(e);exitCode=1;}
+finally{
+  await browser?.close();
+  staticServer.kill();
+  // The PeerServer factory returns an Express handler (no close method).
+  // Terminate this short-lived test process to close its listening sockets.
+  process.exit(exitCode);
+}
