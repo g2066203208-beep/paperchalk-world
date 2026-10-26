@@ -313,6 +313,34 @@ try{
  await growth.locator("#resume").click();
  assert.equal((await snapshot(growth)).reputation,4,"reputation persists under original save key");
  await growth.screenshot({path:"artifacts/kiosk-day-two-reputation.png",fullPage:false});
+ // A genuinely offline reload must restore the same solo inventory and
+ // open window after the service worker installs its published ES modules.
+ // PeerJS CDN routing is removed before offline mode: multiplayer still
+ // requires internet, but a local shop must not.
+ const offlineContext=await browser.newContext({viewport:{width:390,height:844}});
+ const offline=await open(offlineContext);
+ await offline.locator("#solo").click();
+ await offline.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
+ await action(offline,"window");
+ await action(offline,"slot","shelfL1");
+ assert.equal((await snapshot(offline)).players.solo.hand,"tea");
+ await offline.waitForFunction(async()=>{
+   const reg=await navigator.serviceWorker.ready;
+   const cache=await caches.open("untitled-kiosk-offline-v2");
+   return Boolean(reg.active)&&(await cache.keys()).length>=12;
+ },undefined,{timeout:20000});
+ await offline.reload();
+ await offline.waitForFunction(()=>Boolean(navigator.serviceWorker.controller),undefined,{timeout:12000});
+ await offline.unroute("https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js");
+ await offlineContext.setOffline(true);
+ await offline.reload({waitUntil:"domcontentloaded",timeout:15000});
+ await offline.waitForFunction(()=>window.__KIOSK_TEST__?.getHits);
+ await offline.locator("#resume").click();
+ const offlineState=await snapshot(offline);
+ assert.equal(offlineState.windowOpen,true,"offline shop retains the open shutter");
+ assert.equal(offlineState.players.solo.hand,"tea","offline shop restores saved stock");
+ await offline.screenshot({path:"artifacts/kiosk-offline-solo-restored.png",fullPage:false});
+ await offlineContext.close();
  assert.deepEqual(errors,[]);
  console.log("PASS: two actual mobile clients transferred stock, opened drawer, sold a customer, local restore, no scroll, landscape layout.");
 }catch(e){console.error(e);process.exitCode=1;}
