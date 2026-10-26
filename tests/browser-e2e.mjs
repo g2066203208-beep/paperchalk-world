@@ -211,6 +211,24 @@ try{
  await wide.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  assert.equal(await wide.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2),false,"landscape must remain fixed-screen");
  await wide.screenshot({path:"artifacts/kiosk-landscape-desktop.png",fullPage:false});
+ // Verify real Chromium at a compact portrait phone AND rotated phone shape.
+ for(const [vw,vh,name] of [[320,568,"compact-phone"],[844,390,"phone-landscape"]]){
+   const p=await open(context,vw,vh);
+   await p.locator("#solo").click();
+   await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="talk"));
+   const metrics=await p.evaluate(()=>{
+     const h=window.__KIOSK_TEST__.getHits().find(v=>v.cmd==="talk");
+     const size=window.__KIOSK_TEST__.screen();
+     return {touchHeight:h.h/size.H*innerHeight,land:size.land,
+       overflow:document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2};
+   });
+   assert.equal(metrics.overflow,false,"No scrolling on "+name);
+   assert.ok(metrics.touchHeight>=42,"Main touch target too small on "+name+": "+metrics.touchHeight);
+   assert.equal(metrics.land,vw>vh,"Correct adaptive orientation on "+name);
+   await action(p,"window");
+   await p.screenshot({path:"artifacts/kiosk-"+name+".png",fullPage:false});
+   await p.close();
+ }
  // Five real solo sales verify end-of-day rating and persistent reputation.
  const growth=await open(context);
  await growth.locator("#solo").click();
