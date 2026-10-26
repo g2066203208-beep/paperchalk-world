@@ -229,7 +229,8 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
   // The visible product on the pass-through mat is physically handed over.
   // Hold it to take it back instead of selling the wrong order.
   if(s.counter&&s.windowOpen){
-   hit(hits,mat.x,mat.y,mat.w,mat.h,"sell");
+   // Short tap on the transfer mat retrieves the item; holding it can also
+   // retrieve it. Checkout stays on the separate visible cash register.
    hit(hits,mat.x,mat.y,mat.w,mat.h,"counter",undefined,"hold");
   }
   const win={x:x+w*.256,y:y+h*.215,w:w*.488,h:h*.473};
