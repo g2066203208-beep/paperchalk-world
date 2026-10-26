@@ -24,6 +24,8 @@ async function open(ctx,w=390,h=844){
  return p;
 }
 async function action(page,cmd,key){
+ // Network state can arrive between animation frames; wait for its real-world hitbox.
+ await page.waitForFunction(([cmd,key])=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd===cmd&&(key===null||h.key===key)),[cmd,key??null],{timeout:6000});
  const h=await page.evaluate(([cmd,key])=>window.__KIOSK_TEST__.getHits().find(x=>x.cmd===cmd&&(key===undefined||x.key===key)),[cmd,key]);
  assert.ok(h,"Missing clickable "+cmd+" / "+key);
  const v=await page.evaluate(()=>window.__KIOSK_TEST__.screen());
