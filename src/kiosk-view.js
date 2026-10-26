@@ -1,7 +1,7 @@
 // Independently drawn flat-color shapes for every functional fixture and object.
 // No flattened game screen; all hitboxes and host-authoritative inventory remain real.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
-import {flatAmbient,flatWall,flatStreet,flatCustomer,flatProduct,flatShelfBase,flatCupboard,flatDrawer,flatWindow,flatCounter,flatMat,flatPlaque,flatTop,flatButton} from "./kiosk-flat.js";
+import {flatAmbient,flatWall,flatStreet,flatCustomer,flatProduct,flatShelfBase,flatCupboard,flatDrawer,flatWindow,flatCounter,flatMat,flatPlaque,flatTop,flatButton,flatActionIcon,flatDialogue} from "./kiosk-flat.js";
 import {drawPixelCash} from "./kiosk-pixel.js";
 
 const C={ink:"#263459",outline:"#263459",wall:"#425D91",wood:"#526FA9",woodLight:"#E4EAF4",trim:"#263459",shelf:"#DDE6F5",dark:"#1E294D",cream:"#F9F7F4",amber:"#F3A33E",sky:"#7F99C2",snow:"#F0F4F8",blue:"#526FA9",gold:"#F3A33E",green:"#8CB3B1",red:"#DF7770"};
@@ -128,6 +128,9 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
    talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving),
    refusing:Boolean(motion?.refusing)});
   g.restore();
+  const sku=visitor(s).sku;
+  const short=sku==="bread"?"一份面包":sku==="battery"?"有电池吗":sku==="cocoa"?"来杯可可":"来杯热茶";
+  flatDialogue(g,short,x+w*.51,y+h*.10,w*.43,Math.max(31,h*.16));
  }
  flatWindow(g,x,y,w,h,s.windowOpen);
  hit(hits,x+w*.16,y+h-23,w*.68,49,"window");
@@ -225,7 +228,10 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
 }
 function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
  flatButton(g,x,y,w,h,active);
- t(g,text,x+w/2,y+h*.53,Math.min(16,h*.35),active?"#263459":"#263459","center");
+ if(cmd&&w>=70){
+  flatActionIcon(g,cmd,x+Math.min(25,w*.22),y+h*.52,Math.min(25,h*.43));
+ }
+ t(g,text,x+w*.56,y+h*.53,Math.min(15,h*.32),C.ink,"center",w*.68);
  if(cmd)hit(hits,x,y,w,h,cmd,key);
 }
 export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=null){

@@ -195,3 +195,32 @@ export function flatButton(g,x,y,w,h,active=false){
  R(g,x+2,y+1,w-4,h-6,active?F.warm:F.paper,8);
  R(g,x+8,y+7,w-16,4,active?F.paper:F.pale,2);
 }
+
+export function flatActionIcon(g,kind,x,y,size=26){
+ g.save();g.translate(x,y);const k=size/26;g.scale(k,k);
+ const e=F.ink,p=F.paper,a=F.orange;
+ if(kind==="talk"){
+  R(g,-10,-8,19,15,e,6);R(g,-7,-5,13,9,p,4);
+  path(g,[[-4,6],[-9,13],[1,7]],e);
+  R(g,-3,-1,7,2,a,1);
+ }else if(kind==="sell"){
+  R(g,-11,-9,22,18,e,3);R(g,-8,-6,16,12,p,2);
+  R(g,-5,-13,10,5,e,1);R(g,-5,-1,10,3,a,1);
+  R(g,-6,5,4,2,e,1);R(g,2,5,4,2,e,1);
+ }else if(kind==="commission"){
+  R(g,-9,-11,18,22,e,3);R(g,-6,-8,12,16,p,1);
+  R(g,-3,-13,6,5,e,2);
+  for(let i=0;i<3;i++){R(g,-4,-4+i*5,8,2,i===2?a:e,1);}
+ }else if(kind==="restock"){
+  path(g,[[-11,-2],[0,-10],[11,-2],[0,6]],e);
+  path(g,[[-7,-2],[0,-7],[7,-2],[0,2]],F.orange);
+  path(g,[[-11,0],[0,8],[0,13],[-11,5]],e);
+  path(g,[[11,0],[0,8],[0,13],[11,5]],F.blue);
+ }
+ g.restore();
+}
+export function flatDialogue(g,msg,x,y,w,h){
+ tile(g,x,y,w,h,F.paper,F.ink,7,2);
+ path(g,[[x+w*.37,y+h],[x+w*.55,y+h],[x+w*.51,y+h+10]],F.ink);
+ text(g,msg,x+w/2,y+h*.52,Math.min(12,h*.41),F.ink);
+}
