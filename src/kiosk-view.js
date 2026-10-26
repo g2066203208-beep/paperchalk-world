@@ -1,7 +1,7 @@
 // Handmade geometric pixel art. Every fixture/item/customer is a separate
 // draw routine (no flattened image / generated art); all clickable bounds
 // are registered with the same coordinates used to paint the object.
-import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead} from "./kiosk-core.js";
+import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
 import {drawWindowCustomer} from "./kiosk-guest.js";
 const C={ink:"#181d28",outline:"#272331",wall:"#66504a",wood:"#987159",woodLight:"#bd9874",
 trim:"#533d3f",shelf:"#bb8c69",dark:"#302d35",cream:"#e7cdb1",amber:"#e4b374",
@@ -276,6 +276,8 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+126,12,C.gold);
    t(g,"保温 "+((s.upgrades?.heating??0)?"已完成":"未改造"),17,headH+151,12,C.gold);
    t(g,"今日进货 ¥"+(s.dayExpenses||0),17,headH+176,12,C.cream);
+   t(g,"口碑 "+(s.reputation||0)+"/100 · "+reputationLevel(s)+"级",17,headH+201,12,C.gold);
+   t(g,"熟客小费 ¥"+(s.loyaltyTips||0)+" · 每单 +¥"+loyaltyTip(s),17,headH+226,12,C.cream);
   r(g,W-146,headH,146,shop.h,C.dark);
   t(g,"当前订单",W-130,headH+25,13,C.gold);
   t(g,visitor(s).name,W-130,headH+52,17,C.cream);
@@ -289,6 +291,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   const lower=shop.y+shop.h;
   r(g,0,lower,W,84,C.dark);
   t(g,visitor(s).name+"  ·  "+(s.windowOpen?GOODS[visitor(s).sku].name+" ¥"+GOODS[visitor(s).sku].price:"请点击窗闩开窗"),12,lower+16,15,C.gold);
+  t(g,"口碑 "+(s.reputation||0)+"/100",W-12,lower+16,12,C.gold,"right");
   const favor=visitor(s).favor;
   const favorText=!favor?"邻里委托：暂无":s.favorDone?"邻里委托：已完成，获得 ¥"+favor.tip:
    s.spoken?"邻里委托："+GOODS[favor.sku].name+"，报酬 ¥"+favor.tip:"邻里委托：交谈后可了解";
@@ -326,12 +329,12 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   r(g,0,0,W,H,"#171922e9");
   t(g,"今 日 打 烊",W/2,H*.27,32,C.gold,"center");
   const bill=dailyOverhead(s);
-  t(g,"服务顾客 "+s.served+" 人",W/2,H*.35,19,C.cream,"center");
-  t(g,"销售 ¥"+s.earnings+" · 委托 ¥"+(s.favorTips||0),W/2,H*.41,17,C.cream,"center");
+  t(g,"服务顾客 "+s.served+" 人 · 今日评分 "+(s.dayRating||0)+"/5",W/2,H*.35,19,C.cream,"center");
+  t(g,"销售 ¥"+s.earnings+" · 委托 ¥"+(s.favorTips||0)+" · 熟客小费 ¥"+(s.loyaltyTips||0),W/2,H*.41,17,C.cream,"center");
   t(g,"本日进货 -¥"+(s.dayExpenses||0),W/2,H*.47,17,C.cream,"center");
   t(g,"房租 -¥"+bill.rent+" · 暖气 -¥"+bill.heating,W/2,H*.53,17,C.cream,"center");
   t(g,"经营净额 "+(s.dayNet<0?"-¥":"¥")+Math.abs(s.dayNet||0),W/2,H*.59,20,C.gold,"center");
-  t(g,"现金结余 ¥"+s.cash,W/2,H*.65,19,C.cream,"center");
+  t(g,"现金 ¥"+s.cash+" · 口碑 "+(s.reputation||0)+"/100 ("+((s.dayReputationDelta||0)>=0?"+":"")+(s.dayReputationDelta||0)+")",W/2,H*.65,18,C.cream,"center");
   chip(g,hits,W*.23,H*.73,W*.54,56,"开始下一天","nextday");
  }
  return hits;
