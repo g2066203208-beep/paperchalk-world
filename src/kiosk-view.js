@@ -50,10 +50,16 @@ function sprite(g,sku,x,y,scale=3){
 // The glove and the merchandise are separate foreground pixel layers.
 function glovedHand(g,x,y,alpha=1){
  g.save();g.globalAlpha=Math.max(0,Math.min(1,alpha));
- r(g,x+22,y+40,20,38,C.ink);r(g,x+25,y+43,15,34,'#516879');
- r(g,x+20,y+35,23,9,C.trim);r(g,x+22,y+36,19,6,C.woodLight);
- r(g,x+9,y+28,29,15,C.ink);r(g,x+11,y+30,25,11,'#728c8c');
- r(g,x+12,y+28,6,6,'#a9b9a5');r(g,x+30,y+29,5,5,'#536b70');
+ // Stepped diagonal sleeve enters from the lower-right foreground.
+ r(g,x+41,y+60,31,20,C.ink);r(g,x+43,y+62,28,17,'#3e566a');
+ r(g,x+33,y+51,29,20,C.ink);r(g,x+35,y+53,26,16,'#516b7b');
+ r(g,x+26,y+43,26,19,C.ink);r(g,x+28,y+45,23,15,'#617d88');
+ r(g,x+22,y+38,28,10,C.trim);r(g,x+24,y+40,24,6,C.woodLight);
+ // Mitten, thumb and finger seams are separate hand-drawn pixel parts.
+ r(g,x+9,y+27,31,17,C.ink);r(g,x+11,y+29,27,13,'#728c8c');
+ r(g,x+6,y+35,12,10,C.ink);r(g,x+8,y+37,10,7,'#8ca59a');
+ r(g,x+12,y+27,6,4,'#a9b9a5');r(g,x+22,y+29,2,11,'#516b70');
+ r(g,x+29,y+30,2,10,'#516b70');
  g.restore();
 }
 function heldItemLayer(g,motion,mat,x,y,w,benchY,benchH){

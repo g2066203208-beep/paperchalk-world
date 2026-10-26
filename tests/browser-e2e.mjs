@@ -109,10 +109,15 @@ try{
  await solo.locator("#solo").click();
  await solo.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window")));
  await action(solo,"window");
+ await solo.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==='idle',{timeout:5000});
  await action(solo,"slot","shelfL1");
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='pickup',{timeout:3000});
+ await solo.waitForTimeout(150); // Show the actual hand in motion, not the first empty frame.
+ assert.equal((await solo.evaluate(()=>window.__KIOSK_TEST__.getHeldItemMotion())).stage,'pickup');
  await solo.screenshot({path:"artifacts/kiosk-item-picked-up.png",fullPage:false});
+ await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='held',{timeout:3000});
+ await solo.screenshot({path:"artifacts/kiosk-item-held.png",fullPage:false});
  await action(solo,"counter");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='place',{timeout:3000});
  await solo.waitForTimeout(100);
