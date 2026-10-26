@@ -265,6 +265,8 @@ try{
    const p=await open(context,vw,vh);
    await p.locator("#solo").click();
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="window"&&h.w>=1));
+   await action(p,"window");
+   await p.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:6000});
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="talk"));
    const metrics=await p.evaluate(()=>{
      const h=window.__KIOSK_TEST__.getHits().find(v=>v.cmd==="talk");
@@ -277,7 +279,6 @@ try{
    assert.equal(metrics.statusHidden,true,"Persistent status must not cover scene art on "+name);
    assert.ok(metrics.touchHeight>=42,"Main touch target too small on "+name+": "+metrics.touchHeight);
    assert.equal(metrics.land,vw>vh,"Correct adaptive orientation on "+name);
-   await action(p,"window");
    await p.screenshot({path:"artifacts/kiosk-"+name+".png",fullPage:false});
    await p.close();
  }
