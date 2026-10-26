@@ -112,3 +112,60 @@ test("leave restores stock and resume preserves old and new v3 hands",()=>{
  resumeSolo(old,"店长");
  assert.equal(old.players.solo.hand,"cocoa");assert.equal(old.players.solo.restock,"bread");
 });
+
+
+test("optional neighbor commission consumes a real item once without replacing the main sale",()=>{
+ const s=initialShop();join(s,"host","店长");join(s,"guest","店员");
+ apply(s,"host",{cmd:"window"});
+ // First visitor has no side request; serve their main tea order.
+ apply(s,"host",{cmd:"slot",key:"shelfL1"});
+ apply(s,"host",{cmd:"counter"});
+ assert.equal(apply(s,"host",{cmd:"sell"}),true);
+ const request=visitor(s).favor;
+ assert.deepEqual({sku:request.sku,tip:request.tip},{sku:"tea",tip:8});
+ assert.equal(s.favorDone,false);
+ // The optional task is separate from the bread order.
+ assert.equal(apply(s,"guest",{cmd:"commission"}),true);
+ assert.equal(s.cash,109,"unspoken request pays nothing");
+ apply(s,"guest",{cmd:"talk"});
+ apply(s,"host",{cmd:"slot",key:"shelfL2"});
+ apply(s,"host",{cmd:"counter"});
+ assert.equal(apply(s,"guest",{cmd:"commission"}),true);
+ assert.equal(s.counter,"bread","wrong SKU stays on counter");
+ assert.equal(s.cash,109);
+ apply(s,"host",{cmd:"counter"});
+ apply(s,"host",{cmd:"slot",key:"shelfL2"});
+ apply(s,"guest",{cmd:"slot",key:"shelfL1"});
+ apply(s,"guest",{cmd:"counter"});
+ assert.equal(apply(s,"guest",{cmd:"commission"}),true);
+ assert.equal(s.cash,117);
+ assert.equal(s.counter,null);
+ assert.equal(s.favorDone,true);
+ assert.equal(s.favorCount,1);assert.equal(s.favorTips,8);assert.equal(s.totalFavors,1);
+ assert.equal(apply(s,"host",{cmd:"commission"}),true);
+ assert.equal(s.cash,117,"second worker cannot collect same tip twice");
+ assert.equal(s.totalFavors,1);
+ apply(s,"host",{cmd:"slot",key:"shelfL2"});
+ apply(s,"host",{cmd:"counter"});
+ assert.equal(apply(s,"guest",{cmd:"sell"}),true);
+ assert.equal(s.cash,129);
+ assert.equal(s.favorDone,false,"next visitor has a fresh request");
+ assert.equal(s.totalServed,2);
+ assert.equal(validate(JSON.parse(JSON.stringify(s))),true);
+});
+test("legacy version 3 saves gain optional commission counters without migration or lost stock",()=>{
+ const s=initialShop();join(s,"host","店长");
+ delete s.favorDone;delete s.favorCount;delete s.favorTips;delete s.totalFavors;
+ const old=JSON.parse(JSON.stringify(s));
+ assert.equal(validate(old),true);
+ apply(old,"host",{cmd:"window"});
+ apply(old,"host",{cmd:"slot",key:"shelfL1"});apply(old,"host",{cmd:"counter"});
+ apply(old,"host",{cmd:"sell"});
+ apply(old,"host",{cmd:"talk"});
+ apply(old,"host",{cmd:"slot",key:"shelfL1"});apply(old,"host",{cmd:"counter"});
+ apply(old,"host",{cmd:"commission"});
+ assert.equal(old.favorCount,1);assert.equal(old.favorTips,8);
+ assert.equal(old.totalFavors,1);assert.equal(old.favorDone,true);
+ assert.equal(old.slots.shelfL2.qty,2);
+ assert.equal(validate(old),true);
+});
