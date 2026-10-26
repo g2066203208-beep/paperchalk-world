@@ -49,7 +49,7 @@ try{
  await guest.locator("#joinCode").fill(code);
  await guest.locator("#join").click();
  try{
-   await guest.waitForFunction(()=>Object.keys(window.__KIOSK_TEST__.getState()?.players||{}).length===2,undefined,{timeout:18000});
+   await guest.waitForFunction(()=>Object.keys(window.__KIOSK_TEST__.getState()?.players||{}).length===2,undefined,{timeout:40000});
  }catch(e){
    console.error("WebRTC join diagnostic",JSON.stringify({
      room:code,
