@@ -81,9 +81,10 @@ export class RoomNetwork{
     conn.on("data",data=>{
       if(!data||typeof data!=="object")return;
       if(data.t==="join"&&!joined){
-        joined=true;const name=String(data.name||"旅人").slice(0,14);
+        const name=String(data.name||"旅人").slice(0,14);
         const permitted=this.cb.join?.(conn.peer,name);
         if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();return;}
+        joined=true;
         // The host callback has already applied the join and broadcast a
         // snapshot. Send welcome *before* an explicit latest-state replay:
         // guest ignores state packets until welcome sets ready=true.
