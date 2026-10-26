@@ -15,6 +15,56 @@ const t=(g,text,x,y,size=12,color=C.cream,align="left",maxWidth=null)=>{
 const frame=(g,x,y,w,h,th=5)=>{r(g,x,y,w,h,C.outline);r(g,x+th,y+th,w-2*th,h-2*th,C.woodLight);r(g,x+th*2,y+th*2,w-4*th,h-4*th,C.trim);};
 const shine=(g,x,y,w)=>{r(g,x,y,w,2,C.woodLight);r(g,x,y+3,w,1,C.trim);};
 const hit=(hits,x,y,w,h,cmd,key)=>hits.push({x,y,w,h,cmd,key});
+// Dialogue lives at its speaker, never in a persistent bottom message strip.
+// Pure selectors can be regression-tested without changing saves/network state.
+export function customerSpeech(s,motion=null){
+ if(!s?.windowOpen||s.phase==="summary"||
+   ["hidden","enter","handoff","exit"].includes(motion?.stage))return null;
+ const person=visitor(s);
+ if(s.wrongAttempted)return {name:person.name,text:"这不是我要的，请给我"+GOODS[person.sku].name+"。"};
+ if(s.favorDone&&person.favor)return {name:person.name,text:"太感谢了，委托办成啦！"};
+ if(s.spoken&&person.favor)return {name:person.name,text:person.favor.line};
+ return {name:person.name,text:person.line};
+}
+export function wrapSpeech(text,maxChars=14,maxLines=3){
+ const result=[],width=Math.max(2,Math.floor(maxChars)),limit=Math.max(1,Math.floor(maxLines));
+ let current="";
+ for(const ch of String(text??"")){
+  if(ch==="\n"){if(current)result.push(current);current="";continue;}
+  if(Array.from(current).length>=width){result.push(current);current="";}
+  current+=ch;
+ }
+ if(current)result.push(current);
+ if(result.length>limit){
+  const cropped=result.slice(0,limit);
+  cropped[limit-1]=Array.from(cropped[limit-1]).slice(0,width-1).join("")+"…";
+  return cropped;
+ }
+ return result;
+}
+function npcBubble(g,hits,win,s,motion){
+ const speech=customerSpeech(s,motion);
+ if(!speech)return;
+ const {x,y,w,h}=win;
+ const bw=Math.min(w-8,Math.max(120,w*.91));
+ const font=Math.max(12,Math.min(15,Math.floor(w/17)));
+ const lines=wrapSpeech(speech.text,Math.floor((bw-22)/font),3);
+ const lineH=font+4;
+ const bh=24+lines.length*lineH+10;
+ const bx=x+(w-bw)/2;
+ const by=Math.max(y+12,y+h-bh-35);
+ // Message is attached to the customer's torso; a small upward tail points to them.
+ g.save();
+ g.beginPath();g.roundRect(bx,by,bw,bh,9);g.fillStyle=C.cream;g.fill();
+ g.strokeStyle=C.outline;g.lineWidth=2;g.stroke();
+ g.beginPath();g.moveTo(bx+bw*.50,by+1);g.lineTo(bx+bw*.45,by-9);
+ g.lineTo(bx+bw*.59,by+1);g.closePath();g.fillStyle=C.cream;g.fill();
+ t(g,speech.name,bx+11,by+13,12,C.blue);
+ lines.forEach((line,i)=>t(g,line,bx+11,by+29+i*lineH,font,C.ink));
+ g.restore();
+ hit(hits,bx,by,bw,bh,"talk");
+}
+
 function wooden(g,x,y,w,h,seed=1,base=C.wood){
  r(g,x,y,w,h,base);const rows=Math.max(1,Math.floor(h/21));
  for(let k=0;k<rows;k++){
@@ -133,7 +183,12 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
   flatDialogue(g,short,x+w*.51,y+h*.10,w*.43,Math.max(31,h*.16));
  }
  flatWindow(g,x,y,w,h,s.windowOpen);
+ // The physical latch remains the only window-close target.
  hit(hits,x+w*.16,y+h-23,w*.68,49,"window");
+ // Tapping the actual customer speaks to them. Dialogue bubble is also tappable.
+ if(s.windowOpen&&(!motion||motion.stage==="idle"))
+  hit(hits,x+w*.15,y+h*.09,w*.70,h*.63,"talk");
+ npcBubble(g,hits,{x,y,w,h},s,motion);
 }
 function smallGlow(g,x,y,phase){
  const z=6+Math.sin(phase*.03)*1.5;
@@ -246,7 +301,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
- const shop=land?{x:154,y:headH,w:W-300,h:H-headH-93}:{x:0,y:headH,w:W,h:H-headH-244};
+ const shop=land?{x:154,y:headH,w:W-300,h:H-headH-93}:{x:0,y:headH,w:W,h:H-headH-160};
  scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
@@ -272,18 +327,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   t(g,"邻里委托",W-130,headH+185,13,C.gold);
   t(g,!favor?"暂无":s.favorDone?"已完成 +¥"+favor.tip:s.spoken?GOODS[favor.sku].name+" +¥"+favor.tip:"交谈后了解",W-130,headH+211,12,C.cream,"left",119);
   g.restore();
- }else{
-  const lower=shop.y+shop.h;
-  r(g,0,lower,W,84,"#203559");
- r(g,0,lower,W,3,C.gold);
-  t(g,visitor(s).name+"  ·  "+(s.windowOpen?GOODS[visitor(s).sku].name+" ¥"+GOODS[visitor(s).sku].price:"请点击窗闩开窗"),12,lower+16,15,C.gold);
-  t(g,"口碑 "+(s.reputation||0)+"/100",W-12,lower+16,12,C.gold,"right");
-  const favor=visitor(s).favor;
-  const favorText=!favor?"邻里委托：暂无":s.favorDone?"邻里委托：已完成，获得 ¥"+favor.tip:
-   s.spoken?"邻里委托："+GOODS[favor.sku].name+"，报酬 ¥"+favor.tip:"邻里委托：交谈后可了解";
-  t(g,favorText,12,lower+39,12,C.gold);
-  const note=s.notice.length>34?s.notice.slice(0,33)+"…":s.notice;
-  t(g,note,12,lower+65,11,C.cream);
+
  }
  const bottom=land?H-92:H-160;
  if(land){
