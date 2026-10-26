@@ -141,6 +141,11 @@ try{
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.upgrades?.shelves===1,{timeout:12000});
  assert.equal((await snapshot(guest)).cash,78);
  await host.screenshot({path:"artifacts/kiosk-shelf-upgraded.png",fullPage:false});
+ assert.equal((await guest.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="heat"),false);
+ await action(host,"heat");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.upgrades?.heating===1,{timeout:12000});
+ assert.equal((await snapshot(guest)).cash,42);
+ await host.screenshot({path:"artifacts/kiosk-heating-upgraded.png",fullPage:false});
  const mobileOverflow=await host.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2);
  assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
  // Local solo save survives refresh; source account is separate from legacy save.
@@ -171,12 +176,15 @@ try{
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  await action(solo,"upgrade");
  assert.equal((await snapshot(solo)).upgrades.shelves,1);
+ await action(solo,"heat");
+ assert.equal((await snapshot(solo)).upgrades.heating,1);
  await solo.reload();
  await solo.waitForFunction(()=>window.__KIOSK_TEST__?.getState!==undefined);
  await solo.locator("#resume").click();
  assert.equal((await snapshot(solo)).windowOpen,true);
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  assert.equal((await snapshot(solo)).upgrades.shelves,1,"upgrade survives original v3 localStorage key");
+ assert.equal((await snapshot(solo)).upgrades.heating,1,"insulation survives original v3 localStorage key");
  await solo.screenshot({path:"artifacts/kiosk-mobile-solo.png",fullPage:false});
  // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
  const wide=await open(context,1280,720);

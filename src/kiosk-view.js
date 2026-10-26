@@ -1,7 +1,7 @@
 // Handmade geometric pixel art. Every fixture/item/customer is a separate
 // draw routine (no flattened image / generated art); all clickable bounds
 // are registered with the same coordinates used to paint the object.
-import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost} from "./kiosk-core.js";
+import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead} from "./kiosk-core.js";
 import {drawWindowCustomer} from "./kiosk-guest.js";
 const C={ink:"#181d28",outline:"#272331",wall:"#66504a",wood:"#987159",woodLight:"#bd9874",
 trim:"#533d3f",shelf:"#bb8c69",dark:"#302d35",cream:"#e7cdb1",amber:"#e4b374",
@@ -174,6 +174,17 @@ function upgradePlaque(g,hits,x,y,w,h,s,isManager){
  t(g,"容量 +"+(level*2),x+w/2,y+h*.83,9,C.cream,"center");
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"upgrade");
 }
+function heatingPlaque(g,hits,x,y,w,h,s,isManager){
+ const upgraded=s.upgrades?.heating??0,cost=heatingUpgradeCost(s);
+ r(g,x+2,y+3,w,h,C.ink);r(g,x,y,w,h,C.trim);
+ r(g,x+3,y+3,w-6,h-6,upgraded?"#506b65":"#56545d");
+ r(g,x+8,y+8,w-16,3,C.woodLight);
+ for(let i=0;i<4;i++)r(g,x+11+i*(w-27)/3,y+12,3,9,upgraded?C.gold:C.blue);
+ t(g,"保温",x+w/2,y+h*.42,11,C.cream,"center");
+ t(g,cost===null?"已完成":"¥"+cost,x+w/2,y+h*.64,11,C.gold,"center");
+ t(g,upgraded?"省6/日":"暖气改造",x+w/2,y+h*.84,9,C.cream,"center");
+ if(isManager&&cost!==null)hit(hits,x,y,w,h,"heat");
+}
 function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  wooden(g,x,y,w,h,2,C.wall);
@@ -185,6 +196,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  cupboard(g,hits,x+w*.034,topCabY,w*.235,topCabH,"cabinetL",s,phase);
  cupboard(g,hits,x+w*.732,topCabY,w*.235,topCabH,"cabinetR",s,phase);
  upgradePlaque(g,hits,x+w*.28,y+h*.075,w*.155,h*.12,s,isManager);
+  heatingPlaque(g,hits,x+w*.565,y+h*.075,w*.155,h*.12,s,isManager);
  // Left and right shelf towers. Every shelf is a real storage location.
  const towerY=y+h*.245,tw=w*.225,ty=h*.135;
  for(let i=0;i<3;i++){
@@ -262,6 +274,8 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   t(g,"营业额 ¥"+s.earnings,17,headH+77,12,C.cream);
   t(g,"值班 "+Object.keys(s.players).length+" 人",17,headH+101,12,C.cream);
   t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+126,12,C.gold);
+   t(g,"保温 "+((s.upgrades?.heating??0)?"已完成":"未改造"),17,headH+151,12,C.gold);
+   t(g,"今日进货 ¥"+(s.dayExpenses||0),17,headH+176,12,C.cream);
   r(g,W-146,headH,146,shop.h,C.dark);
   t(g,"当前订单",W-130,headH+25,13,C.gold);
   t(g,visitor(s).name,W-130,headH+52,17,C.cream);
@@ -311,11 +325,14 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  if(s.phase==="summary"){
   r(g,0,0,W,H,"#171922e9");
   t(g,"今 日 打 烊",W/2,H*.27,32,C.gold,"center");
-  t(g,"服务顾客 "+s.served+" 人",W/2,H*.37,20,C.cream,"center");
-  t(g,"营业额 ¥"+s.earnings,W/2,H*.42,20,C.cream,"center");
-  t(g,"邻里委托 "+(s.favorCount||0)+" 件 / 小费 ¥"+(s.favorTips||0),W/2,H*.48,17,C.gold,"center");
-  t(g,"现金结余 ¥"+s.cash,W/2,H*.54,20,C.cream,"center");
-  chip(g,hits,W*.23,H*.64,W*.54,56,"开始下一天","nextday");
+  const bill=dailyOverhead(s);
+  t(g,"服务顾客 "+s.served+" 人",W/2,H*.35,19,C.cream,"center");
+  t(g,"销售 ¥"+s.earnings+" · 委托 ¥"+(s.favorTips||0),W/2,H*.41,17,C.cream,"center");
+  t(g,"本日进货 -¥"+(s.dayExpenses||0),W/2,H*.47,17,C.cream,"center");
+  t(g,"房租 -¥"+bill.rent+" · 暖气 -¥"+bill.heating,W/2,H*.53,17,C.cream,"center");
+  t(g,"经营净额 "+(s.dayNet<0?"-¥":"¥")+Math.abs(s.dayNet||0),W/2,H*.59,20,C.gold,"center");
+  t(g,"现金结余 ¥"+s.cash,W/2,H*.65,19,C.cream,"center");
+  chip(g,hits,W*.23,H*.73,W*.54,56,"开始下一天","nextday");
  }
  return hits;
 }

@@ -21,6 +21,9 @@ export const FIXTURES=Object.freeze({
 // The first purchase is affordable on day one; level two requires earned revenue.
 export const SHELF_UPGRADE_COSTS=Object.freeze([35,70]);
 export function shelfUpgradeCost(s){return SHELF_UPGRADE_COSTS[s.upgrades?.shelves??0]??null;}
+export const HEATING_UPGRADE_COST=36;
+export function heatingUpgradeCost(s){return (s.upgrades?.heating??0)===0?HEATING_UPGRADE_COST:null;}
+export function dailyOverhead(s){const rent=6,heating=(s.upgrades?.heating??0)===1?2:8;return {rent,heating,total:rent+heating};}
 export const CUSTOMERS=[
  {name:"卫叔",sku:"tea",line:"冻得耳朵都快掉了！来一杯热茶。",after:"喝了一口，才发现自己戴了两顶帽子。",tone:0},
  {name:"小苏",sku:"bread",line:"一块面包。别问为什么我只穿一只手套。",after:"她笑着把另一只手套从口袋里掏出来。",tone:1,favor:{sku:"tea",tip:8,line:"顺便替门外那位冻僵的雪人捎杯热茶。"}},
@@ -40,7 +43,7 @@ export function initialShop(){
  return {version:3,day:1,cash:100,earnings:0,stars:0,served:0,totalServed:0,
   phase:"operating",windowOpen:false,open:{cabinetL:false,cabinetR:false,drawerL:false,drawerR:false},
   slots,hand:null,counter:null,orderIndex:0,spoken:false,queue:0,selectedRestock:null,
-  players:{},upgrades:{shelves:0},favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
+  players:{},upgrades:{shelves:0,heating:0},dayExpenses:0,dayOverhead:0,dayNet:0,totalOverhead:0,favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
 }
 export function visitor(s){return CUSTOMERS[s.orderIndex % CUSTOMERS.length];}
 function putBack(s,sku,origin){
@@ -93,7 +96,7 @@ export function apply(s,by,a){
       if(s.cash<cost){s.notice="进货资金不够。";p.restock=null;}
       else if(slot.sku&&slot.sku!==kind){s.notice="这一格已有其他商品，先取走。";return false;}
       else if(slot.qty>=slotRoom(key,kind,s)){s.notice="这一格已经放满。";return false;}
-      else{slot.sku=kind;slot.qty++;s.cash-=cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;p.restock=null;}
+      else{slot.sku=kind;slot.qty++;s.cash-=cost;s.dayExpenses=(s.dayExpenses||0)+cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;p.restock=null;}
     }else if(p.hand){
       if(slot.sku&&slot.sku!==p.hand){s.notice="这格摆的是其他商品。";return false;}
       if(slot.qty>=slotRoom(key,p.hand,s)){s.notice="位置太小，放不下。";return false;}
@@ -122,6 +125,14 @@ export function apply(s,by,a){
       s.upgrades={...(s.upgrades||{}),shelves:level};
       s.notice="货架扩容升级到 "+level+"/2 级！每层货架容量增加 "+(level*2)+" 单位。";
     }
+ }
+ else if(cmd==="heat"){
+    if(p.role!=="manager")return false;
+    p.restock=null;
+    const cost=heatingUpgradeCost(s);
+    if(cost===null)s.notice="保温改造已经完成，暖气费每天节省 ¥6。";
+    else if(s.cash<cost)s.notice="保温改造需要 ¥"+cost+"，目前资金不足。";
+    else{s.cash-=cost;s.upgrades={...(s.upgrades||{}),heating:1};s.notice="门窗保温改造完成！每天暖气费从 ¥8 降为 ¥2。";}
  }
  else if(cmd==="restock" && GOODS[sku]){
     if(p.role!=="manager"||p.hand)return false;
@@ -155,7 +166,13 @@ export function apply(s,by,a){
     if(s.counter!==visitor(s).sku){s.notice=visitor(s).name+"摇了摇头：这不是我要的。请换货。";return false;}
     const price=GOODS[s.counter].price;s.cash+=price;s.earnings+=price;s.stars++;
     s.totalServed++;s.served++;s.notice=visitor(s).after+"  收款 ¥"+price;s.counter=null;s.spoken=false;s.favorDone=false;s.orderIndex++;
-    if(s.served>=5){s.phase="summary";s.notice="今日打烊！可以查看营业情况并开始第二天。";}
+    if(s.served>=5){
+      // Host settles exactly once on fifth sale; upgrades are capital investment, not daily operating costs.
+      const bill=dailyOverhead(s);
+      s.cash-=bill.total;s.dayOverhead=bill.total;s.totalOverhead=(s.totalOverhead||0)+bill.total;
+      s.dayNet=s.earnings+(s.favorTips||0)-(s.dayExpenses||0)-bill.total;
+      s.phase="summary";s.notice="今日打烊！房租 ¥"+bill.rent+"、暖气 ¥"+bill.heating+" 已结算。";
+    }
  }
  else if(cmd==="nextday" && s.phase==="summary"){} // resolved by explicit branch below
  else return false;
@@ -163,14 +180,18 @@ export function apply(s,by,a){
 }
 export function nextDay(s,by){
  if(!s.players[by]||s.players[by].role!=="manager"||s.phase!=="summary")return false;
- s.day++;s.served=0;s.earnings=0;s.favorCount=0;s.favorTips=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
+ s.day++;s.served=0;s.earnings=0;s.favorCount=0;s.favorTips=0;s.dayExpenses=0;s.dayOverhead=0;s.dayNet=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
 }
 export function validate(s){
  if(s?.version!==3)return false;
  if(s.counter!==null&&!GOODS[s.counter])return false;
  // Legacy v3 saves have no upgrades field; they are treated as level zero.
  if(s.upgrades!==undefined&&(!s.upgrades||typeof s.upgrades!=="object"||Array.isArray(s.upgrades)||
-   !Number.isInteger(s.upgrades.shelves)||s.upgrades.shelves<0||s.upgrades.shelves>SHELF_UPGRADE_COSTS.length))return false;
+   !Number.isInteger(s.upgrades.shelves)||s.upgrades.shelves<0||s.upgrades.shelves>SHELF_UPGRADE_COSTS.length||
+   (s.upgrades.heating!==undefined&&s.upgrades.heating!==0&&s.upgrades.heating!==1)))return false;
+ for(const field of ["dayExpenses","dayOverhead","totalOverhead"])
+   if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
+ if(s.dayNet!==undefined&&!Number.isSafeInteger(s.dayNet))return false;
  if(s.favorDone!==undefined&&typeof s.favorDone!=="boolean")return false;
  for(const field of ["favorCount","favorTips","totalFavors"])
    if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
