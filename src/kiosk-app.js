@@ -1,5 +1,6 @@
 import {GOODS,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {render} from "./kiosk-view.js";
+import {drawAmbient} from "./kiosk-skin.js";
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
 import {RoomNetwork} from "./network.js";
@@ -88,7 +89,7 @@ function resize(){
  const W=land?960:480, H=Math.max(land?500:640,Math.round(W*height/width));
  screen={W,H,land};
  canvas.width=W;canvas.height=H;
- ctx.imageSmoothingEnabled=false;
+ ctx.imageSmoothingEnabled=true;
 }
 window.addEventListener("resize",resize);window.addEventListener("orientationchange",resize);
 canvas.addEventListener("pointerdown",e=>{
@@ -119,8 +120,8 @@ function frame(){
  ctx.imageSmoothingEnabled=false;
  if(state){const now=performance.now();customerMotion=sampleCustomerMotion(state,now);heldItemMotion=sampleHeldItemMotion(state,id,now);hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion);}
  else{
-  ctx.fillStyle="#1a202b";ctx.fillRect(0,0,screen.W,screen.H);
-  ctx.fillStyle="#e3ba8a";ctx.textAlign="center";ctx.font="bold 19px monospace";
+  drawAmbient(ctx,screen.W,screen.H,phase);
+  ctx.fillStyle="#fff3dd";ctx.textAlign="center";ctx.font="bold 19px monospace";
   ctx.fillText("冬夜杂货窗口 · 等待营业",screen.W/2,screen.H/2);
   hits=[];
  }
