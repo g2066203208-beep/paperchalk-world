@@ -115,6 +115,16 @@ try{
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand==="tea",{timeout:12000});
  await action(host,"counter");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
+ // Wrong item for the bread order: both WebRTC clients must observe a single
+ // mistake without removing the tea from the shared counter.
+ await action(guest,"sell");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.mistakes===1,{timeout:12000});
+ assert.equal((await snapshot(host)).counter,"tea");
+ assert.equal((await snapshot(host)).cash,105);
+ await action(host,"sell");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.revision>0,{timeout:12000});
+ assert.equal((await snapshot(host)).mistakes,1,"repeated wrong clicks cannot stack penalties");
+ await host.screenshot({path:"artifacts/kiosk-wrong-item-feedback.png",fullPage:false});
  await action(guest,"commission");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.favorDone===true,{timeout:12000});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="favor",{timeout:4000});
