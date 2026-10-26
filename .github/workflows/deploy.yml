@@ -51,18 +51,24 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
-      - name: Prepare Chinese UI fonts without blocking gameplay tests
+      - name: Ensure Chinese glyphs before recording real browser screenshots
         run: |
-          # Font packages are optional; do not skip real Chromium multiplayer
-          # checks when GitHub runner apt mirrors stall.
-          if fc-list : family | grep -qi "Noto Sans CJK"; then
-            echo "Noto CJK already available"
-          else
-            timeout 20s sudo apt-get update -qq || echo "apt mirror unavailable; using cached lists"
-            timeout 35s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk || echo "CJK font install unavailable; continuing browser tests"
+          set -euo pipefail
+          if ! fc-list :lang=zh family | grep -qi 'Noto Sans CJK'; then
+            mkdir -p "$HOME/.local/share/fonts"
+            # Runner apt mirrors sometimes hang. Fetch this OFL-licensed font
+            # only into the temporary CI machine, never into game assets.
+            curl -fL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 110 \
+              'https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf' \
+              -o "$HOME/.local/share/fonts/NotoSansCJKsc-Regular.otf"
+            test "$(stat -c%s "$HOME/.local/share/fonts/NotoSansCJKsc-Regular.otf")" -gt 1000000
+            fc-cache -f
           fi
-          fc-cache -f || true
-          fc-match "Noto Sans CJK SC" || true
+          fc-match -f '%{family}\n' 'Noto Sans CJK SC'
+          fc-list :lang=zh family | grep -qi 'Noto Sans CJK' || {
+            echo 'Missing Chinese glyph font; refusing to publish unreadable screenshot evidence.' >&2
+            exit 1
+          }
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
