@@ -266,6 +266,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  if(s.counter&&!itemMotion?.hideCounter)sprite(g,s.counter,mat.x+mat.w*.40,mat.y+mat.h*.1,Math.min(3,mat.h*.070));
  else t(g,"交接台",mat.x+mat.w/2,mat.y+mat.h/2,11,C.cream,"center");
  hit(hits,mat.x,mat.y,mat.w,mat.h,"counter");
+ if(s.counter)hit(hits,mat.x,mat.y,mat.w,mat.h,"counter",undefined,"hold");
  // A sold product is animated independently from the authoritative counter
  // inventory. Its destination follows the moving customer's receiving hand.
  if(motion?.handoff&&GOODS[motion.handoff.sku]){
