@@ -45,10 +45,10 @@ export const CUSTOMERS=[
 ];
 export function initialShop(){
  const slots={};for(const key of Object.keys(FIXTURES))slots[key]={sku:null,qty:0};
- slots.shelfL1={sku:"tea",qty:2};
- slots.shelfL2={sku:"bread",qty:2};
- slots.shelfR1={sku:"battery",qty:2};
- slots.drawerL={sku:"cocoa",qty:2};
+ slots.shelfL1={sku:"tea",qty:2,lastSku:"tea"};
+ slots.shelfL2={sku:"bread",qty:2,lastSku:"bread"};
+ slots.shelfR1={sku:"battery",qty:2,lastSku:"battery"};
+ slots.drawerL={sku:"cocoa",qty:2,lastSku:"cocoa"};
  return {version:3,day:1,cash:100,earnings:0,stars:0,served:0,totalServed:0,
   phase:"operating",windowOpen:false,open:{cabinetL:false,cabinetR:false,drawerL:false,drawerR:false},
   slots,hand:null,counter:null,orderIndex:0,spoken:false,queue:0,selectedRestock:null,
@@ -59,7 +59,7 @@ export function initialShop(){
 export function visitor(s){return CUSTOMERS[s.orderIndex % CUSTOMERS.length];}
 function putBack(s,sku,origin){
  const keys=[origin,...Object.keys(FIXTURES)].filter((k,i,all)=>FIXTURES[k]&&all.indexOf(k)===i);
- for(const k of keys){const v=s.slots[k];if(v&&(!v.sku||v.sku===sku)&&v.qty<slotRoom(k,sku,s)){v.sku=sku;v.qty++;return;}}
+ for(const k of keys){const v=s.slots[k];if(v&&(!v.sku||v.sku===sku)&&v.qty<slotRoom(k,sku,s)){v.sku=sku;v.lastSku=sku;v.qty++;return;}}
  if(!s.counter)s.counter=sku;else(s.returns??=[]).push(sku);
 }
 export function join(s,id,name){
@@ -107,13 +107,13 @@ export function apply(s,by,a){
       if(s.cash<cost){s.notice="进货资金不够。";p.restock=null;}
       else if(slot.sku&&slot.sku!==kind){s.notice="这一格已有其他商品，先取走。";return false;}
       else if(slot.qty>=slotRoom(key,kind,s)){s.notice="这一格已经放满。";return false;}
-      else{slot.sku=kind;slot.qty++;s.cash-=cost;s.dayExpenses=(s.dayExpenses||0)+cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;p.restock=null;}
+      else{slot.sku=kind;slot.lastSku=kind;slot.qty++;s.cash-=cost;s.dayExpenses=(s.dayExpenses||0)+cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;p.restock=null;}
     }else if(p.hand){
       if(slot.sku&&slot.sku!==p.hand){s.notice="这格摆的是其他商品。";return false;}
       if(slot.qty>=slotRoom(key,p.hand,s)){s.notice="位置太小，放不下。";return false;}
-      slot.sku=p.hand;slot.qty++;s.notice="把"+GOODS[p.hand].name+"放回了"+FIXTURES[key].label;p.hand=null;p.origin=null;
+      slot.sku=p.hand;slot.lastSku=p.hand;slot.qty++;s.notice="把"+GOODS[p.hand].name+"放回了"+FIXTURES[key].label;p.hand=null;p.origin=null;
     }else if(slot.qty>0){
-      p.hand=slot.sku;p.origin=key;slot.qty--;if(slot.qty===0)slot.sku=null;
+      p.hand=slot.sku;p.origin=key;slot.lastSku=slot.sku;slot.qty--;if(slot.qty===0)slot.sku=null;
       s.notice="拿起了"+GOODS[p.hand].name+"。现在点柜台放下。";
     }else{s.notice="这里还空着。可先选择进货，再点这个位置。";}
  }
@@ -235,6 +235,7 @@ export function validate(s){
  for(const p of Object.values(s.players||{}))if((p.hand&&!GOODS[p.hand])||(p.restock&&!GOODS[p.restock]))return false;
  for(const [key,f] of Object.entries(FIXTURES)){
    const v=s.slots?.[key];if(!v||!Number.isInteger(v.qty)||v.qty<0)return false;
+   if(v.lastSku!==undefined&&v.lastSku!==null&&!GOODS[v.lastSku])return false;
    if(v.qty>0&&(!GOODS[v.sku]||v.qty>slotRoom(key,v.sku,s)))return false;
    if(v.qty===0&&v.sku!==null)return false;
  }
