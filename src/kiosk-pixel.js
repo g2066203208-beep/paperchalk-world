@@ -22,7 +22,7 @@ const palettes=[
  {coat:"#416e74",coatLight:"#6d9e9b",coatShadow:"#2a485a",hair:"#c1b5a1",hairShade:"#7d796e",skin:"#d8a88d",skinLight:"#f4cfaa",hat:"#546f79",hatLight:"#a3d0c4",scarf:"#f3d0a0",eyes:"#344454"},
  {coat:"#a16d53",coatLight:"#cb9b6e",coatShadow:"#60495c",hair:"#393b59",hairShade:"#222c49",skin:"#edb89e",skinLight:"#ffddbc",hat:"#2e456e",hatLight:"#9bbce1",scarf:"#b6cbe4",eyes:"#253455"}
 ];
-function paintPerson(g,p,kind,blink,talk,receive){
+function paintPerson(g,p,kind,blink,talk,receive,refuse){
  const O="#17213d",shadow="#25304b";
  // Outlined stepped silhouette: long coat, narrow waist, padded sleeves.
  steps(g,[[13,75,54,45],[8,83,64,30],[4,94,72,24]],O);
@@ -70,11 +70,17 @@ function paintPerson(g,p,kind,blink,talk,receive){
    px(g,ex+1,46,2,3,"#8fd1ee");px(g,ex+1,46,1,1,"#ffffff");
   }
  }
+ if(refuse){ // Lowered brows make an incorrect order visibly upsetting.
+  px(g,29,41,10,2,p.eyes);px(g,46,40,10,2,p.eyes);
+  px(g,30,42,5,1,p.eyes);px(g,51,42,5,1,p.eyes);
+ }
  if(kind===2){ // Small glasses, readable even when the customer blinks.
   px(g,29,43,12,1,"#4d5c6b");px(g,43,43,12,1,"#4d5c6b");px(g,40,44,4,1,"#4d5c6b");
  }
  px(g,39,54,2,2,"#d89487");px(g,28,55,4,2,"#e49d9d");px(g,50,55,4,2,"#e49d9d");
- if(talk){px(g,37,59,7,4,"#a95364");px(g,39,61,3,1,"#f2b4aa");}
+ if(refuse){
+  px(g,36,61,9,2,"#754459");px(g,36,59,2,3,"#754459");px(g,43,59,2,3,"#754459");
+ }else if(talk){px(g,37,59,7,4,"#a95364");px(g,39,61,3,1,"#f2b4aa");}
  else{px(g,37,60,7,2,"#9b5568");px(g,39,62,3,1,"#f5c6b7");}
  // Scarf + pin + asymmetric scarf tail.
  steps(g,[[22,68,36,10],[24,76,32,5]],O);
@@ -88,6 +94,13 @@ function paintPerson(g,p,kind,blink,talk,receive){
   steps(g,[[54,82,15,7],[61,78,12,8]],p.coatLight);
   steps(g,[[68,76,8,11]],O);px(g,69,77,6,8,p.skinLight);
   px(g,69,77,6,2,"#fff4d8");
+ }else if(refuse){
+  // Arms fold across the coat: a separate hand-authored pose.
+  steps(g,[[5,88,27,16],[48,88,27,16],[22,96,37,13]],O);
+  steps(g,[[7,90,25,12],[48,90,25,12]],p.coatLight);
+  steps(g,[[18,96,44,10]],p.coatShadow);
+  px(g,21,95,8,7,p.skinLight);px(g,51,95,8,7,p.skinLight);
+  px(g,22,95,6,2,"#fff1d8");px(g,52,95,6,2,"#fff1d8");
  }else{
   steps(g,[[5,101,18,15],[57,101,18,15]],O);
   steps(g,[[7,102,14,11],[59,102,14,11]],p.hat);
@@ -99,13 +112,14 @@ function paintPerson(g,p,kind,blink,talk,receive){
  px(g,27,102,5,1,p.coatLight);px(g,48,102,5,1,p.coatLight);
  px(g,20,117,40,2,shadow);
 }
-export function drawPixelCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false,receiving=false}){
+export function drawPixelCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false,receiving=false,refusing=false}){
  const kind=((Math.floor(tone)%4)+4)%4;
  const blink=Math.floor(phase)%197>=193;
  const mouth=Boolean(talking)&&Math.floor(phase/10)%2===0;
- const key="person-"+[kind,+blink,+mouth,+Boolean(receiving)].join("-");
+ const refusal=Boolean(refusing)&&!receiving;
+ const key="person-"+[kind,+blink,+mouth,+Boolean(receiving),+refusal].join("-");
  let img=cache.get(key);
- if(!img){img=raster(80,120,c=>paintPerson(c,palettes[kind],kind,blink,mouth,receiving));cache.set(key,img);}
+ if(!img){img=raster(80,120,c=>paintPerson(c,palettes[kind],kind,blink,mouth,receiving,refusal));cache.set(key,img);}
  const s=Math.min(w/80,h/120);
  const bob=Math.round(Math.sin(phase*.06)*1.1);
  const xx=Math.round(x+w/2-40*s),yy=Math.round(y+h*.96-120*s+bob);
