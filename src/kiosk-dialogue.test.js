@@ -1,0 +1,34 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {createSpeechPresentation} from "./kiosk-dialogue.js";
+test("NPC bubble is temporary and reappears only after a relevant action",()=>{
+ const ui=createSpeechPresentation(4000);
+ const s={windowOpen:false,phase:"operating",orderIndex:0,spoken:false,wrongAttempted:false,favorDone:false};
+ assert.equal(ui.sample(s,0),false);
+ s.windowOpen=true;
+ assert.equal(ui.sample(s,100),true,"new arrival speaks");
+ assert.equal(ui.sample(s,4100),false,"idle customer does not keep permanent speech panel");
+ ui.prompt(5000);
+ assert.equal(ui.sample(s,5200),true,"tapping a customer can revive dialogue");
+ assert.equal(ui.sample(s,9000),false);
+ s.spoken=true;
+ assert.equal(ui.sample(s,9200),true,"new question/commission revives dialogue");
+ assert.equal(ui.sample(s,13300),false);
+ s.wrongAttempted=true;
+ assert.equal(ui.sample(s,13500),true,"refusal appears in NPC speech");
+ s.favorDone=true;
+ assert.equal(ui.sample(s,18000),true,"commission thanks appear once");
+ s.orderIndex=1;s.spoken=false;s.favorDone=false;s.wrongAttempted=false;
+ assert.equal(ui.sample(s,22000),true,"new customer gets fresh speech");
+ s.windowOpen=false;
+ assert.equal(ui.sample(s,22001),false,"closed window has no dialogue");
+ s.windowOpen=true;
+ assert.equal(ui.sample(s,22100),true,"reopening window starts a new speech window");
+});
+test("speech visibility is local presentation and never mutates shop state",()=>{
+ const ui=createSpeechPresentation();
+ const s={windowOpen:true,phase:"operating",orderIndex:0,spoken:false,wrongAttempted:false,favorDone:false};
+ const before=JSON.stringify(s);
+ ui.sample(s,10);ui.prompt(20);ui.sample(s,5000);
+ assert.equal(JSON.stringify(s),before);
+});
