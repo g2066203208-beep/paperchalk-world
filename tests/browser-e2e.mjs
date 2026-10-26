@@ -46,6 +46,11 @@ try{
  await action(guest,"window");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.windowOpen===true,{timeout:15000});
  assert.equal((await snapshot(host)).windowOpen,true);
+ await fs.mkdir("artifacts",{recursive:true});
+ await host.screenshot({path:"artifacts/kiosk-first-customer.png",fullPage:false});
+ await action(guest,"talk");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.spoken===true,{timeout:12000});
+ await host.screenshot({path:"artifacts/kiosk-customer-talking.png",fullPage:false});
  await action(guest,"slot","shelfL1");
  const guestId=await guest.evaluate(()=>window.__KIOSK_TEST__.getSelfId());
  await host.waitForFunction(id=>window.__KIOSK_TEST__.getState()?.players?.[id]?.hand==="tea",guestId,{timeout:12000});
