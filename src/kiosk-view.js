@@ -239,7 +239,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  drawAmbient(g,W,H,phase);
  const headH=land?48:54;
  drawGameFrame(g,W,H,land,headH,phase);
- t(g,"冬 夜 · 售 货 窗",76,headH*.47,land?17:16,C.cream);
+ t(g,"冬 夜 · 售 货 窗",90,headH*.47,land?17:16,C.cream);
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
@@ -249,15 +249,15 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
   g.save();g.beginPath();g.rect(0,headH,154,shop.h);g.clip();
-  t(g,"今日",17,headH+24,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+52,14,C.cream);
-  t(g,"营业额 ¥"+s.earnings,17,headH+77,12,C.cream);
-  t(g,"值班 "+Object.keys(s.players).length+" 人",17,headH+101,12,C.cream);
-  t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+126,12,C.gold);
-   t(g,"保温 "+((s.upgrades?.heating??0)?"已完成":"未改造"),17,headH+151,12,C.gold);
-   t(g,"今日进货 ¥"+(s.dayExpenses||0),17,headH+176,12,C.cream);
-   t(g,"口碑 "+(s.reputation||0)+"/100 · "+reputationLevel(s)+"级",17,headH+201,12,C.gold,"left",128);
-   t(g,"熟客小费 ¥"+(s.loyaltyTips||0),17,headH+226,12,C.cream,"left",128);
-   t(g,"每单 +¥"+loyaltyTip(s),17,headH+248,12,C.cream);
+  t(g,"今日",17,headH+36,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+64,14,C.cream);
+  t(g,"营业额 ¥"+s.earnings,17,headH+89,12,C.cream);
+  t(g,"值班 "+Object.keys(s.players).length+" 人",17,headH+113,12,C.cream);
+  t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+138,12,C.gold);
+   t(g,"保温 "+((s.upgrades?.heating??0)?"已完成":"未改造"),17,headH+163,12,C.gold);
+   t(g,"今日进货 ¥"+(s.dayExpenses||0),17,headH+188,12,C.cream);
+   t(g,"口碑 "+(s.reputation||0)+"/100 · "+reputationLevel(s)+"级",17,headH+213,12,C.gold,"left",128);
+   t(g,"熟客小费 ¥"+(s.loyaltyTips||0),17,headH+238,12,C.cream,"left",128);
+   t(g,"每单 +¥"+loyaltyTip(s),17,headH+260,12,C.cream);
   g.restore();
   r(g,W-146,headH,146,shop.h,C.dark);
   g.save();g.beginPath();g.rect(W-146,headH,146,shop.h);g.clip();
