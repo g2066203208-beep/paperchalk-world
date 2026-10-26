@@ -64,6 +64,7 @@ try{
  // Local solo save survives refresh; source account is separate from legacy save.
  const solo=await open(context);
  await solo.locator("#solo").click();
+ await solo.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window")));
  await action(solo,"window");
  await solo.reload();
  await solo.waitForFunction(()=>window.__KIOSK_TEST__?.getState!==undefined);
@@ -73,6 +74,7 @@ try{
  // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
  const wide=await open(context,1280,720);
  await wide.locator("#solo").click();
+ await wide.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().length));
  assert.equal((await wide.evaluate(()=>window.__KIOSK_TEST__.screen())).land,true);
  assert.ok((await wide.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="slot"));
  await wide.screenshot({path:"artifacts/kiosk-landscape-desktop.png",fullPage:false});

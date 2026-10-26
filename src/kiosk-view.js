@@ -127,7 +127,7 @@ function windowFrame(g,hits,x,y,w,h,s,phase){
  r(g,x,y+h-5,w,4,C.ink);
  // Click the fixed latch at the sill, allowing customers to remain clickable.
  r(g,x+w*.44,y+h+2,w*.12,5,C.gold);
- hit(hits,x+w*.28,y+h-17,w*.44,36,"window");
+ hit(hits,x+w*.17,y+h-25,w*.66,55,"window");
 }
 function smallGlow(g,x,y,step){
  r(g,x-34,y-10,68,9,"#b38b5d");r(g,x-25,y-1,50,7,C.woodLight);
@@ -187,7 +187,7 @@ export function render(g,s,view,phase=0){
  r(g,0,0,W,H,C.ink);
  const headH=land?48:54;
  r(g,0,0,W,headH,C.trim);r(g,0,headH-3,W,3,C.gold);
- t(g,"雪 夜 杂 货 铺",12,headH*.47,land?17:16,C.cream);
+ t(g,"雪 夜 杂 货 铺",56,headH*.47,land?17:16,C.cream);
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.

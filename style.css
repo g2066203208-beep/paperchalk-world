@@ -10,3 +10,9 @@
 label{font-size:12px;color:#d6bb98;display:block;margin-top:9px;text-align:left}input{width:100%;min-height:44px;margin-top:5px;padding:8px 12px;border:2px solid #ad825f;background:#272a33;color:#f1ddbe;font-size:16px;border-radius:0;touch-action:manipulation}
 .buttons{display:flex;gap:8px;margin-top:10px}.buttons button{flex:1}.buttons button,.close{min-height:47px;padding:8px;font-size:13px;font-weight:700;border:2px solid #c5a06c;background:#644c44;color:#fff1d7;cursor:pointer}.buttons button:active,.close:active{background:#846753}.buttons #solo{background:#547566}.buttons #resume{background:#3b5867}.close{margin-top:9px;width:100%;background:#38363e}.fine{font-size:10px;color:#b1a89b;line-height:1.5;margin:8px 0 0}
 @media(max-height:660px){.panel{padding:9px}.instructions{font-size:11px;margin:4px 0;padding:6px}.shelf-icon{display:none}h1{font-size:21px}.fine{display:none}.modal{padding:6px}.panel input{min-height:33px;padding:4px}.buttons button{min-height:34px}}
+
+/* Game HUD is deliberately outside the canvas header's title and money cells. */
+#hud{right:auto;width:40px}
+#roomCode{position:fixed;top:calc(59px + env(safe-area-inset-top,0px));left:8px;background:#1b2028d9;padding:5px 8px;max-width:54vw;pointer-events:auto;font-size:10px;color:#e5b67b}
+#roomCode:empty{display:none}
+#status{position:fixed;top:calc(59px + env(safe-area-inset-top,0px));right:8px;margin:0;max-width:47vw;padding:5px 7px;background:#1b2028d9;pointer-events:none;text-align:right;font-size:10px}
