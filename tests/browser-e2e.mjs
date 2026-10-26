@@ -229,6 +229,37 @@ try{
    await p.screenshot({path:"artifacts/kiosk-"+name+".png",fullPage:false});
    await p.close();
  }
+ // Verify compact portrait and wide mobile landscape, not just desktop screenshots.
+ // The art is rendered from separate 80x120 and 24x28 pixel sprites.
+ const pixelGrid=await host.evaluate(async()=> (await import("./src/kiosk-pixel.js")).PIXEL_GRID);
+ assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.customer)),[80,120]);
+ assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.item)),[24,28]);
+ for(const [vw,vh,label] of [[320,568,"compact-portrait"],[844,390,"phone-landscape"]]){
+   const phone=await open(context,vw,vh);
+   await phone.locator("#solo").click();
+   await phone.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()?.players?.solo));
+   await action(phone,"window");
+   await phone.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:6000});
+   const measurements=await phone.evaluate(()=>{
+     const {W,H,land}=window.__KIOSK_TEST__.screen();
+     const box=document.querySelector("#game").getBoundingClientRect();
+     const h=window.__KIOSK_TEST__.getHits().filter(x=>["talk","sell","commission","restock"].includes(x.cmd));
+     return {W,H,land,screenWidth:innerWidth,screenHeight:innerHeight,
+       hitSizes:h.map(x=>({cmd:x.cmd,width:x.w*box.width/W,height:x.h*box.height/H})),
+       overflow:document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2};
+   });
+   assert.equal(measurements.land,vw>vh,"orientation must match physical viewport");
+   assert.ok(Math.abs(measurements.W/measurements.H-vw/vh)<.005,
+     label+" aspect ratio distorted: "+JSON.stringify(measurements));
+   assert.equal(measurements.overflow,false,label+" must not scroll");
+   assert.ok(measurements.hitSizes.length>=3,label+" must expose controls");
+   for(const hit of measurements.hitSizes){
+     assert.ok(hit.width>=44&&hit.height>=44,
+       label+" touch target below 44 CSS px: "+JSON.stringify(hit));
+   }
+   await phone.screenshot({path:"artifacts/kiosk-"+label+"-pixel.png",fullPage:false});
+   await phone.close();
+ }
  // Five real solo sales verify end-of-day rating and persistent reputation.
  const growth=await open(context);
  await growth.locator("#solo").click();
