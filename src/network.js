@@ -80,17 +80,18 @@ export class RoomNetwork{
     // callback fires; that race previously stranded a connected clerk.
     conn.on("data",data=>{
       if(!data||typeof data!=="object")return;
-      if(data.t==="join"&&!joined){
-        const name=String(data.name||"旅人").slice(0,14);
-        const permitted=this.cb.join?.(conn.peer,name);
-        if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();return;}
-        joined=true;
-        // The host callback has already applied the join and broadcast a
-        // snapshot. Send welcome *before* an explicit latest-state replay:
-        // guest ignores state packets until welcome sets ready=true.
+      if(data.t==="join"){
+        if(!joined){
+          const name=String(data.name||"旅人").slice(0,14);
+          const permitted=this.cb.join?.(conn.peer,name);
+          if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();return;}
+          joined=true;
+          this.cb.roster?.();
+        }
+        // Idempotent handshake: resend welcome when a guest retransmits join.
+        // The player is added only once, and the authoritative state follows.
         conn.send({t:"welcome",id:conn.peer,room:this.room});
         if(this.lastState)conn.send({t:"state",state:this.lastState});
-        this.cb.roster?.();
       }else if(data.t==="input"&&joined){
         if(!this.inbox.push(conn.peer,data.input))
           conn.send({t:"input-rejected",reason:"操作过快或操作序号无效"});
