@@ -48,7 +48,20 @@ try{
  await guest.locator("#nickname").fill("店员");
  await guest.locator("#joinCode").fill(code);
  await guest.locator("#join").click();
- await guest.waitForFunction(()=>Object.keys(window.__KIOSK_TEST__.getState()?.players||{}).length===2,{timeout:20000});
+ try{
+   await guest.waitForFunction(()=>Object.keys(window.__KIOSK_TEST__.getState()?.players||{}).length===2,undefined,{timeout:18000});
+ }catch(e){
+   console.error("WebRTC join diagnostic",JSON.stringify({
+     room:code,
+     hostStatus:await host.locator("#status").textContent(),
+     guestStatus:await guest.locator("#status").textContent(),
+     hostPlayers:Object.keys((await snapshot(host))?.players||{}),
+     guestPlayers:Object.keys((await snapshot(guest))?.players||{}),
+     pageErrors:errors
+   }));
+   await guest.screenshot({path:"artifacts/kiosk-join-failed.png",fullPage:false});
+   throw e;
+ }
  await action(guest,"window");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.windowOpen===true,{timeout:15000});
  assert.equal((await snapshot(host)).windowOpen,true);
