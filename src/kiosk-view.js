@@ -6,7 +6,12 @@ import {drawAmbient,drawRoomWall,drawGameFrame,drawSkinButton} from "./kiosk-ski
 import {drawPixelCustomer,drawPixelItem,drawPixelStreet} from "./kiosk-pixel.js";
 const C={ink:"#122140",outline:"#25365b",wall:"#33466a",wood:"#ab7a61",woodLight:"#e0b78a",trim:"#263454",shelf:"#c78d63",dark:"#17294e",cream:"#fff3e2",amber:"#ffc76b",sky:"#5b83b5",snow:"#ebf2ff",blue:"#89b9df",gold:"#ffcd79",green:"#729db2",red:"#d97a7d"};
 const r=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
-const t=(g,text,x,y,size=12,color=C.cream,align="left")=>{g.fillStyle=color;g.font='bold '+size+'px ui-monospace, "Noto Sans SC",monospace';g.textAlign=align;g.textBaseline="middle";g.fillText(String(text),Math.round(x),Math.round(y));};
+const t=(g,text,x,y,size=12,color=C.cream,align="left",maxWidth=null)=>{
+ g.fillStyle=color;g.font='bold '+size+'px ui-monospace, "Noto Sans SC",monospace';
+ g.textAlign=align;g.textBaseline="middle";
+ if(maxWidth)g.fillText(String(text),Math.round(x),Math.round(y),maxWidth);
+ else g.fillText(String(text),Math.round(x),Math.round(y));
+};
 const frame=(g,x,y,w,h,th=5)=>{r(g,x,y,w,h,C.outline);r(g,x+th,y+th,w-2*th,h-2*th,C.woodLight);r(g,x+th*2,y+th*2,w-4*th,h-4*th,C.trim);};
 const shine=(g,x,y,w)=>{r(g,x,y,w,2,C.woodLight);r(g,x,y+3,w,1,C.trim);};
 const hit=(hits,x,y,w,h,cmd,key)=>hits.push({x,y,w,h,cmd,key});
@@ -243,15 +248,19 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
+  g.save();g.beginPath();g.rect(0,headH,154,shop.h);g.clip();
   t(g,"今日",17,headH+24,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+52,14,C.cream);
   t(g,"营业额 ¥"+s.earnings,17,headH+77,12,C.cream);
   t(g,"值班 "+Object.keys(s.players).length+" 人",17,headH+101,12,C.cream);
   t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+126,12,C.gold);
    t(g,"保温 "+((s.upgrades?.heating??0)?"已完成":"未改造"),17,headH+151,12,C.gold);
    t(g,"今日进货 ¥"+(s.dayExpenses||0),17,headH+176,12,C.cream);
-   t(g,"口碑 "+(s.reputation||0)+"/100 · "+reputationLevel(s)+"级",17,headH+201,12,C.gold);
-   t(g,"熟客小费 ¥"+(s.loyaltyTips||0)+" · 每单 +¥"+loyaltyTip(s),17,headH+226,12,C.cream);
+   t(g,"口碑 "+(s.reputation||0)+"/100 · "+reputationLevel(s)+"级",17,headH+201,12,C.gold,"left",128);
+   t(g,"熟客小费 ¥"+(s.loyaltyTips||0),17,headH+226,12,C.cream,"left",128);
+   t(g,"每单 +¥"+loyaltyTip(s),17,headH+248,12,C.cream);
+  g.restore();
   r(g,W-146,headH,146,shop.h,C.dark);
+  g.save();g.beginPath();g.rect(W-146,headH,146,shop.h);g.clip();
   t(g,"当前订单",W-130,headH+25,13,C.gold);
   t(g,visitor(s).name,W-130,headH+52,17,C.cream);
   t(g,GOODS[visitor(s).sku].name,W-130,headH+87,15,C.cream);
@@ -259,7 +268,8 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   t(g,s.windowOpen?"营业中":"未开窗",W-130,headH+150,12,C.gold);
   const favor=visitor(s).favor;
   t(g,"邻里委托",W-130,headH+185,13,C.gold);
-  t(g,!favor?"暂无":s.favorDone?"已完成 +¥"+favor.tip:s.spoken?GOODS[favor.sku].name+" +¥"+favor.tip:"交谈后了解",W-130,headH+211,12,C.cream);
+  t(g,!favor?"暂无":s.favorDone?"已完成 +¥"+favor.tip:s.spoken?GOODS[favor.sku].name+" +¥"+favor.tip:"交谈后了解",W-130,headH+211,12,C.cream,"left",119);
+  g.restore();
  }else{
   const lower=shop.y+shop.h;
   r(g,0,lower,W,84,"#203559");
@@ -284,7 +294,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   let px=430;
   if(isManager){for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+4,105,64,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);px+=112;}}
   else t(g,"店长负责进货；店员可拿货、交接与收款",350,bottom+23,13,C.cream);
-  t(g,"选择商品格拿货 → 点交接台 → 收款。补货先选商品再点格子。",26,bottom+72,12,C.cream);
+  t(g,"货架拿货 → 交接台 → 收款；补货先选商品再点货格。",26,bottom+84,12,C.cream);
  } else{
   r(g,0,H-160,W,160,"#17264a");
   chip(g,hits,10,H-154,145,70,"交谈","talk");

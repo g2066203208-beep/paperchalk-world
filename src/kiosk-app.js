@@ -5,6 +5,15 @@ import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
 import {RoomNetwork} from "./network.js";
 const $=id=>document.getElementById(id);
+// Keep room status accessible inside the menu without covering physical shelves.
+function setStatus(message,alert=false){
+ const el=$("status");el.textContent=message;el.dataset.alert=alert?"true":"false";
+ refreshRoomDetails();
+}
+function refreshRoomDetails(){
+ const details=$("roomDetails");if(!details)return;
+ details.textContent=(room?"房间码："+room+" · 可分享给店员":"单人/本地小店")+" · "+$("status").textContent;
+}
 const SAVE="untitled-kiosk-save-v1";
 const canvas=$("game"),ctx=canvas.getContext("2d",{alpha:false});
 let screen={W:480,H:900,land:false},hits=[],phase=0;
@@ -13,15 +22,15 @@ const sampleCustomerMotion=createCustomerMotion();
 const sampleHeldItemMotion=createHeldItemMotion();
 let customerMotion=null,heldItemMotion=null;
 const net=new RoomNetwork({
- status:t=>{$("status").textContent=t;},
+ status:t=>setStatus(t),
  join:(pid,name)=>{
   if(!state)return false;
   const yes=join(state,pid,name);if(yes)net.broadcast(state);return yes;
  },
  leave:pid=>{if(state){leave(state,pid);net.broadcast(state);}},
  state:s=>{if(mode==="guest"&&s?.version===3){state=s;$("lobby").hidden=true;}},
- disconnected:()=>{$("status").textContent="房主已断开；本局停止同步。";},
- rejected:reason=>{$("status").textContent="操作被拒绝："+reason;}
+ disconnected:()=>setStatus("房主已断开；本局停止同步。",true),
+ rejected:reason=>setStatus("操作被拒绝："+reason,true)
 });
 function readSave(){try{let value=JSON.parse(localStorage.getItem(SAVE)||"null");return value?.version===3?value:null;}catch{return null;}}
 function save(){if(state&&(mode==="solo"||mode==="host"))localStorage.setItem(SAVE,JSON.stringify(state));}
@@ -29,37 +38,40 @@ function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
  mode=who;state=model;id=userId;seq=0;
+ $("hud").classList.add("playing");
  $("lobby").hidden=true;
  $("roomCode").textContent=room?("房间码："+room):"";
+ refreshRoomDetails();
  save();
 }
 $("solo").onclick=()=>{
  net.clean();room="";
  const s=initialShop();join(s,"solo",playerName());
  start("solo",s);
- $("status").textContent="单人营业 · 本机自动存档";
+ setStatus("单人营业 · 本机自动存档");
 };
 $("resume").onclick=()=>{
  net.clean();room="";
  const s=readSave();if(!s)return;
  resumeSolo(s,playerName());
  start("solo",s);
- $("status").textContent="本机存档已恢复";
+ setStatus("本机存档已恢复");
 };
 $("host").onclick=async()=>{
  try{
-  $("status").textContent="正在创建房间…";
+  setStatus("正在创建房间…");
   room=await net.create();
   const s=initialShop();join(s,"host",playerName());
   start("host",s,"host");
   net.broadcast(state);
   $("roomCode").textContent="房间码："+room;
- }catch(e){$("status").textContent="联机创建失败："+(e?.message||e);}
+  refreshRoomDetails();
+ }catch(e){setStatus("联机创建失败："+(e?.message||e),true);}
 };
 $("join").onclick=async()=>{
  try{
   const code=$("joinCode").value.trim().toUpperCase();
-  $("status").textContent="正在加入…";
+  setStatus("正在加入…");
   // PeerJS may close an early data channel even after the host accepts it.
   // A fresh peer ID on retry prevents a ghost half-join from blocking play.
   let joined,lastError;
@@ -68,18 +80,20 @@ $("join").onclick=async()=>{
     catch(e){
       lastError=e;
       if(attempt<2){
-        $("status").textContent="连接暂断，正在重试（"+(attempt+2)+"/3）…";
+        setStatus("连接暂断，正在重试（"+(attempt+2)+"/3）…");
         await new Promise(resolve=>setTimeout(resolve,350));
       }
     }
   }
   if(!joined)throw lastError||Error("无法连接房间");
   room=joined.room;id=joined.id;mode="guest";state=null;seq=0;
+  $("hud").classList.add("playing");
   $("lobby").hidden=true;
   $("roomCode").textContent="房间码："+room;
- }catch(e){$("status").textContent="无法加入："+(e?.message||e);}
+  refreshRoomDetails();
+ }catch(e){setStatus("无法加入："+(e?.message||e),true);}
 };
-$("menu").onclick=()=>{refreshResume();$("lobby").hidden=!$("lobby").hidden;};
+$("menu").onclick=()=>{refreshResume();refreshRoomDetails();$("lobby").hidden=!$("lobby").hidden;};
 $("closeLobby").onclick=()=>{$("lobby").hidden=true;};
 function localAction(pid,a){
  if(!state)return false;

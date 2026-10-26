@@ -45,6 +45,9 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host,{timeout:20000});
  const code=(await host.locator("#roomCode").textContent()).split("：")[1];
  assert.equal(code.length,8);
+ await host.locator("#menu").click();
+ assert.match(await host.locator("#roomDetails").textContent(),new RegExp(code),"room code must remain discoverable inside menu");
+ await host.locator("#closeLobby").click();
  await guest.locator("#nickname").fill("店员");
  await guest.locator("#joinCode").fill(code);
  await guest.locator("#join").click();
@@ -238,9 +241,11 @@ try{
      const h=window.__KIOSK_TEST__.getHits().find(v=>v.cmd==="talk");
      const size=window.__KIOSK_TEST__.screen();
      return {touchHeight:h.h/size.H*innerHeight,land:size.land,
+       statusHidden:getComputedStyle(document.querySelector("#status")).display==="none",
        overflow:document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2};
    });
    assert.equal(metrics.overflow,false,"No scrolling on "+name);
+   assert.equal(metrics.statusHidden,true,"Persistent status must not cover scene art on "+name);
    assert.ok(metrics.touchHeight>=42,"Main touch target too small on "+name+": "+metrics.touchHeight);
    assert.equal(metrics.land,vw>vh,"Correct adaptive orientation on "+name);
    await action(p,"window");
@@ -265,12 +270,14 @@ try{
      const h=window.__KIOSK_TEST__.getHits().filter(x=>["talk","sell","commission","restock"].includes(x.cmd));
      return {W,H,land,screenWidth:innerWidth,screenHeight:innerHeight,
        hitSizes:h.map(x=>({cmd:x.cmd,width:x.w*box.width/W,height:x.h*box.height/H})),
+       overlayHidden:getComputedStyle(document.querySelector("#status")).display==="none",
        overflow:document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2};
    });
    assert.equal(measurements.land,vw>vh,"orientation must match physical viewport");
    assert.ok(Math.abs(measurements.W/measurements.H-vw/vh)<.005,
      label+" aspect ratio distorted: "+JSON.stringify(measurements));
    assert.equal(measurements.overflow,false,label+" must not scroll");
+   assert.equal(measurements.overlayHidden,true,label+" must not overlay shop art with status");
    assert.ok(measurements.hitSizes.length>=3,label+" must expose controls");
    for(const hit of measurements.hitSizes){
      assert.ok(hit.width>=44&&hit.height>=44,

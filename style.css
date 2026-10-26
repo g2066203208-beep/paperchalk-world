@@ -39,3 +39,12 @@ label{font-size:12px;color:#d6bb98;display:block;margin-top:9px;text-align:left}
 .buttons #solo{background:linear-gradient(#ffcf80,#e99445);color:#20335a}
 .instructions{background:#152443b0;border-color:#ffb95c;color:#f5e8dc}
 @media(prefers-reduced-motion:reduce){#lobby::before,#lobby::after{animation:none}}
+
+/* Status and room code belong in the pause menu, not over interactive scenery.
+   A connection failure still shows a small urgent alert during gameplay. */
+#hud.playing #roomCode,#hud.playing #status:not([data-alert="true"]){display:none}
+#hud.playing #status[data-alert="true"]{top:calc(54px + env(safe-area-inset-top,0px));
+ max-width:min(76vw,360px);background:#5a2538ed;border:1px solid #ffbca3;
+ padding:7px 10px;color:#fff2e6;z-index:3}
+.room-details{font-size:12px;line-height:1.5;color:#ffe2ad;background:#101d3b;
+ border:1px solid #6c95c0;padding:7px 10px;margin:6px 0 9px;overflow-wrap:anywhere}
