@@ -60,6 +60,7 @@ async function run(){
  await guest.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
  // Two players now manipulate the same visible item, not merely share text clues.
  await guest.locator('[data-station="shelf"]').click();
+ const wanted=await guest.evaluate(()=>window.lampkeepState().shop.shelf[0]);
  await guest.locator("#shelfProps button").nth(1).click();
  await host.waitForFunction(()=>Boolean(window.lampkeepState()?.shop?.counter),null,{timeout:12000});
  const trustBefore=await host.evaluate(()=>window.lampkeepState().trust);
@@ -68,7 +69,6 @@ async function run(){
  assert.equal(await host.evaluate(()=>window.lampkeepState().trust),trustBefore-1);
  await host.locator("#returnButton").click();
  await guest.waitForFunction(()=>window.lampkeepState()?.shop?.counter===null,null,{timeout:12000});
- const wanted=await guest.evaluate(()=>window.lampkeepState().shop.shelf[0]);
  await guest.locator('#shelfProps button[data-sku="'+wanted+'"]').click();
  await host.waitForFunction(wanted=>window.lampkeepState()?.shop?.counter===wanted,wanted,{timeout:12000});
  await host.locator("#scanButton").click();
