@@ -47,6 +47,35 @@ function sprite(g,sku,x,y,scale=3){
  const pattern=map[sku]||map.tea;
  pattern.forEach((line,row)=>[...line].forEach((ch,col)=>{if(palette[ch])r(g,x+col*scale,y+row*scale,scale,scale,palette[ch]);}));
 }
+// The glove and the merchandise are separate foreground pixel layers.
+function glovedHand(g,x,y,alpha=1){
+ g.save();g.globalAlpha=Math.max(0,Math.min(1,alpha));
+ r(g,x+22,y+40,20,38,C.ink);r(g,x+25,y+43,15,34,'#516879');
+ r(g,x+20,y+35,23,9,C.trim);r(g,x+22,y+36,19,6,C.woodLight);
+ r(g,x+9,y+28,29,15,C.ink);r(g,x+11,y+30,25,11,'#728c8c');
+ r(g,x+12,y+28,6,6,'#a9b9a5');r(g,x+30,y+29,5,5,'#536b70');
+ g.restore();
+}
+function heldItemLayer(g,motion,mat,x,y,w,benchY,benchH){
+ if(!motion||!GOODS[motion.sku])return;
+ const {stage,sku,progress}=motion;
+ const hx=x+w*.64,hy=benchY+benchH*.27;
+ const tx=mat.x+mat.w*.40,ty=mat.y+mat.h*.10;
+ const lerp=(a,b,p)=>a+(b-a)*p;
+ if(stage==='place'){
+  glovedHand(g,hx,hy,1-progress);
+  sprite(g,sku,lerp(hx+9,tx,progress),lerp(hy,ty,progress),2.6);
+ }else if(stage==='take'){
+  glovedHand(g,hx,hy,progress);
+  sprite(g,sku,lerp(tx,hx+9,progress),lerp(ty,hy,progress),2.6);
+ }else if(stage==='pickup'){
+  glovedHand(g,hx,hy,progress);
+  sprite(g,sku,hx+9,hy+(1-progress)*27,2.6);
+ }else{
+  glovedHand(g,hx,hy);
+  sprite(g,sku,hx+9,hy,2.6);
+ }
+}
 function shelf(g,hits,x,y,w,h,slot,s){
  const key=slot,content=s.slots[key];
  r(g,x+3,y+4,w-6,h-6,C.dark);
@@ -125,7 +154,7 @@ function smallGlow(g,x,y,step){
  r(g,x-15,y+6,30,9,C.gold);r(g,x-5,y+15,10,3,C.cream);
  r(g,x-4,y-27,8,20,C.ink);
 }
-function scene(g,hits,s,x,y,w,h,phase,motion){
+function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion){
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  wooden(g,x,y,w,h,2,C.wall);
  // structural corner posts
@@ -153,7 +182,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion){
  const mat={x:x+w*.31,y:benchY+benchH*.25,w:w*.38,h:benchH*.56};
  r(g,mat.x,mat.y,mat.w,mat.h,C.ink);
  r(g,mat.x+4,mat.y+4,mat.w-8,mat.h-8,"#506b66");
- if(s.counter)sprite(g,s.counter,mat.x+mat.w*.40,mat.y+mat.h*.1,Math.min(3,mat.h*.070));
+ if(s.counter&&!itemMotion?.hideCounter)sprite(g,s.counter,mat.x+mat.w*.40,mat.y+mat.h*.1,Math.min(3,mat.h*.070));
  else t(g,"交接台",mat.x+mat.w/2,mat.y+mat.h/2,11,C.cream,"center");
  hit(hits,mat.x,mat.y,mat.w,mat.h,"counter");
  // A sold product is animated independently from the authoritative counter
@@ -182,6 +211,8 @@ function scene(g,hits,s,x,y,w,h,phase,motion){
  const drawY=y+h*.855;
  drawer(g,hits,x+w*.065,drawY,w*.34,h*.117,"drawerL",s);
  drawer(g,hits,x+w*.585,drawY,w*.34,h*.117,"drawerR",s);
+ // Local first-person arm stays above the drawers and below the UI.
+ heldItemLayer(g,itemMotion,mat,x,y,w,benchY,benchH);
  g.restore();
 }
 function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
@@ -190,7 +221,7 @@ function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
  t(g,text,x+w/2,y+h*.52,h*.36,active?C.gold:C.cream,"center");
  if(cmd)hit(hits,x,y,w,h,cmd,key);
 }
-export function render(g,s,view,phase=0,viewerId=null,motion=null){
+export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=null){
  const {W,H,land}=view,hits=[];
  const p=s.players?.[viewerId]||Object.values(s.players||{})[0]||{};
  const isManager=p.role==="manager";
@@ -203,7 +234,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null){
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
  const shop=land?{x:154,y:headH,w:W-300,h:H-headH-83}:{x:0,y:headH,w:W,h:H-headH-190};
- scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion);
+ scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion);
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
   t(g,"今日",17,headH+24,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+52,14,C.cream);
