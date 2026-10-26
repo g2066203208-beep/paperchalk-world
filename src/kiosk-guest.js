@@ -14,7 +14,7 @@ export function drawWindowCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false}={}){
  const ox=Math.round(x+(w-44*scale)/2),oy=Math.round(y+h-72*scale);
  const [coat,shade,lit]=O.coats[v], [hat,hatShade,hatLit]=O.hats[v];
  const blink=(Math.floor(phase/11)+v*7)%31===0;
- const bob=Math.floor(phase/32)%2;
+ const bob=-(Math.floor(phase/32)%2);
  const armLift=talking&&Math.floor(phase/14)%2===0;
  const R=(a,b,c,d,col)=>box(g,a,b+bob,c,d,col,scale,ox,oy);
  // Silhouette: legs stay behind the counter sill; coat and arms are separate layers.
@@ -63,6 +63,6 @@ export function drawWindowCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false}={}){
  // Cold breath puffs are small detached animated pixels, not a flat overlay.
  if(!talking && Math.floor(phase/27)%3===1){
   const off=Math.floor(phase/9)%3;
-  R(37+off,31-off,3,2,'#d8e4e3');R(41+off,27-off,2,2,'#a9c9d4');
+  R(37+off,31-off,3,2,'#d8e4e3');R(40+off,27-off,2,2,'#a9c9d4');
  }
 }
