@@ -53,8 +53,10 @@ jobs:
           fi
       - name: Install Chinese UI fonts for real screenshots
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq fonts-noto-cjk
+          # GitHub mirrors occasionally stall indefinitely on apt-get update.
+          # Bound this optional refresh and use the runner's package lists.
+          timeout 45s sudo apt-get update -qq || echo "apt index refresh timed out; using cached index"
+          timeout 110s sudo apt-get install -y -qq fonts-noto-cjk
           fc-cache -f
           fc-match "Noto Sans CJK SC"
       - run: node tests/browser-e2e.mjs
