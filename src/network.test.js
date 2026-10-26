@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {InputMailbox} from "./network.js";
+import {InputMailbox,RoomNetwork} from "./network.js";
+import {EventEmitter} from "node:events";
 
 test("a hundred fast taps from one peer remain in exact input order",()=>{
  const mailbox=new InputMailbox();
@@ -36,4 +37,46 @@ test("bounded queue cannot be exhausted by a single misbehaving connection",()=>
  assert.equal(mailbox.push("A",{seq:1,action:{type:"ask"}}),true);
  mailbox.reset();
  assert.equal(mailbox.drain().length,0);
+});
+
+test("host accepts a join packet even if data arrives before its open callback",()=>{
+ class FakeConn extends EventEmitter {
+   constructor(peer){super();this.peer=peer;this.open=true;this.sent=[];}
+   send(message){this.sent.push(structuredClone(message));}
+   close(){this.emit("close");}
+ }
+ const state={players:{host:{role:"manager"}},revision:1};
+ let leaves=0;
+ const net=new RoomNetwork({
+   join:(id,name)=>{state.players[id]={name,role:"clerk"};state.revision++;net.broadcast(state);return true;},
+   leave:()=>{leaves++;}
+ });
+ net.host=true;net.room="ABCDEFGH";net.broadcast(state);
+ const conn=new FakeConn("peer-one");
+ net.accept(conn);
+ // Deliberately do not emit "open": the first data packet must still work.
+ conn.emit("data",{t:"join",name:"店员"});
+ assert.equal(state.players["peer-one"].name,"店员");
+ assert.ok(conn.sent.some(m=>m.t==="welcome"));
+ const welcomeAt=conn.sent.findIndex(m=>m.t==="welcome");
+ assert.equal(conn.sent[welcomeAt+1].t,"state","latest state follows welcome in-order");
+ assert.equal(conn.sent[welcomeAt+1].state.players["peer-one"].role,"clerk");
+ conn.emit("data",{t:"input",input:{seq:1,action:{type:"kiosk",operation:"window"}}});
+ assert.equal(net.takeInputs()[0].input.action.operation,"window");
+ conn.close();
+ assert.equal(leaves,1);
+});
+test("rejected guest cannot cause a phantom leave or state replay",()=>{
+ class FakeConn extends EventEmitter{
+   constructor(){super();this.peer="bad";this.open=true;this.sent=[];}
+   send(m){this.sent.push(m);}
+   close(){this.emit("close");}
+ }
+ let leaves=0;
+ const net=new RoomNetwork({join:()=>false,leave:()=>leaves++});
+ net.host=true;net.room="ABCDEFGH";
+ const conn=new FakeConn();net.accept(conn);
+ conn.emit("data",{t:"join",name:"too-many"});
+ assert.equal(conn.sent.at(-1).t,"reject");
+ assert.equal(leaves,0);
 });
