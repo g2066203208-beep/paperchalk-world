@@ -27,7 +27,7 @@ async function run(){
  browser=await chromium.launch({headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
  const host=await open(context),guest=await open(context);
- assert.match(await host.title(),/留灯/);
+ assert.match(await host.title(),/未命名游戏/);
  await host.locator("#playerName").fill("收银员");
  await host.locator("#hostButton").click();
  await host.waitForFunction(()=>document.querySelector("#inviteCode")?.textContent.length===8,null,{timeout:15000});
