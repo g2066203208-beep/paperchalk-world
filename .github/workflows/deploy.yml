@@ -83,7 +83,7 @@ jobs:
             seen.add(file);
             if(!file.startsWith(root+sep)||!existsSync(file))throw Error('Missing deployed module: '+file);
             const source=readFileSync(file,'utf8');
-            for(const m of source.matchAll(/\\b(?:import|export)\\s+(?:[^'"]*?\\s+from\\s+)?['"](\\.[^'"]+)['"]/g)){
+            for(const m of source.matchAll(/\b(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"](\.[^'"]+)['"]/g)){
               const dep=resolve(dirname(file),m[1]);
               if(!dep.startsWith(root+sep))throw Error('Import escapes public directory: '+m[1]);
               pending.push(dep);
