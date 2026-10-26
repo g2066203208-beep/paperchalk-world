@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createCustomerMotion,CUSTOMER_HANDOFF_MS,CUSTOMER_EXIT_MS,CUSTOMER_ENTER_MS} from "./kiosk-motion.js";
+import {createCustomerMotion,CUSTOMER_HANDOFF_MS,CUSTOMER_FAVOR_MS,CUSTOMER_EXIT_MS,CUSTOMER_ENTER_MS} from "./kiosk-motion.js";
 import {CUSTOMERS} from "./kiosk-core.js";
 const shop=()=>({windowOpen:false,orderIndex:0,spoken:false,phase:"operating"});
 test("closed window hides visitor; opening brings an independent sprite into view",()=>{
@@ -68,4 +68,41 @@ test("handoff uses the previous customer's product and never writes shared stock
  assert.equal(second.handoff.progress,0);
  assert.equal(JSON.stringify({...s,orderIndex:0}),before,
   "presentation sampling must not write to the shop model");
+});
+
+test("neighbor commission hands over the requested physical SKU without moving to next customer",()=>{
+ const s=shop(),sample=createCustomerMotion();s.windowOpen=true;s.orderIndex=1;s.favorDone=false;
+ sample(s,0);assert.equal(sample(s,1000).stage,"idle");
+ const before=JSON.stringify(s);
+ s.favorDone=true;
+ const start=sample(s,1100);
+ assert.equal(start.stage,"favor");assert.equal(start.tone,CUSTOMERS[1].tone);
+ assert.equal(start.receiving,true);assert.equal(start.offset,0);
+ assert.deepEqual(start.handoff,{sku:"tea",progress:0});
+ const mid=sample(s,1100+CUSTOMER_FAVOR_MS/2);
+ assert.equal(mid.stage,"favor");
+ assert.ok(mid.handoff.progress>0&&mid.handoff.progress<1);
+ assert.equal(mid.offset,0);
+ assert.equal(sample(s,1100+CUSTOMER_FAVOR_MS).stage,"idle");
+ assert.equal(sample(s,2000).handoff,null,"commission animation runs only once");
+ assert.equal(s.orderIndex,1,"commission must not advance the paid order");
+ assert.equal(JSON.stringify({...s,favorDone:false}),before,"animation never mutates host state");
+});
+test("joining after a completed commission must not replay an old delivery",()=>{
+ const s=shop();s.windowOpen=true;s.orderIndex=1;s.favorDone=true;
+ const sample=createCustomerMotion();
+ assert.equal(sample(s,0).stage,"enter");
+ assert.equal(sample(s,1000).stage,"idle");
+ assert.equal(sample(s,1000).handoff,null);
+});
+test("sale immediately after a commission interrupts the favor animation without duplicate merchandise",()=>{
+ const s=shop(),sample=createCustomerMotion();s.windowOpen=true;s.orderIndex=1;
+ sample(s,0);sample(s,1000);
+ s.favorDone=true;assert.equal(sample(s,1100).stage,"favor");
+ s.orderIndex=2;s.favorDone=false;
+ const sale=sample(s,1200);
+ assert.equal(sale.stage,"handoff");
+ assert.equal(sale.handoff.sku,"bread","the previous customer's main order takes precedence");
+ assert.equal(sale.handoff.progress,0);
+ assert.equal(sample(s,1200+CUSTOMER_HANDOFF_MS).stage,"exit");
 });
