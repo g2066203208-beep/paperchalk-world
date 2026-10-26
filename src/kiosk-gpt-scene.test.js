@@ -30,4 +30,7 @@ test("actual separately loadable PNG assets have metadata and one real alpha-mas
  assert.equal(isolated.anchor[1],1);
  assert.equal(isolated.alpha,"segmented-transparent");
  assert.equal(independentPartStatus().total,0,"node must not fake image preloading");
+ const renderer=readFileSync(new URL("./kiosk-gpt-scene.js",import.meta.url),"utf8");
+ assert.match(renderer,/spriteCache\.get\("customer-idle"\)/,"active visitor must come from a true alpha PNG");
+ assert.match(renderer,/piece\.img/,"independent background and fixture images must draw at runtime");
 });
