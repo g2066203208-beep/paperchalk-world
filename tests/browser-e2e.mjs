@@ -81,7 +81,7 @@ try{
    const size=window.__KIOSK_TEST__.screen();
    return {hits:hs.map(h=>({cmd:h.cmd,gesture:h.gesture,x:h.x,y:h.y,w:h.w,h:h.h})),size};
  });
- assert.ok(immersive.hits.some(h=>h.cmd==="sell"&&h.gesture==="tap"),"checkout is a physical till target");
+ assert.ok(immersive.hits.some(h=>h.cmd==="talk"&&h.gesture==="tap"),"NPC itself is a physical talk target");
  assert.ok(immersive.hits.some(h=>h.cmd==="restock"&&h.gesture==="hold"),"stock is ordered from physical shelf hold");
  assert.ok(immersive.hits.filter(h=>h.cmd==="restock").every(h=>h.gesture==="hold"),"no floating reorder buttons");
  assert.ok(immersive.hits.filter(h=>["sell","talk","commission"].includes(h.cmd))
@@ -101,6 +101,9 @@ try{
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand==="bread",{timeout:12000});
  await action(guest,"counter");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
+ const checkoutHits=await host.evaluate(()=>window.__KIOSK_TEST__.getHits());
+ assert.ok(checkoutHits.some(h=>h.cmd==="sell"&&h.gesture==="tap"),"placed item must offer physical checkout");
+ assert.ok(checkoutHits.some(h=>h.cmd==="counter"&&h.gesture==="hold"),"placed item must remain retrievable by holding it");
  await action(host,"sell");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.totalServed===1,{timeout:15000});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="handoff",{timeout:5000});
