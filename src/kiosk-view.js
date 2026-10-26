@@ -215,6 +215,11 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  if(renderGeneratedShop(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager)){
   // Interaction adapter for the existing independent generated-art fixtures.
   // This changes only their hit mapping; no art files or drawing code are altered.
+  // Generator scene returns physical clickable regions; all tap targets use an
+  // explicit gesture, and the cash register exists even before stock is placed.
+  for(const h of hits)h.gesture??="tap";
+  const till={x:x+w*.77,y:y+h*.705,w:w*.18,h:Math.max(72,h*.105)};
+  hit(hits,till.x,till.y,till.w,till.h,"sell",undefined,"tap");
   const stockTargets=hits.filter(h=>h.cmd==="slot");
   if(isManager)for(const h of stockTargets){
    const entry=s.slots[h.key],sku=entry?.sku||entry?.lastSku;
