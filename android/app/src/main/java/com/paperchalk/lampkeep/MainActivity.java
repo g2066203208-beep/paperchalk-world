@@ -10,6 +10,8 @@ import android.graphics.Insets;
 import android.view.WindowInsets;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebResourceResponse;
+import java.io.InputStream;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -39,6 +41,28 @@ public final class MainActivity extends Activity {
         web.getSettings().setMediaPlaybackRequiresUserGesture(true);
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
+            @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
+                Uri u=req.getUrl();
+                if("https".equals(u.getScheme()) && "g2066203208-beep.github.io".equals(u.getHost())
+                   && u.getPath()!=null && u.getPath().startsWith("/paperchalk-world/")){
+                    String rel=u.getPath().substring("/paperchalk-world/".length());
+                    if(rel.isEmpty()) rel="index.html";
+                    if(!rel.contains("..") && rel.matches("[A-Za-z0-9_./-]+")){
+                        try{
+                            InputStream stream=getAssets().open("web/"+rel);
+                            String mime=rel.endsWith(".js")?"application/javascript":
+                                rel.endsWith(".css")?"text/css":
+                                rel.endsWith(".webp")?"image/webp":
+                                rel.endsWith(".svg")?"image/svg+xml":
+                                rel.endsWith(".png")?"image/png":
+                                rel.endsWith(".html")?"text/html":"application/octet-stream";
+                            return new WebResourceResponse(mime,"UTF-8",stream);
+                        }catch(Exception ignored){}
+                    }
+                }
+                return super.shouldInterceptRequest(view,req);
+            }
+
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 Uri u = req.getUrl();
                 if ("https".equals(u.getScheme()) && "g2066203208-beep.github.io".equals(u.getHost()) && (u.getPath() != null && u.getPath().startsWith("/paperchalk-world/"))) return false;
@@ -56,7 +80,7 @@ public final class MainActivity extends Activity {
             });
         }
         setContentView(web);
-        if(state==null) web.loadUrl(HOME+"?source=apk");
+        if(state==null) web.loadUrl(HOME+"?source=apk-preview");
         else web.restoreState(state);
     }
     @Override protected void onSaveInstanceState(Bundle state) {

@@ -131,7 +131,7 @@ function frame(){
  requestAnimationFrame(frame);
 }
 resize();refreshResume();frame();
-if("serviceWorker" in navigator){
+if(new URLSearchParams(location.search).get("source")!=="apk-preview" && "serviceWorker" in navigator){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
