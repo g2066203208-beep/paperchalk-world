@@ -119,6 +119,7 @@ test("wrong item produces a visible refusal pose and resets without changing inv
  s.wrongAttempted=true;s.orderIndex=1;
  assert.equal(sample(s,1100).stage,"handoff");
  assert.equal(sample(s,1100).refusing,false,"handoff overrides the previous refusal");
+ s.wrongAttempted=false; // Host resets this on a successful sale.
  assert.equal(sample(s,1100+CUSTOMER_HANDOFF_MS+CUSTOMER_EXIT_MS+CUSTOMER_ENTER_MS).refusing,false,
   "next customer must not inherit the previous refusal pose");
 });
