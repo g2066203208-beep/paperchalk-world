@@ -2,7 +2,7 @@
 // the ES modules deployed to GitHub Pages; PeerJS signaling remains online-only.
 // Only individually cropped, licensed/original GPTIMG sprite files are cached.
 // Never precache a flattened mock screenshot or the obsolete anime asset pack.
-const CACHE="untitled-kiosk-offline-flat-v1";
+const CACHE="untitled-kiosk-offline-v4-flat";
 const CORE=[
  "./","./index.html","./style.css",
  "./src/kiosk-core.js","./src/kiosk-view.js","./src/kiosk-flat.js","./src/kiosk-skin.js",
