@@ -88,6 +88,7 @@ try{
  await host.screenshot({path:"artifacts/kiosk-next-customer-arriving.png",fullPage:false});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  assert.equal((await snapshot(guest)).cash,109);
+ assert.equal((await snapshot(guest)).reputation,0,"day one has no early loyalty tip");
  assert.equal((await snapshot(guest)).players.host.hand,"bread");
  await action(host,"slot","shelfL2");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand===null,{timeout:12000});
@@ -196,6 +197,31 @@ try{
  await wide.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  assert.equal(await wide.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2),false,"landscape must remain fixed-screen");
  await wide.screenshot({path:"artifacts/kiosk-landscape-desktop.png",fullPage:false});
+ // Five real solo sales verify end-of-day rating and persistent reputation.
+ const growth=await open(context);
+ await growth.locator("#solo").click();
+ await action(growth,"window");
+ await action(growth,"toggle","drawerL");
+ for(const key of ["shelfL1","shelfL2","shelfR1","drawerL","shelfL1"]){
+  await action(growth,"slot",key);
+  await action(growth,"counter");
+  await action(growth,"sell");
+ }
+ const settled=await snapshot(growth);
+ assert.equal(settled.phase,"summary");
+ assert.equal(settled.dayRating,4);
+ assert.equal(settled.dayReputationDelta,4);
+ assert.equal(settled.reputation,4);
+ assert.equal(settled.dayNet,46);
+ await growth.screenshot({path:"artifacts/kiosk-day-reputation-summary.png",fullPage:false});
+ assert.equal(await growth.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2),false);
+ await action(growth,"nextday");
+ assert.equal((await snapshot(growth)).reputation,4);
+ assert.equal((await snapshot(growth)).dayRating,0);
+ await growth.reload();
+ await growth.locator("#resume").click();
+ assert.equal((await snapshot(growth)).reputation,4,"reputation persists under original save key");
+ await growth.screenshot({path:"artifacts/kiosk-day-two-reputation.png",fullPage:false});
  assert.deepEqual(errors,[]);
  console.log("PASS: two actual mobile clients transferred stock, opened drawer, sold a customer, local restore, no scroll, landscape layout.");
 }catch(e){console.error(e);process.exitCode=1;}
