@@ -249,10 +249,9 @@ try{
  }
  // Verify compact portrait and wide mobile landscape, not just desktop screenshots.
  // The art is rendered from separate 80x120 and 24x28 pixel sprites.
- const animeStatus=await host.evaluate(async()=> (await import("./src/kiosk-anime-assets.js")).getAnimeArtStatus());
- for(const key of ["window-open","window-closed","cabinetL-open","drawer-open","girl","bread"]){
-   assert.equal(animeStatus[key],"ready","Approved layered anime art must load: "+key);
- }
+ const pixelGrid=await host.evaluate(async()=> (await import("./src/kiosk-pixel.js")).PIXEL_GRID);
+ assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.customer)),[80,120]);
+ assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.item)),[24,28]);
  for(const [vw,vh,label] of [[320,568,"compact-portrait"],[844,390,"phone-landscape"]]){
    const phone=await open(context,vw,vh);
    await phone.locator("#solo").click();
