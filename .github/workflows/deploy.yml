@@ -72,6 +72,26 @@ jobs:
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Upload standalone playable UI for high-resolution art verification
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anime-ui-html5-preview
+          path: |
+            index.html
+            style.css
+            sw.js
+            src/kiosk-core.js
+            src/kiosk-anime-assets.js
+            src/kiosk-skin.js
+            src/kiosk-view.js
+            src/kiosk-motion.js
+            src/kiosk-item-motion.js
+            src/kiosk-app.js
+            src/network.js
+            assets/anime/
+          retention-days: 14
+          if-no-files-found: error
   deploy:
     name: Publish site
     needs: [tests, browser-e2e]
