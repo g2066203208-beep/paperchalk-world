@@ -1,77 +1,25 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#24343b"><meta name="description" content="未命名开发版：一间深夜小店里的多人互动悬疑游戏。">
-<title>未命名游戏 · 开发版</title><link rel="stylesheet" href="./style.css">
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#181d28"><title>未命名 · 冬夜小店试玩</title>
+<link rel="stylesheet" href="./style.css">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
-<script type="module" src="./src/client.js"></script>
-</head>
-<body>
-<div class="app" id="app">
-<header class="masthead">
- <div class="mark"><span class="mark-icon">◈</span><div><b>未命名 <small>· DEV BUILD</small></b><p>夜 间 杂 货 店</p></div></div>
- <div class="session"><span id="networkStatus" aria-live="polite">离线 · 小店尚未开门</span><button class="tiny" id="menuButton" aria-label="打开菜单">菜单</button></div>
-</header>
-<div id="roomToast" class="room-toast" hidden><span>小店邀请码</span><strong id="inviteCode"></strong><button id="copyCode">复制</button></div>
-<main>
- <section class="game-area" aria-label="营业场景">
-  <div class="visual" id="visual">
-   <img class="scene-bg" src="./assets/shop.svg" alt="">
-   <div class="street-tag">营业中 <span>OPEN 24 HRS</span></div>
-   <img class="guest-art" id="guestArt" src="./assets/guest-01.svg" alt="到店客人的独立立绘">
-   <div class="visitor-card" id="visitorCard"><span id="nightLabel">第一夜 · 22:48</span><strong id="visitorName">?</strong><p id="visitorOrder">有人站在门外。</p></div>
-   <div class="story-strip" aria-live="polite"><span>客人说</span><p id="visitorVoice">今晚不太平。先听听门口有什么动静。</p></div>
+<script type="module" src="./src/kiosk-app.js"></script>
+</head><body>
+<canvas id="game" aria-label="第一人称冬夜小店：点击窗台开窗，货架拿取商品，柜台交付收款"></canvas>
+<div id="hud"><button id="menu" aria-label="打开菜单">☰</button><span id="roomCode"></span><span id="status" role="status">尚未营业</span></div>
+<div id="lobby" class="modal">
+  <div class="panel">
+    <div class="eyebrow">FIRST PERSON · WINTER SHOP · PLAYABLE BUILD</div>
+    <h1>冬夜杂货窗口</h1><p class="sub">未命名游戏 · 经营玩法测试版</p>
+    <div class="shelf-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <p class="instructions">先点窗闩打开售货窗口，顾客会来买东西。点货架拿商品，再点柜台的绿色交接台，最后点「收款」。柜门与抽屉可反复打开关闭，货物可以放回，也可以购买新库存。</p>
+    <label>值班员称呼 <input id="nickname" maxlength="14" value="店长"></label>
+    <div class="buttons"><button id="solo">单人开始营业</button><button id="resume" hidden>继续本地存档</button></div>
+    <div class="buttons twin"><button id="host">创建多人小店</button><button id="join">加入好友小店</button></div>
+    <label>加入码 <input id="joinCode" maxlength="8" placeholder="填写 8 位房间码" autocomplete="off"></label>
+    <button id="closeLobby" class="close">返回游戏</button>
+    <p class="fine">纯手绘程序化像素素材 · 单屏横竖适配 · 1–4 人协作实验版<br>本版没有使用 GPT 生成图片；多人依赖网络信令，手机浏览器版本非原生引擎。</p>
   </div>
-  <section class="prop-stage" id="propStage" aria-label="可操作的商品与柜台">
-   <div class="prop-zone"><b>货架 · 触摸拿取</b><div id="shelfProps" class="prop-items"></div></div>
-   <div class="prop-zone counter-zone"><b>收银台 · 核对商品</b><div id="counterProps" class="counter-prop"></div><div class="prop-controls"><button id="scanButton" type="button">扫码核对</button><button id="returnButton" type="button">退回货架</button></div></div>
-   <p class="prop-feedback" id="shopFeedback" aria-live="polite"></p>
-  </section>
-  <div class="station-nav" id="stationNav" role="tablist" aria-label="小店工作位">
-   <button data-station="counter" role="tab" aria-selected="true"><span>①</span>柜台</button>
-   <button data-station="window" role="tab" aria-selected="false"><span>②</span>临街窗</button>
-   <button data-station="shelf" role="tab" aria-selected="false"><span>③</span>货架</button>
-   <button data-station="ledger" role="tab" aria-selected="false"><span>④</span>旧账</button>
-  </div>
-  <section class="work-card" aria-live="polite">
-   <div class="work-head"><span class="mini-title" id="stationEyebrow">COUNTER · 01</span><div id="inspectState">尚未查看</div></div>
-   <div id="workMessage" class="work-message">打开小店后开始检查。</div>
-   <div class="work-actions"><button id="inspectButton" class="btn btn-ink">仔细观察</button><button id="pinButton" class="btn btn-minor">贴到线索板</button></div>
-  </section>
-  <section class="shared-board">
-   <div class="board-heading"><b>共同线索板</b><small id="partyCount">0 人值班</small></div>
-   <div class="pins" id="pinList"><span class="empty">队友发现的线索会留在这里。</span></div>
-   <div class="board-heading second"><b>大家的意见</b><small id="voteCount">尚未表决</small></div>
-   <div class="vote-list" id="voteList"></div>
-  </section>
- </section>
- <aside class="journal">
-  <section><div class="side-label">SHIFT RECORD / 值夜手记</div><div class="numbers"><div><small>街坊信任</small><strong id="trustValue">5</strong></div><div><small>店内危险</small><strong id="dangerValue">0</strong></div><div><small>剩余物资</small><strong id="supplyValue">8</strong></div></div></section>
-  <section><div class="side-label">AFTER EACH VISITOR</div><h3>来客记录</h3><div id="history" class="history"><p>第一位客人还未离开。</p></div></section>
-  <section><div class="side-label">NIGHT CREW</div><h3>值班同伴</h3><div id="roster" class="roster">等待开店</div></section>
- </aside>
-</main>
-<div class="decision-tray" id="decisionTray" data-collapsed="true">
- <button class="tray-toggle" id="trayToggle" type="button" aria-controls="decisionButtons" aria-expanded="false">作出判断 · 展开操作 ▲</button>
- <div class="tray-note"><span id="notice">还没营业。</span><button id="askButton" class="link-button">再聊几句</button></div>
- <div class="decision-buttons" id="decisionButtons"><button id="welcomeButton" class="decision allow">请进店里 <small>WELCOME</small></button><button id="refuseButton" class="decision deny">婉拒交易 <small>REFUSE</small></button></div>
 </div>
-<div class="modal" id="lobby">
- <div class="lobby-card">
-  <div class="lobby-crest">◈</div><div class="kicker">A VERY SMALL SHOP, A VERY LONG NIGHT</div>
-  <h1>未<span>命名</span></h1><p class="subtitle">路过的人，总会留下些什么。</p>
-  <p class="about">夜幕降临。你和朋友在同一间小店值班：有人接待客人，有人翻旧账，有人盯着窗外。只有拼起彼此发现的细节，才知道谁该被留下，谁该被送走。</p>
-  <label for="playerName">值班员称呼</label><input id="playerName" placeholder="你的称呼" maxlength="14" value="值班员" autocomplete="nickname">
-  <button id="soloButton" class="btn btn-gold">一个人值夜班</button>
-  <button id="resumeButton" class="btn btn-border" hidden>继续本地存档</button>
-  <div class="lobby-split"><button id="hostButton" class="btn btn-border">创建多人小店</button><button id="joinButton" class="btn btn-border">加入好友小店</button></div>
-  <input id="joinCode" maxlength="8" spellcheck="false" placeholder="填写好友的 8 位房间码" aria-label="联机房间码">
-  <p id="lobbyHelp" class="lobby-help">最多 4 名玩家同店合作，玩家可以随时换工作位。房主需要保持在线。</p>
-  <p class="version">ORIGINAL PROTOTYPE · 2026 · v0.1</p>
- </div>
-</div>
-
-</div>
-</body>
-</html>
+</body></html>

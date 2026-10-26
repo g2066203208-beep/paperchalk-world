@@ -1,34 +1,12 @@
-// Untitled game offline cache. Always prefer a newer server build when online; use cached
-// code and art when reopening the game without internet. PeerJS multiplayer still
-// requires a connection.
-const CACHE="lampkeep-shell-20261026c";
-const CORE=[
- "./","./index.html","./style.css","./src/logic.js","./src/client.js",
- "./src/network.js","./assets/shop.svg",
- "./assets/guest-01.svg","./assets/guest-02.svg","./assets/guest-03.svg",
- "./assets/guest-04.svg","./assets/guest-05.svg","./assets/guest-06.svg",
- "./assets/guest-07.svg","./assets/guest-08.svg",
- "./assets/item-umbrella.svg","./assets/item-lighter.svg","./assets/item-milk.svg","./assets/item-salt.svg","./assets/item-syrup.svg","./assets/item-ticket.svg","./assets/item-bulb.svg","./assets/item-mirror.svg"
-];
-self.addEventListener("install",event=>{
- event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
-});
-self.addEventListener("activate",event=>{
- event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith("lampkeep-shell-")&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
-});
-self.addEventListener("fetch",event=>{
- const req=event.request;
- if(req.method!=="GET")return;
- const url=new URL(req.url);
- if(url.origin!==self.location.origin)return;
+// Offline-first after the first successful visit; online fetch is network-first.
+const CACHE="untitled-kiosk-20261026-v1";
+const CORE=["./","./index.html","./style.css","./src/kiosk-core.js","./src/kiosk-view.js","./src/kiosk-app.js","./src/network.js"];
+self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
+self.addEventListener("activate",e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith("untitled-kiosk-")&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
+self.addEventListener("fetch",e=>{
+ const req=e.request,url=new URL(req.url);if(req.method!=="GET"||url.origin!==location.origin)return;
  if(req.mode==="navigate"){
-   event.respondWith(fetch(req).then(r=>{if(r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put("./index.html",copy));}return r;})
-     .catch(()=>caches.match("./index.html")));
-   return;
+  e.respondWith(fetch(req).then(r=>{if(r.ok){let copy=r.clone();caches.open(CACHE).then(c=>c.put("./index.html",copy));}return r;}).catch(()=>caches.match("./index.html")));return;
  }
- if(!url.pathname.includes("/paperchalk-world/"))return;
- event.respondWith(fetch(req).then(r=>{
-   if(r.ok){const copy=r.clone();caches.open(CACHE).then(c=>c.put(req,copy));}
-   return r;
- }).catch(()=>caches.match(req)));
+ e.respondWith(fetch(req).then(r=>{if(r.ok){let copy=r.clone();caches.open(CACHE).then(c=>c.put(req,copy));}return r;}).catch(()=>caches.match(req)));
 });

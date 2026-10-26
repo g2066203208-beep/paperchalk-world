@@ -1,5 +1,4 @@
-// Integration: two real browsers connect through a local PeerServer, share facts and decisions,
-// and preserve a single-player game in app-local browser storage.
+// Real two-client WebRTC shop interaction at mobile resolution and landscape.
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -8,95 +7,76 @@ import {createRequire} from "node:module";
 import {chromium} from "playwright";
 const require=createRequire(import.meta.url),{PeerServer}=require("peer");
 PeerServer({port:9100,host:"127.0.0.1",path:"/"});
-const staticServer=spawn("python3",["-m","http.server","4173","--bind","127.0.0.1"],{stdio:"ignore"});
-let browser;
-const errors=[];
-async function open(context,width=390,height=844){
- const page=await context.newPage({viewport:{width,height}});
- page.on("pageerror",e=>errors.push(e.message));
- await page.route("https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js",route=>route.fulfill({path:path.resolve("node_modules/peerjs/dist/peerjs.min.js"),contentType:"application/javascript"}));
- await page.addInitScript(()=>{
-  window.LAMPKEEP_E2E=true;
-  window.CRYPTBOUND_PEER_OPTIONS={host:"127.0.0.1",port:9100,path:"/",secure:false};
- });
- for(let attempt=0;attempt<25;attempt++){try{await page.goto("http://127.0.0.1:4173/",{waitUntil:"domcontentloaded",timeout:5000});break;}catch(e){if(attempt===24)throw e;await new Promise(r=>setTimeout(r,200));}}
- await page.waitForFunction(()=>typeof window.lampkeepState==="function");
- return page;
+const server=spawn("python3",["-m","http.server","4173","--bind","127.0.0.1"],{stdio:"ignore"});
+const errors=[];let browser;
+async function open(ctx,w=390,h=844){
+ const p=await ctx.newPage({viewport:{width:w,height:h}});
+ p.on("pageerror",e=>errors.push(e.stack||e.message));
+ await p.route("https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js",
+    route=>route.fulfill({path:path.resolve("node_modules/peerjs/dist/peerjs.min.js"),contentType:"application/javascript"}));
+ await p.addInitScript(()=>{window.CRYPTBOUND_PEER_OPTIONS={host:"127.0.0.1",port:9100,path:"/",secure:false};});
+ for(let tries=0;tries<30;tries++)try{
+   await p.goto("http://127.0.0.1:4173",{waitUntil:"domcontentloaded",timeout:3500});break;
+ }catch(e){if(tries===29)throw e;await new Promise(ok=>setTimeout(ok,220));}
+ await p.waitForFunction(()=>window.__KIOSK_TEST__?.getHits);
+ return p;
 }
-async function run(){
+async function action(page,cmd,key){
+ const h=await page.evaluate(([cmd,key])=>window.__KIOSK_TEST__.getHits().find(x=>x.cmd===cmd&&(key===undefined||x.key===key)),[cmd,key]);
+ assert.ok(h,"Missing clickable "+cmd+" / "+key);
+ const v=await page.evaluate(()=>window.__KIOSK_TEST__.screen());
+ const rect=await page.locator("#game").boundingBox();
+ await page.mouse.click(rect.x+(h.x+h.w/2)/v.W*rect.width,rect.y+(h.y+h.h/2)/v.H*rect.height);
+}
+const snapshot=p=>p.evaluate(()=>window.__KIOSK_TEST__.getState());
+try{
  browser=await chromium.launch({headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
  const host=await open(context),guest=await open(context);
- assert.match(await host.title(),/未命名游戏/);
- await host.locator("#playerName").fill("收银员");
- await host.locator("#hostButton").click();
- await host.waitForFunction(()=>document.querySelector("#inviteCode")?.textContent.length===8,null,{timeout:15000});
- const code=await host.locator("#inviteCode").textContent();
- await guest.locator("#playerName").fill("窗边的人");
+ await host.locator("#nickname").fill("店长");
+ await host.locator("#host").click();
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host,{timeout:20000});
+ const code=(await host.locator("#roomCode").textContent()).split("：")[1];
+ assert.equal(code.length,8);
+ await guest.locator("#nickname").fill("店员");
  await guest.locator("#joinCode").fill(code);
- await guest.locator("#joinButton").click();
- await host.waitForFunction(()=>Object.keys(window.lampkeepState()?.players||{}).length===2,null,{timeout:16000});
- await guest.waitForFunction(()=>Object.keys(window.lampkeepState()?.players||{}).length===2,null,{timeout:16000});
- const nameA=await host.locator("#visitorName").textContent(),nameB=await guest.locator("#visitorName").textContent();
- assert.equal(nameA,nameB);
- await guest.locator('[data-station="window"]').click();
- await guest.locator("#inspectButton").click();
- await host.waitForFunction(()=>window.lampkeepState()?.opened?.window===true,null,{timeout:12000});
- await guest.locator("#pinButton").click();
- await host.waitForFunction(()=>window.lampkeepState()?.pins?.includes("window"),null,{timeout:12000});
- assert.equal(await host.locator("#welcomeButton").isVisible(),false,"mobile decisions start folded to expose workbench");
- await host.locator("#trayToggle").click();
- await guest.locator("#trayToggle").click();
- assert.equal(await host.locator("#welcomeButton").isVisible(),true);
- await host.locator("#welcomeButton").click();
- await new Promise(r=>setTimeout(r,420));
- assert.equal(await host.evaluate(()=>window.lampkeepState().index),0,"two players must agree");
- await guest.locator("#welcomeButton").click();
- await host.waitForFunction(()=>window.lampkeepState()?.index===1,null,{timeout:12000});
- await guest.waitForFunction(()=>window.lampkeepState()?.index===1,null,{timeout:12000});
- // Rapid successive actions used to overwrite the previous action before the
- // host's 150ms tick. Validate 100 ordered inputs from a real connected client.
- const peerId=await guest.evaluate(()=>Object.keys(window.lampkeepState().players).find(k=>k!=="host"));
- const before=await host.evaluate(()=>window.lampkeepState().revision);
- await guest.evaluate(()=>window.lampkeepSendTestActions(100));
- await host.waitForFunction(before=>window.lampkeepState()?.revision>=before+100,before,{timeout:15000});
- await host.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
- await guest.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
- // Two players now manipulate the same visible item, not merely share text clues.
- await guest.locator('[data-station="shelf"]').click();
- const wanted=await guest.evaluate(()=>window.lampkeepState().shop.shelf[0]);
- await guest.locator("#shelfProps button").nth(1).click();
- await host.waitForFunction(()=>Boolean(window.lampkeepState()?.shop?.counter),null,{timeout:12000});
- const trustBefore=await host.evaluate(()=>window.lampkeepState().trust);
- await host.locator("#scanButton").click();
- await host.waitForFunction(()=>window.lampkeepState()?.shop?.mistakes===1,null,{timeout:12000});
- assert.equal(await host.evaluate(()=>window.lampkeepState().trust),trustBefore-1);
- await host.locator("#returnButton").click();
- await guest.waitForFunction(()=>window.lampkeepState()?.shop?.counter===null,null,{timeout:12000});
- await guest.locator('#shelfProps button[data-sku="'+wanted+'"]').click();
- await host.waitForFunction(wanted=>window.lampkeepState()?.shop?.counter===wanted,wanted,{timeout:12000});
- await host.locator("#scanButton").click();
- await guest.waitForFunction(()=>window.lampkeepState()?.shop?.success===true,null,{timeout:12000});
- assert.equal(await guest.locator("#propStage").getAttribute("data-result"),"correct");
- await host.locator("#trayToggle").click();
- await guest.locator("#trayToggle").click();
- assert.equal(await host.locator("#welcomeButton").isVisible(),false);
+ await guest.locator("#join").click();
+ await guest.waitForFunction(()=>Object.keys(window.__KIOSK_TEST__.getState()?.players||{}).length===2,{timeout:20000});
+ await action(guest,"window");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.windowOpen===true,{timeout:15000});
+ assert.equal((await snapshot(host)).windowOpen,true);
+ await action(guest,"slot","shelfL1");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.hand==="tea",{timeout:12000});
+ await action(guest,"counter");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
+ await action(host,"sell");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.totalServed===1,{timeout:15000});
+ assert.equal((await snapshot(guest)).cash,109);
+ // Real door/open state and stock list should be shared rather than fake icons.
+ await action(host,"toggle","drawerL");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.open?.drawerL===true,{timeout:12000});
+ assert.equal((await snapshot(guest)).slots.drawerL.sku,"cocoa");
  await fs.mkdir("artifacts",{recursive:true});
- await host.screenshot({path:"artifacts/lampkeep-host-mobile.png",fullPage:true});
- await guest.screenshot({path:"artifacts/lampkeep-guest-mobile.png",fullPage:true});
- assert.deepEqual(errors,[],"No uncaught browser errors");
+ await host.screenshot({path:"artifacts/kiosk-mobile-host.png",fullPage:false});
+ await guest.screenshot({path:"artifacts/kiosk-mobile-guest.png",fullPage:false});
+ const mobileOverflow=await host.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2);
+ assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
+ // Local solo save survives refresh; source account is separate from legacy save.
  const solo=await open(context);
- await solo.locator("#soloButton").click();
- await solo.locator('[data-station="ledger"]').click();
- await solo.locator("#inspectButton").click();
- const seed=await solo.evaluate(()=>window.lampkeepState().seed);
+ await solo.locator("#solo").click();
+ await action(solo,"window");
  await solo.reload();
- await solo.locator("#resumeButton").click();
- assert.equal(await solo.evaluate(()=>window.lampkeepState().seed),seed);
- assert.equal(await solo.evaluate(()=>window.lampkeepState().opened.ledger),true);
- await solo.screenshot({path:"artifacts/lampkeep-solo-mobile.png",fullPage:true});
- console.log("PASS: two clients transferred physical products, wrong scan reduced trust, correct scan synchronized, and solo save restored.");
-}
-let exitCode=0;
-try{await run();}catch(e){console.error(e);exitCode=1;}
-finally{await browser?.close();staticServer.kill();process.exit(exitCode);}
+ await solo.waitForFunction(()=>window.__KIOSK_TEST__?.getState!==undefined);
+ await solo.locator("#resume").click();
+ assert.equal((await snapshot(solo)).windowOpen,true);
+ await solo.screenshot({path:"artifacts/kiosk-mobile-solo.png",fullPage:false});
+ // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
+ const wide=await open(context,1280,720);
+ await wide.locator("#solo").click();
+ assert.equal((await wide.evaluate(()=>window.__KIOSK_TEST__.screen())).land,true);
+ assert.ok((await wide.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="slot"));
+ await wide.screenshot({path:"artifacts/kiosk-landscape-desktop.png",fullPage:false});
+ assert.deepEqual(errors,[]);
+ console.log("PASS: two actual mobile clients transferred stock, opened drawer, sold a customer, local restore, no scroll, landscape layout.");
+}catch(e){console.error(e);process.exitCode=1;}
+finally{await browser?.close();server.kill();process.exit();}

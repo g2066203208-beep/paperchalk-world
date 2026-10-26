@@ -20,7 +20,7 @@ export class InputMailbox {
     const type=input?.action?.type;
     if(typeof peerId!=="string"||!peerId||
        !Number.isSafeInteger(seq)||seq<=0||
-       typeof type!=="string"||!["station","inspect","pin","ask","vote","take","return","scan"].includes(type)) return false;
+       typeof type!=="string"||!["station","inspect","pin","ask","vote","take","return","scan","kiosk"].includes(type)) return false;
     if(seq<=(this.lastSeq.get(peerId)||0)) return false;
     if(this.events.length>=this.limit) return false;
     if(this.events.filter(e=>e.peerId===peerId).length>=this.perPeer) return false;
@@ -28,7 +28,9 @@ export class InputMailbox {
       type,
       ...(typeof input.action.station==="string"?{station:input.action.station.slice(0,20)}:{}),
       ...(typeof input.action.choice==="string"?{choice:input.action.choice.slice(0,20)}:{}),
-      ...(typeof input.action.sku==="string"?{sku:input.action.sku.slice(0,20)}:{})
+      ...(typeof input.action.sku==="string"?{sku:input.action.sku.slice(0,20)}:{}),
+      ...(typeof input.action.operation==="string"?{operation:input.action.operation.slice(0,20)}:{}),
+      ...(typeof input.action.key==="string"?{key:input.action.key.slice(0,24)}:{})
     }}});
     this.lastSeq.set(peerId,seq);
     return true;

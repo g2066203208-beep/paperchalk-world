@@ -1,12 +1,1 @@
-{
-  "name": "untitled-shop-prototype",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "description": "Original portrait-first cooperative shop mystery for web and Android",
-  "scripts": {
-    "test": "node --test src/*.test.js",
-    "check": "node --check src/logic.js && node --check src/network.js && node --check src/client.js && node --check src/fixtures.js"
-  },
-  "engines": {"node": ">=22"}
-}
+{"name":"untitled-first-person-kiosk-demo","version":"0.2.0","private":true,"type":"module","scripts":{"test":"node --test src/*.test.js","check":"node --check src/logic.js && node --check src/network.js && node --check src/kiosk-core.js && node --check src/kiosk-view.js && node --check src/kiosk-app.js && node --check src/client.js"},"engines":{"node":">=22"}}
