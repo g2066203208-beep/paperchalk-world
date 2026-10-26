@@ -2,10 +2,8 @@
 // draw routine (no flattened image / generated art); all clickable bounds
 // are registered with the same coordinates used to paint the object.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
-import {drawWindowCustomer} from "./kiosk-guest.js";
-const C={ink:"#181d28",outline:"#272331",wall:"#66504a",wood:"#987159",woodLight:"#bd9874",
-trim:"#533d3f",shelf:"#bb8c69",dark:"#302d35",cream:"#e7cdb1",amber:"#e4b374",
-sky:"#526f87",snow:"#c1cbd0",blue:"#7d9aaa",gold:"#f1bc77",green:"#789788",red:"#be706b"};
+import {drawAmbient,drawRoomWall,drawNightStreet,drawStylizedCustomer,drawMerchandise,drawGameFrame,drawSkinButton} from "./kiosk-skin.js";
+const C={ink:"#122140",outline:"#25365b",wall:"#33466a",wood:"#ab7a61",woodLight:"#e0b78a",trim:"#263454",shelf:"#c78d63",dark:"#17294e",cream:"#fff3e2",amber:"#ffc76b",sky:"#5b83b5",snow:"#ebf2ff",blue:"#89b9df",gold:"#ffcd79",green:"#729db2",red:"#d97a7d"};
 const r=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const t=(g,text,x,y,size=12,color=C.cream,align="left")=>{g.fillStyle=color;g.font='bold '+size+'px ui-monospace, "Noto Sans SC",monospace';g.textAlign=align;g.textBaseline="middle";g.fillText(String(text),Math.round(x),Math.round(y));};
 const frame=(g,x,y,w,h,th=5)=>{r(g,x,y,w,h,C.outline);r(g,x+th,y+th,w-2*th,h-2*th,C.woodLight);r(g,x+th*2,y+th*2,w-4*th,h-4*th,C.trim);};
@@ -35,18 +33,7 @@ function snowyStreet(g,x,y,w,h,phase){
  r(g,x+w*.79,y+h*.34,3,h*.53,"#27333d");r(g,x+w*.74,y+h*.31,w*.1,3,"#27333d");
  r(g,x+w*.76,y+h*.29,w*.07,8,C.gold);
 }
-function sprite(g,sku,x,y,scale=3){
- // 10x12 hand-drawn indexed-color sprites; each pixel remains a discrete cell.
- const palette={".":null,"#":C.ink,"w":"#d8d6be","k":"#d49b61","o":"#a96f46","g":"#83aa95","r":"#c97971","b":"#8baabd","y":"#e1bd75","p":"#9c83a1"};
- const map={
- tea:["..........","..####....","..#kk#....","..#yy###..","..#yyww#..","..#yy###..","..#yy#....","..#yy#....","..####....",".######...","..........",".........."],
- bread:["..........","..........","..####....",".#kkkk#...",".#kyyk#...",".#kyyk#...",".#kyyk#...",".#kkkk#...",".#oooo#...",".######...","..........",".........."],
- battery:["..........","...gg.....","..####....","..#bb#....","..#wb#....","..#bb#....","..#wb#....","..#bb#....","..#bb#....","..####....","..........",".........."],
- cocoa:["..........","..####....","..#pp#....","..#pp#....","..#ww###..","..#wwww#..","..#ww###..","..#pp#....","..#pp#....","..####....","..........",".........."]
- };
- const pattern=map[sku]||map.tea;
- pattern.forEach((line,row)=>[...line].forEach((ch,col)=>{if(palette[ch])r(g,x+col*scale,y+row*scale,scale,scale,palette[ch]);}));
-}
+function sprite(g,sku,x,y,scale=3){drawMerchandise(g,sku,x,y,scale*10,scale*12);}
 // The glove and the merchandise are separate foreground pixel layers.
 function glovedHand(g,x,y,alpha=1){
  g.save();g.globalAlpha=Math.max(0,Math.min(1,alpha));
@@ -85,6 +72,7 @@ function heldItemLayer(g,motion,mat,x,y,w,benchY,benchH){
 function shelf(g,hits,x,y,w,h,slot,s){
  const key=slot,content=s.slots[key];
  r(g,x+3,y+4,w-6,h-6,C.dark);
+ r(g,x+5,y+5,w-10,2,"#7198ba");
  r(g,x,y+h-12,w,11,C.shelf);
  r(g,x,y+h-12,w,3,C.woodLight);
  r(g,x,y+h-4,w,5,C.trim);
@@ -133,11 +121,11 @@ function drawer(g,hits,x,y,w,h,key,s){
 }
 function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  r(g,x-9,y-9,w+18,h+18,C.outline);
- snowyStreet(g,x,y,w,h,phase);
+ drawNightStreet(g,x,y,w,h,phase);
  if(s.windowOpen&&(!motion||motion.visible)){
   // Moving sprites are clipped to the actual window aperture, not the wall.
   g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
-  drawWindowCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
+  drawStylizedCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
    w:w*.92,h:h*.92,tone:motion?.tone??visitor(s).tone,phase,
    talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving)});
   g.restore();
@@ -187,7 +175,7 @@ function heatingPlaque(g,hits,x,y,w,h,s,isManager){
 }
 function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
- wooden(g,x,y,w,h,2,C.wall);
+ drawRoomWall(g,x,y,w,h,phase);
  // structural corner posts
  r(g,x,y,12,h,C.trim);r(g,x+w-12,y,12,h,C.trim);
  r(g,x+11,y,w-22,7,C.woodLight);
@@ -249,18 +237,17 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  g.restore();
 }
 function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
- r(g,x+2,y+3,w,h,C.ink);r(g,x,y,w,h,active?C.gold:C.trim);
- r(g,x+2,y+2,w-4,h-4,active?"#584336":"#5c5352");
- t(g,text,x+w/2,y+h*.52,h*.36,active?C.gold:C.cream,"center");
+ drawSkinButton(g,x,y,w,h,active);
+ t(g,text,x+w/2,y+h*.53,Math.min(16,h*.35),active?"#24335d":"#203c6f","center");
  if(cmd)hit(hits,x,y,w,h,cmd,key);
 }
 export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=null){
  const {W,H,land}=view,hits=[];
  const p=s.players?.[viewerId]||Object.values(s.players||{})[0]||{};
  const isManager=p.role==="manager";
- r(g,0,0,W,H,C.ink);
+ drawAmbient(g,W,H,phase);
  const headH=land?48:54;
- r(g,0,0,W,headH,C.trim);r(g,0,headH-3,W,3,C.gold);
+ drawGameFrame(g,W,H,land,headH,phase);
  t(g,"雪 夜 杂 货 铺",56,headH*.47,land?17:16,C.cream);
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
@@ -289,7 +276,8 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   t(g,!favor?"暂无":s.favorDone?"已完成 +¥"+favor.tip:s.spoken?GOODS[favor.sku].name+" +¥"+favor.tip:"交谈后了解",W-130,headH+211,12,C.cream);
  }else{
   const lower=shop.y+shop.h;
-  r(g,0,lower,W,84,C.dark);
+  r(g,0,lower,W,84,"#203559");
+ r(g,0,lower,W,3,C.gold);
   t(g,visitor(s).name+"  ·  "+(s.windowOpen?GOODS[visitor(s).sku].name+" ¥"+GOODS[visitor(s).sku].price:"请点击窗闩开窗"),12,lower+16,15,C.gold);
   t(g,"口碑 "+(s.reputation||0)+"/100",W-12,lower+16,12,C.gold,"right");
   const favor=visitor(s).favor;
@@ -301,7 +289,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  }
  const bottom=land?H-82:H-123;
  if(land){
-  r(g,0,bottom,W,H-bottom,C.dark);
+  r(g,0,bottom,W,H-bottom,"#17264a");
   t(g,"交互",12,bottom+21,12,C.gold);
   chip(g,hits,67,bottom+7,95,33,"问候","talk");
   chip(g,hits,168,bottom+7,95,33,"收款","sell");
@@ -312,7 +300,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   else t(g,"店长负责进货；店员可拿货、交接与收款",350,bottom+23,13,C.cream);
   t(g,"选择商品格拿货 → 点交接台 → 收款。补货先选商品再点格子。",26,bottom+61,12,C.cream);
  } else{
-  r(g,0,H-123,W,123,C.dark);
+  r(g,0,H-123,W,123,"#17264a");
   chip(g,hits,10,H-117,145,49,"交谈","talk");
   chip(g,hits,167,H-117,145,49,"收款","sell");
   chip(g,hits,324,H-117,146,49,"完成委托","commission");
