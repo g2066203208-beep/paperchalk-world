@@ -84,3 +84,33 @@ test("rejected guest cannot cause a phantom leave or state replay",()=>{
  assert.equal(conn.sent.at(-1).t,"reject");
  assert.equal(leaves,0);
 });
+
+test("retrying the same browser session replaces stale ghost players before joining",()=>{
+ class FakeConn extends EventEmitter{
+   constructor(peer){super();this.peer=peer;this.open=true;this.sent=[];}
+   send(m){this.sent.push(m);}
+   close(){this.emit("close");}
+ }
+ const players=new Set(["host"]);
+ let leaves=0;
+ const net=new RoomNetwork({
+   join:id=>{if(players.size>=4)return false;players.add(id);return true;},
+   leave:id=>{players.delete(id);leaves++;}
+ });
+ net.host=true;net.room="ABCDEFGH";
+ const old=new FakeConn("stale-peer"),fresh=new FakeConn("fresh-peer");
+ net.accept(old);
+ old.emit("data",{t:"join",name:"店员",session:"one-browser-tab-uuid"});
+ assert.deepEqual([...players],["host","stale-peer"]);
+ net.accept(fresh);
+ fresh.emit("data",{t:"join",name:"店员",session:"one-browser-tab-uuid"});
+ assert.deepEqual([...players],["host","fresh-peer"],"retry must not occupy two staff slots");
+ assert.equal(leaves,1);
+ old.close();
+ assert.equal(leaves,1,"late close cannot remove a player twice");
+ fresh.emit("data",{t:"input",input:{seq:1,action:{type:"kiosk",operation:"window"}}});
+ assert.equal(net.takeInputs().length,1);
+ fresh.close();
+ assert.deepEqual([...players],["host"]);
+ assert.equal(leaves,2);
+});

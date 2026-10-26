@@ -48,10 +48,14 @@ export class InputMailbox {
 }
 export class RoomNetwork{
   constructor(callbacks={}){
-    this.cb=callbacks;this.peer=null;this.host=false;this.room="";this.id="";this.conn=null;this.connections=new Map();this.inbox=new InputMailbox();this.ready=false;this.lastState=null;
+    this.cb=callbacks;this.peer=null;this.host=false;this.room="";this.id="";this.conn=null;
+    this.connections=new Map();this.inbox=new InputMailbox();this.ready=false;this.lastState=null;
+    // One stable identity per browser tab survives PeerJS handshake retries.
+    this.sessionId=globalThis.crypto?.randomUUID?.()||"session-"+Math.random().toString(36).slice(2);
+    this.sessions=new Map();this.disconnectors=new Map();
   }
   status(text){this.cb.status?.(text);}
-  clean(){this.ready=false;this.connections.forEach(c=>{try{c.close();}catch{}});this.connections.clear();this.inbox.reset();this.lastState=null;try{this.conn?.close();}catch{}try{this.peer?.destroy();}catch{}this.peer=null;this.conn=null;}
+  clean(){this.ready=false;this.connections.forEach(c=>{try{c.close();}catch{}});this.connections.clear();this.sessions.clear();this.disconnectors.clear();this.inbox.reset();this.lastState=null;try{this.conn?.close();}catch{}try{this.peer?.destroy();}catch{}this.peer=null;this.conn=null;}
   ensurePeer(){if(typeof window.Peer!=="function")throw Error("联机组件未加载，请检查网络或刷新页面");}
   async create(){
     this.clean();this.ensurePeer();this.host=true;
@@ -69,27 +73,51 @@ export class RoomNetwork{
     });
   }
   accept(conn){
-    if(!this.host||this.connections.size>=3){
-      conn.on("open",()=>{conn.send({t:"reject",reason:"房间已满（最多4人）"});setTimeout(()=>conn.close(),300);});
+    if(!this.host){
+      conn.on("open",()=>{conn.send({t:"reject",reason:"房间不可用"});setTimeout(()=>conn.close(),300);});
       return;
     }
     this.connections.set(conn.peer,conn);
-    let joined=false;
-    // Install the data listener immediately, not inside conn.on("open").
-    // The remote side can send its first "join" packet before our open
-    // callback fires; that race previously stranded a connected clerk.
+    let joined=false,closed=false,sessionKey=null;
+    const detach=()=>{
+      if(closed)return;
+      closed=true;
+      if(this.connections.get(conn.peer)===conn)this.connections.delete(conn.peer);
+      this.disconnectors.delete(conn.peer);
+      this.inbox.forget(conn.peer);
+      if(sessionKey&&this.sessions.get(sessionKey)===conn.peer)this.sessions.delete(sessionKey);
+      if(joined)this.cb.leave?.(conn.peer);
+      this.cb.roster?.();
+    };
+    this.disconnectors.set(conn.peer,detach);
+    // The first join packet may arrive before the connection's open event.
     conn.on("data",data=>{
-      if(!data||typeof data!=="object")return;
+      if(closed||!data||typeof data!=="object")return;
       if(data.t==="join"){
         if(!joined){
           const name=String(data.name||"旅人").slice(0,14);
+          const token=typeof data.session==="string"&&data.session.length>=12&&data.session.length<=64?data.session:null;
+          if(token){
+            const oldPeer=this.sessions.get(token);
+            if(oldPeer&&oldPeer!==conn.peer){
+              // A previous PeerJS attempt may remain open after the guest
+              // retries. Remove its player synchronously before admitting
+              // the replacement, then ignore the late close callback.
+              const oldConn=this.connections.get(oldPeer);
+              this.disconnectors.get(oldPeer)?.();
+              try{oldConn?.close();}catch{}
+            }
+          }
+          if(this.connections.size>3){
+            conn.send({t:"reject",reason:"房间已满（最多4人）"});conn.close();detach();return;
+          }
           const permitted=this.cb.join?.(conn.peer,name);
-          if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();return;}
-          joined=true;
+          if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();detach();return;}
+          joined=true;sessionKey=token;
+          if(sessionKey)this.sessions.set(sessionKey,conn.peer);
           this.cb.roster?.();
         }
-        // Idempotent handshake: resend welcome when a guest retransmits join.
-        // The player is added only once, and the authoritative state follows.
+        // Repeated join on the same connection is idempotent.
         conn.send({t:"welcome",id:conn.peer,room:this.room});
         if(this.lastState)conn.send({t:"state",state:this.lastState});
       }else if(data.t==="input"&&joined){
@@ -97,10 +125,7 @@ export class RoomNetwork{
           conn.send({t:"input-rejected",reason:"操作过快或操作序号无效"});
       }
     });
-    conn.on("close",()=>{
-      this.connections.delete(conn.peer);this.inbox.forget(conn.peer);
-      if(joined)this.cb.leave?.(conn.peer);this.cb.roster?.();
-    });
+    conn.on("close",detach);
     conn.on("error",()=>{});
   }
   async join(code,name){
@@ -121,7 +146,7 @@ export class RoomNetwork{
         this.id=id;
         const conn=this.conn=peer.connect(PREFIX+this.room,{reliable:true});
         conn.on("open",()=>{
-          const request=()=>{if(conn.open&&!settled)conn.send({t:"join",name:String(name||"旅人").slice(0,14)});};
+          const request=()=>{if(conn.open&&!settled)conn.send({t:"join",name:String(name||"旅人").slice(0,14),session:this.sessionId});};
           request();joinTimer=setInterval(request,850);
         });
         conn.on("data",data=>{
