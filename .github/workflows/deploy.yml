@@ -53,18 +53,16 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
-      - name: Prepare Chinese UI fonts without blocking gameplay tests
+      - name: Ensure Chinese font glyphs exist in actual game screenshots
         run: |
-          # Font packages are optional; do not skip real Chromium multiplayer
-          # checks when GitHub runner apt mirrors stall.
-          if fc-list : family | grep -qi "Noto Sans CJK"; then
-            echo "Noto CJK already available"
-          else
-            timeout 20s sudo apt-get update -qq || echo "apt mirror unavailable; using cached lists"
-            timeout 35s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk || echo "CJK font install unavailable; continuing browser tests"
+          if ! fc-list :lang=zh-cn family | grep -q .; then
+            timeout 75s sudo apt-get update -qq || echo "using cached apt index"
+            timeout 145s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk \
+              || timeout 80s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-wqy-microhei
           fi
-          fc-cache -f || true
-          fc-match "Noto Sans CJK SC" || true
+          fc-cache -f
+          echo "Chinese font: $(fc-match -f '%{family}' ':lang=zh-cn')"
+          fc-list :lang=zh-cn family | grep -q . || { echo 'ERROR: Chinese font missing, visual screenshots invalid'; exit 1; }
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
