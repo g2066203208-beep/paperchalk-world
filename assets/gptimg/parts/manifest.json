@@ -82,6 +82,25 @@
       "alpha": "opaque-composite-part",
       "stage": "prototype; regenerate individually before final art"
     },
+    "cabinet-open-interior": {
+      "file": "cabinet-open-interior.png",
+      "size": [
+        158,
+        163
+      ],
+      "sourceCrop": [
+        70,
+        340,
+        158,
+        163
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "alpha": "opaque-composite-part",
+      "stage": "prototype; regenerate individually before final art"
+    },
     "shelfL1": {
       "file": "shelfL1.png",
       "size": [
