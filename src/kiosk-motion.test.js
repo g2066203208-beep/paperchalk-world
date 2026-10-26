@@ -23,18 +23,22 @@ test("paid order waits for physical item handoff before the customer walks away"
  assert.equal(start.stage,"handoff");assert.equal(start.tone,CUSTOMERS[0].tone);
  assert.equal(start.receiving,true);assert.equal(start.offset,0);
  assert.equal(start.handoff.sku,"tea");assert.equal(start.handoff.progress,0);
+ assert.deepEqual(start.payment,{kind:"sale",amount:9,progress:0});
  const mid=sample(s,1100+CUSTOMER_HANDOFF_MS/2);
  assert.equal(mid.stage,"handoff");
  assert.ok(mid.handoff.progress>0&&mid.handoff.progress<1);
+ assert.ok(mid.payment.progress>0&&mid.payment.progress<1,"cash note travels toward the till");
  assert.equal(mid.offset,0,"customer must not leave before receiving the item");
  const departing=sample(s,1100+CUSTOMER_HANDOFF_MS);
  assert.equal(departing.stage,"exit");
  assert.equal(departing.handoff.progress,1);
+ assert.equal(departing.payment,null,"cash must not float beside the departing customer");
  assert.ok(sample(s,1100+CUSTOMER_HANDOFF_MS+CUSTOMER_EXIT_MS/2).offset<0);
  const arriving=sample(s,1100+CUSTOMER_HANDOFF_MS+CUSTOMER_EXIT_MS);
  assert.equal(arriving.stage,"enter");assert.equal(arriving.tone,CUSTOMERS[1].tone);
  assert.equal(arriving.receiving,false);
  assert.equal(arriving.handoff,null,"next customer cannot inherit the old purchase");
+ assert.equal(arriving.payment,null,"next customer cannot inherit the previous payment");
  assert.equal(sample(s,1100+CUSTOMER_HANDOFF_MS+CUSTOMER_EXIT_MS+CUSTOMER_ENTER_MS).stage,"idle");
 });
 test("closing shutter interrupts sale animation and reopening starts a fresh arrival",()=>{
@@ -79,12 +83,15 @@ test("neighbor commission hands over the requested physical SKU without moving t
  assert.equal(start.stage,"favor");assert.equal(start.tone,CUSTOMERS[1].tone);
  assert.equal(start.receiving,true);assert.equal(start.offset,0);
  assert.deepEqual(start.handoff,{sku:"tea",progress:0});
+ assert.deepEqual(start.payment,{kind:"favor",amount:8,progress:0});
  const mid=sample(s,1100+CUSTOMER_FAVOR_MS/2);
  assert.equal(mid.stage,"favor");
  assert.ok(mid.handoff.progress>0&&mid.handoff.progress<1);
+ assert.ok(mid.payment.progress>0&&mid.payment.progress<1);
  assert.equal(mid.offset,0);
  assert.equal(sample(s,1100+CUSTOMER_FAVOR_MS).stage,"idle");
  assert.equal(sample(s,2000).handoff,null,"commission animation runs only once");
+ assert.equal(sample(s,2000).payment,null,"commission money cannot be replayed");
  assert.equal(s.orderIndex,1,"commission must not advance the paid order");
  assert.equal(JSON.stringify({...s,favorDone:false}),before,"animation never mutates host state");
 });
@@ -94,6 +101,7 @@ test("joining after a completed commission must not replay an old delivery",()=>
  assert.equal(sample(s,0).stage,"enter");
  assert.equal(sample(s,1000).stage,"idle");
  assert.equal(sample(s,1000).handoff,null);
+ assert.equal(sample(s,1000).payment,null,"joining late must not replay paid cash");
 });
 test("sale immediately after a commission interrupts the favor animation without duplicate merchandise",()=>{
  const s=shop(),sample=createCustomerMotion();s.windowOpen=true;s.orderIndex=1;
@@ -114,6 +122,7 @@ test("wrong item produces a visible refusal pose and resets without changing inv
  const before=JSON.stringify(s),refusal=sample(s,1010);
  assert.equal(refusal.stage,"idle");assert.equal(refusal.refusing,true);
  assert.equal(refusal.receiving,false);assert.equal(refusal.handoff,null);
+ assert.equal(refusal.payment,null,"wrong item never generates payment");
  assert.equal(JSON.stringify(s),before,"animation never changes authoritative shop state");
  s.wrongAttempted=false;assert.equal(sample(s,1020).refusing,false);
  s.wrongAttempted=true;s.orderIndex=1;

@@ -93,6 +93,11 @@ try{
  assert.equal(transfer.offset,0,"customer waits at window until item arrives");
  assert.equal((await snapshot(host)).counter,null,"sold item must leave authoritative counter immediately");
  await host.screenshot({path:"artifacts/kiosk-item-handoff.png",fullPage:false});
+ await host.waitForFunction(()=>{
+   const m=window.__KIOSK_TEST__.getCustomerMotion();
+   return m?.stage==="handoff"&&m.payment?.amount===9&&m.payment.progress>.1&&m.payment.progress<1;
+ },undefined,{timeout:3000});
+ await host.screenshot({path:"artifacts/kiosk-cash-payment.png",fullPage:false});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="exit",{timeout:5000});
  await host.waitForTimeout(240); // Capture the actual departing customer with item.
  const departing=await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion());
@@ -159,6 +164,11 @@ try{
  assert.ok(favorMotion.handoff.progress>0&&favorMotion.handoff.progress<1);
  assert.equal(favorMotion.offset,0,"commission customer stays at the service window");
  await host.screenshot({path:"artifacts/kiosk-commission-handoff.png",fullPage:false});
+ await host.waitForFunction(()=>{
+   const m=window.__KIOSK_TEST__.getCustomerMotion();
+   return m?.stage==="favor"&&m.payment?.amount===8&&m.payment.progress>.1&&m.payment.progress<1;
+ },undefined,{timeout:3000});
+ await host.screenshot({path:"artifacts/kiosk-commission-cash.png",fullPage:false});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:4000});
  assert.equal((await snapshot(host)).orderIndex,1,"commission must not skip the paying customer");
  assert.equal((await snapshot(host)).cash,113,"commission pays exactly one 8-yuan tip");

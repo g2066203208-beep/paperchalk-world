@@ -3,7 +3,7 @@
 // are registered with the same coordinates used to paint the object.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
 import {drawAmbient,drawRoomWall,drawGameFrame,drawSkinButton} from "./kiosk-skin.js";
-import {drawPixelCustomer,drawPixelItem,drawPixelStreet} from "./kiosk-pixel.js";
+import {drawPixelCustomer,drawPixelItem,drawPixelStreet,drawPixelCash} from "./kiosk-pixel.js";
 const C={ink:"#122140",outline:"#25365b",wall:"#33466a",wood:"#ab7a61",woodLight:"#e0b78a",trim:"#263454",shelf:"#c78d63",dark:"#17294e",cream:"#fff3e2",amber:"#ffc76b",sky:"#5b83b5",snow:"#ebf2ff",blue:"#89b9df",gold:"#ffcd79",green:"#729db2",red:"#d97a7d"};
 const r=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const t=(g,text,x,y,size=12,color=C.cream,align="left",maxWidth=null)=>{
@@ -278,9 +278,24 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
   sprite(g,motion.handoff.sku,fromX+(handX-fromX)*p,fromY+(handY-fromY)*p,scale);
   g.restore();
  }
- // small secondary station objects that don't compete with the item mat
- r(g,x+w*.075,benchY+benchH*.29,w*.06,8,C.gold);
- r(g,x+w*.075+5,benchY+benchH*.2,w*.04,5,C.ink);
+ // A physical pixel cash tray. The note flies here after a paid handoff.
+ const till={x:x+w*.075,y:benchY+benchH*.22,w:Math.max(26,w*.09),h:Math.max(13,benchH*.32)};
+ r(g,till.x+2,till.y+3,till.w,till.h,C.ink);
+ r(g,till.x,till.y,till.w,till.h,"#b38d61");
+ r(g,till.x+3,till.y+3,till.w-6,till.h-6,"#485d5a");
+ r(g,till.x+6,till.y+6,till.w-12,2,"#e0c68f");
+ if(motion?.payment&&motion.payment.progress>0){
+  const p=motion.payment.progress;
+  const cw=win.w*.92,ch=win.h*.92,cs=Math.min(cw/80,ch/120);
+  const cx=win.x+win.w*(.04+(motion.offset||0));
+  const cy=win.y+win.h*(.04+(motion.drop||0));
+  const fromX=cx+cw/2+34*cs,fromY=cy+ch*.96-37*cs;
+  const toX=till.x+till.w*.27,toY=till.y-4;
+  const arc=Math.sin(Math.PI*p)*Math.min(20,benchH*.20);
+  const cashScale=Math.max(.85,Math.min(1.45,w/450));
+  drawPixelCash(g,fromX+(toX-fromX)*p,fromY+(toY-fromY)*p-arc,cashScale);
+  if(p>.75)t(g,"¥"+motion.payment.amount,till.x+till.w/2,till.y-13,11,C.gold,"center");
+ }
  r(g,x+w*.80,benchY+benchH*.3,w*.09,10,C.dark);
  r(g,x+w*.81,benchY+benchH*.17,w*.07,10,C.cream);
  // Under-counter drawers: both open and close, both store merchandise.

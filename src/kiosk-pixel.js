@@ -161,6 +161,23 @@ export function drawPixelItem(g,sku,x,y,w,h){
  g.drawImage(img,Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));
  g.restore();
 }
+// Original 22x14 note sprite: transparent, separately cached and reusable.
+export function drawPixelCash(g,x,y,scale=1){
+ if(!Number.isFinite(scale)||scale<=0)return;
+ let img=cache.get("cash-note");
+ if(!img){
+  img=raster(22,14,c=>{
+   px(c,0,2,22,11,"#1c2c43");px(c,2,3,18,9,"#d6d3a2");
+   px(c,3,4,16,7,"#779d87");px(c,5,5,12,5,"#b7d6b1");
+   px(c,8,5,6,5,"#477363");px(c,10,6,2,3,"#f4e9b8");
+   px(c,3,4,3,2,"#e7e4bc");px(c,16,9,3,2,"#e7e4bc");
+   px(c,1,12,20,1,"#42505c");
+  });cache.set("cash-note",img);
+ }
+ g.save();g.imageSmoothingEnabled=false;
+ g.drawImage(img,Math.round(x),Math.round(y),Math.max(1,Math.round(22*scale)),Math.max(1,Math.round(14*scale)));
+ g.restore();
+}
 function paintStreet(g){
  px(g,0,0,160,112,"#24395d");
  // Dithered winter sky: horizontal bands rather than a smooth gradient.

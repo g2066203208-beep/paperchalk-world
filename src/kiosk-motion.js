@@ -1,12 +1,12 @@
 // Client-local presentation only: no shop inventory, save data or multiplayer
 // authority is changed by these animation states. All times are milliseconds.
-import {CUSTOMERS} from "./kiosk-core.js";
+import {CUSTOMERS,GOODS} from "./kiosk-core.js";
 export const CUSTOMER_HANDOFF_MS=520;
 export const CUSTOMER_FAVOR_MS=620;
 export const CUSTOMER_EXIT_MS=640;
 export const CUSTOMER_ENTER_MS=860;
 const ease=t=>t*t*(3-2*t);
-const hidden=()=>({visible:false,stage:"hidden",tone:0,offset:0,drop:0,talking:false,receiving:false,refusing:false,handoff:null});
+const hidden=()=>({visible:false,stage:"hidden",tone:0,offset:0,drop:0,talking:false,receiving:false,refusing:false,handoff:null,payment:null});
 export function createCustomerMotion(){
  let previousOrder=null,previousOpen=false,previousFavorDone=false,stage="hidden",startedAt=0,departingOrder=null;
  return function sampleCustomerMotion(shop,now=0){
@@ -54,11 +54,19 @@ export function createCustomerMotion(){
    sku:customer.sku,
    progress:stage==="exit"?1:ease(Math.min(1,elapsed/CUSTOMER_HANDOFF_MS))
   }:null;
+  // Presentation-only payment: the host has already credited the shop.
+  // Neither cash balance nor the save/network schema is touched here.
+  const paying=stage==="handoff"||stage==="favor";
+  const payment=paying?{
+   kind:stage==="favor"?"favor":"sale",
+   amount:stage==="favor"?customer.favor.tip:GOODS[customer.sku].price,
+   progress:ease(Math.max(0,Math.min(1,(elapsed/(stage==="favor"?CUSTOMER_FAVOR_MS:CUSTOMER_HANDOFF_MS)-.24)/.72)))
+  }:null;
   return {visible:true,stage,tone:customer.tone,
    offset:stage==="enter"?(1-amount)*.76:stage==="exit"?-amount*.76:0,
    drop:stage==="enter"?(1-amount)*.06:stage==="exit"?amount*.03:0,
    talking:stage==="idle"&&Boolean(shop.spoken),
    refusing:stage==="idle"&&Boolean(shop.wrongAttempted),
-   receiving:stage==="favor"||stage==="handoff"||stage==="exit",handoff};
+   receiving:stage==="favor"||stage==="handoff"||stage==="exit",handoff,payment};
  };
 }
