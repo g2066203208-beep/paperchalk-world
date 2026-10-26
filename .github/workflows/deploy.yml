@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: untitled-pages-${{ github.ref }}
+  group: untitled-pages-pixel-20261027-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
