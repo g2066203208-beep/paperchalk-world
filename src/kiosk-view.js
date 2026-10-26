@@ -112,7 +112,8 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
   g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
   drawPixelCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
    w:w*.92,h:h*.92,tone:motion?.tone??visitor(s).tone,phase,
-   talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving)});
+   talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving),
+   refusing:Boolean(motion?.refusing)});
   g.restore();
  }
  if(!s.windowOpen){
