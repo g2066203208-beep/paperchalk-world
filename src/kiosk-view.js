@@ -3,7 +3,7 @@
 // are registered with the same coordinates used to paint the object.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
 import {drawAmbient,drawRoomWall,drawGameFrame,drawSkinButton} from "./kiosk-skin.js";
-import {drawPixelCustomer,drawPixelItem,drawPixelStreet} from "./kiosk-pixel.js";
+import {drawAnime} from "./kiosk-anime-assets.js";
 const C={ink:"#122140",outline:"#25365b",wall:"#33466a",wood:"#ab7a61",woodLight:"#e0b78a",trim:"#263454",shelf:"#c78d63",dark:"#17294e",cream:"#fff3e2",amber:"#ffc76b",sky:"#5b83b5",snow:"#ebf2ff",blue:"#89b9df",gold:"#ffcd79",green:"#729db2",red:"#d97a7d"};
 const r=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const t=(g,text,x,y,size=12,color=C.cream,align="left")=>{g.fillStyle=color;g.font='bold '+size+'px ui-monospace, "Noto Sans SC",monospace';g.textAlign=align;g.textBaseline="middle";g.fillText(String(text),Math.round(x),Math.round(y));};
@@ -18,22 +18,9 @@ function wooden(g,x,y,w,h,seed=1,base=C.wood){
    let len=5+((k*7+a*3)%11);r(g,px,yy+7+(a%3)*4,len,1,(a%3===0)?"#ad836b":"#705348");}
  }
 }
-function sprite(g,sku,x,y,scale=3){drawPixelItem(g,sku,x,y,scale*10,scale*12);}
+function sprite(g,sku,x,y,scale=3){drawAnime(g,sku,x,y,scale*10,scale*12);}
 // The glove and the merchandise are separate foreground pixel layers.
-function glovedHand(g,x,y,alpha=1){
- g.save();g.globalAlpha=Math.max(0,Math.min(1,alpha));
- // Stepped diagonal sleeve enters from the lower-right foreground.
- r(g,x+41,y+60,31,20,C.ink);r(g,x+43,y+62,28,17,'#3e566a');
- r(g,x+33,y+51,29,20,C.ink);r(g,x+35,y+53,26,16,'#516b7b');
- r(g,x+26,y+43,26,19,C.ink);r(g,x+28,y+45,23,15,'#617d88');
- r(g,x+22,y+38,28,10,C.trim);r(g,x+24,y+40,24,6,C.woodLight);
- // Mitten, thumb and finger seams are separate hand-drawn pixel parts.
- r(g,x+9,y+27,31,17,C.ink);r(g,x+11,y+29,27,13,'#728c8c');
- r(g,x+6,y+35,12,10,C.ink);r(g,x+8,y+37,10,7,'#8ca59a');
- r(g,x+12,y+27,6,4,'#a9b9a5');r(g,x+22,y+29,2,11,'#516b70');
- r(g,x+29,y+30,2,10,'#516b70');
- g.restore();
-}
+function glovedHand(){ /* Removed previous procedural mitten. A separated staff-hand asset will replace it. */ }
 function heldItemLayer(g,motion,mat,x,y,w,benchY,benchH){
  if(!motion||!GOODS[motion.sku])return;
  const {stage,sku,progress}=motion;
@@ -55,107 +42,73 @@ function heldItemLayer(g,motion,mat,x,y,w,benchY,benchH){
  }
 }
 function shelf(g,hits,x,y,w,h,slot,s){
- const key=slot,content=s.slots[key];
- r(g,x+3,y+4,w-6,h-6,C.dark);
- r(g,x+5,y+5,w-10,2,"#7198ba");
- r(g,x,y+h-12,w,11,C.shelf);
- r(g,x,y+h-12,w,3,C.woodLight);
- r(g,x,y+h-4,w,5,C.trim);
- if(s.upgrades?.shelves)r(g,x+4,y+h-9,w-8,2,C.gold);
+ const content=s.slots[slot];
+ // Actual slot and inventory are still determined by kiosk-core.
+ r(g,x+3,y+3,w-6,h-7,"#152648bd");
+ r(g,x+3,y+h-14,w-6,3,"#e8ac72");
  if(content?.qty>0){
-  const count=Math.min(content.qty,3);
-  for(let i=0;i<count;i++)sprite(g,content.sku,x+Math.max(1,(w-count*27)/2)+i*27,y+h-47,2.3);
-  t(g,content.qty+"/"+slotRoom(key,content.sku,s),x+w-6,y+h-18,10,C.gold,"right");
- } else {r(g,x+w*.26,y+h-28,w*.45,2,"#564b49");}
- hit(hits,x,y,w,h,"slot",key);
+  const count=Math.min(content.qty,3),sz=Math.min(w/(count+1),h*.60);
+  for(let i=0;i<count;i++)drawAnime(g,content.sku,x+(i+1)*w/(count+1)-sz*.45,y+h*.20,sz*.90,sz*1.25);
+  r(g,x+w-34,y+h-16,29,14,"#20345c");t(g,content.qty+"/"+slotRoom(slot,content.sku,s),x+w-19,y+h-9,10,C.cream,"center");
+ }
+ hit(hits,x,y,w,h,"slot",slot);
 }
 function cupboard(g,hits,x,y,w,h,key,s,phase){
  const opened=Boolean(s.open[key]);
- r(g,x-4,y-4,w+8,h+9,C.outline);
- r(g,x,y,w,h,C.trim);
+ drawAnime(g,key+(opened?"-open":"-closed"),x-4,y-5,w+8,h+10);
  if(opened){
-  r(g,x+6,y+6,w-12,h-15,C.dark);
-  shelf(g,hits,x+8,y+8,w-16,h-18,key,s);
-  r(g,x-3,y,w*.19,h,C.wood);
-  r(g,x+w*.81,y,w*.19,h,C.wood);
- } else {
-  wooden(g,x+3,y+3,w-6,h-6,key.charCodeAt(0),C.wood);
-  r(g,x+w*.50,y+4,2,h-8,C.trim);
-  r(g,x+w*.39,y+h*.54,3,11,C.gold);r(g,x+w*.60,y+h*.54,3,11,C.gold);
- }
- // interaction hit registered after child slots; selecting slot inside open cabinet
- // uses more specific interior item region.
- hit(hits,x,y,w,h,"toggle",key);
- if(opened){hits.pop();hit(hits,x,y,Math.max(8,w*.14),h,"toggle",key);hit(hits,x+w*.86,y,Math.max(8,w*.14),h,"toggle",key);}
+  // Product art represents the actual stored SKU, not a decorative fake inventory.
+  const b=s.slots[key];
+  if(b?.qty)drawAnime(g,b.sku,x+w*.34,y+h*.35,w*.31,h*.38);
+  hit(hits,x+w*.16,y+h*.22,w*.68,h*.58,"slot",key);
+  hit(hits,x,y,w*.17,h,"toggle",key);
+  hit(hits,x+w*.84,y,w*.16,h,"toggle",key);
+ }else hit(hits,x,y,w,h,"toggle",key);
 }
 function drawer(g,hits,x,y,w,h,key,s){
- const opened=s.open[key];
- r(g,x,y,w,h,C.trim);
+ const opened=Boolean(s.open[key]);
+ drawAnime(g,opened?"drawer-open":"drawer-closed",x-4,y-5,w+8,h+10);
  if(opened){
-  r(g,x+4,y+3,w-8,h-5,C.dark);
-  shelf(g,hits,x+5,y+4,w-10,h-8,key,s);
-  r(g,x+1,y+h-10,w-2,13,C.woodLight);
-  t(g,"⌄ 关",x+w/2,y+h-5,10,C.ink,"center");
-  hit(hits,x,y+h-13,w,16,"toggle",key);
- }else{
-  r(g,x+4,y+4,w-8,h-7,C.wood);
-  r(g,x+8,y+7,w-16,2,C.woodLight);
-  r(g,x+w*.43,y+h*.48,w*.14,4,C.gold);
-  hit(hits,x,y,w,h,"toggle",key);
- }
+  const b=s.slots[key];
+  if(b?.qty)drawAnime(g,b.sku,x+w*.35,y+h*.10,w*.26,h*.55);
+  hit(hits,x+4,y+3,w-8,h*.62,"slot",key);
+  hit(hits,x,y+h*.70,w,h*.30,"toggle",key);
+ }else hit(hits,x,y,w,h,"toggle",key);
 }
 function windowFrame(g,hits,x,y,w,h,s,phase,motion){
- r(g,x-9,y-9,w+18,h+18,C.outline);
- drawPixelStreet(g,x,y,w,h,phase);
+ // Outdoor landscape, movable customer cutout, functional shutter and frame are
+ // independent draw calls, not a pasted composition or fake clickable screenshot.
+ r(g,x,y,w,h,"#5779a6");
+ drawAnime(g,"street",x,y,w,h);
  if(s.windowOpen&&(!motion||motion.visible)){
-  // Moving sprites are clipped to the actual window aperture, not the wall.
+  const kinds=["girl","man","woman","child"];
+  const tone=motion?.tone??visitor(s).tone;
+  const kind=kinds[Math.abs(Math.floor(tone||0))%kinds.length];
   g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
-  drawPixelCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
-   w:w*.92,h:h*.92,tone:motion?.tone??visitor(s).tone,phase,
-   talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving)});
+  const bob=Math.sin(phase*.045)*1.8;
+  drawAnime(g,kind,x+w*(motion?.offset||0),y+h*(.11+(motion?.drop||0))+bob,w,h*.95);
   g.restore();
  }
- if(!s.windowOpen){
-  // A solid wood shutter physically covers the opening when shut.
-  wooden(g,x+5,y+5,w-10,h-10,3,C.wood);
-  r(g,x+w*.4,y+h*.52,w*.2,7,C.gold);
- }else{
-  r(g,x,y,w*.08,h,"#584a47");r(g,x+w*.92,y,w*.08,h,"#584a47");
- }
- r(g,x-9,y-9,w+18,8,C.woodLight);r(g,x-9,y+h,w+18,12,C.woodLight);
- r(g,x-8,y,w*.07,h,C.wood);r(g,x+w*.93,y,w*.07,h,C.wood);
- r(g,x,y+h-5,w,4,C.ink);
- // Click the fixed latch at the sill, allowing customers to remain clickable.
- r(g,x+w*.44,y+h+2,w*.12,5,C.gold);
- hit(hits,x+w*.17,y+h-25,w*.66,55,"window");
+ drawAnime(g,s.windowOpen?"window-open":"window-closed",x-w*.11,y-h*.14,w*1.22,h*1.27);
+ // Sill latch keeps the identical world command for open/close and WebRTC.
+ hit(hits,x+w*.18,y+h-20,w*.64,48,"window");
 }
-function smallGlow(g,x,y,step){
- r(g,x-34,y-10,68,9,"#b38b5d");r(g,x-25,y-1,50,7,C.woodLight);
- r(g,x-15,y+6,30,9,C.gold);r(g,x-5,y+15,10,3,C.cream);
- r(g,x-4,y-27,8,20,C.ink);
+function smallGlow(g,x,y,phase){
+ const pulse=.76+Math.sin(phase*.035)*.07;
+ g.save();g.globalAlpha=pulse;
+ drawAnime(g,"lamp",x-31,y-37,62,68);
+ g.restore();
 }
-// A real in-world work order, not a transparent text hotspot. The plaque is
-// independent from the window, shelf sprites and overlay controls.
 function upgradePlaque(g,hits,x,y,w,h,s,isManager){
  const level=s.upgrades?.shelves??0,cost=shelfUpgradeCost(s);
- r(g,x+2,y+3,w,h,C.ink);r(g,x,y,w,h,C.trim);
- r(g,x+3,y+3,w-6,h-6,level?"#526b5b":"#66584c");
- // A compact shelf-shaped wooden order board, positioned away from HUD.
- r(g,x+7,y+9,w-14,3,C.gold);r(g,x+9,y+12,3,9,C.dark);r(g,x+w-12,y+12,3,9,C.dark);
- t(g,"扩架",x+w/2,y+h*.39,11,C.cream,"center");
- t(g,cost===null?"满级":"¥"+cost,x+w/2,y+h*.61,12,C.gold,"center");
- t(g,"容量 +"+(level*2),x+w/2,y+h*.83,9,C.cream,"center");
+ drawAnime(g,"shelf-upgrade",x,y,w,h);
+ t(g,cost===null?"满级":"¥"+cost,x+w/2,y+h*.81,11,C.cream,"center");
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"upgrade");
 }
 function heatingPlaque(g,hits,x,y,w,h,s,isManager){
- const upgraded=s.upgrades?.heating??0,cost=heatingUpgradeCost(s);
- r(g,x+2,y+3,w,h,C.ink);r(g,x,y,w,h,C.trim);
- r(g,x+3,y+3,w-6,h-6,upgraded?"#506b65":"#56545d");
- r(g,x+8,y+8,w-16,3,C.woodLight);
- for(let i=0;i<4;i++)r(g,x+11+i*(w-27)/3,y+12,3,9,upgraded?C.gold:C.blue);
- t(g,"保温",x+w/2,y+h*.42,11,C.cream,"center");
- t(g,cost===null?"已完成":"¥"+cost,x+w/2,y+h*.64,11,C.gold,"center");
- t(g,upgraded?"省6/日":"暖气改造",x+w/2,y+h*.84,9,C.cream,"center");
+ const level=s.upgrades?.heating??0,cost=heatingUpgradeCost(s);
+ drawAnime(g,"heater-upgrade",x,y,w,h);
+ t(g,cost===null?"已完成":"¥"+cost,x+w/2,y+h*.81,11,C.cream,"center");
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"heat");
 }
 function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
@@ -164,32 +117,30 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  // structural corner posts
  r(g,x,y,12,h,C.trim);r(g,x+w-12,y,12,h,C.trim);
  r(g,x+11,y,w-22,7,C.woodLight);
- const win={x:x+w*.29,y:y+h*.22,w:w*.42,h:h*.47};
+ const win={x:x+w*.225,y:y+h*.225,w:w*.55,h:h*.46};
  const topCabY=y+h*.045, topCabH=h*.16;
  cupboard(g,hits,x+w*.034,topCabY,w*.235,topCabH,"cabinetL",s,phase);
  cupboard(g,hits,x+w*.732,topCabY,w*.235,topCabH,"cabinetR",s,phase);
  upgradePlaque(g,hits,x+w*.28,y+h*.075,w*.155,h*.12,s,isManager);
   heatingPlaque(g,hits,x+w*.565,y+h*.075,w*.155,h*.12,s,isManager);
  // Left and right shelf towers. Every shelf is a real storage location.
- const towerY=y+h*.245,tw=w*.225,ty=h*.135;
+ const towerY=y+h*.27,tw=w*.206,ty=h*.128;
+ drawAnime(g,"shelf",x+w*.008,towerY-10,tw*1.16,ty*3.40);
+ drawAnime(g,"shelf",x+w*.783,towerY-10,tw*1.16,ty*3.40);
  for(let i=0;i<3;i++){
-  shelf(g,hits,x+w*.035,towerY+i*ty,tw,ty,"shelfL"+(i+1),s);
-  shelf(g,hits,x+w*.740,towerY+i*ty,tw,ty,"shelfR"+(i+1),s);
+  shelf(g,hits,x+w*.019,towerY+i*ty,tw,ty,"shelfL"+(i+1),s);
+  shelf(g,hits,x+w*.777,towerY+i*ty,tw,ty,"shelfR"+(i+1),s);
  }
  windowFrame(g,hits,win.x,win.y,win.w,win.h,s,phase,motion);
  // light above service window
- smallGlow(g,x+w/2,y+h*.15,phase);
+ smallGlow(g,x+w/2,y+h*.17,phase);
  // the physical pass-through and main worktop in front of shop wall.
  const benchY=y+h*.71,benchH=h*.13;
- r(g,x+10,benchY,w-20,benchH,C.trim);
- r(g,x+11,benchY,w-22,10,C.woodLight);
- wooden(g,x+14,benchY+10,w-28,benchH-12,9,C.wood);
- // Dedicated handoff mat, visible even if empty.
+ drawAnime(g,"counter",x-12,benchY-10,w+24,benchH+46);
  const mat={x:x+w*.31,y:benchY+benchH*.25,w:w*.38,h:benchH*.56};
- r(g,mat.x,mat.y,mat.w,mat.h,C.ink);
- r(g,mat.x+4,mat.y+4,mat.w-8,mat.h-8,"#506b66");
+ drawAnime(g,"mat",mat.x,mat.y,mat.w,mat.h);
  if(s.counter&&!itemMotion?.hideCounter)sprite(g,s.counter,mat.x+mat.w*.40,mat.y+mat.h*.1,Math.min(3,mat.h*.070));
- else t(g,"交接台",mat.x+mat.w/2,mat.y+mat.h/2,11,C.cream,"center");
+ else t(g,"交接",mat.x+mat.w/2,mat.y+mat.h/2,11,C.cream,"center");
  hit(hits,mat.x,mat.y,mat.w,mat.h,"counter");
  // A sold product is animated independently from the authoritative counter
  // inventory. Its destination follows the moving customer's receiving hand.
@@ -209,16 +160,17 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
   g.restore();
  }
  // small secondary station objects that don't compete with the item mat
- r(g,x+w*.075,benchY+benchH*.29,w*.06,8,C.gold);
- r(g,x+w*.075+5,benchY+benchH*.2,w*.04,5,C.ink);
- r(g,x+w*.80,benchY+benchH*.3,w*.09,10,C.dark);
- r(g,x+w*.81,benchY+benchH*.17,w*.07,10,C.cream);
+ // Existing pen cup is part of separated counter sprite.
+ // r(g,x+w*.075,benchY+benchH*.29,w*.06,8,C.gold);
+ 
+ 
+ 
  // Under-counter drawers: both open and close, both store merchandise.
  const drawY=y+h*.855;
  drawer(g,hits,x+w*.065,drawY,w*.34,h*.117,"drawerL",s);
  drawer(g,hits,x+w*.585,drawY,w*.34,h*.117,"drawerR",s);
  // Local first-person arm stays above the drawers and below the UI.
- heldItemLayer(g,itemMotion,mat,x,y,w,benchY,benchH);
+ if(itemMotion?.sku) heldItemLayer(g,itemMotion,mat,x,y,w,benchY,benchH);
  g.restore();
 }
 function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
