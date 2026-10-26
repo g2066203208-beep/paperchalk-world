@@ -14,7 +14,7 @@ const t=(g,text,x,y,size=12,color=C.cream,align="left",maxWidth=null)=>{
 };
 const frame=(g,x,y,w,h,th=5)=>{r(g,x,y,w,h,C.outline);r(g,x+th,y+th,w-2*th,h-2*th,C.woodLight);r(g,x+th*2,y+th*2,w-4*th,h-4*th,C.trim);};
 const shine=(g,x,y,w)=>{r(g,x,y,w,2,C.woodLight);r(g,x,y+3,w,1,C.trim);};
-const hit=(hits,x,y,w,h,cmd,key)=>hits.push({x,y,w,h,cmd,key});
+const hit=(hits,x,y,w,h,cmd,key,gesture="tap")=>hits.push({x,y,w,h,cmd,key,gesture});
 // Dialogue lives at its speaker, never in a persistent bottom message strip.
 // Pure selectors can be regression-tested without changing saves/network state.
 export function customerSpeech(s,motion=null){
@@ -42,6 +42,10 @@ export function wrapSpeech(text,maxChars=14,maxLines=3){
  }
  return result;
 }
+function commissionReady(s){
+ const favor=visitor(s).favor;
+ return Boolean(s.windowOpen&&s.spoken&&favor&&(s.counter===favor.sku||s.favorDone));
+}
 function npcBubble(g,hits,win,s,motion){
  const speech=customerSpeech(s,motion);
  if(!speech)return;
@@ -59,7 +63,7 @@ function npcBubble(g,hits,win,s,motion){
  lines.forEach((line,i)=>t(g,line,bx+9,by+28+i*(font+3),font,C.ink,"left",bw-15));
  g.restore();
  const touchHeight=Math.max(72,bh);
- hit(hits,bx,by-(touchHeight-bh),bw,touchHeight,"talk");
+ hit(hits,bx,by-(touchHeight-bh),bw,touchHeight,commissionReady(s)?"commission":"talk");
 }
 function wooden(g,x,y,w,h,seed=1,base=C.wood){
  r(g,x,y,w,h,base);const rows=Math.max(1,Math.floor(h/21));
@@ -113,7 +117,7 @@ function heldItemLayer(g,motion,mat,x,y,w,benchY,benchH){
   sprite(g,sku,hx+9,hy,2.6);
  }
 }
-function shelf(g,hits,x,y,w,h,slot,s){
+function shelf(g,hits,x,y,w,h,slot,s,isManager){
  const content=s.slots[slot];flatShelfBase(g,x,y,w,h);
  if(content?.qty>0){
   const count=Math.min(content.qty,3),scale=Math.min(2.5,Math.max(1.05,(w-8)/(count*29)));
@@ -122,24 +126,30 @@ function shelf(g,hits,x,y,w,h,slot,s){
   t(g,content.qty+"/"+slotRoom(slot,content.sku,s),x+w-18,y+h-8,10,C.cream,"center");
  }
  hit(hits,x,y,w,h,"slot",slot);
+ // Hold the actual shelf/stock label to prepare a purchase of that same SKU.
+ // The old item identity remains on an empty shelf, preventing a sellout deadlock.
+ const stockSku=content?.sku||content?.lastSku;
+ if(isManager&&stockSku)hit(hits,x,y,w,h,"restock",stockSku,"hold");
 }
-function cupboard(g,hits,x,y,w,h,key,s,phase){
+function cupboard(g,hits,x,y,w,h,key,s,phase,isManager){
  const open=Boolean(s.open[key]);
  flatCupboard(g,x,y,w,h,open,key==="cabinetR"?1:0);
  if(open){
   const entry=s.slots[key];
   if(entry?.qty>0)flatProduct(g,entry.sku,x+w*.36,y+h*.27,w*.29,h*.55);
   hit(hits,x+w*.20,y+h*.16,w*.60,h*.71,"slot",key);
+  if(isManager&&(entry.sku||entry.lastSku))hit(hits,x+w*.20,y+h*.16,w*.60,h*.71,"restock",entry.sku||entry.lastSku,"hold");
   hit(hits,x,y,w*.2,h,"toggle",key);
   hit(hits,x+w*.8,y,w*.2,h,"toggle",key);
  }else hit(hits,x,y,w,h,"toggle",key);
 }
-function drawer(g,hits,x,y,w,h,key,s){
+function drawer(g,hits,x,y,w,h,key,s,isManager){
  const open=Boolean(s.open[key]);flatDrawer(g,x,y,w,h,open);
  if(open){
   const entry=s.slots[key];
   if(entry?.qty>0)flatProduct(g,entry.sku,x+w*.38,y+h*.05,w*.25,h*.51);
   hit(hits,x+5,y+5,w-10,h*.62,"slot",key);
+  if(isManager&&(entry.sku||entry.lastSku))hit(hits,x+5,y+5,w-10,Math.max(60,h*.62),"restock",entry.sku||entry.lastSku,"hold");
   hit(hits,x,y+h*.70,w,h*.3,"toggle",key);
  }else hit(hits,x,y,w,h,"toggle",key);
 }
@@ -180,7 +190,7 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  hit(hits,x+w*.16,y+h-23,w*.68,49,"window");
  // Tapping the actual customer speaks to them. Dialogue bubble is also tappable.
  if(s.windowOpen&&(!motion||motion.stage==="idle"))
-  hit(hits,x+w*.15,y+h*.09,w*.70,h*.63,"talk");
+  hit(hits,x+w*.15,y+h*.09,w*.70,h*.63,commissionReady(s)?"commission":"talk");
  npcBubble(g,hits,{x,y,w,h},s,motion);
 }
 function smallGlow(g,x,y,phase){
@@ -208,15 +218,15 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  r(g,x+11,y,w-22,5,C.cream);
  const win={x:x+w*.255,y:y+h*.20,w:w*.49,h:h*.49};
  const topCabY=y+h*.025, topCabH=h*.18;
- cupboard(g,hits,x+w*.034,topCabY,w*.235,topCabH,"cabinetL",s,phase);
- cupboard(g,hits,x+w*.732,topCabY,w*.235,topCabH,"cabinetR",s,phase);
+ cupboard(g,hits,x+w*.034,topCabY,w*.235,topCabH,"cabinetL",s,phase,isManager);
+ cupboard(g,hits,x+w*.732,topCabY,w*.235,topCabH,"cabinetR",s,phase,isManager);
  upgradePlaque(g,hits,x+w*.28,y+h*.075,w*.155,h*.12,s,isManager);
   heatingPlaque(g,hits,x+w*.565,y+h*.075,w*.155,h*.12,s,isManager);
  // Left and right shelf towers. Every shelf is a real storage location.
  const towerY=y+h*.237,tw=w*.22,ty=h*.147;
  for(let i=0;i<3;i++){
-  shelf(g,hits,x+w*.035,towerY+i*ty,tw,ty,"shelfL"+(i+1),s);
-  shelf(g,hits,x+w*.740,towerY+i*ty,tw,ty,"shelfR"+(i+1),s);
+  shelf(g,hits,x+w*.035,towerY+i*ty,tw,ty,"shelfL"+(i+1),s,isManager);
+  shelf(g,hits,x+w*.740,towerY+i*ty,tw,ty,"shelfR"+(i+1),s,isManager);
  }
  windowFrame(g,hits,win.x,win.y,win.w,win.h,s,phase,motion);
  // light above service window
@@ -252,6 +262,9 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  r(g,till.x,till.y,till.w,till.h,"#b38d61");
  r(g,till.x+3,till.y+3,till.w-6,till.h-6,"#485d5a");
  r(g,till.x+6,till.y+6,till.w-12,2,"#e0c68f");
+ // The existing cash tray is the physical checkout target, not a floating button.
+ // Expanded touch tolerance stays centered on the visible tray.
+ hit(hits,till.x-10,till.y-21,Math.max(60,till.w+20),60,"sell");
  if(motion?.payment&&motion.payment.progress>0){
   const p=motion.payment.progress;
   const cw=win.w*.92,ch=win.h*.92,cs=Math.min(cw/80,ch/120);
@@ -268,8 +281,8 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  r(g,x+w*.81,benchY+benchH*.17,w*.07,10,C.cream);
  // Under-counter drawers: both open and close, both store merchandise.
  const drawY=y+h*.855;
- drawer(g,hits,x+w*.065,drawY,w*.34,h*.117,"drawerL",s);
- drawer(g,hits,x+w*.585,drawY,w*.34,h*.117,"drawerR",s);
+ drawer(g,hits,x+w*.065,drawY,w*.34,h*.117,"drawerL",s,isManager);
+ drawer(g,hits,x+w*.585,drawY,w*.34,h*.117,"drawerR",s,isManager);
  // Local first-person arm stays above the drawers and below the UI.
  heldItemLayer(g,itemMotion,mat,x,y,w,benchY,benchH);
  g.restore();
@@ -294,61 +307,10 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
- // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
- const shop=land?{x:154,y:headH,w:W-300,h:H-headH-93}:{x:0,y:headH,w:W,h:H-headH-160};
+ // Give the actual shop the full viewport; customer speech is attached to the NPC.
+ // No detached order sidebars, bottom command strip or floating stock buttons.
+ const shop={x:0,y:headH,w:W,h:H-headH-8};
  scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
- if(land){
-  r(g,0,headH,154,shop.h,C.dark);
-  g.save();g.beginPath();g.rect(0,headH,154,shop.h);g.clip();
-  t(g,"今日",17,headH+36,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+64,14,C.cream);
-  t(g,"营业额 ¥"+s.earnings,17,headH+89,12,C.cream);
-  t(g,"值班 "+Object.keys(s.players).length+" 人",17,headH+113,12,C.cream);
-  t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+138,12,C.gold);
-   t(g,"保温 "+((s.upgrades?.heating??0)?"已完成":"未改造"),17,headH+163,12,C.gold);
-   t(g,"今日进货 ¥"+(s.dayExpenses||0),17,headH+188,12,C.cream);
-   t(g,"口碑 "+(s.reputation||0)+"/100 · "+reputationLevel(s)+"级",17,headH+213,12,C.gold,"left",128);
-   t(g,"熟客小费 ¥"+(s.loyaltyTips||0),17,headH+238,12,C.cream,"left",128);
-   t(g,"每单 +¥"+loyaltyTip(s),17,headH+260,12,C.cream);
-  g.restore();
-  r(g,W-146,headH,146,shop.h,C.dark);
-  g.save();g.beginPath();g.rect(W-146,headH,146,shop.h);g.clip();
-  t(g,"当前订单",W-130,headH+25,13,C.gold);
-  t(g,visitor(s).name,W-130,headH+52,17,C.cream);
-  t(g,GOODS[visitor(s).sku].name,W-130,headH+87,15,C.cream);
-  t(g,"售价 ¥"+GOODS[visitor(s).sku].price,W-130,headH+110,13,C.cream);
-  t(g,s.windowOpen?"营业中":"未开窗",W-130,headH+150,12,C.gold);
-  const favor=visitor(s).favor;
-  t(g,"邻里委托",W-130,headH+185,13,C.gold);
-  t(g,!favor?"暂无":s.favorDone?"已完成 +¥"+favor.tip:s.spoken?GOODS[favor.sku].name+" +¥"+favor.tip:"交谈后了解",W-130,headH+211,12,C.cream,"left",119);
-  g.restore();
-
- }
- const bottom=land?H-92:H-160;
- if(land){
-  r(g,0,bottom,W,H-bottom,"#17264a");
-  t(g,"交互",12,bottom+21,12,C.gold);
-  chip(g,hits,67,bottom+4,95,64,"问候","talk");
-  chip(g,hits,168,bottom+4,95,64,"收款","sell");
-  chip(g,hits,269,bottom+4,95,64,"委托","commission");
-  t(g,"补货：",370,bottom+21,12,C.gold);
-  let px=430;
-  if(isManager){for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+4,105,64,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);px+=112;}}
-  else t(g,"店长负责进货；店员可拿货、交接与收款",350,bottom+23,13,C.cream);
-  t(g,"货架拿货 → 交接台 → 收款；补货先选商品再点货格。",26,bottom+84,12,C.cream);
- } else{
-  r(g,0,H-160,W,160,"#17264a");
-  chip(g,hits,10,H-154,145,70,"交谈","talk");
-  chip(g,hits,167,H-154,145,70,"收款","sell");
-  chip(g,hits,324,H-154,146,70,"完成委托","commission");
-  let skuKeys=Object.keys(GOODS);
-  if(isManager){for(let i=0;i<4;i++){
-   const sku=skuKeys[i];chip(g,hits,10+i*118,H-78,107,74,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);
-  }}else t(g,"店员：从货架拿货 → 交接台 → 收款",W/2,H-41,15,C.cream,"center");
- }
- if(p.hand){
-  t(g,"手持："+GOODS[p.hand].name,land?W/2:W/2,land?bottom-14:H-196,13,C.gold,"center");
- }
- if(s.returns?.length)t(g,"待领回 ×"+s.returns.length+"（点空交接台取回）",W/2,land?bottom-37:H-215,12,C.gold,"center");
  if(s.phase==="summary"){
   r(g,0,0,W,H,"#171922e9");
   t(g,"今 日 打 烊",W/2,H*.27,32,C.gold,"center");
