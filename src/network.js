@@ -48,10 +48,10 @@ export class InputMailbox {
 }
 export class RoomNetwork{
   constructor(callbacks={}){
-    this.cb=callbacks;this.peer=null;this.host=false;this.room="";this.id="";this.conn=null;this.connections=new Map();this.inbox=new InputMailbox();this.ready=false;
+    this.cb=callbacks;this.peer=null;this.host=false;this.room="";this.id="";this.conn=null;this.connections=new Map();this.inbox=new InputMailbox();this.ready=false;this.lastState=null;
   }
   status(text){this.cb.status?.(text);}
-  clean(){this.ready=false;this.connections.forEach(c=>{try{c.close();}catch{}});this.connections.clear();this.inbox.reset();try{this.conn?.close();}catch{}try{this.peer?.destroy();}catch{}this.peer=null;this.conn=null;}
+  clean(){this.ready=false;this.connections.forEach(c=>{try{c.close();}catch{}});this.connections.clear();this.inbox.reset();this.lastState=null;try{this.conn?.close();}catch{}try{this.peer?.destroy();}catch{}this.peer=null;this.conn=null;}
   ensurePeer(){if(typeof window.Peer!=="function")throw Error("联机组件未加载，请检查网络或刷新页面");}
   async create(){
     this.clean();this.ensurePeer();this.host=true;
@@ -69,25 +69,37 @@ export class RoomNetwork{
     });
   }
   accept(conn){
-    if(!this.host||this.connections.size>=3){conn.on("open",()=>{conn.send({t:"reject",reason:"房间已满（最多4人）"});setTimeout(()=>conn.close(),300);});return;}
+    if(!this.host||this.connections.size>=3){
+      conn.on("open",()=>{conn.send({t:"reject",reason:"房间已满（最多4人）"});setTimeout(()=>conn.close(),300);});
+      return;
+    }
     this.connections.set(conn.peer,conn);
-    conn.on("open",()=>{
-      let joined=false;
-      conn.on("data",data=>{
-        if(!data||typeof data!=="object")return;
-        if(data.t==="join"&&!joined){
-          joined=true;const name=String(data.name||"旅人").slice(0,14);
-          const permitted=this.cb.join?.(conn.peer,name);
-          if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();return;}
-          conn.send({t:"welcome",id:conn.peer,room:this.room});
-          this.cb.roster?.();
-        } else if(data.t==="input"&&joined){
-          if(!this.inbox.push(conn.peer,data.input))conn.send({t:"input-rejected",reason:"操作过快或操作序号无效"});
-        }
-      });
-      conn.on("close",()=>{this.connections.delete(conn.peer);this.inbox.forget(conn.peer);if(joined)this.cb.leave?.(conn.peer);this.cb.roster?.();});
-      conn.on("error",()=>{});
+    let joined=false;
+    // Install the data listener immediately, not inside conn.on("open").
+    // The remote side can send its first "join" packet before our open
+    // callback fires; that race previously stranded a connected clerk.
+    conn.on("data",data=>{
+      if(!data||typeof data!=="object")return;
+      if(data.t==="join"&&!joined){
+        joined=true;const name=String(data.name||"旅人").slice(0,14);
+        const permitted=this.cb.join?.(conn.peer,name);
+        if(permitted===false){conn.send({t:"reject",reason:"房间已满"});conn.close();return;}
+        // The host callback has already applied the join and broadcast a
+        // snapshot. Send welcome *before* an explicit latest-state replay:
+        // guest ignores state packets until welcome sets ready=true.
+        conn.send({t:"welcome",id:conn.peer,room:this.room});
+        if(this.lastState)conn.send({t:"state",state:this.lastState});
+        this.cb.roster?.();
+      }else if(data.t==="input"&&joined){
+        if(!this.inbox.push(conn.peer,data.input))
+          conn.send({t:"input-rejected",reason:"操作过快或操作序号无效"});
+      }
     });
+    conn.on("close",()=>{
+      this.connections.delete(conn.peer);this.inbox.forget(conn.peer);
+      if(joined)this.cb.leave?.(conn.peer);this.cb.roster?.();
+    });
+    conn.on("error",()=>{});
   }
   async join(code,name){
     this.clean();this.ensurePeer();this.host=false;
@@ -121,6 +133,7 @@ export class RoomNetwork{
   takeInputs(){return this.inbox.drain();}
   broadcast(game){
     if(!this.host)return;
+    this.lastState=game;
     const packet={t:"state",state:game};
     for(const conn of this.connections.values())if(conn.open)conn.send(packet);
   }
