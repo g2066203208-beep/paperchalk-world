@@ -121,9 +121,11 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.mistakes===1,{timeout:12000});
  assert.equal((await snapshot(host)).counter,"tea");
  assert.equal((await snapshot(host)).cash,105);
+ const revisionBeforeRepeat=(await snapshot(host)).revision;
  await action(host,"sell");
- await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.revision>0,{timeout:12000});
+ await guest.waitForFunction(rev=>window.__KIOSK_TEST__.getState()?.revision>rev,revisionBeforeRepeat,{timeout:12000});
  assert.equal((await snapshot(host)).mistakes,1,"repeated wrong clicks cannot stack penalties");
+ assert.equal((await snapshot(guest)).mistakes,1,"host and guest share one penalty");
  await host.screenshot({path:"artifacts/kiosk-wrong-item-feedback.png",fullPage:false});
  await action(guest,"commission");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.favorDone===true,{timeout:12000});
