@@ -10,7 +10,8 @@ PeerServer({port:9100,host:"127.0.0.1",path:"/"});
 const server=spawn("python3",["-m","http.server","4173","--bind","127.0.0.1"],{stdio:"ignore"});
 const errors=[];let browser;
 async function open(ctx,w=390,h=844){
- const p=await ctx.newPage({viewport:{width:w,height:h}});
+ const p=await ctx.newPage();
+ await p.setViewportSize({width:w,height:h});
  p.on("pageerror",e=>errors.push(e.stack||e.message));
  await p.route("https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js",
     route=>route.fulfill({path:path.resolve("node_modules/peerjs/dist/peerjs.min.js"),contentType:"application/javascript"}));
