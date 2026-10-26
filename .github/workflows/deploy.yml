@@ -69,8 +69,28 @@ jobs:
         run: |
           mkdir -p _site/src _site/assets
           cp index.html style.css sw.js .nojekyll _site/
-          cp src/kiosk-core.js src/kiosk-view.js src/kiosk-app.js src/network.js _site/src/
+          cp src/kiosk-core.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-app.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
+      - name: Verify published ES module dependencies
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,existsSync} from 'node:fs';
+          import {dirname,resolve,sep} from 'node:path';
+          const root=resolve('_site'),pending=[resolve(root,'src/kiosk-app.js')],seen=new Set();
+          while(pending.length){
+            const file=pending.pop();
+            if(seen.has(file))continue;
+            seen.add(file);
+            if(!file.startsWith(root+sep)||!existsSync(file))throw Error('Missing deployed module: '+file);
+            const source=readFileSync(file,'utf8');
+            for(const m of source.matchAll(/\\b(?:import|export)\\s+(?:[^'"]*?\\s+from\\s+)?['"](\\.[^'"]+)['"]/g)){
+              const dep=resolve(dirname(file),m[1]);
+              if(!dep.startsWith(root+sep))throw Error('Import escapes public directory: '+m[1]);
+              pending.push(dep);
+            }
+          }
+          console.log('Verified '+seen.size+' published ES modules: '+[...seen].map(p=>p.slice(root.length+1)).join(', '));
+          NODE
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
