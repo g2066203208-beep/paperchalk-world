@@ -30,8 +30,8 @@ test("physical shelf -> hand -> counter -> wrong product -> return -> correct pa
  assert.equal(apply(g,"guest",{cmd:"counter"}),true);
  assert.equal(g.counter,"battery");
  apply(g,"host",{cmd:"window"});
- assert.equal(apply(g,"host",{cmd:"sell"}),false);
- assert.equal(g.totalServed,0);assert.equal(g.cash,start);
+ assert.equal(apply(g,"host",{cmd:"sell"}),true,"wrong item warning synchronizes");
+ assert.equal(g.totalServed,0);assert.equal(g.cash,start);assert.equal(g.mistakes,1);
  assert.equal(apply(g,"guest",{cmd:"counter"}),true);
  assert.equal(g.players.guest.hand,"battery");
  assert.equal(apply(g,"guest",{cmd:"slot",key:"shelfR1"}),true);
