@@ -60,7 +60,20 @@ $("join").onclick=async()=>{
  try{
   const code=$("joinCode").value.trim().toUpperCase();
   $("status").textContent="正在加入…";
-  const joined=await net.join(code,playerName());
+  // PeerJS may close an early data channel even after the host accepts it.
+  // A fresh peer ID on retry prevents a ghost half-join from blocking play.
+  let joined,lastError;
+  for(let attempt=0;attempt<3&&!joined;attempt++){
+    try{joined=await net.join(code,playerName());}
+    catch(e){
+      lastError=e;
+      if(attempt<2){
+        $("status").textContent="连接暂断，正在重试（"+(attempt+2)+"/3）…";
+        await new Promise(resolve=>setTimeout(resolve,350));
+      }
+    }
+  }
+  if(!joined)throw lastError||Error("无法连接房间");
   room=joined.room;id=joined.id;mode="guest";state=null;seq=0;
   $("lobby").hidden=true;
   $("roomCode").textContent="房间码："+room;
