@@ -97,6 +97,28 @@ function drawer(g,hits,x,y,w,h,key,s){
   hit(hits,x,y+h*.70,w,h*.3,"toggle",key);
  }else hit(hits,x,y,w,h,"toggle",key);
 }
+// Backward-compatible deterministic trim geometry. Remains available to save/replay tests.
+export function windowFrostPattern(width,height){
+ const w=Math.floor(width),h=Math.floor(height);
+ if(!Number.isFinite(w)||!Number.isFinite(h)||w<24||h<24)return [];
+ const pieces=[];
+ const add=(x,y,ww,hh,color)=>{
+  const l=Math.max(0,x),r=Math.min(w,x+ww);
+  if(r>l)pieces.push({x:l,y,w:r-l,h:hh,color});
+ };
+ for(let i=0;i<w;i+=18){
+  const length=Math.min(w-i,13+(i/18%3)*2);
+  add(i,-7,length,2,"#F9F7F4");
+  add(i+2,-5,Math.max(1,length-4),2,"#DDE6F5");
+  if((i/18)%3===1)add(i+5,-3,2,3,"#7F99C2");
+ }
+ for(let i=0;i<w;i+=25){
+  const length=Math.min(w-i,12+(i/25%3)*3);
+  add(i,h+2,length,2,"#F9F7F4");
+  add(i+2,h+4,Math.max(1,length-4),2,"#DDE6F5");
+ }
+ return pieces;
+}
 function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  flatStreet(g,x,y,w,h,phase);
  if(s.windowOpen&&(!motion||motion.visible)){
