@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {createGame,makeQueue,joinGame,leaveGame,act,currentVisitor,revealedClue,testPatterns,STATIONS} from "./logic.js";
+import {createGame,makeQueue,joinGame,leaveGame,act,currentVisitor,revealedClue,testPatterns,STATIONS,CATALOG,shopView} from "./logic.js";
 
 test("nights are seeded reproducibly, with nine distinct visitor events",()=>{
  for(let i=1;i<=120;i++){const q=makeQueue(i);assert.deepEqual(q,makeQueue(i));assert.equal(q.length,9);assert.equal(new Set(q).size,9);
@@ -64,4 +64,36 @@ test("after nine visits the night ends, saves a journal, and keeps scores in bou
  assert.ok(g.points>=9*60);
  assert.ok(g.trust>=0&&g.trust<=8);
  assert.equal(act(g,"a",{type:"inspect",station:"counter"}),false);
+});
+
+test("a shelf clerk physically hands a product to a separate counter clerk",()=>{
+ const g=createGame(77);joinGame(g,"cashier","收银");joinGame(g,"stock","理货");
+ const wanted=shopView(g).shelf[0],wrong=shopView(g).shelf[1],trust=g.trust,points=g.points;
+ assert.equal(act(g,"cashier",{type:"take",sku:wanted}),false,"counter cannot remove shelf stock");
+ assert.equal(act(g,"stock",{type:"scan"}),false,"shelf cannot scan");
+ assert.equal(act(g,"stock",{type:"station",station:"shelf"}),true);
+ assert.equal(act(g,"stock",{type:"take",sku:wrong}),true);
+ assert.equal(g.shop.counter,wrong);assert.ok(!g.shop.shelf.includes(wrong));
+ assert.equal(act(g,"stock",{type:"take",sku:wanted}),false,"only one item can occupy counter");
+ assert.equal(act(g,"cashier",{type:"scan"}),true);
+ assert.equal(g.trust,trust-1);assert.equal(g.shop.mistakes,1);
+ assert.equal(act(g,"cashier",{type:"scan"}),false,"wrong scan cannot double-penalize");
+ assert.equal(act(g,"cashier",{type:"return"}),true);
+ assert.equal(act(g,"stock",{type:"take",sku:wanted}),true);
+ assert.equal(act(g,"cashier",{type:"scan"}),true);
+ assert.equal(g.shop.success,true);assert.equal(g.points,points+10);
+ assert.equal(act(g,"cashier",{type:"scan"}),false,"correct scan cannot farm points");
+ assert.equal(act(g,"cashier",{type:"return"}),false,"sold item cannot be returned");
+ assert.equal(Object.keys(CATALOG).length,8);
+});
+test("older version-2 saves without shop state migrate without losing existing progress",()=>{
+ const g=createGame(32);joinGame(g,"a","老存档");delete g.shop;
+ const oldIndex=g.index,oldPoints=g.points;
+ assert.ok(shopView(g).shelf.length===3);
+ act(g,"a",{type:"station",station:"shelf"});
+ assert.equal(g.shop.shelf.length,3);
+ assert.equal(g.index,oldIndex);assert.equal(g.points,oldPoints);
+ act(g,"a",{type:"station",station:"counter"});
+ act(g,"a",{type:"vote",choice:"welcome"});
+ assert.equal(g.index,1);assert.equal(g.shop.shelf.length,3);
 });

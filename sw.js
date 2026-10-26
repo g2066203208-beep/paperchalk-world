@@ -1,13 +1,14 @@
 // Untitled game offline cache. Always prefer a newer server build when online; use cached
 // code and art when reopening the game without internet. PeerJS multiplayer still
 // requires a connection.
-const CACHE="lampkeep-shell-20261026b";
+const CACHE="lampkeep-shell-20261026c";
 const CORE=[
  "./","./index.html","./style.css","./src/logic.js","./src/client.js",
  "./src/network.js","./assets/shop.svg",
  "./assets/guest-01.svg","./assets/guest-02.svg","./assets/guest-03.svg",
  "./assets/guest-04.svg","./assets/guest-05.svg","./assets/guest-06.svg",
- "./assets/guest-07.svg","./assets/guest-08.svg"
+ "./assets/guest-07.svg","./assets/guest-08.svg",
+ "./assets/item-umbrella.svg","./assets/item-lighter.svg","./assets/item-milk.svg","./assets/item-salt.svg","./assets/item-syrup.svg","./assets/item-ticket.svg","./assets/item-bulb.svg","./assets/item-mirror.svg"
 ];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));

@@ -23,6 +23,11 @@
    <div class="visitor-card" id="visitorCard"><span id="nightLabel">第一夜 · 22:48</span><strong id="visitorName">?</strong><p id="visitorOrder">有人站在门外。</p></div>
    <div class="story-strip" aria-live="polite"><span>客人说</span><p id="visitorVoice">今晚不太平。先听听门口有什么动静。</p></div>
   </div>
+  <section class="prop-stage" id="propStage" aria-label="可操作的商品与柜台">
+   <div class="prop-zone"><b>货架 · 触摸拿取</b><div id="shelfProps" class="prop-items"></div></div>
+   <div class="prop-zone counter-zone"><b>收银台 · 核对商品</b><div id="counterProps" class="counter-prop"></div><div class="prop-controls"><button id="scanButton" type="button">扫码核对</button><button id="returnButton" type="button">退回货架</button></div></div>
+   <p class="prop-feedback" id="shopFeedback" aria-live="polite"></p>
+  </section>
   <div class="station-nav" id="stationNav" role="tablist" aria-label="小店工作位">
    <button data-station="counter" role="tab" aria-selected="true"><span>①</span>柜台</button>
    <button data-station="window" role="tab" aria-selected="false"><span>②</span>临街窗</button>

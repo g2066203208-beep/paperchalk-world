@@ -58,6 +58,22 @@ async function run(){
  await host.waitForFunction(before=>window.lampkeepState()?.revision>=before+100,before,{timeout:15000});
  await host.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
  await guest.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
+ // Two players now manipulate the same visible item, not merely share text clues.
+ await guest.locator('[data-station="shelf"]').click();
+ await guest.locator("#shelfProps button").nth(1).click();
+ await host.waitForFunction(()=>Boolean(window.lampkeepState()?.shop?.counter),null,{timeout:12000});
+ const trustBefore=await host.evaluate(()=>window.lampkeepState().trust);
+ await host.locator("#scanButton").click();
+ await host.waitForFunction(()=>window.lampkeepState()?.shop?.mistakes===1,null,{timeout:12000});
+ assert.equal(await host.evaluate(()=>window.lampkeepState().trust),trustBefore-1);
+ await host.locator("#returnButton").click();
+ await guest.waitForFunction(()=>window.lampkeepState()?.shop?.counter===null,null,{timeout:12000});
+ const wanted=await guest.evaluate(()=>window.lampkeepState().shop.shelf[0]);
+ await guest.locator('#shelfProps button[data-sku="'+wanted+'"]').click();
+ await host.waitForFunction(wanted=>window.lampkeepState()?.shop?.counter===wanted,wanted,{timeout:12000});
+ await host.locator("#scanButton").click();
+ await guest.waitForFunction(()=>window.lampkeepState()?.shop?.success===true,null,{timeout:12000});
+ assert.equal(await guest.locator("#propStage").getAttribute("data-result"),"correct");
  await fs.mkdir("artifacts",{recursive:true});
  await host.screenshot({path:"artifacts/lampkeep-host-mobile.png",fullPage:true});
  await guest.screenshot({path:"artifacts/lampkeep-guest-mobile.png",fullPage:true});
@@ -72,7 +88,7 @@ async function run(){
  assert.equal(await solo.evaluate(()=>window.lampkeepState().seed),seed);
  assert.equal(await solo.evaluate(()=>window.lampkeepState().opened.ledger),true);
  await solo.screenshot({path:"artifacts/lampkeep-solo-mobile.png",fullPage:true});
- console.log("PASS: two clients joined, shared investigation, published a clue, agreed on a verdict, and restored local mobile save.");
+ console.log("PASS: two clients transferred physical products, wrong scan reduced trust, correct scan synchronized, and solo save restored.");
 }
 let exitCode=0;
 try{await run();}catch(e){console.error(e);exitCode=1;}

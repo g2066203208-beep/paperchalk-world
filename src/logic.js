@@ -1,4 +1,4 @@
-// LAMPKEEP: pure, testable multiplayer rules (authoritative host only).
+// Untitled game: pure multiplayer rules (authoritative host only).
 const STORIES=[
  {id:"umbrella",name:"顾盈",age:"24",look:"01",order:"要一把旧式折叠伞。她说昨天把自己的落在这里。",voice:"我没有带伞，真的。能找一把和以前一样的吗？",trueHuman:true,
  clues:{counter:"顾客认得柜台上的猫铃，提到上周坏过一次。",shelf:"雨伞货架只剩一把蓝边伞，价签是上周换的新价。",ledger:"旧账：七天前确实卖过两把蓝边伞，收据都有签名。",window:"窗边玻璃有一把靠在门外的同款伞，雨水未干。"},explain:"她确实回来找落下的伞。旧账和门外遗失物能相互印证。"},
@@ -19,6 +19,25 @@ const STORIES=[
  {id:"knock",name:"顾盈",age:"24",look:"01",order:"一模一样的顾盈再次回来，想取走店里的旧伞。",voice:"我上次已经付过钱了，你怎么不记得？",trueHuman:false,
  clues:{counter:"她不认得坏掉的猫铃，却记得第一位顾盈的名字。",shelf:"蓝边伞有泥痕，她伸手时泥痕短暂消失。",ledger:"两个顾盈的签名字形完全一样，笔压却方向相反。",window:"她站在灯下，玻璃只映出挂在门口的蓝边伞。"},explain:"这个“顾盈”复制了真实顾客的外表，却没有她的共同记忆。"}
 ];
+// Shelf-to-counter physical handoff. The host owns all item positions and verdict effects.
+export const CATALOG=Object.freeze({
+ umbrella:{name:"蓝边折叠伞"},
+ lighter:{name:"铜壳打火机"},
+ milk:{name:"玻璃牛奶瓶"},
+ salt:{name:"粗盐纸袋"},
+ syrup:{name:"旧款止咳糖浆"},
+ ticket:{name:"旧车票样本"},
+ bulb:{name:"旧式灯泡"},
+ mirror:{name:"小圆镜"}
+});
+const REQUESTED={umbrella:"umbrella",bell:"lighter",milk:"milk",salt:"salt",scarf:"syrup",ticket:"ticket",lamp:"bulb",mirror:"mirror",knock:"umbrella"};
+function newShop(g){
+ const visitor=currentVisitor(g),wanted=visitor&&REQUESTED[visitor.id],keys=Object.keys(CATALOG);
+ if(!wanted)return {shelf:[],counter:null,scanned:false,success:false,mistakes:0,feedback:""};
+ const i=keys.indexOf(wanted);
+ return {shelf:[wanted,keys[(i+1)%keys.length],keys[(i+3)%keys.length]],counter:null,scanned:false,success:false,mistakes:0,feedback:"请在货架挑选商品，送到柜台核对。"};
+}
+export function shopView(g){return g.shop||newShop(g);}
 export const STATIONS=["counter","window","shelf","ledger"];
 export const STATION_NAMES={counter:"柜台",window:"临街窗",shelf:"货架",ledger:"旧账"};
 export const MAX_PLAYERS=4;
@@ -34,7 +53,8 @@ export function makeQueue(seed){
 }
 export function currentVisitor(game){return STORIES.find(c=>c.id===game.queue[game.index])||null;}
 export function createGame(seed=Date.now()){
- return {version:2,seed:seed>>>0,queue:makeQueue(seed),index:0,night:1,players:{},pins:[],votes:{},opened:{},asks:0,waiting:false,trust:5,supplies:8,danger:0,points:0,history:[],phase:"running",revision:0,notice:"今晚的第一位客人正在敲门。"};
+ const g={version:2,seed:seed>>>0,queue:makeQueue(seed),index:0,night:1,players:{},pins:[],votes:{},opened:{},asks:0,waiting:false,trust:5,supplies:8,danger:0,points:0,history:[],phase:"running",revision:0,notice:"今晚的第一位客人正在敲门。"};
+ g.shop=newShop(g);return g;
 }
 export function joinGame(g,id,name){
  if(g.players[id]||Object.keys(g.players).length>=MAX_PLAYERS||g.phase!=="running")return false;
@@ -54,7 +74,7 @@ function complete(g,choice){
  g.supplies=Math.max(0,g.supplies-(choice==="welcome"?1:0));
  g.notice=correct?"这一回，你们看清了真相。":c.trueHuman?"你们错过了一位真正的客人。":"有人借着熟悉的脸走进了店里。";
  g.index++;g.night=Math.floor(g.index/3)+1;
- g.opened={};g.pins=[];g.votes={};g.asks=0;g.waiting=false;
+ g.opened={};g.pins=[];g.votes={};g.asks=0;g.waiting=false;g.shop=newShop(g);
  if(g.index>=MAX_VISITORS||g.trust<=0||g.danger>=6){
    g.phase=g.trust<=0?"closed":g.danger>=6?"overrun":"complete";
    g.notice=g.phase==="complete"?"天亮了。小店还在。":g.phase==="closed"?"小店失去了街坊的信任。":"店里出现了不属于任何人的影子。";
@@ -63,6 +83,8 @@ function complete(g,choice){
 export function act(g,id,payload){
  if(g.phase!=="running"||!g.players[id]||!payload||typeof payload!=="object")return false;
  const type=payload.type,station=String(payload.station||"");
+ if(!g.shop)g.shop=newShop(g); // Migrate existing version-2 browser saves without changing their storage key.
+ const shop=g.shop,role=g.players[id].station;
  if(type==="station"&&STATIONS.includes(station)){g.players[id].station=station;g.revision++;return true;}
  if(type==="inspect"&&STATIONS.includes(station)){
    // Clues are public after any player investigates; shared board still needs deliberate pinning.
@@ -72,6 +94,24 @@ export function act(g,id,payload){
  if(type==="pin"&&STATIONS.includes(station)&&g.opened[station]){
    if(!g.pins.includes(station)){g.pins.push(station);g.revision++;}
    return true;
+ }
+ if(type==="take"&&role==="shelf"&&!shop.counter&&typeof payload.sku==="string"&&shop.shelf.includes(payload.sku)){
+   shop.shelf.splice(shop.shelf.indexOf(payload.sku),1);shop.counter=payload.sku;shop.scanned=false;
+   shop.feedback=CATALOG[payload.sku].name+"已送到柜台，等待柜员核对。";g.notice=shop.feedback;g.revision++;return true;
+ }
+ if(type==="return"&&role==="counter"&&shop.counter&&!shop.success){
+   shop.shelf.unshift(shop.counter);shop.counter=null;shop.scanned=false;
+   shop.feedback="商品已退回货架，可重新挑选。";g.notice=shop.feedback;g.revision++;return true;
+ }
+ if(type==="scan"&&role==="counter"&&shop.counter&&!shop.scanned){
+   shop.scanned=true;
+   if(shop.counter===REQUESTED[currentVisitor(g).id]){
+     shop.success=true;g.points+=10;shop.feedback="核对正确：商品与客人要求一致。";
+   }else{
+     shop.mistakes++;g.trust=Math.max(0,g.trust-1);
+     shop.feedback="商品拿错了！顾客失去耐心，街坊信任 -1。请退回重选。";
+   }
+   g.notice=shop.feedback;g.revision++;return true;
  }
  if(type==="ask"&&g.asks<2){g.asks++;g.notice=g.asks===1?"顾客停下来，等待你们调查。":"顾客催促着要离开，店门外的雨更大了。";g.revision++;return true;}
  if(type==="vote"&&(payload.choice==="welcome"||payload.choice==="refuse")){

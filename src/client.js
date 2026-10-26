@@ -1,4 +1,4 @@
-import {createGame,joinGame,leaveGame,act,currentVisitor,publicVisitor,revealedClue,STATIONS,STATION_NAMES} from "./logic.js";
+import {createGame,joinGame,leaveGame,act,currentVisitor,publicVisitor,revealedClue,STATIONS,STATION_NAMES,CATALOG,shopView} from "./logic.js";
 import {RoomNetwork} from "./network.js";
 
 const $=id=>document.getElementById(id);
@@ -72,6 +72,9 @@ document.querySelectorAll("[data-station]").forEach(el=>el.onclick=()=>{
 $("inspectButton").onclick=()=>send({type:"inspect",station});
 $("pinButton").onclick=()=>send({type:"pin",station});
 $("askButton").onclick=()=>send({type:"ask"});
+$("shelfProps").addEventListener("click",e=>{const b=e.target.closest("button[data-sku]");if(b)send({type:"take",sku:b.dataset.sku});});
+$("scanButton").onclick=()=>send({type:"scan"});
+$("returnButton").onclick=()=>send({type:"return"});
 $("welcomeButton").onclick=()=>send({type:"vote",choice:"welcome"});
 $("refuseButton").onclick=()=>send({type:"vote",choice:"refuse"});
 function node(tag,cls,text){
@@ -80,6 +83,20 @@ function node(tag,cls,text){
 function refresh(){
  const g=game,c=g?currentVisitor(g):null;
  const running=g?.phase==="running";
+ const shop=g?shopView(g):null;
+ const shelf=$("shelfProps");shelf.replaceChildren();
+ if(shop)for(const sku of shop.shelf){
+   const b=node("button","prop-item");b.type="button";b.dataset.sku=sku;b.disabled=!running||station!=="shelf"||Boolean(shop.counter);
+   const icon=node("img");icon.src="./assets/item-"+sku+".svg";icon.alt="";
+   b.append(icon,node("span",null,CATALOG[sku].name));shelf.append(b);
+ }
+ const counter=$("counterProps");counter.replaceChildren();
+ if(shop?.counter){const icon=node("img");icon.src="./assets/item-"+shop.counter+".svg";icon.alt="";counter.append(icon,node("span",null,CATALOG[shop.counter].name));}
+ else counter.append(node("span","counter-empty","等待货架送来商品"));
+ $("scanButton").disabled=!running||station!=="counter"||!shop?.counter||shop.scanned;
+ $("returnButton").disabled=!running||station!=="counter"||!shop?.counter||shop.success;
+ $("shopFeedback").textContent=shop?.feedback||"货架和收银台会同步显示商品位置。";
+ $("propStage").dataset.result=shop?.success?"correct":shop?.scanned?"wrong":"pending";
  $("visitorName").textContent=c?.name||"暂无来客";
  $("visitorOrder").textContent=c?.order||"今晚店门关着。";
  $("visitorVoice").textContent=c?.voice||"路过的人，总会留下些什么。";
