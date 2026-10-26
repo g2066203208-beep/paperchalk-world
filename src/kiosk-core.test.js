@@ -181,6 +181,7 @@ test("physical reorder identity survives a sold-out shelf and legacy v3 save",()
  assert.equal(s.slots.shelfL1.qty,0);
  assert.equal(s.slots.shelfL1.sku,null);
  assert.equal(s.slots.shelfL1.lastSku,"tea","a physically empty shelf keeps its reorder identity");
+ assert.equal(apply(s,"solo",{cmd:"counter"}),true,"place the last tea on the real counter before ordering");
  assert.equal(apply(s,"solo",{cmd:"restock",sku:"tea"}),true);
  const cash=s.cash;
  assert.equal(apply(s,"solo",{cmd:"slot",key:"shelfL1"}),true);
