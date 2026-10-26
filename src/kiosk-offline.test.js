@@ -11,12 +11,14 @@ const {CACHE,CORE}=runInNewContext(worker+"\n;({CACHE,CORE})",{
  self:{addEventListener(){}}
 });
 
-test("offline precache has only deployed, original game modules",()=>{
+test("offline precache includes deployed GPTIMG sprite and independent game modules",()=>{
  assert.match(CACHE,/^untitled-kiosk-offline-v/);
  assert.equal(new Set(CORE).size,CORE.length,"duplicate cache entries");
  assert.ok(CORE.includes("./index.html"));
  assert.ok(CORE.includes("./src/kiosk-pixel.js"));
- assert.ok(!CORE.some(x=>x.includes("anime")||x.includes(".webp")));
+ assert.ok(CORE.includes("./src/kiosk-gptimg.js"));
+ assert.ok(CORE.includes("./assets/gptimg/customer-uncle.webp"));
+ assert.ok(!CORE.some(x=>x.includes("assets/anime")||x.includes("full-scene")));
  const staged=deploy.match(/cp (src\/[^\n]+) _site\/src\//)?.[1]
    .split(/\s+/).filter(x=>x.startsWith("src/"))||[];
  assert.ok(staged.length>=9,"cannot find deployed ES module manifest");
@@ -31,7 +33,7 @@ test("offline precache has only deployed, original game modules",()=>{
  }
 });
 
-test("service worker has a real offline navigation fallback and no stale generated art",()=>{
+test("service worker has a real offline navigation fallback without obsolete art bundle",()=>{
  assert.match(worker,/request\.mode==="navigate"/);
  assert.match(worker,/catch\(\(\)=>caches\.match\("\.\/index\.html"\)\)/);
  assert.doesNotMatch(worker,/kiosk-anime-assets|assets\/anime/);

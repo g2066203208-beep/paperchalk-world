@@ -1,6 +1,7 @@
 // Pixel-art scene sprites: authored in code at native low resolution.
 // Each customer, product and the exterior street is a separate drawable layer.
-// No image generation, flattened screenshot, third-party art or sprite atlas.
+// These hand-drawn routines remain loading/animation fallbacks while original
+// GPTIMG character and fixture assets are progressively integrated.
 export const PIXEL_GRID=Object.freeze({customer:[80,120],item:[24,28],street:[160,112]});
 const cache=new Map();
 function raster(w,h,paint){

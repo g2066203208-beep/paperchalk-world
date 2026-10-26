@@ -1,9 +1,10 @@
-// Handmade geometric pixel art. Every fixture/item/customer is a separate
-// draw routine (no flattened image / generated art); all clickable bounds
-// are registered with the same coordinates used to paint the object.
+// Layered kiosk renderer: independently generated character art may replace
+// one portrait at a time; all fixture hitboxes and inventory remain physical.
+// Procedural pixel sprites are retained as animated/error/loading fallbacks.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
 import {drawAmbient,drawRoomWall,drawGameFrame,drawSkinButton} from "./kiosk-skin.js";
 import {drawPixelCustomer,drawPixelItem,drawPixelStreet,drawPixelCash} from "./kiosk-pixel.js";
+import {drawGeneratedCustomer} from "./kiosk-gptimg.js";
 const C={ink:"#122140",outline:"#25365b",wall:"#33466a",wood:"#ab7a61",woodLight:"#e0b78a",trim:"#263454",shelf:"#c78d63",dark:"#17294e",cream:"#fff3e2",amber:"#ffc76b",sky:"#5b83b5",snow:"#ebf2ff",blue:"#89b9df",gold:"#ffcd79",green:"#729db2",red:"#d97a7d"};
 const r=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const t=(g,text,x,y,size=12,color=C.cream,align="left",maxWidth=null)=>{
@@ -157,10 +158,11 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  if(s.windowOpen&&(!motion||motion.visible)){
   // Moving sprites are clipped to the actual window aperture, not the wall.
   g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
-  drawPixelCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
+  const portrait={x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
    w:w*.92,h:h*.92,tone:motion?.tone??visitor(s).tone,phase,
    talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving),
-   refusing:Boolean(motion?.refusing)});
+   refusing:Boolean(motion?.refusing)};
+  if(!drawGeneratedCustomer(g,portrait))drawPixelCustomer(g,portrait);
   g.restore();
  }
  if(!s.windowOpen){

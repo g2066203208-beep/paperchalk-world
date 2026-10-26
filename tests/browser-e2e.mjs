@@ -71,6 +71,8 @@ try{
  await fs.mkdir("artifacts",{recursive:true});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  await host.waitForFunction(()=>document.querySelector("#game")&&document.readyState==="complete");
+ await host.waitForFunction(async()=> (await import("./src/kiosk-gptimg.js")).gptimgAssetState().loaded,undefined,{timeout:10000});
+ await host.screenshot({path:"artifacts/kiosk-first-customer-gptimg.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer.png",fullPage:false});
  await action(guest,"talk");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.spoken===true,{timeout:12000});
@@ -336,8 +338,8 @@ try{
  assert.equal((await snapshot(offline)).players.solo.hand,"tea");
  await offline.waitForFunction(async()=>{
    const reg=await navigator.serviceWorker.ready;
-   const cache=await caches.open("untitled-kiosk-offline-v2");
-   return Boolean(reg.active)&&(await cache.keys()).length>=12;
+   const cache=await caches.open("untitled-kiosk-offline-v3");
+   return Boolean(reg.active)&&(await cache.keys()).length>=14;
  },undefined,{timeout:20000});
  await offline.reload();
  await offline.waitForFunction(()=>Boolean(navigator.serviceWorker.controller),undefined,{timeout:12000});

@@ -1,12 +1,14 @@
 // Offline-capable single-player shell. The first online visit installs exactly
 // the ES modules deployed to GitHub Pages; PeerJS signaling remains online-only.
-// No generated art, legacy anime bundle or full-scene screenshots are cached.
-const CACHE="untitled-kiosk-offline-v2";
+// Only individually cropped, licensed/original GPTIMG sprite files are cached.
+// Never precache a flattened mock screenshot or the obsolete anime asset pack.
+const CACHE="untitled-kiosk-offline-v3";
 const CORE=[
  "./","./index.html","./style.css",
  "./src/kiosk-core.js","./src/kiosk-view.js","./src/kiosk-skin.js",
- "./src/kiosk-pixel.js","./src/kiosk-guest.js","./src/kiosk-motion.js",
- "./src/kiosk-item-motion.js","./src/kiosk-app.js","./src/network.js"
+ "./src/kiosk-pixel.js","./src/kiosk-gptimg.js","./src/kiosk-guest.js","./src/kiosk-motion.js",
+ "./src/kiosk-item-motion.js","./src/kiosk-app.js","./src/network.js",
+ "./assets/gptimg/customer-uncle.webp"
 ];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE))

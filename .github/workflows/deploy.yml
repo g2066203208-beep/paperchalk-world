@@ -91,10 +91,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Stage public site
         run: |
-          mkdir -p _site/src _site/assets
+          mkdir -p _site/src _site/assets _site/assets/gptimg
           cp index.html style.css sw.js .nojekyll _site/
-          cp src/kiosk-core.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-app.js src/network.js _site/src/
+          cp src/kiosk-core.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-gptimg.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-app.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
+          cp assets/gptimg/*.webp _site/assets/gptimg/
       - name: Verify published ES module dependencies
         run: |
           node --input-type=module <<'NODE'
