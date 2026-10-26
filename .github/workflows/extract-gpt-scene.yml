@@ -29,13 +29,13 @@ jobs:
           from pathlib import Path
           root=Path('assets/gptimg/parts')
           m=json.loads((root/'manifest.json').read_text())
-          assert len(m['sprites'])==27
+          assert len(m['sprites'])==28
           for n,meta in m['sprites'].items():
               p=root/meta['file'];assert p.exists(),n
               im=Image.open(p);assert list(im.size)==meta['size'],n
           a=Image.open(root/'customer-idle.png').getchannel('A')
           assert a.getextrema()==(0,255)
-          print('Transparent customer and all 27 manifest entries validated')
+          print('Transparent customer and all 28 manifest entries validated')
           PY
       - uses: actions/upload-artifact@v4
         with:

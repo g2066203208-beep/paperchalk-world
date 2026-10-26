@@ -93,6 +93,12 @@ try{
 
  await host.waitForFunction(()=>document.querySelector("#game")&&document.readyState==="complete");
  await host.waitForFunction(async()=> (await import("./src/kiosk-gptimg.js")).gptimgAssetState().loaded,undefined,{timeout:10000});
+ await host.waitForFunction(async()=> {
+   const art=await import("./src/kiosk-gpt-scene.js");
+   const parts=art.independentPartStatus();
+   return parts.total===28&&parts.failed===0&&parts.ready===28&&parts.transparentCustomer;
+ },undefined,{timeout:20000});
+ await host.screenshot({path:"artifacts/kiosk-independent-sprites-customer.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer-gptimg.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer.png",fullPage:false});
  await action(guest,"talk");

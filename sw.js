@@ -2,13 +2,15 @@
 // the ES modules deployed to GitHub Pages; PeerJS signaling remains online-only.
 // Only individually cropped, licensed/original GPTIMG sprite files are cached.
 // Never precache a flattened mock screenshot or the obsolete anime asset pack.
-const CACHE="untitled-kiosk-offline-v6-dialogue";
+const CACHE="untitled-kiosk-offline-v7-sprites";
 const CORE=[
  "./","./index.html","./style.css",
  "./src/kiosk-core.js","./src/kiosk-view.js","./src/kiosk-gpt-scene.js","./src/kiosk-flat.js","./src/kiosk-skin.js",
  "./src/kiosk-pixel.js","./src/kiosk-gptimg.js","./src/kiosk-guest.js","./src/kiosk-motion.js",
  "./src/kiosk-item-motion.js","./src/kiosk-dialogue.js","./src/kiosk-app.js","./src/network.js",
- "./assets/gptimg/customer-uncle.webp","./assets/gptimg/winter-kiosk-source.png"
+ "./assets/gptimg/customer-uncle.webp","./assets/gptimg/winter-kiosk-source.png",
+ ...["customer-idle","wall-left","wall-right","cabinetL-closed","cabinetR-closed","cabinet-open-interior","shelfL1","shelfL2","shelfL3","shelfR1","shelfR2","shelfR3","window-landscape","building-left","building-right","frame-left","frame-right","frame-top","frame-sill","shutter-closed","countertop","under-counter","drawerL-closed","drawerR-closed","good-tea","good-bread","good-battery","good-cocoa"].map(n=>"./assets/gptimg/parts/"+n+".png"),
+ "./assets/gptimg/parts/manifest.json"
 ];
 self.addEventListener("install",event=>{
  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE))
