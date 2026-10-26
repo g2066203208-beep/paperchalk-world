@@ -106,3 +106,19 @@ test("sale immediately after a commission interrupts the favor animation without
  assert.equal(sale.handoff.progress,0);
  assert.equal(sample(s,1200+CUSTOMER_HANDOFF_MS).stage,"exit");
 });
+
+test("wrong item produces a visible refusal pose and resets without changing inventory",()=>{
+ const s=shop(),sample=createCustomerMotion();s.windowOpen=true;
+ sample(s,0);assert.equal(sample(s,1000).stage,"idle");
+ s.wrongAttempted=true;
+ const before=JSON.stringify(s),refusal=sample(s,1010);
+ assert.equal(refusal.stage,"idle");assert.equal(refusal.refusing,true);
+ assert.equal(refusal.receiving,false);assert.equal(refusal.handoff,null);
+ assert.equal(JSON.stringify(s),before,"animation never changes authoritative shop state");
+ s.wrongAttempted=false;assert.equal(sample(s,1020).refusing,false);
+ s.wrongAttempted=true;s.orderIndex=1;
+ assert.equal(sample(s,1100).stage,"handoff");
+ assert.equal(sample(s,1100).refusing,false,"handoff overrides the previous refusal");
+ assert.equal(sample(s,1100+CUSTOMER_HANDOFF_MS+CUSTOMER_EXIT_MS+CUSTOMER_ENTER_MS).refusing,false,
+  "next customer must not inherit the previous refusal pose");
+});
