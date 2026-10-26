@@ -1,14 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-const view=readFileSync(new URL("./kiosk-view.js",import.meta.url),"utf8");
-const deploy=readFileSync(new URL("../.github/workflows/deploy.yml",import.meta.url),"utf8");
-test("generated art is a separate sprite layer, never a flattened fake game screenshot",()=>{
- assert.match(view,/drawGeneratedCustomer\(g,portrait\)/);
- assert.match(view,/drawPixelCustomer\(g,portrait\)/);
- assert.match(view,/drawPixelStreet/);
+const read=p=>readFileSync(new URL(p,import.meta.url),"utf8");
+const view=read("./kiosk-view.js"),art=read("./kiosk-flat.js"),app=read("./kiosk-app.js");
+test("flat art elements are real independent live game layers, not a game screenshot",()=>{
+ assert.match(view,/flatCupboard\(/);
+ assert.match(view,/flatDrawer\(/);
+ assert.match(view,/flatStreet\(/);
+ assert.match(view,/flatCustomer\(/);
+ assert.match(view,/flatProduct\(/);
+ assert.match(view,/flatCounter\(/);
+ assert.match(view,/hit\(hits,.*"slot"/);
+ assert.match(view,/hit\(hits,.*"window"/);
  assert.match(view,/hit\(hits,mat\.x,mat\.y,mat\.w,mat\.h,"counter"\)/);
- assert.match(view,/hit\(hits,x,y,w,h,"slot",key\)/);
- assert.match(deploy,/assets\/gptimg\/\*\.webp/);
- assert.doesNotMatch(view,/drawImage\([^\n]*fullScene|assets\/anime/);
+ assert.doesNotMatch(view,/drawGeneratedCustomer|drawPixelCustomer|drawPixelStreet/);
+ assert.doesNotMatch(art,/createLinearGradient|filter:\s*blur|ctx\.drawImage|fullScene/);
+ assert.match(app,/flatAmbient/);
 });

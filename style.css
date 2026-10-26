@@ -48,3 +48,27 @@ label{font-size:12px;color:#d6bb98;display:block;margin-top:9px;text-align:left}
  padding:7px 10px;color:#fff2e6;z-index:3}
 .room-details{font-size:12px;line-height:1.5;color:#ffe2ad;background:#101d3b;
  border:1px solid #6c95c0;padding:7px 10px;margin:6px 0 9px;overflow-wrap:anywhere}
+
+/* Flat-color mode: deliberately no rendered bevels, gradients or fake shadows. */
+html,body{background:#1E294D;color:#F9F7F4}
+#game{image-rendering:auto}
+#menu{background:#F9F7F4;color:#263459;border:2px solid #263459;border-radius:10px;box-shadow:2px 3px 0 #263459}
+#roomCode,#status{background:#263459e8;color:#F9F7F4}
+#lobby{background:#263459}
+#lobby::before{opacity:.32;background:repeating-linear-gradient(125deg,transparent 0 48px,#526FA9 48px 74px,transparent 74px 155px,#F3A33E 155px 161px)}
+#lobby::after{opacity:.35;background:radial-gradient(circle at 25% 35%,#526FA9 0 14%,transparent 14% 100%),radial-gradient(circle at 75% 65%,#F3A33E 0 7%,transparent 7% 100%)}
+.panel{background:#DDE6F5;border:4px solid #263459;box-shadow:8px 9px 0 #111C35;border-radius:16px;color:#263459}
+.panel h1{color:#263459}.panel .eyebrow,.panel .sub{color:#526FA9}
+.panel label{color:#263459}
+.panel input{background:#F9F7F4;color:#263459;border:2px solid #263459;border-radius:8px}
+.panel .instructions{background:#F9F7F4;color:#263459;border:0;border-left:5px solid #F3A33E;border-radius:7px}
+.panel .room-details{background:#526FA9;color:#F9F7F4;border:0;border-radius:7px}
+.panel .fine{color:#526FA9}
+.panel .buttons button,.panel .close{background:#F9F7F4;border:2px solid #263459;border-radius:9px;color:#263459;box-shadow:3px 3px 0 #263459}
+.panel .buttons #solo{background:#F3A33E;color:#263459}
+.panel .buttons #resume{background:#8CB3B1;color:#263459}
+.panel .buttons button:active,.panel .close:active{box-shadow:0 0 0 #263459;transform:translate(2px,2px)}
+.shelf-icon span{background:#526FA9;border:2px solid #263459;border-radius:3px}
+.shelf-icon span:nth-child(2){background:#F3A33E}
+.shelf-icon span:nth-child(3){background:#8CB3B1}
+.shelf-icon span:nth-child(4){background:#DDE6F5}

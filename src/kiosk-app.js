@@ -1,6 +1,6 @@
 import {GOODS,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {render} from "./kiosk-view.js";
-import {drawAmbient} from "./kiosk-skin.js";
+import {flatAmbient} from "./kiosk-flat.js";
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
 import {RoomNetwork} from "./network.js";
@@ -150,7 +150,7 @@ function frame(){
  ctx.imageSmoothingEnabled=false;
  if(state){const now=performance.now();customerMotion=sampleCustomerMotion(state,now);heldItemMotion=sampleHeldItemMotion(state,id,now);hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion);}
  else{
-  drawAmbient(ctx,screen.W,screen.H,phase);
+  flatAmbient(ctx,screen.W,screen.H,phase);
   ctx.fillStyle="#fff3dd";ctx.textAlign="center";ctx.font="bold 19px monospace";
   ctx.fillText("冬夜杂货窗口 · 等待营业",screen.W/2,screen.H/2);
   hits=[];
