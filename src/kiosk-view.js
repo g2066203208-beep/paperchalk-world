@@ -233,7 +233,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  drawAmbient(g,W,H,phase);
  const headH=land?48:54;
  drawGameFrame(g,W,H,land,headH,phase);
- t(g,"冬 夜 · 售 货 窗",56,headH*.47,land?17:16,C.cream);
+ t(g,"冬 夜 · 售 货 窗",76,headH*.47,land?17:16,C.cream);
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
