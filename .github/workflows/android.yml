@@ -5,7 +5,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: untitled-kiosk-latest-android
+  cancel-in-progress: true
 
 jobs:
   apk:
@@ -34,6 +38,19 @@ jobs:
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 30
+      - name: Publish automatic latest debug APK download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp android/app/build/outputs/apk/debug/app-debug.apk untitled-kiosk-latest-debug.apk
+          if ! gh release view kiosk-latest-debug >/dev/null 2>&1; then
+            gh release create kiosk-latest-debug --target "$GITHUB_SHA" \
+              --title "Untitled kiosk — latest Android test build" --prerelease \
+              --notes "Automatically built WebView test shell. This is not a native game engine or a signed production release."
+          fi
+          gh release upload kiosk-latest-debug untitled-kiosk-latest-debug.apk --clobber
+          echo "Latest debug APK: https://github.com/${{ github.repository }}/releases/download/kiosk-latest-debug/untitled-kiosk-latest-debug.apk"
       - name: Prepare optional stable release keystore
         shell: bash
         env:
