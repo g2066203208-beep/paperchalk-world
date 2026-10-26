@@ -28,7 +28,13 @@ async function action(page,cmd,key){
  assert.ok(h,"Missing clickable "+cmd+" / "+key);
  const v=await page.evaluate(()=>window.__KIOSK_TEST__.screen());
  const rect=await page.locator("#game").boundingBox();
- await page.mouse.click(rect.x+(h.x+h.w/2)/v.W*rect.width,rect.y+(h.y+h.h/2)/v.H*rect.height);
+ const px=rect.x+(h.x+h.w/2)/v.W*rect.width,py=rect.y+(h.y+h.h/2)/v.H*rect.height;
+ if(h.gesture==="hold"){
+   await page.mouse.move(px,py);
+   await page.mouse.down();
+   await page.waitForTimeout(560);
+   await page.mouse.up();
+ }else await page.mouse.click(px,py);
 }
 const snapshot=p=>p.evaluate(()=>window.__KIOSK_TEST__.getState());
 try{
@@ -70,6 +76,17 @@ try{
  assert.equal((await snapshot(host)).windowOpen,true);
  await fs.mkdir("artifacts",{recursive:true});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
+ const immersive=await host.evaluate(()=>{
+   const hs=window.__KIOSK_TEST__.getHits();
+   const size=window.__KIOSK_TEST__.screen();
+   return {hits:hs.map(h=>({cmd:h.cmd,gesture:h.gesture,x:h.x,y:h.y,w:h.w,h:h.h})),size};
+ });
+ assert.ok(immersive.hits.some(h=>h.cmd==="sell"&&h.gesture==="tap"),"checkout is a physical till target");
+ assert.ok(immersive.hits.some(h=>h.cmd==="restock"&&h.gesture==="hold"),"stock is ordered from physical shelf hold");
+ assert.ok(immersive.hits.filter(h=>h.cmd==="restock").every(h=>h.gesture==="hold"),"no floating reorder buttons");
+ assert.ok(immersive.hits.filter(h=>["sell","talk","commission"].includes(h.cmd))
+   .every(h=>h.y<immersive.size.H*.82),"service commands cannot sit in a bottom toolbar");
+
  await host.waitForFunction(()=>document.querySelector("#game")&&document.readyState==="complete");
  await host.waitForFunction(async()=> (await import("./src/kiosk-gptimg.js")).gptimgAssetState().loaded,undefined,{timeout:10000});
  await host.screenshot({path:"artifacts/kiosk-first-customer-gptimg.png",fullPage:false});
