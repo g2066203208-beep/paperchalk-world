@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {windowFrostPattern} from "./kiosk-view.js";
+import {windowFrostPattern,customerSpeech,wrapSpeech} from "./kiosk-view.js";
+import {initialShop,join,apply} from "./kiosk-core.js";
 
 test("snowy service-window trim is deterministic and resolution-independent",()=>{
  for(const [w,h] of [[120,145],[240,170],[32,40],[420,250]]){
@@ -21,4 +22,25 @@ test("invalid and tiny apertures do not create off-screen snow",()=>{
  for(const [w,h] of [[0,0],[12,12],[-5,200],[NaN,40],[40,Infinity]]){
   assert.deepEqual(windowFrostPattern(w,h),[]);
  }
+});
+
+test("customer dialogue appears as speaker-anchored information, not a saved bottom-bar message",()=>{
+ const shop=initialShop();join(shop,"solo","测试店长");
+ assert.equal(customerSpeech(shop),null,"closed window has no customer speech");
+ assert.equal(apply(shop,"solo",{cmd:"window"}),true);
+ assert.equal(customerSpeech(shop,{stage:"enter"}),null,"offscreen entrance is silent");
+ assert.match(customerSpeech(shop,{stage:"idle"}).text,/热茶/,"arrived visitor speaks their order");
+ assert.equal(apply(shop,"solo",{cmd:"talk"}),true);
+ assert.match(customerSpeech(shop,{stage:"idle"}).text,/热茶/);
+ shop.counter="bread";
+ assert.equal(apply(shop,"solo",{cmd:"sell"}),true);
+ assert.match(customerSpeech(shop,{stage:"idle"}).text,/不是我要的/,"mistake is spoken by the visitor");
+ assert.equal(customerSpeech(shop,{stage:"handoff"}),null,"departing customer does not leak next order");
+});
+test("NPC speech wraps Chinese across short lines without clipping the full message",()=>{
+ assert.deepEqual(wrapSpeech("热茶",9),["热茶"]);
+ const v=wrapSpeech("这是一段非常长的委托内容要被分行显示且不能溢出",7,3);
+ assert.equal(v.length,3);
+ assert.ok(v.every(row=>Array.from(row).length<=7));
+ assert.ok(v[2].endsWith("…"));
 });
