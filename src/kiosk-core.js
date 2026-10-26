@@ -111,6 +111,8 @@ export function apply(s,by,a){
  }
  else if(cmd==="upgrade"){
     if(p.role!=="manager")return false;
+    // Switching from stocking to the work-order plaque cancels stale selection.
+    p.restock=null;
     const cost=shelfUpgradeCost(s);
     if(cost===null)s.notice="货架扩容已满级，继续经营攒钱开分店吧。";
     else if(s.cash<cost)s.notice="扩容需要 ¥"+cost+"，目前资金不足。";
