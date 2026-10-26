@@ -18,9 +18,21 @@ const hit=(hits,x,y,w,h,cmd,key)=>hits.push({x,y,w,h,cmd,key});
 function wooden(g,x,y,w,h,seed=1,base=C.wood){
  r(g,x,y,w,h,base);const rows=Math.max(1,Math.floor(h/21));
  for(let k=0;k<rows;k++){
-  let yy=y+k*21;r(g,x,yy,w,2,C.trim);r(g,x,yy+2,w,2,C.woodLight);
-  for(let a=0;a<7;a++){let px=x+((a*53+k*39+seed*17)%Math.max(5,Math.floor(w-12)));
-   let len=5+((k*7+a*3)%11);r(g,px,yy+7+(a%3)*4,len,1,(a%3===0)?"#ad836b":"#705348");}
+  const yy=y+k*21;
+  r(g,x,yy,w,2,C.trim);r(g,x,yy+2,w,2,C.woodLight);
+  for(let a=0;a<7;a++){
+   const px=x+((a*53+k*39+seed*17)%Math.max(5,Math.floor(w-12)));
+   const len=5+((k*7+a*3)%11);
+   r(g,px,yy+7+(a%3)*4,len,1,(a%3===0)?"#ad836b":"#705348");
+  }
+  // Pixel knots and staggered pores belong to each wooden fixture, not a
+  // full-scene overlay. Their deterministic seed survives camera rotation.
+  if(w>=44&&yy+17<y+h){
+   const knot=x+11+((seed*19+k*47)%Math.max(1,Math.floor(w-30)));
+   r(g,knot,yy+10,9,2,"#74564e");
+   r(g,knot+2,yy+9,5,1,"#d3a181");
+   r(g,knot+3,yy+12,3,1,"#5c4a48");
+  }
  }
 }
 function sprite(g,sku,x,y,scale=3){drawPixelItem(g,sku,x,y,scale*10,scale*12);}
@@ -66,6 +78,13 @@ function shelf(g,hits,x,y,w,h,slot,s){
  r(g,x,y+h-12,w,11,C.shelf);
  r(g,x,y+h-12,w,3,C.woodLight);
  r(g,x,y+h-4,w,5,C.trim);
+ // Real pixel joinery: riveted steel supports and a narrow under-shelf
+ // shadow remain attached to this individual, clickable shelf.
+ r(g,x+3,y+h-10,4,7,"#39445a");
+ r(g,x+w-7,y+h-10,4,7,"#39445a");
+ r(g,x+4,y+h-9,2,2,"#b4c5c9");
+ r(g,x+w-6,y+h-9,2,2,"#b4c5c9");
+ r(g,x+9,y+h-2,Math.max(1,w-18),1,"#735953");
  if(s.upgrades?.shelves)r(g,x+4,y+h-9,w-8,2,C.gold);
  if(content?.qty>0){
   const count=Math.min(content.qty,3);
@@ -109,6 +128,29 @@ function drawer(g,hits,x,y,w,h,key,s){
   hit(hits,x,y,w,h,"toggle",key);
  }
 }
+// Frost is geometry, not a translucent screenshot. Coordinates are relative
+// to the aperture, so it can be painted on any aspect ratio without covering
+// the customer or changing the latch's hitbox.
+export function windowFrostPattern(width,height){
+ const w=Math.floor(width),h=Math.floor(height);
+ if(!Number.isFinite(w)||!Number.isFinite(h)||w<24||h<24)return [];
+ const pieces=[];
+ const add=(x,y,ww,hh,color)=>pieces.push({x,y,w:ww,h:hh,color});
+ for(let i=0;i<w;i+=18){
+  const length=Math.min(w-i,13+(i/18%3)*2);
+  add(i,-7,length,2,"#f6f7ee");
+  add(i+2,-5,Math.max(1,length-4),2,"#d7e9ec");
+  if((i/18)%3===1)add(i+5,-3,2,3,"#bcd7e6");
+ }
+ for(let i=0;i<w;i+=25){
+  const length=Math.min(w-i,12+(i/25%3)*3);
+  add(i,h+2,length,2,"#f7f8ef");
+  add(i+2,h+4,Math.max(1,length-4),2,"#c6dce6");
+ }
+ // The frost only occupies the wooden frame and sill; the central glass
+ // remains readable for facial expressions and physical handoff.
+ return pieces;
+}
 function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  r(g,x-9,y-9,w+18,h+18,C.outline);
  drawPixelStreet(g,x,y,w,h,phase);
@@ -130,15 +172,37 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  }
  r(g,x-9,y-9,w+18,8,C.woodLight);r(g,x-9,y+h,w+18,12,C.woodLight);
  r(g,x-8,y,w*.07,h,C.wood);r(g,x+w*.93,y,w*.07,h,C.wood);
+ // Cold blue rim light catches the inner edges of the wooden jambs.
+ r(g,x-5,y+4,2,Math.max(1,h-8),"#a9cad9");
+ r(g,x+w+3,y+4,2,Math.max(1,h-8),"#7d9fb5");
  r(g,x,y+h-5,w,4,C.ink);
+ for(const p of windowFrostPattern(w,h))r(g,x+p.x,y+p.y,p.w,p.h,p.color);
+ // Exposed fasteners and a damp, snowy lower sill are physical details.
+ for(const yy of [y+12,y+h-17]){
+  r(g,x-7,yy,3,3,"#38485a");r(g,x+w+4,yy,3,3,"#38485a");
+  r(g,x-6,yy,1,1,"#d2c3a7");r(g,x+w+5,yy,1,1,"#d2c3a7");
+ }
+ r(g,x+w*.22,y+h+7,w*.56,2,"#e8e9df");
  // Click the fixed latch at the sill, allowing customers to remain clickable.
  r(g,x+w*.44,y+h+2,w*.12,5,C.gold);
  hit(hits,x+w*.17,y+h-25,w*.66,55,"window");
 }
 function smallGlow(g,x,y,step){
- r(g,x-34,y-10,68,9,"#b38b5d");r(g,x-25,y-1,50,7,C.woodLight);
- r(g,x-15,y+6,30,9,C.gold);r(g,x-5,y+15,10,3,C.cream);
- r(g,x-4,y-27,8,20,C.ink);
+ // Individual 1–4 px pieces form a suspended metal-and-glass shop lamp.
+ // Its warm light is local to the lamp, not a whole-screen orange filter.
+ r(g,x-2,y-31,4,22,"#182c49");
+ r(g,x-4,y-12,8,4,"#75869a");
+ r(g,x-24,y-8,48,3,"#2b3652");
+ r(g,x-30,y-5,60,4,"#ad805a");
+ r(g,x-26,y-1,52,5,"#e4b27b");
+ r(g,x-18,y+4,36,6,"#ffcb7e");
+ r(g,x-12,y+10,24,4,"#ffe2a3");
+ r(g,x-6,y+14,12,2,"#fff2c7");
+ r(g,x-23,y-3,4,3,"#fff0cb");
+ r(g,x+19,y-3,4,3,"#fff0cb");
+ const glow=Math.floor(step/27)%2;
+ r(g,x-32,y+5,7,2,glow?"#d0a375":"#e7b884");
+ r(g,x+25,y+5,7,2,glow?"#d0a375":"#e7b884");
 }
 // A real in-world work order, not a transparent text hotspot. The plaque is
 // independent from the window, shelf sprites and overlay controls.
