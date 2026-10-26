@@ -180,7 +180,12 @@ export function drawPixelStreet(g,x,y,w,h,phase){
  let img=cache.get("street");
  if(!img){img=raster(160,112,paintStreet);cache.set("street",img);}
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();g.imageSmoothingEnabled=false;
- g.drawImage(img,Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));
+ // Crop the 160x112 backdrop to the aperture aspect instead of distorting
+ // every building when switching between portrait and landscape windows.
+ const cover=Math.max(w/160,h/112);
+ const sourceW=w/cover,sourceH=h/cover;
+ g.drawImage(img,(160-sourceW)/2,(112-sourceH)/2,sourceW,sourceH,
+   Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));
  const cell=Math.max(2,Math.round(w/160*2));
  // Snow is a separate time-dependent layer; deterministic across both clients.
  for(let i=0;i<42;i++){
