@@ -56,8 +56,11 @@ function customer(g,x,y,w,h,motion,phase){
  if(motion&&!motion.visible)return;
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  const shift=(motion?.offset||0)*w*.92,down=(motion?.drop||0)*h;
- g.translate(x+shift,y+down+Math.sin(phase*.035)*1.3);
- g.scale(w/375,h/430);
+ // Respect the original sprite aspect ratio in both phone orientations.
+ // A 375x430 guest must never become a flattened 16:9 sticker.
+ const scale=Math.min(w/375,h/430);
+ g.translate(x+(w-375*scale)/2+shift,y+h-430*scale+down+Math.sin(phase*.035)*1.3);
+ g.scale(scale,scale);
  // Alpha-shaped cutout extracted at draw time from the GPT source illustration.
  g.beginPath();
  const pts=[[145,9],[197,2],[255,14],[302,40],[328,82],[329,137],[314,164],[335,219],[356,285],[372,429],[0,429],[14,325],[36,250],[48,204],[40,154],[51,104],[77,62],[110,25]];
