@@ -2,7 +2,8 @@
 // draw routine (no flattened image / generated art); all clickable bounds
 // are registered with the same coordinates used to paint the object.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
-import {drawAmbient,drawRoomWall,drawNightStreet,drawStylizedCustomer,drawMerchandise,drawGameFrame,drawSkinButton} from "./kiosk-skin.js";
+import {drawAmbient,drawRoomWall,drawGameFrame,drawSkinButton} from "./kiosk-skin.js";
+import {drawPixelCustomer,drawPixelItem,drawPixelStreet} from "./kiosk-pixel.js";
 const C={ink:"#122140",outline:"#25365b",wall:"#33466a",wood:"#ab7a61",woodLight:"#e0b78a",trim:"#263454",shelf:"#c78d63",dark:"#17294e",cream:"#fff3e2",amber:"#ffc76b",sky:"#5b83b5",snow:"#ebf2ff",blue:"#89b9df",gold:"#ffcd79",green:"#729db2",red:"#d97a7d"};
 const r=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const t=(g,text,x,y,size=12,color=C.cream,align="left")=>{g.fillStyle=color;g.font='bold '+size+'px ui-monospace, "Noto Sans SC",monospace';g.textAlign=align;g.textBaseline="middle";g.fillText(String(text),Math.round(x),Math.round(y));};
@@ -17,23 +18,7 @@ function wooden(g,x,y,w,h,seed=1,base=C.wood){
    let len=5+((k*7+a*3)%11);r(g,px,yy+7+(a%3)*4,len,1,(a%3===0)?"#ad836b":"#705348");}
  }
 }
-function snowyStreet(g,x,y,w,h,phase){
- r(g,x,y,w,h,C.sky);
- // distant blue apartment blocks and roofs
- for(let i=0;i<7;i++){let xx=x+i*w/6-13,roof=y+h*.45+((i*11)%22);
-  r(g,xx,roof,Math.ceil(w/6)+5,h*.55,C.dark);
-  r(g,xx+3,roof-8,Math.ceil(w/6)-3,8,C.snow);
-  for(let q=0;q<3;q++)r(g,xx+7+q*13,roof+21,4,6,(q+i)%3===0?C.gold:"#547086");
- }
- r(g,x,y+h*.80,w,h*.20,C.blue);r(g,x,y+h*.85,w,h*.15,C.snow);
- for(let i=0;i<23;i++){const xx=x+(i*37%Math.max(1,w)), yy=y+((i*29+Math.floor(phase/3))%Math.max(2,Math.floor(h*.82)));
-  r(g,xx,yy,2+(i%2),2,i%3===0?"#f0e6d2":"#b5d3df");
- }
- // street lamp silhouette
- r(g,x+w*.79,y+h*.34,3,h*.53,"#27333d");r(g,x+w*.74,y+h*.31,w*.1,3,"#27333d");
- r(g,x+w*.76,y+h*.29,w*.07,8,C.gold);
-}
-function sprite(g,sku,x,y,scale=3){drawMerchandise(g,sku,x,y,scale*10,scale*12);}
+function sprite(g,sku,x,y,scale=3){drawPixelItem(g,sku,x,y,scale*10,scale*12);}
 // The glove and the merchandise are separate foreground pixel layers.
 function glovedHand(g,x,y,alpha=1){
  g.save();g.globalAlpha=Math.max(0,Math.min(1,alpha));
@@ -121,11 +106,11 @@ function drawer(g,hits,x,y,w,h,key,s){
 }
 function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  r(g,x-9,y-9,w+18,h+18,C.outline);
- drawNightStreet(g,x,y,w,h,phase);
+ drawPixelStreet(g,x,y,w,h,phase);
  if(s.windowOpen&&(!motion||motion.visible)){
   // Moving sprites are clipped to the actual window aperture, not the wall.
   g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
-  drawStylizedCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
+  drawPixelCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
    w:w*.92,h:h*.92,tone:motion?.tone??visitor(s).tone,phase,
    talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving)});
   g.restore();
@@ -211,11 +196,11 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  if(motion?.handoff&&GOODS[motion.handoff.sku]){
   const scale=Math.min(3,mat.h*.070),p=motion.handoff.progress;
   const cw=win.w*.92,ch=win.h*.92;
-  const cs=Math.max(1,Math.floor(Math.min(cw/44,ch/72)));
+  const cs=Math.min(cw/80,ch/120);
   const cx=win.x+win.w*(.04+(motion.offset||0));
   const cy=win.y+win.h*(.04+(motion.drop||0));
-  const handX=cx+(cw-44*cs)/2+30*cs-5*scale;
-  const handY=cy+ch-72*cs+59*cs-4*scale;
+  const handX=cx+cw/2+34*cs-5*scale;
+  const handY=cy+ch*.96-37*cs-4*scale;
   const fromX=mat.x+mat.w*.40,fromY=mat.y+mat.h*.10;
   g.save();g.beginPath();
   // The item may cross the sill, but must never float over solid wall panels.
@@ -248,7 +233,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  drawAmbient(g,W,H,phase);
  const headH=land?48:54;
  drawGameFrame(g,W,H,land,headH,phase);
- t(g,"雪 夜 杂 货 铺",56,headH*.47,land?17:16,C.cream);
+ t(g,"冬 夜 · 售 货 窗",56,headH*.47,land?17:16,C.cream);
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
