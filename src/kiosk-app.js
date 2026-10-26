@@ -84,7 +84,7 @@ function command(cmd,key){
  }else localAction(id,a);
 }
 function resize(){
- const width=Math.max(280,window.innerWidth),height=Math.max(420,window.innerHeight);
+ const width=Math.max(1,window.innerWidth),height=Math.max(1,window.innerHeight);
  const land=width>=height*1.12;
  // Preserve the physical viewport aspect ratio on wide phones as well as desktop.
  // A 500-unit minimum landscape height keeps touch targets usable without squashing art.
