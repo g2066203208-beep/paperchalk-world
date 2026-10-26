@@ -342,28 +342,8 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  const playableHeight=H-headH-8;
  const playableWidth=land?Math.min(W*.72,playableHeight*1.22):W;
  const shop={x:(W-playableWidth)/2,y:headH,w:playableWidth,h:playableHeight};
- if(land){
-  // Native responsive layout: keep the 2D scenery proportionate instead of
-  // stretching a portrait shop screenshot across the entire wide display.
-  r(g,0,headH,shop.x,playableHeight,"#243456");
-  r(g,shop.x+shop.w,headH,W-shop.x-shop.w,playableHeight,"#243456");
-  r(g,14,headH+14,Math.max(10,shop.x-28),3,C.gold);
-  t(g,"今日营业",24,headH+40,17,C.cream);
-  t(g,"第 "+s.day+" 天",24,headH+75,17,C.gold);
-  t(g,"现金 ¥"+s.cash,24,headH+107,15,C.cream);
-  t(g,"已服务 "+s.served+"/5",24,headH+138,14,C.cream);
-  t(g,"口碑 "+(s.reputation||0)+"/100",24,headH+168,14,C.cream);
-  t(g,"店员 "+Object.keys(s.players||{}).length+" 人",24,headH+199,14,C.cream);
-  const rx=shop.x+shop.w+20;
-  r(g,rx,headH+14,Math.max(10,W-rx-15),3,C.gold);
-  t(g,"顾客订单",rx+5,headH+40,17,C.cream);
-  t(g,visitor(s).name,rx+5,headH+75,18,C.gold);
-  t(g,GOODS[visitor(s).sku].name,rx+5,headH+110,16,C.cream);
-  t(g,"售价 ¥"+GOODS[visitor(s).sku].price,rx+5,headH+140,14,C.cream);
-  t(g,s.windowOpen?"窗口已开启":"请点窗闩开窗",rx+5,headH+171,13,C.cream);
-  const favor=visitor(s).favor;
-  t(g,favor?"委托："+GOODS[favor.sku].name:"委托：暂无",rx+5,headH+202,13,C.gold);
- }
+ // Keep landscape margins free of order/mission panels. NPC dialogue is
+ // shown only in the scene near the speaker, not duplicated at screen edges.
  scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
  if(s.phase==="summary"){
   r(g,0,0,W,H,"#171922e9");
