@@ -98,6 +98,12 @@ try{
  await action(guest,"talk");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.spoken===true,{timeout:12000});
  await host.screenshot({path:"artifacts/kiosk-customer-talking.png",fullPage:false});
+ assert.equal(await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion()?.speechVisible),true,
+   "conversation must appear beside the actual customer");
+ await host.waitForTimeout(4450);
+ assert.equal(await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion()?.speechVisible),false,
+   "NPC speech must disappear instead of occupying a permanent panel");
+ await host.screenshot({path:"artifacts/kiosk-customer-silent.png",fullPage:false});
  await action(guest,"slot","shelfL1");
  const guestId=await guest.evaluate(()=>window.__KIOSK_TEST__.getSelfId());
  await host.waitForFunction(id=>window.__KIOSK_TEST__.getState()?.players?.[id]?.hand==="tea",guestId,{timeout:12000});
