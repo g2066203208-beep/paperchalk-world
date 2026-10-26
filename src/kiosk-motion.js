@@ -6,7 +6,7 @@ export const CUSTOMER_FAVOR_MS=620;
 export const CUSTOMER_EXIT_MS=640;
 export const CUSTOMER_ENTER_MS=860;
 const ease=t=>t*t*(3-2*t);
-const hidden=()=>({visible:false,stage:"hidden",tone:0,offset:0,drop:0,talking:false,receiving:false,handoff:null});
+const hidden=()=>({visible:false,stage:"hidden",tone:0,offset:0,drop:0,talking:false,receiving:false,refusing:false,handoff:null});
 export function createCustomerMotion(){
  let previousOrder=null,previousOpen=false,previousFavorDone=false,stage="hidden",startedAt=0,departingOrder=null;
  return function sampleCustomerMotion(shop,now=0){
@@ -58,6 +58,7 @@ export function createCustomerMotion(){
    offset:stage==="enter"?(1-amount)*.76:stage==="exit"?-amount*.76:0,
    drop:stage==="enter"?(1-amount)*.06:stage==="exit"?amount*.03:0,
    talking:stage==="idle"&&Boolean(shop.spoken),
+   refusing:stage==="idle"&&Boolean(shop.wrongAttempted),
    receiving:stage==="favor"||stage==="handoff"||stage==="exit",handoff};
  };
 }
