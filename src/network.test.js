@@ -61,6 +61,10 @@ test("host accepts a join packet even if data arrives before its open callback",
  const welcomeAt=conn.sent.findIndex(m=>m.t==="welcome");
  assert.equal(conn.sent[welcomeAt+1].t,"state","latest state follows welcome in-order");
  assert.equal(conn.sent[welcomeAt+1].state.players["peer-one"].role,"clerk");
+ const revision=state.revision;
+ conn.emit("data",{t:"join",name:"重试的店员"});
+ assert.equal(state.revision,revision,"repeated handshake must not add a duplicate player");
+ assert.equal(conn.sent.filter(m=>m.t==="welcome").length,2,"host must resend welcome on retry");
  conn.emit("data",{t:"input",input:{seq:1,action:{type:"kiosk",operation:"window"}}});
  assert.equal(net.takeInputs()[0].input.action.operation,"window");
  conn.close();
