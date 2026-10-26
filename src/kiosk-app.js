@@ -1,11 +1,14 @@
 import {GOODS,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {render} from "./kiosk-view.js";
+import {createCustomerMotion} from "./kiosk-motion.js";
 import {RoomNetwork} from "./network.js";
 const $=id=>document.getElementById(id);
 const SAVE="untitled-kiosk-save-v1";
 const canvas=$("game"),ctx=canvas.getContext("2d",{alpha:false});
 let screen={W:480,H:900,land:false},hits=[],phase=0;
 let state=null,mode="idle",id="solo",seq=0,room="";
+const sampleCustomerMotion=createCustomerMotion();
+let customerMotion=null;
 const net=new RoomNetwork({
  status:t=>{$("status").textContent=t;},
  join:(pid,name)=>{
@@ -112,7 +115,7 @@ setInterval(()=>{if(mode==="host"&&state)net.broadcast(state);},400);
 function frame(){
  phase++;
  ctx.imageSmoothingEnabled=false;
- if(state)hits=render(ctx,state,screen,phase,id);
+ if(state){customerMotion=sampleCustomerMotion(state,performance.now());hits=render(ctx,state,screen,phase,id,customerMotion);}
  else{
   ctx.fillStyle="#1a202b";ctx.fillRect(0,0,screen.W,screen.H);
   ctx.fillStyle="#e3ba8a";ctx.textAlign="center";ctx.font="bold 19px monospace";
@@ -126,4 +129,4 @@ if("serviceWorker" in navigator){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
- command,screen:()=>screen,getSelfId:()=>id,saveKey:SAVE};
+ command,screen:()=>screen,getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,saveKey:SAVE};

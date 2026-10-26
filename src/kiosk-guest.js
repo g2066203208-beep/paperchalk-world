@@ -8,7 +8,7 @@ const O={
  scarves:['#d3b27c','#a8c4b5','#9bbed0','#d8aa86']
 };
 const box=(g,x,y,w,h,color,scale,ox,oy)=>{g.fillStyle=color;g.fillRect(Math.round(ox+x*scale),Math.round(oy+y*scale),Math.max(1,Math.round(w*scale)),Math.max(1,Math.round(h*scale)));};
-export function drawWindowCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false}={}){
+export function drawWindowCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false,receiving=false}={}){
  const v=((Number(tone)||0)%4+4)%4;
  const scale=Math.max(1,Math.floor(Math.min(w/44,h/72)));
  const ox=Math.round(x+(w-44*scale)/2),oy=Math.round(y+h-72*scale);
@@ -27,7 +27,10 @@ export function drawWindowCustomer(g,{x,y,w,h,tone=0,phase=0,talking=false}={}){
  R(15,59,2,3,lit);R(31,59,2,3,lit);
  // Hands: right arm has a discrete talking/waving pose.
  R(6,45,7,18,shade);R(7,45,5,15,coat);R(7,60,5,5,hatShade);
- if(armLift){R(34,37,6,17,shade);R(35,36,5,12,coat);R(34,31,6,7,O.skin[0]);R(35,30,2,3,O.skin[0]);}
+ if(receiving){ // Hand reaches toward the pass-through while walking away.
+  R(33,45,6,16,shade);R(34,45,4,12,coat);
+  R(30,57,9,5,O.skin[1]);R(28,59,5,3,O.skin[0]);
+ }else if(armLift){R(34,37,6,17,shade);R(35,36,5,12,coat);R(34,31,6,7,O.skin[0]);R(35,30,2,3,O.skin[0]);}
  else{R(33,45,6,18,shade);R(34,45,4,15,coat);R(34,60,5,5,hatShade);}
  // Neck, ears, head shadow and face: eyes and mouth are individually animated.
  R(18,34,10,10,O.skin[2]);R(19,34,9,8,O.skin[0]);

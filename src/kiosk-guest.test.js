@@ -26,6 +26,13 @@ test("conversation changes mouth and arm pose without modifying game state",()=>
  assert.notDeepEqual(paint(0,0,false),paint(0,0,true));
  assert.notDeepEqual(paint(1,0,true),paint(1,14,true));
 });
+test("receiving pose paints a separate reaching hand, not a flattened replacement image",()=>{
+ const commands=[];
+ const g={fillStyle:"",fillRect(x,y,w,h){commands.push([x,y,w,h,this.fillStyle]);}};
+ drawWindowCustomer(g,{x:20,y:30,w:176,h:288,tone:0,phase:10,receiving:true});
+ assert.notDeepEqual(commands,paint(0,10,false));
+ assert.ok(commands.length>50);
+});
 test("blink and winter breath animate deterministically",()=>{
  assert.notDeepEqual(paint(0,0,false),paint(0,11,false));
  assert.deepEqual(paint(2,55,false),paint(2,55,false));

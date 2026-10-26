@@ -47,6 +47,7 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.windowOpen===true,{timeout:15000});
  assert.equal((await snapshot(host)).windowOpen,true);
  await fs.mkdir("artifacts",{recursive:true});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  await host.screenshot({path:"artifacts/kiosk-first-customer.png",fullPage:false});
  await action(guest,"talk");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.spoken===true,{timeout:12000});
@@ -60,6 +61,11 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
  await action(host,"sell");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.totalServed===1,{timeout:15000});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="exit",{timeout:5000});
+ await host.screenshot({path:"artifacts/kiosk-customer-departing.png",fullPage:false});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="enter",{timeout:5000});
+ await host.screenshot({path:"artifacts/kiosk-next-customer-arriving.png",fullPage:false});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  assert.equal((await snapshot(guest)).cash,109);
  assert.equal((await snapshot(guest)).players.host.hand,"bread");
  await action(host,"slot","shelfL2");

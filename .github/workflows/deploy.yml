@@ -69,7 +69,7 @@ jobs:
         run: |
           mkdir -p _site/src _site/assets
           cp index.html style.css sw.js .nojekyll _site/
-          cp src/kiosk-core.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-app.js src/network.js _site/src/
+          cp src/kiosk-core.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-app.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
       - name: Verify published ES module dependencies
         run: |

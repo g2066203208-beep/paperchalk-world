@@ -95,10 +95,17 @@ function drawer(g,hits,x,y,w,h,key,s){
   hit(hits,x,y,w,h,"toggle",key);
  }
 }
-function windowFrame(g,hits,x,y,w,h,s,phase){
+function windowFrame(g,hits,x,y,w,h,s,phase,motion){
  r(g,x-9,y-9,w+18,h+18,C.outline);
  snowyStreet(g,x,y,w,h,phase);
- if(s.windowOpen)drawWindowCustomer(g,{x:x+w*.04,y:y+h*.04,w:w*.92,h:h*.92,tone:visitor(s).tone,phase,talking:s.spoken});
+ if(s.windowOpen&&(!motion||motion.visible)){
+  // Moving sprites are clipped to the actual window aperture, not the wall.
+  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
+  drawWindowCustomer(g,{x:x+w*(.04+(motion?.offset||0)),y:y+h*(.04+(motion?.drop||0)),
+   w:w*.92,h:h*.92,tone:motion?.tone??visitor(s).tone,phase,
+   talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving)});
+  g.restore();
+ }
  if(!s.windowOpen){
   // A solid wood shutter physically covers the opening when shut.
   wooden(g,x+5,y+5,w-10,h-10,3,C.wood);
@@ -118,7 +125,7 @@ function smallGlow(g,x,y,step){
  r(g,x-15,y+6,30,9,C.gold);r(g,x-5,y+15,10,3,C.cream);
  r(g,x-4,y-27,8,20,C.ink);
 }
-function scene(g,hits,s,x,y,w,h,phase){
+function scene(g,hits,s,x,y,w,h,phase,motion){
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  wooden(g,x,y,w,h,2,C.wall);
  // structural corner posts
@@ -134,7 +141,7 @@ function scene(g,hits,s,x,y,w,h,phase){
   shelf(g,hits,x+w*.035,towerY+i*ty,tw,ty,"shelfL"+(i+1),s);
   shelf(g,hits,x+w*.740,towerY+i*ty,tw,ty,"shelfR"+(i+1),s);
  }
- windowFrame(g,hits,win.x,win.y,win.w,win.h,s,phase);
+ windowFrame(g,hits,win.x,win.y,win.w,win.h,s,phase,motion);
  // light above service window
  smallGlow(g,x+w/2,y+h*.15,phase);
  // the physical pass-through and main worktop in front of shop wall.
@@ -166,7 +173,7 @@ function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
  t(g,text,x+w/2,y+h*.52,h*.36,active?C.gold:C.cream,"center");
  if(cmd)hit(hits,x,y,w,h,cmd,key);
 }
-export function render(g,s,view,phase=0,viewerId=null){
+export function render(g,s,view,phase=0,viewerId=null,motion=null){
  const {W,H,land}=view,hits=[];
  const p=s.players?.[viewerId]||Object.values(s.players||{})[0]||{};
  const isManager=p.role==="manager";
@@ -179,7 +186,7 @@ export function render(g,s,view,phase=0,viewerId=null){
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
  const shop=land?{x:154,y:headH,w:W-300,h:H-headH-83}:{x:0,y:headH,w:W,h:H-headH-190};
- scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase);
+ scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion);
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
   t(g,"今日",17,headH+24,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+52,14,C.cream);
