@@ -238,7 +238,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
- const shop=land?{x:154,y:headH,w:W-300,h:H-headH-83}:{x:0,y:headH,w:W,h:H-headH-227};
+ const shop=land?{x:154,y:headH,w:W-300,h:H-headH-93}:{x:0,y:headH,w:W,h:H-headH-244};
  scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
@@ -272,27 +272,27 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   const note=s.notice.length>34?s.notice.slice(0,33)+"…":s.notice;
   t(g,note,12,lower+65,11,C.cream);
  }
- const bottom=land?H-82:H-143;
+ const bottom=land?H-92:H-160;
  if(land){
   r(g,0,bottom,W,H-bottom,"#17264a");
   t(g,"交互",12,bottom+21,12,C.gold);
-  chip(g,hits,67,bottom+3,95,56,"问候","talk");
-  chip(g,hits,168,bottom+3,95,56,"收款","sell");
-  chip(g,hits,269,bottom+3,95,56,"委托","commission");
+  chip(g,hits,67,bottom+4,95,64,"问候","talk");
+  chip(g,hits,168,bottom+4,95,64,"收款","sell");
+  chip(g,hits,269,bottom+4,95,64,"委托","commission");
   t(g,"补货：",370,bottom+21,12,C.gold);
   let px=430;
-  if(isManager){for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+3,105,56,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);px+=112;}}
+  if(isManager){for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+4,105,64,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);px+=112;}}
   else t(g,"店长负责进货；店员可拿货、交接与收款",350,bottom+23,13,C.cream);
   t(g,"选择商品格拿货 → 点交接台 → 收款。补货先选商品再点格子。",26,bottom+72,12,C.cream);
  } else{
-  r(g,0,H-143,W,143,"#17264a");
-  chip(g,hits,10,H-137,145,66,"交谈","talk");
-  chip(g,hits,167,H-137,145,66,"收款","sell");
-  chip(g,hits,324,H-137,146,66,"完成委托","commission");
+  r(g,0,H-160,W,160,"#17264a");
+  chip(g,hits,10,H-154,145,70,"交谈","talk");
+  chip(g,hits,167,H-154,145,70,"收款","sell");
+  chip(g,hits,324,H-154,146,70,"完成委托","commission");
   let skuKeys=Object.keys(GOODS);
   if(isManager){for(let i=0;i<4;i++){
-   const sku=skuKeys[i];chip(g,hits,10+i*118,H-65,107,62,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);
-  }}else t(g,"店员：从货架拿货 → 交接台 → 收款",W/2,H-37,15,C.cream,"center");
+   const sku=skuKeys[i];chip(g,hits,10+i*118,H-78,107,74,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);
+  }}else t(g,"店员：从货架拿货 → 交接台 → 收款",W/2,H-41,15,C.cream,"center");
  }
  if(p.hand){
   t(g,"手持："+GOODS[p.hand].name,land?W/2:W/2,land?bottom-14:H-196,13,C.gold,"center");
