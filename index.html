@@ -2,15 +2,15 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#24343b"><meta name="description" content="留灯——一间深夜小店里的原创多人观察推理游戏。">
-<title>留灯 · LAMPKEEP</title><link rel="stylesheet" href="./style.css">
+<meta name="theme-color" content="#24343b"><meta name="description" content="未命名开发版：一间深夜小店里的多人互动悬疑游戏。">
+<title>未命名游戏 · 开发版</title><link rel="stylesheet" href="./style.css">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
 <script type="module" src="./src/client.js"></script>
 </head>
 <body>
 <div class="app" id="app">
 <header class="masthead">
- <div class="mark"><span class="mark-icon">灯</span><div><b>留灯 <small>· LAMPKEEP</small></b><p>夜 间 杂 货 店</p></div></div>
+ <div class="mark"><span class="mark-icon">◈</span><div><b>未命名 <small>· DEV BUILD</small></b><p>夜 间 杂 货 店</p></div></div>
  <div class="session"><span id="networkStatus" aria-live="polite">离线 · 小店尚未开门</span><button class="tiny" id="menuButton" aria-label="打开菜单">菜单</button></div>
 </header>
 <div id="roomToast" class="room-toast" hidden><span>小店邀请码</span><strong id="inviteCode"></strong><button id="copyCode">复制</button></div>
@@ -54,7 +54,7 @@
 <div class="modal" id="lobby">
  <div class="lobby-card">
   <div class="lobby-crest">◈</div><div class="kicker">A VERY SMALL SHOP, A VERY LONG NIGHT</div>
-  <h1>留<span>灯</span></h1><p class="subtitle">路过的人，总会留下些什么。</p>
+  <h1>未<span>命名</span></h1><p class="subtitle">路过的人，总会留下些什么。</p>
   <p class="about">夜幕降临。你和朋友在同一间小店值班：有人接待客人，有人翻旧账，有人盯着窗外。只有拼起彼此发现的细节，才知道谁该被留下，谁该被送走。</p>
   <label for="playerName">值班员称呼</label><input id="playerName" placeholder="你的称呼" maxlength="14" value="值班员" autocomplete="nickname">
   <button id="soloButton" class="btn btn-gold">一个人值夜班</button>

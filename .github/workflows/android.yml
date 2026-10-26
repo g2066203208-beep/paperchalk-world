@@ -1,4 +1,4 @@
-name: Build Android Lampkeep APK
+name: Build Android Test APK
 on:
   push:
     branches: [main]
@@ -30,7 +30,7 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: lampkeep-debug-apk
+          name: android-game-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 30
@@ -56,7 +56,7 @@ jobs:
         if: env.HAS_RELEASE_KEY == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: lampkeep-signed-release-apk
+          name: android-game-signed-release-apk
           path: android/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
           retention-days: 30

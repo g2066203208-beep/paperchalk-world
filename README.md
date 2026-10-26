@@ -1,6 +1,6 @@
-# 留灯 · LAMPKEEP
+# 未命名游戏（开发版）
 
-**重新设计的手机竖屏多人合作悬疑小店游戏。**
+**手机竖屏多人合作悬疑小店游戏，目前未命名，尚未达到可发布的游戏品质。**
 
 线上预览： https://g2066203208-beep.github.io/paperchalk-world/
 
@@ -27,9 +27,12 @@ APK 程序壳本身不会在后台静默安装替换：Android 系统需要用�
 ## 运行
 本机 Node 22+：`npm test`、`python3 -m http.server 8000` 后打开 localhost。多人联机还需要 PeerJS CDN 可访问。
 
-GitHub Actions → **Build Android Lampkeep APK** → 最近成功的运行 → **lampkeep-debug-apk** 可以下载测试版安卓安装包。
+GitHub Actions → **Build Android Test APK** → 最近成功的运行 → **android-game-debug-apk** 可以下载测试版安卓安装包。
 
 ## 状态和后续任务
+现有文字按钮、共享线索与表决远未达到真正多人互动游戏要求。以 [真实交互验收](design/PLAYABLE_GATE.md) 为门槛：能操作实物、角色有连续反馈、多人分工产生即时后果。未经实际游玩不宣称“好玩”或“完成”。不得再擅自命名。
+
+**内部技术兼容标识**：保留旧的 Android applicationId、存档键、联机协议前缀和签名 Secrets，以免破坏已经安装的应用和本地存档；它们并不是游戏的公开名称。
 这是**可测试的初始玩法原型**，不是承诺完成专业级全部资产。接下来要做的是完整的人物分层动画、强辨识度的美术细化、故事状态连续性、可交互的商品与柜台道具、真正独立的多人操作反馈、断线恢复、稳定签名发行版以及多安卓机型实际检查。
 
 ## 每小时自动验证（与开发任务区别）

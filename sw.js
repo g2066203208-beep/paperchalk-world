@@ -1,7 +1,7 @@
-// Lampkeep offline cache. Always prefer a newer server build when online; use cached
+// Untitled game offline cache. Always prefer a newer server build when online; use cached
 // code and art when reopening the game without internet. PeerJS multiplayer still
 // requires a connection.
-const CACHE="lampkeep-shell-20261026a";
+const CACHE="lampkeep-shell-20261026b";
 const CORE=[
  "./","./index.html","./style.css","./src/logic.js","./src/client.js",
  "./src/network.js","./assets/shop.svg",

@@ -1,4 +1,4 @@
-name: Hourly Lampkeep quality watchdog
+name: Hourly untitled game quality watchdog
 on:
   schedule:
     - cron: '7 * * * *'
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: lampkeep-hourly-ci
+  group: untitled-game-hourly-ci
   cancel-in-progress: false
 
 jobs:
