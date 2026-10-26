@@ -135,7 +135,7 @@ export function windowFrostPattern(width,height){
  const w=Math.floor(width),h=Math.floor(height);
  if(!Number.isFinite(w)||!Number.isFinite(h)||w<24||h<24)return [];
  const pieces=[];
- const add=(x,y,ww,hh,color)=>pieces.push({x,y,w:ww,h:hh,color});
+ const add=(x,y,ww,hh,color)=>{const left=Math.max(0,x),right=Math.min(w,x+ww);if(right>left)pieces.push({x:left,y,w:right-left,h:hh,color});};
  for(let i=0;i<w;i+=18){
   const length=Math.min(w-i,13+(i/18%3)*2);
   add(i,-7,length,2,"#f6f7ee");
