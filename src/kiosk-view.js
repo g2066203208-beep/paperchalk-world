@@ -158,7 +158,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion){
  hit(hits,mat.x,mat.y,mat.w,mat.h,"counter");
  // A sold product is animated independently from the authoritative counter
  // inventory. Its destination follows the moving customer's receiving hand.
- if(motion?.stage==="exit"&&GOODS[motion.handoff?.sku]){
+ if(motion?.handoff&&GOODS[motion.handoff.sku]){
   const scale=Math.min(3,mat.h*.070),p=motion.handoff.progress;
   const cw=win.w*.92,ch=win.h*.92;
   const cs=Math.max(1,Math.floor(Math.min(cw/44,ch/72)));

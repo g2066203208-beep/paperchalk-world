@@ -61,14 +61,20 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
  await action(host,"sell");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.totalServed===1,{timeout:15000});
- await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="exit",{timeout:5000});
- await host.waitForTimeout(250); // Capture the actual moving sprite, not frame zero.
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="handoff",{timeout:5000});
+ await host.waitForTimeout(210);
  const transfer=await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion());
- assert.equal(transfer.stage,"exit");
+ assert.equal(transfer.stage,"handoff");
  assert.equal(transfer.handoff.sku,"tea");
- assert.ok(transfer.handoff.progress>0&&transfer.handoff.progress<=1);
+ assert.ok(transfer.handoff.progress>0&&transfer.handoff.progress<1);
+ assert.equal(transfer.offset,0,"customer waits at window until item arrives");
  assert.equal((await snapshot(host)).counter,null,"sold item must leave authoritative counter immediately");
  await host.screenshot({path:"artifacts/kiosk-item-handoff.png",fullPage:false});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="exit",{timeout:5000});
+ await host.waitForTimeout(240); // Capture the actual departing customer with item.
+ const departing=await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion());
+ assert.equal(departing.stage,"exit");
+ assert.equal(departing.handoff.progress,1);
  await host.screenshot({path:"artifacts/kiosk-customer-departing.png",fullPage:false});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="enter",{timeout:5000});
  await host.waitForTimeout(390);

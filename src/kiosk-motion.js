@@ -1,6 +1,7 @@
 // Client-local presentation only: no shop inventory, save data or multiplayer
 // authority is changed by these animation states. All times are milliseconds.
 import {CUSTOMERS} from "./kiosk-core.js";
+export const CUSTOMER_HANDOFF_MS=520;
 export const CUSTOMER_EXIT_MS=640;
 export const CUSTOMER_ENTER_MS=860;
 const ease=t=>t*t*(3-2*t);
@@ -14,9 +15,13 @@ export function createCustomerMotion(){
    return hidden();
   }
   if(!previousOpen){stage="enter";startedAt=now;departingOrder=null;}
-  else if(previousOrder!==order){departingOrder=previousOrder;stage="exit";startedAt=now;}
+  else if(previousOrder!==order){departingOrder=previousOrder;stage="handoff";startedAt=now;}
   previousOrder=order;previousOpen=true;
   let elapsed=Math.max(0,now-startedAt);
+  if(stage==="handoff"&&elapsed>=CUSTOMER_HANDOFF_MS){
+   stage="exit";startedAt+=CUSTOMER_HANDOFF_MS;
+   elapsed=Math.max(0,now-startedAt);
+  }
   if(stage==="exit"&&elapsed>=CUSTOMER_EXIT_MS){
    stage=shop.phase==="summary"?"hidden":"enter";
    startedAt+=CUSTOMER_EXIT_MS;departingOrder=null;
@@ -26,18 +31,19 @@ export function createCustomerMotion(){
   if(stage==="hidden")return hidden();
   const amount=stage==="exit"?ease(Math.min(1,elapsed/CUSTOMER_EXIT_MS)):
    stage==="enter"?ease(Math.min(1,elapsed/CUSTOMER_ENTER_MS)):1;
-  const index=stage==="exit"?departingOrder:order;
+  const index=(stage==="handoff"||stage==="exit")?departingOrder:order;
   const customer=CUSTOMERS[((index%CUSTOMERS.length)+CUSTOMERS.length)%CUSTOMERS.length];
-  // The already-paid item is a temporary visual sprite, not inventory.
-  // It starts on the counter and reaches the customer's hand before departure.
-  const handoff=stage==="exit"?{
+  // The paid item crosses the counter while the customer waits at the window.
+  // Only after the hand reaches it does the customer turn to leave. This is
+  // never written to shop state, so no duplicate stock or network mutations.
+  const handoff=(stage==="handoff"||stage==="exit")?{
    sku:customer.sku,
-   progress:ease(Math.min(1,elapsed/(CUSTOMER_EXIT_MS*.72)))
+   progress:stage==="exit"?1:ease(Math.min(1,elapsed/CUSTOMER_HANDOFF_MS))
   }:null;
   return {visible:true,stage,tone:customer.tone,
    offset:stage==="enter"?(1-amount)*.76:stage==="exit"?-amount*.76:0,
    drop:stage==="enter"?(1-amount)*.06:stage==="exit"?amount*.03:0,
    talking:stage==="idle"&&Boolean(shop.spoken),
-   receiving:stage==="exit",handoff};
+   receiving:stage==="handoff"||stage==="exit",handoff};
  };
 }
