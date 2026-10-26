@@ -62,8 +62,12 @@ try{
  await action(host,"sell");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.totalServed===1,{timeout:15000});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="exit",{timeout:5000});
+ await host.waitForTimeout(250); // Capture the actual moving sprite, not frame zero.
+ assert.equal((await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion())).stage,"exit");
  await host.screenshot({path:"artifacts/kiosk-customer-departing.png",fullPage:false});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="enter",{timeout:5000});
+ await host.waitForTimeout(390);
+ assert.equal((await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion())).stage,"enter");
  await host.screenshot({path:"artifacts/kiosk-next-customer-arriving.png",fullPage:false});
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
  assert.equal((await snapshot(guest)).cash,109);
@@ -106,6 +110,9 @@ try{
  await wide.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().length));
  assert.equal((await wide.evaluate(()=>window.__KIOSK_TEST__.screen())).land,true);
  assert.ok((await wide.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="slot"));
+ await action(wide,"window");
+ await wide.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:5000});
+ assert.equal(await wide.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2),false,"landscape must remain fixed-screen");
  await wide.screenshot({path:"artifacts/kiosk-landscape-desktop.png",fullPage:false});
  assert.deepEqual(errors,[]);
  console.log("PASS: two actual mobile clients transferred stock, opened drawer, sold a customer, local restore, no scroll, landscape layout.");
