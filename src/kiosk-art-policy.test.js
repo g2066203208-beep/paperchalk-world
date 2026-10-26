@@ -5,6 +5,9 @@ const read=p=>readFileSync(new URL(p,import.meta.url),"utf8");
 const view=read("./kiosk-view.js"),art=read("./kiosk-flat.js"),app=read("./kiosk-app.js");
 test("flat art elements are real independent live game layers, not a game screenshot",()=>{
  assert.match(view,/flatCupboard\(/);
+ assert.match(view,/renderGeneratedShop\(/);
+ assert.match(read("./kiosk-gpt-scene.js"),/window\(g,hits,s,/);
+ assert.match(read("./kiosk-gpt-scene.js"),/cabinet\(g,hits,s,/);
  assert.match(view,/flatDrawer\(/);
  assert.match(view,/flatStreet\(/);
  assert.match(view,/flatCustomer\(/);
