@@ -19,13 +19,13 @@ export const FIXTURES=Object.freeze({
 });
 export const CUSTOMERS=[
  {name:"卫叔",sku:"tea",line:"冻得耳朵都快掉了！来一杯热茶。",after:"喝了一口，才发现自己戴了两顶帽子。",tone:0},
- {name:"小苏",sku:"bread",line:"一块面包。别问为什么我只穿一只手套。",after:"她笑着把另一只手套从口袋里掏出来。",tone:1},
+ {name:"小苏",sku:"bread",line:"一块面包。别问为什么我只穿一只手套。",after:"她笑着把另一只手套从口袋里掏出来。",tone:1,favor:{sku:"tea",tip:8,line:"顺便替门外那位冻僵的雪人捎杯热茶。"}},
  {name:"赵大爷",sku:"battery",line:"两节电池！我家遥控器一直在换台。",after:"他说电视关着时也会换台。",tone:2},
- {name:"阿默",sku:"cocoa",line:"可可有吗？我的雪人要喝。",after:"门外雪人竟然朝店里点了点头。",tone:3},
+ {name:"阿默",sku:"cocoa",line:"可可有吗？我的雪人要喝。",after:"门外雪人竟然朝店里点了点头。",tone:3,favor:{sku:"battery",tip:13,line:"能给雪人的发光鼻子换节电池吗？"}},
  {name:"燕子",sku:"tea",line:"热茶一杯，给你们店长带句好。",after:"她把一张写着笑话的便条留在窗边。",tone:1},
- {name:"老周",sku:"bread",line:"面包有吗？我老婆让我买点正经东西。",after:"他又问这里有没有卖勇气的。",tone:0},
+ {name:"老周",sku:"bread",line:"面包有吗？我老婆让我买点正经东西。",after:"他又问这里有没有卖勇气的。",tone:0,favor:{sku:"cocoa",tip:11,line:"再替我买杯可可，千万别告诉我老婆。"}},
  {name:"快递员",sku:"battery",line:"电池一份，配送车被冻得不听话。",after:"他用新电池装在手电筒里，终于找到车了。",tone:2},
- {name:"某位熟客",sku:"cocoa",line:"可可来一份；别跟邻居说我喜欢甜的。",after:"结果邻居早就在队伍后面偷笑。",tone:3}
+ {name:"某位熟客",sku:"cocoa",line:"可可来一份；别跟邻居说我喜欢甜的。",after:"结果邻居早就在队伍后面偷笑。",tone:3,favor:{sku:"bread",tip:11,line:"替隔壁的鸽子带块面包，别问是谁托的。"}}
 ];
 export function initialShop(){
  const slots={};for(const key of Object.keys(FIXTURES))slots[key]={sku:null,qty:0};
@@ -36,7 +36,7 @@ export function initialShop(){
  return {version:3,day:1,cash:100,earnings:0,stars:0,served:0,totalServed:0,
   phase:"operating",windowOpen:false,open:{cabinetL:false,cabinetR:false,drawerL:false,drawerR:false},
   slots,hand:null,counter:null,orderIndex:0,spoken:false,queue:0,selectedRestock:null,
-  players:{},returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
+  players:{},favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
 }
 export function visitor(s){return CUSTOMERS[s.orderIndex % CUSTOMERS.length];}
 function putBack(s,sku,origin){
@@ -109,14 +109,31 @@ export function apply(s,by,a){
  }
  else if(cmd==="talk"){
     if(!s.windowOpen){s.notice="先开窗，才能听到顾客。";return false;}
-    s.spoken=true;s.notice=visitor(s).line;
+    s.spoken=true;s.notice=visitor(s).line+(visitor(s).favor?" "+visitor(s).favor.line:"");
+ }
+ else if(cmd==="commission"){
+    const favor=visitor(s).favor;
+    if(!s.windowOpen)s.notice="先开窗，才能办理邻里委托。";
+    else if(!favor)s.notice="这位顾客没有额外委托。";
+    else if(!s.spoken)s.notice="先和顾客交谈，了解他的额外需求。";
+    else if(s.favorDone)s.notice="这位顾客的委托已经完成，不能重复领取报酬。";
+    else if(!s.counter)s.notice="请把委托需要的商品放在交接台。";
+    else if(s.counter!==favor.sku)s.notice="委托需要"+GOODS[favor.sku].name+"，交接台上的商品不对。";
+    else{
+      // One physical item is consumed exactly once by the host-authoritative action.
+      s.counter=null;s.cash+=favor.tip;s.favorDone=true;
+      s.favorCount=(s.favorCount||0)+1;
+      s.favorTips=(s.favorTips||0)+favor.tip;
+      s.totalFavors=(s.totalFavors||0)+1;
+      s.notice=visitor(s).name+"的邻里委托完成！报酬 ¥"+favor.tip+" 已入账。";
+    }
  }
  else if(cmd==="sell"){
     if(!s.windowOpen){s.notice="窗没打开，客人听不见。";return false;}
     if(!s.counter){s.notice="交接台上还没有商品。";return false;}
     if(s.counter!==visitor(s).sku){s.notice=visitor(s).name+"摇了摇头：这不是我要的。请换货。";return false;}
     const price=GOODS[s.counter].price;s.cash+=price;s.earnings+=price;s.stars++;
-    s.totalServed++;s.served++;s.notice=visitor(s).after+"  收款 ¥"+price;s.counter=null;s.spoken=false;s.orderIndex++;
+    s.totalServed++;s.served++;s.notice=visitor(s).after+"  收款 ¥"+price;s.counter=null;s.spoken=false;s.favorDone=false;s.orderIndex++;
     if(s.served>=5){s.phase="summary";s.notice="今日打烊！可以查看营业情况并开始第二天。";}
  }
  else if(cmd==="nextday" && s.phase==="summary"){} // resolved by explicit branch below
@@ -125,11 +142,14 @@ export function apply(s,by,a){
 }
 export function nextDay(s,by){
  if(!s.players[by]||s.players[by].role!=="manager"||s.phase!=="summary")return false;
- s.day++;s.served=0;s.earnings=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
+ s.day++;s.served=0;s.earnings=0;s.favorCount=0;s.favorTips=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
 }
 export function validate(s){
  if(s?.version!==3)return false;
  if(s.counter!==null&&!GOODS[s.counter])return false;
+ if(s.favorDone!==undefined&&typeof s.favorDone!=="boolean")return false;
+ for(const field of ["favorCount","favorTips","totalFavors"])
+   if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
  if(!Array.isArray(s.returns||[])||(s.returns||[]).some(sku=>!GOODS[sku]))return false;
  for(const p of Object.values(s.players||{}))if((p.hand&&!GOODS[p.hand])||(p.restock&&!GOODS[p.restock]))return false;
  for(const [key,f] of Object.entries(FIXTURES)){
