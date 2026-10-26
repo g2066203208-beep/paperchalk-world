@@ -48,6 +48,7 @@ function commissionReady(s){
  return Boolean(s.windowOpen&&s.spoken&&favor&&(s.counter===favor.sku||s.favorDone));
 }
 function npcBubble(g,hits,win,s,motion){
+ if(motion?.speechVisible===false)return; // No permanent speech panels when the NPC is silent.
  const speech=customerSpeech(s,motion);
  if(!speech)return;
  const {x,y,w,h}=win;
