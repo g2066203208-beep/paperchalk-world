@@ -169,3 +169,25 @@ test("legacy version 3 saves gain optional commission counters without migration
  assert.equal(old.slots.shelfL2.qty,2);
  assert.equal(validate(old),true);
 });
+
+test("physical reorder identity survives a sold-out shelf and legacy v3 save",()=>{
+ const s=initialShop();join(s,"solo","店长");
+ assert.equal(s.slots.shelfL1.lastSku,"tea");
+ assert.equal(apply(s,"solo",{cmd:"slot",key:"shelfL1"}),true);
+ assert.equal(apply(s,"solo",{cmd:"counter"}),true);
+ assert.equal(apply(s,"solo",{cmd:"window"}),true);
+ assert.equal(apply(s,"solo",{cmd:"sell"}),true);
+ assert.equal(apply(s,"solo",{cmd:"slot",key:"shelfL1"}),true);
+ assert.equal(s.slots.shelfL1.qty,0);
+ assert.equal(s.slots.shelfL1.sku,null);
+ assert.equal(s.slots.shelfL1.lastSku,"tea","a physically empty shelf keeps its reorder identity");
+ assert.equal(apply(s,"solo",{cmd:"restock",sku:"tea"}),true);
+ const cash=s.cash;
+ assert.equal(apply(s,"solo",{cmd:"slot",key:"shelfL1"}),true);
+ assert.equal(s.slots.shelfL1.qty,1);
+ assert.equal(s.cash,cash-GOODS.tea.buy);
+ assert.equal(validate(s),true);
+ const legacy=structuredClone(s);
+ for(const v of Object.values(legacy.slots))delete v.lastSku;
+ assert.equal(validate(legacy),true,"previous version-3 saves remain readable");
+});
