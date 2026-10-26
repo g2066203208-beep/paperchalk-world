@@ -2,6 +2,7 @@
 // draw routine (no flattened image / generated art); all clickable bounds
 // are registered with the same coordinates used to paint the object.
 import {GOODS,FIXTURES,visitor,visible} from "./kiosk-core.js";
+import {drawWindowCustomer} from "./kiosk-guest.js";
 const C={ink:"#181d28",outline:"#272331",wall:"#66504a",wood:"#987159",woodLight:"#bd9874",
 trim:"#533d3f",shelf:"#bb8c69",dark:"#302d35",cream:"#e7cdb1",amber:"#e4b374",
 sky:"#526f87",snow:"#c1cbd0",blue:"#7d9aaa",gold:"#f1bc77",green:"#789788",red:"#be706b"};
@@ -45,23 +46,6 @@ function sprite(g,sku,x,y,scale=3){
  };
  const pattern=map[sku]||map.tea;
  pattern.forEach((line,row)=>[...line].forEach((ch,col)=>{if(palette[ch])r(g,x+col*scale,y+row*scale,scale,scale,palette[ch]);}));
-}
-function guest(g,x,y,w,h,s,phase){
- const who=visitor(s),color=["#6f9b98","#ad8192","#bfa071","#86a3b1"][who.tone];
- const bob=Math.floor(Math.sin(phase/24)*2);
- x=Math.round(x);y=Math.round(y+bob);
- r(g,x+w*.17,y+h*.55,w*.66,h*.44,C.ink);
- r(g,x+w*.21,y+h*.57,w*.58,h*.41,color);
- r(g,x+w*.33,y+h*.48,w*.34,h*.21,"#c19c82");
- r(g,x+w*.30,y+h*.21,w*.40,h*.40,"#edc09a");
- r(g,x+w*.24,y+h*.17,w*.52,h*.13,C.ink);
- r(g,x+w*.29,y+h*.11,w*.42,h*.17,who.tone%2? "#d9aa6f":"#47616e");
- r(g,x+w*.33,y+h*.08,w*.35,h*.04,C.woodLight);
- r(g,x+w*.39,y+h*.41,4,4,C.ink);r(g,x+w*.61,y+h*.41,4,4,C.ink);
- r(g,x+w*.47,y+h*.51,10,3,C.trim);
- // one scarf / collar and two hands on sill
- r(g,x+w*.29,y+h*.60,w*.41,5,C.cream);
- r(g,x+w*.21,y+h*.84,w*.12,11,"#edc09a");r(g,x+w*.66,y+h*.84,w*.12,11,"#edc09a");
 }
 function shelf(g,hits,x,y,w,h,slot,s){
  const key=slot,content=s.slots[key];
@@ -114,7 +98,7 @@ function drawer(g,hits,x,y,w,h,key,s){
 function windowFrame(g,hits,x,y,w,h,s,phase){
  r(g,x-9,y-9,w+18,h+18,C.outline);
  snowyStreet(g,x,y,w,h,phase);
- if(s.windowOpen)guest(g,x+w*.12,y+h*.07,w*.76,h*.88,s,phase);
+ if(s.windowOpen)drawWindowCustomer(g,{x:x+w*.04,y:y+h*.04,w:w*.92,h:h*.92,tone:visitor(s).tone,phase,talking:s.spoken});
  if(!s.windowOpen){
   // A solid wood shutter physically covers the opening when shut.
   wooden(g,x+5,y+5,w-10,h-10,3,C.wood);
