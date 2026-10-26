@@ -24,6 +24,15 @@ export function shelfUpgradeCost(s){return SHELF_UPGRADE_COSTS[s.upgrades?.shelv
 export const HEATING_UPGRADE_COST=36;
 export function heatingUpgradeCost(s){return (s.upgrades?.heating??0)===0?HEATING_UPGRADE_COST:null;}
 export function dailyOverhead(s){const rent=6,heating=(s.upgrades?.heating??0)===1?2:8;return {rent,heating,total:rent+heating};}
+// Legacy v3 saves without reputation fields start at zero. The room host is
+// the sole authority for mistakes, settlement and thank-you tips.
+export function reputationLevel(s){return 1+Math.min(4,Math.floor(Math.max(0,s.reputation||0)/20));}
+export function loyaltyTip(s){return Math.min(4,Math.floor(Math.max(0,s.reputation||0)/20));}
+export function dailyReputation(s){
+ const mistakes=s.mistakes||0,favors=s.favorCount||0;
+ return {delta:Math.max(-8,Math.min(12,4+favors*3-mistakes*4)),
+  rating:Math.max(1,Math.min(5,4+Math.min(1,favors)-Math.min(3,mistakes)))};
+}
 export const CUSTOMERS=[
  {name:"卫叔",sku:"tea",line:"冻得耳朵都快掉了！来一杯热茶。",after:"喝了一口，才发现自己戴了两顶帽子。",tone:0},
  {name:"小苏",sku:"bread",line:"一块面包。别问为什么我只穿一只手套。",after:"她笑着把另一只手套从口袋里掏出来。",tone:1,favor:{sku:"tea",tip:8,line:"顺便替门外那位冻僵的雪人捎杯热茶。"}},
@@ -43,7 +52,9 @@ export function initialShop(){
  return {version:3,day:1,cash:100,earnings:0,stars:0,served:0,totalServed:0,
   phase:"operating",windowOpen:false,open:{cabinetL:false,cabinetR:false,drawerL:false,drawerR:false},
   slots,hand:null,counter:null,orderIndex:0,spoken:false,queue:0,selectedRestock:null,
-  players:{},upgrades:{shelves:0,heating:0},dayExpenses:0,dayOverhead:0,dayNet:0,totalOverhead:0,favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
+  players:{},upgrades:{shelves:0,heating:0},dayExpenses:0,dayOverhead:0,dayNet:0,totalOverhead:0,
+  reputation:0,dayRating:0,dayReputationDelta:0,mistakes:0,totalMistakes:0,
+  wrongAttempted:false,loyaltyTips:0,totalLoyaltyTips:0,favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
 }
 export function visitor(s){return CUSTOMERS[s.orderIndex % CUSTOMERS.length];}
 function putBack(s,sku,origin){
@@ -163,15 +174,34 @@ export function apply(s,by,a){
  else if(cmd==="sell"){
     if(!s.windowOpen){s.notice="窗没打开，客人听不见。";return false;}
     if(!s.counter){s.notice="交接台上还没有商品。";return false;}
-    if(s.counter!==visitor(s).sku){s.notice=visitor(s).name+"摇了摇头：这不是我要的。请换货。";return false;}
-    const price=GOODS[s.counter].price;s.cash+=price;s.earnings+=price;s.stars++;
-    s.totalServed++;s.served++;s.notice=visitor(s).after+"  收款 ¥"+price;s.counter=null;s.spoken=false;s.favorDone=false;s.orderIndex++;
-    if(s.served>=5){
-      // Host settles exactly once on fifth sale; upgrades are capital investment, not daily operating costs.
-      const bill=dailyOverhead(s);
-      s.cash-=bill.total;s.dayOverhead=bill.total;s.totalOverhead=(s.totalOverhead||0)+bill.total;
-      s.dayNet=s.earnings+(s.favorTips||0)-(s.dayExpenses||0)-bill.total;
-      s.phase="summary";s.notice="今日打烊！房租 ¥"+bill.rent+"、暖气 ¥"+bill.heating+" 已结算。";
+    if(s.counter!==visitor(s).sku){
+      // The mistaken item stays on the counter. Record at most one service
+      // mistake per customer; a real state revision synchronizes the warning.
+      s.notice=visitor(s).name+"摇了摇头：这不是我要的。请换货。";
+      if(!s.wrongAttempted){
+        s.mistakes=(s.mistakes||0)+1;
+        s.totalMistakes=(s.totalMistakes||0)+1;
+        s.wrongAttempted=true;
+      }
+    }else{
+      const price=GOODS[s.counter].price,tip=loyaltyTip(s);
+      s.cash+=price+tip;s.earnings+=price;
+      s.loyaltyTips=(s.loyaltyTips||0)+tip;
+      s.totalLoyaltyTips=(s.totalLoyaltyTips||0)+tip;
+      s.stars++;s.totalServed++;s.served++;
+      s.notice=visitor(s).after+"  收款 ¥"+price+(tip?"，熟客感谢小费 ¥"+tip:"");
+      s.counter=null;s.spoken=false;s.favorDone=false;s.wrongAttempted=false;s.orderIndex++;
+      if(s.served>=5){
+        const bill=dailyOverhead(s);
+        s.cash-=bill.total;s.dayOverhead=bill.total;
+        s.totalOverhead=(s.totalOverhead||0)+bill.total;
+        s.dayNet=s.earnings+(s.favorTips||0)+(s.loyaltyTips||0)-(s.dayExpenses||0)-bill.total;
+        const result=dailyReputation(s);
+        s.dayRating=result.rating;s.dayReputationDelta=result.delta;
+        s.reputation=Math.max(0,Math.min(100,(s.reputation||0)+result.delta));
+        s.phase="summary";
+        s.notice="今日打烊！房租 ¥"+bill.rent+"、暖气 ¥"+bill.heating+" 已结算。";
+      }
     }
  }
  else if(cmd==="nextday" && s.phase==="summary"){} // resolved by explicit branch below
@@ -180,7 +210,7 @@ export function apply(s,by,a){
 }
 export function nextDay(s,by){
  if(!s.players[by]||s.players[by].role!=="manager"||s.phase!=="summary")return false;
- s.day++;s.served=0;s.earnings=0;s.favorCount=0;s.favorTips=0;s.dayExpenses=0;s.dayOverhead=0;s.dayNet=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
+ s.day++;s.served=0;s.earnings=0;s.favorCount=0;s.favorTips=0;s.dayExpenses=0;s.dayOverhead=0;s.dayNet=0;s.dayRating=0;s.dayReputationDelta=0;s.mistakes=0;s.wrongAttempted=false;s.loyaltyTips=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
 }
 export function validate(s){
  if(s?.version!==3)return false;
@@ -192,6 +222,12 @@ export function validate(s){
  for(const field of ["dayExpenses","dayOverhead","totalOverhead"])
    if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
  if(s.dayNet!==undefined&&!Number.isSafeInteger(s.dayNet))return false;
+ if(s.reputation!==undefined&&(!Number.isInteger(s.reputation)||s.reputation<0||s.reputation>100))return false;
+ if(s.dayRating!==undefined&&(!Number.isInteger(s.dayRating)||s.dayRating<0||s.dayRating>5))return false;
+ if(s.dayReputationDelta!==undefined&&(!Number.isInteger(s.dayReputationDelta)||s.dayReputationDelta< -8||s.dayReputationDelta>12))return false;
+ if(s.wrongAttempted!==undefined&&typeof s.wrongAttempted!=="boolean")return false;
+ for(const field of ["mistakes","totalMistakes","loyaltyTips","totalLoyaltyTips"])
+   if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
  if(s.favorDone!==undefined&&typeof s.favorDone!=="boolean")return false;
  for(const field of ["favorCount","favorTips","totalFavors"])
    if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
