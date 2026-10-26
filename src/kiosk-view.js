@@ -58,7 +58,8 @@ function npcBubble(g,hits,win,s,motion){
  t(g,speech.name,bx+9,by+12,Math.min(12,font),C.blue);
  lines.forEach((line,i)=>t(g,line,bx+9,by+28+i*(font+3),font,C.ink,"left",bw-15));
  g.restore();
- hit(hits,bx,by,bw,bh,"talk");
+ const touchHeight=Math.max(72,bh);
+ hit(hits,bx,by-(touchHeight-bh),bw,touchHeight,"talk");
 }
 function wooden(g,x,y,w,h,seed=1,base=C.wood){
  r(g,x,y,w,h,base);const rows=Math.max(1,Math.floor(h/21));
