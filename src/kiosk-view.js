@@ -47,8 +47,8 @@ function npcBubble(g,hits,win,s,motion){
  if(!speech)return;
  const {x,y,w,h}=win;
  // Top-right label does not cover eyes, hands or real counter interactions.
- const bw=Math.max(64,Math.min(w*.47,122)),bx=x+w-bw-7,by=y+10;
- const font=Math.max(11,Math.min(13,w/19));
+ const bw=Math.max(82,Math.min(w*.57,145)),bx=x+w-bw-7,by=y+10;
+ const font=Math.max(13,Math.min(15,w/16));
  const lines=wrapSpeech(speech.text,Math.max(4,Math.floor((bw-15)/font)),2);
  const bh=24+lines.length*(font+3);
  g.save();
@@ -277,9 +277,10 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
 function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
  flatButton(g,x,y,w,h,active);
  if(cmd&&w>=70){
-  flatActionIcon(g,cmd,x+Math.min(25,w*.22),y+h*.52,Math.min(25,h*.43));
- }
- t(g,text,x+w*.56,y+h*.53,Math.min(15,h*.32),C.ink,"center",w*.68);
+  const small=w<116;
+  flatActionIcon(g,cmd,x+(small?18:27),y+h*.52,Math.min(small?20:25,h*.40));
+  t(g,text,x+(small?w*.68:w*.62),y+h*.53,Math.min(small?14:16,h*.32),C.ink,"center",w*(small?.59:.64));
+ }else t(g,text,x+w/2,y+h*.53,15,C.ink,"center");
  if(cmd)hit(hits,x,y,w,h,cmd,key);
 }
 export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=null){
