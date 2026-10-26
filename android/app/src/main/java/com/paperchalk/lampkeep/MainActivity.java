@@ -26,10 +26,10 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(Color.rgb(38, 56, 61));
-        getWindow().setNavigationBarColor(Color.rgb(38, 56, 61));
+        getWindow().setStatusBarColor(Color.rgb(20, 36, 72));
+        getWindow().setNavigationBarColor(Color.rgb(20, 36, 72));
         web = new WebView(this);
-        web.setBackgroundColor(Color.rgb(38, 56, 61));
+        web.setBackgroundColor(Color.rgb(20, 36, 72));
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setAllowFileAccess(false);
