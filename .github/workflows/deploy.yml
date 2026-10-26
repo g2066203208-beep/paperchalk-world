@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: untitled-pages-pixel-20261027-${{ github.ref }}
+  group: untitled-pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -31,6 +31,8 @@ jobs:
         run: |
           test -f index.html
           test -f assets/shop.svg
+          test -f assets/anime/scene-window-open.webp
+          test -f assets/anime/customers-girl.webp
           for n in 01 02 03 04 05 06 07 08; do test -f "assets/guest-$n.svg"; done
           test -f android/app/src/main/AndroidManifest.xml
   browser-e2e:
@@ -51,18 +53,16 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
-      - name: Prepare Chinese UI fonts without blocking gameplay tests
+      - name: Ensure Chinese font glyphs exist in actual game screenshots
         run: |
-          # Font packages are optional; do not skip real Chromium multiplayer
-          # checks when GitHub runner apt mirrors stall.
-          if fc-list : family | grep -qi "Noto Sans CJK"; then
-            echo "Noto CJK already available"
-          else
-            timeout 20s sudo apt-get update -qq || echo "apt mirror unavailable; using cached lists"
-            timeout 35s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk || echo "CJK font install unavailable; continuing browser tests"
+          if ! fc-list :lang=zh-cn family | grep -q .; then
+            timeout 75s sudo apt-get update -qq || echo "using cached apt index"
+            timeout 145s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk \
+              || timeout 80s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-wqy-microhei
           fi
-          fc-cache -f || true
-          fc-match "Noto Sans CJK SC" || true
+          fc-cache -f
+          echo "Chinese font: $(fc-match -f '%{family}' ':lang=zh-cn')"
+          fc-list :lang=zh-cn family | grep -q . || { echo 'ERROR: Chinese font missing, visual screenshots invalid'; exit 1; }
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
@@ -72,6 +72,26 @@ jobs:
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Upload standalone playable UI for high-resolution art verification
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: anime-ui-html5-preview
+          path: |
+            index.html
+            style.css
+            sw.js
+            src/kiosk-core.js
+            src/kiosk-anime-assets.js
+            src/kiosk-skin.js
+            src/kiosk-view.js
+            src/kiosk-motion.js
+            src/kiosk-item-motion.js
+            src/kiosk-app.js
+            src/network.js
+            assets/anime/
+          retention-days: 14
+          if-no-files-found: error
   deploy:
     name: Publish site
     needs: [tests, browser-e2e]
@@ -87,8 +107,10 @@ jobs:
         run: |
           mkdir -p _site/src _site/assets
           cp index.html style.css sw.js .nojekyll _site/
-          cp src/kiosk-core.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-app.js src/network.js _site/src/
+          cp src/kiosk-core.js src/kiosk-anime-assets.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-app.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
+          mkdir -p _site/assets/anime
+          cp assets/anime/*.webp _site/assets/anime/
       - name: Verify published ES module dependencies
         run: |
           node --input-type=module <<'NODE'

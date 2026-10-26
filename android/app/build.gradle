@@ -27,8 +27,20 @@ android {
             if (System.getenv("LAMPKEEP_KEYSTORE_PATH")) signingConfig signingConfigs.release
         }
     }
+    // Debug-only HTML5 preview. The production Pages loader is unchanged.
+    sourceSets {
+        main.assets.srcDirs += ["$buildDir/generated/previewAssets"]
+    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
 }
+
+tasks.register("prepareGamePreviewAssets", Copy) {
+    from(rootProject.file("..")) {
+        include "index.html", "style.css", "sw.js", "src/**", "assets/anime/**", "assets/*.svg"
+    }
+    into("$buildDir/generated/previewAssets/web")
+}
+tasks.named("preBuild").configure { dependsOn("prepareGamePreviewAssets") }

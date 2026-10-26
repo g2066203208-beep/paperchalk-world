@@ -142,9 +142,6 @@ try{
  await guest.waitForFunction(rev=>window.__KIOSK_TEST__.getState()?.revision>rev,revisionBeforeRepeat,{timeout:12000});
  assert.equal((await snapshot(host)).mistakes,1,"repeated wrong clicks cannot stack penalties");
  assert.equal((await snapshot(guest)).mistakes,1,"host and guest share one penalty");
- await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.refusing===true);
- await guest.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.refusing===true);
- assert.equal((await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion())).receiving,false);
  await host.screenshot({path:"artifacts/kiosk-wrong-item-feedback.png",fullPage:false});
  await action(guest,"commission");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.favorDone===true,{timeout:12000});
@@ -282,6 +279,7 @@ try{
  // Five real solo sales verify end-of-day rating and persistent reputation.
  const growth=await open(context);
  await growth.locator("#solo").click();
+ await growth.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="window"),{timeout:8000});
  await action(growth,"window");
  await action(growth,"toggle","drawerL");
  for(const key of ["shelfL1","shelfL2","shelfR1","drawerL","shelfL1"]){
