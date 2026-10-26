@@ -112,6 +112,16 @@ try{
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
  await action(guest,"commission");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.favorDone===true,{timeout:12000});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="favor",{timeout:4000});
+ await host.waitForTimeout(180);
+ const favorMotion=await host.evaluate(()=>window.__KIOSK_TEST__.getCustomerMotion());
+ assert.equal(favorMotion.stage,"favor");
+ assert.equal(favorMotion.handoff.sku,"tea","commission transfers its own item, not the bread order");
+ assert.ok(favorMotion.handoff.progress>0&&favorMotion.handoff.progress<1);
+ assert.equal(favorMotion.offset,0,"commission customer stays at the service window");
+ await host.screenshot({path:"artifacts/kiosk-commission-handoff.png",fullPage:false});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:4000});
+ assert.equal((await snapshot(host)).orderIndex,1,"commission must not skip the paying customer");
  assert.equal((await snapshot(host)).cash,113,"commission pays exactly one 8-yuan tip");
  assert.equal((await snapshot(guest)).counter,null,"commission consumes one real tea item");
  assert.equal((await snapshot(guest)).orderIndex,1,"optional favor must not skip bread order");
