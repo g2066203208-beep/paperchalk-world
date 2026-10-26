@@ -15,6 +15,7 @@ DEST=ROOT/"assets/gptimg/parts"
 CROPS={
  "wall-left":(0,127,235,875),"wall-right":(705,127,236,875),
  "cabinetL-closed":(0,130,228,198),"cabinetR-closed":(708,125,231,202),
+ "cabinet-open-interior":(70,340,158,163),
  "shelfL1":(0,345,230,168),"shelfL2":(0,515,230,168),"shelfL3":(0,685,230,168),
  "shelfR1":(711,336,228,168),"shelfR2":(711,511,228,168),"shelfR3":(711,686,228,168),
  "window-landscape":(270,300,424,244),
@@ -69,6 +70,6 @@ def main():
        "size":list(customer.size),"sourceCrop":box,"anchor":[.5,1],
        "alpha":"segmented-transparent","stage":"provisional edge cleanup"}
     (DEST/"manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    assert len(manifest["sprites"])==27
+    assert len(manifest["sprites"])==28
     print("Extracted",len(manifest["sprites"]),"real standalone images")
 if __name__=="__main__": main()
