@@ -3,6 +3,7 @@ import {render} from "./kiosk-view.js";
 import {flatAmbient} from "./kiosk-flat.js";
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
+import {createSpeechPresentation} from "./kiosk-dialogue.js";
 import {RoomNetwork} from "./network.js";
 const $=id=>document.getElementById(id);
 // Keep room status accessible inside the menu without covering physical shelves.
@@ -20,6 +21,7 @@ let screen={W:480,H:900,land:false},hits=[],phase=0;
 let state=null,mode="idle",id="solo",seq=0,room="";
 const sampleCustomerMotion=createCustomerMotion();
 const sampleHeldItemMotion=createHeldItemMotion();
+const speechPresentation=createSpeechPresentation();
 let customerMotion=null,heldItemMotion=null;
 const net=new RoomNetwork({
  status:t=>setStatus(t),
@@ -37,7 +39,7 @@ function save(){if(state&&(mode==="solo"||mode==="host"))localStorage.setItem(SA
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
- mode=who;state=model;id=userId;seq=0;
+ mode=who;state=model;id=userId;seq=0;speechPresentation.reset();
  $("hud").classList.add("playing");
  $("lobby").hidden=true;
  $("roomCode").textContent=room?("房间码："+room):"";
@@ -103,6 +105,7 @@ function localAction(pid,a){
 }
 function command(cmd,key){
  if(!state||state.phase==="summary"&&cmd!=="nextday")return;
+ if(cmd==="talk"||cmd==="commission")speechPresentation.prompt(performance.now());
  const a={cmd};
  if(cmd==="slot"||cmd==="toggle")a.key=key;
  if(cmd==="restock")a.sku=key;
@@ -179,7 +182,13 @@ setInterval(()=>{if(mode==="host"&&state)net.broadcast(state);},400);
 function frame(){
  phase++;
  ctx.imageSmoothingEnabled=false;
- if(state){const now=performance.now();customerMotion=sampleCustomerMotion(state,now);heldItemMotion=sampleHeldItemMotion(state,id,now);hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion);}
+ if(state){
+  const now=performance.now();
+  customerMotion=sampleCustomerMotion(state,now);
+  customerMotion.speechVisible=speechPresentation.sample(state,now);
+  heldItemMotion=sampleHeldItemMotion(state,id,now);
+  hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion);
+ }
  else{
   flatAmbient(ctx,screen.W,screen.H,phase);
   ctx.fillStyle="#fff3dd";ctx.textAlign="center";ctx.font="bold 19px monospace";
