@@ -36,46 +36,76 @@ export function initialShop(){
  return {version:3,day:1,cash:100,earnings:0,stars:0,served:0,totalServed:0,
   phase:"operating",windowOpen:false,open:{cabinetL:false,cabinetR:false,drawerL:false,drawerR:false},
   slots,hand:null,counter:null,orderIndex:0,spoken:false,queue:0,selectedRestock:null,
-  players:{},notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
+  players:{},returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
 }
 export function visitor(s){return CUSTOMERS[s.orderIndex % CUSTOMERS.length];}
-export function join(s,id,name){if(s.players[id]||Object.keys(s.players).length>=4)return false;s.players[id]={id,name:String(name||"店员").slice(0,14)};s.revision++;return true;}
-export function leave(s,id){if(s.players[id]){delete s.players[id];s.revision++;}}
+function putBack(s,sku,origin){
+ const keys=[origin,...Object.keys(FIXTURES)].filter((k,i,all)=>FIXTURES[k]&&all.indexOf(k)===i);
+ for(const k of keys){const v=s.slots[k];if(v&&(!v.sku||v.sku===sku)&&v.qty<slotRoom(k,sku)){v.sku=sku;v.qty++;return;}}
+ if(!s.counter)s.counter=sku;else(s.returns??=[]).push(sku);
+}
+export function join(s,id,name){
+ if(s.players[id]||Object.keys(s.players).length>=4)return false;
+ const first=Object.keys(s.players).length===0;
+ const p={id,name:String(name||"店员").slice(0,14),role:first?"manager":"clerk",hand:null,origin:null,restock:null};
+ if(first&&GOODS[s.hand]){p.hand=s.hand;s.hand=null;}
+ if(first&&GOODS[s.selectedRestock]){p.restock=s.selectedRestock;s.selectedRestock=null;}
+ s.players[id]=p;s.revision++;return true;
+}
+export function leave(s,id){
+ const p=s.players[id];if(!p)return;
+ if(p.hand)putBack(s,p.hand,p.origin);
+ delete s.players[id];s.revision++;
+}
+export function resumeSolo(s,name){
+ const held=[];
+ if(GOODS[s.hand])held.push({sku:s.hand,origin:null});
+ for(const p of Object.values(s.players||{}))if(GOODS[p.hand])held.push({sku:p.hand,origin:p.origin});
+ const restock=GOODS[s.selectedRestock]?s.selectedRestock:null;
+ s.players={};s.hand=null;s.selectedRestock=null;join(s,"solo",name);
+ const first=held.shift();if(first){s.players.solo.hand=first.sku;s.players.solo.origin=first.origin;}
+ for(const p of held)putBack(s,p.sku,p.origin);
+ if(restock)s.players.solo.restock=restock;
+ return s;
+}
 export function visible(s,key){const f=FIXTURES[key];return f&& (f.kind==="shelf" || Boolean(s.open[key]));}
 export function slotRoom(key,sku){return Math.floor(FIXTURES[key].capacity/GOODS[sku].size);}
 export function apply(s,by,a){
  if(!s||s.version!==3||!s.players[by]||s.phase!=="operating"||!a||typeof a!=="object")return false;
+ const p=s.players[by];
  let {cmd,key,sku}=a;
  if(cmd==="window"){s.windowOpen=!s.windowOpen;s.notice=s.windowOpen?"窗打开了。外头已经有人排队。":"窗关好了，寒风被挡在外面。";}
  else if(cmd==="toggle" && FIXTURES[key] && FIXTURES[key].kind!=="shelf"){
-    if(s.hand && !s.open[key])return false;
     s.open[key]=!s.open[key];s.notice=FIXTURES[key].label+(s.open[key]?"已打开。":"已关好。");
  }
  else if(cmd==="slot" && FIXTURES[key] && visible(s,key)){
     const slot=s.slots[key];
-    if(s.selectedRestock){
-      const kind=s.selectedRestock,thing=GOODS[kind],cost=thing.buy;
-      if(s.cash<cost){s.notice="进货资金不够。";s.selectedRestock=null;}
+    if(p.restock){
+      if(p.role!=="manager")return false;
+      const kind=p.restock,thing=GOODS[kind],cost=thing.buy;
+      if(s.cash<cost){s.notice="进货资金不够。";p.restock=null;}
       else if(slot.sku&&slot.sku!==kind){s.notice="这一格已有其他商品，先取走。";return false;}
       else if(slot.qty>=slotRoom(key,kind)){s.notice="这一格已经放满。";return false;}
-      else{slot.sku=kind;slot.qty++;s.cash-=cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;s.selectedRestock=null;}
-    }else if(s.hand){
-      if(slot.sku&&slot.sku!==s.hand){s.notice="这格摆的是其他商品。";return false;}
-      if(slot.qty>=slotRoom(key,s.hand)){s.notice="位置太小，放不下。";return false;}
-      slot.sku=s.hand;slot.qty++;s.notice="把"+GOODS[s.hand].name+"放回了"+FIXTURES[key].label;s.hand=null;
+      else{slot.sku=kind;slot.qty++;s.cash-=cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;p.restock=null;}
+    }else if(p.hand){
+      if(slot.sku&&slot.sku!==p.hand){s.notice="这格摆的是其他商品。";return false;}
+      if(slot.qty>=slotRoom(key,p.hand)){s.notice="位置太小，放不下。";return false;}
+      slot.sku=p.hand;slot.qty++;s.notice="把"+GOODS[p.hand].name+"放回了"+FIXTURES[key].label;p.hand=null;p.origin=null;
     }else if(slot.qty>0){
-      s.hand=slot.sku;slot.qty--;if(slot.qty===0)slot.sku=null;
-      s.notice="拿起了"+GOODS[s.hand].name+"。现在点柜台放下。";
+      p.hand=slot.sku;p.origin=key;slot.qty--;if(slot.qty===0)slot.sku=null;
+      s.notice="拿起了"+GOODS[p.hand].name+"。现在点柜台放下。";
     }else{s.notice="这里还空着。可先选择进货，再点这个位置。";}
  }
  else if(cmd==="counter"){
-    if(s.hand&&s.counter===null){s.counter=s.hand;s.hand=null;s.notice="商品放到了交接台。";}
-    else if(!s.hand&&s.counter){s.hand=s.counter;s.counter=null;s.notice="把商品从交接台拿了起来。";}
+    if(p.hand&&s.counter===null){s.counter=p.hand;p.hand=null;p.origin=null;s.notice="商品放到了交接台。";}
+    else if(!p.hand&&s.counter){p.hand=s.counter;p.origin=null;s.counter=null;s.notice="把商品从交接台拿了起来。";}
+    else if(!p.hand&&!s.counter&&s.returns?.length){p.hand=s.returns.shift();p.origin=null;s.notice="从待领回商品中取出了"+GOODS[p.hand].name;}
     else return false;
  }
  else if(cmd==="restock" && GOODS[sku]){
-    s.selectedRestock=s.selectedRestock===sku?null:sku;
-    s.notice=s.selectedRestock?"请选择一个有空位的货架、柜子或抽屉，放入"+GOODS[sku].name:"已取消进货";
+    if(p.role!=="manager"||p.hand)return false;
+    p.restock=p.restock===sku?null:sku;
+    s.notice=p.restock?"请选择一个有空位的货架、柜子或抽屉，放入"+GOODS[sku].name:"已取消进货";
  }
  else if(cmd==="talk"){
     if(!s.windowOpen){s.notice="先开窗，才能听到顾客。";return false;}
@@ -94,11 +124,14 @@ export function apply(s,by,a){
  s.revision++;return true;
 }
 export function nextDay(s,by){
- if(!s.players[by]||s.phase!=="summary")return false;
+ if(!s.players[by]||s.players[by].role!=="manager"||s.phase!=="summary")return false;
  s.day++;s.served=0;s.earnings=0;s.phase="operating";s.windowOpen=false;s.spoken=false;s.notice="新的一天开始啦，店里还有存货，记得开窗营业。";s.revision++;return true;
 }
 export function validate(s){
  if(s?.version!==3)return false;
+ if(s.counter!==null&&!GOODS[s.counter])return false;
+ if(!Array.isArray(s.returns||[])||(s.returns||[]).some(sku=>!GOODS[sku]))return false;
+ for(const p of Object.values(s.players||{}))if((p.hand&&!GOODS[p.hand])||(p.restock&&!GOODS[p.restock]))return false;
  for(const [key,f] of Object.entries(FIXTURES)){
    const v=s.slots?.[key];if(!v||!Number.isInteger(v.qty)||v.qty<0)return false;
    if(v.qty>0&&(!GOODS[v.sku]||v.qty>slotRoom(key,v.sku)))return false;

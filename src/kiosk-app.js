@@ -1,4 +1,4 @@
-import {GOODS,initialShop,visitor,join,leave,apply,nextDay} from "./kiosk-core.js";
+import {GOODS,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {render} from "./kiosk-view.js";
 import {RoomNetwork} from "./network.js";
 const $=id=>document.getElementById(id);
@@ -36,7 +36,7 @@ $("solo").onclick=()=>{
 $("resume").onclick=()=>{
  net.clean();room="";
  const s=readSave();if(!s)return;
- s.players={};join(s,"solo",playerName());
+ resumeSolo(s,playerName());
  start("solo",s);
  $("status").textContent="本机存档已恢复";
 };
@@ -112,7 +112,7 @@ setInterval(()=>{if(mode==="host"&&state)net.broadcast(state);},400);
 function frame(){
  phase++;
  ctx.imageSmoothingEnabled=false;
- if(state)hits=render(ctx,state,screen,phase);
+ if(state)hits=render(ctx,state,screen,phase,id);
  else{
   ctx.fillStyle="#1a202b";ctx.fillRect(0,0,screen.W,screen.H);
   ctx.fillStyle="#e3ba8a";ctx.textAlign="center";ctx.font="bold 19px monospace";
@@ -126,4 +126,4 @@ if("serviceWorker" in navigator){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
- command,screen:()=>screen,saveKey:SAVE};
+ command,screen:()=>screen,getSelfId:()=>id,saveKey:SAVE};

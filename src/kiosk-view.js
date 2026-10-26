@@ -182,13 +182,16 @@ function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
  t(g,text,x+w/2,y+h*.52,h*.36,active?C.gold:C.cream,"center");
  if(cmd)hit(hits,x,y,w,h,cmd,key);
 }
-export function render(g,s,view,phase=0){
+export function render(g,s,view,phase=0,viewerId=null){
  const {W,H,land}=view,hits=[];
+ const p=s.players?.[viewerId]||Object.values(s.players||{})[0]||{};
+ const isManager=p.role==="manager";
  r(g,0,0,W,H,C.ink);
  const headH=land?48:54;
  r(g,0,0,W,headH,C.trim);r(g,0,headH-3,W,3,C.gold);
  t(g,"雪 夜 杂 货 铺",56,headH*.47,land?17:16,C.cream);
  t(g,"第 "+s.day+" 天",W*.55,headH*.47,land?15:13,C.gold);
+ t(g,isManager?"店长":"店员",W*.78,headH*.47,land?13:11,C.gold);
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
  const shop=land?{x:154,y:headH,w:W-300,h:H-headH-83}:{x:0,y:headH,w:W,h:H-headH-190};
@@ -219,20 +222,22 @@ export function render(g,s,view,phase=0){
   chip(g,hits,168,bottom+7,95,33,"收款","sell");
   t(g,"补货：",282,bottom+21,12,C.gold);
   let px=345;
-  for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+5,105,35,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,s.selectedRestock===sku);px+=112;}
+  if(isManager){for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+5,105,35,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);px+=112;}}
+  else t(g,"店长负责进货；店员可拿货、交接与收款",350,bottom+23,13,C.cream);
   t(g,"选择商品格拿货 → 点交接台 → 收款。补货先选商品再点格子。",26,bottom+61,12,C.cream);
  } else{
   r(g,0,H-123,W,123,C.dark);
   chip(g,hits,10,H-117,222,49,"和顾客说话","talk");
   chip(g,hits,247,H-117,223,49,"收款完成交易","sell");
   let skuKeys=Object.keys(GOODS);
-  for(let i=0;i<4;i++){
-   const sku=skuKeys[i];chip(g,hits,10+i*118,H-59,107,43,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,s.selectedRestock===sku);
-  }
+  if(isManager){for(let i=0;i<4;i++){
+   const sku=skuKeys[i];chip(g,hits,10+i*118,H-59,107,43,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);
+  }}else t(g,"店员：从货架拿货 → 交接台 → 收款",W/2,H-37,15,C.cream,"center");
  }
- if(s.hand){
-  t(g,"拿着："+GOODS[s.hand].name,land?W/2:W/2,land?bottom-14:H-196,13,C.gold,"center");
+ if(p.hand){
+  t(g,"手持："+GOODS[p.hand].name,land?W/2:W/2,land?bottom-14:H-196,13,C.gold,"center");
  }
+ if(s.returns?.length)t(g,"待领回 ×"+s.returns.length+"（点空交接台取回）",W/2,land?bottom-37:H-215,12,C.gold,"center");
  if(s.phase==="summary"){
   r(g,0,0,W,H,"#171922e9");
   t(g,"今 日 打 烊",W/2,H*.27,32,C.gold,"center");

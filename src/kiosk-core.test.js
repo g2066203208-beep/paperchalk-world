@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {initialShop,GOODS,FIXTURES,join,apply,nextDay,visible,validate,visitor} from "./kiosk-core.js";
+import {initialShop,GOODS,FIXTURES,join,apply,nextDay,visible,validate,visitor,leave,resumeSolo} from "./kiosk-core.js";
 test("a hatch must open before speaking or selling",()=>{
  const g=initialShop();join(g,"host","店长");
  assert.equal(apply(g,"host",{cmd:"talk"}),false);
@@ -26,18 +26,18 @@ test("physical shelf -> hand -> counter -> wrong product -> return -> correct pa
  const g=initialShop();join(g,"host","店长");join(g,"guest","店员");
  const start=g.cash;
  assert.equal(apply(g,"guest",{cmd:"slot",key:"shelfR1"}),true);
- assert.equal(g.hand,"battery");assert.equal(g.slots.shelfR1.qty,1);
+ assert.equal(g.players.guest.hand,"battery");assert.equal(g.slots.shelfR1.qty,1);
  assert.equal(apply(g,"guest",{cmd:"counter"}),true);
  assert.equal(g.counter,"battery");
  apply(g,"host",{cmd:"window"});
  assert.equal(apply(g,"host",{cmd:"sell"}),false);
  assert.equal(g.totalServed,0);assert.equal(g.cash,start);
  assert.equal(apply(g,"guest",{cmd:"counter"}),true);
- assert.equal(g.hand,"battery");
+ assert.equal(g.players.guest.hand,"battery");
  assert.equal(apply(g,"guest",{cmd:"slot",key:"shelfR1"}),true);
  assert.equal(g.slots.shelfR1.qty,2);
  apply(g,"guest",{cmd:"slot",key:"shelfL1"});
- assert.equal(g.hand,"tea");
+ assert.equal(g.players.guest.hand,"tea");
  apply(g,"guest",{cmd:"counter"});
  assert.equal(apply(g,"host",{cmd:"sell"}),true);
  assert.equal(g.totalServed,1);assert.equal(g.cash,start+GOODS.tea.price);
@@ -73,7 +73,7 @@ test("five visitors can be served, day advances, and JSON saves are recoverable"
   }
   if(!visible(g,found))apply(g,"host",{cmd:"toggle",key:found});
   assert.equal(apply(g,"host",{cmd:"slot",key:found}),true);
-  assert.equal(g.hand,requested);
+  assert.equal(g.players.host.hand,requested);
   apply(g,"host",{cmd:"counter"});
   assert.equal(apply(g,"host",{cmd:"sell"}),true);
  }
@@ -81,4 +81,34 @@ test("five visitors can be served, day advances, and JSON saves are recoverable"
  const resumed=JSON.parse(JSON.stringify(g));assert.equal(validate(resumed),true);
  assert.equal(nextDay(resumed,"host"),true);
  assert.equal(resumed.day,2);assert.equal(resumed.totalServed,5);
+});
+
+test("two hands and manager-only restock remain isolated",()=>{
+ const s=initialShop();join(s,"host","店长");join(s,"guest","店员");
+ assert.equal(s.players.host.role,"manager");assert.equal(s.players.guest.role,"clerk");
+ assert.equal(apply(s,"guest",{cmd:"restock",sku:"tea"}),false);
+ assert.equal(apply(s,"host",{cmd:"restock",sku:"tea"}),true);
+ apply(s,"guest",{cmd:"slot",key:"shelfL3"});
+ assert.equal(s.cash,100);assert.equal(s.slots.shelfL3.qty,0);
+ apply(s,"host",{cmd:"slot",key:"shelfL3"});assert.equal(s.cash,96);
+ apply(s,"host",{cmd:"slot",key:"shelfL2"});
+ apply(s,"guest",{cmd:"slot",key:"shelfL1"});
+ assert.equal(s.players.host.hand,"bread");assert.equal(s.players.guest.hand,"tea");
+ apply(s,"host",{cmd:"counter"});
+ assert.equal(apply(s,"guest",{cmd:"counter"}),false);
+ assert.equal(s.players.guest.hand,"tea");
+ assert.equal(validate(s),true);
+});
+test("leave restores stock and resume preserves old and new v3 hands",()=>{
+ const s=initialShop();join(s,"host","店长");join(s,"guest","店员");
+ apply(s,"guest",{cmd:"slot",key:"shelfL1"});
+ leave(s,"guest");assert.equal(s.slots.shelfL1.qty,2);
+ join(s,"guest2","店员2");
+ apply(s,"host",{cmd:"slot",key:"shelfL1"});
+ apply(s,"guest2",{cmd:"slot",key:"shelfL2"});
+ resumeSolo(s,"店长");
+ assert.equal(s.players.solo.hand,"tea");assert.equal(s.slots.shelfL2.qty,2);
+ const old=initialShop();old.hand="cocoa";old.selectedRestock="bread";
+ resumeSolo(old,"店长");
+ assert.equal(old.players.solo.hand,"cocoa");assert.equal(old.players.solo.restock,"bread");
 });

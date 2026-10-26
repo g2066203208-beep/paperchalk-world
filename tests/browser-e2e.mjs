@@ -47,12 +47,26 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.windowOpen===true,{timeout:15000});
  assert.equal((await snapshot(host)).windowOpen,true);
  await action(guest,"slot","shelfL1");
- await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.hand==="tea",{timeout:12000});
+ const guestId=await guest.evaluate(()=>window.__KIOSK_TEST__.getSelfId());
+ await host.waitForFunction(id=>window.__KIOSK_TEST__.getState()?.players?.[id]?.hand==="tea",guestId,{timeout:12000});
+ await action(host,"slot","shelfL2");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand==="bread",{timeout:12000});
  await action(guest,"counter");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
  await action(host,"sell");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.totalServed===1,{timeout:15000});
  assert.equal((await snapshot(guest)).cash,109);
+ assert.equal((await snapshot(guest)).players.host.hand,"bread");
+ await action(host,"slot","shelfL2");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand===null,{timeout:12000});
+ await action(host,"restock","tea");
+ assert.equal((await guest.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="restock"),false);
+ await action(guest,"slot","shelfL3");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.notice.includes("这里还空着"),{timeout:12000});
+ assert.equal((await snapshot(host)).cash,109);
+ await action(host,"slot","shelfL3");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.slots?.shelfL3?.qty===1,{timeout:12000});
+ assert.equal((await snapshot(guest)).cash,105);
  // Real door/open state and stock list should be shared rather than fake icons.
  await action(host,"toggle","drawerL");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.open?.drawerL===true,{timeout:12000});
@@ -67,10 +81,13 @@ try{
  await solo.locator("#solo").click();
  await solo.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window")));
  await action(solo,"window");
+ await action(solo,"slot","shelfL1");
+ assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  await solo.reload();
  await solo.waitForFunction(()=>window.__KIOSK_TEST__?.getState!==undefined);
  await solo.locator("#resume").click();
  assert.equal((await snapshot(solo)).windowOpen,true);
+ assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  await solo.screenshot({path:"artifacts/kiosk-mobile-solo.png",fullPage:false});
  // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
  const wide=await open(context,1280,720);
