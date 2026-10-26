@@ -31,8 +31,6 @@ jobs:
         run: |
           test -f index.html
           test -f assets/shop.svg
-          test -f assets/anime/scene-window-open.webp
-          test -f assets/anime/customers-girl.webp
           for n in 01 02 03 04 05 06 07 08; do test -f "assets/guest-$n.svg"; done
           test -f android/app/src/main/AndroidManifest.xml
   browser-e2e:
@@ -53,14 +51,18 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
-      - name: Install Chinese UI fonts for real screenshots
+      - name: Prepare Chinese UI fonts without blocking gameplay tests
         run: |
-          # GitHub mirrors occasionally stall indefinitely on apt-get update.
-          # Bound this optional refresh and use the runner's package lists.
-          timeout 45s sudo apt-get update -qq || echo "apt index refresh timed out; using cached index"
-          timeout 110s sudo apt-get install -y -qq fonts-noto-cjk
-          fc-cache -f
-          fc-match "Noto Sans CJK SC"
+          # Font packages are optional; do not skip real Chromium multiplayer
+          # checks when GitHub runner apt mirrors stall.
+          if fc-list : family | grep -qi "Noto Sans CJK"; then
+            echo "Noto CJK already available"
+          else
+            timeout 20s sudo apt-get update -qq || echo "apt mirror unavailable; using cached lists"
+            timeout 35s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq fonts-noto-cjk || echo "CJK font install unavailable; continuing browser tests"
+          fi
+          fc-cache -f || true
+          fc-match "Noto Sans CJK SC" || true
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
@@ -85,10 +87,8 @@ jobs:
         run: |
           mkdir -p _site/src _site/assets
           cp index.html style.css sw.js .nojekyll _site/
-          cp src/kiosk-core.js src/kiosk-skin.js src/kiosk-anime-assets.js src/kiosk-pixel.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-app.js src/network.js _site/src/
+          cp src/kiosk-core.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-app.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
-          mkdir -p _site/assets/anime
-          cp assets/anime/*.webp _site/assets/anime/
       - name: Verify published ES module dependencies
         run: |
           node --input-type=module <<'NODE'
