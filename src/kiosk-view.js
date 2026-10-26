@@ -234,7 +234,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   let px=430;
   if(isManager){for(const sku of Object.keys(GOODS)){chip(g,hits,px,bottom+4,105,64,GOODS[sku].name+" -"+GOODS[sku].buy,"restock",sku,p.restock===sku);px+=112;}}
   else t(g,"店长负责进货；店员可拿货、交接与收款",350,bottom+23,13,C.cream);
-  t(g,"选择商品格拿货 → 点交接台 → 收款。补货先选商品再点格子。",26,bottom+72,12,C.cream);
+  // The low landscape action bar is reserved for touch targets; move instructions to dialogue status.
  } else{
   r(g,0,H-160,W,160,"#17264a");
   chip(g,hits,10,H-154,145,70,"交谈","talk");
