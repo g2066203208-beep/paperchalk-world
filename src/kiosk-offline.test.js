@@ -21,7 +21,7 @@ test("offline precache has only deployed, original game modules",()=>{
    .split(/\s+/).filter(x=>x.startsWith("src/"))||[];
  assert.ok(staged.length>=9,"cannot find deployed ES module manifest");
  assert.deepEqual(
-   CORE.filter(x=>x.startsWith("./src/")).map(x=>x.slice(2)).sort(),
+   Array.from(CORE).filter(x=>x.startsWith("./src/")).map(x=>x.slice(2)).sort(),
    staged.sort(),
    "precache and published modules must stay in sync"
  );
