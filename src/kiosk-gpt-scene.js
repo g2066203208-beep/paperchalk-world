@@ -1,9 +1,57 @@
 // GPTIMG scene atlas: independent physical zones, not a full-page mockup.
 // All shop commands and authoritative state remain in kiosk-core and kiosk-app.
 import {GOODS,visitor,slotRoom,shelfUpgradeCost,heatingUpgradeCost} from "./kiosk-core.js";
+// Production path: separately loadable files generated from approved GPT image.
+// Legacy atlas is only a temporary fallback while a sprite is loading.
+const SPRITE_BY_CROP={
+ "0,127,235,875": "wall-left",
+ "705,127,236,875": "wall-right",
+ "0,130,228,198": "cabinetL-closed",
+ "708,125,231,202": "cabinetR-closed",
+ "0,345,230,168": "shelfL1",
+ "0,515,230,168": "shelfL2",
+ "0,685,230,168": "shelfL3",
+ "711,336,228,168": "shelfR1",
+ "711,511,228,168": "shelfR2",
+ "711,686,228,168": "shelfR3",
+ "270,300,424,244": "window-landscape",
+ "295,390,120,230": "building-left",
+ "570,345,120,250": "building-right",
+ "217,160,52,828": "frame-left",
+ "682,160,43,828": "frame-right",
+ "250,165,432,118": "frame-top",
+ "241,981,453,73": "frame-sill",
+ "10,125,220,180": "shutter-closed",
+ "0,1012,941,239": "countertop",
+ "0,1240,941,169": "under-counter",
+ "15,1255,240,156": "drawerL-closed",
+ "680,1258,248,155": "drawerR-closed",
+ "799,711,118,153": "good-tea",
+ "769,334,168,174": "good-bread",
+ "326,1275,149,119": "good-battery",
+ "403,408,151,131": "good-cocoa",
+ "70,340,158,163": "cabinet-open-interior"
+};
+const spriteCache=new Map();
+function loadPartSprites(){
+ if(typeof Image==="undefined"||spriteCache.size)return;
+ for(const name of [...new Set([...Object.values(SPRITE_BY_CROP),"customer-idle"])]){
+  const record={status:"loading",img:new Image()};spriteCache.set(name,record);
+  record.img.onload=()=>{record.status="ready"};
+  record.img.onerror=()=>{record.status="error"};
+  record.img.src=new URL("../assets/gptimg/parts/"+name+".png",import.meta.url).href;
+ }
+}
+export function independentPartStatus(){
+ const all=[...spriteCache.values()];
+ return {total:all.length,ready:all.filter(x=>x.status==="ready").length,
+   failed:all.filter(x=>x.status==="error").length,
+   transparentCustomer:spriteCache.get("customer-idle")?.status==="ready"};
+}
 let img=null,load="idle";
 export function generatedArtStatus(){return load;}
 export function preloadGeneratedArt(){
+ loadPartSprites();
  if(img||typeof Image==="undefined")return;
  img=new Image();load="loading";
  img.onload=()=>{load=img.naturalWidth===941&&img.naturalHeight===1672?"ready":"error";};
@@ -11,7 +59,13 @@ export function preloadGeneratedArt(){
  img.src=new URL("../assets/gptimg/winter-kiosk-source.png",import.meta.url).href;
 }
 preloadGeneratedArt();
-const p=(g,sx,sy,sw,sh,x,y,w,h)=>{if(w>0&&h>0)g.drawImage(img,sx,sy,sw,sh,x,y,w,h)};
+const p=(g,sx,sy,sw,sh,x,y,w,h)=>{
+ if(w<=0||h<=0)return;
+ const key=SPRITE_BY_CROP[[sx,sy,sw,sh].join(",")];
+ const piece=key&&spriteCache.get(key);
+ if(piece?.status==="ready")g.drawImage(piece.img,x,y,w,h);
+ else if(load==="ready")g.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+};
 const f=(g,x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(x,y,w,h)};
 const hit=(a,x,y,w,h,cmd,key)=>a.push({x,y,w,h,cmd,key});
 function word(g,s,x,y,size=13,color="#F9F7F4"){
@@ -61,7 +115,13 @@ function customer(g,x,y,w,h,motion,phase){
  const scale=Math.min(w/375,h/430);
  g.translate(x+(w-375*scale)/2+shift,y+h-430*scale+down+Math.sin(phase*.035)*1.3);
  g.scale(scale,scale);
- // Alpha-shaped cutout extracted at draw time from the GPT source illustration.
+ const isolated=spriteCache.get("customer-idle");
+ if(isolated?.status==="ready"){
+  // Customer is a real transparent PNG; no adjacent houses/snow move with her.
+  g.drawImage(isolated.img,0,0,375,430);
+  g.restore();return;
+ }
+ // Compatibility fallback only: legacy hard-edged mask before independent part loads.
  g.beginPath();
  const pts=[[145,9],[197,2],[255,14],[302,40],[328,82],[329,137],[314,164],[335,219],[356,285],[372,429],[0,429],[14,325],[36,250],[48,204],[40,154],[51,104],[77,62],[110,25]];
  g.moveTo(...pts[0]);for(const t of pts.slice(1))g.lineTo(...t);g.closePath();g.clip();
