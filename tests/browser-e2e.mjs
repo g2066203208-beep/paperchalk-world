@@ -280,6 +280,7 @@ try{
  // Five real solo sales verify end-of-day rating and persistent reputation.
  const growth=await open(context);
  await growth.locator("#solo").click();
+ await growth.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="window"),{timeout:8000});
  await action(growth,"window");
  await action(growth,"toggle","drawerL");
  for(const key of ["shelfL1","shelfL2","shelfR1","drawerL","shelfL1"]){
