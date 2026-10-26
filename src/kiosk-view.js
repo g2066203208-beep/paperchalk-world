@@ -46,25 +46,20 @@ function npcBubble(g,hits,win,s,motion){
  const speech=customerSpeech(s,motion);
  if(!speech)return;
  const {x,y,w,h}=win;
- const bw=Math.min(w-8,Math.max(120,w*.91));
- const font=Math.max(12,Math.min(15,Math.floor(w/17)));
- const lines=wrapSpeech(speech.text,Math.floor((bw-22)/font),3);
- const lineH=font+4;
- const bh=24+lines.length*lineH+10;
- const bx=x+(w-bw)/2;
- const by=Math.max(y+12,y+h-bh-35);
- // Message is attached to the customer's torso; a small upward tail points to them.
+ // Top-right label does not cover eyes, hands or real counter interactions.
+ const bw=Math.max(64,Math.min(w*.47,122)),bx=x+w-bw-7,by=y+10;
+ const font=Math.max(11,Math.min(13,w/19));
+ const lines=wrapSpeech(speech.text,Math.max(4,Math.floor((bw-15)/font)),2);
+ const bh=24+lines.length*(font+3);
  g.save();
- g.beginPath();g.roundRect(bx,by,bw,bh,9);g.fillStyle=C.cream;g.fill();
- g.strokeStyle=C.outline;g.lineWidth=2;g.stroke();
- g.beginPath();g.moveTo(bx+bw*.50,by+1);g.lineTo(bx+bw*.45,by-9);
- g.lineTo(bx+bw*.59,by+1);g.closePath();g.fillStyle=C.cream;g.fill();
- t(g,speech.name,bx+11,by+13,12,C.blue);
- lines.forEach((line,i)=>t(g,line,bx+11,by+29+i*lineH,font,C.ink));
+ g.beginPath();g.roundRect(bx,by,bw,bh,8);g.fillStyle="#F9F7F4";g.fill();
+ g.strokeStyle="#263459";g.lineWidth=2;g.stroke();
+ g.beginPath();g.moveTo(bx+bw*.26,by+bh);g.lineTo(bx+bw*.44,by+bh);g.lineTo(bx+bw*.36,by+bh+8);g.closePath();g.fillStyle="#F9F7F4";g.fill();
+ t(g,speech.name,bx+9,by+12,Math.min(12,font),C.blue);
+ lines.forEach((line,i)=>t(g,line,bx+9,by+28+i*(font+3),font,C.ink,"left",bw-15));
  g.restore();
  hit(hits,bx,by,bw,bh,"talk");
 }
-
 function wooden(g,x,y,w,h,seed=1,base=C.wood){
  r(g,x,y,w,h,base);const rows=Math.max(1,Math.floor(h/21));
  for(let k=0;k<rows;k++){
@@ -178,9 +173,6 @@ function windowFrame(g,hits,x,y,w,h,s,phase,motion){
    talking:motion?.talking??s.spoken,receiving:Boolean(motion?.receiving),
    refusing:Boolean(motion?.refusing)});
   g.restore();
-  const sku=visitor(s).sku;
-  const short=sku==="bread"?"一份面包":sku==="battery"?"有电池吗":sku==="cocoa"?"来杯可可":"来杯热茶";
-  flatDialogue(g,short,x+w*.51,y+h*.10,w*.43,Math.max(31,h*.16));
  }
  flatWindow(g,x,y,w,h,s.windowOpen);
  // The physical latch remains the only window-close target.
