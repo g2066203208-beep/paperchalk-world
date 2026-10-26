@@ -156,6 +156,23 @@ function scene(g,hits,s,x,y,w,h,phase,motion){
  if(s.counter)sprite(g,s.counter,mat.x+mat.w*.40,mat.y+mat.h*.1,Math.min(3,mat.h*.070));
  else t(g,"交接台",mat.x+mat.w/2,mat.y+mat.h/2,11,C.cream,"center");
  hit(hits,mat.x,mat.y,mat.w,mat.h,"counter");
+ // A sold product is animated independently from the authoritative counter
+ // inventory. Its destination follows the moving customer's receiving hand.
+ if(motion?.stage==="exit"&&GOODS[motion.handoff?.sku]){
+  const scale=Math.min(3,mat.h*.070),p=motion.handoff.progress;
+  const cw=win.w*.92,ch=win.h*.92;
+  const cs=Math.max(1,Math.floor(Math.min(cw/44,ch/72)));
+  const cx=win.x+win.w*(.04+(motion.offset||0));
+  const cy=win.y+win.h*(.04+(motion.drop||0));
+  const handX=cx+(cw-44*cs)/2+30*cs-5*scale;
+  const handY=cy+ch-72*cs+59*cs-4*scale;
+  const fromX=mat.x+mat.w*.40,fromY=mat.y+mat.h*.10;
+  g.save();g.beginPath();
+  // The item may cross the sill, but must never float over solid wall panels.
+  g.rect(win.x,win.y,win.w,benchY+benchH-win.y);g.clip();
+  sprite(g,motion.handoff.sku,fromX+(handX-fromX)*p,fromY+(handY-fromY)*p,scale);
+  g.restore();
+ }
  // small secondary station objects that don't compete with the item mat
  r(g,x+w*.075,benchY+benchH*.29,w*.06,8,C.gold);
  r(g,x+w*.075+5,benchY+benchH*.2,w*.04,5,C.ink);

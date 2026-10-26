@@ -22,16 +22,23 @@ test("paid order change shows previous customer leaving before the next arrives"
  const departing=sample(s,1100);
  assert.equal(departing.stage,"exit");assert.equal(departing.tone,CUSTOMERS[0].tone);
  assert.equal(departing.receiving,true);
+ assert.equal(departing.handoff.sku,"tea");
+ assert.equal(departing.handoff.progress,0);
+ const mid=sample(s,1100+CUSTOMER_EXIT_MS/3);
+ assert.ok(mid.handoff.progress>0&&mid.handoff.progress<1);
+ assert.ok(sample(s,1100+CUSTOMER_EXIT_MS*.8).handoff.progress===1);
  assert.ok(sample(s,1100+CUSTOMER_EXIT_MS/2).offset<0);
  const arriving=sample(s,1100+CUSTOMER_EXIT_MS);
  assert.equal(arriving.stage,"enter");assert.equal(arriving.tone,CUSTOMERS[1].tone);
  assert.equal(arriving.receiving,false);
+ assert.equal(arriving.handoff,null,"a new customer must not inherit the previous purchase");
  assert.equal(sample(s,1100+CUSTOMER_EXIT_MS+CUSTOMER_ENTER_MS).stage,"idle");
 });
 test("shutter close interrupts animation and re-opening starts a fresh arrival",()=>{
  const s=shop(),sample=createCustomerMotion();s.windowOpen=true;
  sample(s,100);s.orderIndex=1;sample(s,150);
- s.windowOpen=false;assert.equal(sample(s,170).stage,"hidden");
+ s.windowOpen=false;const closed=sample(s,170);
+ assert.equal(closed.stage,"hidden");assert.equal(closed.handoff,null);
  s.windowOpen=true;const next=sample(s,200);
  assert.equal(next.stage,"enter");assert.equal(next.tone,CUSTOMERS[1].tone);
 });
@@ -41,4 +48,22 @@ test("day-end departure does not introduce a new customer under summary overlay"
  s.orderIndex=5;s.phase="summary";
  assert.equal(sample(s,1000).stage,"exit");
  assert.equal(sample(s,1000+CUSTOMER_EXIT_MS).visible,false);
+});
+
+test("each paid customer carries only their own requested product, without changing stock",()=>{
+ const s=shop(),sample=createCustomerMotion();s.windowOpen=true;
+ sample(s,0);sample(s,1000);
+ const before=JSON.stringify(s);
+ s.orderIndex=1;
+ const first=sample(s,1100);
+ assert.equal(first.handoff.sku,"tea");
+ sample(s,1100+CUSTOMER_EXIT_MS+CUSTOMER_ENTER_MS);
+ s.orderIndex=2;
+ const second=sample(s,2500);
+ assert.equal(second.handoff.sku,"bread");
+ assert.equal(second.handoff.progress,0);
+ assert.equal(s.orderIndex,2);
+ assert.equal(s.windowOpen,true);
+ assert.equal(JSON.stringify({...s,orderIndex:1}),before.replace('"orderIndex":0','"orderIndex":1'),
+  "motion must not write to shared shop state");
 });

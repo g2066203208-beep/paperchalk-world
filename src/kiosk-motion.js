@@ -4,7 +4,7 @@ import {CUSTOMERS} from "./kiosk-core.js";
 export const CUSTOMER_EXIT_MS=640;
 export const CUSTOMER_ENTER_MS=860;
 const ease=t=>t*t*(3-2*t);
-const hidden=()=>({visible:false,stage:"hidden",tone:0,offset:0,drop:0,talking:false,receiving:false});
+const hidden=()=>({visible:false,stage:"hidden",tone:0,offset:0,drop:0,talking:false,receiving:false,handoff:null});
 export function createCustomerMotion(){
  let previousOrder=null,previousOpen=false,stage="hidden",startedAt=0,departingOrder=null;
  return function sampleCustomerMotion(shop,now=0){
@@ -27,11 +27,17 @@ export function createCustomerMotion(){
   const amount=stage==="exit"?ease(Math.min(1,elapsed/CUSTOMER_EXIT_MS)):
    stage==="enter"?ease(Math.min(1,elapsed/CUSTOMER_ENTER_MS)):1;
   const index=stage==="exit"?departingOrder:order;
-  const tone=CUSTOMERS[((index%CUSTOMERS.length)+CUSTOMERS.length)%CUSTOMERS.length].tone;
-  return {visible:true,stage,tone,
+  const customer=CUSTOMERS[((index%CUSTOMERS.length)+CUSTOMERS.length)%CUSTOMERS.length];
+  // The already-paid item is a temporary visual sprite, not inventory.
+  // It starts on the counter and reaches the customer's hand before departure.
+  const handoff=stage==="exit"?{
+   sku:customer.sku,
+   progress:ease(Math.min(1,elapsed/(CUSTOMER_EXIT_MS*.72)))
+  }:null;
+  return {visible:true,stage,tone:customer.tone,
    offset:stage==="enter"?(1-amount)*.76:stage==="exit"?-amount*.76:0,
    drop:stage==="enter"?(1-amount)*.06:stage==="exit"?amount*.03:0,
    talking:stage==="idle"&&Boolean(shop.spoken),
-   receiving:stage==="exit"};
+   receiving:stage==="exit",handoff};
  };
 }
