@@ -37,3 +37,12 @@ main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;padding:20p
 .prop-stage[data-result="wrong"]{border-left:6px solid #ad6554}
 @keyframes item-arrive{from{opacity:.2;transform:translateX(-22px) scale(.85)}to{opacity:1;transform:none}}
 @media(max-width:500px){.prop-stage{gap:5px;padding:7px}.prop-zone{padding:5px}.prop-zone>b{font-size:10px}.prop-item{min-width:46px;min-height:67px}.prop-item img{width:40px;height:40px}.prop-item span{font-size:8px}.counter-prop img{width:45px;height:45px}}
+
+/* A compact mobile decision dock leaves the physical work surface unobscured. */
+.tray-toggle{display:none}
+@media(max-width:500px){
+ .tray-toggle{display:block;width:100%;min-height:44px;background:#26383d;color:#f2dfb8;border:1px solid #8b826b;font-size:13px;font-weight:700}
+ .decision-tray[data-collapsed="true"] .tray-note,
+ .decision-tray[data-collapsed="true"] .decision-buttons{display:none}
+ .decision-tray[data-collapsed="true"]{padding:5px 11px calc(5px + var(--safe-bottom))}
+}

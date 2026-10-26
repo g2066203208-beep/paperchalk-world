@@ -44,6 +44,10 @@ async function run(){
  await host.waitForFunction(()=>window.lampkeepState()?.opened?.window===true,null,{timeout:12000});
  await guest.locator("#pinButton").click();
  await host.waitForFunction(()=>window.lampkeepState()?.pins?.includes("window"),null,{timeout:12000});
+ assert.equal(await host.locator("#welcomeButton").isVisible(),false,"mobile decisions start folded to expose workbench");
+ await host.locator("#trayToggle").click();
+ await guest.locator("#trayToggle").click();
+ assert.equal(await host.locator("#welcomeButton").isVisible(),true);
  await host.locator("#welcomeButton").click();
  await new Promise(r=>setTimeout(r,420));
  assert.equal(await host.evaluate(()=>window.lampkeepState().index),0,"two players must agree");
@@ -74,6 +78,9 @@ async function run(){
  await host.locator("#scanButton").click();
  await guest.waitForFunction(()=>window.lampkeepState()?.shop?.success===true,null,{timeout:12000});
  assert.equal(await guest.locator("#propStage").getAttribute("data-result"),"correct");
+ await host.locator("#trayToggle").click();
+ await guest.locator("#trayToggle").click();
+ assert.equal(await host.locator("#welcomeButton").isVisible(),false);
  await fs.mkdir("artifacts",{recursive:true});
  await host.screenshot({path:"artifacts/lampkeep-host-mobile.png",fullPage:true});
  await guest.screenshot({path:"artifacts/lampkeep-guest-mobile.png",fullPage:true});

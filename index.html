@@ -52,9 +52,10 @@
   <section><div class="side-label">NIGHT CREW</div><h3>值班同伴</h3><div id="roster" class="roster">等待开店</div></section>
  </aside>
 </main>
-<div class="decision-tray" id="decisionTray">
+<div class="decision-tray" id="decisionTray" data-collapsed="true">
+ <button class="tray-toggle" id="trayToggle" type="button" aria-controls="decisionButtons" aria-expanded="false">作出判断 · 展开操作 ▲</button>
  <div class="tray-note"><span id="notice">还没营业。</span><button id="askButton" class="link-button">再聊几句</button></div>
- <div class="decision-buttons"><button id="welcomeButton" class="decision allow">请进店里 <small>WELCOME</small></button><button id="refuseButton" class="decision deny">婉拒交易 <small>REFUSE</small></button></div>
+ <div class="decision-buttons" id="decisionButtons"><button id="welcomeButton" class="decision allow">请进店里 <small>WELCOME</small></button><button id="refuseButton" class="decision deny">婉拒交易 <small>REFUSE</small></button></div>
 </div>
 <div class="modal" id="lobby">
  <div class="lobby-card">

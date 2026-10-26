@@ -75,6 +75,12 @@ $("askButton").onclick=()=>send({type:"ask"});
 $("shelfProps").addEventListener("click",e=>{const b=e.target.closest("button[data-sku]");if(b)send({type:"take",sku:b.dataset.sku});});
 $("scanButton").onclick=()=>send({type:"scan"});
 $("returnButton").onclick=()=>send({type:"return"});
+$("trayToggle").onclick=()=>{
+ const tray=$("decisionTray"),collapsed=tray.dataset.collapsed==="true";
+ tray.dataset.collapsed=String(!collapsed);
+ $("trayToggle").setAttribute("aria-expanded",String(collapsed));
+ $("trayToggle").textContent=collapsed?"收起判断操作 ▼":"作出判断 · 展开操作 ▲";
+};
 $("welcomeButton").onclick=()=>send({type:"vote",choice:"welcome"});
 $("refuseButton").onclick=()=>send({type:"vote",choice:"refuse"});
 function node(tag,cls,text){
