@@ -1,6 +1,7 @@
 // Real two-client WebRTC shop interaction at mobile resolution and landscape.
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import {existsSync} from "node:fs";
 import path from "node:path";
 import {spawn} from "node:child_process";
 import {createRequire} from "node:module";
@@ -31,7 +32,10 @@ async function action(page,cmd,key){
 }
 const snapshot=p=>p.evaluate(()=>window.__KIOSK_TEST__.getState());
 try{
- browser=await chromium.launch({headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
+ // GitHub-hosted Linux runners already include Chrome; avoid flaky CDN
+ // browser downloads while still running a real Chromium-family browser.
+ const installedChrome=["/usr/bin/google-chrome","/usr/bin/google-chrome-stable","/usr/bin/chromium"].find(existsSync);
+ browser=await chromium.launch({headless:true,...(installedChrome?{executablePath:installedChrome}:{}),args:["--no-sandbox","--disable-dev-shm-usage"]});
  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
  const host=await open(context),guest=await open(context);
  await host.locator("#nickname").fill("店长");

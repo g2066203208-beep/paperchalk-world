@@ -44,7 +44,13 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.1 peer@1.0.2 peerjs@1.5.5
-      - run: npx playwright install --with-deps chromium
+      - name: Use installed Chromium-family browser or download fallback
+        run: |
+          if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1; then
+            echo "Using the Chromium-family browser already installed on the runner."
+          else
+            npx playwright install --with-deps chromium
+          fi
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
