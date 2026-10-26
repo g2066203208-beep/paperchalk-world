@@ -122,17 +122,48 @@ function resize(){
  ctx.imageSmoothingEnabled=true;
 }
 window.addEventListener("resize",resize);window.addEventListener("orientationchange",resize);
-canvas.addEventListener("pointerdown",e=>{
- if(!state||!$("lobby").hidden)return;
+// Tap a visible fixture to operate it; hold a stocked shelf or open drawer
+// to prepare a reorder. Input geometry is always derived from rendered objects.
+let activePointer=null;
+function pointOnCanvas(e){
  const rect=canvas.getBoundingClientRect();
- let x=(e.clientX-rect.left)/rect.width*screen.W;
- let y=(e.clientY-rect.top)/rect.height*screen.H;
+ return {x:(e.clientX-rect.left)/rect.width*screen.W,
+  y:(e.clientY-rect.top)/rect.height*screen.H};
+}
+function findHit(x,y,gesture){
  for(let i=hits.length-1;i>=0;i--){
   const h=hits[i];
-  if(x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h){
-   command(h.cmd,h.key);break;
-  }
+  if((h.gesture||"tap")===gesture&&x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h)return h;
  }
+ return null;
+}
+canvas.addEventListener("contextmenu",e=>e.preventDefault());
+canvas.addEventListener("pointerdown",e=>{
+ if(!state||!$("lobby").hidden||activePointer)return;
+ const p=pointOnCanvas(e);
+ activePointer={id:e.pointerId,x:p.x,y:p.y,started:performance.now(),cancelled:false};
+ try{canvas.setPointerCapture(e.pointerId);}catch{}
+});
+canvas.addEventListener("pointermove",e=>{
+ if(!activePointer||activePointer.id!==e.pointerId)return;
+ const p=pointOnCanvas(e);
+ const delta=Math.hypot((p.x-activePointer.x)/screen.W*innerWidth,
+  (p.y-activePointer.y)/screen.H*innerHeight);
+ if(delta>15)activePointer.cancelled=true;
+});
+canvas.addEventListener("pointercancel",()=>{activePointer=null;});
+canvas.addEventListener("pointerup",e=>{
+ const press=activePointer;
+ if(!press||press.id!==e.pointerId)return;
+ activePointer=null;
+ if(press.cancelled||!state||!$("lobby").hidden)return;
+ const p=pointOnCanvas(e);
+ const delta=Math.hypot((p.x-press.x)/screen.W*innerWidth,
+  (p.y-press.y)/screen.H*innerHeight);
+ if(delta>15)return;
+ const gesture=performance.now()-press.started>=500?"hold":"tap";
+ const target=findHit(p.x,p.y,gesture)|| (gesture==="hold"?null:findHit(p.x,p.y,"tap"));
+ if(target)command(target.cmd,target.key);
 });
 function tick(){
  if(mode==="host"&&state){
