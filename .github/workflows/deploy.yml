@@ -51,6 +51,12 @@ jobs:
           else
             npx playwright install --with-deps chromium
           fi
+      - name: Install Chinese UI fonts for real screenshots
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk
+          fc-cache -f
+          fc-match "Noto Sans CJK SC"
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
