@@ -86,7 +86,10 @@ function command(cmd,key){
 function resize(){
  const width=Math.max(280,window.innerWidth),height=Math.max(420,window.innerHeight);
  const land=width>=height*1.12;
- const W=land?960:480, H=Math.max(land?500:640,Math.round(W*height/width));
+ // Preserve the physical viewport aspect ratio on wide phones as well as desktop.
+ // A 500-unit minimum landscape height keeps touch targets usable without squashing art.
+ const H=land?Math.max(500,Math.round(960*height/width)):Math.max(640,Math.round(480*height/width));
+ const W=land?Math.round(H*width/height):480;
  screen={W,H,land};
  canvas.width=W;canvas.height=H;
  ctx.imageSmoothingEnabled=true;
