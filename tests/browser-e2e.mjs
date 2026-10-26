@@ -102,6 +102,24 @@ try{
  await fs.mkdir("artifacts",{recursive:true});
  await host.screenshot({path:"artifacts/kiosk-mobile-host.png",fullPage:false});
  await guest.screenshot({path:"artifacts/kiosk-mobile-guest.png",fullPage:false});
+ // A second visitor can commission an optional item without advancing their
+ // main order. Both actual WebRTC clients must see one authoritative tip.
+ await action(guest,"talk");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.spoken===true,{timeout:12000});
+ await action(host,"slot","shelfL3");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand==="tea",{timeout:12000});
+ await action(host,"counter");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
+ await action(guest,"commission");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.favorDone===true,{timeout:12000});
+ assert.equal((await snapshot(host)).cash,113,"commission pays exactly one 8-yuan tip");
+ assert.equal((await snapshot(guest)).counter,null,"commission consumes one real tea item");
+ assert.equal((await snapshot(guest)).orderIndex,1,"optional favor must not skip bread order");
+ await action(host,"commission");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.notice.includes("已经完成"),{timeout:12000});
+ assert.equal((await snapshot(guest)).cash,113,"two workers cannot claim the same favor twice");
+ assert.equal((await snapshot(host)).favorCount,1);
+ await host.screenshot({path:"artifacts/kiosk-commission-complete.png",fullPage:false});
  const mobileOverflow=await host.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2);
  assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
  // Local solo save survives refresh; source account is separate from legacy save.
