@@ -143,10 +143,22 @@ export function flatDrawer(g,x,y,w,h,opened){
  }
 }
 export function flatWindow(g,x,y,w,h,opened){
- tile(g,x-11,y-11,w+22,h+22,F.pale,F.night,5,7);
- R(g,x-4,y-3,w+8,8,F.warm,1);R(g,x-5,y+h-5,w+10,14,F.warm,3);
- if(!opened){R(g,x+7,y+7,w-14,h-14,F.pale,2);R(g,x+w*.45,y+h*.47,w*.1,9,F.blue,4);}
- else{R(g,x-5,y,8,h,F.paper,2);R(g,x+w-3,y,8,h,F.paper,2);}
+ // Truly transparent opening: never paint the customer or the snow behind it.
+ if(!opened){
+  tile(g,x-11,y-11,w+22,h+22,F.pale,F.night,5,7);
+  R(g,x+7,y+7,w-14,h-14,F.pale,2);
+  R(g,x+w*.45,y+h*.47,w*.1,9,F.blue,4);
+ }else{
+  R(g,x-11,y-11,w+22,10,F.night,2);
+  R(g,x-11,y-11,11,h+28,F.night,2);
+  R(g,x+w,y-11,11,h+28,F.night,2);
+  R(g,x-11,y+h,w+22,17,F.night,2);
+  R(g,x-7,y-7,w+14,5,F.warm,1);
+  R(g,x-7,y-7,5,h+15,F.paper,1);
+  R(g,x+w+2,y-7,5,h+15,F.paper,1);
+  R(g,x-7,y+h,w+14,9,F.warm,2);
+ }
+ // A functional, always-visible latch remains centered on the service sill.
  R(g,x+w*.38,y+h+5,w*.24,8,F.paper,4);
  R(g,x+w*.45,y+h+6,w*.1,4,F.blue,2);
 }
