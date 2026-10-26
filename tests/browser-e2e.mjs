@@ -229,6 +229,7 @@ try{
  for(const [vw,vh,name] of [[320,568,"compact-phone"],[844,390,"phone-landscape"]]){
    const p=await open(context,vw,vh);
    await p.locator("#solo").click();
+   await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="window"&&h.w>=1));
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="talk"));
    const metrics=await p.evaluate(()=>{
      const h=window.__KIOSK_TEST__.getHits().find(v=>v.cmd==="talk");
@@ -245,13 +246,15 @@ try{
  }
  // Verify compact portrait and wide mobile landscape, not just desktop screenshots.
  // The art is rendered from separate 80x120 and 24x28 pixel sprites.
- const pixelGrid=await host.evaluate(async()=> (await import("./src/kiosk-pixel.js")).PIXEL_GRID);
- assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.customer)),[80,120]);
- assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.item)),[24,28]);
+ const animeStatus=await host.evaluate(async()=> (await import("./src/kiosk-anime-assets.js")).getAnimeArtStatus());
+ for(const key of ["window-open","window-closed","cabinetL-open","drawer-open","girl","bread"]){
+   assert.equal(animeStatus[key],"ready","Approved layered anime art must load: "+key);
+ }
  for(const [vw,vh,label] of [[320,568,"compact-portrait"],[844,390,"phone-landscape"]]){
    const phone=await open(context,vw,vh);
    await phone.locator("#solo").click();
    await phone.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()?.players?.solo));
+   await phone.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
    await action(phone,"window");
    await phone.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:6000});
    const measurements=await phone.evaluate(()=>{
