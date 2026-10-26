@@ -130,6 +130,13 @@ try{
  assert.equal((await snapshot(guest)).cash,113,"two workers cannot claim the same favor twice");
  assert.equal((await snapshot(host)).favorCount,1);
  await host.screenshot({path:"artifacts/kiosk-commission-complete.png",fullPage:false});
+ // A manager spends shared funds on a permanent capacity upgrade. The clerk
+ // sees the new shelf limit but cannot trigger the purchase.
+ assert.equal((await guest.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="upgrade"),false);
+ await action(host,"upgrade");
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.upgrades?.shelves===1,{timeout:12000});
+ assert.equal((await snapshot(guest)).cash,78);
+ await host.screenshot({path:"artifacts/kiosk-shelf-upgraded.png",fullPage:false});
  const mobileOverflow=await host.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2);
  assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
  // Local solo save survives refresh; source account is separate from legacy save.
@@ -158,11 +165,14 @@ try{
  await action(solo,"counter");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='take',{timeout:3000});
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
+ await action(solo,"upgrade");
+ assert.equal((await snapshot(solo)).upgrades.shelves,1);
  await solo.reload();
  await solo.waitForFunction(()=>window.__KIOSK_TEST__?.getState!==undefined);
  await solo.locator("#resume").click();
  assert.equal((await snapshot(solo)).windowOpen,true);
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
+ assert.equal((await snapshot(solo)).upgrades.shelves,1,"upgrade survives original v3 localStorage key");
  await solo.screenshot({path:"artifacts/kiosk-mobile-solo.png",fullPage:false});
  // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
  const wide=await open(context,1280,720);

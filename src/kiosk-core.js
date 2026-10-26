@@ -17,6 +17,10 @@ export const FIXTURES=Object.freeze({
  drawerL:{label:"左抽屉",capacity:4,kind:"drawer"},
  drawerR:{label:"右抽屉",capacity:4,kind:"drawer"}
 });
+// A manager can permanently increase each shelf's physical volume by two units per level.
+// The first purchase is affordable on day one; level two requires earned revenue.
+export const SHELF_UPGRADE_COSTS=Object.freeze([35,70]);
+export function shelfUpgradeCost(s){return SHELF_UPGRADE_COSTS[s.upgrades?.shelves??0]??null;}
 export const CUSTOMERS=[
  {name:"卫叔",sku:"tea",line:"冻得耳朵都快掉了！来一杯热茶。",after:"喝了一口，才发现自己戴了两顶帽子。",tone:0},
  {name:"小苏",sku:"bread",line:"一块面包。别问为什么我只穿一只手套。",after:"她笑着把另一只手套从口袋里掏出来。",tone:1,favor:{sku:"tea",tip:8,line:"顺便替门外那位冻僵的雪人捎杯热茶。"}},
@@ -36,12 +40,12 @@ export function initialShop(){
  return {version:3,day:1,cash:100,earnings:0,stars:0,served:0,totalServed:0,
   phase:"operating",windowOpen:false,open:{cabinetL:false,cabinetR:false,drawerL:false,drawerR:false},
   slots,hand:null,counter:null,orderIndex:0,spoken:false,queue:0,selectedRestock:null,
-  players:{},favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
+  players:{},upgrades:{shelves:0},favorDone:false,favorCount:0,favorTips:0,totalFavors:0,returns:[],notice:"先点窗闩开窗营业，再从货架拿商品。",revision:0};
 }
 export function visitor(s){return CUSTOMERS[s.orderIndex % CUSTOMERS.length];}
 function putBack(s,sku,origin){
  const keys=[origin,...Object.keys(FIXTURES)].filter((k,i,all)=>FIXTURES[k]&&all.indexOf(k)===i);
- for(const k of keys){const v=s.slots[k];if(v&&(!v.sku||v.sku===sku)&&v.qty<slotRoom(k,sku)){v.sku=sku;v.qty++;return;}}
+ for(const k of keys){const v=s.slots[k];if(v&&(!v.sku||v.sku===sku)&&v.qty<slotRoom(k,sku,s)){v.sku=sku;v.qty++;return;}}
  if(!s.counter)s.counter=sku;else(s.returns??=[]).push(sku);
 }
 export function join(s,id,name){
@@ -69,7 +73,10 @@ export function resumeSolo(s,name){
  return s;
 }
 export function visible(s,key){const f=FIXTURES[key];return f&& (f.kind==="shelf" || Boolean(s.open[key]));}
-export function slotRoom(key,sku){return Math.floor(FIXTURES[key].capacity/GOODS[sku].size);}
+export function slotRoom(key,sku,s=null){
+ const bonus=FIXTURES[key].kind==="shelf"?2*(s?.upgrades?.shelves??0):0;
+ return Math.floor((FIXTURES[key].capacity+bonus)/GOODS[sku].size);
+}
 export function apply(s,by,a){
  if(!s||s.version!==3||!s.players[by]||s.phase!=="operating"||!a||typeof a!=="object")return false;
  const p=s.players[by];
@@ -85,11 +92,11 @@ export function apply(s,by,a){
       const kind=p.restock,thing=GOODS[kind],cost=thing.buy;
       if(s.cash<cost){s.notice="进货资金不够。";p.restock=null;}
       else if(slot.sku&&slot.sku!==kind){s.notice="这一格已有其他商品，先取走。";return false;}
-      else if(slot.qty>=slotRoom(key,kind)){s.notice="这一格已经放满。";return false;}
+      else if(slot.qty>=slotRoom(key,kind,s)){s.notice="这一格已经放满。";return false;}
       else{slot.sku=kind;slot.qty++;s.cash-=cost;s.notice="进货成功："+thing.name+" ×1 放入"+FIXTURES[key].label;p.restock=null;}
     }else if(p.hand){
       if(slot.sku&&slot.sku!==p.hand){s.notice="这格摆的是其他商品。";return false;}
-      if(slot.qty>=slotRoom(key,p.hand)){s.notice="位置太小，放不下。";return false;}
+      if(slot.qty>=slotRoom(key,p.hand,s)){s.notice="位置太小，放不下。";return false;}
       slot.sku=p.hand;slot.qty++;s.notice="把"+GOODS[p.hand].name+"放回了"+FIXTURES[key].label;p.hand=null;p.origin=null;
     }else if(slot.qty>0){
       p.hand=slot.sku;p.origin=key;slot.qty--;if(slot.qty===0)slot.sku=null;
@@ -101,6 +108,18 @@ export function apply(s,by,a){
     else if(!p.hand&&s.counter){p.hand=s.counter;p.origin=null;s.counter=null;s.notice="把商品从交接台拿了起来。";}
     else if(!p.hand&&!s.counter&&s.returns?.length){p.hand=s.returns.shift();p.origin=null;s.notice="从待领回商品中取出了"+GOODS[p.hand].name;}
     else return false;
+ }
+ else if(cmd==="upgrade"){
+    if(p.role!=="manager")return false;
+    const cost=shelfUpgradeCost(s);
+    if(cost===null)s.notice="货架扩容已满级，继续经营攒钱开分店吧。";
+    else if(s.cash<cost)s.notice="扩容需要 ¥"+cost+"，目前资金不足。";
+    else{
+      s.cash-=cost;
+      const level=(s.upgrades?.shelves??0)+1;
+      s.upgrades={...(s.upgrades||{}),shelves:level};
+      s.notice="货架扩容升级到 "+level+"/2 级！每层货架容量增加 "+(level*2)+" 单位。";
+    }
  }
  else if(cmd==="restock" && GOODS[sku]){
     if(p.role!=="manager"||p.hand)return false;
@@ -147,6 +166,9 @@ export function nextDay(s,by){
 export function validate(s){
  if(s?.version!==3)return false;
  if(s.counter!==null&&!GOODS[s.counter])return false;
+ // Legacy v3 saves have no upgrades field; they are treated as level zero.
+ if(s.upgrades!==undefined&&(!s.upgrades||typeof s.upgrades!=="object"||Array.isArray(s.upgrades)||
+   !Number.isInteger(s.upgrades.shelves)||s.upgrades.shelves<0||s.upgrades.shelves>SHELF_UPGRADE_COSTS.length))return false;
  if(s.favorDone!==undefined&&typeof s.favorDone!=="boolean")return false;
  for(const field of ["favorCount","favorTips","totalFavors"])
    if(s[field]!==undefined&&(!Number.isSafeInteger(s[field])||s[field]<0))return false;
@@ -154,7 +176,7 @@ export function validate(s){
  for(const p of Object.values(s.players||{}))if((p.hand&&!GOODS[p.hand])||(p.restock&&!GOODS[p.restock]))return false;
  for(const [key,f] of Object.entries(FIXTURES)){
    const v=s.slots?.[key];if(!v||!Number.isInteger(v.qty)||v.qty<0)return false;
-   if(v.qty>0&&(!GOODS[v.sku]||v.qty>slotRoom(key,v.sku)))return false;
+   if(v.qty>0&&(!GOODS[v.sku]||v.qty>slotRoom(key,v.sku,s)))return false;
    if(v.qty===0&&v.sku!==null)return false;
  }
  return true;

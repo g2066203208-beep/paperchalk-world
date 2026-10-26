@@ -1,7 +1,7 @@
 // Handmade geometric pixel art. Every fixture/item/customer is a separate
 // draw routine (no flattened image / generated art); all clickable bounds
 // are registered with the same coordinates used to paint the object.
-import {GOODS,FIXTURES,visitor,visible} from "./kiosk-core.js";
+import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost} from "./kiosk-core.js";
 import {drawWindowCustomer} from "./kiosk-guest.js";
 const C={ink:"#181d28",outline:"#272331",wall:"#66504a",wood:"#987159",woodLight:"#bd9874",
 trim:"#533d3f",shelf:"#bb8c69",dark:"#302d35",cream:"#e7cdb1",amber:"#e4b374",
@@ -88,10 +88,11 @@ function shelf(g,hits,x,y,w,h,slot,s){
  r(g,x,y+h-12,w,11,C.shelf);
  r(g,x,y+h-12,w,3,C.woodLight);
  r(g,x,y+h-4,w,5,C.trim);
+ if(s.upgrades?.shelves)r(g,x+4,y+h-9,w-8,2,C.gold);
  if(content?.qty>0){
   const count=Math.min(content.qty,3);
   for(let i=0;i<count;i++)sprite(g,content.sku,x+Math.max(1,(w-count*27)/2)+i*27,y+h-47,2.3);
-  t(g,String(content.qty),x+w-6,y+h-18,11,C.gold,"right");
+  t(g,content.qty+"/"+slotRoom(key,content.sku,s),x+w-6,y+h-18,10,C.gold,"right");
  } else {r(g,x+w*.26,y+h-28,w*.45,2,"#564b49");}
  hit(hits,x,y,w,h,"slot",key);
 }
@@ -160,7 +161,19 @@ function smallGlow(g,x,y,step){
  r(g,x-15,y+6,30,9,C.gold);r(g,x-5,y+15,10,3,C.cream);
  r(g,x-4,y-27,8,20,C.ink);
 }
-function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion){
+// A real in-world work order, not a transparent text hotspot. The plaque is
+// independent from the window, shelf sprites and overlay controls.
+function upgradePlaque(g,hits,x,y,w,h,s,isManager){
+ const level=s.upgrades?.shelves??0,cost=shelfUpgradeCost(s);
+ r(g,x+2,y+3,w,h,C.ink);r(g,x,y,w,h,C.trim);
+ r(g,x+3,y+3,w-6,h-6,level?"#526b5b":"#66584c");
+ r(g,x+7,y+8,24,3,C.gold);r(g,x+7,y+19,24,3,C.gold);r(g,x+7,y+30,24,3,C.gold);
+ for(let i=0;i<2;i++)r(g,x+9+i*12,y+h-12,9,6,i<level?C.gold:C.dark);
+ t(g,cost===null?"扩架满级":"扩架 ¥"+cost,x+w*.69,y+h*.38,10,C.cream,"center");
+ t(g,"容量 +"+(level*2),x+w*.69,y+h*.68,10,C.gold,"center");
+ if(isManager&&cost!==null)hit(hits,x,y,w,h,"upgrade");
+}
+function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  wooden(g,x,y,w,h,2,C.wall);
  // structural corner posts
@@ -170,6 +183,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion){
  const topCabY=y+h*.045, topCabH=h*.16;
  cupboard(g,hits,x+w*.034,topCabY,w*.235,topCabH,"cabinetL",s,phase);
  cupboard(g,hits,x+w*.732,topCabY,w*.235,topCabH,"cabinetR",s,phase);
+ upgradePlaque(g,hits,x+w*.52,y+h*.025,w*.20,h*.125,s,isManager);
  // Left and right shelf towers. Every shelf is a real storage location.
  const towerY=y+h*.245,tw=w*.225,ty=h*.135;
  for(let i=0;i<3;i++){
@@ -240,12 +254,13 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  t(g,"¥ "+s.cash,W-12,headH*.47,land?16:14,C.cream,"right");
  // Distinct landscape/portrait camera compositions: no stretching of a screenshot.
  const shop=land?{x:154,y:headH,w:W-300,h:H-headH-83}:{x:0,y:headH,w:W,h:H-headH-207};
- scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion);
+ scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
  if(land){
   r(g,0,headH,154,shop.h,C.dark);
   t(g,"今日",17,headH+24,17,C.gold);t(g,"已服务 "+s.served+"/5",17,headH+52,14,C.cream);
   t(g,"营业额 ¥"+s.earnings,17,headH+77,12,C.cream);
   t(g,"值班 "+Object.keys(s.players).length+" 人",17,headH+101,12,C.cream);
+  t(g,"货架扩容 "+(s.upgrades?.shelves??0)+"/2",17,headH+126,12,C.gold);
   r(g,W-146,headH,146,shop.h,C.dark);
   t(g,"当前订单",W-130,headH+25,13,C.gold);
   t(g,visitor(s).name,W-130,headH+52,17,C.cream);
