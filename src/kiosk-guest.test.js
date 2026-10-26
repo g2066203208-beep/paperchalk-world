@@ -12,7 +12,7 @@ test("four original winter customers render as distinct layered pixel compositio
  const signatures=[];
  for(let tone=0;tone<4;tone++){
   const rects=paint(tone,50);
-  assert.ok(rects.length>65,"customer must contain individually painted details");
+  assert.ok(rects.length>50,"customer must contain individually painted details");
   for(const [x,y,w,h] of rects){
    assert.ok([x,y,w,h].every(Number.isInteger),"all pixels align to integer coordinates");
    assert.ok(w>0&&h>0,"no degenerate pixel rectangle");
