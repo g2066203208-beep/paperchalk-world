@@ -180,6 +180,9 @@ function paintStreet(g){
    px(g,xx,yy,3,5,((xx+yy+i)%4===0)?"#ffd899":"#7794b2");
   }
  }
+ // An original chimney silhouette anchors the exhaust to the rooftop.
+ px(g,37,28,9,8,"#1b3151");px(g,36,26,11,3,"#c4d9e5");
+ px(g,38,25,7,1,"#f0f5f8");
  // Near shopfront silhouettes, winter pavement and snow banks.
  px(g,0,89,160,23,"#e6edf3");
  px(g,0,93,160,3,"#c5d9e9");
@@ -190,6 +193,63 @@ function paintStreet(g){
  // Light spilling across the snow.
  px(g,120,90,20,2,"#e8d4b6");px(g,124,92,13,2,"#e8d4b6");
 }
+
+/**
+ * Pure frame sampler for original 160x112 exterior pixel animation.
+ * Only presentation changes: neither shop inventory nor WebRTC state is touched.
+ * The street is painted in independent layers, never a flattened game screenshot.
+ */
+export function streetAnimationFrame(phase=0){
+ const tick=Number.isFinite(phase)?Math.max(0,Math.floor(phase)):0;
+ return {
+  walkerX:(Math.floor(tick/5)*2)%196-18,
+  stride:Math.floor(tick/9)%4,
+  busX:(Math.floor(tick/3)%236)-38,
+  lampBright:Math.floor(tick/23)%7!==0,
+  smoke:Array.from({length:5},(_,i)=>{
+   const rise=(Math.floor(tick/9)+i*6)%32;
+   return {x:40+Math.floor(rise/8)+((i*3+Math.floor(tick/22))%3)-1,
+    y:26-rise,size:Math.max(1,3-Math.floor(rise/13))};
+  })
+ };
+}
+function paintStreetMotion(g,phase){
+ const f=streetAnimationFrame(phase);
+ // Chimney exhaust drifts above the rooftops in individually drawn pixel puffs.
+ for(const puff of f.smoke){
+  if(puff.y<2)continue;
+  px(g,puff.x,puff.y,puff.size+2,2,"#a3bed4");
+  px(g,puff.x+1,puff.y-1,puff.size,1,"#e1eaf0");
+ }
+ // A distant late bus: body, separate windows, wheels and tail lamps.
+ const bx=f.busX,by=78;
+ px(g,bx-1,by+2,30,9,"#243754");
+ px(g,bx,by,28,9,"#57708e");
+ px(g,bx+2,by+2,5,3,"#ffe0a0");
+ px(g,bx+9,by+2,5,3,"#c8ddeb");
+ px(g,bx+16,by+2,5,3,"#ffe0a0");
+ px(g,bx+24,by+3,2,3,"#f5a576");
+ px(g,bx+4,by+8,4,3,"#172740");
+ px(g,bx+21,by+8,4,3,"#172740");
+ // A bundled-up passerby walks along the snowy pavement, not inside the shop.
+ const x=f.walkerX,y=79;
+ px(g,x+2,y,6,3,"#1c3151");
+ px(g,x+3,y-3,4,4,"#b9c8d8");
+ px(g,x+2,y-2,6,2,"#547c98");
+ px(g,x+1,y+3,8,9,"#253d63");
+ px(g,x+2,y+4,6,6,"#876c82");
+ px(g,x+1,y+5,2,7,"#192c4a");
+ px(g,x+8,y+5,2,7,"#192c4a");
+ px(g,x+2,y+12,3,4+(f.stride===0?1:0),"#1b2945");
+ px(g,x+6,y+12,3,4+(f.stride===2?1:0),"#1b2945");
+ px(g,x+2,y+5,6,2,"#e0b18d");
+ px(g,x+7,y+5,2,6,"#e0b18d");
+ // Gas lamp has a sparse two-tone shimmer; no blurry overlay or imported art.
+ px(g,124,47,7,6,f.lampBright?"#ffda91":"#dfad6d");
+ px(g,126,48,3,3,f.lampBright?"#fff5d5":"#f6d5a2");
+ px(g,120,90,f.lampBright?19:15,2,f.lampBright?"#e8d4b6":"#b8b5b3");
+}
+
 export function drawPixelStreet(g,x,y,w,h,phase){
  let img=cache.get("street");
  if(!img){img=raster(160,112,paintStreet);cache.set("street",img);}
@@ -199,6 +259,14 @@ export function drawPixelStreet(g,x,y,w,h,phase){
  const cover=Math.max(w/160,h/112);
  const sourceW=w/cover,sourceH=h/cover;
  g.drawImage(img,(160-sourceW)/2,(112-sourceH)/2,sourceW,sourceH,
+   Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));
+ // Animated exterior stays a distinct reusable 160x112 transparent layer.
+ // Draw with the same source crop so moving objects never stretch on rotation.
+ let motion=cache.get("street-motion");
+ if(!motion){motion=raster(160,112,()=>{});cache.set("street-motion",motion);}
+ const mg=motion.getContext("2d");mg.clearRect(0,0,160,112);
+ paintStreetMotion(mg,phase);
+ g.drawImage(motion,(160-sourceW)/2,(112-sourceH)/2,sourceW,sourceH,
    Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));
  const cell=Math.max(2,Math.round(w/160*2));
  // Snow is a separate time-dependent layer; deterministic across both clients.
