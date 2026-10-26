@@ -6,7 +6,7 @@
   "description": "Original portrait-first cooperative shop mystery for web and Android",
   "scripts": {
     "test": "node --test src/*.test.js",
-    "check": "node --check src/logic.js && node --check src/network.js && node --check src/client.js"
+    "check": "node --check src/logic.js && node --check src/network.js && node --check src/client.js && node --check src/fixtures.js"
   },
   "engines": {"node": ">=22"}
 }
