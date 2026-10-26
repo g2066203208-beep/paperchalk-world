@@ -38,6 +38,8 @@ try{
  browser=await chromium.launch({headless:true,...(installedChrome?{executablePath:installedChrome}:{}),args:["--no-sandbox","--disable-dev-shm-usage"]});
  const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
  const host=await open(context),guest=await open(context);
+ await fs.mkdir("artifacts",{recursive:true});
+ await host.screenshot({path:"artifacts/kiosk-animated-lobby.png",fullPage:false});
  await host.locator("#nickname").fill("店长");
  await host.locator("#host").click();
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host,{timeout:20000});
