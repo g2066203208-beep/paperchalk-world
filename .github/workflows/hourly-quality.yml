@@ -1,0 +1,35 @@
+name: Hourly Lampkeep quality watchdog
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lampkeep-hourly-ci
+  cancel-in-progress: false
+
+jobs:
+  quick-regression:
+    name: Hourly no-regression check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run check
+      - run: npm test
+      - name: Check offline+Android assets and save origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f sw.js
+          test -f android/app/src/main/java/com/paperchalk/lampkeep/MainActivity.java
+          test -f design/MASTER_EXECUTION_PROMPT.md
+          grep -q 'lampkeep-local-v1' src/client.js
+          grep -q 'lampkeep-' src/network.js
+          echo 'Hourly regression complete. This watchdog tests existing code; it does not autonomously write game features.'

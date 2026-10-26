@@ -50,6 +50,14 @@ async function run(){
  await guest.locator("#welcomeButton").click();
  await host.waitForFunction(()=>window.lampkeepState()?.index===1,null,{timeout:12000});
  await guest.waitForFunction(()=>window.lampkeepState()?.index===1,null,{timeout:12000});
+ // Rapid successive actions used to overwrite the previous action before the
+ // host's 150ms tick. Validate 100 ordered inputs from a real connected client.
+ const peerId=await guest.evaluate(()=>Object.keys(window.lampkeepState().players).find(k=>k!=="host"));
+ const before=await host.evaluate(()=>window.lampkeepState().revision);
+ await guest.evaluate(()=>window.lampkeepSendTestActions(100));
+ await host.waitForFunction(before=>window.lampkeepState()?.revision>=before+100,before,{timeout:15000});
+ await host.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
+ await guest.waitForFunction(peerId=>window.lampkeepState()?.players?.[peerId]?.station==="window",peerId,{timeout:10000});
  await fs.mkdir("artifacts",{recursive:true});
  await host.screenshot({path:"artifacts/lampkeep-host-mobile.png",fullPage:true});
  await guest.screenshot({path:"artifacts/lampkeep-guest-mobile.png",fullPage:true});

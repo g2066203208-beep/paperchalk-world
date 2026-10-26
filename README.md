@@ -31,3 +31,7 @@ GitHub Actions → **Build Android Lampkeep APK** → 最近成功的运行 → 
 
 ## 状态和后续任务
 这是**可测试的初始玩法原型**，不是承诺完成专业级全部资产。接下来要做的是完整的人物分层动画、强辨识度的美术细化、故事状态连续性、可交互的商品与柜台道具、真正独立的多人操作反馈、断线恢复、稳定签名发行版以及多安卓机型实际检查。
+
+## 每小时自动验证（与开发任务区别）
+
+`.github/workflows/hourly-quality.yml` 配置每小时 GitHub Actions 质量监测：语法、逻辑测试、关键资源与本地存档兼容性。这个自动任务**只做自动测试，并不会自己编写新代码或提升美术**；开发迭代则遵守 [持续开发总提示词](design/MASTER_EXECUTION_PROMPT.md) 的具体验收流程。GitHub scheduled workflow 会受 GitHub 排队/暂停策略影响，不保证精确到分钟。

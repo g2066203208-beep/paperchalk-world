@@ -11,7 +11,8 @@ const net=new RoomNetwork({
  leave:peerId=>{if(game){leaveGame(game,peerId);lastRemoteSeq.delete(peerId);refresh();broadcast();}},
  roster:()=>refresh(),
  state:snapshot=>{if(mode!=="guest"||snapshot?.version!==2)return;game=snapshot;refresh();},
- disconnected:()=>{setNotice("房主离线；当前记录不再变化，请返回菜单。");}
+ disconnected:()=>{setNotice("房主离线；当前记录不再变化，请返回菜单。");},
+ rejected:reason=>{setNotice("网络操作未被处理："+reason);}
 });
 function setNotice(text){$("notice").textContent=text;}
 function username(){return $("playerName").value.trim().slice(0,14)||"值班员";}
@@ -127,7 +128,7 @@ function refresh(){
 }
 setInterval(()=>{
  if(mode!=="host"||!game)return;
- for(const [peerId,received] of net.inputs){
+ for(const {peerId,input:received} of net.takeInputs()){
   const seq=Number(received?.seq);
   if(!Number.isSafeInteger(seq)||seq<=0||seq<=(lastRemoteSeq.get(peerId)||0))continue;
   lastRemoteSeq.set(peerId,seq);
@@ -136,7 +137,12 @@ setInterval(()=>{
  broadcast();
 },150);
 $("resumeButton").hidden=!readSave();
-if(window.LAMPKEEP_E2E===true)window.lampkeepState=()=>game?structuredClone(game):null;
+if(window.LAMPKEEP_E2E===true){
+  window.lampkeepState=()=>game?structuredClone(game):null;
+  window.lampkeepSendTestActions=(count)=>{
+    for(let i=0;i<count;i++)send({type:"station",station:i%2===0?"counter":"window"});
+  };
+}
 refresh();
 
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(e=>console.warn('Offline cache unavailable',e)));}
