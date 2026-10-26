@@ -167,10 +167,11 @@ function upgradePlaque(g,hits,x,y,w,h,s,isManager){
  const level=s.upgrades?.shelves??0,cost=shelfUpgradeCost(s);
  r(g,x+2,y+3,w,h,C.ink);r(g,x,y,w,h,C.trim);
  r(g,x+3,y+3,w-6,h-6,level?"#526b5b":"#66584c");
- r(g,x+7,y+8,24,3,C.gold);r(g,x+7,y+19,24,3,C.gold);r(g,x+7,y+30,24,3,C.gold);
- for(let i=0;i<2;i++)r(g,x+9+i*12,y+h-12,9,6,i<level?C.gold:C.dark);
- t(g,cost===null?"扩架满级":"扩架 ¥"+cost,x+w*.69,y+h*.38,10,C.cream,"center");
- t(g,"容量 +"+(level*2),x+w*.69,y+h*.68,10,C.gold,"center");
+ // A compact shelf-shaped wooden order board, positioned away from HUD.
+ r(g,x+7,y+9,w-14,3,C.gold);r(g,x+9,y+12,3,9,C.dark);r(g,x+w-12,y+12,3,9,C.dark);
+ t(g,"扩架",x+w/2,y+h*.39,11,C.cream,"center");
+ t(g,cost===null?"满级":"¥"+cost,x+w/2,y+h*.61,12,C.gold,"center");
+ t(g,"容量 +"+(level*2),x+w/2,y+h*.83,9,C.cream,"center");
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"upgrade");
 }
 function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
@@ -183,7 +184,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  const topCabY=y+h*.045, topCabH=h*.16;
  cupboard(g,hits,x+w*.034,topCabY,w*.235,topCabH,"cabinetL",s,phase);
  cupboard(g,hits,x+w*.732,topCabY,w*.235,topCabH,"cabinetR",s,phase);
- upgradePlaque(g,hits,x+w*.52,y+h*.025,w*.20,h*.125,s,isManager);
+ upgradePlaque(g,hits,x+w*.28,y+h*.075,w*.155,h*.12,s,isManager);
  // Left and right shelf towers. Every shelf is a real storage location.
  const towerY=y+h*.245,tw=w*.225,ty=h*.135;
  for(let i=0;i<3;i++){
