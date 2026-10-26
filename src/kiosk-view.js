@@ -212,7 +212,27 @@ function heatingPlaque(g,hits,x,y,w,h,s,isManager){
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"heat");
 }
 function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
- if(renderGeneratedShop(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager))return;
+ if(renderGeneratedShop(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager)){
+  // Interaction adapter for the existing independent generated-art fixtures.
+  // This changes only their hit mapping; no art files or drawing code are altered.
+  const stockTargets=hits.filter(h=>h.cmd==="slot");
+  if(isManager)for(const h of stockTargets){
+   const entry=s.slots[h.key],sku=entry?.sku||entry?.lastSku;
+   if(sku)hit(hits,h.x,h.y,h.w,Math.max(60,h.h),"restock",sku,"hold");
+  }
+  const mat={x:x+w*.30,y:y+h*.741,w:w*.40,h:h*.105};
+  // The visible product on the pass-through mat is physically handed over.
+  // Hold it to take it back instead of selling the wrong order.
+  if(s.counter&&s.windowOpen){
+   hit(hits,mat.x,mat.y,mat.w,mat.h,"sell");
+   hit(hits,mat.x,mat.y,mat.w,mat.h,"counter",undefined,"hold");
+  }
+  const win={x:x+w*.256,y:y+h*.215,w:w*.488,h:h*.473};
+  if(commissionReady(s)&&(!motion||motion.stage==="idle"))
+   hit(hits,win.x+win.w*.13,win.y+win.h*.25,win.w*.74,win.h*.59,"commission");
+  npcBubble(g,hits,win,s,motion);
+  return;
+ }
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  flatWall(g,x,y,w,h,phase);
  // structural corner posts
