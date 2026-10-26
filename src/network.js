@@ -109,17 +109,26 @@ export class RoomNetwork{
     if(this.room.length!==8)throw Error("请输入8位房间码");
     this.status("正在连接房主…");
     return new Promise((resolve,reject)=>{
-      let settled=false;
-      const fail=e=>{if(!settled){settled=true;this.clean();reject(e instanceof Error?e:new Error(String(e)));}};
+      let settled=false,handshakeTimer=null,joinTimer=null;
+      const fail=e=>{if(!settled){
+        settled=true;clearTimeout(handshakeTimer);clearInterval(joinTimer);
+        this.clean();reject(e instanceof Error?e:new Error(String(e)));
+      }};
+      // A connected-but-unacknowledged data channel must not hang the UI.
+      handshakeTimer=setTimeout(()=>fail(Error("房间握手超时，请重试")),10000);
       const peer=this.peer=new window.Peer(undefined,{debug:0,...(window.CRYPTBOUND_PEER_OPTIONS||{})});
       peer.on("open",id=>{
         this.id=id;
         const conn=this.conn=peer.connect(PREFIX+this.room,{reliable:true});
-        conn.on("open",()=>conn.send({t:"join",name:String(name||"旅人").slice(0,14)}));
+        conn.on("open",()=>{
+          const request=()=>{if(conn.open&&!settled)conn.send({t:"join",name:String(name||"旅人").slice(0,14)});};
+          request();joinTimer=setInterval(request,850);
+        });
         conn.on("data",data=>{
           if(!data||typeof data!=="object")return;
           if(data.t==="reject"){fail(Error(data.reason||"房间拒绝加入"));return;}
           if(data.t==="welcome"){
+            clearTimeout(handshakeTimer);clearInterval(joinTimer);
             this.ready=true;this.status("已联机 · 房主负责模拟");if(!settled){settled=true;resolve(data);}
           }else if(data.t==="state"&&this.ready){this.cb.state?.(data.state);}
           else if(data.t==="input-rejected"){this.cb.rejected?.(data.reason||"输入没有被接受");}
