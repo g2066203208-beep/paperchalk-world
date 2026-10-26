@@ -23,10 +23,12 @@ async function open(ctx,w=390,h=844){
  await p.waitForFunction(()=>window.__KIOSK_TEST__?.getHits);
  return p;
 }
-async function action(page,cmd,key){
+async function action(page,cmd,key,gesture=null){
  // Network state can arrive between animation frames; wait for its real-world hitbox.
- await page.waitForFunction(([cmd,key])=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd===cmd&&(key===null||h.key===key)),[cmd,key??null],{timeout:6000});
- const h=await page.evaluate(([cmd,key])=>window.__KIOSK_TEST__.getHits().find(x=>x.cmd===cmd&&(key===undefined||x.key===key)),[cmd,key]);
+ await page.waitForFunction(([cmd,key,gesture])=>window.__KIOSK_TEST__?.getHits().some(h=>
+   h.cmd===cmd&&(key===null||h.key===key)&&(!gesture||h.gesture===gesture)),[cmd,key??null,gesture],{timeout:6000});
+ const h=await page.evaluate(([cmd,key,gesture])=>window.__KIOSK_TEST__.getHits().find(x=>
+   x.cmd===cmd&&(key===null||x.key===key)&&(!gesture||x.gesture===gesture)),[cmd,key??null,gesture]);
  assert.ok(h,"Missing clickable "+cmd+" / "+key);
  const v=await page.evaluate(()=>window.__KIOSK_TEST__.screen());
  const rect=await page.locator("#game").boundingBox();
@@ -240,7 +242,7 @@ try{
  assert.equal((await snapshot(solo)).counter,"tea");
  await solo.screenshot({path:"artifacts/kiosk-item-placing.png",fullPage:false});
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='empty',{timeout:3000});
- await action(solo,"counter");
+ await action(solo,"counter",undefined,"hold");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='take',{timeout:3000});
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  await action(solo,"upgrade");
