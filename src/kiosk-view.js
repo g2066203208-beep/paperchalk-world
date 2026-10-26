@@ -1,6 +1,7 @@
 // Independently drawn flat-color shapes for every functional fixture and object.
 // No flattened game screen; all hitboxes and host-authoritative inventory remain real.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
+import {renderGeneratedShop} from "./kiosk-gpt-scene.js";
 import {flatAmbient,flatWall,flatStreet,flatCustomer,flatProduct,flatShelfBase,flatCupboard,flatDrawer,flatWindow,flatCounter,flatMat,flatPlaque,flatTop,flatButton,flatActionIcon,flatDialogue} from "./kiosk-flat.js";
 import {drawPixelCash} from "./kiosk-pixel.js";
 
@@ -211,6 +212,7 @@ function heatingPlaque(g,hits,x,y,w,h,s,isManager){
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"heat");
 }
 function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
+ if(renderGeneratedShop(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager))return;
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
  flatWall(g,x,y,w,h,phase);
  // structural corner posts
