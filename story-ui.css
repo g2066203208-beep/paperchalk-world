@@ -34,3 +34,19 @@
 #storyPanel .narrative-here{font-size:12px;font-weight:700;padding:7px 0}
 @media(max-width:359px){#storyPanel .narrative-map{grid-template-columns:1fr}}
 @media(max-height:480px){#storyPanel{width:min(600px,calc(100vw - 30px));max-height:calc(100dvh - 14px)}#storyPanel .narrative-map{grid-template-columns:repeat(4,minmax(0,1fr))}#storyPanel .narrative-location p{display:none}}
+
+/* Playable choice of real portrait assets; no multi-character montage. */
+#storyPanel .protagonist-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#storyPanel .protagonist-card{display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px 12px;
+ min-width:0;border:2px solid #a6ada9;background:#e5e5df;color:#2d3236;min-height:210px;text-align:center}
+#storyPanel .protagonist-card.selected{border-color:#688475;background:#d8e4dc;box-shadow:inset 0 0 0 2px #eee}
+#storyPanel .protagonist-art{display:block;width:auto;max-width:100%;height:148px;object-fit:contain;image-rendering:auto}
+#storyPanel .protagonist-card strong{font-size:16px;line-height:1.25}
+#storyPanel .protagonist-details{font-size:10px;color:#62686b;line-height:1.4}
+#storyPanel .protagonist-job{font-size:12px;font-weight:750;line-height:1.4}
+#storyPanel .city-assignment{border-top:1px solid #9aa39f;margin-top:14px;padding:10px 3px 0}
+#storyPanel .city-assignment strong{font-size:13px}
+#storyPanel .city-assignment p{margin:4px 0;font-size:13px}
+#narrativeTools #avatarBtn{display:flex;justify-content:center;align-items:center;padding:1px;width:44px;min-width:44px;overflow:hidden}
+#narrativeTools #avatarBtn img{height:42px;width:34px;object-fit:contain;display:block}
+@media(max-height:480px){#storyPanel .protagonist-card{min-height:148px}#storyPanel .protagonist-art{height:98px}}
