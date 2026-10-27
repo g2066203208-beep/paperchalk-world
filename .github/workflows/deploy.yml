@@ -95,7 +95,7 @@ jobs:
         run: |
           mkdir -p _site/src
           cp index.html style.css menu.css silhouette.css story-ui.css sw.js .nojekyll _site/
-          cp src/kiosk-app.js src/kiosk-silhouette.js src/kiosk-menu.js src/kiosk-core.js src/kiosk-business.js src/kiosk-objects.js src/kiosk-shop-layout.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/story-framework.js src/story-ui.js src/network.js _site/src/
+          cp src/kiosk-app.js src/kiosk-silhouette.js src/kiosk-menu.js src/kiosk-core.js src/kiosk-business.js src/kiosk-objects.js src/kiosk-shop-layout.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/story-framework.js src/story-ui.js src/story-world-render.js src/story-animation.js src/network.js _site/src/
       - name: Verify published ES module dependencies
         run: |
           node --input-type=module <<'NODE'
