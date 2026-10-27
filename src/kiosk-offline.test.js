@@ -11,13 +11,19 @@ const {CACHE,CORE}=runInNewContext(worker+"\n;({CACHE,CORE})",{
  self:{addEventListener(){}}
 });
 
-test("offline precache includes only deployed silhouette renderer and necessary modules",()=>{
+test("offline precache includes the selected protagonists and only necessary runtime modules",()=>{
  assert.match(CACHE,/^untitled-kiosk-offline-v/);
  assert.equal(new Set(CORE).size,CORE.length,"duplicate cache entries");
  assert.ok(CORE.includes("./index.html"));
  assert.ok(CORE.includes("./src/kiosk-silhouette.js"));
  assert.ok(CORE.includes("./silhouette.css"));
- assert.ok(!CORE.some(x=>x.startsWith("./assets/")||x.includes("gptimg")||x.includes("pixel.js")));
+ const allowedImages=[
+  "./assets/protagonists/alina-preview.webp",
+  "./assets/protagonists/mikhail-preview.webp"
+ ];
+ assert.deepEqual(CORE.filter(x=>x.startsWith("./assets/")).sort(),allowedImages.sort());
+ assert.ok(CORE.every(x=>!x.includes("gptimg")&&!x.includes("pixel.js")));
+ assert.match(deploy,/cp assets\/protagonists\/\*\.webp _site\/assets\/protagonists\//);
  assert.ok(!CORE.some(x=>x.includes("assets/anime")||x.includes("full-scene")));
  const staged=deploy.match(/cp (src\/[^\n]+) _site\/src\//)?.[1]
    .split(/\s+/).filter(x=>x.startsWith("src/"))||[];
