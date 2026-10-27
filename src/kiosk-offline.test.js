@@ -11,13 +11,13 @@ const {CACHE,CORE}=runInNewContext(worker+"\n;({CACHE,CORE})",{
  self:{addEventListener(){}}
 });
 
-test("offline precache includes deployed GPTIMG sprite and independent game modules",()=>{
+test("offline precache includes only deployed silhouette renderer and necessary modules",()=>{
  assert.match(CACHE,/^untitled-kiosk-offline-v/);
  assert.equal(new Set(CORE).size,CORE.length,"duplicate cache entries");
  assert.ok(CORE.includes("./index.html"));
- assert.ok(CORE.includes("./src/kiosk-pixel.js"));
- assert.ok(CORE.includes("./src/kiosk-gptimg.js"));
- assert.ok(CORE.includes("./assets/gptimg/customer-uncle.webp"));
+ assert.ok(CORE.includes("./src/kiosk-silhouette.js"));
+ assert.ok(CORE.includes("./silhouette.css"));
+ assert.ok(!CORE.some(x=>x.startsWith("./assets/")||x.includes("gptimg")||x.includes("pixel.js")));
  assert.ok(!CORE.some(x=>x.includes("assets/anime")||x.includes("full-scene")));
  const staged=deploy.match(/cp (src\/[^\n]+) _site\/src\//)?.[1]
    .split(/\s+/).filter(x=>x.startsWith("src/"))||[];
