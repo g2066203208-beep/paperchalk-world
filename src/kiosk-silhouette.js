@@ -1,7 +1,7 @@
 // Monochrome silhouette workbench: one permanent view, no camera/zoom or cabinet doors.
 // Pure #000/#fff vector geometry; gameplay state remains authoritative in kiosk-core.
 import {GOODS,FIXTURES,visitor,dailyOverhead,shelfUpgradeCost,heatingUpgradeCost} from './kiosk-core.js';
-import {recyclingOffer,recyclingCarried,recyclingState,RECYCLING} from './kiosk-business.js';
+// Old battery-recycling minigame removed from the visible gameplay UI.
 
 export const SILHOUETTE=Object.freeze({black:'#000000',white:'#ffffff'});
 const B=SILHOUETTE.black,W=SILHOUETTE.white;
@@ -109,13 +109,10 @@ function inventory(g,hits,s,p,L,sideKeys,phase){
 }
 function footer(g,hits,L,s,p,by){
  const Wd=L.width,Hd=L.height,y=Hd-L.footer+5,gap=6;
- const recycling=recyclingState(s);
  const cmds=[{cmd:'counter',t:p.hand?'放到交接台':s.counter?'取回商品':'交接台',enabled:Boolean(p.hand||s.counter)},
              {cmd:'sell',t:'确认收款',enabled:Boolean(s.counter)},
-             {cmd:'catalog',t:'进货／改造',enabled:p.role==='manager'},
-             recyclingCarried(s,by)?{cmd:'recycleStore',t:'存入回收格',enabled:true}:
-              recycling.stored===RECYCLING.capacity?{cmd:'recycleShip',t:'回收交运',enabled:true}:
-              {cmd:'recycleReceive',t:'收旧电池',enabled:recyclingOffer(s)}];
+             {cmd:'catalog',t:'进货',enabled:p.role==='manager'},
+             {cmd:'storyOpen',t:'街坊故事',enabled:true}];
  const landscape=Wd/Hd>=1.15,cols=landscape?4:2,bw=(Wd-16-(cols-1)*gap)/cols,bh=landscape?52:Math.max(44,Math.min(50,(L.footer-28-gap)/2));
  cmds.forEach((a,i)=>{const col=i%cols,row=Math.floor(i/cols),b={x:8+col*(bw+gap),y:y+row*(bh+gap),w:bw,h:bh};button(g,hits,b,a.t,a.cmd,null,!a.enabled);});
  txt(g,p.hand?'手持：'+GOODS[p.hand].name:p.restock?'正在补货：'+GOODS[p.restock].name:s.counter?'交接台：'+GOODS[s.counter].name:'直接点货位拿取 · 点台面交付',
