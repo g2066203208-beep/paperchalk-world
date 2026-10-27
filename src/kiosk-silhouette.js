@@ -103,7 +103,7 @@ function inventory(g,hits,s,p,L,sideKeys,phase){
   txt(g,FIXTURES[key].label.replace('货架·','·').replace('吊柜','储物格').replace('抽屉','储物格'),
    r.x+5,r.y+r.h-14,Math.max(9,Math.min(11,r.w*.095)),B,'left',r.w-32);
   txt(g,String(slot.qty),r.x+r.w-7,r.y+r.h-14,12,B,'right');
-  if(valid)hit(hits,r,'slot',key);
+  hit(hits,r,'slot',key);
   if((stocking||held)&&valid){g.strokeStyle=B;g.lineWidth=3;g.strokeRect(r.x+3,r.y+3,r.w-6,r.h-6);}
  }
 }
