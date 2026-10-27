@@ -1,3 +1,4 @@
+import {validateStoryState} from './story-framework.js';
 import {reconcileObjects,canGrabObject,validateObjects} from "./kiosk-objects.js";
 // Shared, deterministic shop rules. Actions validated exclusively at room host.
 import {applyBusinessAction,businessCommand,recyclingCarried,recyclingState,recyclingValid,reclaimRecyclingOnLeave} from "./kiosk-business.js";
@@ -229,6 +230,7 @@ export function nextDay(s,by){
 }
 export function validate(s){
  if(s?.version!==3)return false;
+ if(s.story!==undefined&&!validateStoryState(s.story))return false;
  if(!recyclingValid(s)||!validateObjects(s))return false;
  if(s.counter!==null&&!GOODS[s.counter])return false;
  // Legacy v3 saves have no upgrades field; they are treated as level zero.
