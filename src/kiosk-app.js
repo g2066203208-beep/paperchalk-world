@@ -127,6 +127,7 @@ function localAction(pid,a){
  if(!state)return false;
  const before={totalServed:state.totalServed,day:state.day};
  const isStory=['storyChoice','storyTravel','storyAvatar'].includes(a.cmd);
+ if(!isStory&&state.story?.location!=='shop')return false;
  let updated=isStory?applyStoryAction(state,pid,a):a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
  if(updated){
   seeShopProgress(state,before);
