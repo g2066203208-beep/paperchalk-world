@@ -43,7 +43,7 @@ try{
   await p.locator('#storyPanel').waitFor({state:'visible'});
   await p.locator('.protagonist-art').first().evaluate(img=>img.decode());
   await p.locator('.protagonist-art').last().evaluate(img=>img.decode());
-  assert.deepEqual(await p.locator('.protagonist-art').evaluateAll(els=>els.map(x=>[x.naturalWidth,x.naturalHeight])),[[96,144],[96,144]]);
+  assert.deepEqual(await p.locator('.protagonist-art').evaluateAll(els=>els.map(x=>[x.naturalWidth,x.naturalHeight])),[[80,120],[80,120]]);
   await p.locator('.protagonist-card').nth(W>500?1:0).click();
   const expected=W>500?'male':'female',other=expected==='male'?'female':'male';
   assert.equal((await state(p)).story.assignment.shopkeeper,expected);
@@ -92,6 +92,9 @@ try{
   assert.match(await p.locator('#storyContent').innerText(),/末班车站/);
   await p.locator('#storyContent .narrative-location').filter({hasText:'末班车站'}).getByRole('button',{name:'走过去'}).click();
   assert.equal((await state(p)).story.location,'stop');
+  await p.locator('#storyContent .narrative-location').filter({hasText:'市区统配岗位'}).getByRole('button',{name:'走过去'}).click();
+  assert.equal((await state(p)).story.location,'city');
+  await p.screenshot({path:'artifacts/worker-at-city-'+W+'x'+H+'.png'});
   await p.locator('#avatarTab').click();
   await p.getByRole('button',{name:'女主角'}).click();
   assert.equal((await state(p)).story.avatar,'female');
