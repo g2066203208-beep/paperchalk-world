@@ -14,13 +14,13 @@ const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin
 const browser=await chromium.launch({headless:true,...(chrome?{executablePath:chrome}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
 const errors=[];
 async function open(context,W,H){
- const page=await context.newPage();
+ const page=await context.newPage();page.setDefaultTimeout(10000);page.setDefaultNavigationTimeout(10000);
  await page.setViewportSize({width:W,height:H});
  page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js',r=>r.fulfill({path:path.resolve('node_modules/peerjs/dist/peerjs.min.js'),contentType:'application/javascript'}));
  await page.addInitScript(()=>{window.CRYPTBOUND_PEER_OPTIONS={host:'127.0.0.1',port:9103,path:'/',secure:false};});
- for(let i=0;i<30;i++)try{await page.goto('http://127.0.0.1:4193');break;}catch(e){if(i===29)throw e;await new Promise(r=>setTimeout(r,250));}
- await page.waitForFunction(()=>window.__KIOSK_TEST__?.getHits);
+ for(let i=0;i<12;i++)try{await page.goto('http://127.0.0.1:4193',{waitUntil:'domcontentloaded',timeout:2500});break;}catch(e){if(i===11)throw e;await new Promise(r=>setTimeout(r,250));}
+ await page.waitForFunction(()=>window.__KIOSK_TEST__?.getHits,undefined,{timeout:10000});
  return page;
 }
 async function tap(page,cmd,key){
@@ -33,13 +33,13 @@ const state=p=>p.evaluate(()=>window.__KIOSK_TEST__.getState());
 try{
  await fs.mkdir('artifacts',{recursive:true});
  for(const [W,H] of [[320,568],[390,844],[844,390],[1280,720]]){
-  const ctx=await browser.newContext({viewport:{width:W,height:H},deviceScaleFactor:2});
+  console.log('SILHOUETTE START',W,H);const ctx=await browser.newContext({viewport:{width:W,height:H},deviceScaleFactor:2});
   const p=await open(ctx,W,H);
   assert.equal(await p.locator('#lobby').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)');
   assert.equal(await p.locator('#lobby img').count(),0,'old illustrated art not present');
   await p.screenshot({path:'artifacts/silhouette-menu-'+W+'x'+H+'.png'});
   await p.locator('#primaryStart').click();
-  await p.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert);
+  await p.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert,undefined,{timeout:10000});
   assert.equal(await p.evaluate(()=>window.__KIOSK_TEST__.getCamera()),null);
   const initial=await state(p);
   assert.equal(initial.windowOpen,true,'no window-open ritual');
@@ -76,7 +76,7 @@ try{
  }
  const ctx=await browser.newContext({viewport:{width:390,height:844}});
  const host=await open(ctx,390,844),guest=await open(ctx,390,844);
- await host.locator('#multiplayer').click();
+ console.log('SILHOUETTE WEBRTC START');await host.locator('#multiplayer').click();
  await host.locator('#nickname').fill('店长');
  await host.locator('#host').click();
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host,undefined,{timeout:18000});
