@@ -117,7 +117,7 @@ function footer(g,hits,L,s,p,by){
               recycling.stored===RECYCLING.capacity?{cmd:'recycleShip',t:'回收交运',enabled:true}:
               {cmd:'recycleReceive',t:'收旧电池',enabled:recyclingOffer(s)}];
  const landscape=Wd/Hd>=1.15,cols=landscape?4:2,bw=(Wd-16-(cols-1)*gap)/cols,bh=landscape?52:Math.max(44,Math.min(50,(L.footer-28-gap)/2));
- cmds.forEach((a,i)=>{const col=i%cols,row=Math.floor(i/cols),b={x:8+col*(bw+gap),y:y+row*(bh+gap),w:bw,h:bh};button(g,hits,b,a.t,a.cmd,null,a.enabled);});
+ cmds.forEach((a,i)=>{const col=i%cols,row=Math.floor(i/cols),b={x:8+col*(bw+gap),y:y+row*(bh+gap),w:bw,h:bh};button(g,hits,b,a.t,a.cmd,null,!a.enabled);});
  txt(g,p.hand?'手持：'+GOODS[p.hand].name:p.restock?'正在补货：'+GOODS[p.restock].name:s.counter?'交接台：'+GOODS[s.counter].name:'直接点货位拿取 · 点台面交付',
      Wd/2,Hd-8,12,B,'center',Wd-14);
 }
@@ -128,8 +128,8 @@ function overlay(g,hits,L,s,page){
  txt(g,'进货与改造',x+8,top+15,21,B);
  button(g,hits,{x:x+w-72,y:top,w:72,h:44},'关闭','closeCatalog');
  const taby=top+52;
- button(g,hits,{x,y:taby,w:(w-8)/2,h:44},'进货','catalogPage','goods',page!=='goods');
- button(g,hits,{x:x+(w+8)/2,y:taby,w:(w-8)/2,h:44},'改造','catalogPage','improve',page!=='improve');
+ button(g,hits,{x,y:taby,w:(w-8)/2,h:44},'进货','catalogPage','goods');
+ button(g,hits,{x:x+(w+8)/2,y:taby,w:(w-8)/2,h:44},'改造','catalogPage','improve');
  const lines=page==='improve'?
  [{label:'扩充货架',meta:shelfUpgradeCost(s)===null?'已满级':'¥'+shelfUpgradeCost(s),cmd:'upgrade'},
   {label:'保温改造',meta:heatingUpgradeCost(s)===null?'已完成':'¥'+heatingUpgradeCost(s),cmd:'heat'}]:
