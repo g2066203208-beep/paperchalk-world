@@ -1,0 +1,219 @@
+{
+  "version": 4,
+  "source": "exec-da806495-5ef2-463c-b845-219c16c8d7c6.png",
+  "sourceSize": [
+    1024,
+    1536
+  ],
+  "worldOrigin": [
+    590,
+    0
+  ],
+  "parts": [
+    {
+      "id": "room-shell",
+      "path": "room-shell.webp",
+      "rect": [
+        0,
+        0,
+        1024,
+        1536
+      ],
+      "alpha": true
+    },
+    {
+      "id": "countertop",
+      "path": "countertop.webp",
+      "rect": [
+        0,
+        758,
+        1024,
+        1019
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-left-back",
+      "path": "shelf-left-back.webp",
+      "rect": [
+        0,
+        280,
+        270,
+        850
+      ],
+      "alpha": false
+    },
+    {
+      "id": "shelf-left-structure",
+      "path": "shelf-left-structure.webp",
+      "rect": [
+        0,
+        280,
+        271,
+        851
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-left-rail-0",
+      "path": "shelf-left-rail-0.webp",
+      "rect": [
+        0,
+        464,
+        271,
+        496
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-left-rail-1",
+      "path": "shelf-left-rail-1.webp",
+      "rect": [
+        0,
+        618,
+        271,
+        661
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-left-rail-2",
+      "path": "shelf-left-rail-2.webp",
+      "rect": [
+        0,
+        760,
+        271,
+        831
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-right-back",
+      "path": "shelf-right-back.webp",
+      "rect": [
+        754,
+        280,
+        1023,
+        850
+      ],
+      "alpha": false
+    },
+    {
+      "id": "shelf-right-structure",
+      "path": "shelf-right-structure.webp",
+      "rect": [
+        754,
+        280,
+        1024,
+        851
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-right-rail-0",
+      "path": "shelf-right-rail-0.webp",
+      "rect": [
+        754,
+        464,
+        1024,
+        496
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-right-rail-1",
+      "path": "shelf-right-rail-1.webp",
+      "rect": [
+        754,
+        618,
+        1024,
+        661
+      ],
+      "alpha": true
+    },
+    {
+      "id": "shelf-right-rail-2",
+      "path": "shelf-right-rail-2.webp",
+      "rect": [
+        754,
+        760,
+        1024,
+        831
+      ],
+      "alpha": true
+    },
+    {
+      "id": "cabinet-left-door",
+      "path": "cabinet-left-door.webp",
+      "rect": [
+        73,
+        74,
+        243,
+        278
+      ],
+      "alpha": true
+    },
+    {
+      "id": "cabinet-right-door",
+      "path": "cabinet-right-door.webp",
+      "rect": [
+        797,
+        68,
+        1008,
+        293
+      ],
+      "alpha": true
+    },
+    {
+      "id": "drawer-left-face",
+      "path": "drawer-left-face.webp",
+      "rect": [
+        199,
+        1102,
+        507,
+        1219
+      ],
+      "alpha": true
+    },
+    {
+      "id": "drawer-right-face",
+      "path": "drawer-right-face.webp",
+      "rect": [
+        527,
+        1102,
+        829,
+        1219
+      ],
+      "alpha": true
+    }
+  ],
+  "rule": "All products, customers, hands, movable doors and drawer faces are independent. No retail units baked into room layers.",
+  "style": "Orange/navy/ivory flat graphic anime, unified source perspective",
+  "sourceRole": "Original GPTIMG empty production environment, restyled against approved menu reference",
+  "extensions": {
+    "source": "exec-6b221156-13aa-46d7-9baf-8db1f8590d7b.png",
+    "parts": [
+      "extension-left.webp",
+      "extension-right.webp"
+    ],
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "joinCalibration": {
+      "sourceY": [
+        0,
+        530,
+        642,
+        887
+      ],
+      "worldY": [
+        0,
+        824,
+        1018,
+        1536
+      ]
+    },
+    "note": "Architectural side wings only; central shop and interaction geometry unchanged across orientation."
+  }
+}

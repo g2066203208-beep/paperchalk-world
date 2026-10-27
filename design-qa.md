@@ -54,3 +54,12 @@ This section supersedes the earlier non-menu art limitation. Current scope is an
 - P3: silver closed-eye patch has a small enlarged skin-tone seam. Physical Android device QA remains unavailable. GitHub-hosted multiplayer and Android build results must be verified separately after publication; local WebRTC handshake remains an environment limitation.
 
 final result: passed
+
+## 2026-10-27 · Interior v4 correction after user rejected v3
+
+- Replaced independently mismatched furnishings with a single-perspective authored room split into sixteen runtime raster layers, plus original snowy street and two complete side wings. Retail units, actors, receiving hand and desktop objects remain independent.
+- Removed the live camera dropdown and forced customer-shot changes. Auxiliary views now live in pause settings. Added a real-pointer test that completes the first sale in four physical viewport shapes without using those controls, with unchanged camera coordinates.
+- Removed duplicate routine status bubbles over the customer's face and unused empty-shelf labels. Added compact paper dialogue and restrained window snow, with the motion setting honored for that effect.
+- Local validation: syntax, 92 unit checks, menu entry/return, full five-order playthrough at five viewport/DPR settings, camera/rotation/identity checks, four fixed-workbench first-sale checks passed. GitHub-hosted two-client checks remain the release gate.
+- Evidence: design/gameplay/implemented-v4-portrait.png and implemented-v4-landscape.png are actual Chromium screenshots. Chinese font glyphs verified locally before final captures.
+- This is implementation verification, not a claim of user aesthetic approval or parity with a Nintendo/Persona production. Desktop source and production prompts: design/gameplay/INTERIOR_V4_REBUILD.md.

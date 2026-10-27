@@ -1,3 +1,4 @@
+import {selectView} from './view-settings-helper.mjs';
 // Real two-client WebRTC shop interaction at mobile resolution and landscape.
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
@@ -29,18 +30,8 @@ async function aim(page,cmd,key){
  let shot=['slot','toggle','recycleStore','recycleShip'].includes(cmd)?(key||'drawerR'):cmd==='recycleReceive'?'recycle':cmd==='sell'?'register':cmd==='catalog'?'book':cmd==='counter'?'counter':'customer';
  if(cmd==='look')shot=key;
  if(cmd==='restock')shot=await page.evaluate(sku=>Object.entries(window.__KIOSK_TEST__.getState().slots).find(([,v])=>(v.sku||v.lastSku)===sku)?.[0]||'front',key);
- const select=page.locator('#viewSelect');
  await page.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert);
- if(await select.isVisible()){
-  if(await select.inputValue()!==shot)await select.selectOption(shot);
-  // Wait for the short local camera movement to settle before a stationary tap.
-  let last=null;
-  for(let i=0;i<24;i++){
-   const c=await page.evaluate(()=>window.__KIOSK_TEST__.getCamera());
-   if(last&&Math.abs(c.x-last.x)+Math.abs(c.y-last.y)+Math.abs(c.z-last.z)*100<.2)break;
-   last=c;await page.waitForTimeout(25);
-  }
- }
+ await selectView(page,shot);
 }
 async function action(page,cmd,key,gesture=null){
  await aim(page,cmd,key);

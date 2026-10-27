@@ -75,3 +75,6 @@ html,body{background:#1E294D;color:#F9F7F4}
 /* Camera navigation is local presentation; all fixtures retain world coordinates. */
 .shop-camera-controls{position:fixed;right:max(8px,env(safe-area-inset-right));top:calc(61px + env(safe-area-inset-top));z-index:3;display:flex;align-items:center;gap:6px;margin:0;padding:0 8px;color:#263459;background:#F8F4E9;border:1px solid #263459;border-radius:4px;font-size:13px;box-shadow:2px 2px 0 #26345955}
 .shop-camera-controls select{max-width:125px;min-height:44px;border:0;background:transparent;color:#263459;font:700 14px system-ui;touch-action:manipulation}
+
+/* Auxiliary camera is in settings; the shop itself stays a physical workbench. */
+#menuSettings .shop-camera-controls{position:static;margin:12px 0;padding:4px 0;border:0;box-shadow:none;background:transparent;display:flex;justify-content:space-between;font-size:15px}

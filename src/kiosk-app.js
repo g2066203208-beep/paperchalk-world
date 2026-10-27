@@ -29,12 +29,12 @@ const sampleHeldItemMotion=createHeldItemMotion();
 const speechPresentation=createSpeechPresentation();
 let customerMotion=null,heldItemMotion=null;
 const shopUi={catalog:false,page:"goods",focus:"front",camera:null};
-const cameraControls=document.createElement('label');cameraControls.className='shop-camera-controls';cameraControls.hidden=true;cameraControls.textContent='视线 ';
+const cameraControls=document.createElement('label');cameraControls.className='shop-camera-controls';cameraControls.hidden=true;cameraControls.textContent='辅助取景 ';
 const viewSelect=document.createElement('select');viewSelect.id='viewSelect';viewSelect.setAttribute('aria-label','查看店铺区域');
 for(const [value,title] of [['free','自由环顾'],['front','营业窗口'],['customer','顾客近景'],['counter','交接台面'],['register','收银机'],['book','进货簿'],['recycle','回收交接'],...Object.entries(FIXTURES).map(([k,v])=>[k,v.label])]){const option=document.createElement('option');option.value=value;option.textContent=title;viewSelect.append(option);}
-cameraControls.append(viewSelect);document.body.append(cameraControls);
+cameraControls.append(viewSelect);document.getElementById('menuSettings').append(cameraControls);
 function look(key){shopUi.focus=key;viewSelect.value=key;}
-viewSelect.onchange=()=>look(viewSelect.value);
+viewSelect.onchange=()=>{look(viewSelect.value);titleMenu?.hide();};
 let previousFrame=performance.now();
 function updateCamera(now){
  const {W,H}=screen;if(!shopUi.camera)shopUi.camera=cameraTarget(W,H,shopUi.focus==='free'?'front':shopUi.focus);
@@ -130,7 +130,7 @@ function localAction(pid,a){
  if(!state)return false;
  let updated=a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
  if(updated){save();net.broadcast(state);}
- if(pid===id)shopUi.feedback={text:!updated&&a.itemId?'这件货已被拿走，请重新选择。':state.notice,until:performance.now()+2300,anchor:shopUi.actionAnchor};
+ if(pid===id&&!updated)shopUi.feedback={text:!updated&&a.itemId?'这件货已被拿走，请重新选择。':state.notice,until:performance.now()+2300,anchor:shopUi.actionAnchor};
  return updated;
 }
 function command(cmd,key,itemId){
@@ -141,7 +141,7 @@ function command(cmd,key,itemId){
  if(["restock","upgrade","heat"].includes(cmd))shopUi.catalog=false;
  if(!state||state.phase==="summary"&&cmd!=="nextday")return;
  if(["talk","commission","recycleReceive","recycleStore"].includes(cmd))speechPresentation.prompt(performance.now());
- if(["talk","sell","commission"].includes(cmd))look("customer");
+
  const a={cmd};if(itemId)a.itemId=itemId;
  if(cmd==="slot"||cmd==="toggle")a.key=key;
  if(cmd==="restock")a.sku=key;
@@ -225,10 +225,11 @@ function frame(){
  ctx.imageSmoothingEnabled=true;
  if(state){
   const now=performance.now();updateCamera(now);
-  cameraControls.hidden=!$("lobby").hidden||state.phase==="summary"||shopUi.catalog;
+  cameraControls.hidden=false;
   customerMotion=sampleCustomerMotion(state,now);
   customerMotion.speechVisible=speechPresentation.sample(state,now);
   heldItemMotion=sampleHeldItemMotion(state,id,now);
+  shopUi.motion=$("motionToggle").checked;
   hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
  }
  else{

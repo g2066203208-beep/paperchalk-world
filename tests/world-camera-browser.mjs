@@ -1,7 +1,8 @@
+import {selectView} from './view-settings-helper.mjs';
 import assert from 'node:assert/strict';import {chromium} from 'playwright';import {spawn} from 'node:child_process';import {existsSync} from 'node:fs';import fs from 'node:fs/promises';
 const server=spawn('python3',['-m','http.server','4188','--bind','127.0.0.1'],{stdio:'ignore'});const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);let browser;
 const errors=[];
-async function shot(page,key){await page.locator('#viewSelect').selectOption(key);let last;for(let i=0;i<30;i++){const c=await page.evaluate(()=>window.__KIOSK_TEST__.getCamera());if(last&&Math.abs(c.x-last.x)+Math.abs(c.y-last.y)+Math.abs(c.z-last.z)*100<.1)break;last=c;await page.waitForTimeout(25);}}
+async function shot(page,key){await selectView(page,key);}
 async function clickHit(page,cmd,key,index=0){await page.waitForFunction(([cmd,key])=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd===cmd&&(!key||h.key===key)),[cmd,key]);const h=await page.evaluate(([cmd,key,index])=>window.__KIOSK_TEST__.getHits().filter(h=>h.cmd===cmd&&(!key||h.key===key))[index],[cmd,key,index]);assert.ok(h);await page.mouse.click(h.x+h.w/2,h.y+h.h/2);return h;}
 try{
  browser=await chromium.launch({headless:true,...(chrome?{executablePath:chrome}:{}),args:['--no-sandbox']});const p=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2});p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:4188');await p.locator('#primaryStart').click();await p.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert&&window.__KIOSK_TEST__.getHits().length>0);

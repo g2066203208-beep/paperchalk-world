@@ -1,10 +1,11 @@
+import {INTERIOR_PARTS,interiorRect} from './kiosk-interior-v4.js';
 // Illustrated object scene rendered through a local camera. No screen-based fixture reflow.
 import {GOODS,FIXTURES,visitor,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead} from './kiosk-core.js';
 import {recyclingOffer,recyclingCarried,recyclingState,RECYCLING} from './kiosk-business.js';
 import {SHOP,SHOP_WORLD,cameraTarget,projectedRect,shopTask} from './kiosk-shop-layout.js';
 import {objectsAt} from './kiosk-objects.js';
 import {SHELF_PARTS,CHARACTERS,FACE_RECTS,ITEM_SIZES,ART_PATHS,drawArt,artImage,artStatus} from './kiosk-art-assets.js';
-const F={ink:'#263459',paper:'#F9F7F4',blue:'#526FA9',pale:'#DDE6F5',warm:'#F3A33E',mint:'#8CB3B1'};
+const F={ink:'#283451',paper:'#FFF1DA',blue:'#526FA9',pale:'#E8DFC9',warm:'#F3AA43',mint:'#8CB3B1'};
 export function customerSpeech(s,motion=null){
  if(!s?.windowOpen||s.phase==="summary"||
    ["hidden","enter","handoff","exit"].includes(motion?.stage))return null;
@@ -21,7 +22,7 @@ export function wrapSpeech(text,maxChars=14,maxLines=3){
  let current="";
  for(const ch of String(text??"")){
   if(ch==="\n"){if(current)result.push(current);current="";continue;}
-  if(Array.from(current).length>=width){result.push(current);current="";}
+  if(Array.from(current).length>=width&&!/[，。！？、；：,.!?]/.test(ch)){result.push(current);current="";}
   current+=ch;
  }
  if(current)result.push(current);
@@ -100,7 +101,7 @@ export function sceneObjectRects(s){
  for(const b of SHOP.shelves){
   const units=objectsAt(s,'slot:'+b.key);
   for(const o of units){
-   const columns=Math.min(3,Math.floor(FIXTURES[b.key].capacity/GOODS[o.sku].size)),socket=o.socket??o.index,row=Math.floor(socket/columns),column=socket%columns;
+   const columns=Math.min(2,Math.floor(FIXTURES[b.key].capacity/GOODS[o.sku].size)),socket=o.socket??o.index,row=Math.floor(socket/columns),column=socket%columns;
    const cellW=b.w/columns,[iw,ih]=ITEM_SIZES[o.sku],h=Math.min(b.h-3,(cellW-6)*ih/iw),w=h*iw/ih;
    result.push({...o,key:b.key,x:b.x+column*cellW+(cellW-w)/2+row*3,y:b.y+b.h-h-row*18,w,h,depth:row});
   }
@@ -115,24 +116,31 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
   if(!active)return;
   const v=projectedRect(b,camera,W,H),x=Math.max(0,v.x),y=Math.max(56,v.y),r=Math.min(W,v.x+v.w),bottom=Math.min(H,v.y+v.h);
   if(r-x<12||bottom-y<12)return;
-  if(r-x<44||bottom-y<44)return;
-  hits.push({x,y,w:r-x,h:bottom-y,cmd,key,gesture:'tap',world:{...b},...extra});
+  const w=Math.max(44,r-x),h=Math.max(44,bottom-y);
+  hits.push({x:Math.max(0,Math.min(W-w,x-(w-r+x)/2)),y:Math.max(56,Math.min(H-h,y-(h-bottom+y)/2)),w,h,cmd,key,gesture:'tap',world:{...b},...extra});
  }
  box(g,{x:0,y:0,w:W,h:H},F.ink,0);
  g.save();g.beginPath();g.rect(0,56,W,H-56);g.clip();
  g.translate(W/2,56+(H-56)/2);g.scale(camera.z,camera.z);g.translate(-camera.x,-camera.y);
- // Complete architectural field spans every allowed camera position.
- drawArt(g,'architecture/wall.webp',SHOP_WORLD);
- drawArt(g,'architecture/wall-left-complete.webp',{x:0,y:0,w:600,h:1800});
- drawArt(g,'architecture/wall-right-complete.webp',{x:1600,y:0,w:600,h:1800});
- drawArt(g,'architecture/floor.webp',{x:0,y:1550,w:2200,h:250});
- drawArt(g,'architecture/ceiling-beam.webp',{x:0,y:0,w:2200,h:65});
+ // V4: every furnishing shares one authored perspective, extracted into independent layers.
+ const part=name=>INTERIOR_PARTS.find(p=>p.id===name);
+ function layer(name,override){const p=part(name);drawArt(g,'v4/'+p.path,override||interiorRect(p));}
+ // Complete backing planes continue behind doors and beyond the permitted camera crop.
+ box(g,SHOP_WORLD,'#283451',0);
+ drawArt(g,'v4/extension-left.webp',{x:0,y:0,w:590,h:1536});
+ drawArt(g,'v4/extension-right.webp',{x:1614,y:0,w:590,h:1536});
+ layer('room-shell');
  const win=SHOP.win;
- drawArt(g,'architecture/street.webp',win,'cover');
+ drawArt(g,'v4/street.webp',win,'cover');
+ // Small procedural snow is an effect, never a replacement for authored shop art.
+ if(ui.motion!==false){g.save();g.beginPath();g.rect(win.x,win.y,win.w,win.h);g.clip();
+  for(let i=0;i<18;i++){const x=win.x+((i*89+Math.sin(phase/100+i)*12)%win.w+win.w)%win.w,y=win.y+(i*67+phase*(.25+(i%3)*.08))%win.h;g.globalAlpha=.35+(i%3)*.12;box(g,{x,y,w:2+i%2,h:2+i%2},F.paper,1);}
+  g.restore();}
+
  if(s.windowOpen&&motion?.visible!==false){
   const tone=motion?.tone??visitor(s).tone,v=CHARACTERS[tone],a=v.anchors,size=v.size||v.sourceSize;
   const face=a.face,palm=a.palmLeft||a.leftPalm||a.receivingPalm;
-  const z=300/(palm[1]-face[1]),dh=size[1]*z,x=1100-face[0]*z+(motion?.offset||0)*win.w,y=650-face[1]*z;
+  const z=200/(palm[1]-face[1]),dh=size[1]*z,x=1102-face[0]*z+(motion?.offset||0)*win.w,y=565-face[1]*z;
   g.save();g.beginPath();g.rect(win.x,win.y,win.w,win.h);g.clip();
   drawArt(g,'characters/'+names[tone]+'.webp',{x,y,w:size[0]*z,h:dh});
   const e=customerExpression(motion,phase);if(e){const [fx,fy,fw,fh]=FACE_RECTS[tone];drawArt(g,'characters/'+names[tone]+'-'+e+'.webp',{x:x+fx*z,y:y+fy*z,w:fw*z,h:fh*z});}
@@ -141,100 +149,88 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  }
  const shutter=1-openAmount('window',s.windowOpen,now);
  if(shutter>.001){g.save();g.beginPath();g.rect(win.x,win.y,win.w,win.h);g.clip();drawArt(g,'items/shutter.webp',{...win,y:win.y-win.h*(1-shutter)});g.restore();}
- drawArt(g,'architecture/window-left.webp',{x:win.x-22,y:win.y-25,w:26,h:win.h+45});
- drawArt(g,'architecture/window-right.webp',{x:win.x+win.w-4,y:win.y-25,w:26,h:win.h+45});
- drawArt(g,'architecture/window-top.webp',{x:win.x-22,y:win.y-25,w:win.w+44,h:35});
- drawArt(g,'architecture/window-sill.webp',{x:win.x-22,y:win.y+win.h-6,w:win.w+44,h:30});
- if(!s.windowOpen)text(g,'开窗营业',1100,875,30,F.paper,'center');
- hitWorld({x:980,y:810,w:240,h:160},'window','front');
- if(s.windowOpen&&(!motion||motion.stage==='idle'))hitWorld({x:920,y:440,w:360,h:290},'talk','front');
- // Backboards and posts are independent of shelf planks and stock units.
- for(const b of SHOP.shelfBodies){
-  for(const part of SHELF_PARTS.filter(v=>!v.id.startsWith('plank-'))){const [x,y]=part.position,[w,h]=part.size;drawArt(g,'shelf/'+part.path,{x:b.x+x/996*b.w,y:b.y+y/1578*b.h,w:w/996*b.w,h:h/1578*b.h});}
-  for(let i=0;i<3;i++){const part=SHELF_PARTS.find(v=>v.id===`plank-${i}-surface`),[x,y]=part.position,[w,h]=part.size;drawArt(g,'shelf/'+part.path,{x:b.x+x/996*b.w,y:b.y+y/1578*b.h,w:w/996*b.w,h:h/1578*b.h});}
- }
+ // A scalloped curtain masks the top of the visitor, never their face.
+ // Repaint shell after the aperture so cloth, timber, and window edges occlude naturally.
+ layer('room-shell');
+ if(!s.windowOpen)text(g,'开窗营业',1102,670,25,F.paper,'center');
+ hitWorld({x:990,y:625,w:230,h:125},'window','front');
+ if(s.windowOpen&&(!motion||motion.stage==='idle'))hitWorld({x:940,y:430,w:325,h:270},'talk','front');
+ for(const side of ['left','right']){layer('shelf-'+side+'-back');layer('shelf-'+side+'-structure');}
  const units=sceneObjectRects(s);
  for(const b of SHOP.shelves){
   const slot=s.slots[b.key];
   if(p.hand||p.restock||slot.qty===0)hitWorld(b,'slot',b.key);
-  else hitWorld(b,'focus',b.key);
+
   if(p.restock&&(!slot.sku||slot.sku===p.restock)){g.strokeStyle=F.warm;g.lineWidth=3/camera.z;g.strokeRect(b.x,b.y,b.w,b.h);}
   const sku=slot.sku||slot.lastSku;
   if(p.role==='manager'&&sku)hitWorld(b,'restock',sku,{gesture:'hold',focusKey:b.key});
  }
  for(const o of [...units].sort((a,b)=>b.depth-a.depth)){flatProduct(g,o.sku,o.x,o.y,o.w,o.h);if(!p.hand&&!p.restock)hitWorld(o,'slot',o.key,{itemId:o.id});}
- // Shelf front rails occlude the bottom of physical stock, not baked copies.
- for(const b of SHOP.shelfBodies)for(let i=0;i<3;i++){const part=SHELF_PARTS.find(v=>v.id===`plank-${i}-front-rail`),[x,y]=part.position,[w,h]=part.size;drawArt(g,'shelf/'+part.path,{x:b.x+x/996*b.w,y:b.y+y/1578*b.h,w:w/996*b.w,h:h/1578*b.h});}
- for(const b of SHOP.shelves){const v=s.slots[b.key],sku=v.sku||v.lastSku;if(camera.z>.55)text(g,(sku?GOODS[sku].name:'空位')+' '+v.qty,b.x+b.w/2,b.y+b.h+12,14/camera.z,F.ink,'center');}
+ // Merchandise remains live beneath the independently authored shelf lips.
+ for(const side of ['left','right'])for(let i=0;i<3;i++)layer('shelf-'+side+'-rail-'+i);
+ for(const b of SHOP.shelves){const v=s.slots[b.key],sku=v.sku||v.lastSku;if(!sku)continue;
+  const card={x:b.x+b.w/2-64,y:b.y+b.h+8,w:128,h:28};box(g,card,F.paper,0);text(g,(sku?GOODS[sku].name:'空位')+' '+v.qty,card.x+64,card.y+14,10/camera.z,F.ink,'center');}
  function storage(b,drawer){
   const amount=openAmount(b.key,Boolean(s.open[b.key]),now),slot=s.slots[b.key];
   if(!drawer){
-   // Full inner backing remains when the hinged door reveals it.
-   drawArt(g,'shelf/backboard.webp',b);
-   if(amount>.98){
-    const contents={x:b.x+35,y:b.y+20,w:b.w-70,h:b.h-35};
-    for(const o of objectsAt(s,'slot:'+b.key))flatProduct(g,o.sku,contents.x+(o.socket??o.index)*45,contents.y,60,contents.h);
+   const side=b.key==='cabinetL'?'left':'right',q=part('cabinet-'+side+'-door'),inside=interiorRect(q);
+   drawArt(g,'v4/shelf-'+side+'-back.webp',inside);
+   if(amount>.98){const contents={x:b.x+15,y:b.y+30,w:b.w-30,h:b.h-40};
+    for(const o of objectsAt(s,'slot:'+b.key)){const rr={x:contents.x+(o.socket??o.index)*55,y:contents.y,w:60,h:contents.h};flatProduct(g,o.sku,rr.x,rr.y,rr.w,rr.h);if(!p.hand&&!p.restock)hitWorld(rr,'slot',b.key,{itemId:o.id});}
     if(p.hand||p.restock||slot.qty===0)hitWorld(contents,'slot',b.key);
    }
-   drawArt(g,'cabinet/case-closed.webp',b);
-   if(amount>.001){
-    // Cover the extracted door's location with its complete interior plate.
-    const inside={x:b.x+b.w*.08,y:b.y+b.h*.20,w:b.w*.86,h:b.h*.71};drawArt(g,'shelf/backboard.webp',inside);
-    for(const o of objectsAt(s,'slot:'+b.key)){const r={x:inside.x+15+(o.socket??o.index)*40,y:inside.y+8,w:55,h:inside.h-12};flatProduct(g,o.sku,r.x,r.y,r.w,r.h);if(!p.hand&&!p.restock)hitWorld(r,'slot',b.key,{itemId:o.id});}
-    drawArt(g,'cabinet/door.webp',{x:inside.x,y:inside.y,w:inside.w*(1-amount*.88),h:inside.h});
-   }
+   layer('cabinet-'+side+'-door',{...inside,w:inside.w*(1-amount*.87)});
    hitWorld(amount>.6?{x:b.x,y:b.y,w:50,h:b.h}:b,'toggle',b.key);
   }else{
-   const face={...b,y:b.y+amount*95,h:b.h*(1-amount*.48)};
-   drawArt(g,'shelf/backboard.webp',b);
+   const face={...b,y:b.y+amount*85,h:b.h*(1-amount*.25)};
+   drawArt(g,'v4/shelf-left-back.webp',b);
    if(amount>.98){
-    const contents={x:b.x+45,y:b.y+12,w:b.w-90,h:135};
-    for(const o of objectsAt(s,'slot:'+b.key)){const r={x:contents.x+(o.socket??o.index)*75,y:contents.y,w:80,h:120};flatProduct(g,o.sku,r.x,r.y,r.w,r.h);if(!p.hand&&!p.restock)hitWorld(r,'slot',b.key,{itemId:o.id});}
+    const contents={x:b.x+20,y:b.y+5,w:b.w-40,h:95};
+    for(const o of objectsAt(s,'slot:'+b.key)){const rr={x:contents.x+(o.socket??o.index)*65,y:contents.y,w:65,h:95};flatProduct(g,o.sku,rr.x,rr.y,rr.w,rr.h);if(!p.hand&&!p.restock)hitWorld(rr,'slot',b.key,{itemId:o.id});}
     if(p.hand||p.restock||slot.qty===0)hitWorld(contents,'slot',b.key);
     if(b.key==='drawerR'){
-     const recycle=recyclingState(s);for(let i=0;i<recycle.stored;i++)flatProduct(g,'battery',contents.x+i*80,contents.y,65,110);
+     const recycle=recyclingState(s);for(let i=0;i<recycle.stored;i++)flatProduct(g,'battery',contents.x+i*65,contents.y,55,95);
      if(recyclingCarried(s,viewerId))hitWorld(contents,'recycleStore',b.key);
      if(recycle.stored===RECYCLING.capacity)hitWorld(contents,'recycleShip',b.key,{gesture:'hold'});
     }
    }
-   const side=b.key==='drawerL'?'left':'right';drawArt(g,'counter-drawer-'+side+'.webp',face);
-   drawArt(g,'counter-handle-'+side+'.webp',{x:face.x+face.w*(side==='left'?.3555:.371),y:face.y+face.h*.3896,w:face.w*.2726,h:face.h*.2597});
+   layer('drawer-'+(b.key==='drawerL'?'left':'right')+'-face',face);
    hitWorld(face,'toggle',b.key);
   }
   const sku=slot.sku||slot.lastSku;if(p.role==='manager'&&sku&&amount>.6)hitWorld(b,'restock',sku,{gesture:'hold',focusKey:b.key});
  }
  for(const b of SHOP.cabinets)storage(b,false);
- drawArt(g,'items/lamp.webp',{x:1005,y:20,w:190,h:310},true);
- // Single continuous table bridges the service sill to the player's edge.
- drawArt(g,'counter-cabinet-body.webp',{x:590,y:1230,w:1020,h:390});
- drawArt(g,'counter-top-rim.webp',{x:590,y:950,w:1020,h:300});
+ // The entire counter surface is a single continuous authored plane.
+ layer('countertop');
  drawArt(g,'items/tray.webp',SHOP.mat);
  drawArt(g,'items/register.webp',SHOP.till,true);drawArt(g,'items/book.webp',SHOP.book,true);drawArt(g,'items/bell.webp',SHOP.bell,true);
  hitWorld(SHOP.mat,'counter','counter');hitWorld(SHOP.mat,'counter','counter',{gesture:'hold'});
  hitWorld(SHOP.till,'sell','front');hitWorld(SHOP.bell,'sell','front');if(p.role==='manager')hitWorld(SHOP.book,'catalog','counter');
- if(s.counter&&!itemMotion?.hideCounter)flatProduct(g,s.counter,SHOP.mat.x+115,SHOP.mat.y-25,110,145);
+ if(s.counter&&!itemMotion?.hideCounter)flatProduct(g,s.counter,SHOP.mat.x+85,SHOP.mat.y-15,110,145);
  if(motion?.handoff){
-  const v=CHARACTERS[motion.tone],size=v.size||v.sourceSize,a=v.anchors,face=a.face,palm=a.palmLeft||a.leftPalm||a.receivingPalm,z=300/(palm[1]-face[1]);
-  const dx=1100+(palm[0]-face[0])*z+(motion.offset||0)*win.w,dy=650+(palm[1]-face[1])*z,t=motion.handoff.progress;
+  const v=CHARACTERS[motion.tone],size=v.size||v.sourceSize,a=v.anchors,face=a.face,palm=a.palmLeft||a.leftPalm||a.receivingPalm,z=200/(palm[1]-face[1]);
+  const dx=1102+(palm[0]-face[0])*z+(motion.offset||0)*win.w,dy=565+(palm[1]-face[1])*z,t=motion.handoff.progress;
   g.save();g.beginPath();g.rect(win.x,win.y,win.w,SHOP.mat.y+SHOP.mat.h-win.y);g.clip();
-  flatProduct(g,motion.handoff.sku,SHOP.mat.x+115+(dx-55-SHOP.mat.x-115)*t,SHOP.mat.y-25+(dy-85-SHOP.mat.y+25)*t,110,145);g.restore();
+  flatProduct(g,motion.handoff.sku,SHOP.mat.x+85+(dx-55-SHOP.mat.x-115)*t,SHOP.mat.y-15+(dy-85-SHOP.mat.y+25)*t,110,145);g.restore();
  }
  if(motion?.payment){const t=motion.payment.progress;text(g,'+¥'+motion.payment.amount,1280+80*t,1010-60*t,22,F.warm,'center');}
  for(const b of SHOP.drawers)storage(b,true);
- if(s.windowOpen&&s.spoken&&visitor(s).favor){const b={x:SHOP.win.x+290,y:800,w:200,h:130};drawArt(g,'items/book.webp',b);text(g,GOODS[visitor(s).favor.sku].name+'委托',b.x+b.w/2,b.y+50,22,F.ink,'center');hitWorld(b,'commission','front');}
- if(recyclingOffer(s)&&(!motion||motion.stage==='idle')){const b={x:930,y:810,w:110,h:130};flatProduct(g,'battery',b.x,b.y,b.w,b.h);hitWorld(b,'recycleReceive','front');}
+ if(s.windowOpen&&s.spoken&&visitor(s).favor){const b={x:SHOP.win.x+285,y:650,w:140,h:100};drawArt(g,'items/book.webp',b);text(g,GOODS[visitor(s).favor.sku].name+'委托',b.x+b.w/2,b.y+50,22,F.ink,'center');hitWorld(b,'commission','front');}
+ if(recyclingOffer(s)&&(!motion||motion.stage==='idle')){const b={x:940,y:650,w:90,h:110};flatProduct(g,'battery',b.x,b.y,b.w,b.h);hitWorld(b,'recycleReceive','front');}
  g.restore();
- // Speech follows the speaker; choose a side in landscape and the chest area in portrait.
- if(s.windowOpen&&motion?.speechVisible!==false&&['front','customer','free'].includes(ui.focus||'front')){
+ // One compact speech card above the customer: no stacked status panels across the face.
+ const feedbackVisible=ui.feedback?.anchor&&ui.feedback.until>now&&!ui.catalog;
+ if(s.windowOpen&&motion?.speechVisible!==false&&!feedbackVisible&&['front','customer','free'].includes(ui.focus||'front')){
   const speech=customerSpeech(s,motion);if(speech){
-   const face=projectedRect({x:950,y:430,w:300,h:350},camera,W,H),center=projectedRect({x:1100,y:650,w:0,h:0},camera,W,H);
-   if(center.x>40&&center.x<W-40&&center.y>96&&center.y<H-80){
-    const side=W/H>=1.2,right=W-face.x-face.w-20,left=face.x-20;
-    const bw=side?Math.min(240,Math.max(right,left)):Math.min(240,W-24);
-    const x=side?(right>=left?face.x+face.w+10:face.x-bw-10):(W-bw)/2;
-    const b={x:Math.max(12,Math.min(W-bw-12,x)),y:Math.max(110,Math.min(H-76,side?center.y-50:center.y+110*camera.z+10)),w:bw,h:70};
-    box(g,b,F.paper,9);text(g,speech.name+' · 要'+GOODS[visitor(s).sku].name,b.x+10,b.y+17,14,F.blue);
-    wrapSpeech(speech.text,Math.floor((bw-20)/14),2).forEach((line,i)=>text(g,line,b.x+10,b.y+38+i*17,14,F.ink));
+   const center=projectedRect({x:1102,y:565,w:0,h:0},camera,W,H);
+   if(center.x>40&&center.x<W-40&&center.y>96&&center.y<H-50){
+    const side=W/H>=1.2,bw=Math.min(side?210:205,W-24);
+    const b={x:side?Math.max(12,Math.min(W-bw-12,center.x+125*camera.z)):(W-bw)/2,y:Math.max(65,side?center.y-55:center.y-145),w:bw,h:64};
+    // A small irregular paper edge, matching the approved menu's graphic grammar.
+    g.fillStyle=F.ink;g.fillRect(b.x+3,b.y+4,b.w,b.h);
+    box(g,b,F.paper,2);g.fillStyle=F.warm;g.fillRect(b.x,b.y,4,b.h);
+    text(g,speech.name+' · '+GOODS[visitor(s).sku].name,b.x+12,b.y+14,12,F.blue);
+    wrapSpeech(speech.text,Math.floor((bw-24)/13),2).forEach((line,i)=>text(g,line,b.x+12,b.y+33+i*17,13,F.ink));
    }
   }
  }
@@ -246,7 +242,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  }
  if(p.hand||recyclingCarried(s,viewerId)||itemMotion?.stage==='place'){
   const sku=p.hand||(recyclingCarried(s,viewerId)?'battery':itemMotion.sku),t=itemMotion?.progress??1;
-  const held={x:W-118,y:H-175,w:72,h:100},tray=projectedRect({x:SHOP.mat.x+115,y:SHOP.mat.y-25,w:110,h:145},camera,W,H);
+  const held={x:W-118,y:H-175,w:72,h:100},tray=projectedRect({x:SHOP.mat.x+85,y:SHOP.mat.y-15,w:110,h:145},camera,W,H);
   let from=held,to=held,progress=1;
   if(itemMotion?.stage==='place'){from=held;to=tray;progress=t;}
   else if(itemMotion?.stage==='take'){from=tray;to=held;progress=t;}
