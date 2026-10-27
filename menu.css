@@ -73,3 +73,13 @@
 .choice{font-size:clamp(21px,10.2cqw,43px)!important}
 @media(max-aspect-ratio:4/5){.menu-paper[data-view=home]{min-height:42%}.menu-paper h1{font-size:clamp(30px,13cqw,40px)}.choice{font-size:clamp(22px,9.5cqw,29px)!important}}
 @media(min-aspect-ratio:4/5) and (max-height:520px){.menu-paper h1{font-size:34px}.choice{font-size:23px!important}}
+/* Window-side entry: paper retreats, camera approaches, shutter masks the switch. */
+#sceneTransition{position:fixed;inset:0;z-index:40;overflow:hidden;pointer-events:auto;touch-action:none}
+.transition-shutter{position:absolute;inset:-2%;background:url('./assets/menu/transition-shutter.svg') repeat;transform:translateY(-106%);animation:shop-shutter-pass .86s cubic-bezier(.45,0,.2,1) both;box-shadow:0 7px 0 #1E294D}
+.title-menu.leaving{animation:none;pointer-events:none}
+.title-menu.leaving .menu-paper{animation:notice-put-away .32s ease-in both;transform-origin:50% 0}
+.title-menu.leaving .scene-stage{animation:approach-service-window .44s cubic-bezier(.3,0,.2,1) both;transform-origin:70% 68%}
+@keyframes notice-put-away{to{opacity:0;transform:translateY(-25px) rotate(-3deg) scale(.97)}}
+@keyframes approach-service-window{to{transform:scale(1.12) translate(-.5%,.5%)}}
+@keyframes shop-shutter-pass{0%,12%{transform:translateY(-106%)}44%,58%{transform:translateY(0)}100%{transform:translateY(106%)}}
+@media(prefers-reduced-motion:reduce){.transition-shutter,.title-menu.leaving .menu-paper,.title-menu.leaving .scene-stage{animation:none!important}}

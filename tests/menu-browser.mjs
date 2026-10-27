@@ -39,5 +39,23 @@ try{
   await p.locator('#primaryStart').click();await p.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.solo);
   results.push({viewport:`${w}x${h}`,result:'passed'});await ctx.close();
  }
+ // Full-motion entry and return preserve the live world and block input
+ // through the opaque shutter, rather than exposing an empty/interactable frame.
+ const cinematicContext=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1});
+ const cinematic=await cinematicContext.newPage();
+ cinematic.on('pageerror',e=>errors.push(e.message));
+ await cinematic.route('https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js',r=>r.fulfill({path:'node_modules/peerjs/dist/peerjs.min.js',contentType:'application/javascript'}));
+ await cinematic.goto(process.env.MENU_TEST_URL||'http://127.0.0.1:4174');
+ await cinematic.waitForFunction(()=>window.__KIOSK_TEST__);
+ await cinematic.locator('#primaryStart').click();
+ assert.equal(await cinematic.locator('#lobby').getAttribute('data-transition'),'entering');
+ assert.equal(await cinematic.locator('#game').evaluate(n=>n.inert),true);
+ await cinematic.waitForFunction(()=>document.getElementById('sceneTransition').hidden&&!document.getElementById('game').inert);
+ assert.equal(await cinematic.locator('#lobby').isHidden(),true);
+ const beforeMenu=await cinematic.evaluate(()=>window.__KIOSK_TEST__.getState());
+ await cinematic.locator('#menu').click();await cinematic.locator('#primaryStart').click();
+ await cinematic.waitForFunction(()=>document.getElementById('sceneTransition').hidden&&!document.getElementById('game').inert);
+ assert.deepEqual(await cinematic.evaluate(()=>window.__KIOSK_TEST__.getState()),beforeMenu,'continue current game must not replace world during transition');
+ results.push({viewport:'390x844',transition:'full-motion entry/return',result:'passed'});await cinematicContext.close();
  assert.deepEqual(errors,[]);await fs.writeFile('artifacts/menu/results.json',JSON.stringify({results,pageErrors:errors},null,2));console.log(JSON.stringify(results));
 }finally{await browser.close();server.kill();}

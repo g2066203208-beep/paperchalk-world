@@ -31,3 +31,9 @@ Visual acceptance still belongs to the user. Small residual differences: exact d
 Local complete two-client regression is separately blocked at WebRTC handshake in the current runner; not represented as passed. Android physical-device rendering is not available here and is not claimed.
 
 final result: passed
+
+## Follow-up: store-entry transition
+
+2026-10-27: planning commit `a37fe5a` first recorded the small-shop start, same-current-store menu, rich physical interactions and store-growth projection before implementation. Current view-switch now retreats the notice paper, approaches the window, and uses an opaque shutter to mask the camera/render-path change. Input remains blocked until the reveal finishes. Reduced-motion entry remains immediate. The multiplayer entry waits for a first valid host snapshot. Local 4-size menu checks plus full-motion entry/return and world-state preservation pass. Cloud browser inspected entering state, then playable world, then return to the same live game. This is the transition layer; a shared store projection and growth-driven menu are explicitly planned, not claimed implemented.
+
+Previous runtime `624d745` passed the GitHub-hosted complete browser regression, page deployment and Android build. The earlier local WebRTC limitation did not reproduce on the GitHub runner.

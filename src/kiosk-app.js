@@ -33,7 +33,7 @@ const net=new RoomNetwork({
   const yes=join(state,pid,name);if(yes)net.broadcast(state);return yes;
  },
  leave:pid=>{if(state){leave(state,pid);net.broadcast(state);}},
- state:s=>{if(mode==="guest"&&s?.version===3){const first=state===null;state=s;if(first)titleMenu?.hide(false);}},
+ state:s=>{if(mode==="guest"&&s?.version===3){const first=state===null;state=s;if(first){$("host").disabled=$("join").disabled=false;titleMenu?.hide();}}},
  disconnected:()=>setStatus("房主已断开；本局停止同步。",true),
  rejected:reason=>setStatus("操作被拒绝："+reason,true)
 });
@@ -44,7 +44,7 @@ function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
  mode=who;state=model;id=userId;seq=0;speechPresentation.reset();
  $("hud").classList.add("playing");
- titleMenu?.hide(false);
+ titleMenu?.hide();
  $("roomCode").textContent=room?("房间码："+room):"";
  refreshRoomDetails();
  save();
@@ -100,11 +100,11 @@ $("join").onclick=async()=>{
   if(!joined)throw lastError||Error("无法连接房间");
   room=joined.room;id=joined.id;mode="guest";state=null;seq=0;
   $("hud").classList.add("playing");
-  titleMenu?.hide(false);
+  setStatus("已连接，正在同步当前店面…");
   $("roomCode").textContent="房间码："+room;
   refreshRoomDetails();
  }catch(e){setStatus("无法加入："+(e?.message||e),true);}
- finally{$("host").disabled=$("join").disabled=false;}
+ finally{$("host").disabled=$("join").disabled=(mode==="guest"&&state===null);}
 };
 $("menu").onclick=()=>{refreshResume();refreshRoomDetails();if($("lobby").hidden)titleMenu.show();else if(state)titleMenu.hide();};
 $("closeLobby").onclick=()=>{if(state)titleMenu.hide();};

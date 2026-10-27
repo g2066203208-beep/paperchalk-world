@@ -9,7 +9,9 @@ export function mountTitleMenu({hasSave,onStart,onResume,onNew,hasGame}){
  const $=id=>document.getElementById(id),root=$("lobby");
  const views={home:$("menuHome"),multi:$("menuMulti"),settings:$("menuSettings")};
  const prefs=loadMenuSettings(localStorage,matchMedia("(prefers-reduced-motion: reduce)").matches);
- let exitTimer=null,audio=null,currentView="home";
+ let exitTimer=null,revealTimer=null,transitioning=false,audio=null,currentView="home";
+ const curtain=$("sceneTransition"),gameCanvas=$("game");
+ root.dataset.transition="idle";
  function persist(){try{localStorage.setItem(MENU_SETTINGS_KEY,JSON.stringify(prefs));}catch{}}
  function applyPrefs(){
   root.dataset.motion=String(prefs.motion);root.dataset.largeText=String(prefs.largeText);
@@ -37,18 +39,30 @@ export function mountTitleMenu({hasSave,onStart,onResume,onNew,hasGame}){
   $("homeSave").textContent=saved?"上次的忙碌，已经替你记下。":"推开窗，迎接第一位客人。";
   $("closeLobby").hidden=!hasGame();$("newGame").hidden=!saved;
  }
- function hide(animate=true){
-  clearTimeout(exitTimer);
-  if(animate&&prefs.motion){root.classList.add("leaving");exitTimer=setTimeout(()=>{root.hidden=true;root.classList.remove("leaving");},240);}
-  else{root.hidden=true;root.classList.remove("leaving");}
-  document.getElementById("game").inert=false;
+ function finishEntry(){
+  clearTimeout(exitTimer);clearTimeout(revealTimer);transitioning=false;
+  root.hidden=true;root.inert=false;root.classList.remove("leaving");root.dataset.transition="idle";
+  curtain.hidden=true;gameCanvas.inert=false;
   $("menu").focus({preventScroll:true});
  }
- function show(){
-  clearTimeout(exitTimer);root.classList.remove("leaving");root.hidden=false;
-  $("game").inert=true;refresh();showView("home");
+ function hide(animate=true){
+  if(transitioning)return;
+  if(root.hidden){gameCanvas.inert=false;return;}
+  clearTimeout(exitTimer);clearTimeout(revealTimer);
+  const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!animate||!prefs.motion||reduced){finishEntry();return;}
+  transitioning=true;root.dataset.transition="entering";root.inert=true;gameCanvas.inert=true;
+  root.classList.add("leaving");curtain.hidden=false;
+  // Reveal the prepared world only at the fully opaque shutter midpoint.
+  revealTimer=setTimeout(()=>{root.hidden=true;root.inert=false;root.classList.remove("leaving");},420);
+  exitTimer=setTimeout(finishEntry,860);
  }
- $("primaryStart").onclick=()=>{tone();if(hasGame())hide();else (hasSave()?onResume:onStart)();};
+ function show(){
+  clearTimeout(exitTimer);clearTimeout(revealTimer);transitioning=false;curtain.hidden=true;
+  root.classList.remove("leaving");root.dataset.transition="idle";root.inert=false;root.hidden=false;
+  gameCanvas.inert=true;refresh();showView("home");
+ }
+ $("primaryStart").onclick=()=>{if(transitioning)return;tone();if(hasGame())hide();else (hasSave()?onResume:onStart)();};
  $("multiplayer").onclick=()=>{tone();showView("multi");};
  $("settings").onclick=()=>{tone();showView("settings");};
  root.querySelectorAll("[data-menu-back]").forEach(b=>b.onclick=()=>{tone();refresh();showView("home");});
@@ -77,7 +91,7 @@ export function mountTitleMenu({hasSave,onStart,onResume,onNew,hasGame}){
   n.style.cssText=`left:${(i*47.31)%100}%;--size:${5+i%4*3}px;--duration:${12+i%7*2}s;--delay:-${i*2.13}s;--opacity:${.35+i%4*.12}`;
   field.append(n);
  }
- document.addEventListener("visibilitychange",()=>{root.querySelectorAll(".menu-scene *").forEach(n=>n.style.animationPlayState=document.hidden?"paused":"");});
+ document.addEventListener("visibilitychange",()=>{root.querySelectorAll(".menu-scene *").forEach(n=>n.style.animationPlayState=document.hidden?"paused":"");if(document.hidden&&transitioning)finishEntry();});
  function sceneSize(){
   const w=root.clientWidth||innerWidth,h=root.clientHeight||innerHeight;
   const portrait=w/h<.8;

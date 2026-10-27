@@ -24,6 +24,7 @@ async function open(ctx,w=390,h=844){
  return p;
 }
 async function action(page,cmd,key,gesture=null){
+ await page.waitForFunction(()=>document.getElementById("lobby").hidden&&!document.getElementById("game").inert);
  // Network state can arrive between animation frames; wait for its real-world hitbox.
  await page.waitForFunction(([cmd,key,gesture])=>window.__KIOSK_TEST__?.getHits().some(h=>
    h.cmd===cmd&&(key===null||h.key===key)&&(!gesture||h.gesture===gesture)),[cmd,key??null,gesture],{timeout:6000});

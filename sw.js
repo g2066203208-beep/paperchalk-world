@@ -2,9 +2,9 @@
 // the ES modules deployed to GitHub Pages; PeerJS signaling remains online-only.
 // Only individually cropped, licensed/original GPTIMG sprite files are cached.
 // Never precache a flattened mock screenshot or the obsolete anime asset pack.
-const CACHE="untitled-kiosk-offline-v10-approved-scene";
+const CACHE="untitled-kiosk-offline-v11-shop-entry";
 const CORE=[
- "./","./index.html","./style.css","./menu.css","./src/kiosk-menu.js","./assets/menu/fonts/menu-black.woff",
+ "./","./index.html","./style.css","./menu.css","./src/kiosk-menu.js","./assets/menu/transition-shutter.svg","./assets/menu/fonts/menu-black.woff",
  ...["paper.svg","ticket.svg","tape.svg","mug.svg","snow.svg","steam.svg","icon-door.svg","icon-friends.svg","icon-settings.svg","icon-arrow.svg","icon-back.svg"].map(n=>"./assets/menu/"+n),
  ...["backdrop.webp","foreground.webp","clerk-body.webp","clerk-head-open.webp","clerk-head-blink.webp","clerk-cup-arm.webp","customer-master.webp"].map(n=>"./assets/menu-approved/"+n),
  "./src/kiosk-core.js","./src/kiosk-business.js","./src/kiosk-view.js","./src/kiosk-gpt-scene.js","./src/kiosk-flat.js","./src/kiosk-skin.js",
