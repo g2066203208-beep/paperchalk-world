@@ -42,16 +42,28 @@ const net=new RoomNetwork({
   const yes=join(state,pid,name);if(yes)net.broadcast(state);return yes;
  },
  leave:pid=>{if(state){leave(state,pid);net.broadcast(state);}},
- state:s=>{if(mode==="guest"&&s?.version===3){const first=state===null;state=s;if(first){$("host").disabled=$("join").disabled=false;titleMenu?.hide();}}},
+ state:s=>{if(mode==="guest"&&s?.version===3){const first=state===null;state=s;updateAvatarBadge();if(first){$("host").disabled=$("join").disabled=false;titleMenu?.hide();}}},
  disconnected:()=>setStatus("房主已断开；本局停止同步。",true),
  rejected:reason=>setStatus("操作被拒绝："+reason,true)
 });
 function readSave(){try{let value=JSON.parse(localStorage.getItem(SAVE)||"null");return value?.version===3?value:null;}catch{return null;}}
 function save(){if(state&&(mode==="solo"||mode==="host")){try{localStorage.setItem(SAVE,JSON.stringify(state));}catch{setStatus("浏览器未允许保存，本次进度暂不能自动存档。",true);}}}
+function updateAvatarBadge(){
+ const b=$("avatarBtn");if(!b)return;
+ const avatar=state?.story?.avatar;
+ const label=avatar==='female'?'阿丽娜':avatar==='male'?'米哈伊尔':null;
+ b.replaceChildren();
+ b.setAttribute('aria-label',label?'主角 '+label+' · 角色信息':'选择主角');
+ if(avatar){
+  const img=document.createElement('img');
+  img.src='./assets/protagonists/'+(avatar==='female'?'alina':'mikhail')+'-preview.webp';
+  img.alt='';img.width=34;img.height=42;b.append(img);
+ }else b.textContent='主角';
+}
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
- mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;ensureStory(state);storyUI?.hide();
+ mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;ensureStory(state);storyUI?.hide();updateAvatarBadge();
  // Legacy save compatibility: old hidden cabinets and drawers are now always open racks.
  state.open??={};
  for(const [key,fixture] of Object.entries(FIXTURES))if(fixture.kind!=='shelf')state.open[key]=true;
@@ -60,6 +72,7 @@ function start(who,model,userId="solo"){
  speechPresentation.reset();storyCuePlayer.reset();
  $("hud").classList.add("playing");
  titleMenu?.hide();
+ if(!state.story.avatar)storyUI?.show("avatar");
  $("roomCode").textContent=room?("房间码："+room):"";
  refreshRoomDetails();
  save();
@@ -131,6 +144,7 @@ function localAction(pid,a){
  let updated=isStory?applyStoryAction(state,pid,a):a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
  if(updated){
   seeShopProgress(state,before);
+  if(a.cmd==="storyAvatar")updateAvatarBadge();
   if(a.cmd==='nextday'){
    // The new presentation has no window handle: every shift starts open.
    state.windowOpen=true;state.notice='新的一天。直接点货架拿货，点交接台交付。';
@@ -246,6 +260,7 @@ function frame(){
  requestAnimationFrame(frame);
 }
 storyUI=mountStoryUI({dispatch:command,getState:()=>state});
+updateAvatarBadge();
 titleMenu=mountTitleMenu({hasSave:()=>Boolean(readSave()),hasGame:()=>Boolean(state),onStart:()=>$("solo").onclick(),onResume:()=>$("resume").onclick(),onNew:()=>$("solo").onclick()});
 resize();refreshResume();frame();
 if("serviceWorker" in navigator){
@@ -253,4 +268,4 @@ if("serviceWorker" in navigator){
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
  command,screen:()=>screen,getCamera:()=>null,getWorld:()=>structuredClone(SHOP),getArtStatus:()=>({total:0,ready:0,failed:[]}),getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,
- getHeldItemMotion:()=>heldItemMotion?structuredClone(heldItemMotion):null,getStory:()=>state?.story?structuredClone(state.story):null,openStory:(type)=>storyUI.show(type),saveKey:SAVE};
+ getHeldItemMotion:()=>heldItemMotion?structuredClone(heldItemMotion):null,getStory:()=>state?.story?structuredClone(state.story):null,openStory:(type)=>storyUI.show(type),getHeroBadge:()=>$("avatarBtn")?.querySelector("img")?.getAttribute("src")||null,saveKey:SAVE};
