@@ -1,5 +1,5 @@
 // Shared, deterministic shop rules. Actions validated exclusively at room host.
-import {applyBusinessAction,recyclingCarried,recyclingState,recyclingValid,reclaimRecyclingOnLeave} from "./kiosk-business.js";
+import {applyBusinessAction,businessCommand,recyclingCarried,recyclingState,recyclingValid,reclaimRecyclingOnLeave} from "./kiosk-business.js";
 export const GOODS=Object.freeze({
  tea:{name:"热茶",buy:4,price:9,size:1,color:"#bd8b58"},
  bread:{name:"面包",buy:5,price:12,size:2,color:"#d4a165"},
@@ -99,7 +99,7 @@ export function apply(s,by,a){
  if(!s||s.version!==3||!s.players[by]||s.phase!=="operating"||!a||typeof a!=="object")return false;
  const p=s.players[by];
  let {cmd,key,sku}=a;
- if(cmd==="recycleReceive"||cmd==="recycleStore"||cmd==="recycleShip")return applyBusinessAction(s,by,a);
+ if(businessCommand(cmd))return applyBusinessAction(s,by,a);
  if(recyclingCarried(s,by)&&["slot","counter","restock"].includes(cmd))return false;
  if(cmd==="slot"&&key==="drawerR"){
   const recycling=recyclingState(s);
