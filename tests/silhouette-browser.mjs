@@ -64,9 +64,26 @@ try{
   await tap(p,'restock','tea');
   await tap(p,'slot','shelfL1');
   assert.equal((await state(p)).slots.shelfL1.qty,2,'buy stock by a direct subsequent slot click');
-  await tap(p,'recycleReceive');
-  await tap(p,'recycleStore');
-  assert.equal((await state(p)).businesses.recycling.stored,1,'no drawer-open prerequisite');
+  // Narrative is a real in-game choice UI, not a hardcoded screenshot.
+  assert.equal(await p.evaluate(()=>window.__KIOSK_TEST__.getStory().active),'notice');
+  assert.equal(hits.some(h=>h.cmd==='recycleReceive'),false,'removed battery-recycling gameplay is not advertised');
+  await p.locator('#storyBtn').click();
+  assert.match(await p.locator('#storyContent').innerText(),/暂停车辆到站/);
+  await p.locator('#storyContent .narrative-option').first().click();
+  await p.locator('#storyContent .narrative-option').first().click();
+  await p.locator('#storyContent .narrative-option').first().click();
+  await p.locator('#storyContent .narrative-option').first().click();
+  assert.equal((await state(p)).story.flags.heard_last_bus,true);
+  assert.equal((await state(p)).story.active,'after_sale','a completed sale schedules a consequence after the opening conversation');
+  await p.screenshot({path:'artifacts/story-first-return-'+W+'x'+H+'.png'});
+  await p.locator('#mapTab').click();
+  assert.match(await p.locator('#storyContent').innerText(),/末班车站/);
+  await p.locator('#storyContent .narrative-location').filter({hasText:'末班车站'}).getByRole('button',{name:'走过去'}).click();
+  assert.equal((await state(p)).story.location,'stop');
+  await p.locator('#avatarTab').click();
+  await p.getByRole('button',{name:'女主角'}).click();
+  assert.equal((await state(p)).story.avatar,'female');
+  await p.locator('#closeStory').click();
   await p.mouse.move(W*.45,H*.45);await p.mouse.down();await p.mouse.move(W*.6,H*.6,{steps:5});await p.mouse.up();
   await p.mouse.wheel(0,300);
   assert.equal(await p.evaluate(()=>window.__KIOSK_TEST__.getCamera()),null,'input cannot pan or zoom');
@@ -95,6 +112,13 @@ try{
  await tap(host,'sell');
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.served===1,undefined,{timeout:12000});
  assert.equal((await state(guest)).cash,(await state(host)).cash);
+ // The guest proposes a choice; the host commits it once, and both see the same memory.
+ await guest.locator('#storyBtn').click();
+ await guest.locator('#storyContent .narrative-option').first().click();
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getStory()?.flags.read_notice===true,undefined,{timeout:12000});
+ await guest.waitForFunction(()=>window.__KIOSK_TEST__.getStory()?.active==='clerk_remark',undefined,{timeout:12000});
+ assert.equal((await state(host)).story.history.length,1);
+ await guest.locator('#closeStory').click();
  await host.screenshot({path:'artifacts/silhouette-webrtc-host.png'});
  await guest.screenshot({path:'artifacts/silhouette-webrtc-guest.png'});
  assert.deepEqual(errors,[],'no JavaScript console exceptions');
