@@ -1,0 +1,36 @@
+/* Quiet Russian-winter narrative chrome; independent of legacy kiosk Canvas. */
+#narrativeTools{display:none;position:fixed;top:calc(6px + env(safe-area-inset-top,0px));left:58px;gap:5px;pointer-events:auto;z-index:12}
+#hud.playing #narrativeTools{display:flex}
+#narrativeTools button{min-height:44px;min-width:48px;border:1px solid #20252b;border-radius:0;background:#f3f0ea;color:#20252b;font-size:13px;font-weight:650;cursor:pointer;touch-action:manipulation}
+#narrativeTools #mapBtn,#narrativeTools #avatarBtn{display:none}
+#narrativeTools button:focus-visible,#storyPanel button:focus-visible{outline:3px solid #687a91;outline-offset:2px}
+#storyPanel[hidden]{display:none!important}
+#storyPanel{position:fixed;z-index:40;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:min(480px,calc(100vw - 20px));max-height:min(720px,calc(100dvh - 30px));
+ display:flex;flex-direction:column;padding:0;border:2px solid #333a40;box-shadow:0 9px 0 #333a40,0 18px 40px #1e242640;
+ background:#f1eee7;color:#24292e;font:15px/1.65 system-ui,"Noto Sans CJK SC",sans-serif;
+ touch-action:pan-y;overscroll-behavior:contain}
+#storyPanel .narrative-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 7px;gap:12px}
+#storyPanel h2{margin:0;color:#272c32;font-size:20px;font-weight:700;letter-spacing:.03em}
+#storyPanel button{color:#282e33;cursor:pointer;font-family:inherit;touch-action:manipulation}
+#storyPanel #closeStory{min-height:44px;min-width:80px;background:transparent;border:1px solid #777b7d;font-size:13px}
+#storyPanel .narrative-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;padding:4px 14px 10px;border-bottom:1px solid #b9b8b2}
+#storyPanel .narrative-tabs button{min-height:44px;background:#e1ddd5;border:1px solid #aba9a2;font-size:14px}
+#storyPanel .narrative-tabs button[aria-pressed="true"]{background:#353b40;color:#f6f2ec;border-color:#353b40}
+#storyPanel .narrative-content{padding:12px 14px 20px;overflow-y:auto;flex:1;min-height:0}
+#storyPanel .narrative-speaker{font-weight:750;margin:2px 0 8px;color:#57616a;font-size:12px;letter-spacing:.08em}
+#storyPanel .narrative-prose{margin:3px 0 14px;line-height:1.85;font-size:clamp(15px,3.8vw,18px);white-space:pre-line}
+#storyPanel .narrative-helper{margin:0 0 14px;color:#646e73;font-size:12px;line-height:1.5}
+#storyPanel .narrative-option{display:block;width:100%;min-height:48px;background:#f9f7f2;text-align:left;border:1px solid #868b89;margin-top:9px;padding:10px 12px;font-size:14px;line-height:1.55;transition:background .12s}
+#storyPanel .narrative-option:hover:not(:disabled){background:#e0e5e3}
+#storyPanel .narrative-option:active:not(:disabled){background:#cbd4d1}
+#storyPanel .narrative-option:disabled{cursor:default;opacity:.48}
+#storyPanel .narrative-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#storyPanel .narrative-location{border:1px solid #969c9c;padding:10px;background:#e7e9e7;display:flex;flex-direction:column;gap:4px}
+#storyPanel .narrative-location.current{border:2px solid #3b484e;background:#d4ddd9}
+#storyPanel .narrative-location strong{font-size:15px}
+#storyPanel .narrative-location p{margin:0;flex:1;font-size:12px;color:#515b5e;line-height:1.65}
+#storyPanel .narrative-location .narrative-option{min-height:44px;font-size:12px;text-align:center;padding:6px}
+#storyPanel .narrative-here{font-size:12px;font-weight:700;padding:7px 0}
+@media(max-width:359px){#storyPanel .narrative-map{grid-template-columns:1fr}}
+@media(max-height:480px){#storyPanel{width:min(600px,calc(100vw - 30px));max-height:calc(100dvh - 14px)}#storyPanel .narrative-map{grid-template-columns:repeat(4,minmax(0,1fr))}#storyPanel .narrative-location p{display:none}}
