@@ -1,40 +1,57 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#EEA02E"><title>未命名 · 冬季小店</title>
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./menu.css">
+<meta name="theme-color" content="#ffffff"><title>未命名 · 冬季小店</title>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./menu.css"><link rel="stylesheet" href="./silhouette.css">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
 <script type="module" src="./src/kiosk-app.js"></script>
 </head><body>
-<canvas id="game" aria-label="第一人称冬夜小店：点击窗台开窗，货架拿取商品，柜台交付收款"></canvas>
+<canvas id="game" aria-label="黑白剪影小店：整间店一屏观察，点击货位取货、台面交接、收款"></canvas>
 <div id="hud"><button id="menu" aria-label="打开菜单">☰</button><span id="roomCode"></span><span id="status" role="status">尚未营业</span></div>
 <section id="lobby" class="title-menu approved-menu" aria-label="小店主菜单">
  <div class="menu-scene" aria-hidden="true"><div class="scene-stage">
-  <img class="scene-backdrop" src="./assets/menu-approved/backdrop.webp" alt="">
-  <div class="shopkeeper" data-part="original-fullbody-rig">
-   <img class="keeper-body" src="./assets/menu-approved/clerk-body.webp" alt="">
-   <div class="keeper-head"><img class="eyes-open" src="./assets/menu-approved/clerk-head-open.webp" alt=""><img class="eyes-closed" src="./assets/menu-approved/clerk-head-blink.webp" alt=""></div>
-   <div class="clerk-cup-arm"><img class="clerk-hand" src="./assets/menu-approved/clerk-cup-arm.webp" alt=""><div class="hand-mug"><img src="./assets/menu/mug.svg" alt=""><img class="steam" src="./assets/menu/steam.svg" alt=""></div></div>
-  </div>
-  <img class="scene-counter" src="./assets/menu-approved/foreground.webp" alt="">
-  <img class="scene-customer" src="./assets/menu-approved/customer-master.webp" alt="">
-  <div class="snowfall"></div>
+ <svg class="scene-silhouette" viewBox="0 0 960 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <rect width="960" height="700" fill="#fff"/>
+  <g fill="#000">
+   <path d="M0 465h94v-82h70v82h36v-117h92v117h28v-55h43v55h224v-42h59v42h31v-102h104v102h27v-70h67v70h95v102H0z"/>
+   <path d="M0 568h960v7H0zM0 637h960v63H0z"/>
+   <path d="M0 583h140v5H0zM249 589h178v5H249zM591 585h179v5H591zM832 590h128v5H832z"/>
+  </g>
+  <g fill="#fff">
+   <path d="M23 404h5v8h-5zm16 0h5v8h-5zm29 0h5v8h-5zM217 375h7v10h-7zm19 0h7v10h-7zm19 0h7v10h-7zM694 389h7v10h-7zm22 0h7v10h-7zm22 0h7v10h-7zM867 423h6v9h-6zm21 0h6v9h-6z"/>
+   <path d="M14 595h109v4H14zM317 605h85v3h-85zM619 601h129v3H619z"/>
+  </g>
+  <g shape-rendering="crispEdges">
+   <path d="M447 503h68v76h-68z" fill="#000"/>
+   <path d="M443 500h76v6h-76z" fill="#000"/>
+   <path d="M446 497h68v3h-68z" fill="#fff"/>
+   <path d="M459 518h43v28h-43z" fill="#fff"/>
+   <path d="M480 518v28M459 537h43" stroke="#000" stroke-width="3"/>
+   <path d="M456 557h50v3h-50zM450 568h62v3h-62z" fill="#fff"/>
+   <path d="M441 580h81v4h-81z" fill="#000"/>
+   <path d="M529 484h3v95h-3zM521 485h18v4h-18z" fill="#000"/>
+   <rect x="525" y="476" width="10" height="4" fill="#000"/>
+  </g>
+  <g fill="none" stroke="#000" stroke-width="5" stroke-linecap="square">
+   <path d="M380 557v-97m0 44-24-29m24 14 23-35M579 557V439m0 53-22-30m22 14 25-35"/>
+  </g>
+ </svg><div class="snowfall"></div>
  </div></div>
- <div class="menu-paper" data-view="home"><img class="paper-tape tape-left" src="./assets/menu/tape.svg" alt=""><img class="paper-tape tape-right" src="./assets/menu/tape.svg" alt="">
+ <div class="menu-paper" data-view="home">
 
   <div id="menuHome" class="menu-view">
    <p class="menu-kicker">小店的一天，从这里开始</p>
    <h1 id="menuHeading">欢迎开店<span class="heading-dot">。</span></h1>
    <div class="main-choices">
-    <button id="primaryStart" class="choice choice-primary"><img src="./assets/menu/icon-door.svg" alt=""><span>开始经营</span><img class="choice-arrow" src="./assets/menu/icon-arrow.svg" alt=""></button>
-    <button id="multiplayer" class="choice"><img src="./assets/menu/icon-friends.svg" alt=""><span>与好友开店</span><img class="choice-arrow" src="./assets/menu/icon-arrow.svg" alt=""></button>
-    <button id="settings" class="choice"><img src="./assets/menu/icon-settings.svg" alt=""><span>设置</span><img class="choice-arrow" src="./assets/menu/icon-arrow.svg" alt=""></button>
+    <button id="primaryStart" class="choice choice-primary"><span>开始经营</span></button>
+    <button id="multiplayer" class="choice"><span>与好友开店</span></button>
+    <button id="settings" class="choice"><span>设置</span></button>
    </div>
    <button id="closeLobby" class="return-choice" hidden>返回营业中的小店 <span aria-hidden="true">↗</span></button>
    <p id="homeSave" class="save-caption">推开窗，迎接第一位客人。</p>
   </div>
   <div id="menuMulti" class="menu-view" hidden>
-   <button class="paper-back" data-menu-back><img src="./assets/menu/icon-back.svg" alt="">返回</button>
+   <button class="paper-back" data-menu-back>返回</button>
    <h2>一起开店<span class="heading-dot">。</span></h2>
    <p class="view-caption">同一间小店，一起忙里偷闲。</p>
    <label class="name-field">值班员称呼<input id="nickname" maxlength="14" value="店长" autocomplete="nickname"></label>
@@ -43,7 +60,7 @@
    <p id="roomDetails" class="menu-feedback" role="status" aria-live="polite">创建房间后，把房间码分享给好友。</p>
   </div>
   <div id="menuSettings" class="menu-view" hidden>
-   <button class="paper-back" data-menu-back><img src="./assets/menu/icon-back.svg" alt="">返回</button>
+   <button class="paper-back" data-menu-back>返回</button>
    <h2>按你的习惯<span class="heading-dot">。</span></h2>
    <label class="setting-row"><span>场景动态<small>人物待机、落雪与蒸汽</small></span><input id="motionToggle" type="checkbox" checked></label>
    <label class="setting-row"><span>菜单音效<small>轻触纸签的声音</small></span><input id="soundToggle" type="checkbox"></label>
