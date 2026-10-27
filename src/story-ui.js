@@ -21,6 +21,10 @@ export function mountStoryUI({dispatch,getState}){
     content.append(el('p','narrative-prose','此刻没什么必须说的。窗外的雪仍在工作，而且从不领工资。'));
     addButton(content,'看看街坊地图',()=>show('map'));return;
    }
+   if(node.scene!==s.location){
+    content.append(el('p','narrative-prose','这段话发生在「'+WORLD_LOCATIONS[node.scene].name+'」。人和故事不会跟着你瞬间移动。'));
+    addButton(content,'打开地图，回到那里',()=>show('map'));return;
+   }
    content.append(el('p','narrative-speaker',CAST[node.speaker]?.name||'旁白'));
    content.append(el('p','narrative-prose',node.text));
    content.append(el('p','narrative-helper','你可以不急着作答。关掉窗口，继续做自己的事。'));
