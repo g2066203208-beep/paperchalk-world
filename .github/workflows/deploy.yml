@@ -36,7 +36,8 @@ jobs:
           test -f android/app/src/main/AndroidManifest.xml
           test -s assets/protagonists/alina-preview.webp
           test -s assets/protagonists/mikhail-preview.webp
-          file assets/protagonists/*.webp | grep -c 'Web/P image' | grep -q '^2
+          file assets/protagonists/alina-preview.webp | grep -q 'Web/P image'
+          file assets/protagonists/mikhail-preview.webp | grep -q 'Web/P image'
           if grep -q 'assets/menu-approved' index.html; then exit 1; fi
   browser-e2e:
     name: Two real mobile-size shop clients
