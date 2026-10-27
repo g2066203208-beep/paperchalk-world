@@ -1,9 +1,9 @@
-import {cameraTarget,clampCamera,worldPoint,SHOP} from "./kiosk-shop-layout.js";
-import {artStatus} from "./kiosk-art-assets.js";
+import {SHOP} from './kiosk-shop-layout.js';
+
 import {mountTitleMenu} from "./kiosk-menu.js";
 import {GOODS,FIXTURES,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
-import {render,resetShopPresentation} from "./kiosk-view.js";
-import {flatAmbient} from "./kiosk-flat.js";
+import {renderSilhouette} from './kiosk-silhouette.js';
+
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
 import {createSpeechPresentation} from "./kiosk-dialogue.js";
@@ -28,22 +28,8 @@ const sampleCustomerMotion=createCustomerMotion();
 const sampleHeldItemMotion=createHeldItemMotion();
 const speechPresentation=createSpeechPresentation();
 let customerMotion=null,heldItemMotion=null;
-const shopUi={catalog:false,page:"goods",focus:"front",camera:null};
-const cameraControls=document.createElement('label');cameraControls.className='shop-camera-controls';cameraControls.hidden=true;cameraControls.textContent='辅助取景 ';
-const viewSelect=document.createElement('select');viewSelect.id='viewSelect';viewSelect.setAttribute('aria-label','查看店铺区域');
-for(const [value,title] of [['free','自由环顾'],['front','营业窗口'],['customer','顾客近景'],['counter','交接台面'],['register','收银机'],['book','进货簿'],['recycle','回收交接'],...Object.entries(FIXTURES).map(([k,v])=>[k,v.label])]){const option=document.createElement('option');option.value=value;option.textContent=title;viewSelect.append(option);}
-cameraControls.append(viewSelect);document.getElementById('menuSettings').append(cameraControls);
-function look(key){shopUi.focus=key;viewSelect.value=key;}
-viewSelect.onchange=()=>{look(viewSelect.value);titleMenu?.hide();};
-let previousFrame=performance.now();
-function updateCamera(now){
- const {W,H}=screen;if(!shopUi.camera)shopUi.camera=cameraTarget(W,H,shopUi.focus==='free'?'front':shopUi.focus);
- if(shopUi.focus!=='free'){
-  const goal=cameraTarget(W,H,shopUi.focus),t=matchMedia('(prefers-reduced-motion: reduce)').matches?1:1-Math.exp(-Math.min(100,now-previousFrame)/65);
-  for(const k of ['x','y','z'])shopUi.camera[k]+=(goal[k]-shopUi.camera[k])*t;
- }
- shopUi.camera=clampCamera(shopUi.camera,W,H);previousFrame=now;
-}
+const shopUi={catalog:false,page:'goods',feedback:null};
+// Full-scene fixed composition. No camera, manual panning, selection shot or zoom.
 const net=new RoomNetwork({
  status:t=>setStatus(t),
  join:(pid,name)=>{
@@ -60,7 +46,11 @@ function save(){if(state&&(mode==="solo"||mode==="host")){try{localStorage.setIt
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
- mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;resetShopPresentation();look("front");shopUi.camera=null;speechPresentation.reset();
+ mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;
+ // Legacy save compatibility: old hidden cabinets and drawers are now always open racks.
+ for(const [key,fixture] of Object.entries(FIXTURES))if(fixture.kind!=='shelf')state.open[key]=true;
+ state.windowOpen=true;
+ speechPresentation.reset();
  $("hud").classList.add("playing");
  titleMenu?.hide();
  $("roomCode").textContent=room?("房间码："+room):"";
@@ -134,7 +124,7 @@ function localAction(pid,a){
  return updated;
 }
 function command(cmd,key,itemId){
- if(cmd==="focus"||cmd==="look"){look(key);return;}
+ if(cmd==="focus"||cmd==="look"||cmd==="toggle"||cmd==="window")return;
  if(cmd==="catalog"){shopUi.catalog=true;shopUi.page="goods";return;}
  if(cmd==="catalogPage"){shopUi.page=key;return;}
  if(cmd==="closeCatalog"){shopUi.catalog=false;return;}
@@ -153,61 +143,47 @@ function resize(){
  const rect=canvas.getBoundingClientRect();
  const W=Math.max(1,Math.round(rect.width)),H=Math.max(1,Math.round(rect.height));
  const dpr=Math.min(3,window.devicePixelRatio||1);
- screen={W,H,land:W>=H*1.12,dpr};shopUi.camera=shopUi.focus==="free"&&shopUi.camera?clampCamera(shopUi.camera,W,H):null;
+ screen={W,H,land:W>=H*1.12,dpr};
  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
  ctx.setTransform(dpr,0,0,dpr,0,0);
- ctx.imageSmoothingEnabled=true;
+ ctx.imageSmoothingEnabled=false;
 }
 window.addEventListener("resize",resize);window.addEventListener("orientationchange",resize);
 window.visualViewport?.addEventListener("resize",resize);
-// Tap a visible fixture to operate it; hold a stocked shelf or open drawer
-// to prepare a reorder. Input geometry is always derived from rendered objects.
+// Direct pointer interaction: tap once, act once. Never zoom, drag-pan, or hold.
 let activePointer=null;
 function pointOnCanvas(e){
- const rect=canvas.getBoundingClientRect();
- return {x:(e.clientX-rect.left)/rect.width*screen.W,
-  y:(e.clientY-rect.top)/rect.height*screen.H};
+ const r=canvas.getBoundingClientRect();
+ return {x:(e.clientX-r.left)/r.width*screen.W,y:(e.clientY-r.top)/r.height*screen.H};
 }
-function findHit(x,y,gesture){
+function findHit(x,y){
  for(let i=hits.length-1;i>=0;i--){
   const h=hits[i];
-  if((h.gesture||"tap")===gesture&&x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h)return h;
+  if(x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h)return h;
  }
  return null;
 }
-canvas.addEventListener("contextmenu",e=>e.preventDefault());
-canvas.addEventListener("pointerdown",e=>{
- if(!state||!$("lobby").hidden||activePointer)return;
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('pointerdown',e=>{
+ if(!state||!$('lobby').hidden||activePointer)return;
  const p=pointOnCanvas(e);
- activePointer={id:e.pointerId,x:p.x,y:p.y,started:performance.now(),cancelled:false,target:findHit(p.x,p.y,"tap"),camera:shopUi.camera?{...shopUi.camera}:null};
+ activePointer={id:e.pointerId,x:p.x,y:p.y,target:findHit(p.x,p.y)};
  try{canvas.setPointerCapture(e.pointerId);}catch{}
 });
-canvas.addEventListener("pointermove",e=>{
- if(!activePointer||activePointer.id!==e.pointerId)return;
- const p=pointOnCanvas(e);
- const delta=Math.hypot((p.x-activePointer.x)/screen.W*innerWidth,
-  (p.y-activePointer.y)/screen.H*innerHeight);
- if(delta>15&&!shopUi.catalog&&activePointer.camera){
-  activePointer.cancelled=true;shopUi.focus='free';viewSelect.value='free';
-  shopUi.camera=clampCamera({...activePointer.camera,x:activePointer.camera.x-(p.x-activePointer.x)/activePointer.camera.z,y:activePointer.camera.y-(p.y-activePointer.y)/activePointer.camera.z},screen.W,screen.H);
- }
-});
-canvas.addEventListener("pointercancel",()=>{activePointer=null;});
-canvas.addEventListener("pointerup",e=>{
+canvas.addEventListener('pointercancel',()=>{activePointer=null;});
+canvas.addEventListener('pointerup',e=>{
  const press=activePointer;
  if(!press||press.id!==e.pointerId)return;
  activePointer=null;
- if(press.cancelled||!state||!$("lobby").hidden)return;
+ if(!state||!$('lobby').hidden)return;
  const p=pointOnCanvas(e);
- const delta=Math.hypot((p.x-press.x)/screen.W*innerWidth,
-  (p.y-press.y)/screen.H*innerHeight);
- if(delta>15)return;
- const gesture=performance.now()-press.started>=500?"hold":"tap";
- const target=gesture==="tap"&&press.target?.itemId?press.target:(findHit(p.x,p.y,gesture)|| (gesture==="hold"?null:findHit(p.x,p.y,"tap")));
- if(target){shopUi.actionAnchor=target.world;command(target.cmd,target.key,target.itemId);}
+ if(Math.hypot(p.x-press.x,p.y-press.y)>18)return;
+ const target=press.target;
+ if(target&&findHit(p.x,p.y)?.cmd===target.cmd){
+  shopUi.actionAnchor=target.world||null;
+  command(target.cmd,target.key,target.itemId);
+ }
 });
-canvas.addEventListener('wheel',e=>{if(!state||!$("lobby").hidden||shopUi.catalog)return;e.preventDefault();const c=shopUi.camera;if(!c)return;shopUi.focus='free';viewSelect.value='free';shopUi.camera=clampCamera({...c,x:c.x+e.deltaX/c.z,y:c.y+e.deltaY/c.z},screen.W,screen.H);},{passive:false});
-window.addEventListener('keydown',e=>{if(!state||!$("lobby").hidden||shopUi.catalog||/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName))return;const c=shopUi.camera;if(!c)return;const dir={ArrowLeft:[-120,0],ArrowRight:[120,0],ArrowUp:[0,-120],ArrowDown:[0,120]}[e.key];if(dir){e.preventDefault();shopUi.focus='free';viewSelect.value='free';shopUi.camera=clampCamera({...c,x:c.x+dir[0]/c.z,y:c.y+dir[1]/c.z},screen.W,screen.H);}if(e.key==='Home')look('front');});
 function tick(){
  if(mode==="host"&&state){
   for(const {peerId,input} of net.takeInputs()){
@@ -224,18 +200,17 @@ function frame(){
  ctx.setTransform(screen.dpr||1,0,0,screen.dpr||1,0,0);
  ctx.imageSmoothingEnabled=true;
  if(state){
-  const now=performance.now();updateCamera(now);
-  cameraControls.hidden=false;
+  const now=performance.now();
   customerMotion=sampleCustomerMotion(state,now);
   customerMotion.speechVisible=speechPresentation.sample(state,now);
   heldItemMotion=sampleHeldItemMotion(state,id,now);
   shopUi.motion=$("motionToggle").checked;
-  hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
+  hits=renderSilhouette(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
  }
  else{
-  flatAmbient(ctx,screen.W,screen.H,phase);
-  ctx.fillStyle="#fff3dd";ctx.textAlign="center";ctx.font="bold 19px monospace";
-  ctx.fillText("冬夜杂货窗口 · 等待营业",screen.W/2,screen.H/2);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,screen.W,screen.H);
+  ctx.fillStyle='#000';ctx.textAlign='center';ctx.font='bold 18px system-ui';
+  ctx.fillText('还未营业',screen.W/2,screen.H/2);
   hits=[];
  }
  requestAnimationFrame(frame);
@@ -246,5 +221,5 @@ if("serviceWorker" in navigator){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
- command,screen:()=>screen,getCamera:()=>structuredClone(shopUi.camera),getWorld:()=>structuredClone(SHOP),getArtStatus:artStatus,getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,
+ command,screen:()=>screen,getCamera:()=>null,getWorld:()=>structuredClone(SHOP),getArtStatus:()=>({total:0,ready:0,failed:[]}),getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,
  getHeldItemMotion:()=>heldItemMotion?structuredClone(heldItemMotion):null,saveKey:SAVE};
