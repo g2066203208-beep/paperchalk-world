@@ -27,13 +27,107 @@ jobs:
           node-version: '22'
       - run: npm run check
       - run: npm test
-      - name: Check monochrome game is code-drawn without old scene art
+      - name: Verify shop architecture and selected protagonist sources
         run: |
           test -f index.html
           test -f silhouette.css
           test -f src/kiosk-silhouette.js
           test -f tests/silhouette-browser.mjs
           test -f android/app/src/main/AndroidManifest.xml
+          test -s assets/protagonists/alina-preview.webp
+          test -s assets/protagonists/mikhail-preview.webp
+          file assets/protagonists/*.webp | grep -c 'Web/P image' | grep -q '^2
+          if grep -q 'assets/menu-approved' index.html; then exit 1; fi
+  browser-e2e:
+    name: Two real mobile-size shop clients
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.1 peer@1.0.2 peerjs@1.5.5
+      - name: Use installed Chromium-family browser or download fallback
+        run: |
+          if command -v google-chrome >/dev/null 2>&1 || command -v google-chrome-stable >/dev/null 2>&1 || command -v chromium >/dev/null 2>&1; then
+            echo "Using the Chromium-family browser already installed on the runner."
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Ensure Chinese glyphs before recording real browser screenshots
+        run: |
+          set -euo pipefail
+          if ! fc-list :lang=zh family | grep -qi 'Noto Sans CJK'; then
+            mkdir -p "$HOME/.local/share/fonts"
+            # Runner apt mirrors sometimes hang. Fetch this OFL-licensed font
+            # only into the temporary CI machine, never into game assets.
+            curl -fL --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 110 \
+              'https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf' \
+              -o "$HOME/.local/share/fonts/NotoSansCJKsc-Regular.otf"
+            test "$(stat -c%s "$HOME/.local/share/fonts/NotoSansCJKsc-Regular.otf")" -gt 1000000
+            fc-cache -f
+          fi
+          fc-match -f '%{family}\n' 'Noto Sans CJK SC'
+          fc-list :lang=zh family | grep -qi 'Noto Sans CJK' || {
+            echo 'Missing Chinese glyph font; refusing to publish unreadable screenshot evidence.' >&2
+            exit 1
+          }
+      - run: node tests/silhouette-browser.mjs
+      - name: Screenshot evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: untitled-kiosk-portrait-landscape-shots
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 14
+  deploy:
+    name: Publish site
+    needs: [tests, browser-e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage public monochrome site
+        run: |
+          mkdir -p _site/src _site/assets/protagonists
+          cp index.html style.css menu.css silhouette.css story-ui.css sw.js .nojekyll _site/
+          cp assets/protagonists/*.webp _site/assets/protagonists/
+          cp src/kiosk-app.js src/kiosk-silhouette.js src/kiosk-menu.js src/kiosk-core.js src/kiosk-business.js src/kiosk-objects.js src/kiosk-shop-layout.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/story-framework.js src/story-ui.js src/story-world-render.js src/story-animation.js src/network.js _site/src/
+      - name: Verify published ES module dependencies
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,existsSync} from 'node:fs';
+          import {dirname,resolve,sep} from 'node:path';
+          const root=resolve('_site'),pending=[resolve(root,'src/kiosk-app.js')],seen=new Set();
+          while(pending.length){
+            const file=pending.pop();
+            if(seen.has(file))continue;
+            seen.add(file);
+            if(!file.startsWith(root+sep)||!existsSync(file))throw Error('Missing deployed module: '+file);
+            const source=readFileSync(file,'utf8');
+            for(const m of source.matchAll(/\b(?:import|export)\s+(?:[^'"]*?\s+from\s+)?['"](\.[^'"]+)['"]/g)){
+              const dep=resolve(dirname(file),m[1]);
+              if(!dep.startsWith(root+sep))throw Error('Import escapes public directory: '+m[1]);
+              pending.push(dep);
+            }
+          }
+          console.log('Verified '+seen.size+' published ES modules: '+[...seen].map(p=>p.slice(root.length+1)).join(', '));
+          NODE
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
+
           if grep -q 'assets/menu-approved' index.html; then exit 1; fi
   browser-e2e:
     name: Two real mobile-size shop clients
