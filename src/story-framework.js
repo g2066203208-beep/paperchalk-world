@@ -3,7 +3,8 @@
 export const WORLD_LOCATIONS=Object.freeze({
  shop:{id:'shop',name:'路边小店',blurb:'零下十七度。收银机比市政府更准时。',exits:['street','stop'],layerIds:['sky','apartments','snow','kiosk','window']},
  street:{id:'street',name:'雪街',blurb:'环卫公告说积雪将在春季之前清理完毕。没有注明哪一年。',exits:['shop','stop','flats'],layerIds:['sky','apartments','trees','road','snow']},
- stop:{id:'stop',name:'末班车站',blurb:'站牌写着「请耐心等待」。涂改痕迹显示原句是「请等待」。',exits:['shop','street','flats'],layerIds:['sky','buildings','busstop','snow']},
+ stop:{id:'stop',name:'末班车站',blurb:'站牌写着「请耐心等待」。涂改痕迹显示原句是「请等待」。',exits:['shop','street','flats','city'],layerIds:['sky','buildings','busstop','snow']},
+ city:{id:'city',name:'市区统配岗位',blurb:'大学生在这里完成国家分配的见习工作。没有人可以同时值守小店和这个岗位。',exits:['stop'],layerIds:['sky','factories','tram','snow']},
  flats:{id:'flats',name:'居民楼口',blurb:'门铃坏了三年，告示却每月更新。',exits:['street','stop'],layerIds:['sky','building','entrance','snow']}
 });
 export const CAST=Object.freeze({
