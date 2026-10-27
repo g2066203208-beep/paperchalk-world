@@ -385,7 +385,15 @@ try{
      label+" aspect ratio distorted: "+JSON.stringify(measurements));
    assert.equal(measurements.overflow,false,label+" must not scroll");
    assert.equal(measurements.overlayHidden,true,label+" must not overlay shop art with status");
-   assert.ok(measurements.hitSizes.length>=3,label+" must expose controls");
+   assert.ok(measurements.hitSizes.some(h=>h.cmd==="talk"),label+" main view exposes the customer");
+   assert.ok(measurements.hitSizes.some(h=>h.cmd==="sell"),label+" main view exposes checkout");
+   // The camera intentionally does not shrink all stock and service controls
+   // into the same narrow viewport. Inspect actual unit targets in its stock shot.
+   await aim(phone,"slot","shelfL1");
+   const stockTargets=await phone.evaluate(()=>window.__KIOSK_TEST__.getHits().filter(h=>h.cmd==="slot"&&h.key==="shelfL1"&&h.itemId));
+   assert.equal(stockTargets.length,2,label+" stock closeup exposes both real units");
+   assert.notEqual(stockTargets[0].itemId,stockTargets[1].itemId);
+   assert.ok(stockTargets.every(h=>h.w>=44&&h.h>=44),label+" individual stock targets must be finger-sized");
    for(const hit of measurements.hitSizes){
      assert.ok(hit.width>=44&&hit.height>=44,
        label+" touch target below 44 CSS px: "+JSON.stringify(hit));
