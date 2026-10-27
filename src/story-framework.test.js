@@ -48,6 +48,8 @@ test('world travel is bounded by adjacent streets and a visited bus stop fires u
  assert.equal(travelTo(s,'stop'),true);
  assert.equal(s.story.location,'stop');assert.equal(s.story.active,'stop_event');
  assert.equal(travelTo(s,'flats'),true);
+ assert.equal(choice(s,'leave_note'),false,'cannot finish a bus stop dialogue from an apartment');
+ assert.equal(travelTo(s,'stop'),true);
  assert.equal(choice(s,'leave_note'),true);
  assert.equal(s.story.flags.posted_last_bus,true);
  assert.deepEqual(s.story.memories.driver,['quiet_cup','helped_riders']);
