@@ -2,6 +2,7 @@
 // No flattened game screen; all hitboxes and host-authoritative inventory remain real.
 import {GOODS,FIXTURES,visitor,visible,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead,reputationLevel,loyaltyTip} from "./kiosk-core.js";
 import {renderGeneratedShop} from "./kiosk-gpt-scene.js";
+import {recyclingOffer,recyclingCarried,recyclingState,RECYCLING} from "./kiosk-business.js";
 import {flatAmbient,flatWall,flatStreet,flatCustomer,flatProduct,flatShelfBase,flatCupboard,flatDrawer,flatWindow,flatCounter,flatMat,flatPlaque,flatTop,flatButton,flatActionIcon,flatDialogue} from "./kiosk-flat.js";
 import {drawPixelCash} from "./kiosk-pixel.js";
 
@@ -24,6 +25,8 @@ export function customerSpeech(s,motion=null){
  const person=visitor(s);
  if(s.wrongAttempted)return {name:person.name,text:"这不是我要的，请给我"+GOODS[person.sku].name+"。"};
  if(s.favorDone&&person.favor)return {name:person.name,text:"太感谢了，委托办成啦！"};
+ if(recyclingOffer(s)&&s.spoken)return {name:person.name,text:"我带了节旧电池，可以帮忙回收吗？"};
+ if(recyclingState(s).lastOrder===s.orderIndex&&s.spoken)return {name:person.name,text:"谢谢！放进右边回收抽屉就好。"};
  if(s.spoken&&person.favor)return {name:person.name,text:person.favor.line};
  return {name:person.name,text:person.line};
 }
@@ -66,6 +69,34 @@ function npcBubble(g,hits,win,s,motion){
  g.restore();
  const touchHeight=Math.max(72,bh);
  hit(hits,bx,by-(touchHeight-bh),bw,touchHeight,commissionReady(s)?"commission":"talk");
+}
+// Reuse existing battery sprite on real customer and drawer coordinates.
+// The service adds no new art, floating controls, or invented invisible station.
+function recyclingPhysical(g,hits,s,x,y,w,h,viewerId,motion){
+ const r=recyclingState(s);
+ const offered=recyclingOffer(s)&&(!motion||motion.stage==="idle");
+ if(offered){
+  // Old battery is visibly held near the guest's hand, not a screen button.
+  const item={x:x+w*.57,y:y+h*.515,w:w*.13,h:h*.068};
+  flatProduct(g,"battery",item.x,item.y,item.w,item.h);
+  hit(hits,item.x,item.y,item.w,item.h,"recycleReceive");
+ }
+ if(recyclingCarried(s,viewerId)){
+  // Service stock is distinct from the player's ordinary retail hand.
+  flatProduct(g,"battery",x+w*.62,y+h*.705,w*.105,h*.066);
+ }
+ if(r.stored>0){
+  // Visible contents and capacity are physically attached to the right drawer.
+  flatProduct(g,"battery",x+w*.805,y+h*.892,w*.085,h*.056);
+  t(g,"回收 "+r.stored+"/"+RECYCLING.capacity,x+w*.83,y+h*.974,12,C.cream,"center",w*.23);
+ }
+ if(s.open?.drawerR){
+  const area={x:x+w*.718,y:y+h*.889,w:w*.233,h:h*.070};
+  if(recyclingCarried(s,viewerId))
+   hit(hits,area.x,area.y,area.w,area.h,"recycleStore");
+  if(r.stored===RECYCLING.capacity&&!r.carriedBy)
+   hit(hits,area.x,area.y,area.w,area.h,"recycleShip",undefined,"hold");
+ }
 }
 function wooden(g,x,y,w,h,seed=1,base=C.wood){
  r(g,x,y,w,h,base);const rows=Math.max(1,Math.floor(h/21));
@@ -212,7 +243,7 @@ function heatingPlaque(g,hits,x,y,w,h,s,isManager){
  flatPlaque(g,x,y,w,h,"heating","保温",cost===null?"完成":"¥"+cost);
  if(isManager&&cost!==null)hit(hits,x,y,w,h,"heat");
 }
-function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
+function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager,viewerId){
  if(renderGeneratedShop(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager)){
   // Interaction adapter for the existing independent generated-art fixtures.
   // This changes only their hit mapping; no art files or drawing code are altered.
@@ -238,6 +269,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
   if(commissionReady(s)&&(!motion||motion.stage==="idle"))
    hit(hits,win.x+win.w*.13,win.y+win.h*.25,win.w*.74,win.h*.59,"commission");
   npcBubble(g,hits,win,s,motion);
+  recyclingPhysical(g,hits,s,x,y,w,h,viewerId,motion);
   return;
  }
  g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
@@ -315,6 +347,7 @@ function scene(g,hits,s,x,y,w,h,phase,motion,itemMotion,isManager){
  drawer(g,hits,x+w*.585,drawY,w*.34,h*.117,"drawerR",s,isManager);
  // Local first-person arm stays above the drawers and below the UI.
  heldItemLayer(g,itemMotion,mat,x,y,w,benchY,benchH);
+ recyclingPhysical(g,hits,s,x,y,w,h,viewerId,motion);
  g.restore();
 }
 function chip(g,hits,x,y,w,h,text,cmd,key,active=false){
@@ -344,7 +377,7 @@ export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=nul
  const shop={x:(W-playableWidth)/2,y:headH,w:playableWidth,h:playableHeight};
  // Keep landscape margins free of order/mission panels. NPC dialogue is
  // shown only in the scene near the speaker, not duplicated at screen edges.
- scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager);
+ scene(g,hits,s,shop.x,shop.y,shop.w,shop.h,phase,motion,itemMotion,isManager,viewerId);
  if(s.phase==="summary"){
   r(g,0,0,W,H,"#171922e9");
   t(g,"今 日 打 烊",W/2,H*.27,32,C.gold,"center");
