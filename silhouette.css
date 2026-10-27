@@ -1,0 +1,45 @@
+/* Final silhouette art direction: only #000 and #fff, no tint, blur, gradients or images. */
+:root{--menu-ink:#000;--menu-blue:#000;--menu-paper:#fff;--menu-orange:#fff}
+html,body{background:#fff!important;color:#000!important}
+#game{image-rendering:pixelated!important;touch-action:none}
+#menu{background:#fff!important;color:#000!important;border:2px solid #000!important;border-radius:0!important;box-shadow:none!important}
+#roomCode,#status,#hud.playing #status[data-alert=true]{background:#fff!important;color:#000!important;border:1px solid #000!important;text-shadow:none!important}
+#lobby.title-menu{background:#fff!important;color:#000!important;isolation:isolate}
+#lobby::before,#lobby::after{display:none!important}
+#lobby .menu-scene{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:#fff!important;overflow:hidden!important;pointer-events:none}
+#lobby .scene-stage{position:absolute!important;left:0!important;top:0!important;width:100%!important;height:65%!important;transform:none!important}
+#lobby .scene-silhouette{width:100%;height:100%;display:block;image-rendering:pixelated;shape-rendering:crispEdges}
+#lobby .snowfall{position:absolute;inset:0;pointer-events:none}
+#lobby .snowflake{background:#000!important;border:0!important;opacity:.28!important;width:2px!important;height:2px!important;animation:snow-fall 19s linear infinite!important}
+#lobby .menu-paper{position:absolute!important;z-index:10!important;left:50%!important;right:auto!important;top:auto!important;bottom:max(14px,env(safe-area-inset-bottom,0px))!important;transform:translateX(-50%)!important;width:min(410px,calc(100vw - 24px))!important;max-height:46dvh!important;min-height:0!important;background:#fff!important;border:2px solid #000!important;border-image:none!important;padding:15px 18px!important;box-shadow:none!important;container-type:inline-size}
+#lobby .menu-view{max-height:calc(46dvh - 34px)!important;overflow-y:auto!important}
+#lobby .menu-kicker,#lobby .save-caption{display:block!important;color:#000!important;font-size:11px!important;font-weight:400!important;line-height:1.4}
+#lobby .menu-paper h1,#lobby .menu-paper h2{font-family:system-ui,'Noto Sans CJK SC',sans-serif!important;font-size:clamp(23px,7.5cqw,32px)!important;font-weight:750!important;color:#000!important;margin:5px 0 12px!important;letter-spacing:0!important}
+#lobby .heading-dot{display:none!important}
+#lobby .main-choices{display:grid;gap:5px!important}
+#lobby .choice,#lobby .choice-primary{transform:none!important;min-height:44px!important;background:#fff!important;color:#000!important;border:2px solid #000!important;border-image:none!important;border-radius:0!important;box-shadow:none!important;margin:0!important;padding:8px 10px!important;transition:none!important;font-family:system-ui,'Noto Sans CJK SC',sans-serif!important;font-size:clamp(14px,5cqw,19px)!important;font-weight:650!important;line-height:1.2}
+#lobby .choice-primary{background:#000!important;color:#fff!important}
+#lobby .choice:hover,#lobby .choice:focus-visible{outline:2px solid #000;outline-offset:2px;transform:none!important}
+#lobby .choice img{display:none!important}
+#lobby .return-choice,#lobby .paper-back{color:#000!important;background:#fff!important;border-color:#000!important;font-size:13px!important}
+#lobby .menu-paper input:not([type=checkbox]),#lobby .form-action{background:#fff!important;color:#000!important;border:2px solid #000!important;border-radius:0!important;box-shadow:none!important}
+#lobby .primary-action{background:#000!important;color:#fff!important}
+#lobby .menu-feedback,#lobby .setting-row small,#lobby .view-caption,#lobby .menu-paper label{color:#000!important}
+#lobby .setting-row{border-color:#000!important}
+#lobby .setting-row input{accent-color:#000!important}
+#sceneTransition .transition-shutter{background:#000!important;box-shadow:none!important}
+#lobby.leaving .scene-stage{animation:none!important}
+.panel,.instructions,.modal{background:#fff!important;color:#000!important;border-color:#000!important;box-shadow:none!important}
+#lobby button,#lobby input{touch-action:manipulation!important}
+@media(min-aspect-ratio:11/10){
+ #lobby .scene-stage{height:100%!important}
+ #lobby .menu-paper{left:auto!important;right:3vw!important;bottom:6vh!important;transform:none!important;width:min(350px,35vw)!important;max-height:83dvh!important}
+ #lobby .menu-view{max-height:calc(83dvh - 40px)!important}
+}
+@media(max-height:470px){
+ #lobby .menu-paper{padding:8px 12px!important}
+ #lobby .menu-paper h1,#lobby .menu-paper h2{font-size:20px!important;margin:3px 0 6px!important}
+ #lobby .menu-kicker,#lobby .save-caption{display:none!important}
+ #lobby .choice,#lobby .choice-primary{min-height:44px!important;padding:4px 8px!important}
+}
+@media(prefers-reduced-motion:reduce){#lobby .snowflake{animation:none!important}}
