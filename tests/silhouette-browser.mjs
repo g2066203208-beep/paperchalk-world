@@ -100,8 +100,13 @@ try{
  assert.deepEqual(errors,[],'no JavaScript console exceptions');
  console.log('PASS real two-browser silhouette trade and host-authoritative settlement');
  await ctx.close();
+}catch(e){
+ console.error('Silhouette E2E failure:',e);
+ process.exitCode=1;
 }finally{
  await browser.close();
  server.kill();
  if(typeof relay?.close==='function')relay.close();
+ // The local PeerServer websocket heartbeat may keep Node's event loop open.
+ process.exit(process.exitCode||0);
 }
