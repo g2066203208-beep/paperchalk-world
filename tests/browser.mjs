@@ -59,6 +59,35 @@ try{
    await context.close();
    console.log("PASS browser "+name+" / model import, export, edit and responsive viewport");
   }
+  // Preserve the real historical paper-car model and compare it against the newly authored mesh.
+  for(const [name,width,height,mobile] of [["desktop",1280,800,false],["portrait",390,844,true],["landscape",844,390,true]]){
+   const context=await browser.newContext({viewport:{width,height},isMobile:mobile,hasTouch:mobile,acceptDownloads:true});
+   const page=await context.newPage();const errorsOnPage=[];
+   page.on("pageerror",e=>errorsOnPage.push(e.message));
+   page.on("console",m=>{if(m.type()==="error")errorsOnPage.push(m.text());});
+   await page.goto(origin+"style-study.html",{waitUntil:"domcontentloaded",timeout:35000});
+   await page.waitForFunction(()=>window.__PAPER_STUDY_TEST__?.modelCounts().store>30,{timeout:35000});
+   const count=await page.evaluate(()=>window.__PAPER_STUDY_TEST__.modelCounts());
+   assert.ok(count.car>=2,"historical car actually builds native mesh");
+   assert.ok(count.store>=32,"new storefront is built from individual paper-cut meshes");
+   const bb=await page.evaluate(()=>window.__PAPER_STUDY_TEST__.exportModel());
+   assert.equal(bb.meta.model_format,"free");
+   assert.equal(bb.elements.length,31);
+   assert.ok(bb.elements.every(e=>e.type==="mesh"&&Object.keys(e.vertices).length>=6&&Object.keys(e.faces).length>=4));
+   assert.ok(bb.textures[0].source.startsWith("data:image/png;base64,"));
+   const first=page.waitForEvent("download",{timeout:10000});
+   await page.getByRole("button",{name:/导出新售货亭/}).click();
+   assert.match((await first).suggestedFilename(),/\.bbmodel$/);
+   await page.screenshot({path:"artifacts/paper-style-comparison-"+name+".png",fullPage:true});
+   await page.locator("#threequarter").click();
+   await page.screenshot({path:"artifacts/paper-style-3quarter-"+name+".png",fullPage:true});
+   await page.locator("#onlyStore").click();
+   assert.equal(await page.evaluate(()=>window.__PAPER_STUDY_TEST__.mode()),"store");
+   assert.equal(await page.locator("#stage canvas").count(),1);
+   assert.deepEqual(errorsOnPage,[],"paper-study browser runtime errors");
+   await context.close();
+   console.log("PASS Paper City "+name+" / archived car, paper-cut storefront, .bbmodel Mesh export");
+  }
   assert.deepEqual(errors,[],"console page errors");
  }finally{await browser.close();}
 }finally{server.kill("SIGTERM");}

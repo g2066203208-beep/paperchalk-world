@@ -28,6 +28,8 @@ jobs:
       - name: Verify public examples
         run: |
           test -s dist/index.html
+          test -s dist/style-study.html
+          test -s dist/assets/style-study-*.js || ls -l dist/assets/
           test -s examples/kiosk.bbmodel
           test -s examples/street.bbmodel
           test -s examples/home.bbmodel
