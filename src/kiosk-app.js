@@ -1,3 +1,4 @@
+import {mountTitleMenu} from "./kiosk-menu.js";
 import {GOODS,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {render} from "./kiosk-view.js";
 import {flatAmbient} from "./kiosk-flat.js";
@@ -6,6 +7,7 @@ import {createHeldItemMotion} from "./kiosk-item-motion.js";
 import {createSpeechPresentation} from "./kiosk-dialogue.js";
 import {RoomNetwork} from "./network.js";
 const $=id=>document.getElementById(id);
+let titleMenu=null;
 // Keep room status accessible inside the menu without covering physical shelves.
 function setStatus(message,alert=false){
  const el=$("status");el.textContent=message;el.dataset.alert=alert?"true":"false";
@@ -13,6 +15,7 @@ function setStatus(message,alert=false){
 }
 function refreshRoomDetails(){
  const details=$("roomDetails");if(!details)return;
+ details.dataset.alert=$("status").dataset.alert;
  details.textContent=(room?"房间码："+room+" · 可分享给店员":"单人/本地小店")+" · "+$("status").textContent;
 }
 const SAVE="untitled-kiosk-save-v1";
@@ -30,18 +33,18 @@ const net=new RoomNetwork({
   const yes=join(state,pid,name);if(yes)net.broadcast(state);return yes;
  },
  leave:pid=>{if(state){leave(state,pid);net.broadcast(state);}},
- state:s=>{if(mode==="guest"&&s?.version===3){state=s;$("lobby").hidden=true;}},
+ state:s=>{if(mode==="guest"&&s?.version===3){const first=state===null;state=s;if(first)titleMenu?.hide(false);}},
  disconnected:()=>setStatus("房主已断开；本局停止同步。",true),
  rejected:reason=>setStatus("操作被拒绝："+reason,true)
 });
 function readSave(){try{let value=JSON.parse(localStorage.getItem(SAVE)||"null");return value?.version===3?value:null;}catch{return null;}}
-function save(){if(state&&(mode==="solo"||mode==="host"))localStorage.setItem(SAVE,JSON.stringify(state));}
+function save(){if(state&&(mode==="solo"||mode==="host")){try{localStorage.setItem(SAVE,JSON.stringify(state));}catch{setStatus("浏览器未允许保存，本次进度暂不能自动存档。",true);}}}
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
  mode=who;state=model;id=userId;seq=0;speechPresentation.reset();
  $("hud").classList.add("playing");
- $("lobby").hidden=true;
+ titleMenu?.hide(false);
  $("roomCode").textContent=room?("房间码："+room):"";
  refreshRoomDetails();
  save();
@@ -60,6 +63,8 @@ $("resume").onclick=()=>{
  setStatus("本机存档已恢复");
 };
 $("host").onclick=async()=>{
+ if($("host").disabled)return;
+ $("host").disabled=$("join").disabled=true;
  try{
   setStatus("正在创建房间…");
   room=await net.create();
@@ -69,8 +74,13 @@ $("host").onclick=async()=>{
   $("roomCode").textContent="房间码："+room;
   refreshRoomDetails();
  }catch(e){setStatus("联机创建失败："+(e?.message||e),true);}
+ finally{$("host").disabled=$("join").disabled=false;}
 };
 $("join").onclick=async()=>{
+ if($("join").disabled)return;
+ const requestedCode=$("joinCode").value.trim().toUpperCase();
+ if(!/^[A-Z0-9]{8}$/.test(requestedCode)){setStatus("请填写好友的 8 位房间码。",true);$("joinCode").focus();return;}
+ $("host").disabled=$("join").disabled=true;
  try{
   const code=$("joinCode").value.trim().toUpperCase();
   setStatus("正在加入…");
@@ -90,13 +100,14 @@ $("join").onclick=async()=>{
   if(!joined)throw lastError||Error("无法连接房间");
   room=joined.room;id=joined.id;mode="guest";state=null;seq=0;
   $("hud").classList.add("playing");
-  $("lobby").hidden=true;
+  titleMenu?.hide(false);
   $("roomCode").textContent="房间码："+room;
   refreshRoomDetails();
  }catch(e){setStatus("无法加入："+(e?.message||e),true);}
+ finally{$("host").disabled=$("join").disabled=false;}
 };
-$("menu").onclick=()=>{refreshResume();refreshRoomDetails();$("lobby").hidden=!$("lobby").hidden;};
-$("closeLobby").onclick=()=>{$("lobby").hidden=true;};
+$("menu").onclick=()=>{refreshResume();refreshRoomDetails();if($("lobby").hidden)titleMenu.show();else if(state)titleMenu.hide();};
+$("closeLobby").onclick=()=>{if(state)titleMenu.hide();};
 function localAction(pid,a){
  if(!state)return false;
  let updated=a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
@@ -197,6 +208,7 @@ function frame(){
  }
  requestAnimationFrame(frame);
 }
+titleMenu=mountTitleMenu({hasSave:()=>Boolean(readSave()),hasGame:()=>Boolean(state),onStart:()=>$("solo").onclick(),onResume:()=>$("resume").onclick(),onNew:()=>$("solo").onclick()});
 resize();refreshResume();frame();
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));

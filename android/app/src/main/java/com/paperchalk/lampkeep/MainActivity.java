@@ -51,13 +51,16 @@ public final class MainActivity extends Activity {
         if(Build.VERSION.SDK_INT >= 30) {
             web.setOnApplyWindowInsetsListener((view,insets)->{
                 Insets safe=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());
-                view.setPadding(0,safe.top,0,safe.bottom);
+                view.setPadding(safe.left,safe.top,safe.right,safe.bottom);
                 return insets;
             });
         }
         setContentView(web);
-        if(state==null) web.loadUrl(HOME+"?source=apk");
-        else web.restoreState(state);
+        if(state==null) loadLatest();
+        else if(web.restoreState(state)==null) loadLatest();
+    }
+    private void loadLatest() {
+        web.loadUrl(HOME+"?source=apk&launch="+System.currentTimeMillis());
     }
     @Override protected void onSaveInstanceState(Bundle state) {
         web.saveState(state);

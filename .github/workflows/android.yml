@@ -2,6 +2,8 @@ name: Build Android Test APK
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -29,6 +31,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
+      - name: Preserve test APK signing identity across builds
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: kiosk-debug-signing-v1
       - name: Build installable test APK
         run: gradle --no-daemon -p android :app:assembleDebug
       - name: Upload debug APK
@@ -39,6 +46,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Publish automatic latest debug APK download
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

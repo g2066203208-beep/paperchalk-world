@@ -1,26 +1,57 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<meta name="theme-color" content="#1E294D"><title>未命名 · 冬夜小店试玩</title>
-<link rel="stylesheet" href="./style.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#EEA02E"><title>未命名 · 冬季小店</title>
+<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./menu.css">
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
 <script type="module" src="./src/kiosk-app.js"></script>
 </head><body>
 <canvas id="game" aria-label="第一人称冬夜小店：点击窗台开窗，货架拿取商品，柜台交付收款"></canvas>
 <div id="hud"><button id="menu" aria-label="打开菜单">☰</button><span id="roomCode"></span><span id="status" role="status">尚未营业</span></div>
-<div id="lobby" class="modal">
-  <div class="panel">
-    <div class="eyebrow">FIRST PERSON · WINTER SHOP · PLAYABLE BUILD</div>
-    <h1>未命名 · 冬季小店</h1><p class="sub">未命名游戏 · 经营玩法测试版</p>
-    <p id="roomDetails" class="room-details" role="status">单人或多人开店，房间码会显示在这里。</p>
-    <div class="shelf-icon" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-    <p class="instructions">点击窗闩开窗，直接点击顾客交谈；从货架拿起商品，点柜台交接台放下，随后点击柜台左侧的实体钱盘收款。顾客的额外委托需要先交谈、把正确商品放上交接台，再点击顾客交付。店长可长按已有商品的货架、打开的柜子或抽屉准备补货，再点目标货格；售罄后仍可长按原货格补货。点击墙上的扩架或保温工作牌升级。没有独立的底部操作按钮。</p>
-    <label>值班员称呼 <input id="nickname" maxlength="14" value="店长"></label>
-    <div class="buttons"><button id="solo">单人开始营业</button><button id="resume" hidden>继续本地存档</button></div>
-    <div class="buttons twin"><button id="host">创建多人小店</button><button id="join">加入好友小店</button></div>
-    <label>加入码 <input id="joinCode" maxlength="8" placeholder="填写 8 位房间码" autocomplete="off"></label>
-    <button id="closeLobby" class="close">返回游戏</button>
-    <p class="fine">原创扁平色块组件 · 独立可操作层 · 单屏横竖适配 · 1–4 人协作实验版<br>界面采用实时几何绘制而非整体贴图；多人依赖网络信令，手机浏览器版本非原生引擎。</p>
+<section id="lobby" class="title-menu approved-menu" aria-label="小店主菜单">
+ <div class="menu-scene" aria-hidden="true"><div class="scene-stage">
+  <img class="scene-backdrop" src="./assets/menu-approved/backdrop.webp" alt="">
+  <div class="shopkeeper" data-part="original-fullbody-rig">
+   <img class="keeper-body" src="./assets/menu-approved/clerk-body.webp" alt="">
+   <div class="keeper-head"><img class="eyes-open" src="./assets/menu-approved/clerk-head-open.webp" alt=""><img class="eyes-closed" src="./assets/menu-approved/clerk-head-blink.webp" alt=""></div>
+   <div class="clerk-cup-arm"><img class="clerk-hand" src="./assets/menu-approved/clerk-cup-arm.webp" alt=""><div class="hand-mug"><img src="./assets/menu/mug.svg" alt=""><img class="steam" src="./assets/menu/steam.svg" alt=""></div></div>
   </div>
-</div>
+  <img class="scene-counter" src="./assets/menu-approved/foreground.webp" alt="">
+  <img class="scene-customer" src="./assets/menu-approved/customer-master.webp" alt="">
+  <div class="snowfall"></div>
+ </div></div>
+ <div class="menu-paper" data-view="home"><img class="paper-tape tape-left" src="./assets/menu/tape.svg" alt=""><img class="paper-tape tape-right" src="./assets/menu/tape.svg" alt="">
+
+  <div id="menuHome" class="menu-view">
+   <p class="menu-kicker">小店的一天，从这里开始</p>
+   <h1 id="menuHeading">欢迎开店<span class="heading-dot">。</span></h1>
+   <div class="main-choices">
+    <button id="primaryStart" class="choice choice-primary"><img src="./assets/menu/icon-door.svg" alt=""><span>开始经营</span><img class="choice-arrow" src="./assets/menu/icon-arrow.svg" alt=""></button>
+    <button id="multiplayer" class="choice"><img src="./assets/menu/icon-friends.svg" alt=""><span>与好友开店</span><img class="choice-arrow" src="./assets/menu/icon-arrow.svg" alt=""></button>
+    <button id="settings" class="choice"><img src="./assets/menu/icon-settings.svg" alt=""><span>设置</span><img class="choice-arrow" src="./assets/menu/icon-arrow.svg" alt=""></button>
+   </div>
+   <button id="closeLobby" class="return-choice" hidden>返回营业中的小店 <span aria-hidden="true">↗</span></button>
+   <p id="homeSave" class="save-caption">推开窗，迎接第一位客人。</p>
+  </div>
+  <div id="menuMulti" class="menu-view" hidden>
+   <button class="paper-back" data-menu-back><img src="./assets/menu/icon-back.svg" alt="">返回</button>
+   <h2>一起开店<span class="heading-dot">。</span></h2>
+   <p class="view-caption">同一间小店，一起忙里偷闲。</p>
+   <label class="name-field">值班员称呼<input id="nickname" maxlength="14" value="店长" autocomplete="nickname"></label>
+   <button id="host" class="form-action primary-action">创建多人小店</button>
+   <div class="join-row"><label>好友的房间码<input id="joinCode" maxlength="8" placeholder="8 位房间码" autocomplete="off" spellcheck="false"></label><button id="join" class="form-action">加入</button></div>
+   <p id="roomDetails" class="menu-feedback" role="status" aria-live="polite">创建房间后，把房间码分享给好友。</p>
+  </div>
+  <div id="menuSettings" class="menu-view" hidden>
+   <button class="paper-back" data-menu-back><img src="./assets/menu/icon-back.svg" alt="">返回</button>
+   <h2>按你的习惯<span class="heading-dot">。</span></h2>
+   <label class="setting-row"><span>场景动态<small>人物待机、落雪与蒸汽</small></span><input id="motionToggle" type="checkbox" checked></label>
+   <label class="setting-row"><span>菜单音效<small>轻触纸签的声音</small></span><input id="soundToggle" type="checkbox"></label>
+   <label class="setting-row"><span>大字模式<small>放大菜单与表单文字</small></span><input id="largeTextToggle" type="checkbox"></label>
+   <button id="newGame" class="form-action new-game">重新开一家店</button>
+   <div id="newConfirm" hidden><p class="menu-feedback">开始新店会替换本机存档。</p><div class="confirm-actions"><button id="confirmNew" class="form-action primary-action">确认开始</button><button id="cancelNew" class="form-action">保留存档</button></div></div>
+  </div>
+ </div>
+ <div hidden aria-hidden="true"><button id="solo" hidden>单人开始营业</button><button id="resume" hidden>继续本地存档</button></div>
+</section>
 </body></html>

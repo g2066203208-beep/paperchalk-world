@@ -50,6 +50,7 @@ try{
  const host=await open(context),guest=await open(context);
  await fs.mkdir("artifacts",{recursive:true});
  await host.screenshot({path:"artifacts/kiosk-animated-lobby.png",fullPage:false});
+ await host.locator("#multiplayer").click();
  await host.locator("#nickname").fill("店长");
  await host.locator("#host").click();
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host,{timeout:20000});
@@ -58,6 +59,7 @@ try{
  await host.locator("#menu").click();
  assert.match(await host.locator("#roomDetails").textContent(),new RegExp(code),"room code must remain discoverable inside menu");
  await host.locator("#closeLobby").click();
+ await guest.locator("#multiplayer").click();
  await guest.locator("#nickname").fill("店员");
  await guest.locator("#joinCode").fill(code);
  await guest.locator("#join").click();
@@ -250,7 +252,7 @@ try{
  assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
  // Local solo save survives refresh; source account is separate from legacy save.
  const solo=await open(context);
- await solo.locator("#solo").click();
+ await solo.locator("#primaryStart").click();
  await solo.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window")));
  await action(solo,"window");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==='idle',{timeout:5000});
@@ -280,7 +282,7 @@ try{
  assert.equal((await snapshot(solo)).upgrades.heating,1);
  await solo.reload();
  await solo.waitForFunction(()=>window.__KIOSK_TEST__?.getState!==undefined);
- await solo.locator("#resume").click();
+ await solo.locator("#primaryStart").click();
  assert.equal((await snapshot(solo)).windowOpen,true);
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
  assert.equal((await snapshot(solo)).upgrades.shelves,1,"upgrade survives original v3 localStorage key");
@@ -288,7 +290,7 @@ try{
  await solo.screenshot({path:"artifacts/kiosk-mobile-solo.png",fullPage:false});
  // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
  const wide=await open(context,1280,720);
- await wide.locator("#solo").click();
+ await wide.locator("#primaryStart").click();
  await wide.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().length));
  assert.equal((await wide.evaluate(()=>window.__KIOSK_TEST__.screen())).land,true);
  assert.ok((await wide.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="slot"));
@@ -299,7 +301,7 @@ try{
  // Verify real Chromium at a compact portrait phone AND rotated phone shape.
  for(const [vw,vh,name] of [[320,568,"compact-phone"],[844,390,"phone-landscape"]]){
    const p=await open(context,vw,vh);
-   await p.locator("#solo").click();
+   await p.locator("#primaryStart").click();
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="window"&&h.w>=1));
    await action(p,"window");
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:6000});
@@ -325,7 +327,7 @@ try{
  assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.item)),[24,28]);
  for(const [vw,vh,label] of [[320,568,"compact-portrait"],[844,390,"phone-landscape"]]){
    const phone=await open(context,vw,vh);
-   await phone.locator("#solo").click();
+   await phone.locator("#primaryStart").click();
    await phone.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()?.players?.solo));
    await phone.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
    await action(phone,"window");
@@ -354,7 +356,7 @@ try{
  }
  // Five real solo sales verify end-of-day rating and persistent reputation.
  const growth=await open(context);
- await growth.locator("#solo").click();
+ await growth.locator("#primaryStart").click();
  // A click can update state before the next requestAnimationFrame registers hitboxes.
  await growth.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
  await action(growth,"window");
@@ -376,13 +378,13 @@ try{
  assert.equal((await snapshot(growth)).reputation,4);
  assert.equal((await snapshot(growth)).dayRating,0);
  await growth.reload();
- await growth.locator("#resume").click();
+ await growth.locator("#primaryStart").click();
  assert.equal((await snapshot(growth)).reputation,4,"reputation persists under original save key");
  await growth.screenshot({path:"artifacts/kiosk-day-two-reputation.png",fullPage:false});
  // Finish an actual three-battery recycling batch in Chromium. Unlike retail,
  // this requires customer intake, drawer capacity and dispatch payout.
  const recycler=await open(context);
- await recycler.locator("#solo").click();
+ await recycler.locator("#primaryStart").click();
  await action(recycler,"window");
  await action(recycler,"slot","shelfL1");
  await action(recycler,"counter");
@@ -393,7 +395,7 @@ try{
  await action(recycler,"recycleStore");
  assert.equal((await snapshot(recycler)).businesses.recycling.stored,1);
  await recycler.reload();
- await recycler.locator("#resume").click();
+ await recycler.locator("#primaryStart").click();
  assert.equal((await snapshot(recycler)).businesses.recycling.stored,1,"recycling stock survives old v3 save key");
  for(const key of ["shelfL2","shelfR1"]){
    await action(recycler,"slot",key);
@@ -417,7 +419,7 @@ try{
  // requires internet, but a local shop must not.
  const offlineContext=await browser.newContext({viewport:{width:390,height:844}});
  const offline=await open(offlineContext);
- await offline.locator("#solo").click();
+ await offline.locator("#primaryStart").click();
  await offline.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
  await action(offline,"window");
  await action(offline,"slot","shelfL1");
@@ -434,7 +436,7 @@ try{
  await offlineContext.setOffline(true);
  await offline.reload({waitUntil:"domcontentloaded",timeout:15000});
  await offline.waitForFunction(()=>window.__KIOSK_TEST__?.getHits);
- await offline.locator("#resume").click();
+ await offline.locator("#primaryStart").click();
  const offlineState=await snapshot(offline);
  assert.equal(offlineState.windowOpen,true,"offline shop retains the open shutter");
  assert.equal(offlineState.players.solo.hand,"tea","offline shop restores saved stock");
