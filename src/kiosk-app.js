@@ -8,8 +8,10 @@ import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
 import {createSpeechPresentation} from "./kiosk-dialogue.js";
 import {RoomNetwork} from "./network.js";
+import {mountStoryUI} from './story-ui.js';
+import {ensureStory,applyStoryAction,seeShopProgress} from './story-framework.js';
 const $=id=>document.getElementById(id);
-let titleMenu=null;
+let titleMenu=null,storyUI=null;
 // Keep room status accessible inside the menu without covering physical shelves.
 function setStatus(message,alert=false){
  const el=$("status");el.textContent=message;el.dataset.alert=alert?"true":"false";
@@ -46,7 +48,7 @@ function save(){if(state&&(mode==="solo"||mode==="host")){try{localStorage.setIt
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
- mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;
+ mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;ensureStory(state);storyUI?.hide();
  // Legacy save compatibility: old hidden cabinets and drawers are now always open racks.
  state.open??={};
  for(const [key,fixture] of Object.entries(FIXTURES))if(fixture.kind!=='shelf')state.open[key]=true;
@@ -120,8 +122,11 @@ $("menu").onclick=()=>{refreshResume();refreshRoomDetails();if($("lobby").hidden
 $("closeLobby").onclick=()=>{if(state)titleMenu.hide();};
 function localAction(pid,a){
  if(!state)return false;
- let updated=a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
+ const before={totalServed:state.totalServed,day:state.day};
+ const isStory=['storyChoice','storyTravel','storyAvatar'].includes(a.cmd);
+ let updated=isStory?applyStoryAction(state,pid,a):a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
  if(updated){
+  if(!isStory)seeShopProgress(state,before);
   if(a.cmd==='nextday'){
    // The new presentation has no window handle: every shift starts open.
    state.windowOpen=true;state.notice='新的一天。直接点货架拿货，点交接台交付。';
@@ -131,7 +136,15 @@ function localAction(pid,a){
  if(pid===id&&!updated)shopUi.feedback={text:!updated&&a.itemId?'这件货已被拿走，请重新选择。':state.notice,until:performance.now()+2300,anchor:shopUi.actionAnchor};
  return updated;
 }
-function command(cmd,key,itemId){
+function command(cmd,key,itemId,nodeId){
+ if(cmd==='storyOpen'){storyUI?.show('story');return;}
+ if(['storyChoice','storyTravel','storyAvatar'].includes(cmd)){
+  if(!state)return;
+  const a={cmd,key,nodeId};
+  if(mode==='guest')net.sendInput({seq:++seq,action:{type:'kiosk',operation:cmd,key,nodeId}});
+  else localAction(id,a);
+  storyUI?.refresh(true);return;
+ }
  if(cmd==="focus"||cmd==="look"||cmd==="toggle"||cmd==="window")return;
  if(cmd==="catalog"){shopUi.catalog=true;shopUi.page="goods";return;}
  if(cmd==="catalogPage"){shopUi.page=key;return;}
@@ -196,7 +209,7 @@ function tick(){
  if(mode==="host"&&state){
   for(const {peerId,input} of net.takeInputs()){
    if(input?.action?.type!=="kiosk")continue;
-   const a={cmd:input.action.operation,key:input.action.key,sku:input.action.sku,itemId:input.action.itemId};
+   const a={cmd:input.action.operation,key:input.action.key,sku:input.action.sku,itemId:input.action.itemId,nodeId:input.action.nodeId};
    localAction(peerId,a);
   }
  }
@@ -214,6 +227,7 @@ function frame(){
   heldItemMotion=sampleHeldItemMotion(state,id,now);
   shopUi.motion=$("motionToggle").checked;
   hits=renderSilhouette(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
+  storyUI?.refresh();
  }
  else{
   ctx.fillStyle='#fff';ctx.fillRect(0,0,screen.W,screen.H);
@@ -223,6 +237,7 @@ function frame(){
  }
  requestAnimationFrame(frame);
 }
+storyUI=mountStoryUI({dispatch:command,getState:()=>state});
 titleMenu=mountTitleMenu({hasSave:()=>Boolean(readSave()),hasGame:()=>Boolean(state),onStart:()=>$("solo").onclick(),onResume:()=>$("resume").onclick(),onNew:()=>$("solo").onclick()});
 resize();refreshResume();frame();
 if("serviceWorker" in navigator){
@@ -230,4 +245,4 @@ if("serviceWorker" in navigator){
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
  command,screen:()=>screen,getCamera:()=>null,getWorld:()=>structuredClone(SHOP),getArtStatus:()=>({total:0,ready:0,failed:[]}),getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,
- getHeldItemMotion:()=>heldItemMotion?structuredClone(heldItemMotion):null,saveKey:SAVE};
+ getHeldItemMotion:()=>heldItemMotion?structuredClone(heldItemMotion):null,getStory:()=>state?.story?structuredClone(state.story):null,openStory:(type)=>storyUI.show(type),saveKey:SAVE};
