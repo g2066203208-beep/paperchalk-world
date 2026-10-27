@@ -24,7 +24,8 @@ function ensureRecycling(s){
 export function recyclingOffer(s){
  const r=recyclingState(s);
  return Boolean(s?.phase==="operating"&&s.windowOpen&&businessUnlocked(s,"recycling")&&
-  s.orderIndex%4!==0&&r.lastOrder!==s.orderIndex&&r.stored<RECYCLING.capacity&&!r.carriedBy);
+  s.orderIndex%4!==0&&r.lastOrder!==s.orderIndex&&r.stored<RECYCLING.capacity&&
+  (s.slots?.drawerR?.qty||0)===0&&!r.carriedBy);
 }
 export function recyclingCarried(s,by){return recyclingState(s).carriedBy===by;}
 export function recyclingValid(s){
