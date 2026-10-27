@@ -40,6 +40,16 @@ async function action(page,cmd,key,gesture=null){
    await page.mouse.up();
  }else await page.mouse.click(px,py);
 }
+async function freshSolo(page){
+ // The main CTA correctly resumes an existing save. A fresh test world must
+ // follow the explicit new-shop flow rather than accidentally resuming it.
+ const saved=await page.evaluate(()=>Boolean(localStorage.getItem("untitled-kiosk-save-v1")));
+ if(saved){
+  await page.locator("#settings").click();
+  await page.locator("#newGame").click();
+  await page.locator("#confirmNew").click();
+ }else await page.locator("#primaryStart").click();
+}
 const snapshot=p=>p.evaluate(()=>window.__KIOSK_TEST__.getState());
 try{
  // GitHub-hosted Linux runners already include Chrome; avoid flaky CDN
@@ -252,7 +262,7 @@ try{
  assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
  // Local solo save survives refresh; source account is separate from legacy save.
  const solo=await open(context);
- await solo.locator("#primaryStart").click();
+ await freshSolo(solo);
  await solo.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window")));
  await action(solo,"window");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==='idle',{timeout:5000});
@@ -290,7 +300,7 @@ try{
  await solo.screenshot({path:"artifacts/kiosk-mobile-solo.png",fullPage:false});
  // Landscape and desktop use an expanded camera, not a scaled portrait screenshot.
  const wide=await open(context,1280,720);
- await wide.locator("#primaryStart").click();
+ await freshSolo(wide);
  await wide.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()&&window.__KIOSK_TEST__?.getHits().length));
  assert.equal((await wide.evaluate(()=>window.__KIOSK_TEST__.screen())).land,true);
  assert.ok((await wide.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="slot"));
@@ -301,7 +311,7 @@ try{
  // Verify real Chromium at a compact portrait phone AND rotated phone shape.
  for(const [vw,vh,name] of [[320,568,"compact-phone"],[844,390,"phone-landscape"]]){
    const p=await open(context,vw,vh);
-   await p.locator("#primaryStart").click();
+   await freshSolo(p);
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="window"&&h.w>=1));
    await action(p,"window");
    await p.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:6000});
@@ -327,7 +337,7 @@ try{
  assert.deepEqual(JSON.parse(JSON.stringify(pixelGrid.item)),[24,28]);
  for(const [vw,vh,label] of [[320,568,"compact-portrait"],[844,390,"phone-landscape"]]){
    const phone=await open(context,vw,vh);
-   await phone.locator("#primaryStart").click();
+   await freshSolo(phone);
    await phone.waitForFunction(()=>Boolean(window.__KIOSK_TEST__?.getState()?.players?.solo));
    await phone.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
    await action(phone,"window");
@@ -356,7 +366,7 @@ try{
  }
  // Five real solo sales verify end-of-day rating and persistent reputation.
  const growth=await open(context);
- await growth.locator("#primaryStart").click();
+ await freshSolo(growth);
  // A click can update state before the next requestAnimationFrame registers hitboxes.
  await growth.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
  await action(growth,"window");
@@ -384,7 +394,7 @@ try{
  // Finish an actual three-battery recycling batch in Chromium. Unlike retail,
  // this requires customer intake, drawer capacity and dispatch payout.
  const recycler=await open(context);
- await recycler.locator("#primaryStart").click();
+ await freshSolo(recycler);
  await action(recycler,"window");
  await action(recycler,"slot","shelfL1");
  await action(recycler,"counter");
@@ -419,7 +429,7 @@ try{
  // requires internet, but a local shop must not.
  const offlineContext=await browser.newContext({viewport:{width:390,height:844}});
  const offline=await open(offlineContext);
- await offline.locator("#primaryStart").click();
+ await freshSolo(offline);
  await offline.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
  await action(offline,"window");
  await action(offline,"slot","shelfL1");
