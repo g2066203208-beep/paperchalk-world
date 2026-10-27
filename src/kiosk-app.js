@@ -3,6 +3,7 @@ import {SHOP} from './kiosk-shop-layout.js';
 import {mountTitleMenu} from "./kiosk-menu.js";
 import {GOODS,FIXTURES,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {renderSilhouette} from './kiosk-silhouette.js';
+import {renderStoryWorld} from './story-world-render.js';
 
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
@@ -138,6 +139,7 @@ function localAction(pid,a){
 }
 function command(cmd,key,itemId,nodeId){
  if(cmd==='storyOpen'){storyUI?.show('story');return;}
+ if(cmd==='storyMapOpen'){storyUI?.show('map');return;}
  if(['storyChoice','storyTravel','storyAvatar'].includes(cmd)){
   if(!state)return;
   const a={cmd,key,nodeId};
@@ -226,7 +228,9 @@ function frame(){
   customerMotion.speechVisible=speechPresentation.sample(state,now);
   heldItemMotion=sampleHeldItemMotion(state,id,now);
   shopUi.motion=$("motionToggle").checked;
-  hits=renderSilhouette(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
+  hits=state.story?.location&&state.story.location!=='shop'
+    ?renderStoryWorld(ctx,state,screen,phase,shopUi)
+    :renderSilhouette(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
   storyUI?.refresh();
  }
  else{
