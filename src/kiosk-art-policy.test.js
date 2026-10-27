@@ -1,22 +1,20 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
-const read=p=>readFileSync(new URL(p,import.meta.url),"utf8");
-const view=read("./kiosk-view.js"),art=read("./kiosk-flat.js"),app=read("./kiosk-app.js");
-test("flat art elements are real independent live game layers, not a game screenshot",()=>{
- assert.match(view,/flatCupboard\(/);
- assert.match(view,/renderGeneratedShop\(/);
- assert.match(read("./kiosk-gpt-scene.js"),/window\(g,hits,s,/);
- assert.match(read("./kiosk-gpt-scene.js"),/cabinet\(g,hits,s,/);
- assert.match(view,/flatDrawer\(/);
- assert.match(view,/flatStreet\(/);
- assert.match(view,/flatCustomer\(/);
- assert.match(view,/flatProduct\(/);
- assert.match(view,/flatCounter\(/);
- assert.match(view,/hit\(hits,.*"slot"/);
- assert.match(view,/hit\(hits,.*"window"/);
- assert.match(view,/hit\(hits,mat\.x,mat\.y,mat\.w,mat\.h,"counter"\)/);
- assert.doesNotMatch(view,/drawGeneratedCustomer|drawPixelCustomer|drawPixelStreet/);
- assert.doesNotMatch(art,/createLinearGradient|filter:\s*blur|ctx\.drawImage|fullScene/);
- assert.match(app,/flatAmbient/);
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {initialShop,join} from './kiosk-core.js';
+import {render} from './kiosk-view.js';
+const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
+function context(){return new Proxy({measureText:s=>({width:s.length*14})},{get:(o,k)=>o[k]??(()=>{}),set:(o,k,v)=>(o[k]=v,true)});}
+test('runtime uses independent flat fixtures and no obsolete scene crop atlas',()=>{
+ const view=read('./kiosk-view.js');
+ assert.doesNotMatch(view,/renderGeneratedShop|kiosk-gpt-scene|createLinearGradient/);
+ const s=initialShop();join(s,'solo','店长');const g=context();
+ const hits=render(g,s,{W:390,H:844},0,'solo');
+ assert.equal(hits.filter(h=>h.cmd==='slot').length,6);
+ assert.equal(hits.filter(h=>h.cmd==='toggle').length,4);
+ for(const cmd of ['window','counter','sell','catalog'])assert.ok(hits.some(h=>h.cmd===cmd),cmd);
+ s.open.cabinetL=true;s.open.drawerL=true;
+ const open=render(g,s,{W:390,H:844},0,'solo');
+ assert.ok(open.some(h=>h.cmd==='slot'&&h.key==='cabinetL'));
+ assert.ok(open.some(h=>h.cmd==='slot'&&h.key==='drawerL'));
 });

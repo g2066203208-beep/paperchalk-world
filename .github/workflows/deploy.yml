@@ -72,6 +72,7 @@ jobs:
             exit 1
           }
       - run: node tests/menu-browser.mjs
+      - run: node tests/small-shop-browser.mjs
       - run: node tests/browser-e2e.mjs
       - name: Screenshot evidence
         if: always()
@@ -96,10 +97,11 @@ jobs:
         run: |
           mkdir -p _site/src _site/assets _site/assets/gptimg/parts
           cp index.html style.css menu.css sw.js .nojekyll _site/
-          cp src/kiosk-core.js src/kiosk-business.js src/kiosk-gpt-scene.js src/kiosk-flat.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-gptimg.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/kiosk-app.js src/kiosk-menu.js src/network.js _site/src/
+          cp src/kiosk-shop-layout.js src/kiosk-core.js src/kiosk-business.js src/kiosk-gpt-scene.js src/kiosk-flat.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-gptimg.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/kiosk-app.js src/kiosk-menu.js src/network.js _site/src/
           cp assets/*.svg _site/assets/
           cp -R assets/menu _site/assets/menu
           cp -R assets/menu-approved _site/assets/menu-approved
+          cp -R assets/rig _site/assets/rig
           cp assets/gptimg/*.webp assets/gptimg/*.png _site/assets/gptimg/
           cp assets/gptimg/parts/*.png assets/gptimg/parts/manifest.json _site/assets/gptimg/parts/
       - name: Verify published ES module dependencies

@@ -2,12 +2,12 @@
 // the ES modules deployed to GitHub Pages; PeerJS signaling remains online-only.
 // Only individually cropped, licensed/original GPTIMG sprite files are cached.
 // Never precache a flattened mock screenshot or the obsolete anime asset pack.
-const CACHE="untitled-kiosk-offline-v11-shop-entry";
+const CACHE="untitled-kiosk-offline-v12-playable-shop";
 const CORE=[
  "./","./index.html","./style.css","./menu.css","./src/kiosk-menu.js","./assets/menu/transition-shutter.svg","./assets/menu/fonts/menu-black.woff",
  ...["paper.svg","ticket.svg","tape.svg","mug.svg","snow.svg","steam.svg","icon-door.svg","icon-friends.svg","icon-settings.svg","icon-arrow.svg","icon-back.svg"].map(n=>"./assets/menu/"+n),
  ...["backdrop.webp","foreground.webp","clerk-body.webp","clerk-head-open.webp","clerk-head-blink.webp","clerk-cup-arm.webp","customer-master.webp"].map(n=>"./assets/menu-approved/"+n),
- "./src/kiosk-core.js","./src/kiosk-business.js","./src/kiosk-view.js","./src/kiosk-gpt-scene.js","./src/kiosk-flat.js","./src/kiosk-skin.js",
+ "./src/kiosk-shop-layout.js",...["courier-master.webp","tone0-master.webp","tone1-master.webp","tone3-master.webp","elder-smile.webp","elder-concern.webp","elder-talk.webp"].map(n=>"./assets/rig/customer/"+n),"./src/kiosk-core.js","./src/kiosk-business.js","./src/kiosk-view.js","./src/kiosk-gpt-scene.js","./src/kiosk-flat.js","./src/kiosk-skin.js",
  "./src/kiosk-pixel.js","./src/kiosk-gptimg.js","./src/kiosk-guest.js","./src/kiosk-motion.js",
  "./src/kiosk-item-motion.js","./src/kiosk-dialogue.js","./src/kiosk-app.js","./src/network.js",
  "./assets/gptimg/customer-uncle.webp","./assets/gptimg/winter-kiosk-source.png",

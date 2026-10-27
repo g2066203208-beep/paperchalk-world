@@ -105,12 +105,10 @@ try{
    .every(h=>h.y<immersive.size.H*.82),"service commands cannot sit in a bottom toolbar");
 
  await host.waitForFunction(()=>document.querySelector("#game")&&document.readyState==="complete");
- await host.waitForFunction(async()=> (await import("./src/kiosk-gptimg.js")).gptimgAssetState().loaded,undefined,{timeout:10000});
  await host.waitForFunction(async()=> {
-   const art=await import("./src/kiosk-gpt-scene.js");
-   const parts=art.independentPartStatus();
-   return parts.total===28&&parts.failed===0&&parts.ready===28&&parts.transparentCustomer;
- },undefined,{timeout:20000});
+   const img=new Image();img.src='./assets/rig/customer/courier-master.webp';
+   await img.decode();return img.naturalHeight>img.naturalWidth;
+ },undefined,{timeout:10000});
  await host.screenshot({path:"artifacts/kiosk-independent-sprites-customer.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer-gptimg.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer.png",fullPage:false});
@@ -233,11 +231,15 @@ try{
  // A manager spends shared funds on a permanent capacity upgrade. The clerk
  // sees the new shelf limit but cannot trigger the purchase.
  assert.equal((await guest.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="upgrade"),false);
+ await action(host,"catalog");
+ await action(host,"catalogPage","improve");
  await action(host,"upgrade");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.upgrades?.shelves===1,{timeout:12000});
  assert.equal((await snapshot(guest)).cash,78);
  await host.screenshot({path:"artifacts/kiosk-shelf-upgraded.png",fullPage:false});
  assert.equal((await guest.evaluate(()=>window.__KIOSK_TEST__.getHits())).some(h=>h.cmd==="heat"),false);
+ await action(host,"catalog");
+ await action(host,"catalogPage","improve");
  await action(host,"heat");
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.upgrades?.heating===1,{timeout:12000});
  assert.equal((await snapshot(guest)).cash,42);
@@ -287,8 +289,12 @@ try{
  await action(solo,"counter",undefined,"hold");
  await solo.waitForFunction(()=>window.__KIOSK_TEST__.getHeldItemMotion()?.stage==='take',{timeout:3000});
  assert.equal((await snapshot(solo)).players.solo.hand,"tea");
+ await action(solo,"catalog");
+ await action(solo,"catalogPage","improve");
  await action(solo,"upgrade");
  assert.equal((await snapshot(solo)).upgrades.shelves,1);
+ await action(solo,"catalog");
+ await action(solo,"catalogPage","improve");
  await action(solo,"heat");
  assert.equal((await snapshot(solo)).upgrades.heating,1);
  await solo.reload();

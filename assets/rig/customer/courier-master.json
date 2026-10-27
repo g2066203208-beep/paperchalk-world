@@ -1,0 +1,51 @@
+{
+  "id": "courier",
+  "source": "GPTIMG original generated character",
+  "sourceFile": "exec-13d83ba1-399c-4584-b6d1-d3e40e670945.png",
+  "size": [
+    948,
+    1660
+  ],
+  "alpha": true,
+  "fullBody": true,
+  "silhouetteBBox": [
+    205,
+    27,
+    770,
+    1634
+  ],
+  "pose": "front slight three-quarter, one receiving palm at waist",
+  "anchors": {
+    "face": [
+      483,
+      273
+    ],
+    "receivingPalm": [
+      341,
+      672
+    ],
+    "relaxedHand": [
+      720,
+      971
+    ],
+    "feet": [
+      483,
+      1626
+    ]
+  },
+  "regions": {
+    "face": [
+      341,
+      174,
+      587,
+      356
+    ],
+    "receivingHand": [
+      255,
+      609,
+      426,
+      722
+    ]
+  },
+  "prompt": "Original complete full-body adult courier, olive short hair, orange knit cap, navy winter jacket, ivory scarf, blue trousers and boots; front slight three-quarter pose with free palm extended at waist to receive goods. Clean flat anime facial grammar with tapered oval eyes and thick lids, tiny nose dot, small expressive mouth, limited navy/ivory/orange palette, one hard cel shadow; transparent alpha. Entire head through both boot soles inside canvas; no scene, props, text or copied identity."
+}

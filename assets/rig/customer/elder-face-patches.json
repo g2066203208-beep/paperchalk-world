@@ -1,0 +1,102 @@
+{
+  "source": "tone0-master.webp",
+  "sourceSize": [
+    560,
+    1100
+  ],
+  "sourceRect": [
+    265,
+    110,
+    130,
+    130
+  ],
+  "patchSize": [
+    130,
+    130
+  ],
+  "featureRectsLocal": {
+    "eyes": [
+      [
+        20,
+        27,
+        44,
+        33
+      ],
+      [
+        76,
+        39,
+        40,
+        32
+      ]
+    ],
+    "brows": [
+      [
+        22,
+        7,
+        52,
+        26
+      ],
+      [
+        85,
+        19,
+        39,
+        29
+      ]
+    ],
+    "mouth": [
+      [
+        33,
+        76,
+        55,
+        34
+      ]
+    ]
+  },
+  "compositing": "Draw image at sourceRect x/y in source-space before character transform. Patch alpha is confined to facial feature interiors; no hair/hat/head edge replacement.",
+  "expressions": {
+    "smile": {
+      "path": "elder-smile.webp",
+      "features": [
+        "eyes",
+        "mouth"
+      ],
+      "alphaBBox": [
+        18,
+        25,
+        119,
+        113
+      ],
+      "width": 130,
+      "height": 130
+    },
+    "concern": {
+      "path": "elder-concern.webp",
+      "features": [
+        "brows",
+        "mouth"
+      ],
+      "alphaBBox": [
+        20,
+        5,
+        127,
+        113
+      ],
+      "width": 130,
+      "height": 130
+    },
+    "talk": {
+      "path": "elder-talk.webp",
+      "features": [
+        "mouth"
+      ],
+      "alphaBBox": [
+        31,
+        74,
+        91,
+        113
+      ],
+      "width": 130,
+      "height": 130
+    }
+  }
+}

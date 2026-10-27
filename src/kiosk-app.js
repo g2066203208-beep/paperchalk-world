@@ -26,6 +26,7 @@ const sampleCustomerMotion=createCustomerMotion();
 const sampleHeldItemMotion=createHeldItemMotion();
 const speechPresentation=createSpeechPresentation();
 let customerMotion=null,heldItemMotion=null;
+const shopUi={catalog:false,page:"goods"};
 const net=new RoomNetwork({
  status:t=>setStatus(t),
  join:(pid,name)=>{
@@ -42,7 +43,7 @@ function save(){if(state&&(mode==="solo"||mode==="host")){try{localStorage.setIt
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
- mode=who;state=model;id=userId;seq=0;speechPresentation.reset();
+ mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;speechPresentation.reset();
  $("hud").classList.add("playing");
  titleMenu?.hide();
  $("roomCode").textContent=room?("房间码："+room):"";
@@ -115,6 +116,10 @@ function localAction(pid,a){
  return updated;
 }
 function command(cmd,key){
+ if(cmd==="catalog"){shopUi.catalog=true;shopUi.page="goods";return;}
+ if(cmd==="catalogPage"){shopUi.page=key;return;}
+ if(cmd==="closeCatalog"){shopUi.catalog=false;return;}
+ if(["restock","upgrade","heat"].includes(cmd))shopUi.catalog=false;
  if(!state||state.phase==="summary"&&cmd!=="nextday")return;
  if(["talk","commission","recycleReceive","recycleStore"].includes(cmd))speechPresentation.prompt(performance.now());
  const a={cmd};
@@ -125,17 +130,16 @@ function command(cmd,key){
  }else localAction(id,a);
 }
 function resize(){
- const width=Math.max(1,window.innerWidth),height=Math.max(1,window.innerHeight);
- const land=width>=height*1.12;
- // Preserve the physical viewport aspect ratio on wide phones as well as desktop.
- // A 500-unit minimum landscape height keeps touch targets usable without squashing art.
- const H=land?Math.max(500,Math.round(960*height/width)):Math.max(640,Math.round(480*height/width));
- const W=land?Math.round(H*width/height):480;
- screen={W,H,land};
- canvas.width=W;canvas.height=H;
+ const rect=canvas.getBoundingClientRect();
+ const W=Math.max(1,Math.round(rect.width)),H=Math.max(1,Math.round(rect.height));
+ const dpr=Math.min(3,window.devicePixelRatio||1);
+ screen={W,H,land:W>=H*1.12,dpr};
+ canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
  ctx.imageSmoothingEnabled=true;
 }
 window.addEventListener("resize",resize);window.addEventListener("orientationchange",resize);
+window.visualViewport?.addEventListener("resize",resize);
 // Tap a visible fixture to operate it; hold a stocked shelf or open drawer
 // to prepare a reorder. Input geometry is always derived from rendered objects.
 let activePointer=null;
@@ -192,13 +196,14 @@ setInterval(tick,100);
 setInterval(()=>{if(mode==="host"&&state)net.broadcast(state);},400);
 function frame(){
  phase++;
- ctx.imageSmoothingEnabled=false;
+ ctx.setTransform(screen.dpr||1,0,0,screen.dpr||1,0,0);
+ ctx.imageSmoothingEnabled=true;
  if(state){
   const now=performance.now();
   customerMotion=sampleCustomerMotion(state,now);
   customerMotion.speechVisible=speechPresentation.sample(state,now);
   heldItemMotion=sampleHeldItemMotion(state,id,now);
-  hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion);
+  hits=render(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
  }
  else{
   flatAmbient(ctx,screen.W,screen.H,phase);

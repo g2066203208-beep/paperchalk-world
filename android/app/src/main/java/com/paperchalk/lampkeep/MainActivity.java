@@ -14,6 +14,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.widget.Toast;
+import android.widget.FrameLayout;
 
 /**
  * Native Android shell for the responsive HTML5 game.
@@ -32,6 +33,9 @@ public final class MainActivity extends Activity {
         web.setBackgroundColor(Color.rgb(20, 36, 72));
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
+        web.getSettings().setTextZoom(100);
+        web.getSettings().setUseWideViewPort(true);
+        web.getSettings().setLoadWithOverviewMode(false);
         web.getSettings().setAllowFileAccess(false);
         web.getSettings().setAllowContentAccess(false);
         web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -48,14 +52,19 @@ public final class MainActivity extends Activity {
             }
         });
         // Android 15 edge-to-edge: reserve real OS status/navigation/cutout insets.
+        FrameLayout root = new FrameLayout(this);
+        root.addView(web,new FrameLayout.LayoutParams(-1,-1));
         if(Build.VERSION.SDK_INT >= 30) {
-            web.setOnApplyWindowInsetsListener((view,insets)->{
+            root.setOnApplyWindowInsetsListener((view,insets)->{
                 Insets safe=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());
-                view.setPadding(safe.left,safe.top,safe.right,safe.bottom);
+                FrameLayout.LayoutParams layout=(FrameLayout.LayoutParams)web.getLayoutParams();
+                layout.setMargins(safe.left,safe.top,safe.right,safe.bottom);
+                web.setLayoutParams(layout);
                 return insets;
             });
         }
-        setContentView(web);
+        setContentView(root);
+        root.requestApplyInsets();
         if(state==null) loadLatest();
         else if(web.restoreState(state)==null) loadLatest();
     }
