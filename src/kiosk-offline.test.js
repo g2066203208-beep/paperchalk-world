@@ -21,7 +21,7 @@ test("offline precache includes the selected protagonists and only necessary run
   "./assets/protagonists/alina-preview.webp",
   "./assets/protagonists/mikhail-preview.webp"
  ];
- assert.deepEqual(CORE.filter(x=>x.startsWith("./assets/")).sort(),allowedImages.sort());
+ assert.deepEqual(Array.from(CORE).filter(x=>x.startsWith("./assets/")).sort(),allowedImages.sort());
  assert.ok(CORE.every(x=>!x.includes("gptimg")&&!x.includes("pixel.js")));
  assert.match(deploy,/cp assets\/protagonists\/\*\.webp _site\/assets\/protagonists\//);
  assert.ok(!CORE.some(x=>x.includes("assets/anime")||x.includes("full-scene")));
