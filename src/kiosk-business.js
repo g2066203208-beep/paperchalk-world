@@ -3,8 +3,10 @@
 export const RECYCLING=Object.freeze({capacity:3,handlingCost:1,batchPayout:12});
 export const BUSINESS_REGISTRY=Object.freeze({
  retail:Object.freeze({id:"retail",name:"窗口零售",category:"goods",station:"counter",steps:Object.freeze(["take","place","sell"]),unlock:"always"}),
- recycling:Object.freeze({id:"recycling",name:"旧电池回收",category:"service",station:"drawerR",steps:Object.freeze(["receive","store","dispatch"]),unlock:"one_sale"})
+ recycling:Object.freeze({id:"recycling",name:"旧电池回收",category:"service",station:"drawerR",steps:Object.freeze(["receive","store","dispatch"]),commands:Object.freeze(["recycleReceive","recycleStore","recycleShip"]),unlock:"one_sale"})
 });
+// A single core dispatcher works for future registered businesses as well.
+export function businessCommand(cmd){return Object.values(BUSINESS_REGISTRY).some(b=>b.commands?.includes(cmd));}
 export function businessUnlocked(s,id){
  const rule=BUSINESS_REGISTRY[id]?.unlock;
  return rule==="always"||rule==="one_sale"&&(s?.totalServed||0)>=1;
@@ -50,7 +52,7 @@ export function reclaimRecyclingOnLeave(s,by){
 export function applyBusinessAction(s,by,a){
  if(!s||s.version!==3||s.phase!=="operating"||!s.players?.[by]||!a)return false;
  const p=s.players[by],cmd=a.cmd;
- if(!["recycleReceive","recycleStore","recycleShip"].includes(cmd))return false;
+ if(!businessCommand(cmd))return false;
  const r=recyclingState(s);
  if(cmd==="recycleReceive"){
   if(!recyclingOffer(s)||p.hand||p.restock||s.cash<RECYCLING.handlingCost)return false;
