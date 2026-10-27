@@ -80,6 +80,12 @@ export function renderStoryWorld(g,shop,view,phase=0,options={}){
   r(g,W*.45,ground-H*.21,W*.10,3,COLORS.snow);
   tree(g,W*.12,ground,H*.31);
  }else{kiosk(g,W,H,ground);}
+ const cue=options.storyCue;
+ if(cue&&!cue.done&&(cue.track==='paper'||cue.track==='footstep')){
+  const x=W*.30+cue.offsetX,y=ground-36+cue.offsetY;
+  if(cue.track==='paper'){r(g,x,y,18,25,COLORS.white);r(g,x+3,y+5,12,2,COLORS.ink);r(g,x+3,y+10,9,2,COLORS.ink);}
+  else {r(g,x,ground-3,10,3,COLORS.ink);r(g,x+16,ground-9,10,3,COLORS.ink);}
+ }
  // Each location owns a coherent environment, not a static map-only label.
  r(g,0,0,W,51,COLORS.white);
  label(g,location.name,12,25,19,COLORS.ink);
