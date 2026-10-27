@@ -3,8 +3,10 @@ import {spawn} from 'node:child_process';
 const server=spawn(process.execPath,['tools/dev-server.mjs','--port','4174','--host','127.0.0.1'],{stdio:'ignore'});
 for(let i=0;i<30;i++){try{await fetch('http://127.0.0.1:4174');break;}catch{await new Promise(r=>setTimeout(r,100));}}
 import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
 import fs from 'node:fs/promises';
-const browser=await chromium.launch({headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+const installedChrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
+const browser=await chromium.launch({headless:true,...(installedChrome?{executablePath:installedChrome}:{}),args:['--no-sandbox','--disable-dev-shm-usage']});
 await fs.mkdir('artifacts/menu',{recursive:true});
 const errors=[];const results=[];
 try{
