@@ -159,7 +159,11 @@ export function applyStoryAction(shop,by,a){
  if(!shop?.players?.[by]||!a||typeof a!=='object')return false;
  if(a.cmd==='storyChoice')return chooseStory(shop,a.key,a.nodeId);
  if(a.cmd==='storyTravel')return travelTo(shop,a.key);
- if(a.cmd==='storyAvatar')return chooseAvatar(shop,a.key);
+ if(a.cmd==='storyAvatar'){
+  // One owner decides the save's protagonist; additional online clerks cannot swap it.
+  if(shop.players[by].role!=='manager')return false;
+  return chooseAvatar(shop,a.key);
+ }
  return false;
 }
 export function validateStoryGraph(graph=STORY_GRAPH){
