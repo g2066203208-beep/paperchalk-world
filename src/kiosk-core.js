@@ -1,3 +1,4 @@
+import {reconcileObjects,canGrabObject,validateObjects} from "./kiosk-objects.js";
 // Shared, deterministic shop rules. Actions validated exclusively at room host.
 import {applyBusinessAction,businessCommand,recyclingCarried,recyclingState,recyclingValid,reclaimRecyclingOnLeave} from "./kiosk-business.js";
 export const GOODS=Object.freeze({
@@ -69,15 +70,16 @@ export function join(s,id,name){
  const p={id,name:String(name||"店员").slice(0,14),role:first?"manager":"clerk",hand:null,origin:null,restock:null};
  if(first&&GOODS[s.hand]){p.hand=s.hand;s.hand=null;}
  if(first&&GOODS[s.selectedRestock]){p.restock=s.selectedRestock;s.selectedRestock=null;}
- s.players[id]=p;s.revision++;return true;
+ s.players[id]=p;reconcileObjects(s);s.revision++;return true;
 }
 export function leave(s,id){
  const p=s.players[id];if(!p)return;
  if(p.hand)putBack(s,p.hand,p.origin);
  reclaimRecyclingOnLeave(s,id);
- delete s.players[id];s.revision++;
+ delete s.players[id];reconcileObjects(s);s.revision++;
 }
 export function resumeSolo(s,name){
+ const physicalBefore=s.physicalItems;
  // Old multiplayer players cannot keep a service parcel in an orphaned hand.
  for(const oldId of Object.keys(s.players||{}))reclaimRecyclingOnLeave(s,oldId);
  const held=[];
@@ -85,10 +87,11 @@ export function resumeSolo(s,name){
  for(const p of Object.values(s.players||{}))if(GOODS[p.hand])held.push({sku:p.hand,origin:p.origin});
  const restock=GOODS[s.selectedRestock]?s.selectedRestock:null;
  s.players={};s.hand=null;s.selectedRestock=null;join(s,"solo",name);
+ if(physicalBefore)s.physicalItems=physicalBefore;
  const first=held.shift();if(first){s.players.solo.hand=first.sku;s.players.solo.origin=first.origin;}
  for(const p of held)putBack(s,p.sku,p.origin);
  if(restock)s.players.solo.restock=restock;
- return s;
+ reconcileObjects(s);return s;
 }
 export function visible(s,key){const f=FIXTURES[key];return f&& (f.kind==="shelf" || Boolean(s.open[key]));}
 export function slotRoom(key,sku,s=null){
@@ -98,6 +101,8 @@ export function slotRoom(key,sku,s=null){
 export function apply(s,by,a){
  if(!s||s.version!==3||!s.players[by]||s.phase!=="operating"||!a||typeof a!=="object")return false;
  const p=s.players[by];
+ reconcileObjects(s);
+ if(a.itemId&&(a.cmd!=="slot"||p.hand||p.restock||!canGrabObject(s,a.itemId,a.key)))return false;
  let {cmd,key,sku}=a;
  if(businessCommand(cmd))return applyBusinessAction(s,by,a);
  if(recyclingCarried(s,by)&&["slot","counter","restock"].includes(cmd))return false;
@@ -216,7 +221,7 @@ export function apply(s,by,a){
  }
  else if(cmd==="nextday" && s.phase==="summary"){} // resolved by explicit branch below
  else return false;
- s.revision++;return true;
+ reconcileObjects(s,a.itemId);s.revision++;return true;
 }
 export function nextDay(s,by){
  if(!s.players[by]||s.players[by].role!=="manager"||s.phase!=="summary")return false;
@@ -224,7 +229,7 @@ export function nextDay(s,by){
 }
 export function validate(s){
  if(s?.version!==3)return false;
- if(!recyclingValid(s))return false;
+ if(!recyclingValid(s)||!validateObjects(s))return false;
  if(s.counter!==null&&!GOODS[s.counter])return false;
  // Legacy v3 saves have no upgrades field; they are treated as level zero.
  if(s.upgrades!==undefined&&(!s.upgrades||typeof s.upgrades!=="object"||Array.isArray(s.upgrades)||

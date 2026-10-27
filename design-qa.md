@@ -37,3 +37,20 @@ final result: passed
 2026-10-27: planning commit `a37fe5a` first recorded the small-shop start, same-current-store menu, rich physical interactions and store-growth projection before implementation. Current view-switch now retreats the notice paper, approaches the window, and uses an opaque shutter to mask the camera/render-path change. Input remains blocked until the reveal finishes. Reduced-motion entry remains immediate. The multiplayer entry waits for a first valid host snapshot. Local 4-size menu checks plus full-motion entry/return and world-state preservation pass. Cloud browser inspected entering state, then playable world, then return to the same live game. This is the transition layer; a shared store projection and growth-driven menu are explicitly planned, not claimed implemented.
 
 Previous runtime `624d745` passed the GitHub-hosted complete browser regression, page deployment and Android build. The earlier local WebRTC limitation did not reproduce on the GitHub runner.
+
+## First-shop world scene v3 — 2026-10-27
+
+This section supersedes the earlier non-menu art limitation. Current scope is an actual illustrated, interactive 2D world scene, not the preceding generated concept images.
+
+- Reference grounding: approved navy/ivory/orange menu and cleaned interior concept, corrected against the user's continuous-counter and complete-object production requirements. This is a new gameplay composition, not a claim of pixel-identical cloning or user aesthetic approval.
+- P0 fixed: goods are independent host-authoritative physical IDs, including a fixed storage socket; removing a unit does not recenter/rescale the remaining units. Capturing the ID at pointer-down prevents a late network update from retargeting the tap to a neighbor.
+- P1 fixed: continuous counter, complete cabinet/drawer interior backing, drawer panels aligned to the source frame and available for interaction only after the opening animation completes.
+- P1 fixed: fixed fixture coordinates across orientation, camera-local drag/shot selection, safe bounds and inverse transforms, individual goods targets available in close shots instead of oversized overlapping invisible hotspots.
+- P1 fixed: main landscape camera retains the full head and handoff surface; speech chooses a side in landscape and chest-level space in portrait. Four original fullbody sources use localized facial overlays, with hands and stocked products independently drawn.
+- Actual cloud browser inspected menu→world, stock close shot, one unit pickup, full shelf backing, restored held unit after reload, counter placement and physical register checkout. No app page exceptions observed.
+- Local syntax checks and 92 unit tests pass. Five real browser viewport/DPR flows pass: 320×568/1, 390×844/3, 568×320/2, 844×390/3, 1280×720/1, including wrong-item recovery, commissions, procurement, recycling, five-sale settlement, next day and resume.
+- A separate real-pointer camera test passes drag, rotate while holding, preserved unit identity, all fixture shots, continuous counter and open-drawer backing. Menu four-size and full-motion entry/return regression passes.
+- Production sprites, geometry, prompts and source metadata reside in `assets/interior-v3/`; implementation and unimplemented scope are documented in `design/gameplay/INTERIOR_PRODUCTION_SPEC.md`. Current runtime remains Canvas/WebView, with fixed-view 2D pan/zoom, not unrestricted 3D rotation.
+- P3: silver closed-eye patch has a small enlarged skin-tone seam. Physical Android device QA remains unavailable. GitHub-hosted multiplayer and Android build results must be verified separately after publication; local WebRTC handshake remains an environment limitation.
+
+final result: passed

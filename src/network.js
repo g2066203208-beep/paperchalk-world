@@ -29,6 +29,7 @@ export class InputMailbox {
       ...(typeof input.action.station==="string"?{station:input.action.station.slice(0,20)}:{}),
       ...(typeof input.action.choice==="string"?{choice:input.action.choice.slice(0,20)}:{}),
       ...(typeof input.action.sku==="string"?{sku:input.action.sku.slice(0,20)}:{}),
+      ...(typeof input.action.itemId==="string"?{itemId:input.action.itemId.slice(0,40)}:{}),
       ...(typeof input.action.operation==="string"?{operation:input.action.operation.slice(0,20)}:{}),
       ...(typeof input.action.key==="string"?{key:input.action.key.slice(0,24)}:{})
     }}});

@@ -114,3 +114,8 @@ test("retrying the same browser session replaces stale ghost players before join
  assert.deepEqual([...players],["host"]);
  assert.equal(leaves,2);
 });
+
+test('individual item identity survives the input mailbox for host-side stale-grab rejection',()=>{
+ const mailbox=new InputMailbox();assert.equal(mailbox.push('worker',{seq:1,action:{type:'kiosk',operation:'slot',key:'shelfL1',itemId:'item-5'}}),true);
+ const [{input}]=mailbox.drain();assert.equal(input.action.itemId,'item-5');assert.equal(input.action.key,'shelfL1');
+});

@@ -7,7 +7,26 @@ import fs from 'node:fs/promises';
 const server=spawn('python3',['-m','http.server','4187','--bind','127.0.0.1'],{stdio:'ignore'});
 const chrome=['/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/chromium'].find(existsSync);
 let browser;const errors=[];
+async function aim(page,cmd,key){
+ if(['catalogPage','closeCatalog','nextday'].includes(cmd))return;
+ if(cmd==='restock'&&(await page.evaluate(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==='closeCatalog'))))return;
+ let shot=['slot','toggle','recycleStore','recycleShip'].includes(cmd)?(key||'drawerR'):cmd==='recycleReceive'?'recycle':cmd==='sell'?'register':cmd==='catalog'?'book':cmd==='counter'?'counter':'customer';
+ if(cmd==='restock')shot=await page.evaluate(sku=>Object.entries(window.__KIOSK_TEST__.getState().slots).find(([,v])=>(v.sku||v.lastSku)===sku)?.[0]||'front',key);
+ const select=page.locator('#viewSelect');
+ await page.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert);
+ if(await select.isVisible()){
+  if(await select.inputValue()!==shot)await select.selectOption(shot);
+  // Wait for the short local camera movement to settle before a stationary tap.
+  let last=null;
+  for(let i=0;i<24;i++){
+   const c=await page.evaluate(()=>window.__KIOSK_TEST__.getCamera());
+   if(last&&Math.abs(c.x-last.x)+Math.abs(c.y-last.y)+Math.abs(c.z-last.z)*100<.2)break;
+   last=c;await page.waitForTimeout(25);
+  }
+ }
+}
 async function tap(p,cmd,key){
+ await aim(p,cmd,key);
  await p.waitForFunction(([cmd,key])=>document.querySelector('#lobby').hidden&&!document.querySelector('#game').inert&&window.__KIOSK_TEST__.getHits().some(h=>h.cmd===cmd&&(key===null||h.key===key)),[cmd,key??null],{timeout:6000}).catch(async e=>{console.log('FAILED',cmd,key,await state(p),await p.evaluate(()=>window.__KIOSK_TEST__.getHits()));throw e;});
  const h=await p.evaluate(([cmd,key])=>window.__KIOSK_TEST__.getHits().find(h=>h.cmd===cmd&&(key===null||h.key===key)),[cmd,key??null]);
  await p.mouse.click(h.x+h.w/2,h.y+h.h/2);

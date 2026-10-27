@@ -1,0 +1,58 @@
+{
+  "id": "elder",
+  "source": "GPTIMG original character remake",
+  "sourceFile": "exec-8217d7b2-6c12-4d56-a1ed-3f548dd5ac44.png",
+  "size": [
+    1024,
+    1536
+  ],
+  "fullBody": true,
+  "alpha": true,
+  "silhouetteBBox": [
+    177,
+    78,
+    935,
+    1489
+  ],
+  "identity": "elder neighborhood customer, gray hair, ivory knit cap, orange scarf, navy winter coat",
+  "pose": "compact chibi, front slight three-quarter, both open palms forward at waist",
+  "anchors": {
+    "face": [
+      536,
+      412
+    ],
+    "palmLeft": [
+      368,
+      880
+    ],
+    "palmRight": [
+      855,
+      888
+    ],
+    "feet": [
+      520,
+      1467
+    ]
+  },
+  "regions": {
+    "face": [
+      305,
+      249,
+      734,
+      565
+    ],
+    "handLeft": [
+      257,
+      800,
+      477,
+      958
+    ],
+    "handRight": [
+      782,
+      814,
+      938,
+      962
+    ]
+  },
+  "prompt": "Exactly one complete full-body chibi elderly neighbor about 3.5 heads target, matching original orange flat graphic anime facial grammar; gray hair and brows, ivory cap, navy coat, orange scarf, compact sturdy legs, both palms forward at waist. Large tapered oval eyes and tiny dot nose/simple mouth, broad matte navy/blue/ivory/orange color cuts, no scene/props/text; transparent head-to-boots complete source."
+}

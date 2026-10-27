@@ -23,7 +23,26 @@ async function open(ctx,w=390,h=844){
  await p.waitForFunction(()=>window.__KIOSK_TEST__?.getHits);
  return p;
 }
+async function aim(page,cmd,key){
+ if(['catalogPage','closeCatalog','nextday'].includes(cmd))return;
+ if(cmd==='restock'&&(await page.evaluate(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==='closeCatalog'))))return;
+ let shot=['slot','toggle','recycleStore','recycleShip'].includes(cmd)?(key||'drawerR'):cmd==='recycleReceive'?'recycle':cmd==='sell'?'register':cmd==='catalog'?'book':cmd==='counter'?'counter':'customer';
+ if(cmd==='restock')shot=await page.evaluate(sku=>Object.entries(window.__KIOSK_TEST__.getState().slots).find(([,v])=>(v.sku||v.lastSku)===sku)?.[0]||'front',key);
+ const select=page.locator('#viewSelect');
+ await page.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert);
+ if(await select.isVisible()){
+  if(await select.inputValue()!==shot)await select.selectOption(shot);
+  // Wait for the short local camera movement to settle before a stationary tap.
+  let last=null;
+  for(let i=0;i<24;i++){
+   const c=await page.evaluate(()=>window.__KIOSK_TEST__.getCamera());
+   if(last&&Math.abs(c.x-last.x)+Math.abs(c.y-last.y)+Math.abs(c.z-last.z)*100<.2)break;
+   last=c;await page.waitForTimeout(25);
+  }
+ }
+}
 async function action(page,cmd,key,gesture=null){
+ await aim(page,cmd,key);
  await page.waitForFunction(()=>document.getElementById("lobby").hidden&&!document.getElementById("game").inert);
  // Network state can arrive between animation frames; wait for its real-world hitbox.
  await page.waitForFunction(([cmd,key,gesture])=>window.__KIOSK_TEST__?.getHits().some(h=>
@@ -247,6 +266,7 @@ try{
  // Second distinct business: customer hands over a used battery, a clerk
  // physically stores it in the right drawer; the room host owns all costs.
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:7000});
+ await aim(host,"recycleReceive");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="recycleReceive"),undefined,{timeout:6000});
  await host.screenshot({path:"artifacts/kiosk-recycling-customer-offer.png",fullPage:false});
  await action(guest,"recycleReceive");

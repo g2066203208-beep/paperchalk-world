@@ -1,0 +1,221 @@
+{
+  "identity": "earmuffs",
+  "source": "earmuffs.webp",
+  "sourceSize": [
+    1024,
+    1536
+  ],
+  "sourceRect": [
+    405,
+    225,
+    285,
+    245
+  ],
+  "patchSize": [
+    285,
+    245
+  ],
+  "registration": "All patches are source-space overlays at (405,225), independent feature alpha islands with opaque peach backing; hair/head outline/body remain from fullbody master.",
+  "featurePolygonsLocal": {
+    "eyes": [
+      [
+        [
+          29,
+          40
+        ],
+        [
+          55,
+          31
+        ],
+        [
+          98,
+          43
+        ],
+        [
+          117,
+          66
+        ],
+        [
+          107,
+          108
+        ],
+        [
+          80,
+          125
+        ],
+        [
+          48,
+          122
+        ],
+        [
+          29,
+          95
+        ]
+      ],
+      [
+        [
+          171,
+          91
+        ],
+        [
+          198,
+          80
+        ],
+        [
+          231,
+          86
+        ],
+        [
+          252,
+          108
+        ],
+        [
+          252,
+          141
+        ],
+        [
+          222,
+          163
+        ],
+        [
+          195,
+          170
+        ],
+        [
+          169,
+          151
+        ],
+        [
+          166,
+          116
+        ]
+      ]
+    ],
+    "brows": [
+      [
+        [
+          78,
+          0
+        ],
+        [
+          125,
+          5
+        ],
+        [
+          128,
+          43
+        ],
+        [
+          77,
+          26
+        ]
+      ],
+      [
+        [
+          212,
+          34
+        ],
+        [
+          245,
+          48
+        ],
+        [
+          250,
+          76
+        ],
+        [
+          207,
+          58
+        ]
+      ]
+    ],
+    "mouth": [
+      [
+        [
+          90,
+          134
+        ],
+        [
+          121,
+          137
+        ],
+        [
+          156,
+          156
+        ],
+        [
+          156,
+          186
+        ],
+        [
+          138,
+          205
+        ],
+        [
+          107,
+          207
+        ],
+        [
+          84,
+          192
+        ],
+        [
+          82,
+          159
+        ]
+      ]
+    ]
+  },
+  "expressions": {
+    "smile": {
+      "path": "earmuffs-smile.webp",
+      "features": [
+        "eyes",
+        "mouth"
+      ],
+      "size": [
+        285,
+        245
+      ],
+      "alphaBBox": [
+        26,
+        29,
+        256,
+        210
+      ]
+    },
+    "concern": {
+      "path": "earmuffs-concern.webp",
+      "features": [
+        "brows",
+        "mouth"
+      ],
+      "size": [
+        285,
+        245
+      ],
+      "alphaBBox": [
+        74,
+        0,
+        254,
+        210
+      ]
+    },
+    "talk": {
+      "path": "earmuffs-talk.webp",
+      "features": [
+        "mouth"
+      ],
+      "size": [
+        285,
+        245
+      ],
+      "alphaBBox": [
+        79,
+        132,
+        160,
+        210
+      ]
+    }
+  }
+}

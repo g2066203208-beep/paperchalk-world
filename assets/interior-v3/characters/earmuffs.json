@@ -1,0 +1,49 @@
+{
+  "identity": "earmuffs",
+  "tone": 1,
+  "path": "earmuffs.webp",
+  "sourceSize": [
+    1024,
+    1536
+  ],
+  "fullBody": true,
+  "alpha": true,
+  "silhouetteBBox": [
+    235,
+    24,
+    816,
+    1518
+  ],
+  "style": "Original flat graphic chibi, aubergine bob/ivory earmuffs/navy coat/ochre satchel",
+  "pose": "both hands forward at waist, palms up receiving service",
+  "anchors": {
+    "face": [
+      548,
+      356
+    ],
+    "leftPalm": [
+      424,
+      759
+    ],
+    "rightPalm": [
+      707,
+      757
+    ],
+    "receivingPalm": [
+      424,
+      759
+    ],
+    "feet": [
+      522,
+      1488
+    ]
+  },
+  "faceRect": [
+    414,
+    237,
+    273,
+    226
+  ],
+  "source": "GPTIMG original generated single character",
+  "sourceFile": "exec-311fb008-d51e-4ec1-b29b-df46b2d56b7d.png"
+}

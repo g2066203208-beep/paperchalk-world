@@ -1,8 +1,10 @@
-// Flat, independently interactive first shop. Coordinates are CSS pixels.
-import {GOODS,visitor,slotRoom,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead} from "./kiosk-core.js";
-import {recyclingOffer,recyclingCarried,recyclingState,RECYCLING} from "./kiosk-business.js";
-import {shopLayout,shopTask} from "./kiosk-shop-layout.js";
-import {flatStreet,flatCustomer,flatProduct,flatShelfBase,flatCupboard,flatDrawer,flatWindow,flatMat,F} from "./kiosk-flat.js";
+// Illustrated object scene rendered through a local camera. No screen-based fixture reflow.
+import {GOODS,FIXTURES,visitor,shelfUpgradeCost,heatingUpgradeCost,dailyOverhead} from './kiosk-core.js';
+import {recyclingOffer,recyclingCarried,recyclingState,RECYCLING} from './kiosk-business.js';
+import {SHOP,SHOP_WORLD,cameraTarget,projectedRect,shopTask} from './kiosk-shop-layout.js';
+import {objectsAt} from './kiosk-objects.js';
+import {SHELF_PARTS,CHARACTERS,FACE_RECTS,ITEM_SIZES,ART_PATHS,drawArt,artImage,artStatus} from './kiosk-art-assets.js';
+const F={ink:'#263459',paper:'#F9F7F4',blue:'#526FA9',pale:'#DDE6F5',warm:'#F3A33E',mint:'#8CB3B1'};
 export function customerSpeech(s,motion=null){
  if(!s?.windowOpen||s.phase==="summary"||
    ["hidden","enter","handoff","exit"].includes(motion?.stage))return null;
@@ -52,90 +54,12 @@ export function windowFrostPattern(width,height){
  }
  return pieces;
 }
+
 const text=(g,s,x,y,size=14,c=F.paper,align='left',max)=>{g.font=`700 ${size}px system-ui,"Noto Sans CJK SC",sans-serif`;g.textAlign=align;g.textBaseline='middle';g.fillStyle=c;g.fillText(String(s),x,y,max);};
 const box=(g,b,c,r=5)=>{g.fillStyle=c;g.beginPath();g.roundRect(b.x,b.y,b.w,b.h,r);g.fill();};
 const target=(hits,b,cmd,key,gesture='tap')=>hits.push({...b,cmd,key,gesture});
 const label=(g,b,s,active=false,size=14)=>{box(g,b,active?F.warm:F.paper);text(g,s,b.x+b.w/2,b.y+b.h/2,size,F.ink,'center',b.w-8);};
-function bubble(g,b,name,message){
- box(g,b,F.paper,8);text(g,name,b.x+10,b.y+16,13,F.blue);
- const rows=wrapSpeech(message,Math.max(5,Math.floor((b.w-20)/14)),3);
- rows.forEach((s,i)=>text(g,s,b.x+10,b.y+38+i*18,14,F.ink));
-}
-const cast=[
- {file:'tone0-master.webp',size:[560,1100],face:[324,180],palm:[184,445]},
- {file:'tone1-master.webp',size:[560,1100],face:[280,184],palm:[200,452]},
- {file:'courier-master.webp',size:[948,1660],face:[483,273],palm:[341,672]},
- {file:'tone3-master.webp',size:[560,1100],face:[250,189],palm:[184,447]}
-].map(v=>{if(typeof Image!=='undefined'){v.img=new Image();v.img.src='./assets/rig/customer/'+v.file;}return v;});
-const elderFaces=Object.fromEntries(['smile','concern','talk'].map(name=>{
- const image=typeof Image!=='undefined'?new Image():null;if(image)image.src='./assets/rig/customer/elder-'+name+'.webp';return [name,image];
-}));
-export function customerExpression(motion,phase){
- if(motion?.refusing)return 'concern';
- if(motion?.receiving)return 'smile';
- if(motion?.talking&&Math.floor(phase/14)%2)return 'talk';
- return phase%240>232?'smile':null;
-}
-function customerPose(b,s,motion){
- const entry=cast[motion?.tone??visitor(s).tone],dh=b.h*1.65,scale=dh/entry.size[1];
- const x=b.x+b.w*(b.w>260?.32:.50)-entry.face[0]*scale+(motion?.offset||0)*b.w,y=b.y+b.h*.02;
- return {entry,x,y,w:entry.size[0]*scale,h:dh,palm:{x:Math.max(b.x+18,Math.min(b.x+b.w-18,x+entry.palm[0]*scale)),y:Math.min(b.y+b.h-45,y+entry.palm[1]*scale)}};
-}
-function customer(g,b,s,motion,phase){
- if(!s.windowOpen||motion?.visible===false)return;
- const pose=customerPose(b,s,motion),img=pose.entry.img;
- g.save();g.beginPath();g.rect(b.x,b.y,b.w,b.h);g.clip();
- if(img?.complete&&img.naturalWidth){
-  // Complete full-body master; the real window/counter naturally occludes legs.
-  g.drawImage(img,pose.x,pose.y,pose.w,pose.h);
-  if(pose.entry===cast[0]){
-   const patch=elderFaces[customerExpression(motion,phase)],scale=pose.h/1100;
-   // Local eyes/brows/mouth only; never replace or blink away the head/body.
-   if(patch?.complete&&patch.naturalWidth)g.drawImage(patch,pose.x+265*scale,pose.y+110*scale,130*scale,130*scale);
-  }
- }else flatCustomer(g,{...b,x:b.x+(motion?.offset||0)*b.w,y:b.y+b.h*.20,h:b.h*.85,tone:motion?.tone??visitor(s).tone,phase,talking:motion?.talking,receiving:motion?.receiving,refusing:motion?.refusing});
- g.restore();
-}
-function inventory(g,hits,b,key,s,p){
- const v=s.slots[key],sku=v.sku||v.lastSku;
- flatShelfBase(g,b.x,b.y,b.w,b.h);
- const labelH=b.h<80?20:44,body={...b,h:b.h-labelH};
- const kind=sku?GOODS[sku].name:'空货架';
- if(v.qty){
-  const n=Math.min(3,v.qty),pw=Math.min(35,(b.w-12)/n);
-  for(let i=0;i<n;i++)flatProduct(g,sku,b.x+6+i*pw,b.y+2,pw,Math.max(24,body.h-4));
- }
- const stocking=Boolean(p.restock),chosen=stocking&&(!v.sku||v.sku===p.restock);
- if(chosen){g.strokeStyle=F.warm;g.lineWidth=3;g.strokeRect(b.x+2,b.y+2,b.w-4,b.h-4);}
- // The shelf itself is at least 44 CSS px. Purchase remains a hold on that fixture.
- target(hits,b,'slot',key);
- if(p.role==='manager'&&sku)target(hits,b,'restock',sku,'hold');
- box(g,{x:b.x+3,y:b.y+b.h-labelH-2,w:b.w-6,h:labelH},F.ink,2);
- text(g,kind+' '+v.qty+(sku?'/'+slotRoom(key,sku,s):''),b.x+b.w/2,b.y+b.h-(labelH>20?29:12),14,F.paper,'center',b.w-6);
- if(labelH>20)text(g,stocking?'点此放货':'点击拿货',b.x+b.w/2,b.y+b.h-12,12,chosen?F.warm:F.pale,'center',b.w-6);
-}
-function storage(g,hits,b,s,p,cabinet=false){
- const key=b.key,open=s.open[key],entry=s.slots[key];
- (cabinet?flatCupboard:flatDrawer)(g,b.x,b.y,b.w,b.h,open);
- const name=key==='drawerR'&&recyclingState(s).stored?'回收 '+recyclingState(s).stored+'/3':(cabinet?'储物柜':'抽屉');
- if(open){
-  const door={x:b.x,y:b.y,w:44,h:b.h};
-  const content={x:b.x+44,y:b.y,w:b.w-44,h:b.h};
-  if(entry.qty)flatProduct(g,entry.sku,content.x+3,content.y+3,32,Math.max(28,b.h-24));
-  text(g,'关',door.x+22,door.y+door.h/2,14,F.blue,'center');
-  text(g,name,content.x+content.w/2,b.y+b.h-11,13,F.ink,'center',content.w-4);
-  target(hits,content,'slot',key);target(hits,door,'toggle',key);
-  const sku=entry.sku||entry.lastSku;
-  if(p.role==='manager'&&sku)target(hits,content,'restock',sku,'hold');
-  if(key==='drawerR'){
-   if(recyclingCarried(s,p.id))target(hits,content,'recycleStore');
-   if(recyclingState(s).stored===RECYCLING.capacity)target(hits,content,'recycleShip',undefined,'hold');
-  }
- }else{
-  text(g,name+(entry.qty?' · '+entry.qty:''),b.x+b.w/2,b.y+b.h*.30,13,F.ink,'center',b.w-8);
-  target(hits,b,'toggle',key);
- }
-}
+function flatProduct(g,sku,x,y,w,h){drawArt(g,'items/'+sku+'.webp',{x,y,w,h},true);}
 function catalog(g,hits,W,H,s,page='goods'){
  hits.length=0;box(g,{x:0,y:0,w:W,h:H},'#1E294Dee',0);
  const w=Math.min(400,W-24),h=Math.min(400,H-20),x=(W-w)/2,y=(H-h)/2;
@@ -159,82 +83,188 @@ function catalog(g,hits,W,H,s,page='goods'){
   text(g,s.cash>=v.buy?'选购':'不足',b.x+b.w-28,b.y+b.h/2,14,F.blue,'center');target(hits,b,'restock',sku);
  });
 }
-export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=null,ui={}){
- const {W,H}=view,hits=[],l=shopLayout(W,H),p=s.players?.[viewerId]||Object.values(s.players||{})[0]||{};
- box(g,{x:0,y:0,w:W,h:H},F.ink,0);
- // Continuous flat wall, independent shelves, a real service aperture and worktop.
- box(g,{x:4,y:56,w:W-8,h:H-60},F.blue,0);
- text(g,'冬日杂货店',66,27,W<360?16:18,F.paper);
- text(g,'第'+s.day+'天 · '+s.served+'/5',W*.63,27,14,F.warm,'center');
- text(g,'¥'+s.cash,W-12,27,18,F.paper,'right');
- if(!l.wide){
-  const note={x:8,y:64,w:W-16,h:70};box(g,note,F.paper,5);
-  text(g,'今日营业单 · 接待五位邻居',20,82,15,F.ink);
-  text(g,shopTask(s,p),20,106,14,F.blue,'left',W-40);
-  text(g,s.notice,20,124,12,F.ink,'left',W-40);
- }else text(g,shopTask(s,p),W*.51,49,13,F.paper,'center',W-145);
- // Main window: street, full-body source, frame, anchored dialogue, sill latch.
- const win=l.win;
- flatStreet(g,win.x,win.y,win.w,win.h,phase);customer(g,win,s,motion,phase);
- flatWindow(g,win.x,win.y,win.w,win.h,s.windowOpen);
- if(s.windowOpen&&(!motion||motion.stage==='idle'))target(hits,{x:win.x,y:win.y,w:win.w,h:Math.max(44,win.h-100)},'talk');
- const latch={x:win.x+(win.w-Math.min(160,win.w))/2,y:win.y+win.h-38,w:Math.min(160,win.w),h:44};
- label(g,latch,s.windowOpen?'关窗整理':'开窗营业',!s.windowOpen,14);target(hits,latch,'window');
- if(s.windowOpen&&motion?.speechVisible!==false){
-  const speech=customerSpeech(s,motion);
-  if(speech){
-   const bw=win.w>260?Math.min(230,win.w*.43):win.w-4;
-   const fullSpeech=s.spoken&&win.h>=300;
-   const bh=fullSpeech?96:56;
-   const b={x:win.w>260?win.x+win.w-bw-6:win.x+2,y:win.w>260?win.y+6:win.y+Math.max(win.h*.46,win.h-bh-98),w:bw,h:bh};
-   if(fullSpeech)bubble(g,b,speech.name,speech.text);
-   else {box(g,b,F.paper,8);text(g,speech.name,b.x+8,b.y+13,13,F.blue);const favor=s.spoken&&!s.favorDone&&visitor(s).favor;
-    text(g,favor?'帮带'+GOODS[favor.sku].name:'要'+GOODS[visitor(s).sku].name+' · ¥'+GOODS[visitor(s).sku].price,b.x+8,b.y+36,14,F.ink,'left',b.w-12);}
+export function customerExpression(motion,phase){
+ if(motion?.refusing)return 'concern';if(motion?.receiving)return 'smile';
+ if(motion?.talking&&Math.floor(phase/14)%2)return 'talk';return phase%240>232?'smile':null;
+}
+const names=['elder','earmuffs','courier','silver'];
+const opening=new Map();
+export function resetShopPresentation(){opening.clear();}
+function openAmount(key,value,now){
+ let v=opening.get(key);if(!v){v={value:value?1:0,last:value,at:now,from:value?1:0};opening.set(key,v);}
+ if(v.last!==value){v.from=v.value;v.last=value;v.at=now;}
+ const t=Math.min(1,Math.max(0,(now-v.at)/220));v.value=v.from+((value?1:0)-v.from)*(t*t*(3-2*t));return v.value;
+}
+export function sceneObjectRects(s){
+ const result=[];
+ for(const b of SHOP.shelves){
+  const units=objectsAt(s,'slot:'+b.key);
+  for(const o of units){
+   const columns=Math.min(3,Math.floor(FIXTURES[b.key].capacity/GOODS[o.sku].size)),socket=o.socket??o.index,row=Math.floor(socket/columns),column=socket%columns;
+   const cellW=b.w/columns,[iw,ih]=ITEM_SIZES[o.sku],h=Math.min(b.h-3,(cellW-6)*ih/iw),w=h*iw/ih;
+   result.push({...o,key:b.key,x:b.x+column*cellW+(cellW-w)/2+row*3,y:b.y+b.h-h-row*18,w,h,depth:row});
   }
  }
- for(const b of l.shelves)inventory(g,hits,b,b.key,s,p);
- for(const b of l.cabinets)storage(g,hits,b,s,p,true);
- // Worktop: each object is itself the interaction target.
- box(g,l.counter,F.paper,5);box(g,{...l.counter,y:l.counter.y+l.counter.h-8,h:8},F.ink,0);
- const {mat,till,book}=l;
- flatMat(g,mat.x,mat.y,mat.w,mat.h);
- if(s.counter&&!itemMotion?.hideCounter)flatProduct(g,s.counter,mat.x+mat.w/2-20,mat.y+2,40,mat.h-22);
- text(g,s.counter?'点击取回':'交接台 · 放货',mat.x+mat.w/2,mat.y+mat.h-12,14,F.paper,'center',mat.w-6);
- target(hits,mat,'counter');target(hits,mat,'counter',undefined,'hold');
- box(g,till,F.ink,5);box(g,{x:till.x+7,y:till.y+7,w:till.w-14,h:24},F.mint,3);
- text(g,s.counter?'¥'+GOODS[s.counter].price:'收银机',till.x+till.w/2,till.y+19,15,F.ink,'center');
- text(g,'点击收款',till.x+till.w/2,till.y+till.h-13,14,F.paper,'center');target(hits,till,'sell');
- label(g,book,p.role==='manager'?'进货簿':'店员手册',false,16);
- if(p.role==='manager')target(hits,book,'catalog');
- if(motion?.handoff){const t=motion.handoff.progress,palm=customerPose(win,s,motion).palm;
-  g.save();g.beginPath();g.rect(win.x,win.y,win.w,mat.y+mat.h-win.y);g.clip();
-  flatProduct(g,motion.handoff.sku,mat.x+mat.w/2-18+(palm.x-mat.x-mat.w/2)*t,mat.y+(palm.y-22-mat.y)*t,36,44);g.restore();
+ return result;
+}
+export function render(g,s,view,phase=0,viewerId=null,motion=null,itemMotion=null,ui={}){
+ const {W,H}=view,hits=[],p=s.players?.[viewerId]||Object.values(s.players||{})[0]||{};
+ const camera=ui.camera||cameraTarget(W,H,ui.focus||'front'),now=typeof performance!=='undefined'?performance.now():phase*16;
+ const active=typeof Image==='undefined'||ART_PATHS.every(path=>{const i=artImage(path);return i?.complete&&i.naturalWidth;});
+ function hitWorld(b,cmd,key,extra={}){
+  if(!active)return;
+  const v=projectedRect(b,camera,W,H),x=Math.max(0,v.x),y=Math.max(56,v.y),r=Math.min(W,v.x+v.w),bottom=Math.min(H,v.y+v.h);
+  if(r-x<12||bottom-y<12)return;
+  if(r-x<44||bottom-y<44)return;
+  hits.push({x,y,w:r-x,h:bottom-y,cmd,key,gesture:'tap',world:{...b},...extra});
  }
- if(s.upgrades?.heating) {g.strokeStyle=F.mint;g.lineWidth=3;g.strokeRect(win.x-4,win.y-4,win.w+8,win.h+8);}
- if(s.upgrades?.shelves)for(const b of l.shelves){box(g,{x:b.x,y:b.y+b.h-4,w:b.w,h:4},F.warm,0);}
- if(recyclingCarried(s,p.id)){flatProduct(g,'battery',mat.x+mat.w-40,mat.y-24,34,44);text(g,'待回收',mat.x+mat.w-24,mat.y-32,12,F.warm,'center');}
- if(motion?.payment){const t=motion.payment.progress;box(g,{x:win.x+win.w/2+(till.x-win.x-win.w/2)*t,y:win.y+win.h*.65+(till.y-win.y-win.h*.65)*t,w:32,h:18},F.mint,2);text(g,'+¥'+motion.payment.amount,till.x+till.w/2,till.y-10,15,F.warm,'center');}
- for(const b of l.drawers)storage(g,hits,b,s,p);
- if(p.hand||itemMotion?.sku&&itemMotion.stage==='place'){const hand={x:mat.x+mat.w-42,y:mat.y-30,w:42,h:44};
-  g.save();g.beginPath();g.moveTo(hand.x+48,mat.y+mat.h-2);g.lineTo(hand.x+7,hand.y+31);g.lineTo(hand.x+30,hand.y+19);g.lineTo(hand.x+72,mat.y+mat.h-2);g.closePath();g.fillStyle=F.ink;g.fill();
-  box(g,{x:hand.x+6,y:hand.y+20,w:29,h:25},F.paper,10);g.restore();
-  const progress=itemMotion?.progress||0;const placing=itemMotion?.stage==='place';const dy=placing?(mat.y-hand.y)*progress:itemMotion?.stage==='pickup'?24*(1-progress):0;flatProduct(g,p.hand||itemMotion.sku,hand.x,hand.y+dy,hand.w,hand.h);text(g,'手持',hand.x+21,hand.y-9,12,F.warm,'center');}
- // Commission slip and used battery appear next to the speaker, never a command bar.
- if(s.windowOpen&&s.spoken&&visitor(s).favor){
-  const b={x:win.x+52,y:win.y+win.h-92,w:win.w-52,h:48};label(g,b,s.favorDone?'已办妥':'交委托',!s.favorDone,14);target(hits,b,'commission');
+ box(g,{x:0,y:0,w:W,h:H},F.ink,0);
+ g.save();g.beginPath();g.rect(0,56,W,H-56);g.clip();
+ g.translate(W/2,56+(H-56)/2);g.scale(camera.z,camera.z);g.translate(-camera.x,-camera.y);
+ // Complete architectural field spans every allowed camera position.
+ drawArt(g,'architecture/wall.webp',SHOP_WORLD);
+ drawArt(g,'architecture/wall-left-complete.webp',{x:0,y:0,w:600,h:1800});
+ drawArt(g,'architecture/wall-right-complete.webp',{x:1600,y:0,w:600,h:1800});
+ drawArt(g,'architecture/floor.webp',{x:0,y:1550,w:2200,h:250});
+ drawArt(g,'architecture/ceiling-beam.webp',{x:0,y:0,w:2200,h:65});
+ const win=SHOP.win;
+ drawArt(g,'architecture/street.webp',win,'cover');
+ if(s.windowOpen&&motion?.visible!==false){
+  const tone=motion?.tone??visitor(s).tone,v=CHARACTERS[tone],a=v.anchors,size=v.size||v.sourceSize;
+  const face=a.face,palm=a.palmLeft||a.leftPalm||a.receivingPalm;
+  const z=300/(palm[1]-face[1]),dh=size[1]*z,x=1100-face[0]*z+(motion?.offset||0)*win.w,y=650-face[1]*z;
+  g.save();g.beginPath();g.rect(win.x,win.y,win.w,win.h);g.clip();
+  drawArt(g,'characters/'+names[tone]+'.webp',{x,y,w:size[0]*z,h:dh});
+  const e=customerExpression(motion,phase);if(e){const [fx,fy,fw,fh]=FACE_RECTS[tone];drawArt(g,'characters/'+names[tone]+'-'+e+'.webp',{x:x+fx*z,y:y+fy*z,w:fw*z,h:fh*z});}
+
+  g.restore();
  }
- if(recyclingOffer(s)){
-  const palm=customerPose(win,s,motion).palm,b={x:Math.max(win.x,Math.min(win.x+win.w-48,palm.x-24)),y:Math.min(win.y+win.h-94,palm.y-32),w:48,h:48};
-  flatProduct(g,'battery',b.x+8,b.y,32,38);text(g,'旧电池',b.x+24,b.y+44,12,F.warm,'center');target(hits,b,'recycleReceive');
+ const shutter=1-openAmount('window',s.windowOpen,now);
+ if(shutter>.001){g.save();g.beginPath();g.rect(win.x,win.y,win.w,win.h);g.clip();drawArt(g,'items/shutter.webp',{...win,y:win.y-win.h*(1-shutter)});g.restore();}
+ drawArt(g,'architecture/window-left.webp',{x:win.x-22,y:win.y-25,w:26,h:win.h+45});
+ drawArt(g,'architecture/window-right.webp',{x:win.x+win.w-4,y:win.y-25,w:26,h:win.h+45});
+ drawArt(g,'architecture/window-top.webp',{x:win.x-22,y:win.y-25,w:win.w+44,h:35});
+ drawArt(g,'architecture/window-sill.webp',{x:win.x-22,y:win.y+win.h-6,w:win.w+44,h:30});
+ if(!s.windowOpen)text(g,'开窗营业',1100,875,30,F.paper,'center');
+ hitWorld({x:980,y:810,w:240,h:160},'window','front');
+ if(s.windowOpen&&(!motion||motion.stage==='idle'))hitWorld({x:920,y:440,w:360,h:290},'talk','front');
+ // Backboards and posts are independent of shelf planks and stock units.
+ for(const b of SHOP.shelfBodies){
+  for(const part of SHELF_PARTS.filter(v=>!v.id.startsWith('plank-'))){const [x,y]=part.position,[w,h]=part.size;drawArt(g,'shelf/'+part.path,{x:b.x+x/996*b.w,y:b.y+y/1578*b.h,w:w/996*b.w,h:h/1578*b.h});}
+  for(let i=0;i<3;i++){const part=SHELF_PARTS.find(v=>v.id===`plank-${i}-surface`),[x,y]=part.position,[w,h]=part.size;drawArt(g,'shelf/'+part.path,{x:b.x+x/996*b.w,y:b.y+y/1578*b.h,w:w/996*b.w,h:h/1578*b.h});}
  }
+ const units=sceneObjectRects(s);
+ for(const b of SHOP.shelves){
+  const slot=s.slots[b.key];
+  if(p.hand||p.restock||slot.qty===0)hitWorld(b,'slot',b.key);
+  else hitWorld(b,'focus',b.key);
+  if(p.restock&&(!slot.sku||slot.sku===p.restock)){g.strokeStyle=F.warm;g.lineWidth=3/camera.z;g.strokeRect(b.x,b.y,b.w,b.h);}
+  const sku=slot.sku||slot.lastSku;
+  if(p.role==='manager'&&sku)hitWorld(b,'restock',sku,{gesture:'hold',focusKey:b.key});
+ }
+ for(const o of [...units].sort((a,b)=>b.depth-a.depth)){flatProduct(g,o.sku,o.x,o.y,o.w,o.h);if(!p.hand&&!p.restock)hitWorld(o,'slot',o.key,{itemId:o.id});}
+ // Shelf front rails occlude the bottom of physical stock, not baked copies.
+ for(const b of SHOP.shelfBodies)for(let i=0;i<3;i++){const part=SHELF_PARTS.find(v=>v.id===`plank-${i}-front-rail`),[x,y]=part.position,[w,h]=part.size;drawArt(g,'shelf/'+part.path,{x:b.x+x/996*b.w,y:b.y+y/1578*b.h,w:w/996*b.w,h:h/1578*b.h});}
+ for(const b of SHOP.shelves){const v=s.slots[b.key],sku=v.sku||v.lastSku;if(camera.z>.55)text(g,(sku?GOODS[sku].name:'空位')+' '+v.qty,b.x+b.w/2,b.y+b.h+12,14/camera.z,F.ink,'center');}
+ function storage(b,drawer){
+  const amount=openAmount(b.key,Boolean(s.open[b.key]),now),slot=s.slots[b.key];
+  if(!drawer){
+   // Full inner backing remains when the hinged door reveals it.
+   drawArt(g,'shelf/backboard.webp',b);
+   if(amount>.98){
+    const contents={x:b.x+35,y:b.y+20,w:b.w-70,h:b.h-35};
+    for(const o of objectsAt(s,'slot:'+b.key))flatProduct(g,o.sku,contents.x+(o.socket??o.index)*45,contents.y,60,contents.h);
+    if(p.hand||p.restock||slot.qty===0)hitWorld(contents,'slot',b.key);
+   }
+   drawArt(g,'cabinet/case-closed.webp',b);
+   if(amount>.001){
+    // Cover the extracted door's location with its complete interior plate.
+    const inside={x:b.x+b.w*.08,y:b.y+b.h*.20,w:b.w*.86,h:b.h*.71};drawArt(g,'shelf/backboard.webp',inside);
+    for(const o of objectsAt(s,'slot:'+b.key)){const r={x:inside.x+15+(o.socket??o.index)*40,y:inside.y+8,w:55,h:inside.h-12};flatProduct(g,o.sku,r.x,r.y,r.w,r.h);if(!p.hand&&!p.restock)hitWorld(r,'slot',b.key,{itemId:o.id});}
+    drawArt(g,'cabinet/door.webp',{x:inside.x,y:inside.y,w:inside.w*(1-amount*.88),h:inside.h});
+   }
+   hitWorld(amount>.6?{x:b.x,y:b.y,w:50,h:b.h}:b,'toggle',b.key);
+  }else{
+   const face={...b,y:b.y+amount*95,h:b.h*(1-amount*.48)};
+   drawArt(g,'shelf/backboard.webp',b);
+   if(amount>.98){
+    const contents={x:b.x+45,y:b.y+12,w:b.w-90,h:135};
+    for(const o of objectsAt(s,'slot:'+b.key)){const r={x:contents.x+(o.socket??o.index)*75,y:contents.y,w:80,h:120};flatProduct(g,o.sku,r.x,r.y,r.w,r.h);if(!p.hand&&!p.restock)hitWorld(r,'slot',b.key,{itemId:o.id});}
+    if(p.hand||p.restock||slot.qty===0)hitWorld(contents,'slot',b.key);
+    if(b.key==='drawerR'){
+     const recycle=recyclingState(s);for(let i=0;i<recycle.stored;i++)flatProduct(g,'battery',contents.x+i*80,contents.y,65,110);
+     if(recyclingCarried(s,viewerId))hitWorld(contents,'recycleStore',b.key);
+     if(recycle.stored===RECYCLING.capacity)hitWorld(contents,'recycleShip',b.key,{gesture:'hold'});
+    }
+   }
+   const side=b.key==='drawerL'?'left':'right';drawArt(g,'counter-drawer-'+side+'.webp',face);
+   drawArt(g,'counter-handle-'+side+'.webp',{x:face.x+face.w*(side==='left'?.3555:.371),y:face.y+face.h*.3896,w:face.w*.2726,h:face.h*.2597});
+   hitWorld(face,'toggle',b.key);
+  }
+  const sku=slot.sku||slot.lastSku;if(p.role==='manager'&&sku&&amount>.6)hitWorld(b,'restock',sku,{gesture:'hold',focusKey:b.key});
+ }
+ for(const b of SHOP.cabinets)storage(b,false);
+ drawArt(g,'items/lamp.webp',{x:1005,y:20,w:190,h:310},true);
+ // Single continuous table bridges the service sill to the player's edge.
+ drawArt(g,'counter-cabinet-body.webp',{x:590,y:1230,w:1020,h:390});
+ drawArt(g,'counter-top-rim.webp',{x:590,y:950,w:1020,h:300});
+ drawArt(g,'items/tray.webp',SHOP.mat);
+ drawArt(g,'items/register.webp',SHOP.till,true);drawArt(g,'items/book.webp',SHOP.book,true);drawArt(g,'items/bell.webp',SHOP.bell,true);
+ hitWorld(SHOP.mat,'counter','counter');hitWorld(SHOP.mat,'counter','counter',{gesture:'hold'});
+ hitWorld(SHOP.till,'sell','front');hitWorld(SHOP.bell,'sell','front');if(p.role==='manager')hitWorld(SHOP.book,'catalog','counter');
+ if(s.counter&&!itemMotion?.hideCounter)flatProduct(g,s.counter,SHOP.mat.x+115,SHOP.mat.y-25,110,145);
+ if(motion?.handoff){
+  const v=CHARACTERS[motion.tone],size=v.size||v.sourceSize,a=v.anchors,face=a.face,palm=a.palmLeft||a.leftPalm||a.receivingPalm,z=300/(palm[1]-face[1]);
+  const dx=1100+(palm[0]-face[0])*z+(motion.offset||0)*win.w,dy=650+(palm[1]-face[1])*z,t=motion.handoff.progress;
+  g.save();g.beginPath();g.rect(win.x,win.y,win.w,SHOP.mat.y+SHOP.mat.h-win.y);g.clip();
+  flatProduct(g,motion.handoff.sku,SHOP.mat.x+115+(dx-55-SHOP.mat.x-115)*t,SHOP.mat.y-25+(dy-85-SHOP.mat.y+25)*t,110,145);g.restore();
+ }
+ if(motion?.payment){const t=motion.payment.progress;text(g,'+¥'+motion.payment.amount,1280+80*t,1010-60*t,22,F.warm,'center');}
+ for(const b of SHOP.drawers)storage(b,true);
+ if(s.windowOpen&&s.spoken&&visitor(s).favor){const b={x:SHOP.win.x+290,y:800,w:200,h:130};drawArt(g,'items/book.webp',b);text(g,GOODS[visitor(s).favor.sku].name+'委托',b.x+b.w/2,b.y+50,22,F.ink,'center');hitWorld(b,'commission','front');}
+ if(recyclingOffer(s)&&(!motion||motion.stage==='idle')){const b={x:930,y:810,w:110,h:130};flatProduct(g,'battery',b.x,b.y,b.w,b.h);hitWorld(b,'recycleReceive','front');}
+ g.restore();
+ // Speech follows the speaker; choose a side in landscape and the chest area in portrait.
+ if(s.windowOpen&&motion?.speechVisible!==false&&['front','customer','free'].includes(ui.focus||'front')){
+  const speech=customerSpeech(s,motion);if(speech){
+   const face=projectedRect({x:950,y:430,w:300,h:350},camera,W,H),center=projectedRect({x:1100,y:650,w:0,h:0},camera,W,H);
+   if(center.x>40&&center.x<W-40&&center.y>96&&center.y<H-80){
+    const side=W/H>=1.2,right=W-face.x-face.w-20,left=face.x-20;
+    const bw=side?Math.min(240,Math.max(right,left)):Math.min(240,W-24);
+    const x=side?(right>=left?face.x+face.w+10:face.x-bw-10):(W-bw)/2;
+    const b={x:Math.max(12,Math.min(W-bw-12,x)),y:Math.max(110,Math.min(H-76,side?center.y-50:center.y+110*camera.z+10)),w:bw,h:70};
+    box(g,b,F.paper,9);text(g,speech.name+' · 要'+GOODS[visitor(s).sku].name,b.x+10,b.y+17,14,F.blue);
+    wrapSpeech(speech.text,Math.floor((bw-20)/14),2).forEach((line,i)=>text(g,line,b.x+10,b.y+38+i*17,14,F.ink));
+   }
+  }
+ }
+ if(ui.feedback?.anchor&&ui.feedback.until>now&&!ui.catalog){
+  const a=projectedRect(ui.feedback.anchor,camera,W,H);
+  if(a.x+a.w>0&&a.x<W&&a.y+a.h>56&&a.y<H){const w=Math.min(260,W-24),b={x:Math.max(12,Math.min(W-w-12,a.x+a.w/2-w/2)),y:Math.max(112,Math.min(H-66,a.y-65)),w,h:56};
+   box(g,b,F.paper,6);wrapSpeech(ui.feedback.text,Math.floor((w-20)/14),2).forEach((line,i)=>text(g,line,b.x+10,b.y+17+i*20,14,F.ink));
+  }
+ }
+ if(p.hand||recyclingCarried(s,viewerId)||itemMotion?.stage==='place'){
+  const sku=p.hand||(recyclingCarried(s,viewerId)?'battery':itemMotion.sku),t=itemMotion?.progress??1;
+  const held={x:W-118,y:H-175,w:72,h:100},tray=projectedRect({x:SHOP.mat.x+115,y:SHOP.mat.y-25,w:110,h:145},camera,W,H);
+  let from=held,to=held,progress=1;
+  if(itemMotion?.stage==='place'){from=held;to=tray;progress=t;}
+  else if(itemMotion?.stage==='take'){from=tray;to=held;progress=t;}
+  else if(itemMotion?.stage==='pickup'&&ui.actionAnchor){from=projectedRect(ui.actionAnchor,camera,W,H);to=held;progress=t;}
+  const r={};for(const key of ['x','y','w','h'])r[key]=from[key]+(to[key]-from[key])*progress;
+  const palm={x:r.x+r.w/2,y:r.y+r.h*.85},exit={x:W+8,y:H+12},vx=palm.x-exit.x,vy=palm.y-exit.y;
+  const scale=Math.hypot(vx,vy)/Math.hypot(272,229),angle=Math.atan2(vy,vx)-Math.atan2(-229,-272);
+  const hand=artImage('items/player-hand.webp');
+  if(hand?.complete&&hand.naturalWidth){g.save();g.translate(exit.x,exit.y);g.rotate(angle);g.scale(scale,scale);g.globalAlpha=itemMotion?.stage==='place'?1-Math.max(0,t-.8)*4:1;g.drawImage(hand,-512,-512,512,512);g.restore();}
+  flatProduct(g,sku,r.x,r.y,r.w,r.h);
+ }
+ box(g,{x:0,y:0,w:W,h:56},F.ink,0);text(g,'冬日杂货店',62,25,W<360?15:17);text(g,'第'+s.day+'天 · '+s.served+'/5',W*.61,25,13,F.warm,'center');text(g,'¥'+s.cash,W-12,25,17,F.paper,'right');
+ if(!active){box(g,{x:0,y:56,w:W,h:H-56},'#263459d9');const st=artStatus();text(g,st.failed.length?'美术资源加载失败，请联网刷新':'正在布置小店 '+st.ready+'/'+st.total,W/2,H/2,16,F.paper,'center');}
  if(ui.catalog)catalog(g,hits,W,H,s,ui.page);
  if(s.phase==='summary'){
-  hits.length=0;box(g,{x:0,y:0,w:W,h:H},'#1E294Df5',0);
-  const w=Math.min(420,W-24),x=(W-w)/2,cy=H/2,dy=Math.min(42,H*.09);
-  text(g,'今日打烊',W/2,cy-dy*3,28,F.warm,'center');
-  const bill=dailyOverhead(s),rows=['接待 '+s.served+' 位邻居 · 评分 '+s.dayRating+'/5','销售 ¥'+s.earnings+' · 委托 ¥'+(s.favorTips||0),'进货 -¥'+(s.dayExpenses||0)+' · 租暖 -¥'+bill.total,'净额 ¥'+s.dayNet+' · 现金 ¥'+s.cash];
-  rows.forEach((v,i)=>text(g,v,W/2,cy-dy*1.6+i*dy,16,F.paper,'center',w));
-  const b={x,y:cy+dy*2.8,w,h:48};label(g,b,'开始下一天',true,18);if(p.role==='manager')target(hits,b,'nextday');
+  hits.length=0;box(g,{x:0,y:0,w:W,h:H},'#1E294Df5',0);const dy=Math.min(40,H*.09),cy=H/2;
+  text(g,'今日打烊',W/2,cy-dy*3,28,F.warm,'center');const bill=dailyOverhead(s),rows=['接待 '+s.served+' 位邻居 · 评分 '+s.dayRating+'/5','销售 ¥'+s.earnings+' · 委托 ¥'+(s.favorTips||0),'进货 -¥'+(s.dayExpenses||0)+' · 租暖 -¥'+bill.total,'净额 ¥'+s.dayNet+' · 现金 ¥'+s.cash];
+  rows.forEach((v,i)=>text(g,v,W/2,cy-dy*1.6+i*dy,16,F.paper,'center',W-24));const b={x:W*.1,y:cy+dy*2.7,w:W*.8,h:48};label(g,b,'开始下一天',true,18);if(p.role==='manager')target(hits,b,'nextday');
  }
  return hits;
 }

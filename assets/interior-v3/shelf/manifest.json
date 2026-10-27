@@ -1,0 +1,429 @@
+{
+  "id": "illustrated-empty-grocery-shelf-v3",
+  "master": "master.webp",
+  "completeBase": "base-complete.webp",
+  "sourceSize": [
+    996,
+    1578
+  ],
+  "alpha": true,
+  "source": "GPTIMG original empty shelf and clean backboard edit",
+  "sourceFiles": [
+    "exec-5f4ebb9c-f3b5-492c-af35-28087e2675e5.png",
+    "exec-41ca1095-e509-4b2f-9510-4932047e7e15.png"
+  ],
+  "projection": "frontal parallel with shallow top planes consistent with centered shop service-window view",
+  "emptyCompartments": true,
+  "containsBakedProducts": false,
+  "parts": [
+    {
+      "id": "backboard",
+      "path": "backboard.webp",
+      "rect": [
+        121,
+        173,
+        875,
+        1421
+      ],
+      "size": [
+        754,
+        1248
+      ],
+      "position": [
+        121,
+        173
+      ],
+      "alpha": true,
+      "role": "Complete uninterrupted backing, image-generated with planks removed",
+      "z": 0
+    },
+    {
+      "id": "post-left",
+      "path": "post-left.webp",
+      "rect": [
+        43,
+        61,
+        124,
+        1516
+      ],
+      "size": [
+        81,
+        1455
+      ],
+      "position": [
+        43,
+        61
+      ],
+      "alpha": true,
+      "role": "Complete left structural post and cap/foot",
+      "z": 2
+    },
+    {
+      "id": "post-right",
+      "path": "post-right.webp",
+      "rect": [
+        873,
+        61,
+        953,
+        1516
+      ],
+      "size": [
+        80,
+        1455
+      ],
+      "position": [
+        873,
+        61
+      ],
+      "alpha": true,
+      "role": "Complete right structural post and cap/foot",
+      "z": 2
+    },
+    {
+      "id": "top-cap",
+      "path": "top-cap.webp",
+      "rect": [
+        100,
+        88,
+        897,
+        204
+      ],
+      "size": [
+        797,
+        116
+      ],
+      "position": [
+        100,
+        88
+      ],
+      "alpha": true,
+      "role": "Complete top cap and underside trim",
+      "z": 3
+    },
+    {
+      "id": "bottom-rail",
+      "path": "bottom-rail.webp",
+      "rect": [
+        121,
+        1418,
+        875,
+        1469
+      ],
+      "size": [
+        754,
+        51
+      ],
+      "position": [
+        121,
+        1418
+      ],
+      "alpha": true,
+      "role": "Bottom structural rail",
+      "z": 3
+    },
+    {
+      "id": "plank-0",
+      "path": "plank-0.webp",
+      "rect": [
+        68,
+        463,
+        930,
+        598
+      ],
+      "size": [
+        862,
+        135
+      ],
+      "position": [
+        68,
+        463
+      ],
+      "alpha": true,
+      "role": "Complete separate plank, front rail and support brackets",
+      "z": 4
+    },
+    {
+      "id": "plank-0-surface",
+      "path": "plank-0-surface.webp",
+      "rect": [
+        68,
+        463,
+        930,
+        508
+      ],
+      "size": [
+        862,
+        45
+      ],
+      "position": [
+        68,
+        463
+      ],
+      "alpha": true,
+      "role": "Independent product-supporting top plane",
+      "z": 4
+    },
+    {
+      "id": "plank-0-front-rail",
+      "path": "plank-0-front-rail.webp",
+      "rect": [
+        68,
+        507,
+        930,
+        551
+      ],
+      "size": [
+        862,
+        44
+      ],
+      "position": [
+        68,
+        507
+      ],
+      "alpha": true,
+      "role": "Independent front rail with orange/ivory edge; overlays goods bottoms",
+      "z": 20
+    },
+    {
+      "id": "plank-1",
+      "path": "plank-1.webp",
+      "rect": [
+        68,
+        828,
+        930,
+        979
+      ],
+      "size": [
+        862,
+        151
+      ],
+      "position": [
+        68,
+        828
+      ],
+      "alpha": true,
+      "role": "Complete separate plank, front rail and support brackets",
+      "z": 5
+    },
+    {
+      "id": "plank-1-surface",
+      "path": "plank-1-surface.webp",
+      "rect": [
+        68,
+        828,
+        930,
+        884
+      ],
+      "size": [
+        862,
+        56
+      ],
+      "position": [
+        68,
+        828
+      ],
+      "alpha": true,
+      "role": "Independent product-supporting top plane",
+      "z": 5
+    },
+    {
+      "id": "plank-1-front-rail",
+      "path": "plank-1-front-rail.webp",
+      "rect": [
+        68,
+        883,
+        930,
+        928
+      ],
+      "size": [
+        862,
+        45
+      ],
+      "position": [
+        68,
+        883
+      ],
+      "alpha": true,
+      "role": "Independent front rail with orange/ivory edge; overlays goods bottoms",
+      "z": 21
+    },
+    {
+      "id": "plank-2",
+      "path": "plank-2.webp",
+      "rect": [
+        68,
+        1189,
+        930,
+        1356
+      ],
+      "size": [
+        862,
+        167
+      ],
+      "position": [
+        68,
+        1189
+      ],
+      "alpha": true,
+      "role": "Complete separate plank, front rail and support brackets",
+      "z": 6
+    },
+    {
+      "id": "plank-2-surface",
+      "path": "plank-2-surface.webp",
+      "rect": [
+        68,
+        1189,
+        930,
+        1262
+      ],
+      "size": [
+        862,
+        73
+      ],
+      "position": [
+        68,
+        1189
+      ],
+      "alpha": true,
+      "role": "Independent product-supporting top plane",
+      "z": 6
+    },
+    {
+      "id": "plank-2-front-rail",
+      "path": "plank-2-front-rail.webp",
+      "rect": [
+        68,
+        1261,
+        930,
+        1309
+      ],
+      "size": [
+        862,
+        48
+      ],
+      "position": [
+        68,
+        1261
+      ],
+      "alpha": true,
+      "role": "Independent front rail with orange/ivory edge; overlays goods bottoms",
+      "z": 22
+    }
+  ],
+  "tiers": [
+    {
+      "id": 0,
+      "compartmentRect": [
+        146,
+        204,
+        850,
+        463
+      ],
+      "stockRect": [
+        158,
+        220,
+        838,
+        500
+      ],
+      "stockBaseline": 500,
+      "surfaceRect": [
+        68,
+        463,
+        930,
+        508
+      ],
+      "frontRailRect": [
+        68,
+        507,
+        930,
+        551
+      ]
+    },
+    {
+      "id": 1,
+      "compartmentRect": [
+        146,
+        593,
+        850,
+        828
+      ],
+      "stockRect": [
+        158,
+        611,
+        838,
+        876
+      ],
+      "stockBaseline": 876,
+      "surfaceRect": [
+        68,
+        828,
+        930,
+        884
+      ],
+      "frontRailRect": [
+        68,
+        883,
+        930,
+        928
+      ]
+    },
+    {
+      "id": 2,
+      "compartmentRect": [
+        146,
+        974,
+        850,
+        1189
+      ],
+      "stockRect": [
+        158,
+        990,
+        838,
+        1254
+      ],
+      "stockBaseline": 1254,
+      "surfaceRect": [
+        68,
+        1189,
+        930,
+        1262
+      ],
+      "frontRailRect": [
+        68,
+        1261,
+        930,
+        1309
+      ]
+    }
+  ],
+  "nineSlice": {
+    "backboardInsets": [
+      24,
+      24,
+      24,
+      24
+    ],
+    "postLeftInsets": [
+      58,
+      18,
+      58,
+      18
+    ],
+    "postRightInsets": [
+      58,
+      18,
+      58,
+      18
+    ],
+    "frontRailInsets": [
+      12,
+      34,
+      12,
+      34
+    ],
+    "insetOrder": "top,right,bottom,left"
+  },
+  "assembly": "Draw complete base OR independent backboard/posts/caps, then each complete plank; alternate draw each surface, goods, and front-rail. Do not draw whole-plank and its split surface/front-rail twice. Rects are exact source-space coordinates before any runtime scaling. Complete backboard has no shelf-shaped gaps.",
+  "prompt": "One empty isolated 3-tier grocery shelf assembly in approved illustrated flat navy/cornflower/orange/ivory shop style, frontal parallel camera and shallow top planes, no products or text. Additional GPTIMG edit removes three planks/supports/shadows to reveal complete uninterrupted backboard behind independently rendered stock tiers."
+}

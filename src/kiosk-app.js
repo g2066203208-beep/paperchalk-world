@@ -1,6 +1,8 @@
+import {cameraTarget,clampCamera,worldPoint,SHOP} from "./kiosk-shop-layout.js";
+import {artStatus} from "./kiosk-art-assets.js";
 import {mountTitleMenu} from "./kiosk-menu.js";
-import {GOODS,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
-import {render} from "./kiosk-view.js";
+import {GOODS,FIXTURES,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
+import {render,resetShopPresentation} from "./kiosk-view.js";
 import {flatAmbient} from "./kiosk-flat.js";
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
@@ -26,7 +28,22 @@ const sampleCustomerMotion=createCustomerMotion();
 const sampleHeldItemMotion=createHeldItemMotion();
 const speechPresentation=createSpeechPresentation();
 let customerMotion=null,heldItemMotion=null;
-const shopUi={catalog:false,page:"goods"};
+const shopUi={catalog:false,page:"goods",focus:"front",camera:null};
+const cameraControls=document.createElement('label');cameraControls.className='shop-camera-controls';cameraControls.hidden=true;cameraControls.textContent='视线 ';
+const viewSelect=document.createElement('select');viewSelect.id='viewSelect';viewSelect.setAttribute('aria-label','查看店铺区域');
+for(const [value,title] of [['free','自由环顾'],['front','营业窗口'],['customer','顾客近景'],['counter','交接台面'],['register','收银机'],['book','进货簿'],['recycle','回收交接'],...Object.entries(FIXTURES).map(([k,v])=>[k,v.label])]){const option=document.createElement('option');option.value=value;option.textContent=title;viewSelect.append(option);}
+cameraControls.append(viewSelect);document.body.append(cameraControls);
+function look(key){shopUi.focus=key;viewSelect.value=key;}
+viewSelect.onchange=()=>look(viewSelect.value);
+let previousFrame=performance.now();
+function updateCamera(now){
+ const {W,H}=screen;if(!shopUi.camera)shopUi.camera=cameraTarget(W,H,shopUi.focus==='free'?'front':shopUi.focus);
+ if(shopUi.focus!=='free'){
+  const goal=cameraTarget(W,H,shopUi.focus),t=matchMedia('(prefers-reduced-motion: reduce)').matches?1:1-Math.exp(-Math.min(100,now-previousFrame)/65);
+  for(const k of ['x','y','z'])shopUi.camera[k]+=(goal[k]-shopUi.camera[k])*t;
+ }
+ shopUi.camera=clampCamera(shopUi.camera,W,H);previousFrame=now;
+}
 const net=new RoomNetwork({
  status:t=>setStatus(t),
  join:(pid,name)=>{
@@ -43,7 +60,7 @@ function save(){if(state&&(mode==="solo"||mode==="host")){try{localStorage.setIt
 function playerName(){return $("nickname").value.trim().slice(0,14)||"店员";}
 function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
- mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;speechPresentation.reset();
+ mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;resetShopPresentation();look("front");shopUi.camera=null;speechPresentation.reset();
  $("hud").classList.add("playing");
  titleMenu?.hide();
  $("roomCode").textContent=room?("房间码："+room):"";
@@ -113,27 +130,30 @@ function localAction(pid,a){
  if(!state)return false;
  let updated=a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
  if(updated){save();net.broadcast(state);}
+ if(pid===id)shopUi.feedback={text:!updated&&a.itemId?'这件货已被拿走，请重新选择。':state.notice,until:performance.now()+2300,anchor:shopUi.actionAnchor};
  return updated;
 }
-function command(cmd,key){
+function command(cmd,key,itemId){
+ if(cmd==="focus"||cmd==="look"){look(key);return;}
  if(cmd==="catalog"){shopUi.catalog=true;shopUi.page="goods";return;}
  if(cmd==="catalogPage"){shopUi.page=key;return;}
  if(cmd==="closeCatalog"){shopUi.catalog=false;return;}
  if(["restock","upgrade","heat"].includes(cmd))shopUi.catalog=false;
  if(!state||state.phase==="summary"&&cmd!=="nextday")return;
  if(["talk","commission","recycleReceive","recycleStore"].includes(cmd))speechPresentation.prompt(performance.now());
- const a={cmd};
+ if(["talk","sell","commission"].includes(cmd))look("customer");
+ const a={cmd};if(itemId)a.itemId=itemId;
  if(cmd==="slot"||cmd==="toggle")a.key=key;
  if(cmd==="restock")a.sku=key;
  if(mode==="guest"){
-   net.sendInput({seq:++seq,action:{type:"kiosk",operation:a.cmd,key:a.key,sku:a.sku}});
+   net.sendInput({seq:++seq,action:{type:"kiosk",operation:a.cmd,key:a.key,sku:a.sku,itemId:a.itemId}});
  }else localAction(id,a);
 }
 function resize(){
  const rect=canvas.getBoundingClientRect();
  const W=Math.max(1,Math.round(rect.width)),H=Math.max(1,Math.round(rect.height));
  const dpr=Math.min(3,window.devicePixelRatio||1);
- screen={W,H,land:W>=H*1.12,dpr};
+ screen={W,H,land:W>=H*1.12,dpr};shopUi.camera=shopUi.focus==="free"&&shopUi.camera?clampCamera(shopUi.camera,W,H):null;
  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
  ctx.setTransform(dpr,0,0,dpr,0,0);
  ctx.imageSmoothingEnabled=true;
@@ -159,7 +179,7 @@ canvas.addEventListener("contextmenu",e=>e.preventDefault());
 canvas.addEventListener("pointerdown",e=>{
  if(!state||!$("lobby").hidden||activePointer)return;
  const p=pointOnCanvas(e);
- activePointer={id:e.pointerId,x:p.x,y:p.y,started:performance.now(),cancelled:false};
+ activePointer={id:e.pointerId,x:p.x,y:p.y,started:performance.now(),cancelled:false,target:findHit(p.x,p.y,"tap"),camera:shopUi.camera?{...shopUi.camera}:null};
  try{canvas.setPointerCapture(e.pointerId);}catch{}
 });
 canvas.addEventListener("pointermove",e=>{
@@ -167,7 +187,10 @@ canvas.addEventListener("pointermove",e=>{
  const p=pointOnCanvas(e);
  const delta=Math.hypot((p.x-activePointer.x)/screen.W*innerWidth,
   (p.y-activePointer.y)/screen.H*innerHeight);
- if(delta>15)activePointer.cancelled=true;
+ if(delta>15&&!shopUi.catalog&&activePointer.camera){
+  activePointer.cancelled=true;shopUi.focus='free';viewSelect.value='free';
+  shopUi.camera=clampCamera({...activePointer.camera,x:activePointer.camera.x-(p.x-activePointer.x)/activePointer.camera.z,y:activePointer.camera.y-(p.y-activePointer.y)/activePointer.camera.z},screen.W,screen.H);
+ }
 });
 canvas.addEventListener("pointercancel",()=>{activePointer=null;});
 canvas.addEventListener("pointerup",e=>{
@@ -180,14 +203,16 @@ canvas.addEventListener("pointerup",e=>{
   (p.y-press.y)/screen.H*innerHeight);
  if(delta>15)return;
  const gesture=performance.now()-press.started>=500?"hold":"tap";
- const target=findHit(p.x,p.y,gesture)|| (gesture==="hold"?null:findHit(p.x,p.y,"tap"));
- if(target)command(target.cmd,target.key);
+ const target=gesture==="tap"&&press.target?.itemId?press.target:(findHit(p.x,p.y,gesture)|| (gesture==="hold"?null:findHit(p.x,p.y,"tap")));
+ if(target){shopUi.actionAnchor=target.world;command(target.cmd,target.key,target.itemId);}
 });
+canvas.addEventListener('wheel',e=>{if(!state||!$("lobby").hidden||shopUi.catalog)return;e.preventDefault();const c=shopUi.camera;if(!c)return;shopUi.focus='free';viewSelect.value='free';shopUi.camera=clampCamera({...c,x:c.x+e.deltaX/c.z,y:c.y+e.deltaY/c.z},screen.W,screen.H);},{passive:false});
+window.addEventListener('keydown',e=>{if(!state||!$("lobby").hidden||shopUi.catalog||/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName))return;const c=shopUi.camera;if(!c)return;const dir={ArrowLeft:[-120,0],ArrowRight:[120,0],ArrowUp:[0,-120],ArrowDown:[0,120]}[e.key];if(dir){e.preventDefault();shopUi.focus='free';viewSelect.value='free';shopUi.camera=clampCamera({...c,x:c.x+dir[0]/c.z,y:c.y+dir[1]/c.z},screen.W,screen.H);}if(e.key==='Home')look('front');});
 function tick(){
  if(mode==="host"&&state){
   for(const {peerId,input} of net.takeInputs()){
    if(input?.action?.type!=="kiosk")continue;
-   const a={cmd:input.action.operation,key:input.action.key,sku:input.action.sku};
+   const a={cmd:input.action.operation,key:input.action.key,sku:input.action.sku,itemId:input.action.itemId};
    localAction(peerId,a);
   }
  }
@@ -199,7 +224,8 @@ function frame(){
  ctx.setTransform(screen.dpr||1,0,0,screen.dpr||1,0,0);
  ctx.imageSmoothingEnabled=true;
  if(state){
-  const now=performance.now();
+  const now=performance.now();updateCamera(now);
+  cameraControls.hidden=!$("lobby").hidden||state.phase==="summary"||shopUi.catalog;
   customerMotion=sampleCustomerMotion(state,now);
   customerMotion.speechVisible=speechPresentation.sample(state,now);
   heldItemMotion=sampleHeldItemMotion(state,id,now);
@@ -219,5 +245,5 @@ if("serviceWorker" in navigator){
  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"}).catch(()=>{}));
 }
 window.__KIOSK_TEST__={getState:()=>state?structuredClone(state):null,getHits:()=>structuredClone(hits),
- command,screen:()=>screen,getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,
+ command,screen:()=>screen,getCamera:()=>structuredClone(shopUi.camera),getWorld:()=>structuredClone(SHOP),getArtStatus:artStatus,getSelfId:()=>id,getCustomerMotion:()=>customerMotion?structuredClone(customerMotion):null,
  getHeldItemMotion:()=>heldItemMotion?structuredClone(heldItemMotion):null,saveKey:SAVE};
