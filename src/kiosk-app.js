@@ -105,7 +105,7 @@ function localAction(pid,a){
 }
 function command(cmd,key){
  if(!state||state.phase==="summary"&&cmd!=="nextday")return;
- if(cmd==="talk"||cmd==="commission")speechPresentation.prompt(performance.now());
+ if(["talk","commission","recycleReceive","recycleStore"].includes(cmd))speechPresentation.prompt(performance.now());
  const a={cmd};
  if(cmd==="slot"||cmd==="toggle")a.key=key;
  if(cmd==="restock")a.sku=key;
