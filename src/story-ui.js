@@ -1,6 +1,7 @@
 // Accessible DOM narrative/map/avatar panel; separate from Canvas interactions.
-import {CAST,WORLD_LOCATIONS,STORY_AVATARS,storyNode,canTravel} from './story-framework.js';
+import {CAST,WORLD_LOCATIONS,STORY_AVATARS,HERO_PROFILES,protagonistAssignment,storyNode,canTravel} from './story-framework.js';
 const $=id=>document.getElementById(id);
+const ART={female:'./assets/protagonists/alina-preview.webp',male:'./assets/protagonists/mikhail-preview.webp'};
 const el=(tag,cls='',text='')=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e;};
 export function mountStoryUI({dispatch,getState}){
  const panel=$('storyPanel'),heading=$('storyHeading'),content=$('storyContent');
@@ -43,10 +44,27 @@ export function mountStoryUI({dispatch,getState}){
     map.append(wrap);
    }
   }else{
-   heading.textContent='值夜的人';
-   content.append(el('p','narrative-prose','你可以选择主角的呈现方式。两种形象拥有相同的故事、选择权和营业能力。'));
-   content.append(el('p','narrative-helper','正式单人全身素材需要通过美术验收；现在是角色数据与界面骨架。'));
-   for(const avatar of STORY_AVATARS)addButton(content,(avatar==='female'?'女主角':'男主角')+(s.avatar===avatar?' · 已选择':''),()=>dispatch('storyAvatar',avatar),s.avatar===avatar);
+   heading.textContent='选择值守小店的人';
+   content.append(el('p','narrative-helper','两人都在同一所国立大学读书。你选中的人经营小店，另一人接受国家分配，到城里单位见习工作。'));
+   const roles=el('div','protagonist-choices');content.append(roles);
+   for(const avatar of STORY_AVATARS){
+    const p=HERO_PROFILES[avatar],chosen=s.avatar===avatar;
+    const card=el('button','protagonist-card'+(chosen?' selected':''));card.type='button';card.setAttribute('aria-pressed',String(chosen));
+    card.setAttribute('aria-label',(avatar==='female'?'女主角':'男主角')+' · '+p.name+(chosen?' · 已选择':''));
+    const img=el('img','protagonist-art');img.src=ART[avatar];img.alt=p.name+'全身立绘';img.width=80;img.height=120;img.loading='eager';
+    card.append(img,el('strong','',p.name),el('span','protagonist-details',p.school),
+      el('span','protagonist-job',chosen?'小店店主 · 当前玩家':'选择经营小店'));
+    card.addEventListener('click',()=>dispatch('storyAvatar',avatar));
+    roles.append(card);
+   }
+   if(s.avatar){
+    const partner=protagonistAssignment(s.avatar),person=HERO_PROFILES[partner.cityWorker];
+    const box=el('section','city-assignment');
+    box.append(el('strong','', '城市分配通知'),
+      el('p','',person.name+' · '+partner.cityJob),
+      el('p','narrative-helper','另一位主角在城市工作，不会变成店里的第二名店主。更完整的市区工作流程和人物动画仍待制作。'));
+    content.append(box);
+   }
   }
  }
  function show(nextMode='story'){
