@@ -121,7 +121,13 @@ $("closeLobby").onclick=()=>{if(state)titleMenu.hide();};
 function localAction(pid,a){
  if(!state)return false;
  let updated=a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
- if(updated){save();net.broadcast(state);}
+ if(updated){
+  if(a.cmd==='nextday'){
+   // The new presentation has no window handle: every shift starts open.
+   state.windowOpen=true;state.notice='新的一天。直接点货架拿货，点交接台交付。';
+  }
+  save();net.broadcast(state);
+ }
  if(pid===id&&!updated)shopUi.feedback={text:!updated&&a.itemId?'这件货已被拿走，请重新选择。':state.notice,until:performance.now()+2300,anchor:shopUi.actionAnchor};
  return updated;
 }
