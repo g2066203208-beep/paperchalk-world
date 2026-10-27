@@ -48,8 +48,10 @@ function refreshResume(){$("resume").hidden=!readSave();}
 function start(who,model,userId="solo"){
  mode=who;state=model;id=userId;seq=0;shopUi.catalog=false;shopUi.feedback=null;
  // Legacy save compatibility: old hidden cabinets and drawers are now always open racks.
+ state.open??={};
  for(const [key,fixture] of Object.entries(FIXTURES))if(fixture.kind!=='shelf')state.open[key]=true;
  state.windowOpen=true;
+ if(!model.totalServed&&!model.spoken)state.notice='直接点货架拿货，点交接台摆货，然后确认收款。';
  speechPresentation.reset();
  $("hud").classList.add("playing");
  titleMenu?.hide();
