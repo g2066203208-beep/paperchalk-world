@@ -229,6 +229,23 @@ try{
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.upgrades?.heating===1,{timeout:12000});
  assert.equal((await snapshot(guest)).cash,42);
  await host.screenshot({path:"artifacts/kiosk-heating-upgraded.png",fullPage:false});
+ // Second distinct business: customer hands over a used battery, a clerk
+ // physically stores it in the right drawer; the room host owns all costs.
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:7000});
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="recycleReceive"),undefined,{timeout:6000});
+ await host.screenshot({path:"artifacts/kiosk-recycling-customer-offer.png",fullPage:false});
+ await action(guest,"recycleReceive");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.businesses?.recycling?.carriedBy!==null,{timeout:12000});
+ assert.equal((await snapshot(host)).cash,41,"service intake incurs one unit handling cost");
+ await guest.screenshot({path:"artifacts/kiosk-recycling-battery-held.png",fullPage:false});
+ await action(guest,"toggle","drawerR");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.open?.drawerR===true,{timeout:12000});
+ await action(guest,"recycleStore");
+ await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.businesses?.recycling?.stored===1,{timeout:12000});
+ assert.equal((await snapshot(guest)).businesses.recycling.carriedBy,null);
+ assert.equal((await snapshot(guest)).cash,41,"storage cannot charge twice");
+ await host.screenshot({path:"artifacts/kiosk-recycling-stored-multiplayer.png",fullPage:false});
+
  const mobileOverflow=await host.evaluate(()=>document.documentElement.scrollHeight>innerHeight+2||document.documentElement.scrollWidth>innerWidth+2);
  assert.equal(mobileOverflow,false,"mobile must be one fixed no-scroll screen");
  // Local solo save survives refresh; source account is separate from legacy save.
@@ -362,6 +379,38 @@ try{
  await growth.locator("#resume").click();
  assert.equal((await snapshot(growth)).reputation,4,"reputation persists under original save key");
  await growth.screenshot({path:"artifacts/kiosk-day-two-reputation.png",fullPage:false});
+ // Finish an actual three-battery recycling batch in Chromium. Unlike retail,
+ // this requires customer intake, drawer capacity and dispatch payout.
+ const recycler=await open(context);
+ await recycler.locator("#solo").click();
+ await action(recycler,"window");
+ await action(recycler,"slot","shelfL1");
+ await action(recycler,"counter");
+ await action(recycler,"sell");
+ await recycler.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="recycleReceive"),undefined,{timeout:9000});
+ await action(recycler,"recycleReceive");
+ await action(recycler,"toggle","drawerR");
+ await action(recycler,"recycleStore");
+ assert.equal((await snapshot(recycler)).businesses.recycling.stored,1);
+ await recycler.reload();
+ await recycler.locator("#resume").click();
+ assert.equal((await snapshot(recycler)).businesses.recycling.stored,1,"recycling stock survives old v3 save key");
+ for(const key of ["shelfL2","shelfR1"]){
+   await action(recycler,"slot",key);
+   await action(recycler,"counter");
+   await action(recycler,"sell");
+   await recycler.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="recycleReceive"),undefined,{timeout:9000});
+   await action(recycler,"recycleReceive");
+   await action(recycler,"recycleStore");
+ }
+ assert.equal((await snapshot(recycler)).businesses.recycling.stored,3);
+ await recycler.screenshot({path:"artifacts/kiosk-recycling-full-drawer.png",fullPage:false});
+ const beforeDispatch=(await snapshot(recycler)).cash;
+ await action(recycler,"recycleShip",undefined,"hold");
+ assert.equal((await snapshot(recycler)).cash,beforeDispatch+12,"three stored batteries pay once");
+ assert.equal((await snapshot(recycler)).businesses.recycling.shipments,1);
+ assert.equal((await snapshot(recycler)).businesses.recycling.stored,0);
+ await recycler.screenshot({path:"artifacts/kiosk-recycling-batch-settled.png",fullPage:false});
  // A genuinely offline reload must restore the same solo inventory and
  // open window after the service worker installs its published ES modules.
  // PeerJS CDN routing is removed before offline mode: multiplayer still
@@ -375,8 +424,9 @@ try{
  assert.equal((await snapshot(offline)).players.solo.hand,"tea");
  await offline.waitForFunction(async()=>{
    const reg=await navigator.serviceWorker.ready;
-   const cache=await caches.open("untitled-kiosk-offline-v3");
-   return Boolean(reg.active)&&(await cache.keys()).length>=14;
+   const names=(await caches.keys()).filter(name=>name.startsWith("untitled-kiosk-offline-v"));
+   const entries=await Promise.all(names.map(name=>caches.open(name).then(cache=>cache.keys())));
+   return Boolean(reg.active)&&entries.some(keys=>keys.length>=14&&keys.some(req=>req.url.endsWith("/src/kiosk-business.js")));
  },undefined,{timeout:20000});
  await offline.reload();
  await offline.waitForFunction(()=>Boolean(navigator.serviceWorker.controller),undefined,{timeout:12000});
