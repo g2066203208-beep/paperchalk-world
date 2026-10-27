@@ -27,6 +27,7 @@ async function aim(page,cmd,key){
  if(['catalogPage','closeCatalog','nextday'].includes(cmd))return;
  if(cmd==='restock'&&(await page.evaluate(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==='closeCatalog'))))return;
  let shot=['slot','toggle','recycleStore','recycleShip'].includes(cmd)?(key||'drawerR'):cmd==='recycleReceive'?'recycle':cmd==='sell'?'register':cmd==='catalog'?'book':cmd==='counter'?'counter':'customer';
+ if(cmd==='look')shot=key;
  if(cmd==='restock')shot=await page.evaluate(sku=>Object.entries(window.__KIOSK_TEST__.getState().slots).find(([,v])=>(v.sku||v.lastSku)===sku)?.[0]||'front',key);
  const select=page.locator('#viewSelect');
  await page.waitForFunction(()=>document.getElementById('lobby').hidden&&!document.getElementById('game').inert);
@@ -124,10 +125,9 @@ try{
    .every(h=>h.y<immersive.size.H*.82),"service commands cannot sit in a bottom toolbar");
 
  await host.waitForFunction(()=>document.querySelector("#game")&&document.readyState==="complete");
- await host.waitForFunction(async()=> {
-   const img=new Image();img.src='./assets/rig/customer/courier-master.webp';
-   await img.decode();return img.naturalHeight>img.naturalWidth;
- },undefined,{timeout:10000});
+ await host.waitForFunction(()=> {
+   const art=window.__KIOSK_TEST__.getArtStatus();return art.total>=50&&art.ready===art.total&&art.failed.length===0;
+ },undefined,{timeout:15000});
  await host.screenshot({path:"artifacts/kiosk-independent-sprites-customer.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer-gptimg.png",fullPage:false});
  await host.screenshot({path:"artifacts/kiosk-first-customer.png",fullPage:false});
@@ -147,6 +147,7 @@ try{
  await guest.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.players?.host?.hand==="bread",{timeout:12000});
  await action(guest,"counter");
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.counter==="tea",{timeout:12000});
+ await aim(host,"look","front");
  const checkoutHits=await host.evaluate(()=>window.__KIOSK_TEST__.getHits());
  assert.ok(checkoutHits.some(h=>h.cmd==="sell"&&h.gesture==="tap"),"placed item must offer physical checkout");
  assert.ok(checkoutHits.some(h=>h.cmd==="counter"&&h.gesture==="hold"),"placed item must remain retrievable by holding it");
@@ -369,6 +370,7 @@ try{
    await phone.waitForFunction(()=>window.__KIOSK_TEST__?.getHits().some(h=>h.cmd==="window"));
    await action(phone,"window");
    await phone.waitForFunction(()=>window.__KIOSK_TEST__.getCustomerMotion()?.stage==="idle",{timeout:6000});
+   await aim(phone,"look","front");
    const measurements=await phone.evaluate(()=>{
      const {W,H,land}=window.__KIOSK_TEST__.screen();
      const box=document.querySelector("#game").getBoundingClientRect();
