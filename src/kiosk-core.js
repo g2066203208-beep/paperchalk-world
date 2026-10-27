@@ -1,4 +1,5 @@
 // Shared, deterministic shop rules. Actions validated exclusively at room host.
+import {applyBusinessAction,recyclingCarried,recyclingState,recyclingValid,reclaimRecyclingOnLeave} from "./kiosk-business.js";
 export const GOODS=Object.freeze({
  tea:{name:"热茶",buy:4,price:9,size:1,color:"#bd8b58"},
  bread:{name:"面包",buy:5,price:12,size:2,color:"#d4a165"},
@@ -73,9 +74,12 @@ export function join(s,id,name){
 export function leave(s,id){
  const p=s.players[id];if(!p)return;
  if(p.hand)putBack(s,p.hand,p.origin);
+ reclaimRecyclingOnLeave(s,id);
  delete s.players[id];s.revision++;
 }
 export function resumeSolo(s,name){
+ // Old multiplayer players cannot keep a service parcel in an orphaned hand.
+ for(const oldId of Object.keys(s.players||{}))reclaimRecyclingOnLeave(s,oldId);
  const held=[];
  if(GOODS[s.hand])held.push({sku:s.hand,origin:null});
  for(const p of Object.values(s.players||{}))if(GOODS[p.hand])held.push({sku:p.hand,origin:p.origin});
@@ -95,6 +99,12 @@ export function apply(s,by,a){
  if(!s||s.version!==3||!s.players[by]||s.phase!=="operating"||!a||typeof a!=="object")return false;
  const p=s.players[by];
  let {cmd,key,sku}=a;
+ if(cmd==="recycleReceive"||cmd==="recycleStore"||cmd==="recycleShip")return applyBusinessAction(s,by,a);
+ if(recyclingCarried(s,by)&&["slot","counter","restock"].includes(cmd))return false;
+ if(cmd==="slot"&&key==="drawerR"){
+  const recycling=recyclingState(s);
+  if(recycling.stored>0||recycling.carriedBy)return false;
+ }
  if(cmd==="window"){s.windowOpen=!s.windowOpen;s.notice=s.windowOpen?"窗打开了。外头已经有人排队。":"窗关好了，寒风被挡在外面。";}
  else if(cmd==="toggle" && FIXTURES[key] && FIXTURES[key].kind!=="shelf"){
     s.open[key]=!s.open[key];s.notice=FIXTURES[key].label+(s.open[key]?"已打开。":"已关好。");
@@ -214,6 +224,7 @@ export function nextDay(s,by){
 }
 export function validate(s){
  if(s?.version!==3)return false;
+ if(!recyclingValid(s))return false;
  if(s.counter!==null&&!GOODS[s.counter])return false;
  // Legacy v3 saves have no upgrades field; they are treated as level zero.
  if(s.upgrades!==undefined&&(!s.upgrades||typeof s.upgrades!=="object"||Array.isArray(s.upgrades)||
