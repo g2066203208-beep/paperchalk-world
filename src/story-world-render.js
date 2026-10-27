@@ -72,7 +72,7 @@ export function renderStoryWorld(g,shop,view,phase=0,options={}){
  const {horizon}=skyAndSnow(g,W,H,phase,options.motion!==false);
  const ground=H*.73;
  if(location.id==='street'){roadway(g,W,H,ground);kiosk(g,W,H,ground);
-  line(g,W*.21,horizon-4,W*.21,horizon-h*.1,3,COLORS.ink);}
+  line(g,W*.21,horizon-4,W*.21,horizon-H*.1,3,COLORS.ink);}
  else if(location.id==='stop'){roadway(g,W,H,ground);busStop(g,W,H,ground);}
  else if(location.id==='flats'){
   apartment(g,W*.26,ground,W*.48,H*.55);
