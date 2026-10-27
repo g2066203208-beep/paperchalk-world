@@ -126,7 +126,7 @@ function localAction(pid,a){
  const isStory=['storyChoice','storyTravel','storyAvatar'].includes(a.cmd);
  let updated=isStory?applyStoryAction(state,pid,a):a.cmd==="nextday"?nextDay(state,pid):apply(state,pid,a);
  if(updated){
-  if(!isStory)seeShopProgress(state,before);
+  seeShopProgress(state,before);
   if(a.cmd==='nextday'){
    // The new presentation has no window handle: every shift starts open.
    state.windowOpen=true;state.notice='新的一天。直接点货架拿货，点交接台交付。';
