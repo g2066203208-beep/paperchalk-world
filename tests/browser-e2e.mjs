@@ -235,7 +235,7 @@ try{
  await host.waitForFunction(()=>window.__KIOSK_TEST__.getHits().some(h=>h.cmd==="recycleReceive"),undefined,{timeout:6000});
  await host.screenshot({path:"artifacts/kiosk-recycling-customer-offer.png",fullPage:false});
  await action(guest,"recycleReceive");
- await host.waitForFunction(()=>window.__KIOSK_TEST__.getState()?.businesses?.recycling?.carriedBy!==null,{timeout:12000});
+ await host.waitForFunction(()=>Boolean(window.__KIOSK_TEST__.getState()?.businesses?.recycling?.carriedBy),undefined,{timeout:12000});
  assert.equal((await snapshot(host)).cash,41,"service intake incurs one unit handling cost");
  await guest.screenshot({path:"artifacts/kiosk-recycling-battery-held.png",fullPage:false});
  await action(guest,"toggle","drawerR");
