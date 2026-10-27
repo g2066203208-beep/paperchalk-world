@@ -20,6 +20,7 @@ try{
    const b=await p.locator(selector).boundingBox();assert(b&&b.x>=0&&b.y>=0&&b.x+b.width<=w+1&&b.y+b.height<=h+1,`${w}x${h}: clipped ${selector}`);assert(b.height>=44,`${selector} touch size`);
   }
   const overflow=await p.evaluate(()=>({w:document.documentElement.scrollWidth,h:document.documentElement.scrollHeight}));assert(overflow.w<=w&&overflow.h<=h);
+  assert.equal(await p.locator('.eyes-open').evaluate(n=>getComputedStyle(n).opacity),'1','open head remains an opaque fallback during blink');
   await p.screenshot({path:`artifacts/menu/home-${w}x${h}.png`});
   await p.locator('#settings').click();await p.locator('#motionToggle').uncheck();await p.locator('#largeTextToggle').check();
   assert.equal(await p.locator('#lobby').getAttribute('data-motion'),'false');
