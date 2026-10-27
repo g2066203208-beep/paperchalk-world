@@ -103,7 +103,7 @@ function performEffects(story,effects){
 }
 export function chooseStory(shop,choiceId,providedNodeId=null){
  const s=ensureStory(shop),node=storyNode(s);
- if(!node||typeof choiceId!=='string'||(providedNodeId&&providedNodeId!==node.id))return false;
+ if(!node||node.scene!==s.location||typeof choiceId!=='string'||(providedNodeId&&providedNodeId!==node.id))return false;
  const option=node.choices.find(c=>c.id===choiceId);
  if(!option||!option.effects.every(e=>STORY_EFFECT_TYPES.includes(e.type)))return false;
  performEffects(s,option.effects);
