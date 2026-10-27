@@ -4,6 +4,7 @@ import {mountTitleMenu} from "./kiosk-menu.js";
 import {GOODS,FIXTURES,initialShop,visitor,join,leave,apply,nextDay,resumeSolo} from "./kiosk-core.js";
 import {renderSilhouette} from './kiosk-silhouette.js';
 import {renderStoryWorld} from './story-world-render.js';
+import {createCuePlayer} from './story-animation.js';
 
 import {createCustomerMotion} from "./kiosk-motion.js";
 import {createHeldItemMotion} from "./kiosk-item-motion.js";
@@ -30,6 +31,7 @@ let state=null,mode="idle",id="solo",seq=0,room="";
 const sampleCustomerMotion=createCustomerMotion();
 const sampleHeldItemMotion=createHeldItemMotion();
 const speechPresentation=createSpeechPresentation();
+const storyCuePlayer=createCuePlayer();
 let customerMotion=null,heldItemMotion=null;
 const shopUi={catalog:false,page:'goods',feedback:null};
 // Full-scene fixed composition. No camera, manual panning, selection shot or zoom.
@@ -55,7 +57,7 @@ function start(who,model,userId="solo"){
  for(const [key,fixture] of Object.entries(FIXTURES))if(fixture.kind!=='shelf')state.open[key]=true;
  state.windowOpen=true;
  if(!model.totalServed&&!model.spoken)state.notice='直接点货架拿货，点交接台摆货，然后确认收款。';
- speechPresentation.reset();
+ speechPresentation.reset();storyCuePlayer.reset();
  $("hud").classList.add("playing");
  titleMenu?.hide();
  $("roomCode").textContent=room?("房间码："+room):"";
@@ -228,6 +230,7 @@ function frame(){
   customerMotion.speechVisible=speechPresentation.sample(state,now);
   heldItemMotion=sampleHeldItemMotion(state,id,now);
   shopUi.motion=$("motionToggle").checked;
+  shopUi.storyCue=storyCuePlayer.sample(state.story,now,!shopUi.motion);
   hits=state.story?.location&&state.story.location!=='shop'
     ?renderStoryWorld(ctx,state,screen,phase,shopUi)
     :renderSilhouette(ctx,state,screen,phase,id,customerMotion,heldItemMotion,shopUi);
