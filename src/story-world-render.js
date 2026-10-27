@@ -79,6 +79,22 @@ export function renderStoryWorld(g,shop,view,phase=0,options={}){
   r(g,W*.45,ground-H*.18,W*.10,H*.18,COLORS.ink);
   r(g,W*.45,ground-H*.21,W*.10,3,COLORS.snow);
   tree(g,W*.12,ground,H*.31);
+ }else if(location.id==='city'){
+  roadway(g,W,H,ground);
+  const millX=W*.15,millY=ground-H*.40,millW=W*.42;
+  r(g,millX,millY,millW,H*.40,COLORS.near);
+  r(g,millX+8,millY+8,millW-16,3,COLORS.snow);
+  for(let i=0;i<3;i++){
+   r(g,millX+16+i*(millW-34)/3,millY+H*.07,Math.max(9,millW*.15),H*.105,COLORS.lamp);
+  }
+  r(g,millX+millW*.34,ground-H*.23,millW*.28,H*.23,COLORS.ink);
+  label(g,'市政见习单位',millX+millW*.5,millY+H*.025,12,COLORS.white,'center',millW-10);
+  const partner=shop?.story?.assignment?.cityWorker;
+  const hero=options.heroSprites?.[partner];
+  if(hero?.complete&&hero.naturalWidth>0){
+   const ph=Math.min(H*.48,290),pw=ph*2/3;
+   g.drawImage(hero,W*.73-pw/2,ground-ph,pw,ph);
+  }
  }else{kiosk(g,W,H,ground);}
  const cue=options.storyCue;
  if(cue&&!cue.done&&(cue.track==='paper'||cue.track==='footstep')){
