@@ -27,14 +27,14 @@ jobs:
           node-version: '22'
       - run: npm run check
       - run: npm test
-      - name: Check independent game art assets
+      - name: Check monochrome game is code-drawn without old scene art
         run: |
           test -f index.html
-          test -f assets/shop.svg
-          for n in 01 02 03 04 05 06 07 08; do test -f "assets/guest-$n.svg"; done
+          test -f silhouette.css
+          test -f src/kiosk-silhouette.js
+          test -f tests/silhouette-browser.mjs
           test -f android/app/src/main/AndroidManifest.xml
-          test -f assets/gptimg/parts/customer-idle.png
-          test -f assets/gptimg/parts/manifest.json
+          if grep -q 'assets/menu-approved' index.html; then exit 1; fi
   browser-e2e:
     name: Two real mobile-size shop clients
     needs: tests
@@ -71,11 +71,7 @@ jobs:
             echo 'Missing Chinese glyph font; refusing to publish unreadable screenshot evidence.' >&2
             exit 1
           }
-      - run: node tests/menu-browser.mjs
-      - run: node tests/small-shop-browser.mjs
-      - run: node tests/workbench-browser.mjs
-      - run: node tests/world-camera-browser.mjs
-      - run: node tests/browser-e2e.mjs
+      - run: node tests/silhouette-browser.mjs
       - name: Screenshot evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -95,19 +91,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Stage public site
+      - name: Stage public monochrome site
         run: |
-          mkdir -p _site/src _site/assets _site/assets/gptimg/parts
-          cp index.html style.css menu.css sw.js .nojekyll _site/
-          cp src/kiosk-interior-v4.js src/kiosk-objects.js src/kiosk-art-assets.js src/kiosk-shop-layout.js src/kiosk-core.js src/kiosk-business.js src/kiosk-gpt-scene.js src/kiosk-flat.js src/kiosk-skin.js src/kiosk-pixel.js src/kiosk-gptimg.js src/kiosk-view.js src/kiosk-guest.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/kiosk-app.js src/kiosk-menu.js src/network.js _site/src/
-          cp assets/*.svg _site/assets/
-          cp -R assets/menu _site/assets/menu
-          cp -R assets/menu-approved _site/assets/menu-approved
-          cp -R assets/rig _site/assets/rig
-          cp -R assets/interior-v3 _site/assets/interior-v3
-          cp -R assets/interior-v4 _site/assets/interior-v4
-          cp assets/gptimg/*.webp assets/gptimg/*.png _site/assets/gptimg/
-          cp assets/gptimg/parts/*.png assets/gptimg/parts/manifest.json _site/assets/gptimg/parts/
+          mkdir -p _site/src
+          cp index.html style.css menu.css silhouette.css sw.js .nojekyll _site/
+          cp src/kiosk-app.js src/kiosk-silhouette.js src/kiosk-menu.js src/kiosk-core.js src/kiosk-business.js src/kiosk-objects.js src/kiosk-shop-layout.js src/kiosk-motion.js src/kiosk-item-motion.js src/kiosk-dialogue.js src/network.js _site/src/
       - name: Verify published ES module dependencies
         run: |
           node --input-type=module <<'NODE'
