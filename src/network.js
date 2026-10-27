@@ -31,7 +31,8 @@ export class InputMailbox {
       ...(typeof input.action.sku==="string"?{sku:input.action.sku.slice(0,20)}:{}),
       ...(typeof input.action.itemId==="string"?{itemId:input.action.itemId.slice(0,40)}:{}),
       ...(typeof input.action.operation==="string"?{operation:input.action.operation.slice(0,20)}:{}),
-      ...(typeof input.action.key==="string"?{key:input.action.key.slice(0,24)}:{})
+      ...(typeof input.action.key==="string"?{key:input.action.key.slice(0,24)}:{}),
+      ...(typeof input.action.nodeId==="string"?{nodeId:input.action.nodeId.slice(0,40)}:{})
     }}});
     this.lastSeq.set(peerId,seq);
     return true;
