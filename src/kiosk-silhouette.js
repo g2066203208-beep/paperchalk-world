@@ -152,6 +152,17 @@ export function renderSilhouette(g,s,view,phase=0,viewerId=null,motion=null,item
  skyline(g,win,phase,ui.motion!==false);
  if(name&&motion?.visible!==false)person(g,win.x+win.w*.16,win.y+win.h*.16,win.w*.68,win.h*.95,motion);
  g.restore();
+ // Narrative animation cue is visual only and never mutates the authoritative state.
+ const cue=ui.storyCue;
+ if(cue&&!cue.done){
+  if(cue.track==='paper'){
+   const px=win.x+win.w-26+cue.offsetX,py=win.y+8+cue.offsetY;
+   rect(g,px,py,18,25,W);rect(g,px+3,py+5,12,2,B);rect(g,px+3,py+11,9,2,B);
+  }else if(cue.track==='cup'){
+   const cx=win.x+win.w*.58+cue.offsetX,cy=win.y+win.h*.82+cue.offsetY;
+   rect(g,cx,cy,17,13,B);rect(g,cx+3,cy-3,11,3,B);
+  }
+ }
  // Open aperture stays open. Touch it to talk; never navigates or zooms.
  const talk={x:win.x,y:win.y,w:win.w,h:win.h};
  hit(hits,talk,'talk');
