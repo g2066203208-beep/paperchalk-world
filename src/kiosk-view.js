@@ -86,9 +86,10 @@ function recyclingPhysical(g,hits,s,x,y,w,h,viewerId,motion){
   flatProduct(g,"battery",x+w*.62,y+h*.705,w*.105,h*.066);
  }
  if(r.stored>0){
-  // Visible contents and capacity are physically attached to the right drawer.
-  flatProduct(g,"battery",x+w*.805,y+h*.892,w*.085,h*.056);
-  t(g,"回收 "+r.stored+"/"+RECYCLING.capacity,x+w*.83,y+h*.974,12,C.cream,"center",w*.23);
+  // Battery contents are visible only when the physical drawer is open.
+  if(s.open?.drawerR)flatProduct(g,"battery",x+w*.805,y+h*.892,w*.085,h*.056);
+  const label=r.stored===RECYCLING.capacity?"长按封箱":"回收 "+r.stored+"/"+RECYCLING.capacity;
+  t(g,label,x+w*.83,y+h*.974,12,C.cream,"center",w*.23);
  }
  if(s.open?.drawerR){
   const area={x:x+w*.718,y:y+h*.889,w:w*.233,h:h*.070};
