@@ -33,7 +33,13 @@ const sampleHeldItemMotion=createHeldItemMotion();
 const speechPresentation=createSpeechPresentation();
 const storyCuePlayer=createCuePlayer();
 let customerMotion=null,heldItemMotion=null;
-const shopUi={catalog:false,page:'goods',feedback:null};
+const heroSprites={};
+for(const [avatar,file] of [['female','alina'],['male','mikhail']]){
+ const image=new Image();
+ image.src='./assets/protagonists/'+file+'-preview.webp';
+ heroSprites[avatar]=image;
+}
+const shopUi={catalog:false,page:'goods',feedback:null,heroSprites};
 // Full-scene fixed composition. No camera, manual panning, selection shot or zoom.
 const net=new RoomNetwork({
  status:t=>setStatus(t),
