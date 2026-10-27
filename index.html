@@ -1,81 +1,24 @@
-<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#ffffff"><title>未命名 · 冬季小店</title>
-<link rel="stylesheet" href="./style.css"><link rel="stylesheet" href="./menu.css"><link rel="stylesheet" href="./silhouette.css"><link rel="stylesheet" href="./story-ui.css">
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js" defer></script>
-<script type="module" src="./src/kiosk-app.js"></script>
-</head><body>
-<canvas id="game" aria-label="黑白剪影小店：整间店一屏观察，点击货位取货、台面交接、收款"></canvas>
-<div id="hud"><button id="menu" aria-label="打开菜单">☰</button><span id="roomCode"></span><span id="status" role="status">尚未营业</span>
-<nav id="narrativeTools" aria-label="故事与世界"><button id="storyBtn" type="button">故事</button><button id="mapBtn" type="button">地图</button><button id="avatarBtn" type="button">主角</button></nav></div>
-<section id="storyPanel" role="dialog" aria-label="剧情与地图" aria-modal="false" hidden inert>
- <div class="narrative-head"><h2 id="storyHeading">窗边的话</h2><button id="closeStory" type="button" aria-label="关闭剧情面板">关闭 ×</button></div>
- <div class="narrative-tabs" role="group" aria-label="查看剧情、地图或主角"><button type="button" id="storyTab">故事</button><button type="button" id="mapTab">地图</button><button type="button" id="avatarTab">主角</button></div>
- <div id="storyContent" class="narrative-content" aria-live="polite"></div>
-</section>
-<section id="lobby" class="title-menu approved-menu" aria-label="小店主菜单">
- <div class="menu-scene" aria-hidden="true"><div class="scene-stage">
- <svg class="scene-silhouette" viewBox="0 0 960 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-  <rect width="960" height="700" fill="#fff"/>
-  <g fill="#000">
-   <path d="M0 465h94v-82h70v82h36v-117h92v117h28v-55h43v55h224v-42h59v42h31v-102h104v102h27v-70h67v70h95v102H0z"/>
-   <path d="M0 568h960v7H0zM0 637h960v63H0z"/>
-   <path d="M0 583h140v5H0zM249 589h178v5H249zM591 585h179v5H591zM832 590h128v5H832z"/>
-  </g>
-  <g fill="#fff">
-   <path d="M23 404h5v8h-5zm16 0h5v8h-5zm29 0h5v8h-5zM217 375h7v10h-7zm19 0h7v10h-7zm19 0h7v10h-7zM694 389h7v10h-7zm22 0h7v10h-7zm22 0h7v10h-7zM867 423h6v9h-6zm21 0h6v9h-6z"/>
-   <path d="M14 595h109v4H14zM317 605h85v3h-85zM619 601h129v3H619z"/>
-  </g>
-  <g shape-rendering="crispEdges">
-   <path d="M447 503h68v76h-68z" fill="#000"/>
-   <path d="M443 500h76v6h-76z" fill="#000"/>
-   <path d="M446 497h68v3h-68z" fill="#fff"/>
-   <path d="M459 518h43v28h-43z" fill="#fff"/>
-   <path d="M480 518v28M459 537h43" stroke="#000" stroke-width="3"/>
-   <path d="M456 557h50v3h-50zM450 568h62v3h-62z" fill="#fff"/>
-   <path d="M441 580h81v4h-81z" fill="#000"/>
-   <path d="M529 484h3v95h-3zM521 485h18v4h-18z" fill="#000"/>
-   <rect x="525" y="476" width="10" height="4" fill="#000"/>
-  </g>
-  <g fill="none" stroke="#000" stroke-width="5" stroke-linecap="square">
-   <path d="M380 557v-97m0 44-24-29m24 14 23-35M579 557V439m0 53-22-30m22 14 25-35"/>
-  </g>
- </svg><div class="snowfall"></div>
- </div></div>
- <div class="menu-paper" data-view="home">
-
-  <div id="menuHome" class="menu-view">
-   <p class="menu-kicker">小店的一天，从这里开始</p>
-   <h1 id="menuHeading">欢迎开店<span class="heading-dot">。</span></h1>
-   <div class="main-choices">
-    <button id="primaryStart" class="choice choice-primary"><span>开始经营</span></button>
-    <button id="multiplayer" class="choice"><span>与好友开店</span></button>
-    <button id="settings" class="choice"><span>设置</span></button>
-   </div>
-   <button id="closeLobby" class="return-choice" hidden>返回营业中的小店 <span aria-hidden="true">↗</span></button>
-   <p id="homeSave" class="save-caption">推开窗，迎接第一位客人。</p>
-  </div>
-  <div id="menuMulti" class="menu-view" hidden>
-   <button class="paper-back" data-menu-back>返回</button>
-   <h2>一起开店<span class="heading-dot">。</span></h2>
-   <p class="view-caption">同一间小店，一起忙里偷闲。</p>
-   <label class="name-field">值班员称呼<input id="nickname" maxlength="14" value="店长" autocomplete="nickname"></label>
-   <button id="host" class="form-action primary-action">创建多人小店</button>
-   <div class="join-row"><label>好友的房间码<input id="joinCode" maxlength="8" placeholder="8 位房间码" autocomplete="off" spellcheck="false"></label><button id="join" class="form-action">加入</button></div>
-   <p id="roomDetails" class="menu-feedback" role="status" aria-live="polite">创建房间后，把房间码分享给好友。</p>
-  </div>
-  <div id="menuSettings" class="menu-view" hidden>
-   <button class="paper-back" data-menu-back>返回</button>
-   <h2>按你的习惯<span class="heading-dot">。</span></h2>
-   <label class="setting-row"><span>场景动态<small>人物待机、落雪与蒸汽</small></span><input id="motionToggle" type="checkbox" checked></label>
-   <label class="setting-row"><span>菜单音效<small>轻触纸签的声音</small></span><input id="soundToggle" type="checkbox"></label>
-   <label class="setting-row"><span>大字模式<small>放大菜单与表单文字</small></span><input id="largeTextToggle" type="checkbox"></label>
-   <button id="newGame" class="form-action new-game">重新开一家店</button>
-   <div id="newConfirm" hidden><p class="menu-feedback">开始新店会替换本机存档。</p><div class="confirm-actions"><button id="confirmNew" class="form-action primary-action">确认开始</button><button id="cancelNew" class="form-action">保留存档</button></div></div>
-  </div>
- </div>
- <div hidden aria-hidden="true"><button id="solo" hidden>单人开始营业</button><button id="resume" hidden>继续本地存档</button></div>
-</section>
-<div id="sceneTransition" hidden aria-hidden="true"><div class="transition-shutter"></div></div>
-</body></html>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#202b32"/><title>WORLD Studio · Blockbench 建模工作室</title><link rel="stylesheet" href="/style.css"/></head><body>
+<header class="topbar"><div class="brand"><span class="brandmark">▦</span><div><strong>WORLD <em>STUDIO</em></strong><small>方块建模 · 冬城计划</small></div></div><div class="head-actions"><span id="savedState" class="saved">本地已保存</span><a class="head-link" href="https://web.blockbench.net/" target="_blank" rel="noopener">Blockbench 官方编辑器 ↗</a><a class="head-link mobilehide" href="https://github.com/g2066203208-beep/paperchalk-world" target="_blank" rel="noopener">GitHub ↗</a></div></header>
+<main class="workspace">
+<aside class="sidebar library" id="library"><div class="section-title"><b>公开示例项目</b><small>可编辑 · .bbmodel</small></div><div class="templates" id="presets"></div>
+<div class="section-title borderline"><b>模型结构</b><small id="cubeCount">0 方块</small></div><div class="object-list" id="objects" role="listbox" aria-label="模型方块"></div>
+<div class="sidebar-bottom"><button class="outline" id="newCube">＋ 添加方块</button><button class="outline" id="cloneCube">复制选中</button><button class="outline danger" id="deleteCube">删除选中</button></div>
+</aside>
+<section class="stage"><div class="viewport-top"><div><span class="tiny-pill">3D 实时场景</span><span id="sceneTitle">—</span></div><div class="viewport-controls"><button title="居中构图" id="fit">居中</button><button title="撤销编辑" id="undo">↶</button><button title="重做编辑" id="redo">↷</button><button id="grid">网格</button></div></div><div class="canvas-area" id="viewport" aria-label="三维场景编辑区"></div><div class="axis">Y ↑ <span>拖动旋转 · 双指缩放/平移 · 点击方块选中</span></div>
+<div class="viewport-bottom"><span class="dot"></span><span id="status">正在载入模型工作室…</span><span class="spacer"></span><span class="desktop">透视相机 · 真实模型 · 非预渲染图片</span></div></section>
+<aside class="sidebar inspector"><div class="section-title"><b>模型检查器</b><small>精确参数</small></div>
+<div id="emptyInspector" class="inspector-empty">从左侧列表或3D画面选中方块。<br/>这里可修改尺寸、位置和材质。</div>
+<div id="inspectorForm" hidden><label class="field">方块名称<input id="partName" maxlength="80"/></label><label class="field">所在分组<input id="partGroup" maxlength="50"/></label>
+<div class="field"><span>位置 XYZ</span><div class="triple"><input id="posX" type="number" step=".1" aria-label="X位置"/><input id="posY" type="number" step=".1" aria-label="Y位置"/><input id="posZ" type="number" step=".1" aria-label="Z位置"/></div></div>
+<div class="field"><span>尺寸 XYZ</span><div class="triple"><input id="sizeX" type="number" min=".05" step=".1" aria-label="X尺寸"/><input id="sizeY" type="number" min=".05" step=".1" aria-label="Y尺寸"/><input id="sizeZ" type="number" min=".05" step=".1" aria-label="Z尺寸"/></div></div>
+<div class="field"><span>旋转 XYZ · 度</span><div class="triple"><input id="rotX" type="number" step="5" aria-label="X旋转"/><input id="rotY" type="number" step="5" aria-label="Y旋转"/><input id="rotZ" type="number" step="5" aria-label="Z旋转"/></div></div>
+<div class="field"><span>固有色（材质）</span><div class="colorfield"><input type="color" id="partColor" aria-label="选择方块固有色"/><input id="partHex" maxlength="7" placeholder="#rrggbb" aria-label="十六进制颜色"/></div></div>
+<label class="toggle"><input type="checkbox" id="partVisible" checked/> 显示此方块</label></div>
+<div class="section-title borderline"><b>导入 / 导出</b><small>Blockbench 互通</small></div>
+<div class="file-actions"><button id="import" class="outline">导入 .bbmodel</button><input type="file" id="pickFile" accept=".bbmodel,application/json" hidden/><button id="export" class="primary">导出 .bbmodel</button><button id="exportJson" class="outline">备份项目 JSON</button><button id="screenshot" class="outline">保存场景截图</button></div>
+<div class="notes">模型自动保存在此设备浏览器中。导出的 <code>.bbmodel</code> 可在官方 Blockbench 中继续修改。GitHub 公开示例文件提供在线查看及下载。</div>
+<div class="sidebar-bottom footer-links"><a id="latestApk" href="https://github.com/g2066203208-beep/paperchalk-world/releases/download/studio-latest-debug/world-studio-latest-debug.apk">Android 最新 APK ↗</a><a href="https://github.com/g2066203208-beep/paperchalk-world/tree/main/examples">公开模型仓库 ↗</a></div>
+</aside></main>
+<nav class="mobiletabs" aria-label="手机工作区"><button data-pane="library" class="active">项目 / 结构</button><button data-pane="stage">3D 预览</button><button data-pane="inspector">参数 / 导出</button></nav>
+<script type="module" src="/src/main.js"></script></body></html>
