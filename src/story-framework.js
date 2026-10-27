@@ -161,7 +161,7 @@ export function validateStoryGraph(graph=STORY_GRAPH){
  // Follow chains; all nodes must reach a terminal choice, including cyclic stories.
  for(const id of ids){
   const visiting=new Set();
-  function hasEnd(n){if(visiting.has(n))return false;visiting.add(n);
+  function hasEnd(n){if(visiting.has(n)||!graph[n])return false;visiting.add(n);
    return graph[n].choices.some(c=>!c.next||hasEnd(c.next));}
   if(!hasEnd(id))failures.push('No terminating path '+id);
  }
