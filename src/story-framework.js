@@ -75,13 +75,26 @@ export const STORY_GRAPH=Object.freeze({
 });
 export const STORY_EFFECT_TYPES=Object.freeze(['flag','remember']);
 export const STORY_AVATARS=Object.freeze(['female','male']);
+// Either protagonist can run the shop. The other receives a state-assigned city post.
+export const HERO_PROFILES=Object.freeze({
+ female:Object.freeze({name:'阿丽娜',age:21,school:'国立大学 · 物资流通与统计',cityJob:'城市供应统计所 · 见习登记员'}),
+ male:Object.freeze({name:'米哈伊尔',age:22,school:'国立大学 · 机械与设备维护',cityJob:'市政设备维护站 · 见习技工'})
+});
+export function protagonistAssignment(avatar){
+ if(!STORY_AVATARS.includes(avatar))return null;
+ const partner=avatar==='female'?'male':'female';
+ return {shopkeeper:avatar,cityWorker:partner,cityJob:HERO_PROFILES[partner].cityJob};
+}
 export function createStory(){
  return {version:1,avatar:null,location:'shop',active:'notice',visited:['shop'],
-  flags:{},memories:{},history:[],completed:[],eventIds:[],salesSeen:0,lastCue:null};
+  assignment:null,flags:{},memories:{},history:[],completed:[],eventIds:[],salesSeen:0,lastCue:null};
 }
 export function ensureStory(shop){
  if(!shop||typeof shop!=='object')return null;
  if(!shop.story||shop.story.version!==1)shop.story=createStory();
+ // Old v3 saves already store avatar but predate work assignments.
+ if(shop.story.avatar&&(!shop.story.assignment||shop.story.assignment.shopkeeper!==shop.story.avatar))
+   shop.story.assignment=protagonistAssignment(shop.story.avatar);
  return shop.story;
 }
 export function storyNode(story){
@@ -116,7 +129,8 @@ export function chooseStory(shop,choiceId,providedNodeId=null){
 export function chooseAvatar(shop,avatar){
  const s=ensureStory(shop);
  if(!STORY_AVATARS.includes(avatar)||s.avatar===avatar)return false;
- s.avatar=avatar;shop.revision=(shop.revision||0)+1;return true;
+ s.avatar=avatar;s.assignment=protagonistAssignment(avatar);
+ shop.revision=(shop.revision||0)+1;return true;
 }
 export function travelTo(shop,destination){
  const s=ensureStory(shop);
@@ -169,7 +183,11 @@ export function validateStoryGraph(graph=STORY_GRAPH){
 }
 export function validateStoryState(s){
  return Boolean(s?.version===1&&(!s.active||STORY_GRAPH[s.active])&&WORLD_LOCATIONS[s.location]&&
-  (s.avatar===null||STORY_AVATARS.includes(s.avatar))&&Array.isArray(s.history)&&
+  (s.avatar===null||STORY_AVATARS.includes(s.avatar))&&
+  (s.assignment==null||Boolean(s.avatar&&s.assignment.shopkeeper===s.avatar&&
+    s.assignment.cityWorker!==s.avatar&&HERO_PROFILES[s.assignment.cityWorker]&&
+    s.assignment.cityJob===HERO_PROFILES[s.assignment.cityWorker].cityJob))&&
+  Array.isArray(s.history)&&
   Array.isArray(s.visited)&&Array.isArray(s.completed)&&
   Number.isInteger(s.salesSeen)&&s.salesSeen>=0);
 }
