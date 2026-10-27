@@ -12,7 +12,7 @@ function panel(g,r,filled=false){rect(g,r.x,r.y,r.w,r.h,filled?B:W);if(!filled){
 function hit(hits,r,cmd,key,itemId){hits.push({...r,cmd,key,itemId,gesture:'tap'});}
 function button(g,hits,r,title,cmd,key,disabled=false){
  panel(g,r,!disabled);
- txt(g,title,r.x+r.w/2,r.y+r.h/2,Math.min(15,Math.max(11,Math.floor(r.w/6))),disabled?W:B,'center',r.w-8);
+ txt(g,title,r.x+r.w/2,r.y+r.h/2,Math.min(15,Math.max(11,Math.floor(r.w/6))),disabled?B:W,'center',r.w-8);
  if(!disabled)hit(hits,r,cmd,key);
 }
 function person(g,x,y,w,h,motion){
