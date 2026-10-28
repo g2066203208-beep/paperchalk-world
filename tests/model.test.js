@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {createScene,normalizeScene,importBBModel,exportBBModel,PALETTE} from "../src/model.js";
-for(const id of ["kiosk","street","home"]){
+for(const id of ["kiosk","street","home","voxel-car"]){
  test("public scene "+id+" is editable and roundtrips Blockbench",()=>{
   const s=createScene(id),normalized=normalizeScene(s);
   assert.ok(normalized.parts.length>10);
