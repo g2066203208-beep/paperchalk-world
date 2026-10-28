@@ -1,6 +1,7 @@
 /** Chapter 01: the legend predates the playable opening. Pure, testable narrative state.
  * No gameplay tutorial for crime: the masked event is a past public rumor, never an actionable operation.
  */
+import {newPrologue,movePrologue,currentBeat} from '../scenes/prologue-story.js';
 export const FIRST_CHAPTER={
  chapter:'第一章 · 两个人的办公室',
  incident:'旧港苦力码头的债主「马顺」曾靠扣发工钱和私设债契逼迫街坊。某夜他的账目被公开，工人取回欠薪，他的私人打手散去。人们只说看见两名蒙面人。',
@@ -30,10 +31,23 @@ export const originSystem={
   chapter:1,venue:'office',sceneHistory:['office'],dateStarted:day,
   legend:22,identityExposure:0,streetTrust:8,officePurchased:true,officeCondition:'毛坯',
   flags:{heardRumor:false,openedDoor:false,readDeed:false,lookedAtMap:false,spokeBrother:false,inspectedAttic:false,helpedVendor:false,heardWorker:false,challengedHarassment:false},
-  interactions:[],visitorLog:[],ambientCounter:0
+  interactions:[],visitorLog:[],ambientCounter:0,prologue:newPrologue(day)
  }),
  reduce(data,action,{day,context,slices}){
   const event=(type,title,text)=>({type,title,text,venue:data.venue,day});
+  if(action.type==='prologue'){
+    if(!data.prologue)return {error:'现有存档没有开场剧情'};
+    const r=movePrologue(data.prologue,action.step,day,action.choice);
+    if(r.error)return {error:r.error};
+    data.prologue=r.data;
+    if(r.choice){
+      // Choices establish the leader's values without granting free money, territory or revealing masks.
+      data.flags.spokeBrother=true;
+      if(r.choice.id==='street-first')data.streetTrust+=1;
+    }
+    const beat=currentBeat(data.prologue);
+    return {data,events:[event('origin.prologue',beat?.speaker||'开场结束',r.choice?.reaction||beat?.line||'旧港的一天正式开始了。')]};
+  }
   if(action.type==='travel'){
     const dest=SCENE_DEFS[action.to];
     if(!dest||!(action.via==='route-map'||SCENE_DEFS[data.venue].out.includes(action.to)))return {error:'请先出门打开街区地图选择目的地'};

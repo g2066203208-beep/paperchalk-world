@@ -5,6 +5,7 @@
 import {SCENE_DEFS,SCENE_PEOPLE} from '../systems/origin.js';
 import {sceneArtwork} from './artwork.js';
 import {sceneConversation} from './scene-dialogues.js';
+import {currentBeat,prologueMark} from './prologue-story.js';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
 const mainCell={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2'};
 const spots={
@@ -83,6 +84,25 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    '<button type="button" class="talk-leave" data-talk-close="1">'+(choices.length?'告辞':'结束交谈')+'</button>';
  };
  const say=(speaker,line)=>{dialogue={person:null,speaker};speech(speaker,line,[]);};
+ function renderOpening(){
+   const element=root.querySelector('.prologue-presentation');
+   if(!element)return;
+   const p=readWorld().slices.origin?.prologue;
+   const beat=currentBeat(p);
+   if(!beat||venue!=='office'){element.hidden=true;return;}
+   element.hidden=false;
+   element.dataset.mood=beat.mood;
+   const decision=beat.choices?.map(c=>
+     '<button type="button" data-prologue-step="choose" data-prologue-choice="'+c.id+'">'+escape(c.label)+'</button>').join('')||'';
+   element.innerHTML=
+     '<div class="prologue-top"><small>1998 · OLD HARBOR</small><span>'+String((p.at||0)+1).padStart(2,'0')+' / 12</span></div>'+
+     prologueMark(beat.mood)+
+     '<div class="prologue-character"><b>'+escape(beat.speaker)+'</b><p>'+escape(beat.line)+'</p></div>'+
+     '<div class="prologue-foot">'+(beat.choices?
+       '<div class="prologue-decisions">'+decision+'</div>':
+       '<button type="button" class="prologue-continue" data-prologue-step="next">'+(p.at===11?'走进这座城 ›':'继续 ›')+'</button>')+
+     '<button type="button" class="prologue-skip" data-prologue-step="skip">跳过开场</button></div>';
+ }
  function renderCrowd(w,force=false){
    const container=root.querySelector('.explore-crowd');if(!container)return;
    const next=selectCrowd(w,venue),wanted=new Set(next.map(p=>p.id));
@@ -118,7 +138,10 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
     '<span class="explore-location">'+escape(SCENE_DEFS[venue].name)+'</span>'+
     '<div class="explore-dialogue" hidden aria-label="场景内人物对话" role="group">'+
     '<div class="dialogue-sigil">✦</div><div class="dialogue-copy"><small class="dialogue-who"></small><p class="dialogue-line"></p></div>'+
-    '<div class="dialogue-choices"></div></div></div>';
+    '<div class="dialogue-choices"></div></div>'+ 
+    (venue==='office'?'<div class="prologue-presentation" hidden role="group" aria-label="第一章开场演出"></div>':'')+
+    '</div>';
+   renderOpening();
    renderCrowd(w,true);
  }
  function render(){
@@ -126,6 +149,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const w=readWorld(),next=w.slices.origin.venue;
    if(next!==venue||!root.querySelector('.explore-stage')){buildScene();return;}
    if(shift!==w.slices.clock.shift){shift=w.slices.clock.shift;renderCrowd(w);}
+   renderOpening();
    // Important: do NOT assign root.innerHTML here. NPC actors keep walking.
  }
  function startTalk(type,id){
@@ -164,6 +188,14 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    },260);
  }
  root.addEventListener('click',e=>{
+   const prologueButton=e.target.closest('[data-prologue-step]');
+   if(prologueButton){
+     const action={module:'origin',type:'prologue',step:prologueButton.dataset.prologueStep,
+       choice:prologueButton.dataset.prologueChoice||null};
+     const result=command(action);
+     if(result.ok)renderOpening();
+     return;
+   }
    const place=e.target.closest('[data-route-place]');
    if(place){routeSelection=place.dataset.routePlace;updateRoute();return;}
    if(e.target.closest('[data-route-go]')){go();return;}

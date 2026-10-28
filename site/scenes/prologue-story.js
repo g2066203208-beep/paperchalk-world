@@ -54,7 +54,7 @@ export function currentBeat(prologue){
  if(prologue?.status!=='active')return null;
  return PROLOGUE_BEATS[Math.max(0,Math.min(PROLOGUE_LAST,prologue.at||0))];
 }
-export function movePrologue(prologue,command,day){
+export function movePrologue(prologue,command,day,choiceId=null){
  const data=structuredClone(prologue);
  if(data.status!=='active')return {error:'开场已经结束'};
  const beat=currentBeat(data);
@@ -65,7 +65,7 @@ export function movePrologue(prologue,command,day){
  }
  if(command==='choose'){
    if(beat.id!=='decision')return {error:'这里不需要作出选择'};
-   const chosen=beat.choices.find(c=>c.id===arguments[3]);
+   const chosen=beat.choices.find(c=>c.id===choiceId);
    if(!chosen)return {error:'未知回答'};
    data.decision=chosen.id;data.history.push({day,kind:'choice',value:chosen.id});
    data.at++;
