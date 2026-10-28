@@ -32,27 +32,59 @@ function panel(type){
 }
 function closePanel(){currentPanel=null;$('overlay').hidden=true;focusBefore?.focus?.();}
 const mapSVG=()=>{
- const p=zoneInfo(plan.zone),route=plan.zone?'<path class="route-path" d="M350 245L'+p.x+' '+p.y+'"/>':'';
+ const routes={
+  harbor:'M350 245L279 245L279 280L143 272',
+  market:'M350 245L350 159L330 132',
+  midtown:'M350 245L439 245L439 270L520 270',
+  neon:'M350 245L350 346L363 376'
+ };
+ const route='<path class="route-path" d="'+routes[plan.zone]+'"/>';
  const nodes=DISTRICTS.map(d=>{
- const z=state.zones[d.id],active=plan.zone===d.id;
- return '<g tabindex="0" role="button" aria-label="'+d.name+'，影响力'+z.influence+'" data-map-zone="'+d.id+'" class="city-node '+(active?'active':'')+'">'+
-  '<circle class="node-circle" cx="'+d.x+'" cy="'+d.y+'" r="18" fill="'+d.color+'"/>'+
-  '<text x="'+(d.x+26)+'" y="'+(d.y+6)+'">'+d.name+'</text>'+
-  '<text x="'+(d.x+26)+'" y="'+(d.y+24)+'" font-size="11">影响 '+z.influence+'</text></g>';
+  const z=state.zones[d.id],active=plan.zone===d.id;
+  const side=d.id==='harbor'?'right':d.id==='midtown'?'left':'right';
+  const lx=side==='right'?d.x+27:d.x-27;
+  const anchor=side==='right'?'start':'end';
+  return '<g tabindex="0" role="button" aria-label="'+d.name+'，影响力'+z.influence+'" data-map-zone="'+d.id+'" class="city-node '+(active?'active':'')+'">'+
+   '<circle cx="'+d.x+'" cy="'+d.y+'" r="25" fill="#f5e6d0" stroke="#243642" stroke-width="2"/>'+
+   '<circle class="node-circle" cx="'+d.x+'" cy="'+d.y+'" r="15" fill="'+d.color+'"/>'+
+   '<text x="'+lx+'" y="'+(d.y-2)+'" text-anchor="'+anchor+'">'+d.name+'</text>'+
+   '<text x="'+lx+'" y="'+(d.y+16)+'" font-size="11" text-anchor="'+anchor+'">INFL. '+z.influence+'</text></g>';
  }).join('');
- return '<svg class="city-map" viewBox="0 0 700 470" role="img" aria-label="可操作的四区平面街道地图，可选择任务目的地">'+
- '<rect width="700" height="470" fill="#e1d2b5"/>'+
- '<path d="M0 78L704 34V128L0 178Z" fill="#d1c29e"/><path d="M0 336L700 292V390L0 447Z" fill="#cca798"/>'+
- '<path d="M98 0L186 0L342 470L262 470Z" fill="#c5b08e"/>'+
- '<path d="M480 0L538 0L443 470L389 470Z" fill="#b7b8a8"/>'+
- '<g fill="#b6a080" opacity=".85"><path d="M45 30H150V101H45Z"/><path d="M249 49H320V117H249Z"/><path d="M410 64H485V126H410Z"/><path d="M550 163H659V244H550Z"/><path d="M82 335H160V424H82Z"/><path d="M513 367H635V425H513Z"/></g>'+
- '<path class="map-road-border" d="M75 236L642 236"/><path class="map-road" d="M75 236L642 236"/>'+
- '<path class="map-road-border" d="M346 41L346 445"/><path class="map-road" d="M346 41L346 445"/>'+
- '<path class="map-road-border" d="M115 393L572 83"/><path class="map-road" d="M115 393L572 83"/>'+
- route+'<circle cx="350" cy="245" r="26" fill="#1d2d3a" stroke="#f7e5c8" stroke-width="6"/>'+
- '<text x="331" y="250" fill="#fff0d2" font-size="12" font-weight="900">HQ</text>'+
- '<text x="16" y="24" fill="#243340" font-size="16" font-weight="900">NIGHT HARBOR · STREET ATLAS</text>'+
- nodes+'</svg>';
+ const roads=[
+  'M165 15L208 465','M266 0L277 470','M404 0L402 470','M565 0L516 470',
+  'M108 105L695 72','M74 215L705 209','M93 346L702 336','M213 428L700 414',
+  'M190 25L639 417','M159 448L570 39'
+ ];
+ const street=roads.map((d,i)=>'<path d="'+d+'" fill="none" stroke="#8b7d69" stroke-width="'+(i<4?15:10)+'" opacity=".55"/>'+
+  '<path d="'+d+'" fill="none" stroke="#f4e4c8" stroke-width="'+(i<4?11:7)+'"/>').join('');
+ const blocks=[
+ [215,45,37,33],[286,24,67,45],[450,38,76,43],[550,119,69,61],[171,148,41,37],
+ [227,160,56,37],[466,138,65,39],[587,253,63,37],[200,291,52,38],
+ [299,291,38,33],[443,302,61,38],[501,365,45,28],[575,387,73,38]
+ ].map(([x,y,w,h],i)=>'<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+
+ '" rx="1" fill="'+(i%4===0?'#ba7975':i%4===1?'#bea887':i%4===2?'#85969b':'#c6ac91')+'" opacity=".84"/>').join('');
+ return '<svg class="city-map" viewBox="0 0 700 470" role="img" aria-label="街道线路图：选择城区派遣手下">'+
+ '<defs><pattern id="grain" width="17" height="17" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#bca786" opacity=".35"/></pattern></defs>'+
+ '<rect width="700" height="470" fill="#e4d6bd"/>'+
+ '<path d="M0 0H109L154 102L103 223L163 317L116 470H0Z" fill="#829aaa"/>'+
+ '<path d="M0 0H109L154 102L103 223L163 317L116 470" fill="none" stroke="#f9eee0" stroke-width="9"/>'+
+ '<path d="M10 64L108 77M0 179L112 198M11 346L143 326" fill="none" stroke="#c6d2cd" stroke-width="4" stroke-dasharray="13 7"/>'+
+ '<path d="M155 0H700V125L172 173Z" fill="#c6b7a0" opacity=".47"/>'+
+ '<path d="M160 325L699 259V470H121Z" fill="#b7c1b9" opacity=".38"/>'+
+ '<path d="M486 0H700V176L557 195L446 85Z" fill="#cc928a" opacity=".36"/>'+
+ blocks+street+
+ '<g fill="#675d52" opacity=".23"><path d="M600 7H648V44H600Z"/><path d="M335 380H394V410H335Z"/><path d="M560 50H590V96H560Z"/></g>'+
+ '<path d="M94 225L174 227" stroke="#394e5d" stroke-width="13" stroke-linecap="butt"/>'+
+ '<path d="M94 225L174 227" stroke="#edd5b4" stroke-width="7" stroke-dasharray="10 7"/>'+
+ '<g fill="#243441"><text x="19" y="29" font-family="Georgia" font-weight="900" font-size="15" letter-spacing="3">NIGHT HARBOR / 04</text>'+
+ '<text x="15" y="444" font-family="Georgia" font-size="10" letter-spacing="2" transform="rotate(-90 15 444)">OLD HARBOR · PIER DISTRICT</text>'+
+ '<text x="585" y="457" font-size="10" letter-spacing="2">CITY ATLAS / 04</text></g>'+
+ route+
+ '<circle cx="350" cy="245" r="24" fill="#243642" stroke="#f6e4c5" stroke-width="6"/>'+
+ '<text x="337" y="250" font-size="12" font-weight="900" fill="#fff0d4" stroke="none">HQ</text>'+
+ nodes+
+ '<rect width="700" height="470" fill="url(#grain)" pointer-events="none"/>'+
+ '</svg>';
 };
 function mapPanel(){
  const slots=availableCrew(state),planned=state.orders;
