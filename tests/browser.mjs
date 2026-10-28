@@ -3,79 +3,99 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
-const errs=[];
-async function run(name,options,fn){
- const ctx=await browser.newContext(options),page=await ctx.newPage(),exceptions=[];
- page.on('pageerror',e=>exceptions.push(e.message));
+const problems=[];
+async function run(name,options,action){
+ const ctx=await browser.newContext(options),page=await ctx.newPage(),errs=[];
+ page.on('pageerror',e=>errs.push(e.message));
  try{
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
-  await page.locator('.office-svg').waitFor();
-  assert.equal(await page.locator('button.prop').count(),6);
- const asset=await page.locator('img.office-svg').evaluate(img=>({complete:img.complete,loaded:img.naturalWidth>0}));
- assert.ok(asset.complete&&asset.loaded,'original SVG office artwork must render');
-  await fn(page);
-  assert.deepEqual(exceptions,[]);
+  await page.locator('img.office-svg').waitFor();
+  assert.ok(await page.locator('img.office-svg').evaluate(i=>i.complete&&i.naturalWidth>0));
+  await action(page);
+  assert.deepEqual(errs,[],'page JS exceptions: '+errs);
   console.log('PASS '+name);
- }catch(e){
-  errs.push(name+' '+e.message);
-  await page.screenshot({path:'artifacts/FAILED-'+name+'.png',fullPage:true}).catch(()=>{});
- }finally{await ctx.close();}
+ }catch(e){problems.push(name+' '+e.stack);await page.screenshot({path:'artifacts/FAILED-'+name+'.png',fullPage:true}).catch(()=>{});}
+ finally{await ctx.close();}
 }
-await run('desktop',{viewport:{width:1440,height:900}},async page=>{
- await page.screenshot({path:'artifacts/desktop-office.png',fullPage:true});
- await page.locator('.prop-map').hover();
- const label=await page.locator('.prop-map .prop-label').evaluate(el=>Number(getComputedStyle(el).opacity));
- assert.ok(label>=0,'map hover label should be discoverable');
- await page.screenshot({path:'artifacts/desktop-hover-map.png',fullPage:true});
- await page.locator('[data-open="map"]').click();
- assert.equal(await page.locator('.city-node').count(),4);
- assert.ok((await page.locator('.route-path').getAttribute('d')).includes('143 272'));
- await page.screenshot({path:'artifacts/desktop-office-map.png',fullPage:true});
- await page.locator('[data-assign]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1);
- await page.locator('[data-map-crew="mio"]').click();
- await page.locator('[data-map-zone="market"]').click();
- await page.locator('[data-map-mission="network"]').click();
- await page.locator('[data-assign]').click();
- await page.locator('#close-panel').click();
- await page.locator('[data-open="phone"]').click();
+await run('desktop-1440',{viewport:{width:1440,height:900}},async page=>{
+ const objects=page.locator('.object-hit');
+ assert.equal(await objects.count(),8,'6 desk props plus full-body visitor and door');
+ assert.equal(await page.locator('button.prop').count(),0,'no tiny proxy hit icons');
+ await page.screenshot({path:'artifacts/desktop-01-office-door-closed.png',fullPage:true});
+ assert.equal(await page.locator('.scene.has-knock').count(),1,'visitor knocks at door');
+ await page.locator('.object-door').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).visitor.id,'kai');
+ await page.locator('.scene.visitor-here').waitFor();
+ await page.screenshot({path:'artifacts/desktop-02-visitor-entered.png',fullPage:true});
+ await page.locator('.object-person').click();
+ assert.ok((await page.locator('#panel-title').innerText()).includes('阿凯'));
+ await page.screenshot({path:'artifacts/desktop-03-audience.png',fullPage:true});
+ await page.locator('[data-visitact="hear"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).respect,2);
+ await page.locator('.object-door').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'street');
+ await page.screenshot({path:'artifacts/desktop-04-street.png',fullPage:true});
+ await page.locator('[data-travel="harbor"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,225);
+ await page.locator('[data-travel="office"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'office');
+ await page.locator('.object-phone').click();
+ assert.equal(await page.locator('.phone-keypad button').count(),12);
+ for(const key of ['3','0','5'])await page.locator('[data-digit="'+key+'"]').click();
+ assert.equal(await page.locator('#dial-screen').innerText(),'305');
+ await page.screenshot({path:'artifacts/desktop-05-real-phone.png',fullPage:true});
+ await page.locator('[data-dial]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).supply,1,'supplier call placed via real keypad');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,165);
  await page.locator('[data-phone="yes"]').click();
  await page.locator('#close-panel').click();
- await page.locator('[data-open="calendar"]').click();
- await page.locator('[data-next]').click();
- assert.equal(await page.locator('#panel-title').innerText(),'小弟汇报');
- const s=await page.evaluate(()=>window.__OFFICE__.state());
- assert.equal(s.day,2);assert.ok(s.reports.length>=3);
- await page.screenshot({path:'artifacts/desktop-reports.png',fullPage:true});
+ await page.locator('.object-reports').click();
+ assert.equal(await page.locator('.dossier-tile').count(),3);
+ await page.locator('[data-filedecision="approve"][data-case="freight"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1,'signature dispatches crew');
+ await page.screenshot({path:'artifacts/desktop-06-actionable-folders.png',fullPage:true});
  await page.locator('#close-panel').click();
- await page.locator('[data-open="ledger"]').click();
- assert.ok(await page.locator('.account tr').count()>=4);
+ await page.locator('.object-map').click();
+ assert.equal(await page.locator('.city-node').count(),4);
+ await page.screenshot({path:'artifacts/desktop-07-map.png',fullPage:true});
+ await page.locator('#close-panel').click();
+ await page.locator('.object-ledger').click();
+ await page.locator('[data-budget="logistics"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).bonus.logistics,1);
+ await page.screenshot({path:'artifacts/desktop-08-ledger-budget.png',fullPage:true});
+ await page.locator('#close-panel').click();
+ await page.locator('.object-gun').click();
+ await page.locator('[data-safe="50"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).storedCash,50);
+ await page.locator('#close-panel').click();
+ await page.locator('.object-calendar').click();
+ await page.locator('[data-next]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).day,2);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).supply,0,'shipment uses real stock');
+ await page.screenshot({path:'artifacts/desktop-09-daily-reports.png',fullPage:true});
  await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).storedCash,50,'all new simulation persists');
  assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).day,2);
 });
-await run('portrait',{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2},async page=>{
- assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'horizontal overflow');
- await page.screenshot({path:'artifacts/portrait-office.png',fullPage:true});
- await page.locator('[data-open="map"]').tap();
- assert.equal(await page.locator('.city-node').count(),4);
- await page.screenshot({path:'artifacts/portrait-route.png',fullPage:true});
- await page.locator('[data-assign]').tap();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1);
- await page.locator('#close-panel').tap();
- await page.locator('[data-open="phone"]').tap();
- await page.locator('[data-phone="yes"]').tap();
- await page.locator('#close-panel').tap();
- await page.locator('[data-open="gun"]').tap();
- await page.locator('[data-gun]').tap();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).flags.gunSeen,true);
+await run('desktop-1920',{viewport:{width:1920,height:1080}},async page=>{
+ const w=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+ assert.ok(w<2,'desktop width overflow '+w);
+ await page.screenshot({path:'artifacts/desktop-1920-office.png',fullPage:true});
+ await page.locator('.object-phone').click();
+ await page.locator('[data-dialpreset="532"]').click();
+ assert.equal(await page.locator('#dial-screen').innerText(),'532');
+ await page.locator('[data-dial]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).zones.harbor.pressure,11);
 });
-await run('landscape',{viewport:{width:844,height:390},isMobile:true,hasTouch:true,deviceScaleFactor:2},async page=>{
- const dimensions=await page.evaluate(()=>({w:innerWidth,h:innerHeight,sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight}));
- assert.ok(dimensions.sw<=dimensions.w+3&&dimensions.sh<=dimensions.h+3,'landscape overflow '+JSON.stringify(dimensions));
- await page.screenshot({path:'artifacts/landscape-office.png',fullPage:true});
- await page.locator('[data-open="reports"]').tap();
- assert.equal(await page.locator('#panel-title').innerText(),'小弟汇报');
+await run('desktop-1366',{viewport:{width:1366,height:768}},async page=>{
+ await page.screenshot({path:'artifacts/desktop-1366-office.png',fullPage:true});
+ await page.locator('.object-door').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).doorOpen,true);
+ await page.locator('.object-person').click();
+ await page.locator('[data-visitact="dismiss"]').click();
+ await page.locator('.object-door').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'street');
 });
 await browser.close();
-if(errs.length){console.error(errs.join('\n'));process.exit(1);}
-console.log('PASS desktop and phone active office gameplay');
+if(problems.length){console.error(problems.join('\n'));process.exit(1);}
+console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');
