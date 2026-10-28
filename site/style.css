@@ -176,3 +176,20 @@ button:disabled{cursor:default}
 @media(max-width:600px) and (orientation:portrait){
  .office-svg{left:calc(50% + 85px);object-fit:fill}
 }
+
+/* Physical feedback: subtle ringing phone and crisp document transitions. */
+@keyframes phoneHalo{
+  0%,100%{box-shadow:0 0 0 3px #fbebd4b8,0 2px 7px #101622}
+  45%{box-shadow:0 0 0 8px #d69d6d55,0 0 18px #e3a67188}
+}
+@keyframes paperAppear{
+  from{opacity:0;transform:translateY(12px) scale(.985)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(min-width:950px) and (min-height:590px){
+ .prop-phone.ringing .prop-mark{animation:phoneHalo 2.4s ease-in-out infinite}
+ .overlay:not([hidden]) .paper-panel{animation:paperAppear .24s cubic-bezier(.19,.8,.24,1) both}
+ .prop:active .prop-mark{transform:scale(.86);background:#fff2d4}
+ .scene:after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 52% 15%,#f9d6aa0b,transparent 40%),radial-gradient(ellipse at 0% 86%,#0b15294e,transparent 45%)}
+}
+@media(prefers-reduced-motion:reduce){.prop-phone.ringing .prop-mark,.overlay:not([hidden]) .paper-panel{animation:none!important}}
