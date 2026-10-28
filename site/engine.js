@@ -20,8 +20,8 @@ export const MISSIONS=[
 export const GOALS={cash:1400,respect:24,hold:2};
 export function initialGame(){
  return {version:4,day:1,cash:190,heat:12,respect:1,crew:['kai'],zones:Object.fromEntries(DISTRICTS.map(d=>[d.id,{influence:d.influence,pressure:d.pressure}])),
- orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'第一次汇报',body:'老板，办公室还在漏雨。我们两个没有地盘，邻街的工厂关了，求职的工人排满路边。先帮街坊做点事吧。',outcome:'你和兄弟阿凯，190元、破办公室、零地盘。'}],
- call:{id:'welcome',answered:false},callHistory:[],ledger:[{day:1,label:'初始资金',amount:190}],flags:{gunSeen:false},won:false};
+ orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'第一次汇报',body:'办公室钥匙终于到手了，墙还是毛坯。街上又在讲那晚两个蒙面人的事……他们没人知道我们的身份。现在就我们两个人，没有一块地盘。',outcome:'你和阿凯：旧港孤儿院的两个孩子，买下毛坯办公室，余款190元。'}],
+ call:{id:'welcome',answered:false},callHistory:[],ledger:[{day:1,label:'买下毛坯办公室后余下的启动资金',amount:190}],flags:{gunSeen:false},won:false};
 }
 export const crewInfo=id=>CREW.find(c=>c.id===id);
 export const zoneInfo=id=>DISTRICTS.find(d=>d.id===id);

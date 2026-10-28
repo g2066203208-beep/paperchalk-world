@@ -10,6 +10,8 @@ async function run(name,options,action){
  try{
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
   await page.locator('img.office-svg').waitFor();
+  // Older feature regressions intentionally exercise the legacy physical office underneath the new scene layer.
+  await page.evaluate(()=>window.__OFFICE__.exploration.hide());
   assert.ok(await page.locator('img.office-svg').evaluate(i=>i.complete&&i.naturalWidth>0));
   await action(page);
   assert.deepEqual(errs,[],'page JS exceptions: '+errs);
@@ -227,6 +229,63 @@ await run('campaign-reset-keeps-old-save',{viewport:{width:1280,height:800}},asy
  await page.locator('[data-restore-campaign]').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,275);
  await page.screenshot({path:'artifacts/people-04-new-campaign-backup.png',fullPage:true});
+});
+
+
+await run('chapter-one-real-locations',{viewport:{width:1440,height:900}},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const get=()=>page.evaluate(()=>window.__OFFICE__.world().slices.origin);
+ const state=await get();
+ assert.equal(state.venue,'office');
+ assert.equal(state.officePurchased,true);
+ assert.equal(state.identityExposure,0);
+ assert.deepEqual((await page.evaluate(()=>window.__OFFICE__.state())).crew,['kai']);
+ assert.equal(await page.locator('.explore-root .explore-art').count(),1);
+ assert.equal(await page.locator('.explore-spot').count()>5,true);
+ await page.screenshot({path:'artifacts/chapter-01-bare-purchased-office.png',fullPage:true});
+ await page.locator('[data-explore-type="talk"][data-explore-id="kai"]').click();
+ assert.equal((await get()).flags.spokeBrother,true);
+ assert.match(await page.locator('.explore-voice p').innerText(),/孤儿院/);
+ await page.locator('[data-explore-type="inspect"][data-explore-id="deed"]').click();
+ assert.equal((await get()).flags.readDeed,true);
+ await page.locator('[data-explore-type="inspect"][data-explore-id="newspaper"]').click();
+ assert.equal((await get()).flags.heardRumor,true);
+ await page.locator('[data-explore-type="travel"][data-explore-id="alley"]').click();
+ assert.equal((await get()).venue,'alley');
+ await page.screenshot({path:'artifacts/chapter-02-alley-living-street.png',fullPage:true});
+ await page.locator('[data-explore-type="talk"][data-explore-id="neighbor"]').click();
+ assert.match(await page.locator('.explore-voice p').innerText(),/蒙面人/);
+ await page.locator('[data-explore-type="protect"]').click();
+ assert.equal((await get()).flags.challengedHarassment,true);
+ await page.locator('[data-explore-type="travel"][data-explore-id="market"]').click();
+ assert.equal((await get()).venue,'market');
+ await page.screenshot({path:'artifacts/chapter-03-market-vendors.png',fullPage:true});
+ const prior=Number((await page.locator('#cash').innerText()).replace(/\D/g,''));
+ await page.locator('[data-explore-type="talk"][data-explore-id="vendor"]').click();
+ await page.locator('[data-explore-type="aid"]').click();
+ const after=Number((await page.locator('#cash').innerText()).replace(/\D/g,''));
+ assert.equal(prior-after,18);
+ assert.equal((await get()).flags.helpedVendor,true);
+ await page.locator('[data-explore-type="travel"][data-explore-id="labor"]').click();
+ assert.equal((await get()).venue,'labor');
+ await page.locator('[data-explore-type="talk"][data-explore-id="worker"]').click();
+ assert.equal((await get()).flags.heardWorker,true);
+ await page.screenshot({path:'artifacts/chapter-04-labor-exchange.png',fullPage:true});
+ await page.locator('[data-explore-type="travel"][data-explore-id="docks"]').click();
+ assert.equal((await get()).venue,'docks');
+ await page.screenshot({path:'artifacts/chapter-05-docks.png',fullPage:true});
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await get()).venue,'docks');
+ assert.equal((await get()).identityExposure,0);
+ assert.equal((await get()).flags.helpedVendor,true);
+});
+await run('chapter-one-phone-touch',{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ assert.equal(await page.locator('.explore-art').count(),1);
+ await page.screenshot({path:'artifacts/chapter-phone-new-office.png',fullPage:true});
+ await page.locator('[data-explore-type="travel"][data-explore-id="alley"]').tap();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.origin.venue)),'alley');
+ await page.screenshot({path:'artifacts/chapter-phone-alley.png',fullPage:true});
 });
 
 await browser.close();

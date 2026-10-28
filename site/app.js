@@ -6,6 +6,7 @@ import {renderCityBook} from './ui/city-book.js';
 import {renderOriginBook} from './ui/origin-book.js';
 import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
+import {createExploreLayer} from './scenes/explore.js';
 const $=id=>document.getElementById(id);
 const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -14,6 +15,7 @@ let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'
 const WORLD_STORE='night-office-world-v1';
 let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
+let explorer=null;
 let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
 const originTabs=new Set(['society','recruitment','politics']);
 const cityTabs=new Set(['clock','estates','transport','citizens','operations','contacts','justice']);
@@ -45,8 +47,9 @@ function refresh(){
   $('briefing-text').textContent=recent?.body||'地图已放好。';
  }
  $('goal-marker').textContent=state.won?'◆ 城市开始承认你的名字':'目标 · 两区影响力 55 / 声望 24 / 现金 1400';
- document.title='夜港 · 首领办公室 · DAY '+state.day;
+ document.title='夜港 · 两个无名者 · DAY '+state.day;
  save();
+ explorer?.render();
 }
 const header=(eyebrow,title,sub='')=>'<div class="eyebrow">'+escapeHTML(eyebrow)+'</div><h2 id="panel-title">'+escapeHTML(title)+'</h2>'+(sub?'<p>'+escapeHTML(sub)+'</p>':'');
 function panel(type){
@@ -353,8 +356,8 @@ $('panel-body').addEventListener('click',e=>{
   fileTab='dossiers';plan={crew:'kai',zone:'harbor',mission:'deliver'};
   worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',
     operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
-  closePanel();refresh();stage.transition();
-  toast('全新战役已经开启：只有你和阿凯，零地盘。旧存档已备份。');return;
+  closePanel();refresh();explorer.show();stage.transition();
+  toast('新战役：两个人的毛坯办公室；街头流传着匿名蒙面人的故事。');return;
  }
  if(node.dataset.restoreCampaign){
    let backup=null;try{backup=JSON.parse(localStorage.getItem('night-office-campaign-backup')||'null');}catch{}
@@ -435,8 +438,26 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.helpClose){closePanel();}
 });
 const stage=createStage(document.querySelector('.scene'));
+explorer=createExploreLayer(document.querySelector('.scene'),{
+  readWorld:()=>world,
+  readLegacy:()=>state,
+  command:performWorldCommand,
+  openPanel:(kind,tab)=>{
+    if(tab){fileTab=tab;panel('reports');}
+    else panel(kind);
+  },
+  onToggle:shown=>{
+    const button=$('explore-toggle');if(button){
+      button.setAttribute('aria-pressed',String(shown));
+      button.textContent=shown?'旧桌面':'探索街区';
+    }
+  }
+});
+$('explore-toggle').addEventListener('click',()=>{
+  if(explorer.isVisible())explorer.hide();else explorer.show();
+});
 refresh();
-window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,open:panel,close:closePanel,
+window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,open:panel,close:closePanel,
  dispatch:(type,...args)=>{
   const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
   type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):

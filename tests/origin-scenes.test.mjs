@@ -1,0 +1,62 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {initialGame} from '../site/engine.js';
+import {createWorld,applyWorld,runtime} from '../site/core/game.js';
+import {FIRST_CHAPTER,SCENE_DEFS} from '../site/systems/origin.js';
+import {sceneArtwork} from '../site/scenes/artwork.js';
+const init=()=>initialGame();
+const action=(w,type,extra={},s=init())=>applyWorld(w,{module:'origin',type,...extra},s);
+test('an already-purchased empty office, two orphanage brothers and anonymous legend',()=>{
+ const s=init(),w=createWorld(s,null),o=w.slices.origin;
+ assert.equal(o.venue,'office');assert.equal(o.officePurchased,true);
+ assert.equal(o.identityExposure,0);assert.equal(s.crew.length,1);
+ assert.equal(w.slices.estates.parcels[0].owner,'player');
+ assert.equal(w.slices.estates.parcels[0].building.name,'毛坯旧办公室');
+ assert.equal(w.slices.factions.cells.filter(c=>c.owner==='player').length,0);
+ assert.match(FIRST_CHAPTER.origin,/孤儿院/);assert.match(FIRST_CHAPTER.incident,/蒙面人/);
+ assert.match(sceneArtwork('office'),/svg/);
+ for(const id of Object.keys(SCENE_DEFS))assert.match(sceneArtwork(id),/explore-art/);
+});
+test('travel routes are explicit and unchanged by invalid direct teleport',()=>{
+ let w=createWorld(init());
+ assert.equal(action(w,'travel',{to:'docks'}).ok,false);
+ assert.equal(action(w,'travel',{to:'alley'}).ok,true);
+ w=action(w,'travel',{to:'alley'}).state;
+ assert.equal(w.slices.origin.venue,'alley');
+ assert.equal(action(w,'travel',{to:'labor'}).ok,false);
+ w=action(w,'travel',{to:'market'}).state;
+ w=action(w,'travel',{to:'labor'}).state;
+ assert.equal(w.slices.origin.venue,'labor');
+ assert.equal(w.slices.origin.identityExposure,0);
+});
+test('rumor can be observed without automatically exposing masked identities',()=>{
+ let w=createWorld(init());
+ w=action(w,'talk',{person:'kai'}).state;
+ w=action(w,'inspect',{object:'newspaper'}).state;
+ assert.equal(w.slices.origin.flags.spokeBrother,true);
+ assert.equal(w.slices.origin.flags.heardRumor,true);
+ assert.equal(w.slices.origin.identityExposure,0);
+ w=action(w,'travel',{to:'alley'}).state;
+ const heard=action(w,'talk',{person:'neighbor'});
+ assert.equal(heard.ok,true);
+ assert.match(heard.events[0].text,/蒙面人/);
+ assert.equal(heard.state.slices.origin.identityExposure,0);
+});
+test('aid uses actual money and one-time world flag; separate protection gives respect',()=>{
+ const s=init();let w=createWorld(s);
+ w=action(w,'travel',{to:'alley'}).state;
+ let r=action(w,'protect');assert.equal(r.ok,true);w=r.state;
+ assert.equal(action(w,'protect').ok,false);
+ w=action(w,'travel',{to:'market'}).state;
+ r=action(w,'aid');assert.equal(r.ok,true);w=r.state;
+ assert.ok(r.effects.some(e=>e.kind==='cash'&&e.amount===-18));
+ assert.ok(r.effects.some(e=>e.kind==='respect'&&e.amount===2));
+ assert.equal(action(w,'aid').ok,false);
+ assert.equal(w.slices.origin.flags.helpedVendor,true);
+ assert.equal(w.slices.origin.identityExposure,0);
+});
+test('one day settlement retains location and produces ambient city event',()=>{
+ const a=createWorld(init()),r=runtime.advance(a,{cash:190,heat:0,crew:['kai'],orders:[]});
+ assert.equal(r.state.day,2);assert.equal(r.state.slices.origin.venue,'office');
+ assert.ok(r.events.some(e=>e.type==='origin.ambient'));
+});

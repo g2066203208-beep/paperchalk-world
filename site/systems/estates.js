@@ -12,8 +12,8 @@ export const estatesSystem={
  init:()=>({parcels:Array.from({length:48},(_,i)=>{
     const cell=Math.floor(i/3),sub=i%3;
     return {id:'lot-'+i,cell:'s'+cell,title:'地块 '+String(cell+1).padStart(2,'0')+'-'+(sub+1),
-      owner:i===0?'landlord':sub===0&&cell%4===2?'sail':'market',
-      price:priceOf(cell,sub),building:i===0?{type:'office',level:1,mode:'legal',name:'破旧出租事务所'}:null,
+      owner:i===0?'player':sub===0&&cell%4===2?'sail':'market',
+      price:priceOf(cell,sub),building:i===0?{type:'office',level:1,mode:'legal',name:'毛坯旧办公室'}:null,
       condition:62+(i*9)%35,manager:null,lastProfit:0};
    }),journal:[],playerIncome:0}),
  reduce(data,action,{context,slices,day}){

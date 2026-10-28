@@ -5,12 +5,12 @@ import {runtime,createWorld,applyWorld} from '../site/core/game.js';
 import {CANDIDATES} from '../site/systems/recruitment.js';
 const make=()=>initialGame();
 const act=(w,module,type,fields={},s=make())=>applyWorld(w,{module,type,...fields},s);
-test('player origin is boss + brother, rented office, zero turf, and old campaigns are preserved',()=>{
+test('player origin is boss + brother, purchased unfinished office, zero turf, and old campaigns are preserved',()=>{
  const newGame=make(),world=createWorld(newGame,null);
  assert.deepEqual(newGame.crew,['kai']);
  assert.equal(world.slices.factions.cells.filter(c=>c.owner==='player').length,0);
- assert.equal(world.slices.estates.parcels.filter(c=>c.owner==='player').length,0);
- assert.equal(world.slices.estates.parcels[0].building.name,'破旧出租事务所');
+ assert.equal(world.slices.estates.parcels.filter(c=>c.owner==='player').length,1);
+ assert.equal(world.slices.estates.parcels[0].building.name,'毛坯旧办公室');
  const old={...make(),crew:['kai','mio','leo'],day:5,cash:512};
  assert.deepEqual(restore(old),old,'existing v4 crews and their money must remain');
 });
