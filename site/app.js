@@ -120,21 +120,21 @@ function mapPanel(){
  '</div></div>';
 }
 function phonePanel(){
- const incoming=phoneDetails(state);
- const screen=dialBuffer||'— — —';
+ const incoming=phoneDetails(state),screen=dialBuffer||'— — —';
  const buttons=['1','2','3','4','5','6','7','8','9','*','0','#'].map(k=>'<button type="button" data-digit="'+k+'" aria-label="电话按键'+k+'">'+k+'</button>').join('');
  const book=CONTACTS.map(c=>'<div class="contact-line"><div><strong>'+c.name+'</strong><small style="display:block;font-size:10px">'+c.type+' · '+c.hint+'</small></div><button type="button" data-dialpreset="'+c.num+'">'+c.num+'</button></div>').join('');
- return header('HOTLINE · 01','座机通讯台','实际拨号：按数字键输入三位号码，按绿色拨号键接通。每位联系人每天只能处理一通。')+
+ const incomingBlock=!state.call.answered?'<div class="phone-result"><b>☎ 未接来电：'+escapeHTML(incoming.from)+'</b><p>'+escapeHTML(incoming.text)+'</p><div class="phone-options">'+incoming.options.map(o=>'<button type="button" data-phone="'+o.id+'">'+o.name+'<small>'+o.description+'</small></button>').join('')+'</div></div>':'';
+ return header('HOTLINE · 01','座机通讯台','输入三位分机号码，拨出后由对方实际执行工作。')+
  '<div class="phone-station"><div><div class="phone-device"><div class="phone-handset"></div>'+
  '<div class="phone-display"><small>LINE 01 / '+(state.call.answered?'IDLE':'INCOMING')+'</small><strong id="dial-screen">'+escapeHTML(screen)+'</strong></div>'+
  '<div class="phone-keypad">'+buttons+'</div><div class="phone-controls"><button type="button" data-phoneclear="1">退格</button><button type="button" data-dial="1">拨号 ☎</button><button type="button" data-phonehang="1">挂机</button></div></div>'+
- '<div class="phone-result" id="dial-result">'+escapeHTML(lastDial||'拨号输入三位电话号码；点击通讯录号码可快速输入。')+'</div>'+
- (!state.call.answered?'<div class="phone-result"><b>来电：'+escapeHTML(incoming.from)+'</b><p>'+escapeHTML(incoming.text)+'</p><div class="phone-options">'+incoming.options.map(o=>'<button type="button" data-phone="'+o.id+'">'+o.name+'<small>'+o.description+'</small></button>').join('')+'</div></div>':'')+
- '</div><div><div class="mini-title">CONTACT BOOK / 通讯录</div><div class="phone-book">'+book+'</div>'+
- '<hr class="line"/><div class="mini-title">通话记录</div>'+
- (meta.phoneHistory.length?meta.phoneHistory.slice(0,6).map(c=>'<p class="map-hint">DAY '+c.day+' · '+escapeHTML(c.num)+' · '+escapeHTML(c.name)+' — '+escapeHTML(c.result)+'</p>').join(''):'<p>暂时没有拨出通话。</p>')+
- '<div class="info-box"><b>拨打情报员：</b>先在通讯台输入 532，再选择地图侦察目标。现选目标：'+zoneInfo(callZone).name+
- '<div class="selection-list">'+['harbor','market','midtown','neon'].map(id=>'<button class="choice '+(id===callZone?'active':'')+'" data-callzone="'+id+'">'+zoneInfo(id).name+'</button>').join('')+'</div></div></div></div>';
+ '<div class="phone-result" id="dial-result">'+escapeHTML(lastDial||'拨号输入三位号码，或者从通讯录里选一个。')+'</div></div>'+
+ '<div><div class="mini-title">CONTACT BOOK / 通讯录</div><div class="phone-book">'+book+'</div>'+
+ incomingBlock+
+ '<div class="info-box"><b>情报目标：</b>'+zoneInfo(callZone).name+
+ '<div class="selection-list">'+['harbor','market','midtown','neon'].map(id=>'<button class="choice '+(id===callZone?'active':'')+'" data-callzone="'+id+'">'+zoneInfo(id).name+'</button>').join('')+'</div></div>'+
+ (meta.phoneHistory.length?'<div class="mini-title">最近通话 · '+escapeHTML(meta.phoneHistory[0].name)+' / DAY '+meta.phoneHistory[0].day+'</div>':'')+
+ '</div></div>';
 }
 function reportsPanel(){
  const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button></div>';
