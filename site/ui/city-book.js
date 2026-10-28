@@ -43,7 +43,7 @@ function timePage(w){
  return head('OFFICE / CITY CLOCK','夜港时间与作息','时间由模拟器确定性推进。切换时段会改变居民所在场所；翻日历才完成当天企业、派系与刑事结算。')+tabs('clock')+
  '<div class="world-paper-grid"><div>'+box('办公室时钟',
  '<div class="city-clock-face"><small>DAY '+w.day+' / WEEK '+c.week+'</small><strong>'+SHIFTS[c.shift].split(' ')[1]+'</strong><span>'+clockLabel(w.day,c.shift)+'</span></div>'+
- '<div class="city-actions">'+button('data-city-nextshift="1"','推进至下一时段',c.shift>=3)+'</div>')+
+ '<div class="city-actions">'+button('data-city-nextshift="1"','推进至下一时段',c.shift>=3)+'</div>'+
  '<p>每昼夜四个时段：晨间通勤、下午上班、黄昏活动、深夜回家。</p>')+
  '</div><div>'+box('城市生活快报',label('今日气象',c.weather)+label('模拟居民',p.people.length+' 人')+
  label('关押人数',j.custody.length+' 人')+label('本周',c.week+' 周'))+
