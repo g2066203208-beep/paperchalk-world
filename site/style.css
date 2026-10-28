@@ -328,3 +328,50 @@ button:disabled{opacity:.44;cursor:not-allowed;filter:grayscale(.65)}
 @media(prefers-reduced-motion:reduce){
  .stand-card,.player-marker{transition:none!important}
 }
+
+/* Narrow landscape: keep all primary interactions on-screen, not below the fold.
+   Board camera scales cards by its actual measured height. */
+@media (max-height:480px) and (orientation:landscape) and (min-width:650px){
+  body{height:100dvh;overflow:hidden}
+  .game-shell{height:100dvh;min-height:0;overflow:hidden;grid-template-rows:44px minmax(0,1fr)}
+  .topbar{height:44px;min-height:44px;padding:0 8px;gap:8px}
+  .brand strong{font-size:14px}.brand-mark{width:26px;height:26px;font-size:20px}
+  .turn-mark b{font-size:23px}.stat-block b{font-size:13px}
+  .top-button{height:29px;width:29px;min-width:29px;font-size:18px}
+  .field{min-height:0;overflow:hidden;display:flex}
+  .field-heading{height:37px;min-height:37px;padding:2px 9px 0}
+  .field-heading h1{font-size:17px;margin:1px 0}
+  .field-heading p,.field-heading small{display:none}
+  .field-count small{font-size:8px}.field-count b{font-size:17px}
+  .combat-zone{flex:1;height:auto;min-height:0;margin:0 5px;gap:0}
+  .enemy-zone-title{display:none}
+  .board-shell{flex:1;min-height:0}
+  .board-table{min-height:0}
+  .board-horizon,.board-rearline{font-size:7px}
+  .board-status{display:none}
+  .lane-controls{height:31px;min-height:31px;padding:1px 3px}
+  .lane-controls>span{font-size:8px}
+  .lane-controls>span small{display:none}
+  .lane-button{height:27px;font-size:13px}
+  .depth-controls button{height:27px;font-size:9px}
+  .actions-bar{min-height:33px;height:33px;padding:2px 8px}
+  .action-guidance{font-size:9px}
+  .end-btn{padding:5px 9px;font-size:11px}
+  .hand-zone{flex:none;height:110px;min-height:110px;padding:4px 5px 5px;overflow:hidden}
+  .hand-heading{display:none}
+  .hand{height:100%;gap:5px}
+  .paper-card{height:99px!important;min-height:99px!important;padding:3px}
+  .paper-card .card-top{font-size:9px}
+  .paper-card .card-top b{font-size:9px}
+  .paper-card .card-bottom{font-size:8px;min-height:16px;padding-top:2px}
+  .paper-card .cost{font-size:8px;padding:1px 2px}
+  .location-rail{height:100%;max-height:none;padding:7px 7px 3px;overflow-y:auto}
+  .location-heading{padding-bottom:6px;font-size:11px}
+  .location-heading small,.travel-tip,.location-foot{display:none}
+  .location-list{gap:7px}
+  .location-card{padding:3px}
+  .location-card img{height:45px}
+  .location-caption{font-size:9px!important;margin-bottom:2px!important}
+  .location-state{font-size:9px!important;margin-top:2px!important;padding-top:2px!important}
+  .stand-bottom{min-height:10px}
+}

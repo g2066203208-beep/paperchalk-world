@@ -76,6 +76,12 @@ await run('phone-landscape',{viewport:{width:844,height:390},deviceScaleFactor:2
  await assertBoard(page);
  const over=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(over<=3,'landscape horizontal overflow '+over);
+ const fullHeight=await page.evaluate(()=>document.documentElement.scrollHeight-innerHeight);
+ assert.ok(fullHeight<=4,'landscape should fit one screen, overflow '+fullHeight);
+ const hand=await page.locator('[data-action="shoot"]').boundingBox();
+ assert.ok(hand&&hand.y+hand.height<=392,'hand must be visible without scrolling');
+ const boardH=await page.locator('#board').evaluate(el=>el.getBoundingClientRect().height);
+ assert.ok(boardH>=100,'standing tabletop was squeezed away');
  await page.screenshot({path:'artifacts/phone-landscape-five-lanes.png',fullPage:true});
  await page.locator('[data-action="end"]').tap();
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).turn,2);

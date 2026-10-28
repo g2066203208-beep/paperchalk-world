@@ -11,7 +11,7 @@ export function projectCard(enemy, width, height, advance=0){
   const xPercent=50+(enemy.lane-2)*(10.6+9.4*t);
   const yPercent=enemy.side==='rear'?47+t*39:35+t*51;
   // Keep five lanes legible even on 320px-wide screens. Smaller cards belong to distance, not card count.
-  const base=Math.min(104,Math.max(58,width*0.15));
+  const base=Math.min(104,Math.max(35,Math.min(width*0.15,height*0.44)));
   const cardWidth=Math.round(base*(0.57+0.46*t));
   const cardHeight=Math.round(cardWidth*1.38);
   const zIndex=20+Math.round(70*t)+(enemy.side==='rear'?3:0);
