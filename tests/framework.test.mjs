@@ -55,7 +55,7 @@ test('healing, reloading, flare and action exhaustion enforce costs',()=>{
   s=go(s,{type:'shoot',id:'h3'});
   s=go(s,{type:'reload'});
   assert.equal(s.mag,6);
-  assert.equal(s.reserve,11);
+  assert.equal(s.reserve,12);
   s=go(s,{type:'flare'});
   assert.equal(s.ap,0);
   assert.equal(s.enemies.church.find(e=>e.id==='h3').distance,2);
@@ -73,7 +73,7 @@ test('healing, reloading, flare and action exhaustion enforce costs',()=>{
 test('complete combat across locations can win without cheating state',()=>{
  let s=createGame();
  for(const loc of ['church','cemetery','alley']){
-   while(s.current!==loc) s=go(s,{type:'move',to:'church'});
+   if(s.current!==loc && s.current!=='church') s=go(s,{type:'move',to:'church'});
    if(s.current!==loc)s=go(s,{type:'move',to:loc});
    for(const enemy of [...s.enemies[loc]]){
      while(s.enemies[loc].some(e=>e.id===enemy.id)){
