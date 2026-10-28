@@ -75,7 +75,7 @@ function transportation(w,legacy,ui){
  label('路线段数',route?String(route.length-1):'无')+
  '<div class="mini-title">运输人手</div><div class="city-actions">'+legacy.crew.map(id=>button('data-city-courier="'+id+'"',personName(w,id))).join('')+'</div>'+
  '<p>当前选用：'+personName(w,ui.courier||'kai')+'</p>'+
- button('data-city-dispatch="1"','批准运输订单',!origin||!route||route.length<2))+
+ button('data-city-dispatch="1"','批准运输订单',!origin||!route||route.length<2)+
  '<div class="mini-title">待完成订单：'+d.shipments.length+'</div>'+
  d.shipments.map(t=>'<p class="map-hint">'+t.from+' → '+t.to+' · '+personName(w,t.courier)+'</p>').join('')+
  '<div class="mini-title">最近结算</div>'+d.completed.slice(0,5).map(t=>'<p class="map-hint">'+t.id+' · +'+t.net+' 元</p>').join(''))+'</div></div>';
