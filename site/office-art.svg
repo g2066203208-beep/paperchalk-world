@@ -40,6 +40,17 @@
 <path d="M662 43L1130 43V407H660Z" fill="none" stroke="#d5b99a" stroke-width="9"/>
 <path d="M660 408H1136" stroke="#111923" stroke-width="17"/>
 <path d="M669 422H1144" stroke="#5d494a" stroke-width="10"/>
+<!-- boss's door is opposite the desk: real entrance, not wall decoration -->
+<path d="M876 43H1127V446H876Z" fill="#242733"/>
+<path d="M879 59L1109 57L1113 436L880 439Z" fill="#483b3f" stroke="#b08e78" stroke-width="7"/>
+<path d="M905 83L1092 81L1096 424L907 427Z" fill="#131f2b" stroke="#e7c9a2" stroke-width="8"/>
+<path d="M920 99L1077 97V411L920 413Z" fill="#0c1722"/>
+<path d="M922 99L1069 99L1069 413L922 414Z" fill="#392c34" opacity=".56"/>
+<path d="M900 430L1102 426L1123 448L886 451Z" fill="#d2a67e"/>
+<path d="M897 61H1113V79H897Z" fill="#131d27"/>
+<path d="M930 52H1072V77H930Z" fill="#c49a70"/>
+<text x="943" y="69" font-family="Georgia,serif" font-size="14" font-weight="bold" letter-spacing="3" fill="#1b2935">PRIVATE</text>
+<path d="M892 129L904 125M1098 131L1113 127" stroke="#efc99c" stroke-width="8"/>
 <!-- ceiling pendant -->
 <path d="M569 0V125" stroke="#b39881" stroke-width="7"/>
 <path d="M531 128H608L629 164H512Z" fill="#121e2b" stroke="#d4a77c" stroke-width="3"/>
