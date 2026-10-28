@@ -1,0 +1,19 @@
+/* Self-contained staging stylesheet — may be removed without touching simulation. */
+.cinema-bubble{position:absolute;z-index:9;right:20%;top:35%;max-width:min(340px,36vw);color:#192734;background:#f5e6ce;border:3px solid #1a2934;box-shadow:7px 8px 0 #ae4550;padding:12px 16px;pointer-events:none;transform:rotate(-2deg);animation:cinema-appear .3s ease-out both}
+.cinema-bubble[hidden]{display:none}
+.cinema-bubble:after{content:'';position:absolute;bottom:-19px;left:26px;width:22px;height:22px;background:#f5e6ce;transform:rotate(43deg);border-right:3px solid #1a2934;border-bottom:3px solid #1a2934}
+.cinema-bubble small{display:block;color:#ae4550;font-size:10px;font-weight:900}
+.cinema-bubble p{margin:4px 0;font-size:13px;font-weight:800;line-height:1.6}
+.cinema-news{background:#d9c5a4}
+.cinema-audio{position:absolute;z-index:11;top:12px;right:16px;color:#f4e2ce;border:2px solid #eedcbf;background:#1b2a35;font-size:20px;width:35px;height:35px;line-height:30px;transform:skew(-8deg)}
+.scene.puppet-speaking #underling{transform-origin:450px 343px;animation:puppet-breathe .6s ease-in-out infinite alternate}
+.scene.puppet-speaking #npc-mouth{transform-box:fill-box;transform-origin:50% 50%;animation:puppet-mouth .28s ease-in-out infinite alternate}
+.scene.puppet-speaking .puppet-arm{transform-box:fill-box;transform-origin:12% 70%;animation:puppet-arm .7s ease-in-out infinite alternate}
+.scene.scene-turning:after{content:'';pointer-events:none;position:absolute;inset:0;z-index:12;background:linear-gradient(100deg,transparent,#b04752 48%,#162330 55%,transparent);animation:cinema-cut .75s ease-out both}
+@keyframes cinema-appear{from{opacity:0;transform:translateY(13px) rotate(-4deg) scale(.97)}to{opacity:1;transform:translateY(0) rotate(-2deg) scale(1)}}
+@keyframes puppet-breathe{to{transform:translateY(-3px) rotate(-.3deg)}}
+@keyframes puppet-mouth{to{transform:scaleY(1.9)}}
+@keyframes puppet-arm{to{transform:rotate(-3deg)}}
+@keyframes cinema-cut{from{transform:translateX(-120%)}to{transform:translateX(120%)}}
+@media(max-width:600px){.cinema-bubble{top:28%;right:7%;max-width:86vw;padding:9px 11px}.cinema-bubble p{font-size:11px}.cinema-audio{right:10px;top:45px}}
+@media(prefers-reduced-motion:reduce){.cinema-bubble,.scene.puppet-speaking #underling,.scene.puppet-speaking #npc-mouth,.scene.puppet-speaking .puppet-arm,.scene.scene-turning:after{animation:none}}

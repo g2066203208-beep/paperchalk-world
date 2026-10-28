@@ -97,6 +97,52 @@ await run('desktop-1366',{viewport:{width:1366,height:768}},async page=>{
  await page.locator('.object-door').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'street');
 });
+
+await run('modular-world',{viewport:{width:1440,height:900}},async page=>{
+ const scene=page.locator('.scene');
+ assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.factions.cells.length),16);
+ assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.people.members.length),7);
+ await page.locator('.object-reports').click();
+ await page.locator('[data-world-tab="personnel"]').click();
+ assert.equal(await page.locator('#panel-title').innerText(),'组织人员册');
+ await page.screenshot({path:'artifacts/world-01-personnel.png',fullPage:true});
+ await page.locator('[data-world-appoint="kai"][data-job="capo"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.people.members.find(p=>p.id==='kai').job,'capo');
+ await page.locator('[data-world-train="kai"][data-skill="network"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.people.members.find(p=>p.id==='kai').skills.network,2);
+ assert.equal(await page.locator('#cinema-bubble').isVisible(),true);
+ await page.locator('[data-world-tab="city"]').click();
+ assert.equal(await page.locator('.world-cell').count(),16);
+ await page.locator('[data-world-cell="s1"]').click();
+ await page.locator('[data-world-influence="s1"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.factions.cells[1].influence.player,26);
+ await page.screenshot({path:'artifacts/world-02-five-faction-atlas.png',fullPage:true});
+ await page.locator('[data-world-tab="dialogue"]').click();
+ await page.locator('[data-world-dialogue="kai"][data-dialogue-choice="steady"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.dialogue.history.length,1);
+ await page.screenshot({path:'artifacts/world-03-dialogue.png',fullPage:true});
+ await page.locator('#close-panel').click();
+ await page.locator('.object-phone').click();
+ await page.locator('[data-phone="yes"]').click();
+ await page.locator('#close-panel').click();
+ await page.locator('.object-calendar').click();
+ await page.locator('[data-next]').click();
+ const w=await page.evaluate(()=>window.__OFFICE__.world());
+ assert.equal(w.day,2);
+ assert.ok(w.events.some(e=>e.type==='faction.influence'));
+ await page.locator('#close-panel').click();
+ await page.locator('.object-reports').click();
+ await page.locator('[data-world-tab="news"]').click();
+ assert.ok(await page.locator('.world-article').count()>=2);
+ await page.screenshot({path:'artifacts/world-04-newspaper.png',fullPage:true});
+ await page.locator('[data-world-tab="civic"]').click();
+ assert.equal(await page.locator('.world-civic-numbers > div').count(),3);
+ await page.screenshot({path:'artifacts/world-05-civic.png',fullPage:true});
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).day,2,'world save survives reload');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.people.members.find(p=>p.id==='kai').job,'capo','role persists');
+});
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');

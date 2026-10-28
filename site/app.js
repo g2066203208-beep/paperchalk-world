@@ -1,14 +1,21 @@
 import {DISTRICTS,CREW,MISSIONS,GOALS,initialGame,restore,availableCrew,crewInfo,zoneInfo,canOrder,setOrder,endDay,phoneDetails,answerPhone,markGunSeen} from './engine.js';
 import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,queueVisitor,decideDossier,allocate,transferSafe,equip,openDoor,visitorAction,travel,advance} from './office-features.js';
+import {createWorld,applyWorld,advanceWorld} from './core/game.js';
+import {renderWorldPanel} from './ui/world-panel.js';
+import {createStage} from './presentation/stage.js';
 const $=id=>document.getElementById(id);
 const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let state;try{state=restore(localStorage.getItem(STORE));}catch{state=initialGame();}
 let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'null'),state);}catch{meta=initialOffice();}
+const WORLD_STORE='night-office-world-v1';
+let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
+let worldUI={cell:'s1',person:'kai',talker:'kai'};
+const worldTabs=new Set(['city','personnel','news','civic','dialogue']);
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
-function save(){try{localStorage.setItem(STORE,JSON.stringify(state));localStorage.setItem(META_STORE,JSON.stringify(meta));}catch{}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(state));localStorage.setItem(META_STORE,JSON.stringify(meta));localStorage.setItem(WORLD_STORE,JSON.stringify(world));}catch{}}
 function toast(message){const n=$('toast');n.textContent=message;n.classList.add('visible');clearTimeout(timer);timer=setTimeout(()=>n.classList.remove('visible'),2600);}
 function refresh(){
  $('day').textContent=String(state.day).padStart(2,'0');
@@ -47,6 +54,26 @@ function panel(type){
  $('close-panel').focus();
 }
 function closePanel(){currentPanel=null;$('overlay').hidden=true;focusBefore?.focus?.();}
+/** Atomic adapter: world commands carry declarative cash/respect effects. */
+function performWorldCommand(action){
+ const result=applyWorld(world,action,state);
+ if(!result.ok){toast(result.message||'行动暂时无法执行');return result;}
+ const next=structuredClone(state);
+ for(const effect of result.effects){
+   if(effect.kind==='cash'){
+     if(next.cash+effect.amount<0){toast('资金不足');return {ok:false,message:'资金不足'};}
+     next.cash+=effect.amount;
+     next.ledger.unshift({day:next.day,label:effect.label||'组织行动',amount:effect.amount});
+   } else if(effect.kind==='respect'){
+     next.respect=Math.max(0,Math.min(100,next.respect+effect.amount));
+   }
+ }
+ state=next;world=result.state;refresh();repaintPanel();
+ const message=result.events[0]?.text||'行动完成';
+ if(result.events.length)stage.speak(result.events[0].title||'办公室消息',message);
+ else stage.cue('paper');
+ toast(message);return result;
+}
 const mapSVG=()=>{
  const routes={
   harbor:'M350 245L279 245L279 280L143 272',
@@ -116,7 +143,7 @@ function mapPanel(){
  const jobButtons=MISSIONS.map(m=>'<button type="button" class="choice '+(plan.mission===m.id?'active':'')+'" data-map-mission="'+m.id+'">'+m.short+'</button>').join('');
  const district=zoneInfo(plan.zone);
  return header('MAP / ASSIGNMENT','城区路线规划','选择成员、街区与行动，再派出。路线会标在地图上，结果在第二天成为小弟递来的汇报。')+
- '<div class="paper-grid"><div><div class="map-shell">'+mapSVG()+'</div><p class="map-hint">点击地图上的城区圆点选择路线终点 · 总部 HQ 是固定出发点</p>'+
+ '<div class="paper-grid"><div><div class="map-shell">'+mapSVG()+'</div><button class="world-atlas-link" type="button" data-world-tab="city">展开城市势力版图 · 16 街区 / 5 家族 ›</button><p class="map-hint">点击地图上的城区圆点选择路线终点 · 总部 HQ 是固定出发点</p>'+
  '<div class="info-box"><b>'+district.name+'</b>｜'+district.blurb+'<br/>当前影响力 '+state.zones[district.id].influence+' · 竞争压力 '+state.zones[district.id].pressure+'</div></div>'+
  '<div><div class="mini-title">01 / 派谁出门</div><div class="selection-list">'+crewButtons+'</div>'+
  '<hr class="line"/><div class="mini-title">02 / 执行什么任务</div><div class="selection-list">'+jobButtons+'</div>'+
@@ -145,7 +172,8 @@ function phonePanel(){
  '</div></div>';
 }
 function reportsPanel(){
- const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button></div>';
+ if(worldTabs.has(fileTab))return renderWorldPanel(fileTab,world,state,worldUI);
+ const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button></div>';
  let view='';
  if(fileTab==='dossiers'){
   view='<div class="dossier-list">'+DOSSIERS.map(d=>{
@@ -297,6 +325,15 @@ $('panel-body').addEventListener('click',e=>{
   lastDial='已接通 '+r.contact.name+'：'+r.message;
   dialBuffer='';applyResult(r,true);return;
  }
+ if(node.dataset.worldBack){fileTab='dossiers';currentPanel='reports';repaintPanel();return;}
+ if(node.dataset.worldTab){fileTab=node.dataset.worldTab;currentPanel='reports';repaintPanel();stage.cue('paper');return;}
+ if(node.dataset.worldCell){worldUI.cell=node.dataset.worldCell;repaintPanel();return;}
+ if(node.dataset.worldPerson){worldUI.person=node.dataset.worldPerson;repaintPanel();return;}
+ if(node.dataset.worldTalk){worldUI.talker=node.dataset.worldTalk;repaintPanel();return;}
+ if(node.dataset.worldInfluence){performWorldCommand({module:'factions',type:'influence',cell:node.dataset.worldInfluence});return;}
+ if(node.dataset.worldAppoint){performWorldCommand({module:'people',type:'appoint',person:node.dataset.worldAppoint,job:node.dataset.job});return;}
+ if(node.dataset.worldTrain){performWorldCommand({module:'people',type:'train',person:node.dataset.worldTrain,skill:node.dataset.skill});return;}
+ if(node.dataset.worldDialogue){performWorldCommand({module:'dialogue',type:'choose',person:node.dataset.worldDialogue,node:'greet',choice:node.dataset.dialogueChoice});return;}
  if(node.dataset.filetab){fileTab=node.dataset.filetab;repaintPanel();return;}
  if(node.dataset.filedecision){
   applyResult(decideDossier(state,meta,node.dataset.case,node.dataset.filedecision));return;
@@ -315,13 +352,17 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.next){
   const r=advance(state,meta);
   if(!r.ok){toast(r.message);return;}
-  state=r.state;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
+  const sim=advanceWorld(world,state,r.state);
+  world=sim.state;state=r.state;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
+  stage.transition();
+  if(sim.events.length)stage.speak('夜港消息',sim.events[0].text,'news');
   fileTab='reports';closePanel();toast(r.message);panel('reports');return;
  }
  if(node.dataset.helpClose){closePanel();}
 });
+const stage=createStage(document.querySelector('.scene'));
 refresh();
-window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),open:panel,close:closePanel,
+window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,open:panel,close:closePanel,
  dispatch:(type,...args)=>{
   const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
   type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):
