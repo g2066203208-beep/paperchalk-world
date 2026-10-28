@@ -171,3 +171,8 @@ button:disabled{cursor:default}
 .report-card{background:#f5ead8;border-left:4px solid #ac5356;box-shadow:2px 3px 0 #8977623d}
 }
 @media(min-width:600px) and (max-width:949px){.office-svg{object-fit:cover}.prop-mark{transform:scale(.85)}}
+
+/* Keep the reporter in frame on narrower fallback while desktop remains primary. */
+@media(max-width:600px) and (orientation:portrait){
+ .office-svg{left:calc(50% + 85px);object-fit:fill}
+}
