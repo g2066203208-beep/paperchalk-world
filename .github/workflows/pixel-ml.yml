@@ -37,12 +37,19 @@ jobs:
       - name: Pixel constraints audit
         working-directory: pixel-art-ml
         run: python -m pixel_ml.quality --dir .pixel-runs/samples --report .pixel-runs/quality.json --max-colors 10
+      - name: Assert training outputs exist
+        working-directory: pixel-art-ml
+        run: |
+          test -s .pixel-runs/ci/best.pt
+          test -s .pixel-runs/ci/metrics.json
+          test -s .pixel-runs/samples/contact_sheet_3x.png
+          test -s .pixel-runs/quality.json
       - name: Save real trained checkpoint, examples and metrics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pixel-ml-training-preview
-          path: |
-            pixel-art-ml/.pixel-runs/
-          if-no-files-found: warn
+          path: pixel-art-ml/.pixel-runs/
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 30
