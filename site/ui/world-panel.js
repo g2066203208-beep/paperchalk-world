@@ -7,7 +7,7 @@ import {CONVERSATIONS} from '../systems/dialogue.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const hero=(small,title,description)=>'<div class="eyebrow">'+small+'</div><h2 id="panel-title">'+title+'</h2><p>'+description+'</p>';
 const tabs=(current)=>'<nav class="world-tabs" aria-label="组织和城市文件">'+[
- ['city','势力地图'],['personnel','人事册'],['news','夜港晚报'],['civic','城市公报'],['dialogue','当面会谈']
+ ['city','势力地图'],['estates','地契/产业'],['transport','运输'],['clock','时间'],['citizens','居民'],['personnel','人事册'],['operations','高风险委托'],['contacts','雇佣线人'],['justice','警局案件'],['news','夜港晚报'],['civic','城市公报'],['dialogue','当面会谈']
 ].map(([id,label])=>'<button type="button" data-world-tab="'+id+'" class="'+(id===current?'selected':'')+'">'+label+'</button>').join('')+'<button type="button" data-world-back="1">返回卷宗</button></nav>';
 function factionMap(world,selected='s1'){
  const f=world.slices.factions;

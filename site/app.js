@@ -2,6 +2,8 @@ import {DISTRICTS,CREW,MISSIONS,GOALS,initialGame,restore,availableCrew,crewInfo
 import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,queueVisitor,decideDossier,allocate,transferSafe,equip,openDoor,visitorAction,travel,advance} from './office-features.js';
 import {createWorld,applyWorld,advanceWorld} from './core/game.js';
 import {renderWorldPanel} from './ui/world-panel.js';
+import {renderCityBook} from './ui/city-book.js';
+import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
 const $=id=>document.getElementById(id);
 const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
@@ -11,8 +13,9 @@ let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'
 const WORLD_STORE='night-office-world-v1';
 let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
-let worldUI={cell:'s1',person:'kai',talker:'kai'};
-const worldTabs=new Set(['city','personnel','news','civic','dialogue']);
+let worldUI={cell:'s1',lot:'lot-4',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1'};
+const cityTabs=new Set(['clock','estates','transport','citizens','operations','contacts','justice']);
+const worldTabs=new Set(['city','personnel','news','civic','dialogue',...cityTabs]);
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
 function save(){try{localStorage.setItem(STORE,JSON.stringify(state));localStorage.setItem(META_STORE,JSON.stringify(meta));localStorage.setItem(WORLD_STORE,JSON.stringify(world));}catch{}}
@@ -66,6 +69,8 @@ function performWorldCommand(action){
      next.ledger.unshift({day:next.day,label:effect.label||'组织行动',amount:effect.amount});
    } else if(effect.kind==='respect'){
      next.respect=Math.max(0,Math.min(100,next.respect+effect.amount));
+   } else if(effect.kind==='heat'){
+     next.heat=Math.max(0,Math.min(100,next.heat+effect.amount));
    }
  }
  state=next;world=result.state;refresh();repaintPanel();
@@ -143,7 +148,7 @@ function mapPanel(){
  const jobButtons=MISSIONS.map(m=>'<button type="button" class="choice '+(plan.mission===m.id?'active':'')+'" data-map-mission="'+m.id+'">'+m.short+'</button>').join('');
  const district=zoneInfo(plan.zone);
  return header('MAP / ASSIGNMENT','城区路线规划','选择成员、街区与行动，再派出。路线会标在地图上，结果在第二天成为小弟递来的汇报。')+
- '<div class="paper-grid"><div><div class="map-shell">'+mapSVG()+'</div><button class="world-atlas-link" type="button" data-world-tab="city">展开城市势力版图 · 16 街区 / 5 家族 ›</button><p class="map-hint">点击地图上的城区圆点选择路线终点 · 总部 HQ 是固定出发点</p>'+
+ '<div class="paper-grid"><div><div class="map-shell">'+mapSVG()+'</div><button class="world-atlas-link" type="button" data-world-tab="city">展开城市势力版图 · 16 街区 / 5 家族 ›</button><div class="city-actions"><button class="choice" type="button" data-world-tab="estates">地产购置</button><button class="choice" type="button" data-world-tab="transport">运输路线</button><button class="choice" type="button" data-world-tab="citizens">街区居民</button></div><p class="map-hint">点击地图上的城区圆点选择路线终点 · 总部 HQ 是固定出发点</p>'+
  '<div class="info-box"><b>'+district.name+'</b>｜'+district.blurb+'<br/>当前影响力 '+state.zones[district.id].influence+' · 竞争压力 '+state.zones[district.id].pressure+'</div></div>'+
  '<div><div class="mini-title">01 / 派谁出门</div><div class="selection-list">'+crewButtons+'</div>'+
  '<hr class="line"/><div class="mini-title">02 / 执行什么任务</div><div class="selection-list">'+jobButtons+'</div>'+
@@ -172,6 +177,7 @@ function phonePanel(){
  '</div></div>';
 }
 function reportsPanel(){
+ if(cityTabs.has(fileTab))return renderCityBook(fileTab,world,state,worldUI);
  if(worldTabs.has(fileTab))return renderWorldPanel(fileTab,world,state,worldUI);
  const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button></div>';
  let view='';
@@ -226,7 +232,7 @@ function visitorPanel(){
 }
 function calendarPanel(){
  return header('THE MORNING AFTER','翻到下一天','只有结束当天，才能收到外出成员的实际成果。没有任务时也可以处理电话，继续推进时间。')+
- '<div class="paper-grid"><div><div class="dialog-punch">DAY '+String(state.day).padStart(2,'0')+' → DAY '+String(state.day+1).padStart(2,'0')+'</div>'+
+ '<div class="paper-grid"><div><div class="dialog-punch">DAY '+String(state.day).padStart(2,'0')+' → DAY '+String(state.day+1).padStart(2,'0')+'</div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
  '<p>今天安排了 '+state.orders.length+' 项行动；电话'+(state.call.answered?'已经处理':'尚未处理')+'。翻页将结算收入、日常开支，以及街区关系变化。</p>'+
  '<button class="primary" type="button" data-next="1">翻过今天 · 听取明日汇报</button></div>'+
  '<div><div class="mini-title">成员今日状态</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
@@ -325,6 +331,24 @@ $('panel-body').addEventListener('click',e=>{
   lastDial='已接通 '+r.contact.name+'：'+r.message;
   dialBuffer='';applyResult(r,true);return;
  }
+ if(node.dataset.cityLot){worldUI.lot=node.dataset.cityLot;repaintPanel();return;}
+ if(node.dataset.cityOrigin){worldUI.from=node.dataset.cityOrigin;repaintPanel();return;}
+ if(node.dataset.cityDestination){worldUI.destination=node.dataset.cityDestination;repaintPanel();return;}
+ if(node.dataset.cityCourier){worldUI.courier=node.dataset.cityCourier;repaintPanel();return;}
+ if(node.dataset.cityTarget){worldUI.target=node.dataset.cityTarget;repaintPanel();return;}
+ if(node.dataset.cityOperation){worldUI.operation=node.dataset.cityOperation;repaintPanel();return;}
+ if(node.dataset.cityNextshift){performWorldCommand({module:'clock',type:'advance-shift'});return;}
+ if(node.dataset.cityBuy){performWorldCommand({module:'estates',type:'buy',lot:node.dataset.cityBuy});return;}
+ if(node.dataset.cityBuild){performWorldCommand({module:'estates',type:'build',lot:node.dataset.cityBuild,building:node.dataset.cityBuilding});return;}
+ if(node.dataset.cityUpgrade){performWorldCommand({module:'estates',type:'upgrade',lot:node.dataset.cityUpgrade});return;}
+ if(node.dataset.cityMode){performWorldCommand({module:'estates',type:'operate',lot:node.dataset.cityMode,mode:node.dataset.mode});return;}
+ if(node.dataset.cityDispatch){performWorldCommand({module:'transport',type:'dispatch',from:worldUI.from||world.slices.estates.parcels.find(p=>p.owner==='player'&&['garage','warehouse'].includes(p.building?.type))?.id,to:worldUI.destination,courier:worldUI.courier});return;}
+ if(node.dataset.cityCommission){performWorldCommand({module:'operations',type:'commission',operation:worldUI.operation,agent:worldUI.courier,target:worldUI.target});return;}
+ if(node.dataset.cityHire){performWorldCommand({module:'contacts',type:'hire',role:node.dataset.cityHire});return;}
+ if(node.dataset.cityDismiss){performWorldCommand({module:'contacts',type:'dismiss',staff:node.dataset.cityDismiss});return;}
+ if(node.dataset.cityIntel){performWorldCommand({module:'contacts',type:'ask-informant'});return;}
+ if(node.dataset.cityBribe){performWorldCommand({module:'contacts',type:'bribe'});return;}
+ if(node.dataset.cityCounsel){performWorldCommand({module:'justice',type:'counsel',caseId:node.dataset.cityCounsel});return;}
  if(node.dataset.worldBack){fileTab='dossiers';currentPanel='reports';repaintPanel();return;}
  if(node.dataset.worldTab){fileTab=node.dataset.worldTab;currentPanel='reports';repaintPanel();stage.cue('paper');return;}
  if(node.dataset.worldCell){worldUI.cell=node.dataset.worldCell;repaintPanel();return;}
@@ -360,6 +384,7 @@ $('panel-body').addEventListener('click',e=>{
       settled.ledger.unshift({day:settled.day,label:effect.label||'组织运营',amount:effect.amount});
     }else if(effect.kind==='heat')settled.heat=Math.max(0,Math.min(100,settled.heat+effect.amount));
   }
+  settled.detained=[...new Set(sim.state.slices.justice.custody.map(x=>x.subject))];
   world=sim.state;state=settled;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
   stage.transition();
   if(sim.events.length)stage.speak('夜港消息',sim.events[0].text,'news');
