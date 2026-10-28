@@ -71,28 +71,31 @@ test('healing, reloading, flare and action exhaustion enforce costs',()=>{
   assert.equal(s.hp,Math.min(9,hp+3));
   assert.equal(s.medkits,2);
 });
-test('complete combat across locations can win without cheating state',()=>{
+test('a complete deterministic playthrough clears every field and wins',()=>{
  let s=createGame();
- for(const loc of ['church','cemetery','alley']){
-   if(s.current!==loc && s.current!=='church') s=go(s,{type:'move',to:'church'});
-   if(s.current!==loc)s=go(s,{type:'move',to:loc});
-   for(const enemy of [...s.enemies[loc]]){
-     while(s.enemies[loc].some(e=>e.id===enemy.id)){
-       if(s.ap===0)s=go(s,{type:'end'});
-       if(s.mag===0) {
-         s=go(s,{type:'reload'});
-         continue;
-       }
-       s=go(s,{type:'shoot',id:enemy.id});
-       if(s.status!=='playing')break;
-     }
-   }
-   if(s.status!=='playing')break;
-   if(s.ap===0)s=go(s,{type:'end'});
- }
- // A deterministic straightforward strategy may die; only assert status consistency.
- assert.ok(['playing','won','lost'].includes(s.status));
- assert.equal(allCleared(s),s.status==='won');
+ s=go(s,{type:'shoot',id:'h3'});
+ s=go(s,{type:'shoot',id:'h3'});
+ s=go(s,{type:'shoot',id:'h2'});
+ s=go(s,{type:'end'});
+ s=go(s,{type:'shoot',id:'h1'});
+ s=go(s,{type:'shoot',id:'h1'});
+ s=go(s,{type:'move',to:'cemetery'});
+ s=go(s,{type:'end'});
+ s=go(s,{type:'reload'});
+ s=go(s,{type:'shoot',id:'c2'});
+ s=go(s,{type:'shoot',id:'c1'});
+ s=go(s,{type:'end'});
+ s=go(s,{type:'shoot',id:'c1'});
+ s=go(s,{type:'move',to:'church'});
+ s=go(s,{type:'move',to:'alley'});
+ s=go(s,{type:'end'});
+ s=go(s,{type:'shoot',id:'a2'});
+ s=go(s,{type:'shoot',id:'a2'});
+ s=go(s,{type:'shoot',id:'a1'});
+ assert.equal(s.status,'won');
+ assert.equal(allCleared(s),true);
+ assert.equal(s.hp,9);
+ assert.equal(perform(s,{type:'shoot'}).ok,false);
 });
 test('reject corrupt save data rather than rendering broken state',()=>{
  assert.deepEqual(restoreGame('not JSON'),createGame());
