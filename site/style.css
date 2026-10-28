@@ -230,3 +230,53 @@ button:disabled{cursor:default}
  .action-card{min-height:115px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+
+/* Short landscape screens: protect the photographic stage from bottom-pane min-height.
+   At 844×390 the city's five locations, scene and primary ledger must coexist. */
+@media (max-height:540px) and (orientation:landscape) {
+ html,body{height:100%;overflow:hidden}
+ .game{height:100dvh;min-height:0;grid-template-rows:40px minmax(0,1.14fr) minmax(0,.92fr);overflow:hidden}
+ .topbar{min-height:40px;height:40px;padding:0 9px;gap:7px}
+ .identity strong{font-size:13px}.identity small{display:none}.monogram{font-size:23px}
+ .header-stats{gap:10px}.header-stat small{font-size:8px}.header-stat strong{font-size:12px}
+ .header-stat.balance strong{font-size:15px}.crew-top{display:none}
+ .quiet-icon{width:22px;height:28px;font-size:19px}
+ .main{min-height:0;grid-template-columns:minmax(0,1fr) 145px}
+ .stage-top{top:8px;left:11px;right:8px}
+ .stage-top h1{font-size:24px;margin:3px 0 4px}
+ .stage-top small{font-size:8px}.stage-top p{font-size:9px;line-height:1.25;max-width:245px}
+ .territory-stamp{font-size:8px;padding:4px 6px}
+ .stage-bottom{bottom:11px;left:10px;right:10px;gap:7px}
+ .street-data{width:116px;grid-template-columns:minmax(0,1fr) 43px;column-gap:4px}
+ .street-data span,.stage-economy span{font-size:8px}
+ .street-data b{font-size:8px}.stage-economy strong{font-size:16px}
+ .stage-caption{display:none}
+ .neighborhoods{padding:5px 5px 4px;gap:2px;box-shadow:none}
+ .neighborhoods-heading,.neighborhoods-footer{display:none}
+ .district-list{min-height:0;gap:3px}
+ .district-card{min-height:0;max-height:none}
+ .district-label{left:5px;bottom:3px}
+ .district-label strong{font-size:10px}.district-label small{display:none}
+ .district-mark{font-size:9px;top:2px;right:4px}
+ .desk-top{height:37px;min-height:37px;gap:8px;padding:0 9px}
+ .desk-label{min-width:54px}.desk-label span{display:none}.desk-label strong{font-size:12px}
+ .desk-tabs{gap:10px}.desk-tabs button{font-size:10px;padding:3px 0}
+ .week-control{min-width:100px;padding:4px 7px;gap:4px}
+ .week-mark{font-size:17px}.week-control>span:last-child{font-size:10px}
+ .week-control small{font-size:8px}
+ .desk-content{grid-template-columns:minmax(0,1.55fr) minmax(180px,.72fr);min-height:0;gap:8px;padding:6px 9px 7px}
+ .hint{display:none}.action-list{gap:4px}
+ .action-card{min-height:53px;padding:5px;gap:4px}
+ .action-symbol{font-size:15px;width:13px}
+ .action-copy{gap:2px}.action-copy small{font-size:8px}
+ .action-copy strong{font-size:10px;line-height:1.18}
+ .action-copy span{display:none}
+ .action-end{max-width:65px;gap:4px}
+ .action-end b,.action-end small{font-size:8px}
+ .ledger-space{padding-left:7px}.ledger-kicker{font-size:9px;margin-bottom:4px}
+ .ledger-row{font-size:9px;padding:2px 0}.ledger-row b{font-size:10px}
+ .ledger-row.ledger-result{margin-top:2px;padding-top:4px}
+ .ledger-row.ledger-result b{font-size:12px}
+ .organization{font-size:9px;margin-top:5px;padding:5px 0;gap:6px}
+ .goal,.log-box{display:none}
+}

@@ -55,6 +55,16 @@ await check('phone-landscape',{viewport:{width:844,height:390},deviceScaleFactor
  assert.equal(await page.locator('.district-card').count(),5);
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=3,'landscape horizontal overflow '+overflow);
+ const bounds=await page.evaluate(()=>({
+   windowHeight:innerHeight,docHeight:document.documentElement.scrollHeight,
+   stage:document.querySelector('.stage').getBoundingClientRect().height,
+   cards:[...document.querySelectorAll('.district-card')].map(el=>{const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height};}),
+   next:document.querySelector('#next-week').getBoundingClientRect().bottom
+ }));
+ assert.ok(bounds.docHeight<=bounds.windowHeight+4,'Landscape content overflows viewport');
+ assert.ok(bounds.stage>=125,'Main district photo must remain visible, got '+bounds.stage);
+ assert.ok(bounds.next<=bounds.windowHeight,'Next week action hidden');
+ assert.ok(bounds.cards.every(c=>c.height>=20&&c.bottom<=bounds.windowHeight+2),'Location photo cards clipped');
  await page.screenshot({path:'artifacts/phone-landscape-start.png',fullPage:true});
  await page.locator('[data-district="finance"]').tap();
  assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).selected,'finance');
