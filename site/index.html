@@ -3,108 +3,120 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#13110f">
-<meta name="description" content="余烬之夜：支持手机操作的场地切换生存卡牌游戏。">
-<title>余烬之夜 · 场地生存卡牌</title>
+<meta name="theme-color" content="#101315">
+<meta name="description" content="余烬之夜：五条道立式卡牌桌游，三处场地，可操作的生存战斗。">
+<title>余烬之夜 · 桌上残响</title>
 <link rel="stylesheet" href="./style.css">
 <script type="module" src="./app.js"></script>
 </head>
 <body>
 <div id="game" class="game-shell">
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">✣</span><div><strong>余烬之夜</strong><small>NIGHT REMAINS / CARD SURVIVAL</small></div></div>
-    <div class="turn-mark"><small>回合 / TURN</small><b id="turn">01</b></div>
-    <div class="stat-block hp-stat"><small>生命 HP</small><div class="health-pips" id="health"></div></div>
-    <div class="stat-block"><small>行动 AP</small><b id="ap">3 / 3</b></div>
-    <div class="stat-block ammo-stat"><small>弹药 AMMO</small><b id="ammo">5 / 6 <em>+14</em></b></div>
-    <button id="help-btn" class="top-button" aria-label="玩法说明" title="玩法说明">?</button>
-    <button id="reset-btn" class="top-button reset-button" aria-label="重新开始" title="重新开始">↻</button>
-  </header>
-  <aside class="left-rail" aria-label="卡堆与战况">
-    <div class="rail-title">SURVIVAL <span>01</span></div>
-    <div class="deck-card" aria-hidden="true"><span class="deck-sigil">✣</span><span class="deck-border"></span></div>
-    <div class="rail-counter"><small>剩余敌人</small><strong id="remaining">07</strong></div>
-    <div class="rail-rule"></div>
-    <div class="objective-title">任务目标 / OBJECTIVE</div>
-    <div class="objective-desc">清除三个场地中的全部感染者。</div>
-    <div class="map-progress" id="map-progress"></div>
-    <div class="rail-rule"></div>
-    <div class="log-title">战况记录 <span>EVENTS</span></div>
-    <div id="log" class="combat-log" aria-live="polite"></div>
-  </aside>
-  <main class="field" aria-label="当前战场">
-    <div class="scene-image" id="scene-image"></div>
-    <div class="scene-shade"></div>
-    <div class="field-heading">
-      <div><small>当前位置 · CURRENT FIELD</small><h1 id="field-name">教堂</h1><p id="field-hint"></p></div>
-      <div class="field-count"><small>ENCOUNTER</small><b id="field-threat">03 <span>ENEMIES</span></b></div>
+    <div class="brand" aria-label="游戏名称"><span class="brand-glyph">✧</span><div><strong>余烬之夜</strong><small>NIGHT REMAINS</small></div></div>
+    <div class="hud-cluster">
+      <div class="hud-item turn-mark"><small>夜巡 / TURN</small><b id="turn">01</b></div>
+      <div class="hud-item hp-stat"><small>生命 / VITAL</small><div class="health-pips" id="health" aria-label="生命"></div></div>
+      <div class="hud-item ap-stat"><small>行动 / AP</small><b id="ap">3 / 3</b></div>
+      <div class="hud-item ammo-stat"><small>弹药 / AMMO</small><b id="ammo">6 / 6 <em>+46</em></b></div>
     </div>
+    <button id="help-btn" class="glyph-control" aria-label="打开规则说明" title="规则">?</button>
+    <button id="reset-btn" class="glyph-control" aria-label="重新开始" title="重开">↻</button>
+  </header>
+
+  <aside class="left-rail" aria-label="隐藏的战况辅助数据">
+    <div class="rail-counter"><small>剩余敌人</small><strong id="remaining">18</strong></div>
+    <div id="map-progress" class="map-progress"></div>
+    <div id="log" class="combat-log"></div>
+  </aside>
+
+  <main class="field" aria-label="场景与桌上战斗">
+    <div id="scene-image" class="scene-image" aria-hidden="true"></div>
+    <div class="scene-shade" aria-hidden="true"></div>
+    <div class="scene-grain" aria-hidden="true"></div>
+
+    <div class="field-heading">
+      <div class="place-identity"><span class="place-roman">ACT I · THE LONG NIGHT</span><h1 id="field-name">教堂</h1><p id="field-hint">五条道路延伸至黑暗中。</p></div>
+      <div class="field-count"><span class="danger-rune">✢</span><span id="field-threat">08 <span>ENEMIES</span></span></div>
+    </div>
+
     <div class="combat-zone">
-      <div class="enemy-zone-title"><span>— 五条道路 / FIVE-LANE APPROACH —</span><span>远卡小 · 近卡大 · 近排挡远排</span></div>
-      <section class="board-shell" aria-label="五条道立体桌面战场">
-        <div id="board" class="board-table" aria-label="桌面上的立式怪物卡牌">
+      <div class="enemy-zone-title" aria-hidden="true"><span>远处 / THE APPROACH</span><span>✣</span></div>
+      <section class="board-shell" aria-label="五条有纵深的立式卡牌道路">
+        <div id="board" class="board-table">
           <div class="board-atmosphere" aria-hidden="true"></div>
-          <svg class="board-grid" aria-hidden="true" viewBox="0 0 1000 600" preserveAspectRatio="none">
+          <svg class="board-grid" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
             <defs>
-              <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#282623"/>
-                <stop offset=".65" stop-color="#454039"/>
-                <stop offset="1" stop-color="#211c19"/>
+              <linearGradient id="timber" x1="0" y1="0" x2=".3" y2="1">
+                <stop offset="0" stop-color="#5e4b3a"/>
+                <stop offset=".5" stop-color="#382e28"/>
+                <stop offset=".85" stop-color="#2e241f"/>
+                <stop offset="1" stop-color="#1b1716"/>
               </linearGradient>
+              <radialGradient id="tableGlow">
+                <stop stop-color="#b6926745"/>
+                <stop offset="1" stop-color="#513d2900"/>
+              </radialGradient>
             </defs>
-            <polygon points="278,203 722,203 985,520 15,520" fill="url(#felt)" stroke="#b19a80" stroke-width="4"/>
-            <g fill="none" stroke="#9b8066" stroke-opacity=".45" stroke-width="2">
-              <path d="M278 203L15 520 M389 203L258 520 M500 203L500 520 M611 203L742 520 M722 203L985 520"/>
-              <path d="M250 260H750 M217 333H783 M160 420H840"/>
+            <path d="M279 213L720 213L994 548L6 548Z" fill="#090b0b" opacity=".75" transform="translate(0 18)"/>
+            <path d="M279 213L720 213L994 548L6 548Z" fill="url(#timber)" stroke="#8e7458" stroke-width="5"/>
+            <path d="M296 224L704 224L958 531L43 531Z" fill="none" stroke="#bd9b71" stroke-opacity=".46" stroke-width="2"/>
+            <path d="M299 238L688 238L914 504L85 504Z" fill="url(#tableGlow)" opacity=".65"/>
+            <g fill="none" stroke="#92785c" stroke-width="2" opacity=".48">
+              <path d="M303 214L40 548M402 214L275 548M500 214L500 548M598 214L725 548M697 214L960 548"/>
             </g>
-            <g stroke="#dcc29f" stroke-opacity=".28" stroke-width="2" stroke-dasharray="12 10">
-              <path d="M333 203L135 520 M444 203L379 520 M556 203L621 520 M667 203L865 520"/>
+            <g fill="none" stroke="#d3b48a" stroke-width="1.2" opacity=".21" stroke-dasharray="3 10">
+              <path d="M353 220L161 539M452 220L387 539M548 220L613 539M647 220L839 539"/>
             </g>
-            <path d="M15 520H985" stroke="#d09a78" stroke-width="5"/>
+            <g stroke="#8d765e" stroke-opacity=".22">
+              <path d="M253 257Q500 274 747 257M184 340Q500 362 816 340M103 449Q500 478 897 449" fill="none" stroke-width="4"/>
+              <path d="M244 265Q501 281 756 265M173 353Q501 373 828 353M94 465Q500 493 909 465" fill="none" stroke-width="1"/>
+            </g>
+            <path d="M9 548L994 548" stroke="#b78f65" stroke-width="8" stroke-opacity=".76"/>
+            <path d="M0 560Q500 565 1000 560L1000 600H0Z" fill="#0e1010" opacity=".78"/>
           </svg>
-          <div class="board-horizon" aria-hidden="true">FRONT APPROACH / 正面来袭</div>
-          <div class="board-rearline" aria-hidden="true">REAR / 背后夹击</div>
-          <div id="enemy-lanes" class="enemy-lanes" aria-label="可选择的立式怪物卡牌"></div>
-          <div id="player-marker" class="player-marker" aria-label="玩家所在道路"><span>▲</span><b>YOU</b></div>
+          <div class="board-horizon" aria-hidden="true">✦ &nbsp; INTO THE DARK &nbsp; ✦</div>
+          <div id="enemy-lanes" class="enemy-lanes" aria-label="可点击瞄准的敌人立式卡牌"></div>
+          <div id="player-marker" class="player-marker" aria-label="玩家站位"><span>✦</span><b>YOU</b></div>
+          <div id="lane-selector" class="lane-selector" aria-label="点击桌面道路印记改变防守道路"></div>
+          <div class="depth-controls" aria-label="前后移动">
+            <button id="forward-btn" type="button" data-action="advance" title="向前一步，1行动" aria-label="向前推进">⌃</button>
+            <button id="retreat-btn" type="button" data-action="retreat" title="后退一步，1行动" aria-label="向后撤退">⌄</button>
+          </div>
+          <div class="board-side-note" aria-hidden="true">FIVE PATHS · ONE NIGHT</div>
         </div>
       </section>
-      <div class="lane-controls">
-        <span>移动道路 <small>1 AP</small></span>
-        <div id="lane-selector" class="lane-selector" aria-label="选择五条道路"></div>
-        <div class="depth-controls">
-          <button type="button" id="forward-btn" data-action="advance" aria-label="向前推进一格，消耗一行动点">前进 ↑</button>
-          <button type="button" id="retreat-btn" data-action="retreat" aria-label="向后撤退一格，消耗一行动点">后退 ↓</button>
-        </div>
-      </div>
       <div class="board-status"><span id="target-status">点击怪物卡牌锁定目标</span><span id="player-status">第 3 道 · 后线</span></div>
     </div>
+
     <div class="actions-bar">
-      <div class="action-guidance"><span class="tiny-diamond">◆</span><span id="guidance" aria-live="polite">点击敌人瞄准，然后点击步枪射击</span></div>
-      <button id="end-btn" class="end-btn">结束回合 <span>↳</span></button>
+      <span class="action-guidance"><span class="tiny-diamond">✣</span><span id="guidance">点选立卡 · 触摸道路线 · 打出手牌</span></span>
+      <button id="end-btn" class="end-btn" type="button" data-action="end" aria-label="结束回合"><span class="bell-icon" aria-hidden="true">♢</span><span class="bell-label">敲钟<br><small>结束回合</small></span></button>
     </div>
+
     <div class="hand-zone">
-      <div class="hand-heading"><span>随身卡牌 <small>YOUR HAND</small></span><span>点击卡牌使用 · 每回合 3 AP</span></div>
-      <div class="hand" id="hand"></div>
+      <div class="hand-head"><span>HAND / 手牌</span><small>触摸使用</small></div>
+      <div id="hand" class="hand" aria-label="可使用的手牌"></div>
     </div>
+    <div class="desk-edge" aria-hidden="true"></div>
   </main>
-  <aside class="location-rail" aria-label="场地卡牌槽">
-    <div class="location-heading"><span>场地 / LOCATION</span><small>切换场地模拟移动</small></div>
-    <div class="travel-tip">每次移动消耗 <b>1 AP</b><span>当前场地会保留战斗状态</span></div>
+
+  <aside class="location-rail" aria-label="场景切换卡牌">
+    <div class="location-heading"><span>地点</span><small>PLACES</small></div>
+    <div class="travel-tip">翻到另一处场景 <span>· 1 AP</span></div>
     <div id="locations" class="location-list"></div>
-    <div class="location-foot">触摸场地卡切换 · 可用 ↑ ↓ 方向键</div>
+    <div class="location-foot">触碰场景卡移动<br>每处保留原有敌人</div>
   </aside>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div class="modal-cover" id="help-overlay" hidden>
+  <div id="help-overlay" class="modal-cover" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
-      <div class="modal-header"><h2 id="help-title">生存手册</h2><button id="close-help" class="top-button" aria-label="关闭">×</button></div>
-      <p>这是有五条道路、真实纵深遮挡的桌面卡牌战斗原型。目标是清除墓园、教堂和暗巷的所有敌人。</p>
-      <p><strong>立式卡牌：</strong>每张敌人卡立在桌面上。远处更小、更靠近桌面后缘；近处更大并挡住后面敌人。结束回合，敌人沿所在道路推进；有些怪物会从背后来袭（橙色 REAR 标记）。</p>
-      <p><strong>五条道路：</strong>先点敌人锁定目标，再点相应道路的数字按钮转移（1 AP）。步枪一次伤害 2，必须先打倒同一道、同一方向挡在前面的怪物。</p>
-      <p><strong>前进 / 后退：</strong>改变玩家的战术深度（1 AP）。前进让正面更近、背后更远；推进至最前沿时，正面步枪伤害增加到 3。后退反之。</p>
-      <p><strong>补给：</strong>背包装弹、医疗包恢复 5 HP；照明弹击退当前道路两格。每回合 3 AP，前后接近警戒线的怪物都能攻击。</p>
-      <p><strong>场地：</strong>右侧场地卡选择当前地点，每个地点有独立的五条道路和敌人进度。手机竖屏会把场地卡移至战场顶部，避免压缩五条道。</p>
-      <p><strong>存档：</strong>游戏自动本地保存；玩法升级后的旧版存档会重置为新的五道战斗。</p>
-      <button class="end-btn modal-ok" id="help-ok">返回游戏</button>
+      <div class="modal-header"><h2 id="help-title">夜巡手册</h2><button id="close-help" class="glyph-control" aria-label="关闭">×</button></div>
+      <p>三个地点各有五条道路。每张怪物卡真正立在有纵深的桌面上，近处会遮挡远处，敌人会向你推进。</p>
+      <p><strong>瞄准：</strong>点怪物立卡选择目标；点桌面下方的道路印记移动到目标道路，再点击底部步枪。前面挡住了后面的怪物时，必须先解决近处。</p>
+      <p><strong>靠近与夹击：</strong>桌面左下的上下印记可以前进、后退。背后攻击的怪物有红色 REAR 标记。任何近身怪在回合结束时都会攻击。</p>
+      <p><strong>手牌：</strong>步枪、装填、医疗包、照明弹。结束回合请触摸右下方的铜铃印记。右侧竖列为场地卡，手机竖屏时移至战场上方。</p>
+      <p><strong>存档：</strong>自动保存在当前设备中，重启 APK 会重新加载托管网页并继续对局。</p>
+      <button class="modal-ok" id="help-ok">回到桌边</button>
     </div>
   </div>
 </div>

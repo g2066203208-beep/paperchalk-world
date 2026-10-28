@@ -22,6 +22,21 @@ async function run(name,settings,fn){
 }
 async function assertBoard(page){
  assert.equal(await page.locator('.lane-button').count(),5);
+ assert.equal(await page.locator('.paper-card').count(),4,'Hand must have four action cards, no decorative player card');
+ assert.equal(await page.locator('.left-rail').isVisible(),false,'Remove old panel/dashboard');
+ const stage=await page.locator('#scene-image').evaluate(el=>({
+   background:getComputedStyle(el).backgroundImage,
+   height:el.getBoundingClientRect().height
+ }));
+ assert.ok(stage.background.includes('data:image/svg+xml'),'Original layered scenery should be loaded');
+ assert.ok(stage.height>150,'Scene is too small');
+ const medal=await page.locator('.lane-button').first().evaluate(el=>({
+   radius:getComputedStyle(el).borderRadius,
+   width:el.getBoundingClientRect().width,
+   height:el.getBoundingClientRect().height
+ }));
+ assert.ok(medal.radius==='50%','Lane navigation should be integrated round floor medallions');
+ assert.ok(Math.abs(medal.width-medal.height)<3,'Medallion must be round');
  assert.equal(await page.locator('.location-card').count(),3);
  assert.equal(await page.locator('.stand-card').count(),8);
  const near=page.locator('[data-id="h2"]'),far=page.locator('[data-id="h1"]');
@@ -39,7 +54,7 @@ async function assertBoard(page){
 }
 await run('desktop',{viewport:{width:1440,height:900},deviceScaleFactor:1},async page=>{
  await assertBoard(page);
- await page.screenshot({path:'artifacts/desktop-five-lanes.png',fullPage:true});
+ await page.screenshot({path:'artifacts/desktop-diorama-church.png',fullPage:true});
  await page.locator('[data-id="h4"]').click({force:true});
  await page.locator('[data-action="shoot"]').click();
  let s=await page.evaluate(()=>window.__NIGHT_REMAINS__.state());
@@ -54,13 +69,13 @@ await run('desktop',{viewport:{width:1440,height:900},deviceScaleFactor:1},async
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).current,'cemetery');
  await page.reload({waitUntil:'networkidle'});
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).current,'cemetery');
- await page.screenshot({path:'artifacts/desktop-cemetery.png',fullPage:true});
+ await page.screenshot({path:'artifacts/desktop-diorama-cemetery.png',fullPage:true});
 });
 await run('phone-portrait',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await assertBoard(page);
  const over=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(over<=3,'portrait horizontal overflow '+over);
- await page.screenshot({path:'artifacts/phone-portrait-five-lanes.png',fullPage:true});
+ await page.screenshot({path:'artifacts/phone-diorama-portrait.png',fullPage:true});
  await page.locator('[data-action="lane"][data-lane="1"]').tap();
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).lane,1);
  await page.locator('[data-action="advance"]').tap();
@@ -70,7 +85,7 @@ await run('phone-portrait',{viewport:{width:390,height:844},deviceScaleFactor:2,
  await page.locator('[data-action="end"]').tap();
  await page.locator('[data-action="move"][data-to="alley"]').tap();
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).current,'alley');
- await page.screenshot({path:'artifacts/phone-portrait-alley.png',fullPage:true});
+ await page.screenshot({path:'artifacts/phone-diorama-alley.png',fullPage:true});
 });
 await run('phone-landscape',{viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await assertBoard(page);
@@ -82,7 +97,7 @@ await run('phone-landscape',{viewport:{width:844,height:390},deviceScaleFactor:2
  assert.ok(hand&&hand.y+hand.height<=392,'hand must be visible without scrolling');
  const boardH=await page.locator('#board').evaluate(el=>el.getBoundingClientRect().height);
  assert.ok(boardH>=100,'standing tabletop was squeezed away');
- await page.screenshot({path:'artifacts/phone-landscape-five-lanes.png',fullPage:true});
+ await page.screenshot({path:'artifacts/phone-diorama-landscape.png',fullPage:true});
  await page.locator('[data-action="end"]').tap();
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).turn,2);
 });

@@ -15,6 +15,10 @@ test('v2 standing-card site and APK routing still exist',()=>{
  assert.match(html,/id="player-marker"/);
  assert.match(css,/stand-card/);
  assert.match(css,/stand-shadow/);
+ assert.match(html,/class="scene-grain"/);
+ assert.match(html,/class="bell-icon"/);
+ assert.match(css,/radial-gradient/);
+ assert.ok(existsSync('site/environment.js'));
  assert.match(css,/orientation:portrait/);
  assert.match(app,/ResizeObserver/);
  assert.match(app,/localStorage/);

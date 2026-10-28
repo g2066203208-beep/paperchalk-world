@@ -1,6 +1,7 @@
 import {LOCATIONS,ENEMY,MAX_AP,MAX_DEPTH,LANE_COUNT,createGame,perform,restoreGame,canMove,currentEnemies,effectiveDistance} from './rules.js';
 import {projectCard} from './board.js';
 import {ART} from './art.js';
+import {environmentImage} from './environment.js';
 
 const SAVE_KEY='night-remains-save-v2';
 const $=id=>document.getElementById(id);
@@ -76,7 +77,6 @@ function handHTML(){
   const enemies=state.enemies[state.current];
   const sameLane=enemies.some(e=>e.lane===state.lane);
   const cards=[
-    {kind:'player',label:'幸存者',stat:state.hp+'/'+state.maxHp,action:'none',sub:'站位 · '+(state.lane+1)+' / 5',enabled:false,cost:'—'},
     {kind:'rifle',label:'步枪',stat:state.mag+'/'+state.magCap,action:'shoot',sub:state.advance===2?'正面伤害 3':'伤害 2 · 同道路',enabled:active&&state.mag>0&&sameLane&&!!state.selected,cost:'1 AP'},
     {kind:'pack',label:'背包 / 换弹',stat:'+'+state.reserve,action:'reload',sub:'补满弹匣',enabled:active&&state.mag<state.magCap&&state.reserve>0,cost:'1 AP'},
     {kind:'medkit',label:'医疗包',stat:'×'+state.medkits,action:'heal',sub:'恢复 5 HP',enabled:active&&state.medkits>0&&state.hp<state.maxHp,cost:'1 AP'},
@@ -110,7 +110,8 @@ function render(){
   $('log').innerHTML=state.log.slice(0,6).map(t=>'<p>'+escapeText(t)+'</p>').join('');
   $('field-name').textContent=loc.name;
   $('field-hint').textContent=loc.hint;
-  $('scene-image').style.backgroundImage='url("'+ART.scene(loc.id)+'")';
+  $('scene-image').style.backgroundImage='url("'+environmentImage(loc.id)+'")';
+  $('scene-image').dataset.location=loc.id;
   $('field-threat').innerHTML=String(enemies.length).padStart(2,'0')+' <span>ENEMIES</span>';
   $('locations').innerHTML=LOCATIONS.map(locationHTML).join('');
   $('hand').innerHTML=handHTML();
@@ -118,7 +119,7 @@ function render(){
     const count=enemies.filter(e=>e.lane===i).length;
     return '<button type="button" data-action="lane" data-lane="'+i+'" '+(state.status!=='playing'||state.ap===0||state.lane===i?'disabled':'')+
       ' class="lane-button '+(state.lane===i?'active':'')+'" aria-pressed="'+(state.lane===i)+'" aria-label="第'+(i+1)+'道路，'+count+'个敌人">'+
-      (i+1)+'<span>'+count+'</span></button>';
+      '<span class="lane-numeral">'+(i+1)+'</span><span class="lane-threat">'+(count||'')+'</span></button>';
   }).join('');
   $('forward-btn').disabled=state.status!=='playing'||state.ap===0||state.advance>=2;
   $('retreat-btn').disabled=state.status!=='playing'||state.ap===0||state.advance<=0;
@@ -129,8 +130,9 @@ function render(){
   $('guidance').textContent=state.status==='won'?'三个场地已经肃清 · 胜利':state.status==='lost'?'防线已被突破 · 失败':
     !state.ap?'行动点已用尽，请结束回合':enemies.some(e=>e.side==='rear')?'留意背后红色标记！改变前后站位可防包抄':'五条道路独立防守；近排会挡住同路远排';
   const end=$('end-btn');
-  end.innerHTML=state.status==='playing'?'结束回合 <span>↳</span>':'重新开始 <span>↻</span>';
+  end.innerHTML=state.status==='playing'?'<span class="bell-icon" aria-hidden="true">♢</span><span class="bell-label">敲钟<br><small>结束回合</small></span>':'<span class="bell-icon" aria-hidden="true">↻</span><span class="bell-label">重新<br><small>开始</small></span>';
   end.dataset.action=state.status==='playing'?'end':'restart';
+  end.setAttribute('aria-label',state.status==='playing'?'敲钟结束回合':'重新开始');
   renderBoard();persist();
   document.title='余烬之夜 · 五道桌面战场 · '+loc.name;
 }
