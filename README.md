@@ -1,24 +1,35 @@
-# Web + Android 容器
+# 余烬之夜 / Night Remains — 场地生存卡牌（可玩原型）
 
-本仓库的 `main` 只保留未来网页开发所需的最小框架，以及自动构建 Android APK 的托管网页容器。**当前不包含游戏设计或旧项目内容。**
+网页： https://g2066203208-beep.github.io/paperchalk-world/
 
-- 网页入口：<https://g2066203208-beep.github.io/paperchalk-world/>
-- APK 固定下载：<https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk>
-- APK 构建记录：<https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/apk.yml>
+Android APK（WebView 容器）： https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk
 
-## 更新方式
+这不是静态概念图。**打开网页即可操作**，没有构建步骤和登录要求。现有 Android APK 启动时直接打开 GitHub Pages 网页最新版：网页修改不需要重装 APK；Android 原生代码更新才需要手动安装新 APK。
 
-修改 `site/` 后提交到 `main`：GitHub Actions 自动校验并部署 GitHub Pages。已安装的 APK **每次启动时直接获取托管网站最新版页面**，无需重新打包 APK。
+## 已实现
 
-修改 `android/` 后提交到 `main`：GitHub Actions 自动构建 Debug APK，覆盖固定 Release 下载地址。APK 原生代码修改仍需用户手动安装更新，无法静默安装。
+- 三张独立场地卡牌：墓园、教堂、暗巷。点击卡牌切换场地（消耗 1 AP），中间必须经过教堂；各区域敌人状态独立保留。
+- 三种感染者，共七个敌人；敌人距离为 3、2、1，对应小、中、大卡牌尺寸。结束回合后当前位置敌人推进或攻击。
+- 选定目标后用步枪射击（消耗弹药和 1 AP，伤害 2）；背包装弹；医疗包回血；照明弹推开敌人；每回合 3 AP。
+- 清除所有区域敌人即胜利，生命耗尽失败。刷新页面不会丢失进度（浏览器 localStorage）。
+- 手机竖屏（场地卡横排、卡牌可横向滚动）、手机横屏、电脑均可操作；触控按钮满足点击面积，附玩法说明。
+- 原创代码生成的低分辨率矢量像素场景和卡面图案；不是复刻原游戏的素材。
+- 静态 GitHub Pages，无服务器依赖；GitHub Actions：规则测试 + 真实 Chromium 桌面、手机竖屏、手机横屏操作及截图；成功后才发布网页。
+- 原 APK 包名和 WebView 托管网址保持不变。
 
-Android 保留原 applicationId `com.paperchalk.lampkeep` 以及旧调试签名缓存 key，尽可能兼容旧版 APK 的覆盖安装；若原签名缓存已丢失，可能需要卸载旧版后安装。
+## 开发
 
-## 当前目录
+打开 `site/index.html` 需要本地 HTTP 服务器以加载 ES modules，例如：
+```bash
+python -m http.server 4173 --directory site
+```
+然后访问 `http://localhost:4173`。
 
-- `site/index.html`：全新空白网页入口
-- `android/`：仅加载网站的原生 Android WebView 容器
-- `.github/workflows/`：网页部署、APK 自动构建
-- `tests/`：最低限度的框架检查
+规则层是 `site/rules.js`（没有 DOM 依赖），场景与像素卡图是 `site/art.js`，网页交互是 `site/app.js`。运行：
+```bash
+node --test tests/*.test.mjs
+```
 
-没有旧游戏引擎、场景、角色、贴图、模型、Android 业务桥接或游戏功能。具体网页内容待后续决定。
+浏览器 E2E 由 `tests/browser.mjs` 和 `.github/workflows/ci.yml` 启动，对真正的点击 / 触摸、敌人尺寸、存档与水平溢出进行断言，截图保存在 Actions Artifacts 中。
+
+这只是第一版可玩的战斗流程，不声称已经包含完整关卡、剧情、平衡性、网络联机或专业级逐像素插画。后续可以围绕真实游玩反馈继续迭代。

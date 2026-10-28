@@ -1,19 +1,76 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#ffffff">
-  <title>网页框架</title>
-  <style>
-    :root { color-scheme: light; }
-    html, body { margin: 0; width: 100%; min-height: 100%; }
-    body { font-family: system-ui, -apple-system, sans-serif; }
-    main { min-height: 100dvh; display: grid; place-items: center; }
-    p { color: #777; font-size: 14px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#13110f">
+<meta name="description" content="余烬之夜：支持手机操作的场地切换生存卡牌游戏。">
+<title>余烬之夜 · 场地生存卡牌</title>
+<link rel="stylesheet" href="./style.css">
+<script type="module" src="./app.js"></script>
 </head>
 <body>
-  <main id="app"><p>网页框架已就绪</p></main>
+<div id="game" class="game-shell">
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">✣</span><div><strong>余烬之夜</strong><small>NIGHT REMAINS / CARD SURVIVAL</small></div></div>
+    <div class="turn-mark"><small>回合 / TURN</small><b id="turn">01</b></div>
+    <div class="stat-block hp-stat"><small>生命 HP</small><div class="health-pips" id="health"></div></div>
+    <div class="stat-block"><small>行动 AP</small><b id="ap">3 / 3</b></div>
+    <div class="stat-block ammo-stat"><small>弹药 AMMO</small><b id="ammo">5 / 6 <em>+14</em></b></div>
+    <button id="help-btn" class="top-button" aria-label="玩法说明" title="玩法说明">?</button>
+    <button id="reset-btn" class="top-button reset-button" aria-label="重新开始" title="重新开始">↻</button>
+  </header>
+  <aside class="left-rail" aria-label="卡堆与战况">
+    <div class="rail-title">SURVIVAL <span>01</span></div>
+    <div class="deck-card" aria-hidden="true"><span class="deck-sigil">✣</span><span class="deck-border"></span></div>
+    <div class="rail-counter"><small>剩余敌人</small><strong id="remaining">07</strong></div>
+    <div class="rail-rule"></div>
+    <div class="objective-title">任务目标 / OBJECTIVE</div>
+    <div class="objective-desc">清除三个场地中的全部感染者。</div>
+    <div class="map-progress" id="map-progress"></div>
+    <div class="rail-rule"></div>
+    <div class="log-title">战况记录 <span>EVENTS</span></div>
+    <div id="log" class="combat-log" aria-live="polite"></div>
+  </aside>
+  <main class="field" aria-label="当前战场">
+    <div class="scene-image" id="scene-image"></div>
+    <div class="scene-shade"></div>
+    <div class="field-heading">
+      <div><small>当前位置 · CURRENT FIELD</small><h1 id="field-name">教堂</h1><p id="field-hint"></p></div>
+      <div class="field-count"><small>ENCOUNTER</small><b id="field-threat">03 <span>ENEMIES</span></b></div>
+    </div>
+    <div class="combat-zone">
+      <div class="enemy-zone-title"><span>— 前方威胁 / HOSTILES —</span><span>距离越近，卡牌越大</span></div>
+      <div id="enemy-lanes" class="enemy-lanes" aria-label="敌人区域"></div>
+      <div class="combat-floor" aria-hidden="true"><span>远距离 / FAR</span><span>中距离 / MID</span><span>近距离 / CLOSE</span></div>
+    </div>
+    <div class="actions-bar">
+      <div class="action-guidance"><span class="tiny-diamond">◆</span><span id="guidance" aria-live="polite">点击敌人瞄准，然后点击步枪射击</span></div>
+      <button id="end-btn" class="end-btn">结束回合 <span>↳</span></button>
+    </div>
+    <div class="hand-zone">
+      <div class="hand-heading"><span>随身卡牌 <small>YOUR HAND</small></span><span>点击卡牌使用 · 每回合 3 AP</span></div>
+      <div class="hand" id="hand"></div>
+    </div>
+  </main>
+  <aside class="location-rail" aria-label="场地卡牌槽">
+    <div class="location-heading"><span>场地 / LOCATION</span><small>切换场地模拟移动</small></div>
+    <div class="travel-tip">每次移动消耗 <b>1 AP</b><span>当前场地会保留战斗状态</span></div>
+    <div id="locations" class="location-list"></div>
+    <div class="location-foot">触摸场地卡切换 · 可用 ↑ ↓ 方向键</div>
+  </aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-cover" id="help-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="modal-header"><h2 id="help-title">生存手册</h2><button id="close-help" class="top-button" aria-label="关闭">×</button></div>
+      <p>这是一个可通关的卡牌生存原型。目标是清除<strong>墓园、教堂、暗巷</strong>三个场地内的全部敌人。</p>
+      <p><strong>距离即卡牌尺寸：</strong>远距离小，中距离适中，近距离最大；敌人每次结束回合向你靠近，距离为 1 时攻击。</p>
+      <p><strong>出牌：</strong>点敌人选择目标；点击步枪射击（伤害 2）、背包装弹、医疗包回复 3 生命，或照明弹让敌人后退。每回合有 3 行动点。</p>
+      <p><strong>移动：</strong>右侧场地卡可触摸切换，每次消耗 1 AP。墓园与暗巷都必须经教堂到达。</p>
+      <p><strong>存档：</strong>游戏自动保存在本机浏览器内，刷新或重新打开 APK 会继续当前对局。</p>
+      <button class="end-btn modal-ok" id="help-ok">返回游戏</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
