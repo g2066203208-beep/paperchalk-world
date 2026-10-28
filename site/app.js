@@ -353,7 +353,14 @@ $('panel-body').addEventListener('click',e=>{
   const r=advance(state,meta);
   if(!r.ok){toast(r.message);return;}
   const sim=advanceWorld(world,state,r.state);
-  world=sim.state;state=r.state;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
+  const settled=structuredClone(r.state);
+  for(const effect of sim.effects){
+    if(effect.kind==='cash'){
+      settled.cash+=effect.amount;
+      settled.ledger.unshift({day:settled.day,label:effect.label||'组织运营',amount:effect.amount});
+    }else if(effect.kind==='heat')settled.heat=Math.max(0,Math.min(100,settled.heat+effect.amount));
+  }
+  world=sim.state;state=settled;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
   stage.transition();
   if(sim.events.length)stage.speak('夜港消息',sim.events[0].text,'news');
   fileTab='reports';closePanel();toast(r.message);panel('reports');return;

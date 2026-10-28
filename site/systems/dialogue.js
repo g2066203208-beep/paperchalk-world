@@ -21,6 +21,7 @@ export const dialogueSystem={
  init:()=>({history:[],last:null}),
  reduce(data,action,{context,day}){
   if(action.type!=='choose')return {error:'未知对话指令'};
+  if(data.history.some(entry=>entry.day===day&&entry.person===action.person))return {error:'今天已经进行过一次正式会谈'};
   const convo=CONVERSATIONS[action.person];
   if(!convo||(context.crew||[]).includes(action.person)===false)return {error:'该人物尚不能对话'};
   const node=convo.nodes[action.node];

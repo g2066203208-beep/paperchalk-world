@@ -25,12 +25,13 @@ function compete(cell,faction,power){
 }
 export const factionsSystem={
  id:'factions',deps:[],
- init:()=>({cells:owners.map((owner,i)=>nextCell(i,owner)),groups:Object.fromEntries(FACTIONS.map((f,i)=>[f.id,{cash:i?240+i*55:0,relations:{},stance:f.trait}]))}),
+ init:()=>({playerActions:[],cells:owners.map((owner,i)=>nextCell(i,owner)),groups:Object.fromEntries(FACTIONS.map((f,i)=>[f.id,{cash:i?240+i*55:0,relations:{},stance:f.trait}]))}),
  reduce(data,action,{context,slices,day}){
    if(action.type!=='influence')return {error:'Unknown faction action'};
    const id=action.cell,cell=data.cells.find(c=>c.id===id);
    if(!cell)return {error:'Unknown street'};
    if(data.groups.player.cash<0)return {error:'Invalid budget'};
+   if(data.playerActions.includes(cell.id))return {error:'今日已经与这条街区的商户联系过'};
    if(!data.cells.some(c=>c.owner==='player'&&c.neighbors.includes(cell.index))&&cell.owner!=='player')
      return {error:'只能争取与己方地盘相邻的街区'};
    const cost=40;
@@ -38,6 +39,7 @@ export const factionsSystem={
    const leader=slices.people?.members?.find(p=>p.job==='capo'&&p.faction==='player');
    const power=20+(leader?6:0);
    const prior=cell.owner;
+   data.playerActions.push(cell.id);
    const replaced=compete(cell,'player',power);
    cell.publicMood=clamp(cell.publicMood+3);
    return {data,events:[{type:'faction.influence',title:'社区联系',text:'你派人拜访了'+cell.name+'的本地商户，影响力 +'+power+'。',cell:cell.id,faction:'player'},
@@ -46,6 +48,7 @@ export const factionsSystem={
  },
  tick(data,{day,signal}){
    const events=[];
+   data.playerActions=[];
    for(const f of FACTIONS.filter(f=>f.id!=='player')){
      const group=data.groups[f.id];
      const held=data.cells.filter(c=>c.owner===f.id);

@@ -42,6 +42,7 @@ test('territory update checks adjacency and emits accountable cash effect',()=>{
  assert.equal(r.effects[0].amount,-40);
  assert.equal(world.slices.factions.cells[1].influence.player,0);
  assert.equal(applyWorld(world,{module:'factions',type:'influence',cell:'s1'},{...legacy,cash:0}).ok,false);
+ assert.equal(applyWorld(r.state,{module:'factions',type:'influence',cell:'s1'},legacy).ok,false,'same neighborhood has daily action cap');
 });
 test('personnel appointments and training are independent extensible commands',()=>{
  let w=createWorld(legacy);
@@ -61,6 +62,7 @@ test('dialogue branch saves real response and reputation effect',()=>{
  assert.equal(r.state.slices.dialogue.history.length,1);
  assert.ok(r.events.some(x=>x.type==='dialogue.spoken'));
  assert.equal(applyWorld(w,{module:'dialogue',type:'choose',person:'kai',node:'greet',choice:'invalid'},legacy).ok,false);
+ assert.equal(applyWorld(r.state,{module:'dialogue',type:'choose',person:'kai',node:'greet',choice:'risky'},legacy).ok,false,'repeated conversation cannot farm reputation');
 });
 test('100 seeds × 30 days: autonomous rivals, immutable states, budget guards and news provenance',()=>{
  for(let seed=1;seed<=100;seed++){

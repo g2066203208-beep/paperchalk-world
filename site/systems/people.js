@@ -41,16 +41,25 @@ export const peopleSystem={
   return {error:'未知人员指令'};
  },
  tick(data,{day,context}){
-   const events=[];
+   const events=[],effects=[];
    for(const p of data.members){
      if(p.faction!=='player')continue;
      const tasks=(context.orders||[]).filter(x=>x.crew===p.id);
      if(tasks.length){p.experience+=2;p.morale=clamp(p.morale+1);}
      else p.morale=clamp(p.morale-1);
+     if(p.job==='manager'&&tasks.some(t=>t.mission==='deliver')){
+       const bonus=10+p.skills.trade*3;
+       effects.push({kind:'cash',amount:bonus,label:'业务经理·'+p.name+'运营增益'});
+       events.push({type:'business.manager',title:'组织运营',text:p.name+'规范了派送账目，追回应收款 '+bonus+' 元。',person:p.id});
+     }
+     if(p.job==='analyst'&&tasks.some(t=>t.mission==='scout')){
+       effects.push({kind:'heat',amount:-2,label:'情报分析·'+p.name+'风险预警'});
+       events.push({type:'person.analysis',title:'情报预警',text:p.name+'核对最新调查线索，及时提醒组织降低风险。',person:p.id});
+     }
      if(context.cash<0){p.loyalty=clamp(p.loyalty-2);p.morale=clamp(p.morale-3);}
      if(day%7===0){p.morale=clamp(p.morale+(p.personality.discipline>65?1:-1));}
      if(p.morale<30&&day%5===0)events.push({type:'person.concern',title:'人员顾虑',text:p.name+'最近情绪低落，希望获得更明确的安排。',person:p.id});
    }
-   return {data,events};
+   return {data,events,effects};
  }
 };

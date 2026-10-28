@@ -113,7 +113,7 @@ await run('modular-world',{viewport:{width:1440,height:900}},async page=>{
  assert.equal(await page.locator('#cinema-bubble').isVisible(),true);
  await page.locator('[data-world-tab="city"]').click();
  assert.equal(await page.locator('.world-cell').count(),16);
- const cols=await page.locator('.world-atlas').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(/\\s+/).filter(Boolean).length);
+ const cols=await page.locator('.world-atlas').evaluate(el=>getComputedStyle(el).gridTemplateColumns.trim().split(' ').filter(Boolean).length);
  assert.equal(cols,4,'faction board must use its four-column diegetic map stylesheet');
  assert.ok(await page.locator('link[href="./ui/world-panel.css"]').count()===1,'world visual css linked');
 
