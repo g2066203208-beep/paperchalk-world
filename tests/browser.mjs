@@ -252,6 +252,7 @@ await run('chapter-one-real-locations',{viewport:{width:1440,height:900}},async 
  assert.equal((await get()).flags.heardRumor,true);
  await page.locator('[data-explore-type="travel"][data-explore-id="alley"]').click();
  assert.equal((await get()).venue,'alley');
+ await page.waitForTimeout(450);
  await page.screenshot({path:'artifacts/chapter-02-alley-living-street.png',fullPage:true});
  await page.locator('[data-explore-type="talk"][data-explore-id="neighbor"]').click();
  assert.match(await page.locator('.explore-voice p').innerText(),/蒙面人/);
@@ -285,6 +286,7 @@ await run('chapter-one-phone-touch',{viewport:{width:390,height:844},isMobile:tr
  await page.screenshot({path:'artifacts/chapter-phone-new-office.png',fullPage:true});
  await page.locator('[data-explore-type="travel"][data-explore-id="alley"]').tap();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.origin.venue)),'alley');
+ await page.waitForTimeout(450);
  await page.screenshot({path:'artifacts/chapter-phone-alley.png',fullPage:true});
 });
 

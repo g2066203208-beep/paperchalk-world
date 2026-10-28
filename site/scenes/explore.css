@@ -48,3 +48,19 @@
 
 /* Speech is presentational: never prevent selecting the physical paper or character beneath. */
 .explore-voice{pointer-events:none}
+
+/* Reviewed desktop/phone screenshots: keep the illustrated scene visible, not covered with menu labels. */
+.explore-spot>span{opacity:0;position:absolute;bottom:-14px;pointer-events:none;white-space:normal;background:#172835e8;box-shadow:3px 3px 0 #b04752}
+.explore-spot:hover>span,.explore-spot:focus-visible>span,.explore-spot:focus>span{opacity:1}
+.explore-spot:before{inset:27% 35%;border-radius:2px;box-shadow:0 0 0 3px #f0ddb04d}
+.explore-spot:after{top:26%;font-size:11px}
+.explore-root.explore-arrive .explore-visual{animation:explore-crossfade .35s ease-out both}
+@keyframes explore-crossfade{from{opacity:.52;filter:blur(2px);transform:scale(1.012)}to{opacity:1;filter:none;transform:scale(1)}}
+@media(max-width:600px) and (orientation:portrait){
+ .explore-art{width:840px;height:100%;left:50%;transform:translateX(-50%)}
+ .explore-spot>span{opacity:0;font-size:8px}
+ .explore-spot:focus>span,.explore-spot:hover>span{opacity:1}
+ .explore-head{top:2%;max-width:61%;left:2%}
+ .explore-head strong{font-size:16px}
+ .explore-hint{max-width:100%;font-size:8px;text-align:center}
+}

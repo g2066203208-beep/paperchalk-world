@@ -46,7 +46,7 @@ function refresh(){
   $('speaker').textContent=(crewInfo(recent?.crew)?.name||'办公室')+' · 最新汇报';
   $('briefing-text').textContent=recent?.body||'地图已放好。';
  }
- $('goal-marker').textContent=state.won?'◆ 城市开始承认你的名字':'目标 · 两区影响力 55 / 声望 24 / 现金 1400';
+ $('goal-marker').textContent=state.won?'◆ 城市开始承认你的名字':state.day<=6?'第一目标 · 结识街坊、建立信任、保护旧港居民':'目标 · 两区影响力 55 / 声望 24 / 现金 1400';
  document.title='夜港 · 两个无名者 · DAY '+state.day;
  save();
  explorer?.render();
