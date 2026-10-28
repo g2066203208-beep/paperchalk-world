@@ -142,7 +142,7 @@
 
 
 /* Actual playable opening. Remains inside the illustrated office, never a menu screen. */
-.prologue-presentation{position:absolute;z-index:18;left:3%;bottom:4%;width:min(540px,47%);
+.prologue-presentation{position:absolute;z-index:18;left:3%;top:11%;bottom:auto;width:min(510px,43%);max-height:60%;overflow-y:auto;
  background:#f6e8d1;color:#1c2d39;border:3px solid #233340;border-left:9px solid #ad4450;
  box-shadow:10px 12px 0 #21323ad9,15px 16px 0 #ae4552;
  clip-path:polygon(0 0,99% 0,100% 6%,100% 100%,2% 100%,0 96%);
@@ -163,14 +163,14 @@
 .prologue-presentation[data-mood="final"] .prologue-top{color:#e7bb92}
 @keyframes prologue-breathe{from{opacity:.65;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:750px) and (orientation:portrait){
- .prologue-presentation{left:3%;right:3%;bottom:17%;width:auto;max-height:44%;overflow-y:auto;padding:9px 11px 10px;box-shadow:5px 6px 0 #283641}
+ .prologue-presentation{left:3%;right:3%;top:11%;bottom:auto;width:auto;max-height:40%;overflow-y:auto;padding:9px 11px 10px;box-shadow:5px 6px 0 #283641}
  .prologue-character b{font-size:12px}.prologue-character p{font-size:12px;line-height:1.4;margin-bottom:7px}
  .prologue-top{font-size:8px}
  .prologue-foot button{font-size:10px;min-height:30px;padding:5px 8px}
  .prologue-legend-art{max-height:70px}
 }
 @media(max-height:510px) and (orientation:landscape){
- .prologue-presentation{max-height:73%;overflow-y:auto;bottom:3%;width:min(510px,57%);padding:8px 10px}
+ .prologue-presentation{max-height:58%;overflow-y:auto;top:4%;bottom:auto;width:min(510px,56%);padding:8px 10px}
  .prologue-character p{font-size:11px;line-height:1.4;margin:4px 0 6px}
  .prologue-legend-art{max-height:55px}
  .prologue-foot button{min-height:25px;padding:4px 7px;font-size:10px}

@@ -70,7 +70,7 @@ const routeMap=(current,selected)=>'<div class="street-route-backdrop" data-rout
  '<div class="street-route-foot"><p>旧港的街道并不安全；街上有真实工作、交易与生活着的人。</p>'+
  '<button type="button" data-route-go="1" '+(selected===current?'disabled':'')+'>推门前往 · '+escape(SCENE_DEFS[selected]?.name||'')+'</button></div>'+
  '</section></div>';
-export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,onToggle}){
+export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,onToggle,cue}){
  const root=document.createElement('section');root.className='explore-root';root.setAttribute('aria-label','可探索的夜港场景');
  host.appendChild(root);
  let visible=true,venue='',shift=-1,routeOpen=false,routeSelection='alley',dialogue=null;
@@ -193,7 +193,11 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
      const action={module:'origin',type:'prologue',step:prologueButton.dataset.prologueStep,
        choice:prologueButton.dataset.prologueChoice||null};
      const result=command(action);
-     if(result.ok)renderOpening();
+     if(result.ok){
+       const beat=currentBeat(readWorld().slices.origin.prologue);
+       if(beat?.cue)cue?.(beat.cue==='news'?'bell':beat.cue==='key'?'step':'paper');
+       renderOpening();
+     }
      return;
    }
    const place=e.target.closest('[data-route-place]');

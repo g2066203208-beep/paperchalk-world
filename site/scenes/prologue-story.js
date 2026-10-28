@@ -52,7 +52,12 @@ export function newPrologue(day=1){
 }
 export function currentBeat(prologue){
  if(prologue?.status!=='active')return null;
- return PROLOGUE_BEATS[Math.max(0,Math.min(PROLOGUE_LAST,prologue.at||0))];
+ const beat=PROLOGUE_BEATS[Math.max(0,Math.min(PROLOGUE_LAST,prologue.at||0))];
+ if(beat.id==='promise'&&prologue.decision){
+   const choice=PROLOGUE_BEATS.find(x=>x.id==='decision')?.choices.find(x=>x.id===prologue.decision);
+   if(choice)return {...beat,line:choice.reaction+'\n'+beat.line};
+ }
+ return beat;
 }
 export function movePrologue(prologue,command,day,choiceId=null){
  const data=structuredClone(prologue);
