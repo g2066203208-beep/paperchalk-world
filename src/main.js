@@ -53,7 +53,7 @@ function fitBox(){
  const visible=sceneData.parts.filter(p=>p.visible);
  const box=new THREE.Box3();
  for(const p of visible){box.expandByPoint(new THREE.Vector3(...p.from));box.expandByPoint(new THREE.Vector3(...p.to));}
- if(box.isEmpty())return {target:new THREE.Vector3(0,2,0),height:28};
+ if(box.isEmpty())return {target:new THREE.Vector3(0,2,0),height:28,width:28};
  const center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
  // Avoid gigantic snow planes defining a useless camera framing.
  const housing=sceneData.parts.filter(p=>p.visible&&!/(雪地|积雪地面|雪地基底|街面)/.test(p.name));
@@ -61,7 +61,7 @@ function fitBox(){
  housing.forEach(p=>{useful.expandByPoint(new THREE.Vector3(...p.from));useful.expandByPoint(new THREE.Vector3(...p.to));});
  const b=useful.isEmpty()?box:useful,sz=b.getSize(new THREE.Vector3()),ct=b.getCenter(new THREE.Vector3());
  const height=Math.max(20,sz.y*1.75,sz.x*.83,sz.z*.9);
- return {target:ct,height};
+ return {target:ct,height,width:Math.max(sz.x*.9+sz.z*.85,sz.y*.65)};
 }
 function focus(){
  const {target,height}=fitBox();controls.target.copy(target);
@@ -73,7 +73,9 @@ function size(){
  const width=Math.max(1,container.clientWidth),height=Math.max(1,container.clientHeight);
  renderer.setSize(width,height,false);
  const ratio=width/height;
- const h=Math.max(15,fitBox().height);
+ const bounds=fitBox();
+ // On portrait touch devices frame the FULL car width, not only its height.
+ const h=Math.max(15,bounds.height,bounds.width/ratio*1.10);
  camera.left=-h*ratio/2;camera.right=h*ratio/2;camera.top=h/2;camera.bottom=-h/2;
  camera.updateProjectionMatrix();
 }
