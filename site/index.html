@@ -7,7 +7,7 @@
 <div class="scene-art" id="scene-art">
 <img src="./office-art.svg" class="office-svg" alt="原创二次元办公室，年轻下属站在办公桌后，桌上有地图、文件、电话和其他办公物件" draggable="false"/><span class="character-figure" aria-hidden="true"></span>
 <!-- The visible artwork itself is the target. Transparent path shapes exactly follow each item. -->
-<svg class="scene-hitmap" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid slice" aria-label="办公室可互动的真实道具">
+<svg class="scene-hitmap" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid meet" aria-label="办公室可互动的真实道具">
  <defs><clipPath id="guest-behind-desk" clipPathUnits="userSpaceOnUse"><path d="M0 0H1200V431H0Z"/></clipPath></defs>
  <defs><linearGradient id="face" x2=".7" y2="1"><stop stop-color="#f5dbbd"/><stop offset=".66" stop-color="#ecc2a8"/><stop offset="1" stop-color="#c99586"/></linearGradient></defs>
  <g id="door-actor">
@@ -67,12 +67,49 @@
  <path class="object-hit object-map" data-open="map" tabindex="0" role="button" aria-label="摊开整张城区地图" d="M546 485L856 468L927 613L532 619Z"/>
  <path class="object-hit object-reports" data-open="reports" tabindex="0" role="button" aria-label="打开整份报告文件夹" d="M332 517L563 502L620 641L331 665Z"/>
  <path class="object-hit object-ledger" data-open="ledger" tabindex="0" role="button" aria-label="翻开整本财务账簿" d="M809 570L1048 574L1077 654L796 656Z"/>
- <path class="object-hit object-gun" data-open="gun" tabindex="0" role="button" aria-label="打开武器抽屉和安全柜" d="M112 566L261 556L287 650L116 668Z"/>
+ <path class="object-hit object-gun" data-open="gun" tabindex="0" role="button" aria-label="从办公桌上拿起手枪进入射击模式" d="M112 566L261 556L287 650L116 668Z"/>
  <path class="object-hit object-calendar" data-open="calendar" tabindex="0" role="button" aria-label="翻动日历进入下一天" d="M1002 517L1122 531L1142 611L992 614Z"/>
  </g>
 </svg>
 </div>
 <div class="scene-info"><span class="scene-tag"><strong>01</strong> CHAPTER / 白手起家</span><div class="briefing" id="briefing"><small id="speaker">阿凯 · 汇报</small><p id="briefing-text">老板，城区地图和今天的情报都已经放在桌上了。</p><button type="button" id="open-reports" aria-label="打开最新报告">查看汇报 <span>›</span></button></div><span class="scene-note">OBJECTS ARE INTERACTIVE / 点击整件物品操作</span></div>
+<!-- Always uses the same 1200x670 coordinates as the illustrated office. -->
+<div id="combat-root" class="combat-root" hidden aria-label="持枪瞄准与办公室防守">
+ <svg id="combat-viewport" class="combat-viewport" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid meet" tabindex="0" role="application" aria-label="鼠标移动准星，点击进行单发射击，按R换弹">
+  <defs>
+   <radialGradient id="smoke-grad"><stop stop-color="#c96363" stop-opacity=".4"/><stop offset="1" stop-color="#c96363" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g id="combat-targets" aria-hidden="true"></g>
+  <g id="combat-weapon" aria-hidden="true">
+   <path d="M946 655L1010 570L1065 545L1138 559L1200 645V670H946Z" fill="#273847" stroke="#0d1c2c" stroke-width="8"/>
+   <path d="M982 670L991 610L1037 571L1063 588L1043 644L1067 670Z" fill="#e7b9a4" stroke="#a07069" stroke-width="6"/>
+   <path d="M1043 606L1024 554L1063 529L1085 551L1122 546L1132 566L1095 599L1080 644L1064 635Z" fill="#131f2c" stroke="#81919e" stroke-width="6"/>
+   <path d="M1048 551L1094 528L1166 535L1169 556L1094 563Z" fill="#1b2936" stroke="#a2a7a2" stroke-width="6"/>
+   <path d="M1137 540L1190 545" stroke="#d2d2ba" stroke-width="6"/>
+   <path d="M1052 576L1112 567L1103 585L1074 599" stroke="#4b5967" stroke-width="6" fill="none"/>
+   <path d="M1083 553L1100 552" stroke="#c1ae92" stroke-width="4"/>
+  </g>
+  <g id="muzzle-flash" aria-hidden="true" opacity="0"><path d="M1168 536L1192 507L1185 536L1200 538L1184 549L1200 568L1166 552Z" fill="#f6da99" stroke="#e8a464" stroke-width="5"/></g>
+  <g id="shot-ripple" aria-hidden="true" opacity="0"><circle r="26" stroke="#fff0c5" stroke-width="7" fill="none"/><circle r="8" fill="#f2d49d"/></g>
+  <g id="aim-crosshair" aria-hidden="true" transform="translate(600 335)">
+   <circle r="15" stroke="#f6e9d1" stroke-width="2" fill="#0c1821" fill-opacity=".12"/>
+   <path d="M-30 0H-11M11 0H30M0 -30V-11M0 11V30" stroke="#f8e4c4" stroke-width="3" stroke-linecap="round"/>
+   <circle r="2.5" fill="#b54b54" stroke="#fff0d3" stroke-width="1.5"/>
+  </g>
+ </svg>
+ <div class="combat-hud">
+  <div class="combat-brand"><small>PRIVATE DEFENCE / NIGHT HARBOR</small><strong id="combat-status">已拔枪 · 靶场练习</strong><p id="combat-message">移动鼠标瞄准，点击点射。按 R 换弹。</p></div>
+  <div class="combat-metrics"><span><small>弹匣</small><b id="combat-mag">06</b><small id="combat-reserve">/ 24</small></span><span><small>生命</small><b id="combat-hp">100</b></span><span><small>命中</small><b id="combat-hits">0</b></span></div>
+  <div class="combat-actions">
+    <button type="button" id="combat-reload" aria-label="换弹">R · 换弹</button>
+    <button type="button" id="combat-start" aria-label="触发办公室敌袭遭遇">防守事件</button>
+    <button type="button" id="combat-retreat" hidden>撤入掩体</button>
+    <button type="button" id="combat-holster">收枪 Esc</button>
+    <button type="button" id="combat-settle" hidden>结算战斗</button>
+  </div>
+ </div>
+ <div id="combat-flash" class="combat-flash" aria-hidden="true"></div>
+</div>
 </main>
 <div id="street-scene" class="street-scene" hidden aria-label="办公室外的夜港街道">
  <div class="street-haze"><span class="street-moon"></span><span class="street-buildings"></span><span class="street-pavement"></span></div>
