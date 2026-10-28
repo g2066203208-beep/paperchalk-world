@@ -262,7 +262,10 @@ function helpPanel(){
  '<div class="report-card"><h3>日历</h3><p>翻到下一天结算任务。第三天会有新成员加入。</p></div>'+
  '<div class="report-card"><h3>旧枪</h3><p>是故事道具，不是攻击按钮；细节会逐步揭开。</p></div>'+
  '<div class="achievement">第一目标：至少两个城区影响力达到 55、现金 '+fmt(GOALS.cash)+'、声望 '+GOALS.respect+'。</div>'+
- '<button class="primary" type="button" data-help-close="1">回到办公室</button></div></div>';
+ '<button class="primary" type="button" data-help-close="1">回到办公室</button>
+ <div class="info-box"><b>新战役：</b>从零地盘、租房、只有兄弟阿凯重新开始。系统会先备份上一段进度。</div>
+ <div class="city-actions"><button class="choice" type="button" data-new-campaign="1">开始新战役（先备份）</button>
+ <button class="choice" type="button" data-restore-campaign="1">恢复上次战役备份</button></div></div></div>';
 }
 function repaintPanel(){
  if(!currentPanel)return;
@@ -344,6 +347,24 @@ $('panel-body').addEventListener('click',e=>{
   if(!r.ok){lastDial=r.message;repaintPanel();toast(r.message);return;}
   lastDial='已接通 '+r.contact.name+'：'+r.message;
   dialBuffer='';applyResult(r,true);return;
+ }
+ if(node.dataset.newCampaign){
+  if(!window.confirm('确定开启全新战役？现有进度会先保留在本机旧存档备份中。'))return;
+  try{localStorage.setItem('night-office-campaign-backup',JSON.stringify({state,meta,world}));}
+  catch{toast('备份失败，已取消重开');return;}
+  state=initialGame();meta=initialOffice();world=createWorld(state,null);
+  fileTab='dossiers';plan={crew:'kai',zone:'harbor',mission:'deliver'};
+  worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',
+    operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
+  closePanel();refresh();stage.transition();
+  toast('全新战役已经开启：只有你和阿凯，零地盘。旧存档已备份。');return;
+ }
+ if(node.dataset.restoreCampaign){
+   let backup=null;try{backup=JSON.parse(localStorage.getItem('night-office-campaign-backup')||'null');}catch{}
+   if(!backup?.state||!backup?.world){toast('没有找到可恢复的战役备份');return;}
+   if(!window.confirm('恢复之前备份的战役，会覆盖当前进度，确定继续？'))return;
+   state=restore(backup.state);meta=normalizeOffice(backup.meta,state);world=createWorld(state,backup.world);
+   closePanel();refresh();stage.transition();toast('上次战役已恢复');return;
  }
  if(node.dataset.recruitSource){worldUI.source=node.dataset.recruitSource;worldUI.candidate=null;repaintPanel();return;}
  if(node.dataset.recruitPerson){worldUI.candidate=node.dataset.recruitPerson;repaintPanel();return;}

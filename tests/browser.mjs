@@ -212,6 +212,23 @@ await run('people-first-start-and-adult-recruitment',{viewport:{width:1440,heigh
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.society.aidHistory.length,1,'community aid persists');
 });
 
+await run('campaign-reset-keeps-old-save',{viewport:{width:1280,height:800}},async page=>{
+ await page.locator('.object-phone').click();
+ await page.locator('[data-phone="yes"]').click();
+ await page.locator('#close-panel').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,275);
+ await page.locator('#help-btn').click();
+ page.once('dialog',d=>d.accept());
+ await page.locator('[data-new-campaign]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,190);
+ assert.deepEqual((await page.evaluate(()=>window.__OFFICE__.state())).crew,['kai']);
+ await page.locator('#help-btn').click();
+ page.once('dialog',d=>d.accept());
+ await page.locator('[data-restore-campaign]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,275);
+ await page.screenshot({path:'artifacts/people-04-new-campaign-backup.png',fullPage:true});
+});
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');
