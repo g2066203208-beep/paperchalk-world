@@ -341,6 +341,45 @@ await run('sprite-portrait-390x844',{viewport:{width:390,height:844},deviceScale
  assert.equal(await page.locator('.city-node').count(),4);
 });
 
+await run('first-chapter-playable-cutscene',{viewport:{width:1440,height:900}},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const prologue=page.locator('.prologue-presentation');
+ await prologue.waitFor({state:'visible'});
+ assert.match(await prologue.innerText(),/门锁卡了一下/);
+ await page.screenshot({path:'artifacts/actual-story-01-purchased-bare-office.png',fullPage:true});
+ for(let i=0;i<9;i++)await page.locator('[data-prologue-step="next"]').click();
+ assert.equal(await page.locator('[data-prologue-step="choose"]').count(),2);
+ await page.screenshot({path:'artifacts/actual-story-02-first-choice.png',fullPage:true});
+ await page.locator('[data-prologue-choice="street-first"]').click();
+ assert.match(await prologue.innerText(),/先去听听他们怎么说/);
+ await page.locator('[data-prologue-step="next"]').click();
+ await page.locator('[data-prologue-step="next"]').click();
+ assert.equal(await prologue.isVisible(),false);
+ const world=await page.evaluate(()=>window.__OFFICE__.world());
+ assert.equal(world.slices.origin.prologue.status,'complete');
+ assert.equal(world.slices.origin.identityExposure,0);
+ assert.equal(world.slices.origin.streetTrust,9);
+ await page.locator('[data-explore-type="exit"]').click();
+ await page.locator('[data-route-place="alley"]').click();
+ await page.locator('[data-route-go]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.world().slices.origin.venue==='alley');
+ await page.screenshot({path:'artifacts/actual-story-03-first-street.png',fullPage:true});
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.origin.prologue.status,'complete');
+});
+await run('first-chapter-mobile-portrait',{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const p=page.locator('.prologue-presentation');
+ assert.ok(await p.isVisible());
+ const bbox=await p.boundingBox();
+ assert.ok(bbox.x>=0&&bbox.x+bbox.width<=390+2,'intro fits phone viewport');
+ await page.screenshot({path:'artifacts/actual-story-04-phone-opening.png',fullPage:true});
+ await page.locator('[data-prologue-step="skip"]').tap();
+ assert.equal(await p.isVisible(),false);
+ await page.locator('.scene-object.prop-phone').tap();
+ assert.equal(await page.locator('.phone-keypad button').count(),12);
+});
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');
