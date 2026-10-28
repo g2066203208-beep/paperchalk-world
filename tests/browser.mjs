@@ -11,6 +11,8 @@ async function run(name,options,fn){
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
   await page.locator('.office-svg').waitFor();
   assert.equal(await page.locator('button.prop').count(),6);
+ const asset=await page.locator('img.office-svg').evaluate(img=>({complete:img.complete,loaded:img.naturalWidth>0}));
+ assert.ok(asset.complete&&asset.loaded,'original SVG office artwork must render');
   await fn(page);
   assert.deepEqual(exceptions,[]);
   console.log('PASS '+name);
@@ -21,6 +23,10 @@ async function run(name,options,fn){
 }
 await run('desktop',{viewport:{width:1440,height:900}},async page=>{
  await page.screenshot({path:'artifacts/desktop-office.png',fullPage:true});
+ await page.locator('.prop-map').hover();
+ const label=await page.locator('.prop-map .prop-label').evaluate(el=>Number(getComputedStyle(el).opacity));
+ assert.ok(label>=0,'map hover label should be discoverable');
+ await page.screenshot({path:'artifacts/desktop-hover-map.png',fullPage:true});
  await page.locator('[data-open="map"]').click();
  assert.equal(await page.locator('.city-node').count(),4);
  assert.ok((await page.locator('.route-path').getAttribute('d')).includes('143 272'));
