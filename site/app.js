@@ -160,7 +160,7 @@ $('game').addEventListener('click',e=>{
  if(node.dataset.close){closeDialog();return;}
 });
 $('next-week').addEventListener('click',()=>dispatch('next'));
-$('help').addEventListener('click',showHelp);
+$('help').addEventListener('click',()=>{if(state.event){showEvent();toast('请先处理本周的城市事件');}else showHelp();});
 $('reset').addEventListener('click',()=>{
  if(confirm('重新开始夜港？这将清除当前存档。')){
   state=createGame();tab='street';closeDialog();render();toast('从码头重新起步。');

@@ -36,6 +36,13 @@ await check('desktop',{viewport:{width:1440,height:900},deviceScaleFactor:1},asy
  assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).selected,'night');
  await page.locator('#next-week').click();
  assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,2);
+ await page.locator('#next-week').click();
+ assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,3);
+ assert.equal(await page.locator('#veil').isVisible(),true,'A city dilemma must appear after week 3');
+ await page.locator('[data-event="b"]').click();
+ assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).event,null);
+ await page.reload({waitUntil:'domcontentloaded'});
+ assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,3);
 });
 await check('phone-portrait',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  assert.equal(await page.locator('.district-card').count(),5);
