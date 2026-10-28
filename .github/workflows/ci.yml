@@ -1,7 +1,7 @@
 name: Night Office - playable scene, tests, deploy
 on:
   push:
-    branches: [main, game/office-object-interactions, feature/modular-world-runtime, feature/living-city-estates-justice, feature/people-first-origin-politics, feature/legend-origin-explorable-scenes, fix/immersive-object-sprites-landscape, fix/scene-navigation-dialogue-continuous-crowd]
+    branches: [main, game/office-object-interactions, feature/modular-world-runtime, feature/living-city-estates-justice, feature/people-first-origin-politics, feature/legend-origin-explorable-scenes, fix/immersive-object-sprites-landscape, fix/scene-navigation-dialogue-continuous-crowd, feature/playable-first-day-prologue]
   pull_request:
     branches: [main]
   workflow_dispatch:
