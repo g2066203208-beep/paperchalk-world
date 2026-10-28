@@ -1,10 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {createRuntime,signal} from '../site/core/runtime.js';
 import {runtime,createWorld,applyWorld,advanceWorld} from '../site/core/game.js';
 import {FACTIONS,ownership} from '../site/systems/factions.js';
 import {initialGame} from '../site/engine.js';
 const legacy=initialGame();
+test('presentation assets are linked without contaminating simulation rules',()=>{
+ const htmlSource=readFileSync('site/index.html','utf8');
+ assert.ok(htmlSource.includes('./ui/world-panel.css'));
+ assert.ok(htmlSource.includes('./presentation/stage.css'));
+ assert.ok(htmlSource.includes('id="npc-mouth"'));
+});
 test('plugin order is deterministic, dependency sorted; bad dependency/cycle rejected',()=>{
  assert.deepEqual(runtime.moduleIds,['factions','people','civic','dialogue','news']);
  assert.equal(signal(11,2,'npc',3),signal(11,2,'npc',3));

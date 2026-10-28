@@ -8,7 +8,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const hero=(small,title,description)=>'<div class="eyebrow">'+small+'</div><h2 id="panel-title">'+title+'</h2><p>'+description+'</p>';
 const tabs=(current)=>'<nav class="world-tabs" aria-label="组织和城市文件">'+[
  ['city','势力地图'],['personnel','人事册'],['news','夜港晚报'],['civic','城市公报'],['dialogue','当面会谈']
-].map(([id,label])=>'<button type="button" data-world-tab="'+id+'" class="'+(id===current?'selected':'')+'">'+label+'</button>').join('')+'</nav>';
+].map(([id,label])=>'<button type="button" data-world-tab="'+id+'" class="'+(id===current?'selected':'')+'">'+label+'</button>').join('')+'<button type="button" data-world-back="1">返回卷宗</button></nav>';
 function factionMap(world,selected='s1'){
  const f=world.slices.factions;
  const own=ownership(f);
