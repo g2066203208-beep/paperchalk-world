@@ -1,0 +1,6 @@
+/* Exact scene-specific hit testing: travel doors must stay at their artwork locations. */
+.explore-stage:not(.scene-office) .explore-door{left:var(--hot-left)!important;top:var(--hot-top)!important;width:12%;height:31%}
+.explore-stage:not(.scene-office) .explore-person{left:var(--hot-left)!important;top:var(--hot-top)!important;width:10%;height:24%}
+.explore-stage:not(.scene-office) .explore-arrow{left:var(--hot-left)!important;top:var(--hot-top)!important}
+.explore-stage:not(.scene-office) .explore-action{left:var(--hot-left)!important;top:var(--hot-top)!important}
+.explore-stage:not(.scene-office) .explore-paper{left:var(--hot-left)!important;top:var(--hot-top)!important}

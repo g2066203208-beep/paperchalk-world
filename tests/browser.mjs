@@ -241,7 +241,10 @@ await run('chapter-one-real-locations',{viewport:{width:1440,height:900}},async 
  assert.equal(state.identityExposure,0);
  assert.deepEqual((await page.evaluate(()=>window.__OFFICE__.state())).crew,['kai']);
  assert.equal(await page.locator('.explore-root .explore-art').count(),1);
- assert.equal(await page.locator('.explore-spot').count()>5,true);
+ assert.equal(await page.locator('.scene-object img').count(),6,'six individual sprite assets are visible');
+ assert.equal(await page.locator('[data-explore-id="barewall"]').count(),0,'wall must not respond to clicks');
+ assert.equal(await page.locator('[data-explore-id="window"]').count(),0,'decorative window must not be interactive');
+ assert.equal(await page.locator('.explore-hint').count(),0,'no instructions over the scene');
  await page.screenshot({path:'artifacts/chapter-01-bare-purchased-office.png',fullPage:true});
  await page.locator('[data-explore-type="talk"][data-explore-id="kai"]').click();
  assert.equal((await get()).flags.spokeBrother,true);
@@ -288,6 +291,54 @@ await run('chapter-one-phone-touch',{viewport:{width:390,height:844},isMobile:tr
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.origin.venue)),'alley');
  await page.waitForTimeout(450);
  await page.screenshot({path:'artifacts/chapter-phone-alley.png',fullPage:true});
+});
+
+
+await run('sprite-landscape-844x390',{viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const d=await page.evaluate(()=>({w:innerWidth,h:innerHeight,sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight}));
+ assert.ok(d.sw<=d.w+2&&d.sh<=d.h+2,'no landscape overflow: '+JSON.stringify(d));
+ assert.equal(await page.locator('.scene-object img').count(),6);
+ const phone=page.locator('.scene-object.prop-phone');
+ const map=page.locator('.scene-object.prop-map');
+ assert.ok(await phone.isVisible());assert.ok(await map.isVisible());
+ for(const el of [phone,map]){
+  const bb=await el.boundingBox();
+  assert.ok(bb&&bb.x>=0&&bb.y>=0&&bb.x+bb.width<=844+2&&bb.y+bb.height<=390+2,'object outside viewport '+JSON.stringify(bb));
+ }
+ assert.equal(await page.locator('.explore-spot:has-text("查看毛坯墙面")').count(),0);
+ const back=await page.locator('.explore-stage').screenshot({path:'artifacts/new-844-landscape-six-real-sprites.png'});
+ await phone.tap();
+ assert.equal(await page.locator('.phone-keypad button').count(),12);
+ await page.screenshot({path:'artifacts/new-844-landscape-telephone-open.png',fullPage:true});
+ await page.locator('#close-panel').tap();
+ await map.tap();
+ assert.equal(await page.locator('.city-node').count(),4);
+ await page.screenshot({path:'artifacts/new-844-landscape-map-open.png',fullPage:true});
+ await page.locator('#close-panel').tap();
+ await page.locator('.scene-object.prop-folder').tap();
+ assert.ok((await page.locator('#panel-title').innerText()).length>0);
+});
+await run('sprite-landscape-667x375',{viewport:{width:667,height:375},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ assert.ok(await page.locator('.scene-object.prop-phone').isVisible());
+ assert.ok(await page.locator('.scene-object.prop-map').isVisible());
+ const sizes=await page.evaluate(()=>({sw:document.documentElement.scrollWidth,w:innerWidth}));
+ assert.ok(sizes.sw<=sizes.w+2,'no horizontal overflow');
+ await page.screenshot({path:'artifacts/new-667-landscape-office.png',fullPage:true});
+ await page.locator('.scene-object.prop-map').tap();
+ assert.equal(await page.locator('.city-node').count(),4);
+ await page.locator('#close-panel').tap();
+});
+await run('sprite-portrait-390x844',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ assert.equal(await page.locator('.scene-object').count(),6);
+ await page.screenshot({path:'artifacts/new-390-portrait-desk-closeup.png',fullPage:true});
+ await page.locator('.scene-object.prop-phone').tap();
+ assert.equal(await page.locator('.phone-keypad button').count(),12);
+ await page.locator('#close-panel').tap();
+ await page.locator('.scene-object.prop-map').tap();
+ assert.equal(await page.locator('.city-node').count(),4);
 });
 
 await browser.close();

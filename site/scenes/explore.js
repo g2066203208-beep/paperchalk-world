@@ -97,7 +97,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const sClock=w.slices.clock;
    const locals=(SCENE_PEOPLE[o.venue]||[]).map(x=>x.name).join('、');
    const spotsHTML=spots.map(([type,id,x,y,name,style])=>
-    '<button type="button" class="explore-spot explore-'+style+'" data-explore-type="'+type+'" data-explore-id="'+id+'" style="left:'+x+'%;top:'+y+'%" aria-label="'+escape(name)+'"><span>'+escape(name)+'</span></button>'
+    '<button type="button" class="explore-spot explore-'+style+'" data-explore-type="'+type+'" data-explore-id="'+id+'" style="left:'+x+'%;top:'+y+'%;--hot-left:'+x+'%;--hot-top:'+y+'%" aria-label="'+escape(name)+'"><span>'+escape(name)+'</span></button>'
    ).join('');
    root.innerHTML='<div class="explore-visual">'+sceneArtwork(o.venue)+'</div>'+crowd(w,o.venue)+
      '<div class="explore-head"><small>THE NIGHT HARBOR · '+String(s.day).padStart(2,'0')+'</small>'+

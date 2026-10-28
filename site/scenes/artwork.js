@@ -22,24 +22,33 @@ const skyline=()=>rect(0,0,1200,670,'#dcad9f')+
  path('M0 263L168 185L310 232L470 174L649 220L833 151L1020 224L1200 178V520H0Z','#b78081');
 const poster=(x,y,message)=>rect(x,y,168,90,'#eadbc1')+
  '<text x="'+(x+11)+'" y="'+(y+51)+'" fill="#a84550" font-weight="900" font-size="23">'+message+'</text>';
-const office=()=>rect(0,0,1200,670,'#e8dbc8')+
- rect(0,0,1200,59,'#2b3743')+
- path('M0 0H780L683 476H0Z','#f1e6d4')+
- path('M0 486L1200 443V670H0Z','#8c938d')+
- rect(113,113,330,295,'#283d4b')+rect(135,135,285,250,'#d2a092')+
- path('M135 380L203 283L252 329L312 241L420 326V389H135Z','#536879')+
- path('M269 119V400M123 268H435','none','stroke="#efdfc5" stroke-width="12"')+
- rect(837,110,219,333,'#69737b')+rect(855,129,177,293,'#3d4d58')+
- rect(989,282,15,15,'#e4bc86')+
- path('M34 461L424 425L454 499L48 518Z','#c4a27c','stroke="#263441" stroke-width="8"')+
- rect(63,518,28,132,'#32404a')+rect(396,508,28,139,'#32404a')+
- rect(476,543,158,90,'#b69a75')+rect(672,563,124,80,'#bf9c72')+
- poster(121,369,'第一张地契')+
- path('M486 492L611 484L638 527L484 532Z','#ead4b3','stroke="#263440" stroke-width="6"')+
- path('M676 510L792 499L808 541L675 548Z','#e3ceb2','stroke="#263441" stroke-width="6"')+
- person(769,571,'#536b79',.89)+
- '<text x="489" y="121" fill="#a04752" font-size="33" font-weight="900">初次开门 · DAY 01</text>'+
- '<text x="492" y="155" fill="#364551" font-size="17">新买的毛坯办公室 / 无地盘</text>';
+// The props are NOT painted into this background. Each is an independent SVG asset.
+const office=()=>rect(0,0,1200,670,'#e4d5c2')+
+ rect(0,0,1200,57,'#263640')+
+ path('M0 0H756L660 476H0Z','#eee1ce')+
+ path('M0 468L1200 431V670H0Z','#7e8582')+
+ rect(97,98,360,300,'#293a48')+rect(114,114,326,270,'#cfa39a')+
+ path('M114 370L202 272L263 326L334 215L440 325V384H114Z','#607a83')+
+ path('M276 107V387M108 248H451','none','stroke="#efdec5" stroke-width="11"')+
+ rect(913,101,210,358,'#2d3b47')+rect(927,119,175,319,'#394956')+
+ path('M946 134H1083V419H946Z','#5c6269')+
+ path('M944 145H1078V291H944ZM946 302H1078V419H946Z','none','stroke="#cfb191" stroke-width="8"')+
+ rect(1055,283,11,18,'#d8ac80')+
+ path('M0 442L1200 421','none','stroke="#34434a" stroke-width="15"')+
+ rect(60,489,20,168,'#354652')+
+ rect(888,495,23,162,'#354652')+
+ person(780,579,'#4f697b',.88)+
+ // Separate desk tabletop and worn wooden front; interactive sprites sit in DOM on top.
+ path('M74 457L860 450L1096 572L28 575Z','#6a5046','stroke="#1c2b35" stroke-width="10"')+
+ path('M30 573H1091L1063 669H51Z','#3b3540','stroke="#182530" stroke-width="10"')+
+ path('M64 581H1058','none','stroke="#b24a51" stroke-width="7"')+
+ path('M130 466L840 460','none','stroke="#b89d81" stroke-width="3"')+
+ rect(152,365,185,79,'#a98974')+
+ path('M160 373H325V428H160Z','#c7a78a')+
+ path('M344 392L419 384L427 439L341 446Z','#d4b697')+
+ // Cracked concrete, dangling cable: atmosphere only, intentionally non-clickable.
+ path('M517 65L490 128L528 191L497 247','none','stroke="#9e8e7d" stroke-width="4"')+
+ path('M1140 89L1152 170L1138 220','none','stroke="#9e8e7d" stroke-width="4"');
 const alley=()=>skyline()+building(-34,99,363,416,'#bba18a')+
  building(328,71,409,455,'#888c91')+building(739,115,494,414,'#b97572')+
  sidewalk()+poster(410,313,'蒙面人？')+
@@ -85,5 +94,5 @@ rect(807,447,209,92,'#a18568')+poster(102,334,'孤儿院徽章')+
 '<text x="520" y="101" fill="#3b4650" font-size="30" font-weight="900">曾经打工的阁楼 · 回忆</text>';
 const artists={office,alley,market,labor,docks,attic};
 export function sceneArtwork(id){
- return '<svg class="explore-art" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid slice" role="img" aria-label="原创二次元城市场景">'+(artists[id]||office)()+'</svg>';
+ return '<svg class="explore-art" viewBox="0 0 1200 670" preserveAspectRatio="none" role="img" aria-label="原创二次元城市场景">'+(artists[id]||office)()+'</svg>';
 }
