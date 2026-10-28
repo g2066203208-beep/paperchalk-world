@@ -6,16 +6,49 @@
 <main class="scene" aria-label="可交互的黑帮首领办公室">
 <div class="scene-art" id="scene-art">
 <img src="./office-art.svg" class="office-svg" alt="原创二次元办公室，年轻下属站在办公桌后，桌上有地图、文件、电话和其他办公物件" draggable="false"/><span class="character-figure" aria-hidden="true"></span>
-<!-- hotspots anchored to painted objects -->
-<button class="prop prop-phone" type="button" data-open="phone" aria-label="拿起电话"><span class="prop-mark">☎</span><span class="prop-label">电话</span></button>
-<button class="prop prop-map" type="button" data-open="map" aria-label="展开城区地图规划行动"><span class="prop-mark">⌖</span><span class="prop-label">城区地图</span></button>
-<button class="prop prop-folder" type="button" data-open="reports" aria-label="翻开部下汇报文件"><span class="prop-mark">✉</span><span class="prop-label">汇报</span></button>
-<button class="prop prop-ledger" type="button" data-open="ledger" aria-label="打开组织账本"><span class="prop-mark">＄</span><span class="prop-label">账本</span></button>
-<button class="prop prop-gun" type="button" data-open="gun" aria-label="观察桌上的旧手枪"><span class="prop-mark">✧</span><span class="prop-label">旧物</span></button>
-<button class="prop prop-calendar" type="button" data-open="calendar" aria-label="翻动日历进入下一天"><span class="prop-mark">↷</span><span class="prop-label">明日</span></button>
+<!-- The visible artwork itself is the target. Transparent path shapes exactly follow each item. -->
+<svg class="scene-hitmap" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid slice" aria-label="办公室可互动的真实道具">
+ <g id="door-actor">
+  <path class="door-leaf" d="M920 98L1075 97L1076 411L919 416Z" fill="#48505a" stroke="#c8a581" stroke-width="6"/>
+  <path class="door-leaf-detail" d="M945 116H1048V236H945ZM945 256H1048V384H945Z" fill="#343f4b" stroke="#d3ad83" stroke-width="3"/>
+  <ellipse class="door-handle" cx="1045" cy="258" rx="7" ry="11" fill="#e4c08b"/>
+  <g class="guest-actor" id="guest-actor">
+   <ellipse cx="975" cy="422" rx="41" ry="8" fill="#050f1c" opacity=".4"/>
+   <path d="M946 322L985 321L991 424L967 424L955 354L949 425L926 425Z" fill="#151c26"/>
+   <path d="M931 259Q950 245 977 258L998 328L943 356L910 330Z" fill="#b7a18b" stroke="#15212d" stroke-width="4"/>
+   <path d="M947 256L952 306L960 285L971 308L980 253Z" fill="#f3e3ca"/>
+   <path d="M949 256L964 306L968 252Z" fill="#b14c54"/>
+   <path d="M931 269L910 332L922 341L951 301M983 268L1004 328L993 337L968 299" fill="#a08d80" stroke="#222a33" stroke-width="3"/>
+   <path d="M933 213Q925 177 957 171Q986 173 983 218L973 251Q960 263 947 248Z" fill="#e9c4a7"/>
+   <path d="M928 216L921 185L938 164L963 158L987 171L990 208L980 208L974 182L952 192L935 184Z" fill="#243544"/>
+   <path d="M943 215L953 213M965 212L975 212" stroke="#253443" stroke-width="4"/>
+  </g>
+  <g class="knock-flash" id="knock-light" aria-hidden="true"><circle cx="1051" cy="200" r="18" fill="#bd5256"/><text x="1038" y="208" font-size="23" font-weight="900" fill="#fff0dc">!</text></g>
+ </g>
+ <g class="svg-interactions">
+ <path class="object-hit object-door" data-open="door" tabindex="0" role="button" aria-label="打开办公室门或离开办公室" d="M903 78L1091 78L1093 430L905 430Z"/>
+ <path class="object-hit object-person" data-open="visitor" tabindex="0" role="button" aria-label="与进门的访客交谈" d="M889 162L1007 153L1043 355L1008 442L908 440L883 335Z"/>
+ <path class="object-hit object-phone" data-open="phone" tabindex="0" role="button" aria-label="拿起整部座机电话" d="M160 472Q189 453 265 460L357 491L368 555L177 584L148 540Z"/>
+ <path class="object-hit object-map" data-open="map" tabindex="0" role="button" aria-label="摊开整张城区地图" d="M546 485L856 468L927 613L532 619Z"/>
+ <path class="object-hit object-reports" data-open="reports" tabindex="0" role="button" aria-label="打开整份报告文件夹" d="M332 517L563 502L620 641L331 665Z"/>
+ <path class="object-hit object-ledger" data-open="ledger" tabindex="0" role="button" aria-label="翻开整本财务账簿" d="M809 570L1048 574L1077 654L796 656Z"/>
+ <path class="object-hit object-gun" data-open="gun" tabindex="0" role="button" aria-label="打开武器抽屉和安全柜" d="M112 566L261 556L287 650L116 668Z"/>
+ <path class="object-hit object-calendar" data-open="calendar" tabindex="0" role="button" aria-label="翻动日历进入下一天" d="M1002 517L1122 531L1142 611L992 614Z"/>
+ </g>
+</svg>
 </div>
-<div class="scene-info"><span class="scene-tag"><strong>01</strong> CHAPTER / 白手起家</span><div class="briefing" id="briefing"><small id="speaker">阿凯 · 汇报</small><p id="briefing-text">老板，城区地图和今天的情报都已经放在桌上了。</p><button type="button" id="open-reports" aria-label="打开最新报告">查看汇报 <span>›</span></button></div><span class="scene-note">CLICK THE OBJECTS / 点击桌面物件</span></div>
+<div class="scene-info"><span class="scene-tag"><strong>01</strong> CHAPTER / 白手起家</span><div class="briefing" id="briefing"><small id="speaker">阿凯 · 汇报</small><p id="briefing-text">老板，城区地图和今天的情报都已经放在桌上了。</p><button type="button" id="open-reports" aria-label="打开最新报告">查看汇报 <span>›</span></button></div><span class="scene-note">OBJECTS ARE INTERACTIVE / 点击整件物品操作</span></div>
 </main>
+<div id="street-scene" class="street-scene" hidden aria-label="办公室外的夜港街道">
+ <div class="street-haze"><span class="street-moon"></span><span class="street-buildings"></span><span class="street-pavement"></span></div>
+ <div class="street-head"><small>NIGHT HARBOR · NIGHT STREETS</small><strong>走出办公室</strong><p>这里发生的事会改变你的资金和城区关系。</p></div>
+ <div class="street-links">
+   <button type="button" class="place-building harbor-bld" data-travel="harbor"><span>01 / HARBOR</span><strong>旧港</strong><small>现场结算货款 · +35 现金</small></button>
+   <button type="button" class="place-building market-bld" data-travel="market"><span>02 / MARKET</span><strong>市集</strong><small>拜访商户 · 声望与关系上升</small></button>
+   <button type="button" class="place-building neon-bld" data-travel="neon"><span>03 / NEON</span><strong>霓虹街</strong><small>调查竞争者 · 关注可能上升</small></button>
+   <button type="button" class="place-building return-bld" data-travel="office"><span>PRIVATE OFFICE</span><strong>返回办公室</strong><small>通过办公室门回到桌前</small></button>
+ </div>
+ </div>
 <footer class="bottom-ribbon"><div class="day-mark">NO. <span id="ribbon-day">001</span></div><div class="foot-copy">一间办公室。两名伙伴。从这里开始，这座城会记住你的名字。</div><div class="goal-marker" id="goal-marker">目标 · 2 区影响力 55 / 声望 24 / 资金 1400</div></footer>
 <div id="overlay" class="overlay" hidden><section class="paper-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title"><div class="panel-chrome"><span id="panel-kicker">NIGHT HARBOR / PRIVATE FILE</span><button id="close-panel" type="button" aria-label="收起当前物件">×</button></div><div id="panel-body" class="panel-body"></div></section></div>
 <div class="toast" id="toast" aria-live="polite" role="status"></div></div></body></html>
