@@ -1,16 +1,24 @@
-# PaperWorld — 全新起点
+# Web + Android 容器
 
-2026-10-28：按要求将旧项目从 `main` 工作树**整体移除**，重新从零开始。
+本仓库的 `main` 只保留未来网页开发所需的最小框架，以及自动构建 Android APK 的托管网页容器。**当前不包含游戏设计或旧项目内容。**
 
-## 当前状态
+- 网页入口：<https://g2066203208-beep.github.io/paperchalk-world/>
+- APK 固定下载：<https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk>
+- APK 构建记录：<https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/apk.yml>
 
-- 已移除旧版游戏与建模工作室的代码、模型、截图、安卓工程、旧工作流、测试和演示。
-- 当前仅保留全新空白占位页和最低限度的 GitHub Actions 验证/部署流程。
-- **没有**沿用旧版剧情、设定、角色、美术风格、引擎、玩法或技术债。
-- 尚未决定新游戏设计；不擅自套用旧架构。
+## 更新方式
 
-## 开发原则
+修改 `site/` 后提交到 `main`：GitHub Actions 自动校验并部署 GitHub Pages。已安装的 APK **每次启动时直接获取托管网站最新版页面**，无需重新打包 APK。
 
-先明确新方向与可验证的首个垂直切片，再逐步实现。任何游戏功能须在真实浏览器中可操作、能复测，不能用静态截图冒充已实现功能。
+修改 `android/` 后提交到 `main`：GitHub Actions 自动构建 Debug APK，覆盖固定 Release 下载地址。APK 原生代码修改仍需用户手动安装更新，无法静默安装。
 
-> 注意：Git 的历史提交、其它分支以及 GitHub Releases 不属于 `main` 工作树，仍可能保留旧内容；此重置不会伪称清除历史。
+Android 保留原 applicationId `com.paperchalk.lampkeep` 以及旧调试签名缓存 key，尽可能兼容旧版 APK 的覆盖安装；若原签名缓存已丢失，可能需要卸载旧版后安装。
+
+## 当前目录
+
+- `site/index.html`：全新空白网页入口
+- `android/`：仅加载网站的原生 Android WebView 容器
+- `.github/workflows/`：网页部署、APK 自动构建
+- `tests/`：最低限度的框架检查
+
+没有旧游戏引擎、场景、角色、贴图、模型、Android 业务桥接或游戏功能。具体网页内容待后续决定。
