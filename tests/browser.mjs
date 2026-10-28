@@ -188,7 +188,7 @@ await run('people-first-start-and-adult-recruitment',{viewport:{width:1440,heigh
  const first=await page.evaluate(()=>({legacy:window.__OFFICE__.state(),world:window.__OFFICE__.world()}));
  assert.deepEqual(first.legacy.crew,['kai'],'player plus one brother');
  assert.equal(first.world.slices.factions.cells.filter(c=>c.owner==='player').length,0,'zero controlled turf');
- assert.equal(first.world.slices.estates.parcels.filter(p=>p.owner==='player').length,0,'office deed has been purchased');
+ assert.equal(first.world.slices.estates.parcels.filter(p=>p.owner==='player').length,1,'office deed has been purchased');
  await page.locator('.object-reports').click();
  await page.locator('[data-world-tab="society"]').click();
  assert.equal(await page.locator('#panel-title').innerText(),'临时政府与街区互助');
