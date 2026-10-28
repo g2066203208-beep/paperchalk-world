@@ -1,10 +1,12 @@
 import {DISTRICTS,CREW,MISSIONS,GOALS,initialGame,restore,availableCrew,crewInfo,zoneInfo,canOrder,setOrder,endDay,phoneDetails,answerPhone,markGunSeen} from './engine.js';
 import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,queueVisitor,decideDossier,allocate,transferSafe,equip,openDoor,visitorAction,travel,advance} from './office-features.js';
+import {setupCombat} from './combat-ui.js';
 const $=id=>document.getElementById(id);
 const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let state;try{state=restore(localStorage.getItem(STORE));}catch{state=initialGame();}
 let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'null'),state);}catch{meta=initialOffice();}
+let gunplay=null;
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
@@ -32,6 +34,7 @@ function refresh(){
   $('speaker').textContent=(crewInfo(recent?.crew)?.name||'办公室')+' · 最新汇报';
   $('briefing-text').textContent=recent?.body||'地图已放好。';
  }
+ if(gunplay)gunplay.checkDay(state.day,state.heat);
  $('goal-marker').textContent=state.won?'◆ 城市开始承认你的名字':'目标 · 两区影响力 55 / 声望 24 / 现金 1400';
  document.title='夜港 · 首领办公室 · DAY '+state.day;
  save();
@@ -172,6 +175,7 @@ function ledgerPanel(){
  '</tbody></table></div><div><div class="mini-title">可用现金</div><h2>'+fmt(state.cash)+'</h2>'+
  '<div class="budget-row"><div><strong>运输保障 · 40元</strong><small>每个跑单任务明天额外收入 30元 · 已投入 '+meta.bonus.logistics+'/2</small></div><button data-budget="logistics" type="button">划拨</button></div>'+
  '<div class="budget-row"><div><strong>社区关系 · 35元</strong><small>明日声望 +2，市集影响 +3 · 已投入 '+meta.bonus.relations+'/2</small></div><button data-budget="relations" type="button">划拨</button></div>'+
+ '<button class="primary" data-drawer="1" type="button">打开保险抽屉 / 物品管理</button>'+ 
  '<div class="info-box"><b>仓库待出货：</b>'+meta.supply+' 批<br/><b>保险抽屉：</b>'+fmt(meta.storedCash)+'<br/><b>预计日常开支：</b>'+fmt(35+state.crew.length*14)+'</div>'+
  '<p class="map-hint">财务划拨会即时扣款并记入流水，效果在翻日历后结算。</p></div></div>';
 }
@@ -232,6 +236,8 @@ function applyResult(r,updatePanel=true){
 }
 function activateOfficeObject(type){
  if(meta.venue==='street')return;
+ if(type==='gun'){gunplay.draw();return;}
+ if(gunplay?.isActive()){toast('先收枪或结算战斗，再使用其他办公室物件');return;}
  if(type==='door'){
   if(meta.visitor){panel('visitor');return;}
   const r=openDoor(state,meta);
@@ -305,6 +311,7 @@ $('panel-body').addEventListener('click',e=>{
   applyResult(queueVisitor(state,meta,node.dataset.crewvisit));return;
  }
  if(node.dataset.budget){applyResult(allocate(state,meta,node.dataset.budget));return;}
+ if(node.dataset.drawer){panel('gun');return;}
  if(node.dataset.equip){applyResult(equip(state,meta,node.dataset.equip));return;}
  if(node.dataset.safe){applyResult(transferSafe(state,meta,Number(node.dataset.safe)));return;}
  if(node.dataset.visitact){
@@ -320,8 +327,9 @@ $('panel-body').addEventListener('click',e=>{
  }
  if(node.dataset.helpClose){closePanel();}
 });
+gunplay=setupCombat({getWorld:()=>({state,meta}),setWorld:(newState,newMeta)=>{state=newState;meta=newMeta;refresh();},toast});
 refresh();
-window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),open:panel,close:closePanel,
+window.__OFFICE__={version:6,state:()=>structuredClone(state),meta:()=>structuredClone(meta),combat:()=>gunplay.state(),drawGun:()=>gunplay.draw(),open:panel,close:closePanel,
  dispatch:(type,...args)=>{
   const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
   type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):
