@@ -1,0 +1,65 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {initialGame,restore,CREW} from '../site/engine.js';
+import {runtime,createWorld,applyWorld} from '../site/core/game.js';
+import {CANDIDATES} from '../site/systems/recruitment.js';
+const make=()=>initialGame();
+const act=(w,module,type,fields={},s=make())=>applyWorld(w,{module,type,...fields},s);
+test('player origin is boss + brother, rented office, zero turf, and old campaigns are preserved',()=>{
+ const newGame=make(),world=createWorld(newGame,null);
+ assert.deepEqual(newGame.crew,['kai']);
+ assert.equal(world.slices.factions.cells.filter(c=>c.owner==='player').length,0);
+ assert.equal(world.slices.estates.parcels.filter(c=>c.owner==='player').length,0);
+ assert.equal(world.slices.estates.parcels[0].building.name,'破旧出租事务所');
+ const old={...make(),crew:['kai','mio','leo'],day:5,cash:512};
+ assert.deepEqual(restore(old),old,'existing v4 crews and their money must remain');
+});
+test('labor market has several origins and only consenting adults, never children',()=>{
+ const w=createWorld(make());
+ assert.ok(CANDIDATES.length>=8);
+ assert.ok(CANDIDATES.every(c=>c.age>=18&&c.fee>=0&&c.wage>0));
+ assert.equal(CANDIDATES.some(c=>c.origin==='orphanage'||c.origin==='slave'),false);
+ const recruit=act(w,'recruitment','recruit',{person:'mio'});
+ assert.equal(recruit.ok,true,recruit.message);
+ assert.equal(recruit.state.slices.recruitment.candidates.find(c=>c.id==='mio').status,'employed');
+ assert.ok(recruit.effects.some(e=>e.kind==='recruit'&&e.person==='mio'));
+ assert.equal(act(recruit.state,'recruitment','recruit',{person:'mio'}).ok,false);
+ assert.equal(act(w,'recruitment','recruit',{person:'leo'}).ok,false,'low trust first requires community aid');
+});
+test('mutual aid improves hope and adult trust; welfare is never employment inventory',()=>{
+ let w=createWorld(make());
+ const r=act(w,'society','aid',{action:'orphans'});assert.equal(r.ok,true);w=r.state;
+ assert.ok(w.slices.society.childWelfare>18);
+ assert.equal(w.slices.recruitment.candidates.length,CANDIDATES.length);
+ assert.equal(act(w,'society','aid',{action:'orphans'}).ok,false);
+ const support=act(w,'society','aid',{action:'meals'});
+ assert.equal(support.ok,true);w=support.state;
+ assert.ok(w.slices.society.communitySupport>=16);
+ assert.equal(act(w,'society','dues').ok,false,'voluntary dues require enough earned trust');
+});
+test('rival family industries, salaries, political feuds and coups evolve deterministically',()=>{
+ let w=createWorld(make());
+ assert.equal(Object.keys(w.slices.politics.families).length,4);
+ assert.ok(Object.values(w.slices.politics.families).every(f=>f.businesses.length>=2));
+ const first=act(w,'politics','offer',{faction:'bell',offer:'peace'});
+ assert.equal(first.ok,true);w=first.state;
+ assert.equal(act(w,'politics','offer',{faction:'bell',offer:'peace'}).ok,false,'no repeated diplomacy rewards same day');
+ const start=w.slices.politics.families.bell.treasury;
+ for(let i=0;i<30;i++)w=runtime.advance(w,{cash:100,heat:0,crew:['kai'],orders:[]}).state;
+ assert.ok(w.slices.politics.families.bell.treasury>start);
+ assert.ok(w.events.some(e=>e.type==='politics.street'));
+ assert.ok(w.events.some(e=>e.type==='politics.succession'));
+});
+test('business charges count real tax/license and no turf captures private title deeds',()=>{
+ const s={...make(),cash:900},original=createWorld(s);
+ assert.equal(original.slices.factions.cells[0].owner,'bell');
+ let r=act(original,'estates','buy',{lot:'lot-1'},s);assert.equal(r.ok,true,r.message);
+ const bought=r.state;
+ assert.equal(bought.slices.factions.cells[0].owner,'bell','land does not grant turf');
+ assert.equal(bought.slices.estates.parcels[1].owner,'player');
+ r=act(bought,'estates','build',{lot:'lot-1',building:'diner'},s);
+ assert.equal(r.ok,true,r.message);
+ const next=runtime.advance(r.state,{cash:900,heat:0,crew:s.crew,orders:[]});
+ const bill=next.events.find(e=>e.type==='estate.income');
+ assert.ok(bill.tax>0&&bill.license>0);
+});

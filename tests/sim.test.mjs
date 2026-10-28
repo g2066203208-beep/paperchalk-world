@@ -6,11 +6,12 @@ test('original anime office contains six playable in-world objects',()=>{
  const html=readFileSync('site/index.html','utf8');
  for(const name of ['phone','map','reports','ledger','gun','calendar']) assert.ok(html.includes('data-open="'+name+'"'),name);
  assert.ok(html.includes('class="office-svg"'));assert.ok(html.includes('class="character-figure"'));
- assert.equal(DISTRICTS.length,4);assert.equal(CREW.length,3);
+ assert.equal(DISTRICTS.length,4);assert.ok(CREW.length>=9);
 });
 test('route assignment and real subordinate reports after day resolution',()=>{
  let s=initialGame();
- assert.equal(s.cash,190);assert.equal(s.day,1);assert.deepEqual(s.crew,['kai','mio']);
+ assert.equal(s.cash,190);assert.equal(s.day,1);assert.deepEqual(s.crew,['kai']);
+ s.crew.push('mio'); // Compatibility test: simulate a properly signed adult employee.
  let r=setOrder(s,'kai','harbor','deliver');assert.equal(r.ok,true);s=r.state;
  assert.equal(setOrder(s,'kai','market','scout').ok,false);
  r=setOrder(s,'mio','market','network');assert.equal(r.ok,true);s=r.state;
@@ -33,7 +34,7 @@ test('phone and story prop actions persist, invalid old saves reset',()=>{
  const bad=initialGame();bad.zones.harbor.pressure=999;
  assert.deepEqual(restore(bad),initialGame());
 });
-test('legal five-day progression adds staff and creates meaningful records',()=>{
+test('legal five-day progression does not hand out members for free',()=>{
  let s=initialGame();
  for(let i=0;i<5;i++){
   if(!s.call.answered)s=answerPhone(s,'yes').state;
@@ -44,6 +45,6 @@ test('legal five-day progression adds staff and creates meaningful records',()=>
   }
   const r=endDay(s);assert.equal(r.ok,true,r.message);s=r.state;
  }
- assert.equal(s.day,6);assert.ok(s.crew.includes('leo'));assert.ok(s.reports.length>=6);
- assert.ok(s.cash>190);assert.ok(s.respect>1);
+ assert.equal(s.day,6);assert.deepEqual(s.crew,['kai']);assert.ok(s.reports.length>=6);
+ assert.ok(s.cash>190);assert.ok(s.respect>=1);
 });

@@ -101,7 +101,7 @@ await run('desktop-1366',{viewport:{width:1366,height:768}},async page=>{
 await run('modular-world',{viewport:{width:1440,height:900}},async page=>{
  const scene=page.locator('.scene');
  assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.factions.cells.length),16);
- assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.people.members.length),7);
+ assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.people.members.length),13);
  await page.locator('.object-reports').click();
  await page.locator('[data-world-tab="personnel"]').click();
  assert.equal(await page.locator('#panel-title').innerText(),'组织人员册');
@@ -179,6 +179,37 @@ await run('city-properties-and-justice',{viewport:{width:1440,height:900}},async
  assert.ok((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].lastProfit>0);
  await page.reload({waitUntil:'networkidle'});
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
+});
+
+
+await run('people-first-start-and-adult-recruitment',{viewport:{width:1440,height:900}},async page=>{
+ const first=await page.evaluate(()=>({legacy:window.__OFFICE__.state(),world:window.__OFFICE__.world()}));
+ assert.deepEqual(first.legacy.crew,['kai'],'player plus one brother');
+ assert.equal(first.world.slices.factions.cells.filter(c=>c.owner==='player').length,0,'zero controlled turf');
+ assert.equal(first.world.slices.estates.parcels.filter(p=>p.owner==='player').length,0,'office is rented');
+ await page.locator('.object-reports').click();
+ await page.locator('[data-world-tab="society"]').click();
+ assert.equal(await page.locator('#panel-title').innerText(),'临时政府与街区互助');
+ assert.ok(await page.locator('.origin-metric').count()>=6);
+ await page.screenshot({path:'artifacts/people-01-government-aid.png',fullPage:true});
+ await page.locator('[data-aid="meals"]').click();
+ assert.ok((await page.evaluate(()=>window.__OFFICE__.world())).slices.society.communitySupport>5);
+ await page.locator('[data-world-tab="recruitment"]').click();
+ assert.equal(await page.locator('#panel-title').innerText(),'人才市场与自愿雇佣');
+ await page.screenshot({path:'artifacts/people-02-adult-recruitment.png',fullPage:true});
+ await page.locator('[data-recruit-interview="mio"]').click();
+ await page.locator('[data-recruit-sign="mio"]').click();
+ assert.ok((await page.evaluate(()=>window.__OFFICE__.state())).crew.includes('mio'));
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.recruitment.candidates.find(x=>x.id==='mio').status,'employed');
+ await page.locator('[data-world-tab="politics"]').click();
+ assert.equal(await page.locator('#panel-title').innerText(),'四大家族与街头势力');
+ assert.equal(await page.locator('.origin-family').count(),4);
+ await page.screenshot({path:'artifacts/people-03-family-industry.png',fullPage:true});
+ await page.locator('[data-diplomacy="peace"]').click();
+ assert.ok((await page.evaluate(()=>window.__OFFICE__.world())).slices.politics.settlements.length===1);
+ await page.reload({waitUntil:'networkidle'});
+ assert.ok((await page.evaluate(()=>window.__OFFICE__.state())).crew.includes('mio'),'recruited adult persists');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.society.aidHistory.length,1,'community aid persists');
 });
 
 await browser.close();

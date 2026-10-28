@@ -36,7 +36,7 @@ test('file approvals create an actual dispatched assignment and prevent duplicat
  assert.equal(s.orders[0].zone,'harbor');
  assert.equal(m.dossierStatus.freight,'approved');
  assert.equal(decideDossier(s,m,'freight','approve').ok,false);
- assert.equal(availableCrew(s).length,1);
+ assert.equal(availableCrew(s).length,0);
 });
 test('ledger funding and supplier stock produce measurable extra mission revenue',()=>{
  let s=initialGame(),m=initialOffice();
@@ -64,5 +64,5 @@ test('office meta can recover from malformed data and synchronizes day',()=>{
  const m=initialOffice();m.day=99;m.contactsUsed=['supplier'];
  const restored=normalizeOffice(m,s);
  assert.equal(restored.day,s.day);assert.deepEqual(restored.contactsUsed,[]);
- assert.equal(queueVisitor(s,initialOffice(),'mio').ok,true);
+ assert.equal(queueVisitor(s,initialOffice(),'mio').ok,false,'unhired member cannot be summoned');
 });

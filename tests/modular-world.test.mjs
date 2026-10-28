@@ -27,7 +27,7 @@ test('plugin order is deterministic, dependency sorted; bad dependency/cycle rej
 test('v4 day and wealth preserved; persisted world validated and copied',()=>{
  const world=createWorld(legacy,null);
  assert.equal(world.day,1);assert.equal(world.slices.factions.cells.length,16);
- assert.equal(world.slices.people.members.length,7);assert.equal(world.slices.news.articles.length,1);
+ assert.equal(world.slices.people.members.length,13);assert.equal(world.slices.news.articles.length,1);
  assert.deepEqual(createWorld(legacy,JSON.stringify(world)),world);
  const old={...legacy,day:12,cash:666};
  const migrated=createWorld(old,null);
