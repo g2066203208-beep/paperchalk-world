@@ -304,3 +304,10 @@ button:disabled{cursor:default}
  .phone-station{gap:22px}
 }
 .scene.door-open .door-handle{opacity:0}
+
+/* A single detailed anime character actually enters from the far doorway and stops at the boss's desk. */
+.guest-actor{transform-box:view-box;transform-origin:475px 515px;opacity:0;transform:translate(540px,8px) scale(.68);transition:opacity .4s ease,transform 1.05s cubic-bezier(.15,.5,.2,1)}
+.scene.visitor-here .guest-actor{opacity:1;transform:translate(0px,0px) scale(1)}
+.scene.has-knock:not(.visitor-here) .knock-flash{z-index:3}
+.scene.visitor-here .object-person{pointer-events:visiblePainted}
+@media(prefers-reduced-motion:reduce){.guest-actor{transition:none!important}}

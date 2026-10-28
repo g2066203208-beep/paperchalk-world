@@ -64,51 +64,6 @@
 <path d="M1139 478H1183" stroke="#ad8e7a" stroke-width="3"/>
 <path d="M0 477L638 408L1200 485V670H0Z" fill="#392f36"/>
 <path d="M0 499L604 422L1200 506" fill="none" stroke="#ba7065" stroke-opacity=".34" stroke-width="8"/>
-<!-- Character: original 3/4 anime business portrait -->
-<g id="underling">
-<path d="M338 337Q304 363 285 416L254 509L360 517L372 452L387 542L545 538L557 451L580 532L619 509L584 392Q569 354 528 335L479 317L395 313Z" fill="#101f2b" stroke="#0a1720" stroke-width="4"/>
-<path d="M335 358L303 432L284 502H359L370 418Z" fill="#253546"/>
-<path d="M538 343L565 385L594 502L550 514L522 433Z" fill="#314358"/>
-<path d="M403 307L438 353L476 304L509 331L487 530H391L365 337Z" fill="#e8dccc"/>
-<path d="M438 345L449 375L457 360L446 342Z" fill="#a94850"/>
-<path d="M444 369L423 517L460 532L463 390Z" fill="#8e3943"/>
-<path d="M398 312L444 373L391 431L367 353Z" fill="#202f3e"/>
-<path d="M480 311L444 373L494 430L521 346Z" fill="#192b3b"/>
-<path d="M395 315L421 358L405 367L437 401L386 527L353 348Z" fill="#364455"/>
-<path d="M488 311L467 360L486 369L454 402L504 530L555 362L525 337Z" fill="#2d4052"/>
-<path d="M365 346L341 410L360 426L344 465" fill="none" stroke="#5e6975" stroke-width="5"/>
-<path d="M526 352L553 411L531 439" fill="none" stroke="#667688" stroke-width="5"/>
-<path d="M396 449L483 445M391 482L488 482" stroke="#1c2833" stroke-width="3" opacity=".7"/>
-<circle cx="398" cy="474" r="3" fill="#dfb57b"/>
-<path d="M531 392L584 432L628 422L647 450L591 489L529 449Z" fill="#304557" stroke="#182636" stroke-width="4"/>
-<path d="M611 429Q634 410 650 431L658 451Q641 465 624 448Z" fill="#e6b99c"/>
-<path d="M564 411L657 387L680 445L585 464Z" fill="#f2e5d1" stroke="#1d2c3a" stroke-width="6"/>
-<path d="M581 420L636 406M588 432L644 417M592 443L651 427" stroke="#a6a49b" stroke-width="3"/>
-<path d="M621 403L636 400" stroke="#b54b54" stroke-width="6"/>
-<path d="M420 281L420 328Q444 352 474 326L478 275Z" fill="#c98e7e"/>
-<path d="M425 298L444 329L470 306" fill="#efc2aa"/>
-<path d="M357 163Q366 121 424 115L489 150Q517 182 497 248L488 282Q476 313 446 319Q414 310 394 286L371 242Z" fill="url(#face)" stroke="#40303b" stroke-width="3"/>
-<path d="M382 235Q363 226 363 252Q365 277 389 273" fill="#efc1a3" stroke="#ba847e" stroke-width="3"/>
-<path d="M484 230Q502 226 504 249Q499 268 482 266" fill="#e3b097" stroke="#b57f7e" stroke-width="3"/>
-<path d="M404 279Q435 313 469 289" fill="#d29d90" opacity=".38"/>
-<path d="M391 222Q409 214 429 222L425 237Q405 240 395 233Z" fill="#fff5e6"/>
-<path d="M454 222Q473 211 490 218L485 235Q465 241 456 233Z" fill="#fff2e4"/>
-<ellipse cx="414" cy="227" rx="7" ry="10" fill="#30465a"/>
-<ellipse cx="469" cy="226" rx="7" ry="10" fill="#30465a"/>
-<circle cx="417" cy="222" r="3" fill="#f8ede0"/><circle cx="472" cy="221" r="3" fill="#f8ede0"/>
-<path d="M390 218Q406 209 429 217M452 215Q472 205 493 213" stroke="#26313d" stroke-width="5" fill="none" stroke-linecap="round"/>
-<path d="M393 204L424 201M454 199L489 194" stroke="#3e333d" stroke-width="6" stroke-linecap="round"/>
-<path d="M442 221L435 252L447 255" stroke="#b57e77" stroke-width="3" fill="none"/>
-<path d="M426 277Q443 282 459 269" stroke="#a55b61" stroke-width="3" fill="none" stroke-linecap="round"/>
-<path d="M360 230L342 196L341 155L359 119L398 96L451 91L487 105L516 143L507 197L492 232L484 173L475 151L454 172L433 180L414 162L393 202L369 219Z" fill="#151d2a"/>
-<path d="M347 165L365 121L401 104L459 95L494 110L517 147L497 145L481 122L445 120L407 139L384 189L363 210Z" fill="#364757"/>
-<path d="M363 123Q397 82 459 94L495 110L472 131Q443 118 418 143L389 213L367 232L366 190L350 215L339 180Z" fill="#223341"/>
-<path d="M396 100Q460 78 500 122L509 145L484 134L456 132L421 160L398 181L405 142L366 178Z" fill="#475668"/>
-<path d="M467 101L480 112L453 140L431 146" stroke="#6c7785" stroke-width="4" fill="none" opacity=".6"/>
-<path d="M343 178Q352 210 370 238L366 266Q337 238 333 205" fill="#1d2b39"/>
-<path d="M495 147L515 161L510 206L500 231L492 211" fill="#1a2532"/>
-<path d="M521 353L536 360L529 375L515 369Z" fill="#d7b47c"/>
-</g>
 <!-- desk -->
 <path d="M94 426L915 427L1198 601L9 601Z" fill="url(#wood)" stroke="#171d26" stroke-width="12"/>
 <path d="M114 441L897 441L1154 583L55 583Z" fill="none" stroke="#c18d78" stroke-width="3" opacity=".6"/>
