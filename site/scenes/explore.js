@@ -167,13 +167,14 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const w=readWorld();const place=w.slices.origin.venue;
    routeSelection=place==='office'?'alley':'office';
    routeOpen=true;dialogue=null;
+   const intro=root.querySelector('.prologue-presentation');if(intro)intro.hidden=true;
    const d=root.querySelector('.explore-dialogue');if(d)d.hidden=true;
    const holder=document.createElement('div');holder.className='street-route-layer';holder.innerHTML=routeMap(place,routeSelection);
    root.append(holder);
    holder.querySelector('[data-route-place="'+routeSelection+'"]')?.focus();
  }
  function updateRoute(){const holder=root.querySelector('.street-route-layer');if(holder)holder.innerHTML=routeMap(venue,routeSelection);}
- function closeRoute(){routeOpen=false;root.querySelector('.street-route-layer')?.remove();}
+ function closeRoute(){routeOpen=false;root.querySelector('.street-route-layer')?.remove();renderOpening();}
  function go(){
    if(departing||routeSelection===venue||!SCENE_DEFS[routeSelection])return;
    departing=true;
