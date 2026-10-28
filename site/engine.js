@@ -1,3 +1,4 @@
+import {CANDIDATES} from './systems/recruitment.js';
 /** NIGHT OFFICE / original playable vertical slice. Deterministic and offline, browser-independent. */
 export const DISTRICTS=[
 {id:'harbor',name:'旧港',x:143,y:272,influence:28,pressure:18,pay:155,color:'#bc655e',blurb:'码头仓库和旧货轮，是你的第一条街。'},
@@ -8,7 +9,8 @@ export const DISTRICTS=[
 export const CREW=[
 {id:'kai',name:'阿凯',role:'跑腿与运输',skill:'deliver',trait:'脚程快 · 风险低',face:'K',tone:'#d5a66e'},
 {id:'mio',name:'米娅',role:'交涉与情报',skill:'network',trait:'善于和人谈判',face:'M',tone:'#a9bfd2'},
-{id:'leo',name:'雷欧',role:'调查与侦察',skill:'scout',trait:'熟悉陌生街区',face:'L',tone:'#c9a3af'}
+{id:'leo',name:'雷欧',role:'调查与侦察',skill:'scout',trait:'熟悉陌生街区',face:'L',tone:'#c9a3af'},
+ ...CANDIDATES.filter(c=>!['mio','leo'].includes(c.id)).map(c=>({id:c.id,name:c.name,role:c.role,skill:c.skill,trait:c.trait,face:c.face,tone:c.tone}))
 ];
 export const MISSIONS=[
 {id:'deliver',title:'收取货款',short:'跑单',description:'获得现金，可能引发关注。'},
@@ -17,8 +19,8 @@ export const MISSIONS=[
 ];
 export const GOALS={cash:1400,respect:24,hold:2};
 export function initialGame(){
- return {version:4,day:1,cash:190,heat:12,respect:1,crew:['kai','mio'],zones:Object.fromEntries(DISTRICTS.map(d=>[d.id,{influence:d.influence,pressure:d.pressure}])),
- orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'第一次汇报',body:'老板，办公室刚租下来。今天只有两个人、190 元现金，以及旧港一位愿意接电话的老熟人。地图已经送来。',outcome:'这座城还不认识我们。'}],
+ return {version:4,day:1,cash:190,heat:12,respect:1,crew:['kai'],zones:Object.fromEntries(DISTRICTS.map(d=>[d.id,{influence:d.influence,pressure:d.pressure}])),
+ orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'第一次汇报',body:'老板，办公室还在漏雨。我们两个没有地盘，邻街的工厂关了，求职的工人排满路边。先帮街坊做点事吧。',outcome:'你和兄弟阿凯，190元、破办公室、零地盘。'}],
  call:{id:'welcome',answered:false},callHistory:[],ledger:[{day:1,label:'初始资金',amount:190}],flags:{gunSeen:false},won:false};
 }
 export const crewInfo=id=>CREW.find(c=>c.id===id);
@@ -88,7 +90,7 @@ export function endDay(state){
  s.day++;
  s.orders=[];
  s.call={id: s.day%3===0?'rival':s.day%2===0?'neighbor':'supplier',answered:false};
- if(s.day===3&&!s.crew.includes('leo')){s.crew.push('leo');newReports.push({id:'recruit-'+s.day,day:s.day,crew:'leo',title:'新成员前来报到',body:'雷欧听说你在找可靠的调查员。愿意先试一个星期。',outcome:'雷欧加入团队'});}
+ // 后续成员只通过自愿招募入职，绝不无缘无故按日期赠送。
  s.reports=[...newReports,...s.reports].slice(0,40);
  s.won=s.cash>=GOALS.cash&&s.respect>=GOALS.respect&&DISTRICTS.filter(d=>s.zones[d.id].influence>=55).length>=GOALS.hold;
  return {ok:true,state:s,generated:newReports,message:'第 '+s.day+' 天，成员们带回了 '+newReports.length+' 份新报告。'};
@@ -132,7 +134,7 @@ export function restore(raw){
   if(!s||s.version!==4||!Number.isInteger(s.day)||s.day<1||s.day>10000)return initialGame();
   if(!Number.isInteger(s.cash)||Math.abs(s.cash)>1e9||!Number.isInteger(s.heat)||s.heat<0||s.heat>100||
      !Number.isInteger(s.respect)||s.respect<0||s.respect>100)return initialGame();
-  if(!Array.isArray(s.crew)||!s.crew.includes('kai')||!s.crew.includes('mio')||s.crew.some(id=>!crewInfo(id)))return initialGame();
+  if(!Array.isArray(s.crew)||!s.crew.includes('kai')||s.crew.some(id=>!crewInfo(id)))return initialGame();
   if(!Array.isArray(s.orders)||s.orders.length>s.crew.length||s.orders.some(o=>!canOrderType(o)))return initialGame();
   if(new Set(s.orders.map(o=>o.crew)).size!==s.orders.length)return initialGame();
   if(!Array.isArray(s.reports)||s.reports.length>40||!Array.isArray(s.ledger)||s.ledger.length>1000||

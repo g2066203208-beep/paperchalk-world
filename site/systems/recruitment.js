@@ -17,7 +17,7 @@ export const RECRUIT_SOURCES=[
  {id:'clinic',title:'社区诊所',detail:'招聘成年专业人士共同服务居民'}
 ];
 export const recruitmentSystem={
- id:'recruitment',deps:['clock'],
+ id:'recruitment',deps:['clock','society'],
  init:()=>({candidates:CANDIDATES.map(c=>({...c,status:'available',contactDay:0})),employees:[],interviews:[],reputation:0}),
  reduce(data,action,{day,context,slices}){
   const candidate=data.candidates.find(c=>c.id===action.person);

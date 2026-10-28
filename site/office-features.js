@@ -169,6 +169,6 @@ export function advance(state,meta){
  m.day=s.day;m.contactsUsed=[];m.bonus={logistics:0,relations:0};
  m.dossierStatus={freight:'pending',meeting:'pending',audit:'pending'};
  m.visitor=null;m.doorOpen=false;m.venue='office';
- m.visitorQueue=[{id:s.day%2===0?'mio':'kai',title:'新一天的汇报',kind:'report'}];
+ m.visitorQueue=[{id:s.crew.includes('mio')&&s.day%2===0?'mio':'kai',title:'新一天的汇报',kind:'report'}];
  return result(true,s,m,'新一天开始。'+r.generated.length+' 份行动报告，额外收入 '+extra+' 元。',{generated:r.generated});
 }

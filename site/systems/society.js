@@ -7,7 +7,7 @@ export const AID_ACTIONS=[
  {id:'workers',name:'协助失业者求职',cost:24,support:7,hope:4,poverty:-2,description:'介绍正规工作与成人培训'}
 ];
 export const societySystem={
- id:'society',deps:['clock','factions','population'],
+ id:'society',deps:['clock','factions','population','estates'],
  init:()=>({government:{name:'港联邦临时政府',stability:29,legitimacy:18,corruption:76,policePressure:64,
   civilRights:24,publicDebt:83,industryCollapse:71,monthlyTax:12,licenseFee:5},
   poverty:79,unemployment:43,oppression:76,communitySupport:5,hope:14,childWelfare:18,

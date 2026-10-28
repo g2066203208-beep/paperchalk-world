@@ -9,11 +9,11 @@ const headline=event=>{
  return event.text;
 };
 export const newsSystem={
- id:'news',deps:['factions','people','civic','dialogue','estates','transport','justice','contacts'],
+ id:'news',deps:['factions','people','civic','dialogue','estates','transport','justice','contacts','society','recruitment','politics'],
  init:()=>({articles:[{id:'opening-edition',day:1,headline:'夜港晚报：旧港出现新的事务所',source:'夜港晚报',category:'local',credibility:83}]}),
  reduce(data,action){if(action.type!=='read')return {error:'新闻只读'};return {data,events:[]};},
  tick(data,{day,events}){
-   const recent=events.filter(e=>['faction.influence','territory.changed','police.case','civic.unrest','world.foreign','person.concern','estate.purchased','estate.built','estate.income','justice.opened','justice.progress','transport.completed','crime.incident'].includes(e.type));
+   const recent=events.filter(e=>['faction.influence','territory.changed','police.case','civic.unrest','world.foreign','person.concern','estate.purchased','estate.built','estate.income','justice.opened','justice.progress','transport.completed','crime.incident','society.aid','society.government','society.support','politics.street','politics.succession','politics.business','recruit.joined'].includes(e.type));
    const visible=recent.filter(e=>!e.visible||e.visible).slice(0,5);
    if(!visible.length)visible.push({type:'daily',text:'夜港的各个商会仍在静静争夺生意。'});
    const newArticles=visible.map((e,i)=>({id:'article-'+day+'-'+i,day,headline:headline(e),source:e.type==='police.case'?'城区纪事':'夜港晚报',category:e.type,credibility:e.type==='faction.influence'?76:90}));

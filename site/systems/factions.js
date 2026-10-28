@@ -7,10 +7,10 @@ export const FACTIONS=[
  {id:'raven',name:'灰鸦同盟',color:'#565d6b',trait:'intelligence'}
 ];
 export const ZONES=['旧港','市集','中城','霓虹街'];
-const owners=['player','sail','sail','raven','bell','bell','sail','raven','bell','bell','kestrel','raven','kestrel','kestrel','kestrel','raven'];
+const owners=['bell','sail','sail','raven','bell','bell','sail','raven','bell','bell','kestrel','raven','kestrel','kestrel','kestrel','raven'];
 const roads=i=>[i%4>0?i-1:-1,i%4<3?i+1:-1,i>3?i-4:-1,i<12?i+4:-1].filter(n=>n>=0);
 const nextCell=(id,owner)=>({id:'s'+id,index:id,zone:ZONES[Math.floor(id/4)],name:ZONES[Math.floor(id/4)]+' '+['西街','东路','商业区','路口'][id%4],
- owner,influence:Object.fromEntries(FACTIONS.map(f=>[f.id,f.id===owner?66:0])),
+ owner,influence:Object.fromEntries(FACTIONS.map(f=>[f.id,f.id===owner?66:(f.id==='player'&&id===0?20:0)])),
  publicMood:55,security:50,neighbors:roads(id),businesses:[]});
 export const ownership=state=>Object.fromEntries(FACTIONS.map(f=>[f.id,state.cells.filter(c=>c.owner===f.id).length]));
 function compete(cell,faction,power){
@@ -32,7 +32,7 @@ export const factionsSystem={
    if(!cell)return {error:'Unknown street'};
    if(data.groups.player.cash<0)return {error:'Invalid budget'};
    if(data.playerActions.includes(cell.id))return {error:'今日已经与这条街区的商户联系过'};
-   if(!data.cells.some(c=>c.owner==='player'&&c.neighbors.includes(cell.index))&&cell.owner!=='player')
+   if(!data.cells.some(c=>(c.owner==='player'||c.influence.player>=20)&&c.neighbors.includes(cell.index))&&cell.owner!=='player'&&cell.influence.player<20)
      return {error:'只能争取与己方地盘相邻的街区'};
    const cost=40;
    if(context.cash<cost)return {error:'需要 40 元开展社区联系'};

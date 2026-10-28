@@ -1,4 +1,5 @@
 import {clamp} from '../core/runtime.js';
+import {CANDIDATES} from './recruitment.js';
 export const JOBS=[
  {id:'capo',name:'街区负责人',capacity:1,info:'参与社区联系时影响力 +6'},
  {id:'manager',name:'业务经理',capacity:1,info:'获得更多商业经营经验'},
@@ -15,7 +16,15 @@ const defaults=[
 ];
 export const peopleSystem={
  id:'people',deps:['factions','operations'],
- init:()=>({members:structuredClone(defaults.map(p=>({...p,status:'active'})))}),
+ init:()=>({members:structuredClone([
+ ...defaults.map(p=>({...p,status:'active'})),
+ ...CANDIDATES.filter(c=>!defaults.some(p=>p.id===c.id)).map(c=>({
+   id:c.id,name:c.name,faction:'player',job:'none',status:'inactive',
+   skills:{trade:2,network:c.skill==='network'?4:2,analysis:c.skill==='scout'?4:2},
+   personality:{ambition:40+c.age%25,discipline:50+c.age%30,empathy:58,courage:47},
+   loyalty:c.trust,morale:55,experience:0,trainingDay:0
+ }))
+ ])}),
  reduce(data,action,{context,day}){
   const p=data.members.find(m=>m.id===action.person&&m.faction==='player'&&(context.crew||[]).includes(m.id));
   if(!p)return {error:'人员未加入组织'};

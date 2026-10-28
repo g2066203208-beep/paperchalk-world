@@ -12,8 +12,8 @@ export const estatesSystem={
  init:()=>({parcels:Array.from({length:48},(_,i)=>{
     const cell=Math.floor(i/3),sub=i%3;
     return {id:'lot-'+i,cell:'s'+cell,title:'地块 '+String(cell+1).padStart(2,'0')+'-'+(sub+1),
-      owner:i===0?'player':sub===0&&cell%4===2?'sail':'market',
-      price:priceOf(cell,sub),building:i===0?{type:'office',level:1,mode:'legal',name:'无名事务所'}:null,
+      owner:i===0?'landlord':sub===0&&cell%4===2?'sail':'market',
+      price:priceOf(cell,sub),building:i===0?{type:'office',level:1,mode:'legal',name:'破旧出租事务所'}:null,
       condition:62+(i*9)%35,manager:null,lastProfit:0};
    }),journal:[],playerIncome:0}),
  reduce(data,action,{context,slices,day}){
@@ -66,11 +66,12 @@ export const estatesSystem={
     const mood=slices.factions.cells[Number(lot.cell.slice(1))].publicMood;
     const visitors=Math.min(typ.visitors*b.level,Math.round(traffic*.21+signal(lot.id)*5));
     const gross=Math.round((typ.revenue+visitors*3)*b.level*(.6+mood/250));
-    const cost=typ.upkeep*b.level+8;
+    const tax=Math.max(1,Math.round(gross*.12)),license=5;
+    const cost=typ.upkeep*b.level+8+tax+license;
     const profit=gross-cost+(b.mode==='underground'?Math.floor(gross*.65):0);
     lot.lastProfit=profit;lot.condition=clamp(lot.condition-1,25,100);
     total+=profit;
-    events.push({type:'estate.income',title:'商铺日报',text:b.name+'('+lot.title+')客流 '+visitors+'，营业结余 '+profit+' 元。',lot:lot.id,profit});
+    events.push({type:'estate.income',title:'商铺日报',text:b.name+'('+lot.title+')客流 '+visitors+'，税款 '+tax+'、经营许可费 '+license+'，营业结余 '+profit+' 元。',lot:lot.id,profit,tax,license});
     if(b.mode==='underground')events.push({type:'business.risky',title:'高风险经营记录',text:lot.title+'发生未经许可的经营活动，产生了可供警方调查的事件记录。',lot:lot.id,severity:2,actor:'player'});
   }
   if(total)effects.push({kind:'cash',amount:total,label:'合法门店与高风险副业净营业利润'});
