@@ -76,7 +76,11 @@
         34
       ],
       "mode": "overlay",
-      "detail": "仅日期短写+持有现金；声望/警方风险默认藏于报纸和人物反馈；无成排顶部按钮"
+      "detail": "仅日期短写+持有现金；声望/警方风险默认藏于报纸和人物反馈；无成排顶部按钮",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
     },
     {
       "id": "dialogue-bubble",
@@ -88,7 +92,11 @@
         130
       ],
       "mode": "anchor",
-      "detail": "锚于 NPC 头部上方36px，碰撞后自动翻侧；三选项时自动增加气泡高度，但不超40%画面"
+      "detail": "锚于 NPC 头部上方36px，碰撞后自动翻侧；三选项时自动增加气泡高度，但不超40%画面",
+      "inMs": 180,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
     },
     {
       "id": "dialogue-choices",
@@ -100,7 +108,11 @@
         104
       ],
       "mode": "anchor",
-      "detail": "最多3条，43px间距，选项风格为纸条/手写，不用常驻网页按钮"
+      "detail": "最多3条，43px间距，选项风格为纸条/手写，不用常驻网页按钮",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
     },
     {
       "id": "route-sheet",
@@ -112,7 +124,11 @@
         571
       ],
       "mode": "overlay",
-      "detail": "桌面/门后镜头变焦，地图实体材质，5个目的地可选"
+      "detail": "桌面/门后镜头变焦，地图实体材质，5个目的地可选",
+      "inMs": 310,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "route-map",
@@ -124,7 +140,11 @@
         471
       ],
       "mode": "overlay",
-      "detail": "五地标按图形而非完整按钮网格；不可达线路灰掉"
+      "detail": "五地标按图形而非完整按钮网格；不可达线路灰掉",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "route-preview",
@@ -136,7 +156,11 @@
         310
       ],
       "mode": "overlay",
-      "detail": "真实目的地缩略景，目的地选择后轻推镜头与脚步转场"
+      "detail": "真实目的地缩略景，目的地选择后轻推镜头与脚步转场",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "map-full",
@@ -148,7 +172,11 @@
         616
       ],
       "mode": "overlay",
-      "detail": "16街区格+路网+派系涂色+资产点+警署/人口可切模式"
+      "detail": "16街区格+路网+派系涂色+资产点+警署/人口可切模式",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "map-canvas",
@@ -160,7 +188,11 @@
         533
       ],
       "mode": "overlay",
-      "detail": "矢量 hit-test 真实道路，至少16地块，每条线路按路网规划"
+      "detail": "矢量 hit-test 真实道路，至少16地块，每条线路按路网规划",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "map-detail",
@@ -172,7 +204,11 @@
         450
       ],
       "mode": "overlay",
-      "detail": "地图某区钉纸签，信息分层展开，不遮主地图"
+      "detail": "地图某区钉纸签，信息分层展开，不遮主地图",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "people-book",
@@ -184,7 +220,11 @@
         574
       ],
       "mode": "overlay",
-      "detail": "翻开的皮革册，左人像右实际职责关系，上翻页签"
+      "detail": "翻开的皮革册，左人像右实际职责关系，上翻页签",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "people-portrait",
@@ -196,7 +236,11 @@
         387
       ],
       "mode": "overlay",
-      "detail": "二次元人物独立半身图，表情相对于状态变化"
+      "detail": "二次元人物独立半身图，表情相对于状态变化",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "people-details",
@@ -208,7 +252,11 @@
         450
       ],
       "mode": "overlay",
-      "detail": "姓名、职位、能力、信任、组织关系、签名处"
+      "detail": "姓名、职位、能力、信任、组织关系、签名处",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "recruit-sheet",
@@ -220,7 +268,11 @@
         541
       ],
       "mode": "overlay",
-      "detail": "候选人照片+经历+薪酬，面试和签合同各需现实场景动作"
+      "detail": "候选人照片+经历+薪酬，面试和签合同各需现实场景动作",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "dossier-open",
@@ -232,7 +284,11 @@
         558
       ],
       "mode": "overlay",
-      "detail": "只在打开实体卷宗时显示纸页，桌面可见周围空间"
+      "detail": "只在打开实体卷宗时显示纸页，桌面可见周围空间",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "ledger-open",
@@ -244,7 +300,11 @@
         529
       ],
       "mode": "overlay",
-      "detail": "左业务条目右合计，交互是指尖翻账页"
+      "detail": "左业务条目右合计，交互是指尖翻账页",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "telephone-closeup",
@@ -256,7 +316,11 @@
         374
       ],
       "mode": "overlay",
-      "detail": "拿起听筒→拨号→说话，非悬浮全屏电话面板"
+      "detail": "拿起听筒→拨号→说话，非悬浮全屏电话面板",
+      "inMs": 220,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "newspaper-open",
@@ -268,7 +332,11 @@
         537
       ],
       "mode": "overlay",
-      "detail": "大字号标题、照片、情报证据；局部折纸动画"
+      "detail": "大字号标题、照片、情报证据；局部折纸动画",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "crime-dossier",
@@ -280,7 +348,11 @@
         555
       ],
       "mode": "overlay",
-      "detail": "证据必须具体事件化，按时间推进；玩家有选择但不显示犯罪实施指南"
+      "detail": "证据必须具体事件化，按时间推进；玩家有选择但不显示犯罪实施指南",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "estate-deed",
@@ -292,7 +364,11 @@
         549
       ],
       "mode": "overlay",
-      "detail": "地籍编号、建筑轮廓、价格和税费，与地图实际地块互相对应"
+      "detail": "地籍编号、建筑轮廓、价格和税费，与地图实际地块互相对应",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
     },
     {
       "id": "scene-loading-mask",
@@ -304,7 +380,11 @@
         670
       ],
       "mode": "effect",
-      "detail": "门扇遮光，不是普通网页 loading spinner"
+      "detail": "门扇遮光，不是普通网页 loading spinner",
+      "inMs": 180,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": false
     },
     {
       "id": "pause-scrap",
@@ -316,7 +396,11 @@
         36
       ],
       "mode": "overlay",
-      "detail": "无打断式系统菜单，长按日历或键盘Esc"
+      "detail": "无打断式系统菜单，长按日历或键盘Esc",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
     }
   ],
   "scenes": {
@@ -341,7 +425,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "window",
@@ -359,7 +444,48 @@
           "pivot": [
             246,
             348
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                32,
+                13
+              ],
+              [
+                218,
+                13
+              ],
+              [
+                243,
+                217
+              ],
+              [
+                184,
+                253
+              ],
+              [
+                20,
+                237
+              ],
+              [
+                7,
+                65
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "door",
@@ -377,7 +503,40 @@
           "pivot": [
             1069,
             443
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                13,
+                7
+              ],
+              [
+                112,
+                7
+              ],
+              [
+                125,
+                300
+              ],
+              [
+                24,
+                323
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
         },
         {
           "id": "floor",
@@ -395,7 +554,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "crate",
@@ -413,7 +573,48 @@
           "pivot": [
             179,
             517
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                22,
+                8
+              ],
+              [
+                151,
+                8
+              ],
+              [
+                169,
+                126
+              ],
+              [
+                127,
+                147
+              ],
+              [
+                14,
+                138
+              ],
+              [
+                5,
+                38
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "desk",
@@ -431,7 +632,8 @@
           "pivot": [
             603,
             637
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "kai",
@@ -449,7 +651,56 @@
           "pivot": [
             816,
             537
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                44,
+                15
+              ],
+              [
+                127,
+                15
+              ],
+              [
+                153,
+                96
+              ],
+              [
+                169,
+                278
+              ],
+              [
+                146,
+                364
+              ],
+              [
+                25,
+                364
+              ],
+              [
+                9,
+                252
+              ],
+              [
+                29,
+                93
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "paper_deed",
@@ -467,7 +718,40 @@
           "pivot": [
             232,
             549
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                5,
+                12
+              ],
+              [
+                122,
+                2
+              ],
+              [
+                133,
+                74
+              ],
+              [
+                11,
+                87
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "telephone",
@@ -485,7 +769,52 @@
           "pivot": [
             383,
             559
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                13,
+                25
+              ],
+              [
+                50,
+                5
+              ],
+              [
+                121,
+                13
+              ],
+              [
+                140,
+                40
+              ],
+              [
+                131,
+                81
+              ],
+              [
+                14,
+                89
+              ],
+              [
+                3,
+                58
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "telephoneLift",
+              "dialogueAppear"
+            ],
+            "soundCue": "receiver",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "city_map",
@@ -503,7 +832,39 @@
           "pivot": [
             631,
             612
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                10,
+                20
+              ],
+              [
+                238,
+                3
+              ],
+              [
+                259,
+                122
+              ],
+              [
+                21,
+                144
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "mapUnfold"
+            ],
+            "soundCue": "paper-unfold",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "folder",
@@ -521,7 +882,40 @@
           "pivot": [
             861,
             564
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                7,
+                15
+              ],
+              [
+                150,
+                2
+              ],
+              [
+                163,
+                88
+              ],
+              [
+                13,
+                104
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "ledger",
@@ -539,7 +933,40 @@
           "pivot": [
             958,
             638
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                11
+              ],
+              [
+                133,
+                2
+              ],
+              [
+                145,
+                69
+              ],
+              [
+                12,
+                81
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "newspaper",
@@ -557,7 +984,39 @@
           "pivot": [
             498,
             642
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                12
+              ],
+              [
+                137,
+                2
+              ],
+              [
+                149,
+                70
+              ],
+              [
+                12,
+                82
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "newspaperReveal"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "envelope",
@@ -575,7 +1034,48 @@
           "pivot": [
             278,
             628
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                4
+              ],
+              [
+                99,
+                4
+              ],
+              [
+                110,
+                62
+              ],
+              [
+                83,
+                73
+              ],
+              [
+                9,
+                68
+              ],
+              [
+                3,
+                19
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "calendar",
@@ -593,7 +1093,47 @@
           "pivot": [
             1003,
             285
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                10,
+                5
+              ],
+              [
+                70,
+                5
+              ],
+              [
+                77,
+                90
+              ],
+              [
+                58,
+                105
+              ],
+              [
+                6,
+                98
+              ],
+              [
+                2,
+                27
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "lamp",
@@ -611,7 +1151,47 @@
           "pivot": [
             674,
             481
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                8
+              ],
+              [
+                99,
+                8
+              ],
+              [
+                111,
+                131
+              ],
+              [
+                84,
+                153
+              ],
+              [
+                9,
+                144
+              ],
+              [
+                3,
+                39
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propHover"
+            ],
+            "soundCue": "switch",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "chair",
@@ -629,7 +1209,48 @@
           "pivot": [
             678,
             489
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                6
+              ],
+              [
+                99,
+                6
+              ],
+              [
+                111,
+                108
+              ],
+              [
+                84,
+                126
+              ],
+              [
+                9,
+                119
+              ],
+              [
+                3,
+                32
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         }
       ]
     },
@@ -654,7 +1275,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "office_exit",
@@ -672,7 +1294,40 @@
           "pivot": [
             142,
             531
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                6
+              ],
+              [
+                125,
+                6
+              ],
+              [
+                140,
+                269
+              ],
+              [
+                26,
+                290
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
         },
         {
           "id": "stairs",
@@ -690,7 +1345,48 @@
           "pivot": [
             348,
             508
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                17
+              ],
+              [
+                207,
+                17
+              ],
+              [
+                230,
+                280
+              ],
+              [
+                174,
+                326
+              ],
+              [
+                19,
+                306
+              ],
+              [
+                7,
+                83
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "neighbor",
@@ -708,7 +1404,56 @@
           "pivot": [
             525,
             548
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                12
+              ],
+              [
+                95,
+                12
+              ],
+              [
+                114,
+                79
+              ],
+              [
+                126,
+                227
+              ],
+              [
+                109,
+                297
+              ],
+              [
+                19,
+                297
+              ],
+              [
+                7,
+                206
+              ],
+              [
+                22,
+                76
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "runner",
@@ -726,7 +1471,56 @@
           "pivot": [
             822,
             550
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                27,
+                10
+              ],
+              [
+                78,
+                10
+              ],
+              [
+                94,
+                68
+              ],
+              [
+                104,
+                195
+              ],
+              [
+                90,
+                255
+              ],
+              [
+                16,
+                255
+              ],
+              [
+                6,
+                177
+              ],
+              [
+                18,
+                65
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "notice",
@@ -744,7 +1538,48 @@
           "pivot": [
             674,
             396
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                18,
+                8
+              ],
+              [
+                125,
+                8
+              ],
+              [
+                139,
+                134
+              ],
+              [
+                105,
+                157
+              ],
+              [
+                11,
+                147
+              ],
+              [
+                4,
+                40
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "corner_shop",
@@ -762,7 +1597,48 @@
           "pivot": [
             1021,
             521
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                16
+              ],
+              [
+                213,
+                16
+              ],
+              [
+                237,
+                276
+              ],
+              [
+                179,
+                321
+              ],
+              [
+                19,
+                302
+              ],
+              [
+                7,
+                82
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "harassment",
@@ -780,7 +1656,48 @@
           "pivot": [
             730,
             538
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                23,
+                5
+              ],
+              [
+                155,
+                5
+              ],
+              [
+                172,
+                91
+              ],
+              [
+                130,
+                106
+              ],
+              [
+                14,
+                99
+              ],
+              [
+                5,
+                27
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "recoilSurprise",
+              "dialogueAppear"
+            ],
+            "soundCue": "cloth",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "pedestrians",
@@ -798,7 +1715,56 @@
           "pivot": [
             544,
             584
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                144,
+                7
+              ],
+              [
+                420,
+                7
+              ],
+              [
+                504,
+                47
+              ],
+              [
+                558,
+                135
+              ],
+              [
+                480,
+                176
+              ],
+              [
+                84,
+                176
+              ],
+              [
+                30,
+                122
+              ],
+              [
+                96,
+                45
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "wet_ground",
@@ -816,7 +1782,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         }
       ]
     },
@@ -841,7 +1808,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "exit",
@@ -859,7 +1827,40 @@
           "pivot": [
             136,
             514
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                14,
+                6
+              ],
+              [
+                116,
+                6
+              ],
+              [
+                129,
+                295
+              ],
+              [
+                24,
+                318
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
         },
         {
           "id": "vendor_stall",
@@ -877,7 +1878,48 @@
           "pivot": [
             434,
             512
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                39,
+                12
+              ],
+              [
+                263,
+                12
+              ],
+              [
+                293,
+                198
+              ],
+              [
+                221,
+                231
+              ],
+              [
+                24,
+                217
+              ],
+              [
+                9,
+                59
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "vendor",
@@ -895,7 +1937,56 @@
           "pivot": [
             599,
             529
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                12
+              ],
+              [
+                90,
+                12
+              ],
+              [
+                108,
+                79
+              ],
+              [
+                120,
+                227
+              ],
+              [
+                103,
+                297
+              ],
+              [
+                18,
+                297
+              ],
+              [
+                6,
+                206
+              ],
+              [
+                21,
+                76
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "guard",
@@ -913,7 +2004,56 @@
           "pivot": [
             1014,
             526
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                13
+              ],
+              [
+                97,
+                13
+              ],
+              [
+                116,
+                82
+              ],
+              [
+                128,
+                237
+              ],
+              [
+                110,
+                310
+              ],
+              [
+                19,
+                310
+              ],
+              [
+                7,
+                215
+              ],
+              [
+                22,
+                79
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "queue",
@@ -931,7 +2071,56 @@
           "pivot": [
             756,
             532
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                70,
+                6
+              ],
+              [
+                203,
+                6
+              ],
+              [
+                244,
+                42
+              ],
+              [
+                270,
+                120
+              ],
+              [
+                232,
+                157
+              ],
+              [
+                41,
+                157
+              ],
+              [
+                15,
+                109
+              ],
+              [
+                46,
+                40
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "basket",
@@ -949,7 +2138,48 @@
           "pivot": [
             486,
             560
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                19,
+                5
+              ],
+              [
+                130,
+                5
+              ],
+              [
+                145,
+                76
+              ],
+              [
+                110,
+                89
+              ],
+              [
+                12,
+                84
+              ],
+              [
+                4,
+                23
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "recoilSurprise",
+              "dialogueAppear"
+            ],
+            "soundCue": "cloth",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "sign",
@@ -967,7 +2197,48 @@
           "pivot": [
             380,
             370
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                10,
+                4
+              ],
+              [
+                70,
+                4
+              ],
+              [
+                78,
+                66
+              ],
+              [
+                59,
+                76
+              ],
+              [
+                6,
+                72
+              ],
+              [
+                2,
+                20
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "cart",
@@ -985,7 +2256,40 @@
           "pivot": [
             823,
             540
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                7,
+                21
+              ],
+              [
+                149,
+                3
+              ],
+              [
+                162,
+                129
+              ],
+              [
+                13,
+                151
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "newspaper",
@@ -1003,7 +2307,39 @@
           "pivot": [
             986,
             530
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                11
+              ],
+              [
+                126,
+                2
+              ],
+              [
+                137,
+                69
+              ],
+              [
+                11,
+                81
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "newspaperReveal"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         }
       ]
     },
@@ -1028,7 +2364,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "exit",
@@ -1046,7 +2383,40 @@
           "pivot": [
             141,
             528
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                14,
+                7
+              ],
+              [
+                117,
+                7
+              ],
+              [
+                131,
+                308
+              ],
+              [
+                25,
+                331
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
         },
         {
           "id": "board",
@@ -1064,7 +2434,48 @@
           "pivot": [
             385,
             362
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                39,
+                11
+              ],
+              [
+                266,
+                11
+              ],
+              [
+                296,
+                177
+              ],
+              [
+                223,
+                207
+              ],
+              [
+                24,
+                194
+              ],
+              [
+                9,
+                53
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "desk",
@@ -1082,7 +2493,40 @@
           "pivot": [
             706,
             543
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                18,
+                19
+              ],
+              [
+                409,
+                3
+              ],
+              [
+                445,
+                115
+              ],
+              [
+                36,
+                136
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "clerk",
@@ -1100,7 +2544,56 @@
           "pivot": [
             860,
             509
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                32,
+                13
+              ],
+              [
+                92,
+                13
+              ],
+              [
+                111,
+                85
+              ],
+              [
+                123,
+                245
+              ],
+              [
+                106,
+                320
+              ],
+              [
+                18,
+                320
+              ],
+              [
+                7,
+                222
+              ],
+              [
+                21,
+                82
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "worker",
@@ -1118,7 +2611,56 @@
           "pivot": [
             378,
             553
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                13
+              ],
+              [
+                96,
+                13
+              ],
+              [
+                115,
+                82
+              ],
+              [
+                127,
+                236
+              ],
+              [
+                110,
+                308
+              ],
+              [
+                19,
+                308
+              ],
+              [
+                7,
+                214
+              ],
+              [
+                22,
+                79
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "queue",
@@ -1136,7 +2678,56 @@
           "pivot": [
             295,
             563
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                62,
+                9
+              ],
+              [
+                182,
+                9
+              ],
+              [
+                218,
+                61
+              ],
+              [
+                242,
+                175
+              ],
+              [
+                208,
+                228
+              ],
+              [
+                36,
+                228
+              ],
+              [
+                13,
+                158
+              ],
+              [
+                42,
+                58
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "forms",
@@ -1154,7 +2745,40 @@
           "pivot": [
             692,
             521
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                7,
+                13
+              ],
+              [
+                149,
+                2
+              ],
+              [
+                162,
+                81
+              ],
+              [
+                13,
+                95
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "clock",
@@ -1172,7 +2796,47 @@
           "pivot": [
             1061,
             204
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                13,
+                6
+              ],
+              [
+                90,
+                6
+              ],
+              [
+                100,
+                93
+              ],
+              [
+                75,
+                109
+              ],
+              [
+                8,
+                102
+              ],
+              [
+                3,
+                28
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         }
       ]
     },
@@ -1197,7 +2861,8 @@
           "pivot": [
             600,
             670
-          ]
+          ],
+          "hit": null
         },
         {
           "id": "exit",
@@ -1215,7 +2880,40 @@
           "pivot": [
             143,
             528
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                6
+              ],
+              [
+                131,
+                6
+              ],
+              [
+                146,
+                292
+              ],
+              [
+                28,
+                315
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
         },
         {
           "id": "crane",
@@ -1233,7 +2931,48 @@
           "pivot": [
             339,
             470
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                22
+              ],
+              [
+                210,
+                22
+              ],
+              [
+                234,
+                365
+              ],
+              [
+                177,
+                425
+              ],
+              [
+                19,
+                399
+              ],
+              [
+                7,
+                109
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "warehouse",
@@ -1251,7 +2990,48 @@
           "pivot": [
             945,
             498
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                41,
+                15
+              ],
+              [
+                278,
+                15
+              ],
+              [
+                310,
+                254
+              ],
+              [
+                234,
+                296
+              ],
+              [
+                25,
+                278
+              ],
+              [
+                9,
+                76
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "docker",
@@ -1269,7 +3049,56 @@
           "pivot": [
             507,
             541
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                34,
+                13
+              ],
+              [
+                100,
+                13
+              ],
+              [
+                120,
+                81
+              ],
+              [
+                133,
+                235
+              ],
+              [
+                114,
+                307
+              ],
+              [
+                20,
+                307
+              ],
+              [
+                7,
+                213
+              ],
+              [
+                23,
+                78
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "unionist",
@@ -1287,7 +3116,56 @@
           "pivot": [
             787,
             541
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                13
+              ],
+              [
+                97,
+                13
+              ],
+              [
+                116,
+                82
+              ],
+              [
+                128,
+                238
+              ],
+              [
+                110,
+                311
+              ],
+              [
+                19,
+                311
+              ],
+              [
+                7,
+                216
+              ],
+              [
+                22,
+                79
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "shipping_form",
@@ -1305,7 +3183,40 @@
           "pivot": [
             634,
             534
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                15
+              ],
+              [
+                137,
+                2
+              ],
+              [
+                149,
+                88
+              ],
+              [
+                12,
+                104
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "cargo",
@@ -1323,7 +3234,48 @@
           "pivot": [
             390,
             584
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                29,
+                8
+              ],
+              [
+                197,
+                8
+              ],
+              [
+                220,
+                133
+              ],
+              [
+                166,
+                155
+              ],
+              [
+                18,
+                145
+              ],
+              [
+                7,
+                40
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         },
         {
           "id": "workers",
@@ -1341,7 +3293,56 @@
           "pivot": [
             520,
             585
-          ]
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                178,
+                8
+              ],
+              [
+                518,
+                8
+              ],
+              [
+                622,
+                50
+              ],
+              [
+                688,
+                146
+              ],
+              [
+                592,
+                190
+              ],
+              [
+                104,
+                190
+              ],
+              [
+                37,
+                132
+              ],
+              [
+                118,
+                49
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
         }
       ]
     }

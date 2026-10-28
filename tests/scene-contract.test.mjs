@@ -25,6 +25,15 @@ test('all five scenes have exact coordinates, drawing depth, pivot, asset ID and
      assert.ok(x>=0&&y>=0&&x+w<=doc.world.width&&y+h<=doc.world.height,key+' outside world canvas');
      assert.ok(Number.isInteger(obj.layer)&&obj.layer>=0&&obj.layer<=12,key+' z');
      assert.ok(Array.isArray(obj.pivot)&&obj.pivot.length===2,key+' pivot');
+     if(obj.interaction){
+       assert.ok(obj.hit&&obj.hit.type==='alpha-polygon',key+' requires hit geometry');
+       assert.ok(obj.hit.localPoints.length>=4,key+' polygon');
+       assert.ok(obj.hit.localPoints.every(([u,v])=>u>=0&&v>=0&&u<=w&&v<=h),key+' polygon outside asset');
+       assert.equal(obj.hit.minTapCssPx,44);
+       assert.ok(obj.hit.animationPresets.length>=2,key+' needs animation');
+       assert.ok(obj.hit.soundCue);
+       assert.ok(obj.hit.firstFeedbackBudgetMs<=16);
+     }else assert.equal(obj.hit,null,key+' background cannot capture clicks');
      assert.ok(obj.pivot[0]>=x&&obj.pivot[0]<=x+w&&obj.pivot[1]>=y&&obj.pivot[1]<=y+h,key+' pivot outside visual');
      if(obj.interaction)assert.match(obj.interaction,/^[a-z]+[.-][a-z-]+$/,key+' unknown input naming');
      count++;
