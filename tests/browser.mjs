@@ -333,6 +333,8 @@ await run('sprite-landscape-667x375',{viewport:{width:667,height:375},deviceScal
 await run('sprite-portrait-390x844',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await page.evaluate(()=>window.__OFFICE__.exploration.show());
  assert.equal(await page.locator('.scene-object').count(),6);
+ const portraitArt=await page.locator('.scene-office .explore-art').boundingBox();
+ assert.ok(portraitArt.width>850,'portrait must frame the character without stretching');
  await page.screenshot({path:'artifacts/new-390-portrait-desk-closeup.png',fullPage:true});
  await page.locator('.scene-object.prop-phone').tap();
  assert.equal(await page.locator('.phone-keypad button').count(),12);

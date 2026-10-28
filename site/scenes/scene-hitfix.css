@@ -8,3 +8,14 @@
 /* Edge exits must never overlap; minimum 44px accessible mobile target. */
 .explore-stage:not(.scene-office) .explore-arrow{height:clamp(44px,10%,65px)!important;width:9%!important}
 .help-control{display:block!important;width:23px!important;height:23px!important;border:1px solid #d3b58e!important;background:transparent!important;color:#f3debd!important;font-size:14px!important;line-height:20px;transform:none!important;padding:0}
+
+/* Portrait uses a real 16:9 camera crop, not a vertically stretched character. */
+@media (orientation:portrait) and (max-width:650px){
+ .scene-office .explore-art{
+   width:950px!important;height:100%!important;
+   left:50%!important;transform:translateX(-62%)!important;
+ }
+ .scene-office .explore-door{left:88%!important;top:25%!important;height:38%}
+ .scene-office .explore-person{left:56%!important;top:42%!important;height:40%}
+ .scene-office .explore-location{display:none}
+}
