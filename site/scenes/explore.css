@@ -45,3 +45,6 @@
 @keyframes walker-step{0%{transform:translate(-11px,2px) rotate(-2deg)}55%{transform:translate(9px,-4px) rotate(1deg)}100%{transform:translate(24px,1px) rotate(-1deg)}}
 @media(max-width:600px){.city-walker{width:36px;height:79px}.city-walker span{font-size:8px}}
 @media(prefers-reduced-motion:reduce){.city-walker svg{animation:none}}
+
+/* Speech is presentational: never prevent selecting the physical paper or character beneath. */
+.explore-voice{pointer-events:none}
