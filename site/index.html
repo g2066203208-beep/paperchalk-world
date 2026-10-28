@@ -8,12 +8,13 @@
 <img src="./office-art.svg" class="office-svg" alt="原创二次元办公室，年轻下属站在办公桌后，桌上有地图、文件、电话和其他办公物件" draggable="false"/><span class="character-figure" aria-hidden="true"></span>
 <!-- The visible artwork itself is the target. Transparent path shapes exactly follow each item. -->
 <svg class="scene-hitmap" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid slice" aria-label="办公室可互动的真实道具">
+ <defs><clipPath id="guest-behind-desk" clipPathUnits="userSpaceOnUse"><path d="M0 0H1200V431H0Z"/></clipPath></defs>
  <defs><linearGradient id="face" x2=".7" y2="1"><stop stop-color="#f5dbbd"/><stop offset=".66" stop-color="#ecc2a8"/><stop offset="1" stop-color="#c99586"/></linearGradient></defs>
  <g id="door-actor">
   <path class="door-leaf" d="M920 98L1075 97L1076 411L919 416Z" fill="#48505a" stroke="#c8a581" stroke-width="6"/>
   <path class="door-leaf-detail" d="M945 116H1048V236H945ZM945 256H1048V384H945Z" fill="#343f4b" stroke="#d3ad83" stroke-width="3"/>
   <ellipse class="door-handle" cx="1045" cy="258" rx="7" ry="11" fill="#e4c08b"/>
-  <g class="guest-actor" id="guest-actor"><g id="underling">
+  <g class="guest-actor" id="guest-actor" clip-path="url(#guest-behind-desk)"><g id="underling">
 <path d="M338 337Q304 363 285 416L254 509L360 517L372 452L387 542L545 538L557 451L580 532L619 509L584 392Q569 354 528 335L479 317L395 313Z" fill="#101f2b" stroke="#0a1720" stroke-width="4"/>
 <path d="M335 358L303 432L284 502H359L370 418Z" fill="#253546"/>
 <path d="M538 343L565 385L594 502L550 514L522 433Z" fill="#314358"/>
@@ -61,7 +62,7 @@
  </g>
  <g class="svg-interactions">
  <path class="object-hit object-door" data-open="door" tabindex="0" role="button" aria-label="打开办公室门或离开办公室" d="M903 78L1091 78L1093 430L905 430Z"/>
- <path class="object-hit object-person" data-open="visitor" tabindex="0" role="button" aria-label="与进门的访客交谈" d="M330 98L520 96L598 338L650 551L292 551L277 375Z"/>
+ <path class="object-hit object-person" data-open="visitor" tabindex="0" role="button" aria-label="与进门的访客交谈" d="M338 100L525 98L584 328L640 432L294 432L285 359Z"/>
  <path class="object-hit object-phone" data-open="phone" tabindex="0" role="button" aria-label="拿起整部座机电话" d="M160 472Q189 453 265 460L357 491L368 555L177 584L148 540Z"/>
  <path class="object-hit object-map" data-open="map" tabindex="0" role="button" aria-label="摊开整张城区地图" d="M546 485L856 468L927 613L532 619Z"/>
  <path class="object-hit object-reports" data-open="reports" tabindex="0" role="button" aria-label="打开整份报告文件夹" d="M332 517L563 502L620 641L331 665Z"/>

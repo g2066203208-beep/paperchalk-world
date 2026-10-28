@@ -22,8 +22,16 @@ function refresh(){
  const street=$('street-scene');if(street)street.hidden=meta.venue!=='street';
  $('respect').textContent=String(state.respect).padStart(2,'0');
  const recent=state.reports[0];
- $('speaker').textContent=(crewInfo(recent?.crew)?.name||'办公室')+' · 最新汇报';
- $('briefing-text').textContent=recent?.body||'地图已放好。';
+ if(meta.visitor){
+  $('speaker').textContent=(crewInfo(meta.visitor.id)?.name||'来客')+' · 当面汇报';
+  $('briefing-text').textContent='老板，人已经到桌前了。请直接点击我，交代今天的事务。';
+ } else if(meta.visitorQueue.length){
+  $('speaker').textContent='办公室门口 · 敲门声';
+  $('briefing-text').textContent='咚、咚。有人在门外等候。点击整扇门接待来客。';
+ } else {
+  $('speaker').textContent=(crewInfo(recent?.crew)?.name||'办公室')+' · 最新汇报';
+  $('briefing-text').textContent=recent?.body||'地图已放好。';
+ }
  $('goal-marker').textContent=state.won?'◆ 城市开始承认你的名字':'目标 · 两区影响力 55 / 声望 24 / 现金 1400';
  document.title='夜港 · 首领办公室 · DAY '+state.day;
  save();
