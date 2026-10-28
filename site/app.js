@@ -13,6 +13,7 @@ function refresh(){
  $('ribbon-day').textContent=String(state.day).padStart(3,'0');
  $('cash').textContent=fmt(state.cash);
  $('heat').textContent=String(state.heat).padStart(2,'0');
+ const receiver=document.querySelector('.prop-phone');if(receiver)receiver.classList.toggle('ringing',!state.call.answered);
  $('respect').textContent=String(state.respect).padStart(2,'0');
  const recent=state.reports[0];
  $('speaker').textContent=(crewInfo(recent?.crew)?.name||'办公室')+' · 最新汇报';
