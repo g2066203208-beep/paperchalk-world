@@ -112,10 +112,10 @@
 .explore-root .dialogue-copy small{font-size:13px}
 @media (orientation:portrait) and (max-width:650px){
  .explore-stage:not(.scene-office) .explore-art{
-   width:calc((100dvh - 40px) * 1.79104)!important;
-   height:100%!important;
+   width:calc((100dvh - 40px) * 1.27)!important;
+   height:calc((100dvh - 40px) * .7091)!important;
    position:absolute!important;
-   top:0!important;left:50%!important;
+   top:auto!important;bottom:0!important;left:50%!important;
    transform:translateX(-50%)!important;
    max-width:none!important;
  }
@@ -132,4 +132,10 @@
  .explore-root .explore-dialogue{bottom:3%;grid-template-columns:26px 1fr minmax(180px,41%);padding:8px 10px;gap:7px}
  .explore-root .dialogue-copy p{font-size:11px}
  .explore-root .dialogue-choices button{font-size:10px;min-height:27px}
+}
+
+@media (orientation:portrait) and (max-width:650px){
+ .explore-stage:not(.scene-office){background:#dcad9f}
+ .explore-stage:not(.scene-office) .explore-visual{background:linear-gradient(#dcad9f 0%,#d4a29b 58%,#3d4e57 100%)}
+ .explore-stage:not(.scene-office) .explore-door{left:10%!important;top:76%!important;width:13%!important;height:20%!important}
 }
