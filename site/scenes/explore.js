@@ -58,6 +58,26 @@ const hotspots={
   ['talk','caretaker',70,78,'和旧房东聊聊','person']
  ]
 };
+const sceneCell={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2',attic:'s0'};
+const crowd=(w,venue)=>{
+ const cell=sceneCell[venue];
+ if(venue==='office'||venue==='attic')return '';
+ const time=w.slices.clock.shift;
+ const chars=w.slices.population.people.filter(p=>(time===1?p.work:time===2?p.leisure:p.home)===cell).slice(0,4);
+ const positions=[[21,83],[32,80],[65,81],[84,80]];
+ return '<div class="explore-crowd">'+chars.map((p,i)=>{
+  const [x,y]=positions[i],shade=['#718f91','#ab837e','#bfa277','#697e90'][i];
+  return '<button class="city-walker" type="button" data-explore-type="talk-citizen" data-explore-id="'+p.id+'" aria-label="和路人'+p.name+'交谈" style="--walk-x:'+x+'%;--walk-y:'+y+'%;--coat:'+shade+';--delay:'+i*.46+'s">'+
+   '<svg viewBox="0 0 64 128" role="img" aria-label="'+p.name+'"><ellipse cx="34" cy="120" rx="27" ry="6" fill="#1e2934" opacity=".3"/>'+
+   '<path d="M18 65L12 123H28L33 87L39 123H53L48 65" fill="#243541" stroke="#1c2a37" stroke-width="4"/>'+
+   '<path d="M17 43L45 43L55 85H10Z" fill="var(--coat)" stroke="#233541" stroke-width="4"/>'+
+   '<path d="M28 39L29 52L41 52L41 40" fill="#c69b88"/>'+
+   '<path d="M18 16Q33 -7 50 17L47 37Q31 55 18 38Z" fill="#edc2a6" stroke="#253542" stroke-width="3"/>'+
+   '<path d="M16 19L17 7L32 -1L49 8L54 25L46 16L36 19L25 12Z" fill="#263742"/>'+
+   '<path d="M26 30h5M41 29h5" stroke="#263743" stroke-width="3"/></svg>'+
+   '<span>'+p.name+' · '+p.occupation+'</span></button>';
+ }).join('')+'</div>';
+};
 const escape=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
 export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,onToggle}){
  const root=document.createElement('section');
@@ -79,7 +99,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const spotsHTML=spots.map(([type,id,x,y,name,style])=>
     '<button type="button" class="explore-spot explore-'+style+'" data-explore-type="'+type+'" data-explore-id="'+id+'" style="left:'+x+'%;top:'+y+'%" aria-label="'+escape(name)+'"><span>'+escape(name)+'</span></button>'
    ).join('');
-   root.innerHTML='<div class="explore-visual">'+sceneArtwork(o.venue)+'</div>'+
+   root.innerHTML='<div class="explore-visual">'+sceneArtwork(o.venue)+'</div>'+crowd(w,o.venue)+
      '<div class="explore-head"><small>THE NIGHT HARBOR · '+String(s.day).padStart(2,'0')+'</small>'+
      '<strong>'+escape(def.name)+'</strong><em>'+escape(clockLabel(w.day,sClock.shift))+'</em></div>'+
      '<div class="explore-status"><span>流言传闻 '+o.legend+'</span><span>真实身份：'+(o.identityExposure===0?'无人知晓':'存在疑点')+'</span></div>'+
@@ -98,7 +118,8 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
      }else openPanel(id);
      return;
    }
-   const action=type==='travel'?{module:'origin',type:'travel',to:id}:
+   const action=type==='talk-citizen'?{module:'origin',type:'talk-citizen',person:id}:
+     type==='travel'?{module:'origin',type:'travel',to:id}:
      type==='inspect'?{module:'origin',type:'inspect',object:id}:
      type==='talk'?{module:'origin',type:'talk',person:id}:
      type==='aid'?{module:'origin',type:'aid'}:

@@ -55,6 +55,15 @@ test('aid uses actual money and one-time world flag; separate protection gives r
  assert.equal(w.slices.origin.flags.helpedVendor,true);
  assert.equal(w.slices.origin.identityExposure,0);
 });
+test('80 simulated citizens can be encountered based on actual time and street',()=>{
+ const w=createWorld(init()),citizen=w.slices.population.people.find(p=>p.home==='s0');
+ assert.ok(citizen);
+ const moved=action(w,'travel',{to:'alley'}).state;
+ const r=action(moved,'talk-citizen',{person:citizen.id});
+ assert.equal(r.ok,true,r.message);
+ assert.equal(r.events[0].type,'origin.citizen');
+ assert.equal(r.state.slices.origin.identityExposure,0);
+});
 test('one day settlement retains location and produces ambient city event',()=>{
  const a=createWorld(init()),r=runtime.advance(a,{cash:190,heat:0,crew:['kai'],orders:[]});
  assert.equal(r.state.day,2);assert.equal(r.state.slices.origin.venue,'office');

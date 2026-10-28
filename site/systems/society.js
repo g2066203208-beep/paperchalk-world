@@ -7,7 +7,7 @@ export const AID_ACTIONS=[
  {id:'workers',name:'协助失业者求职',cost:24,support:7,hope:4,poverty:-2,description:'介绍正规工作与成人培训'}
 ];
 export const societySystem={
- id:'society',deps:['clock','factions','population','estates'],
+ id:'society',deps:['clock','factions','population','estates','origin'],
  init:()=>({government:{name:'港联邦临时政府',stability:29,legitimacy:18,corruption:76,policePressure:64,
   civilRights:24,publicDebt:83,industryCollapse:71,monthlyTax:12,licenseFee:5},
   poverty:79,unemployment:43,oppression:76,communitySupport:5,hope:14,childWelfare:18,
@@ -41,6 +41,10 @@ export const societySystem={
   data.todayAids=[];
   // Economic decay and resident support independently influence social conditions.
   const shops=slices.estates?.parcels?.filter(p=>p.owner==='player'&&p.building&&p.building.type!=='office').length||0;
+  // Grounded street interactions feed social legitimacy; persistent simulator state,
+  // without giving protection fees or coercion any positive community effect.
+  const street=slices.origin?.streetTrust||0;
+  data.communitySupport=clamp(Math.max(data.communitySupport,Math.round(street*.7)));
   const protection=Math.min(5,Math.floor(data.communitySupport/25));
   data.unemployment=clamp(data.unemployment+(day%5===0?1:0)-(shops>0?1:0));
   data.poverty=clamp(data.poverty+(data.unemployment>45?1:0)-(shops>1?1:0));

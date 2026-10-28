@@ -27,7 +27,7 @@ export const SCENE_PEOPLE={
 };
 export function scenePopulation(state){return SCENE_PEOPLE[state.venue]||[];}
 export const originSystem={
- id:'origin',deps:['clock','society'],
+ id:'origin',deps:['clock'],
  init:({day})=>({
   chapter:1,venue:'office',sceneHistory:['office'],dateStarted:day,
   legend:22,identityExposure:0,streetTrust:8,officePurchased:true,officeCondition:'毛坯',
@@ -99,6 +99,30 @@ export const originSystem={
     if(['neighbor','runner','docker'].includes(who.id))data.flags.heardRumor=true;
     const text=dialogue[who.id];data.visitorLog.unshift({day,venue:data.venue,person:who.id,text});data.visitorLog=data.visitorLog.slice(0,40);
     return {data,events:[event('origin.talk',who.name,text)]};
+  }
+  if(action.type==='talk-citizen'){
+    const p=slices.population?.people?.find(x=>x.id===action.person);
+    if(!p)return {error:'附近没有这个居民'};
+    const location={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2',attic:'s0'}[data.venue];
+    const shift=slices.clock?.shift||0;
+    const current=shift===1?p.work:shift===2?p.leisure:p.home;
+    if(current!==location)return {error:'居民已去了别处'};
+    const lines={
+      店员:'“这里的店铺总是缺人，政府发的证件倒是很难办。”',
+      码头工人:'“仓库昨天又换了管理者，工钱什么时候结清还是没人说。”',
+      司机:'“路口的警卫只在上头来人时出现。我们跑夜班的都怕走那条路。”',
+      餐馆职员:'“食堂一天比一天难做，欠工资的老板倒换了新车。”',
+      记者:'“两名蒙面人的新闻还没查清身份，街坊反倒开始谈自己能做什么。”',
+      护士:'“诊所里有人因工伤不能干活，可补助迟迟没发。”',
+      教师:'“孩子们需要书，街区不应该让他们为大人的烂账买单。”',
+      保安:'“厂房关门了，夜间的巡逻只剩一个人值班。”',
+      店主:'“街上不缺自称能保护你的人，缺的是从来不向你索取保护费的人。”',
+      学生:'“我只希望毕业能有工作，年轻人也该有路可以走。”'
+    };
+    const text=lines[p.occupation]||'“这座城的生活越来越难了。”';
+    data.visitorLog.unshift({day,venue:data.venue,person:p.id,text});
+    data.visitorLog=data.visitorLog.slice(0,40);
+    return {data,events:[event('origin.citizen',p.name+' · '+p.occupation,text)]};
   }
   if(action.type==='aid'){
     if(data.venue!=='market')return {error:'需要先来到集市'};
