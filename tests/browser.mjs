@@ -147,6 +147,40 @@ await run('modular-world',{viewport:{width:1440,height:900}},async page=>{
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.people.members.find(p=>p.id==='kai').job,'capo','role persists');
 });
 
+
+await run('city-properties-and-justice',{viewport:{width:1440,height:900}},async page=>{
+ await page.locator('.object-phone').click();
+ await page.locator('[data-phone="yes"]').click();
+ await page.locator('#close-panel').click();
+ await page.locator('.object-reports').click();
+ await page.locator('[data-world-tab="estates"]').click();
+ assert.equal(await page.locator('.city-lot').count(),3);
+ await page.locator('[data-world-cell="s0"]').click();
+ await page.locator('[data-city-lot="lot-1"]').click();
+ await page.locator('[data-city-buy="lot-1"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
+ await page.locator('[data-city-build="lot-1"][data-city-building="diner"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].building.type,'diner');
+ await page.screenshot({path:'artifacts/city-01-properties.png',fullPage:true});
+ await page.locator('[data-world-tab="citizens"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.population.people.length,80);
+ await page.screenshot({path:'artifacts/city-02-residents.png',fullPage:true});
+ await page.locator('[data-world-tab="clock"]').click();
+ await page.locator('[data-city-nextshift]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.clock.shift,1);
+ await page.screenshot({path:'artifacts/city-03-clock.png',fullPage:true});
+ await page.locator('[data-world-tab="justice"]').click();
+ assert.equal(await page.locator('#panel-title').innerText(),'警方调查与通缉档案');
+ await page.screenshot({path:'artifacts/city-04-justice.png',fullPage:true});
+ await page.locator('#close-panel').click();
+ await page.locator('.object-calendar').click();
+ await page.locator('[data-next]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).day,2);
+ assert.ok((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].lastProfit>0);
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
+});
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');

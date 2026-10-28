@@ -1,7 +1,7 @@
 name: Night Office - playable scene, tests, deploy
 on:
   push:
-    branches: [main, game/office-object-interactions, feature/modular-world-runtime]
+    branches: [main, game/office-object-interactions, feature/modular-world-runtime, feature/living-city-estates-justice]
   pull_request:
     branches: [main]
   workflow_dispatch:
