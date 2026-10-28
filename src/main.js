@@ -173,7 +173,7 @@ renderer.domElement.addEventListener("pointerup",e=>{
 });
 document.getElementById("presets").replaceChildren(...PRESETS.map(([id,title],i)=>{
  const b=document.createElement("button");b.className="template";b.dataset.id=id;
- const count=i===0?"售货亭 / 窗口与物品":i===1?"工业街区 / 车站与路灯":"住宅 / 家具与生活设施";
+ const count=i===0?"售货亭 / 窗口与物品":i===1?"工业街区 / 车站与路灯":i===2?"住宅 / 家具与生活设施":"像素贴图感 / 分层车体 / 真3D";
  b.innerHTML='<span class="index">0'+(i+1)+'</span><span><span class="title"></span><small></small></span>';
  b.querySelector(".title").textContent=title.slice(5);b.querySelector("small").textContent=count;
  b.onclick=()=>loadPreset(id);return b;
