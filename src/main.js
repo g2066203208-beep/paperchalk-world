@@ -203,4 +203,7 @@ for(const tab of document.querySelectorAll(".mobiletabs button"))tab.onclick=()=
 function animate(){requestAnimationFrame(animate);if(document.hidden)return;controls.update();renderer.render(scene,camera);}
 loadPreset(new URL(location.href).searchParams.get("model")||"kiosk");
 animate();
-window.__WORLD_STUDIO_TEST__={scene:()=>structuredClone(sceneData),select,loadPreset,exportBBModel:()=>exportBBModel(sceneData,textureAtlas(sceneData)),camera:()=>[...camera.position],objects:()=>meshes.length};
+window.__WORLD_STUDIO_TEST__={scene:()=>structuredClone(sceneData),select,loadPreset,exportBBModel:()=>exportBBModel(sceneData,textureAtlas(sceneData)),camera:()=>[...camera.position],objects:()=>meshes.length,
+ renderDiagnostics:()=>({canvasWidth:renderer.domElement.width,canvasHeight:renderer.domElement.height,drawCalls:renderer.info.render.calls,
+ cameraPosition:[...camera.position],cameraLeft:camera.left,cameraRight:camera.right,frustumTop:camera.top,frustumBottom:camera.bottom})
+};
