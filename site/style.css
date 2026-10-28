@@ -117,3 +117,57 @@ button:disabled{cursor:default}
 }
 @media(max-width:355px) and (orientation:portrait){.logo strong{font-size:13px}.briefing{bottom:105px}.prop-label{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+
+/* Desktop-first art direction: original theatrical anime office composition. */
+.office-svg{object-fit:cover;object-position:center center;filter:saturate(.98) contrast(1.04)}
+.character-figure{position:absolute;left:30%;top:15%;width:12%;height:50%;pointer-events:none;opacity:0}
+@media(min-width:950px) and (min-height:590px){
+.game{grid-template-rows:59px minmax(0,1fr) 39px;background:#161e29}
+.topbar{padding:0 32px;border-bottom:1px solid #c49b77;box-shadow:0 3px 14px #070e16a3}
+.logo-emblem{font-size:35px;color:#e9c9a4}
+.logo strong{font-weight:900;font-size:19px;letter-spacing:.22em}
+.logo small{font-size:9px;letter-spacing:.17em;opacity:.85}
+.stats{gap:28px}.stat small{color:#d0b89c;font-size:10px}.stat b{font-size:17px}
+.help-control{width:27px;height:27px;border:1px solid #d4b897;background:transparent;color:#e4c8a5;font-size:15px;transform:none}
+.scene{background:#19232e}
+.scene:before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#101a2425,transparent 35%,transparent 88%,#0d172326)}
+.scene-tag{background:transparent;clip-path:none;left:35px;top:24px;color:#e9ceb0;letter-spacing:.13em;font-size:11px;padding:0;display:flex;align-items:center;gap:12px}
+.scene-tag strong{display:grid;place-items:center;width:30px;height:29px;background:#b34c52;color:#fff0d9;font:900 17px Georgia,serif;transform:skew(-8deg);box-shadow:3px 3px 0 #14232f}
+.briefing{left:54%;top:9%;width:320px;min-height:125px;max-height:165px;padding:12px 17px 19px;border-top:5px solid #b14e55;background:#f5e8d4;color:#1b2a37;transform:rotate(-2deg);box-shadow:6px 7px 0 #101b25,10px 10px 0 #b44a4f;clip-path:polygon(0 0,100% 0,100% 89%,92% 89%,87% 100%,81% 89%,0 89%)}
+.briefing small{font-size:11px;letter-spacing:.08em}
+.briefing p{font-size:12px;line-height:1.55}
+.briefing button{font-size:11px;color:#a9454d;border-bottom:1px solid #a9454d;margin-bottom:2px}
+.scene-note{bottom:24px;left:34px;color:#ebcfae;font-size:10px;letter-spacing:.14em;text-shadow:0 2px #151e2a}
+.bottom-ribbon{border-top:1px solid #bd8a7e;background:#171e27;padding:0 30px}
+.day-mark{color:#e2baa1}.day-mark span{font-size:17px}
+.foot-copy{font-size:11px;color:#c9bcb0;letter-spacing:.04em}.goal-marker{font-size:10px;color:#d6ae8c}
+.prop{width:135px;height:105px;background:transparent;border:0;transform:translate(-50%,-50%);color:#f6e7d0}
+.prop::before{display:none!important}
+.prop-mark{display:grid;place-items:center;position:relative;width:18px;height:18px;background:#e6c392;border:2px solid #1a2834;box-shadow:0 0 0 3px #fbebd4b8,0 2px 7px #101622;border-radius:50%;clip-path:none;font-size:0;line-height:1;transition:box-shadow .18s,background .18s}
+.prop-mark:after{content:'+';font:900 14px Arial,sans-serif;color:#23323d;position:absolute;top:-2px;left:2px}
+.prop-label{opacity:0;transform:translateY(5px);transition:opacity .17s,transform .17s;background:#192938;color:#fff0d8;border-left:3px solid #d09c77;clip-path:none;padding:5px 11px;font-size:11px;letter-spacing:.08em;pointer-events:none}
+.prop:is(:hover,:focus-visible) .prop-mark{background:#f9dfb3;box-shadow:0 0 0 7px #f4d4a653,0 0 18px #f2c18d88}
+.prop:is(:hover,:focus-visible) .prop-label{opacity:1;transform:translateY(0)}
+.prop-phone{left:20%;top:79%}
+.prop-map{left:66%;top:83%;width:260px;height:135px}
+.prop-folder{left:41%;top:91%;width:215px;height:105px}
+.prop-ledger{left:86%;top:94%}
+.prop-gun{left:17%;top:94%}
+.prop-calendar{left:91%;top:85%}
+.paper-panel{width:min(1040px,91vw);max-height:86dvh;background:#f2e7d3;border:0;clip-path:none;box-shadow:0 0 0 1px #a14a4f,11px 11px 0 #a54650,23px 24px 0 #16222c}
+.panel-chrome{background:#1a2935;border-bottom:3px solid #b34c54;padding:9px 21px}
+#panel-kicker{font-size:10px;letter-spacing:.2em;color:#e3c09a}
+#close-panel{border:0;width:30px;height:30px;background:transparent;color:#f7e4cc;font-size:26px}
+.panel-body{padding:29px 36px 35px}
+.panel-body h2{font-size:29px;letter-spacing:.08em;margin:5px 0 13px}
+.panel-body .eyebrow{font-size:10px;letter-spacing:.22em}
+.paper-grid{grid-template-columns:minmax(0,1.25fr) minmax(255px,.8fr);gap:32px}
+.map-shell{background:#d5c5a9;border:1px solid #8a7c68;box-shadow:5px 6px 0 #8c7d6845}
+.crew-ticket{background:#e7d8be;border:1px solid #a09279;box-shadow:2px 3px 0 #1e303025}
+.crew-ticket.active{background:#253643;color:#f7e5c8;border-color:#253643}
+.choice{border:1px solid #a7957e;background:#f0e5d1}
+.choice.active{background:#ad4b54;border-color:#ad4b54}
+.primary{background:#af4d55;box-shadow:4px 4px 0 #25313b}
+.report-card{background:#f5ead8;border-left:4px solid #ac5356;box-shadow:2px 3px 0 #8977623d}
+}
+@media(min-width:600px) and (max-width:949px){.office-svg{object-fit:cover}.prop-mark{transform:scale(.85)}}
