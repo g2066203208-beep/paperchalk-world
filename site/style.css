@@ -104,7 +104,7 @@ button:disabled{cursor:default}
 @media(max-width:600px) and (orientation:portrait){
 .game{grid-template-rows:52px minmax(0,1fr) 36px}.topbar{gap:5px;padding:0 8px;border-bottom-width:3px}.logo{gap:4px}.logo-emblem{font-size:24px}.logo strong{font-size:14px;letter-spacing:.1em}.stats{gap:10px;margin-left:auto}.stat{flex-direction:column;align-items:center;gap:0}.stat small{font-size:8px}.stat b{font-size:12px}.stat:nth-child(3),.stat:nth-child(4){display:none}.help-control{width:24px;height:26px;font-size:15px}
 .scene-art{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:minmax(0,1fr) 42px 42px;gap:6px;padding:0 9px 13px}
-.office-svg{top:0;left:50%;width:740px;height:calc(100% - 94px);transform:translateX(-50%)}
+.office-svg{top:0;left:calc(50% - 72px);width:740px;height:calc(100% - 94px);transform:translateX(-50%)}
 .scene-tag{left:9px;top:9px;font-size:10px;padding:5px 8px}
 .briefing{left:8%;right:8%;top:auto;bottom:110px;width:auto;min-height:74px;max-height:112px;padding:7px 11px 12px;transform:rotate(-1deg)}
 .briefing p{font-size:10px;line-height:1.25;-webkit-line-clamp:2}.briefing small,.briefing button{font-size:9px}
