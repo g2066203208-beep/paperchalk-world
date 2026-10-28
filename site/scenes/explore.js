@@ -5,8 +5,8 @@ import {clockLabel} from '../systems/clock.js';
 // Only doors, actual characters and separate object sprites are interactive.
 const hotspots={
  office:[['travel','alley',80,37,'离开办公室','door'],['talk','kai',64,55,'与阿凯交谈','person']],
- alley:[['travel','office',12,65,'回办公室','door'],['travel','market',95,65,'去集市','arrow'],
-  ['travel','attic',29,42,'去阁楼','door'],['travel','docks',95,77,'去码头','arrow'],
+ alley:[['travel','office',12,65,'回办公室','door'],['travel','market',95,57,'去集市','arrow'],
+  ['travel','attic',29,42,'去阁楼','door'],['travel','docks',95,85,'去码头','arrow'],
   ['talk','neighbor',42,72,'与街坊交谈','person'],['talk','runner',69,76,'与少年交谈','person'],['protect','harassment',51,88,'帮助街坊','action']],
  market:[['travel','alley',8,70,'回背街','arrow'],['travel','labor',94,67,'去就业所','arrow'],
   ['talk','vendor',49,72,'与林姨交谈','person'],['talk','guard',73,76,'询问巡查员','person'],['aid','vendor',34,83,'修好摊位','action']],
