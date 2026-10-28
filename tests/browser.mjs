@@ -26,6 +26,7 @@ await run('desktop-1440',{viewport:{width:1440,height:900}},async page=>{
  await page.locator('.object-door').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).visitor.id,'kai');
  await page.locator('.scene.visitor-here').waitFor();
+ await page.waitForTimeout(900);
  await page.screenshot({path:'artifacts/desktop-02-visitor-entered.png',fullPage:true});
  await page.locator('.object-person').click();
  assert.ok((await page.locator('#panel-title').innerText()).includes('阿凯'));
