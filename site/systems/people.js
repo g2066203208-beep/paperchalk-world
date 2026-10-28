@@ -14,8 +14,8 @@ const defaults=[
  {id:'raven-wei',name:'灰鸦·维',faction:'raven',job:'analyst',skills:{trade:2,network:4,analysis:5},personality:{ambition:57,discipline:80,empathy:65,courage:48},loyalty:67,morale:61,experience:0,trainingDay:0}
 ];
 export const peopleSystem={
- id:'people',deps:['factions'],
- init:()=>({members:structuredClone(defaults)}),
+ id:'people',deps:['factions','operations'],
+ init:()=>({members:structuredClone(defaults.map(p=>({...p,status:'active'})))}),
  reduce(data,action,{context,day}){
   const p=data.members.find(m=>m.id===action.person&&m.faction==='player'&&(context.crew||[]).includes(m.id));
   if(!p)return {error:'人员未加入组织'};
@@ -40,8 +40,17 @@ export const peopleSystem={
   }
   return {error:'未知人员指令'};
  },
- tick(data,{day,context}){
+ tick(data,{day,context,events:worldEvents}){
    const events=[],effects=[];
+   for(const e of worldEvents){
+     if(e.type==='person.harmed'||e.type==='person.wounded'){
+       const v=data.members.find(p=>p.id===e.target);
+       if(v&&v.status!=='deceased'){
+         v.status=e.type==='person.harmed'?'deceased':'injured';
+         events.push({type:'person.status',title:'人员动态',text:v.name+'已经'+(v.status==='deceased'?'遇害':'受伤')+'。'});
+       }
+     }
+   }
    for(const p of data.members){
      if(p.faction!=='player')continue;
      const tasks=(context.orders||[]).filter(x=>x.crew===p.id);

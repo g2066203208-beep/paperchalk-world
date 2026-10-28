@@ -24,7 +24,7 @@ export function initialGame(){
 export const crewInfo=id=>CREW.find(c=>c.id===id);
 export const zoneInfo=id=>DISTRICTS.find(d=>d.id===id);
 export const missionInfo=id=>MISSIONS.find(m=>m.id===id);
-export function availableCrew(s){return s.crew.filter(id=>!s.orders.some(o=>o.crew===id));}
+export function availableCrew(s){return s.crew.filter(id=>!(s.detained||[]).includes(id)&&!s.orders.some(o=>o.crew===id));}
 export function canOrder(s,crew,zone,mission){
  const person=crewInfo(crew),place=zoneInfo(zone),job=missionInfo(mission);
  if(!person||!place||!job)return {ok:false,reason:'请选择人手、目的地和行动'};
