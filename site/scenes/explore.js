@@ -5,7 +5,7 @@
 import {SCENE_DEFS,SCENE_PEOPLE} from '../systems/origin.js';
 import {sceneArtwork} from './artwork.js';
 import {sceneConversation} from './scene-dialogues.js';
-import {currentBeat,prologueMark} from './prologue-story.js';
+import {currentBeat,prologueMark} from '../content/prologue-story.js';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
 const mainCell={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2'};
 const spots={

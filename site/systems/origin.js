@@ -1,7 +1,7 @@
 /** Chapter 01: the legend predates the playable opening. Pure, testable narrative state.
  * No gameplay tutorial for crime: the masked event is a past public rumor, never an actionable operation.
  */
-import {newPrologue,movePrologue,currentBeat} from '../scenes/prologue-story.js';
+import {newPrologue,movePrologue,currentBeat} from '../content/prologue-story.js';
 export const FIRST_CHAPTER={
  chapter:'第一章 · 两个人的办公室',
  incident:'旧港苦力码头的债主「马顺」曾靠扣发工钱和私设债契逼迫街坊。某夜他的账目被公开，工人取回欠薪，他的私人打手散去。人们只说看见两名蒙面人。',
