@@ -259,13 +259,10 @@ function helpPanel(){
  '<div class="paper-grid"><div><div class="report-card"><h3>地图</h3><p>点桌上的地图，选择小弟、目的地和行动，然后派出去。你能看到地图上绘出的派遣路线。</p></div>'+
  '<div class="report-card"><h3>电话</h3><p>每一天都有联系人打进电话。你选择回答方式，改变资金、风险或声望。</p></div>'+
  '<div class="report-card"><h3>报告与账本</h3><p>派出去的人第二天带回有结果的报告。账本记录真实的收支。</p></div></div><div>'+
- '<div class="report-card"><h3>日历</h3><p>翻到下一天结算任务。第三天会有新成员加入。</p></div>'+
+ '<div class="report-card"><h3>日历</h3><p>翻到下一天结算任务。新成员需要从人才市场自愿面谈与正式招聘。</p></div>'+
  '<div class="report-card"><h3>旧枪</h3><p>是故事道具，不是攻击按钮；细节会逐步揭开。</p></div>'+
  '<div class="achievement">第一目标：至少两个城区影响力达到 55、现金 '+fmt(GOALS.cash)+'、声望 '+GOALS.respect+'。</div>'+
- '<button class="primary" type="button" data-help-close="1">回到办公室</button>
- <div class="info-box"><b>新战役：</b>从零地盘、租房、只有兄弟阿凯重新开始。系统会先备份上一段进度。</div>
- <div class="city-actions"><button class="choice" type="button" data-new-campaign="1">开始新战役（先备份）</button>
- <button class="choice" type="button" data-restore-campaign="1">恢复上次战役备份</button></div></div></div>';
+ '<button class="primary" type="button" data-help-close="1">回到办公室</button><div class="info-box"><b>新战役：</b>从零地盘、租房、只有兄弟阿凯重新开始。系统会先备份上一段进度。</div><div class="city-actions"><button class="choice" type="button" data-new-campaign="1">开始新战役（先备份）</button><button class="choice" type="button" data-restore-campaign="1">恢复上次战役备份</button></div></div></div>';
 }
 function repaintPanel(){
  if(!currentPanel)return;
