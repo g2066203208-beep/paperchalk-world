@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {initialGame} from '../site/engine.js';
 import {createWorld,applyWorld,runtime} from '../site/core/game.js';
 import {FIRST_CHAPTER,SCENE_DEFS} from '../site/systems/origin.js';
@@ -68,4 +69,15 @@ test('one day settlement retains location and produces ambient city event',()=>{
  const a=createWorld(init()),r=runtime.advance(a,{cash:190,heat:0,crew:['kai'],orders:[]});
  assert.equal(r.state.day,2);assert.equal(r.state.slices.origin.venue,'office');
  assert.ok(r.events.some(e=>e.type==='origin.ambient'));
+});
+
+test('purchased office never bills rent and people-first opening has exactly one companion',()=>{
+ const s=init();
+ assert.equal(s.crew.length,1);
+ assert.equal(s.cash,190);
+ assert.match(s.ledger[0].label,/买下毛坯办公室/);
+ const fs=readFileSync('site/engine.js','utf8');
+ const ui=readFileSync('site/ui/origin-book.js','utf8');
+ assert.ok(!fs.includes('办公室租金与团队开支'));
+ assert.ok(ui.includes('刚买下的毛坯旧办公室'));
 });

@@ -85,7 +85,7 @@ export function endDay(state){
  }
  const rent=35+s.crew.length*14;
  s.cash-=rent;
- s.ledger.unshift({day:s.day,label:'办公室租金与团队开支',amount:-rent});
+ s.ledger.unshift({day:s.day,label:'自有办公室维护、水电与团队开支',amount:-rent});
  s.heat=clamp(s.heat-2);
  s.day++;
  s.orders=[];

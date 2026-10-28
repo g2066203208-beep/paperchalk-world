@@ -255,7 +255,7 @@ function calendarPanel(){
  '<div><div class="mini-title">成员今日状态</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
  const o=state.orders.find(o=>o.crew===c.id);
  return '<p class="map-hint">'+c.name+' · '+(o?zoneInfo(o.zone).name+' / '+MISSIONS.find(m=>m.id===o.mission).title:'留在办公室')+'</p>';
- }).join('')+'<hr class="line"/><p class="map-hint">日常办公室租金和团队开支：'+fmt(35+state.crew.length*14)+'</p></div></div>';
+ }).join('')+'<hr class="line"/><p class="map-hint">自有办公室日常维护、水电和团队开支：'+fmt(35+state.crew.length*14)+'</p></div></div>';
 }
 function helpPanel(){
  return header('WELCOME / YOUR FIRST DAY','从零开始的首领','这不是管理表格。所有重要操作都藏在办公室里的物件上，你可以用鼠标或手机触摸它们。')+

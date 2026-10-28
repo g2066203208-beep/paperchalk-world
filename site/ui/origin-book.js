@@ -24,7 +24,7 @@ function government(w,legacy){
  '<p class="map-hint">援助并非一次性“提高声望”的戏法，也影响招募时人们是否信任你的组织。</p>')+'</div>'+
  '<div>'+section('旧港的处境',
  '<p>港联邦临时政府债台高筑，工厂相继关闭。私营商会、地区警局和街头组织互相制约；不是所有公职人员都腐败。</p>'+
- '<p>你的起点：<b>没有任何街区所有权；只有一间租来的旧办公室和兄弟阿凯。</b></p>'+
+ '<p>你的起点：<b>没有任何街区所有权；只有一间刚买下的毛坯旧办公室和兄弟阿凯。</b></p>'+
  '<div class="origin-rule">原则：平民可以自愿支持你；强迫劳动、向儿童招工与收取恐吓性保护费都不是正面发展路线。</div>'+
  action('data-voluntary-dues','1','邀请商户自愿缴纳互助会费',s.communitySupport<25||s.voluntaryDues===w.day))+
  section('政务负担',
