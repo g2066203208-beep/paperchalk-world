@@ -1,12 +1,14 @@
+import {createVoxelCar} from './voxel-car.js';
 // WORLD Blockbench Studio — format adapter and three starter locations.
 export const PALETTE={snow:"#e5e6df",plaster:"#c7c3b8",steel:"#77888b",slate:"#43505a",wood:"#887360",warm:"#e6c894",glass:"#a6bdc3",olive:"#778271",rust:"#a27869",ink:"#343d43",road:"#7a8081",paper:"#d8cfbe"};
-export const PRESETS=[["kiosk","01 · 冬夜售货亭"],["street","02 · 雪城归家路"],["home","03 · 工人住宅"]];
+export const PRESETS=[["kiosk","01 · 冬夜售货亭"],["street","02 · 雪城归家路"],["home","03 · 工人住宅"],["voxel-car","04 · 像素工艺样车"]];
 const hex=v=>/^#[0-9a-f]{6}$/i.test(v||"")?v.toLowerCase():PALETTE.steel;
 export const uuid=()=>crypto.randomUUID();
 export function cube(name,from,size,color="steel",group="主体"){
  return {id:uuid(),name,group,from:[...from],to:from.map((v,i)=>v+size[i]),rotation:[0,0,0],color:PALETTE[color]||hex(color),visible:true};
 }
 export function createScene(which="kiosk"){
+ if(which==="voxel-car")return createVoxelCar(cube);
  const parts=[],add=(n,p,s,c,g)=>parts.push(cube(n,p,s,c,g));
  if(which==="kiosk"){
   add("积雪地面",[-30,-.7,-25],[60,.25,50],"snow","外景");
