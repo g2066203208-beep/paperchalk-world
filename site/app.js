@@ -1,180 +1,179 @@
-import {LOCATIONS,ENEMY,MAX_AP,MAX_DEPTH,LANE_COUNT,createGame,perform,restoreGame,canMove,currentEnemies,effectiveDistance} from './rules.js';
-import {projectCard} from './board.js';
-import {ART} from './art.js';
-import {environmentImage} from './environment.js';
-
-const SAVE_KEY='night-remains-save-v2';
+import {DISTRICTS,CONFIG,cashText,createGame,getDistrict,photoUrl,ownedCount,sitesCount,payroll,districtRevenue,weeklyFinance,actionInfo,act,eventInfo,resolveEvent,restore} from './engine.js';
 const $=id=>document.getElementById(id);
-const escapeText=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const SAVE='night-harbor-empire-v3';
 let state;
-try{state=restoreGame(localStorage.getItem(SAVE_KEY));}catch{state=createGame();}
-let noticeTimer,boardLocation=null;
-const cardNodes=new Map();
-
-function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
-function toast(message){
-  const el=$('toast');el.textContent=message;el.classList.add('visible');
-  clearTimeout(noticeTimer);
-  noticeTimer=setTimeout(()=>el.classList.remove('visible'),2300);
+try{state=restore(localStorage.getItem(SAVE));}catch{state=createGame();}
+let tab='street',dialogType=null,toastTimer;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const persist=()=>{try{localStorage.setItem(SAVE,JSON.stringify(state));}catch{}};
+const rank=s=>{
+ const owned=ownedCount(s);
+ return owned>=5?'夜港掌舵人':owned>=3?'城区教父':owned>=1?'街区头目':s.crew>=3?'小有名气':'无名之辈';
+};
+function toast(msg){
+ const el=$('toast');el.textContent=msg;el.classList.add('visible');
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('visible'),2500);
 }
-function makeStand(enemy){
-  const el=document.createElement('button');
-  el.type='button';
-  el.className='stand-card '+enemy.side;
-  el.dataset.action='select';
-  el.dataset.id=enemy.id;
-  el.innerHTML='<span class="stand-shadow" aria-hidden="true"></span>'
-  +'<span class="stand-face"><span class="stand-top"><b class="stand-side"></b><strong class="stand-distance"></strong></span>'
-  +'<img draggable="false" class="stand-art" alt="" src="'+ART.enemy(enemy.type)+'">'
-  +'<span class="stand-bottom"><b class="stand-name"></b><strong class="stand-hp"></strong></span></span>'
-  +'<span class="stand-foot" aria-hidden="true"></span>';
-  return el;
+const actionsByTab={
+ street:[
+  {key:'hustle',eyebrow:'01 / STREET',title:'接街头委托',description:'赚取起步资金。会增加警方关注与竞争压力。',icon:'◈'},
+  {key:'network',eyebrow:'02 / CONTACTS',title:'结识本地人',description:'花钱拜访商户，快速建立影响力和声望。',icon:'✧'},
+  {key:'negotiate',eyebrow:'03 / INFLUENCE',title:'商谈合作',description:'改善与当地势力的关系，降低竞争压力。',icon:'⚜'},
+  {key:'claim',eyebrow:'04 / TERRITORY',title:'确立街区控制',description:'影响力达到 65，且有足够的人手才能正式扩张。',icon:'✦'}
+ ],
+ business:[
+  {key:'open',eyebrow:'01 / ESTABLISH',title:'开设产业',description:'投入资金，建立可以每周持续产生收入的事业。',icon:'◈'},
+  {key:'upgrade',eyebrow:'02 / INVEST',title:'升级现有产业',description:'扩大经营规模，提高未来每周现金流。',icon:'↗'},
+  {key:'community',eyebrow:'03 / NEIGHBORHOOD',title:'资助社区',description:'改善地区关系与团队忠诚，顺带降低关注。',icon:'✣'}
+ ],
+ crew:[
+  {key:'recruit',eyebrow:'01 / CREW',title:'招募新伙伴',description:'人数越多，能经营与控制的地区越多；薪水也越高。',icon:'♧'},
+  {key:'quiet',eyebrow:'02 / HEAT',title:'低调休整',description:'主动降低警方关注度，保持团队状态。',icon:'☾'},
+  {key:'community',eyebrow:'03 / LOYALTY',title:'照顾街坊与团队',description:'维护人脉、忠诚与街头名声。',icon:'✣'}
+ ]
+};
+function fill(id,value){$(id).style.width=Math.max(0,Math.min(100,value))+'%';}
+function updatePhoto(d){
+ const photo=$('district-photo');
+ const newSrc=photoUrl(d,1250);
+ if(photo.dataset.district!==d.id){
+  photo.dataset.district=d.id;
+  photo.src=newSrc;
+  photo.alt=d.name+'夜景';
+ }
 }
-function renderBoard(){
-  const root=$('enemy-lanes'),board=$('board');
-  const bounds=board.getBoundingClientRect();
-  if(bounds.width<1||bounds.height<1)return;
-  if(boardLocation!==state.current){
-    root.replaceChildren();cardNodes.clear();boardLocation=state.current;
-  }
-  const living=new Set();
-  for(const enemy of currentEnemies(state)){
-    living.add(enemy.id);
-    let el=cardNodes.get(enemy.id);
-    if(!el){
-      el=makeStand(enemy);cardNodes.set(enemy.id,el);root.append(el);
-    }
-    const p=projectCard(enemy,bounds.width,bounds.height,state.advance);
-    el.style.left=p.xPercent+'%';
-    el.style.top=p.yPercent+'%';
-    el.style.width=p.cardWidth+'px';
-    el.style.height=p.cardHeight+'px';
-    el.style.zIndex=p.zIndex;
-    el.dataset.depth=String(enemy.depth);
-    el.dataset.effective=String(p.effective);
-    el.dataset.lane=String(enemy.lane);
-    el.dataset.side=enemy.side;
-    el.style.setProperty('--card-shadow-size', Math.round(p.cardWidth*.74)+'px');
-    el.classList.toggle('selected',state.selected===enemy.id);
-    el.classList.toggle('rear',enemy.side==='rear');
-    el.classList.toggle('front',enemy.side==='front');
-    el.setAttribute('aria-pressed',String(state.selected===enemy.id));
-    el.setAttribute('aria-label',ENEMY[enemy.type].name+'，'+(enemy.side==='rear'?'后方':'前方')+
-      '第'+(enemy.lane+1)+'道，距离'+p.effective+'，生命'+enemy.hp+'，点击瞄准');
-    el.querySelector('.stand-side').textContent=enemy.side==='rear'?'REAR / 背后':'FRONT';
-    el.querySelector('.stand-distance').textContent='D '+p.effective;
-    el.querySelector('.stand-name').textContent=ENEMY[enemy.type].name;
-    el.querySelector('.stand-hp').textContent='♥ '+enemy.hp;
-  }
-  for(const [id,el] of cardNodes)if(!living.has(id)){el.remove();cardNodes.delete(id);}
-  $('player-marker').style.left=(50+(state.lane-2)*19.8)+'%';
-  $('player-marker').style.top=(90-state.advance*9)+'%';
-  $('player-marker').setAttribute('aria-label','你在第'+(state.lane+1)+'条道路，前进深度'+state.advance);
-  $('board').dataset.current=state.current;
+function renderDistricts(){
+ $('district-list').innerHTML=DISTRICTS.map((d,i)=>{
+  const zone=state.zones[d.id],active=d.id===state.selected;
+  return '<button type="button" class="district-card '+(active?'active':'')+'" data-district="'+d.id+
+   '" aria-pressed="'+active+'" aria-label="查看'+d.name+'，影响力'+zone.influence+'，'+(zone.controlled?'已掌控':'未掌控')+'">'+
+   '<img loading="lazy" alt="" src="'+photoUrl(d,480)+'" referrerpolicy="no-referrer">'+
+   '<span class="district-label"><strong>'+d.name+'</strong><small>'+d.en+'</small></span>'+
+   '<span class="district-mark">'+(zone.controlled?'★':String(i+1).padStart(2,'0'))+'</span></button>';
+ }).join('');
 }
-function handHTML(){
-  const active=state.status==='playing'&&state.ap>0;
-  const enemies=state.enemies[state.current];
-  const sameLane=enemies.some(e=>e.lane===state.lane);
-  const cards=[
-    {kind:'rifle',label:'步枪',stat:state.mag+'/'+state.magCap,action:'shoot',sub:state.advance===2?'正面伤害 3':'伤害 2 · 同道路',enabled:active&&state.mag>0&&sameLane&&!!state.selected,cost:'1 AP'},
-    {kind:'pack',label:'背包 / 换弹',stat:'+'+state.reserve,action:'reload',sub:'补满弹匣',enabled:active&&state.mag<state.magCap&&state.reserve>0,cost:'1 AP'},
-    {kind:'medkit',label:'医疗包',stat:'×'+state.medkits,action:'heal',sub:'恢复 5 HP',enabled:active&&state.medkits>0&&state.hp<state.maxHp,cost:'1 AP'},
-    {kind:'flare',label:'照明弹',stat:'×'+state.flares,action:'flare',sub:'当前道路击退 2 格',enabled:active&&state.flares>0&&sameLane,cost:'1 AP'}
-  ];
-  return cards.map(c=>'<button type="button" class="paper-card '+(c.kind==='player'?'player-card':'')+'" data-action="'+c.action+'" '+(!c.enabled?'disabled':'')+' aria-label="'+c.label+' '+c.sub+'">'
-    +'<div class="card-top"><span>'+c.label+'</span><b>'+c.stat+'</b></div>'
-    +'<img class="card-illustration" draggable="false" alt="" src="'+ART.item(c.kind)+'">'
-    +'<div class="card-bottom"><span>'+c.sub+'</span><span class="cost">'+c.cost+'</span></div></button>').join('');
+function renderActions(){
+ const d=getDistrict(state.selected),z=state.zones[d.id];
+ const descriptions={
+  street:'街区关系与势力变化 · 你可以自由决定先经营哪里',
+  business:d.business+' / 当前等级 '+z.level+' · 预计每周 '+cashText(districtRevenue(state,d)),
+  crew:'现有 '+state.crew+' 人 · 每周团队工资与固定开支 '+cashText(payroll(state))+' · 忠诚 '+state.loyalty
+ };
+ $('tab-hint').textContent=descriptions[tab];
+ $('action-list').innerHTML=actionsByTab[tab].map((a,i)=>{
+  const info=actionInfo(state,a.key);
+  let title=a.title;
+  if(a.key==='open')title='开设'+d.business;
+  if(a.key==='upgrade')title='升级'+d.business;
+  const price=info.cost===0?'自由行动':'费用 '+cashText(info.cost);
+  return '<button type="button" class="action-card '+(!info.ok?'locked':'')+'" data-action="'+a.key+
+   '" aria-disabled="'+(!info.ok)+'" title="'+(info.reason||a.description)+'">'+
+   '<span class="action-symbol" aria-hidden="true">'+a.icon+'</span>'+
+   '<span class="action-copy"><small>'+a.eyebrow+'</small><strong>'+title+'</strong><span>'+a.description+'</span></span>'+
+   '<span class="action-end"><b>'+price+'</b><small>'+(!info.ok?esc(info.reason):'执行 ↗')+'</small></span></button>';
+ }).join('');
 }
-function locationHTML(loc){
-  const now=state.current===loc.id,reachable=canMove(state.current,loc.id),count=state.enemies[loc.id].length;
-  const status=now?'当前位置':count===0?'已肃清':reachable?'可移动':'需经教堂';
-  return '<button type="button" class="location-card '+(now?'active':reachable?'reachable':'inaccessible')+
-    '" data-action="move" data-to="'+loc.id+'" aria-pressed="'+now+'" '+(now?'disabled':'')+
-    ' aria-label="'+loc.name+'，'+status+'，敌人 '+count+'">'+
-    '<div class="location-caption"><span>'+loc.name+'</span><small>'+loc.en+'</small></div>'+
-    '<img draggable="false" alt="" src="'+ART.scene(loc.id)+'">'+
-    '<div class="location-state"><span>'+status+'</span><b>'+count+' 敌人</b></div></button>';
+function renderLedger(){
+ const f=weeklyFinance(state);
+ $('income').textContent='＋'+cashText(f.income);
+ $('upkeep').textContent='－'+cashText(f.wages);
+ $('penalty').textContent='－'+cashText(f.enforcement);
+ $('net').textContent=(f.net>=0?'+':'－')+cashText(Math.abs(f.net));
+ $('net').classList.toggle('negative',f.net<0);
+ $('organization-count').textContent='地盘 '+ownedCount(state)+' / '+DISTRICTS.length;
+ $('organization-sites').textContent='产业 '+sitesCount(state)+' / '+DISTRICTS.length;
+ $('organization-loyalty').textContent='忠诚 '+state.loyalty;
+ $('goal').textContent=state.won?'★ 成就：夜港掌舵人。你可以继续经营城市。':
+ '目标：五个城区全部掌控 · 声望 '+CONFIG.goalRespect+' · 现金 '+cashText(CONFIG.goalCash);
+ $('log').innerHTML=state.log.slice(0,3).map((e,i)=>'<div class="entry"><small>W'+String(e.week).padStart(2,'0')+
+  ' · '+esc(e.title)+'</small><p>'+esc(e.body)+'</p></div>').join('');
 }
 function render(){
-  const loc=LOCATIONS.find(l=>l.id===state.current), enemies=currentEnemies(state);
-  $('turn').textContent=String(state.turn).padStart(2,'0');
-  $('ap').textContent=state.ap+' / '+MAX_AP;
-  $('ammo').innerHTML=state.mag+' / '+state.magCap+' <em>+'+state.reserve+'</em>';
-  $('health').innerHTML=Array.from({length:state.maxHp},(_,i)=>'<i class="'+(i>=state.hp?'empty':'')+'"></i>').join('');
-  $('health').setAttribute('aria-label','生命 '+state.hp+'/'+state.maxHp);
-  $('remaining').textContent=String(LOCATIONS.reduce((sum,l)=>sum+state.enemies[l.id].length,0)).padStart(2,'0');
-  $('map-progress').innerHTML=LOCATIONS.map(l=>'<div class="progress-item '+(state.enemies[l.id].length===0?'done':'')+'"><span>'+
-    l.name+'</span><b>'+(state.enemies[l.id].length===0?'✓':'×'+state.enemies[l.id].length)+'</b></div>').join('');
-  $('log').innerHTML=state.log.slice(0,6).map(t=>'<p>'+escapeText(t)+'</p>').join('');
-  $('field-name').textContent=loc.name;
-  $('field-hint').textContent=loc.hint;
-  $('scene-image').style.backgroundImage='url("'+environmentImage(loc.id)+'")';
-  $('scene-image').dataset.location=loc.id;
-  $('field-threat').innerHTML=String(enemies.length).padStart(2,'0')+' <span>ENEMIES</span>';
-  $('locations').innerHTML=LOCATIONS.map(locationHTML).join('');
-  $('hand').innerHTML=handHTML();
-  $('lane-selector').innerHTML=Array.from({length:LANE_COUNT},(_,i)=>{
-    const count=enemies.filter(e=>e.lane===i).length;
-    return '<button type="button" data-action="lane" data-lane="'+i+'" '+(state.status!=='playing'||state.ap===0||state.lane===i?'disabled':'')+
-      ' class="lane-button '+(state.lane===i?'active':'')+'" aria-pressed="'+(state.lane===i)+'" aria-label="第'+(i+1)+'道路，'+count+'个敌人">'+
-      '<span class="lane-numeral">'+(i+1)+'</span><span class="lane-threat">'+(count||'')+'</span></button>';
-  }).join('');
-  $('forward-btn').disabled=state.status!=='playing'||state.ap===0||state.advance>=2;
-  $('retreat-btn').disabled=state.status!=='playing'||state.ap===0||state.advance<=0;
-  $('player-status').textContent='第 '+(state.lane+1)+' 道 · '+(['后线','中线','前线'][state.advance]);
-  const chosen=enemies.find(e=>e.id===state.selected);
-  $('target-status').textContent=chosen?ENEMY[chosen.type].name+' · '+(chosen.side==='rear'?'背后':'正面')+'第'+(chosen.lane+1)+'道 · 距离'+effectiveDistance(state,chosen)
-    :enemies.length?'点立式卡牌瞄准，再切换到对应道路':'当前场地安全，去其他场地探索';
-  $('guidance').textContent=state.status==='won'?'三个场地已经肃清 · 胜利':state.status==='lost'?'防线已被突破 · 失败':
-    !state.ap?'行动点已用尽，请结束回合':enemies.some(e=>e.side==='rear')?'留意背后红色标记！改变前后站位可防包抄':'五条道路独立防守；近排会挡住同路远排';
-  const end=$('end-btn');
-  end.innerHTML=state.status==='playing'?'<span class="bell-icon" aria-hidden="true">♢</span><span class="bell-label">敲钟<br><small>结束回合</small></span>':'<span class="bell-icon" aria-hidden="true">↻</span><span class="bell-label">重新<br><small>开始</small></span>';
-  end.dataset.action=state.status==='playing'?'end':'restart';
-  end.setAttribute('aria-label',state.status==='playing'?'敲钟结束回合':'重新开始');
-  renderBoard();persist();
-  document.title='余烬之夜 · 五道桌面战场 · '+loc.name;
+ const d=getDistrict(state.selected),z=state.zones[d.id];
+ $('week').textContent=String(state.week).padStart(2,'0');
+ $('rank').textContent=rank(state);
+ $('money').textContent=cashText(state.cash);
+ $('respect').textContent=String(state.respect).padStart(2,'0');
+ $('heat').textContent=String(state.heat).padStart(2,'0');
+ $('heat').classList.toggle('alert',state.heat>=65);
+ $('crew').textContent=String(state.crew).padStart(2,'0');
+ $('district-no').textContent='DISTRICT / '+String(DISTRICTS.indexOf(d)+1).padStart(2,'0');
+ $('district-name').textContent=d.name;
+ $('district-flavor').textContent=d.flavor;
+ $('territory-status').textContent=z.controlled?'✦ 已纳入势力':'自由街区 · '+d.tag;
+ $('territory-status').classList.toggle('controlled',z.controlled);
+ $('influence').textContent=z.influence+' / 100';
+ $('rival').textContent=z.rival+' / 100';
+ $('local-income').textContent=cashText(districtRevenue(state,d));
+ fill('influence-fill',z.influence);fill('rival-fill',z.rival);
+ updatePhoto(d);renderDistricts();
+ document.querySelectorAll('[data-tab]').forEach(el=>{
+  const active=el.dataset.tab===tab;el.setAttribute('aria-selected',String(active));el.classList.toggle('active',active);
+ });
+ renderActions();renderLedger();
+ $('next-week').disabled=!!state.event||state.bankrupt;
+ persist();
+ document.title='夜港 · 第 '+state.week+' 周 · '+d.name;
+ if(state.event)showEvent();
+ else if(dialogType==='event')closeDialog();
 }
-function dispatch(action){
-  const result=perform(state,action);
-  if(!result.ok){toast(result.message);return false;}
-  state=result.state;
-  render();
-  if(action.type!=='select')toast(result.message);
-  if(state.status==='won')toast('胜利！三个场地已肃清');
-  if(state.status==='lost')toast('生命耗尽，游戏结束');
-  return true;
+function dispatch(type){
+ const r=act(state,type);
+ if(!r.ok){toast(r.message);return;}
+ state=r.state;toast(r.message);render();
 }
-$('game').addEventListener('click',event=>{
-  const el=event.target.closest('[data-action]');
-  if(!el||el.disabled)return;
-  const type=el.dataset.action;
-  if(type==='none')return;
-  dispatch({type,id:el.dataset.id,to:el.dataset.to,lane:el.dataset.lane});
+function showDialog(meta,title,body,options,type){
+ dialogType=type;
+ $('dialog-meta').textContent=meta;$('dialog-title').textContent=title;$('dialog-text').textContent=body;
+ $('dialog-options').innerHTML=options;
+ $('veil').hidden=false;
+}
+function showEvent(){
+ const e=eventInfo(state);
+ if(!e)return;
+ const content=['a','b'].map(choice=>{
+  const v=e[choice],cant=state.cash<v.cost;
+  return '<button type="button" data-event="'+choice+'" class="event-choice" '+(cant?'disabled':'')+'><strong>'+v.text+'</strong><small>'+
+     (v.cost?'需要 '+cashText(v.cost):'无需费用')+(cant?' · 资金不足':'')+'</small></button>';
+ }).join('');
+ showDialog('WEEK '+state.week+' / CITY EVENT',e.title,e.text,content,'event');
+}
+function showHelp(){
+ const body='你从 '+cashText(320)+' 和一个伙伴开始。选择右侧城区照片，街区事务帮助你积累资金与影响力；产业能产生每周持续收入；招募人手支持多区经营。点击「进入下一周」结算收入、工资和城市事件。\n\n每个街区影响力达到 65 后，招够人手并支付费用才能建立地盘。最终目标：掌控全部五区，声望至少 70，现金积累 '+cashText(CONFIG.goalCash)+'。没有行动点和回合上限，可长期经营；高关注度和激烈竞争会提高风险。\n\n所有进度自动保存在此设备。';
+ showDialog('HOW TO PLAY / THE RULES','从一个人，到一座城',body,
+ '<button type="button" class="event-choice close-choice" data-close="1"><strong>回到城市</strong></button>','help');
+}
+function closeDialog(){dialogType=null;$('veil').hidden=true;}
+$('game').addEventListener('click',e=>{
+ const node=e.target.closest('button');
+ if(!node)return;
+ if(node.dataset.district){
+  state={...state,selected:node.dataset.district};render();return;
+ }
+ if(node.dataset.tab){tab=node.dataset.tab;render();return;}
+ if(node.dataset.action){dispatch(node.dataset.action);return;}
+ if(node.dataset.event){
+  const r=resolveEvent(state,node.dataset.event);
+  if(!r.ok){toast(r.message);return;}
+  state=r.state;closeDialog();toast(r.message);render();return;
+ }
+ if(node.dataset.close){closeDialog();return;}
 });
-$('reset-btn').addEventListener('click',()=>{
-  if(confirm('重新开始？当前对局进度将被覆盖。'))dispatch({type:'restart'});
+$('next-week').addEventListener('click',()=>dispatch('next'));
+$('help').addEventListener('click',showHelp);
+$('reset').addEventListener('click',()=>{
+ if(confirm('重新开始夜港？这将清除当前存档。')){
+  state=createGame();tab='street';closeDialog();render();toast('从码头重新起步。');
+ }
 });
-const overlay=$('help-overlay');
-function closeHelp(){overlay.hidden=true;}
-$('help-btn').addEventListener('click',()=>{overlay.hidden=false;$('close-help').focus();});
-$('close-help').addEventListener('click',closeHelp);
-$('help-ok').addEventListener('click',closeHelp);
-overlay.addEventListener('click',e=>{if(e.target===overlay)closeHelp();});
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'&&!overlay.hidden){closeHelp();return;}
-  if(!overlay.hidden||e.altKey||e.ctrlKey||e.metaKey)return;
-  if(e.key==='ArrowUp'||e.key==='ArrowDown'){
-    const options=LOCATIONS.filter(l=>canMove(state.current,l.id));
-    if(options.length){dispatch({type:'move',to:options[e.key==='ArrowUp'?0:options.length-1].id});}
-    e.preventDefault();
-  }else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
-    const next=state.lane+(e.key==='ArrowLeft'?-1:1);
-    if(next>=0&&next<LANE_COUNT)dispatch({type:'lane',lane:next});
-    e.preventDefault();
-  }else if(e.key===' '&&e.target.tagName!=='BUTTON'){dispatch({type:'end'});e.preventDefault();}
+ if(e.key==='Escape'&&dialogType==='help')closeDialog();
+ if(e.altKey||e.metaKey||e.ctrlKey||dialogType)return;
+ if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+  const index=DISTRICTS.findIndex(d=>d.id===state.selected);
+  const next=Math.max(0,Math.min(DISTRICTS.length-1,index+(e.key==='ArrowRight'?1:-1)));
+  if(next!==index){state.selected=DISTRICTS[next].id;render();e.preventDefault();}
+ }
 });
-new ResizeObserver(()=>renderBoard()).observe($('board'));
 render();
-window.__NIGHT_REMAINS__={state:()=>structuredClone(state),dispatch,version:2,projectCard};
+window.__HARBOR__={state:()=>structuredClone(state),act:dispatch,select:id=>{if(getDistrict(id)){state.selected=id;render();}},next:()=>dispatch('next'),version:3};

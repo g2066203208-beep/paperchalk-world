@@ -2,123 +2,84 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#101315">
-<meta name="description" content="余烬之夜：五条道立式卡牌桌游，三处场地，可操作的生存战斗。">
-<title>余烬之夜 · 桌上残响</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#14191b">
+<meta name="description" content="夜港：从街头一无所有起步，经营产业、招募团队、扩张到全城的黑帮老大模拟游戏。">
+<title>夜港 · 街头帝国</title>
 <link rel="stylesheet" href="./style.css">
 <script type="module" src="./app.js"></script>
 </head>
 <body>
-<div id="game" class="game-shell">
-  <header class="topbar">
-    <div class="brand" aria-label="游戏名称"><span class="brand-glyph">✧</span><div><strong>余烬之夜</strong><small>NIGHT REMAINS</small></div></div>
-    <div class="hud-cluster">
-      <div class="hud-item turn-mark"><small>夜巡 / TURN</small><b id="turn">01</b></div>
-      <div class="hud-item hp-stat"><small>生命 / VITAL</small><div class="health-pips" id="health" aria-label="生命"></div></div>
-      <div class="hud-item ap-stat"><small>行动 / AP</small><b id="ap">3 / 3</b></div>
-      <div class="hud-item ammo-stat"><small>弹药 / AMMO</small><b id="ammo">6 / 6 <em>+46</em></b></div>
+<div class="game" id="game">
+ <header class="topbar">
+  <div class="identity"><span class="monogram" aria-hidden="true">N<span>°</span></span><div><strong>夜港</strong><small>FROM NOTHING · AN EMPIRE</small></div></div>
+  <div class="header-stats">
+   <div class="header-stat"><small>第 <span id="week">01</span> 周</small><strong id="rank">无名之辈</strong></div>
+   <div class="header-stat balance"><small>现金 CASH</small><strong id="money">＄320</strong></div>
+   <div class="header-stat short"><small>声望</small><strong id="respect">06</strong></div>
+   <div class="header-stat short"><small>关注度</small><strong id="heat">07</strong></div>
+   <div class="header-stat short crew-top"><small>伙伴</small><strong id="crew">01</strong></div>
+  </div>
+  <button type="button" class="quiet-icon" id="help" aria-label="玩法说明" title="玩法说明">?</button>
+  <button type="button" class="quiet-icon" id="reset" aria-label="重新开始" title="重开">↻</button>
+ </header>
+ <div class="main">
+  <section class="stage" aria-label="正在经营的城区">
+    <img id="district-photo" class="stage-photo" draggable="false" alt="城区的夜景照片" referrerpolicy="no-referrer">
+    <div class="stage-overlay"></div>
+    <div class="stage-top">
+      <div><small id="district-no">DISTRICT / 01</small><h1 id="district-name">旧码头</h1><p id="district-flavor">从这里，开始拥有这座城。</p></div>
+      <span class="territory-stamp" id="territory-status">尚未掌控</span>
     </div>
-    <button id="help-btn" class="glyph-control" aria-label="打开规则说明" title="规则">?</button>
-    <button id="reset-btn" class="glyph-control" aria-label="重新开始" title="重开">↻</button>
-  </header>
-
-  <aside class="left-rail" aria-label="隐藏的战况辅助数据">
-    <div class="rail-counter"><small>剩余敌人</small><strong id="remaining">18</strong></div>
-    <div id="map-progress" class="map-progress"></div>
-    <div id="log" class="combat-log"></div>
+    <div class="stage-bottom">
+      <div class="street-data"><span>街区影响力</span><div class="meter"><i id="influence-fill"></i></div><b id="influence">21 / 100</b></div>
+      <div class="street-data"><span>竞争压力</span><div class="meter rival"><i id="rival-fill"></i></div><b id="rival">20 / 100</b></div>
+      <div class="stage-economy"><span>该区每周收入</span><strong id="local-income">＄0</strong></div>
+    </div>
+    <div class="stage-caption">HARBOR CITY <span>·</span> 经营、关系、地盘，都由你的决定改变</div>
+  </section>
+  <aside class="neighborhoods" aria-label="城市街区照片">
+   <div class="neighborhoods-heading"><span>这座城</span><small>FIVE DISTRICTS</small></div>
+   <div id="district-list" class="district-list"></div>
+   <div class="neighborhoods-footer">点击照片，换一个街区经营</div>
   </aside>
-
-  <main class="field" aria-label="场景与桌上战斗">
-    <div id="scene-image" class="scene-image" aria-hidden="true"></div>
-    <div class="scene-shade" aria-hidden="true"></div>
-    <div class="scene-grain" aria-hidden="true"></div>
-
-    <div class="field-heading">
-      <div class="place-identity"><span class="place-roman">ACT I · THE LONG NIGHT</span><h1 id="field-name">教堂</h1><p id="field-hint">五条道路延伸至黑暗中。</p></div>
-      <div class="field-count"><span class="danger-rune">✢</span><span id="field-threat">08 <span>ENEMIES</span></span></div>
+ </div>
+ <section class="bottom" aria-label="帮派经营工作台">
+  <div class="desk-top">
+    <div class="desk-label"><span>THE LEDGER</span><strong>你的组织</strong></div>
+    <div class="desk-tabs" role="tablist" aria-label="经营类别">
+      <button type="button" data-tab="street" role="tab">街区事务</button>
+      <button type="button" data-tab="business" role="tab">产业经营</button>
+      <button type="button" data-tab="crew" role="tab">团队与关系</button>
     </div>
-
-    <div class="combat-zone">
-      <div class="enemy-zone-title" aria-hidden="true"><span>远处 / THE APPROACH</span><span>✣</span></div>
-      <section class="board-shell" aria-label="五条有纵深的立式卡牌道路">
-        <div id="board" class="board-table">
-          <div class="board-atmosphere" aria-hidden="true"></div>
-          <svg class="board-grid" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <linearGradient id="timber" x1="0" y1="0" x2=".3" y2="1">
-                <stop offset="0" stop-color="#5e4b3a"/>
-                <stop offset=".5" stop-color="#382e28"/>
-                <stop offset=".85" stop-color="#2e241f"/>
-                <stop offset="1" stop-color="#1b1716"/>
-              </linearGradient>
-              <radialGradient id="tableGlow">
-                <stop stop-color="#b6926745"/>
-                <stop offset="1" stop-color="#513d2900"/>
-              </radialGradient>
-            </defs>
-            <path d="M279 213L720 213L994 548L6 548Z" fill="#090b0b" opacity=".75" transform="translate(0 18)"/>
-            <path d="M279 213L720 213L994 548L6 548Z" fill="url(#timber)" stroke="#8e7458" stroke-width="5"/>
-            <path d="M296 224L704 224L958 531L43 531Z" fill="none" stroke="#bd9b71" stroke-opacity=".46" stroke-width="2"/>
-            <path d="M299 238L688 238L914 504L85 504Z" fill="url(#tableGlow)" opacity=".65"/>
-            <g fill="none" stroke="#92785c" stroke-width="2" opacity=".48">
-              <path d="M303 214L40 548M402 214L275 548M500 214L500 548M598 214L725 548M697 214L960 548"/>
-            </g>
-            <g fill="none" stroke="#d3b48a" stroke-width="1.2" opacity=".21" stroke-dasharray="3 10">
-              <path d="M353 220L161 539M452 220L387 539M548 220L613 539M647 220L839 539"/>
-            </g>
-            <g stroke="#8d765e" stroke-opacity=".22">
-              <path d="M253 257Q500 274 747 257M184 340Q500 362 816 340M103 449Q500 478 897 449" fill="none" stroke-width="4"/>
-              <path d="M244 265Q501 281 756 265M173 353Q501 373 828 353M94 465Q500 493 909 465" fill="none" stroke-width="1"/>
-            </g>
-            <path d="M9 548L994 548" stroke="#b78f65" stroke-width="8" stroke-opacity=".76"/>
-            <path d="M0 560Q500 565 1000 560L1000 600H0Z" fill="#0e1010" opacity=".78"/>
-          </svg>
-          <div class="board-horizon" aria-hidden="true">✦ &nbsp; INTO THE DARK &nbsp; ✦</div>
-          <div id="enemy-lanes" class="enemy-lanes" aria-label="可点击瞄准的敌人立式卡牌"></div>
-          <div id="player-marker" class="player-marker" aria-label="玩家站位"><span>✦</span><b>YOU</b></div>
-          <div id="lane-selector" class="lane-selector" aria-label="点击桌面道路印记改变防守道路"></div>
-          <div class="depth-controls" aria-label="前后移动">
-            <button id="forward-btn" type="button" data-action="advance" title="向前一步，1行动" aria-label="向前推进">⌃</button>
-            <button id="retreat-btn" type="button" data-action="retreat" title="后退一步，1行动" aria-label="向后撤退">⌄</button>
-          </div>
-          <div class="board-side-note" aria-hidden="true">FIVE PATHS · ONE NIGHT</div>
-        </div>
-      </section>
-      <div class="board-status"><span id="target-status">点击怪物卡牌锁定目标</span><span id="player-status">第 3 道 · 后线</span></div>
+    <button id="next-week" type="button" class="week-control" aria-label="结束本周，结算并进入下一周"><span class="week-mark" aria-hidden="true">◴</span><span>进入下一周<small>结算收支</small></span></button>
+  </div>
+  <div class="desk-content">
+    <div class="action-space">
+      <div class="hint" id="tab-hint"></div>
+      <div class="action-list" id="action-list"></div>
     </div>
-
-    <div class="actions-bar">
-      <span class="action-guidance"><span class="tiny-diamond">✣</span><span id="guidance">点选立卡 · 触摸道路线 · 打出手牌</span></span>
-      <button id="end-btn" class="end-btn" type="button" data-action="end" aria-label="结束回合"><span class="bell-icon" aria-hidden="true">♢</span><span class="bell-label">敲钟<br><small>结束回合</small></span></button>
-    </div>
-
-    <div class="hand-zone">
-      <div class="hand-head"><span>HAND / 手牌</span><small>触摸使用</small></div>
-      <div id="hand" class="hand" aria-label="可使用的手牌"></div>
-    </div>
-    <div class="desk-edge" aria-hidden="true"></div>
-  </main>
-
-  <aside class="location-rail" aria-label="场景切换卡牌">
-    <div class="location-heading"><span>地点</span><small>PLACES</small></div>
-    <div class="travel-tip">翻到另一处场景 <span>· 1 AP</span></div>
-    <div id="locations" class="location-list"></div>
-    <div class="location-foot">触碰场景卡移动<br>每处保留原有敌人</div>
-  </aside>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div id="help-overlay" class="modal-cover" hidden>
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
-      <div class="modal-header"><h2 id="help-title">夜巡手册</h2><button id="close-help" class="glyph-control" aria-label="关闭">×</button></div>
-      <p>三个地点各有五条道路。每张怪物卡真正立在有纵深的桌面上，近处会遮挡远处，敌人会向你推进。</p>
-      <p><strong>瞄准：</strong>点怪物立卡选择目标；点桌面下方的道路印记移动到目标道路，再点击底部步枪。前面挡住了后面的怪物时，必须先解决近处。</p>
-      <p><strong>靠近与夹击：</strong>桌面左下的上下印记可以前进、后退。背后攻击的怪物有红色 REAR 标记。任何近身怪在回合结束时都会攻击。</p>
-      <p><strong>手牌：</strong>步枪、装填、医疗包、照明弹。结束回合请触摸右下方的铜铃印记。右侧竖列为场地卡，手机竖屏时移至战场上方。</p>
-      <p><strong>存档：</strong>自动保存在当前设备中，重启 APK 会重新加载托管网页并继续对局。</p>
-      <button class="modal-ok" id="help-ok">回到桌边</button>
+    <div class="ledger-space">
+      <div class="ledger-kicker">本周账簿 / YOUR BOOKS</div>
+      <div class="ledger-row"><span>产业及地盘收入</span><b id="income">＋＄0</b></div>
+      <div class="ledger-row"><span>薪资与运营成本</span><b id="upkeep">－＄80</b></div>
+      <div class="ledger-row"><span>额外监管成本</span><b id="penalty">－＄0</b></div>
+      <div class="ledger-row ledger-result"><span>预计每周净收入</span><b id="net">－＄80</b></div>
+      <div class="organization"><span id="organization-count">地盘 0 / 5</span><span id="organization-sites">产业 0 / 5</span><span id="organization-loyalty">忠诚 78</span></div>
+      <div class="goal" id="goal">掌控五个城区 · 声望达到 70 · 现金积累到 ＄10,000</div>
+      <div class="log-box" id="log" aria-live="polite"></div>
     </div>
   </div>
+ </section>
+ <div class="toast" id="toast" role="status" aria-live="polite"></div>
+ <div class="veil" id="veil" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <div class="dialog-meta" id="dialog-meta">夜港 · 市内消息</div>
+    <h2 id="dialog-title">新的消息</h2>
+    <p id="dialog-text"></p>
+    <div class="dialog-options" id="dialog-options"></div>
+  </div>
+ </div>
 </div>
 </body>
 </html>
