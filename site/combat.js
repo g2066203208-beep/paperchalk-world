@@ -6,7 +6,7 @@ export const TARGETS=[
  {id:'b',x:733,y:289,r:35,health:2,kind:'intruder',color:'#a88377'},
  {id:'c',x:1090,y:336,r:31,health:2,kind:'intruder',color:'#a66c65'}
 ];
-export function freshCombat(){return {version:1,mode:'holstered',mag:6,reserve:24,maxMag:6,hp:100,wave:0,alert:false,enemies:[],shots:0,hits:0,knockdowns:0,roundDamage:0,roundsCompleted:0,history:[],reloading:false};}
+export function freshCombat(){return {version:1,mode:'holstered',mag:6,reserve:24,maxMag:6,hp:100,wave:0,alert:false,alertDay:0,enemies:[],shots:0,hits:0,knockdowns:0,roundDamage:0,roundsCompleted:0,history:[],reloading:false};}
 export function normalizeCombat(raw){if(!raw||raw.version!==1)return freshCombat();const s=clone(raw);if(!['holstered','aim','fight','won','lost'].includes(s.mode)||!Number.isInteger(s.mag)||s.mag<0||s.mag>6||!Number.isInteger(s.reserve)||s.reserve<0||s.reserve>10000||!Number.isInteger(s.hp)||s.hp<0||s.hp>100||!Array.isArray(s.enemies)||s.enemies.length>3)return freshCombat();s.reloading=false;return s;}
 export function draw(s){
  if(s.mode==='fight')return {ok:false,combat:s,message:'当前已经持枪'};
@@ -83,6 +83,6 @@ export function settle(s,state,meta){
 }
 export function signalEncounter(s,day,heat){
  const n=clone(s);
- if(day>=2&&day%3===2&&heat>=14&&!n.alert&&n.mode==='holstered')n.alert=true;
+ if(day>=2&&day%3===2&&heat>=14&&n.alertDay!==day){n.alert=true;n.alertDay=day;}
  return n;
 }
