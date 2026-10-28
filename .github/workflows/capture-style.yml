@@ -1,0 +1,37 @@
+name: Capture real paper car studio screenshot
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/capture-style.yml
+      - tests/capture-style.mjs
+permissions:
+  contents: write
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund --no-package-lock
+      - run: npm install --no-save --no-audit --no-fund playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Capture original paper car + new 3D kiosk
+        run: node tests/capture-style.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paper-car-style-real-screenshots
+          path: screenshots/
+          retention-days: 30
+      - name: Publish screenshot files in public git repository
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f screenshots/*.png
+          git commit -m "test: publish real Chromium screenshots of original paper car and new kiosk [skip ci]"
+          git push origin HEAD:main
