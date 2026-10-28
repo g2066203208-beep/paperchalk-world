@@ -8,7 +8,7 @@ import {shortestRoute} from '../systems/transport.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const head=(k,t,d)=>'<div class="eyebrow">'+k+'</div><h2 id="panel-title">'+t+'</h2><p>'+d+'</p>';
 const tabs=tab=>'<nav class="world-tabs city-tabs" aria-label="桌上物件里的城市档案">'+[
-['city','城市版图'],['estates','地皮地产'],['transport','运输路线'],['clock','时钟'],['citizens','城市居民'],['operations','组织事务'],['contacts','雇佣线人'],['justice','刑事案件'],['news','晚报']
+['society','平民与政府'],['recruitment','人才市场'],['politics','家族产业'],['city','城市版图'],['estates','地皮地产'],['transport','运输路线'],['clock','时钟'],['citizens','城市居民'],['operations','组织事务'],['contacts','雇佣线人'],['justice','刑事案件'],['news','晚报']
 ].map(([id,name])=>'<button type="button" class="'+(tab===id?'selected':'')+'" data-world-tab="'+id+'">'+name+'</button>').join('')+'</nav>';
 const cellName=(w,id)=>w.slices.factions.cells.find(c=>c.id===id)?.name||id;
 const personName=(w,id)=>w.slices.people.members.find(p=>p.id===id)?.name||id;

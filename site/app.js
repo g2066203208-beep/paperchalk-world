@@ -3,6 +3,7 @@ import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,queueVisitor,decide
 import {createWorld,applyWorld,advanceWorld} from './core/game.js';
 import {renderWorldPanel} from './ui/world-panel.js';
 import {renderCityBook} from './ui/city-book.js';
+import {renderOriginBook} from './ui/origin-book.js';
 import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
 const $=id=>document.getElementById(id);
@@ -13,9 +14,10 @@ let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'
 const WORLD_STORE='night-office-world-v1';
 let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
-let worldUI={cell:'s1',lot:'lot-4',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1'};
+let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
+const originTabs=new Set(['society','recruitment','politics']);
 const cityTabs=new Set(['clock','estates','transport','citizens','operations','contacts','justice']);
-const worldTabs=new Set(['city','personnel','news','civic','dialogue',...cityTabs]);
+const worldTabs=new Set(['city','personnel','news','civic','dialogue',...cityTabs,...originTabs]);
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
 function save(){try{localStorage.setItem(STORE,JSON.stringify(state));localStorage.setItem(META_STORE,JSON.stringify(meta));localStorage.setItem(WORLD_STORE,JSON.stringify(world));}catch{}}
@@ -71,6 +73,17 @@ function performWorldCommand(action){
      next.respect=Math.max(0,Math.min(100,next.respect+effect.amount));
    } else if(effect.kind==='heat'){
      next.heat=Math.max(0,Math.min(100,next.heat+effect.amount));
+   } else if(effect.kind==='recruit'){
+     if(!next.crew.includes(effect.person)){
+       next.crew.push(effect.person);
+       const member=CREW.find(x=>x.id===effect.person);
+       next.reports.unshift({id:'join-'+next.day+'-'+effect.person,day:next.day,crew:effect.person,
+         title:'志愿入职',body:(member?.name||effect.person)+'签署了劳动合同，承诺遵守组织保护街坊的原则。',outcome:'新成员加入'});
+       next.reports=next.reports.slice(0,40);
+     }
+   } else if(effect.kind==='dismiss'){
+     next.crew=next.crew.filter(id=>id!==effect.person);
+     next.orders=next.orders.filter(o=>o.crew!==effect.person);
    }
  }
  state=next;world=result.state;refresh();repaintPanel();
@@ -148,7 +161,8 @@ function mapPanel(){
  const jobButtons=MISSIONS.map(m=>'<button type="button" class="choice '+(plan.mission===m.id?'active':'')+'" data-map-mission="'+m.id+'">'+m.short+'</button>').join('');
  const district=zoneInfo(plan.zone);
  return header('MAP / ASSIGNMENT','城区路线规划','选择成员、街区与行动，再派出。路线会标在地图上，结果在第二天成为小弟递来的汇报。')+
- '<div class="paper-grid"><div><div class="map-shell">'+mapSVG()+'</div><button class="world-atlas-link" type="button" data-world-tab="city">展开城市势力版图 · 16 街区 / 5 家族 ›</button><div class="city-actions"><button class="choice" type="button" data-world-tab="estates">地产购置</button><button class="choice" type="button" data-world-tab="transport">运输路线</button><button class="choice" type="button" data-world-tab="citizens">街区居民</button></div><p class="map-hint">点击地图上的城区圆点选择路线终点 · 总部 HQ 是固定出发点</p>'+
+ '<div class="paper-grid"><div><div class="map-shell">'+mapSVG()+'</div><button class="world-atlas-link" type="button" data-world-tab="city">展开城市势力版图 · 16 街区 / 5 家族 ›</button>
+ <div class="city-actions"><button class="choice" type="button" data-world-tab="recruitment">人才市场</button><button class="choice" type="button" data-world-tab="society">平民互助</button><button class="choice" type="button" data-world-tab="politics">家族产业</button></div><div class="city-actions"><button class="choice" type="button" data-world-tab="estates">地产购置</button><button class="choice" type="button" data-world-tab="transport">运输路线</button><button class="choice" type="button" data-world-tab="citizens">街区居民</button></div><p class="map-hint">点击地图上的城区圆点选择路线终点 · 总部 HQ 是固定出发点</p>'+
  '<div class="info-box"><b>'+district.name+'</b>｜'+district.blurb+'<br/>当前影响力 '+state.zones[district.id].influence+' · 竞争压力 '+state.zones[district.id].pressure+'</div></div>'+
  '<div><div class="mini-title">01 / 派谁出门</div><div class="selection-list">'+crewButtons+'</div>'+
  '<hr class="line"/><div class="mini-title">02 / 执行什么任务</div><div class="selection-list">'+jobButtons+'</div>'+
@@ -177,9 +191,10 @@ function phonePanel(){
  '</div></div>';
 }
 function reportsPanel(){
+ if(originTabs.has(fileTab))return renderOriginBook(fileTab,world,state,worldUI);
  if(cityTabs.has(fileTab))return renderCityBook(fileTab,world,state,worldUI);
  if(worldTabs.has(fileTab))return renderWorldPanel(fileTab,world,state,worldUI);
- const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button><button type="button" data-world-tab="estates">地皮地产</button><button type="button" data-world-tab="transport">运输</button><button type="button" data-world-tab="clock">时间</button><button type="button" data-world-tab="citizens">路人</button><button type="button" data-world-tab="operations">高风险事务</button><button type="button" data-world-tab="contacts">雇佣线人</button><button type="button" data-world-tab="justice">警方卷宗</button></div>';
+ const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button><button type="button" data-world-tab="estates">地皮地产</button><button type="button" data-world-tab="transport">运输</button><button type="button" data-world-tab="clock">时间</button><button type="button" data-world-tab="citizens">路人</button><button type="button" data-world-tab="operations">高风险事务</button><button type="button" data-world-tab="contacts">雇佣线人</button><button type="button" data-world-tab="justice">警方卷宗</button><button type="button" data-world-tab="recruitment">人才市场</button><button type="button" data-world-tab="society">国家民生</button><button type="button" data-world-tab="politics">各大家族</button></div>';
  let view='';
  if(fileTab==='dossiers'){
   view='<div class="dossier-list">'+DOSSIERS.map(d=>{
@@ -331,6 +346,16 @@ $('panel-body').addEventListener('click',e=>{
   lastDial='已接通 '+r.contact.name+'：'+r.message;
   dialBuffer='';applyResult(r,true);return;
  }
+ if(node.dataset.recruitSource){worldUI.source=node.dataset.recruitSource;worldUI.candidate=null;repaintPanel();return;}
+ if(node.dataset.recruitPerson){worldUI.candidate=node.dataset.recruitPerson;repaintPanel();return;}
+ if(node.dataset.politicsFaction){worldUI.faction=node.dataset.politicsFaction;repaintPanel();return;}
+ if(node.dataset.recruitInterview){performWorldCommand({module:'recruitment',type:'interview',person:node.dataset.recruitInterview});return;}
+ if(node.dataset.recruitSign){performWorldCommand({module:'recruitment',type:'recruit',person:node.dataset.recruitSign});return;}
+ if(node.dataset.recruitDismiss){performWorldCommand({module:'recruitment',type:'dismiss',person:node.dataset.recruitDismiss});return;}
+ if(node.dataset.aid){performWorldCommand({module:'society',type:'aid',action:node.dataset.aid});return;}
+ if(node.dataset.voluntaryDues){performWorldCommand({module:'society',type:'dues'});return;}
+ if(node.dataset.diplomacy){performWorldCommand({module:'politics',type:'offer',faction:worldUI.faction,offer:node.dataset.diplomacy});return;}
+ if(node.dataset.protect){performWorldCommand({module:'politics',type:'protect',cell:node.dataset.protect});return;}
  if(node.dataset.cityLot){worldUI.lot=node.dataset.cityLot;repaintPanel();return;}
  if(node.dataset.cityOrigin){worldUI.from=node.dataset.cityOrigin;repaintPanel();return;}
  if(node.dataset.cityDestination){worldUI.destination=node.dataset.cityDestination;repaintPanel();return;}

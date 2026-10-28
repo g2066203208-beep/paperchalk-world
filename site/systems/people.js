@@ -62,6 +62,9 @@ export const peopleSystem={
    }
    for(const p of data.members){
      if(p.faction!=='player')continue;
+     if(p.status==='inactive'&&(context.crew||[]).includes(p.id))p.status='active';
+     if(p.status==='active'&&!(context.crew||[]).includes(p.id))p.status='inactive';
+     if(!(context.crew||[]).includes(p.id))continue;
      const tasks=(context.orders||[]).filter(x=>x.crew===p.id);
      if(tasks.length){p.experience+=2;p.morale=clamp(p.morale+1);}
      else p.morale=clamp(p.morale-1);
