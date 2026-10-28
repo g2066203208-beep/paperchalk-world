@@ -64,7 +64,7 @@ test('21 views have positioned rectangles and UI input methods; no permanently o
 test('24 animation response and timing tokens plus multi-layer rig are specified',()=>{
  assert.equal(Object.keys(doc.animations).length,24);
  for(const [id,t] of Object.entries(doc.animations)){
-   const duration=t.durationMs??t.cycleMs??t.walkOutMs??t.pressMs??t.firstFeedbackMs??t.ringIntervalMs??t.minPausePunctuationMs??t.minMs??t.durationMsPerSegment;
+   const duration=Object.entries(t).filter(([key,value])=>key.endsWith('Ms')&&Number.isFinite(value)).map(([,value])=>value)[0];
    assert.ok(Number.isFinite(duration)&&duration>0,id+' has no numeric timing');
  }
  assert.equal(doc.animations.tapDown.firstFeedbackMs,16);
