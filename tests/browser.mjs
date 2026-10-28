@@ -30,12 +30,20 @@ try{
    if(mobile){assert.equal(await tabs.isVisible(),true);await page.getByRole("button",{name:"项目 / 结构"}).click();}
    await page.locator("#presets button").nth(1).click();
    assert.equal(await page.evaluate(()=>window.__WORLD_STUDIO_TEST__.scene().id),"street");
-   if(mobile)await page.getByRole("button",{name:"3D 预览"}).click();
+   if(mobile){
+    await page.getByRole("button",{name:"3D 预览"}).click();
+    await page.waitForFunction(()=>window.__WORLD_STUDIO_TEST__.renderDiagnostics().canvasWidth>150,{timeout:10000});
+    await page.waitForTimeout(170);
+   }
    await page.screenshot({path:"artifacts/"+name+"-street.png"});
    if(mobile)await page.getByRole("button",{name:"项目 / 结构"}).click();
    await page.locator("#presets button").nth(2).click();
    assert.equal(await page.evaluate(()=>window.__WORLD_STUDIO_TEST__.scene().id),"home");
-   if(mobile)await page.getByRole("button",{name:"3D 预览"}).click();
+   if(mobile){
+    await page.getByRole("button",{name:"3D 预览"}).click();
+    await page.waitForFunction(()=>window.__WORLD_STUDIO_TEST__.renderDiagnostics().canvasWidth>150,{timeout:10000});
+    await page.waitForTimeout(170);
+   }
    await page.screenshot({path:"artifacts/"+name+"-home.png"});
    if(mobile)await page.getByRole("button",{name:"项目 / 结构"}).click();
    await page.locator("#presets button").nth(0).click();
@@ -54,7 +62,11 @@ try{
    await page.locator("#pickFile").setInputFiles({name:"roundtrip.bbmodel",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(exported))});
    await page.waitForFunction(n=>window.__WORLD_STUDIO_TEST__.scene().id.startsWith("imported-"),undefined,{timeout:10000});
    assert.equal(await page.evaluate(()=>window.__WORLD_STUDIO_TEST__.scene().parts.length),initial);
-   if(mobile)await page.getByRole("button",{name:"3D 预览"}).click();
+   if(mobile){
+    await page.getByRole("button",{name:"3D 预览"}).click();
+    await page.waitForFunction(()=>window.__WORLD_STUDIO_TEST__.renderDiagnostics().canvasWidth>150,{timeout:10000});
+    await page.waitForTimeout(170);
+   }
    await page.screenshot({path:"artifacts/"+name+"-kiosk-imported.png"});
    if(mobile)await page.getByRole("button",{name:"项目 / 结构"}).click();
    await page.locator("#presets button").nth(3).click();
@@ -64,7 +76,13 @@ try{
    assert.ok(voxel.parts.some(p=>p.group==="08 真实轮胎"));
    assert.ok(voxel.parts.some(p=>p.group==="05 货斗"));
    assert.ok(voxel.parts.some(p=>p.group==="04 车窗"));
-   if(mobile)await page.getByRole("button",{name:"3D 预览"}).click();
+   if(mobile){
+    await page.getByRole("button",{name:"3D 预览"}).click();
+    await page.waitForFunction(()=>window.__WORLD_STUDIO_TEST__.renderDiagnostics().canvasWidth>150,{timeout:10000});
+    await page.waitForTimeout(170);
+   }
+   const diagnostics=await page.evaluate(()=>window.__WORLD_STUDIO_TEST__.renderDiagnostics());
+   assert.ok(diagnostics.drawCalls>20,"3D preview should submit real on-screen cube meshes: "+JSON.stringify(diagnostics));
    await page.screenshot({path:"artifacts/"+name+"-blockbench-voxel-car.png"});
    await context.close();
    console.log("PASS browser "+name+" / model import, export, edit and responsive viewport");
