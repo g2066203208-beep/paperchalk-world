@@ -146,14 +146,14 @@
  background:#f6e8d1;color:#1c2d39;border:3px solid #233340;border-left:9px solid #ad4450;
  box-shadow:10px 12px 0 #21323ad9,15px 16px 0 #ae4552;
  clip-path:polygon(0 0,99% 0,100% 6%,100% 100%,2% 100%,0 96%);
- padding:13px 17px 14px;animation:prologue-breathe .24s ease both}
+ pointer-events:none;padding:13px 17px 14px;animation:prologue-breathe .24s ease both}
 .prologue-presentation[hidden]{display:none}
 .prologue-top{display:flex;justify-content:space-between;gap:12px;color:#b14c53;font:900 10px Georgia,serif;letter-spacing:.2em}
 .prologue-character b{font-size:15px;font-weight:900}
 .prologue-character p{font-size:clamp(12px,1.2vw,16px);font-weight:700;line-height:1.7;margin:5px 0 12px}
 .prologue-legend-art{display:block;width:100%;height:auto;margin:7px 0;max-height:108px;border:1px solid #243744}
 .prologue-foot{display:flex;justify-content:flex-end;align-items:end;gap:8px;flex-wrap:wrap}
-.prologue-foot button{border:2px solid #223340;padding:7px 12px;font-size:12px;font-weight:900;min-height:32px;cursor:pointer}
+.prologue-foot button{pointer-events:auto;border:2px solid #223340;padding:7px 12px;font-size:12px;font-weight:900;min-height:32px;cursor:pointer}
 .prologue-continue,.prologue-decisions button{background:#ad4650;color:#fff0d9}
 .prologue-decisions{display:flex;flex-wrap:wrap;gap:7px;max-width:100%}
 .prologue-skip{background:transparent;color:#6f6d67;border-color:#baa993!important;font-size:10px!important}
@@ -163,7 +163,7 @@
 .prologue-presentation[data-mood="final"] .prologue-top{color:#e7bb92}
 @keyframes prologue-breathe{from{opacity:.65;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:750px) and (orientation:portrait){
- .prologue-presentation{left:3%;right:3%;top:11%;bottom:auto;width:auto;max-height:40%;overflow-y:auto;padding:9px 11px 10px;box-shadow:5px 6px 0 #283641}
+ .prologue-presentation{left:3%;right:28%;top:11%;bottom:auto;width:auto;max-height:40%;overflow-y:auto;padding:9px 11px 10px;box-shadow:5px 6px 0 #283641}
  .prologue-character b{font-size:12px}.prologue-character p{font-size:12px;line-height:1.4;margin-bottom:7px}
  .prologue-top{font-size:8px}
  .prologue-foot button{font-size:10px;min-height:30px;padding:5px 8px}
