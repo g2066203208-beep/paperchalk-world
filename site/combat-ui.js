@@ -142,7 +142,7 @@ export function setupCombat({getWorld,setWorld,toast}){
  q('combat-retreat').addEventListener('click',()=>act(retreat(game)));
  q('combat-settle').addEventListener('click',settlement);
  document.addEventListener('keydown',e=>{
-  if(!isActive()||e.target.closest('input,textarea'))return;
+  if(!isActive()||e.target.closest?.('input,textarea'))return;
   if(e.key.toLowerCase()==='r'){e.preventDefault();reloadGun();}
   if(e.key==='Escape'&&game.mode==='aim'){e.preventDefault();holsterGun();}
  });
