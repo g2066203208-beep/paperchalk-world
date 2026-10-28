@@ -11,8 +11,8 @@ test('actual telephone number keypad service changes stock and ledger, one-call/
  assert.equal(r.state.cash,130);assert.equal(r.meta.supply,1);
  assert.equal(r.state.ledger[0].amount,-60);
  assert.equal(dial(r.state,r.meta,'305').ok,false);
- const m=dial(r.state,r.meta,'221');assert.equal(m.ok,true);
- assert.equal(m.meta.visitorQueue.length,2,'phone summons real visitor');
+ const m=dial(r.state,r.meta,'221');assert.equal(m.ok,false,'cannot summon unhired candidates');
+ assert.equal(m.meta.visitorQueue.length,1,'only the original brother is currently available');
 });
 test('door is a stateful arrival and street entrance; visitor changes real respect',()=>{
  let s=initialGame(),m=initialOffice();
