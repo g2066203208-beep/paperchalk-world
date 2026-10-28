@@ -1,0 +1,3557 @@
+{
+  "version": "1.0.0",
+  "status": "DESIGN_TARGET_NOT_CURRENT_BUILD",
+  "authoredFor": "夜港 - 两名孤儿院出身主角买下毛坯办公室，秘密传奇与平民互助",
+  "sourceBaseline": "main@05fa75cd7eea7041b923f580984bc565fa41484c",
+  "world": {
+    "width": 1200,
+    "height": 670,
+    "origin": "top-left",
+    "units": "design-pixels",
+    "referenceAspect": 1.791044776119403,
+    "displayPolicy": "orthographic-camera + uniform-scale + crop/pan, never nonuniform stretch"
+  },
+  "palette": {
+    "ink": "#1D2935",
+    "burgundy": "#B34852",
+    "paper": "#F0E2C9",
+    "slate": "#556B76",
+    "warm": "#CBA574",
+    "concrete": "#B9B5AA"
+  },
+  "camera": {
+    "desktop": {
+      "stageAspect": 1.7777777777777777,
+      "sceneVisibleWorld": [
+        0,
+        0,
+        1200,
+        670
+      ],
+      "zoom": 1,
+      "letterbox": false
+    },
+    "portrait": {
+      "designViewWidth": 400,
+      "panStopsX": [
+        0,
+        400,
+        800
+      ],
+      "panMs": 230,
+      "panGestureThresholdPx": 36,
+      "mode": "three shot camera / desk, people, door",
+      "noSemanticTargetsOffscreen": true
+    },
+    "landscapeSmall": {
+      "minSceneHeightCssPx": 250,
+      "sceneCamera": "wide",
+      "hysteresisPx": 12
+    },
+    "safeArea": {
+      "hudTopCssPx": 12,
+      "interactiveBottomCssPx": 24,
+      "minTapCssPx": 44,
+      "preferredTapCssPx": 56,
+      "minTextCssPx": 12
+    }
+  },
+  "performance": {
+    "desktopFpsTarget": 60,
+    "mobileFpsMinTarget": 30,
+    "pointerFeedbackBudgetMs": 16,
+    "p95ActionFirstFeedbackMs": 50,
+    "closeOpenInputMs": 120,
+    "keyboardEnterExit": "Enter/Space/Escape",
+    "crowdDOMPersistence": true
+  },
+  "ui": [
+    {
+      "id": "hud",
+      "label": "常驻极简 HUD",
+      "rect": [
+        16,
+        12,
+        298,
+        34
+      ],
+      "mode": "overlay",
+      "detail": "仅日期短写+持有现金；声望/警方风险默认藏于报纸和人物反馈；无成排顶部按钮",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "dialogue-bubble",
+      "label": "人物局部气泡",
+      "rect": [
+        0,
+        0,
+        376,
+        130
+      ],
+      "mode": "anchor",
+      "detail": "锚于 NPC 头部上方36px，碰撞后自动翻侧；三选项时自动增加气泡高度，但不超40%画面",
+      "inMs": 180,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "dialogue-choices",
+      "label": "话语选择",
+      "rect": [
+        0,
+        0,
+        354,
+        104
+      ],
+      "mode": "anchor",
+      "detail": "最多3条，43px间距，选项风格为纸条/手写，不用常驻网页按钮",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "route-sheet",
+      "label": "门后纸质路线图",
+      "rect": [
+        101,
+        48,
+        998,
+        571
+      ],
+      "mode": "overlay",
+      "detail": "桌面/门后镜头变焦，地图实体材质，5个目的地可选",
+      "inMs": 310,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "route-map",
+      "label": "路线纸左侧",
+      "rect": [
+        128,
+        106,
+        668,
+        471
+      ],
+      "mode": "overlay",
+      "detail": "五地标按图形而非完整按钮网格；不可达线路灰掉",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "route-preview",
+      "label": "路线右栏目的地预览",
+      "rect": [
+        824,
+        117,
+        236,
+        310
+      ],
+      "mode": "overlay",
+      "detail": "真实目的地缩略景，目的地选择后轻推镜头与脚步转场",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "map-full",
+      "label": "大地图铺开状态",
+      "rect": [
+        66,
+        26,
+        1068,
+        616
+      ],
+      "mode": "overlay",
+      "detail": "16街区格+路网+派系涂色+资产点+警署/人口可切模式",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "map-canvas",
+      "label": "地图绘制区",
+      "rect": [
+        94,
+        62,
+        760,
+        533
+      ],
+      "mode": "overlay",
+      "detail": "矢量 hit-test 真实道路，至少16地块，每条线路按路网规划",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "map-detail",
+      "label": "地图地块纸签",
+      "rect": [
+        871,
+        105,
+        225,
+        450
+      ],
+      "mode": "overlay",
+      "detail": "地图某区钉纸签，信息分层展开，不遮主地图",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "people-book",
+      "label": "组织人事册",
+      "rect": [
+        235,
+        43,
+        730,
+        574
+      ],
+      "mode": "overlay",
+      "detail": "翻开的皮革册，左人像右实际职责关系，上翻页签",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "people-portrait",
+      "label": "人事册人物肖像",
+      "rect": [
+        272,
+        98,
+        258,
+        387
+      ],
+      "mode": "overlay",
+      "detail": "二次元人物独立半身图，表情相对于状态变化",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "people-details",
+      "label": "人物档案页",
+      "rect": [
+        550,
+        105,
+        382,
+        450
+      ],
+      "mode": "overlay",
+      "detail": "姓名、职位、能力、信任、组织关系、签名处",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "recruit-sheet",
+      "label": "就业所求职表",
+      "rect": [
+        254,
+        58,
+        688,
+        541
+      ],
+      "mode": "overlay",
+      "detail": "候选人照片+经历+薪酬，面试和签合同各需现实场景动作",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "dossier-open",
+      "label": "可翻页卷宗",
+      "rect": [
+        265,
+        49,
+        687,
+        558
+      ],
+      "mode": "overlay",
+      "detail": "只在打开实体卷宗时显示纸页，桌面可见周围空间",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "ledger-open",
+      "label": "财务账簿",
+      "rect": [
+        255,
+        65,
+        708,
+        529
+      ],
+      "mode": "overlay",
+      "detail": "左业务条目右合计，交互是指尖翻账页",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "telephone-closeup",
+      "label": "座机局部镜头",
+      "rect": [
+        277,
+        152,
+        490,
+        374
+      ],
+      "mode": "overlay",
+      "detail": "拿起听筒→拨号→说话，非悬浮全屏电话面板",
+      "inMs": 220,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "newspaper-open",
+      "label": "夜港晚报",
+      "rect": [
+        248,
+        65,
+        711,
+        537
+      ],
+      "mode": "overlay",
+      "detail": "大字号标题、照片、情报证据；局部折纸动画",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "crime-dossier",
+      "label": "案件袋与通缉通知",
+      "rect": [
+        258,
+        57,
+        698,
+        555
+      ],
+      "mode": "overlay",
+      "detail": "证据必须具体事件化，按时间推进；玩家有选择但不显示犯罪实施指南",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "estate-deed",
+      "label": "地皮购置契约",
+      "rect": [
+        254,
+        59,
+        704,
+        549
+      ],
+      "mode": "overlay",
+      "detail": "地籍编号、建筑轮廓、价格和税费，与地图实际地块互相对应",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": true,
+      "underlaySceneVisible": true
+    },
+    {
+      "id": "scene-loading-mask",
+      "label": "场景遮罩与开门转场",
+      "rect": [
+        0,
+        0,
+        1200,
+        670
+      ],
+      "mode": "effect",
+      "detail": "门扇遮光，不是普通网页 loading spinner",
+      "inMs": 180,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": false
+    },
+    {
+      "id": "pause-scrap",
+      "label": "暂停纸条",
+      "rect": [
+        1015,
+        14,
+        165,
+        36
+      ],
+      "mode": "overlay",
+      "detail": "无打断式系统菜单，长按日历或键盘Esc",
+      "inMs": 260,
+      "outMs": 160,
+      "focusTrap": false,
+      "underlaySceneVisible": true
+    }
+  ],
+  "scenes": {
+    "office": {
+      "title": "开篇：刚买下的毛坯办公室",
+      "camera": "office_wide",
+      "ambient": "room_early_morning",
+      "objects": [
+        {
+          "id": "wall",
+          "label": "剥落水泥墙",
+          "asset": "bg/office/raw-wall.webp",
+          "rect": [
+            0,
+            0,
+            1200,
+            670
+          ],
+          "layer": 0,
+          "interaction": null,
+          "notes": "大面积奶油灰色块；裂缝、水泥灰；绝不能是豪华黑帮办公室",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        },
+        {
+          "id": "window",
+          "label": "漏风的旧窗",
+          "asset": "bg/office/window.webp",
+          "rect": [
+            122,
+            90,
+            248,
+            258
+          ],
+          "layer": 2,
+          "interaction": "inspect.window",
+          "notes": "窗外港区、轻飘窗帘、远处灰色工业天际线",
+          "pivot": [
+            246,
+            348
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                32,
+                13
+              ],
+              [
+                218,
+                13
+              ],
+              [
+                243,
+                217
+              ],
+              [
+                184,
+                253
+              ],
+              [
+                20,
+                237
+              ],
+              [
+                7,
+                65
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "door",
+          "label": "单扇铁门",
+          "asset": "bg/office/door.webp",
+          "rect": [
+            1003,
+            113,
+            132,
+            330
+          ],
+          "layer": 7,
+          "interaction": "travel.open-map",
+          "notes": "手掌触门把；真实门扇摆动，地图出现；不是悬浮箭头",
+          "pivot": [
+            1069,
+            443
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                13,
+                7
+              ],
+              [
+                112,
+                7
+              ],
+              [
+                125,
+                300
+              ],
+              [
+                24,
+                323
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
+        },
+        {
+          "id": "floor",
+          "label": "裸露水泥地面",
+          "asset": "bg/office/floor.webp",
+          "rect": [
+            0,
+            390,
+            1200,
+            280
+          ],
+          "layer": 1,
+          "interaction": null,
+          "notes": "粉尘，鞋印，油漆标记",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        },
+        {
+          "id": "crate",
+          "label": "垫桌角的木箱",
+          "asset": "props/office/crate.webp",
+          "rect": [
+            93,
+            367,
+            172,
+            150
+          ],
+          "layer": 4,
+          "interaction": "inspect.crate",
+          "notes": "只有检查文字反馈，不强迫打开面板",
+          "pivot": [
+            179,
+            517
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                22,
+                8
+              ],
+              [
+                151,
+                8
+              ],
+              [
+                169,
+                126
+              ],
+              [
+                127,
+                147
+              ],
+              [
+                14,
+                138
+              ],
+              [
+                5,
+                38
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "desk",
+          "label": "两人凑齐的二手旧桌",
+          "asset": "bg/office/desk.webp",
+          "rect": [
+            126,
+            397,
+            953,
+            240
+          ],
+          "layer": 6,
+          "interaction": null,
+          "notes": "透视多边形，桌缘遮挡角色前端；非豪华大理石",
+          "pivot": [
+            603,
+            637
+          ],
+          "hit": null
+        },
+        {
+          "id": "kai",
+          "label": "阿凯（全身木偶）",
+          "asset": "characters/kai/rig.json",
+          "rect": [
+            725,
+            166,
+            182,
+            371
+          ],
+          "layer": 5,
+          "interaction": "dialogue.kai",
+          "notes": "人物右侧、头顶可容纳气泡；手中有钥匙与买房收据",
+          "pivot": [
+            816,
+            537
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                44,
+                15
+              ],
+              [
+                127,
+                15
+              ],
+              [
+                153,
+                96
+              ],
+              [
+                169,
+                278
+              ],
+              [
+                146,
+                364
+              ],
+              [
+                25,
+                364
+              ],
+              [
+                9,
+                252
+              ],
+              [
+                29,
+                93
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "paper_deed",
+          "label": "办公室地契",
+          "asset": "props/office/deed.webp",
+          "rect": [
+            165,
+            461,
+            134,
+            88
+          ],
+          "layer": 8,
+          "interaction": "deed.inspect",
+          "notes": "收到过户签字的纸质产权证明",
+          "pivot": [
+            232,
+            549
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                5,
+                12
+              ],
+              [
+                122,
+                2
+              ],
+              [
+                133,
+                74
+              ],
+              [
+                11,
+                87
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "telephone",
+          "label": "二手转盘电话",
+          "asset": "props/office/telephone.webp",
+          "rect": [
+            311,
+            465,
+            144,
+            94
+          ],
+          "layer": 8,
+          "interaction": "phone.pickup",
+          "notes": "真实电话机壳点击；可拿起听筒，不固定占屏按钮",
+          "pivot": [
+            383,
+            559
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                13,
+                25
+              ],
+              [
+                50,
+                5
+              ],
+              [
+                121,
+                13
+              ],
+              [
+                140,
+                40
+              ],
+              [
+                131,
+                81
+              ],
+              [
+                14,
+                89
+              ],
+              [
+                3,
+                58
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "telephoneLift",
+              "dialogueAppear"
+            ],
+            "soundCue": "receiver",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "city_map",
+          "label": "卷折的旧城地图",
+          "asset": "props/office/map-folded.webp",
+          "rect": [
+            500,
+            467,
+            262,
+            145
+          ],
+          "layer": 8,
+          "interaction": "map.unfold",
+          "notes": "地图从桌面摊开，展开后可进入街区路线与势力层",
+          "pivot": [
+            631,
+            612
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                10,
+                20
+              ],
+              [
+                238,
+                3
+              ],
+              [
+                259,
+                122
+              ],
+              [
+                21,
+                144
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "mapUnfold"
+            ],
+            "soundCue": "paper-unfold",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "folder",
+          "label": "旧港来访卷宗",
+          "asset": "props/office/folder.webp",
+          "rect": [
+            778,
+            459,
+            165,
+            105
+          ],
+          "layer": 9,
+          "interaction": "dossier.open",
+          "notes": "可以拿起，夹层掀起；不全屏纯文字覆盖",
+          "pivot": [
+            861,
+            564
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                7,
+                15
+              ],
+              [
+                150,
+                2
+              ],
+              [
+                163,
+                88
+              ],
+              [
+                13,
+                104
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "ledger",
+          "label": "手写账本",
+          "asset": "props/office/ledger.webp",
+          "rect": [
+            885,
+            556,
+            146,
+            82
+          ],
+          "layer": 10,
+          "interaction": "ledger.open",
+          "notes": "真实每日收支，可以翻页",
+          "pivot": [
+            958,
+            638
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                11
+              ],
+              [
+                133,
+                2
+              ],
+              [
+                145,
+                69
+              ],
+              [
+                12,
+                81
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "newspaper",
+          "label": "关于蒙面人的报纸",
+          "asset": "props/office/newspaper.webp",
+          "rect": [
+            422,
+            559,
+            151,
+            83
+          ],
+          "layer": 10,
+          "interaction": "rumor.read",
+          "notes": "标题只说两名蒙面人，无主角真实身份",
+          "pivot": [
+            498,
+            642
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                12
+              ],
+              [
+                137,
+                2
+              ],
+              [
+                149,
+                70
+              ],
+              [
+                12,
+                82
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "newspaperReveal"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "envelope",
+          "label": "余下的启动资金",
+          "asset": "props/office/envelope.webp",
+          "rect": [
+            222,
+            554,
+            112,
+            74
+          ],
+          "layer": 10,
+          "interaction": "cash.inspect",
+          "notes": "预算190与财务账本一致，不是收取重复奖励",
+          "pivot": [
+            278,
+            628
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                4
+              ],
+              [
+                99,
+                4
+              ],
+              [
+                110,
+                62
+              ],
+              [
+                83,
+                73
+              ],
+              [
+                9,
+                68
+              ],
+              [
+                3,
+                19
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "calendar",
+          "label": "挂在墙上的旧日历",
+          "asset": "props/office/calendar.webp",
+          "rect": [
+            963,
+            178,
+            79,
+            107
+          ],
+          "layer": 3,
+          "interaction": "time.open",
+          "notes": "时间非按钮；与时钟联动，第一次交互显示日期",
+          "pivot": [
+            1003,
+            285
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                10,
+                5
+              ],
+              [
+                70,
+                5
+              ],
+              [
+                77,
+                90
+              ],
+              [
+                58,
+                105
+              ],
+              [
+                6,
+                98
+              ],
+              [
+                2,
+                27
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "lamp",
+          "label": "旧台灯",
+          "asset": "props/office/lamp.webp",
+          "rect": [
+            617,
+            325,
+            113,
+            156
+          ],
+          "layer": 7,
+          "interaction": "lamp.toggle",
+          "notes": "可点亮，影响房间明暗和环境音",
+          "pivot": [
+            674,
+            481
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                8
+              ],
+              [
+                99,
+                8
+              ],
+              [
+                111,
+                131
+              ],
+              [
+                84,
+                153
+              ],
+              [
+                9,
+                144
+              ],
+              [
+                3,
+                39
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propHover"
+            ],
+            "soundCue": "switch",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "chair",
+          "label": "有裂缝的椅子",
+          "asset": "props/office/chair.webp",
+          "rect": [
+            621,
+            360,
+            113,
+            129
+          ],
+          "layer": 4,
+          "interaction": "inspect.chair",
+          "notes": "不是成熟老板的高背皮椅",
+          "pivot": [
+            678,
+            489
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                6
+              ],
+              [
+                99,
+                6
+              ],
+              [
+                111,
+                108
+              ],
+              [
+                84,
+                126
+              ],
+              [
+                9,
+                119
+              ],
+              [
+                3,
+                32
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        }
+      ]
+    },
+    "alley": {
+      "title": "旧港背街：街坊生活和不安",
+      "camera": "street_wide",
+      "ambient": "alley_morning",
+      "objects": [
+        {
+          "id": "backdrop",
+          "label": "后巷建筑群",
+          "asset": "bg/alley/background.webp",
+          "rect": [
+            0,
+            0,
+            1200,
+            670
+          ],
+          "layer": 0,
+          "interaction": null,
+          "notes": "不等长楼房、斑驳门头、遮雨棚",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        },
+        {
+          "id": "office_exit",
+          "label": "回办公室的楼道门",
+          "asset": "bg/alley/office-door.webp",
+          "rect": [
+            68,
+            235,
+            147,
+            296
+          ],
+          "layer": 4,
+          "interaction": "travel.open-map",
+          "notes": "通往办公室的唯一实景楼道门",
+          "pivot": [
+            142,
+            531
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                6
+              ],
+              [
+                125,
+                6
+              ],
+              [
+                140,
+                269
+              ],
+              [
+                26,
+                290
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
+        },
+        {
+          "id": "stairs",
+          "label": "生锈楼梯",
+          "asset": "props/alley/stairs.webp",
+          "rect": [
+            230,
+            175,
+            235,
+            333
+          ],
+          "layer": 3,
+          "interaction": "inspect.stairs",
+          "notes": "层级遮挡NPC",
+          "pivot": [
+            348,
+            508
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                17
+              ],
+              [
+                207,
+                17
+              ],
+              [
+                230,
+                280
+              ],
+              [
+                174,
+                326
+              ],
+              [
+                19,
+                306
+              ],
+              [
+                7,
+                83
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "neighbor",
+          "label": "楼下婶婶",
+          "asset": "characters/neighbor/rig.json",
+          "rect": [
+            457,
+            245,
+            136,
+            303
+          ],
+          "layer": 6,
+          "interaction": "dialogue.neighbor",
+          "notes": "手拿菜篮，首章可问蒙面人流言",
+          "pivot": [
+            525,
+            548
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                12
+              ],
+              [
+                95,
+                12
+              ],
+              [
+                114,
+                79
+              ],
+              [
+                126,
+                227
+              ],
+              [
+                109,
+                297
+              ],
+              [
+                19,
+                297
+              ],
+              [
+                7,
+                206
+              ],
+              [
+                22,
+                76
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "runner",
+          "label": "街头少年",
+          "asset": "characters/runner/rig.json",
+          "rect": [
+            766,
+            290,
+            112,
+            260
+          ],
+          "layer": 6,
+          "interaction": "dialogue.runner",
+          "notes": "背包和紧张回望，儿童不能被招募为打手",
+          "pivot": [
+            822,
+            550
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                27,
+                10
+              ],
+              [
+                78,
+                10
+              ],
+              [
+                94,
+                68
+              ],
+              [
+                104,
+                195
+              ],
+              [
+                90,
+                255
+              ],
+              [
+                16,
+                255
+              ],
+              [
+                6,
+                177
+              ],
+              [
+                18,
+                65
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "notice",
+          "label": "社区告示牌",
+          "asset": "props/alley/noticeboard.webp",
+          "rect": [
+            603,
+            236,
+            142,
+            160
+          ],
+          "layer": 4,
+          "interaction": "notice.read",
+          "notes": "失业、治安、警务公告",
+          "pivot": [
+            674,
+            396
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                18,
+                8
+              ],
+              [
+                125,
+                8
+              ],
+              [
+                139,
+                134
+              ],
+              [
+                105,
+                157
+              ],
+              [
+                11,
+                147
+              ],
+              [
+                4,
+                40
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "corner_shop",
+          "label": "低矮杂货铺",
+          "asset": "bg/alley/shop.webp",
+          "rect": [
+            900,
+            193,
+            242,
+            328
+          ],
+          "layer": 3,
+          "interaction": "shop.inspect",
+          "notes": "房东与老板谈话入口",
+          "pivot": [
+            1021,
+            521
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                16
+              ],
+              [
+                213,
+                16
+              ],
+              [
+                237,
+                276
+              ],
+              [
+                179,
+                321
+              ],
+              [
+                19,
+                302
+              ],
+              [
+                7,
+                82
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "harassment",
+          "label": "地痞纠纷事件点",
+          "asset": "events/alley/dispute.webp",
+          "rect": [
+            642,
+            430,
+            176,
+            108
+          ],
+          "layer": 7,
+          "interaction": "event.community-dispute",
+          "notes": "谈判、组织街坊、记录证据；非固定红色战斗按钮",
+          "pivot": [
+            730,
+            538
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                23,
+                5
+              ],
+              [
+                155,
+                5
+              ],
+              [
+                172,
+                91
+              ],
+              [
+                130,
+                106
+              ],
+              [
+                14,
+                99
+              ],
+              [
+                5,
+                27
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "recoilSurprise",
+              "dialogueAppear"
+            ],
+            "soundCue": "cloth",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "pedestrians",
+          "label": "动态路人组",
+          "asset": "characters/crowd/rig.json",
+          "rect": [
+            244,
+            404,
+            600,
+            180
+          ],
+          "layer": 5,
+          "interaction": "citizen.contextual",
+          "notes": "按日程刷新，点击不重建行人",
+          "pivot": [
+            544,
+            584
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                144,
+                7
+              ],
+              [
+                420,
+                7
+              ],
+              [
+                504,
+                47
+              ],
+              [
+                558,
+                135
+              ],
+              [
+                480,
+                176
+              ],
+              [
+                84,
+                176
+              ],
+              [
+                30,
+                122
+              ],
+              [
+                96,
+                45
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "wet_ground",
+          "label": "泥水与积水",
+          "asset": "bg/alley/ground.webp",
+          "rect": [
+            0,
+            497,
+            1200,
+            173
+          ],
+          "layer": 1,
+          "interaction": null,
+          "notes": "水迹反射仅1-2个色阶",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        }
+      ]
+    },
+    "market": {
+      "title": "清晨集市：商户、巡查员与摊位冲突",
+      "camera": "market_wide",
+      "ambient": "market_crowd",
+      "objects": [
+        {
+          "id": "market_bg",
+          "label": "集市全景",
+          "asset": "bg/market/background.webp",
+          "rect": [
+            0,
+            0,
+            1200,
+            670
+          ],
+          "layer": 0,
+          "interaction": null,
+          "notes": "棚布、蒸汽、菜篮、行人",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        },
+        {
+          "id": "exit",
+          "label": "通往旧港的街口",
+          "asset": "bg/market/exit.webp",
+          "rect": [
+            68,
+            190,
+            136,
+            324
+          ],
+          "layer": 4,
+          "interaction": "travel.open-map",
+          "notes": "可触街口或显眼木牌",
+          "pivot": [
+            136,
+            514
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                14,
+                6
+              ],
+              [
+                116,
+                6
+              ],
+              [
+                129,
+                295
+              ],
+              [
+                24,
+                318
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
+        },
+        {
+          "id": "vendor_stall",
+          "label": "林姨的菜摊",
+          "asset": "props/market/stall.webp",
+          "rect": [
+            284,
+            276,
+            299,
+            236
+          ],
+          "layer": 4,
+          "interaction": "business.stall",
+          "notes": "单独分层，受损状态/已维修状态",
+          "pivot": [
+            434,
+            512
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                39,
+                12
+              ],
+              [
+                263,
+                12
+              ],
+              [
+                293,
+                198
+              ],
+              [
+                221,
+                231
+              ],
+              [
+                24,
+                217
+              ],
+              [
+                9,
+                59
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "vendor",
+          "label": "林姨",
+          "asset": "characters/vendor/rig.json",
+          "rect": [
+            534,
+            226,
+            129,
+            303
+          ],
+          "layer": 6,
+          "interaction": "dialogue.vendor",
+          "notes": "靠摊卖菜，拿起菜篮动作",
+          "pivot": [
+            599,
+            529
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                12
+              ],
+              [
+                90,
+                12
+              ],
+              [
+                108,
+                79
+              ],
+              [
+                120,
+                227
+              ],
+              [
+                103,
+                297
+              ],
+              [
+                18,
+                297
+              ],
+              [
+                6,
+                206
+              ],
+              [
+                21,
+                76
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "guard",
+          "label": "巡查员",
+          "asset": "characters/guard/rig.json",
+          "rect": [
+            945,
+            210,
+            138,
+            316
+          ],
+          "layer": 6,
+          "interaction": "dialogue.guard",
+          "notes": "法律工作人员有自我立场，绝非无脑恶人",
+          "pivot": [
+            1014,
+            526
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                13
+              ],
+              [
+                97,
+                13
+              ],
+              [
+                116,
+                82
+              ],
+              [
+                128,
+                237
+              ],
+              [
+                110,
+                310
+              ],
+              [
+                19,
+                310
+              ],
+              [
+                7,
+                215
+              ],
+              [
+                22,
+                79
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "queue",
+          "label": "排队居民组",
+          "asset": "characters/crowd/rig.json",
+          "rect": [
+            611,
+            372,
+            290,
+            160
+          ],
+          "layer": 5,
+          "interaction": "citizen.contextual",
+          "notes": "队列有限等待与前进一步",
+          "pivot": [
+            756,
+            532
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                70,
+                6
+              ],
+              [
+                203,
+                6
+              ],
+              [
+                244,
+                42
+              ],
+              [
+                270,
+                120
+              ],
+              [
+                232,
+                157
+              ],
+              [
+                41,
+                157
+              ],
+              [
+                15,
+                109
+              ],
+              [
+                46,
+                40
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "basket",
+          "label": "散落菜篮",
+          "asset": "props/market/basket.webp",
+          "rect": [
+            412,
+            469,
+            148,
+            91
+          ],
+          "layer": 7,
+          "interaction": "event.repair-stall",
+          "notes": "可修复并改变立绘场景状态",
+          "pivot": [
+            486,
+            560
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                19,
+                5
+              ],
+              [
+                130,
+                5
+              ],
+              [
+                145,
+                76
+              ],
+              [
+                110,
+                89
+              ],
+              [
+                12,
+                84
+              ],
+              [
+                4,
+                23
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "recoilSurprise",
+              "dialogueAppear"
+            ],
+            "soundCue": "cloth",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "sign",
+          "label": "木价签",
+          "asset": "props/market/price-tag.webp",
+          "rect": [
+            340,
+            292,
+            80,
+            78
+          ],
+          "layer": 5,
+          "interaction": "inspect.market-price",
+          "notes": "关联生活成本",
+          "pivot": [
+            380,
+            370
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                10,
+                4
+              ],
+              [
+                70,
+                4
+              ],
+              [
+                78,
+                66
+              ],
+              [
+                59,
+                76
+              ],
+              [
+                6,
+                72
+              ],
+              [
+                2,
+                20
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "cart",
+          "label": "运货板车",
+          "asset": "props/market/cart.webp",
+          "rect": [
+            741,
+            387,
+            164,
+            153
+          ],
+          "layer": 5,
+          "interaction": "transport.inspect",
+          "notes": "实体车轮轻转，订单物件",
+          "pivot": [
+            823,
+            540
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                7,
+                21
+              ],
+              [
+                149,
+                3
+              ],
+              [
+                162,
+                129
+              ],
+              [
+                13,
+                151
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "newspaper",
+          "label": "市集报摊报纸",
+          "asset": "props/market/newspaper.webp",
+          "rect": [
+            917,
+            448,
+            138,
+            82
+          ],
+          "layer": 7,
+          "interaction": "rumor.read",
+          "notes": "关于蒙面人事件的互相矛盾说法",
+          "pivot": [
+            986,
+            530
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                11
+              ],
+              [
+                126,
+                2
+              ],
+              [
+                137,
+                69
+              ],
+              [
+                11,
+                81
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "newspaperReveal"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        }
+      ]
+    },
+    "labor": {
+      "title": "旧厂就业所：成年人自愿招聘",
+      "camera": "labor_wide",
+      "ambient": "labor_hall",
+      "objects": [
+        {
+          "id": "labor_bg",
+          "label": "废工厂就业所大厅",
+          "asset": "bg/labor/background.webp",
+          "rect": [
+            0,
+            0,
+            1200,
+            670
+          ],
+          "layer": 0,
+          "interaction": null,
+          "notes": "剥落绿漆、工厂门、排队线",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        },
+        {
+          "id": "exit",
+          "label": "就业所出口",
+          "asset": "bg/labor/exit.webp",
+          "rect": [
+            72,
+            190,
+            138,
+            338
+          ],
+          "layer": 4,
+          "interaction": "travel.open-map",
+          "notes": "入口场景需保留",
+          "pivot": [
+            141,
+            528
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                14,
+                7
+              ],
+              [
+                117,
+                7
+              ],
+              [
+                131,
+                308
+              ],
+              [
+                25,
+                331
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
+        },
+        {
+          "id": "board",
+          "label": "岗位告示牌",
+          "asset": "props/labor/job-board.webp",
+          "rect": [
+            234,
+            151,
+            302,
+            211
+          ],
+          "layer": 3,
+          "interaction": "jobs.read",
+          "notes": "招聘卡张贴在实际告示牌上",
+          "pivot": [
+            385,
+            362
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                39,
+                11
+              ],
+              [
+                266,
+                11
+              ],
+              [
+                296,
+                177
+              ],
+              [
+                223,
+                207
+              ],
+              [
+                24,
+                194
+              ],
+              [
+                9,
+                53
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "desk",
+          "label": "登记台",
+          "asset": "props/labor/counter.webp",
+          "rect": [
+            481,
+            406,
+            449,
+            137
+          ],
+          "layer": 5,
+          "interaction": "recruit.open",
+          "notes": "与职员互动后拿起表格",
+          "pivot": [
+            706,
+            543
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                18,
+                19
+              ],
+              [
+                409,
+                3
+              ],
+              [
+                445,
+                115
+              ],
+              [
+                36,
+                136
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "clerk",
+          "label": "就业所职员",
+          "asset": "characters/clerk/rig.json",
+          "rect": [
+            794,
+            182,
+            132,
+            327
+          ],
+          "layer": 6,
+          "interaction": "dialogue.clerk",
+          "notes": "将人员登记册交到玩家眼前",
+          "pivot": [
+            860,
+            509
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                32,
+                13
+              ],
+              [
+                92,
+                13
+              ],
+              [
+                111,
+                85
+              ],
+              [
+                123,
+                245
+              ],
+              [
+                106,
+                320
+              ],
+              [
+                18,
+                320
+              ],
+              [
+                7,
+                222
+              ],
+              [
+                21,
+                82
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "worker",
+          "label": "失业工人",
+          "asset": "characters/worker/rig.json",
+          "rect": [
+            309,
+            239,
+            137,
+            314
+          ],
+          "layer": 6,
+          "interaction": "dialogue.worker",
+          "notes": "明确成年、本人自主决定入职",
+          "pivot": [
+            378,
+            553
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                13
+              ],
+              [
+                96,
+                13
+              ],
+              [
+                115,
+                82
+              ],
+              [
+                127,
+                236
+              ],
+              [
+                110,
+                308
+              ],
+              [
+                19,
+                308
+              ],
+              [
+                7,
+                214
+              ],
+              [
+                22,
+                79
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "queue",
+          "label": "求职者队列",
+          "asset": "characters/crowd/rig.json",
+          "rect": [
+            165,
+            330,
+            260,
+            233
+          ],
+          "layer": 5,
+          "interaction": "citizen.contextual",
+          "notes": "脚步前挪，面部表情变化",
+          "pivot": [
+            295,
+            563
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                62,
+                9
+              ],
+              [
+                182,
+                9
+              ],
+              [
+                218,
+                61
+              ],
+              [
+                242,
+                175
+              ],
+              [
+                208,
+                228
+              ],
+              [
+                36,
+                228
+              ],
+              [
+                13,
+                158
+              ],
+              [
+                42,
+                58
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "forms",
+          "label": "候选人求职表",
+          "asset": "props/labor/application.webp",
+          "rect": [
+            610,
+            425,
+            164,
+            96
+          ],
+          "layer": 7,
+          "interaction": "recruit.open",
+          "notes": "候选人的姓名、薪酬、技能等真实数据",
+          "pivot": [
+            692,
+            521
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                7,
+                13
+              ],
+              [
+                149,
+                2
+              ],
+              [
+                162,
+                81
+              ],
+              [
+                13,
+                95
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "clock",
+          "label": "老厂挂钟",
+          "asset": "props/labor/clock.webp",
+          "rect": [
+            1010,
+            93,
+            102,
+            111
+          ],
+          "layer": 3,
+          "interaction": "time.inspect",
+          "notes": "与全局时钟对应",
+          "pivot": [
+            1061,
+            204
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                13,
+                6
+              ],
+              [
+                90,
+                6
+              ],
+              [
+                100,
+                93
+              ],
+              [
+                75,
+                109
+              ],
+              [
+                8,
+                102
+              ],
+              [
+                3,
+                28
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        }
+      ]
+    },
+    "docks": {
+      "title": "旧港码头：劳动、物流和工会",
+      "camera": "docks_wide",
+      "ambient": "port_wind",
+      "objects": [
+        {
+          "id": "docks_bg",
+          "label": "海雾与码头",
+          "asset": "bg/docks/background.webp",
+          "rect": [
+            0,
+            0,
+            1200,
+            670
+          ],
+          "layer": 0,
+          "interaction": null,
+          "notes": "吊车、货轮、水体分层、平面色块",
+          "pivot": [
+            600,
+            670
+          ],
+          "hit": null
+        },
+        {
+          "id": "exit",
+          "label": "码头入口",
+          "asset": "bg/docks/exit.webp",
+          "rect": [
+            66,
+            207,
+            154,
+            321
+          ],
+          "layer": 4,
+          "interaction": "travel.open-map",
+          "notes": "实体港区门禁",
+          "pivot": [
+            143,
+            528
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                15,
+                6
+              ],
+              [
+                131,
+                6
+              ],
+              [
+                146,
+                292
+              ],
+              [
+                28,
+                315
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "doorway",
+              "cameraPan"
+            ],
+            "soundCue": "door-handle",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 250
+          }
+        },
+        {
+          "id": "crane",
+          "label": "吊机",
+          "asset": "props/docks/crane.webp",
+          "rect": [
+            219,
+            36,
+            239,
+            434
+          ],
+          "layer": 2,
+          "interaction": "inspect.crane",
+          "notes": "缓慢吊钩摆动、远景不抢人物",
+          "pivot": [
+            339,
+            470
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                31,
+                22
+              ],
+              [
+                210,
+                22
+              ],
+              [
+                234,
+                365
+              ],
+              [
+                177,
+                425
+              ],
+              [
+                19,
+                399
+              ],
+              [
+                7,
+                109
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "warehouse",
+          "label": "码头仓库",
+          "asset": "bg/docks/warehouse.webp",
+          "rect": [
+            787,
+            196,
+            316,
+            302
+          ],
+          "layer": 3,
+          "interaction": "business.warehouse",
+          "notes": "可经营地皮关联",
+          "pivot": [
+            945,
+            498
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                41,
+                15
+              ],
+              [
+                278,
+                15
+              ],
+              [
+                310,
+                254
+              ],
+              [
+                234,
+                296
+              ],
+              [
+                25,
+                278
+              ],
+              [
+                9,
+                76
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "docker",
+          "label": "码头工友",
+          "asset": "characters/docker/rig.json",
+          "rect": [
+            435,
+            228,
+            143,
+            313
+          ],
+          "layer": 6,
+          "interaction": "dialogue.docker",
+          "notes": "拿搬运登记册",
+          "pivot": [
+            507,
+            541
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                34,
+                13
+              ],
+              [
+                100,
+                13
+              ],
+              [
+                120,
+                81
+              ],
+              [
+                133,
+                235
+              ],
+              [
+                114,
+                307
+              ],
+              [
+                20,
+                307
+              ],
+              [
+                7,
+                213
+              ],
+              [
+                23,
+                78
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "unionist",
+          "label": "老工会成员",
+          "asset": "characters/unionist/rig.json",
+          "rect": [
+            718,
+            224,
+            138,
+            317
+          ],
+          "layer": 6,
+          "interaction": "dialogue.unionist",
+          "notes": "社会互助任务和合法组织关系",
+          "pivot": [
+            787,
+            541
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                33,
+                13
+              ],
+              [
+                97,
+                13
+              ],
+              [
+                116,
+                82
+              ],
+              [
+                128,
+                238
+              ],
+              [
+                110,
+                311
+              ],
+              [
+                19,
+                311
+              ],
+              [
+                7,
+                216
+              ],
+              [
+                22,
+                79
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "shipping_form",
+          "label": "运输合同",
+          "asset": "props/docks/shipping-form.webp",
+          "rect": [
+            559,
+            429,
+            150,
+            105
+          ],
+          "layer": 7,
+          "interaction": "transport.open",
+          "notes": "委托绑定真实仓库及订单",
+          "pivot": [
+            634,
+            534
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                6,
+                15
+              ],
+              [
+                137,
+                2
+              ],
+              [
+                149,
+                88
+              ],
+              [
+                12,
+                104
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "cargo",
+          "label": "货箱与手推车",
+          "asset": "props/docks/cargo.webp",
+          "rect": [
+            278,
+            426,
+            224,
+            158
+          ],
+          "layer": 5,
+          "interaction": "inspect.cargo",
+          "notes": "路网与商路的视觉锚",
+          "pivot": [
+            390,
+            584
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                29,
+                8
+              ],
+              [
+                197,
+                8
+              ],
+              [
+                220,
+                133
+              ],
+              [
+                166,
+                155
+              ],
+              [
+                18,
+                145
+              ],
+              [
+                7,
+                40
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "propPickup",
+              "pageFlip"
+            ],
+            "soundCue": "paper",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        },
+        {
+          "id": "workers",
+          "label": "背景工人组",
+          "asset": "characters/crowd/rig.json",
+          "rect": [
+            150,
+            391,
+            740,
+            194
+          ],
+          "layer": 5,
+          "interaction": "citizen.contextual",
+          "notes": "按工作时段流动",
+          "pivot": [
+            520,
+            585
+          ],
+          "hit": {
+            "type": "alpha-polygon",
+            "localPoints": [
+              [
+                178,
+                8
+              ],
+              [
+                518,
+                8
+              ],
+              [
+                622,
+                50
+              ],
+              [
+                688,
+                146
+              ],
+              [
+                592,
+                190
+              ],
+              [
+                104,
+                190
+              ],
+              [
+                37,
+                132
+              ],
+              [
+                118,
+                49
+              ]
+            ],
+            "alphaCutoff": 0.25,
+            "minTapCssPx": 44,
+            "preferredTapCssPx": 56,
+            "expandCssPx": 8,
+            "animationPresets": [
+              "tapDown",
+              "dialogueAppear",
+              "talkMouth"
+            ],
+            "soundCue": "voice-short",
+            "firstFeedbackBudgetMs": 16,
+            "cooldownAfterConfirmMs": 120
+          }
+        }
+      ]
+    }
+  },
+  "animations": {
+    "tapDown": {
+      "firstFeedbackMs": 16,
+      "pressMs": 72,
+      "easing": "cubic-bezier(.2,.8,.3,1)",
+      "scale": 0.965
+    },
+    "propHover": {
+      "durationMs": 90,
+      "easing": "cubic-bezier(.2,.8,.3,1)",
+      "liftPx": 4,
+      "scale": 1.035
+    },
+    "propPickup": {
+      "durationMs": 260,
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "rotationDeg": -4,
+      "depthScale": 1.08
+    },
+    "folderOpen": {
+      "durationMs": 310,
+      "easing": "cubic-bezier(.16,1,.3,1)",
+      "flipDeg": 92
+    },
+    "mapUnfold": {
+      "durationMs": 360,
+      "easing": "cubic-bezier(.18,.9,.25,1)",
+      "folds": 3
+    },
+    "telephoneLift": {
+      "durationMs": 220,
+      "easing": "cubic-bezier(.21,.83,.24,1)",
+      "upPx": 31
+    },
+    "telephoneRing": {
+      "ringIntervalMs": 920,
+      "ringCycles": 2,
+      "shakeDeg": 1.4
+    },
+    "pageFlip": {
+      "durationMs": 270,
+      "easing": "cubic-bezier(.3,.7,.1,1)",
+      "cornerTurn": "SVG mask or frame-by-frame"
+    },
+    "dialogueAppear": {
+      "durationMs": 180,
+      "easing": "cubic-bezier(.2,.9,.2,1)",
+      "yPx": 12
+    },
+    "dialogueType": {
+      "charactersPerSecond": 34,
+      "minPausePunctuationMs": 160,
+      "skipOnTap": true
+    },
+    "choiceSelect": {
+      "durationMs": 115,
+      "easing": "ease-out",
+      "confirmHoldMs": 90
+    },
+    "blink": {
+      "minIntervalMs": 2700,
+      "maxIntervalMs": 5700,
+      "closeMs": 95,
+      "openMs": 100
+    },
+    "breathe": {
+      "cycleMs": 3200,
+      "torsoYpx": 2,
+      "torsoScaleY": 1.012
+    },
+    "talkMouth": {
+      "cycleMs": 150,
+      "maxOpenScaleY": 1.4,
+      "narrationCoupled": true
+    },
+    "nod": {
+      "durationMs": 420,
+      "rotationDeg": 4
+    },
+    "recoilSurprise": {
+      "durationMs": 310,
+      "headXpx": 6
+    },
+    "walk": {
+      "speedWorldPxPerSec": 95,
+      "rangeWorldPx": [
+        65,
+        145
+      ],
+      "footCycleMs": 480
+    },
+    "doorway": {
+      "doorOpenMs": 210,
+      "maskMs": 180,
+      "walkOutMs": 380,
+      "arriveMs": 420,
+      "wholeMsTarget": 700
+    },
+    "cameraPan": {
+      "durationMs": 230,
+      "easing": "cubic-bezier(.22,.75,.23,1)",
+      "noStretch": true
+    },
+    "newspaperReveal": {
+      "durationMs": 310,
+      "folds": 2
+    },
+    "missionResult": {
+      "durationMs": 420,
+      "easing": "cubic-bezier(.2,1,.3,1)",
+      "startDelayMs": 120
+    },
+    "warning": {
+      "durationMs": 400,
+      "shakePx": 3,
+      "flashMaxOpacity": 0.18
+    },
+    "routeDraw": {
+      "durationMsPerSegment": 85,
+      "minMs": 200,
+      "maxMs": 850
+    },
+    "uiClose": {
+      "durationMs": 160,
+      "easing": "cubic-bezier(.2,.8,.3,1)"
+    }
+  },
+  "input": {
+    "touch": "tap, drag, long-press, pinch; swipe camera on portrait only outside interactable objects",
+    "pointer": "hover subtle lift; click real shape; no generic floating management buttons",
+    "minHitPaddingCssPx": 8,
+    "keyboard": "all interactive objects focusable and named",
+    "doubleTap": "never required"
+  },
+  "rig": {
+    "naming": "characters/{id}/",
+    "layers": [
+      "shadow",
+      "backHair",
+      "legsNear",
+      "legsFar",
+      "torso",
+      "coatBack",
+      "armLUpper",
+      "armLLower",
+      "handL",
+      "armRUpper",
+      "armRLower",
+      "handR",
+      "neck",
+      "head",
+      "eyes",
+      "brows",
+      "mouth",
+      "frontHair",
+      "accessory"
+    ],
+    "pivots": "each bone local pixels; shoulder/neck/elbow/knee pivots explicit",
+    "states": [
+      "idle",
+      "talk",
+      "listen",
+      "look",
+      "reach",
+      "take",
+      "handOver",
+      "walk",
+      "turn",
+      "startled",
+      "angry",
+      "sad",
+      "leave"
+    ],
+    "facialExpressions": [
+      "neutral",
+      "smile",
+      "thinking",
+      "worried",
+      "angry",
+      "surprised",
+      "sad"
+    ]
+  },
+  "assetRules": {
+    "style": "original flat anime color-block designs, not copied commercial game art",
+    "source": "GPTIMG generated and separated manually for production; vector stand-ins only prototype",
+    "format": "transparent PNG/WebP with alpha, RGBA, premultiplied alpha as renderer requires",
+    "colorSpace": "sRGB",
+    "exportScale": 2,
+    "sceneSourcePx": [
+      2400,
+      1340
+    ],
+    "sceneWorkingUnits": [
+      1200,
+      670
+    ],
+    "rigPartsPngMaxPx": [
+      1024,
+      1024
+    ],
+    "naming": "scene / object / character / state / version",
+    "edgePaddingPx": 12,
+    "pivotMetadataRequired": true,
+    "hitPolygonRequired": true,
+    "occlusionLayerRequired": true
+  }
+}
