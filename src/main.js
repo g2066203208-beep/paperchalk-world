@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import {OrbitControls} from "three/addons/controls/OrbitControls.js";
-import {PALETTE,PRESETS,createScene,normalizeScene,cube,uuid,exportBBModel,importBBModel,textureAtlas} from "./model.js";
+import {PALETTE,PRESETS,createScene,normalizeScene,cube,uuid,exportBBModel,importBBModel,textureAtlas,paintPixelTile} from "./model.js";
 
 const $=id=>document.getElementById(id),container=$("viewport");
 let sceneData,selected=null,meshes=[],history=[],future=[],gridEnabled=true,dirty=false;
@@ -22,7 +22,21 @@ controls.touches.ONE=THREE.TOUCH.ROTATE;controls.touches.TWO=THREE.TOUCH.DOLLY_P
 const grid=new THREE.GridHelper(300,120,"#84979a","#a7b9ba");grid.position.y=-.8;grid.material.transparent=true;grid.material.opacity=.35;scene.add(grid);
 const raycaster=new THREE.Raycaster(),pointer=new THREE.Vector2();let down=null;
 const geometry=new THREE.BoxGeometry(1,1,1),materials=new Map();
-function material(color){let m=materials.get(color);if(!m){m=new THREE.MeshStandardMaterial({color,roughness:1,metalness:0});materials.set(color,m);}return m;}
+function material(color,pixelated=false){
+ const key=color+(pixelated?"-pixel":"-solid");
+ let m=materials.get(key);
+ if(!m){
+  if(pixelated){
+   const canvas=document.createElement("canvas");canvas.width=canvas.height=16;
+   const g=canvas.getContext("2d");paintPixelTile(g,color,0,0);
+   const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;
+   map.magFilter=THREE.NearestFilter;map.minFilter=THREE.NearestFilter;
+   m=new THREE.MeshStandardMaterial({color:0xffffff,map,roughness:1,metalness:0});
+  }else m=new THREE.MeshStandardMaterial({color,roughness:1,metalness:0});
+  materials.set(key,m);
+ }
+ return m;
+}
 function notify(s){$("status").textContent=s;}
 function record(){history.push(JSON.stringify(sceneData));if(history.length>45)history.shift();future=[];}
 function save(){try{localStorage.setItem("world-studio:scene:"+sceneData.id,JSON.stringify(sceneData));$("savedState").textContent="本地已保存";}catch{$("savedState").textContent="无法保存本地项目";}}
@@ -51,7 +65,8 @@ function fitBox(){
 }
 function focus(){
  const {target,height}=fitBox();controls.target.copy(target);
- camera.position.copy(target).add(new THREE.Vector3(height*.82,height*.58,height*.98));
+ const offset=sceneData.id==="voxel-car"?new THREE.Vector3(-height*.88,height*.54,height*.91):new THREE.Vector3(height*.82,height*.58,height*.98);
+ camera.position.copy(target).add(offset);
  camera.zoom=1;size();controls.update();
 }
 function size(){
@@ -68,7 +83,7 @@ function build(){
  for(const part of sceneData.parts){
   if(!part.visible)continue;
   const sz=part.to.map((v,i)=>v-part.from[i]);const ctr=part.from.map((v,i)=>v+sz[i]/2);
-  const mesh=new THREE.Mesh(geometry,material(part.color));
+  const mesh=new THREE.Mesh(geometry,material(part.color,sceneData.id==="voxel-car"));
   mesh.position.set(...ctr);mesh.scale.set(...sz);mesh.rotation.set(...part.rotation.map(THREE.MathUtils.degToRad));
   mesh.userData.partId=part.id;mesh.castShadow=!/雪地|路面|地板/.test(part.name);
   mesh.receiveShadow=true;scene.add(mesh);meshes.push(mesh);
