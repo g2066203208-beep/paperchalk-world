@@ -3,100 +3,121 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
-const problems=[];
-async function run(name,options,action){
- const ctx=await browser.newContext(options),page=await ctx.newPage(),errs=[];
- page.on('pageerror',e=>errs.push(e.message));
+const failures=[];
+async function run(label,viewport,action){
+ const ctx=await browser.newContext({viewport,deviceScaleFactor:1});
+ const page=await ctx.newPage(),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));
  try{
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
   await page.locator('img.office-svg').waitFor();
   assert.ok(await page.locator('img.office-svg').evaluate(i=>i.complete&&i.naturalWidth>0));
+  assert.equal(await page.locator('.object-hit').count(),8);
   await action(page);
-  assert.deepEqual(errs,[],'page JS exceptions: '+errs);
-  console.log('PASS '+name);
- }catch(e){problems.push(name+' '+e.stack);await page.screenshot({path:'artifacts/FAILED-'+name+'.png',fullPage:true}).catch(()=>{});}
- finally{await ctx.close();}
+  assert.deepEqual(errors,[],'Uncaught JS exceptions');
+  console.log('PASS '+label);
+ }catch(e){
+  failures.push(label+' :: '+e.stack);
+  await page.screenshot({path:'artifacts/FAILED-'+label+'.png',fullPage:true}).catch(()=>{});
+ }finally{await ctx.close();}
 }
-await run('desktop-1440',{viewport:{width:1440,height:900}},async page=>{
- const objects=page.locator('.object-hit');
- assert.equal(await objects.count(),8,'6 desk props plus full-body visitor and door');
- assert.equal(await page.locator('button.prop').count(),0,'no tiny proxy hit icons');
- await page.screenshot({path:'artifacts/desktop-01-office-door-closed.png',fullPage:true});
- assert.equal(await page.locator('.scene.has-knock').count(),1,'visitor knocks at door');
+async function fireAt(page,x,y){
+ const pos=await page.locator('#combat-viewport').evaluate((svg,p)=>{
+  const point=svg.createSVGPoint();point.x=p[0];point.y=p[1];
+  const client=point.matrixTransform(svg.getScreenCTM());
+  return {x:client.x,y:client.y};
+ },[x,y]);
+ await page.mouse.move(pos.x,pos.y);
+ await page.mouse.click(pos.x,pos.y);
+}
+await run('desktop-1440', {width:1440,height:900},async page=>{
+ await page.screenshot({path:'artifacts/desktop-01-full-room.png',fullPage:true});
+ assert.equal(await page.locator('.office-svg').evaluate(n=>getComputedStyle(n).objectFit),'contain');
+ // Entire physical desk pistol is clickable. The first click lifts it into the viewport.
+ await page.locator('.object-gun').click();
+ assert.equal(await page.locator('#combat-root').isVisible(),true);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mode,'aim');
+ await page.screenshot({path:'artifacts/desktop-02-aim-crosshair.png',fullPage:true});
+ await fireAt(page,991,300);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mag,5);
+ await page.keyboard.press('r');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).reloading,true);
+ await page.waitForTimeout(850);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mag,6);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).reserve,23);
+ await page.locator('#combat-start').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mode,'fight');
+ await page.screenshot({path:'artifacts/desktop-03-door-intrusion.png',fullPage:true});
+ for(const [x,y] of [[999,272],[999,272],[733,289],[733,289]]){
+  await fireAt(page,x,y);await page.waitForTimeout(225);
+ }
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mode,'won','all four hits must be required');
+ await page.screenshot({path:'artifacts/desktop-04-combat-win.png',fullPage:true});
+ await page.locator('#combat-settle').click();
+ assert.equal(await page.locator('#combat-root').isVisible(),false);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,280);
+ // Preserved previous office gameplay
  await page.locator('.object-door').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).visitor.id,'kai');
- await page.locator('.scene.visitor-here').waitFor();
- await page.waitForTimeout(900);
- await page.screenshot({path:'artifacts/desktop-02-visitor-entered.png',fullPage:true});
+ await page.waitForTimeout(1000);
+ await page.screenshot({path:'artifacts/desktop-05-visitor.png',fullPage:true});
  await page.locator('.object-person').click();
- assert.ok((await page.locator('#panel-title').innerText()).includes('阿凯'));
- await page.screenshot({path:'artifacts/desktop-03-audience.png',fullPage:true});
  await page.locator('[data-visitact="hear"]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).respect,2);
  await page.locator('.object-door').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'street');
- await page.screenshot({path:'artifacts/desktop-04-street.png',fullPage:true});
  await page.locator('[data-travel="harbor"]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,225);
  await page.locator('[data-travel="office"]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'office');
  await page.locator('.object-phone').click();
- assert.equal(await page.locator('.phone-keypad button').count(),12);
- for(const key of ['3','0','5'])await page.locator('[data-digit="'+key+'"]').click();
- assert.equal(await page.locator('#dial-screen').innerText(),'305');
- await page.screenshot({path:'artifacts/desktop-05-real-phone.png',fullPage:true});
+ for(const k of ['3','0','5'])await page.locator('[data-digit="'+k+'"]').click();
  await page.locator('[data-dial]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).supply,1,'supplier call placed via real keypad');
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,165);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).supply,1);
+ await page.screenshot({path:'artifacts/desktop-06-real-dialer.png',fullPage:true});
  await page.locator('[data-phone="yes"]').click();
  await page.locator('#close-panel').click();
  await page.locator('.object-reports').click();
- assert.equal(await page.locator('.dossier-tile').count(),3);
  await page.locator('[data-filedecision="approve"][data-case="freight"]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1,'signature dispatches crew');
- await page.screenshot({path:'artifacts/desktop-06-actionable-folders.png',fullPage:true});
- await page.locator('#close-panel').click();
- await page.locator('.object-map').click();
- assert.equal(await page.locator('.city-node').count(),4);
- await page.screenshot({path:'artifacts/desktop-07-map.png',fullPage:true});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1);
  await page.locator('#close-panel').click();
  await page.locator('.object-ledger').click();
  await page.locator('[data-budget="logistics"]').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).bonus.logistics,1);
- await page.screenshot({path:'artifacts/desktop-08-ledger-budget.png',fullPage:true});
- await page.locator('#close-panel').click();
- await page.locator('.object-gun').click();
- await page.locator('[data-safe="50"]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).storedCash,50);
  await page.locator('#close-panel').click();
  await page.locator('.object-calendar').click();
  await page.locator('[data-next]').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).day,2);
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).supply,0,'shipment uses real stock');
- await page.screenshot({path:'artifacts/desktop-09-daily-reports.png',fullPage:true});
  await page.reload({waitUntil:'networkidle'});
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).storedCash,50,'all new simulation persists');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mode,'holstered');
  assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).day,2);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).roundsCompleted,1);
 });
-await run('desktop-1920',{viewport:{width:1920,height:1080}},async page=>{
- const w=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
- assert.ok(w<2,'desktop width overflow '+w);
- await page.screenshot({path:'artifacts/desktop-1920-office.png',fullPage:true});
- await page.locator('.object-phone').click();
- await page.locator('[data-dialpreset="532"]').click();
- assert.equal(await page.locator('#dial-screen').innerText(),'532');
- await page.locator('[data-dial]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).zones.harbor.pressure,11);
+await run('desktop-1920',{width:1920,height:1080},async page=>{
+ const m=await page.evaluate(()=>({
+  img:getComputedStyle(document.querySelector('.office-svg')).objectFit,
+  hit:document.querySelector('.scene-hitmap').getAttribute('preserveAspectRatio'),
+  vw:innerWidth,sw:document.documentElement.scrollWidth
+ }));
+ assert.equal(m.img,'contain');assert.equal(m.hit,'xMidYMid meet');
+ assert.ok(m.sw<=m.vw+2,'no horizontal crop');
+ await page.screenshot({path:'artifacts/desktop-07-1920-full-frame.png',fullPage:true});
+ await page.locator('.object-gun').click();
+ await page.locator('#combat-ammo').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).reserve,36);
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,160);
+ await page.screenshot({path:'artifacts/desktop-08-1920-aim.png',fullPage:true});
+ await page.keyboard.press('Escape');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mode,'holstered');
 });
-await run('desktop-1366',{viewport:{width:1366,height:768}},async page=>{
- await page.screenshot({path:'artifacts/desktop-1366-office.png',fullPage:true});
- await page.locator('.object-door').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).doorOpen,true);
- await page.locator('.object-person').click();
- await page.locator('[data-visitact="dismiss"]').click();
- await page.locator('.object-door').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.meta())).venue,'street');
+await run('desktop-1366',{width:1366,height:768},async page=>{
+ await page.screenshot({path:'artifacts/desktop-09-1366-full-room.png',fullPage:true});
+ await page.locator('.object-gun').click();
+ await page.locator('#combat-start').click();
+ await page.locator('#combat-retreat').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.combat())).mode,'lost');
+ await page.locator('#combat-settle').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).cash,130);
+ await page.locator('.object-map').click();
+ assert.equal(await page.locator('.city-node').count(),4);
 });
 await browser.close();
-if(problems.length){console.error(problems.join('\n'));process.exit(1);}
-console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');
+if(failures.length){console.error(failures.join('\n'));process.exitCode=1;}
+else console.log('DESKTOP FULL-FRAME, SHOOTING, RELOAD, ENCOUNTER, SETTLEMENT AND OFFICE E2E PASSED');

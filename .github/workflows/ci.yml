@@ -1,7 +1,7 @@
 name: Night Office - playable scene, tests, deploy
 on:
   push:
-    branches: [main, game/office-object-interactions]
+    branches: [main, game/desktop-aim-fire]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
-      - run: node --check site/engine.js && node --check site/app.js && node --test tests/*.test.mjs
+      - run: node --check site/engine.js && node --check site/app.js && node --check site/combat.js && node --check site/combat-ui.js && node --test tests/*.test.mjs
   playtest:
     needs: verify
     runs-on: ubuntu-latest
