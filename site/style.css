@@ -284,3 +284,23 @@ button:disabled{cursor:default}
  .office-svg{pointer-events:none}
 }
 @media(prefers-reduced-motion:reduce){.knock-flash,.guest-actor,.door-leaf{animation:none!important;transition:none!important}}
+
+@media(min-width:950px){
+ .scene.visitor-here .guest-actor{opacity:1;transform:translate(-264px,54px) scale(1.16)}
+ .briefing{left:45%;top:8%}
+ .paper-panel.mode-phone{max-height:89dvh}
+ .paper-panel.mode-phone .panel-body{padding-top:15px;padding-bottom:16px}
+ .paper-panel.mode-phone .panel-body h2{font-size:24px;margin:3px 0 5px}
+ .paper-panel.mode-phone .panel-body>p{font-size:11px;margin:4px 0 10px}
+ .phone-device{padding:14px 20px 15px}
+ .phone-display{min-height:63px}
+ .phone-display strong{font-size:26px;min-height:30px}
+ .phone-keypad{gap:7px;margin-top:10px}
+ .phone-keypad button{min-height:43px;font-size:21px}
+ .phone-controls{margin-top:8px}
+ .phone-controls button{padding:8px 4px}
+ .phone-book{max-height:228px}
+ .phone-result{padding:7px 10px;font-size:11px;min-height:33px}
+ .phone-station{gap:22px}
+}
+.scene.door-open .door-handle{opacity:0}
