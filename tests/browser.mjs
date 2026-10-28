@@ -75,6 +75,8 @@ await run('phone-portrait',{viewport:{width:390,height:844},deviceScaleFactor:2,
  await assertBoard(page);
  const over=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(over<=3,'portrait horizontal overflow '+over);
+ const bottom=await page.locator('.field').evaluate(el=>el.getBoundingClientRect().bottom);
+ assert.ok(bottom>=844-5,'portrait scene leaves unused blank area '+(844-bottom));
  await page.screenshot({path:'artifacts/phone-diorama-portrait.png',fullPage:true});
  await page.locator('[data-action="lane"][data-lane="1"]').tap();
  assert.equal((await page.evaluate(()=>window.__NIGHT_REMAINS__.state())).lane,1);

@@ -463,3 +463,15 @@ button:disabled{cursor:default}
  .actions-bar{bottom:154px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* Browser-playtest adjustments: ensure scene fills tall portrait screens and every
+   playable hand card remains fully visible on short landscape viewports. */
+@media(max-width:660px) and (orientation:portrait) and (min-height:660px){
+ .combat-zone{height:max(328px,calc(100dvh - 399px));min-height:max(328px,calc(100dvh - 399px))}
+}
+@media(max-height:510px) and (orientation:landscape){
+ .hand{align-items:center}
+ .paper-card{height:79px;min-height:79px;max-height:79px}
+ .paper-card:nth-child(1),.paper-card:nth-child(4){transform:translateY(0) rotate(6deg)}
+ .paper-card:nth-child(1){transform:translateY(0) rotate(-6deg)}
+}
