@@ -117,9 +117,33 @@ export function importBBModel(raw){
   color:e.studio_color||PALETTE.steel,visible:e.visibility!==false
  }))});
 }
+export function paintPixelTile(g,color,x,y){
+ // 16px hand-authored procedural pixel palette: clean panels, intentional highlights,
+ // no blurry smooth gradients or random grain.
+ const ch=v=>Math.max(0,Math.min(255,Math.round(v)));
+ const tint=(value)=>"#"+[1,3,5].map(k=>ch(parseInt(color.slice(k,k+2),16)+value).toString(16).padStart(2,"0")).join("");
+ g.fillStyle=color;g.fillRect(x,y,16,16);
+ const c=color.toLowerCase();
+ const glass=["#375365","#65828b","#91b1bd"].includes(c);
+ const rubber=["#283238","#475057","#1d272d"].includes(c);
+ if(glass){
+  g.fillStyle=tint(17);g.fillRect(x+2,y+2,8,2);g.fillRect(x+4,y+4,6,1);
+  g.fillStyle=tint(-16);g.fillRect(x+10,y+9,4,2);g.fillRect(x+2,y+13,8,1);
+ }else if(rubber){
+  g.fillStyle=tint(-14);g.fillRect(x,y+12,16,4);g.fillRect(x+12,y+2,2,4);
+  g.fillStyle=tint(12);g.fillRect(x+2,y+3,5,2);g.fillRect(x+9,y+8,3,2);
+ }else{
+  g.fillStyle=tint(12);g.fillRect(x+1,y+1,12,2);g.fillRect(x+1,y+3,4,1);
+  g.fillStyle=tint(-14);g.fillRect(x+1,y+13,14,2);g.fillRect(x+12,y+10,3,3);
+  g.fillStyle=tint(6);g.fillRect(x+3,y+6,3,2);g.fillRect(x+8,y+9,5,1);
+ }
+}
 export function textureAtlas(scene){
  const colors=[...new Set(scene.parts.map(p=>p.color))];
  const c=document.createElement("canvas");c.width=16;c.height=16*colors.length;
- const g=c.getContext("2d");colors.forEach((color,i)=>{g.fillStyle=color;g.fillRect(0,i*16,16,16);});
+ const g=c.getContext("2d");colors.forEach((color,i)=>{
+  if(scene.id==="voxel-car")paintPixelTile(g,color,0,i*16);
+  else {g.fillStyle=color;g.fillRect(0,i*16,16,16);}
+ });
  return c.toDataURL("image/png");
 }
