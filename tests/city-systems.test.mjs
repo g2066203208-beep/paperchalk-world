@@ -72,7 +72,7 @@ test('contract violence creates case, warrant, detention, trial, prison and rele
  let r=cmd(w,'operations','commission',{operation:'assassination',agent:'kai',target:'bell-lu'},s);
  assert.equal(r.ok,true,r.message);w=r.state;
  assert.equal(cmd(w,'operations','commission',{operation:'assassination',agent:'kai',target:'sail-lin'},s).ok,false);
- for(let i=0;i<5;i++)w=runtime.advance(w,{cash:1000,heat:70,crew:s.crew,orders:[]}).state;
+ for(let i=0;i<6;i++)w=runtime.advance(w,{cash:1000,heat:70,crew:s.crew,orders:[]}).state;
  const stages=new Set(w.events.filter(e=>e.type==='justice.progress').map(e=>e.title));
  assert.ok(stages.has('通缉'));assert.ok(stages.has('羁押'));assert.ok(stages.has('审判'));
  assert.ok(w.slices.justice.cases.length>=1);
