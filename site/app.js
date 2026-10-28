@@ -1,5 +1,5 @@
 import {DISTRICTS,CREW,MISSIONS,GOALS,initialGame,restore,availableCrew,crewInfo,zoneInfo,canOrder,setOrder,endDay,phoneDetails,answerPhone,markGunSeen} from './engine.js';
-import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,decideDossier,allocate,transferSafe,equip,openDoor,visitorAction,travel,advance} from './office-features.js';
+import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,queueVisitor,decideDossier,allocate,transferSafe,equip,openDoor,visitorAction,travel,advance} from './office-features.js';
 const $=id=>document.getElementById(id);
 const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -216,17 +216,47 @@ function repaintPanel(){
  $('panel-body').innerHTML=html;
  document.querySelector('.paper-panel').classList.toggle('mode-phone',currentPanel==='phone');
 }
-document.getElementById('game').addEventListener('click',e=>{
- const trigger=e.target.closest('button[data-open]');
- if(trigger)panel(trigger.dataset.open);
+function applyResult(r,updatePanel=true){
+ if(!r.ok){toast(r.message);return false;}
+ state=r.state;meta=r.meta;refresh();
+ if(currentPanel&&updatePanel)repaintPanel();
+ toast(r.message);return true;
+}
+function activateOfficeObject(type){
+ if(meta.venue==='street')return;
+ if(type==='door'){
+  if(meta.visitor){panel('visitor');return;}
+  const r=openDoor(state,meta);
+  if(applyResult(r,false)){
+   if(r.visitor){
+    clearTimeout(doorTimer);
+    doorTimer=setTimeout(()=>{if(meta.visitor&&currentPanel===null)toast(crewInfo(meta.visitor.id).name+' 已到桌前，点击人物听取汇报');},850);
+   }
+  }
+  return;
+ }
+ if(type==='visitor'){
+  if(!meta.visitor){toast('目前没有来客，留意对面的门');return;}
+  panel('visitor');return;
+ }
+ if(type==='reports')fileTab='dossiers';
+ panel(type);
+}
+$('game').addEventListener('click',e=>{
+ const spot=e.target.closest('[data-open]');
+ if(spot){activateOfficeObject(spot.dataset.open);return;}
+ const travelButton=e.target.closest('[data-travel]');
+ if(travelButton){applyResult(travel(state,meta,travelButton.dataset.travel),false);return;}
 });
-$('open-reports').addEventListener('click',()=>panel('reports'));
+$('open-reports').addEventListener('click',()=>{fileTab='reports';panel('reports');});
 $('help-btn').addEventListener('click',()=>panel('help'));
 $('close-panel').addEventListener('click',closePanel);
 $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closePanel();});
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&!$('overlay').hidden){closePanel();return;}
- if(!$('overlay').hidden&&(e.key==='Enter'||e.key===' ')){
+ if(e.key==='Enter'||e.key===' '){
+  const object=e.target.closest?.('[data-open][role="button"]');
+  if(object){e.preventDefault();activateOfficeObject(object.dataset.open);return;}
   const node=e.target.closest?.('[data-map-zone][role="button"]');
   if(node){e.preventDefault();plan.zone=node.dataset.mapZone;repaintPanel();}
  }
@@ -245,23 +275,50 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.phone){
   const r=answerPhone(state,node.dataset.phone);
   if(!r.ok){toast(r.message);return;}
-  state=r.state;refresh();repaintPanel();toast(r.message);return;
+  state=r.state;lastDial='来电处理完毕：'+r.message;refresh();repaintPanel();toast(r.message);return;
  }
- if(node.dataset.gun){
-  const r=markGunSeen(state);state=r.state;refresh();repaintPanel();toast(r.message);return;
+ if(node.dataset.digit){dialBuffer=(dialBuffer+node.dataset.digit).slice(-3);repaintPanel();return;}
+ if(node.dataset.dialpreset){dialBuffer=node.dataset.dialpreset;repaintPanel();return;}
+ if(node.dataset.phoneclear){dialBuffer=dialBuffer.slice(0,-1);repaintPanel();return;}
+ if(node.dataset.phonehang){dialBuffer='';lastDial='听筒已挂回。';repaintPanel();return;}
+ if(node.dataset.callzone){callZone=node.dataset.callzone;repaintPanel();return;}
+ if(node.dataset.dial){
+  if(dialBuffer.length!==3){lastDial='请输入三位联系号码。';repaintPanel();return;}
+  const r=dial(state,meta,dialBuffer,callZone);
+  if(!r.ok){lastDial=r.message;repaintPanel();toast(r.message);return;}
+  lastDial='已接通 '+r.contact.name+'：'+r.message;
+  dialBuffer='';applyResult(r,true);return;
+ }
+ if(node.dataset.filetab){fileTab=node.dataset.filetab;repaintPanel();return;}
+ if(node.dataset.filedecision){
+  applyResult(decideDossier(state,meta,node.dataset.case,node.dataset.filedecision));return;
+ }
+ if(node.dataset.crewvisit){
+  applyResult(queueVisitor(state,meta,node.dataset.crewvisit));return;
+ }
+ if(node.dataset.budget){applyResult(allocate(state,meta,node.dataset.budget));return;}
+ if(node.dataset.equip){applyResult(equip(state,meta,node.dataset.equip));return;}
+ if(node.dataset.safe){applyResult(transferSafe(state,meta,Number(node.dataset.safe)));return;}
+ if(node.dataset.visitact){
+  const r=visitorAction(state,meta,node.dataset.visitact);
+  if(applyResult(r,false))closePanel();
+  return;
  }
  if(node.dataset.next){
   const r=advance(state,meta);
   if(!r.ok){toast(r.message);return;}
-  state=r.state;plan.crew=availableCrew(state)[0]||null;refresh();closePanel();
-  toast(r.message);panel('reports');return;
+  state=r.state;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
+  fileTab='reports';closePanel();toast(r.message);panel('reports');return;
  }
  if(node.dataset.helpClose){closePanel();}
 });
 refresh();
-window.__OFFICE__={version:4,state:()=>structuredClone(state),open:panel,close:closePanel,
+window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),open:panel,close:closePanel,
  dispatch:(type,...args)=>{
-  const r=type==='assign'?setOrder(state,...args):type==='next'?endDay(state):type==='phone'?answerPhone(state,args[0]):{ok:false,state,message:'无效操作'};
-  if(r.ok){state=r.state;refresh();if(currentPanel)repaintPanel();}
+  const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
+  type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):
+  type==='door'?openDoor(state,meta):type==='visitor'?visitorAction(state,meta,args[0]):type==='travel'?travel(state,meta,args[0]):
+  {ok:false,state,meta,message:'无效操作'};
+  if(r.ok){state=r.state;meta=r.meta||meta;refresh();if(currentPanel)repaintPanel();}
   return r;
  }};
