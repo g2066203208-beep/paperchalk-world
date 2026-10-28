@@ -311,3 +311,59 @@ button:disabled{cursor:default}
 .scene.has-knock:not(.visitor-here) .knock-flash{z-index:3}
 .scene.visitor-here .object-person{pointer-events:visiblePainted}
 @media(prefers-reduced-motion:reduce){.guest-actor{transition:none!important}}
+
+/* Desktop: full compositional frame; hit-map and drawn office use identical meet geometry. */
+.office-svg{object-fit:contain!important;object-position:center center!important}
+.scene{background:#17212b}
+.scene-hitmap{width:100%;height:100%;inset:0}
+.combat-root{position:absolute;inset:0;z-index:18;isolation:isolate;overflow:hidden;cursor:crosshair;background:#0d17212b}
+.combat-root[hidden]{display:none!important}
+.combat-viewport{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:none;touch-action:none}
+#combat-weapon{pointer-events:none;transform-origin:1120px 670px}
+#combat-weapon.kick{animation:gunKick .19s ease-out}
+@keyframes gunKick{0%{transform:translate(0,0) rotate(0)}22%{transform:translate(-12px,12px) rotate(-3deg)}100%{transform:translate(0,0) rotate(0)}}
+#muzzle-flash.blast{animation:flashShot .14s ease-out}
+@keyframes flashShot{0%,65%{opacity:1}100%{opacity:0}}
+#shot-ripple.ping{animation:hitPing .22s ease-out}
+@keyframes hitPing{0%{opacity:.95}100%{opacity:0;transform:scale(2.3)}}
+#aim-crosshair{filter:drop-shadow(1px 1px 1px #111e29);pointer-events:none}
+.combat-enemy{pointer-events:none}
+.combat-enemy .enemy-jacket{stroke:#0d1b27;stroke-width:7}
+.combat-enemy .enemy-mask{fill:#1d2735}
+.combat-enemy .enemy-eyes{fill:#edbb8d}
+.combat-target-board{pointer-events:none}
+.combat-hud{position:absolute;inset:0;pointer-events:none;z-index:5}
+.combat-brand{position:absolute;top:25px;left:37px;max-width:440px;color:#f7e6cb;text-shadow:1px 2px 0 #18212d}
+.combat-brand small{font:900 11px Georgia,serif;letter-spacing:.2em;color:#e5a88f}
+.combat-brand strong{display:block;font-size:clamp(18px,2.3vw,30px);font-weight:900;letter-spacing:.08em;margin-top:5px}
+.combat-brand p{max-width:395px;line-height:1.4;font-size:12px;margin:7px 0;color:#ead4bc}
+.combat-metrics{position:absolute;right:27px;top:25px;display:flex;gap:10px}
+.combat-metrics>span{display:flex;align-items:baseline;gap:5px;background:#172431ee;border-left:4px solid #c15e60;padding:9px 14px;color:#f2dcc0;min-width:85px}
+.combat-metrics small{font-size:10px;color:#dbc29e}
+.combat-metrics b{font:900 23px Georgia,serif;color:#fff1cf}
+.combat-actions{pointer-events:auto;position:absolute;left:36px;bottom:24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.combat-actions button{cursor:pointer;background:#e9d3b3;color:#20313e;border:2px solid #273746;padding:11px 17px;min-height:42px;font-size:13px;font-weight:900;box-shadow:4px 4px 0 #16212a}
+.combat-actions button:hover{background:#fff0d7;transform:translateY(-2px)}
+.combat-actions button:disabled{opacity:.5;cursor:default}
+.combat-actions #combat-start{background:#ba5057;color:#fff0df}
+.combat-actions #combat-retreat{background:#a35b56;color:#f6e4cf}
+.combat-actions #combat-settle{background:#c3a579;color:#1a2a34}
+.combat-actions button[hidden]{display:none}
+.combat-flash{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:4;background:radial-gradient(ellipse at center,transparent 52%,#b34b51c4 95%)}
+.combat-flash.damaged{animation:hitScreen .45s ease-out}
+@keyframes hitScreen{0%{opacity:.8}100%{opacity:0}}
+.combat-root.combat-victory{background:#3b5f5840}
+.combat-root.combat-defeat{background:#6b333f4d}
+.combat-root.combat-reloading .combat-viewport{cursor:wait}
+.combat-root.combat-reloading #combat-weapon{animation:reloadGun .7s ease-in-out}
+@keyframes reloadGun{40%{transform:translateY(45px) rotate(-15deg)}100%{transform:translateY(0) rotate(0)}}
+@media(max-width:900px){
+ .combat-brand{top:14px;left:14px;max-width:46%}
+ .combat-brand strong{font-size:17px}.combat-brand p{font-size:10px}
+ .combat-metrics{right:12px;top:13px;gap:4px}.combat-metrics>span{min-width:0;padding:5px 7px}
+ .combat-metrics b{font-size:15px}.combat-metrics small{font-size:8px}
+ .combat-actions{left:9px;bottom:9px;gap:6px}.combat-actions button{min-height:32px;padding:6px 8px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){
+ #combat-weapon.kick,#muzzle-flash.blast,#shot-ripple.ping,.combat-flash.damaged,.combat-root.combat-reloading #combat-weapon{animation:none!important}
+}
