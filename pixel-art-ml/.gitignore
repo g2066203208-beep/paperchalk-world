@@ -1,0 +1,6 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.pixel-data/
+.pixel-runs/
+*.py[cod]
