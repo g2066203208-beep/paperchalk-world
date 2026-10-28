@@ -24,7 +24,7 @@ try{
    await page.goto(origin+"?model=kiosk",{waitUntil:"domcontentloaded",timeout:35000});
    await page.waitForFunction(()=>window.__WORLD_STUDIO_TEST__?.objects()>10,{timeout:35000});
    assert.equal(await page.locator("canvas").count(),1,"renderer must create one canvas");
-   assert.equal(await page.locator("#presets button").count(),3,"three public projects");
+   assert.equal(await page.locator("#presets button").count(),4,"three location projects plus the Blockbench voxel pickup");
    assert.ok((await page.locator("canvas").boundingBox())?.width>100);
    const tabs=page.locator(".mobiletabs");
    if(mobile){assert.equal(await tabs.isVisible(),true);await page.getByRole("button",{name:"项目 / 结构"}).click();}
@@ -56,6 +56,16 @@ try{
    assert.equal(await page.evaluate(()=>window.__WORLD_STUDIO_TEST__.scene().parts.length),initial);
    if(mobile)await page.getByRole("button",{name:"3D 预览"}).click();
    await page.screenshot({path:"artifacts/"+name+"-kiosk-imported.png"});
+   if(mobile)await page.getByRole("button",{name:"项目 / 结构"}).click();
+   await page.locator("#presets button").nth(3).click();
+   const voxel=await page.evaluate(()=>window.__WORLD_STUDIO_TEST__.scene());
+   assert.equal(voxel.id,"voxel-car");
+   assert.ok(voxel.parts.length>100,"A detail-rich sample must be more than a few cubes");
+   assert.ok(voxel.parts.some(p=>p.group==="08 真实轮胎"));
+   assert.ok(voxel.parts.some(p=>p.group==="05 货斗"));
+   assert.ok(voxel.parts.some(p=>p.group==="04 车窗"));
+   if(mobile)await page.getByRole("button",{name:"3D 预览"}).click();
+   await page.screenshot({path:"artifacts/"+name+"-blockbench-voxel-car.png"});
    await context.close();
    console.log("PASS browser "+name+" / model import, export, edit and responsive viewport");
   }
