@@ -6,7 +6,7 @@ export const TARGETS=[
  {id:'b',x:733,y:289,r:35,health:2,kind:'intruder',color:'#a88377'},
  {id:'c',x:1090,y:336,r:31,health:2,kind:'intruder',color:'#a66c65'}
 ];
-export function freshCombat(){return {version:1,mode:'holstered',mag:6,reserve:24,maxMag:6,hp:100,wave:0,alert:false,alertDay:0,enemies:[],shots:0,hits:0,knockdowns:0,roundDamage:0,roundsCompleted:0,history:[],reloading:false};}
+export function freshCombat(){return {version:1,mode:'holstered',mag:6,reserve:24,maxMag:6,hp:100,wave:0,alert:false,alertDay:0,enemies:[],shots:0,hits:0,knockdowns:0,roundDamage:0,roundsCompleted:0,lastEncounterDay:0,history:[],reloading:false};}
 export function normalizeCombat(raw){if(!raw||raw.version!==1)return freshCombat();const s=clone(raw);if(!['holstered','aim','fight','won','lost'].includes(s.mode)||!Number.isInteger(s.mag)||s.mag<0||s.mag>6||!Number.isInteger(s.reserve)||s.reserve<0||s.reserve>10000||!Number.isInteger(s.hp)||s.hp<0||s.hp>100||!Array.isArray(s.enemies)||s.enemies.length>3)return freshCombat();s.reloading=false;return s;}
 export function draw(s){
  if(s.mode==='fight')return {ok:false,combat:s,message:'当前已经持枪'};
@@ -16,10 +16,11 @@ export function holster(s){
  if(s.mode==='fight')return {ok:false,combat:s,message:'遭遇正在进行，请击退来客或使用掩体撤退'};
  const n=clone(s);n.mode='holstered';n.reloading=false;n.enemies=[];return {ok:true,combat:n,message:'枪已放回桌上'};
 }
-export function beginEncounter(s,stage=1){
+export function beginEncounter(s,stage=1,day=1){
  if(s.mode==='fight')return {ok:false,combat:s,message:'正在交火'};
+ if(s.lastEncounterDay===day)return {ok:false,combat:s,message:'今天已经经历过办公室袭击'};
  if(s.hp===0)return {ok:false,combat:s,message:'伤势尚未恢复'};
- const n=clone(s);n.mode='fight';n.wave=stage;n.alert=false;n.reloading=false;n.roundDamage=0;n.enemies=TARGETS.map((e,i)=>({...e,health:stage===1?e.health:Math.min(4,e.health+1),active:i<Math.min(3,stage+1)})).filter(e=>e.active);
+ const n=clone(s);n.mode='fight';n.lastEncounterDay=day;n.wave=stage;n.alert=false;n.reloading=false;n.roundDamage=0;n.enemies=TARGETS.map((e,i)=>({...e,health:stage===1?e.health:Math.min(4,e.health+1),active:i<Math.min(3,stage+1)})).filter(e=>e.active);
  return {ok:true,combat:n,message:'门口传来急促脚步声，敌袭开始！'};
 }
 export function reload(s){
@@ -85,4 +86,12 @@ export function signalEncounter(s,day,heat){
  const n=clone(s);
  if(day>=2&&day%3===2&&heat>=14&&n.alertDay!==day){n.alert=true;n.alertDay=day;}
  return n;
+}
+
+export function buyAmmo(s,state){
+ if(s.reserve>=120)return {ok:false,combat:s,state,message:'弹药已经装满'};
+ if(state.cash<30)return {ok:false,combat:s,state,message:'购买弹药需要 30 元'};
+ const n=clone(s),game=clone(state);n.reserve=Math.min(120,n.reserve+12);game.cash-=30;
+ game.ledger.unshift({day:game.day,label:'办公室采购备用弹药（12发）',amount:-30});
+ return {ok:true,combat:n,state:game,message:'购买 12 发备用弹药，现金 -30'};
 }
