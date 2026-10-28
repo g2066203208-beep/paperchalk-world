@@ -1,85 +1,149 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#14191b">
-<meta name="description" content="夜港：从街头一无所有起步，经营产业、招募团队、扩张到全城的黑帮老大模拟游戏。">
-<title>夜港 · 街头帝国</title>
-<link rel="stylesheet" href="./style.css">
-<script type="module" src="./app.js"></script>
-</head>
-<body>
-<div class="game" id="game">
- <header class="topbar">
-  <div class="identity"><span class="monogram" aria-hidden="true">N<span>°</span></span><div><strong>夜港</strong><small>FROM NOTHING · AN EMPIRE</small></div></div>
-  <div class="header-stats">
-   <div class="header-stat"><small>第 <span id="week">01</span> 周</small><strong id="rank">无名之辈</strong></div>
-   <div class="header-stat balance"><small>现金 CASH</small><strong id="money">＄320</strong></div>
-   <div class="header-stat short"><small>声望</small><strong id="respect">06</strong></div>
-   <div class="header-stat short"><small>关注度</small><strong id="heat">07</strong></div>
-   <div class="header-stat short crew-top"><small>伙伴</small><strong id="crew">01</strong></div>
-  </div>
-  <button type="button" class="quiet-icon" id="help" aria-label="玩法说明" title="玩法说明">?</button>
-  <button type="button" class="quiet-icon" id="reset" aria-label="重新开始" title="重开">↻</button>
- </header>
- <div class="main">
-  <section class="stage" aria-label="正在经营的城区">
-    <img id="district-photo" class="stage-photo" draggable="false" alt="城区的夜景照片" referrerpolicy="no-referrer">
-    <div class="stage-overlay"></div>
-    <div class="stage-top">
-      <div><small id="district-no">DISTRICT / 01</small><h1 id="district-name">旧码头</h1><p id="district-flavor">从这里，开始拥有这座城。</p></div>
-      <span class="territory-stamp" id="territory-status">尚未掌控</span>
-    </div>
-    <div class="stage-bottom">
-      <div class="street-data"><span>街区影响力</span><div class="meter"><i id="influence-fill"></i></div><b id="influence">21 / 100</b></div>
-      <div class="street-data"><span>竞争压力</span><div class="meter rival"><i id="rival-fill"></i></div><b id="rival">20 / 100</b></div>
-      <div class="stage-economy"><span>该区每周收入</span><strong id="local-income">＄0</strong></div>
-    </div>
-    <div class="stage-caption">HARBOR CITY <span>·</span> 经营、关系、地盘，都由你的决定改变</div>
-  </section>
-  <aside class="neighborhoods" aria-label="城市街区照片">
-   <div class="neighborhoods-heading"><span>这座城</span><small>FIVE DISTRICTS</small></div>
-   <div id="district-list" class="district-list"></div>
-   <div class="neighborhoods-footer">点击照片，换一个街区经营</div>
-  </aside>
- </div>
- <section class="bottom" aria-label="帮派经营工作台">
-  <div class="desk-top">
-    <div class="desk-label"><span>THE LEDGER</span><strong>你的组织</strong></div>
-    <div class="desk-tabs" role="tablist" aria-label="经营类别">
-      <button type="button" data-tab="street" role="tab">街区事务</button>
-      <button type="button" data-tab="business" role="tab">产业经营</button>
-      <button type="button" data-tab="crew" role="tab">团队与关系</button>
-    </div>
-    <button id="next-week" type="button" class="week-control" aria-label="结束本周，结算并进入下一周"><span class="week-mark" aria-hidden="true">◴</span><span>进入下一周<small>结算收支</small></span></button>
-  </div>
-  <div class="desk-content">
-    <div class="action-space">
-      <div class="hint" id="tab-hint"></div>
-      <div class="action-list" id="action-list"></div>
-    </div>
-    <div class="ledger-space">
-      <div class="ledger-kicker">本周账簿 / YOUR BOOKS</div>
-      <div class="ledger-row"><span>产业及地盘收入</span><b id="income">＋＄0</b></div>
-      <div class="ledger-row"><span>薪资与运营成本</span><b id="upkeep">－＄80</b></div>
-      <div class="ledger-row"><span>额外监管成本</span><b id="penalty">－＄0</b></div>
-      <div class="ledger-row ledger-result"><span>预计每周净收入</span><b id="net">－＄80</b></div>
-      <div class="organization"><span id="organization-count">地盘 0 / 5</span><span id="organization-sites">产业 0 / 5</span><span id="organization-loyalty">忠诚 78</span></div>
-      <div class="goal" id="goal">掌控五个城区 · 声望达到 70 · 现金积累到 ＄10,000</div>
-      <div class="log-box" id="log" aria-live="polite"></div>
-    </div>
-  </div>
- </section>
- <div class="toast" id="toast" role="status" aria-live="polite"></div>
- <div class="veil" id="veil" hidden>
-  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
-    <div class="dialog-meta" id="dialog-meta">夜港 · 市内消息</div>
-    <h2 id="dialog-title">新的消息</h2>
-    <p id="dialog-text"></p>
-    <div class="dialog-options" id="dialog-options"></div>
-  </div>
- </div>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#161b21"/><meta name="description" content="夜港·首领办公室：点击黑帮老大的地图、电话、文件和账本，在办公室听取手下汇报与规划行动。"/><title>夜港 · 首领办公室</title><link rel="stylesheet" href="./style.css"/><script type="module" src="./app.js"></script></head>
+<body><div class="game" id="game">
+<header class="topbar"><div class="logo"><span class="logo-emblem">N<span>°</span></span><div><strong>夜港</strong><small>THE OFFICE / FROM ZERO</small></div></div>
+<div class="stats"><span class="stat"><small>DAY</small><b id="day">01</b></span><span class="stat"><small>资金</small><b id="cash">＄190</b></span><span class="stat"><small>声望</small><b id="respect">01</b></span><span class="stat"><small>关注</small><b id="heat">12</b></span></div>
+<button class="help-control" id="help-btn" type="button" aria-label="查看游戏玩法">?</button></header>
+<main class="scene" aria-label="可交互的黑帮首领办公室">
+<div class="scene-art" id="scene-art">
+<svg viewBox="0 0 1100 670" preserveAspectRatio="none" class="office-svg" role="img" aria-label="原创扁平二次元黑帮办公室插画。窗外的城市、墙上挂画、办公桌，右侧站着一名年轻的帮派成员。">
+<defs>
+<linearGradient id="wall" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#f4e9d7"/><stop offset="1" stop-color="#d4c6b5"/></linearGradient>
+<linearGradient id="desk" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#363b3d"/><stop offset="1" stop-color="#141a21"/></linearGradient>
+<clipPath id="windowclip"><path d="M62 90L382 59L375 345L70 371Z"/></clipPath>
+<filter id="flatShadow"><feDropShadow dx="6" dy="10" stdDeviation="2" flood-color="#0f151a" flood-opacity=".35"/></filter>
+</defs>
+<!-- ceiling, asymmetrical wall graphic -->
+<path d="M0 0H1100V670H0Z" fill="#e9dfce"/>
+<path d="M0 0H610L551 390L0 424Z" fill="url(#wall)"/>
+<path d="M610 0H1100V670H704L549 396Z" fill="#a94449"/>
+<path d="M845 0H1100V670H969Z" fill="#892d36"/>
+<path d="M0 379L552 350L735 576H0Z" fill="#cbc0b0"/>
+<path d="M0 437L720 408L1100 468V670H0Z" fill="#34373c"/>
+<path d="M0 456L720 425L1100 474" fill="none" stroke="#ece1cf" stroke-width="7"/>
+<!-- window, city silhouette -->
+<path d="M53 77L392 42L389 360L61 391Z" fill="#151e28"/>
+<g clip-path="url(#windowclip)">
+<path d="M61 65H395V380H61Z" fill="#f1b5a1"/>
+<path d="M65 174L387 150V360H65Z" fill="#df7d7d"/>
+<circle cx="290" cy="153" r="63" fill="#f8ddbb"/>
+<path d="M55 335V211H114V246H154V177H200V239H247V185H295V273H351V201H396V392H55Z" fill="#765665"/>
+<path d="M57 353V260H93V201H125V281H153V217H198V310H228V241H284V315H324V266H362V225H394V390H57Z" fill="#303744"/>
+<g stroke="#efc7b0" stroke-width="6" stroke-dasharray="6 18" opacity=".78"><path d="M112 248V338M185 245V340M259 261V346M345 284V355"/></g>
+</g>
+<path d="M62 233L386 202M225 70L222 370" fill="none" stroke="#111a23" stroke-width="13"/>
+<path d="M60 86L394 50L386 354L62 383Z" fill="none" stroke="#f6e8cf" stroke-width="11"/>
+<path d="M60 385L384 359L384 380L62 406Z" fill="#34383d"/>
+<!-- wall territory sketch -->
+<path d="M453 81L660 59L680 302L467 315Z" fill="#222831"/>
+<path d="M465 93L646 74L661 288L475 302Z" fill="#e9d9ba"/>
+<path d="M490 126L600 101L646 146L596 234L500 272L474 189Z" fill="#d1b997"/>
+<path d="M502 135L569 113L617 149L552 191L491 177Z" fill="#bc6a63"/>
+<path d="M552 191L621 149L630 245L562 263Z" fill="#6a8999"/>
+<path d="M491 180L550 195L561 265L486 279Z" fill="#caa56b"/>
+<path d="M529 122L524 276M485 208L632 184" fill="none" stroke="#292e34" stroke-width="4" stroke-dasharray="7 6"/>
+<g fill="#202934"><circle cx="501" cy="169" r="7"/><circle cx="589" cy="204" r="7"/><circle cx="557" cy="234" r="7"/></g>
+<path d="M451 89L659 66" stroke="#f8e7d2" stroke-width="7"/>
+<!-- lamp -->
+<path d="M750 0V118" stroke="#282d31" stroke-width="10"/><path d="M688 121L808 121L831 176L664 176Z" fill="#1b222b"/>
+<path d="M666 178L830 178" stroke="#f3d4a6" stroke-width="9"/><path d="M726 179L598 465H931L785 179Z" fill="#f4d6a0" opacity=".10"/>
+<!-- filing cabinets -->
+<path d="M962 257L1075 232L1090 482L974 504Z" fill="#222832"/>
+<path d="M977 272L1063 258L1066 337L980 351Z" fill="#495057"/>
+<path d="M979 359L1068 347L1070 433L981 447Z" fill="#48515a"/>
+<path d="M1007 312L1039 307M1008 392L1040 385" stroke="#e3cdb0" stroke-width="6" stroke-linecap="round"/>
+<!-- geometric anime side character -->
+<g class="character-figure" filter="url(#flatShadow)">
+<!-- legs -->
+<path d="M825 467L881 459L899 663H847L829 571L810 665H765Z" fill="#1d252e"/>
+<path d="M760 657H809L804 670H753ZM847 655H906L916 670H850Z" fill="#12181f"/>
+<!-- jacket body -->
+<path d="M779 306Q799 283 828 276L887 278Q913 305 922 378L941 506L893 521L860 455L834 507L780 497L763 384Z" fill="#272e39"/>
+<path d="M812 285L844 402L876 284L862 267L826 265Z" fill="#eee6db"/>
+<path d="M832 285L843 400L851 287L843 303Z" fill="#a94449"/>
+<path d="M816 292L841 397L801 358Z" fill="#161e2a"/><path d="M873 292L844 396L891 352Z" fill="#151d27"/>
+<path d="M779 319L742 411L760 451L784 431L820 367Z" fill="#29313d"/>
+<path d="M919 331L956 439L924 461L888 387Z" fill="#212b37"/>
+<path d="M758 445L774 469L793 446L778 424Z" fill="#efc5ad"/>
+<path d="M929 453L952 456L945 485L916 478Z" fill="#ecc0a8"/>
+<!-- neck and anime face -->
+<path d="M825 265L827 289L850 309L873 282L864 253Z" fill="#dca68c"/>
+<path d="M798 158L805 241Q807 276 845 290Q884 282 890 243L898 168L855 128Z" fill="#f0cbb2"/>
+<path d="M798 203L792 211L797 243L807 247" fill="#edb9a0"/><path d="M894 202L899 210L895 243L886 244" fill="#e7b198"/>
+<path d="M817 219L833 216M861 216L876 219" stroke="#263442" stroke-width="7" stroke-linecap="round"/>
+<path d="M827 230L837 230M860 230L871 229" stroke="#131a22" stroke-width="4" stroke-linecap="round"/>
+<path d="M849 234L845 246L854 249" fill="none" stroke="#bd8879" stroke-width="3"/>
+<path d="M834 260Q849 265 861 258" fill="none" stroke="#9a525a" stroke-width="3"/>
+<!-- hair, deliberately angular -->
+<path d="M798 217L785 184L796 137L825 113L878 115L915 142L902 197L889 218L887 180L867 151L847 172L815 159L803 207Z" fill="#192430"/>
+<path d="M781 183L817 129L837 146L821 185L857 148L874 170L890 154L907 195L918 161L884 113L829 112L793 133Z" fill="#283747"/>
+<path d="M800 158L835 127L843 147L816 171Z" fill="#536477"/>
+<!-- earring and details -->
+<circle cx="895" cy="247" r="4" fill="#f1d79c"/>
+<path d="M882 340L902 356M793 342L785 374" stroke="#687788" stroke-width="5"/>
+</g>
+<!-- desk front; stylized polygon perspective -->
+<path d="M117 398L847 407L1088 553L8 553Z" fill="#141b24" opacity=".42"/>
+<path d="M122 407L857 407L1078 548L11 548Z" fill="url(#desk)" stroke="#111820" stroke-width="10"/>
+<path d="M49 541L1047 541L1025 576L56 578Z" fill="#20252c"/>
+<path d="M56 574L1024 574L1008 666L77 666Z" fill="#222b35"/>
+<path d="M76 582L1007 582" stroke="#c25859" stroke-width="5"/>
+<path d="M141 468L862 467" stroke="#6c7780" stroke-width="3" opacity=".5"/>
+<!-- telephone -->
+<g transform="translate(164 451) rotate(-11)">
+<ellipse cx="55" cy="59" rx="101" ry="43" fill="#0a1119" opacity=".5"/>
+<path d="M-8 33L125 33L148 79L-22 79Z" fill="#121a24"/>
+<path d="M5 40L108 40L126 70L-4 70Z" fill="#4a5660"/>
+<circle cx="53" cy="53" r="22" fill="#e4d1b6"/><circle cx="53" cy="53" r="12" fill="#252d35"/>
+<path d="M-17 31Q52 -20 130 27" fill="none" stroke="#1b232e" stroke-width="28" stroke-linecap="round"/>
+<path d="M-17 31Q52 0 130 27" fill="none" stroke="#aeb4af" stroke-width="9" stroke-linecap="round"/>
+</g>
+<!-- city paper map desk -->
+<g transform="translate(355 430) rotate(3)">
+<path d="M-18 25L332 17L379 139L-25 138Z" fill="#e8ddc7" stroke="#17202a" stroke-width="7"/>
+<path d="M15 30L158 25L169 100L10 120Z" fill="#d29a85"/>
+<path d="M161 25L320 22L345 83L173 100Z" fill="#7e9aa4"/>
+<path d="M10 124L168 106L170 130L0 132Z" fill="#d6bc8d"/>
+<path d="M174 106L348 90L365 127L174 130Z" fill="#b15d63"/>
+<path d="M0 65L344 64M97 30L98 128M229 28L243 123" stroke="#fff2d8" stroke-width="5" opacity=".74"/>
+<path d="M33 99Q123 86 216 52T313 94" fill="none" stroke="#24323f" stroke-width="6" stroke-dasharray="14 7"/>
+<circle cx="40" cy="100" r="11" fill="#202b36"/><circle cx="286" cy="88" r="11" fill="#202b36"/>
+<text x="19" y="51" font-family="sans-serif" font-size="16" font-weight="900" fill="#26313d">NIGHT HARBOR / 04</text>
+</g>
+<!-- folder and report -->
+<g transform="translate(795 472) rotate(9)">
+<path d="M-26 15H99L118 29H159L171 116H-40Z" fill="#caa178" stroke="#1c242e" stroke-width="6"/>
+<path d="M-23 24L157 25L170 110H-30Z" fill="#e3c5a1"/>
+<path d="M3 51H116M0 70H137M5 88H81" stroke="#956f59" stroke-width="6"/>
+<rect x="60" y="92" width="76" height="18" fill="#ab4b51" transform="rotate(-8 60 92)"/>
+</g>
+<!-- ledger and pen -->
+<g transform="translate(673 564) rotate(-5)">
+<path d="M-16 0L167 0L172 77H-18Z" fill="#efe3cf" stroke="#1a242c" stroke-width="6"/>
+<path d="M4 19H147M4 34H147M4 49H147M4 65H147" stroke="#a6a08e" stroke-width="2"/>
+<path d="M44 10V69M109 10V70" stroke="#aa9b85" stroke-width="3"/>
+<path d="M145 2L157 60" stroke="#af4b54" stroke-width="7" stroke-linecap="round"/>
+</g>
+<!-- personal pistol as prop, not tactical control -->
+<g transform="translate(194 567) rotate(-9)">
+<path d="M-5 12L111 5L131 18L119 40L86 40L72 71L49 75L54 36L7 34Z" fill="#131d26" stroke="#79818b" stroke-width="4"/>
+<path d="M11 12H97M58 38L54 66" stroke="#a2aab0" stroke-width="5"/>
+<path d="M91 40Q80 60 66 44" fill="none" stroke="#bec0b5" stroke-width="3"/>
+</g>
+<!-- paper calendar / brass paperweight -->
+<g transform="translate(935 518) rotate(14)"><path d="M-13 0H78L92 45H-24Z" fill="#eed9bd" stroke="#1c2227" stroke-width="6"/><path d="M2 7H68V37H-4Z" fill="#ab4c53"/><text x="10" y="31" font-size="21" font-weight="bold" fill="#fff1da" font-family="sans-serif">01</text></g>
+<circle cx="312" cy="525" r="17" fill="#c5a06f" stroke="#171e26" stroke-width="7"/>
+<path d="M0 636L1100 636" stroke="#a84b4d" stroke-width="9"/>
+</svg>
+<!-- hotspots anchored to painted objects -->
+<button class="prop prop-phone" type="button" data-open="phone" aria-label="拿起电话"><span class="prop-mark">☎</span><span class="prop-label">电话</span></button>
+<button class="prop prop-map" type="button" data-open="map" aria-label="展开城区地图规划行动"><span class="prop-mark">⌖</span><span class="prop-label">城区地图</span></button>
+<button class="prop prop-folder" type="button" data-open="reports" aria-label="翻开部下汇报文件"><span class="prop-mark">✉</span><span class="prop-label">汇报</span></button>
+<button class="prop prop-ledger" type="button" data-open="ledger" aria-label="打开组织账本"><span class="prop-mark">＄</span><span class="prop-label">账本</span></button>
+<button class="prop prop-gun" type="button" data-open="gun" aria-label="观察桌上的旧手枪"><span class="prop-mark">✧</span><span class="prop-label">旧物</span></button>
+<button class="prop prop-calendar" type="button" data-open="calendar" aria-label="翻动日历进入下一天"><span class="prop-mark">↷</span><span class="prop-label">明日</span></button>
 </div>
-</body>
-</html>
+<div class="scene-info"><span class="scene-tag">CHAPTER 01 <b>·</b> 白手起家</span><div class="briefing" id="briefing"><small id="speaker">阿凯 · 汇报</small><p id="briefing-text">老板，城区地图和今天的情报都已经放在桌上了。</p><button type="button" id="open-reports" aria-label="打开最新报告">查看汇报 <span>›</span></button></div><span class="scene-note">CLICK THE OBJECTS / 点击桌面物件</span></div>
+</main>
+<footer class="bottom-ribbon"><div class="day-mark">NO. <span id="ribbon-day">001</span></div><div class="foot-copy">一间办公室。两名伙伴。从这里开始，这座城会记住你的名字。</div><div class="goal-marker" id="goal-marker">目标 · 2 区影响力 55 / 声望 24 / 资金 1400</div></footer>
+<div id="overlay" class="overlay" hidden><section class="paper-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title"><div class="panel-chrome"><span id="panel-kicker">NIGHT HARBOR / PRIVATE FILE</span><button id="close-panel" type="button" aria-label="收起当前物件">×</button></div><div id="panel-body" class="panel-body"></div></section></div>
+<div class="toast" id="toast" aria-live="polite" role="status"></div></div></body></html>

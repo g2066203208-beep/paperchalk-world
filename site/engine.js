@@ -1,204 +1,149 @@
-/** 夜港：独立于视图的、可复现的黑帮经营模拟器。所有数值是虚构的游戏规则。 */
+/** NIGHT OFFICE / original playable vertical slice. Deterministic and offline, browser-independent. */
 export const DISTRICTS=[
- {id:'dock',name:'旧码头',en:'OLD HARBOR',tag:'起步之地',photo:'photo-1519608487953-e999c86e7455',photoCredit:'Unsplash',cost:480,income:155,risk:1,initialRival:20,flavor:'潮水拍打仓库。这里没有你的名字，也没有人会替你记住它。',business:'仓库事务所',claimCost:330},
- {id:'oldtown',name:'老城街',en:'OLD QUARTER',tag:'工会与街坊',photo:'photo-1480714378408-67cf0d13bc1b',photoCredit:'Unsplash',cost:850,income:230,risk:2,initialRival:34,flavor:'旧招牌下是几十年的街坊生意。人情比现金更管用。',business:'街角餐厅',claimCost:570},
- {id:'night',name:'霓虹区',en:'NEON MILE',tag:'夜生活中心',photo:'photo-1514565131-fce0801e5785',photoCredit:'Unsplash',cost:1300,income:345,risk:3,initialRival:49,flavor:'午夜的灯亮得像白天。每个笑容背后都有交易。',business:'爵士俱乐部',claimCost:850},
- {id:'finance',name:'中心区',en:'CITY CENTER',tag:'资本的高地',photo:'photo-1519501025264-65ba15a82390',photoCredit:'Unsplash',cost:2100,income:520,risk:4,initialRival:63,flavor:'玻璃大楼倒映着城里的另一套秩序。',business:'投资公司',claimCost:1250},
- {id:'heights',name:'山顶区',en:'THE HEIGHTS',tag:'最后的门槛',photo:'photo-1494526585095-c41746248156',photoCredit:'Unsplash',cost:3400,income:800,risk:5,initialRival:77,flavor:'城里所有的灯都在脚下。想在这里说话，先拿出实力。',business:'私人会所',claimCost:1800}
+{id:'harbor',name:'旧港',x:143,y:272,influence:28,pressure:18,pay:155,color:'#bc655e',blurb:'码头仓库和旧货轮，是你的第一条街。'},
+{id:'market',name:'市集',x:330,y:132,influence:8,pressure:28,pay:185,color:'#d3a76a',blurb:'每张账单都经过别人的手。'},
+{id:'midtown',name:'中城',x:520,y:270,influence:0,pressure:40,pay:235,color:'#6a93aa',blurb:'新的夜晚，旧的势力。'},
+{id:'neon',name:'霓虹街',x:363,y:376,influence:0,pressure:58,pay:295,color:'#bf6d85',blurb:'灯光照不见真实的面孔。'}
 ];
-export const CONFIG={goalCash:10000,goalRespect:70,goalDistricts:5,maxCrew:20};
-export const photoUrl=(d,w=1100)=>'https://images.unsplash.com/'+d.photo+'?auto=format&fit=crop&w='+w+'&q=78';
-export const getDistrict=(id)=>DISTRICTS.find(d=>d.id===id);
-export const cashText=n=>'＄'+Math.round(n).toLocaleString('en-US');
-export function createGame(){
- const zones=Object.fromEntries(DISTRICTS.map(d=>[d.id,{influence:d.id==='dock'?21:0,rival:d.initialRival,level:0,controlled:false,worked:-1,networked:-1,negotiated:-1,community:-1}]));
- return {version:3,week:1,cash:320,crew:1,loyalty:78,respect:6,heat:7,selected:'dock',
-  zones,event:null,quiet:-1,history:[],log:[
-   {week:1,title:'你的故事从码头开始',body:'口袋里只有 320 美元，一位愿意跟随你的朋友。没有产业，也没有地盘。先认识街坊，再想办法开一家自己的店。'}
-  ],won:false,bankrupt:false};
+export const CREW=[
+{id:'kai',name:'阿凯',role:'跑腿与运输',skill:'deliver',trait:'脚程快 · 风险低',face:'K',tone:'#d5a66e'},
+{id:'mio',name:'米娅',role:'交涉与情报',skill:'network',trait:'善于和人谈判',face:'M',tone:'#a9bfd2'},
+{id:'leo',name:'雷欧',role:'调查与侦察',skill:'scout',trait:'熟悉陌生街区',face:'L',tone:'#c9a3af'}
+];
+export const MISSIONS=[
+{id:'deliver',title:'收取货款',short:'跑单',description:'获得现金，可能引发关注。'},
+{id:'network',title:'拜访关系人',short:'交涉',description:'增加街区影响力与声望。'},
+{id:'scout',title:'调查街区',short:'调查',description:'降低街区压力并发现情报。'}
+];
+export const GOALS={cash:1400,respect:24,hold:2};
+export function initialGame(){
+ return {version:4,day:1,cash:190,heat:12,respect:1,crew:['kai','mio'],zones:Object.fromEntries(DISTRICTS.map(d=>[d.id,{influence:d.influence,pressure:d.pressure}])),
+ orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'第一次汇报',body:'老板，办公室刚租下来。今天只有两个人、190 元现金，以及旧港一位愿意接电话的老熟人。地图已经送来。',outcome:'这座城还不认识我们。'}],
+ call:{id:'welcome',answered:false},callHistory:[],ledger:[{day:1,label:'初始资金',amount:190}],flags:{gunSeen:false},won:false};
+}
+export const crewInfo=id=>CREW.find(c=>c.id===id);
+export const zoneInfo=id=>DISTRICTS.find(d=>d.id===id);
+export const missionInfo=id=>MISSIONS.find(m=>m.id===id);
+export function availableCrew(s){return s.crew.filter(id=>!s.orders.some(o=>o.crew===id));}
+export function canOrder(s,crew,zone,mission){
+ const person=crewInfo(crew),place=zoneInfo(zone),job=missionInfo(mission);
+ if(!person||!place||!job)return {ok:false,reason:'请选择人手、目的地和行动'};
+ if(!s.crew.includes(crew))return {ok:false,reason:'这名成员尚未加入'};
+ if(!availableCrew(s).includes(crew))return {ok:false,reason:'这名成员今天已经有任务'};
+ if(s.orders.length>=s.crew.length)return {ok:false,reason:'今天没有空闲人手'};
+ const cost=mission==='network'?25:mission==='scout'?10:0;
+ if(s.cash<cost)return {ok:false,reason:'可用资金不足'};
+ return {ok:true,cost};
+}
+export function setOrder(state,crew,zone,mission){
+ const check=canOrder(state,crew,zone,mission);
+ if(!check.ok)return {ok:false,state,message:check.reason};
+ const s=structuredClone(state);
+ s.cash-=check.cost;
+ s.orders.push({id:s.day+'-'+crew,crew,zone,mission,cost:check.cost});
+ if(check.cost)s.ledger.unshift({day:s.day,label:'安排'+missionInfo(mission).title+'：'+zoneInfo(zone).name,amount:-check.cost});
+ return {ok:true,state:s,message:crewInfo(crew).name+'已接受任务：'+zoneInfo(zone).name+' · '+missionInfo(mission).title};
 }
 const clamp=(n,min=0,max=100)=>Math.max(min,Math.min(max,Math.round(n)));
-const sCopy=s=>structuredClone(s);
-const result=(state,ok,message)=>({state,ok,message});
-const entry=(s,title,body)=>{s.log=[{week:s.week,title,body},...s.log].slice(0,14)};
-export const ownedCount=s=>DISTRICTS.filter(d=>s.zones[d.id].controlled).length;
-export const sitesCount=s=>DISTRICTS.filter(d=>s.zones[d.id].level>0).length;
-export const payroll=s=>s.crew*45+35;
-export const districtRevenue=(s,d)=>{
- const z=s.zones[d.id];
- if(z.level===0)return z.controlled?65:0;
- const mult=[0,1,1.64,2.35][z.level];
- const trust=.78+s.loyalty/450;
- const pressure=z.rival>75?.86:1;
- return Math.round(d.income*mult*trust*pressure)+(z.controlled?65:0);
+function taskResult(s,order){
+ const c=crewInfo(order.crew),d=zoneInfo(order.zone),z=s.zones[d.id];
+ const skilled=c.skill===order.mission, roll=(s.day*7+c.id.length*11+d.x+order.mission.length*5)%9;
+ let amount=0,text='';
+ if(order.mission==='deliver'){
+   amount=Math.round(d.pay*(skilled?1.25:0.82)+(roll-4)*8);
+   s.cash+=amount;
+   s.heat=clamp(s.heat+(z.pressure>=45?8:4));
+   z.influence=clamp(z.influence+(skilled?3:1));
+   text='在'+d.name+'收回了 '+amount+' 元货款。'+(z.pressure>=45?'当地人盯得很紧。':'目前仍算顺利。');
+ } else if(order.mission==='network'){
+   amount=skilled?17:10;
+   z.influence=clamp(z.influence+amount);
+   s.respect=clamp(s.respect+(skilled?4:2));
+   z.pressure=clamp(z.pressure+2);
+   text='结识了新的街区联系人。'+d.name+'影响力增加 '+amount+' 点。';
+ } else {
+   amount=skilled?15:9;
+   z.pressure=clamp(z.pressure-amount);
+   s.heat=clamp(s.heat-3);
+   s.respect=clamp(s.respect+1);
+   text='摸清了当地关系。'+d.name+'的竞争压力降低 '+amount+' 点。';
+ }
+ return {id:order.id,day:s.day,crew:c.id,title:d.name+' · '+missionInfo(order.mission).title,body:text,
+  outcome:order.mission==='deliver'?'收入 +'+amount:order.mission==='network'?'影响力 +'+amount:'压力 -'+amount,zone:d.id};
+}
+export function endDay(state){
+ const s=structuredClone(state);
+ const dispatched=s.orders.length;
+ if(!dispatched&&!s.call.answered)return {ok:false,state,message:'先处理电话，或至少安排一名成员'};
+ const newReports=[];
+ for(const order of s.orders){
+  const report=taskResult(s,order);
+  newReports.push(report);
+  if(order.mission==='deliver')s.ledger.unshift({day:s.day,label:zoneInfo(order.zone).name+' · 货款',amount:parseInt(report.outcome.split('+')[1],10)});
+ }
+ const rent=35+s.crew.length*14;
+ s.cash-=rent;
+ s.ledger.unshift({day:s.day,label:'办公室租金与团队开支',amount:-rent});
+ s.heat=clamp(s.heat-2);
+ s.day++;
+ s.orders=[];
+ s.call={id: s.day%3===0?'rival':s.day%2===0?'neighbor':'supplier',answered:false};
+ if(s.day===3&&!s.crew.includes('leo')){s.crew.push('leo');newReports.push({id:'recruit-'+s.day,day:s.day,crew:'leo',title:'新成员前来报到',body:'雷欧听说你在找可靠的调查员。愿意先试一个星期。',outcome:'雷欧加入团队'});}
+ s.reports=[...newReports,...s.reports].slice(0,40);
+ s.won=s.cash>=GOALS.cash&&s.respect>=GOALS.respect&&DISTRICTS.filter(d=>s.zones[d.id].influence>=55).length>=GOALS.hold;
+ return {ok:true,state:s,generated:newReports,message:'第 '+s.day+' 天，成员们带回了 '+newReports.length+' 份新报告。'};
+}
+export const phoneDetails=state=>{
+ const id=state.call.id;
+ if(id==='welcome')return {from:'旧港联系人',text:'“听说你终于有自己的办公室了。有人需要你替他跑一趟货，旧港这条路好走。想留下名字，就先做出一点动静。”',
+ options:[{id:'yes',name:'接下这份人情',description:'获得 85 元，关注 +5'},{id:'no',name:'先观察局势',description:'降低关注 4'}]};
+ if(id==='rival')return {from:'邻街的陌生人',text:'“你的人最近很忙啊。这里还有别的人做生意。你最好懂一点规矩。”',
+ options:[{id:'yes',name:'耐心解释',description:'声望 +2，关注 -4'},{id:'no',name:'挂断电话',description:'关注 +7'}]};
+ if(id==='neighbor')return {from:'旧城区店主',text:'“我这边有一份小委托。你派人来看看，大家可以互相照顾。”',
+ options:[{id:'yes',name:'答应帮忙',description:'现金 +60，声望 +2'},{id:'no',name:'暂时婉拒',description:'关注 -3'}]};
+ return {from:'仓库经理',text:'“有一笔货款需要有人出面谈谈。不急，但也别拖太久。”',
+ options:[{id:'yes',name:'安排一次碰面',description:'现金 +90，关注 +6'},{id:'no',name:'让对方改天再说',description:'关注 -4'}]};
 };
-export const weeklyFinance=s=>{
- const income=DISTRICTS.reduce((sum,d)=>sum+districtRevenue(s,d),0);
- const wages=payroll(s);
- const enforcement=s.heat>=65?Math.round((s.heat-64)*8):0;
- return {income,wages,enforcement,net:income-wages-enforcement};
-};
-const canPay=(s,cost)=>s.cash>=cost;
-const allowed=s=>!s.bankrupt&&!s.event;
-export function actionInfo(s,type,id=s.selected){
- const d=getDistrict(id),z=s.zones[id];
- if(type==='next')return {ok:allowed(s),cost:0,reason:s.event?'先处理本周事件':''};
- if(!d||!z)return {ok:false,cost:0,reason:'未知街区'};
- if(!allowed(s))return {ok:false,cost:0,reason:s.event?'先处理城内事件':'本局已破产'};
- let cost=0,reason='',done=false;
- switch(type){
-  case 'hustle':done=z.worked===s.week;reason=done?'本周已完成街头跑单':'';break;
-  case 'network':cost=65+d.risk*15;done=z.networked===s.week;reason=done?'本周已拜访过联系人':'';break;
-  case 'negotiate':cost=115+d.risk*35;done=z.negotiated===s.week;reason=done?'本周已与当地势力交涉':'';break;
-  case 'recruit':cost=160+s.crew*75;reason=s.crew>=CONFIG.maxCrew?'团队已达上限':'';break;
-  case 'open':cost=d.cost;reason=z.level>0?'这里已有产业':z.influence<24?'需先建立至少 24 点街区影响力':s.crew<2?'至少需要两名团队成员':'';break;
-  case 'upgrade':cost=Math.round(d.cost*(.65+z.level*.62));reason=z.level===0?'先开设产业':z.level>=3?'产业已升至最高等级':'';break;
-  case 'claim':cost=d.claimCost;reason=z.controlled?'已掌控该街区':z.influence<65?'需要 65 点街区影响力':s.crew<2+ownedCount(s)?'需要更多团队成员支撑新地盘':s.respect<10?'声望至少达到 10':'';break;
-  case 'community':cost=120+d.risk*25;done=z.community===s.week;reason=done?'本周已经维护过街坊关系':'';break;
-  case 'quiet':cost=65;done=s.quiet===s.week;reason=done?'本周已经低调休整':'';break;
-  default:return {ok:false,cost:0,reason:'未知行动'};
- }
- if(!reason&&done)reason='本周已进行';
- if(!reason&&cost>s.cash)reason='资金不足，还差 '+cashText(cost-s.cash);
- return {ok:!reason,cost,reason};
+export function answerPhone(state,choice){
+ if(state.call.answered)return {ok:false,state,message:'今天的通话已经结束'};
+ if(!['yes','no'].includes(choice))return {ok:false,state,message:'未知回复'};
+ const s=structuredClone(state),d=phoneDetails(s),id=s.call.id;
+ if(id==='welcome'){
+  if(choice==='yes'){s.cash+=85;s.heat=clamp(s.heat+5);s.ledger.unshift({day:s.day,label:'旧港人情委托',amount:85});}
+  else s.heat=clamp(s.heat-4);
+ }else if(id==='rival'){
+  if(choice==='yes'){s.respect=clamp(s.respect+2);s.heat=clamp(s.heat-4);}
+  else s.heat=clamp(s.heat+7);
+ }else if(id==='neighbor'){
+  if(choice==='yes'){s.cash+=60;s.respect=clamp(s.respect+2);s.ledger.unshift({day:s.day,label:'店主委托',amount:60});}
+  else s.heat=clamp(s.heat-3);
+ }else if(choice==='yes'){s.cash+=90;s.heat=clamp(s.heat+6);s.ledger.unshift({day:s.day,label:'仓库账款',amount:90});}
+ else s.heat=clamp(s.heat-4);
+ s.call.answered=true;s.callHistory.unshift({day:s.day,from:d.from,answer:d.options.find(o=>o.id===choice).name});
+ return {ok:true,state:s,message:'通话结束：'+d.options.find(o=>o.id===choice).name};
 }
-function checkMilestone(s){
- if(!s.won&&ownedCount(s)>=CONFIG.goalDistricts&&s.cash>=CONFIG.goalCash&&s.respect>=CONFIG.goalRespect){
-  s.won=true;entry(s,'这座城已经记住你的名字','从一位码头熟人，到坐拥五区的组织首领。你仍可以继续经营，挑战更高资产。');
- }
- if(s.cash<-1200&&s.crew<=1){s.bankrupt=true;entry(s,'资金链断裂','组织无法维持开支。本局结束，可重新开始。');}
-}
-export function act(state,type,id=state?.selected){
- const info=actionInfo(state,type,id);
- if(!info.ok)return result(state,false,info.reason);
- if(type==='next')return nextWeek(state);
- const s=sCopy(state),d=getDistrict(id),z=s.zones[id];
- s.cash-=info.cost;
- let text='';
- switch(type){
-  case 'hustle':{
-   const take=145+s.crew*18+d.risk*34;
-   s.cash+=take;s.heat=clamp(s.heat+5+d.risk);
-   s.respect=clamp(s.respect+1);z.influence=clamp(z.influence+4);
-   z.rival=clamp(z.rival+2);z.worked=s.week;
-   text='接下街头委托，收入 '+cashText(take)+'。警方关注度上升。';break;
-  }
-  case 'network':{
-   z.influence=clamp(z.influence+17+Math.floor(s.crew/3));
-   s.respect=clamp(s.respect+2);z.networked=s.week;
-   text='拜访商户、修复关系，本地影响力增加。';break;
-  }
-  case 'negotiate':{
-   z.influence=clamp(z.influence+11);z.rival=clamp(z.rival-13);
-   s.respect=clamp(s.respect+3);z.negotiated=s.week;
-   text='与街区势力达成一项暂时的协议，对抗压力下降。';break;
-  }
-  case 'recruit':{
-   s.crew++;s.loyalty=clamp(s.loyalty-3);s.respect=clamp(s.respect+1);
-   text='新的伙伴加入。团队增加至 '+s.crew+' 人，今后每周需要支付工资。';break;
-  }
-  case 'open':{
-   z.level=1;s.respect=clamp(s.respect+5);z.influence=clamp(z.influence+8);
-   text='签下 '+d.business+'，从下周开始提供持续收入。';break;
-  }
-  case 'upgrade':{
-   z.level++;s.respect=clamp(s.respect+3);
-   text=d.business+' 提升至 '+z.level+' 级，未来收入提高。';break;
-  }
-  case 'claim':{
-   z.controlled=true;z.influence=clamp(Math.max(z.influence,76));z.rival=clamp(z.rival-19);
-   s.heat=clamp(s.heat+8+d.risk);s.respect=clamp(s.respect+9);
-   text='街区的商会与联系人正式承认你的影响力。每周获得额外收益，但警方更关注你。';break;
-  }
-  case 'community':{
-   z.influence=clamp(z.influence+10);s.loyalty=clamp(s.loyalty+8);s.heat=clamp(s.heat-5);
-   z.community=s.week;
-   text='资助街区活动，街坊信任和团队士气回升，关注度降低。';break;
-  }
-  case 'quiet':{
-   s.heat=clamp(s.heat-17);s.loyalty=clamp(s.loyalty+4);s.quiet=s.week;
-   text='暂缓高调活动，让组织休整一周。';break;
-  }
- }
- entry(s,type==='open'||type==='upgrade'?'产业扩张':type==='claim'?'街区易主':'本周行动',d.name+'｜'+text);
- checkMilestone(s);
- return result(s,true,text);
-}
-const EVENTS=[
- {id:'audit',title:'突击核查',text:'监管部门开始调查城里的商铺，近期动作越大，审查越严格。',
-  a:{text:'聘请顾问处理账务',cost:210,heat:-18,loyalty:0,rep:1},b:{text:'维持现状接受检查',cost:0,heat:10,loyalty:0,rep:-1}},
- {id:'rivals',title:'隔街的竞争者',text:'竞争帮派希望重新划分市场。有合作的空间，也有新的摩擦。',
-  a:{text:'谈判并承担一笔费用',cost:185,heat:-3,loyalty:4,rep:3,rival:-16},b:{text:'坚持现有立场',cost:0,heat:8,loyalty:-3,rep:2,rival:12}},
- {id:'employees',title:'团队有了意见',text:'一名老成员认为分红太少。有人开始讨论离开。',
-  a:{text:'发放额外奖金',cost:160,heat:0,loyalty:15,rep:0},b:{text:'要求继续忍耐',cost:0,heat:0,loyalty:-12,rep:-1}},
- {id:'opportunity',title:'新的商业机会',text:'有人邀请你参加一个地区经营联盟，代价不低，但会带来新的联系人。',
-  a:{text:'加入合作计划',cost:230,heat:-2,loyalty:2,rep:7,influence:10},b:{text:'暂时不投资',cost:0,heat:0,loyalty:0,rep:0}}
-];
-export function eventInfo(s){
- if(!s.event)return null;
- return EVENTS.find(e=>e.id===s.event.id)||null;
-}
-function nextWeek(state){
- const s=sCopy(state);
- const {income,wages,enforcement,net}=weeklyFinance(s);
- s.cash+=net;
- s.history=[...s.history,{week:s.week,income,wages,enforcement,net,cash:s.cash}].slice(-26);
- s.week++;
- s.heat=clamp(s.heat-3+ownedCount(s));
- s.loyalty=clamp(s.loyalty-(net<0?3:0));
- for(const d of DISTRICTS){
-  const z=s.zones[d.id];
-  if(z.controlled){
-   z.rival=clamp(z.rival+(s.heat>70?5:1));
-   if(z.rival>=85){z.influence=clamp(z.influence-8);}
-   if(z.influence<38){
-    z.controlled=false;entry(s,'失去街区',d.name+' 的联盟瓦解，重新获得支持才能回归。');
-   }
-  }
- }
- const seed=((s.week*71+s.crew*23+ownedCount(s)*17)%11);
- if(s.week%3===0||seed===4){
-  s.event={id:EVENTS[(s.week*7+ownedCount(s)+s.crew)%EVENTS.length].id,week:s.week};
- }
- entry(s,'财务结算 · 第 '+(s.week-1)+' 周','营业 '+cashText(income)+' － 工资及房租 '+cashText(wages)+(enforcement?' － 监管开销 '+cashText(enforcement):'')+' = '+(net>=0?'+':'')+cashText(net));
- checkMilestone(s);
- return result(s,true,'进入第 '+s.week+' 周。本周净现金流 '+(net>=0?'+':'')+cashText(net));
-}
-export function resolveEvent(state,choice){
- const e=eventInfo(state);
- if(!e)return result(state,false,'当前没有事件');
- if(choice!=='a'&&choice!=='b')return result(state,false,'未知事件选项');
- const pick=e[choice];
- if(state.cash<pick.cost)return result(state,false,'现金不足以支付该方案');
- const s=sCopy(state);s.cash-=pick.cost;
- s.heat=clamp(s.heat+pick.heat);s.loyalty=clamp(s.loyalty+pick.loyalty);s.respect=clamp(s.respect+pick.rep);
- if(pick.rival!==undefined)s.zones[s.selected].rival=clamp(s.zones[s.selected].rival+pick.rival);
- if(pick.influence!==undefined)s.zones[s.selected].influence=clamp(s.zones[s.selected].influence+pick.influence);
- s.event=null;
- entry(s,e.title,pick.text+'。');
- checkMilestone(s);
- return result(s,true,e.title+'：'+pick.text);
+export function markGunSeen(state){
+ const s=structuredClone(state);s.flags.gunSeen=true;
+ return {state:s,ok:true,message:'旧物证：枪身上的刻字“NO KINGS”提醒你，权力从来不只靠武力。'};
 }
 export function restore(raw){
  try{
   const s=typeof raw==='string'?JSON.parse(raw):raw;
-  if(!s||s.version!==3||!getDistrict(s.selected))return createGame();
-  for(const k of ['week','cash','crew','loyalty','respect','heat','quiet']){
-   if(!Number.isInteger(s[k])||Math.abs(s[k])>1e9)return createGame();
-  }
-  if(s.week<1||s.crew<1||s.crew>CONFIG.maxCrew||s.loyalty<0||s.loyalty>100||
-   s.respect<0||s.respect>100||s.heat<0||s.heat>100||s.quiet>s.week)return createGame();
-  if(typeof s.won!=='boolean'||typeof s.bankrupt!=='boolean'||!Array.isArray(s.history)||s.history.length>26||
-   !Array.isArray(s.log)||s.log.length>14)return createGame();
-  if(s.event&&(!EVENTS.some(e=>e.id===s.event.id)||s.event.week!==s.week))return createGame();
+  if(!s||s.version!==4||!Number.isInteger(s.day)||s.day<1||s.day>10000)return initialGame();
+  if(!Number.isInteger(s.cash)||Math.abs(s.cash)>1e9||!Number.isInteger(s.heat)||s.heat<0||s.heat>100||
+     !Number.isInteger(s.respect)||s.respect<0||s.respect>100)return initialGame();
+  if(!Array.isArray(s.crew)||!s.crew.includes('kai')||!s.crew.includes('mio')||s.crew.some(id=>!crewInfo(id)))return initialGame();
+  if(!Array.isArray(s.orders)||s.orders.length>s.crew.length||s.orders.some(o=>!canOrderType(o)))return initialGame();
+  if(new Set(s.orders.map(o=>o.crew)).size!==s.orders.length)return initialGame();
+  if(!Array.isArray(s.reports)||s.reports.length>40||!Array.isArray(s.ledger)||s.ledger.length>1000||
+     !Array.isArray(s.callHistory)||s.callHistory.length>1000)return initialGame();
+  if(!s.call||typeof s.call.id!=='string'||!['welcome','rival','neighbor','supplier'].includes(s.call.id)||
+     typeof s.call.answered!=='boolean'||typeof s.won!=='boolean'||typeof s.flags?.gunSeen!=='boolean')return initialGame();
   for(const d of DISTRICTS){
    const z=s.zones?.[d.id];
-   if(!z||!Number.isInteger(z.influence)||z.influence<0||z.influence>100||
-    !Number.isInteger(z.rival)||z.rival<0||z.rival>100||
-    !Number.isInteger(z.level)||z.level<0||z.level>3||
-    typeof z.controlled!=='boolean')return createGame();
-   for(const k of ['worked','networked','negotiated','community'])if(!Number.isInteger(z[k])||z[k]>s.week)return createGame();
+   if(!z||![z.influence,z.pressure].every(v=>Number.isInteger(v)&&v>=0&&v<=100))return initialGame();
   }
   return s;
- }catch{return createGame();}
+ }catch{return initialGame();}
 }
+function canOrderType(o){return crewInfo(o?.crew)&&zoneInfo(o?.zone)&&missionInfo(o?.mission)&&typeof o.id==='string'&&Number.isInteger(o.cost)&&o.cost>=0;}

@@ -3,81 +3,73 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 await mkdir('artifacts',{recursive:true});
 const browser=await chromium.launch({headless:true});
-const url='http://127.0.0.1:4173/';
-const failures=[];
-async function check(name,settings,fn){
- const ctx=await browser.newContext(settings),page=await ctx.newPage(),errors=[];
- page.on('pageerror',e=>errors.push(e.message));
+const errs=[];
+async function run(name,options,fn){
+ const ctx=await browser.newContext(options),page=await ctx.newPage(),exceptions=[];
+ page.on('pageerror',e=>exceptions.push(e.message));
  try{
-  await page.goto(url,{waitUntil:'domcontentloaded'});
-  await page.locator('.district-card').first().waitFor({timeout:15000});
-  await page.waitForTimeout(700);
+  await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
+  await page.locator('.office-svg').waitFor();
+  assert.equal(await page.locator('button.prop').count(),6);
   await fn(page);
-  assert.deepEqual(errors,[],errors.join(';'));
+  assert.deepEqual(exceptions,[]);
   console.log('PASS '+name);
  }catch(e){
-  failures.push(name+': '+e.message);
+  errs.push(name+' '+e.message);
   await page.screenshot({path:'artifacts/FAILED-'+name+'.png',fullPage:true}).catch(()=>{});
  }finally{await ctx.close();}
 }
-await check('desktop',{viewport:{width:1440,height:900},deviceScaleFactor:1},async page=>{
- assert.equal(await page.locator('.district-card').count(),5);
- assert.equal(await page.locator('.action-card').count(),4);
- assert.equal((await page.locator('#money').innerText()).trim(),'＄320');
- await page.screenshot({path:'artifacts/desktop-street-start.png',fullPage:true});
- await page.locator('[data-action="hustle"]').click();
- assert.ok((await page.evaluate(()=>window.__HARBOR__.state())).cash>320);
- await page.locator('[data-district="night"]').click();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).selected,'night');
- await page.locator('[data-tab="business"]').click();
- assert.equal(await page.locator('.action-card').count(),3);
- await page.screenshot({path:'artifacts/desktop-neon-business.png',fullPage:true});
- await page.reload({waitUntil:'domcontentloaded'});
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).selected,'night');
- await page.locator('#next-week').click();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,2);
- await page.locator('#next-week').click();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,3);
- assert.equal(await page.locator('#veil').isVisible(),true,'A city dilemma must appear after week 3');
- await page.locator('[data-event="b"]').click();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).event,null);
- await page.reload({waitUntil:'domcontentloaded'});
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,3);
+await run('desktop',{viewport:{width:1440,height:900}},async page=>{
+ await page.screenshot({path:'artifacts/desktop-office.png',fullPage:true});
+ await page.locator('[data-open="map"]').click();
+ assert.equal(await page.locator('.city-node').count(),4);
+ assert.ok((await page.locator('.route-path').getAttribute('d')).includes('143 272'));
+ await page.screenshot({path:'artifacts/desktop-office-map.png',fullPage:true});
+ await page.locator('[data-assign]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1);
+ await page.locator('[data-map-crew="mio"]').click();
+ await page.locator('[data-map-zone="market"]').click();
+ await page.locator('[data-map-mission="network"]').click();
+ await page.locator('[data-assign]').click();
+ await page.locator('#close-panel').click();
+ await page.locator('[data-open="phone"]').click();
+ await page.locator('[data-phone="yes"]').click();
+ await page.locator('#close-panel').click();
+ await page.locator('[data-open="calendar"]').click();
+ await page.locator('[data-next]').click();
+ assert.equal(await page.locator('#panel-title').innerText(),'小弟汇报');
+ const s=await page.evaluate(()=>window.__OFFICE__.state());
+ assert.equal(s.day,2);assert.ok(s.reports.length>=3);
+ await page.screenshot({path:'artifacts/desktop-reports.png',fullPage:true});
+ await page.locator('#close-panel').click();
+ await page.locator('[data-open="ledger"]').click();
+ assert.ok(await page.locator('.account tr').count()>=4);
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).day,2);
 });
-await check('phone-portrait',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
- assert.equal(await page.locator('.district-card').count(),5);
- const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
- assert.ok(overflow<=3,'portrait horizontal overflow '+overflow);
- await page.screenshot({path:'artifacts/phone-portrait-start.png',fullPage:true});
- await page.locator('[data-district="oldtown"]').tap();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).selected,'oldtown');
- await page.locator('[data-tab="crew"]').tap();
- await page.locator('[data-action="quiet"]').tap();
- assert.ok((await page.evaluate(()=>window.__HARBOR__.state())).heat<7);
- await page.locator('#next-week').tap();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).week,2);
- await page.screenshot({path:'artifacts/phone-portrait-week2.png',fullPage:true});
+await run('portrait',{viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2},async page=>{
+ assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'horizontal overflow');
+ await page.screenshot({path:'artifacts/portrait-office.png',fullPage:true});
+ await page.locator('[data-open="map"]').tap();
+ assert.equal(await page.locator('.city-node').count(),4);
+ await page.screenshot({path:'artifacts/portrait-route.png',fullPage:true});
+ await page.locator('[data-assign]').tap();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).orders.length,1);
+ await page.locator('#close-panel').tap();
+ await page.locator('[data-open="phone"]').tap();
+ await page.locator('[data-phone="yes"]').tap();
+ await page.locator('#close-panel').tap();
+ await page.locator('[data-open="gun"]').tap();
+ await page.locator('[data-gun]').tap();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.state())).flags.gunSeen,true);
 });
-await check('phone-landscape',{viewport:{width:844,height:390},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
- assert.equal(await page.locator('.district-card').count(),5);
- const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
- assert.ok(overflow<=3,'landscape horizontal overflow '+overflow);
- const bounds=await page.evaluate(()=>({
-   windowHeight:innerHeight,docHeight:document.documentElement.scrollHeight,
-   stage:document.querySelector('.stage').getBoundingClientRect().height,
-   cards:[...document.querySelectorAll('.district-card')].map(el=>{const b=el.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height};}),
-   next:document.querySelector('#next-week').getBoundingClientRect().bottom
- }));
- assert.ok(bounds.docHeight<=bounds.windowHeight+4,'Landscape content overflows viewport');
- assert.ok(bounds.stage>=125,'Main district photo must remain visible, got '+bounds.stage);
- assert.ok(bounds.next<=bounds.windowHeight,'Next week action hidden');
- assert.ok(bounds.cards.every(c=>c.height>=20&&c.bottom<=bounds.windowHeight+2),'Location photo cards clipped');
- await page.screenshot({path:'artifacts/phone-landscape-start.png',fullPage:true});
- await page.locator('[data-district="finance"]').tap();
- assert.equal((await page.evaluate(()=>window.__HARBOR__.state())).selected,'finance');
- await page.locator('[data-action="hustle"]').tap();
- assert.ok((await page.evaluate(()=>window.__HARBOR__.state())).cash>320);
+await run('landscape',{viewport:{width:844,height:390},isMobile:true,hasTouch:true,deviceScaleFactor:2},async page=>{
+ const dimensions=await page.evaluate(()=>({w:innerWidth,h:innerHeight,sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight}));
+ assert.ok(dimensions.sw<=dimensions.w+3&&dimensions.sh<=dimensions.h+3,'landscape overflow '+JSON.stringify(dimensions));
+ await page.screenshot({path:'artifacts/landscape-office.png',fullPage:true});
+ await page.locator('[data-open="reports"]').tap();
+ assert.equal(await page.locator('#panel-title').innerText(),'小弟汇报');
 });
 await browser.close();
-if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log('All gangster tycoon browser playtests passed.');
+if(errs.length){console.error(errs.join('\n'));process.exit(1);}
+console.log('PASS desktop and phone active office gameplay');
