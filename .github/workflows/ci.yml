@@ -1,7 +1,7 @@
 name: Night Office - playable scene, tests, deploy
 on:
   push:
-    branches: [main, game/office-don-vertical-slice]
+    branches: [main, game/office-don-vertical-slice, design/desktop-office-rebuild]
   pull_request:
     branches: [main]
   workflow_dispatch:
