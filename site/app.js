@@ -91,9 +91,12 @@ function performWorldCommand(action){
  }
  state=next;world=result.state;refresh();repaintPanel();
  const message=result.events[0]?.text||'行动完成';
- if(result.events.length)stage.speak(result.events[0].title||'办公室消息',message);
- else stage.cue('paper');
- toast(message);return result;
+ if(action.module!=='origin'&&action.module!=='dialogue'){
+   if(result.events.length)stage.speak(result.events[0].title||'办公室消息',message);
+   else stage.cue('paper');
+   toast(message);
+ }
+ return result;
 }
 const mapSVG=()=>{
  const routes={

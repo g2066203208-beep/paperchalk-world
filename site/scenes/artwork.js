@@ -92,7 +92,10 @@ path('M591 170V452M389 318H796','none','stroke="#e7d1b4" stroke-width="10"')+
 rect(84,484,415,68,'#93777b')+rect(88,440,406,43,'#e7d5b7')+
 rect(807,447,209,92,'#a18568')+poster(102,334,'孤儿院徽章')+
 '<text x="520" y="101" fill="#3b4650" font-size="30" font-weight="900">曾经打工的阁楼 · 回忆</text>';
-const artists={office,alley,market,labor,docks,attic};
+const artsExit=()=>path('M72 333L172 331L177 516L72 520Z','#293946','stroke="#e1c49e" stroke-width="8"')+
+  path('M90 355H157V480H90Z','#425666','stroke="#9e8874" stroke-width="4"')+
+  '<circle cx="151" cy="440" r="6" fill="#efcf9c"/>';
+const artists={office,alley,market,labor,docks};
 export function sceneArtwork(id){
- return '<svg class="explore-art" viewBox="0 0 1200 670" preserveAspectRatio="none" role="img" aria-label="原创二次元城市场景">'+(artists[id]||office)()+'</svg>';
+ return '<svg class="explore-art" viewBox="0 0 1200 670" preserveAspectRatio="none" role="img" aria-label="原创二次元城市场景">'+(artists[id]||office)()+(id!=='office'?artsExit():'')+'</svg>';
 }

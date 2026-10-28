@@ -11,19 +11,17 @@ export const FIRST_CHAPTER={
 };
 export const SCENE_DEFS={
  office:{id:'office',name:'刚买下的毛坯办公室',out:['alley'],mood:'空旷的水泥墙、破窗框、粉尘与只有两人的第一张桌子'},
- alley:{id:'alley',name:'旧港背街',out:['office','market','attic','docks'],mood:'楼梯间、煤烟、屋檐下的闲话和穿梭的居民'},
+ alley:{id:'alley',name:'旧港背街',out:['office','market','docks'],mood:'楼梯间、煤烟、屋檐下的闲话和穿梭的居民'},
  market:{id:'market',name:'清晨集市',out:['alley','labor'],mood:'推车摊位、排队的人、争吵与路口的警卫'},
  labor:{id:'labor',name:'旧厂就业所',out:['market','docks'],mood:'工作告示、失业队伍、倒闭工厂的钟楼'},
- docks:{id:'docks',name:'旧港码头',out:['alley','labor'],mood:'吊机与海雾，商货码头和纠纷'},
- attic:{id:'attic',name:'旧打工阁楼',out:['alley'],mood:'以前打工时的住所，只是可以回访的地方，不是游戏起点'}
+ docks:{id:'docks',name:'旧港码头',out:['alley','labor'],mood:'吊机与海雾，商货码头和纠纷'}
 };
 export const SCENE_PEOPLE={
  office:[{id:'kai',name:'阿凯',role:'兄弟'}],
  alley:[{id:'neighbor',name:'楼下婶婶',role:'街坊'},{id:'runner',name:'街头少年',role:'路人'}],
  market:[{id:'vendor',name:'摊主林姨',role:'商户'},{id:'guard',name:'路口巡查员',role:'治安'}],
  labor:[{id:'worker',name:'失业工人',role:'求职'},{id:'clerk',name:'就业所职员',role:'公职'}],
- docks:[{id:'docker',name:'码头工友',role:'搬运'},{id:'unionist',name:'老工会成员',role:'工会'}],
- attic:[{id:'caretaker',name:'旧房东',role:'街坊'}]
+ docks:[{id:'docker',name:'码头工友',role:'搬运'},{id:'unionist',name:'老工会成员',role:'工会'}]
 };
 export function scenePopulation(state){return SCENE_PEOPLE[state.venue]||[];}
 export const originSystem={
@@ -38,7 +36,7 @@ export const originSystem={
   const event=(type,title,text)=>({type,title,text,venue:data.venue,day});
   if(action.type==='travel'){
     const dest=SCENE_DEFS[action.to];
-    if(!dest||!SCENE_DEFS[data.venue].out.includes(action.to))return {error:'这里没有直达道路'};
+    if(!dest||!(action.via==='route-map'||SCENE_DEFS[data.venue].out.includes(action.to)))return {error:'请先出门打开街区地图选择目的地'};
     const from=data.venue;data.venue=dest.id;data.sceneHistory.push(dest.id);data.sceneHistory=data.sceneHistory.slice(-30);
     if(dest.id==='alley'&&from==='office')data.flags.openedDoor=true;
     return {data,events:[event('origin.travel','走进'+dest.name,dest.mood)]};
@@ -49,8 +47,7 @@ export const originSystem={
      alley:['poster','steps','lantern'],
      market:['stall','sign'],
      labor:['notice','factory'],
-     docks:['crane','manifest'],
-     attic:['bed','keepsake']
+     docks:['crane','manifest']
     };
     if(!allowed[data.venue]?.includes(key))return {error:'这里没有这个物件'};
     const desc={
@@ -69,13 +66,12 @@ export const originSystem={
      factory:'砖墙上停着一块大钟。工厂关门了，门内的生锈机器还没被搬走。',
      crane:'港口吊机穿过雾气，远处几艘轮船卸下货物。工人正争论仓库合同。',
      manifest:'这是一批合法食品的装运清单，价值取决于道路和客户，而不是点击“收款”凭空增加。',
-     bed:'两人曾挤在阁楼床垫上，靠做零工度日。现在这里是可以回忆的旧址，不是开局画面。',
-     keepsake:'孤儿院旧徽章仍在铁盒中。它说明他们的过去，但不能拿来雇佣儿童。'
+     keepsake:'孤儿院旧徽章仍在回忆里，街坊的孩子不应成为劳动力。'
     };
     if(key==='newspaper')data.flags.heardRumor=true;
     if(key==='deed')data.flags.readDeed=true;
     if(key==='map')data.flags.lookedAtMap=true;
-    if(data.venue==='attic')data.flags.inspectedAttic=true;
+    // No playable attic: backstory is conveyed through dialogue, not an unwanted location.
     data.interactions.unshift({day,venue:data.venue,key});data.interactions=data.interactions.slice(0,80);
     return {data,events:[event('origin.inspect','留意到的细节',desc[key])]};
   }
@@ -92,7 +88,7 @@ export const originSystem={
      clerk:'“我们不是不想安排岗位，是区里根本没有预算。请不要在大厅惹事。”',
      docker:'“有人说有两个蒙面人打倒那个小债主；现在港口大公司在抢他的运输合约。”',
      unionist:'“真正值得敬重的是敢站出来保护普通人，却不再向他们要一份保护费。”',
-     caretaker:'“原来住阁楼的两个孩子不回来啦？听说他们买了个办公室。好好过日子吧。”'
+     caretaker:'“旧港的日子不好过，两个年轻人也要学会照顾自己。”'
     };
     if(who.id==='kai')data.flags.spokeBrother=true;
     if(who.id==='worker')data.flags.heardWorker=true;
@@ -103,7 +99,7 @@ export const originSystem={
   if(action.type==='talk-citizen'){
     const p=slices.population?.people?.find(x=>x.id===action.person);
     if(!p)return {error:'附近没有这个居民'};
-    const location={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2',attic:'s0'}[data.venue];
+    const location={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2'}[data.venue];
     const shift=slices.clock?.shift||0;
     const current=shift===1?p.work:shift===2?p.leisure:p.home;
     if(current!==location)return {error:'居民已去了别处'};

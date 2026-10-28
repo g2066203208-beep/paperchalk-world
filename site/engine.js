@@ -20,7 +20,7 @@ export const MISSIONS=[
 export const GOALS={cash:1400,respect:24,hold:2};
 export function initialGame(){
  return {version:4,day:1,cash:190,heat:12,respect:1,crew:['kai'],zones:Object.fromEntries(DISTRICTS.map(d=>[d.id,{influence:d.influence,pressure:d.pressure}])),
- orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'第一次汇报',body:'办公室钥匙终于到手了，墙还是毛坯。街上又在讲那晚两个蒙面人的事……他们没人知道我们的身份。现在就我们两个人，没有一块地盘。',outcome:'你和阿凯：旧港孤儿院的两个孩子，买下毛坯办公室，余款190元。'}],
+ orders:[], reports:[{id:'intro',day:1,crew:'kai',title:'两个人的第一天',body:'办公室钥匙终于到手了，墙还是毛坯。街上又在讲那晚两个蒙面人的事……他们没人知道我们的身份。现在就我们两个人，没有一块地盘。',outcome:'你和阿凯：旧港孤儿院的两个孩子，买下毛坯办公室，余款190元。'}],
  call:{id:'welcome',answered:false},callHistory:[],ledger:[{day:1,label:'买下毛坯办公室后余下的启动资金',amount:190}],flags:{gunSeen:false},won:false};
 }
 export const crewInfo=id=>CREW.find(c=>c.id===id);
