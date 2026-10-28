@@ -1,19 +1,25 @@
 import {DISTRICTS,CREW,MISSIONS,GOALS,initialGame,restore,availableCrew,crewInfo,zoneInfo,canOrder,setOrder,endDay,phoneDetails,answerPhone,markGunSeen} from './engine.js';
+import {CONTACTS,DOSSIERS,initialOffice,normalizeOffice,dial,decideDossier,allocate,transferSafe,equip,openDoor,visitorAction,travel,advance} from './office-features.js';
 const $=id=>document.getElementById(id);
-const STORE='night-office-game-v4';
+const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let state;try{state=restore(localStorage.getItem(STORE));}catch{state=initialGame();}
-let currentPanel=null,focusBefore=null,timer;
+let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'null'),state);}catch{meta=initialOffice();}
+let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
-function save(){try{localStorage.setItem(STORE,JSON.stringify(state));}catch{}}
+function save(){try{localStorage.setItem(STORE,JSON.stringify(state));localStorage.setItem(META_STORE,JSON.stringify(meta));}catch{}}
 function toast(message){const n=$('toast');n.textContent=message;n.classList.add('visible');clearTimeout(timer);timer=setTimeout(()=>n.classList.remove('visible'),2600);}
 function refresh(){
  $('day').textContent=String(state.day).padStart(2,'0');
  $('ribbon-day').textContent=String(state.day).padStart(3,'0');
  $('cash').textContent=fmt(state.cash);
  $('heat').textContent=String(state.heat).padStart(2,'0');
- const receiver=document.querySelector('.prop-phone');if(receiver)receiver.classList.toggle('ringing',!state.call.answered);
+ const scene=document.querySelector('.scene');
+ scene.classList.toggle('door-open',meta.doorOpen);
+ scene.classList.toggle('visitor-here',Boolean(meta.visitor));
+ scene.classList.toggle('has-knock',Boolean(meta.visitorQueue.length)&&!meta.visitor);
+ const street=$('street-scene');if(street)street.hidden=meta.venue!=='street';
  $('respect').textContent=String(state.respect).padStart(2,'0');
  const recent=state.reports[0];
  $('speaker').textContent=(crewInfo(recent?.crew)?.name||'办公室')+' · 最新汇报';
@@ -24,10 +30,11 @@ function refresh(){
 }
 const header=(eyebrow,title,sub='')=>'<div class="eyebrow">'+escapeHTML(eyebrow)+'</div><h2 id="panel-title">'+escapeHTML(title)+'</h2>'+(sub?'<p>'+escapeHTML(sub)+'</p>':'');
 function panel(type){
+ if(type==='gun'&&!state.flags.gunSeen)state=markGunSeen(state).state;
  currentPanel=type;
  focusBefore=document.activeElement;
  $('overlay').hidden=false;
- $('panel-kicker').textContent=({'map':'CITY STRATEGY / 004','phone':'INCOMING CALL / PRIVATE','reports':'REPORTS / CONFIDENTIAL','ledger':'FINANCIAL RECORDS','gun':'PERSONAL EFFECTS / 001','calendar':'THE NEXT DAY / 001','help':'HOW TO PLAY'})[type]||'OFFICE FILE';
+ $('panel-kicker').textContent=({'map':'CITY STRATEGY / 004','phone':'INCOMING CALL / PRIVATE','reports':'REPORTS / CONFIDENTIAL','ledger':'FINANCIAL RECORDS','gun':'PERSONAL EFFECTS / 001','calendar':'THE NEXT DAY / 001','visitor':'PRIVATE MEETING / VISITOR','help':'HOW TO PLAY'})[type]||'OFFICE FILE';
  repaintPanel();
  $('close-panel').focus();
 }
@@ -113,35 +120,73 @@ function mapPanel(){
  '</div></div>';
 }
 function phonePanel(){
- const d=phoneDetails(state);
- return header('HOTLINE / TELEPHONE',state.call.answered?'通话记录':'电话正在响……','今天的电话会影响你的资金、关系和风险。每次通话只能回复一次。')+
- '<div class="paper-grid"><div><div class="dialog-punch">☎ &nbsp; '+escapeHTML(d.from)+'<br/><br/>'+escapeHTML(d.text)+'</div>'+
- '<div class="mini-title">最近通话</div>'+(state.callHistory.length?state.callHistory.slice(0,5).map(c=>'<p class="map-hint">DAY '+c.day+' · '+escapeHTML(c.from)+' · '+escapeHTML(c.answer)+'</p>').join(''):'<p class="map-hint">还没有通话历史。</p>')+'</div>'+
- '<div><div class="mini-title">你的回应</div><div class="phone-lines">'+(state.call.answered?'<div class="info-box">今天的电话已经接听完毕。新的一天会带来新的消息。</div>':
- d.options.map(o=>'<button type="button" class="choice" data-phone="'+o.id+'"><strong>'+o.name+'</strong><small>'+o.description+'</small></button>').join(''))+'</div></div></div>';
+ const incoming=phoneDetails(state);
+ const screen=dialBuffer||'— — —';
+ const buttons=['1','2','3','4','5','6','7','8','9','*','0','#'].map(k=>'<button type="button" data-digit="'+k+'" aria-label="电话按键'+k+'">'+k+'</button>').join('');
+ const book=CONTACTS.map(c=>'<div class="contact-line"><div><strong>'+c.name+'</strong><small style="display:block;font-size:10px">'+c.type+' · '+c.hint+'</small></div><button type="button" data-dialpreset="'+c.num+'">'+c.num+'</button></div>').join('');
+ return header('HOTLINE · 01','座机通讯台','实际拨号：按数字键输入三位号码，按绿色拨号键接通。每位联系人每天只能处理一通。')+
+ '<div class="phone-station"><div><div class="phone-device"><div class="phone-handset"></div>'+
+ '<div class="phone-display"><small>LINE 01 / '+(state.call.answered?'IDLE':'INCOMING')+'</small><strong id="dial-screen">'+escapeHTML(screen)+'</strong></div>'+
+ '<div class="phone-keypad">'+buttons+'</div><div class="phone-controls"><button type="button" data-phoneclear="1">退格</button><button type="button" data-dial="1">拨号 ☎</button><button type="button" data-phonehang="1">挂机</button></div></div>'+
+ '<div class="phone-result" id="dial-result">'+escapeHTML(lastDial||'拨号输入三位电话号码；点击通讯录号码可快速输入。')+'</div>'+
+ (!state.call.answered?'<div class="phone-result"><b>来电：'+escapeHTML(incoming.from)+'</b><p>'+escapeHTML(incoming.text)+'</p><div class="phone-options">'+incoming.options.map(o=>'<button type="button" data-phone="'+o.id+'">'+o.name+'<small>'+o.description+'</small></button>').join('')+'</div></div>':'')+
+ '</div><div><div class="mini-title">CONTACT BOOK / 通讯录</div><div class="phone-book">'+book+'</div>'+
+ '<hr class="line"/><div class="mini-title">通话记录</div>'+
+ (meta.phoneHistory.length?meta.phoneHistory.slice(0,6).map(c=>'<p class="map-hint">DAY '+c.day+' · '+escapeHTML(c.num)+' · '+escapeHTML(c.name)+' — '+escapeHTML(c.result)+'</p>').join(''):'<p>暂时没有拨出通话。</p>')+
+ '<div class="info-box"><b>拨打情报员：</b>先在通讯台输入 532，再选择地图侦察目标。现选目标：'+zoneInfo(callZone).name+
+ '<div class="selection-list">'+['harbor','market','midtown','neon'].map(id=>'<button class="choice '+(id===callZone?'active':'')+'" data-callzone="'+id+'">'+zoneInfo(id).name+'</button>').join('')+'</div></div></div></div>';
 }
 function reportsPanel(){
- return header('PERSONAL REPORTS','小弟汇报','每份报告都对应真实派遣的结算结果。看完报告，再调整下一天的行动。')+
- '<div class="paper-grid"><div>'+(state.reports.length?state.reports.map(r=>'<article class="report-card"><small>DAY '+String(r.day).padStart(2,'0')+' / '+(crewInfo(r.crew)?.name||'来访者')+'</small><h3>'+escapeHTML(r.title)+'</h3><p>'+escapeHTML(r.body)+'</p><span class="outcome">'+escapeHTML(r.outcome)+'</span></article>').join(''):'<p>暂无报告</p>')+'</div>'+
- '<div><div class="mini-title">人员档案 / CREW</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>'<div class="report-card"><span class="paper-chip">NO. '+c.id.toUpperCase()+'</span><h3>'+c.name+'</h3><p>'+c.role+'｜'+c.trait+'</p><small>'+(availableCrew(state).includes(c.id)?'今天尚未安排任务':'已在外执行任务')+'</small></div>').join('')+
- '<p class="map-hint">有新汇报时，桌边人物会自动念出摘要。</p></div></div>';
+ const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button></div>';
+ let view='';
+ if(fileTab==='dossiers'){
+  view='<div class="dossier-list">'+DOSSIERS.map(d=>{
+   const status=meta.dossierStatus[d.id]||'pending';
+   return '<section class="dossier-tile" data-status="'+status+'"><span class="paper-chip">'+d.dept+'</span><h3>'+d.name+'</h3><p>'+d.description+'</p>'+
+   '<div class="mini-title">状态：'+(status==='pending'?'等待批示':status==='approved'?'已批准':'已退回')+'</div>'+
+   (status==='pending'?'<div class="dossier-actions"><button type="button" data-filedecision="approve" data-case="'+d.id+'">签署批准</button><button type="button" data-filedecision="decline" data-case="'+d.id+'">盖章退回</button></div>':'')+'</section>';
+  }).join('')+'</div>';
+ } else if(fileTab==='reports'){
+  view=state.reports.map(r=>'<article class="report-card"><small>DAY '+String(r.day).padStart(2,'0')+' / '+(crewInfo(r.crew)?.name||'来访者')+'</small><h3>'+escapeHTML(r.title)+'</h3><p>'+escapeHTML(r.body)+'</p><span class="outcome">'+escapeHTML(r.outcome)+'</span></article>').join('');
+ }else{
+  view='<div class="dossier-list">'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
+   const o=state.orders.find(o=>o.crew===c.id);
+   return '<article class="dossier-tile"><span class="paper-chip">PERSONNEL / '+c.id.toUpperCase()+'</span><h3>'+c.name+'</h3><p>'+c.trait+' · '+c.role+'</p><p>当前状态：'+(o?'执行 '+zoneInfo(o.zone).name+' / '+o.mission:'办公室待命')+'</p>'+
+   (!o?'<div class="dossier-actions"><button type="button" data-crewvisit="'+c.id+'">召他当面汇报</button></div>':'')+'</article>';
+  }).join('')+'</div>';
+ }
+ return header('OFFICIAL FILES / APPROVAL','小弟汇报','卷宗有实际的批准/退回操作。批准委托会直接向空闲成员分配任务；报告来自每天实际行动。')+tabs+view;
 }
 function ledgerPanel(){
- const delta=state.ledger.reduce((sum,e)=>sum+e.amount,0);
- return header('CASH & EXPENDITURE','办公室账本','账本的每一笔资金变化来自电话决策、行动安排或成员归来，不是凭空增加的数字。')+
- '<div class="paper-grid"><div><table class="account"><thead><tr><th>日期</th><th>事项</th><th>金额</th></tr></thead><tbody>'+
- state.ledger.map(l=>'<tr><td>DAY '+l.day+'</td><td>'+escapeHTML(l.label)+'</td><td class="'+(l.amount<0?'negative':'')+'">'+(l.amount>0?'+':'')+fmt(l.amount)+'</td></tr>').join('')+
- '</tbody></table></div><div><div class="mini-title">办公室财务状况</div><h2>'+fmt(state.cash)+'</h2>'+
- '<div class="info-box"><b>当前团队：</b>'+state.crew.length+' 人<br/><b>累计记录：</b>'+state.ledger.length+' 笔<br/><b>净资产变动：</b>'+fmt(delta)+'</div>'+
- '<div class="mini-title">势力目标</div><p>至少两个城区影响力达到 55，声望达到 '+GOALS.respect+'，现金达到 '+fmt(GOALS.cash)+'。</p>'+
- (state.won?'<div class="achievement">★ 你已经在这座城站稳脚跟。</div>':'')+'</div></div>';
+ return header('ACCOUNTING / BUDGET','组织账本','不仅记录收支：你可以给运输和街区关系拨款，投入在次日结算时发挥作用。')+
+ '<div class="paper-grid"><div><div class="mini-title">当日流水 / CASH FLOW</div><table class="account"><thead><tr><th>日期</th><th>用途</th><th>金额</th></tr></thead><tbody>'+
+ state.ledger.slice(0,24).map(l=>'<tr><td>DAY '+l.day+'</td><td>'+escapeHTML(l.label)+'</td><td class="'+(l.amount<0?'negative':'')+'">'+(l.amount>0?'+':'')+fmt(l.amount)+'</td></tr>').join('')+
+ '</tbody></table></div><div><div class="mini-title">可用现金</div><h2>'+fmt(state.cash)+'</h2>'+
+ '<div class="budget-row"><div><strong>运输保障 · 40元</strong><small>每个跑单任务明天额外收入 30元 · 已投入 '+meta.bonus.logistics+'/2</small></div><button data-budget="logistics" type="button">划拨</button></div>'+
+ '<div class="budget-row"><div><strong>社区关系 · 35元</strong><small>明日声望 +2，市集影响 +3 · 已投入 '+meta.bonus.relations+'/2</small></div><button data-budget="relations" type="button">划拨</button></div>'+
+ '<div class="info-box"><b>仓库待出货：</b>'+meta.supply+' 批<br/><b>保险抽屉：</b>'+fmt(meta.storedCash)+'<br/><b>预计日常开支：</b>'+fmt(35+state.crew.length*14)+'</div>'+
+ '<p class="map-hint">财务划拨会即时扣款并记入流水，效果在翻日历后结算。</p></div></div>';
 }
 function gunPanel(){
- return header('PERSONAL EFFECTS','刻着旧誓言的枪','它静静躺在桌上，并不是战斗按钮，而是关于这间办公室上一任主人的物件。')+
- '<div class="paper-grid"><div><div class="dialog-punch">NO KINGS.<br/><br/>握把的刻字已经磨损。前任主人没留下名字，只留下一句奇怪的警告。</div>'+
- '<p>屋内所有人都知道：你的组织最终能否立足，取决于信任、经营和决策，而不只是武器。</p></div><div>'+
- '<div class="mini-title">个人物件调查</div><div class="info-box"><b>状态：</b>'+(state.flags.gunSeen?'已经查看':'尚未查看')+'</div>'+
- '<button type="button" class="primary" data-gun="1" '+(state.flags.gunSeen?'disabled':'')+'>检查刻字</button></div></div>';
+ return header('SECURE DRAWER / INVENTORY','办公桌保管抽屉','检查和管理办公用品与备用现金。物件安全保管状态直接改变关注风险。')+
+ '<div class="paper-grid"><div><div class="mini-title">保管记录</div><div class="report-card"><h3>旧式手枪 · NO KINGS</h3>'+
+ '<p>当前保管方式：'+(meta.equipment==='locked'?'锁在办公室抽屉':'由阿凯登记保管')+'</p>'+
+ '<div class="dossier-actions"><button type="button" data-equip="locked">锁进抽屉 · 关注-2</button><button type="button" data-equip="kai">交给阿凯登记 · 关注+2</button></div></div>'+
+ '<div class="report-card"><h3>备用现金</h3><p>已经收存 '+fmt(meta.storedCash)+'。</p>'+
+ '<div class="dossier-actions"><button type="button" data-safe="50">存入 50</button><button type="button" data-safe="-50">取出 50</button></div></div></div>'+
+ '<div><div class="mini-title">保管原则</div><div class="info-box"><b>风险：'+state.heat+'</b><br/>将旧枪安全上锁可以降低关注。外带需要登记并提升关注，不提供枪战操作。</div>'+
+ '<div class="mini-title">仓库供应</div><p>库存 '+meta.supply+' 批。需要备货请拿起电话拨打 <b>305</b>。</p></div></div>';
+}
+function visitorPanel(){
+ const v=meta.visitor,c=v?crewInfo(v.id):null;
+ if(!v||!c)return header('VISITOR','来客已离开');
+ return header('IN PERSON / OFFICE AUDIENCE',c.name+' · 到场汇报','他从对面的门进入，站在办公桌前等待你的指示。')+
+ '<div class="visitor-page"><div class="visitor-portrait">'+c.face+'</div><div>'+
+ '<div class="dialog-punch">“老板，我过来了。今天是听取情况，还是马上安排我出去办事？”</div>'+
+ '<p>身份：'+c.role+'　　状态：'+(availableCrew(state).includes(c.id)?'可以安排行动':'已安排任务')+'</p>'+
+ '<div class="visitor-actions"><button type="button" data-visitact="hear">听他当面汇报 · 声望+1</button>'+
+ '<button type="button" data-visitact="assign">直接安排工作</button>'+
+ '<button type="button" data-visitact="dismiss">让他离开</button></div></div></div>';
 }
 function calendarPanel(){
  return header('THE MORNING AFTER','翻到下一天','只有结束当天，才能收到外出成员的实际成果。没有任务时也可以处理电话，继续推进时间。')+
@@ -166,9 +211,10 @@ function helpPanel(){
 function repaintPanel(){
  if(!currentPanel)return;
  const html={
- map:mapPanel,phone:phonePanel,reports:reportsPanel,ledger:ledgerPanel,gun:gunPanel,calendar:calendarPanel,help:helpPanel
+ map:mapPanel,phone:phonePanel,reports:reportsPanel,ledger:ledgerPanel,gun:gunPanel,calendar:calendarPanel,visitor:visitorPanel,help:helpPanel
  }[currentPanel]();
  $('panel-body').innerHTML=html;
+ document.querySelector('.paper-panel').classList.toggle('mode-phone',currentPanel==='phone');
 }
 document.getElementById('game').addEventListener('click',e=>{
  const trigger=e.target.closest('button[data-open]');
@@ -205,7 +251,7 @@ $('panel-body').addEventListener('click',e=>{
   const r=markGunSeen(state);state=r.state;refresh();repaintPanel();toast(r.message);return;
  }
  if(node.dataset.next){
-  const r=endDay(state);
+  const r=advance(state,meta);
   if(!r.ok){toast(r.message);return;}
   state=r.state;plan.crew=availableCrew(state)[0]||null;refresh();closePanel();
   toast(r.message);panel('reports');return;
