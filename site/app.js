@@ -1,121 +1,178 @@
-import {LOCATIONS, ENEMY, MAX_AP, createGame, perform, restoreGame, allCleared, canMove, currentEnemies} from './rules.js';
+import {LOCATIONS,ENEMY,MAX_AP,MAX_DEPTH,LANE_COUNT,createGame,perform,restoreGame,canMove,currentEnemies,effectiveDistance} from './rules.js';
+import {projectCard} from './board.js';
 import {ART} from './art.js';
-const KEY='night-remains-save-v1';
-const byId=(id)=>document.getElementById(id);
-const escapeHtml=(text)=>String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+const SAVE_KEY='night-remains-save-v2';
+const $=id=>document.getElementById(id);
+const escapeText=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let state;
-try {state=restoreGame(localStorage.getItem(KEY));}catch {state=createGame();}
-let noticeTimer=null;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{}}
-function toast(text){
-  const el=byId('toast');el.textContent=text;el.classList.add('visible');
-  if(noticeTimer!==null)clearTimeout(noticeTimer);
-  noticeTimer=setTimeout(()=>el.classList.remove('visible'),2400);
+try{state=restoreGame(localStorage.getItem(SAVE_KEY));}catch{state=createGame();}
+let noticeTimer,boardLocation=null;
+const cardNodes=new Map();
+
+function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}catch{}}
+function toast(message){
+  const el=$('toast');el.textContent=message;el.classList.add('visible');
+  clearTimeout(noticeTimer);
+  noticeTimer=setTimeout(()=>el.classList.remove('visible'),2300);
 }
-function enemyHTML(enemy,index){
-  const d=ENEMY[enemy.type];const sel=state.selected===enemy.id;
-  return '<div class="enemy-slot"><button type="button" class="enemy-card distance-'+enemy.distance+(sel?' selected':'')+'" data-action="select" data-id="'+enemy.id+'" aria-pressed="'+sel+'" aria-label="瞄准 '+d.name+'，距离 '+enemy.distance+'，生命 '+enemy.hp+'">'
-    +'<header><span>DIST '+enemy.distance+'</span><b>'+enemy.distance+'</b></header>'
-    +'<img draggable="false" alt="'+d.name+'" src="'+ART.enemy(enemy.type)+'">'
-    +'<footer><span>'+d.en+'</span><strong>♥ '+enemy.hp+'</strong></footer>'
-    +'</button></div>';
+function makeStand(enemy){
+  const el=document.createElement('button');
+  el.type='button';
+  el.className='stand-card '+enemy.side;
+  el.dataset.action='select';
+  el.dataset.id=enemy.id;
+  el.innerHTML='<span class="stand-shadow" aria-hidden="true"></span>'
+  +'<span class="stand-face"><span class="stand-top"><b class="stand-side"></b><strong class="stand-distance"></strong></span>'
+  +'<img draggable="false" class="stand-art" alt="" src="'+ART.enemy(enemy.type)+'">'
+  +'<span class="stand-bottom"><b class="stand-name"></b><strong class="stand-hp"></strong></span></span>'
+  +'<span class="stand-foot" aria-hidden="true"></span>';
+  return el;
+}
+function renderBoard(){
+  const root=$('enemy-lanes'),board=$('board');
+  const bounds=board.getBoundingClientRect();
+  if(bounds.width<1||bounds.height<1)return;
+  if(boardLocation!==state.current){
+    root.replaceChildren();cardNodes.clear();boardLocation=state.current;
+  }
+  const living=new Set();
+  for(const enemy of currentEnemies(state)){
+    living.add(enemy.id);
+    let el=cardNodes.get(enemy.id);
+    if(!el){
+      el=makeStand(enemy);cardNodes.set(enemy.id,el);root.append(el);
+    }
+    const p=projectCard(enemy,bounds.width,bounds.height,state.advance);
+    el.style.left=p.xPercent+'%';
+    el.style.top=p.yPercent+'%';
+    el.style.width=p.cardWidth+'px';
+    el.style.height=p.cardHeight+'px';
+    el.style.zIndex=p.zIndex;
+    el.dataset.depth=String(enemy.depth);
+    el.dataset.effective=String(p.effective);
+    el.dataset.lane=String(enemy.lane);
+    el.dataset.side=enemy.side;
+    el.style.setProperty('--card-shadow-size', Math.round(p.cardWidth*.74)+'px');
+    el.classList.toggle('selected',state.selected===enemy.id);
+    el.classList.toggle('rear',enemy.side==='rear');
+    el.classList.toggle('front',enemy.side==='front');
+    el.setAttribute('aria-pressed',String(state.selected===enemy.id));
+    el.setAttribute('aria-label',ENEMY[enemy.type].name+'，'+(enemy.side==='rear'?'后方':'前方')+
+      '第'+(enemy.lane+1)+'道，距离'+p.effective+'，生命'+enemy.hp+'，点击瞄准');
+    el.querySelector('.stand-side').textContent=enemy.side==='rear'?'REAR / 背后':'FRONT';
+    el.querySelector('.stand-distance').textContent='D '+p.effective;
+    el.querySelector('.stand-name').textContent=ENEMY[enemy.type].name;
+    el.querySelector('.stand-hp').textContent='♥ '+enemy.hp;
+  }
+  for(const [id,el] of cardNodes)if(!living.has(id)){el.remove();cardNodes.delete(id);}
+  $('player-marker').style.left=(50+(state.lane-2)*19.8)+'%';
+  $('player-marker').style.top=(90-state.advance*9)+'%';
+  $('player-marker').setAttribute('aria-label','你在第'+(state.lane+1)+'条道路，前进深度'+state.advance);
+  $('board').dataset.current=state.current;
 }
 function handHTML(){
-  const hasEnemy=(state.enemies[state.current].length>0);
-  const canAct=state.status==='playing'&&state.ap>0;
+  const active=state.status==='playing'&&state.ap>0;
+  const enemies=state.enemies[state.current];
+  const sameLane=enemies.some(e=>e.lane===state.lane);
   const cards=[
-    {kind:'player',label:'幸存者',stat:state.hp+'/'+state.maxHp,action:'none',desc:'PLAYER',sub:'生命',enabled:false,cost:'—'},
-    {kind:'rifle',label:'步枪',stat:state.mag+'/'+state.magCap,action:'shoot',desc:'RIFLE',sub:'伤害 2 · 射程 3',enabled:canAct&&state.mag>0&&hasEnemy,cost:'1 AP'},
-    {kind:'pack',label:'背包 / 换弹',stat:'+'+state.reserve,action:'reload',desc:'BACKPACK',sub:'补满弹匣',enabled:canAct&&state.mag<state.magCap&&state.reserve>0,cost:'1 AP'},
-    {kind:'medkit',label:'医疗包',stat:'×'+state.medkits,action:'heal',desc:'MEDKIT',sub:'回复 3 HP',enabled:canAct&&state.medkits>0&&state.hp<state.maxHp,cost:'1 AP'},
-    {kind:'flare',label:'照明弹',stat:'×'+state.flares,action:'flare',desc:'FLARE',sub:'全场敌人后退',enabled:canAct&&state.flares>0&&hasEnemy,cost:'1 AP'}
+    {kind:'player',label:'幸存者',stat:state.hp+'/'+state.maxHp,action:'none',sub:'站位 · '+(state.lane+1)+' / 5',enabled:false,cost:'—'},
+    {kind:'rifle',label:'步枪',stat:state.mag+'/'+state.magCap,action:'shoot',sub:state.advance===2?'正面伤害 3':'伤害 2 · 同道路',enabled:active&&state.mag>0&&sameLane&&!!state.selected,cost:'1 AP'},
+    {kind:'pack',label:'背包 / 换弹',stat:'+'+state.reserve,action:'reload',sub:'补满弹匣',enabled:active&&state.mag<state.magCap&&state.reserve>0,cost:'1 AP'},
+    {kind:'medkit',label:'医疗包',stat:'×'+state.medkits,action:'heal',sub:'恢复 5 HP',enabled:active&&state.medkits>0&&state.hp<state.maxHp,cost:'1 AP'},
+    {kind:'flare',label:'照明弹',stat:'×'+state.flares,action:'flare',sub:'当前道路击退 2 格',enabled:active&&state.flares>0&&sameLane,cost:'1 AP'}
   ];
-  return cards.map(c=>'<button class="paper-card '+(c.kind==='player'?'player-card':'')+'" type="button" data-action="'+c.action+'" '+(!c.enabled?'disabled':'')+' aria-label="'+c.label+' '+c.sub+'">'
+  return cards.map(c=>'<button type="button" class="paper-card '+(c.kind==='player'?'player-card':'')+'" data-action="'+c.action+'" '+(!c.enabled?'disabled':'')+' aria-label="'+c.label+' '+c.sub+'">'
     +'<div class="card-top"><span>'+c.label+'</span><b>'+c.stat+'</b></div>'
-    +'<img draggable="false" class="card-illustration" alt="" src="'+ART.item(c.kind)+'">'
+    +'<img class="card-illustration" draggable="false" alt="" src="'+ART.item(c.kind)+'">'
     +'<div class="card-bottom"><span>'+c.sub+'</span><span class="cost">'+c.cost+'</span></div></button>').join('');
 }
 function locationHTML(loc){
-  const now=state.current===loc.id;
-  const accessible=canMove(state.current,loc.id);
-  const count=state.enemies[loc.id].length;
-  let status=now?'当前位置':count===0?'已肃清':accessible?'可移动':'需经教堂';
-  return '<button type="button" class="location-card '+(now?'active':accessible?'reachable':'inaccessible')+'" data-action="move" data-to="'+loc.id+'" aria-pressed="'+now+'" '+(now?'disabled':'')+' aria-label="'+loc.name+'，'+status+'，敌人 '+count+'">'
-  +'<div class="location-caption"><span>'+loc.name+'</span><small>'+loc.en+'</small></div>'
-  +'<img alt="" draggable="false" src="'+ART.scene(loc.id)+'">'
-  +'<div class="location-state"><span>'+status+'</span><b>'+String(count).padStart(2,'0')+' 敌人</b></div>'
-  +'</button>';
+  const now=state.current===loc.id,reachable=canMove(state.current,loc.id),count=state.enemies[loc.id].length;
+  const status=now?'当前位置':count===0?'已肃清':reachable?'可移动':'需经教堂';
+  return '<button type="button" class="location-card '+(now?'active':reachable?'reachable':'inaccessible')+
+    '" data-action="move" data-to="'+loc.id+'" aria-pressed="'+now+'" '+(now?'disabled':'')+
+    ' aria-label="'+loc.name+'，'+status+'，敌人 '+count+'">'+
+    '<div class="location-caption"><span>'+loc.name+'</span><small>'+loc.en+'</small></div>'+
+    '<img draggable="false" alt="" src="'+ART.scene(loc.id)+'">'+
+    '<div class="location-state"><span>'+status+'</span><b>'+count+' 敌人</b></div></button>';
 }
 function render(){
-  const loc=LOCATIONS.find(l=>l.id===state.current);
-  byId('turn').textContent=String(state.turn).padStart(2,'0');
-  byId('ap').textContent=state.ap+' / '+MAX_AP;
-  byId('ammo').innerHTML=state.mag+' / '+state.magCap+' <em>+'+state.reserve+'</em>';
-  byId('health').innerHTML=Array.from({length:state.maxHp},(_,i)=>'<i class="'+(i>=state.hp?'empty':'')+'"></i>').join('');
-  byId('health').setAttribute('aria-label','生命 '+state.hp+'/'+state.maxHp);
-  byId('remaining').textContent=String(LOCATIONS.reduce((a,l)=>a+state.enemies[l.id].length,0)).padStart(2,'0');
-  byId('map-progress').innerHTML=LOCATIONS.map(l=>'<div class="progress-item '+(state.enemies[l.id].length===0?'done':'')+'"><span>'+l.name+'</span><b>'+(state.enemies[l.id].length===0?'✓':'×'+state.enemies[l.id].length)+'</b></div>').join('');
-  byId('log').innerHTML=state.log.slice(0,5).map(x=>'<p>'+escapeHtml(x)+'</p>').join('');
-  byId('field-name').textContent=loc.name;
-  byId('field-hint').textContent=loc.hint;
-  byId('scene-image').style.backgroundImage='url("'+ART.scene(loc.id)+'")';
-  const enemies=currentEnemies(state);
-  byId('field-threat').innerHTML=String(enemies.length).padStart(2,'0')+' <span>ENEMIES</span>';
-  byId('enemy-lanes').innerHTML=enemies.length?enemies.map(enemyHTML).join(''):'<div class="empty-field">'+(state.status==='won'?'所有区域已肃清':'当前区域安全 · CLEAR')+'</div>';
-  byId('hand').innerHTML=handHTML();
-  byId('locations').innerHTML=LOCATIONS.map(locationHTML).join('');
-  byId('guidance').textContent=state.status==='won'?'全部敌人已经清除，胜利！':state.status==='lost'?'生命耗尽，行动结束。':state.ap===0?'行动点耗尽，请结束回合':enemies.length?'选择敌人，再点步枪射击；距离 1 的敌人会攻击':'当前场地安全，可前往其他场地';
-  const end=byId('end-btn');
+  const loc=LOCATIONS.find(l=>l.id===state.current), enemies=currentEnemies(state);
+  $('turn').textContent=String(state.turn).padStart(2,'0');
+  $('ap').textContent=state.ap+' / '+MAX_AP;
+  $('ammo').innerHTML=state.mag+' / '+state.magCap+' <em>+'+state.reserve+'</em>';
+  $('health').innerHTML=Array.from({length:state.maxHp},(_,i)=>'<i class="'+(i>=state.hp?'empty':'')+'"></i>').join('');
+  $('health').setAttribute('aria-label','生命 '+state.hp+'/'+state.maxHp);
+  $('remaining').textContent=String(LOCATIONS.reduce((sum,l)=>sum+state.enemies[l.id].length,0)).padStart(2,'0');
+  $('map-progress').innerHTML=LOCATIONS.map(l=>'<div class="progress-item '+(state.enemies[l.id].length===0?'done':'')+'"><span>'+
+    l.name+'</span><b>'+(state.enemies[l.id].length===0?'✓':'×'+state.enemies[l.id].length)+'</b></div>').join('');
+  $('log').innerHTML=state.log.slice(0,6).map(t=>'<p>'+escapeText(t)+'</p>').join('');
+  $('field-name').textContent=loc.name;
+  $('field-hint').textContent=loc.hint;
+  $('scene-image').style.backgroundImage='url("'+ART.scene(loc.id)+'")';
+  $('field-threat').innerHTML=String(enemies.length).padStart(2,'0')+' <span>ENEMIES</span>';
+  $('locations').innerHTML=LOCATIONS.map(locationHTML).join('');
+  $('hand').innerHTML=handHTML();
+  $('lane-selector').innerHTML=Array.from({length:LANE_COUNT},(_,i)=>{
+    const count=enemies.filter(e=>e.lane===i).length;
+    return '<button type="button" data-action="lane" data-lane="'+i+'" '+(state.status!=='playing'||state.ap===0||state.lane===i?'disabled':'')+
+      ' class="lane-button '+(state.lane===i?'active':'')+'" aria-pressed="'+(state.lane===i)+'" aria-label="第'+(i+1)+'道路，'+count+'个敌人">'+
+      (i+1)+'<span>'+count+'</span></button>';
+  }).join('');
+  $('forward-btn').disabled=state.status!=='playing'||state.ap===0||state.advance>=2;
+  $('retreat-btn').disabled=state.status!=='playing'||state.ap===0||state.advance<=0;
+  $('player-status').textContent='第 '+(state.lane+1)+' 道 · '+(['后线','中线','前线'][state.advance]);
+  const chosen=enemies.find(e=>e.id===state.selected);
+  $('target-status').textContent=chosen?ENEMY[chosen.type].name+' · '+(chosen.side==='rear'?'背后':'正面')+'第'+(chosen.lane+1)+'道 · 距离'+effectiveDistance(state,chosen)
+    :enemies.length?'点立式卡牌瞄准，再切换到对应道路':'当前场地安全，去其他场地探索';
+  $('guidance').textContent=state.status==='won'?'三个场地已经肃清 · 胜利':state.status==='lost'?'防线已被突破 · 失败':
+    !state.ap?'行动点已用尽，请结束回合':enemies.some(e=>e.side==='rear')?'留意背后红色标记！改变前后站位可防包抄':'五条道路独立防守；近排会挡住同路远排';
+  const end=$('end-btn');
   end.innerHTML=state.status==='playing'?'结束回合 <span>↳</span>':'重新开始 <span>↻</span>';
   end.dataset.action=state.status==='playing'?'end':'restart';
-  document.title='余烬之夜 · '+loc.name+' · 第'+state.turn+'回合';
-  save();
+  renderBoard();persist();
+  document.title='余烬之夜 · 五道桌面战场 · '+loc.name;
 }
 function dispatch(action){
- const result=perform(state,action);
- if(!result.ok){toast(result.message);return false;}
- state=result.state;
- render();
- if(action.type!=='select')toast(result.message);
- if(state.status!=='playing')toast(state.status==='won'?'胜利！三个场地全部肃清':'失败：幸存者生命耗尽');
- return true;
+  const result=perform(state,action);
+  if(!result.ok){toast(result.message);return false;}
+  state=result.state;
+  render();
+  if(action.type!=='select')toast(result.message);
+  if(state.status==='won')toast('胜利！三个场地已肃清');
+  if(state.status==='lost')toast('生命耗尽，游戏结束');
+  return true;
 }
-byId('game').addEventListener('click',e=>{
-  const control=e.target.closest('[data-action]');
-  if(!control||control.disabled)return;
-  const type=control.dataset.action;
+$('game').addEventListener('click',event=>{
+  const el=event.target.closest('[data-action]');
+  if(!el||el.disabled)return;
+  const type=el.dataset.action;
   if(type==='none')return;
-  dispatch({type,id:control.dataset.id,to:control.dataset.to});
+  dispatch({type,id:el.dataset.id,to:el.dataset.to,lane:el.dataset.lane});
 });
-byId('reset-btn').addEventListener('click',()=>{
-  if(window.confirm('确定重新开始？当前游戏存档将被覆盖。'))dispatch({type:'restart'});
+$('reset-btn').addEventListener('click',()=>{
+  if(confirm('重新开始？当前对局进度将被覆盖。'))dispatch({type:'restart'});
 });
-const overlay=byId('help-overlay');
+const overlay=$('help-overlay');
 function closeHelp(){overlay.hidden=true;}
-byId('help-btn').addEventListener('click',()=>{overlay.hidden=false;byId('close-help').focus();});
-byId('close-help').addEventListener('click',closeHelp);
-byId('help-ok').addEventListener('click',closeHelp);
+$('help-btn').addEventListener('click',()=>{overlay.hidden=false;$('close-help').focus();});
+$('close-help').addEventListener('click',closeHelp);
+$('help-ok').addEventListener('click',closeHelp);
 overlay.addEventListener('click',e=>{if(e.target===overlay)closeHelp();});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&!overlay.hidden){closeHelp();return;}
   if(!overlay.hidden||e.altKey||e.ctrlKey||e.metaKey)return;
-  const ids=LOCATIONS.map(l=>l.id);
-  const ix=ids.indexOf(state.current);
-  if(e.key==='ArrowUp'||e.key==='ArrowLeft'){
-    const to=ids[(ix+ids.length-1)%ids.length];
-    if(canMove(state.current,to))dispatch({type:'move',to});
+  if(e.key==='ArrowUp'||e.key==='ArrowDown'){
+    const options=LOCATIONS.filter(l=>canMove(state.current,l.id));
+    if(options.length){dispatch({type:'move',to:options[e.key==='ArrowUp'?0:options.length-1].id});}
     e.preventDefault();
-  }else if(e.key==='ArrowDown'||e.key==='ArrowRight'){
-    const to=ids[(ix+1)%ids.length];
-    if(canMove(state.current,to))dispatch({type:'move',to});
+  }else if(e.key==='ArrowLeft'||e.key==='ArrowRight'){
+    const next=state.lane+(e.key==='ArrowLeft'?-1:1);
+    if(next>=0&&next<LANE_COUNT)dispatch({type:'lane',lane:next});
     e.preventDefault();
-  }else if(e.key===' '){
-    dispatch({type:'end'});e.preventDefault();
-  }
+  }else if(e.key===' '&&e.target.tagName!=='BUTTON'){dispatch({type:'end'});e.preventDefault();}
 });
+new ResizeObserver(()=>renderBoard()).observe($('board'));
 render();
-window.__NIGHT_REMAINS__={
-  state:()=>structuredClone(state),
-  dispatch,
-  version:1
-};
+window.__NIGHT_REMAINS__={state:()=>structuredClone(state),dispatch,version:2,projectCard};

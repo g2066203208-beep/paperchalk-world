@@ -40,9 +40,43 @@
       <div class="field-count"><small>ENCOUNTER</small><b id="field-threat">03 <span>ENEMIES</span></b></div>
     </div>
     <div class="combat-zone">
-      <div class="enemy-zone-title"><span>— 前方威胁 / HOSTILES —</span><span>距离越近，卡牌越大</span></div>
-      <div id="enemy-lanes" class="enemy-lanes" aria-label="敌人区域"></div>
-      <div class="combat-floor" aria-hidden="true"><span>远距离 / FAR</span><span>中距离 / MID</span><span>近距离 / CLOSE</span></div>
+      <div class="enemy-zone-title"><span>— 五条道路 / FIVE-LANE APPROACH —</span><span>远卡小 · 近卡大 · 近排挡远排</span></div>
+      <section class="board-shell" aria-label="五条道立体桌面战场">
+        <div id="board" class="board-table" aria-label="桌面上的立式怪物卡牌">
+          <div class="board-atmosphere" aria-hidden="true"></div>
+          <svg class="board-grid" aria-hidden="true" viewBox="0 0 1000 600" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="felt" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#282623"/>
+                <stop offset=".65" stop-color="#454039"/>
+                <stop offset="1" stop-color="#211c19"/>
+              </linearGradient>
+            </defs>
+            <polygon points="278,203 722,203 985,520 15,520" fill="url(#felt)" stroke="#b19a80" stroke-width="4"/>
+            <g fill="none" stroke="#9b8066" stroke-opacity=".45" stroke-width="2">
+              <path d="M278 203L15 520 M389 203L258 520 M500 203L500 520 M611 203L742 520 M722 203L985 520"/>
+              <path d="M250 260H750 M217 333H783 M160 420H840"/>
+            </g>
+            <g stroke="#dcc29f" stroke-opacity=".28" stroke-width="2" stroke-dasharray="12 10">
+              <path d="M333 203L135 520 M444 203L379 520 M556 203L621 520 M667 203L865 520"/>
+            </g>
+            <path d="M15 520H985" stroke="#d09a78" stroke-width="5"/>
+          </svg>
+          <div class="board-horizon" aria-hidden="true">FRONT APPROACH / 正面来袭</div>
+          <div class="board-rearline" aria-hidden="true">REAR / 背后夹击</div>
+          <div id="enemy-lanes" class="enemy-lanes" aria-label="可选择的立式怪物卡牌"></div>
+          <div id="player-marker" class="player-marker" aria-label="玩家所在道路"><span>▲</span><b>YOU</b></div>
+        </div>
+      </section>
+      <div class="lane-controls">
+        <span>移动道路 <small>1 AP</small></span>
+        <div id="lane-selector" class="lane-selector" aria-label="选择五条道路"></div>
+        <div class="depth-controls">
+          <button type="button" id="forward-btn" data-action="advance" aria-label="向前推进一格，消耗一行动点">前进 ↑</button>
+          <button type="button" id="retreat-btn" data-action="retreat" aria-label="向后撤退一格，消耗一行动点">后退 ↓</button>
+        </div>
+      </div>
+      <div class="board-status"><span id="target-status">点击怪物卡牌锁定目标</span><span id="player-status">第 3 道 · 后线</span></div>
     </div>
     <div class="actions-bar">
       <div class="action-guidance"><span class="tiny-diamond">◆</span><span id="guidance" aria-live="polite">点击敌人瞄准，然后点击步枪射击</span></div>
@@ -63,11 +97,13 @@
   <div class="modal-cover" id="help-overlay" hidden>
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
       <div class="modal-header"><h2 id="help-title">生存手册</h2><button id="close-help" class="top-button" aria-label="关闭">×</button></div>
-      <p>这是一个可通关的卡牌生存原型。目标是清除<strong>墓园、教堂、暗巷</strong>三个场地内的全部敌人。</p>
-      <p><strong>距离即卡牌尺寸：</strong>远距离小，中距离适中，近距离最大；敌人每次结束回合向你靠近，距离为 1 时攻击。</p>
-      <p><strong>出牌：</strong>点敌人选择目标；点击步枪射击（伤害 2）、背包装弹、医疗包回复 3 生命，或照明弹让敌人后退。每回合有 3 行动点。</p>
-      <p><strong>移动：</strong>右侧场地卡可触摸切换，每次消耗 1 AP。墓园与暗巷都必须经教堂到达。</p>
-      <p><strong>存档：</strong>游戏自动保存在本机浏览器内，刷新或重新打开 APK 会继续当前对局。</p>
+      <p>这是有五条道路、真实纵深遮挡的桌面卡牌战斗原型。目标是清除墓园、教堂和暗巷的所有敌人。</p>
+      <p><strong>立式卡牌：</strong>每张敌人卡立在桌面上。远处更小、更靠近桌面后缘；近处更大并挡住后面敌人。结束回合，敌人沿所在道路推进；有些怪物会从背后来袭（橙色 REAR 标记）。</p>
+      <p><strong>五条道路：</strong>先点敌人锁定目标，再点相应道路的数字按钮转移（1 AP）。步枪一次伤害 2，必须先打倒同一道、同一方向挡在前面的怪物。</p>
+      <p><strong>前进 / 后退：</strong>改变玩家的战术深度（1 AP）。前进让正面更近、背后更远；推进至最前沿时，正面步枪伤害增加到 3。后退反之。</p>
+      <p><strong>补给：</strong>背包装弹、医疗包恢复 5 HP；照明弹击退当前道路两格。每回合 3 AP，前后接近警戒线的怪物都能攻击。</p>
+      <p><strong>场地：</strong>右侧场地卡选择当前地点，每个地点有独立的五条道路和敌人进度。手机竖屏会把场地卡移至战场顶部，避免压缩五条道。</p>
+      <p><strong>存档：</strong>游戏自动本地保存；玩法升级后的旧版存档会重置为新的五道战斗。</p>
       <button class="end-btn modal-ok" id="help-ok">返回游戏</button>
     </div>
   </div>

@@ -1,7 +1,7 @@
 name: Web - game test, browser playtest and deploy
 on:
   push:
-    branches: [main, game/location-survival]
+    branches: [main, game/location-survival, game/five-lane-tabletop]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node --test tests/*.test.mjs
+      - run: node --check site/app.js && node --check site/rules.js && node --check site/board.js && node --test tests/*.test.mjs
       - run: test -s site/index.html && test -s site/app.js && test -s site/rules.js
   browser-playtest:
     needs: verify
@@ -46,7 +46,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: night-remains-actual-browser-screenshots
+          name: night-remains-five-lane-browser-screenshots
           path: artifacts/
           if-no-files-found: ignore
           retention-days: 30

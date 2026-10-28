@@ -229,3 +229,102 @@ button:disabled{opacity:.44;cursor:not-allowed;filter:grayscale(.65)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 .paper-card.player-card:disabled{opacity:1;filter:none;cursor:default}
+
+/* v2 — standing cards on a five-lane tabletop. The CSS grid is only the surrounding HUD;
+   all enemy positions are projected in board.js and remain world entities in rules.js. */
+.board-shell{position:relative;flex:1;min-height:200px;overflow:hidden;background:radial-gradient(ellipse at 50% 34%,#54493c33,#12110ed8 78%);border:1px solid #706052;border-radius:2px;box-shadow:inset 0 0 24px #0009}
+.board-table{position:absolute;inset:0;overflow:hidden;perspective:800px;contain:layout style paint}
+.board-grid{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 8px 18px #000a);z-index:1}
+.board-atmosphere{position:absolute;inset:0;z-index:0;background:linear-gradient(180deg,#100f0f8c 0%,#30292055 45%,#120d0b88 100%);background-image:repeating-linear-gradient(0deg,transparent 0 5px,#0d0b0935 6px 7px),radial-gradient(ellipse at 50% 5%,#ac8f6a30,transparent 70%);pointer-events:none}
+.board-horizon,.board-rearline{position:absolute;z-index:4;pointer-events:none;font:9px Georgia,serif;letter-spacing:.20em;color:#bdad99;text-shadow:1px 1px 1px #111}
+.board-horizon{left:50%;top:22%;transform:translateX(-50%);white-space:nowrap}
+.board-rearline{right:2%;bottom:6%;color:#e3a18e;font-size:9px}
+.board-table .enemy-lanes{position:absolute;inset:0;display:block;margin:0;padding:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:10}
+.stand-card{position:absolute;display:block;padding:0;margin:0;border:0;background:transparent;color:#181511;overflow:visible;pointer-events:auto;transform:translate(-50%,-100%) rotateY(-6deg) rotateX(-2deg);transform-origin:50% 100%;transition:left .5s cubic-bezier(.15,.65,.2,1),top .5s cubic-bezier(.15,.65,.2,1),width .5s,height .5s,filter .2s,transform .25s;touch-action:manipulation;will-change:left,top,width,height}
+.stand-card.rear{transform:translate(-50%,-100%) rotateY(7deg) rotateX(-2deg)}
+.stand-card:hover{filter:brightness(1.1);transform:translate(-50%,-105%) rotateY(-3deg)}
+.stand-card.selected{filter:drop-shadow(0 0 10px #e4b57c)}
+.stand-card.selected .stand-face{outline:2px solid #eed29c;box-shadow:0 0 0 3px #b65544,4px 8px 0 #160d0b}
+.stand-card:focus-visible{outline:3px solid #efd49a;outline-offset:8px}
+.stand-face{position:relative;z-index:2;display:flex;flex-direction:column;width:100%;height:100%;padding:3px;background:linear-gradient(145deg,#e7ddcb,#c3b39e);border:2px solid #241b16;outline:1px solid #d6c4a4;box-shadow:3px 4px 0 #100e0cd9,inset 0 0 0 1px #a48d72;backface-visibility:visible}
+.stand-face::before{content:'';pointer-events:none;position:absolute;inset:3px;border:1px solid #75635255}
+.stand-top,.stand-bottom{position:relative;z-index:2;display:flex;justify-content:space-between;gap:2px;align-items:center;min-width:0;flex:none;font-family:Georgia,'Noto Sans SC',serif;font-weight:bold}
+.stand-top{height:15%;max-height:19px;font-size:clamp(6px,.7vw,10px);letter-spacing:.025em}
+.stand-distance{color:#a13f3b;font-size:clamp(7px,.8vw,11px);white-space:nowrap}
+.stand-side{font-size:clamp(6px,.64vw,9px);white-space:nowrap}
+.stand-card.rear .stand-top{background:#b8775c;color:#211414;padding:0 2px}
+.stand-card.rear .stand-distance{color:#501f1c}
+.stand-art{width:100%;height:0;min-height:0;object-fit:fill;flex:1;image-rendering:pixelated;filter:contrast(1.1);pointer-events:none}
+.stand-bottom{height:18%;min-height:13px;border-top:1px solid #8c7763;font-size:clamp(6px,.62vw,9px);white-space:nowrap}
+.stand-bottom b{overflow:hidden;text-overflow:clip}
+.stand-hp{color:#9e3e38;font-size:clamp(7px,.8vw,12px)}
+.stand-shadow{position:absolute;z-index:0;bottom:-18px;left:50%;width:var(--card-shadow-size,60px);height:18px;border-radius:50%;background:#050403ce;filter:blur(5px);transform:translateX(-45%) skewX(-35deg);pointer-events:none}
+.stand-foot{position:absolute;z-index:1;bottom:-7px;left:13%;width:74%;height:9px;transform:perspective(150px) rotateX(63deg);background:linear-gradient(90deg,#171210,#7d6a53 45%,#2c211b);border:1px solid #21150e;box-shadow:0 2px 3px #0d0907}
+.player-marker{position:absolute;z-index:120;transform:translate(-50%,-50%);width:48px;height:30px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;background:#331e1aca;border:1px solid #ddaf8a;outline:2px solid #42231a;border-radius:3px;color:#efccaa;box-shadow:0 0 14px #b7523970;transition:left .45s,top .45s;pointer-events:none}
+.player-marker span{font-size:14px;line-height:13px;color:#e6b489}
+.player-marker b{font:9px Georgia,serif;letter-spacing:.12em}
+.combat-zone{display:flex;flex-direction:column;gap:5px;min-height:300px;margin:0 12px;position:relative}
+.enemy-zone-title{flex:none;margin:5px 0 0}
+.enemy-zone-title span:last-child{font-size:10px}
+.lane-controls{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:nowrap;flex:none;padding:7px 5px 2px;border-top:1px solid #8369517a;background:#1c1916ba}
+.lane-controls>span{flex:none;font-size:10px;white-space:nowrap;color:#d6b89a}
+.lane-controls>span small{display:block;color:#a78970;font:9px Georgia,serif;margin-top:2px}
+.lane-selector{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;min-width:120px;width:min(310px,47%)}
+.lane-button{height:31px;position:relative;border:1px solid #6c5a4c;background:#292522;color:#d9c2a6;min-width:0;font-family:Georgia,serif;font-size:15px}
+.lane-button.active{background:#b05d4f;color:#fff2dd;border-color:#e7c394;opacity:1!important;filter:none!important}
+.lane-button span{position:absolute;right:2px;top:1px;font-size:9px;color:#f2cf9d}
+.depth-controls{display:flex;flex:none;gap:4px}
+.depth-controls button{height:31px;padding:0 8px;border:1px solid #98785c;background:#41382e;color:#e9d5b7;white-space:nowrap;font-size:11px}
+.depth-controls button:not(:disabled):hover,.lane-button:not(:disabled):hover{background:#80614b}
+.board-status{display:flex;justify-content:space-between;gap:6px;padding:1px 5px 6px;min-height:21px;white-space:nowrap;font-size:10px;color:#b9a58e}
+.board-status span:first-child{overflow:hidden;text-overflow:ellipsis}
+.board-status span:last-child{color:#d7b489;flex:none}
+.hand-zone{padding-bottom:10px}
+.paper-card.player-card:disabled{opacity:1;filter:none;cursor:default}
+@media(max-width:1170px){
+ .combat-zone{margin:0 8px}
+ .lane-controls{gap:5px}
+ .lane-controls>span{font-size:9px}
+ .depth-controls button{font-size:10px;padding-inline:5px}
+ .board-horizon{font-size:8px}
+}
+@media(max-width:890px){
+ .combat-zone{min-height:310px;margin:0 6px}
+ .field-heading{padding:10px 12px 4px}
+ .lane-controls{padding:4px 1px}
+ .lane-selector{width:45%;min-width:120px}
+ .depth-controls button{height:30px}
+}
+@media(max-width:650px) and (orientation:portrait){
+ .combat-zone{height:360px;min-height:360px;margin:0 5px;gap:2px}
+ .board-shell{min-height:265px}
+ .board-table{min-height:265px}
+ .board-horizon{font-size:7px;top:23%}
+ .board-rearline{font-size:7px}
+ .enemy-zone-title span:last-child{font-size:8px}
+ .lane-controls{gap:4px;padding:4px 1px}
+ .lane-controls>span{font-size:9px}
+ .lane-selector{min-width:132px;width:48%;gap:2px}
+ .lane-button{height:34px;font-size:16px}
+ .depth-controls{gap:2px}
+ .depth-controls button{height:34px;font-size:10px;padding:0 5px}
+ .board-status{font-size:9px;min-height:18px;padding:1px 3px 4px}
+ .stand-top,.stand-bottom{font-size:7px}
+ .stand-side{font-size:6px}
+ .field{min-height:0}
+ .hand-zone{padding-top:6px}
+}
+@media(max-width:370px) and (orientation:portrait){
+ .lane-controls>span{display:none}
+ .lane-selector{width:62%;min-width:130px}
+ .board-status span:last-child{font-size:8px}
+}
+@media(max-height:550px) and (orientation:landscape){
+ .combat-zone{height:355px;min-height:355px}
+ .board-shell{min-height:270px}
+ .field{min-height:590px}
+ .location-rail{max-height:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .stand-card,.player-marker{transition:none!important}
+}

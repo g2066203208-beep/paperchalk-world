@@ -1,35 +1,27 @@
-# 余烬之夜 / Night Remains — 场地生存卡牌（可玩原型）
+# 余烬之夜：立式卡牌五道桌面战场
 
-网页： https://g2066203208-beep.github.io/paperchalk-world/
+**正式网页**：https://g2066203208-beep.github.io/paperchalk-world/
 
-Android APK（WebView 容器）： https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk
+**Android APK**：https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk
 
-这不是静态概念图。**打开网页即可操作**，没有构建步骤和登录要求。现有 Android APK 启动时直接打开 GitHub Pages 网页最新版：网页修改不需要重装 APK；Android 原生代码更新才需要手动安装新 APK。
+## 本次重构的真实玩法
 
-## 已实现
+- 五条道路、六级纵深；所有怪物数据含 `lane`, `depth`, `side`（正面或背后）。
+- 怪物卡牌**立在有透视的桌面上**，每回合真实移动到新的地面坐标；卡牌尺寸按距离变化。CSS 3D 旋转、脚座和桌面阴影，近处卡牌在远处卡牌之上遮挡。
+- 每条道路同向存在多个怪物时，必须先打近排才可攻击后排（遮挡影响战斗规则，不只影响美术）。
+- 玩家可花费 1 AP 在五条道路间转移，也可前进/后退；前进使正面更危险、后方更安全，前线步枪对正面造成 3 点伤害。
+- 后方橙色 REAR 标记敌人能造成真正的背后攻击，和正面攻击一起结算。
+- 步枪射击、换弹、回血、当前道路照明弹击退、结束回合、胜负、三张可切换场地卡和独立场地状态；刷新自动恢复本地存档。
+- 手机竖屏将场地移到顶部横排，电脑和手机横屏仍是右侧场地栏；触屏可操作五条道、怪物和手牌。
+- 无外部游戏运行库，纯 HTML/CSS/ES modules，免费 GitHub Pages 托管。现有 APK 的 WebView 启动即访问托管站点最新版，网页更新无需重新打包。
 
-- 三张独立场地卡牌：墓园、教堂、暗巷。点击卡牌切换场地（消耗 1 AP），中间必须经过教堂；各区域敌人状态独立保留。
-- 三种感染者，共七个敌人；敌人距离为 3、2、1，对应小、中、大卡牌尺寸。结束回合后当前位置敌人推进或攻击。
-- 选定目标后用步枪射击（消耗弹药和 1 AP，伤害 2）；背包装弹；医疗包回血；照明弹推开敌人；每回合 3 AP。
-- 清除所有区域敌人即胜利，生命耗尽失败。刷新页面不会丢失进度（浏览器 localStorage）。
-- 手机竖屏（场地卡横排、卡牌可横向滚动）、手机横屏、电脑均可操作；触控按钮满足点击面积，附玩法说明。
-- 原创代码生成的低分辨率矢量像素场景和卡面图案；不是复刻原游戏的素材。
-- 静态 GitHub Pages，无服务器依赖；GitHub Actions：规则测试 + 真实 Chromium 桌面、手机竖屏、手机横屏操作及截图；成功后才发布网页。
-- 原 APK 包名和 WebView 托管网址保持不变。
+## 实现与限制
 
-## 开发
+`site/rules.js` 是纯战斗规则；`site/board.js` 是纯投影算法；`site/app.js` 保留 DOM 卡牌节点并对坐标、宽度和高度进行 CSS 动画插值；`site/art.js` 是原有原创像素样式 SVG。
 
-打开 `site/index.html` 需要本地 HTTP 服务器以加载 ES modules，例如：
-```bash
-python -m http.server 4173 --directory site
-```
-然后访问 `http://localhost:4173`。
+这是 **CSS 2.5D 透视桌面**，不是用 Three.js 重建整个 3D 世界；卡牌有站立视觉、阴影、深度遮挡和动态位置，运算较轻，适合移动端 WebView。没有声称经过所有安卓真机 GPU 兼容性测试。当前插画是程序原型，不是最终精绘美术。
 
-规则层是 `site/rules.js`（没有 DOM 依赖），场景与像素卡图是 `site/art.js`，网页交互是 `site/app.js`。运行：
-```bash
-node --test tests/*.test.mjs
-```
+## 测试
 
-浏览器 E2E 由 `tests/browser.mjs` 和 `.github/workflows/ci.yml` 启动，对真正的点击 / 触摸、敌人尺寸、存档与水平溢出进行断言，截图保存在 Actions Artifacts 中。
-
-这只是第一版可玩的战斗流程，不声称已经包含完整关卡、剧情、平衡性、网络联机或专业级逐像素插画。后续可以围绕真实游玩反馈继续迭代。
+`node --test tests/*.test.mjs` 验证五条道、遮挡射线、前后位置、推进和击退、背后伤害、跨场地存档。
+GitHub Actions 还在实际 Chromium 桌面和手机触屏视口中运行点击、位置变化、图层顺序、尺寸、换场地、存档恢复并上传截屏；通过后才自动部署 GitHub Pages。
