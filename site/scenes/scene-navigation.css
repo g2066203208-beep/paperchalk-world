@@ -102,3 +102,34 @@
  .explore-stage .city-walker,.explore-stage .city-walker svg,
  .scene-departing .explore-visual,.scene-arriving .explore-visual,.explore-dialogue{animation:none!important}
 }
+
+/* Camera rule: portrait streets crop a correctly-proportioned 1200x670 illustration.
+   This intentionally overrides the earlier stretch-to-screen stage style. */
+.scene-exit-door-art{display:none;position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(4px 5px 2px #111b26a0);pointer-events:none}
+.explore-root .explore-dialogue{background:#f6ead9;grid-template-columns:58px minmax(0,1fr) minmax(235px,29%);padding:16px 18px;bottom:3%;max-width:1080px;box-shadow:8px 10px 0 #ac4851}
+.explore-root .dialogue-copy p{font-size:15px;line-height:1.55;color:#1d2935}
+.explore-root .dialogue-choices button{font-size:13px;min-height:35px}
+.explore-root .dialogue-copy small{font-size:13px}
+@media (orientation:portrait) and (max-width:650px){
+ .explore-stage:not(.scene-office) .explore-art{
+   width:calc((100dvh - 40px) * 1.79104)!important;
+   height:100%!important;
+   position:absolute!important;
+   top:0!important;left:50%!important;
+   transform:translateX(-50%)!important;
+   max-width:none!important;
+ }
+ .explore-stage:not(.scene-office) .explore-door{
+   left:11%!important;top:68%!important;width:19%!important;height:27%!important;
+ }
+ .explore-stage:not(.scene-office) .scene-exit-door-art{display:block}
+ .explore-root .explore-dialogue{left:2%;right:2%;bottom:8%;grid-template-columns:23px minmax(0,1fr);max-width:none;padding:10px 11px;gap:6px}
+ .explore-root .dialogue-copy p{font-size:12px}
+ .explore-root .dialogue-copy small{font-size:11px}
+ .explore-root .dialogue-choices button{font-size:11px;min-height:32px}
+}
+@media (orientation:landscape) and (max-height:510px){
+ .explore-root .explore-dialogue{bottom:3%;grid-template-columns:26px 1fr minmax(180px,41%);padding:8px 10px;gap:7px}
+ .explore-root .dialogue-copy p{font-size:11px}
+ .explore-root .dialogue-choices button{font-size:10px;min-height:27px}
+}

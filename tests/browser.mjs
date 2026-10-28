@@ -262,6 +262,7 @@ await run('persistent-city-dialogue-and-door-map',{viewport:{width:1440,height:9
  await page.locator('[data-explore-type="aid"]').click();
  assert.equal(await walked.evaluate(el=>el.dataset.persistMarker),'keep-moving','walker DOM cannot reset on helping neighbors');
  assert.equal((await get()).flags.helpedVendor,true);
+ await page.waitForTimeout(440);
  await page.screenshot({path:'artifacts/new-04-market-persistent-walkers.png',fullPage:true});
  await page.locator('[data-explore-type="exit"]').click();
  await page.locator('[data-route-place="labor"]').click();
@@ -269,6 +270,7 @@ await run('persistent-city-dialogue-and-door-map',{viewport:{width:1440,height:9
  await page.waitForFunction(()=>window.__OFFICE__.world().slices.origin.venue==='labor');
  await page.locator('[data-explore-type="talk"][data-explore-id="worker"]').click();
  assert.ok(await page.locator('[data-talk-choice]').count()>=2);
+ await page.waitForTimeout(440);
  await page.screenshot({path:'artifacts/new-05-labor-interactive-dialogue.png',fullPage:true});
  await page.reload({waitUntil:'networkidle'});
  assert.equal((await get()).venue,'labor','world persists after reload');
@@ -281,7 +283,11 @@ await run('route-map-portrait-touch',{viewport:{width:390,height:844},isMobile:t
  await page.locator('[data-route-place="docks"]').tap();
  await page.locator('[data-route-go]').tap();
  await page.waitForFunction(()=>window.__OFFICE__.world().slices.origin.venue==='docks');
+ await page.waitForTimeout(500);
  await page.screenshot({path:'artifacts/new-07-portrait-docks.png',fullPage:true});
+ const imageShape=await page.locator('.scene-docks .explore-art').evaluate(el=>{const b=el.getBoundingClientRect();return b.width/b.height});
+ assert.ok(imageShape>1.65&&imageShape<1.95,'street illustration must keep natural aspect ratio, not stretch: '+imageShape);
+ assert.ok(await page.locator('.scene-docks .scene-exit-door-art').isVisible(),'the door is a visible, physical exit object');
  assert.ok(await page.locator('.city-walker').count()>0);
  const h=await page.evaluate(()=>({w:innerWidth,sw:document.documentElement.scrollWidth}));
  assert.ok(h.sw<=h.w+2,'portrait horizontal overflow '+JSON.stringify(h));

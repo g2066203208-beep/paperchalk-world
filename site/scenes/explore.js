@@ -108,7 +108,9 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const main=spots[venue]||[];
    const buttons=main.map(([type,id,x,y,label,style])=>
      '<button type="button" class="explore-spot explore-'+style+'" data-explore-type="'+type+'" data-explore-id="'+id+
-     '" style="left:'+x+'%;top:'+y+'%;--hot-left:'+x+'%;--hot-top:'+y+'%" aria-label="'+label+'"><span>'+escape(label)+'</span></button>'
+     '" style="left:'+x+'%;top:'+y+'%;--hot-left:'+x+'%;--hot-top:'+y+'%" aria-label="'+label+'">'+
+     (style==='door'&&venue!=='office'?'<svg class="scene-exit-door-art" viewBox="0 0 110 200" aria-hidden="true"><path d="M9 7H101V195H9Z" fill="#263845" stroke="#d8b891" stroke-width="7"/><path d="M26 23H85V161H26Z" fill="#475968" stroke="#8b8173" stroke-width="4"/><circle cx="82" cy="116" r="6" fill="#ecc393"/></svg>':'')+
+     '<span>'+escape(label)+'</span></button>'
    ).join('');
    root.innerHTML='<div class="explore-stage scene-'+venue+'"><div class="explore-visual">'+sceneArtwork(venue)+'</div>'+
     '<div class="explore-crowd" aria-label="持续活动的街区行人"></div>'+
