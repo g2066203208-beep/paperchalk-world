@@ -6,7 +6,7 @@
  */
 import {regionAt,FACILITY_TYPES} from './national-atlas.js';
 import {createPixelStreetRenderer,drawPixelPerson,PIXEL_VIEW} from '../scenes/pixel/pixel-city-art.js';
-import {isOldHarborCell,oldHarborBuildings,OLD_HARBOR_WALKERS} from '../scenes/pixel/old-harbor-plaza.js';
+import {isOldHarborCell,oldHarborBuildings,OLD_HARBOR_WALKERS,OLD_HARBOR_SOLIDS} from '../scenes/pixel/old-harbor-plaza.js';
 export {interiorFor} from './interiors.js';
 export const STREET_W=960,STREET_H=600;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -37,6 +37,9 @@ export function streetBuildingsAt(x,y){
 }
 export function canStandAt(px,py,buildings){
  if(px<8||py<8||px>STREET_W-8||py>STREET_H-8)return false;
+ // Special art-directed landmarks use exactly the same collision test as walking.
+ if(buildings[0]?.curated && OLD_HARBOR_SOLIDS.some(s=>
+   px>s.x-8&&px<s.x+s.w+8&&py>s.y-8&&py<s.y+s.h+8))return false;
  return !buildings.some(b=>px>b.x-10&&px<b.x+b.w+10&&py>b.y-10&&py<b.y+b.h+5);
 }
 
