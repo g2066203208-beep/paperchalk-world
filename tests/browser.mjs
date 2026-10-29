@@ -99,9 +99,26 @@ try{
  await page.mouse.up();
  await capture(page,'artifacts/creature-05-ik-drag.png');screenshots.push('IK');
  assert.equal((await page.evaluate(()=>window.__BONE_LAB__.state.dragging)),false);
+ // Observe actual file anchors and read their Blob/data URL bytes, even when
+ // headless Chromium suppresses native download events.
+ await page.evaluate(()=>{
+  window.__exportChecks=[];
+  document.addEventListener('click',event=>{
+   const anchor=event.target.closest?.('a[download]');
+   if(!anchor)return;
+   const name=anchor.download,href=anchor.href;
+   fetch(href).then(r=>r.blob()).then(blob=>
+    window.__exportChecks.push({name,size:blob.size,mime:blob.type})
+   ).catch(err=>window.__exportChecks.push({name,size:0,error:String(err)}));
+  },true);
+ });
  for(const [selector,extension] of [['#export-json','.json'],['#export-svg','.svg'],['#export-png','.png']]){
-  const [download]=await Promise.all([page.waitForEvent('download'),page.locator(selector).click()]);
-  assert.ok(download.suggestedFilename().endsWith(extension),selector+' downloaded unexpected '+download.suggestedFilename());
+  console.log('Validating export '+selector);
+  await page.locator(selector).click();
+  await page.waitForFunction(ext=>
+   window.__exportChecks.some(item=>item.name.endsWith(ext)),extension,{timeout:12000});
+  const result=await page.evaluate(ext=>window.__exportChecks.find(i=>i.name.endsWith(ext)),extension);
+  assert.ok(result.size>100,selector+' should export actual nonempty image/project bytes '+JSON.stringify(result));
  }
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  mobile.on('pageerror',e=>errors.push(String(e)));
