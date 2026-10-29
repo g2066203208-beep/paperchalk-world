@@ -20,7 +20,7 @@ let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='
 let explorer=null;
 let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
 const originTabs=new Set(['society','recruitment','politics']);
-const cityTabs=new Set(['clock','estates','transport','citizens','operations','contacts','justice']);
+const cityTabs=new Set(['clock','estates','industry','transport','citizens','operations','contacts','justice']);
 const worldTabs=new Set(['city','personnel','news','civic','dialogue',...cityTabs,...originTabs]);
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
@@ -420,6 +420,26 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.diplomacy){performWorldCommand({module:'politics',type:'offer',faction:worldUI.faction,offer:node.dataset.diplomacy});return;}
  if(node.dataset.protect){performWorldCommand({module:'politics',type:'protect',cell:node.dataset.protect});return;}
  if(node.dataset.cityLot){worldUI.lot=node.dataset.cityLot;repaintPanel();return;}
+ if(node.dataset.industryLot){worldUI.lot=node.dataset.industryLot;fileTab='industry';currentPanel='reports';repaintPanel();return;}
+ if(node.dataset.industrySector){worldUI.industrySector=node.dataset.industrySector;repaintPanel();return;}
+ if(node.dataset.industryGood){worldUI.industryGood=node.dataset.industryGood;repaintPanel();return;}
+ if(node.dataset.industryTo){worldUI.industryTo=node.dataset.industryTo;repaintPanel();return;}
+ if(node.dataset.industryQty){worldUI.industryQty=Number(node.dataset.industryQty);repaintPanel();return;}
+ if(node.dataset.industryPrice){
+   performWorldCommand({module:'estates',type:'pricing',lot:worldUI.lot,price:node.dataset.industryPrice});return;
+ }
+ if(node.dataset.industryAction){
+   performWorldCommand({module:'estates',type:node.dataset.industryAction,lot:worldUI.lot});return;
+ }
+ if(node.dataset.industryTransfer){
+   const origin=world.slices.estates.parcels.find(p=>p.id===worldUI.lot);
+   const target=world.slices.estates.parcels.find(p=>p.id===worldUI.industryTo&&p.id!==worldUI.lot)
+      ||world.slices.estates.parcels.find(p=>p.owner==='player'&&p.building?.firm&&p.id!==worldUI.lot);
+   const entries=Object.entries(origin?.building?.firm?.stock||{}).filter(([id,amount])=>amount>0);
+   const good=entries.find(([id])=>id===worldUI.industryGood)?.[0]||entries[0]?.[0];
+   performWorldCommand({module:'estates',type:'transfer',lot:worldUI.lot,to:target?.id,good,quantity:worldUI.industryQty||1});return;
+ }
+
  if(node.dataset.cityOrigin){worldUI.from=node.dataset.cityOrigin;repaintPanel();return;}
  if(node.dataset.cityDestination){worldUI.destination=node.dataset.cityDestination;repaintPanel();return;}
  if(node.dataset.cityCourier){worldUI.courier=node.dataset.cityCourier;repaintPanel();return;}
