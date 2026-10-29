@@ -161,6 +161,8 @@ jobs:
         run: node tests/repixel-browser.mjs
       - name: Verify true per-pixel grid, zoom, point sampling, and unchanged PNG in Chromium
         run: node tests/repixel-grid-browser.mjs
+      - name: Test eight original four-color palette live previews, export and mobile UI
+        run: node tests/palette-browser.mjs
       - name: Upload trained repixelizer, faithful outputs and Chromium screenshots
         if: always()
         uses: actions/upload-artifact@v4
