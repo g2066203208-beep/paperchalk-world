@@ -178,7 +178,11 @@ await run('city-properties-and-justice',{viewport:{width:1440,height:900}},async
  await page.locator('.object-calendar').click();
  await page.locator('[data-next]').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).day,2);
- assert.ok((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].lastProfit>0);
+ const firstDayFirm=(await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1];
+ assert.ok(firstDayFirm.building.firm,'new business must use real stock accounting');
+ assert.equal(firstDayFirm.lastProfit,firstDayFirm.building.firm.lastRevenue-firstDayFirm.building.firm.lastExpenses,
+  'daily profit must be earned sales minus real operating expenses, even when short of cash');
+ assert.ok(firstDayFirm.building.firm.lastSales<=firstDayFirm.building.firm.lastDemand,'no fake customers beyond demand');
  await page.reload({waitUntil:'networkidle'});
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
 });
@@ -563,6 +567,67 @@ await run('mainstory-ending-reload',{viewport:{width:1440,height:900}},async pag
  await page.locator('[data-explore-type="open"][data-explore-id="calendar"]').click();
  assert.match(await page.locator('.chapter-finale').innerText(),/城市由人们开门/);
  await page.screenshot({path:'artifacts/mainstory-ending-journal.png',fullPage:true});
+});
+
+// Economic sandbox: funded fixture only for testing business UI, not for claiming story progression.
+await run('industry-real-ui-desktop',{viewport:{width:1440,height:900}},async page=>{
+ await page.evaluate(()=>{
+  const old=JSON.parse(localStorage.getItem('night-office-game-v4'));
+  old.cash=4000;
+  localStorage.setItem('night-office-game-v4',JSON.stringify(old));
+ });
+ await page.reload({waitUntil:'networkidle'});
+ await page.evaluate(()=>window.__OFFICE__.exploration.hide());
+ await page.locator('[data-open="reports"]').click();
+ await page.locator('#panel-body .file-tabs [data-world-tab="estates"]').click();
+ const buy=page.locator('#panel-body [data-city-buy="lot-1"]');
+ await buy.click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
+ await page.locator('#panel-body [data-city-build="lot-1"][data-city-building="farm"]').click();
+ await page.locator('#panel-body [data-industry-lot="lot-1"]').click();
+ assert.match(await page.locator('#panel-title').innerText(),/产业经营/);
+ await page.locator('#panel-body [data-industry-price="premium"]').click();
+ await page.locator('#panel-body [data-industry-action="hire"]').click();
+ let firm=(await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].building.firm;
+ assert.equal(firm.price,'premium');
+ assert.equal(firm.workers,2);
+ await page.locator('#panel-body .city-tabs [data-world-tab="estates"]').click();
+ await page.locator('#panel-body [data-city-lot="lot-2"]').click();
+ await page.locator('#panel-body [data-city-buy="lot-2"]').click();
+ await page.locator('#panel-body [data-city-build="lot-2"][data-city-building="mill"]').click();
+ await page.locator('#panel-body [data-industry-lot="lot-2"]').click();
+ assert.match(await page.locator('#panel-body').innerText(),/面粉厂/);
+ await page.screenshot({path:'artifacts/industry-01-two-firms.png',fullPage:true});
+ await page.locator('#close-panel').click();
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ await page.locator('.scene-object[data-explore-id="phone"]').click();
+ await page.locator('#panel-body [data-phone="yes"]').click();
+ await page.locator('#close-panel').click();
+ await page.locator('.story-wall-calendar').click();
+ await page.locator('#panel-body [data-next]').click();
+ await page.locator('#close-panel').click();
+ const state=await page.evaluate(()=>window.__OFFICE__.world());
+ assert.equal(state.day,2);
+ const mill=state.slices.estates.parcels[2].building.firm;
+ assert.ok(mill.lastTransfers>0,'mill should receive player-owned grain before external suppliers');
+ assert.ok(state.slices.estates.journal[0].advanced>=2);
+ await page.locator('.story-wall-calendar').click();
+ await page.locator('#panel-body [data-world-tab="industry"]').click();
+ assert.match(await page.locator('#panel-body').innerText(),/昨日营业额/);
+ assert.match(await page.locator('#panel-body').innerText(),/最近10日经营/);
+ await page.screenshot({path:'artifacts/industry-02-running-ledger.png',fullPage:true});
+ await page.reload({waitUntil:'networkidle'});
+ const resumed=await page.evaluate(()=>window.__OFFICE__.world());
+ assert.equal(resumed.day,2);
+ assert.equal(resumed.slices.estates.parcels[1].building.firm.workers,2);
+});
+await run('industry-portrait-ui',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ await page.locator('.story-wall-calendar').tap();
+ await page.locator('#panel-body [data-world-tab="industry"]').tap();
+ assert.match(await page.locator('#panel-title').innerText(),/产业经营/);
+ assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'industry UI must not overflow phone width');
+ await page.screenshot({path:'artifacts/industry-03-mobile-overview.png',fullPage:true});
 });
 
 await browser.close();

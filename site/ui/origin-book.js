@@ -5,7 +5,7 @@ import {FACTIONS} from '../systems/factions.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const head=(k,t,d)=>'<div class="eyebrow">'+k+'</div><h2 id="panel-title">'+t+'</h2><p>'+d+'</p>';
 const tabs=tab=>'<nav class="world-tabs origin-tabs" aria-label="城市与组织档案">'+[
- ['society','政府与平民'],['recruitment','人才市场'],['politics','家族产业'],['city','地盘'],['estates','地契'],['personnel','内部人事'],['news','新闻']
+ ['society','政府与平民'],['recruitment','人才市场'],['politics','家族产业'],['city','地盘'],['industry','产业经营'],['estates','地契'],['personnel','内部人事'],['news','新闻']
 ].map(([id,t])=>'<button type="button" data-world-tab="'+id+'" class="'+(id===tab?'selected':'')+'">'+t+'</button>').join('')+'</nav>';
 const action=(key,val,title,disabled=false)=>'<button type="button" class="choice" '+key+'="'+esc(val)+'"'+(disabled?' disabled':'')+'>'+esc(title)+'</button>';
 const metric=(k,val,comment='')=>'<div class="origin-metric"><small>'+k+'</small><strong>'+val+'</strong><span>'+comment+'</span></div>';

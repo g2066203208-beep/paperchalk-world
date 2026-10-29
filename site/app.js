@@ -20,7 +20,7 @@ let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='
 let explorer=null;
 let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
 const originTabs=new Set(['society','recruitment','politics']);
-const cityTabs=new Set(['clock','estates','transport','citizens','operations','contacts','justice']);
+const cityTabs=new Set(['clock','estates','industry','transport','citizens','operations','contacts','justice']);
 const worldTabs=new Set(['city','personnel','news','civic','dialogue',...cityTabs,...originTabs]);
 let plan={crew:'kai',zone:'harbor',mission:'deliver'};
 const fmt=n=>'＄'+n.toLocaleString('en-US');
@@ -212,7 +212,7 @@ function reportsPanel(){
  if(originTabs.has(fileTab))return renderOriginBook(fileTab,world,state,worldUI);
  if(cityTabs.has(fileTab))return renderCityBook(fileTab,world,state,worldUI);
  if(worldTabs.has(fileTab))return renderWorldPanel(fileTab,world,state,worldUI);
- const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button><button type="button" data-world-tab="estates">地皮地产</button><button type="button" data-world-tab="transport">运输</button><button type="button" data-world-tab="clock">时间</button><button type="button" data-world-tab="citizens">路人</button><button type="button" data-world-tab="operations">高风险事务</button><button type="button" data-world-tab="contacts">雇佣线人</button><button type="button" data-world-tab="justice">警方卷宗</button><button type="button" data-world-tab="recruitment">人才市场</button><button type="button" data-world-tab="society">国家民生</button><button type="button" data-world-tab="politics">各大家族</button></div>';
+ const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button><button type="button" data-world-tab="industry">产业经营</button><button type="button" data-world-tab="estates">地皮地产</button><button type="button" data-world-tab="transport">运输</button><button type="button" data-world-tab="clock">时间</button><button type="button" data-world-tab="citizens">路人</button><button type="button" data-world-tab="operations">高风险事务</button><button type="button" data-world-tab="contacts">雇佣线人</button><button type="button" data-world-tab="justice">警方卷宗</button><button type="button" data-world-tab="recruitment">人才市场</button><button type="button" data-world-tab="society">国家民生</button><button type="button" data-world-tab="politics">各大家族</button></div>';
  let view='';
  if(fileTab==='dossiers'){
   view='<div class="dossier-list">'+DOSSIERS.map(d=>{
@@ -292,7 +292,7 @@ function calendarPanel(){
  '<div class="daily-calendar-record"><small>'+clockLabel(state.day,world.slices.clock.shift)+'</small><strong>'+arcTitle+'</strong><p>'+ (episode?.title||'城市自由经营') +'</p>'+
  '<p>当日安排 '+progress.actionsToday+' / 2 · 街坊支持 '+progress.communityTrust+' · 可查证线索 '+progress.evidence+'</p>'+
  '<p>下一件事：'+(beat?beat.title+' · 在'+({office:'办公室',alley:'旧港背街',market:'清晨集市',labor:'旧厂就业所',docks:'旧港码头'}[beat.venue]||beat.venue)+'进行':'今天已无新的主线安排')+'</p>'+
- '<p>'+(arc?'本章区间：DAY '+arc.start+'—'+arc.end+'。未完成的现场事件一旦翻日历就会错过，请先到对应地点推进主线。':'主线已结束；你可以继续经营街区，并在右侧档案重读结局。')+'</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
+ '<p>'+(arc?'本章区间：DAY '+arc.start+'—'+arc.end+'。未完成的现场事件一旦翻日历就会错过，请先到对应地点推进主线。':'主线已结束；你可以继续经营街区，并在右侧档案重读结局。')+'</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button><button type="button" class="choice" data-world-tab="industry">查看产业经营</button>'+
  '<p>今天安排了 '+state.orders.length+' 项行动；电话'+(state.call.answered?'已经处理':'尚未处理')+'。翻页将结算收入、日常开支，以及街区关系变化。</p>'+
  '<button class="primary" type="button" data-next="1">翻过今天 · 听取明日汇报</button></div>'+
  '<div><div class="mini-title">成员今日状态</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
@@ -420,6 +420,28 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.diplomacy){performWorldCommand({module:'politics',type:'offer',faction:worldUI.faction,offer:node.dataset.diplomacy});return;}
  if(node.dataset.protect){performWorldCommand({module:'politics',type:'protect',cell:node.dataset.protect});return;}
  if(node.dataset.cityLot){worldUI.lot=node.dataset.cityLot;repaintPanel();return;}
+ if(node.dataset.industryLot){worldUI.lot=node.dataset.industryLot;fileTab='industry';currentPanel='reports';repaintPanel();return;}
+ if(node.dataset.industrySector){worldUI.industrySector=node.dataset.industrySector;repaintPanel();return;}
+ if(node.dataset.industryGood){worldUI.industryGood=node.dataset.industryGood;repaintPanel();return;}
+ if(node.dataset.industryTo){worldUI.industryTo=node.dataset.industryTo;repaintPanel();return;}
+ if(node.dataset.industryQty){worldUI.industryQty=Number(node.dataset.industryQty);repaintPanel();return;}
+ const managedIndustryLot=()=>world.slices.estates.parcels.find(x=>x.id===worldUI.lot&&x.owner==='player'&&x.building&&x.building.type!=='office')?.id||
+   world.slices.estates.parcels.find(x=>x.owner==='player'&&x.building&&x.building.type!=='office')?.id;
+ if(node.dataset.industryPrice){
+   performWorldCommand({module:'estates',type:'pricing',lot:managedIndustryLot(),price:node.dataset.industryPrice});return;
+ }
+ if(node.dataset.industryAction){
+   performWorldCommand({module:'estates',type:node.dataset.industryAction,lot:managedIndustryLot()});return;
+ }
+ if(node.dataset.industryTransfer){
+   const origin=world.slices.estates.parcels.find(p=>p.id===managedIndustryLot());
+   const target=world.slices.estates.parcels.find(p=>p.id===worldUI.industryTo&&p.id!==managedIndustryLot())
+      ||world.slices.estates.parcels.find(p=>p.owner==='player'&&p.building?.firm&&p.id!==worldUI.lot);
+   const entries=Object.entries(origin?.building?.firm?.stock||{}).filter(([id,amount])=>amount>0);
+   const good=entries.find(([id])=>id===worldUI.industryGood)?.[0]||entries[0]?.[0];
+   performWorldCommand({module:'estates',type:'transfer',lot:managedIndustryLot(),to:target?.id,good,quantity:worldUI.industryQty||1});return;
+ }
+
  if(node.dataset.cityOrigin){worldUI.from=node.dataset.cityOrigin;repaintPanel();return;}
  if(node.dataset.cityDestination){worldUI.destination=node.dataset.cityDestination;repaintPanel();return;}
  if(node.dataset.cityCourier){worldUI.courier=node.dataset.cityCourier;repaintPanel();return;}

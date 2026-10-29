@@ -1,6 +1,7 @@
 /** Typed presentation for the office's expandable files; reads snapshots, no side effects. */
 import {clockLabel,SHIFTS} from '../systems/clock.js';
 import {BUSINESS_TYPES} from '../systems/estates.js';
+import {renderIndustryBook} from './industry-book.js';
 import {OPERATIONS} from '../systems/operations.js';
 import {SPECIALISTS} from '../systems/contacts.js';
 import {casePhase} from '../systems/justice.js';
@@ -8,7 +9,7 @@ import {shortestRoute} from '../systems/transport.js';
 const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const head=(k,t,d)=>'<div class="eyebrow">'+k+'</div><h2 id="panel-title">'+t+'</h2><p>'+d+'</p>';
 const tabs=tab=>'<nav class="world-tabs city-tabs" aria-label="桌上物件里的城市档案">'+[
-['society','平民与政府'],['recruitment','人才市场'],['politics','家族产业'],['city','城市版图'],['estates','地皮地产'],['transport','运输路线'],['clock','时钟'],['citizens','城市居民'],['operations','组织事务'],['contacts','雇佣线人'],['justice','刑事案件'],['news','晚报']
+['society','平民与政府'],['recruitment','人才市场'],['politics','家族产业'],['city','城市版图'],['estates','地皮地产'],['industry','产业经营'],['transport','运输路线'],['clock','时钟'],['citizens','城市居民'],['operations','组织事务'],['contacts','雇佣线人'],['justice','刑事案件'],['news','晚报']
 ].map(([id,name])=>'<button type="button" class="'+(tab===id?'selected':'')+'" data-world-tab="'+id+'">'+name+'</button>').join('')+'</nav>';
 const cellName=(w,id)=>w.slices.factions.cells.find(c=>c.id===id)?.name||id;
 const personName=(w,id)=>w.slices.people.members.find(p=>p.id===id)?.name||id;
@@ -19,7 +20,8 @@ function parcelsPage(w,legacy,ui){
  const d=w.slices.estates,selected=ui.cell||'s0';
  const cells=w.slices.factions.cells;
  const parcels=d.parcels.filter(p=>p.cell===selected),lot=d.parcels.find(p=>p.id===ui.lot&&p.cell===selected)||parcels[0];
- const types=BUSINESS_TYPES.map(b=>button('data-city-build="'+lot.id+'" data-city-building="'+b.id+'"',b.name+' · '+b.build,lot.owner!=='player'||!!lot.building)).join('');
+ const sectors=[...new Set(BUSINESS_TYPES.map(b=>b.sector))];
+ const types=sectors.map(sector=>'<div class="mini-title">'+sector+'</div><div class="city-actions">'+BUSINESS_TYPES.filter(b=>b.sector===sector).map(b=>button('data-city-build="'+lot.id+'" data-city-building="'+b.id+'"',b.name+' · '+b.build,lot.owner!=='player'||!!lot.building||legacy.cash<b.build)).join('')+'</div>').join('');
  return head('REAL ESTATE / TITLE DEEDS','夜港地籍与购置','16街区、48处独立地皮，商业产权与黑帮控制权分开计算。合法建筑有实际客流、收入、维护成本和升级。')+tabs('estates')+
  '<div class="world-paper-grid"><div><div class="mini-title">01 / 选择街区</div><div class="city-street-list">'+cells.map(c=>button('data-world-cell="'+c.id+'" class="'+(selected===c.id?'selected':'')+'"',c.name)).join('')+'</div>'+
  '<div class="mini-title">02 / 选择地皮</div><div class="city-lot-list">'+parcels.map(p=>'<button type="button" class="city-lot '+(lot.id===p.id?'selected':'')+'" data-city-lot="'+p.id+'"><b>'+p.title+'</b><small>'+ (p.owner==='player'?'名下资产':p.owner==='market'?'可交易土地':'其他家族产权') +'</small><span>'+(p.building?p.building.name:'空地')+'</span></button>').join('')+'</div>'+
@@ -31,8 +33,10 @@ function parcelsPage(w,legacy,ui){
  label('上日利润',lot.lastProfit+' 元')+
  '<div class="city-actions">'+button('data-city-buy="'+lot.id+'"','签购地契 · '+lot.price,lot.owner!=='market')+
  (lot.building&&lot.building.type!=='office'?
- button('data-city-upgrade="'+lot.id+'"','升级建筑 · '+(90*lot.building.level),lot.owner!=='player'||lot.building.level>=3):'')+'</div>')+
- '<div class="mini-title">建设商业设施 / 施工申请</div><div class="city-actions">'+types+'</div>'+
+ button('data-city-upgrade="'+lot.id+'"','升级建筑 · '+Math.round(95*lot.building.level*(1+lot.building.level*.25)),lot.owner!=='player'||lot.building.level>=5):'')+'</div>')+
+ '<div class="mini-title">建设商业设施 / 施工申请</div><p class="map-hint">经营提醒：先留足至少一天的采购、工资、维护、税费。建好商铺不等于立刻有收入；缺货会产生真实亏损。</p><div class="city-actions">'+types+'</div>'+
+ '<div class="mini-title">精细经营</div><div class="city-actions">'+
+ (lot.building&&lot.building.type!=='office'?button('data-industry-lot="'+lot.id+'"','查看企业经营与供应链'): '')+'</div>'+ 
  '<div class="mini-title">经营性质</div><div class="city-actions">'+
  button('data-city-mode="'+lot.id+'" data-mode="legal"','正规经营',!lot.building||lot.building.type==='office')+
  button('data-city-mode="'+lot.id+'" data-mode="underground"','高风险地下业务',!lot.building||lot.building.type==='office')+'</div>'+
@@ -126,6 +130,7 @@ function casePage(w,legacy){
 }
 export function renderCityBook(tab,w,legacy,ui={}){
  if(tab==='estates')return parcelsPage(w,legacy,ui);
+ if(tab==='industry')return renderIndustryBook(w,legacy,ui,tabs('industry'));
  if(tab==='clock')return timePage(w);
  if(tab==='citizens')return residentsPage(w,ui);
  if(tab==='transport')return transportation(w,legacy,ui);
