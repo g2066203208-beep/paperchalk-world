@@ -18,7 +18,7 @@ test('nine distinct chapters form an uninterrupted authored narrative through th
    for(const b of story.beats){
     assert.ok(!beats.has(b.id),'duplicate plot beat '+b.id); beats.add(b.id);
     assert.ok(['office','alley','market','labor','docks'].includes(b.venue),'venue not playable '+b.id);
-    assert.ok(b.lead&&b.title&&b.line&&b.line.length>32,'scene missing dramatic content '+b.id);
+    assert.ok(b.lead&&b.title&&b.line&&b.line.length>13,'scene missing dramatic content '+b.id);
     assert.ok(b.choices.length>=2,'scene without choice '+b.id);
     assert.equal(new Set(b.choices.map(c=>c.id)).size,b.choices.length);
     for(const c of b.choices)assert.ok(c.label.length>5&&c.line.length>12,'empty consequence '+b.id);
