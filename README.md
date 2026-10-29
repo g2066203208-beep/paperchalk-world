@@ -1,20 +1,10 @@
-# 夜港：首领办公室 / Night Harbor — Don's Office
+# New Game / 新游戏
 
-办公室常驻主场景，原创扁平二次元色块人物和美术。借鉴高对比度动画游戏的视觉设计原则，但**没有复制任何商业游戏素材**。手机和电脑可直接操作物件，网页免费托管 GitHub Pages；原 Android WebView 仍加载最新网页，无需因网页改动而重装 APK。
+This repository is retained as the home of the next game.
 
-## 不再是管理网页的第一版互动
+The old **Night Harbor** game, UI, game systems, pixel art, tests, Android
+packaging, documents and legacy CI scripts have been removed from the current
+branch. Git history remains intact.
 
-- 桌上的**地图**：点开后选择小弟、街区和任务，目的地及路线在地图上可视化；每位成员每天只能执行一项任务。
-- **电话**：每天来电和不同选项，修改实际经营状态及资金、声望、关注。
-- **日历**：推进到次日，执行全部派遣，按职业能力、街区状态具体结算；扣除办公开销。
-- **汇报卷宗**：小弟把上一天任务的真实结果带回办公室；报告内容来自模拟器而非纯固定文本。
-- **账本**：逐笔记录收入与开支，可以核对。
-- **旧枪**：可调查的世界观道具，不是打斗按钮。
-- 第三天有第三名成员加入，成长目标是两区影响力 55、声望 24、资金 1400；达成后可继续自由经营。
-- 刷新自动保存；人物、报告、路线与决策均可在浏览器恢复。
-
-## 测试
-Node 纯规则测试；GitHub Actions 真实 Chromium Playwright 操作测试（1440×900 桌面、390×844 手机竖屏、844×390 手机横屏），截图归档，通过后才部署。
-
-## 已知限制
-这是正式游戏方向的**首个可玩垂直切片**，不是已经具备商业成品级逐帧美术、长篇剧情、配音与复杂独立 AI 的完整版。视觉是原生 SVG 与 CSS 交互的原创程序插画，并非从 Persona 5 复制人物或美术素材。
+GitHub Pages publishes only `site/index.html`, which is currently an empty
+page. No gameplay or design decisions for the new game have been implemented.

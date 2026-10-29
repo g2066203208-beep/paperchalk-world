@@ -1,89 +1,10 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/><meta name="theme-color" content="#161b21"/><meta name="description" content="夜港：在衰败的港城中，从一间买下的毛坯办公室与一名兄弟起家，帮助街坊，自愿招人，与家族企业和政府制度周旋。"/><title>夜港 · 首领办公室</title><link rel="stylesheet" href="./style.css"/><link rel="stylesheet" href="./ui/world-panel.css"/><link rel="stylesheet" href="./presentation/stage.css"/><link rel="stylesheet" href="./ui/city-book.css"/><link rel="stylesheet" href="./ui/industry-book.css"/><link rel="stylesheet" href="./ui/origin-book.css"/><link rel="stylesheet" href="./scenes/explore.css"/><link rel="stylesheet" href="./world/atlas-explorer.css"/><link rel="stylesheet" href="./world/country-map.css"/><link rel="stylesheet" href="./world/walkable-street.css"/><link rel="stylesheet" href="./scenes/explore-toggle.css"/><link rel="stylesheet" href="./scenes/scene-focus.css"/><link rel="stylesheet" href="./scenes/scene-hitfix.css"/><link rel="stylesheet" href="./scenes/scene-navigation.css"/><link rel="stylesheet" href="./scenes/pedestrian.css"/><link rel="stylesheet" href="./scenes/daily-story.css"/><link rel="stylesheet" href="./scenes/main-story.css"/><link rel="stylesheet" href="./scenes/pixel/pixel-game.css"/><script type="module" src="./app.js"></script></head>
-<body><div class="game" id="game">
-<header class="topbar"><div class="logo"><span class="logo-emblem">N<span>°</span></span><div><strong>夜港</strong><small>THE OFFICE / FROM ZERO</small></div></div>
-<div class="stats"><span class="game-date" id="game-date">09-07 · 周一</span><span class="stat"><small>DAY</small><b id="day">01</b></span><span class="stat"><small>资金</small><b id="cash">＄190</b></span><span class="stat"><small>声望</small><b id="respect">01</b></span><span class="stat"><small>关注</small><b id="heat">12</b></span></div>
-<button class="explore-switch" id="explore-toggle" type="button" aria-label="切换探索街区与传统办公室" aria-pressed="true">旧桌面</button><button type="button" id="national-atlas-open" aria-label="进入实际街道自由步行探索" style="background:#c09770;color:#17232b;border:0;padding:8px 13px;font-weight:900;cursor:pointer">走进城市</button><button class="help-control" id="help-btn" type="button" aria-label="查看游戏玩法">?</button></header>
-<main class="scene" aria-label="可交互的黑帮首领办公室">
-<div class="scene-art" id="scene-art">
-<img src="./office-art.svg" class="office-svg" alt="原创二次元办公室，年轻下属站在办公桌后，桌上有地图、文件、电话和其他办公物件" draggable="false"/><span class="character-figure" aria-hidden="true"></span>
-<!-- The visible artwork itself is the target. Transparent path shapes exactly follow each item. -->
-<svg class="scene-hitmap" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid slice" aria-label="办公室可互动的真实道具">
- <defs><clipPath id="guest-behind-desk" clipPathUnits="userSpaceOnUse"><path d="M0 0H1200V431H0Z"/></clipPath></defs>
- <defs><linearGradient id="face" x2=".7" y2="1"><stop stop-color="#f5dbbd"/><stop offset=".66" stop-color="#ecc2a8"/><stop offset="1" stop-color="#c99586"/></linearGradient></defs>
- <g id="door-actor">
-  <path class="door-leaf" d="M920 98L1075 97L1076 411L919 416Z" fill="#48505a" stroke="#c8a581" stroke-width="6"/>
-  <path class="door-leaf-detail" d="M945 116H1048V236H945ZM945 256H1048V384H945Z" fill="#343f4b" stroke="#d3ad83" stroke-width="3"/>
-  <ellipse class="door-handle" cx="1045" cy="258" rx="7" ry="11" fill="#e4c08b"/>
-  <g class="guest-actor" id="guest-actor" clip-path="url(#guest-behind-desk)"><g id="underling">
-<path d="M338 337Q304 363 285 416L254 509L360 517L372 452L387 542L545 538L557 451L580 532L619 509L584 392Q569 354 528 335L479 317L395 313Z" fill="#101f2b" stroke="#0a1720" stroke-width="4"/>
-<path d="M335 358L303 432L284 502H359L370 418Z" fill="#253546"/>
-<path d="M538 343L565 385L594 502L550 514L522 433Z" fill="#314358"/>
-<path d="M403 307L438 353L476 304L509 331L487 530H391L365 337Z" fill="#e8dccc"/>
-<path d="M438 345L449 375L457 360L446 342Z" fill="#a94850"/>
-<path d="M444 369L423 517L460 532L463 390Z" fill="#8e3943"/>
-<path d="M398 312L444 373L391 431L367 353Z" fill="#202f3e"/>
-<path d="M480 311L444 373L494 430L521 346Z" fill="#192b3b"/>
-<path d="M395 315L421 358L405 367L437 401L386 527L353 348Z" fill="#364455"/>
-<path d="M488 311L467 360L486 369L454 402L504 530L555 362L525 337Z" fill="#2d4052"/>
-<path d="M365 346L341 410L360 426L344 465" fill="none" stroke="#5e6975" stroke-width="5"/>
-<path d="M526 352L553 411L531 439" fill="none" stroke="#667688" stroke-width="5"/>
-<path d="M396 449L483 445M391 482L488 482" stroke="#1c2833" stroke-width="3" opacity=".7"/>
-<circle cx="398" cy="474" r="3" fill="#dfb57b"/>
-<g class="puppet-arm"><path d="M531 392L584 432L628 422L647 450L591 489L529 449Z" fill="#304557" stroke="#182636" stroke-width="4"/>
-<path d="M611 429Q634 410 650 431L658 451Q641 465 624 448Z" fill="#e6b99c"/>
-</g><path d="M564 411L657 387L680 445L585 464Z" fill="#f2e5d1" stroke="#1d2c3a" stroke-width="6"/>
-<path d="M581 420L636 406M588 432L644 417M592 443L651 427" stroke="#a6a49b" stroke-width="3"/>
-<path d="M621 403L636 400" stroke="#b54b54" stroke-width="6"/>
-<path d="M420 281L420 328Q444 352 474 326L478 275Z" fill="#c98e7e"/>
-<path d="M425 298L444 329L470 306" fill="#efc2aa"/>
-<path d="M357 163Q366 121 424 115L489 150Q517 182 497 248L488 282Q476 313 446 319Q414 310 394 286L371 242Z" fill="url(#face)" stroke="#40303b" stroke-width="3"/>
-<path d="M382 235Q363 226 363 252Q365 277 389 273" fill="#efc1a3" stroke="#ba847e" stroke-width="3"/>
-<path d="M484 230Q502 226 504 249Q499 268 482 266" fill="#e3b097" stroke="#b57f7e" stroke-width="3"/>
-<path d="M404 279Q435 313 469 289" fill="#d29d90" opacity=".38"/>
-<path d="M391 222Q409 214 429 222L425 237Q405 240 395 233Z" fill="#fff5e6"/>
-<path d="M454 222Q473 211 490 218L485 235Q465 241 456 233Z" fill="#fff2e4"/>
-<ellipse cx="414" cy="227" rx="7" ry="10" fill="#30465a"/>
-<ellipse cx="469" cy="226" rx="7" ry="10" fill="#30465a"/>
-<circle cx="417" cy="222" r="3" fill="#f8ede0"/><circle cx="472" cy="221" r="3" fill="#f8ede0"/>
-<path d="M390 218Q406 209 429 217M452 215Q472 205 493 213" stroke="#26313d" stroke-width="5" fill="none" stroke-linecap="round"/>
-<path d="M393 204L424 201M454 199L489 194" stroke="#3e333d" stroke-width="6" stroke-linecap="round"/>
-<path d="M442 221L435 252L447 255" stroke="#b57e77" stroke-width="3" fill="none"/>
-<path id="npc-mouth" d="M426 277Q443 282 459 269" stroke="#a55b61" stroke-width="3" fill="none" stroke-linecap="round"/>
-<path d="M360 230L342 196L341 155L359 119L398 96L451 91L487 105L516 143L507 197L492 232L484 173L475 151L454 172L433 180L414 162L393 202L369 219Z" fill="#151d2a"/>
-<path d="M347 165L365 121L401 104L459 95L494 110L517 147L497 145L481 122L445 120L407 139L384 189L363 210Z" fill="#364757"/>
-<path d="M363 123Q397 82 459 94L495 110L472 131Q443 118 418 143L389 213L367 232L366 190L350 215L339 180Z" fill="#223341"/>
-<path d="M396 100Q460 78 500 122L509 145L484 134L456 132L421 160L398 181L405 142L366 178Z" fill="#475668"/>
-<path d="M467 101L480 112L453 140L431 146" stroke="#6c7785" stroke-width="4" fill="none" opacity=".6"/>
-<path d="M343 178Q352 210 370 238L366 266Q337 238 333 205" fill="#1d2b39"/>
-<path d="M495 147L515 161L510 206L500 231L492 211" fill="#1a2532"/>
-<path d="M521 353L536 360L529 375L515 369Z" fill="#d7b47c"/>
-</g></g>
-    <g class="knock-flash" id="knock-light" aria-hidden="true"><circle cx="1051" cy="200" r="18" fill="#bd5256"/><text x="1038" y="208" font-size="23" font-weight="900" fill="#fff0dc">!</text></g>
- </g>
- <g class="svg-interactions">
- <path class="object-hit object-door" data-open="door" tabindex="0" role="button" aria-label="打开办公室门或离开办公室" d="M903 78L1091 78L1093 430L905 430Z"/>
- <path class="object-hit object-person" data-open="visitor" tabindex="0" role="button" aria-label="与进门的访客交谈" d="M338 100L525 98L584 328L640 432L294 432L285 359Z"/>
- <path class="object-hit object-phone" data-open="phone" tabindex="0" role="button" aria-label="拿起整部座机电话" d="M160 472Q189 453 265 460L357 491L368 555L177 584L148 540Z"/>
- <path class="object-hit object-map" data-open="map" tabindex="0" role="button" aria-label="摊开整张城区地图" d="M546 485L856 468L927 613L532 619Z"/>
- <path class="object-hit object-reports" data-open="reports" tabindex="0" role="button" aria-label="打开整份报告文件夹" d="M332 517L563 502L620 641L331 665Z"/>
- <path class="object-hit object-ledger" data-open="ledger" tabindex="0" role="button" aria-label="翻开整本财务账簿" d="M809 570L1048 574L1077 654L796 656Z"/>
- <path class="object-hit object-gun" data-open="gun" tabindex="0" role="button" aria-label="打开武器抽屉和安全柜" d="M112 566L261 556L287 650L116 668Z"/>
- <path class="object-hit object-calendar" data-open="calendar" tabindex="0" role="button" aria-label="翻动日历进入下一天" d="M1002 517L1122 531L1142 611L992 614Z"/>
- </g>
-</svg>
-</div>
-<div class="scene-info"><span class="scene-tag"><strong>01</strong> CHAPTER / 白手起家</span><div class="briefing" id="briefing"><small id="speaker">阿凯 · 汇报</small><p id="briefing-text">老板，城区地图和今天的情报都已经放在桌上了。</p><button type="button" id="open-reports" aria-label="打开最新报告">查看汇报 <span>›</span></button></div><span class="scene-note">OBJECTS ARE INTERACTIVE / 点击整件物品操作</span></div>
-</main>
-<div id="street-scene" class="street-scene" hidden aria-label="办公室外的夜港街道">
- <div class="street-haze"><span class="street-moon"></span><span class="street-buildings"></span><span class="street-pavement"></span></div>
- <div class="street-head"><small>NIGHT HARBOR · NIGHT STREETS</small><strong>走出办公室</strong><p>这里发生的事会改变你的资金和城区关系。</p></div>
- <div class="street-links">
-   <button type="button" class="place-building harbor-bld" data-travel="harbor"><span>01 / HARBOR</span><strong>旧港</strong><small>现场结算货款 · +35 现金</small></button>
-   <button type="button" class="place-building market-bld" data-travel="market"><span>02 / MARKET</span><strong>市集</strong><small>拜访商户 · 声望与关系上升</small></button>
-   <button type="button" class="place-building neon-bld" data-travel="neon"><span>03 / NEON</span><strong>霓虹街</strong><small>调查竞争者 · 关注可能上升</small></button>
-   <button type="button" class="place-building return-bld" data-travel="office"><span>PRIVATE OFFICE</span><strong>返回办公室</strong><small>通过办公室门回到桌前</small></button>
- </div>
- </div>
-<footer class="bottom-ribbon"><div class="day-mark">NO. <span id="ribbon-day">001</span></div><div class="foot-copy">一间毛坯办公室。两个人。城里还无人知道他们是谁。</div><div class="goal-marker" id="goal-marker">目标 · 2 区影响力 55 / 声望 24 / 资金 1400</div></footer>
-<div id="overlay" class="overlay" hidden><section class="paper-panel" role="dialog" aria-modal="true" aria-labelledby="panel-title"><div class="panel-chrome"><span id="panel-kicker">NIGHT HARBOR / PRIVATE FILE</span><button id="close-panel" type="button" aria-label="收起当前物件">×</button></div><div id="panel-body" class="panel-body"></div></section></div>
-<div class="toast" id="toast" aria-live="polite" role="status"></div></div></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title></title>
+</head>
+<body></body>
+</html>
