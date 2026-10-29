@@ -3,7 +3,7 @@ const $=s=>document.querySelector(s);
 const cv=$('#rig-canvas'),wrap=$('#canvas-wrap'),ctx=cv.getContext('2d');
 const colors={core:'#8ed7cc',spine:'#8ed7cc',head:'#e9b4ae',leg:'#e9c58e',arm:'#e9c58e',tail:'#aaaedb'};
 const names={core:'身体核心',spine:'脊柱',head:'头部结构',arm:'前肢 / 手臂',leg:'支撑肢体',tail:'尾椎'};
-const state={type:'quadruped',seed:2048,size:100,limbs:100,playing:true,labels:false,ghost:true,zoom:1,rig:null,pose:null,selected:null,drag:null,time:0,last:0,camera:null};
+const state={type:'quadruped',seed:2048,size:100,limbs:100,playing:true,labels:false,ghost:true,zoom:1,rig:null,pose:null,selected:null,drag:null,time:0,last:0,camera:null,dirty:true};
 function labelMessage(text){$('#message').textContent=text;}
 function readControls(){
  state.size=Number($('#size-range').value);
@@ -17,7 +17,7 @@ function rebuild(){
  readControls();
  state.rig=generateRig(state.type,state.seed,{size:state.size,limbs:state.limbs});
  const check=validateRig(state.rig);
- state.drag=null;state.selected=null;state.time=0;
+ state.drag=null;state.selected=null;state.time=0;state.dirty=true;
  state.zoom=1;
  $('#stat-nodes').textContent=check.bones;
  $('#stat-chains').textContent=check.chains;
@@ -59,6 +59,7 @@ function refreshHierarchy(){
  }
 }
 function updateInspector(){
+ state.dirty=true;
  document.querySelectorAll('.bone-row').forEach(row=>
   row.classList.toggle('active',row.dataset.boneId===state.selected));
  const bone=findBone(state.rig,state.selected);
@@ -174,6 +175,9 @@ function drawAnnotations(camera){
  ctx.restore();
 }
 function render(now){
+ requestAnimationFrame(render);
+ if(!state.playing&&!state.drag&&!state.dirty)return;
+ state.dirty=false;
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
  if(state.playing&&!state.drag)state.time+=dt;
  if(!state.rig)return;
@@ -190,8 +194,9 @@ function render(now){
  drawAnnotations(camera);
  $('#anim-progress').style.width=(state.time*.85%1*100).toFixed(1)+'%';
  $('#zoom-label').textContent=Math.round(state.zoom*100)+'%';
- if(state.selected&&Math.floor(now/400)!==Math.floor((now-16)/400))updateInspector();
- requestAnimationFrame(render);
+ if(state.selected&&Math.floor(now/400)!==Math.floor((now-16)/400)){
+  // Inspector info is updated by interactions, not every paint tick.
+ }
 }
 function canvasPoint(event){const box=cv.getBoundingClientRect();return {x:event.clientX-box.left,y:event.clientY-box.top};}
 function nearest(point){
@@ -221,14 +226,14 @@ cv.addEventListener('pointermove',event=>{
  state.drag.x=p.x;state.drag.y=p.y;
 });
 function finishDrag(){
- if(state.drag){state.drag=null;cv.classList.remove('dragging');labelMessage('骨长约束测试完成');}
+ if(state.drag){state.drag=null;state.dirty=true;cv.classList.remove('dragging');labelMessage('骨长约束测试完成');}
 }
 cv.addEventListener('pointerup',finishDrag);
 cv.addEventListener('pointercancel',finishDrag);
 cv.addEventListener('lostpointercapture',finishDrag);
 cv.addEventListener('wheel',event=>{
  event.preventDefault();
- state.zoom=clamp(state.zoom*Math.exp(-event.deltaY*.001),.5,3);
+ state.zoom=clamp(state.zoom*Math.exp(-event.deltaY*.001),.5,3);state.dirty=true;
 },{passive:false});
 document.querySelectorAll('[data-type]').forEach(b=>b.addEventListener('click',()=>{
  state.type=b.dataset.type;rebuild();
@@ -241,7 +246,7 @@ $('#regenerate').addEventListener('click',()=>{
 });
 $('#generate').addEventListener('click',()=>{rebuild();labelMessage('已重新生成并重置骨架');});
 function updatePlaying(){
- state.playing=$('#play-switch').checked;
+ state.playing=$('#play-switch').checked;state.dirty=true;
  $('#play-button').innerHTML=state.playing?'Ⅱ <span>暂停</span>':'▶ <span>播放</span>';
  $('#play-button').setAttribute('aria-label',state.playing?'暂停动画':'播放动画');
  $('#mode-label').textContent=state.playing?'实时模拟':'静止检查';
@@ -250,9 +255,9 @@ $('#play-switch').addEventListener('change',updatePlaying);
 $('#play-button').addEventListener('click',()=>{
  $('#play-switch').checked=!state.playing;updatePlaying();
 });
-$('#labels-switch').addEventListener('change',e=>{state.labels=e.target.checked;});
-$('#ghost-switch').addEventListener('change',e=>{state.ghost=e.target.checked;});
-$('#fit-view').addEventListener('click',()=>{state.zoom=1;labelMessage('视图已适配');});
+$('#labels-switch').addEventListener('change',e=>{state.labels=e.target.checked;state.dirty=true;});
+$('#ghost-switch').addEventListener('change',e=>{state.ghost=e.target.checked;state.dirty=true;});
+$('#fit-view').addEventListener('click',()=>{state.zoom=1;state.dirty=true;labelMessage('视图已适配');});
 function download(name,blob){
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;
  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -286,6 +291,7 @@ $('#export-png').addEventListener('click',()=>{
  cv.toBlob(blob=>{if(blob)download(currentName('png'),blob);},'image/png');
  labelMessage('已导出当前画布 PNG');
 });
+window.addEventListener('resize',()=>{state.dirty=true;});
 rebuild();
 window.__BONE_LAB__={
  get rig(){return state.rig;},
