@@ -234,10 +234,19 @@ export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPos
  }
  frame=requestAnimationFrame(frameDraw);
  return {
-  buildings,goTo(id){const b=buildings.find(x=>x.id===id);if(b)locate(b.doorX,b.doorY);return !!b;},
+  buildings,goTo(id){
+   const b=buildings.find(x=>x.id===id);
+   if(!b)return false;
+   // Destination buttons target a *door*, not the building's wall hitbox.
+   // Never infer the selected building from the destination coordinate.
+   follow=b;target={x:b.doorX,y:b.doorY};
+   path=findStreetPath(player,target,buildings);
+   if(!path.length){follow=null;target=null;return false;}
+   return true;
+  },
   move(dx,dy){const nx=clamp(player.x+dx,8,STREET_W-8),ny=clamp(player.y+dy,8,STREET_H-8);
     if(canStandAt(nx,ny,buildings)){player.x=nx;player.y=ny;write();return true;}return false;},
-  snapshot(){return {...player,buildings:buildings.length,people:site.people.length};},
+  snapshot(){return {...player,buildings:buildings.length,people:site.people.length,following:follow?.id||null,waypoints:path.length};},
   destroy(){if(closed)return;closed=true;cancelAnimationFrame(frame);canvas.removeEventListener('click',click);
    document.removeEventListener('keydown',down);document.removeEventListener('keyup',up);write();}
  };
