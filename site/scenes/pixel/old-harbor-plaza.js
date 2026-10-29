@@ -17,7 +17,7 @@ const SITES=[
  ['clock','钟楼市政厅',396,80,186,78,3,'clock'],
  ['cafe','海鸥咖啡馆',602,34,157,120,2,'cafe'],
  ['books','旧港书店',790,49,138,109,2,'shop'],
- ['market','港湾杂货铺',22,239,144,102,2,'shop'],
+ ['market','港湾杂货铺',48,239,118,102,2,'shop'],
  ['press','旧港报社',243,266,143,101,3,'press'],
  ['diner','船工食堂',788,255,147,110,2,'diner'],
  ['clinic','旧港诊所',32,443,153,99,2,'civic'],
@@ -33,6 +33,12 @@ export function oldHarborBuildings(){
   worldX:125,worldY:112,style,curated:true
  }));
 }
+export const OLD_HARBOR_SOLIDS=Object.freeze([
+ {x:0,y:0,w:35,h:600}, // canal: never walk on water
+ {x:535,y:289,w:89,h:60}, // stone fountain and water basin
+ {x:64,y:70,w:14,h:44}, {x:154,y:84,w:14,h:45}, // park tree trunks
+ {x:77,y:141,w:49,h:23} // garden bench
+]);
 export const OLD_HARBOR_WALKERS=Object.freeze([
  [102,198],[306,202],[464,207],[682,208],[850,210],
  [72,382],[279,393],[416,379],[563,371],[685,362],
@@ -206,7 +212,23 @@ function facade(c,b,i){
   q(c,tx+28,y-32,19,15,'#507786');
   q(c,tx+32,y-28,11,7,'#a8bec0');
  }
- if(style==='press')q(c,x+w-29,y+h-59,25,26,'#dcceaf');
+ if(style==='press'){
+  q(c,x+w-29,y+h-59,25,26,'#dcceaf');
+  q(c,x+w-25,y+h-55,17,4,'#53696e');
+  for(let k=0;k<3;k++)q(c,x+w-25,y+h-46+k*7,16,4,'#9c9384');
+  q(c,x+13,y+h-12,22,7,'#b4a28b');
+ }
+ if(style==='cafe'){
+  // Tables and potted plants outside an actual cafe, not decorative generic boxes.
+  q(c,x+w-31,y+h-18,22,7,'#765f58');
+  q(c,x+w-23,y+h-12,5,12,C.ink);
+  q(c,x+w-38,y+h-7,10,5,C.wood);
+  q(c,x+w-9,y+h-7,10,5,C.wood);
+ }
+ if(style==='diner'){
+  q(c,x+w-40,y+h-58,31,17,'#e4c996');
+  words(c,'今日热餐',x+w-24,y+h-50,29,C.ink,9);
+ }
  if(style==='civic'){
   q(c,x+w-29,y+h-64,19,20,'#eadcc5');
   q(c,x+w-22,y+h-61,5,14,'#b96261');
