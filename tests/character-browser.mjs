@@ -31,7 +31,14 @@ try{
  assert.equal(await page.evaluate(()=>window.__CHARACTER_ATELIER__.state.palette),'purple');
  await page.locator('[data-palette="blue"]').click();
  await page.locator('[data-mode="pixel"]').click();
- await page.waitForFunction(()=>document.querySelector('#pixel').width===64);
+ await page.waitForFunction(()=>document.querySelector('#pixel').width===64&&
+  document.querySelector('#render-status').textContent.includes('NEAREST NEIGHBOR'));
+ const pixelSample=await page.locator('#pixel').evaluate(canvas=>{
+  const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+  return new Set(Array.from({length:data.length/4},(_,i)=>
+   [data[i*4],data[i*4+1],data[i*4+2],data[i*4+3]].join(','))).size;
+ });
+ assert.ok(pixelSample>40,'64px output must contain actual rendered artwork, not blank canvas');
  assert.equal(await page.locator('#pixel').isVisible(),true);
  await page.screenshot({path:'character-artifacts/03-pixel-64.png',fullPage:true});
  const results=[];
