@@ -655,12 +655,14 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===1);
  await page.screenshot({path:'artifacts/national-00-full-country.png',fullPage:true});
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ assert.deepEqual(await page.locator('.national-walk-canvas').evaluate(el=>({width:el.width,height:el.height,smoothing:el.getContext('2d').imageSmoothingEnabled})),{width:480,height:300,smoothing:false},'actual walking city must render on a deliberate pixel grid');
  const start=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
  await page.locator('.national-walk-canvas').focus();
  await page.keyboard.down('d');await page.waitForTimeout(260);await page.keyboard.up('d');
  const moved=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
  assert.ok(moved.x>start.x,'player should physically move when pressing D');
  await page.screenshot({path:'artifacts/national-01-urban-street.png',fullPage:true});
+ await page.locator('.national-walk-canvas').screenshot({path:'artifacts/national-01b-pixel-street-closeup.png'});
  const before=await page.evaluate(()=>window.__OFFICE__.atlas.position());
  await page.locator('[data-atlas-step="1,0"]').click();
  const after=await page.evaluate(()=>window.__OFFICE__.atlas.position());
