@@ -11,7 +11,8 @@ export const nationalStreetScene={
  render({x,y,readWorld,tileNames}){
   const ground=terrainAt(x,y),region=regionAt(x,y),places=streetBuildingsAt(x,y);
   const estates=playerDistricts(readWorld()).filter(p=>p.x===x&&p.y===y);
-  return '<div class="national-local-title"><strong>可自由步行：'+e(region.name)+'</strong><span>坐标 '+x+','+y+' · '+e(tileNames[ground.terrain])+'</span></div>'+
+  return '<div class="national-local-title"><strong>像素街区 · 自由步行：'+e(region.name)+'</strong><span>坐标 '+x+','+y+' · '+e(tileNames[ground.terrain])+'</span></div>'+ 
+   '<button type="button" class="pixel-scene-focus-toggle" data-scene-focus="1">▣ 街区全屏 / 返回全国地图</button>'+
    '<div class="national-walk-zone"><canvas class="national-walk-canvas" aria-label="WASD自由移动，点击建筑会步行至门口" tabindex="0"></canvas>'+
    '<div class="national-walk-overlay"><b>W A S D / 方向键移动</b><span>点道路步行 · 点建筑走向门口</span></div>'+
    '<div class="national-walk-buttons" aria-label="手机步行控制">'+
