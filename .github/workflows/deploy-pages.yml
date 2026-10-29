@@ -74,6 +74,22 @@ jobs:
         run: |
           python ml/verify_outputs.py
           node tests/pixel-model.mjs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium for trained-model browser testing
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test actual neural browser inference and RL brush replay
+        run: node tests/pixel-browser.mjs
+      - name: Upload PixelLab real browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixellab-trained-browser-screenshots
+          path: pixel-artifacts/
+          retention-days: 30
       - name: Upload learning artifacts and reproducibility proof
         uses: actions/upload-artifact@v4
         with:
