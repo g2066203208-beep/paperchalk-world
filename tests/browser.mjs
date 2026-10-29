@@ -53,6 +53,28 @@ try{
  assert.equal(await page.locator('[data-type]').count(),4);
  assert.equal(await page.locator('#stat-roots').innerText(),'1');
  assert.ok(Number(await page.locator('#stat-nodes').innerText())>20);
+ await page.waitForFunction(()=>window.__BONE_LAB__.surface?.contours?.some(c=>c.closed));
+ assert.equal(await page.locator('#surface-switch').isChecked(),true);
+ assert.equal(await page.locator('#bones-switch').isChecked(),true);
+ const originalArea=await page.evaluate(()=>window.__BONE_LAB__.surface.inside);
+ await page.locator('#thickness-range').evaluate(el=>{
+  el.value='165';el.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ await page.waitForFunction(before=>window.__BONE_LAB__.surface?.inside>before,originalArea);
+ assert.equal((await page.locator('#thickness-output').innerText()),'165%');
+ await page.locator('#thickness-range').evaluate(el=>{
+  el.value='115';el.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ await page.locator('#blend-range').evaluate(el=>{
+  el.value='17';el.dispatchEvent(new Event('input',{bubbles:true}));
+ });
+ assert.equal((await page.locator('#blend-output').innerText()),'17 u');
+ await page.locator('#bones-switch').uncheck();
+ assert.equal((await page.evaluate(()=>window.__BONE_LAB__.skin.showBones)),false);
+ await page.locator('#play-switch').uncheck();
+ await page.waitForTimeout(130);
+ await capture(page,'artifacts/surface-01-skin-only.png');
+ await page.locator('#bones-switch').check();
  const colors=await page.locator('#rig-canvas').evaluate(canvas=>{
   const c=canvas.getContext('2d'),img=c.getImageData(0,0,canvas.width,canvas.height).data,colors=new Set();
   for(let y=10;y<canvas.height;y+=19)for(let x=10;x<canvas.width;x+=23){
@@ -110,8 +132,8 @@ try{
           Math.abs(Math.hypot(b.x-c.x,b.y-c.y)-chain.l2)];
  });
  assert.ok(constraints.every(v=>v<.05),'drag cannot stretch a bone: '+constraints);
- await page.mouse.up();
  await capture(page,'artifacts/creature-05-ik-drag.png');screenshots.push('IK');
+ await page.mouse.up();
  assert.equal((await page.evaluate(()=>window.__BONE_LAB__.state.dragging)),false);
  // Observe actual file anchors and read their Blob/data URL bytes, even when
  // headless Chromium suppresses native download events.
