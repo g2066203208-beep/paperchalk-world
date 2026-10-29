@@ -645,7 +645,7 @@ await run('national-atlas-real-street-building-and-road-journey',{viewport:{widt
  const target=await page.evaluate(async()=>{
   const {buildingAt,interiorFor}=await import('./nation/world-model.js');
   const b=buildingAt(938,2049,0,window.__OFFICE__.world().slices.estates);
-  assert.ok(b);return {building:b,room:interiorFor(b)};
+  if(!b)throw Error('Historic lot-25 needs a real walkable building');return {building:b,room:interiorFor(b)};
  });
  assert.equal(target.building.property,'lot-25','this is a real property from the economic game');
  const camera=await page.evaluate(()=>window.__OFFICE__.nation.snapshot());
