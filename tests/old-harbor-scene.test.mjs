@@ -22,6 +22,8 @@ test('opening plaza is an authored district, not a copy of the 6x4 procedural gr
 test('every bespoke entrance remains attached to a real, independently entered interior',()=>{
  const b=streetBuildingsAt(125,112),origin={x:124,y:100};
  assert.equal(canStandAt(origin.x,origin.y,b),true);
+ assert.equal(canStandAt(10,290,b),false,'canal is not a walkable street');
+ assert.equal(canStandAt(581,314,b),false,'fountain cannot be walked through');
  for(const building of b){
   assert.ok(canStandAt(building.doorX,building.doorY,b),'blocked door: '+building.id);
   const path=findStreetPath(origin,{x:building.doorX,y:building.doorY},b);
