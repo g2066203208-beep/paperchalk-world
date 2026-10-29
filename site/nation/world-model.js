@@ -68,19 +68,27 @@ export function hash(...parts){
 }
 export const between=(v,min,max)=>Math.max(min,Math.min(max,v));
 export const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function valueNoise(x,y,unit){
+ const gx=Math.floor(x/unit),gy=Math.floor(y/unit),u=(x/unit-gx),v=(y/unit-gy);
+ const smooth=t=>t*t*(3-2*t),a=smooth(u),b=smooth(v);
+ const val=(i,j)=>hash('landform',i,j,COUNTRY.seed)/4294967295;
+ const top=val(gx,gy)*(1-a)+val(gx+1,gy)*a;
+ const bottom=val(gx,gy+1)*(1-a)+val(gx+1,gy+1)*a;
+ return top*(1-b)+bottom*b;
+}
 function coastAt(y){return 690+70*Math.sin(y/236)+38*Math.sin(y/83);}
 function riverAt(x){return 3100-480*Math.sin(x/530)+45*Math.sin(x/99);}
 export function terrainAt(x,y){
  x=Math.floor(x);y=Math.floor(y);
  if(x<0||y<0||x>=COUNTRY.size||y>=COUNTRY.size)return {kind:'outside',region:null,elevation:0};
- const coast=coastAt(y),river=riverAt(x),h=hash(x>>3,y>>3,COUNTRY.seed)/4294967296;
+ const coast=coastAt(y),river=riverAt(x),h=valueNoise(x,y,175)*.55+valueNoise(x,y,61)*.3+valueNoise(x,y,17)*.15;
  const elevation=Math.round(20+140*h+Math.max(0,x-2700)*.12);
  if(x<coast-18)return {kind:'sea',region:'coast',elevation:0};
  if(Math.abs(y-river)<15&&x>coast+50&&x<2340)return {kind:'water',region:'river',elevation:0};
- const region=REGIONS.map(r=>({...r,d:distance({x,y},r)/r.r})).sort((a,b)=>a.d-b.d)[0];
+ const region=REGIONS.map(r=>({...r,d:distance({x,y},r)/(r.r*(.86+valueNoise(x,y,133)*.32))})).sort((a,b)=>a.d-b.d)[0];
  let kind=region.d<1?region.biome:'grassland';
- if(region.d>1&&h>.84)kind='forest';
- if(region.d>1&&h<.20)kind='farm';
+ if(region.d>1&&h>.62)kind='forest';
+ if(region.d>1&&h<.37)kind='farm';
  if(x<coast+40)kind='port';
  return {kind,region:region.id,elevation};
 }
