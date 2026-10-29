@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101629"><title>FLAT4 · 真正训练的像素修复网络</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0e1426;color:#eeeef4;font:14px/1.6 system-ui,-apple-system,"Noto Sans SC",sans-serif}
+a{color:#9de4e9}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 23px;border-bottom:1px solid #313c59}
+header strong{font-size:15px;letter-spacing:1.5px}.shell{max-width:1420px;margin:auto;padding:26px}.eyebrow{letter-spacing:2px;color:#77d8dd;font-size:11px;font-weight:750}
+h1{font-size:clamp(24px,4.4vw,43px);line-height:1.17;margin:13px 0}h2{font-size:17px;margin:0 0 14px}p{color:#b0bed2;line-height:1.75}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}.stat{background:#19223b;border:1px solid #36425f;border-radius:12px;padding:16px}
+.stat small{color:#9eacc8;display:block}.stat strong{font-size:25px;color:#e4f8f5;display:block;font-variant-numeric:tabular-nums}
+.work{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:14px}.stage,.controls{border:1px solid #35415e;border-radius:14px;background:#171f36;padding:16px}
+.stage{background:#131b30}.trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.cell{text-align:center;min-width:0;background:#1c2540;border:1px solid #3a4767;border-radius:12px;padding:13px}
+.cell h3{font-size:13px;margin:0 0 12px;color:#d5e4ed}.cell canvas{height:384px;max-width:100%;width:auto;aspect-ratio:2/3;image-rendering:pixelated;image-rendering:crisp-edges;background:repeating-conic-gradient(#222b43 0% 25%,#1d263a 0% 50%) 50% / 24px 24px;border:1px solid #425173;touch-action:none;cursor:crosshair}
+.cell small{color:#98a7c1}.legend{display:flex;gap:9px;justify-content:space-between;flex-wrap:wrap;margin-top:12px}
+.palette{display:flex;gap:5px}.color{height:25px;width:25px;border-radius:5px;border:1px solid #ffffff33}.buttons{display:grid;gap:10px}
+button{cursor:pointer;background:#2b3959;border:1px solid #526783;border-radius:10px;padding:12px;color:#f3f4f8;font-weight:700}
+button.primary{color:#0e1a2b;background:#a7e9eb;border-color:#a7e9eb}
+button:disabled{cursor:not-allowed;opacity:.5}.group{border-bottom:1px solid #36445f;padding:0 0 19px;margin-bottom:19px}.group:last-child{margin:0;border:0}
+.box{padding:13px;border-radius:10px;background:#202b47;color:#bfcce0;font-size:12px;line-height:1.8}
+.meter{display:flex;justify-content:space-between;gap:10px;margin:9px 0}.meter b{color:#a7e9eb}
+details{margin-top:18px;color:#c8d1e1}summary{cursor:pointer;font-weight:700}
+.chart{width:100%;height:92px;margin:5px 0}#message{min-height:38px;color:#a7e9eb;font-weight:600}
+@media(max-width:880px){.work{grid-template-columns:1fr}.trio{gap:5px}.cell{padding:5px}.cell canvas{height:auto;width:100%;max-height:360px}.stats{grid-template-columns:repeat(2,1fr)}.shell{padding:15px}}@media(max-width:430px){.cell h3{font-size:11px}.cell small{font-size:10px}}
+</style></head>
+<body><header><strong>PIXEL LAB / <span style="color:#a7e9eb">LEARNED FLAT4</span></strong><a href="./flat4.html">← 返回可编辑母版</a></header>
+<div class="shell"><div class="eyebrow">TRAINED ON GITHUB ACTIONS · REPRODUCIBLE MODEL · 4 COLORS</div>
+<h1>让神经网络真正修复缺失的像素。</h1><p>从我们自己绘制的 64 × 96 四色人物母版采样，使用 NumPy 训练 5×5 局部上下文神经网络，预测被遮盖的真实像素。右边不是手动画好的答案，而是浏览器直接执行导出权重的推理结果。</p>
+<section class="stats"><div class="stat"><small>真实训练步数</small><strong id="steps">—</strong></div><div class="stat"><small>破损像素准确率</small><strong id="accuracy">—</strong></div><div class="stat"><small>邻域填充基线</small><strong id="baseline">—</strong></div><div class="stat"><small>原始母版</small><strong id="sourceCount">—</strong></div></section>
+<div class="work"><section class="stage">
+<div class="trio"><div class="cell"><h3>01 · 自绘原始像素</h3><canvas id="truth" width="64" height="96"></canvas><small>原始画布，不使用外部画师素材</small></div>
+<div class="cell"><h3>02 · 缺损输入</h3><canvas id="broken" width="64" height="96"></canvas><small>点击可标记需要神经修复的像素</small></div>
+<div class="cell"><h3>03 · 模型真实输出</h3><canvas id="restored" width="64" height="96"></canvas><small>网页端执行 MLP 推理并重建像素</small></div></div>
+<div class="legend"><span>64 × 96 · 透明 + 固定四种颜色</span><div class="palette" id="palette"></div><span>最近邻整数放大 · 不插值</span></div>
+<details><summary>模型误差变化（真实训练报告）</summary><svg class="chart" id="loss" viewBox="0 0 600 100" role="img" aria-label="cross entropy training loss"></svg><p id="report"></p></details>
+</section>
+<aside class="controls">
+<div class="group"><h2>01 · 神经像素重建</h2><div class="buttons"><button id="damage" disabled>① 随机遮盖 12% 原生像素</button><button class="primary" id="repair" disabled>② 用训练网络实际修复</button><button id="download" disabled>③ 导出四颜色修复 PNG</button><button id="reset" disabled>恢复原稿</button></div><p id="message">正在加载真实模型权重…</p></div>
+<div class="group"><h2>02 · 现场测量</h2><div class="meter"><span>当前遮盖像素</span><b id="masked">—</b></div><div class="meter"><span>遮盖前准确率</span><b id="before">—</b></div><div class="meter"><span>修复后准确率</span><b id="after">—</b></div><div class="meter"><span>输出中额外颜色</span><b id="extraColors">—</b></div></div>
+<div class="group"><h2>03 · 模型能做什么</h2><div class="box"><strong>能：</strong>学习这一张人物的局部配色与轮廓，修复少量缺失像素；输出只可能是透明或指定四色。<br><br><strong>不能：</strong>凭空画出审美成熟的新角色；也没有学习有織はべり或其他未经授权画师的作品。这个实验不是扩散模型，也不是从 ChatGPT 拆出来的绘图权重。</div></div>
+</aside></div></div>
+<script type="module">
+const W=64,H=96,MASK=5;
+const $=id=>document.getElementById(id);
+let model,source,truth,damaged,output,mask=[];
+function rgba(hex){return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]}
+function draw(canvas,tokens){const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;const img=ctx.createImageData(W,H);const palette=model.palette.map(rgba);for(let i=0;i<tokens.length;i++){const t=tokens[i],j=i*4;if(t===0||t===MASK){img.data[j+3]=0;continue}const [r,g,b]=palette[t-1];img.data[j]=r;img.data[j+1]=g;img.data[j+2]=b;img.data[j+3]=255}ctx.putImageData(img,0,0)}
+function refresh(){draw($('truth'),truth);draw($('broken'),damaged);draw($('restored'),output);$('masked').textContent=mask.length;$('extraColors').textContent='0 / 合格'}
+function seeded(seed){let s=seed>>>0;return()=>((s=Math.imul(s,1664525)+1013904223>>>0)/4294967296)}
+function damage(){const random=seeded(1997);mask=[];damaged=truth.slice();for(let i=0;i<damaged.length;i++){if(random()<.12){mask.push(i);damaged[i]=MASK;}}output=damaged.slice();$('before').textContent='0%';$('after').textContent='—';refresh();$('message').textContent='已遮盖 '+mask.length+' 个真实像素；可以在中间画布额外点击标记。';}
+function predict(tokens,x,y){const w=model.weights;const hidden=new Float32Array(model.hidden);for(let k=0;k<hidden.length;k++)hidden[k]=w.b1[k];let j=0;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const px=x+dx,py=y+dy;const t=(px<0||py<0||px>=W||py>=H)?0:tokens[py*W+px];const row=w.w1[j*6+t];for(let k=0;k<hidden.length;k++)hidden[k]+=row[k];j++;}
+for(let k=0;k<hidden.length;k++)hidden[k]=Math.max(0,hidden[k]);const scores=w.b2.slice();for(let k=0;k<hidden.length;k++){const row=w.w2[k];for(let c=0;c<5;c++)scores[c]+=hidden[k]*row[c]}return scores.indexOf(Math.max(...scores));}
+function repair(){if(!mask.length){$('message').textContent='请先遮盖像素。';return}const prediction=damaged.slice();let correct=0;for(const i of mask){const y=Math.floor(i/W),x=i%W;const p=predict(damaged,x,y);prediction[i]=p;if(p===truth[i])correct++}output=prediction;refresh();$('after').textContent=(100*correct/mask.length).toFixed(1)+'%';$('message').textContent='已运行导出模型权重，预测 '+mask.length+' 个被遮盖像素。结果未经过人工替换。';}
+function download(){const c=$('restored'),a=document.createElement('a');a.download='flat4-neural-reconstruction-64x96.png';a.href=c.toDataURL('image/png');a.click()}
+function chart(report){const pts=report.curve;const max=Math.max(...pts.map(p=>p.cross_entropy));const coords=pts.map((p,i)=>[10+i/(pts.length-1)*580,90-(p.cross_entropy/max)*75]);$('loss').innerHTML='<path d="M'+coords.map(([x,y])=>x.toFixed(1)+','+y.toFixed(1)).join(' L')+'" fill="none" stroke="#8be1dc" stroke-width="3"/><path d="M10,92 H590" fill="none" stroke="#54647d"/>'}
+$('damage').onclick=damage;$('repair').onclick=repair;$('download').onclick=download;$('reset').onclick=()=>{mask=[];damaged=truth.slice();output=truth.slice();$('before').textContent='—';$('after').textContent='—';$('message').textContent='已恢复原始四颜色人物。';refresh()};
+$('broken').addEventListener('click',e=>{if(!model)return;const r=e.target.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*W),y=Math.floor((e.clientY-r.top)/r.height*H);if(x<0||x>=W||y<0||y>=H)return;const i=y*W+x;if(!mask.includes(i))mask.push(i);damaged[i]=MASK;output[i]=MASK;refresh();});
+try{
+ const response=await Promise.all([fetch('./flat4-model.json'),fetch('./flat4-source.json')]);
+ if(response.some(r=>!r.ok))throw Error('Training artifacts are not deployed yet');
+ [model,source]=await Promise.all(response.map(x=>x.json()));
+ if(model.format!=='flat4-masked-token-mlp-v1'||source.tokens.length!==6144||model.palette.length!==4)throw Error('Invalid model export');
+ truth=source.tokens.slice();damaged=truth.slice();output=truth.slice();
+ $('steps').textContent=String(model.metrics.training_steps);
+ $('accuracy').textContent=(model.metrics.holdout_same_source_mask_accuracy*100).toFixed(1)+'%';
+ $('baseline').textContent=(model.metrics.four_neighbour_majority_baseline*100).toFixed(1)+'%';
+ $('sourceCount').textContent=String(model.metrics.source_sprites);
+ $('report').textContent='验证仅限同一原稿的未见过破损与位移，不代表跨画师或跨人物泛化。非前沿生成大模型。';
+ for(const hex of model.palette){const e=document.createElement('i');e.className='color';e.style.background=hex;$('palette').appendChild(e);}
+ chart(model.metrics);refresh();
+ for(const id of ['damage','repair','download','reset'])$(id).disabled=false;
+ $('message').textContent='模型已加载。可以亲自遮盖、修复并验证输出。';
+ window.FLAT4_LEARNING={ready:true,damage,repair,getResult:()=>({mask:mask.length,after:$('after').textContent,palette:new Set(output.filter(t=>t>0&&t<5)).size})};
+}catch(e){$('message').textContent='加载失败：'+String(e.message)+ '。请检查 GitHub Actions 部署结果。';console.error(e)}
+</script></body></html>
