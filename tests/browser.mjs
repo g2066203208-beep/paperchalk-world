@@ -28,6 +28,8 @@ try{
   return colors.size;
  });
  assert.ok(colors>30,'renderer must paint real layered anatomy rather than blank canvas: '+colors);
+ await page.locator('#play-switch').uncheck();
+ await page.waitForTimeout(140);
  await page.screenshot({path:'artifacts/creature-01-quadruped.png',fullPage:true});screenshots.push('quadruped');
  // Real generator swaps 4 structural archetypes, not just a label.
  for(const [type,number] of [['biped',2],['hexapod',6],['serpent',0]]){
@@ -48,7 +50,7 @@ try{
  await page.locator('#regenerate').click();
  const after=await page.evaluate(()=>window.__BONE_LAB__.rig.seed);
  assert.notEqual(after,before);
- await page.locator('#size-range').fill('125');
+ await page.locator('#size-range').evaluate(el=>{el.value='125';el.dispatchEvent(new Event('input',{bubbles:true}));});
  assert.equal((await page.evaluate(()=>window.__BONE_LAB__.rig.size)),125);
  await page.locator('#labels-switch').check();
  await page.locator('#play-switch').uncheck();
@@ -73,8 +75,8 @@ try{
           Math.abs(Math.hypot(b.x-c.x,b.y-c.y)-chain.l2)];
  });
  assert.ok(constraints.every(v=>v<.05),'drag cannot stretch a bone: '+constraints);
- await page.screenshot({path:'artifacts/creature-05-ik-drag.png',fullPage:true});screenshots.push('IK');
  await page.mouse.up();
+ await page.screenshot({path:'artifacts/creature-05-ik-drag.png',fullPage:true});screenshots.push('IK');
  assert.equal((await page.evaluate(()=>window.__BONE_LAB__.state.dragging)),false);
  for(const [selector,extension] of [['#export-json','.json'],['#export-svg','.svg'],['#export-png','.png']]){
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator(selector).click()]);
