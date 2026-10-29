@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createSceneHost} from '../site/scenes/core/scene-host.js';
 import {nationalStreetScene} from '../site/scenes/modules/national-street.js';
 import {nationalInteriorScene} from '../site/scenes/modules/national-interior.js';
-import {renderNationalMap} from '../site/scenes/modules/national-map.js';
+import {renderNationalMap,ZOOM_STEPS} from '../site/scenes/modules/national-map.js';
 import {renderNationalTransport} from '../site/scenes/modules/national-transport.js';
 import {REGIONS} from '../site/world/national-atlas.js';
 import {streetBuildingsAt} from '../site/world/walkable-street.js';
@@ -49,6 +49,10 @@ test('separately owned scene views render the same persistent building id',()=>{
 test('map and transport are independent modules, not hardwired to interior scene',()=>{
  const viewport=renderNationalMap({x:125,y:112,tileNames:{urban:'城市',sea:'海',forest:'森林',grass:'草原',fields:'农田',river:'河',mountain:'山',lake:'湖'}});
  assert.equal(viewport.match(/data-atlas-cell=/g).length,117);
+ assert.match(viewport,/country-map-canvas/);
+ assert.match(viewport,/data-map-action="overview"/);
+ assert.match(viewport,/data-map-layer="rail"/);
+ assert.deepEqual(ZOOM_STEPS,[1,2,4,8,16,32]);
  const travel=renderNationalTransport({region:REGIONS[0],station:REGIONS[3],mode:'road',selected:REGIONS[3].id});
  assert.match(travel,/data-atlas-travel/);
  assert.match(travel,/北部农垦区/);
