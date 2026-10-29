@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FLAT4 · 参考图到真正四色像素 · Pixel Lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#f6f1f2;background:#10142b;font:14px/1.6 system-ui,-apple-system,"Noto Sans SC",sans-serif}a{color:#9bdfe3}header{padding:18px 24px;border-bottom:1px solid #343851;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}.page{max-width:1080px;margin:auto;padding:25px}.tag{letter-spacing:2.1px;font-weight:700;font-size:11px;color:#8cd8df}h1{font-size:clamp(24px,4vw,41px);margin:8px 0;line-height:1.2}p{color:#b6bad0;max-width:820px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;margin-top:20px}.stage{border:1px solid #35415f;border-radius:16px;min-height:650px;background:#151a34;display:flex;align-items:center;justify-content:center;padding:30px}.checker{background-color:#242a40;background-image:linear-gradient(45deg,#323b53 25%,transparent 25%),linear-gradient(-45deg,#323b53 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#323b53 75%),linear-gradient(-45deg,transparent 75%,#323b53 75%);background-size:26px 26px;background-position:0 0,0 13px,13px -13px,-13px 0}.stage canvas{width:min(100%,560px);height:auto;aspect-ratio:112/160;image-rendering:pixelated;image-rendering:crisp-edges}.panel{background:#1a203a;border-radius:16px;border:1px solid #35415f;padding:20px}.panel h2{font-size:15px;margin:4px 0 15px}.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.chip{height:50px;border-radius:8px;border:2px solid #ffffff32}.meta{border-top:1px solid #36415b;display:flex;justify-content:space-between;padding:12px 0}.meta b{font-variant-numeric:tabular-nums;color:#a4e6e5}.buttons{display:grid;gap:9px;margin-top:16px}button{font:inherit;cursor:pointer;background:#2d3b58;color:white;border:1px solid #627391;padding:12px;border-radius:9px;font-weight:650}button.primary{background:#9ce3e5;color:#131b2e;border-color:#9ce3e5}button:hover{filter:brightness(1.1)}button:disabled{opacity:.5;cursor:wait}.notice{font-size:12px;line-height:1.7;background:#252d49;border-radius:10px;padding:12px;margin-top:18px;color:#c8cde0}#status{margin-top:12px;color:#aae9d1;font-weight:700}.foot{padding:18px 0;font-size:12px;color:#929db9}@media(max-width:800px){.layout{grid-template-columns:1fr}.page{padding:14px}.stage{min-height:0;padding:14px}.stage canvas{width:min(86vw,420px)}} 
+</style></head>
+<body><header><b>PIXEL LAB / <span style="color:#9ce3e5">FLAT4 REDRAW</span></b><a href="./">返回像素工作室 ↗</a></header>
+<div class="page"><div class="tag">TRUE PIXEL ART · 112 × 160 · EXACTLY FOUR OPAQUE COLORS</div>
+<h1>重新设计人物，而不是假装缩小就是像素画。</h1>
+<p>这是一张以之前粉发人物为构图方向、重新绘制的简化全身像素母版。颜色全程严格锁定为四种；无渐变、无明暗层次、无抗锯齿。支持查看实际像素、PNG 原生导出。它属于人工设计的像素实验，不是声称训练好的审美生成模型。</p>
+<div class="layout"><div class="stage checker" id="stage"><canvas width="112" height="160" id="sprite" aria-label="原生112乘160四色像素人物"></canvas></div>
+<aside class="panel"><h2>固定 4 色 · 无多余颜色</h2><div class="palette"><div class="chip" style="background:#161433"></div><div class="chip" style="background:#e43d89"></div><div class="chip" style="background:#62bacc"></div><div class="chip" style="background:#fce5a3"></div></div>
+<div style="margin-top:22px">
+<div class="meta"><span>真实像素尺寸</span><b>112 × 160</b></div>
+<div class="meta"><span>实际使用颜色</span><b id="colorCount">检查中</b></div>
+<div class="meta"><span>半透明像素</span><b id="alphaCount">检查中</b></div>
+<div class="meta"><span>外部素材依赖</span><b>无</b></div>
+</div>
+<div class="buttons"><button class="primary" id="native" disabled>导出原生透明 PNG</button><button id="large" disabled>导出最近邻 6× PNG</button><button id="checker">切换透明棋盘格</button></div>
+<div id="status">载入像素矩阵中…</div><div class="notice">这不是上一张图的简单颜色量化。参考构图保留粉发、蓝裙、黄色肌肤，但服装块面和人物比例进行了独立重画。仅提供像素技术合格证明；美术是否达标仍要看实际视觉效果。</div>
+</aside></div><div class="foot">技术校验：浏览器逐像素读取 ImageData，检测四个 RGB 固有色、0/255 Alpha、原始画布分辨率。可自动化截图和 CI 运行。</div></div>
+<script type="module">
+const W=112,H=160;
+const PAL=[[22,20,51],[228,61,137],[98,186,204],[252,229,163]];
+const DATA='eNrtm9u26yAIRUX9/28+bWIUEI2gSdt94ktHc3Fm4Q0kce4pT3nKU9oFcLkRdTUUeuVCmsflIqLI4szVNN8uS4lnMIS8D7cKOEpbRZRx0AZegWvxpoEtY4I/AcJSXJu3A60qm10FTjpNOIBwNW+jhcRTNidoeQl28LDQKXltXggHb7frXbyQpSqAdt72L4Mv6y5ZHuIpgJkHEzwwGBQUs8vGmLMnaGazbQwUng6nk/fieexE6bon6HnvU9mzSFINvXN0vd0vTbNmCE63/jZ7Z3+J94nw4qnmT5O8zZyuAJ1lclHysEDTWqTiFYFWng6HDXoLzypQ4HXih2ke1LxefISuXMWLMXYCQMIzADkv5kIwESI6s4b3qtVTUpQLsChCyStNdNQnMbBWHrUogBIPUTo8k0FB1IcrZ8cCaQC1Qendpe7sI0ThWMUbB5Yx1eAh4GJeHOMFylMGSH1euJ8XpQa08xzhQbu/xOyHMR6YeUQgsObbgWTWht0tNIa22KC5cmGOwfOZYeOAjHcKTH/QHF7snXDeG3gYKExleM0oz+KBrYKGWLq9IuBCF+QJgx5AXyuSeJXfdBHvbU+3jDdg0X2nx7q1RduPA0FcCbfbvE1gxQOmBf0UnF0gGxDQHOXl3xSPN73QhsAarzaLcUbL8Wq3rxy32Q3K9jQ7wFLzOp5r+56oYrAChZHb5rlpXi0vHe2Jowb1pvid3iS5n92Ba1r/xMxVlP0GNhHOyWO5sijVZzJon1e1HUwKBIk3mHEEg0A1Th6BowIleR1UmBVIeOhYkEoFVAuU3BC0p8lpyOOFKm+h41GrxZqIBiLZ+VzA231oQoSyzmeNtTOp652lKhJEiGFZAoLU/kPBCq6ahPFC2JKvs/KI7VhIxMMW/GCO+tnDO+VVW5HqmfeCryM1DPN4Z+T+mIzLubGcHBjkVX2fr3zUM6TXOc17FSRhQTNsPCQp3TfIQNUbE9W09f450lElARaCYHnnlN6LMJOQ9FcBouwiycFp3d1xnixwFS7zfIsXbuDBdbxQ2XPWoH3cTuyeX80Ln+dNNGDtOJzx5gSey/sGntmgA+YU/TSrQAOvnuBneHApT5Q3VkwzjCjPwNMsfjYcc5uM7XfeOdFzGXmgxxEemHmg45VQSem9gBZ3CNS/75pDLI01UccSdoHOeDi7GLRAumM4yEO5SwtPI5BlS6080MmrI4NRYNQJrEPLa3mFqOYFWwd1adfBjb+cnDzSdJOWd7zrpOXlUCzqPWx5KTw3p3OmjOrAFl1z4876UrSV536E1xiWJL0BVYrlZ3nxczyo8x8P76t5cM6Dh/fw/h8eWcc/w2scfXjfx3NyzTfx3B/kiV4fzOySK3zRhof6szye5AbZAV/Ikz46APkxFsvbqhZ464B13JkDvcVfxLZ4vvEN96qvjFtfi13w0W/nw/6rQsC/zltU/gG82kam';
+const canvas=document.getElementById('sprite'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+ctx.imageSmoothingEnabled=false;
+const status=document.getElementById('status');
+function validate(){
+ const d=ctx.getImageData(0,0,W,H).data,colors=new Set();let partial=0,invalid=0;
+ const allowed=new Set(PAL.map(c=>c.join(',')));
+ for(let i=0;i<d.length;i+=4){if(d[i+3]===0)continue;if(d[i+3]!==255)partial++;const rgb=[d[i],d[i+1],d[i+2]].join(',');colors.add(rgb);if(!allowed.has(rgb))invalid++;}
+ document.getElementById('colorCount').textContent=colors.size+' / 4';
+ document.getElementById('alphaCount').textContent=String(partial);
+ status.textContent=colors.size===4&&partial===0&&invalid===0?'已通过严格四色与不透明像素检查':'验色失败 · 请检查生成数据';
+ if(invalid||partial||colors.size!==4)throw Error('strict 4 color constraint failed');
+ return {colors:colors.size,semiTransparent:partial,invalid,width:W,height:H};
+}
+function download(c,name){let a=document.createElement('a');a.href=c.toDataURL('image/png');a.download=name;a.click();}
+document.getElementById('native').onclick=()=>download(canvas,'flat4-original-112x160.png');
+document.getElementById('large').onclick=()=>{const c=document.createElement('canvas');c.width=W*6;c.height=H*6;const x=c.getContext('2d');x.imageSmoothingEnabled=false;x.drawImage(canvas,0,0,c.width,c.height);download(c,'flat4-preview-nearest6x.png');};
+document.getElementById('checker').onclick=()=>document.getElementById('stage').classList.toggle('checker');
+try{
+const packed=Uint8Array.from(atob(DATA),c=>c.charCodeAt(0));
+const stream=new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate'));
+const bytes=new Uint8Array(await new Response(stream).arrayBuffer());
+if(bytes.length!==W*H)throw Error('invalid sprite length '+bytes.length);
+const img=ctx.createImageData(W,H);
+for(let i=0;i<bytes.length;i++){const v=bytes[i],j=i*4;if(v===0)continue;if(v>4)throw Error('unrecognized palette token '+v);const rgb=PAL[v-1];img.data[j]=rgb[0];img.data[j+1]=rgb[1];img.data[j+2]=rgb[2];img.data[j+3]=255;}
+ctx.putImageData(img,0,0);const result=validate();
+for(const id of ['native','large'])document.getElementById(id).disabled=false;
+window.FLAT4_REDRAW={ready:true,inspect:()=>result};
+}catch(error){status.textContent='像素数据加载失败：'+error.message;console.error(error);}
+</script></body></html>

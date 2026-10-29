@@ -46,6 +46,8 @@ jobs:
         run: node tests/character-browser.mjs
       - name: Check strict four-color sprite editor and capture real Chromium screenshot
         run: node tests/flat4-browser.mjs
+      - name: Verify 112x160 four-color redrawn full-body sprite in Chromium
+        run: node tests/flat4-redraw-browser.mjs
       - name: Upload true four-color sprite browser proof
         if: always()
         uses: actions/upload-artifact@v4
