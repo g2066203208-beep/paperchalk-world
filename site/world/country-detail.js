@@ -102,3 +102,51 @@ export function describeMapLocation(x,y){
  return {x,y,terrain:t.terrain,district,region:regionAt(x,y),
   nearby,facilities:nearby.length};
 }
+
+/**
+ * Highway-constrained itinerary from a local street to a mapped settlement.
+ * No direct countrywide coordinate teleport: only district highway edges
+ * already present in TRANSPORT_SEGMENTS are traversable.
+ */
+export function planCountryRoad(from,settlementId){
+ const target=SETTLEMENTS.find(s=>s.id===settlementId);
+ const start=districtAt(from?.x,from?.y);
+ const finish=target&&DISTRICTS.find(d=>d.id===target.district);
+ if(!start||!finish)return null;
+ const highway=TRANSPORT_SEGMENTS.filter(edge=>edge.mode==='road'&&edge.tier==='highway');
+ const nearest=(point)=>DISTRICTS.find(d=>d.x===point.x&&d.y===point.y)?.id||null;
+ const adj=new Map(DISTRICTS.map(d=>[d.id,[]]));
+ for(const edge of highway){
+  const a=nearest(edge.a),b=nearest(edge.b);
+  if(!a||!b||a===b)continue;
+  const km=Math.hypot(edge.a.x-edge.b.x,edge.a.y-edge.b.y);
+  adj.get(a).push({id:b,km});adj.get(b).push({id:a,km});
+ }
+ const dist=new Map([[start.id,0]]),previous=new Map(),seen=new Set();
+ while(true){
+  let next=null,min=Infinity;
+  for(const [id,v] of dist)if(!seen.has(id)&&v<min){min=v;next=id;}
+  if(!next)break;
+  if(next===finish.id)break;
+  seen.add(next);
+  for(const segment of adj.get(next)||[]){
+   const score=min+segment.km;
+   if(score<(dist.get(segment.id)??Infinity)){
+    dist.set(segment.id,score);previous.set(segment.id,next);
+   }
+  }
+ }
+ if(!dist.has(finish.id))return null;
+ const districts=[finish.id];let cursor=finish.id;
+ while(cursor!==start.id){
+  cursor=previous.get(cursor);if(!cursor)return null;
+  districts.unshift(cursor);
+ }
+ const legs=[{x:from.x,y:from.y},...districts.map(id=>{
+  const d=DISTRICTS.find(x=>x.id===id);return {x:d.x,y:d.y};
+ }),{x:target.x,y:target.y}];
+ const lengthKm=Math.round(dist.get(finish.id)+Math.hypot(from.x-start.x,from.y-start.y)+
+ Math.hypot(target.x-finish.x,target.y-finish.y));
+ return {target:target.id,to:{x:target.x,y:target.y},districts,legs,
+  lengthKm,mode:'road',estimatedMinutes:Math.max(1,Math.ceil(lengthKm/55*60))};
+}
