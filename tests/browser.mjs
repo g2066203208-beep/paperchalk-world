@@ -484,6 +484,7 @@ await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async 
  const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
  await one.click({force:true,timeout:5000});
  await page.locator('.explore-dialogue:not([hidden])').waitFor();
+ await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='talking',talkId,{timeout:3000});
  const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
  assert.equal(state,'talking','selected citizen stops to speak');
  const paused=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
