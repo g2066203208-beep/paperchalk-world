@@ -34,7 +34,21 @@ try{
   try{await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:2500});break;}
   catch(e){if(n===39)throw e;await new Promise(resolve=>setTimeout(resolve,150));}
  }
- await page.waitForFunction(()=>window.__BONE_LAB__?.pose?.size>10);
+ await page.waitForFunction(()=>window.__BONE_LAB__?.pose?.size>10,{},{timeout:6500})
+  .catch(async error=>{
+   console.error('BOOT DIAGNOSTICS:',JSON.stringify({
+    errors,source:await page.locator('script[type=module]').getAttribute('src'),
+    state:await page.evaluate(()=>({ready:document.readyState,
+     lab:typeof window.__BONE_LAB__,
+     body:document.body.innerText.slice(0,300),
+     scripts:[...document.scripts].map(s=>s.src)})),
+    responses:await Promise.all(['app.js','surface.js','surface-renderer.js','rig.js'].map(async path=>{
+     const res=await page.request.get('http://127.0.0.1:4173/'+path);
+     return {path,status:res.status(),contentType:res.headers()['content-type']};
+    }))
+   },null,2));
+   throw error;
+  });
  assert.match(await page.title(),/骨骼实验室/);
  assert.equal(await page.locator('[data-type]').count(),4);
  assert.equal(await page.locator('#stat-roots').innerText(),'1');
