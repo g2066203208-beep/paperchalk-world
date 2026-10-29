@@ -13,10 +13,3 @@
 .math-note b{color:#d0e9d8;font:700 11px monospace}
 .math-note span{color:#8ea8a5;font-size:10px;line-height:1.5}
 @media(max-width:650px){.left-panel,.right-panel{max-height:none;overflow:visible}}
-
-.facet-title{margin-top:20px}
-.facet-info{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px;margin:8px 0 16px;padding:10px 12px;border:1px solid #4f6761;border-radius:5px;background:#1c3333}
-.facet-info span{font-size:10px;color:#a0c9b7}
-.facet-info strong{font:700 22px monospace;color:#eed09a}
-.facet-info small{grid-column:1/-1;color:#8ba7ab;font:10px monospace;margin-top:5px}
-.facet-info b{color:#e0e9d9}

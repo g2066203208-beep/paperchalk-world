@@ -1,7 +1,7 @@
 import {pathsToSVG} from './surface.js';
 
-export function paintSurface(ctx,envelope,camera,{opacity=1,facets=null,showVertices=false,scoreAt=null}={}){
- const closed=(facets?.contours||envelope.contours).filter(c=>c.closed&&c.points.length>3);
+export function paintSurface(ctx,envelope,camera,{opacity=1}={}){
+ const closed=envelope.contours.filter(c=>c.closed&&c.points.length>3);
  if(!closed.length)return 0;
  const sx=x=>camera.tx+x*camera.scale,sy=y=>camera.ty+y*camera.scale;
  const region=envelope.extent;
@@ -32,7 +32,7 @@ export function paintSurface(ctx,envelope,camera,{opacity=1,facets=null,showVert
  ctx.restore();
  ctx.save();
  ctx.lineCap='round';ctx.lineJoin='round';
- ctx.strokeStyle=facets?'#e0ebd6':'#d3eed7';ctx.lineWidth=facets?2.4:2;
+ ctx.strokeStyle='#d3eed7';ctx.lineWidth=2;
  for(const contour of closed){
   ctx.beginPath();contour.points.forEach((p,i)=>{
    if(i===0)ctx.moveTo(sx(p.x),sy(p.y));
@@ -41,18 +41,6 @@ export function paintSurface(ctx,envelope,camera,{opacity=1,facets=null,showVert
   ctx.closePath();ctx.stroke();
  }
  ctx.restore();
- if(facets&&showVertices){
-  ctx.save();
-  for(const c of closed){
-   for(const pt of c.points){
-    const count=scoreAt?scoreAt(pt):0;
-    ctx.beginPath();ctx.arc(sx(pt.x),sy(pt.y),count>1.25?3.1:2.6,0,Math.PI*2);
-    ctx.fillStyle=count>1.25?'#efbe91':'#e8f0da';
-    ctx.fill();ctx.strokeStyle='#183039';ctx.lineWidth=1.25;ctx.stroke();
-   }
-  }
-  ctx.restore();
- }
  return closed.length;
 }
 export {pathsToSVG};
