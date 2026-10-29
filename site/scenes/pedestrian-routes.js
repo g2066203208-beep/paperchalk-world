@@ -22,7 +22,7 @@ export function pedestrianPlan(person,venue,shift,sequence=0){
  const config=LOCATIONS[venue];
  if(!config)throw Error('street venue required');
  const value=deterministicIndex(person.id,sequence+shift*3);
- const fromLeft=(value%2===0);
+ const fromLeft=((Math.floor(value/3)+sequence)%2===0);
  const hasShop=(value%5===1);
  const pause= value%3===0;
  const lane=config.lanes[value%config.lanes.length];
