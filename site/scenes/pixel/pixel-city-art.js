@@ -5,6 +5,7 @@
  * No third-party sprites, screenshots or visual assets.
  */
 import {terrainAt,regionAt} from '../../world/national-atlas.js';
+import {isOldHarborCell,paintOldHarborPlaza} from './old-harbor-plaza.js';
 export const PIXEL_VIEW={width:480,height:300,worldWidth:960,worldHeight:600};
 export const PIXEL_PALETTE=Object.freeze({
  ink:'#243544',night:'#182737',stone:'#9b9b8c',edge:'#e6d2b1',
@@ -151,6 +152,7 @@ function pavement(c,x,y,seed){
  if(seed%9===0)small(c,x+16,y+8,'#61685f');
 }
 function staticScene(c,site){
+ if(isOldHarborCell(site.x,site.y)){paintOldHarborPlaza(c,site);return;}
  const {x,y,buildings}=site,env=terrainAt(x,y),biome=regionAt(x,y).biome;
  const coastal=/(sea|river|lake)/.test(env.terrain)||['harbor','shipyard','fishing'].includes(biome);
  const rural=env.terrain==='forest'||env.terrain==='fields';
@@ -274,10 +276,17 @@ export function createPixelStreetRenderer({x,y,buildings}){
    ctx.drawImage(art,0,0,960,600);
    const t=elapsed*.001;
    if(shift!==3)for(let i=0;i<traffic;i++){
-    const vertical=i%3===0,road=Math.floor(i/3);
-    const vx=vertical?138+(road%5)*158:((i%2===0?1:-1)*(t*(31+i*3))+i*177)%1150;
-    const vy=vertical?((t*(25+i*2)+i*100)%730)-60:132+(road%4)*150;
-    pixelVehicle(ctx,vertical?vx:(vx+1150)%1150-80,vy,i);
+    if(isOldHarborCell(x,y)){
+     // Vehicles use streets visible in the bespoke plaza, never the old grid.
+     const south=i%2===1,speed=(i%2?1:-1)*(29+i*2);
+     const px=((t*speed+i*177)%1140+1140)%1140-85;
+     pixelVehicle(ctx,px,south?417:215,i);
+    }else{
+     const vertical=i%3===0,road=Math.floor(i/3);
+     const vx=vertical?138+(road%5)*158:((i%2===0?1:-1)*(t*(31+i*3))+i*177)%1150;
+     const vy=vertical?((t*(25+i*2)+i*100)%730)-60:132+(road%4)*150;
+     pixelVehicle(ctx,vertical?vx:(vx+1150)%1150-80,vy,i);
+    }
    }
    for(let i=0;i<people.length;i++){
     const person=people[i];
