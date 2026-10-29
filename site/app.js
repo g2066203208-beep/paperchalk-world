@@ -353,6 +353,7 @@ $('game').addEventListener('click',e=>{
 });
 $('open-reports').addEventListener('click',()=>{fileTab='reports';panel('reports');});
 $('help-btn').addEventListener('click',()=>panel('help'));
+$('national-atlas-open').addEventListener('click',()=>atlas.open());
 $('close-panel').addEventListener('click',closePanel);
 $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closePanel();});
 document.addEventListener('keydown',e=>{
