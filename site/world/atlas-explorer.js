@@ -45,7 +45,7 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
     recordPlayer();
     if(applyGeography({type:'enter',building:building.id}))render();
    }};
-  const key=inside?'national-interior':'national-street';
+  const key=sceneHost.resolve(context,inside?'national-interior':'national-street');
   const sceneHTML=sceneHost.render(key,context);
   layer.innerHTML='<div class="national-header"><div><small>NIGHT HARBOR / NATIONAL EXPLORATION</small><h2>夜港国土 · 场景化世界</h2>'+
    '<p>国家坐标分块加载 · 玩家进入实地街道，建筑独立进入</p></div>'+
@@ -85,5 +85,8 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
   if(b.dataset.atlasInspect){const label=b.querySelector('strong')?.textContent||'房间';const caption=layer.querySelector('.interior-caption');if(caption)caption.textContent='你检查了 '+label+'。这是 '+inside.kind+' 的独立编号空间；生产和交易仍须接入真正的NPC、库存系统。';}
  });
  document.addEventListener('keydown',event=>{if(layer.hidden)return;if(event.key==='Escape'){inside? (inside=null,render()):close();return;}if(inside||!event.ctrlKey||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];if(applyGeography({type:'move',x:x+dir[0],y:y+dir[1]}))render();});
- return {open:enter,close,render,isVisible:()=>!layer.hidden,position:()=>({x,y,inside:inside?.id||null,street:walk?.snapshot()||null}),sceneModule:()=>sceneHost.current()?.id||null,element:layer};
+ return {open:enter,close,render,isVisible:()=>!layer.hidden,position:()=>({x,y,inside:inside?.id||null,street:walk?.snapshot()||null}),sceneModule:()=>sceneHost.current()?.id||null,sceneModules:()=>sceneHost.list(),
+  registerScene:module=>{const id=sceneHost.register(module);if(!layer.hidden)render();return id;},
+  unregisterScene:id=>{if(['national-street','national-interior'].includes(id))return false;
+   const removed=sceneHost.unregister(id);if(removed&&!layer.hidden)render();return removed;},element:layer};
 }
