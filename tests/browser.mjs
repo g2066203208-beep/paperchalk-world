@@ -631,9 +631,16 @@ await run('industry-portrait-ui',{viewport:{width:390,height:844},deviceScaleFac
 });
 
 await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,height:900}},async page=>{
- await page.locator('#national-atlas-open').click();
+ assert.ok(await page.locator('.world-walk-entry').isVisible(),'walking must be obvious inside the actual game');
+ await page.locator('.world-walk-entry').click();
  assert.ok(await page.locator('.national-explorer').isVisible());
  assert.equal(await page.locator('.national-map-tile').count(),117);
+ assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ const start=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
+ await page.locator('.national-walk-canvas').focus();
+ await page.keyboard.down('d');await page.waitForTimeout(260);await page.keyboard.up('d');
+ const moved=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
+ assert.ok(moved.x>start.x,'player should physically move when pressing D');
  await page.screenshot({path:'artifacts/national-01-urban-street.png',fullPage:true});
  const before=await page.evaluate(()=>window.__OFFICE__.atlas.position());
  await page.locator('[data-atlas-step="1,0"]').click();
@@ -648,11 +655,15 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  assert.ok(site,'national atlas must contain buildings nearby');
  await page.locator('[data-atlas-cell="'+site.x+','+site.y+'"]').click();
  await buildings.first().waitFor({timeout:10000});
+ const enteredId=await buildings.first().getAttribute('data-atlas-enter');
+ const oldStreet=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
+ assert.ok(oldStreet&&oldStreet.buildings>=10,'visible world must render many separate buildings');
  await buildings.first().click();
- assert.ok(await page.locator('.national-interior').isVisible());
- assert.ok(await page.locator('[data-atlas-inspect="desk"]').isVisible());
- await page.locator('[data-atlas-inspect="desk"]').click();
- assert.match(await page.locator('.interior-caption').innerText(),/属于/);
+ await page.locator('.national-floorplan').waitFor({timeout:15000});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.position())).inside,enteredId);
+ assert.ok(await page.locator('[data-atlas-inspect]').first().isVisible());
+ await page.locator('[data-atlas-inspect]').first().click();
+ assert.match(await page.locator('.interior-caption').innerText(),/检查了/);
  await page.screenshot({path:'artifacts/national-02-enterable-building.png',fullPage:true});
  await page.locator('[data-atlas-leave]').click();
  await page.locator('[data-atlas-mode="rail"]').click();
@@ -672,6 +683,13 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
 await run('national-atlas-portrait-390',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await page.locator('#national-atlas-open').tap();
  assert.ok(await page.locator('.national-map-grid').isVisible());
+ assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ const before=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
+ await page.locator('[data-walk-move="d"]').dispatchEvent('pointerdown');
+ await page.waitForTimeout(240);
+ await page.locator('[data-walk-move="d"]').dispatchEvent('pointerup');
+ const after=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
+ assert.ok(after.x>before.x,'touch control must move the real player');
  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3);
  await page.screenshot({path:'artifacts/national-04-portrait.png',fullPage:true});
 });
