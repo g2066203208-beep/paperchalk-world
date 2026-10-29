@@ -62,6 +62,10 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
    ' · 海拔'+ground.elevation+'米</span><span>附近建筑：'+streetBuildingsAt(x,y).length+'栋</span></div></div></div>';
   walk=sceneHost.mount(layer)||null;
   largeMap=mountNationalMap(layer,{x,y,camera:mapCamera,
+   onTravel:destination=>{
+    if(!applyGeography({type:'road-journey',target:destination}))return;
+    mapCamera={...mapCamera,cx:x,cy:y,zoom:8};render();
+   },
    onCamera:next=>{mapCamera=next;},
    onInspect:place=>{const station=place.region;
      if(station&&station.id!==selected){selected=station.id;
