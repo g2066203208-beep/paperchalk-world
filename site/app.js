@@ -290,6 +290,7 @@ rebuild();
 window.__BONE_LAB__={
  get rig(){return state.rig;},
  get pose(){return state.pose;},
+ get camera(){return state.camera;},
  get state(){return {type:state.type,seed:state.seed,selected:state.selected,playing:state.playing,zoom:state.zoom,dragging:!!state.drag};},
  generate:(type,seed)=>{state.type=type;$('#seed-input').value=String(seed);rebuild();return state.rig;},
  inspect:()=>validateRig(state.rig)
