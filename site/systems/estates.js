@@ -2,7 +2,13 @@
 import {clamp} from '../core/runtime.js';
 import {INDUSTRIES,INDUSTRY,PRICE_MODES,newFirm,runIndustryDay,MAX_INVENTORY,stockUnits,cellDistance} from './industry-model.js';
 // Retains old API and parcel types while expanding to an extensible catalog.
-export const BUSINESS_TYPES=INDUSTRIES;
+const OLD_BUILDING_ECONOMY={
+ diner:{revenue:40,upkeep:15,visitors:9},
+ garage:{revenue:66,upkeep:29,visitors:5},
+ warehouse:{revenue:49,upkeep:20,visitors:3},
+ club:{revenue:84,upkeep:42,visitors:11}
+};
+export const BUSINESS_TYPES=INDUSTRIES.map(x=>({...x,...(OLD_BUILDING_ECONOMY[x.id]||{})}));
 export const priceOf=(index,sub)=>85+((index*13+sub*19)%9)*22;
 export const estatesSystem={
  id:'estates',deps:['factions','people','population','clock'],
