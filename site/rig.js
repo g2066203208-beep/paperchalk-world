@@ -46,8 +46,8 @@ function rigBuilder(type,seed,size,limbs){
    add(s+'-knee',s+'-hip',out*(15+random()*5),sy(60)*variability(),'leg',7);
    add(s+'-ankle',s+'-knee',out*(16+random()*6),sy(127)*variability(),'leg',5);
    add(s+'-toe',s+'-ankle',out*(27+random()*4),sy(133),'leg',4);
-   chain(s+'-shoulder',s+'-elbow',s+'-wrist',side===-1?0:Math.PI,side);
-   chain(s+'-hip',s+'-knee',s+'-ankle',side===-1?0:Math.PI,side);
+   chain(s+'-shoulder',s+'-elbow',s+'-wrist',side===-1?0:Math.PI,-side);
+   chain(s+'-hip',s+'-knee',s+'-ankle',side===-1?0:Math.PI,-side);
   }
  }else if(type==='quadruped'){
   const stride=sx(1),rise=sy(1);
