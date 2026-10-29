@@ -136,6 +136,41 @@ jobs:
             site/pixel-lab/flat4-source.json
             site/pixel-lab/flat4-model.json
           retention-days: 30
+      - name: Reconstruct supplied pink-haired character from committed real pixel grid
+        run: python -m ml.repixelize.engine --embedded ml/repixelize/reference-384.lzma.b64 --out-dir site/pixel-lab
+      - name: Train RGB-patch denoising network on synthetic fake-pixel degradations
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: python -m ml.repixelize.train --source ml/repixelize/reference-384.lzma.b64 --output repixel-ml-artifacts --steps 300
+      - name: Validate native four-color repixelization, source snapshot and reconstruction fidelity
+        run: |
+          python -m unittest ml.test_repixelize
+          python - <<'PY'
+          import json
+          from PIL import Image
+          report=json.load(open('repixel-ml-artifacts/training-report.json'))
+          assert report['training_steps']==300
+          assert report['source_artwork_count']==1
+          assert report['neural_accuracy']>.9
+          image=Image.open('site/pixel-lab/repixelized-384x512.png')
+          assert image.size==(384,512)
+          print('REPIXEL: 4-color, native 384x512, reproducible training evidence and PNG validated')
+          PY
+      - name: Browser-test real image upload, palette locking and native PNG
+        run: node tests/repixel-browser.mjs
+      - name: Upload trained repixelizer, faithful outputs and Chromium screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pink-girl-repixel-true-four-colors-training-and-proof
+          path: |
+            repixel-ml-artifacts/
+            repixel-browser-artifacts/
+            site/pixel-lab/repixelized-384x512.png
+            site/pixel-lab/repixelized-preview.png
+            site/pixel-lab/repixelize-quality.json
+          retention-days: 30
       - name: Upload true 16x16 human-only trained character evidence
         if: always()
         uses: actions/upload-artifact@v4
