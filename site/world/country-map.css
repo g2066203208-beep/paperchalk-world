@@ -33,3 +33,6 @@
 @media(min-width:1500px){.national-explorer{padding:16px 3vw}.national-layout{grid-template-columns:minmax(0,2.15fr) minmax(360px,.95fr)}}
 @media(max-width:1050px){.national-layout{grid-template-columns:1fr}.national-map-column{order:1}.national-scene-column{order:2}.country-canvas-frame{max-height:60vh}}
 @media(max-width:600px){.national-map-column{padding:7px}.country-toolbar{align-items:start}.country-toolbar strong{font-size:13px}.country-toolbar small{font-size:9px}.country-zoom-buttons{gap:3px}.country-zoom-buttons button{min-width:29px;min-height:30px;padding:4px;font-size:11px}.country-canvas-frame{border-width:2px}.country-map-scale{font-size:9px}.country-map-info{font-size:11px}.country-nearby-details{padding:4px}.national-map-heading{margin-bottom:4px}}
+
+.country-map-info button{margin-left:10px;padding:7px 12px;font-weight:800;font-size:12px;border:1px solid #edc98d;background:#b05e5d;color:#fff1dc;cursor:pointer}
+.country-map-info button:disabled{opacity:.45;cursor:not-allowed}
