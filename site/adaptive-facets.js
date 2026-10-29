@@ -131,7 +131,7 @@ export function selfIntersections(points){
  * Uses a fixed polar anchor at the leftmost input point and a two-pass
  * max-edge-span + chord-error test; no smoothing interpolation is introduced.
  */
-export function facetContour(contour,scoreAt,{coarse=37,fine=7,strength=1,tolerance=5}={}){
+export function facetContour(contour,scoreAt,{coarse=37,fine=7,strength=1,tolerance=5,depth=0}={}){
  const pts=contour.points||[];
  const raw=pts.length>2&&distance(pts[0],pts[pts.length-1])<1e-7?pts.slice(0,-1):pts.slice();
  if(raw.length<=4)return {points:raw,closed:!!contour.closed,original:raw.length,segments:raw.length};
@@ -169,8 +169,9 @@ export function facetContour(contour,scoreAt,{coarse=37,fine=7,strength=1,tolera
  // At extremely coarse settings, a chord may jump across a narrow limb.
  // Reject the invalid simplification rather than produce torn skin.
  if(selfIntersections(coarsePoints)){
+  if(depth>=4)return {points:raw,closed:true,original:raw.length,segments:raw.length};
   const retry=facetContour(contour,scoreAt,{coarse:Math.max(8,coarse*.64),
-   fine:Math.max(3,fine*.75),strength,tolerance:Math.max(.6,tolerance*.5)});
+   fine:Math.max(3,fine*.75),strength,tolerance:Math.max(.6,tolerance*.5),depth:depth+1});
   return retry;
  }
  return {points:coarsePoints,closed:true,original:raw.length,
