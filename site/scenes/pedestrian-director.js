@@ -111,6 +111,9 @@ export function createPedestrianDirector(layer,{world,venue}){
    frame=requestAnimationFrame(tick);
  }
  function pauseCitizen(id,lock=true){
+   // A passer-by wandering underneath the mouse pointer must NEVER unlock an
+   // ongoing real conversation with a different citizen.
+   if(talkLocked&&!lock)return;
    if(pausedCitizen&&actors.has(pausedCitizen)&&pausedCitizen!==id)resumeCitizen();
    const item=actors.get(id);if(!item)return;
    if(item.walk.phase!=='talking'&&item.walk.phase!=='hovering')item.walk.previousPhase=item.walk.phase;
