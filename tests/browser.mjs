@@ -636,6 +636,14 @@ await run('industry-portrait-ui',{viewport:{width:390,height:844},deviceScaleFac
 await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,height:900}},async page=>{
  await page.evaluate(()=>window.__OFFICE__.exploration.show());
  assert.ok(await page.locator('.world-walk-entry').isVisible(),'walking must be obvious inside the actual game');
+ const homePreview=await page.locator('.pixel-entry-preview').evaluate(el=>{
+   const d=el.getContext('2d').getImageData(0,0,el.width,el.height).data;
+   let nonblank=0;for(let i=0;i<d.length;i+=16)if(d[i]||d[i+1]||d[i+2])nonblank++;
+   return {width:el.width,height:el.height,nonblank};
+ });
+ assert.deepEqual([homePreview.width,homePreview.height],[240,150]);
+ assert.ok(homePreview.nonblank>150,'first-screen pixel preview must contain actual game-rendered art');
+ await page.screenshot({path:'artifacts/national-10-first-screen-pixel-entry.png',fullPage:true});
  await page.locator('.world-walk-entry').click();
  assert.ok(await page.locator('.national-explorer').isVisible());
  assert.equal(await page.locator('.national-map-tile').count(),117);
