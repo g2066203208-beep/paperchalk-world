@@ -207,5 +207,6 @@ def main():
     destination.write_text(json.dumps(model,separators=(',',':')),encoding='utf-8')
     Path('ml').mkdir(exist_ok=True)
     Path('ml/metrics.json').write_text(json.dumps(metrics,indent=2),encoding='utf-8')
+    Path('ml/targets.json').write_text(json.dumps(tokens.tolist(),separators=(',',':')),encoding='utf-8')
     print('TRAINING COMPLETE',metrics,'OUTPUT',destination,'bytes',destination.stat().st_size,flush=True)
 if __name__=='__main__':main()
