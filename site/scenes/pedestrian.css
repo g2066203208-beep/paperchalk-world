@@ -61,3 +61,13 @@
 .explore-stage .city-walker.pedestrian-actor > .pedestrian-identity{bottom:100%;opacity:0}
 .explore-stage .city-walker.pedestrian-actor:hover > .pedestrian-identity,
 .explore-stage .city-walker.pedestrian-actor:focus-visible > .pedestrian-identity{opacity:1}
+
+/* Vertical camera fills the street without distorting the 1200:670 painted stage. */
+@media (orientation:portrait) and (max-width:650px){
+ .explore-stage:not(.scene-office) .explore-art{
+   width:calc((100dvh - 40px) * 1.791)!important;
+   height:calc(100dvh - 40px)!important;
+   top:0!important;bottom:auto!important;left:50%!important;
+   transform:translateX(-50%)!important;
+ }
+}

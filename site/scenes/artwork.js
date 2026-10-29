@@ -53,16 +53,16 @@ const alley=()=>skyline()+building(-34,99,363,416,'#bba18a')+
  building(328,71,409,455,'#888c91')+building(739,115,494,414,'#b97572')+
  sidewalk()+poster(410,313,'蒙面人？')+
  rect(80,340,141,150,'#344755')+rect(1090,355,113,150,'#293d4c')+
- person(513,551,'#7f9286',.7)+person(836,542,'#97727d',.72)+
- person(1101,551,'#718a9a',.55)+
+ person(513,551,'#7f9286',.51)+person(836,542,'#97727d',.49)+
+ person(1101,551,'#718a9a',.45)+
  '<text x="374" y="264" fill="#f8e5c9" stroke="#243441" stroke-width="8" paint-order="stroke" font-size="36" font-weight="900">旧港背街</text>';
 const market=()=>skyline()+building(0,111,349,405,'#a59a90')+
 building(348,84,409,430,'#a6a398')+building(765,100,460,423,'#b9787d')+
 sidewalk()+path('M151 356L494 341L530 482H131Z','#bb4855','stroke="#263442" stroke-width="11"')+
 rect(184,407,322,97,'#ac8e72')+
 Array.from({length:8},(_,i)=>'<circle cx="'+(225+i*34)+'" cy="'+(455+(i%2)*11)+'" r="16" fill="'+(i%2?'#8aab76':'#b2ba7b')+'" stroke="#36454d" stroke-width="4"/>').join('')+
-person(579,546,'#859a8b',.83)+person(863,551,'#657a88',.68)+
-person(1019,559,'#a6787c',.59)+poster(849,337,'市集 / 工作')+
+person(579,546,'#859a8b',.55)+person(863,551,'#657a88',.50)+
+person(1019,559,'#a6787c',.44)+poster(849,337,'市集 / 工作')+
 '<text x="428" y="263" font-size="39" stroke="#263641" stroke-width="8" paint-order="stroke" fill="#f4d9b2" font-weight="900">清晨集市</text>';
 const labor=()=>skyline()+building(0,130,335,393,'#8c9898')+
 rect(322,57,585,455,'#80979e')+
@@ -71,8 +71,8 @@ rect(367,109,498,95,'#283e4b')+
 rect(443,250,319,267,'#d0b89c')+
 windows(454,283,3)+building(904,133,335,392,'#b79084')+
 sidewalk()+poster(96,341,'工厂停工')+
-person(407,570,'#8c7f7d',.73)+person(654,562,'#5b7889',.8)+
-person(877,571,'#b4937b',.65);
+person(407,570,'#8c7f7d',.51)+person(654,562,'#5b7889',.55)+
+person(877,571,'#b4937b',.46);
 const docks=()=>skyline()+path('M0 405L1200 334V537H0Z','#759baa')+
 path('M0 463L1200 425V559H0Z','#517b8c')+
 building(-30,204,530,295,'#8d7372')+
@@ -81,7 +81,7 @@ path('M548 120L1150 72','none','stroke="#263942" stroke-width="22"')+
 path('M862 101V324','none','stroke="#263942" stroke-width="8"')+
 rect(813,306,106,89,'#b24a54')+
 sidewalk()+rect(127,446,186,82,'#c1a078')+rect(339,470,157,61,'#aa8a74')+
-person(570,559,'#ac8881',.82)+person(927,556,'#7192a3',.8)+
+person(570,559,'#ac8881',.53)+person(927,556,'#7192a3',.52)+
 '<text x="104" y="278" fill="#f5d9b5" stroke="#263642" stroke-width="7" paint-order="stroke" font-size="38" font-weight="900">旧港码头</text>';
 const attic=()=>rect(0,0,1200,670,'#b49c8e')+
 path('M0 0L593 188L1200 0','none','stroke="#32404b" stroke-width="27"')+

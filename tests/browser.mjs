@@ -473,11 +473,16 @@ await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async 
  assert.ok(t2.exits>=1,'walker has genuinely left the scene');
  assert.ok(t2.entrances>t0.entrances,'new pedestrians emerge from both entrances');
  await page.screenshot({path:'artifacts/street-03-fresh-entrances.png',fullPage:true});
- const one=page.locator('.pedestrian-actor').first();
+ const talkId=await page.evaluate(()=>{
+   const a=window.__OFFICE__.exploration.traffic().actors;
+   return a.find(p=>p.x>18&&p.x<82&&p.phase==='walking')?.id||a.find(p=>p.x>12&&p.x<90)?.id;
+ });
+ assert.ok(talkId,'one citizen should be visible for face-to-face talk');
+ const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
  await one.click({force:true,timeout:5000});
  await page.locator('.explore-dialogue:not([hidden])').waitFor();
- assert.equal(await one.getAttribute('data-walker-phase'),'talking','citizen stops to speak');
- const talkId=await one.getAttribute('data-explore-id');
+ const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
+ assert.equal(state,'talking','selected citizen stops to speak');
  const paused=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
  await page.waitForTimeout(600);
  const frozen=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
