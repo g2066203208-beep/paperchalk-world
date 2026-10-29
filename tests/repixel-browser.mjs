@@ -13,7 +13,7 @@ try{
  await page.locator('#upload').setInputFiles(resolve('site/pixel-lab/repixelized-preview.png'));
  await page.locator('#convert').click();
  await page.waitForFunction(()=>Boolean(window.REPIXEL?.ready),{timeout:30000});
- const out=await page.evaluate(()=>({w:document.querySelector('canvas').width,h:document.querySelector('canvas').height,metrics:window.REPIXEL.metrics}));
+ const out=await page.evaluate(()=>({w:document.getElementById('result').width,h:document.getElementById('result').height,metrics:window.REPIXEL.metrics}));
  assert.equal(out.w,384);assert.equal(out.h,512);
  assert.equal(out.metrics.colors,4);assert.equal(out.metrics.partial,0);assert.equal(out.metrics.illegal,0);
  assert.equal(errors.length,0,errors.join('\n'));
