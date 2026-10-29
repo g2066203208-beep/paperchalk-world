@@ -4,7 +4,7 @@
  * remains for accessible keyboard navigation and short on-foot travel.
  */
 import {WORLD_WIDTH,WORLD_HEIGHT,terrainAt,regionAt,REGIONS,LINKS,atlasViewport} from '../../world/national-atlas.js';
-import {DISTRICTS,SETTLEMENTS,settlementsInBounds,transportInBounds,describeMapLocation} from '../../world/country-detail.js';
+import {DISTRICTS,SETTLEMENTS,settlementsInBounds,transportInBounds,describeMapLocation,planCountryRoad} from '../../world/country-detail.js';
 import {escapeText as e} from '../core/scene-html.js';
 export const TERRAIN_COLORS={sea:'#3d7187',river:'#5595a8',mountain:'#8d8779',forest:'#557763',fields:'#b6ae78',lake:'#6593a4',urban:'#af9883',grass:'#8f9d7a'};
 export const ZOOM_STEPS=[1,2,4,8,16,32];
@@ -48,7 +48,7 @@ export function renderNationalMap({x,y,tileNames}){
     (active?'✦':sites?'▣':t.terrain==='forest'?'♠':t.terrain==='mountain'?'▲':'')+'</button>';
   }).join('')+'</div></details></div>';
 }
-export function mountNationalMap(root,{x,y,camera,onInspect,onCamera}={}){
+export function mountNationalMap(root,{x,y,camera,onInspect,onCamera,onTravel}={}){
  const wrapper=root.querySelector('[data-country-atlas]');
  if(!wrapper)return null;
  const canvas=wrapper.querySelector('.country-map-canvas');
@@ -186,8 +186,16 @@ export function mountNationalMap(root,{x,y,camera,onInspect,onCamera}={}){
   state.inspect={x:description.x,y:description.y};schedule();
   const info=wrapper.querySelector('.country-map-info');
   const label=nearest?nearest.name:'未命名地块';
-  if(info)info.textContent=label+' · '+description.district.name+' · '+description.region.name+
-   ' · 坐标 '+description.x+','+description.y+'。当前地图仅侦察位置；远方地点需要沿交通线路实际抵达。';
+  if(info){
+   const route=nearest?planCountryRoad({x,y},nearest.id):null;
+   info.textContent=label+' · '+description.district.name+' · '+description.region.name+
+     ' · 坐标 '+description.x+','+description.y+'。';
+   if(nearest){const go=document.createElement('button');go.type='button';
+    go.dataset.mapRoadTo=nearest.id;
+    go.textContent=route?'沿公路前往 · '+route.lengthKm+'公里（按行程结算）':'公路未连通';
+    go.disabled=!route;info.appendChild(go);
+   }
+  }
   onInspect?.(description);
  }
  let pointer=null;
@@ -222,6 +230,7 @@ export function mountNationalMap(root,{x,y,camera,onInspect,onCamera}={}){
  }
  const buttonHandler=event=>{
   const b=event.target.closest('button');if(!b||!wrapper.contains(b))return;
+  if(b.dataset.mapRoadTo){onTravel?.(b.dataset.mapRoadTo);return;}
   if(b.dataset.mapAction){
    const action=b.dataset.mapAction;
    if(action==='overview')focus(WORLD_WIDTH/2,WORLD_HEIGHT/2,1);
