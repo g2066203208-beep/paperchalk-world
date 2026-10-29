@@ -52,6 +52,14 @@ SOURCES=[
   'url':'https://opengameart.org/sites/default/files/person_sprite_sheet.png'},
  {'id':'furkan-50','author':'Furkan Duran','kind':'minis_archive','source':'https://opengameart.org/content/16x16-mini-characters',
   'url':'https://opengameart.org/sites/default/files/Minis%20_1.zip'},
+ {'id':'grafxkid','author':'GrafxKid','kind':'grid','source':'https://opengameart.org/content/rpg-character-sprites',
+  'url':'https://opengameart.org/sites/default/files/RPG_assets.png'},
+ {'id':'mage','author':'saint11','kind':'grid','source':'https://opengameart.org/content/16x16-mage',
+  'url':'https://opengameart.org/sites/default/files/mage.png'},
+ {'id':'putting','author':'patvanmackelberg','kind':'grid','source':'https://opengameart.org/content/16x16-characters-putting-animation',
+  'url':'https://opengameart.org/sites/default/files/Putt%20Putt%20Chars.png'},
+ {'id':'man','author':'dutzy','kind':'grid','source':'https://opengameart.org/content/man-sprite-16x16',
+  'url':'https://opengameart.org/sites/default/files/villager.png'},
 ]
 # All sources individually CC0; reuse of other packs is forbidden unless audited.
 for s in SOURCES:s['license']='CC0-1.0'
