@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>16×16 人物像素训练成果 · Pixel Lab</title><link rel="stylesheet" href="./characters.css"></head><body>
+<header><a href="./">← 像素学习实验室</a><span>PIXEL<span class="accent">/CHARACTER</span> <small>RESEARCH 0.2</small></span><a href="../character-lab/">矢量角色实验 ↗</a></header>
+<div class="page">
+<section class="hero"><span class="eyebrow">REAL 16×16 HUMAN SPRITES · CC0 DATASET · GITHUB ACTIONS</span><h1>先学习真实人物，<br><em>再生成新的像素角色。</em></h1><p>只使用核验为 CC0 的真实 16×16 人物素材；先按完整角色精灵切帧、去重和来源隔离，再训练神经生成模型。生成图直接来自学习出的解码器，不是随便拼的像素块。</p><div class="hero-status" id="status">正在验证模型、来源和训练数据…</div></section>
+<div class="stats"><article><span>真实人物帧</span><strong id="n-images">—</strong><small>已筛选并去重 · 原生16×16</small></article><article><span>有效 CC0 来源</span><strong id="n-sources">—</strong><small>保留 URL / SHA256 / 许可证</small></article><article><span>源隔离验证准确率</span><strong id="accuracy">—</strong><small>未见过的作者/素材包重建</small></article><article><span>强化训练回合</span><strong id="rl-count">—</strong><small>潜空间策略优化 · 几何奖励</small></article></div>
+<div class="tabs"><button data-tab="generated" class="active">模型生成的 16×16 人物</button><button data-tab="reference">真实训练素材对照</button></div>
+<section class="canvas-section">
+ <div class="canvas-head"><div><small id="gallery-subtitle">TRAINED MODEL · SAMPLED SPRITES</small><h2 id="gallery-title">生成的角色，不是参考图</h2><p id="gallery-description">每个角色都是模型生成的 16×16 像素矩阵。可以与训练数据对照，而不是看修图分数。</p></div><div class="actions"><label>随机种子 <input id="seed" type="number" min="1" max="99999999" value="20261029"></label><button id="generate">生成新一批</button></div></div>
+ <div class="gallery" id="gallery"><div class="loading">模型加载中…</div></div>
+ <div class="legend"><span>每块画布：16×16 原始像素</span><span>仅在显示时最近邻整数放大</span><span>训练源和结果不混用</span></div>
+</section>
+<div class="bottom">
+ <section><small>WHAT WAS TRAINED</small><h3>离散像素生成 + 潜空间奖励优化</h3><p>用 16×16 人物帧训练离散分类 VAE，再通过 REINFORCE 优化潜变量采样策略。强化部分使用明确的几何连通性和人体剪影启发奖励，并不是人类审美评分。低样本模型不应宣称达到专业像素画师水平。</p><div class="mini-chart"><svg id="loss" viewBox="0 0 400 110" aria-label="真实生成模型的重建交叉熵曲线"></svg></div><span id="training-text"></span></section>
+ <section><small>DATASET AUDIT</small><h3>来源透明，训练许可核验</h3><div id="sources"><p>正在加载 CC0 数据来源和最终筛选帧数…</p></div><p>站点上的原始作品仅用于经允许的训练和对照，不会将禁止 AI 训练、未经许可的 16×16 资源混入。</p></section>
+</div>
+</div><script type="module" src="./characters.js"></script></body></html>
