@@ -451,66 +451,60 @@ await run('story-touch-portrait',{viewport:{width:390,height:844},isMobile:true,
  await page.screenshot({path:'artifacts/story-07-portrait-afternoon-decision.png',fullPage:true});
 });
 
-// The camera, not a small back-and-forth loop, defines street traffic.
-async function checkCrossings(page,label){
- const checks=await page.locator('.city-walker').evaluateAll(actors=>{
-  const stage=actors[0]?.closest('.explore-stage')?.getBoundingClientRect();
-  return actors.map(actor=>{
-   const style=getComputedStyle(actor);
-   const animation=actor.getAnimations({subtree:false}).find(a=>a.effect?.getKeyframes?.().length);
-   if(!animation)return {error:'missing pedestrian animation'};
-   const savedTime=animation.currentTime;
-   const wasRunning=animation.playState==='running';
-   animation.pause();
-   const cycle=parseFloat(style.animationDuration)*1000;
-   const delay=parseFloat(style.animationDelay)*1000;
-   const sample=f=>{animation.currentTime=delay+cycle*(1+f);const r=actor.getBoundingClientRect();return r.left+r.width/2};
-   const [begin,middle,end]=[0,.5,.995].map(sample);
-   animation.currentTime=savedTime;
-   if(wasRunning)animation.play();
-   return {direction:actor.classList.contains('walker-ltr')?'ltr':'rtl',
-     name:style.animationName,mode:style.animationDirection,
-     begin,middle,end,left:stage.left,right:stage.right,speed:Number(actor.dataset.walkSpeed)};
-  });
+await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const moved=await page.evaluate(()=>window.__OFFICE__.worldCommand({module:'origin',type:'travel',to:'market',via:'route-map'}));
+ assert.equal(moved.ok,true,moved.message);
+ await page.locator('.scene-market .pedestrian-actor').first().waitFor();
+ const t0=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(t0.actors.length>=3,'street has moving actors');
+ assert.ok(t0.actors.some(x=>x.direction==='left'||x.direction==='right'));
+ assert.ok(await page.locator('.pedestrian-puppet .puppet-leg').count()>=4,'legs are articulated');
+ assert.equal(await page.locator('.pedestrian-facing').first().evaluate(el=>getComputedStyle(el).opacity),'1','no invisible legacy span bug');
+ await page.screenshot({path:'artifacts/street-01-actors-entering.png',fullPage:true});
+ await page.waitForTimeout(1100);
+ const t1=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(t1.actors.some(a=>t0.actors.some(b=>a.id===b.id&&Math.abs(a.x-b.x)>4)),
+  'walkers must move across the actual stage >4 percentage points, not swing in place');
+ await page.screenshot({path:'artifacts/street-02-actors-crossing.png',fullPage:true});
+ await page.waitForFunction(()=>window.__OFFICE__.exploration.traffic().exits>0,{timeout:18000});
+ const t2=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(t2.exits>=1,'walker has genuinely left the scene');
+ assert.ok(t2.entrances>t0.entrances,'new pedestrians emerge from both entrances');
+ await page.screenshot({path:'artifacts/street-03-fresh-entrances.png',fullPage:true});
+ const talkId=await page.evaluate(()=>{
+   const a=window.__OFFICE__.exploration.traffic().actors;
+   return a.find(p=>p.x>18&&p.x<82&&p.phase==='walking')?.id||a.find(p=>p.x>12&&p.x<90)?.id;
  });
- assert.ok(checks.length>=2,label+' must have pedestrians in both directions');
- assert.ok(checks.some(x=>x.direction==='ltr')&&checks.some(x=>x.direction==='rtl'),label+' lacks bidirectional traffic');
- for(const c of checks){
-  assert.ok(!c.error,label+': '+c.error);
-  assert.ok(c.speed>=48&&c.speed<=78,label+' invalid stable walking speed');
-  assert.equal(c.mode,'normal',label+' cannot reverse direction at scene edges');
-  assert.equal(c.name,'street-pass-'+c.direction,label+' must use correct crossing animation');
-  if(c.direction==='ltr'){
-   assert.ok(c.begin<c.left-20&&c.end>c.right+20,label+' rightbound citizen must start/end outside view '+JSON.stringify(c));
-   assert.ok(c.begin<c.middle&&c.middle<c.end,label+' rightbound citizen must move monotonically '+JSON.stringify(c));
-  }else{
-   assert.ok(c.begin>c.right+20&&c.end<c.left-20,label+' leftbound citizen must start/end outside view '+JSON.stringify(c));
-   assert.ok(c.begin>c.middle&&c.middle>c.end,label+' leftbound citizen must move monotonically '+JSON.stringify(c));
-  }
- }
-}
-for(const [name,options] of [
- ['street-crossing-desktop',{viewport:{width:1440,height:900}}],
- ['street-crossing-portrait',{viewport:{width:390,height:844},isMobile:true,hasTouch:true}],
- ['street-crossing-landscape',{viewport:{width:844,height:390},isMobile:true,hasTouch:true}]
-]){
- await run(name,options,async page=>{
-  await page.evaluate(()=>window.__OFFICE__.exploration.show());
-  const skip=page.locator('[data-prologue-step="skip"]');
-  if(await skip.isVisible())await skip.click();
-  await page.locator('[data-explore-type="exit"]').click();
-  await page.locator('[data-route-place="market"]').click();
-  await page.locator('[data-route-go]').click();
-  await page.waitForFunction(()=>window.__OFFICE__.world().slices.origin.venue==='market');
-  await checkCrossings(page,name);
-  await page.screenshot({path:'artifacts/'+name+'.png',fullPage:true});
-  const keeper=page.locator('.city-walker').first();
-  await keeper.evaluate(el=>el.dataset.crowdUnchanged='yes');
-  await page.locator('[data-explore-type="talk"][data-explore-id="vendor"]').click();
-  assert.equal(await keeper.evaluate(el=>el.dataset.crowdUnchanged),'yes',name+' re-created crowd on dialogue');
-  assert.equal(await keeper.evaluate(el=>el.getAnimations({subtree:false})[0]?.playState),'running',name+' walking paused on dialogue');
- });
-}
+ assert.ok(talkId,'one citizen should be visible for face-to-face talk');
+ const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
+ await one.click({force:true,timeout:5000});
+ await page.locator('.explore-dialogue:not([hidden])').waitFor();
+ const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
+ assert.equal(state,'talking','selected citizen stops to speak');
+ const paused=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
+ await page.waitForTimeout(600);
+ const frozen=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
+ assert.ok(Math.abs(frozen-paused)<0.02,'NPC stays still during conversation');
+ await page.screenshot({path:'artifacts/street-04-face-to-face-dialogue.png',fullPage:true});
+ await page.locator('[data-talk-close]').click();
+ await page.waitForTimeout(650);
+ const after=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id)?.x,talkId);
+ assert.ok(after===undefined||Math.abs(after-paused)>2,'NPC resumes walking or exits after conversation');
+});
+await run('street-portrait-motion-390',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const result=await page.evaluate(()=>window.__OFFICE__.worldCommand({module:'origin',type:'travel',to:'alley',via:'route-map'}));
+ assert.equal(result.ok,true);
+ await page.locator('.pedestrian-actor').first().waitFor();
+ const initial=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ await page.waitForTimeout(900);
+ const after=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(after.actors.some(a=>initial.actors.some(b=>a.id===b.id&&Math.abs(a.x-b.x)>3)),
+  'touchscreen scene also traverses left/right');
+ assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'mobile has no horizontal overflow');
+ await page.screenshot({path:'artifacts/street-05-portrait-lived-in.png',fullPage:true});
+});
 
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}

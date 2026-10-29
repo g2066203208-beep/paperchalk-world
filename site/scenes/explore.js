@@ -4,12 +4,12 @@
  */
 import {SCENE_DEFS,SCENE_PEOPLE} from '../systems/origin.js';
 import {sceneArtwork} from './artwork.js';
+import {createPedestrianDirector} from './pedestrian-director.js';
 import {sceneConversation} from './scene-dialogues.js';
 import {currentBeat,prologueMark} from '../content/prologue-story.js';
 import {activeStoryBeat,todayStory} from '../systems/campaign.js';
 import {clockLabel,SHIFTS} from '../systems/clock.js';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
-const mainCell={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2'};
 const spots={
  office:[['exit','street',80,34,'出门去街上','door'],['talk','kai',64,55,'阿凯','person']],
  alley:[['exit','street',11,65,'去其他地点','door'],['talk','neighbor',42,72,'楼下婶婶','person'],
@@ -30,8 +30,6 @@ const desk=[
  ['newspaper','newspaper.svg','inspect','newspaper',36,88,12,'旧港报纸']
 ];
 const sceneOptions=['office','alley','market','labor','docks'];
-const pedestrianLanes=[[19,80],[35,83],[67,78],[86,84],[52,81]];
-const WALKER_CLEARANCE=72; // whole body must be beyond the edge before recycling
 function dayStamp(world){
  const raw=clockLabel(world.day,world.slices.clock.shift);
  return '<div class="scene-time-ribbon"><strong>DAY '+String(world.day).padStart(2,'0')+'</strong>'+
@@ -41,33 +39,6 @@ function scenicCalendar(world){
  return '<button type="button" class="story-wall-calendar" data-explore-type="open" data-explore-id="calendar" data-date="'+
  String(world.day).padStart(2,'0')+'" aria-label="查看挂在墙上的日历及本日安排">'+
  '<img src="./assets/props/calendar.svg" draggable="false" alt=""/></button>';
-}
-function selectCrowd(world,venue){
- const cell=mainCell[venue];
- if(!cell||venue==='office')return [];
- const shift=world.slices.clock.shift;
- const matches=world.slices.population.people.filter(p=>(shift===1?p.work:shift===2?p.leisure:p.home)===cell);
- return matches.slice(0,Math.min(5,matches.length));
-}
-function actorMarkup(p,i,initial=false){
- const color=['#7d9fa1','#ac837e','#baa27d','#708d9b','#979580'][i%5];
- const [stillX,y]=pedestrianLanes[i%pedestrianLanes.length];
- const serial=Number(String(p.id).replace(/\D/g,''))||0;
- const speed=48+(serial%7)*5; // screen pixels/second, not a tiny animation about one spot
- const direction=i%2===0?'ltr':'rtl';
- const delay=initial?0:(i*1.65+(serial%5)*.28);
- const phase=initial?((i*.207+.13+(serial%11)*.009)%1):0;
- return '<button type="button" class="city-walker walker-'+direction+'" data-explore-type="talk-citizen" data-explore-id="'+escape(p.id)+'"'+
- ' data-walk-speed="'+speed+'" data-walk-phase="'+phase+'" data-walk-stagger="'+delay+'"'+
- ' aria-label="和'+escape(p.name)+'交谈" style="--walk-y:'+y+'%;--walk-still-x:'+stillX+'%;--coat:'+color+';--facing:'+(direction==='ltr'?'1':'-1')+'">'+
- '<div class="walker-figure"><svg viewBox="0 0 64 128" role="img" aria-hidden="true"><ellipse cx="30" cy="123" rx="27" ry="6" fill="#1c2934" opacity=".28"/>'+
- '<path d="M19 65L12 119H27L33 90L39 121H53L47 65" fill="#293947" stroke="#1d2b36" stroke-width="4"/>'+
- '<path d="M18 44L45 43L53 84H10Z" fill="var(--coat)" stroke="#263645" stroke-width="4"/>'+
- '<path d="M27 38L28 51L40 50L40 39" fill="#cba086"/>'+
- '<path d="M18 17Q33 -6 49 17L54 29L46 36Q31 56 19 38Z" fill="#edc4a7" stroke="#2a3c47" stroke-width="3"/>'+
- '<path d="M16 19L18 7L32 0L49 8L53 24L46 17L37 19L25 12Z" fill="#263846"/>'+
- '<path d="M41 29h5" stroke="#263742" stroke-width="3"/></svg></div>'+
- '<span>'+escape(p.name)+' · '+escape(p.occupation)+'</span></button>';
 }
 function physicalProps(){
  return desk.map(([key,file,type,id,x,y,width,label])=>
@@ -92,7 +63,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
  const root=document.createElement('section');root.className='explore-root';root.setAttribute('aria-label','可探索的夜港场景');
  host.appendChild(root);
  let visible=true,venue='',shift=-1,routeOpen=false,routeSelection='alley',dialogue=null;
- let departing=false;
+ let departing=false,traffic=null;
  const speech=(speaker,line,choices=[])=>{
   const box=root.querySelector('.explore-dialogue');if(!box)return;
   box.hidden=false;
@@ -121,46 +92,6 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
        '<button type="button" class="prologue-continue" data-prologue-step="next">'+(p.at===11?'走进这座城 ›':'继续 ›')+'</button>')+
      '<button type="button" class="prologue-skip" data-prologue-step="skip">跳过开场</button></div>';
  }
- function syncWalkGeometry(){
-   const stage=root.querySelector('.explore-stage');
-   const container=stage?.querySelector('.explore-crowd');
-   if(!container)return;
-   const width=stage.clientWidth||root.clientWidth||window.innerWidth||1200;
-   const distance=width+WALKER_CLEARANCE*2;
-   for(const walker of container.querySelectorAll('.city-walker')){
-     const speed=Number(walker.dataset.walkSpeed)||55;
-     const duration=distance/speed;
-     const phase=Number(walker.dataset.walkPhase)||0;
-     const stagger=Number(walker.dataset.walkStagger)||0;
-     walker.style.setProperty('--walk-distance',distance+'px');
-     walker.style.setProperty('--walk-duration',duration.toFixed(3)+'s');
-     walker.style.setProperty('--walk-delay',(phase>0?-duration*phase:stagger).toFixed(3)+'s');
-   }
- }
- function renderCrowd(w,initial=false){
-   const container=root.querySelector('.explore-crowd');if(!container)return;
-   const next=selectCrowd(w,venue),wanted=new Set(next.map(p=>p.id));
-   for(const button of Array.from(container.querySelectorAll('.city-walker'))){
-     if(!wanted.has(button.dataset.exploreId)&&!button.dataset.retiring){
-       // Finish the current one-way crossing, then remove the citizen offscreen.
-       if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){button.remove();continue;}
-       button.dataset.retiring='1';button.disabled=true;button.setAttribute('aria-hidden','true');
-     }
-   }
-   next.forEach((p,i)=>{
-     if(!Array.from(container.querySelectorAll('.city-walker:not([data-retiring])')).some(x=>x.dataset.exploreId===p.id)){
-       const temp=document.createElement('div');temp.innerHTML=actorMarkup(p,i,initial);
-       container.append(temp.firstElementChild);
-     }
-   });
-   syncWalkGeometry();
- }
- root.addEventListener('animationiteration',event=>{
-   const walker=event.target;
-   if(walker.classList?.contains('city-walker')&&walker.dataset.retiring&&event.animationName.startsWith('street-pass-')){
-     walker.remove();
-   }
- });
  function renderDailyCues(w){
    const stage=root.querySelector('.explore-stage');if(!stage)return;
    const band=stage.querySelector('.scene-time-ribbon');
@@ -189,6 +120,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
      (style==='door'&&venue!=='office'?'<svg class="scene-exit-door-art" viewBox="0 0 110 200" aria-hidden="true"><path d="M9 7H101V195H9Z" fill="#263845" stroke="#d8b891" stroke-width="7"/><path d="M26 23H85V161H26Z" fill="#475968" stroke="#8b8173" stroke-width="4"/><circle cx="82" cy="116" r="6" fill="#ecc393"/></svg>':'')+
      '<span>'+escape(label)+'</span></button>'
    ).join('');
+   traffic?.destroy();traffic=null;
    root.innerHTML='<div class="explore-stage scene-'+venue+'"><div class="explore-visual">'+sceneArtwork(venue)+'</div>'+dayStamp(w)+
     '<div class="explore-crowd" aria-label="持续活动的街区行人"></div>'+
     (venue==='office'?physicalProps()+scenicCalendar(w):'')+buttons+'<div class="scene-day-layer"></div>'+
@@ -200,13 +132,13 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
     '</div>';
    renderOpening();
    renderDailyCues(w);
-   renderCrowd(w,true);
+   traffic=createPedestrianDirector(root.querySelector('.explore-crowd'),{world:readWorld,venue});
  }
  function render(){
    if(!visible)return;
    const w=readWorld(),next=w.slices.origin.venue;
    if(next!==venue||!root.querySelector('.explore-stage')){buildScene();return;}
-   if(shift!==w.slices.clock.shift){shift=w.slices.clock.shift;renderCrowd(w);}
+   if(shift!==w.slices.clock.shift){shift=w.slices.clock.shift;traffic?.sync(w);}
    renderOpening();
    renderDailyCues(w);
    // Important: do NOT assign root.innerHTML here. NPC actors keep walking.
@@ -220,12 +152,13 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const r=command(action);if(!r.ok)return;
    const opening=r.events?.find(e=>e.source==='origin')?.text||convo.opening;
    dialogue={person:id,speaker:convo.speaker,citizen:!!citizen,convo};
+   if(citizen)traffic?.pauseCitizen(id);
    speech(convo.speaker,opening,convo.options);
  }
  function openRoute(){
    const w=readWorld();const place=w.slices.origin.venue;
    routeSelection=place==='office'?'alley':'office';
-   routeOpen=true;dialogue=null;
+   routeOpen=true;dialogue=null;traffic?.resumeCitizen();traffic?.pause();
    const intro=root.querySelector('.prologue-presentation');if(intro)intro.hidden=true;
    const d=root.querySelector('.explore-dialogue');if(d)d.hidden=true;
    const holder=document.createElement('div');holder.className='street-route-layer';holder.innerHTML=routeMap(place,routeSelection);
@@ -233,7 +166,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    holder.querySelector('[data-route-place="'+routeSelection+'"]')?.focus();
  }
  function updateRoute(){const holder=root.querySelector('.street-route-layer');if(holder)holder.innerHTML=routeMap(venue,routeSelection);}
- function closeRoute(){routeOpen=false;root.querySelector('.street-route-layer')?.remove();renderOpening();}
+ function closeRoute(){routeOpen=false;root.querySelector('.street-route-layer')?.remove();traffic?.resume();renderOpening();}
  function go(){
    if(departing||routeSelection===venue||!SCENE_DEFS[routeSelection])return;
    departing=true;
@@ -264,7 +197,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(place){routeSelection=place.dataset.routePlace;updateRoute();return;}
    if(e.target.closest('[data-route-go]')){go();return;}
    if(e.target.closest('[data-route-close]')){closeRoute();return;}
-   if(e.target.closest('[data-talk-close]')){dialogue=null;root.querySelector('.explore-dialogue').hidden=true;return;}
+   if(e.target.closest('[data-talk-close]')){dialogue=null;traffic?.resumeCitizen();root.querySelector('.explore-dialogue').hidden=true;return;}
    const story=e.target.closest('[data-scene-day]');
    if(story){
      const beat=activeStoryBeat(readWorld());
@@ -312,9 +245,8 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(result.ok){const ev=result.events?.find(x=>x.source==='origin');if(ev)say(ev.title,ev.text);}
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&routeOpen){e.preventDefault();closeRoute();}});
- function show(){visible=true;root.hidden=false;render();syncWalkGeometry();onToggle?.(true);}
- function hide(){visible=false;root.hidden=true;closeRoute();onToggle?.(false);}
- if(typeof ResizeObserver!=='undefined')new ResizeObserver(syncWalkGeometry).observe(root);
+ function show(){visible=true;root.hidden=false;traffic?.resume();render();onToggle?.(true);}
+ function hide(){visible=false;root.hidden=true;closeRoute();traffic?.pause();onToggle?.(false);}
  buildScene();shift=readWorld().slices.clock.shift;
- return Object.freeze({render,show,hide,isVisible:()=>visible,say,current:()=>readWorld().slices.origin.venue,openTravel:openRoute});
+ return Object.freeze({render,show,hide,isVisible:()=>visible,say,current:()=>readWorld().slices.origin.venue,openTravel:openRoute,traffic:()=>traffic?.snapshot()||{actors:[],entrances:0,exits:0}});
 }
