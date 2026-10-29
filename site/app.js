@@ -25,7 +25,7 @@ function rebuild(){
  $('#stat-chains').textContent=check.chains;
  $('#stat-roots').textContent=check.roots;
  $('#bone-count-a').textContent=check.bones;
- $('#joint-count').textContent=check.bones;
+ $('#contour-count').textContent='…';
  $('#specimen-title').textContent=state.rig.label+' · 骨骼结构';
  $('#specimen-id').textContent=String(state.seed).padStart(5,'0').slice(-6);
  document.querySelectorAll('[data-type]').forEach(button=>{
