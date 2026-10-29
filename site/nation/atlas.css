@@ -1,0 +1,57 @@
+/* National map & actual walkable floor plans. Canvas pixels, not button-only scenery. */
+.nation-world[hidden]{display:none!important}
+.nation-world{position:fixed;inset:0;z-index:1000;background:#172632;color:#ede5d6;font-family:system-ui,"Noto Sans SC",sans-serif}
+.nation-shell{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+.nation-top{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#16232e;border-bottom:1px solid #a47f62;padding:9px 19px;min-height:63px;flex-shrink:0}
+.nation-brand{display:flex;flex-direction:column;gap:3px}
+.nation-brand small{font-size:9px;letter-spacing:.17em;color:#b5a88e}
+.nation-brand strong{font-family:Georgia,"Noto Serif SC",serif;font-size:22px;color:#f0dbba}
+.nation-top-controls{display:flex;gap:6px;flex-wrap:wrap}
+.nation-world button,.nation-world select{font-family:inherit;color:#f6e7cf;border:1px solid #917c67;background:#3a4b55;padding:8px 10px;font-size:12px;cursor:pointer;border-radius:3px}
+.nation-world button:disabled{opacity:.43;cursor:not-allowed}
+.nation-world button:hover:not(:disabled),.nation-world button:focus-visible{background:#825c54;color:#fff;outline:1px solid #d4bb96}
+.nation-main{display:grid;grid-template-columns:minmax(0,1fr) 300px;flex:1;min-height:0}
+.nation-viewport{position:relative;background:#375869;min-width:0;min-height:0;touch-action:none;overflow:hidden;cursor:crosshair;outline:none}
+.nation-viewport:focus-visible{box-shadow:inset 0 0 0 3px #fff1c2}
+.nation-viewport canvas{position:absolute;inset:0;display:block;image-rendering:auto}
+.nation-traffic{pointer-events:auto}
+.nation-hud{position:absolute;bottom:14px;left:14px;right:14px;display:flex;flex-wrap:wrap;align-items:center;gap:7px;pointer-events:none}
+.nation-hud span{display:inline-block;padding:7px 9px;background:rgba(19,32,42,.87);color:#f6ebd8;font-size:11px;border:1px solid #8e806d}
+.nation-hud .nation-tips{margin-left:auto;color:#d6cfbb}
+.nation-side{min-height:0;overflow-y:auto;background:#e8dac2;color:#253844;border-left:2px solid #b79e7a}
+.nation-section{padding:14px 16px;border-bottom:1px solid #b5a183}
+.nation-section>small{font-size:9px;letter-spacing:.2em;color:#865353;font-weight:800}
+.nation-section h2{font:700 20px/1.3 Georgia,"Noto Serif SC",serif;margin:6px 0 9px;color:#263a48}
+.nation-section h3{font-size:13px;letter-spacing:.04em;margin:0 0 9px;color:#3b4c56}
+.nation-section>p,.nation-building-info{font-size:11px;line-height:1.7;color:#5c5b56}
+.nation-measures{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
+.nation-measures span{font-size:9px;color:#6f6054;border:1px solid #baa386;padding:6px;background:#f6e8cf}
+.nation-measures strong{font-size:14px;color:#354752;display:block}
+.nation-mode-buttons{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.nation-side .nation-mode-buttons button{font-size:10px;padding:6px 7px;color:#344452;background:#f6eedf;border-color:#b69d84}
+.nation-side .nation-mode-buttons button.selected{background:#77514d;color:#fff4dc}
+.nation-side label{font-size:11px;display:block;margin-bottom:4px}
+.nation-side select{background:#f6eedf;width:100%;color:#344452;border:1px solid #9f8a73;padding:10px;font-size:12px}
+.nation-route{margin:9px 0;padding:10px;background:#f6ecd8;border:1px solid #c7b494;color:#35434b}
+.nation-route strong{font-size:12px}
+.nation-route p{font-size:11px;color:#835b49}
+.nation-route small{font-size:10px;color:#64665c;line-height:1.6}
+.nation-side .nation-depart{background:#7e5148;color:#fff3df;width:100%;font-weight:bold}
+.nation-log p{font-size:10px;line-height:1.5}
+.nation-foot{display:flex;align-items:center;gap:15px;padding:7px 14px;background:#1a2a35;border-top:1px solid #94735a;flex-shrink:0;min-height:52px}
+.nation-foot>span{font-size:11px;color:#c9bea9}
+.nation-legend{display:flex;flex-wrap:wrap;gap:9px}
+.nation-legend span{display:inline-flex;align-items:center;gap:4px;font-size:10px}
+.nation-legend i{display:inline-block;width:13px;height:5px}
+.nation-pad{display:flex;gap:3px;margin-left:auto}
+.nation-world .nation-pad button{min-height:36px;min-width:36px;padding:6px}
+@media(max-width:850px){.nation-main{grid-template-columns:minmax(0,1fr) 210px}.nation-brand strong{font-size:15px}.nation-top{padding:7px 10px}.nation-top-controls button{font-size:10px;padding:6px}}
+@media(max-width:620px){.nation-main{display:flex;flex-direction:column}.nation-viewport{min-height:42vh;flex:1}.nation-side{max-height:29vh;overflow-y:auto;border-left:0;border-top:2px solid #b79e7a}
+ .nation-brand strong{font-size:15px}.nation-top-controls{justify-content:flex-end}.nation-top-controls button{padding:5px;font-size:10px}
+ .nation-section{padding:8px 12px}.nation-measures{margin:5px 0}.nation-hud{bottom:5px;left:5px;right:5px}.nation-hud span{font-size:9px;padding:4px 5px}
+ .nation-hud .nation-tips{display:none}.nation-foot{gap:4px;flex-wrap:wrap;padding:4px 7px}.nation-foot>span{display:none}
+ .nation-world .nation-pad button{min-height:38px;min-width:38px}.nation-legend{gap:6px}.nation-legend span{font-size:9px}}
+
+.nation-launch{font-size:12px;color:#f0dfc2;background:#744e49;border:1px solid #ad8e72;border-radius:4px;padding:8px 12px;cursor:pointer}
+.nation-launch:hover,.nation-launch:focus-visible{background:#a06157;color:#fff4de}
+@media(max-width:620px){.nation-launch{font-size:10px;padding:6px}}

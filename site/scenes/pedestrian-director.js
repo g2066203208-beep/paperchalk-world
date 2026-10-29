@@ -42,7 +42,7 @@ export function createPedestrianDirector(layer,{world,venue}){
  if(!LOCATIONS[venue])return Object.freeze({sync:()=>{},pause:()=>{},resume:()=>{},pauseCitizen:()=>{},resumeCitizen:()=>{},destroy:()=>{},snapshot:()=>({actors:[],entrances:0,exits:0})});
  const actors=new Map();
  let active=true,stopped=false,frame=0,last=0,sequence=0,entrances=0,exits=0,shift=-1,roster=[];
- let pausedCitizen=null;
+ let pausedCitizen=null,talkLocked=false;
  const capacity=()=>window.matchMedia('(max-width:650px)').matches?3:5;
  function position(item){
   const {element,walk}=item;
@@ -74,6 +74,10 @@ export function createPedestrianDirector(layer,{world,venue}){
    const holder=document.createElement('div');holder.innerHTML=actorMarkup(p,plan);
    const element=holder.firstElementChild;
    const item={element,walk:walker};
+   // Real people can be approached: hovering pauses movement so the actual
+   // moving target is clickable on desktop. A conversation locks the pause.
+   element.addEventListener('pointerenter',()=>pauseCitizen(p.id,false));
+   element.addEventListener('pointerleave',()=>{if(pausedCitizen===p.id&&!talkLocked)resumeCitizen();});
    actors.set(p.id,item);layer.append(element);entrances++;
    position(item);
  }
@@ -106,23 +110,27 @@ export function createPedestrianDirector(layer,{world,venue}){
    }
    frame=requestAnimationFrame(tick);
  }
- function pauseCitizen(id){
+ function pauseCitizen(id,lock=true){
+   // A passer-by wandering underneath the mouse pointer must NEVER unlock an
+   // ongoing real conversation with a different citizen.
+   if(talkLocked&&!lock)return;
    if(pausedCitizen&&actors.has(pausedCitizen)&&pausedCitizen!==id)resumeCitizen();
    const item=actors.get(id);if(!item)return;
-   pausedCitizen=id;
-   item.walk.previousPhase=item.walk.phase;
-   item.walk.phase='talking';
-   item.element.classList.add('pedestrian-talking');
+   if(item.walk.phase!=='talking'&&item.walk.phase!=='hovering')item.walk.previousPhase=item.walk.phase;
+   pausedCitizen=id;talkLocked=lock||talkLocked;
+   item.walk.phase=talkLocked?'talking':'hovering';
+   item.element.classList.toggle('pedestrian-talking',talkLocked);
+   item.element.classList.toggle('pedestrian-hovering',!talkLocked);
    position(item);
  }
  function resumeCitizen(){
    if(pausedCitizen&&actors.has(pausedCitizen)){
      const item=actors.get(pausedCitizen);
      item.walk.phase=item.walk.previousPhase||'walking';
-     item.element.classList.remove('pedestrian-talking');
+     item.element.classList.remove('pedestrian-talking','pedestrian-hovering');
      position(item);
    }
-   pausedCitizen=null;
+   pausedCitizen=null;talkLocked=false;
  }
  sync(world(),true);
  frame=requestAnimationFrame(tick);

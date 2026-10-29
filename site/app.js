@@ -7,6 +7,7 @@ import {renderOriginBook} from './ui/origin-book.js';
 import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
 import {createExploreLayer} from './scenes/explore.js';
+import {createNationalAtlas} from './nation/atlas-view.js';
 import {todayStory,activeStoryBeat,SEASON_ARCS,FINAL_DAY} from './systems/campaign.js';
 import {clockLabel} from './systems/clock.js';
 const $=id=>document.getElementById(id);
@@ -17,7 +18,7 @@ let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'
 const WORLD_STORE='night-office-world-v1';
 let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
-let explorer=null;
+let explorer=null,nationAtlas=null;
 let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
 const originTabs=new Set(['society','recruitment','politics']);
 const cityTabs=new Set(['clock','estates','industry','transport','citizens','operations','contacts','justice']);
@@ -56,6 +57,7 @@ function refresh(){
  document.title='夜港 · 两个无名者 · DAY '+state.day;
  save();
  explorer?.render();
+ nationAtlas?.refresh();
 }
 const header=(eyebrow,title,sub='')=>'<div class="eyebrow">'+escapeHTML(eyebrow)+'</div><h2 id="panel-title">'+escapeHTML(title)+'</h2>'+(sub?'<p>'+escapeHTML(sub)+'</p>':'');
 function panel(type){
@@ -525,11 +527,13 @@ explorer=createExploreLayer(document.querySelector('.scene'),{
     }
   }
 });
+nationAtlas=createNationalAtlas($('nation-root'),{readWorld:()=>world,command:performWorldCommand});
+$('nation-open').addEventListener('click',()=>{closePanel();nationAtlas.show();});
 $('explore-toggle').addEventListener('click',()=>{
   if(explorer.isVisible())explorer.hide();else explorer.show();
 });
 refresh();
-window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,open:panel,close:closePanel,
+window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,nation:nationAtlas,open:panel,close:closePanel,
  dispatch:(type,...args)=>{
   const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
   type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):

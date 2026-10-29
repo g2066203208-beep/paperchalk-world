@@ -38,7 +38,7 @@ export function pedestrianPlan(person,venue,shift,sequence=0){
   clothing:value%4,bubble:config.ambient[value%config.ambient.length],seed:value};
 }
 export function stepWalker(walker,dt){
- if(walker.phase==='talking')return walker;
+ if(walker.phase==='talking'||walker.phase==='hovering')return walker;
  const copy={...walker};
  let remaining=Math.max(0,Math.min(.08,dt));
  if(copy.phase==='waiting'||copy.phase==='chatting'){

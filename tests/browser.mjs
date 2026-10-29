@@ -482,7 +482,10 @@ await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async 
  });
  assert.ok(talkId,'one citizen should be visible for face-to-face talk');
  const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
- await one.click({force:true,timeout:5000});
+ await one.hover({force:true,timeout:8000});
+ await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='hovering',talkId,{timeout:3000});
+ await one.click({timeout:8000});
+ await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='talking',talkId,{timeout:3000});
  await page.locator('.explore-dialogue:not([hidden])').waitFor();
  const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
  assert.equal(state,'talking','selected citizen stops to speak');
@@ -628,6 +631,74 @@ await run('industry-portrait-ui',{viewport:{width:390,height:844},deviceScaleFac
  assert.match(await page.locator('#panel-title').innerText(),/产业经营/);
  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'industry UI must not overflow phone width');
  await page.screenshot({path:'artifacts/industry-03-mobile-overview.png',fullPage:true});
+});
+
+// Nation-scale map is genuine drawable geometry and rooms, not a screenshot of remote reference art.
+await run('national-atlas-real-street-building-and-road-journey',{viewport:{width:1440,height:900}},async page=>{
+ await page.locator('#nation-open').click();
+ await page.locator('#nation-root:not([hidden]) .nation-viewport').waitFor({state:'visible'});
+ const nation=await page.evaluate(()=>window.__OFFICE__.world().slices.nation);
+ assert.equal(nation.station,'oldport');
+ await page.locator('[data-nation-zoom="all"]').click();
+ const overview=await page.evaluate(()=>window.__OFFICE__.nation.snapshot());
+ assert.ok(overview.scale<1,'country overview truly shows large geographic extent');
+ assert.ok(overview.chunks<=36,'national map must not materialize millions of tiles');
+ await page.screenshot({path:'artifacts/national-01-country-overview.png',fullPage:true});
+ await page.locator('[data-nation-center="me"]').click();
+ await page.locator('[data-nation-scene="street"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.nation.snapshot())).mode,'street','street elevation must be an actual mode, not a map screenshot');
+ await page.screenshot({path:'artifacts/national-02-street-level-facades.png',fullPage:true});
+ await page.locator('[data-nation-center="me"]').click();
+ const target=await page.evaluate(async()=>{
+  const {buildingAt,interiorFor}=await import('./nation/world-model.js');
+  const b=buildingAt(938,2049,0,window.__OFFICE__.world().slices.estates);
+  if(!b)throw Error('Historic lot-25 needs a real walkable building');return {building:b,room:interiorFor(b)};
+ });
+ assert.equal(target.building.property,'lot-25','this is a real property from the economic game');
+ const camera=await page.evaluate(()=>window.__OFFICE__.nation.snapshot());
+ const stage=await page.locator('.nation-viewport').boundingBox();
+ const fp=target.building.footprint;
+ const clickX=stage.x+stage.width/2+((fp.x+fp.w/2)-camera.center.x)*camera.scale;
+ const clickY=stage.y+stage.height/2+((fp.y+fp.h/2)-camera.center.y)*camera.scale;
+ await page.mouse.click(clickX,clickY);
+ await page.waitForFunction(id=>window.__OFFICE__.world().slices.nation.inside===id,target.building.id);
+ assert.match(await page.locator('.nation-loc').innerText(),/室内调查/);
+ await page.screenshot({path:'artifacts/national-02-unique-building-interior.png',fullPage:true});
+ const f=target.room.fixtures[4];
+ await page.mouse.click(stage.x+(f.x+f.w/2)*stage.width/960,stage.y+(f.y+f.h/2)*stage.height/600);
+ await page.waitForFunction(()=>window.__OFFICE__.world().slices.nation.discoveries.length>0,{timeout:8000});
+ await page.screenshot({path:'artifacts/national-03-physical-interior-inspection.png',fullPage:true});
+ await page.mouse.click(stage.x+480*stage.width/960,stage.y+565*stage.height/600);
+ await page.waitForFunction(()=>window.__OFFICE__.world().slices.nation.inside===null);
+ await page.locator('#nation-destination').selectOption('capital');
+ await page.locator('[data-nation-mode="road"]').click();
+ assert.match(await page.locator('.nation-route').innerText(),/公里|km/);
+ await page.locator('[data-nation-depart]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.nation.journey)).mode,'road');
+ await page.screenshot({path:'artifacts/national-04-moving-on-national-road.png',fullPage:true});
+ await page.waitForFunction(()=>window.__OFFICE__.world().slices.nation.station==='capital',{timeout:17000});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.nation.arrivals)),1);
+ const persisted=await page.evaluate(()=>window.__OFFICE__.world().slices.nation);
+ await page.locator('[data-nation-close]').click();
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.nation.station)),'capital','national position persists across browser reload');
+ assert.ok(persisted.visited.includes(target.building.id));
+});
+await run('national-atlas-mobile-touch-and-offshore-fairways',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.locator('#nation-open').tap();
+ await page.locator('[data-nation-zoom="all"]').tap();
+ await page.locator('.nation-viewport').waitFor({state:'visible'});
+ assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'no phone horizontal overflow');
+ await page.screenshot({path:'artifacts/national-05-country-mobile.png',fullPage:true});
+ await page.locator('[data-nation-center="me"]').tap();
+ await page.locator('[data-nation-scene="street"]').tap();
+ await page.screenshot({path:'artifacts/national-06-street-mobile-elevation.png',fullPage:true});
+ const before=await page.evaluate(()=>window.__OFFICE__.world().slices.nation.position);
+ await page.locator('[data-nation-step="1,0"]').tap();
+ const after=await page.evaluate(()=>window.__OFFICE__.world().slices.nation.position);
+ assert.equal(after.x,before.x+1,'physical touch movement advances one adjacent street block');
+ await page.screenshot({path:'artifacts/national-06-street-mobile.png',fullPage:true});
+ await page.locator('[data-nation-close]').tap();
 });
 
 await browser.close();
