@@ -1,16 +1,56 @@
 import {SECOND_WEEK} from '../content/second-week-story.js';
+import {STORY_2_5} from '../content/main-story-2-5.js';
+import {STORY_6_9} from '../content/main-story-6-9.js';
 /**
- * NIGHT HARBOR / CHAPTER 01 - DAYS ARE PLAYABLE
- * First seven days are fully authored two-scene beats. Days 8-15 offer recurring
- * voluntary-neighborhood work while the long campaign is being developed.
- * No user-facing UI or network access. Event state is replayable.
+ * 九章完整主线：1—39天，前十五天保持原剧情不破坏存档。
+ * 每天两次实地场景行动，分支是可重访的剧情状态，而不是只换文字。
+ * 第39天第二幕在原地触发终局；第40天之后为自由城市生活。
  */
 export const SEASON_ARCS=[
- {id:'roof',start:1,end:15,title:'雨漏的屋顶',goal:'建立街坊互助点，获得第一批真实信任'},
- {id:'streets',start:16,end:45,title:'街巷的名字',goal:'公开经营、招聘，争取街区议事权'},
- {id:'bell',start:46,end:105,title:'钟楼下的协议',goal:'产业经营、势力谈判与司法危机'},
- {id:'inheritance',start:106,end:180,title:'城的继承者',goal:'重建城市秩序与不同结局'}
+ {id:'roof',chapter:1,start:1,end:15,title:'第一章 · 两个人的办公室',goal:'让破屋成为真正的街坊互助点'},
+ {id:'seal',chapter:2,start:16,end:18,title:'第二章 · 黑印收据',goal:'发现旧港收费单与十七号货柜的联系'},
+ {id:'tide',chapter:3,start:19,end:21,title:'第三章 · 第十七码头',goal:'查清停电、孤儿院与船员赔偿名册'},
+ {id:'witness',chapter:4,start:22,end:24,title:'第四章 · 灯下的证人',goal:'让小禾自主决定是否作证'},
+ {id:'families',chapter:5,start:25,end:27,title:'第五章 · 四家的长桌',goal:'拒绝用证据换利益，分清各家责任'},
+ {id:'blackout',chapter:6,start:28,end:30,title:'第六章 · 钟楼停摆',goal:'在停电危机里保护街坊与档案'},
+ {id:'masks',chapter:7,start:31,end:33,title:'第七章 · 面具背后',goal:'处理主角与阿凯的匿名过去'},
+ {id:'trial',chapter:8,start:34,end:36,title:'第八章 · 城市的审判',goal:'独立取证并建立有监督的城市议事制度'},
+ {id:'keys',chapter:9,start:37,end:39,title:'第九章 · 最后一把钥匙',goal:'公开投票并决定权力由谁持有'}
 ];
+export const FINAL_DAY=39;
+export const MAIN_STORY={...STORY_2_5,...STORY_6_9};
+export const ENDINGS={
+ community:{title:'结局一 · 城市由人们开门',subtitle:'灯亮着，门没有上锁',text:'第十七码头的死者终于有了可以查证的名字。临时议事会按公开选举产生，财务、警务和港口账簿交由独立机构监督。那间小办公室不再属于某一个人的传说。小禾在诊所工作，邢伯仍每天准时看表。你与阿凯像普通街坊一样轮值。第一把钥匙留在了居民手里。'},
+ charter:{title:'结局二 · 守夜人的宪章',subtitle:'制度仍脆弱，但有人愿意守着',text:'证据赢得调查，章程获得通过；四大家族并未一夜消失，他们仍经营自己的商店、港口和产业，只是不能再随意删改别人的名字。事务所仍是过渡监督的一环。阿凯把日程贴在门外，提醒所有人：权力不是一次赢来的。'},
+ truth:{title:'结局三 · 只有真相的港口',subtitle:'档案柜里有光，街道还没有',text:'调查组认可了许多证据，但街坊对谁来承担日常治理仍有疑虑。你们赢下了旧案的一部分，没能赢得一座城的共同承诺。小禾选择离开聚光灯继续行医。阿凯把钥匙放在桌上，说这不是结束，只是第一次看清真正要面对什么。'},
+ shelter:{title:'结局四 · 好心人的孤岛',subtitle:'帮助过人，却没能留下公正的规则',text:'夜港记得你们送过的粮食、修过的路灯；但真正能证明事故责任的记录仍有空缺。受害者家属没有放弃追问。事务所继续开放，不再把善意当成免责的凭证。阿凯重新打开那本账簿：下一次，必须把每个决定写清楚。'},
+ unresolved:{title:'结局五 · 雨还没有停',subtitle:'故事没有被英雄替人们写完',text:'听证结束了，市集却没有形成足以支撑新制度的共识。旧日家族仍握有不少利益，居民委员会只能缓慢试行。你与阿凯没有失踪，也没有被某个结局判为失败者。破屋门前多了一张写着开放时间的纸；有人敲门时，里面仍会有人回应。'}
+};
+export function resolveEnding(c){
+ const picked=c.decisions||{};
+ if(picked['final-door']==='people-rule'&&picked.keys==='return-key'&&
+    c.communityTrust>=85&&c.evidence>=36&&c.resolve>=38)return 'community';
+ if(c.communityTrust>=70&&c.evidence>=30&&c.resolve>=25)return 'charter';
+ if(c.evidence>=38&&c.communityTrust<70)return 'truth';
+ if(c.communityTrust>=55&&c.evidence<30)return 'shelter';
+ return 'unresolved';
+}
+const ECHOES={
+ 26:{'lucas':[['seal','audit','你拿出那张原件，卢卡一眼认出了封缄上的编号。']]},
+ 27:{'raven':[['ticket','safehouse','苏纱认出当初写给她的合法援助地址，她知道你没把人情做成交易。']]},
+ 29:{'alarm':[['threat','guard-witness','上次陪小禾回家的那几位街坊，此刻已经知道怎么安全疏散居民。']]},
+ 31:{'brother':[['photograph','tell','阿凯记得你曾经毫无保留地告诉他一切。']]},
+ 32:{'kai-witness':[['xiaho','consent-witness','小禾提醒调查员，你们早先答应过只采用她允许公开的证词。']]},
+ 33:{'mask-choice':[['vow','lay-down-masks','阿凯想起昨晚一起锁进抽屉的面具。']]},
+ 34:{'hearing':[['threat','publish-threat','那段没有暴露诊所地址的影像，今天成为了威胁案的正式证据。']]},
+ 36:{'city-charter':[['table','merchant-seat','曾要求列席会议的商户们亲自带来了章程草案。']]},
+ 38:{'keys':[['city-charter','charter','居民已在议事会草案里写下对钥匙持有者的监督程序。']]},
+ 39:{'final-door':[['keys','return-key','昨晚接过钥匙的值班代表，今天正在门口向新来的街坊解释值班表。']]}
+};
+export function storyConsequences(world,beat){
+ const rows=ECHOES[world.day]?.[beat.id]||[];
+ return rows.filter(([id,choice])=>world.slices.campaign?.decisions?.[id]===choice).map(x=>x[2]);
+}
 const beat=(id,venue,lead,title,line,choices)=>({id,venue,lead,title,line,choices});
 const opt=(id,label,line,benefits={})=>({id,label,line,benefits});
 export const FIRST_WEEK={
@@ -115,23 +155,27 @@ export function todayStory(world){
  if(!state)return null;
  if(day<=7)return FIRST_WEEK[day]||null;
  if(day<=15)return SECOND_WEEK[day]||null;
- return null;
+ return MAIN_STORY[day]||null;
 }
 export function activeStoryBeat(world){
  const p=todayStory(world);
- return p?.beats[world.slices.campaign?.actionsToday||0]||null;
+ const beat=p?.beats[world.slices.campaign?.actionsToday||0]||null;
+ if(!beat)return null;
+ const echoes=storyConsequences(world,beat);
+ return echoes.length?{...beat,line:beat.line+'\n'+echoes.join('\n')}:beat;
 }
 export function storySnapshot(world){
  const p=world.slices.campaign;
  return {chapter:SEASON_ARCS.find(x=>world.day<=x.end)?.title||'尾声之后',
   day:world.day, actions:p.actionsToday,trust:p.communityTrust,clues:p.evidence,resolution:p.resolve,
-  identity:p.identityRisk,caseResult:p.firstWeekOutcome};
+  identity:p.identityRisk,caseResult:p.firstWeekOutcome,ending:p.ending||null,decisions:p.decisions||{}};
 }
 export const campaignSystem={
  id:'campaign',deps:['origin','clock','society'],
  init:({day})=>({
   actionsToday:0,communityTrust:0,evidence:0,resolve:0,identityRisk:0,supplies:0,
-  firstWeekOutcome:null,firstChapterOutcome:null,history:[],daySummaries:[],introComplete:false
+  firstWeekOutcome:null,firstChapterOutcome:null,history:[],daySummaries:[],introComplete:false,
+  decisions:{},chapterOutcomes:[],ending:null
  }),
  reduce(data,action,{day,context,slices}){
   if(action.type!=='scene-choice')return {error:'未知的每日剧情命令'};
@@ -144,6 +188,10 @@ export const campaignSystem={
   if(!pick)return {error:'无效剧情选择'};
   const e=pick.benefits||{};
   if((e.cash||0)<0&&context.cash<-(e.cash||0))return {error:'资金不足，选择其他方式帮助街坊'};
+  if(!data.decisions)data.decisions={};
+  if(!data.chapterOutcomes)data.chapterOutcomes=[];
+  if(data.ending)return {error:'主线已落幕，可以继续自由经营或在日历中回顾'};
+  data.decisions[event.id]=pick.id;
   data.actionsToday++;
   data.communityTrust=Math.max(0,data.communityTrust+(e.trust||0));
   data.evidence=Math.max(0,data.evidence+(e.clues||0));
@@ -153,15 +201,23 @@ export const campaignSystem={
   data.history.unshift({id:day+'-'+event.id,day,venue:event.venue,beat:event.id,choice:pick.id,title:event.title,
     result:pick.line,benefits:e});
   data.history=data.history.slice(0,100);
+  const additional=[];
+  if(day===FINAL_DAY&&data.actionsToday===2){
+    const key=resolveEnding(data);
+    data.ending={key,day,title:ENDINGS[key].title,subtitle:ENDINGS[key].subtitle,
+      text:ENDINGS[key].text};
+    additional.push({type:'campaign.ending',title:data.ending.title,
+      text:data.ending.subtitle+'\n'+data.ending.text,ending:key});
+  }
   return {data,events:[{type:'campaign.choice',title:event.lead+' · '+event.title,
-    text:pick.line,scene:event.venue,beat:event.id,choice:pick.id}],
+    text:pick.line,scene:event.venue,beat:event.id,choice:pick.id},...additional],
    effects:[...((e.cash||0)!==0?[{kind:'cash',amount:e.cash,label:'街区剧情：'+event.title}]:[]),
     ...((e.trust||0)>0?[{kind:'respect',amount:Math.min(2,e.trust),label:'社区声望'}]:[]),
     {kind:'time-phase',to:data.actionsToday===1?2:3}]};
  },
  tick(data,{day}){
   const yesterday=day-1,previous=data.actionsToday;
-  if(yesterday<=15){
+  if(yesterday<=FINAL_DAY){
    const summary={day:yesterday,completed:previous,trust:data.communityTrust,evidence:data.evidence};
    data.daySummaries.unshift(summary);data.daySummaries=data.daySummaries.slice(0,35);
   }
@@ -180,9 +236,18 @@ export const campaignSystem={
       text:achieved?'居民共同制定自愿互助章程，社区办公室正式成立。主角与阿凯的蒙面身份仍未公开。':
         '互助组织暂未达成完整共识，但愿意继续帮忙的人正在增加。未来还可以重新争取居民的信任。'});
   }
+  const finishedArc=SEASON_ARCS.find(a=>a.end===yesterday);
+  if(finishedArc){
+   data.chapterOutcomes ||= [];
+   if(!data.chapterOutcomes.some(x=>x.chapter===finishedArc.chapter)){
+    const completed=(data.daySummaries||[]).filter(x=>x.day>=finishedArc.start&&x.day<=finishedArc.end);
+    data.chapterOutcomes.push({chapter:finishedArc.chapter,title:finishedArc.title,
+     completed:completed.reduce((n,x)=>n+x.completed,0),days:finishedArc.end-finishedArc.start+1});
+   }
+  }
   data.actionsToday=0;
-  if(day<=15){
-   const story=FIRST_WEEK[day]||SECOND_WEEK[day]||{title:'街坊的一天'};
+  if(day<=FINAL_DAY){
+   const story=FIRST_WEEK[day]||SECOND_WEEK[day]||MAIN_STORY[day]||{title:'街坊的一天'};
    events.push({type:'campaign.morning',title:'DAY '+day+' · '+story.title,
     text:story.deadline||'新的问题出现在街头。'});
   }

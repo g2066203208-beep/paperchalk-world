@@ -1,0 +1,33 @@
+/* Main story journal; letterpress-like record instead of a new intrusive HUD. */
+.chapter-journal{margin-top:15px;padding:16px;background:#e4d6be;color:#263641;border:2px solid #344451;box-shadow:4px 4px 0 #aa6260;display:grid;gap:8px}
+.chapter-journal>h3,.chapter-archive>h3{margin:4px 0 7px;color:#263641;font-size:16px}
+.chapter-journal-line{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #ad9982}
+.chapter-journal-line:last-child{border-bottom:0}
+.chapter-journal-line .chapter-index{font:900 21px Georgia,serif;color:#a64e55}
+.chapter-journal-line strong{font-size:12px;display:block}
+.chapter-journal-line small{display:block;font-size:10px;color:#675e52;margin-top:4px;line-height:1.35}
+.chapter-journal-line em{font:800 10px system-ui,sans-serif;font-style:normal;color:#995058;white-space:nowrap}
+.chapter-journal-line.is-current{background:#f8ebd4;border-left:4px solid #b84f56}
+.chapter-journal-line.is-locked{opacity:.65}
+.chapter-archive{margin:16px 0;padding:12px;background:#f5e7d0;color:#263641;border-left:4px solid #b64d56}
+.chapter-archive>p{margin:9px 0;border-top:1px dashed #b7a894;padding-top:9px}
+.chapter-archive small{display:block;font-size:10px;font-weight:800;letter-spacing:.03em;color:#a24551}
+.chapter-archive span{display:block;font-size:12px;line-height:1.5;margin-top:3px}
+.chapter-finale{padding:20px;background:#243744;color:#fff1d7;border-left:5px solid #c15b62;box-shadow:6px 6px 0 #a44c53}
+.chapter-finale small{color:#e8b89f;font:900 10px Georgia,serif;letter-spacing:.1em}
+.chapter-finale h3{font-size:21px;margin:8px 0;color:#ffdfb5}
+.chapter-finale>strong{font-size:13px}
+.chapter-finale>p{font-size:13px;line-height:1.85;white-space:pre-line}
+.explore-root .scene-ending-beat{border-color:#eccd91;background:#233645;color:#fff1d9}
+.explore-root .scene-ending-beat strong{color:#ffe4bd}
+.explore-root .scene-ending-beat::before{content:'◆';font-size:16px;color:#ecd6a5;margin-right:7px}
+@media(max-width:650px){
+ .chapter-journal{padding:9px;gap:4px}
+ .chapter-journal-line{gap:5px;padding:9px 4px;grid-template-columns:27px minmax(0,1fr)}
+ .chapter-journal-line .chapter-index{font-size:16px}
+ .chapter-journal-line em{grid-column:2;display:block;font-size:9px}
+ .chapter-journal-line strong{font-size:11px}
+ .chapter-journal-line small{font-size:9px}
+ .chapter-finale{padding:11px}
+ .chapter-finale h3{font-size:18px}
+}

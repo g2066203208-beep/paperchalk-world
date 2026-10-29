@@ -18,7 +18,7 @@ test('original date-based chapter starts in purchased bare office with two anony
  assert.equal(world.slices.origin.venue,'office');assert.equal(world.slices.origin.identityExposure,0);
  assert.equal(world.slices.campaign.actionsToday,0);assert.equal(world.slices.campaign.firstWeekOutcome,null);
  assert.match(clockLabel(1),/1998-09-07.*周一/);
- assert.equal(SEASON_ARCS.length,4);
+ assert.equal(SEASON_ARCS.length,9);
  assert.equal(Object.keys(FIRST_WEEK).length,7);
  assert.equal(FIRST_WEEK[1].beats.length,2);
 });
@@ -81,7 +81,7 @@ test('expired shift blocks story, monthly story structure remains calendar-consi
  assert.equal(applyWorld(world,{module:'campaign',type:'scene-choice',choice:'hear'},legacy).ok,false);
  for(let day=2;day<=15;day++){const r=runtime.advance(world,{cash:190,heat:0,crew:legacy.crew,orders:[]});world=r.state;}
  assert.equal(world.day,15);assert.equal(todayStory(world).beats.length,2);
- assert.ok(SEASON_ARCS.find(c=>c.end===180));
+ assert.ok(SEASON_ARCS.find(c=>c.end===39));
 });
 test('campaign module migrates into already-existing world saves and never wipes earlier slices',()=>{
  const initial=initialGame(),world=createWorld(initial);
@@ -123,5 +123,5 @@ test('fifteen-day community narrative reaches an accountable chapter-one ending'
  assert.equal(world.slices.campaign.daySummaries.length,15);
  assert.ok(['charter-founded','community-in-progress'].includes(world.slices.campaign.firstChapterOutcome));
  assert.ok(world.events.some(e=>e.type==='campaign.chapter'));
- assert.equal(todayStory(world),null,'Chapter II is not falsely presented as fully authored');
+ assert.ok(todayStory(world)?.beats?.length===2,'Chapter II is now authored and immediately playable');
 });
