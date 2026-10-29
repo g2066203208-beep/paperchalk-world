@@ -70,7 +70,7 @@ test('discount and premium genuinely affect demand, and staff changes have wage 
  const hired=action(priced,'hire',{lot:'lot-1'});
  assert.equal(hired.parcels[1].building.firm.workers,2);
  const settled=estatesSystem.tick(hired,{day:2,slices,context:{cash:2000},signal:()=>.5});
- assert.ok(settled.effects.some(x=>x.label.includes('商铺净结算')));
+ assert.ok(settled.effects.some(x=>x.label.includes('营业净结算')));
  assert.equal(hired.parcels[1].building.firm.lastWages,2*INDUSTRY.bakery.staffWage);
 });
 test('raw material -> owned processing -> retail uses matching physical goods without duplication',()=>{
