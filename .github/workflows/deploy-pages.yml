@@ -159,6 +159,8 @@ jobs:
           PY
       - name: Browser-test real image upload, palette locking and native PNG
         run: node tests/repixel-browser.mjs
+      - name: Verify true per-pixel grid, zoom, point sampling, and unchanged PNG in Chromium
+        run: node tests/repixel-grid-browser.mjs
       - name: Upload trained repixelizer, faithful outputs and Chromium screenshots
         if: always()
         uses: actions/upload-artifact@v4

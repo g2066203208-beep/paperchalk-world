@@ -34,12 +34,83 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
 #status{font-weight:700;color:#a7e5eb;min-height:48px}
 .links{display:grid;gap:9px;margin:15px 0}
 @media(max-width:800px){.studio{grid-template-columns:1fr}.wrap{padding:18px 11px}.panel{padding:12px}.art{gap:7px}.canvas{padding:6px}.caption{font-size:11px}}
+
+/* Genuine per-native-pixel viewport. Grid drawn separately from the export canvas. */
+.pixel-inspect{margin:20px 0 22px;overflow:hidden}
+.inspect-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.inspect-head h2{font-size:21px;margin:3px 0 4px}
+.inspect-head p{font-size:13px;margin:0 0 12px}
+.inspect-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.inspect-tools label{display:flex;align-items:center;gap:6px;border:1px solid #455777;background:#23304e;padding:5px 10px;border-radius:9px}
+.inspect-tools label.checkgrid{font-weight:750;color:#e7fcff}
+.inspect-tools select{border:0;border-left:1px solid #425977;padding:5px;color:#fff;background:#243750;font:inherit;outline-offset:3px}
+.inspect-tools input[type="checkbox"]{accent-color:#a7e6e6;width:18px;height:18px;cursor:pointer}
+.inspect-tools button{padding:7px 10px;font-size:13px}
+.inspect-workspace{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:14px}
+.inspect-main{min-width:0}
+.inspect-view{height:520px;min-height:320px;border:1px solid #526383;border-radius:11px;overflow:hidden;position:relative}
+#inspectCanvas{width:100%;height:100%;display:block;touch-action:none;cursor:grab;image-rendering:pixelated;image-rendering:crisp-edges}
+#inspectCanvas.dragging{cursor:grabbing}
+.inspect-hint{position:absolute;bottom:9px;left:9px;pointer-events:none;background:#0a1026cb;border:1px solid #526383;padding:4px 8px;border-radius:7px;color:#e0e7ee;font-size:11px}
+#gridLegend{font-size:12px;color:#a6d8dd;margin:10px 0 0}
+.inspect-side{display:flex;flex-direction:column;gap:8px}
+.inspect-side .side-label{font-size:11px;color:#adbcd0;letter-spacing:1px;font-weight:750}
+#inspectMini{width:100%;height:auto;aspect-ratio:3/4;image-rendering:pixelated;image-rendering:crisp-edges;border:1px solid #506082;cursor:crosshair}
+.sample-row{display:flex;align-items:center;gap:11px;background:#242f4b;border:1px solid #425778;border-radius:9px;padding:11px 9px}
+#pixelSampleSwatch{width:35px;height:35px;flex:none;border:1px solid #bec7d8;border-radius:5px}
+.sample-meta{min-width:0;overflow-wrap:anywhere}
+#pixelCoord{font-size:16px;font-weight:800}
+#pixelColor{font-size:12px;color:#b1dfe4}
+#pixelScale{font-size:12px;color:#a7e5eb;font-weight:700}
+#pixelCopy{font-size:12px;padding:7px 8px}
+#pixelCount{font-size:11px;color:#c8cfe1}
+@media(max-width:800px){.inspect-workspace{grid-template-columns:minmax(0,1fr) 112px;gap:8px}.inspect-view{height:430px}.inspect-side{gap:6px}.inspect-side .side-label{font-size:10px}.sample-row{padding:6px 4px;gap:5px;flex-direction:column;align-items:stretch}#pixelCoord{font-size:13px}#pixelColor{font-size:10px}#pixelSampleSwatch{width:25px;height:25px}#pixelCopy{font-size:10px}}
+@media(max-width:460px){.inspect-workspace{grid-template-columns:minmax(0,1fr) 84px;gap:5px}.inspect-view{height:350px;min-height:280px}.inspect-tools button{padding:6px 8px}.inspect-side .side-label{font-size:9px}}
+
 </style></head><body>
 <header><div class="brand">PIXEL LAB / <em>REPIXEL</em></div><a href="./index.html">← 像素机器学习实验室</a></header>
 <main class="wrap">
 <div class="eyebrow">NO GPT IMAGE GENERATION · STRICT 4 COLORS · EXACT NATIVE PIXELS</div>
 <h1>保留人物，只纠正假的像素。</h1>
 <p>已根据你提供的粉发少女原图建立 <strong>384×512</strong> 原生四色像素数据。整个工具只重新离散化色块，不自由修改角色。下面的作品是 GitHub Actions 根据固定输入像素数据实际导出的结果；也可以上传新图片在浏览器中直接转换。</p>
+
+<section class="panel pixel-inspect" aria-label="原生像素网格检查器">
+  <div class="inspect-head">
+    <div><div class="eyebrow">PIXEL INSPECTOR · TRUE GRID · LOSSLESS SOURCE</div>
+      <h2>原生像素显微镜 · 一格就是一个真实像素</h2>
+      <p>默认开启网格。拖动画面移动、滚轮放大；点一下读取精确坐标和 RGB。所有网格线都只是检查图层，绝不会混入导出的 PNG。</p>
+    </div><div id="pixelScale">8× / 每个原生像素 8 CSS px</div>
+  </div>
+  <div class="inspect-tools">
+    <label class="checkgrid"><input id="gridToggle" type="checkbox" checked> 显示逐像素网格</label>
+    <label>放大倍率 <select id="pixelZoom" aria-label="检查倍率">
+      <option value="fit">全图适应</option><option value="2">2×</option><option value="4">4×</option>
+      <option value="8" selected>8×</option><option value="12">12×</option>
+      <option value="16">16×</option><option value="24">24×</option><option value="32">32×</option>
+    </select></label>
+    <button id="inspectFace">检查脸部</button>
+    <button id="inspectHand">检查衣袖</button>
+    <button id="inspectShoe">检查鞋子</button>
+    <button id="inspectCenter">人物居中</button>
+  </div>
+  <div class="inspect-workspace">
+    <div class="inspect-main">
+      <div class="inspect-view"><canvas id="inspectCanvas" aria-label="逐像素格线放大检查视图"></canvas>
+      <div class="inspect-hint">拖拽平移 · 滚轮缩放 · 点击取色</div></div>
+      <p id="gridLegend">每一条细网格线对应原生 PNG 的真实像素边界。</p>
+    </div>
+    <div class="inspect-side">
+      <span class="side-label">全图导航 · 点击定位</span>
+      <canvas id="inspectMini" width="192" height="256" aria-label="点击以定位像素查看区域"></canvas>
+      <span class="side-label">当前采样像素</span>
+      <div class="sample-row"><span id="pixelSampleSwatch"></span>
+        <div class="sample-meta"><div id="pixelCoord">(—, —)</div><div id="pixelColor">尚未取样</div></div></div>
+      <button id="pixelCopy">复制像素坐标 / RGB</button>
+      <div id="pixelCount">全图 384×512，网格不写入原图。</div>
+    </div>
+  </div>
+</section>
+
 <section class="studio">
 <div class="panel"><div class="art">
 <div class="canvas"><div class="caption"><span>已锁定的人物参考</span><span>相同构图</span></div><img id="reference" src="./repixelized-preview.png" alt="固定人物参考的放大像素预览"></div>
@@ -68,11 +139,13 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
 <div class="note">另有真实训练的 <strong>3×3 RGB patch MLP</strong>，学习同一张参考图的合成模糊/噪点修复。当前这张保真输出走严格色板 + 像素网格约束，避免神经模型改动五官与服装结构。训练结果是同图验证，不冒充跨角色生成能力。</div>
 </aside></section>
 </main>
+<script src="./repixel-inspector.js" defer></script>
 <script type="module">
 const W=384,H=512,P=[[15,15,59],[227,54,134],[44,159,206],[253,238,143]];
 const $=id=>document.getElementById(id);
 const canvas=$('result'),ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
 let uploaded=null,ready=false;
+const inspector=window.createPixelInspector({source:canvas,palette:P});
 function closest(r,g,b){let best=0,min=1e10;for(let k=0;k<4;k++){const dr=r-P[k][0],dg=g-P[k][1],db=b-P[k][2],d=dr*dr+dg*dg+db*db;if(d<min){min=d;best=k}}return best}
 function check(){const data=ctx.getImageData(0,0,W,H).data,set=new Set();let partial=0,illegal=0;
  for(let i=0;i<data.length;i+=4){if(data[i+3]!==255)partial++;const idx=closest(data[i],data[i+1],data[i+2]);const p=P[idx];if(data[i]!==p[0]||data[i+1]!==p[1]||data[i+2]!==p[2])illegal++;set.add(idx);}
@@ -95,7 +168,7 @@ function convertPixels(image){
      out.data[o]=p[0];out.data[o+1]=p[1];out.data[o+2]=p[2];out.data[o+3]=255;
    }
  }
- ctx.putImageData(out,0,0);const r=check();if(r.colors!==4||r.partial||r.illegal)throw Error('四色验收失败：'+JSON.stringify(r));
+ ctx.putImageData(out,0,0);inspector.refresh();const r=check();if(r.colors!==4||r.partial||r.illegal)throw Error('四色验收失败：'+JSON.stringify(r));
  ready=true;$('save').disabled=false;$('status').textContent='完成：384×512 原生像素，四色验收通过。';
  window.REPIXEL={ready:true,metrics:r,download:download};
 }

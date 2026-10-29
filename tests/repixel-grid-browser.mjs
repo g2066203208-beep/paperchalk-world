@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import { chromium } from 'playwright';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { mkdirSync } from 'node:fs';
+const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
+try {
+ const page = await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
+ const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ await page.goto(pathToFileURL(resolve('site/pixel-lab/repixelize.html')).href);
+ await page.locator('#upload').setInputFiles(resolve('site/pixel-lab/repixelized-preview.png'));
+ await page.locator('#convert').click();
+ await page.waitForFunction(()=>window.REPIXEL?.ready && window.REPIXEL_INSPECTOR?.inspect);
+ const before = await page.evaluate(()=>document.getElementById('result').toDataURL('image/png'));
+ const initial = await page.evaluate(()=>window.REPIXEL_INSPECTOR.inspect());
+ assert.equal(initial.grid,true,'Grid must start ON');
+ assert.equal(initial.scale,8,'Starts at 8 CSS pixels per source pixel');
+ assert.equal(initial.visiblePixelGrid,true,'Grid must draw source pixel boundaries');
+ assert.equal(initial.width,384);assert.equal(initial.height,512);
+ await page.locator('#pixelZoom').selectOption('16');
+ assert.equal((await page.evaluate(()=>window.REPIXEL_INSPECTOR.inspect())).scale,16);
+ const sample=await page.evaluate(()=>window.REPIXEL_INSPECTOR.sample(152,112));
+ assert.equal(sample.x,152);assert.equal(sample.y,112);
+ assert.ok(/^#[0-9A-F]{6}$/.test(sample.hex));
+ assert.equal(sample.alpha,255);assert.ok(sample.paletteIndex>=0&&sample.paletteIndex<4);
+ assert.match(await page.locator('#pixelCoord').innerText(),/152, 112/);
+ mkdirSync('repixel-browser-artifacts',{recursive:true});
+ await page.screenshot({path:'repixel-browser-artifacts/native-pixel-grid-on-16x.png',fullPage:true});
+ await page.locator('#gridToggle').uncheck();
+ const off=await page.evaluate(()=>window.REPIXEL_INSPECTOR.inspect());
+ assert.equal(off.grid,false);assert.equal(off.visiblePixelGrid,false);
+ await page.screenshot({path:'repixel-browser-artifacts/native-pixel-grid-off-16x.png',fullPage:true});
+ await page.locator('#gridToggle').check();
+ const after=await page.evaluate(()=>document.getElementById('result').toDataURL('image/png'));
+ assert.equal(before,after,'Grid zoom sample must NEVER mutate exported original');
+ assert.deepEqual(errors,[],'No browser JS errors');
+ console.log('REPIXEL GRID PASS',{initial,sample,gridOff:off.grid,exportIdentical:before===after});
+}finally {await browser.close();}
