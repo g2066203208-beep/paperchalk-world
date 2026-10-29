@@ -36,7 +36,7 @@ function parcelsPage(w,legacy,ui){
  button('data-city-upgrade="'+lot.id+'"','升级建筑 · '+Math.round(95*lot.building.level*(1+lot.building.level*.25)),lot.owner!=='player'||lot.building.level>=5):'')+'</div>')+
  '<div class="mini-title">建设商业设施 / 施工申请</div><div class="city-actions">'+types+'</div>'+
  '<div class="mini-title">精细经营</div><div class="city-actions">'+
- (lot.building&&lot.building.type!==\'office\'?button('data-industry-lot="'+lot.id+'"','查看企业经营与供应链'): '')+'</div>'+ 
+ (lot.building&&lot.building.type!=='office'?button('data-industry-lot="'+lot.id+'"','查看企业经营与供应链'): '')+'</div>'+ 
  '<div class="mini-title">经营性质</div><div class="city-actions">'+
  button('data-city-mode="'+lot.id+'" data-mode="legal"','正规经营',!lot.building||lot.building.type==='office')+
  button('data-city-mode="'+lot.id+'" data-mode="underground"','高风险地下业务',!lot.building||lot.building.type==='office')+'</div>'+
