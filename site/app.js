@@ -425,19 +425,21 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.industryGood){worldUI.industryGood=node.dataset.industryGood;repaintPanel();return;}
  if(node.dataset.industryTo){worldUI.industryTo=node.dataset.industryTo;repaintPanel();return;}
  if(node.dataset.industryQty){worldUI.industryQty=Number(node.dataset.industryQty);repaintPanel();return;}
+ const managedIndustryLot=()=>world.slices.estates.parcels.find(x=>x.id===worldUI.lot&&x.owner==='player'&&x.building&&x.building.type!=='office')?.id||
+   world.slices.estates.parcels.find(x=>x.owner==='player'&&x.building&&x.building.type!=='office')?.id;
  if(node.dataset.industryPrice){
-   performWorldCommand({module:'estates',type:'pricing',lot:worldUI.lot,price:node.dataset.industryPrice});return;
+   performWorldCommand({module:'estates',type:'pricing',lot:managedIndustryLot(),price:node.dataset.industryPrice});return;
  }
  if(node.dataset.industryAction){
-   performWorldCommand({module:'estates',type:node.dataset.industryAction,lot:worldUI.lot});return;
+   performWorldCommand({module:'estates',type:node.dataset.industryAction,lot:managedIndustryLot()});return;
  }
  if(node.dataset.industryTransfer){
-   const origin=world.slices.estates.parcels.find(p=>p.id===worldUI.lot);
-   const target=world.slices.estates.parcels.find(p=>p.id===worldUI.industryTo&&p.id!==worldUI.lot)
+   const origin=world.slices.estates.parcels.find(p=>p.id===managedIndustryLot());
+   const target=world.slices.estates.parcels.find(p=>p.id===worldUI.industryTo&&p.id!==managedIndustryLot())
       ||world.slices.estates.parcels.find(p=>p.owner==='player'&&p.building?.firm&&p.id!==worldUI.lot);
    const entries=Object.entries(origin?.building?.firm?.stock||{}).filter(([id,amount])=>amount>0);
    const good=entries.find(([id])=>id===worldUI.industryGood)?.[0]||entries[0]?.[0];
-   performWorldCommand({module:'estates',type:'transfer',lot:worldUI.lot,to:target?.id,good,quantity:worldUI.industryQty||1});return;
+   performWorldCommand({module:'estates',type:'transfer',lot:managedIndustryLot(),to:target?.id,good,quantity:worldUI.industryQty||1});return;
  }
 
  if(node.dataset.cityOrigin){worldUI.from=node.dataset.cityOrigin;repaintPanel();return;}
