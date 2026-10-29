@@ -145,7 +145,7 @@ jobs:
         run: python -m ml.repixelize.train --source ml/repixelize/reference-384.lzma.b64 --output repixel-ml-artifacts --steps 300
       - name: Validate native four-color repixelization, source snapshot and reconstruction fidelity
         run: |
-          python -m unittest ml.test_repixelize
+          python -m unittest discover -s tests -p 'repixel_checks.py'
           python - <<'PY'
           import json
           from PIL import Image
