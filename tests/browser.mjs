@@ -700,6 +700,43 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.locator('#national-atlas-open').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.position())).x,92,'country travel persisted after reload');
 });
+await run('country-road-trip-to-map-settlement',{viewport:{width:1440,height:900}},async page=>{
+ await page.locator('#national-atlas-open').click();
+ await page.locator('[data-map-action="home"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===8);
+ const site=await page.evaluate(async()=>{
+  const {SETTLEMENTS,planCountryRoad,districtAt}=await import('./world/country-detail.js');
+  const cx=125,cy=112,home=districtAt(cx,cy);
+  return SETTLEMENTS.find(s=>s.district===home.id&&s.x>cx-18&&s.x<cx+18&&
+   s.y>cy-10&&s.y<cy+10&&planCountryRoad({x:cx,y:cy},s.id));
+ });
+ assert.ok(site,'there must be a road-connected town in local map zoom');
+ const canvas=page.locator('.country-map-canvas'),box=await canvas.boundingBox();
+ assert.ok(box);
+ const screenX=(site.x-(125-24))/48*box.width;
+ const screenY=(site.y-(112-15))/30*box.height;
+ await canvas.click({position:{x:screenX,y:screenY}});
+ const btn=page.locator('[data-map-road-to]');
+ await btn.waitFor();
+ const townId=await btn.getAttribute('data-map-road-to');
+ const actualTown=await page.evaluate(async id=>{
+  const {SETTLEMENTS}=await import('./world/country-detail.js');
+  return SETTLEMENTS.find(x=>x.id===id);
+ },townId);
+ assert.ok(actualTown);
+ assert.ok(await btn.isEnabled(),'selected town must have a real road graph route');
+ await page.screenshot({path:'artifacts/national-06-map-selected-town.png',fullPage:true});
+ await btn.click();
+ await page.waitForFunction(target=>{
+  const w=window.__OFFICE__.world().slices.geography;
+  return w.x===target.x&&w.y===target.y;
+ },actualTown);
+ assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ const visited=await page.evaluate(()=>window.__OFFICE__.world().slices.geography.journeys[0]);
+ assert.equal(visited.mode,'road');
+ assert.equal(visited.to,townId);
+ await page.screenshot({path:'artifacts/national-07-town-arrived.png',fullPage:true});
+});
 await run('national-atlas-portrait-390',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await page.locator('#national-atlas-open').tap();
  assert.ok(await page.locator('.country-map-canvas').isVisible());
