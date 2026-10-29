@@ -311,3 +311,10 @@ button:disabled{cursor:default}
 .scene.has-knock:not(.visitor-here) .knock-flash{z-index:3}
 .scene.visitor-here .object-person{pointer-events:visiblePainted}
 @media(prefers-reduced-motion:reduce){.guest-actor{transition:none!important}}
+
+.topbar .game-date{color:#f6c895;font-size:10px;font-weight:900;letter-spacing:.08em;white-space:nowrap}
+.daily-calendar-record{background:#e2cfb1;border-left:6px solid #ab4851;padding:11px 13px;margin:10px 0}
+.daily-calendar-record small{font:900 11px Georgia,serif;color:#a24951;display:block}
+.daily-calendar-record strong{display:block;font-size:18px;margin:4px 0;color:#1b2835}
+.daily-calendar-record p{font-size:11px;margin:5px 0}
+@media(max-width:700px){.topbar .game-date{display:none}}

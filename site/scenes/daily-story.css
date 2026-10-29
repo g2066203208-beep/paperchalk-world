@@ -1,0 +1,44 @@
+/* Physical date/calendar, location-bound story cues, original 2D stage compositions. */
+.explore-root .scene-time-ribbon{
+ position:absolute;z-index:12;top:10px;left:13px;pointer-events:none;
+ display:flex;gap:9px;align-items:center;max-width:73%;
+ background:linear-gradient(110deg,#1a2937 0 86%,transparent 86%);
+ border-left:6px solid #b94d58;padding:6px 20px 6px 9px;color:#f4e5d1;
+ filter:drop-shadow(4px 5px 0 #13232b66);transform:skew(-5deg)
+}
+.scene-time-ribbon strong{font:900 18px Georgia,serif;white-space:nowrap;letter-spacing:.01em}
+.scene-time-ribbon span{font-size:10px;font-weight:800;line-height:1.35;color:#efcfac}
+.scene-time-ribbon .time-segment{font-size:9px;color:#fac5aa}
+.explore-stage .scene-day-beat{position:absolute;z-index:8;left:56%;top:57%;transform:translate(-50%,-50%) rotate(-4deg);width:min(250px,26%);min-height:110px;background:#ebdac2;
+ color:#273743;border:4px solid #263541;box-shadow:7px 8px 0 #a84752,13px 13px 0 #182734;
+ display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;text-align:left;padding:11px 12px 9px 18px;
+ font-family:inherit;clip-path:polygon(0 0,100% 0,100% 91%,92% 100%,0 100%);transition:transform .18s;
+}
+.explore-stage .scene-day-beat:hover,.explore-stage .scene-day-beat:focus-visible{transform:translate(-50%,-55%) rotate(-2deg)}
+.scene-day-beat:before{content:'';position:absolute;left:14px;top:-1px;height:16px;width:22px;background:#b54d56;transform:rotate(10deg)}
+.scene-day-beat small{font:900 10px Georgia,serif;color:#a4404c;letter-spacing:.14em}
+.scene-day-beat strong{font-size:15px;line-height:1.25}
+.scene-day-beat span{font-size:10px;color:#765f56;line-height:1.35}
+.scene-day-beat[hidden],.scene-time-ribbon[hidden]{display:none}
+.scene-day-beat[data-location="office"]{left:54%;top:69%}
+.scene-day-beat[data-location="alley"]{left:54%;top:59%}
+.scene-day-beat[data-location="market"]{left:64%;top:55%}
+.scene-day-beat[data-location="labor"]{left:65%;top:53%}
+.scene-day-beat[data-location="docks"]{left:66%;top:57%}
+.explore-stage .story-wall-calendar{position:absolute;z-index:7;left:88%;top:29%;width:12%;height:20%;display:grid;place-items:center;transform:translate(-50%,-50%) rotate(3deg);
+ border:0;background:none;padding:0;filter:drop-shadow(4px 5px 0 #151f2a88)}
+.story-wall-calendar img{width:100%;height:100%;object-fit:contain;transition:transform .18s}
+.story-wall-calendar:hover img{transform:rotate(-3deg) scale(1.07)}
+.story-wall-calendar:after{content:attr(data-date);position:absolute;top:51%;font:900 21px Georgia,serif;color:#1d2b38;pointer-events:none}
+.story-wall-calendar[hidden]{display:none}
+.explore-stage .scene-day-conclusion{position:absolute;z-index:18;right:3%;bottom:15%;max-width:37%;background:#1e2e3c;color:#f6ddbc;padding:10px 13px;font-size:11px;border-left:5px solid #b54a52;pointer-events:none}
+.explore-stage .scene-day-conclusion[hidden]{display:none}
+@media(max-width:680px){
+.explore-root .scene-time-ribbon{top:6px;left:5px;padding:4px 12px 4px 6px;max-width:76%}
+.scene-time-ribbon strong{font-size:14px}.scene-time-ribbon span{font-size:8px}
+.explore-stage .scene-day-beat{width:33%;min-height:85px;padding:7px 8px;border-width:2px;box-shadow:4px 5px 0 #a84752,8px 8px 0 #182734}
+.scene-day-beat strong{font-size:11px}.scene-day-beat small,.scene-day-beat span{font-size:8px}
+.story-wall-calendar:after{font-size:13px}
+.explore-stage .scene-day-conclusion{max-width:55%;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){.explore-stage .scene-day-beat,.story-wall-calendar img{transition:none}}

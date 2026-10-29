@@ -6,6 +6,8 @@ import {SCENE_DEFS,SCENE_PEOPLE} from '../systems/origin.js';
 import {sceneArtwork} from './artwork.js';
 import {sceneConversation} from './scene-dialogues.js';
 import {currentBeat,prologueMark} from '../content/prologue-story.js';
+import {activeStoryBeat,todayStory} from '../systems/campaign.js';
+import {clockLabel,SHIFTS} from '../systems/clock.js';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
 const mainCell={office:'s0',alley:'s0',market:'s4',labor:'s5',docks:'s2'};
 const spots={
@@ -29,6 +31,16 @@ const desk=[
 ];
 const sceneOptions=['office','alley','market','labor','docks'];
 const positions=[[19,80],[35,84],[67,82],[86,83],[52,83]];
+function dayStamp(world){
+ const raw=clockLabel(world.day,world.slices.clock.shift);
+ return '<div class="scene-time-ribbon"><strong>DAY '+String(world.day).padStart(2,'0')+'</strong>'+
+ '<span>'+raw.slice(0,10)+' · '+raw.split(' · ')[1]+'</span><span class="time-segment">'+SHIFTS[world.slices.clock.shift]+'</span></div>';
+}
+function scenicCalendar(world){
+ return '<button type="button" class="story-wall-calendar" data-explore-type="open" data-explore-id="calendar" data-date="'+
+ String(world.day).padStart(2,'0')+'" aria-label="查看挂在墙上的日历及本日安排">'+
+ '<img src="./assets/props/calendar.svg" draggable="false" alt=""/></button>';
+}
 function selectCrowd(world,venue){
  const cell=mainCell[venue];
  if(!cell||venue==='office')return [];
@@ -120,6 +132,22 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
      }
    });
  }
+ function renderDailyCues(w){
+   const stage=root.querySelector('.explore-stage');if(!stage)return;
+   const band=stage.querySelector('.scene-time-ribbon');
+   if(band)band.outerHTML=dayStamp(w);
+   const calendar=stage.querySelector('.story-wall-calendar');
+   if(calendar)calendar.dataset.date=String(w.day).padStart(2,'0');
+   const layer=stage.querySelector('.scene-day-layer');
+   if(!layer)return;
+   const episode=todayStory(w),beat=activeStoryBeat(w);
+   const ready=w.slices.origin.prologue?.status!=='active';
+   const marker=ready&&beat&&beat.venue===venue?
+     '<button type="button" class="scene-day-beat" data-scene-day="1" data-location="'+venue+'" aria-label="调查'+escape(beat.title)+'">'+
+     '<small>DAY '+String(w.day).padStart(2,'0')+' · '+(w.slices.campaign.actionsToday===0?'AFTERNOON':'EVENING')+'</small>'+
+     '<strong>'+escape(beat.title)+'</strong><span>'+escape(beat.lead)+'在这里等你 · 触碰便条</span></button>':'';
+   if(layer.dataset.content!==marker){layer.innerHTML=marker;layer.dataset.content=marker;}
+ }
  function buildScene(){
    const w=readWorld(),current=w.slices.origin.venue;
    venue=SCENE_DEFS[current]?current:'office';
@@ -132,9 +160,9 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
      (style==='door'&&venue!=='office'?'<svg class="scene-exit-door-art" viewBox="0 0 110 200" aria-hidden="true"><path d="M9 7H101V195H9Z" fill="#263845" stroke="#d8b891" stroke-width="7"/><path d="M26 23H85V161H26Z" fill="#475968" stroke="#8b8173" stroke-width="4"/><circle cx="82" cy="116" r="6" fill="#ecc393"/></svg>':'')+
      '<span>'+escape(label)+'</span></button>'
    ).join('');
-   root.innerHTML='<div class="explore-stage scene-'+venue+'"><div class="explore-visual">'+sceneArtwork(venue)+'</div>'+
+   root.innerHTML='<div class="explore-stage scene-'+venue+'"><div class="explore-visual">'+sceneArtwork(venue)+'</div>'+dayStamp(w)+
     '<div class="explore-crowd" aria-label="持续活动的街区行人"></div>'+
-    (venue==='office'?physicalProps():'')+buttons+
+    (venue==='office'?physicalProps()+scenicCalendar(w):'')+buttons+'<div class="scene-day-layer"></div>'+
     '<span class="explore-location">'+escape(SCENE_DEFS[venue].name)+'</span>'+
     '<div class="explore-dialogue" hidden aria-label="场景内人物对话" role="group">'+
     '<div class="dialogue-sigil">✦</div><div class="dialogue-copy"><small class="dialogue-who"></small><p class="dialogue-line"></p></div>'+
@@ -142,6 +170,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
     (venue==='office'?'<div class="prologue-presentation" hidden role="group" aria-label="第一章开场演出"></div>':'')+
     '</div>';
    renderOpening();
+   renderDailyCues(w);
    renderCrowd(w,true);
  }
  function render(){
@@ -150,6 +179,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(next!==venue||!root.querySelector('.explore-stage')){buildScene();return;}
    if(shift!==w.slices.clock.shift){shift=w.slices.clock.shift;renderCrowd(w);}
    renderOpening();
+   renderDailyCues(w);
    // Important: do NOT assign root.innerHTML here. NPC actors keep walking.
  }
  function startTalk(type,id){
@@ -206,7 +236,28 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(e.target.closest('[data-route-go]')){go();return;}
    if(e.target.closest('[data-route-close]')){closeRoute();return;}
    if(e.target.closest('[data-talk-close]')){dialogue=null;root.querySelector('.explore-dialogue').hidden=true;return;}
+   const story=e.target.closest('[data-scene-day]');
+   if(story){
+     const beat=activeStoryBeat(readWorld());
+     if(!beat||beat.venue!==venue)return;
+     dialogue={campaign:true,beat};
+     speech(beat.lead,beat.line,beat.choices);
+     cue?.('paper');return;
+   }
    const choice=e.target.closest('[data-talk-choice]');
+   if(choice&&dialogue?.campaign){
+     const choiceId=choice.dataset.talkChoice;
+     const option=dialogue.beat.choices.find(x=>x.id===choiceId);
+     if(!option)return;
+     const result=command({module:'campaign',type:'scene-choice',choice:choiceId});
+     if(result.ok){
+       const speaker=dialogue.beat.lead;
+       dialogue=null;
+       speech(speaker,option.line,[]);
+       cue?.('bell');
+     } else speech(dialogue.beat.lead,'今天无法这么做。换个办法吧。',dialogue.beat.choices);
+     return;
+   }
    if(choice&&dialogue?.convo){
      const selected=dialogue.convo.options.find(x=>x.id===choice.dataset.talkChoice);
      if(!selected)return;

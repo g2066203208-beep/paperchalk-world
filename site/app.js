@@ -7,6 +7,8 @@ import {renderOriginBook} from './ui/origin-book.js';
 import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
 import {createExploreLayer} from './scenes/explore.js';
+import {todayStory,activeStoryBeat,SEASON_ARCS} from './systems/campaign.js';
+import {clockLabel} from './systems/clock.js';
 const $=id=>document.getElementById(id);
 const STORE='night-office-game-v4', META_STORE='night-office-features-v1';
 const escapeHTML=s=>String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -26,6 +28,8 @@ function save(){try{localStorage.setItem(STORE,JSON.stringify(state));localStora
 function toast(message){const n=$('toast');n.textContent=message;n.classList.add('visible');clearTimeout(timer);timer=setTimeout(()=>n.classList.remove('visible'),2600);}
 function refresh(){
  $('day').textContent=String(state.day).padStart(2,'0');
+ const dateLabel=$('game-date');if(dateLabel)dateLabel.textContent=clockLabel(state.day,world.slices.clock.shift).replace('1998-','');
+
  $('ribbon-day').textContent=String(state.day).padStart(3,'0');
  $('cash').textContent=fmt(state.cash);
  $('heat').textContent=String(state.heat).padStart(2,'0');
@@ -67,6 +71,7 @@ function performWorldCommand(action){
  const result=applyWorld(world,action,state);
  if(!result.ok){toast(result.message||'行动暂时无法执行');return result;}
  const next=structuredClone(state);
+ let stagedWorld=result.state;
  for(const effect of result.effects){
    if(effect.kind==='cash'){
      if(next.cash+effect.amount<0){toast('资金不足');return {ok:false,message:'资金不足'};}
@@ -87,11 +92,17 @@ function performWorldCommand(action){
    } else if(effect.kind==='dismiss'){
      next.crew=next.crew.filter(id=>id!==effect.person);
      next.orders=next.orders.filter(o=>o.crew!==effect.person);
+   } else if(effect.kind==='time-phase'){
+     while(stagedWorld.slices.clock.shift<effect.to){
+       const passed=applyWorld(stagedWorld,{module:'clock',type:'advance-shift'},next);
+       if(!passed.ok)break;
+       stagedWorld=passed.state;
+     }
    }
  }
- state=next;world=result.state;refresh();repaintPanel();
+ state=next;world=stagedWorld;refresh();repaintPanel();
  const message=result.events[0]?.text||'行动完成';
- if(action.module!=='origin'&&action.module!=='dialogue'){
+ if(action.module!=='origin'&&action.module!=='dialogue'&&action.module!=='campaign'){
    if(result.events.length)stage.speak(result.events[0].title||'办公室消息',message);
    else stage.cue('paper');
    toast(message);
@@ -251,8 +262,14 @@ function visitorPanel(){
  '<button type="button" data-visitact="dismiss">让他离开</button></div></div></div>';
 }
 function calendarPanel(){
+ const episode=todayStory(world),beat=activeStoryBeat(world),progress=world.slices.campaign;
+ const arc=SEASON_ARCS.find(x=>state.day<=x.end)||SEASON_ARCS[SEASON_ARCS.length-1];
  return header('THE MORNING AFTER','翻到下一天','只有结束当天，才能收到外出成员的实际成果。没有任务时也可以处理电话，继续推进时间。')+
- '<div class="paper-grid"><div><div class="dialog-punch">DAY '+String(state.day).padStart(2,'0')+' → DAY '+String(state.day+1).padStart(2,'0')+'</div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
+ '<div class="paper-grid"><div><div class="dialog-punch">DAY '+String(state.day).padStart(2,'0')+' → DAY '+String(state.day+1).padStart(2,'0')+'</div>'+
+ '<div class="daily-calendar-record"><small>'+clockLabel(state.day,world.slices.clock.shift)+'</small><strong>'+arc.title+'</strong><p>'+ (episode?.title||'城市自由经营') +'</p>'+
+ '<p>当日安排 '+progress.actionsToday+' / 2 · 街坊支持 '+progress.communityTrust+' · 可查证线索 '+progress.evidence+'</p>'+
+ '<p>下一件事：'+(beat?beat.title+' · 在'+({office:'办公室',alley:'旧港背街',market:'清晨集市',labor:'旧厂就业所',docks:'旧港码头'}[beat.venue]||beat.venue)+'进行':'今天已无新的主线安排')+'</p>'+
+ '<p>本阶段期限：DAY '+arc.end+'。未处理的事件不会让世界停止。</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
  '<p>今天安排了 '+state.orders.length+' 项行动；电话'+(state.call.answered?'已经处理':'尚未处理')+'。翻页将结算收入、日常开支，以及街区关系变化。</p>'+
  '<button class="primary" type="button" data-next="1">翻过今天 · 听取明日汇报</button></div>'+
  '<div><div class="mini-title">成员今日状态</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
@@ -422,9 +439,13 @@ $('panel-body').addEventListener('click',e=>{
   return;
  }
  if(node.dataset.next){
-  const r=advance(state,meta);
+  // A narrative day may end without a business mission or a telephone conversation.
+  const spentStory=world.slices.campaign?.actionsToday>0;
+  const dayInput=spentStory&&!state.call.answered&&!state.orders.length?
+   {...state,call:{...state.call,answered:true}}:state;
+  const r=advance(dayInput,meta);
   if(!r.ok){toast(r.message);return;}
-  const sim=advanceWorld(world,state,r.state);
+  const sim=advanceWorld(world,dayInput,r.state);
   const settled=structuredClone(r.state);
   for(const effect of sim.effects){
     if(effect.kind==='cash'){
@@ -435,7 +456,9 @@ $('panel-body').addEventListener('click',e=>{
   settled.detained=[...new Set(sim.state.slices.justice.custody.map(x=>x.subject))];
   world=sim.state;state=settled;meta=r.meta;plan.crew=availableCrew(state)[0]||null;refresh();
   stage.transition();
-  if(sim.events.length)stage.speak('夜港消息',sim.events[0].text,'news');
+  const morning=sim.events.find(x=>x.type==='campaign.morning'||x.type==='campaign.chapter');
+  if(morning)stage.speak(morning.title,morning.text,'news');
+  else if(sim.events.length)stage.speak('夜港消息',sim.events[0].text,'news');
   fileTab='reports';closePanel();toast(r.message);panel('reports');return;
  }
  if(node.dataset.helpClose){closePanel();}

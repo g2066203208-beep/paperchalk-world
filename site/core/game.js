@@ -16,8 +16,9 @@ import {societySystem} from '../systems/society.js';
 import {recruitmentSystem} from '../systems/recruitment.js';
 import {politicsSystem} from '../systems/politics.js';
 import {originSystem} from '../systems/origin.js';
+import {campaignSystem} from '../systems/campaign.js';
 export const runtime=createRuntime([newsSystem,dialogueSystem,civicSystem,justiceSystem,contactsSystem,
-  transportSystem,estatesSystem,peopleSystem,operationsSystem,populationSystem,factionsSystem,clockSystem,societySystem,recruitmentSystem,politicsSystem,originSystem]);
+  transportSystem,estatesSystem,peopleSystem,operationsSystem,populationSystem,factionsSystem,clockSystem,societySystem,recruitmentSystem,politicsSystem,originSystem,campaignSystem]);
 export function createWorld(legacy,raw){
  let candidate=null;
  try{candidate=typeof raw==='string'?JSON.parse(raw):raw;}catch{}
