@@ -643,7 +643,7 @@ await run('national-atlas-real-street-building-and-road-journey',{viewport:{widt
  await page.screenshot({path:'artifacts/national-01-country-overview.png',fullPage:true});
  await page.locator('[data-nation-center="me"]').click();
  await page.locator('[data-nation-scene="street"]').click();
- assert.equal((await page.evaluate(()=>window.__OFFICE__.nation.snapshot())).mode,'map','snapshot should distinguish street stage from map');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.nation.snapshot())).mode,'street','street elevation must be an actual mode, not a map screenshot');
  await page.screenshot({path:'artifacts/national-02-street-level-facades.png',fullPage:true});
  await page.locator('[data-nation-center="me"]').click();
  const target=await page.evaluate(async()=>{
