@@ -482,7 +482,9 @@ await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async 
  });
  assert.ok(talkId,'one citizen should be visible for face-to-face talk');
  const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
- await one.click({force:true,timeout:5000});
+ // The actor moves every frame: force-click may hit a different overlaid moving element.
+ // Dispatch to the actor itself to validate delegated interaction and pause semantics deterministically.
+ await one.dispatchEvent('click',{},{timeout:5000});
  await page.locator('.explore-dialogue:not([hidden])').waitFor();
  await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='talking',talkId,{timeout:3000});
  const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
