@@ -167,11 +167,26 @@ export function interiorFor(building){
    x:185+i*165+(hash(i,h)%45),y:310+(hash(h,i)%80)
   }))};
 }
+export function edgeGeometry(mode,from,to){
+ if(mode==='sea'){
+  // Ships actually leave the harbor mouth and follow an offshore fairway.
+  const offshore=510;
+  return [{x:from.x,y:from.y},{x:offshore,y:from.y},
+    {x:offshore,y:to.y},{x:to.x,y:to.y}];
+ }
+ if(mode==='rail'){
+  // An independent rail alignment follows a persistent rail corridor.
+  return [{x:from.x,y:from.y},{x:from.x+(to.x-from.x)*.52,y:from.y+(to.y-from.y)*.48},
+    {x:to.x,y:to.y}];
+ }
+ return [{x:from.x,y:from.y},{x:to.x,y:to.y}];
+}
 export function allEdges(mode){
  return (NETWORK[mode]||[]).map(([a,b],index)=>{
   const from=STATIONS.find(s=>s.id===a),to=STATIONS.find(s=>s.id===b);
-  return {id:mode+':'+a+':'+b,mode,a,b,index,from,to,
-   km:Math.round(distance(from,to)*COUNTRY.metersPerTile/1000)};
+  const geometry=edgeGeometry(mode,from,to);
+  return {id:mode+':'+a+':'+b,mode,a,b,index,from,to,geometry,
+   km:Math.round(geometry.slice(1).reduce((total,p,i)=>total+distance(p,geometry[i]),0)*COUNTRY.metersPerTile/1000)};
  });
 }
 export function routeBetween(fromId,toId,mode){
@@ -193,8 +208,13 @@ export function routeBetween(fromId,toId,mode){
  if(!costs.has(toId))return null;
  const edges=[];let at=toId;
  while(at!==fromId){const p=previous.get(at);if(!p)return null;edges.unshift({...p.edge,fromId:p.from,toId:at});at=p.from;}
- const points=[STATIONS.find(s=>s.id===fromId)];
- for(const e of edges)points.push(STATIONS.find(s=>s.id===e.toId));
+ const points=[{...STATIONS.find(s=>s.id===fromId)}];
+ for(const e of edges){
+  const forward=e.fromId===e.a;
+  const coords=forward?e.geometry:e.geometry.slice().reverse();
+  for(const p of coords.slice(1))points.push({...p,id:p.id||null});
+  points[points.length-1].id=e.toId;
+ }
  const km=edges.reduce((n,e)=>n+e.km,0);
  return {mode,from:fromId,to:toId,edges:edges.map(e=>e.id),points:points.map(p=>({x:p.x,y:p.y,id:p.id})),
   km,durationHours:Math.max(1,Math.ceil(km/MODE[mode].speed)),fare:Math.max(2,Math.round(km*MODE[mode].cost/10))};
