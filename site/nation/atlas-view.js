@@ -112,11 +112,15 @@ export function createNationalAtlas(root,{readWorld,command}){
     const v=screen(e.from.x,e.from.y),w=screen(e.to.x,e.to.y);
     if(Math.min(v.x,w.x)>view.w+50||Math.max(v.x,w.x)<-50||
        Math.min(v.y,w.y)>view.h+50||Math.max(v.y,w.y)<-50)continue;
-    if(m==='road'){line(c,v,w,'#544d49',Math.max(1,Math.min(14,scale*.22)));
-      line(c,v,w,'#d3b78b',Math.max(.8,Math.min(4,scale*.07)));}
-    if(m==='rail'){line(c,v,w,'#303b4b',Math.max(2,Math.min(9,scale*.13)));
-      c.setLineDash([Math.max(3,scale*.17),Math.max(2,scale*.12)]);line(c,v,w,'#efede4',Math.max(1,Math.min(2,scale*.03)));c.setLineDash([]);}
-    if(m==='sea'){line(c,v,w,'#87d6df',Math.max(2,Math.min(5,scale*.06)));}
+    const route=e.geometry.map(p=>screen(p.x,p.y));
+    for(let i=1;i<route.length;i++){
+     const v=route[i-1],w=route[i];
+     if(m==='road'){line(c,v,w,'#544d49',Math.max(1,Math.min(14,scale*.22)));
+       line(c,v,w,'#d3b78b',Math.max(.8,Math.min(4,scale*.07)));}
+     if(m==='rail'){line(c,v,w,'#303b4b',Math.max(2,Math.min(9,scale*.13)));
+       c.setLineDash([Math.max(3,scale*.17),Math.max(2,scale*.12)]);line(c,v,w,'#efede4',Math.max(1,Math.min(2,scale*.03)));c.setLineDash([]);}
+     if(m==='sea'){line(c,v,w,'#87d6df',Math.max(2,Math.min(5,scale*.06)));}
+    }
    }
   }
   if(scale<14){
@@ -198,7 +202,7 @@ export function createNationalAtlas(root,{readWorld,command}){
    for(const m of ['road','rail','sea']){
     for(const e of allEdges(m)){
      const t=((now/(m==='road'?24000:m==='rail'?18000:36000)+hash(e.id)%100/100)%1);
-     const p={x:e.from.x+(e.to.x-e.from.x)*t,y:e.from.y+(e.to.y-e.from.y)*t};
+     const p=positionOnRoute({points:e.geometry},t);
      const xy=screen(p.x,p.y);
      if(xy.x<-15||xy.x>view.w+15||xy.y<-15||xy.y>view.h+15)continue;
      a.fillStyle=m==='road'?'#f6c783':m==='rail'?'#eff0e6':'#bfe7eb';
@@ -231,7 +235,7 @@ export function createNationalAtlas(root,{readWorld,command}){
   $(root,'.nation-route').innerHTML=route?
    '<strong>'+esc(from.name)+' → '+esc(STATIONS.find(x=>x.id===selected).name)+'</strong>'+
    '<p>'+route.km+' km · 预计 '+route.durationHours+' 小时 · 票价 ＄'+route.fare+'</p>'+
-   '<small>'+route.points.map(x=>esc(STATIONS.find(s=>s.id===x.id).name)).join(' → ')+'</small>':
+   '<small>'+route.points.filter(x=>x.id).map(x=>esc(STATIONS.find(s=>s.id===x.id)?.name||x.id)).join(' → ')+'</small>':
    '<p>当前方式没有连通线路，试试另一种交通方式。</p>';
   $(root,'[data-nation-depart]').disabled=!route||!!nation.journey||!!nation.inside;
   $(root,'.nation-journey-log').innerHTML='<p>已进入建筑：'+nation.visited.length+' · 发现物品：'+nation.discoveries.length+
