@@ -663,6 +663,7 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===1);
  await page.screenshot({path:'artifacts/national-00-full-country.png',fullPage:true});
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ assert.equal(await page.locator('.national-walk-canvas').evaluate(el=>getComputedStyle(el).imageRendering),'pixelated','pixel sprites must not be bilinearly blurred');
  const pixelStreet=await page.locator('.national-walk-canvas').evaluate(el=>{
   const ctx=el.getContext('2d'),set=new Set(),data=ctx.getImageData(0,0,el.width,el.height).data;
   for(let y=8;y<el.height;y+=5)for(let x=8;x<el.width;x+=5){
