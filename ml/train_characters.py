@@ -147,7 +147,6 @@ def acceptable(arr):
  return True
 
 def collect():
- data=[],; # placeholder overwritten below
  data=[];records=[];stats=[];seen=set();selected_sources=set()
  for source in SOURCES:
   raw=fetch(source)
