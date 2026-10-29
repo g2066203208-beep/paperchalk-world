@@ -99,9 +99,9 @@ export function nearbyRegion(x,y){
  return REGIONS.map(r=>({...r,dist:distance(r,{x,y})})).sort((a,b)=>a.dist-b.dist)[0];
 }
 function propertyAt(x,y,slot,estate){
- const col=x-934,row=y-2040;
- if(col>=0&&col<24&&col%2===0&&row>=0&&row<8&&row%2===0&&slot===0){
-  const i=Math.floor(row/2)*12+Math.floor(col/2),lot=estate?.parcels?.[i];
+ const col=x-934,row=y-2041;
+ if(col>=0&&col<48&&col%4===0&&row>=0&&row<16&&row%4===0&&slot===0){
+  const i=Math.floor(row/4)*12+Math.floor(col/4),lot=estate?.parcels?.[i];
   return lot?{id:lot.id,title:lot.title,owner:lot.owner,building:lot.building}:null;
  }
  return null;
@@ -113,9 +113,9 @@ export function buildingAt(x,y,slot,estate=null){
  if(['sea','water','outside'].includes(terrain.kind)||roadGridAt(x,y))return null;
  const biome=SITE_TYPES[terrain.kind]?terrain.kind:'farm';
  const density={urban:6,industry:4,port:4,forest:2,mine:3,farm:2,wetland:2,mountain:1}[biome]||2;
- const count=1+(hash(x,y,'lots')%density);
- if(slot>=count)return null;
  const parcel=propertyAt(x,y,slot,estate);
+ const count=Math.max(parcel?1:0,1+(hash(x,y,'lots')%density));
+ if(slot>=count)return null;
  const title=parcel?.building?.name||SITE_TYPES[biome][hash(x,y,slot)%SITE_TYPES[biome].length];
  const id='b:'+x+':'+y+':'+slot;
  const side=slot%3,level=Math.floor(slot/3);
