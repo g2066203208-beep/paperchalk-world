@@ -517,6 +517,7 @@ explorer=createExploreLayer(document.querySelector('.scene'),{
   readLegacy:()=>state,
   command:performWorldCommand,
   cue:(tone)=>stage.cue(tone),
+  openAtlas:()=>atlas?.open(),
   openPanel:(kind,tab)=>{
     if(tab){fileTab=tab;panel('reports');}
     else panel(kind);
