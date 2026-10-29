@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0c1024">
+<title>REPIXEL · GPT 假像素转真正四色像素 · Pixel Lab</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0c1024;color:#f3f4fc;font:14px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif}
+a{color:#a7e5eb;text-decoration:none}a:hover{text-decoration:underline}
+header{border-bottom:1px solid #323958;padding:15px max(18px,calc((100vw - 1280px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px}
+.brand{font-weight:850;letter-spacing:1px}.brand em{color:#a7e5eb;font-style:normal}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 18px 48px}
+.eyebrow{font-size:11px;letter-spacing:2.4px;color:#90e0dd;font-weight:800}
+h1{font-size:clamp(25px,4.4vw,46px);line-height:1.16;margin:10px 0 12px}
+p{color:#b1bbd4;max-width:920px}
+.panel{background:#171e35;border:1px solid #34405e;border-radius:17px;padding:20px}
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;margin-top:24px}
+.art{display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:420px}
+.canvas{background:#10152d;border:1px solid #2d3858;border-radius:10px;padding:10px;min-width:0;display:flex;flex-direction:column;align-items:center}
+.caption{width:100%;font-size:12px;font-weight:700;color:#a5b9d7;margin-bottom:10px;display:flex;justify-content:space-between}
+.canvas img,.canvas canvas{display:block;max-width:100%;height:auto;object-fit:contain;image-rendering:pixelated;image-rendering:crisp-edges;aspect-ratio:3/4;background:#0f0f3b}
+.canvas img{width:100%}.canvas canvas{width:100%;border:1px solid #495577}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.chip{border:1px solid #4b5772;padding:5px 9px;border-radius:8px;color:#b3d8df;font-size:12px}
+h2{font-size:15px;margin:0 0 10px}.palette{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:18px}
+.color{height:52px;border-radius:8px;border:1px solid #fff3}
+hr{border:0;border-top:1px solid #374360;margin:19px 0}
+button,.btn{background:#293954;border:1px solid #526b85;color:white;border-radius:9px;padding:11px 13px;font-weight:750;cursor:pointer;font:inherit;text-align:center}
+button.primary,.btn.primary{color:#092332;background:#9ee6e3;border-color:#9ee6e3;font-weight:800}
+button:disabled,.btn.disabled{opacity:.45;cursor:not-allowed}
+input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
+.check{display:flex;justify-content:space-between;border-top:1px solid #34415a;padding:10px 0;gap:15px}
+.check b{color:#99e2d7;font-variant-numeric:tabular-nums}
+.note{padding:12px;background:#252d4a;border-radius:9px;color:#c3cbe0;font-size:12px;line-height:1.8}
+#status{font-weight:700;color:#a7e5eb;min-height:48px}
+.links{display:grid;gap:9px;margin:15px 0}
+@media(max-width:800px){.studio{grid-template-columns:1fr}.wrap{padding:18px 11px}.panel{padding:12px}.art{gap:7px}.canvas{padding:6px}.caption{font-size:11px}}
+</style></head><body>
+<header><div class="brand">PIXEL LAB / <em>REPIXEL</em></div><a href="./index.html">← 像素机器学习实验室</a></header>
+<main class="wrap">
+<div class="eyebrow">NO GPT IMAGE GENERATION · STRICT 4 COLORS · EXACT NATIVE PIXELS</div>
+<h1>保留人物，只纠正假的像素。</h1>
+<p>已根据你提供的粉发少女原图建立 <strong>384×512</strong> 原生四色像素数据。整个工具只重新离散化色块，不自由修改角色。下面的作品是 GitHub Actions 根据固定输入像素数据实际导出的结果；也可以上传新图片在浏览器中直接转换。</p>
+<section class="studio">
+<div class="panel"><div class="art">
+<div class="canvas"><div class="caption"><span>已锁定的人物参考</span><span>相同构图</span></div><img id="reference" src="./repixelized-preview.png" alt="固定人物参考的放大像素预览"></div>
+<div class="canvas"><div class="caption"><span>输出 · 真正原生像素</span><span id="nativeLabel">384×512</span></div><canvas id="result" width="384" height="512"></canvas></div>
+</div><div class="bar"><span class="chip">零新零件</span><span class="chip">零光影插值</span><span class="chip">四种 RGB 固有色</span><span class="chip">无半透明 / 无抗锯齿</span></div>
+<div class="links"><a href="./repixelized-384x512.png" download>↓ 下载固定参考的原生 384×512 PNG</a><a href="./repixelized-preview.png" download>↓ 下载整数 3× 放大预览 PNG</a><a href="./repixelize-quality.json">查看自动验色报告 JSON</a></div>
+</div>
+<aside class="panel">
+<h2>01 · 四种固有色</h2>
+<div class="palette"><span class="color" style="background:#0f0f3b"></span><span class="color" style="background:#e33686"></span><span class="color" style="background:#2c9fce"></span><span class="color" style="background:#fdee8f"></span></div>
+<div class="check"><span>目标像素网格</span><b>384 × 512</b></div>
+<div class="check"><span>实际输出颜色</span><b id="colorCount">—</b></div>
+<div class="check"><span>额外 RGB / Alpha</span><b id="invalid">—</b></div>
+<hr>
+<h2>02 · 上传任何伪像素角色</h2>
+<p style="font-size:12px">上传图片后执行最近颜色分类和网格占用率投票。保持画幅、布局和姿势；对原图每一条边缘只能近似保留，不会生成不存在的细节。</p>
+<input id="upload" type="file" accept="image/png,image/jpeg,image/webp">
+<div style="display:grid;gap:9px;margin-top:13px">
+<button id="convert" class="primary" disabled>转换当前上传图片</button>
+<button id="save" disabled>导出原生 PNG</button>
+<button id="reset">恢复固定参考成品</button>
+</div>
+<p id="status">正在读取 GitHub 发布的原生图片…</p>
+<hr>
+<h2>03 · 机器学习结果</h2>
+<div class="note">另有真实训练的 <strong>3×3 RGB patch MLP</strong>，学习同一张参考图的合成模糊/噪点修复。当前这张保真输出走严格色板 + 像素网格约束，避免神经模型改动五官与服装结构。训练结果是同图验证，不冒充跨角色生成能力。</div>
+</aside></section>
+</main>
+<script type="module">
+const W=384,H=512,P=[[15,15,59],[227,54,134],[44,159,206],[253,238,143]];
+const $=id=>document.getElementById(id);
+const canvas=$('result'),ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
+let uploaded=null,ready=false;
+function closest(r,g,b){let best=0,min=1e10;for(let k=0;k<4;k++){const dr=r-P[k][0],dg=g-P[k][1],db=b-P[k][2],d=dr*dr+dg*dg+db*db;if(d<min){min=d;best=k}}return best}
+function check(){const data=ctx.getImageData(0,0,W,H).data,set=new Set();let partial=0,illegal=0;
+ for(let i=0;i<data.length;i+=4){if(data[i+3]!==255)partial++;const idx=closest(data[i],data[i+1],data[i+2]);const p=P[idx];if(data[i]!==p[0]||data[i+1]!==p[1]||data[i+2]!==p[2])illegal++;set.add(idx);}
+ $('colorCount').textContent=set.size+' / 4';$('invalid').textContent=(partial+illegal)+' / '+(W*H);return {colors:set.size,partial,illegal}}
+function convertPixels(image){
+ const w=image.width,h=image.height,s=document.createElement('canvas');s.width=w;s.height=h;
+ const c=s.getContext('2d',{willReadFrequently:true});c.drawImage(image,0,0);
+ const src=c.getImageData(0,0,w,h).data;
+ const out=ctx.createImageData(W,H);
+ for(let y=0;y<H;y++){
+   const sy0=Math.floor(y*h/H),sy1=Math.min(h,Math.max(sy0+1,Math.ceil((y+1)*h/H)));
+   for(let x=0;x<W;x++){
+     const sx0=Math.floor(x*w/W),sx1=Math.min(w,Math.max(sx0+1,Math.ceil((x+1)*w/W)));
+     const counts=[0,0,0,0];
+     const skipX=Math.max(1,Math.floor((sx1-sx0)/9)),skipY=Math.max(1,Math.floor((sy1-sy0)/9));
+     for(let sy=sy0;sy<sy1;sy+=skipY)for(let sx=sx0;sx<sx1;sx+=skipX){
+       const j=4*(sy*w+sx);counts[closest(src[j],src[j+1],src[j+2])]++;
+     }
+     const best=counts.indexOf(Math.max(...counts)),o=(y*W+x)*4,p=P[best];
+     out.data[o]=p[0];out.data[o+1]=p[1];out.data[o+2]=p[2];out.data[o+3]=255;
+   }
+ }
+ ctx.putImageData(out,0,0);const r=check();if(r.colors!==4||r.partial||r.illegal)throw Error('四色验收失败：'+JSON.stringify(r));
+ ready=true;$('save').disabled=false;$('status').textContent='完成：384×512 原生像素，四色验收通过。';
+ window.REPIXEL={ready:true,metrics:r,download:download};
+}
+function download(){const a=document.createElement('a');a.download='repixelized-true-384x512.png';a.href=canvas.toDataURL('image/png');a.click()}
+$('save').onclick=download;
+$('upload').onchange=async(e)=>{const f=e.target.files?.[0];if(!f)return;uploaded=await createImageBitmap(f);$('convert').disabled=false;$('status').textContent='已加载：'+f.name+'（'+uploaded.width+'×'+uploaded.height+'）';};
+$('convert').onclick=()=>{if(!uploaded)return;try{convertPixels(uploaded)}catch(e){$('status').textContent='转换失败：'+e.message;console.error(e)}};
+$('reset').onclick=async()=>{try{const img=await createImageBitmap(await (await fetch('./repixelized-384x512.png')).blob());convertPixels(img);$('status').textContent='已恢复 GitHub 输出：固定参考角色。';}catch(e){$('status').textContent='恢复失败：'+e.message;}};
+$('reset').click();
+</script></body></html>
