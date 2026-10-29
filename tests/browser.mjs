@@ -655,6 +655,23 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===1);
  await page.screenshot({path:'artifacts/national-00-full-country.png',fullPage:true});
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ const pixelStreet=await page.locator('.national-walk-canvas').evaluate(el=>{
+  const ctx=el.getContext('2d'),set=new Set(),data=ctx.getImageData(0,0,el.width,el.height).data;
+  for(let y=8;y<el.height;y+=5)for(let x=8;x<el.width;x+=5){
+   const k=(y*el.width+x)*4;set.add([data[k],data[k+1],data[k+2]].join('-'));
+  }
+  return {width:el.width,height:el.height,colorCount:set.size,smoothing:ctx.imageSmoothingEnabled};
+ });
+ assert.deepEqual([pixelStreet.width,pixelStreet.height],[480,300],'street must use true native-pixel framebuffer');
+ assert.ok(pixelStreet.colorCount>22,'street art should visibly contain details, not two flat rectangles');
+ assert.equal(pixelStreet.smoothing,false,'nearest neighbour pixel rendering');
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.position().street)).art,'pixel-city-v1');
+ await page.locator('[data-scene-focus]').click();
+ assert.ok(!(await page.locator('.national-map-column').isVisible()),'full screen street mode must hide large map');
+ assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ await page.screenshot({path:'artifacts/national-08-pixel-city-fullscreen.png',fullPage:true});
+ await page.locator('[data-scene-focus]').click();
+ assert.ok(await page.locator('.country-map-canvas').isVisible());
  const start=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
  await page.locator('.national-walk-canvas').focus();
  await page.keyboard.down('d');await page.waitForTimeout(260);await page.keyboard.up('d');
@@ -680,6 +697,17 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  assert.ok(oldStreet&&oldStreet.buildings>=10,'visible world must render many separate buildings');
  await buildings.first().click();
  await page.locator('.national-floorplan').waitFor({timeout:15000});
+ const room=await page.locator('.pixel-room-canvas').evaluate(el=>{
+  const ctx=el.getContext('2d'),data=ctx.getImageData(0,0,el.width,el.height).data;
+  const color=new Set();for(let y=0;y<el.height;y+=8)for(let x=0;x<el.width;x+=8){
+   const k=(y*el.width+x)*4;color.add([data[k],data[k+1],data[k+2]].join('-'));
+  }
+  return {width:el.width,height:el.height,colorCount:color.size,smoothing:ctx.imageSmoothingEnabled};
+ });
+ assert.equal(room.width,480);assert.equal(room.height,300);
+ assert.ok(room.colorCount>=15,'interior pixel scene has furniture and architectural textures');
+ assert.equal(room.smoothing,false);
+ await page.screenshot({path:'artifacts/national-09-pixel-interior.png',fullPage:true});
  assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.position())).inside,enteredId);
  assert.ok(await page.locator('[data-atlas-inspect]').first().isVisible());
  await page.locator('[data-atlas-inspect]').first().click();
