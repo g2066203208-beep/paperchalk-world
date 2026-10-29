@@ -5,6 +5,25 @@ import {chromium} from 'playwright';
 const server=spawn('python3',['-m','http.server','4173','--directory','site'],{stdio:'ignore'});
 let browser;
 const screenshots=[];
+async function capture(page,path){
+ // Use only real Canvas pixels for the CI bitmap; stabilizes headless Chromium compositing.
+ await page.evaluate(()=>{
+  const canvas=document.querySelector('#rig-canvas');
+  const pixels=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+  let nonwhite=0;
+  for(let i=0;i<pixels.length;i+=400)if(pixels[i]<200||pixels[i+1]<200||pixels[i+2]<200)nonwhite++;
+  if(nonwhite<500)throw new Error('blank or white skeleton canvas, cannot capture '+nonwhite);
+  const img=document.createElement('img');img.id='ci-canvas-bitmap';img.src=canvas.toDataURL('image/png');
+  img.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0';
+  canvas.after(img);canvas.style.visibility='hidden';
+ });
+ try{await page.screenshot({path,fullPage:true});}
+ finally{await page.evaluate(()=>{
+  document.querySelector('#rig-canvas')?.style.removeProperty('visibility');
+  document.getElementById('ci-canvas-bitmap')?.remove();
+ });}
+}
+
 try{
  await mkdir('artifacts',{recursive:true});
  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
@@ -30,7 +49,7 @@ try{
  assert.ok(colors>30,'renderer must paint real layered anatomy rather than blank canvas: '+colors);
  await page.locator('#play-switch').uncheck();
  await page.waitForTimeout(140);
- await page.screenshot({path:'artifacts/creature-01-quadruped.png',fullPage:true});screenshots.push('quadruped');
+ await capture(page,'artifacts/creature-01-quadruped.png');screenshots.push('quadruped');
  // Real generator swaps 4 structural archetypes, not just a label.
  for(const [type,number] of [['biped',2],['hexapod',6],['serpent',0]]){
   await page.locator('[data-type="'+type+'"]').click();
@@ -42,7 +61,7 @@ try{
   if(type==='hexapod')assert.equal(stats.chains,number);
   if(type==='serpent')assert.equal(stats.chains,0);
   await page.waitForTimeout(80);
-  await page.screenshot({path:'artifacts/creature-0'+(type==='biped'?2:type==='hexapod'?3:4)+'-'+type+'.png',fullPage:true});
+  await capture(page,'artifacts/creature-0'+(type==='biped'?2:type==='hexapod'?3:4)+'-'+type+'.png');
   screenshots.push(type);
  }
  await page.locator('[data-type="quadruped"]').click();
@@ -59,24 +78,26 @@ try{
  assert.notEqual((await page.locator('#selected-name').innerText()),'未选中关节');
  // Hit and drag a genuine IK terminal joint within the canvas viewport.
  const location=await page.evaluate(()=>{
-  const api=window.__BONE_LAB__,chain=api.rig.chains[0];
+  const api=window.__BONE_LAB__,chain=api.rig.chains.at(-1);
   const pt=api.pose.get(chain.end),cam=api.camera,box=document.getElementById('rig-canvas').getBoundingClientRect();
   return {x:box.x+cam.tx+pt.x*cam.scale,y:box.y+cam.ty+pt.y*cam.scale};
  });
  await page.mouse.move(location.x,location.y);
  await page.mouse.down();
+ const downState=await page.evaluate(()=>window.__BONE_LAB__.state);
+ console.log('IK target click:',JSON.stringify({location,downState}));
  await page.mouse.move(location.x+36,location.y-26,{steps:7});
  const moved=await page.evaluate(()=>window.__BONE_LAB__.state.dragging);
  assert.equal(moved,true,'drag should engage a real IK end effector');
  const constraints=await page.evaluate(()=>{
-  const api=window.__BONE_LAB__,chain=api.rig.chains[0];
+  const api=window.__BONE_LAB__,chain=api.rig.chains.at(-1);
   const a=api.pose.get(chain.root),b=api.pose.get(chain.mid),c=api.pose.get(chain.end);
   return [Math.abs(Math.hypot(a.x-b.x,a.y-b.y)-chain.l1),
           Math.abs(Math.hypot(b.x-c.x,b.y-c.y)-chain.l2)];
  });
  assert.ok(constraints.every(v=>v<.05),'drag cannot stretch a bone: '+constraints);
  await page.mouse.up();
- await page.screenshot({path:'artifacts/creature-05-ik-drag.png',fullPage:true});screenshots.push('IK');
+ await capture(page,'artifacts/creature-05-ik-drag.png');screenshots.push('IK');
  assert.equal((await page.evaluate(()=>window.__BONE_LAB__.state.dragging)),false);
  for(const [selector,extension] of [['#export-json','.json'],['#export-svg','.svg'],['#export-png','.png']]){
   const [download]=await Promise.all([page.waitForEvent('download'),page.locator(selector).click()]);
@@ -89,7 +110,7 @@ try{
  assert.equal(await mobile.locator('#rig-canvas').isVisible(),true);
  const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
  assert.ok(overflow<=4,'mobile has horizontal overflow: '+overflow);
- await mobile.screenshot({path:'artifacts/creature-06-mobile.png',fullPage:true});
+ await capture(mobile,'artifacts/creature-06-mobile.png');
  screenshots.push('mobile');
  assert.deepEqual(errors,[],'browser must not throw errors');
  console.log('PASS real browser: '+screenshots.join(', '));
