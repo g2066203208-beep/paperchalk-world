@@ -4,7 +4,8 @@
  * stable world-id, hitbox, front door and persisted avatar position.
  * Only visible pedestrians and vehicles are animated; no country-wide DOM.
  */
-import {regionAt,terrainAt,FACILITY_TYPES} from './national-atlas.js';
+import {regionAt,FACILITY_TYPES} from './national-atlas.js';
+import {createPixelStreetRenderer,drawPixelPerson,PIXEL_VIEW} from '../scenes/pixel/pixel-city-art.js';
 export {interiorFor} from './interiors.js';
 export const STREET_W=960,STREET_H=600;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -64,85 +65,14 @@ export function findStreetPath(start,end,buildings){
 
 }
 
-function rect(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
-function text(ctx,label,x,y,size=12,color='#f8ead5'){
- ctx.font='bold '+size+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#1b2935';
- ctx.strokeText(label,x,y);ctx.fillStyle=color;ctx.fillText(label,x,y);
-}
-function drawPerson(ctx,x,y,color,label){
- ctx.fillStyle='#27364655';ctx.beginPath();ctx.ellipse(x,y+8,12,5,0,0,7);ctx.fill();
- rect(ctx,x-5,y-22,10,24,color);rect(ctx,x-4,y-2,3,9,'#272d30');rect(ctx,x+1,y-2,3,9,'#272d30');
- ctx.fillStyle='#e4c4a3';ctx.beginPath();ctx.arc(x,y-27,8,0,7);ctx.fill();
- if(label)text(ctx,label,x,y-41,11);
-}
-function drawBuilding(ctx,b,shift){
- const face=b.tint,roof='#574e51',dark='#39495b';
- rect(ctx,b.x+6,b.y+9,b.w,b.h+17,'#28373a66');
- rect(ctx,b.x,b.y,b.w,b.h,face);
- rect(ctx,b.x,b.y-9,b.w,17,roof);
- // Distinct floors and windows, deterministic per building.
- const windows=Math.max(2,Math.min(5,b.floors+1));
- for(let i=0;i<windows;i++){
-   const wx=b.x+11+i*(b.w-19)/windows;
-   rect(ctx,wx,b.y+17,10,14,'#263c49');
-   rect(ctx,wx+2,b.y+18,6,10,shift===3?'#d5b47e':'#92b8c1');
- }
- rect(ctx,b.doorX-8,b.y+b.h-22,16,22,dark);
- rect(ctx,b.doorX+4,b.y+b.h-13,2,2,'#e4c889');
- rect(ctx,b.x,b.y+b.h-4,b.w,5,'#75605b');
- text(ctx,b.name,b.x+b.w/2,b.y-16,10);
-}
-function drawEnvironment(ctx,site,elapsed,shift,traffic){
- const {x,y}=site;const t=terrainAt(x,y);
- const rural=t.terrain==='forest'||t.terrain==='fields';
- rect(ctx,0,0,STREET_W,STREET_H, rural?'#718776':t.terrain==='sea'?'#6990a3':'#9ca197');
- // Four city blocks, two intersecting east-west roads and sidewalks.
- for(let yy=115;yy<STREET_H;yy+=150){
-   rect(ctx,0,yy,STREET_W,36,'#4f5c60');
-   rect(ctx,0,yy-8,STREET_W,8,'#c7bca5');
-   rect(ctx,0,yy+28,STREET_W,8,'#c7bca5');
-   for(let xx=0;xx<STREET_W;xx+=65)rect(ctx,xx+4,yy+16,28,2,'#ead1a1');
- }
- for(let xx=130;xx<STREET_W;xx+=158){
-   rect(ctx,xx,0,25,STREET_H,'#505d62');
-   rect(ctx,xx-6,0,6,STREET_H,'#bdbaa7');
-   rect(ctx,xx+25,0,5,STREET_H,'#bdbaa7');
-   for(let yy=0;yy<STREET_H;yy+=55)rect(ctx,xx+12,yy,2,24,'#e8d19c');
- }
- // Persistent grass, street furniture, traffic lights, not individually DOM-updated.
- for(let i=0;i<90;i++){
-   const bx=Math.floor(rnd(x+i,y,33)*STREET_W),by=Math.floor(rnd(y+i,x,47)*STREET_H);
-   if(site.buildings.some(b=>bx>b.x-5&&bx<b.x+b.w+5&&by>b.y-5&&by<b.y+b.h+5))continue;
-   const green=rnd(i+x,i+y,61)>.35;
-   if(green){ctx.fillStyle='#476f55';ctx.beginPath();ctx.arc(bx,by,2+rnd(i,y,31)*5,0,7);ctx.fill();}
- }
- for(const b of site.buildings)drawBuilding(ctx,b,shift);
- const time=elapsed*.001, trafficOn=shift!==3;
- if(trafficOn){
- for(let i=0;i<traffic;i++){
-   const vertical=i%3===0,road=Math.floor(i/3);
-   const px=vertical?137+road%5*158:((i%2===0?1:-1)*(time*(35+i*4))+i*177)%1160;
-   const py=vertical?((time*(27+i*2)+i*100)%760)-80:133+(road%3)*150;
-   const vx=vertical?px:((px+1160)%1160)-100,vy=vertical?py:py;
-   rect(ctx,vx-10,vy-5,20,10,i%5===0?'#e7c678':['#8f5554','#53758b','#78867a'][i%3]);
-   rect(ctx,vx-2,vy-4,7,5,'#a9c2c6');
- }
- }
- for(let i=0;i<site.people.length;i++){
-   const p=site.people[i],px=p.x+Math.sin(time*.35+i)*Math.min(20,18+p.drift);
-   const py=p.y+Math.sin(time*.6+i)*3;
-   drawPerson(ctx,px,py,['#7b637b','#5a7679','#a16e69','#7e7b5b'][i%4],null);
- }
- const night=shift===3,evening=shift===2;
- if(night||evening)rect(ctx,0,0,STREET_W,STREET_H,night?'#1827474a':'#8a5b7130');
-}
 export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnter,onLeave,onPosition}){
  const ctx=canvas.getContext('2d',{alpha:false});
- const scale=window.devicePixelRatio||1;
- canvas.width=Math.round(STREET_W*Math.min(scale,2));canvas.height=Math.round(STREET_H*Math.min(scale,2));
+ canvas.width=PIXEL_VIEW.width;canvas.height=PIXEL_VIEW.height;
+ ctx.imageSmoothingEnabled=false;
  ctx.setTransform(canvas.width/STREET_W,0,0,canvas.height/STREET_H,0,0);
  const buildings=streetBuildingsAt(x,y),key='night-harbor-street-player-'+x+'-'+y;
  let original=null;try{original=JSON.parse(localStorage.getItem(key)||'null')}catch{}
+ const art=createPixelStreetRenderer({x,y,buildings});
  const site={x,y,buildings,people:[]},source=readWorld()?.slices?.population?.people||[];
  for(let i=0;i<Math.min(30,source.length);i++){
   const px=65+Math.floor(rnd(x+i,y,433)*840),py=100+Math.floor(rnd(y+i,x,347)*460);
@@ -202,14 +132,15 @@ export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnt
     onPosition?.(player);
   }
   const world=readWorld(),shift=world?.slices?.clock?.shift||0;
-  drawEnvironment(ctx,site,timestamp,shift,clamp(Math.floor((world?.slices?.population?.footTraffic?.['s0']||15)/2),4,18));
-  // Focus ring for the current pedestrian-controlled protagonist.
-  ctx.strokeStyle='#f2dbad';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y-17,20,0,7);ctx.stroke();
-  drawPerson(ctx,player.x,player.y,'#b24f58','你');
+  art.render(ctx,timestamp,shift,
+   clamp(Math.floor((world?.slices?.population?.footTraffic?.['s0']||15)/2),4,18),site.people);
+  // Pixel-grid selection marker and original animated protagonist.
+  ctx.fillStyle='#ffe1a5';
+  ctx.fillRect(Math.floor((player.x-17)/4)*4,Math.floor((player.y+11)/4)*4,32,4);
+  drawPixelPerson(ctx,player.x,player.y,'#b3525f','你',timestamp*.001);
   if(follow){
-    ctx.strokeStyle='#e0c676';ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(follow.doorX,follow.doorY,13,0,7);ctx.stroke();
-    text(ctx,'正在走向 '+follow.name,clamp(player.x,120,840),clamp(player.y+35,60,580),12);
+    ctx.fillStyle='#e5c56c';
+    ctx.fillRect(Math.floor((follow.doorX-10)/4)*4,Math.floor((follow.doorY+8)/4)*4,20,4);
   }
   if(!closed)frame=requestAnimationFrame(frameDraw);
  }
@@ -227,7 +158,7 @@ export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnt
   },
   move(dx,dy){const nx=clamp(player.x+dx,8,STREET_W-8),ny=clamp(player.y+dy,8,STREET_H-8);
     if(canStandAt(nx,ny,buildings)){player.x=nx;player.y=ny;write();return true;}return false;},
-  snapshot(){return {...player,buildings:buildings.length,people:site.people.length,following:follow?.id||null,waypoints:path.length};},
+  snapshot(){return {...player,buildings:buildings.length,people:site.people.length,following:follow?.id||null,waypoints:path.length,art:'pixel-city-v1',nativeSize:{width:canvas.width,height:canvas.height}};},
   destroy(){if(closed)return;closed=true;cancelAnimationFrame(frame);canvas.removeEventListener('click',click);
    document.removeEventListener('keydown',down);document.removeEventListener('keyup',up);write();}
  };

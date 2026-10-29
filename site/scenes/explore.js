@@ -4,6 +4,7 @@
  */
 import {SCENE_DEFS,SCENE_PEOPLE} from '../systems/origin.js';
 import {sceneArtwork} from './artwork.js';
+import {paintPixelEntry} from './pixel/pixel-preview.js';
 import {createPedestrianDirector} from './pedestrian-director.js';
 import {sceneConversation} from './scene-dialogues.js';
 import {currentBeat,prologueMark} from '../content/prologue-story.js';
@@ -131,7 +132,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    root.innerHTML='<div class="explore-stage scene-'+venue+'"><div class="explore-visual">'+sceneArtwork(venue)+'</div>'+dayStamp(w)+
     '<div class="explore-crowd" aria-label="持续活动的街区行人"></div>'+
     (venue==='office'?physicalProps()+scenicCalendar(w):'')+buttons+
-    '<button type="button" class="world-walk-entry" data-route-walk="1"><span class="walk-entry-icon">▣</span><span><strong>走进真正的城市街道</strong><small>WASD自由步行 · 建筑进入 · 公路铁路航线</small></span></button>'+
+    '<button type="button" class="world-walk-entry" data-route-walk="1"><canvas class="pixel-entry-preview" width="240" height="150" aria-hidden="true"></canvas><span><strong>进入像素城市 ▣</strong><small>街道步行 · 建筑室内 · 大地图</small></span></button>'+
     '<div class="scene-day-layer"></div>'+
     '<span class="explore-location">'+escape(SCENE_DEFS[venue].name)+'</span>'+
     '<div class="explore-dialogue" hidden aria-label="场景内人物对话" role="group">'+
@@ -141,6 +142,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
     '</div>';
    renderOpening();
    renderDailyCues(w);
+   paintPixelEntry(root,w);
    traffic=createPedestrianDirector(root.querySelector('.explore-crowd'),{world:readWorld,venue});
  }
  function render(){

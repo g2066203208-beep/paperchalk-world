@@ -84,11 +84,12 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
   const wasOpen=!layer.hidden;
   if(wasOpen)recordPlayer();
   largeMap?.destroy();largeMap=null;
-  sceneHost.unmount();walk=null;layer.hidden=true;document.body.classList.remove('national-exploring');
+  sceneHost.unmount();walk=null;layer.hidden=true;layer.classList.remove('national-scene-focus');document.body.classList.remove('national-exploring');
   if(wasOpen&&!silent)onExit?.();
  }
  layer.addEventListener('click',event=>{
   const b=event.target.closest('button,[data-atlas-inspect]');if(!b)return;
+  if(b.dataset.sceneFocus){layer.classList.toggle('national-scene-focus');return;}
   if(b.dataset.atlasClose){close();return;}
   if(b.dataset.atlasLeave){if(applyGeography({type:'leave'}))render();return;}
   if(b.dataset.atlasCell){const [nx,ny]=b.dataset.atlasCell.split(',').map(Number);if(applyGeography({type:'map-locate',x:nx,y:ny}))render();return;}
