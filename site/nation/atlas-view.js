@@ -479,6 +479,6 @@ export function createNationalAtlas(root,{readWorld,command}){
  });
  const observer=new ResizeObserver(()=>{if(visible)resize();});observer.observe(viewEl);
  return Object.freeze({show,close,isVisible:()=>visible,refresh:()=>{if(!visible)return;updateState();chunks.clear();paint();updateSidebar();},
-  snapshot:()=>({scale,center:{...center},mode:snapshot.slices.nation.inside?'interior':'map',
+  snapshot:()=>({scale,center:{...center},mode:snapshot.slices.nation.inside?'interior':mode,
    chunks:chunks.size,journey:snapshot.slices.nation.journey?.mode||null,inside:snapshot.slices.nation.inside})});
 }
