@@ -48,6 +48,10 @@ SOURCES=[
   'url':'https://raw.githubusercontent.com/pixel-boy/NinjaAdventure/main/content/character/samurai_blue/sprite.png'},
  {'id':'cozy','author':'IshtartPixels','kind':'archive','source':'https://opengameart.org/content/cozy-asset-pack-10',
   'url':'https://opengameart.org/sites/default/files/ishtar_pixels_cozy_pack_1.0.zip'},
+ {'id':'person-16','author':'pboop','kind':'grid','source':'https://opengameart.org/content/16x16-person-sprite',
+  'url':'https://opengameart.org/sites/default/files/person_sprite_sheet.png'},
+ {'id':'furkan-50','author':'Furkan Duran','kind':'minis_archive','source':'https://opengameart.org/content/16x16-mini-characters',
+  'url':'https://opengameart.org/sites/default/files/Minis%20_1.zip'},
 ]
 # All sources individually CC0; reuse of other packs is forbidden unless audited.
 for s in SOURCES:s['license']='CC0-1.0'
@@ -55,7 +59,7 @@ for s in SOURCES:s['license']='CC0-1.0'
 def fetch(source):
  CACHED.mkdir(parents=True,exist_ok=True)
  url=source['url']
- ext='.zip' if source['kind']=='archive' else '.png'
+ ext='.zip' if source['kind'] in ('archive','minis_archive') else '.png'
  dest=CACHED/(source['id']+ext)
  if dest.exists() and dest.stat().st_size>200:return dest.read_bytes()
  last=None
@@ -103,10 +107,17 @@ def frames(s,data):
      yield f'{s["id"]}:{row}:{col}',arr[row*16:(row+1)*16,col*16:(col+1)*16].copy()
   else:
    archive=zipfile.ZipFile(io.BytesIO(data))
+   if s['kind']=='minis_archive':
+    print('ARCHIVE AUDIT',s['id'],[m.filename for m in archive.infolist() if m.filename.lower().endswith('.png')][:35],flush=True)
    for member in archive.infolist():
     name=member.filename.lower()
     if not name.endswith('.png') or member.file_size>2_000_000:continue
-    if not any(x in name for x in ('character','npc','player','hero','people','person','sprite')):
+    if s['kind']=='minis_archive':
+     # This archive also contains weapons and attacks. Reject such paths.
+     if any(x in name for x in ('weapon','axe','sword','spear','wand','bow','dagger','pistol','rapier','crystal',
+                               'attack','preview','showcase','sample','tileset','background','effect')):
+      continue
+    elif not any(x in name for x in ('character','npc','player','hero','people','person','sprite')):
      continue
     if any(x in name for x in ('preview','logo','tile','map','sample','background')):continue
     try:
