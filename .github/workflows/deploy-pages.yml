@@ -42,6 +42,15 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Test BoneLab browser and take screenshots
         run: node tests/browser.mjs
+      - name: Test Character Atelier geometric art, expressions and pixel previews
+        run: node tests/character-browser.mjs
+      - name: Upload Character Atelier actual screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: character-atelier-browser-screenshots
+          path: character-artifacts/
+          retention-days: 30
       - name: Upload BoneLab visual proof
         if: always()
         uses: actions/upload-artifact@v4
