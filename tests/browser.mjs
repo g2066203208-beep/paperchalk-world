@@ -451,6 +451,57 @@ await run('story-touch-portrait',{viewport:{width:390,height:844},isMobile:true,
  await page.screenshot({path:'artifacts/story-07-portrait-afternoon-decision.png',fullPage:true});
 });
 
+
+await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const moved=await page.evaluate(()=>window.__OFFICE__.worldCommand({module:'origin',type:'travel',to:'market',via:'route-map'}));
+ assert.equal(moved.ok,true,moved.message);
+ await page.locator('.scene-market .pedestrian-actor').first().waitFor();
+ const t0=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(t0.actors.length>=3,'street has moving actors');
+ assert.ok(t0.actors.some(x=>x.direction==='left'||x.direction==='right'));
+ assert.ok(await page.locator('.pedestrian-puppet .puppet-leg').count()>=4,'legs are articulated');
+ assert.equal(await page.locator('.pedestrian-facing').first().evaluate(el=>getComputedStyle(el).opacity),'1','no invisible legacy span bug');
+ await page.screenshot({path:'artifacts/street-01-actors-entering.png',fullPage:true});
+ await page.waitForTimeout(1100);
+ const t1=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(t1.actors.some(a=>t0.actors.some(b=>a.id===b.id&&Math.abs(a.x-b.x)>4)),
+  'walkers must move across the actual stage >4 percentage points, not swing in place');
+ await page.screenshot({path:'artifacts/street-02-actors-crossing.png',fullPage:true});
+ await page.waitForFunction(()=>window.__OFFICE__.exploration.traffic().exits>0,{timeout:18000});
+ const t2=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(t2.exits>=1,'walker has genuinely left the scene');
+ assert.ok(t2.entrances>t0.entrances,'new pedestrians emerge from both entrances');
+ await page.screenshot({path:'artifacts/street-03-fresh-entrances.png',fullPage:true});
+ const one=page.locator('.pedestrian-actor').first();
+ await one.click({force:true,timeout:5000});
+ await page.locator('.explore-dialogue:not([hidden])').waitFor();
+ assert.equal(await one.getAttribute('data-walker-phase'),'talking','citizen stops to speak');
+ const talkId=await one.getAttribute('data-explore-id');
+ const paused=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
+ await page.waitForTimeout(600);
+ const frozen=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id).x,talkId);
+ assert.ok(Math.abs(frozen-paused)<0.02,'NPC stays still during conversation');
+ await page.screenshot({path:'artifacts/street-04-face-to-face-dialogue.png',fullPage:true});
+ await page.locator('[data-talk-close]').click();
+ await page.waitForTimeout(650);
+ const after=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(a=>a.id===id)?.x,talkId);
+ assert.ok(after===undefined||Math.abs(after-paused)>2,'NPC resumes walking or exits after conversation');
+});
+await run('street-portrait-motion-390',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ const result=await page.evaluate(()=>window.__OFFICE__.worldCommand({module:'origin',type:'travel',to:'alley',via:'route-map'}));
+ assert.equal(result.ok,true);
+ await page.locator('.pedestrian-actor').first().waitFor();
+ const initial=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ await page.waitForTimeout(900);
+ const after=await page.evaluate(()=>window.__OFFICE__.exploration.traffic());
+ assert.ok(after.actors.some(a=>initial.actors.some(b=>a.id===b.id&&Math.abs(a.x-b.x)>3)),
+  'touchscreen scene also traverses left/right');
+ assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'mobile has no horizontal overflow');
+ await page.screenshot({path:'artifacts/street-05-portrait-lived-in.png',fullPage:true});
+});
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');

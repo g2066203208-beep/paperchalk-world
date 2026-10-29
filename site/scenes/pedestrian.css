@@ -45,3 +45,19 @@
 @media(prefers-reduced-motion:reduce){
  .pedestrian-puppet .puppet-bob,.pedestrian-puppet .puppet-leg,.pedestrian-puppet .puppet-arm{animation:none!important}
 }
+
+/* The legacy .city-walker span selector also matches this new nested puppet:
+   undo its tooltip styling on real character and speech elements. */
+.explore-stage .city-walker.pedestrian-actor > .pedestrian-facing{
+ position:relative;display:block;inset:auto;left:auto;bottom:auto;
+ width:100%;height:100%;background:transparent!important;opacity:1!important;
+ transform:scaleX(var(--ped-facing,1));pointer-events:none;
+ padding:0;transition:none;white-space:normal;
+}
+.explore-stage .city-walker.pedestrian-actor > .pedestrian-greeting:not([hidden]){
+ opacity:1!important;bottom:104%;left:47%;background:#f5e9d4;
+ transform:translateX(-25%);padding:6px 9px;pointer-events:none
+}
+.explore-stage .city-walker.pedestrian-actor > .pedestrian-identity{bottom:100%;opacity:0}
+.explore-stage .city-walker.pedestrian-actor:hover > .pedestrian-identity,
+.explore-stage .city-walker.pedestrian-actor:focus-visible > .pedestrian-identity{opacity:1}
