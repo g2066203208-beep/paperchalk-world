@@ -32,6 +32,7 @@ export const nationalInteriorScene={
   if(!canvas)return null;
   const info=interiorFor(inside),shift=readWorld()?.slices?.clock?.shift||0;
   paintPixelInterior(canvas,info,shift);
-  return {canvas,kind:info.room,dispose(){}};
+  // A room has no street movement instance; the atlas' walk handle must remain null.
+  return null;
  }
 };
