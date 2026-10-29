@@ -36,7 +36,7 @@ for item in data['generated']+data['real_samples']:
     assert sum(i>0 for i in item['tokens'])>=12
 fingerprints={tuple(x['tokens']) for x in data['generated']}
 assert len(fingerprints)>=16,'generated sprites must be different'
-assert fingerprints.isdisjoint(tuple(x['tokens']) for x in data['real_samples']), 'can't pass original sprites off as generated'
+assert fingerprints.isdisjoint(tuple(x['tokens']) for x in data['real_samples']), 'must not pass original sprites off as generated'
 for filename in ('character-reference-sheet.png','character-generated-sheet.png'):
     img=Image.open('site/pixel-lab/'+filename)
     assert img.width>=640 and img.height>=180
