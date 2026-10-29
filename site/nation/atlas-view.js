@@ -303,7 +303,7 @@ export function createNationalAtlas(root,{readWorld,command}){
   if(b.dataset.nationZoom){if(b.dataset.nationZoom==='all'){center={x:2000,y:1900};fit(.68);}else{center={...snapshot.slices.nation.position};fit(30);}return;}
   if(b.dataset.nationCenter){center={...snapshot.slices.nation.position};fit(30);return;}
   if(b.dataset.nationMode){transport=b.dataset.nationMode;updateSidebar();return;}
-  if(b.dataset.nationDepart){
+  if(b.hasAttribute('data-nation-depart')){
    const route=routeBetween(snapshot.slices.nation.station,selected,transport);
    const r=exec({type:'depart',to:selected,mode:transport});
    if(r.ok){animation={started:performance.now(),duration:between(route.km*15,2400,11000),path:route};
