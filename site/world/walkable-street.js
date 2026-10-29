@@ -58,17 +58,10 @@ export function findStreetPath(start,end,buildings){
  const path=[];let at=dest;
  while(at!==origin){path.push({x:(at%cols)*step+step/2,y:Math.floor(at/cols)*step+step/2});at=prev[at];}
  path.reverse();
- // Remove collinear intermediate nodes; preserve obstacle-safe routing corners.
- const slim=[];
- for(let i=0;i<path.length;i++){
-   if(i>0&&i<path.length-1){
-     const a=path[i-1],b=path[i],c=path[i+1];
-     if((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y))continue;
-   }
-   slim.push(path[i]);
- }
- slim.push(end);
- return slim;
+ // Keep every axis-aligned waypoint. Simplifying corners makes the actor
+ // cut diagonally through solid buildings and get stuck outside the door.
+ return [...path,end];
+
 }
 
 function rect(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
@@ -197,7 +190,7 @@ export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnt
   if(held.has('s')||held.has('arrowdown'))vy++;
   if(target&&vx===0&&vy===0){const next=path[0]||target;
     const dx=next.x-player.x,dy=next.y-player.y;
-    if(Math.hypot(dx,dy)>7){vx=dx;vy=dy;}
+    if(Math.hypot(dx,dy)>5){vx=dx;vy=dy;}
     else if(path.length){path.shift();}
     else {target=null;if(follow){const b=follow;follow=null;if(!entered){entered=true;write();onEnter(b);return;}}}
   }else if(vx||vy){target=null;follow=null;path=[];}
