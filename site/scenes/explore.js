@@ -205,6 +205,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const place=e.target.closest('[data-route-place]');
    if(place){routeSelection=place.dataset.routePlace;updateRoute();return;}
    if(e.target.closest('[data-route-go]')){go();return;}
+   if(e.target.closest('[data-route-walk]')){if(routeOpen)closeRoute();openAtlas?.();return;}
    if(e.target.closest('[data-route-close]')){closeRoute();return;}
    if(e.target.closest('[data-talk-close]')){dialogue=null;traffic?.resumeCitizen();root.querySelector('.explore-dialogue').hidden=true;return;}
    if(e.target.closest('[data-scene-ending]')){
