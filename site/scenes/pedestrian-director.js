@@ -113,17 +113,18 @@ export function createPedestrianDirector(layer,{world,venue}){
  function pauseCitizen(id,lock=true){
    if(pausedCitizen&&actors.has(pausedCitizen)&&pausedCitizen!==id)resumeCitizen();
    const item=actors.get(id);if(!item)return;
-   if(item.walk.phase!=='talking')item.walk.previousPhase=item.walk.phase;
+   if(item.walk.phase!=='talking'&&item.walk.phase!=='hovering')item.walk.previousPhase=item.walk.phase;
    pausedCitizen=id;talkLocked=lock||talkLocked;
-   item.walk.phase='talking';
-   item.element.classList.add('pedestrian-talking');
+   item.walk.phase=talkLocked?'talking':'hovering';
+   item.element.classList.toggle('pedestrian-talking',talkLocked);
+   item.element.classList.toggle('pedestrian-hovering',!talkLocked);
    position(item);
  }
  function resumeCitizen(){
    if(pausedCitizen&&actors.has(pausedCitizen)){
      const item=actors.get(pausedCitizen);
      item.walk.phase=item.walk.previousPhase||'walking';
-     item.element.classList.remove('pedestrian-talking');
+     item.element.classList.remove('pedestrian-talking','pedestrian-hovering');
      position(item);
    }
    pausedCitizen=null;talkLocked=false;
