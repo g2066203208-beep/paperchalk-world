@@ -637,6 +637,21 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.locator('.world-walk-entry').click();
  assert.ok(await page.locator('.national-explorer').isVisible());
  assert.equal(await page.locator('.national-map-tile').count(),117);
+ assert.ok(await page.locator('.country-map-canvas').isVisible(),'full national map must be front and center');
+ const initialCamera=await page.evaluate(()=>window.__OFFICE__.atlas.map());
+ assert.equal(initialCamera.zoom,1,'open at full country overview');
+ await page.locator('[data-map-action="plus"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===2);
+ await page.locator('[data-map-action="plus"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===4);
+ await page.screenshot({path:'artifacts/national-00-country-zoom.png',fullPage:true});
+ const camera=await page.evaluate(()=>window.__OFFICE__.atlas.map());
+ assert.equal(camera.zoom,4,'map must zoom beyond a small 13x9 widget');
+ await page.locator('[data-map-layer="rail"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.map())).layers.rail,false);
+ await page.locator('[data-map-action="overview"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===1);
+ await page.screenshot({path:'artifacts/national-00-full-country.png',fullPage:true});
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
  const start=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
  await page.locator('.national-walk-canvas').focus();
@@ -655,6 +670,7 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
   return null;
  });
  assert.ok(site,'national atlas must contain buildings nearby');
+ await page.locator('.country-nearby-details summary').click();
  await page.locator('[data-atlas-cell="'+site.x+','+site.y+'"]').click();
  await buildings.first().waitFor({timeout:10000});
  const enteredId=await buildings.first().getAttribute('data-atlas-enter');
@@ -684,6 +700,11 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
 });
 await run('national-atlas-portrait-390',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await page.locator('#national-atlas-open').tap();
+ assert.ok(await page.locator('.country-map-canvas').isVisible());
+ await page.locator('[data-map-action="home"]').tap();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===8);
+ await page.screenshot({path:'artifacts/national-05-mobile-zoom.png',fullPage:true});
+ await page.locator('.country-nearby-details summary').tap();
  assert.ok(await page.locator('.national-map-grid').isVisible());
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
  const before=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
