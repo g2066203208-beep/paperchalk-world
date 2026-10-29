@@ -215,7 +215,12 @@ def make_split(records):
  # Hold out complete sources where possible.
  ids=sorted(set(r['source_id'] for r in records))
  rng=random.Random(SEED);rng.shuffle(ids)
- held=set(ids[-max(1,len(ids)//5):])
+ sizes=collections.Counter(r['source_id'] for r in records)
+ held=set()
+ for source in ids:
+  if sum(sizes[x] for x in held)>=max(10,len(records)//6):break
+  if len(records)-sum(sizes[x] for x in held)-sizes[source]>=45:
+   held.add(source)
  train=np.array([i for i,r in enumerate(records) if r['source_id'] not in held],np.int32)
  val=np.array([i for i,r in enumerate(records) if r['source_id'] in held],np.int32)
  if len(val)<8 or len(train)<45:
@@ -370,7 +375,15 @@ def main():
  # Each rendered output borrows a palette from a legally CC0 training sprite,
  # but its token geometry comes from the trained decoder.
  chosen=palettes[train][rng.integers(len(train),size=len(samples))]
- contact(tokens[:min(120,len(tokens))],palettes[:min(120,len(tokens))],
+ # Round-robin examples across sources to avoid showing 100 variants of one author.
+ buckets=collections.defaultdict(list)
+ for i,r in enumerate(records):buckets[r['source_id']].append(i)
+ showcase=[]
+ while len(showcase)<min(120,len(records)) and any(buckets.values()):
+  for sid in sorted(buckets):
+   if buckets[sid] and len(showcase)<min(120,len(records)):
+    showcase.append(buckets[sid].pop(0))
+ contact(tokens[showcase],palettes[showcase],
   SITE/'character-reference-sheet.png','REAL 16x16 CC0 CHARACTER DATA  /  NOT GENERATED',12)
  contact(samples,chosen,SITE/'character-generated-sheet.png',
   'UNSUPERVISED VAE + REINFORCE / ACTUAL GENERATED 16x16 SPRITES',12)
@@ -394,8 +407,8 @@ def main():
      'w3':np.round(params['w3'],5).tolist(),
      'b3':np.round(params['b3'],5).tolist()},
   'palettes':palettes[train][:min(40,len(train))].tolist(),
-  'real_samples':[{'tokens':t.flatten().tolist(),'palette':palettes[i].tolist(),
-     'source_id':records[i]['source_id']} for i,t in enumerate(tokens[:min(48,len(tokens))])],
+  'real_samples':[{'tokens':tokens[i].flatten().tolist(),'palette':palettes[i].tolist(),
+     'source_id':records[i]['source_id']} for i in showcase[:min(48,len(showcase))]],
   'generated':[{'tokens':t.flatten().tolist(),'palette':pal.tolist()}
       for t,pal in zip(samples,chosen)]}
  (SITE/'characters.json').write_text(json.dumps(export,separators=(',',':')))
