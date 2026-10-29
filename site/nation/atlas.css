@@ -51,3 +51,7 @@
  .nation-section{padding:8px 12px}.nation-measures{margin:5px 0}.nation-hud{bottom:5px;left:5px;right:5px}.nation-hud span{font-size:9px;padding:4px 5px}
  .nation-hud .nation-tips{display:none}.nation-foot{gap:4px;flex-wrap:wrap;padding:4px 7px}.nation-foot>span{display:none}
  .nation-world .nation-pad button{min-height:38px;min-width:38px}.nation-legend{gap:6px}.nation-legend span{font-size:9px}}
+
+.nation-launch{font-size:12px;color:#f0dfc2;background:#744e49;border:1px solid #ad8e72;border-radius:4px;padding:8px 12px;cursor:pointer}
+.nation-launch:hover,.nation-launch:focus-visible{background:#a06157;color:#fff4de}
+@media(max-width:620px){.nation-launch{font-size:10px;padding:6px}}
