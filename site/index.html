@@ -40,6 +40,14 @@
    <label class="switch-row"><span>运动测试 <small>步态 / 摆动</small></span><input id="play-switch" type="checkbox" checked><i></i></label>
    <label class="switch-row"><span>关节编号 <small>显示节点名称</small></span><input id="labels-switch" type="checkbox"><i></i></label>
    <label class="switch-row"><span>静止参考姿态 <small>灰色骨骼叠加</small></span><input id="ghost-switch" type="checkbox" checked><i></i></label>
+   <div class="section-title surface-title">数学包裹体 <span>IMPLICIT SKIN · SDF</span></div>
+   <label class="switch-row"><span>光滑身体表面 <small>骨段胶囊距离场 + 平滑并集</small></span><input id="surface-switch" type="checkbox" checked><i></i></label>
+   <label class="switch-row"><span>骨架叠加 <small>显示骨骼节点与关节</small></span><input id="bones-switch" type="checkbox" checked><i></i></label>
+   <label class="control-label" for="thickness-range"><span>体表厚度</span><output id="thickness-output">115%</output></label>
+   <input id="thickness-range" type="range" min="60" max="190" value="115">
+   <label class="control-label" for="blend-range"><span>关节融合半径</span><output id="blend-output">12 u</output></label>
+   <input id="blend-range" type="range" min="0" max="25" value="12">
+   <div class="math-note"><b>F(x,y) = smoothMin(d₁, d₂, ...)</b><span>体表是 F(x,y) = 0 的等值线。<br>移动骨骼，包裹体自动重算。</span></div>
    <div class="sidebar-note">◉ 单击骨骼关节查看信息；拖动手腕或脚踝，直接测试双段逆向运动学。</div>
   </aside>
   <main class="viewport">
@@ -50,7 +58,7 @@
    <div class="canvas-wrap" id="canvas-wrap">
     <canvas id="rig-canvas" aria-label="可交互的2D骨骼绘制视图"></canvas>
     <div class="canvas-top-left"><span class="coords-dot"></span> ORTHOGRAPHIC · XY <span id="zoom-label">100%</span></div>
-    <div class="canvas-top-right">BONES <span id="bone-count-a">–</span> / JOINTS <span id="joint-count">–</span></div>
+    <div class="canvas-top-right">BONES <span id="bone-count-a">–</span> / CONTOURS <span id="contour-count">—</span></div>
     <div class="canvas-bottom-left">局部坐标空间 <span class="mini-sep">•</span> 骨长约束 <span class="mini-sep">•</span> IK 求解</div>
     <div class="canvas-bottom-right">滚轮缩放　·　拖动末端关节</div>
    </div>
@@ -75,10 +83,10 @@
    </div>
    <div class="section-title export-heading">导出骨骼 <span>EXPORT</span></div>
    <div class="exports"><button id="export-json">↓ JSON</button><button id="export-svg">↓ SVG</button><button id="export-png">↓ PNG</button></div>
-   <p class="export-note">JSON 保存层级与生成种子；SVG、PNG 保存当前骨骼可视化。此阶段尚不包含蒙皮和物理碰撞。</p>
+   <p class="export-note">JSON 保存骨架与包裹参数；SVG、PNG 导出实际生成的连续轮廓。当前为程序化 2D 表面，不包含真实组织物理。</p>
   </aside>
  </section>
- <footer class="bottom-bar"><span>GENERATION ENGINE <b>v0.1</b></span><span id="message" role="status">骨架就绪 · 等待交互</span><span>ALL POSES ARE COMPUTED · NO IMAGE ASSETS</span></footer>
+ <footer class="bottom-bar"><span>GENERATION ENGINE <b>v0.2 SDF</b></span><span id="message" role="status">骨架就绪 · 等待交互</span><span>ALL POSES ARE COMPUTED · NO IMAGE ASSETS</span></footer>
 </div>
 <script type="module" src="./app.js"></script>
 </body>
