@@ -42,7 +42,7 @@ export function createPedestrianDirector(layer,{world,venue}){
  if(!LOCATIONS[venue])return Object.freeze({sync:()=>{},pause:()=>{},resume:()=>{},pauseCitizen:()=>{},resumeCitizen:()=>{},destroy:()=>{},snapshot:()=>({actors:[],entrances:0,exits:0})});
  const actors=new Map();
  let active=true,stopped=false,frame=0,last=0,sequence=0,entrances=0,exits=0,shift=-1,roster=[];
- let pausedCitizen=null;
+ let pausedCitizen=null,talkLocked=false;
  const capacity=()=>window.matchMedia('(max-width:650px)').matches?3:5;
  function position(item){
   const {element,walk}=item;
@@ -74,6 +74,10 @@ export function createPedestrianDirector(layer,{world,venue}){
    const holder=document.createElement('div');holder.innerHTML=actorMarkup(p,plan);
    const element=holder.firstElementChild;
    const item={element,walk:walker};
+   // Real people can be approached: hovering pauses movement so the actual
+   // moving target is clickable on desktop. A conversation locks the pause.
+   element.addEventListener('pointerenter',()=>pauseCitizen(p.id,false));
+   element.addEventListener('pointerleave',()=>{if(pausedCitizen===p.id&&!talkLocked)resumeCitizen();});
    actors.set(p.id,item);layer.append(element);entrances++;
    position(item);
  }
@@ -106,11 +110,11 @@ export function createPedestrianDirector(layer,{world,venue}){
    }
    frame=requestAnimationFrame(tick);
  }
- function pauseCitizen(id){
+ function pauseCitizen(id,lock=true){
    if(pausedCitizen&&actors.has(pausedCitizen)&&pausedCitizen!==id)resumeCitizen();
    const item=actors.get(id);if(!item)return;
-   pausedCitizen=id;
-   item.walk.previousPhase=item.walk.phase;
+   if(item.walk.phase!=='talking')item.walk.previousPhase=item.walk.phase;
+   pausedCitizen=id;talkLocked=lock||talkLocked;
    item.walk.phase='talking';
    item.element.classList.add('pedestrian-talking');
    position(item);
@@ -122,7 +126,7 @@ export function createPedestrianDirector(layer,{world,venue}){
      item.element.classList.remove('pedestrian-talking');
      position(item);
    }
-   pausedCitizen=null;
+   pausedCitizen=null;talkLocked=false;
  }
  sync(world(),true);
  frame=requestAnimationFrame(tick);
