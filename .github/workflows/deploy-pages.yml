@@ -111,6 +111,29 @@ jobs:
         run: node tests/pixel-browser.mjs
       - name: Test real character-only VAE browser inference and original CC0 gallery
         run: node tests/character-generator-browser.mjs
+      - name: Export first-party four-color master as strict pixel tokens
+        run: node ml/flat4/export-source.mjs
+      - name: Train genuine 5x5 masked-token neural pixel network on first-party art
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+          FLAT4_TRAIN_STEPS: '260'
+        run: python ml/train_flat4.py
+      - name: Verify learned weights, honest validation and exact palette
+        run: python ml/verify_flat4.py
+      - name: Test trained network in real Chromium and capture proof
+        run: node tests/flat4-trained-browser.mjs
+      - name: Upload exact four-color neural repair proof and actual model
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flat4-learned-mlp-training-reconstruction-proof
+          path: |
+            flat4-artifacts/
+            ml/flat4/source.json
+            site/pixel-lab/flat4-source.json
+            site/pixel-lab/flat4-model.json
+          retention-days: 30
       - name: Upload true 16x16 human-only trained character evidence
         if: always()
         uses: actions/upload-artifact@v4
