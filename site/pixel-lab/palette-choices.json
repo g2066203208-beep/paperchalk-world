@@ -1,98 +1,130 @@
 [
   {
     "id": "A",
-    "name": "糖夜纸片",
-    "en": "Candy Night",
-    "description": "梦幻 · 甜感 · 高识别",
+    "name": "朱墨宣纸",
+    "en": "Vermilion Press",
+    "description": "黑白朱红 · 印刷张力 · 冷峻利落",
     "colors": [
-      "#17142E",
-      "#E84A8A",
-      "#58B9C9",
-      "#F6E39A"
-    ]
+      "#17171A",
+      "#D83434",
+      "#8C928B",
+      "#F2E8D5"
+    ],
+    "scene": "版画街区",
+    "shape": "方正建筑、红色圆印、大片留白",
+    "ui": "印章式方框＋红色小标",
+    "motto": "像一本会动的四色版画"
   },
   {
     "id": "B",
-    "name": "青瓷朱砂",
-    "en": "Jade & Vermilion",
-    "description": "和风 · 清雅 · 温润",
+    "name": "荧藻深海",
+    "en": "Abyssal Signal",
+    "description": "深渊蓝 · 荧光黄绿 · 夜航幻想",
     "colors": [
-      "#172C2A",
-      "#DA695F",
-      "#71B9A7",
-      "#F6E9D1"
-    ]
+      "#061B2B",
+      "#D1F246",
+      "#2A68DD",
+      "#FFB49C"
+    ],
+    "scene": "深海夜航",
+    "shape": "海浪横带、珊瑚拱门、光标浮游",
+    "ui": "深蓝窗口＋酸绿航迹",
+    "motto": "海底信号在夜色里发亮"
   },
   {
     "id": "C",
-    "name": "紫雾来信",
-    "en": "Violet Haze",
-    "description": "神秘 · 柔雾 · 轻奇幻",
+    "name": "酸紫机城",
+    "en": "Ultraviolet Arcade",
+    "description": "紫电 · 酸糖 · 高能机械节奏",
     "colors": [
-      "#24203F",
-      "#A17BD6",
-      "#78C8C3",
-      "#FFE8D5"
-    ]
+      "#27092F",
+      "#FF42B8",
+      "#7653FA",
+      "#E2FB51"
+    ],
+    "scene": "游乐机械城",
+    "shape": "斜线、齿状楼顶、夸张几何标记",
+    "ui": "尖角仪表＋荧绿状态条",
+    "motto": "把游乐园做成一台机器"
   },
   {
     "id": "D",
-    "name": "夕橙胶片",
-    "en": "Sunset Film",
-    "description": "活泼 · 复古现代 · 暖调",
+    "name": "雾樱玻璃",
+    "en": "Porcelain Blossom",
+    "description": "粉白 · 淡紫 · 柔软安静",
     "colors": [
-      "#29223A",
-      "#F07D55",
-      "#7C9FD5",
-      "#FDEBBF"
-    ]
+      "#393657",
+      "#F2A5C2",
+      "#A9BAE9",
+      "#FFF5E6"
+    ],
+    "scene": "樱雾小镇",
+    "shape": "圆树冠、低矮屋顶、宽阔留白",
+    "ui": "纸签式卡片＋淡紫分隔",
+    "motto": "轻得像一张有温度的明信片"
   },
   {
     "id": "E",
-    "name": "霜樱薄荷",
-    "en": "Frost Sakura",
-    "description": "软萌 · 轻盈 · 清爽",
+    "name": "赤土铜绿",
+    "en": "Terracotta Grove",
+    "description": "陶土 · 铜绿 · 干燥的生活气息",
     "colors": [
-      "#242A40",
-      "#DF87B5",
-      "#85B7D0",
-      "#F9EAE5"
-    ]
+      "#393328",
+      "#C96F3D",
+      "#5F9981",
+      "#F6DFB4"
+    ],
+    "scene": "赤土山城",
+    "shape": "层叠台地、厚墙、阶梯阴影线",
+    "ui": "石牌横条＋陶色识别块",
+    "motto": "让大地、建筑和人物共享材料感"
   },
   {
     "id": "F",
-    "name": "茶铜旧梦",
-    "en": "Copper Archive",
-    "description": "文艺 · 朴素 · 纸质感",
+    "name": "冰极警报",
+    "en": "Polar Alarm",
+    "description": "极地蓝白 · 信号红 · 冷硬未来",
     "colors": [
-      "#2E2A29",
-      "#C68159",
-      "#97A883",
-      "#F2E0BE"
-    ]
+      "#0C2543",
+      "#F24A3C",
+      "#89DFFD",
+      "#FAFFFF"
+    ],
+    "scene": "冰冠电台",
+    "shape": "垂直信号塔、切割冰面、方形标识",
+    "ui": "技术框线＋红色危险提示",
+    "motto": "冰层下面是有秩序的旧科技"
   },
   {
     "id": "G",
-    "name": "海盐汽水",
-    "en": "Salt Soda",
-    "description": "青春 · 夏日 · 通透",
+    "name": "菌森书简",
+    "en": "Moss Letter",
+    "description": "森林绿 · 杏桃 · 奶油纸",
     "colors": [
-      "#123849",
-      "#F18671",
-      "#6ACBD0",
-      "#FFF0CF"
-    ]
+      "#12372E",
+      "#F0A187",
+      "#59B27D",
+      "#F5F1CB"
+    ],
+    "scene": "菌森邮局",
+    "shape": "蘑菇伞冠、粗枝、森林小门",
+    "ui": "邮戳格子＋纸张标签",
+    "motto": "用简单的生命形状构建整座世界"
   },
   {
     "id": "H",
-    "name": "夜电萤火",
-    "en": "Neon Fern",
-    "description": "电玩 · 未来 · 鲜明",
+    "name": "橘日港湾",
+    "en": "Orange Harbor",
+    "description": "橘红 · 海港蓝 · 强烈日光",
     "colors": [
-      "#191F37",
-      "#D063C2",
-      "#5F91E1",
-      "#DCF0A5"
-    ]
+      "#2A2435",
+      "#FF6B32",
+      "#3B879D",
+      "#FFE3B0"
+    ],
+    "scene": "夕阳码头",
+    "shape": "吊臂、船坞、巨大太阳和横向水面",
+    "ui": "航运标签＋大块橘色主按钮",
+    "motto": "每张画面都像航行中的夏日海报"
   }
 ]
