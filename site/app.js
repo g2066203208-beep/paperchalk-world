@@ -440,8 +440,8 @@ $('panel-body').addEventListener('click',e=>{
  }
  if(node.dataset.next){
   // A narrative day may end without a business mission or a telephone conversation.
-  const spentStory=world.slices.campaign?.actionsToday>0;
-  const dayInput=spentStory&&!state.call.answered&&!state.orders.length?
+  const narrativeFreeDay=world.slices.origin?.prologue?.status==='complete';
+  const dayInput=narrativeFreeDay&&!state.call.answered&&!state.orders.length?
    {...state,call:{...state.call,answered:true}}:state;
   const r=advance(dayInput,meta);
   if(!r.ok){toast(r.message);return;}
