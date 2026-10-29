@@ -155,7 +155,7 @@ function drawEnvironment(ctx,site,elapsed,shift,traffic){
  const night=shift===3,evening=shift===2;
  if(night||evening)rect(ctx,0,0,STREET_W,STREET_H,night?'#1827474a':'#8a5b7130');
 }
-export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPosition}){
+export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnter,onLeave,onPosition}){
  const ctx=canvas.getContext('2d',{alpha:false});
  const scale=window.devicePixelRatio||1;
  canvas.width=Math.round(STREET_W*Math.min(scale,2));canvas.height=Math.round(STREET_H*Math.min(scale,2));
@@ -167,7 +167,7 @@ export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPos
   const px=65+Math.floor(rnd(x+i,y,433)*840),py=100+Math.floor(rnd(y+i,x,347)*460);
   site.people.push({name:source[i].name,x:px,y:py,drift:i%11});
  }
- let player={x:clamp(original?.x||124,10,950),y:clamp(original?.y||100,10,590)};
+ let player={x:clamp(initialPosition?.x??original?.x??124,10,950),y:clamp(initialPosition?.y??original?.y??100,10,590)};
  if(!canStandAt(player.x,player.y,buildings))player={x:120,y:106};
  let target=null,follow=null,path=[],last=0,frame=0,closed=false,held=new Set(),entered=false;
  const write=()=>{try{localStorage.setItem(key,JSON.stringify(player))}catch{}};
