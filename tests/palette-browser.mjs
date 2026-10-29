@@ -28,10 +28,10 @@ try{
  assert.equal(await cards.count(),8,'Exactly eight visual choices');
  const ids=await cards.evaluateAll(els=>els.map(x=>x.dataset.id));
  assert.deepEqual(ids,['A','B','C','D','E','F','G','H']);
- const results=await page.evaluate(()=>window.PALETTE_STUDIO.palettes().map(x=>({id:x.id,colors:x.colors,...window.PALETTE_STUDIO.inspect(x.id)})));
+ const results=await page.evaluate(()=>window.PALETTE_STUDIO.palettes().map(x=>({id:x.id,swatches:x.colors,...window.PALETTE_STUDIO.inspect(x.id)})));
  for(const entry of results){
-  assert.equal(entry.colors.length,4,'Four allowed colors');
-  assert.equal(new Set(entry.colors).size,4,'Palette colors unique');
+  assert.equal(entry.swatches.length,4,'Four allowed colors');
+  assert.equal(new Set(entry.swatches).size,4,'Palette colors unique');
   assert.equal(entry.width,384);assert.equal(entry.height,512);
   assert.equal(entry.sourceTokens,384*512);
   assert.equal(entry.colors,4,'ALL four palette colors present');
@@ -41,7 +41,7 @@ try{
  const original=await page.evaluate(()=>window.PALETTE_STUDIO.snapshot('A'));
  mkdirSync('repixel-browser-artifacts',{recursive:true});
  await page.screenshot({path:'repixel-browser-artifacts/eight-palettes-desktop.png',fullPage:true});
- await cards.filter({has:page.locator('[class="card-id"]', {hasText:'H'})}).locator('.choose-button').click();
+ await page.locator('.palette-card[data-id="H"] .choose-button').click();
  assert.equal(await page.locator('#selectedLetter').innerText(),'H.');
  assert.equal(await page.locator('#selectedTitle').innerText(),'夜电萤火');
  assert.equal(await page.locator('#compareId').innerText(),'B');
