@@ -7,7 +7,7 @@ import {sceneArtwork} from './artwork.js';
 import {createPedestrianDirector} from './pedestrian-director.js';
 import {sceneConversation} from './scene-dialogues.js';
 import {currentBeat,prologueMark} from '../content/prologue-story.js';
-import {activeStoryBeat,todayStory} from '../systems/campaign.js';
+import {activeStoryBeat,todayStory,SEASON_ARCS} from '../systems/campaign.js';
 import {clockLabel,SHIFTS} from '../systems/clock.js';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
 const spots={
@@ -102,10 +102,16 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(!layer)return;
    const episode=todayStory(w),beat=activeStoryBeat(w);
    const ready=w.slices.origin.prologue?.status!=='active';
-   const marker=ready&&beat&&beat.venue===venue?
-     '<button type="button" class="scene-day-beat" data-scene-day="1" data-location="'+venue+'" aria-label="调查'+escape(beat.title)+'">'+
-     '<small>DAY '+String(w.day).padStart(2,'0')+' · '+(w.slices.campaign.actionsToday===0?'AFTERNOON':'EVENING')+'</small>'+
-     '<strong>'+escape(beat.title)+'</strong><span>'+escape(beat.lead)+'在这里等你 · 触碰便条</span></button>':'';
+   const chapter=SEASON_ARCS.find(a=>w.day>=a.start&&w.day<=a.end);
+   const finale=w.slices.campaign?.ending;
+   const marker=ready&&finale&&venue==='office'?
+     '<button type="button" class="scene-day-beat scene-ending-beat" data-scene-ending="1">'+
+     '<small>MAIN STORY · ENDING '+escape(finale.key)+'</small>'+
+     '<strong>'+escape(finale.title)+'</strong><span>结局已保存在档案中 · 点击重读</span></button>':
+    ready&&beat&&beat.venue===venue?
+     '<button type="button" class="scene-day-beat" data-scene-day="1" data-location="'+venue+'" aria-label="推进主线'+escape(beat.title)+'">'+
+     '<small>第'+(chapter?.chapter||1)+'章 · DAY '+String(w.day).padStart(2,'0')+' · '+(w.slices.campaign.actionsToday===0?'AFTERNOON':'EVENING')+'</small>'+
+     '<strong>'+escape(beat.title)+'</strong><span>'+escape(beat.lead)+' · 点击推进主线</span></button>':'';
    if(layer.dataset.content!==marker){layer.innerHTML=marker;layer.dataset.content=marker;}
  }
  function buildScene(){
@@ -198,6 +204,11 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(e.target.closest('[data-route-go]')){go();return;}
    if(e.target.closest('[data-route-close]')){closeRoute();return;}
    if(e.target.closest('[data-talk-close]')){dialogue=null;traffic?.resumeCitizen();root.querySelector('.explore-dialogue').hidden=true;return;}
+   if(e.target.closest('[data-scene-ending]')){
+     const final=readWorld().slices.campaign?.ending;
+     if(final)say(final.title,final.subtitle+'\n'+final.text);
+     return;
+   }
    const story=e.target.closest('[data-scene-day]');
    if(story){
      const beat=activeStoryBeat(readWorld());
@@ -213,9 +224,10 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
      if(!option)return;
      const result=command({module:'campaign',type:'scene-choice',choice:choiceId});
      if(result.ok){
+       const finale=result.events?.find(x=>x.type==='campaign.ending');
        const speaker=dialogue.beat.lead;
        dialogue=null;
-       speech(speaker,option.line,[]);
+       speech(finale?.title||speaker,finale?.text||option.line,[]);
        cue?.('bell');
      } else speech(dialogue.beat.lead,'今天无法这么做。换个办法吧。',dialogue.beat.choices);
      return;
