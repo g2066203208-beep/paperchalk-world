@@ -631,6 +631,7 @@ await run('industry-portrait-ui',{viewport:{width:390,height:844},deviceScaleFac
 });
 
 await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,height:900}},async page=>{
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
  assert.ok(await page.locator('.world-walk-entry').isVisible(),'walking must be obvious inside the actual game');
  await page.locator('.world-walk-entry').click();
  assert.ok(await page.locator('.national-explorer').isVisible());
