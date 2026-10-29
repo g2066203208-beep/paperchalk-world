@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0c1224"><meta name="description" content="同一款原生384×512四色像素角色，比较8套原创游戏配色并导出像素PNG和HEX色板。">
+<title>四色美术实验室 · 8套游戏配色实时对比 | Pixel Lab</title>
+<link rel="stylesheet" href="./palette-choices.css"></head>
+<body>
+<header class="topbar"><a class="wordmark" href="./index.html"><span class="mark">PIXEL<span>LAB</span></span><span class="slash">/</span><span>PALETTE STUDIO</span></a><nav><a href="./repixelize.html">真像素转换器</a><a href="./index.html">工作室首页</a></nav></header>
+<main class="shell">
+<section class="intro">
+<div class="eyebrow"><span class="light"></span> ORIGINAL GAME PALETTE STUDY · 8 DIRECTIONS</div>
+<div class="intro-grid"><div><h1>同一个人物。<em>八种世界的颜色。</em></h1>
+<p>我们自己的游戏主配色候选。严格使用相同的 <strong>384×512 原生像素人物</strong>，只替换四个固定色位；不改造型、动作、表情或像素轮廓。先选你喜欢的视觉方向，再决定是否正式锁定。</p></div>
+<div class="intro-side"><span>01 — 08 / PALETTE EXPLORATION</span><strong>8 <small>套候选</small> × 4 <small>色</small></strong><span>4 COLORS · ZERO SHADING · TRUE PIXELS</span></div></div>
+</section>
+<div id="status" class="status" role="status">正在载入原生像素人物与八套色板…</div>
+<section class="feature" aria-label="当前选中的两套配色">
+ <div class="feature-head"><div><span class="section-tag">LIVE COMPARISON / 实时对比</span><h2>看得见的区别，不用猜。</h2></div>
+ <div class="feature-head-tools"><label for="compareSelect">右侧对照</label><select id="compareSelect" aria-label="右侧对照配色"></select></div></div>
+ <div class="feature-content">
+  <div class="feature-stage">
+   <div class="portrait-panel">
+    <div class="portrait-top"><span class="stage-key" id="activeId">A</span><span id="activeStageName">糖夜纸片</span><span class="stage-badge">当前选择</span></div>
+    <canvas id="activeCanvas" width="384" height="512" aria-label="选中的完整384乘512四色像素人物"></canvas>
+   </div>
+   <div class="portrait-panel secondary">
+    <div class="portrait-top"><span class="stage-key" id="compareId">B</span><span id="compareName">青瓷朱砂</span><span class="stage-badge muted">对照</span></div>
+    <canvas id="compareCanvas" width="384" height="512" aria-label="右侧对照人物"></canvas>
+   </div>
+  </div>
+  <aside class="feature-details">
+   <div class="selected-label">SELECTED PALETTE</div>
+   <h3><span id="selectedLetter">A.</span> <span id="selectedTitle">糖夜纸片</span></h3>
+   <div id="selectedEnglish" class="subline">CANDY NIGHT</div>
+   <p id="selectedDescription" class="selected-description">梦幻 · 甜感 · 高识别</p>
+   <div class="palette-role-list" id="selectedSwatches" aria-label="当前四色与HEX代码"></div>
+   <div class="actions">
+    <button type="button" id="downloadPNG" class="btn primary" disabled>下载该配色的原生 PNG <span aria-hidden="true">↘</span></button>
+    <div class="action-row"><button type="button" id="copyHEX" class="btn" disabled>复制四个 HEX</button><button type="button" id="downloadJSON" class="btn" disabled>导出色板 JSON</button></div>
+   </div>
+   <div class="hint-box">这只是**候选**，不会自动修改游戏正式配色。下载的是无网格线、无渐变、无额外色彩的原生 384×512 PNG。</div>
+  </aside>
+ </div>
+</section>
+<section class="palette-gallery" id="gallery" aria-label="八套四色游戏候选">
+<div class="section-header"><div><span class="section-tag">THE EIGHT ORIGINAL PALETTES / 八套候选</span><h2>点击一套，切换上方真实人物。</h2></div><span class="section-note">A—H · SAME CHARACTER · 4 RGB COLORS</span></div>
+<div class="cards" id="cards"><div class="placeholder">原生人物载入后，八种配色将显示在这里。</div></div>
+</section>
+<section class="pixel-inspector" aria-label="原生像素网格检验">
+<div class="section-header"><div><span class="section-tag">PIXEL INSPECTOR / 逐像素检查</span><h2>连像素格子也可以放大看。</h2><p>把选中人物的同一片区域放大；细线仅用于检查，不会进入 PNG。</p></div>
+<div class="inspector-controls"><label class="grid-check"><input id="showGrid" type="checkbox" checked> 显示 1 像素网格</label><select id="inspectPart" aria-label="选择放大部位"><option value="face">脸部</option><option value="sleeve">衣袖</option><option value="skirt">裙摆</option><option value="shoe">鞋子</option></select></div></div>
+<div class="inspector-content"><div class="inspector-stage"><canvas id="inspectCanvas" width="384" height="384" aria-label="具有真实网格线的48乘48局部像素放大图"></canvas></div>
+<div class="inspector-info"><strong>8×</strong><span>每格 = 原图 1 像素</span><p id="inspectCoord">正在定位像素…</p><div id="inspectChip" class="sample-chip"></div><span id="inspectColor">点击格子查看准确 HEX。</span><p class="small-note">无论网格是否显示，原始 PNG 的每一个像素都不受影响。</p></div></div>
+</section>
+<footer class="footer">PIXEL LAB · PALETTE STUDY v1.0　|　所有配色均为项目候选；最终风格由你来定。<span> <a href="./repixelize.html">返回 REPIXEL</a> · <a href="./index.html">返回工作室</a></span></footer>
+</main><script type="module" src="./palette-choices.js"></script></body></html>

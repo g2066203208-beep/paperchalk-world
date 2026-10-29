@@ -1,0 +1,98 @@
+[
+  {
+    "id": "A",
+    "name": "糖夜纸片",
+    "en": "Candy Night",
+    "description": "梦幻 · 甜感 · 高识别",
+    "colors": [
+      "#17142E",
+      "#E84A8A",
+      "#58B9C9",
+      "#F6E39A"
+    ]
+  },
+  {
+    "id": "B",
+    "name": "青瓷朱砂",
+    "en": "Jade & Vermilion",
+    "description": "和风 · 清雅 · 温润",
+    "colors": [
+      "#172C2A",
+      "#DA695F",
+      "#71B9A7",
+      "#F6E9D1"
+    ]
+  },
+  {
+    "id": "C",
+    "name": "紫雾来信",
+    "en": "Violet Haze",
+    "description": "神秘 · 柔雾 · 轻奇幻",
+    "colors": [
+      "#24203F",
+      "#A17BD6",
+      "#78C8C3",
+      "#FFE8D5"
+    ]
+  },
+  {
+    "id": "D",
+    "name": "夕橙胶片",
+    "en": "Sunset Film",
+    "description": "活泼 · 复古现代 · 暖调",
+    "colors": [
+      "#29223A",
+      "#F07D55",
+      "#7C9FD5",
+      "#FDEBBF"
+    ]
+  },
+  {
+    "id": "E",
+    "name": "霜樱薄荷",
+    "en": "Frost Sakura",
+    "description": "软萌 · 轻盈 · 清爽",
+    "colors": [
+      "#242A40",
+      "#DF87B5",
+      "#85B7D0",
+      "#F9EAE5"
+    ]
+  },
+  {
+    "id": "F",
+    "name": "茶铜旧梦",
+    "en": "Copper Archive",
+    "description": "文艺 · 朴素 · 纸质感",
+    "colors": [
+      "#2E2A29",
+      "#C68159",
+      "#97A883",
+      "#F2E0BE"
+    ]
+  },
+  {
+    "id": "G",
+    "name": "海盐汽水",
+    "en": "Salt Soda",
+    "description": "青春 · 夏日 · 通透",
+    "colors": [
+      "#123849",
+      "#F18671",
+      "#6ACBD0",
+      "#FFF0CF"
+    ]
+  },
+  {
+    "id": "H",
+    "name": "夜电萤火",
+    "en": "Neon Fern",
+    "description": "电玩 · 未来 · 鲜明",
+    "colors": [
+      "#191F37",
+      "#D063C2",
+      "#5F91E1",
+      "#DCF0A5"
+    ]
+  }
+]
