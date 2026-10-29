@@ -39,7 +39,7 @@ export const INDUSTRIES=[
  type('textile','纺织厂','制造',1,230,15,'fabric',8,{cotton:6},{retail:false}),
  type('sawmill','木板加工厂','制造',1,195,12,'boards',8,{timber:6},{retail:false}),
  type('machine','机械零件厂','制造',2,300,20,'parts',6,{steel:4},{retail:false}),
- type('bakery','面包烘焙坊','食品',2,170,11,'bread',9,{flour:6},{info:'面粉加工为面包，当天上架销售'}),
+ type('bakery','面包烘焙坊','食品',2,170,11,'bread',9,{flour:6},{retail:true,info:'面粉加工为面包，当天上架销售'}),
  type('furniture','家具作坊','制造',3,290,19,'furniture',5,{boards:4,parts:1},{retail:true}),
  type('tailor','服装工坊','零售',3,240,14,'clothes',6,{fabric:5}),
  type('electronics','电器装配坊','制造',3,390,27,'electronics',4,{parts:3,steel:1}),
@@ -208,10 +208,14 @@ export function runIndustryDay(parcels,{day,slices,context,signal}){
   f.daybook=f.daybook.slice(0,30);
   lot.condition=cap(lot.condition-(f.open?(b.level>=4?2:1):0),20,100);
   events.push({type:'estate.income',title:'商铺经营日报',lot:lot.id,profit:lot.lastProfit,
+   tax:book.tax,license:book.license||0,
    text:typ.name+'：生产'+book.produced+'，售出'+book.sold+'，缺货'+book.stockouts+
      '，销售收入'+book.revenue+'，采购'+book.purchase+'，工资'+book.wages+
      '，维修'+book.maintenance+'，税'+book.tax+'，利润'+lot.lastProfit+'元。'});
-  effects.push({kind:'cash',amount:lot.lastProfit,label:'商铺净结算：'+typ.name+' / '+lot.title});
+  effects.push({kind:'cash',amount:lot.lastProfit,label:'商铺营业净结算：'+typ.name+' / '+lot.title});
+  if(b.mode==='underground')events.push({type:'business.risky',title:'高风险经营记录',
+    text:lot.title+'出现未经许可的经营活动，留有可供依法调查的经营记录。',
+    lot:lot.id,severity:2,actor:'player'});
  }
  return {events,effects,books:[...books.values()],total:[...books.values()].reduce((n,x)=>n+x.revenue-x.expenses,0)};
 }
