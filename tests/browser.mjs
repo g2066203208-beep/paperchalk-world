@@ -642,6 +642,10 @@ await run('national-atlas-real-street-building-and-road-journey',{viewport:{widt
  assert.ok(overview.chunks<=36,'national map must not materialize millions of tiles');
  await page.screenshot({path:'artifacts/national-01-country-overview.png',fullPage:true});
  await page.locator('[data-nation-center="me"]').click();
+ await page.locator('[data-nation-scene="street"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.nation.snapshot())).mode,'map','snapshot should distinguish street stage from map');
+ await page.screenshot({path:'artifacts/national-02-street-level-facades.png',fullPage:true});
+ await page.locator('[data-nation-center="me"]').click();
  const target=await page.evaluate(async()=>{
   const {buildingAt,interiorFor}=await import('./nation/world-model.js');
   const b=buildingAt(938,2049,0,window.__OFFICE__.world().slices.estates);
@@ -684,6 +688,8 @@ await run('national-atlas-mobile-touch-and-offshore-fairways',{viewport:{width:3
  assert.ok((await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth))<=3,'no phone horizontal overflow');
  await page.screenshot({path:'artifacts/national-05-country-mobile.png',fullPage:true});
  await page.locator('[data-nation-center="me"]').tap();
+ await page.locator('[data-nation-scene="street"]').tap();
+ await page.screenshot({path:'artifacts/national-06-street-mobile-elevation.png',fullPage:true});
  const before=await page.evaluate(()=>window.__OFFICE__.world().slices.nation.position);
  await page.locator('[data-nation-step="1,0"]').tap();
  const after=await page.evaluate(()=>window.__OFFICE__.world().slices.nation.position);
