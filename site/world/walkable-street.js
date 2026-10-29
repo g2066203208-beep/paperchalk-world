@@ -5,6 +5,7 @@
  * Only visible pedestrians and vehicles are animated; no country-wide DOM.
  */
 import {regionAt,terrainAt,FACILITY_TYPES} from './national-atlas.js';
+export {interiorFor} from './interiors.js';
 export const STREET_W=960,STREET_H=600;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const rnd=(a,b,salt=0)=>{
@@ -70,19 +71,6 @@ export function findStreetPath(start,end,buildings){
  return slim;
 }
 
-export function interiorFor(b){
- const seed=Math.floor(rnd(b.worldX+b.x,b.worldY+b.y,701)*9999);
- const w=13+seed%5,h=9+Math.floor(seed/6)%4;
- const room=/(矿|厂|场|站|坞|仓|铁路|煤|工业)/.test(b.name)?'workshop':
-  /(店|市|铺|餐|咖啡|鱼|银行|报社)/.test(b.name)?'store':
-  /(学校|医院|诊所)/.test(b.name)?'civic':'home';
- const rooms=room==='workshop'?['生产作业区','装卸入口','值班室','工具库']:
- room==='store'?['顾客区','货架','后仓','收银处']:
- room==='civic'?['前台','服务室','休息区','档案室']:['客厅','厨房','卧室','储物间'];
- return {id:b.id,kind:b.name,street:b.street,room,rooms,width:w,height:h,
-  fixtureSeed:seed,layout:rooms.map((name,i)=>({id:b.id+'-room-'+i,name,
-   x:i%2===0?8:52,y:Math.floor(i/2)===0?13:57,w:40,h:37}))};
-}
 function rect(ctx,x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(x,y,w,h);}
 function text(ctx,label,x,y,size=12,color='#f8ead5'){
  ctx.font='bold '+size+'px sans-serif';ctx.textAlign='center';ctx.lineWidth=3;ctx.strokeStyle='#1b2935';
