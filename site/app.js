@@ -1,9 +1,11 @@
 import {TYPES,generateRig,validateRig,poseRig,bounds,findBone,rigToJSON,clamp} from './rig.js';
+import {buildEnvelope} from './surface.js';
+import {paintSurface,pathsToSVG} from './surface-renderer.js';
 const $=s=>document.querySelector(s);
 const cv=$('#rig-canvas'),wrap=$('#canvas-wrap'),ctx=cv.getContext('2d');
 const colors={core:'#8ed7cc',spine:'#8ed7cc',head:'#e9b4ae',leg:'#e9c58e',arm:'#e9c58e',tail:'#aaaedb'};
 const names={core:'身体核心',spine:'脊柱',head:'头部结构',arm:'前肢 / 手臂',leg:'支撑肢体',tail:'尾椎'};
-const state={type:'quadruped',seed:2048,size:100,limbs:100,playing:true,labels:false,ghost:true,zoom:1,rig:null,pose:null,selected:null,drag:null,time:0,last:0,camera:null,dirty:true};
+const state={type:'quadruped',seed:2048,size:100,limbs:100,playing:true,labels:false,ghost:true,zoom:1,rig:null,pose:null,selected:null,drag:null,time:0,last:0,camera:null,dirty:true,lastPaint:0,surface:null,surfaceOn:true,bonesOn:true,thickness:1.15,blend:12};
 function labelMessage(text){$('#message').textContent=text;}
 function readControls(){
  state.size=Number($('#size-range').value);
@@ -17,7 +19,7 @@ function rebuild(){
  readControls();
  state.rig=generateRig(state.type,state.seed,{size:state.size,limbs:state.limbs});
  const check=validateRig(state.rig);
- state.drag=null;state.selected=null;state.time=0;state.dirty=true;
+ state.drag=null;state.selected=null;state.time=0;state.dirty=true;state.surface=null;
  state.zoom=1;
  $('#stat-nodes').textContent=check.bones;
  $('#stat-chains').textContent=check.chains;
@@ -177,6 +179,9 @@ function drawAnnotations(camera){
 function render(now){
  requestAnimationFrame(render);
  if(!state.playing&&!state.drag&&!state.dirty)return;
+ // Live implicit contours are CPU-evaluated; cap redrawing at ~25 FPS.
+ if(state.playing&&!state.dirty&&!state.drag&&now-state.lastPaint<40)return;
+ state.lastPaint=now;
  state.dirty=false;
  const dt=state.last?Math.min(.05,(now-state.last)/1000):0;state.last=now;
  if(state.playing&&!state.drag)state.time+=dt;
@@ -188,9 +193,21 @@ function render(now){
  originRulers(camera);
  const pose=poseRig(state.rig,state.time,{play:state.playing,drag:state.drag});
  state.pose=pose;
- if(state.ghost)drawBoneLines(poseRig(state.rig,0,{play:false}),camera,true);
- drawBoneLines(pose,camera);
- drawSkeletonNodes(pose,camera);
+ if(state.surfaceOn){
+  state.surface=buildEnvelope(state.rig,pose,{
+   thickness:state.thickness,blend:state.blend,step:3
+  });
+  const rings=paintSurface(ctx,state.surface,camera,{opacity:1});
+  $('#contour-count').textContent=String(rings);
+ }else{
+  state.surface=null;
+  $('#contour-count').textContent='—';
+ }
+ if(state.bonesOn){
+  if(state.ghost)drawBoneLines(poseRig(state.rig,0,{play:false}),camera,true);
+  drawBoneLines(pose,camera);
+  drawSkeletonNodes(pose,camera);
+ }
  drawAnnotations(camera);
  $('#anim-progress').style.width=(state.time*.85%1*100).toFixed(1)+'%';
  $('#zoom-label').textContent=Math.round(state.zoom*100)+'%';
@@ -257,6 +274,16 @@ $('#play-button').addEventListener('click',()=>{
 });
 $('#labels-switch').addEventListener('change',e=>{state.labels=e.target.checked;state.dirty=true;});
 $('#ghost-switch').addEventListener('change',e=>{state.ghost=e.target.checked;state.dirty=true;});
+$('#surface-switch').addEventListener('change',e=>{state.surfaceOn=e.target.checked;state.dirty=true;});
+$('#bones-switch').addEventListener('change',e=>{state.bonesOn=e.target.checked;state.dirty=true;});
+$('#thickness-range').addEventListener('input',e=>{
+ state.thickness=Number(e.target.value)/100;
+ $('#thickness-output').textContent=e.target.value+'%';state.dirty=true;
+});
+$('#blend-range').addEventListener('input',e=>{
+ state.blend=Number(e.target.value);
+ $('#blend-output').textContent=e.target.value+' u';state.dirty=true;
+});
 $('#fit-view').addEventListener('click',()=>{state.zoom=1;state.dirty=true;labelMessage('视图已适配');});
 function download(name,blob){
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;
@@ -264,11 +291,11 @@ function download(name,blob){
 }
 function currentName(ext){return 'bonelab-'+state.type+'-'+state.seed+'.'+ext;}
 $('#export-json').addEventListener('click',()=>{
- download(currentName('json'),new Blob([rigToJSON(state.rig)],{type:'application/json;charset=utf-8'}));
+ download(currentName('json'),new Blob([JSON.stringify({...JSON.parse(rigToJSON(state.rig)),skin:{method:'smooth-capsule-sdf',thickness:state.thickness,blend:state.blend}},null,2)],{type:'application/json;charset=utf-8'}));
  labelMessage('已导出完整父子层级 / 骨长 JSON');
 });
 function svgScene(){
- const b=bounds(state.rig,state.pose),padding=35;
+ const b=bounds(state.rig,state.pose),padding=80;
  const minX=b.minX-padding,minY=b.minY-padding,w=b.maxX-b.minX+padding*2,h=b.maxY-b.minY+padding*2;
  const lines=state.rig.bones.filter(node=>node.parent).map(node=>{
   const a=state.pose.get(node.parent),c=state.pose.get(node.id),color=colors[node.group]||colors.spine;
@@ -280,8 +307,11 @@ function svgScene(){
   return '<circle cx="'+pt.x+'" cy="'+pt.y+'" r="'+Math.max(2,node.radius*.46)+
    '" fill="'+color+'" stroke="#23303a" stroke-width="1"/>';
  }).join('');
+ const surface=state.surfaceOn?buildEnvelope(state.rig,state.pose,{thickness:state.thickness,blend:state.blend,step:2.5}):null;
  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="'+minX+' '+minY+' '+w+' '+h+
-  '" width="'+Math.round(w*3)+'" height="'+Math.round(h*3)+'">'+lines+nodes+'</svg>';
+  '" width="'+Math.round(w*3)+'" height="'+Math.round(h*3)+'">'+
+  (surface?pathsToSVG(surface):'')+
+  (state.bonesOn?lines+nodes:'')+'</svg>';
 }
 $('#export-svg').addEventListener('click',()=>{
  download(currentName('svg'),new Blob([svgScene()],{type:'image/svg+xml;charset=utf-8'}));
@@ -297,7 +327,9 @@ window.__BONE_LAB__={
  get rig(){return state.rig;},
  get pose(){return state.pose;},
  get camera(){return state.camera;},
- get state(){return {type:state.type,seed:state.seed,selected:state.selected,playing:state.playing,zoom:state.zoom,dragging:!!state.drag};},
+ get surface(){return state.surface;},
+ get skin(){return {enabled:state.surfaceOn,showBones:state.bonesOn,thickness:state.thickness,blend:state.blend};},
+ get state(){return {type:state.type,seed:state.seed,selected:state.selected,playing:state.playing,zoom:state.zoom,dragging:!!state.drag,surfaceOn:state.surfaceOn,contours:state.surface?.contours.length??0};},
  generate:(type,seed)=>{state.type=type;$('#seed-input').value=String(seed);rebuild();return state.rig;},
  inspect:()=>validateRig(state.rig)
 };
