@@ -640,6 +640,13 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  const after=await page.evaluate(()=>window.__OFFICE__.atlas.position());
  assert.equal(after.x,before.x+1,'real adjacent coordinate traversal');
  const buildings=page.locator('[data-atlas-enter]');
+ const site=await page.evaluate(async()=>{
+  const {facilitiesAt}=await import('./world/national-atlas.js');
+  for(let yy=109;yy<=115;yy++)for(let xx=121;xx<=129;xx++)if(facilitiesAt(xx,yy).length)return {x:xx,y:yy};
+  return null;
+ });
+ assert.ok(site,'national atlas must contain buildings nearby');
+ await page.locator('[data-atlas-cell="'+site.x+','+site.y+'"]').click();
  await buildings.first().waitFor({timeout:10000});
  await buildings.first().click();
  assert.ok(await page.locator('.national-interior').isVisible());
