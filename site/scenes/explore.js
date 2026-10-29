@@ -52,7 +52,7 @@ function selectCrowd(world,venue){
 function actorMarkup(p,i,initial=false){
  const color=['#7d9fa1','#ac837e','#baa27d','#708d9b','#979580'][i%5];
  const [stillX,y]=pedestrianLanes[i%pedestrianLanes.length];
- const serial=Number(String(p.id).replace(/\\D/g,''))||0;
+ const serial=Number(String(p.id).replace(/\D/g,''))||0;
  const speed=48+(serial%7)*5; // screen pixels/second, not a tiny animation about one spot
  const direction=i%2===0?'ltr':'rtl';
  const delay=initial?0:(i*1.65+(serial%5)*.28);
