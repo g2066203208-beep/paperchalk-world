@@ -8,15 +8,30 @@
 .explore-stage .explore-door:hover{background:#e5c58a23}
 .explore-stage .explore-door:after{content:'›';display:block!important;position:absolute;right:5px;bottom:8px;background:#283644ad;border:1px solid #e9d4b5;color:#ffe6bd;font-size:20px;padding:1px 7px;opacity:0;transition:opacity .2s}
 .explore-stage .explore-door:hover:after,.explore-stage .explore-door:focus-visible:after{opacity:1}
-.explore-stage .city-walker{z-index:3;animation:street-walk var(--stride,8s) ease-in-out var(--walk-delay,0s) infinite alternate;will-change:transform}
-.explore-stage .city-walker svg{animation:walker-step .45s ease-in-out infinite alternate;filter:drop-shadow(1px 3px 2px #10202e70)}
-.explore-stage .city-walker.entering{opacity:0;transform:translate(-110px,-88%);transition:opacity .5s,transform .5s}
-.explore-stage .city-walker.departing{opacity:0;transform:translate(110px,-88%);transition:opacity .5s,transform .5s}
-@keyframes street-walk{
-  0%{translate:-34px -2px}
-  35%{translate:0px 0px}
-  70%{translate:35px -1px}
-  100%{translate:66px -2px}
+/* One-way pass: every pedestrian starts outside one edge and exits the other.
+   Compositor translate is used instead of changing left every frame. */
+.explore-stage .city-walker{
+ z-index:3;left:-72px;top:var(--walk-y);
+ animation:street-pass-ltr var(--walk-duration,24s) linear var(--walk-delay,0s) infinite;
+ will-change:translate;
+}
+.explore-stage .city-walker.walker-rtl{
+ left:calc(100% + 72px);
+ animation-name:street-pass-rtl;
+}
+.explore-stage .city-walker .walker-figure{
+ width:100%;height:100%;transform:scaleX(var(--facing,1));
+}
+.explore-stage .city-walker svg{
+ animation:walker-step .45s ease-in-out infinite alternate;
+ filter:drop-shadow(1px 3px 2px #10202e70);
+}
+.explore-stage .city-walker:focus-visible{animation-play-state:paused}
+@keyframes street-pass-ltr{
+ from{translate:0 0}to{translate:var(--walk-distance,1440px) 0}
+}
+@keyframes street-pass-rtl{
+ from{translate:0 0}to{translate:calc(-1 * var(--walk-distance,1440px)) 0}
 }
 @keyframes walker-step{0%{transform:translateY(0) rotate(-2deg)}100%{transform:translateY(-4px) rotate(2deg)}}
 .explore-root .explore-dialogue{position:absolute;z-index:13;bottom:4%;left:10%;right:10%;max-width:900px;margin:auto;display:grid;grid-template-columns:50px minmax(0,1fr) minmax(150px,32%);gap:15px;align-items:center;background:#f3e7d4;color:#1e2c38;border:3px solid #1e303d;box-shadow:7px 8px 0 #b14952;padding:13px 15px;animation:dialogue-lift .23s ease-out both}
@@ -176,3 +191,10 @@
  .prologue-foot button{min-height:25px;padding:4px 7px;font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){.prologue-presentation{animation:none}}
+
+/* Motion-sensitive players see stationary, still-interactive residents on the pavement,
+   never a blank street caused by actors parked outside the clipping bounds. */
+@media(prefers-reduced-motion:reduce){
+ .explore-stage .city-walker{left:var(--walk-still-x)!important;translate:none!important;animation:none!important}
+ .explore-stage .city-walker .walker-figure svg{animation:none!important}
+}

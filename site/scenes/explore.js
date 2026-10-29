@@ -30,7 +30,8 @@ const desk=[
  ['newspaper','newspaper.svg','inspect','newspaper',36,88,12,'旧港报纸']
 ];
 const sceneOptions=['office','alley','market','labor','docks'];
-const positions=[[19,80],[35,84],[67,82],[86,83],[52,83]];
+const pedestrianLanes=[[19,80],[35,83],[67,78],[86,84],[52,81]];
+const WALKER_CLEARANCE=72; // whole body must be beyond the edge before recycling
 function dayStamp(world){
  const raw=clockLabel(world.day,world.slices.clock.shift);
  return '<div class="scene-time-ribbon"><strong>DAY '+String(world.day).padStart(2,'0')+'</strong>'+
@@ -48,19 +49,24 @@ function selectCrowd(world,venue){
  const matches=world.slices.population.people.filter(p=>(shift===1?p.work:shift===2?p.leisure:p.home)===cell);
  return matches.slice(0,Math.min(5,matches.length));
 }
-function actorMarkup(p,i){
+function actorMarkup(p,i,initial=false){
  const color=['#7d9fa1','#ac837e','#baa27d','#708d9b','#979580'][i%5];
- const [x,y]=positions[i%positions.length];
- const speed=7+(Number(p.id.replace(/\D/g,''))%5)*1.8;
- return '<button type="button" class="city-walker" data-explore-type="talk-citizen" data-explore-id="'+escape(p.id)+'"'+
- ' aria-label="和'+escape(p.name)+'交谈" style="--walk-x:'+x+'%;--walk-y:'+y+'%;--coat:'+color+';--stride:'+speed+'s;--walk-delay:-'+((i+1)*2.1)+'s">'+
- '<svg viewBox="0 0 64 128" role="img" aria-hidden="true"><ellipse cx="30" cy="123" rx="27" ry="6" fill="#1c2934" opacity=".28"/>'+
+ const [stillX,y]=pedestrianLanes[i%pedestrianLanes.length];
+ const serial=Number(String(p.id).replace(/\D/g,''))||0;
+ const speed=48+(serial%7)*5; // screen pixels/second, not a tiny animation about one spot
+ const direction=i%2===0?'ltr':'rtl';
+ const delay=initial?0:(i*1.65+(serial%5)*.28);
+ const phase=initial?((i*.207+.13+(serial%11)*.009)%1):0;
+ return '<button type="button" class="city-walker walker-'+direction+'" data-explore-type="talk-citizen" data-explore-id="'+escape(p.id)+'"'+
+ ' data-walk-speed="'+speed+'" data-walk-phase="'+phase+'" data-walk-stagger="'+delay+'"'+
+ ' aria-label="和'+escape(p.name)+'交谈" style="--walk-y:'+y+'%;--walk-still-x:'+stillX+'%;--coat:'+color+';--facing:'+(direction==='ltr'?'1':'-1')+'">'+
+ '<div class="walker-figure"><svg viewBox="0 0 64 128" role="img" aria-hidden="true"><ellipse cx="30" cy="123" rx="27" ry="6" fill="#1c2934" opacity=".28"/>'+
  '<path d="M19 65L12 119H27L33 90L39 121H53L47 65" fill="#293947" stroke="#1d2b36" stroke-width="4"/>'+
  '<path d="M18 44L45 43L53 84H10Z" fill="var(--coat)" stroke="#263645" stroke-width="4"/>'+
  '<path d="M27 38L28 51L40 50L40 39" fill="#cba086"/>'+
- '<path d="M18 17Q33 -6 49 17L46 38Q31 56 19 38Z" fill="#edc4a7" stroke="#2a3c47" stroke-width="3"/>'+
+ '<path d="M18 17Q33 -6 49 17L54 29L46 36Q31 56 19 38Z" fill="#edc4a7" stroke="#2a3c47" stroke-width="3"/>'+
  '<path d="M16 19L18 7L32 0L49 8L53 24L46 17L37 19L25 12Z" fill="#263846"/>'+
- '<path d="M25 30h5M41 30h5" stroke="#263742" stroke-width="3"/></svg>'+
+ '<path d="M41 29h5" stroke="#263742" stroke-width="3"/></svg></div>'+
  '<span>'+escape(p.name)+' · '+escape(p.occupation)+'</span></button>';
 }
 function physicalProps(){
@@ -115,23 +121,46 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
        '<button type="button" class="prologue-continue" data-prologue-step="next">'+(p.at===11?'走进这座城 ›':'继续 ›')+'</button>')+
      '<button type="button" class="prologue-skip" data-prologue-step="skip">跳过开场</button></div>';
  }
- function renderCrowd(w,force=false){
+ function syncWalkGeometry(){
+   const stage=root.querySelector('.explore-stage');
+   const container=stage?.querySelector('.explore-crowd');
+   if(!container)return;
+   const width=stage.clientWidth||root.clientWidth||window.innerWidth||1200;
+   const distance=width+WALKER_CLEARANCE*2;
+   for(const walker of container.querySelectorAll('.city-walker')){
+     const speed=Number(walker.dataset.walkSpeed)||55;
+     const duration=distance/speed;
+     const phase=Number(walker.dataset.walkPhase)||0;
+     const stagger=Number(walker.dataset.walkStagger)||0;
+     walker.style.setProperty('--walk-distance',distance+'px');
+     walker.style.setProperty('--walk-duration',duration.toFixed(3)+'s');
+     walker.style.setProperty('--walk-delay',(phase>0?-duration*phase:stagger).toFixed(3)+'s');
+   }
+ }
+ function renderCrowd(w,initial=false){
    const container=root.querySelector('.explore-crowd');if(!container)return;
    const next=selectCrowd(w,venue),wanted=new Set(next.map(p=>p.id));
    for(const button of Array.from(container.querySelectorAll('.city-walker'))){
-     if(!wanted.has(button.dataset.exploreId)&&!button.classList.contains('departing')){
-       button.classList.add('departing');
-       setTimeout(()=>button.remove(),520);
+     if(!wanted.has(button.dataset.exploreId)&&!button.dataset.retiring){
+       // Finish the current one-way crossing, then remove the citizen offscreen.
+       if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches){button.remove();continue;}
+       button.dataset.retiring='1';button.disabled=true;button.setAttribute('aria-hidden','true');
      }
    }
    next.forEach((p,i)=>{
-     if(!container.querySelector('[data-explore-id="'+p.id+'"]')){
-       const temp=document.createElement('div');temp.innerHTML=actorMarkup(p,i);
-       const b=temp.firstElementChild;b.classList.add('entering');container.append(b);
-       requestAnimationFrame(()=>b.classList.remove('entering'));
+     if(!Array.from(container.querySelectorAll('.city-walker:not([data-retiring])')).some(x=>x.dataset.exploreId===p.id)){
+       const temp=document.createElement('div');temp.innerHTML=actorMarkup(p,i,initial);
+       container.append(temp.firstElementChild);
      }
    });
+   syncWalkGeometry();
  }
+ root.addEventListener('animationiteration',event=>{
+   const walker=event.target;
+   if(walker.classList?.contains('city-walker')&&walker.dataset.retiring&&event.animationName.startsWith('street-pass-')){
+     walker.remove();
+   }
+ });
  function renderDailyCues(w){
    const stage=root.querySelector('.explore-stage');if(!stage)return;
    const band=stage.querySelector('.scene-time-ribbon');
@@ -283,8 +312,9 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    if(result.ok){const ev=result.events?.find(x=>x.source==='origin');if(ev)say(ev.title,ev.text);}
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&routeOpen){e.preventDefault();closeRoute();}});
- function show(){visible=true;root.hidden=false;render();onToggle?.(true);}
+ function show(){visible=true;root.hidden=false;render();syncWalkGeometry();onToggle?.(true);}
  function hide(){visible=false;root.hidden=true;closeRoute();onToggle?.(false);}
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(syncWalkGeometry).observe(root);
  buildScene();shift=readWorld().slices.clock.shift;
  return Object.freeze({render,show,hide,isVisible:()=>visible,say,current:()=>readWorld().slices.origin.venue,openTravel:openRoute});
 }
