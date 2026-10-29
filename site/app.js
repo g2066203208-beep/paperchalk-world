@@ -6,8 +6,7 @@ import {renderCityBook} from './ui/city-book.js';
 import {renderOriginBook} from './ui/origin-book.js';
 import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
-import {createExploreLayer} from './scenes/explore.js';
-import {createAtlasExplorer} from './world/atlas-explorer.js';
+import {createGameSceneRegistry} from './scenes/scene-registry.js';
 import {todayStory,activeStoryBeat,SEASON_ARCS,FINAL_DAY} from './systems/campaign.js';
 import {clockLabel} from './systems/clock.js';
 const $=id=>document.getElementById(id);
@@ -18,7 +17,7 @@ let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'
 const WORLD_STORE='night-office-world-v1';
 let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
-let explorer=null,atlas=null;
+let explorer=null,atlas=null,sceneManager=null;
 let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
 const originTabs=new Set(['society','recruitment','politics']);
 const cityTabs=new Set(['clock','estates','industry','transport','citizens','operations','contacts','justice']);
@@ -105,7 +104,7 @@ function performWorldCommand(action){
  }
  state=next;world=stagedWorld;refresh();repaintPanel();
  const message=result.events[0]?.text||'行动完成';
- if(action.module!=='origin'&&action.module!=='dialogue'&&action.module!=='campaign'){
+ if(!['origin','dialogue','campaign','geography'].includes(action.module)){
    if(result.events.length)stage.speak(result.events[0].title||'办公室消息',message);
    else stage.cue('paper');
    toast(message);
@@ -353,7 +352,7 @@ $('game').addEventListener('click',e=>{
 });
 $('open-reports').addEventListener('click',()=>{fileTab='reports';panel('reports');});
 $('help-btn').addEventListener('click',()=>panel('help'));
-$('national-atlas-open').addEventListener('click',()=>atlas.open());
+$('national-atlas-open').addEventListener('click',()=>sceneManager.activate('country'));
 $('close-panel').addEventListener('click',closePanel);
 $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closePanel();});
 document.addEventListener('keydown',e=>{
@@ -461,7 +460,7 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.cityIntel){performWorldCommand({module:'contacts',type:'ask-informant'});return;}
  if(node.dataset.cityBribe){performWorldCommand({module:'contacts',type:'bribe'});return;}
  if(node.dataset.cityCounsel){performWorldCommand({module:'justice',type:'counsel',caseId:node.dataset.cityCounsel});return;}
- if(node.dataset.openAtlas){closePanel();atlas.open();return;}
+ if(node.dataset.openAtlas){closePanel();sceneManager.activate('country');return;}
  if(node.dataset.worldBack){fileTab='dossiers';currentPanel='reports';repaintPanel();return;}
  if(node.dataset.worldTab){fileTab=node.dataset.worldTab;currentPanel='reports';repaintPanel();stage.cue('paper');return;}
  if(node.dataset.worldCell){worldUI.cell=node.dataset.worldCell;repaintPanel();return;}
@@ -512,28 +511,29 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.helpClose){closePanel();}
 });
 const stage=createStage(document.querySelector('.scene'));
-explorer=createExploreLayer(document.querySelector('.scene'),{
-  readWorld:()=>world,
-  readLegacy:()=>state,
-  command:performWorldCommand,
-  cue:(tone)=>stage.cue(tone),
-  openPanel:(kind,tab)=>{
-    if(tab){fileTab=tab;panel('reports');}
-    else panel(kind);
-  },
-  onToggle:shown=>{
-    const button=$('explore-toggle');if(button){
-      button.setAttribute('aria-pressed',String(shown));
-      button.textContent=shown?'旧桌面':'探索街区';
-    }
-  }
+const scenes=createGameSceneRegistry({
+ host:document.querySelector('.scene'),
+ readWorld:()=>world,
+ readLegacy:()=>state,
+ command:performWorldCommand,
+ cue:(tone)=>stage.cue(tone),
+ openPanel:(kind,tab)=>{
+   if(tab){fileTab=tab;panel('reports');}
+   else panel(kind);
+ },
+ onToggle:shown=>{
+   const button=$('explore-toggle');
+   button.setAttribute('aria-pressed',String(shown));
+   button.textContent=shown?'旧桌面':'探索街区';
+ }
 });
+explorer=scenes.explorer;atlas=scenes.atlas;sceneManager=scenes.manager;
 $('explore-toggle').addEventListener('click',()=>{
-  if(explorer.isVisible())explorer.hide();else explorer.show();
+ if(sceneManager.active==='country'){sceneManager.back();return;}
+ if(explorer.isVisible())explorer.hide();else explorer.show();
 });
 refresh();
-atlas=createAtlasExplorer({readWorld:()=>world,openPanel:panel});
-window.__OFFICE__={atlas,version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,open:panel,close:closePanel,
+window.__OFFICE__={atlas,sceneManager,version:6,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,open:panel,close:closePanel,
  dispatch:(type,...args)=>{
   const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
   type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):

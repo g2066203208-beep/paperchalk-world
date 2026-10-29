@@ -56,10 +56,11 @@ const routeMap=(current,selected)=>'<div class="street-route-backdrop" data-rout
  return '<button class="street-route-place '+(active?'picked':'')+'" type="button" data-route-place="'+id+'" aria-pressed="'+active+'">'+
  '<div class="street-route-preview" aria-hidden="true">'+sceneArtwork(id)+'</div><div class="street-route-caption"><b>'+escape(def.name)+'</b><span>'+(here?'你正在这里':(i+1)+' · 前往')+'</span></div></button>';
  }).join('')+'</div>'+
- '<div class="street-route-foot"><p>旧港的街道并不安全；街上有真实工作、交易与生活着的人。</p>'+
+ '<div class="street-route-world-entry"><div><strong>自由步行探索城市</strong><p>进入可操作的街区，步行到建筑门口，走入独立编号的室内房间。</p></div><button type="button" data-route-walk="1">走进城市 ›</button></div>'+ 
+ '<div class="street-route-foot"><p>下方保留原剧情场景的路线选择。</p>'+
  '<button type="button" data-route-go="1" '+(selected===current?'disabled':'')+'>推门前往 · '+escape(SCENE_DEFS[selected]?.name||'')+'</button></div>'+
  '</section></div>';
-export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,onToggle,cue}){
+export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,openAtlas,onToggle,cue}){
  const root=document.createElement('section');root.className='explore-root';root.setAttribute('aria-label','可探索的夜港场景');
  host.appendChild(root);
  let visible=true,venue='',shift=-1,routeOpen=false,routeSelection='alley',dialogue=null;
@@ -129,7 +130,9 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    traffic?.destroy();traffic=null;
    root.innerHTML='<div class="explore-stage scene-'+venue+'"><div class="explore-visual">'+sceneArtwork(venue)+'</div>'+dayStamp(w)+
     '<div class="explore-crowd" aria-label="持续活动的街区行人"></div>'+
-    (venue==='office'?physicalProps()+scenicCalendar(w):'')+buttons+'<div class="scene-day-layer"></div>'+
+    (venue==='office'?physicalProps()+scenicCalendar(w):'')+buttons+
+    '<button type="button" class="world-walk-entry" data-route-walk="1"><span class="walk-entry-icon">▣</span><span><strong>走进真正的城市街道</strong><small>WASD自由步行 · 建筑进入 · 公路铁路航线</small></span></button>'+
+    '<div class="scene-day-layer"></div>'+
     '<span class="explore-location">'+escape(SCENE_DEFS[venue].name)+'</span>'+
     '<div class="explore-dialogue" hidden aria-label="场景内人物对话" role="group">'+
     '<div class="dialogue-sigil">✦</div><div class="dialogue-copy"><small class="dialogue-who"></small><p class="dialogue-line"></p></div>'+
@@ -202,6 +205,7 @@ export function createExploreLayer(host,{readWorld,readLegacy,command,openPanel,
    const place=e.target.closest('[data-route-place]');
    if(place){routeSelection=place.dataset.routePlace;updateRoute();return;}
    if(e.target.closest('[data-route-go]')){go();return;}
+   if(e.target.closest('[data-route-walk]')){if(routeOpen)closeRoute();openAtlas?.();return;}
    if(e.target.closest('[data-route-close]')){closeRoute();return;}
    if(e.target.closest('[data-talk-close]')){dialogue=null;traffic?.resumeCitizen();root.querySelector('.explore-dialogue').hidden=true;return;}
    if(e.target.closest('[data-scene-ending]')){
