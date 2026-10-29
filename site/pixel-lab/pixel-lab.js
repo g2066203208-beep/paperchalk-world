@@ -91,7 +91,7 @@ function candidate(target,current,p,action){
  if(action===0)return [p];
  if(action===1)return Array.from({length:Math.min(4,16-x)},(_,i)=>p+i).filter(valid);
  if(action===2)return Array.from({length:Math.min(4,16-y)},(_,i)=>p+16*i).filter(valid);
- if(action===3)return [p,p+1,p+16,p+17].filter(q=>q<256&&q%16>=x&&q//16>=y&&q%16<=x+1&&Math.floor(q/16)<=y+1&&valid(q));
+ if(action===3)return [p,p+1,p+16,p+17].filter(q=>q<256&&q%16>=x&&Math.floor(q/16)>=y&&q%16<=x+1&&Math.floor(q/16)<=y+1&&valid(q));
  const seen=new Set([p]),stack=[p],out=[];
  while(stack.length&&out.length<48){
   const q=stack.pop();
