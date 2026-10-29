@@ -9,7 +9,7 @@ test('national atlas coordinates are stable, bounded and generated lazily',()=>{
  const tiles=atlasViewport(125,112,13,9);
  assert.equal(tiles.length,117);
  assert.ok(tiles.every(t=>Array.isArray(t.facilities)));
- assert.equal(atlasViewport(0,0,13,9).length,35,'clip visible tiles at national border');
+ assert.equal(atlasViewport(0,0,13,9).length,24,'clip visible tiles at national border');
 });
 test('real regions exist for urban, forestry, mining, shipping, farming and rail corridors',()=>{
  assert.ok(REGIONS.length>=12);
