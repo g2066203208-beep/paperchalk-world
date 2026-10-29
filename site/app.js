@@ -292,7 +292,7 @@ function calendarPanel(){
  '<div class="daily-calendar-record"><small>'+clockLabel(state.day,world.slices.clock.shift)+'</small><strong>'+arcTitle+'</strong><p>'+ (episode?.title||'城市自由经营') +'</p>'+
  '<p>当日安排 '+progress.actionsToday+' / 2 · 街坊支持 '+progress.communityTrust+' · 可查证线索 '+progress.evidence+'</p>'+
  '<p>下一件事：'+(beat?beat.title+' · 在'+({office:'办公室',alley:'旧港背街',market:'清晨集市',labor:'旧厂就业所',docks:'旧港码头'}[beat.venue]||beat.venue)+'进行':'今天已无新的主线安排')+'</p>'+
- '<p>'+(arc?'本章区间：DAY '+arc.start+'—'+arc.end+'。未完成的现场事件一旦翻日历就会错过，请先到对应地点推进主线。':'主线已结束；你可以继续经营街区，并在右侧档案重读结局。')+'</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
+ '<p>'+(arc?'本章区间：DAY '+arc.start+'—'+arc.end+'。未完成的现场事件一旦翻日历就会错过，请先到对应地点推进主线。':'主线已结束；你可以继续经营街区，并在右侧档案重读结局。')+'</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button><button type="button" class="choice" data-world-tab="industry">查看产业经营</button>'+
  '<p>今天安排了 '+state.orders.length+' 项行动；电话'+(state.call.answered?'已经处理':'尚未处理')+'。翻页将结算收入、日常开支，以及街区关系变化。</p>'+
  '<button class="primary" type="button" data-next="1">翻过今天 · 听取明日汇报</button></div>'+
  '<div><div class="mini-title">成员今日状态</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
