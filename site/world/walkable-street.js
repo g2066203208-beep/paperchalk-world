@@ -6,6 +6,7 @@
  */
 import {regionAt,FACILITY_TYPES} from './national-atlas.js';
 import {createPixelStreetRenderer,drawPixelPerson,PIXEL_VIEW} from '../scenes/pixel/pixel-city-art.js';
+import {isOldHarborCell,oldHarborBuildings,OLD_HARBOR_WALKERS} from '../scenes/pixel/old-harbor-plaza.js';
 export {interiorFor} from './interiors.js';
 export const STREET_W=960,STREET_H=600;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -15,6 +16,7 @@ const rnd=(a,b,salt=0)=>{
 };
 const colors=['#bb8d74','#b2a18c','#a4aaa4','#a88181','#b8ac91','#8e9d99','#d0bca4','#bd9982'];
 export function streetBuildingsAt(x,y){
+ if(isOldHarborCell(x,y))return oldHarborBuildings();
  const kind=regionAt(x,y).biome,arr=FACILITY_TYPES[kind]||FACILITY_TYPES.town;
  const units=[],spacingX=158,spacingY=150;
  const rows=[0,1,2,3],cols=[0,1,2,3,4,5];
@@ -75,7 +77,9 @@ export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnt
  const art=createPixelStreetRenderer({x,y,buildings});
  const site={x,y,buildings,people:[]},source=readWorld()?.slices?.population?.people||[];
  for(let i=0;i<Math.min(30,source.length);i++){
-  const px=65+Math.floor(rnd(x+i,y,433)*840),py=100+Math.floor(rnd(y+i,x,347)*460);
+  const plaza=OLD_HARBOR_WALKERS[i%OLD_HARBOR_WALKERS.length];
+  const px=isOldHarborCell(x,y)?plaza[0]:65+Math.floor(rnd(x+i,y,433)*840);
+  const py=isOldHarborCell(x,y)?plaza[1]:100+Math.floor(rnd(y+i,x,347)*460);
   site.people.push({name:source[i].name,x:px,y:py,drift:i%11});
  }
  let player={x:clamp(initialPosition?.x??original?.x??124,10,950),y:clamp(initialPosition?.y??original?.y??100,10,590)};
