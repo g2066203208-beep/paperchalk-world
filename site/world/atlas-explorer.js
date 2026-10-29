@@ -1,4 +1,5 @@
 import {WORLD_WIDTH,WORLD_HEIGHT,WORLD_AREA,REGIONS,LINKS,terrainAt,facilitiesAt,regionAt,playerDistricts,atlasViewport,MODE_STYLE,routeBetween} from './national-atlas.js';
+import {createWalkableStreet,streetBuildingsAt,interiorFor} from './walkable-street.js';
 const STORAGE='night-harbor-country-position-v1';
 const escape=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -6,7 +7,7 @@ export function createAtlasExplorer({readWorld,openPanel}){
  let saved=null;try{saved=JSON.parse(localStorage.getItem(STORAGE)||'null')}catch{}
  let x=Number.isFinite(saved?.x)?clamp(saved.x,0,WORLD_WIDTH-1):125;
  let y=Number.isFinite(saved?.y)?clamp(saved.y,0,WORLD_HEIGHT-1):112;
- let inside=null,selected=null,mode='road',expanded=false;
+ let inside=null,selected=null,mode='road',expanded=false,walk=null;
  const layer=document.createElement('section');layer.className='national-explorer';layer.hidden=true;
  layer.setAttribute('aria-label','夜港国家地图与可进入地点');
  document.body.append(layer);
@@ -14,33 +15,40 @@ export function createAtlasExplorer({readWorld,openPanel}){
  const tileNames={sea:'海洋',river:'河流',mountain:'山岳',forest:'森林',fields:'农田',lake:'湖泊',urban:'城市',grass:'野地'};
  const shade={sea:'#385b75',river:'#6798ad',mountain:'#8e8477',forest:'#4a7866',fields:'#9eac7f',lake:'#6d9eb4',urban:'#ae9b87',grass:'#88977b'};
  function scene(){
-  const t=terrainAt(x,y),r=REGIONS.find(a=>a.id===t.regionId),places=facilitiesAt(x,y);
+  const t=terrainAt(x,y),r=REGIONS.find(a=>a.id===t.regionId),places=streetBuildingsAt(x,y);
   const lots=playerDistricts(readWorld()).filter(p=>p.x===x&&p.y===y);
   if(inside){
-   const kind=inside.kind;
-   const service=/(店|餐|咖啡|集市|鱼市|铺|报社)/.test(kind);
-   const industrial=/(矿|厂|场|林业|农|码头|站|船坞)/.test(kind);
-   return '<section class="national-interior"><div class="interior-ceiling"><span>'+escape(r.name)+' / '+escape(kind)+'</span><b>室内场景</b></div>'+
-   '<div class="interior-window"></div><div class="interior-floor"></div>'+
-   '<div class="interior-object desk" data-atlas-inspect="desk"><span>'+ (service?'收银台与货架':industrial?'控制台与工具':'服务台与登记册')+'</span></div>'+
-   '<div class="interior-object shelves" data-atlas-inspect="shelves"><span>'+ (service?'陈列商品':'储物区')+'</span></div>'+
-   '<div class="interior-object machine" data-atlas-inspect="machine"><span>'+ (industrial?'正在工作的设备':'当地设施')+'</span></div>'+
-   '<div class="interior-person" data-atlas-inspect="person"><span>值班人员</span></div>'+
-   '<button class="national-exit" data-atlas-leave="1">← 推门回到 '+escape(r.name)+' 的街道</button>'+
-   '<div class="interior-caption">每个地点拥有独立坐标、名称和可互动对象。此版内部空间为类别化程序场景，尚非独立手绘关卡。</div></section>';
+   const info=interiorFor(inside),world=readWorld();
+   const today=world?.slices?.clock?.shift||0,person=world?.slices?.population?.people?.[(info.fixtureSeed%80)];
+   const people=person?person.name+' · '+(today===1?'上班工作':today===2?'街区活动':today===0?'准备开门':'准备打烊'):'暂无值班记录';
+   return '<section class="national-floorplan" aria-label="'+escape(info.kind)+'的独立室内空间">'+
+    '<div class="national-floorplan-heading"><b>'+escape(info.kind)+'</b><span>'+escape(info.street)+' · 场景 '+escape(info.id)+'</span></div>'+
+    '<div class="national-floorplan-body" style="--floorseed:'+info.fixtureSeed+'">'+
+    info.layout.map((room,i)=>'<button type="button" class="national-room room-'+info.room+' room-'+i+
+     '" style="left:'+room.x+'%;top:'+room.y+'%;width:'+room.w+'%;height:'+room.h+'%" '+
+     'data-atlas-inspect="'+room.id+'"><span class="room-lamp"></span><strong>'+escape(room.name)+'</strong><small>进入调查 / 查看</small></button>').join('')+
+    '<div class="national-plan-player">你</div>'+
+    '</div><div class="national-interior-information">'+
+    '<p><b>场所状态：</b>'+escape(people)+'</p>'+
+    '<p><b>空间编号：</b>'+escape(info.id)+' · '+info.width+' × '+info.height+'米</p>'+
+    '<div class="interior-caption" role="status">点击房间调查。楼层、员工工作和货物装卸仍需与经营系统进一步打通。</div>'+
+    '<button class="national-exit" data-atlas-leave="1">← 出门返回实地街道</button></div></section>';
   }
-  return '<div class="national-local-title"><strong>'+escape(r.name)+'</strong><span>街道 / '+escape(tileNames[t.terrain])+' · '+x+' km E · '+y+' km S</span></div>'+
-  '<div class="national-neighborhood">'+
-  '<div class="national-distant"></div><div class="national-local-ground '+t.terrain+'"></div>'+
-  '<div class="national-local-road"></div>'+
-  places.map((p,i)=>'<button class="national-building national-building-'+i+'" data-atlas-enter="'+p.id+'" aria-label="进入'+escape(p.kind)+'">'+
-  '<span class="national-roof"></span><span class="national-facade"><i></i><i></i><i></i><i></i></span><strong>'+escape(p.kind)+'</strong></button>').join('')+
-  lots.map((p,i)=>'<button class="national-building national-estate" style="--building-i:'+i+'" data-atlas-estate="'+p.lot+'">'+
-  '<span class="national-roof"></span><span class="national-facade"><i></i><i></i></span><strong>'+escape(p.kind)+'</strong></button>').join('')+
-  '<div class="national-avatar" aria-label="玩家当前位置"><span>你</span></div></div>'+
-  '<div class="national-neighbor-actions">'+
-  [['北',0,-1],['西',-1,0],['东',1,0],['南',0,1]].map(([name,dx,dy])=>
-    '<button data-atlas-step="'+dx+','+dy+'" '+(!terrainAt(x+dx,y+dy)?'disabled':'')+'>'+name+' · 前往相邻 '+(terrainAt(x+dx,y+dy)?tileNames[terrainAt(x+dx,y+dy).terrain]:'边界')+'</button>').join('')+'</div>';
+  return '<div class="national-local-title"><strong>可以真正走动的街区：'+escape(r.name)+'</strong><span>坐标 '+x+','+y+' · '+escape(tileNames[t.terrain])+'</span></div>'+
+   '<div class="national-walk-zone"><canvas class="national-walk-canvas" aria-label="实时街道地图，方向键或WASD移动，点击建筑门口步行进入" tabindex="0"></canvas>'+
+   '<div class="national-walk-overlay"><b>W A S D / 方向键移动</b><span>点击道路移动 · 点建筑后走向门口</span></div>'+
+   '<div class="national-walk-buttons" aria-label="手机步行控制">'+
+   '<button data-walk-move="w" aria-label="向北步行">↑</button>'+
+   '<button data-walk-move="a" aria-label="向西步行">←</button>'+
+   '<button data-walk-move="s" aria-label="向南步行">↓</button>'+
+   '<button data-walk-move="d" aria-label="向东步行">→</button></div></div>'+
+   '<div class="national-site-heading"><b>这一街区的 '+places.length+' 栋独立编号建筑</b><span>点击建筑 · 角色步行到门前 · 进入室内</span></div>'+
+   '<div class="national-site-list">'+places.map(p=>'<button type="button" data-atlas-enter="'+escape(p.id)+'">'+
+   '<strong>'+escape(p.name)+'</strong><small>'+escape(p.street)+' · '+p.floors+'层</small></button>').join('')+'</div>'+
+   (lots.length?'<div class="national-lot-links"><b>与经营存档关联的地块</b>'+
+   lots.map(p=>'<button type="button" data-atlas-estate="'+escape(p.lot)+'">'+escape(p.kind)+' · 地契 '+escape(p.lot)+'</button>').join('')+'</div>':'')+
+   '<div class="national-neighbor-actions">'+[['北',0,-1],['西',-1,0],['东',1,0],['南',0,1]].map(([name,dx,dy])=>
+    '<button data-atlas-step="'+dx+','+dy+'" '+(!terrainAt(x+dx,y+dy)?'disabled':'')+'>'+name+' · 去相邻1公里区域</button>').join('')+'</div>';
  }
  function map(){
   const tiles=atlasViewport(x,y,13,9);
@@ -57,6 +65,7 @@ export function createAtlasExplorer({readWorld,openPanel}){
  }
  function render(){
   if(layer.hidden)return;
+  walk?.destroy();walk=null;
   const r=regionAt(x,y),t=terrainAt(x,y);
   const station=REGIONS.find(p=>p.id===selected)||r;
   const connections=LINKS.filter(l=>l.a===r.id||l.b===r.id).filter(l=>l.mode===mode);
@@ -76,23 +85,25 @@ export function createAtlasExplorer({readWorld,openPanel}){
    '<small>按站点网络通行，不是凭空从一张场景切换到另一张；长距离步行可沿局部格子逐格探索。</small></div></div>'+
    '<div class="national-scene-column">'+scene()+
    '<div class="national-footer"><b>所在区域：'+escape(r.name)+'</b><span>'+escape(tileNames[t.terrain])+
-   ' · 海拔'+t.elevation+'米</span><span>附近地点：'+facilitiesAt(x,y).length+'处</span></div></div></div>';
+   ' · 海拔'+t.elevation+'米</span><span>附近建筑：'+streetBuildingsAt(x,y).length+'栋</span></div></div></div>';
+  const canvas=layer.querySelector('.national-walk-canvas');
+  if(canvas)walk=createWalkableStreet(canvas,{x,y,readWorld,onEnter(b){inside=b;render();}});
  }
  function enter(){layer.hidden=false;document.body.classList.add('national-exploring');render();}
- function close(){layer.hidden=true;document.body.classList.remove('national-exploring');}
+ function close(){walk?.destroy();walk=null;layer.hidden=true;document.body.classList.remove('national-exploring');}
  layer.addEventListener('click',event=>{
   const b=event.target.closest('button,[data-atlas-inspect]');if(!b)return;
   if(b.dataset.atlasClose){close();return;}
   if(b.dataset.atlasLeave){inside=null;render();return;}
   if(b.dataset.atlasCell){const [nx,ny]=b.dataset.atlasCell.split(',').map(Number);x=nx;y=ny;inside=null;save();render();return;}
   if(b.dataset.atlasStep){const [dx,dy]=b.dataset.atlasStep.split(',').map(Number);x=clamp(x+dx,0,WORLD_WIDTH-1);y=clamp(y+dy,0,WORLD_HEIGHT-1);save();render();return;}
-  if(b.dataset.atlasEnter){inside=facilitiesAt(x,y).find(p=>p.id===b.dataset.atlasEnter);render();return;}
+  if(b.dataset.atlasEnter){walk?.goTo(b.dataset.atlasEnter);return;}
   if(b.dataset.atlasEstate){openPanel('reports','estates');close();return;}
   if(b.dataset.atlasMode){mode=b.dataset.atlasMode;render();return;}
   if(b.dataset.atlasStation){selected=b.dataset.atlasStation;render();return;}
   if(b.dataset.atlasTravel){const target=REGIONS.find(r=>r.id===selected);if(!target||!routeBetween(regionAt(x,y).id,target.id,mode))return;x=target.x;y=target.y;inside=null;save();render();return;}
-  if(b.dataset.atlasInspect){const label=b.querySelector('span')?.textContent||'内部设施';const caption=layer.querySelector('.interior-caption');if(caption)caption.textContent=label+'：这里属于 '+inside.kind+'，可以查看实地配置。专属行业操作仍通过产业经营系统执行。';}
+  if(b.dataset.atlasInspect){const label=b.querySelector('strong')?.textContent||'房间';const caption=layer.querySelector('.interior-caption');if(caption)caption.textContent='你检查了 '+label+'。这是 '+inside.kind+' 的独立编号空间；生产和交易仍须接入真正的NPC、库存系统。';}
  });
- document.addEventListener('keydown',event=>{if(layer.hidden)return;if(event.key==='Escape'){inside? (inside=null,render()):close();return;}if(inside||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];x=clamp(x+dir[0],0,WORLD_WIDTH-1);y=clamp(y+dir[1],0,WORLD_HEIGHT-1);save();render();});
- return {open:enter,close,isVisible:()=>!layer.hidden,position:()=>({x,y,inside:inside?.id||null}),element:layer};
+ document.addEventListener('keydown',event=>{if(layer.hidden)return;if(event.key==='Escape'){inside? (inside=null,render()):close();return;}if(inside||!event.ctrlKey||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];x=clamp(x+dir[0],0,WORLD_WIDTH-1);y=clamp(y+dir[1],0,WORLD_HEIGHT-1);save();render();});
+ return {open:enter,close,isVisible:()=>!layer.hidden,position:()=>({x,y,inside:inside?.id||null,street:walk?.snapshot()||null}),element:layer};
 }
