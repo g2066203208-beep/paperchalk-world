@@ -285,13 +285,14 @@ function chapterJournal(){
 }
 function calendarPanel(){
  const episode=todayStory(world),beat=activeStoryBeat(world),progress=world.slices.campaign;
- const arc=SEASON_ARCS.find(x=>state.day>=x.start&&state.day<=x.end)||SEASON_ARCS[SEASON_ARCS.length-1];
+ const arc=SEASON_ARCS.find(x=>state.day>=x.start&&state.day<=x.end);
+ const arcTitle=arc?.title||'主线终章之后 · 自由经营';
  return header('THE MORNING AFTER','翻到下一天','只有结束当天，才能收到外出成员的实际成果。没有任务时也可以处理电话，继续推进时间。')+
  '<div class="paper-grid"><div><div class="dialog-punch">DAY '+String(state.day).padStart(2,'0')+' → DAY '+String(state.day+1).padStart(2,'0')+'</div>'+
- '<div class="daily-calendar-record"><small>'+clockLabel(state.day,world.slices.clock.shift)+'</small><strong>'+arc.title+'</strong><p>'+ (episode?.title||'城市自由经营') +'</p>'+
+ '<div class="daily-calendar-record"><small>'+clockLabel(state.day,world.slices.clock.shift)+'</small><strong>'+arcTitle+'</strong><p>'+ (episode?.title||'城市自由经营') +'</p>'+
  '<p>当日安排 '+progress.actionsToday+' / 2 · 街坊支持 '+progress.communityTrust+' · 可查证线索 '+progress.evidence+'</p>'+
  '<p>下一件事：'+(beat?beat.title+' · 在'+({office:'办公室',alley:'旧港背街',market:'清晨集市',labor:'旧厂就业所',docks:'旧港码头'}[beat.venue]||beat.venue)+'进行':'今天已无新的主线安排')+'</p>'+
- '<p>本章区间：DAY '+arc.start+'—'+arc.end+'。未完成的现场事件一旦翻日历就会错过，请先到对应地点推进主线。</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
+ '<p>'+(arc?'本章区间：DAY '+arc.start+'—'+arc.end+'。未完成的现场事件一旦翻日历就会错过，请先到对应地点推进主线。':'主线已结束；你可以继续经营街区，并在右侧档案重读结局。')+'</p></div><p>当前时段：'+SHIFTS[world.slices.clock.shift]+'</p><button type="button" class="choice" data-world-tab="clock">打开城市时钟</button>'+
  '<p>今天安排了 '+state.orders.length+' 项行动；电话'+(state.call.answered?'已经处理':'尚未处理')+'。翻页将结算收入、日常开支，以及街区关系变化。</p>'+
  '<button class="primary" type="button" data-next="1">翻过今天 · 听取明日汇报</button></div>'+
  '<div><div class="mini-title">成员今日状态</div>'+CREW.filter(c=>state.crew.includes(c.id)).map(c=>{
@@ -307,7 +308,7 @@ function helpPanel(){
  '<div class="report-card"><h3>主线与日历</h3><p>从开局直到第39天共有九章主线。跟随场景里的剧情便条进行每日两次调查与抉择，注意翻页会错过未处理事件；章节与结局可在日历里重读。</p></div>'+
  '<div class="report-card"><h3>旧枪</h3><p>是故事道具，不是攻击按钮；细节会逐步揭开。</p></div>'+
  '<div class="achievement">第一目标：至少两个城区影响力达到 55、现金 '+fmt(GOALS.cash)+'、声望 '+GOALS.respect+'。</div>'+
- '<button class="primary" type="button" data-help-close="1">回到办公室</button><div class="info-box"><b>新战役：</b>从零地盘、租房、只有兄弟阿凯重新开始。系统会先备份上一段进度。</div><div class="city-actions"><button class="choice" type="button" data-new-campaign="1">开始新战役（先备份）</button><button class="choice" type="button" data-restore-campaign="1">恢复上次战役备份</button></div></div></div>';
+ '<button class="primary" type="button" data-help-close="1">回到办公室</button><div class="info-box"><b>新战役：</b>从零地盘、买下毛坯办公室、只有兄弟阿凯重新开始。系统会先备份上一段进度。</div><div class="city-actions"><button class="choice" type="button" data-new-campaign="1">开始新战役（先备份）</button><button class="choice" type="button" data-restore-campaign="1">恢复上次战役备份</button></div></div></div>';
 }
 function repaintPanel(){
  if(!currentPanel)return;
