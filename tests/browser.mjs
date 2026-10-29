@@ -56,6 +56,13 @@ try{
  await page.waitForFunction(()=>window.__BONE_LAB__.surface?.contours?.some(c=>c.closed));
  assert.equal(await page.locator('#surface-switch').isChecked(),true);
  assert.equal(await page.locator('#bones-switch').isChecked(),true);
+ assert.equal(await page.locator('#facet-switch').isChecked(),true);
+ await page.waitForFunction(()=>window.__BONE_LAB__.facets?.vertices>4);
+ const initialFacets=await page.evaluate(()=>window.__BONE_LAB__.facets);
+ assert.ok(initialFacets.vertices<initialFacets.original*.8,
+  'quiet body parts should use few long straight lines');
+ assert.equal(await page.locator('#facet-vertices-switch').isChecked(),true);
+
  const originalArea=await page.evaluate(()=>window.__BONE_LAB__.surface.inside);
  await page.locator('#thickness-range').evaluate(el=>{
   el.value='165';el.dispatchEvent(new Event('input',{bubbles:true}));
@@ -86,6 +93,36 @@ try{
  await page.locator('#play-switch').uncheck();
  await page.waitForTimeout(140);
  await capture(page,'artifacts/creature-01-quadruped.png');screenshots.push('quadruped');
+ // Let several gait cycles accumulate real hinge-angle events inside one window.
+ await page.locator('#play-switch').check();
+ await page.waitForTimeout(2300);
+ await page.locator('#play-switch').uncheck();
+ await page.waitForFunction(()=>window.__BONE_LAB__.deformation.events>0);
+ const active=await page.evaluate(()=>({
+  total:window.__BONE_LAB__.deformation.events,
+  segments:window.__BONE_LAB__.facets.vertices,
+  points:window.__BONE_LAB__.facets.original
+ }));
+ assert.ok(active.total>0&&active.segments<active.points);
+ await capture(page,'artifacts/facets-07-dynamic-hotspots.png');
+ screenshots.push('adaptive facets');
+ const sendRange=async(id,value)=>page.locator(id).evaluate((input,v)=>{
+  input.value=String(v);input.dispatchEvent(new Event('input',{bubbles:true}));
+ },value);
+ await sendRange('#facet-coarse',70);
+ await page.waitForFunction(()=>window.__BONE_LAB__.state.facetVertices>0);
+ await page.waitForTimeout(120);
+ const lowDetail=await page.evaluate(()=>window.__BONE_LAB__.facets.vertices);
+ await sendRange('#facet-coarse',20);
+ await page.waitForTimeout(140);
+ const highDetail=await page.evaluate(()=>window.__BONE_LAB__.facets.vertices);
+ assert.ok(highDetail>lowDetail,'lower max span must increase actual facet vertices');
+ await page.locator('#facet-switch').uncheck();
+ await page.waitForFunction(()=>window.__BONE_LAB__.state.facetOn===false);
+ await page.locator('#facet-switch').check();
+ await sendRange('#facet-coarse',37);
+ await page.waitForTimeout(140);
+
  // Real generator swaps 4 structural archetypes, not just a label.
  for(const [type,number] of [['biped',2],['hexapod',6],['serpent',0]]){
   await page.locator('[data-type="'+type+'"]').click();
