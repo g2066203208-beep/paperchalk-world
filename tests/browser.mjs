@@ -451,6 +451,67 @@ await run('story-touch-portrait',{viewport:{width:390,height:844},isMobile:true,
  await page.screenshot({path:'artifacts/story-07-portrait-afternoon-decision.png',fullPage:true});
 });
 
+// The camera, not a small back-and-forth loop, defines street traffic.
+async function checkCrossings(page,label){
+ const checks=await page.locator('.city-walker').evaluateAll(actors=>{
+  const stage=actors[0]?.closest('.explore-stage')?.getBoundingClientRect();
+  return actors.map(actor=>{
+   const style=getComputedStyle(actor);
+   const animation=actor.getAnimations({subtree:false}).find(a=>a.effect?.getKeyframes?.().length);
+   if(!animation)return {error:'missing pedestrian animation'};
+   const savedTime=animation.currentTime;
+   const wasRunning=animation.playState==='running';
+   animation.pause();
+   const cycle=parseFloat(style.animationDuration)*1000;
+   const delay=parseFloat(style.animationDelay)*1000;
+   const sample=f=>{animation.currentTime=delay+cycle*(1+f);const r=actor.getBoundingClientRect();return r.left+r.width/2};
+   const [begin,middle,end]=[0,.5,.995].map(sample);
+   animation.currentTime=savedTime;
+   if(wasRunning)animation.play();
+   return {direction:actor.classList.contains('walker-ltr')?'ltr':'rtl',
+     name:style.animationName,mode:style.animationDirection,
+     begin,middle,end,left:stage.left,right:stage.right,speed:Number(actor.dataset.walkSpeed)};
+  });
+ });
+ assert.ok(checks.length>=2,label+' must have pedestrians in both directions');
+ assert.ok(checks.some(x=>x.direction==='ltr')&&checks.some(x=>x.direction==='rtl'),label+' lacks bidirectional traffic');
+ for(const c of checks){
+  assert.ok(!c.error,label+': '+c.error);
+  assert.ok(c.speed>=48&&c.speed<=78,label+' invalid stable walking speed');
+  assert.equal(c.mode,'normal',label+' cannot reverse direction at scene edges');
+  assert.equal(c.name,'street-pass-'+c.direction,label+' must use correct crossing animation');
+  if(c.direction==='ltr'){
+   assert.ok(c.begin<c.left-20&&c.end>c.right+20,label+' rightbound citizen must start/end outside view '+JSON.stringify(c));
+   assert.ok(c.begin<c.middle&&c.middle<c.end,label+' rightbound citizen must move monotonically '+JSON.stringify(c));
+  }else{
+   assert.ok(c.begin>c.right+20&&c.end<c.left-20,label+' leftbound citizen must start/end outside view '+JSON.stringify(c));
+   assert.ok(c.begin>c.middle&&c.middle>c.end,label+' leftbound citizen must move monotonically '+JSON.stringify(c));
+  }
+ }
+}
+for(const [name,options] of [
+ ['street-crossing-desktop',{viewport:{width:1440,height:900}}],
+ ['street-crossing-portrait',{viewport:{width:390,height:844},isMobile:true,hasTouch:true}],
+ ['street-crossing-landscape',{viewport:{width:844,height:390},isMobile:true,hasTouch:true}]
+]){
+ await run(name,options,async page=>{
+  await page.evaluate(()=>window.__OFFICE__.exploration.show());
+  const skip=page.locator('[data-prologue-step="skip"]');
+  if(await skip.isVisible())await skip.click();
+  await page.locator('[data-explore-type="exit"]').click();
+  await page.locator('[data-route-place="market"]').click();
+  await page.locator('[data-route-go]').click();
+  await page.waitForFunction(()=>window.__OFFICE__.world().slices.origin.venue==='market');
+  await checkCrossings(page,name);
+  await page.screenshot({path:'artifacts/'+name+'.png',fullPage:true});
+  const keeper=page.locator('.city-walker').first();
+  await keeper.evaluate(el=>el.dataset.crowdUnchanged='yes');
+  await page.locator('[data-explore-type="talk"][data-explore-id="vendor"]').click();
+  assert.equal(await keeper.evaluate(el=>el.dataset.crowdUnchanged),'yes',name+' re-created crowd on dialogue');
+  assert.equal(await keeper.evaluate(el=>el.getAnimations({subtree:false})[0]?.playState),'running',name+' walking paused on dialogue');
+ });
+}
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');
