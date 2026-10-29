@@ -14,7 +14,7 @@ export const isOldHarborCell=(x,y)=>x===OLD_HARBOR_CELL.x&&y===OLD_HARBOR_CELL.y
 /** Architectural arrangement deliberately avoids the repetitive national 6x4 grid. */
 const SITES=[
  ['post','旧港邮电局',222,30,150,118,2,'civic'],
- ['clock','钟楼市政厅',396,12,186,145,3,'clock'],
+ ['clock','钟楼市政厅',396,80,186,78,3,'clock'],
  ['cafe','海鸥咖啡馆',602,34,157,120,2,'cafe'],
  ['books','旧港书店',790,49,138,109,2,'shop'],
  ['market','港湾杂货铺',22,239,144,102,2,'shop'],
@@ -195,16 +195,16 @@ function facade(c,b,i){
  if(style==='clock'){
   // Clock tower is the scene focal point: high contrast silhouette at the north edge.
   const tx=x+w/2-35;
-  q(c,tx-9,y-91,85,77,C.ink);
-  q(c,tx-4,y-86,75,68,'#c9b99f');
-  q(c,tx-17,y-99,99,14,C.ink);
-  q(c,tx-13,y-95,91,8,'#5a7479');
-  q(c,tx+23,y-82,27,27,C.ink);
-  q(c,tx+27,y-78,19,19,C.gold);
-  q(c,tx+35,y-74,3,11,C.ink);
-  q(c,tx+34,y-70,9,3,C.ink);
-  q(c,tx+28,y-40,19,15,'#507786');
-  q(c,tx+32,y-36,11,7,'#a8bec0');
+  q(c,tx-9,y-69,85,56,C.ink);
+  q(c,tx-4,y-65,75,50,'#c9b99f');
+  q(c,tx-17,y-77,99,14,C.ink);
+  q(c,tx-13,y-73,91,8,'#5a7479');
+  q(c,tx+23,y-62,27,27,C.ink);
+  q(c,tx+27,y-58,19,19,C.gold);
+  q(c,tx+35,y-54,3,11,C.ink);
+  q(c,tx+34,y-50,9,3,C.ink);
+  q(c,tx+28,y-32,19,15,'#507786');
+  q(c,tx+32,y-28,11,7,'#a8bec0');
  }
  if(style==='press')q(c,x+w-29,y+h-59,25,26,'#dcceaf');
  if(style==='civic'){
