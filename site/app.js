@@ -7,6 +7,7 @@ import {renderOriginBook} from './ui/origin-book.js';
 import {SHIFTS} from './systems/clock.js';
 import {createStage} from './presentation/stage.js';
 import {createExploreLayer} from './scenes/explore.js';
+import {createAtlasExplorer} from './world/atlas-explorer.js';
 import {todayStory,activeStoryBeat,SEASON_ARCS,FINAL_DAY} from './systems/campaign.js';
 import {clockLabel} from './systems/clock.js';
 const $=id=>document.getElementById(id);
@@ -17,7 +18,7 @@ let meta;try{meta=normalizeOffice(JSON.parse(localStorage.getItem(META_STORE)||'
 const WORLD_STORE='night-office-world-v1';
 let world;try{world=createWorld(state,localStorage.getItem(WORLD_STORE));}catch{world=createWorld(state,null);}
 let currentPanel=null,focusBefore=null,timer,dialBuffer='',lastDial='',fileTab='dossiers',callZone='harbor',doorTimer=null;
-let explorer=null;
+let explorer=null,atlas=null;
 let worldUI={cell:'s0',lot:'lot-1',person:'kai',talker:'kai',courier:'kai',target:'bell-lu',operation:'pressure',from:null,destination:'s1',source:'job',candidate:'mio',faction:'bell'};
 const originTabs=new Set(['society','recruitment','politics']);
 const cityTabs=new Set(['clock','estates','industry','transport','citizens','operations','contacts','justice']);
@@ -212,7 +213,7 @@ function reportsPanel(){
  if(originTabs.has(fileTab))return renderOriginBook(fileTab,world,state,worldUI);
  if(cityTabs.has(fileTab))return renderCityBook(fileTab,world,state,worldUI);
  if(worldTabs.has(fileTab))return renderWorldPanel(fileTab,world,state,worldUI);
- const tabs='<div class="file-tabs"><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button><button type="button" data-world-tab="industry">产业经营</button><button type="button" data-world-tab="estates">地皮地产</button><button type="button" data-world-tab="transport">运输</button><button type="button" data-world-tab="clock">时间</button><button type="button" data-world-tab="citizens">路人</button><button type="button" data-world-tab="operations">高风险事务</button><button type="button" data-world-tab="contacts">雇佣线人</button><button type="button" data-world-tab="justice">警方卷宗</button><button type="button" data-world-tab="recruitment">人才市场</button><button type="button" data-world-tab="society">国家民生</button><button type="button" data-world-tab="politics">各大家族</button></div>';
+ const tabs='<div class="file-tabs"><button type="button" data-open-atlas="1">国家实景探索</button><button type="button" data-filetab="dossiers" class="'+(fileTab==='dossiers'?'selected':'')+'">待批示卷宗</button><button type="button" data-filetab="reports" class="'+(fileTab==='reports'?'selected':'')+'">实际行动汇报</button><button type="button" data-filetab="crew" class="'+(fileTab==='crew'?'selected':'')+'">组织成员档案</button><button type="button" data-world-tab="personnel">人事任命册</button><button type="button" data-world-tab="news">夜港晚报</button><button type="button" data-world-tab="civic">治安与世界</button><button type="button" data-world-tab="dialogue">会谈</button><button type="button" data-world-tab="industry">产业经营</button><button type="button" data-world-tab="estates">地皮地产</button><button type="button" data-world-tab="transport">运输</button><button type="button" data-world-tab="clock">时间</button><button type="button" data-world-tab="citizens">路人</button><button type="button" data-world-tab="operations">高风险事务</button><button type="button" data-world-tab="contacts">雇佣线人</button><button type="button" data-world-tab="justice">警方卷宗</button><button type="button" data-world-tab="recruitment">人才市场</button><button type="button" data-world-tab="society">国家民生</button><button type="button" data-world-tab="politics">各大家族</button></div>';
  let view='';
  if(fileTab==='dossiers'){
   view='<div class="dossier-list">'+DOSSIERS.map(d=>{
@@ -352,6 +353,7 @@ $('game').addEventListener('click',e=>{
 });
 $('open-reports').addEventListener('click',()=>{fileTab='reports';panel('reports');});
 $('help-btn').addEventListener('click',()=>panel('help'));
+$('national-atlas-open').addEventListener('click',()=>atlas.open());
 $('close-panel').addEventListener('click',closePanel);
 $('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closePanel();});
 document.addEventListener('keydown',e=>{
@@ -459,6 +461,7 @@ $('panel-body').addEventListener('click',e=>{
  if(node.dataset.cityIntel){performWorldCommand({module:'contacts',type:'ask-informant'});return;}
  if(node.dataset.cityBribe){performWorldCommand({module:'contacts',type:'bribe'});return;}
  if(node.dataset.cityCounsel){performWorldCommand({module:'justice',type:'counsel',caseId:node.dataset.cityCounsel});return;}
+ if(node.dataset.openAtlas){closePanel();atlas.open();return;}
  if(node.dataset.worldBack){fileTab='dossiers';currentPanel='reports';repaintPanel();return;}
  if(node.dataset.worldTab){fileTab=node.dataset.worldTab;currentPanel='reports';repaintPanel();stage.cue('paper');return;}
  if(node.dataset.worldCell){worldUI.cell=node.dataset.worldCell;repaintPanel();return;}
@@ -529,7 +532,8 @@ $('explore-toggle').addEventListener('click',()=>{
   if(explorer.isVisible())explorer.hide();else explorer.show();
 });
 refresh();
-window.__OFFICE__={version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,open:panel,close:closePanel,
+atlas=createAtlasExplorer({readWorld:()=>world,openPanel:panel});
+window.__OFFICE__={atlas,version:5,state:()=>structuredClone(state),meta:()=>structuredClone(meta),world:()=>structuredClone(world),worldCommand:performWorldCommand,exploration:explorer,open:panel,close:closePanel,
  dispatch:(type,...args)=>{
   const r=type==='assign'?setOrder(state,...args):type==='next'?advance(state,meta):type==='phone'?answerPhone(state,args[0]):
   type==='dial'?dial(state,meta,...args):type==='dossier'?decideDossier(state,meta,...args):type==='budget'?allocate(state,meta,args[0]):
