@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0e1721">
+<title>Pixel Lab · 像素画机器学习实验室</title>
+<link rel="stylesheet" href="./pixel-lab.css"></head>
+<body>
+<header class="top">
+ <a class="back" href="../index.html">↖ 返回 BoneLab</a>
+ <div class="mark"><b>PIXEL</b><span>LAB / ML</span></div>
+ <div class="top-right">RESEARCH BUILD <strong>0.1</strong><span class="pill">16 × 16</span></div>
+</header>
+<div class="shell">
+ <section class="hero">
+  <div class="eyebrow"><span class="live">●</span> GITHUB ACTIONS · REAL MODEL TRAINING</div>
+  <h1>让模型真正学习<span>像素规律</span>。</h1>
+  <p>从真实授权素材训练像素补全网络；独立训练强化学习画笔策略。不是随机拼贴，也不是未经训练的 AI 绘画。</p>
+  <div class="status"><span id="ml-status">正在读取训练结果…</span><span class="divider"></span><span id="data-status">数据来源检查中</span></div>
+ </section>
+ <section class="metrics">
+  <article><small>训练图片 <em>LICENSED CC0</em></small><strong id="metric-images">—</strong><p>真实素材，不含合成假样本</p></article>
+  <article><small>隐藏像素验证准确率</small><strong id="metric-accuracy">—</strong><p>留出数据集，和基线对比</p></article>
+  <article><small>机器学习训练步数</small><strong id="metric-steps">—</strong><p>神经网络梯度下降</p></article>
+  <article><small>强化学习绘制节省</small><strong id="metric-rl">—</strong><p>对比逐像素复制画笔</p></article>
+ </section>
+ <div class="workspace">
+  <aside class="controls">
+   <div class="section-heading"><span>01</span> 实验配置 <small>INPAINT / RL</small></div>
+   <label for="sample">留出样本 <span>真实 CC0</span></label>
+   <select id="sample"></select>
+   <label for="mask">遮盖像素比例 <output id="mask-value">45%</output></label>
+   <input id="mask" type="range" min="15" max="80" step="5" value="45">
+   <label for="seed">可复现随机种子</label>
+   <input id="seed" type="number" min="1" max="999999" value="2026">
+   <button id="damage" class="secondary">✳ 重新生成破损图</button>
+   <button id="restore" class="primary">✦ 神经网络修复像素</button>
+   <div class="caption"><b>模型：</b> 局部上下文神经网络（MLP），在 GitHub Actions 中学习被遮住的像素颜色。这里展示真实推理，不是预先画好的修复结果。</div>
+   <hr>
+   <div class="section-heading"><span>02</span> 强化学习画笔 <small>Q-LEARNING</small></div>
+   <p class="small">给策略提供参考图，让它选择单点、横线、竖线、矩形或区域填充，以较少操作复现素材。<strong>它不负责原创构图。</strong></p>
+   <button id="replay" class="secondary">▶ 播放强化学习绘制过程</button>
+   <div class="result-row"><span>逐像素操作</span><strong id="naive-strokes">—</strong></div>
+   <div class="result-row"><span>策略操作</span><strong id="policy-strokes">—</strong></div>
+  </aside>
+  <main class="lab">
+   <div class="section-heading"><span>LIVE</span> 神经网络像素修复 <small>REAL INFERENCE</small></div>
+   <div class="canvas-grid">
+    <div class="tile"><div class="tile-head">01 / 原始素材 <span>GROUND TRUTH</span></div><canvas id="original" width="16" height="16"></canvas><div class="tile-foot">CC0 · 留出样本</div></div>
+    <div class="tile"><div class="tile-head">02 / 遮盖后的输入 <span>MASKED</span></div><canvas id="corrupted" width="16" height="16"></canvas><div class="tile-foot"><span id="masked-pixels">—</span> 个像素等待预测</div></div>
+    <div class="tile"><div class="tile-head">03 / 模型实际预测 <span>NEURAL</span></div><canvas id="predicted" width="16" height="16"></canvas><div class="tile-foot"><span id="local-accuracy">点击运行神经网络</span></div></div>
+   </div>
+   <div class="sub-grid">
+    <div class="sub-panel"><div class="section-heading"><span>REWARD</span> 强化学习画笔演示 <small>FRAME-BY-FRAME</small></div>
+      <div class="replay-layout"><canvas id="rl-canvas" width="16" height="16"></canvas><div><strong id="rl-progress">0 / 0</strong><p id="rl-action">每一笔由 Q-Learning 策略选择</p><div class="track"><div id="progress"></div></div></div></div>
+    </div>
+    <div class="sub-panel"><div class="section-heading"><span>LOSS</span> 实际训练曲线 <small>CROSS ENTROPY</small></div><svg id="loss-chart" viewBox="0 0 360 130" preserveAspectRatio="none" role="img" aria-label="真实训练误差曲线"></svg><div class="chart-labels"><span>TRAIN START</span><span>TRAIN END</span></div></div>
+   </div>
+  </main>
+ </div>
+ <section class="footnote"><h3>模型适用范围与边界</h3><p>这是面向 16×16 小型像素素材的入门学习系统。神经网络在真实 CC0 图像上学习局部像素上下文，可做遮挡补全，但不等于已经学会原创角色设计。强化学习只学习参考引导下的画笔选择。训练样本数少，不能宣传为最先进的像素生成模型；后续可升级为离散 token 生成、扩散模型和人工审美反馈评分。</p><p>素材来源：<a href="https://kenney.nl/assets/tiny-dungeon">Kenney Tiny Dungeon</a>、<a href="https://kenney.nl/assets/tiny-town">Tiny Town</a>、<a href="https://opengameart.org/content/pixel-platformer-0">Pixel Platformer</a>（CC0）。训练数据哈希、样本数量、验证指标记录于模型文件。</p></section>
+</div>
+<script type="module" src="./pixel-lab.js"></script>
+</body></html>
