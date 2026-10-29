@@ -5,6 +5,7 @@
  * Only visible pedestrians and vehicles are animated; no country-wide DOM.
  */
 import {regionAt,terrainAt,FACILITY_TYPES} from './national-atlas.js';
+import {PIXEL_W,PIXEL_H,drawPixelStreet} from './pixel-street-renderer.js';
 export {interiorFor} from './interiors.js';
 export const STREET_W=960,STREET_H=600;
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
@@ -138,9 +139,8 @@ function drawEnvironment(ctx,site,elapsed,shift,traffic){
 }
 export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnter,onLeave,onPosition}){
  const ctx=canvas.getContext('2d',{alpha:false});
- const scale=window.devicePixelRatio||1;
- canvas.width=Math.round(STREET_W*Math.min(scale,2));canvas.height=Math.round(STREET_H*Math.min(scale,2));
- ctx.setTransform(canvas.width/STREET_W,0,0,canvas.height/STREET_H,0,0);
+ canvas.width=PIXEL_W;canvas.height=PIXEL_H;
+ ctx.imageSmoothingEnabled=false;
  const buildings=streetBuildingsAt(x,y),key='night-harbor-street-player-'+x+'-'+y;
  let original=null;try{original=JSON.parse(localStorage.getItem(key)||'null')}catch{}
  const site={x,y,buildings,people:[]},source=readWorld()?.slices?.population?.people||[];
@@ -202,15 +202,7 @@ export function createWalkableStreet(canvas,{x,y,readWorld,initialPosition,onEnt
     onPosition?.(player);
   }
   const world=readWorld(),shift=world?.slices?.clock?.shift||0;
-  drawEnvironment(ctx,site,timestamp,shift,clamp(Math.floor((world?.slices?.population?.footTraffic?.['s0']||15)/2),4,18));
-  // Focus ring for the current pedestrian-controlled protagonist.
-  ctx.strokeStyle='#f2dbad';ctx.lineWidth=3;ctx.beginPath();ctx.arc(player.x,player.y-17,20,0,7);ctx.stroke();
-  drawPerson(ctx,player.x,player.y,'#b24f58','你');
-  if(follow){
-    ctx.strokeStyle='#e0c676';ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(follow.doorX,follow.doorY,13,0,7);ctx.stroke();
-    text(ctx,'正在走向 '+follow.name,clamp(player.x,120,840),clamp(player.y+35,60,580),12);
-  }
+  drawPixelStreet(ctx,site,timestamp,shift,clamp(Math.floor((world?.slices?.population?.footTraffic?.['s0']||15)/2),4,18),player,follow);
   if(!closed)frame=requestAnimationFrame(frameDraw);
  }
  frame=requestAnimationFrame(frameDraw);
