@@ -24,6 +24,21 @@
 .national-explorer.national-scene-focus .national-scene-column{width:100%;max-width:1450px;margin:0 auto}
 .national-explorer.national-scene-focus .national-walk-zone{width:100%;max-height:78vh;aspect-ratio:480/300}
 .national-explorer.national-scene-focus .national-walk-canvas{width:100%;height:100%}
+/* Composition-mode camera: fit the entire artwork into a real viewport,
+   instead of cutting off the southern half of the city on 16:9 displays. */
+.national-explorer.national-scene-focus .national-header{padding-bottom:6px}
+.national-explorer.national-scene-focus .national-header h2{font-size:19px;margin:1px 0}
+.national-explorer.national-scene-focus .national-header p{display:none}
+.national-explorer.national-scene-focus .national-layout{margin-top:8px}
+.national-explorer.national-scene-focus .national-scene-column{padding:10px}
+.national-explorer.national-scene-focus .national-local-title{margin:1px 0 7px}
+.national-explorer.national-scene-focus .national-walk-zone{
+ width:min(100%,calc((100dvh - 232px)*1.6));
+ height:auto;max-height:none;aspect-ratio:8/5;margin-inline:auto
+}
+@media (max-width:700px){
+ .national-explorer.national-scene-focus .national-walk-zone{width:100%;height:auto}
+}
 .national-explorer.national-scene-focus .national-site-list{grid-template-columns:repeat(4,minmax(0,1fr));max-height:135px}
 .national-explorer.national-scene-focus .national-floorplan{max-width:1050px;margin:0 auto}
 @media(max-width:700px){.pixel-floorplan .national-room strong{font-size:9px;padding:2px 3px}.pixel-floorplan .national-room small{font-size:8px}.national-explorer.national-scene-focus .national-site-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
