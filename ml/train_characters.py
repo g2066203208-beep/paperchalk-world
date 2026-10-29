@@ -253,7 +253,7 @@ def training(tokens,trainidx,validx,steps):
   v2=z@p['w2']+p['b2'];h2=np.maximum(0,v2)
   output=(h2@p['w3']+p['b3']).reshape(-1,256,K)
   prob=softmax(output)
-  y=tokens[index]
+  y=tokens[index].reshape(-1,256)
   cross=-np.log(np.maximum(prob[np.arange(len(y))[:,None],np.arange(256)[None,:],y],1e-8)).mean()
   kl=(-.5*(1+lv-mean*mean-np.exp(lv))).sum(1).mean()
   beta=.004
