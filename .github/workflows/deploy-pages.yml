@@ -44,6 +44,15 @@ jobs:
         run: node tests/browser.mjs
       - name: Test Character Atelier geometric art, expressions and pixel previews
         run: node tests/character-browser.mjs
+      - name: Check strict four-color sprite editor and capture real Chromium screenshot
+        run: node tests/flat4-browser.mjs
+      - name: Upload true four-color sprite browser proof
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flat4-four-color-browser-proof
+          path: flat4-artifacts/
+          retention-days: 30
       - name: Upload Character Atelier actual screenshots
         if: always()
         uses: actions/upload-artifact@v4
