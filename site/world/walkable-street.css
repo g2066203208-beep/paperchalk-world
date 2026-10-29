@@ -38,7 +38,7 @@
 .national-interior-information p{margin:2px 0;font-size:11px}
 .national-interior-information .interior-caption{position:static;max-width:none;background:#d8c4a8;color:#30414a}
 .national-interior-information .national-exit{position:static;justify-self:start;max-width:100%;font-size:12px;padding:10px 13px}
-.world-walk-entry{position:absolute;right:2.5%;bottom:9%;z-index:17;min-height:64px;width:min(39%,360px);display:flex;align-items:center;gap:10px;text-align:left;background:#293e4af2;color:#ffe8c1;border:3px solid #f1c88d;box-shadow:7px 8px 0 #192c35aa;cursor:pointer;padding:12px;font-weight:900;transform:rotate(-1deg);animation:walk-entry-glow 3s ease-in-out infinite alternate}
+.world-walk-entry{position:absolute;right:1.6%;top:58%;bottom:auto;z-index:17;min-height:64px;width:min(21%,230px);display:flex;align-items:center;gap:10px;text-align:left;background:#293e4af2;color:#ffe8c1;border:3px solid #f1c88d;box-shadow:7px 8px 0 #192c35aa;cursor:pointer;padding:12px;font-weight:900;transform:rotate(-1deg);animation:walk-entry-glow 3s ease-in-out infinite alternate}
 .world-walk-entry:hover,.world-walk-entry:focus-visible{background:#a54e59;transform:rotate(0)}
 .world-walk-entry strong{display:block;font-size:clamp(12px,1.4vw,17px)}
 .world-walk-entry small{display:block;color:#ebceb3;font-size:11px;margin-top:3px;font-weight:500}
@@ -47,4 +47,4 @@
 .street-route-world-entry{background:#233c48;color:#f4ddba;border:2px solid #dcad78;padding:13px;margin-bottom:13px;display:flex;justify-content:space-between;gap:12px;align-items:center}
 .street-route-world-entry strong{font-size:14px}
 .street-route-world-entry button{background:#a5535e;color:white;border:0;font-weight:900;padding:10px;cursor:pointer}
-@media(max-width:750px){.national-site-list{grid-template-columns:repeat(2,minmax(0,1fr))}.national-walk-zone{margin-bottom:8px}.national-floorplan-body{height:260px}.world-walk-entry{width:48%;min-height:44px;padding:5px 8px;bottom:6%;right:3%}.world-walk-entry .walk-entry-icon{font-size:20px}.world-walk-entry small{font-size:9px}.national-walk-overlay{padding:5px;font-size:9px}.national-walk-overlay b{font-size:10px}}
+@media(max-width:750px){.national-site-list{grid-template-columns:repeat(2,minmax(0,1fr))}.national-walk-zone{margin-bottom:8px}.national-floorplan-body{height:260px}.world-walk-entry{width:31%;min-height:44px;padding:5px 8px;top:61%;bottom:auto;right:1.5%}.world-walk-entry .walk-entry-icon{font-size:20px}.world-walk-entry small{font-size:9px}.national-walk-overlay{padding:5px;font-size:9px}.national-walk-overlay b{font-size:10px}}
