@@ -3,7 +3,7 @@ import {streetBuildingsAt} from './walkable-street.js';
 import {createSceneHost} from '../scenes/core/scene-host.js';
 import {nationalStreetScene} from '../scenes/modules/national-street.js';
 import {nationalInteriorScene} from '../scenes/modules/national-interior.js';
-import {renderNationalMap} from '../scenes/modules/national-map.js';
+import {renderNationalMap,mountNationalMap} from '../scenes/modules/national-map.js';
 import {renderNationalTransport} from '../scenes/modules/national-transport.js';
 const STORAGE='night-harbor-country-position-v1';
 const escape=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -13,7 +13,8 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
  const initial=readWorld()?.slices?.geography;
  let x=Number.isFinite(initial?.x)?clamp(initial.x,0,WORLD_WIDTH-1):Number.isFinite(saved?.x)?clamp(saved.x,0,WORLD_WIDTH-1):125;
  let y=Number.isFinite(initial?.y)?clamp(initial.y,0,WORLD_HEIGHT-1):Number.isFinite(saved?.y)?clamp(saved.y,0,WORLD_HEIGHT-1):112;
- let inside=streetBuildingsAt(x,y).find(p=>p.id===initial?.interior)||null,selected=null,mode='road',walk=null;
+ let inside=streetBuildingsAt(x,y).find(p=>p.id===initial?.interior)||null,selected=null,mode='road',walk=null,largeMap=null;
+ let mapCamera={cx:180,cy:120,zoom:1,layers:{road:true,rail:true,sea:true}};
  const sceneHost=createSceneHost([nationalStreetScene,nationalInteriorScene]);
  const layer=document.createElement('section');layer.className='national-explorer';layer.hidden=true;
  layer.setAttribute('aria-label','夜港国家地图与可进入地点');
@@ -37,6 +38,7 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
   if(layer.hidden)return;
   // The scene host disposes listeners, animation frames and canvas state on every
   // street/interior/world transition. Unrelated UI may be safely re-rendered.
+  largeMap?.destroy();largeMap=null;
   sceneHost.unmount();walk=null;
   const region=regionAt(x,y),ground=terrainAt(x,y);
   const station=REGIONS.find(p=>p.id===selected)||region;
@@ -59,6 +61,19 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
    '<div class="national-footer"><b>所在区域：'+escape(region.name)+'</b><span>'+escape(tileNames[ground.terrain])+
    ' · 海拔'+ground.elevation+'米</span><span>附近建筑：'+streetBuildingsAt(x,y).length+'栋</span></div></div></div>';
   walk=sceneHost.mount(layer)||null;
+  largeMap=mountNationalMap(layer,{x,y,camera:mapCamera,
+   onTravel:destination=>{
+    if(!applyGeography({type:'road-journey',target:destination}))return;
+    mapCamera={...mapCamera,cx:x,cy:y,zoom:8};render();
+   },
+   onCamera:next=>{mapCamera=next;},
+   onInspect:place=>{const station=place.region;
+     if(station&&station.id!==selected){selected=station.id;
+      const picker=layer.querySelector('[data-atlas-station="'+station.id+'"]');
+      layer.querySelectorAll('[data-atlas-station]').forEach(el=>el.classList.toggle('active',el===picker));
+      // Selected destination changes only the planned itinerary, not player position.
+     }
+   }});
  }
  function enter(){
   const geo=readWorld()?.slices?.geography;
@@ -68,6 +83,7 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
  function close(silent=false){
   const wasOpen=!layer.hidden;
   if(wasOpen)recordPlayer();
+  largeMap?.destroy();largeMap=null;
   sceneHost.unmount();walk=null;layer.hidden=true;document.body.classList.remove('national-exploring');
   if(wasOpen&&!silent)onExit?.();
  }
@@ -85,7 +101,7 @@ export function createAtlasExplorer({readWorld,openPanel,command,onExit}){
   if(b.dataset.atlasInspect){const label=b.querySelector('strong')?.textContent||'房间';const caption=layer.querySelector('.interior-caption');if(caption)caption.textContent='你检查了 '+label+'。这是 '+inside.kind+' 的独立编号空间；生产和交易仍须接入真正的NPC、库存系统。';}
  });
  document.addEventListener('keydown',event=>{if(layer.hidden)return;if(event.key==='Escape'){inside? (inside=null,render()):close();return;}if(inside||!event.ctrlKey||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;event.preventDefault();const dir={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[event.key];if(applyGeography({type:'move',x:x+dir[0],y:y+dir[1]}))render();});
- return {open:enter,close,render,isVisible:()=>!layer.hidden,position:()=>({x,y,inside:inside?.id||null,street:walk?.snapshot()||null}),sceneModule:()=>sceneHost.current()?.id||null,sceneModules:()=>sceneHost.list(),
+ return {open:enter,close,render,isVisible:()=>!layer.hidden,position:()=>({x,y,inside:inside?.id||null,street:walk?.snapshot()||null}),sceneModule:()=>sceneHost.current()?.id||null,sceneModules:()=>sceneHost.list(),map:()=>largeMap?.snapshot()||mapCamera,
   registerScene:module=>{const id=sceneHost.register(module);if(!layer.hidden)render();return id;},
   unregisterScene:id=>{if(['national-street','national-interior'].includes(id))return false;
    const removed=sceneHost.unregister(id);if(removed&&!layer.hidden)render();return removed;},element:layer};

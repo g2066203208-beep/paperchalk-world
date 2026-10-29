@@ -482,7 +482,9 @@ await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async 
  });
  assert.ok(talkId,'one citizen should be visible for face-to-face talk');
  const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
- await one.click({force:true,timeout:5000});
+ // The actor moves every frame: force-click may hit a different overlaid moving element.
+ // Dispatch to the actor itself to validate delegated interaction and pause semantics deterministically.
+ await one.dispatchEvent('click',{},{timeout:5000});
  await page.locator('.explore-dialogue:not([hidden])').waitFor();
  await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='talking',talkId,{timeout:3000});
  const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
@@ -637,6 +639,21 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.locator('.world-walk-entry').click();
  assert.ok(await page.locator('.national-explorer').isVisible());
  assert.equal(await page.locator('.national-map-tile').count(),117);
+ assert.ok(await page.locator('.country-map-canvas').isVisible(),'full national map must be front and center');
+ const initialCamera=await page.evaluate(()=>window.__OFFICE__.atlas.map());
+ assert.equal(initialCamera.zoom,1,'open at full country overview');
+ await page.locator('[data-map-action="plus"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===2);
+ await page.locator('[data-map-action="plus"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===4);
+ await page.screenshot({path:'artifacts/national-00-country-zoom.png',fullPage:true});
+ const camera=await page.evaluate(()=>window.__OFFICE__.atlas.map());
+ assert.equal(camera.zoom,4,'map must zoom beyond a small 13x9 widget');
+ await page.locator('[data-map-layer="rail"]').click();
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.map())).layers.rail,false);
+ await page.locator('[data-map-action="overview"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===1);
+ await page.screenshot({path:'artifacts/national-00-full-country.png',fullPage:true});
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
  const start=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);
  await page.locator('.national-walk-canvas').focus();
@@ -655,6 +672,7 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
   return null;
  });
  assert.ok(site,'national atlas must contain buildings nearby');
+ await page.locator('.country-nearby-details summary').click();
  await page.locator('[data-atlas-cell="'+site.x+','+site.y+'"]').click();
  await buildings.first().waitFor({timeout:10000});
  const enteredId=await buildings.first().getAttribute('data-atlas-enter');
@@ -682,8 +700,50 @@ await run('national-atlas-transport-and-real-interiors',{viewport:{width:1440,he
  await page.locator('#national-atlas-open').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.atlas.position())).x,92,'country travel persisted after reload');
 });
+await run('country-road-trip-to-map-settlement',{viewport:{width:1440,height:900}},async page=>{
+ await page.locator('#national-atlas-open').click();
+ await page.locator('[data-map-action="home"]').click();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===8);
+ const site=await page.evaluate(async()=>{
+  const {SETTLEMENTS,planCountryRoad,districtAt}=await import('./world/country-detail.js');
+  const cx=125,cy=112,home=districtAt(cx,cy);
+  return SETTLEMENTS.find(s=>s.district===home.id&&s.x>cx-18&&s.x<cx+18&&
+   s.y>cy-10&&s.y<cy+10&&planCountryRoad({x:cx,y:cy},s.id));
+ });
+ assert.ok(site,'there must be a road-connected town in local map zoom');
+ const canvas=page.locator('.country-map-canvas'),box=await canvas.boundingBox();
+ assert.ok(box);
+ const screenX=(site.x-(125-24))/48*box.width;
+ const screenY=(site.y-(112-15))/30*box.height;
+ await canvas.click({position:{x:screenX,y:screenY}});
+ const btn=page.locator('[data-map-road-to]');
+ await btn.waitFor();
+ const townId=await btn.getAttribute('data-map-road-to');
+ const actualTown=await page.evaluate(async id=>{
+  const {SETTLEMENTS}=await import('./world/country-detail.js');
+  return SETTLEMENTS.find(x=>x.id===id);
+ },townId);
+ assert.ok(actualTown);
+ assert.ok(await btn.isEnabled(),'selected town must have a real road graph route');
+ await page.screenshot({path:'artifacts/national-06-map-selected-town.png',fullPage:true});
+ await btn.click();
+ await page.waitForFunction(target=>{
+  const w=window.__OFFICE__.world().slices.geography;
+  return w.x===target.x&&w.y===target.y;
+ },actualTown);
+ assert.ok(await page.locator('.national-walk-canvas').isVisible());
+ const visited=await page.evaluate(()=>window.__OFFICE__.world().slices.geography.journeys[0]);
+ assert.equal(visited.mode,'road');
+ assert.equal(visited.to,townId);
+ await page.screenshot({path:'artifacts/national-07-town-arrived.png',fullPage:true});
+});
 await run('national-atlas-portrait-390',{viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true},async page=>{
  await page.locator('#national-atlas-open').tap();
+ assert.ok(await page.locator('.country-map-canvas').isVisible());
+ await page.locator('[data-map-action="home"]').tap();
+ await page.waitForFunction(()=>window.__OFFICE__.atlas.map().zoom===8);
+ await page.screenshot({path:'artifacts/national-05-mobile-zoom.png',fullPage:true});
+ await page.locator('.country-nearby-details summary').tap();
  assert.ok(await page.locator('.national-map-grid').isVisible());
  assert.ok(await page.locator('.national-walk-canvas').isVisible());
  const before=await page.evaluate(()=>window.__OFFICE__.atlas.position().street);

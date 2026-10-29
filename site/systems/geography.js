@@ -5,6 +5,7 @@
  */
 import {WORLD_WIDTH,WORLD_HEIGHT,terrainAt,REGIONS,routeBetween} from '../world/national-atlas.js';
 import {streetBuildingsAt} from '../world/walkable-street.js';
+import {planCountryRoad} from '../world/country-detail.js';
 const initial=()=>({schema:1,x:125,y:112,interior:null,player:{x:124,y:100},
  visits:[],visitedBuildings:{},distanceWalked:0,journeys:[],lastMovedDay:1});
 const validTile=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&Boolean(terrainAt(x,y));
@@ -27,6 +28,19 @@ export const geographySystem={
    data.distanceWalked+=Math.abs(x-data.x)+Math.abs(y-data.y);
    data.x=x;data.y=y;data.player={x:124,y:100};data.lastMovedDay=day;
    return {data,events:[{type:'geography.map-walk',title:'周边步行',text:'步行经过周边街区抵达'+x+','+y}]};
+ }
+ if(action.type==='road-journey'){
+   if(data.interior)return {error:'必须先走出建筑才能乘车'};
+   const itinerary=planCountryRoad({x:data.x,y:data.y},action.target);
+   if(!itinerary)return {error:'目前没有连通的公路通向这座城镇'};
+   data.journeys.unshift({day,mode:'road',from:data.x+','+data.y,
+     to:itinerary.target,stops:itinerary.districts,
+     lengthKm:itinerary.lengthKm,estimatedMinutes:itinerary.estimatedMinutes});
+   data.journeys=data.journeys.slice(0,80);
+   data.x=itinerary.to.x;data.y=itinerary.to.y;data.player={x:124,y:100};
+   data.lastMovedDay=day;
+   return {data,events:[{type:'geography.road-journey',title:'沿公路抵达城镇',
+     text:'沿现有区县公路路线走了'+itinerary.lengthKm+'公里，抵达'+itinerary.target+'。当前按路线结算，车辆驾驶仍待实现。'}]};
  }
  if(action.type==='map-travel'){
    const target=REGIONS.find(x=>x.id===action.target),mode=action.mode;

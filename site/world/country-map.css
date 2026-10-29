@@ -1,0 +1,38 @@
+/* National cartography: occupies the primary gameplay viewport and supports touch. */
+.national-layout{grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);align-items:start}
+.national-map-column{background:#253844;padding:12px;border:2px solid #857b68;box-shadow:0 10px 24px #0f1c2499}
+.country-atlas{display:flex;flex-direction:column;gap:9px;width:100%;min-width:0}
+.country-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.country-toolbar>div:first-child{display:flex;flex-direction:column;gap:3px}
+.country-toolbar strong{font-size:16px;color:#f6d5a3}
+.country-toolbar small{font-size:10px;color:#c8d2ca}
+.country-zoom-buttons{display:flex;gap:5px;flex-shrink:0}
+.country-zoom-buttons button{font-size:13px;min-height:36px;min-width:34px;background:#efe0c5;border:1px solid #8e7365;color:#283b48;padding:6px;font-weight:900}
+.country-zoom-buttons button:hover{background:#f7c78d}
+.country-canvas-frame{position:relative;width:100%;aspect-ratio:960/600;border:4px solid #c9b496;background:#2e5670;overflow:hidden;box-shadow:inset 0 0 40px #0d2537,0 5px 0 #152631;touch-action:none}
+.country-map-canvas{display:block;width:100%;height:100%;object-fit:fill;cursor:grab;touch-action:none;outline:0}
+.country-map-canvas:active{cursor:grabbing}
+.country-map-canvas:focus-visible{outline:3px solid #ffe8aa;outline-offset:-4px}
+.country-map-scale{position:absolute;left:8px;bottom:8px;padding:5px 9px;background:#142934db;border:1px solid #cab58a;color:#ffe8c1;font-size:11px;pointer-events:none;max-width:74%}
+.country-map-compass{position:absolute;right:12px;top:10px;width:42px;height:42px;display:grid;place-items:center;background:#172e3ccf;border:2px solid #d3bd90;border-radius:50%;font:900 12px Georgia;color:#f3d8ad;pointer-events:none}
+.country-map-layers{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.country-map-layers button{background:#5b6770;border:1px solid #839293;color:#f7dfb8;font-size:11px;padding:7px 10px;opacity:.5}
+.country-map-layers button.selected{opacity:1;background:#283c48;border-color:#e2ba88}
+.country-map-layers span[class$="-key"]{display:inline-block;width:14px;border-top:3px solid #f2cb8c;vertical-align:middle;margin-right:4px}
+.country-map-layers .country-rail-key{border-top-color:#9ca9b1;border-top-style:dashed}
+.country-map-layers .country-sea-key{border-top-color:#9bd5d9;border-top-style:dotted}
+.country-map-legend{color:#d9ceb9;font-size:10px;flex:1}
+.country-map-info{padding:9px 12px;min-height:44px;line-height:1.55;background:#192b36;border-left:4px solid #e0b67e;color:#f5e3cb;font-size:12px}
+.country-nearby-details{border:1px solid #64737a;background:#202e37;padding:7px 9px}
+.country-nearby-details summary{cursor:pointer;padding:6px;font-size:11px;font-weight:800;color:#e8cbaa}
+.country-nearby-details .national-map-grid{max-height:360px;margin-top:9px}
+.national-map-heading{font-size:12px}
+.national-transport{margin-top:12px}
+.national-stations{max-height:85px;overflow:auto}
+.national-site-list{max-height:245px}
+@media(min-width:1500px){.national-explorer{padding:16px 3vw}.national-layout{grid-template-columns:minmax(0,2.15fr) minmax(360px,.95fr)}}
+@media(max-width:1050px){.national-layout{grid-template-columns:1fr}.national-map-column{order:1}.national-scene-column{order:2}.country-canvas-frame{max-height:60vh}}
+@media(max-width:600px){.national-map-column{padding:7px}.country-toolbar{align-items:start}.country-toolbar strong{font-size:13px}.country-toolbar small{font-size:9px}.country-zoom-buttons{gap:3px}.country-zoom-buttons button{min-width:29px;min-height:30px;padding:4px;font-size:11px}.country-canvas-frame{border-width:2px}.country-map-scale{font-size:9px}.country-map-info{font-size:11px}.country-nearby-details{padding:4px}.national-map-heading{margin-bottom:4px}}
+
+.country-map-info button{margin-left:10px;padding:7px 12px;font-weight:800;font-size:12px;border:1px solid #edc98d;background:#b05e5d;color:#fff1dc;cursor:pointer}
+.country-map-info button:disabled{opacity:.45;cursor:not-allowed}
