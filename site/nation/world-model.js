@@ -154,10 +154,32 @@ const FURNISHING={
  wetland:['水位尺','观测仪','渔网','值守台','巡查记录'],
  mountain:['测绘桌','岩石样本','气象仪','安全绳','标高地图']
 };
+const SPECIAL_INTERIORS=[
+ ['电影',['售票窗口','放映机','座位排','幕布','胶片盒','检票台']],
+ ['食堂',['备菜台','灶台','出餐口','餐桌','洗碗池','收银台']],
+ ['咖啡',['咖啡机','烘焙台','吧台','餐桌','点单台','咖啡豆货架']],
+ ['诊所',['病历柜','诊疗床','药品柜','等候座椅','检查台','洗手池']],
+ ['修理',['液压升降台','维修工具架','零件货架','发动机台架','机油桶','收银台']],
+ ['农场',['种子架','农机工具箱','收割机台','谷物秤台','水泵','配送站台']],
+ ['面粉厂',['磨粉机','谷物料仓','分装机','面粉货架','运输传送台','维修工作台']],
+ ['仓库',['托盘堆场','装卸平台','货架','扫描台','物流单据柜','叉车充电位']],
+ ['矿',['矿井调度台','岩样分选台','通风控制箱','矿车轨道','安全设备架','地层图']],
+ ['钢铁',['高炉控制箱','钢坯台','卷扬机','工具架','安全监测台','出货站台']],
+ ['学校',['讲台','课桌','图书柜','公告栏','黑板','文具柜']],
+ ['银行',['业务窗口','金库门','客户长椅','账簿柜','经理办公桌','票据验核台']],
+ ['旅馆',['前台','钥匙柜','沙发','行李架','客房服务台','登记簿']],
+ ['服装',['布料货架','缝纫机','裁剪台','试衣镜','服装展台','收银台']],
+ ['印刷',['活字印刷机','纸卷','校对台','报纸架','分拣台','发货台']],
+ ['港',['报关窗口','装卸平台','航运清单','绞盘','海图柜','集装箱门']]
+];
+function furnishingFor(building){
+ const special=SPECIAL_INTERIORS.find(([match])=>building.title.includes(match));
+ return special?special[1]:FURNISHING[building.biome]||FURNISHING.urban;
+}
 export function interiorFor(building){
  if(!building)return null;
  const h=hash(building.id,'interior'),fixtures=[];
- const source=FURNISHING[building.biome]||FURNISHING.urban;
+ const source=furnishingFor(building);
  const w=960,H=600;
  // Every building has a stable, differentiated floor plan; fixtures are collidable.
  const rooms=1+(h%3),wallX=rooms>=2?400+(h%110):0;
