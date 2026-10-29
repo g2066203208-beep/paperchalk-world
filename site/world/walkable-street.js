@@ -35,6 +35,41 @@ export function canStandAt(px,py,buildings){
  if(px<8||py<8||px>STREET_W-8||py>STREET_H-8)return false;
  return !buildings.some(b=>px>b.x-10&&px<b.x+b.w+10&&py>b.y-10&&py<b.y+b.h+5);
 }
+
+export function findStreetPath(start,end,buildings){
+ const step=12,cols=Math.floor(STREET_W/step),rows=Math.floor(STREET_H/step);
+ const idx=(x,y)=>y*cols+x,inside=(x,y)=>x>=0&&y>=0&&x<cols&&y<rows;
+ const toGrid=p=>[clamp(Math.floor(p.x/step),0,cols-1),clamp(Math.floor(p.y/step),0,rows-1)];
+ const [sx,sy]=toGrid(start),[ex,ey]=toGrid(end);
+ const origin=idx(sx,sy),dest=idx(ex,ey),prev=new Int32Array(cols*rows).fill(-1);
+ const queue=[origin];prev[origin]=origin;
+ for(let i=0;i<queue.length;i++){
+   const at=queue[i];if(at===dest)break;
+   const x=at%cols,y=Math.floor(at/cols);
+   for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+    const nx=x+dx,ny=y+dy;if(!inside(nx,ny))continue;
+    const n=idx(nx,ny);
+    if(prev[n]!==-1||!canStandAt(nx*step+step/2,ny*step+step/2,buildings))continue;
+    prev[n]=at;queue.push(n);
+   }
+ }
+ if(prev[dest]===-1)return [];
+ const path=[];let at=dest;
+ while(at!==origin){path.push({x:(at%cols)*step+step/2,y:Math.floor(at/cols)*step+step/2});at=prev[at];}
+ path.reverse();
+ // Remove collinear intermediate nodes; preserve obstacle-safe routing corners.
+ const slim=[];
+ for(let i=0;i<path.length;i++){
+   if(i>0&&i<path.length-1){
+     const a=path[i-1],b=path[i],c=path[i+1];
+     if((a.x===b.x&&b.x===c.x)||(a.y===b.y&&b.y===c.y))continue;
+   }
+   slim.push(path[i]);
+ }
+ slim.push(end);
+ return slim;
+}
+
 export function interiorFor(b){
  const seed=Math.floor(rnd(b.worldX+b.x,b.worldY+b.y,701)*9999);
  const w=13+seed%5,h=9+Math.floor(seed/6)%4;
@@ -134,12 +169,14 @@ export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPos
  }
  let player={x:clamp(original?.x||124,10,950),y:clamp(original?.y||100,10,590)};
  if(!canStandAt(player.x,player.y,buildings))player={x:120,y:106};
- let target=null,follow=null,last=0,frame=0,closed=false,held=new Set(),entered=false;
+ let target=null,follow=null,path=[],last=0,frame=0,closed=false,held=new Set(),entered=false;
  const write=()=>{try{localStorage.setItem(key,JSON.stringify(player))}catch{}};
  function locate(px,py){
    const hit=buildings.find(b=>px>=b.x-3&&px<=b.x+b.w+3&&py>=b.y-14&&py<=b.y+b.h+8);
    if(hit){follow=hit;target={x:hit.doorX,y:hit.doorY};}
    else{follow=null;target={x:px,y:py};}
+   path=findStreetPath(player,target,buildings);
+   if(!path.length){target=null;follow=null;}
  }
  function click(event){
    const r=canvas.getBoundingClientRect();
@@ -148,7 +185,7 @@ export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPos
  }
  function down(event){
    const key=event.key.toLowerCase();
-   if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright'].includes(key)){
+   if(!event.ctrlKey&&['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright'].includes(key)){
      if(!event.target.closest('input,textarea'))event.preventDefault();held.add(key);
    }
  }
@@ -158,7 +195,7 @@ export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPos
  document.addEventListener('keyup',up);
  const controls=canvas.parentNode.querySelectorAll('[data-walk-move]');
  for(const b of controls){
-   b.addEventListener('pointerdown',()=>{held.add(b.dataset.walkMove);target=null;});
+   b.addEventListener('pointerdown',()=>{held.add(b.dataset.walkMove);target=null;path=[];});
    b.addEventListener('pointerup',()=>held.delete(b.dataset.walkMove));
    b.addEventListener('pointercancel',()=>held.delete(b.dataset.walkMove));
  }
@@ -170,9 +207,12 @@ export function createWalkableStreet(canvas,{x,y,readWorld,onEnter,onLeave,onPos
   if(held.has('d')||held.has('arrowright'))vx++;
   if(held.has('w')||held.has('arrowup'))vy--;
   if(held.has('s')||held.has('arrowdown'))vy++;
-  if(target&&vx===0&&vy===0){const dx=target.x-player.x,dy=target.y-player.y;
-    if(Math.hypot(dx,dy)>8){vx=dx;vy=dy;} else{target=null;if(follow){const b=follow;follow=null;if(!entered){entered=true;write();onEnter(b);return;}}}
-  }else if(vx||vy){target=null;follow=null;}
+  if(target&&vx===0&&vy===0){const next=path[0]||target;
+    const dx=next.x-player.x,dy=next.y-player.y;
+    if(Math.hypot(dx,dy)>7){vx=dx;vy=dy;}
+    else if(path.length){path.shift();}
+    else {target=null;if(follow){const b=follow;follow=null;if(!entered){entered=true;write();onEnter(b);return;}}}
+  }else if(vx||vy){target=null;follow=null;path=[];}
   const distance=Math.hypot(vx,vy);
   if(distance){
     const speed=210*dt,nx=player.x+vx/distance*speed,ny=player.y+vy/distance*speed;
