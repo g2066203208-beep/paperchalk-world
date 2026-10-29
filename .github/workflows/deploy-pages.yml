@@ -62,7 +62,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -83,6 +83,14 @@ jobs:
         run: |
           python ml/verify_outputs.py
           node tests/pixel-model.mjs
+      - name: Collect artist-verified CC0 16x16 characters, train VAE and latent reinforcement policy
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+          CHARACTER_TRAIN_STEPS: '440'
+        run: |
+          python ml/train_characters.py
+          python ml/verify_characters.py
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -92,6 +100,22 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Test actual neural browser inference and RL brush replay
         run: node tests/pixel-browser.mjs
+      - name: Test real character-only VAE browser inference and original CC0 gallery
+        run: node tests/character-generator-browser.mjs
+      - name: Upload true 16x16 human-only trained character evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-16x16-characters-vae-results
+          path: |
+            character-ml-artifacts/
+            ml/characters/character-data-manifest.json
+            ml/characters/character-report.json
+            ml/characters/character-vae-weights.npz
+            site/pixel-lab/characters.json
+            site/pixel-lab/character-reference-sheet.png
+            site/pixel-lab/character-generated-sheet.png
+          retention-days: 30
       - name: Upload PixelLab real browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
