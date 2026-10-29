@@ -35,6 +35,7 @@ jobs:
         run: |
           python3 -m http.server 4173 --directory site > /tmp/site.log 2>&1 &
           node tests/browser.mjs
+          node tests/full-browser-playthrough.mjs
       - name: Upload real screenshots
         if: always()
         uses: actions/upload-artifact@v4
