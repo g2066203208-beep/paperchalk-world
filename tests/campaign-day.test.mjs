@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {initialGame} from '../site/engine.js';
 import {runtime,createWorld,applyWorld} from '../site/core/game.js';
 import {FIRST_WEEK,SEASON_ARCS,todayStory,activeStoryBeat} from '../site/systems/campaign.js';
+import {SECOND_WEEK} from '../site/content/second-week-story.js';
 import {clockLabel} from '../site/systems/clock.js';
 const begin=()=>{
  const legacy=initialGame();
@@ -89,4 +90,38 @@ test('campaign module migrates into already-existing world saves and never wipes
  assert.ok(restored.slices.campaign);
  assert.deepEqual(restored.slices.factions,world.slices.factions);
  assert.deepEqual(restored.slices.origin,world.slices.origin);
+});
+
+test('each of the first 15 dated days has two unique fully authored scene events',()=>{
+ const episodes={...FIRST_WEEK,...SECOND_WEEK};
+ assert.equal(Object.keys(episodes).length,15);
+ const ids=[];
+ for(let day=1;day<=15;day++){
+   const entry=episodes[day];
+   assert.equal(entry.beats.length,2,'DAY '+day);
+   assert.ok(entry.title.length>3&&entry.deadline.length>5);
+   for(const b of entry.beats){ids.push(b.id);assert.equal(b.choices.length,2);assert.ok(b.line.length>13);}
+ }
+ assert.equal(new Set(ids).size,30,'each scene uses a unique authored beat ID');
+});
+test('fifteen-day community narrative reaches an accountable chapter-one ending',()=>{
+ let {legacy,world}=begin();
+ for(let day=1;day<=15;day++){
+   const episode=todayStory(world);
+   assert.equal(episode.beats.length,2);
+   for(const b of episode.beats){
+     const traveled=applyWorld(world,{module:'origin',type:'travel',via:'route-map',to:b.venue},legacy);
+     assert.equal(traveled.ok,true);world=traveled.state;
+     const pick=b.choices.find(c=>(c.benefits.cash||0)>=0)||b.choices[0];
+     const r=applyWorld(world,{module:'campaign',type:'scene-choice',choice:pick.id},legacy);
+     assert.equal(r.ok,true,r.message);world=r.state;
+   }
+   world=runtime.advance(world,{cash:700,heat:0,crew:legacy.crew,orders:[]}).state;
+ }
+ assert.equal(world.day,16);
+ assert.equal(world.slices.campaign.history.length,30);
+ assert.equal(world.slices.campaign.daySummaries.length,15);
+ assert.ok(['charter-founded','community-in-progress'].includes(world.slices.campaign.firstChapterOutcome));
+ assert.ok(world.events.some(e=>e.type==='campaign.chapter'));
+ assert.equal(todayStory(world),null,'Chapter II is not falsely presented as fully authored');
 });

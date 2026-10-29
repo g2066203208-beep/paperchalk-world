@@ -1,3 +1,4 @@
+import {SECOND_WEEK} from '../content/second-week-story.js';
 /**
  * NIGHT HARBOR / CHAPTER 01 - DAYS ARE PLAYABLE
  * First seven days are fully authored two-scene beats. Days 8-15 offer recurring
@@ -113,8 +114,7 @@ export function todayStory(world){
  const day=world.day,state=world.slices.campaign;
  if(!state)return null;
  if(day<=7)return FIRST_WEEK[day]||null;
- if(day<=15)return {title:'街坊的一天',deadline:'新的社区不是靠一次义举建成的。每天总有人需要帮忙。',
-   beats:[repeating[(day-8)%4],repeating[(day-7)%4]]};
+ if(day<=15)return SECOND_WEEK[day]||null;
  return null;
 }
 export function activeStoryBeat(world){
@@ -131,7 +131,7 @@ export const campaignSystem={
  id:'campaign',deps:['origin','clock','society'],
  init:({day})=>({
   actionsToday:0,communityTrust:0,evidence:0,resolve:0,identityRisk:0,supplies:0,
-  firstWeekOutcome:null,history:[],daySummaries:[],introComplete:false
+  firstWeekOutcome:null,firstChapterOutcome:null,history:[],daySummaries:[],introComplete:false
  }),
  reduce(data,action,{day,context,slices}){
   if(action.type!=='scene-choice')return {error:'未知的每日剧情命令'};
@@ -173,9 +173,16 @@ export const campaignSystem={
      text:success?'街坊同意试办自愿互助办公室。钥匙不再只属于你们两个人，匿名蒙面人的身份仍然没有曝光。':
      '街坊尚未形成足够共识，但办公室仍在。有人留下联系地址，愿意以后再谈。'});
   }
+  if(yesterday===15&&!data.firstChapterOutcome){
+    const achieved=data.communityTrust>=45&&data.evidence>=9&&data.resolve>=5;
+    data.firstChapterOutcome=achieved?'charter-founded':'community-in-progress';
+    events.push({type:'campaign.chapter',title:achieved?'第一章完：街坊自己的钥匙':'第一章完：仍在成长',
+      text:achieved?'居民共同制定自愿互助章程，社区办公室正式成立。主角与阿凯的蒙面身份仍未公开。':
+        '互助组织暂未达成完整共识，但愿意继续帮忙的人正在增加。未来还可以重新争取居民的信任。'});
+  }
   data.actionsToday=0;
   if(day<=15){
-   const story=FIRST_WEEK[day]||{title:'街坊的一天'};
+   const story=FIRST_WEEK[day]||SECOND_WEEK[day]||{title:'街坊的一天'};
    events.push({type:'campaign.morning',title:'DAY '+day+' · '+story.title,
     text:story.deadline||'新的问题出现在街头。'});
   }

@@ -25,7 +25,7 @@
 .scene-day-beat[data-location="market"]{left:64%;top:55%}
 .scene-day-beat[data-location="labor"]{left:65%;top:53%}
 .scene-day-beat[data-location="docks"]{left:66%;top:57%}
-.explore-stage .story-wall-calendar{position:absolute;z-index:7;left:88%;top:29%;width:12%;height:20%;display:grid;place-items:center;transform:translate(-50%,-50%) rotate(3deg);
+.explore-stage .story-wall-calendar{position:absolute;z-index:7;left:55%;top:20%;width:9%;height:14%;display:grid;place-items:center;transform:translate(-50%,-50%) rotate(3deg);
  border:0;background:none;padding:0;filter:drop-shadow(4px 5px 0 #151f2a88)}
 .story-wall-calendar img{width:100%;height:100%;object-fit:contain;transition:transform .18s}
 .story-wall-calendar:hover img{transform:rotate(-3deg) scale(1.07)}
