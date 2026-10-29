@@ -134,8 +134,8 @@ export function createNationalAtlas(root,{readWorld,command}){
    c.beginPath();c.arc(p.x,p.y,Math.max(3,Math.min(7,scale*.14)),0,7);c.fill();
    if(scale>1&&scale<25)text(c,stop.name,p.x+8,p.y-8,'bold 11px sans-serif','#fff7e5');
   }
-  $('.nation-loc',root).textContent=nearbyRegion(center.x,center.y).name+' · '+Math.round(center.x)+' / '+Math.round(center.y);
-  $('.nation-scale',root).textContent='地图比例 1块=250米 · '+(Math.round(1000/scale)/10)+' 米/10px';
+  $(root,'.nation-loc').textContent=nearbyRegion(center.x,center.y).name+' · '+Math.round(center.x)+' / '+Math.round(center.y);
+  $(root,'.nation-scale').textContent='地图比例 1块=250米 · '+(Math.round(1000/scale)/10)+' 米/10px';
  }
  function drawInterior(){
   const b=resolveBuilding(snapshot.slices.nation.inside,snapshot.slices.estates),floor=interiorFor(b);
