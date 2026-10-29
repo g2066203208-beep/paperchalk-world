@@ -107,6 +107,11 @@ function building(c,b,seed,shift){
  r(c,doorX+12,py+h-16,4,4,P.gold);
  r(c,doorX-8,py+h,36,8,'#a19b88');
  if(retail){
+  // Independent shopfront, striped canopy, glazed showcase and shelf silhouettes.
+  r(c,px+4,py+h-34,27,18,P.ink);
+  r(c,px+8,py+h-30,19,12,'#799a9c');
+  r(c,px+8,py+h-23,19,5,'#cfa980');
+  for(let j=0;j<5;j++)r(c,px+2+j*7,py+h-39,7,8,j%2?'#f1d5a6':'#bd7270');
   r(c,px+4,py+h-16,24,12,'#415e69');
   r(c,px+4,py+h-20,24,4,P.rust);
   r(c,px+4,py+h-24,24,4,P.edge);
@@ -117,8 +122,28 @@ function building(c,b,seed,shift){
  // Reflect different venue functions through identity and signage.
  const label= b.name.length>6?b.name.slice(0,6):b.name;
  sign(c,label,px+w*.5,py-2,w-8,industrial?'industrial':harbor?'harbor':retail?'retail':'');
- if(institutional)r(c,px+w-16,py+18,8,8,P.gold);
+ if(institutional){
+  r(c,px+w-24,py+15,16,16,'#e5d5bd');
+  r(c,px+w-17,py+16,4,12,'#ad5f5c');
+  r(c,px+w-21,py+20,12,4,'#ad5f5c');
+ }
+ if(harbor){r(c,px-5,py+h-15,18,10,'#a77660');r(c,px+1,py+h-22,6,8,'#d3ba8c');}
  if(seed%4===2){r(c,px+4,py+h-6,12,4,'#416a67');r(c,px+16,py+h-6,8,4,'#527a67');}
+}
+
+function pocketPark(c,x,y,seed){
+ // Vacant lots become small public spaces, not empty beige rectangles.
+ r(c,x-3,y-8,111,91,'#6c8072');r(c,x+1,y-4,103,83,'#8aa07e');
+ for(let i=0;i<5;i++){r(c,x+i*22,y+34,20,14,'#aaa990');r(c,x+i*22,y+39,20,4,'#c0ba98');}
+ tree(c,x+20,y+31,seed);tree(c,x+85,y+37,seed+3);
+ r(c,x+41,y+11,20,16,'#e0c397');r(c,x+45,y+15,12,8,'#7d9795');
+ r(c,x+41,y+27,20,4,P.ink);
+ r(c,x+35,y+63,35,6,'#65594f');r(c,x+39,y+69,4,11,P.ink);
+ r(c,x+62,y+69,4,11,P.ink);
+ for(let i=0;i<9;i++){
+  const xx=x+7+Math.floor(noise(seed,i)*95),yy=y+8+Math.floor(noise(seed+4,i)*65);
+  small(c,xx,yy,i%2?'#d5b68e':'#f0cbad');
+ }
 }
 function pavement(c,x,y,seed){
  r(c,x,y,32,32,seed%3===0?'#9d9e91':'#a7a89a');
@@ -189,6 +214,10 @@ function staticScene(c,site){
    if((bx%158)>113&&i%3===0)tree(c,bx,by,i+23);
    else if(i%4===0)crate(c,bx,by,i%2?'#af8b65':'#8f6c63');
   }
+ }
+ for(let row=0;row<4;row++)for(let col=0;col<6;col++){
+  const lx=25+col*158,ly=24+row*150;
+  if(!buildings.some(b=>b.x===lx&&b.y===ly))pocketPark(c,lx,ly,x*100+y*11+row*6+col);
  }
  for(let i=0;i<buildings.length;i++){
   const b=buildings[i],seed=Math.floor(noise(x+y,b.x*8+b.y,425)*100000);
