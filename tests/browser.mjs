@@ -591,7 +591,7 @@ await run('industry-real-ui-desktop',{viewport:{width:1440,height:900}},async pa
  let firm=(await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].building.firm;
  assert.equal(firm.price,'premium');
  assert.equal(firm.workers,2);
- await page.locator('#panel-body [data-world-tab="estates"]').click();
+ await page.locator('#panel-body .city-tabs [data-world-tab="estates"]').click();
  await page.locator('#panel-body [data-city-lot="lot-2"]').click();
  await page.locator('#panel-body [data-city-buy="lot-2"]').click();
  await page.locator('#panel-body [data-city-build="lot-2"][data-city-building="mill"]').click();
