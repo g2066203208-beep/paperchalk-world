@@ -21,7 +21,14 @@ export const geographySystem={
    data.x=x;data.y=y;data.lastMovedDay=day;data.player={x:124,y:100};
    return {data,events:[{type:'geography.move',title:'地区步行',text:'抵达新街区 '+x+','+y}]};
   }
-  if(action.type==='map-travel'){
+  if(action.type==='map-locate'){
+   const x=action.x,y=action.y;
+   if(!validTile(x,y)||Math.abs(x-data.x)>6||Math.abs(y-data.y)>4||data.interior)return {error:'只能在附近地图中选择可抵达的室外地区'};
+   data.distanceWalked+=Math.abs(x-data.x)+Math.abs(y-data.y);
+   data.x=x;data.y=y;data.player={x:124,y:100};data.lastMovedDay=day;
+   return {data,events:[{type:'geography.map-walk',title:'周边步行',text:'步行经过周边街区抵达'+x+','+y}]};
+ }
+ if(action.type==='map-travel'){
    const target=REGIONS.find(x=>x.id===action.target),mode=action.mode;
    const origin=REGIONS.find(x=>x.id===data.region)||REGIONS.reduce((a,b)=>
      Math.hypot(data.x-a.x,data.y-a.y)<Math.hypot(data.x-b.x,data.y-b.y)?a:b);
