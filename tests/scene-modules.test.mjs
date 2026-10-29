@@ -53,3 +53,22 @@ test('map and transport are independent modules, not hardwired to interior scene
  assert.match(travel,/data-atlas-travel/);
  assert.match(travel,/北部农垦区/);
 });
+
+test('new industry/region scene plugins can override, disable and revert safely',()=>{
+ const host=createSceneHost([nationalStreetScene,nationalInteriorScene]);
+ const fallback={inside:{id:'building-125-112-0-0',name:'诊所'}};
+ assert.equal(host.resolve(fallback,'national-interior'),'national-interior');
+ const plugin={
+  id:'clinic-room-3d',
+  match:({inside})=>inside?.name==='诊所',
+  render:()=>'<div class="clinic-scene">custom clinic</div>',
+  mount:()=>({destroy(){}})
+ };
+ host.register(plugin);
+ assert.equal(host.resolve(fallback,'national-interior'),'clinic-room-3d');
+ assert.match(host.render(host.resolve(fallback,'national-interior'),fallback),/custom clinic/);
+ host.mount({});
+ assert.equal(host.unregister('clinic-room-3d'),true);
+ assert.equal(host.current(),null,'unregistered active scene must unmount');
+ assert.equal(host.resolve(fallback,'national-interior'),'national-interior');
+});
