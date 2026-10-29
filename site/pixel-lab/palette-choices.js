@@ -1,8 +1,9 @@
 import { recolor, readSourceTokens, validateCanvas, PALETTE_ORIGINAL, ROLES } from './palette-core.js';
+import { drawWorld,validateWorld,WORLD_W,WORLD_H } from './palette-worlds.js';
 
 const $=id=>document.getElementById(id);
 const W=384,H=512;
-const model={palettes:[],tokens:null,canvases:new Map(),active:'A',compare:'B',grid:true,focus:'face',inspectorOffset:{x:0,y:0}};
+const model={palettes:[],tokens:null,canvases:new Map(),worlds:new Map(),active:'A',compare:'B',grid:true,focus:'face',inspectorOffset:{x:0,y:0}};
 const $cards=$('cards');
 const regions={face:{x:154,y:112},sleeve:{x:319,y:217},skirt:{x:177,y:251},shoe:{x:199,y:449}};
 const inspect=$('inspectCanvas'),ic=inspect.getContext('2d',{willReadFrequently:true});
@@ -27,6 +28,7 @@ function downloadJSON(){
  const p=find(model.active);
  const value={version:1,status:'candidate',id:p.id,name:p.name,en:p.en,
   source:'Same first-party 384x512 four-color full-body pixel sprite',
+  artDirection:{scene:p.scene,shape:p.shape,ui:p.ui,motto:p.motto},
   colors:p.colors,roles:ROLES,width:W,height:H,noShading:true};
  const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob);
@@ -47,6 +49,10 @@ function setActive(id){
  $('selectedLetter').textContent=p.id+'.';$('selectedTitle').textContent=p.name;
  $('selectedEnglish').textContent=p.en.toUpperCase();
  $('selectedDescription').textContent=p.description;
+ $('selectedMotto').textContent=p.motto;
+ $('selectedShape').textContent=p.shape;
+ $('selectedUI').textContent=p.ui;
+ $('activeWorldName').textContent=p.scene;
  $('selectedSwatches').innerHTML=displayColorList(p);
  $('activeId').textContent=p.id;$('activeStageName').textContent=p.name;
  renderSelected();
@@ -61,8 +67,15 @@ function setCompare(id){
  const p=find(id);
  model.compare=p.id;
  $('compareId').textContent=p.id;$('compareName').textContent=p.name;
+ $('compareWorldName').textContent=p.scene;
  drawInto(model.canvases.get(p.id),$('compareCanvas'));
+ drawIntoWorld(model.worlds.get(p.id),$('compareWorldCanvas'));
  window.PALETTE_STUDIO.compare=p.id;
+}
+function drawIntoWorld(from,to){
+ if(!from)throw Error('Missing world artwork');
+ const ctx=to.getContext('2d',{willReadFrequently:true});
+ ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,WORLD_W,WORLD_H);ctx.drawImage(from,0,0);
 }
 function drawInto(from,to){
  const ctx=to.getContext('2d',{willReadFrequently:true});
@@ -71,6 +84,7 @@ function drawInto(from,to){
 function renderSelected(){
  const p=find(model.active);
  drawInto(model.canvases.get(p.id),$('activeCanvas'));
+ drawIntoWorld(model.worlds.get(p.id),$('activeWorldCanvas'));
  setCompare(model.compare);
  drawInspector();
 }
@@ -120,11 +134,20 @@ function makeCard(p){
  for(const hex of p.colors){const el=document.createElement('div');el.className='mini-swatch';
   const s=document.createElement('div');s.className='sample';s.style.background=hex;
   const code=document.createElement('code');code.textContent=hex;el.append(s,code);swatches.append(el);}
+ const worldBox=document.createElement('div');worldBox.className='card-world';
+ const worldLabel=document.createElement('div');worldLabel.className='card-world-label';
+ worldLabel.textContent='WORLD STUDY · '+p.scene;
+ const worldCanvas=model.worlds.get(p.id);
+ worldCanvas.className='card-world-canvas';
+ worldCanvas.setAttribute('aria-label',p.name+'原创像素场景和HUD');
+ worldBox.append(worldLabel,worldCanvas);
+ const shape=document.createElement('div');shape.className='card-shape';
+ shape.textContent='形状：'+p.shape;
  const act=document.createElement('div');act.className='card-actions';
  const btn=document.createElement('button');btn.className='choose-button';btn.type='button';btn.textContent='选择此方案';
  btn.addEventListener('click',()=>setActive(p.id));
  const val=document.createElement('span');val.className='card-validate';val.textContent='4 COLORS · 0 SHADING';
- act.append(btn,val);info.append(top,en,description,swatches,act);root.append(wrap,info);
+ act.append(btn,val);info.append(top,en,description,swatches,worldBox,shape,act);root.append(wrap,info);
  return root;
 }
 function sourceImage(path){
@@ -150,6 +173,11 @@ async function boot(){
    ctx.putImageData(image,0,0);const test=validateCanvas(image.data,p.colors);
    if(test.colors!==4||test.alpha!==0||test.other!==0)throw Error('四色失败：'+p.id);
    model.canvases.set(p.id,canvas);
+   const worldCanvas=document.createElement('canvas');
+   drawWorld(worldCanvas,p.colors,p.id);
+   const worldCheck=validateWorld(worldCanvas,p.colors);
+   if(worldCheck.colors!==4||worldCheck.invalid||worldCheck.transparency)throw Error('场景RGBA验证失败：'+p.id);
+   model.worlds.set(p.id,worldCanvas);
   }
   const choose=$('compareSelect');for(const p of model.palettes){
    const opt=document.createElement('option');opt.value=p.id;opt.textContent=p.id+' · '+p.name;choose.append(opt);
@@ -161,11 +189,11 @@ async function boot(){
   window.PALETTE_STUDIO={
    ready:true,active:id,compare:model.compare,
    palettes:()=>model.palettes.map(p=>({id:p.id,colors:p.colors.slice(),name:p.name})),
-   inspect:(letter)=>{const p=find(letter||model.active);const data=model.canvases.get(p.id).getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;return {id:p.id,...validateCanvas(data,p.colors),width:W,height:H,sourceTokens:model.tokens.length,grid:model.grid};},
+   inspect:(letter)=>{const p=find(letter||model.active);const data=model.canvases.get(p.id).getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;return {id:p.id,...validateCanvas(data,p.colors),world:validateWorld(model.worlds.get(p.id),p.colors),width:W,height:H,sourceTokens:model.tokens.length,grid:model.grid};},
    snapshot:(letter)=>model.canvases.get(find(letter||model.active).id).toDataURL('image/png')
   };
   setActive(id);$('downloadPNG').disabled=false;$('copyHEX').disabled=false;$('downloadJSON').disabled=false;
-  $('status').textContent='已加载 8 套真实原生像素配色 · 每套严格 4 色 · 点选任意方案对比。';
+  $('status').textContent='8套差异化美术方向已加载：每套人物 + 原创场景 + HUD，均严格四色。点击任何一套比较。';
  }catch(err){$('status').classList.add('error');$('status').textContent='载入失败：'+err.message+'。请检查 GitHub Actions 是否已经发布源图。';console.error(err);}
 }
 $('compareSelect').addEventListener('change',e=>setCompare(e.target.value));

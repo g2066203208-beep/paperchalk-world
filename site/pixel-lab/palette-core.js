@@ -1,5 +1,5 @@
 export const PALETTE_ORIGINAL=['#0F0F3B','#E33686','#2C9FCE','#FDEE8F'];
-export const ROLES=['轮廓 / 背景','暖色 / 发饰','冷色 / 衣服','亮色 / 肤色'];
+export const ROLES=['轮廓与背景','角色识别色','服饰与结构色','肤色与留白'];
 const ORIGINAL=PALETTE_ORIGINAL.map(h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)));
 const colorOf=(hex)=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
 export function readSourceTokens(rgba){

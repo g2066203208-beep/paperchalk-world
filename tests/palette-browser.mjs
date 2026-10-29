@@ -26,6 +26,8 @@ try{
  await page.waitForFunction(()=>Boolean(window.PALETTE_STUDIO?.ready),{timeout:25000});
  const cards=page.locator('.palette-card');
  assert.equal(await cards.count(),8,'Exactly eight visual choices');
+ assert.equal(await page.locator('.card-world-canvas').count(),8,'Eight independent world boards');
+ assert.equal(await page.locator('#activeWorldCanvas').getAttribute('width'),'224');
  const ids=await cards.evaluateAll(els=>els.map(x=>x.dataset.id));
  assert.deepEqual(ids,['A','B','C','D','E','F','G','H']);
  const results=await page.evaluate(()=>window.PALETTE_STUDIO.palettes().map(x=>({id:x.id,swatches:x.colors,...window.PALETTE_STUDIO.inspect(x.id)})));
@@ -37,16 +39,19 @@ try{
   assert.equal(entry.colors,4,'ALL four palette colors present');
   assert.equal(entry.other,0,'No phantom color');
   assert.equal(entry.alpha,0,'No alpha interpolation');
+  assert.deepEqual(entry.world,{width:224,height:144,colors:4,invalid:0,transparency:0},'True four-color original world preview');
  }
  const original=await page.evaluate(()=>window.PALETTE_STUDIO.snapshot('A'));
  mkdirSync('repixel-browser-artifacts',{recursive:true});
  await page.screenshot({path:'repixel-browser-artifacts/eight-palettes-desktop.png',fullPage:true});
  await page.locator('.palette-card[data-id="H"] .choose-button').click();
  assert.equal(await page.locator('#selectedLetter').innerText(),'H.');
- assert.equal(await page.locator('#selectedTitle').innerText(),'夜电萤火');
+ assert.equal(await page.locator('#selectedTitle').innerText(),'橘日港湾');
+ assert.equal(await page.locator('#activeWorldName').innerText(),'夕阳码头');
  assert.equal(await page.locator('#compareId').innerText(),'B');
  await page.locator('#compareSelect').selectOption('F');
- assert.equal(await page.locator('#compareName').innerText(),'茶铜旧梦');
+ assert.equal(await page.locator('#compareName').innerText(),'冰极警报');
+ assert.equal(await page.locator('#compareWorldName').innerText(),'冰冠电台');
  await page.locator('#inspectPart').selectOption('shoe');
  await page.locator('#inspectCanvas').click({position:{x:100,y:100}});
  assert.match(await page.locator('#inspectCoord').innerText(),/像素坐标/);
@@ -66,6 +71,7 @@ try{
  await mobile.waitForFunction(()=>window.PALETTE_STUDIO?.ready);
  assert.equal(await mobile.locator('#selectedLetter').innerText(),'C.');
  assert.equal(await mobile.locator('.palette-card').count(),8);
+ assert.equal(await mobile.locator('.card-world-canvas').count(),8);
  assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+3),true,'No horizontal overflow on mobile');
  await mobile.screenshot({path:'repixel-browser-artifacts/eight-palettes-mobile.png',fullPage:true});
  assert.deepEqual(errors,[],'Desktop browser console errors');
