@@ -178,7 +178,11 @@ await run('city-properties-and-justice',{viewport:{width:1440,height:900}},async
  await page.locator('.object-calendar').click();
  await page.locator('[data-next]').click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).day,2);
- assert.ok((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].lastProfit>0);
+ const firstDayFirm=(await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1];
+ assert.ok(firstDayFirm.building.firm,'new business must use real stock accounting');
+ assert.equal(firstDayFirm.lastProfit,firstDayFirm.building.firm.lastRevenue-firstDayFirm.building.firm.lastExpenses,
+  'daily profit must be earned sales minus real operating expenses, even when short of cash');
+ assert.ok(firstDayFirm.building.firm.lastSales<=firstDayFirm.building.firm.lastDemand,'no fake customers beyond demand');
  await page.reload({waitUntil:'networkidle'});
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
 });
@@ -575,7 +579,7 @@ await run('industry-real-ui-desktop',{viewport:{width:1440,height:900}},async pa
  await page.reload({waitUntil:'networkidle'});
  await page.evaluate(()=>window.__OFFICE__.exploration.hide());
  await page.locator('[data-open="reports"]').click();
- await page.locator('#panel-body [data-world-tab="estates"]').click();
+ await page.locator('#panel-body .city-tabs [data-world-tab="estates"]').click();
  const buy=page.locator('#panel-body [data-city-buy="lot-1"]');
  await buy.click();
  assert.equal((await page.evaluate(()=>window.__OFFICE__.world())).slices.estates.parcels[1].owner,'player');
