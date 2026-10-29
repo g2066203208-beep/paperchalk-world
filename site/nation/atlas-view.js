@@ -16,7 +16,7 @@ export function createNationalAtlas(root,{readWorld,command}){
  const chunks=new Map(),CACHE_LIMIT=36;
  const html='<section class="nation-shell" role="dialog" aria-label="夜港联邦可探索国家地图">'+
  '<header class="nation-top"><div class="nation-brand"><small>THE FEDERATION · 1998</small><strong>夜港联邦 · 国土探索</strong></div>'+
- '<div class="nation-top-controls"><button data-nation-zoom="all">全国</button><button data-nation-zoom="local">街区</button>'+
+ '<div class="nation-top-controls"><button data-nation-zoom="all">全国</button><button data-nation-zoom="local">俯瞰街区</button><button data-nation-scene="street">街道实景</button>'+
  '<button data-nation-center="me">回到自己位置</button><button data-nation-close>返回游戏 ×</button></div></header>'+
  '<div class="nation-main"><div class="nation-viewport" tabindex="0" aria-label="地图可拖拽、滚轮缩放；点击建筑进入，键盘WASD移动">'+
  '<canvas class="nation-land" aria-label="国家地形、道路、铁路和可进入建筑"></canvas>'+
@@ -39,7 +39,7 @@ export function createNationalAtlas(root,{readWorld,command}){
  const viewEl=$(root,'.nation-viewport'),land=$(root,'.nation-land'),traffic=$(root,'.nation-traffic');
  const c=land.getContext('2d',{alpha:false}),a=traffic.getContext('2d');
  const destination=$(root,'#nation-destination'),info=$(root,'.nation-building-info'),hint=$(root,'.nation-loc');
- let fixedFrame=null,pointStart=null,dragging=false,lastDrag=null;
+ let fixedFrame=null,pointStart=null,dragging=false,lastDrag=null,streetHits=[],returnMode='map';
  function notify(text){info.textContent=text;}
  function updateState(){snapshot=readWorld();}
  function exec(action){
@@ -139,7 +139,7 @@ export function createNationalAtlas(root,{readWorld,command}){
    if(scale>1&&scale<25)text(c,stop.name,p.x+8,p.y-8,'bold 11px sans-serif','#fff7e5');
   }
   $(root,'.nation-loc').textContent=nearbyRegion(center.x,center.y).name+' · '+Math.round(center.x)+' / '+Math.round(center.y);
-  $(root,'.nation-scale').textContent='地图比例 1块=250米 · '+(Math.round(1000/scale)/10)+' 米/10px';
+  $(root,'.nation-scale').textContent='1块=250米 · '+Math.round(2500/scale)+' 米/10px';
  }
  function drawInterior(){
   const b=resolveBuilding(snapshot.slices.nation.inside,snapshot.slices.estates),floor=interiorFor(b);
@@ -173,10 +173,95 @@ export function createNationalAtlas(root,{readWorld,command}){
   c.restore();
   hint.textContent=b.street+' · '+b.title+' · 室内调查';
  }
+ function drawStreet(){
+  const pos=snapshot.slices.nation.position,terrain=terrainAt(pos.x,pos.y);
+  const sky=c.createLinearGradient(0,0,0,view.h);
+  sky.addColorStop(0,'#627789');sky.addColorStop(.5,'#ad9d89');sky.addColorStop(1,'#d0bfa7');
+  c.fillStyle=sky;c.fillRect(0,0,view.w,view.h);
+  const horizon=view.h*.70,ground=view.h*.78,unit=view.w<660?135:193;
+  // Atmospheric layered skyline and real architectural facades, not map menu cards.
+  for(let i=0;i<16;i++){
+   const x=i*view.w/15-40,h=view.h*(.11+(hash(pos.y,i,'sky')%19)/100);
+   rect(c,x,horizon-h,view.w/14+12,h,'#5f666b');
+   rect(c,x+7,horizon-h+13,7,10,'#bdaf94');
+  }
+  if(terrain.kind==='port'||terrain.kind==='sea'){
+   rect(c,0,horizon-20,view.w,48,'#75939c');
+   for(let i=0;i<5;i++){const x=i*view.w/4;
+    line(c,{x,y:horizon-185},{x:x+16,y:horizon-185},'#535960',4);
+    line(c,{x:x+12,y:horizon-185},{x:x+12,y:horizon-15},'#535960',4);
+    line(c,{x:x+12,y:horizon-185},{x:x+80,y:horizon-145},'#535960',4);}
+  }
+  streetHits=[];
+  for(let d=-4;d<=4;d++){
+   const bx=Math.round(pos.x)+d,by=Math.round(pos.y),x=view.w/2+d*unit-unit*.45;
+   const place=terrainAt(bx,by),b=buildingsInBlock(bx,by,snapshot.slices.estates)[0];
+   if(x>view.w+unit||x<-unit)continue;
+   const width=unit*.86;
+   if(!b){
+    if(place.kind==='forest'||place.kind==='farm'||place.kind==='grassland'){
+     for(let j=0;j<3;j++){
+      const xx=x+j*width/3,stem=ground-130+(hash(bx,j)%35);
+      rect(c,xx+11,stem,7,ground-stem,'#665c4f');
+      c.fillStyle=place.kind==='farm'?'#a9a06a':'#536f5e';
+      c.beginPath();c.arc(xx+16,stem-13,25,0,7);c.fill();
+     }
+    }else{
+     rect(c,x,ground-120,width,120,'#8c7b70');
+     for(let j=0;j<3;j++)rect(c,x+j*width/3+9,ground-84,width/5,45,'#505b67');
+    }continue;
+   }
+   const floors=Math.min(4,b.floors),roof=ground-(185+floors*41),brick=['#9a8177','#8e9392','#b6a08e','#a49286','#879495','#a89c8e'][b.frontage%6];
+   rect(c,x+7,roof+10,width,ground-roof,'#39434a');
+   rect(c,x,roof,width,ground-roof,brick);
+   rect(c,x-5,roof-9,width+10,12,'#4d515a');
+   rect(c,x+9,roof+14,width-18,5,'#cbbba1');
+   for(let f=0;f<floors;f++)for(let j=0;j<3;j++){
+    const wx=x+15+j*(width-30)/3,wy=roof+34+f*40;
+    rect(c,wx-4,wy-4,(width-34)/4+6,31,'#55575d');
+    rect(c,wx,wy,(width-34)/4,22,'#79909d');
+    rect(c,wx+2,wy+2,(width-34)/9,17,'#b5c7c0');
+    rect(c,wx-7,wy+23,(width-34)/4+12,6,'#d4c8b0');
+   }
+   const signY=ground-106,doorX=x+width*.39,doorW=width*.25;
+   rect(c,x+6,signY-13,width-12,31,'#364753');
+   rect(c,x+9,signY-10,width-18,25,'#65504a');
+   c.font='bold '+(view.w<660?'10':'13')+'px sans-serif';c.textAlign='center';c.fillStyle='#f3dbc1';
+   c.fillText(b.title.slice(0,view.w<660?5:8),x+width/2,signY+7);
+   rect(c,doorX,ground-74,doorW,76,'#293e49');
+   rect(c,doorX+4,ground-70,doorW-8,63,'#aa8269');
+   rect(c,doorX+doorW-10,ground-35,4,5,'#f1d5a1');
+   c.textAlign='left';rect(c,x-1,ground-6,width+3,7,'#d4c1a4');
+   streetHits.push({x:doorX-13,y:ground-87,w:doorW+26,h:91,building:b});
+  }
+  // Sidewalk, street lamps, curb and marked asphalt.
+  rect(c,0,ground,view.w,18,'#c4b297');
+  rect(c,0,ground+18,view.w,view.h-ground-18,'#4c5157');
+  rect(c,0,ground+25,view.w,4,'#dfd0b4');
+  rect(c,0,view.h-58,view.w,2,'#c0ae8e');
+  c.setLineDash([39,30]);line(c,{x:0,y:view.h-92},{x:view.w,y:view.h-92},'#c9bfa8',3);c.setLineDash([]);
+  for(let d=-3;d<=3;d+=3){
+   const lx=view.w/2+d*unit;
+   rect(c,lx,ground-160,5,160,'#40494f');
+   c.fillStyle='#c6b17f';c.beginPath();c.arc(lx+2,ground-157,14,0,7);c.fill();
+   c.fillStyle='rgba(255,230,167,.11)';c.beginPath();c.arc(lx+2,ground-157,38,0,7);c.fill();
+  }
+  if(terrain.kind==='industry'||terrain.kind==='port'){
+   for(let i=0;i<4;i++)rect(c,i*view.w/4+30,ground-16,67,15,'#a79983');
+  }
+  hint.textContent=nearbyRegion(pos.x,pos.y).name+' · '+streetName(pos.x,pos.y)+' · 第'+Math.round(pos.x)+'号街段';
+  $(root,'.nation-scale').textContent='街道立面 · 同一个国土坐标与存档';
+ }
+ function hitStreet(x,y){
+  const found=streetHits.find(p=>x>=p.x&&x<=p.x+p.w&&y>=p.y&&y<=p.y+p.h);
+  if(found){openBuilding(found.building);return;}
+  notify('这是'+streetName(snapshot.slices.nation.position.x,snapshot.slices.nation.position.y)+'。在店面大门点击进入，WASD沿路行走。');
+ }
  function paint(){
   if(!visible)return;
   c.clearRect(0,0,view.w,view.h);
-  if(snapshot.slices.nation.inside)drawInterior();else drawMap();
+  if(snapshot.slices.nation.inside)drawInterior();
+  else if(mode==='street')drawStreet();else drawMap();
  }
  function drawTraffic(now){
   if(!visible)return;
@@ -243,7 +328,7 @@ export function createNationalAtlas(root,{readWorld,command}){
     nation.journal.slice(0,3).map(x=>'<p>DAY '+x.day+' · '+esc(x.item||x.at||x.type)+'</p>').join('');
   root.querySelectorAll('[data-nation-mode]').forEach(b=>b.classList.toggle('selected',b.dataset.nationMode===transport));
  }
- function fit(zoom){scale=between(zoom,.32,76);paint();updateSidebar();}
+ function fit(zoom){mode='map';scale=between(zoom,.16,76);paint();updateSidebar();}
  function show(){
   if(visible)return;visible=true;root.hidden=false;updateState();
   if(snapshot.slices.nation.inside){mode='interior';player={x:480,y:510};}
@@ -269,7 +354,7 @@ export function createNationalAtlas(root,{readWorld,command}){
  function openBuilding(b){
   if(!b)return;
   const r=exec({type:'enter',building:b.id});
-  if(r.ok){mode='interior';player={x:480,y:510};walkTarget=null;
+  if(r.ok){returnMode=mode;mode='interior';player={x:480,y:510};walkTarget=null;
    notify('进入 '+b.title+'：行走到物件旁并点击调查，室内有各自不同的陈设和访客。');paint();
   }
  }
@@ -287,7 +372,7 @@ export function createNationalAtlas(root,{readWorld,command}){
  function hitInside(x,y){
   const p={x:x/view.w*960,y:y/view.h*600};
   const floor=interiorFor(resolveBuilding(snapshot.slices.nation.inside,snapshot.slices.estates));
-  if(p.y>535&&p.x>412&&p.x<545){if(exec({type:'exit'}).ok){mode='map';center={...snapshot.slices.nation.position};paint();}return;}
+  if(p.y>535&&p.x>412&&p.x<545){if(exec({type:'exit'}).ok){mode=returnMode;center={...snapshot.slices.nation.position};paint();}return;}
   const fixture=floor.fixtures.find(f=>p.x>f.x-15&&p.x<f.x+f.w+15&&p.y>f.y-20&&p.y<f.y+f.h+20);
   if(fixture){
    const dx=fixture.x-player.x,dy=fixture.y-player.y;
@@ -300,13 +385,14 @@ export function createNationalAtlas(root,{readWorld,command}){
  root.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.hasAttribute('data-nation-close')){close();return;}
-  if(b.dataset.nationZoom){if(b.dataset.nationZoom==='all'){center={x:2000,y:1900};fit(.68);}else{center={...snapshot.slices.nation.position};fit(30);}return;}
+  if(b.dataset.nationZoom){if(b.dataset.nationZoom==='all'){center={x:2048,y:2048};fit(Math.max(.16,Math.min(view.w,view.h)/4350));}else{center={...snapshot.slices.nation.position};fit(34);}return;}
   if(b.dataset.nationCenter){center={...snapshot.slices.nation.position};fit(30);return;}
+  if(b.dataset.nationScene){mode='street';animation=null;paint();notify('正站在'+streetName(snapshot.slices.nation.position.x,snapshot.slices.nation.position.y)+'。按左右键沿街行走，点击店面的大门进入。');return;}
   if(b.dataset.nationMode){transport=b.dataset.nationMode;updateSidebar();return;}
   if(b.hasAttribute('data-nation-depart')){
    const route=routeBetween(snapshot.slices.nation.station,selected,transport);
    const r=exec({type:'depart',to:selected,mode:transport});
-   if(r.ok){animation={started:performance.now(),duration:between(route.km*15,2400,11000),path:route};
+   if(r.ok){mode='map';animation={started:performance.now(),duration:between(route.km*15,2400,11000),path:route};
     notify(MODE[transport].name+'已发车：沿地图上的线连续驶向'+STATIONS.find(s=>s.id===selected).name+'。');}
    return;
   }
@@ -324,19 +410,19 @@ export function createNationalAtlas(root,{readWorld,command}){
  viewEl.addEventListener('pointerup',e=>{if(activePointer!==e.pointerId)return;
   activePointer=null;lastDrag=null;if(dragging)return;
   const box=viewEl.getBoundingClientRect(),x=e.clientX-box.left,y=e.clientY-box.top;
-  if(snapshot.slices.nation.inside)hitInside(x,y);else hitOnMap(x,y);
+  if(snapshot.slices.nation.inside)hitInside(x,y);else if(mode==='street')hitStreet(x,y);else hitOnMap(x,y);
  });
  viewEl.addEventListener('wheel',e=>{e.preventDefault();if(snapshot.slices.nation.inside)return;
   const box=viewEl.getBoundingClientRect(),px=e.clientX-box.left,py=e.clientY-box.top;
   const before=worldPos(px,py),ratio=e.deltaY>0?.78:1.28;
-  scale=between(scale*ratio,.32,76);
+  scale=between(scale*ratio,.16,76);
   center={x:before.x-(px-view.w/2)/scale,y:before.y-(py-view.h/2)/scale};
   paint();},{passive:false});
  viewEl.addEventListener('keydown',e=>{
   const delta={ArrowUp:[0,-1],KeyW:[0,-1],ArrowDown:[0,1],KeyS:[0,1],
    ArrowLeft:[-1,0],KeyA:[-1,0],ArrowRight:[1,0],KeyD:[1,0]}[e.code];
   if(delta){e.preventDefault();move(...delta);}
-  if(e.code==='Escape'&&snapshot.slices.nation.inside){e.preventDefault();exec({type:'exit'});mode='map';paint();}
+  if(e.code==='Escape'&&snapshot.slices.nation.inside){e.preventDefault();exec({type:'exit'});mode=returnMode;paint();}
  });
  const observer=new ResizeObserver(()=>{if(visible)resize();});observer.observe(viewEl);
  return Object.freeze({show,close,isVisible:()=>visible,refresh:()=>{if(!visible)return;updateState();chunks.clear();paint();updateSidebar();},
