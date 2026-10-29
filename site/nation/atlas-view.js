@@ -284,6 +284,28 @@ export function createNationalAtlas(root,{readWorld,command}){
    rect(a,player.x-4,player.y-26,8,10,'#5f667c');
    a.restore();
   }else{
+   if(mode==='street'){
+    const foot=view.h*.78;
+    for(let i=0;i<8;i++){
+     const x=((now*(i%2?-.024:.017)+hash(snapshot.slices.nation.position.x,i)*.7)%(view.w+180)+view.w+180)%(view.w+180)-90;
+     const y=foot-9+(i%3)*3,step=Math.sin(now/125+i);
+     a.strokeStyle='#31434f';a.lineWidth=3;
+     a.beginPath();a.moveTo(x,y-17);a.lineTo(x-7*step,y);a.moveTo(x,y-17);a.lineTo(x+7*step,y);a.stroke();
+     rect(a,x-7,y-37,14,24,['#364c62','#865753','#647567','#766b78'][i%4]);
+     a.fillStyle=['#d3ad8b','#ddbc9e','#b88d7a'][i%3];a.beginPath();a.arc(x,y-44,8,0,7);a.fill();
+    }
+    for(let i=0;i<3;i++){
+     const x=((now*(i%2?-.038:.05)+hash(i,'car',snapshot.slices.nation.position.y)*.1)%(view.w+240)+view.w+240)%(view.w+240)-180;
+     const y=view.h-42+i*9,body=i===1?'#9f7771':'#425867';
+     rect(a,x,y-28,83,24,body);rect(a,x+13,y-42,43,16,'#809caa');
+     for(const wheel of [x+15,x+67]){a.fillStyle='#25323a';a.beginPath();a.arc(wheel,y-2,9,0,7);a.fill();}
+    }
+    const x=view.w/2,y=foot-1,step=Math.sin(now/100)*5;
+    a.strokeStyle='#25333d';a.lineWidth=5;a.beginPath();a.moveTo(x-4,y-25);a.lineTo(x-10+step,y);
+    a.moveTo(x+4,y-25);a.lineTo(x+10-step,y);a.stroke();
+    rect(a,x-13,y-67,26,45,'#526477');rect(a,x-8,y-79,16,14,'#d5ad97');
+    a.fillStyle='#29343c';a.beginPath();a.ellipse(x,y-78,14,6,0,0,7);a.fill();
+   }else{
    for(const m of ['road','rail','sea']){
     for(const e of allEdges(m)){
      const t=((now/(m==='road'?24000:m==='rail'?18000:36000)+hash(e.id)%100/100)%1);
@@ -308,6 +330,7 @@ export function createNationalAtlas(root,{readWorld,command}){
    const xy=screen(position.x,position.y);
    a.fillStyle='#ffefbf';a.beginPath();a.arc(xy.x,xy.y,7,0,7);a.fill();
    a.strokeStyle='#8f3f45';a.lineWidth=2;a.stroke();
+   }
   }
   raf=requestAnimationFrame(drawTraffic);
  }
