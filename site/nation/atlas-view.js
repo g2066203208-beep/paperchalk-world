@@ -157,13 +157,43 @@ export function createNationalAtlas(root,{readWorld,command}){
   rect(c,25,27,19,545,'#35404a');rect(c,926,27,19,545,'#35404a');
   rect(c,419,567,122,16,'#9a764f');
   for(let j=0;j<6;j++){rect(c,78+j*145,27,86,10,'#93b8bd');rect(c,78+j*145,44,86,10,'#d7c7a6');}
-  for(const f of floor.fixtures){
-   rect(c,f.x-4,f.y-4,f.w+8,f.h+8,'#33424c');
-   rect(c,f.x,f.y,f.w,f.h,['#b4977e','#5e7c83','#b0a87a','#8b6a63'][hash(f.id)%4]);
-   rect(c,f.x+8,f.y+7,f.w-16,6,'#eee1bc');
-   text(c,f.label,f.x-5,f.y-9,'bold 15px sans-serif','#23313d');
-  }
-  text(c,b.street+' / '+b.title,64,88,'bold 21px sans-serif','#293b46');
+  // Props are individually illustrated equipment, shelves, desks or seating, not labeled cards.
+  floor.fixtures.forEach((f,i)=>{
+   const x=f.x,y=f.y,w=f.w,h=f.h,t=f.label;
+   const machine=/机|灶|炉|泵|控制|发电|轨道|放映|升降|卷扬|叉车|分装|收割|扫描/.test(t);
+   const storage=/架|柜|仓|箱|桶|堆|货|卷|档案|材料|木材|药品|布料|样本/.test(t);
+   const seating=/桌|台|床|椅|沙发|座|讲台|餐/.test(t);
+   rect(c,x+6,y+9,w,h,'rgba(31,46,53,.28)');
+   rect(c,x-3,y-3,w+6,h+6,'#364550');
+   rect(c,x,y,w,h,machine?'#6e848b':storage?'#857362':seating?'#956e53':'#71857d');
+   if(machine){
+    rect(c,x+8,y+8,w-16,h-16,'#a9b9b1');
+    c.fillStyle='#4a6069';for(let j=0;j<3;j++){c.beginPath();c.arc(x+18+j*25,y+h/2,8,0,7);c.fill();}
+    rect(c,x+w-29,y+11,18,13,'#384b59');rect(c,x+w-26,y+13,8,6,'#e0b66f');
+    for(let j=0;j<4;j++)rect(c,x+12+j*16,y+h-11,9,3,'#e1d5bd');
+   }else if(storage){
+    rect(c,x+8,y+4,w-16,h-8,'#c9aa83');
+    for(let j=0;j<3;j++){
+     const xx=x+11+j*(w-22)/3;
+     rect(c,xx,y+8,(w-28)/3,h-16,['#9d6860','#637e81','#a58e67'][j]);
+     rect(c,xx+3,y+12,8,6,'#decaa3');
+    }
+    rect(c,x+6,y+h/2-2,w-12,4,'#554b47');
+   }else if(seating){
+    rect(c,x+6,y+6,w-12,h-12,'#c19a74');
+    rect(c,x+8,y+8,w-16,5,'#f1d2a0');
+    rect(c,x+12,y+17,w-24,Math.max(5,h-26),'#b7a17f');
+    rect(c,x+w-27,y+19,17,13,'#e9ddbd');
+    rect(c,x+w-27,y+35,12,3,'#8f786a');
+    rect(c,x+10,y+h-2,12,7,'#6e5448');
+   }else{
+    for(let j=0;j<4;j++)rect(c,x+8+j*17,y+8,11,h-16,j%2?'#c5b28b':'#536b76');
+   }
+   c.fillStyle='#a04f49';c.beginPath();c.arc(x-9,y-8,13,0,7);c.fill();
+   c.textAlign='center';text(c,String(i+1),x-9,y-3,'bold 13px sans-serif','#fff0db');c.textAlign='left';
+  });
+  rect(c,54,61,390,42,'rgba(36,48,54,.90)');
+  text(c,b.street+'  /  '+b.title,68,87,'bold 19px sans-serif','#f6e8c9');
   for(const npc of floor.characters){
    const dy=5*Math.sin(elapsed/850+hash(npc.id)%12);
    c.fillStyle='#364958';c.beginPath();c.ellipse(npc.x,npc.y+dy,12,8,0,0,7);c.fill();
