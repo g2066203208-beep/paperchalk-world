@@ -113,7 +113,7 @@ export function runIndustryDay(parcels,{day,slices,context,signal}){
   debit(book,wage,'wages');debit(book,operating,'maintenance');
   if(!f.open){lot.lastProfit=0;continue;}
   // Small per-unit capacity, real material constraints, deterministic quantities.
-  const maxBatch=Math.max(1,Math.min(b.level,f.workers));
+  const maxBatch=Math.max(1,Math.min(b.level+1,f.workers));
   const amount=typ.batch*maxBatch;
   if(typ.batch>0){
    let canRun=true;
@@ -188,9 +188,10 @@ export function runIndustryDay(parcels,{day,slices,context,signal}){
      Math.max(1,Math.round(GOOD[typ.output].cost*1.45*PRICE_MODES[f.price].multiplier));
    book.sold=sales;book.revenue=sales*unit;f.stock[typ.output]=(f.stock[typ.output]||0)-sales;
    if(available<demand)book.stockouts=demand-available;
-   book.tax=Math.round(book.revenue*.11);
-   debit(book,book.tax,'tax');
-   debit(book,5,'license');
+   const government=slices.society?.government;
+   const tax=Math.round(book.revenue*(government?.monthlyTax??11)/100);
+   debit(book,tax,'tax');
+   debit(book,government?.licenseFee??5,'license');
    f.reputation=cap(f.reputation+(demand?Math.round((sales/demand-.65)*2):0),10,100);
   }
   for(const item of GOODS.filter(x=>x.perishable)){
