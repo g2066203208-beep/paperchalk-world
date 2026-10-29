@@ -1,6 +1,7 @@
 import { chromium } from 'playwright';
 import { pathToFileURL } from 'node:url';
-import { resolve, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
 import assert from 'node:assert/strict';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 try{
