@@ -483,8 +483,9 @@ await run('street-real-traversal-1440',{viewport:{width:1440,height:900}},async 
  assert.ok(talkId,'one citizen should be visible for face-to-face talk');
  const one=page.locator('.pedestrian-actor[data-explore-id="'+talkId+'"]');
  await one.hover({force:true,timeout:8000});
- await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='talking',talkId,{timeout:3000});
+ await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='hovering',talkId,{timeout:3000});
  await one.click({timeout:8000});
+ await page.waitForFunction(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase==='talking',talkId,{timeout:3000});
  await page.locator('.explore-dialogue:not([hidden])').waitFor();
  const state=await page.evaluate(id=>window.__OFFICE__.exploration.traffic().actors.find(p=>p.id===id)?.phase,talkId);
  assert.equal(state,'talking','selected citizen stops to speak');
