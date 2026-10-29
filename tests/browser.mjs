@@ -506,6 +506,65 @@ await run('street-portrait-motion-390',{viewport:{width:390,height:844},deviceSc
  await page.screenshot({path:'artifacts/street-05-portrait-lived-in.png',fullPage:true});
 });
 
+// Real browser validation for newly authored story, not just standalone pure logic tests.
+async function loadStoryDay(page,day,patchCampaign={}){
+ await page.evaluate(async({day,patchCampaign})=>{
+  const engine=await import('./engine.js');
+  const worldApi=await import('./core/game.js');
+  const legacy=engine.initialGame(); legacy.day=day;
+  legacy.call={id:'rival',answered:false};
+  const fresh=worldApi.runtime.initial(20261028,day);
+  Object.assign(fresh.slices.campaign,patchCampaign);
+  localStorage.setItem('night-office-game-v4',JSON.stringify(legacy));
+  localStorage.setItem('night-office-world-v1',JSON.stringify(fresh));
+  localStorage.removeItem('night-office-features-v1');
+ },{day,patchCampaign});
+ await page.reload({waitUntil:'networkidle'});
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+}
+async function visitScene(page,venue){
+ const where=await page.evaluate(()=>window.__OFFICE__.world().slices.origin.venue);
+ if(where===venue)return;
+ await page.locator('[data-explore-type="exit"]').click();
+ await page.locator('[data-route-place="'+venue+'"]').click();
+ await page.locator('[data-route-go]').click();
+ await page.waitForFunction(to=>window.__OFFICE__.world().slices.origin.venue===to,venue);
+}
+await run('mainstory-day16-playable',{viewport:{width:1440,height:900}},async page=>{
+ await loadStoryDay(page,16);
+ await visitScene(page,'market');
+ const marker=page.locator('[data-scene-day]');
+ assert.match(await marker.innerText(),/不属于市集的印章/);
+ await marker.click();
+ assert.match(await page.locator('.dialogue-line').innerText(),/黑色印章/);
+ await page.locator('[data-talk-choice="audit"]').click();
+ assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.campaign.decisions.seal),'audit');
+ await page.screenshot({path:'artifacts/mainstory-16-market-clue.png',fullPage:true});
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal(await page.evaluate(()=>window.__OFFICE__.world().slices.campaign.decisions.seal),'audit','story decision survives reload');
+});
+await run('mainstory-ending-reload',{viewport:{width:1440,height:900}},async page=>{
+ await loadStoryDay(page,39,{communityTrust:150,evidence:130,resolve:100,
+   decisions:{keys:'return-key'}});
+ await visitScene(page,'market');
+ await page.locator('[data-scene-day]').click();
+ await page.locator('[data-talk-choice="accept-vote"]').click();
+ await visitScene(page,'office');
+ await page.locator('[data-scene-day]').click();
+ await page.locator('[data-talk-choice="people-rule"]').click();
+ const ending=await page.evaluate(()=>window.__OFFICE__.world().slices.campaign.ending);
+ assert.equal(ending.key,'community');
+ assert.match(await page.locator('.dialogue-line').innerText(),/居民/);
+ assert.ok(await page.locator('[data-scene-ending]').isVisible());
+ await page.screenshot({path:'artifacts/mainstory-39-final-ending.png',fullPage:true});
+ await page.reload({waitUntil:'networkidle'});
+ assert.equal((await page.evaluate(()=>window.__OFFICE__.world().slices.campaign.ending)).key,'community','saved ending must survive reload');
+ await page.evaluate(()=>window.__OFFICE__.exploration.show());
+ await page.locator('[data-explore-type="open"][data-explore-id="calendar"]').click();
+ assert.match(await page.locator('.chapter-finale').innerText(),/城市由人们开门/);
+ await page.screenshot({path:'artifacts/mainstory-ending-journal.png',fullPage:true});
+});
+
 await browser.close();
 if(problems.length){console.error(problems.join('\n'));process.exit(1);}
 console.log('COMPLETE desktop office: full shapes, working door, visit, exterior, dial keypad, dossier, budget, drawer, map, persistence');
