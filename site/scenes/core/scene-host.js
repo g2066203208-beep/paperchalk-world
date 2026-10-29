@@ -10,7 +10,7 @@ export function createSceneHost(initial=[]){
  function register(module){
   if(!module||!/^[a-z][a-z0-9-]*$/.test(module.id)||
    typeof module.render!=='function'||(module.mount&&typeof module.mount!=='function')||
-   (module.dispose&&typeof module.dispose!=='function')||definitions.has(module.id)){
+   (module.dispose&&typeof module.dispose!=='function')||(module.match&&typeof module.match!=='function')||definitions.has(module.id)){
    throw Error('Invalid or duplicate scene module: '+String(module?.id));
   }
   definitions.set(module.id,module);
@@ -41,8 +41,16 @@ export function createSceneHost(initial=[]){
   active.instance=instance;active.mounted=true;
   return instance;
  }
+ function resolve(context,fallback){
+  // Later registered, more-specific scene packs override the generic template.
+  const candidates=[...definitions.values()].reverse();
+  const matching=candidates.find(scene=>scene.match?.(context));
+  const id=matching?.id||fallback;
+  if(!definitions.has(id))throw Error('No scene module matches '+String(fallback));
+  return id;
+ }
  function current(){return active?Object.freeze({id:active.id,mounted:active.mounted,instance:active.instance}):null;}
  function list(){return [...definitions.keys()];}
  for(const module of initial)register(module);
- return Object.freeze({register,unregister,render,mount,unmount,current,list});
+ return Object.freeze({register,unregister,resolve,render,mount,unmount,current,list});
 }
