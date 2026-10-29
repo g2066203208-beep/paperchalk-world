@@ -48,6 +48,18 @@
    <label class="control-label" for="blend-range"><span>关节融合半径</span><output id="blend-output">12 u</output></label>
    <input id="blend-range" type="range" min="0" max="25" value="12">
    <div class="math-note"><b>F(x,y) = smoothMin(d₁, d₂, ...)</b><span>体表是 F(x,y) = 0 的等值线。<br>移动骨骼，包裹体自动重算。</span></div>
+   <div class="section-title facet-title">自适应硬边分段 <span>ADAPTIVE FACETS</span></div>
+   <label class="switch-row"><span>多边形硬边轮廓 <small>保留真实数学包裹体</small></span><input id="facet-switch" type="checkbox" checked><i></i></label>
+   <label class="switch-row"><span>显示分段顶点 <small>橙色：反复变形位置</small></span><input id="facet-vertices-switch" type="checkbox" checked><i></i></label>
+   <label class="control-label" for="facet-coarse"><span>静态部位最大段长</span><output id="facet-coarse-out">37 u</output></label>
+   <input id="facet-coarse" type="range" min="18" max="75" value="37">
+   <label class="control-label" for="facet-fine"><span>高频变形最小段长</span><output id="facet-fine-out">7 u</output></label>
+   <input id="facet-fine" type="range" min="3" max="18" value="7">
+   <label class="control-label" for="facet-window"><span>形变统计时间窗口</span><output id="facet-window-out">4 s</output></label>
+   <input id="facet-window" type="range" min="2" max="10" value="4">
+   <label class="control-label" for="facet-threshold"><span>计次弯曲角阈值</span><output id="facet-threshold-out">6°</output></label>
+   <input id="facet-threshold" type="range" min="3" max="20" value="6">
+   <div class="facet-info"><span>最近窗口内形变事件</span><strong id="facet-events">0</strong><small>原轮廓 <b id="facet-original">–</b> → 直线段 <b id="facet-count">–</b></small></div>
    <div class="sidebar-note">◉ 单击骨骼关节查看信息；拖动手腕或脚踝，直接测试双段逆向运动学。</div>
   </aside>
   <main class="viewport">
@@ -86,7 +98,7 @@
    <p class="export-note">JSON 保存骨架与包裹参数；SVG、PNG 导出实际生成的连续轮廓。当前为程序化 2D 表面，不包含真实组织物理。</p>
   </aside>
  </section>
- <footer class="bottom-bar"><span>GENERATION ENGINE <b>v0.2 SDF</b></span><span id="message" role="status">骨架就绪 · 等待交互</span><span>ALL POSES ARE COMPUTED · NO IMAGE ASSETS</span></footer>
+ <footer class="bottom-bar"><span>GENERATION ENGINE <b>v0.3 FACETS</b></span><span id="message" role="status">骨架就绪 · 等待交互</span><span>ADAPTIVE FACETS · LOCAL DEFORMATION EVENTS</span></footer>
 </div>
 <script type="module" src="./app.js"></script>
 </body>
