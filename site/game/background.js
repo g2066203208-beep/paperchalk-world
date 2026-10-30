@@ -57,6 +57,30 @@ document.addEventListener('visibilitychange',()=>{
   canvas.style.animationPlayState=document.hidden?'paused':'running';
 });
 if(document.hidden)canvas.style.animationPlayState='paused';
+// Live web version check: the Android shell is only a WebView. When GitHub
+// Pages changes, reload the website even if the APK stays open in foreground.
+const ACTIVE_BUILD='20261030-blue8s-diagonal2';
+let checking=false;
+async function checkPublishedVersion(){
+  if(checking||document.hidden||navigator.onLine===false)return;
+  checking=true;
+  try{
+    const response=await fetch('./?pw_version_check='+Date.now(),{cache:'no-store'});
+    if(!response.ok)return;
+    const html=await response.text();
+    const match=html.match(/background\\.js\\?v=([A-Za-z0-9._-]+)/);
+    if(match && match[1]!==ACTIVE_BUILD){
+      location.replace('./?apk=1&fresh='+Date.now());
+    }
+  }catch(error){/* Offline: keep the already rendered background. */}
+  finally{checking=false;}
+}
+window.addEventListener('focus',checkPublishedVersion);
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden)checkPublishedVersion();
+});
+setInterval(checkPublishedVersion,60000);
+
 // Non-interactive test telemetry: never reads or changes the CSS animation.
 window.__PAPERWORLD_BACKGROUND__=Object.freeze({
   version:'2026.10.30-blue8s-diagonal.1',
