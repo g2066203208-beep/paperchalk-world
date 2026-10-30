@@ -5,7 +5,7 @@ const deg=n=>n/RAD;
 const close=(a,b,eps=.12)=>assert.ok(Math.abs(a-b)<eps,'expected '+a+' ~= '+b);
 test('X forward Y left Z up: orthogonal camera axes',()=>{
  const b=cameraBasis({yaw:0,pitch:0,roll:0});
- assert.deepEqual(b.forward,[1,0,0]);assert.deepEqual(b.right,[0,-1,0]);assert.deepEqual(b.up,[0,0,1]);
+ assert.deepEqual(b.forward,[1,0,0]);assert.deepEqual(b.right,[0,-1,0]);assert.deepEqual(b.up.map(v=>v===0?0:v),[0,0,1]);
  const y=cameraBasis({yaw:Math.PI/2,pitch:0,roll:0});close(y.forward[0],0);close(y.forward[1],1);
  const p=cameraBasis({yaw:0,pitch:Math.PI/4,roll:0});close(p.forward[2],Math.SQRT1_2);
  const roll=cameraBasis({yaw:0,pitch:0,roll:Math.PI/2});close(roll.right[2],1);
