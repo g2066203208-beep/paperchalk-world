@@ -175,6 +175,17 @@ jobs:
           assert report['training']['training_steps']==300
           print('D STANDING: four exact RGB colors, true native pixels, trained model verified')
           PY
+      - name: Prepare two D-style anchors, human-outline masks and 8 part crops
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+        run: python -m ml.style2.prepare
+      - name: Train neural pixel restoration and masked-neighborhood drawing model on both characters
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: python -m ml.style2.train
+      - name: Validate D-style training, masks, crops and exact color limits
+        run: python -m unittest discover -s tests -p 'style2_checks.py'
       - name: Browser-test real image upload, palette locking and native PNG
         run: node tests/repixel-browser.mjs
       - name: Verify true per-pixel grid, zoom, point sampling, and unchanged PNG in Chromium
@@ -199,6 +210,7 @@ jobs:
             site/pixel-lab/d-standing-v1-neural-denoise-demo.png
             site/pixel-lab/d-standing-v1-neural-weights.npz
             site/pixel-lab/d-standing-v1-report.json
+            site/pixel-lab/style2/
           retention-days: 30
       - name: Upload true 16x16 human-only trained character evidence
         if: always()
