@@ -43,9 +43,9 @@ try{
     assert.ok(info.rect.height>=info.innerHeight && info.rect.height<info.innerHeight+4);
     assert.equal(info.imageRendering,'pixelated');
     const fn=await page.evaluate(async()=>{
-      const m=await import('./game/background.js?v=20261030-blue1');
+      const m=await import('./game/background.js?v=20261030-blue18s');
       return {palette:m.PALETTE,colors:[m.BACKGROUND,m.STRIPE],wrap:[...Array(20)].every((_,i)=>m.stripeAt(i,42,0)===m.stripeAt(i,42,80)),
-        loop:m.phaseFromSeconds(0)===m.phaseFromSeconds(36),
+        loop:m.phaseFromSeconds(0)===m.phaseFromSeconds(18),
         motion:[...Array(80)].some((_,x)=>m.stripeAt(x,1,0)!==m.stripeAt(x,1,20))};
     });
     assert.deepEqual(fn.palette,['#393657','#F2A5C2','#A9BAE9','#FFF5E6']);
@@ -67,8 +67,8 @@ try{
       return {exists:true,x0,x1,initial,after,duration:timing.duration};
     });
     assert.ok(compositor.exists,'CSS compositor animation is active');
-    assert.equal(compositor.duration,36000);
-    assert.ok(Math.abs((compositor.x1-compositor.x0)+320/36)<0.3,'subpixel-continuous pan, not stepped raster offset');
+    assert.equal(compositor.duration,18000);
+    assert.ok(Math.abs((compositor.x1-compositor.x0)+320/18)<0.3,'subpixel-continuous pan, not stepped raster offset');
     assert.equal(compositor.initial,1,'render only once on mount');
     assert.equal(compositor.after,compositor.initial,'never redraw texture for each animation frame');
     await page.screenshot({path:'artifacts/game/'+name+'-background.png'});
