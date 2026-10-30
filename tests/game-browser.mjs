@@ -29,7 +29,7 @@ async function clickGame(page,index,foldShot=null,expectBurst=true){
  if(expectBurst){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount>0,{timeout:800});
   const count=await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount);
-  assert.ok(count>0 && count<=96,'miniature fireworks must be bounded under rapid taps');
+  assert.ok(count>0 && count<=18,'pixel-pop feedback must be limited to six squares per tap');
  }
  if(foldShot){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
@@ -90,12 +90,11 @@ try{
   assert.equal(emptyTap.touchCount,beforeTap+1,'exactly one burst per tap');
   assert.equal(emptyTap.lastTouch.x,Math.round(touchX/2));
   assert.equal(emptyTap.lastTouch.y,Math.round(touchY/2));
-  assert.ok(emptyTap.particleCount>=14&&emptyTap.particleCount<=21,'each touch fires a random small 14-21 spark firework');
+  assert.equal(emptyTap.particleCount,6,'every touch produces only six tiny pixels');
   await page.screenshot({path:'artifacts/game/'+name+'-empty-space-tap.png'});
   await page.waitForTimeout(750);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'random firework fully disappears within 0.6 seconds');
-  // Different taps should randomize particle count or velocities, rather than
-  // drawing the same 16-piece compass ring on every click.
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'minimal pixel pop disappears after 0.24 seconds');
+  // Different taps can vary slightly in direction, without fireworks or halos.
   const signatures=await page.evaluate(async()=>{
     const c=document.querySelector('#menu');
     const r=c.getBoundingClientRect(),x=r.left+r.width*.52,y=r.top+30;
@@ -111,9 +110,9 @@ try{
     const second={count:window.__PAPERWORLD_MENU__.particleCount,pattern:window.__PAPERWORLD_MENU__.lastFireworkPattern};
     return {a:first.count,b:second.count,different:first.pattern!==second.pattern,from:window.__PAPERWORLD_MENU__.touchCount};
   });
-  assert.ok(signatures.a>=14 && signatures.a<=21);
-  assert.ok(signatures.b>signatures.a && signatures.b<=42,'rapid taps produce independent bounded fireworks');
-  assert.ok(signatures.different,'successive random fireworks must have different trajectories');
+  assert.equal(signatures.a,6);
+  assert.equal(signatures.b,12,'two rapid taps show exactly twelve tiny pixels');
+  assert.ok(signatures.different,'successive tiny pops may have slightly different directions');
   await page.waitForTimeout(800);
 
 
@@ -131,7 +130,7 @@ try{
   const subPageTouches=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
   await page.mouse.click(24,24);
   await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,subPageTouches);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play','non-button firework also works in subpages');
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play','non-button tiny pixel pop also works in subpages');
   await page.waitForTimeout(500);
   await page.screenshot({path:'artifacts/game/'+name+'-prologue.png'});
   await clickGame(page,0); // Back to menu.
@@ -161,5 +160,5 @@ try{
   assert.deepEqual(errors,[],'no Javascript errors');
   await context.close();
  }
- console.log('PASS: randomized touch fireworks everywhere, zero idle particles, original four colors, 4 screen sizes and menu flow');
+ console.log('PASS: minimal six-square touch pops everywhere, exact four colors, four device sizes, menu flows');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
