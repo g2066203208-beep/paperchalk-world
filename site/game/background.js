@@ -9,6 +9,8 @@ export const GAP_CELLS=44;
 export const CYCLE_SECONDS=8;
 export const PATTERN_CELLS=STRIPE_CELLS+GAP_CELLS;
 export const PERIOD_CSS=PATTERN_CELLS*PIXEL_CSS;
+export const DIAGONAL_OVERSCAN_CELLS=PATTERN_CELLS/2;
+export const NORMAL_SHIFT_CSS=DIAGONAL_OVERSCAN_CELLS*PIXEL_CSS;
 export const stripeAt=(x,y,phase)=>((x+y+phase)%PATTERN_CELLS+PATTERN_CELLS)%PATTERN_CELLS<STRIPE_CELLS;
 // Kept for independently testing periodicity; this function is NOT used for animation.
 export const phaseFromSeconds=t=>((t%CYCLE_SECONDS)+CYCLE_SECONDS)%CYCLE_SECONDS*PATTERN_CELLS/CYCLE_SECONDS;
@@ -22,16 +24,16 @@ let logicalWidth=-1,logicalHeight=-1;
 let redraws=0;
 
 function drawOnceForSize(){
-  const cols=Math.ceil(Math.max(1,window.innerWidth)/PIXEL_CSS)+PATTERN_CELLS;
-  const rows=Math.ceil(Math.max(1,window.innerHeight)/PIXEL_CSS);
+  const cols=Math.ceil(Math.max(1,window.innerWidth)/PIXEL_CSS)+DIAGONAL_OVERSCAN_CELLS;
+  const rows=Math.ceil(Math.max(1,window.innerHeight)/PIXEL_CSS)+DIAGONAL_OVERSCAN_CELLS;
   if(cols===logicalWidth&&rows===logicalHeight)return;
   logicalWidth=cols;logicalHeight=rows;
   canvas.width=cols;
   canvas.height=rows;
   canvas.style.width=(cols*PIXEL_CSS)+'px';
   canvas.style.height=(rows*PIXEL_CSS)+'px';
-  // An additional full pattern is drawn off the right edge. Moving exactly
-  // one period horizontally therefore fills the viewport with no seam.
+  // Add half a pattern on the RIGHT and BOTTOM. One full period of x+y is
+  // reached by moving half a period along each axis, normal to the stripes.
   ctx.imageSmoothingEnabled=false;
   const image=ctx.createImageData(cols,rows);
   const d=image.data;
@@ -57,9 +59,10 @@ document.addEventListener('visibilitychange',()=>{
 if(document.hidden)canvas.style.animationPlayState='paused';
 // Non-interactive test telemetry: never reads or changes the CSS animation.
 window.__PAPERWORLD_BACKGROUND__=Object.freeze({
-  version:'2026.10.30-blue8s.1',
+  version:'2026.10.30-blue8s-diagonal.1',
   get redraws(){return redraws},
   get dimensions(){return [logicalWidth,logicalHeight]},
   palette:PALETTE,
-  periodCss:PERIOD_CSS
+  periodCss:PERIOD_CSS,
+  normalShiftCss:NORMAL_SHIFT_CSS
 });
