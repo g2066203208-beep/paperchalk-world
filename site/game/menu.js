@@ -272,7 +272,7 @@ let vis=true;document.addEventListener('visibilitychange',()=>{last=0;vis=!docum
 function tick(now){
  if(!last)last=now;let dt=clamp((now-last)/1000,0,.05);last=now;
  if(!vis)dt=0;
- if(prefs.motion)clock+=dt;
+ clock+=dt; // UI time never freezes when background movement is disabled.
  updateClickPixels(dt);
  updateCurtain(dt);
  frameN++;draw();requestAnimationFrame(tick)
