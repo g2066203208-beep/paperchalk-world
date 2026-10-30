@@ -31,7 +31,7 @@ try{
  const errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
  for(let n=0;n<40;n++){
-  try{await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle',timeout:2500});break;}
+  try{await page.goto('http://127.0.0.1:4173/bone-lab/',{waitUntil:'networkidle',timeout:2500});break;}
   catch(e){if(n===39)throw e;await new Promise(resolve=>setTimeout(resolve,150));}
  }
  await page.waitForFunction(()=>window.__BONE_LAB__?.pose?.size>10,{},{timeout:6500})
@@ -43,7 +43,7 @@ try{
      body:document.body.innerText.slice(0,300),
      scripts:[...document.scripts].map(s=>s.src)})),
     responses:await Promise.all(['app.js','surface.js','surface-renderer.js','rig.js'].map(async path=>{
-     const res=await page.request.get('http://127.0.0.1:4173/'+path);
+     const res=await page.request.get('http://127.0.0.1:4173/bone-lab/'+path);
      return {path,status:res.status(),contentType:res.headers()['content-type']};
     }))
    },null,2));
@@ -158,7 +158,7 @@ try{
  }
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  mobile.on('pageerror',e=>errors.push(String(e)));
- await mobile.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
+ await mobile.goto('http://127.0.0.1:4173/bone-lab/',{waitUntil:'networkidle'});
  await mobile.waitForFunction(()=>window.__BONE_LAB__?.pose?.size>10);
  assert.equal(await mobile.locator('#rig-canvas').isVisible(),true);
  const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
