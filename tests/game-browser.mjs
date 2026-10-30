@@ -103,13 +103,17 @@ try{
       c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,clientX:px,clientY:py,bubbles:true}));
       c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,clientX:px,clientY:py,bubbles:true}));
     }
-    pressAt(x,y,310);const a=window.__PAPERWORLD_MENU__.particleCount;
+    pressAt(x,y,310);
     await new Promise(resolve=>requestAnimationFrame(resolve));
-    pressAt(x,y,311);const b=window.__PAPERWORLD_MENU__.particleCount;
-    return {a,b,from:window.__PAPERWORLD_MENU__.touchCount};
+    const first={count:window.__PAPERWORLD_MENU__.particleCount,pattern:window.__PAPERWORLD_MENU__.lastFireworkPattern};
+    pressAt(x,y,311);
+    await new Promise(resolve=>requestAnimationFrame(resolve));
+    const second={count:window.__PAPERWORLD_MENU__.particleCount,pattern:window.__PAPERWORLD_MENU__.lastFireworkPattern};
+    return {a:first.count,b:second.count,different:first.pattern!==second.pattern,from:window.__PAPERWORLD_MENU__.touchCount};
   });
   assert.ok(signatures.a>=14 && signatures.a<=21);
   assert.ok(signatures.b>signatures.a && signatures.b<=42,'rapid taps produce independent bounded fireworks');
+  assert.ok(signatures.different,'successive random fireworks must have different trajectories');
   await page.waitForTimeout(800);
 
 
