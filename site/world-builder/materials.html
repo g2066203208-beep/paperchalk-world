@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#393657">
 <title>PAPERWORLD · 世界材质工坊</title>
 <meta name="description" content="PAPERWORLD 世界构建01：可编辑16x16原生四色无缝材质、真实WebGL3D预览、游戏贴图应用和Atlas导出">
-<link rel="stylesheet" href="./materials.css?v=m1">
+<link rel="stylesheet" href="./materials.css?v=m2">
 </head>
 <body>
 <div class="studio">
@@ -16,9 +16,15 @@
  </header>
  <div class="layout">
   <aside class="library">
-   <div class="section-head"><span>01</span><div><strong>材质资源库</strong><small>8 / 8 · 官方四色</small></div></div>
+   <div class="section-head"><span>01</span><div><strong>材质资源库</strong><small>32 种原生像素材质 · 官方四色</small></div></div>
+   <div class="material-filters" role="group" aria-label="按场景筛选材质">
+    <button class="active" data-filter="all" aria-pressed="true">全部 <span>32</span></button>
+    <button data-filter="ground" aria-pressed="false">地表 <span>16</span></button>
+    <button data-filter="building" aria-pressed="false">建筑 <span>12</span></button>
+    <button data-filter="nature" aria-pressed="false">树木 <span>4</span></button>
+   </div>
    <div class="library-list" id="material-list" role="list"></div>
-   <div class="library-help"><span class="dot"></span><p>不是随机噪点贴图。每种材料有清晰的结构语言：砌缝、砖排、木纹、屋瓦或窗格。</p></div>
+   <div class="library-help"><span class="dot"></span><p>大世界材质不是随机噪点：草甸、石路、土壤有分区；房子有砖墙、真正的门框与窗格；树干和树冠使用不同纹理。原有八种已兼容保存。</p></div>
   </aside>
   <main class="editor" aria-label="材质像素绘制工作区">
    <div class="editor-title">
@@ -46,15 +52,15 @@
    </div>
   </main>
   <aside class="preview">
-   <div class="section-head"><span>02</span><div><strong>真实表面预览</strong><small>REPEAT × 3 / 3D UV MAPPING</small></div></div>
+   <div class="section-head"><span>02</span><div><strong>真实表面预览</strong><small>32 TEXTURES / UV MAPPING</small></div></div>
    <div class="preview-card"><header><strong>无缝平铺</strong><small>3 × 3 · 自动重复</small></header><canvas id="repeat-canvas" width="240" height="240" aria-label="当前材质连续平铺九宫格预览"></canvas><p>检查重复边缘、色块节奏与接缝。不做模糊、半透明或噪点平滑。</p></div>
-   <div class="preview-card cube"><header><strong>立体材质</strong><small>WEBGL · 真实六面纹理映射</small></header><canvas id="cube-canvas" width="320" height="220" aria-label="可拖拽旋转的WebGL纹理立方体"></canvas><p>按住拖拽旋转。游戏中的地面、外墙、屋顶使用同一份 16px 材质数据。</p></div>
+   <div class="preview-card cube"><header><strong>立体材质</strong><small>WEBGL · 真实六面纹理映射</small></header><canvas id="cube-canvas" width="320" height="220" aria-label="可拖拽旋转的WebGL纹理立方体"></canvas><p>按住拖拽旋转。真实 3D 大世界里的草地、道路、石头、房屋、门窗和树叶使用这一份原生像素材质数据。</p></div>
    <div class="bottom-actions"><button id="export-tile">导出当前 PNG</button><button id="export-atlas">导出完整 Atlas</button><button id="restore-one">复原此材质</button></div>
   </aside>
  </div>
  <footer class="foot"><strong>PAPERWORLD / WORLD ASSET PIPELINE</strong><span>编辑 → 真实像素 → UV 材质图集 → 世界 WebGL</span><a href="../pixel-lab/editor.html">角色像素画 ›</a></footer>
 </div>
 <input id="file-picker" type="file" accept=".json,application/json" hidden>
-<script type="module" src="./materials.js?v=m1"></script>
+<script type="module" src="./materials.js?v=m2"></script>
 </body>
 </html>
