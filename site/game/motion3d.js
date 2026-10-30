@@ -72,6 +72,9 @@ export class MotionPose{
   // Prefer native rotation-vector sensor over WebView's missing/inconsistent
   // deviceorientation. Web fallback remains usable in mobile browsers.
   if(source==='web'&&this.lastSource==='native')return false;
+  // Native and W3C reference frames are NOT interchangeable. Zero once
+  // when switching to the more reliable native Android rotation sensor.
+  if(source==='native'&&this.lastSource==='web')this.calibrated=false;
   this.currentQ=unit;this.sensorSeen=true;this.lastSource=source;
   this.latest=raw||{quaternion:[...unit]};
   if(!this.calibrated)this.recenter();
