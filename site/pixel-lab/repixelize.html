@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0c1024">
-<title>REPIXEL · GPT 假像素转真正四色像素 · Pixel Lab</title>
+<title>01 真像素转换 · D 雾樱玻璃四色 | Pixel Lab</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#0c1024;color:#f3f4fc;font:14px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif}
 a{color:#a7e5eb;text-decoration:none}a:hover{text-decoration:underline}
@@ -68,11 +68,11 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
 @media(max-width:460px){.inspect-workspace{grid-template-columns:minmax(0,1fr) 84px;gap:5px}.inspect-view{height:350px;min-height:280px}.inspect-tools button{padding:6px 8px}.inspect-side .side-label{font-size:9px}}
 
 </style></head><body>
-<header><div class="brand">PIXEL LAB / <em>REPIXEL</em></div><a href="./index.html">← 像素机器学习实验室</a></header>
+<header><div class="brand">PIXEL LAB / <em>01 · 真像素转换</em></div><a href="./index.html">← 两大系统首页</a></header>
 <main class="wrap">
 <div class="eyebrow">NO GPT IMAGE GENERATION · STRICT 4 COLORS · EXACT NATIVE PIXELS</div>
-<h1>保留人物，只纠正假的像素。</h1>
-<p>已根据你提供的粉发少女原图建立 <strong>384×512</strong> 原生四色像素数据。整个工具只重新离散化色块，不自由修改角色。下面的作品是 GitHub Actions 根据固定输入像素数据实际导出的结果；也可以上传新图片在浏览器中直接转换。</p>
+<h1>假像素 → D 风格原生像素。</h1>
+<p>这是两大系统中的 <strong>01 真像素转换</strong>：保留构图，采用选定的 D「雾樱玻璃」四色，把假像素量化到固定 384×512 网格。可以上传自己的图片并实时检查逐像素网格；最终审美好坏仍需人工验收。</p>
 
 <section class="panel pixel-inspect" aria-label="原生像素网格检查器">
   <div class="inspect-head">
@@ -111,17 +111,17 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
   </div>
 </section>
 
-<div style="padding:11px 14px;margin:17px 0;border:1px solid #669eab;border-radius:10px;background:#1e3445"><strong>新：8 套原创四色配色可以在线比较</strong> · <a href="./palette-choices.html" style="color:#bff5e8;font-weight:800">打开配色工作室 →</a></div>
+<div style="padding:11px 14px;margin:17px 0;border:1px solid #669eab;border-radius:10px;background:#1e3445"><strong>当前正式配色：D「雾樱玻璃」</strong> · <a href="./d-standing.html" style="color:#bff5e8;font-weight:800">查看站姿人物原生网格</a> · <a href="./learn.html" style="color:#bff5e8;font-weight:800">系统 02：学习像素绘画</a></div>
 <section class="studio">
 <div class="panel"><div class="art">
-<div class="canvas"><div class="caption"><span>已锁定的人物参考</span><span>相同构图</span></div><img id="reference" src="./repixelized-preview.png" alt="固定人物参考的放大像素预览"></div>
+<div class="canvas"><div class="caption"><span>已锁定的人物参考</span><span>相同构图</span></div><img id="reference" src="./d-standing-v1-preview-2x.png" alt="D风格站立角色的像素预览"></div>
 <div class="canvas"><div class="caption"><span>输出 · 真正原生像素</span><span id="nativeLabel">384×512</span></div><canvas id="result" width="384" height="512"></canvas></div>
 </div><div class="bar"><span class="chip">零新零件</span><span class="chip">零光影插值</span><span class="chip">四种 RGB 固有色</span><span class="chip">无半透明 / 无抗锯齿</span></div>
-<div class="links"><a href="./repixelized-384x512.png" download>↓ 下载固定参考的原生 384×512 PNG</a><a href="./repixelized-preview.png" download>↓ 下载整数 3× 放大预览 PNG</a><a href="./repixelize-quality.json">查看自动验色报告 JSON</a></div>
+<div class="links"><a href="./d-standing-v1-384x512.png" download>↓ D 风格站姿原生 384×512 PNG</a><a href="./d-standing-v1-preview-2x.png" download>↓ D 风格整数放大预览</a><a href="./d-standing-v1-report.json">查看原生四色与训练验证报告</a></div>
 </div>
 <aside class="panel">
 <h2>01 · 四种固有色</h2>
-<div class="palette"><span class="color" style="background:#0f0f3b"></span><span class="color" style="background:#e33686"></span><span class="color" style="background:#2c9fce"></span><span class="color" style="background:#fdee8f"></span></div>
+<div class="palette"><span class="color" style="background:#393657"></span><span class="color" style="background:#F2A5C2"></span><span class="color" style="background:#A9BAE9"></span><span class="color" style="background:#FFF5E6"></span></div>
 <div class="check"><span>目标像素网格</span><b>384 × 512</b></div>
 <div class="check"><span>实际输出颜色</span><b id="colorCount">—</b></div>
 <div class="check"><span>额外 RGB / Alpha</span><b id="invalid">—</b></div>
@@ -137,12 +137,12 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
 <p id="status">正在读取 GitHub 发布的原生图片…</p>
 <hr>
 <h2>03 · 机器学习结果</h2>
-<div class="note">另有真实训练的 <strong>3×3 RGB patch MLP</strong>，学习同一张参考图的合成模糊/噪点修复。当前这张保真输出走严格色板 + 像素网格约束，避免神经模型改动五官与服装结构。训练结果是同图验证，不冒充跨角色生成能力。</div>
+<div class="note">当前 D 站姿图有真实训练的 <strong>3×3 RGB Patch MLP</strong> 去噪模型，用同作品的合成模糊进行验证。发布的保真图实际采用固定色板 + 面积投票；神经模型在单幅图上训练，不代表已经学会画新人物。<a href="./d-standing-v1-report.json">查看报告</a></div>
 </aside></section>
 </main>
 <script src="./repixel-inspector.js" defer></script>
 <script type="module">
-const W=384,H=512,P=[[15,15,59],[227,54,134],[44,159,206],[253,238,143]];
+const W=384,H=512,P=[[57,54,87],[242,165,194],[169,186,233],[255,245,230]];
 const $=id=>document.getElementById(id);
 const canvas=$('result'),ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
 let uploaded=null,ready=false;
@@ -173,10 +173,10 @@ function convertPixels(image){
  ready=true;$('save').disabled=false;$('status').textContent='完成：384×512 原生像素，四色验收通过。';
  window.REPIXEL={ready:true,metrics:r,download:download};
 }
-function download(){const a=document.createElement('a');a.download='repixelized-true-384x512.png';a.href=canvas.toDataURL('image/png');a.click()}
+function download(){const a=document.createElement('a');a.download='D-converted-true-384x512.png';a.href=canvas.toDataURL('image/png');a.click()}
 $('save').onclick=download;
 $('upload').onchange=async(e)=>{const f=e.target.files?.[0];if(!f)return;uploaded=await createImageBitmap(f);$('convert').disabled=false;$('status').textContent='已加载：'+f.name+'（'+uploaded.width+'×'+uploaded.height+'）';};
 $('convert').onclick=()=>{if(!uploaded)return;try{convertPixels(uploaded)}catch(e){$('status').textContent='转换失败：'+e.message;console.error(e)}};
-$('reset').onclick=async()=>{try{const img=await createImageBitmap(await (await fetch('./repixelized-384x512.png')).blob());convertPixels(img);$('status').textContent='已恢复 GitHub 输出：固定参考角色。';}catch(e){$('status').textContent='恢复失败：'+e.message;}};
+$('reset').onclick=async()=>{try{const img=await createImageBitmap(await (await fetch('./d-standing-v1-384x512.png')).blob());convertPixels(img);$('status').textContent='已恢复 D 风格站姿固定样本。';}catch(e){$('status').textContent='恢复失败：'+e.message;}};
 $('reset').click();
 </script></body></html>
