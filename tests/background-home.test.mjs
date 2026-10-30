@@ -22,15 +22,15 @@ test('D palette and background use exact preapproved colors, integer pixel grid'
   assert.match(background,/PIXEL_CSS=4/);
   assert.match(background,/STRIPE_CELLS=36/);
   assert.match(background,/GAP_CELLS=44/);
-  assert.match(background,/CYCLE_SECONDS=18/);
-  assert.match(page,/animation:stripe-drift 18s linear infinite/);
+  assert.match(background,/CYCLE_SECONDS=8/);
+  assert.match(page,/animation:stripe-drift 8s linear infinite/);
   assert.match(page,/image-rendering:pixelated/);
 });
 
 test('strict two-color procedural stripes are exactly cyclic in space and time',()=>{
   const fn=(x,y,p)=>((x+y+p)%80+80)%80<36;
-  const phase=s=>Math.floor(((s%18)+18)%18*80/18)%80;
-  assert.equal(phase(0),phase(18));
+  const phase=s=>Math.floor(((s%8)+8)%8*80/8)%80;
+  assert.equal(phase(0),phase(8));
   let changed=false;
   for(let y=0;y<41;y++)for(let x=0;x<81;x++){
     assert.equal(fn(x,y,0),fn(x,y,80));
