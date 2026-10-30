@@ -8,11 +8,11 @@ const KEY='paperworld-menu-v1',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
 const ctx=el.getContext('2d',{alpha:true,willReadFrequently:false});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let prefs={motion:!reduced,particles:false,haptic:true};
+let prefs={motion:!reduced,particles:!reduced,haptic:true};
 try{prefs={...prefs,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
 if(reduced)prefs.motion=false;
 let W=0,H=0,scale=2,land=false,btns=[],state='menu',selected=0,hover=-1,held=-1;
-let frameN=0,clock=0,last=0,saveExists=false;
+let frameN=0,clock=0,last=0,saveExists=false,clickBits=[],burstSerial=0;
 let note='',noteTo=0,curtain=null;
 try{saveExists=localStorage.getItem(SAVE)==='created'}catch{}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -94,7 +94,7 @@ function layout(){
  buttons();
 }
 function buttons(){
- btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
+ btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','点击粒子','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
  else{bw=Math.round(clamp(W*.81,132,230));bh=Math.round(clamp(H*.078,28,37));gap=Math.round(clamp(H*.023,7,12));cx=Math.round(W*.5);top=Math.round(clamp(H*.48,155,H-(names.length*(bh+gap)+33)))}
@@ -123,7 +123,7 @@ function drawButton(b,i){
  frame(x,y,w,h,COL.ink,fill,5,2);
  if(active&&!disabled){R(x+3,y+8,2,h-16,COL.paper);R(x+w-5,y+8,2,h-16,COL.paper)}
  let label=b.label;
- if(state==='settings'&&i<2)label+=' '+(i===0?(prefs.motion?'开':'关'):(prefs.haptic?'开':'关'));
+ if(state==='settings'&&i<3)label+=' '+(i===0?(prefs.motion?'开':'关'):i===1?(prefs.particles?'开':'关'):(prefs.haptic?'开':'关'));
  let hFont=Math.round(clamp(h*.53,14,19));
  let sprite=glyphBitmap(label,hFont);
  while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
@@ -153,6 +153,7 @@ function overlay(){
  }
 }
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const CLOSE_TIME=.23,OPEN_TIME=.29;
 function switchScene(next){
  if(curtain)return;
  if(reduced){state=next;selected=0;hover=-1;held=-1;buttons();return}
@@ -161,16 +162,63 @@ function switchScene(next){
 function updateCurtain(dt){
  if(!curtain)return;
  curtain.elapsed+=dt;
- if(curtain.phase==='close'&&curtain.elapsed>=.27){
+ if(curtain.phase==='close'&&curtain.elapsed>=CLOSE_TIME){
   state=curtain.next;selected=0;hover=-1;held=-1;buttons();curtain.phase='open';curtain.elapsed=0;
- }else if(curtain.phase==='open'&&curtain.elapsed>=.30)curtain=null;
+ }else if(curtain.phase==='open'&&curtain.elapsed>=OPEN_TIME)curtain=null;
 }
-function paintCurtain(){
+function paintFoldWipe(){
  if(!curtain)return;
- const t=curtain.phase==='close'?ease(Math.min(1,curtain.elapsed/.27)):1-ease(Math.min(1,curtain.elapsed/.30));
- const span=Math.ceil(W*.5*t);
- R(0,0,span,H,COL.ink);
- R(W-span,0,span+1,H,COL.ink);
+ // A single diagonal paper-sheet wipe, not two doors or a circular blackout.
+ // The x+y front is perpendicular to the 45-degree stripe direction.
+ // Close: ink grows from upper-left to lower-right.
+ // Open: the NEW page appears in that same direction.
+ const close=curtain.phase==='close';
+ const duration=close?CLOSE_TIME:OPEN_TIME;
+ const p=ease(Math.min(1,curtain.elapsed/duration));
+ const edge=(W+H)*p;
+ for(let y=0;y<H;y++){
+  const x=Math.round(edge-y);
+  if(close){
+   const cover=limit(x,0,W);
+   if(cover>0)R(0,y,cover,1,COL.ink);
+   // The fold has a crisp 3-pixel cream lip and 2-pixel mist-blue seam.
+   if(x>=0&&x<=W+6){R(x-5,y,3,1,COL.paper);R(x-2,y,2,1,COL.blue)}
+  }else{
+   const from=limit(x,0,W);
+   if(from<W)R(from,y,W-from,1,COL.ink);
+   if(x>=-6&&x<=W){R(x+1,y,3,1,COL.paper);R(x+4,y,2,1,COL.pink)}
+  }
+ }
+}
+function emitClickPixels(x,y,index){
+ // Only 10 short-lived fragments at the activated button. No idle confetti.
+ if(reduced||!prefs.particles)return;
+ const b=btns[index];
+ if(!b)return;
+ burstSerial++;
+ for(let i=0;i<10;i++){
+  const side=i%2===0?-1:1,rank=Math.floor(i/2);
+  const originX=side<0?b.x+12:b.x+b.w-12;
+  const originY=b.y+b.h*.5+(rank-2)*3;
+  const spread=(rank-2)*.34+((burstSerial%3)-1)*.12;
+  const speed=27+rank*4;
+  clickBits.push({
+   x:originX,y:originY,vx:side*speed,vy:spread*speed-15,
+   size:i%3===0?3:2,life:.30+i*.012,max:.30+i*.012,
+   color:[COL.pink,COL.blue,COL.paper,COL.ink][i%4]
+  });
+ }
+ if(clickBits.length>32)clickBits.splice(0,clickBits.length-32);
+}
+function updateClickPixels(dt){
+ for(let i=clickBits.length-1;i>=0;i--){
+  const p=clickBits[i];p.life-=dt;
+  if(p.life<=0){clickBits.splice(i,1);continue}
+  p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=72*dt;
+ }
+}
+function paintClickPixels(){
+ for(const p of clickBits)R(p.x,p.y,p.size,p.size,p.color);
 }
 function draw(){
  if(!W||!H)return;
@@ -182,14 +230,16 @@ function draw(){
  if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
   }
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
- paintCurtain();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:0,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs,particles:false},logical:[W,H],frame:frameN,transition:curtain?{phase:curtain.phase,progress:curtain.elapsed}:null};
+ paintClickPixels();
+ paintFoldWipe();
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:clickBits.length,burstSerial,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
 function act(i,x,y){
  if(curtain||i<0||i>=btns.length)return;
  if(prefs.haptic&&navigator.vibrate)try{navigator.vibrate(7)}catch{}
+ emitClickPixels(x,y,i);
  selected=i;hover=i;
  if(state==='menu'){
   if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('play')}
@@ -198,8 +248,9 @@ function act(i,x,y){
   else if(i===3)switchScene('exit');
  }else if(state==='settings'){
   if(i===0)prefs.motion=!prefs.motion;
-  if(i===1)prefs.haptic=!prefs.haptic;
-  if(i===2)switchScene('menu');
+  if(i===1)prefs.particles=!prefs.particles;
+  if(i===2)prefs.haptic=!prefs.haptic;
+  if(i===3)switchScene('menu');
   savePrefs();
  }else switchScene('menu');
  if(!curtain){selected=0;hover=-1;held=-1;buttons()}
@@ -222,6 +273,7 @@ function tick(now){
  if(!last)last=now;let dt=clamp((now-last)/1000,0,.05);last=now;
  if(!vis)dt=0;
  if(prefs.motion)clock+=dt;
+ updateClickPixels(dt);
  updateCurtain(dt);
  frameN++;draw();requestAnimationFrame(tick)
 }
