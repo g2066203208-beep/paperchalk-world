@@ -75,6 +75,26 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          BATH_RUN=$(gh run list --workflow bath-girl-ml.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$BATH_RUN" ] && [ "$BATH_RUN" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/bath-girl"
+            gh run download "$BATH_RUN" --name pixel-bath-girl-converted-and-trained --dir "$RUNNER_TEMP/bath-girl"
+            test -s "$RUNNER_TEMP/bath-girl/site/pixel-lab/style2/bath-girl/report.json"
+            mkdir -p site/pixel-lab/style2/bath-girl
+            cp -a "$RUNNER_TEMP/bath-girl/site/pixel-lab/style2/bath-girl/." site/pixel-lab/style2/bath-girl/
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('site/pixel-lab/style2/bath-girl')
+          r=json.loads((p/'report.json').read_text())
+          assert r['grid']==[384,512] and r['eligible_for_gold_training']==False
+          assert r['learning']['steps']>=100 and (p/'candidate_384x512.png').is_file()
+          print('PASS: package audited exact-four-color new art plus actual ML training')
+          PY
+          else
+            echo "::warning::New-artwork machine-learning workflow has no successful run yet"
+          fi
+
           FULLBODY_RUN=$(gh run list --workflow fullbody-16.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
           if [ -n "$FULLBODY_RUN" ] && [ "$FULLBODY_RUN" != "null" ]; then
             mkdir -p "$RUNNER_TEMP/fullbody-16"
