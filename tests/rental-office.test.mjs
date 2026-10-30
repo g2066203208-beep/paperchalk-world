@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {officeLayout,drawOfficeBack,drawOfficeCounter} from '../site/game/rental-office.js';
 const COL={ink:'#393657',pink:'#F2A5C2',blue:'#A9BAE9',paper:'#FFF5E6'};
 const allowed=new Set(Object.values(COL));
@@ -24,7 +25,7 @@ for(const [name,W,H] of [['phone portrait',195,422],['phone landscape',422,195],
  });
 }
 test('rental interior has only one hostess sprite and correct foreground painter order',()=>{
- const src=await import('node:fs').then(fs=>fs.readFileSync('site/game/intro.js','utf8'));
+ const src=readFileSync('site/game/intro.js','utf8');
  assert.match(src,/drawOfficeBack\(\{R,COL\},W,H\)/);
  assert.match(src,/ctx\.drawImage\(source,0,0,HOSTESS_WIDTH,HOSTESS_HEIGHT,px,py,sw,sh\);\s*\/\/ Correct occlusion:[\s\S]*?drawOfficeCounter\(\{R,COL\},W,H\)/);
  assert.equal((src.match(/new Image\(\)/g)||[]).length,1);
