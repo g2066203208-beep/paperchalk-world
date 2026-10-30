@@ -1,0 +1,54 @@
+name: PixelLab - generic multi-face neural pretraining
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/style2/face_general_train.py'
+      - 'ml/style2/verify_face_general.py'
+      - '.github/workflows/face-general.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: pixel-face-general-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  generic_faces:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install reproducible CPU training dependencies
+        run: |
+          python -m pip install 'numpy==2.2.6' 'Pillow==11.3.0'
+          python -m pip install 'torch==2.7.1+cpu' --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Download LICENSED multi-face CC0 dataset
+        run: |
+          mkdir -p ml/datasets
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 \
+            'https://opengameart.org/sites/default/files/faces_1.zip' \
+            -o ml/datasets/cc0_faces_lamiarts.zip
+          echo 'b03a1a4537612a9faccc43aaf481e3548d21ba318df57ace9d04229231286cfc  ml/datasets/cc0_faces_lamiarts.zip' | sha256sum -c -
+      - name: Train multi-combination VAE and generate 24 not-exact-copied examples
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '2'
+        run: python -m ml.style2.face_general_train --steps 300 --limit 576
+      - name: Verify no same-character padding, true four-color samples and stored trained weights
+        run: python -m ml.style2.verify_face_general
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pixel-generic-multiface-trained-weights-and-samples
+          path: site/pixel-lab/style2/face-general/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Request published PixelLab gallery after training
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main
