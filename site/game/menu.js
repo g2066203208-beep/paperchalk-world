@@ -110,10 +110,8 @@ function titleArtwork(){
  const zoom=Math.max(2,Math.floor((land?size:W-14)/(10*6)));
  const wordW=10*6*zoom-zoom,wordY=Math.round(by-size*.08);
  panel(cx-wordW/2-7,wordY-6,wordW+14,7*zoom+13,COL.ink,4);
- latin('PAPERWORLD',cx+2,wordY+2,zoom,COL.pink);
  latin('PAPERWORLD',cx,wordY,zoom,COL.paper);
- if(!land){R(cx-wordW*.42,wordY+7*zoom+9,Math.round(wordW*.84),2,COL.blue);
-  latin('FOUR COLORS',cx,wordY+7*zoom+13,1,COL.ink)}
+
 }
 function drawButton(b,i){
  const active=i===hover||i===selected,pressed=i===held,disabled=state==='menu'&&i===1&&!saveExists;
