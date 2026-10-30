@@ -41,6 +41,20 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),true);
   assert.deepEqual(errors,[]);
   await page.screenshot({path:'artifacts/hostess-new/'+device+'-true4color-native.png',fullPage:true});
+  await page.goto('http://127.0.0.1:'+server.address().port+'/pixel-lab/hostess-20261030-quality.html');
+  await page.waitForFunction(()=>document.querySelector('#verdict')?.textContent.includes('验收不通过'));
+  await page.waitForFunction(()=>document.querySelector('#tiny')?.textContent==='1,206');
+  assert.equal(await page.locator('#all').textContent(),'16,724');
+  assert.equal(await page.locator('#single').textContent(),'617');
+  assert.equal(await page.locator('#heat').evaluate(el=>{
+   const d=el.getContext('2d').getImageData(0,0,192,256).data;
+   let count=0;for(let i=0;i<192*256;i++){const p=i*4;if(d[p]===255&&d[p+1]===80&&d[p+2]===42)count++;}
+   return count;
+  }),1206);
+  await page.screenshot({path:'artifacts/hostess-new/'+device+'-honest-1to3px-cluster-audit.png',fullPage:true});
+  await page.locator('#overlay').click();
+  assert.equal(await page.locator('#overlay').getAttribute('aria-pressed'),'false');
+  assert.deepEqual(errors,[]);
   await page.close();
  }
  console.log('PASS: new heroine color reference and original indexed four-color pixels loaded on desktop and mobile');
