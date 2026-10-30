@@ -50,13 +50,17 @@ jobs:
           npx playwright install --with-deps chromium
           sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
       - name: Browser-test actual procedural game menu and tactile controls on 4 screen sizes
-        run: node tests/game-browser.mjs
+        run: |
+          node tests/game-browser.mjs
+          node tests/hostess-redraw-browser.mjs
       - name: Upload real browser screenshot evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: paperworld-clean-main-menu-and-curtain-four-viewports
-          path: artifacts/game/
+          path: |
+            artifacts/game/
+            artifacts/pixel-art/
           retention-days: 14
           if-no-files-found: warn
   deploy:
