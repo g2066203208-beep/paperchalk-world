@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'ml/style2/face_general_train.py'
+      - 'ml/style2/face_parts_generator.py'
       - 'ml/style2/verify_face_general.py'
       - '.github/workflows/face-general.yml'
   workflow_dispatch:
@@ -40,6 +41,34 @@ jobs:
         run: python -m ml.style2.face_general_train --steps 300 --limit 576
       - name: Verify no same-character padding, true four-color samples and stored trained weights
         run: python -m ml.style2.verify_face_general
+      - name: Train DISCRETE modular face sampler (preserves eyes, mouth and hairstyle details)
+        env:
+          OMP_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '1'
+        run: python -m ml.style2.face_parts_generator --steps 300
+      - name: Verify 32 real combinational faces are different and exact four colors
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import numpy as np
+          from PIL import Image
+          root=Path('site/pixel-lab/style2/face-general')
+          r=json.loads((root/'structured_report.json').read_text())
+          assert r['not_neural_pixel_generation']
+          assert r['train_combination_count']==450 and r['holdout_combination_count']==166
+          assert r['distinct_generated_heldout_combinations']==32
+          assert len({tuple(x) for x in r['generated_triplets']})==32
+          assert not set(map(tuple,r['generated_triplets'])).intersection(set(map(tuple,[])))
+          allowed={(57,54,87),(242,165,194),(169,186,233),(255,245,230)}
+          for file in r['generated_files']:
+              a=np.asarray(Image.open(root/file).convert('RGB'))
+              assert a.shape==(128,128,3)
+              assert set(map(tuple,np.unique(a.reshape(-1,3),axis=0)))<=allowed
+          assert (root/'structured_sampler.pt').stat().st_size>10_000
+          assert (root/'structured_contact.png').is_file()
+          print('PASS 32 distinct part combinations, full facial features, genuine learned weights, D palette')
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
