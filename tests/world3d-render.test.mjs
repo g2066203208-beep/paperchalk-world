@@ -27,41 +27,29 @@ test('programmatic 3D city contains real depth-tested WebGL geometry, exact 4 co
  assert.match(source,/projectionMatrix\(pose,canvas\.width\/canvas\.height,eye\)/);
  assert.match(source,/motor\.update\(dt,controls\(\),motion\.pose\.yaw,performance\.now\(\)\)/);
 });
-test('world3d requests sensor only from a click, gives recenter, touch/keyboard fallback and pauses when closed',()=>{
- const source=readFileSync('site/game/world3d.js','utf8');
- assert.match(source,/addEventListener\('click',startMotion\)/);
- assert.match(source,/DeviceOrientationEvent\.requestPermission\(\)/);
- assert.match(source,/window\.addEventListener\('deviceorientation'/);
- assert.match(source,/window\.removeEventListener\('deviceorientation'/);
- assert.match(source,/motion\.recenter\(\)/);
- assert.match(source,/canvas\.addEventListener\('pointermove'/);
- assert.match(source,/requestPointerLock\(\)/);
- assert.match(source,/devicemotion/);
- assert.match(source,/onAcceleration/);
- assert.match(source,/pw-move-stick/);
- assert.match(source,/pw-posture-hold/);
- assert.match(source,/setStance\(n\)/);
- assert.match(source,/window\.addEventListener\('keydown',keyDown\)/);
- assert.match(source,/const lookKeys=\{arrowleft:/);
- assert.match(source,/cancelAnimationFrame\(raf\)/);
+test('3D world has genuine 3D eye-translation peek, no inertial walking or fake squat',()=>{
+ const world=readFileSync('site/game/world3d.js','utf8');
+ const lean=readFileSync('site/game/lean3d.js','utf8');
  const html=readFileSync('site/index.html','utf8');
- assert.match(html,/id="pw-world-canvas"/);
- assert.match(html,/id="pw-motion-start"/);
- assert.match(html,/id="pw-motion-center"/);
- assert.match(html,/id="pw-motion-sensitivity"/);
- assert.match(html,/id="pw-motion-response"/);
- assert.match(html,/id="pw-lease-enter-world"/);
- assert.match(html,/id="pw-forward-hold"/);
- assert.match(html,/id="pw-back-hold"/);
- assert.match(html,/id="pw-walk-direction"/);
- assert.match(html,/id="pw-squat-motion"/);
- assert.match(html,/id="pw-gait-threshold"/);
- assert.match(source,/bindWalkHold\('pw-forward-hold',1\)/);
- assert.match(source,/bindWalkHold\('pw-back-hold',-1\)/);
- assert.match(source,/deviceQuaternion\(o\.alpha,o\.beta,o\.gamma,0\)/);
- assert.match(source,/rotate\(q,\[a\.x,a\.y,a\.z\]\)\[2\]/);
- assert.match(source,/motor\.ingestVerticalAcceleration\(up,now\)/);
- assert.match(source,/motor\.setWalkDirection\(-motor\.stepDirection\)/);
- assert.match(source,/accelerationIncludingGravity/);
-
+ assert.match(world,/import \{LeanCamera\} from '\.\/lean3d\.js'/);
+ assert.match(world,/const peek=lean\.update\(dt,sideRoll,motion\.pose\.yaw,p\.eye,renderer\?\.solids\|\|\[\]\)/);
+ assert.match(world,/renderer\.render\(view,peek\.eye\)/);
+ assert.match(lean,/protectedLean/);
+ assert.match(lean,/offset:eased\*LEAN_MAX/);
+ assert.doesNotMatch(world,/devicemotion|onAcceleration|ingestVerticalAcceleration|walkMode|physicalStanceMode|pw-walk-toggle|pw-posture-hold/);
+ assert.match(world,/bindHold\('pw-forward-hold',/);
+ assert.match(world,/bindHold\('pw-back-hold',/);
+ assert.match(world,/bindHold\('pw-lean-left',/);
+ assert.match(world,/bindHold\('pw-lean-right',/);
+ assert.match(world,/requestPointerLock/);
+ assert.match(world,/window\.addEventListener\('deviceorientation'/);
+ assert.match(world,/window\.removeEventListener\('deviceorientation'/);
+ assert.match(world,/setStance\('stand'\)/);
+ for(const name of ['pw-world-canvas','pw-motion-start','pw-lean-left','pw-lean-right',
+ 'pw-lean-distance','pw-stance-stand','pw-stance-crouch','pw-stance-prone',
+ 'pw-forward-hold','pw-back-hold']){
+   assert.ok(html.includes('id="'+name+'"'));
+ }
+ for(const id of ['pw-walk-toggle','pw-walk-direction','pw-posture-hold','pw-squat-motion','pw-gait-threshold'])
+   assert.ok(!html.includes('id="'+id+'"'),'removed unreliable sensor input');
 });
