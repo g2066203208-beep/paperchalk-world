@@ -8,7 +8,7 @@ const KEY='paperworld-menu-v1',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
 const ctx=el.getContext('2d',{alpha:true,willReadFrequently:false});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let prefs={motion:!reduced,particles:!reduced,haptic:true};
+let prefs={motion:!reduced,particles:false,haptic:true};
 try{prefs={...prefs,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
 if(reduced)prefs.motion=false;
 let W=0,H=0,scale=2,land=false,btns=[],state='menu',selected=0,hover=-1,held=-1;
@@ -60,23 +60,23 @@ function latin(text,x,y,zoom=2,fill=COL.paper){
  return w;
 }
 const textCache=new Map();
-function glyphBitmap(s,height=13){
- const key=s+'|'+height;if(textCache.has(key))return textCache.get(key);
+function glyphBitmap(s,height=17){
+ const key=s+'|'+height;
+ if(textCache.has(key))return textCache.get(key);
  const c=document.createElement('canvas'),g=c.getContext('2d',{willReadFrequently:true});
- const px=height*3;g.font='900 '+px+'px "Noto Sans CJK SC","Microsoft YaHei","PingFang SC",sans-serif';
- const bounds=g.measureText(s),ww=Math.ceil(bounds.width+px),hh=Math.ceil(px*1.6);
- c.width=ww;c.height=hh;g.fillStyle='#000';g.font='900 '+px+'px "Noto Sans CJK SC","Microsoft YaHei","PingFang SC",sans-serif';
- g.textBaseline='top';g.fillText(s,3,0);
- // Convert ONLY the mask to exact palette ink, opaque or transparent.
- const data=g.getImageData(0,0,ww,hh);let minX=ww,minY=hh,maxX=0,maxY=0;
- for(let yy=0;yy<hh;yy++)for(let xx=0;xx<ww;xx++){const i=(yy*ww+xx)*4;if(data.data[i+3]>150){minX=Math.min(minX,xx);maxX=Math.max(maxX,xx);minY=Math.min(minY,yy);maxY=Math.max(maxY,yy)}}
- if(minX>maxX){const empty={w:0,h:0,cols:[]};textCache.set(key,empty);return empty}
- const fw=Math.ceil((maxX-minX+1)/3),fh=Math.ceil((maxY-minY+1)/3),cols=[];
- for(let y=0;y<fh;y++)for(let x=0;x<fw;x++){let hits=0;
-  for(let dy=0;dy<3;dy++)for(let dx=0;dx<3;dx++){const yy=minY+y*3+dy,xx=minX+x*3+dx;if(xx<ww&&yy<hh&&data.data[(yy*ww+xx)*4+3]>115)hits++}
-  if(hits>=3)cols.push([x,y]);
+ // Render glyphs at the FINAL logical size, without any downsampling.
+ // Threshold alpha to produce exact one-bit pixels instead of blurry edges.
+ const font='900 '+height+'px "Noto Sans CJK SC","Microsoft YaHei","PingFang SC",sans-serif';
+ g.font=font;const bounds=g.measureText(s);
+ const ww=Math.ceil(bounds.width+height*.6+4),hh=Math.ceil(height*1.55+4);
+ c.width=ww;c.height=hh;g.font=font;g.fillStyle='#000';g.textBaseline='top';g.fillText(s,2,0);
+ const data=g.getImageData(0,0,ww,hh).data;
+ let minX=ww,minY=hh,maxX=-1,maxY=-1;const coords=[];
+ for(let y=0;y<hh;y++)for(let x=0;x<ww;x++){
+   if(data[(y*ww+x)*4+3]>=170){coords.push([x,y]);minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y)}
  }
- const sprite={w:fw,h:fh,cols};textCache.set(key,sprite);return sprite;
+ const sprite={w:Math.max(0,maxX-minX+1),h:Math.max(0,maxY-minY+1),cols:coords.map(q=>[q[0]-minX,q[1]-minY])};
+ textCache.set(key,sprite);return sprite;
 }
 function text(s,x,y,h=13,c=COL.ink,align='center'){
  const b=glyphBitmap(s,h);let px=Math.round(x);if(align==='center')px-=Math.floor(b.w/2);else if(align==='right')px-=b.w;
@@ -98,7 +98,7 @@ function layout(){
  buttons();
 }
 function buttons(){
- btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','粒子效果','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
+ btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
  else{bw=Math.round(clamp(W*.81,132,230));bh=Math.round(clamp(H*.078,28,37));gap=Math.round(clamp(H*.023,7,12));cx=Math.round(W*.5);top=Math.round(clamp(H*.48,155,H-(names.length*(bh+gap)+33)))}
@@ -128,16 +128,11 @@ function titleArtwork(){
  if(!reduced&&prefs.motion){const bob=Math.sin(clock*1.3)*2;
   plane(cx+size*.035,by-size*.55,size*.6,bob);
  }else plane(cx+size*.035,by-size*.55,size*.6);
- const orbitR=size*.49;
- for(let i=0;i<27;i++){const a=i/27*Math.PI*1.7+.2;const xx=cx+Math.cos(a)*orbitR,yy=by+Math.sin(a)*size*.40;if(i%3===0)R(xx,yy,2,2,COL.ink)}
  const zoom=Math.max(2,Math.floor((land?size:W-14)/(10*6)));
  const wordW=10*6*zoom-zoom,wordY=Math.round(by-size*.08);
  panel(cx-wordW/2-7,wordY-6,wordW+14,7*zoom+13,COL.ink,4);
  latin('PAPERWORLD',cx+2,wordY+2,zoom,COL.pink);
  latin('PAPERWORLD',cx,wordY,zoom,COL.paper);
- sparkle(cx+size*.4,by-size*.49,4,COL.pink);
- sparkle(cx-size*.46,by-size*.26,3,COL.ink);
- sparkle(cx+size*.49,by+size*.18,4,COL.ink);
  if(!land){R(cx-wordW*.42,wordY+7*zoom+9,Math.round(wordW*.84),2,COL.blue);
   latin('FOUR COLORS',cx,wordY+7*zoom+13,1,COL.ink)}
 }
@@ -149,27 +144,22 @@ function drawButton(b,i){
  const offset=active?3:2;
  panel(x+2,y+offset,w,h,COL.blue,5);
  frame(x,y,w,h,COL.ink,fill,5,2);
- R(x+8,y+5,2,2,COL.ink);R(x+w-10,y+5,2,2,COL.ink);
- R(x+8,y+h-7,2,2,COL.ink);R(x+w-10,y+h-7,2,2,COL.ink);
  if(active&&!disabled){R(x+3,y+8,2,h-16,COL.paper);R(x+w-5,y+8,2,h-16,COL.paper)}
  let label=b.label;
- if(state==='settings'&&i!==3)label+=['  '+(prefs.motion?'开':'关'),'  '+(prefs.particles?'开':'关'),'  '+(prefs.haptic?'开':'关')][i];
- let hFont=Math.round(clamp(h*.42,11,16));
+ if(state==='settings'&&i<2)label+=' '+(i===0?(prefs.motion?'开':'关'):(prefs.haptic?'开':'关'));
+ let hFont=Math.round(clamp(h*.53,14,19));
  let sprite=glyphBitmap(label,hFont);
- if(sprite.w>w*.73){hFont=Math.max(10,Math.round(hFont*w*.7/sprite.w));sprite=glyphBitmap(label,hFont)}
+ while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
  const labelCenter=x+w*.58;const labelX=Math.round(labelCenter),labelY=Math.round(y+(h-sprite.h)/2);
  text(label,labelX,labelY,hFont,COL.ink);
  buttonIcon(state==='menu'?['play','continue','gear','exit'][i]:'back',x+w*.17,y+h*.5,Math.round(h*.36),COL.ink);
  if(disabled){ // Do not pretend "Continue" works without an actual stored start.
   R(x+w-20,y+h-8,2,2,COL.blue)
  }
- if(active&&prefs.particles){sparkle(x+w+7,y+h*.5+Math.sin(clock*2)*3,3,COL.pink)}
 }
 function overlay(){
  if(state==='menu')return;
  R(0,0,W,H,COL.ink);
- // Retain full four-ink pixel style and subtle particles over dark scene.
- for(let k=0;k<18;k++){const x=(k*67+23)%W,y=(k*131+17)%H;R(x,y,k%3+1,k%3+1,k%2?COL.blue:COL.paper)}
  const centerX=W/2,top=land?H*.13:H*.18;
  cloud(centerX,top+21,Math.min(W*.78,180),35);
  if(state==='play'){
@@ -189,11 +179,11 @@ function draw(){
  if(!W||!H)return;
  ctx.clearRect(0,0,W,H);
  // Transparent overlay on GPU animated striped background in menu.
- if(state==='menu'){atmosphere();titleArtwork()}
- else{overlay();atmosphere()}
+ if(state==='menu'){titleArtwork()}
+ else{overlay()}
  for(let i=0;i<btns.length;i++)drawButton(btns[i],i);
  if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
-  sparkle(W-17,H-19,2,state==='menu'?COL.ink:COL.pink)}
+  }
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.ink,3);text(note,W/2,H*.09+5,11,COL.paper)}
  window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:particles.length,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN};
 }
@@ -208,7 +198,7 @@ function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}
 function act(i,x,y){
  if(i<0||i>=btns.length)return;
  if(prefs.haptic&&navigator.vibrate)try{navigator.vibrate(7)}catch{}
- burst(x,y);selected=i;hover=i;
+ selected=i;hover=i;
  if(state==='menu'){
   if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;state='play'}
   else if(i===1){if(saveExists)state='play';else flash('暂无存档')}
@@ -216,9 +206,8 @@ function act(i,x,y){
   else if(i===3)state='exit';
  }else if(state==='settings'){
   if(i===0)prefs.motion=!prefs.motion;
-  if(i===1)prefs.particles=!prefs.particles;
-  if(i===2)prefs.haptic=!prefs.haptic;
-  if(i===3)state='menu';
+  if(i===1)prefs.haptic=!prefs.haptic;
+  if(i===2)state='menu';
   savePrefs();
  }else state='menu';
  selected=0;hover=-1;held=-1;buttons();
