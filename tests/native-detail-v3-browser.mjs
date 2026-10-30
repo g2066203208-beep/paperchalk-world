@@ -37,7 +37,8 @@ try{
  assert.notEqual(await canvas.evaluate(c=>c.toDataURL()),after,'Grid must be toggleable');
  await page.locator('#v3-pose').selectOption('A_dynamic');
  await page.waitForFunction(()=>document.querySelector('#v3-native').dataset.ready==='true' &&
-  document.querySelector('[data-v3-image="generated384"]').src.includes('A_dynamic_generated384.png'),{timeout:20000});
+  document.querySelector('#v3-save').download==='D-A_dynamic-learned-detail-384x512.png' &&
+  document.querySelector('[data-v3-image="generated384"]').naturalWidth===384,{timeout:20000});
  assert.equal((await page.locator('#v3-save').getAttribute('download')),'D-A_dynamic-learned-detail-384x512.png');
  assert.deepEqual(errors,[]);
  mkdirSync('repixel-browser-artifacts',{recursive:true});
