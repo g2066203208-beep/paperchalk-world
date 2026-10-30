@@ -75,3 +75,40 @@
 #pw-ui-touch-fx{position:fixed;inset:0;z-index:9;pointer-events:none;overflow:hidden}
 .pw-touch-spark{position:absolute;display:block;width:5px;height:5px;background:var(--pink);pointer-events:none;transition:transform .28s steps(7,end);image-rendering:pixelated}
 @media(prefers-reduced-motion:reduce){.pw-touch-spark{transition:none}}
+
+/* 3D native WebGL scene, pixel-accurate; HUD is a clean four-ink 2.5D overlay. */
+#pw-world{position:fixed;inset:0;z-index:8;overflow:hidden;background:var(--ink);color:var(--ink);touch-action:none;pointer-events:auto}
+#pw-world-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:0;image-rendering:pixelated;touch-action:none;cursor:grab}
+#pw-world-canvas:active{cursor:grabbing}
+#pw-world .pw-panel{clip-path:none;background:var(--paper);border:3px solid var(--ink);box-shadow:3px 4px 0 var(--ink)}
+#pw-world-top{position:absolute;z-index:2;top:max(9px,env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;max-width:600px;margin:auto}
+#pw-world-top strong{display:block;letter-spacing:.08em;font-size:13px}
+#pw-world-top small{display:block;font-size:11px;font-weight:700}
+#pw-world-top button{min-height:39px;font-size:13px;flex:none}
+#pw-world-reticle{position:absolute;left:50%;top:43%;transform:translate(-50%,-50%);width:15px;height:15px;z-index:1;pointer-events:none}
+#pw-world-reticle::before,#pw-world-reticle::after{content:"";position:absolute;background:var(--paper)}
+#pw-world-reticle::before{top:7px;left:0;height:1px;width:15px}
+#pw-world-reticle::after{left:7px;top:0;height:15px;width:1px}
+#pw-world-bottom{position:absolute;z-index:2;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(94%,610px);padding:11px;display:grid;gap:9px;max-height:min(55dvh,450px);overflow:auto;touch-action:pan-y}
+.pw-world-line{display:flex;justify-content:space-between;align-items:start;gap:6px}
+.pw-world-line strong{display:block;font-size:14px}
+.pw-world-line small{display:block;font-size:11px;line-height:1.4;font-weight:650}
+#pw-sensor-badge{font-size:11px;font-weight:900;background:var(--blue);border:1px solid var(--ink);padding:4px 6px;white-space:nowrap}
+.pw-world-angles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pw-world-angles>div{text-align:center;background:var(--blue);border:2px solid var(--ink);padding:5px 3px}
+.pw-world-angles span{display:block;font-weight:800;font-size:10px}
+.pw-world-angles strong{display:block;font-size:clamp(18px,4vw,25px);font-variant-numeric:tabular-nums}
+.pw-world-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pw-world-actions button{font-size:clamp(12px,3vw,14px);white-space:normal;line-height:1.3;min-height:43px;padding:6px 4px}
+.pw-world-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pw-world-controls label{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:5px;font-size:11px;font-weight:800}
+.pw-world-controls input{grid-column:1/-1;width:100%;accent-color:var(--ink);height:20px;touch-action:auto}
+.pw-world-help{font-size:11px;font-weight:700;line-height:1.45;border-top:1px solid var(--blue);padding-top:7px}
+#pw-world button{touch-action:manipulation}
+@media(max-height:650px){
+ #pw-world-bottom{width:min(50%,500px);left:auto;right:8px;transform:none;max-height:calc(100dvh - 88px);bottom:5px;padding:7px;gap:5px}
+ #pw-world-top{right:auto;width:min(49%,430px)}
+ .pw-world-help{display:none}
+ .pw-world-angles strong{font-size:18px}
+}
+@media(max-width:420px){#pw-world-top{padding:6px 8px}#pw-world-bottom{padding:8px}.pw-world-help{font-size:10px}}
