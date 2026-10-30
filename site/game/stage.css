@@ -182,3 +182,14 @@
 #pw-world-help,.pw-world-help{line-height:1.4}
 @media(max-width:420px){#pw-lean-buttons{left:4px;top:25%}#pw-lean-buttons button{min-width:72px;min-height:42px;font-size:11px}#pw-move-stick{bottom:clamp(180px,28dvh,260px)}}
 @media(min-aspect-ratio:5/4) and (max-height:650px){#pw-lean-buttons{top:34%;left:120px}#pw-lean-buttons button{min-height:37px}}
+
+/* Motion-sickness-safe game HUD: stable horizon, no flashes or shader blur. */
+#pw-comfort-toggle{border:2px solid var(--ink);min-height:30px;padding:5px 7px;background:var(--blue);color:var(--ink);font:800 11px/1.2 system-ui;white-space:nowrap;touch-action:manipulation}
+#pw-comfort-toggle[aria-pressed="false"]{background:var(--paper)}
+#pw-gyro-debug{width:100%;font-size:11px;font-weight:700;line-height:1.25;color:var(--ink);font-variant-numeric:tabular-nums}
+#pw-world-bottom.pw-world-compact{max-height:min(40dvh,312px)}
+@media(max-width:420px){
+ #pw-comfort-toggle{font-size:10px;padding:4px;min-height:29px}
+ #pw-gyro-debug{font-size:10px}
+ #pw-world-bottom.pw-world-compact{max-height:min(43dvh,340px)}
+}
