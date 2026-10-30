@@ -3,7 +3,7 @@
  * No interpolation, smoothing, half-transparent paints or hidden fifth pigment.
  */
 export const INKS=['#393657','#F2A5C2','#A9BAE9','#FFF5E6'];
-export const MAX_DIM=512, MAX_LAYERS=16, MAX_FRAMES=24;
+export const MAX_DIM=512, MAX_LAYERS=16, MAX_FRAMES=24, MAX_TOTAL_CELLS=3_000_000;
 let sequence=0;
 const id=()=>Date.now().toString(36)+'-'+(++sequence).toString(36);
 export function createProject(width=64,height=64){
@@ -14,11 +14,13 @@ export function createProject(width=64,height=64){
     activeFrame:0,activeLayer:0};
 }
 function checkSize(w,h){if(!Number.isInteger(w)||!Number.isInteger(h)||w<8||h<8||w>MAX_DIM||h>MAX_DIM)throw Error('画布尺寸须为 8–512 的整数')}
+function checkBudget(w,h,layers,frames){if(w*h*layers*frames>MAX_TOTAL_CELLS)throw Error('当前画布太大：最多允许 300 万个图层帧像素，请缩小尺寸或减少图层/帧')}
 export function validateProject(p){
  if(!p||p.format!=='paperworld-pixel-v1')throw Error('不是支持的 PAPERWORLD 像素工程');
  checkSize(p.width,p.height);
  if(!Array.isArray(p.layers)||p.layers.length<1||p.layers.length>MAX_LAYERS||
     !Array.isArray(p.frames)||p.frames.length<1||p.frames.length>MAX_FRAMES)throw Error('图层或动画帧数量超过限制');
+ checkBudget(p.width,p.height,p.layers.length,p.frames.length);
  if(!Array.isArray(p.palette)||p.palette.length!==4||p.palette.some((v,i)=>v.toUpperCase()!==INKS[i]))throw Error('本游戏工程仅支持正式四色');
  for(const l of p.layers)if(typeof l.name!=='string'||l.name.length>60||typeof l.visible!=='boolean')throw Error('图层信息损坏');
  for(const f of p.frames){
@@ -98,6 +100,7 @@ export function composite(p,frame=p.activeFrame){
 }
 export function addLayer(p){
  if(p.layers.length>=MAX_LAYERS)throw Error('最多 16 层');
+ checkBudget(p.width,p.height,p.layers.length+1,p.frames.length);
  const i=p.activeLayer+1;p.layers.splice(i,0,{id:id(),name:'图层 '+(p.layers.length+1),visible:true});
  for(const f of p.frames)f.cels.splice(i,0,Array(p.width*p.height).fill(0));p.activeLayer=i;
 }
@@ -107,6 +110,7 @@ export function deleteLayer(p){
 }
 export function addFrame(p){
  if(p.frames.length>=MAX_FRAMES)throw Error('最多 24 帧');
+ checkBudget(p.width,p.height,p.layers.length,p.frames.length+1);
  const f=p.frames[p.activeFrame];p.frames.splice(p.activeFrame+1,0,{id:id(),cels:f.cels.map(a=>a.slice())});p.activeFrame++;
 }
 export function deleteFrame(p){if(p.frames.length===1)throw Error('至少保留一帧');p.frames.splice(p.activeFrame,1);p.activeFrame=Math.max(0,p.activeFrame-1)}
@@ -124,7 +128,7 @@ export function selectionPaste(p,clip,x,y){
  for(let j=0;j<clip.height;j++)for(let i=0;i<clip.width;i++)putPixel(p,x+i,y+j,clip.data[j*clip.width+i]);
 }
 export function resizeProject(p,w,h){
- checkSize(w,h);
+ checkSize(w,h);checkBudget(w,h,p.layers.length,p.frames.length);
  for(const f of p.frames)f.cels=f.cels.map(a=>{
    const next=Array(w*h).fill(0);for(let y=0;y<Math.min(h,p.height);y++)for(let x=0;x<Math.min(w,p.width);x++)next[y*w+x]=a[y*p.width+x];return next;
  });
