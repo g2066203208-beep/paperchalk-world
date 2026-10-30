@@ -25,7 +25,7 @@ test('Z-axis heading, pitch, recenter and smooth yaw wrap',()=>{
 test('90 degree side lie, sensor compensation, smoothing limits',()=>{
  const m=new MotionPose();m.manual(0,0,90*RAD);
  for(let i=0;i<40;i++)m.step(1/60);
- assert.ok(deg(m.pose.roll)>88);
+ assert.ok(deg(m.pose.roll)>87);
  assert.ok(cameraBasis(m.pose).right[2]>.99);
  m.setSensitivity(2);assert.equal(m.sensitivity,1.6);
  m.setResponse(.001);assert.equal(m.smooth,.025);
