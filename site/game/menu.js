@@ -190,54 +190,75 @@ function paintFoldWipe(){
   }
  }
 }
-// Input effect: ANY screen tap, independent of button hit-testing.
-// Small coordinated pixel diamond + radial paper confetti at EXACT touch coordinates.
-// No ambient particles, no alpha blending, no gradients or full-screen explosions.
-const TOUCH_DIRECTIONS=Array.from({length:16},(_,i)=>{
- const angle=i*Math.PI/8-Math.PI/2;
- return [Math.cos(angle),Math.sin(angle)];
-});
+// ANY touchscreen position: a miniature RANDOM pixel firework, not a geometric ring.
+// No idle visuals, no gradients, only exact four-color opaque integer pixels.
+// Each touch has an independently randomized asymmetrical spray with short trails.
 function emitTouchEffect(x,y){
  if(reduced||!prefs.particles)return;
- touchSerial++;
  const centerX=Math.round(clamp(x,0,W-1)),centerY=Math.round(clamp(y,0,H-1));
+ const rand=Math.random;
+ const count=14+Math.floor(rand()*8);
+ const sparks=[];
+ // A loose upward-biased, irregular starburst. No even-angle spacing.
+ for(let i=0;i<count;i++){
+  const angle=rand()*Math.PI*2;
+  const speed=(26+rand()*49)*(rand()<.15?.60:1);
+  const duration=.28+rand()*.28;
+  const colors=[COL.ink,COL.pink,COL.blue,COL.ink,COL.paper];
+  const c=colors[Math.floor(rand()*colors.length)];
+  sparks.push({
+   x:centerX+(rand()-.5)*4,y:centerY+(rand()-.5)*4,
+   vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-8,
+   life:duration,max:duration,delay:rand()*.065,drag:1.6+rand()*2,
+   g:55+rand()*55,size:rand()<.17?3:(rand()<.47?2:1),
+   color:c,twinkle:rand()*6.283,flare:rand()<.16
+  });
+ }
+ touchSerial++;
  lastTouch={x:centerX,y:centerY};
- touchBursts.push({x:centerX,y:centerY,age:0,duration:.42,seed:touchSerial%16});
- // Six touches max, 16 fragments each: bounded under repeated rapid tapping.
- if(touchBursts.length>6)touchBursts.shift();
+ touchBursts.push({x:centerX,y:centerY,age:0,max:.60,sparks,seed:touchSerial});
+ // At most four simultaneous little fireworks; prevents screen pollution.
+ if(touchBursts.length>4)touchBursts.shift();
 }
 function updateTouchEffects(dt){
  for(let i=touchBursts.length-1;i>=0;i--){
-  const touch=touchBursts[i];touch.age+=dt;
-  if(touch.age>=touch.duration)touchBursts.splice(i,1);
+  const burst=touchBursts[i];burst.age+=dt;
+  for(const p of burst.sparks){
+   if(p.life<=0)continue;
+   if(burst.age<p.delay)continue;
+   p.life-=dt;
+   const drag=Math.max(0,1-p.drag*dt);
+   p.vx*=drag;p.vy=p.vy*drag+p.g*dt;
+   p.x+=p.vx*dt;p.y+=p.vy*dt;
+  }
+  if(burst.age>=burst.max||burst.sparks.every(p=>p.life<=0))touchBursts.splice(i,1);
  }
 }
 function paintTouchEffects(){
- for(const p of touchBursts){
-  const t=clamp(p.age/p.duration,0,1);
-  const travel=Math.round(2+26*(1-(1-t)*(1-t)));
-  // Two coordinated color sets: high-contrast ink + soft accent petals.
-  // Everything remains opaque at one logical-pixel resolution.
-  for(let i=0;i<16;i++){
-   const dir=TOUCH_DIRECTIONS[i];
-   const stagger=i%2===0?1:.67;
-   const rad=Math.round(travel*stagger);
-   const x=p.x+Math.round(dir[0]*rad),y=p.y+Math.round(dir[1]*rad);
-   const size=t<.56?(i%4===0?3:2):1;
-   if(t>.84&&i%2===1)continue;
-   const color=i%4===0?COL.ink:i%4===1?COL.pink:i%4===2?COL.ink:COL.blue;
-   R(x,y,size,size,color);
-   if(i%4===0&&t>.12&&t<.58){
-    R(x-Math.round(dir[0]*4),y-Math.round(dir[1]*4),2,2,COL.paper);
-   }
+ for(const burst of touchBursts){
+  // Flash is only at the exact tap and lasts ~50ms, not a permanent ring.
+  if(burst.age<.052){
+   const x=burst.x,y=burst.y;
+   R(x-2,y-2,5,5,COL.paper);
+   R(x-1,y-1,3,3,COL.pink);
+   R(x-5,y,3,1,COL.ink);R(x+3,y,3,1,COL.ink);
+   R(x,y-5,1,3,COL.ink);R(x,y+3,1,3,COL.ink);
   }
-  // A brief four-corner diamond ripple expands at the touch point.
-  if(t<.72){
-   const d=Math.round(3+17*t),arm=t<.2?3:2;
-   for(const sign of [-1,1]){
-    R(p.x+sign*d,p.y,arm,arm,COL.pink);
-    R(p.x,p.y+sign*d,arm,arm,COL.ink);
-    if(t<.38){R(p.x+sign*2,p.y,2,2,COL.ink);R(p.x,p.y+sign*2,2,2,COL.paper)}
+  for(const p of burst.sparks){
+   if(burst.age<p.delay||p.life<=0)continue;
+   const t=p.life/p.max;
+   // An irregular, gradually thinning trail; no circle/diamond motif.
+   if(t>.28&&Math.abs(p.vx)+Math.abs(p.vy)>16){
+    const tail=t>.65?3:2;
+    const dx=Math.sign(p.vx),dy=Math.sign(p.vy);
+    for(let j=1;j<=tail;j++)R(p.x-dx*j*2,p.y-dy*j*2,1,1,j===tail?COL.paper:p.color);
+   }
+   const size=t>.40?p.size:1;
+   R(p.x,p.y,size,size,p.color);
+   // Rare one-frame bright four-point twinkle on selected particles.
+   if(p.flare&&t>.42&&t<.66){
+    R(p.x-2,p.y,1,1,COL.paper);R(p.x+size+1,p.y,1,1,COL.paper);
+    R(p.x,p.y-2,1,1,COL.paper);R(p.x,p.y+size+1,1,1,COL.paper);
    }
   }
  }
@@ -254,7 +275,7 @@ function draw(){
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintFoldWipe();
  paintTouchEffects();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.length*16,touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.filter(p=>p.life>0).length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
