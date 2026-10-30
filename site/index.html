@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#FFF5E6">
-<meta name="paperworld-build" content="20261030-hostess-intro1">
-<meta name="description" content="PAPERWORLD — 四色原创程序像素游戏。纸飞机、像素按钮均程序绘制，含清晰像素文字、真正四色的看板娘立绘、灰色剪影登场、呼吸动画与自动/点击对话。">
-<title>PAPERWORLD · 纸飞机世界</title>
+<meta name="paperworld-build" content="20261030-shop-lease2">
+<meta name="description" content="PAPERWORLD 四色像素游戏：老板娘来到柜台，为玩家办理角色登记与店铺租借。">
+<title>PAPERWORLD · 新店开张</title>
+<link rel="stylesheet" href="./game/stage.css?v=shop-lease2">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#FFF5E6}
@@ -20,8 +21,73 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
 </head>
 <body>
 <canvas id="background" aria-hidden="true"></canvas>
-<canvas id="menu" role="application" aria-label="PAPERWORLD 主菜单。触摸或点击开始游戏、继续游戏、设置和退出游戏，也可以用上下方向键和回车操作。" tabindex="0"></canvas>
+<canvas id="menu" role="application" aria-label="PAPERWORLD 游戏主菜单及老板娘开店引导" tabindex="0"></canvas>
+<div id="stage-ui">
+  <section id="pw-dialogue" class="pw-panel pw-off" aria-label="老板娘对话" aria-live="polite">
+    <div class="pw-dialogue-head">
+      <div class="pw-dialogue-name">老板娘</div>
+      <button type="button" class="pw-btn secondary" id="pw-dialogue-auto" aria-pressed="true">自动：开</button>
+    </div>
+    <div class="pw-dialogue-speech" id="pw-dialogue-speech"></div>
+    <div class="pw-dialogue-actions">
+      <button type="button" class="pw-btn secondary" id="pw-dialogue-back">返回</button>
+      <span id="pw-dialogue-status">点击继续 · 1 / 2</span>
+      <button type="button" class="pw-btn" id="pw-dialogue-next">继续 ›</button>
+    </div>
+  </section>
+  <section id="pw-lease" class="pw-off" aria-label="游戏内角色创建与店铺租借登记">
+    <div class="pw-panel" id="pw-lease-card">
+      <div class="pw-card-header"><div>
+        <div class="pw-chip">PAPERWORLD / SHOP REGISTRY</div>
+        <h2>店铺租赁登记</h2>
+        <p>老板娘协助办理开店手续 · 仅填写游戏角色资料</p>
+      </div><div class="pw-card-icon" aria-hidden="true">▧</div></div>
+      <div class="pw-tabs" aria-label="办理进度">
+        <div class="pw-tab" id="pw-tab-1">01 角色身份</div>
+        <div class="pw-tab" id="pw-tab-2">02 店铺资料</div>
+        <div class="pw-tab" id="pw-tab-3">03 确认签约</div>
+      </div>
+      <form id="pw-register" novalidate>
+        <section class="pw-step" id="pw-form-step1">
+          <div class="pw-profile"><canvas id="pw-avatar" width="32" height="48" role="img" aria-label="程序绘制的游戏像素角色预览"></canvas>
+            <div class="pw-profile-copy"><strong>创建你的角色</strong><div>发型与服装实时预览</div><div>不需要真实姓名或联系方式</div></div>
+          </div>
+          <div class="pw-fields">
+            <div class="pw-fieldgroup wide"><label for="pw-nickname">角色昵称 *</label><input class="pw-field" id="pw-nickname" name="nickname" maxlength="14" autocomplete="off" placeholder="例如：小满" required></div>
+            <div class="pw-fieldgroup"><label for="pw-pronouns">角色称呼</label><select class="pw-field" id="pw-pronouns" name="pronouns"><option>她</option><option>他</option><option>TA</option></select></div>
+            <div class="pw-fieldgroup"><label for="pw-origin">身份背景</label><select class="pw-field" id="pw-origin" name="origin"><option>新居民</option><option>旅行商人</option><option>工坊学徒</option><option>自由职业者</option></select></div>
+            <div class="pw-fieldgroup"><label for="pw-hair">头发造型</label><select class="pw-field" id="pw-hair" name="hair"><option>短发</option><option>双马尾</option><option>长发</option><option>卷发</option></select></div>
+            <div class="pw-fieldgroup"><label for="pw-outfit">服装主色</label><select class="pw-field" id="pw-outfit" name="outfit"><option>樱粉</option><option>雾蓝</option><option>奶油白</option></select></div>
+          </div>
+        </section>
+        <section class="pw-step pw-off" id="pw-form-step2">
+          <div class="pw-fields">
+            <div class="pw-fieldgroup wide"><label for="pw-shopName">店铺名称 *</label><input class="pw-field" id="pw-shopName" name="shopName" maxlength="18" autocomplete="off" placeholder="例如：蓝铃杂货店" required></div>
+            <div class="pw-fieldgroup"><label for="pw-business">经营类型</label><select class="pw-field" id="pw-business" name="business"><option>杂货</option><option>咖啡与点心</option><option>花艺</option><option>书屋</option><option>工坊</option></select></div>
+            <div class="pw-fieldgroup"><label for="pw-district">店铺位置</label><select class="pw-field" id="pw-district" name="district"><option>街角</option><option>广场</option><option>河岸</option></select></div>
+            <div class="pw-fieldgroup wide"><label for="pw-term">租借期限</label><select class="pw-field" id="pw-term" name="term"><option value="7">7 个游戏日 · 体验</option><option value="30">30 个游戏日 · 标准</option><option value="90">90 个游戏日 · 长租</option></select></div>
+          </div>
+          <div class="pw-cost"><span><span class="pw-chip">预计租金</span><span class="pw-hint">仅为游戏内虚拟货币</span></span><strong id="pw-rent">260 ◈</strong></div>
+        </section>
+        <section class="pw-step pw-off" id="pw-form-step3">
+          <div class="pw-contract"><div class="pw-chip">APPLICATION / 店铺租借确认书</div><dl id="pw-contract-details"></dl><div class="pw-hint">确认后保存到本机游戏存档。可返回修改。</div></div>
+        </section>
+        <section class="pw-step pw-off" id="pw-receipt" aria-live="polite">
+          <div class="pw-seal">✓ 租赁登记完成</div>
+          <div class="pw-contract"><div class="pw-chip">LEASE RECEIPT / 游戏内租约</div><dl id="pw-receipt-details"></dl></div>
+          <div class="pw-hint">角色及店铺信息已保存。店铺经营场景尚在开发中。</div>
+        </section>
+        <div id="pw-form-errors" class="pw-errors pw-off" role="alert"></div>
+        <div class="pw-actions">
+          <button id="pw-prev" class="pw-btn secondary" type="button">返回</button>
+          <button id="pw-next" class="pw-btn" type="submit">下一步 →</button>
+        </div>
+        <p class="pw-footer-note">此处为虚构角色建档 · 自动保存草稿</p>
+      </form>
+    </div>
+  </section>
+</div>
 <script type="module" src="./game/background.js?v=20261030-blue8s-diagonal2"></script>
-<script type="module" src="./game/menu.js?v=20261030-hostess-intro1"></script>
+<script type="module" src="./game/menu.js?v=20261030-shop-lease2"></script>
 </body>
 </html>
