@@ -34,16 +34,17 @@ try{
   assert.equal(before.materials[0].pixels.length,256);
   assert.ok((await page.locator('#pixel-canvas').boundingBox()).width>220);
   // Enter an exact different pixel; verify source pixels change and undo/redo restores.
-  await page.locator('[data-ink="4"]').click();
+  const original=before.materials[0].pixels[2*16+2],target=original===4?1:4;
+  await page.locator('[data-ink="'+target+'"]').click();
   const box=await page.locator('#pixel-canvas').boundingBox();
   const x=box.x+(2.5/16)*box.width,y=box.y+(2.5/16)*box.height;
   await page.mouse.click(x,y);
   let edited=await getPack(page);
-  assert.equal(edited.materials[0].pixels[2*16+2],4);
+  assert.equal(edited.materials[0].pixels[2*16+2],target);
   await page.locator('#undo').click();
   assert.equal((await getPack(page)).materials[0].pixels[2*16+2],before.materials[0].pixels[2*16+2]);
   await page.locator('#redo').click();
-  assert.equal((await getPack(page)).materials[0].pixels[2*16+2],4);
+  assert.equal((await getPack(page)).materials[0].pixels[2*16+2],target);
   // Inspect another named material and check the same real pixel data drives both previews.
   await page.locator('[data-material="brick"]').click();
   assert.equal((await getState(page)).active,'brick');
@@ -62,7 +63,7 @@ try{
   assert.equal(await page.locator('#pw-world-material-link').count(),1);
   // Same origin applies material edits immediately to the real 3D game on entry.
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('paperworld-world-materials-v1')));
-  assert.equal(saved.materials[0].pixels[2*16+2],4);
+  assert.equal(saved.materials[0].pixels[2*16+2],target);
   await page.screenshot({path:'artifacts/world-materials/'+device+'-textured-3d-world.png'});
   await context.close();
  }
