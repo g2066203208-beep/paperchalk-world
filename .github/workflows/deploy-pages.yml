@@ -64,6 +64,7 @@ jobs:
         run: |
           node tests/game-browser.mjs
           node tests/hostess-redraw-browser.mjs
+          node tests/hostess-20261030-browser.mjs
           node tests/fullbody-learning-browser.mjs
       - name: Upload real browser screenshot evidence
         if: always()
@@ -73,6 +74,7 @@ jobs:
           path: |
             artifacts/game/
             artifacts/pixel-art/
+            artifacts/hostess-new/
             artifacts/fullbody-learning/
           retention-days: 14
           if-no-files-found: warn
