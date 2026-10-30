@@ -54,7 +54,13 @@ test('owner approaches from distance, breathing vertically, then starts shop ren
  assert.match(intro,/imageSmoothingEnabled=false/);
  assert.ok(intro.includes('老板娘')&&intro.includes('店铺')&&intro.includes('租期'));
  assert.doesNotMatch(intro,/欢迎来到 PAPERWORLD|故事还在慢慢展开/);
- assert.match(intro,/CHAR_PER_SEC=25,AUTO_PAUSE=1\.35/);
+ assert.match(intro,/CHAR_PER_SEC=10/);
+ assert.match(intro,/function computeExteriorMask\(/);
+ assert.match(intro,/function portraitLayers\(/);
+ assert.match(intro,/if\(outside\[i\]\)continue/);
+ assert.doesNotMatch(intro,/AUTO_PAUSE|autoBtn|next\(true\)|dwell/);
+ assert.doesNotMatch(html,/id="pw-dialogue-auto"/);
+ assert.match(html,/手动对话 · 点击继续/);
  assert.match(menu,/switchScene\('lease'\)/);
  assert.match(menu,/createLeaseUI\(/);
  assert.match(html,/id="pw-register"/);
@@ -75,4 +81,27 @@ test('native form has all character and rental fields, and accessible IME contro
  assert.match(css,/touch-action:pan-y/);
  assert.match(css,/--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6/);
  assert.doesNotMatch(css,/backdrop-filter|filter:blur/);
+});
+
+test('masked face retains enclosed deep-purple pupil, not globally alpha-keyed ink',()=>{
+ const source=readFileSync('site/game/intro.js','utf8');
+ const start=source.indexOf('function computeExteriorMask(data,w,h){');
+ const end=source.indexOf('function portraitLayers(image){',start);
+ assert.ok(start>=0&&end>start);
+ const fn=new Function('INK',source.slice(start,end)+';return computeExteriorMask')([57,54,87]);
+ const w=17,h=17,data=new Uint8ClampedArray(w*h*4);
+ const ink=[57,54,87],skin=[255,245,230];
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  // cream filled face 4..12, with dark pupil 7..9 / 7..9.
+  // one dark pixel contour crack at top must not flood into the pupil.
+  const isFace=x>=4&&x<=12&&y>=4&&y<=12;
+  const pupil=x>=7&&x<=9&&y>=7&&y<=9;
+  const color=isFace&&!pupil?skin:ink;
+  const i=(y*w+x)*4;data.set([...color,255],i);
+ }
+ const ext=fn(data,w,h);
+ assert.equal(ext[0],1,'external corner is transparent');
+ assert.equal(ext[8*w+8],0,'center of pupil stays opaque');
+ assert.equal(ext[6*w+6],0,'skin stays opaque');
+ assert.equal(ext[2*w+8],1,'sky outside face is removed');
 });
