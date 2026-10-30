@@ -37,13 +37,13 @@ try{
     assert.deepEqual(info.colors,['169,186,233,255','255,245,230,255'],'only exact D mist-blue and cream output');
     assert.equal(info.sceneCount,1,'exactly one background canvas');
     assert.equal(info.controls,0,'no legacy UI/portrait/dialogue/menu elements');
-    assert.equal(info.canvasWidth,Math.ceil(info.innerWidth/4)+80,'one full 80-cell seamless overscan');
-    assert.equal(info.canvasHeight,Math.ceil(info.innerHeight/4));
-    assert.ok(info.rect.width>=info.innerWidth+320 && info.rect.width<info.innerWidth+324);
-    assert.ok(info.rect.height>=info.innerHeight && info.rect.height<info.innerHeight+4);
+    assert.equal(info.canvasWidth,Math.ceil(info.innerWidth/4)+40,'40-cell diagonal overscan on X');
+    assert.equal(info.canvasHeight,Math.ceil(info.innerHeight/4)+40,'40-cell diagonal overscan on Y');
+    assert.ok(info.rect.width>=info.innerWidth+160 && info.rect.width<info.innerWidth+164);
+    assert.ok(info.rect.height>=info.innerHeight+160 && info.rect.height<info.innerHeight+164);
     assert.equal(info.imageRendering,'pixelated');
     const fn=await page.evaluate(async()=>{
-      const m=await import('./game/background.js?v=20261030-blue8s');
+      const m=await import('./game/background.js?v=20261030-blue8s-diagonal2');
       return {palette:m.PALETTE,colors:[m.BACKGROUND,m.STRIPE],wrap:[...Array(20)].every((_,i)=>m.stripeAt(i,42,0)===m.stripeAt(i,42,80)),
         loop:m.phaseFromSeconds(0)===m.phaseFromSeconds(8),
         motion:[...Array(80)].some((_,x)=>m.stripeAt(x,1,0)!==m.stripeAt(x,1,20))};
@@ -59,16 +59,18 @@ try{
       if(!animation)return {exists:false};
       animation.pause();
       animation.currentTime=1000;
-      const x0=new DOMMatrixReadOnly(getComputedStyle(c).transform).m41;
+      const matrix0=new DOMMatrixReadOnly(getComputedStyle(c).transform);
+      const x0=matrix0.m41, y0=matrix0.m42;
       animation.currentTime=2000;
-      const x1=new DOMMatrixReadOnly(getComputedStyle(c).transform).m41;
+      const matrix1=new DOMMatrixReadOnly(getComputedStyle(c).transform);
+      const x1=matrix1.m41, y1=matrix1.m42;
       const after=stats.redraws;
       const timing=animation.effect.getComputedTiming();
-      return {exists:true,x0,x1,initial,after,duration:timing.duration};
+      return {exists:true,x0,x1,y0,y1,initial,after,duration:timing.duration};
     });
     assert.ok(compositor.exists,'CSS compositor animation is active');
     assert.equal(compositor.duration,8000);
-    assert.ok(Math.abs((compositor.x1-compositor.x0)+320/8)<0.3,'subpixel-continuous pan, not stepped raster offset');
+    assert.ok(Math.abs((compositor.x1-compositor.x0)+160/8)<0.3 && Math.abs((compositor.y1-compositor.y0)+160/8)<0.3,'smooth pan along normal of 45-degree stripes on BOTH X and Y');
     assert.equal(compositor.initial,1,'render only once on mount');
     assert.equal(compositor.after,compositor.initial,'never redraw texture for each animation frame');
     await page.screenshot({path:'artifacts/game/'+name+'-background.png'});
