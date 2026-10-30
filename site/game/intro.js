@@ -138,7 +138,7 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   next();
  });
  // Rental office is a native editable scene, not a baked GPT illustration.
- function world(W,H){return drawOfficeBack({R,COL},W,H)}
+ function world(W,H){return drawOfficeBack({R,COL,text},W,H)}
  function geometry(W,H){
   const room=officeLayout(W,H),{wide,anchorX,anchorY}=room;
   // Portrait: one recognisable unaltered hostess behind a physical counter.
