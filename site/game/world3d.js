@@ -129,10 +129,22 @@ function makeTown(lod='full'){
    box(x,towardRoad+out,.055,2.05,.50,.13,0,MAT.stone,MAT.stone);
    if(bareMobileRow)continue;
    // Windows, reveals and sills are actual offset 3D volumes, not a painted rectangle.
+   // Desktop architectural LOD adds corner posts and a readable window ledge,
+   // while mobile preserves doors, frame material and collision at much lower cost.
+   if(lod!=='mobile'){
+    for(const dx of [-w/2+.23,w/2-.23]){
+     box(x+dx,towardRoad,.16,.21,.21,h-.13,0,MAT.timber,MAT.timber);
+     box(x+dx,y+(y>0?depth/2-.19:-depth/2+.19),.18,.20,.20,h-.16,0,MAT.timber,MAT.timber);
+    }
+   }
    for(let floor=0;floor<Math.floor(h/2);floor+=(lod==='mobile'?2:1)){ 
     for(const dx of [-1,1]){
      box(x+dx*1.13,towardRoad,.95+floor*1.75,.72,.09,.78,0);
      box(x+dx*1.13,towardRoad+(.07*(y<0?-1:1)),.98+floor*1.75,.49,.095,.5,2,(seed+floor)%3===0?MAT.windowlit:MAT.window,MAT.window);
+     if(lod!=='mobile'){
+      box(x+dx*1.13,towardRoad+out*1.1,.87+floor*1.75,1.01,.27,.12,3,MAT.limestone,MAT.limestone);
+      box(x+dx*1.13,towardRoad+out*.45,1.73+floor*1.75,1.00,.20,.12,3,MAT.timber,MAT.timber);
+     }
     }
    }
    box(x,y,.1,w+.35,depth+.35,.20,0,MAT.stone,MAT.stone);
