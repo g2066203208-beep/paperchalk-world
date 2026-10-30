@@ -25,6 +25,25 @@
  <p style="color:#c8bcdc">不再展示一堆中间步骤图片。直接比较母版、粗形体条件、模型最终生成及55%遮挡恢复；支持原生像素网格和逐格取色。采用 Masked Token 并行预测和错误像素二次编辑，训练源码、验证和生成结果可核查。当前只研究一个人物的两种姿势。</p>
  <a style="color:#F2A5C2;font-weight:900" href="./discrete-diffusion.html">查看模型真实生成、网格和失败对照 →</a>
 </section>
+<details id="pixel-v2" style="background:#222237;border:1px solid #797092;border-radius:14px;padding:17px;margin:17px 0" open>
+ <summary style="font-size:21px;font-weight:850;cursor:pointer;color:#F2A5C2">V2 · 真实训练：角色＋道具＋场景的四色离散生成</summary>
+ <p style="color:#c0b6d3">实际模型以 48×64 逻辑网格生成，每个像素只能是 D 色板四类之一。增加独立形体蓝图、像素年龄与纠错，程序化道具的训练参数与测试参数分开。<strong>这仍然是科研样机，不是成熟美术生成器。</strong></p>
+ <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0">
+  <label>样本类别 <select id="pixel-v2-family" style="border-radius:8px;padding:7px;background:#393657;color:#FFF5E6"><option>读取中</option></select></label>
+  <label><input id="pixel-v2-grid" type="checkbox" checked> 逐格原生像素网格</label>
+ </div>
+ <div id="pixel-v2-status" style="color:#A9BAE9;margin:6px 0 12px" role="status">正在读取实际训练数据…</div>
+ <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-width:920px">
+  <figure style="margin:0"><figcaption>参考像素图（测试目标）</figcaption><canvas data-v2-canvas="reference" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
+  <figure style="margin:0"><figcaption>输入的独立粗形体蓝图</figcaption><canvas data-v2-canvas="blueprint" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
+  <figure style="margin:0"><figcaption>从全遮挡 Token 推理的结果</figcaption><canvas data-v2-canvas="generated" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
+  <figure style="margin:0"><figcaption>55% 遮挡修复（其余像素锁定）</figcaption><canvas data-v2-canvas="repaired" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
+ </div>
+ <p id="pixel-v2-metrics" style="color:#FFF5E6;background:#302d47;border-radius:9px;padding:12px;font-size:12px;margin-top:12px">训练评测尚未读取</p>
+ <p style="color:#b7acc9;font-size:12px">验收要与“直接复制粗蓝图”的基线比较，而不只看背景占比很高的总体准确率。人物两个姿势是同一身份，不能拿它们证明新角色生成能力。</p>
+ <a href="./style2/v2/report.json">完整训练与留出报告</a>
+</details>
+<script type="module" src="./style2/diffusion-v2-gallery.js"></script>
 <section id="style2-anchors" aria-label="D风格两张人物训练样本" style="margin:18px 0 20px;padding:20px;background:#20263a;border:1px solid #66708a;border-radius:15px">
  <div class="eyebrow">SYSTEM 02 · TWO D-STYLE TRAINING ANCHORS</div>
  <h2 style="font-size:26px;margin:8px 0">两张人物 · 正式纳入绘画学习</h2>
