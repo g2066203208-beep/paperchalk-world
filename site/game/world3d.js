@@ -41,7 +41,7 @@ function makeTown(lod='full'){
  // Shops stand in three-dimensional city blocks on both sides of the avenue.
  for(let i=-7;i<=7;i++){
   // Fewer far facade windows on phones: preserve actual 3D geometry and collisions.
-  if(lod==='mobile'&&Math.abs(i)%2===1)continue;
+  const bareMobileRow=lod==='mobile'&&Math.abs(i)%2===1;
   const x=i*10+4;
   for(const j of [-3,-2,-1,1,2,3]){
    const y=j*10.5+2;
@@ -51,6 +51,8 @@ function makeTown(lod='full'){
    const w=4.6+(seed%3)*.7,depth=5.5;
    box(x,y,.1,w,depth,h,wall);
    solids.push({x,y,w,d:depth});
+   // On mobile keep all architecture/collision. Only ornamental surfaces use LOD.
+   if(bareMobileRow)continue;
    // Stacked facade windows are small solid meshes, not sprites.
    const towardRoad=y>0?y-depth/2-.025:y+depth/2+.025;
    for(let floor=0;floor<Math.floor(h/2);floor+=(lod==='mobile'?2:1)){ 

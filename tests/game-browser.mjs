@@ -97,6 +97,13 @@ try{
   assert.ok(sensorResult.lean.offset>.13,'native quaternion side tilt moves the real camera left');
   assert.ok(Math.abs(sensorResult.lean.bank)<.0001,'comfort keeps the horizon level');
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-native-gyro-peek-comfort.png'});
+  // Verify the *real* hit target. A synthetic/forced click would conceal joystick overlap.
+  const comfortHit=await page.locator('#pw-comfort-toggle').evaluate(el=>{
+    const r=el.getBoundingClientRect();
+    const target=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+    return target===el||el.contains(target);
+  });
+  assert.ok(comfortHit,'comfort button must not be covered by the joystick/HUD on '+screen);
   await page.locator('#pw-comfort-toggle').click();
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.comfort),false);
   await page.waitForTimeout(500);
@@ -163,7 +170,9 @@ try{
   await waitScene(page,'intro');
   const distant=(await state(page)).intro;
   assert.equal(distant.phase,'approaching');
-  assert.ok(distant.scale<=.40,'owner initially appears small and far from camera');
+  const revealScale=(await state(page)).introRevealScale;
+  assert.ok(revealScale>=.23&&revealScale<=.25,'owner is small at the first visible reveal frame');
+  assert.ok(distant.scale>=revealScale&&distant.scale<1,'owner continues approaching after paper reveal');
   await page.screenshot({path:'artifacts/game/'+screen+'-far-owner.png'});
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.phase==='talk',{timeout:6500});
   const near=(await state(page)).intro;

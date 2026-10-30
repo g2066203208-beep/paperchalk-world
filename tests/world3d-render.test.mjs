@@ -55,3 +55,16 @@ test('3D world has genuine 3D eye-translation peek, no inertial walking or fake 
  for(const id of ['pw-walk-toggle','pw-walk-direction','pw-posture-hold','pw-squat-motion','pw-gait-threshold'])
    assert.ok(!html.includes('id="'+id+'"'),'removed unreliable sensor input');
 });
+
+test('desktop and mobile LOD share every building collision while mobile draws fewer decorative triangles',()=>{
+ const source=readFileSync('site/game/world3d.js','utf8');
+ const begin=source.indexOf('function makeTown(lod='),end=source.indexOf('\nfunction program(gl,',begin);
+ assert.ok(begin>=0&&end>begin);
+ const ink=[57/255,54/255,87/255],pink=[242/255,165/255,194/255],blue=[169/255,186/255,233/255],paper=[1,245/255,230/255];
+ const town=new Function('INK','PINK','BLUE','PAPER','PALETTE',source.slice(begin,end)+'\nreturn makeTown;')(ink,pink,blue,paper,[ink,pink,blue,paper]);
+ const full=town('full'),mobile=town('mobile');
+ assert.equal(full.solids.length,107);
+ assert.deepEqual(mobile.solids,full.solids,'LOD may not remove buildings or change collision');
+ assert.ok(mobile.tri.length<full.tri.length*.5,'mobile triangles should be less than half the desktop total');
+ assert.ok(mobile.tri.length>0&&mobile.line.length>0);
+});

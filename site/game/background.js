@@ -65,7 +65,11 @@ if(document.hidden||!motionEnabledByMenu())canvas.style.animationPlayState='paus
 // Pages changes, reload the website even if the APK stays open in foreground.
 const ACTIVE_BUILD='20261030-blue8s-diagonal2';
 const ACTIVE_MENU_BUILD=document.querySelector('meta[name="paperworld-build"]')?.content||'';
-let checking=false;
+let checking=false,updateWaiting=false;
+function gameIsSafeToReload(){
+  const ui=window.__PAPERWORLD_MENU__;
+  return !!ui&&ui.state==='menu'&&!ui.transition&&!window.__PAPERWORLD_WORLD3D__?.active;
+}
 async function checkPublishedVersion(){
   if(checking||document.hidden||navigator.onLine===false)return;
   checking=true;
@@ -76,7 +80,8 @@ async function checkPublishedVersion(){
     const match=html.match(/background\.js\?v=([A-Za-z0-9._-]+)/);
     const remoteMenu=html.match(/<meta name="paperworld-build" content="([A-Za-z0-9._-]+)"/);
     if((remoteMenu && remoteMenu[1]!==ACTIVE_MENU_BUILD) || (!remoteMenu && match && match[1]!==ACTIVE_BUILD)){
-      location.replace('./?apk=1&fresh='+Date.now());
+      if(gameIsSafeToReload())location.replace('./?apk=1&fresh='+Date.now());
+      else updateWaiting=true;
     }
   }catch(error){/* Offline: keep the already rendered background. */}
   finally{checking=false;}
@@ -86,6 +91,11 @@ document.addEventListener('visibilitychange',()=>{
   if(!document.hidden)checkPublishedVersion();
 });
 setInterval(checkPublishedVersion,60000);
+// If a release was noticed during active gameplay, apply it only after returning
+// safely to the idle main menu. No arbitrary mid-session navigation.
+setInterval(()=>{
+  if(updateWaiting&&gameIsSafeToReload())location.replace('./?apk=1&fresh='+Date.now());
+},2000);
 
 // Non-interactive test telemetry: never reads or changes the CSS animation.
 window.__PAPERWORLD_BACKGROUND__=Object.freeze({

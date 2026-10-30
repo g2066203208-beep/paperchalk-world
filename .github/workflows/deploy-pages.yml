@@ -76,7 +76,7 @@ jobs:
           if-no-files-found: warn
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    needs: verify
+    needs: [verify, browser]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:

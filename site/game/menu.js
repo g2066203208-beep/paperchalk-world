@@ -37,6 +37,7 @@ if(reduced)prefs.motion=false;
 let W=0,H=0,scale=2,land=false,btns=[],state='menu',selected=0,hover=-1,held=-1;
 let frameN=0,clock=0,last=0,saveExists=false,touchBursts=[],touchSerial=0,lastTouch=null;
 let note='',noteTo=0,curtain=null;
+let introRevealScale=null;
 try{saveExists=localStorage.getItem(SAVE)==='created'}catch{}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const F={A:['01110','10001','10001','11111','10001','10001','10001'],B:['11110','10001','10001','11110','10001','10001','11110'],C:['01111','10000','10000','10000','10000','10000','01111'],D:['11110','10001','10001','10001','10001','10001','11110'],E:['11111','10000','10000','11110','10000','10000','11111'],F:['11111','10000','10000','11110','10000','10000','10000'],G:['01111','10000','10000','10111','10001','10001','01111'],H:['10001','10001','10001','11111','10001','10001','10001'],I:['11111','00100','00100','00100','00100','00100','11111'],J:['00111','00010','00010','00010','10010','10010','01100'],K:['10001','10010','10100','11000','10100','10010','10001'],L:['10000','10000','10000','10000','10000','10000','11111'],M:['10001','11011','10101','10101','10001','10001','10001'],N:['10001','11001','10101','10011','10001','10001','10001'],O:['01110','10001','10001','10001','10001','10001','01110'],P:['11110','10001','10001','11110','10000','10000','10000'],Q:['01110','10001','10001','10001','10101','10010','01101'],R:['11110','10001','10001','11110','10100','10010','10001'],S:['01111','10000','10000','01110','00001','00001','11110'],T:['11111','00100','00100','00100','00100','00100','00100'],U:['10001','10001','10001','10001','10001','10001','01110'],V:['10001','10001','10001','10001','10001','01010','00100'],W:['10001','10001','10001','10101','10101','10101','01010'],X:['10001','10001','01010','00100','01010','10001','10001'],Y:['10001','10001','01010','00100','00100','00100','00100'],Z:['11111','00001','00010','00100','01000','10000','11111'],0:['01110','10011','10101','10101','11001','10001','01110'],1:['00100','01100','00100','00100','00100','00100','01110'],2:['01110','10001','00001','00110','01000','10000','11111'],3:['11110','00001','00001','01110','00001','00001','11110'],'.':['00000','00000','00000','00000','00000','01100','01100'],':':['00000','01100','01100','00000','01100','01100','00000'],'-':['00000','00000','00000','11111','00000','00000','00000']};
@@ -211,7 +212,7 @@ const intro=createHostessIntro({
 });
 function enterScene(next){
  state=next;selected=0;hover=-1;held=-1;
- if(next==='intro')intro.enter();
+ if(next==='intro'){intro.enter();introRevealScale=null;}
  else intro.leave();
  if(next!=='lease')lease.hide();
  buttons();
@@ -232,6 +233,8 @@ function updateCurtain(dt){
   enterScene(curtain.next);curtain.phase='open';curtain.elapsed=0;
  }else if(curtain.phase==='open'&&curtain.elapsed>=OPEN_TIME){
   curtain=null;
+  // Snapshot at paper reveal, independent of slow software-renderer test polling.
+  if(state==='intro')introRevealScale=intro.snapshot().scale;
   if(nativeLabels)nativeLabels.style.visibility='visible';
   if(state==='lease')lease.show({receipt:lease.snapshot().hasContract});
   if(state==='world')world.open();
@@ -312,7 +315,7 @@ function draw(){
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintFoldWipe();
  paintTouchEffects();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,world:state==='world'?{active:world.active}:null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,introRevealScale,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,world:state==='world'?{active:world.active}:null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
