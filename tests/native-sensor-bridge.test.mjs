@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const java=readFileSync('android/app/src/main/java/com/paperchalk/lampkeep/MainActivity.java','utf8');
+const html=readFileSync('site/index.html','utf8');
+const world=readFileSync('site/game/world3d.js','utf8');
+const motion=readFileSync('site/game/motion3d.js','utf8');
+test('existing original APK has rotation vector sensor service, no second game app',()=>{
+ assert.match(java,/Sensor\.TYPE_GAME_ROTATION_VECTOR/);
+ assert.match(java,/Sensor\.TYPE_ROTATION_VECTOR/);
+ assert.match(java,/SensorManager\.getQuaternionFromVector/);
+ assert.match(java,/web\.addJavascriptInterface\(new GameSensorBridge\(\), "PaperworldSensor"\)/);
+ assert.match(java,/@JavascriptInterface public void start\(\)/);
+ assert.match(java,/@JavascriptInterface public void stop\(\)/);
+ assert.match(java,/lastSensorNs < 33333333L/);
+ assert.match(java,/stopSensor\(\);\s+super\.onPause\(\)/);
+ assert.match(java,/stopSensor\(\);\s+if \(web != null\)/);
+ assert.match(java,/window\.__PAPERWORLD_NATIVE_ORIENTATION__/);
+ assert.match(java,/g2066203208-beep\.github\.io/);
+ assert.doesNotMatch(java,/ACCESS_FINE_LOCATION|CAMERA|RECORD_AUDIO/);
+});
+test('3D web scene actually starts/stops native sensor and receives quaternions',()=>{
+ assert.match(world,/window\.PaperworldSensor\?\.start/);
+ assert.match(world,/window\.PaperworldSensor\?\.stop/);
+ assert.match(world,/window\.__PAPERWORLD_NATIVE_ORIENTATION__=onNativeQuaternion/);
+ assert.match(world,/motion\.ingestQuaternion\(w,x,y,z\)/);
+ assert.match(motion,/source==='native'&&this\.lastSource==='web'/);
+ assert.match(motion,/source==='web'&&this\.lastSource==='native'/);
+ assert.match(motion,/relativeAngles\(this\.referenceQ,this\.currentQ\)/);
+ assert.match(html,/id="pw-comfort-toggle"/);
+ assert.match(html,/id="pw-gyro-debug"/);
+ assert.match(world,/setComfort\(comfort\)/);
+ assert.doesNotMatch(world,/onAcceleration|ingestVerticalAcceleration|walkMode/);
+});
