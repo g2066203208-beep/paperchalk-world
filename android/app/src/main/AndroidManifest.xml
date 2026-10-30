@@ -4,7 +4,7 @@
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <application
       android:allowBackup="false"
-      android:label="网页容器"
+      android:label="PAPERWORLD"
       android:usesCleartextTraffic="false"
       android:theme="@android:style/Theme.Material.Light.NoActionBar">
     <activity
