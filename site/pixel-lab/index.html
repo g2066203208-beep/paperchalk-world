@@ -41,12 +41,8 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
 <main>
 <div class="kicker">TWO SYSTEMS / ONE ART DIRECTION</div>
 <h1>只做两件事，<br>把像素画真正做好。</h1>
-<p class="lead">D「雾樱玻璃」是当前游戏默认美术方案。所有人物、场景与道具将遵守同一规格。独立实验不再挤在首页，留作相应系统内部研究。</p>
-<details style="margin:20px 0;border:1px solid #5d5879;border-radius:12px;padding:15px;color:#FFF5E6">
-<summary style="cursor:pointer;font-weight:800">历史实验：16张头像拼接全身（未通过美术验收）</summary>
-<p style="margin:10px 0">16张图复用同一个角色和两套身体姿势母版，没有重新绘制16个独立人物的服装、四肢与动作；美术批准0/16。旧图保留作为研究记录，不计入正式资产。</p>
-<a href="./fullbody-16.html">查看旧模板合成图与训练报告</a>
-</details>
+<p class="lead">D「雾樱玻璃」是当前游戏默认美术方案。所有人物、场景与道具将遵守同一规格。这里只展示完整人物立绘的正式工作流程；旧头像、微型动作和模板换脸实验不再作为系统02内容。</p>
+
 <section class="preview" aria-label="新绘制全身人物候选">
 <img src="./assets/hostess-redraw-v1-192x256.png" alt="新绘制四色透明全身老板娘候选像素立绘" width="192" height="256">
 <div><h3>新绘制全身立绘 · V1候选</h3><p>独立重新设计的全身人物、服装与手势，原生192×256四色透明PNG。尚未通过正式美术验收，也未覆盖当前游戏角色。</p><a href="./hostess-redraw.html">放大检查 · 网格 · 取回PNG</a> <span style="color:#afa7c6">/</span> <a href="./hostess-matte.html">旧老板娘抠图检查</a></div></section>
@@ -60,15 +56,15 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
  <a class="action" href="./repixelize.html">进入 01 · 真像素转换</a>
 </article>
 <article class="route">
- <div class="number">02 · LEARN / 像素绘画学习</div>
- <h2>学习人物、场景、道具</h2>
- <p>当前进行多人物结构训练：7种脸型×11类五官×8种发型，生成32张真实不同结构的脸。旧VAE空白脸问题已通过保存原始五官像素解决。</p>
- <div class="capability"><strong>当前主线 · 多人物脸型与五官学习</strong> 真正使用不同的CC0人物头部与五官，神经网络学习识别结构，再生成未见过的部件组合。<br><span class="detail">生成保留原部件的像素笔画；尚未学会从零绘制新的精致眼睛。</span><br><a href="./face-parts.html">直接查看32张不同脸部</a></div>
- <a class="action" href="./learn.html">进入 02 · 像素绘画学习</a>
+ <div class="number">02 · WHOLE FIGURE / 整幅人物训练</div>
+ <h2>完整全身立绘训练</h2>
+ <p>以384×512整个人物为单位，连同脸、发型、衣饰、躯干、双臂双腿和姿势一起学习。拒绝孤立头像、16×16小人以及拿固定身体拼脸冒充生成。</p>
+ <div class="capability"><strong>真实 PyTorch 整幅画布训练已运行</strong> 查看原图与模型输出的完整对照、遮挡前景指标、原生四色和逐像素细节。<br><span class="detail">当前只有1个正式身份的两张母版：生成全新人设的模型尚未达到训练数据门槛。</span></div>
+ <a class="action" href="./fullbody-learning.html">进入 02 · 全身立绘训练</a>
 </article>
 </section>
 
-<footer>统一标准：颜色、尺寸、轮廓、像素密度和原生网格先验收，再做审美与资产质量验收。旧训练和未通过美术审核的图片只作为研究档案保留，不进入正式角色素材库。</footer>
+<footer>统一标准：完整全身、原生四色、像素密度、透明轮廓、角色差异与人工美术验收。已作废的换脸/微型动作实验不计入训练成果。</footer>
 </main>
 </body>
 </html>
