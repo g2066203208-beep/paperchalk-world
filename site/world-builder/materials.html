@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#393657">
+<title>PAPERWORLD · 世界材质工坊</title>
+<meta name="description" content="PAPERWORLD 世界构建01：可编辑16x16原生四色无缝材质、真实WebGL3D预览、游戏贴图应用和Atlas导出">
+<link rel="stylesheet" href="./materials.css?v=m1">
+</head>
+<body>
+<div class="studio">
+ <header class="bar">
+   <div class="identity"><a href="../index.html" class="back">‹ 游戏</a><span class="sigil">▦</span><div><strong>WORLD BUILDER</strong><small>01 / MATERIAL ATELIER · 世界材质</small></div></div>
+   <div class="bar-actions"><span class="save-state" id="save-state" role="status">本地材质库</span><button id="import-pack">导入</button><button id="export-pack">工程 JSON</button><button id="apply-world" class="primary">应用到 3D 世界 ↗</button></div>
+ </header>
+ <div class="layout">
+  <aside class="library">
+   <div class="section-head"><span>01</span><div><strong>材质资源库</strong><small>8 / 8 · 官方四色</small></div></div>
+   <div class="library-list" id="material-list" role="list"></div>
+   <div class="library-help"><span class="dot"></span><p>不是随机噪点贴图。每种材料有清晰的结构语言：砌缝、砖排、木纹、屋瓦或窗格。</p></div>
+  </aside>
+  <main class="editor" aria-label="材质像素绘制工作区">
+   <div class="editor-title">
+    <div><span class="eyebrow">TEXTURE WORKSPACE / 16 × 16</span><h1 id="material-title">石砌墙</h1><p id="material-role">墙体 / 基础 · 连续循环贴图</p></div>
+    <div class="history"><button id="undo" title="撤销 Ctrl+Z">↶ 撤销</button><button id="redo" title="重做 Ctrl+Y">↷ 重做</button></div>
+   </div>
+   <div class="paint-shell">
+    <div class="ruler horizontal"><span>00</span><span>04</span><span>08</span><span>12</span><span>16</span></div>
+    <div class="canvas-wrap"><div class="ruler vertical"><span>00</span><span>04</span><span>08</span><span>12</span><span>16</span></div><canvas id="pixel-canvas" width="512" height="512" aria-label="16x16 逐像素可编辑材质画布" tabindex="0"></canvas></div>
+    <div class="paint-caption"><span id="coordinates">X 00 · Y 00</span><span>16² PIXELS · NO INTERPOLATION</span></div>
+   </div>
+   <div class="controls">
+    <div class="toolstrip" aria-label="材质绘画工具">
+     <button class="active" data-tool="pencil" aria-pressed="true">✎ 铅笔 <small>B</small></button>
+     <button data-tool="line" aria-pressed="false">╱ 直线 <small>L</small></button>
+     <button data-tool="fill" aria-pressed="false">▨ 填充 <small>F</small></button>
+     <button data-tool="picker" aria-pressed="false">◉ 取色 <small>I</small></button>
+    </div>
+    <div class="ink-section">
+     <div class="ink-heading"><strong>游戏四色</strong><span>INK LOCK · 不增加第五色</span></div>
+     <div id="ink-list" class="ink-list" role="group" aria-label="官方四色选择"></div>
+     <label class="brush-label">笔刷 <output id="brush-value">1 px</output><input id="brush" type="range" min="1" max="4" value="1"></label>
+     <label class="grid-label"><input id="show-grid" type="checkbox" checked> 显示像素网格</label>
+    </div>
+   </div>
+  </main>
+  <aside class="preview">
+   <div class="section-head"><span>02</span><div><strong>真实表面预览</strong><small>REPEAT × 3 / 3D UV MAPPING</small></div></div>
+   <div class="preview-card"><header><strong>无缝平铺</strong><small>3 × 3 · 自动重复</small></header><canvas id="repeat-canvas" width="240" height="240" aria-label="当前材质连续平铺九宫格预览"></canvas><p>检查重复边缘、色块节奏与接缝。不做模糊、半透明或噪点平滑。</p></div>
+   <div class="preview-card cube"><header><strong>立体材质</strong><small>WEBGL · 真实六面纹理映射</small></header><canvas id="cube-canvas" width="320" height="220" aria-label="可拖拽旋转的WebGL纹理立方体"></canvas><p>按住拖拽旋转。游戏中的地面、外墙、屋顶使用同一份 16px 材质数据。</p></div>
+   <div class="bottom-actions"><button id="export-tile">导出当前 PNG</button><button id="export-atlas">导出完整 Atlas</button><button id="restore-one">复原此材质</button></div>
+  </aside>
+ </div>
+ <footer class="foot"><strong>PAPERWORLD / WORLD ASSET PIPELINE</strong><span>编辑 → 真实像素 → UV 材质图集 → 世界 WebGL</span><a href="../pixel-lab/editor.html">角色像素画 ›</a></footer>
+</div>
+<input id="file-picker" type="file" accept=".json,application/json" hidden>
+<script type="module" src="./materials.js?v=m1"></script>
+</body>
+</html>
