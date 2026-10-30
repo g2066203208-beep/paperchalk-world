@@ -22,6 +22,19 @@
 <figure><figcaption>原 D 站姿人物</figcaption><img src="./geometry-v5/B_standing_input.png" alt="真实 D 风格站姿母版作为几何识别输入"></figure>
 <figure><figcaption>V5 人体部件预测（诊断色板）</figcaption><img src="./geometry-v5/B_standing_pred_parts.png" alt="合成几何训练模型对站姿人物的部件推测，非已验证分割"></figure>
 </div></details>
+<section style="border:2px solid #F2A5C2;background:#29243b;padding:16px;border-radius:13px;margin:18px 0" aria-label="V5.1 real pixel domain adaptation">
+<h2>V5.1 · 用真正的 D 原画学习部件（不是椭球小人）</h2>
+<p>给现有 V5 模型补充真实原画的人工粗分区：<strong>只用动态动作 A 做调整训练</strong>，把站姿 B 作为未参与梯度更新的留出测试。对比「合成模型直接识别」与「真实图适配后」的差异，避免把合成 IoU 冒充人物识别精度。</p>
+<div class="screens" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+<figure><figcaption>真实站姿输入 · D 四色</figcaption><img src="./geometry-v5/B_standing_source.png" alt="V5.1 原始站姿人物，低分辨率仅供部件训练验证"></figure>
+<figure><figcaption>人工粗标注 · 不精确</figcaption><img src="./geometry-v5/B_standing_manual_approx.png" alt="现有手工粗多边形的分区检查，不是精确眼睛手指标签"></figure>
+<figure><figcaption>旧 V5 合成模型</figcaption><img src="./geometry-v5/B_standing_synthetic_model.png" alt="旧 V5 在真实像素原画上的预测"></figure>
+<figure><figcaption>V5.1 真实分区学习之后</figcaption><img src="./geometry-v5/B_standing_real_adapted.png" alt="只训练动作A后在站姿B留出集的识别结果"></figure>
+</div>
+<p id="v51-status" class="small" role="status">正在读取真正的留出姿势测试分数……</p>
+<p class="small">注意：训练集只有同一个角色的两个姿势；标注仅是粗多边形，不能因此认为已经学会头发纤维、手指、五官或真实 3D 深度。</p>
+<a href="./geometry-v5/v51_real_parts_report.json">查看 V5.1 完整真实域评测报告</a>
+</section>
 <div class="note" style="margin-top:17px"><h2>真实留出参数测试</h2><div id="report">读取训练报告中……</div><p class="small">留出随机参数与视角测试，并非未见真人角色测试。不能用合成数据准确率证明已掌握成人脸型、写实衣服和精致像素绘画。</p><a href="./geometry-v5/report.json">查看可审计训练指标</a> · <a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/ml/style2/volume_parts_v5.py">查看 PyTorch 源码</a></div>
 </main><script>
 const angle=document.querySelector('#angle');
@@ -32,4 +45,10 @@ fetch('./geometry-v5/report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Er
  const s=d.evaluation;
  document.getElementById('report').textContent='训练 '+d.train_steps+' 步，模型 '+d.parameter_count+' 参数；部件前景平均 IoU '+(s.foreground_part_mean_iou*100).toFixed(2)+'%；深度类别 '+(s.foreground_depth_bin_accuracy*100).toFixed(2)+'%；视角分类 '+(s.yaw_class_accuracy*100).toFixed(2)+'%；关节误差 '+s.joint_mean_error_pixels+' 像素。';
 }).catch(e=>document.getElementById('report').textContent='尚未确认训练输出：'+e.message);
+</script><script>
+fetch('./geometry-v5/v51_real_parts_report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('模型尚未发布');return r.json()}).then(d=>{
+ const b=d.baseline_holdout,a=d.adapted_holdout;
+ const label=v=>(v*100).toFixed(1)+'%';
+ document.getElementById('v51-status').textContent='站姿 B 留出对照：前景标注准确率 '+label(b.foreground_accuracy)+' → '+label(a.foreground_accuracy)+'；平均分区 IoU '+label(b.macro_iou)+' → '+label(a.macro_iou)+'。'+(d.passes_proxy_improvement?'粗标注迁移指标有所提升；尚未达到美术通过。':'留出集未达到迁移提升标准；不得当作合格模型。');
+}).catch(err=>document.getElementById('v51-status').textContent='尚无 V5.1 可核实结果：'+err.message)
 </script></body></html>
