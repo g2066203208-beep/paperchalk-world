@@ -44,8 +44,31 @@ jobs:
             assert "visual-review.json" in (p/"../fullbody-learning.html").read_text()
           print("PixelLab failure states and model integrity pass")
           PY
-  deploy:
+  browser_refiner:
     needs: verify_art
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install web artwork pixel inspector
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test actual whole-figure ML pixel comparison on phone and desktop
+        run: node tests/refiner-browser.mjs
+      - name: Save screenshots of original versus actual refined sprite
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: whole-figure-ml-retouch-real-browser-screenshots
+          path: artifacts/refine-review/
+          retention-days: 14
+          if-no-files-found: warn
+  deploy:
+    needs: [verify_art, browser_refiner]
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment:
