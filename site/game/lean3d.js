@@ -46,9 +46,8 @@ export class LeanCamera{
   // Smooth real-camera displacement continuously, independent from sensor Hz.
   const response=1-Math.exp(-clamp(dt,0,.08)/LEAN_RESPONSE);
   this.offset+=(allowed-this.offset)*response;
-  // Collision can tighten while close to walls, never allow camera penetration.
-  if(Math.abs(this.offset)>Math.abs(allowed)||Math.sign(this.offset)!==Math.sign(allowed))
-   this.offset=allowed;
+  // Do NOT snap to zero as the device returns upright. Only wall geometry
+  // may truncate the smoothed offset. Otherwise the head must glide home.
   const safe=protectedLean(base,this.offset,solids);
   this.offset=safe;
   this.bank+=(intent.bank-this.bank)*response;
