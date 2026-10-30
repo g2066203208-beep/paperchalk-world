@@ -5,9 +5,9 @@
  */
 import {clamp} from './motion3d.js';
 export const STANCES=Object.freeze({
- stand:{height:1.68,speed:3.0,radius:.32},
- crouch:{height:1.06,speed:1.4,radius:.32},
- prone:{height:.43,speed:.68,radius:.32}
+ stand:{height:1.68,speed:1.6,radius:.32},
+ crouch:{height:1.06,speed:1.0,radius:.32},
+ prone:{height:.43,speed:.48,radius:.32}
 });
 export function blocked(x,y,radius,solids=[]){
  if(Math.abs(x)>88-radius||Math.abs(y)>88-radius)return true;
