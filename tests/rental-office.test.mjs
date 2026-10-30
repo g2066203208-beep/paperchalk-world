@@ -26,7 +26,7 @@ for(const [name,W,H] of [['phone portrait',195,422],['phone landscape',422,195],
 }
 test('rental interior has only one hostess sprite and correct foreground painter order',()=>{
  const src=readFileSync('site/game/intro.js','utf8');
- assert.match(src,/drawOfficeBack\(\{R,COL\},W,H\)/);
+ assert.match(src,/drawOfficeBack\(\{R,COL,text\},W,H\)/);
  assert.match(src,/ctx\.drawImage\(source,0,0,HOSTESS_WIDTH,HOSTESS_HEIGHT,px,py,sw,sh\);\s*\/\/ Correct occlusion:[\s\S]*?drawOfficeCounter\(\{R,COL\},W,H\)/);
  assert.equal((src.match(/new Image\(\)/g)||[]).length,1);
 });
