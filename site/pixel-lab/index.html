@@ -54,8 +54,8 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
 <article class="route">
  <div class="number">02 · LEARN / 像素绘画学习</div>
  <h2>学习人物、场景、道具</h2>
- <p>当前是 V5：新增人体体积、关节、透视、部件识别实验。实际检视发现 V5 在原画上的分区失真；V2/V3 作为历史对照，尚未达到合格人物生成质量。</p>
- <div class="capability"><strong>当前 V5 · 结构学习实验</strong> 12 类部件、深度和关节监督，已跑出实际网络结果；跨域原画预测明显不合格，下一阶段必须补真实人物语义监督。<br><span class="detail">严格区分合成体块成绩与原画质量，未实现自动生成优质新人物。</span><br><a href="./style2/geometry-v5.html">直接查看 V5 原图 vs 模型分区</a></div>
+ <p>现在先练脸：独立 96×96 原生四色神经生成器，训练后批量生成16张真实像素脸。V2–V5仅是辅助与旧实验。</p>
+ <div class="capability"><strong>当前主线 · 真实像素脸训练</strong> 只用真实 D 风格母版训练与同一人物另一姿势留出测试，逐张核验面部结构。<br><span class="detail">当前仅生成母版条件变化，不宣称已经会独立设计新人物。</span><br><a href="./face.html">直接查看16张训练生成的脸</a></div>
  <a class="action" href="./learn.html">进入 02 · 像素绘画学习</a>
 </article>
 </section>
