@@ -12,7 +12,7 @@ try{
  page.on('pageerror',err=>errors.push(err.message));
  let ok=false;
  for(let i=0;i<25;i++){
-  try{await page.goto('http://127.0.0.1:4175/pixel-lab/',{waitUntil:'networkidle',timeout:2000});ok=true;break;}
+  try{await page.goto('http://127.0.0.1:4175/pixel-lab/learn.html',{waitUntil:'networkidle',timeout:2000});ok=true;break;}
   catch(err){await new Promise(res=>setTimeout(res,160));}
  }
  assert.ok(ok,'local PixelLab page must load');
@@ -62,7 +62,7 @@ try{
  assert.notEqual(before,after);
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  mobile.on('pageerror',err=>errors.push(err.message));
- await mobile.goto('http://127.0.0.1:4175/pixel-lab/',{waitUntil:'networkidle'});
+ await mobile.goto('http://127.0.0.1:4175/pixel-lab/learn.html',{waitUntil:'networkidle'});
  await mobile.waitForFunction(()=>window.__PIXEL_LAB__?.model?.metrics?.steps>0);
  assert.equal(await mobile.locator('#predicted').isVisible(),true);
  const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
