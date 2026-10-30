@@ -55,7 +55,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/3D体感世界/);
   assert.match(page,/id="pw-motion-start"/);
   assert.match(page,/id="pw-world-canvas"/);
-  assert.match(menu,/import \{createHostessIntro\} from '\.\/intro\.js\?v=20261030-rentdialog9'/);
+  assert.match(menu,/import \{createHostessIntro\} from '\.\/intro\.js\?v=20261031-office1'/);
   assert.match(menu,/intro\.draw\(ctx,W,H\)/);
   assert.match(menu,/intro\.onTap\(\)/);
   assert.match(menu,/const CLOSE_TIME=\.56,OPEN_TIME=\.62/);
