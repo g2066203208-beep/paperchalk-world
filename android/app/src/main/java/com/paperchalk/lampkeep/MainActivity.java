@@ -170,7 +170,8 @@ public final class MainActivity extends Activity {
         settings.setDomStorageEnabled(true);
         settings.setUseWideViewPort(true);
         settings.setAllowFileAccess(false);
-        settings.setAllowContentAccess(false);
+        // File input receives user-picked content:// URIs from Android SAF; keep file:// disabled.
+        settings.setAllowContentAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setTextZoom(100);
