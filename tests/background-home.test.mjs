@@ -50,7 +50,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/paperworld-menu-v3/);
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
-  assert.match(page,/20261030-world3d-locomotion2/);
+  assert.match(page,/20261030-world3d-locomotion3/);
   assert.match(menu,/import \{createWorld3D\} from '\.\/world3d\.js\?v=20261030-locomotion3'/);
   assert.match(menu,/3D体感世界/);
   assert.match(page,/id="pw-motion-start"/);
