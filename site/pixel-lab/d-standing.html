@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#393657">
+<title>D · 雾樱玻璃｜新站姿角色 · 原生四色像素 · Pixel Lab</title>
+<style>
+:root{color-scheme:dark;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
+*{box-sizing:border-box}body{background:#1b1c31;color:#eee9f8;font:15px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif;margin:0}
+a{color:var(--pink)}a:focus-visible{outline:3px solid var(--cream);outline-offset:4px}
+nav{padding:14px max(16px,calc((100vw - 1160px)/2));border-bottom:1px solid #494361;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+nav strong{letter-spacing:.1em;font-size:12px}nav a{font-weight:700;font-size:12px}
+main{max-width:1160px;margin:auto;padding:28px 16px 55px}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.2;margin:10px 0}h2{font-size:20px;margin:0 0 12px}
+.sub{color:#c2bcd7;max-width:880px}.eyebrow{color:var(--pink);font-size:11px;letter-spacing:2px;font-weight:800}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;margin-top:25px}
+.artpanel{padding:18px;background:#2b2942;border:1px solid #5a5473;border-radius:16px;min-width:0}
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.picture{background:#252338;border:1px solid #514b6a;border-radius:12px;overflow:hidden;min-width:0}
+.picture header{font-size:12px;font-weight:800;padding:9px 10px;color:#e6dced;display:flex;justify-content:space-between;gap:5px}
+.picture header span{color:#bcb5d8;font-size:10px}
+.picture img,.picture canvas{display:block;width:100%;aspect-ratio:3/4;object-fit:contain;height:auto;background:var(--ink);image-rendering:pixelated;image-rendering:crisp-edges}
+.picture .caption{padding:11px;font-size:12px;color:#c0b9d2}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+.tags span{padding:3px 9px;background:#373451;border:1px solid #625a7f;border-radius:16px;font-size:11px}
+aside{display:flex;flex-direction:column;gap:15px}
+.side{padding:16px;background:#29283f;border:1px solid #524c6e;border-radius:14px}
+.side p{color:#c8bed7;font-size:13px;margin:8px 0}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
+.swatch i{display:block;height:48px;border-radius:7px;border:1px solid #fff4}
+.swatch small{font-family:ui-monospace,monospace;font-size:9px;color:#d2ccdc}
+.action{display:block;text-align:center;background:var(--pink);color:var(--ink);border:0;border-radius:9px;text-decoration:none;font-weight:900;padding:12px 9px;margin-top:8px}
+.action.secondary{background:#4b4664;color:#f4e7fa}
+.mono{font-family:ui-monospace,monospace;font-size:11px;overflow-wrap:anywhere}
+#quality{font-size:12px;color:#d2cadd;white-space:pre-wrap}
+footer{border-top:1px solid #514b67;margin-top:27px;padding-top:17px;font-size:12px;color:#a9a2bc}
+@media(max-width:850px){.grid{grid-template-columns:1fr}}@media(max-width:460px){.artpanel{padding:8px}.compare{gap:7px}.picture header{padding:6px;font-size:11px}.picture header span{font-size:8px}.picture .caption{font-size:10px;padding:8px}}
+</style>
+</head>
+<body>
+<nav><strong>PIXEL LAB / D STYLE / STANDING CHARACTER</strong>
+<div><a href="./palette-choices.html?p=D">D 配色工作室</a> · <a href="./repixelize.html">真像素转换器</a> · <a href="./index.html">工作室首页</a></div>
+</nav>
+<main>
+<div class="eyebrow">ORIGINAL CHARACTER · EXACT FOUR-COLOR NATIVE GRID</div>
+<h1>D「雾樱玻璃」· 单人自然站姿</h1>
+<p class="sub">原来的粉发角色参考与新站姿并排检查。左边保留旧角色跳跃姿态，右边是这次实际处理的新站姿。两张都锁定 384×512 和相同 D 色板，直接显示，不需要先下载。</p>
+<div class="grid">
+<section class="artpanel" aria-label="旧版与新版角色并排对比">
+<div class="compare">
+<div class="picture"><header>原有角色 <span>旧姿势</span></header><canvas id="oldD" width="384" height="512" aria-label="原有粉发少女跳跃姿态的D风格四色角色"></canvas><div class="caption">对照母版 · 原先的动态姿势</div></div>
+<div class="picture"><header>新角色 <span>站立姿势</span></header><img id="dAvatar" src="./d-standing-v1-384x512.png" width="384" height="512" alt="D 雾樱玻璃四色自然站立单人全身像素角色"><div class="caption">独立新站姿图 · 非骨骼直接变形</div></div>
+</div>
+<div class="tags"><span>384×512 原生网格</span><span>4 种 HEX</span><span>RGB 无半透明</span><span>最近邻显示</span><span>原始单幅人物</span></div>
+</section>
+<aside>
+<section class="side"><h2>D 色板 · 固定四种颜色</h2>
+<div class="swatches"><div class="swatch"><i style="background:#393657"></i><small>#393657</small></div><div class="swatch"><i style="background:#F2A5C2"></i><small>#F2A5C2</small></div><div class="swatch"><i style="background:#A9BAE9"></i><small>#A9BAE9</small></div><div class="swatch"><i style="background:#FFF5E6"></i><small>#FFF5E6</small></div></div>
+<a class="action" href="./d-standing-v1-384x512.png" download="D-standing-v1-384x512.png">下载本次 384×512 PNG</a>
+<a class="action secondary" href="./d-standing-v1-preview-2x.png" download>下载 2× 无插值预览</a></section>
+<section class="side"><h2>逐像素验证</h2><div id="quality" role="status">正在读取自动化检查报告…</div>
+<a href="./d-standing-v1-report.json">完整 JSON 报告</a></section>
+<section class="side"><h2>真实机器学习实验</h2>
+<p>GitHub Actions 在该作品四色网格上训练 3×3 RGB patch MLP，用不同随机种子合成的噪声测试修复效果。页面展示真实训练验证，但不把这种单图训练说成已学会画师画风。</p>
+<p>最终站姿 PNG 为保留原构图的固定色板区域投票输出。机器学习的重建样张单独保留，不用错误预测破坏人物五官与服装。</p>
+<a href="./d-standing-v1-neural-denoise-demo.png">查看神经网络去噪重建样张</a>
+<a href="./d-standing-v1-neural-weights.npz" download>获取实际训练的模型权重</a></section>
+</aside>
+</div>
+<footer>本页是 D 风格角色的技术候选稿，已实现像素真实性检查；美术好看与否需要继续人工评审。没有冒充自动生成完美像素的模型。</footer>
+</main>
+<script type="module">
+import { PALETTE_ORIGINAL } from './palette-core.js';
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const old=PALETTE_ORIGINAL.map(hex);
+const d=['#393657','#F2A5C2','#A9BAE9','#FFF5E6'].map(hex);
+const oldCanvas=document.getElementById('oldD'),ctx=oldCanvas.getContext('2d',{willReadFrequently:true});
+async function drawOld(){
+ const image=new Image();image.src='./repixelized-384x512.png';
+ await image.decode();ctx.imageSmoothingEnabled=false;ctx.drawImage(image,0,0,384,512);
+ const pix=ctx.getImageData(0,0,384,512);
+ for(let i=0;i<pix.data.length;i+=4){
+  const k=old.findIndex(a=>a[0]===pix.data[i]&&a[1]===pix.data[i+1]&&a[2]===pix.data[i+2]);
+  if(k<0)throw new Error('Old source is not strict four-color');
+  pix.data.set([...d[k],255],i);
+ }
+ ctx.putImageData(pix,0,0);
+}
+async function showReport(){
+ const res=await fetch('./d-standing-v1-report.json',{cache:'no-store'});
+ if(!res.ok)throw new Error('报告暂未发布');
+ const data=await res.json();
+ const img=document.getElementById('dAvatar');await img.decode();
+ if(img.naturalWidth!==384||img.naturalHeight!==512)throw new Error('PNG size mismatch');
+ if(data.palette_id!=='D'||data.distinct_rgb_colors!==4||data.other_rgb_colors!==0||data.alpha_pixels!==0)throw new Error('PNG failed quality report');
+ const ml=data.training;
+ document.getElementById('quality').textContent='图像  '+data.native_grid.join('×')+'\n精确四色  '+data.distinct_rgb_colors+' / 4\n额外颜色  '+data.other_rgb_colors+'\n半透明像素  '+data.alpha_pixels+'\n神经网络训练  '+ml.training_steps+' steps\n噪声留出预测  '+(ml.neural_accuracy*100).toFixed(2)+'%\n最近颜色基线  '+(ml.nearest_color_baseline*100).toFixed(2)+'%\n（同作品局部验证，不代表跨人物效果）';
+ window.D_STANDING_STUDIO={ready:true,report:data};
+}
+Promise.all([drawOld(),showReport()]).catch(e=>{document.getElementById('quality').textContent='尚未通过完整加载：'+e.message;console.error(e)});
+</script>
+</body>
+</html>
