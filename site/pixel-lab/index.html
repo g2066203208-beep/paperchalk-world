@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#393657">
 <meta name="description" content="像素机器学习工作室仅有两个核心系统：真像素转换、像素绘画学习。">
-<title>PIXEL LAB｜V5 人物拆解实验 · 两个系统</title>
+<title>PIXEL LAB｜多人物脸型训练 · 两个系统</title>
 <style>
 :root{color-scheme:dark;--bg:#191827;--panel:#29273f;--line:#5d5879;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif}
@@ -54,8 +54,8 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
 <article class="route">
  <div class="number">02 · LEARN / 像素绘画学习</div>
  <h2>学习人物、场景、道具</h2>
- <p>现在先练脸：独立 96×96 原生四色神经生成器，训练后批量生成16张真实像素脸。V2–V5仅是辅助与旧实验。</p>
- <div class="capability"><strong>当前主线 · 真实像素脸训练</strong> 只用真实 D 风格母版训练与同一人物另一姿势留出测试，逐张核验面部结构。<br><span class="detail">当前仅生成母版条件变化，不宣称已经会独立设计新人物。</span><br><a href="./face.html">直接查看16张训练生成的脸</a></div>
+ <p>当前进行多人物结构训练：7种脸型×11类五官×8种发型，生成32张真实不同结构的脸。旧VAE空白脸问题已通过保存原始五官像素解决。</p>
+ <div class="capability"><strong>当前主线 · 多人物脸型与五官学习</strong> 真正使用不同的CC0人物头部与五官，神经网络学习识别结构，再生成未见过的部件组合。<br><span class="detail">生成保留原部件的像素笔画；尚未学会从零绘制新的精致眼睛。</span><br><a href="./face-parts.html">直接查看32张不同脸部</a></div>
  <a class="action" href="./learn.html">进入 02 · 像素绘画学习</a>
 </article>
 </section>
