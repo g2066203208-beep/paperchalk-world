@@ -42,7 +42,7 @@ jobs:
           node --test tests/locomotion3d.test.mjs
           node --test tests/lean3d.test.mjs
           node --test tests/native-sensor-bridge.test.mjs
-          node --test tests/pixel-lab-structure.test.mjs tests/hostess-redraw-native.test.mjs tests/refiner-native.test.mjs tests/pixel-audit.test.mjs tests/character-browser.mjs
+          node --test tests/pixel-lab-structure.test.mjs tests/hostess-redraw-native.test.mjs tests/refiner-native.test.mjs tests/pixel-audit.test.mjs tests/structured-gold.test.mjs tests/character-browser.mjs
           test ! -f site/bone-lab/index.html
           test ! -f site/rig.js
           test ! -f site/app.js
