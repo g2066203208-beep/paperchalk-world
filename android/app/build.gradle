@@ -7,7 +7,7 @@ android {
         applicationId 'com.paperchalk.lampkeep'
         minSdk 26
         targetSdk 35
-        versionCode (1000 + (System.getenv('GITHUB_RUN_NUMBER') ?: '0').toInteger())
+        versionCode (100000 + (System.getenv('GITHUB_RUN_NUMBER') ?: '0').toInteger())
         versionName ('1.0.' + (System.getenv('GITHUB_RUN_NUMBER') ?: '0'))
     }
     buildTypes {
