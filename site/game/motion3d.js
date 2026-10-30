@@ -25,64 +25,103 @@ export function sensorAxes(alpha,beta,gamma,screenAngle=0){
  const q=deviceQuaternion(alpha,beta,gamma,screenAngle);
  return {forward:rotate(q,[0,0,-1]),right:rotate(q,[1,0,0]),up:rotate(q,[0,1,0])};
 }
+export const qConjugate=q=>[q[0],-q[1],-q[2],-q[3]];
+export const qMultiply=mul;
+export const qNormalize=q=>{
+ const n=Math.hypot(...q);
+ return n>1e-9?q.map(x=>x/n):null;
+};
+export function relativeAngles(qBase,qNow){
+ const base=qNormalize(qBase),now=qNormalize(qNow);
+ if(!base||!now)return null;
+ let delta=mul(qConjugate(base),now);
+ // Quaternion sign q and -q are the SAME pose. Make relative rotation short.
+ if(delta[0]<0)delta=delta.map(v=>-v);
+ // Decompose intrinsic device-local Y (heading) / X (pitch) / Z (screen roll).
+ // This is crucial: the old world-gravity roll reading was 0 for many
+ // upright-phone sideways tilts due to W3C Euler gimbal lock.
+ const right=rotate(delta,[1,0,0]),up=rotate(delta,[0,1,0]),face=rotate(delta,[0,0,1]);
+ const pitch=Math.asin(clamp(-face[1],-1,1));
+ const cp=Math.cos(pitch);
+ const yaw=Math.abs(cp)>.025?Math.atan2(face[0],face[2]):0;
+ const roll=Math.abs(cp)>.025?Math.atan2(right[1],up[1]):2*Math.atan2(delta[3],delta[0]);
+ return {yaw:wrap(yaw),pitch,roll:wrap(roll)};
+}
 export class MotionPose{
  constructor(){
-  this.bias={yaw:0,pitch:0,roll:0};this.target={yaw:0,pitch:0,roll:0};
+  this.bias={yaw:0,pitch:0,roll:0};
+  this.target={yaw:0,pitch:0,roll:0};
   this.pose={yaw:0,pitch:0,roll:0};
   this.latest=null;this.sensorSeen=false;this.calibrated=false;
-  this.screenAngle=0;this.sensitivity=1;this.smooth=0.105;this.deadzone=.20*RAD;
+  this.referenceQ=null;this.currentQ=null;this.lastSource='none';
+  this.screenAngle=0;this.sensitivity=.78;this.smooth=.15;
+  this.deadzone=.30*RAD;this.comfort=true;
   this.status='等待传感器';this.origin=null;
  }
  ingest(alpha,beta,gamma,screenAngle=0){
-  if(![alpha,beta,gamma].every(Number.isFinite))return false;
-  const basis=sensorAxes(alpha,beta,gamma,screenAngle);
-  // Heading from horizontal projection of device's view axis; at zenith retain previous heading.
-  const f=basis.forward,ground=Math.hypot(f[0],f[1]);
-  const heading=ground>0.03?Math.atan2(f[1],f[0]):(this.latest?.yaw??0);
-  const pitch=Math.atan2(f[2],ground);
-  // Tilt of screen's RIGHT edge relative to gravity. Has full +/-90° range.
-  const roll=Math.atan2(basis.right[2],basis.up[2]);
-  this.latest={yaw:heading,pitch,roll,alpha,beta,gamma,screenAngle};
-  this.sensorSeen=true;this.status='体感已连接';
+  if(![alpha,beta,gamma,screenAngle].every(Number.isFinite))return false;
+  const q=deviceQuaternion(alpha,beta,gamma,screenAngle);
+  return this._accept(q,'web',{alpha,beta,gamma,screenAngle});
+ }
+ ingestQuaternion(w,x,y,z){
+  if(![w,x,y,z].every(Number.isFinite))return false;
+  return this._accept([w,x,y,z],'native',null);
+ }
+ _accept(q,source,raw){
+  const unit=qNormalize(q);if(!unit)return false;
+  // Prefer native rotation-vector sensor over WebView's missing/inconsistent
+  // deviceorientation. Web fallback remains usable in mobile browsers.
+  if(source==='web'&&this.lastSource==='native')return false;
+  this.currentQ=unit;this.sensorSeen=true;this.lastSource=source;
+  this.latest=raw||{quaternion:[...unit]};
   if(!this.calibrated)this.recenter();
-  this.refreshTarget();return true;
+  this.refreshTarget();this.status='体感已连接';return true;
  }
  recenter(){
-  if(!this.latest)return false;
-  this.bias={yaw:this.latest.yaw,pitch:this.latest.pitch,roll:this.latest.roll};
-  this.origin={...this.latest};
-  this.pose={yaw:0,pitch:0,roll:0};this.target={yaw:0,pitch:0,roll:0};
+  if(!this.currentQ)return false;
+  this.referenceQ=[...this.currentQ];
+  this.bias={yaw:0,pitch:0,roll:0};
+  this.pose={yaw:0,pitch:0,roll:0};
+  this.target={yaw:0,pitch:0,roll:0};
+  this.origin=this.latest?{...this.latest}:null;
   this.calibrated=true;this.status='已校准';return true;
  }
  refreshTarget(){
-  if(!this.latest||!this.calibrated)return;
+  if(!this.currentQ||!this.referenceQ||!this.calibrated)return;
+  const angles=relativeAngles(this.referenceQ,this.currentQ);
+  if(!angles)return;
+  const gain=this.sensitivity;
   const t={
-   yaw:wrap(this.latest.yaw-this.bias.yaw)*this.sensitivity,
-   pitch:clamp(wrap(this.latest.pitch-this.bias.pitch)*this.sensitivity,-85*RAD,85*RAD),
-   roll:clamp(wrap(this.latest.roll-this.bias.roll)*this.sensitivity,-95*RAD,95*RAD)
+   yaw:wrap(angles.yaw*gain*(this.comfort?.78:1)),
+   pitch:clamp(angles.pitch*gain*(this.comfort?.72:1),-80*RAD,80*RAD),
+   roll:clamp(angles.roll, -90*RAD,90*RAD)
   };
-  for(const name of ['yaw','pitch','roll']){
-   if(Math.abs(name==='yaw'?wrap(t[name]-this.target[name]):t[name]-this.target[name])<this.deadzone*.32)continue;
-   this.target[name]=t[name];
+  for(const key of ['yaw','pitch','roll']){
+   let next=t[key];
+   const change=key==='yaw'?wrap(next-this.target[key]):next-this.target[key];
+   if(Math.abs(change)<this.deadzone*.15)continue;
+   this.target[key]=next;
   }
  }
  step(dt){
   dt=clamp(dt,0,.07);
-  const factor=1-Math.exp(-dt/Math.max(.018,this.smooth));
-  for(const name of ['yaw','pitch','roll']){
-   let diff=name==='yaw'?wrap(this.target.yaw-this.pose.yaw):this.target[name]-this.pose[name];
-   if(Math.abs(diff)<this.deadzone&&Math.abs(diff)<.0008)diff=0;
-   this.pose[name]=name==='yaw'?wrap(this.pose.yaw+diff*factor):this.pose[name]+diff*factor;
+  const fac=1-Math.exp(-dt/Math.max(.035,this.smooth));
+  for(const key of ['yaw','pitch','roll']){
+   const diff=key==='yaw'?wrap(this.target.yaw-this.pose.yaw):this.target[key]-this.pose[key];
+   const limit=(key==='yaw'?(this.comfort?85:180):key==='pitch'?(this.comfort?60:120):180)*RAD*dt;
+   const delta=clamp(diff*fac,-limit,limit);
+   this.pose[key]=key==='yaw'?wrap(this.pose[key]+delta):this.pose[key]+delta;
   }
   return {...this.pose};
  }
- setSensitivity(n){this.sensitivity=clamp(Number(n)||1,.5,1.6);this.refreshTarget()}
- setResponse(v){this.smooth=clamp(Number(v)||.105,.025,.25)}
+ setComfort(v){this.comfort=!!v;this.refreshTarget()}
+ setSensitivity(v){this.sensitivity=clamp(Number(v)||.78,.5,1.6);this.refreshTarget()}
+ setResponse(v){this.smooth=clamp(Number(v)||.15,.025,.3)}
  manual(dyaw,dpitch,droll){
-  // Browser fallback, kept separate from sensors; manual controls are never hidden.
+  // Preserve mouse/keyboard heading even without a sensor.
   this.target.yaw=wrap(this.target.yaw+dyaw);
-  this.target.pitch=clamp(this.target.pitch+dpitch,-85*RAD,85*RAD);
-  this.target.roll=clamp(this.target.roll+droll,-95*RAD,95*RAD);
+  this.target.pitch=clamp(this.target.pitch+dpitch,-80*RAD,80*RAD);
+  this.target.roll=clamp(this.target.roll+droll,-90*RAD,90*RAD);
  }
  get degrees(){return Object.fromEntries(['yaw','pitch','roll'].map(k=>[k,Math.round(this.pose[k]/RAD)]))}
 }
@@ -92,7 +131,7 @@ export function cameraBasis(pose){
  return {forward,right:[right[0]*c+up[0]*s,right[1]*c+up[1]*s,right[2]*c+up[2]*s],
   up:[up[0]*c-right[0]*s,up[1]*c-right[1]*s,up[2]*c-right[2]*s]};
 }
-export function projectionMatrix(pose,aspect,eye=[0,0,2.2],fov=72,near=.09,far=130){
+export function projectionMatrix(pose,aspect,eye=[0,0,2.2],fov=64,near=.09,far=130){
  const {forward,right,up}=cameraBasis(pose),tf=Math.tan(fov*RAD/2),sx=1/(tf*aspect),sy=1/tf;
  // Column-major, clip: (dot(right,d)*sx, dot(up,d)*sy, A*depth+B, depth).
  const A=(far+near)/(far-near),B=-2*far*near/(far-near);
