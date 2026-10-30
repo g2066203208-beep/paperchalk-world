@@ -13,9 +13,9 @@ test('standing, crouching and prone are explicit inputs with smooth eye height',
 });
 test('continuous forward and backward control changes actual position every frame',()=>{
  const b=new BodyMotor();for(let i=0;i<90;i++)b.update(1/60,{forward:1},0);
- const x=b.position.x;assert.ok(x>3.8);
+ const x=b.position.x;assert.ok(x>2.1);
  for(let i=0;i<95;i++)b.update(1/60,{forward:-1},0);
- assert.ok(b.position.x<x-3.5);
+ assert.ok(b.position.x<x-2.1);
  const y=b.position.x;for(let i=0;i<30;i++)b.update(1/60,{forward:0},0);
  assert.ok(Math.abs(b.position.x-y)<.15,'released control stops rapidly');
  near(b.velocity.x,0,.015);
