@@ -18,6 +18,8 @@ import android.widget.Toast;
 /**
  * Minimal Android wrapper. No legacy game logic, file bridges, or native UI.
  * Every cold launch loads the hosted page with a fresh URL query parameter.
+ * PAPERWORLD background animation is served from the existing GitHub Pages root.
+ * Rebuild of this existing application ID refreshes the original APK release.
  */
 public final class MainActivity extends Activity {
     private static final String HOME =
