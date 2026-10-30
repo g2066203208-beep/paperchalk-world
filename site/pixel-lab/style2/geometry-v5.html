@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#393657"><title>系统02 · V5 体积／拆解学习</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{background:#201d30;color:#FFF5E6;font:15px/1.6 system-ui,"Noto Sans SC",sans-serif;margin:0}main{max-width:1140px;margin:auto;padding:25px 16px 55px}a{color:#A9BAE9}h1{font-size:clamp(25px,4.5vw,40px)}h2{font-size:18px}p{max-width:900px}nav{padding:12px;border-bottom:1px solid #595270}select{padding:9px;background:#393657;border:1px solid #A9BAE9;color:#FFF5E6;border-radius:8px}.screens{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-top:15px}.screens figure{margin:0;border:1px solid #595270;border-radius:10px;padding:8px;min-width:0;background:#2d2840}.screens img{display:block;width:100%;height:auto;image-rendering:pixelated}.screens figcaption{font-size:13px;font-weight:700;padding-bottom:5px}.note{background:#312b46;border-radius:12px;padding:14px}.small{color:#c6c2d2;font-size:13px}button{padding:9px;border-radius:6px;border:1px solid #A9BAE9;background:#393657;color:#FFF5E6}@media(max-width:850px){.screens{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style></head><body>
+<nav><a href="../learn.html">← 系统 02 像素绘画学习</a></nav><main>
+<p class="small">V5 · SYNTHETIC 3D GEOMETRY SUPERVISION · REAL TRAINING RESULTS</p>
+<h1>人物体积、透视与部件拆解学习</h1>
+<p>真正训练的<strong>多任务几何识别网络</strong>：输入仅用 D 四色呈现的程序化三维关节代理图，预测头发、脸、眼睛、颈、躯干、上下臂、手、裙、大小腿、鞋等 12 个部位，以及前后深度等级、10 个关节热图和摄像机左右视角。</p>
+<p class="note"><strong>严格界限：</strong>这些图片来自我们生成的三维椭球和胶囊代理，不是从原画真正恢复出的 3D 人体，也不是新的优秀人物立绘。诊断用分区图采用额外颜色便于检视，只有输入像素角色严格限制为 D 四色。目标是先验证几何监督是否学得动，再将真人工标注的原角色部位与透视引入训练。</p>
+<label>切换视角 <select id="angle"><option value="0">左 40°</option><option value="1" selected>正面 0°</option><option value="2">右 40°</option></select></label>
+<div class="screens">
+<figure><figcaption>体积模型四色渲染</figcaption><img id="source" src="./geometry-v5/view1_input.png" alt="三维关节代理四色像素渲染" width="96" height="128"></figure>
+<figure><figcaption>程序生成的真实部件标签</figcaption><img id="target" src="./geometry-v5/view1_target_parts.png" alt="合成数据真值分区" width="96" height="128"></figure>
+<figure><figcaption>网络预测部件</figcaption><img id="parts" src="./geometry-v5/view1_pred_parts.png" alt="模型分区预测" width="96" height="128"></figure>
+<figure><figcaption>网络预测深度层次</figcaption><img id="depth" src="./geometry-v5/view1_pred_depth.png" alt="前后遮挡序数深度预测" width="96" height="128"></figure>
+</div>
+<div class="note" style="margin-top:17px"><h2>真实留出参数测试</h2><div id="report">读取训练报告中……</div><p class="small">留出随机参数与视角测试，并非未见真人角色测试。不能用合成数据准确率证明已掌握成人脸型、写实衣服和精致像素绘画。</p><a href="./geometry-v5/report.json">查看可审计训练指标</a> · <a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/ml/style2/volume_parts_v5.py">查看 PyTorch 源码</a></div>
+</main><script>
+const angle=document.querySelector('#angle');
+const entries={source:'input',target:'target_parts',parts:'pred_parts',depth:'pred_depth'};
+angle.addEventListener('change',()=>{for(const [id,suffix] of Object.entries(entries))document.getElementById(id).src='./geometry-v5/view'+angle.value+'_'+suffix+'.png'});
+fetch('./geometry-v5/report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('尚未部署验证通过的训练成果');return r.json()}).then(d=>{
+ if(!d.trained||!d.no_claim_real_3d)throw Error('数据验收不完整');
+ const s=d.evaluation;
+ document.getElementById('report').textContent='训练 '+d.train_steps+' 步，模型 '+d.parameter_count+' 参数；部件前景平均 IoU '+(s.foreground_part_mean_iou*100).toFixed(2)+'%；深度类别 '+(s.foreground_depth_bin_accuracy*100).toFixed(2)+'%；视角分类 '+(s.yaw_class_accuracy*100).toFixed(2)+'%；关节误差 '+s.joint_mean_error_pixels+' 像素。';
+}).catch(e=>document.getElementById('report').textContent='尚未确认训练输出：'+e.message);
+</script></body></html>
