@@ -60,6 +60,19 @@ try{
   assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.width))>30);
   assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.height))>30);
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-real-perspective.png'});
+
+   // Spatial opening activity: pickup is possible at spawn, but delivery
+   // cannot grant currency until the player actually reaches the storefront.
+   const firstDay=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.shop);
+   assert.equal(firstDay.phase,'pickup');
+   assert.equal(firstDay.cash,0);
+   await page.locator('#pw-shop-interact').click();
+   const carrying=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.shop);
+   assert.equal(carrying.phase,'deliver');
+   assert.equal(carrying.cash,0);
+   assert.equal(await page.locator('#pw-shop-interact').isDisabled(),true);
+   await page.screenshot({path:'artifacts/game/'+screen+'-first-day-opening-task.png'});
+
    // Real touch gestures: positive screen X must turn camera RIGHT (-yaw).
    const rightSwipe=await page.evaluate(()=>{
      const w=window.__PAPERWORLD_WORLD3D__,c=document.getElementById('pw-world-canvas'),before=w.target.yaw,id=77;
