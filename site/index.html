@@ -4,41 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#FFF5E6">
-<meta name="description" content="PAPERWORLD 四色像素游戏——中央小窗、低刺激双色程序动态背景、可交互故事。">
-<title>PAPERWORLD · 四色像素游戏</title>
-<link rel="stylesheet" href="./game/game.css?v=20261030g1">
+<meta name="description" content="PAPERWORLD 四色像素游戏 · 第一阶段：双色程序循环背景">
+<title>PAPERWORLD</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#FFF5E6}
+body{overscroll-behavior:none}
+#background{display:block;position:fixed;left:0;top:0;background:#FFF5E6;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
+</style>
 </head>
 <body>
-<canvas id="ambient" aria-hidden="true"></canvas>
-<main id="app">
- <section class="screen-shell" aria-label="PAPERWORLD 游戏窗口">
-  <header class="screen-top"><span>◈ PAPERWORLD / D-4</span><button id="menuButton" aria-controls="menu" aria-expanded="false">菜单 ≡</button></header>
-  <div class="scene-wrap">
-   <canvas id="scene" width="384" height="216" aria-label="四种颜色绘制的深夜室内柜台场景"></canvas>
-   <img id="portrait" src="./pixel-lab/d-standing-v1-384x512.png" alt="" hidden>
-   <span id="sceneTitle">PAPERWORLD / 01</span>
-  </div>
-  <section class="dialogue" aria-label="游戏对话">
-   <strong class="speaker" id="speaker">第一幕 · 夜间柜台</strong>
-   <p id="dialogueText" aria-live="polite"></p>
-   <div id="actions" aria-label="对话操作"></div>
-  </section>
-  <aside id="menu" aria-label="游戏菜单" aria-hidden="true">
-   <h2>游戏菜单</h2>
-   <p>轻触对话按钮继续，选择不同回应。当前为第一段可交互场景。</p>
-   <button class="action" id="resumeButton">返回游戏</button>
-   <button class="action" id="newGameButton">开始游戏</button>
-   <button class="action alt" id="restartButton">回到标题</button>
-   <button class="action alt" id="motionButton">停止背景</button>
-   <nav id="gameLinks" aria-label="创作工具">
-    <a href="./pixel-lab/">像素学习工作室</a>
-    <a href="./bone-lab/">BoneLab 骨骼工作室</a>
-    <a href="./character-lab/">角色工作室</a>
-   </nav>
-  </aside>
- </section>
-</main>
-<div class="footer-label">D-4 · FOUR COLORS / ONE WORLD</div>
-<script type="module" src="./game/game.js?v=20261030g1"></script>
+<canvas id="background" role="img" aria-label="奶油白色底与樱粉色粗斜纹缓慢无缝平移的四色像素游戏背景"></canvas>
+<script type="module" src="./game/background.js?v=20261030b2"></script>
 </body>
 </html>
