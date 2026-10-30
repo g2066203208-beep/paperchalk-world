@@ -88,7 +88,7 @@ test('masked face retains enclosed deep-purple pupil, not globally alpha-keyed i
  const start=source.indexOf('function computeExteriorMask(data,w,h){');
  const end=source.indexOf('function portraitLayers(image){',start);
  assert.ok(start>=0&&end>start);
- const fn=new Function('INK',source.slice(start,end)+';return computeExteriorMask')([57,54,87]);
+ const fn=new Function('INK',source.slice(start,end).replace(/\bexport\s*$/,'')+';return computeExteriorMask')([57,54,87]);
  const w=17,h=17,data=new Uint8ClampedArray(w*h*4);
  const ink=[57,54,87],skin=[255,245,230];
  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
