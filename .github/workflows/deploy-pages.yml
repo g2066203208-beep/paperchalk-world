@@ -219,6 +219,37 @@ jobs:
           assert Path('site/pixel-lab/learn.html').read_text().find('V5 人体结构')!=-1
           print('PASS: packaged V5 training report + real-character predictions + current V5 page')
           PY
+      - name: Include verified newly uploaded character and learned multi-action prior
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REF_ID=$(gh run list --workflow new-reference.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$REF_ID" ] && [ "$REF_ID" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/new-ref" site/pixel-lab/style2/new-reference
+            gh run download "$REF_ID" --name new-uploaded-384-native-pixel-and-ml-repair --dir "$RUNNER_TEMP/new-ref"
+            if [ -s "$RUNNER_TEMP/new-ref/modern-pink-hair-384x512.png" ]; then
+              cp -a "$RUNNER_TEMP/new-ref/." site/pixel-lab/style2/new-reference/
+            else
+              cp -a "$RUNNER_TEMP/new-ref/site/pixel-lab/style2/new-reference/." site/pixel-lab/style2/new-reference/
+            fi
+            test -s site/pixel-lab/style2/new-reference/ml_report.json
+            test -s site/pixel-lab/style2/new-reference/modern-pink-hair-384x512.png
+          fi
+          MOTION_ID=$(gh run list --workflow motion-prior.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$MOTION_ID" ] && [ "$MOTION_ID" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/motion-prior" site/pixel-lab/style2/motion-prior
+            gh run download "$MOTION_ID" --name trained-multi-person-cc0-motion-prior --dir "$RUNNER_TEMP/motion-prior"
+            if [ -s "$RUNNER_TEMP/motion-prior/report.json" ]; then
+              cp -a "$RUNNER_TEMP/motion-prior/." site/pixel-lab/style2/motion-prior/
+            else
+              cp -a "$RUNNER_TEMP/motion-prior/site/pixel-lab/style2/motion-prior/." site/pixel-lab/style2/motion-prior/
+            fi
+            test -s site/pixel-lab/style2/motion-prior/contact.png
+          fi
+          echo "PixelLab uploaded reference and learned motion-prior artifacts packaged"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
