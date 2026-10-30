@@ -1,0 +1,22 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>系统02｜多人物五官拆解与生成</title>
+<style>:root{--bg:#393657;--cream:#FFF5E6;--pink:#F2A5C2;--blue:#A9BAE9;color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.55 system-ui,-apple-system,"Noto Sans SC",sans-serif}header{border-bottom:2px solid var(--pink);padding:12px 16px}a{color:var(--blue)}main{max-width:1200px;margin:auto;padding:24px 16px 60px}h1{font-size:clamp(26px,4vw,40px);line-height:1.22;margin:12px 0}h2{font-size:20px}.muted{font-size:13px;color:var(--blue)}#report{border:1px solid var(--pink);padding:15px;margin:18px 0}.gallery{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px}figure{margin:0;min-width:0}figure img{display:block;image-rendering:pixelated;width:100%;height:auto;aspect-ratio:1;border:1px solid var(--blue);cursor:zoom-in}figcaption{margin:4px 0 12px;font-size:12px}#zoom{width:min(450px,100%);height:auto;image-rendering:pixelated;border:2px solid var(--pink)}@media(max-width:800px){.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:420px){.gallery{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}}</style>
+</head><body><header><a href="./learn.html">← 系统02：像素绘画学习</a></header><main><p class="muted">FACE PART TOKENS · MACHINE LEARNING · CC0 · D PALETTE</p>
+<h1>多人物脸型、五官、头发的离散组合学习</h1><p>为解决上一轮 VAE 把眼睛和嘴巴抹成空白的问题，改成两层：<strong>神经网络学习头型、五官和发型的离散组合</strong>，然后使用精确像素部件合成。不再用同一个粉发角色平移冒充新人物。</p>
+<p>公开 CC0 训练资源：<a href="https://opengameart.org/content/faces-1">lamiarts 多人物部件合集</a>。组合不是由模型从头画出的全新五官；这些不同人物共享画师绘制的部件。<strong>这是一套结构生成原型，不是用户最终母版风格的原创美术模型。</strong></p>
+<div id="report" role="status">读取 GitHub 神经训练与生成报告中……</div>
+<h2>实际生成的 32 张不同组合</h2><div class="gallery" id="gallery"></div>
+<h2>逐像素放大</h2><img id="zoom" width="128" height="128" alt="生成的四种颜色 128×128 正面头像" /><p class="muted" id="detail">选择一张脸放大。</p>
+<p class="muted">严格色板：#393657 / #F2A5C2 / #A9BAE9 / #FFF5E6。暂时不合格的内容：不是真正全新手绘五官，也未达到你的粉发母版的高级脸部细节。不同脸型、头发、五官部件可观察，但模型并未自行绘制像素线条。</p>
+<p><a href="./face-general.html">查看上一轮 VAE 平均化失败的真实图</a></p>
+</main><script>
+const base='./style2/face-general/';
+async function go(){
+ const r=await fetch(base+'structured_report.json',{cache:'no-store'});if(!r.ok)throw Error('本轮训练尚未部署');const d=await r.json();
+ if(!d.not_neural_pixel_generation||d.distinct_generated_heldout_combinations!==32)throw Error('来源与产物验证失败');
+ document.getElementById('report').textContent=`已训练 ${d.steps} 步，${d.learned_parameter_count} 个神经参数。训练组合 ${d.train_combination_count}，未见过的组合 ${d.holdout_combination_count}，生成不同组合 ${d.distinct_generated_heldout_combinations} 张。严格四色 128×128；人工美术验收：0/32。这不意味着模型会画新五官。`;
+ let list=document.getElementById('gallery');
+ for(let i=0;i<d.generated_files.length;i++){let figure=document.createElement('figure'),img=document.createElement('img'),cap=document.createElement('figcaption');img.src=base+d.generated_files[i];img.width=128;img.height=128;img.loading='lazy';img.alt='生成脸型与五官组合 '+(i+1);img.onclick=()=>{document.getElementById('zoom').src=img.src;document.getElementById('detail').textContent='第 '+(i+1)+' / '+d.generated_files.length+' 张 · D 四色128原生像素';};cap.textContent=String(i+1).padStart(2,'0');figure.append(img,cap);list.append(figure);}
+ document.getElementById('zoom').src=base+d.generated_files[0];
+}
+go().catch(e=>document.getElementById('report').textContent='未通过发布检查：'+e.message);
+</script></body></html>
