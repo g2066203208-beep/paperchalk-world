@@ -22,9 +22,16 @@ test('Z-axis heading, pitch, recenter and smooth yaw wrap',()=>{
  m.ingest(47,65,0);close(deg(m.target.pitch),-25);
  close(deg(wrap(179*RAD-(-179*RAD))),-2);
 });
+test('comfort mode damps yaw while standard mode gives one-to-one calibrated pose',()=>{
+ const m=new MotionPose();m.ingest(0,90,0);m.ingest(47,90,0);
+ close(deg(m.target.yaw),47*m.sensitivity*.78);
+ m.setComfort(false);close(deg(m.target.yaw),47*m.sensitivity);
+ m.setSensitivity(1);close(deg(m.target.yaw),47);
+});
 test('90 degree side lie, sensor compensation, smoothing limits',()=>{
  const m=new MotionPose();m.manual(0,0,90*RAD);
- for(let i=0;i<40;i++)m.step(1/60);
+ // Respect the finite angular velocity cap in the physical controller.
+ for(let i=0;i<60;i++)m.step(1/60);
  assert.ok(deg(m.pose.roll)>88);
  assert.ok(cameraBasis(m.pose).right[2]>.99);
  m.setSensitivity(2);assert.equal(m.sensitivity,1.6);

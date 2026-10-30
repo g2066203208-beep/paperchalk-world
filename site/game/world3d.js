@@ -41,7 +41,7 @@ function makeTown(lod='full'){
  // Shops stand in three-dimensional city blocks on both sides of the avenue.
  for(let i=-7;i<=7;i++){
   // Fewer far facade windows on phones: preserve actual 3D geometry and collisions.
-  if(lod==='mobile'&&Math.abs(i)%2===1)continue;
+  // LOD never deletes whole shops or their collisions; windows below are cheaper on mobile.
   const x=i*10+4;
   for(const j of [-3,-2,-1,1,2,3]){
    const y=j*10.5+2;

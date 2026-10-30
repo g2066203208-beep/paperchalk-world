@@ -27,6 +27,17 @@ test('programmatic 3D city contains real depth-tested WebGL geometry, exact 4 co
  assert.match(source,/projectionMatrix\(pose,canvas\.width\/canvas\.height,eye\)/);
  assert.match(source,/motor\.update\(dt,input\(\),motion\.pose\.yaw\)/);
 });
+test('mobile LOD preserves buildings and collision footprints while reducing detail',()=>{
+ const source=readFileSync('site/game/world3d.js','utf8');
+ const begin=source.indexOf('function makeTown(lod='),end=source.indexOf('\nfunction program(gl,',begin);
+ assert.ok(begin>=0&&end>begin);
+ const ink=[57/255,54/255,87/255],pink=[242/255,165/255,194/255],blue=[169/255,186/255,233/255],paper=[1,245/255,230/255];
+ const create=new Function('INK','PINK','BLUE','PAPER','PALETTE',source.slice(begin,end)+'\nreturn makeTown;')(ink,pink,blue,paper,[ink,pink,blue,paper]);
+ const desktop=create('full'),mobile=create('mobile');
+ assert.deepEqual(mobile.solids,desktop.solids,'mobile cannot remove building or collision footprints');
+ assert.ok(mobile.tri.length<desktop.tri.length,'mobile must still reduce decorative triangles');
+ assert.ok(mobile.tri.length>desktop.tri.length/2,'city architecture must remain');
+});
 test('3D world has genuine 3D eye-translation peek, no inertial walking or fake squat',()=>{
  const world=readFileSync('site/game/world3d.js','utf8');
  const lean=readFileSync('site/game/lean3d.js','utf8');

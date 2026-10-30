@@ -50,8 +50,11 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/paperworld-menu-v3/);
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
-  assert.match(page,/name="paperworld-build" content="20\\d{6}-[a-z0-9-]+"/);
-  assert.match(menu,/import \{createWorld3D\} from '\.\/world3d\.js\?v=20261030-gyrocomfort6'/);
+  assert.match(page,/<meta name="paperworld-build" content="20\d{6}-[a-z0-9-]+"/);
+  const build=page.match(/<meta name="paperworld-build" content="([^"]+)"/)?.[1];
+  assert.ok(build&&/^20\d{6}-[A-Za-z0-9._-]+$/.test(build));
+  assert.ok(page.includes('game/menu.js?v='+build),'main menu build stamp must match HTML');
+  assert.match(menu,/import \{createWorld3D\} from '\.\/world3d\.js\?v=[^']+'/);
   assert.match(menu,/3D体感世界/);
   assert.match(page,/id="pw-motion-start"/);
   assert.match(page,/id="pw-world-canvas"/);
