@@ -304,7 +304,7 @@ function downloadData(canvas,fileName,mime='image/png',content=null){
  const dataURL=content?'data:'+mime+';base64,'+btoa(unescape(encodeURIComponent(content))):canvas.toDataURL('image/png');
  // New Android APK provides an actual MediaStore/Downloads bridge for blob/data URLs.
  if(window.PaperworldFiles?.saveBase64){
-  try{window.PaperworldFiles.saveBase64(fileName,dataURL,mime);status('已发送到 Android 下载目录');return}catch(e){warn(e)}
+  try{window.PaperworldFiles.saveBase64(fileName,dataURL,mime);status('已打开 Android 系统保存窗口');return}catch(e){warn(e)}
  }
  const anchor=document.createElement('a');anchor.download=fileName;anchor.href=dataURL;document.body.append(anchor);anchor.click();anchor.remove();
  status('已导出 '+fileName);
