@@ -71,8 +71,9 @@ export function createMaterialBatch(gl,mesh,pack,mode='world'){
   else{gl.uniform1f(loc.yaw,params.yaw);gl.uniform1f(loc.pitch,params.pitch);gl.uniform1f(loc.aspect,params.aspect)}
   gl.drawArrays(gl.TRIANGLES,0,count);
  }
+ function updatePack(nextPack){const atlas=atlasRGBA(nextPack,true);gl.bindTexture(gl.TEXTURE_2D,texture);gl.texSubImage2D(gl.TEXTURE_2D,0,0,0,atlas.width,atlas.height,gl.RGBA,gl.UNSIGNED_BYTE,atlas.rgba)}
  function destroy(){buffers.forEach(b=>gl.deleteBuffer(b));gl.deleteTexture(texture);gl.deleteProgram(program)}
- return {render,destroy,count};
+ return {render,updatePack,destroy,count};
 }
 export function cubeMaterialMesh(material=0){
  const p=[],uv=[],id=[];
@@ -93,7 +94,7 @@ export function createMaterialCube(canvas,pack,material=0){
  const gl=canvas.getContext('webgl',{antialias:false,alpha:false,depth:true,preserveDrawingBuffer:true});
  if(!gl)throw Error('设备不支持 WebGL 材质预览');
  gl.disable(gl.DITHER);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
- let batch=createMaterialBatch(gl,cubeMaterialMesh(material),pack,'preview');
+ let batch=createMaterialBatch(gl,cubeMaterialMesh(material),pack,'preview'),currentMaterial=material;
  let yaw=.63,pitch=-.30,last=null;
  function draw(){
   const dpr=Math.min(2,window.devicePixelRatio||1),width=Math.max(1,Math.floor(canvas.clientWidth*dpr)),height=Math.max(1,Math.floor(canvas.clientHeight*dpr));
@@ -102,7 +103,9 @@ export function createMaterialCube(canvas,pack,material=0){
   batch.render({yaw,pitch,aspect:width/height});
  }
  function update(nextPack,nextMaterial){
-  batch.destroy();batch=createMaterialBatch(gl,cubeMaterialMesh(nextMaterial),nextPack,'preview');draw();
+  if(nextMaterial!==currentMaterial){batch.destroy();batch=createMaterialBatch(gl,cubeMaterialMesh(nextMaterial),nextPack,'preview');currentMaterial=nextMaterial}
+  else batch.updatePack(nextPack);
+  draw();
  }
  const down=e=>{last={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)};
  const move=e=>{if(!last||e.pointerId!==last.id)return;
