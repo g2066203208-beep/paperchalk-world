@@ -10,13 +10,13 @@
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#FFF5E6}
 body{overscroll-behavior:none}
-#background{display:block;position:fixed;left:0;top:0;background:#FFF5E6;image-rendering:pixelated;pointer-events:none;will-change:transform;animation:stripe-drift 36s linear infinite;transform:translate3d(0,0,0)}
+#background{display:block;position:fixed;left:0;top:0;background:#FFF5E6;image-rendering:pixelated;pointer-events:none;will-change:transform;animation:stripe-drift 18s linear infinite;transform:translate3d(0,0,0)}
 @keyframes stripe-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-320px,0,0)}}
 @media(prefers-reduced-motion:reduce){#background{animation:none!important;transform:none!important}}
 </style>
 </head>
 <body>
 <canvas id="background" role="img" aria-label="奶油白色底与雾蓝色粗斜纹缓慢无缝平移的四色像素游戏背景"></canvas>
-<script type="module" src="./game/background.js?v=20261030-blue1"></script>
+<script type="module" src="./game/background.js?v=20261030-blue18s"></script>
 </body>
 </html>
