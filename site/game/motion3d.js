@@ -117,6 +117,15 @@ export class MotionPose{
   }
   return {...this.pose};
  }
+ disconnectSensor(){
+  // Preserve the current visible heading/pitch for touch/mouse controls.
+  // Clear sensor roll and calibration so a later restart is independent.
+  this.target={yaw:this.pose.yaw,pitch:this.pose.pitch,roll:0};
+  this.pose.roll=0;
+  this.latest=null;this.currentQ=null;this.referenceQ=null;
+  this.sensorSeen=false;this.calibrated=false;this.lastSource='none';this.origin=null;
+  this.status='体感已关闭';
+ }
  setComfort(v){this.comfort=!!v;this.refreshTarget()}
  setSensitivity(v){this.sensitivity=clamp(Number(v)||.78,.5,1.6);this.refreshTarget()}
  setResponse(v){this.smooth=clamp(Number(v)||.085,.025,.3)}
