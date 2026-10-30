@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#FFF5E6">
-<meta name="paperworld-build" content="20261030-gyrocomfort6">
+<meta name="paperworld-build" content="20261030-gyrocontrol7">
 <meta name="description" content="PAPERWORLD 四色像素游戏：老板娘走到柜台办理租赁。纯四色角色内部深色细节保留，对话手动慢速推进。">
 <title>PAPERWORLD · 新店开张</title>
 <link rel="stylesheet" href="./game/stage.css?v=20261030-gyrocomfort6">
@@ -111,7 +111,7 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
   <div id="pw-world-bottom" class="pw-panel pw-world-compact">
     <div class="pw-world-line">
       <div><strong>手机体感 · 360° 原地转向</strong><small id="pw-motion-status" role="status">3D 场景载入中…</small></div>
-      <button type="button" id="pw-comfort-toggle" aria-pressed="true">舒适模式：开</button><button type="button" class="pw-world-more" id="pw-world-more" aria-expanded="false">体感设置 ▾</button><span id="pw-sensor-badge">等待体感数据</span><small id="pw-gyro-debug">尚无传感器数据 · 点击「开启手机体感」</small>
+      <button type="button" id="pw-comfort-toggle" aria-pressed="true">舒适模式：开</button><button type="button" class="pw-world-more" id="pw-world-more" aria-expanded="false">体感设置 ▾</button><span id="pw-sensor-badge">体感已关闭</span><small id="pw-gyro-debug">方向传感器已停用 · 触屏/鼠标可转向</small>
     </div>
     <div class="pw-world-angles" aria-label="实时三轴角度">
       <div><span>Z · 原地转向</span><strong id="pw-yaw">0°</strong></div>
@@ -119,7 +119,7 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
       <div><span>抬头 · 低头</span><strong id="pw-pitch">0°</strong></div>
     </div>
     <div class="pw-world-actions">
-      <button class="pw-btn" type="button" id="pw-motion-start">开启手机体感</button>
+      <button class="pw-btn" type="button" id="pw-motion-start" aria-pressed="false">开启手机体感</button>
       <button class="pw-btn secondary" type="button" id="pw-motion-center">当前位置设为正前方</button>
     </div>
     <div class="pw-world-controls">
@@ -149,6 +149,6 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
 </section>
 <div id="pw-ui-touch-fx" aria-hidden="true"></div>
 <script type="module" src="./game/background.js?v=20261030-blue8s-diagonal2"></script>
-<script type="module" src="./game/menu.js?v=20261030-gyrocomfort6"></script>
+<script type="module" src="./game/menu.js?v=20261030-gyrocontrol7"></script>
 </body>
 </html>
