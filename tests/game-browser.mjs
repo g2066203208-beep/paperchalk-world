@@ -6,10 +6,14 @@ import {resolve,extname} from 'node:path';
 
 const root=resolve('site'),types={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'text/css','.png':'image/png'};
 const server=createServer((req,res)=>{
- try{const path=resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));
- if(!path.startsWith(root+'/'))throw Error('Path escape');
- const data=readFileSync(path);res.writeHead(200,{'Content-Type':types[extname(path)]||'application/octet-stream','Cache-Control':'no-store'});res.end(data)}
- catch(e){res.writeHead(404);res.end('Not Found')}
+ try{
+  const urlPath=decodeURIComponent(new URL(req.url,'http://localhost').pathname);
+  const path=resolve(root,'.'+(urlPath==='/'?'/index.html':urlPath));
+  if(!path.startsWith(root+'/'))throw Error('Path escape');
+  const data=readFileSync(path);
+  res.writeHead(200,{'Content-Type':types[extname(path)]||'application/octet-stream','Cache-Control':'no-store'});res.end(data);
+ }
+ catch(e){if(!res.headersSent){res.writeHead(404);res.end('Not Found')}else res.destroy(e)}
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
