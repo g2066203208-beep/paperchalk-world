@@ -1,5 +1,5 @@
 import {TILE,PALETTE,MATERIALS,freshPack,validatePack,tryReadPack,writePack,
- paint,stroke,flood,sample,tileRGBA,atlasRGBA} from './materials-core.js';
+ paint,stroke,flood,sample,tileRGBA,atlasRGBA,migratePack,ATLAS_COLS,ATLAS_ROWS} from './materials-core.js';
 import {createMaterialCube} from '../game/world-material-gl.js';
 
 const $=id=>document.getElementById(id),canvas=$('pixel-canvas');
@@ -8,7 +8,7 @@ const repeat=$('repeat-canvas'),repeatCtx=repeat.getContext('2d');
 const list=$('material-list'),colors=$('ink-list');
 const labels=['深紫 · 01','樱粉 · 02','雾蓝 · 03','奶白 · 04'];
 const SAVE_DELAY=180,MAX_UNDOS=40;
-let pack=tryReadPack(window.localStorage),active=0,color=1,tool='pencil',brush=1;
+let pack=tryReadPack(window.localStorage),active=0,color=1,tool='pencil',brush=1,filter='all';
 let undo=[],redo=[],drag=null,pointer=null,saveHandle=0,renderQueued=false;
 let cube=null,cubeError=null;
 const snapshot=()=>JSON.stringify(pack);
@@ -62,6 +62,7 @@ function drawRepeated(){
 function refreshLibrary(){
  list.replaceChildren();
  MATERIALS.forEach((meta,i)=>{
+  if(filter!=='all'&&meta.group!==filter)return;
   const button=document.createElement('button');button.className='material-item'+(i===active?' active':'');
   button.dataset.material=meta.id;button.setAttribute('role','listitem');button.setAttribute('aria-pressed',String(i===active));
   const thumb=document.createElement('canvas');thumb.width=TILE;thumb.height=TILE;
@@ -72,6 +73,11 @@ function refreshLibrary(){
   list.append(button);
  });
 }
+for(const b of document.querySelectorAll('[data-filter]'))b.addEventListener('click',()=>{
+ filter=b.dataset.filter;
+ for(const c of document.querySelectorAll('[data-filter]')){c.classList.toggle('active',c.dataset.filter===filter);c.setAttribute('aria-pressed',String(c.dataset.filter===filter))}
+ refreshLibrary();
+});
 function render(){
  paintTile();drawRepeated();refreshLibrary();
  const m=MATERIALS[active];$('material-title').textContent=pack.materials[active].name;
@@ -150,7 +156,7 @@ $('export-tile').addEventListener('click',()=>{
 });
 $('export-atlas').addEventListener('click',()=>{
  const atlas=document.createElement('canvas');rawToCanvas(atlas,atlasRGBA(pack));
- savePNG(atlas,'paperworld-material-atlas-64x32.png');
+ savePNG(atlas,'paperworld-material-atlas-'+atlas.width+'x'+atlas.height+'.png');
 });
 $('export-pack').addEventListener('click',()=>{
  const encoded=btoa(unescape(encodeURIComponent(snapshot())));
@@ -161,7 +167,7 @@ $('file-picker').addEventListener('change',async e=>{
  const file=e.target.files?.[0];if(!file)return;
  try{
   if(file.size>100000)throw Error('材质工程 JSON 不能超过 100KB');
-  const imported=validatePack(JSON.parse(await file.text()));
+  const imported=validatePack(migratePack(JSON.parse(await file.text())));
   const old=snapshot();pack=imported;active=0;checkpoint(old);render();setStatus('成功导入官方四色材质工程');
  }catch(error){setStatus(error.message,true)}
 });
@@ -191,5 +197,5 @@ render();
 window.__PAPERWORLD_MATERIAL_STUDIO__={
  snapshot:()=>snapshot(),
  state:()=>({active: MATERIALS[active].id,tool,color,brush,undo:undo.length,redo:redo.length,
-  atlasSize:[64,32],tileSize:TILE,webgl:!!cube})
+  atlasSize:[TILE*ATLAS_COLS,TILE*ATLAS_ROWS],tileSize:TILE,webgl:!!cube,materialCount:MATERIALS.length,filter})
 };
