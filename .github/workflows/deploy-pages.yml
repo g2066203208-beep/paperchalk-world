@@ -29,6 +29,7 @@ jobs:
           node --check site/game/intro.js
           node --check site/game/hostess-pixel.js
           node --test tests/background-home.test.mjs
+          node --test tests/hostess-intro.test.mjs
           test ! -f site/bone-lab/index.html
           test ! -f site/rig.js
           test ! -f site/app.js
