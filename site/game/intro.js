@@ -122,8 +122,9 @@ export function createHostessIntro({COL,R,frame,text,latin,glyphBitmap}){
     frame(b.x,b.y,b.w,b.h,COL.ink,COL.paper,5,2);
     // Tiny pixel dialogue tail, only a handful of squares.
     if(!g.landscape){R(b.x+18,b.y-4,8,6,COL.ink);R(b.x+20,b.y-4,6,5,COL.paper)}
-    frame(b.x+10,b.y-15,72,24,COL.ink,COL.pink,4,2);
-    text('看板娘',b.x+46,b.y-9,13,COL.ink);
+    const tagY=g.landscape?b.y+6:b.y-15;
+    frame(b.x+10,tagY,72,24,COL.ink,COL.pink,4,2);
+    text('看板娘',b.x+46,tagY+6,13,COL.ink);
     const autoX=b.x+b.w-56,autoY=b.y+9;
     frame(autoX,autoY,46,21,COL.ink,auto?COL.pink:COL.paper,3,2);
     text(auto?'自动 开':'自动 关',autoX+23,autoY+5,11,COL.ink);
