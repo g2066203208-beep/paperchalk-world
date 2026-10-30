@@ -36,8 +36,8 @@ def project(point,angle):
     a=math.radians(angle)
     rx=x*math.cos(a)+z*math.sin(a)
     rz=z*math.cos(a)-x*math.sin(a)
-    scale=190./(4.0-rz)
-    return W/2+rx*scale,H*.76-y*scale,scale,rz
+    scale=150./(4.0-rz)
+    return W/2+rx*scale,H*.84-y*scale,scale,rz
 
 def scene(seed,view):
     """Supervised procedural anatomy with jointed limbs and explicit z-order.
@@ -148,6 +148,7 @@ class GeometryNet(nn.Module):
         self.enc=nn.Sequential(nn.Conv2d(6,channels,3,padding=1),Res(channels),nn.Conv2d(channels,channels*2,3,stride=2,padding=1),Res(channels*2))
         self.mid=nn.Sequential(nn.Conv2d(channels*2,channels*3,3,stride=2,padding=1),Res(channels*3))
         self.up=nn.Sequential(nn.Conv2d(channels*3+channels*2,channels*2,3,padding=1),Res(channels*2))
+        self.skip=nn.Conv2d(6,channels,1)
         self.out=nn.Sequential(nn.Conv2d(channels*2+channels,channels,3,padding=1),Res(channels))
         self.seg=nn.Conv2d(channels,len(PARTS),1)
         self.dep=nn.Conv2d(channels,5,1)
@@ -163,9 +164,7 @@ class GeometryNet(nn.Module):
         big=F.interpolate(low,size=s.shape[-2:],mode='nearest')
         big=self.up(torch.cat((big,s),1))
         full=F.interpolate(big,size=(h,w),mode='nearest')
-        full=self.out(torch.cat((full,enc.new_zeros(b,0,h,w),F.interpolate(enc[:,:0],size=(h,w))),1)) if False else full
-        # Explicit high-resolution RGB/color skip features (one extra projection).
-        full=self.out(torch.cat((full,F.pad(a,(0,0,0,0,0,28))),1))
+        full=self.out(torch.cat((full,self.skip(enc)),1))
         return self.seg(full),self.dep(full),self.joints(full),self.yaw(low)
 
 def make_batch(rng,batch=8,train=True):
