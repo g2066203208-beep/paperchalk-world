@@ -21,9 +21,13 @@ from ml.style2.prepare import ROOT as ASSETS, COL, prepare
 H,W=64,48
 ROOT=ASSETS/"diffusion"
 def tokens(path):
-    rgb=np.asarray(Image.open(path).convert("RGB").resize((W,H),Image.Resampling.NEAREST),dtype="int16")
-    delta=(rgb[:,:,None,:]-COL[None,None,:,:].astype("int16"))**2
-    return torch.from_numpy(delta.sum(3).argmin(2).astype("int64"))
+    rgb=np.asarray(Image.open(path).convert("RGB").resize((W,H),Image.Resampling.NEAREST),dtype="int32")
+    delta=(rgb[:,:,None,:]-COL[None,None,:,:].astype("int32"))**2
+    result=delta.sum(3).argmin(2).astype("int64")
+    reconstructed=COL[result]
+    if not np.array_equal(reconstructed,rgb.astype("uint8")):
+        raise AssertionError("Native D palette labels changed during tokenization")
+    return torch.from_numpy(result)
 def png(v,path):
     Image.fromarray(COL[v.cpu().numpy().astype("uint8")],"RGB").save(path)
 
