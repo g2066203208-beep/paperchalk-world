@@ -37,7 +37,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/function switchScene\(/);
   assert.match(menu,/function updateCurtain\(/);
   assert.match(menu,/COL\.ink/);
-  assert.match(menu,/data\[\(y\*ww\+x\)\*4\+3\]>=170/);
+  assert.match(menu,/data\[\(y\*ww\+x\)\*4\+3\]>=120/);
   assert.doesNotMatch(menu,/height\*3|for\(let dy=0;dy<3/);
   assert.match(menu,/function drawButton\(/);
   assert.match(menu,/function latin\(/);
@@ -49,11 +49,13 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/paperworld-menu-v3/);
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
-  assert.match(page,/20261030-hostess-intro1/);
+  assert.match(page,/20261030-shop-lease2/);
   assert.match(menu,/import \{createHostessIntro\} from '\.\/intro\.js'/);
-  assert.match(menu,/intro\.draw\(ctx,W,H,clock\)/);
-  assert.match(menu,/intro\.onTap\(p\.x,p\.y,W,H\)/);
+  assert.match(menu,/intro\.draw\(ctx,W,H\)/);
+  assert.match(menu,/intro\.onTap\(\)/);
   assert.match(menu,/const CLOSE_TIME=\.56,OPEN_TIME=\.62/);
+  assert.match(menu,/createLeaseUI/);
+  assert.match(menu,/state==='lease'/);
   for(const label of ['开始游戏','继续游戏','设置','退出游戏'])assert.ok(menu.includes(label));
   assert.doesNotMatch(menu,/\.png|\.webp|\.jpe?g|image_gen|<img|drawImage\(/);
 });
