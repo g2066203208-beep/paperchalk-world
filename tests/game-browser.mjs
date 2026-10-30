@@ -84,7 +84,7 @@ try{
   await clickGame(page,1); // Continue now truly resumes the created journey.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play');
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(90);
+  await page.waitForTimeout(740);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
   await clickGame(page,2);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'settings');
