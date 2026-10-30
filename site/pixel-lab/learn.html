@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#393657">
-<title>02 · 像素绘画学习 | D 四色离散生成</title>
+<title>系统02 · V5 人物结构拆解与像素训练</title>
 <style>
 :root{color-scheme:dark;--bg:#1b1a2c;--panel:#29273f;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
@@ -24,10 +24,23 @@ label{display:flex;align-items:center;gap:6px}
 <nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
 <main>
 <div class="eyebrow">SYSTEM 02 · ACTIVE MODEL ONLY</div>
-<h1>像素绘画学习 · 原生高清细节</h1>
-<p class="summary">现在采用分层训练：V2 在 48×64 上学习素材类型和全局结构；V3 在 384×512 原生像素上进行局部细节训练，192×256 仅用于结构条件。两者属于同一个系统，没有建立第三个工作室。过去的局部 MLP、VAE、Q-Learning 和扩散 V1 都已经从当前代码与构建流程移除。</p>
+<h1>系统 02 · V5 人体结构与像素绘画训练</h1>
+<p class="summary">现有 V5 训练通过了合成体块数据集，但对原始 D 人物的部件拆解明显失败。这里首先展示原画与预测结果，不再把合成样本高分当成人物绘制成功。V3 原生 384×512 细节修复和 V2 48×64 粗构图保留为旧实验对照。</p>
 <p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
 
+<section id="v5-first" aria-label="当前V5真实人物识别对照" style="background:#25213b;border:2px solid #F2A5C2;border-radius:14px;padding:16px;margin:18px 0">
+  <div class="eyebrow">CURRENT · V5 / ACTUAL D-STYLE CHARACTERS</div>
+  <h2 style="font-size:clamp(20px,3vw,27px);margin:6px 0 9px">先看原画，再看模型识别失败在哪里</h2>
+  <p>这一组图就是实际 V5 权重推理的输入与输出。模型在合成椭球人身上学到部分结构，但识别真正的粉发人物时将头发、面部、服装和肢体混淆。<strong>当前原画分区不合格，不能作为成品，也不能据此宣称理解了真实人体。</strong></p>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+    <figure style="min-width:0;margin:0"><figcaption>动态人物 · D 原图</figcaption><img loading="lazy" src="./style2/geometry-v5/A_dynamic_input.png" alt="动态母版，缩至96乘128供识别" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
+    <figure style="min-width:0;margin:0"><figcaption>V5 动态人物分区 · 未通过</figcaption><img loading="lazy" src="./style2/geometry-v5/A_dynamic_pred_parts.png" alt="不准确的人物部件预测" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
+    <figure style="min-width:0;margin:0"><figcaption>站姿人物 · D 原图</figcaption><img loading="lazy" src="./style2/geometry-v5/B_standing_input.png" alt="站姿母版，缩至96乘128供识别" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
+    <figure style="min-width:0;margin:0"><figcaption>V5 站姿人物分区 · 未通过</figcaption><img loading="lazy" src="./style2/geometry-v5/B_standing_pred_parts.png" alt="不准确的站姿人物部件预测" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
+  </div>
+  <p style="margin:12px 0 0"><a href="./style2/geometry-v5.html" style="color:#F2A5C2;font-weight:900">查看三视角几何实验、真实留出指标及源代码</a></p>
+  <p style="font-size:12px;color:#c6bdd8">注：语义分区使用额外诊断颜色；成品像素素材的 D 四色限制不变。</p>
+</section>
 <section style="background:#30283e;border:1px solid #F2A5C2;border-radius:13px;padding:17px;margin:18px 0">
 <h2 style="margin:0 0 7px">新增 · 13 张人物图片批量真像素转换 / 训练样本质量审查</h2>
 <p style="margin:6px 0 10px">两张正式母版、九张未经批准的 AI 草稿、一张新人物绘制候选及一张排除的多图设定表。全部恢复为原生 384×512 D 色板，但低质量草稿不会被自动当作优秀样本训练。V4 神经转换模型只有在跨姿势留出测试超过传统方法时才会启用。</p>
