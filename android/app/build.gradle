@@ -1,0 +1,21 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.paperchalk.lampkeep'
+    compileSdk 35
+    defaultConfig {
+        // Keep the existing package ID so installed clients can receive APK updates.
+        applicationId 'com.paperchalk.lampkeep'
+        minSdk 26
+        targetSdk 35
+        versionCode (1000 + (System.getenv('GITHUB_RUN_NUMBER') ?: '0').toInteger())
+        versionName ('1.0.' + (System.getenv('GITHUB_RUN_NUMBER') ?: '0'))
+    }
+    buildTypes {
+        debug { debuggable true }
+        release { minifyEnabled false }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
