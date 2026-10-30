@@ -1,4 +1,4 @@
-/* Shared WebGL1 material pipeline: real UV-mapped surfaces, one 64x32 atlas,
+/* Shared WebGL1 material pipeline: real UV-mapped surfaces, one 128x64 atlas,
  * 16x16 integer texels, NEAREST filtering and texel-center sampling.
  */
 import {atlasRGBA} from '../world-builder/materials-core.js';
@@ -20,10 +20,10 @@ const FRAGMENT=[
  'uniform sampler2D uAtlas;',
  'void main(){',
  '  vec2 local=floor(fract(vUV)*16.0);',
- '  float column=mod(floor(vMaterial+0.5),4.0);',
- '  float row=floor((vMaterial+0.5)/4.0);',
- '  vec2 atlasPixel=vec2(column*16.0+local.x+0.5,32.0-(row*16.0+local.y+0.5));',
- '  gl_FragColor=texture2D(uAtlas,atlasPixel/vec2(64.0,32.0));',
+ '  float column=mod(floor(vMaterial+0.5),8.0);',
+ '  float row=floor((vMaterial+0.5)/8.0);',
+ '  vec2 atlasPixel=vec2(column*16.0+local.x+0.5,64.0-(row*16.0+local.y+0.5));',
+ '  gl_FragColor=texture2D(uAtlas,atlasPixel/vec2(128.0,64.0));',
  '}'
 ].join('\n');
 function makeTexture(gl,pack){
