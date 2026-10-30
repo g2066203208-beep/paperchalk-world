@@ -4,7 +4,7 @@
  */
 const COL={ink:'#393657',pink:'#F2A5C2',blue:'#A9BAE9',paper:'#FFF5E6'};
 const ORDER=['开始游戏','继续游戏','设置','退出游戏'];
-const KEY='paperworld-menu-v1',SAVE='paperworld-journey-v1';
+const KEY='paperworld-menu-v2',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
 const ctx=el.getContext('2d',{alpha:true,willReadFrequently:false});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
