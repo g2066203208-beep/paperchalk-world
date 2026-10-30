@@ -28,7 +28,9 @@ try{
   assert.equal(await page.locator('#full').evaluate(c=>c.width===384&&c.height===512),true);
   assert.equal(await page.locator('#zoom').evaluate(c=>c.width===260&&c.height===260),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),true);
-  const ready=existsSync(reportFile);
+  const auditFile=resolve(root,'pixel-lab/fullbody-generated/visual-review.json');
+  const approved=existsSync(auditFile)&&JSON.parse(readFileSync(auditFile,'utf8')).status==='approved';
+  const ready=existsSync(reportFile)&&approved;
   if(ready){
    const report=JSON.parse(readFileSync(reportFile,'utf8'));
    assert.equal(await page.locator('#gallery .item').count(),report.generated.length);
