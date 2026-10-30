@@ -267,6 +267,13 @@ export function createWorld3D({onBack}){
   postureButton.addEventListener(evt,e=>{if(e.pointerId===poseHold.id)releaseStanceGesture()});
  for(const n of ['stand','crouch','prone'])
   el('pw-stance-'+n).addEventListener('click',()=>{motor.stopPosture();releaseStanceGesture();setStance(n)});
+ const compact=el('pw-world-bottom'),more=el('pw-world-more');
+ more.addEventListener('click',()=>{
+  const wasCompact=compact.classList.contains('pw-world-compact');
+  compact.classList.toggle('pw-world-compact',!wasCompact);
+  more.textContent=wasCompact?'收起设置 ▴':'体感设置 ▾';
+  more.setAttribute('aria-expanded',String(wasCompact));
+ });
  el('pw-motion-start').addEventListener('click',startMotion);
  el('pw-motion-center').addEventListener('click',()=>{
   if(motion.sensorSeen){motion.recenter();note('校准完成：此方向为正前方')}
