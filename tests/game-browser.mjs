@@ -51,8 +51,8 @@ try{
 
   // The simple click-pixel feedback applies to empty screen too.
   await point(page,menu.logical[0]*.49,15);
-  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount===6);
-  await page.waitForTimeout(320);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount===7);
+  await page.waitForTimeout(390);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0);
   await button(page,1);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu','continue without save is disabled');
