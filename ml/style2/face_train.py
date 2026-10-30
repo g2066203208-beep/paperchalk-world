@@ -124,7 +124,8 @@ def sample(net,guide,seed=0,passes=6,temperature=.82,retain=None):
             confidences=prob.masked_fill(~open_mask,-1.)
             selected=torch.topk(confidences.flatten(),n).indices
             cur.flatten()[selected]=idx.flatten()[selected]
-        cur[lock]=retain[0][None][lock]
+        if retain is not None:
+            cur[lock]=retain[0][None][lock]
     assert bool((cur!=4).all())
     return cur[0].numpy().astype(np.uint8)
 
