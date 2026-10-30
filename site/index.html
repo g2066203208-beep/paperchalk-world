@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#FFF5E6">
-<meta name="paperworld-build" content="20261030-shop-lease5-matte-manual">
+<meta name="paperworld-build" content="20261030-world3d-motion1">
 <meta name="description" content="PAPERWORLD 四色像素游戏：老板娘走到柜台办理租赁。纯四色角色内部深色细节保留，对话手动慢速推进。">
 <title>PAPERWORLD · 新店开张</title>
-<link rel="stylesheet" href="./game/stage.css?v=shop-lease4">
+<link rel="stylesheet" href="./game/stage.css?v=world3d-motion1">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#FFF5E6}
@@ -88,6 +88,38 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
     </div>
   </section>
 </div>
+<section id="pw-world" class="pw-off" aria-label="PAPERWORLD 三轴手机体感三维世界">
+  <canvas id="pw-world-canvas" tabindex="0" aria-label="WebGL 立体场景：X向前、Z向上，左右转身、侧倒、抬头低头"></canvas>
+  <header id="pw-world-top" class="pw-panel">
+    <div><strong>PAPERWORLD / 3D</strong><small>世界坐标：X 前 · Y 左 · Z 上</small></div>
+    <button class="pw-btn secondary" type="button" id="pw-motion-back">返回游戏</button>
+  </header>
+  <div id="pw-world-reticle" aria-hidden="true"><span></span></div>
+  <div id="pw-world-bottom" class="pw-panel">
+    <div class="pw-world-line">
+      <div><strong>手机体感 · 360° 原地转向</strong><small id="pw-motion-status" role="status">3D 场景载入中…</small></div>
+      <span id="pw-sensor-badge">可用手指拖动</span>
+    </div>
+    <div class="pw-world-angles" aria-label="实时三轴角度">
+      <div><span>Z · 原地转向</span><strong id="pw-yaw">0°</strong></div>
+      <div><span>X · 左右侧倾</span><strong id="pw-roll">0°</strong></div>
+      <div><span>抬头 · 低头</span><strong id="pw-pitch">0°</strong></div>
+    </div>
+    <div class="pw-world-actions">
+      <button class="pw-btn" type="button" id="pw-motion-start">开启手机体感</button>
+      <button class="pw-btn secondary" type="button" id="pw-motion-center">当前位置设为正前方</button>
+    </div>
+    <div class="pw-world-controls">
+      <label>体感灵敏度 <strong id="pw-motion-sensitivity-value">1.00×</strong>
+        <input id="pw-motion-sensitivity" type="range" min="0.5" max="1.6" step="0.05" value="1">
+      </label>
+      <label>平滑响应 <strong id="pw-motion-response-value">105 ms</strong>
+        <input id="pw-motion-response" type="range" min="0.025" max="0.25" step="0.005" value="0.105">
+      </label>
+    </div>
+    <div class="pw-world-help">左转/右转：绕竖直 Z 轴 · 侧倒手机：横滚最多约90° · 抬头低头：俯仰。保持手机正对前方后点击校准。没有传感器时可拖动视角，键盘 Q/E 侧倒、方向键转向。</div>
+  </div>
+</section>
 <div id="pw-ui-touch-fx" aria-hidden="true"></div>
 <script type="module" src="./game/background.js?v=20261030-blue8s-diagonal2"></script>
 <script type="module" src="./game/menu.js?v=20261030-shop-lease5-matte-manual"></script>
