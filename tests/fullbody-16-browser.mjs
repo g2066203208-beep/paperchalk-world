@@ -22,6 +22,8 @@ try{
   await page.waitForFunction(()=>document.querySelector('#status')?.textContent.includes('GitHub 已训练'),{timeout:20000});
   assert.equal(await page.locator('#gallery figure').count(),16,'not 16 full-body characters');
   for(const img of await page.locator('#gallery figure img').all()){
+    await img.scrollIntoViewIfNeeded();
+    await img.evaluate(async el=>{await el.decode()});
     const result=await img.evaluate(el=>[el.complete,el.naturalWidth,el.naturalHeight]);
     assert.deepEqual(result,[true,384,512]);
   }
