@@ -9,10 +9,13 @@ test('Only two primary systems and D palette are visible',()=>{
  assert.match(index,/href="\.\/learn\.html"/);
  assert.match(index,/D「雾樱玻璃」/);
 });
-test('System 02 includes only active V2 model, not obsolete training',()=>{
+test('System 02 contains V3 native details and V2 coarse study, no obsolete training',()=>{
  const p=read('learn.html');
+ assert.match(p,/id="v3-native"/);
+ assert.match(p,/native-detail-v3\.js/);
  assert.match(p,/id="pixel-v2"/);
  assert.match(p,/diffusion-v2-gallery\.js/);
+ assert.ok(p.indexOf('id="v3-native"')<p.indexOf('id="pixel-v2"'),'Full-res art comes first');
  for(const x of ['pixel-lab.js','characters.html','flat4-learning.html','discrete-diffusion.html','style2\/training_report.json'])
    assert.ok(!p.includes(x),'Removed legacy URL still linked: '+x);
 });
