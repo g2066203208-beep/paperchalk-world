@@ -1,0 +1,61 @@
+<!doctype html><html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#393657">
+<title>PixelLab · 新绘制全身立绘候选V1</title>
+<meta name="description" content="192×256 严格 D 四色透明像素人物，网格和放大镜检查">
+<style>
+:root{color-scheme:dark;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
+*{box-sizing:border-box}body{margin:0;background:#1d1b2e;color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
+a{color:var(--blue)}a:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+nav{border-bottom:1px solid #655c7d;padding:13px max(18px,calc((100vw - 1050px)/2));display:flex;flex-wrap:wrap;gap:22px}
+main{max-width:1050px;margin:auto;padding:26px 16px 55px}
+h1{font-size:clamp(26px,4.3vw,42px);line-height:1.22;margin:8px 0 12px}
+.note{color:#d3cce0;max-width:880px}.tag{font-size:12px;font-weight:800;letter-spacing:.13em;color:var(--pink)}
+.layout{display:grid;grid-template-columns:minmax(0,480px) minmax(0,1fr);gap:21px;margin:20px 0}
+.frame{border:1px solid #77708e;background:var(--ink);border-radius:12px;padding:14px}
+.frame h2{font-size:17px;margin:0 0 9px}
+.canvas-frame{background:var(--cream);min-height:350px;display:grid;place-items:center;padding:10px}
+.canvas-frame.blue{background:var(--blue)}
+canvas{max-width:100%;height:auto;image-rendering:pixelated;cursor:crosshair}
+#full{width:384px;aspect-ratio:3/4}#detail{width:320px;aspect-ratio:1}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}
+button,.btn{cursor:pointer;background:var(--pink);border:0;border-radius:6px;color:var(--ink);font-weight:850;font:inherit;padding:10px 15px;min-height:44px}
+button[aria-pressed=true]{background:var(--blue)}
+.spec{font-size:13px;color:#d0c9dd;padding:12px 0;border-bottom:1px solid #5b526e}
+.status{font-size:13px;color:var(--blue);min-height:24px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.canvas-frame{min-height:240px}}
+</style></head><body>
+<nav><a href="./index.html">← 像素工作室</a><a href="./learn.html">绘画学习</a><a href="../index.html">返回游戏</a></nav>
+<main><div class="tag">NEW DRAWING / ART REVIEW CANDIDATE V1</div>
+<h1>老板娘 · 新绘制全身立绘候选</h1>
+<p class="note">这是新的独立人物设计稿，不是旧16张头像套身体母版。经过最近邻采样、严格 D 四色量化和背景分割，保存为真正192×256的透明索引像素PNG。<strong>尚未通过人工美术验收，尚未替换游戏内旧立绘。</strong></p>
+<div class="actions"><button id="grid" type="button" aria-pressed="false">显示像素网格</button>
+<button id="paper" type="button" aria-pressed="false">切换底板</button>
+<a class="btn" href="./assets/hostess-redraw-v1-192x256.png" download="PAPERWORLD-hostess-fullbody-v1-192x256.png">保存原生 PNG</a></div>
+<div class="layout">
+<section class="frame"><h2>全身角色 · 无平滑缩放</h2><div class="canvas-frame" id="full-wrap"><canvas id="full" width="384" height="512" aria-label="新绘制四色透明全身角色"></canvas></div></section>
+<section class="frame"><h2>面部精细检查（每格放大8倍）</h2><div class="canvas-frame" id="detail-wrap"><canvas id="detail" width="320" height="320" aria-label="新绘制像素角色面部放大"></canvas></div>
+<p class="spec">规格：192×256 原生网格 · 透明或深紫/樱粉/雾蓝/奶油白 · 单张 PNG 可检查所有像素。</p>
+<p class="spec">制作说明：先绘制完整人物草稿，再离线转换。脸、发型、衣服、姿态为本次新设计；像素量化不等于训练出通用角色生成模型。</p>
+<p id="status" class="status" role="status">读取新立绘...</p>
+</section></div></main>
+<script>
+const URL='./assets/hostess-redraw-v1-192x256.png',P=new Set(['57,54,87,255','242,165,194,255','169,186,233,255','255,245,230,255','0,0,0,0']);
+const src=new Image();src.src=URL;
+const full=document.getElementById('full'),detail=document.getElementById('detail');
+const f=full.getContext('2d',{willReadFrequently:true}),d=detail.getContext('2d',{willReadFrequently:true});f.imageSmoothingEnabled=false;d.imageSmoothingEnabled=false;
+let grid=false,blue=false,ready=false;
+function lineGrid(ctx,width,height,step){ctx.strokeStyle='#393657';ctx.lineWidth=1;ctx.beginPath();for(let x=step;x<width;x+=step){ctx.moveTo(x+.5,0);ctx.lineTo(x+.5,height)}for(let y=step;y<height;y+=step){ctx.moveTo(0,y+.5);ctx.lineTo(width,y+.5)}ctx.stroke()}
+function draw(){if(!ready)return;f.clearRect(0,0,384,512);f.drawImage(src,0,0,384,512);d.clearRect(0,0,320,320);
+d.drawImage(src,68,22,40,40,0,0,320,320);
+if(grid){lineGrid(f,384,512,2);lineGrid(d,320,320,8)}}
+src.onload=()=>{
+if(src.naturalWidth!==192||src.naturalHeight!==256){document.getElementById('status').textContent='尺寸不符：素材无效';return}
+const ctx=document.createElement('canvas');ctx.width=192;ctx.height=256;const c=ctx.getContext('2d',{willReadFrequently:true});c.drawImage(src,0,0);
+const p=c.getImageData(0,0,192,256).data;let bad=0,opaque=0;
+for(let i=0;i<p.length;i+=4){if(!P.has([p[i],p[i+1],p[i+2],p[i+3]].join(',')))bad++;if(p[i+3]===255)opaque++}
+const result=bad===0&&opaque>8000;document.getElementById('status').textContent=(result?'通过':'未通过')+' · 四色及透明像素校验 / 非法像素 '+bad+' · 人物不透明像素 '+opaque;
+ready=true;draw();
+};src.onerror=()=>document.getElementById('status').textContent='新立绘文件未加载，请检查 Pages 部署状态';
+document.getElementById('grid').addEventListener('click',e=>{grid=!grid;e.currentTarget.setAttribute('aria-pressed',String(grid));draw()});
+document.getElementById('paper').addEventListener('click',e=>{blue=!blue;e.currentTarget.setAttribute('aria-pressed',String(blue));document.querySelectorAll('.canvas-frame').forEach(el=>el.classList.toggle('blue',blue))});
+</script></body></html>
