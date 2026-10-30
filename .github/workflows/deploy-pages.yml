@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   pages: write
+  actions: read
   id-token: write
 concurrency:
   group: studio-${{ github.ref }}
@@ -61,6 +62,39 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Include verified model outputs from real GitHub training runs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V5_ID=$(gh run list --workflow geometry-v5.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          test -n "$V5_ID" && test "$V5_ID" != "null" || { echo "::error::No successful V5 model run to publish"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/pixel-v5"
+          gh run download "$V5_ID" --name pixel-v5-geometry-real-model-and-evidence --dir "$RUNNER_TEMP/pixel-v5"
+          test -s "$RUNNER_TEMP/pixel-v5/site/pixel-lab/style2/geometry-v5/report.json"
+          mkdir -p site/pixel-lab/style2/geometry-v5
+          cp -a "$RUNNER_TEMP/pixel-v5/site/pixel-lab/style2/geometry-v5/." site/pixel-lab/style2/geometry-v5/
+
+          LEGACY_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq '[.artifacts[]|select(.name=="PixelLab-native-384-detail-and-composition" and .expired==false)][0].workflow_run.id')
+          if [ -n "$LEGACY_RUN" ] && [ "$LEGACY_RUN" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/pixel-legacy"
+            gh run download "$LEGACY_RUN" --name PixelLab-native-384-detail-and-composition --dir "$RUNNER_TEMP/pixel-legacy"
+            if [ -d "$RUNNER_TEMP/pixel-legacy/site/pixel-lab" ]; then
+              cp -a "$RUNNER_TEMP/pixel-legacy/site/pixel-lab/." site/pixel-lab/
+            fi
+          else
+            echo "::warning::No previous V2–V4 artifacts; leaving those pages as legacy references"
+          fi
+          test -s site/pixel-lab/style2/geometry-v5/B_standing_pred_parts.png
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('site/pixel-lab/style2/geometry-v5/report.json').read_text())
+          assert r['trained'] and r['no_claim_real_3d'] and r['no_claim_new_character_generation']
+          assert len(r['preview'])==5
+          assert Path('site/pixel-lab/learn.html').read_text().find('V5 人体结构')!=-1
+          print('PASS: packaged V5 training report + real-character predictions + current V5 page')
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
