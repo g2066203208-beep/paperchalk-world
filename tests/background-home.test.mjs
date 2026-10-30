@@ -20,7 +20,14 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/function plane\(/);
   assert.match(menu,/function cloud\(/);
   assert.doesNotMatch(menu,/function sparkle\(|function atmosphere\(|function burst\(/);
-  assert.match(menu,/function paintCurtain\(/);
+  assert.doesNotMatch(menu,/function paintCurtain\(/);
+  assert.match(menu,/function paintFoldWipe\(/);
+  assert.match(menu,/function emitClickPixels\(/);
+  assert.match(menu,/function updateClickPixels\(/);
+  assert.match(menu,/function paintClickPixels\(/);
+  assert.match(menu,/diagonal-paper-wipe/);
+  assert.match(menu,/clickBits\.length>32/);
+  assert.match(menu,/i<10/);
   assert.match(menu,/function switchScene\(/);
   assert.match(menu,/function updateCurtain\(/);
   assert.match(menu,/COL\.ink/);
@@ -33,7 +40,9 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/pointerup/);
   assert.match(menu,/requestAnimationFrame\(tick\)/);
   assert.match(menu,/localStorage/);
-  assert.match(page,/20261030-menu2-clean-curtain/);
+  assert.match(menu,/paperworld-menu-v2/);
+  assert.match(menu,/点击粒子/);
+  assert.match(page,/20261030-menu3-click-fold/);
   for(const label of ['开始游戏','继续游戏','设置','退出游戏'])assert.ok(menu.includes(label));
   assert.doesNotMatch(menu,/\.png|\.webp|\.jpe?g|image_gen|<img|drawImage\(/);
 });
