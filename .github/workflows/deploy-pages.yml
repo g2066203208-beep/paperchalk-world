@@ -99,6 +99,27 @@ jobs:
             echo "::warning::Face training still running; face gallery will appear after verified workflow dispatches Pages"
           fi
 
+          PARTS_RUN=$(gh run list --workflow face-parts.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$PARTS_RUN" ] && [ "$PARTS_RUN" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/face-parts"
+            gh run download "$PARTS_RUN" --name face-part-preserving-32-trained-model --dir "$RUNNER_TEMP/face-parts"
+            test -s "$RUNNER_TEMP/face-parts/site/pixel-lab/style2/face-structure/report.json"
+            mkdir -p site/pixel-lab/style2/face-structure
+            cp -a "$RUNNER_TEMP/face-parts/site/pixel-lab/style2/face-structure/." site/pixel-lab/style2/face-structure/
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('site/pixel-lab/style2/face-structure')
+          d=json.loads((p/'report.json').read_text())
+          assert d['number_generated']==32 and d['sampled_unseen_combinations']
+          assert d['styles_approved_for_game']==0
+          assert (p/'face_31.png').is_file()
+          print('PASS: 32 distinct, feature-preserving CC0 face combinations included in Pages')
+          PY
+          else
+            echo "::warning::No successful part-preserving face model yet; awaiting training"
+          fi
+
           GENERAL_RUN=$(gh run list --workflow face-general.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
           if [ -n "$GENERAL_RUN" ] && [ "$GENERAL_RUN" != "null" ]; then
             mkdir -p "$RUNNER_TEMP/face-general"
