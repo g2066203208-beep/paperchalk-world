@@ -1,24 +1,24 @@
-# PAPERWORLD · 四色像素叙事游戏
+# PAPERWORLD · 四色像素游戏
 
-游戏主页（**原 Android APK 直接访问的旧网址**）：https://g2066203208-beep.github.io/paperchalk-world/
+**实际游戏入口与原 APK 加载的网站地址：** https://g2066203208-beep.github.io/paperchalk-world/
 
-本轮实现（2026-10-30）：
-- `site/index.html`：真正的游戏首页，不是独立背景演示；中央小窗口 + 两色粗斜纹动态背景
-- `site/game/game.js`：正式 D 风格色板 `#393657` / `#F2A5C2` / `#A9BAE9` / `#FFF5E6`；外层背景仅使用奶油白和樱粉，Canvas 整数网格程序绘制，36秒无缝周期
-- `site/game/game.css`：小窗游戏布局，手机竖屏、横屏和平板适配
-- 游戏内第一段互动：开始、推进对白、选择回应、短剧情反馈；`localStorage` 保存进度，具备暂停运动、重新开始选项
-- `tests/game-browser.mjs`：Playwright 测试四屏尺寸、像素调色板、对话分支和存档
-- `android/` 和 `.github/workflows/apk.yml`：**从仓库既有历史版本恢复**，原包名 `com.paperchalk.lampkeep`，每次冷启动请求根目录最新网页；不再使用新建的第二个 APK
-- 固定 APK（原地址）：https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk
-- APK Actions：https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/apk.yml
+## 当前游戏阶段：只实现背景（2026-10-30）
 
-原工作室保留，不覆盖：
-- BoneLab：https://g2066203208-beep.github.io/paperchalk-world/bone-lab/
-- PixelLab：https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/
-- 角色实验室：https://g2066203208-beep.github.io/paperchalk-world/character-lab/
+现阶段按用户要求**移除原首页的骨骼实验室、人物立绘、对话、按钮和中央小窗口**；网站根入口 `site/index.html` 只渲染一个全屏程序化背景 Canvas，后续再逐步添加游戏内容。
 
-## 真实状态与范围
+- `site/index.html`：只有 Canvas 和动态背景脚本，手机全屏（竖屏、横屏）、电脑及平板适配。
+- `site/game/background.js`：真正的像素网格函数绘制；奶油白 `#FFF5E6` 底色 + 樱粉 `#F2A5C2` 粗45°条纹；4 CSS px 一个逻辑像素；36格条纹，44格间隔；每36秒精确平移一个完整周期。
+- **游戏正式四色**始终限定为 `#393657`、`#F2A5C2`、`#A9BAE9`、`#FFF5E6`。当前背景只使用后两者（奶油白和樱粉），没有额外色、透明度、渐变或抗锯齿。
+- 尊重系统“减少动态效果”设置；网页隐藏时暂停演算。
+- `tests/game-browser.mjs`：四种屏幕尺寸检查，验证只有背景、严格双色、逐像素网格覆盖屏幕，以及循环首尾一致。
+- `.github/workflows/deploy-pages.yml`：保留原有 GitHub Pages 发布和其它像素学习工作流，添加游戏背景浏览器测试与截图。
+- **原 Android APK**：`android/app/src/main/java/com/paperchalk/lampkeep/MainActivity.java`，原包名 `com.paperchalk.lampkeep`，每次冷启动请求网站根地址，自动获取新的网页内容，**无需新造另一套 APK**。
+- 原有 APK 下载链接：https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-latest-debug/paperworld-latest-debug.apk
 
-这是**首个可操作的游戏界面及对话垂直切片**，不是最终剧情或完成的人物演出。角色立绘复用已经通过正式四色审核的资产（如生成/部署的 `pixel-lab/d-standing-v1-384x512.png`），未审核的 AI 草图不得进入游戏。若该导出图暂时不存在，游戏仍可操作，暂不显示立绘。
+**注意：当前只是背景阶段，不宣称游戏玩法已完成。** 网页/Android 是否已成功部署或编译，需以 GitHub Actions 真实状态为准。
 
-GitHub Pages 部署由 `.github/workflows/deploy-pages.yml` 负责。网页变更通过原 APK 下次启动加载，无须重复安装；Android 包自身改动才需要重新编译安装。Debug APK 能否覆盖原安装还依赖原签名缓存是否一致。新的网页和 APK 是否部署成功须查看 GitHub Actions 实际运行结果，不能凭代码已提交宣称全部通过。
+## 保留的创作工具（不是 APK 首页）
+
+- [PixelLab](https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/)
+- [BoneLab](https://g2066203208-beep.github.io/paperchalk-world/bone-lab/)
+- [Character Lab](https://g2066203208-beep.github.io/paperchalk-world/character-lab/)
