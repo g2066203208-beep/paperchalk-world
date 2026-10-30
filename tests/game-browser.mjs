@@ -70,6 +70,28 @@ try{
   const yawed=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
   assert.ok(yawed.yaw>side.yaw,'3D camera turns around vertical Z axis');
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-banked-turn.png'});
+  // Phone controls work even without acceleration hardware. Check actual X/Y
+  // world translation under a held forward and a held backward touch.
+  async function holdWorldButton(id,ms){
+    return page.evaluate(async ({id,ms})=>{
+      const el=document.getElementById(id),player=()=>window.__PAPERWORLD_WORLD3D__.player.position;
+      const before=player();
+      const pointer=790+(id==='pw-back-hold'?1:0);
+      el.dispatchEvent(new PointerEvent('pointerdown',{pointerId:pointer,bubbles:true}));
+      await new Promise(r=>setTimeout(r,ms));
+      const during=player();
+      el.dispatchEvent(new PointerEvent('pointerup',{pointerId:pointer,bubbles:true}));
+      return {before,during};
+    },{id,ms});
+  }
+  const up=await holdWorldButton('pw-forward-hold',520);
+  const down=await holdWorldButton('pw-back-hold',540);
+  const forwardDir=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose.yaw);
+  const projected=(p,q)=>(q.x-p.x)*Math.cos(forwardDir)+(q.y-p.y)*Math.sin(forwardDir);
+  assert.ok(projected(up.before,up.during)>.45,'press forward immediately walks along camera direction');
+  assert.ok(projected(down.before,down.during)<-.45,'press backward ACTUALLY moves backwards');
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.forwardHold),0,'releasing touch stops input');
+  await page.screenshot({path:'artifacts/game/'+screen+'-real-forward-backward-controls.png'});
   // The camera must TRANSLATE through world geometry, not merely rotate a flat sky.
   const p0=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player);
   assert.ok((await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.walls))>50,'buildings and trees have real solid footprints');
@@ -96,6 +118,24 @@ try{
   await page.locator('#pw-walk-toggle').click();
   assert.equal((await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.walkMode)),true);
   await page.locator('#pw-walk-toggle').click();
+  // Synthetic accelerometer actions verify STANCE MACHINE only, not real
+  // room-scale XYZ tracking or actual OEM hardware performance.
+  await page.locator('#pw-squat-motion').click();
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.physicalStanceMode),true);
+  await page.evaluate(()=>{
+    window.__PAPERWORLD_WORLD3D__.injectTestVertical(-2.4,2000);
+    window.__PAPERWORLD_WORLD3D__.injectTestVertical(1.6,2320);
+  });
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.stance),'crouch');
+  await page.evaluate(()=>{
+    window.__PAPERWORLD_WORLD3D__.injectTestVertical(2.4,3500);
+    window.__PAPERWORLD_WORLD3D__.injectTestVertical(-1.5,3860);
+  });
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.stance),'stand');
+  await page.locator('#pw-squat-motion').click();
+  await page.locator('#pw-walk-direction').click();
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.stepDirection),-1);
+  await page.screenshot({path:'artifacts/game/'+screen+'-mobile-motion-squat-reverse.png'});
   await page.locator('#pw-motion-center').click();
   await page.waitForTimeout(310);
   await page.locator('#pw-motion-back').click();
