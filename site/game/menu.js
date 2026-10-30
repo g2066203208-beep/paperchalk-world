@@ -4,7 +4,7 @@ import {createWorld3D} from './world3d.js?v=20261030-shopgyro8';
 
 /* PAPERWORLD · original four-ink procedural pixel menu.
  * Every visible logo, plane, cloud, glyph, button and outline is
- * drawn at an integer logical pixel. No generated image is used at runtime.
+ * drawn at an integer logical pixel. The intro may load an audited 2-bit four-ink PNG.
  */
 const COL={ink:'#393657',pink:'#F2A5C2',blue:'#A9BAE9',paper:'#FFF5E6'};
 const ORDER=['开始游戏','继续游戏','3D体感世界','设置','退出游戏'];
