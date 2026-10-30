@@ -37,13 +37,13 @@ try{
     assert.deepEqual(info.colors,['242,165,194,255','255,245,230,255'],'only exact D pink and cream output');
     assert.equal(info.sceneCount,1,'exactly one background canvas');
     assert.equal(info.controls,0,'no legacy UI/portrait/dialogue/menu elements');
-    assert.equal(info.canvasWidth,Math.ceil(info.innerWidth/4));
+    assert.equal(info.canvasWidth,Math.ceil(info.innerWidth/4)+80,'one full 80-cell seamless overscan');
     assert.equal(info.canvasHeight,Math.ceil(info.innerHeight/4));
-    assert.ok(info.rect.width>=info.innerWidth && info.rect.width<info.innerWidth+4);
+    assert.ok(info.rect.width>=info.innerWidth+320 && info.rect.width<info.innerWidth+324);
     assert.ok(info.rect.height>=info.innerHeight && info.rect.height<info.innerHeight+4);
     assert.equal(info.imageRendering,'pixelated');
     const fn=await page.evaluate(async()=>{
-      const m=await import('./game/background.js?v=20261030b2');
+      const m=await import('./game/background.js?v=20261030-smooth1');
       return {palette:m.PALETTE,colors:[m.BACKGROUND,m.STRIPE],wrap:[...Array(20)].every((_,i)=>m.stripeAt(i,42,0)===m.stripeAt(i,42,80)),
         loop:m.phaseFromSeconds(0)===m.phaseFromSeconds(36),
         motion:[...Array(80)].some((_,x)=>m.stripeAt(x,1,0)!==m.stripeAt(x,1,20))};
@@ -51,9 +51,29 @@ try{
     assert.deepEqual(fn.palette,['#393657','#F2A5C2','#A9BAE9','#FFF5E6']);
     assert.deepEqual(fn.colors,['#FFF5E6','#F2A5C2']);
     assert.ok(fn.wrap&&fn.loop&&fn.motion,'real seamless movement with period');
+    const compositor=await page.evaluate(()=>{
+      const c=document.getElementById('background');
+      const stats=window.__PAPERWORLD_BACKGROUND__;
+      const initial=stats.redraws;
+      const animation=c.getAnimations()[0];
+      if(!animation)return {exists:false};
+      animation.pause();
+      animation.currentTime=1000;
+      const x0=new DOMMatrixReadOnly(getComputedStyle(c).transform).m41;
+      animation.currentTime=2000;
+      const x1=new DOMMatrixReadOnly(getComputedStyle(c).transform).m41;
+      const after=stats.redraws;
+      const timing=animation.effect.getComputedTiming();
+      return {exists:true,x0,x1,initial,after,duration:timing.duration};
+    });
+    assert.ok(compositor.exists,'CSS compositor animation is active');
+    assert.equal(compositor.duration,36000);
+    assert.ok(Math.abs((compositor.x1-compositor.x0)+320/36)<0.3,'subpixel-continuous pan, not stepped raster offset');
+    assert.equal(compositor.initial,1,'render only once on mount');
+    assert.equal(compositor.after,compositor.initial,'never redraw texture for each animation frame');
     await page.screenshot({path:'artifacts/game/'+name+'-background.png'});
     assert.deepEqual(errors,[], 'no browser JavaScript errors');
     await context.close();
   }
-  console.log('Four-color background-only homepage: four viewports, palette, full bleed, crisp grid, loop PASS');
+  console.log('GPU continuous stripe background: 4 viewports, 2 exact source colors, no redraw, seam PASS');
 }finally{await browser.close();await new Promise(done=>server.close(done))}
