@@ -14,7 +14,7 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: pixel-lab-pages
+  group: studio-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   publish_pixel_lab:
