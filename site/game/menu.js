@@ -1,3 +1,5 @@
+import {createHostessIntro} from './intro.js';
+
 /* PAPERWORLD · original four-ink procedural pixel menu.
  * Every visible logo, plane, cloud, glyph, button and outline is
  * drawn at an integer logical pixel. No generated image is used at runtime.
@@ -94,6 +96,7 @@ function layout(){
  buttons();
 }
 function buttons(){
+ if(state==='intro'){btns=[];return}
  btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','点击粒子','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
@@ -153,17 +156,19 @@ function overlay(){
  }
 }
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-const CLOSE_TIME=.23,OPEN_TIME=.29;
+const CLOSE_TIME=.56,OPEN_TIME=.62;
+const intro=createHostessIntro({COL,R,frame,text,latin,glyphBitmap});
+function enterScene(next){state=next;if(next==='intro')intro.enter();selected=0;hover=-1;held=-1;buttons()}
 function switchScene(next){
  if(curtain)return;
- if(reduced){state=next;selected=0;hover=-1;held=-1;buttons();return}
+ if(reduced){enterScene(next);return}
  curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
 }
 function updateCurtain(dt){
  if(!curtain)return;
  curtain.elapsed+=dt;
  if(curtain.phase==='close'&&curtain.elapsed>=CLOSE_TIME){
-  state=curtain.next;selected=0;hover=-1;held=-1;buttons();curtain.phase='open';curtain.elapsed=0;
+  enterScene(curtain.next);curtain.phase='open';curtain.elapsed=0;
  }else if(curtain.phase==='open'&&curtain.elapsed>=OPEN_TIME)curtain=null;
 }
 function paintFoldWipe(){
@@ -231,15 +236,16 @@ function draw(){
  if(!W||!H)return;
  ctx.clearRect(0,0,W,H);
  // Transparent overlay on GPU animated striped background in menu.
- if(state==='menu'){titleArtwork()}
- else{overlay()}
+ if(state==='menu')titleArtwork();
+ else if(state==='intro'){intro.draw(ctx,W,H,clock);if(!curtain){frame(5,6,52,21,COL.ink,COL.paper,4,2);text('返回',31,11,12,COL.ink)}}
+ else overlay();
  for(let i=0;i<btns.length;i++)drawButton(btns[i],i);
  if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
   }
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintFoldWipe();
  paintTouchEffects();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:state==='intro'?intro.snapshot():null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
@@ -248,8 +254,8 @@ function act(i,x,y){
  if(prefs.haptic&&navigator.vibrate)try{navigator.vibrate(7)}catch{}
  selected=i;hover=i;
  if(state==='menu'){
-  if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('play')}
-  else if(i===1){if(saveExists)switchScene('play');else flash('暂无存档')}
+  if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('intro')}
+  else if(i===1){if(saveExists)switchScene('intro');else flash('暂无存档')}
   else if(i===2)switchScene('settings');
   else if(i===3)switchScene('exit');
  }else if(state==='settings'){
@@ -265,12 +271,22 @@ function hit(x,y){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(x>=b.x-5&
 function xy(ev){const rect=el.getBoundingClientRect();return {x:(ev.clientX-rect.left)*W/rect.width,y:(ev.clientY-rect.top)*H/rect.height}}
 el.addEventListener('pointermove',e=>{const p=xy(e);hover=hit(p.x,p.y);el.style.cursor=hover>=0?'pointer':'default'});
 el.addEventListener('pointerdown',e=>{const p=xy(e);emitTouchEffect(p.x,p.y);if(curtain){held=-1;return}held=hit(p.x,p.y);if(held>=0)el.setPointerCapture(e.pointerId)});
-el.addEventListener('pointerup',e=>{const p=xy(e),i=hit(p.x,p.y);if(i>=0&&i===held)act(i,p.x,p.y);held=-1});
+el.addEventListener('pointerup',e=>{const p=xy(e);
+ if(state==='intro'&&!curtain){
+  if(p.x>=5&&p.x<=57&&p.y>=6&&p.y<=28)switchScene('menu');
+  else intro.onTap(p.x,p.y,W,H);
+  held=-1;return;
+ }
+ const i=hit(p.x,p.y);if(i>=0&&i===held)act(i,p.x,p.y);held=-1
+});
 el.addEventListener('pointercancel',()=>held=-1);
 el.addEventListener('pointerleave',()=>{hover=-1;held=-1});
 addEventListener('keydown',e=>{
  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();selected=(selected+(e.key==='ArrowDown'?1:-1)+btns.length)%btns.length;hover=selected}
- else if(e.key==='Enter'||e.key===' '){e.preventDefault();const b=btns[selected];if(b){emitTouchEffect(b.x+b.w/2,b.y+b.h/2);act(selected,b.x+b.w/2,b.y+b.h/2)}}
+ else if(e.key==='Enter'||e.key===' '){e.preventDefault();
+ if(state==='intro'&&!curtain){intro.onTap(W/2,H/2,W,H)}
+ else {const b=btns[selected];if(b){emitTouchEffect(b.x+b.w/2,b.y+b.h/2);act(selected,b.x+b.w/2,b.y+b.h/2)}}
+ }
  else if(e.key==='Escape'||e.key==='Backspace'){if(state!=='menu')switchScene('menu')}
 });
 addEventListener('resize',layout,{passive:true});
@@ -281,6 +297,7 @@ function tick(now){
  clock+=dt; // UI time never freezes when background movement is disabled.
  updateTouchEffects(dt);
  updateCurtain(dt);
+ if(state==='intro'&&!curtain)intro.update(dt);
  frameN++;draw();requestAnimationFrame(tick)
 }
 layout();savePrefs();requestAnimationFrame(tick);
