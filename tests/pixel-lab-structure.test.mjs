@@ -19,7 +19,7 @@ test('System 02 is decoder-sampled novel full-body image gallery, not reconstruc
  }
  assert.match(page,/随机潜变量采样/);
  assert.match(page,/96×128/);
- assert.match(page,/url=\.\/fullbody-learning\.html/);
+ assert.match(legacy,/url=\.\/fullbody-learning\.html/);
  assert.doesNotMatch(page,/href="\.\/(face-parts|motion-prior|fullbody-16)\.html"/);
  assert.doesNotMatch(page,/id="original"|id="model"/);
 });
