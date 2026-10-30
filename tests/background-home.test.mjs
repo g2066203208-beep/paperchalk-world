@@ -25,11 +25,13 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/function emitTouchEffect\(/);
   assert.match(menu,/function paintTouchEffects\(/);
   assert.match(menu,/function updateTouchEffects\(/);
-  assert.match(menu,/TOUCH_DIRECTIONS=Array\.from\(\{length:16\}/);
+  assert.doesNotMatch(menu,/TOUCH_DIRECTIONS|four-corner diamond ripple/);
+  assert.match(menu,/const angle=rand\(\)\*Math\.PI\*2/);
+  assert.match(menu,/const count=14\+Math\.floor\(rand\(\)\*8\)/);
   assert.match(menu,/emitTouchEffect\(p\.x,p\.y\);if\(curtain\)/);
   assert.match(menu,/diagonal-paper-wipe/);
-  assert.match(menu,/touchBursts\.length>6/);
-  assert.match(menu,/i<16/);
+  assert.match(menu,/touchBursts\.length>4/);
+  assert.match(menu,/i<count/);
   assert.match(menu,/function switchScene\(/);
   assert.match(menu,/function updateCurtain\(/);
   assert.match(menu,/COL\.ink/);
@@ -45,7 +47,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/paperworld-menu-v3/);
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
-  assert.match(page,/20261030-menu4-anywhere-touch/);
+  assert.match(page,/20261030-menu5-random-fireworks/);
   for(const label of ['开始游戏','继续游戏','设置','退出游戏'])assert.ok(menu.includes(label));
   assert.doesNotMatch(menu,/\.png|\.webp|\.jpe?g|image_gen|<img|drawImage\(/);
 });
