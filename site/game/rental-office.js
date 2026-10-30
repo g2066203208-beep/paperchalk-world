@@ -13,7 +13,7 @@ export function officeLayout(W,H){
  return {wide,front,floor,keys,doorway,
   anchorX:int(W*(wide?.27:.5)),anchorY:int(H*(wide?.96:.735))};
 }
-export function drawOfficeBack({R,COL},W,H){
+export function drawOfficeBack({R,COL,text},W,H){
  const g=officeLayout(W,H),{ink,blue,pink,paper}=COL;
  R(0,0,W,H,ink);
  // Four-color architectural framing. Integer rectangles only.
@@ -23,6 +23,13 @@ export function drawOfficeBack({R,COL},W,H){
  R(W-Math.max(4,int(W*.06)),int(H*.16),Math.max(4,int(W*.06)),int(H*.53),blue);
  R(0,int(H*.16),Math.max(2,int(W*.025)),int(H*.53),pink);
  R(W-Math.max(2,int(W*.025)),int(H*.16),Math.max(2,int(W*.025)),int(H*.53),pink);
+ // A single legible RENTAL sign (game typography, not text baked in a picture).
+ // The sign and keys convey the purpose of the room, not decorative clutter.
+ const sx=Math.max(4,int(W*.055)),sy=Math.max(12,int(H*.105));
+ const sw=Math.max(32,int(W*(g.wide?.16:.24))),sh=Math.max(18,int(H*.055));
+ R(sx,sy,sw,sh,blue);
+ R(sx+2,sy+2,sw-4,sh-4,paper);
+ if(typeof text==='function')text('租房',sx+int(sw/2),sy+int(sh*.53),Math.min(14,sh-7),ink);
  // Behind hostess: a simple glazed inner doorway for spatial context.
  const d=g.doorway;
  R(d.x-3,d.y,d.w+6,d.h+4,pink);
@@ -79,6 +86,20 @@ export function drawOfficeCounter({R,COL},W,H){
  R(bx,by,boardW,boardH,paper);
  R(bx+int(boardW*.37),by-3,int(boardW*.26),4,pink);
  for(let i=0;i<3;i++)R(bx+5,by+int(boardH*(i+2)/6),boardW-10,1,blue);
+ // Carved house crest: the counter belongs to an actual rental business.
+ // Construct every pixel cluster at integer coordinates, no blurry icon/image.
+ const cx=int(W/2),cy=y+int(frontH*.54);
+ const roofW=Math.max(15,int(mid*.32)),roofH=Math.max(5,int(roofW*.34));
+ for(let row=0;row<roofH;row++){
+  const inset=int((roofH-row-1)*1.8);
+  R(cx-int(roofW/2)+inset,cy-roofH+row,
+   Math.max(2,roofW-2*inset),1,pink);
+ }
+ const hw=Math.max(12,roofW-6),hh=Math.max(9,int(frontH*.19));
+ R(cx-int(hw/2),cy,hw,hh,paper);
+ R(cx-2,cy+int(hh*.43),4,hh-int(hh*.43),ink);
+ R(cx-int(hw*.37),cy+2,3,3,blue);
+ R(cx+int(hw*.27),cy+2,3,3,blue);
  // Keep visible bottom margin as a clean floor strip.
  R(0,g.floor,W,H-g.floor,ink);
  R(0,g.floor,W,3,pink);
