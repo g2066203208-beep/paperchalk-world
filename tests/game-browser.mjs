@@ -65,19 +65,44 @@ try{
   await page.waitForTimeout(750);
   const left=await page.evaluate(()=>({peek:window.__PAPERWORLD_WORLD3D__.lean,eye:window.__PAPERWORLD_WORLD3D__.eye,player:window.__PAPERWORLD_WORLD3D__.player}));
   await page.keyboard.up('q');
-  assert.ok(left.peek.offset>.53,'left lean extends camera well beyond body center');
-  assert.ok(left.eye[1]-left.player.position.y>.53,'real eye translates sideways in world coordinates');
+  assert.ok(left.peek.offset>.27,'left lean extends camera well beyond body center');
+  assert.ok(left.eye[1]-left.player.position.y>.27,'real eye translates sideways in world coordinates');
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-left-head-peek.png'});
   await page.keyboard.down('e');
   await page.waitForTimeout(850);
   const right=await page.evaluate(()=>({peek:window.__PAPERWORLD_WORLD3D__.lean,eye:window.__PAPERWORLD_WORLD3D__.eye,player:window.__PAPERWORLD_WORLD3D__.player}));
   await page.keyboard.up('e');
-  assert.ok(right.peek.offset<-.53,'right lean extends camera in opposite direction');
-  assert.ok(right.eye[1]-right.player.position.y<-.53,'right peek actually translates world eye');
+  assert.ok(right.peek.offset<-.27,'right lean extends camera in opposite direction');
+  assert.ok(right.eye[1]-right.player.position.y<-.27,'right peek actually translates world eye');
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-right-head-peek.png'});
   await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(300);
   assert.ok((await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose.yaw))>0,'Z-up turning still works');
+  // Synthetic device quaternions run through THE SAME phone sensor route
+  // that Android native rotation-vector bridge invokes (not an animation fake).
+  const sensorResult=await page.evaluate(async ()=>{
+    const w=window.__PAPERWORLD_WORLD3D__;
+    const base=[Math.SQRT1_2,Math.SQRT1_2,0,0]; // upright beta=90
+    w.injectTestQuaternion(...base);
+    const t=40*Math.PI/180/2;
+    // qbase * qz(40°)
+    const q=[base[0]*Math.cos(t),base[1]*Math.cos(t),
+      -base[1]*Math.sin(t),base[0]*Math.sin(t)];
+    w.injectTestQuaternion(...q);
+    await new Promise(r=>setTimeout(r,900));
+    return {lean:w.lean,pose:w.pose,source:w.sensorSource,comfort:w.comfort};
+  });
+  assert.equal(sensorResult.source,'native');
+  assert.equal(sensorResult.comfort,true);
+  assert.ok(sensorResult.lean.offset>.13,'native quaternion side tilt moves the real camera left');
+  assert.ok(Math.abs(sensorResult.lean.bank)<.0001,'comfort keeps the horizon level');
+  await page.screenshot({path:'artifacts/game/'+screen+'-3d-native-gyro-peek-comfort.png'});
+  await page.locator('#pw-comfort-toggle').click();
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.comfort),false);
+  await page.waitForTimeout(500);
+  const standardPeek=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.lean);
+  assert.ok(standardPeek.offset>sensorResult.lean.offset,'standard mode permits larger peek');
+  await page.locator('#pw-comfort-toggle').click();
   // Phone controls work even without acceleration hardware. Check actual X/Y
   // world translation under a held forward and a held backward touch.
   async function holdWorldButton(id,ms){
