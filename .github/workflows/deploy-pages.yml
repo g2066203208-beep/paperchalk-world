@@ -24,6 +24,9 @@ jobs:
           node-version: '22'
       - name: Verify real procedural pixel game menu
         run: |
+          node --check site/world-builder/materials-core.js
+          node --check site/world-builder/materials.js
+          node --check site/game/world-material-gl.js
           node --check site/pixel-lab/editor-core.js
           node --check site/pixel-lab/editor.js
           node --check site/game/background.js
@@ -36,6 +39,7 @@ jobs:
           node --check site/game/intro.js
           node --check site/game/lease.js
           node --check site/game/hostess-pixel.js
+          node --test tests/world-materials.test.mjs
           node --test tests/pixel-atelier-core.test.mjs
           node --test tests/background-home.test.mjs
           node --test tests/hostess-intro.test.mjs
@@ -66,6 +70,7 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
       - name: Browser-test actual procedural game menu and tactile controls on 4 screen sizes
         run: |
+          node tests/world-materials-browser.mjs
           node tests/pixel-atelier-browser.mjs
           node tests/game-browser.mjs
           node tests/hostess-redraw-browser.mjs
@@ -78,6 +83,7 @@ jobs:
           name: paperworld-clean-main-menu-and-curtain-four-viewports
           path: |
             artifacts/game/
+            artifacts/world-materials/
             artifacts/pixel-atelier/
             artifacts/pixel-art/
             artifacts/hostess-new/
