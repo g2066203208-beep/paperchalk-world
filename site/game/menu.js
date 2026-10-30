@@ -369,3 +369,6 @@ function tick(now){
  frameN++;draw();requestAnimationFrame(tick)
 }
 layout();savePrefs();requestAnimationFrame(tick);
+// Public 3D entry point for immediate mobile hardware testing; sensor access
+// still requires an explicit user gesture on the '开启手机体感' button.
+if(new URLSearchParams(location.search).get('world3d')==='1')switchScene('world');
