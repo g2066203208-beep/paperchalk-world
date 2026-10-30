@@ -60,16 +60,24 @@ try{
   assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.width))>30);
   assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.height))>30);
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-real-perspective.png'});
-  const neutral=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
-  await page.keyboard.press('e');
-  await page.waitForTimeout(260);
-  const side=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
-  assert.ok(side.roll>neutral.roll,'Q/E roll rotates around forward axis');
+  // Q/E are REAL CAMERA translations, not merely bank/roll values.
+  await page.keyboard.down('q');
+  await page.waitForTimeout(750);
+  const left=await page.evaluate(()=>({peek:window.__PAPERWORLD_WORLD3D__.lean,eye:window.__PAPERWORLD_WORLD3D__.eye,player:window.__PAPERWORLD_WORLD3D__.player}));
+  await page.keyboard.up('q');
+  assert.ok(left.peek.offset>.53,'left lean extends camera well beyond body center');
+  assert.ok(left.eye[1]-left.player.position.y>.53,'real eye translates sideways in world coordinates');
+  await page.screenshot({path:'artifacts/game/'+screen+'-3d-left-head-peek.png'});
+  await page.keyboard.down('e');
+  await page.waitForTimeout(850);
+  const right=await page.evaluate(()=>({peek:window.__PAPERWORLD_WORLD3D__.lean,eye:window.__PAPERWORLD_WORLD3D__.eye,player:window.__PAPERWORLD_WORLD3D__.player}));
+  await page.keyboard.up('e');
+  assert.ok(right.peek.offset<-.53,'right lean extends camera in opposite direction');
+  assert.ok(right.eye[1]-right.player.position.y<-.53,'right peek actually translates world eye');
+  await page.screenshot({path:'artifacts/game/'+screen+'-3d-right-head-peek.png'});
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(260);
-  const yawed=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
-  assert.ok(yawed.yaw>side.yaw,'3D camera turns around vertical Z axis');
-  await page.screenshot({path:'artifacts/game/'+screen+'-3d-banked-turn.png'});
+  await page.waitForTimeout(300);
+  assert.ok((await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose.yaw))>0,'Z-up turning still works');
   // Phone controls work even without acceleration hardware. Check actual X/Y
   // world translation under a held forward and a held backward touch.
   async function holdWorldButton(id,ms){
@@ -115,27 +123,10 @@ try{
   await page.locator('#pw-stance-stand').click();
   await page.waitForTimeout(650);
   assert.ok((await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.height))>1.55);
-  await page.locator('#pw-walk-toggle').click();
-  assert.equal((await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.walkMode)),true);
-  await page.locator('#pw-walk-toggle').click();
-  // Synthetic accelerometer actions verify STANCE MACHINE only, not real
-  // room-scale XYZ tracking or actual OEM hardware performance.
-  await page.locator('#pw-squat-motion').click();
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.physicalStanceMode),true);
-  await page.evaluate(()=>{
-    window.__PAPERWORLD_WORLD3D__.injectTestVertical(-2.4,2000);
-    window.__PAPERWORLD_WORLD3D__.injectTestVertical(1.6,2320);
-  });
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.stance),'crouch');
-  await page.evaluate(()=>{
-    window.__PAPERWORLD_WORLD3D__.injectTestVertical(2.4,3500);
-    window.__PAPERWORLD_WORLD3D__.injectTestVertical(-1.5,3860);
-  });
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.stance),'stand');
-  await page.locator('#pw-squat-motion').click();
-  await page.locator('#pw-walk-direction').click();
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.player.stepDirection),-1);
-  await page.screenshot({path:'artifacts/game/'+screen+'-mobile-motion-squat-reverse.png'});
+  assert.equal(await page.locator('#pw-walk-toggle').count(),0,'delete unreliable step gait UI');
+  assert.equal(await page.locator('#pw-squat-motion').count(),0,'delete inaccurate automatic squat UI');
+  assert.equal(await page.locator('#pw-posture-hold').count(),0,'delete unreliable tilt-to-crouch UI');
+  // All three stances are still controlled precisely by explicit buttons.
   await page.locator('#pw-motion-center').click();
   await page.waitForTimeout(310);
   await page.locator('#pw-motion-back').click();
