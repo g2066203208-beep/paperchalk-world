@@ -25,12 +25,12 @@ try{
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'world-builder/materials.html',{waitUntil:'load'});
-  await page.waitForFunction(()=>window.__PAPERWORLD_MATERIAL_STUDIO__?.state()?.atlasSize[0]===64);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MATERIAL_STUDIO__?.state()?.atlasSize[0]===128);
   let state=await getState(page);
   assert.equal(state.active,'stone');
   assert.equal(state.webgl,true,'WebGL must show an actual textured 3D cube');
   const before=await getPack(page);
-  assert.equal(before.materials.length,8);
+  assert.equal(before.materials.length,32);
   assert.equal(before.materials[0].pixels.length,256);
   assert.ok((await page.locator('#pixel-canvas').boundingBox()).width>220);
   // Enter an exact different pixel; verify source pixels change and undo/redo restores.
@@ -45,6 +45,14 @@ try{
   assert.equal((await getPack(page)).materials[0].pixels[2*16+2],before.materials[0].pixels[2*16+2]);
   await page.locator('#redo').click();
   assert.equal((await getPack(page)).materials[0].pixels[2*16+2],target);
+  // Browse actual distinct terrain, architecture and vegetation assets.
+  await page.locator('[data-filter="ground"]').click();
+  assert.equal(await page.locator('#material-list .material-item').count(),16);
+  await page.locator('[data-filter="nature"]').click();
+  assert.equal(await page.locator('#material-list .material-item').count(),4);
+  await page.locator('[data-filter="building"]').click();
+  assert.equal(await page.locator('#material-list .material-item').count(),12);
+  await page.locator('[data-filter="all"]').click();
   // Inspect another named material and check the same real pixel data drives both previews.
   await page.locator('[data-material="brick"]').click();
   assert.equal((await getState(page)).active,'brick');
@@ -52,7 +60,7 @@ try{
   assert.equal((await getState(page)).tool,'fill');
   await page.screenshot({path:'artifacts/world-materials/'+device+'-material-studio.png',fullPage:true});
   const [png]=await Promise.all([page.waitForEvent('download'),page.locator('#export-atlas').click()]);
-  assert.equal(png.suggestedFilename(),'paperworld-material-atlas-64x32.png');
+  assert.equal(png.suggestedFilename(),'paperworld-material-atlas-128x64.png');
   const [json]=await Promise.all([page.waitForEvent('download'),page.locator('#export-pack').click()]);
   assert.match(json.suggestedFilename(),/material-pack\.json$/);
   await page.locator('#apply-world').click();
@@ -63,7 +71,9 @@ try{
   assert.equal(await page.locator('#pw-world-material-link').count(),1);
   const materialStats=await page.evaluate(()=>window.__PAPERWORLD_WORLD_MATERIALS__);
   assert.ok(materialStats.texturedTriangles>2000,'real 3D WebGL material draw call must exist; flat-color fallback is not enough');
-  assert.deepEqual(materialStats.atlas,[64,32]);
+  assert.deepEqual(materialStats.atlas,[128,64]);
+  assert.equal(materialStats.materialCount,32);
+  assert.equal(materialStats.worldMeters,384);
   // Same origin applies material edits immediately to the real 3D game on entry.
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('paperworld-world-materials-v1')));
   assert.equal(saved.materials[0].pixels[2*16+2],target);
@@ -74,7 +84,7 @@ try{
  const page=await context.newPage();await page.goto(origin);
  await page.locator('#pw-world-builder-link').click();
  await page.waitForURL('**/world-builder/materials.html');
- assert.equal(await page.locator('#material-list .material-item').count(),8);
+ assert.equal(await page.locator('#material-list .material-item').count(),32);
  await context.close();
- console.log('PASS: 3 device views; 8 four-ink materials; real 3D shader preview; pencil, undo/redo, PNG+JSON; persisted edits applied to original WebGL game');
+ console.log('PASS: 3 device views; 32 four-ink materials across 3 world-surface categories; real 3D shader preview; pencil, undo/redo, PNG+JSON; persisted edits applied to original WebGL game');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
