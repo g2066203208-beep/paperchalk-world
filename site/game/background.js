@@ -60,6 +60,7 @@ if(document.hidden)canvas.style.animationPlayState='paused';
 // Live web version check: the Android shell is only a WebView. When GitHub
 // Pages changes, reload the website even if the APK stays open in foreground.
 const ACTIVE_BUILD='20261030-blue8s-diagonal2';
+const ACTIVE_MENU_BUILD=document.querySelector('meta[name="paperworld-build"]')?.content||'';
 let checking=false;
 async function checkPublishedVersion(){
   if(checking||document.hidden||navigator.onLine===false)return;
@@ -69,7 +70,8 @@ async function checkPublishedVersion(){
     if(!response.ok)return;
     const html=await response.text();
     const match=html.match(/background\.js\?v=([A-Za-z0-9._-]+)/);
-    if(match && match[1]!==ACTIVE_BUILD){
+    const remoteMenu=html.match(/<meta name="paperworld-build" content="([A-Za-z0-9._-]+)"/);
+    if((remoteMenu && remoteMenu[1]!==ACTIVE_MENU_BUILD) || (!remoteMenu && match && match[1]!==ACTIVE_BUILD)){
       location.replace('./?apk=1&fresh='+Date.now());
     }
   }catch(error){/* Offline: keep the already rendered background. */}
