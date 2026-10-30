@@ -19,25 +19,30 @@ const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 mkdirSync('artifacts/game',{recursive:true});
 const origin='http://127.0.0.1:'+server.address().port+'/';
 const allowed=new Set(['57,54,87,255','242,165,194,255','169,186,233,255','255,245,230,255','0,0,0,0']);
-async function clickGame(page,index,curtainShot=null){
+async function clickGame(page,index,foldShot=null,expectBurst=true){
  const b=await page.evaluate(i=>window.__PAPERWORLD_MENU__.buttons[i],index);
  const pos=await page.locator('#menu').boundingBox();
  const size=await page.evaluate(()=>window.__PAPERWORLD_MENU__.logical);
  assert.ok(b&&pos,'menu button '+index+' exists');
  const px=pos.x+(b.x+b.w/2)/size[0]*pos.width,py=pos.y+(b.y+b.h/2)/size[1]*pos.height;
  await page.mouse.click(px,py);
- if(curtainShot){
+ if(expectBurst){
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount>0,{timeout:800});
+  const count=await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount);
+  assert.ok(count>0 && count<=32,'particle burst must be short and localized');
+ }
+ if(foldShot){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
   await page.waitForTimeout(90);
   const shot=await page.evaluate(()=>{
-   const c=document.querySelector('#menu'),d=c.getContext('2d').getImageData(2,Math.floor(c.height/2),1,1).data;
+   const c=document.querySelector('#menu'),d=c.getContext('2d').getImageData(2,2,1,1).data;
    return {pixel:[...d],transition:window.__PAPERWORLD_MENU__.transition};
   });
-  assert.deepEqual(shot.pixel,[57,54,87,255],'curtain enters from left in official deep purple');
-  assert.ok(shot.transition,'curtain is still visibly moving');
-  await page.screenshot({path:'artifacts/game/'+curtainShot+'-curtain.png'});
+  assert.deepEqual(shot.pixel,[57,54,87,255],'single diagonal paper sweep covers upper-left in official deep purple');
+  assert.equal(shot.transition?.type,'diagonal-paper-wipe','single page wipe replaces two side doors');
+  await page.screenshot({path:'artifacts/game/'+foldShot+'-paper-wipe.png'});
  }
- await page.waitForTimeout(curtainShot?620:740);
+ await page.waitForTimeout(foldShot?650:620);
 }
 try{
  for(const [name,width,height] of [['portrait',390,844],['landscape',844,390],['tablet',768,1024],['desktop',1440,900]]){
@@ -76,7 +81,7 @@ try{
   await page.screenshot({path:'artifacts/game/'+name+'-main-menu.png'});
   await clickGame(page,1); // Continue cannot fabricate a saved game.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  await clickGame(page,0,name); // Start creates saved game and captures actual curtain.
+  await clickGame(page,0,name); // Start creates a save, local burst and diagonal paper sweep.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play');
   await page.screenshot({path:'artifacts/game/'+name+'-prologue.png'});
   await clickGame(page,0); // Back to menu.
@@ -88,11 +93,16 @@ try{
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
   await clickGame(page,2);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'settings');
-  const before=await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.haptic);
+  const before=await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles);
   await clickGame(page,1);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.haptic),!before);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles),!before);
+  await clickGame(page,1,null,false);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles),before);
+  const beforeHaptic=await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.haptic);
+  await clickGame(page,2);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.haptic),!beforeHaptic);
   await page.screenshot({path:'artifacts/game/'+name+'-settings.png'});
-  await clickGame(page,2); // Settings has only background / haptic / return.
+  await clickGame(page,3); // Settings: background / click particles / haptic / return.
   await clickGame(page,3);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'exit');
   await clickGame(page,0);
@@ -101,5 +111,5 @@ try{
   assert.deepEqual(errors,[],'no Javascript errors');
   await context.close();
  }
- console.log('PASS: four exact inks, 4 viewports, crisp glyphs, clean menu and dual pixel curtain transition');
+ console.log('PASS: exact 4 colors, crisp glyphs, localized click burst, diagonal paper wipe, 4 viewport interaction');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
