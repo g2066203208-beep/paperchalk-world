@@ -201,3 +201,10 @@
  #pw-move-stick{left:5px;top:calc(25% + 112px);bottom:auto;z-index:4;transform:scale(.82);transform-origin:left top}
  #pw-world-bottom.pw-world-compact{max-height:min(34dvh,285px)}
 }
+
+/* Keep gyro OFF accessible even after scrolling the narrow landscape HUD.
+ * The header must remain a true hit target, never behind the scrolled content. */
+#pw-world-bottom > .pw-world-line:first-child{
+ position:sticky;top:0;z-index:8;background:var(--paper);
+ padding:3px 1px 5px;
+}

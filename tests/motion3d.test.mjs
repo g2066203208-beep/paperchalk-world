@@ -77,3 +77,25 @@ test('matrix is true perspective depth projection',()=>{
  const pitched=clip(projectionMatrix({yaw:0,pitch:Math.PI/4,roll:0},1,[0,0,2.2]),[10,0,2.2]);
  assert.ok(pitched[1]<0);
 });
+
+
+test('disabling gyro discards calibration and preserves the manual heading',()=>{
+ const m=new MotionPose();m.ingest(0,90,0);m.ingest(45,90,0);
+ for(let i=0;i<25;i++)m.step(1/60);
+ const heading=m.pose.yaw;assert.ok(heading>0&&m.sensorSeen);
+ m.disconnectSensor();
+ assert.equal(m.sensorSeen,false);
+ assert.equal(m.calibrated,false);
+ assert.equal(m.lastSource,'none');
+ close(m.pose.yaw,heading,1e-8);close(m.target.yaw,heading,1e-8);
+ assert.equal(m.pose.roll,0);assert.equal(m.target.roll,0);
+ m.manual(-.2,0,0);assert.ok(m.target.yaw<heading);
+ m.ingest(25,90,0);assert.equal(m.calibrated,true);
+ close(m.target.yaw,0,1e-8);
+});
+test('camera right turn is negative yaw in X-forward Y-left world',()=>{
+ const m=new MotionPose();m.manual(-100*.0033,0,0);
+ for(let i=0;i<20;i++)m.step(1/60);
+ assert.ok(m.pose.yaw<0);
+ assert.ok(cameraBasis(m.pose).forward[1]<0,'right turn faces world -Y');
+});

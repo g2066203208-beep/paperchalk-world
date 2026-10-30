@@ -60,6 +60,51 @@ try{
   assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.width))>30);
   assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.height))>30);
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-real-perspective.png'});
+   // Real touch gestures: positive screen X must turn camera RIGHT (-yaw).
+   const rightSwipe=await page.evaluate(()=>{
+     const w=window.__PAPERWORLD_WORLD3D__,c=document.getElementById('pw-world-canvas'),before=w.target.yaw,id=77;
+     c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,clientX:100,clientY:180,pointerType:'touch',bubbles:true}));
+     c.dispatchEvent(new PointerEvent('pointermove',{pointerId:id,clientX:190,clientY:180,pointerType:'touch',bubbles:true}));
+     c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,clientX:190,clientY:180,pointerType:'touch',bubbles:true}));
+     return {before,after:w.target.yaw};
+   });
+   assert.ok(rightSwipe.after<rightSwipe.before-.25,'right swipe must rotate camera right');
+   const leftSwipe=await page.evaluate(()=>{
+     const w=window.__PAPERWORLD_WORLD3D__,c=document.getElementById('pw-world-canvas'),before=w.target.yaw,id=78;
+     c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,clientX:190,clientY:180,pointerType:'touch',bubbles:true}));
+     c.dispatchEvent(new PointerEvent('pointermove',{pointerId:id,clientX:100,clientY:180,pointerType:'touch',bubbles:true}));
+     c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,clientX:100,clientY:180,pointerType:'touch',bubbles:true}));
+     return {before,after:w.target.yaw};
+   });
+   assert.ok(leftSwipe.after>leftSwipe.before+.25,'left swipe must rotate camera left');
+   await page.locator('#pw-motion-center').click();
+   // Simulated actual APK native bridge, including a late orientation callback.
+   await page.evaluate(()=>{
+     window.__pwMock={starts:0,stops:0,late:null};
+     window.PaperworldSensor={available:()=>true,start(){
+       window.__pwMock.starts++;window.__pwMock.late=window.__PAPERWORLD_NATIVE_ORIENTATION__;
+     },stop(){window.__pwMock.stops++}};
+   });
+   await page.locator('#pw-motion-start').click();
+   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.sensorEnabled),true);
+   assert.equal(await page.locator('#pw-motion-start').textContent(),'关闭手机体感');
+   await page.evaluate(()=>window.__pwMock.late(Math.SQRT1_2,Math.SQRT1_2,0,0));
+   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.sensor),true);
+   await page.locator('#pw-motion-start').click();
+   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.sensorEnabled),false);
+   assert.equal(await page.locator('#pw-motion-start').textContent(),'开启手机体感');
+   const turnedOff=await page.evaluate(()=>{
+     const before=window.__PAPERWORLD_WORLD3D__.target.yaw;
+     window.__pwMock.late(Math.SQRT1_2,0,Math.SQRT1_2,0);
+     return {before,after:window.__PAPERWORLD_WORLD3D__.target.yaw,
+       sensor:window.__PAPERWORLD_WORLD3D__.sensor,
+       callback:window.__PAPERWORLD_NATIVE_ORIENTATION__,stops:window.__pwMock.stops};
+   });
+   assert.equal(turnedOff.sensor,false);
+   assert.equal(turnedOff.callback,null);
+   assert.equal(turnedOff.after,turnedOff.before,'late Android sensor event must be ignored');
+   assert.ok(turnedOff.stops>=1,'native sensor was actually stopped');
+
   // Q/E are REAL CAMERA translations, not merely bank/roll values.
   await page.keyboard.down('q');
   await page.waitForTimeout(750);

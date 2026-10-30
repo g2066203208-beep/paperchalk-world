@@ -2,7 +2,7 @@
  * WORLD: X forward / Y left / Z vertical. Geometry is real depth-tested
  * triangles with 4 exact palette colors; no Three/CDN/API dependency.
  */
-import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js?v=20261030-gyrocomfort6';
+import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js?v=20261030-gyrocontrol7';
 import {LeanCamera} from './lean3d.js?v=20261030-gyrocomfort6';
 import {BodyMotor} from './locomotion3d.js?v=20261030-gyrocomfort6';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
@@ -141,6 +141,7 @@ export function createWorld3D({onBack}){
  const motion=new MotionPose(),lean=new LeanCamera();
  let renderer=null,motor=new BodyMotor(),active=false,frame=0,prev=0,raf=0;
  let permission='idle',orientationListening=false,timeout=0,lastSensor=0,lastEye=null;
+ let sensorEnabled=false,sensorRequest=0;
  let comfort=true;
  const keys=new Set(),stick={forward:0,side:0,id:null};
  const heldForward={value:0},headHold={value:0};
@@ -160,8 +161,8 @@ export function createWorld3D({onBack}){
   el('pw-player-position').textContent='X '+m.position.x.toFixed(1)+' · Y '+m.position.y.toFixed(1);
   el('pw-player-speed').textContent=m.speed.toFixed(1)+' m/s';
   el('pw-stance-status').textContent={stand:'站立',crouch:'蹲下',prone:'趴下'}[m.stance]+' · '+m.height.toFixed(2)+'m';
-  el('pw-sensor-badge').textContent=motion.sensorSeen?(motion.lastSource==='native'?'APK 原生陀螺仪':'网页姿态传感器'):'等待体感数据';
-  el('pw-gyro-debug').textContent=motion.sensorSeen?
+  el('pw-sensor-badge').textContent=!sensorEnabled?'体感已关闭':motion.sensorSeen?(motion.lastSource==='native'?'APK 原生陀螺仪':'网页姿态传感器'):'等待体感数据';
+  el('pw-gyro-debug').textContent=!sensorEnabled?'方向传感器已停用 · 触屏/鼠标可转向':motion.sensorSeen?
    ('侧倾 '+a.roll+'° · '+(Math.abs(lean.offset)*100).toFixed(0)+'cm · '+motion.lastSource):
    '尚无传感器数据 · 点击「开启手机体感」';
  }
@@ -189,7 +190,7 @@ export function createWorld3D({onBack}){
   raf=requestAnimationFrame(draw);
  }
  function onOrientation(e){
-  if(!active)return;
+  if(!active||!sensorEnabled)return;
   const angle=Number(screen.orientation?.angle??window.orientation??0)||0;
   if(motion.ingest(e.alpha,e.beta,e.gamma,angle)){
    lastSensor=performance.now();
@@ -198,41 +199,68 @@ export function createWorld3D({onBack}){
   }
  }
  function onNativeQuaternion(w,x,y,z){
-  if(!active)return;
+  if(!active||!sensorEnabled)return;
   if(motion.ingestQuaternion(w,x,y,z)){
    lastSensor=performance.now();
    if(timeout){clearTimeout(timeout);timeout=0}
    note('APK 原生体感已连接 · 左右倾斜直接探头 · 地平线稳定');
   }
  }
+ function updateSensorButton(){
+  const btn=el('pw-motion-start');
+  btn.textContent=sensorEnabled?'关闭手机体感':'开启手机体感';
+  btn.setAttribute('aria-pressed',String(sensorEnabled));
+ }
+ function stopMotion(){
+  // Invalidate pending permission prompts and discard late native packets.
+  sensorEnabled=false;sensorRequest++;
+  if(timeout){clearTimeout(timeout);timeout=0}
+  if(orientationListening){window.removeEventListener('deviceorientation',onOrientation);orientationListening=false}
+  if(window.PaperworldSensor?.stop){try{window.PaperworldSensor.stop()}catch(e){}}
+  window.__PAPERWORLD_NATIVE_ORIENTATION__=null;
+  motion.disconnectSensor();lean.reset();
+  permission='idle';updateSensorButton();readouts();
+  if(active)note('体感已关闭 · 滑动屏幕或移动鼠标转向');
+ }
  async function startMotion(){
   if(!active)return;
-  if(window.PaperworldSensor?.start){
-   window.__PAPERWORLD_NATIVE_ORIENTATION__=onNativeQuaternion;
-   try{window.PaperworldSensor.start()}catch(e){}
-  }
+  if(sensorEnabled){stopMotion();return}
+  sensorEnabled=true;
+  const request=++sensorRequest;
+  updateSensorButton();
+  try{
+   // Use the native Android rotation vector exclusively when available.
+   if(window.PaperworldSensor?.start && window.PaperworldSensor?.available?.()!==false){
+    window.__PAPERWORLD_NATIVE_ORIENTATION__=onNativeQuaternion;
+    window.PaperworldSensor.start();
+    permission='native';note('APK 原生体感已启动 · 再点一次关闭');return;
+   }
+  }catch(e){window.__PAPERWORLD_NATIVE_ORIENTATION__=null}
   if(typeof DeviceOrientationEvent==='undefined'){
-   if(window.PaperworldSensor?.start){permission='native';note('已请求原生体感 · 请左右倾斜手机');return}
-
-   permission='unsupported';note('该浏览器没有设备方向接口，仍可点探头键或使用 Q/E');return;
+   stopMotion();permission='unsupported';note('设备不支持方向传感器 · 请滑动触屏');return;
   }
   try{
    if(typeof DeviceOrientationEvent.requestPermission==='function'){
     const result=await DeviceOrientationEvent.requestPermission();
-    if(result!=='granted'){permission='denied';note('未允许方向传感器，可使用左右探头键和键盘');return}
+    if(!active||!sensorEnabled||request!==sensorRequest)return;
+    if(result!=='granted'){stopMotion();permission='denied';note('体感未授权 · 请使用触屏转向');return}
    }
+   if(!active||!sensorEnabled||request!==sensorRequest)return;
    if(!orientationListening){
     window.addEventListener('deviceorientation',onOrientation,{passive:true});
     orientationListening=true;
    }
-   permission='granted';note('传感器已开启 · 保持手机自然方向后点「重新校准」');
-   timeout=setTimeout(()=>{if(active&&!motion.sensorSeen)note('未收到设备方向数据，请使用探头按钮或检查浏览器权限')},2200);
-  }catch(e){permission='denied';note('体感授权失败：'+String(e.message||e).slice(0,65))}
+   permission='granted';note('体感已开启 · 再点一次关闭');
+   timeout=setTimeout(()=>{if(active&&sensorEnabled&&!motion.sensorSeen)note('未收到方向数据 · 可关闭体感使用触屏')},2200);
+  }catch(e){
+   if(request===sensorRequest){stopMotion();permission='denied';note('体感授权失败 · 请使用触屏转向')}
+  }
  }
  function open(){
   if(active)return;
   stage.classList.remove('pw-off');active=true;frame=0;prev=0;
-  motion.pose={yaw:0,pitch:0,roll:0};motion.target={yaw:0,pitch:0,roll:0};lean.reset();
+  motion.disconnectSensor();motion.pose={yaw:0,pitch:0,roll:0};motion.target={yaw:0,pitch:0,roll:0};lean.reset();
+  sensorEnabled=false;updateSensorButton();
   motion.setComfort(comfort);lean.setComfort(comfort);
   try{
    renderer??=makeRenderer(canvas);motor=new BodyMotor(renderer.solids);
@@ -243,13 +271,10 @@ export function createWorld3D({onBack}){
  function close(){
   if(!active)return;
   active=false;stage.classList.add('pw-off');cancelAnimationFrame(raf);prev=0;
-  if(timeout){clearTimeout(timeout);timeout=0}
-  if(orientationListening){window.removeEventListener('deviceorientation',onOrientation);orientationListening=false}
-  if(window.PaperworldSensor?.stop){try{window.PaperworldSensor.stop()}catch(e){}}
-  window.__PAPERWORLD_NATIVE_ORIENTATION__=null;
+  stopMotion();
   if(document.pointerLockElement===canvas)document.exitPointerLock?.();
   keys.clear();heldForward.value=0;headHold.value=0;stick.forward=stick.side=0;stick.id=null;
-  pointerLook.id=null;lean.reset();motion.sensorSeen=false;motion.calibrated=false;permission='idle';
+  pointerLook.id=null;lean.reset();
   el('pw-stick-knob').style.transform='translate(0,0)';
  }
  function bindHold(id,callback){
@@ -337,14 +362,15 @@ export function createWorld3D({onBack}){
  });
  canvas.addEventListener('pointermove',e=>{
   if(!active||document.pointerLockElement===canvas||pointerLook.id!==e.pointerId)return;
-  motion.manual((e.clientX-pointerLook.x)*.0033,(pointerLook.y-e.clientY)*.0033,0);
+  // X-forward, Y-left world: right swipe means negative yaw, turning camera right.
+  motion.manual((pointerLook.x-e.clientX)*.0033,(pointerLook.y-e.clientY)*.0033,0);
   pointerLook.x=e.clientX;pointerLook.y=e.clientY;
  });
  for(const event of ['pointerup','pointercancel'])
   canvas.addEventListener(event,e=>{if(e.pointerId===pointerLook.id)pointerLook.id=null});
  document.addEventListener('mousemove',e=>{
   if(active&&document.pointerLockElement===canvas)
-   motion.manual(e.movementX*.0026,-e.movementY*.0026,0);
+   motion.manual(-e.movementX*.0026,-e.movementY*.0026,0);
  });
  function keyDown(e){
   if(!active||/INPUT|SELECT|TEXTAREA/.test(e.target?.tagName||''))return;
@@ -369,7 +395,7 @@ export function createWorld3D({onBack}){
  window.addEventListener('keydown',keyDown);
  window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
  window.addEventListener('blur',()=>{keys.clear();heldForward.value=0;stick.forward=stick.side=0;headHold.value=0});
- function onScreen(){motion.calibrated=false;if(active)note('屏幕朝向变更，待重新校准')}
+ function onScreen(){if(sensorEnabled){motion.calibrated=false;if(active)note('屏幕朝向变更，待重新校准')}}
  window.addEventListener('orientationchange',onScreen);
  window.screen?.orientation?.addEventListener?.('change',onScreen);
  document.addEventListener('visibilitychange',()=>{
@@ -385,7 +411,7 @@ export function createWorld3D({onBack}){
   get walls(){return renderer?.solids.length||0},
   get triangles(){return renderer?.triangles||0},
   get forwardHold(){return heldForward.value},
-  get sensor(){return motion.sensorSeen},get sensorSource(){return motion.lastSource},get comfort(){return comfort},get permission(){return permission},
+  get sensor(){return motion.sensorSeen},get sensorEnabled(){return sensorEnabled},get sensorSource(){return motion.lastSource},get comfort(){return comfort},get permission(){return permission},
   injectTestQuaternion:(w,x,y,z)=>motion.ingestQuaternion(w,x,y,z),
   injectTestOrientation:(a,b,g,angle=0)=>motion.ingest(a,b,g,angle),
   setTestStance:name=>motor.setStance(name)
