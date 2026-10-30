@@ -117,7 +117,9 @@ function makeRenderer(canvas){
   resize();gl.useProgram(shader);
   gl.clearColor(...INK,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   gl.uniformMatrix4fv(view,false,projectionMatrix(pose,canvas.width/canvas.height));
+  gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);
   bind(tPos,tCol);gl.drawArrays(gl.TRIANGLES,0,data.tri.length/3);
+  gl.disable(gl.POLYGON_OFFSET_FILL);
   // Depth-tested architectural ink edges; pull slightly to front using depth func LEQUAL.
   bind(lPos,lCol);gl.drawArrays(gl.LINES,0,data.line.length/3);
  }
@@ -130,7 +132,7 @@ export function createWorld3D({onBack}){
  const motion=new MotionPose();let renderer=null,active=false,frame=0,prev=0,raf=0;
  let started=false,timeout=0,lastMotion=0,permission='idle',drag=null;
  const label=id=>$(id);
- function note(v){status.textContent=v}
+ function note(v){if(status.textContent!==v)status.textContent=v}
  function readings(){
   const {yaw,pitch,roll}=motion.degrees;
   label('pw-yaw').textContent=(yaw>=0?'+':'')+yaw+'°';
