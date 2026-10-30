@@ -41,7 +41,7 @@ try{
   assert.match(await page.locator('#dialogueText').textContent(),/柜台后方的灯/);
   await page.getByRole('button',{name:/继续/}).last().click();
   await page.reload();assert.match(await page.locator('#dialogueText').textContent(),/雨声穿过玻璃/);
-  for(let i=0;i<2;i++)await page.getByRole('button',{name:/继续|选择回应/}).last().click();
+  for(let i=0;i<3;i++)await page.getByRole('button',{name:/继续|选择回应/}).last().click();
   await page.getByRole('button',{name:'请他坐下'}).click();
   assert.match(await page.locator('#dialogueText').textContent(),/默默坐在柜台/);
   await page.getByRole('button',{name:'菜单 ≡'}).click();
