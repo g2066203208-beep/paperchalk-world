@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 test('programmatic 3D city contains real depth-tested WebGL geometry, exact 4 colors and many structures',()=>{
  const source=readFileSync('site/game/world3d.js','utf8');
- const begin=source.indexOf('function makeTown(){'),end=source.indexOf('\nfunction program(gl,',begin);
+ const begin=source.indexOf('function makeTown(lod='),end=source.indexOf('\nfunction program(gl,',begin);
  assert.ok(begin>=0&&end>begin,'world mesh builder is present');
  const ink=[57/255,54/255,87/255],pink=[242/255,165/255,194/255],blue=[169/255,186/255,233/255],paper=[1,245/255,230/255];
  const mesh=new Function('INK','PINK','BLUE','PAPER','PALETTE',
