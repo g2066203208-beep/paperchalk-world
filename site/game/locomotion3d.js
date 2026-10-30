@@ -72,7 +72,9 @@ export class BodyMotor{
   this.filteredAccel+=.20*(magnitude-this.filteredAccel);
   const activity=Math.max(magnitude*.72+this.filteredAccel*.28,0);
   this.motionAvailable=true;
-  if(activity<MOTION_CONFIG.stepRelease)this.stepArmed=true;
+  // Re-arm from CURRENT raw quiet sample, not slow EMA residual: the old
+  // filter could stay above threshold and permanently ignore later steps.
+  if(magnitude<MOTION_CONFIG.stepRelease)this.stepArmed=true;
   if(this.walkMode&&this.stepArmed&&activity>=this.gaitThreshold&&timestamp-this.lastStep>MOTION_CONFIG.minStepMs){
    const interval=timestamp-this.lastStep;
    this.stepArmed=false;this.steps++;
