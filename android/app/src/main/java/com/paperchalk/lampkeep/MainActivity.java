@@ -282,9 +282,9 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        stopSensor();
         if (pendingImport != null) { pendingImport.onReceiveValue(null); pendingImport = null; }
         pendingExport = null;
+        stopSensor();
         if (web != null) {
             web.destroy();
             web = null;
