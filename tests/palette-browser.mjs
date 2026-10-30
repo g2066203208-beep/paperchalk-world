@@ -25,11 +25,11 @@ try{
  await page.goto(url,{waitUntil:'load'});
  await page.waitForFunction(()=>Boolean(window.PALETTE_STUDIO?.ready),{timeout:25000});
  const cards=page.locator('.palette-card');
- assert.equal(await cards.count(),8,'Exactly eight visual choices');
- assert.equal(await page.locator('.card-world-canvas').count(),8,'Eight independent world boards');
+ assert.equal(await cards.count(),30,'Exactly thirty visual choices');
+ assert.equal(await page.locator('.card-world-canvas').count(),30,'Thirty independent world boards');
  assert.equal(await page.locator('#activeWorldCanvas').getAttribute('width'),'224');
  const ids=await cards.evaluateAll(els=>els.map(x=>x.dataset.id));
- assert.deepEqual(ids,['A','B','C','D','E','F','G','H']);
+ assert.deepEqual(ids,'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').concat(['AA','AB','AC','AD']));
  const results=await page.evaluate(()=>window.PALETTE_STUDIO.palettes().map(x=>({id:x.id,swatches:x.colors,...window.PALETTE_STUDIO.inspect(x.id)})));
  for(const entry of results){
   assert.equal(entry.swatches.length,4,'Four allowed colors');
@@ -43,7 +43,7 @@ try{
  }
  const original=await page.evaluate(()=>window.PALETTE_STUDIO.snapshot('A'));
  mkdirSync('repixel-browser-artifacts',{recursive:true});
- await page.screenshot({path:'repixel-browser-artifacts/eight-palettes-desktop.png',fullPage:true});
+ await page.screenshot({path:'repixel-browser-artifacts/thirty-palettes-desktop.png',fullPage:true});
  await page.locator('.palette-card[data-id="H"] .choose-button').click();
  assert.equal(await page.locator('#selectedLetter').innerText(),'H.');
  assert.equal(await page.locator('#selectedTitle').innerText(),'橘日港湾');
@@ -60,21 +60,35 @@ try{
  await page.locator('#showGrid').check();
  const same=await page.evaluate(()=>window.PALETTE_STUDIO.snapshot('A'));
  assert.equal(original,same,'Grid/selection must not change underlying sprite geometry');
+
+ // The 22 new visual worlds are real scenes, not bare swatches; filter and compare on mobile.
+ await page.locator('#categorySelect').selectOption('暗黑奇谭');
+ assert.deepEqual(await page.evaluate(()=>window.PALETTE_STUDIO.visible()),['L','P','W','Z']);
+ await page.locator('#paletteSearch').fill('荆棘');
+ assert.deepEqual(await page.evaluate(()=>window.PALETTE_STUDIO.visible()),['W']);
+ assert.match(await page.locator('#showingCount').innerText(),/1 \/ 30/);
+ await page.locator('#clearFilters').click();
+ assert.equal(await page.locator('.palette-card:not([hidden])').count(),30);
+ await page.locator('.palette-card[data-id="AC"] .choose-button').click();
+ assert.equal(await page.locator('#activeWorldName').innerText(),'灵波废弃电台');
+ await page.locator('#compareSelect').selectOption('AA');
+ assert.equal(await page.locator('#compareWorldName').innerText(),'蓝瓷花窗城');
+ assert.equal((await page.evaluate(()=>window.PALETTE_STUDIO.inspect('AD'))).world.colors,4);
  const pending=page.waitForEvent('download');
  await page.locator('#downloadPNG').click();
  const download=await pending;
- assert.match(download.suggestedFilename(),/game-palette-H-.*384x512\.png/);
- await page.screenshot({path:'repixel-browser-artifacts/eight-palettes-H-selected.png',fullPage:true});
+ assert.match(download.suggestedFilename(),/game-palette-AC-.*384x512\.png/);
+ await page.screenshot({path:'repixel-browser-artifacts/thirty-palettes-new-AC-selected.png',fullPage:true});
  const mobile=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
  const mobileErrors=[];mobile.on('pageerror',e=>mobileErrors.push(String(e)));
  await mobile.goto(url+'?p=C');
  await mobile.waitForFunction(()=>window.PALETTE_STUDIO?.ready);
  assert.equal(await mobile.locator('#selectedLetter').innerText(),'C.');
- assert.equal(await mobile.locator('.palette-card').count(),8);
- assert.equal(await mobile.locator('.card-world-canvas').count(),8);
+ assert.equal(await mobile.locator('.palette-card').count(),30);
+ assert.equal(await mobile.locator('.card-world-canvas').count(),30);
  assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+3),true,'No horizontal overflow on mobile');
- await mobile.screenshot({path:'repixel-browser-artifacts/eight-palettes-mobile.png',fullPage:true});
+ await mobile.screenshot({path:'repixel-browser-artifacts/thirty-palettes-mobile.png',fullPage:true});
  assert.deepEqual(errors,[],'Desktop browser console errors');
  assert.deepEqual(mobileErrors,[],'Mobile browser console errors');
- console.log('PASS 8 real recolored 384x512 palettes, four colors each, zero alpha/other, responsive, export, grid and mobile',results.map(x=>({id:x.id,colors:x.colors,alpha:x.alpha,other:x.other})));
+ console.log('PASS 30 real recolored 384x512 palettes, four colors each, zero alpha/other, responsive, export, grid and mobile',results.map(x=>({id:x.id,colors:x.colors,alpha:x.alpha,other:x.other})));
 }finally{await browser.close();await new Promise(ok=>server.close(ok));}
