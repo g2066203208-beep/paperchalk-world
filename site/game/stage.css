@@ -66,3 +66,8 @@
 
 #pw-menu-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
 .pw-menu-label{position:absolute;display:block;transform:translate(-50%,-50%);color:var(--ink);font-size:clamp(16px,4.4vw,20px);font-weight:800;line-height:1.15;white-space:nowrap;text-align:center;letter-spacing:.025em;text-shadow:none;user-select:none;pointer-events:none}
+
+/* Page changes have a short stepped vertical lift, with zero blur or opacity interpolation. */
+.pw-step:not(.pw-off){animation:pw-form-page-in .26s steps(9,end) both;transform-origin:center top}
+@keyframes pw-form-page-in{from{transform:translate3d(0,12px,-14px)}to{transform:translate3d(0,0,0)}}
+@media(prefers-reduced-motion:reduce){.pw-step:not(.pw-off){animation:none!important}}
