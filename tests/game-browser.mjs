@@ -29,7 +29,7 @@ async function clickGame(page,index,foldShot=null,expectBurst=true){
  if(expectBurst){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount>0,{timeout:800});
   const count=await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount);
-  assert.ok(count>0 && count<=96,'local tap ripple must be bounded even after rapid taps');
+  assert.ok(count>0 && count<=96,'miniature fireworks must be bounded under rapid taps');
  }
  if(foldShot){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
@@ -90,17 +90,35 @@ try{
   assert.equal(emptyTap.touchCount,beforeTap+1,'exactly one burst per tap');
   assert.equal(emptyTap.lastTouch.x,Math.round(touchX/2));
   assert.equal(emptyTap.lastTouch.y,Math.round(touchY/2));
-  assert.equal(emptyTap.particleCount,16,'sixteen coordinated particles at touch point');
+  assert.ok(emptyTap.particleCount>=14&&emptyTap.particleCount<=21,'each touch fires a random small 14-21 spark firework');
   await page.screenshot({path:'artifacts/game/'+name+'-empty-space-tap.png'});
-  await page.waitForTimeout(520);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'ripple fully clears after 0.42 seconds');
+  await page.waitForTimeout(750);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'random firework fully disappears within 0.6 seconds');
+  // Different taps should randomize particle count or velocities, rather than
+  // drawing the same 16-piece compass ring on every click.
+  const signatures=await page.evaluate(async()=>{
+    const c=document.querySelector('#menu');
+    const r=c.getBoundingClientRect(),x=r.left+r.width*.52,y=r.top+30;
+    function pressAt(px,py,id){
+      c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,clientX:px,clientY:py,bubbles:true}));
+      c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,clientX:px,clientY:py,bubbles:true}));
+    }
+    pressAt(x,y,310);const a=window.__PAPERWORLD_MENU__.particleCount;
+    await new Promise(resolve=>requestAnimationFrame(resolve));
+    pressAt(x,y,311);const b=window.__PAPERWORLD_MENU__.particleCount;
+    return {a,b,from:window.__PAPERWORLD_MENU__.touchCount};
+  });
+  assert.ok(signatures.a>=14 && signatures.a<=21);
+  assert.ok(signatures.b>signatures.a && signatures.b<=42,'rapid taps produce independent bounded fireworks');
+  await page.waitForTimeout(800);
+
 
   // Bottom edge also receives particles; no invisible hitbox required.
   const secondTouch=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
   await page.mouse.click(Math.round(width*.15),Math.round(height*.9));
   await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,secondTouch);
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  await page.waitForTimeout(520);
+  await page.waitForTimeout(750);
 
   await clickGame(page,1); // Continue cannot fabricate a saved game.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
@@ -109,7 +127,7 @@ try{
   const subPageTouches=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
   await page.mouse.click(24,24);
   await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,subPageTouches);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play','non-button ripple also works in subpages');
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play','non-button firework also works in subpages');
   await page.waitForTimeout(500);
   await page.screenshot({path:'artifacts/game/'+name+'-prologue.png'});
   await clickGame(page,0); // Back to menu.
@@ -139,5 +157,5 @@ try{
   assert.deepEqual(errors,[],'no Javascript errors');
   await context.close();
  }
- console.log('PASS: any-position touchscreen ripple, 16 exact-color shards, no idle noise, four viewports, full menu flow');
+ console.log('PASS: randomized touch fireworks everywhere, zero idle particles, original four colors, 4 screen sizes and menu flow');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
