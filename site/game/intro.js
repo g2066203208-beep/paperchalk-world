@@ -143,7 +143,7 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
  }
  function geometry(W,H){
   const wide=W/H>1.25;
-  const goalHeight=Math.min(wide?H*.85:H*.66,wide?190:284);
+  const goalHeight=Math.min(wide?H*.85:H*.66,wide?190:284,(W-12)*HOSTESS_HEIGHT/HOSTESS_WIDTH);
   const goalWidth=Math.round(goalHeight*HOSTESS_WIDTH/HOSTESS_HEIGHT);
   const anchorX=Math.round(wide?W*.27:W*.50);
   const anchorY=Math.round(wide?H*.96:H*.73);
