@@ -242,6 +242,24 @@ def write_preview(net,out):
             Image.fromarray(palette[preds],"RGB").save(out/cases[-1]["pred_parts"])
             shades=np.array([[57,54,87],[85,91,121],[124,143,174],[169,186,233],[255,245,230]],np.uint8)
             Image.fromarray(shades[z],"RGB").save(out/cases[-1]["pred_depth"])
+    # Domain-gap probes on both real pixel-art poses: no fake 3D labels or
+    # unjustified ground-truth claims. Outputs are diagnostic predictions only.
+    anchor_root=Path("site/pixel-lab/style2")
+    for name in ("A_dynamic","B_standing"):
+        source=anchor_root/(name+".png")
+        if not source.exists():
+            continue
+        rgb=np.asarray(Image.open(source).convert("RGB").resize((W,H),Image.Resampling.NEAREST),dtype=np.int32)
+        dist=((rgb[:,:,None,:]-RGB[None,None,:,:].astype(np.int32))**2).sum(3)
+        cls=dist.argmin(2)
+        assert np.array_equal(RGB[cls],rgb.astype("uint8"))
+        with torch.no_grad():
+            predicted=net(torch.from_numpy(cls.copy()).long()[None])
+        Image.fromarray(RGB[cls],"RGB").save(out/(name+"_input.png"))
+        Image.fromarray(DIAGNOSTIC[predicted[0][0].argmax(0).numpy()],"RGB").save(out/(name+"_pred_parts.png"))
+        cases.append({"view":"real_pixel_art_domain_probe","name":name,
+            "input":name+"_input.png","pred_parts":name+"_pred_parts.png",
+            "not_ground_truth":True})
     return cases
 
 def train(steps=180,out=OUT,seed=20261030):
