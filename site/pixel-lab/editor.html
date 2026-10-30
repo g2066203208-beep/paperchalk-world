@@ -53,6 +53,7 @@
     <div class="group">
      <label><input type="checkbox" id="grid" checked> 网格</label>
      <label><input type="checkbox" id="mirror"> 左右镜像</label>
+     <label><input type="checkbox" id="onion"> 洋葱皮</label>
      <label><input type="checkbox" id="filled"> 实心形状</label>
     </div>
     <div class="group">
@@ -70,7 +71,7 @@
     <p>只用正式四色，导出的每个像素都可定位。透明不会被自动填白。</p>
    </section>
    <section class="layer-panel">
-    <div class="panel-heading"><h2>图层 <span id="layer-count">1 / 16</span></h2><div class="panel-actions"><button id="add-layer" title="添加图层">＋</button><button id="delete-layer" title="删除图层">−</button></div></div>
+    <div class="panel-heading"><h2>图层 <span id="layer-count">1 / 16</span></h2><div class="panel-actions"><button id="layer-up" title="上移图层">↑</button><button id="layer-down" title="下移图层">↓</button><button id="add-layer" title="添加图层">＋</button><button id="delete-layer" title="删除图层">−</button></div></div>
     <div id="layers" class="layer-list" role="list"></div>
    </section>
    <section class="operations">
