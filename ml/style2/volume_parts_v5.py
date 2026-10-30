@@ -81,7 +81,7 @@ def scene(seed,view):
         zbuf[region]=near[region]
         depth[region]=np.clip(np.floor((near[region]+1.1)*1.65).astype(np.int16)+1,1,4).astype(np.uint8)
     def ellipse(pos,radii,part,pal):
-        x,y,scale,z=project(pos)
+        x,y,scale,z=project(pos,angle)
         rx,ry,rz=radii
         # Explicit axial foreshortening for off-axis ellipsoids.
         factor=math.sqrt(max(.25,math.cos(math.radians(angle))**2))
