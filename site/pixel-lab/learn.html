@@ -24,10 +24,40 @@ label{display:flex;align-items:center;gap:6px}
 <nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
 <main>
 <div class="eyebrow">SYSTEM 02 · ACTIVE MODEL ONLY</div>
-<h1>像素绘画学习 · V2 离散生成</h1>
-<p class="summary">现在只保留一条可复现的训练主线：48×64 原生四色离散 Token、带条件形体、像素年龄与自我修正，训练对象包括同一角色的两个姿势及五类原创程序化道具、场景。过去的局部 MLP、VAE、Q-Learning 和扩散 V1 都已经从当前代码与构建流程移除。</p>
+<h1>像素绘画学习 · 原生高清细节</h1>
+<p class="summary">现在采用分层训练：V2 在 48×64 上学习素材类型和全局结构；V3 在 384×512 原生像素上进行局部细节训练，192×256 仅用于结构条件。两者属于同一个系统，没有建立第三个工作室。过去的局部 MLP、VAE、Q-Learning 和扩散 V1 都已经从当前代码与构建流程移除。</p>
 <p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
-<details id="pixel-v2" style="background:#222237;border:1px solid #797092;border-radius:14px;padding:17px;margin:17px 0" open>
+
+<section id="v3-native" aria-label="高精度人物原生像素细节学习" style="margin:20px 0;border:1px solid #F2A5C2;background:#242139;border-radius:15px;padding:16px" data-ready="false">
+ <div class="eyebrow">ACTIVE HI-RES MODEL / NATIVE DETAIL V3</div>
+ <h2 style="font-size:clamp(23px,3.2vw,32px);line-height:1.3;margin:7px 0">384×512 原生细节 · 不再使用 48×64 成品图</h2>
+ <p class="summary">模型在真实 384×512 的局部像素上训练。192×256 只作为构图条件；右侧模型必须逐格恢复眼睛、发丝、服装花纹等小细节。两张图仍是同一人物的两种动作，<strong>这里是原尺寸细节恢复实验，不是已学会原创高质量新角色</strong>。</p>
+ <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:12px 0">
+  <label>姿势 <select id="v3-pose" style="border-radius:7px;padding:8px;color:#FFF5E6;background:#393657;border:1px solid #7d6b9c"><option value="B_standing">B · 正常站姿</option><option value="A_dynamic">A · 动态人物</option></select></label>
+  <label>细节区 <select id="v3-area" style="border-radius:7px;padding:8px;color:#FFF5E6;background:#393657;border:1px solid #7d6b9c"><option value="face">眼睛 / 五官</option><option value="hair">发饰 / 头发</option><option value="costume">衣服 / 围裙</option><option value="shoes">鞋子 / 末端</option></select></label>
+  <label>倍率 <select id="v3-zoom" style="border-radius:7px;padding:8px;color:#FFF5E6;background:#393657;border:1px solid #7d6b9c"><option value="8">8×</option><option value="12" selected>12×</option><option value="16">16×</option><option value="24">24×</option></select></label>
+  <label><input id="v3-grid" checked type="checkbox"> 显示原生像素网格</label>
+ </div>
+ <div id="v3-readout" role="status" style="padding:8px 0;color:#A9BAE9;font-size:13px">正在读取实际训练的高清结果…</div>
+ <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:900px">
+  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">原图 D 风格母版 · 384×512</figcaption><img data-v3-image="original" width="384" height="512" alt="原始完整细节人物" style="display:block;width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
+  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">V3 模型预测 · 384×512</figcaption><img data-v3-image="generated384" width="384" height="512" alt="模型原生384像素细节预测" style="display:block;width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
+  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">原图眼睛 / 服饰局部网格</figcaption><canvas data-v3-zoom="original" width="384" height="384" aria-label="原图逐像素检视网格" style="display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;cursor:crosshair;touch-action:none"></canvas></figure>
+  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">模型相同区域局部网格</figcaption><canvas data-v3-zoom="generated384" width="384" height="384" aria-label="生成细节逐像素检视网格" style="display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;cursor:crosshair;touch-action:none"></canvas></figure>
+ </div>
+ <div id="v3-metrics" style="margin:14px 0;padding:12px;color:#FFF5E6;font-size:13px;border-radius:9px;background:#36304b">正在读取真正的前景细节分数及低分辨率基线…</div>
+ <details style="border:1px solid #675b7c;border-radius:9px;padding:10px">
+  <summary style="font-weight:750">对比低分辨率放大与高分辨率遮挡修复</summary>
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">
+   <figure style="margin:0;min-width:0"><figcaption>192×256 放大，仅作基线</figcaption><img data-v3-image="coarse192" alt="低分辨率最近邻放大基线" width="384" height="512" style="width:100%;height:auto;image-rendering:pixelated"></figure>
+   <figure style="margin:0;min-width:0"><figcaption>原图随机遮挡 58% 后模型修复</figcaption><img data-v3-image="masked_repair384" alt="高分辨率像素级遮挡修复样张" width="384" height="512" style="width:100%;height:auto;image-rendering:pixelated"></figure>
+  </div>
+ </details>
+ <p class="summary" style="font-size:12px;margin-top:13px">只有当模型超过低分辨率基线，特别是人物<strong>前景细节</strong>，才算达到训练门槛。不能用大面积背景的总体准确率冒充高质量美术。最终母版始终保留原始 384×512 像素，训练不能把母版降质。</p>
+ <div style="display:flex;flex-wrap:wrap;gap:14px"><a id="v3-save" href="#" download>下载模型原生 384×512 PNG</a><a href="./style2/v3/report.json">查看实际训练报告</a></div>
+</section>
+<script type="module" src="./native-detail-v3.js"></script>
+<details id="pixel-v2" style="background:#222237;border:1px solid #797092;border-radius:14px;padding:17px;margin:17px 0">
  <summary style="font-size:21px;font-weight:850;cursor:pointer;color:#F2A5C2">V2 · 真实训练：角色＋道具＋场景的四色离散生成</summary>
  <p style="color:#c0b6d3">实际模型以 48×64 逻辑网格生成，每个像素只能是 D 色板四类之一。增加独立形体蓝图、像素年龄与纠错，程序化道具的训练参数与测试参数分开。<strong>这仍然是科研样机，不是成熟美术生成器。</strong></p>
  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0">
