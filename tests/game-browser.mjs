@@ -41,7 +41,15 @@ try{
   const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(origin,{waitUntil:'load'});
-  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.buttons?.length===5);
+  try{await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.buttons?.length===5,null,{timeout:9000})}
+  catch(e){
+   const diagnostics=await page.evaluate(()=>({
+    ready:document.readyState,menu:window.__PAPERWORLD_MENU__??null,
+    scripts:[...document.scripts].map(x=>x.src),href:location.href
+   }));
+   console.error('STARTUP_DIAGNOSTICS',screen,errors,JSON.stringify(diagnostics));
+   throw e;
+  }
   const home=await state(page);
   assert.equal(home.state,'menu');
   assert.ok(home.buttons.every(b=>b.x>=0&&b.y>=0&&b.x+b.w<=home.logical[0]&&b.y+b.h<=home.logical[1]));
@@ -238,6 +246,27 @@ try{
   assert.ok((await exactCanvasColors(page)).every(c=>official.has(c)),'no gray-fill or antialias fifth ink');
   await page.screenshot({path:'artifacts/game/'+screen+'-owner-near.png'});
   assert.equal(await page.locator('#pw-dialogue').isVisible(),true,'crisp DOM speech bubble appears after approach');
+
+  // Reference 2's speech frame must be a real interactive four-ink DOM UI.
+  const dialogLayout=await page.locator('#pw-dialogue').evaluate(el=>{
+   const r=el.getBoundingClientRect(),css=getComputedStyle(el);
+   const speech=el.querySelector('#pw-dialogue-speech'),c=getComputedStyle(speech);
+   return {x:r.left,y:r.top,right:r.right,bottom:r.bottom,
+    bg:css.backgroundColor,color:c.color,fs:parseFloat(c.fontSize),
+    label:el.querySelector('.pw-dialogue-name')?.textContent,
+    live:speech.getAttribute('aria-live')};
+  });
+  assert.ok(dialogLayout.x>=-1&&dialogLayout.y>=-1&&dialogLayout.right<=width+1&&dialogLayout.bottom<=height+1,
+   'dialogue frame must fit '+screen+' screen without clipping');
+  assert.equal(dialogLayout.bg,'rgb(255, 245, 230)','cream is the only panel fill');
+  assert.equal(dialogLayout.color,'rgb(57, 54, 87)','dark-purple text is native and readable');
+  assert.equal(dialogLayout.live,'polite');
+  assert.equal(dialogLayout.label,'老板娘');
+  assert.ok(dialogLayout.fs>=15);
+  if(height>width)assert.ok(dialogLayout.y>height*.42,'portrait dialogue is below the face');
+  else assert.ok(dialogLayout.x>width*.47,'landscape dialogue is right of owner');
+  await page.screenshot({path:'artifacts/game/'+screen+'-native-hostess-rental-dialogue.png'});
+
   const breatheSamples=[];
   for(let i=0;i<8;i++){
    breatheSamples.push((await state(page)).intro.breathingY);
@@ -257,7 +286,7 @@ try{
   // Two owner messages: first tap completes current sentence, next tap advances.
   for(let i=0;i<6;i++){
    const snap=await state(page);
-   if(snap.state==='lease'||snap.transition)break;
+   if(snap.state==='lease'||snap.transition||!await page.locator('#pw-dialogue-next').isVisible())break;
    await page.locator('#pw-dialogue-next').click();
    await page.waitForTimeout(65);
   }

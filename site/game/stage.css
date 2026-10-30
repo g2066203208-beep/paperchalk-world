@@ -233,3 +233,74 @@
  #pw-shop-panel{top:max(71px,calc(64px + env(safe-area-inset-top)));width:min(48vw,190px);right:6px}
  #pw-shop-panel strong{font-size:11px}
 }
+
+/* Portrait-first rental opening · the actual interactive dialogue from reference frame 2.
+ * One cream speech card, one pink name tab, one ink chevron; no decorative UI clutter.
+ * Actual strings remain native DOM text so they stay legible at any viewport/DPR. */
+#pw-dialogue{
+ left:50%;right:auto;top:clamp(278px,51dvh,560px);bottom:auto;
+ transform:translateX(-50%);width:min(94vw,670px);
+ min-height:clamp(152px,20dvh,208px);
+ padding:0 16px 10px;display:grid;grid-template-rows:auto 1fr auto;gap:2px;
+ border:4px solid var(--ink);background:var(--paper);color:var(--ink);
+ box-shadow:0 5px 0 var(--blue),5px 9px 0 var(--ink);
+ clip-path:polygon(9px 0,calc(100% - 9px) 0,100% 9px,100% calc(100% - 9px),calc(100% - 9px) 100%,9px 100%,0 calc(100% - 9px),0 9px);
+ touch-action:manipulation;
+}
+#pw-dialogue::before{display:none}
+#pw-dialogue::after{
+ content:'';position:absolute;right:13px;bottom:43px;width:10px;height:8px;
+ background:var(--ink);clip-path:polygon(0 0,100% 0,50% 100%);
+ pointer-events:none;animation:pw-talk-caret .95s steps(2,end) infinite;
+}
+@keyframes pw-talk-caret{50%{transform:translateY(3px)}}
+#pw-dialogue .pw-dialogue-head{
+ display:flex;align-items:start;justify-content:flex-start;
+ min-height:29px;margin:0;gap:0;
+}
+#pw-dialogue .pw-dialogue-name{
+ display:inline-block;font-size:clamp(13px,3.6vw,17px);line-height:1.2;
+ padding:5px 15px 6px;background:var(--pink);border:0;
+ border-left:3px solid var(--ink);border-right:3px solid var(--ink);
+ font-weight:900;white-space:nowrap;
+}
+#pw-dialogue .pw-dialogue-speech{
+ font-size:clamp(17px,4.4vw,22px);font-weight:750;line-height:1.48;
+ min-height:2.85em;overflow-wrap:anywhere;
+ padding:5px 3px 7px;align-self:center;max-width:100%;
+}
+#pw-dialogue .pw-dialogue-actions{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:8px;border-top:2px solid var(--blue);padding-top:7px;
+}
+#pw-dialogue .pw-dialogue-actions .pw-btn{
+ min-height:34px;padding:3px 9px;font-size:clamp(12px,3.2vw,15px);
+ border-width:2px;box-shadow:2px 2px 0 var(--ink);
+}
+#pw-dialogue #pw-dialogue-next{background:var(--pink);min-width:88px}
+#pw-dialogue #pw-dialogue-back{background:var(--paper)}
+#pw-dialogue #pw-dialogue-status{
+ font-size:clamp(10px,2.6vw,12px);font-weight:750;
+ text-align:center;min-width:0;
+}
+@media (max-width:380px){
+ #pw-dialogue{padding:0 9px 8px;min-height:148px;top:49dvh}
+ #pw-dialogue .pw-dialogue-name{padding:5px 10px}
+ #pw-dialogue .pw-dialogue-actions{gap:3px}
+ #pw-dialogue #pw-dialogue-next{min-width:75px}
+}
+@media (min-aspect-ratio:5/4){
+ #pw-dialogue{
+  top:auto;bottom:max(14px,env(safe-area-inset-bottom));
+  left:auto;right:max(11px,env(safe-area-inset-right));
+  transform:none;width:min(47vw,570px);min-height:130px;max-height:calc(100dvh - 28px);
+  padding:0 12px 8px;overflow:auto;
+ }
+ #pw-dialogue .pw-dialogue-speech{font-size:clamp(15px,2.2vw,21px);min-height:2em}
+ #pw-dialogue .pw-dialogue-name{font-size:14px}
+}
+@media (max-height:570px) and (max-aspect-ratio:5/4){
+ #pw-dialogue{top:auto;bottom:max(10px,env(safe-area-inset-bottom));min-height:128px}
+ #pw-dialogue .pw-dialogue-speech{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){#pw-dialogue::after{animation:none}}

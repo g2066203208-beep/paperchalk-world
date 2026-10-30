@@ -6,8 +6,8 @@
 import {HOSTESS_PNG,HOSTESS_WIDTH,HOSTESS_HEIGHT} from './hostess-pixel.js';
 
 export const SHOP_LINES=Object.freeze([
-  '我是这里的老板娘。你是来办理店铺租借的吧？',
-  '请先创建角色，然后填写店铺名称、经营类型和租期。'
+  '欢迎来到蓝铃街。第一次来这儿吧？',
+  '想在城里住下的话，先填一张登记表，我帮你看看合适的地方。'
 ]);
 const INK=[57,54,87],APPROACH_SECONDS=2.8,CHAR_PER_SEC=10;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -128,7 +128,7 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   dialogue.classList.remove('pw-off');
   speech.textContent=[...SHOP_LINES[line]].slice(0,Math.floor(shown)).join('');
   status.textContent=(line+1)+' / '+SHOP_LINES.length+' · '+(shown>=length()?'点击继续':'点击显示全文');
-  nextBtn.textContent=line===SHOP_LINES.length-1&&shown>=length()?'办理租借 →':'继续 ›';
+  nextBtn.textContent=line===SHOP_LINES.length-1&&shown>=length()?'填写资料 →':'继续 ›';
  }
  nextBtn.addEventListener('click',e=>{e.stopPropagation();next()});
  backBtn.addEventListener('click',e=>{e.stopPropagation();onBack?.()});
@@ -174,10 +174,12 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
  }
  function geometry(W,H){
   const wide=W/H>1.25;
-  const goalHeight=Math.min(wide?H*.85:H*.66,wide?190:284,(W-12)*HOSTESS_HEIGHT/HOSTESS_WIDTH);
+  // Reference-2 close-up: owner visually dominates the counter instead of
+  // looking like a tiny sprite behind a floating dialogue. No blur or resample.
+  const goalHeight=Math.min(wide?H*.90:H*.89,wide?350:366);
   const goalWidth=Math.round(goalHeight*HOSTESS_WIDTH/HOSTESS_HEIGHT);
   const anchorX=Math.round(wide?W*.27:W*.50);
-  const anchorY=Math.round(wide?H*.96:H*.73);
+  const anchorY=Math.round(wide?H*.96:H*.98);
   return {wide,goalHeight:Math.round(goalHeight),goalWidth,anchorX,anchorY};
  }
  function draw(ctx,W,H){
