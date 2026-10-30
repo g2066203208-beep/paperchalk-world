@@ -30,5 +30,5 @@ test('new fullbody candidate is visible from PixelLab but old 16 remain unapprov
  assert.match(home,/href="\.\/hostess-redraw\.html"/);
  assert.match(viewer,/hostess-redraw-v1-192x256\.png/);
  assert.match(viewer,/尚未通过人工美术验收/);
- assert.match(home,/整幅人物 · 结构化绘制与机器学习/);
+ assert.match(home,/全身人物逐像素精修与验收/);
 });

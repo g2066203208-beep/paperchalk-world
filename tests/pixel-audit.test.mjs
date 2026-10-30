@@ -5,7 +5,7 @@ const base=new URL('../site/pixel-lab/',import.meta.url);
 const read=p=>readFileSync(new URL(p,base),'utf8');
 test('system02 opens real individual-pixel evidence and acknowledges unknown anatomy',()=>{
  const page=read('pixel-audit.html'),home=read('index.html');
- assert.match(read("structured-redraw.html"),/href="\.\/pixel-audit\.html"/);
+ assert.match(home,/href="\.\/pixel-audit\.html"/);
  for(const id of ['id="source"','id="output"','id="audit"','id="detail"','id="reason"'])assert.ok(page.includes(id),id);
  for(const field of ['before_role','neighbor_votes','surrounding_support','policy_score','region_hypothesis','semantic_understanding_achieved'])assert.ok(page.includes(field),field);
 });

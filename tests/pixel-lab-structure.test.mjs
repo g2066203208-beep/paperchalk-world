@@ -6,7 +6,7 @@ test('Keep only two principal work systems, with whole-figure ML retouch as curr
  const home=read('index.html');
  assert.equal((home.match(/class="route"/g)||[]).length,2);
  assert.match(home,/href="\.\/repixelize\.html"/);
- assert.match(home,/href="\.\/structured-redraw\.html"/);
+ assert.match(home,/href="\.\/pixel-audit\.html"/);
  assert.match(home,/D「雾樱玻璃」/);
  assert.doesNotMatch(home,/href="\.\/(face-parts|fullbody-16)\.html"/);
 });
