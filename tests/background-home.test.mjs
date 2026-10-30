@@ -9,7 +9,7 @@ const android=readFileSync('android/app/src/main/java/com/paperchalk/lampkeep/Ma
 test('APK root now shows real procedural pixel menu above original diagonal moving background',()=>{
   assert.match(page,/<canvas id="background"/);
   assert.match(page,/<canvas id="menu"/);
-  assert.equal((page.match(/<canvas\b/g)||[]).length,3,'background + game + pixel-character avatar preview');
+  assert.equal((page.match(/<canvas\b/g)||[]).length,4,'background + menu + pixel avatar + real WebGL world canvas');
   assert.match(page,/game\/menu\.js\?v=/);
   assert.match(page,/game\/background\.js\?v=/);
   assert.doesNotMatch(page,/BoneLab|<img\b|<svg\b/);
@@ -50,7 +50,11 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/paperworld-menu-v3/);
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
-  assert.match(page,/20261030-shop-lease5-matte-manual/);
+  assert.match(page,/20261030-world3d-motion1/);
+  assert.match(menu,/import \{createWorld3D\} from '\.\/world3d\.js'/);
+  assert.match(menu,/3D体感世界/);
+  assert.match(page,/id="pw-motion-start"/);
+  assert.match(page,/id="pw-world-canvas"/);
   assert.match(menu,/import \{createHostessIntro\} from '\.\/intro\.js'/);
   assert.match(menu,/intro\.draw\(ctx,W,H\)/);
   assert.match(menu,/intro\.onTap\(\)/);
