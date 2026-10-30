@@ -1,1 +1,0 @@
-{"name":"四色像素 · 循环背景","short_name":"四色背景","description":"严格四色，双色粗斜纹循环，原生像素渲染，手机优化","lang":"zh-CN","start_url":"./?source=pwa","scope":"./","display":"standalone","orientation":"any","background_color":"#FFF5E6","theme_color":"#FFF5E6","icons":[{"src":"./icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
