@@ -29,7 +29,7 @@ async function clickGame(page,index,foldShot=null,expectBurst=true){
  if(expectBurst){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount>0,{timeout:800});
   const count=await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount);
-  assert.ok(count>0 && count<=32,'particle burst must be short and localized');
+  assert.ok(count>0 && count<=96,'local tap ripple must be bounded even after rapid taps');
  }
  if(foldShot){
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
@@ -79,10 +79,38 @@ try{
   assert.ok(info.buttons.every(b=>b.h*2>=48),'tap targets at least 48 CSS px tall');
   for(let i=0;i<info.buttons.length-1;i++)assert.ok(info.buttons[i].y+info.buttons[i].h<info.buttons[i+1].y);
   await page.screenshot({path:'artifacts/game/'+name+'-main-menu.png'});
+  // A finger press on EMPTY BACKGROUND must produce the same feedback.
+  // The menu action is separate: blank space must not invoke a button.
+  const beforeTap=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
+  const touchX=Math.round(width*.5),touchY=32;
+  await page.mouse.click(touchX,touchY);
+  await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,beforeTap);
+  const emptyTap=await page.evaluate(()=>window.__PAPERWORLD_MENU__);
+  assert.equal(emptyTap.state,'menu','empty background touch leaves menu unchanged');
+  assert.equal(emptyTap.touchCount,beforeTap+1,'exactly one burst per tap');
+  assert.equal(emptyTap.lastTouch.x,Math.round(touchX/2));
+  assert.equal(emptyTap.lastTouch.y,Math.round(touchY/2));
+  assert.equal(emptyTap.particleCount,16,'sixteen coordinated particles at touch point');
+  await page.screenshot({path:'artifacts/game/'+name+'-empty-space-tap.png'});
+  await page.waitForTimeout(520);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'ripple fully clears after 0.42 seconds');
+
+  // Bottom edge also receives particles; no invisible hitbox required.
+  const secondTouch=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
+  await page.mouse.click(Math.round(width*.15),Math.round(height*.9));
+  await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,secondTouch);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
+  await page.waitForTimeout(520);
+
   await clickGame(page,1); // Continue cannot fabricate a saved game.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
   await clickGame(page,0,name); // Start creates a save, local burst and diagonal paper sweep.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play');
+  const subPageTouches=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
+  await page.mouse.click(24,24);
+  await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,subPageTouches);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play','non-button ripple also works in subpages');
+  await page.waitForTimeout(500);
   await page.screenshot({path:'artifacts/game/'+name+'-prologue.png'});
   await clickGame(page,0); // Back to menu.
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
@@ -111,5 +139,5 @@ try{
   assert.deepEqual(errors,[],'no Javascript errors');
   await context.close();
  }
- console.log('PASS: exact 4 colors, crisp glyphs, localized click burst, diagonal paper wipe, 4 viewport interaction');
+ console.log('PASS: any-position touchscreen ripple, 16 exact-color shards, no idle noise, four viewports, full menu flow');
 }finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
