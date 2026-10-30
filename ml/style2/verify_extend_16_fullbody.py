@@ -28,6 +28,12 @@ for i,item in enumerate(r["output_records"]):
     assert item["pose_template"] in ("A_dynamic","B_standing")
     assert item["transplanted_face_pixels"]>=1000
     assert (FACES/item["input_face_file"]).is_file()
+    assert item["embedded_face_file"]==f"face_input_{i:02}.png"
+    embedded=OUT/item["embedded_face_file"]
+    assert embedded.is_file()
+    assert Image.open(embedded).size==(96,96)
+    assert np.array_equal(np.asarray(Image.open(embedded).convert("RGB")),
+       np.asarray(Image.open(FACES/item["input_face_file"]).convert("RGB"))),"face input changed"
     p=OUT/item["fullbody_file"]
     a=np.asarray(Image.open(p).convert("RGB"),dtype=np.uint8)
     assert a.shape==(512,384,3)
