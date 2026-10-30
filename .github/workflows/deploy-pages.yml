@@ -97,6 +97,26 @@ jobs:
             echo "::warning::Face training still running; face gallery will appear after verified workflow dispatches Pages"
           fi
 
+          GENERAL_RUN=$(gh run list --workflow face-general.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$GENERAL_RUN" ] && [ "$GENERAL_RUN" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/face-general"
+            gh run download "$GENERAL_RUN" --name pixel-generic-multiface-trained-weights-and-samples --dir "$RUNNER_TEMP/face-general"
+            test -s "$RUNNER_TEMP/face-general/site/pixel-lab/style2/face-general/general_report.json"
+            mkdir -p site/pixel-lab/style2/face-general
+            cp -a "$RUNNER_TEMP/face-general/site/pixel-lab/style2/face-general/." site/pixel-lab/style2/face-general/
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          folder=Path('site/pixel-lab/style2/face-general')
+          report=json.loads((folder/'general_report.json').read_text())
+          assert report['pretrained'] and report['distinct_train_combinations']>=64 and report['candidate_count']>=8
+          assert (folder/'generated_00.png').is_file()
+          print('PASS: real multi-face training output packaged, not duplicated master poses')
+          PY
+          else
+            echo "::warning::No validated multi-face checkpoint yet; the generic-face gallery will show unready state"
+          fi
+
           LEGACY_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq '[.artifacts[]|select(.name=="PixelLab-native-384-detail-and-composition" and .expired==false)][0].workflow_run.id')
           if [ -n "$LEGACY_RUN" ] && [ "$LEGACY_RUN" != "null" ]; then
             mkdir -p "$RUNNER_TEMP/pixel-legacy"
