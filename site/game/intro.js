@@ -197,14 +197,20 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   if(W/H>1.25){
    const panelWidth=Math.round(W*.53);
    const sourceHeight=Math.min(334,Math.round(188*H/panelWidth));
-   const sourceY=Math.max(0,Math.min(334-sourceHeight,Math.round(192-sourceHeight*.53)));
+   // Keep both the hair and the pen/clipboard inside the actual view.
+   const sourceY=Math.max(0,Math.min(334-sourceHeight,Math.round(39)));
    ctx.drawImage(counter,0,sourceY,188,sourceHeight,0,0,panelWidth,H);
    R(panelWidth,0,2,H,COL.pink);
   }else{
-   const drawWidth=Math.min(W,Math.round(H*188/334));
-   const drawHeight=Math.round(drawWidth*334/188);
-   const offset=Math.round((W-drawWidth)/2);
-   ctx.drawImage(counter,0,0,188,334,offset,0,drawWidth,drawHeight);
+   // The reference includes a large empty footer. Remove that dead space
+   // before cover-scaling; preserve the head, hands and the counter frontage.
+   // Pixels are still sampled with nearest-neighbour and no fifth ink.
+   const sceneHeight=284;
+   const scale=Math.max(W/188,H/sceneHeight);
+   const drawWidth=Math.ceil(188*scale);
+   const drawHeight=Math.ceil(sceneHeight*scale);
+   const offset=Math.floor((W-drawWidth)/2);
+   ctx.drawImage(counter,0,0,188,sceneHeight,offset,0,drawWidth,drawHeight);
   }
  }
  function draw(ctx,W,H){
