@@ -80,3 +80,10 @@ test('PNG quantization converts alpha to transparency, exact official inks remai
  assert.equal(m.quantizeRGBA(255,245,230,255),4);
  assert.equal(m.quantizeRGBA(169,186,233,127),0);
 });
+
+test('browser memory budget rejects huge layer-frame combinations before allocation',()=>{
+ const p=m.createProject(512,512);
+ p.layers=Array.from({length:12},(_,i)=>({id:String(i),name:'L'+i,visible:true}));
+ p.frames[0].cels=Array.from({length:12},()=>p.frames[0].cels[0]);
+ assert.throws(()=>m.validateProject(p),/300 万/);
+});
