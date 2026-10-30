@@ -64,6 +64,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Include optional PixelLab model outputs (must never block game website)
         continue-on-error: true
+        timeout-minutes: 2
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
