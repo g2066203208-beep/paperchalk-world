@@ -139,6 +139,7 @@ export function createWorld3D({onBack}){
  const motion=new MotionPose(),lean=new LeanCamera();
  let renderer=null,motor=new BodyMotor(),active=false,frame=0,prev=0,raf=0;
  let permission='idle',orientationListening=false,timeout=0,lastSensor=0,lastEye=null;
+ let comfort=true;
  const keys=new Set(),stick={forward:0,side:0,id:null};
  const heldForward={value:0},headHold={value:0};
  const pointerLook={id:null,x:0,y:0};
@@ -157,7 +158,10 @@ export function createWorld3D({onBack}){
   el('pw-player-position').textContent='X '+m.position.x.toFixed(1)+' · Y '+m.position.y.toFixed(1);
   el('pw-player-speed').textContent=m.speed.toFixed(1)+' m/s';
   el('pw-stance-status').textContent={stand:'站立',crouch:'蹲下',prone:'趴下'}[m.stance]+' · '+m.height.toFixed(2)+'m';
-  el('pw-sensor-badge').textContent=motion.sensorSeen?'方向传感器已连接':'手指/键盘可操作';
+  el('pw-sensor-badge').textContent=motion.sensorSeen?(motion.lastSource==='native'?'APK 原生陀螺仪':'网页姿态传感器'):'等待体感数据';
+  el('pw-gyro-debug').textContent=motion.sensorSeen?
+   ('侧倾 '+a.roll+'° · '+(Math.abs(lean.offset)*100).toFixed(0)+'cm · '+motion.lastSource):
+   '尚无传感器数据 · 点击「开启手机体感」';
  }
  function input(){
   const forward=heldForward.value||((keys.has('w')?1:0)-(keys.has('s')?1:0)+stick.forward);
@@ -191,9 +195,23 @@ export function createWorld3D({onBack}){
    note('方向已连接 · 左右倾斜可连续探头 · 已关闭不可靠的体感踏步与蹲起');
   }
  }
+ function onNativeQuaternion(w,x,y,z){
+  if(!active)return;
+  if(motion.ingestQuaternion(w,x,y,z)){
+   lastSensor=performance.now();
+   if(timeout){clearTimeout(timeout);timeout=0}
+   note('APK 原生体感已连接 · 左右倾斜直接探头 · 地平线稳定');
+  }
+ }
  async function startMotion(){
   if(!active)return;
+  if(window.PaperworldSensor?.start){
+   window.__PAPERWORLD_NATIVE_ORIENTATION__=onNativeQuaternion;
+   try{window.PaperworldSensor.start()}catch(e){}
+  }
   if(typeof DeviceOrientationEvent==='undefined'){
+   if(window.PaperworldSensor?.start){permission='native';note('已请求原生体感 · 请左右倾斜手机');return}
+
    permission='unsupported';note('该浏览器没有设备方向接口，仍可点探头键或使用 Q/E');return;
   }
   try{
@@ -213,6 +231,7 @@ export function createWorld3D({onBack}){
   if(active)return;
   stage.classList.remove('pw-off');active=true;frame=0;prev=0;
   motion.pose={yaw:0,pitch:0,roll:0};motion.target={yaw:0,pitch:0,roll:0};lean.reset();
+  motion.setComfort(comfort);lean.setComfort(comfort);
   try{
    renderer??=makeRenderer(canvas);motor=new BodyMotor(renderer.solids);
    note('3D 街区就绪 · 前后移动用按键/摇杆 · 手机左右倾斜直接探头');
@@ -224,6 +243,8 @@ export function createWorld3D({onBack}){
   active=false;stage.classList.add('pw-off');cancelAnimationFrame(raf);prev=0;
   if(timeout){clearTimeout(timeout);timeout=0}
   if(orientationListening){window.removeEventListener('deviceorientation',onOrientation);orientationListening=false}
+  if(window.PaperworldSensor?.stop){try{window.PaperworldSensor.stop()}catch(e){}}
+  window.__PAPERWORLD_NATIVE_ORIENTATION__=null;
   if(document.pointerLockElement===canvas)document.exitPointerLock?.();
   keys.clear();heldForward.value=0;headHold.value=0;stick.forward=stick.side=0;stick.id=null;
   pointerLook.id=null;lean.reset();motion.sensorSeen=false;motion.calibrated=false;permission='idle';
@@ -250,6 +271,14 @@ export function createWorld3D({onBack}){
  for(const name of ['stand','crouch','prone'])
   el('pw-stance-'+name).addEventListener('click',()=>setStance(name));
  el('pw-motion-start').addEventListener('click',startMotion);
+ const comfortBtn=el('pw-comfort-toggle');
+ comfortBtn.addEventListener('click',()=>{
+  comfort=!comfort;
+  motion.setComfort(comfort);lean.setComfort(comfort);
+  comfortBtn.textContent=comfort?'舒适模式：开':'舒适模式：关';
+  comfortBtn.setAttribute('aria-pressed',String(comfort));
+  note(comfort?'稳定地平线 · 缩小探头幅度 · 低敏感旋转':'标准模式 · 探头幅度增大，视角更灵敏');
+ });
  el('pw-motion-center').addEventListener('click',()=>{
   if(motion.sensorSeen){motion.recenter();lean.reset();note('探头与朝向已重新校准')}
   else{motion.pose={yaw:0,pitch:0,roll:0};motion.target={yaw:0,pitch:0,roll:0};lean.reset();note('视角已回正')}
@@ -354,7 +383,8 @@ export function createWorld3D({onBack}){
   get walls(){return renderer?.solids.length||0},
   get triangles(){return renderer?.triangles||0},
   get forwardHold(){return heldForward.value},
-  get sensor(){return motion.sensorSeen},get permission(){return permission},
+  get sensor(){return motion.sensorSeen},get sensorSource(){return motion.lastSource},get comfort(){return comfort},get permission(){return permission},
+  injectTestQuaternion:(w,x,y,z)=>motion.ingestQuaternion(w,x,y,z),
   injectTestOrientation:(a,b,g,angle=0)=>motion.ingest(a,b,g,angle),
   setTestStance:name=>motor.setStance(name)
  };
