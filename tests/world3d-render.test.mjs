@@ -22,6 +22,10 @@ test('programmatic 3D city contains real depth-tested WebGL geometry, exact 4 co
  assert.match(source,/gl\.drawArrays\(gl\.LINES/);
  assert.match(source,/gl\.disable\(gl\.DITHER\)/);
  assert.match(source,/gl\.polygonOffset\(1,1\)/);
+ assert.ok(mesh.solids.length>50,'buildings and trees have physical collision footprints');
+ assert.match(source,/function render\(pose,eye\)/);
+ assert.match(source,/projectionMatrix\(pose,canvas\.width\/canvas\.height,eye\)/);
+ assert.match(source,/motor\.update\(dt,controls\(\),motion\.pose\.yaw,performance\.now\(\)\)/);
 });
 test('world3d requests sensor only from a click, gives recenter, touch/keyboard fallback and pauses when closed',()=>{
  const source=readFileSync('site/game/world3d.js','utf8');
@@ -31,6 +35,13 @@ test('world3d requests sensor only from a click, gives recenter, touch/keyboard 
  assert.match(source,/window\.removeEventListener\('deviceorientation'/);
  assert.match(source,/motion\.recenter\(\)/);
  assert.match(source,/canvas\.addEventListener\('pointermove'/);
+ assert.match(source,/requestPointerLock\(\)/);
+ assert.match(source,/devicemotion/);
+ assert.match(source,/onAcceleration/);
+ assert.match(source,/pw-move-stick/);
+ assert.match(source,/pw-posture-hold/);
+ assert.match(source,/setStance\(n\)/);
+ assert.match(source,/window\.addEventListener\('keydown',keyDown\)/);
  assert.match(source,/const keys=\{ArrowLeft:/);
  assert.match(source,/cancelAnimationFrame\(raf\)/);
  const html=readFileSync('site/index.html','utf8');
