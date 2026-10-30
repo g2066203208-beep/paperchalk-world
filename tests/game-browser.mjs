@@ -131,6 +131,19 @@ try{
   await page.locator('#pw-prev').click();await waitScene(page,'menu');
   await clicked(page,2);await waitScene(page,'settings');
   await clicked(page,3);await waitScene(page,'menu');
+  if(screen==='portrait'){
+    // The PixelLab inspector must show the very SAME extracted sprite as the
+    // in-game hostess, and keep substantial internal purple pupil/outline ink.
+    await page.goto(origin+'pixel-lab/hostess-matte.html',{waitUntil:'load'});
+    await page.waitForFunction(()=>document.querySelector('#status')?.textContent.startsWith('通过'),{timeout:10000});
+    const studio=await page.locator('#status').textContent();
+    const retained=Number(studio.match(/保留深紫暗部 (\d+)/)?.[1]);
+    assert.ok(retained>500,'dark eyelashes/pupils and clothes must not become transparent');
+    assert.ok(studio.includes('其他颜色/半透明 0'));
+    await page.screenshot({path:'artifacts/game/pixel-lab-hostess-transparent-cutout.png'});
+    await page.locator('#grid-toggle').click();
+    await page.screenshot({path:'artifacts/game/pixel-lab-hostess-eyes-pixel-grid.png'});
+  }
   assert.deepEqual(errors,[],'runtime must not throw errors');
   await ctx.close();
  }
