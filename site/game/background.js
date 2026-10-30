@@ -53,10 +53,14 @@ window.addEventListener('orientationchange',drawOnceForSize,{passive:true});
 window.addEventListener('pageshow',drawOnceForSize,{passive:true});
 // CSS keyframes run on the compositor, independent of JavaScript workloads.
 // Pausing when hidden avoids unnecessary work and ensures no catch-up jump.
+function motionEnabledByMenu(){
+  try{return JSON.parse(localStorage.getItem('paperworld-menu-v1')||'{}').motion!==false}
+  catch{return true}
+}
 document.addEventListener('visibilitychange',()=>{
-  canvas.style.animationPlayState=document.hidden?'paused':'running';
+  canvas.style.animationPlayState=document.hidden||!motionEnabledByMenu()?'paused':'running';
 });
-if(document.hidden)canvas.style.animationPlayState='paused';
+if(document.hidden||!motionEnabledByMenu())canvas.style.animationPlayState='paused';
 // Live web version check: the Android shell is only a WebView. When GitHub
 // Pages changes, reload the website even if the APK stays open in foreground.
 const ACTIVE_BUILD='20261030-blue8s-diagonal2';
