@@ -1,0 +1,59 @@
+name: PixelLab - learned semantic-aware pixel audit (no fake semantics)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/fullbody_refine/semantic_cleanup.py'
+      - 'ml/fullbody_refine/verify_semantic.py'
+      - '.github/workflows/pixel-semantic-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: pixel-semantic-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  pixel-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ML and topology analysis
+        run: |
+          python -m pip install --quiet numpy==2.2.6 Pillow==11.3.0 scipy==1.16.1
+          python -m pip install --quiet 'torch==2.7.1+cpu' --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Train contextual bandit on actual complete hostess sprite, apply safe edits
+        env:
+          OMP_NUM_THREADS: '2'
+          MKL_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '1'
+        run: python -m ml.fullbody_refine.semantic_cleanup
+      - name: Verify exact pixel rationale, clean clusters and preservation
+        run: python -m ml.fullbody_refine.verify_semantic
+      - name: Preserve complete pixel decision report and learned weights
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-ML-pixel-audit-every-pixel-status-and-edit-rationale
+          path: site/pixel-lab/semantic-output/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Publish only QA-verified native images and explanations
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/pixel-lab/semantic-output/*.png site/pixel-lab/semantic-output/*.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "assets(pixel): auditable ML cleanup of color-cluster noise in complete figure"
+          for i in 1 2 3 4; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
