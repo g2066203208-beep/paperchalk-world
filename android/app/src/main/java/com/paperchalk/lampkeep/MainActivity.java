@@ -14,6 +14,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowInsets;
 import android.webkit.WebChromeClient;
+import android.webkit.ValueCallback;
+import android.util.Base64;
+import java.io.OutputStream;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -22,7 +25,7 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 /**
- * Minimal Android wrapper. No legacy game logic, file bridges, or native UI.
+ * Live-hosted Android wrapper with limited pixel-art file-open/save bridges.
  * Every cold launch loads the hosted page with a fresh URL query parameter.
  * PAPERWORLD background animation is served from the existing GitHub Pages root.
  * Rebuild of this existing application ID refreshes the original APK release.
@@ -81,6 +84,68 @@ public final class MainActivity extends Activity {
         lastSensorNs = 0;
     }
 
+    // Android system file picker: no storage permissions or unrestricted file access.
+    private static final int REQUEST_IMPORT = 3101;
+    private static final int REQUEST_EXPORT = 3102;
+    private ValueCallback<Uri[]> pendingImport;
+    private byte[] pendingExport;
+
+    private boolean isTrustedSite() {
+        if (web == null || web.getUrl() == null) return false;
+        Uri uri = Uri.parse(web.getUrl());
+        return "https".equals(uri.getScheme())
+            && SITE_HOST.equals(uri.getHost()) && uri.getPath() != null
+            && uri.getPath().startsWith(SITE_PATH);
+    }
+
+    private final class PixelFileBridge {
+        @JavascriptInterface public void saveBase64(String fileName, String dataUrl, String mime) {
+            if (!isTrustedSite() || fileName == null || dataUrl == null || mime == null) return;
+            if (!"image/png".equals(mime) && !"application/json".equals(mime)) return;
+            if (dataUrl.length() > 16_000_000 || !dataUrl.startsWith("data:" + mime + ";base64,")) return;
+            String safeName = fileName.replaceAll("[^A-Za-z0-9._-]", "_");
+            if (safeName.isEmpty() || safeName.length() > 100) return;
+            if ("image/png".equals(mime) && !safeName.endsWith(".png")) return;
+            if ("application/json".equals(mime) && !safeName.endsWith(".json")) return;
+            final byte[] bytes;
+            try {
+                bytes = Base64.decode(dataUrl.substring(dataUrl.indexOf(',') + 1), Base64.DEFAULT);
+            } catch (IllegalArgumentException badBase64) { return; }
+            if (bytes.length > 12_000_000) return;
+            runOnUiThread(() -> {
+                pendingExport = bytes;
+                Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType(mime);
+                intent.putExtra(Intent.EXTRA_TITLE, safeName);
+                try { startActivityForResult(intent, REQUEST_EXPORT); }
+                catch (Exception e) { pendingExport = null; Toast.makeText(MainActivity.this, "无法打开保存窗口", Toast.LENGTH_SHORT).show(); }
+            });
+        }
+    }
+
+    @Override @SuppressWarnings("deprecation")
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_IMPORT) {
+            if (pendingImport != null) {
+                pendingImport.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+                pendingImport = null;
+            }
+        } else if (requestCode == REQUEST_EXPORT) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null && pendingExport != null) {
+                try (OutputStream output = getContentResolver().openOutputStream(data.getData())) {
+                    if (output == null) throw new IllegalStateException("Cannot open destination");
+                    output.write(pendingExport);
+                    Toast.makeText(this, "像素画已保存", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, "保存失败，请重试", Toast.LENGTH_LONG).show();
+                }
+            }
+            pendingExport = null;
+        }
+    }
+
     private WebView web;
     private boolean resumedOnce = false;
     private boolean legacyWorkerCleanupStarted = false;
@@ -95,6 +160,7 @@ public final class MainActivity extends Activity {
         }
         web = new WebView(this);
         web.addJavascriptInterface(new GameSensorBridge(), "PaperworldSensor");
+        web.addJavascriptInterface(new PixelFileBridge(), "PaperworldFiles");
         web.clearCache(true);
         web.setBackgroundColor(0xFFFFF5E6);
 
@@ -108,7 +174,21 @@ public final class MainActivity extends Activity {
         settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         settings.setTextZoom(100);
 
-        web.setWebChromeClient(new WebChromeClient());
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onShowFileChooser(WebView view,
+                    ValueCallback<Uri[]> callback, FileChooserParams params) {
+                if (!isTrustedSite()) { callback.onReceiveValue(null); return true; }
+                if (pendingImport != null) pendingImport.onReceiveValue(null);
+                pendingImport = callback;
+                try { startActivityForResult(params.createIntent(), REQUEST_IMPORT); }
+                catch (Exception e) {
+                    pendingImport = null;
+                    callback.onReceiveValue(null);
+                    Toast.makeText(MainActivity.this, "无法打开文件选择器", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+        });
         web.setWebViewClient(new WebViewClient() {
             @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
                 resumeSensorOnForeground = false;
@@ -202,6 +282,8 @@ public final class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         stopSensor();
+        if (pendingImport != null) { pendingImport.onReceiveValue(null); pendingImport = null; }
+        pendingExport = null;
         if (web != null) {
             web.destroy();
             web = null;
