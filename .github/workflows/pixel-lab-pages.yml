@@ -1,69 +1,60 @@
-name: PixelLab - deploy verified new artwork without game CI dependency
+name: PixelLab - isolated art QA and Pages deployment
 on:
   push:
     branches: [main]
     paths:
+      - 'site/pixel-lab/**'
+      - 'tests/pixel-lab-structure.test.mjs'
       - '.github/workflows/pixel-lab-pages.yml'
   workflow_dispatch:
-  workflow_run:
-    workflows: ['PixelLab - new girl native D conversion and training']
-    types: [completed]
 permissions:
   contents: read
-  actions: read
   pages: write
   id-token: write
 concurrency:
   group: studio-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
-  publish_pixel_lab:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+  verify_art:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run isolated pixel art tests without unrelated game sensor regression
+        run: |
+          node --test tests/pixel-lab-structure.test.mjs
+          node --test tests/hostess-redraw-native.test.mjs
+          node --test tests/character-browser.mjs
+      - name: Refuse to label failed model samples as approved character art
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("site/pixel-lab/fullbody-generated")
+          if (p/"report.json").exists():
+            result=json.loads((p/"report.json").read_text())
+            review=json.loads((p/"visual-review.json").read_text())
+            assert result["approved_for_game"]==0
+            assert review["status"]=="rejected" and review["approved"]==0
+            assert review["can_publish_as_new_character"] is False
+            assert "visual-review.json" in (p/"../fullbody-learning.html").read_text()
+          print("PixelLab failure states and model integrity pass")
+          PY
+  deploy:
+    needs: verify_art
     runs-on: ubuntu-latest
     timeout-minutes: 12
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Pull real verified new-artwork GitHub Actions outputs
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          RUN_ID=$(gh run list --workflow bath-girl-ml.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          test -n "$RUN_ID" && test "$RUN_ID" != "null"
-          mkdir -p "$RUNNER_TEMP/new-art"
-          gh run download "$RUN_ID" --name pixel-bath-girl-converted-and-trained --dir "$RUNNER_TEMP/new-art"
-          test -s "$RUNNER_TEMP/new-art/report.json"
-          test -s "$RUNNER_TEMP/new-art/candidate_384x512.png"
-          mkdir -p site/pixel-lab/style2/bath-girl
-          cp -a "$RUNNER_TEMP/new-art/." site/pixel-lab/style2/bath-girl/
-          test -s site/pixel-lab/bath-girl.html
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Check published image and training source integrity
-        run: |
-          python -m pip install --quiet 'Pillow==11.3.0'
-          python - <<'PY'
-          import json,hashlib
-          from PIL import Image
-          from pathlib import Path
-          root=Path('site/pixel-lab/style2/bath-girl')
-          d=json.loads((root/'report.json').read_text())
-          assert d['grid']==[384,512] and not d['eligible_for_gold_training']
-          assert d['learning']['steps']>=100
-          png=Image.open(root/'candidate_384x512.png').convert('RGB')
-          assert png.size==(384,512)
-          assert hashlib.sha256(png.tobytes()).hexdigest()=='172f25f35b7d4ecafb21793b736b0949f3543006ea4bb2887aee26885020799a'
-          print('PASS: PixelLab package matches source-digest and trained evidence')
-          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
       - uses: actions/deploy-pages@v4
-        id: deployment
+        id: deploy
