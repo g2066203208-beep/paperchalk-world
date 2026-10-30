@@ -24,6 +24,8 @@ jobs:
           node-version: '22'
       - name: Verify real procedural pixel game menu
         run: |
+          node --check site/pixel-lab/editor-core.js
+          node --check site/pixel-lab/editor.js
           node --check site/game/background.js
           node --check site/game/menu.js
           node --check site/game/world3d.js
@@ -34,6 +36,7 @@ jobs:
           node --check site/game/intro.js
           node --check site/game/lease.js
           node --check site/game/hostess-pixel.js
+          node --test tests/pixel-atelier-core.test.mjs
           node --test tests/background-home.test.mjs
           node --test tests/hostess-intro.test.mjs
           node --test tests/motion3d.test.mjs
@@ -62,6 +65,7 @@ jobs:
           sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
       - name: Browser-test actual procedural game menu and tactile controls on 4 screen sizes
         run: |
+          node tests/pixel-atelier-browser.mjs
           node tests/game-browser.mjs
           node tests/hostess-redraw-browser.mjs
           node tests/hostess-20261030-browser.mjs
@@ -73,6 +77,7 @@ jobs:
           name: paperworld-clean-main-menu-and-curtain-four-viewports
           path: |
             artifacts/game/
+            artifacts/pixel-atelier/
             artifacts/pixel-art/
             artifacts/hostess-new/
             artifacts/fullbody-learning/
@@ -115,7 +120,7 @@ jobs:
           set -euo pipefail
           URL="https://g2066203208-beep.github.io/paperchalk-world/"
           for i in $(seq 1 12); do
-            if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "$URL?verify=$GITHUB_SHA-$i" -o /tmp/live-game.html                && grep -q 'blue8s-diagonal2' /tmp/live-game.html                && grep -q 'game/menu.js?v=20261030-shopgyro8' /tmp/live-game.html && ! grep -q 'BoneLab' /tmp/live-game.html                && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/background.js?verify=$GITHUB_SHA-$i" -o /tmp/live-background.js                && grep -q 'DIAGONAL_OVERSCAN_CELLS' /tmp/live-background.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/menu.js?verify=$GITHUB_SHA-$i" -o /tmp/live-menu.js && grep -q 'function paintFoldWipe' /tmp/live-menu.js && grep -q 'function emitTouchEffect' /tmp/live-menu.js && grep -q 'createHostessIntro' /tmp/live-menu.js && grep -q 'createWorld3D' /tmp/live-menu.js && grep -q 'data\[' /tmp/live-menu.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/intro.js?verify=$GITHUB_SHA-$i" -o /tmp/live-intro.js && grep -q 'function portraitLayers' /tmp/live-intro.js && grep -q 'function computeExteriorMask' /tmp/live-intro.js && grep -q 'CHAR_PER_SEC=10' /tmp/live-intro.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/hostess-pixel.js?verify=$GITHUB_SHA-$i" -o /tmp/live-hostess.js && grep -q 'HOSTESS_PNG' /tmp/live-hostess.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/lease.js?verify=$GITHUB_SHA-$i" -o /tmp/live-lease.js && grep -q 'createLeaseUI' /tmp/live-lease.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/stage.css?verify=$GITHUB_SHA-$i" -o /tmp/live-stage.css && grep -q 'pw-lease-card' /tmp/live-stage.css && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/world3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-world3d.js && grep -q 'makeTown' /tmp/live-world3d.js && grep -q 'BodyMotor' /tmp/live-world3d.js && grep -q 'LeanCamera' /tmp/live-world3d.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/motion3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-motion3d.js && grep -q 'class MotionPose' /tmp/live-motion3d.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/locomotion3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-locomotion.js && grep -q 'class BodyMotor' /tmp/live-locomotion.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/lean3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-lean3d.js && grep -q 'protectedLean' /tmp/live-lean3d.js && grep -q 'setComfort' /tmp/live-lean3d.js && grep -q 'relativeAngles' /tmp/live-motion3d.js; then
+            if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "$URL?verify=$GITHUB_SHA-$i" -o /tmp/live-game.html                && grep -q 'blue8s-diagonal2' /tmp/live-game.html                && grep -q 'game/menu.js?v=20261030-shopgyro8' /tmp/live-game.html && grep -q 'pw-pixel-editor-link' /tmp/live-game.html && ! grep -q 'BoneLab' /tmp/live-game.html                && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/background.js?verify=$GITHUB_SHA-$i" -o /tmp/live-background.js                && grep -q 'DIAGONAL_OVERSCAN_CELLS' /tmp/live-background.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/menu.js?verify=$GITHUB_SHA-$i" -o /tmp/live-menu.js && grep -q 'function paintFoldWipe' /tmp/live-menu.js && grep -q 'function emitTouchEffect' /tmp/live-menu.js && grep -q 'createHostessIntro' /tmp/live-menu.js && grep -q 'createWorld3D' /tmp/live-menu.js && grep -q 'data\[' /tmp/live-menu.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/intro.js?verify=$GITHUB_SHA-$i" -o /tmp/live-intro.js && grep -q 'function portraitLayers' /tmp/live-intro.js && grep -q 'function computeExteriorMask' /tmp/live-intro.js && grep -q 'CHAR_PER_SEC=10' /tmp/live-intro.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/hostess-pixel.js?verify=$GITHUB_SHA-$i" -o /tmp/live-hostess.js && grep -q 'HOSTESS_PNG' /tmp/live-hostess.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/lease.js?verify=$GITHUB_SHA-$i" -o /tmp/live-lease.js && grep -q 'createLeaseUI' /tmp/live-lease.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/stage.css?verify=$GITHUB_SHA-$i" -o /tmp/live-stage.css && grep -q 'pw-lease-card' /tmp/live-stage.css && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/world3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-world3d.js && grep -q 'makeTown' /tmp/live-world3d.js && grep -q 'BodyMotor' /tmp/live-world3d.js && grep -q 'LeanCamera' /tmp/live-world3d.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/motion3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-motion3d.js && grep -q 'class MotionPose' /tmp/live-motion3d.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/locomotion3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-locomotion.js && grep -q 'class BodyMotor' /tmp/live-locomotion.js && curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${URL}game/lean3d.js?verify=$GITHUB_SHA-$i" -o /tmp/live-lean3d.js && grep -q 'protectedLean' /tmp/live-lean3d.js && grep -q 'setComfort' /tmp/live-lean3d.js && grep -q 'relativeAngles' /tmp/live-motion3d.js; then
               echo "PASS: Live GitHub Pages serves new diagonal game-only background"
               exit 0
             fi
