@@ -35,3 +35,23 @@ test('New character gallery is clickable but does not overwrite previous candida
  const page=readFileSync(new URL('../site/pixel-lab/hostess-20261030.html',import.meta.url),'utf8');
  assert.match(page,/id="figure"/);assert.match(page,/id="version"/);assert.match(page,/reference-384x512\.webp/);assert.match(page,/id="zoom"/);assert.match(page,/未经美术验收|未经美术|美术验收尚未通过|未替换游戏正式角色/);
 });
+
+test('Latest character is NOT approved: review report is version-locked to the PNG source',()=>{
+ const r=JSON.parse(readFileSync(new URL('../site/pixel-lab/assets/hostess-20261030-quality.json',import.meta.url),'utf8'));
+ const b=readFileSync(new URL('../site/pixel-lab/assets/hostess-20261030-D-192x256.png',import.meta.url));
+ assert.equal(r.sha256,createHash('sha256').update(b).digest('hex'));
+ assert.deepEqual(r.native_grid,[192,256]);
+ assert.equal(r.foreground_pixels,16724);
+ assert.equal(r.tiny_4_connected_1_to_3_pixels,1206);
+ assert.equal(r.isolated_singletons,617);
+ assert.equal(r.perfect_pixel_pass,false);
+ assert.equal(r.manual_art_approved,false);
+ assert.equal(r.new_character_training_applied,false);
+ assert.equal(r.release_gate_passed,false);
+ const page=readFileSync(new URL('../site/pixel-lab/hostess-20261030-quality.html',import.meta.url),'utf8');
+ assert.match(page,/4连通|四连通/);
+ assert.match(page,/id="heat"/);
+ assert.match(page,/r\.perfect_pixel_pass/);
+ const home=readFileSync(new URL('../site/pixel-lab/index.html',import.meta.url),'utf8');
+ assert.match(home,/href="\.\/hostess-20261030-quality\.html"/);
+});

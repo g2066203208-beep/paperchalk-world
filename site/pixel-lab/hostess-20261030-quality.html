@@ -1,0 +1,79 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PixelLab · 新角色像素质量缺陷检查</title><meta name="theme-color" content="#393657">
+<style>:root{color-scheme:dark;--bg:#1a1929;--panel:#2c2a43;--edge:#645e78;--paper:#fff5e6;--pink:#f2a5c2;--blue:#a9bae9}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--paper);font:15px/1.65 system-ui,"Noto Sans SC",sans-serif}
+a{color:var(--blue)}a:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+nav{padding:13px max(17px,calc((100vw - 1110px)/2));border-bottom:1px solid var(--edge);display:flex;flex-wrap:wrap;gap:20px}
+main{max-width:1110px;margin:auto;padding:26px 17px 70px}h1{font-size:clamp(30px,5vw,43px);line-height:1.18;margin:7px 0 13px}
+.kicker{font-weight:850;letter-spacing:.11em;font-size:12px;color:var(--pink)}.lead{max-width:860px;color:#d2c9df}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0}
+.stat{padding:14px;background:var(--panel);border:1px solid var(--edge);border-radius:9px}
+.stat strong{font-size:25px;display:block;font-variant-numeric:tabular-nums}.stat span{font-size:12px;color:#cac1d8}
+.images{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.art{min-width:0;border:1px solid var(--edge);border-radius:11px;padding:12px;background:var(--panel)}h2{font-size:19px;margin:0 0 10px}
+.art img,.art canvas{display:block;width:100%;max-width:384px;margin:0 auto;aspect-ratio:3/4;image-rendering:pixelated;background:#393657}
+.caption{font-size:13px;color:#bfb4cc}.status{padding:14px;background:var(--panel);border:1px solid var(--edge);border-radius:10px;margin:17px 0}
+.buttons{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}button{font:inherit;color:var(--paper);border:1px solid #88809d;border-radius:7px;min-height:44px;background:#38344f;padding:9px 13px;cursor:pointer}button[aria-pressed=true]{background:var(--blue);color:#393657}
+.note{margin-top:21px;border-top:1px solid var(--edge);padding-top:13px;color:#c2b8d0;font-size:13px}
+@media(max-width:720px){.images{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}</style></head>
+<body><nav><a href="./index.html">← PixelLab</a><a href="./hostess-20261030.html">新人物母图与四色转换</a><a href="./pixel-audit.html">旧人物RL实验</a></nav>
+<main><div class="kicker">2026-10-30 / ART QUALITY DIAGNOSIS</div><h1>四色成功 ≠ 完美像素</h1>
+<p class="lead">这是对<strong>最新粉发少女的实际192×256原生PNG</strong>所做的四连通色块审计。红橙色显示1～3像素的同色独立色块。这些都是值得检查的候选位置，不是自动判定错误：眼睛、高光、线尾可能本来就需要一两个像素。</p>
+<div class="status"><strong id="verdict">正在读取真实质量报告……</strong><p id="why">本页不改动图像，不用降噪假装改善美术。</p></div>
+<div class="stats"><div class="stat"><strong id="all">—</strong><span>全身人物非透明像素</span></div>
+<div class="stat"><strong id="tiny">—</strong><span>1～3像素色块中的像素</span></div>
+<div class="stat"><strong id="single">—</strong><span>完全孤立的单像素色块</span></div></div>
+<div class="buttons"><button id="overlay" aria-pressed="true">色块警告：开</button><button id="light" aria-pressed="false">切换背景</button></div>
+<div class="images"><section class="art"><h2>当前四色像素原图</h2><img id="original" src="./assets/hostess-20261030-D-192x256.png" alt="原始新人物D四色全身像素PNG"><p class="caption">源文件保持不变，不进行一键抹除。</p></section>
+<section class="art"><h2>逐点审计标记</h2><canvas id="heat" width="192" height="256" aria-label="红橙色标记当前人物小色块像素的质量分析图"></canvas><p class="caption">橘红：四方向不相连、区域大小1～3格；不包括对角连接。</p></section></div>
+<div class="note"><strong>真正需要通过的美术验收：</strong>角色轮廓及肢体比例清楚、头发与脸可辨、布料分层和褶线有合理方向、手脚及重叠关系正确、阴影属于具体材质与受光面、关键像素能解释存在理由，并通过人工视觉审查。目前没有逐像素部位真值，也没有把最新人物用训练好的语义精修网络生成出可用成品。<p><a href="./assets/hostess-20261030-quality.json">查阅可复核质量报告 JSON</a></p></div></main>
+<script>
+const image=document.querySelector('#original'),c=document.querySelector('#heat'),ctx=c.getContext('2d',{willReadFrequently:true});
+let auditMask=null,show=true,light=false;
+function audit(){
+ if(!image.complete||image.naturalWidth!==192)return;
+ const buffer=document.createElement('canvas');buffer.width=192;buffer.height=256;
+ const g=buffer.getContext('2d',{willReadFrequently:true});g.drawImage(image,0,0);
+ const pixels=g.getImageData(0,0,192,256),data=pixels.data,labels=new Uint8Array(192*256);
+ const palette=[[57,54,87],[242,165,194],[169,186,233],[255,245,230]];
+ for(let i=0;i<labels.length;i++){
+  if(data[i*4+3]===0)continue;
+  for(let k=0;k<4;k++)if(data[i*4]===palette[k][0]&&data[i*4+1]===palette[k][1]&&data[i*4+2]===palette[k][2]){labels[i]=k+1;break}
+ }
+ const seen=new Uint8Array(labels.length),flags=new Uint8Array(labels.length);
+ let tiny=0,single=0,fg=0;
+ for(let i=0;i<labels.length;i++)if(labels[i])fg++;
+ for(let i=0;i<labels.length;i++){
+  if(!labels[i]||seen[i])continue;
+  const color=labels[i],q=[i],group=[];seen[i]=1;
+  while(q.length){
+   const pos=q.pop();group.push(pos);
+   const x=pos%192,y=(pos/192)|0;
+   const n=[];
+   if(x>0)n.push(pos-1);if(x<191)n.push(pos+1);if(y>0)n.push(pos-192);if(y<255)n.push(pos+192);
+   for(const j of n)if(!seen[j]&&labels[j]===color){seen[j]=1;q.push(j)}
+  }
+  if(group.length<=3){for(const j of group)flags[j]=1;tiny+=group.length;if(group.length===1)single++}
+ }
+ auditMask=flags;
+ const imageData=ctx.createImageData(192,256);imageData.data.set(data);
+ for(let i=0;i<flags.length;i++)if(flags[i]&&show){imageData.data[i*4]=255;imageData.data[i*4+1]=80;imageData.data[i*4+2]=42;imageData.data[i*4+3]=255}
+ ctx.putImageData(imageData,0,0);
+ document.querySelector('#all').textContent=fg.toLocaleString();
+ document.querySelector('#tiny').textContent=tiny.toLocaleString();
+ document.querySelector('#single').textContent=single.toLocaleString();
+ if(tiny!==1206||single!==617||fg!==16724){
+  document.querySelector('#verdict').textContent='审计数据与源图不符 · 不能发布验收';
+  document.querySelector('#why').textContent='实际计算='+fg+'/'+tiny+'/'+single+'，应检查上传文件与报告是否同一版本。';
+ }
+}
+image.addEventListener('load',audit);
+document.querySelector('#overlay').addEventListener('click',e=>{show=!show;e.currentTarget.setAttribute('aria-pressed',String(show));audit()});
+document.querySelector('#light').addEventListener('click',e=>{light=!light;e.currentTarget.setAttribute('aria-pressed',String(light));image.style.background=c.style.background=light?'#fff5e6':'#393657'});
+fetch('./assets/hostess-20261030-quality.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('质量报告不可用');return r.json()}).then(r=>{
+ if(r.perfect_pixel_pass||r.manual_art_approved||r.new_character_training_applied)throw Error('不符合真实质量状态');
+ document.querySelector('#verdict').textContent='PNG结构通过；游戏美术/完美像素验收不通过';
+ document.querySelector('#why').textContent='小色块像素占不透明图形的 '+r.tiny_share_of_opaque_percent+'%；没有经人工逐点确认的部位与线条意图。该图目前只是量化候选。';
+}).catch(e=>{document.querySelector('#verdict').textContent='质量状态无法验证';document.querySelector('#why').textContent=e.message});
+if(image.complete)audit();
+</script></body></html>
