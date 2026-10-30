@@ -18,7 +18,7 @@ test('the existing APK home displays only the fullscreen background canvas',()=>
 test('D palette and background use exact preapproved colors, integer pixel grid',()=>{
   assert.match(background,/'#393657','#F2A5C2','#A9BAE9','#FFF5E6'/);
   assert.match(background,/BACKGROUND='#FFF5E6'/);
-  assert.match(background,/STRIPE='#F2A5C2'/);
+  assert.match(background,/STRIPE='#A9BAE9'/);
   assert.match(background,/PIXEL_CSS=4/);
   assert.match(background,/STRIPE_CELLS=36/);
   assert.match(background,/GAP_CELLS=44/);
