@@ -51,7 +51,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
   assert.match(page,/name="paperworld-build" content="20\d{6}-[a-z0-9-]+"/);
-  assert.match(menu,/import \{createWorld3D\} from '\.\/world3d\.js\?v=20261030-gyrocontrol7'/);
+  assert.match(menu,/import \{createWorld3D\} from '\.\/world3d\.js\?v=20261030-shopgyro8'/);
   assert.match(menu,/3D体感世界/);
   assert.match(page,/id="pw-motion-start"/);
   assert.match(page,/id="pw-world-canvas"/);

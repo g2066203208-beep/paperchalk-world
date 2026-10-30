@@ -5,6 +5,7 @@
 import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js?v=20261030-gyrocontrol7';
 import {LeanCamera} from './lean3d.js?v=20261030-gyrocomfort6';
 import {BodyMotor} from './locomotion3d.js?v=20261030-gyrocomfort6';
+import {ShopOpeningLoop} from './shoploop.js?v=20261030-shopgyro8';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
 const PALETTE=[INK,PINK,BLUE,PAPER];
@@ -65,7 +66,10 @@ function makeTown(lod='full'){
    box(x,y,h+.1,w+.35,depth+.35,.28,1);
   }
  }
- // Landmark rental house ahead: stylized pink/cream shop front and tower.
+ // Two real 3D markers: supplies near spawn and doorstep of rental shop.
+  box(0,0,.05,1.2,1.2,.12,3);box(0,0,.17,.8,.8,.26,1);
+  box(24,0,.05,1.5,1.5,.12,3);box(24,0,.17,.9,.9,.25,2);
+  // Landmark rental house ahead: stylized pink/cream shop front and tower.
  box(30,0,.08,8,9,8,3);
  solids.push({x:30,y:0,w:8,d:9});
  box(29.9,0,8.1,9.5,10,.7,1);
@@ -143,7 +147,9 @@ export function createWorld3D({onBack}){
  let permission='idle',orientationListening=false,timeout=0,lastSensor=0,lastEye=null;
  let sensorEnabled=false,sensorRequest=0;
  let comfort=true;
- const keys=new Set(),stick={forward:0,side:0,id:null};
+ let shopStore=null;try{shopStore=window.localStorage}catch{}
+  const shop=new ShopOpeningLoop(shopStore);
+  const keys=new Set(),stick={forward:0,side:0,id:null};
  const heldForward={value:0},headHold={value:0};
  const pointerLook={id:null,x:0,y:0};
  const el=id=>$(id),note=s=>{if(status.textContent!==s)status.textContent=s};
@@ -161,12 +167,29 @@ export function createWorld3D({onBack}){
   el('pw-player-position').textContent='X '+m.position.x.toFixed(1)+' · Y '+m.position.y.toFixed(1);
   el('pw-player-speed').textContent=m.speed.toFixed(1)+' m/s';
   el('pw-stance-status').textContent={stand:'站立',crouch:'蹲下',prone:'趴下'}[m.stance]+' · '+m.height.toFixed(2)+'m';
+   refreshShopUI(m.position);
   el('pw-sensor-badge').textContent=!sensorEnabled?'体感已关闭':motion.sensorSeen?(motion.lastSource==='native'?'APK 原生陀螺仪':'网页姿态传感器'):'等待体感数据';
   el('pw-gyro-debug').textContent=!sensorEnabled?'方向传感器已停用 · 触屏/鼠标可转向':motion.sensorSeen?
    ('侧倾 '+a.roll+'° · '+(Math.abs(lean.offset)*100).toFixed(0)+'cm · '+motion.lastSource):
    '尚无传感器数据 · 点击「开启手机体感」';
  }
- function input(){
+ function refreshShopUI(position){
+   const t=shop.describe(position);
+   el('pw-shop-name').textContent=shop.shopName+' · Lv.'+t.level;
+   el('pw-shop-goal').textContent=(t.phase==='pickup'?'到广场领货':'到店铺交货')+
+    ' · X '+t.target.x+' Y '+t.target.y+' · '+t.distance.toFixed(1)+'m';
+   el('pw-shop-bank').textContent='营业金 '+t.cash+' · 声望 '+t.reputation+' · 已送 '+t.deliveries;
+   const a=el('pw-shop-interact');a.textContent=t.action;a.disabled=!t.canInteract;
+   const u=el('pw-shop-upgrade');u.textContent=t.upgradeCost===null?'最高等级':'升级 '+t.upgradeCost;
+   u.disabled=!t.canUpgrade;
+  }
+  function shopAction(kind){
+   if(!active)return;
+   const p=motor.snapshot().position;
+   const result=kind==='upgrade'?shop.upgrade(p):shop.interact(p);
+   note(result.message);refreshShopUI(p);
+  }
+  function input(){
   const forward=heldForward.value||((keys.has('w')?1:0)-(keys.has('s')?1:0)+stick.forward);
   const side=(keys.has('a')?1:0)-(keys.has('d')?1:0)+stick.side;
   return {forward:clamp(forward,-1,1),side:clamp(side,-1,1),sprint:keys.has('shift')};
@@ -318,7 +341,9 @@ export function createWorld3D({onBack}){
   motion.setResponse(e.target.value);
   el('pw-motion-response-value').textContent=Math.round(motion.smooth*1000)+' ms';
  });
- el('pw-motion-back').addEventListener('click',()=>{close();onBack?.()});
+ el('pw-shop-interact').addEventListener('click',()=>shopAction('interact'));
+  el('pw-shop-upgrade').addEventListener('click',()=>shopAction('upgrade'));
+  el('pw-motion-back').addEventListener('click',()=>{close();onBack?.()});
  const more=el('pw-world-more'),panel=el('pw-world-bottom');
  more.addEventListener('click',()=>{
   const old=panel.classList.contains('pw-world-compact');
@@ -383,7 +408,8 @@ export function createWorld3D({onBack}){
    if(dirs[k]){e.preventDefault();motion.manual(...dirs[k])}return;
   }
   if(e.repeat)return;
-  if(k==='control')setStance(motor.stance==='crouch'?'stand':'crouch');
+  if(k==='f'){e.preventDefault();shopAction('interact');return}
+   if(k==='control')setStance(motor.stance==='crouch'?'stand':'crouch');
   if(k==='z')setStance(motor.stance==='prone'?'stand':'prone');
   if(k==='x')setStance('stand');
   if(k===' '){motion.sensorSeen?motion.recenter():(motion.pose={yaw:0,pitch:0,roll:0},motion.target={yaw:0,pitch:0,roll:0});lean.reset()}
@@ -410,6 +436,7 @@ export function createWorld3D({onBack}){
   get lean(){return {offset:lean.offset,bank:lean.bank}},
   get walls(){return renderer?.solids.length||0},
   get triangles(){return renderer?.triangles||0},
+   get shop(){return shop.snapshot()},
   get forwardHold(){return heldForward.value},
   get sensor(){return motion.sensorSeen},get sensorEnabled(){return sensorEnabled},get sensorSource(){return motion.lastSource},get comfort(){return comfort},get permission(){return permission},
   injectTestQuaternion:(w,x,y,z)=>motion.ingestQuaternion(w,x,y,z),
