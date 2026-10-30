@@ -24,6 +24,8 @@ test('D palette and background use exact preapproved colors, integer pixel grid'
   assert.match(background,/GAP_CELLS=44/);
   assert.match(background,/CYCLE_SECONDS=8/);
   assert.match(page,/animation:stripe-drift 8s linear infinite/);
+  assert.match(page,/translate3d\(-160px,-160px,0\)/);
+  assert.match(background,/DIAGONAL_OVERSCAN_CELLS=PATTERN_CELLS\/2/);
   assert.match(page,/image-rendering:pixelated/);
 });
 
@@ -31,6 +33,7 @@ test('strict two-color procedural stripes are exactly cyclic in space and time',
   const fn=(x,y,p)=>((x+y+p)%80+80)%80<36;
   const phase=s=>Math.floor(((s%8)+8)%8*80/8)%80;
   assert.equal(phase(0),phase(8));
+  assert.equal(fn(0,0,0),fn(40,40,0),'normal translation by (40,40) grid cells must be identical');
   let changed=false;
   for(let y=0;y<41;y++)for(let x=0;x<81;x++){
     assert.equal(fn(x,y,0),fn(x,y,80));
