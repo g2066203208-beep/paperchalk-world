@@ -6,31 +6,45 @@ import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js?v=20261030-gy
 import {LeanCamera} from './lean3d.js?v=20261030-gyrocomfort6';
 import {BodyMotor} from './locomotion3d.js?v=20261030-gyrocomfort6';
 import {ShopOpeningLoop} from './shoploop.js?v=20261030-shopgyro8';
+import {createMaterialBatch} from './world-material-gl.js';
+import {tryReadPack} from '../world-builder/materials-core.js';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
 const PALETTE=[INK,PINK,BLUE,PAPER];
 const $=id=>document.getElementById(id);
 function makeTown(lod='full'){
  const verts=[],cols=[],lines=[],lineCols=[],solids=[];
+ const materialPosition=[],materialUV=[],materialID=[];
  function vertex(p,c){verts.push(...p);cols.push(...PALETTE[c])}
  function line(a,b,c){lines.push(...a,...b);lineCols.push(...PALETTE[c],...PALETTE[c])}
- function quad(a,b,c,d,k,outline=false){
+ function quad(a,b,c,d,k,outline=false,material=-1){
   for(const p of [a,b,c,a,c,d])vertex(p,k);
+  if(material>=0){
+   // Real UV mapped triangles following the exact physical faces of this mesh.
+   // One 16px material tile corresponds to about 2m of surface.
+   const length=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);
+   const u=Math.max(1/16,length(a,b)/2),v=Math.max(1/16,length(b,c)/2);
+   const coords=[a,b,c,a,c,d],tex=[[0,0],[u,0],[u,v],[0,0],[u,v],[0,v]];
+   coords.forEach((p,i)=>{materialPosition.push(...p);materialUV.push(...tex[i]);materialID.push(material)});
+  }
   if(outline){line(a,b,0);line(b,c,0);line(c,d,0);line(d,a,0)}
  }
- function box(x,y,z,sx,sy,sz,pal=2){
+ function box(x,y,z,sx,sy,sz,pal=2,material=null){
   const x0=x-sx/2,x1=x+sx/2,y0=y-sy/2,y1=y+sy/2,z0=z,z1=z+sz;
+  // Material identifiers: stone=0 brick=1 wood=2 plaster=3 roof=4
+  // paving=5 meadow=6 glass=7; keep original palette-color mesh for fallback.
+  const wall=material??(pal===1?1:pal===2?3:pal===3?2:0);
   quad([x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],pal);
-  quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],pal===1?3:1,true);
-  quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1],pal,true);
-  quad([x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],pal===2?3:2,true);
-  quad([x1,y1,z0],[x0,y1,z0],[x0,y1,z1],[x1,y1,z1],pal,true);
-  quad([x0,y1,z0],[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],pal===2?1:pal,true);
+  quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],pal===1?3:1,true,4);
+  quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1],pal,true,wall);
+  quad([x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],pal===2?3:2,true,wall);
+  quad([x1,y1,z0],[x0,y1,z0],[x0,y1,z1],[x1,y1,z1],pal,true,wall);
+  quad([x0,y1,z0],[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],pal===2?1:pal,true,wall);
  }
  // Ground, roads and stone blocks. Only hard pixel-color surfaces.
- quad([-90,-90,-.08],[90,-90,-.08],[90,90,-.08],[-90,90,-.08],2);
- quad([-90,-3,.012],[90,-3,.012],[90,3,.012],[-90,3,.012],0);
- quad([-5,-90,.016],[5,-90,.016],[5,90,.016],[-5,90,.016],0);
+ quad([-90,-90,-.08],[90,-90,-.08],[90,90,-.08],[-90,90,-.08],2,false,6);
+ quad([-90,-3,.012],[90,-3,.012],[90,3,.012],[-90,3,.012],0,false,5);
+ quad([-5,-90,.016],[5,-90,.016],[5,90,.016],[-5,90,.016],0,false,5);
  for(let n=-72;n<=72;n+=6){
   quad([n,-.12,.022],[n+2,-.12,.022],[n+2,.12,.022],[n,.12,.022],3);
   quad([-.12,n,.023],[.12,n,.023],[.12,n+2,.023],[-.12,n+2,.023],3);
@@ -59,7 +73,7 @@ function makeTown(lod='full'){
    for(let floor=0;floor<Math.floor(h/2);floor+=(lod==='mobile'?2:1)){ 
     for(const dx of [-1,1]){
      box(x+dx*1.13,towardRoad,.95+floor*1.75,.72,.09,.78,0);
-     box(x+dx*1.13,towardRoad+(.07*(y<0?-1:1)),.98+floor*1.75,.49,.095,.5,2);
+     box(x+dx*1.13,towardRoad+(.07*(y<0?-1:1)),.98+floor*1.75,.49,.095,.5,2,7);
     }
    }
    box(x,y,.1, w+.35,depth+.35,.20,0);
@@ -94,7 +108,8 @@ function makeTown(lod='full'){
  // A distant sky landmark visible on looking up.
  box(66,-22,14,4,4,17,1);
  box(66,-22,31,9,9,.65,3);
- return {tri:new Float32Array(verts),colors:new Float32Array(cols),line:new Float32Array(lines),lineColors:new Float32Array(lineCols),solids};
+ return {tri:new Float32Array(verts),colors:new Float32Array(cols),line:new Float32Array(lines),lineColors:new Float32Array(lineCols),solids,
+  materialPosition:new Float32Array(materialPosition),materialUV:new Float32Array(materialUV),materialID:new Float32Array(materialID)};
 }
 function program(gl,vs,fs){
  const compile=(type,source)=>{
@@ -117,6 +132,9 @@ function makeRenderer(canvas){
  const data=makeTown(Math.min(window.innerWidth,window.innerHeight)<640?'mobile':'full');
  function buffer(arr){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,arr,gl.STATIC_DRAW);return b}
  const tPos=buffer(data.tri),tCol=buffer(data.colors),lPos=buffer(data.line),lCol=buffer(data.lineColors);
+ let materialPass=null;
+ try{materialPass=createMaterialBatch(gl,{position:data.materialPosition,uv:data.materialUV,id:data.materialID},tryReadPack(window.localStorage))}
+ catch(e){console.warn('Pixel materials unavailable, using native four-color faces',e)}
  const bind=(pos,col)=>{gl.bindBuffer(gl.ARRAY_BUFFER,pos);gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,col);gl.enableVertexAttribArray(aColor);gl.vertexAttribPointer(aColor,3,gl.FLOAT,false,0,0)};
  gl.disable(gl.DITHER);gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);
  function resize(){
@@ -129,14 +147,18 @@ function makeRenderer(canvas){
  function render(pose,eye){
   resize();gl.useProgram(shader);
   gl.clearColor(...INK,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-  gl.uniformMatrix4fv(view,false,projectionMatrix(pose,canvas.width/canvas.height,eye));
+  const projection=projectionMatrix(pose,canvas.width/canvas.height,eye);
+  gl.uniformMatrix4fv(view,false,projection);
   gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);
   bind(tPos,tCol);gl.drawArrays(gl.TRIANGLES,0,data.tri.length/3);
   gl.disable(gl.POLYGON_OFFSET_FILL);
-  // Depth-tested architectural ink edges; pull slightly to front using depth func LEQUAL.
+  // Palette-only nearest-neighbour materials on the actual road/roof/wall triangles.
+  // Original flat meshes stay as a fallback, and black outlines remain last.
+  materialPass?.render({matrix:projection});
+  gl.useProgram(shader);gl.uniformMatrix4fv(view,false,projection);
   bind(lPos,lCol);gl.drawArrays(gl.LINES,0,data.line.length/3);
  }
- function destroy(){gl.deleteBuffer(tPos);gl.deleteBuffer(tCol);gl.deleteBuffer(lPos);gl.deleteBuffer(lCol);gl.deleteProgram(shader)}
+ function destroy(){materialPass?.destroy();gl.deleteBuffer(tPos);gl.deleteBuffer(tCol);gl.deleteBuffer(lPos);gl.deleteBuffer(lCol);gl.deleteProgram(shader)}
  return {render,resize,destroy,solids:data.solids,get triangles(){return data.tri.length/9}};
 }
 export function createWorld3D({onBack}){
