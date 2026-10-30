@@ -25,7 +25,7 @@ test('programmatic 3D city contains real depth-tested WebGL geometry, exact 4 co
  assert.ok(mesh.solids.length>50,'buildings and trees have physical collision footprints');
  assert.match(source,/function render\(pose,eye\)/);
  assert.match(source,/projectionMatrix\(pose,canvas\.width\/canvas\.height,eye\)/);
- assert.match(source,/motor\.update\(dt,controls\(\),motion\.pose\.yaw,performance\.now\(\)\)/);
+ assert.match(source,/motor\.update\(dt,input\(\),motion\.pose\.yaw\)/);
 });
 test('3D world has genuine 3D eye-translation peek, no inertial walking or fake squat',()=>{
  const world=readFileSync('site/game/world3d.js','utf8');
