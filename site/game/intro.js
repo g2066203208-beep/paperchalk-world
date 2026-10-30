@@ -88,6 +88,13 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
  const status=root.querySelector('#pw-dialogue-status');
  const nextBtn=root.querySelector('#pw-dialogue-next');
  const backBtn=root.querySelector('#pw-dialogue-back');
+ // The actual four-ink in-game reception counter, converted from the approved
+ // portrait concept into a 2-bit palette PNG; never draw generated UI labels.
+ const counter=new Image();counter.decoding='async';
+ let counterReady=false,counterFailed=false;
+ counter.onload=()=>{counterReady=counter.naturalWidth===188&&counter.naturalHeight===334};
+ counter.onerror=()=>{counterFailed=true};
+ counter.src='./game/art/rental-counter-4ink.png?v=20261031-counter1';
  const img=new Image();img.decoding='sync';
  let art=null,far=null,loaded=false,failed=false,visible=false;
  img.onload=()=>{
@@ -182,7 +189,29 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   const anchorY=Math.round(wide?H*.96:H*.98);
   return {wide,goalHeight:Math.round(goalHeight),goalWidth,anchorX,anchorY};
  }
+ function counterScene(ctx,W,H){
+  // The art is a pixel indexed asset; draw only at integer logical coordinates.
+  // Portrait: show the WHOLE scene. Landscape: crop a window containing
+  // the hostess' face and actual clipboard/counter, leaving speech at right.
+  R(0,0,W,H,COL.ink);ctx.imageSmoothingEnabled=false;
+  if(W/H>1.25){
+   const panelWidth=Math.round(W*.53);
+   const sourceHeight=Math.min(334,Math.round(188*H/panelWidth));
+   const sourceY=Math.max(0,Math.min(334-sourceHeight,Math.round(192-sourceHeight*.53)));
+   ctx.drawImage(counter,0,sourceY,188,sourceHeight,0,0,panelWidth,H);
+   R(panelWidth,0,2,H,COL.pink);
+  }else{
+   const drawWidth=Math.min(W,Math.round(H*188/334));
+   const drawHeight=Math.round(drawWidth*334/188);
+   const offset=Math.round((W-drawWidth)/2);
+   ctx.drawImage(counter,0,0,188,334,offset,0,drawWidth,drawHeight);
+  }
+ }
  function draw(ctx,W,H){
+  if(counterReady&&t>=APPROACH_SECONDS){
+   counterScene(ctx,W,H);
+   return;
+  }
   world(W,H);
   if(!loaded){text(failed?'角色素材读取失败':'老板娘正在走近…',W/2,H*.42,15,COL.paper);return}
   const g=geometry(W,H),p=smooth(t/APPROACH_SECONDS);
@@ -203,7 +232,7 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
    progress:+smooth(t/APPROACH_SECONDS).toFixed(3),scale:+(.24+.76*smooth(t/APPROACH_SECONDS)).toFixed(3),
    elapsed:+t.toFixed(3),breathingY:t>=APPROACH_SECONDS?Math.round(2*Math.sin((t-APPROACH_SECONDS)*Math.PI*2/3.6)):0,
    line,shown:Math.floor(shown),full:length(),auto:false,dialogue:SHOP_LINES[line],
-   portrait:[HOSTESS_WIDTH,HOSTESS_HEIGHT]};
+   portrait:[HOSTESS_WIDTH,HOSTESS_HEIGHT],counterReady,counterFailed,counterAsset:[188,334]};
  }
  return {enter,leave,draw,update,onTap,next,snapshot};
 }
