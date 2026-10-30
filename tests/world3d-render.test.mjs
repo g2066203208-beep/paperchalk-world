@@ -42,7 +42,7 @@ test('world3d requests sensor only from a click, gives recenter, touch/keyboard 
  assert.match(source,/pw-posture-hold/);
  assert.match(source,/setStance\(n\)/);
  assert.match(source,/window\.addEventListener\('keydown',keyDown\)/);
- assert.match(source,/const keys=\{ArrowLeft:/);
+ assert.match(source,/const lookKeys=\{arrowleft:/);
  assert.match(source,/cancelAnimationFrame\(raf\)/);
  const html=readFileSync('site/index.html','utf8');
  assert.match(html,/id="pw-world-canvas"/);
