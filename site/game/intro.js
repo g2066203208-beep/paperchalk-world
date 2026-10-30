@@ -4,6 +4,7 @@
  * Breathing is VERTICAL, whole-sprite up/down by 1-2 integer pixels, period 3.6s.
  */
 import {HOSTESS_PNG,HOSTESS_WIDTH,HOSTESS_HEIGHT} from './hostess-pixel.js';
+import {drawOfficeBack,drawOfficeCounter,officeLayout} from './rental-office.js?v=20261031-office1';
 
 export const SHOP_LINES=Object.freeze([
   '欢迎来到蓝铃街。第一次来这儿吧？',
@@ -136,55 +137,20 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   if(e.target.closest('button'))return;
   next();
  });
- // Real 2.5D spatial composition: converging tiled floor and a rental counter.
- function world(W,H){
-  R(0,0,W,H,COL.ink);
-  const horizon=Math.round(H*.37),vx=Math.round(W*.50);
-  poly([[0,horizon],[W,horizon],[W,H],[0,H]],COL.blue);
-  // Mid-ground shop wall and counter in integer-pixel four-color blocks.
-  R(0,Math.round(horizon*.10),W,4,COL.paper);
-  R(0,horizon-3,W,3,COL.paper);
-  const left=Math.round(W*.05),right=Math.round(W*.95);
-  R(left,horizon-49,5,48,COL.paper);R(right-5,horizon-49,5,48,COL.paper);
-  R(Math.round(W*.23),horizon-59,Math.round(W*.54),6,COL.paper);
-  R(Math.round(W*.35),horizon-49,Math.round(W*.30),26,COL.ink);
-  R(Math.round(W*.39),horizon-42,Math.round(W*.22),12,COL.pink);
-  // Perspective floor plane: vanishing point at center.
-  for(let i=-4;i<=4;i++){
-   const bx=Math.round(W/2+i*W*.23);
-   lineFloor(vx,horizon,bx,H,COL.paper);
-  }
-  for(const frac of [.16,.31,.53,.76,.94]){
-   const z=frac*frac,y=Math.round(horizon+(H-horizon)*z);
-   R(0,y,W,Math.max(1,Math.floor(z*3)),COL.ink);
-  }
-  // Two spatially staggered counter supports.
-  const counterY=Math.round(H*.72);
-  R(3,counterY,Math.round(W*.17),H-counterY,COL.ink);
-  R(W-Math.round(W*.17)-3,counterY,Math.round(W*.17),H-counterY,COL.ink);
-  R(3,counterY,Math.round(W*.17),3,COL.pink);
-  R(W-Math.round(W*.17)-3,counterY,Math.round(W*.17),3,COL.pink);
- }
- function lineFloor(x1,y1,x2,y2,c){
-  // Pixel staircase lines, no browser anti-aliasing.
-  let dx=Math.abs(x2-x1),dy=-Math.abs(y2-y1),sx=x1<x2?1:-1,sy=y1<y2?1:-1,e=dx+dy;
-  while(true){R(x1,y1,1,1,c);if(x1===x2&&y1===y2)break;const twice=2*e;
-   if(twice>=dy){e+=dy;x1+=sx}if(twice<=dx){e+=dx;y1+=sy}
-  }
- }
+ // Rental office is a native editable scene, not a baked GPT illustration.
+ function world(W,H){return drawOfficeBack({R,COL},W,H)}
  function geometry(W,H){
-  const wide=W/H>1.25;
-  // Reference-2 close-up: owner visually dominates the counter instead of
-  // looking like a tiny sprite behind a floating dialogue. No blur or resample.
-  const goalHeight=Math.min(wide?H*.90:H*.89,wide?350:366);
+  const room=officeLayout(W,H),{wide,anchorX,anchorY}=room;
+  // Portrait: one recognisable unaltered hostess behind a physical counter.
+  // Landscape: keep the complete sprite left of the real native speech window.
+  const goalHeight=Math.min(wide?H*.93:H*.75,wide?350:336,
+    (W*(wide?.31:.98))*HOSTESS_HEIGHT/HOSTESS_WIDTH);
   const goalWidth=Math.round(goalHeight*HOSTESS_WIDTH/HOSTESS_HEIGHT);
-  const anchorX=Math.round(wide?W*.27:W*.50);
-  const anchorY=Math.round(wide?H*.96:H*.98);
   return {wide,goalHeight:Math.round(goalHeight),goalWidth,anchorX,anchorY};
  }
  function draw(ctx,W,H){
   world(W,H);
-  if(!loaded){text(failed?'角色素材读取失败':'老板娘正在走近…',W/2,H*.42,15,COL.paper);return}
+  if(!loaded){text(failed?'角色素材读取失败':'老板娘正在走近…',W/2,H*.42,15,COL.paper);drawOfficeCounter({R,COL},W,H);return}
   const g=geometry(W,H),p=smooth(t/APPROACH_SECONDS);
   // Distance is spatial, NOT just a gray fill: ~24% scale at vanishing point,
   // ~100% at the counter, with grounded feet and a walking step.
@@ -197,9 +163,12 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   // Far away silhouette becomes the actual fully-colored original before reaching us.
   const source=p<.36?far:art;
   ctx.drawImage(source,0,0,HOSTESS_WIDTH,HOSTESS_HEIGHT,px,py,sw,sh);
+  // Correct occlusion: counter and physical register are always in front.
+  drawOfficeCounter({R,COL},W,H);
  }
  function snapshot(){
-  return {loaded,failed,visible,phase:t<APPROACH_SECONDS?'approaching':'talk',
+  return {loaded,failed,visible,scene:'rental-office-v1',room:officeLayout(192,384).keys,
+   phase:t<APPROACH_SECONDS?'approaching':'talk',
    progress:+smooth(t/APPROACH_SECONDS).toFixed(3),scale:+(.24+.76*smooth(t/APPROACH_SECONDS)).toFixed(3),
    elapsed:+t.toFixed(3),breathingY:t>=APPROACH_SECONDS?Math.round(2*Math.sin((t-APPROACH_SECONDS)*Math.PI*2/3.6)):0,
    line,shown:Math.floor(shown),full:length(),auto:false,dialogue:SHOP_LINES[line],
