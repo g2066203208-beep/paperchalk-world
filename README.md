@@ -4,7 +4,7 @@
 
 ## 当前游戏阶段：只实现背景（2026-10-30）
 
-现阶段按用户要求**移除原首页的骨骼实验室、人物立绘、对话、按钮和中央小窗口**；网站根入口 `site/index.html` 只渲染一个全屏程序化背景 Canvas，后续再逐步添加游戏内容。
+现阶段按用户要求**移除旧版首页的全部旧内容、人物立绘、对话、按钮和中央小窗口**；网站根入口 `site/index.html` 只渲染一个全屏程序化背景 Canvas，后续再逐步添加游戏内容。
 
 - `site/index.html`：只有 Canvas 和动态背景脚本，手机全屏（竖屏、横屏）、电脑及平板适配。
 - `site/game/background.js`：真正的像素网格函数绘制；奶油白 `#FFF5E6` 底色 + 樱粉 `#F2A5C2` 粗45°条纹；4 CSS px 一个逻辑像素；36格条纹，44格间隔；每36秒精确平移一个完整周期。
@@ -20,5 +20,8 @@
 ## 保留的创作工具（不是 APK 首页）
 
 - [PixelLab](https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/)
-- [BoneLab](https://g2066203208-beep.github.io/paperchalk-world/bone-lab/)
 - [Character Lab](https://g2066203208-beep.github.io/paperchalk-world/character-lab/)
+
+## 已清理的旧模块
+
+旧 BoneLab 的页面、CSS、JS 渲染/逆运动学/SDF 算法与相应测试均已从 `main` 删除；原游戏网页不再有旧实验室入口。独立 PixelLab、Character Lab 不受此次删除影响。网站发布改为独立快速流水线，不再依赖任何 ML 训练任务。训练过程迁移至手动/受限触发的 PixelLab 工作流。
