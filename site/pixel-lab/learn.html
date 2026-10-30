@@ -24,10 +24,16 @@ label{display:flex;align-items:center;gap:6px}
 <nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
 <main>
 <div class="eyebrow">SYSTEM 02 · ACTIVE MODEL ONLY</div>
-<h1>系统 02 · V5 人体结构与像素绘画训练</h1>
-<p class="summary">现有 V5 训练通过了合成体块数据集，但对原始 D 人物的部件拆解明显失败。这里首先展示原画与预测结果，不再把合成样本高分当成人物绘制成功。V3 原生 384×512 细节修复和 V2 48×64 粗构图保留为旧实验对照。</p>
+<h1>系统 02 · 多人物像素脸训练</h1>
+<p class="summary">目前主线已从单个人物的复制修复改为多人物组合学习：先用 CC0 头型、眼睛五官、发型练结构，再独立做 D 风格像素质量验收。此前单人训练和 VAE 空白脸问题在页面中保留供对照。</p>
 <p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
 
+<section style="background:#393657;border:2px solid #A9BAE9;border-radius:12px;padding:15px;margin:18px 0" aria-label="通用型多人物训练最新实验">
+<div class="eyebrow">CURRENT · MULTI-CHARACTER / DISCRETE FACE PARTS</div>
+<h2 style="margin:7px 0;font-size:clamp(20px,3vw,28px)">多人物、不同脸型、不同五官、不同发型</h2>
+<p>原先 16 张同一人物变形已降级为失败对照。现采用 CC0 公共人物部件数据集（7 种头型、11 类五官、8 种发型），独立训练离散采样器，组合出 32 张不同头像；旧 VAE 平均化导致空白脸，也保留失败图。<strong>暂时属于通用结构学习，不代表已画出 D 风格高质量新角色。</strong></p>
+<a style="font-weight:900;color:#FFF5E6;font-size:17px" href="./face-structured.html">打开32张可见五官的多人物训练结果</a>　·　<a href="./face-general.html">查看VAE失败对照</a>
+</section>
 <section id="face-first" style="background:#393657;color:#FFF5E6;border:2px solid #F2A5C2;border-radius:11px;padding:16px;margin:16px 0">
 <div class="eyebrow">NOW · FACE-ONLY TRAINING / 96×96 TRUE PIXELS</div>
 <h2 style="font-size:clamp(22px,3vw,28px);margin:5px 0">当前任务：先把脸画好</h2>
