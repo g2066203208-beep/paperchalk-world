@@ -1,0 +1,62 @@
+name: PixelLab - structured fullbody redraw and pixel-part ML
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/fullbody_refine/structured_gold.py'
+      - 'ml/fullbody_refine/train_parts.py'
+      - 'ml/fullbody_refine/verify_structured.py'
+      - '.github/workflows/structured-pixel-art.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: structured-pixel-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  redraw-and-learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install indexed pixel-art and ML tooling
+        run: |
+          python -m pip install --quiet numpy==2.2.6 Pillow==11.3.0 scipy==1.16.1
+          python -m pip install --quiet 'torch==2.7.1+cpu' --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Render genuinely redesigned whole character with hand-authored parts
+        run: python -m ml.fullbody_refine.structured_gold
+      - name: Train model against labelled head hair face cape costume hands and boots
+        env:
+          OMP_NUM_THREADS: "2"
+          MKL_NUM_THREADS: "2"
+          OPENBLAS_NUM_THREADS: "1"
+        run: python -m ml.fullbody_refine.train_parts
+      - name: Assert real art pixel quality and actual trained semantic model
+        run: python -m ml.fullbody_refine.verify_structured
+      - name: Preserve native art, source strokes, labels and trained network
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: structured-figure-true-pixel-redraw-with-10-parts-and-ml
+          path: site/pixel-lab/structured-gold/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Publish inspected structured character and measured ML study
+        if: success()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/pixel-lab/structured-gold/*.png site/pixel-lab/structured-gold/*.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'assets: structured 4-color body-part redraw and pixel supervision'
+          for i in 1 2 3 4; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
