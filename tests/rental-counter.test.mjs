@@ -25,8 +25,8 @@ test('the real rental counter asset is a four-ink, unfiltered-by-GPT PNG checked
  const scanlines=inflateSync(compressed);
  assert.equal(scanlines.length,334*(1+Math.ceil(188*2/8)));
  const intro=readFileSync('site/game/intro.js','utf8');
- assert.match(intro,/game\\/art\\/rental-counter-4ink\\.png/);
+ assert.ok(intro.includes('game/art/rental-counter-4ink.png'));
  assert.match(intro,/imageSmoothingEnabled=false/);
- assert.match(intro,/counterScene\\(ctx,W,H\\)/);
+ assert.ok(intro.includes('counterScene(ctx,W,H)'));
  assert.match(intro,/APPROACH_SECONDS/,'intro/owner entrance remains playable');
 });
