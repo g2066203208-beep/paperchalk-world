@@ -6,9 +6,8 @@
 import {HOSTESS_PNG,HOSTESS_WIDTH,HOSTESS_HEIGHT} from './hostess-pixel.js';
 
 export const SHOP_LINES=Object.freeze([
-  '欢迎光临。我是这间店铺租赁所的老板娘。',
-  '想开自己的店吗？先登记你的角色信息，再选择店铺和租期。',
-  '准备好了就去柜台填写租约吧。'
+  '我是这里的老板娘。你是来办理店铺租借的吧？',
+  '请先创建角色，然后填写店铺名称、经营类型和租期。'
 ]);
 const INK=[57,54,87],APPROACH_SECONDS=2.8,CHAR_PER_SEC=25,AUTO_PAUSE=1.35;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
