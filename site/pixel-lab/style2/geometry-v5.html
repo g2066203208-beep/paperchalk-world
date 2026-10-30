@@ -14,6 +14,14 @@
 <figure><figcaption>网络预测部件</figcaption><img id="parts" src="./geometry-v5/view1_pred_parts.png" alt="模型分区预测" width="96" height="128"></figure>
 <figure><figcaption>网络预测深度层次</figcaption><img id="depth" src="./geometry-v5/view1_pred_depth.png" alt="前后遮挡序数深度预测" width="96" height="128"></figure>
 </div>
+<details style="margin:18px 0;border:1px solid #76678e;border-radius:12px;padding:13px"><summary style="cursor:pointer;font-weight:800">查看两张真正 D 风格人物的零样本分区预测（没有真深度标签）</summary>
+<p class="small">模型先用三维几何代理训练，再直接推断这两张真实像素人物；这里展示的是<strong>跨域失败风险检查</strong>，不拿合成体积当作真实立绘的准确三维模型。</p>
+<div class="screens" style="grid-template-columns:repeat(2,minmax(0,1fr));max-width:760px">
+<figure><figcaption>原 D 动态人物（降至几何识别 96×128）</figcaption><img src="./geometry-v5/A_dynamic_input.png" alt="真实 D 风格动态母版作为几何识别输入"></figure>
+<figure><figcaption>V5 人体部件预测（诊断色板）</figcaption><img src="./geometry-v5/A_dynamic_pred_parts.png" alt="合成几何训练模型对动态人物的部件推测，非已验证分割"></figure>
+<figure><figcaption>原 D 站姿人物</figcaption><img src="./geometry-v5/B_standing_input.png" alt="真实 D 风格站姿母版作为几何识别输入"></figure>
+<figure><figcaption>V5 人体部件预测（诊断色板）</figcaption><img src="./geometry-v5/B_standing_pred_parts.png" alt="合成几何训练模型对站姿人物的部件推测，非已验证分割"></figure>
+</div></details>
 <div class="note" style="margin-top:17px"><h2>真实留出参数测试</h2><div id="report">读取训练报告中……</div><p class="small">留出随机参数与视角测试，并非未见真人角色测试。不能用合成数据准确率证明已掌握成人脸型、写实衣服和精致像素绘画。</p><a href="./geometry-v5/report.json">查看可审计训练指标</a> · <a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/ml/style2/volume_parts_v5.py">查看 PyTorch 源码</a></div>
 </main><script>
 const angle=document.querySelector('#angle');
