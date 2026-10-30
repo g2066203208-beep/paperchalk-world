@@ -171,7 +171,7 @@ function drawButton(b,i){
   while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
   text(label,x+w*.58,y+(h-sprite.h)/2,hFont,COL.ink);
  }
- buttonIcon(state==='menu'?['play','continue','gear','exit'][i]:'back',x+w*.17,y+h*.5,Math.round(h*.36),COL.ink);
+ buttonIcon(state==='menu'?['play','continue','world','gear','exit'][i]:'back',x+w*.17,y+h*.5,Math.round(h*.36),COL.ink);
  if(disabled){ // Do not pretend "Continue" works without an actual stored start.
   R(x+w-20,y+h-8,2,2,COL.blue)
  }
