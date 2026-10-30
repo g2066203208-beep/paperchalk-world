@@ -195,7 +195,7 @@ function draw(){
  if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
   sparkle(W-17,H-19,2,state==='menu'?COL.ink:COL.pink)}
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.ink,3);text(note,W/2,H*.09+5,11,COL.paper)}
- window.__PAPERWORLD_MENU__={state,selected,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:particles.length,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN};
 }
 function burst(x,y,n=16){
  if(!prefs.particles)return;
