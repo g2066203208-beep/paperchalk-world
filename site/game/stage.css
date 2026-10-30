@@ -143,3 +143,20 @@
  #pw-world-bottom{max-height:min(60dvh,460px)}
  #pw-walk-help{font-size:10px}
 }
+
+/* Compact gameplay view: preserve 3D visibility and keep advanced tweaks optional. */
+#pw-world-bottom.pw-world-compact .pw-world-controls,
+#pw-world-bottom.pw-world-compact .pw-world-help{display:none}
+#pw-world-bottom.pw-world-compact{max-height:min(48dvh,360px)}
+.pw-world-more{padding:4px 5px;min-height:28px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);font:800 11px/1 system-ui;white-space:nowrap;cursor:pointer}
+#pw-world .pw-world-more{font-size:11px}
+.pw-world-line{align-items:center;flex-wrap:wrap}
+#pw-move-stick{bottom:clamp(260px,38dvh,360px)}
+@media(max-height:650px){
+ #pw-world-bottom.pw-world-compact{max-height:calc(100dvh - 92px)}
+ #pw-move-stick{bottom:10px}
+}
+@media(max-width:420px){
+ #pw-world-bottom.pw-world-compact{max-height:min(46dvh,360px)}
+ #pw-move-stick{bottom:clamp(256px,37dvh,330px)}
+}
