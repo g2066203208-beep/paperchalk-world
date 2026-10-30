@@ -4,8 +4,8 @@
  * Max displacement 0.72 m at 65 degrees; bank capped at 17 degrees.
  * Camera's eye is collision clamped against the same city buildings/trees.
  */
-import {clamp,RAD} from './motion3d.js';
-import {blocked} from './locomotion3d.js';
+import {clamp,RAD} from './motion3d.js?v=20261030-gyrocomfort6';
+import {blocked} from './locomotion3d.js?v=20261030-gyrocomfort6';
 
 export const LEAN_MAX=.64;
 export const LEAN_FULL_ANGLE=65*RAD;
