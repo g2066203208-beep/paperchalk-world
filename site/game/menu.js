@@ -10,6 +10,24 @@ const ORDER=['开始游戏','继续游戏','设置','退出游戏'];
 const KEY='paperworld-menu-v3',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
 const nativeLabels=document.getElementById('pw-menu-labels');
+// Native form controls sit above the game canvas. Preserve the same clean
+// touch feedback there, without stealing focus from Chinese text inputs.
+const uiTouchFx=document.getElementById('pw-ui-touch-fx');
+addEventListener('pointerdown',e=>{
+ if(!uiTouchFx||!prefs.particles||reduced||!e.target.closest?.('#pw-lease,#pw-dialogue'))return;
+ for(let i=0;i<7;i++){
+  const spark=document.createElement('span');spark.className='pw-touch-spark';
+  const size=i%3===0?6:4,theta=Math.random()*Math.PI*2,dist=10+Math.random()*15;
+  spark.style.width=size+'px';spark.style.height=size+'px';
+  spark.style.left=Math.round(e.clientX-size/2)+'px';
+  spark.style.top=Math.round(e.clientY-size/2)+'px';
+  spark.style.background=i%2?'#393657':'#F2A5C2';
+  uiTouchFx.appendChild(spark);
+  requestAnimationFrame(()=>{spark.style.transform='translate3d('+Math.round(Math.cos(theta)*dist)+'px,'+Math.round(Math.sin(theta)*dist)+'px,0)'});
+  setTimeout(()=>spark.remove(),320);
+ }
+});
+
 const ctx=el.getContext('2d',{alpha:true,willReadFrequently:false});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let prefs={motion:!reduced,particles:!reduced,haptic:true};
