@@ -2,7 +2,7 @@
 // compositor translate it continuously. Never redraw the full screen per frame.
 export const PALETTE=Object.freeze(['#393657','#F2A5C2','#A9BAE9','#FFF5E6']);
 export const BACKGROUND='#FFF5E6';
-export const STRIPE='#F2A5C2';
+export const STRIPE='#A9BAE9';
 export const PIXEL_CSS=4;
 export const STRIPE_CELLS=36;
 export const GAP_CELLS=44;
@@ -17,7 +17,7 @@ const canvas=document.getElementById('background');
 if(!canvas)throw Error('Missing #background canvas');
 const ctx=canvas.getContext('2d',{alpha:false});
 if(!ctx)throw Error('Missing 2D context');
-const CREAM=[255,245,230], PINK=[242,165,194];
+const CREAM=[255,245,230], BLUE=[169,186,233];
 let logicalWidth=-1,logicalHeight=-1;
 let redraws=0;
 
@@ -37,7 +37,7 @@ function drawOnceForSize(){
   const d=image.data;
   for(let y=0;y<rows;y++){
     for(let x=0;x<cols;x++){
-      const c=stripeAt(x,y,0)?PINK:CREAM;
+      const c=stripeAt(x,y,0)?BLUE:CREAM;
       const i=(y*cols+x)*4;
       d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255;
     }
@@ -57,7 +57,7 @@ document.addEventListener('visibilitychange',()=>{
 if(document.hidden)canvas.style.animationPlayState='paused';
 // Non-interactive test telemetry: never reads or changes the CSS animation.
 window.__PAPERWORLD_BACKGROUND__=Object.freeze({
-  version:'2026.10.30-smooth.1',
+  version:'2026.10.30-blue.1',
   get redraws(){return redraws},
   get dimensions(){return [logicalWidth,logicalHeight]},
   palette:PALETTE,
