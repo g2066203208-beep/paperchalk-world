@@ -23,6 +23,7 @@ try {
  page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>document.querySelector('#pixel-v2').dataset.ready==='true',{timeout:30000});
+ await page.locator('#pixel-v2 > summary').click(); // V2 is intentionally collapsed beneath native V3.
  assert.equal(await page.locator('#pixel-v2-family option').count(),7);
  assert.equal(await page.locator('#pixel-v2-grid').isChecked(),true);
  let before=await page.locator('[data-v2-canvas="generated"]').evaluate(el=>el.toDataURL());
