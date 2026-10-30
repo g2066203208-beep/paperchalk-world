@@ -1,0 +1,42 @@
+name: PixelLab - pretrained fullbody pixel model research probe
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/fullbody/pretrained_probe.py'
+      - '.github/workflows/fullbody-pretrained-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pixel-pretrained-probe-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU only PyTorch and upstream flow-matching model
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "torch==2.7.1+cpu" "torchvision==0.22.1+cpu" --extra-index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --quiet "Pillow==11.3.0" "numpy==2.2.6" "open-clip-torch>=2.24,<4" "transformers>=4.40,<5" "huggingface_hub>=0.29,<2" "safetensors>=0.4" "ftfy" "timm"
+          python -m pip install --quiet --no-deps "git+https://github.com/evilsocket/alucard.git"
+      - name: Generate 4 newly described entire people in 4 different poses
+        env:
+          OMP_NUM_THREADS: "2"
+          MKL_NUM_THREADS: "2"
+          HF_HUB_DISABLE_XET: "1"
+        run: python -m ml.fullbody.pretrained_probe --steps 16
+      - name: Keep pretrained outputs as private evaluation evidence (NOT formally approved)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: research-only-pretrained-4-full-figures-for-visual-review
+          path: site/pixel-lab/fullbody-pretrained/
+          retention-days: 14
+          if-no-files-found: warn
