@@ -31,9 +31,11 @@ test('3D world has genuine 3D eye-translation peek, no inertial walking or fake 
  const world=readFileSync('site/game/world3d.js','utf8');
  const lean=readFileSync('site/game/lean3d.js','utf8');
  const html=readFileSync('site/index.html','utf8');
- assert.match(world,/import \{LeanCamera\} from '\.\/lean3d\.js'/);
+ assert.match(world,/import \{LeanCamera\} from '\.\/lean3d\.js\?v=20261030-gyrocomfort6'/);
  assert.match(world,/const peek=lean\.update\(dt,sideRoll,motion\.pose\.yaw,p\.eye,renderer\?\.solids\|\|\[\]\)/);
  assert.match(world,/renderer\.render\(view,peek\.eye\)/);
+ assert.match(world,/onNativeQuaternion/);
+ assert.match(world,/setComfort\(comfort\)/);
  assert.match(lean,/protectedLean/);
  assert.match(lean,/offset:eased\*LEAN_MAX/);
  assert.doesNotMatch(world,/devicemotion|onAcceleration|ingestVerticalAcceleration|walkMode|physicalStanceMode|pw-walk-toggle|pw-posture-hold/);
