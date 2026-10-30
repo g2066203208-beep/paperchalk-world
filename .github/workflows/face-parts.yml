@@ -1,13 +1,8 @@
 name: PixelLab - part preserving multi-face learning
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/style2/face_parts_structured.py'
-      - 'ml/style2/verify_face_parts_structured.py'
-      - '.github/workflows/face-parts.yml'
-      - 'site/pixel-lab/face-parts.html'
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: write

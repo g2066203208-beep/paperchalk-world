@@ -1,14 +1,8 @@
 name: PixelLab - extend sixteen trained faces to complete full-body sprites
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/style2/extend_16_fullbody.py'
-      - 'ml/style2/verify_extend_16_fullbody.py'
-      - '.github/workflows/fullbody-16.yml'
-      - 'site/pixel-lab/fullbody-16.html'
-      - 'tests/fullbody-16-browser.mjs'
   workflow_dispatch:
+
 permissions:
   contents: write
   actions: write

@@ -1,12 +1,8 @@
 name: PixelLab - actual CC0 motion prior training
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/style2/motion_prior_cc0.py'
-      - 'ml/style2/verify_motion_prior_cc0.py'
-      - '.github/workflows/motion-prior.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: write

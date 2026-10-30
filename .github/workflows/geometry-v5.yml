@@ -1,16 +1,8 @@
 name: PixelLab V5 geometry - train and verify independently
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/style2/volume_parts_v5.py'
-      - 'ml/style2/real_parts_v51.py'
-      - 'ml/style2/verify_volume_parts_v5.py'
-      - 'site/pixel-lab/style2/geometry-v5.html'
-      - 'tests/geometry-v5-browser.mjs'
-      - 'site/pixel-lab/learn.html'
-      - '.github/workflows/geometry-v5.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: write

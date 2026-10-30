@@ -1,13 +1,8 @@
 name: PixelLab - generic multi-face neural pretraining
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/style2/face_general_train.py'
-      - 'ml/style2/face_parts_generator.py'
-      - 'ml/style2/verify_face_general.py'
-      - '.github/workflows/face-general.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: write

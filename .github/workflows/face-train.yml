@@ -1,14 +1,8 @@
 name: PixelLab - real face-only masked token training
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/style2/face_train.py'
-      - 'ml/style2/verify_face.py'
-      - 'site/pixel-lab/face.html'
-      - 'tests/face-browser.mjs'
-      - '.github/workflows/face-train.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: write

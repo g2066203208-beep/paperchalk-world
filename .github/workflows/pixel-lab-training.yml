@@ -1,14 +1,8 @@
 name: PixelLab model training and browser evidence (separate from game site)
+# ARCHIVED: isolated face/tiny-sprite/template research; never auto-train on main.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'ml/**'
-      - 'site/pixel-lab/**'
-      - 'tests/v4_*'
-      - 'tests/v5_*'
-      - '.github/workflows/pixel-lab-training.yml'
+
 permissions:
   contents: read
 concurrency:
