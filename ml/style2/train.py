@@ -138,7 +138,7 @@ def main(steps=240,seed=20261030):
  neural=np.concatenate([painter.logits(features[i:i+4096]).argmax(1) for i in range(0,len(features),4096)])
  expected=b[y0:,:].ravel()
  # The four orthogonal neighbors constitute a simple non-neural baseline.
- context=features.reshape(-1,25,5)[:,:,[7,11,13,17]].sum(2)[:,:4]
+ context=features.reshape(-1,25,5)[:,[7,11,13,17],:4].sum(1)
  baseline=context.argmax(1)
  fg=expected!=0
  visual=b.copy();visual[y0:,:]=neural.reshape(H-y0,W)
