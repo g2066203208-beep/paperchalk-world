@@ -2,95 +2,43 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101821">
-<title>骨骼实验室 · 程序生成 2D 生物</title>
-<link rel="stylesheet" href="./style.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFF5E6">
+<meta name="description" content="PAPERWORLD 四色像素游戏——中央小窗、低刺激双色程序动态背景、可交互故事。">
+<title>PAPERWORLD · 四色像素游戏</title>
+<link rel="stylesheet" href="./game/game.css?v=20261030g1">
 </head>
 <body>
-<div id="studio">
- <header class="topbar">
-  <div class="brand-mark"><span class="mark-center"></span><span class="mark-orbit"></span></div>
-  <div class="brand-copy"><strong>BONE<span>LAB</span></strong><small>生物结构实验室 · PROCEDURAL CREATURE RIGS</small></div>
-  <a class="pixel-lab-link" href="./pixel-lab/">✦ 像素机器学习实验室</a>
-  <a class="pixel-lab-link" href="./pixel-lab/palette-choices.html">◈ 8套游戏四色配色</a>
-  <a class="pixel-lab-link" href="./character-lab/">✧ 角色造型实验室</a>
-  <div class="header-spacer"></div>
-  <span class="system-pill"><span class="live-dot"></span> 实时骨骼求解器</span>
-  <span class="version">BUILD 0.1 · 2D</span>
- </header>
- <section class="workspace">
-  <aside class="panel left-panel" aria-label="生成控制台">
-   <div class="panel-label"><span>01</span> 生物结构生成器</div>
-   <h1>从骨骼开始<span class="title-dot">.</span></h1>
-   <p class="intro">先确定真正的骨架和关节，再考虑皮肤与像素美术。所有结构由程序生成，并可重现。</p>
-   <div class="section-title">选择身体拓扑 <span>ARCHETYPE</span></div>
-   <div class="species-grid" id="species-grid">
-    <button class="species" data-type="biped" aria-pressed="false"><span class="species-icon">♟</span><strong>双足</strong><small>BIPED</small></button>
-    <button class="species active" data-type="quadruped" aria-pressed="true"><span class="species-icon">♞</span><strong>四足</strong><small>QUAD</small></button>
-    <button class="species" data-type="hexapod" aria-pressed="false"><span class="species-icon">✳</span><strong>六足</strong><small>HEXAPOD</small></button>
-    <button class="species" data-type="serpent" aria-pressed="false"><span class="species-icon">∿</span><strong>蛇形</strong><small>SERPENT</small></button>
-   </div>
-   <div class="section-title seed-title">形态参数 <span>GENOME</span></div>
-   <label class="control-label" for="size-range"><span>身体纵向比例</span><output id="size-output">100%</output></label>
-   <input id="size-range" type="range" min="65" max="140" value="100">
-   <label class="control-label" for="limbs-range"><span>身体横向比例</span><output id="limbs-output">100%</output></label>
-   <input id="limbs-range" type="range" min="65" max="140" value="100">
-   <label class="control-label seed-label" for="seed-input"><span>随机种子</span><small>可复现</small></label>
-   <div class="seed-row"><input id="seed-input" type="number" min="1" max="4294967295" value="2048"><button id="regenerate" class="icon-btn" title="更换种子">↻</button></div>
-   <button id="generate" class="primary-button"><span>✦</span> 重新生成骨骼 <span>↗</span></button>
-   <div class="section-title options-title">显示与运动 <span>VIEW</span></div>
-   <label class="switch-row"><span>运动测试 <small>步态 / 摆动</small></span><input id="play-switch" type="checkbox" checked><i></i></label>
-   <label class="switch-row"><span>关节编号 <small>显示节点名称</small></span><input id="labels-switch" type="checkbox"><i></i></label>
-   <label class="switch-row"><span>静止参考姿态 <small>灰色骨骼叠加</small></span><input id="ghost-switch" type="checkbox" checked><i></i></label>
-   <div class="section-title surface-title">数学包裹体 <span>IMPLICIT SKIN · SDF</span></div>
-   <label class="switch-row"><span>光滑身体表面 <small>骨段胶囊距离场 + 平滑并集</small></span><input id="surface-switch" type="checkbox" checked><i></i></label>
-   <label class="switch-row"><span>骨架叠加 <small>显示骨骼节点与关节</small></span><input id="bones-switch" type="checkbox" checked><i></i></label>
-   <label class="control-label" for="thickness-range"><span>体表厚度</span><output id="thickness-output">115%</output></label>
-   <input id="thickness-range" type="range" min="60" max="190" value="115">
-   <label class="control-label" for="blend-range"><span>关节融合半径</span><output id="blend-output">12 u</output></label>
-   <input id="blend-range" type="range" min="0" max="25" value="12">
-   <div class="math-note"><b>F(x,y) = smoothMin(d₁, d₂, ...)</b><span>体表是 F(x,y) = 0 的等值线。<br>移动骨骼，包裹体自动重算。</span></div>
-   <div class="sidebar-note">◉ 单击骨骼关节查看信息；拖动手腕或脚踝，直接测试双段逆向运动学。</div>
-  </aside>
-  <main class="viewport">
-   <div class="stage-header">
-    <div><span class="eyebrow">ACTIVE SPECIMEN <span class="divider-slash">/</span> NO. <span id="specimen-id">2048</span></span><h2 id="specimen-title">四足 · 骨骼结构</h2></div>
-    <div class="stage-tools"><button id="fit-view" title="适合视图">⊞ <span>适配</span></button><button id="play-button" aria-label="暂停动画">Ⅱ <span>暂停</span></button></div>
-   </div>
-   <div class="canvas-wrap" id="canvas-wrap">
-    <canvas id="rig-canvas" aria-label="可交互的2D骨骼绘制视图"></canvas>
-    <div class="canvas-top-left"><span class="coords-dot"></span> ORTHOGRAPHIC · XY <span id="zoom-label">100%</span></div>
-    <div class="canvas-top-right">BONES <span id="bone-count-a">–</span> / CONTOURS <span id="contour-count">—</span></div>
-    <div class="canvas-bottom-left">局部坐标空间 <span class="mini-sep">•</span> 骨长约束 <span class="mini-sep">•</span> IK 求解</div>
-    <div class="canvas-bottom-right">滚轮缩放　·　拖动末端关节</div>
-   </div>
-   <div class="stage-footer">
-    <div class="legend"><span><i class="dot trunk"></i> 脊柱</span><span><i class="dot limbs"></i> 四肢</span><span><i class="dot head"></i> 头部</span><span><i class="dot tail"></i> 尾部</span></div>
-    <div class="transport"><span id="mode-label">实时模拟</span><div class="anim-track"><div id="anim-progress"></div></div><span>0.85 Hz</span></div>
-   </div>
-  </main>
-  <aside class="panel right-panel" aria-label="骨架数据检查器">
-   <div class="panel-label"><span>02</span> 结构检查器</div>
-   <div class="stats">
-    <div><small>骨骼节点</small><strong id="stat-nodes">—</strong></div>
-    <div><small>IK 运动链</small><strong id="stat-chains">—</strong></div>
-    <div><small>身体根节点</small><strong id="stat-roots">—</strong></div>
-   </div>
-   <div class="section-title">父子层级 <span>HIERARCHY</span></div>
-   <div class="bone-list" id="bone-list"></div>
-   <div class="inspector" id="inspector">
-    <small>SELECTED JOINT</small>
-    <strong id="selected-name">未选中关节</strong>
-    <div id="selected-info">点击画布中的圆形关节节点，查看其上级骨骼、长度与位置。</div>
-   </div>
-   <div class="section-title export-heading">导出骨骼 <span>EXPORT</span></div>
-   <div class="exports"><button id="export-json">↓ JSON</button><button id="export-svg">↓ SVG</button><button id="export-png">↓ PNG</button></div>
-   <p class="export-note">JSON 保存骨架与包裹参数；SVG、PNG 导出实际生成的连续轮廓。当前为程序化 2D 表面，不包含真实组织物理。</p>
+<canvas id="ambient" aria-hidden="true"></canvas>
+<main id="app">
+ <section class="screen-shell" aria-label="PAPERWORLD 游戏窗口">
+  <header class="screen-top"><span>◈ PAPERWORLD / D-4</span><button id="menuButton" aria-controls="menu" aria-expanded="false">菜单 ≡</button></header>
+  <div class="scene-wrap">
+   <canvas id="scene" width="384" height="216" aria-label="四种颜色绘制的深夜室内柜台场景"></canvas>
+   <img id="portrait" src="./pixel-lab/d-standing-v1-384x512.png" alt="" hidden>
+   <span id="sceneTitle">PAPERWORLD / 01</span>
+  </div>
+  <section class="dialogue" aria-label="游戏对话">
+   <strong class="speaker" id="speaker">第一幕 · 夜间柜台</strong>
+   <p id="dialogueText" aria-live="polite"></p>
+   <div id="actions" aria-label="对话操作"></div>
+  </section>
+  <aside id="menu" aria-label="游戏菜单" aria-hidden="true">
+   <h2>游戏菜单</h2>
+   <p>轻触对话按钮继续，选择不同回应。当前为第一段可交互场景。</p>
+   <button class="action" id="resumeButton">返回游戏</button>
+   <button class="action" id="newGameButton">开始游戏</button>
+   <button class="action alt" id="restartButton">回到标题</button>
+   <button class="action alt" id="motionButton">停止背景</button>
+   <nav id="gameLinks" aria-label="创作工具">
+    <a href="./pixel-lab/">像素学习工作室</a>
+    <a href="./bone-lab/">BoneLab 骨骼工作室</a>
+    <a href="./character-lab/">角色工作室</a>
+   </nav>
   </aside>
  </section>
- <footer class="bottom-bar"><span>GENERATION ENGINE <b>v0.2 SDF</b></span><span id="message" role="status">骨架就绪 · 等待交互</span><span>ALL POSES ARE COMPUTED · NO IMAGE ASSETS</span></footer>
-</div>
-<script type="module" src="./app.js"></script>
+</main>
+<div class="footer-label">D-4 · FOUR COLORS / ONE WORLD</div>
+<script type="module" src="./game/game.js?v=20261030g1"></script>
 </body>
 </html>
