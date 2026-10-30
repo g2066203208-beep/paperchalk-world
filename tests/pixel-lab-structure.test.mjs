@@ -17,7 +17,8 @@ test('System02 focuses on actual complete fullbody 384x512 canvases',()=>{
  assert.match(page,/id="original"/);
  assert.match(page,/id="model"/);
  assert.match(page,/id="pixelDetail"/);
- assert.match(page,/fullbody-learning\/report\.json/);
+ assert.ok(page.includes("const BASE='./fullbody-learning/'"));
+ assert.ok(page.includes("fetch(BASE+'report.json'"));
  assert.match(legacy,/url=\.\/fullbody-learning\.html/);
  for(const link of ['face-parts.html','face-general.html','motion-prior.html','fullbody-16.html']){
   assert.ok(!page.includes('href="./'+link+'"'),"No face/tiny-sprite/template detours in current training: "+link);
