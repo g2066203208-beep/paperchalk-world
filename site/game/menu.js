@@ -179,12 +179,12 @@ function paintFoldWipe(){
  for(let y=0;y<H;y++){
   const x=Math.round(edge-y);
   if(close){
-   const cover=limit(x,0,W);
+   const cover=clamp(x,0,W);
    if(cover>0)R(0,y,cover,1,COL.ink);
    // The fold has a crisp 3-pixel cream lip and 2-pixel mist-blue seam.
    if(x>=0&&x<=W+6){R(x-5,y,3,1,COL.paper);R(x-2,y,2,1,COL.blue)}
   }else{
-   const from=limit(x,0,W);
+   const from=clamp(x,0,W);
    if(from<W)R(from,y,W-from,1,COL.ink);
    if(x>=-6&&x<=W){R(x+1,y,3,1,COL.paper);R(x+4,y,2,1,COL.pink)}
   }
