@@ -29,6 +29,7 @@ public final class MainActivity extends Activity {
 
     private WebView web;
     private boolean resumedOnce = false;
+    private boolean legacyWorkerCleanupStarted = false;
 
     @Override
     public void onCreate(Bundle state) {
@@ -64,6 +65,25 @@ public final class MainActivity extends Activity {
                     Toast.makeText(MainActivity.this, "无法打开外部链接", Toast.LENGTH_SHORT).show();
                 }
                 return true;
+            }
+
+            @Override public void onPageFinished(WebView view, String url) {
+                if (legacyWorkerCleanupStarted || !url.startsWith(HOME)) return;
+                legacyWorkerCleanupStarted = true;
+                // Earlier versions installed a root-scoped offline Service Worker.
+                // It can return the OLD game even when WebView uses LOAD_NO_CACHE.
+                // Migrate that old registration once; leave unrelated PixelLab caches alone.
+                String migrate = "(async function(){try{" +
+                    "if(!('serviceWorker' in navigator))return;" +
+                    "const regs=await navigator.serviceWorker.getRegistrations();" +
+                    "const old=regs.filter(r=>r.scope==='https://g2066203208-beep.github.io/paperchalk-world/');" +
+                    "if(!old.length)return;" +
+                    "await Promise.all(old.map(r=>r.unregister()));" +
+                    "if('caches' in window){const keys=await caches.keys();" +
+                    "await Promise.all(keys.filter(k=>/^(untitled-kiosk|paperworld|bone|night)/i.test(k)).map(k=>caches.delete(k)));}" +
+                    "location.replace('https://g2066203208-beep.github.io/paperchalk-world/?apk=1&fresh='+Date.now());" +
+                    "}catch(e){} })();";
+                view.evaluateJavascript(migrate, null);
             }
         });
 
