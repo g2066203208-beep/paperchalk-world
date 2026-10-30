@@ -7,17 +7,19 @@
 import {clamp,RAD} from './motion3d.js';
 import {blocked} from './locomotion3d.js';
 
-export const LEAN_MAX=.72;
+export const LEAN_MAX=.64;
 export const LEAN_FULL_ANGLE=65*RAD;
-export const BANK_MAX=17*RAD;
+export const BANK_MAX=4*RAD;
 export const EYE_RADIUS=.14;
-export const LEAN_RESPONSE=.065;
+export const LEAN_RESPONSE=.13;
 
 // Even at 90deg phone tilt this remains a *peek*, not a sideways fall.
-export function leanIntent(roll){
- const v=clamp(roll/LEAN_FULL_ANGLE,-1,1);
- const eased=Math.sign(v)*(Math.abs(v)*Math.abs(v)*(3-2*Math.abs(v)));
- return {offset:eased*LEAN_MAX,bank:eased*BANK_MAX};
+export function leanIntent(roll,comfort=true){
+ const a=Math.abs(roll),dead=1.4*RAD;
+ const v=Math.sign(roll)*clamp((a-dead)/(LEAN_FULL_ANGLE-dead),0,1);
+ const max=comfort?.34:LEAN_MAX;
+ // Linear gives immediate, proportional, predictable positional feedback.
+ return {offset:v*max,bank:comfort?0:v*BANK_MAX};
 }
 
 // Return the furthest collision-safe position along the short camera ray.
@@ -35,12 +37,13 @@ export function protectedLean(base,side,solids=[],radius=EYE_RADIUS){
  return safe;
 }
 export class LeanCamera{
- constructor(){this.offset=0;this.bank=0;this.rawRoll=0}
+ constructor(){this.offset=0;this.bank=0;this.rawRoll=0;this.comfort=true}
+ setComfort(enabled){this.comfort=!!enabled}
  reset(){this.offset=0;this.bank=0;this.rawRoll=0}
  update(dt,roll,yaw,eye,solids=[]){
   this.rawRoll=roll;
   const leftX=-Math.sin(yaw),leftY=Math.cos(yaw);
-  const intent=leanIntent(roll);
+  const intent=leanIntent(roll,this.comfort);
   const base={x:eye[0],y:eye[1],leftX,leftY};
   const allowed=protectedLean(base,intent.offset,solids);
   // Smooth real-camera displacement continuously, independent from sensor Hz.
@@ -52,7 +55,7 @@ export class LeanCamera{
   this.offset=safe;
   this.bank+=(intent.bank-this.bank)*response;
   // Real sideways translation + a small vertical arc as the upper body leans.
-  const drop=.075*(Math.abs(safe)/LEAN_MAX)**2;
+  const drop=this.comfort?0:.035*(Math.abs(safe)/LEAN_MAX)**2;
   return {
    eye:[eye[0]+leftX*safe,eye[1]+leftY*safe,Math.max(.24,eye[2]-drop)],
    bank:this.bank,offset:safe,
