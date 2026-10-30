@@ -1,0 +1,84 @@
+{
+  "algorithm": "constrained color clusters + REINFORCE contextual bandit",
+  "trained_policy": true,
+  "diffusion_trained": false,
+  "training_data": "one character and synthetic damage; no supervised artist-corrected pairs",
+  "native_grid": [
+    192,
+    256
+  ],
+  "preview_grid": [
+    384,
+    512
+  ],
+  "no_new_detail_from_resize": true,
+  "total_pixels": 49152,
+  "figure_pixels": 16691,
+  "native_changed_pixels": 276,
+  "silhouette_preserved": true,
+  "head_preserved": true,
+  "art_approved": false,
+  "semantic_understanding_achieved": false,
+  "source_sha256": "f79d2999693599ae24fea6fa785eb9956b12bf2e4351eda928a30f8bfd7c7a44",
+  "result_sha256": "9f0babd11f6ecc42aa9268fbe57b72f55c7e5ca840d77cd8a99458161e85325c",
+  "clusters_before": {
+    "by_color": {
+      "1": {
+        "small_components": 316,
+        "pixels_in_small_components": 470
+      },
+      "2": {
+        "small_components": 176,
+        "pixels_in_small_components": 220
+      },
+      "3": {
+        "small_components": 203,
+        "pixels_in_small_components": 281
+      },
+      "4": {
+        "small_components": 33,
+        "pixels_in_small_components": 40
+      }
+    },
+    "small_component_pixels": 1011
+  },
+  "clusters_after": {
+    "by_color": {
+      "1": {
+        "small_components": 246,
+        "pixels_in_small_components": 336
+      },
+      "2": {
+        "small_components": 121,
+        "pixels_in_small_components": 147
+      },
+      "3": {
+        "small_components": 143,
+        "pixels_in_small_components": 196
+      },
+      "4": {
+        "small_components": 26,
+        "pixels_in_small_components": 29
+      }
+    },
+    "small_component_pixels": 708
+  },
+  "training": {
+    "episodes": 95,
+    "mean_reward_final_20": 3.25792
+  },
+  "holdout": {
+    "holdout_synthetic_accuracy_gain": 0.0051066,
+    "mean_accepted_edits": 660.8
+  },
+  "decision_map": "pixel-audit-map.png",
+  "edit_ledger": "edit-reasons.json",
+  "audit_categories": {
+    "0": "transparent",
+    "1": "preserved/semantic unknown",
+    "2": "protected head band",
+    "3": "protected contour",
+    "4": "edited with cluster evidence"
+  },
+  "limitations": "No model can infer actual object meaning of every pixel from one sample. All changed clusters require artist approval."
+}
