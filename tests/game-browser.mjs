@@ -245,6 +245,21 @@ try{
   assert.equal(near.scale,1,'owner reaches near counter at full size');
   assert.ok((await exactCanvasColors(page)).every(c=>official.has(c)),'no gray-fill or antialias fifth ink');
   await page.screenshot({path:'artifacts/game/'+screen+'-owner-near.png'});
+  // Real four-ink rental-office rendering in the actual game canvas;
+  // the front counter must occlude the original owner instead of floating behind.
+  const rentalScene=await page.evaluate(async ()=>{
+   const {officeLayout}=await import('./game/rental-office.js?v=20261031-office1');
+   const canvas=document.getElementById('menu'),g=officeLayout(canvas.width,canvas.height);
+   const rgba=[...canvas.getContext('2d').getImageData(2,g.front-5,1,1).data];
+   return {scene:window.__PAPERWORLD_MENU__.intro.scene,front:g.front,
+    center:g.anchorX,keys:g.keys,rgba,width:canvas.width,height:canvas.height};
+  });
+  assert.equal(rentalScene.scene,'rental-office-v1');
+  assert.deepEqual(rentalScene.rgba,[242,165,194,255],
+    'the physical foreground counter has pink front edge on '+screen);
+  assert.ok(rentalScene.keys.x>=0&&rentalScene.keys.x+rentalScene.keys.w<=rentalScene.width);
+  await page.screenshot({path:'artifacts/game/'+screen+'-rental-office-counter.png'});
+
   assert.equal(await page.locator('#pw-dialogue').isVisible(),true,'crisp DOM speech bubble appears after approach');
 
   // Reference 2's speech frame must be a real interactive four-ink DOM UI.
