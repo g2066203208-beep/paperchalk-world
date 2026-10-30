@@ -1,0 +1,94 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#393657"><title>PIXEL LAB · 每一个像素为什么</title>
+<style>
+:root{color-scheme:dark;--paper:#fff5e6;--ink:#393657;--pink:#f2a5c2;--blue:#a9bae9;--panel:#2b2941}
+*{box-sizing:border-box}body{margin:0;background:#191827;color:var(--paper);font:15px/1.6 system-ui,"Noto Sans SC",sans-serif}a{color:var(--blue)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+nav{padding:15px max(18px,calc((100vw - 1040px)/2));border-bottom:1px solid #5e5774;display:flex;gap:20px;flex-wrap:wrap}
+main{max-width:1040px;margin:auto;padding:28px 18px 65px}
+h1{font-size:clamp(29px,5vw,44px);line-height:1.2;margin:8px 0}h2{font-size:19px;margin:0 0 9px}
+.lead{color:#d0c7de;max-width:850px}.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--pink);font-weight:850}
+.status{padding:14px;background:var(--panel);border-radius:9px;border:1px solid #6a6283;margin:22px 0}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}.stat{padding:14px;background:var(--panel);border:1px solid #625a7c;border-radius:10px}
+.stat b{display:block;font-size:24px}.stat span{font-size:12px;color:#c3b9d4}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pane{background:var(--panel);padding:11px;border:1px solid #655c7d;border-radius:11px}
+.pane img{display:block;image-rendering:pixelated;aspect-ratio:3/4;width:100%;object-fit:contain;background:var(--ink);cursor:crosshair}
+.pane p{font-size:12px;color:#c9c1d8}
+.inspect{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;background:var(--panel);border:1px solid #685e7d;border-radius:12px;padding:15px;margin-top:20px}
+#detail{display:block;width:100%;height:auto;aspect-ratio:1;background:var(--paper);image-rendering:pixelated}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin:17px 0}
+button{font:inherit;border:1px solid #776e8d;background:#343149;color:var(--paper);padding:9px 14px;border-radius:7px;cursor:pointer;min-height:44px}
+button[aria-pressed=true]{background:var(--blue);color:var(--ink)}
+#reason{background:#242235;padding:14px;border-radius:8px;min-height:160px;white-space:pre-wrap;overflow-wrap:anywhere}
+footer{margin-top:23px;padding-top:14px;border-top:1px solid #5d5774;color:#c5bbd4;font-size:12px}
+@media(max-width:700px){.gallery{grid-template-columns:repeat(2,1fr)}.inspect{grid-template-columns:1fr}.statgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:450px){.gallery{grid-template-columns:1fr}}
+</style></head><body>
+<nav><a href="./index.html">← PixelLab 首页</a><a href="./fullbody-refine.html">上一版去噪测试</a><a href="../index.html">游戏</a></nav>
+<main><div class="eyebrow">SYSTEM 02 / AUDITABLE RL PIXEL CLEANUP</div>
+<h1>每一个像素，为什么？</h1>
+<p class="lead">这次不是将模糊伪像素强行量化。先识别完整人物内部的微小色块，再用真实训练的强化学习选择策略筛选修改；每个像素能查到<strong>未修改、头脸保护、轮廓保护或具体改动证据</strong>。不能确证的真实材质/解剖语义会标为未知。</p>
+<div class="status"><strong id="status">读取 GitHub Actions 训练结果……</strong><p id="summary">无成功结果时不展示旧图冒充ML处理结果。</p>
+<a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/pixel-semantic-audit.yml">查看模型训练和日志</a></div>
+<div class="statgrid"><div class="stat"><b id="edits">—</b><span>实际修改的原生像素数</span></div><div class="stat"><b id="before">—</b><span>原图细小色块像素数</span></div><div class="stat"><b id="after">—</b><span>处理后细小色块像素数</span></div></div>
+<div class="gallery">
+<div class="pane"><h2>原图</h2><img id="source" src="./assets/hostess-redraw-v1-192x256.png" alt="原生四色完整人物"><p>192×256，完整保留。</p></div>
+<div class="pane"><h2>机器学习清理后</h2><img id="output" alt="训练结果尚未加载"><p>头部和外轮廓禁止被改动。</p></div>
+<div class="pane"><h2>逐像素审核分类图</h2><img id="audit" alt="审核地图尚未加载"><p>蓝：保留；粉：头部；奶油：边缘；深紫：已改动。</p></div>
+</div>
+<div class="actions"><button type="button" id="toggle" aria-pressed="true">局部显示精修版</button><button type="button" id="grid-toggle" aria-pressed="true">网格：开</button><button type="button" id="map-toggle" aria-pressed="false">查看像素分类图</button></div>
+<div class="inspect">
+<div><h2>局部逐格放大8倍</h2><canvas width="320" height="320" id="detail" aria-label="原生像素40格放大"></canvas><p>点击上方任意图片定位检查区域。</p></div>
+<div><h2>逐像素可核查证据</h2><div id="reason" role="status">等待真实模型数据。</div><p><a id="download" href="#" download="refined_native_192x256.png">保存真正原生精修图</a> · <a href="./semantic-output/edit-reasons.json">查看所有修改坐标JSON</a></p>
+<p>重要：邻域证据能解释<strong>为何尝试改色</strong>，不能证明这格究竟是纽扣、眼睛还是发丝。这里没有伪造语义模型。</p></div>
+</div>
+<footer>算法：PyTorch REINFORCE contextual bandit + 4连通颜色簇 + 人体轮廓强约束。没有训练扩散模型；也没有通过正式美术验收。不能把自动消噪当作专业像素立绘的最终重画。</footer>
+</main>
+<script>
+const base='./semantic-output/',source=document.querySelector('#source'),output=document.querySelector('#output'),audit=document.querySelector('#audit');
+const detail=document.querySelector('#detail'),ctx=detail.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
+let ready=false,showOutput=true,showGrid=true,showAudit=false,report=null,ledger=null,bitmap=null,point={x:104,y:181};
+const roles={'0,0,0':'背景透明','169,186,233':'保留，实际对象语义未知','242,165,194':'头发/脸部保护区域（仅粗略位置）','255,245,230':'外轮廓和孔洞边缘保护','57,54,87':'模型修改，有审计证据'};
+function explain(){
+ const e=document.querySelector('#reason');if(!ready||!bitmap){e.textContent='模型审核数据未就绪';return}
+ const k=(point.y*192+point.x)*4,key=Array.from(bitmap.slice(k,k+3)).join(',');
+ const change=ledger.accepted.find(a=>a.x===point.x&&a.y===point.y);
+ let txt='原生坐标 x='+point.x+', y='+point.y+'\n';
+ txt+='保护/修改类别：'+(roles[key]||'无法判定')+'\n';
+ if(change){
+  txt+='颜色：'+change.before_role+' → '+change.after_role+'\n';
+  txt+='同色连通块：'+change.component_pixels+'格；邻域票数：'+change.neighbor_votes+'/8；局部支持：'+change.surrounding_support+'\n';
+  txt+='学习策略概率：'+(change.policy_score*100).toFixed(1)+'%\n';
+  txt+='区域推测：'+change.region_hypothesis+'（未验证）';
+ }else txt+='这格未修改。保留可能是有意结构，也可能仍是噪点；具体美术语义未获证明。';
+ e.textContent=txt;
+}
+function paint(){
+ const img=showAudit&&ready?audit:showOutput&&ready?output:source;
+ if(!img.complete||!img.naturalWidth)return;
+ const x=Math.min(152,Math.max(0,point.x-20)),y=Math.min(216,Math.max(0,point.y-20));
+ ctx.clearRect(0,0,320,320);ctx.drawImage(img,x,y,40,40,0,0,320,320);
+ if(showGrid){ctx.strokeStyle='#393657';ctx.lineWidth=.7;ctx.beginPath();for(let p=8;p<320;p+=8){ctx.moveTo(p+.5,0);ctx.lineTo(p+.5,320);ctx.moveTo(0,p+.5);ctx.lineTo(320,p+.5)}ctx.stroke()}
+ explain();
+}
+[source,output,audit].forEach(im=>{im.addEventListener('load',paint);im.addEventListener('click',e=>{
+ const r=im.getBoundingClientRect();point={x:Math.max(0,Math.min(191,Math.floor((e.clientX-r.left)*192/r.width))),y:Math.max(0,Math.min(255,Math.floor((e.clientY-r.top)*256/r.height)))};paint()})});
+document.querySelector('#toggle').addEventListener('click',e=>{showOutput=!showOutput;e.currentTarget.setAttribute('aria-pressed',String(showOutput));paint()});
+document.querySelector('#grid-toggle').addEventListener('click',e=>{showGrid=!showGrid;e.currentTarget.setAttribute('aria-pressed',String(showGrid));paint()});
+document.querySelector('#map-toggle').addEventListener('click',e=>{showAudit=!showAudit;e.currentTarget.setAttribute('aria-pressed',String(showAudit));paint()});
+function get(x){return fetch(base+x,{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('训练结果 '+x+' 尚未发布');return r.json()})}
+Promise.all([get('report.json'),get('edit-reasons.json')]).then(async x=>{
+ report=x[0];ledger=x[1];if(!report.trained_policy||report.art_approved!==false||report.semantic_understanding_achieved!==false)throw Error('训练证据异常');
+ document.querySelector('#edits').textContent=report.native_changed_pixels;
+ document.querySelector('#before').textContent=report.clusters_before.small_component_pixels;
+ document.querySelector('#after').textContent=report.clusters_after.small_component_pixels;
+ document.querySelector('#status').textContent='真实强化学习已完成，像素结构检查通过，艺术质量尚未验收';
+ document.querySelector('#summary').textContent='独立模拟坏点测验的正确率提升 '+(report.holdout.holdout_synthetic_accuracy_gain*100).toFixed(3)+' 个百分点；尚不等于语义理解';
+ output.src=base+'refined_native.png';audit.src=base+'pixel-audit-map.png';document.querySelector('#download').href=base+'refined_native.png';
+ await new Promise((resolve,reject)=>{if(audit.complete&&audit.naturalWidth)return resolve();audit.onload=resolve;audit.onerror=reject});
+ const hidden=document.createElement('canvas');hidden.width=192;hidden.height=256;
+ const a=hidden.getContext('2d',{willReadFrequently:true});a.drawImage(audit,0,0);bitmap=a.getImageData(0,0,192,256).data;
+ ready=true;paint();
+}).catch(e=>{document.querySelector('#status').textContent='审核结果尚未发布';document.querySelector('#summary').textContent=e.message});
+if(source.complete)paint();
+</script></body></html>
