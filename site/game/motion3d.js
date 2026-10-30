@@ -54,7 +54,7 @@ export class MotionPose{
   this.pose={yaw:0,pitch:0,roll:0};
   this.latest=null;this.sensorSeen=false;this.calibrated=false;
   this.referenceQ=null;this.currentQ=null;this.lastSource='none';
-  this.screenAngle=0;this.sensitivity=.78;this.smooth=.15;
+  this.screenAngle=0;this.sensitivity=.78;this.smooth=.085;
   this.deadzone=.30*RAD;this.comfort=true;
   this.status='等待传感器';this.origin=null;
  }
