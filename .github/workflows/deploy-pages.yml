@@ -71,6 +71,25 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          FULLBODY_RUN=$(gh run list --workflow fullbody-16.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$FULLBODY_RUN" ] && [ "$FULLBODY_RUN" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/fullbody-16"
+            gh run download "$FULLBODY_RUN" --name pixel-sixteen-fullbody-384x512-model-and-gallery --dir "$RUNNER_TEMP/fullbody-16"
+            test -s "$RUNNER_TEMP/fullbody-16/site/pixel-lab/style2/fullbody-16/report.json"
+            mkdir -p site/pixel-lab/style2/fullbody-16
+            cp -a "$RUNNER_TEMP/fullbody-16/site/pixel-lab/style2/fullbody-16/." site/pixel-lab/style2/fullbody-16/
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('site/pixel-lab/style2/fullbody-16')
+          d=json.loads((p/'report.json').read_text())
+          assert d['number_outputs']==16 and d['output_grid']==[384,512] and d['not_16_independent_identities']
+          assert len(list(p.glob('fullbody_*.png')))==16
+          print('PASS: 16 verified original face variants extended to complete 384x512 D fullbody PNGs')
+          PY
+          else
+            echo "::warning::Fullbody-16 training is not verified yet; gallery displays pending status"
+          fi
           V5_ID=$(gh run list --workflow geometry-v5.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
           test -n "$V5_ID" && test "$V5_ID" != "null" || { echo "::error::No successful V5 model run to publish"; exit 1; }
           mkdir -p "$RUNNER_TEMP/pixel-v5"
