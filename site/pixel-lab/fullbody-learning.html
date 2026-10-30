@@ -107,6 +107,8 @@ full.addEventListener('pointerdown',e=>{const rect=full.getBoundingClientRect();
 fetch(BASE+'report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('训练未发布（查看 Actions）');return r.json()})
 .then(d=>{
  if(!d.trained||!d.samples_are_decoder_only||!d.generated||d.generated.length<9)throw Error('模型还没有通过新人物生成检查');
+ return fetch(BASE+'visual-review.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(a=>{if(!a||a.status!=='approved'||a.can_publish_as_new_character!==true)throw Error('15张首次VAE采样已被人工视觉审核否决：均为碎块、没有完整可辨认的人体。不会当作新立绘展示。');return d});
+}).then(d=>{
  report=d;document.querySelector('#empty').hidden=true;
  document.querySelector('#phase').textContent='模型已经生成候选';
  document.querySelector('#status').textContent='VAE从随机潜变量采样，不输入原始人物图。美术质量仍需要逐张检查。';
