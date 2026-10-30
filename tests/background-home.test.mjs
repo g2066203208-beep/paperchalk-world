@@ -9,7 +9,7 @@ const android=readFileSync('android/app/src/main/java/com/paperchalk/lampkeep/Ma
 test('APK root now shows real procedural pixel menu above original diagonal moving background',()=>{
   assert.match(page,/<canvas id="background"/);
   assert.match(page,/<canvas id="menu"/);
-  assert.equal((page.match(/<canvas\b/g)||[]).length,2);
+  assert.equal((page.match(/<canvas\b/g)||[]).length,3,'background + game + pixel-character avatar preview');
   assert.match(page,/game\/menu\.js\?v=/);
   assert.match(page,/game\/background\.js\?v=/);
   assert.doesNotMatch(page,/BoneLab|<img\b|<button\b|<svg\b/);
