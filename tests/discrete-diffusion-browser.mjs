@@ -31,8 +31,9 @@ try{
  assert.equal(snapshots.original.w,384);assert.equal(snapshots.original.h,512);
  assert.notEqual(snapshots.original.snapshot,snapshots.generated.snapshot);
  assert.notEqual(snapshots.coarse.snapshot,snapshots.generated.snapshot);
+ await page.evaluate(v=>window.beforeOriginal=v,snapshots.original.snapshot);
  await page.locator('#pose').selectOption('A');
- await page.waitForFunction(()=>document.querySelector('#original').toDataURL()!==window.beforeOriginal,{timeout:10000}).catch(()=>{});
+ await page.waitForFunction(()=>document.querySelector('#original').toDataURL()!==window.beforeOriginal,{timeout:10000});
  const afterPose=await page.locator('#original').evaluate(c=>c.toDataURL());
  assert.notEqual(snapshots.original.snapshot,afterPose);
  await page.locator('#grid').uncheck();
