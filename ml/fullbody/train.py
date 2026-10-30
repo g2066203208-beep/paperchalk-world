@@ -33,7 +33,7 @@ SOURCES=[
 
 def palette_index(rgb:np.ndarray)->np.ndarray:
     if rgb.shape!=(HEIGHT,WIDTH,3):raise ValueError("full-canvas dimensions must be 384x512")
-    dist=((rgb.astype(np.int16)[:,:,None,:]-PALETTE.astype(np.int16)[None,None,:,:])**2).sum(-1)
+    dist=((rgb.astype(np.int32)[:,:,None,:]-PALETTE.astype(np.int32)[None,None,:,:])**2).sum(-1)
     idx=dist.argmin(-1).astype(np.uint8)
     if not np.array_equal(PALETTE[idx],rgb):
         raise ValueError("non-D-palette pixel found; conversion belongs in System 01")
