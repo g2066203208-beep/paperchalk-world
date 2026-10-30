@@ -3,7 +3,7 @@
  * Continuous joystick / WASD velocity and explicit stance buttons only.
  * Z is up; ground-plane circles slide against walls.
  */
-import {clamp} from './motion3d.js';
+import {clamp} from './motion3d.js?v=20261030-gyrocomfort6';
 export const STANCES=Object.freeze({
  stand:{height:1.68,speed:1.6,radius:.32},
  crouch:{height:1.06,speed:1.0,radius:.32},
