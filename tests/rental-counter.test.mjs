@@ -47,6 +47,12 @@ test('intro composites original independent hostess in front of plain ink, desk 
  const intro=readFileSync('site/game/intro.js','utf8');
  assert.ok(intro.includes("import {HOSTESS_PNG,HOSTESS_WIDTH,HOSTESS_HEIGHT}"));
  assert.ok(intro.includes('game/art/counter-clean-4ink.png'));
+ assert.ok(intro.includes('game/art/hostess-original-4ink.png'),'hostess must be a standalone image asset');
+ const owner=readFileSync('site/game/art/hostess-original-4ink.png');
+ const embedded=readFileSync('site/game/hostess-pixel.js','utf8').match(/base64,([A-Za-z0-9+/=]+)/)?.[1];
+ assert.ok(embedded,'the original character must be retained');
+ assert.ok(owner.equals(Buffer.from(embedded,'base64')),'standalone hostess PNG must be byte-for-byte original');
+
  assert.doesNotMatch(intro,/rental-counter-4ink\.png|counterScene\(/,'must not draw the old merged full-screen scene');
  assert.match(intro,/ctx\.drawImage\(source,0,0,HOSTESS_WIDTH,HOSTESS_HEIGHT,px,py,sw,sh\);\s*drawCounter\(ctx,W,H\)/,'owner then foreground desk');
  assert.match(intro,/function world\(W,H\)\{R\(0,0,W,H,COL\.ink\)\}/);
