@@ -28,11 +28,13 @@ public final class MainActivity extends Activity {
     private static final String SITE_PATH = "/paperchalk-world/";
 
     private WebView web;
+    private boolean resumedOnce = false;
 
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
         web = new WebView(this);
+        web.clearCache(true);
         web.setBackgroundColor(0xFFFFF5E6);
 
         WebSettings settings = web.getSettings();
@@ -80,8 +82,21 @@ public final class MainActivity extends Activity {
         }
         setContentView(root);
         root.requestApplyInsets();
-        if (state == null || web.restoreState(state) == null) {
-            web.loadUrl(HOME + "?apk=1&fresh=" + System.currentTimeMillis());
+        // NEVER restore a stale WebView snapshot: always request the live Pages root.
+        openLatestHome();
+    }
+
+    private void openLatestHome() {
+        if (web != null) web.loadUrl(HOME + "?apk=1&fresh=" + System.currentTimeMillis());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!resumedOnce) {
+            resumedOnce = true; // Initial load already started in onCreate().
+        } else {
+            openLatestHome(); // Returning from background must refresh the live web game.
         }
     }
 
@@ -89,12 +104,6 @@ public final class MainActivity extends Activity {
     public void onBackPressed() {
         if (web != null && web.canGoBack()) web.goBack();
         else super.onBackPressed();
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        if (web != null) web.saveState(outState);
-        super.onSaveInstanceState(outState);
     }
 
     @Override
