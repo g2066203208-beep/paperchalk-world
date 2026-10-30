@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 const loc=new URL('../site/pixel-lab/assets/hostess-20261030-D-192x256.png',import.meta.url);
 const b=readFileSync(loc);
 const chunks=()=>{let p=8,list=[];while(p<b.length){const len=b.readUInt32BE(p),typ=b.toString('ascii',p+4,p+8);list.push({typ,value:b.subarray(p+8,p+8+len)});p+=12+len;if(typ==='IEND')break;}return list};
@@ -14,10 +15,23 @@ test('New fullbody image is real native 192x256 palette PNG, not RGB fake pixels
  assert.equal(list.find(x=>x.typ==='tRNS')?.value[0],0);
  assert.ok(list.some(x=>x.typ==='IDAT'));
 });
+test('Both source-reference WEBP and native D palette PNG are real checked-in binaries',()=>{
+ const ref=readFileSync(new URL('../site/pixel-lab/assets/hostess-20261030-reference-384x512.webp',import.meta.url));
+ const png=readFileSync(new URL('../site/pixel-lab/assets/hostess-20261030-D-192x256.png',import.meta.url));
+ const sha=x=>createHash('sha256').update(x).digest('hex');
+ assert.equal(ref.toString('ascii',0,4),'RIFF');
+ assert.equal(ref.toString('ascii',8,12),'WEBP');
+ assert.equal(sha(ref),'164e52c2d4e14cbc7c6645580f07d09bd97177aad703d3ed7ca6ba8987698de0');
+ assert.equal(sha(png),'cb0cc31f4dd57ba10c6865a68f822a9f9e71fbf80b08765a72156884f44baefb');
+ const prov=JSON.parse(readFileSync(new URL('../site/pixel-lab/assets/hostess-20261030-provenance.json',import.meta.url)));
+ assert.equal(prov.reference_in_repo,true);
+ assert.equal(prov.source_image_in_repo,false);
+ assert.equal(prov.art_approved,false);
+});
 test('New character gallery is clickable but does not overwrite previous candidate',()=>{
  const html=readFileSync(new URL('../site/pixel-lab/index.html',import.meta.url),'utf8');
  assert.match(html,/href="\.\/hostess-20261030\.html"/);
  assert.match(html,/href="\.\/hostess-redraw\.html"/);
  const page=readFileSync(new URL('../site/pixel-lab/hostess-20261030.html',import.meta.url),'utf8');
- assert.match(page,/id="figure"/);assert.match(page,/id="zoom"/);assert.match(page,/未经美术验收|未经美术|美术验收尚未通过|未替换游戏正式角色/);
+ assert.match(page,/id="figure"/);assert.match(page,/id="version"/);assert.match(page,/reference-384x512\.webp/);assert.match(page,/id="zoom"/);assert.match(page,/未经美术验收|未经美术|美术验收尚未通过|未替换游戏正式角色/);
 });

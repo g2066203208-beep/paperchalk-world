@@ -19,6 +19,15 @@
   ],
   "source_image_in_repo": false,
   "art_approved": false,
-  "native_png_sha256": "f04ed6604f428f0c81d3f468b9ddf5973e7d75a459b8561851e16307e08cb30b",
-  "note": "Source 1086x1448 PNG needs archival binary import separately; PNG stored here is computed color-restricted derivative, not original and not proof of artistic readiness."
+  "native_png_sha256": "cb0cc31f4dd57ba10c6865a68f822a9f9e71fbf80b08765a72156884f44baefb",
+  "note": "The source original is 1086x1448 1,180,232-byte PNG retained from chat, sha256 as recorded; repo includes exact faithful compressed 384x512 visual reference and a separate indexed game candidate. The source-original bytes have not been archived in GitHub.",
+  "reference_in_repo": true,
+  "reference_path": "site/pixel-lab/assets/hostess-20261030-reference-384x512.webp",
+  "reference_dimensions": [
+    384,
+    512
+  ],
+  "reference_sha256": "164e52c2d4e14cbc7c6645580f07d09bd97177aad703d3ed7ca6ba8987698de0",
+  "reference_is_lossy": true,
+  "reference_is_original_full_resolution": false
 }

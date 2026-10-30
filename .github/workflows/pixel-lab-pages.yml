@@ -27,6 +27,7 @@ jobs:
         run: |
           node --test tests/pixel-lab-structure.test.mjs
           node --test tests/hostess-redraw-native.test.mjs
+          node --test tests/hostess-20261030.test.mjs
           node --test tests/refiner-native.test.mjs
           node --test tests/pixel-audit.test.mjs
           node --test tests/character-browser.mjs
