@@ -18,7 +18,42 @@
   <div class="status"><span id="ml-status">正在读取训练结果…</span><span class="divider"></span><span id="data-status">数据来源检查中</span></div>
  </section>
 
- <section style="margin:16px 0 22px;padding:19px 22px;border:1px solid #46685a;background:#15271f;border-radius:14px">
+ 
+<section id="style2-anchors" aria-label="D风格两张人物训练样本" style="margin:18px 0 20px;padding:20px;background:#20263a;border:1px solid #66708a;border-radius:15px">
+ <div class="eyebrow">SYSTEM 02 · TWO D-STYLE TRAINING ANCHORS</div>
+ <h2 style="font-size:26px;margin:8px 0">两张人物 · 正式纳入绘画学习</h2>
+ <p style="color:#bdcce0">同一角色的两种动作：原有动态姿势、正常站姿。都是 384×512、严格 D 四色。它们是<strong>两个姿势样本，不是两个独立人物身份</strong>。</p>
+ <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:800px">
+  <figure style="margin:0;background:#393657;padding:10px;border:1px solid #6d6785;border-radius:12px">
+   <img src="./style2/A_dynamic.png" alt="D风格人物A动态姿势" width="384" height="512" style="width:100%;height:auto;display:block;image-rendering:pixelated">
+   <figcaption style="color:#f2d1e0;margin-top:7px">A · 原有动态角色</figcaption>
+  </figure>
+  <figure style="margin:0;background:#393657;padding:10px;border:1px solid #6d6785;border-radius:12px">
+   <img src="./style2/B_standing.png" alt="D风格人物B正常站姿" width="384" height="512" style="width:100%;height:auto;display:block;image-rendering:pixelated">
+   <figcaption style="color:#f2d1e0;margin-top:7px">B · 正常站姿角色</figcaption>
+  </figure>
+ </div>
+ <details style="margin:15px 0;color:#d7e0f2"><summary style="cursor:pointer;font-weight:800">展开分区 mask 与头部、身体、服装训练切片</summary>
+  <p>彩色叠加是人工粗标注，不是精确分割。深色轮廓与背景同色，不能仅靠色板分割。</p>
+  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-width:800px">
+   <img src="./style2/A_dynamic_mask_review.png" alt="动态角色区域粗标注" style="width:100%;image-rendering:pixelated">
+   <img src="./style2/B_standing_mask_review.png" alt="站姿角色区域粗标注" style="width:100%;image-rendering:pixelated">
+  </div>
+  <p>对齐的局部训练图：</p>
+  <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+   <img src="./style2/B_standing_head.png" alt="头部切片" style="max-width:29%;image-rendering:pixelated">
+   <img src="./style2/B_standing_torso.png" alt="身体衣袖切片" style="max-width:29%;image-rendering:pixelated">
+   <img src="./style2/B_standing_skirt.png" alt="裙装切片" style="max-width:29%;image-rendering:pixelated">
+  </div>
+ </details>
+ <div style="background:#2a3344;border:1px solid #53627c;border-radius:10px;padding:11px 14px;margin-top:16px">
+  <strong style="display:block;color:#f2d2e5">实际训练 · 真像素修复 + 局部像素补绘</strong>
+  <div id="style2-report" style="font-size:13px;color:#cdd8e5">正在读取训练结果……</div>
+  <a href="./style2/training_report.json">训练报告</a> · <a href="./style2/dataset.json">数据与标注清单</a>
+ </div>
+ <p style="font-size:12px;color:#afc1d4">目前是局部像素学习实验，不代表能够独立画出优质人物、场景、道具。</p>
+</section>
+<section style="margin:16px 0 22px;padding:19px 22px;border:1px solid #46685a;background:#15271f;border-radius:14px">
   <div class="eyebrow">SYSTEM 02 / PIXEL ART LEARNING</div>
   <h2 style="font-size:24px;line-height:1.3;margin:8px 0">像素绘画学习 · 当前研究阶段</h2>
   <p style="max-width:900px;color:#a7beb5">目标是学习人物、场景、道具和动画素材的造型与像素簇规律，最终生成质量统一的游戏资产。下面展示的是已有局部修复模型和参考画笔策略；<strong>它们尚不能独立绘制商业成品级新角色或完整场景。</strong></p>
@@ -74,4 +109,18 @@
  <section class="footnote"><h3>模型适用范围与边界</h3><p>这是面向 16×16 小型像素素材的入门学习系统。神经网络在真实 CC0 图像上学习局部像素上下文，可做遮挡补全，但不等于已经学会原创角色设计。强化学习只学习参考引导下的画笔选择。训练样本数少，不能宣传为最先进的像素生成模型；后续可升级为离散 token 生成、扩散模型和人工审美反馈评分。</p><p>素材来源：<a href="https://kenney.nl/assets/tiny-dungeon">Kenney Tiny Dungeon</a>、<a href="https://kenney.nl/assets/tiny-town">Tiny Town</a>、<a href="https://opengameart.org/content/pixel-platformer-0">Pixel Platformer</a>（CC0）。训练数据哈希、样本数量、验证指标记录于模型文件。</p></section>
 </div>
 <script type="module" src="./pixel-lab.js"></script>
+<script>
+(async()=>{
+ const area=document.getElementById('style2-report');
+ try{
+  const r=await fetch('./style2/training_report.json',{cache:'no-store'});
+  if(!r.ok)throw Error('训练结果尚未发布');
+  const d=await r.json();
+  if(d.source_images!==2||!d.model_training_completed)throw Error('训练未完成');
+  const rep=d.repair.A_dynamic_train_to_B_standing_test;
+  const draw=d.pixel_drawing_learning;
+  area.textContent='两张 D 色板样本已入库并训练。跨姿势像素修复 '+(rep.neural_accuracy*100).toFixed(2)+'%，最近颜色基线 '+(rep.nearest_baseline*100).toFixed(2)+'%；局部像素补绘前景 '+(draw.foreground_accuracy*100).toFixed(2)+'%，邻域基线 '+(draw.foreground_neighbor_baseline*100).toFixed(2)+'%。注意：仍是同一人物的两种姿势。';
+ }catch(e){area.textContent='暂未取得验证报告：'+e.message;}
+})();
+</script>
 </body></html>
