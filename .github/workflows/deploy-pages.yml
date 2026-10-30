@@ -128,6 +128,8 @@ jobs:
         run: node tests/discrete-v2-browser.mjs
       - name: Validate V4 person-asset review gallery and D palette in Chromium
         run: node tests/v4-gallery-browser.mjs
+      - name: Browser-test V5 anatomy, perspective, depth and synthetic-to-real probes
+        run: node tests/geometry-v5-browser.mjs
       - name: Test real full-resolution V3 character detail in Chromium desktop and mobile
         run: node tests/native-detail-v3-browser.mjs
       - name: Publish only current pixel artwork, masks, V2 and V3 weights and browser evidence
