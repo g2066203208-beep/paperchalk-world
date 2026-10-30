@@ -119,7 +119,7 @@ export class MotionPose{
  }
  setComfort(v){this.comfort=!!v;this.refreshTarget()}
  setSensitivity(v){this.sensitivity=clamp(Number(v)||.78,.5,1.6);this.refreshTarget()}
- setResponse(v){this.smooth=clamp(Number(v)||.15,.025,.3)}
+ setResponse(v){this.smooth=clamp(Number(v)||.085,.025,.3)}
  manual(dyaw,dpitch,droll){
   // Preserve mouse/keyboard heading even without a sensor.
   this.target.yaw=wrap(this.target.yaw+dyaw);
