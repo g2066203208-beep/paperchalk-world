@@ -13,6 +13,12 @@ test('the existing APK home displays only the fullscreen background canvas',()=>
   assert.doesNotMatch(page,/<button|<nav|<img|class="screen-shell"|id="scene"|id="menu"/);
   assert.match(android,/https:\/\/g2066203208-beep\.github\.io\/paperchalk-world\//);
   assert.match(android,/package com\.paperchalk\.lampkeep/);
+  assert.doesNotMatch(android,/web\.restoreState\(state\)/,'must not restore stale APK page snapshot');
+  assert.match(android,/web\.clearCache\(true\)/);
+  assert.match(android,/protected void onResume\(\)/);
+  assert.match(android,/openLatestHome\(\)/);
+  assert.match(android,/\?apk=1&fresh=/);
+
 });
 
 test('D palette and background use exact preapproved colors, integer pixel grid',()=>{
