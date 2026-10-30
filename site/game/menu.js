@@ -1,4 +1,5 @@
 import {createHostessIntro} from './intro.js';
+import {createLeaseUI} from './lease.js';
 
 /* PAPERWORLD · original four-ink procedural pixel menu.
  * Every visible logo, plane, cloud, glyph, button and outline is
@@ -64,14 +65,14 @@ function glyphBitmap(s,height=17){
  const c=document.createElement('canvas'),g=c.getContext('2d',{willReadFrequently:true});
  // Render glyphs at the FINAL logical size, without any downsampling.
  // Threshold alpha to produce exact one-bit pixels instead of blurry edges.
- const font='900 '+height+'px "Noto Sans CJK SC","Microsoft YaHei","PingFang SC",sans-serif';
+ const font='700 '+height+'px "Noto Sans CJK SC","Microsoft YaHei","PingFang SC",sans-serif';
  g.font=font;const bounds=g.measureText(s);
  const ww=Math.ceil(bounds.width+height*.6+4),hh=Math.ceil(height*1.55+4);
  c.width=ww;c.height=hh;g.font=font;g.fillStyle='#000';g.textBaseline='top';g.fillText(s,2,0);
  const data=g.getImageData(0,0,ww,hh).data;
  let minX=ww,minY=hh,maxX=-1,maxY=-1;const coords=[];
  for(let y=0;y<hh;y++)for(let x=0;x<ww;x++){
-   if(data[(y*ww+x)*4+3]>=170){coords.push([x,y]);minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y)}
+   if(data[(y*ww+x)*4+3]>=120){coords.push([x,y]);minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y)}
  }
  const sprite={w:Math.max(0,maxX-minX+1),h:Math.max(0,maxY-minY+1),cols:coords.map(q=>[q[0]-minX,q[1]-minY])};
  textCache.set(key,sprite);return sprite;
@@ -96,7 +97,7 @@ function layout(){
  buttons();
 }
 function buttons(){
- if(state==='intro'){btns=[];return}
+ if(state==='intro'||state==='lease'){btns=[];return}
  btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','点击粒子','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
@@ -127,7 +128,7 @@ function drawButton(b,i){
  if(active&&!disabled){R(x+3,y+8,2,h-16,COL.paper);R(x+w-5,y+8,2,h-16,COL.paper)}
  let label=b.label;
  if(state==='settings'&&i<3)label+=' '+(i===0?(prefs.motion?'开':'关'):i===1?(prefs.particles?'开':'关'):(prefs.haptic?'开':'关'));
- let hFont=Math.round(clamp(h*.53,14,19));
+ let hFont=Math.round(clamp(h*.61,16,21));
  let sprite=glyphBitmap(label,hFont);
  while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
  const labelCenter=x+w*.58;const labelX=Math.round(labelCenter),labelY=Math.round(y+(h-sprite.h)/2);
@@ -157,11 +158,29 @@ function overlay(){
 }
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 const CLOSE_TIME=.56,OPEN_TIME=.62;
-const intro=createHostessIntro({COL,R,frame,text,latin,glyphBitmap});
-function enterScene(next){state=next;if(next==='intro')intro.enter();selected=0;hover=-1;held=-1;buttons()}
+const stageRoot=document.getElementById('stage-ui');
+const lease=createLeaseUI({
+ root:stageRoot,
+ onBack:()=>switchScene('menu'),
+ onDone:()=>{saveExists=true}
+});
+const intro=createHostessIntro({
+ COL,R,poly,text,root:stageRoot,
+ onComplete:()=>switchScene('lease'),
+ onBack:()=>switchScene('menu')
+});
+function enterScene(next){
+ state=next;selected=0;hover=-1;held=-1;
+ if(next==='intro')intro.enter();
+ else intro.leave();
+ if(next!=='lease')lease.hide();
+ buttons();
+}
 function switchScene(next){
  if(curtain)return;
- if(reduced){enterScene(next);return}
+ if(state==='intro')intro.leave();
+ if(state==='lease')lease.hide();
+ if(reduced){enterScene(next);if(next==='lease')lease.show({receipt:!!lease.snapshot().hasContract});return}
  curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
 }
 function updateCurtain(dt){
@@ -169,7 +188,10 @@ function updateCurtain(dt){
  curtain.elapsed+=dt;
  if(curtain.phase==='close'&&curtain.elapsed>=CLOSE_TIME){
   enterScene(curtain.next);curtain.phase='open';curtain.elapsed=0;
- }else if(curtain.phase==='open'&&curtain.elapsed>=OPEN_TIME)curtain=null;
+ }else if(curtain.phase==='open'&&curtain.elapsed>=OPEN_TIME){
+  curtain=null;
+  if(state==='lease')lease.show({receipt:lease.snapshot().hasContract});
+}
 }
 function paintFoldWipe(){
  if(!curtain)return;
@@ -237,15 +259,15 @@ function draw(){
  ctx.clearRect(0,0,W,H);
  // Transparent overlay on GPU animated striped background in menu.
  if(state==='menu')titleArtwork();
- else if(state==='intro'){intro.draw(ctx,W,H,clock);if(!curtain){frame(5,6,52,21,COL.ink,COL.paper,4,2);text('返回',31,11,12,COL.ink)}}
+ else if(state==='intro'||state==='lease'){intro.draw(ctx,W,H);if(state==='intro'&&!curtain){frame(5,6,52,21,COL.ink,COL.paper,4,2);text('返回',31,11,15,COL.ink)}}
  else overlay();
  for(let i=0;i<btns.length;i++)drawButton(btns[i],i);
- if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
+ if(!land&&state==='menu'){latin('V0.2.0',W*.17,H-18,1,COL.ink);
   }
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintFoldWipe();
  paintTouchEffects();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:state==='intro'?intro.snapshot():null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
@@ -255,7 +277,7 @@ function act(i,x,y){
  selected=i;hover=i;
  if(state==='menu'){
   if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('intro')}
-  else if(i===1){if(saveExists)switchScene('intro');else flash('暂无存档')}
+  else if(i===1){if(saveExists){const existing=localStorage.getItem('paperworld-lease-v1');switchScene(existing?'lease':'intro')}else flash('暂无存档')}
   else if(i===2)switchScene('settings');
   else if(i===3)switchScene('exit');
  }else if(state==='settings'){
@@ -274,7 +296,7 @@ el.addEventListener('pointerdown',e=>{const p=xy(e);emitTouchEffect(p.x,p.y);if(
 el.addEventListener('pointerup',e=>{const p=xy(e);
  if(state==='intro'&&!curtain){
   if(p.x>=5&&p.x<=57&&p.y>=6&&p.y<=28)switchScene('menu');
-  else intro.onTap(p.x,p.y,W,H);
+  else intro.onTap();
   held=-1;return;
  }
  const i=hit(p.x,p.y);if(i>=0&&i===held)act(i,p.x,p.y);held=-1
@@ -284,7 +306,7 @@ el.addEventListener('pointerleave',()=>{hover=-1;held=-1});
 addEventListener('keydown',e=>{
  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();selected=(selected+(e.key==='ArrowDown'?1:-1)+btns.length)%btns.length;hover=selected}
  else if(e.key==='Enter'||e.key===' '){e.preventDefault();
- if(state==='intro'&&!curtain){intro.onTap(W/2,H/2,W,H)}
+ if(state==='intro'&&!curtain){intro.onTap()}
  else {const b=btns[selected];if(b){emitTouchEffect(b.x+b.w/2,b.y+b.h/2);act(selected,b.x+b.w/2,b.y+b.h/2)}}
  }
  else if(e.key==='Escape'||e.key==='Backspace'){if(state!=='menu')switchScene('menu')}
