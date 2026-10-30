@@ -1,12 +1,13 @@
 import {createHostessIntro} from './intro.js';
 import {createLeaseUI} from './lease.js';
+import {createWorld3D} from './world3d.js';
 
 /* PAPERWORLD · original four-ink procedural pixel menu.
  * Every visible logo, plane, cloud, glyph, button and outline is
  * drawn at an integer logical pixel. No generated image is used at runtime.
  */
 const COL={ink:'#393657',pink:'#F2A5C2',blue:'#A9BAE9',paper:'#FFF5E6'};
-const ORDER=['开始游戏','继续游戏','设置','退出游戏'];
+const ORDER=['开始游戏','继续游戏','3D体感世界','设置','退出游戏'];
 const KEY='paperworld-menu-v3',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
 const nativeLabels=document.getElementById('pw-menu-labels');
@@ -106,6 +107,7 @@ function buttonIcon(kind,x,y,sz=13,c=COL.ink){
  if(kind==='continue'){frame(x-6*q,y-3*q,12*q,9*q,c,COL.paper,2*q,1*q);R(x-5*q,y-5*q,5*q,2*q,c)}
  if(kind==='gear'){R(x-3*q,y-3*q,6*q,6*q,c);R(x-1*q,y-5*q,2*q,10*q,c);R(x-5*q,y-1*q,10*q,2*q,c);R(x-q,y-q,2*q,2*q,COL.paper)}
  if(kind==='exit'){frame(x-6*q,y-5*q,7*q,10*q,c,COL.paper,2*q,q);poly([[x-1*q,y-2*q],[x+7*q,y],[x-1*q,y+3*q]],c)}
+ if(kind==='world'){frame(x-5*q,y-4*q,10*q,9*q,c,COL.paper,2*q,q);R(x-2*q,y-2*q,4*q,4*q,c)}
  if(kind==='back'){poly([[x-6*q,y],[x+2*q,y-5*q],[x+2*q,y+5*q]],c)}
 }
 function layout(){
@@ -116,7 +118,7 @@ function layout(){
  buttons();
 }
 function buttons(){
- if(state==='intro'||state==='lease'){btns=[];updateNativeLabels();return}
+ if(state==='intro'||state==='lease'||state==='world'){btns=[];updateNativeLabels();return}
  btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','点击粒子','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
@@ -127,7 +129,7 @@ function buttons(){
 function updateNativeLabels(){
  if(!nativeLabels)return;
  nativeLabels.replaceChildren();
- if(state==='intro'||state==='lease')return;
+ if(state==='intro'||state==='lease'||state==='world')return;
  for(let i=0;i<btns.length;i++){
   const b=btns[i],label=document.createElement('span');
   label.className='pw-menu-label';
@@ -200,6 +202,7 @@ const lease=createLeaseUI({
  onBack:()=>switchScene('menu'),
  onDone:()=>{saveExists=true}
 });
+const world=createWorld3D({onBack:()=>switchScene('menu')});
 const intro=createHostessIntro({
  COL,R,poly,text,root:stageRoot,
  onComplete:()=>switchScene('lease'),
@@ -216,7 +219,8 @@ function switchScene(next){
  if(curtain)return;
  if(state==='intro')intro.leave();
  if(state==='lease')lease.hide();
- if(reduced){enterScene(next);if(next==='lease')lease.show({receipt:!!lease.snapshot().hasContract});return}
+ if(state==='world')world.close();
+ if(reduced){enterScene(next);if(next==='lease')lease.show({receipt:!!lease.snapshot().hasContract});if(next==='world')world.open();return}
  if(nativeLabels)nativeLabels.style.visibility='hidden';
  curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
 }
@@ -229,6 +233,7 @@ function updateCurtain(dt){
   curtain=null;
   if(nativeLabels)nativeLabels.style.visibility='visible';
   if(state==='lease')lease.show({receipt:lease.snapshot().hasContract});
+  if(state==='world')world.open();
 }
 }
 function paintFoldWipe(){
@@ -297,6 +302,7 @@ function draw(){
  ctx.clearRect(0,0,W,H);
  // Transparent overlay on GPU animated striped background in menu.
  if(state==='menu')titleArtwork();
+ else if(state==='world'){R(0,0,W,H,COL.ink)}
  else if(state==='intro'||state==='lease'){intro.draw(ctx,W,H);if(state==='intro'&&!curtain){frame(5,6,52,21,COL.ink,COL.paper,4,2);text('返回',31,11,15,COL.ink)}}
  else overlay();
  for(let i=0;i<btns.length;i++)drawButton(btns[i],i);
@@ -305,7 +311,7 @@ function draw(){
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintFoldWipe();
  paintTouchEffects();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,world:state==='world'?{active:world.active}:null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
@@ -316,8 +322,9 @@ function act(i,x,y){
  if(state==='menu'){
   if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('intro')}
   else if(i===1){if(saveExists){const existing=localStorage.getItem('paperworld-lease-v1');switchScene(existing?'lease':'intro')}else flash('暂无存档')}
-  else if(i===2)switchScene('settings');
-  else if(i===3)switchScene('exit');
+  else if(i===2)switchScene('world');
+  else if(i===3)switchScene('settings');
+  else if(i===4)switchScene('exit');
  }else if(state==='settings'){
   if(i===0)prefs.motion=!prefs.motion;
   if(i===1)prefs.particles=!prefs.particles;
@@ -342,7 +349,7 @@ el.addEventListener('pointerup',e=>{const p=xy(e);
 el.addEventListener('pointercancel',()=>held=-1);
 el.addEventListener('pointerleave',()=>{hover=-1;held=-1});
 addEventListener('keydown',e=>{
- if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();selected=(selected+(e.key==='ArrowDown'?1:-1)+btns.length)%btns.length;hover=selected}
+ if((e.key==='ArrowDown'||e.key==='ArrowUp')&&btns.length){e.preventDefault();selected=(selected+(e.key==='ArrowDown'?1:-1)+btns.length)%btns.length;hover=selected}
  else if(e.key==='Enter'||e.key===' '){e.preventDefault();
  if(state==='intro'&&!curtain){intro.onTap()}
  else {const b=btns[selected];if(b){emitTouchEffect(b.x+b.w/2,b.y+b.h/2);act(selected,b.x+b.w/2,b.y+b.h/2)}}
