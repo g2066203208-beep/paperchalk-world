@@ -28,6 +28,8 @@ try{
     assert.deepEqual(result,[true,384,512]);
   }
   await page.locator('#gallery figure button').nth(15).click();
+  await page.locator('#zoom').evaluate(async el=>{await el.decode()});
+  await page.locator('#face').evaluate(async el=>{await el.decode()});
   assert.equal(await page.locator('#zoom').evaluate(el=>el.complete&&el.naturalWidth===384&&el.naturalHeight===512),true);
   assert.equal(await page.locator('#face').evaluate(el=>el.complete&&el.naturalWidth===96&&el.naturalHeight===96),true);
   assert.match(await page.locator('#selected').textContent(),/第 16 张/);
