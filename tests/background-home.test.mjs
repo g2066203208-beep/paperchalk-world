@@ -19,7 +19,13 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/getContext\('2d'/);
   assert.match(menu,/function plane\(/);
   assert.match(menu,/function cloud\(/);
-  assert.match(menu,/function sparkle\(/);
+  assert.doesNotMatch(menu,/function sparkle\(|function atmosphere\(|function burst\(/);
+  assert.match(menu,/function paintCurtain\(/);
+  assert.match(menu,/function switchScene\(/);
+  assert.match(menu,/function updateCurtain\(/);
+  assert.match(menu,/COL\.ink/);
+  assert.match(menu,/data\[\(y\*ww\+x\)\*4\+3\]>=170/);
+  assert.doesNotMatch(menu,/height\*3|for\(let dy=0;dy<3/);
   assert.match(menu,/function drawButton\(/);
   assert.match(menu,/function latin\(/);
   assert.match(menu,/function glyphBitmap\(/);
@@ -27,6 +33,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/pointerup/);
   assert.match(menu,/requestAnimationFrame\(tick\)/);
   assert.match(menu,/localStorage/);
+  assert.match(page,/20261030-menu2-clean-curtain/);
   for(const label of ['开始游戏','继续游戏','设置','退出游戏'])assert.ok(menu.includes(label));
   assert.doesNotMatch(menu,/\.png|\.webp|\.jpe?g|image_gen|<img|drawImage\(/);
 });
