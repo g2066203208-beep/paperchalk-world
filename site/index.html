@@ -2,21 +2,25 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#FFF5E6">
-<meta name="description" content="PAPERWORLD 四色像素游戏 · 第一阶段：双色程序循环背景">
-<title>PAPERWORLD</title>
+<meta name="description" content="PAPERWORLD — 四色原创程序像素游戏。纸飞机、像素按钮与星光粒子均实时绘制。">
+<title>PAPERWORLD · 纸飞机世界</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#FFF5E6}
-body{overscroll-behavior:none}
-#background{display:block;position:fixed;left:0;top:0;background:#FFF5E6;image-rendering:pixelated;pointer-events:none;will-change:transform;animation:stripe-drift 8s linear infinite;transform:translate3d(0,0,0)}
+body{overscroll-behavior:none;touch-action:none}
+canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
+#background{background:#FFF5E6;pointer-events:none;will-change:transform;animation:stripe-drift 8s linear infinite;transform:translate3d(0,0,0)}
+#menu{z-index:2;width:100%;height:100%;touch-action:none;outline:none}
 @keyframes stripe-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-160px,-160px,0)}}
 @media(prefers-reduced-motion:reduce){#background{animation:none!important;transform:none!important}}
 </style>
 </head>
 <body>
-<canvas id="background" role="img" aria-label="奶油白色底与雾蓝色粗斜纹沿垂直条纹方向无缝平移的四色像素游戏背景"></canvas>
+<canvas id="background" aria-hidden="true"></canvas>
+<canvas id="menu" role="application" aria-label="PAPERWORLD 主菜单。触摸或点击开始游戏、继续游戏、设置和退出游戏，也可以用上下方向键和回车操作。" tabindex="0"></canvas>
 <script type="module" src="./game/background.js?v=20261030-blue8s-diagonal2"></script>
+<script type="module" src="./game/menu.js?v=20261030-menu1"></script>
 </body>
 </html>
