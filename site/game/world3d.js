@@ -2,7 +2,7 @@
  * WORLD: X forward / Y left / Z vertical. Geometry is real depth-tested
  * triangles with 4 exact palette colors; no Three/CDN/API dependency.
  */
-import {MotionPose,projectionMatrix,RAD,clamp,wrap} from './motion3d.js';
+import {MotionPose,projectionMatrix,RAD,clamp,wrap,deviceQuaternion,rotate} from './motion3d.js';
 import {BodyMotor,STANCES} from './locomotion3d.js';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
@@ -136,7 +136,8 @@ export function createWorld3D({onBack}){
  const motion=new MotionPose();
  let renderer=null,motor=new BodyMotor(),active=false,frame=0,prev=0,raf=0;
  let orientListening=false,accelListening=false,permission='idle',timeout=0;
- const keys=new Set(),stick={forward:0,side:0,id:null},look={id:null,x:0,y:0},poseHold={id:null,lockedPitch:0};
+ const keys=new Set(),stick={forward:0,side:0,id:null},heldMove={forward:0},look={id:null,x:0,y:0},poseHold={id:null,lockedPitch:0};
+ const gravity={x:null,y:null,z:null};
  const el=id=>$(id);
  const note=v=>{if(status.textContent!==v)status.textContent=v};
  function setStance(name){
@@ -155,7 +156,7 @@ export function createWorld3D({onBack}){
   el('pw-player-position').textContent='X '+p.position.x.toFixed(1)+' · Y '+p.position.y.toFixed(1);
   el('pw-player-speed').textContent=p.speed.toFixed(1)+' m/s';
   el('pw-sensor-badge').textContent=motion.sensorSeen?'陀螺仪在线':'可用手指/键盘';
-  el('pw-walk-help').textContent=motor.walkMode?
+  el('pw-walk-help').textContent=motor.physicalStanceMode?'识别真实下蹲/站起：手机要随身体上下运动，原地踏步暂时禁用':motor.walkMode?
    (motor.motionAvailable?'体感踏步已开启 · 已识别 '+p.steps+' 步 · 姿态需按住按钮调整':
     '等待手机加速度事件；若没有踏步信号，直接使用屏幕摇杆'):
    '屏幕摇杆/WASD可移动；开启体感踏步后，原地踏步才会自动前进';
@@ -165,7 +166,7 @@ export function createWorld3D({onBack}){
  function controls(){
   const f=(keys.has('w')||keys.has('ArrowForward')?1:0)-(keys.has('s')?1:0);
   const sideways=(keys.has('a')?1:0)-(keys.has('d')?1:0);
-  return {forward:clamp(f+stick.forward,-1,1),side:clamp(sideways+stick.side,-1,1),sprint:keys.has('shift')};
+  return {forward:heldMove.forward||clamp(f+stick.forward,-1,1),side:clamp(sideways+stick.side,-1,1),sprint:keys.has('shift')};
  }
  function draw(t){
   if(!active)return;
@@ -191,10 +192,32 @@ export function createWorld3D({onBack}){
   }
  }
  function onAcceleration(e){
-  if(!active||!motor.walkMode)return;
-  const a=e.acceleration;
-  if(a&&[a.x,a.y,a.z].every(Number.isFinite))
-   motor.ingestAcceleration(a.x,a.y,a.z,performance.now());
+  if(!active||(!motor.walkMode&&!motor.physicalStanceMode))return;
+  const now=performance.now();
+  let a=e.acceleration;
+  // DeviceMotion.acceleration is null on some WebViews. High-pass the
+  // gravity-bearing sample instead, never integrate it into absolute XYZ.
+  if(!a||![a.x,a.y,a.z].every(Number.isFinite)){
+   const g=e.accelerationIncludingGravity;
+   if(!g||![g.x,g.y,g.z].every(Number.isFinite))return;
+   if(gravity.x===null){for(const axis of ['x','y','z'])gravity[axis]=g[axis];return}
+   const linear={};
+   for(const axis of ['x','y','z']){
+    linear[axis]=g[axis]-gravity[axis];
+    gravity[axis]+=.045*linear[axis];
+   }
+   a=linear;
+  }
+  if(motor.walkMode)motor.ingestAcceleration(a.x,a.y,a.z,now);
+  if(motor.physicalStanceMode&&motion.latest){
+   // Rotate gravity-free DEVICE acceleration to WORLD Z, independent of
+   // handset's portrait/landscape or roll. Z is actual game vertical.
+   const o=motion.latest;
+   const q=deviceQuaternion(o.alpha,o.beta,o.gamma,0);
+   const up=rotate(q,[a.x,a.y,a.z])[2];
+   const stance=motor.ingestVerticalAcceleration(up,now);
+   if(stance){setStance(stance);note(stance==='crouch'?'识别到真实下蹲动作':'识别到真实站起动作')}
+  }
  }
  async function startMotion(){
   if(!active)return;
@@ -238,7 +261,7 @@ export function createWorld3D({onBack}){
   if(accelListening){window.removeEventListener('devicemotion',onAcceleration);accelListening=false}
   if(document.pointerLockElement===canvas)document.exitPointerLock?.();
   motion.sensorSeen=false;motion.calibrated=false;motor.setWalkMode(false);
-  permission='idle';keys.clear();stick.forward=0;stick.side=0;stick.id=null;
+  permission='idle';keys.clear();stick.forward=0;stick.side=0;stick.id=null;heldMove.forward=0;
   look.id=null;poseHold.id=null;motor.stopPosture();
   el('pw-stick-knob').style.transform='translate(0,0)';
  }
@@ -267,6 +290,51 @@ export function createWorld3D({onBack}){
   postureButton.addEventListener(evt,e=>{if(e.pointerId===poseHold.id)releaseStanceGesture()});
  for(const n of ['stand','crouch','prone'])
   el('pw-stance-'+n).addEventListener('click',()=>{motor.stopPosture();releaseStanceGesture();setStance(n)});
+ // Large front/back hold controls work instantly even without any sensors.
+ function bindWalkHold(id,direction){
+  const button=el(id),current={pointer:null};
+  const stop=e=>{
+   if(current.pointer===null||e.pointerId!==current.pointer)return;
+   current.pointer=null;heldMove.forward=0;
+   button.setAttribute('aria-pressed','false');
+  };
+  button.addEventListener('pointerdown',e=>{
+   if(!active)return;
+   e.preventDefault();current.pointer=e.pointerId;heldMove.forward=direction;
+   button.setAttribute('aria-pressed','true');
+   try{button.setPointerCapture(e.pointerId)}catch{}
+  });
+  for(const name of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(name,stop);
+ }
+ bindWalkHold('pw-forward-hold',1);
+ bindWalkHold('pw-back-hold',-1);
+ const backwards=el('pw-walk-direction');
+ backwards.addEventListener('click',()=>{
+  motor.setWalkDirection(-motor.stepDirection);
+  backwards.textContent=motor.stepDirection>0?'踏步方向：前进 ↑':'踏步方向：后退 ↓';
+  backwards.setAttribute('aria-pressed',String(motor.stepDirection<0));
+  note(motor.stepDirection>0?'体感踏步方向：前进':'体感踏步方向：后退');
+ });
+ const physical=el('pw-squat-motion');
+ physical.addEventListener('click',()=>{
+  const next=!motor.physicalStanceMode;
+  // During physical squat recognition, suppress step detection so the
+  // same down-up pulse cannot move the player unexpectedly.
+  if(next&&motor.walkMode){
+   motor.setWalkMode(false);el('pw-walk-toggle').textContent='体感踏步：关';
+   el('pw-walk-toggle').setAttribute('aria-pressed','false');
+  }
+  motor.setPhysicalStanceMode(next);
+  physical.textContent=next?'体感蹲起：开':'体感蹲起：关';
+  physical.setAttribute('aria-pressed',String(next));
+  note(next?'体感蹲起就绪：上下蹲起（两段脉冲识别），不要只倾斜手机':'体感蹲起已关闭');
+  if(next&&!accelListening)startMotion();
+ });
+ el('pw-gait-threshold').addEventListener('input',e=>{
+  const threshold=Number(e.target.value);
+  motor.setGaitThreshold(threshold);
+  el('pw-gait-value').textContent=threshold<.70?'灵敏':threshold>1.2?'稳健':'标准';
+ });
  const compact=el('pw-world-bottom'),more=el('pw-world-more');
  more.addEventListener('click',()=>{
   const wasCompact=compact.classList.contains('pw-world-compact');
@@ -280,7 +348,9 @@ export function createWorld3D({onBack}){
   else{motion.pose={yaw:0,pitch:0,roll:0};motion.target={...motion.pose};note('鼠标/摇杆视角已回正')}
  });
  el('pw-walk-toggle').addEventListener('click',()=>{
-  const next=!motor.walkMode;motor.setWalkMode(next);
+  const next=!motor.walkMode;
+  if(next&&motor.physicalStanceMode){motor.setPhysicalStanceMode(false);el('pw-squat-motion').textContent='体感蹲起：关';el('pw-squat-motion').setAttribute('aria-pressed','false')}
+  motor.setWalkMode(next);
   el('pw-walk-toggle').textContent=next?'体感踏步：开':'体感踏步：关';
   el('pw-walk-toggle').setAttribute('aria-pressed',String(next));
   if(next&&!accelListening)startMotion();
@@ -343,17 +413,19 @@ export function createWorld3D({onBack}){
  }
  window.addEventListener('keydown',keyDown);
  window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
- window.addEventListener('blur',()=>{keys.clear();stick.forward=0;stick.side=0});
+ window.addEventListener('blur',()=>{keys.clear();stick.forward=0;stick.side=0;heldMove.forward=0});
  function screenChange(){if(!active)return;motion.calibrated=false;note('屏幕方向变化，请重新校准体感')}
  window.addEventListener('orientationchange',screenChange);
  window.screen?.orientation?.addEventListener?.('change',screenChange);
  document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){keys.clear();stick.forward=0;stick.side=0;if(active)note('页面已隐藏，暂停移动')}
+  if(document.hidden){keys.clear();stick.forward=0;stick.side=0;heldMove.forward=0;if(active)note('页面已隐藏，暂停移动')}
  });
  window.__PAPERWORLD_WORLD3D__={
   get active(){return active},get sensor(){return motion.sensorSeen},get pose(){return {...motion.pose}},
   get target(){return {...motion.target}},get permission(){return permission},get triangles(){return renderer?.triangles||0},
   get player(){return motor.snapshot()},get walls(){return renderer?.solids.length||0},
+  get forwardHold(){return heldMove.forward},
+  injectTestVertical:(up,ms)=>motor.ingestVerticalAcceleration(up,ms),
   injectTestOrientation:(a,b,g,screenAngle=0)=>motion.ingest(a,b,g,screenAngle),
   injectTestAcceleration:(x,y,z,ms)=>motor.ingestAcceleration(x,y,z,ms),
   setTestStance:name=>motor.setStance(name)
