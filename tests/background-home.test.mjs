@@ -50,7 +50,7 @@ test('all art and interactivity use Canvas code, no generated image assets',()=>
   assert.match(menu,/paperworld-menu-v3/);
   assert.match(menu,/点击粒子/);
   assert.doesNotMatch(menu,/emitClickPixels\(|clickBits\[/);
-  assert.match(page,/20261030-shop-lease2/);
+  assert.match(page,/20261030-shop-lease3/);
   assert.match(menu,/import \{createHostessIntro\} from '\.\/intro\.js'/);
   assert.match(menu,/intro\.draw\(ctx,W,H\)/);
   assert.match(menu,/intro\.onTap\(\)/);
