@@ -202,10 +202,14 @@ def render(steps=100):
         clothes,changed=outfit_variant(gold[pose],labels[pose],pred,conf,style)
         result,face_pixels,ratio=transplant_face(clothes,face,pose)
         assert result.shape==(H,W) and np.max(result)<=3
+        # Bundle the exact input face next to completed fullbody for reliable
+        # source-to-output comparison even without old workflow artifacts.
+        face_file=f"face_input_{i:02}.png"
+        Image.fromarray(COLORS[face],"RGB").save(OUT/face_file)
         file=f"fullbody_{i:02}.png"
         Image.fromarray(COLORS[result],"RGB").save(OUT/file)
         images.append(result)
-        records.append({"candidate":i,"input_face_file":f"candidate_{i:02}.png",
+        records.append({"candidate":i,"input_face_file":f"candidate_{i:02}.png","embedded_face_file":face_file,
            "fullbody_file":file,"pose_template":pose,"wardrobe_variant":style,
            "transplanted_face_pixels":face_pixels,"garment_changes":changed,
            "source_body_gold":pose,"approved_as_new_character":False})
