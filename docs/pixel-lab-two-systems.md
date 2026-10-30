@@ -1,9 +1,22 @@
-# Pixel Lab · 两套系统（2026-10-30 清理后）
-- **01 真像素转换**：`site/pixel-lab/repixelize.html`、`ml/repixelize/engine.py`，原生 D 四色和逐像素网格、PNG 下载。 `ml/repixelize/publish_d_standing.py` 只导出站姿母版，不再训练旧单图模型。
-- **02 像素绘画学习**：`site/pixel-lab/learn.html`、`ml/style2/discrete_diffusion_v2.py` 与 `ml/style2/verify_discrete_v2.py`，以及 `ml/style2/native_detail_v3.py` 和 `ml/style2/verify_detail_v3.py`。V2 学习整体结构，V3 直接在 384×512 上学习像素细节；均属于一个系统。V2 带形体条件的 4 类离散生成，像素年龄、可见 token 纠错、程序化测试留出。
-- **原始数据保留**：`ml/repixelize/reference-384.lzma.b64`、`ml/repixelize/d-standing-v1.tokens.b64`，`ml/style2/prepare.py` 输出 D 姿势母版及粗分区标签。
-- **独立纯编辑工具保留**：`site/pixel-lab/flat4.html` 与 `flat4-redraw.html`（不是训练模型）。
-- **已在当前分支清理**：CC0 16×16 MLP、VAE、Q-Learning、FLAT4 训练、RGB patch 训练、像素补绘 MLP、离散扩散 V1；删除对应旧页面、测试、CI 步骤与部署产物。
-- **研究论文保留**：`docs/*paper*`、`docs/*research*` 只是论文调查，不代表官方模型已经集成。
-- **验收**：四色准确性、网格、真实 PNG、模型生成、与蓝图基线比较、留出参数测试、网页/手机 Chromium；不以正确率冒充美术质量。原生 384×512 是人物正式目标；192×256 仅为结构条件。V3 必须在前景指标超过简单放大后才能算质量通过。
-历史提交可在 GitHub History 恢复，但不再随当前 main 构建、运行或部署。
+# PixelLab 两系统 · 2026-10-30 校准
+
+## 01 真像素转换
+- 网站：`site/pixel-lab/repixelize.html`
+- 目的：导入一张完整人物原画、保持构图、转为原生 D 四色和显式像素网格。
+- 颜色：`#393657`、`#F2A5C2`、`#A9BAE9`、`#FFF5E6`。转换不是重新绘画。
+
+## 02 完整全身立绘训练（唯一当前主线）
+- 网站：`site/pixel-lab/fullbody-learning.html`（旧 `learn.html` 自动进入此页）。
+- 训练代码：`ml/fullbody/train.py`，验收代码 `ml/fullbody/verify.py`。
+- GitHub Actions：`.github/workflows/fullbody-learning.yml`，真实训练和模型输出均可核查。
+- 输入：严格 D 四色的完整 **384×512 全身画布**，包括头、五官、发、衣服、四肢、鞋、完整姿态；不使用独立脸部头像、16×16动作小人或把脸移植到身体母版。
+- 当前模型：PyTorch 全画布遮挡像素重建基线。网络对整幅384×512图预测原生四色类别；由网络计算的预测图 `*_pred.png` 单独导出，不用原画覆盖错误。
+- 数据事实：`gold_dynamic`、`gold_standing` 是**同一角色**的两张正式 384×512 姿势母版，只有 **1 个**独立已认可身份。`hostess_candidate` 是独立 **192×256** 新立绘候选，2×最近邻放大只用于测试、绝不宣称获得新的384×512绘制细节。
+- 验证：训练、前景遮挡指标、PNG尺寸、四色、原图/模型预测分开、手机/桌面浏览器截图。
+- 当前正式生成新角色：**0**。这不是文生图、多身份立绘扩散模型；仅两张同身份母版不能证明能创作新的精致全身人物。项目设定正式生成训练集至少需32个经过审核的独立全身角色（设定门槛，不是已满足的数据量）。
+
+## 历史实现：只保留回溯，不再展示为系统02功能
+`face-train`、`face-general`、`face-parts`、`motion-prior`、`geometry-v5`、`fullbody-16`、`pixel-lab-training` 等旧工作流已改为仅手动触发，避免继续运行与本轮目标不符的头像和小人训练。`site/pixel-lab/fullbody-16.html` 的16张模板组合为历史合成实验，**0张通过新角色验收**，不在当前训练导航露出。
+
+## 下一步合格条件
+扩大有来源/许可且经人工美术审核的完整角色数据：至少三种不同体型、不同头部比例、足够不同服饰结构、站姿和动态姿势，所有素材完整显示足部与手部；按人物身份隔离训练、验证、测试，严禁同一角色的换色/裁剪被当作不同身份。只有经过未见角色泛化评估、人工评判角色与服装确有创新并通过原生像素/四色验收后，才可以称为“学会生成新的全身人物立绘”。
