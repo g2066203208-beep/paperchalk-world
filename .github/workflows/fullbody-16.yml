@@ -7,9 +7,10 @@ on:
       - 'ml/style2/verify_extend_16_fullbody.py'
       - '.github/workflows/fullbody-16.yml'
       - 'site/pixel-lab/fullbody-16.html'
+      - 'tests/fullbody-16-browser.mjs'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   actions: write
 concurrency:
   group: fullbody-sixteen-${{ github.ref }}
@@ -54,6 +55,15 @@ jobs:
         run: python -m ml.style2.extend_16_fullbody --steps 100
       - name: Verify every 384x512 PNG, body completeness and training checkpoint
         run: python -m ml.style2.verify_extend_16_fullbody
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium to check all 16 real sprites
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Browser check 16 fullbody PNGs and matched faces on desktop/mobile
+        run: node tests/fullbody-16-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -62,8 +72,27 @@ jobs:
             site/pixel-lab/style2/fullbody-16/
           retention-days: 30
           if-no-files-found: warn
-      - name: Refresh live PixelLab when outputs are verified
+      - name: Commit verified PNG images to Pages source (without the large neural weights)
         if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run deploy-pages.yml --ref main
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add site/pixel-lab/style2/fullbody-16/*.png site/pixel-lab/style2/fullbody-16/report.json
+          if git diff --cached --quiet; then
+            echo 'All sixteen sprites already committed'
+          else
+            git commit -m 'assets(pixel-lab): publish verified sixteen full-body D pixel sprites'
+            for i in 1 2 3 4; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                echo 'PASS: model training output is now committed in public Pages source'
+                exit 0
+              fi
+              sleep 2
+            done
+            echo '::error::Unable to commit trained pixel outputs to main'
+            exit 1
+          fi
+
