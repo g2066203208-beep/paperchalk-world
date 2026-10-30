@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#393657"><meta name="description" content="机器学习采样生成新全身人物和动作：人物外形、衣着和姿势候选">
-<title>PIXEL LAB 02 · 新全身人物生成结果</title>
+<title>PIXEL LAB 02 · 全身立绘生成实验与质量验收</title>
 <style>
 :root{color-scheme:dark;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6;--bg:#1a1929;--panel:#29263b;--line:#56506b}
 *{box-sizing:border-box}body{background:var(--bg);color:var(--paper);font:15px/1.65 system-ui,"Noto Sans SC",sans-serif;margin:0;min-height:100vh}
@@ -39,8 +39,8 @@ footer{margin-top:24px;font-size:12px;color:#aaa1bd;border-top:1px solid var(--l
 </style></head><body>
 <nav><strong>PIXEL LAB / 02</strong><a href="./index.html">像素工作室</a><a href="./repixelize.html">01 真像素转换</a><a href="../index.html">游戏</a></nav>
 <main><div class="eyebrow">GENERATIVE MODEL / NEW FULL FIGURES</div>
-<h1>新人物 · 新服装 · 新动作</h1>
-<p class="lead">这里显示<strong>机器学习模型直接采样生成</strong>的完整人物候选，而不是恢复旧画、贴脸或程序复制母版。候选跨不同体型、服装和动作训练，所有原始 PNG 都可以逐格放大审查。</p>
+<h1>完整人物生成 · 质量验收</h1>
+<p class="lead">这里仅展示<strong>模型真正生成、且已通过视觉验收</strong>的完整人物立绘。第一轮模型虽然产生15张不同图像，但无法识别完整人物，已经全部否决，拒绝以色块充当新角色。</p>
 <div class="status"><strong id="phase">正在读取训练结果</strong><span id="status">若模型尚未完成，请查看 GitHub Actions 的训练任务。</span><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/fullbody-generate.yml">查看真实训练</a></div>
 <section class="stats" aria-label="模型训练与生成证据">
  <div class="stat"><b id="candidate-count">—</b><span>模型生成的不同完整人物候选</span></div>
@@ -52,7 +52,7 @@ footer{margin-top:24px;font-size:12px;color:#aaa1bd;border-top:1px solid var(--l
 <button id="background" aria-pressed="false" type="button">切换浅色底板</button></div>
 <div class="layout">
  <section><div class="gallery" id="gallery" aria-label="模型采样完整人物画廊"></div>
- <div id="empty">没有可展示的模型采样结果。旧头像、旧人体母版、技术修复图不会冒充新人物。<p><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/fullbody-generate.yml">查看模型训练进度或失败日志</a></p></div></section>
+ <div id="empty">目前没有通过验收的新人物、新服装或新动作立绘。首轮15张都已因人体结构严重错误被拒绝；旧头像、人体母版和技术修复图不会冒充新人物。<p><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/fullbody-generate.yml">查看模型训练进度或失败日志</a></p></div></section>
  <aside class="inspector"><h2 id="selected-title">选择一张完整人物</h2>
  <div class="stage" id="stage"><canvas id="full" width="384" height="512" aria-label="真实模型生成的全身人物"></canvas></div>
  <p class="technical" id="meta">绘制前请确认实际训练报告已加载。</p>
