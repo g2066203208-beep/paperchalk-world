@@ -20,8 +20,8 @@
 .pw-dialogue-actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .pw-dialogue-actions .pw-btn{min-height:42px;font-size:14px}
 #pw-dialogue-status{font-size:12px;font-weight:800;letter-spacing:.08em}
-#pw-lease{position:absolute;inset:0;display:grid;place-items:center;pointer-events:auto;padding:max(13px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom));overflow-y:auto;overflow-x:hidden;perspective:800px;background:var(--ink)}
-#pw-lease::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(135deg,var(--ink) 0px,var(--ink) 42px,var(--blue) 42px,var(--blue) 46px,var(--ink) 46px,var(--ink) 90px);opacity:.22}
+#pw-lease{position:absolute;inset:0;display:grid;place-items:center;pointer-events:auto;padding:max(13px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom));overflow-y:auto;overflow-x:hidden;perspective:800px;background:transparent}
+#pw-lease::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:transparent;opacity:1}
 #pw-lease-card{position:relative;width:min(94vw,660px);max-height:calc(100dvh - 28px);overflow-y:auto;overflow-x:hidden;padding:20px clamp(15px,4vw,28px) 24px;transform:translateZ(0);transition:transform .32s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
 #pw-lease[data-open="yes"] #pw-lease-card{animation:pw-card-arrive .5s steps(12,end) both}
 @keyframes pw-card-arrive{from{transform:translateY(28px) rotateX(7deg) scale(.92)}to{transform:translateY(0) rotateX(0) scale(1)}}
