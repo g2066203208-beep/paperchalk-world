@@ -14,6 +14,13 @@ const PALETTE=[INK,PINK,BLUE,PAPER];
 const $=id=>document.getElementById(id);
 function makeTown(lod='full'){
  const verts=[],cols=[],lines=[],lineCols=[],solids=[];
+ // Stable IDs into the same editable 32-material atlas used by Material Studio.
+ const MAT={stone:0,brick:1,wood:2,plaster:3,roof:4,paving:5,grass:6,glass:7,
+  wildgrass:8,clover:9,flowers:10,dirt:11,pebbles:12,sand:13,moss:14,gravel:15,
+  cobble:16,path:17,asphalt:18,sidewalk:19,wetsoil:20,limestone:21,
+  timber:22,wallblue:23,door:24,doorframe:25,window:26,windowlit:27,
+  bark:28,leavesblue:29,leavespink:30,hedge:31};
+ const hash=(x,y)=>{let t=Math.imul(x|0,374761393)+Math.imul(y|0,668265263);t=Math.imul(t^(t>>>13),1274126177);return (t^(t>>>16))>>>0};
  const materialPosition=[],materialUV=[],materialID=[];
  function vertex(p,c){verts.push(...p);cols.push(...PALETTE[c])}
  function line(a,b,c){lines.push(...a,...b);lineCols.push(...PALETTE[c],...PALETTE[c])}
@@ -29,29 +36,74 @@ function makeTown(lod='full'){
   }
   if(outline){line(a,b,0);line(b,c,0);line(c,d,0);line(d,a,0)}
  }
- function box(x,y,z,sx,sy,sz,pal=2,material=null){
+ function box(x,y,z,sx,sy,sz,pal=2,material=null,topMaterial=material??MAT.roof){
   const x0=x-sx/2,x1=x+sx/2,y0=y-sy/2,y1=y+sy/2,z0=z,z1=z+sz;
-  // Material identifiers: stone=0 brick=1 wood=2 plaster=3 roof=4
-  // paving=5 meadow=6 glass=7; keep original palette-color mesh for fallback.
-  const wall=material??(pal===1?1:pal===2?3:pal===3?2:0);
+  // Every external face is UV mapped; components can override their top surface.
+  const wall=material??(pal===1?MAT.brick:pal===2?MAT.wallblue:pal===3?MAT.plaster:MAT.stone);
   quad([x0,y0,z0],[x0,y1,z0],[x1,y1,z0],[x1,y0,z0],pal);
-  quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],pal===1?3:1,true,4);
+  quad([x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1],pal===1?3:1,true,topMaterial);
   quad([x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1],pal,true,wall);
   quad([x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1],pal===2?3:2,true,wall);
   quad([x1,y1,z0],[x0,y1,z0],[x0,y1,z1],[x1,y1,z1],pal,true,wall);
   quad([x0,y1,z0],[x0,y0,z0],[x0,y0,z1],[x0,y1,z1],pal===2?1:pal,true,wall);
  }
- // Ground, roads and stone blocks. Only hard pixel-color surfaces.
- quad([-90,-90,-.08],[90,-90,-.08],[90,90,-.08],[-90,90,-.08],2,false,6);
- quad([-90,-3,.012],[90,-3,.012],[90,3,.012],[-90,3,.012],0,false,5);
- quad([-5,-90,.016],[5,-90,.016],[5,90,.016],[-5,90,.016],0,false,5);
- for(let n=-72;n<=72;n+=6){
-  quad([n,-.12,.022],[n+2,-.12,.022],[n+2,.12,.022],[n,.12,.022],3);
-  quad([-.12,n,.023],[.12,n,.023],[.12,n+2,.023],[-.12,n+2,.023],3);
+ // Material-aware outdoor landscape: exact geometry, no image overlays.
+ // The playable district expands to 384x384m; 3D collisions use the same extent.
+ quad([-192,-192,-.10],[192,-192,-.10],[192,192,-.10],[-192,192,-.10],2,false,MAT.grass);
+ // Spatially-coherent ground patches are larger than one tile so this is not
+ // a checkerboard. Quad silhouettes overlap the base meadow without z fighting.
+ // Lower LOD halves patch density but keeps roads and building collisions.
+ const stride=lod==='mobile'?18:12;
+ for(let ix=-Math.floor(180/stride);ix<Math.floor(180/stride);ix++){
+  for(let iy=-Math.floor(180/stride);iy<Math.floor(180/stride);iy++){
+   const cx=(ix+.5)*stride,cy=(iy+.5)*stride;
+   if(Math.abs(cx)<12||Math.abs(cy)<11)continue;
+   const seed=hash(Math.floor(ix/2),Math.floor(iy/2));
+   const biome=Math.abs(cy)>100?MAT.wildgrass:Math.abs(cx)>115?MAT.limestone:
+    seed%17<4?MAT.clover:seed%17<7?MAT.wildgrass:
+    seed%17<9?MAT.flowers:seed%17<12?MAT.dirt:seed%17<14?MAT.moss:MAT.grass;
+   if(biome===MAT.grass)continue;
+   const sz=stride*(.49+(hash(ix,iy)%19)/100);
+   quad([cx-sz,cy-sz*.62,-.085],[cx+sz*.58,cy-sz,-.085],
+        [cx+sz,cy+sz*.54,-.085],[cx-sz*.62,cy+sz,-.085],2,false,biome);
+   if(seed%7===0){
+    const x=cx+sz*.3,y=cy-sz*.15,r=sz*.28;
+    quad([x-r,y-r,-.082],[x+r,y-r,-.082],[x+r,y+r,-.082],[x-r,y+r,-.082],3,false,seed%2?MAT.pebbles:MAT.flowers);
+   }
+  }
  }
- for(let n=-90;n<=90;n+=9){
-  line([n,-90,.035],[n,90,.035],3);
-  line([-90,n,.035],[90,n,.035],3);
+ // Street cross. Paving is NOT the road surface: dark carriageways,
+ // pale stone sidewalks, edge curbs, cobbled intersections and dirt park paths.
+ quad([-192,-3.45,.012],[192,-3.45,.012],[192,3.45,.012],[-192,3.45,.012],0,false,MAT.asphalt);
+ quad([-5.5,-192,.016],[5.5,-192,.016],[5.5,192,.016],[-5.5,192,.016],0,false,MAT.asphalt);
+ // Sidewalks follow both streets with correct elevation and intersections.
+ for(const sign of [-1,1]){
+  const ya=sign>0?3.55:-6.3,yb=sign>0?6.3:-3.55;
+  quad([-192,ya,.020],[192,ya,.020],[192,yb,.020],[-192,yb,.020],3,false,MAT.sidewalk);
+  const xa=sign>0?5.65:-8.25,xb=sign>0?8.25:-5.65;
+  quad([xa,-192,.022],[xb,-192,.022],[xb,192,.022],[xa,192,.022],3,false,MAT.sidewalk);
+ }
+ // Older quarter along the western avenue uses a textured cobble lane.
+ quad([-191,-3.43,.020],[-100,-3.43,.020],[-100,3.43,.020],[-191,3.43,.020],2,false,MAT.cobble);
+ // Plaza and pedestrian crossing anchor the street visually.
+ quad([-10,-9,.028],[10,-9,.028],[10,9,.028],[-10,9,.028],3,false,MAT.cobble);
+ for(const sign of [-1,1]){
+  const y=sign*8;
+  quad([-32,y-1.2,.026],[-10,y-1.2,.026],[-10,y+1.2,.026],[-32,y+1.2,.026],3,false,MAT.path);
+ }
+ // World-scale paths lead into surrounding meadows.
+ for(const y of [-95,100]){
+  quad([-160,y-1.3,-.060],[160,y-1.3,-.060],[160,y+1.3,-.060],[-160,y+1.3,-.060],2,false,MAT.path);
+ }
+ for(let n=-174;n<=174;n+=9){
+  // Short lane dashes, not an intrusive engineering grid across the grass.
+  quad([n,-.12,.033],[n+3,-.12,.033],[n+3,.12,.033],[n,.12,.033],3);
+  quad([-.12,n,.035],[.12,n,.035],[.12,n+3,.035],[-.12,n+3,.035],3);
+ }
+ // Crosswalks use deliberate pale stripes only at pedestrian junctions.
+ for(const x of [-14,14]){
+  for(let y=-2.6;y<3;y+=1.1)
+   quad([x-1.25,y,.038],[x+1.25,y,.038],[x+1.25,y+.48,.038],[x-1.25,y+.48,.038],3);
  }
  // Shops stand in three-dimensional city blocks on both sides of the avenue.
  for(let i=-7;i<=7;i++){
@@ -64,50 +116,108 @@ function makeTown(lod='full'){
    const seed=Math.abs(i*23+j*17);
    const h=3+(seed%5)*1.2,wall=(seed%3===0?1:seed%3===1?2:3);
    const w=4.6+(seed%3)*.7,depth=5.5;
-   box(x,y,.1,w,depth,h,wall);
+   const wallMat=seed%5===0?MAT.brick:seed%5===1?MAT.wallblue:seed%5===2?MAT.plaster:seed%5===3?MAT.stone:MAT.wood;
+   const roofMat=seed%4===0?MAT.brick:MAT.roof;
+   box(x,y,.1,w,depth,h,wall,wallMat,wallMat);
    solids.push({x,y,w,d:depth});
-   // On mobile keep all architecture/collision. Only ornamental surfaces use LOD.
+   // Every house has a recognizable door and a step, including mobile LOD.
+   const towardRoad=y>0?y-depth/2-.045:y+depth/2+.045;
+   const out=y>0?-.11:.11;
+   box(x,towardRoad,.08,1.57,.16,2.37,0,MAT.doorframe,MAT.doorframe);
+   box(x,towardRoad+out,.11,1.15,.11,2.14,1,MAT.door,MAT.door);
+   box(x+.39,towardRoad+out*1.65,1.07,.10,.09,.13,3,MAT.timber,MAT.timber);
+   box(x,towardRoad+out,.055,2.05,.50,.13,0,MAT.stone,MAT.stone);
    if(bareMobileRow)continue;
-   // Stacked facade windows are small solid meshes, not sprites.
-   const towardRoad=y>0?y-depth/2-.025:y+depth/2+.025;
+   // Windows, reveals and sills are actual offset 3D volumes, not a painted rectangle.
    for(let floor=0;floor<Math.floor(h/2);floor+=(lod==='mobile'?2:1)){ 
     for(const dx of [-1,1]){
      box(x+dx*1.13,towardRoad,.95+floor*1.75,.72,.09,.78,0);
-     box(x+dx*1.13,towardRoad+(.07*(y<0?-1:1)),.98+floor*1.75,.49,.095,.5,2,7);
+     box(x+dx*1.13,towardRoad+(.07*(y<0?-1:1)),.98+floor*1.75,.49,.095,.5,2,(seed+floor)%3===0?MAT.windowlit:MAT.window,MAT.window);
     }
    }
-   box(x,y,.1, w+.35,depth+.35,.20,0);
-   box(x,y,h+.1,w+.35,depth+.35,.28,1);
+   box(x,y,.1,w+.35,depth+.35,.20,0,MAT.stone,MAT.stone);
+   // Two restrained roof silhouettes: stepped slate and pale parapet.
+   box(x,y,h+.1,w+.55,depth+.55,.26,1,roofMat,roofMat);
+   if(seed%3!==0){
+    box(x,y,h+.38,w*.77,depth+.68,.19,0,roofMat,roofMat);
+    box(x,y,h+.59,w*.38,depth+.8,.15,1,roofMat,roofMat);
+   }else{
+    box(x,y,h+.43,w+.25,depth+.25,.17,3,MAT.timber,MAT.timber);
+   }
+   // Frame, shopfront awning and stone plinth tell a shop from a blank cube.
+   box(x,towardRoad+out*.2,2.55,3.25,.35,.28,1,MAT.timber,MAT.timber);
+   for(let k=0;k<5;k++){
+    box(x-1.3+k*.65,towardRoad+out*2.2,2.38,.64,.43,.11,k%2?1:3,k%2?MAT.brick:MAT.plaster,k%2?MAT.brick:MAT.plaster);
+   }
   }
  }
  // Two real 3D markers: supplies near spawn and doorstep of rental shop.
-  box(0,0,.05,1.2,1.2,.12,3);box(0,0,.17,.8,.8,.26,1);
-  box(24,0,.05,1.5,1.5,.12,3);box(24,0,.17,.9,.9,.25,2);
+  box(0,0,.05,1.2,1.2,.12,3,MAT.stone,MAT.stone);box(0,0,.17,.8,.8,.26,1,MAT.brick,MAT.brick);
+  box(24,0,.05,1.5,1.5,.12,3,MAT.stone,MAT.stone);box(24,0,.17,.9,.9,.25,2,MAT.wood,MAT.wood);
   // Landmark rental house ahead: stylized pink/cream shop front and tower.
- box(30,0,.08,8,9,8,3);
+ box(30,0,.08,8,9,8,3,MAT.plaster,MAT.plaster);
  solids.push({x:30,y:0,w:8,d:9});
- box(29.9,0,8.1,9.5,10,.7,1);
- box(29.9,0,9,4,4,3.3,2);
- box(29.9,0,12.3,5.6,5.6,.45,1);
- box(25.93,0,.11,.15,2.5,3.25,0);
- box(25.84,0,3.4,.2,4,1,1);
+ box(29.9,0,8.1,9.5,10,.7,1,MAT.roof,MAT.roof);
+ box(29.9,0,9,4,4,3.3,2,MAT.wallblue,MAT.wallblue);
+ box(29.9,0,12.3,5.6,5.6,.45,1,MAT.roof,MAT.roof);
+ // The landlord building finally has a full door surface with threshold,
+ // fluted wooden frame, handle and a recognizable overhead sign.
+ box(25.90,0,.1,.2,2.7,3.40,0,MAT.doorframe,MAT.doorframe);
+ box(25.75,0,.13,.2,2.14,3.04,1,MAT.door,MAT.door);
+ box(25.60,.67,1.34,.1,.14,.15,3,MAT.timber,MAT.timber);
+ box(25.78,0,.03,.9,3.1,.16,0,MAT.stone,MAT.stone);
+ box(25.68,0,3.64,.18,4.4,.66,1,MAT.timber,MAT.timber);
  for(let side of [-3.1,3.1]){
-  box(25.8,side,2.7,.13,1.5,1.5,0);
-  box(25.7,side,2.9,.15,1,1.05,2);
+  box(25.8,side,2.7,.13,1.5,1.5,0,MAT.doorframe,MAT.doorframe);
+  box(25.7,side,2.9,.15,1,1.05,2,MAT.windowlit,MAT.windowlit);
  }
- // Four-color geometric trees create parallax in the near field.
+ // Two intentional silhouettes: flowering shade trees and tall blue trees.
+ // Crown is made of staggered smaller cuboids, not one shapeless giant cube.
+ function tree(x,y,variant){
+  const blossom=variant%3===0,leaf=blossom?MAT.leavespink:MAT.leavesblue;
+  const pal=blossom?1:2,height=blossom?2.65:3.5;
+  solids.push({x,y,w:.72,d:.72});
+  box(x,y,.05,.42,.48,height,0,MAT.bark,MAT.bark);
+  if(lod==='mobile'){
+   box(x,y,height-.55,1.95,1.95,1.05,pal,leaf,leaf);
+   box(x+.18,y,height+.42,1.48,1.55,.76,pal,leaf,leaf);
+  }else{
+   box(x,y,height-.52,2.2,2.1,1.05,pal,leaf,leaf);
+   box(x-.68,y+.3,height+.16,1.42,1.3,.85,pal,leaf,leaf);
+   box(x+.72,y-.23,height+.15,1.4,1.5,.9,pal,leaf,leaf);
+   box(x+.09,y,height+.59,1.76,1.74,.76,pal,leaf,leaf);
+   box(x+.02,y-.09,height+1.15,1.04,1.12,.41,pal,leaf,leaf);
+   // Branches are narrower than the leaf masses.
+   box(x+.62,y-.18,height-.18,1.0,.18,.2,0,MAT.bark,MAT.bark);
+  }
+ }
  for(let x=-45;x<=60;x+=10){
   for(const y of [-6.5,6.5]){
    if(x>=24&&x<=37)continue;
-   solids.push({x,y,w:.72,d:.72});
-   box(x,y,.05,.46,.46,1.6,0);
-   box(x,y,1.2,2.35,2.35,2.5,(Math.abs(x)%20)?1:3);
-   box(x,y,3.35,1.4,1.4,.95,2);
+   tree(x,y,hash(x,y)%7);
   }
  }
+ // Sparse park trees and shrub rows beyond the commercial block, without
+ // altering road/tree collision footprints in the existing movement tests.
+ for(let x=-144;x<=144;x+=24){
+  for(const y of [-26,26]){
+   if(Math.abs(x)<80)continue;
+   // Background trees are visual only, small hedges are walk-through decoration.
+   const leaf=hash(x,y)%3===0?MAT.leavespink:MAT.leavesblue;
+   box(x,y,.06,.42,.42,2.35,0,MAT.bark,MAT.bark);
+   box(x,y,2.1,2,2,.92,leaf===MAT.leavespink?1:2,leaf,leaf);
+   if(lod!=='mobile')box(x+.25,y,2.90,1.5,1.55,.64,leaf===MAT.leavespink?1:2,leaf,leaf);
+  }
+ }
+ for(const side of [-1,1])for(let x=-77;x<=78;x+=18){
+  if(Math.abs(x-30)<14)continue;
+  const y=side*9.5;
+  box(x,y,.03,1.2,1.18,.58,2,MAT.hedge,MAT.hedge);
+  if(lod!=='mobile')box(x+.35,y+.15,.41,.85,.9,.47,2,MAT.hedge,MAT.hedge);
+ }
  // A distant sky landmark visible on looking up.
- box(66,-22,14,4,4,17,1);
- box(66,-22,31,9,9,.65,3);
+ box(66,-22,14,4,4,17,1,MAT.brick,MAT.brick);
+ box(66,-22,31,9,9,.65,3,MAT.limestone,MAT.limestone);
  return {tri:new Float32Array(verts),colors:new Float32Array(cols),line:new Float32Array(lines),lineColors:new Float32Array(lineCols),solids,
   materialPosition:new Float32Array(materialPosition),materialUV:new Float32Array(materialUV),materialID:new Float32Array(materialID)};
 }
@@ -309,7 +419,7 @@ export function createWorld3D({onBack}){
   motion.setComfort(comfort);lean.setComfort(comfort);
   try{
    renderer??=makeRenderer(canvas);motor=new BodyMotor(renderer.solids);
-   window.__PAPERWORLD_WORLD_MATERIALS__={texturedTriangles:renderer.materialTriangles,atlas:[64,32],source:'official-four-ink-material-pack'};
+   window.__PAPERWORLD_WORLD_MATERIALS__={texturedTriangles:renderer.materialTriangles,atlas:[128,64],materialCount:32,worldMeters:384,source:'official-four-ink-material-pack'};
    note('3D 街区就绪 · 前后移动用按键/摇杆 · 手机左右倾斜直接探头');
   }catch(e){motor=new BodyMotor();note('WebGL 不可用：'+String(e.message||e))}
   setStance('stand');readouts();raf=requestAnimationFrame(draw);
