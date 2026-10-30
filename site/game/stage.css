@@ -163,12 +163,12 @@
 
 /* Motion v4: two large, immediate, thumb-friendly forward/back controls.
  * They work without hardware permission and intentionally override footsteps. */
-#pw-mobile-move-buttons{position:absolute;left:10px;top:35%;z-index:5;display:flex;gap:7px;flex-direction:column;touch-action:none}
+#pw-mobile-move-buttons{position:absolute;right:10px;left:auto;top:31%;z-index:5;display:flex;gap:7px;flex-direction:column;touch-action:none}
 #pw-mobile-move-buttons button{min-width:84px;min-height:54px;border:3px solid var(--ink);background:var(--paper);color:var(--ink);font:900 15px system-ui;box-shadow:3px 3px 0 var(--pink);touch-action:none;user-select:none;-webkit-user-select:none}
 #pw-mobile-move-buttons button[aria-pressed="true"]{background:var(--pink);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
 .pw-move-sensitivity{display:flex;flex-direction:column;gap:3px;font-size:11px;font-weight:800}
 .pw-move-sensitivity input{width:100%;min-height:24px;touch-action:auto;accent-color:var(--ink)}
 #pw-world-bottom .pw-world-locomotion{touch-action:pan-y}
 #pw-squat-motion[aria-pressed="true"],#pw-walk-direction[aria-pressed="true"]{background:var(--pink)}
-@media(max-height:650px){#pw-mobile-move-buttons{left:9px;top:25%}#pw-mobile-move-buttons button{min-height:40px;font-size:12px;min-width:70px}}
-@media(max-width:420px){#pw-mobile-move-buttons{top:27%;left:6px}#pw-mobile-move-buttons button{min-height:46px;min-width:70px;font-size:13px}}
+@media(max-height:650px){#pw-mobile-move-buttons{left:128px;right:auto;top:25%}#pw-mobile-move-buttons button{min-height:40px;font-size:12px;min-width:70px}}
+@media(max-width:420px){#pw-mobile-move-buttons{top:27%;right:6px;left:auto}#pw-mobile-move-buttons button{min-height:46px;min-width:70px;font-size:13px}}
