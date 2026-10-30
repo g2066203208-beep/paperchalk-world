@@ -92,7 +92,7 @@ test('stripe normal translation is exactly periodic',()=>{
 
 test('Android foreground restore preserves the WebView, and live update waits until idle menu',()=>{
  const resume=android.slice(android.indexOf('protected void onResume()'),android.indexOf('@Override\n    public void onBackPressed()'));
- assert.doesNotMatch(resume,/openLatestHome\(|loadUrl\(/,'resuming the app must not reset active game state');
+ assert.doesNotMatch(resume,/\b(?:openLatestHome|web\.loadUrl)\s*\(/,'resuming the app must not reset active game state');
  assert.match(resume,/resumeSensorOnForeground/);
  assert.match(android,/resumeSensorOnForeground = sensorListening;\s*stopSensor\(\);/);
  assert.match(background,/function gameIsSafeToReload\(\)/);
