@@ -1,0 +1,62 @@
+name: PixelLab - real face-only masked token training
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/style2/face_train.py'
+      - 'ml/style2/verify_face.py'
+      - 'site/pixel-lab/face.html'
+      - 'tests/face-browser.mjs'
+      - '.github/workflows/face-train.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: face-train-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  face:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install real neural training dependencies
+        run: |
+          python -m pip install 'numpy==2.2.6' 'Pillow==11.3.0'
+          python -m pip install 'torch==2.7.1+cpu' --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Reconstruct strict 384x512 D art
+        run: python -m ml.style2.prepare
+      - name: Train face-only neural model and genuinely generate sixteen 96x96 samples
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '2'
+        run: python -m ml.style2.face_train --steps 300
+      - name: Verify actual checkpoint and exact 4-color 96x96 images
+        run: python -m ml.style2.verify_face
+      - name: Install Chromium
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test actual web gallery on desktop and mobile
+        run: node tests/face-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pixel-face-trained-samples-and-weights
+          path: |
+            site/pixel-lab/style2/face-lab/
+            repixel-browser-artifacts/face-*.png
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Rebuild Pages with verified faces
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main
