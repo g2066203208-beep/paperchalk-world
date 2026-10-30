@@ -117,7 +117,7 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
 <div class="canvas"><div class="caption"><span>已锁定的人物参考</span><span>相同构图</span></div><img id="reference" src="./d-standing-v1-preview-2x.png" alt="D风格站立角色的像素预览"></div>
 <div class="canvas"><div class="caption"><span>输出 · 真正原生像素</span><span id="nativeLabel">384×512</span></div><canvas id="result" width="384" height="512"></canvas></div>
 </div><div class="bar"><span class="chip">零新零件</span><span class="chip">零光影插值</span><span class="chip">四种 RGB 固有色</span><span class="chip">无半透明 / 无抗锯齿</span></div>
-<div class="links"><a href="./d-standing-v1-384x512.png" download>↓ D 风格站姿原生 384×512 PNG</a><a href="./d-standing-v1-preview-2x.png" download>↓ D 风格整数放大预览</a><a href="./d-standing-v1-report.json">查看原生四色与训练验证报告</a></div>
+<div class="links"><a href="./d-standing-v1-384x512.png" download>↓ D 风格站姿原生 384×512 PNG</a><a href="./d-standing-v1-preview-2x.png" download>↓ D 风格整数放大预览</a><a href="./d-standing-v1-report.json">查看原生四色验收报告</a></div>
 </div>
 <aside class="panel">
 <h2>01 · 四种固有色</h2>
@@ -137,7 +137,7 @@ input[type=file]{max-width:100%;color:#bbc7da;cursor:pointer}
 <p id="status">正在读取 GitHub 发布的原生图片…</p>
 <hr>
 <h2>03 · 机器学习结果</h2>
-<div class="note">当前 D 站姿图有真实训练的 <strong>3×3 RGB Patch MLP</strong> 去噪模型，用同作品的合成模糊进行验证。发布的保真图实际采用固定色板 + 面积投票；神经模型在单幅图上训练，不代表已经学会画新人物。<a href="./d-standing-v1-report.json">查看报告</a></div>
+<div class="note">此页只进行原生网格、固定 D 色板和 PNG 保真处理，不运行或展示已淘汰的局部神经网络。新模型统一在 <a href="./learn.html">系统 02</a>。</div>
 </aside></section>
 </main>
 <script src="./repixel-inspector.js" defer></script>

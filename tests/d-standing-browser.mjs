@@ -27,7 +27,7 @@ try{
  assert.deepEqual(report.palette,['#393657','#F2A5C2','#A9BAE9','#FFF5E6']);
  assert.equal(report.distinct_rgb_colors,4);
  assert.equal(report.alpha_pixels,0);assert.equal(report.other_rgb_colors,0);
- assert.ok(report.training.training_steps>=300);
+ assert.equal(report.model_training,false,'Standing master is a preserved asset, not a legacy MLP');
  const pixels=await page.evaluate(()=>{
   const img=document.querySelector('#dAvatar'), canvas=document.createElement('canvas');
   canvas.width=384;canvas.height=512;const ctx=canvas.getContext('2d',{willReadFrequently:true});

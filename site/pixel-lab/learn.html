@@ -1,30 +1,32 @@
 <!doctype html>
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0e1721">
-<title>Pixel Lab · 像素画机器学习实验室</title>
-<link rel="stylesheet" href="./pixel-lab.css"></head>
+<meta name="theme-color" content="#393657">
+<title>02 · 像素绘画学习 | D 四色离散生成</title>
+<style>
+:root{color-scheme:dark;--bg:#1b1a2c;--panel:#29273f;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
+a{color:var(--blue)}nav{border-bottom:1px solid #514b6e;padding:13px max(16px,calc((100vw - 1160px)/2))}
+main{max-width:1160px;margin:auto;padding:25px 18px 60px}h1{font-size:clamp(28px,5vw,46px);line-height:1.2;margin:12px 0}
+h2{margin:11px 0}p{line-height:1.7}
+.eyebrow{color:var(--pink);font-size:11px;letter-spacing:1.8px;font-weight:900}
+.summary{max-width:930px;color:#c2b9d8}.tag{border:1px solid #615c79;border-radius:18px;padding:5px 10px;font-size:12px}
+.anchors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:780px}
+.anchors figure{margin:0;padding:9px;background:var(--ink);border-radius:10px}
+.anchors img{display:block;width:100%;height:auto;image-rendering:pixelated}
+.anchors figcaption{color:var(--cream);font-size:12px;margin:6px 0}
+section.refs{border:1px solid #57506e;background:#26233b;border-radius:13px;padding:16px;margin-top:22px}
+details summary{cursor:pointer}canvas{cursor:crosshair;touch-action:manipulation}
+label{display:flex;align-items:center;gap:6px}
+@media(max-width:700px){main{padding:20px 11px}.anchors{gap:7px}}
+</style></head>
 <body>
-<header class="top">
- <a class="back" href="./index.html">← 两大系统总览</a>
- <div class="mark"><b>PIXEL</b><span>LAB / ML</span></div>
- <div class="top-right">绘画学习 <strong>研究阶段</strong><span class="pill">16 × 16 实验</span></div>
-</header>
-<div class="shell">
- <section class="hero">
-  <div class="eyebrow"><span class="live">●</span> GITHUB ACTIONS · REAL MODEL TRAINING</div>
-  <h1>学习绘画<span>人物、场景和道具</span>。</h1>
-  <p>这是两大系统中的第二部分：训练真正理解像素画结构的模型。当前只有小型像素补全、人物样本学习与画笔动作实验，尚无跨人物、场景与道具的成熟生成模型。</p>
-  <div class="status"><span id="ml-status">正在读取训练结果…</span><span class="divider"></span><span id="data-status">数据来源检查中</span></div>
- </section>
-
- 
-<section style="background:#28243f;border:1px solid #F2A5C2;border-radius:13px;padding:17px;margin:17px 0">
- <div class="eyebrow">NEW RESEARCH / DISCRETE PIXEL DIFFUSION</div>
- <h2 style="margin:6px 0;font-size:22px">真正训练的四色离散扩散实验</h2>
- <p style="color:#c8bcdc">不再展示一堆中间步骤图片。直接比较母版、粗形体条件、模型最终生成及55%遮挡恢复；支持原生像素网格和逐格取色。采用 Masked Token 并行预测和错误像素二次编辑，训练源码、验证和生成结果可核查。当前只研究一个人物的两种姿势。</p>
- <a style="color:#F2A5C2;font-weight:900" href="./discrete-diffusion.html">查看模型真实生成、网格和失败对照 →</a>
-</section>
+<nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
+<main>
+<div class="eyebrow">SYSTEM 02 · ACTIVE MODEL ONLY</div>
+<h1>像素绘画学习 · V2 离散生成</h1>
+<p class="summary">现在只保留一条可复现的训练主线：48×64 原生四色离散 Token、带条件形体、像素年龄与自我修正，训练对象包括同一角色的两个姿势及五类原创程序化道具、场景。过去的局部 MLP、VAE、Q-Learning 和扩散 V1 都已经从当前代码与构建流程移除。</p>
+<p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
 <details id="pixel-v2" style="background:#222237;border:1px solid #797092;border-radius:14px;padding:17px;margin:17px 0" open>
  <summary style="font-size:21px;font-weight:850;cursor:pointer;color:#F2A5C2">V2 · 真实训练：角色＋道具＋场景的四色离散生成</summary>
  <p style="color:#c0b6d3">实际模型以 48×64 逻辑网格生成，每个像素只能是 D 色板四类之一。增加独立形体蓝图、像素年龄与纠错，程序化道具的训练参数与测试参数分开。<strong>这仍然是科研样机，不是成熟美术生成器。</strong></p>
@@ -44,108 +46,15 @@
  <a href="./style2/v2/report.json">完整训练与留出报告</a>
 </details>
 <script type="module" src="./style2/diffusion-v2-gallery.js"></script>
-<section id="style2-anchors" aria-label="D风格两张人物训练样本" style="margin:18px 0 20px;padding:20px;background:#20263a;border:1px solid #66708a;border-radius:15px">
- <div class="eyebrow">SYSTEM 02 · TWO D-STYLE TRAINING ANCHORS</div>
- <h2 style="font-size:26px;margin:8px 0">两张人物 · 正式纳入绘画学习</h2>
- <p style="color:#bdcce0">同一角色的两种动作：原有动态姿势、正常站姿。都是 384×512、严格 D 四色。它们是<strong>两个姿势样本，不是两个独立人物身份</strong>。</p>
- <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:800px">
-  <figure style="margin:0;background:#393657;padding:10px;border:1px solid #6d6785;border-radius:12px">
-   <img src="./style2/A_dynamic.png" alt="D风格人物A动态姿势" width="384" height="512" style="width:100%;height:auto;display:block;image-rendering:pixelated">
-   <figcaption style="color:#f2d1e0;margin-top:7px">A · 原有动态角色</figcaption>
-  </figure>
-  <figure style="margin:0;background:#393657;padding:10px;border:1px solid #6d6785;border-radius:12px">
-   <img src="./style2/B_standing.png" alt="D风格人物B正常站姿" width="384" height="512" style="width:100%;height:auto;display:block;image-rendering:pixelated">
-   <figcaption style="color:#f2d1e0;margin-top:7px">B · 正常站姿角色</figcaption>
-  </figure>
- </div>
- <details style="margin:15px 0;color:#d7e0f2"><summary style="cursor:pointer;font-weight:800">展开分区 mask 与头部、身体、服装训练切片</summary>
-  <p>彩色叠加是人工粗标注，不是精确分割。深色轮廓与背景同色，不能仅靠色板分割。</p>
-  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-width:800px">
-   <img src="./style2/A_dynamic_mask_review.png" alt="动态角色区域粗标注" style="width:100%;image-rendering:pixelated">
-   <img src="./style2/B_standing_mask_review.png" alt="站姿角色区域粗标注" style="width:100%;image-rendering:pixelated">
-  </div>
-  <p>对齐的局部训练图：</p>
-  <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-   <img src="./style2/B_standing_head.png" alt="头部切片" style="max-width:29%;image-rendering:pixelated">
-   <img src="./style2/B_standing_torso.png" alt="身体衣袖切片" style="max-width:29%;image-rendering:pixelated">
-   <img src="./style2/B_standing_skirt.png" alt="裙装切片" style="max-width:29%;image-rendering:pixelated">
-  </div>
- </details>
- <div style="background:#2a3344;border:1px solid #53627c;border-radius:10px;padding:11px 14px;margin-top:16px">
-  <strong style="display:block;color:#f2d2e5">实际训练 · 真像素修复 + 局部像素补绘</strong>
-  <div id="style2-report" style="font-size:13px;color:#cdd8e5">正在读取训练结果……</div>
-  <a href="./style2/training_report.json">训练报告</a> · <a href="./style2/dataset.json">数据与标注清单</a>
- </div>
- <p style="font-size:12px;color:#afc1d4">目前是局部像素学习实验，不代表能够独立画出优质人物、场景、道具。</p>
-</section>
-<section style="margin:16px 0 22px;padding:19px 22px;border:1px solid #46685a;background:#15271f;border-radius:14px">
-  <div class="eyebrow">SYSTEM 02 / PIXEL ART LEARNING</div>
-  <h2 style="font-size:24px;line-height:1.3;margin:8px 0">像素绘画学习 · 当前研究阶段</h2>
-  <p style="max-width:900px;color:#a7beb5">目标是学习人物、场景、道具和动画素材的造型与像素簇规律，最终生成质量统一的游戏资产。下面展示的是已有局部修复模型和参考画笔策略；<strong>它们尚不能独立绘制商业成品级新角色或完整场景。</strong></p>
-  <div style="display:flex;gap:11px;flex-wrap:wrap">
-   <a href="./palette-choices.html?p=D" style="font-weight:800">查看已选 D 风格与候选色板</a>
-   <a href="./characters.html" style="font-weight:800">16×16 人物学习实验</a>
-  </div>
-  <details style="margin-top:17px;color:#b2c7bb">
-   <summary style="cursor:pointer;font-weight:800">展开历史研究工具（保留，但不再作为独立主系统）</summary>
-   <p><a href="./flat4.html">四色像素编辑器</a> · <a href="./flat4-redraw.html">112×160 人物母版</a> · <a href="./flat4-learning.html">四色神经像素实验</a> · <a href="./characters.html">角色样本学习</a></p>
-  </details>
- </section>
-<section class="metrics">
-  <article><small>训练图片 <em>LICENSED CC0</em></small><strong id="metric-images">—</strong><p>真实素材，不含合成假样本</p></article>
-  <article><small>隐藏像素验证准确率</small><strong id="metric-accuracy">—</strong><p>留出数据集，和基线对比</p></article>
-  <article><small>机器学习训练步数</small><strong id="metric-steps">—</strong><p>神经网络梯度下降</p></article>
-  <article><small>强化学习绘制节省</small><strong id="metric-rl">—</strong><p>对比逐像素复制画笔</p></article>
- </section>
- <div class="workspace">
-  <aside class="controls">
-   <div class="section-heading"><span>01</span> 实验配置 <small>INPAINT / RL</small></div>
-   <label for="sample">留出样本 <span>真实 CC0</span></label>
-   <select id="sample"></select>
-   <label for="mask">遮盖像素比例 <output id="mask-value">45%</output></label>
-   <input id="mask" type="range" min="15" max="80" step="5" value="45">
-   <label for="seed">可复现随机种子</label>
-   <input id="seed" type="number" min="1" max="999999" value="2026">
-   <button id="damage" class="secondary">✳ 重新生成破损图</button>
-   <button id="restore" class="primary">✦ 神经网络修复像素</button>
-   <div class="caption"><b>模型：</b> 局部上下文神经网络（MLP），在 GitHub Actions 中学习被遮住的像素颜色。这里展示真实推理，不是预先画好的修复结果。</div>
-   <hr>
-   <div class="section-heading"><span>02</span> 强化学习画笔 <small>Q-LEARNING</small></div>
-   <p class="small">给策略提供参考图，让它选择单点、横线、竖线、矩形或区域填充，以较少操作复现素材。<strong>它不负责原创构图。</strong></p>
-   <button id="replay" class="secondary">▶ 播放强化学习绘制过程</button>
-   <div class="result-row"><span>逐像素操作</span><strong id="naive-strokes">—</strong></div>
-   <div class="result-row"><span>策略操作</span><strong id="policy-strokes">—</strong></div>
-  </aside>
-  <main class="lab">
-   <div class="section-heading"><span>LIVE</span> 神经网络像素修复 <small>REAL INFERENCE</small></div>
-   <div class="canvas-grid">
-    <div class="tile"><div class="tile-head">01 / 原始素材 <span>GROUND TRUTH</span></div><canvas id="original" width="16" height="16"></canvas><div class="tile-foot">CC0 · 留出样本</div></div>
-    <div class="tile"><div class="tile-head">02 / 遮盖后的输入 <span>MASKED</span></div><canvas id="corrupted" width="16" height="16"></canvas><div class="tile-foot"><span id="masked-pixels">—</span> 个像素等待预测</div></div>
-    <div class="tile"><div class="tile-head">03 / 模型实际预测 <span>NEURAL</span></div><canvas id="predicted" width="16" height="16"></canvas><div class="tile-foot"><span id="local-accuracy">点击运行神经网络</span></div></div>
-   </div>
-   <div class="sub-grid">
-    <div class="sub-panel"><div class="section-heading"><span>REWARD</span> 强化学习画笔演示 <small>FRAME-BY-FRAME</small></div>
-      <div class="replay-layout"><canvas id="rl-canvas" width="16" height="16"></canvas><div><strong id="rl-progress">0 / 0</strong><p id="rl-action">每一笔由 Q-Learning 策略选择</p><div class="track"><div id="progress"></div></div></div></div>
-    </div>
-    <div class="sub-panel"><div class="section-heading"><span>LOSS</span> 实际训练曲线 <small>CROSS ENTROPY</small></div><svg id="loss-chart" viewBox="0 0 360 130" preserveAspectRatio="none" role="img" aria-label="真实训练误差曲线"></svg><div class="chart-labels"><span>TRAIN START</span><span>TRAIN END</span></div></div>
-   </div>
-  </main>
- </div>
- <section class="footnote"><h3>模型适用范围与边界</h3><p>这是面向 16×16 小型像素素材的入门学习系统。神经网络在真实 CC0 图像上学习局部像素上下文，可做遮挡补全，但不等于已经学会原创角色设计。强化学习只学习参考引导下的画笔选择。训练样本数少，不能宣传为最先进的像素生成模型；后续可升级为离散 token 生成、扩散模型和人工审美反馈评分。</p><p>素材来源：<a href="https://kenney.nl/assets/tiny-dungeon">Kenney Tiny Dungeon</a>、<a href="https://kenney.nl/assets/tiny-town">Tiny Town</a>、<a href="https://opengameart.org/content/pixel-platformer-0">Pixel Platformer</a>（CC0）。训练数据哈希、样本数量、验证指标记录于模型文件。</p></section>
+
+<section class="refs">
+<h2>D 风格人物训练母版</h2>
+<p class="summary">这两张图是同一角色的两个动作，不是两个独立角色身份。母版、分区标注及学习数据继续保留；不再训练旧的“邻域猜像素”模型。</p>
+<div class="anchors">
+<figure><img src="./style2/A_dynamic.png" alt="D 四色动态人物母版" width="384" height="512"><figcaption>动态姿势 · 原生 384×512</figcaption></figure>
+<figure><img src="./style2/B_standing.png" alt="D 四色站姿人物母版" width="384" height="512"><figcaption>站立姿势 · 原生 384×512</figcaption></figure>
 </div>
-<script type="module" src="./pixel-lab.js"></script>
-<script>
-(async()=>{
- const area=document.getElementById('style2-report');
- try{
-  const r=await fetch('./style2/training_report.json',{cache:'no-store'});
-  if(!r.ok)throw Error('训练结果尚未发布');
-  const d=await r.json();
-  if(d.source_images!==2||!d.model_training_completed)throw Error('训练未完成');
-  const rep=d.repair.A_dynamic_train_to_B_standing_test;
-  const draw=d.pixel_drawing_learning;
-  area.textContent='两张 D 色板样本已入库并训练。跨姿势像素修复 '+(rep.neural_accuracy*100).toFixed(2)+'%，最近颜色基线 '+(rep.nearest_baseline*100).toFixed(2)+'%；局部像素补绘前景 '+(draw.foreground_accuracy*100).toFixed(2)+'%，邻域基线 '+(draw.foreground_neighbor_baseline*100).toFixed(2)+'%。注意：仍是同一人物的两种姿势。';
- }catch(e){area.textContent='暂未取得验证报告：'+e.message;}
-})();
-</script>
-</body></html>
+<details><summary>查看现有分区标注（粗标注，非精确语义分割）</summary>
+<div class="anchors"><img src="./style2/A_dynamic_mask_review.png" alt="动态母版分区"><img src="./style2/B_standing_mask_review.png" alt="站姿母版分区"></div>
+</details></section>
+</main></body></html>

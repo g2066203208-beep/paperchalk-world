@@ -85,11 +85,7 @@ details summary{cursor:pointer;font-weight:700;color:#e5d9f0}
 <a class="action secondary" href="./d-standing-v1-preview-2x.png" download>下载 2× 无插值预览</a></section>
 <section class="side"><h2>逐像素验证</h2><div id="quality" role="status">正在读取自动化检查报告…</div>
 <a href="./d-standing-v1-report.json">完整 JSON 报告</a></section>
-<details class="side"><summary>查看该角色的机器学习实验记录</summary><div style="margin-top:8px">
-<p>GitHub Actions 在该作品四色网格上训练 3×3 RGB patch MLP，用不同随机种子合成的噪声测试修复效果。页面展示真实训练验证，但不把这种单图训练说成已学会画师画风。</p>
-<p>最终站姿 PNG 为保留原构图的固定色板区域投票输出。机器学习的重建样张单独保留，不用错误预测破坏人物五官与服装。</p>
-<a href="./d-standing-v1-neural-denoise-demo.png">查看神经网络去噪重建样张</a>
-<a href="./d-standing-v1-neural-weights.npz" download>获取实际训练的模型权重</a></div></details>
+
 </aside>
 </div>
 <footer>本页是 D 风格角色的技术候选稿，已实现像素真实性检查；美术好看与否需要继续人工评审。没有冒充自动生成完美像素的模型。</footer>
@@ -119,8 +115,7 @@ async function showReport(){
  const img=document.getElementById('dAvatar');await img.decode();
  if(img.naturalWidth!==384||img.naturalHeight!==512)throw new Error('PNG size mismatch');
  if(data.palette_id!=='D'||data.distinct_rgb_colors!==4||data.other_rgb_colors!==0||data.alpha_pixels!==0)throw new Error('PNG failed quality report');
- const ml=data.training;
- document.getElementById('quality').textContent='图像  '+data.native_grid.join('×')+'\n精确四色  '+data.distinct_rgb_colors+' / 4\n额外颜色  '+data.other_rgb_colors+'\n半透明像素  '+data.alpha_pixels+'\n神经网络训练  '+ml.training_steps+' steps\n噪声留出预测  '+(ml.neural_accuracy*100).toFixed(2)+'%\n最近颜色基线  '+(ml.nearest_color_baseline*100).toFixed(2)+'%\n（同作品局部验证，不代表跨人物效果）';
+ document.getElementById('quality').textContent='原生尺寸：'+data.native_grid.join('×')+'\\n精确四色：'+data.distinct_rgb_colors+'/4\\n多余颜色：'+data.other_rgb_colors+'\\n半透明像素：'+data.alpha_pixels+'\\n原始母版：完整保留\\n说明：本页面只验收素材，不训练模型。';
  const microscope=mountNativeGrid({
    source:img,canvas:document.getElementById('nativeGrid'),
    toggle:document.getElementById('gridVisible'),
