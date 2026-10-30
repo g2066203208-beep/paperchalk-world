@@ -11,6 +11,7 @@ const ORDER=['开始游戏','继续游戏','3D体感世界','设置','退出游�
 const KEY='paperworld-menu-v3',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
 const nativeLabels=document.getElementById('pw-menu-labels');
+const pixelEditorLink=document.getElementById('pw-pixel-editor-link');
 // Native form controls sit above the game canvas. Preserve the same clean
 // touch feedback there, without stealing focus from Chinese text inputs.
 const uiTouchFx=document.getElementById('pw-ui-touch-fx');
@@ -128,6 +129,7 @@ function buttons(){
  updateNativeLabels();
 }
 function updateNativeLabels(){
+ if(pixelEditorLink)pixelEditorLink.hidden=state!=='menu';
  if(!nativeLabels)return;
  nativeLabels.replaceChildren();
  if(state==='intro'||state==='lease'||state==='world')return;
@@ -224,6 +226,7 @@ function switchScene(next){
  if(state==='world')world.close();
  if(reduced){enterScene(next);if(next==='lease')lease.show({receipt:!!lease.snapshot().hasContract});if(next==='world')world.open();return}
  if(nativeLabels)nativeLabels.style.visibility='hidden';
+ if(pixelEditorLink)pixelEditorLink.hidden=true;
  curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
 }
 function updateCurtain(dt){
