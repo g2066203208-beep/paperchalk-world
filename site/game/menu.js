@@ -198,18 +198,18 @@ function paintFoldWipe(){
 // Tiny pixel pop on ANY touch, including empty space. Nothing moves while idle.
 // Exactly six 1–2 logical-pixel squares, under 12 logical pixels of travel.
 // No flash, star, trails, ring, gravity, glow, transparent blending or gradient.
-const PIXEL_POP_COUNT=6;
-const PIXEL_POP_SECONDS=.24;
+const PIXEL_POP_COUNT=7;
+const PIXEL_POP_SECONDS=.30;
 function emitTouchEffect(x,y){
  if(reduced||!prefs.particles)return;
  const px=Math.round(clamp(x,0,W-1)),py=Math.round(clamp(y,0,H-1));
  const sparks=[];
  for(let i=0;i<PIXEL_POP_COUNT;i++){
   const angle=Math.random()*Math.PI*2;
-  const distance=4+Math.random()*6; // 8–20 CSS pixels total.
+  const distance=5+Math.random()*8; // 10–26 CSS pixels, still restrained.
   sparks.push({
    dx:Math.cos(angle)*distance,dy:Math.sin(angle)*distance,
-   size:i%3===0?1:2,color:i%2===0?COL.ink:COL.pink
+   size:i%3===0?3:2,color:state==='menu'?(i%3===0?COL.pink:COL.ink):[COL.paper,COL.pink,COL.blue][i%3]
   });
  }
  touchSerial++;lastTouch={x:px,y:py};
