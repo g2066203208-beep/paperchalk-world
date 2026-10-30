@@ -1,0 +1,38 @@
+name: PixelLab - CC0 multi-identity face corpus audit
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/style2/inspect_cc0_faces.py'
+      - '.github/workflows/face-corpus.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare CC0 audit dependencies
+        run: python -m pip install 'Pillow==11.3.0'
+      - name: Download real third-party multi-face source (license CC0)
+        run: |
+          mkdir -p ml/datasets
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 \
+            'https://opengameart.org/sites/default/files/faces_1.zip' \
+            -o ml/datasets/cc0_faces_lamiarts.zip
+          file ml/datasets/cc0_faces_lamiarts.zip
+          test "$(stat -c%s ml/datasets/cc0_faces_lamiarts.zip)" -gt 100000
+      - name: Audit actual pixels, filenames and all-faces image files
+        run: python -m ml.style2.inspect_cc0_faces
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verified-CC0-face-corpus-audit
+          path: site/pixel-lab/style2/face-general/
+          retention-days: 30
+          if-no-files-found: warn
