@@ -200,7 +200,8 @@ const stageRoot=document.getElementById('stage-ui');
 const lease=createLeaseUI({
  root:stageRoot,
  onBack:()=>switchScene('menu'),
- onDone:()=>{saveExists=true}
+ onDone:()=>{saveExists=true},
+ onWorld:()=>switchScene('world')
 });
 const world=createWorld3D({onBack:()=>switchScene('menu')});
 const intro=createHostessIntro({
