@@ -24,7 +24,7 @@ def face(name):
     a=np.asarray(Image.open(ROOT/(name+".png")).convert("RGB"),np.uint8)
     x,y=SOURCES[name]; a=a[y:y+SIDE,x:x+SIDE]
     assert a.shape==(SIDE,SIDE,3)
-    d=((a.astype(np.int16)[:,:,None,:]-PAL.astype(np.int16)[None,None,:,:])**2).sum(-1)
+    d=((a.astype(np.int32)[:,:,None,:]-PAL.astype(np.int32)[None,None,:,:])**2).sum(-1)
     t=d.argmin(-1).astype(np.uint8)
     assert np.array_equal(PAL[t],a), "Gold is not an exact four-color image"
     return t
