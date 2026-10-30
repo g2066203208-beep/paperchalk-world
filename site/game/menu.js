@@ -1,5 +1,5 @@
 /* PAPERWORLD · original four-ink procedural pixel menu.
- * Every visible logo, plane, cloud, glyph, button, outline and particle is
+ * Every visible logo, plane, cloud, glyph, button and outline is
  * drawn at an integer logical pixel. No generated image is used at runtime.
  */
 const COL={ink:'#393657',pink:'#F2A5C2',blue:'#A9BAE9',paper:'#FFF5E6'};
@@ -12,13 +12,10 @@ let prefs={motion:!reduced,particles:false,haptic:true};
 try{prefs={...prefs,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
 if(reduced)prefs.motion=false;
 let W=0,H=0,scale=2,land=false,btns=[],state='menu',selected=0,hover=-1,held=-1;
-let frameN=0,clock=0,last=0,particles=[],ripples=[],saveExists=false;
+let frameN=0,clock=0,last=0,saveExists=false;
 let note='',noteTo=0,curtain=null;
 try{saveExists=localStorage.getItem(SAVE)==='created'}catch{}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-const rand=(seed)=>{let x=seed|0;return()=>{x=Math.imul(x^x>>>15,1|x);x^=x+Math.imul(x^x>>>7,61|x);return ((x^x>>>14)>>>0)/4294967296}};
-const rng=rand(36024);
-const stars=Array.from({length:39},(_,i)=>({x:rng(),y:rng(),phase:rng()*6.283,kind:i%4,speed:.25+rng()*.5}));
 const F={A:['01110','10001','10001','11111','10001','10001','10001'],B:['11110','10001','10001','11110','10001','10001','11110'],C:['01111','10000','10000','10000','10000','10000','01111'],D:['11110','10001','10001','10001','10001','10001','11110'],E:['11111','10000','10000','11110','10000','10000','11111'],F:['11111','10000','10000','11110','10000','10000','10000'],G:['01111','10000','10000','10111','10001','10001','01111'],H:['10001','10001','10001','11111','10001','10001','10001'],I:['11111','00100','00100','00100','00100','00100','11111'],J:['00111','00010','00010','00010','10010','10010','01100'],K:['10001','10010','10100','11000','10100','10010','10001'],L:['10000','10000','10000','10000','10000','10000','11111'],M:['10001','11011','10101','10101','10001','10001','10001'],N:['10001','11001','10101','10011','10001','10001','10001'],O:['01110','10001','10001','10001','10001','10001','01110'],P:['11110','10001','10001','11110','10000','10000','10000'],Q:['01110','10001','10001','10001','10101','10010','01101'],R:['11110','10001','10001','11110','10100','10010','10001'],S:['01111','10000','10000','01110','00001','00001','11110'],T:['11111','00100','00100','00100','00100','00100','00100'],U:['10001','10001','10001','10001','10001','10001','01110'],V:['10001','10001','10001','10001','10001','01010','00100'],W:['10001','10001','10001','10101','10101','10101','01010'],X:['10001','10001','01010','00100','01010','10001','10001'],Y:['10001','10001','01010','00100','00100','00100','00100'],Z:['11111','00001','00010','00100','01000','10000','11111'],0:['01110','10011','10101','10101','11001','10001','01110'],1:['00100','01100','00100','00100','00100','00100','01110'],2:['01110','10001','00001','00110','01000','10000','11111'],3:['11110','00001','00001','01110','00001','00001','11110'],'.':['00000','00000','00000','00000','00000','01100','01100'],':':['00000','01100','01100','00000','01100','01100','00000'],'-':['00000','00000','00000','11111','00000','00000','00000']};
 const R=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.max(0,Math.round(w)),Math.max(0,Math.round(h)))};
 function panel(x,y,w,h,c,cut=5){x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);cut=Math.min(cut,Math.floor(h/4));R(x+cut,y,w-2*cut,h,c);R(x,y+cut,w,h-2*cut,c);R(x+1,y+cut-2,w-2,h-2*cut+4,c)}
@@ -37,7 +34,6 @@ function poly(verts,c){ // Scanline pixel polygon: no browser vector antialiasin
   xx.sort((a,b)=>a-b);for(let i=0;i+1<xx.length;i+=2)R(Math.ceil(xx[i]),y,Math.floor(xx[i+1])-Math.ceil(xx[i])+1,1,c)
  }
 }
-function sparkle(x,y,s,c=COL.ink){s=Math.max(2,Math.round(s));R(x-1,y-s,2,s*2+1,c);R(x-s,y-1,s*2+1,2,c);R(x-1,y-1,2,2,COL.paper)}
 function cloud(x,y,w,h,seed=0){ // Pixel-edged layered cloud silhouette
  const p=[[x-w*.5,y+h*.10],[x-w*.46,y-h*.18],[x-w*.34,y-h*.26],[x-w*.27,y-h*.45],[x-w*.13,y-h*.47],[x-w*.05,y-h*.32],[x+w*.10,y-h*.54],[x+w*.29,y-h*.49],[x+w*.35,y-h*.27],[x+w*.48,y-h*.16],[x+w*.51,y+h*.20],[x+w*.40,y+h*.40],[x-w*.40,y+h*.40]];
  poly(p,COL.ink);poly(p.map(v=>[x+(v[0]-x)*.95,y+(v[1]-y)*.86-1]),COL.paper);
@@ -103,23 +99,6 @@ function buttons(){
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
  else{bw=Math.round(clamp(W*.81,132,230));bh=Math.round(clamp(H*.078,28,37));gap=Math.round(clamp(H*.023,7,12));cx=Math.round(W*.5);top=Math.round(clamp(H*.48,155,H-(names.length*(bh+gap)+33)))}
  for(let i=0;i<names.length;i++)btns.push({label:names[i],x:cx-bw/2,y:top+i*(bh+gap),w:bw,h:bh,index:i});
-}
-function atmosphere(){
- for(let i=0;i<stars.length;i++){
-  const a=stars[i],x=Math.round(a.x*W),y=Math.round(a.y*H);
-  const mid=land?W*.56:W*.5;
-  if(!land&&Math.abs(x-mid)<W*.3&&y>H*.44&&y<H*.87)continue;
-  const tw=prefs.motion?Math.sin(clock*a.speed+a.phase):0;
-  const color=a.kind===0?COL.pink:a.kind===1?COL.ink:COL.paper;
-  if(a.kind===0)sparkle(x,y,Math.round(2+Math.max(0,tw)*2),color);
-  else if(a.kind===1){R(x,y,2,2,COL.ink);R(x+1,y+4,1,2,COL.ink)}
-  else if(a.kind===2)R(x,y,2,2,COL.blue);
-  else sparkle(x,y,2,COL.paper);
- }
- for(let i=0;i<particles.length;i++){
-  const p=particles[i],u=clamp(p.life/p.max,0,1);
-  if(u>0)R(p.x,p.y,Math.max(1,Math.round(2*u)),Math.max(1,Math.round(2*u)),p.c);
- }
 }
 function titleArtwork(){
  const cx=Math.round(land?W*.28:W*.5),by=Math.round(land?H*.49:H*.265);
@@ -207,12 +186,6 @@ function draw(){
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintCurtain();
  window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:0,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs,particles:false},logical:[W,H],frame:frameN,transition:curtain?{phase:curtain.phase,progress:curtain.elapsed}:null};
-}
-function burst(x,y,n=16){
- if(!prefs.particles)return;
- for(let i=0;i<n;i++){const a=Math.PI*2*i/n+rng()*.7,v=15+rng()*40;
- particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-5,life:.5+rng()*.4,max:.8,c:[COL.paper,COL.pink,COL.blue,COL.ink][i%4]})}
- if(particles.length>90)particles.splice(0,particles.length-90)
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
