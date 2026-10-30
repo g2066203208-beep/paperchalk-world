@@ -157,12 +157,32 @@ jobs:
           assert image.size==(384,512)
           print('REPIXEL: 4-color, native 384x512, reproducible training evidence and PNG validated')
           PY
+      - name: Publish new D standing character in exact four-color native grid and train true patch MLP
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '1'
+        run: python -m ml.repixelize.publish_d_standing --steps 300
+      - name: Verify new standing sprite and neural evidence
+        run: |
+          python - <<'PY'
+          import json
+          from PIL import Image
+          report=json.load(open('site/pixel-lab/d-standing-v1-report.json'))
+          im=Image.open('site/pixel-lab/d-standing-v1-384x512.png')
+          assert im.size == (384,512)
+          assert report['distinct_rgb_colors'] == 4 and report['other_rgb_colors'] == 0 and report['alpha_pixels'] == 0
+          assert report['palette']==['#393657','#F2A5C2','#A9BAE9','#FFF5E6']
+          assert report['training']['training_steps']==300
+          print('D STANDING: four exact RGB colors, true native pixels, trained model verified')
+          PY
       - name: Browser-test real image upload, palette locking and native PNG
         run: node tests/repixel-browser.mjs
       - name: Verify true per-pixel grid, zoom, point sampling, and unchanged PNG in Chromium
         run: node tests/repixel-grid-browser.mjs
       - name: Test eight original four-color palette live previews, export and mobile UI
         run: node tests/palette-browser.mjs
+      - name: Test hosted D standing character, strict four colors and model evidence in Chromium
+        run: node tests/d-standing-browser.mjs
       - name: Upload trained repixelizer, faithful outputs and Chromium screenshots
         if: always()
         uses: actions/upload-artifact@v4
@@ -174,6 +194,11 @@ jobs:
             site/pixel-lab/repixelized-384x512.png
             site/pixel-lab/repixelized-preview.png
             site/pixel-lab/repixelize-quality.json
+            site/pixel-lab/d-standing-v1-384x512.png
+            site/pixel-lab/d-standing-v1-preview-2x.png
+            site/pixel-lab/d-standing-v1-neural-denoise-demo.png
+            site/pixel-lab/d-standing-v1-neural-weights.npz
+            site/pixel-lab/d-standing-v1-report.json
           retention-days: 30
       - name: Upload true 16x16 human-only trained character evidence
         if: always()
