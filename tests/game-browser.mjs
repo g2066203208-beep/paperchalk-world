@@ -73,14 +73,22 @@ try{
    await page.waitForTimeout(240);
   }
   assert.ok(new Set(breatheSamples).size>1,'owner breathes vertically up/down, not sideways');
-  await page.locator('#pw-dialogue-auto').click();
-  assert.equal((await state(page)).intro.auto,false);
-  // Skip typed letters, then finish each short practical rental sentence.
+  assert.equal(await page.locator('#pw-dialogue-auto').count(),0,'no auto-play switch must remain');
+  // No timer may advance the text; 10 Chinese chars/sec lets users read.
+  const before=(await state(page)).intro;
+  await page.waitForTimeout(350);
+  const slower=(await state(page)).intro;
+  assert.equal(slower.line,before.line,'text cannot skip a line by itself');
+  assert.ok(slower.shown-before.shown<=5,'typewriter is deliberately slower than old 25 chars/sec');
+  await page.waitForTimeout(2300);
+  assert.equal((await state(page)).intro.line,before.line,'even completed text must wait for a tap');
+  await page.screenshot({path:'artifacts/game/'+screen+'-manual-slow-dialogue.png'});
+  // Two owner messages: first tap completes current sentence, next tap advances.
   for(let i=0;i<6;i++){
    const snap=await state(page);
    if(snap.state==='lease'||snap.transition)break;
    await page.locator('#pw-dialogue-next').click();
-   await page.waitForTimeout(55);
+   await page.waitForTimeout(65);
   }
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.state==='lease'&&window.__PAPERWORLD_MENU__?.lease?.visible,{timeout:10000});
   assert.equal(await page.locator('#pw-form-step1').isVisible(),true);
@@ -126,7 +134,7 @@ try{
   assert.deepEqual(errors,[],'runtime must not throw errors');
   await ctx.close();
  }
- console.log('PASS: owner approaches in 2.5D, vertical breathing, crisp dialogue, native shop rental and character creation across 4 viewports');
+ console.log('PASS: owner alpha matte keeps inner pupils; no autoplay; slow manual typewriter and shop registration on 4 viewports');
 }finally{
  await browser.close();await new Promise(done=>server.close(done));
 }
