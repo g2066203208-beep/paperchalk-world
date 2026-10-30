@@ -61,7 +61,7 @@ footer{border-top:1px solid #57506d;padding-top:16px;margin-top:25px;color:#bbb1
 <p><a class="action" id="download" href="#" download="hostess-gold-native-192x256.png">保存新的四色原生像素稿</a></p>
 <p><a href="./structured-gold/trace.json">编辑源数据：每笔形状与部位</a> · <a href="./structured-gold/gold-report.json">像素完整报告</a> · <a href="./structured-gold/parts-ml-report.json">模型训练报告</a></p>
 </div></section>
-<footer>当前图像是结构化人工/程序重绘候选，并非扩散模型生成，也尚未通过游戏美术验收。机器学习学习的是同一人物的10类部位标注，不能据此宣称会画所有角色。参考 Pixel Denoise 的噪点分析与 NeurIPS 2025 PixPerfect 的局部像素保真方向，但没有声称复现这些模型。</footer>
+<footer>当前图像是结构化人工/程序重绘候选，并非扩散模型生成，也尚未通过游戏美术验收。旧图与新稿的细碎色块像素用完全相同的4连通规则统计。机器学习学习的是同一人物的10类部位标注，不能据此宣称会画所有角色。参考 Pixel Denoise 的噪点分析与 NeurIPS 2025 PixPerfect 的局部像素保真方向，但没有声称复现这些模型。</footer>
 </main>
 <script>
 const B='./structured-gold/',im=document.querySelector('#after'),source=document.querySelector('#before');
