@@ -1,120 +1,119 @@
 <!doctype html>
-<html lang="zh-CN"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#393657">
-<meta name="description" content="系统02只做完整384×512人物立绘学习与真实模型验收，不训练孤立头部或小人">
-<title>PixelLab · 完整全身立绘训练</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#393657"><meta name="description" content="机器学习采样生成新全身人物和动作：人物外形、衣着和姿势候选">
+<title>PIXEL LAB 02 · 新全身人物生成结果</title>
 <style>
-:root{color-scheme:dark;--bg:#181728;--panel:#28253b;--edge:#57516d;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--cream);font:15px/1.65 system-ui,-apple-system,"Noto Sans SC",sans-serif}
-a{color:var(--blue)}a:focus-visible,button:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
-nav{border-bottom:1px solid var(--edge);padding:15px max(18px,calc((100vw - 1220px)/2));display:flex;gap:22px;flex-wrap:wrap}
-main{max-width:1220px;margin:auto;padding:28px 17px 55px}
-.kicker{color:var(--pink);font-size:12px;font-weight:850;letter-spacing:.15em}
-h1{font-size:clamp(29px,4.9vw,48px);margin:9px 0 13px;line-height:1.18}
-h2{font-size:19px;line-height:1.3;margin:0 0 10px}
-p{margin:8px 0 13px}.lead{color:#d0c9dd;max-width:850px}
-.checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0}
-.check{border:1px solid var(--edge);border-radius:10px;background:#29263a;padding:14px}
-.check b{display:block;font-size:21px;color:var(--cream)}.check span{font-size:12px;color:#c5bcdb}
-.work{border:1px solid #655c7b;border-radius:14px;background:#222034;padding:18px;margin-top:18px}
-.head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--edge);padding-bottom:14px}
-.head p{font-size:13px;color:#c7bfd4}
-.switches{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}
-button{font:inherit;cursor:pointer;padding:9px 13px;background:#343149;border:1px solid #655d7e;color:var(--cream);border-radius:7px;min-height:42px}
-button[aria-pressed="true"]{background:var(--blue);color:var(--ink);font-weight:900;border-color:var(--blue)}
-.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.art{border:1px solid var(--edge);background:#302c45;min-width:0;padding:10px;border-radius:10px}
-.art h3{font-size:13px;margin:0 0 8px;color:var(--cream)}
-.canvasWrap{background:var(--ink);display:flex;justify-content:center;align-items:center;overflow:hidden;min-height:290px}
-.canvasWrap.light{background:var(--cream)}
-.canvasWrap canvas{display:block;max-width:100%;width:auto;height:auto;max-height:660px;image-rendering:pixelated}
-#original,#model{aspect-ratio:3/4;width:min(100%,384px)}
-.caption{font-size:12px;color:#bdb5d1;margin-top:8px}
-.bottom{display:grid;grid-template-columns:340px 1fr;gap:18px;margin-top:18px}
-.detail{background:#28253b;padding:12px;border:1px solid var(--edge);border-radius:9px}
-#pixelDetail{display:block;width:min(100%,320px);height:auto;image-rendering:pixelated;aspect-ratio:1;background:var(--ink)}
-.metric{padding:12px 0;border-bottom:1px solid var(--edge)}
-.metric span{color:#bbb1cd;font-size:13px}.metric strong{font-size:19px;display:block}
-.notice{color:#d2c9dc;background:#2c293f;border-left:3px solid var(--pink);padding:12px;margin:17px 0}
-code{font-size:12px;word-break:break-word}
-.linkrow{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;margin-top:15px}
-@media(max-width:720px){.pair,.bottom{grid-template-columns:1fr}.checks{grid-template-columns:1fr}.work{padding:12px}.canvasWrap canvas{max-height:580px}}
+:root{color-scheme:dark;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6;--bg:#1a1929;--panel:#29263b;--line:#56506b}
+*{box-sizing:border-box}body{background:var(--bg);color:var(--paper);font:15px/1.65 system-ui,"Noto Sans SC",sans-serif;margin:0;min-height:100vh}
+a{color:var(--blue)}a:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+nav{border-bottom:1px solid var(--line);padding:13px max(16px,calc((100vw - 1140px)/2));display:flex;gap:19px;align-items:center;flex-wrap:wrap}nav strong{color:var(--pink)}
+main{max-width:1140px;padding:30px 17px 65px;margin:auto}.eyebrow{font-size:12px;color:var(--pink);font-weight:850;letter-spacing:.16em}
+h1{font-size:clamp(29px,4.8vw,46px);line-height:1.16;margin:11px 0 16px}h2{font-size:19px;line-height:1.3;margin:0 0 10px}
+.lead{max-width:920px;font-size:15px;color:#d2c9dc}
+.status{border:1px solid #69617f;background:#27243a;padding:14px 17px;margin:21px 0;border-radius:9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.status strong{color:var(--pink)}.status span{flex:1;min-width:220px}
+.progress{font-size:13px;color:#cbc4dc}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:19px 0}
+.stat{padding:14px;border:1px solid var(--line);background:#252237;border-radius:10px}
+.stat b{display:block;font-size:23px;color:var(--paper)}.stat span{font-size:12px;color:#bcb3cd}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:20px 0 14px}
+label{font-weight:750;font-size:13px}select,button{font:inherit;border-radius:7px;border:1px solid #756d90;background:#333047;color:var(--paper);min-height:44px;padding:7px 11px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--blue);color:var(--ink);font-weight:850;border-color:var(--blue)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 328px;gap:19px;align-items:start}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.item{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:10px;text-align:left;overflow:hidden}
+.item[aria-pressed="true"]{border:2px solid var(--pink);padding:9px}
+.item img{display:block;width:100%;height:auto;aspect-ratio:3/4;object-fit:contain;image-rendering:pixelated;background:var(--ink)}
+.item b{display:block;font-size:13px;margin-top:6px}.item span{display:block;font-size:11px;color:#c4bdd1}
+.inspector{border:1px solid #706486;background:var(--panel);border-radius:11px;padding:15px;position:sticky;top:15px}
+.inspector h2{font-size:17px}.inspector .stage{display:grid;place-items:center;background:var(--ink);padding:8px;min-height:320px}
+.inspector .stage.paper{background:var(--paper)}
+canvas{width:100%;height:auto;aspect-ratio:3/4;image-rendering:pixelated;max-width:288px}
+#zoom{width:100%;aspect-ratio:1;max-width:260px;background:var(--ink)}
+.technical{font-size:12px;color:#c2b9d0;margin:11px 0}
+.link{display:block;text-decoration:none;text-align:center;padding:11px 14px;background:var(--pink);color:var(--ink);font-weight:900;border-radius:8px;min-height:44px;margin-top:12px}
+#empty{padding:35px 18px;border:1px dashed #716686;border-radius:10px;color:#d2cbde}
+footer{margin-top:24px;font-size:12px;color:#aaa1bd;border-top:1px solid var(--line);padding-top:18px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.inspector{position:static;max-width:520px}.gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:510px){.stats{grid-template-columns:1fr 1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding-top:22px}.inspector{max-width:none}}
 </style></head><body>
-<nav><a href="./index.html">← PixelLab</a><a href="./repixelize.html">01 真像素转换</a><a href="../index.html">返回游戏</a></nav>
-<main>
-<div class="kicker">SYSTEM 02 / WHOLE FIGURE LEARNING</div>
-<h1>完整全身立绘训练</h1>
-<p class="lead">训练对象是整个人物：头发、五官、躯干、双手、双脚、服装与姿势一起纳入同一张384×512画布。<strong>不再把头像训练、小人动作或换脸贴身体当作角色生成成果。</strong></p>
-<section class="checks" aria-label="训练原始证据">
-<div class="check"><b>384 × 512</b><span>真实模型处理整幅画布，保留 D 四色像素</span></div>
-<div class="check"><b>2 张 / 1 人</b><span>当前已认可的两套完整全身姿势，身份不独立</span></div>
-<div class="check"><b>0 张</b><span>目前已通过验收的模型原创新人物立绘</span></div>
+<nav><strong>PIXEL LAB / 02</strong><a href="./index.html">像素工作室</a><a href="./repixelize.html">01 真像素转换</a><a href="../index.html">游戏</a></nav>
+<main><div class="eyebrow">GENERATIVE MODEL / NEW FULL FIGURES</div>
+<h1>新人物 · 新服装 · 新动作</h1>
+<p class="lead">这里显示<strong>机器学习模型直接采样生成</strong>的完整人物候选，而不是恢复旧画、贴脸或程序复制母版。候选跨不同体型、服装和动作训练，所有原始 PNG 都可以逐格放大审查。</p>
+<div class="status"><strong id="phase">正在读取训练结果</strong><span id="status">若模型尚未完成，请查看 GitHub Actions 的训练任务。</span><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/fullbody-generate.yml">查看真实训练</a></div>
+<section class="stats" aria-label="模型训练与生成证据">
+ <div class="stat"><b id="candidate-count">—</b><span>模型生成的不同完整人物候选</span></div>
+ <div class="stat"><b id="pose-count">—</b><span>不同动作条件</span></div>
+ <div class="stat"><b id="data-count">—</b><span>完整人物训练图数量</span></div>
 </section>
-<section class="work" aria-label="全身人物训练结果检查器">
-<div class="head"><div><h2>原始全身图 vs 神经网络输出</h2>
-<p id="status" role="status">读取本次 GitHub Actions 训练证据…</p></div><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/fullbody-learning.yml">查看真实训练流水线</a></div>
-<div class="switches" role="group" aria-label="画布选择">
-<button type="button" data-sample="0" aria-pressed="true">动态全身母版</button>
-<button type="button" data-sample="1" aria-pressed="false">站姿全身母版</button>
-<button type="button" data-sample="2" aria-pressed="false">新人物独立测试</button>
-<button type="button" id="background" aria-pressed="false">浅色底板</button>
-<button type="button" id="gridToggle" aria-pressed="true">放大网格：开</button>
+<div class="tools"><label for="pose">查看动作</label><select id="pose"><option value="all">全部动作</option></select>
+<button id="gridToggle" aria-pressed="false" type="button">打开像素网格</button>
+<button id="background" aria-pressed="false" type="button">切换浅色底板</button></div>
+<div class="layout">
+ <section><div class="gallery" id="gallery" aria-label="模型采样完整人物画廊"></div>
+ <div id="empty">没有可展示的模型采样结果。旧头像、旧人体母版、技术修复图不会冒充新人物。<p><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/fullbody-generate.yml">查看模型训练进度或失败日志</a></p></div></section>
+ <aside class="inspector"><h2 id="selected-title">选择一张完整人物</h2>
+ <div class="stage" id="stage"><canvas id="full" width="384" height="512" aria-label="真实模型生成的全身人物"></canvas></div>
+ <p class="technical" id="meta">绘制前请确认实际训练报告已加载。</p>
+ <h2>逐像素检查</h2><div class="stage"><canvas id="zoom" width="260" height="260" aria-label="局部逐格放大网格"></canvas></div>
+ <p class="technical">点击全身图定位放大处；保留真实像素块，无平滑插值。</p>
+ <a class="link" id="download" download="fullbody-ml-candidate.png" href="#">保存本张生成 PNG</a></aside>
 </div>
-<div class="pair"><div class="art"><h3>原始整张立绘</h3>
-<div class="canvasWrap" id="wrap-original"><canvas id="original" width="384" height="512" aria-label="完整全身原始立绘"></canvas></div>
-<div class="caption" id="caption-original">模型尚未加载</div></div>
-<div class="art"><h3>模型直接预测的整张立绘</h3>
-<div class="canvasWrap" id="wrap-model"><canvas id="model" width="384" height="512" aria-label="模型像素预测结果"></canvas></div>
-<div class="caption" id="caption-model">原始输出，不用母版覆盖错误，也不从别人的身体拼图</div></div></div>
-<div class="bottom"><div class="detail"><h2>逐像素细节</h2>
-<canvas id="pixelDetail" width="320" height="320" aria-label="全身图局部40×40像素网格放大8倍"></canvas>
-<p class="caption">点击任意全身图查看原位置的40×40像素，逐格放大8倍。检查眼睛、手指、衣物和足部是否真的画对。</p></div>
-<div><div class="metric"><span>当前测试图</span><strong id="item">—</strong></div>
-<div class="metric"><span>遮挡像素预测准确率</span><strong id="accuracy">—</strong></div>
-<div class="metric"><span>遮挡前景区域准确率</span><strong id="foreground">—</strong></div>
-<div class="metric"><span>可训练的独立已认可人物数</span><strong id="identities">1 / 32</strong></div>
-<div class="notice">当前是<strong>整幅人物修复训练基线</strong>，不是已能创造新发型、服装、动作和人物身份的生成器。低样本条件下，不把复原成功率、模板拼接或放大图冒称原创立绘。</div>
-<div class="linkrow"><a id="sourceDownload" href="#" download>查看原始 PNG</a><a id="predDownload" href="#" download>查看模型预测 PNG</a></div>
-</div></div>
-</section>
+<footer>质量声明：初版模型的学习网格为96×128，输出384×512采用4倍最近邻展示，不代表学到原生384×512细节；生成图属于研究候选，未通过游戏美术审核，不能冒充专业完成品。<a href="./fullbody-learning/report.json">旧整画布修复实验报告</a>仅留用于技术对照。</footer>
 </main>
 <script>
-const BASE='./fullbody-learning/',ids=['gold_dynamic','gold_standing','hostess_candidate'],names=['动态完整母版','站姿完整母版','新人物候选（仅独立测试）'];
-const canvases=[document.getElementById('original'),document.getElementById('model')],contexts=canvases.map(c=>c.getContext('2d',{willReadFrequently:true}));
-for(const ctx of contexts)ctx.imageSmoothingEnabled=false;
-const detail=document.getElementById('pixelDetail'),detailCtx=detail.getContext('2d',{willReadFrequently:true});detailCtx.imageSmoothingEnabled=false;
-let report=null,selected=0,images=null,showGrid=true,light=false,focus={x:175,y:95};
-function showError(m){document.getElementById('status').textContent=m}
-function picture(src){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(Error(src));im.src=src})}
-function setButtons(){for(const b of document.querySelectorAll('[data-sample]'))b.setAttribute('aria-pressed',String(Number(b.dataset.sample)===selected))}
-function paint(){
- if(!images)return;
- images.forEach((im,i)=>{const c=canvases[i],ctx=contexts[i];ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,384,512)});
- detailCtx.clearRect(0,0,320,320);
- const cropX=Math.max(0,Math.min(344,focus.x-20)),cropY=Math.max(0,Math.min(472,focus.y-20));
- detailCtx.drawImage(images[1],cropX,cropY,40,40,0,0,320,320);
- if(showGrid){detailCtx.fillStyle='#393657';for(let n=8;n<320;n+=8){detailCtx.fillRect(n,0,1,320);detailCtx.fillRect(0,n,320,1)}}
+const BASE='./fullbody-generated/';
+const label={resting:'站立/静止',running:'奔跑/行走',jumping:'跳跃/腾空',casting:'施法',combat:'战斗'};
+const full=document.querySelector('#full'),zoom=document.querySelector('#zoom');
+const f=full.getContext('2d',{willReadFrequently:true}),z=zoom.getContext('2d',{willReadFrequently:true});
+f.imageSmoothingEnabled=z.imageSmoothingEnabled=false;
+let report=null,selection=null,selectedImg=null,grid=false,light=false,point={x:192,y:90};
+function error(reason){document.querySelector('#phase').textContent='生成结果未就绪';document.querySelector('#status').textContent=reason;document.querySelector('#empty').hidden=false}
+function draw(){
+ if(!selectedImg)return;
+ f.clearRect(0,0,384,512);f.drawImage(selectedImg,0,0,384,512);
+ const sx=Math.max(0,Math.min(344,Math.round(point.x)-20)),sy=Math.max(0,Math.min(472,Math.round(point.y)-20));
+ z.clearRect(0,0,260,260);z.drawImage(selectedImg,sx,sy,40,40,0,0,260,260);
+ if(grid){z.fillStyle='#393657';for(let i=6;i<260;i+=6.5){z.fillRect(Math.floor(i),0,1,260);z.fillRect(0,Math.floor(i),260,1)}}
 }
-async function choose(n){
- selected=n;setButtons();
+function choose(i){
  if(!report)return;
- const row=report.records[n];
- document.getElementById('item').textContent=names[n];
- document.getElementById('accuracy').textContent=Math.round(row.evaluation.masked_accuracy*10000)/100+'%';
- document.getElementById('foreground').textContent=Math.round(row.evaluation.masked_foreground_accuracy*10000)/100+'%';
- document.getElementById('caption-original').textContent='完整人物 '+row.source_grid.join('×')+' 原始像素网格 · '+(row.train?'训练源':'独立测试，未作为训练目标');
- document.getElementById('caption-model').textContent='实际全画布模型预测 · 不贴回正确原画 · 未通过游戏美术验收';
- document.getElementById('sourceDownload').href=BASE+row.preview;
- document.getElementById('predDownload').href=BASE+row.reconstruction;
- try{images=await Promise.all([picture(BASE+row.preview),picture(BASE+row.reconstruction)]);paint()}catch(e){showError('训练文件未部署完整：'+e.message)}
+ const row=report.generated[i];selection=i;
+ for(const [j,b] of [...document.querySelectorAll('.item')].entries())b.setAttribute('aria-pressed',String(j===i));
+ document.querySelector('#selected-title').textContent='候选 '+String(i+1).padStart(2,'0')+' · '+(label[row.pose_condition]||row.pose_condition);
+ document.querySelector('#meta').textContent='训练后随机采样 · 种子 '+row.seed+' · 原始96×128网格 · 前景 '+Math.round(row.foreground_fraction*100)+'% · 非原图拼接';
+ document.querySelector('#download').href=BASE+row.file;
+ const im=new Image();im.onload=()=>{selectedImg=im;draw()};im.onerror=()=>error('选中的模型图文件加载失败');im.src=BASE+row.file;
 }
-for(const b of document.querySelectorAll('[data-sample]'))b.addEventListener('click',()=>choose(Number(b.dataset.sample)));
-document.getElementById('background').addEventListener('click',e=>{light=!light;e.currentTarget.setAttribute('aria-pressed',String(light));document.querySelectorAll('.canvasWrap').forEach(el=>el.classList.toggle('light',light))});
-document.getElementById('gridToggle').addEventListener('click',e=>{showGrid=!showGrid;e.currentTarget.setAttribute('aria-pressed',String(showGrid));paint()});
-canvases.forEach(c=>c.addEventListener('pointerdown',e=>{const rect=c.getBoundingClientRect();focus={x:Math.min(383,Math.max(0,Math.floor((e.clientX-rect.left)*384/rect.width))),y:Math.min(511,Math.max(0,Math.floor((e.clientY-rect.top)*512/rect.height)))};paint()}));
-fetch(BASE+'report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('训练产物尚未发布（可到 GitHub Actions 查看）');return r.json()})
-.then(obj=>{if(!obj.trained_actual_full_canvas||obj.native_model_grid.join('x')!=='384x512'||obj.records.length!==3)throw Error('全身训练结果未通过契约检查');report=obj;document.getElementById('identities').textContent=obj.training_independent_identities+' / '+obj.minimum_independent_approved_characters_for_generative_training;document.getElementById('status').textContent='真实训练 '+obj.steps+' 步完成，训练2张完整画布，独立人物泛化仍未达标';choose(0)})
-.catch(e=>showError('尚未就绪：'+e.message));
-</script>
-</body></html>
+function renderCards(){
+ let filter=document.querySelector('#pose').value;
+ const gal=document.querySelector('#gallery');gal.replaceChildren();
+ report.generated.forEach((row,i)=>{
+  if(filter!=='all'&&row.pose_condition!==filter)return;
+  let btn=document.createElement('button');btn.type='button';btn.className='item';btn.setAttribute('aria-pressed',String(i===selection));
+  const img=document.createElement('img');img.src=BASE+row.file;img.alt='模型采样角色 '+(i+1)+' · '+(label[row.pose_condition]||row.pose_condition);img.loading='lazy';
+  const title=document.createElement('b');title.textContent='新人物 '+String(i+1).padStart(2,'0');
+  const sub=document.createElement('span');sub.textContent=label[row.pose_condition]||row.pose_condition;
+  btn.append(img,title,sub);btn.addEventListener('click',()=>choose(i));gal.append(btn);
+ });
+ const active=report.generated.findIndex(r=>filter==='all'||r.pose_condition===filter);
+ if(active>=0)choose(active);
+}
+document.querySelector('#pose').addEventListener('change',renderCards);
+document.querySelector('#gridToggle').addEventListener('click',e=>{grid=!grid;e.currentTarget.setAttribute('aria-pressed',String(grid));draw()});
+document.querySelector('#background').addEventListener('click',e=>{light=!light;e.currentTarget.setAttribute('aria-pressed',String(light));document.querySelectorAll('.stage').forEach(n=>n.classList.toggle('paper',light))});
+full.addEventListener('pointerdown',e=>{const rect=full.getBoundingClientRect();point={x:((e.clientX-rect.left)/rect.width)*384,y:((e.clientY-rect.top)/rect.height)*512};draw()});
+fetch(BASE+'report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('训练未发布（查看 Actions）');return r.json()})
+.then(d=>{
+ if(!d.trained||!d.samples_are_decoder_only||!d.generated||d.generated.length<9)throw Error('模型还没有通过新人物生成检查');
+ report=d;document.querySelector('#empty').hidden=true;
+ document.querySelector('#phase').textContent='模型已经生成候选';
+ document.querySelector('#status').textContent='VAE从随机潜变量采样，不输入原始人物图。美术质量仍需要逐张检查。';
+ document.querySelector('#candidate-count').textContent=d.generated_fullbody_count;
+ document.querySelector('#pose-count').textContent=d.pose_groups.length;
+ document.querySelector('#data-count').textContent=d.training_examples;
+ const pose=document.querySelector('#pose');d.pose_groups.forEach(name=>{const o=document.createElement('option');o.value=name;o.textContent=label[name]||name;pose.add(o)});
+ renderCards();
+}).catch(e=>error(e.message));
+</script></body></html>
