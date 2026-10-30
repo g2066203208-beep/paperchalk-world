@@ -12,7 +12,8 @@ def main():
     assert report["no_claim_new_character_generation"]
     assert report["train_steps"]>=120
     assert report["native_geometry_grid"]==[96,128]
-    assert len(report["preview"])==3
+    assert len(report["preview"])==5
+    assert all(x.get("not_ground_truth") for x in report["preview"][3:])
     assert len(report["target_part_classes"])==13
     assert len(report["joint_names"])==10
     assert np.isfinite(report["evaluation"]["foreground_part_mean_iou"])
@@ -45,6 +46,12 @@ def main():
                 assert colors.issubset({(57,54,87),(85,91,121),(124,143,174),(169,186,233),(255,245,230)})
             else:
                 assert colors.issubset(set(map(tuple,DIAGNOSTIC)))
+    for name in ("A_dynamic","B_standing"):
+        for item in ("input","pred_parts"):
+            im=np.asarray(Image.open(OUT/f"{name}_{item}.png").convert("RGB"))
+            assert im.shape==(128,96,3)
+            colors=set(map(tuple,np.unique(im.reshape(-1,3),axis=0)))
+            assert colors.issubset(set(map(tuple,RGB if item=="input" else DIAGNOSTIC)))
     print("PASS V5 anatomy: 3 true perspective views, 13 parts, depth, joint maps, learned weights, heldout synthetic test")
 
 if __name__=="__main__":main()
