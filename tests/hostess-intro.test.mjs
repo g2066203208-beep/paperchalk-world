@@ -52,7 +52,7 @@ test('owner approaches from distance, breathing vertically, then starts shop ren
  assert.doesNotMatch(intro,/out\.data\[p\]=136|phase\*\.95\*weight|SILHOUETTE_END/);
  assert.match(intro,/function portraitLayers\(/);
  assert.match(intro,/imageSmoothingEnabled=false/);
- assert.ok(intro.includes('老板娘')&&intro.includes('店铺')&&intro.includes('租期'));
+ assert.ok(intro.includes('欢迎来到蓝铃街')&&intro.includes('登记表')&&intro.includes('合适的地方'),'opening introduces housing rather than a shop-register wall');
  assert.doesNotMatch(intro,/欢迎来到 PAPERWORLD|故事还在慢慢展开/);
  assert.match(intro,/CHAR_PER_SEC=10/);
  assert.match(intro,/function computeExteriorMask\(/);
@@ -60,7 +60,9 @@ test('owner approaches from distance, breathing vertically, then starts shop ren
  assert.match(intro,/if\(outside\[i\]\)continue/);
  assert.doesNotMatch(intro,/AUTO_PAUSE|autoBtn|next\(true\)|dwell/);
  assert.doesNotMatch(html,/id="pw-dialogue-auto"/);
- assert.match(html,/手动对话 · 点击继续/);
+ assert.match(html,/id="pw-dialogue-speech" role="status" aria-live="polite"/);
+  assert.match(html,/data-dialogue-art="reference-2-pixel-frame"/);
+  assert.doesNotMatch(html,/id="pw-dialogue-mode"/);
  assert.match(menu,/switchScene\('lease'\)/);
  assert.match(menu,/createLeaseUI\(/);
  assert.match(html,/id="pw-register"/);
