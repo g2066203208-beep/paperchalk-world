@@ -39,7 +39,11 @@ try{
   await page.locator('#redo').click();
   assert.ok((await project(page)).frames[0].cels[0].filter(Boolean).length>0,'redo restores stroke');
   await page.locator('#add-layer').click();assert.equal((await info(page)).layers,2);
+  assert.equal((await info(page)).layer,1);
+  await page.locator('#layer-down').click();assert.equal((await info(page)).layer,0);
+  await page.locator('#layer-up').click();assert.equal((await info(page)).layer,1);
   await page.locator('#add-frame').click();assert.equal((await info(page)).frames,2);
+  await page.locator('#onion').check();
   await page.locator('#play').click();
   assert.equal(await page.locator('#play').getAttribute('aria-pressed'),'true');
   await page.locator('#play').click();
