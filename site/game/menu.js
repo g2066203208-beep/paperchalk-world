@@ -12,7 +12,7 @@ let prefs={motion:!reduced,particles:!reduced,haptic:true};
 try{prefs={...prefs,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
 if(reduced)prefs.motion=false;
 let W=0,H=0,scale=2,land=false,btns=[],state='menu',selected=0,hover=-1,held=-1;
-let frameN=0,clock=0,last=0,saveExists=false,clickBits=[],burstSerial=0;
+let frameN=0,clock=0,last=0,saveExists=false,touchBursts=[],touchSerial=0,lastTouch=null;
 let note='',noteTo=0,curtain=null;
 try{saveExists=localStorage.getItem(SAVE)==='created'}catch{}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -190,35 +190,57 @@ function paintFoldWipe(){
   }
  }
 }
-function emitClickPixels(x,y,index){
- // Only 10 short-lived fragments at the activated button. No idle confetti.
+// Input effect: ANY screen tap, independent of button hit-testing.
+// Small coordinated pixel diamond + radial paper confetti at EXACT touch coordinates.
+// No ambient particles, no alpha blending, no gradients or full-screen explosions.
+const TOUCH_DIRECTIONS=Array.from({length:16},(_,i)=>{
+ const angle=i*Math.PI/8-Math.PI/2;
+ return [Math.cos(angle),Math.sin(angle)];
+});
+function emitTouchEffect(x,y){
  if(reduced||!prefs.particles)return;
- const b=btns[index];
- if(!b)return;
- burstSerial++;
- for(let i=0;i<10;i++){
-  const side=i%2===0?-1:1,rank=Math.floor(i/2);
-  const originX=side<0?b.x+12:b.x+b.w-12;
-  const originY=b.y+b.h*.5+(rank-2)*3;
-  const spread=(rank-2)*.34+((burstSerial%3)-1)*.12;
-  const speed=27+rank*4;
-  clickBits.push({
-   x:originX,y:originY,vx:side*speed,vy:spread*speed-15,
-   size:i%3===0?3:2,life:.30+i*.012,max:.30+i*.012,
-   color:[COL.pink,COL.blue,COL.paper,COL.ink][i%4]
-  });
- }
- if(clickBits.length>32)clickBits.splice(0,clickBits.length-32);
+ touchSerial++;
+ const centerX=Math.round(clamp(x,0,W-1)),centerY=Math.round(clamp(y,0,H-1));
+ lastTouch={x:centerX,y:centerY};
+ touchBursts.push({x:centerX,y:centerY,age:0,duration:.42,seed:touchSerial%16});
+ // Six touches max, 16 fragments each: bounded under repeated rapid tapping.
+ if(touchBursts.length>6)touchBursts.shift();
 }
-function updateClickPixels(dt){
- for(let i=clickBits.length-1;i>=0;i--){
-  const p=clickBits[i];p.life-=dt;
-  if(p.life<=0){clickBits.splice(i,1);continue}
-  p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=72*dt;
+function updateTouchEffects(dt){
+ for(let i=touchBursts.length-1;i>=0;i--){
+  const touch=touchBursts[i];touch.age+=dt;
+  if(touch.age>=touch.duration)touchBursts.splice(i,1);
  }
 }
-function paintClickPixels(){
- for(const p of clickBits)R(p.x,p.y,p.size,p.size,p.color);
+function paintTouchEffects(){
+ for(const p of touchBursts){
+  const t=clamp(p.age/p.duration,0,1);
+  const travel=Math.round(2+26*(1-(1-t)*(1-t)));
+  // Two coordinated color sets: high-contrast ink + soft accent petals.
+  // Everything remains opaque at one logical-pixel resolution.
+  for(let i=0;i<16;i++){
+   const dir=TOUCH_DIRECTIONS[i];
+   const stagger=i%2===0?1:.67;
+   const rad=Math.round(travel*stagger);
+   const x=p.x+Math.round(dir[0]*rad),y=p.y+Math.round(dir[1]*rad);
+   const size=t<.56?(i%4===0?3:2):1;
+   if(t>.84&&i%2===1)continue;
+   const color=i%4===0?COL.ink:i%4===1?COL.pink:i%4===2?COL.ink:COL.blue;
+   R(x,y,size,size,color);
+   if(i%4===0&&t>.12&&t<.58){
+    R(x-Math.round(dir[0]*4),y-Math.round(dir[1]*4),2,2,COL.paper);
+   }
+  }
+  // A brief four-corner diamond ripple expands at the touch point.
+  if(t<.72){
+   const d=Math.round(3+17*t),arm=t<.2?3:2;
+   for(const sign of [-1,1]){
+    R(p.x+sign*d,p.y,arm,arm,COL.pink);
+    R(p.x,p.y+sign*d,arm,arm,COL.ink);
+    if(t<.38){R(p.x+sign*2,p.y,2,2,COL.ink);R(p.x,p.y+sign*2,2,2,COL.paper)}
+   }
+  }
+ }
 }
 function draw(){
  if(!W||!H)return;
@@ -230,16 +252,15 @@ function draw(){
  if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
   }
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
- paintClickPixels();
  paintFoldWipe();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:clickBits.length,burstSerial,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ paintTouchEffects();
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:touchBursts.length*16,touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
 function act(i,x,y){
  if(curtain||i<0||i>=btns.length)return;
  if(prefs.haptic&&navigator.vibrate)try{navigator.vibrate(7)}catch{}
- emitClickPixels(x,y,i);
  selected=i;hover=i;
  if(state==='menu'){
   if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('play')}
@@ -258,13 +279,13 @@ function act(i,x,y){
 function hit(x,y){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(x>=b.x-5&&x<=b.x+b.w+5&&y>=b.y-5&&y<=b.y+b.h+5)return i}return -1}
 function xy(ev){const rect=el.getBoundingClientRect();return {x:(ev.clientX-rect.left)*W/rect.width,y:(ev.clientY-rect.top)*H/rect.height}}
 el.addEventListener('pointermove',e=>{const p=xy(e);hover=hit(p.x,p.y);el.style.cursor=hover>=0?'pointer':'default'});
-el.addEventListener('pointerdown',e=>{const p=xy(e);held=hit(p.x,p.y);if(held>=0)el.setPointerCapture(e.pointerId)});
+el.addEventListener('pointerdown',e=>{const p=xy(e);emitTouchEffect(p.x,p.y);if(curtain){held=-1;return}held=hit(p.x,p.y);if(held>=0)el.setPointerCapture(e.pointerId)});
 el.addEventListener('pointerup',e=>{const p=xy(e),i=hit(p.x,p.y);if(i>=0&&i===held)act(i,p.x,p.y);held=-1});
 el.addEventListener('pointercancel',()=>held=-1);
 el.addEventListener('pointerleave',()=>{hover=-1;held=-1});
 addEventListener('keydown',e=>{
  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();selected=(selected+(e.key==='ArrowDown'?1:-1)+btns.length)%btns.length;hover=selected}
- else if(e.key==='Enter'||e.key===' '){e.preventDefault();const b=btns[selected];if(b)act(selected,b.x+b.w/2,b.y+b.h/2)}
+ else if(e.key==='Enter'||e.key===' '){e.preventDefault();const b=btns[selected];if(b){emitTouchEffect(b.x+b.w/2,b.y+b.h/2);act(selected,b.x+b.w/2,b.y+b.h/2)}}
  else if(e.key==='Escape'||e.key==='Backspace'){if(state!=='menu')switchScene('menu')}
 });
 addEventListener('resize',layout,{passive:true});
@@ -273,7 +294,7 @@ function tick(now){
  if(!last)last=now;let dt=clamp((now-last)/1000,0,.05);last=now;
  if(!vis)dt=0;
  clock+=dt; // UI time never freezes when background movement is disabled.
- updateClickPixels(dt);
+ updateTouchEffects(dt);
  updateCurtain(dt);
  frameN++;draw();requestAnimationFrame(tick)
 }
