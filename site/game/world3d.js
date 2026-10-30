@@ -9,7 +9,7 @@ const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
 const PALETTE=[INK,PINK,BLUE,PAPER];
 const $=id=>document.getElementById(id);
-function makeTown(){
+function makeTown(lod='full'){
  const verts=[],cols=[],lines=[],lineCols=[],solids=[];
  function vertex(p,c){verts.push(...p);cols.push(...PALETTE[c])}
  function line(a,b,c){lines.push(...a,...b);lineCols.push(...PALETTE[c],...PALETTE[c])}
@@ -40,6 +40,8 @@ function makeTown(){
  }
  // Shops stand in three-dimensional city blocks on both sides of the avenue.
  for(let i=-7;i<=7;i++){
+  // Fewer far facade windows on phones: preserve actual 3D geometry and collisions.
+  if(lod==='mobile'&&Math.abs(i)%2===1)continue;
   const x=i*10+4;
   for(const j of [-3,-2,-1,1,2,3]){
    const y=j*10.5+2;
@@ -51,7 +53,7 @@ function makeTown(){
    solids.push({x,y,w,d:depth});
    // Stacked facade windows are small solid meshes, not sprites.
    const towardRoad=y>0?y-depth/2-.025:y+depth/2+.025;
-   for(let floor=0;floor<Math.floor(h/2);floor++){
+   for(let floor=0;floor<Math.floor(h/2);floor+=(lod==='mobile'?2:1)){ 
     for(const dx of [-1,1]){
      box(x+dx*1.13,towardRoad,.95+floor*1.75,.72,.09,.78,0);
      box(x+dx*1.13,towardRoad+(.07*(y<0?-1:1)),.98+floor*1.75,.49,.095,.5,2);
@@ -100,13 +102,13 @@ function program(gl,vs,fs){
  return p;
 }
 function makeRenderer(canvas){
- const gl=canvas.getContext('webgl',{alpha:false,depth:true,antialias:false,stencil:false,preserveDrawingBuffer:true,powerPreference:'high-performance'});
+ const gl=canvas.getContext('webgl',{alpha:false,depth:true,antialias:false,stencil:false,preserveDrawingBuffer:false,powerPreference:'high-performance'});
  if(!gl)throw Error('手机或浏览器无法启用 WebGL');
  const shader=program(gl,
   'attribute vec3 aPosition;attribute vec3 aColor;uniform mat4 uView;varying vec3 vColor;void main(){gl_Position=uView*vec4(aPosition,1.0);vColor=aColor;}',
   'precision mediump float;varying vec3 vColor;void main(){gl_FragColor=vec4(vColor,1.0);}');
  const aPos=gl.getAttribLocation(shader,'aPosition'),aColor=gl.getAttribLocation(shader,'aColor'),view=gl.getUniformLocation(shader,'uView');
- const data=makeTown();
+ const data=makeTown(Math.min(window.innerWidth,window.innerHeight)<640?'mobile':'full');
  function buffer(arr){const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,arr,gl.STATIC_DRAW);return b}
  const tPos=buffer(data.tri),tCol=buffer(data.colors),lPos=buffer(data.line),lCol=buffer(data.lineColors);
  const bind=(pos,col)=>{gl.bindBuffer(gl.ARRAY_BUFFER,pos);gl.enableVertexAttribArray(aPos);gl.vertexAttribPointer(aPos,3,gl.FLOAT,false,0,0);gl.bindBuffer(gl.ARRAY_BUFFER,col);gl.enableVertexAttribArray(aColor);gl.vertexAttribPointer(aColor,3,gl.FLOAT,false,0,0)};
