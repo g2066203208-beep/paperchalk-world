@@ -13,7 +13,7 @@ try{prefs={...prefs,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
 if(reduced)prefs.motion=false;
 let W=0,H=0,scale=2,land=false,btns=[],state='menu',selected=0,hover=-1,held=-1;
 let frameN=0,clock=0,last=0,particles=[],ripples=[],saveExists=false;
-let note='',noteTo=0;
+let note='',noteTo=0,curtain=null;
 try{saveExists=localStorage.getItem(SAVE)==='created'}catch{}
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const rand=(seed)=>{let x=seed|0;return()=>{x=Math.imul(x^x>>>15,1|x);x^=x+Math.imul(x^x>>>7,61|x);return ((x^x>>>14)>>>0)/4294967296}};
@@ -175,6 +175,26 @@ function overlay(){
   text('感谢游玩',centerX,top+66,16,COL.pink);
  }
 }
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function switchScene(next){
+ if(curtain)return;
+ if(reduced){state=next;selected=0;hover=-1;held=-1;buttons();return}
+ curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
+}
+function updateCurtain(dt){
+ if(!curtain)return;
+ curtain.elapsed+=dt;
+ if(curtain.phase==='close'&&curtain.elapsed>=.27){
+  state=curtain.next;selected=0;hover=-1;held=-1;buttons();curtain.phase='open';curtain.elapsed=0;
+ }else if(curtain.phase==='open'&&curtain.elapsed>=.30)curtain=null;
+}
+function paintCurtain(){
+ if(!curtain)return;
+ const t=curtain.phase==='close'?ease(Math.min(1,curtain.elapsed/.27)):1-ease(Math.min(1,curtain.elapsed/.30));
+ const span=Math.ceil(W*.5*t);
+ R(0,0,span,H,COL.ink);
+ R(W-span,0,span+1,H,COL.ink);
+}
 function draw(){
  if(!W||!H)return;
  ctx.clearRect(0,0,W,H);
@@ -184,8 +204,9 @@ function draw(){
  for(let i=0;i<btns.length;i++)drawButton(btns[i],i);
  if(!land){latin('V0.1.0',W*.17,H-18,1,state==='menu'?COL.ink:COL.paper);
   }
- if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.ink,3);text(note,W/2,H*.09+5,11,COL.paper)}
- window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:particles.length,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN};
+ if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
+ paintCurtain();
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,particleCount:0,buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs,particles:false},logical:[W,H],frame:frameN,transition:curtain?{phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function burst(x,y,n=16){
  if(!prefs.particles)return;
@@ -196,21 +217,21 @@ function burst(x,y,n=16){
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
 function act(i,x,y){
- if(i<0||i>=btns.length)return;
+ if(curtain||i<0||i>=btns.length)return;
  if(prefs.haptic&&navigator.vibrate)try{navigator.vibrate(7)}catch{}
  selected=i;hover=i;
  if(state==='menu'){
-  if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;state='play'}
-  else if(i===1){if(saveExists)state='play';else flash('暂无存档')}
-  else if(i===2)state='settings';
-  else if(i===3)state='exit';
+  if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('play')}
+  else if(i===1){if(saveExists)switchScene('play');else flash('暂无存档')}
+  else if(i===2)switchScene('settings');
+  else if(i===3)switchScene('exit');
  }else if(state==='settings'){
   if(i===0)prefs.motion=!prefs.motion;
   if(i===1)prefs.haptic=!prefs.haptic;
-  if(i===2)state='menu';
+  if(i===2)switchScene('menu');
   savePrefs();
- }else state='menu';
- selected=0;hover=-1;held=-1;buttons();
+ }else switchScene('menu');
+ if(!curtain){selected=0;hover=-1;held=-1;buttons()}
 }
 function hit(x,y){for(let i=btns.length-1;i>=0;i--){const b=btns[i];if(x>=b.x-5&&x<=b.x+b.w+5&&y>=b.y-5&&y<=b.y+b.h+5)return i}return -1}
 function xy(ev){const rect=el.getBoundingClientRect();return {x:(ev.clientX-rect.left)*W/rect.width,y:(ev.clientY-rect.top)*H/rect.height}}
@@ -222,7 +243,7 @@ el.addEventListener('pointerleave',()=>{hover=-1;held=-1});
 addEventListener('keydown',e=>{
  if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();selected=(selected+(e.key==='ArrowDown'?1:-1)+btns.length)%btns.length;hover=selected}
  else if(e.key==='Enter'||e.key===' '){e.preventDefault();const b=btns[selected];if(b)act(selected,b.x+b.w/2,b.y+b.h/2)}
- else if(e.key==='Escape'||e.key==='Backspace'){if(state!=='menu'){state='menu';buttons();selected=0}}
+ else if(e.key==='Escape'||e.key==='Backspace'){if(state!=='menu')switchScene('menu')}
 });
 addEventListener('resize',layout,{passive:true});
 let vis=true;document.addEventListener('visibilitychange',()=>{last=0;vis=!document.hidden});
@@ -230,7 +251,7 @@ function tick(now){
  if(!last)last=now;let dt=clamp((now-last)/1000,0,.05);last=now;
  if(!vis)dt=0;
  if(prefs.motion)clock+=dt;
- for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=Math.pow(.1,dt);p.vy=p.vy*Math.pow(.3,dt)+30*dt;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
+ updateCurtain(dt);
  frameN++;draw();requestAnimationFrame(tick)
 }
 layout();savePrefs();requestAnimationFrame(tick);
