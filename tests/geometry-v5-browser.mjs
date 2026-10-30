@@ -27,6 +27,13 @@ try {
  await page.goto(url);
  await page.waitForFunction(()=>document.querySelector('#report').textContent.includes('训练 '),{timeout:20000});
  assert.match(await page.locator('#report').textContent(),/IoU/);
+ await page.waitForFunction(()=>document.querySelector('#v51-status')?.textContent.includes('站姿 B 留出对照：'),{timeout:20000});
+ for(const ending of ['source','manual_approx','synthetic_model','real_adapted']){
+   const img=page.locator('img[src$="B_standing_'+ending+'.png"]');
+   assert.equal(await img.count(),1,'Missing V5.1 '+ending);
+   assert.equal(await img.evaluate(el=>el.complete&&el.naturalWidth===96&&el.naturalHeight===128),true,'Broken V5.1 '+ending);
+ }
+
  for(const name of ['source','target','parts','depth']){
   const loaded=await page.locator('#'+name).evaluate(img=>img.complete && img.naturalWidth===96 && img.naturalHeight===128);
   assert.equal(loaded,true,name);
