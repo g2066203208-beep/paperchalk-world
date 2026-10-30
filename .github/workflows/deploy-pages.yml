@@ -194,6 +194,8 @@ jobs:
         run: node tests/palette-browser.mjs
       - name: Test hosted D standing character, strict four colors and model evidence in Chromium
         run: node tests/d-standing-browser.mjs
+      - name: Test hosted D four-token diffusion gallery, true grid, native download and mobile Chromium
+        run: node tests/discrete-diffusion-browser.mjs
       - name: Upload trained repixelizer, faithful outputs and Chromium screenshots
         if: always()
         uses: actions/upload-artifact@v4
