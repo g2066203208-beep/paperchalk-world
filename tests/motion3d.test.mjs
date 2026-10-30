@@ -31,6 +31,16 @@ test('90 degree side lie, sensor compensation, smoothing limits',()=>{
  assert.ok(deviceQuaternion(0,90,0,90).every(Number.isFinite));
  assert.ok(sensorAxes(20,70,30,90).forward.every(Number.isFinite));
 });
+test('real sensor poses: sideways handset maps to 90-degree body roll, not yaw',()=>{
+ const m=new MotionPose();
+ m.ingest(0,90,0); // upright phone, screen top points upward
+ m.ingest(-90,0,90); // same gaze with phone laid on its side
+ close(deg(m.target.yaw),0);
+ close(deg(m.target.pitch),0);
+ close(deg(m.target.roll),-90);
+ for(let i=0;i<70;i++)m.step(1/60);
+ assert.ok(deg(m.pose.roll)<-89);
+});
 test('matrix is true perspective depth projection',()=>{
  const p=projectionMatrix({yaw:0,pitch:0,roll:0},1,[0,0,2.2]);
  assert.equal(p.length,16);assert.ok(p.every(Number.isFinite));
