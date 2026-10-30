@@ -27,7 +27,7 @@ function avatar(canvas,form){
  R(11,36,5,9,ink);R(18,36,5,9,ink);R(10,44,7,3,blue);R(17,44,7,3,blue);
  R(15,26,2,5,paper);
 }
-export function createLeaseUI({root,onBack,onDone}){
+export function createLeaseUI({root,onBack,onDone,onWorld}){
  const pane=$(root,'pw-lease'),form=$(pane,'pw-register'),card=$(pane,'pw-lease-card'),error=$(pane,'pw-form-errors');
  if(!pane||!form)throw Error('Missing rental UI elements in index.html');
  let values={...DEFAULT_FORM,...read(DRAFT)},contract=read(CONTRACT),step=1,visible=false;
@@ -103,6 +103,7 @@ export function createLeaseUI({root,onBack,onDone}){
  form.addEventListener('input',()=>{collect();avatar($(pane,'pw-avatar'),values);if(step===2)$(pane,'pw-rent').textContent=rent()+' ◈';error.classList.add('pw-off')});
  form.addEventListener('change',()=>{collect();avatar($(pane,'pw-avatar'),values);if(step===2)$(pane,'pw-rent').textContent=rent()+' ◈'});
  form.addEventListener('submit',e=>{e.preventDefault();next()});
+ $(pane,'pw-lease-enter-world').addEventListener('click',()=>{if(step===4&&contract)onWorld?.()});
  $(pane,'pw-prev').addEventListener('click',()=>{
   collect();
   if(step===1||step===4){onBack?.();return}
