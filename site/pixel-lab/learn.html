@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#393657">
-<title>系统02 · 像素脸模型训练</title>
+<title>系统02 · 32张多人物脸部训练</title>
 <style>
 :root{color-scheme:dark;--bg:#1b1a2c;--panel:#29273f;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
@@ -22,7 +22,14 @@ label{display:flex;align-items:center;gap:6px}
 </style></head>
 <body>
 <nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
-<main>
+<main><section style="max-width:1020px;margin:15px 0 20px;border:2px solid #F2A5C2;background:#393657;padding:18px;border-radius:12px" aria-label="当前多人物脸部实验">
+<div class="eyebrow">ACTIVE · 32 FACES · FOUR COLORS</div>
+<h1 style="font-size:clamp(24px,4vw,34px);margin:9px 0">先练真正不同的脸</h1>
+<p>当前训练识别 <strong>7 种脸型 / 11 种五官 / 8 种发型</strong>，并保留完整眼睛和嘴巴的原生像素。32 张是未在训练组合里出现过的部件搭配，不是同一张脸镜像或换颜色。<strong>离游戏母版的精致绘画质量仍有差距。</strong></p>
+<a href="./face-parts.html" style="display:inline-block;border:1px solid #FFF5E6;border-radius:8px;padding:10px 14px;font-weight:900;color:#FFF5E6;background:#393657">查看本轮真实 32 张脸</a>
+</section>
+<details style="border:1px solid #A9BAE9;padding:14px;border-radius:12px;max-width:1020px"><summary style="font-size:16px;font-weight:900;cursor:pointer">展开旧实验、母版与技术指标（V2–V5、VAE 失败对照）</summary>
+
 <div class="eyebrow">SYSTEM 02 · ACTIVE MODEL ONLY</div>
 <h1>系统 02 · 多人物像素脸训练</h1>
 <p class="summary">目前主线已从单个人物的复制修复改为多人物组合学习：先用 CC0 头型、眼睛五官、发型练结构，再独立做 D 风格像素质量验收。此前单人训练和 VAE 空白脸问题在页面中保留供对照。</p>
@@ -125,4 +132,5 @@ label{display:flex;align-items:center;gap:6px}
 <details><summary>查看现有分区标注（粗标注，非精确语义分割）</summary>
 <div class="anchors"><img src="./style2/A_dynamic_mask_review.png" alt="动态母版分区"><img src="./style2/B_standing_mask_review.png" alt="站姿母版分区"></div>
 </details></section>
+</details>
 </main></body></html>
