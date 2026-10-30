@@ -74,6 +74,16 @@ try{
     assert.equal(compositor.initial,1,'render only once on mount');
     assert.equal(compositor.after,compositor.initial,'never redraw texture for each animation frame');
     await page.screenshot({path:'artifacts/game/'+name+'-background.png'});
+    if(name==='desktop'){
+      // A changed Pages build must be picked up in a currently OPEN APK/web tab.
+      await page.route('**/*pw_version_check=*',route=>route.fulfill({
+        status:200,contentType:'text/html',
+        body:'<script type="module" src="./game/background.js?v=20261030-future-publish"></script>'
+      }));
+      await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+      await page.waitForURL(/\?apk=1&fresh=\d+/, {timeout:8000});
+    }
+
     assert.deepEqual(errors,[], 'no browser JavaScript errors');
     await context.close();
   }
