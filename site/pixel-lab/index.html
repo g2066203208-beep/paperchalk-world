@@ -45,7 +45,7 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
 
 <section class="preview" aria-label="新绘制全身人物候选">
 <img src="./assets/hostess-redraw-v1-192x256.png" alt="新绘制四色透明全身老板娘候选像素立绘" width="192" height="256">
-<div><h3>新绘制全身立绘 · V1候选</h3><p>独立重新设计的全身人物、服装与手势，原生192×256四色透明PNG。尚未通过正式美术验收，也未覆盖当前游戏角色。</p><a href="./hostess-redraw.html">放大检查 · 网格 · 取回PNG</a> <span style="color:#afa7c6">/</span> <a href="./hostess-matte.html">旧老板娘抠图检查</a></div></section>
+<div><h3>新绘制全身立绘 · V1候选</h3><p>独立重新设计的全身人物、服装与手势，原生192×256四色透明PNG。尚未通过正式美术验收，也未覆盖当前游戏角色。</p><a href="./fullbody-refine.html">查看此人物的机器学习精修与改动</a> · <a href="./hostess-redraw.html">原图网格</a> <span style="color:#afa7c6">/</span> <a href="./hostess-matte.html">旧老板娘抠图检查</a></div></section>
 <section class="routes" aria-label="两个唯一主系统">
 <article class="route">
  <div class="number">01 · CONVERT / 真像素转换</div>
@@ -57,10 +57,10 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
 </article>
 <article class="route">
  <div class="number">02 · WHOLE FIGURE / 整幅人物训练</div>
- <h2>完整全身立绘训练</h2>
- <p>以384×512整个人物为单位，连同脸、发型、衣饰、躯干、双臂双腿和姿势一起学习。拒绝孤立头像、16×16小人以及拿固定身体拼脸冒充生成。</p>
- <div class="capability"><strong>真实 PyTorch 整幅画布训练已运行</strong> 查看原图与模型输出的完整对照、遮挡前景指标、原生四色和逐像素细节。<br><span class="detail">当前只有1个正式身份的两张母版：生成全新人设的模型尚未达到训练数据门槛。</span></div>
- <a class="action" href="./fullbody-learning.html">进入 02 · 全身立绘训练</a>
+ <h2>完整全身立绘机器学习精修</h2>
+ <p>从现有192×256新人物完整立绘开始，真实训练PyTorch去噪精修网络，检查全身轮廓、头脸、服装和独立破损测试。所有实际像素改动均可核对。</p>
+ <div class="capability"><strong>新的真实精修训练与修改记录</strong> 原图对比、模型权重、修改位置、严格四色和逐像素检查。<br><span class="detail">当前只有一个人物，先证明真实训练与少量保守修正，尚未具备补画新五官或新衣服的能力。</span></div>
+ <a class="action" href="./fullbody-refine.html">进入 02 · 全身人物ML精修</a>
 </article>
 </section>
 

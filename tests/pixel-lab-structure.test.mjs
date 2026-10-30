@@ -6,7 +6,7 @@ test('System 01 and new-character-generating System 02 only',()=>{
  const index=read('index.html');
  assert.equal((index.match(/class="route"/g)||[]).length,2);
  assert.match(index,/href="\.\/repixelize\.html"/);
- assert.match(index,/href="\.\/fullbody-learning\.html"/);
+ assert.match(index,/href="\.\/fullbody-refine\.html"/);
  assert.match(index,/D「雾樱玻璃」/);
  assert.doesNotMatch(index,/href="\.\/(face-parts|fullbody-16)\.html"/);
 });
