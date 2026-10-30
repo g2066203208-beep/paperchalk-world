@@ -18,7 +18,7 @@
 主要实现文件：site/game/intro.js、site/game/lease.js、site/game/stage.css、site/game/menu.js、site/game/hostess-pixel.js。
 运行验收：tests/hostess-intro.test.mjs、tests/background-home.test.mjs、tests/game-browser.mjs。
 
-以下为旧版研究与迭代历史，仅作记录。
+2026-10-30 网站清理：PixelLab 首页只保留真像素转换与像素绘画学习两大主系统；16张同身份、两套身体模板合成图仅列为旧实验（美术批准0/16）；旧矢量角色页退役并删除脚本与样式；现有游戏老板娘抠图工具保留，但不能冒充新人物全身重绘。\n\n以下为旧版研究与迭代历史，仅作记录。
 
 ---
 
@@ -52,7 +52,7 @@ https://github.com/g2066203208-beep/paperchalk-world/releases/download/apk-lates
 ## 保留的独立创作工具
 
 - [PixelLab](https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/)
-- [Character Atelier](https://g2066203208-beep.github.io/paperchalk-world/character-lab/)
+- 旧 Character Atelier 矢量工作室已归档；旧地址自动引导至 PixelLab 绘画学习。
 
 旧 BoneLab 的页面/骨骼求解器/渲染器已经删除。游戏程序与美术训练工作室分离。
 
