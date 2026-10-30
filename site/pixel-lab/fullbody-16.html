@@ -9,7 +9,7 @@
 <div class="focus"><div class="focusbox"><img class="full" id="zoom" width="384" height="512" alt="对应的完整384x512像素人物"></div><div><img id="face" class="face" width="96" height="96" alt="原始训练的对应头像"><p id="selected">点击上面的全身人物。</p><p class="muted">原始头像的中心五官通过最近邻对齐转移，外围头发、身体由两张真实全身母版提供。训练的部件网络限制服装调色范围，防止误改头发与肤色。</p><a href="./style2/fullbody-16/report.json">查看真实训练报告和具体限制</a></div></div>
 <details><summary>本轮模型能做什么，不能做什么</summary><p>目前拥有真实训练的粗分区网络；实际生成的身体利用 A 动态、B 站姿这两张母版，进行身份五官迁移与服装调色。它没有从一张脸从零预测出完全新的人体，16 张脸也仍属于同一人物的变化。网页不会把模板扩展冒充独立设计的16个新角色；这一步是把已有16张头像真实接成完整可审查资产。</p></details>
 </main><script>
-const out='./style2/fullbody-16/',faces='./style2/face-lab/';
+const out='./style2/fullbody-16/';
 async function init(){
  const r=await fetch(out+'report.json',{cache:'no-store'});if(!r.ok)throw Error('全身训练输出尚未完成部署');
  const d=await r.json();
@@ -28,7 +28,7 @@ async function init(){
 function select(i,d){
  const row=d.output_records[i];
  document.querySelector('#zoom').src=out+row.fullbody_file;
- document.querySelector('#face').src=faces+row.input_face_file;
+ document.querySelector('#face').src=out+row.embedded_face_file;
  document.querySelector('#selected').textContent='第 '+(i+1)+' 张：脸部来自 candidate_'+String(i).padStart(2,'0')+'.png；身体模板 '+(row.pose_template==='B_standing'?'站姿':'动态')+'；服装组合 '+(row.wardrobe_variant+1)+'/8。';
 }
 init().catch(e=>document.querySelector('#status').textContent='尚未就绪：'+e.message);
