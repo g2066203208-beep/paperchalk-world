@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#393657">
-<title>系统02 · 32张多人物脸部训练</title>
+<title>系统02 · 16头像扩展全身训练</title>
 <style>
 :root{color-scheme:dark;--bg:#1b1a2c;--panel:#29273f;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
@@ -22,7 +22,14 @@ label{display:flex;align-items:center;gap:6px}
 </style></head>
 <body>
 <nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
-<main><section style="max-width:1020px;margin:15px 0 20px;border:2px solid #F2A5C2;background:#393657;padding:18px;border-radius:12px" aria-label="当前多人物脸部实验">
+<main><section style="background:#393657;border:2px solid #F2A5C2;border-radius:12px;padding:17px;margin:14px 0;max-width:1030px" aria-label="十六张头像转全身工作">
+<div class="eyebrow">ACTIVE · 16 FACE → 16 FULL BODY · 384×512</div>
+<h1 style="font-size:clamp(25px,4vw,35px);margin:6px 0">把原来16张脸接成全身人物</h1>
+<p>输入直接使用之前机器学习输出的16张脸；全身像素由原始D风格站姿及动态母版提供，新增身体部件训练用于限制衣物区域变化。每张保留脸部细节、完整身体与精确四色网格。</p>
+<a href="./fullbody-16.html" style="display:inline-block;border:1px solid #FFF5E6;border-radius:8px;padding:10px 14px;color:#FFF5E6;font-weight:900">打开16张全身 PNG，逐张对照原头像</a>
+<p style="font-size:12px;color:#A9BAE9">这是保留原始美术的全身扩展实验；不是16个独立全新人设，身体也尚未从零神经绘制。</p>
+</section>
+<section style="max-width:1020px;margin:15px 0 20px;border:2px solid #F2A5C2;background:#393657;padding:18px;border-radius:12px" aria-label="当前多人物脸部实验">
 <div class="eyebrow">ACTIVE · 32 FACES · FOUR COLORS</div>
 <h1 style="font-size:clamp(24px,4vw,34px);margin:9px 0">先练真正不同的脸</h1>
 <p>当前训练识别 <strong>7 种脸型 / 11 种五官 / 8 种发型</strong>，并保留完整眼睛和嘴巴的原生像素。32 张是未在训练组合里出现过的部件搭配，不是同一张脸镜像或换颜色。<strong>离游戏母版的精致绘画质量仍有差距。</strong></p>
