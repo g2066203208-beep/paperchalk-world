@@ -5,6 +5,8 @@ on:
     paths:
       - 'site/pixel-lab/**'
       - 'tests/pixel-lab-structure.test.mjs'
+      - 'tests/hostess-20261030*.mjs'
+      - 'ml/repixelize/QUALITY_CONTRACT.md'
       - '.github/workflows/pixel-lab-pages.yml'
   workflow_dispatch:
 permissions:
