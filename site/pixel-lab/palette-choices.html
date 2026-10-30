@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0c1224"><meta name="description" content="同一款原生384×512四色像素角色，比较8套原创游戏配色并导出像素PNG和HEX色板。">
-<title>四色美术实验室 · 8套游戏配色实时对比 | Pixel Lab</title>
+<meta name="theme-color" content="#0c1224"><meta name="description" content="同一款原生384×512四色像素角色，比较30套原创游戏配色并导出像素PNG和HEX色板。">
+<title>四色美术实验室 · 30套游戏配色实时对比 | Pixel Lab</title>
 <link rel="stylesheet" href="./palette-choices.css"></head>
 <body>
 <header class="topbar"><a class="wordmark" href="./index.html"><span class="mark">PIXEL<span>LAB</span></span><span class="slash">/</span><span>PALETTE STUDIO</span></a><nav><a href="./repixelize.html">真像素转换器</a><a href="./index.html">工作室首页</a></nav></header>
 <main class="shell">
 <section class="intro">
-<div class="eyebrow"><span class="light"></span> ORIGINAL GAME PALETTE STUDY · 8 DIRECTIONS</div>
+<div class="eyebrow"><span class="light"></span> ORIGINAL GAME PALETTE STUDY · 30 DIRECTIONS</div>
 <div class="intro-grid"><div><h1>不是换几种颜色。<em>是选我们的游戏长什么样。</em></h1>
-<p>上一版八套差别不够大，所以全部重新设计。现在每套同时展示 <strong>同一张 384×512 原生像素人物、独立的原创场景和 HUD 风格</strong>。四种颜色不仅决定角色，还决定世界的色块、建筑轮廓和界面语言。先选一个真正有辨识度的美术方向。</p></div>
-<div class="intro-side"><span>01 — 08 / PALETTE EXPLORATION</span><strong>8 <small>套候选</small> × 4 <small>色</small></strong><span>8 DISTINCT WORLDS · TRUE PIXELS</span></div></div>
+<p>8套还不足以探索鲜明的游戏美术方向。我们保留原有方案，再补充22套独立设计，现在每套同时展示 <strong>同一张 384×512 原生像素人物、独立的原创场景和 HUD 风格</strong>。四种颜色不仅决定角色，还决定世界的色块、建筑轮廓和界面语言。先选一个真正有辨识度的美术方向。</p></div>
+<div class="intro-side"><span>01 — 30 / PALETTE EXPLORATION</span><strong>30 <small>套候选</small> × 4 <small>色</small></strong><span>30 DISTINCT WORLDS · TRUE PIXELS</span></div></div>
 </section>
-<div id="status" class="status" role="status">正在载入原生像素人物与八套色板…</div>
+<div id="status" class="status" role="status">正在载入原生像素人物与30套色板…</div>
 <section class="feature" aria-label="当前选中的两套配色">
  <div class="feature-head"><div><span class="section-tag">LIVE COMPARISON / 实时对比</span><h2>人物、场景、HUD 三者一起比较。</h2></div>
  <div class="feature-head-tools"><label for="compareSelect">右侧对照</label><select id="compareSelect" aria-label="右侧对照配色"></select></div></div>
@@ -33,7 +33,7 @@
    <div class="selected-label">SELECTED PALETTE</div>
    <h3><span id="selectedLetter">A.</span> <span id="selectedTitle">糖夜纸片</span></h3>
    <div id="selectedEnglish" class="subline">CANDY NIGHT</div>
-   <p id="selectedDescription" class="selected-description">八种真正不同的视觉方向</p>
+   <p id="selectedDescription" class="selected-description">三十种真正不同的视觉方向</p>
    <div class="art-direction-note"><span>视觉宣言</span><strong id="selectedMotto"></strong><span>形状语言</span><p id="selectedShape"></p><span>UI 语言</span><p id="selectedUI"></p></div>
    <div class="palette-role-list" id="selectedSwatches" aria-label="当前四色与HEX代码"></div>
    <div class="actions">
@@ -44,9 +44,14 @@
   </aside>
  </div>
 </section>
-<section class="palette-gallery" id="gallery" aria-label="八套四色游戏候选">
-<div class="section-header"><div><span class="section-tag">THE EIGHT ORIGINAL PALETTES / 八套候选</span><h2>每套都有专属场景与界面，而不是只换人物颜色。</h2></div><span class="section-note">8 ART DIRECTIONS · 8 WORLDS</span></div>
-<div class="cards" id="cards"><div class="placeholder">正在绘制八种原创像素场景和角色色板…</div></div>
+<section class="palette-gallery" id="gallery" aria-label="30套四色游戏候选">
+<div class="section-header"><div><span class="section-tag">THE 30 ORIGINAL PALETTES / 三十套候选</span><h2>每套都有专属场景与界面，而不是只换人物颜色。</h2></div><span class="section-note">30 ART DIRECTIONS · 30 WORLDS</span></div>
+<div class="gallery-toolbar" aria-label="按风格浏览三十种候选">
+<label>风格分类 <select id="categorySelect"><option value="全部">全部风格 · 30 套</option></select></label>
+<label>搜索方案 <input id="paletteSearch" type="search" placeholder="名字、场景、色彩关键词…" autocomplete="off" aria-label="搜索30套配色"></label>
+<button id="clearFilters" type="button">清除筛选</button><span id="showingCount" role="status" aria-live="polite">当前显示 30 / 30 套</span>
+</div>
+<div class="cards" id="cards"><div class="placeholder">正在绘制三十种原创像素场景和角色色板…</div></div>
 </section>
 <section class="pixel-inspector" aria-label="原生像素网格检验">
 <div class="section-header"><div><span class="section-tag">PIXEL INSPECTOR / 逐像素检查</span><h2>连像素格子也可以放大看。</h2><p>把选中人物的同一片区域放大；细线仅用于检查，不会进入 PNG。</p></div>
@@ -54,5 +59,5 @@
 <div class="inspector-content"><div class="inspector-stage"><canvas id="inspectCanvas" width="384" height="384" aria-label="具有真实网格线的48乘48局部像素放大图"></canvas></div>
 <div class="inspector-info"><strong>8×</strong><span>每格 = 原图 1 像素</span><p id="inspectCoord">正在定位像素…</p><div id="inspectChip" class="sample-chip"></div><span id="inspectColor">点击格子查看准确 HEX。</span><p class="small-note">无论网格是否显示，原始 PNG 的每一个像素都不受影响。</p></div></div>
 </section>
-<footer class="footer">PIXEL LAB · ART DIRECTION STUDY v2.0　|　所有配色均为项目候选；最终风格由你来定。<span> <a href="./repixelize.html">返回 REPIXEL</a> · <a href="./index.html">返回工作室</a></span></footer>
+<footer class="footer">PIXEL LAB · ART DIRECTION STUDY v3.0　|　所有配色均为项目候选；最终风格由你来定。<span> <a href="./repixelize.html">返回 REPIXEL</a> · <a href="./index.html">返回工作室</a></span></footer>
 </main><script type="module" src="./palette-choices.js"></script></body></html>
