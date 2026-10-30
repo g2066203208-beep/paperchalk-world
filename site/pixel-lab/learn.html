@@ -22,7 +22,12 @@ label{display:flex;align-items:center;gap:6px}
 </style></head>
 <body>
 <nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
-<main><section id="bath-girl-current"><h2>新人物：384×512 四色真像素转换与模型训练</h2><p>已从新上传图像转换原生四色 PNG，并用该候选参与颜色恢复训练；仍未通过美术验收。</p><p><a href="./bath-girl.html">打开新人物像素网格和实际机器学习测试</a></p></section><section style="background:#393657;border:2px solid #F2A5C2;border-radius:12px;padding:17px;margin:14px 0;max-width:1030px" aria-label="十六张头像转全身工作">
+<main><section style="padding:16px;border:2px solid #F2A5C2;background:#393657;border-radius:12px;margin:8px 0 20px;color:#FFF5E6">
+<strong>当前 GitHub 实际训练结果</strong><p style="margin:7px 0 12px">新上传粉发角色已转为原生384×512严格四色，并加入神经网络像素修复实验；另用3名CC0开源角色训练了不同动作的独立小尺寸先验。两条学习线均有实际模型权重和留出指标，但尚未合成为合格的384×512动作人物生成器。</p>
+<p><a style="font-weight:900;color:#FFF5E6" href="./new-reference.html">查看上传新角色的真像素＋训练对照</a></p>
+<p><a style="font-weight:900;color:#FFF5E6" href="./motion-prior.html">查看16个不同的模型动作先验</a></p>
+</section>
+<section id="bath-girl-current"><h2>新人物：384×512 四色真像素转换与模型训练</h2><p>已从新上传图像转换原生四色 PNG，并用该候选参与颜色恢复训练；仍未通过美术验收。</p><p><a href="./bath-girl.html">打开新人物像素网格和实际机器学习测试</a></p></section><section style="background:#393657;border:2px solid #F2A5C2;border-radius:12px;padding:17px;margin:14px 0;max-width:1030px" aria-label="十六张头像转全身工作">
 <div class="eyebrow">ACTIVE · 16 FACE → 16 FULL BODY · 384×512</div>
 <h1 style="font-size:clamp(25px,4vw,35px);margin:6px 0">把原来16张脸接成全身人物</h1>
 <p>输入直接使用之前机器学习输出的16张脸；全身像素由原始D风格站姿及动态母版提供，新增身体部件训练用于限制衣物区域变化。每张保留脸部细节、完整身体与精确四色网格。</p>
