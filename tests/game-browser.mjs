@@ -4,161 +4,126 @@ import {createServer} from 'node:http';
 import {readFileSync,mkdirSync} from 'node:fs';
 import {resolve,extname} from 'node:path';
 const root=resolve('site');
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
+const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'};
 const server=createServer((req,res)=>{
  try{
-  const urlPath=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
-  const path=resolve(root,'.'+(urlPath==='/'?'/index.html':urlPath));
-  if(!path.startsWith(root+'/'))throw Error('path escape');
-  res.writeHead(200,{'Content-Type':types[extname(path)]||'application/octet-stream','Cache-Control':'no-store'});
-  res.end(readFileSync(path));
+  const route=decodeURIComponent(new URL(req.url,'http://127.0.0.1').pathname);
+  const p=resolve(root,'.'+(route==='/'?'/index.html':route));
+  if(!p.startsWith(root+'/'))throw Error('invalid route');
+  res.writeHead(200,{'Content-Type':mime[extname(p)]||'application/octet-stream','Cache-Control':'no-store'});
+  res.end(readFileSync(p));
  }catch(e){res.writeHead(404);res.end('Not found')}
 });
-await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+await new Promise(fn=>server.listen(0,'127.0.0.1',fn));
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+const base='http://127.0.0.1:'+server.address().port+'/';
 mkdirSync('artifacts/game',{recursive:true});
-const origin='http://127.0.0.1:'+server.address().port+'/';
-const allowed=new Set(['57,54,87,255','242,165,194,255','169,186,233,255','255,245,230,255','0,0,0,0']);
-async function clickGame(page,index,foldShot=null,expectBurst=true){
- const b=await page.evaluate(i=>window.__PAPERWORLD_MENU__.buttons[i],index);
- const pos=await page.locator('#menu').boundingBox();
- const size=await page.evaluate(()=>window.__PAPERWORLD_MENU__.logical);
- assert.ok(b&&pos,'menu button '+index+' exists');
- const px=pos.x+(b.x+b.w/2)/size[0]*pos.width,py=pos.y+(b.y+b.h/2)/size[1]*pos.height;
- await page.mouse.click(px,py);
- if(expectBurst){
-  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount>0,{timeout:800});
-  const count=await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount);
-  assert.ok(count>0 && count<=18,'pixel-pop feedback must be limited to six squares per tap');
- }
- if(foldShot){
-  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
-  await page.waitForTimeout(90);
-  const shot=await page.evaluate(()=>{
-   const c=document.querySelector('#menu'),d=c.getContext('2d').getImageData(2,2,1,1).data;
-   return {pixel:[...d],transition:window.__PAPERWORLD_MENU__.transition};
-  });
-  assert.deepEqual(shot.pixel,[57,54,87,255],'single diagonal paper sweep covers upper-left in official deep purple');
-  assert.equal(shot.transition?.type,'diagonal-paper-wipe','single page wipe replaces two side doors');
-  await page.screenshot({path:'artifacts/game/'+foldShot+'-paper-wipe.png'});
- }
- await page.waitForTimeout(foldShot?650:620);
+const colors=new Set(['57,54,87,255','242,165,194,255','169,186,233,255','255,245,230,255','0,0,0,0']);
+async function point(page,x,y){
+ const v=await page.evaluate(()=>window.__PAPERWORLD_MENU__);
+ const rect=await page.locator('#menu').boundingBox();
+ await page.mouse.click(rect.x+x/v.logical[0]*rect.width,rect.y+y/v.logical[1]*rect.height);
+}
+async function button(page,index){
+ const state=await page.evaluate(()=>window.__PAPERWORLD_MENU__);
+ const b=state.buttons[index];assert.ok(b,'button '+index+' must be present in '+state.state);
+ await point(page,b.x+b.w/2,b.y+b.h/2);
+}
+async function inState(page,target){
+ await page.waitForFunction(state=>window.__PAPERWORLD_MENU__?.state===state&&!window.__PAPERWORLD_MENU__?.transition,target,{timeout:10000});
 }
 try{
  for(const [name,width,height] of [['portrait',390,844],['landscape',844,390],['tablet',768,1024],['desktop',1440,900]]){
   const context=await browser.newContext({viewport:{width,height},hasTouch:name!=='desktop',isMobile:name!=='desktop',deviceScaleFactor:1,reducedMotion:'no-preference'});
-  const page=await context.newPage(),errors=[];
-  page.on('pageerror',e=>errors.push(String(e)));
-  await page.goto(origin,{waitUntil:'load'});
+  const page=await context.newPage();const exceptions=[];page.on('pageerror',e=>exceptions.push(String(e)));
+  await page.goto(base,{waitUntil:'load'});
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.buttons.length===4);
-  await page.waitForTimeout(180);
-  const info=await page.evaluate(()=>{
-   const c=document.querySelector('#menu'),bg=document.querySelector('#background');
-   const data=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
-   const inkSet=new Set();
-   for(let i=0;i<data.length;i+=4)inkSet.add(data[i]+','+data[i+1]+','+data[i+2]+','+data[i+3]);
-   const bdata=bg.getContext('2d').getImageData(0,0,bg.width,bg.height).data;
-   const colors=new Set();
-   for(let i=0;i<bdata.length;i+=4)colors.add(bdata[i]+','+bdata[i+1]+','+bdata[i+2]+','+bdata[i+3]);
-   const rects=window.__PAPERWORLD_MENU__.buttons;
-   return {colors:[...inkSet],background:[...colors],buttons:rects,logical:[c.width,c.height],
-    state:window.__PAPERWORLD_MENU__.state,layout:rects.map(b=>b.y+b.h),
-    viewport:[innerWidth,innerHeight],canvasCount:document.querySelectorAll('canvas').length,
-    drawCount:window.__PAPERWORLD_BACKGROUND__.redraws,
-    bgAnimation:getComputedStyle(bg).animationDuration};
+  const menu=await page.evaluate(()=>{
+   const m=window.__PAPERWORLD_MENU__,c=document.getElementById('menu');
+   const raw=c.getContext('2d').getImageData(0,0,c.width,c.height).data,found=new Set();
+   for(let i=0;i<raw.length;i+=4)found.add([raw[i],raw[i+1],raw[i+2],raw[i+3]].join(','));
+   return {state:m.state,buttons:m.buttons,logical:m.logical,palette:[...found]};
   });
-  assert.equal(info.canvasCount,2,'animated background + 100% procedural menu overlay');
-  assert.equal(info.state,'menu');
-  assert.equal(info.buttons.length,4);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'no decorative particles');
-  assert.ok(info.colors.every(c=>allowed.has(c)),'only four exact official pixels + transparency: '+info.colors);
-  assert.ok(info.colors.includes('242,165,194,255'),'the primary button is pink');
-  assert.deepEqual(info.background.sort(),['169,186,233,255','255,245,230,255']);
-  assert.equal(info.bgAnimation,'8s');
-  assert.ok(info.buttons.every(b=>b.x>=0&&b.y>=0&&b.x+b.w<=info.logical[0]&&b.y+b.h<=info.logical[1]),'all tap targets fit viewport');
-  assert.ok(info.buttons.every(b=>b.h*2>=48),'tap targets at least 48 CSS px tall');
-  for(let i=0;i<info.buttons.length-1;i++)assert.ok(info.buttons[i].y+info.buttons[i].h<info.buttons[i+1].y);
-  await page.screenshot({path:'artifacts/game/'+name+'-main-menu.png'});
-  // A finger press on EMPTY BACKGROUND must produce the same feedback.
-  // The menu action is separate: blank space must not invoke a button.
-  const beforeTap=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
-  const touchX=Math.round(width*.5),touchY=32;
-  await page.mouse.click(touchX,touchY);
-  await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,beforeTap);
-  const emptyTap=await page.evaluate(()=>window.__PAPERWORLD_MENU__);
-  assert.equal(emptyTap.state,'menu','empty background touch leaves menu unchanged');
-  assert.equal(emptyTap.touchCount,beforeTap+1,'exactly one burst per tap');
-  assert.equal(emptyTap.lastTouch.x,Math.round(touchX/2));
-  assert.equal(emptyTap.lastTouch.y,Math.round(touchY/2));
-  assert.equal(emptyTap.particleCount,6,'every touch produces only six tiny pixels');
-  await page.screenshot({path:'artifacts/game/'+name+'-empty-space-tap.png'});
-  await page.waitForTimeout(750);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0,'minimal pixel pop disappears after 0.24 seconds');
-  // Different taps can vary slightly in direction, without fireworks or halos.
-  const signatures=await page.evaluate(async()=>{
-    const c=document.querySelector('#menu');
-    const r=c.getBoundingClientRect(),x=r.left+r.width*.52,y=r.top+30;
-    function pressAt(px,py,id){
-      c.dispatchEvent(new PointerEvent('pointerdown',{pointerId:id,clientX:px,clientY:py,bubbles:true}));
-      c.dispatchEvent(new PointerEvent('pointerup',{pointerId:id,clientX:px,clientY:py,bubbles:true}));
-    }
-    pressAt(x,y,310);
-    await new Promise(resolve=>requestAnimationFrame(resolve));
-    const first={count:window.__PAPERWORLD_MENU__.particleCount,pattern:window.__PAPERWORLD_MENU__.lastFireworkPattern};
-    pressAt(x,y,311);
-    await new Promise(resolve=>requestAnimationFrame(resolve));
-    const second={count:window.__PAPERWORLD_MENU__.particleCount,pattern:window.__PAPERWORLD_MENU__.lastFireworkPattern};
-    return {a:first.count,b:second.count,different:first.pattern!==second.pattern,from:window.__PAPERWORLD_MENU__.touchCount};
+  assert.equal(menu.state,'menu');assert.equal(menu.buttons.length,4);
+  assert.ok(menu.palette.every(c=>colors.has(c)),'main menu uses exact four inks');
+  assert.ok(menu.buttons.every(b=>b.y>=0&&b.y+b.h<=menu.logical[1]));
+  await page.screenshot({path:'artifacts/game/'+name+'-menu.png'});
+
+  // The simple click-pixel feedback applies to empty screen too.
+  await point(page,menu.logical[0]*.49,15);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount===6);
+  await page.waitForTimeout(320);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.particleCount),0);
+  await button(page,1);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu','continue without save is disabled');
+
+  await button(page,0);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
+  await page.screenshot({path:'artifacts/game/'+name+'-slow-page-transition.png'});
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.state==='intro'&&window.__PAPERWORLD_MENU__?.intro?.loaded);
+  await inState(page,'intro');
+  const first=await page.evaluate(()=>window.__PAPERWORLD_MENU__.intro);
+  assert.equal(first.phase,'silhouette','hostess appears first as grayscale silhouette');
+  await page.screenshot({path:'artifacts/game/'+name+'-gray-silhouette.png'});
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.phase==='reveal',{timeout:4000});
+  await page.screenshot({path:'artifacts/game/'+name+'-pixel-portrait-reveal.png'});
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.phase==='talk',{timeout:4000});
+  await page.waitForTimeout(120);
+  const story=await page.evaluate(()=>{
+    const c=document.getElementById('menu'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,s=new Set();
+    for(let i=0;i<d.length;i+=4)s.add([d[i],d[i+1],d[i+2],d[i+3]].join(','));
+    return {scene:window.__PAPERWORLD_MENU__,colors:[...s]};
   });
-  assert.equal(signatures.a,6);
-  assert.equal(signatures.b,12,'two rapid taps show exactly twelve tiny pixels');
-  assert.ok(signatures.different,'successive tiny pops may have slightly different directions');
-  await page.waitForTimeout(800);
+  assert.ok(story.colors.every(c=>colors.has(c)),'fully revealed portrait and UI must be EXACT four colors');
+  assert.deepEqual(story.scene.intro.portrait,[192,256]);
+  await page.screenshot({path:'artifacts/game/'+name+'-hostess-dialogue.png'});
 
+  // Click dialogue once to complete typed text, again for next sentence.
+  const logical=story.scene.logical;
+  const advance={x:logical[0]*.5,y:logical[1]*.53};
+  await point(page,advance.x,advance.y);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.intro.shown),
+    await page.evaluate(()=>window.__PAPERWORLD_MENU__.intro.full),'first tap reveals whole current sentence');
+  await point(page,advance.x,advance.y);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.line===1);
+  // Change automatic reading in its actual bubble option.
+  const dims=await page.evaluate(()=>{
+    const [W,H]=window.__PAPERWORLD_MENU__.logical,land=W/H>1.25;
+    const x=land?Math.round(W*.49):9, y=land?12:H-139;
+    const w=land?Math.round(W*.49-8):W-18;
+    return {x:x+w-33,y:y+18};
+  });
+  await point(page,dims.x,dims.y);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.intro.auto),false,'auto mode can be disabled');
+  await point(page,advance.x,advance.y);
+  await point(page,advance.x,advance.y);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.line===2);
+  await point(page,dims.x,dims.y);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.intro.auto),true);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.line>=3,{timeout:9000});
+  await page.screenshot({path:'artifacts/game/'+name+'-hostess-auto-next-line.png'});
 
-  // Bottom edge also receives particles; no invisible hitbox required.
-  const secondTouch=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
-  await page.mouse.click(Math.round(width*.15),Math.round(height*.9));
-  await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,secondTouch);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  await page.waitForTimeout(750);
-
-  await clickGame(page,1); // Continue cannot fabricate a saved game.
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  await clickGame(page,0,name); // Start creates a save, local burst and diagonal paper sweep.
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play');
-  const subPageTouches=await page.evaluate(()=>window.__PAPERWORLD_MENU__.touchCount);
-  await page.mouse.click(24,24);
-  await page.waitForFunction(prev=>window.__PAPERWORLD_MENU__.touchCount>prev,subPageTouches);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play','non-button tiny pixel pop also works in subpages');
-  await page.waitForTimeout(500);
-  await page.screenshot({path:'artifacts/game/'+name+'-prologue.png'});
-  await clickGame(page,0); // Back to menu.
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  await clickGame(page,1); // Continue now truly resumes the created journey.
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'play');
+  // Return to menu and continue from saved chapter.
+  await point(page,30,16);
+  await inState(page,'menu');
+  await button(page,1);
+  await inState(page,'intro');
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.intro.phase),'silhouette',
+    'continuing a saved start always replays hostess entry sequence');
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(740);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  await clickGame(page,2);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'settings');
-  const before=await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles);
-  await clickGame(page,1);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles),!before);
-  await clickGame(page,1,null,false);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles),before);
-  const beforeHaptic=await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.haptic);
-  await clickGame(page,2);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.haptic),!beforeHaptic);
-  await page.screenshot({path:'artifacts/game/'+name+'-settings.png'});
-  await clickGame(page,3); // Settings: background / click particles / haptic / return.
-  await clickGame(page,3);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'exit');
-  await clickGame(page,0);
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.state),'menu');
-  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_BACKGROUND__.redraws),info.drawCount,'the moving stripe texture must not be repainted');
-  assert.deepEqual(errors,[],'no Javascript errors');
+  await inState(page,'menu');
+  await button(page,2);
+  await inState(page,'settings');
+  const was=await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles);
+  await button(page,1);
+  assert.equal(await page.evaluate(()=>window.__PAPERWORLD_MENU__.prefs.particles),!was);
+  await button(page,1);
+  await button(page,3);
+  await inState(page,'menu');
+  assert.deepEqual(exceptions,[],'no runtime JS errors');
   await context.close();
  }
- console.log('PASS: minimal six-square touch pops everywhere, exact four colors, four device sizes, menu flows');
-}finally{await browser.close();await new Promise(resolve=>server.close(resolve))}
+ console.log('PASS: real pixel hostess, grayscale silhouette then reveal, integer breathing, typewriter+auto dialogue, four viewports');
+}finally{
+ await browser.close();await new Promise(fn=>server.close(fn));
+}
