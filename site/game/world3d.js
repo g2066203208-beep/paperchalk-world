@@ -159,7 +159,7 @@ function makeRenderer(canvas){
   bind(lPos,lCol);gl.drawArrays(gl.LINES,0,data.line.length/3);
  }
  function destroy(){materialPass?.destroy();gl.deleteBuffer(tPos);gl.deleteBuffer(tCol);gl.deleteBuffer(lPos);gl.deleteBuffer(lCol);gl.deleteProgram(shader)}
- return {render,resize,destroy,solids:data.solids,get triangles(){return data.tri.length/9}};
+ return {render,resize,destroy,solids:data.solids,get triangles(){return data.tri.length/9},get materialTriangles(){return materialPass?.count/3||0}};
 }
 export function createWorld3D({onBack}){
  const stage=$('pw-world'),canvas=$('pw-world-canvas'),status=$('pw-motion-status');
@@ -309,6 +309,7 @@ export function createWorld3D({onBack}){
   motion.setComfort(comfort);lean.setComfort(comfort);
   try{
    renderer??=makeRenderer(canvas);motor=new BodyMotor(renderer.solids);
+   window.__PAPERWORLD_WORLD_MATERIALS__={texturedTriangles:renderer.materialTriangles,atlas:[64,32],source:'official-four-ink-material-pack'};
    note('3D 街区就绪 · 前后移动用按键/摇杆 · 手机左右倾斜直接探头');
   }catch(e){motor=new BodyMotor();note('WebGL 不可用：'+String(e.message||e))}
   setStance('stand');readouts();raf=requestAnimationFrame(draw);
