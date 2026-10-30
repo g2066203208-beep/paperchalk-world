@@ -1,68 +1,69 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0e1721">
-<title>Pixel Lab · 像素画机器学习实验室</title>
-<link rel="stylesheet" href="./pixel-lab.css"></head>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#393657">
+<meta name="description" content="像素机器学习工作室仅有两个核心系统：真像素转换、像素绘画学习。">
+<title>PIXEL LAB｜两个系统，一套美术标准</title>
+<style>
+:root{color-scheme:dark;--bg:#191827;--panel:#29273f;--line:#5d5879;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif}
+a{color:var(--blue)}a:focus-visible{outline:3px solid var(--pink);outline-offset:4px}
+header{border-bottom:1px solid #4b4663;padding:14px max(16px,calc((100vw - 1120px)/2));display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{font-weight:900;letter-spacing:1.4px}.brand span{color:var(--pink)}
+header a{font-size:12px;text-decoration:none;color:#d5cae9}
+main{max-width:1120px;padding:35px 18px 65px;margin:auto}
+.kicker{font-size:11px;font-weight:900;color:var(--pink);letter-spacing:2px}
+h1{font-size:clamp(32px,5.3vw,57px);line-height:1.15;letter-spacing:-1px;margin:12px 0}
+.lead{font-size:16px;color:#c0b8d6;max-width:750px;margin-bottom:26px}
+.routes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}
+.route{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:23px;min-width:0;display:flex;flex-direction:column}
+.route h2{font-size:clamp(22px,2.8vw,30px);line-height:1.27;margin:8px 0}
+.route p{color:#c6bddb;margin:8px 0 17px}
+.route .number{font-size:12px;font-weight:900;letter-spacing:1.4px;color:var(--pink)}
+.route .detail{font-size:13px;color:#afa7c6}
+.action{display:block;text-decoration:none;text-align:center;border-radius:10px;padding:12px;background:var(--pink);color:#30273f;font-weight:900;margin-top:auto}
+.route:nth-child(2) .action{background:var(--blue)}
+.capability{padding:12px 0;margin:0 0 21px;border-top:1px solid #4c4965;font-size:13px;flex:1}
+.capability strong{display:block;font-size:13px;color:#f4e5f1}
+.swatches{display:flex;gap:5px;margin:10px 0 17px}
+.swatches i{display:block;width:49px;height:15px;border-radius:3px;border:1px solid #ffffff15}
+.preview{display:flex;gap:14px;align-items:center;background:#211e35;border:1px solid #45405d;border-radius:13px;padding:11px;margin:25px 0}
+.preview img{width:112px;max-width:28%;height:auto;aspect-ratio:3/4;image-rendering:pixelated;image-rendering:crisp-edges;border-radius:5px;background:var(--ink)}
+.preview h3{font-size:18px;margin:0 0 3px}.preview p{margin:4px 0 8px;color:#c6bdd7;font-size:13px}
+.preview a{font-size:13px;font-weight:900}
+footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2c0;font-size:12px}
+@media(max-width:670px){.routes{grid-template-columns:1fr}main{padding-top:22px}.preview{align-items:flex-start}.route{padding:19px}}
+</style>
+</head>
 <body>
-<header class="top">
- <a class="back" href="../index.html">↖ 返回 BoneLab</a>
- <div class="mark"><b>PIXEL</b><span>LAB / ML</span></div>
- <div class="top-right">RESEARCH BUILD <strong>0.1</strong><span class="pill">16 × 16</span></div>
-</header>
-<div class="shell">
- <section class="hero">
-  <div class="eyebrow"><span class="live">●</span> GITHUB ACTIONS · REAL MODEL TRAINING</div>
-  <h1>让模型真正学习<span>像素规律</span>。</h1>
-  <p>从真实授权素材训练像素补全网络；独立训练强化学习画笔策略。不是随机拼贴，也不是未经训练的 AI 绘画。</p>
-  <div class="status"><span id="ml-status">正在读取训练结果…</span><span class="divider"></span><span id="data-status">数据来源检查中</span></div>
- </section>
- <div style="padding:16px 20px;margin:18px 0;border:1px solid #49627b;border-radius:12px;background:#172336"><strong>新增 · FLAT4 严格四色角色母版</strong><p>64 × 96 原生像素 · 单幅全身人物 · 像素级编辑 · 严格四颜色检查 · PNG 无损导出</p><a href="./flat4.html" style="display:inline-block;color:#9be8f2;font-weight:700">进入四色像素重绘工作台 ↗</a><br><a href="./flat4-learning.html" style="display:inline-block;margin-top:8px;color:#9be8f2;font-weight:700">进入真正训练的像素神经修复实验 ↗</a></div>
- <div style="padding:15px;margin:18px 0;border:1px solid #5a627e;border-radius:12px"><strong>新增：真正的 112×160 全身四色像素母版</strong> · <a href="./flat4-redraw.html" style="color:#b6eced">打开并导出原生 PNG ↗</a></div>
- <div style="padding:18px 20px;margin:20px 0;border-radius:14px;background:#182d3c;border:1px solid #477281"><strong>新功能 / REPIXEL 真正保真像素转换</strong><p>以你指定的粉发少女为基准，384×512 原生四色，不重画人物；上传自己的 GPT 假像素图即可在浏览器内转换。</p><a href="./repixelize.html" style="color:#aceeef;font-weight:800">打开真像素转换器 →</a></div>
- <div style="padding:20px;margin:20px 0;border:1px solid #4d7d80;border-radius:14px;background:#112c38"><strong style="color:#c2f6ed">新功能 / 三十套原创四色游戏配色 · 实时人物对比</strong><p>同一个 384×512 原生像素人物，A–AD 三十套颜色同屏显示；可切换预览、查看 HEX、导出 PNG 和色板 JSON。</p><a href="./palette-choices.html" style="color:#aef5e9;font-weight:800">进入 30 套配色选择器 →</a></div>
- <div style="padding:19px 20px;margin:20px 0;border:1px solid #F2A5C2;border-radius:14px;background:#30263f"><strong style="color:#FFF5E6">D「雾樱玻璃」· 新站姿人物 · 真四色机器学习实验</strong><p style="color:#d6c9e4">单人全身立绘：原有角色与新站姿并排对比。384×512、D 色板四种准确 RGB、PNG 直接显示与下载；GitHub Actions 实际训练像素去噪模型并提供验证结果，未将其伪称为完美画风生成。</p><a href="./d-standing.html" style="color:#F2A5C2;font-weight:900">打开 D 风格新站姿对照和模型报告 →</a></div>
-<section class="metrics">
-  <article><small>训练图片 <em>LICENSED CC0</em></small><strong id="metric-images">—</strong><p>真实素材，不含合成假样本</p></article>
-  <article><small>隐藏像素验证准确率</small><strong id="metric-accuracy">—</strong><p>留出数据集，和基线对比</p></article>
-  <article><small>机器学习训练步数</small><strong id="metric-steps">—</strong><p>神经网络梯度下降</p></article>
-  <article><small>强化学习绘制节省</small><strong id="metric-rl">—</strong><p>对比逐像素复制画笔</p></article>
- </section>
- <div class="workspace">
-  <aside class="controls">
-   <div class="section-heading"><span>01</span> 实验配置 <small>INPAINT / RL</small></div>
-   <label for="sample">留出样本 <span>真实 CC0</span></label>
-   <select id="sample"></select>
-   <label for="mask">遮盖像素比例 <output id="mask-value">45%</output></label>
-   <input id="mask" type="range" min="15" max="80" step="5" value="45">
-   <label for="seed">可复现随机种子</label>
-   <input id="seed" type="number" min="1" max="999999" value="2026">
-   <button id="damage" class="secondary">✳ 重新生成破损图</button>
-   <button id="restore" class="primary">✦ 神经网络修复像素</button>
-   <div class="caption"><b>模型：</b> 局部上下文神经网络（MLP），在 GitHub Actions 中学习被遮住的像素颜色。这里展示真实推理，不是预先画好的修复结果。</div>
-   <hr>
-   <div class="section-heading"><span>02</span> 强化学习画笔 <small>Q-LEARNING</small></div>
-   <p class="small">给策略提供参考图，让它选择单点、横线、竖线、矩形或区域填充，以较少操作复现素材。<strong>它不负责原创构图。</strong></p>
-   <button id="replay" class="secondary">▶ 播放强化学习绘制过程</button>
-   <div class="result-row"><span>逐像素操作</span><strong id="naive-strokes">—</strong></div>
-   <div class="result-row"><span>策略操作</span><strong id="policy-strokes">—</strong></div>
-  </aside>
-  <main class="lab">
-   <div class="section-heading"><span>LIVE</span> 神经网络像素修复 <small>REAL INFERENCE</small></div>
-   <div class="canvas-grid">
-    <div class="tile"><div class="tile-head">01 / 原始素材 <span>GROUND TRUTH</span></div><canvas id="original" width="16" height="16"></canvas><div class="tile-foot">CC0 · 留出样本</div></div>
-    <div class="tile"><div class="tile-head">02 / 遮盖后的输入 <span>MASKED</span></div><canvas id="corrupted" width="16" height="16"></canvas><div class="tile-foot"><span id="masked-pixels">—</span> 个像素等待预测</div></div>
-    <div class="tile"><div class="tile-head">03 / 模型实际预测 <span>NEURAL</span></div><canvas id="predicted" width="16" height="16"></canvas><div class="tile-foot"><span id="local-accuracy">点击运行神经网络</span></div></div>
-   </div>
-   <div class="sub-grid">
-    <div class="sub-panel"><div class="section-heading"><span>REWARD</span> 强化学习画笔演示 <small>FRAME-BY-FRAME</small></div>
-      <div class="replay-layout"><canvas id="rl-canvas" width="16" height="16"></canvas><div><strong id="rl-progress">0 / 0</strong><p id="rl-action">每一笔由 Q-Learning 策略选择</p><div class="track"><div id="progress"></div></div></div></div>
-    </div>
-    <div class="sub-panel"><div class="section-heading"><span>LOSS</span> 实际训练曲线 <small>CROSS ENTROPY</small></div><svg id="loss-chart" viewBox="0 0 360 130" preserveAspectRatio="none" role="img" aria-label="真实训练误差曲线"></svg><div class="chart-labels"><span>TRAIN START</span><span>TRAIN END</span></div></div>
-   </div>
-  </main>
- </div>
- <section class="footnote"><h3>模型适用范围与边界</h3><p>这是面向 16×16 小型像素素材的入门学习系统。神经网络在真实 CC0 图像上学习局部像素上下文，可做遮挡补全，但不等于已经学会原创角色设计。强化学习只学习参考引导下的画笔选择。训练样本数少，不能宣传为最先进的像素生成模型；后续可升级为离散 token 生成、扩散模型和人工审美反馈评分。</p><p>素材来源：<a href="https://kenney.nl/assets/tiny-dungeon">Kenney Tiny Dungeon</a>、<a href="https://kenney.nl/assets/tiny-town">Tiny Town</a>、<a href="https://opengameart.org/content/pixel-platformer-0">Pixel Platformer</a>（CC0）。训练数据哈希、样本数量、验证指标记录于模型文件。</p></section>
-</div>
-<script type="module" src="./pixel-lab.js"></script>
-</body></html>
+<header><strong class="brand">PIXEL<span> LAB</span></strong><a href="../index.html">返回工作室</a></header>
+<main>
+<div class="kicker">TWO SYSTEMS / ONE ART DIRECTION</div>
+<h1>只做两件事，<br>把像素画真正做好。</h1>
+<p class="lead">D「雾樱玻璃」是当前游戏默认美术方案。所有人物、场景与道具将遵守同一规格。独立实验不再挤在首页，留作相应系统内部研究。</p>
+<section class="routes" aria-label="两个唯一主系统">
+<article class="route">
+ <div class="number">01 · CONVERT / 真像素转换</div>
+ <h2>假像素 → 原生像素</h2>
+ <p>上传角色或游戏素材，锁定 D 风格四色，在真实的像素网格中检查轮廓与颜色，导出无插值 PNG。</p>
+ <div class="swatches"><i style="background:#393657"></i><i style="background:#F2A5C2"></i><i style="background:#A9BAE9"></i><i style="background:#FFF5E6"></i></div>
+ <div class="capability"><strong>已可用</strong> 固定 384×512 网格、严格四色、像素坐标取色、网格放大、PNG 导出。<br><span class="detail">研究中：机器学习修复细节，目前固定色板/面积投票仍是保真输出，不冒充已达到完美。</span></div>
+ <a class="action" href="./repixelize.html">进入 01 · 真像素转换</a>
+</article>
+<article class="route">
+ <div class="number">02 · LEARN / 像素绘画学习</div>
+ <h2>学习人物、场景、道具</h2>
+ <p>整理合法参考素材、绘画规则与统一角色尺寸，训练模型理解轮廓、像素簇、服装结构和场景组织。</p>
+ <div class="capability"><strong>目前是研究阶段</strong> 已有小尺寸像素补全与局部神经修复、画笔策略实验。<br><span class="detail">还没有达到独立生成优质完整人物、场景、道具和动画资源的目标。</span></div>
+ <a class="action" href="./learn.html">进入 02 · 像素绘画学习</a>
+</article>
+</section>
+<section class="preview" aria-label="当前D风格人物样本">
+ <img src="./d-standing-v1-384x512.png" alt="D风格站立少女候选角色，原生四色像素" width="384" height="512">
+ <div><h3>当前样本 · D 风格站姿角色</h3><p>384×512 · 原生四色 PNG · 可与旧角色并排对比。真实像素网格已加入检查器，默认开启。</p><a href="./d-standing.html">打开人物与真实像素网格</a></div>
+</section>
+<footer>统一标准：颜色、尺寸、轮廓、像素密度和原生网格先验收，再做审美与资产质量验收。历史实验保留在对应系统内部，不作为新的主入口。</footer>
+</main>
+</body>
+</html>
