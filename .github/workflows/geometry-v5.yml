@@ -4,9 +4,11 @@ on:
     branches: [main]
     paths:
       - 'ml/style2/volume_parts_v5.py'
+      - 'ml/style2/real_parts_v51.py'
       - 'ml/style2/verify_volume_parts_v5.py'
       - 'site/pixel-lab/style2/geometry-v5.html'
       - 'tests/geometry-v5-browser.mjs'
+      - 'site/pixel-lab/learn.html'
       - '.github/workflows/geometry-v5.yml'
   workflow_dispatch:
 permissions:
@@ -39,6 +41,27 @@ jobs:
         run: python -m ml.style2.volume_parts_v5 --steps 160
       - name: Gate trained checkpoint, depth, part labels, camera yaw and real D probes
         run: python -m ml.style2.verify_volume_parts_v5
+      - name: V5.1 adapt to actual D character parts (A train / B untouched holdout)
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '2'
+        run: python -m ml.style2.real_parts_v51 --steps 160
+      - name: Verify V5.1 real-source reporting and no fake depth or new-identity claims
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          from PIL import Image
+          root=Path('site/pixel-lab/style2/geometry-v5')
+          r=json.loads((root/'v51_real_parts_report.json').read_text())
+          assert r['real_annotated_train']==['A_dynamic'] and r['real_heldout']==['B_standing']
+          assert r['no_claim_new_identity'] and r['no_claim_real_depth_ground_truth']
+          assert r['accepted_as_finished_character_art'] is False
+          for pose in ('A_dynamic','B_standing'):
+              for name in ('source','manual_approx','synthetic_model','real_adapted'):
+                  assert Image.open(root/f'{pose}_{name}.png').size==(96,128)
+          print('PASS: V5.1 real pose A training vs untouched pose B evaluation')
+          PY
       - name: Install real browser
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
