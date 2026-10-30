@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#393657"><title>PixelLab · 人脸结构学习</title><style>
+:root{color-scheme:dark;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6}*{box-sizing:border-box}body{margin:0;background:var(--ink);color:var(--paper);font:14px/1.6 system-ui,-apple-system,"Noto Sans SC",sans-serif}main{width:min(100%,1100px);margin:auto;padding:24px 18px 50px}a{color:var(--blue)}nav{padding:13px 18px;border-bottom:1px solid var(--blue)}h1{font-size:clamp(26px,4vw,42px);line-height:1.18;margin:12px 0}h2{font-size:19px;margin:20px 0 8px}.eyebrow{color:var(--pink);font-weight:750;letter-spacing:1.2px;font-size:11px}.note{color:var(--blue);max-width:900px;margin:10px 0}#status{border:1px solid var(--blue);padding:10px 14px;margin:14px 0;font-weight:550}.grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}.item{margin:0;min-width:0}.item img{display:block;width:100%;height:auto;aspect-ratio:1;image-rendering:pixelated;border:1px solid var(--blue);background:var(--ink);cursor:zoom-in}.item figcaption{font:12px/1.4 ui-monospace,monospace;padding-top:3px;color:var(--paper)}#focus{display:block;width:min(384px,90vw);height:auto;image-rendering:pixelated;border:2px solid var(--pink);aspect-ratio:1}.comparison{display:grid;grid-template-columns:1fr 1fr;gap:12px}.comparison img{width:100%;image-rendering:pixelated;border:1px solid var(--blue)}button{padding:7px 10px;border:1px solid var(--paper);background:var(--ink);color:var(--paper);cursor:pointer}footer{padding-top:16px;border-top:1px solid var(--blue);font-size:12px;color:var(--blue)}@media(max-width:750px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}@media(max-width:420px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}main{padding:15px 11px}}</style></head><body><nav><a href="./learn.html">← 返回像素学习</a></nav><main><div class="eyebrow">SYSTEM 02 / FACE STRUCTURE / CC0 TRAINING</div><h1>人脸结构训练 · 32 张不同的脸</h1><p class="note">这一轮专门解决之前眼睛、鼻子、嘴巴被神经 VAE 混成一团的问题：神经网络学习区分头型、五官和头发，重新组合时严格保留原像素笔画。</p><p id="status" role="status">读取 GitHub 实际训练结果……</p>
+<section id="faces" class="grid" aria-label="32张完整脸"></section>
+<h2>放大检查</h2><img id="focus" width="128" height="128" alt="单张像素脸逐像素查看"><p class="note" id="selected">点击上面的头像可查看。</p>
+<details><summary>训练与留出数据（点击展开）</summary><div class="comparison"><figure><img id="train" alt="训练角色组合" loading="lazy"><figcaption>不同的训练组合</figcaption></figure><figure><img id="test" alt="未见过的组合" loading="lazy"><figcaption>留出的组合</figcaption></figure></div></details>
+<footer>数据来自 lamiarts《Faces》CC0；7种头型×11种五官×8种发型，共616种头像组合，部件之间有重用。模型训练的是部件识别和组合筛选，最终像素由部件原样合成，尚不能独立绘制新的眼睛或达到我们的粉发人物母版质量。人工美术通过：0。</footer>
+</main><script>
+const base='./style2/face-structure/';
+fetch(base+'report.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('真实训练产物尚未部署');return r.json()}).then(d=>{
+ if(d.number_generated!==32||!d.sampled_unseen_combinations||d.styles_approved_for_game!==0)throw Error('报告校验失败');
+ const pct=v=>(v*100).toFixed(1)+'%';
+ document.querySelector('#status').textContent='神经分类器：训练 '+d.train_combinations+' 种组合、留出 '+d.heldout_combinations+' 种组合｜头型准确率 '+pct(d.heldout_accuracy.shape_accuracy)+'，五官 '+pct(d.heldout_accuracy.feature_accuracy)+'，头发 '+pct(d.heldout_accuracy.hair_accuracy)+'｜新组合32张 · 严格D四色 · 未通过最终游戏美术验收';
+ const box=document.querySelector('#faces');
+ for(let i=0;i<32;i++){
+  const item=document.createElement('figure');item.className='item';
+  const img=document.createElement('img');img.width=128;img.height=128;img.loading='lazy';img.src=base+'face_'+String(i).padStart(2,'0')+'.png';img.alt='不同组合头像 '+(i+1);
+  img.addEventListener('click',()=>{document.querySelector('#focus').src=img.src;document.querySelector('#selected').textContent='候选 '+String(i+1).padStart(2,'0')+' · 尚未达到母版质量'});
+  const caption=document.createElement('figcaption');caption.textContent=String(i+1).padStart(2,'0');
+  item.append(img,caption);box.append(item);
+ }
+ document.querySelector('#focus').src=base+'face_00.png';
+ document.querySelector('#train').src=base+'train_24.png';
+ document.querySelector('#test').src=base+'holdout_16.png';
+}).catch(e=>document.querySelector('#status').textContent='未就绪：'+e.message);
+</script></body></html>
