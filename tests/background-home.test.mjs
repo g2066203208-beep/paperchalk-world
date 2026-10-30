@@ -12,7 +12,8 @@ test('APK root now shows real procedural pixel menu above original diagonal movi
   assert.equal((page.match(/<canvas\b/g)||[]).length,3,'background + game + pixel-character avatar preview');
   assert.match(page,/game\/menu\.js\?v=/);
   assert.match(page,/game\/background\.js\?v=/);
-  assert.doesNotMatch(page,/BoneLab|<img\b|<button\b|<svg\b/);
+  assert.doesNotMatch(page,/BoneLab|<img\b|<svg\b/);
+  assert.match(page,/id="pw-register"/,'native character/shop form must render actual buttons and input fields');
   assert.equal(existsSync('site/bone-lab/index.html'),false);
 });
 test('all art and interactivity use Canvas code, no generated image assets',()=>{
