@@ -63,3 +63,6 @@
 #pw-register,#pw-register input,#pw-register select{touch-action:auto}
 #pw-dialogue{touch-action:manipulation}
 #pw-lease-card{-webkit-overflow-scrolling:touch;scrollbar-color:var(--ink) var(--blue)}
+
+#pw-menu-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.pw-menu-label{position:absolute;display:block;transform:translate(-50%,-50%);color:var(--ink);font-size:clamp(16px,4.4vw,20px);font-weight:800;line-height:1.15;white-space:nowrap;text-align:center;letter-spacing:.025em;text-shadow:none;user-select:none;pointer-events:none}
