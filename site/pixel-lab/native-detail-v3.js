@@ -37,6 +37,7 @@ if(root){
  function repaint(){paint('original');paint('generated384')}
  async function load(){
   const id=++epoch,key=sel('#v3-pose').value;
+  root.dataset.ready='false';
   pose=key;out.textContent='正在读取 384×512 原生像素…';
   const downloads=views.map(async name=>{
    const src=prefix+key+'_'+name+'.png';
