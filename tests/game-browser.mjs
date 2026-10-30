@@ -97,6 +97,13 @@ try{
   assert.ok(sensorResult.lean.offset>.13,'native quaternion side tilt moves the real camera left');
   assert.ok(Math.abs(sensorResult.lean.bank)<.0001,'comfort keeps the horizon level');
   await page.screenshot({path:'artifacts/game/'+screen+'-3d-native-gyro-peek-comfort.png'});
+  // Verify the *real* hit target. A synthetic/forced click would conceal joystick overlap.
+  const comfortHit=await page.locator('#pw-comfort-toggle').evaluate(el=>{
+    const r=el.getBoundingClientRect();
+    const target=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+    return target===el||el.contains(target);
+  });
+  assert.ok(comfortHit,'comfort button must not be covered by the joystick/HUD on '+screen);
   await page.locator('#pw-comfort-toggle').click();
   assert.equal(await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.comfort),false);
   await page.waitForTimeout(500);

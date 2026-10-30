@@ -193,3 +193,11 @@
  #pw-gyro-debug{font-size:10px}
  #pw-world-bottom.pw-world-compact{max-height:min(43dvh,340px)}
 }
+
+/* Gameplay controls: HUD must never be trapped beneath the touch joystick.
+   On narrow portrait screens the joystick sits between the peek keys and the HUD. */
+#pw-world-bottom{z-index:6}
+@media (max-width:420px) and (min-height:651px){
+ #pw-move-stick{left:5px;top:calc(25% + 112px);bottom:auto;z-index:4;transform:scale(.82);transform-origin:left top}
+ #pw-world-bottom.pw-world-compact{max-height:min(34dvh,285px)}
+}

@@ -36,6 +36,8 @@ public final class MainActivity extends Activity {
     private SensorManager sensorManager;
     private Sensor rotationSensor;
     private boolean sensorListening = false;
+    // Restore only a sensor stream the player had explicitly enabled before pausing.
+    private boolean resumeSensorOnForeground = false;
     private long lastSensorNs = 0;
     private final SensorEventListener sensorListener = new SensorEventListener() {
         @Override public void onAccuracyChanged(Sensor sensor, int accuracy) {}
@@ -55,10 +57,10 @@ public final class MainActivity extends Activity {
     // No sensor data is sent to a server. Expose start/stop only to this WebView.
     private final class GameSensorBridge {
         @JavascriptInterface public void start() {
-            runOnUiThread(() -> startSensor());
+            runOnUiThread(() -> { resumeSensorOnForeground = true; startSensor(); });
         }
         @JavascriptInterface public void stop() {
-            runOnUiThread(() -> stopSensor());
+            runOnUiThread(() -> { resumeSensorOnForeground = false; stopSensor(); });
         }
         @JavascriptInterface public boolean available() {
             return rotationSensor != null;
@@ -109,6 +111,7 @@ public final class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
             @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                resumeSensorOnForeground = false;
                 stopSensor();
             }
             @Override
@@ -173,6 +176,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        resumeSensorOnForeground = sensorListening;
         stopSensor();
         super.onPause();
     }
@@ -182,8 +186,10 @@ public final class MainActivity extends Activity {
         super.onResume();
         if (!resumedOnce) {
             resumedOnce = true; // Initial load already started in onCreate().
-        } else {
-            openLatestHome(); // Returning from background must refresh the live web game.
+        } else if (resumeSensorOnForeground) {
+            // Keep the existing WebView, live 3D scene, pose and unsaved game state.
+            // Never call loadUrl() merely because the player switched applications.
+            startSensor();
         }
     }
 
