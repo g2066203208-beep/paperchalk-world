@@ -1,0 +1,55 @@
+name: PixelLab - part preserving multi-face learning
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/style2/face_parts_structured.py'
+      - 'ml/style2/verify_face_parts_structured.py'
+      - '.github/workflows/face-parts.yml'
+      - 'site/pixel-lab/face-parts.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+concurrency:
+  group: face-parts-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real training stack
+        run: |
+          python -m pip install 'numpy==2.2.6' 'Pillow==11.3.0'
+          python -m pip install 'torch==2.7.1+cpu' --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Fetch CC0 real heads, hair and facial-feature source
+        run: |
+          mkdir -p ml/datasets
+          curl -fL --retry 3 --connect-timeout 20 --max-time 180 \
+            'https://opengameart.org/sites/default/files/faces_1.zip' \
+            -o ml/datasets/cc0_faces_lamiarts.zip
+          echo 'b03a1a4537612a9faccc43aaf481e3548d21ba318df57ace9d04229231286cfc  ml/datasets/cc0_faces_lamiarts.zip' | sha256sum -c -
+      - name: Train actual part-factor neural recognition and generate 32 uncompromised feature portraits
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '2'
+        run: python -m ml.style2.face_parts_structured --steps 340
+      - name: Validate weights, non-trivial heldout accuracy and output integrity
+        run: python -m ml.style2.verify_face_parts_structured
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: face-part-preserving-32-trained-model
+          path: site/pixel-lab/style2/face-structure/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Publish result to PixelLab after successful validation
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main
