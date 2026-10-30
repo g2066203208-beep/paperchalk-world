@@ -41,6 +41,31 @@ try{
  assert.deepEqual(pixels.colors,report.palette.slice().sort());
  assert.equal(pixels.transparent,0);
  assert.equal(await page.locator('#oldD').getAttribute('width'),'384');
+
+ // Grid must be an actual per-source-pixel microscope, default visible.
+ const first=await page.evaluate(()=>({
+  grid:window.D_STANDING_STUDIO.microscope.gridVisible,
+  zoom:window.D_STANDING_STUDIO.microscope.zoom,
+  dimensions:window.D_STANDING_STUDIO.microscope.sourceDimensions,
+  color:window.D_STANDING_STUDIO.microscope.sample(172,110),
+  render:document.querySelector('#nativeGrid').toDataURL('image/png'),
+  source:document.querySelector('#dAvatar').src
+ }));
+ assert.equal(first.grid,true,'Per-pixel grid must start ON');
+ assert.equal(first.zoom,12,'Native pixels enlarged by exact integer 12x');
+ assert.deepEqual(first.dimensions,[384,512]);
+ assert.ok(report.palette.includes(first.color));
+ assert.equal(await page.locator('#nativeGrid').getAttribute('width'),'384');
+ await page.locator('#gridZoom').selectOption('16');
+ await page.locator('#gridFocus').selectOption('shoes');
+ assert.equal((await page.evaluate(()=>window.D_STANDING_STUDIO.microscope.zoom)),16);
+ const renderAfterZoom=await page.locator('#nativeGrid').evaluate(c=>c.toDataURL('image/png'));
+ assert.notEqual(first.render,renderAfterZoom,'Zoom/focus must redraw a genuinely different source-pixel region');
+ await page.locator('#gridVisible').uncheck();
+ assert.equal(await page.evaluate(()=>window.D_STANDING_STUDIO.microscope.gridVisible),false);
+ await page.locator('#gridVisible').check();
+ assert.equal(await page.evaluate(()=>window.D_STANDING_STUDIO.microscope.gridVisible),true);
+ assert.equal(await page.locator('#dAvatar').getAttribute('src'),'./d-standing-v1-384x512.png','Grid never modifies exported PNG');
  const pending=page.waitForEvent('download');
  await page.locator('a.action:not(.secondary)').click();
  const dl=await pending;assert.match(dl.suggestedFilename(),/D-standing-v1-384x512\.png/);
@@ -51,6 +76,8 @@ try{
  await mobile.goto(base,{waitUntil:'load'});
  await mobile.waitForFunction(()=>window.D_STANDING_STUDIO?.ready,{timeout:30000});
  assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+3),true,'No mobile horizontal overflow');
+ assert.equal(await mobile.locator('#gridVisible').isChecked(),true);
+ assert.equal(await mobile.locator('#nativeGrid').isVisible(),true);
  await mobile.screenshot({path:'repixel-browser-artifacts/D-standing-mobile.png',fullPage:true});
  assert.deepEqual(errors,[]);assert.deepEqual(mobileErrors,[]);
  console.log('PASS hosted D standing 384x512 image, exact RGB, ML evidence, download, old/new comparison and mobile');
