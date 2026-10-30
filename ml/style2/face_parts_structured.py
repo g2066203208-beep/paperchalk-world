@@ -43,7 +43,7 @@ def make_layer(z,role,index):
     if role=="shape":
         labels[nonblack]=3
         # Only actual reddish edge pixels get pink shading.
-        labels[alpha&(rgb[:,:,0]>130)&(rgb[:,:,1]<110)&(rgb[:,:,2]<100)]=1
+        labels[alpha&(rgb[:,:,0]>170)&(rgb[:,:,0]<230)&(rgb[:,:,1]<65)&(rgb[:,:,2]<100)]=1
     elif role=="feature":
         labels[nonblack]=0  # delicate eyes and brows need DARK ink
         cyan=alpha&(rgb[:,:,1]>170)&(rgb[:,:,2]>170)&(rgb[:,:,0]<150)
