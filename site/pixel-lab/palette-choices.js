@@ -3,8 +3,10 @@ import { drawWorld,validateWorld,WORLD_W,WORLD_H } from './palette-worlds.js';
 
 const $=id=>document.getElementById(id);
 const W=384,H=512;
-const model={palettes:[],tokens:null,canvases:new Map(),worlds:new Map(),active:'A',compare:'B',grid:true,focus:'face',inspectorOffset:{x:0,y:0}};
+const model={palettes:[],tokens:null,canvases:new Map(),worlds:new Map(),active:'A',compare:'B',category:'全部',search:'',grid:true,focus:'face',inspectorOffset:{x:0,y:0}};
 const $cards=$('cards');
+const allowedIds=Array.from({length:26},(_,i)=>String.fromCharCode(65+i)).concat(['AA','AB','AC','AD']);
+const allowedCategories=['复古年代','未来幻想','童话奇想','自然风物','暗黑奇谭','极端实验'];
 const regions={face:{x:154,y:112},sleeve:{x:319,y:217},skirt:{x:177,y:251},shoe:{x:199,y:449}};
 const inspect=$('inspectCanvas'),ic=inspect.getContext('2d',{willReadFrequently:true});
 const hexToRgb=h=>[1,3,5].map(p=>parseInt(h.slice(p,p+2),16));
@@ -117,6 +119,15 @@ function sampleInspector(event){
  $('inspectColor').textContent=hex+' · '+ROLES[n]+' · 第 '+(n+1)+' 色';
  $('inspectChip').style.background=hex;
 }
+function renderGallery(){
+ let shown=0;
+ for(const el of $cards.querySelectorAll('.palette-card')){
+  const p=find(el.dataset.id);
+  el.hidden=!((model.category==='全部'||p.category===model.category)&&(!model.search||[p.id,p.name,p.en,p.scene,p.description,p.shape].join(' ').toLowerCase().includes(model.search)));
+  if(!el.hidden)shown++;
+ }
+ $('showingCount').textContent='当前显示 '+shown+' / '+model.palettes.length+' 套';
+}
 function makeCard(p){
  const root=document.createElement('article');
  root.className='palette-card';root.dataset.id=p.id;root.setAttribute('aria-selected','false');
@@ -128,6 +139,7 @@ function makeCard(p){
  const badge=document.createElement('span');badge.className='card-id';badge.textContent=p.id;
  const title=document.createElement('strong');title.className='card-name';title.textContent=p.name;
  top.append(badge,title);
+ const category=document.createElement('span');category.className='card-category';category.textContent=p.category;
  const en=document.createElement('div');en.className='card-en';en.textContent=p.en.toUpperCase();
  const description=document.createElement('div');description.className='card-desc';description.textContent=p.description;
  const swatches=document.createElement('div');swatches.className='card-swatches';
@@ -147,7 +159,7 @@ function makeCard(p){
  const btn=document.createElement('button');btn.className='choose-button';btn.type='button';btn.textContent='选择此方案';
  btn.addEventListener('click',()=>setActive(p.id));
  const val=document.createElement('span');val.className='card-validate';val.textContent='4 COLORS · 0 SHADING';
- act.append(btn,val);info.append(top,en,description,swatches,worldBox,shape,act);root.append(wrap,info);
+ act.append(btn,val);info.append(top,category,en,description,swatches,worldBox,shape,act);root.append(wrap,info);
  return root;
 }
 function sourceImage(path){
@@ -160,13 +172,13 @@ async function boot(){
   const [res,img]=await Promise.all([fetch('./palette-choices.json'),sourceImage('./repixelized-384x512.png')]);
   if(!res.ok)throw Error('配色数据读取失败：HTTP '+res.status);
   model.palettes=await res.json();
-  if(!Array.isArray(model.palettes)||model.palettes.length!==8)throw Error('要求恰好8套候选配色');
+  if(!Array.isArray(model.palettes)||model.palettes.length!==30)throw Error('要求恰好30套候选配色');
   if(img.width!==W||img.height!==H)throw Error('源图尺寸不正确：'+img.width+'×'+img.height);
   const src=document.createElement('canvas');src.width=W;src.height=H;
   const sx=src.getContext('2d',{willReadFrequently:true});sx.drawImage(img,0,0);
   model.tokens=readSourceTokens(sx.getImageData(0,0,W,H).data);
   for(const p of model.palettes){
-   if(!/^[A-H]$/.test(p.id)||!Array.isArray(p.colors)||p.colors.length!==4||p.colors.some(h=>!/^#[0-9A-Fa-f]{6}$/.test(h)))throw Error('配色数据格式错误：'+p.id);
+   if(!allowedIds.includes(p.id)||!allowedCategories.includes(p.category)||!Array.isArray(p.colors)||p.colors.length!==4||new Set(p.colors).size!==4||p.colors.some(h=>!/^#[0-9A-Fa-f]{6}$/.test(h)))throw Error('配色数据格式错误：'+p.id);
    const canvas=document.createElement('canvas');canvas.width=W;canvas.height=H;
    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=false;
    const image=ctx.createImageData(W,H);recolor(model.tokens,p.colors,image.data);
@@ -184,18 +196,25 @@ async function boot(){
   }
   choose.value=model.compare;
   $cards.replaceChildren(...model.palettes.map(makeCard));
+  const categorySelect=$('categorySelect');
+  for(const category of allowedCategories){const opt=document.createElement('option');opt.value=category;opt.textContent=category+' · '+model.palettes.filter(p=>p.category===category).length+' 套';categorySelect.append(opt);}
+  renderGallery();
   const urlId=new URLSearchParams(location.search).get('p');
   const id=model.palettes.some(p=>p.id===urlId)?urlId:'A';
   window.PALETTE_STUDIO={
    ready:true,active:id,compare:model.compare,
-   palettes:()=>model.palettes.map(p=>({id:p.id,colors:p.colors.slice(),name:p.name})),
+   palettes:()=>model.palettes.map(p=>({id:p.id,colors:p.colors.slice(),name:p.name,category:p.category,scene:p.scene})),
+   visible:()=>Array.from($cards.querySelectorAll('.palette-card:not([hidden])')).map(el=>el.dataset.id),
    inspect:(letter)=>{const p=find(letter||model.active);const data=model.canvases.get(p.id).getContext('2d',{willReadFrequently:true}).getImageData(0,0,W,H).data;return {id:p.id,...validateCanvas(data,p.colors),world:validateWorld(model.worlds.get(p.id),p.colors),width:W,height:H,sourceTokens:model.tokens.length,grid:model.grid};},
    snapshot:(letter)=>model.canvases.get(find(letter||model.active).id).toDataURL('image/png')
   };
   setActive(id);$('downloadPNG').disabled=false;$('copyHEX').disabled=false;$('downloadJSON').disabled=false;
-  $('status').textContent='8套差异化美术方向已加载：每套人物 + 原创场景 + HUD，均严格四色。点击任何一套比较。';
+  $('status').textContent='30套原创美术方向已加载：每套人物 + 独立场景 + HUD，均严格四色。可筛选、搜索并左右对比。';
  }catch(err){$('status').classList.add('error');$('status').textContent='载入失败：'+err.message+'。请检查 GitHub Actions 是否已经发布源图。';console.error(err);}
 }
+$('categorySelect').addEventListener('change',e=>{model.category=e.target.value;renderGallery();});
+$('paletteSearch').addEventListener('input',e=>{model.search=e.target.value.trim().toLowerCase();renderGallery();});
+$('clearFilters').addEventListener('click',()=>{model.category='全部';model.search='';$('categorySelect').value='全部';$('paletteSearch').value='';renderGallery();});
 $('compareSelect').addEventListener('change',e=>setCompare(e.target.value));
 $('showGrid').addEventListener('change',e=>{model.grid=e.target.checked;drawInspector();});
 $('inspectPart').addEventListener('change',e=>{model.focus=e.target.value;drawInspector();});
