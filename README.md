@@ -1,3 +1,21 @@
+# PAPERWORLD · 手机版移动与体感蹲起修复（2026-10-30）
+
+测试入口：https://g2066203208-beep.github.io/paperchalk-world/?world3d=1&v=20261030-world3d-motionfix4
+
+### 本轮真实代码修复
+
+- **前进和后退**：3D画面左侧两个大按键可长按，按下立刻运动、松手停止，无需任何传感器。左侧摇杆也可前后行走。
+- **体感踏步**：可设置「踏步方向：前进/后退」，步伐检测的加速度峰值默认降低到0.84m/s²，允许用户自行调到0.45~1.8m/s²。修复老版EMA平滑残留导致识别器无法重新准备下一步的问题，默认200毫秒最短间隔，约900毫秒无新步后自动衰减至停下。按键/摇杆方向永远优先于体感步伐。
+- **手机真实蹲起动作识别**：独立按钮「体感蹲起」，读取DeviceMotion的去重力加速度，将手机坐标转换到游戏世界Z竖直轴。检测向下运动—刹停（负、正两个加速度阶段）切换到蹲下，检测反向的向上—刹停切换到站立，包含两阶段时间窗、回差/冷却和开关，不能靠晃一下、静止或视角转动来触发。开启蹲起时禁用踏步，以避免同一波运动既蹲下又走路；趴下仍有独立按钮。
+- **系统兼容**：当DeviceMotion.acceleration为null，改用accelerationIncludingGravity的低通重力估计与高通分量。保持iOS请求权限的显式按钮；没有传感器时前后按钮、摇杆、电脑WASD/Ctrl/Z/X照常可用。
+- **传感器局限**：普通DeviceOrientation/DeviceMotion给方向、角速度和加速度，不能准确输出现实空间的X/Y/Z坐标；这里的蹲起是动作识别不是对身体身高的测量。真实6DoF绝对/相对空间追踪需要视觉惯性SLAM（ARCore、支持的WebXR和摄像头），目前**没有实现ARCore的实时相机定位**，不会冒充已经实现。
+- **缓存与部署**：原GitHub Pages首页、菜单模块、WebGL模块及新控制器版本标记同步为motionfix4；GitHub Actions加入静态四端浏览器操作脚本和动作识别回归。代码提交不代表Pages/安卓真机已经验收。
+
+主要文件：site/game/locomotion3d.js、site/game/world3d.js、site/index.html、site/game/stage.css。
+回归：tests/locomotion3d.test.mjs、tests/world3d-render.test.mjs、tests/game-browser.mjs。
+
+---
+
 # PAPERWORLD · 三维角色移动与手机体感姿态（2026-10-30）
 
 **直接测试：** https://g2066203208-beep.github.io/paperchalk-world/?world3d=1
