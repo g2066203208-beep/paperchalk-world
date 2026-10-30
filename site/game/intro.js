@@ -19,7 +19,7 @@ const smooth=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
 // 2. Close one-pixel gaps in foreground contour (3x3 dilate then erode).
 // 3. Flood-fill ONLY exterior background from image edges (4-connected).
 // 4. Preserve every remaining dark-purple interior pixel in original palette.
-function computeExteriorMask(data,w,h){
+export function computeExteriorMask(data,w,h){
  const len=w*h,barrier=new Uint8Array(len),dilated=new Uint8Array(len),closed=new Uint8Array(len);
  let originalInk=0,nonInk=0;
  for(let i=0;i<len;i++){
@@ -59,7 +59,7 @@ function computeExteriorMask(data,w,h){
  }
  return exterior;
 }
-function portraitLayers(image){
+export function portraitLayers(image){
  const w=image.width,h=image.height;
  const base=document.createElement('canvas');base.width=w;base.height=h;
  const ctx=base.getContext('2d',{willReadFrequently:true});
