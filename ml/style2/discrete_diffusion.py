@@ -1,10 +1,10 @@
-"""Tiny exact four-color masked discrete diffusion with parallel token editing.
+"""Tiny exact four-color masked discrete diffusion with parallel token editing and coarse composition conditioning.
 
 Research prototype inspired by:
  - MaskGIT (CVPR 2022), masked parallel decoding
  - Nemotron-Labs-Diffusion-Image (2026), correcting visible tokens
 
-NOT the official models. 48x64 native logical grid; outputs D palette.
+NOT the official models. 48x64 native logical grid; needs 12x16 coarse layout guide; outputs D palette.
 Two supplied images are one character in two poses, not two identities.
 Requires PyTorch (CPU works). After running ml.style2.prepare:
  python -m ml.style2.discrete_diffusion --steps 160
@@ -40,17 +40,24 @@ class DNet(nn.Module):
         super().__init__()
         self.embed=nn.Embedding(5,16)   # four exact colors + [MASK]
         self.pose=nn.Embedding(2,8)
-        self.stem=nn.Conv2d(28,n,3,padding=1)
+        self.stem=nn.Conv2d(32,n,3,padding=1)
         self.blocks=nn.Sequential(*(Block(n,d) for d in (1,2,4,8,8,4,2,1)))
         self.head=nn.Sequential(nn.GroupNorm(8,n),nn.SiLU(),nn.Conv2d(n,4,1))
-    def forward(self,a,p,t):
+    def forward(self,a,p,t,guide):
         b,h,w=a.shape
         e=self.embed(a).permute(0,3,1,2)
         q=self.pose(p)[:,:,None,None].expand(-1,-1,h,w)
         y=torch.linspace(-1,1,h)[None,None,:,None].expand(b,1,h,w)
         x=torch.linspace(-1,1,w)[None,None,None,:].expand(b,1,h,w)
         t=t[:,None,None,None].expand(b,1,h,w)
-        return self.head(self.blocks(self.stem(torch.cat((e,q,x,y,t,1-t),1))))
+        g=F.one_hot(guide,4).permute(0,3,1,2).float()
+        return self.head(self.blocks(self.stem(torch.cat((e,q,x,y,t,1-t,g),1))))
+
+def coarse_guide(tokens):
+    # Area-voted D palette color masses at 12x16; not the source pixel grid.
+    one=F.one_hot(tokens,4).permute(0,3,1,2).float()
+    sampled=F.avg_pool2d(one,4).argmax(1).float()[:,None]
+    return F.interpolate(sampled,size=(H,W),mode="nearest")[:,0].long()
 
 def batch(images,rng,b=12):
     choices=rng.integers(0,2,b)
@@ -70,16 +77,17 @@ def batch(images,rng,b=12):
     bad=torch.from_numpy(rng.integers(0,4,(b,H,W),dtype=np.int64))
     inp=clean.clone()
     inp[mask]=4;inp[corrupted]=bad[corrupted]
-    return clean,poses,noise,inp,mask,corrupted
+    return clean,poses,noise,inp,mask,corrupted,coarse_guide(clean)
 
 @torch.no_grad()
-def generate(net,pose=1,seed=20261030,passes=8,part=None,allow_edit=True):
+def generate(net,pose=1,seed=20261030,passes=8,part=None,allow_edit=True,guide=None):
     torch.manual_seed(seed)
     seq=torch.full((1,H,W),4,dtype=torch.long) if part is None else part[None].clone()
     p=torch.tensor([pose])
+    if guide is None:raise ValueError('A coarse layout guide is necessary with only two training sprites')
     for step in range(passes):
         ratio=(seq==4).float().mean().view(1)
-        probabilities=F.softmax(net(seq,p,ratio)[0].permute(1,2,0)/max(.75,1.25-.06*step),-1)
+        probabilities=F.softmax(net(seq,p,ratio,guide[None])[0].permute(1,2,0)/max(.75,1.25-.06*step),-1)
         confidence,prediction=probabilities.max(-1)
         unknown=seq[0]==4
         if allow_edit and step:
@@ -105,8 +113,8 @@ def run(steps=160,out=ROOT,seed=20261030):
     net=DNet();optim=torch.optim.AdamW(net.parameters(),lr=.001,weight_decay=.001)
     trajectory=[];start=time.time()
     for step in range(steps):
-        target,pose,ratio,noisy,hidden,bad=batch(originals,rng)
-        logits=net(noisy,pose,ratio)
+        target,pose,ratio,noisy,hidden,bad,guide=batch(originals,rng)
+        logits=net(noisy,pose,ratio,guide)
         weight=torch.where(target==0,1.,4.)*(torch.where(hidden,2.,.25)+bad.float()*2.)
         loss=(F.cross_entropy(logits,target,reduction="none")*weight).sum()/weight.sum()
         optim.zero_grad();loss.backward();nn.utils.clip_grad_norm_(net.parameters(),2.);optim.step()
@@ -116,17 +124,20 @@ def run(steps=160,out=ROOT,seed=20261030):
     for i,source in enumerate(originals):
         tag="A" if i==0 else "B"
         png(source,out/f"{tag}_original.png")
-        generated=generate(net,i,seed+i)
+        guide=coarse_guide(source[None])[0]
+        png(guide,out/f"{tag}_coarse.png")
+        generated=generate(net,i,seed+i,guide=guide)
         png(generated,out/f"{tag}_generated.png")
         mask=torch.from_numpy(rng.random((H,W))<.55)
         partial=source.clone();partial[mask]=4
-        repaired=generate(net,i,seed+100+i,part=partial)
+        repaired=generate(net,i,seed+100+i,part=partial,guide=guide)
         png(repaired,out/f"{tag}_repair.png")
         validations.append({"pose":tag,
           "mask55_recovery":round(float((repaired[mask]==source[mask]).float().mean()),4),
           "all_background_baseline":round(float((source[mask]==0).float().mean()),4),
-          "from_full_mask_agreement":round(float((generated==source).float().mean()),4)})
-    report={"method":"Masked discrete diffusion + visible token editing, small convolutional denoiser",
+          "from_full_mask_agreement":round(float((generated==source).float().mean()),4),
+          "coarse_layout_baseline":round(float((guide==source).float().mean()),4)})
+    report={"method":"Coarse-layout-conditioned masked discrete diffusion + visible token editing, small convolutional denoiser",
        "not_official_Nemotron":True,"palette":["#393657","#F2A5C2","#A9BAE9","#FFF5E6"],
        "grid":[W,H],"images":2,"distinct_character_identities":1,
        "parameters":sum(p.numel() for p in net.parameters()),
