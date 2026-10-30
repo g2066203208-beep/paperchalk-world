@@ -176,7 +176,7 @@ def run(steps=360,seed=20261030,out=OUT):
         save(pred,out/(f"candidate_{i:02}.png"))
         candidates.append({"file":f"candidate_{i:02}.png","source":"A_dynamic guided structural variation",
                            "approved":False})
-    sheet=Image.new("RGB",(SIDE*4*3,SIDE*4*4),tuple(PAL[0]))
+    sheet=Image.new("RGB",(SIDE*4*3,SIDE*4*3),tuple(PAL[0]))
     d=ImageDraw.Draw(sheet)
     for i,c in enumerate(candidates):
         image=Image.open(out/c["file"]).resize((SIDE*3,SIDE*3),Image.Resampling.NEAREST)
