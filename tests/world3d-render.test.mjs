@@ -51,4 +51,17 @@ test('world3d requests sensor only from a click, gives recenter, touch/keyboard 
  assert.match(html,/id="pw-motion-sensitivity"/);
  assert.match(html,/id="pw-motion-response"/);
  assert.match(html,/id="pw-lease-enter-world"/);
+ assert.match(html,/id="pw-forward-hold"/);
+ assert.match(html,/id="pw-back-hold"/);
+ assert.match(html,/id="pw-walk-direction"/);
+ assert.match(html,/id="pw-squat-motion"/);
+ assert.match(html,/id="pw-gait-threshold"/);
+ assert.match(source,/bindWalkHold\('pw-forward-hold',1\)/);
+ assert.match(source,/bindWalkHold\('pw-back-hold',-1\)/);
+ assert.match(source,/deviceQuaternion\(o\.alpha,o\.beta,o\.gamma,0\)/);
+ assert.match(source,/rotate\(q,\[a\.x,a\.y,a\.z\]\)\[2\]/);
+ assert.match(source,/motor\.ingestVerticalAcceleration\(up,now\)/);
+ assert.match(source,/motor\.setWalkDirection\(-motor\.stepDirection\)/);
+ assert.match(source,/accelerationIncludingGravity/);
+
 });
