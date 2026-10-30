@@ -79,188 +79,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Include optional PixelLab model outputs (must never block game website)
-        continue-on-error: true
-        timeout-minutes: 2
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Ship only checked-in current PixelLab full-figure evidence
         run: |
           set -euo pipefail
-          BATH_RUN=$(gh run list --workflow bath-girl-ml.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$BATH_RUN" ] && [ "$BATH_RUN" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/bath-girl"
-            gh run download "$BATH_RUN" --name pixel-bath-girl-converted-and-trained --dir "$RUNNER_TEMP/bath-girl"
-            mkdir -p site/pixel-lab/style2/bath-girl
-            if [ -s "$RUNNER_TEMP/bath-girl/report.json" ]; then
-              cp -a "$RUNNER_TEMP/bath-girl/." site/pixel-lab/style2/bath-girl/
-            elif [ -s "$RUNNER_TEMP/bath-girl/site/pixel-lab/style2/bath-girl/report.json" ]; then
-              cp -a "$RUNNER_TEMP/bath-girl/site/pixel-lab/style2/bath-girl/." site/pixel-lab/style2/bath-girl/
-            else
-              echo "::error::Bath-girl training artifact missing report.json"; exit 1
-            fi
-            python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('site/pixel-lab/style2/bath-girl')
-          r=json.loads((p/'report.json').read_text())
-          assert r['grid']==[384,512] and r['eligible_for_gold_training']==False
-          assert r['learning']['steps']>=100 and (p/'candidate_384x512.png').is_file()
-          print('PASS: package audited exact-four-color new art plus actual ML training')
-          PY
-          else
-            echo "::warning::New-artwork machine-learning workflow has no successful run yet"
-          fi
-
-          FULLBODY_RUN=$(gh run list --workflow fullbody-16.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$FULLBODY_RUN" ] && [ "$FULLBODY_RUN" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/fullbody-16"
-            gh run download "$FULLBODY_RUN" --name pixel-sixteen-fullbody-384x512-model-and-gallery --dir "$RUNNER_TEMP/fullbody-16"
-            test -s "$RUNNER_TEMP/fullbody-16/site/pixel-lab/style2/fullbody-16/report.json"
-            mkdir -p site/pixel-lab/style2/fullbody-16
-            cp -a "$RUNNER_TEMP/fullbody-16/site/pixel-lab/style2/fullbody-16/." site/pixel-lab/style2/fullbody-16/
-            python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('site/pixel-lab/style2/fullbody-16')
-          d=json.loads((p/'report.json').read_text())
-          assert d['number_outputs']==16 and d['output_grid']==[384,512] and d['not_16_independent_identities']
-          assert len(list(p.glob('fullbody_*.png')))==16
-          print('PASS: 16 verified original face variants extended to complete 384x512 D fullbody PNGs')
-          PY
-          else
-            echo "::warning::Fullbody-16 training is not verified yet; gallery displays pending status"
-          fi
-          V5_ID=$(gh run list --workflow geometry-v5.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          test -n "$V5_ID" && test "$V5_ID" != "null" || { echo "::error::No successful V5 model run to publish"; exit 1; }
-          mkdir -p "$RUNNER_TEMP/pixel-v5"
-          gh run download "$V5_ID" --name pixel-v5-geometry-real-model-and-evidence --dir "$RUNNER_TEMP/pixel-v5"
-          test -s "$RUNNER_TEMP/pixel-v5/site/pixel-lab/style2/geometry-v5/report.json"
-          mkdir -p site/pixel-lab/style2/geometry-v5
-          cp -a "$RUNNER_TEMP/pixel-v5/site/pixel-lab/style2/geometry-v5/." site/pixel-lab/style2/geometry-v5/
-
-          FACE_ID=$(gh run list --workflow face-train.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$FACE_ID" ] && [ "$FACE_ID" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/pixel-face"
-            gh run download "$FACE_ID" --name pixel-face-trained-samples-and-weights --dir "$RUNNER_TEMP/pixel-face"
-            test -s "$RUNNER_TEMP/pixel-face/site/pixel-lab/style2/face-lab/report.json"
-            mkdir -p site/pixel-lab/style2/face-lab
-            cp -a "$RUNNER_TEMP/pixel-face/site/pixel-lab/style2/face-lab/." site/pixel-lab/style2/face-lab/
-            python3 - <<'PY'
-          import json
-          from pathlib import Path
-          f=Path("site/pixel-lab/style2/face-lab")
-          r=json.loads((f/"report.json").read_text())
-          assert r["trained"] and r["grid"]==[96,96] and len(r["generated_candidates"])==16
-          assert r["human_approved_count"]==0 and (f/"contact_16.png").is_file()
-          print("PASS: packaged 16 exact-color trained face candidates with honesty checks")
-          PY
-          else
-            echo "::warning::Face training still running; face gallery will appear after verified workflow dispatches Pages"
-          fi
-
-          PARTS_RUN=$(gh run list --workflow face-parts.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$PARTS_RUN" ] && [ "$PARTS_RUN" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/face-parts"
-            gh run download "$PARTS_RUN" --name face-part-preserving-32-trained-model --dir "$RUNNER_TEMP/face-parts"
-            test -s "$RUNNER_TEMP/face-parts/site/pixel-lab/style2/face-structure/report.json"
-            mkdir -p site/pixel-lab/style2/face-structure
-            cp -a "$RUNNER_TEMP/face-parts/site/pixel-lab/style2/face-structure/." site/pixel-lab/style2/face-structure/
-            python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p=Path('site/pixel-lab/style2/face-structure')
-          d=json.loads((p/'report.json').read_text())
-          assert d['number_generated']==32 and d['sampled_unseen_combinations']
-          assert d['styles_approved_for_game']==0
-          assert (p/'face_31.png').is_file()
-          print('PASS: 32 distinct, feature-preserving CC0 face combinations included in Pages')
-          PY
-          else
-            echo "::warning::No successful part-preserving face model yet; awaiting training"
-          fi
-
-          GENERAL_RUN=$(gh run list --workflow face-general.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$GENERAL_RUN" ] && [ "$GENERAL_RUN" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/face-general"
-            gh run download "$GENERAL_RUN" --name pixel-generic-multiface-trained-weights-and-samples --dir "$RUNNER_TEMP/face-general"
-            test -s "$RUNNER_TEMP/face-general/site/pixel-lab/style2/face-general/general_report.json"
-            mkdir -p site/pixel-lab/style2/face-general
-            cp -a "$RUNNER_TEMP/face-general/site/pixel-lab/style2/face-general/." site/pixel-lab/style2/face-general/
-            python3 - <<'PY'
-          import json
-          from pathlib import Path
-          folder=Path('site/pixel-lab/style2/face-general')
-          report=json.loads((folder/'general_report.json').read_text())
-          assert report['pretrained'] and report['distinct_train_combinations']>=64 and report['candidate_count']>=8
-          assert (folder/'generated_00.png').is_file()
-          print('PASS: real multi-face training output packaged, not duplicated master poses')
-          PY
-          else
-            echo "::warning::No validated multi-face checkpoint yet; the generic-face gallery will show unready state"
-          fi
-
-          LEGACY_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq '[.artifacts[]|select(.name=="PixelLab-native-384-detail-and-composition" and .expired==false)][0].workflow_run.id')
-          if [ -n "$LEGACY_RUN" ] && [ "$LEGACY_RUN" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/pixel-legacy"
-            gh run download "$LEGACY_RUN" --name PixelLab-native-384-detail-and-composition --dir "$RUNNER_TEMP/pixel-legacy"
-            if [ -d "$RUNNER_TEMP/pixel-legacy/site/pixel-lab" ]; then
-              cp -a "$RUNNER_TEMP/pixel-legacy/site/pixel-lab/." site/pixel-lab/
-            fi
-          else
-            echo "::warning::No previous V2–V4 artifacts; leaving those pages as legacy references"
-          fi
-          # Some newer ML evidence artifacts omit historical V2/V3 model files.
-          # Fill in missing files from the last fully verified end-to-end PixelLab build.
-          if [ ! -s site/pixel-lab/style2/v3/report.json ]; then
-            if gh run download 41019933500 --name PixelLab-native-384-detail-and-composition --dir "$RUNNER_TEMP/pixel-full-history"; then
-              if [ -d "$RUNNER_TEMP/pixel-full-history/site/pixel-lab" ]; then
-                rsync -a --ignore-existing "$RUNNER_TEMP/pixel-full-history/site/pixel-lab/" site/pixel-lab/
-              fi
-            else
-              echo "::warning::Historical PixelLab model artifact expired; V2/V3 archive should be regenerated"
-            fi
-          fi
-          test -s site/pixel-lab/style2/geometry-v5/B_standing_pred_parts.png
           python3 - <<'PY'
           import json
           from pathlib import Path
-          r=json.loads(Path('site/pixel-lab/style2/geometry-v5/report.json').read_text())
-          assert r['trained'] and r['no_claim_real_3d'] and r['no_claim_new_character_generation']
-          assert len(r['preview'])==5
-          assert Path('site/pixel-lab/learn.html').read_text().find('V5 人体结构')!=-1
-          print('PASS: packaged V5 training report + real-character predictions + current V5 page')
+          p=Path("site/pixel-lab/fullbody-learning")
+          d=json.loads((p/"report.json").read_text(encoding="utf-8"))
+          assert d["trained_actual_full_canvas"] and d["native_model_grid"]==[384,512]
+          assert d["training_independent_identities"]==1
+          assert d["new_distinct_fullbody_characters_generated"]==0
+          for row in d["records"]:
+              assert (p/row["preview"]).is_file()
+              assert (p/row["reconstruction"]).is_file()
+          print("PASS: native whole-figure results checked in; no old tiny-face artifacts copied")
           PY
-      - name: Include verified newly uploaded character and learned multi-action prior
-        continue-on-error: true
-        timeout-minutes: 3
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          REF_ID=$(gh run list --workflow new-reference.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$REF_ID" ] && [ "$REF_ID" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/new-ref" site/pixel-lab/style2/new-reference
-            gh run download "$REF_ID" --name new-uploaded-384-native-pixel-and-ml-repair --dir "$RUNNER_TEMP/new-ref"
-            if [ -s "$RUNNER_TEMP/new-ref/modern-pink-hair-384x512.png" ]; then
-              cp -a "$RUNNER_TEMP/new-ref/." site/pixel-lab/style2/new-reference/
-            else
-              cp -a "$RUNNER_TEMP/new-ref/site/pixel-lab/style2/new-reference/." site/pixel-lab/style2/new-reference/
-            fi
-            test -s site/pixel-lab/style2/new-reference/ml_report.json
-            test -s site/pixel-lab/style2/new-reference/modern-pink-hair-384x512.png
-          fi
-          MOTION_ID=$(gh run list --workflow motion-prior.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -n "$MOTION_ID" ] && [ "$MOTION_ID" != "null" ]; then
-            mkdir -p "$RUNNER_TEMP/motion-prior" site/pixel-lab/style2/motion-prior
-            gh run download "$MOTION_ID" --name trained-multi-person-cc0-motion-prior --dir "$RUNNER_TEMP/motion-prior"
-            if [ -s "$RUNNER_TEMP/motion-prior/report.json" ]; then
-              cp -a "$RUNNER_TEMP/motion-prior/." site/pixel-lab/style2/motion-prior/
-            else
-              cp -a "$RUNNER_TEMP/motion-prior/site/pixel-lab/style2/motion-prior/." site/pixel-lab/style2/motion-prior/
-            fi
-            test -s site/pixel-lab/style2/motion-prior/contact.png
-          fi
-          echo "PixelLab uploaded reference and learned motion-prior artifacts packaged"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
