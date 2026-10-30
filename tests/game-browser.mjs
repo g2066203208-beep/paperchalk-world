@@ -170,7 +170,9 @@ try{
   await waitScene(page,'intro');
   const distant=(await state(page)).intro;
   assert.equal(distant.phase,'approaching');
-  assert.ok(distant.scale<=.40,'owner initially appears small and far from camera');
+  const revealScale=(await state(page)).introRevealScale;
+  assert.ok(revealScale>=.23&&revealScale<=.25,'owner is small at the first visible reveal frame');
+  assert.ok(distant.scale>=revealScale&&distant.scale<1,'owner continues approaching after paper reveal');
   await page.screenshot({path:'artifacts/game/'+screen+'-far-owner.png'});
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.phase==='talk',{timeout:6500});
   const near=(await state(page)).intro;
