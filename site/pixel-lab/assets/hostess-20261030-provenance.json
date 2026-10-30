@@ -1,0 +1,24 @@
+{
+  "origin": "GPT-generated illustration displayed 2026-10-30",
+  "source_filename": "粉发少女像素女仆立绘.png",
+  "source_dimensions": [
+    1086,
+    1448
+  ],
+  "source_sha256": "aca554adc8806d90797309aca166a1bd3dda456337e2a97667976f3e06a8401b",
+  "native_figure_dimensions": [
+    192,
+    256
+  ],
+  "palette": [
+    "transparent",
+    "#393657",
+    "#F2A5C2",
+    "#A9BAE9",
+    "#FFF5E6"
+  ],
+  "source_image_in_repo": false,
+  "art_approved": false,
+  "native_png_sha256": "f04ed6604f428f0c81d3f468b9ddf5973e7d75a459b8561851e16307e08cb30b",
+  "note": "Source 1086x1448 PNG needs archival binary import separately; PNG stored here is computed color-restricted derivative, not original and not proof of artistic readiness."
+}
