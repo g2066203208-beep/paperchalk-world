@@ -34,7 +34,7 @@ try{
         controls:document.querySelectorAll('button,input,select,textarea,a,img,.screen-shell,.dialogue,#app').length,
         imageRendering:getComputedStyle(canvas).imageRendering};
     });
-    assert.deepEqual(info.colors,['242,165,194,255','255,245,230,255'],'only exact D pink and cream output');
+    assert.deepEqual(info.colors,['169,186,233,255','255,245,230,255'],'only exact D pink and cream output');
     assert.equal(info.sceneCount,1,'exactly one background canvas');
     assert.equal(info.controls,0,'no legacy UI/portrait/dialogue/menu elements');
     assert.equal(info.canvasWidth,Math.ceil(info.innerWidth/4)+80,'one full 80-cell seamless overscan');
@@ -43,13 +43,13 @@ try{
     assert.ok(info.rect.height>=info.innerHeight && info.rect.height<info.innerHeight+4);
     assert.equal(info.imageRendering,'pixelated');
     const fn=await page.evaluate(async()=>{
-      const m=await import('./game/background.js?v=20261030-smooth1');
+      const m=await import('./game/background.js?v=20261030-blue1');
       return {palette:m.PALETTE,colors:[m.BACKGROUND,m.STRIPE],wrap:[...Array(20)].every((_,i)=>m.stripeAt(i,42,0)===m.stripeAt(i,42,80)),
         loop:m.phaseFromSeconds(0)===m.phaseFromSeconds(36),
         motion:[...Array(80)].some((_,x)=>m.stripeAt(x,1,0)!==m.stripeAt(x,1,20))};
     });
     assert.deepEqual(fn.palette,['#393657','#F2A5C2','#A9BAE9','#FFF5E6']);
-    assert.deepEqual(fn.colors,['#FFF5E6','#F2A5C2']);
+    assert.deepEqual(fn.colors,['#FFF5E6','#A9BAE9']);
     assert.ok(fn.wrap&&fn.loop&&fn.motion,'real seamless movement with period');
     const compositor=await page.evaluate(()=>{
       const c=document.getElementById('background');
