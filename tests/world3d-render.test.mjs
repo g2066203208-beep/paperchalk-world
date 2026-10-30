@@ -37,7 +37,7 @@ test('3D world has genuine 3D eye-translation peek, no inertial walking or fake 
  assert.match(world,/onNativeQuaternion/);
  assert.match(world,/setComfort\(comfort\)/);
  assert.match(lean,/protectedLean/);
- assert.match(lean,/offset:eased\*LEAN_MAX/);
+ assert.match(lean,/offset:v\*max/);
  assert.doesNotMatch(world,/devicemotion|onAcceleration|ingestVerticalAcceleration|walkMode|physicalStanceMode|pw-walk-toggle|pw-posture-hold/);
  assert.match(world,/bindHold\('pw-forward-hold',/);
  assert.match(world,/bindHold\('pw-back-hold',/);
