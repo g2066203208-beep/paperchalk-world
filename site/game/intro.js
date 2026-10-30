@@ -100,8 +100,14 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
  img.onload=()=>{
   const built=portraitLayers(img);art=built.clean;far=built.distant;loaded=true;
  };
- img.onerror=()=>{failed=true};
- img.src=HOSTESS_PNG;
+ // Physical PNG file first; the exact embedded original is a fallback only.
+ // It is NEVER joined to the cabinet at any stage of rendering.
+ let hostessFallback=false;
+ img.onerror=()=>{
+  if(!hostessFallback){hostessFallback=true;img.src=HOSTESS_PNG}
+  else failed=true;
+ };
+ img.src='./game/art/hostess-original-4ink.png?v=20261031-separated2';
  let t=0,line=0,shown=0,completionSent=false;
  const length=()=>[...SHOP_LINES[line]].length;
  function enter(){
