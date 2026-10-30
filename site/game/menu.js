@@ -9,6 +9,7 @@ const COL={ink:'#393657',pink:'#F2A5C2',blue:'#A9BAE9',paper:'#FFF5E6'};
 const ORDER=['开始游戏','继续游戏','设置','退出游戏'];
 const KEY='paperworld-menu-v3',SAVE='paperworld-journey-v1';
 const el=document.getElementById('menu'), bg=document.getElementById('background');
+const nativeLabels=document.getElementById('pw-menu-labels');
 const ctx=el.getContext('2d',{alpha:true,willReadFrequently:false});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let prefs={motion:!reduced,particles:!reduced,haptic:true};
@@ -97,12 +98,28 @@ function layout(){
  buttons();
 }
 function buttons(){
- if(state==='intro'||state==='lease'){btns=[];return}
+ if(state==='intro'||state==='lease'){btns=[];updateNativeLabels();return}
  btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','点击粒子','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
  else{bw=Math.round(clamp(W*.81,132,230));bh=Math.round(clamp(H*.078,28,37));gap=Math.round(clamp(H*.023,7,12));cx=Math.round(W*.5);top=Math.round(clamp(H*.48,155,H-(names.length*(bh+gap)+33)))}
  for(let i=0;i<names.length;i++)btns.push({label:names[i],x:cx-bw/2,y:top+i*(bh+gap),w:bw,h:bh,index:i});
+ updateNativeLabels();
+}
+function updateNativeLabels(){
+ if(!nativeLabels)return;
+ nativeLabels.replaceChildren();
+ if(state==='intro'||state==='lease')return;
+ for(let i=0;i<btns.length;i++){
+  const b=btns[i],label=document.createElement('span');
+  label.className='pw-menu-label';
+  let words=b.label;
+  if(state==='settings'&&i<3)words+=' · '+(i===0?(prefs.motion?'开':'关'):i===1?(prefs.particles?'开':'关'):(prefs.haptic?'开':'关'));
+  label.textContent=words;
+  label.style.left=Math.round((b.x+b.w*.58)*2)+'px';
+  label.style.top=Math.round((b.y+b.h*.51)*2)+'px';
+  nativeLabels.appendChild(label);
+ }
 }
 function titleArtwork(){
  const cx=Math.round(land?W*.28:W*.5),by=Math.round(land?H*.49:H*.265);
@@ -132,7 +149,7 @@ function drawButton(b,i){
  let sprite=glyphBitmap(label,hFont);
  while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
  const labelCenter=x+w*.58;const labelX=Math.round(labelCenter),labelY=Math.round(y+(h-sprite.h)/2);
- text(label,labelX,labelY,hFont,COL.ink);
+ if(!nativeLabels)text(label,labelX,labelY,hFont,COL.ink);
  buttonIcon(state==='menu'?['play','continue','gear','exit'][i]:'back',x+w*.17,y+h*.5,Math.round(h*.36),COL.ink);
  if(disabled){ // Do not pretend "Continue" works without an actual stored start.
   R(x+w-20,y+h-8,2,2,COL.blue)
@@ -181,6 +198,7 @@ function switchScene(next){
  if(state==='intro')intro.leave();
  if(state==='lease')lease.hide();
  if(reduced){enterScene(next);if(next==='lease')lease.show({receipt:!!lease.snapshot().hasContract});return}
+ if(nativeLabels)nativeLabels.style.visibility='hidden';
  curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
 }
 function updateCurtain(dt){
@@ -190,6 +208,7 @@ function updateCurtain(dt){
   enterScene(curtain.next);curtain.phase='open';curtain.elapsed=0;
  }else if(curtain.phase==='open'&&curtain.elapsed>=OPEN_TIME){
   curtain=null;
+  if(nativeLabels)nativeLabels.style.visibility='visible';
   if(state==='lease')lease.show({receipt:lease.snapshot().hasContract});
 }
 }
