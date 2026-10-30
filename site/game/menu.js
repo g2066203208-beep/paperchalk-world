@@ -130,7 +130,7 @@ function titleArtwork(){
  }else plane(cx+size*.035,by-size*.55,size*.6);
  const orbitR=size*.49;
  for(let i=0;i<27;i++){const a=i/27*Math.PI*1.7+.2;const xx=cx+Math.cos(a)*orbitR,yy=by+Math.sin(a)*size*.40;if(i%3===0)R(xx,yy,2,2,COL.ink)}
- const zoom=Math.max(2,Math.floor(size/(10*6)));
+ const zoom=Math.max(2,Math.floor((land?size:W-14)/(10*6)));
  const wordW=10*6*zoom-zoom,wordY=Math.round(by-size*.08);
  panel(cx-wordW/2-7,wordY-6,wordW+14,7*zoom+13,COL.ink,4);
  latin('PAPERWORLD',cx+2,wordY+2,zoom,COL.pink);
