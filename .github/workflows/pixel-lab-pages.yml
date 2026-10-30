@@ -28,6 +28,7 @@ jobs:
           node --test tests/pixel-lab-structure.test.mjs
           node --test tests/hostess-redraw-native.test.mjs
           node --test tests/refiner-native.test.mjs
+          node --test tests/pixel-audit.test.mjs
           node --test tests/character-browser.mjs
       - name: Refuse to label failed model samples as approved character art
         run: |
@@ -58,13 +59,17 @@ jobs:
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Test actual whole-figure ML pixel comparison on phone and desktop
-        run: node tests/refiner-browser.mjs
+        run: |
+          node tests/refiner-browser.mjs
+          node tests/pixel-audit-browser.mjs
       - name: Save screenshots of original versus actual refined sprite
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: whole-figure-ml-retouch-real-browser-screenshots
-          path: artifacts/refine-review/
+          path: |
+            artifacts/refine-review/
+            artifacts/pixel-audit/
           retention-days: 14
           if-no-files-found: warn
   deploy:
