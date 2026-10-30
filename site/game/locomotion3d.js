@@ -10,7 +10,7 @@ export const STANCES=Object.freeze({
  prone:{height:.43,speed:.48,radius:.32}
 });
 export function blocked(x,y,radius,solids=[]){
- if(Math.abs(x)>88-radius||Math.abs(y)>88-radius)return true;
+ if(Math.abs(x)>190-radius||Math.abs(y)>190-radius)return true;
  for(const box of solids){
   const bx=clamp(x,box.x-box.w/2,box.x+box.w/2);
   const by=clamp(y,box.y-box.d/2,box.y+box.d/2);
