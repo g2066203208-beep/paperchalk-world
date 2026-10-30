@@ -100,7 +100,7 @@ public final class MainActivity extends Activity {
 
     private final class PixelFileBridge {
         @JavascriptInterface public void saveBase64(String fileName, String dataUrl, String mime) {
-            if (!isTrustedSite() || fileName == null || dataUrl == null || mime == null) return;
+            if (fileName == null || dataUrl == null || mime == null) return;
             if (!"image/png".equals(mime) && !"application/json".equals(mime)) return;
             if (dataUrl.length() > 16_000_000 || !dataUrl.startsWith("data:" + mime + ";base64,")) return;
             String safeName = fileName.replaceAll("[^A-Za-z0-9._-]", "_");
@@ -113,6 +113,7 @@ public final class MainActivity extends Activity {
             } catch (IllegalArgumentException badBase64) { return; }
             if (bytes.length > 12_000_000) return;
             runOnUiThread(() -> {
+                if (!isTrustedSite()) return;
                 pendingExport = bytes;
                 Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
