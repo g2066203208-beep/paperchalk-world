@@ -2,9 +2,9 @@
  * WORLD: X forward / Y left / Z vertical. Geometry is real depth-tested
  * triangles with 4 exact palette colors; no Three/CDN/API dependency.
  */
-import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js';
-import {LeanCamera} from './lean3d.js';
-import {BodyMotor} from './locomotion3d.js?v=20261030-peek5';
+import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js?v=20261030-gyrocomfort6';
+import {LeanCamera} from './lean3d.js?v=20261030-gyrocomfort6';
+import {BodyMotor} from './locomotion3d.js?v=20261030-gyrocomfort6';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
 const PALETTE=[INK,PINK,BLUE,PAPER];
