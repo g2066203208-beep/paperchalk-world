@@ -96,6 +96,13 @@ jobs:
           OMP_NUM_THREADS: '2'
           OPENBLAS_NUM_THREADS: '1'
         run: python -m ml.style2.v4_pipeline --train
+      - name: Train V5 body volume, perspective, anatomical-part and joint supervision
+        env:
+          OPENBLAS_NUM_THREADS: '1'
+          OMP_NUM_THREADS: '2'
+        run: python -m ml.style2.volume_parts_v5 --steps 160
+      - name: Validate V5 learned anatomy, perspective, depth and joint predictions
+        run: python -m ml.style2.verify_volume_parts_v5
       - name: Train V3 full 384x512 native detail model on 48x48 true-pixel crops
         env:
           OPENBLAS_NUM_THREADS: '1'
