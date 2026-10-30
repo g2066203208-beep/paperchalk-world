@@ -1,0 +1,253 @@
+{
+  "trained": true,
+  "pipeline": "full_figure_stochastic_vae_v1",
+  "training_on_complete_fullbody": true,
+  "samples_are_decoder_only": true,
+  "sampling_uses_no_original_image_pixels": true,
+  "trained_grid": [
+    96,
+    128
+  ],
+  "export_grid": [
+    384,
+    512
+  ],
+  "export_is_nearest_neighbor_4x": true,
+  "native_384_detail_learned": false,
+  "data_source": "Limbicnation/pixel-art-character",
+  "dataset_revision": "aa83392",
+  "license": "Apache-2.0 as declared by dataset author",
+  "training_examples": 125,
+  "heldout_examples": 13,
+  "pose_groups": [
+    "resting",
+    "running",
+    "jumping",
+    "casting",
+    "combat"
+  ],
+  "steps": 1150,
+  "loss": [
+    {
+      "step": 1,
+      "loss": 0.92234,
+      "reconstruction_ce": 0.92232,
+      "kl": 0.00216
+    },
+    {
+      "step": 288,
+      "loss": 0.25324,
+      "reconstruction_ce": 0.24201,
+      "kl": 1.2482
+    },
+    {
+      "step": 576,
+      "loss": 0.16192,
+      "reconstruction_ce": 0.1517,
+      "kl": 1.13586
+    },
+    {
+      "step": 863,
+      "loss": 0.15111,
+      "reconstruction_ce": 0.13974,
+      "kl": 1.26359
+    },
+    {
+      "step": 1150,
+      "loss": 0.16873,
+      "reconstruction_ce": 0.15765,
+      "kl": 1.23123
+    }
+  ],
+  "generated_fullbody_count": 15,
+  "approved_for_game": 0,
+  "generated": [
+    {
+      "file": "generated_00.png",
+      "pose_condition": "resting",
+      "seed": 440,
+      "pose_training_examples": 26,
+      "sha256": "059c969b93212be0e9e5909d10ab99956c57ae6acde16e9e9c21da89a2e20d9a",
+      "foreground_fraction": 0.1582,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_01.png",
+      "pose_condition": "resting",
+      "seed": 440,
+      "pose_training_examples": 26,
+      "sha256": "e1eac8145274dcca6dbd971556d4f1ce3430caba9594e57b5fa24d7bf9f9a8a3",
+      "foreground_fraction": 0.1769,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_02.png",
+      "pose_condition": "resting",
+      "seed": 440,
+      "pose_training_examples": 26,
+      "sha256": "6213b84df3fd4004c4dcff56449a423f8dbf49f8aec2f9256cf765e702a5da9c",
+      "foreground_fraction": 0.1114,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_03.png",
+      "pose_condition": "running",
+      "seed": 441,
+      "pose_training_examples": 23,
+      "sha256": "9c510dc2c01d7f35a3a08b46bdc14b6207d4ab9f11faf1ae2d8863c4606b5161",
+      "foreground_fraction": 0.0864,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_04.png",
+      "pose_condition": "running",
+      "seed": 441,
+      "pose_training_examples": 23,
+      "sha256": "957be2c253a3724ad544d58644e64293ce18d656b1ecec2e0508450aa8182914",
+      "foreground_fraction": 0.1366,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_05.png",
+      "pose_condition": "running",
+      "seed": 441,
+      "pose_training_examples": 23,
+      "sha256": "4ac7962a241583530ce953340bc582a9430cdc5c781bc509e37a7620df7241b6",
+      "foreground_fraction": 0.1033,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_06.png",
+      "pose_condition": "jumping",
+      "seed": 442,
+      "pose_training_examples": 15,
+      "sha256": "834388374d1eb3abceac8322449f3be8459b68ce915e33b313542686e178e533",
+      "foreground_fraction": 0.1157,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_07.png",
+      "pose_condition": "jumping",
+      "seed": 442,
+      "pose_training_examples": 15,
+      "sha256": "d844b7ad005d2ab7f96654d2203cb572ed64356e30e4abe762fe1c79e0999f6f",
+      "foreground_fraction": 0.1108,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_08.png",
+      "pose_condition": "jumping",
+      "seed": 442,
+      "pose_training_examples": 15,
+      "sha256": "574a93718b09271b1050219a52af20e082813889dfe9e2389a0938a900d8453d",
+      "foreground_fraction": 0.1195,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_09.png",
+      "pose_condition": "casting",
+      "seed": 443,
+      "pose_training_examples": 9,
+      "sha256": "76a67938f608ccd559e80d146aed06b32cd8615c165089252c0635f84015fb70",
+      "foreground_fraction": 0.1913,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_10.png",
+      "pose_condition": "casting",
+      "seed": 443,
+      "pose_training_examples": 9,
+      "sha256": "abf033e8a5a306c747a547b0dbde0f48b16dfeff347eda913c6488ed36f276b8",
+      "foreground_fraction": 0.1989,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_11.png",
+      "pose_condition": "casting",
+      "seed": 443,
+      "pose_training_examples": 9,
+      "sha256": "da422334ce83635fd70f9a38ef347e31194306baef3d8477fe23f268d05ea23e",
+      "foreground_fraction": 0.1715,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_12.png",
+      "pose_condition": "combat",
+      "seed": 444,
+      "pose_training_examples": 33,
+      "sha256": "28458182ce710ae396413a83d7761c8f0fc1a0813e3f61e234fa0ce026555dbc",
+      "foreground_fraction": 0.1531,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_13.png",
+      "pose_condition": "combat",
+      "seed": 444,
+      "pose_training_examples": 33,
+      "sha256": "d7d237f24e4d0ce6c5c25042b48b1448dda5add619fff7c2b8585ce631873155",
+      "foreground_fraction": 0.1078,
+      "native_grid": [
+        96,
+        128
+      ]
+    },
+    {
+      "file": "generated_14.png",
+      "pose_condition": "combat",
+      "seed": 444,
+      "pose_training_examples": 33,
+      "sha256": "8ca94f1d2c594863bebbf393520382bd8147d501b87f66d3f91622a120e51fbb",
+      "foreground_fraction": 0.1185,
+      "native_grid": [
+        96,
+        128
+      ]
+    }
+  ],
+  "limitations": [
+    "CPU pilot; artistic quality and anatomy need manual inspection.",
+    "Output PNG grid 384x512 is upscaled from learned 96x128 and cannot claim original fine details.",
+    "Training dataset is synthetic, imperfect and has provenance uncertainty; only SFW-caption filtering was automatic.",
+    "Pose labels are weak captions rather than joint-controlled rigging.",
+    "New checksums do not prove artistic originality or playable animations."
+  ]
+}
