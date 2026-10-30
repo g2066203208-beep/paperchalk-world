@@ -68,7 +68,7 @@ async function checkPublishedVersion(){
     const response=await fetch('./?pw_version_check='+Date.now(),{cache:'no-store'});
     if(!response.ok)return;
     const html=await response.text();
-    const match=html.match(/background\\.js\\?v=([A-Za-z0-9._-]+)/);
+    const match=html.match(/background\.js\?v=([A-Za-z0-9._-]+)/);
     if(match && match[1]!==ACTIVE_BUILD){
       location.replace('./?apk=1&fresh='+Date.now());
     }
