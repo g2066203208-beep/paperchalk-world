@@ -64,6 +64,10 @@
 #pw-dialogue{touch-action:manipulation}
 #pw-lease-card{-webkit-overflow-scrolling:touch;scrollbar-color:var(--ink) var(--blue)}
 
+#pw-pixel-editor-link{position:absolute;z-index:6;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));pointer-events:auto;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:7px 11px;background:var(--paper);color:var(--ink);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--blue);font:900 13px/1.2 system-ui,sans-serif;touch-action:manipulation}
+#pw-pixel-editor-link:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+#pw-pixel-editor-link[hidden]{display:none!important}
+@media(max-width:420px){#pw-pixel-editor-link{font-size:12px;min-height:36px;padding:5px 8px;box-shadow:2px 2px 0 var(--blue)}}
 #pw-menu-labels{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
 .pw-menu-label{position:absolute;display:block;transform:translate(-50%,-50%);color:var(--ink);font-size:clamp(16px,4.4vw,20px);font-weight:800;line-height:1.15;white-space:nowrap;text-align:center;letter-spacing:.025em;text-shadow:none;user-select:none;pointer-events:none}
 
