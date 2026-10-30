@@ -1,62 +1,13 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#393657"><meta name="description" content="像素绘画学习：人物结构与全身动作研究、未通过验收的历史实验">
-<title>PIXEL LAB · 系统02 / 像素绘画学习</title>
-<style>
-:root{color-scheme:dark;--bg:#1d1b2d;--panel:#2b2941;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--paper);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
-a{color:var(--blue)}a:focus-visible,summary:focus-visible{outline:3px solid var(--pink);outline-offset:4px}
-nav{border-bottom:1px solid #635d7c;padding:14px max(18px,calc((100vw - 1080px)/2));display:flex;gap:20px;flex-wrap:wrap}
-main{max-width:1080px;margin:auto;padding:35px 18px 65px}
-.eyebrow{font-size:12px;color:var(--pink);letter-spacing:.14em;font-weight:900}
-h1{font-size:clamp(30px,5vw,45px);line-height:1.2;margin:10px 0 13px}
-h2{font-size:clamp(21px,3vw,26px);margin:6px 0 12px}
-.lead{max-width:780px;color:#cbc3dc}
-.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:28px 0}
-.card{border:1px solid #736b8b;background:var(--panel);border-radius:12px;padding:24px;display:flex;flex-direction:column;min-width:0}
-.card p{color:#d0c9dd;flex:1}
-.action{display:block;text-align:center;text-decoration:none;color:var(--ink);background:var(--pink);font-weight:900;padding:11px;border-radius:8px;min-height:44px}
-.card:nth-child(2) .action{background:var(--blue)}
-.status{background:#262338;border:1px solid #746986;border-radius:11px;padding:19px}
-.status h2{font-size:19px}.status p{color:#d0c9dd;margin:7px 0}
-details{margin-top:20px;border-top:1px solid #645d7a;padding:15px 0}
-summary{cursor:pointer;font-size:16px;font-weight:800}
-.archives{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:17px 0}
-.archives a{padding:10px 12px;border:1px solid #524d67;border-radius:7px;text-decoration:none;background:#29263f}
-.small{font-size:13px;color:#bbb4ca}
-@media(max-width:680px){.cards,.archives{grid-template-columns:1fr}.card{padding:19px}}
-</style></head><body>
-<nav><a href="./index.html">← PixelLab 首页</a><a href="./repixelize.html">01 真像素转换</a><a href="../index.html">返回游戏</a></nav>
-<main><div class="eyebrow">02 / DRAWING LEARNING</div>
-<h1>像素绘画学习</h1><p class="lead">只展示当前两条有效研究方向。训练指标、像素网格通过检查，并不代表人物设计已经达到可用于游戏的质量。</p>
-<section class="cards" aria-label="当前学习方向">
-<article class="card"><div class="eyebrow">FACE & EXPRESSION</div><h2>多人物脸型与五官</h2>
-<p>训练不同脸型、眼睛、发型和表情的结构组合。32张结果仍是候选实验，尚未通过正式美术审核。</p>
-<a class="action" href="./face-parts.html">检查多脸型训练</a></article>
-<article class="card"><div class="eyebrow">POSE & ANATOMY</div><h2>身体比例与动作</h2>
-<p>用不同人物的姿势先验检查肢体和动作变化，目标是能真正画出多身份、多服装、多姿势的新角色，而不是换脸与调色。</p>
-<a class="action" href="./motion-prior.html">检查动作先验</a></article>
-</section>
-<section class="status" aria-label="正式全身人物状态">
-<h2>全身人物美术验收：0 / 16</h2>
-<p>此前16张所谓全身人物来自同一身份的脸和两套身体母版，只是拓展合成，不是重新绘制。保留PNG及训练报告用于复查，但全部从正式成果展示撤下。</p>
-<p><a href="./fullbody-16.html">旧16张合成实验记录</a> · <a href="./hostess-matte.html">老板娘现有立绘抠图检查</a></p>
-</section>
-<details><summary>历史模型与素材实验（默认收起）</summary>
-<p class="small">以下为可追溯实验，不是当前游戏的正式资产。历史 GitHub Actions 产物若过期，部分图片可能无法加载。</p>
-<div class="archives">
-<a href="./face-structured.html">五官结构学习</a>
-<a href="./face-general.html">通用多脸训练</a>
-<a href="./face.html">旧16脸实验</a>
-<a href="./new-reference.html">上传人物参考图</a>
-<a href="./bath-girl.html">新人物转换候选</a>
-<a href="./style2/geometry-v5.html">V5 人体结构实验</a>
-<a href="./v4-review.html">V4 转换与母版审查</a>
-<a href="./d-standing.html">原D站姿母版网格</a>
-</div>
-<details><summary>早期模型诊断（V2–V3）</summary>
-<p id="v3-native" class="small">V3 细节还原研究：<a href="./style2/v3/report.json">训练报告</a>。历史参考脚本 native-detail-v3.js；尚未成为通用绘画模型。</p>
-<p id="pixel-v2" class="small">V2 低分辨率扩散研究：<a href="./style2/v2/report.json">训练报告</a>。历史参考脚本 diffusion-v2-gallery.js。</p>
-</details>
-</details>
-</main></body></html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="0;url=./fullbody-learning.html">
+<meta name="theme-color" content="#393657">
+<meta name="description" content="系统02只训练完整全身384×512人物立绘">
+<title>系统02 · 完整全身立绘训练</title>
+<style>body{margin:0;background:#1d1b2d;color:#FFF5E6;font:16px/1.65 system-ui;padding:40px}a{color:#F2A5C2}</style>
+</head><body>
+<main><h1>系统02 · 完整全身立绘训练</h1>
+<p>原来的脸部、小人动作与拼接研究已经退出当前训练系统。正在进入整幅384×512立绘训练与模型结果对照。</p>
+<p><a href="./fullbody-learning.html">进入完整全身立绘训练</a></p></main>
+</body></html>
