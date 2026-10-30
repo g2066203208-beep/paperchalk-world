@@ -43,8 +43,8 @@ jobs:
         run: node tests/browser.mjs
       - name: Test Character Atelier browser
         run: node tests/character-browser.mjs
-      - name: Verify four-color stripe game in four viewport sizes
-        run: node tests/stripe-background-browser.mjs
+      - name: Verify game root on desktop and mobile, palette and gameplay
+        run: node tests/game-browser.mjs
       - name: Verify pixel drawing editor
         run: node tests/flat4-browser.mjs
       - name: Verify hand-authored pixel master
