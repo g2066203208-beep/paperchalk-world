@@ -75,6 +75,8 @@ function update(){
  $('layer-count').textContent=project.layers.length+' / 16';
  $('undo').disabled=!undoStack.length;$('redo').disabled=!redoStack.length;
  $('delete-layer').disabled=project.layers.length<=1;$('delete-frame').disabled=project.frames.length<=1;
+ $('layer-up').disabled=project.activeLayer>=project.layers.length-1;
+ $('layer-down').disabled=project.activeLayer<=0;
  $('add-layer').disabled=project.layers.length>=16;$('add-frame').disabled=project.frames.length>=24;
  $('help').textContent=help[tool];
  $('zoom-label').textContent=Math.round(view.zoom*100)+'%';
@@ -101,16 +103,19 @@ function draw(){
  const step=8*z;
  for(let row=0;row<Math.ceil(project.height/8);row++)for(let col=0;col<Math.ceil(project.width/8);col++)
   if((row+col)%2===0)ctx.fillRect(ox+col*step,oy+row*step,step,step);
+ if(buffer.width!==project.width||buffer.height!==project.height){buffer.width=project.width;buffer.height=project.height}
+ const bctx=buffer.getContext('2d');bctx.clearRect(0,0,buffer.width,buffer.height);
+ bctx.drawImage(newBuffer(),0,0);
+ if($('onion').checked&&project.frames.length>1){
+  ctx.save();ctx.globalAlpha=.28;ctx.drawImage(newBuffer((project.activeFrame+project.frames.length-1)%project.frames.length),ox,oy,aw,ah);ctx.restore();
+ }
+ ctx.drawImage(buffer,ox,oy,aw,ah);
  if($('grid').checked&&z>=7){
   ctx.strokeStyle='rgba(57,54,87,.21)';ctx.lineWidth=1;ctx.beginPath();
   for(let x=0;x<=project.width;x++){const p=Math.round(ox+x*z)+.5;ctx.moveTo(p,oy);ctx.lineTo(p,oy+ah)}
   for(let y=0;y<=project.height;y++){const p=Math.round(oy+y*z)+.5;ctx.moveTo(ox,p);ctx.lineTo(ox+aw,p)}
   ctx.stroke();
  }
- if(buffer.width!==project.width||buffer.height!==project.height){buffer.width=project.width;buffer.height=project.height}
- const bctx=buffer.getContext('2d');bctx.clearRect(0,0,buffer.width,buffer.height);
- bctx.drawImage(newBuffer(),0,0);
- ctx.drawImage(buffer,ox,oy,aw,ah);
  if(selection&&selection.w&&selection.h){
   ctx.lineWidth=1;ctx.setLineDash([5,4]);ctx.strokeStyle='#FFF5E6';
   ctx.strokeRect(ox+selection.x*z+.5,oy+selection.y*z+.5,selection.w*z,selection.h*z);
@@ -242,6 +247,9 @@ function pointerUp(e){
  pointers.delete(e.pointerId);
  if(pinch){if(pointers.size<2)pinch=null;return}
  if(!drag)return;
+ if(['line','rect','ellipse'].includes(drag.mode)){
+  project=JSON.parse(drag.before);drawShape(drag.start,artPos(canvasPos(e)));
+ }
  if(drag.mode==='move'&&drag.baseSelection){
   const base=drag.baseSelection,next=selection;
   const clip=selectionCopy(project,base);selectionErase(project,base);selectionPaste(project,clip,next.x,next.y);
@@ -258,7 +266,7 @@ dom.canvas.addEventListener('contextmenu',e=>e.preventDefault());
 dom.view.addEventListener('dragover',e=>e.preventDefault());
 dom.view.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files[0])openFile(e.dataTransfer.files[0])});
 document.querySelectorAll('.tool').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));
-$('grid').addEventListener('change',draw);$('brush').addEventListener('input',e=>{brush=Number(e.target.value);$('brush-label').textContent=brush+'px'});
+$('grid').addEventListener('change',draw);$('onion').addEventListener('change',draw);$('brush').addEventListener('input',e=>{brush=Number(e.target.value);$('brush-label').textContent=brush+'px'});
 $('zoom-in').addEventListener('click',()=>zoomAt(view.zoom+1));$('zoom-out').addEventListener('click',()=>zoomAt(view.zoom-1));$('zoom-label').addEventListener('click',fit);$('fit').addEventListener('click',fit);
 function history(direction){
  const src=direction==='undo'?undoStack:redoStack,dst=direction==='undo'?redoStack:undoStack;
@@ -270,6 +278,15 @@ function mutate(fn){
 }
 $('add-layer').addEventListener('click',()=>mutate(()=>addLayer(project)));
 $('delete-layer').addEventListener('click',()=>mutate(()=>deleteLayer(project)));
+function reorderLayer(direction){
+ const a=project.activeLayer,b=a+direction;if(b<0||b>=project.layers.length)return;
+ mutate(()=>{[project.layers[a],project.layers[b]]=[project.layers[b],project.layers[a]];
+  for(const f of project.frames)[f.cels[a],f.cels[b]]=[f.cels[b],f.cels[a]];
+  project.activeLayer=b;
+ });
+}
+$('layer-up').addEventListener('click',()=>reorderLayer(1));
+$('layer-down').addEventListener('click',()=>reorderLayer(-1));
 $('add-frame').addEventListener('click',()=>{stopPlay();mutate(()=>addFrame(project))});
 $('delete-frame').addEventListener('click',()=>{stopPlay();mutate(()=>deleteFrame(project))});
 $('clear-layer').addEventListener('click',()=>mutate(()=>cel(project).fill(0)));
