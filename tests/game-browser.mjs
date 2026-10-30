@@ -103,6 +103,7 @@ try{
   await page.locator('#pw-origin').selectOption('旅行商人');
   assert.equal(await page.locator('#pw-nickname').inputValue(),'小满');
   await page.locator('#pw-next').click();
+  await page.waitForFunction(expected=>window.__PAPERWORLD_MENU__?.lease?.step===expected,2,{timeout:3000});
   assert.equal((await state(page)).lease.step,2);
   await page.locator('#pw-next').click(); // Missing shop name must not pass.
   assert.equal((await state(page)).lease.step,2);
@@ -113,10 +114,12 @@ try{
   assert.ok((await page.locator('#pw-rent').textContent()).includes('770'));
   await page.screenshot({path:'artifacts/game/'+screen+'-rent-shop.png'});
   await page.locator('#pw-next').click();
+  await page.waitForFunction(expected=>window.__PAPERWORLD_MENU__?.lease?.step===expected,3,{timeout:3000});
   assert.equal((await state(page)).lease.step,3);
   assert.ok((await page.locator('#pw-contract-details').textContent()).includes('蓝铃杂货店'));
   await page.screenshot({path:'artifacts/game/'+screen+'-verify-contract.png'});
   await page.locator('#pw-next').click();
+  await page.waitForFunction(expected=>window.__PAPERWORLD_MENU__?.lease?.step===expected,4,{timeout:3000});
   assert.equal((await state(page)).lease.step,4);
   assert.ok((await state(page)).lease.hasContract);
   assert.ok((await page.locator('#pw-receipt-details').textContent()).includes('PW-'));
