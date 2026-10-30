@@ -71,3 +71,7 @@
 .pw-step:not(.pw-off){animation:pw-form-page-in .26s steps(9,end) both;transform-origin:center top}
 @keyframes pw-form-page-in{from{transform:translate3d(0,12px,-14px)}to{transform:translate3d(0,0,0)}}
 @media(prefers-reduced-motion:reduce){.pw-step:not(.pw-off){animation:none!important}}
+
+#pw-ui-touch-fx{position:fixed;inset:0;z-index:9;pointer-events:none;overflow:hidden}
+.pw-touch-spark{position:absolute;display:block;width:5px;height:5px;background:var(--pink);pointer-events:none;transition:transform .28s steps(7,end);image-rendering:pixelated}
+@media(prefers-reduced-motion:reduce){.pw-touch-spark{transition:none}}
