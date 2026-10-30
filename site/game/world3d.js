@@ -2,13 +2,14 @@
  * WORLD: X forward / Y left / Z vertical. Geometry is real depth-tested
  * triangles with 4 exact palette colors; no Three/CDN/API dependency.
  */
-import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js';
+import {MotionPose,projectionMatrix,RAD,clamp,wrap} from './motion3d.js';
+import {BodyMotor,STANCES} from './locomotion3d.js';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
 const PALETTE=[INK,PINK,BLUE,PAPER];
 const $=id=>document.getElementById(id);
 function makeTown(){
- const verts=[],cols=[],lines=[],lineCols=[];
+ const verts=[],cols=[],lines=[],lineCols=[],solids=[];
  function vertex(p,c){verts.push(...p);cols.push(...PALETTE[c])}
  function line(a,b,c){lines.push(...a,...b);lineCols.push(...PALETTE[c],...PALETTE[c])}
  function quad(a,b,c,d,k,outline=false){
@@ -46,6 +47,7 @@ function makeTown(){
    const h=3+(seed%5)*1.2,wall=(seed%3===0?1:seed%3===1?2:3);
    const w=4.6+(seed%3)*.7,depth=5.5;
    box(x,y,.1,w,depth,h,wall);
+   solids.push({x,y,w,d:depth});
    // Stacked facade windows are small solid meshes, not sprites.
    const towardRoad=y>0?y-depth/2-.025:y+depth/2+.025;
    for(let floor=0;floor<Math.floor(h/2);floor++){
@@ -60,6 +62,7 @@ function makeTown(){
  }
  // Landmark rental house ahead: stylized pink/cream shop front and tower.
  box(30,0,.08,8,9,8,3);
+ solids.push({x:30,y:0,w:8,d:9});
  box(29.9,0,8.1,9.5,10,.7,1);
  box(29.9,0,9,4,4,3.3,2);
  box(29.9,0,12.3,5.6,5.6,.45,1);
@@ -73,6 +76,7 @@ function makeTown(){
  for(let x=-45;x<=60;x+=10){
   for(const y of [-6.5,6.5]){
    if(x>=24&&x<=37)continue;
+   solids.push({x,y,w:.72,d:.72});
    box(x,y,.05,.46,.46,1.6,0);
    box(x,y,1.2,2.35,2.35,2.5,(Math.abs(x)%20)?1:3);
    box(x,y,3.35,1.4,1.4,.95,2);
@@ -81,7 +85,7 @@ function makeTown(){
  // A distant sky landmark visible on looking up.
  box(66,-22,14,4,4,17,1);
  box(66,-22,31,9,9,.65,3);
- return {tri:new Float32Array(verts),colors:new Float32Array(cols),line:new Float32Array(lines),lineColors:new Float32Array(lineCols)};
+ return {tri:new Float32Array(verts),colors:new Float32Array(cols),line:new Float32Array(lines),lineColors:new Float32Array(lineCols),solids};
 }
 function program(gl,vs,fs){
  const compile=(type,source)=>{
@@ -113,10 +117,10 @@ function makeRenderer(canvas){
   const cw=Math.ceil(w/scale),ch=Math.ceil(h/scale);
   if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch;gl.viewport(0,0,cw,ch)}
  }
- function render(pose){
+ function render(pose,eye){
   resize();gl.useProgram(shader);
   gl.clearColor(...INK,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-  gl.uniformMatrix4fv(view,false,projectionMatrix(pose,canvas.width/canvas.height));
+  gl.uniformMatrix4fv(view,false,projectionMatrix(pose,canvas.width/canvas.height,eye));
   gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);
   bind(tPos,tCol);gl.drawArrays(gl.TRIANGLES,0,data.tri.length/3);
   gl.disable(gl.POLYGON_OFFSET_FILL);
@@ -124,7 +128,7 @@ function makeRenderer(canvas){
   bind(lPos,lCol);gl.drawArrays(gl.LINES,0,data.line.length/3);
  }
  function destroy(){gl.deleteBuffer(tPos);gl.deleteBuffer(tCol);gl.deleteBuffer(lPos);gl.deleteBuffer(lCol);gl.deleteProgram(shader)}
- return {render,resize,destroy,get triangles(){return data.tri.length/9}};
+ return {render,resize,destroy,solids:data.solids,get triangles(){return data.tri.length/9}};
 }
 export function createWorld3D({onBack}){
  const stage=$('pw-world'),canvas=$('pw-world-canvas'),status=$('pw-motion-status');
