@@ -85,6 +85,17 @@ jobs:
           else
             echo "::warning::No previous V2–V4 artifacts; leaving those pages as legacy references"
           fi
+          # Some newer ML evidence artifacts omit historical V2/V3 model files.
+          # Fill in missing files from the last fully verified end-to-end PixelLab build.
+          if [ ! -s site/pixel-lab/style2/v3/report.json ]; then
+            if gh run download 41019933500 --name PixelLab-native-384-detail-and-composition --dir "$RUNNER_TEMP/pixel-full-history"; then
+              if [ -d "$RUNNER_TEMP/pixel-full-history/site/pixel-lab" ]; then
+                rsync -a --ignore-existing "$RUNNER_TEMP/pixel-full-history/site/pixel-lab/" site/pixel-lab/
+              fi
+            else
+              echo "::warning::Historical PixelLab model artifact expired; V2/V3 archive should be regenerated"
+            fi
+          fi
           test -s site/pixel-lab/style2/geometry-v5/B_standing_pred_parts.png
           python3 - <<'PY'
           import json
