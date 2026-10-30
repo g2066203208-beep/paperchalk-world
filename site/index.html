@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#FFF5E6">
-<meta name="paperworld-build" content="20261030-world3d-motion1">
+<meta name="paperworld-build" content="20261030-world3d-locomotion2">
 <meta name="description" content="PAPERWORLD 四色像素游戏：老板娘走到柜台办理租赁。纯四色角色内部深色细节保留，对话手动慢速推进。">
 <title>PAPERWORLD · 新店开张</title>
-<link rel="stylesheet" href="./game/stage.css?v=world3d-motion1">
+<link rel="stylesheet" href="./game/stage.css?v=world3d-locomotion2">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#FFF5E6}
@@ -95,6 +95,10 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
     <div><strong>PAPERWORLD / 3D</strong><small>世界坐标：X 前 · Y 左 · Z 上</small></div>
     <button class="pw-btn secondary" type="button" id="pw-motion-back">返回游戏</button>
   </header>
+  <div id="pw-move-stick" aria-label="触屏移动摇杆" role="group">
+    <span id="pw-stick-ring" aria-hidden="true"><span id="pw-stick-knob"></span></span>
+    <span>移动 / 平移</span>
+  </div>
   <div id="pw-world-reticle" aria-hidden="true"><span></span></div>
   <div id="pw-world-bottom" class="pw-panel">
     <div class="pw-world-line">
@@ -117,6 +121,19 @@ canvas{display:block;position:fixed;top:0;left:0;image-rendering:pixelated}
       <label>平滑响应 <strong id="pw-motion-response-value">105 ms</strong>
         <input id="pw-motion-response" type="range" min="0.025" max="0.25" step="0.005" value="0.105">
       </label>
+    </div>
+    <div class="pw-world-locomotion">
+      <div class="pw-world-move-data"><span>位置 <b id="pw-player-position">X 0.0 · Y 0.0</b></span><span>速度 <b id="pw-player-speed">0.0 m/s</b></span><span>身体 <b id="pw-stance-status">站立</b></span></div>
+      <div class="pw-world-actions">
+        <button class="pw-btn" type="button" id="pw-walk-toggle" aria-pressed="false">体感踏步：关</button>
+        <button class="pw-btn quiet" type="button" id="pw-posture-hold">按住倾斜手机 · 调整站蹲趴</button>
+      </div>
+      <div class="pw-world-stance-buttons">
+        <button class="pw-btn secondary" type="button" id="pw-stance-stand">站立</button>
+        <button class="pw-btn secondary" type="button" id="pw-stance-crouch">蹲下</button>
+        <button class="pw-btn secondary" type="button" id="pw-stance-prone">趴下</button>
+      </div>
+      <small id="pw-walk-help">左侧虚拟摇杆随时可走；体感踏步需开启传感器，检测原地踏步才前进。</small>
     </div>
     <div class="pw-world-help">左转/右转：绕竖直 Z 轴 · 侧倒手机：横滚最多约90° · 抬头低头：俯仰。保持手机正对前方后点击校准。没有传感器时可拖动视角，键盘 Q/E 侧倒、方向键转向。</div>
   </div>
