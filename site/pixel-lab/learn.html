@@ -28,6 +28,11 @@ label{display:flex;align-items:center;gap:6px}
 <p class="summary">现在采用分层训练：V2 在 48×64 上学习素材类型和全局结构；V3 在 384×512 原生像素上进行局部细节训练，192×256 仅用于结构条件。两者属于同一个系统，没有建立第三个工作室。过去的局部 MLP、VAE、Q-Learning 和扩散 V1 都已经从当前代码与构建流程移除。</p>
 <p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
 
+<section style="background:#30283e;border:1px solid #F2A5C2;border-radius:13px;padding:17px;margin:18px 0">
+<h2 style="margin:0 0 7px">新增 · 13 张人物图片批量真像素转换 / 训练样本质量审查</h2>
+<p style="margin:6px 0 10px">两张正式母版、九张未经批准的 AI 草稿、一张新人物绘制候选及一张排除的多图设定表。全部恢复为原生 384×512 D 色板，但低质量草稿不会被自动当作优秀样本训练。V4 神经转换模型只有在跨姿势留出测试超过传统方法时才会启用。</p>
+<a href="./v4-review.html" style="font-weight:900;color:#F2A5C2">打开全部人物像素、原生网格和机器学习验收 →</a>
+</section>
 <section id="v3-native" aria-label="高精度人物原生像素细节学习" style="margin:20px 0;border:1px solid #F2A5C2;background:#242139;border-radius:15px;padding:16px" data-ready="false">
  <div class="eyebrow">ACTIVE HI-RES MODEL / NATIVE DETAIL V3</div>
  <h2 style="font-size:clamp(23px,3.2vw,32px);line-height:1.3;margin:7px 0">384×512 原生细节 · 不再使用 48×64 成品图</h2>

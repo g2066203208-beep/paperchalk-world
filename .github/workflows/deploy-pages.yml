@@ -83,6 +83,11 @@ jobs:
         run: python -m ml.style2.discrete_diffusion_v2 --steps 260
       - name: Check V2 composition weights and D colors
         run: python -m ml.style2.verify_discrete_v2
+      - name: Recover 13 native 384x512 four-color images and train V4 conversion with a heldout pose
+        env:
+          OMP_NUM_THREADS: '2'
+          OPENBLAS_NUM_THREADS: '1'
+        run: python -m ml.style2.v4_pipeline --train
       - name: Train V3 full 384x512 native detail model on 48x48 true-pixel crops
         env:
           OPENBLAS_NUM_THREADS: '1'
@@ -94,6 +99,8 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
+      - name: Verify all V4 packed 384x512 images and strict draft quality boundaries
+        run: python -m unittest discover -s tests -p 'v4_pipeline_checks.py'
       - name: Test true pixel converter upload
         run: node tests/repixel-browser.mjs
       - name: Test native pixel inspector
@@ -104,6 +111,8 @@ jobs:
         run: node tests/d-standing-browser.mjs
       - name: Test V2 trained model browser on desktop/mobile
         run: node tests/discrete-v2-browser.mjs
+      - name: Validate V4 person-asset review gallery and D palette in Chromium
+        run: node tests/v4-gallery-browser.mjs
       - name: Test real full-resolution V3 character detail in Chromium desktop and mobile
         run: node tests/native-detail-v3-browser.mjs
       - name: Publish only current pixel artwork, masks, V2 and V3 weights and browser evidence
