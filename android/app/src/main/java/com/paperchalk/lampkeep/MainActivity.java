@@ -1,6 +1,12 @@
 package com.paperchalk.lampkeep;
 
 import android.app.Activity;
+import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.webkit.JavascriptInterface;
 import android.content.Intent;
 import android.graphics.Insets;
 import android.net.Uri;
@@ -27,6 +33,52 @@ public final class MainActivity extends Activity {
     private static final String SITE_HOST = "g2066203208-beep.github.io";
     private static final String SITE_PATH = "/paperchalk-world/";
 
+    private SensorManager sensorManager;
+    private Sensor rotationSensor;
+    private boolean sensorListening = false;
+    private long lastSensorNs = 0;
+    private final SensorEventListener sensorListener = new SensorEventListener() {
+        @Override public void onAccuracyChanged(Sensor sensor, int accuracy) {}
+
+        @Override public void onSensorChanged(SensorEvent event) {
+            if (!sensorListening || web == null || event.sensor != rotationSensor) return;
+            // Limit bridge traffic to 30Hz. Rendering interpolates at the display refresh rate.
+            if (event.timestamp - lastSensorNs < 33333333L) return;
+            lastSensorNs = event.timestamp;
+            final float[] q = new float[4];
+            SensorManager.getQuaternionFromVector(q, event.values);
+            final String js = "window.__PAPERWORLD_NATIVE_ORIENTATION__?.(" +
+                q[0] + "," + q[1] + "," + q[2] + "," + q[3] + ")";
+            web.evaluateJavascript(js, null);
+        }
+    };
+    // No sensor data is sent to a server. Expose start/stop only to this WebView.
+    private final class GameSensorBridge {
+        @JavascriptInterface public void start() {
+            runOnUiThread(() -> startSensor());
+        }
+        @JavascriptInterface public void stop() {
+            runOnUiThread(() -> stopSensor());
+        }
+        @JavascriptInterface public boolean available() {
+            return rotationSensor != null;
+        }
+    }
+    private void startSensor() {
+        if (sensorListening || sensorManager == null || rotationSensor == null || web == null) return;
+        final String url = web.getUrl();
+        if (url == null || !url.startsWith(HOME)) return;
+        lastSensorNs = 0;
+        sensorListening = sensorManager.registerListener(
+            sensorListener, rotationSensor, SensorManager.SENSOR_DELAY_GAME);
+    }
+    private void stopSensor() {
+        if (!sensorListening || sensorManager == null) return;
+        sensorManager.unregisterListener(sensorListener);
+        sensorListening = false;
+        lastSensorNs = 0;
+    }
+
     private WebView web;
     private boolean resumedOnce = false;
     private boolean legacyWorkerCleanupStarted = false;
@@ -34,7 +86,13 @@ public final class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        if (sensorManager != null) {
+            rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
+            if (rotationSensor == null) rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        }
         web = new WebView(this);
+        web.addJavascriptInterface(new GameSensorBridge(), "PaperworldSensor");
         web.clearCache(true);
         web.setBackgroundColor(0xFFFFF5E6);
 
@@ -50,6 +108,9 @@ public final class MainActivity extends Activity {
 
         web.setWebChromeClient(new WebChromeClient());
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
+                stopSensor();
+            }
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
@@ -111,6 +172,12 @@ public final class MainActivity extends Activity {
     }
 
     @Override
+    protected void onPause() {
+        stopSensor();
+        super.onPause();
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         if (!resumedOnce) {
@@ -128,6 +195,7 @@ public final class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        stopSensor();
         if (web != null) {
             web.destroy();
             web = null;
