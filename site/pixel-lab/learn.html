@@ -33,6 +33,13 @@ label{display:flex;align-items:center;gap:6px}
 <p style="margin:6px 0 10px">两张正式母版、九张未经批准的 AI 草稿、一张新人物绘制候选及一张排除的多图设定表。全部恢复为原生 384×512 D 色板，但低质量草稿不会被自动当作优秀样本训练。V4 神经转换模型只有在跨姿势留出测试超过传统方法时才会启用。</p>
 <a href="./v4-review.html" style="font-weight:900;color:#F2A5C2">打开全部人物像素、原生网格和机器学习验收 →</a>
 </section>
+<section style="border:1px solid #A9BAE9;background:#292540;padding:17px;border-radius:12px;margin:16px 0" aria-label="V5 人物体积、透视、拆解训练">
+ <div class="eyebrow">V5 · REAL TRAINED GEOMETRY SUPERVISION</div>
+ <h2>人体体积 / 透视 / 部件拆解 / 关节定位</h2>
+ <p>新增真实多任务 PyTorch 训练：3D 体块经过不同相机角度投影，监督头发、脸、眼睛、手臂、手、腿、鞋等部件的分区、前后深度、10 个关节坐标以及左右视角。与原有 V2、V3 位于同一个系统，不新建主工作室。</p>
+ <p style="font-size:12px;color:#c6bdd8">目前是三维代理几何的合成监督实验；没有伪称原始角色已有真实三维数据，也没有伪称已生成合格的新人物。</p>
+ <a style="color:#F2A5C2;font-weight:800" href="./style2/geometry-v5.html">进入 V5 实际预测结果：正面／左／右视角 + 部件 + 深度 →</a>
+</section>
 <section id="v3-native" aria-label="高精度人物原生像素细节学习" style="margin:20px 0;border:1px solid #F2A5C2;background:#242139;border-radius:15px;padding:16px" data-ready="false">
  <div class="eyebrow">ACTIVE HI-RES MODEL / NATIVE DETAIL V3</div>
  <h2 style="font-size:clamp(23px,3.2vw,32px);line-height:1.3;margin:7px 0">384×512 原生细节 · 不再使用 48×64 成品图</h2>
