@@ -1,0 +1,85 @@
+<!doctype html><html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIXEL LAB｜看板娘真四色透明立绘与瞳孔保护检查</title>
+<style>
+:root{--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6}
+*{box-sizing:border-box}body{background:var(--ink);color:var(--paper);font:16px/1.6 system-ui,"Noto Sans SC",sans-serif;margin:0}
+nav{padding:15px 18px;display:flex;gap:20px;align-items:center;border-bottom:2px solid var(--blue)}
+a{color:var(--pink)}main{max-width:1050px;margin:auto;padding:22px 15px 45px}
+h1{font-size:clamp(23px,5vw,38px);margin:0 0 10px}p{margin:6px 0 15px}
+button{background:var(--pink);color:var(--ink);font:800 15px system-ui;min-height:44px;padding:8px 14px;border:2px solid var(--paper);cursor:pointer}
+button[aria-pressed="true"]{background:var(--blue)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.frame{border:2px solid var(--blue);padding:10px}
+.frame h2{margin:0 0 10px;font-size:17px}
+.stage{min-height:330px;display:grid;place-items:center;background:var(--paper)}
+.stage.blue{background:var(--blue)}
+canvas,img{image-rendering:pixelated;max-width:100%}
+#full{width:min(100%,384px);aspect-ratio:3/4;height:auto}
+#face{width:min(100%,390px);height:auto;aspect-ratio:1}
+.status{border:2px solid var(--pink);padding:10px 12px;margin:16px 0;font-weight:750}
+.note{font-size:13px;color:var(--blue)}
+@media(max-width:610px){.grid{grid-template-columns:1fr}.stage{min-height:240px}}
+</style></head><body>
+<nav><strong>PIXEL LAB / 01 真像素转换</strong><a href="./index.html">返回像素工作室</a><a href="../">返回游戏</a></nav>
+<main><h1>老板娘 · 四色透明立绘修复</h1>
+<p>保留原人物颜色和像素网格。先闭合一像素轮廓缝隙，再只抠除与画布边缘连通的深紫背景。<strong>内部深色瞳孔、眼线、衣服暗部不会被全局色键误删。</strong></p>
+<div class="controls">
+<button id="switch" aria-pressed="false">切换蓝色底板</button>
+<button id="grid-toggle" aria-pressed="false">打开像素网格</button>
+<button id="save">下载透明真四色 PNG</button>
+</div>
+<div class="status" id="status">正在读取游戏中的原版立绘并计算透明轮廓…</div>
+<div class="grid">
+<section class="frame"><h2>完整透明立绘 · 192 × 256</h2><div class="stage" id="stage-full"><canvas id="full" width="192" height="256"></canvas></div><p class="note">浅底、蓝底交替检查是否误删边缘。</p></section>
+<section class="frame"><h2>脸部细节放大 · 每个方块都是原生像素</h2><div class="stage" id="stage-face"><canvas id="face" width="390" height="390"></canvas></div><p class="note">重点检查眼睛、瞳孔、睫毛、发丝。展示网格不会进入导出文件。</p></section>
+</div>
+</main>
+<script type="module">
+import {HOSTESS_PNG} from '../game/hostess-pixel.js';
+import {portraitLayers} from '../game/intro.js';
+const source=new Image();source.src=HOSTESS_PNG;
+let clean=null,cutout=null,blue=false,showGrid=false;
+const full=document.getElementById('full'),face=document.getElementById('face');
+const fctx=full.getContext('2d'),zoom=face.getContext('2d');
+fctx.imageSmoothingEnabled=false;zoom.imageSmoothingEnabled=false;
+function paint(){
+ if(!clean)return;
+ fctx.clearRect(0,0,192,256);fctx.drawImage(clean,0,0);
+ zoom.clearRect(0,0,390,390);
+ const sx=55,sy=25,sw=65,sh=65,px=6;
+ zoom.drawImage(clean,sx,sy,sw,sh,0,0,390,390);
+ if(showGrid){
+  zoom.fillStyle='#393657';
+  for(let x=px;x<390;x+=px)zoom.fillRect(x,0,1,390);
+  for(let y=px;y<390;y+=px)zoom.fillRect(0,y,390,1);
+ }
+}
+source.onload=()=>{
+ const layers=portraitLayers(source);clean=layers.clean;const c=clean.getContext('2d').getImageData(0,0,192,256).data;
+ const counts={transparent:0,opaque:0,internalInk:0,other:0};
+ const palette=new Set(['57,54,87','242,165,194','169,186,233','255,245,230']);
+ for(let i=0;i<c.length;i+=4){
+  if(c[i+3]===0){counts.transparent++;continue}
+  if(c[i+3]!==255||!palette.has([c[i],c[i+1],c[i+2]].join(',')))counts.other++;
+  counts.opaque++;if(c[i]===57&&c[i+1]===54&&c[i+2]===87)counts.internalInk++;
+ }
+ const pass=counts.other===0&&counts.opaque>13000&&counts.internalInk>500;
+ document.getElementById('status').textContent=(pass?'通过':'需要复查')+' · 透明 '+counts.transparent+' 像素 · 保留人物 '+counts.opaque+' 像素 · 保留深紫暗部 '+counts.internalInk+' 像素 · 其他颜色/半透明 '+counts.other;
+ paint();
+};
+source.onerror=()=>document.getElementById('status').textContent='载入立绘失败；请确认 GitHub Pages 已部署最新素材。';
+document.getElementById('switch').addEventListener('click',()=>{
+ blue=!blue;
+ for(const el of document.querySelectorAll('.stage'))el.classList.toggle('blue',blue);
+ document.getElementById('switch').setAttribute('aria-pressed',String(blue));
+});
+document.getElementById('grid-toggle').addEventListener('click',()=>{
+ showGrid=!showGrid;document.getElementById('grid-toggle').setAttribute('aria-pressed',String(showGrid));paint();
+});
+document.getElementById('save').addEventListener('click',()=>{
+ if(!clean)return;
+ const a=document.createElement('a');a.download='PAPERWORLD-hostess-192x256-4color-RGBA.png';a.href=clean.toDataURL('image/png');a.click();
+});
+</script></body></html>
