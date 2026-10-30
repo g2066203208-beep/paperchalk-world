@@ -14,7 +14,7 @@ const server=createServer((req,res)=>{
  }catch(e){res.writeHead(404);res.end('Not found')}
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
-const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-webgl']});
 const origin='http://127.0.0.1:'+server.address().port+'/';
 mkdirSync('artifacts/game',{recursive:true});
 const official=new Set(['57,54,87,255','242,165,194,255','169,186,233,255','255,245,230,255','0,0,0,0']);
@@ -41,7 +41,7 @@ try{
   const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(String(e)));
   await page.goto(origin,{waitUntil:'load'});
-  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.buttons?.length===4);
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.buttons?.length===5);
   const home=await state(page);
   assert.equal(home.state,'menu');
   assert.ok(home.buttons.every(b=>b.x>=0&&b.y>=0&&b.x+b.w<=home.logical[0]&&b.y+b.h<=home.logical[1]));
@@ -53,6 +53,28 @@ try{
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.particleCount===7);
   await page.waitForTimeout(370);
   assert.equal((await state(page)).particleCount,0);
+  // Real three-dimensional scene: WebGL triangles, depth, and independent yaw/pitch/roll.
+  await clicked(page,2);
+  await waitScene(page,'world');
+  await page.waitForFunction(()=>window.__PAPERWORLD_WORLD3D__?.triangles>200);
+  assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.width))>30);
+  assert.ok((await page.locator('#pw-world-canvas').evaluate(el=>el.height))>30);
+  await page.screenshot({path:'artifacts/game/'+screen+'-3d-real-perspective.png'});
+  const neutral=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
+  await page.keyboard.press('e');
+  await page.waitForTimeout(260);
+  const side=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
+  assert.ok(side.roll>neutral.roll,'Q/E roll rotates around forward axis');
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(260);
+  const yawed=await page.evaluate(()=>window.__PAPERWORLD_WORLD3D__.pose);
+  assert.ok(yawed.yaw>side.yaw,'3D camera turns around vertical Z axis');
+  await page.screenshot({path:'artifacts/game/'+screen+'-3d-banked-turn.png'});
+  await page.locator('#pw-motion-center').click();
+  await page.waitForTimeout(310);
+  await page.locator('#pw-motion-back').click();
+  await waitScene(page,'menu');
+
   await clicked(page,0);
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
   await page.screenshot({path:'artifacts/game/'+screen+'-transition.png'});
@@ -132,7 +154,7 @@ try{
   await waitScene(page,'lease');
   assert.equal((await state(page)).lease.step,4,'continue directly opens existing lease receipt');
   await page.locator('#pw-prev').click();await waitScene(page,'menu');
-  await clicked(page,2);await waitScene(page,'settings');
+  await clicked(page,3);await waitScene(page,'settings');
   await clicked(page,3);await waitScene(page,'menu');
   if(screen==='portrait'){
     // The PixelLab inspector must show the very SAME extracted sprite as the
