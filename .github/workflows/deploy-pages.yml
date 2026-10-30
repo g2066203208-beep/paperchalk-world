@@ -49,6 +49,14 @@ jobs:
         run: node tests/flat4-browser.mjs
       - name: Verify hand-authored pixel master
         run: node tests/flat4-redraw-browser.mjs
+      - name: Save actual game browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperworld-game-desktop-mobile-evidence
+          path: artifacts/game/
+          retention-days: 14
+          if-no-files-found: warn
   learn:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: verify
