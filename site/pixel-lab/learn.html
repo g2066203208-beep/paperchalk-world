@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#393657">
-<title>系统02 · V5 人物结构拆解与像素训练</title>
+<title>系统02 · 像素脸模型训练</title>
 <style>
 :root{color-scheme:dark;--bg:#1b1a2c;--panel:#29273f;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
@@ -28,6 +28,13 @@ label{display:flex;align-items:center;gap:6px}
 <p class="summary">现有 V5 训练通过了合成体块数据集，但对原始 D 人物的部件拆解明显失败。这里首先展示原画与预测结果，不再把合成样本高分当成人物绘制成功。V3 原生 384×512 细节修复和 V2 48×64 粗构图保留为旧实验对照。</p>
 <p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
 
+<section id="face-first" style="background:#393657;color:#FFF5E6;border:2px solid #F2A5C2;border-radius:11px;padding:16px;margin:16px 0">
+<div class="eyebrow">NOW · FACE-ONLY TRAINING / 96×96 TRUE PIXELS</div>
+<h2 style="font-size:clamp(22px,3vw,28px);margin:5px 0">当前任务：先把脸画好</h2>
+<p>独立四色离散神经网络，只学习母版的脸、眼睛、刘海与嘴巴。实际训练后自动生成 <strong>16 张原生像素脸候选</strong>，逐一查看，不通过美术验收的不进入游戏。</p>
+<a style="color:#FFF5E6;font-weight:900;font-size:17px" href="./face.html">进入像素脸专线 · 查看 16 张真实生成图</a>
+<p style="font-size:12px;color:#A9BAE9">目前只有一个人物的两种动作，生成属于母版条件变化，还不能称为独立新人物。下方 V2/V3/V5 均是历史或辅助研究。</p>
+</section>
 <section id="v5-first" aria-label="当前V5真实人物识别对照" style="background:#25213b;border:2px solid #F2A5C2;border-radius:14px;padding:16px;margin:18px 0">
   <div class="eyebrow">CURRENT · V5 / ACTUAL D-STYLE CHARACTERS</div>
   <h2 style="font-size:clamp(20px,3vw,27px);margin:6px 0 9px">先看原画，再看模型识别失败在哪里</h2>
