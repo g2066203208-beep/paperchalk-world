@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#393657">
 <meta name="description" content="像素机器学习工作室仅有两个核心系统：真像素转换、像素绘画学习。">
-<title>PIXEL LAB｜16张头像扩展全身 · 两个系统</title>
+<title>PIXEL LAB｜像素工作室 · 两个主系统</title>
 <style>
 :root{color-scheme:dark;--bg:#191827;--panel:#29273f;--line:#5d5879;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,-apple-system,"Noto Sans SC",sans-serif}
@@ -42,16 +42,12 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
 <div class="kicker">TWO SYSTEMS / ONE ART DIRECTION</div>
 <h1>只做两件事，<br>把像素画真正做好。</h1>
 <p class="lead">D「雾樱玻璃」是当前游戏默认美术方案。所有人物、场景与道具将遵守同一规格。独立实验不再挤在首页，留作相应系统内部研究。</p>
-<section aria-label="当前全身人物训练成果" style="background:#393657;border:2px solid #F2A5C2;padding:18px;border-radius:12px;margin:20px 0;color:#FFF5E6">
- <div class="kicker">NEW · 16 FULL BODY SPRITES · 384×512</div>
- <h2 style="font-size:clamp(24px,3.5vw,32px);margin:8px 0">之前的16张头像，现已扩展为16张完整人物</h2>
- <p>实际 GitHub 训练与生成，16张全身PNG、对应头像和机器学习报告已写入仓库。严格D四色、真像素、从头发到鞋子完整可检查。身体来自两张高质量姿势母版；并非16个独立新身份。</p>
- <a href="./fullbody-16.html" style="display:inline-block;background:#F2A5C2;color:#393657;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:900">查看16张全身像素人物</a>
-</section>
-<section class="preview" aria-label="修复后的老板娘透明像素立绘">
- <div><h3>老板娘 · 透明像素抠图检查</h3><p>严格四色轮廓修复，外部背景连通域剔除，人物瞳孔、睫毛及服装内部深紫保留。支持蓝底/奶油白切换、脸部逐像素放大、透明 PNG 导出。</p>
- <a href="./hostess-matte.html">打开老板娘透明立绘像素检查器</a></div>
-</section>
+<details style="margin:20px 0;border:1px solid #5d5879;border-radius:12px;padding:15px;color:#FFF5E6">
+<summary style="cursor:pointer;font-weight:800">历史实验：16张头像拼接全身（未通过美术验收）</summary>
+<p style="margin:10px 0">16张图复用同一个角色和两套身体姿势母版，没有重新绘制16个独立人物的服装、四肢与动作；美术批准0/16。旧图保留作为研究记录，不计入正式资产。</p>
+<a href="./fullbody-16.html">查看旧模板合成图与训练报告</a>
+</details>
+<section class="preview" aria-label="老板娘立绘检查工具"><div><h3>老板娘 · 透明像素检查</h3><p>可检查现有画像的轮廓、眼睛及保留的深紫内部像素。此为原像素画像修复，不是新人物全身重绘。</p><a href="./hostess-matte.html">检查现有立绘</a></div></section>
 <section class="routes" aria-label="两个唯一主系统">
 <article class="route">
  <div class="number">01 · CONVERT / 真像素转换</div>
@@ -69,11 +65,8 @@ footer{margin-top:26px;padding-top:16px;border-top:1px solid #49455f;color:#aaa2
  <a class="action" href="./learn.html">进入 02 · 像素绘画学习</a>
 </article>
 </section>
-<section class="preview" aria-label="当前D风格人物样本">
- <img src="./d-standing-v1-384x512.png" alt="D风格站立少女候选角色，原生四色像素" width="384" height="512">
- <div><h3>当前样本 · D 风格站姿角色</h3><p>384×512 · 原生四色 PNG · 可与旧角色并排对比。真实像素网格已加入检查器，默认开启。</p><a href="./d-standing.html">打开人物与真实像素网格</a></div>
-</section>
-<footer>统一标准：颜色、尺寸、轮廓、像素密度和原生网格先验收，再做审美与资产质量验收。旧训练实现与结果已从当前分支清理，历史提交仍可追溯。</footer>
+
+<footer>统一标准：颜色、尺寸、轮廓、像素密度和原生网格先验收，再做审美与资产质量验收。旧训练和未通过美术审核的图片只作为研究档案保留，不进入正式角色素材库。</footer>
 </main>
 </body>
 </html>
