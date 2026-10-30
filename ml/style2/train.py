@@ -47,7 +47,7 @@ class MLP:
 def load_tokens(name):
  image=np.asarray(Image.open(ROOT/(name+".png")).convert("RGB"))
  matching=(image[:,:,None,:]==COL[None,None,:,:]).all(3)
- assert matching.all(2).all(),name
+ assert matching.any(2).all(),name
  return matching.argmax(2).astype("uint8")
 
 def degrade(tokens,rng):
