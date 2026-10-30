@@ -37,8 +37,8 @@ try{
   const original=before.materials[0].pixels[2*16+2],target=original===4?1:4;
   await page.locator('[data-ink="'+target+'"]').click();
   const box=await page.locator('#pixel-canvas').boundingBox();
-  const x=box.x+(2.5/16)*box.width,y=box.y+(2.5/16)*box.height;
-  await page.mouse.click(x,y);
+  // Locator click scrolls the editor panel into view on short landscape devices.
+  await page.locator('#pixel-canvas').click({position:{x:(2.5/16)*box.width,y:(2.5/16)*box.height}});
   let edited=await getPack(page);
   assert.equal(edited.materials[0].pixels[2*16+2],target);
   await page.locator('#undo').click();
