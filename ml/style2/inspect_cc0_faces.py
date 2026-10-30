@@ -52,5 +52,17 @@ def main():
             thumbs.paste(rgba,(xx+(140-rgba.width)//2,yy))
             d.text((xx+2,yy+119),name.split("/")[-1][:19],fill=(255,245,230))
         thumbs.save(ROOT/"source_audit_contact.png")
+        # Preserve unmodified, licensed PART layers so a separate discrete model
+        # can learn and recombine exact eyes, face geometry and hairstyles.
+        parts_dir=ROOT/"part_samples";parts_dir.mkdir(exist_ok=True)
+        for part in subset:
+            if not part.startswith("Faces/parts/"):continue
+            raw=archive_data=None
+            with z.open(part) as src:raw=src.read()
+            dst=parts_dir/part.split("/")[-1]
+            dst.write_bytes(raw)
+        report["part_samples_exported"]=len(list(parts_dir.glob("*.png")))
+        (ROOT/"source_audit.json").write_text(json.dumps(report,indent=2,ensure_ascii=False))
+
         print("CC0 SOURCE AUDIT:",json.dumps(report,ensure_ascii=False)[:13000],flush=True)
 if __name__=="__main__":main()
