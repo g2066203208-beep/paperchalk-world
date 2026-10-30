@@ -6,7 +6,7 @@ export const STRIPE='#A9BAE9';
 export const PIXEL_CSS=4;
 export const STRIPE_CELLS=36;
 export const GAP_CELLS=44;
-export const CYCLE_SECONDS=18;
+export const CYCLE_SECONDS=8;
 export const PATTERN_CELLS=STRIPE_CELLS+GAP_CELLS;
 export const PERIOD_CSS=PATTERN_CELLS*PIXEL_CSS;
 export const stripeAt=(x,y,phase)=>((x+y+phase)%PATTERN_CELLS+PATTERN_CELLS)%PATTERN_CELLS<STRIPE_CELLS;
@@ -57,7 +57,7 @@ document.addEventListener('visibilitychange',()=>{
 if(document.hidden)canvas.style.animationPlayState='paused';
 // Non-interactive test telemetry: never reads or changes the CSS animation.
 window.__PAPERWORLD_BACKGROUND__=Object.freeze({
-  version:'2026.10.30-blue18s.1',
+  version:'2026.10.30-blue8s.1',
   get redraws(){return redraws},
   get dimensions(){return [logicalWidth,logicalHeight]},
   palette:PALETTE,
