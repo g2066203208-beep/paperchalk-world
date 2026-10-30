@@ -75,6 +75,26 @@ jobs:
           mkdir -p site/pixel-lab/style2/geometry-v5
           cp -a "$RUNNER_TEMP/pixel-v5/site/pixel-lab/style2/geometry-v5/." site/pixel-lab/style2/geometry-v5/
 
+          FACE_ID=$(gh run list --workflow face-train.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -n "$FACE_ID" ] && [ "$FACE_ID" != "null" ]; then
+            mkdir -p "$RUNNER_TEMP/pixel-face"
+            gh run download "$FACE_ID" --name pixel-face-trained-samples-and-weights --dir "$RUNNER_TEMP/pixel-face"
+            test -s "$RUNNER_TEMP/pixel-face/site/pixel-lab/style2/face-lab/report.json"
+            mkdir -p site/pixel-lab/style2/face-lab
+            cp -a "$RUNNER_TEMP/pixel-face/site/pixel-lab/style2/face-lab/." site/pixel-lab/style2/face-lab/
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          f=Path("site/pixel-lab/style2/face-lab")
+          r=json.loads((f/"report.json").read_text())
+          assert r["trained"] and r["grid"]==[96,96] and len(r["generated_candidates"])==16
+          assert r["human_approved_count"]==0 and (f/"contact_16.png").is_file()
+          print("PASS: packaged 16 exact-color trained face candidates with honesty checks")
+          PY
+          else
+            echo "::warning::Face training still running; face gallery will appear after verified workflow dispatches Pages"
+          fi
+
           LEGACY_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq '[.artifacts[]|select(.name=="PixelLab-native-384-detail-and-composition" and .expired==false)][0].workflow_run.id')
           if [ -n "$LEGACY_RUN" ] && [ "$LEGACY_RUN" != "null" ]; then
             mkdir -p "$RUNNER_TEMP/pixel-legacy"
