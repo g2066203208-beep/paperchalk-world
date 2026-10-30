@@ -18,6 +18,10 @@ test('the existing APK home displays only the fullscreen background canvas',()=>
   assert.match(android,/protected void onResume\(\)/);
   assert.match(android,/openLatestHome\(\)/);
   assert.match(android,/\?apk=1&fresh=/);
+  assert.match(android,/navigator\.serviceWorker\.getRegistrations\(\)/);
+  assert.match(android,/r=>r\.unregister\(\)/);
+  assert.match(android,/legacyWorkerCleanupStarted/);
+
 
 });
 
@@ -32,6 +36,11 @@ test('D palette and background use exact preapproved colors, integer pixel grid'
   assert.match(page,/animation:stripe-drift 8s linear infinite/);
   assert.match(page,/translate3d\(-160px,-160px,0\)/);
   assert.match(background,/DIAGONAL_OVERSCAN_CELLS=PATTERN_CELLS\/2/);
+  assert.match(background,/setInterval\(checkPublishedVersion,60000\)/);
+  const build=page.match(/background\.js\?v=([A-Za-z0-9._-]+)/)?.[1];
+  assert.ok(build,'production script cache-busting version exists');
+  assert.ok(background.includes("const ACTIVE_BUILD='"+build+"'"),'live-check build ID must match page script ID');
+
   assert.match(page,/image-rendering:pixelated/);
 });
 
