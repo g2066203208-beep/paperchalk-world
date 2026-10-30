@@ -43,7 +43,7 @@ jobs:
         run: node tests/browser.mjs
       - name: Test Character Atelier browser
         run: node tests/character-browser.mjs
-      - name: Verify game root on desktop and mobile, palette and gameplay
+      - name: Verify background-only APK home on desktop and mobile (strict two colors)
         run: node tests/game-browser.mjs
       - name: Verify pixel drawing editor
         run: node tests/flat4-browser.mjs
