@@ -1,148 +1,62 @@
 <!doctype html>
-<html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#393657">
-<title>系统02 · 16头像扩展全身训练</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#393657"><meta name="description" content="像素绘画学习：人物结构与全身动作研究、未通过验收的历史实验">
+<title>PIXEL LAB · 系统02 / 像素绘画学习</title>
 <style>
-:root{color-scheme:dark;--bg:#1b1a2c;--panel:#29273f;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--cream:#FFF5E6}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--cream);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
-a{color:var(--blue)}nav{border-bottom:1px solid #514b6e;padding:13px max(16px,calc((100vw - 1160px)/2))}
-main{max-width:1160px;margin:auto;padding:25px 18px 60px}h1{font-size:clamp(28px,5vw,46px);line-height:1.2;margin:12px 0}
-h2{margin:11px 0}p{line-height:1.7}
-.eyebrow{color:var(--pink);font-size:11px;letter-spacing:1.8px;font-weight:900}
-.summary{max-width:930px;color:#c2b9d8}.tag{border:1px solid #615c79;border-radius:18px;padding:5px 10px;font-size:12px}
-.anchors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:780px}
-.anchors figure{margin:0;padding:9px;background:var(--ink);border-radius:10px}
-.anchors img{display:block;width:100%;height:auto;image-rendering:pixelated}
-.anchors figcaption{color:var(--cream);font-size:12px;margin:6px 0}
-section.refs{border:1px solid #57506e;background:#26233b;border-radius:13px;padding:16px;margin-top:22px}
-details summary{cursor:pointer}canvas{cursor:crosshair;touch-action:manipulation}
-label{display:flex;align-items:center;gap:6px}
-@media(max-width:700px){main{padding:20px 11px}.anchors{gap:7px}}
-</style></head>
-<body>
-<nav><a href="./index.html">← 两大系统首页</a> · <a href="./repixelize.html">01 真像素转换</a></nav>
-<main><section style="padding:16px;border:2px solid #F2A5C2;background:#393657;border-radius:12px;margin:8px 0 20px;color:#FFF5E6">
-<strong>当前 GitHub 实际训练结果</strong><p style="margin:7px 0 12px">新上传粉发角色已转为原生384×512严格四色，并加入神经网络像素修复实验；另用3名CC0开源角色训练了不同动作的独立小尺寸先验。两条学习线均有实际模型权重和留出指标，但尚未合成为合格的384×512动作人物生成器。</p>
-<p><a style="font-weight:900;color:#FFF5E6" href="./new-reference.html">查看上传新角色的真像素＋训练对照</a></p>
-<p><a style="font-weight:900;color:#FFF5E6" href="./motion-prior.html">查看16个不同的模型动作先验</a></p>
+:root{color-scheme:dark;--bg:#1d1b2d;--panel:#2b2941;--ink:#393657;--pink:#F2A5C2;--blue:#A9BAE9;--paper:#FFF5E6}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:var(--bg);color:var(--paper);font:15px/1.7 system-ui,"Noto Sans SC",sans-serif}
+a{color:var(--blue)}a:focus-visible,summary:focus-visible{outline:3px solid var(--pink);outline-offset:4px}
+nav{border-bottom:1px solid #635d7c;padding:14px max(18px,calc((100vw - 1080px)/2));display:flex;gap:20px;flex-wrap:wrap}
+main{max-width:1080px;margin:auto;padding:35px 18px 65px}
+.eyebrow{font-size:12px;color:var(--pink);letter-spacing:.14em;font-weight:900}
+h1{font-size:clamp(30px,5vw,45px);line-height:1.2;margin:10px 0 13px}
+h2{font-size:clamp(21px,3vw,26px);margin:6px 0 12px}
+.lead{max-width:780px;color:#cbc3dc}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:28px 0}
+.card{border:1px solid #736b8b;background:var(--panel);border-radius:12px;padding:24px;display:flex;flex-direction:column;min-width:0}
+.card p{color:#d0c9dd;flex:1}
+.action{display:block;text-align:center;text-decoration:none;color:var(--ink);background:var(--pink);font-weight:900;padding:11px;border-radius:8px;min-height:44px}
+.card:nth-child(2) .action{background:var(--blue)}
+.status{background:#262338;border:1px solid #746986;border-radius:11px;padding:19px}
+.status h2{font-size:19px}.status p{color:#d0c9dd;margin:7px 0}
+details{margin-top:20px;border-top:1px solid #645d7a;padding:15px 0}
+summary{cursor:pointer;font-size:16px;font-weight:800}
+.archives{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:17px 0}
+.archives a{padding:10px 12px;border:1px solid #524d67;border-radius:7px;text-decoration:none;background:#29263f}
+.small{font-size:13px;color:#bbb4ca}
+@media(max-width:680px){.cards,.archives{grid-template-columns:1fr}.card{padding:19px}}
+</style></head><body>
+<nav><a href="./index.html">← PixelLab 首页</a><a href="./repixelize.html">01 真像素转换</a><a href="../index.html">返回游戏</a></nav>
+<main><div class="eyebrow">02 / DRAWING LEARNING</div>
+<h1>像素绘画学习</h1><p class="lead">只展示当前两条有效研究方向。训练指标、像素网格通过检查，并不代表人物设计已经达到可用于游戏的质量。</p>
+<section class="cards" aria-label="当前学习方向">
+<article class="card"><div class="eyebrow">FACE & EXPRESSION</div><h2>多人物脸型与五官</h2>
+<p>训练不同脸型、眼睛、发型和表情的结构组合。32张结果仍是候选实验，尚未通过正式美术审核。</p>
+<a class="action" href="./face-parts.html">检查多脸型训练</a></article>
+<article class="card"><div class="eyebrow">POSE & ANATOMY</div><h2>身体比例与动作</h2>
+<p>用不同人物的姿势先验检查肢体和动作变化，目标是能真正画出多身份、多服装、多姿势的新角色，而不是换脸与调色。</p>
+<a class="action" href="./motion-prior.html">检查动作先验</a></article>
 </section>
-<section id="bath-girl-current"><h2>新人物：384×512 四色真像素转换与模型训练</h2><p>已从新上传图像转换原生四色 PNG，并用该候选参与颜色恢复训练；仍未通过美术验收。</p><p><a href="./bath-girl.html">打开新人物像素网格和实际机器学习测试</a></p></section><section style="background:#393657;border:2px solid #F2A5C2;border-radius:12px;padding:17px;margin:14px 0;max-width:1030px" aria-label="十六张头像转全身工作">
-<div class="eyebrow">ACTIVE · 16 FACE → 16 FULL BODY · 384×512</div>
-<h1 style="font-size:clamp(25px,4vw,35px);margin:6px 0">把原来16张脸接成全身人物</h1>
-<p>输入直接使用之前机器学习输出的16张脸；全身像素由原始D风格站姿及动态母版提供，新增身体部件训练用于限制衣物区域变化。每张保留脸部细节、完整身体与精确四色网格。</p>
-<a href="./fullbody-16.html" style="display:inline-block;border:1px solid #FFF5E6;border-radius:8px;padding:10px 14px;color:#FFF5E6;font-weight:900">打开16张全身 PNG，逐张对照原头像</a>
-<p style="font-size:12px;color:#A9BAE9">这是保留原始美术的全身扩展实验；不是16个独立全新人设，身体也尚未从零神经绘制。</p>
+<section class="status" aria-label="正式全身人物状态">
+<h2>全身人物美术验收：0 / 16</h2>
+<p>此前16张所谓全身人物来自同一身份的脸和两套身体母版，只是拓展合成，不是重新绘制。保留PNG及训练报告用于复查，但全部从正式成果展示撤下。</p>
+<p><a href="./fullbody-16.html">旧16张合成实验记录</a> · <a href="./hostess-matte.html">老板娘现有立绘抠图检查</a></p>
 </section>
-<section style="max-width:1020px;margin:15px 0 20px;border:2px solid #F2A5C2;background:#393657;padding:18px;border-radius:12px" aria-label="当前多人物脸部实验">
-<div class="eyebrow">ACTIVE · 32 FACES · FOUR COLORS</div>
-<h1 style="font-size:clamp(24px,4vw,34px);margin:9px 0">先练真正不同的脸</h1>
-<p>当前训练识别 <strong>7 种脸型 / 11 种五官 / 8 种发型</strong>，并保留完整眼睛和嘴巴的原生像素。32 张是未在训练组合里出现过的部件搭配，不是同一张脸镜像或换颜色。<strong>离游戏母版的精致绘画质量仍有差距。</strong></p>
-<a href="./face-parts.html" style="display:inline-block;border:1px solid #FFF5E6;border-radius:8px;padding:10px 14px;font-weight:900;color:#FFF5E6;background:#393657">查看本轮真实 32 张脸</a>
-</section>
-<details style="border:1px solid #A9BAE9;padding:14px;border-radius:12px;max-width:1020px"><summary style="font-size:16px;font-weight:900;cursor:pointer">展开旧实验、母版与技术指标（V2–V5、VAE 失败对照）</summary>
-
-<div class="eyebrow">SYSTEM 02 · ACTIVE MODEL ONLY</div>
-<h1>系统 02 · 多人物像素脸训练</h1>
-<p class="summary">目前主线已从单个人物的复制修复改为多人物组合学习：先用 CC0 头型、眼睛五官、发型练结构，再独立做 D 风格像素质量验收。此前单人训练和 VAE 空白脸问题在页面中保留供对照。</p>
-<p class="summary">重要限制：这仍然是研究原型，程序化素材测试不能证明会绘制高品质游戏素材。训练权重和性能报告来自 GitHub Actions，并提供可视化验收。</p>
-
-<section style="background:#393657;border:2px solid #A9BAE9;border-radius:12px;padding:15px;margin:18px 0" aria-label="通用型多人物训练最新实验">
-<div class="eyebrow">CURRENT · MULTI-CHARACTER / DISCRETE FACE PARTS</div>
-<h2 style="margin:7px 0;font-size:clamp(20px,3vw,28px)">多人物、不同脸型、不同五官、不同发型</h2>
-<p>原先 16 张同一人物变形已降级为失败对照。现采用 CC0 公共人物部件数据集（7 种头型、11 类五官、8 种发型），独立训练离散采样器，组合出 32 张不同头像；旧 VAE 平均化导致空白脸，也保留失败图。<strong>暂时属于通用结构学习，不代表已画出 D 风格高质量新角色。</strong></p>
-<a style="font-weight:900;color:#FFF5E6;font-size:17px" href="./face-structured.html">打开32张可见五官的多人物训练结果</a>　·　<a href="./face-general.html">查看VAE失败对照</a>
-</section>
-<section id="face-first" style="background:#393657;color:#FFF5E6;border:2px solid #F2A5C2;border-radius:11px;padding:16px;margin:16px 0">
-<div class="eyebrow">NOW · FACE-ONLY TRAINING / 96×96 TRUE PIXELS</div>
-<h2 style="font-size:clamp(22px,3vw,28px);margin:5px 0">当前任务：先把脸画好</h2>
-<p>独立四色离散神经网络，只学习母版的脸、眼睛、刘海与嘴巴。实际训练后自动生成 <strong>16 张原生像素脸候选</strong>，逐一查看，不通过美术验收的不进入游戏。</p>
-<a style="color:#FFF5E6;font-weight:900;font-size:17px" href="./face.html">进入像素脸专线 · 查看 16 张真实生成图</a>
-<p style="font-size:12px;color:#A9BAE9">目前只有一个人物的两种动作，生成属于母版条件变化，还不能称为独立新人物。下方 V2/V3/V5 均是历史或辅助研究。</p>
-</section>
-<section id="v5-first" aria-label="当前V5真实人物识别对照" style="background:#25213b;border:2px solid #F2A5C2;border-radius:14px;padding:16px;margin:18px 0">
-  <div class="eyebrow">CURRENT · V5 / ACTUAL D-STYLE CHARACTERS</div>
-  <h2 style="font-size:clamp(20px,3vw,27px);margin:6px 0 9px">先看原画，再看模型识别失败在哪里</h2>
-  <p>这一组图就是实际 V5 权重推理的输入与输出。模型在合成椭球人身上学到部分结构，但识别真正的粉发人物时将头发、面部、服装和肢体混淆。<strong>当前原画分区不合格，不能作为成品，也不能据此宣称理解了真实人体。</strong></p>
-  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
-    <figure style="min-width:0;margin:0"><figcaption>动态人物 · D 原图</figcaption><img loading="lazy" src="./style2/geometry-v5/A_dynamic_input.png" alt="动态母版，缩至96乘128供识别" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
-    <figure style="min-width:0;margin:0"><figcaption>V5 动态人物分区 · 未通过</figcaption><img loading="lazy" src="./style2/geometry-v5/A_dynamic_pred_parts.png" alt="不准确的人物部件预测" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
-    <figure style="min-width:0;margin:0"><figcaption>站姿人物 · D 原图</figcaption><img loading="lazy" src="./style2/geometry-v5/B_standing_input.png" alt="站姿母版，缩至96乘128供识别" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
-    <figure style="min-width:0;margin:0"><figcaption>V5 站姿人物分区 · 未通过</figcaption><img loading="lazy" src="./style2/geometry-v5/B_standing_pred_parts.png" alt="不准确的站姿人物部件预测" width="96" height="128" style="width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
-  </div>
-  <p style="margin:12px 0 0"><a href="./style2/geometry-v5.html" style="color:#F2A5C2;font-weight:900">查看三视角几何实验、真实留出指标及源代码</a></p>
-  <p style="font-size:12px;color:#c6bdd8">注：语义分区使用额外诊断颜色；成品像素素材的 D 四色限制不变。</p>
-</section>
-<section style="background:#30283e;border:1px solid #F2A5C2;border-radius:13px;padding:17px;margin:18px 0">
-<h2 style="margin:0 0 7px">新增 · 13 张人物图片批量真像素转换 / 训练样本质量审查</h2>
-<p style="margin:6px 0 10px">两张正式母版、九张未经批准的 AI 草稿、一张新人物绘制候选及一张排除的多图设定表。全部恢复为原生 384×512 D 色板，但低质量草稿不会被自动当作优秀样本训练。V4 神经转换模型只有在跨姿势留出测试超过传统方法时才会启用。</p>
-<a href="./v4-review.html" style="font-weight:900;color:#F2A5C2">打开全部人物像素、原生网格和机器学习验收 →</a>
-</section>
-<section style="border:1px solid #A9BAE9;background:#292540;padding:17px;border-radius:12px;margin:16px 0" aria-label="V5 人物体积、透视、拆解训练">
- <div class="eyebrow">V5 · REAL TRAINED GEOMETRY SUPERVISION</div>
- <h2>人体体积 / 透视 / 部件拆解 / 关节定位</h2>
- <p>新增真实多任务 PyTorch 训练：3D 体块经过不同相机角度投影，监督头发、脸、眼睛、手臂、手、腿、鞋等部件的分区、前后深度、10 个关节坐标以及左右视角。与原有 V2、V3 位于同一个系统，不新建主工作室。</p>
- <p style="font-size:12px;color:#c6bdd8">目前是三维代理几何的合成监督实验；没有伪称原始角色已有真实三维数据，也没有伪称已生成合格的新人物。</p>
- <a style="color:#F2A5C2;font-weight:800" href="./style2/geometry-v5.html">进入 V5 实际预测结果：正面／左／右视角 + 部件 + 深度 →</a>
-</section>
-<section id="v3-native" aria-label="高精度人物原生像素细节学习" style="margin:20px 0;border:1px solid #F2A5C2;background:#242139;border-radius:15px;padding:16px" data-ready="false">
- <div class="eyebrow">ACTIVE HI-RES MODEL / NATIVE DETAIL V3</div>
- <h2 style="font-size:clamp(23px,3.2vw,32px);line-height:1.3;margin:7px 0">384×512 原生细节 · 不再使用 48×64 成品图</h2>
- <p class="summary">模型在真实 384×512 的局部像素上训练。192×256 只作为构图条件；右侧模型必须逐格恢复眼睛、发丝、服装花纹等小细节。两张图仍是同一人物的两种动作，<strong>这里是原尺寸细节恢复实验，不是已学会原创高质量新角色</strong>。</p>
- <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:12px 0">
-  <label>姿势 <select id="v3-pose" style="border-radius:7px;padding:8px;color:#FFF5E6;background:#393657;border:1px solid #7d6b9c"><option value="B_standing">B · 正常站姿</option><option value="A_dynamic">A · 动态人物</option></select></label>
-  <label>细节区 <select id="v3-area" style="border-radius:7px;padding:8px;color:#FFF5E6;background:#393657;border:1px solid #7d6b9c"><option value="face">眼睛 / 五官</option><option value="hair">发饰 / 头发</option><option value="costume">衣服 / 围裙</option><option value="shoes">鞋子 / 末端</option></select></label>
-  <label>倍率 <select id="v3-zoom" style="border-radius:7px;padding:8px;color:#FFF5E6;background:#393657;border:1px solid #7d6b9c"><option value="8">8×</option><option value="12" selected>12×</option><option value="16">16×</option><option value="24">24×</option></select></label>
-  <label><input id="v3-grid" checked type="checkbox"> 显示原生像素网格</label>
- </div>
- <div id="v3-readout" role="status" style="padding:8px 0;color:#A9BAE9;font-size:13px">正在读取实际训练的高清结果…</div>
- <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:900px">
-  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">原图 D 风格母版 · 384×512</figcaption><img data-v3-image="original" width="384" height="512" alt="原始完整细节人物" style="display:block;width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
-  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">V3 模型预测 · 384×512</figcaption><img data-v3-image="generated384" width="384" height="512" alt="模型原生384像素细节预测" style="display:block;width:100%;height:auto;image-rendering:pixelated;background:#393657"></figure>
-  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">原图眼睛 / 服饰局部网格</figcaption><canvas data-v3-zoom="original" width="384" height="384" aria-label="原图逐像素检视网格" style="display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;cursor:crosshair;touch-action:none"></canvas></figure>
-  <figure style="margin:0;min-width:0"><figcaption style="font-weight:800">模型相同区域局部网格</figcaption><canvas data-v3-zoom="generated384" width="384" height="384" aria-label="生成细节逐像素检视网格" style="display:block;width:100%;aspect-ratio:1;image-rendering:pixelated;cursor:crosshair;touch-action:none"></canvas></figure>
- </div>
- <div id="v3-metrics" style="margin:14px 0;padding:12px;color:#FFF5E6;font-size:13px;border-radius:9px;background:#36304b">正在读取真正的前景细节分数及低分辨率基线…</div>
- <details style="border:1px solid #675b7c;border-radius:9px;padding:10px">
-  <summary style="font-weight:750">对比低分辨率放大与高分辨率遮挡修复</summary>
-  <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">
-   <figure style="margin:0;min-width:0"><figcaption>192×256 放大，仅作基线</figcaption><img data-v3-image="coarse192" alt="低分辨率最近邻放大基线" width="384" height="512" style="width:100%;height:auto;image-rendering:pixelated"></figure>
-   <figure style="margin:0;min-width:0"><figcaption>原图随机遮挡 58% 后模型修复</figcaption><img data-v3-image="masked_repair384" alt="高分辨率像素级遮挡修复样张" width="384" height="512" style="width:100%;height:auto;image-rendering:pixelated"></figure>
-  </div>
- </details>
- <p class="summary" style="font-size:12px;margin-top:13px">只有当模型超过低分辨率基线，特别是人物<strong>前景细节</strong>，才算达到训练门槛。不能用大面积背景的总体准确率冒充高质量美术。最终母版始终保留原始 384×512 像素，训练不能把母版降质。</p>
- <div style="display:flex;flex-wrap:wrap;gap:14px"><a id="v3-save" href="#" download>下载模型原生 384×512 PNG</a><a href="./style2/v3/report.json">查看实际训练报告</a></div>
-</section>
-<script type="module" src="./native-detail-v3.js"></script>
-<details id="pixel-v2" style="background:#222237;border:1px solid #797092;border-radius:14px;padding:17px;margin:17px 0">
- <summary style="font-size:21px;font-weight:850;cursor:pointer;color:#F2A5C2">V2 · 真实训练：角色＋道具＋场景的四色离散生成</summary>
- <p style="color:#c0b6d3">实际模型以 48×64 逻辑网格生成，每个像素只能是 D 色板四类之一。增加独立形体蓝图、像素年龄与纠错，程序化道具的训练参数与测试参数分开。<strong>这仍然是科研样机，不是成熟美术生成器。</strong></p>
- <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:10px 0">
-  <label>样本类别 <select id="pixel-v2-family" style="border-radius:8px;padding:7px;background:#393657;color:#FFF5E6"><option>读取中</option></select></label>
-  <label><input id="pixel-v2-grid" type="checkbox" checked> 逐格原生像素网格</label>
- </div>
- <div id="pixel-v2-status" style="color:#A9BAE9;margin:6px 0 12px" role="status">正在读取实际训练数据…</div>
- <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-width:920px">
-  <figure style="margin:0"><figcaption>参考像素图（测试目标）</figcaption><canvas data-v2-canvas="reference" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
-  <figure style="margin:0"><figcaption>输入的独立粗形体蓝图</figcaption><canvas data-v2-canvas="blueprint" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
-  <figure style="margin:0"><figcaption>从全遮挡 Token 推理的结果</figcaption><canvas data-v2-canvas="generated" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
-  <figure style="margin:0"><figcaption>55% 遮挡修复（其余像素锁定）</figcaption><canvas data-v2-canvas="repaired" width="384" height="512" style="display:block;width:100%;height:auto;image-rendering:pixelated;cursor:crosshair;background:#393657"></canvas></figure>
- </div>
- <p id="pixel-v2-metrics" style="color:#FFF5E6;background:#302d47;border-radius:9px;padding:12px;font-size:12px;margin-top:12px">训练评测尚未读取</p>
- <p style="color:#b7acc9;font-size:12px">验收要与“直接复制粗蓝图”的基线比较，而不只看背景占比很高的总体准确率。人物两个姿势是同一身份，不能拿它们证明新角色生成能力。</p>
- <a href="./style2/v2/report.json">完整训练与留出报告</a>
-</details>
-<script type="module" src="./style2/diffusion-v2-gallery.js"></script>
-
-<section class="refs">
-<h2>D 风格人物训练母版</h2>
-<p class="summary">这两张图是同一角色的两个动作，不是两个独立角色身份。母版、分区标注及学习数据继续保留；不再训练旧的“邻域猜像素”模型。</p>
-<div class="anchors">
-<figure><img src="./style2/A_dynamic.png" alt="D 四色动态人物母版" width="384" height="512"><figcaption>动态姿势 · 原生 384×512</figcaption></figure>
-<figure><img src="./style2/B_standing.png" alt="D 四色站姿人物母版" width="384" height="512"><figcaption>站立姿势 · 原生 384×512</figcaption></figure>
+<details><summary>历史模型与素材实验（默认收起）</summary>
+<p class="small">以下为可追溯实验，不是当前游戏的正式资产。历史 GitHub Actions 产物若过期，部分图片可能无法加载。</p>
+<div class="archives">
+<a href="./face-structured.html">五官结构学习</a>
+<a href="./face-general.html">通用多脸训练</a>
+<a href="./face.html">旧16脸实验</a>
+<a href="./new-reference.html">上传人物参考图</a>
+<a href="./bath-girl.html">新人物转换候选</a>
+<a href="./style2/geometry-v5.html">V5 人体结构实验</a>
+<a href="./v4-review.html">V4 转换与母版审查</a>
+<a href="./d-standing.html">原D站姿母版网格</a>
 </div>
-<details><summary>查看现有分区标注（粗标注，非精确语义分割）</summary>
-<div class="anchors"><img src="./style2/A_dynamic_mask_review.png" alt="动态母版分区"><img src="./style2/B_standing_mask_review.png" alt="站姿母版分区"></div>
-</details></section>
+<details><summary>早期模型诊断（V2–V3）</summary>
+<p id="v3-native" class="small">V3 细节还原研究：<a href="./style2/v3/report.json">训练报告</a>。历史参考脚本 native-detail-v3.js；尚未成为通用绘画模型。</p>
+<p id="pixel-v2" class="small">V2 低分辨率扩散研究：<a href="./style2/v2/report.json">训练报告</a>。历史参考脚本 diffusion-v2-gallery.js。</p>
+</details>
 </details>
 </main></body></html>
