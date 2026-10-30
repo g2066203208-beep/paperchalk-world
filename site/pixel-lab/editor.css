@@ -31,7 +31,7 @@ button,input{font:inherit}button{border:1px solid var(--outline);border-radius:7
 .selected-color{display:flex;gap:10px;align-items:center;border:1px solid var(--outline);background:#1d1c2e;margin-top:14px;padding:8px}
 #selected-chip{height:34px;width:40px;border:2px solid var(--paper);flex:none}#selected-name{font-size:12px;display:block}#selected-hex{font-size:11px;color:var(--muted)}
 .palette-panel p{color:#a9a5bd;font-size:11px;line-height:1.55;margin:10px 0 0}
-.panel-actions{display:flex;gap:5px}.panel-actions button{min-height:26px;padding:1px 9px}
+.panel-actions{display:flex;gap:3px}.panel-actions button{min-height:26px;padding:1px 7px}
 .layer-list{display:grid;gap:6px}
 .layer{display:flex;align-items:center;gap:6px;padding:7px;border:1px solid var(--outline);border-radius:6px;background:#29293c;cursor:pointer}
 .layer.active{border-color:var(--pink);background:#39354b}.layer button{min-height:27px;padding:2px 7px;font-size:12px}
@@ -60,7 +60,7 @@ button,input{font:inherit}button{border:1px solid var(--outline);border-radius:7
  .canvas-bottom{min-height:33px;gap:3px;flex-wrap:wrap}.group{gap:7px;font-size:10px}.group input[type=range]{width:54px}#pointer-position{display:none}.canvas-hint{font-size:9px;bottom:5px}
  .inspector{grid-row:3;grid-column:1;display:flex;overflow-x:auto;overflow-y:hidden;border-left:0;border-top:1px solid var(--outline)}.inspector section{flex:none;min-width:0;border-right:1px solid var(--outline);padding:7px 9px;border-bottom:0}
  .inspector .palette-panel{width:54%}.inspector .layer-panel{width:46%}.inspector .operations{width:235px}
- .panel-heading{margin-bottom:6px}.swatches{gap:6px}.swatch{height:32px}.selected-color{margin-top:5px;padding:3px;gap:5px}.selected-color #selected-chip{height:17px;width:22px}.selected-color strong{font-size:10px}.selected-color code{font-size:9px}.palette-panel p{display:none}
+ .panel-heading{margin-bottom:6px}.panel-actions button{padding:1px 4px;min-width:23px}.swatches{gap:6px}.swatch{height:32px}.selected-color{margin-top:5px;padding:3px;gap:5px}.selected-color #selected-chip{height:17px;width:22px}.selected-color strong{font-size:10px}.selected-color code{font-size:9px}.palette-panel p{display:none}
  .layer-list{max-height:80px;overflow:auto;gap:2px}.layer{padding:2px}.layer button{min-height:22px}.layer input{font-size:11px;padding:1px}
  .ops-grid{gap:4px}.ops-grid button{min-height:25px;padding:3px;font-size:10px}
  .timeline-header{padding:4px 8px;min-height:34px}.timeline-header small{display:none}.timeline-actions{gap:4px}.timeline-actions button{padding:2px 5px;min-height:25px}.frames{padding:3px 8px 6px;gap:5px}.frame{min-height:60px;min-width:75px;padding:3px}.frame canvas{width:40px;height:40px}
