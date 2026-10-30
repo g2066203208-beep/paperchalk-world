@@ -143,13 +143,14 @@ function drawButton(b,i){
  panel(x+2,y+offset,w,h,COL.blue,5);
  frame(x,y,w,h,COL.ink,fill,5,2);
  if(active&&!disabled){R(x+3,y+8,2,h-16,COL.paper);R(x+w-5,y+8,2,h-16,COL.paper)}
- let label=b.label;
- if(state==='settings'&&i<3)label+=' '+(i===0?(prefs.motion?'开':'关'):i===1?(prefs.particles?'开':'关'):(prefs.haptic?'开':'关'));
- let hFont=Math.round(clamp(h*.61,16,21));
- let sprite=glyphBitmap(label,hFont);
- while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
- const labelCenter=x+w*.58;const labelX=Math.round(labelCenter),labelY=Math.round(y+(h-sprite.h)/2);
- if(!nativeLabels)text(label,labelX,labelY,hFont,COL.ink);
+ if(!nativeLabels){
+  let label=b.label;
+  if(state==='settings'&&i<3)label+=' '+(i===0?(prefs.motion?'开':'关'):i===1?(prefs.particles?'开':'关'):(prefs.haptic?'开':'关'));
+  let hFont=Math.round(clamp(h*.61,16,21));
+  let sprite=glyphBitmap(label,hFont);
+  while(sprite.w>w*.72&&hFont>13){hFont--;sprite=glyphBitmap(label,hFont)}
+  text(label,x+w*.58,y+(h-sprite.h)/2,hFont,COL.ink);
+ }
  buttonIcon(state==='menu'?['play','continue','gear','exit'][i]:'back',x+w*.17,y+h*.5,Math.round(h*.36),COL.ink);
  if(disabled){ // Do not pretend "Continue" works without an actual stored start.
   R(x+w-20,y+h-8,2,2,COL.blue)
