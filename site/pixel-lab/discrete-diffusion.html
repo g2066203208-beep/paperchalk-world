@@ -48,12 +48,13 @@ button{background:var(--pink);border:0;border-radius:8px;padding:9px 13px;font-w
 const colors=['#393657','#F2A5C2','#A9BAE9','#FFF5E6'];
 const id=x=>document.getElementById(x);
 let modelData=null,pose='B',on=true;
-const dec=s=>{
- const bytes=atob(s),values=new Uint8Array(bytes.length*4);
- for(let i=0;i<bytes.length;i++)for(let j=0;j<4;j++)values[i*4+j]=(bytes.charCodeAt(i)>>(2*j))&3;
- if(values.length!==48*64)throw Error('Invalid raw token length '+values.length);
+async function dec(s){
+ const compressed=Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+ const stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate'));
+ const values=new Uint8Array(await new Response(stream).arrayBuffer());
+ if(values.length!==48*64||values.some(v=>v>3))throw Error('Invalid model token data');
  return values;
-};
+}
 function draw(name,tokens){
  const canvas=id(name),ctx=canvas.getContext('2d');
  ctx.clearRect(0,0,384,512);
@@ -73,8 +74,12 @@ function draw(name,tokens){
   id('stats').textContent='像素 ('+x+', '+y+')：'+colors[tokens[y*48+x]]+'。 '+modelData.reportText;
  };
 }
-function render(){
- const imgs=modelData.images[pose];for(const type of ['original','coarse','generated','repair'])draw(type,dec(imgs[type]));
+async function render(){
+ const current=pose,imgs=modelData.images[current],types=['original','coarse','generated','repair'];
+ const decoded=await Promise.all(types.map(type=>dec(imgs[type])));
+ if(current!==pose)return;
+ modelData.decoded=Object.fromEntries(types.map((type,i)=>[type,decoded[i]]));
+ for(let i=0;i<types.length;i++)draw(types[i],decoded[i]);
  id('stats').textContent=modelData.reportText;
 }
 function actualPNG(tokens){
@@ -90,7 +95,7 @@ id('pose').onchange=e=>{pose=e.target.value;if(modelData)render()};
 id('grid').onchange=e=>{on=e.target.checked;if(modelData)render()};
 id('save').onclick=()=>{
  const a=document.createElement('a');a.download='D-'+pose+'-masked-diffusion-48x64.png';
- a.href=actualPNG(dec(modelData.images[pose].generated));a.click();
+ a.href=actualPNG(modelData.decoded.generated);a.click();
 };
 fetch('./diffusion-outputs.json').then(r=>{if(!r.ok)throw Error('trained report not deployed');return r.json()})
 .then(d=>{
