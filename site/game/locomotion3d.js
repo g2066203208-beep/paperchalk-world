@@ -12,7 +12,7 @@ export const STANCES=Object.freeze({
 });
 export const MOTION_CONFIG=Object.freeze({
  stepPeak:.84,stepRelease:.34,minStepMs:200,maxStepMs:1250,stepTimeoutMs:900,
- squatPulse:2.1,squatBrake:1.25,squatMinMs:90,squatMaxMs:740,squatCooldownMs:1000,
+ squatPulse:1.15,squatBrake:.72,squatMinMs:110,squatMaxMs:1100,squatCooldownMs:1050,
  crouchOn:29,crouchOff:23,proneOn:62,proneOff:54
 });
 export const hypot2=(x,y)=>Math.hypot(x,y);
