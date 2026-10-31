@@ -315,3 +315,38 @@
 @media (max-aspect-ratio:5/4) and (min-height:571px){
  #pw-dialogue{top:auto;bottom:max(8px,env(safe-area-inset-bottom))}
 }
+
+/* ART-DIRECTION / V2: the first-person world is the hero, not a telemetry
+ * dashboard. Controls remain accessible, advanced sensor data behind Settings.
+ * All surfaces use the existing four-ink system (no fifth UI color).
+ */
+#pw-world-bottom.pw-world-compact{
+ width:min(94vw,430px);max-height:min(26dvh,180px);
+ padding:6px 9px;gap:3px;left:50%;right:auto;bottom:max(6px,env(safe-area-inset-bottom));
+ transform:translateX(-50%);
+}
+#pw-world-bottom.pw-world-compact .pw-world-angles,
+#pw-world-bottom.pw-world-compact #pw-gyro-debug,
+#pw-world-bottom.pw-world-compact .pw-world-help,
+#pw-world-bottom.pw-world-compact .pw-world-controls,
+#pw-world-bottom.pw-world-compact #pw-walk-help{display:none}
+#pw-world-bottom.pw-world-compact .pw-world-line{gap:5px}
+#pw-world-bottom.pw-world-compact .pw-world-line>div>strong{font-size:11px;letter-spacing:.02em}
+#pw-world-bottom.pw-world-compact #pw-motion-status{display:block;max-width:260px;font-size:10px;line-height:1.15}
+#pw-world-bottom.pw-world-compact .pw-world-move-data{font-size:10px;gap:3px}
+#pw-world-bottom.pw-world-compact .pw-world-actions .pw-btn{min-height:27px;padding:3px 5px;font-size:11px}
+#pw-world-bottom.pw-world-compact .pw-world-stance-buttons .pw-btn{min-height:27px;padding:3px 5px;font-size:11px}
+#pw-world-bottom.pw-world-compact .pw-world-locomotion{gap:3px;padding-top:3px;border-top:1px solid var(--ink)}
+#pw-shop-panel{width:min(38vw,205px);gap:2px;padding:6px}
+#pw-shop-panel strong{font-size:11px}
+#pw-shop-panel small{font-size:10px}
+@media(max-width:420px) and (min-height:651px){
+ #pw-world-bottom.pw-world-compact{width:min(96vw,390px);max-height:205px}
+ #pw-world-bottom.pw-world-compact .pw-world-line>div{max-width:185px}
+ #pw-shop-panel{width:min(46vw,180px)}
+}
+@media (min-aspect-ratio:5/4) and (max-height:650px){
+ #pw-world-bottom.pw-world-compact{right:7px;left:auto;transform:none;bottom:6px;width:min(46vw,400px);max-height:calc(100dvh - 150px)}
+ #pw-world-bottom.pw-world-compact .pw-world-move-data{display:none}
+ #pw-world-bottom.pw-world-compact #pw-motion-status{display:none}
+}
