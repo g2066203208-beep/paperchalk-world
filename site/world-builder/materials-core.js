@@ -80,7 +80,7 @@ function drawTile(type){
   break;
  case 'plaster':
   a=blank(4); // intentionally quiet: structural depth is in the model
-  h(a,0,15,16,3);v(a,15,0,3,3);
+  h(a,2,15,6,3);v(a,15,0,3,3);
   break;
  case 'roof':
   a=blank(1);
