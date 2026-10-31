@@ -1,0 +1,47 @@
+{
+  "status": "real PyTorch pseudo-supervised silhouette study; not trained on human professional pixel art",
+  "train_characters": 30,
+  "holdout_characters": 6,
+  "total_training_steps": 250,
+  "holdout": [
+    {
+      "id": "R6C1",
+      "noisy_baseline_iou": 0.84783,
+      "trained_cnn_iou": 0.97735,
+      "improved": true
+    },
+    {
+      "id": "R6C2",
+      "noisy_baseline_iou": 0.86053,
+      "trained_cnn_iou": 0.9625,
+      "improved": true
+    },
+    {
+      "id": "R6C3",
+      "noisy_baseline_iou": 0.85714,
+      "trained_cnn_iou": 0.98276,
+      "improved": true
+    },
+    {
+      "id": "R6C4",
+      "noisy_baseline_iou": 0.85174,
+      "trained_cnn_iou": 0.9596,
+      "improved": true
+    },
+    {
+      "id": "R6C5",
+      "noisy_baseline_iou": 0.85841,
+      "trained_cnn_iou": 0.96594,
+      "improved": true
+    },
+    {
+      "id": "R6C6",
+      "noisy_baseline_iou": 0.87671,
+      "trained_cnn_iou": 0.97406,
+      "improved": true
+    }
+  ],
+  "all_holdouts_beaten": true,
+  "promotion_policy": "Never overwrite the verified 24x24 palette-index sprites; CNN mask is experimental only.",
+  "visual_quality_conclusion": "An IoU win on synthetic corruption does NOT prove pixel-art craft."
+}

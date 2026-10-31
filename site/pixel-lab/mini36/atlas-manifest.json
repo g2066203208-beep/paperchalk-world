@@ -1,0 +1,464 @@
+{
+  "status": "experimental indexed pixel reconstruction, NOT approved artist gold",
+  "characters": 36,
+  "grid": [
+    6,
+    6
+  ],
+  "sprite_grid": [
+    24,
+    24
+  ],
+  "gallery_cell": [
+    40,
+    40
+  ],
+  "logical_atlas": [
+    240,
+    240
+  ],
+  "display_size": [
+    960,
+    960
+  ],
+  "one_cell_one_color": true,
+  "nearest_neighbor_verified": true,
+  "pixel_data_sha256": "cd406a55ba1119cc31b7464fafd390a7622972318a0622825fcdddca911575d8",
+  "concept_source_sha256": "c13119d4d2eb175b7d1efd3df950b5aeaa2a4636b3e13a779a350085491d97bf",
+  "source_kind": "AI-generated concept; discrete sprites extracted algorithmically, not human-authored art",
+  "method": "segmented each of 36 cells, rebuilt RGBA palette-index pixels and packed 4bit color indices",
+  "sprites": [
+    {
+      "id": "R1C1",
+      "name": "抽烟侦探",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 284,
+      "transparent_pixels": 292,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R1C2",
+      "name": "沉默浪人",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 250,
+      "transparent_pixels": 326,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R1C3",
+      "name": "观星老人",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 313,
+      "transparent_pixels": 263,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R1C4",
+      "name": "银发朋克少女",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 247,
+      "transparent_pixels": 329,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R1C5",
+      "name": "街头快递员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 280,
+      "transparent_pixels": 296,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R1C6",
+      "name": "腼腆花店少女",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 264,
+      "transparent_pixels": 312,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R2C1",
+      "name": "拳击手",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 272,
+      "transparent_pixels": 304,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R2C2",
+      "name": "惊慌飞行员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 263,
+      "transparent_pixels": 313,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R2C3",
+      "name": "快乐厨师",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 254,
+      "transparent_pixels": 322,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R2C4",
+      "name": "冷静指挥官",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 240,
+      "transparent_pixels": 336,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R2C5",
+      "name": "小个子女巫",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 271,
+      "transparent_pixels": 305,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R2C6",
+      "name": "暴躁铁匠",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 329,
+      "transparent_pixels": 247,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R3C1",
+      "name": "深海探索者",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 324,
+      "transparent_pixels": 252,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R3C2",
+      "name": "摇滚歌手",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 320,
+      "transparent_pixels": 256,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R3C3",
+      "name": "白发医师",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 274,
+      "transparent_pixels": 302,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R3C4",
+      "name": "蒸汽机械师",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 321,
+      "transparent_pixels": 255,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R3C5",
+      "name": "哥特女王",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 309,
+      "transparent_pixels": 267,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R3C6",
+      "name": "温和农夫",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 314,
+      "transparent_pixels": 262,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R4C1",
+      "name": "焦虑图书管理员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 254,
+      "transparent_pixels": 322,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R4C2",
+      "name": "沙漠赏金猎人",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 333,
+      "transparent_pixels": 243,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R4C3",
+      "name": "马戏杂技演员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 320,
+      "transparent_pixels": 256,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R4C4",
+      "name": "深夜黑客",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 263,
+      "transparent_pixels": 313,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R4C5",
+      "name": "老航海家",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 311,
+      "transparent_pixels": 265,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R4C6",
+      "name": "倦怠贵族女性",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 279,
+      "transparent_pixels": 297,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R5C1",
+      "name": "仿生机器人",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 258,
+      "transparent_pixels": 318,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R5C2",
+      "name": "街头速写画家",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 342,
+      "transparent_pixels": 234,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R5C3",
+      "name": "动物驯养员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 331,
+      "transparent_pixels": 245,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R5C4",
+      "name": "蒙面急救员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 312,
+      "transparent_pixels": 264,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R5C5",
+      "name": "疲惫公交司机",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 312,
+      "transparent_pixels": 264,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R5C6",
+      "name": "灯塔守望者",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 343,
+      "transparent_pixels": 233,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R6C1",
+      "name": "山地巡护员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 306,
+      "transparent_pixels": 270,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R6C2",
+      "name": "受伤侦察员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 313,
+      "transparent_pixels": 263,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R6C3",
+      "name": "流动摊贩",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 345,
+      "transparent_pixels": 231,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R6C4",
+      "name": "机器人修理师",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 291,
+      "transparent_pixels": 285,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R6C5",
+      "name": "流浪小提琴家",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 318,
+      "transparent_pixels": 258,
+      "approved_artist_gold": false
+    },
+    {
+      "id": "R6C6",
+      "name": "消防员",
+      "size": [
+        24,
+        24
+      ],
+      "colors": 14,
+      "opaque_pixels": 342,
+      "transparent_pixels": 234,
+      "approved_artist_gold": false
+    }
+  ]
+}
