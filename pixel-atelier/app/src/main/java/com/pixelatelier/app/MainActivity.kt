@@ -697,11 +697,32 @@ private fun PixelViewport(
                 }
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
-                    var last = toPixel(down.position)
-                    var first = last
+                    val first = toPixel(down.position)
+                    var last = first
                     var stroke = false
                     var multi = false
-
+                    val shapeKind = tool.shapeKind()
+                    var currentShape = currentPreview
+                    var modifyingStart = false
+                    if (mode != TouchMode.CURSOR && shapeKind != null) {
+                        val existing = currentShape
+                        val hitRadius = 25f * density
+                        fun screenOf(p: PixelPoint) = Offset(
+                            pan.value.x + (p.x + 0.5f) * zoom.floatValue,
+                            pan.value.y + (p.y + 0.5f) * zoom.floatValue
+                        )
+                        val hitStart = existing != null && existing.kind == shapeKind &&
+                            (down.position-screenOf(existing.start)).getDistance() <= hitRadius
+                        val hitEnd = existing != null && existing.kind == shapeKind &&
+                            (down.position-screenOf(existing.end)).getDistance() <= hitRadius
+                        if (hitStart || hitEnd) {
+                            modifyingStart = hitStart && !hitEnd
+                        } else {
+                            currentShape = ShapeDraft(shapeKind,PixelPoint(first.x,first.y),
+                                PixelPoint(first.x,first.y),color)
+                            currentDraftUpdate(currentShape)
+                        }
+                    }
                     fun plot(point: IntOffset) {
                         if (point.x !in 0 until doc.width || point.y !in 0 until doc.height) return
                         when (tool) {
@@ -715,11 +736,11 @@ private fun PixelViewport(
                     }
                     if (mode != TouchMode.CURSOR) {
                         if (mode == TouchMode.OFFSET) currentCursor(first)
-                        if (tool !in listOf(EditorTool.PICKER, EditorTool.SELECT_RECT,
-                                EditorTool.ELLIPSE, EditorTool.FILLED_ELLIPSE)) {
+                        if (shapeKind == null && tool != EditorTool.PICKER) {
                             doc.beginStroke(); stroke = true
                         }
-                        if (tool in listOf(EditorTool.PENCIL,EditorTool.ERASER,EditorTool.FILL,EditorTool.PICKER)) plot(first)
+                        if (tool in listOf(EditorTool.PENCIL,EditorTool.ERASER,
+                                EditorTool.FILL,EditorTool.PICKER)) plot(first)
                     } else currentCursor(first)
 
                     while (true) {
@@ -735,61 +756,46 @@ private fun PixelViewport(
                             val a = pressed[0]; val b = pressed[1]
                             val prevCenter = (a.previousPosition + b.previousPosition)/2f
                             val nowCenter = (a.position + b.position)/2f
-                            val oldDistance = (a.previousPosition - b.previousPosition).getDistance()
-                            val newDistance = (a.position - b.position).getDistance()
+                            val oldDistance = (a.previousPosition-b.previousPosition).getDistance()
+                            val newDistance = (a.position-b.position).getDistance()
                             val oldScale = zoom.floatValue
                             val factor = if (oldDistance > 3f) newDistance / oldDistance else 1f
-                            val newScale = (oldScale * factor).coerceIn(0.2f,64f)
+                            val newScale = (oldScale*factor).coerceIn(0.2f,64f)
                             val anchor = (prevCenter-pan.value)/oldScale
-                            pan.value = nowCenter - anchor*newScale
+                            pan.value = nowCenter-anchor*newScale
                             zoom.floatValue = newScale
                             event.changes.forEach { it.consume() }
-                        } else if (pressed.size == 1 && !multi) {
-                            val point = toPixel(pressed[0].position)
-                            if (mode == TouchMode.OFFSET) currentCursor(point)
-                            if (mode == TouchMode.CURSOR) {
-                                currentCursor(IntOffset(point.x.coerceIn(0,doc.width-1),
-                                    point.y.coerceIn(0,doc.height-1)))
-                            } else when(tool) {
-                                EditorTool.PENCIL, EditorTool.ERASER -> {
+                        } else if (!multi) {
+                            val changed = pressed.firstOrNull()
+                                ?: event.changes.firstOrNull()
+                            if (changed != null) {
+                                val point = toPixel(changed.position)
+                                if (mode == TouchMode.OFFSET) currentCursor(point)
+                                if (mode == TouchMode.CURSOR) {
+                                    currentCursor(IntOffset(point.x.coerceIn(0,doc.width-1),
+                                        point.y.coerceIn(0,doc.height-1)))
+                                } else if (shapeKind != null) {
+                                    val draft = currentShape
+                                    if (draft != null) {
+                                        currentShape = if (modifyingStart)
+                                            draft.withStart(PixelPoint(point.x,point.y))
+                                        else draft.withEnd(PixelPoint(point.x,point.y))
+                                        currentDraftUpdate(currentShape)
+                                    }
+                                } else if (tool == EditorTool.PENCIL || tool == EditorTool.ERASER) {
                                     if (stroke && point != last) {
                                         doc.line(last.x,last.y,point.x,point.y,
                                             if (tool == EditorTool.ERASER) 0 else color)
                                         currentChanged()
                                     }
                                 }
-                                else -> Unit
+                                last = point
                             }
-                            last = point
                         }
                         if (pressed.isEmpty()) break
                     }
-                    if (!multi && mode != TouchMode.CURSOR) {
-                        if (tool in listOf(EditorTool.LINE,EditorTool.RECT,EditorTool.FILLED_RECT)) {
-                            doc.beginStroke(); stroke = true
-                            val argb = color
-                            when(tool) {
-                                EditorTool.LINE -> doc.line(first.x,first.y,last.x,last.y,argb)
-                                EditorTool.RECT -> doc.rectangle(first.x,first.y,last.x,last.y,argb)
-                                EditorTool.FILLED_RECT -> doc.rectangle(first.x,first.y,last.x,last.y,argb,true)
-                                else -> Unit
-                            }
-                        }
-                        if (tool == EditorTool.SELECT_RECT) {
-                            val x0 = first.x.coerceIn(0, doc.width-1)
-                            val y0 = first.y.coerceIn(0, doc.height-1)
-                            val x1 = last.x.coerceIn(0, doc.width-1)
-                            val y1 = last.y.coerceIn(0, doc.height-1)
-                            currentSelection(SelectionMask.rectangle(doc.width, doc.height,
-                                minOf(x0,x1), minOf(y0,y1),
-                                maxOf(x0,x1) + 1, maxOf(y0,y1) + 1))
-                        }
-                        if (tool == EditorTool.ELLIPSE || tool == EditorTool.FILLED_ELLIPSE) {
-                            if (PixelSelectionTools.drawEllipse(doc, minOf(first.x,last.x),
-                                minOf(first.y,last.y), maxOf(first.x,last.x)+1, maxOf(first.y,last.y)+1,
-                                color, tool == EditorTool.FILLED_ELLIPSE)) currentCommit()
-                        }
-                        if (stroke) { doc.finishStroke(); currentCommit() }
+                    if (!multi && stroke && mode != TouchMode.CURSOR) {
+                        if (doc.finishStroke()) currentCommit()
                     }
                 }
             }
