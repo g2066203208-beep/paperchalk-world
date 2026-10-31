@@ -1,0 +1,42 @@
+name: Pixel Character AI Research
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/pixel-lab/character-ai/**'
+      - 'research/pixel-character-ai/**'
+      - 'tests/pixel-character-ai.test.mjs'
+      - '.github/workflows/pixel-character-ai.yml'
+  pull_request:
+    paths:
+      - 'site/pixel-lab/character-ai/**'
+      - 'research/pixel-character-ai/**'
+      - 'tests/pixel-character-ai.test.mjs'
+      - '.github/workflows/pixel-character-ai.yml'
+  workflow_dispatch:
+jobs:
+  pixel-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check site/pixel-lab/character-ai/core.mjs
+      - run: node --test tests/pixel-character-ai.test.mjs
+  pytorch-model-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU PyTorch and image dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install numpy Pillow
+      - name: Verify model and dataset invariants
+        run: |
+          cd research/pixel-character-ai
+          python -m unittest discover -s . -p 'test_*.py' -v
