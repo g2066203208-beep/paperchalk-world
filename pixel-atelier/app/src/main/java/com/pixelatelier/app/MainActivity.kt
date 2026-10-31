@@ -355,7 +355,7 @@ private fun AtelierApp(store: ProjectStore) {
                     val op = editOperation!!
                     Column(Modifier.fillMaxWidth().background(Color(0xFF34405A))
                         .padding(horizontal=12.dp,vertical=8.dp)) {
-                        Text("操作预览 · " + op.label + "（可撤销）",
+                        Text("操作预览 · " + op.label + "（可撤销；锁定图层保留）",
                             style=MaterialTheme.typography.labelLarge)
                         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End) {
                             TextButton(onClick = { editOperation = null }) { Text("取消") }
@@ -435,6 +435,10 @@ private fun AtelierApp(store: ProjectStore) {
                     Spacer(Modifier.width(9.dp))
                     TextButton(onClick = { showColors = true }) { Text("颜色") }
                     TextButton(onClick = { showLayers = true }) { Text("图层 " + doc.layers.size) }
+                    TextButton(onClick = {
+                        preview = null
+                        editOperation = EditOperation.CLEAR_ALL
+                    }) { Text("清空画布") }
                     if (selection != null) {
                         TextButton(onClick = {
                             internalClipboard = PixelSelectionTools.copy(doc, selection!!)
@@ -567,35 +571,11 @@ private fun AtelierApp(store: ProjectStore) {
         )
     }
 
-    if (showColors) AlertDialog(
-        onDismissRequest = { showColors = false },
-        title = { Text("选择像素颜色") },
-        text = {
-            Column {
-                PixelColors.chunked(6).forEach { line ->
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        line.forEach { shade ->
-                            Box(Modifier.padding(3.dp).size(36.dp).clip(RoundedCornerShape(8.dp))
-                                .background(Color(shade))
-                                .border(if (color == shade) 2.dp else 0.dp, Accent, RoundedCornerShape(8.dp))
-                                .clickable { color = shade; showColors = false })
-                        }
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                var hex by remember(color) { mutableStateOf("%08X".format(color)) }
-                OutlinedTextField(hex, { hex = it.take(8).uppercase() },
-                    label = { Text("RGBA 十六进制 (AARRGGBB)") }, singleLine = true)
-                TextButton(onClick = {
-                    val parsed = hex.toLongOrNull(16)
-                    if (parsed != null && hex.length == 8) {
-                        color = parsed.toInt()
-                        showColors = false
-                    }
-                }) { Text("使用自定义颜色") }
-            }
-        },
-        confirmButton = { TextButton(onClick = { showColors = false }) { Text("完成") } }
+    if (showColors) ProfessionalColorPicker(
+        initialColor=color,
+        presetColors=PixelColors,
+        onCommit={ chosen -> color=chosen; showColors=false },
+        onDismiss={ showColors=false }
     )
 
     val activeDoc = document
