@@ -236,6 +236,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   if(!active)return;
   buttons=[];
   lastLayout=computeBarLayout(W,H);
+  lastLayout.fullPortrait=computeFullPortraitPlacement(lastLayout.room);
   R(0,0,W,H,COL.ink);
   // Paint order is intentional: scene, speech, mixing, shared top bar.
   scene(lastLayout.room,ctx);
