@@ -82,6 +82,9 @@ function render(){
  $('study-note').replaceChildren();
  $('study-note').append(el('strong','',active?'本游戏研究重点':'PAPERWORLD 对照研究'));
  $('study-note').append(el('span','',active?active.focus:'先看柜台顶面与人物分层，再看档案操作与窗口反馈。不得把其他游戏的成品 UI 当作我们自己的贴图使用。'));
+ const fav=$('favorite-game');
+ fav.hidden=!active;
+ if(active){const saved=state.saved.has(active.id);fav.textContent=saved?'★ 已收藏':'☆ 收藏这款';fav.setAttribute('aria-pressed',String(saved))}
  const source=$('official-source');
  source.hidden=!active;
  if(active){source.href=storeLink(active.id);source.textContent='Steam 官方页面 ↗'}
@@ -129,6 +132,14 @@ $('core-only').addEventListener('change',e=>{state.core=e.target.checked;state.s
 $('saved-only').addEventListener('change',e=>{state.onlySaved=e.target.checked;state.selected=0;state.visible=48;render()});
 $('all-games').addEventListener('click',()=>{state.selected=0;state.tag='全部';state.query='';$('search').value='';state.core=false;$('core-only').checked=false;state.onlySaved=false;$('saved-only').checked=false;state.visible=48;render()});
 $('more').addEventListener('click',()=>{state.visible+=48;render()});
+$('favorite-game').addEventListener('click',()=>{
+ const id=state.selected;if(!id)return;
+ if(state.saved.has(id))state.saved.delete(id);else state.saved.add(id);
+ try{localStorage.setItem('paperworld-study-saved-v1',JSON.stringify([...state.saved]))}catch{}
+ if(state.onlySaved&&!state.saved.has(id))state.selected=0;
+ render();
+});
+
 async function loadImages(){
  let parsed=null;
  try{
