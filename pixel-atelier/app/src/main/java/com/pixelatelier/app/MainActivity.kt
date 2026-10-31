@@ -36,6 +36,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -241,7 +242,8 @@ private fun AtelierApp(store: ProjectStore) {
         } else {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 4.dp),
+                    Modifier.fillMaxWidth().heightIn(min = 56.dp).testTag("top-toolbar")
+                        .padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { closeProject() }, modifier = Modifier.size(48.dp)) {
@@ -278,6 +280,7 @@ private fun AtelierApp(store: ProjectStore) {
                 if (preview != null) {
                     val draft = preview!!
                     Column(Modifier.fillMaxWidth().background(Color(0xFF243248))
+                        .testTag("shape-preview-controls")
                         .padding(horizontal = 10.dp, vertical = 6.dp)) {
                         Text(
                             "预览 · " + draft.kind.labelZh() + " (" +
@@ -687,7 +690,7 @@ private fun PixelViewport(
     }
 
     Canvas(
-        modifier.background(Color(0xFF10151E))
+        modifier.background(Color(0xFF10151E)).testTag("pixel-canvas")
             .onSizeChanged { viewport.value = it }
             .pointerInput(doc, tool, color, mode) {
                 fun toPixel(point: Offset): IntOffset {
