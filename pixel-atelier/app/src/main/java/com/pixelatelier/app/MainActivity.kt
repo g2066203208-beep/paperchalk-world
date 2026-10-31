@@ -305,7 +305,9 @@ private fun AtelierApp(store: ProjectStore) {
                                     modifier = Modifier.widthIn(min=32.dp)
                                 ) { Text(label) }
                             }
-                            Spacer(Modifier.weight(1f))
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically) {
                             TextButton(onClick = {
                                 preview = null
                                 cursorShapeAnchored = false
