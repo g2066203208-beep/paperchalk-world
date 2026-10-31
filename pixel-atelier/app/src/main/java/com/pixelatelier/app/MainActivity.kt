@@ -677,7 +677,7 @@ private fun PixelViewport(
         isFilterBitmap=false; isAntiAlias=false
     } }
     val previewGuidePaint = remember { android.graphics.Paint().apply {
-        isAntiAlias=true; color=android.graphics.Color.WHITE; strokeWidth=2f
+        isAntiAlias=true; this.color=android.graphics.Color.WHITE; strokeWidth=2f
         style=android.graphics.Paint.Style.STROKE
     } }
     val gridPaint = remember {
@@ -868,7 +868,7 @@ private fun PixelViewport(
                     val bounds = mask.bounds()
                     if (bounds != null) {
                         val tint = android.graphics.Paint().apply {
-                            color=0x44699CF9; isAntiAlias=false
+                            this.color=0x44699CF9; isAntiAlias=false
                         }
                         canvas.drawRect(left+bounds.left*scale,top+bounds.top*scale,
                             left+bounds.right*scale,top+bounds.bottom*scale,tint)
