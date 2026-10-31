@@ -1,0 +1,194 @@
+package com.pixelatelier.app
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.AtomicFile
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+
+/** Versioned, atomic, fully local project archive. One pixel = one encoded ARGB integer. */
+class ProjectStore(context: Context) {
+    private val folder = File(context.filesDir, "projects").apply { mkdirs() }
+
+    fun list(): List<File> = folder.listFiles { file -> file.isFile && file.name.endsWith(".pixelatelier") }
+        ?.sortedByDescending { it.lastModified() } ?: emptyList()
+
+    private fun file(id: String) = File(folder, id.filter { it.isLetterOrDigit() || it == '-' } + ".pixelatelier")
+
+    fun save(document: PixelDocument) {
+        val target = AtomicFile(file(document.id))
+        val output = target.startWrite()
+        try {
+            ZipOutputStream(object : java.io.FilterOutputStream(output) {
+                override fun close() { flush() } // AtomicFile owns and fsyncs the descriptor
+            }).use { zip ->
+                val manifest = JSONObject()
+                manifest.put("format", "pixelatelier")
+                manifest.put("version", 2)
+                manifest.put("id", document.id)
+                manifest.put("title", document.title)
+                manifest.put("width", document.width)
+                manifest.put("height", document.height)
+                manifest.put("active", document.activeLayer)
+                val layers = JSONArray()
+                document.layers.forEachIndexed { i, layer ->
+                    layers.put(JSONObject()
+                        .put("id", layer.id)
+                        .put("name", layer.name)
+                        .put("visible", layer.visible)
+                        .put("locked", layer.locked)
+                        .put("opacity", layer.opacity)
+                        .put("blendMode", layer.blendMode.name)
+                        .put("alphaLocked", layer.alphaLocked)
+                        .put("maskEnabled", layer.maskEnabled))
+                    layer.mask?.let { pixels ->
+                        require(pixels.size == document.width * document.height)
+                        zip.putNextEntry(ZipEntry("masks/" + i + ".gray"))
+                        zip.write(pixels)
+                        zip.closeEntry()
+                    }
+                    val bytes = ByteArrayOutputStream(document.width * document.height * 4)
+                    DataOutputStream(bytes).use { out -> layer.pixels.forEach { out.writeInt(it) } }
+                    zip.putNextEntry(ZipEntry("layers/" + i + ".argb"))
+                    zip.write(bytes.toByteArray())
+                    zip.closeEntry()
+                }
+                manifest.put("layers", layers)
+                zip.putNextEntry(ZipEntry("manifest.json"))
+                zip.write(manifest.toString().toByteArray(Charsets.UTF_8))
+                zip.closeEntry()
+            }
+            target.finishWrite(output)
+        } catch (error: Throwable) {
+            target.failWrite(output)
+            throw error
+        }
+    }
+
+    /** Native archive backup: preserves all layers and ARGB data, not just a flattened PNG. */
+    fun exportProject(document: PixelDocument, output: OutputStream) {
+        save(document)
+        file(document.id).inputStream().buffered().use { it.copyTo(output) }
+        output.flush()
+    }
+
+    /** Import a bounded archive with a fresh ID to avoid overwriting an existing project. */
+    fun importProject(input: InputStream): PixelDocument {
+        val scratch = File.createTempFile("pixelatelier-import-", ".tmp", folder)
+        try {
+            scratch.outputStream().buffered().use { target ->
+                val buffer = ByteArray(8192)
+                var total = 0L
+                while (true) {
+                    val n = input.read(buffer)
+                    if (n == -1) break
+                    total += n
+                    require(total <= 160L * 1024 * 1024) { "工程文件超过安全大小" }
+                    target.write(buffer, 0, n)
+                }
+            }
+            val loaded = load(scratch)
+            return PixelDocument(java.util.UUID.randomUUID().toString(), loaded.title,
+                loaded.width, loaded.height,
+                loaded.layers.map { it.copyLayer() }.toMutableList(), loaded.activeLayer)
+        } finally {
+            scratch.delete()
+        }
+    }
+
+    fun load(id: String): PixelDocument = load(file(id))
+
+    fun load(source: File): PixelDocument {
+        var manifest: JSONObject? = null
+        val raw = hashMapOf<Int, ByteArray>()
+        val masks = hashMapOf<Int, ByteArray>()
+        ZipInputStream(source.inputStream().buffered()).use { zip ->
+            while (true) {
+                val entry = zip.nextEntry ?: break
+                if (entry.name == "manifest.json") {
+                    val bytes = readBounded(zip, 128 * 1024)
+                    manifest = JSONObject(String(bytes, Charsets.UTF_8))
+                } else {
+                    val maskMatch = Regex("masks/([0-9]+)\\.gray").matchEntire(entry.name)
+                    if(maskMatch != null) {
+                        val index=maskMatch.groupValues[1].toInt()
+                        if(index in 0..31) masks[index]=readBounded(zip, 1024 * 1024)
+                    }
+                    val match = Regex("layers/([0-9]+)\\.argb").matchEntire(entry.name)
+                    if (match != null) {
+                        val index = match.groupValues[1].toInt()
+                        if (index in 0..31) raw[index] = readBounded(zip, 4 * 1024 * 1024)
+                    }
+                }
+                zip.closeEntry()
+            }
+        }
+        val json = manifest ?: error("缺少工程清单")
+        require(json.getString("format") == "pixelatelier" && json.getInt("version") in 1..2)
+        val w = json.getInt("width"); val h = json.getInt("height")
+        require(w in 1..1024 && h in 1..1024 && w.toLong() * h <= 1048576)
+        val infos = json.getJSONArray("layers")
+        require(infos.length() in 1..32)
+        val layers = (0 until infos.length()).map { i ->
+            val metadata = infos.getJSONObject(i)
+            val bytes = raw[i] ?: error("图层数据缺失")
+            require(bytes.size == w * h * 4) { "图层数据损坏" }
+            val input = DataInputStream(ByteArrayInputStream(bytes))
+            val pixels = IntArray(w * h) { input.readInt() }
+            val blendName=metadata.optString("blendMode","NORMAL")
+            val blend=PixelBlendMode.entries.firstOrNull { it.name==blendName }
+                ?: PixelBlendMode.NORMAL
+            val mask=masks[i]
+            if(mask != null) require(mask.size==w*h) { "遮罩数据损坏" }
+            PixelLayer(metadata.getLong("id"), metadata.getString("name"),
+                pixels, metadata.getBoolean("visible"), metadata.getBoolean("locked"),
+                metadata.getInt("opacity").coerceIn(0, 255),
+                blend, metadata.optBoolean("alphaLocked",false), mask,
+                metadata.optBoolean("maskEnabled",true))
+        }.toMutableList()
+        return PixelDocument(json.getString("id"), json.getString("title"), w, h,
+            layers, json.optInt("active").coerceIn(0, layers.lastIndex))
+    }
+
+    private fun readBounded(input: InputStream, limit: Int): ByteArray {
+        val output = ByteArrayOutputStream()
+        val buffer = ByteArray(8192)
+        while (true) {
+            val n = input.read(buffer)
+            if (n < 0) break
+            require(output.size() + n <= limit) { "项目文件超过安全大小" }
+            output.write(buffer, 0, n)
+        }
+        return output.toByteArray()
+    }
+
+    fun exportPng(document: PixelDocument, output: OutputStream) {
+        val bitmap = Bitmap.createBitmap(document.width, document.height, Bitmap.Config.ARGB_8888)
+        try {
+            bitmap.setPixels(document.composite(), 0, document.width, 0, 0, document.width, document.height)
+            require(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) { "PNG 写入失败" }
+        } finally { bitmap.recycle() }
+    }
+
+    fun importPng(input: InputStream): PixelDocument {
+        val bitmap = BitmapFactory.decodeStream(input) ?: error("无法读取图片")
+        try {
+            require(bitmap.width in 1..1024 && bitmap.height in 1..1024)
+            require(bitmap.width.toLong() * bitmap.height <= 1048576)
+            val doc = PixelDocument.new(bitmap.width, bitmap.height, "导入图片")
+            bitmap.getPixels(doc.currentLayer.pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+            return doc
+        } finally { bitmap.recycle() }
+    }
+}
