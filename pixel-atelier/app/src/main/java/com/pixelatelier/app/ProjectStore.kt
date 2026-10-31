@@ -67,6 +67,37 @@ class ProjectStore(context: Context) {
         }
     }
 
+    /** Native archive backup: preserves all layers and ARGB data, not just a flattened PNG. */
+    fun exportProject(document: PixelDocument, output: OutputStream) {
+        save(document)
+        file(document.id).inputStream().buffered().use { it.copyTo(output) }
+        output.flush()
+    }
+
+    /** Import a bounded archive with a fresh ID to avoid overwriting an existing project. */
+    fun importProject(input: InputStream): PixelDocument {
+        val scratch = File.createTempFile("pixelatelier-import-", ".tmp", folder)
+        try {
+            scratch.outputStream().buffered().use { target ->
+                val buffer = ByteArray(8192)
+                var total = 0L
+                while (true) {
+                    val n = input.read(buffer)
+                    if (n == -1) break
+                    total += n
+                    require(total <= 160L * 1024 * 1024) { "工程文件超过安全大小" }
+                    target.write(buffer, 0, n)
+                }
+            }
+            val loaded = load(scratch)
+            return PixelDocument(java.util.UUID.randomUUID().toString(), loaded.title,
+                loaded.width, loaded.height,
+                loaded.layers.map { it.copyLayer() }.toMutableList(), loaded.activeLayer)
+        } finally {
+            scratch.delete()
+        }
+    }
+
     fun load(id: String): PixelDocument = load(file(id))
 
     fun load(source: File): PixelDocument {

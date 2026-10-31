@@ -207,6 +207,45 @@ private fun AtelierApp(store: ProjectStore) {
         }
     }
 
+    val importProjectLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            try {
+                val imported = withContext(Dispatchers.IO) {
+                    context.contentResolver.openInputStream(uri)?.use { store.importProject(it) }
+                        ?: error("无法读取工程文件")
+                }
+                document = imported
+                preview = null; cursorShapeAnchored = false
+                selection = null; internalClipboard = null
+                cursor = IntOffset(imported.width / 2, imported.height / 2)
+                version++
+                scheduleSave(true)
+                snackbar.showSnackbar("像素工程导入成功，图层已保留")
+            } catch (e: Exception) {
+                snackbar.showSnackbar("导入工程失败：" + (e.message ?: "格式不支持"))
+            }
+        }
+    }
+    val exportProjectLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
+        val snapshot = document?.deepCopy()
+        if (uri != null && snapshot != null) scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    writeMutex.withLock {
+                        context.contentResolver.openOutputStream(uri)?.use {
+                            store.exportProject(snapshot, it)
+                        } ?: error("无法创建工程备份")
+                    }
+                }
+                snackbar.showSnackbar("原生像素工程备份成功，可用于迁移安装")
+            } catch (e: Exception) {
+                snackbar.showSnackbar("工程备份失败：" + (e.message ?: "存储异常"))
+            }
+        }
+    }
+
     Box(Modifier.fillMaxSize().background(SurfaceColor).safeDrawingPadding().imePadding()) {
         val doc = document
         if (doc == null) {
@@ -222,6 +261,10 @@ private fun AtelierApp(store: ProjectStore) {
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = { importLauncher.launch("image/png") }, modifier = Modifier.fillMaxWidth()) {
                     Text("导入 PNG 图片")
+                }
+                OutlinedButton(onClick = { importProjectLauncher.launch(arrayOf("*/*")) },
+                    modifier = Modifier.fillMaxWidth()) {
+                    Text("导入 .pixelatelier 原生工程")
                 }
                 Spacer(Modifier.height(28.dp))
                 Text("本地作品", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -555,6 +598,14 @@ private fun AtelierApp(store: ProjectStore) {
                     showOptions = false
                     exportLauncher.launch(activeDoc.title.replace(Regex("[\\/:*?\"<>|]"), "_") + ".png")
                 }) { Text("导出无损 PNG") }
+                TextButton(onClick = {
+                    showOptions = false
+                    exportProjectLauncher.launch(activeDoc.title.filter { it.isLetterOrDigit() || it == '-' || it == '_' }.ifBlank { "像素工程" } + ".pixelatelier")
+                }) { Text("备份完整工程（保留图层）") }
+                TextButton(onClick = {
+                    showOptions = false
+                    importProjectLauncher.launch(arrayOf("*/*"))
+                }) { Text("导入 .pixelatelier 工程") }
                 TextButton(onClick = {
                     showOptions = false
                     importLauncher.launch("image/png")
