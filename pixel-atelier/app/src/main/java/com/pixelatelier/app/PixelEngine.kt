@@ -78,7 +78,7 @@ class PixelDocument(
         val index = y * width + x
         val old = layer.pixels[index]
         val next = if (layer.alphaLocked) {
-            if (old ushr 24 == 0) return
+            if (old ushr 24 == 0 || argb ushr 24 == 0) return
             (old and -0x1000000) or (argb and 0x00FFFFFF)
         } else argb
         if (old == next) return
@@ -264,7 +264,7 @@ class PixelDocument(
                 if (mask != null && !mask.get(index % width, index / width)) continue
                 val before = layer.pixels[index]
                 val next = if (layer.alphaLocked) {
-                    if (before ushr 24 == 0) continue
+                    if (before ushr 24 == 0 || color ushr 24 == 0) continue
                     (before and -0x1000000) or (color and 0x00FFFFFF)
                 } else color
                 if (before == next) continue
@@ -360,7 +360,7 @@ class PixelDocument(
             val src=if(layer.id==currentLayer.id) {
                 val original=layer.pixels[index]
                 if(layer.alphaLocked) {
-                    if(original ushr 24 == 0) original
+                    if(original ushr 24 == 0 || previewArgb ushr 24 == 0) original
                     else (original and -0x1000000) or (previewArgb and 0x00FFFFFF)
                 } else previewArgb
             } else layer.pixels[index]
