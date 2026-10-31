@@ -214,7 +214,8 @@ function makeTown(lod='full'){
  for(let x=-144;x<=144;x+=24){
   for(const y of [-26,26]){
    if(Math.abs(x)<80)continue;
-   // Background trees are visual only, small hedges are walk-through decoration.
+   // Tree trunks are collidable even in the remote park; foliage is not.
+   solids.push({x,y,w:.72,d:.72});
    const leaf=hash(x,y)%3===0?MAT.leavespink:MAT.leavesblue;
    box(x,y,.06,.42,.42,2.35,0,MAT.bark,MAT.bark);
    box(x,y,2.1,2,2,.92,leaf===MAT.leavespink?1:2,leaf,leaf);
@@ -432,7 +433,7 @@ export function createWorld3D({onBack}){
   try{
    renderer??=makeRenderer(canvas);motor=new BodyMotor(renderer.solids);
    window.__PAPERWORLD_WORLD_MATERIALS__={texturedTriangles:renderer.materialTriangles,atlas:[128,64],materialCount:32,worldMeters:384,source:'official-four-ink-material-pack'};
-   note('3D 街区就绪 · 前后移动用按键/摇杆 · 手机左右倾斜直接探头');
+   note('384 米像素大世界 · 32 种原生材质已进入地面、道路、房屋和树木 · 触屏/按键移动');
   }catch(e){motor=new BodyMotor();note('WebGL 不可用：'+String(e.message||e))}
   setStance('stand');readouts();raf=requestAnimationFrame(draw);
  }
