@@ -32,6 +32,7 @@ jobs:
           node --check site/game/background.js
           node --check site/game/menu.js
           node --check site/game/bar-scene.js
+          node --check site/game/bar-environment.js
           node --check site/learning-library/gallery.js
           node --check site/learning-library/games.js
           node --check scripts/collect-game-reference-shots.mjs
