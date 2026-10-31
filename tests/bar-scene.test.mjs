@@ -74,7 +74,15 @@ test('complete hostess portrait keeps all 192×256 rows and is never behind coun
   const p=computeFullPortraitPlacement(r);
   assert.deepEqual(p.source,[192,256]);
   assert.ok(p.x>=r.x&&p.y>=r.y&&p.y+p.h<=r.y+r.h, 'vertical crop: '+w+' '+h);
-  assert.ok(p.x+p.w+4<p.deskStart,'counter overlaps full figure: '+w+' '+h);
+  assert.ok(p.x+p.w<=r.x+r.w,'full sprite may not leave the room: '+w+' '+h);
   assert.ok(Math.abs(p.w*256-p.h*192)<=192,'aspect ratio warped');
  }
+});
+
+test('long café counter is behind the complete character, not a separate little cabinet',()=>{
+ const scene=readFileSync('site/game/bar-scene.js','utf8');
+ const env=readFileSync('site/game/bar-environment.js','utf8');
+ assert.ok(scene.indexOf('drawBarInterior({p,rect,poly,caption,clock,counts})')<scene.indexOf('ctx.drawImage(art,0,0,192,256,'));
+ assert.match(env,/counterStart=x\+n\(w\*\.055\)/);
+ assert.match(env,/wallBottom/);
 });
