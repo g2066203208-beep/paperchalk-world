@@ -19,7 +19,7 @@ export const BAR_PALETTE=Object.freeze({
 const n=v=>Math.round(v);
 export function getBarInteriorGeometry(p){
  const {x,y,w,h}=p;
- const counterStart=x+n(w*(w<250?.57:.39));
+ const counterStart=x+n(w*.055);
  return {
   counterStart,topRear:y+n(h*.60),topNear:y+n(h*.73),
   bottom:y+h-1,wallBottom:y+n(h*.73)
