@@ -13,6 +13,7 @@ const el=document.getElementById('menu'), bg=document.getElementById('background
 const nativeLabels=document.getElementById('pw-menu-labels');
 const pixelEditorLink=document.getElementById('pw-pixel-editor-link');
 const worldBuilderLink=document.getElementById('pw-world-builder-link');
+const gameReferenceLink=document.getElementById('pw-reference-library-link');
 // Native form controls sit above the game canvas. Preserve the same clean
 // touch feedback there, without stealing focus from Chinese text inputs.
 const uiTouchFx=document.getElementById('pw-ui-touch-fx');
@@ -132,6 +133,7 @@ function buttons(){
 function updateNativeLabels(){
  if(pixelEditorLink)pixelEditorLink.hidden=state!=='menu';
  if(worldBuilderLink)worldBuilderLink.hidden=state!=='menu';
+  if(gameReferenceLink)gameReferenceLink.hidden=state!=='menu';
  if(!nativeLabels)return;
  nativeLabels.replaceChildren();
  if(state==='intro'||state==='lease'||state==='world')return;
@@ -230,6 +232,7 @@ function switchScene(next){
  if(nativeLabels)nativeLabels.style.visibility='hidden';
  if(pixelEditorLink)pixelEditorLink.hidden=true;
  if(worldBuilderLink)worldBuilderLink.hidden=true;
+  if(gameReferenceLink)gameReferenceLink.hidden=true;
  curtain={next,phase:'close',elapsed:0};hover=-1;held=-1;
 }
 function updateCurtain(dt){
