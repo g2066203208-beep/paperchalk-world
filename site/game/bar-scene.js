@@ -150,7 +150,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
    else if(stage==='served')resetForNext();
    return true;
   }
-  if(b.id.startsWith('m')){
+  if(/^m[0-2]$/.test(b.id)){
    if(stage==='greeting'){resetForNext()}
    if(stage==='served'){resetForNext()}
    counts[Number(b.id[1])]=clamp(counts[Number(b.id[1])]+1,0,5);
