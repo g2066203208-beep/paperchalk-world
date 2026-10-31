@@ -30,7 +30,16 @@ function makeTown(lod='full'){
    // Real UV mapped triangles following the exact physical faces of this mesh.
    // One 16px material tile corresponds to about 2m of surface.
    const length=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]);
-   const u=Math.max(1/16,length(a,b)/2),v=Math.max(1/16,length(b,c)/2);
+   // Material scale is semantic, not one noisy 16px tile every 2m.
+   // Large calm road/field surfaces get coarse world-space detail;
+   // crafted door/window textures retain their smaller pixel scale.
+   const meters=material===MAT.asphalt?16:material===MAT.grass?10:
+    material===MAT.sidewalk?6:material===MAT.plaster?8:
+    material===MAT.wallblue?7:material===MAT.brick?4:
+    material===MAT.wood?4:material===MAT.roof?5:
+    material===MAT.leavesblue||material===MAT.leavespink?4:
+    material===MAT.cobble?4:material===MAT.wildgrass?8:3;
+   const u=Math.max(1/16,length(a,b)/meters),v=Math.max(1/16,length(b,c)/meters);
    const coords=[a,b,c,a,c,d],tex=[[0,0],[u,0],[u,v],[0,0],[u,v],[0,v]];
    coords.forEach((p,i)=>{materialPosition.push(...p);materialUV.push(...tex[i]);materialID.push(material)});
   }
