@@ -122,6 +122,26 @@ try{
  await reduced.locator('#hand-cards .play-card').first().click();
  assert.equal(await reduced.locator('#selected-count').innerText(),'1 / 5','reduced motion must preserve touch gameplay');
  await reduced.close();
+ // Capture a real interactive animation sequence: idle floating, two tactile
+ // selections, then actual playing/scoring. Screenshots remain raw Chromium
+ // output rather than a separately fabricated motion showcase.
+ const motionPage=await browser.newPage({viewport:{width:960,height:620},deviceScaleFactor:1,
+  reducedMotion:'no-preference'});
+ motionPage.on('pageerror',e=>errors.push('motion-preview: '+e.message));
+ await motionPage.goto(base+'/card-game/',{waitUntil:'load'});
+ await motionPage.waitForFunction(()=>window.__PAPERWORLD_CARD_GAME__);
+ mkdirSync('artifacts/card-paradox/motion-frames',{recursive:true});
+ for(let i=0;i<26;i++){
+  if(i===5)await motionPage.locator('#hand-cards .play-card').first().click({force:true});
+  if(i===10)await motionPage.locator('#hand-cards .play-card').nth(1).click({force:true});
+  if(i===14)await motionPage.locator('#play-button').click();
+  await motionPage.screenshot({path:'artifacts/card-paradox/motion-frames/'+String(i).padStart(2,'0')+'.png',
+   animations:'allow'});
+  await motionPage.waitForTimeout(105);
+ }
+ const motionStats=await motionPage.evaluate(()=>window.__PAPERWORLD_CARD_GAME__.snapshot());
+ assert.ok(motionStats.score>0,'animation frames must depict actual game scoring');
+ await motionPage.close();
  assert.deepEqual(errors,[]);
  console.log('PASS: live card floating, glossy foil, selection spring, scoring hit, reduced-motion compliance, actual playable shop');
 }finally{
