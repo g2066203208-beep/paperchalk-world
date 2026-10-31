@@ -82,6 +82,18 @@ class LayerCompositingTest {
         doc.beginStroke();doc.setPixel(1,1,white);doc.finishStroke()
         assertEquals(draftPreview,doc.composite()[i])
     }
+    @Test fun alphaLockedEraserCannotDarkenOrDeleteExistingPixel() {
+        val doc=PixelDocument.new(1,1)
+        doc.replaceArea(0x80abcdef.toInt())
+        doc.setAlphaLocked(true)
+        doc.beginStroke()
+        doc.setPixel(0,0,0)
+        assertFalse(doc.finishStroke())
+        assertEquals(0x80abcdef.toInt(),doc.pixel(0,0))
+        assertFalse(doc.replaceArea(0))
+        assertEquals(0x80abcdef.toInt(),doc.pixel(0,0))
+    }
+
     @Test fun maskBrushStrokeHasOneUndoAndCanCancel() {
         val doc=PixelDocument.new(8,8)
         doc.replaceArea(red)
