@@ -161,14 +161,14 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   const goalWidth=Math.round(Math.min(sceneWidth*(wide?.77:.94),H*(wide?.74:.68)*HOSTESS_WIDTH/CROP_H));
   const goalHeight=Math.round(goalWidth*CROP_H/HOSTESS_WIDTH);
   return {wide,sceneWidth,goalHeight,goalWidth,
-   anchorX:Math.round(sceneWidth*.5),anchorY:Math.round(H*(wide?.68:.61))};
+   anchorX:Math.round(sceneWidth*.5),anchorY:Math.round(H*(wide?.68:.51))};
  }
  function drawCounter(ctx,W,H){
   if(!counterReady)return;
   const wide=W/H>1.25;
   const w=wide?Math.round(W*.54):W;
-  const h=wide?Math.round(H*.48):Math.round(H*.245);
-  const y=Math.round(H*(wide?.56:.57));
+  const h=wide?Math.round(H*.48):Math.round(H*.30);
+  const y=Math.round(H*(wide?.56:.48));
   ctx.drawImage(counter,0,0,192,84,0,y,w,h);
  }
  function draw(ctx,W,H){
