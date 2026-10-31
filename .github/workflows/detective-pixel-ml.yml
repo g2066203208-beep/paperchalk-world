@@ -10,7 +10,7 @@ on:
       - 'site/pixel-lab/portrait-v4/source-v4-640-q92.webp'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   detective-training:
     runs-on: ubuntu-latest
@@ -36,6 +36,21 @@ jobs:
       - name: Validate exact RGB pixel blocks and holdout provenance
         run: |
           python -m unittest discover -s tests -p test_detective_pixel_ml.py -v
+      - name: Archive selected native pixel PNG to the Pixel Lab website
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p site/pixel-lab/portrait-v4
+          cp artifacts/detective-v4-ml/R2C2-selected-native-128.png site/pixel-lab/portrait-v4/R2C2-detective-approved-direction-candidate-128.png
+          cp artifacts/detective-v4-ml/R2C2-selected-native-128-preview-1024.png site/pixel-lab/portrait-v4/R2C2-detective-approved-direction-preview-1024.png
+          cp artifacts/detective-v4-ml/R2C2-topology-gate-report.json site/pixel-lab/portrait-v4/R2C2-detective-topology-report.json
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add site/pixel-lab/portrait-v4/R2C2-detective-approved-direction-candidate-128.png site/pixel-lab/portrait-v4/R2C2-detective-approved-direction-preview-1024.png site/pixel-lab/portrait-v4/R2C2-detective-topology-report.json
+          if ! git diff --cached --quiet; then
+            git commit -m "art(pixel-lab): archive selected R2C2 128x128 discrete pixel candidate and audit"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
       - name: Publish real R2C2 results (not synthetic smoke)
         uses: actions/upload-artifact@v4
         with:
