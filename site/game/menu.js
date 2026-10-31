@@ -1,6 +1,7 @@
 import {createHostessIntro} from './intro.js?v=20261031-separated3';
 import {createLeaseUI} from './lease.js';
 import {createWorld3D} from './world3d.js?v=20261031-artdirection2';
+import {createBarScene} from './bar-scene.js?v=20261031-bar1';
 
 /* PAPERWORLD · original four-ink procedural pixel menu.
  * Every visible logo, plane, cloud, glyph, button and outline is
@@ -122,7 +123,7 @@ function layout(){
  buttons();
 }
 function buttons(){
- if(state==='intro'||state==='lease'||state==='world'){btns=[];updateNativeLabels();return}
+ if(state==='intro'||state==='lease'||state==='world'||state==='bar'){btns=[];updateNativeLabels();return}
  btns=[];const names=state==='menu'?ORDER:state==='settings'?['背景动画','点击粒子','触感反馈','返回菜单']:state==='play'?['返回菜单']:['返回菜单'];
  let bw,bh,gap,cx,top;
  if(land){bw=Math.round(clamp(W*.42,130,195));bh=Math.round(clamp(H*.16,24,31));gap=8;cx=Math.round(W*.75);top=Math.round((H-(names.length*bh+(names.length-1)*gap))/2)}
@@ -136,7 +137,7 @@ function updateNativeLabels(){
   if(gameReferenceLink)gameReferenceLink.hidden=state!=='menu';
  if(!nativeLabels)return;
  nativeLabels.replaceChildren();
- if(state==='intro'||state==='lease'||state==='world')return;
+ if(state==='intro'||state==='lease'||state==='world'||state==='bar')return;
  for(let i=0;i<btns.length;i++){
   const b=btns[i],label=document.createElement('span');
   label.className='pw-menu-label';
@@ -211,6 +212,7 @@ const lease=createLeaseUI({
  onWorld:()=>switchScene('world')
 });
 const world=createWorld3D({onBack:()=>switchScene('menu')});
+const bar=createBarScene({COL,R,poly,text,onBack:()=>switchScene('menu'),onIntro:()=>switchScene('intro')});
 const intro=createHostessIntro({
  COL,R,poly,text,root:stageRoot,
  onComplete:()=>switchScene('lease'),
@@ -221,6 +223,7 @@ function enterScene(next){
  if(next==='intro'){intro.enter();introRevealScale=null;}
  else intro.leave();
  if(next!=='lease')lease.hide();
+ if(next==='bar')bar.enter();else bar.leave();
  buttons();
 }
 function switchScene(next){
@@ -228,6 +231,7 @@ function switchScene(next){
  if(state==='intro')intro.leave();
  if(state==='lease')lease.hide();
  if(state==='world')world.close();
+ if(state==='bar')bar.leave();
  if(reduced){enterScene(next);if(next==='lease')lease.show({receipt:!!lease.snapshot().hasContract});if(next==='world')world.open();return}
  if(nativeLabels)nativeLabels.style.visibility='hidden';
  if(pixelEditorLink)pixelEditorLink.hidden=true;
@@ -316,6 +320,7 @@ function draw(){
  // Transparent overlay on GPU animated striped background in menu.
  if(state==='menu')titleArtwork();
  else if(state==='world'){R(0,0,W,H,COL.ink)}
+  else if(state==='bar'){bar.draw(ctx,W,H)}
  else if(state==='intro'||state==='lease'){intro.draw(ctx,W,H);if(state==='intro'&&!curtain){frame(5,6,52,21,COL.ink,COL.paper,4,2);text('返回',31,11,15,COL.ink)}}
  else overlay();
  for(let i=0;i<btns.length;i++)drawButton(btns[i],i);
@@ -324,7 +329,7 @@ function draw(){
  if(note&&clock<noteTo){panel(W/2-76,H*.09,152,22,COL.paper,3);text(note,W/2,H*.09+5,11,COL.ink)}
  paintFoldWipe();
  paintTouchEffects();
- window.__PAPERWORLD_MENU__={state,selected,hover,held,introRevealScale,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,world:state==='world'?{active:world.active}:null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
+ window.__PAPERWORLD_MENU__={state,selected,hover,held,introRevealScale,particleCount:touchBursts.reduce((n,b)=>n+b.sparks.length,0),touchCount:touchSerial,lastTouch,activeRipples:touchBursts.length,lastFireworkPattern:touchBursts.at(-1)?.sparks.map(p=>p.dx.toFixed(2)+','+p.dy.toFixed(2)).join('|')||'',buttons:btns.map(b=>({...b})),saveExists,prefs:{...prefs},logical:[W,H],frame:frameN,intro:(state==='intro'||state==='lease')?intro.snapshot():null,lease:state==='lease'?lease.snapshot():null,world:state==='world'?{active:world.active}:null,bar:state==='bar'?bar.snapshot():null,transition:curtain?{type:'diagonal-paper-wipe',phase:curtain.phase,progress:curtain.elapsed}:null};
 }
 function flash(msg){note=msg;noteTo=clock+1.3}
 function savePrefs(){try{localStorage.setItem(KEY,JSON.stringify(prefs))}catch{}bg.style.animationPlayState=prefs.motion?'running':'paused'}
@@ -333,8 +338,8 @@ function act(i,x,y){
  if(prefs.haptic&&navigator.vibrate)try{navigator.vibrate(7)}catch{}
  selected=i;hover=i;
  if(state==='menu'){
-  if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('intro')}
-  else if(i===1){if(saveExists){const existing=localStorage.getItem('paperworld-lease-v1');switchScene(existing?'lease':'intro')}else flash('暂无存档')}
+  if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('bar')}
+  else if(i===1){if(saveExists){switchScene('bar')}else flash('暂无存档')}
   else if(i===2)switchScene('world');
   else if(i===3)switchScene('settings');
   else if(i===4)switchScene('exit');
@@ -352,6 +357,7 @@ function xy(ev){const rect=el.getBoundingClientRect();return {x:(ev.clientX-rect
 el.addEventListener('pointermove',e=>{const p=xy(e);hover=hit(p.x,p.y);el.style.cursor=hover>=0?'pointer':'default'});
 el.addEventListener('pointerdown',e=>{const p=xy(e);emitTouchEffect(p.x,p.y);if(curtain){held=-1;return}held=hit(p.x,p.y);if(held>=0)el.setPointerCapture(e.pointerId)});
 el.addEventListener('pointerup',e=>{const p=xy(e);
+  if(state==='bar'&&!curtain){bar.tap(p.x,p.y);held=-1;return;}
  if(state==='intro'&&!curtain){
   if(p.x>=5&&p.x<=57&&p.y>=6&&p.y<=28)switchScene('menu');
   else intro.onTap();
@@ -378,9 +384,11 @@ function tick(now){
  updateTouchEffects(dt);
  updateCurtain(dt);
  if(state==='intro'&&!curtain)intro.update(dt);
+  if(state==='bar'&&!curtain)bar.update(dt);
  frameN++;draw();requestAnimationFrame(tick)
 }
 layout();savePrefs();requestAnimationFrame(tick);
 // Public 3D entry point for immediate mobile hardware testing; sensor access
 // still requires an explicit user gesture on the '开启手机体感' button.
 if(new URLSearchParams(location.search).get('world3d')==='1')switchScene('world');
+if(new URLSearchParams(location.search).get('bar')==='1')switchScene('bar');
