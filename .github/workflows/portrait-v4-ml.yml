@@ -30,6 +30,12 @@ jobs:
         run: |
           python -m ml.portrait_v4.convert --synthetic-smoke \
             --out-dir artifacts/portrait-v4-smoke --train --steps 120
+      - name: Process uploaded high-detail 640px V4 WebP derivative
+        run: |
+          test -f site/pixel-lab/portrait-v4/source-v4-640-q92.webp
+          python -m ml.portrait_v4.convert \
+            --input site/pixel-lab/portrait-v4/source-v4-640-q92.webp \
+            --out-dir artifacts/portrait-v4-webp-real --train --steps 120
       - name: Reconstruct genuine V4-derived compact thumbnail (not the original PNG)
         run: |
           python -m ml.portrait_v4.decode_snapshot
