@@ -26,7 +26,7 @@ try{
   assert.equal(before.hand,8);
   assert.equal(before.phase,'battle');
   assert.equal(await page.locator('#hand-cards .play-card').count(),8);
-  if(name==='portrait'){
+  if(name==='portrait'||name==='landscape'){
    const visible=await page.locator('#hand-cards .play-card').evaluateAll(els=>
      els.every(e=>e.getBoundingClientRect().left>=0&&e.getBoundingClientRect().right<=innerWidth+2));
    assert.ok(visible,'all eight playable cards must fit mobile screen without horizontal scrolling');
