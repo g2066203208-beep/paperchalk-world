@@ -51,229 +51,150 @@ function blank(color){return Array(SIZE).fill(color)}
 function set(a,x,y,c){a[wrapped(y)*TILE+wrapped(x)]=c}
 function h(a,x,y,n,c){for(let i=0;i<n;i++)set(a,x+i,y,c)}
 function v(a,x,y,n,c){for(let i=0;i<n;i++)set(a,x,y+i,c)}
+/**
+ * Atelier v2 · low-frequency, silhouette-first native 4-ink art direction.
+ * Zero independent one-pixel dust. Material pixels describe construction,
+ * never attempt to fake lighting or small random surface noise.
+ * 1=ink, 2=rose, 3=slate, 4=paper.
+ */
 function drawTile(type){
  let a;
  switch(type){
  case 'stone':
   a=blank(3);
-  for(let y=0;y<16;y+=8){
-   h(a,0,y,16,1);h(a,0,y+1,16,4);
-   for(let x=(y===0?0:4);x<20;x+=8){
-    v(a,x,y,8,1);v(a,x+1,y+2,5,4);
-    h(a,x+3,y+3,3,4);h(a,x+2,y+6,4,2);
-   }
+  for(const y of [0,8]){h(a,0,y,16,1);h(a,0,y+1,16,4)}
+  for(const [x,y] of [[0,0],[8,0],[4,8],[12,8]]){
+   v(a,x,y+2,6,1);h(a,x+2,y+3,4,4);
   }
   break;
  case 'brick':
   a=blank(2);
-  for(let row=0;row<4;row++){
-   const y=row*4,offset=(row%2)*4;
-   h(a,0,y,16,4);
-   for(let x=offset;x<16+offset;x+=8){
-    v(a,x,y,4,1);h(a,x+2,y+1,4,3);h(a,x+2,y+3,5,1);
-   }
+  for(let y=0;y<16;y+=4){h(a,0,y,16,1);
+   for(let x=(y%8?4:0);x<16;x+=8)v(a,x,y,4,1);
   }
   break;
  case 'wood':
-  a=blank(1);
-  for(let x=0;x<16;x+=8){
-   v(a,x,0,16,4);v(a,x+1,0,16,2);
-   v(a,x+5,2,10,2);v(a,x+6,3,6,3);
-  }
-  h(a,0,0,8,1);h(a,8,8,8,1);
-  h(a,1,1,5,3);h(a,9,9,5,3);
+  a=blank(2);
+  for(const x of [0,8]){v(a,x,0,16,1);v(a,x+1,0,16,4)}
+  v(a,5,2,10,3);v(a,12,7,8,3);
   break;
  case 'plaster':
-  a=blank(4);
-  h(a,1,1,3,3);h(a,11,10,4,3);h(a,7,4,2,2);
-  h(a,9,5,2,3);h(a,2,11,2,3);set(a,13,3,2);
+  a=blank(4); // intentionally quiet: structural depth is in the model
+  h(a,0,15,16,3);v(a,15,0,3,3);
   break;
  case 'roof':
   a=blank(3);
-  for(let y=0;y<16;y+=4){
-   h(a,0,y,16,1);
-   for(let x=(y%8===0?0:4);x<20;x+=8){
-    v(a,x,y+1,3,1);h(a,x+2,y+1,4,4);h(a,x+2,y+3,5,2);
-   }
-  }
+  for(const y of [0,8]){h(a,0,y,16,1);h(a,0,y+1,16,4)}
+  for(const [x,y] of [[0,1],[8,1],[4,9],[12,9]])v(a,x,y,6,1);
   break;
  case 'paving':
   a=blank(4);
-  for(let y=0;y<16;y+=8){
-   h(a,0,y,16,1);
-   for(let x=(y===0?0:4);x<20;x+=8){
-    v(a,x,y,8,1);
-    h(a,x+1,y+1,5,3);h(a,x+2,y+2,4,3);
-    h(a,x+3,y+6,4,2);
-   }
-  }
+  h(a,0,0,16,3);v(a,0,0,16,3);
+  h(a,3,9,5,3);
   break;
  case 'grass':
   a=blank(3);
-  for(const [x,y] of [[1,2],[9,1],[4,10],[12,11]]){
-   v(a,x+1,y,3,1);set(a,x,y+1,2);set(a,x+2,y+1,2);
-   set(a,x+1,y,4);
-  }
-  h(a,6,6,3,2);h(a,7,7,2,4);
-  h(a,0,14,3,2);
+  for(const [x,y] of [[3,2],[11,10]]){set(a,x,y,4);set(a,x-1,y+1,2);set(a,x+1,y+1,2);set(a,x,y+2,1)}
   break;
  case 'glass':
+ case 'window':
   a=blank(3);
-  v(a,0,0,16,1);v(a,15,0,16,1);h(a,0,0,16,1);h(a,0,15,16,1);
+  for(const x of [0,15])v(a,x,0,16,1);
+  for(const y of [0,15])h(a,0,y,16,1);
   v(a,7,0,16,1);h(a,0,8,16,1);
-  for(let d=0;d<5;d++){set(a,2+d,1+d,4);set(a,9+d,9+d,4)}
-  h(a,9,3,5,2);h(a,2,12,4,2);
+  for(let i=1;i<5;i++){set(a,i,i,4);set(a,i+8,i+8,4)}
   break;
-
  case 'wildgrass':
   a=blank(3);
-  for(const [x,y,c] of [[1,0,1],[5,6,1],[12,4,1],[9,11,1],[15,14,1]]){
-   v(a,x,y,3,c);set(a,x-1,y+1,2);set(a,x+1,y,4);h(a,x-1,y+3,3,3);
-  }
-  h(a,7,2,2,4);h(a,0,12,3,2);
+  for(const [x,y] of [[3,2],[12,11]]){v(a,x,y,4,1);set(a,x-1,y+2,2);set(a,x+1,y+1,4)}
   break;
  case 'clover':
   a=blank(3);
-  for(const [x,y] of [[3,3],[11,10],[13,1]]){
-   set(a,x,y,4);set(a,x+1,y,2);set(a,x,y+1,2);set(a,x+1,y+1,1);
-   set(a,x,y+2,4);set(a,x-1,y+1,4);
-  }
-  h(a,7,6,2,2);v(a,1,11,3,1);
+  for(const [x,y] of [[3,3],[11,11]]){h(a,x,y,2,4);h(a,x-1,y+1,3,2);set(a,x,y+2,1)}
   break;
  case 'flowers':
   a=blank(3);
-  for(const [x,y,c] of [[2,2,2],[10,4,4],[5,12,4],[14,13,2]]){
-   set(a,x,y,c);set(a,x-1,y+1,c);set(a,x+1,y+1,c);set(a,x,y+2,c);
-   set(a,x,y+1,1);v(a,x,y+3,2,1);
-  }
-  h(a,8,11,3,4);
+  for(const [x,y] of [[3,3],[12,11]]){h(a,x,y,3,2);set(a,x+1,y-1,4);v(a,x+1,y+1,3,1)}
   break;
  case 'dirt':
-  a=blank(2);
-  for(const [x,y,n,c] of [[0,1,4,1],[9,3,3,1],[3,8,5,3],[11,12,4,1],[6,15,3,4],[1,13,3,3]])h(a,x,y,n,c);
-  for(const [x,y] of [[6,2],[14,7],[1,11],[9,9]])set(a,x,y,4);
+  a=blank(2);h(a,2,3,5,1);h(a,10,12,4,3);
   break;
  case 'pebbles':
-  a=blank(1);
-  for(const [x,y] of [[1,2],[8,0],[12,7],[3,10],[9,12]]){
-   h(a,x,y,3,4);h(a,x-1,y+1,5,3);h(a,x,y+2,3,3);set(a,x+4,y+1,2);
-  }
+  a=blank(4);
+  for(const [x,y] of [[2,2],[11,10]]){h(a,x,y,4,1);h(a,x+1,y+1,4,3);h(a,x+2,y+2,2,3)}
   break;
  case 'sand':
-  a=blank(4);
-  for(const [x,y] of [[1,1],[8,3],[4,9],[13,12],[0,15]]){
-   h(a,x,y,4,3);h(a,x+1,y+1,2,2);set(a,x+2,y+2,3);
-  }
-  h(a,10,7,4,3);
+  a=blank(4);h(a,3,4,5,3);h(a,10,12,4,2);
   break;
  case 'moss':
   a=blank(3);
-  for(const [x,y] of [[0,0],[8,0],[4,8],[12,8]]){
-   h(a,x,y,8,1);v(a,x,y,8,1);h(a,x+1,y+2,4,4);h(a,x+3,y+5,4,2);
-  }
-  for(const [x,y] of [[3,4],[10,6],[5,13],[14,14]]){set(a,x,y,2);set(a,x+1,y,2);set(a,x,y+1,1)}
+  h(a,0,0,16,1);v(a,0,0,16,1);
+  h(a,3,4,5,2);h(a,11,12,4,2);
   break;
  case 'gravel':
-  a=blank(1);
-  for(const [x,y,c] of [[1,1,3],[5,3,4],[12,0,3],[2,10,4],[9,9,3],[13,13,4]]){
-   h(a,x,y,3,c);h(a,x+1,y+1,2,2);set(a,x+2,y+2,c);
-  }
+  a=blank(3);h(a,2,2,4,1);h(a,10,11,3,4);
   break;
  case 'cobble':
-  a=blank(1);
-  for(let y=0;y<16;y+=5)for(let x=(y%2)*2;x<18;x+=7){
-   h(a,x+1,y+1,5,3);h(a,x+1,y+2,5,3);h(a,x+2,y+3,4,4);set(a,x+1,y+3,2);
-  }
+  a=blank(3);
+  for(const y of [0,8])h(a,0,y,16,1);
+  for(const [x,y] of [[0,0],[8,0],[4,8],[12,8]])v(a,x,y,8,1);
   break;
  case 'path':
   a=blank(2);
-  for(let y=0;y<16;y+=6){h(a,0,y,16,3);h(a,2,y+1,7,4);h(a,9,y+4,5,1)}
-  set(a,13,8,4);set(a,14,8,4);
+  h(a,0,0,16,3);h(a,3,9,8,4);
   break;
  case 'asphalt':
-  a=blank(1);
-  for(const [x,y] of [[1,2],[10,4],[5,9],[13,13]]){h(a,x,y,3,3);set(a,x+1,y+1,2)}
-  h(a,4,15,3,3);
+  a=blank(1); // no speckles; dashed lane geometry is the only high-contrast detail
+  h(a,5,7,3,3);
   break;
  case 'sidewalk':
   a=blank(4);
-  for(const y of [0,8])h(a,0,y,16,1);
-  for(const x of [0,8])v(a,x,0,16,1);
-  for(const [x,y] of [[2,2],[10,2],[2,10],[10,10]]){h(a,x,y,3,3);h(a,x+1,y+1,4,3)}
+  h(a,0,0,16,3);v(a,0,0,16,3);
   break;
  case 'wetsoil':
-  a=blank(1);
-  for(const [x,y] of [[0,2],[8,0],[4,8],[11,12]]){h(a,x,y,6,2);h(a,x+1,y+1,4,3);set(a,x+4,y+3,4)}
+  a=blank(1);h(a,3,5,6,2);h(a,10,13,4,3);
   break;
  case 'limestone':
   a=blank(4);
-  for(let y=0;y<16;y+=7){
-   h(a,0,y,16,3);h(a,2,y+2,7,3);
-   for(let x=(y===0?1:5);x<18;x+=8){v(a,x,y,7,1);h(a,x+2,y+5,4,2)}
-  }
+  for(const y of [0,8])h(a,0,y,16,3);
+  v(a,0,0,8,1);v(a,8,8,8,1);h(a,5,4,6,3);
   break;
  case 'timber':
-  a=blank(2);
-  for(let x=0;x<16;x+=6){v(a,x,0,16,1);v(a,x+1,0,16,4);v(a,x+4,0,16,3)}
-  for(const y of [3,11]){h(a,0,y,16,1);h(a,0,y+1,16,4)}
+  a=blank(2);v(a,0,0,16,1);v(a,2,0,16,4);v(a,13,0,16,3);
   break;
  case 'wallblue':
-  a=blank(3);
-  for(let y=0;y<16;y+=8){h(a,0,y,16,4);h(a,1,y+1,6,4);h(a,9,y+6,5,1)}
-  for(const [x,y] of [[2,4],[11,2],[6,12],[14,14]])set(a,x,y,2);
+  a=blank(3);h(a,0,0,16,4);h(a,3,11,5,4);
   break;
  case 'door':
   a=blank(2);
   for(const x of [0,15])v(a,x,0,16,1);
   for(const y of [0,15])h(a,0,y,16,1);
-  for(const x of [3,11])v(a,x,2,12,1);
-  h(a,2,4,12,4);h(a,2,11,12,1);
-  for(const y of [6,13])h(a,4,y,6,3);
+  v(a,4,2,12,1);v(a,11,2,12,1);h(a,4,4,8,3);h(a,4,12,8,3);
   set(a,12,9,4);set(a,12,10,1);
   break;
  case 'doorframe':
   a=blank(4);
   for(const x of [0,1,14,15])v(a,x,0,16,1);
-  for(const y of [0,1,14,15])h(a,0,y,16,1);
-  v(a,3,3,10,2);v(a,12,3,10,2);h(a,3,3,10,2);
-  break;
- case 'window':
-  a=blank(3);
-  for(const x of [0,7,15])v(a,x,0,16,1);
-  for(const y of [0,8,15])h(a,0,y,16,1);
-  for(let i=0;i<6;i++){set(a,1+i,1+i,4);set(a,8+i,9+i,4)}
-  h(a,9,3,4,2);
+  h(a,0,0,16,1);h(a,0,1,16,1);
   break;
  case 'windowlit':
   a=blank(4);
-  for(const x of [0,7,15])v(a,x,0,16,1);
-  for(const y of [0,8,15])h(a,0,y,16,1);
-  h(a,2,2,4,2);h(a,9,10,4,2);
-  for(let i=0;i<4;i++){set(a,1+i,10+i,3);set(a,9+i,1+i,3)}
+  for(const x of [0,15])v(a,x,0,16,1);
+  for(const y of [0,15])h(a,0,y,16,1);
+  v(a,7,0,16,1);h(a,0,8,16,1);
+  h(a,2,2,5,2);h(a,9,10,5,2);
   break;
  case 'bark':
-  a=blank(1);
-  for(const x of [1,6,11]){v(a,x,0,16,2);v(a,x+1,0,16,3);v(a,x+3,2,9,4)}
-  h(a,1,7,4,1);h(a,10,13,4,1);
+  a=blank(1);v(a,4,0,16,2);v(a,12,0,16,3);
   break;
  case 'leavesblue':
-  a=blank(3);
-  for(const [x,y] of [[1,1],[9,0],[4,8],[12,10]]){
-   h(a,x,y,5,1);h(a,x,y+1,6,2);h(a,x+1,y+2,5,4);h(a,x+2,y+3,3,3);
-  }
+  a=blank(3);h(a,3,4,5,4);h(a,11,12,4,2);
   break;
  case 'leavespink':
-  a=blank(2);
-  for(const [x,y] of [[1,2],[8,0],[4,10],[12,9]]){
-   h(a,x,y,5,1);h(a,x,y+1,6,4);h(a,x+2,y+2,5,3);set(a,x+2,y,2);
-  }
+  a=blank(2);h(a,3,4,5,4);h(a,11,12,4,3);
   break;
  case 'hedge':
-  a=blank(3);
-  for(const [x,y] of [[0,0],[8,0],[0,8],[8,8]]){
-   h(a,x,y,7,1);h(a,x+1,y+1,6,2);h(a,x+1,y+3,6,4);
-   h(a,x+2,y+5,4,1);set(a,x+3,y+6,2);
-  }
+  a=blank(3);h(a,2,3,6,4);h(a,10,11,5,2);
   break;
  default:throw Error('Unknown material '+type);
  }
