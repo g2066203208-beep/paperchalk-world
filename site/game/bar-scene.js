@@ -51,7 +51,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   }
   // Pixel neon wall signage and one shelf; sparse objects support the scene.
   rect(x+Math.floor(w*.65),y+Math.floor(h*.13),Math.floor(w*.25),3,COL.pink);
-  caption('BLUEBELL',x+Math.floor(w*.775),y+Math.floor(h*.06),Math.max(8,Math.min(13,w*.025)),COL.paper,'center');
+  caption('BLUEBELL',x+Math.floor(w*.775),y+Math.floor(h*.18),Math.max(8,Math.min(13,w*.025)),COL.paper,'center');
   rect(x+Math.floor(w*.67),y+Math.floor(h*.38),Math.floor(w*.22),4,COL.blue);
   for(let i=0;i<3;i++){
    const bx=x+Math.floor(w*(.695+i*.066));
@@ -61,7 +61,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   }
   // Existing portrait sprite is individually composited, cropped by the counter.
   if(art){
-   const pw=Math.min(Math.floor(w*.37),Math.floor(h*.63*192/140));
+   const pw=Math.min(Math.floor(w*.45),Math.floor(h*.63*192/140));
    const ph=Math.floor(pw*140/192);
    const bob=Math.round(Math.sin(clock*2.1));
    const px=x+Math.floor(w*.48)-Math.floor(pw/2),py=y+Math.floor(h*.60)-ph+bob;
@@ -81,7 +81,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   rect(cx+6,cy-10,10,8,COL.pink);
   rect(x+Math.floor(w*.14),cy-9,Math.floor(w*.12),15,COL.ink);
   rect(x+Math.floor(w*.14)+2,cy-7,Math.max(7,Math.floor(w*.12)-4),10,COL.paper);
-  caption('营业中',x+Math.floor(w*.04),y+Math.floor(h*.035),Math.max(10,Math.min(14,h*.055)),COL.pink);
+  caption('蓝铃酒馆',x+Math.floor(w*.5),y+Math.floor(h*.80),Math.max(9,Math.min(13,h*.045)),COL.pink,'center');
  }
  function mixer(x,y,w,h,vertical){
   rect(x,y,w,h,COL.ink);
