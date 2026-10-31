@@ -517,7 +517,7 @@ private fun PixelViewport(
     }
     val gridPaint = remember {
         android.graphics.Paint().apply {
-            color = 0x33FFFFFF; strokeWidth = 1f; isAntiAlias = false
+            this.color = 0x33FFFFFF; strokeWidth = 1f; isAntiAlias = false
         }
     }
 
@@ -622,8 +622,8 @@ private fun PixelViewport(
             canvas.save()
             canvas.clipRect(0f,0f,size.width,size.height)
             val tileSize = 8 * scale
-            val tilePaint = android.graphics.Paint().apply { color = 0xFF343B49.toInt() }
-            val tileOther = android.graphics.Paint().apply { color = 0xFF404858.toInt() }
+            val tilePaint = android.graphics.Paint().apply { this.color = 0xFF343B49.toInt() }
+            val tileOther = android.graphics.Paint().apply { this.color = 0xFF404858.toInt() }
             canvas.drawRect(left,top,left+doc.width*scale,top+doc.height*scale,tilePaint)
             if (tileSize >= 2f) {
                 for (by in 0 until (doc.height+7)/8)
@@ -646,7 +646,7 @@ private fun PixelViewport(
                 val cx = left + (cursor.x+0.5f)*scale
                 val cy = top + (cursor.y+0.5f)*scale
                 val pen = android.graphics.Paint().apply {
-                    color = android.graphics.Color.WHITE; strokeWidth = 2f; isAntiAlias = false
+                    this.color = android.graphics.Color.WHITE; strokeWidth = 2f; isAntiAlias = false
                 }
                 canvas.drawLine(cx-11f,cy,cx+11f,cy,pen)
                 canvas.drawLine(cx,cy-11f,cx,cy+11f,pen)
