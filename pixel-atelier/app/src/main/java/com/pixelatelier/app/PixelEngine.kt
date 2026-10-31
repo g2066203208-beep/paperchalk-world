@@ -53,6 +53,8 @@ class PixelDocument(
     private val redo = ArrayDeque<PixelAction>()
     private var stroke: MutableMap<Int, Int>? = null
     private var strokeLayerId: Long = -1
+    private var maskStrokeOriginal: ByteArray? = null
+    private var maskStrokeLayerId: Long = -1
     private val historyLimit = 100
     val canUndo get() = undo.isNotEmpty()
     val canRedo get() = redo.isNotEmpty()
@@ -83,6 +85,57 @@ class PixelDocument(
         if (stroke == null) beginStroke()
         stroke?.putIfAbsent(index, old)
         layer.pixels[index] = next
+    }
+
+    /** Begins a grayscale mask painting stroke, recorded as one undoable edit. */
+    fun beginMaskStroke(): Boolean {
+        finishMaskStroke()
+        finishStroke()
+        val layer=currentLayer
+        if(layer.locked || layer.mask==null) return false
+        maskStrokeOriginal=layer.mask!!.copyOf()
+        maskStrokeLayerId=layer.id
+        return true
+    }
+    fun setMaskPixel(x: Int,y: Int,value: Int) {
+        if(x !in 0 until width || y !in 0 until height) return
+        val layer=layers.firstOrNull { it.id==maskStrokeLayerId } ?: return
+        if(layer.locked) return
+        layer.mask?.set(y*width+x,value.coerceIn(0,255).toByte())
+    }
+    fun maskLine(x0: Int,y0: Int,x1: Int,y1: Int,value: Int) {
+        var x=x0;var y=y0
+        val dx=kotlin.math.abs(x1-x0); val dy=kotlin.math.abs(y1-y0)
+        val sx=if(x0<x1) 1 else -1;val sy=if(y0<y1) 1 else -1
+        var err=dx-dy
+        while(true) {
+            setMaskPixel(x,y,value)
+            if(x==x1 && y==y1) break
+            val e2=err*2
+            if(e2 > -dy) {err-=dy;x+=sx}
+            if(e2 < dx) {err+=dx;y+=sy}
+        }
+    }
+    fun finishMaskStroke(): Boolean {
+        val before=maskStrokeOriginal ?: return false
+        val id=maskStrokeLayerId
+        val layer=layers.firstOrNull { it.id==id }
+        maskStrokeOriginal=null
+        maskStrokeLayerId=-1
+        val after=layer?.mask ?: return false
+        if(before.contentEquals(after)) return false
+        val old=settings(layer).copy(mask=before)
+        val now=settings(layer)
+        undo.addLast(PixelAction(properties=listOf(LayerPropertyChange(id,old,now))))
+        while(undo.size > historyLimit) undo.removeFirst()
+        redo.clear()
+        return true
+    }
+    fun cancelMaskStroke() {
+        val before=maskStrokeOriginal ?: return
+        layers.firstOrNull { it.id==maskStrokeLayerId }?.mask=before
+        maskStrokeOriginal=null
+        maskStrokeLayerId=-1
     }
 
     fun line(x0: Int, y0: Int, x1: Int, y1: Int, argb: Int) {
@@ -161,6 +214,7 @@ class PixelDocument(
     }
 
     fun undo(): Boolean {
+        finishMaskStroke()
         finishStroke()
         if (undo.isEmpty()) return false
         val action = undo.removeLast()
@@ -177,6 +231,7 @@ class PixelDocument(
     }
 
     fun redo(): Boolean {
+        finishMaskStroke()
         if (redo.isEmpty()) return false
         val action = redo.removeLast()
         for (entry in action.affectedLayers) {
@@ -236,6 +291,7 @@ class PixelDocument(
         layer.maskEnabled = snapshot.maskEnabled
     }
     private fun mutateSettings(block: (PixelLayer) -> Unit): Boolean {
+        finishMaskStroke()
         finishStroke()
         val layer = currentLayer
         if (layer.locked) return false
