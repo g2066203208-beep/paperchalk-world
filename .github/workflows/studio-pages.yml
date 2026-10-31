@@ -1,0 +1,58 @@
+name: Pixel Atelier - creative tools only Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pixel-tools-clean-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.publish.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Assert playable games removed and tool modules intact
+        run: |
+          set -euo pipefail
+          test ! -e site/game
+          test ! -e site/horror-room
+          test ! -d android
+          test -s site/pixel-lab/index.html
+          test -s site/world-builder/materials.html
+          ! grep -q 'game/menu.js' site/index.html
+          node --check site/world-builder/materials.js
+          node --check site/world-builder/world-material-gl.js
+          node --test tests/pixel-lab-structure.test.mjs tests/world-materials.test.mjs tests/learning-library.test.mjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - uses: actions/deploy-pages@v4
+        id: publish
+      - name: Verify public tools remain but old games return 404
+        run: |
+          set -euo pipefail
+          root="https://g2066203208-beep.github.io/paperchalk-world"
+          for i in $(seq 1 15); do
+            page="$(curl -fsSL --max-time 16 -H 'Cache-Control: no-cache' "$root/?clear=$GITHUB_SHA-$i" || true)"
+            horror="$(curl -L -s -o /dev/null -w '%{http_code}' --max-time 16 "$root/horror-room/?check=$GITHUB_SHA-$i" || true)"
+            game="$(curl -L -s -o /dev/null -w '%{http_code}' --max-time 16 "$root/game/menu.js?check=$GITHUB_SHA-$i" || true)"
+            if echo "$page" | grep -q 'PIXEL ATELIER' && [ "$horror" = 404 ] && [ "$game" = 404 ]; then
+              curl -fsSL --max-time 16 "$root/pixel-lab/" | grep -q 'PIXEL LAB'
+              echo "PASS: public tools live, old game URLs 404"
+              exit 0
+            fi
+            sleep 7
+          done
+          exit 1

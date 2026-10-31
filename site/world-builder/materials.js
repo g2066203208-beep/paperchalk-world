@@ -1,6 +1,6 @@
 import {TILE,PALETTE,MATERIALS,freshPack,validatePack,tryReadPack,writePack,
  paint,stroke,flood,sample,tileRGBA,atlasRGBA,migratePack,ATLAS_COLS,ATLAS_ROWS} from './materials-core.js?v=20261031-artdirection2';
-import {createMaterialCube} from '../game/world-material-gl.js?v=20261031-artdirection2';
+import {createMaterialCube} from './world-material-gl.js?v=20261031-standalone';
 
 const $=id=>document.getElementById(id),canvas=$('pixel-canvas');
 const ctx=canvas.getContext('2d',{alpha:false});
@@ -192,10 +192,6 @@ $('restore-one').addEventListener('click',()=>{
  if(!confirm('只重置「'+MATERIALS[active].name+'」？其他七种材质不变。'))return;
  const before=snapshot();pack.materials[active].pixels=freshPack().materials[active].pixels;
  checkpoint(before);render();
-});
-$('apply-world').addEventListener('click',()=>{
- try{clearTimeout(saveHandle);writePack(localStorage,pack);location.assign('../index.html?world3d=1&materials=1')}
- catch(e){setStatus('应用失败：'+e.message,true)}
 });
 window.addEventListener('keydown',e=>{
  if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;

@@ -37,8 +37,8 @@ test('true-gameplay evidence is never an AI render, capsule, banner or a fake im
 });
 test('actual gallery is responsive and wired from the real PAPERWORLD menu',()=>{
  const html=read('site/learning-library/index.html'),css=read('site/learning-library/gallery.css'),
-  app=read('site/learning-library/gallery.js'),menu=read('site/game/menu.js'),
-  main=read('site/index.html'),stage=read('site/game/stage.css');
+  app=read('site/learning-library/gallery.js'),
+  main=read('site/index.html');
  for(const id of ['photos','viewer','search','categories','game-list','official-source','more','total-images'])
   assert.ok(html.includes('id="'+id+'"'),id);
  for(const action of ['openViewer','updateViewer','galleryLink','sourceKind','loadImages','currentPhotos'])
@@ -46,8 +46,7 @@ test('actual gallery is responsive and wired from the real PAPERWORLD menu',()=>
  assert.match(css,/@media\(max-width:730px\)/);
  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
  assert.ok(main.includes('./learning-library/'));
- assert.ok(stage.includes('pw-reference-library-link'));
- assert.ok(menu.includes('gameReferenceLink.hidden=state!==\'menu\''));
+ assert.ok(main.includes('PIXEL ATELIER'));
 });
 test('harvester only accepts documented source records; not generated thumbnails',()=>{
  const js=read('scripts/collect-game-reference-shots.mjs');

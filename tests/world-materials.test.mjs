@@ -55,28 +55,6 @@ test('round-trip editable project through browser-compatible storage and reject 
  assert.throws(()=>m.validatePack(broken));
  cache.set(m.STORAGE_KEY,'invalid');assert.deepEqual(m.tryReadPack(storage),m.freshPack());
 });
-test('native WebGL world mesh actually carries UVs and material IDs without altering collisions',()=>{
- const source=readFileSync('site/game/world3d.js','utf8');
- const begin=source.indexOf('function makeTown(lod='),end=source.indexOf('\nfunction program(gl,',begin);
- assert.ok(begin>0&&end>begin);
- const ink=[57/255,54/255,87/255],pink=[242/255,165/255,194/255],blue=[169/255,186/255,233/255],paper=[1,245/255,230/255];
- const town=new Function('INK','PINK','BLUE','PAPER','PALETTE',source.slice(begin,end)+'\nreturn makeTown;')(ink,pink,blue,paper,[ink,pink,blue,paper]);
- const mesh=town('full'),mobile=town('mobile');
- assert.ok(mesh.materialPosition.length>20000,'city surfaces really have UV mesh');
- assert.equal(mesh.materialPosition.length/3,mesh.materialUV.length/2);
- assert.equal(mesh.materialPosition.length/3,mesh.materialID.length);
- assert.ok(mesh.materialUV.every(Number.isFinite));
- assert.ok(mesh.materialID.every(id=>Number.isInteger(id)&&id>=0&&id<32));
- const types=new Set(mesh.materialID);
- for(const id of [6,8,10,11,16,17,18,19,22,23,24,25,26,27,28,29,30,31])assert.ok(types.has(id),'world actually uses material '+m.MATERIALS[id].id);
- assert.deepEqual(mesh.solids,mobile.solids,'material layer preserves collision geometry');
- assert.ok(mesh.tri.length/9>15000,'buildings, realistic doors and tree crowns are actual modeled solids');
- assert.ok(source.includes('materialPass?.render({matrix:projection})'));
- assert.ok(source.includes('createMaterialBatch'));
- const gl=readFileSync('site/game/world-material-gl.js','utf8');
- for(const flag of ['gl.NEAREST','gl.CLAMP_TO_EDGE','texSubImage2D','gl.drawArrays(gl.TRIANGLES','128.0,64.0'])assert.ok(gl.includes(flag));
-});
-
 test('saved eight-material user pack migrates without repainting first eight assets',()=>{
  const old=m.freshPack();old.materials=old.materials.slice(0,8);
  old.materials[0].pixels[37]=4;
