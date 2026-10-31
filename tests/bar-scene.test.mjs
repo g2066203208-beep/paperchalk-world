@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {BAR_ORDERS,validMixture} from '../site/game/bar-scene.js';
+import {BAR_ORDERS,validMixture,computeBarLayout} from '../site/game/bar-scene.js';
 
 test('bar orders have exact deterministic ingredient combinations',()=>{
  assert.equal(BAR_ORDERS.length,2);
@@ -34,4 +34,25 @@ test('main game boots the bar without deleting previous features',()=>{
  assert.match(bar,/portraitLayers/);
  assert.match(bar,/counter|柜台|poly/);
  assert.doesNotMatch(bar,/(balatro|va-11|coffee talk).*\.png/i);
+});
+
+test('four viewport panels stay inside canvas and never overlap',()=>{
+ const targets=[[195,422],[422,195],[720,450],[410,590],[280,250]];
+ function overlaps(a,b){
+  return Math.max(a.x,b.x)<Math.min(a.x+a.w,b.x+b.w)&&
+   Math.max(a.y,b.y)<Math.min(a.y+a.h,b.y+b.h);
+ }
+ for(const [w,h] of targets){
+  const layout=computeBarLayout(w,h);
+  const panels=[layout.header,layout.room,layout.dialogue,layout.mixer];
+  for(const panel of panels){
+   assert.ok(panel.x>=0&&panel.y>=0&&panel.w>0&&panel.h>0);
+   assert.ok(panel.x+panel.w<=w&&panel.y+panel.h<=h,'clipped '+JSON.stringify({w,h,panel}));
+  }
+  for(let i=0;i<panels.length;i++)for(let j=i+1;j<panels.length;j++)
+   assert.equal(overlaps(panels[i],panels[j]),false,'overlap '+JSON.stringify({w,h,i,j}));
+  const surface=panels.reduce((a,p)=>a+p.w*p.h,0);
+  assert.equal(surface,w*h,'zero dead space; panels fully tile screen');
+  assert.ok(layout.room.h>=60&&layout.dialogue.h>=55&&layout.mixer.h>=70);
+ }
 });
