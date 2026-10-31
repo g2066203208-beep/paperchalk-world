@@ -788,3 +788,178 @@ F10 GitHub Actions 产物与提交 SHA、编译版本、无 INTERNET 权限校�
 **门禁 G6**：图层、曲线、渐变、动画和 3D 以阶段化真实功能上线，不再使用占位按钮。
 
 未通过 G1/G2 绝不允许宣称“适配手机专业绘图版”，因为那是用户明确指出的基础问题。
+
+
+# 18. 分阶段真实开发命令：严格顺序，不允许跳关
+
+## SPRINT 0 — 建立基线并复现问题
+
+必须先完成：
+- 读取当前 branch/main 与最近成功的 Android Actions，锁定 commit SHA；
+- 用现有 APK 和真实模拟器检查状态栏覆盖、顶部返回/撤销触摸区域、屏幕可用尺寸；
+- 写自动化脚本录制“按下直线—拖动中截图—抬起截图—撤销截图”；
+- 统计 P0、V1.1 中哪些工具直接修改文档、哪些松手提交、哪些已有 preview；为每项标记原始失败；
+- 记录绘制引擎当前的依赖树和 UI 复杂耦合，并建立向后兼容与回滚计划；
+- 构建一组可复现“有问题的版本”截图/日志作为修复前证据。
+
+产物：BUG_AUDIT + 预览缺口表 + baseline APK SHA + golden 画布输入数据。
+
+## SPRINT 1 — 全手机安全区修复（先于一切新工具）
+
+实现：
+- enableEdgeToEdge 与窗口区域统一策略；
+- SafeTopBar、SafeToolDock、SafeCanvasViewport；
+- Insets 处理层与 UI 布局/绘图逻辑完全分离；
+- Android 15+ 系统栏、顶部挖孔、底部导航、输入法、横屏、分屏；
+- 用布局测量和 Compose UI 测试断言所有主要控件的 safe bounds；
+- 用模拟器截屏对照修复前，明确证据指向“按钮可见、可点击、不卡到系统栏下面”。
+
+通过标准：设备形态下所有主要交互控件可用且不与 cutout/statusBars/navigationBars 交叠；旧 PNG 导入、笔刷、保存操作无回归。
+
+**禁止只在最外层加一个魔法 24dp padding 然后宣布解决。**
+
+## SPRINT 2 — 统一 PreviewSession 实现
+
+先实现最小交互垂直切片，只有一个 ToolController 也必须采用未来可复用架构：
+- 选择直线 → PointerDown 建 Anchor；
+- PointerMove 在独立 draft 上用真实 Rasterizer 更新像素线；
+- 画布 CommittedBitmap 与 DraftBitmap 复合显示，控制柄/HUD 单独绘制；
+- PointerUp 转入 CommitReady；用户可拖动端点；
+- 点击确认写 PixelCommand；点击取消完全不写；
+- 一次 undo 可撤销，redo 恢复；
+- 屏幕缩放和 orientation 改变不会让图像错位；
+- 加入截图脚本证明“拖动途中就能看见线”。
+
+通过标准：全部 G1/G2 直线项；确保 app 可以安装运行，有截图和记录。
+
+## SPRINT 3 — 把所有形状工具迁入 PreviewSession
+
+按顺序：矩形/填充矩形→椭圆/实心椭圆→矩形/椭圆选区→多边形/折线→Bezier→渐变。不得每次重写独立状态机，只定义 Tool 参数及 Rasterizer。
+
+补齐：
+- 预览控制柄拾取；
+- 约束/吸附；
+- 透明 Alpha；
+- 图层锁定与选区遮罩；
+- “松手完成”与“确认完成”可切换；
+- 独立精确准星和偏移触控模式；
+- 当前正在操作的工具 Tooltip 与状态 HUD。
+
+每完成一个工具，展示视频中 PointerMove 至少两段中间形态；只给最终图不能通过验收。
+
+## SPRINT 4 — 真正的选区浮动编辑与剪贴板
+
+实施 SelectionMask UI→矩形/椭圆/套索→magic wand→内部复制/剪切/粘贴→FloatingSelection→移动/缩放/镜像/旋转→合并 Command→工程序列化。
+
+粘贴后不能直接覆盖中心：必须先预览，可拖动，所有处理都可以取消并恢复源内容。系统剪贴板留作独立经过 URI 权限测试的阶段。
+
+通过标准：选中 5×7 透明区域，复制粘贴到指定位置，精修、确认、撤销、保存重开、PNG 导出，均通过逐像素比对。
+
+## SPRINT 5 — 专业笔刷与材质预览
+
+实现 BrushDescriptor、StrokeSeed、PixelDab、预览路径、硬边形状、沿路径印章、色彩权重、对称复制、Bayer/误差扩散、渐变、模糊、WrappedCanvas。
+
+先确保 WYSIWYG 不变量，再优化混合模式和精细纹理。算法未通过固定 seed test 时不能在 UI 中显示随机材质已上线。
+
+## SPRINT 6 — 动画、Tilemap、3D 分阶段接入
+
+1. Frame/Cel/OnionSkin 与时间轴 preview；
+2. TileSet/Tilemap/周期纹理与材质预览；
+3. Cube/UV/2D texel 同步；
+4. 骨骼/Graph Editor 关键帧曲线及导出。
+
+要求始终保持普通 2D 手机画板极简可用，不因为高级工作区而增加启动负担。
+
+# 19. 实际代码实现的技术陷阱与明确禁令
+
+**禁令一：** 不要用 Android Canvas.drawLine 的抗锯齿向量线当作最终像素预览，而真正提交时用另一套 Bresenham。结果可能边界不相同。
+
+**禁令二：** 不要在 PointerMove 中频繁对 PixelDocument.beginStroke/setPixel/finishStroke 做正式 commit，再把撤销历史当作“临时预览”。这会引发撤销混乱、自动保存污染、残影和性能问题。
+
+**禁令三：** 不要把内容安全区用固定 dp 硬编码；不同导航、刘海、系统缩放、窗口形态差异巨大。
+
+**禁令四：** 不要在 safeDrawingPadding 已应用后再次对子元素 systemBarsPadding 叠加消耗过的 Insets；反之也不能以为父容器绘制在安全区，按钮就自然安全。
+
+**禁令五：** 不要将输入从 Activity 获取 screen rawX/rawY 后用常量减 titleBarHeight；使用局部 LayoutCoordinates 与官方 Pointer APIs 计算。
+
+**禁令六：** 不要把低分辨率预览靠 GPU 双线性缩放成模糊画面；真实 pixel buffer 设置 NEAREST。UI 控制柄/阴影可以抗锯齿，图片不能。
+
+**禁令七：** 不要用 Math.random() 每帧生成随机纹理，预览与结果会不断变化。必须用固定 seed 和笔触序列 ID。
+
+**禁令八：** 不要在 1024² 画布的每一像素创建 Compose 组件；使用 bitmap / tile rendering。
+
+**禁令九：** 不要把 InputRouter、PreviewEngine、Renderer、History、Serialization 留在单文件 Activity 中；分模块、按领域依赖。
+
+**禁令十：** 不要把选区 bbox 画框当作“真正不规则选区可用”，真实 mask 必须参与选择和效果计算。
+
+**禁令十一：** 不要在动画播放时直接编辑原 Cel 指针却没有版本化，导致播放和绘画竞态修改文件。
+
+**禁令十二：** 不要用模型视图的平滑外观掩盖错误 UV texel；3D 必须展示真实贴图像素映射。
+
+**禁令十三：** 不要把手机外观上有图标的原型说成“功能齐全”。工具状态为 PLANNED/ENGINE_ONLY/UI_WIRED/TESTED/RELEASED 必须逐项区分。
+
+**禁令十四：** 不要在 GitHub Actions 编译通过后就声称真实设备手感良好。最少需模拟器功能验收 + 用户真机触摸回归与性能记录。
+
+**禁令十五：** 不要跳过 UI 截图：顶部安全区和拖动实时预览正是当前版本最严重的问题，必须留下“修复前/修复后”真实运行证据。
+
+# 20. 安全、开源研究与责任归属
+
+本应用为完全本地工具，不包含第三方账号、云图像服务、广告、跟踪分析、网络权限、网络生图。保持全部项目文件在用户掌控下。可提供导出备份，由用户自己管理，不自动上传。
+
+公开研究优先参考：
+- Android 官方 Compose Insets： https://developer.android.com/develop/ui/compose/system/insets
+- Android 官方 Insets UI： https://developer.android.com/develop/ui/compose/system/insets-ui
+- Android Edge-to-edge： https://developer.android.com/develop/ui/compose/system/setup-e2e
+- Compose Gesture 文档： https://developer.android.com/develop/ui/compose/touch-input/pointer-input/understand-gestures
+- Android Stylus 历史样本与输入设备： https://developer.android.com/develop/ui/compose/touch-input/input-compatibility-on-large-screens
+- Android 高级主动笔与手掌拒绝： https://developer.android.com/develop/ui/compose/touch-input/stylus-input/advanced-stylus-features
+- Android Window Size Classes： https://developer.android.com/develop/adaptive-apps/guides/use-window-size-classes
+- Android Fold-aware： https://developer.android.com/develop/adaptive-apps/guides/foldables/make-your-app-fold-aware
+- Android Orientation and resizability： https://developer.android.com/develop/adaptive-apps/guides/app-orientation-aspect-ratio-resizability
+- Aseprite 官方文档： https://aseprite.com/docs/
+- LibreSprite： https://github.com/LibreSprite/LibreSprite
+- Krita Assistants： https://docs.krita.org/en/user_manual/painting_with_assistants.html
+- Blockbench： https://blockbench.net/
+
+这些来源用于理解成熟工具的行为和官方 API，不自动授权复制商业软件 UI、图标或 GPL/EULA 代码。所有新引入库需要核查许可证和发布义务。
+
+# 21. 每轮交付结果报告模板
+
+标题：Pixel Atelier V1.2 / Commit / APK build / Emulator / Physical Device
+
+1. **本轮修复问题 ID**：对应 Issues / BUG_AUDIT、复现步骤及具体变更。
+2. **代码文件**：新增模块路径、修改文件、算法职责、接口变化。
+3. **交互功能真实现状**：哪些功能已 UI_WIRED，哪些只有 ENGINE_ONLY，哪些尚无实现。
+4. **录屏与截图**：至少顶部安全区、正在拖动的线、松手后精修、确认、取消、撤销五个关键状态。
+5. **逻辑像素一致性测试**：预览和提交输出 hash、单测总数/失败数。
+6. **系统 Insets 验收**：测试 API/设备、顶部与底部安全矩形、cutout 状态。
+7. **Android 编译**：Gradle 版本、Java 版本、SDK、APK 产物、build logs。
+8. **模拟器和真机**：分开记录；未测写 NOT_TESTED。
+9. **性能报告**：画布尺寸、帧率、内存、延迟测量方法及实测值。
+10. **数据安全报告**：保存恢复、撤销、PNG roundtrip、无网络权限。
+11. **已知失败与下一步**：说明未通过项的影响、具体修复计划，不允许隐藏。
+12. **可下载交付**：可安装 APK、SHA-256、签名类型、Git commit、Actions Run URL。
+
+每一份成果必须可被别的工程师重新构建、复核和继续开发。
+
+# 22. V1.2 最终强制指令（可直接交给开发团队）
+
+**现在立即按以下顺序执行，不要只绘制一张漂亮界面概念图：**
+
+第一，彻查 GitHub 中的现有 Android 代码及所有 CI 日志，把被状态栏盖住的顶部操作、无实时预览的直线和其他形状、没有确认/取消的选区编辑问题做成明确可复现缺陷。
+
+第二，以 Android 官方 Edge-to-edge、WindowInsets、Adaptive Window Size 和 PointerInput 为基础，实现真正正确的顶栏/画布/底部 Dock 布局。在各类挖孔屏、手势导航和横屏上验证按钮可见且可触摸。不得把定值 padding 作为修复。
+
+第三，建立所有工具共享的 PreviewSession、ToolController、DraftRasterBuffer、SelectionOverlay、HandleManager 和 CommandDispatcher。把直线作为第一条真实开发垂直链路，完成拖动实时像素预览、端点二次编辑、数值输入、吸附、确认/取消、单笔撤销和保存一致性。
+
+第四，把矩形、椭圆、选区、复制粘贴、变形、画笔、渐变、抖动、无缝材质和复杂动画等按同一预览合同逐项上线，不为每个工具各写一套互不兼容的状态机。
+
+第五，完成 GitHub Actions 的 JVM 逻辑测试、Android APK 编译、模拟器手势回放、真实运行截图和像素 golden tests。未通过实际验收，不得声称功能已完成，更不得宣称达到商业专业级软件。
+
+第六，不断提升手机 UX 的可理解性、精确性和稳定性。高级能力必须采用渐进显示，普通用户能立即作画，专业用户能深入控制每个像素、图层、线条、参数、动画帧与 UV 纹素。
+
+**最终成功标准：用户打开真实离线 APK，在任何合规支持的 Android 手机显示环境中，都能看见完整安全的顶栏工具；选中直线，在手指移动的每个阶段看到可预测、真实像素级、随移动更新的预览；松手后精修并确认，最终图像与预览逐像素一致。所有其他绘制操作必须遵循同样可靠的交互逻辑。**
+
+---
+
+**文件地位：** Pixel Atelier V1.2 是 V1.0 / V1.1 的增补和强制修复规范。此前“没有实时预览”“顶部挖孔屏按钮被遮挡”等体验错误，禁止被标记为设计偏好或非关键问题。只有通过源码、截图、测试和真正的用户操作证据，才能关闭这些缺陷。
