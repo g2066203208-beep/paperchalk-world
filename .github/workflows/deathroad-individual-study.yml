@@ -50,14 +50,17 @@ jobs:
           x=json.loads((p/'model-study.json').read_text())
           assert x['records_count']==30
           assert len(x['records'])==30
-          assert set(p.iterdir())=={p/'model-study.json'},'no copyrighted sprite reproduction in artifacts'
-          print('PASS: 30 individual research statistics only, original character sprites not redistributed')
+          model_files=sorted((p/'models').glob('DR2C-VISUAL-*.json'))
+          assert len(model_files)==30,'each of 30 visible characters needs independent learned weights'
+          assert all('contextual_weights' in json.loads(f.read_text()) for f in model_files)
+          assert not list(p.rglob('*.png')),'no copyrighted sprite reproduction in artifacts'
+          print('PASS: 30 independently trained parameter files, NO proprietary PNG exported')
           PY
       - name: Publish aggregate numerical descriptions only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: deathroad-30-reference-style-research-only
-          path: artifacts/deathroad-reference-study/model-study.json
+          name: deathroad-30-independent-models-research-only
+          path: artifacts/deathroad-reference-study/
           retention-days: 14
           if-no-files-found: warn
