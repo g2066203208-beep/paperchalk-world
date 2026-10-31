@@ -9,14 +9,27 @@ data class PixelLayer(
     val pixels: IntArray,
     var visible: Boolean = true,
     var locked: Boolean = false,
-    var opacity: Int = 255
+    var opacity: Int = 255,
+    var blendMode: PixelBlendMode = PixelBlendMode.NORMAL,
+    var alphaLocked: Boolean = false,
+    var mask: ByteArray? = null,
+    var maskEnabled: Boolean = true
 ) {
-    fun copyLayer(): PixelLayer = copy(pixels = pixels.copyOf())
+    fun copyLayer(): PixelLayer = copy(pixels = pixels.copyOf(), mask = mask?.copyOf())
 }
 
 private data class Change(val index: Int, val before: Int, val after: Int)
 private data class LayerPixelsChange(val layerId: Long, val changes: List<Change>)
-private data class PixelAction(val affectedLayers: List<LayerPixelsChange>)
+private data class LayerSettings(
+    val opacity: Int, val blendMode: PixelBlendMode, val alphaLocked: Boolean,
+    val mask: ByteArray?, val maskEnabled: Boolean
+)
+private data class LayerPropertyChange(val layerId: Long,
+    val before: LayerSettings, val after: LayerSettings)
+private data class PixelAction(
+    val affectedLayers: List<LayerPixelsChange> = emptyList(),
+    val properties: List<LayerPropertyChange> = emptyList()
+)
 enum class ClearScope { ACTIVE_LAYER, ALL_EDITABLE_LAYERS }
 
 class PixelDocument(
@@ -61,10 +74,15 @@ class PixelDocument(
         val layer = currentLayer
         if (layer.locked) return
         val index = y * width + x
-        if (layer.pixels[index] == argb) return
+        val old = layer.pixels[index]
+        val next = if (layer.alphaLocked) {
+            if (old ushr 24 == 0) return
+            (old and -0x1000000) or (argb and 0x00FFFFFF)
+        } else argb
+        if (old == next) return
         if (stroke == null) beginStroke()
-        stroke?.putIfAbsent(index, layer.pixels[index])
-        layer.pixels[index] = argb
+        stroke?.putIfAbsent(index, old)
+        layer.pixels[index] = next
     }
 
     fun line(x0: Int, y0: Int, x1: Int, y1: Int, argb: Int) {
@@ -151,6 +169,9 @@ class PixelDocument(
                 for (c in entry.changes) layer.pixels[c.index] = c.before
             }
         }
+        for (entry in action.properties) {
+            layers.firstOrNull { it.id == entry.layerId }?.let { applySettings(it, entry.before) }
+        }
         redo.addLast(action)
         return true
     }
@@ -162,6 +183,9 @@ class PixelDocument(
             layers.firstOrNull { it.id == entry.layerId }?.let { layer ->
                 for (c in entry.changes) layer.pixels[c.index] = c.after
             }
+        }
+        for (entry in action.properties) {
+            layers.firstOrNull { it.id == entry.layerId }?.let { applySettings(it, entry.after) }
         }
         undo.addLast(action)
         return true
@@ -184,9 +208,13 @@ class PixelDocument(
             for (index in 0 until width * height) {
                 if (mask != null && !mask.get(index % width, index / width)) continue
                 val before = layer.pixels[index]
-                if (before == color) continue
-                changes.add(Change(index, before, color))
-                layer.pixels[index] = color
+                val next = if (layer.alphaLocked) {
+                    if (before ushr 24 == 0) continue
+                    (before and -0x1000000) or (color and 0x00FFFFFF)
+                } else color
+                if (before == next) continue
+                changes.add(Change(index, before, next))
+                layer.pixels[index] = next
             }
             if (changes.isNotEmpty()) entries.add(LayerPixelsChange(layer.id, changes))
         }
@@ -196,6 +224,50 @@ class PixelDocument(
         redo.clear()
         return true
     }
+
+    private fun settings(layer: PixelLayer) = LayerSettings(
+        layer.opacity, layer.blendMode, layer.alphaLocked, layer.mask?.copyOf(), layer.maskEnabled
+    )
+    private fun applySettings(layer: PixelLayer, snapshot: LayerSettings) {
+        layer.opacity = snapshot.opacity
+        layer.blendMode = snapshot.blendMode
+        layer.alphaLocked = snapshot.alphaLocked
+        layer.mask = snapshot.mask?.copyOf()
+        layer.maskEnabled = snapshot.maskEnabled
+    }
+    private fun mutateSettings(block: (PixelLayer) -> Unit): Boolean {
+        finishStroke()
+        val layer = currentLayer
+        if (layer.locked) return false
+        val old=settings(layer)
+        block(layer)
+        val after=settings(layer)
+        if (old.opacity == after.opacity && old.blendMode == after.blendMode &&
+            old.alphaLocked == after.alphaLocked && old.maskEnabled == after.maskEnabled &&
+            (old.mask?.contentEquals(after.mask ?: ByteArray(0)) ?: (after.mask == null))) return false
+        undo.addLast(PixelAction(properties=listOf(LayerPropertyChange(layer.id,old,after))))
+        while(undo.size > historyLimit) undo.removeFirst()
+        redo.clear()
+        return true
+    }
+    fun setBlendMode(mode: PixelBlendMode) =
+        mutateSettings { it.blendMode = mode }
+    fun setOpacity(value: Int) =
+        mutateSettings { it.opacity = value.coerceIn(0,255) }
+    fun setAlphaLocked(value: Boolean) =
+        mutateSettings { it.alphaLocked = value }
+    fun createMask(): Boolean =
+        mutateSettings { it.mask = ByteArray(width*height){ 0xff.toByte() }; it.maskEnabled = true }
+    fun removeMask(): Boolean =
+        mutateSettings { it.mask = null }
+    fun fillMask(value: Int): Boolean =
+        mutateSettings { it.mask?.fill(value.coerceIn(0,255).toByte()) }
+    fun invertMask(): Boolean =
+        mutateSettings { it.mask?.let { pixels ->
+            for(i in pixels.indices) pixels[i]=(255-(pixels[i].toInt() and 255)).toByte()
+        } }
+    fun setMaskEnabled(enabled: Boolean): Boolean =
+        mutateSettings { if(it.mask != null) it.maskEnabled=enabled }
 
     fun addLayer(name: String = "图层 " + (layers.size + 1)): Boolean {
         if (layers.size >= 32) return false
@@ -218,55 +290,36 @@ class PixelDocument(
     fun deepCopy(): PixelDocument =
         PixelDocument(id, title, width, height, layers.map { it.copyLayer() }.toMutableList(), activeLayer)
 
-    /**
-     * Preview a replacement active-layer pixel through the EXACT same source-over
-     * order/rounding as [composite], without writing to any layer or history.
-     * This is called only for pixel indices touched by a transient shape draft.
-     */
+    private fun blendPixel(dst: Int, layer: PixelLayer, src: Int, index: Int): Int {
+        val coverage = if(layer.maskEnabled) (layer.mask?.get(index)?.toInt()?.and(255) ?: 255) else 255
+        return PixelBlend.over(dst,src,layer.opacity,layer.blendMode,coverage)
+    }
+
+    /** Uses the exact same per-layer blend and mask arithmetic as final export. */
     fun compositeWithPreview(index: Int, previewArgb: Int): Int {
-        if (index !in 0 until width * height) return 0
-        val overrideId = currentLayer.id
-        var output = 0
-        for (layer in layers) {
-            if (!layer.visible || layer.opacity == 0) continue
-            val src = if (layer.id == overrideId) previewArgb else layer.pixels[index]
-            val srcA = ((src ushr 24) * layer.opacity + 127) / 255
-            if (srcA == 0) continue
-            val dstA = output ushr 24
-            val outA = srcA + (dstA * (255 - srcA) + 127) / 255
-            if (outA == 0) { output = 0; continue }
-            fun channel(shift: Int): Int {
-                val sv = (src ushr shift) and 255
-                val dv = (output ushr shift) and 255
-                return ((sv * srcA * 255 + dv * dstA * (255 - srcA)) /
-                    (outA * 255)).coerceIn(0,255)
-            }
-            output = (outA shl 24) or (channel(16) shl 16) or
-                (channel(8) shl 8) or channel(0)
+        if(index !in 0 until width*height) return 0
+        var output=0
+        for(layer in layers) {
+            if(!layer.visible || layer.opacity==0) continue
+            val src=if(layer.id==currentLayer.id) {
+                val original=layer.pixels[index]
+                if(layer.alphaLocked) {
+                    if(original ushr 24 == 0) original
+                    else (original and -0x1000000) or (previewArgb and 0x00FFFFFF)
+                } else previewArgb
+            } else layer.pixels[index]
+            output=blendPixel(output,layer,src,index)
         }
         return output
     }
 
-    /** Explicit source-over composition, no interpolation. */
+    /** Single authoritative CPU compositing path for editor and exported PNG. */
     fun composite(): IntArray {
-        val output = IntArray(width * height)
-        for (layer in layers) {
-            if (!layer.visible || layer.opacity == 0) continue
-            for (i in output.indices) {
-                val src = layer.pixels[i]
-                val srcA = ((src ushr 24) * layer.opacity + 127) / 255
-                if (srcA == 0) continue
-                val dst = output[i]
-                val dstA = dst ushr 24
-                val outA = srcA + (dstA * (255 - srcA) + 127) / 255
-                if (outA == 0) { output[i] = 0; continue }
-                fun channel(shift: Int): Int {
-                    val s = (src ushr shift) and 255
-                    val d = (dst ushr shift) and 255
-                    return ((s * srcA * 255 + d * dstA * (255 - srcA)) / (outA * 255)).coerceIn(0,255)
-                }
-                output[i] = (outA shl 24) or (channel(16) shl 16) or (channel(8) shl 8) or channel(0)
-            }
+        val output=IntArray(width*height)
+        for(layer in layers) {
+            if(!layer.visible || layer.opacity==0) continue
+            for(i in output.indices)
+                output[i]=blendPixel(output[i],layer,layer.pixels[i],i)
         }
         return output
     }
