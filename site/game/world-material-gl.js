@@ -1,7 +1,7 @@
 /* Shared WebGL1 material pipeline: real UV-mapped surfaces, one 128x64 atlas,
  * 16x16 integer texels, NEAREST filtering and texel-center sampling.
  */
-import {atlasRGBA} from '../world-builder/materials-core.js';
+import {atlasRGBA} from '../world-builder/materials-core.js?v=20261031-world32';
 function makeProgram(gl,vertex,fragment){
  const shader=(type,src)=>{
   const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
