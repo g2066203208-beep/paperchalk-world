@@ -55,6 +55,8 @@ def loss_fn(net,pixels,guide,coords,condition):
     weight=torch.where(pixels==0,.5,2.)
     return (loss*weight*mask).sum()/(weight*mask).sum()
 def train(args):
+    if not getattr(args,"experimental_four_ink_ablation",False):
+        raise RuntimeError("This tool is an old FOUR-COLOR ablation only. For curated original artist RGB pixel work, use art_training.py with human quality review. Pass --experimental-four-ink-ablation to deliberately run this limited baseline.")
     random.seed(args.seed);np.random.seed(args.seed);torch.manual_seed(args.seed)
     if torch.cuda.is_available():torch.cuda.manual_seed_all(args.seed)
     root=pathlib.Path(args.data).resolve()
@@ -108,7 +110,8 @@ if __name__=='__main__':
     p=argparse.ArgumentParser();sub=p.add_subparsers(dest='command',required=True)
     t=sub.add_parser('train')
     t.add_argument('--data',required=True);t.add_argument('--manifest',default='manifest.json')
-    t.add_argument('--profile',choices=list(PROFILES),default='portrait');t.add_argument('--output',default='runs/portrait')
+    t.add_argument('--profile',choices=list(PROFILES),default='portrait')
+    t.add_argument('--experimental-four-ink-ablation',action='store_true');t.add_argument('--output',default='runs/portrait')
     t.add_argument('--epochs',type=int,default=30);t.add_argument('--batch',type=int,default=8)
     t.add_argument('--channels',type=int,default=32);t.add_argument('--lr',type=float,default=.0003)
     t.add_argument('--seed',type=int,default=20261031)
