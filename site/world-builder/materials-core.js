@@ -201,17 +201,38 @@ function drawTile(type){
  return a;
 }
 export function freshPack(){
- return {format:FORMAT,tileSize:TILE,palette:[...PALETTE],
+ return {format:FORMAT,tileSize:TILE,palette:[...PALETTE],artDirectionRevision:2,
   materials:MATERIALS.map(m=>({id:m.id,name:m.name,pixels:drawTile(m.id)}))};
 }
-/** Keep the user's eight original edited materials when upgrading the live game. */
+/** Fingerprints of the previous 32 shipped factory tiles (not user pixels).
+ * Deterministic FNV-1a over the 256 ink indices, not image recognition.
+ * Only exact unedited defaults are refreshed; customized tiles remain intact.
+ */
+const PREVIOUS_FACTORY_HASHES=[
+ 717349493,2128907397,2988585035,1539448020,2263932453,1353693149,1198018039,2139005790,
+ 2831397877,3221559442,3858680380,2456228518,1676209069,1107083173,2268728994,2123012279,
+ 3266929769,3997760241,3342330257,3950301861,205887231,946174429,1652008557,1898620919,
+ 173921492,4164273029,1935394779,1138536840,167985799,2734861237,3052169327,830979877
+];
+function pixelHash(pixels){
+ let h=2166136261;
+ for(const n of pixels)h=Math.imul(h^n,16777619);
+ return h>>>0;
+}
 export function migratePack(value){
  if(!value||value.format!==FORMAT||value.tileSize!==TILE||!Array.isArray(value.materials))return value;
- if(value.materials.length!==8)return value;
- const fresh=freshPack();
- if(value.materials.some((item,i)=>item?.id!==MATERIALS[i].id))return value;
- fresh.materials.splice(0,8,...value.materials);
- return fresh;
+ const count=value.materials.length;
+ if(count!==8&&count!==MATERIALS.length)return value;
+ if(count===MATERIALS.length&&value.artDirectionRevision===2)return value;
+ if(value.materials.some((m,i)=>m?.id!==MATERIALS[i].id))return value;
+ const pack=freshPack();
+ for(let i=0;i<count;i++){
+  const existing=value.materials[i];
+  if(!Array.isArray(existing.pixels)||existing.pixels.length!==SIZE)return value;
+  if(pixelHash(existing.pixels)!==PREVIOUS_FACTORY_HASHES[i])
+   pack.materials[i]={id:existing.id,name:existing.name,pixels:[...existing.pixels]};
+ }
+ return pack;
 }
 export function validatePack(value){
  if(!value||value.format!==FORMAT||value.tileSize!==TILE)throw Error('材质工程版本不支持');
