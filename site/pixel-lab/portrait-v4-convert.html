@@ -35,7 +35,7 @@ figcaption{color:#c9c9d3;font-size:12px;margin:7px 0}
 <h2>25个独立人物</h2>
 <div id="tiles" aria-label="25格原生像素结果"></div>
 <h2>机器约束核对</h2>
-<pre id="report">等待原图导入。画布固定5×5，行列对齐；安全区之外必须是统一背景。此页面仅做确定性转换，不会假装调用训练模型。</pre>
+<pre id="report">正在载入GitHub归档的V4高清参考衍生图。画布固定5×5；安全区之外必须是统一背景。此页面仅做确定性转换，不会假装调用训练模型。</pre>
 <p><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/portrait-v4-ml.yml">查看GitHub Actions训练</a> · <a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/docs/pixel-portrait-v4-ml-conversion.md">模型实验与五官美术验收说明</a></p>
 </main>
 <script>
@@ -90,6 +90,8 @@ function rebuild(){
  report.unshift("画布：640×640；网格：5×5；每格：128×128；最近轴向净空至少20逻辑像素；越界像素："+bleed+"；结果："+(bleed===0?"通过":"未通过"));
  ids("report").textContent=report.join("\n");ids("download").disabled=bleed!==0;ids("preview").disabled=bleed!==0;
 }
+// Default source is the actual V4 portrait artwork derivative archived in GitHub.
+const archived=new Image();archived.onload=()=>{if(!rawImage){rawImage=archived;const c=src.getContext("2d");c.drawImage(archived,0,0,640,640);ids("convert").disabled=false;ids("report").textContent="已自动加载仓库中的V4图鉴640×640 WebP压缩衍生图；开始构建独立原生像素候选。原始1254×1254 PNG在本次对话成果包内。";rebuild()}};archived.onerror=()=>{ids("report").textContent="无法自动读取GitHub V4源图。仍可手动导入图片。";};archived.src="./portrait-v4/source-v4-640-q92.webp";
 ids("source").addEventListener("change",e=>{const file=e.target.files?.[0];if(!file)return;let u=URL.createObjectURL(file),img=new Image();img.onload=()=>{rawImage=img;let ctx=src.getContext("2d");ctx.fillStyle="#f6ebd2";ctx.fillRect(0,0,640,640);ctx.drawImage(img,0,0,640,640);ids("convert").disabled=false;ids("report").textContent="已读取 "+img.width+"×"+img.height+" 源图；点击重构。";URL.revokeObjectURL(u)};img.onerror=()=>{URL.revokeObjectURL(u);alert("无法读取图片")};img.src=u});
 ids("convert").onclick=()=>{if(rawImage)rebuild()};
 ids("download").onclick=()=>download(dst,"portrait-v4-native-candidate-640.png");
