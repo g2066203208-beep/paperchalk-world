@@ -308,3 +308,10 @@
  #pw-dialogue .pw-dialogue-speech{font-size:16px}
 }
 @media(prefers-reduced-motion:reduce){#pw-dialogue::after{animation:none}}
+
+/* Rental opening: speech is an actual UI layer BELOW the owner's face.
+ * Portrait arrangement: upper-body sprite -> physical counter -> speech at foot.
+ * Landscape continues to use the existing right-hand conversation column. */
+@media (max-aspect-ratio:5/4) and (min-height:571px){
+ #pw-dialogue{top:auto;bottom:max(8px,env(safe-area-inset-bottom))}
+}
