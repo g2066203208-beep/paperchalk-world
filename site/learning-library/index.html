@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#393657">
+<meta name="description" content="PAPERWORLD 像素游戏美术学习库：真实游戏截图、柜台透视、人物对话、桌面文件交互、UI 案例。">
+<title>PAPERWORLD · 游戏画面学习库</title>
+<link rel="stylesheet" href="./gallery.css?v=20261031-library1">
+</head>
+<body>
+<header class="top">
+ <div class="title">
+  <a class="back" href="../" aria-label="返回 PAPERWORLD 游戏">← 游戏</a>
+  <div><small class="eyebrow">PAPERWORLD / VISUAL RESEARCH</small><h1>游戏画面学习库</h1></div>
+ </div>
+ <p>只收集真正的游戏运行截图。研究镜头、人物、桌面透视、对话、文件与 UI，而不是复制别人的游戏素材。</p>
+ <div class="summary"><strong id="total-games">23 款游戏</strong><strong id="total-images">正在读取实机图库…</strong><span>官方商店截图 + 标注来源的实机参考</span></div>
+</header>
+<div class="workspace">
+ <aside class="side" aria-label="游戏清单">
+  <label for="search">查找参考游戏 / 视觉要素</label>
+  <input id="search" type="search" placeholder="Coffee Talk、柜台、文书…" autocomplete="off">
+  <div id="categories" class="categories" aria-label="参考主题筛选"></div>
+  <div class="filters"><label><input type="checkbox" id="core-only"> 只看指定的 5 款</label><label><input type="checkbox" id="saved-only"> 仅看收藏</label></div>
+  <div id="game-list" class="game-list" role="list"></div>
+ </aside>
+ <main class="main">
+  <div class="section-head">
+   <div><small id="selection-subtitle">已注明来源的游戏真实截图</small><h2 id="selection-title">全部截图</h2></div>
+   <div class="actions"><button id="all-games" type="button">全部游戏</button><a id="official-source" href="https://store.steampowered.com/" rel="noopener noreferrer" target="_blank" hidden>官方游戏页面 ↗</a></div>
+  </div>
+  <div id="study-note" class="study-note"><strong>学习目的</strong><span>比较真正的柜台顶面透视、独立人物素材和实体表单交互，先观察，再设计我们自己的独立资产。</span></div>
+  <p id="empty" class="empty" hidden>这一项暂未拿到可核实的实机截图。可通过游戏的官方商店或 Steam 社区截图页继续查看；这里不会用宣传插画冒充实机。</p>
+  <div id="photos" class="photos" aria-live="polite"></div>
+  <button id="more" type="button" class="more" hidden>继续加载截图</button>
+  <div class="provenance">素材归各原游戏权利方所有。本库只显示带来源的外部截图，不作为模型训练数据，不改画风冒充 PAPERWORLD 原创游戏素材。图片由 Steam 等来源网站提供；离线时可能无法显示。</div>
+ </main>
+</div>
+<dialog id="viewer" class="viewer" aria-label="放大查看真实游戏截图">
+ <div class="viewer-bar"><strong id="viewer-title"></strong><span id="viewer-count"></span><button id="viewer-close" aria-label="关闭大图">✕</button></div>
+ <div class="viewer-stage"><button id="viewer-prev" aria-label="上一张">‹</button><img id="viewer-img" alt="游戏实机截图"><button id="viewer-next" aria-label="下一张">›</button></div>
+ <div class="viewer-bottom"><p id="viewer-label"></p><div><a id="viewer-source" rel="noopener noreferrer" target="_blank">查看原始截图来源 ↗</a><a id="viewer-store" rel="noopener noreferrer" target="_blank">游戏官网 ↗</a></div></div>
+</dialog>
+<script type="module" src="./gallery.js?v=20261031-library1"></script>
+</body></html>
