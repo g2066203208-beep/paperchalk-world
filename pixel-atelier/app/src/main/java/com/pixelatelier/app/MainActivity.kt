@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -590,7 +591,7 @@ private fun AtelierApp(store: ProjectStore) {
         onDismissRequest = { showLayers = false },
         title = { Text("图层管理") },
         text = {
-            Column {
+            Column(Modifier.heightIn(max=440.dp).verticalScroll(rememberScrollState())) {
                 activeDoc.layers.indices.reversed().forEach { index ->
                     val layer = activeDoc.layers[index]
                     Row(
@@ -608,6 +609,78 @@ private fun AtelierApp(store: ProjectStore) {
                         TextButton(onClick = {
                             layer.locked = !layer.locked; notifyChange(); scheduleSave()
                         }) { Text(if (layer.locked) "已锁" else "锁定") }
+                    }
+                }
+                HorizontalDivider(Modifier.padding(vertical=7.dp))
+                Text("当前层属性 · " + activeDoc.currentLayer.name,
+                    style=MaterialTheme.typography.titleSmall, color=Accent)
+                var blendExpanded by remember(activeDoc.id,activeDoc.activeLayer) {
+                    mutableStateOf(false)
+                }
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    Box {
+                        TextButton(onClick={ blendExpanded=true }) {
+                            Text("混合：" + activeDoc.currentLayer.blendMode.label)
+                        }
+                        DropdownMenu(expanded=blendExpanded, onDismissRequest={ blendExpanded=false }) {
+                            PixelBlendMode.entries.forEach { candidate ->
+                                DropdownMenuItem(
+                                    text={ Text(candidate.label) },
+                                    onClick={
+                                        blendExpanded=false
+                                        if(activeDoc.setBlendMode(candidate)) {
+                                            notifyChange(); scheduleSave()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                Row(verticalAlignment=Alignment.CenterVertically) {
+                    TextButton(onClick={
+                        if(activeDoc.setOpacity(activeDoc.currentLayer.opacity-26)) {
+                            notifyChange(); scheduleSave()
+                        }
+                    }) { Text("透明度－") }
+                    Text((activeDoc.currentLayer.opacity*100/255).toString()+"%")
+                    TextButton(onClick={
+                        if(activeDoc.setOpacity(activeDoc.currentLayer.opacity+26)) {
+                            notifyChange(); scheduleSave()
+                        }
+                    }) { Text("＋") }
+                }
+                TextButton(onClick={
+                    if(activeDoc.setAlphaLocked(!activeDoc.currentLayer.alphaLocked)) {
+                        notifyChange(); scheduleSave()
+                    }
+                }) { Text(if(activeDoc.currentLayer.alphaLocked)
+                    "Alpha 锁：已开启" else "Alpha 锁：关闭") }
+                Text("透明遮罩（源像素保留）",
+                    style=MaterialTheme.typography.labelMedium)
+                if(activeDoc.currentLayer.mask==null) {
+                    TextButton(onClick={
+                        if(activeDoc.createMask()) { notifyChange(); scheduleSave() }
+                    }) { Text("＋ 新建全白遮罩") }
+                } else {
+                    Row(Modifier.horizontalScroll(rememberScrollState())) {
+                        TextButton(onClick={
+                            if(activeDoc.setMaskEnabled(!activeDoc.currentLayer.maskEnabled)) {
+                                notifyChange(); scheduleSave()
+                            }
+                        }) { Text(if(activeDoc.currentLayer.maskEnabled) "暂时停用" else "启用遮罩") }
+                        TextButton(onClick={
+                            if(activeDoc.fillMask(0)) { notifyChange(); scheduleSave() }
+                        }) { Text("全黑隐藏") }
+                        TextButton(onClick={
+                            if(activeDoc.fillMask(255)) { notifyChange(); scheduleSave() }
+                        }) { Text("全白显示") }
+                        TextButton(onClick={
+                            if(activeDoc.invertMask()) { notifyChange(); scheduleSave() }
+                        }) { Text("反转") }
+                        TextButton(onClick={
+                            if(activeDoc.removeMask()) { notifyChange(); scheduleSave() }
+                        }) { Text("删除遮罩") }
                     }
                 }
                 Row {
