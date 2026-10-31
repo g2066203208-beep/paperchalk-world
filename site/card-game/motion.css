@@ -1,0 +1,241 @@
+/* CARD PARADOX — LIVE JUICE v2
+ * Every animated surface in this file is an actual playable card/joker.
+ * Two independent transform layers: floating slot + interactive button.
+ * Animated pixels are original art; no external or Balatro-owned sprite assets.
+ */
+#hand-cards>.card-motion-slot{
+  position:relative;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  flex:0 0 clamp(69px,8vw,104px);
+  width:clamp(69px,8vw,104px);
+  height:clamp(106px,12vw,152px);
+  transform-origin:center bottom;
+  z-index:1;
+  animation:card-bob var(--float-duration,3.35s) ease-in-out var(--float-delay,0s) infinite;
+  transition:transform .25s cubic-bezier(.12,.86,.25,1);
+}
+#hand-cards>.card-motion-slot:hover{
+  animation-play-state:paused;
+  z-index:5;
+}
+#hand-cards>.card-motion-slot[data-selected="true"]{
+  animation:none;
+  transform:translateY(-1px);
+  z-index:10;
+}
+#hand-cards>.card-motion-slot[data-selected="true"] .play-card{
+  --card-scale:1.045;
+}
+#hand-cards>.card-motion-slot .play-card{
+  flex:0 0 100%;
+  width:100%;
+  height:100%;
+  position:relative;
+  transform-origin:50% 72%;
+  --tiltX:0deg;
+  --card-scale:1;
+  --lightX:50%;
+  --lightY:50%;
+  transform:perspective(560px) translate3d(0,var(--lift,0px),0)
+   rotateZ(var(--rot,0deg)) rotateY(var(--pitch,0deg))
+   rotateX(var(--tiltX,0deg)) scale(var(--card-scale,1));
+  transition:transform .24s cubic-bezier(.18,1.32,.27,1),
+    box-shadow .22s ease,background .20s ease;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+#hand-cards>.card-motion-slot .play-card:hover:not(:disabled){
+  --card-scale:1.085;
+  box-shadow:6px 13px 0 #151422,0 0 0 2px #F2A5C2;
+}
+#hand-cards>.card-motion-slot .play-card[aria-pressed="true"]{
+  box-shadow:4px 13px 0 #151422,0 0 0 3px #F2A5C2;
+}
+#hand-cards>.card-motion-slot .play-card.touch-pressed{
+  --card-scale:1.09;
+  filter:brightness(1.055);
+}
+.play-card::after{
+  opacity:.44;
+  z-index:4;
+  border-radius:4px;
+  background:
+    radial-gradient(ellipse at var(--lightX,50%) var(--lightY,50%),
+      #FFF5E6a8,transparent 37%),
+    linear-gradient(116deg,transparent 17%,#F2A5C205 31%,#A9BAE976 40%,
+      #FFF5E6c0 46%,#F2A5C266 52%,transparent 66%);
+  background-size:100% 100%,280% 100%;
+  background-position:center,140% 0;
+  mix-blend-mode:screen;
+  animation:card-holo-sweep 4.2s ease-in-out infinite;
+  pointer-events:none;
+}
+.play-card[aria-pressed="true"]::after{
+  opacity:.78;
+  animation-duration:2.15s;
+}
+.play-card:hover::after,.play-card.touch-pressed::after{opacity:.84}
+.play-card::before{
+  content:"✧";
+  position:absolute;right:5px;top:24px;
+  font:900 15px var(--display);
+  color:var(--pink);
+  z-index:5;
+  opacity:0;
+  text-shadow:1px 1px var(--ink);
+  pointer-events:none;
+  animation:card-star-twinkle 4.6s ease-in-out infinite;
+}
+.play-card .suit-icon{
+  animation:emblem-breathe 3.5s ease-in-out infinite;
+}
+.play-card[aria-pressed="true"] .suit-icon{
+  animation-duration:1.65s;
+}
+.play-card.card-just-picked{
+  animation:card-pick-spring .46s cubic-bezier(.18,.8,.28,1);
+}
+.play-card.card-playing{
+  box-shadow:0 0 0 3px var(--pink),6px 15px 0 var(--shadow);
+}
+.play-card.card-scored{
+  animation:card-scoring-hit .42s cubic-bezier(.15,.9,.2,1);
+  z-index:10;
+}
+.play-card.card-scored::after{opacity:.98;animation-duration:.6s}
+/* Base card UI has an understated cream/pink/blue/ink palette; flip the suit
+ * color into the actual four-ink palette rather than introducing a fifth red. */
+.play-card.red{--suit-ink:var(--pink)}
+/* Cards must all be visible on mobile, but not wander outside the viewport
+ * during the floating animation. Entirely independent of scroll physics. */
+@keyframes card-bob{
+  0%,100%{transform:translate3d(0,2px,0) rotateZ(-.65deg)}
+  38%{transform:translate3d(0,-5px,0) rotateZ(.75deg)}
+  64%{transform:translate3d(0,-3px,0) rotateZ(-.35deg)}
+}
+@keyframes card-holo-sweep{
+  0%,15%{background-position:center,142% 0}
+  70%,100%{background-position:center,-135% 0}
+}
+@keyframes card-star-twinkle{
+  0%,20%,58%,100%{opacity:0;transform:scale(.8)}
+  27%,39%{opacity:.95;transform:scale(1.3)}
+  45%{opacity:.2;transform:scale(.9)}
+}
+@keyframes emblem-breathe{
+  0%,100%{transform:translateY(2px) scale(1)}
+  50%{transform:translateY(0) scale(1.09)}
+}
+@keyframes card-pick-spring{
+  0%{transform:perspective(560px) translateY(0) scale(.98) rotateZ(var(--rot,0deg))}
+  29%{transform:perspective(560px) translateY(calc(var(--lift,0px) - 9px)) scale(1.17) rotateZ(-4deg)}
+  59%{transform:perspective(560px) translateY(calc(var(--lift,0px) + 3px)) scale(.97) rotateZ(2deg)}
+  79%{transform:perspective(560px) translateY(calc(var(--lift,0px) - 2px)) scale(1.065)}
+  100%{transform:perspective(560px) translateY(var(--lift,0px)) scale(var(--card-scale,1))}
+}
+@keyframes card-scoring-hit{
+  0%,100%{transform:perspective(560px) translateY(var(--lift,0px)) scale(1)}
+  23%{transform:perspective(560px) translateY(-42px) scale(1.19) rotateZ(-4deg)}
+  53%{transform:perspective(560px) translateY(-34px) scale(1.065) rotateZ(3deg)}
+  78%{transform:perspective(560px) translateY(-28px) scale(1.09)}
+}
+@keyframes joker-bob{
+  0%,100%{transform:translateY(0) rotateZ(-1.2deg)}
+  49%{transform:translateY(-5px) rotateZ(1.2deg)}
+}
+@keyframes joker-glyph-breathe{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-2px) scale(1.06)}
+}
+.joker:not(.joker-slot):not(.joker-activated){
+  animation:joker-bob 3.25s ease-in-out var(--joker-phase,0s) infinite;
+}
+.joker:not(.joker-slot):hover{
+  animation-play-state:paused;
+  box-shadow:5px 10px 0 #11101b;
+}
+.joker:not(.joker-slot) canvas,.shop-joker canvas{
+  animation:joker-glyph-breathe 3.25s ease-in-out var(--joker-phase,0s) infinite;
+}
+.joker.joker-activated{
+  animation:joker-hit .45s cubic-bezier(.1,.8,.25,1);
+}
+.shop-joker{
+  position:relative;
+  overflow:hidden;
+}
+.shop-joker::after{
+  content:"";
+  pointer-events:none;
+  position:absolute;
+  inset:0;
+  background:linear-gradient(115deg,transparent 12%,#FFF5E6b3 45%,transparent 61%);
+  background-size:270% 100%;
+  animation:card-holo-sweep 4s linear infinite;
+  opacity:.30;
+}
+@keyframes counter-rebound{
+  0%,100%{transform:scale(1)}
+  24%{transform:scale(1.24)}
+  51%{transform:scale(.96)}
+  75%{transform:scale(1.06)}
+}
+.counter-kick{
+  display:inline-block;
+  animation:counter-rebound .38s cubic-bezier(.15,.95,.26,1);
+}
+/* Ambience belongs behind the game and respects low-end Android GPU budgets. */
+#table-zone{isolation:isolate}
+#table-zone::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  z-index:0;
+  background:radial-gradient(circle at 70% 30%,#F2A5C20f,transparent 53%),
+   radial-gradient(circle at 26% 79%,#A9BAE918,transparent 56%);
+  animation:table-glow 9s ease-in-out infinite alternate;
+}
+#table-zone>*{position:relative;z-index:1}
+@keyframes table-glow{0%{opacity:.20}100%{opacity:.95}}
+@media(max-width:940px){
+ #hand-cards>.card-motion-slot{
+  flex-basis:clamp(65px,10vw,90px);
+  width:clamp(65px,10vw,90px);
+  height:133px;
+ }
+}
+@media(max-width:680px){
+ #hand-dock #hand-cards>.card-motion-slot{
+  flex:0 0 69px;
+  width:69px;
+  height:110px;
+  margin:0;
+ }
+ #hand-dock #hand-cards>.card-motion-slot:not(:first-child){
+  margin-left:clamp(-40px,calc((100vw - 570px)/7),-20px);
+ }
+ #hand-dock #hand-cards>.card-motion-slot[data-selected="true"]{z-index:11}
+ #hand-dock #hand-cards{padding-top:22px}
+ #hand-dock #hand-cards>.play-card{display:none}
+}
+@media(max-height:560px) and (min-width:681px){
+ #hand-dock #hand-cards>.card-motion-slot{
+  flex:0 0 70px;
+  width:70px;
+  height:96px;
+  margin:0;
+ }
+ #hand-dock #hand-cards>.card-motion-slot:not(:first-child){margin-left:-11px}
+ #hand-dock #hand-cards{padding-top:18px}
+}
+/* Reduced motion is a functional accessibility constraint, not optional. */
+@media(prefers-reduced-motion:reduce){
+ #hand-cards>.card-motion-slot,
+ .play-card::after,.play-card::before,.play-card .suit-icon,
+ .play-card.card-just-picked,.play-card.card-scored,
+ .joker:not(.joker-slot),.joker canvas,.shop-joker::after,
+ .counter-kick,#table-zone::before{
+  animation:none!important;
+  transition:none!important;
+ }
+}
