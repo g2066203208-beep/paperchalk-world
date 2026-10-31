@@ -4,7 +4,7 @@
 
 本次针对用户确认的V4图鉴，已经在本对话执行一次实际转换与真实PyTorch训练。源图1254×1254，构造640×640整数网格候选，25格独立区域，每个角色108×108候选块，每格18色上限，任意相邻角色理论最小空白20逻辑像素；另导出2560×2560最近邻预览。**机器验证安全间距通过。**
 
-但当前源码提交与GitHub Actions流程并不等同于图片二进制已上传：连接器支持提交UTF-8源码，**原始1254×1254的PNG本轮尚未加入GitHub仓库**。图像与本地训练输出已经打包在用户本次聊天的ZIP里。Action仅在仓库存在`site/pixel-lab/portrait-v4/source-v4.png`时才处理真实图像，否则对明确标记的合成测试图运行模型。这不是GitHub已经对真实作品训练的证明。
+但当前源码提交与GitHub Actions流程并不等同于图片二进制已上传：连接器支持提交UTF-8源码，**原始1254×1254的PNG本轮尚未加入GitHub仓库**。图像与本地训练输出已经打包在用户本次聊天的ZIP里。Action仅在仓库存在`site/pixel-lab/portrait-v4/source-v4.png`时才处理真实图像，或额外存在原始高清文件时分别处理。**合成CI样本、40×40低保真衍生样本、640×640高保真WebP衍生样本**在产出路径上彼此隔离，不得互相混称。
 
 **禁止宣称“完美像素”已经完成。** 像素归属逻辑、脸部结构、瞳孔线条、发丝簇与色彩仍需人工逐格审查。
 
@@ -54,6 +54,10 @@ python -m unittest discover -s tests -p portrait_v4_checks.py -v
 ```
 
 GitHub Actions入口：https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/portrait-v4-ml.yml
+
+在线浏览并自动加载640×640图鉴WebP衍生图：https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/portrait-v4-convert.html
+
+源图WebP（浏览器直接查看）：https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/portrait-v4/source-v4-640-q92.webp
 
 ## 下一步艺术验收：不能以训练损失取代
 
