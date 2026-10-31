@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'ml/portrait_v4/detective.py'
+      - 'ml/portrait_v4/detective_topology.py'
       - '.github/workflows/detective-pixel-ml.yml'
       - 'tests/test_detective_pixel_ml.py'
       - 'site/pixel-lab/portrait-v4/source-v4-640-q92.webp'
@@ -30,6 +31,8 @@ jobs:
           python -m ml.portrait_v4.detective \
             --input site/pixel-lab/portrait-v4/source-v4-640-q92.webp \
             --out artifacts/detective-v4-ml --steps 150 --colors 14
+      - name: Clean disconnected pixel specks without editing protected facial features
+        run: python -m ml.portrait_v4.detective_topology --dir artifacts/detective-v4-ml
       - name: Validate exact RGB pixel blocks and holdout provenance
         run: |
           python -m unittest discover -s tests -p test_detective_pixel_ml.py -v
