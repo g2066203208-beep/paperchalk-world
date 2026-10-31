@@ -98,8 +98,11 @@ def contextual_model(index: np.ndarray, classes: int):
         ctx,label=observations[int(n)]
         p=counts[ctx]/counts[ctx].sum()
         loss-=math.log(max(1e-10,p[label]))
+    conditionals={("-".join(map(str,k))):np.round(v/v.sum(),5).tolist()
+                  for k,v in sorted(counts.items())}
     return {"prior":np.round(total/total.sum(),4).tolist(),
-            "contexts":len(counts),"train_context_nll":round(loss/len(subset),5)}
+            "contexts":len(counts),"train_context_nll":round(loss/len(subset),5),
+            "conditional_probabilities":conditionals}
 
 def study(image: Image.Image, source: str):
     entries=[]
@@ -119,7 +122,9 @@ def study(image: Image.Image, source: str):
           "bbox":([int(xx.min()),int(yy.min()),int(xx.max())+1,int(yy.max())+1] if count else None),
           "palette_cluster_count":len(centers),
           "palette_rgb_learned":np.rint(centers).astype(int).tolist(),
-          "model_statistics":stats,
+          "model_statistics":{k:v for k,v in stats.items() if k!="conditional_probabilities"},
+          "trained_model":{"method":"laplace categorical neighbor","palette_centroids":np.rint(centers).astype(int).tolist(),
+            "prior":stats["prior"],"contextual_weights":stats["conditional_probabilities"]},
           "game_asset_approved":False
         })
     return {"experiment":"DR2C-30-visual-study-v1","status":"reference-analysis-not-production-assets",
@@ -158,6 +163,12 @@ def main():
     data=study(src,ns.source if ns.mode=="reference" else "Original code-generated demonstration")
     data["input_kind"]=ns.mode
     out=pathlib.Path(ns.output);out.mkdir(parents=True,exist_ok=True)
+    model_dir=out/"models";model_dir.mkdir(exist_ok=True)
+    for character in data["records"]:
+        fitted=character.pop("trained_model")
+        character["model_file"]="models/"+character["identity_id"]+".json"
+        (model_dir/(character["identity_id"]+".json")).write_text(
+            json.dumps(fitted,ensure_ascii=False,separators=(",",":")),encoding="utf-8")
     (out/"model-study.json").write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding="utf-8")
     print(json.dumps({"status":data["status"],"mode":ns.mode,"identities":data["records_count"],
           "models_fitted":len(data["records"]),"source_images_saved":0},ensure_ascii=False))
