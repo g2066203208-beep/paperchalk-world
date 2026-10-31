@@ -1,0 +1,62 @@
+name: Pixel Lab Mini36 - native 24x24 sprites and real CNN experiment
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/mini36/**'
+      - 'site/pixel-lab/mini36/mini36-v1.lossless.lzma.b64'
+      - 'tests/test_mini36.py'
+      - '.github/workflows/mini36-ml.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mini36-build
+  cancel-in-progress: true
+jobs:
+  reconstruct-and-train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU processing and PyTorch
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --no-cache-dir numpy pillow opencv-python-headless
+          python -m pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Decode all 36 palette-index sprites to genuine 24x24 PNGs
+        run: |
+          python -m ml.mini36.atlas --out artifacts/mini36
+      - name: Train true PyTorch mask CNN on 30 characters and test 6 holdouts
+        run: |
+          python -m ml.mini36.learn --out artifacts/mini36/ml --steps 250
+      - name: Verify pixel indices, 6x6 geometry and ML outputs
+        run: |
+          python -m unittest discover -s tests -p test_mini36.py -v
+      - name: Publish 36 independent sprite files and gallery to GitHub Pages
+        run: |
+          cp artifacts/mini36/R?C?.png site/pixel-lab/mini36/
+          cp artifacts/mini36/mini36-atlas-240.png site/pixel-lab/mini36/
+          cp artifacts/mini36/mini36-atlas-960-nearest.png site/pixel-lab/mini36/
+          cp artifacts/mini36/manifest.json site/pixel-lab/mini36/atlas-manifest.json
+          cp artifacts/mini36/ml/ml-report.json site/pixel-lab/mini36/model-report.json
+          mkdir -p site/pixel-lab/mini36/ml
+          cp artifacts/mini36/ml/R?C?-cnn-mask.png site/pixel-lab/mini36/ml/
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git add site/pixel-lab/mini36/
+          if ! git diff --cached --quiet; then
+            git commit -m 'art(pixel-lab): publish 36 native 24x24 indexed sprites and ML audits'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Publish CNN weights, original discrete sprites and metrics as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini36-real-native-pixel-sprites-and-ml
+          path: artifacts/mini36/
+          retention-days: 30
+          if-no-files-found: error
