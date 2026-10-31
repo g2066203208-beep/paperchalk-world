@@ -305,7 +305,8 @@ function makeRenderer(canvas){
  }
  function render(pose,eye){
   resize();gl.useProgram(shader);
-  gl.clearColor(...INK,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  // Clear four-ink slate-blue sky, instead of the old oppressive black void.
+  gl.clearColor(...BLUE,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   const projection=projectionMatrix(pose,canvas.width/canvas.height,eye);
   gl.uniformMatrix4fv(view,false,projection);
   gl.enable(gl.POLYGON_OFFSET_FILL);gl.polygonOffset(1,1);
