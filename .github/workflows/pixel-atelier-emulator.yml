@@ -1,0 +1,48 @@
+name: Pixel Atelier - emulator launch and editor smoke
+on:
+  push:
+    branches: ['feature/pixel-atelier-native-p0']
+    paths:
+      - 'pixel-atelier/**'
+      - '.github/workflows/pixel-atelier-emulator.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  emulator-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Enable KVM for Android emulator
+        run: |
+          if [ -e /dev/kvm ]; then sudo chmod 666 /dev/kvm; fi
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          working-directory: pixel-atelier
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            gradle --no-daemon :app:connectedDebugAndroidTest
+            mkdir -p emulator-evidence
+            adb pull /sdcard/Android/data/com.pixelatelier.app/files/pixel-atelier-editor-smoke.png emulator-evidence/editor.png
+            adb shell dumpsys package com.pixelatelier.app | grep -A3 'com.pixelatelier.app.MainActivity' | head -8 || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pixel-atelier-android-emulator-evidence
+          path: |
+            pixel-atelier/emulator-evidence/
+            pixel-atelier/app/build/outputs/androidTest-results/
+            pixel-atelier/app/build/reports/androidTests/
+          if-no-files-found: ignore
