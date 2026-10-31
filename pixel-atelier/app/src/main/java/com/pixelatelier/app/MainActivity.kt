@@ -275,6 +275,54 @@ private fun AtelierApp(store: ProjectStore) {
                     onCommit = { notifyChange(); scheduleSave() },
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )
+                if (preview != null) {
+                    val draft = preview!!
+                    Column(Modifier.fillMaxWidth().background(Color(0xFF243248))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)) {
+                        Text(
+                            "预览 · " + draft.kind.labelZh() + " (" +
+                                draft.start.x + "," + draft.start.y + ") → (" +
+                                draft.end.x + "," + draft.end.y + ")",
+                            color = TextMain, style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            TextButton(onClick = { editStart = !editStart }) {
+                                Text(if (editStart) "起点" else "终点")
+                            }
+                            listOf("←" to PixelPoint(-1,0), "→" to PixelPoint(1,0),
+                                "↑" to PixelPoint(0,-1), "↓" to PixelPoint(0,1)).forEach { (label,delta) ->
+                                TextButton(
+                                    onClick = {
+                                        val p = if (editStart) draft.start else draft.end
+                                        val next = PixelPoint(p.x+delta.x,p.y+delta.y)
+                                        preview = if(editStart) draft.withStart(next) else draft.withEnd(next)
+                                    },
+                                    modifier = Modifier.widthIn(min=32.dp)
+                                ) { Text(label) }
+                            }
+                            Spacer(Modifier.weight(1f))
+                            TextButton(onClick = {
+                                preview = null
+                                cursorShapeAnchored = false
+                            }) { Text("取消") }
+                            Button(onClick = {
+                                if (draft.kind == ShapeKind.RECT_SELECTION) {
+                                    selection = ShapeRasterizer.selection(doc.width,doc.height,draft)
+                                } else {
+                                    if (ShapeRasterizer.commit(doc,draft)) {
+                                        notifyChange(); scheduleSave()
+                                    }
+                                }
+                                preview = null
+                                cursorShapeAnchored = false
+                            }, enabled = draft.kind == ShapeKind.RECT_SELECTION || !doc.currentLayer.locked) {
+                                Text("完成")
+                            }
+                        }
+                    }
+                }
                 Row(
                     Modifier.fillMaxWidth().background(PanelColor)
                         .horizontalScroll(rememberScrollState())
