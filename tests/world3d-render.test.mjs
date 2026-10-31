@@ -63,7 +63,7 @@ test('desktop and mobile LOD share every building collision while mobile draws f
  const ink=[57/255,54/255,87/255],pink=[242/255,165/255,194/255],blue=[169/255,186/255,233/255],paper=[1,245/255,230/255];
  const town=new Function('INK','PINK','BLUE','PAPER','PALETTE',source.slice(begin,end)+'\nreturn makeTown;')(ink,pink,blue,paper,[ink,pink,blue,paper]);
  const full=town('full'),mobile=town('mobile');
- assert.equal(full.solids.length,107);
+ assert.equal(full.solids.length,119,'each city and distant park tree retains collision geometry');
  assert.deepEqual(mobile.solids,full.solids,'LOD may not remove buildings or change collision');
  assert.ok(mobile.tri.length<full.tri.length*.5,'mobile triangles should be less than half the desktop total');
  assert.ok(mobile.tri.length>0&&mobile.line.length>0);
