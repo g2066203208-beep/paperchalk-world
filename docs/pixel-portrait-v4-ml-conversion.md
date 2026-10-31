@@ -80,3 +80,12 @@ GitHub Actions入口：https://github.com/g2066203208-beep/paperchalk-world/acti
 - 可直接在 https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/portrait-v4-convert.html 预览。
 - 原始PNG仍可从本次对话成果ZIP获取；质量92的640×640 WEBP源图则供GitHub云端训练输入（两种衍生图的来源与目的不同）。
 - 不可将清晰的整数像素、颜色数量与安全间距合格，等同于「艺术家逐像素精修达到完美」。
+
+## 2026-10-31 像素拓扑清理对比 A/B（均已归档至GitHub）
+
+- A 原始限色候选：`site/pixel-lab/portrait-v4/native-baseline-640.lossless.webp`，Git Blob `d2ba05feb6bcc839cee4f5aef7c34e1bbec24b98`。
+- B 保守簇清理候选：`site/pixel-lab/portrait-v4/native-cluster-cleaned-640.lossless.webp`，Git Blob `4d751ae1458a92aa33cefbb9efc9d5285969dd08`。
+- 方法：对面积不大于2像素、与多数相邻色块在Lab空间距离小于等于55的连通小簇进行最多两轮替换；保留强对比独立五官与暗色结构。绝不静默覆盖A，必须看A/B。
+- 使用本地原始PNG转换的A做只读分析：总计**27024个面积≤2像素的同色连通簇**；可选清理B变为**7967个**，本次改变**24198个像素**。这些数量不是“错误像素数”，脸部瞳孔、胡须或线条端点也可能是合理的小簇。
+- B的统计变化不等于艺术质量得到证实；手工逐格比较眼睛、鼻翼、嘴角、脸型与边框，排除过度平滑才允许把B作为正式素材。
+- GitHub Actions `portrait-v4-ml.yml` 同样运行只读像素簇审计和可选B结果保存，已在 https://github.com/g2066203208-beep/paperchalk-world/actions/runs/41202944268 得到成功的CI执行记录。
