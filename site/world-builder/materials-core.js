@@ -83,8 +83,8 @@ function drawTile(type){
   h(a,0,15,16,3);v(a,15,0,3,3);
   break;
  case 'roof':
-  a=blank(3);
-  for(const y of [0,8]){h(a,0,y,16,1);h(a,0,y+1,16,4)}
+  a=blank(1);
+  for(const y of [0,8]){h(a,0,y,16,3);h(a,0,y+1,16,2)}
   for(const [x,y] of [[0,1],[8,1],[4,9],[12,9]])v(a,x,y,6,1);
   break;
  case 'paving':
