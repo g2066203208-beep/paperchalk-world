@@ -37,6 +37,8 @@ try{
   assert.equal(first.bar.stage,'greeting');
   const {layout,buttons}=first.bar;
   assert.ok(layout && buttons.length>=6);
+  assert.deepEqual(layout.fullPortrait.source,[192,256],label+' whole figure source');
+  assert.ok(layout.fullPortrait.x+layout.fullPortrait.w+4<layout.fullPortrait.deskStart,label+' figure and counter cannot intersect');
   const panels=[layout.header,layout.room,layout.dialogue,layout.mixer];
   for(const r of panels){
    assert.ok(r.w>=65&&r.h>=(r===layout.header?20:55)&&r.x>=0&&r.y>=0&&r.x+r.w<=first.logical[0]&&r.y+r.h<=first.logical[1],label+' rectangle '+JSON.stringify(r));
