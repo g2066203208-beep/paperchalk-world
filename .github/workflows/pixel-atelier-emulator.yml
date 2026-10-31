@@ -35,7 +35,8 @@ jobs:
           script: |
             gradle --no-daemon :app:connectedDebugAndroidTest
             mkdir -p emulator-evidence
-            adb pull /sdcard/Android/data/com.pixelatelier.app/files/pixel-atelier-editor-smoke.png emulator-evidence/editor.png
+            adb exec-out run-as com.pixelatelier.app cat files/pixel-atelier-editor-smoke.png > emulator-evidence/editor.png
+            test -s emulator-evidence/editor.png
             adb shell dumpsys package com.pixelatelier.app | grep -A3 'com.pixelatelier.app.MainActivity' | head -8 || true
       - uses: actions/upload-artifact@v4
         if: always()
