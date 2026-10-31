@@ -1,4 +1,4 @@
-name: Pixel Atelier - creative tools only Pages
+name: Pixel Atelier - creative tools and Night Lamp Pages
 on:
   push:
     branches: [main]
@@ -22,12 +22,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Assert playable games removed and tool modules intact
+      - name: Assert retired games absent and tools plus Night Lamp intact
         run: |
           set -euo pipefail
           test ! -e site/game
           test ! -e site/horror-room
           test ! -d android
+          test -s site/galgame/index.html
+          node galgame/check.cjs
           test -s site/pixel-lab/index.html
           test -s site/world-builder/materials.html
           ! grep -q 'game/menu.js' site/index.html
@@ -40,7 +42,7 @@ jobs:
           path: site
       - uses: actions/deploy-pages@v4
         id: publish
-      - name: Verify public tools remain but old games return 404
+      - name: Verify public tools and Night Lamp work while old games remain 404
         run: |
           set -euo pipefail
           root="https://g2066203208-beep.github.io/paperchalk-world"
@@ -51,7 +53,10 @@ jobs:
             if echo "$page" | grep -q 'PIXEL ATELIER' && [ "$horror" = 404 ] && [ "$game" = 404 ]; then
               curl -fsSL --max-time 16 "$root/pixel-lab/" -o /tmp/pixel-lab-public.html
               grep -q 'PIXEL LAB' /tmp/pixel-lab-public.html
-              echo "PASS: public tools live, old game URLs 404"
+              curl -fsSL --max-time 16 "$root/galgame/" -o /tmp/nightlamp-public.html
+              grep -q '夜航灯' /tmp/nightlamp-public.html
+              grep -q 'id="scene"' /tmp/nightlamp-public.html
+              echo "PASS: public tools and Night Lamp live, retired game URLs 404"
               exit 0
             fi
             sleep 7
