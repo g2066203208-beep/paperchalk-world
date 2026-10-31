@@ -49,7 +49,8 @@ jobs:
             horror="$(curl -L -s -o /dev/null -w '%{http_code}' --max-time 16 "$root/horror-room/?check=$GITHUB_SHA-$i" || true)"
             game="$(curl -L -s -o /dev/null -w '%{http_code}' --max-time 16 "$root/game/menu.js?check=$GITHUB_SHA-$i" || true)"
             if echo "$page" | grep -q 'PIXEL ATELIER' && [ "$horror" = 404 ] && [ "$game" = 404 ]; then
-              curl -fsSL --max-time 16 "$root/pixel-lab/" | grep -q 'PIXEL LAB'
+              curl -fsSL --max-time 16 "$root/pixel-lab/" -o /tmp/pixel-lab-public.html
+              grep -q 'PIXEL LAB' /tmp/pixel-lab-public.html
               echo "PASS: public tools live, old game URLs 404"
               exit 0
             fi
