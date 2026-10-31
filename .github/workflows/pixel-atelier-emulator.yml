@@ -37,6 +37,8 @@ jobs:
             mkdir -p emulator-evidence
             adb exec-out run-as com.pixelatelier.app cat files/pixel-atelier-editor-smoke.png > emulator-evidence/editor.png
             test -s emulator-evidence/editor.png
+            adb exec-out run-as com.pixelatelier.app cat files/pixel-atelier-preview-pointer-down.png > emulator-evidence/line-preview-during-drag.png
+            test -s emulator-evidence/line-preview-during-drag.png
             adb shell dumpsys package com.pixelatelier.app | grep -A3 'com.pixelatelier.app.MainActivity' | head -8 || true
       - uses: actions/upload-artifact@v4
         if: always()
