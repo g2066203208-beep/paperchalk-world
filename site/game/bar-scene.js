@@ -47,13 +47,16 @@ export function computeBarLayout(W,H){
 // Preserve the source image's true 3:4 ratio (192×256), including the feet.
 export function computeFullPortraitPlacement(p){
  const {x,y,w,h}=p;
+ // Characters are a separate foreground sprite layer, as in story-driven
+ // café games. The whole figure is painted AFTER the long café counter and
+ // is never cropped or covered by its front apron.
  const deskStart=getBarInteriorGeometry(p).counterStart;
- const safeWidth=Math.max(8,deskStart-x-10);
- const safeHeight=Math.max(12,Math.floor(h*.9));
+ const safeWidth=Math.max(8,Math.floor(w*(w<250?.49:.35)));
+ const safeHeight=Math.max(12,Math.floor(h*.89));
  const sw=Math.min(safeWidth,Math.floor(safeHeight*192/256));
  const sh=Math.floor(sw*256/192);
- const left=x+Math.max(2,Math.floor((deskStart-x-sw)/2));
- const top=y+Math.max(3,Math.floor(h*.92)-sh);
+ const left=x+Math.max(3,Math.floor(w*.085));
+ const top=y+Math.max(3,Math.floor(h*.93)-sh);
  return {x:left,y:top,w:sw,h:sh,source:[192,256],deskStart};
 }
 
@@ -119,6 +122,9 @@ export function createBarScene({COL:menuPalette,R,poly,text,onBack,onIntro}){
   const place=computeFullPortraitPlacement(p);
   if(art){
    const bob=Math.round(Math.sin(clock*1.8));
+   // Separate quiet drop shadow beneath the shoes, not a noisy halo.
+   rect(place.x+Math.round(place.w*.19),place.y+place.h-2,
+     Math.round(place.w*.58),3,'#272330');
    ctx.imageSmoothingEnabled=false;
    ctx.drawImage(art,0,0,192,256,place.x,place.y+bob,place.w,place.h);
   }else if(failed)caption('角色素材载入失败',place.x+place.w/2,p.y+p.h*.42,11,COL.pink,'center');
