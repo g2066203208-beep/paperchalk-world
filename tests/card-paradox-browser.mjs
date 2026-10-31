@@ -26,14 +26,34 @@ try{
   assert.equal(before.hand,8);
   assert.equal(before.phase,'battle');
   assert.equal(await page.locator('#hand-cards .play-card').count(),8);
+  assert.equal(await page.locator('.card-motion-slot').count(),8,'animation must wrap actual clickable cards');
+  const motion=await page.locator('.card-motion-slot').first().evaluate(e=>({
+   bob:getComputedStyle(e).animationName,
+   foil:getComputedStyle(e.querySelector('.play-card'),'::after').animationName,
+   breath:getComputedStyle(e.querySelector('.suit-icon')).animationName
+  }));
+  assert.equal(motion.bob,'card-bob');
+  assert.ok(motion.foil.includes('card-holo-sweep'));
+  assert.equal(motion.breath,'emblem-breathe');
   if(name==='portrait'||name==='landscape'){
    const visible=await page.locator('#hand-cards .play-card').evaluateAll(els=>
      els.every(e=>e.getBoundingClientRect().left>=0&&e.getBoundingClientRect().right<=innerWidth+2));
    assert.ok(visible,'all eight playable cards must fit mobile screen without horizontal scrolling');
   }
   assert.equal(await page.locator('#target-value').innerText(),'250');
+  const initialCard=await page.locator('#hand-cards .play-card').first().evaluate(el=>{el.dataset.keptNode='yes';return el.dataset.card});
   await page.locator('#hand-cards .play-card').first().click();
   assert.equal(await page.locator('#selected-count').innerText(),'1 / 5');
+  const stateAfterTap=await page.locator('#hand-cards .play-card').first().evaluate(e=>({
+   reused:e.dataset.keptNode,
+   picked:e.classList.contains('card-just-picked'),
+   selected:e.getAttribute('aria-pressed'),
+   slot:e.parentElement.dataset.selected
+  }));
+  assert.equal(stateAfterTap.reused,'yes','click should preserve DOM to avoid restarting animation');
+  assert.equal(stateAfterTap.picked,true,'selected card needs actual spring keyframe');
+  assert.equal(stateAfterTap.selected,'true');
+  assert.equal(stateAfterTap.slot,'true');
   assert.equal(await page.locator('#play-button').isEnabled(),true);
   assert.ok(Number((await page.locator('#predicted-score').innerText()).replaceAll(',',''))>0);
   // Verify meaningful DOM access and do not render decorative fake controls.
@@ -41,6 +61,8 @@ try{
   assert.equal((await page.evaluate(()=>window.__PAPERWORLD_CARD_GAME__.snapshot())).discards,2);
   await page.locator('#hand-cards .play-card').first().click();
   await page.locator('#play-button').click();
+  await page.locator('.card-scored').first().waitFor({state:'attached',timeout:4000});
+  assert.equal(await page.locator('#current-score').innerText(),'0','score lands only after stepwise actual card animation');
   await page.waitForFunction(()=>window.__PAPERWORLD_CARD_GAME__.ready(),{timeout:12000});
   const after=await page.evaluate(()=>window.__PAPERWORLD_CARD_GAME__.snapshot());
   assert.equal(after.hands,3);
@@ -88,8 +110,20 @@ try{
  await page.locator('#close-help').click();
  assert.equal(await page.locator('#help-modal').isVisible(),false);
  await page.close();
+ const reduced=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+ await reduced.goto(base+'/card-game/',{waitUntil:'load'});
+ await reduced.waitForFunction(()=>window.__PAPERWORLD_CARD_GAME__);
+ const reducedStyles=await reduced.locator('.card-motion-slot').first().evaluate(e=>({
+  bob:getComputedStyle(e).animationName,
+  foil:getComputedStyle(e.querySelector('.play-card'),'::after').animationName
+ }));
+ assert.equal(reducedStyles.bob,'none','OS reduced motion must disable idle float');
+ assert.equal(reducedStyles.foil,'none','OS reduced motion must disable flash/foil animations');
+ await reduced.locator('#hand-cards .play-card').first().click();
+ assert.equal(await reduced.locator('#selected-count').innerText(),'1 / 5','reduced motion must preserve touch gameplay');
+ await reduced.close();
  assert.deepEqual(errors,[]);
- console.log('PASS: actual playable browser shop → owned Joker → next blind → help');
+ console.log('PASS: live card floating, glossy foil, selection spring, scoring hit, reduced-motion compliance, actual playable shop');
 }finally{
  await browser.close();
  await new Promise(r=>server.close(r));
