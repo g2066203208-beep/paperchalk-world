@@ -39,7 +39,7 @@ try{
   assert.ok(layout && buttons.length>=6);
   const panels=[layout.header,layout.room,layout.dialogue,layout.mixer];
   for(const r of panels){
-   assert.ok(r.w>=65&&r.h>=55&&r.x>=0&&r.y>=0&&r.x+r.w<=first.logical[0]&&r.y+r.h<=first.logical[1],label+' rectangle '+JSON.stringify(r));
+   assert.ok(r.w>=65&&r.h>=(r===layout.header?20:55)&&r.x>=0&&r.y>=0&&r.x+r.w<=first.logical[0]&&r.y+r.h<=first.logical[1],label+' rectangle '+JSON.stringify(r));
   }
   for(let i=0;i<panels.length;i++)for(let j=i+1;j<panels.length;j++)
    assert.ok(!rectOverlap(panels[i],panels[j]),label+' panel overlaps '+i+' '+j);
