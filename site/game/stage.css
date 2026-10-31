@@ -350,3 +350,18 @@
  #pw-world-bottom.pw-world-compact .pw-world-move-data{display:none}
  #pw-world-bottom.pw-world-compact #pw-motion-status{display:none}
 }
+
+/* Dedicated research library entry. Visible only in the main menu. */
+#pw-reference-library-link{
+ position:absolute;z-index:6;right:max(12px,env(safe-area-inset-right));
+ top:max(108px,calc(env(safe-area-inset-top) + 96px));pointer-events:auto;
+ text-decoration:none;min-height:36px;padding:7px 11px;
+ background:var(--pink);color:var(--ink);border:3px solid var(--ink);
+ box-shadow:3px 3px 0 var(--blue);font:900 13px/1.15 system-ui,sans-serif;
+ touch-action:manipulation;
+}
+#pw-reference-library-link:focus-visible{outline:3px solid var(--paper);outline-offset:2px}
+#pw-reference-library-link[hidden]{display:none!important}
+@media(max-width:420px){
+ #pw-reference-library-link{font-size:12px;min-height:34px;padding:5px 8px;top:max(99px,calc(env(safe-area-inset-top) + 88px))}
+}
