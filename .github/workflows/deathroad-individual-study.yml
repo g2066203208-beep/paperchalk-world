@@ -1,0 +1,63 @@
+name: Pixel Character - Death Road individual structural learning
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/deathroad_study/**'
+      - 'tests/test_deathroad_character_study.py'
+      - '.github/workflows/deathroad-individual-study.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-and-demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install numerical training dependencies
+        run: python -m pip install numpy Pillow
+      - name: Unit-test thirty separately fitted native-pixel models
+        run: python -m unittest discover -s tests -p test_deathroad_character_study.py -v
+      - name: Train demo models on 30 ORIGINAL generated figures only
+        run: python ml/deathroad_study/identity_lab.py --mode demo --output artifacts/deathroad-individual-demo
+      - name: Publish independent-model diagnostic report, no third-party art
+        uses: actions/upload-artifact@v4
+        with:
+          name: individual-character-30-original-demo-report
+          path: artifacts/deathroad-individual-demo/
+          retention-days: 14
+  research-public-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install analytical libraries
+        run: python -m pip install numpy Pillow
+      - name: Research thirty publicly visible reference slots WITHOUT publishing images
+        run: |
+          python ml/deathroad_study/identity_lab.py --mode reference --output artifacts/deathroad-reference-study
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('artifacts/deathroad-reference-study')
+          x=json.loads((p/'model-study.json').read_text())
+          assert x['records_count']==30
+          assert len(x['records'])==30
+          assert set(p.iterdir())=={p/'model-study.json'},'no copyrighted sprite reproduction in artifacts'
+          print('PASS: 30 individual research statistics only, original character sprites not redistributed')
+          PY
+      - name: Publish aggregate numerical descriptions only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deathroad-30-reference-style-research-only
+          path: artifacts/deathroad-reference-study/model-study.json
+          retention-days: 14
+          if-no-files-found: warn
