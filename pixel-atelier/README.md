@@ -43,3 +43,14 @@ V1.1 初步算法已开始：SelectionTools.kt 提供矩形/椭圆掩码、精�
 当前新增 UI：矩形框选、复制当前图层选中像素、内部粘贴到画布中心、椭圆和填充椭圆；入口为下方工具条与选择后的快捷操作。底层新增 SelectionMask、精确颜色魔棒、镜像/90°旋转、周期落点等算法，但这些底层工具尚未全部接入 UI，复制粘贴尚缺真正浮动选区、剪切和系统剪贴板。
 
 新增 UI 版本的 **APK + JVM test** 成功构建：https://github.com/g2066203208-beep/paperchalk-world/actions/runs/41210315353 。此结果不等于模拟器交互/真机全部功能验证。严格按功能矩阵逐项验收。
+
+
+## V1.2 — 手机安全区和全工具实时预览（强制修复规格，2026-10-31）
+
+**[阅读完整 V1.2 MASTER PROMPT（约 3.47 万字符、966 行）](docs/MASTER_PROMPT_V1_2_MOBILE_PREVIEW_INTERACTION.md)**
+
+V1.2 已核对现有 MainActivity/PixelViewport 设计不足：针对 Android 15 edge-to-edge，顶部安全区缺乏明确完整的 WindowInsets 处理；直线、矩形、椭圆等几何工具主要在 PointerUp 后提交，没有共同的真实像素实时 PreviewSession。此问题属于 UI 核心阻塞缺陷，不是用户操作偏好。
+
+V1.2 强制修复目标：SafeTopBar/SafeToolDock、WindowInsets/DisplayCutout/IME/Foldable、矩形安全区域断言、全工具独立 draft buffer 和预览图层、实时直线/椭圆/选区/变形预览、端点与控制柄二次编辑、确认/取消和一致性测试、Android 真正的模拟器截图与触摸回放。
+
+**当前状态：设计/开发提示词已提交 GitHub，不得把这份文档宣称为 APK 功能已经修好。** 继续以 V1.1 原生工程增量实现，以 GitHub Actions 和真实模拟器截图验收为准；源码、行为、APK、UI 验证分开标记。
