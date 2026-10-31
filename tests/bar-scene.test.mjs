@@ -30,7 +30,7 @@ test('main game boots the bar without deleting previous features',()=>{
  assert.match(menu,/createHostessIntro/);
  assert.match(menu,/createLeaseUI/);
  assert.match(menu,/createWorld3D/);
- assert.match(html,/game\/menu\.js\?v=20261031-bar1/);
+ assert.match(html,/game\/menu\.js\?v=20261031-bar2/);
  assert.match(bar,/portraitLayers/);
  assert.match(bar,/counter|柜台|poly/);
  assert.doesNotMatch(bar,/(balatro|va-11|coffee talk).*\.png/i);
