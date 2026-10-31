@@ -5,8 +5,8 @@ import {GAMES,CATEGORIES,storeLink,galleryLink} from '../site/learning-library/g
 const read=path=>readFileSync(path,'utf8');
 const seeded=JSON.parse(read('site/learning-library/seed-screenshots.json'));
 const built=JSON.parse(read('site/learning-library/screenshots.json'));
-test('all FIVE specifically requested study games are registered with verified Steam app IDs',()=>{
- const requested=[914800,2470300,239030,1451940,447530];
+test('all SIX priority study games are registered with verified Steam app IDs',()=>{
+ const requested=[914800,1663220,2470300,239030,1451940,447530];
  assert.deepEqual(GAMES.filter(g=>g.core).map(g=>g.id),requested);
  assert.ok(GAMES.length>=20,'expand beyond core to a sizeable research library');
  assert.equal(new Set(GAMES.map(g=>g.id)).size,GAMES.length);
@@ -16,7 +16,7 @@ test('all FIVE specifically requested study games are registered with verified S
 });
 test('true-gameplay evidence is never an AI render, capsule, banner or a fake image URL',()=>{
  const data=seeded.games;
- const required=[914800,2470300,239030,1451940,447530];
+ const required=[914800,1663220,2470300,239030,1451940,447530];
  for(const id of required){
   assert.ok(data[id].length>=2,'2+ carefully sourced real game images required for '+id);
  }
