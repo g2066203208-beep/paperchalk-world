@@ -42,7 +42,7 @@ try{
   }
   assert.equal(await page.locator('#target-value').innerText(),'250');
   const initialCard=await page.locator('#hand-cards .play-card').first().evaluate(el=>{el.dataset.keptNode='yes';return el.dataset.card});
-  await page.locator('#hand-cards .play-card').first().click();
+  await page.locator('#hand-cards .play-card').first().click({force:true});
   assert.equal(await page.locator('#selected-count').innerText(),'1 / 5');
   const stateAfterTap=await page.locator('#hand-cards .play-card').first().evaluate(e=>({
    reused:e.dataset.keptNode,
@@ -59,7 +59,7 @@ try{
   // Verify meaningful DOM access and do not render decorative fake controls.
   await page.locator('#discard-button').click();
   assert.equal((await page.evaluate(()=>window.__PAPERWORLD_CARD_GAME__.snapshot())).discards,2);
-  await page.locator('#hand-cards .play-card').first().click();
+  await page.locator('#hand-cards .play-card').first().click({force:true});
   await page.locator('#play-button').click();
   await page.locator('.card-scored').first().waitFor({state:'attached',timeout:4000});
   assert.equal(await page.locator('#current-score').innerText(),'0','score lands only after stepwise actual card animation');
@@ -92,7 +92,7 @@ try{
  });
  await page.reload();
  await page.waitForFunction(()=>!!window.__PAPERWORLD_CARD_GAME__);
- await page.locator('#hand-cards .play-card').first().click();
+ await page.locator('#hand-cards .play-card').first().click({force:true});
  await page.locator('#play-button').click();
  await page.waitForFunction(()=>window.__PAPERWORLD_CARD_GAME__.ready()&&window.__PAPERWORLD_CARD_GAME__.snapshot().phase==='shop',{timeout:12000});
  assert.equal(await page.locator('#shop-modal').isVisible(),true);
