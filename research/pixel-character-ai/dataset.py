@@ -1,5 +1,5 @@
 """Licensed, identity-disjoint and strict native-pixel sprite dataset."""
-import hashlib,json,pathlib
+import json,pathlib
 import numpy as np
 from PIL import Image
 import torch
@@ -9,7 +9,12 @@ from model import HEIGHT,WIDTH,PALETTE,POSES,HAIRS,OUTFITS
 def split_identity(identity):
     identity=str(identity).strip()
     if not identity:raise ValueError('identity_id required')
-    n=int(hashlib.sha256(identity.encode()).hexdigest()[:8],16)%10
+    h=2166136261
+    data=identity.encode('utf-16-le')
+    for i in range(0,len(data),2):
+        h ^= data[i] | (data[i+1]<<8)
+        h=(h*16777619)&0xffffffff
+    n=h%10
     return 'train' if n<8 else ('val' if n==8 else 'test')
 
 def encode(path):
