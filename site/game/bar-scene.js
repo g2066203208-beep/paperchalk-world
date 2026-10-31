@@ -1,19 +1,49 @@
-/* PAPERWORLD | original four-ink counter scene, inspired by dialogue-driven bar games.
- * No third-party game art, sprites, palettes, or recipes are included.
- * Each visible shape is an integer-pixel cluster in the game's exact four inks.
+/* PAPERWORLD — four-ink bar interface v2.
+ * A real pixel-rendered playable scene. Character and furniture are separate layers.
+ * Layout is computed in logical Canvas pixels for portrait, landscape and desktop.
+ * No external copyrighted sprites, no fifth colors, no blurred Canvas scaling.
  */
 import {portraitLayers} from './intro.js';
 import {HOSTESS_PNG} from './hostess-pixel.js';
+
 export const BAR_ORDERS=Object.freeze([
  {name:'蓝铃汽泡',goal:[2,1,0],reward:18,order:'两份甜露，一份清泉。不要加苦草。',good:'旅人：正是这个味道。这里比街上安静多了。'},
  {name:'夜航茶',goal:[1,0,2],reward:26,order:'一份甜露，两份苦草。清泉不要。',good:'夜班客：不错。今夜总算有件顺心的事。'}
 ]);
 const MATERIALS=['甜露','清泉','苦草'];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-export function validMixture(counts,goal){return counts.length===goal.length&&counts.every((n,i)=>Number.isInteger(n)&&n===goal[i]);}
+export function validMixture(counts,goal){
+ return counts.length===goal.length&&counts.every((n,i)=>Number.isInteger(n)&&n===goal[i]);
+}
+
+// Exact panel rectangles in the SAME 2x logical coordinate system as menu.js.
+// No panel intersects another. Header never overlays the painted character.
+export function computeBarLayout(W,H){
+ W=Math.max(1,Math.floor(W));H=Math.max(1,Math.floor(H));
+ const narrow=W/H<.88;
+ const headerH=Math.min(31,Math.max(23,Math.floor(H*.066)));
+ const header={x:0,y:0,w:W,h:headerH};
+ if(narrow){
+  const sceneBottom=Math.max(headerH+65,Math.floor(H*.485));
+  const dialogueH=Math.max(62,Math.floor(H*.205));
+  const room={x:0,y:headerH,w:W,h:sceneBottom-headerH};
+  const dialogue={x:0,y:sceneBottom,w:W,h:dialogueH};
+  const mixer={x:0,y:sceneBottom+dialogueH,w:W,h:H-sceneBottom-dialogueH};
+  return {mode:'portrait',header,room,dialogue,mixer};
+ }
+ const side=Math.min(Math.floor(W*.335),Math.max(133,Math.floor(W*.31)));
+ const mainW=W-side;
+ const available=H-headerH;
+ const roomH=Math.floor(available*(H<270?.63:.695));
+ return {mode:H<270?'landscape':'desktop',header,
+  room:{x:0,y:headerH,w:mainW,h:roomH},
+  dialogue:{x:0,y:headerH+roomH,w:mainW,h:available-roomH},
+  mixer:{x:mainW,y:headerH,w:side,h:available}};
+}
+
 export function createBarScene({COL,R,poly,text,onBack,onIntro}){
  let active=false,clock=0,counts=[0,0,0],order=0,stage='greeting',line=0,cash=0,served=0;
- let art=null,failed=false,buttons=[],message='';
+ let art=null,failed=false,buttons=[],message='',lastLayout=null;
  const starter=['旅人：街上又下雨了。这里还营业吗？','老板娘：当然。先坐下，我给你调杯热乎的。'];
  const portrait=new Image();portrait.decoding='async';
  let fallback=false;
@@ -22,122 +52,182 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
  portrait.src='./game/art/hostess-original-4ink.png?v=20261031-separated2';
  try{const save=JSON.parse(localStorage.getItem('paperworld-bar-v1')||'null');if(save){cash=save.cash|0;served=save.served|0}}catch{}
  const writeSave=()=>{try{localStorage.setItem('paperworld-bar-v1',JSON.stringify({cash,served}))}catch{}};
- function resetForNext(){counts=[0,0,0];order=served%BAR_ORDERS.length;stage='order';message='客人：'+BAR_ORDERS[order].order}
+ function resetForNext(){
+  counts=[0,0,0];order=served%BAR_ORDERS.length;stage='order';
+  message='客人：'+BAR_ORDERS[order].order;
+ }
  function enter(){active=true;clock=0;counts=[0,0,0];order=served%BAR_ORDERS.length;stage='greeting';line=0;message=starter[0]}
  function leave(){active=false}
  function update(dt){if(active)clock+=dt}
- function addButton(id,x,y,w,h,title,kind='normal'){
-  if(w<8||h<8)return;
+ const rect=(x,y,w,h,c)=>R(Math.round(x),Math.round(y),Math.max(0,Math.round(w)),Math.max(0,Math.round(h)),c);
+ const caption=(v,x,y,size=12,c=COL.paper,align='left')=>text(String(v),Math.round(x),Math.round(y),Math.round(size),c,align);
+
+ function drawButton(id,x,y,w,h,title,kind='normal',size=12){
+  x=Math.round(x);y=Math.round(y);w=Math.round(w);h=Math.round(h);
+  if(w<13||h<13)return;
   buttons.push({id,x,y,w,h});
-  R(x,y,w,h,COL.paper);
-  R(x+2,y+2,w-4,h-4,kind==='selected'?COL.pink:kind==='primary'?COL.blue:COL.ink);
-  text(title,x+w/2,y+Math.max(3,Math.floor((h-12)/2)),Math.min(12,Math.max(9,Math.floor(h*.34))),kind==='selected'?COL.ink:COL.paper);
+  const fill=kind==='selected'?COL.pink:kind==='primary'?COL.blue:kind==='quiet'?COL.ink:COL.paper;
+  const fg=kind==='quiet'?COL.paper:COL.ink;
+  // One-pixel edges and a 2px lower shadow, not the old thick double frames.
+  rect(x,y+2,w,h-2,COL.ink);
+  rect(x,y,w,h-2,fill);
+  if(kind!=='quiet'){
+   rect(x,y,w,1,COL.ink);rect(x,y,1,h-2,COL.ink);
+   rect(x+w-1,y,1,h-2,COL.ink);
+  }
+  caption(title,x+w/2,y+Math.max(2,Math.floor((h-size)/2)-1),size,fg,'center');
  }
- function caption(t,x,y,size=12,c=COL.paper,align='left'){text(t,Math.round(x),Math.round(y),size,c,align)}
- function rect(x,y,w,h,c){R(Math.round(x),Math.round(y),Math.round(w),Math.round(h),c)}
- function room(x,y,w,h){
-  // Framed scene, rainy window, shelves and major silhouettes — no micro-noise.
-  rect(x,y,w,h,COL.ink);rect(x+2,y+2,w-4,h-4,COL.ink);
-  const windowX=x+Math.floor(w*.055),windowY=y+Math.floor(h*.115),
-        winW=Math.floor(w*.33),winH=Math.floor(h*.34);
-  rect(windowX-3,windowY-3,winW+6,winH+6,COL.blue);
-  rect(windowX,windowY,winW,winH,COL.ink);
-  rect(windowX+Math.floor(winW*.51),windowY,3,winH,COL.blue);
-  rect(windowX,windowY+Math.floor(winH*.57),winW,3,COL.blue);
-  for(let i=0;i<8;i++){
-   const rx=windowX+5+(i*17)%Math.max(6,winW-12);
-   const rh=4+(i*7)%Math.max(5,Math.floor(winH*.35));
-   rect(rx,windowY+winH-rh-3,Math.max(3,Math.floor(winW*.07)),rh,COL.pink);
+
+ function header(p){
+  const {w,h}=p;
+  rect(0,0,w,h,COL.ink);
+  rect(0,h-2,w,2,COL.blue);
+  const bw=w<240?41:52,aux=w<240?43:56,hh=h-5;
+  drawButton('back',5,2,bw,hh,'返回','quiet',w<240?10:12);
+  drawButton('intro',w-aux-5,2,aux,hh,'序章','quiet',w<240?10:12);
+  caption('蓝铃酒馆',w/2,Math.max(3,Math.floor((h-15)/2)),w<240?13:16,COL.paper,'center');
+ }
+
+ function scene(p,ctx){
+  const {x,y,w,h}=p;
+  rect(x,y,w,h,COL.ink);
+  // Large calm wall and an intentional single window.
+  const wx=x+Math.floor(w*.055),wy=y+Math.floor(h*.09);
+  const ww=Math.floor(w*.275),wh=Math.floor(h*.37);
+  rect(wx-2,wy-2,ww+4,wh+4,COL.blue);
+  rect(wx,wy,ww,wh,COL.ink);
+  rect(wx+Math.floor(ww*.49),wy,2,wh,COL.blue);
+  rect(wx,wy+Math.floor(wh*.57),ww,2,COL.blue);
+  // Distant apartment silhouettes: block groups, not noisy random pixels.
+  for(let i=0;i<4;i++){
+   const xx=wx+3+i*Math.floor((ww-7)/4);
+   const v=wh*(.12+((i*7)%4)*.1);
+   rect(xx,wy+wh-Math.floor(v),Math.max(2,Math.floor(ww*.115)),Math.floor(v),COL.pink);
   }
-  // Pixel neon wall signage and one shelf; sparse objects support the scene.
-  rect(x+Math.floor(w*.65),y+Math.floor(h*.13),Math.floor(w*.25),3,COL.pink);
-  caption('BLUEBELL',x+Math.floor(w*.775),y+Math.floor(h*.18),Math.max(8,Math.min(13,w*.025)),COL.paper,'center');
-  rect(x+Math.floor(w*.67),y+Math.floor(h*.38),Math.floor(w*.22),4,COL.blue);
+  // One restrained shelf and a three-bottle silhouette to the right.
+  const shx=x+Math.floor(w*.74),shy=y+Math.floor(h*.39),sww=Math.floor(w*.205);
+  rect(shx,shy,sww,3,COL.blue);
   for(let i=0;i<3;i++){
-   const bx=x+Math.floor(w*(.695+i*.066));
-   const by=y+Math.floor(h*.26);
-   rect(bx+3,by-5,7,7,COL.blue);rect(bx,by+1,13,Math.floor(h*.105),i===1?COL.pink:COL.paper);
-   rect(bx+3,by+5,7,4,COL.ink);
+   const bw=Math.max(5,Math.floor(w*.027));
+   const bx=shx+Math.floor(sww*(.13+i*.30));
+   const body=Math.max(10,Math.floor(h*.115));
+   rect(bx+Math.floor(bw*.3),shy-body-5,Math.max(2,Math.floor(bw*.45)),5,COL.blue);
+   rect(bx,shy-body,bw,body,i===1?COL.pink:COL.paper);
   }
-  // Existing portrait sprite is individually composited, cropped by the counter.
+  // A small sign is kept INSIDE the architectural negative space, below the shelf.
+  if(w>300)caption('BLUEBELL',shx+sww/2,y+Math.floor(h*.48),11,COL.pink,'center');
+
+  // EXISTING original portrait — no replacement of approved face or clothing.
+  const anchorX=x+Math.floor(w*.49),edgeY=y+Math.floor(h*.70);
   if(art){
-   const pw=Math.min(Math.floor(w*.45),Math.floor(h*.63*192/140));
+   const pw=Math.floor(Math.min(w*.54,h*.78*192/140));
    const ph=Math.floor(pw*140/192);
    const bob=Math.round(Math.sin(clock*2.1));
-   const px=x+Math.floor(w*.48)-Math.floor(pw/2),py=y+Math.floor(h*.60)-ph+bob;
-   const cv=document.getElementById('menu').getContext('2d');cv.imageSmoothingEnabled=false;
-   cv.drawImage(art,0,0,192,140,px,py,pw,ph);
-  }else if(failed)caption('立绘载入失败',x+w*.5,y+h*.35,12,COL.pink,'center');
-  // Real, readable TOP PLANE: narrow back edge, wider near edge.
-  poly([[x+Math.floor(w*.08),y+Math.floor(h*.58)],[x+Math.floor(w*.92),y+Math.floor(h*.58)],
-   [x+w-1,y+Math.floor(h*.70)],[x,y+Math.floor(h*.70)]],COL.blue);
-  poly([[x+2,y+Math.floor(h*.70)],[x+w-3,y+Math.floor(h*.70)],
-   [x+Math.floor(w*.95),y+h-3],[x+Math.floor(w*.05),y+h-3]],COL.ink);
-  rect(x+1,y+Math.floor(h*.70),w-2,3,COL.paper);
-  rect(x+Math.floor(w*.06),y+Math.floor(h*.85),Math.floor(w*.88),3,COL.pink);
-  // Only two deliberate counter props: a glass and a small order terminal.
-  const cx=x+Math.floor(w*.72),cy=y+Math.floor(h*.595);
-  rect(cx+2,cy-16,18,4,COL.paper);rect(cx+4,cy-12,14,13,COL.paper);
-  rect(cx+6,cy-10,10,8,COL.pink);
-  rect(x+Math.floor(w*.14),cy-9,Math.floor(w*.12),15,COL.ink);
-  rect(x+Math.floor(w*.14)+2,cy-7,Math.max(7,Math.floor(w*.12)-4),10,COL.paper);
-  caption('蓝铃酒馆',x+Math.floor(w*.5),y+Math.floor(h*.80),Math.max(9,Math.min(13,h*.045)),COL.pink,'center');
+   ctx.imageSmoothingEnabled=false;
+   ctx.drawImage(art,0,0,192,140,anchorX-Math.floor(pw/2),edgeY-ph+bob,pw,ph);
+  }else if(failed)caption('角色素材载入失败',anchorX,y+Math.floor(h*.39),11,COL.pink,'center');
+
+  // Depth: rear edge of the counter, visible trapezoidal TOP, front apron.
+  const rear=y+Math.floor(h*.68),front=y+Math.floor(h*.79);
+  poly([[x+Math.floor(w*.09),rear],[x+Math.floor(w*.91),rear],
+   [x+w-1,front],[x,front]],COL.blue);
+  rect(x,front-1,w,3,COL.paper);
+  rect(x,front+2,w,Math.max(0,y+h-front-2),COL.ink);
+  rect(x+Math.floor(w*.05),front+Math.floor((y+h-front)*.51),Math.floor(w*.90),2,COL.pink);
+  // Only useful foreground props. The clear cup reflects currently selected ingredients.
+  const cupx=x+Math.floor(w*.72),cupy=rear-Math.floor(h*.08);
+  rect(cupx+2,cupy-4,16,3,COL.paper);
+  rect(cupx+4,cupy-1,12,Math.max(10,Math.floor(h*.115)),COL.paper);
+  rect(cupx+6,cupy+4,8,Math.max(4,Math.floor(h*.05)),COL.pink);
+  const sx=x+Math.floor(w*.16),sy=rear-Math.floor(h*.055);
+  rect(sx,sy,Math.max(15,Math.floor(w*.10)),Math.max(10,Math.floor(h*.06)),COL.paper);
+  rect(sx+2,sy+2,Math.max(11,Math.floor(w*.10)-4),3,COL.ink);
+  // Ingredient chips appear on the tabletop only after actual input.
+  for(let i=0;i<3;i++)for(let j=0;j<Math.min(counts[i],3);j++){
+   rect(x+Math.floor(w*.54)+i*11+j*3,rear+4+i*3,2,2,i===0?COL.pink:i===1?COL.paper:COL.ink);
+  }
  }
- function mixer(x,y,w,h,vertical){
+
+ function speech(p){
+  const {x,y,w,h}=p;
+  rect(x,y,w,h,COL.paper);
+  rect(x,y,w,3,COL.blue);
+  // One small speaker tab; all dialogue on a light field for legibility.
+  const who=message.split('：')[0]||'客人';
+  const chipW=clamp(w*.21,48,82);
+  rect(x+8,y+8,chipW,19,COL.pink);
+  caption(who,x+13,y+10,11,COL.ink);
+  const actionable=stage==='greeting'||stage==='served';
+  if(actionable){
+   const nw=w<230?57:75;
+   drawButton('next',x+w-nw-9,y+6,nw,27,stage==='served'?'下一位':'继续','primary',w<230?11:12);
+  }else{
+   caption(stage==='retry'?'配方未完成':'订单已记录',x+w-9,y+12,10,COL.ink,'right');
+  }
+  // Wrap by approximate logical glyph width; dialogue never intersects buttons.
+  const compact=h<85;
+  const font=w<230?11:compact?11:14;
+  const maxChars=Math.max(10,Math.floor((w-25)/(font*.99)));
+  const chars=[...message],lines=[];
+  for(let i=0;i<chars.length;i+=maxChars)lines.push(chars.slice(i,i+maxChars).join(''));
+  const top=y+(compact?32:41),lineH=font+5;
+  const maxLines=Math.max(1,Math.floor((h-(top-y)-4)/lineH));
+  lines.slice(0,Math.min(3,maxLines)).forEach((v,i)=>caption(v,x+11,top+i*lineH,font,COL.ink));
+ }
+
+ function mixing(p,portraitMode){
+  const {x,y,w,h}=p;
   rect(x,y,w,h,COL.ink);
-  rect(x+2,y+2,w-4,3,COL.blue);
-  const small=vertical?10:12;
-  caption('饮品调制',x+9,y+9,vertical?11:15,COL.paper);
-  caption('◈ '+cash,x+w-12,y+9,vertical?10:12,COL.pink,'right');
-  const current=BAR_ORDERS[order];
-  caption('订单 / '+current.name,x+9,y+(vertical?26:39),small,COL.pink);
-  caption('配方 '+current.goal.map((n,i)=>MATERIALS[i]+n).join('  '),x+9,y+(vertical?40:56),vertical?9:10,COL.paper);
-  if(vertical){
-   const gap=5,bw=Math.floor((w-24-gap*2)/3),by=y+57,bh=Math.max(23,Math.min(34,h*.27));
-   MATERIALS.forEach((n,i)=>addButton('m'+i,x+9+i*(bw+gap),by,bw,bh,n+' '+counts[i],counts[i]?'selected':'normal'));
-   const ay=y+h-31,aw=Math.floor((w-24)/2);
-   addButton('reset',x+9,ay,aw,25,'清空');
-   addButton('mix',x+15+aw,ay,aw,25,'调制','primary');
-  }else{
-   let by=y+Math.floor(h*.26),bh=Math.max(27,Math.floor(h*.105));
-   MATERIALS.forEach((n,i)=>addButton('m'+i,x+10,by+i*(bh+7),w-20,bh,n+' × '+counts[i],counts[i]?'selected':'normal'));
-   const ay=y+h-44,aw=Math.floor((w-30)/2);
-   addButton('reset',x+10,ay,aw,32,'清空');
-   addButton('mix',x+20+aw,ay,aw,32,'调制','primary');
+  if(!portraitMode)rect(x,y,3,h,COL.blue);
+  else rect(x,y,w,2,COL.blue);
+  const compact=!portraitMode&&h<250;
+  const hd=portraitMode?11:compact?12:17;
+  caption('调制台',x+10,y+8,hd,COL.paper);
+  caption('◈ '+cash,x+w-12,y+8,portraitMode?11:compact?11:14,COL.pink,'right');
+  const recipe=BAR_ORDERS[order];
+  if(portraitMode){
+   caption('当前订单 · '+recipe.name,x+10,y+27,11,COL.pink);
+   const by=y+clamp(Math.floor(h*.35),34,48);
+   const pad=8,gap=5,bw=Math.floor((w-2*pad-2*gap)/3);
+   const bh=clamp(Math.floor(h*.245),23,34);
+   MATERIALS.forEach((name,i)=>drawButton('m'+i,x+pad+i*(bw+gap),by,bw,bh,name+' '+counts[i],
+    counts[i]>0?'selected':'normal',10));
+   const actionY=y+h-36,aw=Math.floor((w-3*pad)/2);
+   drawButton('reset',x+pad,actionY,aw,30,'清空','quiet',12);
+   drawButton('mix',x+2*pad+aw,actionY,aw,30,'调制饮品','primary',12);
+   return;
   }
- }
- function dialogue(x,y,w,h,vertical){
-  rect(x,y,w,h,COL.ink);rect(x+2,y+2,w-4,3,COL.blue);
-  const speaker=stage==='greeting'?'营业日志':stage==='served'?'好评':stage==='retry'?'配方有误':'顾客订单';
-  rect(x+8,y+9,Math.min(w*.26,80),21,COL.pink);
-  caption(speaker,x+13,y+12,11,COL.ink);
-  const compact=!vertical&&h<90,actionWidth=(stage==='greeting'||stage==='served')?(vertical?58:91):0;
-  const glyphWidth=vertical?12.2:compact?10.8:13.3;
-  const lines=[],maxChars=Math.max(8,Math.floor((w-22-actionWidth)/glyphWidth));
-  for(let i=0;i<[...message].length;i+=maxChars)lines.push([...message].slice(i,i+maxChars).join(''));
-  for(let i=0;i<Math.min(lines.length,vertical?2:3);i++)
-   caption(lines[i],x+10,y+(vertical?37:39)+i*(compact?14:17),vertical?11:compact?10:13,COL.paper);
-  if(stage==='greeting'||stage==='served'){
-   const bw=vertical?58:91,bh=25;
-   addButton('next',x+w-bw-9,y+h-bh-8,bw,bh,stage==='served'?'下一位':'继续','primary');
-  }else{
-   caption(stage==='retry'?'清空材料再试一次':'点击右侧材料，然后调制',x+10,y+h-19,vertical?9:11,COL.blue);
+  caption('订单 / '+recipe.name,x+10,y+(compact?26:44),compact?11:14,COL.pink);
+  if(!compact){
+   caption('材料配比',x+10,y+70,11,COL.blue);
+   const needed=recipe.goal.map((n,i)=>MATERIALS[i]+n).filter(s=>!s.endsWith('0'));
+   needed.forEach((v,i)=>caption(v,x+10+i*Math.floor((w-20)/needed.length),y+91,11,COL.paper));
   }
+  const start=y+(compact?43:clamp(Math.floor(h*.30),108,150));
+  const step=compact?Math.max(26,Math.floor((h-84)/3)):clamp(Math.floor(h*.16),50,66);
+  const gap=compact?4:9,bh=Math.min(compact?27:53,step-gap);
+  MATERIALS.forEach((name,i)=>drawButton('m'+i,x+10,start+i*step,w-20,bh,
+    name+'   × '+counts[i],counts[i]>0?'selected':'normal',compact?11:14));
+  if(!compact&&h>=310){
+   const fy=y+h-100;
+   rect(x+10,fy,w-20,40,COL.blue);
+   caption('杯中材料  '+counts.reduce((a,b)=>a+b,0)+' / 5',x+18,fy+12,12,COL.ink);
+  }
+  const ay=y+h-(compact?36:46),gapActions=8,aw=Math.floor((w-28-gapActions)/2);
+  drawButton('reset',x+10,ay,aw,compact?29:37,'清空','quiet',compact?11:13);
+  drawButton('mix',x+18+aw,ay,aw,compact?29:37,'调制','primary',compact?11:13);
  }
+
  function draw(ctx,W,H){
   if(!active)return;
   buttons=[];
+  lastLayout=computeBarLayout(W,H);
   R(0,0,W,H,COL.ink);
-  const portrait=W/H<1.2;
-  if(portrait){
-   const sh=Math.floor(H*.45),dh=Math.max(96,Math.floor(H*.20)),mh=H-sh-dh;
-   room(0,0,W,sh);mixer(0,sh,W,mh,true);dialogue(0,H-dh,W,dh,true);
-  }else{
-   const rw=Math.floor(W*.635),dh=Math.max(72,Math.floor(H*.255));
-   room(0,0,rw,H-dh);dialogue(0,H-dh,rw,dh,false);mixer(rw,0,W-rw,H,false);
-  }
-  addButton('back',6,6,Math.min(64,Math.floor(W*.16)),22,'返回');
-  addButton('intro',Math.floor(W*(portrait?.77:.51)),6,Math.min(78,Math.floor(W*.21)),22,'旧序章');
+  // Paint order is intentional: scene, speech, mixing, shared top bar.
+  scene(lastLayout.room,ctx);
+  speech(lastLayout.dialogue);
+  mixing(lastLayout.mixer,lastLayout.mode==='portrait');
+  header(lastLayout.header);
  }
  function tap(x,y){
   if(!active)return false;
@@ -151,22 +241,26 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
    return true;
   }
   if(/^m[0-2]$/.test(b.id)){
-   if(stage==='greeting'){resetForNext()}
-   if(stage==='served'){resetForNext()}
+   if(stage==='served')return true;
+   if(stage==='greeting')resetForNext();
    counts[Number(b.id[1])]=clamp(counts[Number(b.id[1])]+1,0,5);
    stage='order';return true;
   }
-  if(b.id==='reset'){counts=[0,0,0];if(stage==='retry')stage='order';return true}
+  if(b.id==='reset'){if(stage==='served')return true;counts=[0,0,0];if(stage==='retry')stage='order';return true}
   if(b.id==='mix'){
    if(stage==='served')return true;
    const recipe=BAR_ORDERS[order];
    if(validMixture(counts,recipe.goal)){
-    stage='served';served++;cash+=recipe.reward;message=recipe.good;writeSave()
+    stage='served';served++;cash+=recipe.reward;message=recipe.good;writeSave();
    }else{stage='retry';message='客人：这杯不太对。检查一下材料比例吧。'}
    return true;
   }
   return false;
  }
- function snapshot(){return {active,stage,line,order,counts:[...counts],target:[...BAR_ORDERS[order].goal],cash,served,portraitReady:!!art,buttons:buttons.map(b=>({id:b.id,x:b.x,y:b.y,w:b.w,h:b.h}))}}
+ function snapshot(){
+  return {active,stage,line,order,counts:[...counts],target:[...BAR_ORDERS[order].goal],
+   cash,served,portraitReady:!!art,layout:lastLayout,
+   buttons:buttons.map(b=>({...b}))};
+ }
  return {enter,leave,update,draw,tap,snapshot};
 }
