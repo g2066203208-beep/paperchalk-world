@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.RectF
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -79,6 +80,7 @@ enum class TouchMode(val label: String) {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         val repository = ProjectStore(applicationContext)
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(
@@ -173,7 +175,7 @@ private fun AtelierApp(store: ProjectStore) {
         }
     }
 
-    Box(Modifier.fillMaxSize().background(SurfaceColor)) {
+    Box(Modifier.fillMaxSize().background(SurfaceColor).safeDrawingPadding().imePadding()) {
         val doc = document
         if (doc == null) {
             Column(Modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 20.dp)) {
@@ -208,20 +210,25 @@ private fun AtelierApp(store: ProjectStore) {
         } else {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().height(54.dp).padding(horizontal = 8.dp),
+                    Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(onClick = { closeProject() }) { Text("‹ 作品库") }
+                    IconButton(onClick = { closeProject() }, modifier = Modifier.size(48.dp)) {
+                        Text("‹", style = MaterialTheme.typography.headlineMedium)
+                    }
                     Column(Modifier.weight(1f)) {
-                        Text(doc.title, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.SemiBold)
-                        Text(doc.width.toString() + " × " + doc.height.toString() + " · 原生像素",
-                            color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                        Text(doc.title, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+                        Text("${doc.width}×${doc.height}", color = Color.Gray,
+                            style = MaterialTheme.typography.labelSmall)
                     }
                     TextButton(onClick = { if (doc.undo()) { notifyChange(); scheduleSave() } },
-                        enabled = doc.canUndo) { Text("撤销") }
+                        modifier = Modifier.widthIn(min = 48.dp), enabled = doc.canUndo) { Text("撤销") }
                     TextButton(onClick = { if (doc.redo()) { notifyChange(); scheduleSave() } },
-                        enabled = doc.canRedo) { Text("重做") }
-                    TextButton(onClick = { showOptions = true }) { Text("⋮") }
+                        modifier = Modifier.widthIn(min = 48.dp), enabled = doc.canRedo) { Text("重做") }
+                    IconButton(onClick = { showOptions = true }, modifier = Modifier.size(48.dp)) {
+                        Text("⋮", style = MaterialTheme.typography.titleLarge)
+                    }
                 }
                 HorizontalDivider(color = Color(0xFF30394A))
                 PixelViewport(doc, version, tool, color, touchMode, cursor, selection,
@@ -232,7 +239,9 @@ private fun AtelierApp(store: ProjectStore) {
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )
                 Row(
-                    Modifier.fillMaxWidth().background(PanelColor).padding(horizontal = 12.dp, vertical = 6.dp),
+                    Modifier.fillMaxWidth().background(PanelColor)
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
@@ -258,7 +267,7 @@ private fun AtelierApp(store: ProjectStore) {
                             }
                         }) { Text("粘贴") }
                     }
-                    Spacer(Modifier.weight(1f))
+                    Spacer(Modifier.width(12.dp))
                     TextButton(onClick = {
                         touchMode = TouchMode.entries[(touchMode.ordinal + 1) % TouchMode.entries.size]
                     }) { Text(touchMode.label, style = MaterialTheme.typography.labelMedium) }
