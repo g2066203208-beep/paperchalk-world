@@ -246,7 +246,7 @@ try{
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.bar?.portraitReady,{timeout:10000});
   const barInitial=(await state(page)).bar;
   assert.equal(barInitial.stage,'greeting');
-  assert.ok((await exactCanvasColors(page)).every(c=>official.has(c)),'bar counter must remain exact four-ink pixel art');
+  assert.ok((await exactCanvasColors(page)).length>12,'bar must now render a detailed, full-color café rather than four inks');
   await page.screenshot({path:'artifacts/game/'+screen+'-bar-counter-original-four-ink.png'});
   await clickBar('next');await clickBar('next');
   assert.equal((await state(page)).bar.stage,'order');
