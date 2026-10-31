@@ -42,6 +42,20 @@ export function computeBarLayout(W,H){
   mixer:{x:mainW,y:headerH,w:side,h:available}};
 }
 
+// This layout is testable without a browser or art assets.
+// Preserve the source image's true 3:4 ratio (192×256), including the feet.
+export function computeFullPortraitPlacement(p){
+ const {x,y,w,h}=p;
+ const maxW=Math.max(8,Math.floor(w*.55));
+ const maxH=Math.max(12,Math.floor(h-12));
+ const sw=Math.min(maxW,Math.floor(maxH*192/256));
+ const sh=Math.floor(sw*256/192);
+ const centerX=x+Math.floor(w*.283);
+ const left=Math.max(x+2,centerX-Math.floor(sw/2));
+ return {x:left,y:y+Math.floor((h-sh)/2),w:sw,h:sh,source:[192,256],
+  deskStart:x+Math.floor(w*.60)};
+}
+
 export function createBarScene({COL,R,poly,text,onBack,onIntro}){
  let active=false,clock=0,counts=[0,0,0],order=0,stage='greeting',line=0,cash=0,served=0;
  let art=null,failed=false,buttons=[],message='',lastLayout=null;
@@ -118,37 +132,34 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   // A small sign is kept INSIDE the architectural negative space, below the shelf.
   if(w>300)caption('BLUEBELL',shx+sww/2,y+Math.floor(h*.48),11,COL.pink,'center');
 
-  // EXISTING original portrait — no replacement of approved face or clothing.
-  const anchorX=x+Math.floor(w*.49),edgeY=y+Math.floor(h*.70);
+  // The counter lives on the RIGHT side of the scene, instead of
+  // covering the legs or cutting through the original character artwork.
+  const deskX=x+Math.floor(w*.60);
+  const rear=y+Math.floor(h*.61),front=y+Math.floor(h*.80);
+  poly([[deskX+4,rear],[x+w-7,rear],
+   [x+w-1,front],[deskX-3,front]],COL.blue);
+  rect(deskX-3,front,w-(deskX-x)+3,3,COL.paper);
+  rect(deskX-3,front+3,w-(deskX-x)+3,Math.max(0,y+h-front-3),COL.ink);
+  rect(deskX+Math.floor((x+w-deskX)*.10),front+Math.floor((y+h-front)*.54),
+   Math.floor((x+w-deskX)*.79),2,COL.pink);
+  const cupx=deskX+Math.floor((x+w-deskX)*.55),cupy=rear-Math.floor(h*.05);
+  rect(cupx,cupy-2,Math.max(7,Math.floor(w*.046)),2,COL.paper);
+  rect(cupx+2,cupy,Math.max(5,Math.floor(w*.037)),Math.max(6,Math.floor(h*.095)),COL.paper);
+  rect(cupx+3,cupy+4,Math.max(3,Math.floor(w*.025)),Math.max(3,Math.floor(h*.044)),COL.pink);
+  for(let i=0;i<3;i++)for(let j=0;j<Math.min(counts[i],3);j++){
+   rect(deskX+10+i*11+j*3,rear+8+i*3,2,2,i===0?COL.pink:i===1?COL.paper:COL.ink);
+  }
+
+  // Draw the WHOLE original 192×256 transparent figure. This is not a
+  // torso crop; neither the head, hands, dress, legs nor shoes may disappear.
+  // Its placement is reserved independently from the counter, with a
+  // 5+ logical-pixel gap, so the desk cannot occlude any character pixel.
+  const place=computeFullPortraitPlacement(p);
   if(art){
-   const widthCap=w>300&&h>230?w*.63:w*.54;
-   const safeHeight=Math.max(12,h*.68-7);
-   const pw=Math.floor(Math.min(widthCap,h*.78*192/140,safeHeight*192/140));
-   const ph=Math.floor(pw*140/192);
    const bob=Math.round(Math.sin(clock*2.1));
    ctx.imageSmoothingEnabled=false;
-   ctx.drawImage(art,0,0,192,140,anchorX-Math.floor(pw/2),edgeY-ph+bob,pw,ph);
-  }else if(failed)caption('角色素材载入失败',anchorX,y+Math.floor(h*.39),11,COL.pink,'center');
-
-  // Depth: rear edge of the counter, visible trapezoidal TOP, front apron.
-  const rear=y+Math.floor(h*.68),front=y+Math.floor(h*.79);
-  poly([[x+Math.floor(w*.09),rear],[x+Math.floor(w*.91),rear],
-   [x+w-1,front],[x,front]],COL.blue);
-  rect(x,front-1,w,3,COL.paper);
-  rect(x,front+2,w,Math.max(0,y+h-front-2),COL.ink);
-  rect(x+Math.floor(w*.05),front+Math.floor((y+h-front)*.51),Math.floor(w*.90),2,COL.pink);
-  // Only useful foreground props. The clear cup reflects currently selected ingredients.
-  const cupx=x+Math.floor(w*.72),cupy=rear-Math.floor(h*.08);
-  rect(cupx+2,cupy-4,16,3,COL.paper);
-  rect(cupx+4,cupy-1,12,Math.max(10,Math.floor(h*.115)),COL.paper);
-  rect(cupx+6,cupy+4,8,Math.max(4,Math.floor(h*.05)),COL.pink);
-  const sx=x+Math.floor(w*.16),sy=rear-Math.floor(h*.055);
-  rect(sx,sy,Math.max(15,Math.floor(w*.10)),Math.max(10,Math.floor(h*.06)),COL.paper);
-  rect(sx+2,sy+2,Math.max(11,Math.floor(w*.10)-4),3,COL.ink);
-  // Ingredient chips appear on the tabletop only after actual input.
-  for(let i=0;i<3;i++)for(let j=0;j<Math.min(counts[i],3);j++){
-   rect(x+Math.floor(w*.54)+i*11+j*3,rear+4+i*3,2,2,i===0?COL.pink:i===1?COL.paper:COL.ink);
-  }
+   ctx.drawImage(art,0,0,192,256,place.x,place.y+bob,place.w,place.h);
+  }else if(failed)caption('角色素材载入失败',place.x+place.w/2,y+Math.floor(h*.4),11,COL.pink,'center');
  }
 
  function speech(p){
