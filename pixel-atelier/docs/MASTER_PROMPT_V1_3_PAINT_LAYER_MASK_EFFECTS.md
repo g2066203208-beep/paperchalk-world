@@ -166,3 +166,138 @@ RasterPixelDiff、LayerAdd/Remove/Duplicate/Rename/Move/Group/Visibility/Lock/Op
 
 清空多层/批量合并前支持本地快照；Android SAF 导出完整 .pixelatelier 工程作为备份；APK 签名可能不同导致不能覆盖安装，不能要求卸载旧版而不先备份；原子保存、存储错误提示、可恢复文件检查均应继续完善。
 
+
+# 12｜完整选区、复制剪贴和自由变形
+
+选择工具：矩形、椭圆、套索、多边形、魔棒、全局相似色、颜色范围、Alpha 范围、Live-Wire 磁性路径、离线用户引导智能选择。组合：replace/add/subtract/intersect/XOR/invert/grow/shrink/save/load。mask 可使用 Boolean 硬边或 ByteArray 的 0..255 coverage，默认传统像素画硬边；羽化是明确可选功能。
+
+浮动选区复制保留透明洞、原图层来源、source palette 和锚点，粘贴后可移动/镜像/等比缩放/任意旋转/扭曲；预览像素必须等于正式结果；取消不改原图。剪切在最后确认前保留源像素，确认之后作为同一 undo transaction。支持复制当前层与复制合成层的不同语义，Android 系统剪贴板需 Content URI，不能把巨大 PNG bytes 当字符串。
+
+# 13｜更多完整基础工具、几何和数值
+
+必须提供：铅笔、橡皮、油漆桶、颜色取样、颜色替换、线、虚线/点线、矩形/填充矩形、椭圆/填充椭圆、正多边形、自由多边形、贝塞尔、样条、圆弧/扇形、标尺、圆规、导向线、中心吸附、角度吸附、移动、自由变换、裁剪、水平/垂直/径向对称、涂抹、颜色渐变、图案填充和程序化函数曲线。
+
+几何工具的一致操作流程：按下显示锚点→移动期间真实整数像素预览→松手端点控制柄可精修→明确完成/取消→一次历史提交。约束参数支持 x/y 数值，长度、角度、等比、网格和中心吸附。独立准星模式必须支持起点/终点/确认三阶段，而不是只支持单点。输入中途加入第二指时优先保证画布导航不破坏草稿，处理系统 ACTION_CANCEL 和棕榈误触。
+
+# 14｜图案材质、随机画笔、智能抖动和无缝贴图
+
+画笔 BrushDescriptor 包含 shape、stamp、spacing、angle、rotation、density、palette、weights、seed、opacity、blend、symmetry、alphaLock、selection、wrap。随机颜色要有概率权重和颜色分布，可锁 seed，避免每次 UI 重绘随机改变预览。草地、石墙、木、砖、金属、沙、布、皮革、水、云等为可编辑图案预设，用户可自定义制作图案刷。
+
+Dither 至少提供 Bayer2/4/8、Floyd–Steinberg、Atkinson、Jarvis–Judice–Ninke（后续）、蓝噪声图案、调色板限色、边缘保护、可选透明处理。指定扫描方向、量化规则、误差扩散范围、透明洞保护、周期边界规则。Blur/去噪需明确是图像运算不是轨迹平滑，只有用户主动开启才修改。
+
+无缝：Wrap X、Wrap Y、Wrap XY，所有负坐标用 floorMod；编辑显示 3×3 或 5×5 重复，但文档逻辑尺寸不变。直线/笔刷/图案印章/随机颜色/模糊边界/填色都遵守相同的 wrap 设置。穿越左边即时在右边出现预览，不能等松手。自动修缝是额外可撤销滤镜，不得自动更改用户有意制作的边缘。
+
+# 15｜专业动画 Frame/Cel、洋葱皮、时间曲线
+
+正式 Frame×Layer→Cel，帧 durationMs 独立存储而不是由恒定 FPS 代替；Frame 可以插入、删除、复制、拖动排序、链接 Cel、打标签/动作片段，支持 ping-pong、循环、播放暂停、精确逐帧。Onion 前后 N 帧、衰减 Alpha 和不同色彩、参考层/所有可见层可选，必须只参与编辑预览，不出现在 PNG 或单帧文件中。
+
+时长与运动曲线不同：改变帧 durationMs 不凭空生成中间像素；2D 插值/时间重映射需定义采样和需要生成的中间 frame。关键帧曲线支持 Step/Linear/Cubic、缓入、缓出、导数速度，真实作用在可插值属性上。导出 Sprite Sheet/PNG 序列/GIF/APNG/元数据，编码回读必须验证每帧时长、透明度和顺序。
+
+# 16｜3D 方块建模、UV、骨骼与 Graph Editor
+
+在独立工作区实现 Cuboid、对象树、组、父子关系、旋转轴心、坐标系、法线/UV、纹理真实整数像素。2D UV 和 3D 模型面必须引用同一 TextureAsset，用户在 3D 面绘制时光线拾取→faceId→UV→texel，不允许使用屏幕坐标乱涂。纹理显示用 NEAREST，3D 相机可平滑但不改变 texel。
+
+正视、侧视、顶视、透视/正交、可视网格、轴向变换控制柄、面/边/块选择；骨骼层级、关键帧平移/旋转/缩放、Graph Editor 插值参数与模型实际姿态联动；逐帧预览和真实模型导出需要格式验证。没有完成的 3D 工作区应隐藏或明确 Experimental，不能塞一个“3D”空按钮。
+
+# 17｜保存格式与数据一致性规范
+
+建议 schema v2/v3：manifest（版本、document ID、dimensions、colorMode、frame definitions）、LayerTree（稳定 ID、类型、可见、锁、Opacity、BlendMode、Mask ID、Effects）、CelStore（按 frame×layer）、Palette、MaskStore（位深/边界/Hash）、Material/BrushPresets/Animation/ModelAsset 关联数据。像素 RGBA 不丢 Alpha，任何关键数据需 CRC/hash 或读取校验；ZIP 文件读入限制尺寸/资源总量、防 Zip Bomb、防路径穿越，AtomicFile 串行写入。
+
+内存估算每层 W×H×4 字节，帧×层增长会快速超出预算；对大项目使用块存储、共享未修改 Cel 和缓存上限。自动保存只处理提交后的状态，预览草稿不能被悄悄烘焙。系统进程中断/切后台保存策略必须在 UI 中可解释。
+
+旧 v1 .pixelatelier 无图层 blend/mask/cel 信息，迁移时设 Normal、mask absent、单帧 Cel，保留所有原始 pixels、layer names 和 opacity。升级后至少进行打开→保存→重新打开→逐像素/属性 hash 对比。
+
+# 18｜Android 性能与 UI 工程的具体模块
+
+模块建议：core-pixel、core-color、core-composite、core-layer、core-mask、core-command、core-preview、core-input、core-fill、core-brush、core-selection、core-effects、core-animation、core-model3d、core-project、feature-editor、feature-gallery、tests/benchmark。
+
+不要把全部逻辑留在 MainActivity.kt。Compose ViewModel 管理编辑状态，画布渲染基于缓存 bitmap/tile/bounds，InputRouter 负责手势路由，CommandDispatcher 负责正式写入。复杂洪泛/滤镜使用 Coroutine Worker + 取消机制和 docRevision check。禁止把每像素当 Compose 子元素；避免每次 pointerMove 重算全屏 composite；不要因为 GPU BlendMode 看起来正确就省略文件导出 CPU 合成 golden 测试。
+
+Android 边到边使用 enableEdgeToEdge 与 WindowInsets.safeDrawing、IME；需要适配 320dp 竖屏、紧凑横屏、状态栏/挖孔屏/手势导航/三键导航、字体缩放、平板和折叠屏。顶部按钮不能被时间或摄像头覆盖；底部清空/复制/图层不能进入系统导航区域。必须提供至少 48dp 可点击目标和 TalkBack 语义。
+
+# 19｜正式验收测试矩阵：每个基本操作必须留真实证据
+
+## A 油漆桶
+A01 封闭形内填色；A02 透明背景连通；A03 4/8 邻域对角差异；A04 容差 0/64/255；A05 当前层/可见层采样差异；A06 选区限制；A07 Alpha Lock；A08 遮罩参与；A09 大图 worker 取消；A10 超界与空操作；A11 preview/commit hash；A12 保存重开和 PNG。
+
+## B 清空
+B01 清空当前层不改变其他层；B02 清空选区仅改内部；B03 清空当前帧不改其它帧；B04 清空所有层有确认；B05 图层锁正确跳过；B06 取消恢复文档 hash；B07 清空后一次撤销恢复；B08 透明空层 no-op；B09 重新打开仍能恢复已保存状态；B10 原生文件备份可导入。
+
+## C 图层混合
+C01 Normal 透明上下层；C02 Multiply 精确值；C03 Screen 精确值；C04 Overlay 分段两个区间；C05 source Alpha=0 时不可篡改背景；C06 背景 Alpha=0 时结果=源色；C07 Opacity=0% 与 100%；C08 Mask 128 灰；C09 图层顺序换位得到正确差异；C10 混合模式改回 Normal 不改源 pixels；C11 PNG 合成一致；C12 CPU/GPU golden 对比。
+
+## D 遮罩
+D01 全白不改外观；D02 全黑隐藏但不丢源；D03 灰色 128 计算精确；D04 编辑 Mask 与编辑 Layer 是两个不同目标；D05 从 Selection 创建；D06 反转与禁用；D07 剪贴层跟随底层 Alpha；D08 Mask 删除恢复原图；D09 多层/组缓存失效；D10 保存重开并能修改 mask。
+
+## E 图层编辑历史
+E01 新建图层后撤销恢复层数；E02 删除图层撤销恢复像素；E03 排序影响合成；E04 Opacity 滑动一事务；E05 BlendMode 切换一事务；E06 加 Mask/删 Mask 可逆；E07 复制层保持 RGBA；E08 合并层保留可见外观；E09 旧工程迁移；E10 跨工程粘贴不污染源。
+
+## F 手机 UI
+F01 状态栏区域控件可触摸；F02 横屏工具不被遮挡；F03 底部系统导航不盖按钮；F04 颜色 HEX 键盘不盖完成键；F05 画布拖动中预览不消失；F06 320dp 宽混合模式可操作；F07 清空操作有当前范围与取消；F08 TalkBack 有中文作用描述；F09 两指缩放不误涂；F10 系统 ACTION_CANCEL 不提交草稿。
+
+## G 动画与 3D
+G01 帧分层正确；G02 Onion 不导出；G03 帧 durationMs；G04 Sprite Sheet 回读；G05 Cube UV texel 准确；G06 骨骼层级；G07 Graph Editor 实际改变姿态；G08 两工作区相互不污染。
+
+每个测试必须记录：commit SHA、run URL、设备 API、画布尺寸、步骤、预期数组/结果、PASS/FAIL、截图/录像、失败原因、修复 commit。截图必须检查 PNG 签名，不允许把 adb 错误文本冒充真实截图；Android UI smoke 没通过不能宣称手机手感已验证。
+
+# 20｜专业开源参考与许可证边界
+
+研究资料：
+- Aseprite Layer & Cels: https://www.aseprite.org/docs/layers/
+- Aseprite Paint Bucket Context: https://www.aseprite.org/docs/context-bar/
+- Aseprite Blend Mode API: https://aseprite.com/api/blendmode
+- Krita Layers and Masks: https://docs.krita.org/en/reference_manual/layers_and_masks.html
+- Krita Mask Basics: https://docs.krita.org/en/user_manual/getting_started/basic_concepts.html
+- Android Compose Offscreen/BlendMode: https://developer.android.com/develop/ui/compose/graphics/draw/modifiers
+- Android Insets: https://developer.android.com/develop/ui/compose/system/insets
+- Android Touch/Gestures: https://developer.android.com/develop/ui/compose/touch-input/pointer-input/understand-gestures
+- Blockbench: https://github.com/JannisX11/blockbench
+- LibreSprite: https://github.com/LibreSprite/LibreSprite
+
+学习操作语义、公开数学原理、格式设计与算法，不擅自复制第三方源码/图片/图标。复制 GPL/EULA 代码需单独许可审核，独立研发的实现要记录源码位置与所参考的公开材料。不能因为 GitHub 是公开仓库就认定所有素材可以商业再发行。
+
+# 21｜研发优先级与可运行迭代
+
+**Sprint A / 完整基本画板（立即）：** 清空选区/当前层/全部层、填满层、填色桶参数、按选区限制、图层可撤销、保存/回读；真实 UI，GitHub APK/JVM/模拟器测试。
+**Sprint B / 图层混合：** 正确 Normal/Multiply/Screen/Overlay 等算法，实时混合预览，图层属性存储升级与 PNG golden。
+**Sprint C / 遮罩与剪贴：** Alpha Lock、透明遮罩、遮罩笔刷、剪贴链、选区转换和撤销。
+**Sprint D / 效果与图层树：** 非破坏效果、分组/排序/合并、局部模糊/像素发光、渐变、抖动。
+**Sprint E / 全工具专业化：** 真实实时预览、Bezier、智能选区、浮动剪贴/变形、对称、随机材质、自动无缝。
+**Sprint F / 动画与 3D：** Frame/Cel、时间轴、洋葱皮、速度、Tilemap、Blockbench 式 Cube/UV/骨骼/曲线。
+
+必须随每个 sprint 输出可运行 APK、测试数、设备或模拟器报告、图像结果，绝不以“按钮已加入”“完成概念图”作为完成证据。未通过首要安全区和预览回归，不得把版本标为正式专业版。
+
+# 22｜必须拒绝的错误做法
+
+1. 一个“清空”按钮不说明范围。
+2. 不可撤销地清除整个画布。
+3. 用黑色涂满图层假装清成透明。
+4. 用修改原 RGBA 的办法假装透明遮罩。
+5. 用 Layer.opacity 改变假装实现 Overlay 混合模式。
+6. 将图层剪贴与 Alpha Lock 混为一个功能。
+7. 添加新层后清空全部 Undo。
+8. 选区只有矩形边框，没有真实每像素 mask。
+9. 颜色填充沿错的参考层发生颜色泄漏。
+10. 用 GPU 界面看起来对的效果替代导出中的真实 ARGB 数据。
+11. 让随机画笔在每次 preview 重绘时随机换色。
+12. 实时预览与正式提交生成不同像素。
+13. 模糊滤镜不经过确认就覆盖原图。
+14. 洋葱皮、准星、格子线导出到 PNG。
+15. Blockbench 式 3D 工作区只有空按钮没有 UV。
+16. 用脚本或 mock 截图冒充真实模拟器画面。
+17. 编译过就称全部真机验证通过。
+18. 不对用户说明 APK 签名变化可能造成覆盖失败和项目丢失。
+19. 不检查第三方许可证就搬源码。
+20. 用户反馈基础功能缺失时继续只堆高级功能名称。
+
+# 23｜最终验收场景
+
+用户在 Android 手机打开像素工坊，顶部按钮不会被摄像头/状态栏遮住。新建 64×64 透明画布，先用铅笔画一圈轮廓；点油漆桶，在拖动容差与连通模式时实时看到区域和结果，只向当前层提交。建立第二层，填满前景色；调整为正片叠底和叠加，下面画层透出正确的数学合成效果。建立灰度遮罩，用白色恢复显示、黑色隐藏局部，底下原来的像素全部保留。复制选区、浮动粘贴移动、确认、撤销。用“清空当前图层”只删该层；用 Undo 整体恢复。保存为 .pixelatelier，重新打开后图层、混合模式、遮罩、Alpha 与像素不变。导出 PNG，合成结果与画布完全一致。之后再进入动画和 3D 编辑，数据模型无冲突。
+
+**这个基础流程没有真正可用之前，任何专业动画和 3D 承诺都不能替代它。**
+
+# 24｜最终执行命令
+
+现在继续开发原生 Android 版本，不是再做一张概念图。按 Sprint A→F 的依赖链，在当前 GitHub 工程提交源码，优先实现清空、油漆、混合、遮罩的真正数据模型与 UI 行为。每个工具必须：输入→即时预览→确认/取消→正确 PixelCommand→Undo/Redo→Save/Load→PNG Export→JVM Golden→Android Emulator→真实 APK。禁止假实现、虚报设备结果、写死系统 Insets，所有未完成项在功能矩阵标记为未完成。持续保存 GitHub 工作室的源码、测试与研究记录。
+
+**PIXEL ATELIER V1.3 — BASIC TOOLS FIRST. NON-DESTRUCTIVE BY DESIGN. EVERY PIXEL ACCOUNTABLE.**
