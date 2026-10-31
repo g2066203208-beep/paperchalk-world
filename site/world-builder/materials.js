@@ -59,24 +59,41 @@ function paintTile(){
 function drawRepeated(){
  const tile=tileRGBA(pack,active,3);rawToCanvas(repeat,tile);
 }
+let libraryFilter=null;
 function refreshLibrary(){
- list.replaceChildren();
- MATERIALS.forEach((meta,i)=>{
-  if(filter!=='all'&&meta.group!==filter)return;
-  const button=document.createElement('button');button.className='material-item'+(i===active?' active':'');
-  button.dataset.material=meta.id;button.setAttribute('role','listitem');button.setAttribute('aria-pressed',String(i===active));
-  const thumb=document.createElement('canvas');thumb.width=TILE;thumb.height=TILE;
-  rawToCanvas(thumb,tileRGBA(pack,i));
-  const names=document.createElement('span'),main=document.createElement('strong'),sub=document.createElement('small');
-  main.textContent=meta.name;sub.textContent=meta.en;names.append(main,sub);button.append(thumb,names);
-  button.addEventListener('click',()=>{if(drag)return;active=i;render()});
-  list.append(button);
- });
+ if(libraryFilter!==filter){
+  list.replaceChildren();
+  MATERIALS.forEach((meta,i)=>{
+   if(filter!=='all'&&meta.group!==filter)return;
+   const button=document.createElement('button');button.className='material-item';
+   button.dataset.material=meta.id;button.dataset.index=String(i);
+   button.setAttribute('role','listitem');
+   const thumb=document.createElement('canvas');thumb.width=TILE;thumb.height=TILE;
+   rawToCanvas(thumb,tileRGBA(pack,i));
+   const names=document.createElement('span'),main=document.createElement('strong'),sub=document.createElement('small');
+   main.textContent=meta.name;sub.textContent=meta.en;names.append(main,sub);button.append(thumb,names);
+   button.addEventListener('click',()=>{if(drag)return;active=i;render()});
+   list.append(button);
+  });
+  libraryFilter=filter;
+ }
+ // Do not destroy 32 thumbnails and scroll position on every brush movement.
+ for(const button of list.children){
+  const index=Number(button.dataset.index);
+  button.classList.toggle('active',index===active);
+  button.setAttribute('aria-pressed',String(index===active));
+  if(index===active)rawToCanvas(button.querySelector('canvas'),tileRGBA(pack,index));
+ }
 }
 for(const b of document.querySelectorAll('[data-filter]'))b.addEventListener('click',()=>{
  filter=b.dataset.filter;
- for(const c of document.querySelectorAll('[data-filter]')){c.classList.toggle('active',c.dataset.filter===filter);c.setAttribute('aria-pressed',String(c.dataset.filter===filter))}
- refreshLibrary();
+ if(filter!=='all'&&MATERIALS[active].group!==filter)
+  active=MATERIALS.findIndex(m=>m.group===filter);
+ for(const c of document.querySelectorAll('[data-filter]')){
+  c.classList.toggle('active',c.dataset.filter===filter);
+  c.setAttribute('aria-pressed',String(c.dataset.filter===filter));
+ }
+ render();
 });
 function render(){
  paintTile();drawRepeated();refreshLibrary();
