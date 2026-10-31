@@ -30,7 +30,7 @@ test('main game boots the bar without deleting previous features',()=>{
  assert.match(menu,/createHostessIntro/);
  assert.match(menu,/createLeaseUI/);
  assert.match(menu,/createWorld3D/);
- assert.match(html,/game\/menu\.js\?v=20261031-cafe-normal2/);
+ assert.match(html,/game\/menu\.js\?v=20261031-cafe-normal3/);
  assert.match(bar,/portraitLayers/);
  assert.match(bar,/drawBarInterior/);
  const interior=readFileSync('site/game/bar-environment.js','utf8');
