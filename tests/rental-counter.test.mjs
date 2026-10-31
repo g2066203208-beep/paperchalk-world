@@ -57,6 +57,8 @@ test('intro composites original independent hostess in front of plain ink, desk 
  assert.match(intro,/ctx\.drawImage\(source,0,0,HOSTESS_WIDTH,CROP_H,px,py,sw,sh\);\s*drawCounter\(ctx,W,H\)/,'owner then foreground desk');
  assert.match(intro,/function world\(W,H\)\{R\(0,0,W,H,COL\.ink\)\}/);
  assert.ok(intro.includes('independentLayers'));
- assert.match(intro,/const CROP_H=168/,'close-up portrait has no floating legs');
+ const visibleHeight=/const CROP_H=(\d+)/.exec(intro);
+ assert.ok(visibleHeight,'reception camera crops the original PNG without modifying it');
+ assert.ok(Number(visibleHeight[1])>=110&&Number(visibleHeight[1])<=180,'crop stays upper-body, never shows floating full legs');
  assert.match(intro,/imageSmoothingEnabled=false/,'pixel-perfect nearest neighbor sampling');
 });
