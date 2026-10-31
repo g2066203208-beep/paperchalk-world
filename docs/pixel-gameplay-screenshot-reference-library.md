@@ -4,9 +4,9 @@
 
 ## 首批研究作品
 
-**用户指定的核心五款：** Coffee Talk（咖啡心语）、Hookah Haze（水烟水雾）、Papers, Please（请出示证件）、NEEDY STREAMER OVERLOAD（主播女孩重度依赖）、VA-11 Hall-A（赛博朋克酒保行动）。
+**用户指定的六款重点：** Coffee Talk（咖啡心语）、Coffee Talk Episode 2: Hibiscus & Butterfly（咖啡心语 2）、Hookah Haze（水烟水雾）、Papers, Please（请出示证件）、NEEDY STREAMER OVERLOAD（主播女孩重度依赖）、VA-11 Hall-A（赛博朋克酒保行动）。
 
-**扩展 18 款：** Pixel Cafe、The Red Strings Club、Coffee Talk Episode 2、Strange Horticulture、The Cosmic Wheel Sisterhood、2064: Read Only Memories、Potion Craft、Unpacking、Death and Taxes、Do Not Feed the Monkeys、A Space for the Unbound、Eastward、Mind Scanners、Not For Broadcast、To the Moon、OneShot、Potion Permit、The Final Station。
+**扩展 17 款：** Pixel Cafe、The Red Strings Club、Strange Horticulture、The Cosmic Wheel Sisterhood、2064: Read Only Memories、Potion Craft、Unpacking、Death and Taxes、Do Not Feed the Monkeys、A Space for the Unbound、Eastward、Mind Scanners、Not For Broadcast、To the Moon、OneShot、Potion Permit、The Final Station。
 
 ## 实机截图，而非 AI 假图
 
@@ -21,7 +21,7 @@
 
 | 优先领域 | 重点作品 | 我们的独立设计原则 |
 |---|---|---|
-| 老板娘、对话与物体遮挡 | Coffee Talk、Hookah Haze、VA-11 Hall-A | 人物/桌台/对话 UI 分为独立图层；人物正脸视线与台面位置合理 |
+| 老板娘、对话与物体遮挡 | Coffee Talk 1 + Episode 2、Hookah Haze、VA-11 Hall-A | 人物/桌台/对话 UI 分为独立图层；人物正脸视线与台面位置合理 |
 | 柜台透视及经营操作 | Pixel Cafe、The Red Strings Club | 桌面后缘较窄、前缘较宽；看得到真实可放物件的台面，禁止只有正面立板 |
 | 租房登记、审查与盖章 | Papers, Please、Death and Taxes | 表格在桌面上，签名与盖章有明确步骤和反馈；文本始终是游戏真实 UI |
 | 四色 UI 结构与窗口操作 | NEEDY STREAMER OVERLOAD | 分析清晰的窗口层级和点击反馈，保留 PAPERWORLD 自己的四色配色 |
