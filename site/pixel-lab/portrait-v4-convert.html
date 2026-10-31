@@ -28,6 +28,12 @@ figcaption{color:#c9c9d3;font-size:12px;margin:7px 0}
 <button id="download" disabled>导出640×640 PNG</button>
 <button id="preview" disabled>导出最近邻2560×2560</button>
 </div>
+<section class="panel" aria-label="Github永久归档原图转换成果">
+<h2>已永久保存的 V4 原始PNG衍生像素候选图</h2>
+<p>直接显示当前对话用原始1254×1254 PNG在本地实际计算出的640×640整数像素结果（GitHub上以无损WebP保存像素，无质量损失）。注意该成果尚未经过逐像素美术验收，不等于已经完美。</p>
+<a href="./portrait-v4/native-baseline-640.lossless.webp" download="portrait-v4-native-baseline-640.webp">查看／保存原始PNG转换结果</a>
+<div style="max-width:720px;margin:12px auto"><img src="./portrait-v4/native-baseline-640.lossless.webp" width="640" height="640" alt="已归档的真实V4人物图鉴640乘640原生整数像素转换候选图" style="display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;background:#f6ebd2"></div>
+</section>
 <div class="grid">
 <figure><canvas id="original" width="640" height="640"></canvas><figcaption>用户原图（等比缩放，仅预览）</figcaption></figure>
 <figure><canvas id="result" width="640" height="640"></canvas><figcaption>640×640 候选原生像素 · 每格128×128 · 保护区108×108</figcaption></figure>
