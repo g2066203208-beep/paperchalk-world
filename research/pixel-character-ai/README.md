@@ -1,4 +1,6 @@
 # PIXEL CHARACTER AI LAB — 像素人物生成模型博士级研究规程 v0.1
+> **2026-10-31 高质量训练数据强制规范：** 只用有明确训练许可、原生像素分辨率和**两名独立评审通过**的画师原作进入新的正式数据集；必须区分全身立绘、面部画像、动作素材和场景。请优先读 [HIGH_QUALITY_CORPUS.md](./HIGH_QUALITY_CORPUS.md)、[HUMAN_ART_SOURCES.json](./HUMAN_ART_SOURCES.json)。原有四色程序拼装图仅保留为失败对照，不再充当「优秀艺术训练集」。新的 [quality_gate.py](./quality_gate.py) 和 [art_training.py](./art_training.py) 将素材审核与原始 RGBA 学习分开；**目前正式人工美术审核通过的数据为 0 张，尚无基于高质量画师作品训练出的模型权重。**
+
 
 > **EXP-001 · 2026-10-31：**已实际训练一轮 192×256 原生像素的结构条件 PyTorch 网络（已完成第6 epoch，并保存权重、留出集分项评分与 PNG）。学术结果详见 [EXP001_REPORT.md](./experiments/EXP001_REPORT.md)。这是只使用合成训练人物的条件色彩重建原型，**未通过游戏美术质量验收**；不代表发表论文成果，不允许把它说成文字直接生成完整立绘。
 

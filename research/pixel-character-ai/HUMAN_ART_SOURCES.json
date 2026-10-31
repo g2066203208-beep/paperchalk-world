@@ -1,0 +1,53 @@
+{
+  "schema_version": "sources-v1",
+  "status": "CANDIDATES_ONLY_NOT_TRAINING",
+  "instructions": "Preview sources; check exact artist-authored image, visible license, provenance, anti-AI wishes, native resolution; run independent art reviews before acceptance.",
+  "candidates": [
+    {
+      "id": "loregret_100_pixel_portraits",
+      "url": "https://loregret.itch.io/pixel-art-portrait-pack",
+      "author": "Loregret",
+      "task": "face_portrait",
+      "observed": "100 portraits, Aseprite source, creator says CC0 and no generative AI",
+      "status": "candidate_only",
+      "blocker": "Need original PNG acquisition, native pixel inspection, source provenance and two human aesthetics reviews; NOT fullbody"
+    },
+    {
+      "id": "retraissance_character_animations",
+      "url": "https://retraissance.itch.io/pixel-character-base-animations-64x64",
+      "author": "Retraissance",
+      "task": "action_sprite",
+      "observed": "Original pixel character motion foundations, sheet includes 64x128 frames; creator declares CC0 and non-AI",
+      "status": "candidate_only",
+      "blocker": "Not a detailed portrait; need individual frame extraction with annotation and art review"
+    },
+    {
+      "id": "kenney_roguelike_characters",
+      "url": "https://kenney.nl/assets/roguelike-characters",
+      "author": "Kenney",
+      "task": "small_sprite",
+      "observed": "CC0 16x16 and related small character components",
+      "status": "reference_only",
+      "blocker": "Incompatible with 192x256 fullbody art; do not upscale to fake HQ dataset"
+    },
+    {
+      "id": "notjam_pixels",
+      "url": "https://not-jam.itch.io/pixels",
+      "author": "Not Jam",
+      "task": "multiple",
+      "observed": "CC0, but author expresses explicit opposition to AI/ML uses",
+      "status": "EXCLUDED_ARTIST_PREFERENCE",
+      "blocker": "Exclude out of respect for creator's stated preference"
+    },
+    {
+      "id": "freegamesprites_256_fullbody",
+      "url": "https://freegamesprites.com/en/packs/rpg-characters",
+      "author": "source requires verification",
+      "task": "portrait_fullbody",
+      "observed": "40 static 256x256 RPG characters advertised CC0",
+      "status": "QUARANTINED_UNVERIFIED_ORIGIN",
+      "blocker": "Artist identity and whether artwork is AI-generated or programmatic not verified. Not approved for human-drawn training."
+    }
+  ],
+  "approved_artworks": 0
+}
