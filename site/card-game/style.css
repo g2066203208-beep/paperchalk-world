@@ -19,3 +19,13 @@
 @media(max-width:380px){#game-shell{padding:0 4px}.site-header{gap:2px}.brand{font-size:10px}.quiet-button{font-size:9px;padding:7px 4px}.shop-item strong{font-size:9px}.shop-item p{font-size:9px}}
 @media(max-height:560px) and (min-width:680px){#game-stage{padding:7px 0}.brand-tile{min-height:100px}.score-board,.score-equation{padding:6px}.score-board>strong{font-size:19px}.score-equation>strong{font-size:14px}.joker-bar{min-height:90px;padding:4px 10px}.joker{transform:scale(.7);margin-right:-27px}.table-center{min-height:35px;padding:0}.table-center #battle-notice{font-size:10px}.hand-scroll #hand-cards{padding:10px 5px 6px;min-height:112px}.play-card{height:96px;flex-basis:70px}.play-card .suit-icon{font-size:35px}.hand-heading{margin:0}.footline{display:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}#abyss{opacity:.25}}
+
+/* MOBILE HAND FAN: keep all 8 cards simultaneously visible instead of making
+ * the player hunt for hidden cards in an invisible horizontal scroller. */
+@media(max-width:680px){
+ #hand-dock .hand-scroll{overflow-x:visible}
+ #hand-dock #hand-cards{min-width:0;width:100%;gap:0;justify-content:center}
+ #hand-dock #hand-cards>.play-card{flex:0 0 69px;width:69px;margin:0}
+ #hand-dock #hand-cards>.play-card:not(:first-child){margin-left:clamp(-40px,calc((100vw - 570px)/7),-20px)}
+ #hand-dock #hand-cards>.play-card:hover{z-index:4}
+}
