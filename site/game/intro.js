@@ -152,22 +152,23 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
  // The stage intentionally contains NO buildings, key rack, sign or loose props.
  // Two independently composited sprites over the game's original deep-purple ink.
  function world(W,H){R(0,0,W,H,COL.ink)}
+ // Preserve original PNG bytes; hide the standing/jumping legs behind the desk
+ // using a camera upper-body crop, never by repainting the owner image.
+ const CROP_H=168;
  function geometry(W,H){
   const wide=W/H>1.25;
   const sceneWidth=wide?Math.round(W*.54):W;
-  const goalHeight=Math.min(wide?H*.92:H*.72,
-   sceneWidth*(wide?.60:.97)*HOSTESS_HEIGHT/HOSTESS_WIDTH);
-  const goalWidth=Math.round(goalHeight*HOSTESS_WIDTH/HOSTESS_HEIGHT);
-  return {wide,sceneWidth,goalHeight:Math.round(goalHeight),goalWidth,
-    anchorX:Math.round(sceneWidth*.5),anchorY:Math.round(H*(wide?.93:.71))};
+  const goalWidth=Math.round(Math.min(sceneWidth*(wide?.77:.94),H*(wide?.74:.68)*HOSTESS_WIDTH/CROP_H));
+  const goalHeight=Math.round(goalWidth*CROP_H/HOSTESS_WIDTH);
+  return {wide,sceneWidth,goalHeight,goalWidth,
+   anchorX:Math.round(sceneWidth*.5),anchorY:Math.round(H*(wide?.76:.625))};
  }
  function drawCounter(ctx,W,H){
   if(!counterReady)return;
   const wide=W/H>1.25;
   const w=wide?Math.round(W*.54):W;
   const h=wide?Math.round(H*.48):Math.round(H*.245);
-  const y=Math.round(H*(wide?.64:.70));
-  // Foreground desk is NOT an image of the hostess or the room.
+  const y=Math.round(H*(wide?.63:.625));
   ctx.drawImage(counter,0,0,192,84,0,y,w,h);
  }
  function draw(ctx,W,H){
@@ -184,7 +185,7 @@ export function createHostessIntro({COL,R,poly,text,root,onComplete,onBack}){
   ctx.imageSmoothingEnabled=false;
   // Far away silhouette becomes the actual fully-colored original before reaching us.
   const source=p<.36?far:art;
-  ctx.drawImage(source,0,0,HOSTESS_WIDTH,HOSTESS_HEIGHT,px,py,sw,sh);
+  ctx.drawImage(source,0,0,HOSTESS_WIDTH,CROP_H,px,py,sw,sh);
   drawCounter(ctx,W,H); // Physical foreground occlusion; never merged with owner
  }
  function snapshot(){
