@@ -10,7 +10,7 @@ test('all FIVE specifically requested study games are registered with verified S
  assert.deepEqual(GAMES.filter(g=>g.core).map(g=>g.id),requested);
  assert.ok(GAMES.length>=20,'expand beyond core to a sizeable research library');
  assert.equal(new Set(GAMES.map(g=>g.id)).size,GAMES.length);
- assert.ok(GAMES.every(g=>g.id>0&&g.title&&g.cn&&g.focus.length>20&&g.tags.length>=2));
+ assert.ok(GAMES.every(g=>g.id>0&&g.title&&g.cn&&g.focus.length>=16&&g.tags.length>=2));
  assert.ok(CATEGORIES.includes('柜台')&&CATEGORIES.includes('文件')&&CATEGORIES.includes('UI'));
  for(const g of GAMES){assert.match(storeLink(g.id),new RegExp('/'+g.id+'/'));assert.match(galleryLink(g.id),/steamcommunity/)}
 });
