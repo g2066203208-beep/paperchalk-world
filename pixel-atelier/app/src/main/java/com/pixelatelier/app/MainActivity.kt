@@ -73,6 +73,31 @@ enum class EditorTool(val label: String, val glyph: String) {
     FILLED_ELLIPSE("实心椭圆", "⬤"), SELECT_RECT("框选", "▧")
 }
 
+enum class EditorCategory(val label: String) {
+    DRAW("绘画"), SHAPES("形状"), SELECT("选择")
+}
+private fun EditorTool.category(): EditorCategory = when (this) {
+    EditorTool.PENCIL, EditorTool.ERASER, EditorTool.PICKER, EditorTool.FILL -> EditorCategory.DRAW
+    EditorTool.SELECT_RECT -> EditorCategory.SELECT
+    else -> EditorCategory.SHAPES
+}
+private fun EditorTool.shapeKind(): ShapeKind? = when (this) {
+    EditorTool.LINE -> ShapeKind.LINE
+    EditorTool.RECT -> ShapeKind.RECTANGLE
+    EditorTool.FILLED_RECT -> ShapeKind.FILLED_RECTANGLE
+    EditorTool.ELLIPSE -> ShapeKind.ELLIPSE
+    EditorTool.FILLED_ELLIPSE -> ShapeKind.FILLED_ELLIPSE
+    EditorTool.SELECT_RECT -> ShapeKind.RECT_SELECTION
+    else -> null
+}
+private fun ShapeKind.labelZh() = when(this) {
+    ShapeKind.LINE -> "直线"
+    ShapeKind.RECTANGLE -> "矩形"
+    ShapeKind.FILLED_RECTANGLE -> "实心矩形"
+    ShapeKind.ELLIPSE -> "椭圆"
+    ShapeKind.FILLED_ELLIPSE -> "实心椭圆"
+    ShapeKind.RECT_SELECTION -> "框选"
+}
 enum class TouchMode(val label: String) {
     DIRECT("直接绘画"), OFFSET("偏移光标"), CURSOR("独立光标")
 }
@@ -102,6 +127,10 @@ private fun AtelierApp(store: ProjectStore) {
     var version by remember { mutableIntStateOf(0) }
     var color by remember { mutableIntStateOf(PixelColors[17]) }
     var tool by remember { mutableStateOf(EditorTool.PENCIL) }
+    var toolCategory by remember { mutableStateOf(EditorCategory.DRAW) }
+    var preview by remember { mutableStateOf<ShapeDraft?>(null) }
+    var editStart by remember { mutableStateOf(false) }
+    var cursorShapeAnchored by remember { mutableStateOf(false) }
     var touchMode by remember { mutableStateOf(TouchMode.DIRECT) }
     var selection by remember { mutableStateOf<SelectionMask?>(null) }
     var internalClipboard by remember { mutableStateOf<PixelClipboard?>(null) }
@@ -131,6 +160,7 @@ private fun AtelierApp(store: ProjectStore) {
                 val loaded = withContext(Dispatchers.IO) { store.load(file) }
                 pending?.cancel()
                 document = loaded
+                preview = null; cursorShapeAnchored = false
                 selection = null
                 internalClipboard = null
                 version++
@@ -144,6 +174,7 @@ private fun AtelierApp(store: ProjectStore) {
     fun closeProject() {
         scheduleSave(true)
         document = null
+        preview = null; cursorShapeAnchored = false
         showLayers = false; showColors = false
     }
 
@@ -157,7 +188,7 @@ private fun AtelierApp(store: ProjectStore) {
                         store.importPng(input ?: error("无法打开文件"))
                     }
                 }
-                document = imported; selection = null; internalClipboard = null; version++
+                document = imported; preview = null; selection = null; internalClipboard = null; version++
                 scheduleSave(true)
             } catch (e: Exception) { snackbar.showSnackbar("导入失败：" + (e.message ?: "未知错误")) }
         }
@@ -231,9 +262,15 @@ private fun AtelierApp(store: ProjectStore) {
                     }
                 }
                 HorizontalDivider(color = Color(0xFF30394A))
-                PixelViewport(doc, version, tool, color, touchMode, cursor, selection,
+                PixelViewport(doc, version, tool, color, touchMode, cursor, selection, preview,
+                    onPreview = { preview = it },
                     onSelection = { selection = it },
-                    onCursor = { cursor = it }, onPick = { color = it },
+                    onCursor = {
+                        cursor = it
+                        if (cursorShapeAnchored && tool.shapeKind() != null)
+                            preview = preview?.withEnd(PixelPoint(it.x,it.y))
+                    },
+                    onPick = { color = it },
                     onChanged = { notifyChange() },
                     onCommit = { notifyChange(); scheduleSave() },
                     modifier = Modifier.weight(1f).fillMaxWidth()
@@ -279,24 +316,49 @@ private fun AtelierApp(store: ProjectStore) {
                     ) {
                         Text("准星  " + cursor.x + "," + cursor.y, modifier = Modifier.weight(1f))
                         Button(onClick = {
-                            doc.beginStroke()
-                            doc.setPixel(cursor.x, cursor.y, if (tool == EditorTool.ERASER) 0 else color)
-                            doc.finishStroke()
-                            notifyChange(); scheduleSave()
-                        }) { Text("● 落笔") }
+                            val kind = tool.shapeKind()
+                            if (kind != null) {
+                                if (!cursorShapeAnchored) {
+                                    preview = ShapeDraft(kind,PixelPoint(cursor.x,cursor.y),
+                                        PixelPoint(cursor.x,cursor.y),color)
+                                    cursorShapeAnchored = true
+                                } else {
+                                    preview = preview?.withEnd(PixelPoint(cursor.x,cursor.y))
+                                    cursorShapeAnchored = false
+                                }
+                            } else {
+                                doc.beginStroke()
+                                doc.setPixel(cursor.x, cursor.y, if (tool == EditorTool.ERASER) 0 else color)
+                                if (doc.finishStroke()) { notifyChange(); scheduleSave() }
+                            }
+                        }) { Text(if (tool.shapeKind()!=null)
+                            (if(cursorShapeAnchored) "设终点" else "设起点") else "● 落笔") }
                     }
                 }
                 Row(
                     Modifier.fillMaxWidth().background(PanelColor)
-                        .horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 9.dp),
+                        .padding(horizontal = 10.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(9.dp)
+                ) {
+                    EditorCategory.entries.forEach { category ->
+                        FilterChip(selected = toolCategory == category, onClick = {
+                            toolCategory = category
+                            tool = EditorTool.entries.first { it.category() == category }
+                            preview = null; cursorShapeAnchored = false
+                        }, label = { Text(category.label) })
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth().background(PanelColor)
+                        .horizontalScroll(rememberScrollState()).padding(horizontal = 8.dp, vertical = 5.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    EditorTool.entries.forEach { t ->
+                    EditorTool.entries.filter { it.category() == toolCategory }.forEach { t ->
                         val active = t == tool
                         Column(
                             Modifier.widthIn(min = 62.dp).clip(RoundedCornerShape(13.dp))
                                 .background(if (active) Accent.copy(alpha = 0.22f) else Color.Transparent)
-                                .clickable { tool = t }.padding(horizontal = 10.dp, vertical = 7.dp),
+                                .clickable { tool = t; preview = null; cursorShapeAnchored = false }.padding(horizontal = 10.dp, vertical = 7.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(t.glyph, style = MaterialTheme.typography.titleLarge,
@@ -346,6 +408,7 @@ private fun AtelierApp(store: ProjectStore) {
                     val w = width.toIntOrNull() ?: 0; val h = height.toIntOrNull() ?: 0
                     if (w in 1..1024 && h in 1..1024 && w.toLong()*h <= 1048576L) {
                         document = PixelDocument.new(w,h,title.ifBlank { "未命名作品" })
+                        preview = null; cursorShapeAnchored = false
                         selection = null; internalClipboard = null
                         version++; showNew = false
                         cursor = IntOffset(w/2,h/2)
@@ -512,6 +575,8 @@ private fun PixelViewport(
     mode: TouchMode,
     cursor: IntOffset,
     selection: SelectionMask?,
+    preview: ShapeDraft?,
+    onPreview: (ShapeDraft?) -> Unit,
     onSelection: (SelectionMask?) -> Unit,
     onCursor: (IntOffset) -> Unit,
     onPick: (Int) -> Unit,
@@ -528,7 +593,9 @@ private fun PixelViewport(
     val currentCursor by rememberUpdatedState(onCursor)
     val currentPick by rememberUpdatedState(onPick)
     val currentSelection by rememberUpdatedState(onSelection)
-    LaunchedEffect(doc.id, viewport.value) {
+    val currentPreview by rememberUpdatedState(preview)
+    val currentDraftUpdate by rememberUpdatedState(onPreview)
+    LaunchedEffect(doc.id) {
         val bounds = viewport.value
         if (bounds.width > 0 && bounds.height > 0) {
             val fit = min(bounds.width.toFloat()/doc.width, bounds.height.toFloat()/doc.height)*0.9f
@@ -536,6 +603,10 @@ private fun PixelViewport(
             pan.value = Offset((bounds.width-doc.width*zoom.floatValue)/2f,
                 (bounds.height-doc.height*zoom.floatValue)/2f)
         }
+    }
+    val previewIndices = remember(doc.width,doc.height,preview) {
+        if (preview != null && preview.kind != ShapeKind.RECT_SELECTION)
+            ShapeRasterizer.rasterize(doc.width,doc.height,preview) else IntArray(0)
     }
     val bitmap = remember(doc, version) {
         Bitmap.createBitmap(doc.width,doc.height,Bitmap.Config.ARGB_8888).apply {
@@ -549,6 +620,16 @@ private fun PixelViewport(
             isFilterBitmap = false; isAntiAlias = false; isDither = false
         }
     }
+    val pixelPreviewPaint = remember { android.graphics.Paint().apply {
+        isFilterBitmap=false; isAntiAlias=false
+    } }
+    val checkerPreviewPaint = remember { android.graphics.Paint().apply {
+        isFilterBitmap=false; isAntiAlias=false
+    } }
+    val previewGuidePaint = remember { android.graphics.Paint().apply {
+        isAntiAlias=true; color=android.graphics.Color.WHITE; strokeWidth=2f
+        style=android.graphics.Paint.Style.STROKE
+    } }
     val gridPaint = remember {
         android.graphics.Paint().apply {
             this.color = 0x33FFFFFF; strokeWidth = 1f; isAntiAlias = false
