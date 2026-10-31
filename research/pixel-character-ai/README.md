@@ -1,4 +1,6 @@
 # PIXEL CHARACTER AI LAB — 像素人物生成模型博士级研究规程 v0.1
+> **最新科研主线（2026-10-31）：只做完整全身像素肖像。** 入口：[FULLBODY_ONLY_PROTOCOL.md](./FULLBODY_ONLY_PROTOCOL.md)。新全局全身模型 `fullbody_vae.py`，新训练 `train_fullbody.py`，准入 `fullbody_corpus.py`。只认 192×256 / 384×512 原生画师像素图，含真实面部、手、脚、全身服装；48×64、脸部单张、Q版、动作帧和场景全部不属于当前正向训练集。**审核通过原图仍为零，未发布高质量训练权重；训练器按设计会阻止无数据训练。**
+
 > **2026-10-31 高质量训练数据强制规范：** 只用有明确训练许可、原生像素分辨率和**两名独立评审通过**的画师原作进入新的正式数据集；必须区分全身立绘、面部画像、动作素材和场景。请优先读 [HIGH_QUALITY_CORPUS.md](./HIGH_QUALITY_CORPUS.md)、[HUMAN_ART_SOURCES.json](./HUMAN_ART_SOURCES.json)。原有四色程序拼装图仅保留为失败对照，不再充当「优秀艺术训练集」。新的 [quality_gate.py](./quality_gate.py) 和 [art_training.py](./art_training.py) 将素材审核与原始 RGBA 学习分开；**目前正式人工美术审核通过的数据为 0 张，尚无基于高质量画师作品训练出的模型权重。**
 
 
