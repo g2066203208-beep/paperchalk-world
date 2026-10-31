@@ -5,7 +5,7 @@
 ## 状态规范
 
 - PLANNED：仅需求与实现方案。
-- ENGINE_ONLY：可运行核心算法与单测，UI 未接通。
+- ENGINE_ONLY：已有核心算法，UI 未接通；是否通过测试仍需看本次 CI。\n- ENGINE_PARTIAL：只完成该功能部分底层能力，尚不具备完整语义/事务。
 - ENGINE_TESTED：现有纯算法单测通过，未表示 UI 验证。
 - UI_WIRED_UNVERIFIED：UI 接入了操作，但未完成真实模拟器/真机验收。
 - BUILD_VERIFIED：编译产物和静态元数据验证，通过不等于真机正确。
@@ -36,23 +36,23 @@
 | PA-01-10 | 本地 .pixelatelier v1 工程 | P0 | UI_WIRED_UNVERIFIED | atomic recovery / import v1 |
 | PA-01-11 | PNG 导入导出 | P0 | UI_WIRED_UNVERIFIED | pixel roundtrip / alpha |
 | PA-01-12 | APK 无互联网权限 | P0 | BUILD_VERIFIED | aapt permissions, airplane mode |
-| PA-02-01 | 矩形选区 | P1-A | PLANNED | MASK-001 bbox inclusive/exclusive |
-| PA-02-02 | 椭圆选区 | P1-A | PLANNED | MASK-002 ellipse parity |
+| PA-02-01 | 矩形选区 | P1-A | ENGINE_ONLY | MASK-001 bbox inclusive/exclusive |
+| PA-02-02 | 椭圆选区 | P1-A | ENGINE_ONLY | MASK-002 ellipse parity |
 | PA-02-03 | 自由套索/多边形套索 | P1-A | PLANNED | MASK-003 winding/even odd |
-| PA-02-04 | 魔棒与相似色 | P1-A | PLANNED | MASK-004 4/8 neighbors tolerance |
+| PA-02-04 | 魔棒与相似色 | P1-A | ENGINE_PARTIAL | MASK-004 4/8 neighbors tolerance |
 | PA-02-05 | 智能磁性套索 Live Wire | P1-A | PLANNED | MASK-005 anchor and edge path |
 | PA-02-06 | 前景背景引导智能选择 | P1-A | PLANNED | MASK-006 correction markers |
-| PA-02-07 | 增/减/交/异或/反选 | P1-A | PLANNED | MASK-007 boolean identities |
+| PA-02-07 | 增/减/交/异或/反选 | P1-A | ENGINE_ONLY | MASK-007 boolean identities |
 | PA-02-08 | 选区保存与跨层应用 | P1-A | PLANNED | MASK-008 serialized mask |
-| PA-02-09 | 内部复制/剪切/粘贴 | P1-A | PLANNED | CLIP-001 transparent holes |
+| PA-02-09 | 内部复制/剪切/粘贴 | P1-A | ENGINE_PARTIAL | CLIP-001 transparent holes |
 | PA-02-10 | Android 系统图片剪贴板 | P1-A | PLANNED | CLIP-002 Content URI permissions |
 | PA-02-11 | 浮动选区确认/取消 | P1-A | PLANNED | CLIP-003 atomic cut and undo |
 | PA-02-12 | 通用操作事务与结构撤销 | P1-A | PLANNED | CMD-001 content+structure rollback |
 | PA-02-13 | 工程 schema v2 / v1 迁移 | P1-A | PLANNED | FILE-001 v1 compatibility |
-| PA-03-01 | 移动/缩放/镜像/90°旋转 | P1-B | PLANNED | XFORM-001 reversible integer transforms |
+| PA-03-01 | 移动/缩放/镜像/90°旋转 | P1-B | ENGINE_PARTIAL | XFORM-001 reversible integer transforms |
 | PA-03-02 | 任意角度旋转/最近邻 | P1-B | PLANNED | XFORM-002 inverse mapping |
 | PA-03-03 | 错切/透视/网格变形 | P1-B | PLANNED | XFORM-003 cancel + preview |
-| PA-03-04 | 椭圆/实心椭圆 | P1-B | PLANNED | GEOM-001 four quadrant parity |
+| PA-03-04 | 椭圆/实心椭圆 | P1-B | ENGINE_ONLY | GEOM-001 four quadrant parity |
 | PA-03-05 | 圆弧/扇形/正多边形 | P1-B | PLANNED | GEOM-002 angle and degenerates |
 | PA-03-06 | 二次/三次 Bézier 曲线 | P1-B | PLANNED | GEOM-003 zoom-independent raster |
 | PA-03-07 | 可编辑路径节点与柄 | P1-B | PLANNED | GEOM-004 mobile handle accuracy |
@@ -72,7 +72,7 @@
 | PA-04-09 | 阶梯/径向/线性渐变 | P1-C | PLANNED | FX-001 indexed color bounds |
 | PA-04-10 | Gaussian/盒式模糊 | P1-C | PLANNED | FX-002 alpha boundary + preview |
 | PA-04-11 | 选择性像素平滑与去噪 | P1-C | PLANNED | FX-003 explicit confirm |
-| PA-04-12 | 上下左右周期笔刷 | P1-C | PLANNED | WRAP-001 x/y/xy floorMod |
+| PA-04-12 | 上下左右周期笔刷 | P1-C | ENGINE_PARTIAL | WRAP-001 x/y/xy floorMod |
 | PA-04-13 | 3×3 无缝预览与偏移检查 | P1-C | PLANNED | WRAP-002 seams+same core size |
 | PA-04-14 | 材质收藏预设与图案库 | P1-C | PLANNED | BRUSH-007 import/export consistency |
 | PA-05-01 | Frame/Cel/Layer 动画模型 | P1-D | PLANNED | ANIM-001 cel grid schema |
@@ -113,3 +113,8 @@
 - 测试失败记录和修复提交；完成状态和下一任务。
 
 最终验收不是表里打勾，而是每条链条的真实操作行为。
+
+### P1 引擎源码进展与限制
+- [SelectionTools.kt](../app/src/main/java/com/pixelatelier/app/SelectionTools.kt)：矩形/椭圆 mask、布尔操作、精确值 4/8 邻域魔棒、内部 copy/paste、旋转/镜像、周期单点写入、椭圆绘制。
+- [SelectionToolsTest.kt](../app/src/test/java/com/pixelatelier/app/SelectionToolsTest.kt)：新增 8 组针对性 JUnit 测试。
+- 目前尚未接入手机工具 Dock、SelectionMask UI、浮动变形、剪切、容差调节、按笔刷 Footprint 进行周期生成。不得标记为 UI_WIRED 或 RELEASED。

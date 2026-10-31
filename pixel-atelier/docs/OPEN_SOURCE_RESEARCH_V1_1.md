@@ -62,3 +62,9 @@
 - 建立 ENGINE_DESIGN_V1_1.md 的算法、数据不变量和输入/输出契约。
 - 研究对应的官方文档、开源仓库和许可证差异。
 - 本轮为规格和源码研究记录，不是宣称新增所有工具已经写入 APK。
+
+## F. 参考文档补记（2026-10-31）
+- Android 原生富内容复制/粘贴：https://developer.android.com/develop/ui/compose/touch-input/copy-and-paste —— 图片共享需 content URI/ContentProvider，不能将大型 PNG 原始数据塞进字符串剪贴板。
+- Aseprite 洋葱皮：https://www.aseprite.org/docs/onion-skinning/ —— 可设置前后帧数量与颜色参考；不应污染最终图像。
+- Aseprite Timeline：https://www.aseprite.org/docs/timeline/ —— Frame、Cel、Layer 形成矩阵关系。
+- 本轮核心代码是根据本项目规格自主编写的 Kotlin 实现，没有导入上述项目的第三方源码。

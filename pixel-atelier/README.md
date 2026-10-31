@@ -25,3 +25,15 @@ JVM 像素测试、APK 编译通过与否以 GitHub Actions 的真实结果为�
 
 ## 隐私
 Manifest 不声明 INTERNET 权限；文件本地保存，仅使用 Android 系统文件选择器导入导出。
+
+## 专业功能 V1.1 工作室（2026-10-31）
+
+P0 并非完整专业绘画软件。已建立 [V1.1 专业总提示词与产品规格](docs/MASTER_PROMPT_V1_1_PROFESSIONAL.md)、[图形内核技术蓝图](docs/ENGINE_DESIGN_V1_1.md)、[72 项功能矩阵](docs/FEATURE_MATRIX_V1_1.md)、[开源研究和许可证记录](docs/OPEN_SOURCE_RESEARCH_V1_1.md)。
+
+**跟踪 Issue：[#130：V1.1 72 项专业工具](https://github.com/g2066203208-beep/paperchalk-world/issues/130)**。
+
+V1.1 初步算法已开始：SelectionTools.kt 提供矩形/椭圆掩码、精确连通颜色选区、mask 布尔操作、内部像素复制及粘贴、90°旋转与水平/垂直镜像、周期画笔落点和硬像素椭圆栅格。测试代码在 SelectionToolsTest.kt。**现阶段为 ENGINE_ONLY，不代表手机 UI 已提供这些工具**。剪切、浮动选区、任意旋转、洋葱皮、3D 建模、渐变模糊和关键帧曲线仍待开发。
+
+源码是公开可读的 GitHub 仓库；当前没有因 V1.1 自动增加统一许可证。任何第三方 GPL 或 EULA 源码重用都必须先完成授权审查。
+
+**验证区分：** P0 原生 APK/JVM 测试曾通过，原有 Android 模拟器 UI 工作流失败；当前新引擎版本以 GitHub Actions 的最新日志为准。不能把编译通过当作已完成真实手机使用验收。
