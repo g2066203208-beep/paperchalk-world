@@ -71,5 +71,5 @@ class FullBodyResearchSmoke(unittest.TestCase):
             export_rgba(model,out,192,256,seed=3)
             with Image.open(out) as im:
                 self.assertEqual(im.size,(192,256))
-                self.assertEqual(set(np.asarray(im.convert("RGBA"))[:,:,3].flatten()),{0,255} if len(set(np.asarray(im.convert("RGBA"))[:,:,3].flatten()))==2 else set(np.asarray(im.convert("RGBA"))[:,:,3].flatten()))
+                self.assertTrue(set(np.asarray(im.convert("RGBA"))[:,:,3].flatten()).issubset({0,255}))
 if __name__=="__main__":unittest.main()
