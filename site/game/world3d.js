@@ -77,9 +77,11 @@ function makeTown(lod='full'){
   }
   const top=[x+.1*radius,y-.09*radius,z+height],bottom=[x,y,z];
   for(let i=0;i<8;i++){
-   const next=(i+1)%8;
-   tri(ring[i],ring[next],top,(i%4===0?3:color),material);
-   tri(ring[next],ring[i],bottom,(i%3===0?0:color),material);
+   const next=(i+1)%8,light=i%4===0,shadow=i%3===0;
+   // Deliberate flat-palette facets remain visible rather than hidden under
+   // the full-opacity textured layer; remaining faces use edited leaf tiles.
+   tri(ring[i],ring[next],top,light?3:color,light?-1:material);
+   tri(ring[next],ring[i],bottom,shadow?0:color,shadow?-1:material);
   }
  }
  function box(x,y,z,sx,sy,sz,pal=2,material=null,topMaterial=material??MAT.roof){
@@ -133,7 +135,13 @@ function makeTown(lod='full'){
  // Older quarter along the western avenue uses a textured cobble lane.
  quad([-191,-3.43,.020],[-100,-3.43,.020],[-100,3.43,.020],[-191,3.43,.020],2,false,MAT.cobble);
  // Plaza and pedestrian crossing anchor the street visually.
- quad([-9,-9,.028],[9,-9,.028],[9,9,.028],[-9,9,.028],3,false,MAT.sidewalk);
+ // Calm junction center stays dark road. Pale stone belongs only outside
+ // the carriageway; the prior 18m cream plaza made phone view a white slab.
+ for(const sx of [-1,1])for(const sy of [-1,1]){
+  const x0=sx>0?8.3:-11.2,x1=sx>0?11.2:-8.3;
+  const y0=sy>0?6.4:-9.3,y1=sy>0?9.3:-6.4;
+  quad([x0,y0,.028],[x1,y0,.028],[x1,y1,.028],[x0,y1,.028],3,false,MAT.sidewalk);
+ }
  for(const sign of [-1,1]){
   const y=sign*8;
   quad([-32,y-1.2,.026],[-10,y-1.2,.026],[-10,y+1.2,.026],[-32,y+1.2,.026],3,false,MAT.path);
@@ -217,8 +225,8 @@ function makeTown(lod='full'){
  box(30,0,.08,8,9,8,3,MAT.plaster,MAT.plaster);
  solids.push({x:30,y:0,w:8,d:9});
  gableRoof(29.9,0,8.15,9.3,10.1,2.35,MAT.roof);
- box(29.9,0,10.04,2.6,2.5,2.15,2,MAT.wallblue,MAT.wallblue);
- gableRoof(29.9,0,12.1,3.2,3.1,.95,MAT.roof);
+ // Delete the isolated upper tower. In the real 390px screenshot it read
+ // as a floating roof fragment, not a legitimate piece of architecture.
  // The landlord building finally has a full door surface with threshold,
  // fluted wooden frame, handle and a recognizable overhead sign.
  box(25.90,0,.1,.2,2.7,3.40,0,MAT.doorframe,MAT.doorframe);
