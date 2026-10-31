@@ -1,4 +1,4 @@
-import {GAMES,CATEGORIES,storeLink,galleryLink} from './games.js?v=20261031-library1';
+import {GAMES,CATEGORIES,storeLink,galleryLink} from './games.js?v=20261031-library2';
 const $=id=>document.getElementById(id);
 const state={data:{},selected:0,tag:'全部',query:'',core:false,onlySaved:false,
  visible:48,current:0,viewerItems:[],saved:new Set()};
