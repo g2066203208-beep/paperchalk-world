@@ -123,3 +123,29 @@
 - JVM 新增算法单测、原生 debug APK 和无 INTERNET 权限检查均通过：https://github.com/g2066203208-beep/paperchalk-world/actions/runs/41210315353
 - 新版初步 UI：矩形选择/复制/粘贴至中心/椭圆/实心椭圆；不含浮动预览、移动变换、智能选择、剪切、动画和 3D。
 - 原有 UI 模拟器自动化在较早提交中曾成功执行测试，但截图拉取步骤失败；修复截图路径后的完整流水线结果必须单独审查，不能提前列为通过。
+
+
+## V1.3 核心基础编辑扩展（2026-10-31）
+
+V1.1 72 项矩阵继续有效，下表特别补足之前遗漏的基础编辑；状态是源码存在与否，不代表模拟器/真机验收。
+
+| V1.3 功能 | 当前状态 | 说明 |
+|---|---|---|
+| 油漆桶 4 向精确填充 | UI_WIRED_UNVERIFIED | P0 已有，尚缺预览/容差 |
+| 4/8 连通容差/全图相似色油漆 | PLANNED | 需 source snapshot、mask preview |
+| 清空当前层 | UI_WIRED_UNVERIFIED | replaceArea, 预览后确认 |
+| 清空当前层选择区 | UI_WIRED_UNVERIFIED | SelectionMask 限制、可撤销 |
+| 清空所有未锁定层 | UI_WIRED_UNVERIFIED | 一个历史命令恢复全部层 |
+| 填满当前层颜色 | UI_WIRED_UNVERIFIED | replaceArea(color), 预览 |
+| 透明度混合 Normal | ENGINE_TESTED | 当前源代码 source-over |
+| Multiply / Screen / Overlay / Add | PLANNED | V1.3 数学合同已建立 |
+| 图层透明度可视化滑杆 | PLANNED | 底层字段已存在，UI 尚不完整 |
+| Alpha Lock | PLANNED | 后续开发 |
+| 灰阶透明度遮罩 | PLANNED | MaskStore/图层编辑模式 |
+| 剪贴遮罩 | PLANNED | 组内 Alpha 限制 |
+| 图层组、排序、结构性撤销 | PLANNED | Command Journal 改造 |
+| 过滤器遮罩、FX/投影/描边 | PLANNED | 非破坏效果栈 |
+| 高级 2D 动画 Frame/Cel | PLANNED | 原有 V1.1 规划 |
+| Cube/UV/骨骼/Graph Editor | PLANNED | 原有 V1.1 规划 |
+
+**新增源码**：`pixel-atelier/app/src/test/java/com/pixelatelier/app/BasicEditTest.kt` 和 PixelEngine.replaceArea。

@@ -54,3 +54,10 @@ V1.2 已核对现有 MainActivity/PixelViewport 设计不足：针对 Android 15
 V1.2 强制修复目标：SafeTopBar/SafeToolDock、WindowInsets/DisplayCutout/IME/Foldable、矩形安全区域断言、全工具独立 draft buffer 和预览图层、实时直线/椭圆/选区/变形预览、端点与控制柄二次编辑、确认/取消和一致性测试、Android 真正的模拟器截图与触摸回放。
 
 **当前状态：设计/开发提示词已提交 GitHub，不得把这份文档宣称为 APK 功能已经修好。** 继续以 V1.1 原生工程增量实现，以 GitHub Actions 和真实模拟器截图验收为准；源码、行为、APK、UI 验证分开标记。
+
+
+## V1.3｜基础绘画工具、清空、图层混合与遮罩优先升级
+
+**[超详细 V1.3 专业主提示词](docs/MASTER_PROMPT_V1_3_PAINT_LAYER_MASK_EFFECTS.md)**（约 1.5 万字符；25 个编号章节）。当前专业功能基础优先级：油漆桶容差、实时填色预览、清除选区/当前层/全部层、图层混合 Normal/Multiply/Screen/Overlay、独立 Alpha Lock、非破坏 Transparency/Clipping/Filter Mask、效果/图层结构撤销、保存迁移。
+
+**本轮已开始的实际代码**：PixelEngine.replaceArea 提供清除/填满当前层或全部未锁定层，支持 SelectionMask，且多图层操作只产生一次 PixelAction；BasicEditTest 有 7 个针对性回归测试；MainActivity 的工程操作菜单加入清空选区/当前层/全部可编辑层/填满颜色，并在预览中展示实际图层合成，确认或取消。此阶段代码测试/模拟器结果以对应最新 Actions 为准。**图层混合模式、编辑遮罩、完整油漆桶容差、动画和 3D 尚未实现，不能宣称已完成。**
