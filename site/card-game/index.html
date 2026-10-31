@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#191827">
+<meta name="description" content="PAPERWORLD 原创四色像素扑克构筑游戏。九场试炼、十二张特殊小丑牌、连锁计分、弹性牌面与流动背景。">
+<title>PAPERWORLD · CARD PARADOX｜像素扑克构筑</title>
+<link rel="stylesheet" href="./style.css?v=20261101-card01">
+</head>
+<body>
+<canvas id="abyss" width="192" height="108" aria-hidden="true"></canvas>
+<div id="grain" aria-hidden="true"></div>
+<div id="game-shell">
+ <header class="site-header">
+   <a class="brand" href="../index.html" aria-label="返回 Pixel Atelier 首页"><span class="brand-mark">◆</span>PAPERWORLD <small> / CARD PARADOX</small></a>
+   <div class="header-actions">
+     <span class="online-status" id="save-status">本地自动存档</span>
+     <button class="quiet-button" id="sound-toggle" aria-pressed="false" title="切换音效">音效: 关</button>
+     <button class="quiet-button" id="help-button" title="查看规则">规则 ?</button>
+     <button class="quiet-button" id="restart-button">新游戏 ↻</button>
+   </div>
+ </header>
+ <main id="game-stage">
+  <aside id="left-rail" aria-label="牌局信息">
+    <div class="brand-tile"><span>CHAPTER <b id="stage-index">01 / 09</b></span><div class="chapter-art"><span class="moon">☾</span><span class="chapter-diamond">◇</span></div><strong id="blind-name">起始试炼</strong><span id="blind-kind">普通关卡</span></div>
+    <section class="score-board">
+     <div class="board-label">本场目标 <span>TARGET</span></div>
+     <strong id="target-value">250</strong>
+     <div class="board-label">本场得分 <span>CURRENT SCORE</span></div>
+     <strong id="current-score" class="current-score">0</strong>
+     <div class="score-track"><div id="score-track-fill"></div></div>
+    </section>
+    <section class="score-equation" aria-label="所选牌型预计分数">
+     <div class="board-label">即将结算 <span>PREVIEW</span></div>
+     <strong id="hand-kind">选择卡牌</strong>
+     <div class="equation-row"><div class="chip-box"><span>筹码</span><b id="chips-display">0</b></div><div class="multiply-mark">×</div><div class="mult-box"><span>倍率</span><b id="mult-display">0</b></div></div>
+     <div class="predicted">预计 <strong id="predicted-score">0</strong> 分</div>
+    </section>
+    <div class="run-stats"><div><span>出牌</span><b id="hands-count">4</b></div><div><span>弃牌</span><b id="discards-count">3</b></div><div><span>金币</span><b id="money-count">$8</b></div></div>
+   </aside>
+   <section id="table-zone" aria-label="卡牌桌面">
+    <div id="table-head"><div><div class="table-kicker">ORIGINAL PIXEL DECKBUILDER</div><h1>纸牌悖论 <span>· 四色幻术</span></h1></div><span class="seed-label" id="seed-label">SEED 1729</span></div>
+    <div id="joker-bar" class="joker-bar" role="list" aria-label="当前小丑牌">
+      <div class="joker-placeholder">◇ <span>从商店收集最多 5 张特殊卡牌，它们将改变你的牌型和倍率</span></div>
+    </div>
+    <div class="table-center">
+      <div class="table-ornament">✦ <span>THE HOUSE REMEMBERS</span> ✦</div>
+      <div id="battle-notice" role="status" aria-live="polite">选择手牌开始构筑。</div>
+      <div id="last-event"></div>
+      <div id="reveal-cards" aria-hidden="true"></div>
+    </div>
+    <div id="hand-dock">
+      <div class="hand-heading"><span>YOUR HAND <b id="hand-size">8</b></span><div class="hand-sort"><button id="sort-rank">按点数</button><button id="sort-suit">按花色</button></div></div>
+      <div class="hand-scroll"><div id="hand-cards" role="group" aria-label="可选择的手牌"></div></div>
+      <div id="bottom-actions">
+       <button id="play-button" class="main-action" disabled>◆ 打出选中牌 <span id="selected-count">0 / 5</span></button>
+       <button id="discard-button" class="sub-action" disabled>弃牌 ↘ <span>剩余 3 次</span></button>
+      </div>
+    </div>
+   </section>
+ </main>
+ <div id="shade" class="hidden" aria-hidden="true"></div>
+ <section id="shop-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="纸牌商店">
+  <div class="modal-kicker">THE NIGHT MARKET</div>
+  <div class="shop-title"><div><h2>夜色商店</h2><p>特性从左到右触发。选择新的协同组合。</p></div><div class="coin-balance">◇ <b id="shop-money">0</b></div></div>
+  <div id="shop-list" class="shop-list"></div>
+  <div class="shop-actions"><button id="shop-reroll">刷新商品 · $3</button><button id="shop-level">随机提升牌型 · $5</button></div>
+  <button class="continue-button" id="continue-button">前往下一场试炼 →</button>
+ </section>
+ <section id="end-modal" class="modal end-modal hidden" role="dialog" aria-modal="true" aria-label="本局结果">
+  <div class="modal-kicker">THE CARDS HAVE SPOKEN</div><h2 id="end-title">挑战结束</h2><p id="end-copy"></p><div id="end-stats"></div>
+  <button class="continue-button" id="end-restart">重新洗牌 · 新的一局</button>
+ </section>
+ <section id="help-modal" class="modal help-modal hidden" role="dialog" aria-modal="true" aria-label="游戏规则">
+   <div class="modal-kicker">HOW TO PLAY</div><h2>规则 · 纸牌悖论</h2>
+   <p>从 52 张标准扑克牌组成的牌堆抽取 8 张手牌，选择 1–5 张打出。对子、两对、三条、顺子、同花、葫芦、四条、同花顺都有不同的<strong>基础筹码 × 倍率</strong>。</p>
+   <p>计分牌的点数提供额外筹码。A = 11，J / Q / K = 10。特殊小丑牌按从左至右结算，可能增加筹码、倍率或让倍率翻倍。累计得分达到本场目标即获胜。</p>
+   <p>每场有 4 次出牌、3 次弃牌；胜利获得金币，在商店购买特性卡、刷新商品或升级随机牌型。完成 9 场获得最终胜利。所有牌与特性都是原创设计。</p>
+   <button class="continue-button" id="close-help">了解了，开始玩</button>
+ </section>
+ <div id="fx-layer" aria-hidden="true"></div>
+ <footer class="footline"><span>原创四色 · 真像素网格 · 实时 WebGL 风格光影</span><span>你的进度仅保存在当前浏览器 / APK 的本地存储</span></footer>
+</div>
+<script type="module" src="./app.mjs?v=20261101-card01"></script>
+</body>
+</html>
