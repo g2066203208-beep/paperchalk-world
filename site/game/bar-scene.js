@@ -5,7 +5,7 @@
  */
 import {portraitLayers} from './intro.js';
 import {HOSTESS_PNG} from './hostess-pixel.js';
-import {drawBarInterior,getBarInteriorGeometry,BAR_PALETTE} from './bar-environment.js';
+import {drawBarInterior,getBarInteriorGeometry,BAR_PALETTE} from './bar-environment.js?v=20261031-cafe2';
 
 export const BAR_ORDERS=Object.freeze([
  {name:'蓝铃汽泡',goal:[2,1,0],reward:18,order:'两份甜露，一份清泉。不要加苦草。',good:'旅人：正是这个味道。这里比街上安静多了。'},
