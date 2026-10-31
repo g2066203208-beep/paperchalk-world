@@ -35,10 +35,11 @@ jobs:
           script: |
             gradle --no-daemon :app:connectedDebugAndroidTest
             mkdir -p emulator-evidence
-            adb exec-out run-as com.pixelatelier.app cat files/pixel-atelier-editor-smoke.png > emulator-evidence/editor.png
+            adb pull /sdcard/Download/pixel-atelier-editor-smoke.png emulator-evidence/editor.png
             test -s emulator-evidence/editor.png
-            adb exec-out run-as com.pixelatelier.app cat files/pixel-atelier-preview-pointer-down.png > emulator-evidence/line-preview-during-drag.png
+            adb pull /sdcard/Download/pixel-atelier-preview-pointer-down.png emulator-evidence/line-preview-during-drag.png
             test -s emulator-evidence/line-preview-during-drag.png
+            python3 -c 'from pathlib import Path; sig=b"\x89PNG\r\n\x1a\n"; assert all(Path(f).read_bytes()[:8] == sig for f in ("emulator-evidence/editor.png", "emulator-evidence/line-preview-during-drag.png"))'
             adb shell dumpsys package com.pixelatelier.app | grep -A3 'com.pixelatelier.app.MainActivity' | head -8 || true
       - uses: actions/upload-artifact@v4
         if: always()

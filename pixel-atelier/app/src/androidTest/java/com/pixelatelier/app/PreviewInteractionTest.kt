@@ -57,12 +57,13 @@ class PreviewInteractionTest {
         // The pixel draft/controls MUST exist while the finger is still down.
         compose.onNodeWithTag("shape-preview-controls").assertExists()
         compose.onNodeWithText("撤销").assertIsNotEnabled()
-        val screenshot = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
-        val file = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir,
-            "pixel-atelier-preview-pointer-down.png")
-        file.outputStream().use { screenshot.compress(Bitmap.CompressFormat.PNG,100,it) }
+        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        val screenshot = automation.takeScreenshot()
+        assertTrue(screenshot.width > 100 && screenshot.height > 100)
         screenshot.recycle()
-        assertTrue(file.isFile && file.length()>1000L)
+        val output = automation.executeShellCommand(
+            "screencap -p /sdcard/Download/pixel-atelier-preview-pointer-down.png")
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(output).use { it.readBytes() }
 
         send(MotionEvent.ACTION_UP,endX,endY,t0+64L)
         compose.waitForIdle()

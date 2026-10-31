@@ -33,9 +33,10 @@ class EditorSmokeTest {
         compose.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val screenshot = instrumentation.uiAutomation.takeScreenshot()
-        val file = File(instrumentation.targetContext.filesDir, "pixel-atelier-editor-smoke.png")
-        file.outputStream().use { screenshot.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        check(screenshot.width > 100 && screenshot.height > 100)
         screenshot.recycle()
-        check(file.isFile && file.length() > 1000L)
+        val output = instrumentation.uiAutomation.executeShellCommand(
+            "screencap -p /sdcard/Download/pixel-atelier-editor-smoke.png")
+        android.os.ParcelFileDescriptor.AutoCloseInputStream(output).use { it.readBytes() }
     }
 }
