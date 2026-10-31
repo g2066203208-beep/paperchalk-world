@@ -99,6 +99,19 @@ private fun ShapeKind.labelZh() = when(this) {
     ShapeKind.FILLED_ELLIPSE -> "实心椭圆"
     ShapeKind.RECT_SELECTION -> "框选"
 }
+private enum class EditOperation(val label: String) {
+    CLEAR_SELECTION("清除当前层选区"),
+    CLEAR_LAYER("清空当前图层"),
+    CLEAR_ALL("清空所有未锁定图层"),
+    FILL_LAYER("用前景色填满当前层")
+}
+private fun EditOperation.colorForEdit(foreground: Int) =
+    if (this == EditOperation.FILL_LAYER) foreground else 0
+private fun EditOperation.maskForEdit(selection: SelectionMask?) =
+    if (this == EditOperation.CLEAR_SELECTION) selection else null
+private fun EditOperation.scopeForEdit() =
+    if (this == EditOperation.CLEAR_ALL) ClearScope.ALL_EDITABLE_LAYERS else ClearScope.ACTIVE_LAYER
+
 enum class TouchMode(val label: String) {
     DIRECT("直接绘画"), OFFSET("偏移光标"), CURSOR("独立光标")
 }
@@ -130,6 +143,7 @@ private fun AtelierApp(store: ProjectStore) {
     var tool by remember { mutableStateOf(EditorTool.PENCIL) }
     var toolCategory by remember { mutableStateOf(EditorCategory.DRAW) }
     var preview by remember { mutableStateOf<ShapeDraft?>(null) }
+    var editOperation by remember { mutableStateOf<EditOperation?>(null) }
     var editStart by remember { mutableStateOf(false) }
     var cursorShapeAnchored by remember { mutableStateOf(false) }
     var touchMode by remember { mutableStateOf(TouchMode.DIRECT) }
@@ -161,7 +175,7 @@ private fun AtelierApp(store: ProjectStore) {
                 val loaded = withContext(Dispatchers.IO) { store.load(file) }
                 pending?.cancel()
                 document = loaded
-                preview = null; cursorShapeAnchored = false
+                preview = null; cursorShapeAnchored = false; editOperation = null
                 selection = null
                 internalClipboard = null
                 version++
@@ -175,7 +189,7 @@ private fun AtelierApp(store: ProjectStore) {
     fun closeProject() {
         scheduleSave(true)
         document = null
-        preview = null; cursorShapeAnchored = false
+        preview = null; cursorShapeAnchored = false; editOperation = null
         showLayers = false; showColors = false
     }
 
@@ -189,7 +203,7 @@ private fun AtelierApp(store: ProjectStore) {
                         store.importPng(input ?: error("无法打开文件"))
                     }
                 }
-                document = imported; preview = null; selection = null; internalClipboard = null; version++
+                document = imported; preview = null; editOperation = null; selection = null; internalClipboard = null; version++
                 scheduleSave(true)
             } catch (e: Exception) { snackbar.showSnackbar("导入失败：" + (e.message ?: "未知错误")) }
         }
@@ -307,7 +321,7 @@ private fun AtelierApp(store: ProjectStore) {
                     }
                 }
                 HorizontalDivider(color = Color(0xFF30394A))
-                PixelViewport(doc, version, tool, color, touchMode, cursor, selection, preview,
+                PixelViewport(doc, version, tool, color, touchMode, cursor, selection, preview, editOperation,
                     onPreview = { preview = it },
                     onSelection = { selection = it },
                     onCursor = {
@@ -320,6 +334,25 @@ private fun AtelierApp(store: ProjectStore) {
                     onCommit = { notifyChange(); scheduleSave() },
                     modifier = Modifier.weight(1f).fillMaxWidth()
                 )
+                if (editOperation != null) {
+                    val op = editOperation!!
+                    Column(Modifier.fillMaxWidth().background(Color(0xFF34405A))
+                        .padding(horizontal=12.dp,vertical=8.dp)) {
+                        Text("操作预览 · " + op.label + "（可撤销）",
+                            style=MaterialTheme.typography.labelLarge)
+                        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.End) {
+                            TextButton(onClick = { editOperation = null }) { Text("取消") }
+                            Button(onClick = {
+                                val changed = doc.replaceArea(
+                                    color=op.colorForEdit(color),
+                                    mask=op.maskForEdit(selection),
+                                    scope=op.scopeForEdit())
+                                if(changed) { notifyChange(); scheduleSave() }
+                                editOperation = null
+                            }) { Text("确认修改") }
+                        }
+                    }
+                }
                 if (preview != null) {
                     val draft = preview!!
                     Column(Modifier.fillMaxWidth().background(Color(0xFF243248))
@@ -504,7 +537,7 @@ private fun AtelierApp(store: ProjectStore) {
                     val w = width.toIntOrNull() ?: 0; val h = height.toIntOrNull() ?: 0
                     if (w in 1..1024 && h in 1..1024 && w.toLong()*h <= 1048576L) {
                         document = PixelDocument.new(w,h,title.ifBlank { "未命名作品" })
-                        preview = null; cursorShapeAnchored = false
+                        preview = null; cursorShapeAnchored = false; editOperation = null
                         selection = null; internalClipboard = null
                         version++; showNew = false
                         cursor = IntOffset(w/2,h/2)
@@ -598,6 +631,17 @@ private fun AtelierApp(store: ProjectStore) {
                     showOptions = false
                     exportLauncher.launch(activeDoc.title.replace(Regex("[\\/:*?\"<>|]"), "_") + ".png")
                 }) { Text("导出无损 PNG") }
+                HorizontalDivider()
+                Text("基础编辑与清除", style=MaterialTheme.typography.titleSmall)
+                EditOperation.entries.forEach { op ->
+                    TextButton(onClick = {
+                        showOptions = false
+                        preview = null
+                        editOperation = op
+                    }, enabled = op != EditOperation.CLEAR_SELECTION || selection != null) {
+                        Text(op.label)
+                    }
+                }
                 TextButton(onClick = {
                     showOptions = false
                     exportProjectLauncher.launch(activeDoc.title.filter { it.isLetterOrDigit() || it == '-' || it == '_' }.ifBlank { "像素工程" } + ".pixelatelier")
@@ -680,6 +724,7 @@ private fun PixelViewport(
     cursor: IntOffset,
     selection: SelectionMask?,
     preview: ShapeDraft?,
+    editOperation: EditOperation?,
     onPreview: (ShapeDraft?) -> Unit,
     onSelection: (SelectionMask?) -> Unit,
     onCursor: (IntOffset) -> Unit,
@@ -720,6 +765,23 @@ private fun PixelViewport(
         }
     }
     DisposableEffect(bitmap) { onDispose { bitmap.recycle() } }
+    val editPreviewBitmap = remember(doc,version,editOperation,selection,color) {
+        editOperation?.let { op ->
+            val copy = doc.deepCopy()
+            copy.replaceArea(
+                color=op.colorForEdit(color),
+                mask=op.maskForEdit(selection),
+                scope=op.scopeForEdit()
+            )
+            Bitmap.createBitmap(copy.width,copy.height,Bitmap.Config.ARGB_8888).apply {
+                setPixels(copy.composite(),0,copy.width,0,0,copy.width,copy.height)
+            }
+        }
+    }
+    DisposableEffect(editPreviewBitmap) {
+        onDispose { editPreviewBitmap?.recycle() }
+    }
+
 
     val drawingPaint = remember {
         android.graphics.Paint().apply {
@@ -878,7 +940,7 @@ private fun PixelViewport(
                                 minOf(top+(by+1)*tileSize,top+doc.height*scale),tileOther)
                         }
             }
-            canvas.drawBitmap(bitmap,null,RectF(left,top,left+doc.width*scale,
+            canvas.drawBitmap(editPreviewBitmap ?: bitmap,null,RectF(left,top,left+doc.width*scale,
                 top+doc.height*scale),drawingPaint)
 
             // V1.2: the draft uses exactly ShapeRasterizer's integer cells and
