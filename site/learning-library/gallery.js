@@ -47,7 +47,7 @@ function categoryButtons(){
 }
 function photoData(){
  const subset=GAMES.filter(matches).filter(g=>state.selected===0||g.id===state.selected);
- // Default grouping keeps the original five visually prominent.
+ // Default grouping keeps all six priority reference games visually prominent.
  return subset.flatMap(g=>imagesFor(g).map((image,i)=>({game:g,image,index:i})));
 }
 function photoCard(item,index){
