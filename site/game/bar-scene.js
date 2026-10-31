@@ -24,8 +24,9 @@ export function computeBarLayout(W,H){
  const headerH=Math.min(31,Math.max(23,Math.floor(H*.066)));
  const header={x:0,y:0,w:W,h:headerH};
  if(narrow){
-  const sceneBottom=Math.max(headerH+65,Math.floor(H*.485));
-  const dialogueH=Math.max(62,Math.floor(H*.205));
+  const tabletPortrait=W>=300;
+  const sceneBottom=Math.max(headerH+65,Math.floor(H*(tabletPortrait?.605:.485)));
+  const dialogueH=Math.max(62,Math.floor(H*(tabletPortrait?.16:.205)));
   const room={x:0,y:headerH,w:W,h:sceneBottom-headerH};
   const dialogue={x:0,y:sceneBottom,w:W,h:dialogueH};
   const mixer={x:0,y:sceneBottom+dialogueH,w:W,h:H-sceneBottom-dialogueH};
@@ -34,7 +35,7 @@ export function computeBarLayout(W,H){
  const side=Math.min(Math.floor(W*.335),Math.max(133,Math.floor(W*.31)));
  const mainW=W-side;
  const available=H-headerH;
- const roomH=Math.floor(available*(H<270?.63:.695));
+ const roomH=Math.floor(available*(H<270?.63:.795));
  return {mode:H<270?'landscape':'desktop',header,
   room:{x:0,y:headerH,w:mainW,h:roomH},
   dialogue:{x:0,y:headerH+roomH,w:mainW,h:available-roomH},
@@ -120,7 +121,9 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   // EXISTING original portrait — no replacement of approved face or clothing.
   const anchorX=x+Math.floor(w*.49),edgeY=y+Math.floor(h*.70);
   if(art){
-   const pw=Math.floor(Math.min(w*.54,h*.78*192/140));
+   const widthCap=w>300&&h>230?w*.63:w*.54;
+   const safeHeight=Math.max(12,h*.68-7);
+   const pw=Math.floor(Math.min(widthCap,h*.78*192/140,safeHeight*192/140));
    const ph=Math.floor(pw*140/192);
    const bob=Math.round(Math.sin(clock*2.1));
    ctx.imageSmoothingEnabled=false;
