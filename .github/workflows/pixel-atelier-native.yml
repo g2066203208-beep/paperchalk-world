@@ -25,10 +25,17 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-      - name: Install Android API 35
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Verify and use hosted Android SDK
+        run: |
+          set -euo pipefail
+          SDK_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          test -d "$SDK_HOME/cmdline-tools"
+          if [ ! -f "$SDK_HOME/platforms/android-35/android.jar" ] || [ ! -x "$SDK_HOME/build-tools/35.0.0/aapt" ]; then
+            SDKMANAGER="$(find "$SDK_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -1)"
+            "$SDKMANAGER" --install 'platforms;android-35' 'build-tools;35.0.0'
+          fi
+          test -f "$SDK_HOME/platforms/android-35/android.jar"
+          test -x "$SDK_HOME/build-tools/35.0.0/aapt"
       - name: JVM pixel-engine tests
         run: gradle --no-daemon :app:testDebugUnitTest
       - name: Build genuine native debug APK

@@ -30,7 +30,9 @@ class ProjectStore(context: Context) {
         val target = AtomicFile(file(document.id))
         val output = target.startWrite()
         try {
-            ZipOutputStream(output).use { zip ->
+            ZipOutputStream(object : java.io.FilterOutputStream(output) {
+                override fun close() { flush() } // AtomicFile owns and fsyncs the descriptor
+            }).use { zip ->
                 val manifest = JSONObject()
                 manifest.put("format", "pixelatelier")
                 manifest.put("version", 1)

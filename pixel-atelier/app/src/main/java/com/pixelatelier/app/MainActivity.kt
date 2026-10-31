@@ -551,6 +551,7 @@ private fun PixelViewport(
                         currentChanged()
                     }
                     if (mode != TouchMode.CURSOR) {
+                        if (mode == TouchMode.OFFSET) currentCursor(first)
                         if (tool != EditorTool.PICKER) { doc.beginStroke(); stroke = true }
                         if (tool in listOf(EditorTool.PENCIL,EditorTool.ERASER,EditorTool.FILL,EditorTool.PICKER)) plot(first)
                     } else currentCursor(first)
@@ -579,6 +580,7 @@ private fun PixelViewport(
                             event.changes.forEach { it.consume() }
                         } else if (pressed.size == 1 && !multi) {
                             val point = toPixel(pressed[0].position)
+                            if (mode == TouchMode.OFFSET) currentCursor(point)
                             if (mode == TouchMode.CURSOR) {
                                 currentCursor(IntOffset(point.x.coerceIn(0,doc.width-1),
                                     point.y.coerceIn(0,doc.height-1)))
@@ -640,7 +642,7 @@ private fun PixelViewport(
                 for(y in 0..doc.height)
                     canvas.drawLine(left,top+y*scale,left+doc.width*scale,top+y*scale,gridPaint)
             }
-            if (mode == TouchMode.CURSOR && cursor.x in 0 until doc.width && cursor.y in 0 until doc.height) {
+            if (mode != TouchMode.DIRECT && cursor.x in 0 until doc.width && cursor.y in 0 until doc.height) {
                 val cx = left + (cursor.x+0.5f)*scale
                 val cy = top + (cursor.y+0.5f)*scale
                 val pen = android.graphics.Paint().apply {
