@@ -9,7 +9,7 @@ test('programmatic 3D city contains real depth-tested WebGL geometry, exact 4 co
  const mesh=new Function('INK','PINK','BLUE','PAPER','PALETTE',
    source.slice(begin,end)+'\nreturn makeTown();')(ink,pink,blue,paper,[ink,pink,blue,paper]);
  assert.ok(mesh.tri.length/9>10000,'city is made of actual textured-looking 3D triangle faces');
- assert.ok(mesh.line.length/6>10000,'street/building edges are real 3D line vertices');
+ assert.ok(mesh.line.length/6>100&&mesh.line.length/6<600,'intentional roof ridge and silhouette edges replace the noisy 10k+ black edge cage');
  assert.equal(mesh.tri.length,mesh.colors.length);assert.equal(mesh.line.length,mesh.lineColors.length);
  assert.ok(mesh.tri.every(Number.isFinite)&&mesh.line.every(Number.isFinite));
  const colors=new Set();
