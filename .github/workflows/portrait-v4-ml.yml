@@ -1,0 +1,49 @@
+name: Pixel Lab V4 - 5x5 portrait reconstruction and ML
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/portrait_v4/**'
+      - 'tests/portrait_v4_checks.py'
+      - '.github/workflows/portrait-v4-ml.yml'
+      - 'site/pixel-lab/portrait-v4/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  portrait_quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Python image and CPU neural dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --no-cache-dir numpy pillow opencv-python-headless
+          python -m pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Test 25 portraits, safe gutters and neural smoke
+        run: python -m unittest discover -s tests -p portrait_v4_checks.py -v
+      - name: Reconstruct and train from clearly labeled synthetic fixture
+        run: |
+          python -m ml.portrait_v4.convert --synthetic-smoke \
+            --out-dir artifacts/portrait-v4-smoke --train --steps 120
+      - name: Process genuine reference only if binary source is present
+        run: |
+          if [ -f site/pixel-lab/portrait-v4/source-v4.png ]; then
+            python -m ml.portrait_v4.convert \
+              --input site/pixel-lab/portrait-v4/source-v4.png \
+              --out-dir artifacts/portrait-v4-real --train --steps 120
+          else
+            echo 'Actual source PNG absent from repository; synthetic CI does NOT imply real image was trained in GitHub.'
+          fi
+      - name: Upload generated artifacts with source provenance
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-lab-v4-portrait-ml
+          path: artifacts/portrait-v4-*/
+          retention-days: 30
+          if-no-files-found: warn
