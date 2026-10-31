@@ -73,3 +73,10 @@ GitHub Actions入口：https://github.com/g2066203208-beep/paperchalk-world/acti
 - **结论**：4/5改善，未达到5/5门槛，`all_heldout_beaten=false`，**神经网络没有被部署为图鉴导出算法**。整数网格+限色的保守基线仍是当前可审候选版本。
 
 注意：这是云端真实执行记录，不能把模拟退化指标解释为像素画艺术质量；真正的每像素语义仍需逐格人工精修。
+
+## GitHub永久归档的真实转换图像
+
+- `site/pixel-lab/portrait-v4/native-baseline-640.lossless.webp`：由本轮原始1254×1254 PNG经过独立25格面积采样与每格18色限色生成的**真实候选图**；640×640，Git Blob SHA `d2ba05feb6bcc839cee4f5aef7c34e1bbec24b98`，无损WebP仅用于保存已经确定的像素，**不是**将原图片用有损WEBP重采样得到的版本。
+- 可直接在 https://g2066203208-beep.github.io/paperchalk-world/pixel-lab/portrait-v4-convert.html 预览。
+- 原始PNG仍可从本次对话成果ZIP获取；质量92的640×640 WEBP源图则供GitHub云端训练输入（两种衍生图的来源与目的不同）。
+- 不可将清晰的整数像素、颜色数量与安全间距合格，等同于「艺术家逐像素精修达到完美」。
