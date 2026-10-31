@@ -85,3 +85,34 @@ test('saved eight-material user pack migrates without repainting first eight ass
  assert.equal(upgraded.materials[0].pixels[37],4);
  assert.deepEqual(m.validatePack(upgraded),upgraded);
 });
+
+test('art direction v2 favors quiet wall, road and turf surfaces over random pixel dust',()=>{
+ const p=m.freshPack();assert.equal(p.artDirectionRevision,2);
+ const dominant=(id,color)=>p.materials[id].pixels.filter(c=>c===color).length;
+ assert.ok(dominant(18,1)>=250,'asphalt must be at least 97% calm dark ink');
+ assert.ok(dominant(3,4)>=240,'plaster wall must remain a mostly uninterrupted cream plane');
+ assert.ok(dominant(6,3)>=240,'grass reads as a field, not speckled static');
+ assert.ok(dominant(23,3)>=230,'facade has large uninterrupted blue planes');
+ assert.ok(dominant(30,2)>=240,'blossom canopy should read as one pink silhouette');
+ assert.ok(!moduleText.includes('Math.random'),'no random texture speckles');
+});
+test('v2 replaces only exact previous shipped tile, preserving any custom ink stroke',()=>{
+ const source=m.freshPack();
+ const oldRoad=Array(256).fill(1);
+ const mark=(x,y,c)=>{oldRoad[y*16+x]=c};
+ for(const [x,y] of [[1,2],[10,4],[5,9],[13,13]]){
+  for(let i=0;i<3;i++)mark(x+i,y,3);
+  mark(x+1,y+1,2);
+ }
+ for(let i=0;i<3;i++)mark(4+i,15,3);
+ const old=structuredClone(source);delete old.artDirectionRevision;
+ old.materials[18].pixels=oldRoad;
+ const migrated=m.migratePack(old);
+ assert.equal(migrated.artDirectionRevision,2);
+ assert.deepEqual(migrated.materials[18].pixels,source.materials[18].pixels,
+  'factory asphalt should upgrade to quiet art direction');
+ const edited=structuredClone(old);edited.materials[18].pixels[0]=2;
+ const kept=m.migratePack(edited);
+ assert.equal(kept.materials[18].pixels[0],2,'actual user edit must survive');
+ assert.deepEqual(kept.materials[18].pixels,edited.materials[18].pixels);
+});
