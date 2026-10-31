@@ -239,38 +239,58 @@ function floatText(text,modifier=''){
 function hitNumber(id){
  const el=$(id);if(!el)return;el.classList.remove('score-pop');void el.offsetWidth;el.classList.add('score-pop');
 }
-async function resolve(result){
- // Event order is the point: each scored card / joker responds and sounds,
- // rather than jumping to one meaningless giant number immediately.
+async function resolve(result,playedIds){
+ // Score is still computed atomically and saved by the engine.
+ // The following sequence is only presentation, driven by those actual events.
+ const base=result.events[0];
+ let chips=base.chips,mult=base.mult;
+ $('hand-kind').textContent=result.name;
+ $('chips-display').textContent=number(chips);
+ $('mult-display').textContent=number(mult);
+ $('predicted-score').textContent=number(chips*mult);
  $('last-event').textContent='◆ '+result.name;
- await wait(130);
+ const byId=new Map([...$('hand-cards').querySelectorAll('.play-card')].map(el=>[el.dataset.card,el]));
+ for(const id of playedIds)byId.get(id)?.classList.add('card-playing');
+ await wait(170);
  const events=result.events.filter(e=>e.type==='card'||e.type==='joker');
  for(let i=0;i<events.length;i++){
   const ev=events[i];
   if(ev.type==='card'){
+   chips+=ev.chips;
    $('last-event').textContent=ev.label+'　+'+ev.chips+' 筹码';
-   tone(360+i*45,.075,'triangle',.04);
+   const card=byId.get(ev.id);
+   if(card){card.classList.remove('card-scored');void card.offsetWidth;card.classList.add('card-scored')}
+   tone(360+i*45,.08,'triangle',.042);
   }else{
+   chips+=ev.chips;mult=(mult+ev.mult)*ev.multiply;
    $('last-event').textContent=ev.name+'　'+(ev.multiply>1?'×'+ev.multiply:ev.mult?'+'+ev.mult+' 倍率':'+'+ev.chips+' 筹码');
    const joker=document.querySelector('.joker[data-joker="'+ev.id+'"]');
    if(joker){joker.classList.remove('joker-activated');void joker.offsetWidth;joker.classList.add('joker-activated')}
-   tone(500+i*55,.10,'sine',.06);
+   tone(500+i*55,.10,'sine',.065);
    if(ev.multiply>1){flash();floatText('× '+ev.multiply)}
   }
-  await wait(Math.min(190,140+5*i));
+  $('chips-display').textContent=number(chips);
+  $('mult-display').textContent=number(mult);
+  $('predicted-score').textContent=number(Math.round(chips*mult));
+  hitNumber('chips-display');hitNumber('mult-display');
+  await wait(Math.min(210,155+5*i));
  }
  floatText('+'+number(result.score));hitNumber('current-score');hitNumber('predicted-score');
- flash();tone(700,.18,'triangle',.065);
+ flash();tone(730,.19,'triangle',.075);
+ $('current-score').textContent=number(s.score);
+ $('score-track-fill').style.width=Math.min(100,(s.score/currentBlind(s).target)*100)+'%';
  $('last-event').textContent=result.chips+' × '+result.mult+' = '+number(result.score)+' 分！';
- await wait(640);
+ await wait(690);
 }
 async function actionPlay(){
- if(locked)return;const outcome=play(s);if(!outcome.ok){$('battle-notice').textContent=outcome.reason;return}
+ if(locked)return;
+ const playedIds=[...s.selected],outcome=play(s);
+ if(!outcome.ok){$('battle-notice').textContent=outcome.reason;return}
  locked=true;save();
  $('hand-cards').querySelectorAll('button').forEach(b=>b.disabled=true);
  $('play-button').disabled=true;$('discard-button').disabled=true;
- await resolve(outcome.result);
- locked=false;render();
+ try{await resolve(outcome.result,playedIds)}
+ finally{locked=false;render()}
 }
 $('play-button').addEventListener('click',actionPlay);
 $('discard-button').addEventListener('click',()=>{if(locked||!discardSelected(s))return;tone(280,.1,'sawtooth',.035);save();render()});
