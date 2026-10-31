@@ -1,0 +1,49 @@
+name: PAPERWORLD - screenshot study library verification
+on:
+  pull_request:
+    paths:
+      - 'site/learning-library/**'
+      - 'scripts/collect-game-reference-shots.mjs'
+      - 'tests/learning-library*.mjs'
+      - '.github/workflows/game-reference-library.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  references:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify five mandatory references, provenance and game navigation
+        run: |
+          node --check site/learning-library/gallery.js
+          node --check site/learning-library/games.js
+          node --check scripts/collect-game-reference-shots.mjs
+          node --test tests/learning-library.test.mjs
+      - name: Harvest genuine publisher screenshots from Steam store metadata
+        run: |
+          node scripts/collect-game-reference-shots.mjs
+          node -e "const s=require('./site/learning-library/screenshots.json'); if(s.totalScreenshots<19 || s.totalGames!==23) process.exit(1); console.log('STUDY_LIBRARY',s.totalGames,s.totalScreenshots,s.unavailable)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: paperworld-gameplay-screenshot-url-catalog
+          path: site/learning-library/screenshots.json
+          retention-days: 14
+      - name: Install Chromium for genuine mobile/desktop browsing
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+      - name: Test responsive gallery, origin links, full-size viewer and filters
+        run: node tests/learning-library-browser.mjs
+      - name: Upload screenshots from actual running gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperworld-study-library-real-browser
+          path: artifacts/learning-library/
+          retention-days: 14
