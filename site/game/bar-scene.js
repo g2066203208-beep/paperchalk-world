@@ -111,10 +111,12 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   const speaker=stage==='greeting'?'营业日志':stage==='served'?'好评':stage==='retry'?'配方有误':'顾客订单';
   rect(x+8,y+9,Math.min(w*.26,80),21,COL.pink);
   caption(speaker,x+13,y+12,11,COL.ink);
-  const lines=[],maxChars=Math.max(10,Math.floor((w-22)/(vertical?12.2:13.3)));
+  const compact=!vertical&&h<90,actionWidth=(stage==='greeting'||stage==='served')?(vertical?58:91):0;
+  const glyphWidth=vertical?12.2:compact?10.8:13.3;
+  const lines=[],maxChars=Math.max(8,Math.floor((w-22-actionWidth)/glyphWidth));
   for(let i=0;i<[...message].length;i+=maxChars)lines.push([...message].slice(i,i+maxChars).join(''));
   for(let i=0;i<Math.min(lines.length,vertical?2:3);i++)
-   caption(lines[i],x+10,y+(vertical?37:39)+i*17,vertical?11:13,COL.paper);
+   caption(lines[i],x+10,y+(vertical?37:39)+i*(compact?14:17),vertical?11:compact?10:13,COL.paper);
   if(stage==='greeting'||stage==='served'){
    const bw=vertical?58:91,bh=25;
    addButton('next',x+w-bw-9,y+h-bh-8,bw,bh,stage==='served'?'下一位':'继续','primary');
@@ -131,7 +133,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
    const sh=Math.floor(H*.45),dh=Math.max(96,Math.floor(H*.20)),mh=H-sh-dh;
    room(0,0,W,sh);mixer(0,sh,W,mh,true);dialogue(0,H-dh,W,dh,true);
   }else{
-   const rw=Math.floor(W*.635),dh=Math.floor(H*.255);
+   const rw=Math.floor(W*.635),dh=Math.max(72,Math.floor(H*.255));
    room(0,0,rw,H-dh);dialogue(0,H-dh,rw,dh,false);mixer(rw,0,W-rw,H,false);
   }
   addButton('back',6,6,Math.min(64,Math.floor(W*.16)),22,'返回');
