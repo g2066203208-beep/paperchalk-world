@@ -30,6 +30,12 @@ jobs:
         run: |
           python -m ml.portrait_v4.convert --synthetic-smoke \
             --out-dir artifacts/portrait-v4-smoke --train --steps 120
+      - name: Reconstruct genuine V4-derived compact thumbnail (not the original PNG)
+        run: |
+          python -m ml.portrait_v4.decode_snapshot
+          python -m ml.portrait_v4.convert \
+            --input artifacts/portrait-v4-derived/source-derived-1250.png \
+            --out-dir artifacts/portrait-v4-derived-results --train --steps 120
       - name: Process genuine reference only if binary source is present
         run: |
           if [ -f site/pixel-lab/portrait-v4/source-v4.png ]; then
