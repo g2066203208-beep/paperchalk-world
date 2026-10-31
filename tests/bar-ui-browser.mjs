@@ -35,6 +35,10 @@ try{
   const first=await state();
   assert.equal(first.state,'bar');
   assert.equal(first.bar.stage,'greeting');
+  assert.equal(first.logical[0],width,label+' native-resolution render width');
+  assert.equal(first.logical[1],height,label+' native-resolution render height');
+  assert.equal(first.bar.render.backing,'css-pixels');
+  assert.deepEqual(first.bar.render.originalPortrait,[192,256]);
   const {layout,buttons}=first.bar;
   assert.ok(layout && buttons.length>=6);
   assert.deepEqual(layout.fullPortrait.source,[192,256],label+' whole figure source');
