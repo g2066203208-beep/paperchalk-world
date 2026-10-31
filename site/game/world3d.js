@@ -127,7 +127,13 @@ function makeTown(lod='full'){
    box(x,towardRoad+out,.11,1.15,.11,2.14,1,MAT.door,MAT.door);
    box(x+.39,towardRoad+out*1.65,1.07,.10,.09,.13,3,MAT.timber,MAT.timber);
    box(x,towardRoad+out,.055,2.05,.50,.13,0,MAT.stone,MAT.stone);
-   if(bareMobileRow)continue;
+   if(bareMobileRow){
+    // A low-detail building still needs a roof and a visible facade window.
+    box(x,y,h+.1,w+.55,depth+.55,.25,1,roofMat,roofMat);
+    quad([x-.95,towardRoad+out*.28,2.7],[x-.25,towardRoad+out*.28,2.7],
+         [x-.25,towardRoad+out*.28,3.35],[x-.95,towardRoad+out*.28,3.35],2,true,MAT.window);
+    continue;
+   }
    // Windows, reveals and sills are actual offset 3D volumes, not a painted rectangle.
    // Desktop architectural LOD adds corner posts and a readable window ledge,
    // while mobile preserves doors, frame material and collision at much lower cost.
