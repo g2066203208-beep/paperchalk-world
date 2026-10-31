@@ -116,6 +116,22 @@ jobs:
               assert (p/row["reconstruction"]).is_file()
           print("PASS: native whole-figure results checked in; no old tiny-face artifacts copied")
           PY
+      - name: Retrieve actual multi-device world and material screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: paperworld-clean-main-menu-and-curtain-four-viewports
+          path: ${{ runner.temp }}/qa-world-materials
+      - name: Publish evidence captured from actual Chromium 3D game
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p site/world-builder/qa
+          for file in phone-material-studio.png landscape-material-studio.png desktop-material-studio.png phone-textured-3d-world.png landscape-textured-3d-world.png desktop-textured-3d-world.png; do
+            source="$(find "$RUNNER_TEMP/qa-world-materials" -type f -name "$file" -print -quit)"
+            test -n "$source" && test -s "$source"
+            cp "$source" "site/world-builder/qa/$file"
+          done
+          echo "PASS: six real-browser screenshots included in GitHub Pages"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
