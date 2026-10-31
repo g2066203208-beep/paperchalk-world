@@ -1,6 +1,6 @@
 import {TILE,PALETTE,MATERIALS,freshPack,validatePack,tryReadPack,writePack,
- paint,stroke,flood,sample,tileRGBA,atlasRGBA,migratePack,ATLAS_COLS,ATLAS_ROWS} from './materials-core.js?v=20261031-world32';
-import {createMaterialCube} from '../game/world-material-gl.js?v=20261031-world32';
+ paint,stroke,flood,sample,tileRGBA,atlasRGBA,migratePack,ATLAS_COLS,ATLAS_ROWS} from './materials-core.js?v=20261031-artdirection2';
+import {createMaterialCube} from '../game/world-material-gl.js?v=20261031-artdirection2';
 
 const $=id=>document.getElementById(id),canvas=$('pixel-canvas');
 const ctx=canvas.getContext('2d',{alpha:false});
