@@ -339,7 +339,7 @@ function act(i,x,y){
  selected=i;hover=i;
  if(state==='menu'){
   if(i===0){try{localStorage.setItem(SAVE,'created')}catch{}saveExists=true;switchScene('bar')}
-  else if(i===1){if(saveExists){switchScene('bar')}else flash('暂无存档')}
+  else if(i===1){if(saveExists){const existing=localStorage.getItem('paperworld-lease-v1');switchScene(existing?'lease':'bar')}else flash('暂无存档')}
   else if(i===2)switchScene('world');
   else if(i===3)switchScene('settings');
   else if(i===4)switchScene('exit');
