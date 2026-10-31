@@ -239,3 +239,19 @@
   transition:none!important;
  }
 }
+
+/* Tablet / small desktop: eight fully visible live cards, even with side
+ * scoreboard. A 960px capture revealed that old max-content scrolling hid
+ * the last card. Preserve the entire fan instead. */
+@media(min-width:681px) and (max-width:1150px) and (min-height:561px){
+ #hand-dock .hand-scroll{overflow-x:visible}
+ #hand-dock #hand-cards{min-width:0;width:100%;gap:0;justify-content:center}
+ #hand-dock #hand-cards>.card-motion-slot{
+  flex:0 0 clamp(65px,10vw,90px);
+  width:clamp(65px,10vw,90px);
+  margin:0;
+ }
+ #hand-dock #hand-cards>.card-motion-slot:not(:first-child){
+  margin-left:clamp(-21px,calc((100vw - 1150px)/12),-12px);
+ }
+}
