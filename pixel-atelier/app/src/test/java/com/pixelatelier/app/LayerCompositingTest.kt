@@ -82,6 +82,25 @@ class LayerCompositingTest {
         doc.beginStroke();doc.setPixel(1,1,white);doc.finishStroke()
         assertEquals(draftPreview,doc.composite()[i])
     }
+    @Test fun maskBrushStrokeHasOneUndoAndCanCancel() {
+        val doc=PixelDocument.new(8,8)
+        doc.replaceArea(red)
+        assertTrue(doc.createMask())
+        assertTrue(doc.beginMaskStroke())
+        doc.maskLine(1,1,6,6,0)
+        assertEquals(0,doc.composite()[1*8+1])
+        assertEquals(red,doc.currentLayer.pixels[1*8+1])
+        assertTrue(doc.finishMaskStroke())
+        assertTrue(doc.undo())
+        assertEquals(red,doc.composite()[1*8+1])
+        assertTrue(doc.redo())
+        assertEquals(0,doc.composite()[1*8+1])
+        assertTrue(doc.beginMaskStroke())
+        doc.maskLine(0,0,7,0,0)
+        doc.cancelMaskStroke()
+        assertEquals(red,doc.composite()[0])
+    }
+
     @Test fun deepCopyOfMaskIsIndependent() {
         val doc=PixelDocument.new(2,2)
         doc.createMask()
