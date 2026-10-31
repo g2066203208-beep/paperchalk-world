@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -173,7 +174,7 @@ private fun HueAndSVPicker(hue: Float, saturation: Float, value: Float,
                            onHue: (Float)->Unit, onSV: (Float,Float)->Unit) {
     val hueChange by rememberUpdatedState(onHue)
     val squareChange by rememberUpdatedState(onSV)
-    Canvas(Modifier.fillMaxWidth().height(250.dp)
+    Canvas(Modifier.fillMaxWidth().height(250.dp).testTag("hsv-color-wheel")
         .pointerInput(Unit) {
             awaitEachGesture {
                 val down=awaitFirstDown(requireUnconsumed=false)
