@@ -5,6 +5,7 @@ on:
     paths:
       - 'ml/deathroad_study/**'
       - 'tests/test_deathroad_character_study.py'
+      - 'tests/test_deathroad_original_sprites.py'
       - '.github/workflows/deathroad-individual-study.yml'
   workflow_dispatch:
 permissions:
@@ -79,7 +80,7 @@ jobs:
       - name: Download learned numerical palette statistics (never proprietary sprite images)
         uses: actions/download-artifact@v4
         with:
-          name: deathroad-30-reference-style-research-only
+          name: deathroad-30-independent-models-research-only
           path: artifacts/model-input
       - name: Decode all thirty originally authored indexed sprite designs and apply learned palette statistics
         run: |
