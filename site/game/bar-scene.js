@@ -1,11 +1,11 @@
-/* PAPERWORLD — four-ink bar interface v2.
+/* PAPERWORLD — warm-color café bar interface v5.
  * A real pixel-rendered playable scene. Character and furniture are separate layers.
  * Layout is computed in logical Canvas pixels for portrait, landscape and desktop.
- * No external copyrighted sprites, no fifth colors, no blurred Canvas scaling.
+ * Original room geometry, independent warm palette, full-body portrait preserved.
  */
 import {portraitLayers} from './intro.js';
 import {HOSTESS_PNG} from './hostess-pixel.js';
-import {drawBarInterior} from './bar-environment.js';
+import {drawBarInterior,getBarInteriorGeometry,BAR_PALETTE} from './bar-environment.js';
 
 export const BAR_ORDERS=Object.freeze([
  {name:'蓝铃汽泡',goal:[2,1,0],reward:18,order:'两份甜露，一份清泉。不要加苦草。',good:'旅人：正是这个味道。这里比街上安静多了。'},
@@ -47,17 +47,22 @@ export function computeBarLayout(W,H){
 // Preserve the source image's true 3:4 ratio (192×256), including the feet.
 export function computeFullPortraitPlacement(p){
  const {x,y,w,h}=p;
- const maxW=Math.max(8,Math.floor(w*.55));
- const maxH=Math.max(12,Math.floor(h-12));
- const sw=Math.min(maxW,Math.floor(maxH*192/256));
+ const deskStart=getBarInteriorGeometry(p).counterStart;
+ const safeWidth=Math.max(8,deskStart-x-10);
+ const safeHeight=Math.max(12,Math.floor(h*.9));
+ const sw=Math.min(safeWidth,Math.floor(safeHeight*192/256));
  const sh=Math.floor(sw*256/192);
- const centerX=x+Math.floor(w*.283);
- const left=Math.max(x+2,centerX-Math.floor(sw/2));
- return {x:left,y:y+Math.floor((h-sh)/2),w:sw,h:sh,source:[192,256],
-  deskStart:x+Math.floor(w*.60)};
+ const left=x+Math.max(2,Math.floor((deskStart-x-sw)/2));
+ const top=y+Math.max(3,Math.floor(h*.92)-sh);
+ return {x:left,y:top,w:sw,h:sh,source:[192,256],deskStart};
 }
 
-export function createBarScene({COL,R,poly,text,onBack,onIntro}){
+export function createBarScene({COL:menuPalette,R,poly,text,onBack,onIntro}){
+ // The bar is no longer locked to the global four-color menu palette.
+ // The menu and legacy intro keep their own previous palette and save data.
+ const COL={
+  ink:'#251f30',pink:'#c88790',blue:'#7f9fa6',paper:'#f7ead7'
+ };
  let active=false,clock=0,counts=[0,0,0],order=0,stage='greeting',line=0,cash=0,served=0;
  let art=null,failed=false,buttons=[],message='',lastLayout=null;
  const starter=['旅人：街上又下雨了。这里还营业吗？','老板娘：当然。先坐下，我给你调杯热乎的。'];
@@ -105,38 +110,18 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
  }
 
  function scene(p,ctx){
-  const {x,y,w,h}=p;
-  // Dedicated layered pixel architecture; no copyrighted screenshot background.
-  drawBarInterior({p,COL,rect,poly,caption,clock});
-
-  // The counter lives on the RIGHT side of the scene, instead of
-  // covering the legs or cutting through the original character artwork.
-  const deskX=x+Math.floor(w*.60);
-  const rear=y+Math.floor(h*.61),front=y+Math.floor(h*.80);
-  poly([[deskX+4,rear],[x+w-7,rear],
-   [x+w-1,front],[deskX-3,front]],COL.blue);
-  rect(deskX-3,front,w-(deskX-x)+3,3,COL.paper);
-  rect(deskX-3,front+3,w-(deskX-x)+3,Math.max(0,y+h-front-3),COL.ink);
-  rect(deskX+Math.floor((x+w-deskX)*.10),front+Math.floor((y+h-front)*.54),
-   Math.floor((x+w-deskX)*.79),2,COL.pink);
-  const cupx=deskX+Math.floor((x+w-deskX)*.55),cupy=rear-Math.floor(h*.05);
-  rect(cupx,cupy-2,Math.max(7,Math.floor(w*.046)),2,COL.paper);
-  rect(cupx+2,cupy,Math.max(5,Math.floor(w*.037)),Math.max(6,Math.floor(h*.095)),COL.paper);
-  rect(cupx+3,cupy+4,Math.max(3,Math.floor(w*.025)),Math.max(3,Math.floor(h*.044)),COL.pink);
-  for(let i=0;i<3;i++)for(let j=0;j<Math.min(counts[i],3);j++){
-   rect(deskX+10+i*11+j*3,rear+8+i*3,2,2,i===0?COL.pink:i===1?COL.paper:COL.ink);
-  }
-
-  // Draw the WHOLE original 192×256 transparent figure. This is not a
-  // torso crop; neither the head, hands, dress, legs nor shoes may disappear.
-  // Its placement is reserved independently from the counter, with a
-  // 5+ logical-pixel gap, so the desk cannot occlude any character pixel.
+  // Architectural priority: BACKGROUND WALL with window, brickwork,
+  // shelves and lights; large continuous counter sits in the FOREGROUND.
+  // All items drawn with normal full-color palettes, not four inks.
+  drawBarInterior({p,rect,poly,caption,clock,counts});
+  // Keep the entire original character visible in a reserved left bay.
+  // It is intentionally not torso-cropped or hidden by the front counter.
   const place=computeFullPortraitPlacement(p);
   if(art){
-   const bob=Math.round(Math.sin(clock*2.1));
+   const bob=Math.round(Math.sin(clock*1.8));
    ctx.imageSmoothingEnabled=false;
    ctx.drawImage(art,0,0,192,256,place.x,place.y+bob,place.w,place.h);
-  }else if(failed)caption('角色素材载入失败',place.x+place.w/2,y+Math.floor(h*.4),11,COL.pink,'center');
+  }else if(failed)caption('角色素材载入失败',place.x+place.w/2,p.y+p.h*.42,11,COL.pink,'center');
  }
 
  function speech(p){
