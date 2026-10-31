@@ -1,0 +1,47 @@
+name: Night Lamp pixel VN smoke test
+on:
+  push:
+    paths:
+      - 'galgame/**'
+      - '.github/workflows/galgame-smoke.yml'
+  pull_request:
+    paths:
+      - 'galgame/**'
+      - '.github/workflows/galgame-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify dialogue graph, script syntax and pixel UI
+        run: node galgame/check.cjs
+      - name: Capture desktop and mobile browser previews when Chrome is available
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p previews
+          if command -v google-chrome >/dev/null 2>&1; then
+            CHROME=$(command -v google-chrome)
+          elif command -v chromium >/dev/null 2>&1; then
+            CHROME=$(command -v chromium)
+          else
+            echo "No Chrome binary in runner, skipping visual screenshots"
+            exit 0
+          fi
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --hide-scrollbars --window-size=1440,900 \
+            --screenshot=previews/desktop.png "file://$GITHUB_WORKSPACE/galgame/index.html"
+          "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage \
+            --hide-scrollbars --window-size=430,1000 \
+            --screenshot=previews/mobile.png "file://$GITHUB_WORKSPACE/galgame/index.html"
+          ls -lh previews/
+      - name: Upload visual previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightlamp-browser-previews
+          path: previews/*.png
+          if-no-files-found: ignore
