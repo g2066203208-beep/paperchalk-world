@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIXEL LAB · V4 25人像素图鉴重构检查台</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{background:#151a25;color:#f0efe6;margin:0;font:14px/1.7 system-ui,"Noto Sans SC",sans-serif}
+a{color:#bdd5c2}main{max-width:1190px;margin:auto;padding:22px 16px 65px}
+header{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(24px,4vw,37px);line-height:1.2}p{color:#b9c0c7}
+aside,.panel{background:#252c38;border:1px solid #475565;padding:16px;border-radius:13px;margin:14px 0}
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+input,select,button{font:inherit}input[type=file]{max-width:100%}button{background:#c7dccb;color:#12221b;font-weight:750;padding:10px 14px;border:0;border-radius:9px;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid figure{margin:0;min-width:0}
+canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;background:#f6ebd2;border:1px solid #576170}
+figcaption{color:#c9c9d3;font-size:12px;margin:7px 0}
+#tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+#tiles figure{margin:0;min-width:0;position:relative}#tiles canvas{width:100%}#tiles button{width:100%;margin-top:3px;padding:5px;font-size:12px}
+#report{white-space:pre-wrap;font:12px/1.55 ui-monospace,monospace;background:#141b26;border:1px solid #3e505d;border-radius:8px;padding:11px;max-height:260px;overflow:auto}
+@media(max-width:700px){.grid{grid-template-columns:1fr}#tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head><body><main>
+<header><a href="./index.html">← PIXEL LAB</a><a href="./portrait-atlas-v4.html">V4 25位角色详细提示词</a></header>
+<h1>V4 · 5×5 原生像素候选检查台</h1>
+<p>把V4原图导入浏览器，可立即进行25格隔离、每格限色、640×640原生整数格重构与逐格导出。所有处理在浏览器本地完成，不上传图片；真正的PyTorch训练只在Python/GitHub Actions运行。</p>
+<aside><strong>质量声明：</strong>转换后是一张可检查的整数像素候选图，并不自动具备手工像素画美学。有限色板和离散坐标不能证明每一簇都有艺术含义。GitHub Action的合成训练报告不可冒充本图的模型成果。</aside>
+<div class="panel toolbar">
+<label>载入原图 <input id="source" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<label>每格色数 <select id="colors"><option>8</option><option>12</option><option selected>18</option><option>24</option></select></label>
+<button id="convert" disabled>重构5×5候选图</button>
+<button id="download" disabled>导出640×640 PNG</button>
+<button id="preview" disabled>导出最近邻2560×2560</button>
+</div>
+<div class="grid">
+<figure><canvas id="original" width="640" height="640"></canvas><figcaption>用户原图（等比缩放，仅预览）</figcaption></figure>
+<figure><canvas id="result" width="640" height="640"></canvas><figcaption>640×640 候选原生像素 · 每格128×128 · 保护区108×108</figcaption></figure>
+</div>
+<h2>25个独立人物</h2>
+<div id="tiles" aria-label="25格原生像素结果"></div>
+<h2>机器约束核对</h2>
+<pre id="report">等待原图导入。画布固定5×5，行列对齐；安全区之外必须是统一背景。此页面仅做确定性转换，不会假装调用训练模型。</pre>
+<p><a href="https://github.com/g2066203208-beep/paperchalk-world/actions/workflows/portrait-v4-ml.yml">查看GitHub Actions训练</a> · <a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/docs/pixel-portrait-v4-ml-conversion.md">模型实验与五官美术验收说明</a></p>
+</main>
+<script>
+"use strict";
+const ids=n=>document.getElementById(n);
+const src=ids("original"),dst=ids("result"),tbox=ids("tiles");
+const BACKGROUND=[246,235,210],GAP=10,SIDE=108,STEP=128;
+let rawImage=null;
+const clamp=x=>Math.min(255,Math.max(0,x));
+function quantize(pixels,limit){
+ // Fixed RGB k-means per cell, no stochastic dithering, no antialias in output.
+ const n=pixels.length/4,clusters=[];
+ const counts=new Map();
+ for(let k=0;k<n;k++){const a=k*4;const key=((pixels[a]>>3)<<10)|((pixels[a+1]>>3)<<5)|(pixels[a+2]>>3);counts.set(key,(counts.get(key)||0)+1)}
+ const popular=[...counts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,limit);
+ for(const [key] of popular)clusters.push([(((key>>10)&31)<<3)+4,(((key>>5)&31)<<3)+4,((key&31)<<3)+4]);
+ while(clusters.length<limit)clusters.push(clusters[0]||[0,0,0]);
+ let assignments=new Uint8Array(n);
+ for(let pass=0;pass<6;pass++){
+  const sums=Array.from({length:limit},()=>[0,0,0,0]);
+  for(let k=0;k<n;k++){const i=k*4;let dmin=Infinity,which=0;for(let j=0;j<limit;j++){const c=clusters[j];const d=(pixels[i]-c[0])**2+(pixels[i+1]-c[1])**2+(pixels[i+2]-c[2])**2;if(d<dmin){dmin=d;which=j}}assignments[k]=which;const s=sums[which];s[0]+=pixels[i];s[1]+=pixels[i+1];s[2]+=pixels[i+2];s[3]++}
+  for(let j=0;j<limit;j++){let s=sums[j];if(s[3])clusters[j]=[s[0]/s[3],s[1]/s[3],s[2]/s[3]]}
+ }
+ const out=new Uint8ClampedArray(pixels.length);for(let k=0;k<n;k++){let c=clusters[assignments[k]],i=k*4;out[i]=clamp(Math.round(c[0]));out[i+1]=clamp(Math.round(c[1]));out[i+2]=clamp(Math.round(c[2]));out[i+3]=255}return out;
+}
+function download(canvas,name){canvas.toBlob(blob=>{if(!blob)return;const u=URL.createObjectURL(blob);const a=document.createElement("a");a.download=name;a.href=u;a.click();setTimeout(()=>URL.revokeObjectURL(u),1200)},"image/png")}
+function rebuild(){
+ const colorCount=Number(ids("colors").value),sourceW=rawImage.naturalWidth,sourceH=rawImage.naturalHeight;
+ const resultCtx=dst.getContext("2d",{willReadFrequently:true});
+ resultCtx.fillStyle="rgb("+BACKGROUND.join(",")+")";resultCtx.fillRect(0,0,640,640);
+ tbox.replaceChildren();let report=[];
+ for(let row=0;row<5;row++)for(let col=0;col<5;col++){
+  const sample=document.createElement("canvas");sample.width=SIDE;sample.height=SIDE;
+  const sc=sample.getContext("2d",{willReadFrequently:true});sc.imageSmoothingEnabled=true;sc.imageSmoothingQuality="high";
+  const x0=Math.round(col*sourceW/5),x1=Math.round((col+1)*sourceW/5);
+  const y0=Math.round(row*sourceH/5),y1=Math.round((row+1)*sourceH/5);
+  sc.drawImage(rawImage,x0,y0,x1-x0,y1-y0,0,0,SIDE,SIDE);
+  const data=sc.getImageData(0,0,SIDE,SIDE);data.data.set(quantize(data.data,colorCount));sc.putImageData(data,0,0);
+  resultCtx.drawImage(sample,col*STEP+GAP,row*STEP+GAP);
+  const figure=document.createElement("figure"),caption=document.createElement("figcaption"),button=document.createElement("button");
+  caption.textContent="R"+(row+1)+"C"+(col+1);button.textContent="导出此人物";
+  button.onclick=()=>download(sample,caption.textContent+"-108.png");
+  figure.append(sample,caption,button);tbox.appendChild(figure);
+  const names=new Set();const a=data.data;for(let k=0;k<a.length;k+=4)names.add(a[k]+","+a[k+1]+","+a[k+2]);
+  report.push(caption.textContent+": "+names.size+"色；安全区域本格["+GAP+","+(GAP+SIDE)+")");
+ }
+ const pixels=resultCtx.getImageData(0,0,640,640).data;
+ let bleed=0;for(let y=0;y<640;y++)for(let x=0;x<640;x++){
+   const yy=y%STEP,xx=x%STEP;if(xx>=10&&xx<118&&yy>=10&&yy<118)continue;
+   const i=(y*640+x)*4;if(pixels[i]!==BACKGROUND[0]||pixels[i+1]!==BACKGROUND[1]||pixels[i+2]!==BACKGROUND[2])bleed++;
+ }
+ report.unshift("画布：640×640；网格：5×5；每格：128×128；最近轴向净空至少20逻辑像素；越界像素："+bleed+"；结果："+(bleed===0?"通过":"未通过"));
+ ids("report").textContent=report.join("\n");ids("download").disabled=bleed!==0;ids("preview").disabled=bleed!==0;
+}
+ids("source").addEventListener("change",e=>{const file=e.target.files?.[0];if(!file)return;let u=URL.createObjectURL(file),img=new Image();img.onload=()=>{rawImage=img;let ctx=src.getContext("2d");ctx.fillStyle="#f6ebd2";ctx.fillRect(0,0,640,640);ctx.drawImage(img,0,0,640,640);ids("convert").disabled=false;ids("report").textContent="已读取 "+img.width+"×"+img.height+" 源图；点击重构。";URL.revokeObjectURL(u)};img.onerror=()=>{URL.revokeObjectURL(u);alert("无法读取图片")};img.src=u});
+ids("convert").onclick=()=>{if(rawImage)rebuild()};
+ids("download").onclick=()=>download(dst,"portrait-v4-native-candidate-640.png");
+ids("preview").onclick=()=>{const tmp=document.createElement("canvas");tmp.width=2560;tmp.height=2560;const g=tmp.getContext("2d");g.imageSmoothingEnabled=false;g.drawImage(dst,0,0,2560,2560);download(tmp,"portrait-v4-native-preview-2560.png")};
+</script></body></html>
