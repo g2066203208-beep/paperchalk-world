@@ -554,3 +554,237 @@ Hover 或轻触时显示将被填充区域的半透明 mask、预计影响像素
 - 目标文件不存在、磁盘满、URI 拒绝、文档压缩包损坏时提供中文错误和恢复选择。
 - PNG 导出使用原始逻辑尺寸和 NEAREST，绝不把准星、网格、参考线、预览把手、弹窗、状态栏等导出进去。
 - 图层多选、剪切、粘贴、矩形变形、路径编辑、随机刷等每个操作必须可以撤销、重做和重新打开。
+
+
+# 14. 分层原生 Android 工程结构与专门技术接口
+
+禁止继续让 700 多行 MainActivity 同时拥有工程列表、全部工具状态、手势处理、数据变更、画布绘制、对话框以及 ZIP 文件保存逻辑。用户看不到直线预览的根本工程原因之一就是输入、预览与最终文档不隔离。
+
+建议模块树（实际增量迁移，不要求一次全拆导致旧功能停摆）：
+
+app/
+- MainActivity：导航/Edge-to-edge/SystemBars/适配入口。
+- PixelAtelierApp：主题、全局作品导航、系统窗口管理。
+core-ui/
+- DesignTokens.kt：颜色、spacing、圆角、typography、touch target。
+- AdaptiveScreen.kt：窗口尺寸类、WindowInsets/hinge、IME。
+- SafeHeader.kt：顶部内容安全区、操作溢出策略。
+- ToolDock.kt：底部主工具栏、左右手重排、收藏工具。
+- ToolContextPanel.kt：工具参数抽屉。
+- FloatingActionRail.kt：落笔/确认/取消/微调按钮。
+core-input/
+- InputRouter.kt：PointerEvent 分配与消费规则。
+- GestureArbiter.kt：一指/双指/系统返回/控制柄优先级。
+- StylusAdapter.kt：MotionEvent 历史点、压力、hover、palm rejection。
+- TouchModeManager.kt：直接/偏移/独立准星模式。
+- ViewportTransform.kt：屏幕到逻辑像素双向坐标。
+core-preview/
+- PreviewSession.kt：所有工具的暂存态与状态机。
+- PreviewCoordinator.kt：输入→参数→渲染→提交。
+- DraftRasterBuffer.kt：可重用预览像素缓冲与脏矩形。
+- PreviewOverlayRenderer.kt：虚线、手柄、HUD、准星、预览蒙版。
+- HandleManager.kt：控制柄拾取/高亮/偏移/吸附。
+- PreviewCommitValidator.kt：预览和提交逐像素一致性门禁。
+core-pixel/
+- PixelDocument.kt：像素与图层的唯一真值。
+- PixelRasterizers.kt：直线/矩形/椭圆/多边形/曲线。
+- ColorMath.kt：Alpha、调色板索引、混合/量化。
+- PixelBrushEngine.kt：画笔 stamp/seed/spacing/压力。
+- SelectionMask.kt：选区布尔、剪贴与坐标。
+core-command/
+- Command.kt：所有画布操作的可逆命令接口。
+- TransactionJournal.kt：提交、撤销、重做、checkpoint。
+core-project/
+- ProjectStore.kt：版本化无损存储、原子保存、恢复。
+- ImportExport.kt：PNG/动画帧/3D 等真实格式。
+feature-editor/
+- EditorScreen.kt：组合屏幕各个 UI 面板。
+- EditorViewModel.kt：文档、工具、选区与预览持有。
+- CanvasSurface.kt：Committed/Preview/Overlay 分层渲染。
+- ToolRegistry.kt：工具 ID、参数、能力和帮助。
+- EditorActions.kt：用户意图至 command 的映射。
+feature-animation/
+- TimelineScreen.kt、OnionSkinRenderer.kt、FrameController.kt。
+feature-model3d/
+- ModelViewport.kt、SceneGraph.kt、UVEditor.kt、GraphEditor.kt。
+tests/
+- preview-geometry-golden/
+- insets-screenshot-golden/
+- gesture-replay/
+- pixel-roundtrip/
+- save-recovery/
+- performance-benchmarks/
+
+## 14.1 推荐的工具接口语义（伪接口，不代表已实现）
+
+接口 ToolController 不允许直接访问 Activity、ContentResolver 或 mutable Composable UI 树。
+
+声明：
+- onBegin(context: ToolContext, start: PixelPoint): PreviewSession
+- onUpdate(session: PreviewSession, current: PixelPoint): PreviewDelta
+- onRefine(session, handleId, point): PreviewDelta
+- getPreviewGeometry(session): GeometryDescription
+- rasterizePreview(session, readOnlySnapshot): RasterPreview
+- validate(session, document): Validation
+- buildCommand(session, document): PixelCommand
+- onCancel(session): NoMutation
+
+ToolContext 是 read-only：选中图层、颜色、画笔参数、选区 mask、documentRevision、辅助线、对称、平铺参数。正式 Commit 的事务必须由 CommandDispatcher 统一处理，工具不得自行保存文件。
+
+## 14.2 预览资源生命周期
+
+begin：分配 / 清空 draft buffer；
+update：dirty old region + new region；在 UI 中无阻塞提交预览版本；
+recalculate：同步轻量算法或带 cancellation token 的后台重算；
+commit：检查文档版本与图层锁定状态→验证 preview hash→单次 command→释放 draft；
+cancel：清理 overlay，主文档未变；
+activityStopped：保留已确认文档，按用户设置持久化可恢复草稿参数，但不能偷偷变成像素结果。
+
+## 14.3 防止 UI 坐标与预览落点不一致
+
+所有 pointer 必须在具体 Canvas 布局的 local coordinate 中解释，不能拿整屏坐标简单减去一个假定的标题栏高度。ToolController 只接受 PixelPoint，不接受 dp 或 window coordinate。
+当 Insets 改变：
+- ViewportTransform 重新计算 local-to-document；
+- 当前 PreviewSession 的几何逻辑点保持不变；
+- Overlay 的可见控制柄位置重新投影；
+- 如果屏幕短暂变窄，自动合理平移视口以保持活动像素可见，但不移动内容；
+- 不可直接重置为默认 fit 导致正在精修眼睛时跳到全图；
+- 测试日志记录 safeTop/safeBottom/viewportRect、fingerLocal、pixelCoordinate，便于重现偏移。
+
+# 15. 每项 UI 功能的正式验收体系
+
+以下均为必须纳入自动化或人工真机回归的用例；不得用只检查应用能启动替代。将每项写入 TEST_MATRIX_V1_2.md，并标记 NOT_RUN / FAIL / PASS_ANDROID_EMULATOR / PASS_PHYSICAL_DEVICE。对于 screenshot golden test，可维护不同 OS 版本和 density 的经过人工审核基线；不能未经理由就批量更新快照让测试虚假通过。
+
+## A 组｜系统栏、挖孔与窗口布局
+
+A01 在 Android 15 / targetSdk 35 上启用边到边，顶部“返回/撤销/重做”点击坐标落在 safeDrawing 可交互范围。
+A02 Android 13/14 使用手势导航，顶部无需增加双重 padding。
+A03 Android 15 三键导航，底部 48dp 按钮完整露出，不被系统导航键盖住。
+A04 正中挖孔屏，标题和按钮与 cutout rect 无相交。
+A05 左侧挖孔屏，返回键布局向内避让；仍可点击。
+A06 横屏右侧刘海，侧栏与 cutout 不重叠。
+A07 曲面屏左右 waterfall 区域有安全的点击边界或明确禁止放控制柄。
+A08 窗口 captionBar/桌面模式，顶栏不与窗口标题重叠。
+A09 用户将系统字体设置到 1.5 倍，顶栏可用、没有文字覆盖撤销键。
+A10 用户将显示大小调大，主要操作 hit target 不被裁剪。
+A11 输入 HEX 时弹出 IME，确认按钮仍可触摸。
+A12 大折叠屏从闭合变展开，画布逻辑焦点保持，组件不会跨越遮挡铰链。
+A13 分屏窗口连续改变高度，工具栏自动重新排列，不出现负高度或崩溃。
+A14 系统返回手势滑动，不能顺带产生意外笔触。
+A15 安卓状态栏亮色/暗色图标均有合规对比度。
+A16 用户进入专注绘画模式后恢复系统栏，所有控件重新出现在可交互区域。
+
+## B 组｜直线与几何实时预览
+
+B01 32×32 画布，开始直线后即显示起点高亮；第一次移动时显示真实像素线。
+B02 拖动从 (2,2) 到 (19,7)，屏幕连续至少数次预览变化，而不是只有 PointerUp 后变化。
+B03 同一个手势两次移动到不同终点，不保留上一次预览的残影。
+B04 未确认前关闭预览，文档 hash 与操作前完全相等。
+B05 手指抬起后进入可拖动控制柄的精修状态；拖动终点实时改变像素集。
+B06 点击确认后仅有一次 undo，回滚完整直线而非一格一格撤销。
+B07 直线首尾同一点画一格；负斜率和八方向无断点。
+B08 直线完全超出画布边界时安全裁剪，无无限循环/OutOfMemory。
+B09 同样的逻辑起终点在 2×、4×、8×、16× zoom 下得到相同像素数组。
+B10 横屏+挖孔+安全区改变后，端点落点依旧正确。
+B11 45° 约束确实改变最终路径，而不是只显示吸附辅助虚线。
+B12 矩形/椭圆拖动时真实预览完整轮廓，并包含当前透明度和图层合成。
+B13 实心矩形/实心椭圆在拖动中显示填充体，而非只显示轮廓。
+B14 椭圆奇偶宽高、退化线、退化点与实际图像输出一致。
+B15 Bézier 控制点编辑时旧曲线预览完全清除；控制柄不导出。
+B16 预览时改变颜色/线宽，要么采用参数快照要么明确重算；不能一半颜色旧一半新。
+B17 锁定图层尝试画线显示明确中文警告，不静默失效。
+B18 预览时接收到第二指缩放，支持安全保留预览且不留下误涂点。
+B19 多工具切换发生在 CommitReady 时出现确认/取消处理，不丢编辑结果。
+B20 对同一次输入，临时真实像素图与正式提交图在排除 UI overlay 后逐像素哈希一致。
+
+## C 组｜绘图笔刷与准星
+
+C01 手指快速斜向移动，完整补足每个逻辑像素路径，不因帧率低而断线。
+C02 单像素铅笔在不同 density 与偏移光标模式精确落同一逻辑格。
+C03 独立准星模式先起点后终点，画线实时预览并确认，真正可用。
+C04 偏移光标接近顶栏安全区时自动调整放大镜并正确点选。
+C05 “落笔”按钮在双指缩放或图层面板操作中不会触发误绘。
+C06 橡皮 preview 能看到透明棋盘透出，取消后 alpha 完全恢复。
+C07 吸管显示 HEX/RGBA 和采样来源，采样本身不修改图像。
+C08 随机画笔固定 seed、同输入重复得同 hash；预览稳定不闪烁。
+C09 触控笔 pressure 历史点有校准；不支持 pressure 的手指稳定使用默认值。
+C10 棕榈触摸误识别触发取消逻辑后不会残留永久像素。
+C11 在高刷新率设备重复测试，对 pointer move 的 coalescing 不丢真实笔画点。
+C12 用户手指遮住目标像素时放大镜准确展示当前 preview，不是旧图像。
+C13 卷积/抖动/渐变等重量操作在主线程之外预览，不阻塞所有触摸。
+
+## D 组｜选区、剪贴、变形和效果
+
+D01 矩形选区拖动中显示真实 mask，之后复制透明区域，再粘贴到新位置。
+D02 椭圆选区和任意多边形选区显示真实形状蚂蚁线，不可只显示 bbox。
+D03 浮动粘贴拖动时原图不变；点击取消不留像素；点击确认后一次撤销恢复。
+D04 框选/剪切/粘贴/缩放/旋转前后 alpha 及锁定图层规则正确。
+D05 选区组合布尔运算的像素数量正确；空选区输入不崩溃。
+D06 魔棒容差拖动实时更新预览，不因大区域全图卡住 UI。
+D07 对称模式实时预览所有对称点位，奇数/偶数画布镜像不偏一格。
+D08 渐变预览颜色种数与实际导出颜色种数吻合。
+D09 Gaussian 模糊预览与最终像素同算法，无透明黑边或不可撤销副作用。
+D10 平铺 XY 模式跨边界笔画在实时预览中同时出现，导出保持原图尺寸。
+D11 图层隐藏/锁定时，预览与正式写入权限一致。
+D12 多图层合成预览不得把参考图或选区 UI 参与图片输出。
+
+## E 组｜动画、3D 和专业资源
+
+E01 帧前后洋葱皮显示颜色/透明度正确，导出 PNG 不包含 ghost。
+E02 不同 durationMs 帧播放节奏和总时长正确。
+E03 时间轴播放/暂停/跳帧只在 preview 中体现，不破坏工程。
+E04 Cube 面拾取与 UV texel 映射一致，2D 贴图和 3D 视图同步更新。
+E05 3D 关键帧曲线修改后真的改变模型姿势，不只是动一条 UI 曲线。
+E06 3D 贴图插值为 NEAREST，模型可绕转且 UV 映射不随窗口 Insets 发生错误。
+E07 3D 编辑器进入全屏/分屏不丢模型数据和选中的面。
+E08 2D 项目不会因未加载 3D 后端而明显延迟启动。
+
+## F 组｜存储、异常恢复与离线
+
+F01 飞行模式下新建、画线预览、确认、图层、保存、导出完整可用。
+F02 模拟进程中断于 preview 阶段，重启不会把未提交预览写入作品。
+F03 模拟中断于 commit 后 autosave 前，有明确保留或恢复策略。
+F04 ZIP 旧工程 v1 导入并升级，不丢像素透明度或图层。
+F05 保存失败给出具体中文原因，原有效工程可以重新打开。
+F06 PNG 逐像素 roundtrip、尺寸、alpha、渐变结果一致。
+F07 界面语言完全中文，TalkBack 朗读工具标签，截图可人工核查。
+F08 32×32 新用户用不超过 5 个核心交互步骤画出并保存一条精准直线。
+F09 内存不足场景不会使自动保存输出一个被截断的“成功文件”。
+F10 GitHub Actions 产物与提交 SHA、编译版本、无 INTERNET 权限校验、APK SHA-256 一一对应。
+
+# 16. Android Emulator 与真实设备验证流程
+
+1. 使用 JDK 17、可复现 Gradle 版本、Android SDK 35/后续兼容版本进行原生 assembleDebug。
+2. JVM 单测运行 core-pixel、core-geometry、core-preview、core-command、core-selection 各算法；输出 JUnit XML 和 golden pixel fixtures。
+3. Android Emulator 上至少测试 API 28、API 33、API 35；可添加 API 36 验证后续行为。每个 API 测试手机竖/横屏、手势/三键导航、字体缩放和 320dp 小窗口（以实际支持能力为准）。
+4. 专门写手势回放：手指从一个像素拖到另一个像素，在手指仍按下时截图，截图必须出现预览直线；再截图松手/精修/确认/撤销状态，逐步骤保存。
+5. 对 UI 使用 Compose testTag，严格断言顶部按钮 bounding box 与安全矩形无相交；对于 cutout 的真实物理形状需结合可配置测试设备、WindowInsets 和截图人工审查。
+6. 模拟器启动成功不等于 UI 测试成功；UI 测试成功也不等于 screenshot 拉取成功。分别报告结果，截图必须从可靠应用存储路径获取，不能在 adb pull 路径失败后照样宣称通过。
+7. 真实设备专项：一款普通紧凑 Android 手机、一款异形挖孔屏、一款大屏或横屏设备、支持触控笔的设备（有条件时）。不具备设备就写 NOT_TESTED，不得假装。
+8. 录屏必须显示手指/触控注释或 input replay 轨迹，并看到预览随着轨迹变化；单张结果 PNG 不能证明动态预览。
+9. 性能记录：设备型号、API、屏幕刷新率、density、画布尺寸、图层帧数、笔刷尺寸、p50/p95 触控延迟、frame pacing、CPU、内存和 GC 暂停；报告不能只写“不卡”。
+10. 自动化运行失败时必须先打开原始 logs 分析是源码、模拟器、网络依赖还是截图路径问题，再确定修复策略，不能无证据反复重跑。
+11. APK 交付先做 Debug 内部测试，正式 release 签名密钥单独保管，永远不传到 GitHub 公开仓库。
+12. 所有可安装版本都附上 SHA-256 和对应 Git commit；问题版本保留回滚入口。
+
+# 17. 量化性能目标与升级门禁
+
+所有指标是目标，必须标注设备、场景和是否实测：
+
+- 常用 128×128、256×256 画布的几何形状预览目标稳定接近设备刷新率（一般不低于 60fps），对于复杂滤镜可有进度反馈和异步精细化。
+- 触控笔/手指位置到预览位置 p95 目标小于 50ms；真实数字要采集，不可靠肉眼估计。
+- 简单直线或矩形预览的算法时间应远小于单帧预算；如超时，则检查重复全画布复合、位图分配、Compose 状态传递与 UI 线程 I/O。
+- 自动保存不得在主线程阻塞绘制；单笔状态撤销不应导致整张图闪白。
+- 手势输入 120Hz 与画面 60Hz 不造成漏点；可以合并预览帧但不能吞掉提交笔触。
+- 在 320dp 窄屏、字体 1.5 倍情况下，工具仍可操作；若有溢出菜单，核心工具使用不超过两层菜单。
+- 辅助 HUD、网格、蚂蚁线、手柄动画可以降帧/关闭，但逻辑像素输出不能降质量。
+- 后台/低电量模式减少实时无关视觉动画，但不改变预览/提交一致性。
+
+**门禁 G1**：顶部安全区、底部导航区、屏幕旋转均通过截图/坐标测试。
+**门禁 G2**：直线、矩形、椭圆、选区在手指移动中有真实预览，并通过预览/提交一致性测试。
+**门禁 G3**：几何工具确认/取消/撤销/重做没有残影、数据损坏和异常 autosave。
+**门禁 G4**：三种触控模式完整覆盖线/形状/选区，双指不中断作品。
+**门禁 G5**：性能、透明边缘、导出、图层以及旧工程回归成功。
+**门禁 G6**：图层、曲线、渐变、动画和 3D 以阶段化真实功能上线，不再使用占位按钮。
+
+未通过 G1/G2 绝不允许宣称“适配手机专业绘图版”，因为那是用户明确指出的基础问题。
