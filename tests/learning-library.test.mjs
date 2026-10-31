@@ -31,6 +31,8 @@ test('true-gameplay evidence is never an AI render, capsule, banner or a fake im
   }
  }
  assert.ok(count>=18);
+ assert.ok(data[1663220].length>=3,'Coffee Talk Episode 2 needs counter, drink UI and latte-art sources');
+ assert.ok(data[1663220].some(x=>x.source.includes('famitsu.com')),'episode 2 customer-counter scene must be credited');
  assert.deepEqual(built.games,data);
 });
 test('actual gallery is responsive and wired from the real PAPERWORLD menu',()=>{
