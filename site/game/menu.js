@@ -117,7 +117,8 @@ function buttonIcon(kind,x,y,sz=13,c=COL.ink){
 }
 function layout(){
  const sw=innerWidth,sh=innerHeight;
- scale=2;
+ // The bar uses a true CSS-pixel backing buffer; keep existing low-res pipeline for other scenes.
+ scale=state==='bar'?1:2;
  W=Math.max(1,Math.ceil(sw/scale));H=Math.max(1,Math.ceil(sh/scale));land=W/H>1.25;
  el.width=W;el.height=H;el.style.width=(W*scale)+'px';el.style.height=(H*scale)+'px';ctx.imageSmoothingEnabled=false;
  buttons();
@@ -224,7 +225,7 @@ function enterScene(next){
  else intro.leave();
  if(next!=='lease')lease.hide();
  if(next==='bar')bar.enter();else bar.leave();
- buttons();
+ layout();
 }
 function switchScene(next){
  if(curtain)return;
