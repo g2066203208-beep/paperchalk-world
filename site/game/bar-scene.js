@@ -5,6 +5,7 @@
  */
 import {portraitLayers} from './intro.js';
 import {HOSTESS_PNG} from './hostess-pixel.js';
+import {drawBarInterior} from './bar-environment.js';
 
 export const BAR_ORDERS=Object.freeze([
  {name:'蓝铃汽泡',goal:[2,1,0],reward:18,order:'两份甜露，一份清泉。不要加苦草。',good:'旅人：正是这个味道。这里比街上安静多了。'},
@@ -105,32 +106,8 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
 
  function scene(p,ctx){
   const {x,y,w,h}=p;
-  rect(x,y,w,h,COL.ink);
-  // Large calm wall and an intentional single window.
-  const wx=x+Math.floor(w*.055),wy=y+Math.floor(h*.09);
-  const ww=Math.floor(w*.275),wh=Math.floor(h*.37);
-  rect(wx-2,wy-2,ww+4,wh+4,COL.blue);
-  rect(wx,wy,ww,wh,COL.ink);
-  rect(wx+Math.floor(ww*.49),wy,2,wh,COL.blue);
-  rect(wx,wy+Math.floor(wh*.57),ww,2,COL.blue);
-  // Distant apartment silhouettes: block groups, not noisy random pixels.
-  for(let i=0;i<4;i++){
-   const xx=wx+3+i*Math.floor((ww-7)/4);
-   const v=wh*(.12+((i*7)%4)*.1);
-   rect(xx,wy+wh-Math.floor(v),Math.max(2,Math.floor(ww*.115)),Math.floor(v),COL.pink);
-  }
-  // One restrained shelf and a three-bottle silhouette to the right.
-  const shx=x+Math.floor(w*.74),shy=y+Math.floor(h*.39),sww=Math.floor(w*.205);
-  rect(shx,shy,sww,3,COL.blue);
-  for(let i=0;i<3;i++){
-   const bw=Math.max(5,Math.floor(w*.027));
-   const bx=shx+Math.floor(sww*(.13+i*.30));
-   const body=Math.max(10,Math.floor(h*.115));
-   rect(bx+Math.floor(bw*.3),shy-body-5,Math.max(2,Math.floor(bw*.45)),5,COL.blue);
-   rect(bx,shy-body,bw,body,i===1?COL.pink:COL.paper);
-  }
-  // A small sign is kept INSIDE the architectural negative space, below the shelf.
-  if(w>300)caption('BLUEBELL',shx+sww/2,y+Math.floor(h*.48),11,COL.pink,'center');
+  // Dedicated layered pixel architecture; no copyrighted screenshot background.
+  drawBarInterior({p,COL,rect,poly,caption,clock});
 
   // The counter lives on the RIGHT side of the scene, instead of
   // covering the legs or cutting through the original character artwork.
