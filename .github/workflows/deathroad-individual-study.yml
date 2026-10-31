@@ -64,3 +64,41 @@ jobs:
           path: artifacts/deathroad-reference-study/
           retention-days: 14
           if-no-files-found: warn
+
+  render-original-characters:
+    needs: [research-public-reference]
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install exact-grid image inspection
+        run: python -m pip install numpy Pillow
+      - name: Download learned numerical palette statistics (never proprietary sprite images)
+        uses: actions/download-artifact@v4
+        with:
+          name: deathroad-30-reference-style-research-only
+          path: artifacts/model-input
+      - name: Decode all thirty originally authored indexed sprite designs and apply learned palette statistics
+        run: |
+          python ml/deathroad_study/render_originals.py --study artifacts/model-input/model-study.json --out artifacts/original-characters
+          python -m unittest discover -s tests -p test_deathroad_original_sprites.py -v
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from PIL import Image
+          p=Path("artifacts/original-characters")
+          m=json.loads((p/"manifest.json").read_text())
+          assert m["original_character_count"]==30
+          assert all(x["reference_stat_conditioned"] for x in m["sprites"])
+          assert Image.open(p/"contact-30-original.png").size == (1332,1555)
+          print("PASS: actual 30 original playable-sized true pixel PNG assets")
+          PY
+      - name: Upload actual original PNGs individually and contact sheet
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-native-pixel-32x48-thirty-characters
+          path: artifacts/original-characters/
+          retention-days: 30
