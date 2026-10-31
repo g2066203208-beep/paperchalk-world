@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {BAR_ORDERS,validMixture,computeBarLayout} from '../site/game/bar-scene.js';
+import {BAR_ORDERS,validMixture,computeBarLayout,computeFullPortraitPlacement} from '../site/game/bar-scene.js';
 
 test('bar orders have exact deterministic ingredient combinations',()=>{
  assert.equal(BAR_ORDERS.length,2);
@@ -54,5 +54,19 @@ test('four viewport panels stay inside canvas and never overlap',()=>{
   const surface=panels.reduce((a,p)=>a+p.w*p.h,0);
   assert.equal(surface,w*h,'zero dead space; panels fully tile screen');
   assert.ok(layout.room.h>=60&&layout.dialogue.h>=55&&layout.mixer.h>=70);
+ }
+});
+
+test('complete hostess portrait keeps all 192×256 rows and is never behind counter',()=>{
+ const file=readFileSync('site/game/bar-scene.js','utf8');
+ assert.match(file,/drawImage\(art,0,0,192,256,/);
+ assert.doesNotMatch(file,/drawImage\(art,0,0,192,140,/);
+ for(const [w,h] of [[195,422],[422,195],[720,450],[410,590],[280,250]]){
+  const r=computeBarLayout(w,h).room;
+  const p=computeFullPortraitPlacement(r);
+  assert.deepEqual(p.source,[192,256]);
+  assert.ok(p.x>=r.x&&p.y>=r.y&&p.y+p.h<=r.y+r.h, 'vertical crop: '+w+' '+h);
+  assert.ok(p.x+p.w+4<p.deskStart,'counter overlaps full figure: '+w+' '+h);
+  assert.ok(Math.abs(p.w*256-p.h*192)<=192,'aspect ratio warped');
  }
 });
