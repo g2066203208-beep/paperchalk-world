@@ -157,6 +157,7 @@ private fun AtelierApp(store: ProjectStore) {
     var showNew by remember { mutableStateOf(false) }
     var showColors by remember { mutableStateOf(false) }
     var showLayers by remember { mutableStateOf(false) }
+    var editingMask by remember { mutableStateOf(false) }
     var showOptions by remember { mutableStateOf(false) }
     var cursor by remember { mutableStateOf(IntOffset(0, 0)) }
     val snackbar = remember { SnackbarHostState() }
@@ -181,6 +182,7 @@ private fun AtelierApp(store: ProjectStore) {
                 pending?.cancel()
                 document = loaded
                 preview = null; cursorShapeAnchored = false; editOperation = null
+                editingMask = false
                 selection = null
                 internalClipboard = null
                 version++
@@ -195,6 +197,7 @@ private fun AtelierApp(store: ProjectStore) {
         scheduleSave(true)
         document = null
         preview = null; cursorShapeAnchored = false; editOperation = null
+        editingMask = false
         showLayers = false; showColors = false
     }
 
@@ -325,8 +328,17 @@ private fun AtelierApp(store: ProjectStore) {
                         Text("⋮", style = MaterialTheme.typography.titleLarge)
                     }
                 }
+                if (editingMask) {
+                    Row(Modifier.fillMaxWidth().background(Color(0xFF4C3650))
+                        .padding(horizontal=8.dp, vertical=3.dp),
+                        verticalAlignment=Alignment.CenterVertically) {
+                        Text("遮罩绘制 · 铅笔显露／橡皮隐藏",Modifier.weight(1f),
+                            style=MaterialTheme.typography.labelSmall)
+                        TextButton(onClick={ editingMask=false }) { Text("退出遮罩") }
+                    }
+                }
                 HorizontalDivider(color = Color(0xFF30394A))
-                PixelViewport(doc, version, tool, color, touchMode, cursor, selection, preview, editOperation,
+                PixelViewport(doc, version, tool, color, touchMode, cursor, selection, preview, editOperation, editingMask,
                     onPreview = { preview = it },
                     onSelection = { selection = it },
                     onCursor = {
@@ -599,9 +611,9 @@ private fun AtelierApp(store: ProjectStore) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(selected = activeDoc.activeLayer == index,
-                            onClick = { activeDoc.activeLayer = index; notifyChange() })
+                            onClick = { activeDoc.activeLayer = index; editingMask = false; notifyChange() })
                         Text(layer.name, Modifier.weight(1f).clickable {
-                            activeDoc.activeLayer = index; notifyChange()
+                            activeDoc.activeLayer = index; editingMask = false; notifyChange()
                         })
                         TextButton(onClick = {
                             layer.visible = !layer.visible; notifyChange(); scheduleSave()
@@ -663,6 +675,17 @@ private fun AtelierApp(store: ProjectStore) {
                         if(activeDoc.createMask()) { notifyChange(); scheduleSave() }
                     }) { Text("＋ 新建全白遮罩") }
                 } else {
+                    TextButton(onClick = {
+                        if (!activeDoc.currentLayer.maskEnabled) {
+                            if(activeDoc.setMaskEnabled(true)) { notifyChange(); scheduleSave() }
+                        }
+                        editingMask = !editingMask
+                        if(editingMask) {
+                            tool = EditorTool.PENCIL
+                            toolCategory = EditorCategory.DRAW
+                            showLayers = false
+                        }
+                    }) { Text(if (editingMask) "● 正在绘制遮罩（铅笔显露／橡皮隐藏）" else "✎ 编辑遮罩像素") }
                     Row(Modifier.horizontalScroll(rememberScrollState())) {
                         TextButton(onClick={
                             if(activeDoc.setMaskEnabled(!activeDoc.currentLayer.maskEnabled)) {
@@ -802,6 +825,7 @@ private fun PixelViewport(
     selection: SelectionMask?,
     preview: ShapeDraft?,
     editOperation: EditOperation?,
+    editingMask: Boolean,
     onPreview: (ShapeDraft?) -> Unit,
     onSelection: (SelectionMask?) -> Unit,
     onCursor: (IntOffset) -> Unit,
@@ -884,7 +908,7 @@ private fun PixelViewport(
     Canvas(
         modifier.background(Color(0xFF10151E)).testTag("pixel-canvas")
             .onSizeChanged { viewport.value = it }
-            .pointerInput(doc, tool, color, mode) {
+            .pointerInput(doc, tool, color, mode, editingMask) {
                 fun toPixel(point: Offset): IntOffset {
                     val p = if (mode == TouchMode.OFFSET) point - Offset(0f, 56f*density) else point
                     return IntOffset(
@@ -897,6 +921,7 @@ private fun PixelViewport(
                     val first = toPixel(down.position)
                     var last = first
                     var stroke = false
+                    var maskStroke = false
                     var multi = false
                     val shapeKind = tool.shapeKind()
                     var currentShape = currentPreview
@@ -922,7 +947,10 @@ private fun PixelViewport(
                     }
                     fun plot(point: IntOffset) {
                         if (point.x !in 0 until doc.width || point.y !in 0 until doc.height) return
-                        when (tool) {
+                        if (maskStroke) {
+                            if (tool == EditorTool.PENCIL || tool == EditorTool.ERASER)
+                                doc.setMaskPixel(point.x,point.y,if (tool == EditorTool.ERASER) 0 else 255)
+                        } else when (tool) {
                             EditorTool.PENCIL -> doc.setPixel(point.x,point.y,color)
                             EditorTool.ERASER -> doc.setPixel(point.x,point.y,0)
                             EditorTool.FILL -> doc.floodFill(point.x,point.y,color)
@@ -933,7 +961,10 @@ private fun PixelViewport(
                     }
                     if (mode != TouchMode.CURSOR) {
                         if (mode == TouchMode.OFFSET) currentCursor(first)
-                        if (shapeKind == null && tool != EditorTool.PICKER) {
+                        if (editingMask && doc.currentLayer.mask != null &&
+                            (tool == EditorTool.PENCIL || tool == EditorTool.ERASER)) {
+                            maskStroke = doc.beginMaskStroke()
+                        } else if (shapeKind == null && tool != EditorTool.PICKER) {
                             doc.beginStroke(); stroke = true
                         }
                         if (tool in listOf(EditorTool.PENCIL,EditorTool.ERASER,
@@ -944,9 +975,10 @@ private fun PixelViewport(
                         val event = awaitPointerEvent()
                         val pressed = event.changes.filter { it.pressed }
                         if (pressed.size >= 2) {
-                            if (!multi && stroke) {
-                                doc.cancelStroke()
-                                stroke = false
+                            if (!multi && (stroke || maskStroke)) {
+                                if (maskStroke) doc.cancelMaskStroke()
+                                if (stroke) doc.cancelStroke()
+                                stroke = false; maskStroke = false
                                 currentChanged()
                             }
                             multi = true
@@ -980,8 +1012,10 @@ private fun PixelViewport(
                                         currentDraftUpdate(currentShape)
                                     }
                                 } else if (tool == EditorTool.PENCIL || tool == EditorTool.ERASER) {
-                                    if (stroke && point != last) {
-                                        doc.line(last.x,last.y,point.x,point.y,
+                                    if ((stroke || maskStroke) && point != last) {
+                                        if(maskStroke) doc.maskLine(last.x,last.y,point.x,point.y,
+                                            if (tool == EditorTool.ERASER) 0 else 255)
+                                        else doc.line(last.x,last.y,point.x,point.y,
                                             if (tool == EditorTool.ERASER) 0 else color)
                                         currentChanged()
                                     }
@@ -991,8 +1025,9 @@ private fun PixelViewport(
                         }
                         if (pressed.isEmpty()) break
                     }
-                    if (!multi && stroke && mode != TouchMode.CURSOR) {
-                        if (doc.finishStroke()) currentCommit()
+                    if (!multi && mode != TouchMode.CURSOR) {
+                        if (maskStroke && doc.finishMaskStroke()) currentCommit()
+                        else if (stroke && doc.finishStroke()) currentCommit()
                     }
                 }
             }
