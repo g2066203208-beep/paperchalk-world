@@ -43,7 +43,9 @@ class PreviewInteractionTest {
         fun send(action: Int, x: Float, y: Float, at: Long) {
             val event = MotionEvent.obtain(t0,at,action,x,y,0)
             event.source = InputDevice.SOURCE_TOUCHSCREEN
-            compose.activity.runOnUiThread { root.dispatchTouchEvent(event) }
+            InstrumentationRegistry.getInstrumentation().runOnMainSync {
+                root.dispatchTouchEvent(event)
+            }
             event.recycle()
         }
 
