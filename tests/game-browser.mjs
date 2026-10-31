@@ -233,6 +233,30 @@ try{
   await clicked(page,0);
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.transition?.phase==='close');
   await page.screenshot({path:'artifacts/game/'+screen+'-transition.png'});
+  await waitScene(page,'bar');
+  // The new main path is a real counter scene, not a flat reference image.
+  async function clickBar(id){
+    const m=await state(page),b=m.bar?.buttons.find(b=>b.id===id);
+    assert.ok(b,'bar action exists: '+id);
+    const rect=await page.locator('#menu').boundingBox();
+    await page.mouse.click(rect.x+(b.x+b.w/2)*rect.width/m.logical[0],
+      rect.y+(b.y+b.h/2)*rect.height/m.logical[1]);
+    await page.waitForTimeout(80);
+  }
+  await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.bar?.portraitReady,{timeout:10000});
+  const barInitial=(await state(page)).bar;
+  assert.equal(barInitial.stage,'greeting');
+  assert.ok((await exactCanvasColors(page)).every(c=>official.has(c)),'bar counter must remain exact four-ink pixel art');
+  await page.screenshot({path:'artifacts/game/'+screen+'-bar-counter-original-four-ink.png'});
+  await clickBar('next');await clickBar('next');
+  assert.equal((await state(page)).bar.stage,'order');
+  await clickBar('m0');await clickBar('m0');await clickBar('m1');
+  assert.deepEqual((await state(page)).bar.counts,[2,1,0]);
+  await clickBar('mix');
+  assert.equal((await state(page)).bar.stage,'served','correct 2+1+0 mix must serve the drink');
+  assert.ok((await state(page)).bar.cash>=18);
+  await page.screenshot({path:'artifacts/game/'+screen+'-bar-mixed-success.png'});
+  await clickBar('intro');
   await waitScene(page,'intro');
   const distant=(await state(page)).intro;
   assert.equal(distant.phase,'approaching');
