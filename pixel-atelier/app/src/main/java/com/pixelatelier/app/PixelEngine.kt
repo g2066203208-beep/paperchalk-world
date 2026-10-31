@@ -15,7 +15,9 @@ data class PixelLayer(
 }
 
 private data class Change(val index: Int, val before: Int, val after: Int)
-private data class PixelAction(val layerId: Long, val changes: List<Change>)
+private data class LayerPixelsChange(val layerId: Long, val changes: List<Change>)
+private data class PixelAction(val affectedLayers: List<LayerPixelsChange>)
+enum class ClearScope { ACTIVE_LAYER, ALL_EDITABLE_LAYERS }
 
 class PixelDocument(
     val id: String,
@@ -127,7 +129,7 @@ class PixelDocument(
             if (old == now) null else Change(i, old, now)
         }
         if (changes.isEmpty()) return false
-        undo.addLast(PixelAction(layer.id, changes))
+        undo.addLast(PixelAction(listOf(LayerPixelsChange(layer.id, changes))))
         while (undo.size > historyLimit) undo.removeFirst()
         redo.clear()
         return true
@@ -144,8 +146,10 @@ class PixelDocument(
         finishStroke()
         if (undo.isEmpty()) return false
         val action = undo.removeLast()
-        layers.firstOrNull { it.id == action.layerId }?.let { layer ->
-            for (c in action.changes) layer.pixels[c.index] = c.before
+        for (entry in action.affectedLayers) {
+            layers.firstOrNull { it.id == entry.layerId }?.let { layer ->
+                for (c in entry.changes) layer.pixels[c.index] = c.before
+            }
         }
         redo.addLast(action)
         return true
@@ -154,10 +158,42 @@ class PixelDocument(
     fun redo(): Boolean {
         if (redo.isEmpty()) return false
         val action = redo.removeLast()
-        layers.firstOrNull { it.id == action.layerId }?.let { layer ->
-            for (c in action.changes) layer.pixels[c.index] = c.after
+        for (entry in action.affectedLayers) {
+            layers.firstOrNull { it.id == entry.layerId }?.let { layer ->
+                for (c in entry.changes) layer.pixels[c.index] = c.after
+            }
         }
         undo.addLast(action)
+        return true
+    }
+
+    /**
+     * Atomically clears or fills the selected pixels on one or multiple editable layers.
+     * One user operation -> one history entry. A null mask targets every logical pixel.
+     * Does not remove layer metadata, frames, IDs, or lock state.
+     */
+    fun replaceArea(color: Int = 0, mask: SelectionMask? = null,
+                    scope: ClearScope = ClearScope.ACTIVE_LAYER): Boolean {
+        if (mask != null) require(mask.width == width && mask.height == height)
+        finishStroke()
+        val targets = if (scope == ClearScope.ACTIVE_LAYER) listOf(currentLayer) else layers.toList()
+        val entries = mutableListOf<LayerPixelsChange>()
+        for (layer in targets) {
+            if (layer.locked) continue
+            val changes = ArrayList<Change>()
+            for (index in 0 until width * height) {
+                if (mask != null && !mask.get(index % width, index / width)) continue
+                val before = layer.pixels[index]
+                if (before == color) continue
+                changes.add(Change(index, before, color))
+                layer.pixels[index] = color
+            }
+            if (changes.isNotEmpty()) entries.add(LayerPixelsChange(layer.id, changes))
+        }
+        if (entries.isEmpty()) return false
+        undo.addLast(PixelAction(entries))
+        while (undo.size > historyLimit) undo.removeFirst()
+        redo.clear()
         return true
     }
 
