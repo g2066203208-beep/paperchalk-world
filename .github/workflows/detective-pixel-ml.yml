@@ -1,0 +1,42 @@
+name: Pixel Lab - V4 detective real CNN pixel experiment
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/portrait_v4/detective.py'
+      - '.github/workflows/detective-pixel-ml.yml'
+      - 'tests/test_detective_pixel_ml.py'
+      - 'site/pixel-lab/portrait-v4/source-v4-640-q92.webp'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  detective-training:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install image processing and CPU ML dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pillow opencv-python-headless
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Run actual source-trained inference and holdouts
+        run: |
+          test -f site/pixel-lab/portrait-v4/source-v4-640-q92.webp
+          python -m ml.portrait_v4.detective \
+            --input site/pixel-lab/portrait-v4/source-v4-640-q92.webp \
+            --out artifacts/detective-v4-ml --steps 150 --colors 14
+      - name: Validate exact RGB pixel blocks and holdout provenance
+        run: |
+          python -m unittest discover -s tests -p test_detective_pixel_ml.py -v
+      - name: Publish real R2C2 results (not synthetic smoke)
+        uses: actions/upload-artifact@v4
+        with:
+          name: v4-detective-real-cnn-native-pixels
+          path: artifacts/detective-v4-ml/
+          retention-days: 30
+          if-no-files-found: error
