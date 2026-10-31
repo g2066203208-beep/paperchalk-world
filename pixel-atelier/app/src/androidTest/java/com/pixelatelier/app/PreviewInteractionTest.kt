@@ -73,11 +73,9 @@ class PreviewInteractionTest {
 
         // A new draft can be committed exactly once; undo is enabled afterwards.
         compose.onNodeWithTag("pixel-canvas").performTouchInput {
-            swipe(
-                start = androidx.compose.ui.geometry.Offset(center.x-50f,center.y-40f),
-                end = androidx.compose.ui.geometry.Offset(center.x+50f,center.y+50f),
-                durationMillis = 230L
-            )
+            down(androidx.compose.ui.geometry.Offset(center.x-50f,center.y-40f))
+            moveTo(androidx.compose.ui.geometry.Offset(center.x+50f,center.y+50f))
+            up()
         }
         compose.onNodeWithTag("shape-preview-controls").assertExists()
         compose.onNodeWithText("完成").performClick()
