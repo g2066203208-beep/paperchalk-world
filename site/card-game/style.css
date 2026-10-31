@@ -29,3 +29,13 @@
  #hand-dock #hand-cards>.play-card:not(:first-child){margin-left:clamp(-40px,calc((100vw - 570px)/7),-20px)}
  #hand-dock #hand-cards>.play-card:hover{z-index:4}
 }
+
+/* Short landscape Android devices have half a page of vertical space and
+ * a narrower stage than desktop: fan eight cards without chopping card 8. */
+@media(min-width:681px) and (max-height:560px){
+ #hand-dock .hand-scroll{overflow-x:visible}
+ #hand-dock #hand-cards{min-width:0;width:100%;gap:0;justify-content:center}
+ #hand-dock #hand-cards>.play-card{flex:0 0 70px;width:70px;margin:0}
+ #hand-dock #hand-cards>.play-card:not(:first-child){margin-left:-11px}
+ #hand-dock #hand-cards>.play-card:hover{z-index:4}
+}
