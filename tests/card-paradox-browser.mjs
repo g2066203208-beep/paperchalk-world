@@ -17,7 +17,7 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base='http://127.0.0.1:'+server.address().port,errors=[];
 const browser=await chromium.launch({headless:true,args:['--no-sandbox','--use-gl=swiftshader']});
 try{
- for(const [name,width,height] of [['desktop',1440,900],['portrait',390,844],['landscape',844,390]]){
+ for(const [name,width,height] of [['desktop',1440,900],['tablet',960,620],['portrait',390,844],['landscape',844,390]]){
   const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,isMobile:name!=='desktop',hasTouch:name!=='desktop'});
   page.on('pageerror',e=>errors.push(name+': '+e.message));
   await page.goto(base+'/card-game/',{waitUntil:'load'});
