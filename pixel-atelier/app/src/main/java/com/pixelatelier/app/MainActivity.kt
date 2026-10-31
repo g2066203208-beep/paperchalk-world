@@ -822,6 +822,66 @@ private fun PixelViewport(
             }
             canvas.drawBitmap(bitmap,null,RectF(left,top,left+doc.width*scale,
                 top+doc.height*scale),drawingPaint)
+
+            // V1.2: the draft uses exactly ShapeRasterizer's integer cells and
+            // the document's alpha compositing rules; never mutates the document.
+            val draft = preview
+            if (draft != null && draft.kind != ShapeKind.RECT_SELECTION) {
+                var runRow = -1
+                var runStart = -1
+                var runEnd = -1
+                var runArgb = 0
+                var runChecker = 0
+                fun flushRun() {
+                    if(runRow < 0) return
+                    val x0 = left + runStart*scale
+                    val x1 = left + (runEnd+1)*scale
+                    val y0 = top + runRow*scale
+                    val y1 = top + (runRow+1)*scale
+                    checkerPreviewPaint.color = runChecker
+                    canvas.drawRect(x0,y0,x1,y1,checkerPreviewPaint)
+                    if (runArgb ushr 24 != 0) {
+                        pixelPreviewPaint.color = runArgb
+                        canvas.drawRect(x0,y0,x1,y1,pixelPreviewPaint)
+                    }
+                }
+                for (index in previewIndices) {
+                    val x = index % doc.width
+                    val y = index / doc.width
+                    val argb = doc.compositeWithPreview(index,draft.argb)
+                    val checker = if (8*scale >= 2f && ((x/8+y/8)%2==1))
+                        0xFF404858.toInt() else 0xFF343B49.toInt()
+                    if (y==runRow && x==runEnd+1 && argb==runArgb && checker==runChecker) {
+                        runEnd=x
+                    } else {
+                        flushRun()
+                        runRow=y; runStart=x; runEnd=x; runArgb=argb; runChecker=checker
+                    }
+                }
+                flushRun()
+            }
+            if (draft != null) {
+                if (draft.kind == ShapeKind.RECT_SELECTION) {
+                    val mask = ShapeRasterizer.selection(doc.width,doc.height,draft)
+                    val bounds = mask.bounds()
+                    if (bounds != null) {
+                        val tint = android.graphics.Paint().apply {
+                            color=0x44699CF9; isAntiAlias=false
+                        }
+                        canvas.drawRect(left+bounds.left*scale,top+bounds.top*scale,
+                            left+bounds.right*scale,top+bounds.bottom*scale,tint)
+                    }
+                }
+                val guide = previewGuidePaint
+                val startX = left + (draft.start.x+0.5f)*scale
+                val startY = top + (draft.start.y+0.5f)*scale
+                val endX = left + (draft.end.x+0.5f)*scale
+                val endY = top + (draft.end.y+0.5f)*scale
+                guide.color = android.graphics.Color.WHITE
+                canvas.drawCircle(startX,startY,8f,guide)
+                guide.color = 0xFF71DCE3.toInt()
+                canvas.drawCircle(endX,endY,8f,guide)
+            }
             if (scale >= 9f) {
                 for(x in 0..doc.width)
                     canvas.drawLine(left+x*scale,top,left+x*scale,top+doc.height*scale,gridPaint)
