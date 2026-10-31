@@ -33,6 +33,11 @@ test('main game boots the bar without deleting previous features',()=>{
  assert.match(html,/game\/menu\.js\?v=20261031-bar4-hires/);
  assert.match(bar,/portraitLayers/);
  assert.match(bar,/drawBarInterior/);
+ const interior=readFileSync('site/game/bar-environment.js','utf8');
+ assert.match(interior,/getBarInteriorGeometry/);
+ assert.match(interior,/brickLight/);
+ assert.match(interior,/topEdge/);
+ assert.match(interior,/counterStart/);
  assert.match(bar,/ctx\.scale\(2,2\)/);
  assert.ok(readFileSync('site/game/bar-environment.js','utf8').includes('drawBarInterior'));
  assert.match(bar,/counter|柜台|poly/);
