@@ -5,13 +5,14 @@
  */
 export const GAMES=Object.freeze([
  {id:914800,title:'Coffee Talk',cn:'咖啡心语',core:true,tags:['角色','柜台','对话','操作台'],focus:'观察人物与柜台的上下遮挡、台面高度、近景对话框，以及调饮料时切换到操作台的方式。'},
+ {id:1663220,title:'Coffee Talk Episode 2: Hibiscus & Butterfly',cn:'咖啡心语 2',core:true,tags:['柜台','桌面','角色','对话','操作台','交互','UI'],focus:'重点观察：老板娘正面人物与吧台后缘遮挡；台面和顾客镜头的构图；对话场景到饮品操作面板的切换；三栏配方、制作进度、拉花触控和回到人物对话的反馈；道具抽屉如何影响后续叙事。'},
  {id:2470300,title:'Hookah Haze',cn:'水烟水雾',core:true,tags:['角色','柜台','对话','操作台','UI'],focus:'研究人物镜头、操作窗口与对话框如何在同一个固定场景里切换。'},
  {id:239030,title:'Papers, Please',cn:'请出示证件',core:true,tags:['文件','签字','桌面','交互'],focus:'研究文书、抽屉、盖章、审查、拖放与桌面层级；租房登记直接借鉴实体操作逻辑。'},
  {id:1451940,title:'NEEDY STREAMER OVERLOAD',cn:'主播女孩重度依赖',core:true,tags:['UI','窗口','角色','交互'],focus:'学习多个窗口的颜色与层级、像素边框、状态提示、窗口焦点及密集信息的可读性。'},
  {id:447530,title:'VA-11 Hall-A: Cyberpunk Bartender Action',cn:'赛博朋克酒保行动',core:true,tags:['角色','柜台','对话','操作台'],focus:'学习完整的顾客对话、柜台服务与配方操作之间的分屏和过场结构。'},
  {id:2409360,title:'Pixel Cafe',cn:'像素咖啡馆',tags:['柜台','桌面','操作台','经营'],focus:'研究真正可见的台面深度、顾客需求信息与操作空间的分层。'},
  {id:589780,title:'The Red Strings Club',cn:'红弦俱乐部',tags:['柜台','对话','操作台','角色'],focus:'研究横向吧台、人物位置、局部互动道具以及叙事分镜。'},
- {id:1663220,title:'Coffee Talk Episode 2: Hibiscus & Butterfly',cn:'咖啡心语 2',tags:['柜台','角色','对话','操作台'],focus:'观察饮品制作视角转换、画面清洁度、道具反馈与客户交流。'},
+
  {id:1574580,title:'Strange Horticulture',cn:'奇异园艺',tags:['桌面','文件','交互','经营'],focus:'研究场景内的真实可操作文件、柜台抽屉和物品定位。'},
  {id:1340480,title:'The Cosmic Wheel Sisterhood',cn:'宇宙之轮姐妹会',tags:['角色','UI','文件','交互'],focus:'研究手工制作卡片的独立素材层、拖放与预览方式。'},
  {id:330820,title:'2064: Read Only Memories',cn:'2064：只读记忆',tags:['角色','对话','UI'],focus:'研究第一人称对话窗口、像素肖像及剧情反馈。'},

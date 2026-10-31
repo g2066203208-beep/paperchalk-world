@@ -26,7 +26,7 @@ try{
   await page.waitForFunction(()=>window.__PAPERWORLD_LEARNING_LIBRARY__?.totalPhotos>=19,{timeout:12000});
   const info=await page.evaluate(()=>window.__PAPERWORLD_LEARNING_LIBRARY__);
   assert.equal(info.totalGames,23);
-  assert.equal(info.coreCount,5);
+  assert.equal(info.coreCount,6);
   assert.ok(info.totalPhotos>=19);
   assert.ok(await page.locator('.photo').count()>5);
   assert.ok(await page.locator('.game-item').count()>=20);
@@ -34,7 +34,8 @@ try{
   assert.equal(overflow,false,type+' no horizontal page overflow');
   await page.screenshot({path:'artifacts/learning-library/'+type+'-gameplay-library.png',fullPage:true});
   await page.locator('#core-only').check();
-  assert.equal(await page.locator('.game-item').count(),5);
+  assert.equal(await page.locator('.game-item').count(),6);
+  assert.ok(await page.locator('.game-item').filter({hasText:'咖啡心语 2'}).count()>=1,'Coffee Talk 2 must appear among six priority references');
   await page.locator('.game-item').filter({hasText:'咖啡心语'}).first().click();
   assert.equal(await page.locator('#selection-title').textContent(),'咖啡心语');
   assert.ok(await page.locator('.photo').count()>=2);

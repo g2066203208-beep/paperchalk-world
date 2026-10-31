@@ -1,4 +1,4 @@
-import {GAMES,CATEGORIES,storeLink,galleryLink} from './games.js?v=20261031-library1';
+import {GAMES,CATEGORIES,storeLink,galleryLink} from './games.js?v=20261031-library2';
 const $=id=>document.getElementById(id);
 const state={data:{},selected:0,tag:'全部',query:'',core:false,onlySaved:false,
  visible:48,current:0,viewerItems:[],saved:new Set()};
@@ -47,7 +47,7 @@ function categoryButtons(){
 }
 function photoData(){
  const subset=GAMES.filter(matches).filter(g=>state.selected===0||g.id===state.selected);
- // Default grouping keeps the original five visually prominent.
+ // Default grouping keeps all six priority reference games visually prominent.
  return subset.flatMap(g=>imagesFor(g).map((image,i)=>({game:g,image,index:i})));
 }
 function photoCard(item,index){
