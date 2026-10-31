@@ -170,7 +170,7 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   const maxChars=Math.max(10,Math.floor((w-25)/(font*.99)));
   const chars=[...message],lines=[];
   for(let i=0;i<chars.length;i+=maxChars)lines.push(chars.slice(i,i+maxChars).join(''));
-  const top=y+(compact?32:41),lineH=font+5;
+  const top=y+(compact?28:41),lineH=font+(compact?3:5);
   const maxLines=Math.max(1,Math.floor((h-(top-y)-4)/lineH));
   lines.slice(0,Math.min(3,maxLines)).forEach((v,i)=>caption(v,x+11,top+i*lineH,font,COL.ink));
  }
