@@ -1,6 +1,6 @@
 import {createHostessIntro} from './intro.js?v=20261031-counter2';
 import {createLeaseUI} from './lease.js';
-import {createWorld3D} from './world3d.js?v=20261030-shopgyro8';
+import {createWorld3D} from './world3d.js?v=20261031-worldmaterials32';
 
 /* PAPERWORLD · original four-ink procedural pixel menu.
  * Every visible logo, plane, cloud, glyph, button and outline is
