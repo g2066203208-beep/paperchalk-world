@@ -1,4 +1,4 @@
-import {createHostessIntro} from './intro.js?v=20261031-counter2';
+import {createHostessIntro} from './intro.js?v=20261031-separated3';
 import {createLeaseUI} from './lease.js';
 import {createWorld3D} from './world3d.js?v=20261031-worldmaterials32';
 

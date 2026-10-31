@@ -246,11 +246,13 @@ try{
   assert.ok((await exactCanvasColors(page)).every(c=>official.has(c)),'no gray-fill or antialias fifth ink');
   await page.screenshot({path:'artifacts/game/'+screen+'-owner-near.png'});
 
-  // This is the REAL checked-in four-ink reception painting, not the previous
-  // placeholder floor/counter geometry or a generated UI screenshot overlay.
+  // The two physical sprite assets MUST stay separate. The desk is an
+  // independent alpha PNG occluding the original moving hostess, with no
+  // screenshot, room art, prop clutter or duplicated baked-in character.
   await page.waitForFunction(()=>window.__PAPERWORLD_MENU__?.intro?.counterReady===true,{timeout:10000});
   const scene=await state(page);
-  assert.deepEqual(scene.intro.counterAsset,[188,334]);
+  assert.deepEqual(scene.intro.counterAsset,[192,84]);
+  assert.deepEqual(scene.intro.independentLayers,['hostess-pixel','counter-clean-4ink']);
   assert.equal(scene.intro.counterFailed,false);
   assert.ok((await exactCanvasColors(page)).every(c=>official.has(c)),
     'rendered first-person counter must use ONLY the four approved ink colors at '+screen);
