@@ -6,8 +6,8 @@ import {MotionPose,projectionMatrix,RAD,clamp} from './motion3d.js?v=20261030-gy
 import {LeanCamera} from './lean3d.js?v=20261030-gyrocomfort6';
 import {BodyMotor} from './locomotion3d.js?v=20261030-gyrocomfort6';
 import {ShopOpeningLoop} from './shoploop.js?v=20261030-shopgyro8';
-import {createMaterialBatch} from './world-material-gl.js';
-import {tryReadPack} from '../world-builder/materials-core.js';
+import {createMaterialBatch} from './world-material-gl.js?v=20261031-world32';
+import {tryReadPack} from '../world-builder/materials-core.js?v=20261031-world32';
 const INK=[57/255,54/255,87/255],PINK=[242/255,165/255,194/255];
 const BLUE=[169/255,186/255,233/255],PAPER=[1,245/255,230/255];
 const PALETTE=[INK,PINK,BLUE,PAPER];
