@@ -35,7 +35,7 @@ class ProjectStore(context: Context) {
             }).use { zip ->
                 val manifest = JSONObject()
                 manifest.put("format", "pixelatelier")
-                manifest.put("version", 1)
+                manifest.put("version", 2)
                 manifest.put("id", document.id)
                 manifest.put("title", document.title)
                 manifest.put("width", document.width)
@@ -48,7 +48,16 @@ class ProjectStore(context: Context) {
                         .put("name", layer.name)
                         .put("visible", layer.visible)
                         .put("locked", layer.locked)
-                        .put("opacity", layer.opacity))
+                        .put("opacity", layer.opacity)
+                        .put("blendMode", layer.blendMode.name)
+                        .put("alphaLocked", layer.alphaLocked)
+                        .put("maskEnabled", layer.maskEnabled))
+                    layer.mask?.let { pixels ->
+                        require(pixels.size == document.width * document.height)
+                        zip.putNextEntry(ZipEntry("masks/" + i + ".gray"))
+                        zip.write(pixels)
+                        zip.closeEntry()
+                    }
                     val bytes = ByteArrayOutputStream(document.width * document.height * 4)
                     DataOutputStream(bytes).use { out -> layer.pixels.forEach { out.writeInt(it) } }
                     zip.putNextEntry(ZipEntry("layers/" + i + ".argb"))
@@ -103,6 +112,7 @@ class ProjectStore(context: Context) {
     fun load(source: File): PixelDocument {
         var manifest: JSONObject? = null
         val raw = hashMapOf<Int, ByteArray>()
+        val masks = hashMapOf<Int, ByteArray>()
         ZipInputStream(source.inputStream().buffered()).use { zip ->
             while (true) {
                 val entry = zip.nextEntry ?: break
@@ -110,6 +120,11 @@ class ProjectStore(context: Context) {
                     val bytes = readBounded(zip, 128 * 1024)
                     manifest = JSONObject(String(bytes, Charsets.UTF_8))
                 } else {
+                    val maskMatch = Regex("masks/([0-9]+)\\.gray").matchEntire(entry.name)
+                    if(maskMatch != null) {
+                        val index=maskMatch.groupValues[1].toInt()
+                        if(index in 0..31) masks[index]=readBounded(zip, 1024 * 1024)
+                    }
                     val match = Regex("layers/([0-9]+)\\.argb").matchEntire(entry.name)
                     if (match != null) {
                         val index = match.groupValues[1].toInt()
@@ -120,7 +135,7 @@ class ProjectStore(context: Context) {
             }
         }
         val json = manifest ?: error("缺少工程清单")
-        require(json.getString("format") == "pixelatelier" && json.getInt("version") == 1)
+        require(json.getString("format") == "pixelatelier" && json.getInt("version") in 1..2)
         val w = json.getInt("width"); val h = json.getInt("height")
         require(w in 1..1024 && h in 1..1024 && w.toLong() * h <= 1048576)
         val infos = json.getJSONArray("layers")
@@ -131,9 +146,16 @@ class ProjectStore(context: Context) {
             require(bytes.size == w * h * 4) { "图层数据损坏" }
             val input = DataInputStream(ByteArrayInputStream(bytes))
             val pixels = IntArray(w * h) { input.readInt() }
+            val blendName=metadata.optString("blendMode","NORMAL")
+            val blend=PixelBlendMode.entries.firstOrNull { it.name==blendName }
+                ?: PixelBlendMode.NORMAL
+            val mask=masks[i]
+            if(mask != null) require(mask.size==w*h) { "遮罩数据损坏" }
             PixelLayer(metadata.getLong("id"), metadata.getString("name"),
                 pixels, metadata.getBoolean("visible"), metadata.getBoolean("locked"),
-                metadata.getInt("opacity").coerceIn(0, 255))
+                metadata.getInt("opacity").coerceIn(0, 255),
+                blend, metadata.optBoolean("alphaLocked",false), mask,
+                metadata.optBoolean("maskEnabled",true))
         }.toMutableList()
         return PixelDocument(json.getString("id"), json.getString("title"), w, h,
             layers, json.optInt("active").coerceIn(0, layers.lastIndex))
