@@ -68,7 +68,8 @@ private val PixelColors = listOf(
 enum class EditorTool(val label: String, val glyph: String) {
     PENCIL("铅笔", "✎"), ERASER("橡皮", "◇"), PICKER("吸管", "◎"),
     FILL("填色", "▣"), LINE("直线", "╱"), RECT("矩形", "□"),
-    FILLED_RECT("实心矩形", "■")
+    FILLED_RECT("实心矩形", "■"), ELLIPSE("椭圆", "◯"),
+    FILLED_ELLIPSE("实心椭圆", "⬤"), SELECT_RECT("框选", "▧")
 }
 
 enum class TouchMode(val label: String) {
@@ -100,6 +101,8 @@ private fun AtelierApp(store: ProjectStore) {
     var color by remember { mutableIntStateOf(PixelColors[17]) }
     var tool by remember { mutableStateOf(EditorTool.PENCIL) }
     var touchMode by remember { mutableStateOf(TouchMode.DIRECT) }
+    var selection by remember { mutableStateOf<SelectionMask?>(null) }
+    var internalClipboard by remember { mutableStateOf<PixelClipboard?>(null) }
     var showNew by remember { mutableStateOf(false) }
     var showColors by remember { mutableStateOf(false) }
     var showLayers by remember { mutableStateOf(false) }
@@ -126,6 +129,8 @@ private fun AtelierApp(store: ProjectStore) {
                 val loaded = withContext(Dispatchers.IO) { store.load(file) }
                 pending?.cancel()
                 document = loaded
+                selection = null
+                internalClipboard = null
                 version++
                 cursor = IntOffset(loaded.width / 2, loaded.height / 2)
             } catch (e: Exception) {
@@ -150,7 +155,7 @@ private fun AtelierApp(store: ProjectStore) {
                         store.importPng(input ?: error("无法打开文件"))
                     }
                 }
-                document = imported; version++
+                document = imported; selection = null; internalClipboard = null; version++
                 scheduleSave(true)
             } catch (e: Exception) { snackbar.showSnackbar("导入失败：" + (e.message ?: "未知错误")) }
         }
@@ -219,7 +224,8 @@ private fun AtelierApp(store: ProjectStore) {
                     TextButton(onClick = { showOptions = true }) { Text("⋮") }
                 }
                 HorizontalDivider(color = Color(0xFF30394A))
-                PixelViewport(doc, version, tool, color, touchMode, cursor,
+                PixelViewport(doc, version, tool, color, touchMode, cursor, selection,
+                    onSelection = { selection = it },
                     onCursor = { cursor = it }, onPick = { color = it },
                     onChanged = { notifyChange() },
                     onCommit = { notifyChange(); scheduleSave() },
@@ -237,6 +243,21 @@ private fun AtelierApp(store: ProjectStore) {
                     Spacer(Modifier.width(9.dp))
                     TextButton(onClick = { showColors = true }) { Text("颜色") }
                     TextButton(onClick = { showLayers = true }) { Text("图层 " + doc.layers.size) }
+                    if (selection != null) {
+                        TextButton(onClick = {
+                            internalClipboard = PixelSelectionTools.copy(doc, selection!!)
+                        }) { Text("复制") }
+                        TextButton(onClick = { selection = null }) { Text("取消框选") }
+                    }
+                    if (internalClipboard != null) {
+                        TextButton(onClick = {
+                            val clip = internalClipboard!!
+                            if (clip.pasteInto(doc, (doc.width - clip.width) / 2,
+                                    (doc.height - clip.height) / 2)) {
+                                notifyChange(); scheduleSave()
+                            }
+                        }) { Text("粘贴") }
+                    }
                     Spacer(Modifier.weight(1f))
                     TextButton(onClick = {
                         touchMode = TouchMode.entries[(touchMode.ordinal + 1) % TouchMode.entries.size]
@@ -316,6 +337,7 @@ private fun AtelierApp(store: ProjectStore) {
                     val w = width.toIntOrNull() ?: 0; val h = height.toIntOrNull() ?: 0
                     if (w in 1..1024 && h in 1..1024 && w.toLong()*h <= 1048576L) {
                         document = PixelDocument.new(w,h,title.ifBlank { "未命名作品" })
+                        selection = null; internalClipboard = null
                         version++; showNew = false
                         cursor = IntOffset(w/2,h/2)
                         scheduleSave(true)
@@ -480,6 +502,8 @@ private fun PixelViewport(
     color: Int,
     mode: TouchMode,
     cursor: IntOffset,
+    selection: SelectionMask?,
+    onSelection: (SelectionMask?) -> Unit,
     onCursor: (IntOffset) -> Unit,
     onPick: (Int) -> Unit,
     onChanged: () -> Unit,
@@ -494,6 +518,7 @@ private fun PixelViewport(
     val currentCommit by rememberUpdatedState(onCommit)
     val currentCursor by rememberUpdatedState(onCursor)
     val currentPick by rememberUpdatedState(onPick)
+    val currentSelection by rememberUpdatedState(onSelection)
     LaunchedEffect(doc.id, viewport.value) {
         val bounds = viewport.value
         if (bounds.width > 0 && bounds.height > 0) {
@@ -552,7 +577,10 @@ private fun PixelViewport(
                     }
                     if (mode != TouchMode.CURSOR) {
                         if (mode == TouchMode.OFFSET) currentCursor(first)
-                        if (tool != EditorTool.PICKER) { doc.beginStroke(); stroke = true }
+                        if (tool !in listOf(EditorTool.PICKER, EditorTool.SELECT_RECT,
+                                EditorTool.ELLIPSE, EditorTool.FILLED_ELLIPSE)) {
+                            doc.beginStroke(); stroke = true
+                        }
                         if (tool in listOf(EditorTool.PENCIL,EditorTool.ERASER,EditorTool.FILL,EditorTool.PICKER)) plot(first)
                     } else currentCursor(first)
 
@@ -609,6 +637,20 @@ private fun PixelViewport(
                                 else -> Unit
                             }
                         }
+                        if (tool == EditorTool.SELECT_RECT) {
+                            val x0 = first.x.coerceIn(0, doc.width-1)
+                            val y0 = first.y.coerceIn(0, doc.height-1)
+                            val x1 = last.x.coerceIn(0, doc.width-1)
+                            val y1 = last.y.coerceIn(0, doc.height-1)
+                            currentSelection(SelectionMask.rectangle(doc.width, doc.height,
+                                minOf(x0,x1), minOf(y0,y1),
+                                maxOf(x0,x1) + 1, maxOf(y0,y1) + 1))
+                        }
+                        if (tool == EditorTool.ELLIPSE || tool == EditorTool.FILLED_ELLIPSE) {
+                            if (PixelSelectionTools.drawEllipse(doc, minOf(first.x,last.x),
+                                minOf(first.y,last.y), maxOf(first.x,last.x)+1, maxOf(first.y,last.y)+1,
+                                color, tool == EditorTool.FILLED_ELLIPSE)) currentCommit()
+                        }
                         if (stroke) { doc.finishStroke(); currentCommit() }
                     }
                 }
@@ -641,6 +683,20 @@ private fun PixelViewport(
                     canvas.drawLine(left+x*scale,top,left+x*scale,top+doc.height*scale,gridPaint)
                 for(y in 0..doc.height)
                     canvas.drawLine(left,top+y*scale,left+doc.width*scale,top+y*scale,gridPaint)
+            }
+            if (selection != null && selection.width == doc.width &&
+                    selection.height == doc.height) {
+                selection.bounds()?.let { bounds ->
+                    val edge = android.graphics.Paint().apply {
+                        this.color = android.graphics.Color.WHITE
+                        isAntiAlias = false
+                        strokeWidth = 2f
+                        style = android.graphics.Paint.Style.STROKE
+                        pathEffect = android.graphics.DashPathEffect(floatArrayOf(7f,5f),0f)
+                    }
+                    canvas.drawRect(left + bounds.left*scale, top + bounds.top*scale,
+                        left + bounds.right*scale, top + bounds.bottom*scale, edge)
+                }
             }
             if (mode != TouchMode.DIRECT && cursor.x in 0 until doc.width && cursor.y in 0 until doc.height) {
                 val cx = left + (cursor.x+0.5f)*scale
