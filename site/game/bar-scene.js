@@ -235,17 +235,25 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
  function draw(ctx,W,H){
   if(!active)return;
   buttons=[];
-  lastLayout=computeBarLayout(W,H);
+  // Canvas backing is now the full CSS-pixel resolution. The environmental
+  // design grid stays at half size, but the ORIGINAL 192x256 portrait is
+  // sampled directly onto a full-size backing buffer instead of being
+  // destructively downscaled to a 96x128 game canvas first.
+  ctx.save();
+  ctx.scale(2,2);
+  const gridW=Math.ceil(W/2),gridH=Math.ceil(H/2);
+  lastLayout=computeBarLayout(gridW,gridH);
   lastLayout.fullPortrait=computeFullPortraitPlacement(lastLayout.room);
-  R(0,0,W,H,COL.ink);
-  // Paint order is intentional: scene, speech, mixing, shared top bar.
+  R(0,0,gridW,gridH,COL.ink);
   scene(lastLayout.room,ctx);
   speech(lastLayout.dialogue);
   mixing(lastLayout.mixer,lastLayout.mode==='portrait');
   header(lastLayout.header);
+  ctx.restore();
  }
  function tap(x,y){
   if(!active)return false;
+  x/=2;y/=2;
   const b=[...buttons].reverse().find(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y&&y<=b.y+b.h);
   if(!b)return false;
   if(b.id==='back'){onBack?.();return true}
@@ -273,9 +281,16 @@ export function createBarScene({COL,R,poly,text,onBack,onIntro}){
   return false;
  }
  function snapshot(){
+  const scaleRect=r=>r?{...r,x:r.x*2,y:r.y*2,w:r.w*2,h:r.h*2}:null;
+  const lp=lastLayout?.fullPortrait;
+  const fullPortrait=lp?{...scaleRect(lp),source:[192,256],deskStart:lp.deskStart*2}:null;
+  const layout=lastLayout?{mode:lastLayout.mode,header:scaleRect(lastLayout.header),
+   room:scaleRect(lastLayout.room),dialogue:scaleRect(lastLayout.dialogue),
+   mixer:scaleRect(lastLayout.mixer),fullPortrait}:null;
   return {active,stage,line,order,counts:[...counts],target:[...BAR_ORDERS[order].goal],
-   cash,served,portraitReady:!!art,layout:lastLayout,
-   buttons:buttons.map(b=>({...b}))};
+   cash,served,portraitReady:!!art,layout,
+   render:{backing:'css-pixels',sceneGridScale:2,originalPortrait:[192,256],resampledBeforeDisplay:false},
+   buttons:buttons.map(scaleRect)};
  }
  return {enter,leave,update,draw,tap,snapshot};
 }
