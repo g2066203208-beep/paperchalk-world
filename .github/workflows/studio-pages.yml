@@ -9,7 +9,7 @@ permissions:
   id-token: write
 concurrency:
   group: pixel-tools-clean-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -27,7 +27,12 @@ jobs:
           set -euo pipefail
           test ! -e site/game
           test ! -e site/horror-room
-          test ! -d android
+          test -s android/app/src/main/java/com/paperchalk/lampkeep/MainActivity.java
+          test -s site/card-game/index.html
+          test -s site/card-game/app.mjs
+          node --check site/card-game/engine.mjs
+          node --check site/card-game/app.mjs
+          node --test tests/card-paradox.test.mjs
           test -s site/galgame/index.html
           node galgame/check.cjs
           test -s site/pixel-lab/index.html
@@ -36,6 +41,20 @@ jobs:
           node --check site/world-builder/materials.js
           node --check site/world-builder/world-material-gl.js
           node --test tests/pixel-lab-structure.test.mjs tests/world-materials.test.mjs tests/learning-library.test.mjs
+      - name: Install Chromium to test real 3-screen card play
+        run: |
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Play real card game, shop and persistence on desktop and phones
+        run: node tests/card-paradox-browser.mjs
+      - name: Keep actual browser screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paperworld-card-paradox-real-game-screenshots
+          path: artifacts/card-paradox/
+          retention-days: 14
+          if-no-files-found: warn
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
