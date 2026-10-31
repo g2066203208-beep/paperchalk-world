@@ -643,13 +643,15 @@ private fun PixelViewport(
     val currentSelection by rememberUpdatedState(onSelection)
     val currentPreview by rememberUpdatedState(preview)
     val currentDraftUpdate by rememberUpdatedState(onPreview)
-    LaunchedEffect(doc.id) {
+    var hasFitViewport by remember(doc.id) { mutableStateOf(false) }
+    LaunchedEffect(doc.id, viewport.value) {
         val bounds = viewport.value
-        if (bounds.width > 0 && bounds.height > 0) {
+        if (!hasFitViewport && bounds.width > 0 && bounds.height > 0) {
             val fit = min(bounds.width.toFloat()/doc.width, bounds.height.toFloat()/doc.height)*0.9f
             zoom.floatValue = fit.coerceIn(0.2f,32f)
             pan.value = Offset((bounds.width-doc.width*zoom.floatValue)/2f,
                 (bounds.height-doc.height*zoom.floatValue)/2f)
+            hasFitViewport = true
         }
     }
     val previewIndices = remember(doc.width,doc.height,preview) {
