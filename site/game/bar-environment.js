@@ -10,25 +10,25 @@ export function drawBarInterior({p,COL,rect,poly,caption,clock}){
  rect(x,y,w,h,COL.ink);
  rect(x,by(.04),w,Math.max(2,u(h*.03)),COL.blue);
  rect(x,by(.075),w,2,COL.pink);
- rect(x,by(.575),w,Math.max(3,u(h*.035)),COL.blue);
- rect(x,by(.60),w,2,COL.paper);
- poly([[x,by(.61)],[x+w,by(.61)],[x+w,by(1)],[x,by(1)]],COL.blue);
+ rect(x,by(.695),w,Math.max(3,u(h*.025)),COL.blue);
+ rect(x,by(.717),w,2,COL.paper);
+ poly([[x,by(.73)],[x+w,by(.73)],[x+w,by(1)],[x,by(1)]],COL.blue);
  // Gridded perspective floor: only a few joints at meaningful scale.
- const vanX=bx(.52),horizon=by(.615);
- for(const fraction of [.03,.19,.38,.61,.80,.97]){
+ const vanX=bx(.51),horizon=by(.735);
+ for(const fraction of [.08,.37,.63,.92]){
   const foot=bx(fraction);
   poly([[vanX+u((foot-vanX)*.10),horizon],[vanX+u((foot-vanX)*.10)+1,horizon],
-   [foot+1,by(1)],[foot-1,by(1)]],COL.ink);
+   [foot+1,by(.99)],[foot,by(.99)]],COL.ink);
  }
- for(const level of [.735,.88]){
+ for(const level of [.86]){
   rect(x,by(level),w,1,COL.ink);
  }
  // Dark panelled wood on the back wall, wide vertical divisions rather than
  // pixel speckle. These provide a strong spatial rhythm behind foreground art.
  for(const f of [.018,.365,.635,.975]){
   const px=bx(f);
-  rect(px-2,by(.09),4,u(h*.49),COL.blue);
-  rect(px,by(.09),1,u(h*.49),COL.paper);
+  rect(px-2,by(.09),4,u(h*.60),COL.blue);
+  rect(px,by(.09),1,u(h*.60),COL.paper);
  }
  // Rainy city window: four depth-separated frames, sill, mullions, skyline.
  const wx=bx(.046),wy=by(.135),ww=u(w*.302),wh=u(h*.382);
@@ -105,5 +105,5 @@ export function drawBarInterior({p,COL,rect,poly,caption,clock}){
   rect(mx+5,my+u(mh*.69),u(mw*.62),1,COL.paper);
  }
  // Floor trim along the back-wall base visually unifies all cabinets.
- rect(x,by(.63),w,2,COL.paper);
+ rect(x,by(.715),w,2,COL.paper);
 }
