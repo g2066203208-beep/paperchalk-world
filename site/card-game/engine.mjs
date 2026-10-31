@@ -68,7 +68,7 @@ export function detectHand(cards){
  else if(groups[0].n===2)id='pair';
  const relevant=id==='straightFlush'||id==='straight'||id==='flush'||id==='full'?cards:
  id==='twoPair'?cards.filter(c=>counts.get(c.rank)===2):
- id==='high'?cards.filter(c=>c.rank===Math.max(...cards.map(p=>p.rank===1?14:p.rank))):
+ id==='high'?cards.filter(c=>(c.rank===1?14:c.rank)===Math.max(...cards.map(p=>p.rank===1?14:p.rank))):
  cards.filter(c=>counts.get(c.rank)===groups[0].n);
  return {id,name:HAND_BY_ID[id].name,scoredIds:relevant.map(c=>c.id),baseChips:HAND_BY_ID[id].chips,baseMult:HAND_BY_ID[id].mult};
 }
@@ -119,7 +119,7 @@ function draw(s,n){
 }
 function enterBlind(s){
  s.phase='battle';s.score=0;s.hands=4+s.bonusHands;s.discards=3+s.bonusDiscards;
- s.hand=[];s.deck=shuffle(s,[...s.deck,...s.discard]);s.discard=[];
+ s.deck=shuffle(s,[...s.deck,...s.discard,...s.hand]);s.hand=[];s.discard=[];
  draw(s,8);
  s.selected=[];s.shop=[];s.lastScore=null;s.notice='选择 1–5 张手牌，打出组合击败盲注。';
 }
@@ -130,7 +130,7 @@ function availableJokers(s){
 }
 export function createGame(seed=1729){
  const s={version:VERSION,seed:seed>>>0,rng:seed>>>0,phase:'battle',blind:0,score:0,
- money:8,hand:[],deck:shuffle({rng:seed>>>0},makeDeck()),discard:[],
+ money:8,hand:[],deck:[],discard:[],
  jokers:[],selected:[],shop:[],hands:4,discards:3,bonusHands:0,bonusDiscards:0,
  levels:{},lastScore:null,notice:'',stats:{played:0,highest:0,won:0},rerollCost:3};
  // Seed both card order and subsequent shop RNG deterministically.
