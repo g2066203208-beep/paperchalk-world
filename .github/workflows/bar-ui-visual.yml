@@ -20,6 +20,7 @@ jobs:
       - name: Check layout and recipe
         run: |
           node --check site/game/bar-scene.js
+          node --check site/game/bar-environment.js
           node --test tests/bar-scene.test.mjs
       - name: Install headless Chromium and CJK fonts
         run: |
