@@ -7,8 +7,8 @@
  */
 const canvas=document.getElementById('view');
 const gl=canvas.getContext('webgl2',{antialias:false,alpha:false,premultipliedAlpha:false,preserveDrawingBuffer:true});
+const fallback=gl?null:canvas.getContext('2d',{alpha:false});
 const status=document.getElementById('status');
-if(!gl){status.textContent='浏览器不支持 WebGL2，无法显示真正的三维房间。';throw Error('WebGL2 required')}
 const VS=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
@@ -66,8 +66,7 @@ void main(){
  frag=vec4(al,1.0);
 }`;
 function shader(type,source){let s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s}
-const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,VS));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);
-const un={vp:gl.getUniformLocation(prog,'uVP'),time:gl.getUniformLocation(prog,'uTime'),camera:gl.getUniformLocation(prog,'uCamera')};
+let prog=null,un={};if(gl){prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,VS));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));gl.useProgram(prog);un={vp:gl.getUniformLocation(prog,'uVP'),time:gl.getUniformLocation(prog,'uTime'),camera:gl.getUniformLocation(prog,'uCamera')};}
 const world=[],door=[];let objects=0;
 function quad(data,a,b,c,d,normal,mat,uv=[0,0,1,1]){
  const push=(p,t)=>data.push(p[0],p[1],p[2],...normal,...t,mat);
@@ -164,19 +163,19 @@ box(world,3.07,1.80,-1.08,.12,.06,.45,8);
 // Front left exposed floorboard separations: tiny true 3D seam meshes.
 for(let x=-3.03;x<3.1;x+=.41)box(world,x,.011,.05,.007,.013,7.2,5);
 // Strip seams are dark and unobtrusive.
-function buildBuffer(data){const vao=gl.createVertexArray();gl.bindVertexArray(vao);const vbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);let stride=9*4;for(let [loc,n,offset] of [[0,3,0],[1,3,3],[2,2,6],[3,1,8]]){gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,n,gl.FLOAT,false,stride,offset*4)}gl.bindVertexArray(null);return {vao,count:data.length/9}}
+function buildBuffer(data){if(!gl)return {data:new Float32Array(data),count:data.length/9};const vao=gl.createVertexArray();gl.bindVertexArray(vao);const vbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW);let stride=9*4;for(let [loc,n,offset] of [[0,3,0],[1,3,3],[2,2,6],[3,1,8]]){gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,n,gl.FLOAT,false,stride,offset*4)}gl.bindVertexArray(null);return {vao,count:data.length/9}}
 const still=buildBuffer(world),leaf=buildBuffer(door);
 // All transformations done in real matrix space; not drawing a flat image.
 function mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++)o[c*4+r]=a[r]*b[c*4]+a[4+r]*b[c*4+1]+a[8+r]*b[c*4+2]+a[12+r]*b[c*4+3];return o}
 function perspective(fovy,aspect,near,far){let f=1/Math.tan(fovy/2);return new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+near)/(near-far),-1,0,0,2*far*near/(near-far),0])}
 function view(eye,yaw,pitch){const forward=[Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch)];let up=[0,1,0];const norm=a=>{let v=Math.hypot(...a);return a.map(i=>i/v)};const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];const z=norm(forward.map(x=>-x)),x=norm(cross(up,z)),y=cross(z,x);return new Float32Array([x[0],y[0],z[0],0,x[1],y[1],z[1],0,x[2],y[2],z[2],0,-x.reduce((a,v,i)=>a+v*eye[i],0),-y.reduce((a,v,i)=>a+v*eye[i],0),-z.reduce((a,v,i)=>a+v*eye[i],0),1])}
-const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));let yaw=0,pitch=-.055,zEye=.45;let targetYaw=0,targetPitch=-.055,targetZ=.45;let impactAt=-100;let observe=false;let listening=false;let knockCount=0;let lastFrame=performance.now();let tStart=lastFrame;
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));let yaw=0,pitch=innerWidth<640?-.15:-.055,zEye=.45;let targetYaw=0,targetPitch=pitch,targetZ=.45;let impactAt=-100;let observe=false;let listening=false;let knockCount=0;let lastFrame=performance.now();let tStart=lastFrame;
 const isNarrow=()=>innerWidth<640;
-function resize(){const p=isNarrow();const W=p?304:512,H=p?512:288;canvas.width=W;canvas.height=H;gl.viewport(0,0,W,H);gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE)}
+function resize(){const p=isNarrow();const W=p?304:512,H=p?512:288;canvas.width=W;canvas.height=H;if(gl){gl.viewport(0,0,W,H);gl.disable(gl.BLEND);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.disable(gl.CULL_FACE)}}
 addEventListener('resize',resize);resize();
 const prefersLess=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let dragging=false,lastX=0,lastY=0;canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;try{canvas.setPointerCapture(e.pointerId)}catch{}});canvas.addEventListener('pointermove',e=>{if(!dragging)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;targetYaw=clamp(targetYaw+dx*.0024,-.48,.48);targetPitch=clamp(targetPitch-dy*.0020,-.22,.17)});canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);
-addEventListener('keydown',e=>{if(e.key==='k'||e.key==='K'||e.key===' ')knock();if(e.key==='w'||e.key==='W')targetZ=Math.max(-.95,targetZ-.25);if(e.key==='s'||e.key==='S')targetZ=Math.min(1.1,targetZ+.25);if(e.key==='ArrowLeft')targetYaw=clamp(targetYaw-.055,-.48,.48);if(e.key==='ArrowRight')targetYaw=clamp(targetYaw+.055,-.48,.48);if(e.key==='Escape'){targetYaw=0;targetPitch=-.055;targetZ=.45;setText('你退回了房间中央。')}});
+addEventListener('keydown',e=>{if(e.key==='k'||e.key==='K'||e.key===' ')knock();if(e.key==='w'||e.key==='W')targetZ=Math.max(-.95,targetZ-.25);if(e.key==='s'||e.key==='S')targetZ=Math.min(1.1,targetZ+.25);if(e.key==='ArrowLeft')targetYaw=clamp(targetYaw-.055,-.48,.48);if(e.key==='ArrowRight')targetYaw=clamp(targetYaw+.055,-.48,.48);if(e.key==='Escape'){targetYaw=0;targetPitch=isNarrow()?-.15:-.055;targetZ=.45;setText('你退回了房间中央。')}});
 function setText(t){status.textContent=t}
 // Real-time, synthesized nonverbal door impacts, never downloaded MP3s.
 let audioCtx=null;function audio(){if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume();return audioCtx}
@@ -184,23 +183,49 @@ function impact(delay=0,velocity=1){const ctx=audio();let at=ctx.currentTime+del
 // low woody knock transient, deterministic noise buffer with decay.
 const count=Math.round(ctx.sampleRate*.085),buffer=ctx.createBuffer(1,count,ctx.sampleRate),d=buffer.getChannelData(0);let seed=19;for(let i=0;i<count;i++){seed=(seed*1664525+1013904223)>>>0;d[i]=((seed/4294967296)*2-1)*Math.exp(-i/(count*.16))*.6}let src=ctx.createBufferSource();src.buffer=buffer;const ng=ctx.createGain(),nf=ctx.createBiquadFilter();nf.type='lowpass';nf.frequency.value=230;ng.gain.value=.42*velocity;src.connect(nf);nf.connect(ng);ng.connect(ctx.destination);src.start(at)}
 function knock(){impactAt=performance.now();knockCount++;impact(0,.88);impact(.29,.78);if(knockCount%2===0)impact(.85,.64);setText(knockCount===1?'咚、咚。声音来自门外。':knockCount===2?'第三下……似乎更近了。':'门板在震动。你没有看见任何人。')}
-function listen(){listening=!listening;targetZ=listening?-1.02:.45;targetYaw=0;targetPitch=-.025;setText(listening?'你将耳朵靠近门板。外面没有脚步声。':'你缓缓退开，仍盯着门锁。');if(listening){let ctx=audio();let o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=38;g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.linearRampToValueAtTime(.025,ctx.currentTime+.3);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+1.4);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+1.5)}}
-function inspect(){observe=!observe;targetZ=observe?-1.14:.45;targetYaw=observe?.066:0;targetPitch=observe?.11:-.055;setText(observe?'门锁是冰凉的。锁舌没有移动。':'你收回了手。门依然没有打开。')}
+function listen(){listening=!listening;targetZ=listening?-1.02:.45;targetYaw=0;targetPitch=isNarrow()?-.12:-.025;setText(listening?'你将耳朵靠近门板。外面没有脚步声。':'你缓缓退开，仍盯着门锁。');if(listening){let ctx=audio();let o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=38;g.gain.setValueAtTime(.0001,ctx.currentTime);g.gain.linearRampToValueAtTime(.025,ctx.currentTime+.3);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+1.4);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+1.5)}}
+function inspect(){observe=!observe;targetZ=observe?-1.14:.45;targetYaw=observe?.066:0;targetPitch=observe?.11:(isNarrow()?-.15:-.055);setText(observe?'门锁是冰凉的。锁舌没有移动。':'你收回了手。门依然没有打开。')}
 document.getElementById('knock').addEventListener('click',knock);document.getElementById('listen').addEventListener('click',listen);document.getElementById('lock').addEventListener('click',inspect);
+const SOFTWARE_COLORS=['#1e2a39','#343947','#28232c','#493739','#71605a','#121a26','#627786','#8aa5b8','#303038','#47373e','#10131d','#343e4c','#858d8e','#384d60','#9cb6cc'];
+function softwareRender(mvp,leafJolt){
+ const w=canvas.width,h=canvas.height,ctx=fallback;
+ ctx.fillStyle='#0c101b';ctx.fillRect(0,0,w,h);
+ const triangles=[];
+ function project(v){let x=v[0],y=v[1],z=v[2];return [mvp[0]*x+mvp[4]*y+mvp[8]*z+mvp[12],mvp[1]*x+mvp[5]*y+mvp[9]*z+mvp[13],mvp[2]*x+mvp[6]*y+mvp[10]*z+mvp[14],mvp[3]*x+mvp[7]*y+mvp[11]*z+mvp[15]]}
+ function clip(poly){let output=[];for(let j=0;j<poly.length;j++){let a=poly[j],b=poly[(j+1)%poly.length],ca=a[3]>.09&&a[2]>-a[3],cb=b[3]>.09&&b[2]>-b[3];let f=q=>Math.min(q[3]-.09,q[2]+q[3]);if(ca)output.push(a);if(ca!==cb){let da=f(a),db=f(b),t=da/(da-db);output.push(a.map((v,i)=>v+t*(b[i]-v)));}}return output}
+ function drawGroup(data,displace=0){
+  for(let i=0;i<data.length;i+=54){const points=[],normal=[data[i+3],data[i+4],data[i+5]],mat=data[i+8]|0;
+   // Each box face is two triangles. Paint their SHARED four-sided quad as
+   // one polygon so the software backend cannot create diagonal seams.
+   for(const j of [0,1,2,5])points.push(project([data[i+j*9],data[i+j*9+1],data[i+j*9+2]+displace]));
+   let poly=clip(points);if(poly.length<3)continue;
+   let avg=0;const p=[];for(let v of poly){avg+=v[3];let sx=(v[0]/v[3]*.5+.5)*w,sy=(1-(v[1]/v[3]*.5+.5))*h;p.push([sx,sy]);}
+   avg/=poly.length;let side=(normal[0]*-.55+normal[1]*.18+normal[2]*.3)*.13+.78;
+   if(mat===5||mat===10)side*=.74;
+   if(mat===14)side=1.1;
+   triangles.push({p,avg,color:SOFTWARE_COLORS[mat],side});
+  }
+ }
+ drawGroup(still.data);drawGroup(leaf.data,leafJolt);
+ triangles.sort((a,b)=>b.avg-a.avg);
+ const colorCache=new Map();
+ function shade(hex,f){let key=hex+'-'+f.toFixed(2);if(colorCache.has(key))return colorCache.get(key);let rgb=[1,3,5].map(i=>Math.min(255,Math.max(0,Math.round(parseInt(hex.slice(i,i+2),16)*f))));let s='rgb('+rgb.join(',')+')';colorCache.set(key,s);return s;}
+ for(let t of triangles){ctx.fillStyle=shade(t.color,t.side);ctx.beginPath();ctx.moveTo(t.p[0][0],t.p[0][1]);for(let i=1;i<t.p.length;i++)ctx.lineTo(t.p[i][0],t.p[i][1]);ctx.closePath();ctx.fill()}
+ // Subtle native-pixel dithering. Deterministic and semantically gentle.
+ ctx.globalAlpha=.075;ctx.fillStyle='#b0bfd6';for(let i=0;i<75;i++){let x=((i*73+17)%w),y=((i*53+29)%h);ctx.fillRect(x,y,1,1)}ctx.globalAlpha=1;
+}
 function render(time){const dt=Math.min(.05,(time-lastFrame)/1000);lastFrame=time;const alpha=1-Math.exp(-dt*(prefersLess?28:4.0));yaw+=(targetYaw-yaw)*alpha;pitch+=(targetPitch-pitch)*alpha;zEye+=(targetZ-zEye)*alpha;const sec=(time-tStart)*.001;
 // No color cycling, no pointless blinking lamp: room is UNLIT.
- gl.clearColor(.018,.024,.036,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+ if(gl){gl.clearColor(.018,.024,.036,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);}
  const eye=[Math.sin(sec*.35)*(prefersLess?0:.002),1.49+(prefersLess?0:Math.sin(sec*1.12)*.004),zEye];const aspect=canvas.width/canvas.height;
- const projection=perspective((isNarrow()?64:53)*Math.PI/180,aspect,.08,26);const vp=mul(projection,view(eye,yaw,pitch));gl.useProgram(prog);gl.uniformMatrix4fv(un.vp,false,vp);gl.uniform1f(un.time,sec);gl.uniform3f(un.camera,...eye);
- gl.bindVertexArray(still.vao);gl.drawArrays(gl.TRIANGLES,0,still.count);
+ const projection=perspective((isNarrow()?80:53)*Math.PI/180,aspect,.08,26);const vp=mul(projection,view(eye,yaw,pitch));if(gl){gl.useProgram(prog);gl.uniformMatrix4fv(un.vp,false,vp);gl.uniform1f(un.time,sec);gl.uniform3f(un.camera,...eye);gl.bindVertexArray(still.vao);gl.drawArrays(gl.TRIANGLES,0,still.count);}
  // The knocker's vibrations are subtle; all geometry remains 3D and legible.
  // Door leaf translation only in its model space, using a tiny time modulation.
  const knockT=(time-impactAt)/1000;const k=(knockT>=0&&knockT<1.25)?Math.pow(1-knockT/1.25,2)*Math.sin(knockT*35)*.018:0;
- if(Math.abs(k)>.0001){const transform=new Float32Array(vp); // translate x/y/z against projected basis
+ if(gl&&Math.abs(k)>.0001){const transform=new Float32Array(vp); // translate x/y/z against projected basis
    transform[12]+=vp[8]*k;transform[13]+=vp[9]*k;transform[14]+=vp[10]*k;transform[15]+=vp[11]*k;
    gl.uniformMatrix4fv(un.vp,false,transform);
  }
- gl.bindVertexArray(leaf.vao);gl.drawArrays(gl.TRIANGLES,0,leaf.count);
- gl.bindVertexArray(null);requestAnimationFrame(render)}requestAnimationFrame(render);
-window.__HORROR_ROOM__={get meshObjects(){return objects},get triangleCount(){return (world.length+door.length)/27},get view(){return {yaw,pitch,zEye}},get roomUnlit(){return true},get currentMessage(){return status.textContent},knock,listen,inspect};
+ if(gl){gl.bindVertexArray(leaf.vao);gl.drawArrays(gl.TRIANGLES,0,leaf.count);gl.bindVertexArray(null)}else softwareRender(vp,k);requestAnimationFrame(render)}requestAnimationFrame(render);
+window.__HORROR_ROOM__={get meshObjects(){return objects},get triangleCount(){return (world.length+door.length)/27},get view(){return {yaw,pitch,zEye}},get roomUnlit(){return true},get renderBackend(){return gl?'WebGL2':'Canvas2D software projection'},get currentMessage(){return status.textContent},knock,listen,inspect};
 </script></body></html>
