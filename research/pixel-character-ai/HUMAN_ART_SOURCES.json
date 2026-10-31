@@ -4,6 +4,20 @@
   "instructions": "Preview sources; check exact artist-authored image, visible license, provenance, anti-AI wishes, native resolution; run independent art reviews before acceptance.",
   "candidates": [
     {
+      "id": "kepixelart_three_fullbody_fantasy",
+      "url": "https://kepixelart.itch.io/free-pixel-art-fantasy-character-pack",
+      "author": "KePixelArt",
+      "task": "portrait_fullbody",
+      "observed": "Three artist-posted full-body fantasy characters (Dark Paladin, Sage, Wraith), CC0, itch page declares no generative AI",
+      "status": "CANDIDATE_ONLY_NOT_APPROVED",
+      "blocker": "Download original files, inspect true native dimensions, independent whole-body art reviews and verify suitability. One artist and three samples are insufficient for training/generalization.",
+      "previews": [
+        "https://img.itch.zone/aW1nLzIzMjgzNzUxLnBuZw%3D%3D/original/zIWpd%2F.png",
+        "https://img.itch.zone/aW1nLzIzMjgzNzUwLnBuZw%3D%3D/original/9%2FWSei.png",
+        "https://img.itch.zone/aW1nLzIzMjgzNzM4LnBuZw%3D%3D/original/9emv3A.png"
+      ]
+    },
+    {
       "id": "loregret_100_pixel_portraits",
       "url": "https://loregret.itch.io/pixel-art-portrait-pack",
       "author": "Loregret",
@@ -49,5 +63,6 @@
       "blocker": "Artist identity and whether artwork is AI-generated or programmatic not verified. Not approved for human-drawn training."
     }
   ],
-  "approved_artworks": 0
+  "approved_artworks": 0,
+  "focus": "FULLBODY PORTRAITS ONLY: 192x256 or 384x512 native art"
 }
