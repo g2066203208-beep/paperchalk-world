@@ -51,6 +51,17 @@ jobs:
           else
             echo 'Actual source PNG absent from repository; synthetic CI does NOT imply real image was trained in GitHub.'
           fi
+      - name: Audit authentic V4-derived pixel topology and export opt-in cleaned alternative
+        run: |
+          python -m ml.portrait_v4.pixel_audit \
+            artifacts/portrait-v4-webp-real/native-baseline-640.png \
+            artifacts/portrait-v4-webp-real/pixel-audit-original.json
+          python -m ml.portrait_v4.cluster_regularize \
+            artifacts/portrait-v4-webp-real/native-baseline-640.png \
+            artifacts/portrait-v4-webp-real/native-cluster-cleaned-640.png
+          python -m ml.portrait_v4.pixel_audit \
+            artifacts/portrait-v4-webp-real/native-cluster-cleaned-640.png \
+            artifacts/portrait-v4-webp-real/pixel-audit-cleaned.json
       - name: Upload generated artifacts with source provenance
         if: always()
         uses: actions/upload-artifact@v4
