@@ -8,10 +8,13 @@ const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript','.css':'t
 const server=createServer((req,res)=>{
  try{
   const url=new URL(req.url,'http://localhost');
-  const p=resolve(root,'.'+(url.pathname==='/'?'/index.html':decodeURIComponent(url.pathname)));
+  const pathname=decodeURIComponent(url.pathname);
+  const file=pathname.endsWith('/')?pathname+'index.html':pathname;
+  const p=resolve(root,'.'+file);
   if(!p.startsWith(root+'/'))throw Error('unsafe pathname');
+  const body=readFileSync(p);
   res.writeHead(200,{'Content-Type':mime[extname(p)]||'application/octet-stream'});
-  res.end(readFileSync(p));
+  res.end(body);
  }catch(e){res.writeHead(404);res.end('missing')}
 });
 await new Promise(done=>server.listen(0,'127.0.0.1',done));
