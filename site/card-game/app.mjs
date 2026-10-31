@@ -21,8 +21,17 @@ function tone(f=440,d=.06,wave='sine',volume=.065){
 }
 function ping(){tone(390,.055,'triangle',.037)}
 function pts(id){const c=s.hand.find(x=>x.id===id);return c?{x:c.rank===1?14:c.rank,y:c.suit}:null}
+let lastPreviewSignature='';
+function pulsePreview(){
+ for(const id of ['chips-display','mult-display','predicted-score']){
+  const el=$(id);el.classList.remove('counter-kick');void el.offsetWidth;el.classList.add('counter-kick');
+ }
+}
 function refreshPreview(){
  const p=preview(s);
+ const signature=p?(p.id+':'+p.score+':'+s.selected.join('|')):'none';
+ if(signature!==lastPreviewSignature&&lastPreviewSignature!=='')pulsePreview();
+ lastPreviewSignature=signature;
  $('hand-kind').textContent=p?p.name:'选择卡牌';
  $('chips-display').textContent=p?number(p.chips):'0';
  $('mult-display').textContent=p?number(p.mult):'0';
@@ -84,6 +93,7 @@ function paintGlyph(canvas,glyph){
 function jokerElement(j,shop=false){
  const outer=document.createElement('div');
  outer.className=shop?'shop-joker':'joker';outer.dataset.color=j.color;
+ outer.style.setProperty('--joker-phase',String((JOKERS.findIndex(x=>x.id===j.id)%6)*-.47)+'s');
  if(!shop){outer.dataset.joker=j.id;outer.title=j.name+' · '+j.desc}
  const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
  paintGlyph(canvas,j.glyph);outer.append(canvas);
@@ -102,6 +112,10 @@ function renderJokers(){
 }
 function createPlayingCard(card){
  const sel=s.selected.includes(card.id),red=card.suit===1||card.suit===3;
+ const slot=document.createElement('div');
+ slot.className='card-motion-slot';slot.dataset.cardId=card.id;
+ slot.style.setProperty('--float-delay',(-.32*(Number(card.id.slice(1))%9)).toFixed(2)+'s');
+ slot.style.setProperty('--float-duration',(3.0+(card.rank%4)*.24).toFixed(2)+'s');
  const button=document.createElement('button');
  button.type='button';button.className='play-card '+(red?'red':'black');
  button.dataset.card=card.id;button.setAttribute('aria-pressed',String(sel));
@@ -117,21 +131,57 @@ function createPlayingCard(card){
  button.append(corner,jewel,center,water,other);
  button.addEventListener('click',()=>{
   if(locked||!selection(s,card.id))return;
-  tone(380+(card.rank*23),.075,'triangle',.05);save();renderHand();refreshPreview();
+  tone(380+(card.rank*23),.075,'triangle',.05);
+  // Rebuilding all cards per tap would restart idle animation and cause jerks.
+  save();syncHandSelection();refreshPreview();
  });
  button.addEventListener('pointermove',e=>{
   if(e.pointerType==='touch')return;
-  const rect=button.getBoundingClientRect(),dx=(e.clientX-rect.left)/rect.width-.5;
-  button.style.setProperty('--pitch',(dx*16).toFixed(1)+'deg');
+  const rect=button.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width-.5;
+  const y=(e.clientY-rect.top)/rect.height-.5;
+  button.style.setProperty('--pitch',(x*18).toFixed(1)+'deg');
+  button.style.setProperty('--tiltX',(-y*11).toFixed(1)+'deg');
+  button.style.setProperty('--lightX',(50+x*75).toFixed(1)+'%');
+  button.style.setProperty('--lightY',(50+y*80).toFixed(1)+'%');
  });
- button.addEventListener('pointerleave',()=>button.style.setProperty('--pitch','0deg'));
- return button;
+ button.addEventListener('pointerleave',()=>{
+  button.style.setProperty('--pitch','0deg');button.style.setProperty('--tiltX','0deg');
+  button.style.setProperty('--lightX','50%');button.style.setProperty('--lightY','50%');
+ });
+ button.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch'){
+   button.classList.add('touch-pressed');
+   button.style.setProperty('--pitch','-5deg');button.style.setProperty('--tiltX','5deg');
+  }
+ });
+ for(const eventName of ['pointerup','pointercancel']){
+  button.addEventListener(eventName,()=>{
+   button.classList.remove('touch-pressed');
+   button.style.setProperty('--pitch','0deg');button.style.setProperty('--tiltX','0deg');
+  });
+ }
+ slot.append(button);
+ return slot;
+}
+function syncHandSelection(){
+ for(const button of $('hand-cards').querySelectorAll('.play-card')){
+  const id=button.dataset.card,selected=s.selected.includes(id);
+  const was=button.getAttribute('aria-pressed')==='true';
+  button.setAttribute('aria-pressed',String(selected));
+  const card=s.hand.find(c=>c.id===id);
+  if(card)button.setAttribute('aria-label',RANKS[card.rank-1]+SUITS[card.suit]+(selected?' 已选中':' 点击选中'));
+  button.parentElement.dataset.selected=String(selected);
+  if(selected&&!was){
+   button.classList.remove('card-just-picked');void button.offsetWidth;button.classList.add('card-just-picked');
+  }else if(!selected)button.classList.remove('card-just-picked');
+ }
 }
 function renderHand(){
  const root=$('hand-cards'),scroll=root.parentElement.scrollLeft;root.replaceChildren();
  for(const c of s.hand)root.append(createPlayingCard(c));
  root.parentElement.scrollLeft=scroll;
- $('hand-size').textContent=s.hand.length;
+ $('hand-size').textContent=s.hand.length;syncHandSelection();
 }
 function stats(){
  const b=currentBlind(s);
@@ -251,7 +301,7 @@ window.addEventListener('keydown',e=>{
  if(locked||s.phase!=='battle'||!$('help-modal').classList.contains('hidden'))return;
  if(e.key>='1'&&e.key<='8'){
   const c=s.hand[Number(e.key)-1];
-  if(c){selection(s,c.id);ping();save();renderHand();refreshPreview()}
+  if(c&&selection(s,c.id)){ping();save();syncHandSelection();refreshPreview()}
  }else if(e.key==='Enter'||e.code==='Space'){
   e.preventDefault();if(s.selected.length)actionPlay();
  }else if(e.key.toLowerCase()==='d'){
@@ -279,6 +329,7 @@ if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
  raf=requestAnimationFrame(tick);
 }else{animateBackground(500)}
 window.__PAPERWORLD_CARD_GAME__={
+ motionVersion:2,
  snapshot(){return {phase:s.phase,blind:s.blind,score:s.score,hand:s.hand.length,deck:s.deck.length,discard:s.discard.length,
   selected:s.selected.length,jokers:s.jokers.length,shop:s.shop.length,money:s.money,hands:s.hands,discards:s.discards,version:s.version}},
  getLastEvents(){return s.lastScore?.events?.map(e=>e.type)||[]},
