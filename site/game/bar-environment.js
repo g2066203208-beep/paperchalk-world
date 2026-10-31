@@ -22,7 +22,7 @@ export function getBarInteriorGeometry(p){
  const counterStart=x+n(w*.055);
  return {
   counterStart,topRear:y+n(h*.60),topNear:y+n(h*.73),
-  bottom:y+h-1,wallBottom:y+n(h*.73)
+  bottom:y+n(h*.91),wallBottom:y+n(h*.73)
  };
 }
 export function drawBarInterior({p,rect,poly,caption,clock,counts=[0,0,0]}){
@@ -118,7 +118,10 @@ export function drawBarInterior({p,rect,poly,caption,clock,counts=[0,0,0]}){
    poly([[px,py+2],[px+dx-3,py+dy],[px+dx+3,py+dy+2]],Math.abs(dx)%2?c.leaf:c.plant);
   }
  }
- // 05 The foreground counter now reads as ONE continuous solid café fixture.
+ // 05 A thin floor strip in front of the bar gives the complete character a grounded stage.
+ rect(x,Y(.91),w,Math.max(1,Y(1)-Y(.91)),c.floor);
+ rect(x,Y(.91),w,3,c.floorLight);
+ // One continuous foreground café counter.
  // Full-body art occupies the reserved left-side pocket. The counter remains
  // front and centre for the majority of the playable scene.
  const geo=getBarInteriorGeometry(p),left=geo.counterStart,
@@ -128,18 +131,18 @@ export function drawBarInterior({p,rect,poly,caption,clock,counts=[0,0,0]}){
  poly([[left+8,rear],[right-6,rear-5],[right,front-3],[left-5,front]],c.topShade);
  poly([[left+11,rear+3],[right-9,rear-2],[right-3,front-9],[left-1,front-4]],c.top);
  poly([[left-5,front],[right,front-3],[right,front+4],[left-5,front+7]],c.topEdge);
- rect(left-5,front+7,right-left+5,Math.max(1,y+h-front-7),c.wood);
+ rect(left-5,front+7,right-left+5,Math.max(1,geo.bottom-front-7),c.wood);
  rect(left-5,front+8,right-left+5,4,c.woodDark);
  // Inset wooden panels, perfectly aligned to the entire face.
- const faceY=front+Math.max(14,n((y+h-front)*.19));
- const faceH=Math.max(9,n((y+h-front)*.52));
+ const faceY=front+Math.max(8,n((geo.bottom-front)*.18));
+ const faceH=Math.max(9,n((geo.bottom-front)*.52));
  for(let j=0;j<3;j++){
   const pL=left+n((right-left)*(.04+j*.315)),pW=n((right-left)*.275);
   rect(pL,faceY,pW,faceH,c.woodDark);
   rect(pL+3,faceY+3,pW-6,faceH-6,c.counterInset);
   rect(pL+5,faceY+4,Math.max(0,pW-10),2,c.woodEdge);
  }
- rect(left-5,y+h-10,right-left+5,3,c.woodEdge);
+ rect(left-5,geo.bottom-8,right-left+5,3,c.woodEdge);
  // Real items rest ON top, never hang in front of the character.
  const cx=left+n((right-left)*.70),cy=rear+n((front-rear)*.45);
  rect(cx-9,cy-7,18,4,c.cream);
