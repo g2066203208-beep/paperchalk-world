@@ -182,6 +182,35 @@ class PixelDocument(
     fun deepCopy(): PixelDocument =
         PixelDocument(id, title, width, height, layers.map { it.copyLayer() }.toMutableList(), activeLayer)
 
+    /**
+     * Preview a replacement active-layer pixel through the EXACT same source-over
+     * order/rounding as [composite], without writing to any layer or history.
+     * This is called only for pixel indices touched by a transient shape draft.
+     */
+    fun compositeWithPreview(index: Int, previewArgb: Int): Int {
+        if (index !in 0 until width * height) return 0
+        val overrideId = currentLayer.id
+        var output = 0
+        for (layer in layers) {
+            if (!layer.visible || layer.opacity == 0) continue
+            val src = if (layer.id == overrideId) previewArgb else layer.pixels[index]
+            val srcA = ((src ushr 24) * layer.opacity + 127) / 255
+            if (srcA == 0) continue
+            val dstA = output ushr 24
+            val outA = srcA + (dstA * (255 - srcA) + 127) / 255
+            if (outA == 0) { output = 0; continue }
+            fun channel(shift: Int): Int {
+                val sv = (src ushr shift) and 255
+                val dv = (output ushr shift) and 255
+                return ((sv * srcA * 255 + dv * dstA * (255 - srcA)) /
+                    (outA * 255)).coerceIn(0,255)
+            }
+            output = (outA shl 24) or (channel(16) shl 16) or
+                (channel(8) shl 8) or channel(0)
+        }
+        return output
+    }
+
     /** Explicit source-over composition, no interpolation. */
     fun composite(): IntArray {
         val output = IntArray(width * height)
