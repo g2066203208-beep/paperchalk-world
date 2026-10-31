@@ -59,7 +59,9 @@ try{
    }
    return [...s];
   });
-  for(const pixel of p)assert.ok(['57,54,87,255','242,165,194,255','169,186,233,255','255,245,230,255'].includes(pixel),label+' unexpected RGB '+pixel);
+  assert.ok(p.length>=12,label+' new interior must use genuinely rich warm colors, got '+p.length);
+  assert.ok(p.some(pixel=>pixel.startsWith('76,50,65,')),label+' visible warm brick wall');
+  assert.ok(p.some(pixel=>pixel.startsWith('121,135,139,')),label+' visible counter surface');
   await page.screenshot({path:'artifacts/bar-ui/'+label+'-bar-initial.png'});
   async function press(id){
    const m=await state();
