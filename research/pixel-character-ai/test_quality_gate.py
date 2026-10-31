@@ -54,7 +54,7 @@ class QualityGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"training permission"):inspect_sample(s,self.root)
     def test_tiny_upscaled_sprite_without_provenance_rejected(self):
         s=sample();s["native_pixel_art"]=False
-        with self.assertRaisesRegex(ValueError,"native pixel grid"):inspect_sample(s,self.root)
+        with self.assertRaisesRegex(ValueError,"Native pixel grid"):inspect_sample(s,self.root)
     def test_palette_is_not_forced_to_four_colors(self):
         data=np.asarray(Image.open(self.root/"portrait.png").convert("RGBA")).copy()
         for y in range(20,245):
