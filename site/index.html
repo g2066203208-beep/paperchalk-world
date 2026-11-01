@@ -139,6 +139,81 @@ body.mobile-mode.virtual-landscape #view{
   #scene-menu button{font-size:clamp(12px,2.7cqh,23px);min-height:30px}
 }
 
+
+/* 18:00—06:00: layered battle on the SAME original stage renderer.
+   stage child z 0=background, z 2=enemy, z 3=player. Black fog remains
+   viewport-fixed and is NEVER transformed with the art. */
+#scene[data-scene="battle"] #source{filter:brightness(.55) saturate(.73) contrast(1.08)}
+#battle-enemy-layer,#battle-player-layer{position:absolute;inset:0;pointer-events:none;display:block}
+#battle-enemy-layer{z-index:2}
+#battle-player-layer{z-index:3}
+#battle-enemy,#battle-player{
+ position:absolute;display:block;width:auto;max-width:none;object-fit:contain;
+ object-position:bottom center;pointer-events:none;-webkit-user-drag:none;
+ user-select:none;filter:drop-shadow(0 4px 4px rgba(0,0,0,.32));
+}
+#battle-enemy{height:68%;left:62%;bottom:21%}
+#battle-player{height:91%;left:9%;bottom:-3%}
+#battle-enemy-layer[hidden],#battle-player-layer[hidden],#battle-ui[hidden]{display:none!important}
+#battle-enemy.strike{animation:enemyStrike .52s cubic-bezier(.17,.7,.22,1)}
+#battle-player.strike{animation:playerStrike .48s ease-in-out}
+#battle-enemy.hit,#battle-player.hit{animation:actorFlinch .37s ease-out}
+@keyframes enemyStrike{0%,100%{translate:0 0}45%{translate:-23% 9%}65%{translate:-15% 7%}}
+@keyframes playerStrike{0%,100%{translate:0 0}43%{translate:18% -8%}68%{translate:9% -3%}}
+@keyframes actorFlinch{0%,100%{filter:brightness(1)}35%{filter:brightness(1.7)}}
+#battle-ui{
+ position:absolute;inset:0;z-index:6;pointer-events:none;
+ color:#eaeae5;font-family:var(--font-dialogue);
+ letter-spacing:.06em;text-shadow:0 1px 4px #000,0 2px 8px #000;
+}
+#battle-ui [hidden]{display:none!important}
+#battle-ui button{
+ background:none!important;border:0!important;box-shadow:none!important;
+ color:inherit;font-family:var(--font-menu);font-size:inherit;letter-spacing:inherit;
+ padding:4px 8px;min-height:36px;text-align:left;cursor:pointer;
+ -webkit-tap-highlight-color:transparent;pointer-events:auto;touch-action:manipulation;
+}
+#battle-ui button:disabled{opacity:.32;cursor:default}
+#battle-ui button:focus-visible{outline:1px solid #eee;outline-offset:2px}
+#battle-time{
+ position:absolute;top:max(9px,3.7cqh);left:max(14px,5.2cqw);
+ font-family:var(--font-name);font-weight:500;font-size:clamp(12px,2.4cqh,29px);
+}
+#battle-enemy-status{
+ position:absolute;right:10%;top:13%;text-align:right;
+ font-size:clamp(12px,2.55cqh,29px);line-height:1.55;
+}
+#battle-player-status{
+ position:absolute;left:12%;bottom:19%;
+ font-size:clamp(12px,2.55cqh,29px);line-height:1.5;
+}
+#battle-message{
+ position:absolute;left:31%;bottom:10%;width:40%;
+ text-align:center;font-family:var(--font-dialogue);
+ font-size:clamp(12px,2.55cqh,28px);line-height:1.5;
+}
+#battle-actions{
+ position:absolute;bottom:6%;right:7%;display:grid;
+ grid-template-columns:repeat(2,max-content);column-gap:max(7px,1.7cqw);
+ row-gap:1px;font-size:clamp(12px,2.7cqh,30px);
+}
+#battle-shortcuts{position:absolute;right:5%;top:3%;font-size:clamp(11px,2.15cqh,23px)}
+#battle-turn-hint{
+ position:absolute;left:31%;bottom:3%;font-size:clamp(10px,1.65cqh,20px);
+ opacity:.75;max-width:36%;
+}
+@container (max-height:450px){
+ #battle-enemy{height:69%;left:62%;bottom:21%}
+ #battle-player{height:92%;left:9%;bottom:-3%}
+ #battle-player-status{bottom:19%;left:7%}
+ #battle-message{left:29%;width:41%;bottom:13%;font-size:clamp(11px,2.9cqh,17px)}
+ #battle-actions{right:4%;bottom:3%;font-size:clamp(11px,2.8cqh,19px)}
+ #battle-turn-hint{bottom:2%;left:29%}
+}
+@media(prefers-reduced-motion:reduce){
+ #battle-enemy.strike,#battle-player.strike,#battle-enemy.hit,#battle-player.hit{animation:none}
+}
+
 /* BLACK-only scene transition, independent of the original running fluid fog */
 #scene-transition{position:absolute;inset:0;z-index:20;pointer-events:none;opacity:0;
  background:radial-gradient(ellipse at 50% 47%,rgba(0,0,0,0) 0%,rgba(0,0,0,.23) 37%,rgba(0,0,0,.68) 69%,#000 100%);
@@ -156,6 +231,14 @@ body.mobile-mode.virtual-landscape #view{
   <figure id="scene" data-scene="menu" aria-label="主菜单：一面墙、一扇门和一盏灯">
     <img id="source" src="./assets/menu-wall.webp" width="1024" height="576"
          alt="昏暗的墙壁，一扇闭合的旧门和顶上的灯。" draggable="false">
+    <div id="battle-enemy-layer" aria-label="远景敌人立绘" hidden>
+      <img class="battle-actor" id="battle-enemy" src="./assets/battle/enemy-front.webp"
+           width="454" height="780" alt="狂乱者，正面，面对玩家" draggable="false">
+    </div>
+    <div id="battle-player-layer" aria-label="近景玩家背面立绘" hidden>
+      <img class="battle-actor" id="battle-player" src="./assets/battle/player-back.webp"
+           width="291" height="780" alt="主角背影，面向敌人" draggable="false">
+    </div>
     <div id="scene-menu" aria-label="主菜单场景文字">
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
@@ -189,6 +272,23 @@ body.mobile-mode.virtual-landscape #view{
     <div id="advance"><button id="next-line" type="button" aria-label="下一句">▸</button></div>
     <div id="history" hidden role="region" aria-label="对白记录"></div>
   </div>
+  <section id="battle-ui" aria-label="夜间学校战斗" hidden>
+    <div id="battle-time" aria-label="里世界时间">18:04　/　里世界</div>
+    <div id="battle-enemy-status" aria-label="敌人生命">狂乱者　HP 100 / 100</div>
+    <div id="battle-player-status" aria-label="玩家生命">猎人　HP 100 / 100</div>
+    <div id="battle-message" role="status" aria-live="polite">18:00之后，学校已经不是原来的学校。</div>
+    <nav id="battle-actions" aria-label="回合制战斗操作">
+      <button id="battle-attack" type="button">斩击</button>
+      <button id="battle-guard" type="button">防御</button>
+      <button id="battle-observe" type="button">观察</button>
+      <button id="battle-heal" type="button">包扎</button>
+      <button id="battle-next" type="button" hidden>继续狩猎</button>
+      <button id="battle-retry" type="button" hidden>重新开始</button>
+      <button id="battle-leave" type="button" hidden>离开学校</button>
+    </nav>
+    <button id="battle-shortcuts" type="button" aria-label="打开主菜单">☰</button>
+    <div id="battle-turn-hint">18:00 后进入里世界 · 06:00 才能离开</div>
+  </section>
   <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
@@ -447,9 +547,15 @@ void main(){
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
   const SCENES=Object.freeze({
     menu:Object.freeze({image:'./assets/menu-wall.webp',alt:'一面旧墙、一扇门和一盏灯',type:'menu'}),
-    classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',type:'story'})
+    classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',type:'story'}),
+    battle:Object.freeze({image:'./assets/classroom.webp',alt:'18:04，进入里世界的夜间教室；前景猎人对峙狂乱者',type:'battle'})
   });
   const sourceImage=document.getElementById('source');
+  const battleHud=document.getElementById('battle-ui');
+  const battleEnemyLayer=document.getElementById('battle-enemy-layer');
+  const battlePlayerLayer=document.getElementById('battle-player-layer');
+  const battleEnemy=document.getElementById('battle-enemy');
+  const battlePlayer=document.getElementById('battle-player');
   const sceneMenu=document.getElementById('scene-menu');
   const mainOptions=document.getElementById('scene-menu-main');
   const settingsOptions=document.getElementById('scene-menu-settings');
@@ -486,18 +592,24 @@ void main(){
     stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
     sceneMenu.hidden=def.type!=='menu';
     uiRoot.hidden=def.type!=='story';
+    battleHud.hidden=def.type!=='battle';
+    battleEnemyLayer.hidden=def.type!=='battle';
+    battlePlayerLayer.hidden=def.type!=='battle';
     if(def.type==='menu'){
       cancelAuto();if(logOpen)toggleLog();
       mainOptions.hidden=false;settingsOptions.hidden=true;
-      continueButton.disabled=!readSave();
-    }else{
+      continueButton.disabled=!readHunt();
+    }else if(def.type==='story'){
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
       textHidden=false;dialogue.hidden=false;
       nextLineButton.parentElement.hidden=false;renderDialogue();writeSave();
+    }else if(def.type==='battle'){
+      renderBattle();
     }
     start(); // continuous, same original fog frame chain
   }
 
+  function sceneUI(name){return name==='menu'?sceneMenu:name==='battle'?battleHud:uiRoot}
   // Reusable transition state: idle -> preload -> out -> covered -> in -> idle.
   // Same live WebGL/CPU black fog canvas persists behind the black veil.
   const shade=document.getElementById('scene-transition');
@@ -535,7 +647,7 @@ void main(){
   async function changeScene(name){
     if(transitioning||!SCENES[name]||stage.dataset.scene===name)return false;
     transitioning=true;shade.dataset.active='true';shade.dataset.phase='preload';
-    const outgoing=stage.dataset.scene==='menu'?sceneMenu:uiRoot;
+    const outgoing=sceneUI(stage.dataset.scene);
     if(!(await ensureAsset(name))){
       shade.dataset.phase='idle';shade.dataset.active='false';transitioning=false;
       return false;
@@ -547,7 +659,7 @@ void main(){
       openScene(name); // replace image ONLY after center is fully black
       await waitForPaint();
       await new Promise(done=>setTimeout(done,reduced.matches?35:105));
-      const incoming=name==='menu'?sceneMenu:uiRoot;
+      const incoming=sceneUI(name);
       incoming.style.opacity='0';
       const textTimer=setTimeout(()=>{incoming.style.opacity='1'},reduced.matches?0:165);
       await animateDark(1,0,reduced.matches?170:500,'in');
@@ -559,14 +671,195 @@ void main(){
       transitioning=false;
     }
   }
+
+  // Game world: fail to go home before 18:00 -> night realm until 06:00.
+  // The player starts in this already-active hunt at 18:04, under attack.
+  const NIGHT_RULES=Object.freeze({start:18*60,end:6*60,turnMinutes:20});
+  const battleEls={
+    clock:document.getElementById('battle-time'),
+    enemy:document.getElementById('battle-enemy-status'),
+    player:document.getElementById('battle-player-status'),
+    message:document.getElementById('battle-message'),
+    attack:document.getElementById('battle-attack'),
+    guard:document.getElementById('battle-guard'),
+    observe:document.getElementById('battle-observe'),
+    heal:document.getElementById('battle-heal'),
+    next:document.getElementById('battle-next'),
+    retry:document.getElementById('battle-retry'),
+    leave:document.getElementById('battle-leave')
+  };
+  const BATTLE_SAVE='paperchalk-hunt-v1';
+  const state={minute:18*60+4,hp:100,maxHP:100,enemyHP:100,enemyMaxHP:100,
+    wave:1,bandages:3,guard:false,turn:0,phase:'ambush',night:true};
+  let combatTimer=0;
+  const combatButtons=[battleEls.attack,battleEls.guard,battleEls.observe,battleEls.heal];
+  function isOtherworld(minutes){
+    const m=((minutes%1440)+1440)%1440;
+    return m>=NIGHT_RULES.start||m<NIGHT_RULES.end;
+  }
+  function clockLabel(minutes){
+    const m=((minutes%1440)+1440)%1440;
+    return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+  }
+  function saveHunt(){
+    try{localStorage.setItem(BATTLE_SAVE,JSON.stringify({...state}))}catch(_){}
+    continueButton.disabled=false;
+  }
+  function readHunt(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(BATTLE_SAVE));
+      if(!raw||!Number.isFinite(raw.hp)||!Number.isFinite(raw.minute)||!Number.isFinite(raw.wave))return null;
+      return raw;
+    }catch(_){return null}
+  }
+  function restoreHunt(raw){
+    if(!raw)return false;
+    const hp=Math.floor(clamp(raw.hp,0,100));
+    Object.assign(state,{
+      minute:Math.floor(clamp(raw.minute,0,2880)),
+      hp,enemyHP:Math.floor(clamp(Number(raw.enemyHP)||0,0,100)),
+      wave:Math.max(1,Math.floor(raw.wave)),
+      bandages:Math.floor(clamp(Number(raw.bandages)||0,0,3)),
+      turn:Math.max(0,Math.floor(Number(raw.turn)||0)),
+      guard:false,phase:hp===0?'lost':'ready'
+    });
+    state.night=isOtherworld(state.minute);
+    if(state.enemyHP<=0&&state.phase!=='lost')state.phase=state.night?'won':'dawn';
+    renderBattle();return true;
+  }
+  function resetHunt(){
+    clearTimeout(combatTimer);
+    Object.assign(state,{minute:18*60+4,hp:100,maxHP:100,enemyHP:100,enemyMaxHP:100,
+      wave:1,bandages:3,guard:false,turn:0,phase:'ambush',night:true});
+    renderBattle();saveHunt();
+  }
+  function setBattleMessage(message){battleEls.message.textContent=message}
+  function showStrike(actor,kind){
+    actor.classList.remove('strike','hit');
+    void actor.offsetWidth;actor.classList.add(kind);
+    setTimeout(()=>actor.classList.remove(kind),600);
+  }
+  function renderBattle(){
+    state.night=isOtherworld(state.minute);
+    battleEls.clock.textContent=clockLabel(state.minute)+(state.night?'　/　里世界':'　/　黎明');
+    battleEls.enemy.textContent='狂乱者 '+state.wave+'　HP '+state.enemyHP+' / 100';
+    battleEls.player.textContent='猎人　HP '+state.hp+' / 100　绷带 '+state.bandages;
+    battleHud.dataset.phase=state.phase;
+    battleHud.dataset.time=clockLabel(state.minute);
+    battleHud.dataset.wave=String(state.wave);
+    battleHud.dataset.hp=String(state.hp);
+    battleHud.dataset.enemyHp=String(state.enemyHP);
+    document.body.dataset.otherworld=String(state.night);
+    const playable=state.phase==='ready';
+    for(const b of combatButtons)b.disabled=!playable;
+    battleEls.heal.disabled=!playable||state.bandages<=0||state.hp>=state.maxHP;
+    battleEls.next.hidden=state.phase!=='won';
+    battleEls.retry.hidden=state.phase!=='lost';
+    battleEls.leave.hidden=state.phase!=='dawn';
+    battleEnemy.style.opacity=state.enemyHP<=0?'.26':'1';
+  }
+  function advanceNightClock(){
+    state.minute+=NIGHT_RULES.turnMinutes;
+    if(state.night&&!isOtherworld(state.minute)){
+      state.night=false;
+      if(state.phase!=='lost')state.phase='dawn';
+      setBattleMessage('06:00 后的黎明到了。里世界终于允许你离开。');
+    }
+  }
+  function enemyTurn(isOpening=false){
+    if(stage.dataset.scene!=='battle'||state.hp<=0)return;
+    state.phase='enemy';renderBattle();
+    showStrike(battleEnemy,'strike');
+    const damage=state.guard?5:(isOpening?16:12+state.wave*2);
+    state.guard=false;
+    combatTimer=setTimeout(()=>{
+      if(stage.dataset.scene!=='battle')return;
+      state.hp=Math.max(0,state.hp-damage);
+      showStrike(battlePlayer,'hit');
+      if(state.hp===0){
+        state.phase='lost';
+        setBattleMessage('你倒下了。午夜的学校仍在等待。');
+      }else{
+        state.phase='ready';
+        setBattleMessage(isOpening?
+          '狂乱者突然扑来！你受伤了。现在轮到你行动。':
+          '狂乱者反击，你失去 '+damage+' 点生命。');
+      }
+      renderBattle();saveHunt();
+    },520);
+  }
+  function beginAmbush(){
+    if(stage.dataset.scene!=='battle')return;
+    state.phase='ambush';renderBattle();
+    setBattleMessage('18:04。狂乱者冲出课桌，直接向你发动袭击！');
+    combatTimer=setTimeout(()=>enemyTurn(true),300);
+  }
+  function playerAction(type){
+    if(transitioning||stage.dataset.scene!=='battle'||state.phase!=='ready')return;
+    state.turn++;
+    if(type==='attack'){
+      const damage=34+(state.turn%3)*4;
+      state.enemyHP=Math.max(0,state.enemyHP-damage);
+      showStrike(battlePlayer,'strike');
+      showStrike(battleEnemy,'hit');
+      setBattleMessage('你挥刀斩向狂乱者，造成 '+damage+' 点伤害。');
+    }else if(type==='guard'){
+      state.guard=true;
+      setBattleMessage('你稳住重心，准备挡下下一次袭击。');
+    }else if(type==='observe'){
+      setBattleMessage('它的动作像是被什么拖拽着。攻击会让它暂时失去平衡。');
+    }else if(type==='heal'){
+      if(state.bandages<=0||state.hp>=state.maxHP)return;
+      state.bandages--;
+      state.hp=Math.min(state.maxHP,state.hp+32);
+      setBattleMessage('你匆忙包扎伤口，恢复 32 点生命。');
+    }else return;
+    state.phase='busy';advanceNightClock();renderBattle();saveHunt();
+    if(state.phase==='dawn')return;
+    if(state.enemyHP===0){
+      state.phase='won';
+      setBattleMessage('狂乱者倒下了。夜还很长，其他怪物正在靠近。');
+      renderBattle();saveHunt();return;
+    }
+    combatTimer=setTimeout(()=>enemyTurn(false),620);
+  }
+  function nextEncounter(){
+    if(state.phase!=='won'||!state.night)return;
+    state.wave++;
+    state.enemyHP=100;state.guard=false;state.phase='ready';
+    setBattleMessage('第 '+state.wave+' 名狂乱者从黑暗中走了出来。');
+    showStrike(battleEnemy,'hit');renderBattle();saveHunt();
+  }
+  // Dedicated battle scene first; old illustrated menu remains reachable via ☰.
+  function enterNewBattle(){
+    resetHunt();
+    if(stage.dataset.scene==='battle')beginAmbush();
+    else changeScene('battle').then(ok=>{if(ok)beginAmbush()});
+  }
+  battleEls.attack.addEventListener('click',()=>playerAction('attack'));
+  battleEls.guard.addEventListener('click',()=>playerAction('guard'));
+  battleEls.observe.addEventListener('click',()=>playerAction('observe'));
+  battleEls.heal.addEventListener('click',()=>playerAction('heal'));
+  battleEls.next.addEventListener('click',nextEncounter);
+  battleEls.retry.addEventListener('click',enterNewBattle);
+  battleEls.leave.addEventListener('click',()=>{
+    if(state.phase==='dawn'&&!state.night)changeScene('menu');
+  });
+  document.getElementById('battle-shortcuts').addEventListener('click',()=>{
+    clearTimeout(combatTimer);saveHunt();changeScene('menu');
+  });
+  function continueHunt(){
+    if(!restoreHunt(readHunt()))return;
+    changeScene('battle');
+  }
   function beginStory(resume){
     if(transitioning)return;
     const save=resume?readSave():null;
     dialogueIndex=save?save.line:0;
     changeScene('classroom');
   }
-  document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
-  continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
+  document.getElementById('menu-start').addEventListener('click',enterNewBattle);
+  continueButton.addEventListener('click',continueHunt);
   document.getElementById('menu-settings-button').addEventListener('click',()=>{
     mainOptions.hidden=true;settingsOptions.hidden=false;
   });
@@ -581,7 +874,7 @@ void main(){
     start();
   });
   tiltButton.textContent=tiltEnabled?'场景倾斜：开启':'场景倾斜：关闭';
-  continueButton.disabled=!readSave();
+  continueButton.disabled=!readHunt();
   function cancelAuto(){
     clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
     autoButton.setAttribute('aria-pressed','false');
@@ -660,7 +953,8 @@ void main(){
   window.addEventListener('keydown',e=>{
     if(transitioning)return;
     if(e.key==='Escape'){
-      if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;mainOptions.hidden=false}
+      if(stage.dataset.scene==='battle'){clearTimeout(combatTimer);saveHunt();changeScene('menu')}
+      else if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;mainOptions.hidden=false}
       else if(logOpen)toggleLog();
       else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
     }else if((e.key===' '||e.key==='Enter')&&
@@ -673,7 +967,9 @@ void main(){
     else if(autoEnabled)scheduleAuto();
   });
   renderDialogue();
-  openScene('menu');
+  resetHunt();
+  openScene('battle');
+  beginAmbush();
   function shader(type,text){
     const s=gl.createShader(type);
     gl.shaderSource(s,text);gl.compileShader(s);
@@ -814,6 +1110,9 @@ void main(){
     if(reduced.matches||!tiltEnabled){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    // Enemy responds to both shared stage tilt and its own depth parallax.
+    battleEnemyLayer.style.transform='translate3d('+(-currentX*11).toFixed(2)+'px,'+(-currentY*6).toFixed(2)+'px,0)';
+    battlePlayerLayer.style.transform='translate3d('+(currentX*17).toFixed(2)+'px,'+(currentY*9).toFixed(2)+'px,0)';
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
