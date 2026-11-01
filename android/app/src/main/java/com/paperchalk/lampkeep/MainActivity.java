@@ -27,12 +27,12 @@ import android.widget.Toast;
 /**
  * Live-hosted Android wrapper with limited pixel-art file-open/save bridges.
  * Every cold launch loads the hosted page with a fresh URL query parameter.
- * Original card game and custom pixel tools are loaded from the same trusted GitHub Pages origin.
+ * Original horror game and custom pixel tools are loaded from the same trusted GitHub Pages origin.
  * Rebuild of this existing application ID refreshes the original APK release.
  */
 public final class MainActivity extends Activity {
     private static final String HOME =
-        "https://g2066203208-beep.github.io/paperchalk-world/card-game/";
+        "https://g2066203208-beep.github.io/paperchalk-world/false-memory/";
     private static final String SITE_HOST = "g2066203208-beep.github.io";
     private static final String SITE_PATH = "/paperchalk-world/";
 
@@ -227,7 +227,7 @@ public final class MainActivity extends Activity {
                     "await Promise.all(old.map(r=>r.unregister()));" +
                     "if('caches' in window){const keys=await caches.keys();" +
                     "await Promise.all(keys.filter(k=>/^(untitled-kiosk|paperworld|bone|night)/i.test(k)).map(k=>caches.delete(k)));}" +
-                    "location.replace('https://g2066203208-beep.github.io/paperchalk-world/card-game/?apk=1&fresh='+Date.now());" +
+                    "location.replace('https://g2066203208-beep.github.io/paperchalk-world/false-memory/?apk=1&fresh='+Date.now());" +
                     "}catch(e){} })();";
                 view.evaluateJavascript(migrate, null);
             }
@@ -248,7 +248,7 @@ public final class MainActivity extends Activity {
         }
         setContentView(root);
         root.requestApplyInsets();
-        // NEVER restore a stale WebView snapshot: request the live hosted card game.
+        // NEVER restore a stale WebView snapshot: request the live hosted horror game.
         openLatestHome();
     }
 
