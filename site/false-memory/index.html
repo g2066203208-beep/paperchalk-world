@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10141b"><title>错位日常 · 第一夜</title>
+<style>
+:root{--ink:#e9e8e2;--muted:#abb7be;--teal:#bed4d5;--accent:#e5bac0;--hair:#101318}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#0a0d12;color:var(--ink);font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}button:focus-visible{outline:2px solid #f3d3bb;outline-offset:3px}
+#game{position:relative;min-height:100dvh;max-width:1500px;margin:auto;overflow:hidden;background:#0d121b}
+#world{position:relative;width:100%;height:100dvh;min-height:580px;overflow:hidden;background:linear-gradient(#1f303a,#0d1624)}
+#stage-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stage{opacity:0;transition:opacity .7s ease} .stage.active{opacity:1}
+#sky-glow{animation:flicker 9s infinite} @keyframes flicker{0%,39%,41%,74%,76%,100%{opacity:.8}40%,75%{opacity:.16}}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 36%,transparent 22%,rgba(2,4,10,.13) 61%,rgba(0,0,4,.76) 100%)}
+#texture{position:absolute;inset:0;pointer-events:none;opacity:.17;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.4' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.23'/%3E%3C/svg%3E");mix-blend-mode:overlay}
+#hero{position:absolute;z-index:5;left:15%;bottom:12%;height:min(82vh,850px);max-width:40vw;object-fit:contain;object-position:bottom center;filter:drop-shadow(17px 18px 13px #0009) drop-shadow(-3px 0px 8px #8b9db64d);transition:opacity .6s,transform .6s;transform-origin:bottom center;pointer-events:none}
+#hero.ghost{opacity:.18;transform:translateX(9px) scaleX(.996);filter:brightness(.7) blur(1px) drop-shadow(15px 0 8px #e5dada90)}
+#hero[src=""]{display:none}
+#fallback{position:absolute;bottom:14%;left:18%;height:54%;width:16%;z-index:4;display:none;align-items:center;justify-content:center;color:#e6dfe6a3;border:1px dashed #9b9fa050;background:#151d25a8;text-align:center;line-height:1.5}
+header{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-items:center;gap:15px;justify-content:space-between;padding:17px clamp(16px,3vw,45px);background:linear-gradient(#080c12c9,#080c1200)}
+.brand{letter-spacing:.28em;font-weight:600;font-size:clamp(17px,2vw,27px)}.brand small{display:block;font-size:10px;letter-spacing:.25em;color:#d3d6d9a6;font-weight:400;margin-top:4px}
+.toolbar{display:flex;gap:9px}.toolbar button{border:1px solid #d9e7ec4b;background:#0e1921a3;padding:8px 12px;border-radius:3px;font-size:12px}
+#location{position:absolute;z-index:9;top:91px;left:clamp(16px,3vw,45px);font-size:11px;color:#e0e0d9ad;letter-spacing:.14em}
+#location:before{content:"◆";color:#f0b8b8;margin-right:9px}
+.hotspot{position:absolute;z-index:8;border:1px solid #f0e9ce9e;background:#101e2b99;box-shadow:0 0 0 5px #e2e6ee20,0 4px 20px #0008;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;font-size:14px;transition:transform .15s,background .15s;animation:breathe 3s ease-in-out infinite;touch-action:manipulation}
+.hotspot:hover,.hotspot:focus-visible{background:#5b6475e8;transform:scale(1.15)}@keyframes breathe{50%{box-shadow:0 0 0 11px #e2e6ee06,0 4px 20px #0008}}
+.hotspot:after{content:attr(data-title);position:absolute;bottom:41px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;color:#eee8e0;background:#0b121ce8;border:1px solid #9ea5a75a;padding:5px 8px;opacity:0;pointer-events:none}.hotspot:hover:after,.hotspot:focus-visible:after{opacity:1}
+#dialogue{position:absolute;z-index:12;bottom:clamp(18px,5vh,50px);left:clamp(14px,4vw,55px);right:clamp(14px,4vw,55px);min-height:170px;padding:20px 25px 22px;border:1px solid #c9c9ce80;border-top:2px solid #e9d5c3;background:linear-gradient(105deg,#101720f2,#17202bdd 60%,#101820ed);box-shadow:0 10px 45px #000c;backdrop-filter:blur(12px)}
+#speaker{letter-spacing:.23em;font-size:13px;color:#edcbc0;font-weight:700;margin-bottom:7px}
+#line{font-size:clamp(15px,1.5vw,19px);line-height:1.85;min-height:57px;max-width:950px;text-shadow:0 2px 6px #0009}
+#controls{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;margin-top:12px}
+#hint{font-size:11px;color:#b1b8bda3;letter-spacing:.05em}
+#next{border:1px solid #aebdc69a;background:#273545bf;padding:8px 17px;letter-spacing:.13em;min-width:94px}
+#choices{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+#choices button{background:#263442ec;border:1px solid #9baaaa89;padding:10px 15px;text-align:left;min-width:150px}
+#choices button:hover{background:#465263}
+#chapter{position:absolute;z-index:10;right:28px;top:94px;font-size:10px;letter-spacing:.23em;color:#e9ebed95;text-align:right}
+#status{position:absolute;z-index:9;top:125px;left:clamp(16px,3vw,45px);font-size:12px;letter-spacing:.1em;color:#e3c6c1}
+#flash{position:absolute;inset:0;background:#edeeee;z-index:20;opacity:0;pointer-events:none;transition:opacity .4s}
+#flash.on{opacity:.85;transition:opacity .05s}
+@media(max-width:700px){#world{min-height:650px}#stage-art{width:100%;height:100%;object-fit:cover}#hero{left:8%;height:62vh;max-height:700px;max-width:58vw;bottom:23%;opacity:.92}header{padding-top:calc(9px + env(safe-area-inset-top))}.brand{font-size:18px;letter-spacing:.13em}.brand small{font-size:8px}.toolbar button{font-size:10px;padding:7px}#location{top:76px;font-size:9px}#chapter{top:76px;right:15px}#dialogue{bottom:max(10px,env(safe-area-inset-bottom));padding:14px 16px 15px;min-height:205px}#line{font-size:15px;min-height:72px}#controls{margin-top:7px}#choices button{min-width:120px;padding:9px 10px;font-size:13px}#hint{font-size:9px}#status{top:109px;left:15px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main id="game">
+<div id="world" aria-label="夜间校园可互动场景">
+<svg id="stage-art" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="手绘夜间校园走廊、教室、楼梯间">
+<defs>
+<linearGradient id="walls" x1="0" y1="0" x2="1" y2=".2"><stop stop-color="#485866"/><stop offset=".5" stop-color="#64757c"/><stop offset="1" stop-color="#23343f"/></linearGradient>
+<linearGradient id="floor" x1="0" y1="0" x2=".5" y2="1"><stop stop-color="#515861"/><stop offset=".45" stop-color="#333b43"/><stop offset="1" stop-color="#101922"/></linearGradient>
+<linearGradient id="door" x1="0" y1="0" x2="1" y2=".1"><stop stop-color="#394a50"/><stop offset=".4" stop-color="#17252e"/><stop offset=".95" stop-color="#455a62"/></linearGradient>
+<linearGradient id="window" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#111e30"/><stop offset=".5" stop-color="#203b4d"/><stop offset="1" stop-color="#3a4140"/></linearGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b6c7c5" stop-opacity=".55"/><stop offset=".5" stop-color="#7893a3" stop-opacity=".18"/><stop offset="1" stop-color="#081929" stop-opacity=".62"/></linearGradient>
+<radialGradient id="lamp"><stop stop-color="#fff1c6" stop-opacity=".65"/><stop offset=".28" stop-color="#d7dfd8" stop-opacity=".28"/><stop offset="1" stop-color="#cfe6ed" stop-opacity="0"/></radialGradient>
+<linearGradient id="ceiling" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#151e25"/><stop offset="1" stop-color="#4e606a"/></linearGradient>
+<pattern id="tiles" patternUnits="userSpaceOnUse" width="92" height="92"><path d="M0 0 H92 M0 0 V92" stroke="#9da6a8" stroke-opacity=".15" fill="none" stroke-width="2"/></pattern>
+<filter id="blur"><feGaussianBlur stdDeviation="13"/></filter>
+<filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+</defs>
+<g id="hall" class="stage active">
+<rect width="1440" height="900" fill="#283541"/>
+<polygon points="0,0 1440,0 1030,260 430,260" fill="url(#ceiling)"/>
+<polygon points="0,0 430,260 430,520 0,760" fill="url(#walls)"/>
+<polygon points="1440,0 1030,260 1030,520 1440,760" fill="#293d48"/>
+<rect x="430" y="260" width="600" height="260" fill="#647178"/>
+<polygon points="0,760 430,520 1030,520 1440,760 1440,900 0,900" fill="url(#floor)"/>
+<polygon points="0,760 430,520 1030,520 1440,760 1440,900 0,900" fill="url(#tiles)" opacity=".6"/>
+<path d="M0 770 L430 520 M170 900 L520 520 M540 900 L640 520 M900 900 L800 520 M1280 900 L920 520 M1440 760 L1030 520" stroke="#a7b4b3" stroke-opacity=".17" stroke-width="2"/>
+<path d="M0 833 L1440 833 M0 741 L1440 741 M170 652 L1270 652 M320 584 L1120 584 M427 523 H1033" stroke="#a7b4b3" stroke-opacity=".1" stroke-width="2"/>
+<path d="M0 480 L430 418 M1030 418 L1440 480" fill="none" stroke="#283b47" stroke-width="12"/>
+<!-- windows and rain -->
+<path d="M68 168 L335 242 L335 503 L68 587 Z" fill="#1b2832" stroke="#aab5b3" stroke-width="13"/>
+<path d="M84 194 L318 259 L318 489 L84 558 Z" fill="url(#window)"/>
+<path d="M204 223 L204 522 M84 372 L318 369" stroke="#b4c2c3" stroke-opacity=".67" stroke-width="10"/>
+<path d="M100 216 L150 232 L150 531 L100 545Z" fill="url(#glass)" opacity=".35"/>
+<path d="M126 240 L120 533 M174 249 L166 514 M244 265 L232 503 M293 284 L286 493" stroke="#d1dce2" stroke-opacity=".28" stroke-width="2"/>
+<path d="M0 607 L430 466 M1030 466 L1440 607" stroke="#b6b5ad" stroke-opacity=".35" stroke-width="7"/>
+<!-- classroom entrance -->
+<polygon points="1084,197 1300,133 1300,693 1084,584" fill="#121b25" stroke="#788a90" stroke-width="13"/>
+<polygon points="1103,209 1280,156 1280,665 1103,573" fill="url(#door)"/>
+<polygon points="1130,234 1259,198 1259,374 1130,401" fill="#071521" stroke="#7f989c" stroke-width="9"/>
+<polygon points="1141,247 1249,218 1249,363 1141,388" fill="url(#glass)"/>
+<path d="M1170 243 L1190 376" stroke="#d9d4bf" stroke-opacity=".35" stroke-width="3"/>
+<ellipse cx="1128" cy="473" rx="9" ry="13" fill="#d4c6aa"/><ellipse cx="1128" cy="473" rx="3" ry="6" fill="#4b5353"/>
+<rect x="1095" y="170" width="160" height="30" rx="2" fill="#d7d8cf"/><text x="1117" y="191" fill="#35424c" font-size="16" letter-spacing="3">3 - B</text>
+<!-- end hallway clock and door -->
+<rect x="608" y="325" width="235" height="195" fill="#273640" stroke="#94a2a4" stroke-width="9"/>
+<rect x="628" y="348" width="195" height="172" fill="#27333e" stroke="#46535a" stroke-width="7"/>
+<circle cx="731" cy="302" r="25" fill="#e3ded0" stroke="#48545d" stroke-width="7"/>
+<path d="M731 286 V302 L741 307" fill="none" stroke="#28333a" stroke-width="3" stroke-linecap="round"/>
+<path d="M0 60 L430 268 M1440 60 L1030 268" stroke="#b4bfbe" stroke-opacity=".13" stroke-width="6"/>
+<!-- fluorescent ceiling fixtures -->
+<polygon points="610,64 850,64 797,119 653,119" fill="#e0e1d6" opacity=".9"/>
+<ellipse id="sky-glow" cx="730" cy="127" rx="430" ry="245" fill="url(#lamp)"/>
+<polygon points="675,183 788,183 774,201 692,201" fill="#d8d8ca" opacity=".68"/>
+<ellipse cx="730" cy="232" rx="190" ry="80" fill="url(#lamp)" opacity=".6"/>
+<!-- hallway bench -->
+<path d="M378 595 L472 546 L552 565 L453 631 Z" fill="#323337" stroke="#68767b" stroke-width="4"/>
+<path d="M399 615 V663 M507 589 V634" stroke="#353a3b" stroke-width="9"/>
+<!-- paper note -->
+<path d="M856 367 L893 365 L896 431 L852 432 Z" fill="#d6d3bc" opacity=".83"/>
+<path d="M862 383 L884 382 M860 395 L886 394 M862 407 L887 406" stroke="#676965" stroke-opacity=".6"/>
+<!-- floor reflection -->
+<ellipse cx="730" cy="686" rx="255" ry="75" fill="#dce7dd" opacity=".075" filter="url(#blur)"/>
+<path d="M646 601 L819 601 L1030 900 L420 900 Z" fill="#dae4e5" opacity=".026"/>
+</g>
+<g id="classroom" class="stage">
+<rect width="1440" height="900" fill="#283643"/>
+<rect y="0" width="1440" height="160" fill="#29363f"/>
+<rect x="0" y="160" width="1440" height="550" fill="#617174"/>
+<rect x="0" y="710" width="1440" height="190" fill="url(#floor)"/>
+<path d="M0 700 H1440 M0 760 H1440" stroke="#c7d3c7" stroke-opacity=".2" stroke-width="10"/>
+<rect x="70" y="225" width="650" height="295" fill="#1b3638" stroke="#a0a9a2" stroke-width="16"/>
+<path d="M150 265 Q350 245 420 280" stroke="#b7c5bd" stroke-width="3" opacity=".5" fill="none"/>
+<text x="125" y="335" font-size="31" fill="#d0d8d0" opacity=".65" font-family="serif">03 / 17</text>
+<text x="124" y="391" font-size="19" fill="#d0d8d0" opacity=".55">全班 32 人　/　到校 33 人</text>
+<rect x="990" y="180" width="310" height="340" fill="url(#window)" stroke="#a9b7bd" stroke-width="16"/>
+<path d="M1145 189 V513 M990 348 H1300" stroke="#b4c0c0" stroke-width="11"/>
+<path d="M1028 207 L1020 493 M1100 212 L1091 484 M1235 201 L1212 486" stroke="#d8e2e5" stroke-opacity=".23"/>
+<g fill="#262c34" stroke="#8e8c82" stroke-width="8">
+<path d="M390 600 L820 592 L848 661 L360 669Z"/>
+<path d="M367 673 L385 886 M830 666 L855 884"/>
+<path d="M880 585 L1210 576 L1258 632 L868 647Z"/>
+<path d="M888 655 L898 875 M1221 649 L1238 876"/>
+</g>
+<rect x="770" y="280" width="120" height="230" fill="#7d8480" opacity=".45"/>
+<ellipse cx="720" cy="226" rx="370" ry="172" fill="url(#lamp)" opacity=".5"/>
+<rect x="525" y="42" width="385" height="30" rx="5" fill="#d5d7c9"/>
+<path d="M0 161 H1440" stroke="#909b9f" stroke-width="12"/>
+</g>
+<g id="stairs" class="stage">
+<rect width="1440" height="900" fill="#283643"/>
+<polygon points="0,0 1440,0 1200,750 240,750" fill="#525f66"/>
+<polygon points="0,720 1440,720 1440,900 0,900" fill="url(#floor)"/>
+<polygon points="370,720 1100,720 1180,900 270,900" fill="#25333c"/>
+<path d="M370 720 H1100 M351 760 H1120 M328 805 H1140 M303 855 H1160" stroke="#79868a" stroke-width="24"/>
+<path d="M285 900 L442 414 L450 415 L299 900 M1170 900 L1018 414 L1010 415 L1156 900" stroke="#b0a4a0" stroke-width="11"/>
+<rect x="444" y="190" width="565" height="320" fill="#293b48" stroke="#809198" stroke-width="15"/>
+<rect x="465" y="207" width="527" height="289" fill="url(#window)"/>
+<path d="M735 205 V496" stroke="#8b9ca2" stroke-width="13"/>
+<path d="M550 230 L520 477 M600 230 L572 467 M780 226 L749 471" stroke="#d1d8dc" stroke-opacity=".23" stroke-width="3"/>
+<ellipse cx="750" cy="128" rx="350" ry="215" fill="url(#lamp)" opacity=".67"/>
+<path d="M600 70 H850" stroke="#ddd8c7" stroke-width="20"/>
+<text x="1193" y="502" font-size="39" fill="#d7dfdf" opacity=".5">3F</text>
+</g>
+</svg>
+<div id="vignette"></div><div id="texture"></div>
+<img id="hero" src="./hero.webp" alt="主角：黑色长发、深色制服的学生全身立绘" onerror="this.style.display='none';document.getElementById('fallback').style.display='flex'">
+<div id="fallback">角色原画<br>素材加载中</div>
+<div id="flash"></div>
+<header><div class="brand">错位日常<small>THE DAY THAT FORGOT YOU</small></div><nav class="toolbar"><button id="sound" aria-pressed="false">声音 · 关</button><button id="restart">重新开始</button></nav></header>
+<div id="location">旧校舍三层 · 18:47</div>
+<div id="chapter">PROLOGUE<br>记忆不一定属于你</div>
+<div id="status"></div>
+<div id="hotspots" aria-label="可调查物件"></div>
+<section id="dialogue" aria-label="游戏剧情对话">
+<div id="speaker">内心独白</div><div id="line" aria-live="polite"></div><div id="choices"></div>
+<div id="controls"><div id="hint">点击调查圆点 · 点击继续推进 · 结局会记住你的选择</div><button id="next">继续 ›</button></div>
+</section>
+</div>
+</main>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), spots=$("hotspots"),line=$("line"),next=$("next");
+let scene="hall",step=0,found={note:false,door:false,clock:false,desk:false,window:false,stair:false},ending="",sound=false,ctx=null;
+const narrative=[
+["我","傍晚的旧校舍只剩我一个人。校务系统却显示，今天有两个人还没离校。"],
+["我","另一个人的名字，是我的。"],
+["我","手机里的合照少了一张脸。那张脸的轮廓……和我现在的脸完全一样。"]
+];
+const scripts={
+note:["墙上的字条","「明日值日：请确认今天的自己已经离开。」纸张背后，还有一行更淡的笔迹：「不要相信重复出现的记忆。」"],
+clock:["墙上的时钟","时针停在六点四十七。手机显示六点四十七。可是我清楚记得，进门之前已经六点五十二了。"],
+door:["3-B 教室","门从里面锁着。玻璃后面有人坐在我的座位上，背影跟我一模一样。"],
+desk:["我的座位","课桌里有一本笔记，写满我从未学过的笔迹。最后一页只留下：「如果你读到了这里，就说明我已经成功。」"],
+window:["教室的窗","玻璃映出我的轮廓。奇怪的是，倒影的嘴比我慢了半秒才闭上。"],
+stair:["三楼楼梯","楼梯通往一层。指示牌上的箭头指向楼上，却写着「出口」。脚步声从上方传来。"]
+};
+const layouts={
+hall:[{id:"note",x:61,y:44,t:"观察字条"},{id:"clock",x:50.6,y:34,t:"检查时钟"},{id:"door",x:82,y:54,t:"进入 3-B"},{id:"stair",x:95,y:73,t:"前往楼梯"}],
+classroom:[{id:"desk",x:52,y:67,t:"调查课桌"},{id:"window",x:82,y:42,t:"观察玻璃"},{id:"hall",x:9,y:69,t:"返回走廊"}],
+stairs:[{id:"stair",x:53,y:55,t:"检查楼梯"},{id:"hall",x:12,y:71,t:"返回走廊"}]
+};
+function tone(f){if(!sound)return;try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=f;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.02);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.19);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.2)}catch(e){}}
+function show(s,t){$("speaker").textContent=s;line.textContent=t;$("choices").replaceChildren()}
+function choices(options){next.hidden=true;const wrap=$("choices");wrap.replaceChildren();options.forEach(o=>{const b=document.createElement("button");b.textContent=o[0];b.onclick=()=>{tone(440);next.hidden=false;wrap.replaceChildren();o[1]()};wrap.appendChild(b)})}
+function drawHotspots(){spots.replaceChildren();layouts[scene].forEach(o=>{const b=document.createElement("button");b.className="hotspot";b.style.left=o.x+"%";b.style.top=o.y+"%";b.dataset.title=o.t;b.textContent=found[o.id]?"✓":"+";b.setAttribute("aria-label",o.t);b.onclick=()=>inspect(o.id);spots.appendChild(b)})}
+function move(to){scene=to;for(const id of ["hall","classroom","stairs"])$(id).classList.toggle("active",id===to);$("location").textContent={hall:"旧校舍三层 · 18:47",classroom:"3-B 教室 · 18:47",stairs:"三楼楼梯 · 18:47"}[to];drawHotspots();tone(185)}
+function inspect(id){if(id==="hall"){move("hall");show("我","走廊里的灯比刚才暗了一些。");return}found[id]=true;drawHotspots();tone(id==="door"?145:300);if(id==="door"){show("我",scripts.door[1]);setTimeout(()=>{$("flash").classList.add("on");setTimeout(()=>$("flash").classList.remove("on"),140)},170);move("classroom");return}
+if(id==="stair"&&scene==="hall"){move("stairs");show(...scripts.stair);return}
+show(...scripts[id]);$("status").textContent="已发现 "+Object.values(found).filter(Boolean).length+" / 6 条线索";
+if(Object.values(found).filter(Boolean).length>=4&&!ending){ending="ready";setTimeout(()=>{show("内心独白","我终于明白：学校不是在复制一个人，而是在不停替换谁才有资格成为「原来的我」。");choices([["保持原样，离开这里",()=>finish("leave")],["去寻找那个自己",()=>finish("meet")]])},850)}
+}
+function finish(route){ending=route;show(route==="leave"?"记录 · 结局一":"记录 · 结局二",route==="leave"?"我走出了校门。第二天早上，课桌上仍放着我昨晚写下的笔记。可是这一次，笔记里的名字不是我的。":"我推开最后一道门。那个人看着我，像看着一段已经被遗忘的过去。她先开口了：「你终于回来替我上课了。」");spots.replaceChildren();$("status").textContent="序章结束 · "+(route==="leave"?"残留":"替代");try{localStorage.setItem("false-memory-ending",route)}catch(e){}}
+function advance(){tone(510);if(step<narrative.length){show(narrative[step][0],narrative[step][1]);step++;return}if(!ending){show("提示","点击场景里的调查标记，检查教室、时钟、纸条与楼梯。");next.textContent="继续探索 ›"}}
+$("next").onclick=advance;
+$("restart").onclick=()=>{step=0;ending="";found={note:false,door:false,clock:false,desk:false,window:false,stair:false};move("hall");$("hero").classList.remove("ghost");next.hidden=false;next.textContent="继续 ›";$("status").textContent="";show("我","放学后，我收到了一封署名是自己的短信：「今晚别回家。」");};
+$("sound").onclick=()=>{sound=!sound;$("sound").textContent="声音 · "+(sound?"开":"关");$("sound").setAttribute("aria-pressed",String(sound));tone(660)};
+document.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){if(e.target.tagName==="BUTTON")return;e.preventDefault();if(!next.hidden)advance()}});
+drawHotspots();$("restart").click();
+})();
+</script></body></html>
