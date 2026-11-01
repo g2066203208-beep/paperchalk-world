@@ -861,14 +861,14 @@ void main(){
     if(reduced.matches||!tiltEnabled){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
-    // A closer enemy shifts by a distinct amount relative to the far classroom;
-    // the player is physically a sibling of fog and never receives a transform.
-    const parallaxPx=Math.min(32,sizes.w*.027);
+    // Enemy is only slightly nearer than the classroom back wall.
+    // The player stays camera-pinned; black fog remains screen-space.
+    const parallaxPx=Math.min(6,sizes.w*.005);
     enemyDepth.style.transform='translate(-50%,-50%) translate3d('+
       (currentX*parallaxPx).toFixed(2)+'px,'+
-      (currentY*parallaxPx*.65).toFixed(2)+'px,0) rotateY('+
-      (currentX*8.1).toFixed(3)+'deg) rotateX('+
-      (-currentY*6.2).toFixed(3)+'deg)';
+      (currentY*parallaxPx*.55).toFixed(2)+'px,0) rotateY('+
+      (currentX*6.3).toFixed(3)+'deg) rotateX('+
+      (-currentY*4.82).toFixed(3)+'deg)';
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);

@@ -64,6 +64,8 @@ jobs:
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
           assert 'id="camera-player-root"' in h and 'id="enemy-depth-root"' in h
           assert 'enemyDepth.style.transform=' in h
+          assert 'const parallaxPx=Math.min(6,sizes.w*.005)' in h
+          assert '(currentX*6.3)' in h and '(-currentY*4.82)' in h
           assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
           assert "shade.dataset.phase='covered'" in h
@@ -173,7 +175,8 @@ jobs:
                     player:document.getElementById('actor-player').getBoundingClientRect().toJSON(),
                     enemy:document.getElementById('actor-enemy').getBoundingClientRect().toJSON(),
                     fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
-                    enemyStyle:document.getElementById('enemy-depth-root').style.transform
+                    enemyStyle:document.getElementById('enemy-depth-root').style.transform,
+                    stageStyle:document.getElementById('scene').style.transform
                   }));
                   await page.mouse.move(cfg.width-50,cfg.height-50);
                   await page.waitForTimeout(580);
@@ -181,13 +184,27 @@ jobs:
                     player:document.getElementById('actor-player').getBoundingClientRect().toJSON(),
                     enemy:document.getElementById('actor-enemy').getBoundingClientRect().toJSON(),
                     fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
-                    enemyStyle:document.getElementById('enemy-depth-root').style.transform
+                    enemyStyle:document.getElementById('enemy-depth-root').style.transform,
+                    stageStyle:document.getElementById('scene').style.transform
                   }));
                   assert.ok(Math.abs(a.player.x-b.player.x)<1&&Math.abs(a.player.y-b.player.y)<1,
                     'foreground player moved relative to camera');
                   assert.ok(Math.abs(a.enemy.x-b.enemy.x)>5||Math.abs(a.enemy.y-b.enemy.y)>5,
                     'enemy did not visibly parallax across mouse tilt');
                   assert.notEqual(a.enemyStyle,b.enemyStyle,'enemy plane never tilts');
+                  const angles=(style,axis)=>{
+                    const part=style.match(new RegExp(axis+'\\((-?[\\d.]+)deg\\)'));
+                    assert.ok(part,'missing rotation '+axis+' in '+style);
+                    return Number(part[1]);
+                  };
+                  for(const frame of [a,b]){
+                    assert.ok(Math.abs(angles(frame.enemyStyle,'rotateY')-
+                                       angles(frame.stageStyle,'rotateY'))<.6,
+                      'enemy yaw too far from classroom');
+                    assert.ok(Math.abs(angles(frame.enemyStyle,'rotateX')-
+                                       angles(frame.stageStyle,'rotateX'))<.5,
+                      'enemy pitch too far from classroom');
+                  }
                   assert.deepEqual(a.fog,b.fog,'black fog moved with the world');
                 }
                 await page.screenshot({path:'artifacts/classroom/'+
