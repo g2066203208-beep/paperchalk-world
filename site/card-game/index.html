@@ -1,98 +1,70 @@
 <!doctype html>
 <html lang="zh-CN"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#191827">
-<meta name="description" content="原创末日开放区域求生卡牌战斗游戏。动态手牌、回合制尸群对抗、自由探索和资源管理。">
-<title>夜幕余生 · NIGHTFALL ROUTES — 动态末日卡牌游戏</title>
-<link rel="stylesheet" href="./style.css?v=20261101-card04">
-<link rel="stylesheet" href="./motion.css?v=20261101-juice04">
-<link rel="stylesheet" href="./survival.css?v=20261101-survival01">
-</head><body>
-<canvas id="abyss" width="192" height="108" aria-hidden="true"></canvas><div id="grain" aria-hidden="true"></div>
-<div id="game-shell">
- <header class="site-header">
-  <a class="brand" href="../index.html"><span class="brand-mark">✣</span>夜幕余生 <small> / NIGHTFALL ROUTES</small></a>
-  <div class="header-actions"><span id="save-status" class="online-status">自动保存</span>
-   <button class="quiet-button" id="sound-toggle" aria-pressed="false">音效: 关</button>
-   <button class="quiet-button" id="help-button">玩法 ?</button>
-   <button class="quiet-button" id="restart-button">新档 ↻</button>
+<meta name="theme-color" content="#10141a">
+<meta name="description" content="《失序之夜》2D 点击式规则怪谈剧情生存原型。调查302室、记录规则、逃离异常公寓。">
+<title>失序之夜 · 第一夜｜2D 点击剧情恐怖</title>
+<link rel="stylesheet" href="./point-story.css?v=20261101-01">
+</head>
+<body>
+<div class="shell">
+ <header class="topbar">
+  <a class="brand" href="../index.html"><span>◈</span> 失序之夜 <small>LOST ORDER / EPISODE 01</small></a>
+  <div class="top-actions">
+   <span class="saved" id="saved">● 本地存档</span>
+   <button class="minor" id="notebook-toggle" aria-expanded="false">规则笔记</button>
+   <button class="minor" id="new-run">重新开始 ↺</button>
   </div>
  </header>
- <main id="game-stage">
-  <aside id="left-rail" aria-label="角色状态和生存物资">
-   <section class="brand-tile survival-chapter"><span>DAY <b id="day-label">01</b> <span id="time-label">17:00</span></span>
-    <div class="chapter-art"><span class="moon">☾</span><span class="chapter-diamond">☣</span></div>
-    <strong id="location-name">十三号避难所</strong><span id="location-kind">安全区域</span>
-   </section>
-   <section class="score-board health-board">
-    <div class="board-label">生命 <span id="hp-value">60 / 60</span></div><div class="stat-track"><div id="hp-fill" class="hp-fill"></div></div>
-    <div class="board-label">饥饿 <span id="hunger-value">80 / 100</span></div><div class="stat-track"><div id="hunger-fill" class="hunger-fill"></div></div>
-    <div class="board-label">水分 <span id="thirst-value">80 / 100</span></div><div class="stat-track"><div id="thirst-fill" class="thirst-fill"></div></div>
-    <div class="status-micro"><span>感染 <b id="infection-value">0</b></span><span>噪音 <b id="noise-value">0</b></span></div>
-   </section>
-   <section class="score-equation survival-energy" aria-label="战斗状态">
-    <div class="board-label">战斗资源 <span>BATTLE</span></div>
-    <div class="equation-row"><div class="chip-box"><span>体力</span><b id="energy-value">3</b></div><div class="multiply-mark">✦</div>
-     <div class="mult-box"><span>防御</span><b id="block-value">0</b></div></div>
-    <div id="combat-turn" class="predicted">探索阶段</div>
-   </section>
-   <section class="pack-board"><div class="board-label">背包 <span>SUPPLIES</span></div>
-    <div class="pack-row"><button id="use-food">罐头 <b id="food-value">3</b></button><button id="use-water">饮水 <b id="water-value">3</b></button>
-     <button id="use-medkit">急救 <b id="medkit-value">1</b></button></div>
-    <div class="status-micro"><span>零件 <b id="scrap-value">2</b></span><span>击杀 <b id="kills-value">0</b></span></div>
-   </section>
-  </aside>
-  <section id="table-zone" aria-label="末日卡牌战斗桌面">
-   <div id="table-head"><div><div class="table-kicker">PROCEDURAL SURVIVAL · TURN-BASED DECK COMBAT</div><h1>死寂街区 <span>· 没有安全的道路</span></h1></div><span class="seed-label" id="seed-label">SEED 1729</span></div>
-   <section id="world-panel" aria-label="开放区域地图与移动">
-    <div class="world-copy"><div class="panel-kicker">OPEN-ZONE EXPLORATION</div><strong id="world-name">十三号避难所</strong>
-     <p id="world-desc">地图从避难所向四面扩展。寻找补给，但不要惊动游荡的感染者。</p>
-     <span id="coord-label">区域坐标 (0, 0)</span>
+ <div class="game">
+  <main class="content">
+   <div class="above">
+    <div><span class="kicker">A QUIET NIGHT · 2003/08/17</span><h1 id="scene-title">302室 · 玄关</h1><p id="scene-subtitle">门外传来了第三次敲门</p></div>
+    <div class="stats"><div><small>TIME</small><strong id="time">18:47</strong></div>
+     <div><small>SANITY</small><strong id="sanity">100</strong></div>
+     <div><small>ATTENTION</small><strong id="attention">0</strong></div>
     </div>
-    <div id="world-map" class="world-map" role="group" aria-label="附近区域五乘五地图"></div>
-    <div id="explore-actions"><button id="search-button">⌕ 搜刮当前位置</button><button id="rest-button">⌂ 避难所休息</button></div>
+   </div>
+   <section id="scene-frame" class="scene-frame" aria-label="可点击调查的固定机位二维场景">
+    <img id="scene-image" class="scene-image" src="./scenes/foyer.svg" alt="302室玄关，紧闭的深棕色入户门，两侧有告示和鞋柜">
+    <img id="temporary-art" class="scene-image temporary-art" alt="用户上传的临时背景预览" hidden>
+    <div class="grain" aria-hidden="true"></div>
+    <div id="scene-hotspots" class="hotspots" aria-label="可调查物品"></div>
+    <div class="scene-top"><span id="scene-position">SCENE 01 / FOYER</span><span>固定镜头 · 纯二维</span></div>
+    <div class="scene-bottom"><span>◉ 点击发光标记进行调查</span><span id="scene-description">看似一切正常的玄关</span></div>
    </section>
-   <section id="battle-panel" aria-label="敌人和战斗目标" hidden>
-    <div class="enemy-heading"><strong>附近感染者 <span>HOSTILE CONTACTS</span></strong><span id="enemy-intent">观察敌方意图，决定先解决谁。</span></div>
-    <div id="enemy-bar" role="group" aria-label="选择要攻击的感染者"></div>
+   <section id="dialogue" class="dialogue" aria-label="剧情对话" aria-live="polite">
+    <div class="speaker" id="speaker">旁白</div>
+    <div class="dialogue-body" id="dialogue-body">咚。咚。咚。第三次敲门过后，整个公寓忽然安静下来。</div>
+    <div class="choices" id="choices"></div>
    </section>
-   <section id="table-center" class="table-center">
-    <div class="table-ornament">✦ <span>THE DEAD CAN HEAR YOU</span> ✦</div>
-    <div id="battle-notice" role="status" aria-live="polite">走出避难所，寻找水和食物。</div>
-    <div id="last-event" aria-live="polite"></div>
-    <div id="reveal-cards" aria-hidden="true"></div>
+   <section class="actions" aria-label="剧情行动卡牌">
+    <div class="actions-head"><span>你的行动 <small>CONTEXT ACTIONS</small></span><span>点击卡牌调查，不是扑克凑牌</span></div>
+    <div class="card-hand" id="card-hand">
+     <button data-action="observe" class="action-card" type="button"><span class="cost">01</span><span class="card-icon">⌕</span><strong>观察环境</strong><small>查看当前场景</small></button>
+     <button data-action="listen" class="action-card" type="button"><span class="cost">02</span><span class="card-icon">◉</span><strong>侧耳倾听</strong><small>分辨异常声音</small></button>
+     <button data-action="breathe" class="action-card" type="button"><span class="cost">03</span><span class="card-icon">◌</span><strong>屏息等待</strong><small>降低关注程度</small></button>
+     <button data-action="wait" class="action-card" type="button"><span class="cost">04</span><span class="card-icon">⌛</span><strong>继续等待</strong><small>观察时间变化</small></button>
+    </div>
+    <div class="footer-row"><span>临时美术：固定机位 2D 构图白盒，待 Anima 正式场景替换</span>
+     <label class="import-label" for="import-art">上传 Anima 背景预览 <input id="import-art" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
+    <p id="import-note" class="import-note" hidden>背景替换仅在当前页面有效，刷新后恢复原始示意图。</p>
    </section>
-   <section id="hand-dock" aria-label="玩家战术牌">
-    <div class="hand-heading"><span>TACTICAL HAND <b id="hand-size">0</b></span><span id="deck-count">牌库 14 · 抽牌 0</span></div>
-    <div class="hand-scroll"><div id="hand-cards" role="group" aria-label="可操作的动态战术卡牌"></div></div>
-    <div id="bottom-actions"><button id="end-turn" class="main-action" disabled>结束回合 ↻ <span id="turn-cost">敌方行动</span></button>
-     <button id="deck-info" class="sub-action">查看牌组 <span id="total-deck">14 张</span></button></div>
-   </section>
-  </section>
- </main>
- <div id="shade" class="hidden"></div>
- <section class="modal hidden" id="reward-modal" role="dialog" aria-modal="true" aria-label="战斗战利品">
-  <div class="modal-kicker">SURVIVED ANOTHER NIGHT</div><h2>从废墟中活下来</h2><p>获得零件补给。选择一张新战术卡加入永久牌组，或者不拿。</p>
-  <div id="reward-cards" class="reward-list"></div><button class="continue-button" id="skip-reward">跳过战术卡，继续探索 →</button>
- </section>
- <section class="modal end-modal hidden" id="dead-modal" role="dialog" aria-modal="true" aria-label="生存结束">
-  <div class="modal-kicker">NO ONE ANSWERS THE RADIO</div><h2>无人生还</h2><p id="dead-copy"></p>
-  <button class="continue-button" id="dead-restart">重新踏上街道</button>
- </section>
- <section class="modal help-modal hidden" id="help-modal" role="dialog" aria-modal="true" aria-label="玩法说明">
-  <div class="modal-kicker">HOW TO SURVIVE</div><h2>夜幕余生 · 生存手册</h2>
-  <p><strong>地图：</strong>点击地图中央相邻的四个格子，自由前往未知区域。地点按坐标生成，可无限向外探索；搜刮只能在同一地点进行一次。</p>
-  <p><strong>战斗：</strong>面对会显示攻击意图的感染者。点击敌人选中目标，再点击手牌立即打出。每回合恢复 3 点体力并抽取 5 张牌；防御在敌方回合吸收伤害。点击“结束回合”让敌人攻击。</p>
-  <p><strong>求生：</strong>移动消耗时间、饥饿与水分。背包中的罐头、饮水和急救包可直接使用。返回原点避难所能够休息。击败敌人后可获取新卡扩充永久牌组。</p>
-  <p>不同于凑扑克牌型计分：这里所有卡牌都用于真实的回合制战斗。完整的手牌浮动、镜面光泽、按下弹跳和结算冲击效果继续保留。</p>
-  <button class="continue-button" id="close-help">明白，开始生存 →</button>
- </section>
- <section class="modal hidden" id="deck-modal" role="dialog" aria-modal="true" aria-label="卡组总览">
-  <div class="modal-kicker">YOUR SURVIVAL DECK</div><h2>战术牌组</h2><div id="deck-list" class="deck-list"></div>
-  <button class="continue-button" id="close-deck">返回牌桌</button>
- </section>
- <div id="fx-layer" aria-hidden="true"></div>
- <footer class="footline"><span>原创丧尸求生 · 可探索区域 · 实时动态卡片</span><span>本地自动存档 · APK 每次启动加载最新网页版</span></footer>
+  </main>
+  <aside id="notebook" class="notebook">
+   <div class="notebook-top"><span class="kicker">CASE NOTES / CHAPTER 01</span><h2>规则档案</h2>
+    <p>线索不是谜题提示词。所有异常触发条件都由游戏逻辑判定。</p></div>
+   <div class="notebook-section"><h3>当前目标</h3><p id="objective">阅读物业告示，调查敲门声与收音机广播。</p></div>
+   <div class="notebook-section"><h3>已发现证据 <span id="clue-count">0 / 5</span></h3><div id="rule-list" class="rule-list"><p class="empty">尚未发现可靠记录。</p></div></div>
+   <div class="notebook-section"><h3>随身物品</h3><div id="inventory"><span class="empty">空</span></div></div>
+   <div class="notebook-section"><h3>最近记录</h3><div id="history" class="history"></div></div>
+   <p class="aside-note">玩法原型 v1：无第一人称3D移动、无战斗数值。重点验证场景关系、规则与剧情行动。</p>
+  </aside>
+ </div>
+ <div id="ending-overlay" class="ending-overlay" hidden role="dialog" aria-modal="true" aria-label="章节结局">
+  <div class="ending-card"><div class="kicker">EPISODE 01 / COMPLETE</div><h2 id="ending-title"></h2>
+   <p id="ending-copy"></p><button id="ending-restart">重新开始第一夜 ↻</button></div>
+ </div>
 </div>
-<script type="module" src="./survival-app.mjs?v=20261101-survival01"></script>
+<script type="module" src="./point-story-app.mjs?v=20261101-01"></script>
 </body></html>
