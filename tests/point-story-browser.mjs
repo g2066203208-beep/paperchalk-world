@@ -10,8 +10,8 @@ const server=createServer((req,res)=>{
  if(p.endsWith('/'))p+='index.html';
  const full=resolve(root,'.'+p);
  if(!full.startsWith(root+'/')){res.writeHead(403);res.end();return}
- try{res.writeHead(200,{'content-type':types[extname(full)]||'text/plain','cache-control':'no-store'});res.end(readFileSync(full))}
- catch{res.writeHead(404);res.end('not found')}
+ try{const bytes=readFileSync(full);res.writeHead(200,{'content-type':types[extname(full)]||'text/plain','cache-control':'no-store'});res.end(bytes)}
+ catch{if(!res.headersSent)res.writeHead(404);res.end('not found')}
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base='http://127.0.0.1:'+server.address().port+'/card-game/';
@@ -30,7 +30,7 @@ try{
   await page.locator('#classroom-toggle').click();
   assert.equal((await page.evaluate(()=>window.__POINT_STORY__.snapshot())).scene,'classroom');
   assert.equal(await page.locator('#scene-hotspots button').count(),5);
-  assert.equal(await page.locator('#scene-image').getAttribute('src'),'./scenes/classroom.webp');
+  assert.equal(await page.locator('#scene-image').getAttribute('src'),'./scenes/classroom.svg');
   await page.locator('[data-spot="girl"]').click();
   await page.screenshot({path:'artifacts/point-story/'+label+'-classroom.png',fullPage:true,animations:'disabled'});
   await page.locator('#classroom-toggle').click();
