@@ -2,6 +2,8 @@ import {VERSION,SCENES,RULES,createGame,loadGame,clock,inspect,choose,useAction,
 const $=id=>document.getElementById(id);
 const KEY='paperworld-lost-order-story-01';
 let state,previousScene='',scenePreviewUrls={};
+const ART_KEY='paperworld-anima-classroom-image-v1';
+try{const savedArt=localStorage.getItem(ART_KEY);if(savedArt?.startsWith('data:image/'))scenePreviewUrls.classroom=savedArt}catch{}
 try{state=loadGame(localStorage.getItem(KEY))}catch{state=createGame()}
 const cardDefs=[
  {id:'observe',title:'观察环境',desc:'观察当前空间'},
@@ -24,7 +26,7 @@ function renderStage(){
  $('attention').textContent=state.attention;
  $('attention').style.color=state.attention>30?'#ffb3b8':'';
  if(previousScene!==state.scene){
-  $('scene-image').src='./scenes/'+state.scene+(state.scene==='classroom'?'.webp':'.svg');
+  $('scene-image').src='./scenes/'+state.scene+'.svg';
   $('scene-image').alt='固定机位二维场景：'+info.name+'。'+info.desc;
   previousScene=state.scene;
  }
@@ -124,8 +126,10 @@ $('notebook-toggle').addEventListener('click',()=>{
  $('notebook-toggle').textContent=open?'收起笔记':'规则笔记';
 });
 function restart(){
- for(const uri of Object.values(scenePreviewUrls))URL.revokeObjectURL(uri);
- scenePreviewUrls={};state=createGame();previousScene='';$('import-note').hidden=true;
+ for(const uri of Object.values(scenePreviewUrls))if(uri.startsWith('blob:'))URL.revokeObjectURL(uri);
+ scenePreviewUrls={};
+ try{const savedArt=localStorage.getItem(ART_KEY);if(savedArt?.startsWith('data:image/'))scenePreviewUrls.classroom=savedArt}catch{}
+ state=createGame();previousScene='';$('import-note').hidden=true;
  save();render();
 }
 $('new-run').addEventListener('click',()=>{if(confirm('重新开始会覆盖第一夜的本地存档。确定吗？'))restart()});
@@ -135,11 +139,22 @@ $('import-art').addEventListener('change',e=>{
  if(!/^image\/(png|jpeg|webp)$/.test(file.type)||file.size>20*1024*1024){
   $('import-note').hidden=false;$('import-note').textContent='请选择 20 MB 以内的 PNG、JPEG 或 WebP 图片。';return;
  }
- if(scenePreviewUrls[state.scene])URL.revokeObjectURL(scenePreviewUrls[state.scene]);
- scenePreviewUrls[state.scene]=URL.createObjectURL(file);
- $('import-note').hidden=false;
- $('import-note').textContent='已在 '+SCENES[state.scene].name+' 预览新背景。仅当前页面有效，刷新后恢复原始示意图。';
- renderStage();e.target.value='';
+ const sceneName=state.scene;
+ if(scenePreviewUrls[sceneName]?.startsWith('blob:'))URL.revokeObjectURL(scenePreviewUrls[sceneName]);
+ if(sceneName==='classroom'){
+  const reader=new FileReader();reader.onload=()=>{
+   const data=String(reader.result||'');scenePreviewUrls.classroom=data;
+   try{localStorage.setItem(ART_KEY,data);$('import-note').textContent='教室背景已保存到这个浏览器，刷新仍会保留。GitHub 全站素材尚未发布。';}
+   catch{$('import-note').textContent='教室背景已预览，但浏览器储存空间不足，刷新后可能丢失。';}
+   $('import-note').hidden=false;renderStage();
+  };reader.readAsDataURL(file);
+ }else{
+  scenePreviewUrls[sceneName]=URL.createObjectURL(file);
+  $('import-note').hidden=false;
+  $('import-note').textContent='已在 '+SCENES[sceneName].name+' 预览新背景。仅当前页面有效。';
+  renderStage();
+ }
+ e.target.value='';
 });
 window.addEventListener('keydown',e=>{
  if(e.target instanceof HTMLInputElement||e.target instanceof HTMLButtonElement)return;
