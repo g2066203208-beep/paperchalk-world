@@ -21,7 +21,7 @@ test('real browser pixel game asset production on phone and desktop',async()=>{
    assert.equal(await page.locator('#module-list button').count(),10);
    assert.equal(initial.training.ready,false);
    await page.screenshot({path:'artifacts/game-production/'+device+'-initial.png',fullPage:true});
-   await page.locator('#module-list button').filter({hasText:'植物'}).click();
+   await page.locator('#module-list button').filter({hasText:'绿植'}).click();
    let current=await page.evaluate(()=>window.__GAME_ASSET_STUDIO__.state());
    assert.equal(current.scene.objects.length,initial.scene.objects.length+1);
    await page.locator('#pos-x').fill('207');await page.locator('#pos-x').press('Tab');
