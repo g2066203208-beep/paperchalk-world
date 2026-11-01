@@ -59,27 +59,6 @@ body.mobile-mode.virtual-landscape #view{
   /* independent viewport-space layer: mouse never transforms the fog */
 }
 
-/* Controls and fog stay in GAME VIEWPORT coordinates; neither follows scene tilt. */
-#motion-ui{
-  position:fixed;z-index:15;right:max(12px,env(safe-area-inset-right));
-  bottom:max(10px,env(safe-area-inset-bottom));
-  display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;
-  max-width:min(96cqw,560px);font:12px/1.3 system-ui,sans-serif;
-}
-#motion-ui button{
-  appearance:none;border:1px solid #a6aeb4;border-radius:8px;
-  background:#171e24e8;color:#fff;padding:10px 13px;min-height:40px;
-  font:600 13px system-ui,sans-serif;touch-action:manipulation;
-}
-#motion-ui button:focus-visible{outline:2px solid #fff;outline-offset:3px}
-#motion-ui button[hidden]{display:none}
-#motion-status{color:#d4dadd;text-shadow:0 1px 4px #000;max-width:180px}
-body.mobile-mode #motion-ui{display:flex}
-/* The landscape view is visible on first load, even with portrait lock enabled. */
-@media (max-height:430px) and (orientation:landscape){
-  #motion-ui{bottom:max(6px,env(safe-area-inset-bottom));right:max(8px,env(safe-area-inset-right))}
-  #motion-ui button{padding:7px 10px;min-height:34px}
-}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
@@ -91,10 +70,6 @@ body.mobile-mode #motion-ui{display:flex}
   </figure>
   <canvas id="fog" aria-hidden="true"></canvas>
 
-  <div id="motion-ui" aria-label="手机横屏及体感控制">
-    <span id="motion-status" role="status" aria-live="polite">横屏画面已启用</span>
-    <button id="enable-motion" type="button">开启体感</button>
-  </div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -203,13 +178,10 @@ void main(){
     }
   }
 
-  const enableMotion=document.getElementById('enable-motion');
-  const motionStatus=document.getElementById('motion-status');
   const coarse=matchMedia('(pointer:coarse)');
   const mobile=coarse.matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   let sensorEnabled=false,sensorSamples=0,sensorCenter=null,sensorAngle=null;
   let nativeCenter=null,nativeSamples=0,nativeActive=false,touchStart=null;
-  function setMotionStatus(message){motionStatus.textContent=message}
   function orientationAngle(){
     const actual=(((screen.orientation&&Number.isFinite(screen.orientation.angle)
       ?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0))%360)+360)%360;
@@ -241,9 +213,6 @@ void main(){
       aimY=clamp(deadzone(deltaDegrees(y,sensorCenter.y))/18,-1,1);
     }
     sensorSamples++;
-    if(sensorSamples===2){
-      setMotionStatus('体感已连接 · 轻轻倾斜手机');
-    }
     start();
   }
   // Android app's native GAME_ROTATION_VECTOR bridge is used when present;
@@ -268,17 +237,12 @@ void main(){
       aimY=clamp(deadzone(py)/18,-1,1);
     }
     nativeSamples++;
-    if(nativeSamples===2){
-      setMotionStatus('原生体感已连接');
-      enableMotion.hidden=true;
-    }
     start();
   };
   function beginWebSensor(){
     if(sensorEnabled)return;
     sensorEnabled=true;
     window.addEventListener('deviceorientation',webOrientation,{passive:true});
-    setMotionStatus('正在读取手机方向…');
   }
   async function tryLandscape(fullscreen){
     // Web browsers may reject lock() outside fullscreen or without a gesture.
@@ -291,42 +255,20 @@ void main(){
     }
     updatePhoneLayout();
   }
-  async function enableSensorsAndLandscape(){
-    enableMotion.disabled=true;
-    setMotionStatus('正在请求体感与横屏…');
-    const native=window.PaperworldSensor;
-    if(native&&typeof native.available==='function'&&native.available()){
-      nativeActive=true;nativeCenter=null;
-      native.start();
-      await tryLandscape(true);
-      enableMotion.hidden=true;
-      setMotionStatus('正在校准原生体感…');
-      enableMotion.disabled=false;return;
-    }
-    // On iOS, requestPermission MUST be invoked synchronously in this click.
-    let permission=null;
-    try {
-      if(typeof DeviceOrientationEvent!=='undefined'&&
-         typeof DeviceOrientationEvent.requestPermission==='function'){
-        permission=DeviceOrientationEvent.requestPermission();
-      }
-    }catch(_){permission=Promise.resolve('denied')}
-    // Request fullscreen from the same tap, then request landscape lock.
-    const full=(view.requestFullscreen&&!document.fullscreenElement)
-      ?view.requestFullscreen().catch(()=>false):Promise.resolve(false);
-    let granted='granted';
-    try{if(permission)granted=await permission}catch(_){granted='denied'}
-    await full;await tryLandscape(false);
-    if(granted==='granted'&&'DeviceOrientationEvent' in window){
-      beginWebSensor();
-      enableMotion.textContent='重试横屏';
-    }else{
-      setMotionStatus('体感不可用，可手动横屏并触摸拖动');
-      enableMotion.textContent='重试横屏';
-    }
-    enableMotion.disabled=false;
+  // iOS requires a user gesture to authorize motion; use the first ordinary
+  // interaction with the game, never a persistent on-screen button or label.
+  // Android native and permissionless browser sensors initialize automatically.
+  function enableIOSMotionOnFirstTouch(){
+    if(!mobile || nativeActive || sensorEnabled) return;
+    if(typeof DeviceOrientationEvent==='undefined' ||
+       typeof DeviceOrientationEvent.requestPermission!=='function') return;
+    try{
+      Promise.resolve(DeviceOrientationEvent.requestPermission())
+        .then(result=>{if(result==='granted')beginWebSensor()})
+        .catch(()=>{});
+    }catch(_){}
   }
-  enableMotion.addEventListener('click',enableSensorsAndLandscape);
+  view.addEventListener('pointerdown',enableIOSMotionOnFirstTouch,{once:true,passive:true});
   window.addEventListener('orientationchange',()=>{
     updatePhoneLayout();centreSensor();resize();
   },{passive:true});
@@ -351,7 +293,6 @@ void main(){
   try{
     if(mobile&&window.PaperworldSensor?.available?.()){
       nativeActive=true;window.PaperworldSensor.start();
-      setMotionStatus('正在读取原生体感…');
     }else if(mobile&&'DeviceOrientationEvent' in window&&
       typeof DeviceOrientationEvent.requestPermission!=='function'){
       beginWebSensor();

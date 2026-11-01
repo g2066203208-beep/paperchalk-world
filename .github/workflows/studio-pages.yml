@@ -42,10 +42,13 @@ jobs:
                       "screen.orientation.lock('landscape')",
                       'window.__PAPERWORLD_NATIVE_ORIENTATION__',
                       "view.addEventListener('pointermove'", "window.addEventListener('orientationchange'",
+                      "view.addEventListener('pointerdown',enableIOSMotionOnFirstTouch",
                       'body.mobile-mode.virtual-landscape #view',
                       'transform:rotate(90deg)', 'const logical=logicalSize()'):
               assert key in h,key
           assert 'calibrate-motion' not in h and '重置中心' not in h
+          assert 'motion-ui' not in h and 'motion-status' not in h
+          assert 'enable-motion' not in h and '原生体感已连接' not in h
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
@@ -86,6 +89,8 @@ jobs:
                 const fog=await page.locator('#fog').boundingBox();
                 const actual=await page.locator('#source').evaluate(el=>[el.naturalWidth,el.naturalHeight]);
                 assert.deepEqual(actual,[1024,576]);
+                assert.equal(await page.locator('#motion-ui').count(),0,
+                             'any remaining HUD text or sensor button is forbidden');
                 if(cfg.mobile){
                   const mode=await page.evaluate(()=>{
                     const container=document.querySelector('#view');
