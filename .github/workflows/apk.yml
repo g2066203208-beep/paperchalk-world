@@ -1,4 +1,4 @@
-name: False Memory - live Pages Android APK
+name: Card Paradox - live Pages Android APK
 on:
   push:
     branches: [main]
@@ -48,7 +48,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: false-memory-debug-apk
+          name: card-paradox-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
           if-no-files-found: error
@@ -58,9 +58,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          cp android/app/build/outputs/apk/debug/app-debug.apk false-memory-latest-debug.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk card-paradox-latest-debug.apk
           if ! gh release view apk-latest-debug >/dev/null 2>&1; then
-            gh release create apk-latest-debug --target "$GITHUB_SHA" --title "False Memory - Latest Android APK" --prerelease --notes "Original horror game loaded live from GitHub Pages on cold app launch. Site-only updates require no reinstall."
+            gh release create apk-latest-debug --target "$GITHUB_SHA" --title "Card Paradox - Latest Android APK" --prerelease --notes "Original card game loaded live from GitHub Pages on cold app launch. Site-only updates require no reinstall."
           fi
-          gh release upload apk-latest-debug false-memory-latest-debug.apk --clobber
+          gh release upload apk-latest-debug card-paradox-latest-debug.apk --clobber
           gh release edit apk-latest-debug --notes "APK source: $GITHUB_SHA. Web changes load automatically on app launch; APK code changes require manual installation."

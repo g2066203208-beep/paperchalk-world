@@ -4,7 +4,7 @@
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <application
       android:allowBackup="false"
-      android:label="错位日常"
+      android:label="纸牌悖论"
       android:usesCleartextTraffic="false"
       android:theme="@android:style/Theme.Material.Light.NoActionBar">
     <activity
