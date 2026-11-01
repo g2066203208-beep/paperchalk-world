@@ -4,283 +4,292 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>教室 · 黑雾镜头</title>
+<title>教室 · 连续流动黑雾</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}
-main{position:fixed;inset:0;background:#000;overflow:hidden;perspective:1600px;perspective-origin:50% 50%;touch-action:none}
-.scene{
- position:absolute;left:50%;top:50%;width:1024px;height:576px;margin:0;
- transform-origin:50% 50%;transform-style:preserve-3d;
- transform:translate3d(-50%,-50%,0);
- will-change:transform,width,height;backface-visibility:hidden;
- pointer-events:none;
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
+#view{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:#000;perspective:1500px}
+#scene{
+  position:relative;flex:none;margin:0;
+  width:min(90vw,calc(88dvh * 16 / 9));aspect-ratio:16/9;
+  transform-origin:center center;
+  transform:rotateX(0deg) rotateY(0deg);
+  will-change:transform;backface-visibility:hidden;
 }
-.scene canvas,.scene img,.fallback-fog{display:block;position:absolute;inset:0;width:100%;height:100%}
-.scene img{object-fit:fill;-webkit-user-drag:none;user-select:none}
-.fallback-fog{
- pointer-events:none;
- background:linear-gradient(90deg,#000,transparent 8%,transparent 92%,#000),
-            linear-gradient(0deg,#000,transparent 8%,transparent 92%,#000);
- opacity:.95;
+#scene img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;-webkit-user-drag:none}
+#fog{
+  position:fixed;inset:0;display:block;width:100%;height:100%;
+  pointer-events:none;image-rendering:auto;
+  /* independent viewport-space layer: mouse never transforms the fog */
 }
-.scene.webgl-on .fallback{display:none}
-#air{
- display:block;position:absolute;inset:0;width:100%;height:100%;
- pointer-events:none;filter:blur(11px);image-rendering:auto;
-}
-@media(prefers-reduced-motion:reduce){.scene{will-change:auto}#air{filter:none}}
+@media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
 <body>
-<main id="view" aria-label="教室视角实验。移动鼠标看向四周；滚轮向下拉远；双击切换完整画面；手机拖动，双指缩放。">
- <figure id="scene" class="scene" aria-label="教室中央的画面始终对齐屏幕中心，可拉近观察或退后查看全景">
-  <canvas id="picture" aria-hidden="true"></canvas>
-  <img id="source" class="fallback" src="./assets/classroom.webp"
-       width="1024" height="576" draggable="false" alt="原始教室背景，左边窗户、中央黑板与前后课桌。">
-  <div class="fallback fallback-fog" aria-hidden="true"></div>
- </figure>
- <canvas id="air" aria-hidden="true"></canvas>
+<main id="view" aria-label="中央完整的教室背景，黑雾在屏幕坐标中独立连续流动">
+  <figure id="scene" aria-label="完整教室背景，鼠标移动只让背景轻微倾斜">
+    <img id="source" src="./assets/classroom.webp" width="1024" height="576"
+         alt="空教室全景：黑板、课桌、左侧窗户。" draggable="false">
+  </figure>
+  <canvas id="fog" aria-hidden="true"></canvas>
 </main>
-<script id="v-shader" type="x-shader/x-vertex">
-attribute vec2 a_pos;
+<script id="vertex" type="x-shader/x-vertex">
+attribute vec2 a_position;
 varying vec2 v_uv;
+void main(){v_uv=a_position*.5+.5;gl_Position=vec4(a_position,0.,1.);}
+</script>
+<script id="fluid" type="x-shader/x-fragment">
+precision highp float;
+varying vec2 v_uv;
+uniform sampler2D u_previous;
+uniform vec2 u_simSize;
+uniform vec2 u_viewSize;
+uniform vec2 u_half;
+uniform float u_time;
+uniform float u_dt;
+float edgeDistance(vec2 uv){
+  vec2 v=u_half-abs(uv-.5);
+  return min(v.x*u_viewSize.x,v.y*u_viewSize.y);
+}
 void main(){
- v_uv=a_pos*.5+.5;
- gl_Position=vec4(a_pos,0.0,1.0);
+  vec2 uv=v_uv;
+  vec2 pixel=1.0/u_simSize;
+  vec2 p=(uv-.5)*vec2(u_viewSize.x/u_viewSize.y,1.);
+  float t=u_time;
+  // Time-varying curl velocity from a stream function, not frame-swapped images.
+  float ax=p.x*5.0+t*.39, ay=p.y*7.7-t*.34;
+  float bx=p.x*11.0-t*.24,by=p.y*8.0+t*.28;
+  vec2 v=vec2(
+    42.0*(7.7*sin(ax)*cos(ay)+.34*8.0*cos(bx)*cos(by))/7.7,
+   -42.0*(5.0*cos(ax)*sin(ay)-.34*11.0*sin(bx)*sin(by))/7.7
+  );
+  // Semi-Lagrangian transport: density persists from the preceding frame.
+  vec2 back=clamp(uv-v*(u_dt/u_viewSize),pixel*.5,1.-pixel*.5);
+  float transported=texture2D(u_previous,back).r;
+  // Diffusion softens the smoke instead of teleporting or blinking it.
+  vec2 a=vec2(pixel.x,0.),b=vec2(0.,pixel.y);
+  float neighbors=(texture2D(u_previous,back+a).r+
+                   texture2D(u_previous,back-a).r+
+                   texture2D(u_previous,back+b).r+
+                   texture2D(u_previous,back-b).r)*.25;
+  float density=mix(transported,neighbors,clamp(u_dt*1.5,0.,.11));
+  float d=edgeDistance(uv);
+  // Continuous injection on all four image edges, with turbulent wave fronts.
+  float w1=sin(p.x*15.7+p.y*4.2+t*.82+sin(p.y*8.-t*.36)*1.8);
+  float w2=sin(p.y*18.4-p.x*6.6-t*.61+sin(p.x*10.+t*.4));
+  float envelope=.52+.26*w1+.19*w2;
+  float reach=73.+25.*w1+21.*w2+10.*sin(t*.73+p.x*8.);
+  float inlet=1.-smoothstep(-15.,max(12.,reach),d);
+  float injection=inlet*max(.04,envelope)*1.4;
+  density=clamp(density*exp(-u_dt*.67)+u_dt*injection,0.,1.);
+  gl_FragColor=vec4(density,density,density,1.);
 }
 </script>
-<script id="f-shader" type="x-shader/x-fragment">
+<script id="display" type="x-shader/x-fragment">
 precision mediump float;
 varying vec2 v_uv;
-uniform sampler2D u_picture;
+uniform sampler2D u_density;
+uniform vec2 u_viewSize;
+uniform vec2 u_half;
 uniform float u_time;
-uniform float u_ratio;
-uniform float u_zoom;
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){
- vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
- return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),
-            mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);
-}
-float fbm(vec2 p){
- float a=.5,v=0.;
- for(int i=0;i<4;i++){v+=a*noise(p);p=p*2.09+vec2(7.3,11.7);a*=.5;}
- return v/.9375;
-}
 void main(){
- vec2 uv=v_uv;
- vec2 p=vec2(uv.x*u_ratio,uv.y);
- float t=u_time;
- // Real distance from the four image edges, NOT an oval vignette.
- // The noisy inward threshold is advected in two independent directions,
- // so smoke bulges, curls, retreats, and breathes at distinct locations.
- float d=min(min(uv.x,1.-uv.x)*u_ratio,min(uv.y,1.-uv.y));
- vec2 driftA=vec2(t*.105,-t*.068);
- vec2 driftB=vec2(-t*.142,t*.094);
- float base=fbm(p*5.8+driftA);
- vec2 twisted=p+vec2(base-.5,noise(p*7.6+driftB)-.5)*.21;
- float billow=fbm(twisted*10.8+driftB);
- float filaments=fbm(twisted*23.0+vec2(t*.176,t*.113));
- float breath=sin(t*.89+base*4.2+billow*2.1);
- float ripple=sin(p.x*18.0+p.y*11.0+t*.82+billow*6.0);
- float reach=mix(.101,.133,u_zoom)
-       +(base-.5)*.155+(billow-.5)*.092
-       +breath*.034+ripple*.019+(filaments-.5)*.025;
- reach=clamp(reach,.022,.253);
- // A wide, irregular soft transition that repeatedly exposes and hides
- // changing strips of the ACTUAL classroom image.
- float reveal=smoothstep(-.010,reach*1.24,d);
- float fineWisps=1.-smoothstep(reach*.57,reach*2.13,d);
- float flowing=.44+.56*billow;
- float darkVeil=fineWisps*(.13+.22*filaments)*flowing;
- vec3 original=texture2D(u_picture,uv).rgb;
- gl_FragColor=vec4(original*reveal*(1.-darkVeil),1.);
+  vec2 uv=v_uv;
+  float density=texture2D(u_density,uv).r;
+  vec2 e=u_half-abs(uv-.5);
+  float edge=min(e.x*u_viewSize.x,e.y*u_viewSize.y);
+  // The scene-edge distance anchors smoke to a RECTANGLE;
+  // transported density gives the boundary a living, nonrectangular contour.
+  float rattle=sin(uv.x*36.+u_time*.43)*sin(uv.y*23.-u_time*.32);
+  float shiver=1.-smoothstep(-11.,15.+12.*rattle,edge);
+  float alpha=clamp(pow(density,.72)*.91+shiver*.24,0.,.96);
+  gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
 <script>
-(function(){
- 'use strict';
- const view=document.getElementById('view');
- const stage=document.getElementById('scene');
- const canvas=document.getElementById('picture');
- const image=document.getElementById('source');
- const air=document.getElementById('air');
- const reduce=matchMedia('(prefers-reduced-motion: reduce)');
- const fine=matchMedia('(pointer:fine)');
- const aspect=16/9;
- const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
- const smooth=(a,b,x)=>{let t=clamp((x-a)/(b-a));return t*t*(3-2*t)};
- let width=innerWidth,height=innerHeight,fitWidth=0,nearWidth=0;
- let targetZoom=.72,zoom=.72,targetX=0,targetY=0,lookX=0,lookY=0;
- let prev=0,lastFog=0,lastAir=0,request=0,gl=null,prog=null,uTime=null,uZoom=null;
- let airCtx=null,airPixels=null,aw=0,ah=0;
- const fingers=new Map();
- let pinchDistance=0,lastTap=0,lastTapX=0,lastTapY=0;
- function dimensions(){
-   width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
-   fitWidth=Math.min(width*.9,height*aspect*.88);
-   nearWidth=Math.max(width*1.48,height*aspect*1.48);
-   const longer=Math.max(width,height),factor=240/longer;
-   aw=Math.max(60,Math.round(width*factor));
-   ah=Math.max(60,Math.round(height*factor));
-   air.width=aw;air.height=ah;
-   airCtx=air.getContext('2d',{alpha:true});
-   airPixels=airCtx?airCtx.createImageData(aw,ah):null;
- }
- function shader(type,id){
-   const s=gl.createShader(type);
-   gl.shaderSource(s,document.getElementById(id).textContent);
-   gl.compileShader(s);
-   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));
-   return s;
- }
- function setupGL(){
-   try{
-     gl=canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:false});
-     if(!gl)return;
-     const vs=shader(gl.VERTEX_SHADER,'v-shader'),fs=shader(gl.FRAGMENT_SHADER,'f-shader');
-     prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);
-     if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));
-     gl.useProgram(prog);
-     const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
-     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-     const pos=gl.getAttribLocation(prog,'a_pos');
-     gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
-     const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
-     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
-     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
-     canvas.width=innerWidth<700?768:1024;canvas.height=canvas.width*9/16;gl.viewport(0,0,canvas.width,canvas.height);
-     gl.uniform1i(gl.getUniformLocation(prog,'u_picture'),0);
-     gl.uniform1f(gl.getUniformLocation(prog,'u_ratio'),aspect);
-     uTime=gl.getUniformLocation(prog,'u_time');
-     uZoom=gl.getUniformLocation(prog,'u_zoom');
-     stage.classList.add('webgl-on');
-   }catch(e){
-     console.warn('Image shader fallback:',e);
-     gl=null;stage.classList.remove('webgl-on');
-   }
- }
- function mist(t){
-   if(!airPixels||!airCtx)return;
-   const data=airPixels.data;
-   const breath=.79+.21*Math.sin(t*.79);
-   for(let y=0;y<ah;y++){
-     const v=(y+.5)/ah;
-     for(let x=0;x<aw;x++){
-       const u=(x+.5)/aw,i=(y*aw+x)*4;
-       const d=Math.min(u,1-u,v,1-v);
-       const a=Math.sin(u*17.8+Math.sin(v*9.9-t*.71)*2.2+t*.54);
-       const b=Math.sin(v*18.4+Math.sin(u*15.0+t*.58)*2.0-t*.67);
-       const c=Math.sin((u+v)*33.0+t*.83+a*1.35);
-       const reach=clamp(.049+.021*a+.024*b+.012*c,.009,.112);
-       const edgeCloud=1-smooth(reach*.25,reach*1.47,d);
-       const stream=.70+.30*Math.sin(t*.94+u*12.0-v*9.0+b*2.0);
-       data[i]=0;data[i+1]=0;data[i+2]=0;
-       data[i+3]=Math.round(255*edgeCloud*(.30+.28*stream)*breath);
-     }
-   }
-   airCtx.putImageData(airPixels,0,0);
- }
- function frame(t){
-   request=0;
-   if(document.hidden)return;
-   let dt=Math.min(.40,Math.max(.001,(t-(prev||t-16))/1000));prev=t;
-   const kz=reduce.matches?1:1-Math.exp(-dt*8.0);
-   const kl=reduce.matches?1:1-Math.exp(-dt*6.6);
-   zoom+=(targetZoom-zoom)*kz;
-   lookX+=(targetX-lookX)*kl;
-   lookY+=(targetY-lookY)*kl;
-   const sw=fitWidth+(nearWidth-fitWidth)*zoom,sh=sw/aspect;
-   const px=Math.max(0,(sw-width)*.5-14),py=Math.max(0,(sh-height)*.5-14);
-   const yaw=lookX*8.0*smooth(0,.5,zoom),pitch=-lookY*5.9*smooth(0,.5,zoom);
-   const dx=-lookX*px*.88,dy=-lookY*py*.88;
-   // The -50% translations remain the origin; all camera motion is relative.
-   stage.style.width=sw.toFixed(2)+'px';
-   stage.style.height=sh.toFixed(2)+'px';
-   stage.style.transform='translate3d(-50%,-50%,0) translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0) rotateY('+yaw.toFixed(3)+'deg) rotateX('+pitch.toFixed(3)+'deg)';
-   if(gl&&(!lastFog||t-lastFog>62)){
-      gl.useProgram(prog);
-      gl.uniform1f(uTime,reduce.matches?0:t*.001);
-      gl.uniform1f(uZoom,zoom);
-      gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-      lastFog=t;
-   }
-   if(!lastAir||t-lastAir>90){mist(reduce.matches?0:t*.001);lastAir=t}
-   if(!reduce.matches||Math.abs(targetZoom-zoom)+Math.abs(targetX-lookX)+Math.abs(targetY-lookY)>.001){
-     request=requestAnimationFrame(frame);
-   }
- }
- function wake(){if(!request)request=requestAnimationFrame(frame)}
- function fullView(){targetZoom=0;targetX=0;targetY=0;wake()}
- function closeView(){targetZoom=.72;targetX=0;targetY=0;wake()}
- function toggleView(){if(targetZoom<.18)closeView();else fullView()}
- window.addEventListener('pointermove',e=>{
-   if(e.pointerType==='touch'||!fine.matches)return;
-   targetX=clamp(e.clientX/width*2-1,-1,1);
-   targetY=clamp(e.clientY/height*2-1,-1,1);
-   wake();
- },{passive:true});
- document.addEventListener('pointerleave',()=>{
-   if(fingers.size===0){targetX=0;targetY=0;wake()}
- });
- window.addEventListener('blur',()=>{if(fingers.size===0){targetX=0;targetY=0;wake()}});
- view.addEventListener('wheel',e=>{
-   e.preventDefault();
-   targetZoom=clamp(targetZoom-e.deltaY*.001);
-   if(targetZoom<.015){targetZoom=0;targetX=0;targetY=0}
-   wake();
- },{passive:false});
- view.addEventListener('dblclick',e=>{if(!fine.matches)return;e.preventDefault();toggleView()});
- window.addEventListener('keydown',e=>{
-   if(['Escape','Home','KeyF','Digit0'].includes(e.code)){e.preventDefault();fullView()}
-   else if(['Space','Enter'].includes(e.code)){e.preventDefault();toggleView()}
-   else if(e.code==='KeyR'){e.preventDefault();closeView()}
- });
- function distance(){
-   const [a,b]=[...fingers.values()];
-   return Math.hypot(a.x-b.x,a.y-b.y);
- }
- view.addEventListener('pointerdown',e=>{
-   if(e.pointerType==='mouse')return;
-   const now=performance.now();
-   if(now-lastTap<1350&&Math.hypot(e.clientX-lastTapX,e.clientY-lastTapY)<52){
-     toggleView();lastTap=0;
-   }else{lastTap=now;lastTapX=e.clientX;lastTapY=e.clientY}
-   fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-   if(fingers.size===2)pinchDistance=distance();
-   try{view.setPointerCapture(e.pointerId)}catch(_){}
- });
- view.addEventListener('pointermove',e=>{
-   const old=fingers.get(e.pointerId);if(!old)return;
-   fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
-   if(fingers.size>=2){
-     const d=distance();
-     if(pinchDistance>0)targetZoom=clamp(targetZoom+(d-pinchDistance)/Math.min(width,height)*1.7);
-     pinchDistance=d;
-   }else{
-     const sw=fitWidth+(nearWidth-fitWidth)*Math.max(zoom,targetZoom);
-     const px=Math.max(90,(sw-width)*.5),py=Math.max(90,(sw/aspect-height)*.5);
-     targetX=clamp(targetX-(e.clientX-old.x)/px,-1,1);
-     targetY=clamp(targetY-(e.clientY-old.y)/py,-1,1);
-   }
-   wake();
- });
- function release(e){fingers.delete(e.pointerId);pinchDistance=0;wake()}
- view.addEventListener('pointerup',release);
- view.addEventListener('pointercancel',release);
- window.addEventListener('resize',()=>{dimensions();wake()},{passive:true});
- document.addEventListener('visibilitychange',()=>{prev=0;if(!document.hidden)wake()});
- reduce.addEventListener?.('change',wake);
- dimensions();wake();
- if(image.complete&&image.naturalWidth){setupGL();wake()}
- else image.addEventListener('load',()=>{setupGL();wake()},{once:true});
- image.addEventListener('error',()=>console.warn('Classroom image missing'),{once:true});
+(()=>{
+  'use strict';
+  const stage=document.getElementById('scene');
+  const fog=document.getElementById('fog');
+  const view=document.getElementById('view');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  const fine=matchMedia('(pointer:fine)');
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  let aimX=0,aimY=0,currentX=0,currentY=0,last=0,raf=0,frameNumber=0;
+  let gl=null,simulate=null,composite=null,simTargets=[],simIndex=0,quad=null;
+  let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
+  let fallback=null,fallbackState=null;
+  let sceneHalf={x:.4,y:.4};
+  function half(){
+    const r=stage.getBoundingClientRect();
+    // Geometry is calculated from CSS dimensions (untransformed), not the
+    // current tilted bounds. Fog stays centered on screen independently.
+    sceneHalf={x:stage.offsetWidth/(2*innerWidth),y:stage.offsetHeight/(2*innerHeight)};
+    if(gl){
+      for(const p of [simulate,composite]){
+        gl.useProgram(p);
+        gl.uniform2f(gl.getUniformLocation(p,'u_half'),sceneHalf.x,sceneHalf.y);
+      }
+    }
+  }
+  function shader(type,text){
+    const s=gl.createShader(type);
+    gl.shaderSource(s,text);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  function program(id,vertex){
+    const p=gl.createProgram();
+    gl.attachShader(p,vertex);
+    gl.attachShader(p,shader(gl.FRAGMENT_SHADER,document.getElementById(id).textContent));
+    gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p));
+    gl.useProgram(p);
+    const loc=gl.getAttribLocation(p,'a_position');
+    gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+    gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+    return p;
+  }
+  function target(sw,sh){
+    const tex=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D,tex);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,sw,sh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+    const fb=gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+    if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw Error('Fog framebuffer incomplete');
+    gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+    return {tex,fb};
+  }
+  function initGPU(){
+    try{
+      gl=fog.getContext('webgl',{alpha:true,premultipliedAlpha:false,antialias:false,preserveDrawingBuffer:false});
+      if(!gl)return false;
+      quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);
+      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+      const vertex=shader(gl.VERTEX_SHADER,document.getElementById('vertex').textContent);
+      simulate=program('fluid',vertex);composite=program('display',vertex);
+      fog.dataset.renderer='gpu-advected-fluid';
+      return true;
+    }catch(e){console.warn('GPU fluid unavailable; using CPU fluid fallback:',e);gl=null;return false;}
+  }
+  function initCPU(){
+    fallback=fog.getContext('2d',{alpha:true});
+    fog.dataset.renderer='cpu-advected-fluid';
+  }
+  function resize(){
+    const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);
+    const scale=Math.min(devicePixelRatio||1,1.4);
+    // The visible fog gets a responsive canvas, while the simulation runs
+    // on a smaller persistent density field for per-frame performance.
+    const fw=Math.max(1,Math.round(w*scale)),fh=Math.max(1,Math.round(h*scale));
+    const simulationScale=Math.min(.52,480/Math.max(w,h));
+    const sw=Math.max(80,Math.round(w*simulationScale));
+    const sh=Math.max(80,Math.round(h*simulationScale));
+    sizes={w,h,sw,sh};
+    if(gl){
+      for(const t of simTargets){gl.deleteTexture(t.tex);gl.deleteFramebuffer(t.fb)}
+      simTargets=[];
+      fog.width=fw;fog.height=fh;gl.viewport(0,0,fw,fh);
+      simTargets=[target(sw,sh),target(sw,sh)];
+      simIndex=0;gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+      for(const p of [simulate,composite]){
+        gl.useProgram(p);
+        gl.uniform2f(gl.getUniformLocation(p,'u_viewSize'),w,h);
+        gl.uniform2f(gl.getUniformLocation(p,'u_half'),sceneHalf.x,sceneHalf.y);
+      }
+      gl.useProgram(simulate);gl.uniform2f(gl.getUniformLocation(simulate,'u_simSize'),sw,sh);
+      gl.uniform1i(gl.getUniformLocation(simulate,'u_previous'),0);
+      gl.useProgram(composite);gl.uniform1i(gl.getUniformLocation(composite,'u_density'),0);
+    }else if(fallback){
+      const sx=Math.max(90,Math.round(w*.24)),sy=Math.max(70,Math.round(h*.24));
+      fog.width=sx;fog.height=sy;
+      fallbackState={sx,sy,a:new Float32Array(sx*sy),b:new Float32Array(sx*sy),image:fallback.createImageData(sx,sy)};
+    }
+    half();
+  }
+  function drawGPU(dt,t){
+    gl.activeTexture(gl.TEXTURE0);
+    gl.useProgram(simulate);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,simTargets[1-simIndex].fb);
+    gl.viewport(0,0,sizes.sw,sizes.sh);
+    gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
+    gl.uniform1f(gl.getUniformLocation(simulate,'u_time'),t);
+    gl.uniform1f(gl.getUniformLocation(simulate,'u_dt'),dt);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+    simIndex=1-simIndex;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    gl.viewport(0,0,fog.width,fog.height);
+    gl.useProgram(composite);
+    gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
+    gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }
+  function sample(arr,fx,fy,w,h){
+    fx=clamp(fx,0,w-1);fy=clamp(fy,0,h-1);
+    const x=Math.floor(fx),y=Math.floor(fy),u=fx-x,v=fy-y;
+    const x1=Math.min(x+1,w-1),y1=Math.min(y+1,h-1);
+    return (arr[y*w+x]*(1-u)+arr[y*w+x1]*u)*(1-v)
+       +(arr[y1*w+x]*(1-u)+arr[y1*w+x1]*u)*v;
+  }
+  function drawCPU(dt,t){
+    const s=fallbackState;if(!s)return;
+    const {sx,sy,a,b,image}=s;
+    for(let y=0;y<sy;y++)for(let x=0;x<sx;x++){
+      const uvx=(x+.5)/sx,uvy=(y+.5)/sy;
+      const px=(uvx-.5)*sizes.w/sizes.h,py=(uvy-.5);
+      const ax=px*5+t*.39,ay=py*7.7-t*.34,bx=px*11-t*.24,by=py*8+t*.28;
+      const vx=42*(7.7*Math.sin(ax)*Math.cos(ay)+.34*8*Math.cos(bx)*Math.cos(by))/7.7;
+      const vy=-42*(5*Math.cos(ax)*Math.sin(ay)-.34*11*Math.sin(bx)*Math.sin(by))/7.7;
+      const old=sample(a,x-vx*dt*sx/sizes.w,y-vy*dt*sy/sizes.h,sx,sy);
+      const distance=Math.min((sceneHalf.x-Math.abs(uvx-.5))*sizes.w,
+                              (sceneHalf.y-Math.abs(uvy-.5))*sizes.h);
+      const w1=Math.sin(px*15.7+py*4.2+t*.82+Math.sin(py*8-t*.36)*1.8);
+      const w2=Math.sin(py*18.4-px*6.6-t*.61+Math.sin(px*10+t*.4));
+      const reach=73+25*w1+21*w2+10*Math.sin(t*.73+px*8);
+      const inlet=1-(clamp((distance+15)/(Math.max(12,reach)+15),0,1))**2;
+      const source=inlet*Math.max(.04,.52+.26*w1+.19*w2)*1.4;
+      const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.67)+dt*source,0,1);
+      const p=(y*sx+x)*4;
+      const shiver=1-clamp((distance+11)/26,0,1);
+      const alpha=clamp(d**.72*.91+shiver*.24,0,.96);
+      image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
+    }
+    s.a=b;s.b=a;fallback.putImageData(image,0,0);
+  }
+  function tick(now){
+    raf=0;if(document.hidden)return;
+    let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
+    const k=1-Math.exp(-dt*7);
+    if(reduced.matches){aimX=0;aimY=0}
+    currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
+    stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    fluidTime+=reduced.matches?0:dt;
+    if(gl)drawGPU(dt,fluidTime);
+    else if(fallback)drawCPU(dt,fluidTime);
+    fog.dataset.frames=String(++frameNumber);
+    // No 10/16/24 FPS steps: every browser animation frame advances the SAME
+    // persistent fluid density and composites the independent screen fog.
+    if(!reduced.matches||Math.abs(currentX)+Math.abs(currentY)>.001)raf=requestAnimationFrame(tick);
+  }
+  function start(){if(!raf)raf=requestAnimationFrame(tick)}
+  window.addEventListener('pointermove',e=>{
+    if(!fine.matches||e.pointerType==='touch'||reduced.matches)return;
+    aimX=clamp(e.clientX/Math.max(1,innerWidth)*2-1,-1,1);
+    aimY=clamp(e.clientY/Math.max(1,innerHeight)*2-1,-1,1);
+    start();
+  },{passive:true});
+  view.addEventListener('pointerleave',()=>{aimX=0;aimY=0;start()});
+  window.addEventListener('blur',()=>{aimX=0;aimY=0;start()});
+  window.addEventListener('resize',()=>{resize();start()},{passive:true});
+  document.addEventListener('visibilitychange',()=>{last=0;if(!document.hidden)start()});
+  reduced.addEventListener?.('change',()=>{last=0;start()});
+  if(!initGPU())initCPU();
+  resize();start();
 })();
 </script>
 </body>

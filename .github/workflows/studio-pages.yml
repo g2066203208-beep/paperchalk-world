@@ -1,4 +1,4 @@
-name: Minimal classroom stage - GitHub Pages
+name: Classroom - independent continuous fog stage
 on:
   push:
     branches: [main]
@@ -24,39 +24,40 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Assert centered scene, procedural fog and zoom controls
+      - name: Assert original complete classroom and independent fluid layer
         run: |
+          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          p=Path("site/assets/classroom.webp")
-          data=p.read_bytes()
-          assert data[:4]==b'RIFF' and data[8:12]==b'WEBP'
-          h=Path("site/index.html").read_text(encoding="utf-8")
-          for marker in (
-              'left:50%;top:50%', 'translate3d(-50%,-50%,0)',
-              'float low=fbm', 'float reach=', 'float d=min(min(uv.x',
-              'function mist(t)', 'targetZoom=0', 'toggleView()',
-              "view.addEventListener('wheel'", "view.addEventListener('dblclick'",
-              "view.addEventListener('pointerdown'", 'prefers-reduced-motion'
-          ):
-              assert marker in h, marker
-          files=[f for f in Path("site").rglob("*") if f.is_file()]
+          image=Path('site/assets/classroom.webp').read_bytes()
+          assert image[:4]==b'RIFF' and image[8:12]==b'WEBP'
+          h=Path('site/index.html').read_text()
+          for key in ('id="scene"','id="fog"','object-fit:contain',
+                      'pointer-events:none','uniform sampler2D u_previous',
+                      'Semi-Lagrangian transport','framebufferTexture2D',
+                      'requestAnimationFrame(tick)','fog.dataset.frames',
+                      'getBoundingClientRect','stage.style.transform=',
+                      'sceneHalf.x','fluidTime+=','drawCPU(dt,fluidTime)'):
+              assert key in h,key
+          assert 'targetZoom' not in h
+          assert 't-lastFog' not in h
+          files=[p for p in Path('site').rglob('*') if p.is_file()]
           assert len(files)==2,files
-          print("PASS: original image; centered scene; fractal fog; full-view toggle; two files")
+          print('PASS: complete image, independent viewport-space fluid fog, per-frame feedback and no zoom')
           PY
           node - <<'JS'
           const fs=require('fs');
           const html=fs.readFileSync('site/index.html','utf8');
-          const code=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
-          if(!code)throw Error('Missing inline JS');
-          new Function(code);
-          console.log('PASS: JS parsed');
+          const script=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
+          if(!script)throw Error('Main script missing');
+          new Function(script);
+          console.log('PASS: JS syntax valid');
           JS
-      - name: Install Chromium for desktop and mobile camera checks
+      - name: Install Chromium
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Test camera centering, full view, zoom and mobile double-tap
+      - name: Verify full background, two independent layers, and continuous frames
         run: |
           mkdir -p artifacts/classroom
           python3 -m http.server 8123 --directory site > /tmp/stage-http.log 2>&1 &
@@ -65,61 +66,51 @@ jobs:
           const assert=require('node:assert/strict');
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
-            try{
-              const desk=await browser.newPage({viewport:{width:1280,height:720}});
-              await desk.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
-              await desk.waitForTimeout(1100);
-              const natural=await desk.locator('#source').evaluate(im=>im.naturalWidth);
-              assert.equal(natural,1024);
-              const initial=await desk.locator('#scene').boundingBox();
-              assert.ok(Math.abs(initial.x+initial.width/2-640)<3,'scene off horizontal center');
-              assert.ok(Math.abs(initial.y+initial.height/2-360)<3,'scene off vertical center');
-              assert.ok(initial.width>1280,'default is not close-up');
-              await desk.screenshot({path:'artifacts/classroom/near.png'});
-              await desk.dblclick('main',{position:{x:640,y:360}});
-              await desk.waitForTimeout(1250);
-              const fit=await desk.locator('#scene').boundingBox();
-              console.log('Desktop fit bounds:',JSON.stringify(fit));
-              assert.ok(fit.width<1200,'full image does not fit horizontally');
-              assert.ok(fit.height<670,'full image does not fit vertically');
-              assert.ok(Math.abs(fit.x+fit.width/2-640)<3,'fit scene not centered');
-              await desk.screenshot({path:'artifacts/classroom/full.png'});
-              await desk.mouse.wheel(0,-1400);
-              await desk.waitForTimeout(1150);
-              const zoomed=await desk.locator('#scene').boundingBox();
-              assert.ok(zoomed.width>fit.width+250,'wheel zoom did not enlarge image');
-              await desk.mouse.move(1230,360);
-              await desk.waitForTimeout(600);
-              const transform=await desk.locator('#scene').evaluate(el=>el.style.transform);
-              assert.ok(transform.includes('rotateY('),'head-turn rotation missing');
-              await desk.screenshot({path:'artifacts/classroom/turned.png'});
-              const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
-              await mobile.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
-              await mobile.waitForTimeout(600);
-              await mobile.evaluate(()=>{
-                window.__touchLog=[];
-                ['pointerdown','pointerup','dblclick'].forEach(type=>document.getElementById('view').addEventListener(type,e=>window.__touchLog.push({type,pointer:e.pointerType||'',t:Math.round(performance.now())}),true));
-              });
-              await mobile.tap('main',{position:{x:195,y:400}});
-              await mobile.waitForTimeout(80);
-              await mobile.tap('main',{position:{x:195,y:400}});
-              await mobile.waitForTimeout(1250);
-              const m=await mobile.locator('#scene').boundingBox();
-              console.log('Mobile fit bounds:',JSON.stringify(m),'touch events:',JSON.stringify(await mobile.evaluate(()=>window.__touchLog)));
-              assert.ok(m.width<390,'mobile double tap did not fit entire image');
-              assert.ok(Math.abs(m.x+m.width/2-195)<4,'mobile scene not centered');
-              await mobile.screenshot({path:'artifacts/classroom/mobile-full.png'});
-              await mobile.close();await desk.close();
-              console.log('PASS: desktop centered, full-scene return, wheel zoom, look-around and mobile full-scene toggle');
-            }finally{await browser.close();}
+            try {
+              for(const cfg of [{width:1280,height:720,mobile:false},{width:390,height:844,mobile:true}]){
+                const page=await browser.newPage({viewport:{width:cfg.width,height:cfg.height},isMobile:cfg.mobile,hasTouch:cfg.mobile});
+                const errors=[];
+                page.on('pageerror',e=>errors.push(e.message));
+                await page.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
+                await page.waitForTimeout(900);
+                assert.deepEqual(errors,[],'browser JS error');
+                const scene=await page.locator('#scene').boundingBox();
+                const fog=await page.locator('#fog').boundingBox();
+                const actual=await page.locator('#source').evaluate(el=>[el.naturalWidth,el.naturalHeight]);
+                assert.deepEqual(actual,[1024,576]);
+                assert.ok(scene.width<=cfg.width*.92,'scene not fully visible horizontally');
+                assert.ok(scene.height<=cfg.height*.90,'scene not fully visible vertically');
+                assert.ok(Math.abs(scene.x+scene.width/2-cfg.width/2)<3,'scene horizontally off-center');
+                assert.ok(Math.abs(scene.y+scene.height/2-cfg.height/2)<3,'scene vertically off-center');
+                assert.ok(Math.abs(fog.width-cfg.width)<2 && Math.abs(fog.height-cfg.height)<2,'fog must be viewport-fixed');
+                const before=await page.locator('#fog').getAttribute('data-frames');
+                await page.waitForTimeout(450);
+                const after=await page.locator('#fog').getAttribute('data-frames');
+                assert.ok(Number(after)-Number(before)>5,'fluid did not advance continuously');
+                const renderer=await page.locator('#fog').getAttribute('data-renderer');
+                assert.ok(renderer==='gpu-advected-fluid'||renderer==='cpu-advected-fluid');
+                if(!cfg.mobile){
+                  const beforeFog=await page.locator('#fog').boundingBox();
+                  await page.mouse.move(1200,600);
+                  await page.waitForTimeout(380);
+                  const transform=await page.locator('#scene').evaluate(e=>e.style.transform);
+                  assert.ok(transform.includes('rotateY('));
+                  const afterFog=await page.locator('#fog').boundingBox();
+                  assert.deepEqual(afterFog,beforeFog,'fog moved with image');
+                }
+                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?'mobile':'desktop')+'.png'});
+                console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
+                await page.close();
+              }
+            } finally {await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
-      - name: Preserve real browser screenshots
+      - name: Store browser screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: classroom-stage-browser-review
-          path: artifacts/classroom/
+          name: classroom-fluid-smoke-review
+          path: artifacts/classroom
           retention-days: 7
           if-no-files-found: warn
       - uses: actions/configure-pages@v5
@@ -127,4 +118,3 @@ jobs:
         with:
           path: site
       - uses: actions/deploy-pages@v4
-        id: publish
