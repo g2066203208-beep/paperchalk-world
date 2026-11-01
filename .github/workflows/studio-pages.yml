@@ -224,6 +224,7 @@ jobs:
                 }
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-intro.png'});
                 await page.locator('#enter-scene').click();
+                await page.locator('#dialogue-panel').waitFor({state:'visible',timeout:4000});
                 assert.equal(await page.locator('#dialogue-panel').isVisible(),true);
                 assert.equal(await page.locator('#speaker-name').textContent(),'阿丽娜');
                 await page.locator('#dialogue-next').click();
