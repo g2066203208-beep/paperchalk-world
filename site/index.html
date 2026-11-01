@@ -224,7 +224,7 @@ void main(){
    if(targetZoom<.015){targetZoom=0;targetX=0;targetY=0}
    wake();
  },{passive:false});
- view.addEventListener('dblclick',e=>{e.preventDefault();toggleView()});
+ view.addEventListener('dblclick',e=>{if(!fine.matches)return;e.preventDefault();toggleView()});
  window.addEventListener('keydown',e=>{
    if(['Escape','Home','KeyF','Digit0'].includes(e.code)){e.preventDefault();fullView()}
    else if(['Space','Enter'].includes(e.code)){e.preventDefault();toggleView()}
