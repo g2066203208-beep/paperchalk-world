@@ -38,7 +38,10 @@ jobs:
                       'Semi-Lagrangian transport','framebufferTexture2D',
                       'requestAnimationFrame(tick)','fog.dataset.frames',
                       'getBoundingClientRect','stage.style.transform=',
-                      'sceneHalf.x','fluidTime+=','drawCPU(dt,fluidTime)'):
+                      'sceneHalf.x','fluidTime+=','drawCPU(dt,fluidTime)', 'DeviceOrientationEvent.requestPermission',
+                      "screen.orientation.lock('landscape')",
+                      'window.__PAPERWORLD_NATIVE_ORIENTATION__',
+                      "view.addEventListener('pointermove'", 'calibrateMotion.addEventListener'):
               assert key in h,key
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
@@ -69,7 +72,7 @@ jobs:
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
             try {
-              for(const cfg of [{width:1280,height:720,mobile:false},{width:390,height:844,mobile:true}]){
+              for(const cfg of [{width:1280,height:720,mobile:false},{width:390,height:844,mobile:true},{width:844,height:390,mobile:true}]){
                 const page=await browser.newPage({viewport:{width:cfg.width,height:cfg.height},isMobile:cfg.mobile,hasTouch:cfg.mobile});
                 const errors=[];
                 page.on('pageerror',e=>errors.push(e.message));
@@ -159,7 +162,26 @@ jobs:
                   await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
                   console.log('PASS: opaque black on all four scene edges at five maximum/mid tilt poses; smoke hidden for mask-only test');
                 }
-                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?'mobile':'desktop')+'.png'});
+                if(cfg.mobile && cfg.width > cfg.height){
+                  // Feed emulated orientation events and verify that the SAME
+                  // scene transform used on desktop responds to mobile tilt.
+                  await page.evaluate(()=>{
+                    for(const gamma of [0,26]){
+                      const e=new Event('deviceorientation');
+                      Object.defineProperty(e,'beta',{value:0});
+                      Object.defineProperty(e,'gamma',{value:gamma});
+                      dispatchEvent(e);
+                    }
+                  });
+                  await page.waitForTimeout(400);
+                  const transform=await page.locator('#scene').evaluate(el=>el.style.transform);
+                  const yaw=Number(transform.match(/rotateY\\((-?[\\d.]+)deg\\)/)?.[1]);
+                  assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
+                  assert.equal(await page.locator('#calibrate-motion').isVisible(),true,'mobile sensor calibration missing');
+                  await page.locator('#calibrate-motion').click();
+                  console.log('PASS: mobile landscape emulated gyroscope changed classroom tilt and has calibration');
+                }
+                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
                 await page.close();
               }
