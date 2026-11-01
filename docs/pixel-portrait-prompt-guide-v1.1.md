@@ -46,3 +46,6 @@ https://snezhinka.ltt.jp/
 https://sakulibera.carrd.co/
 https://skima.jp/item/detail?item_id=264927
 https://booth.pm/ja/items/6301957
+
+## 已核实的AI使用禁令
+Sakulibera官网服务条款明确禁止NFT、AI use、trace与未经许可再分发作品：https://sakulibera.carrd.co/ 。PixelBuns的服务条款也明确禁止使用其艺术作品训练AI：https://vgen.co/PixelBuns/service/high-quality-pixel-art-vtuber-model-rigging-/67e51dfe-0503-4078-8881-8b9a4a49322e 。数据库将这两位标记为explicit_AI_use_prohibited；无论技术上能否下载，都不可用于我们的LoRA数据集。
