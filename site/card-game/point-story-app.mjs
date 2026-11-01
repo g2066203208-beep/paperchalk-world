@@ -1,4 +1,4 @@
-import {VERSION,SCENES,RULES,createGame,loadGame,clock,inspect,choose,useAction,isEscapeReady} from './point-story-engine.mjs';
+import {VERSION,SCENES,RULES,createGame,loadGame,clock,inspect,choose,useAction,isEscapeReady,enterClassroom} from './point-story-engine.mjs';
 const $=id=>document.getElementById(id);
 const KEY='paperworld-lost-order-story-01';
 let state,previousScene='',scenePreviewUrls={};
@@ -24,10 +24,11 @@ function renderStage(){
  $('attention').textContent=state.attention;
  $('attention').style.color=state.attention>30?'#ffb3b8':'';
  if(previousScene!==state.scene){
-  $('scene-image').src='./scenes/'+state.scene+'.svg';
+  $('scene-image').src='./scenes/'+state.scene+(state.scene==='classroom'?'.webp':'.svg');
   $('scene-image').alt='固定机位二维场景：'+info.name+'。'+info.desc;
   previousScene=state.scene;
  }
+ $('classroom-toggle').textContent=state.scene==='classroom'?'返回剧情':'教室场景';
  const preview=scenePreviewUrls[state.scene];
  $('temporary-art').hidden=!preview;
  if(preview)$('temporary-art').src=preview;
@@ -79,6 +80,7 @@ function renderNotebook(){
  else if(state.flags.radio&&state.flags.listened&&!state.flags.waited)objective='根据广播等待脚步声远去，再决定是否开门。';
  else if(isEscapeReady(state)&&state.scene==='foyer')objective='敲门声已经停止。检查入户门，选择是否离开。';
  else if(state.scene==='hallway')objective='西侧楼梯可以下楼，注意广播禁止乘电梯。';
+ else if(state.scene==='classroom')objective='测试新加入的 Anima 教室背景：点击女孩、黑板、空座位或窗户，之后返回原剧情。';
  else if(state.scene==='stairs')objective='沿安全楼梯走向一楼，离开这栋异常公寓。';
  else if(state.ending)objective=state.ending.type==='survived'?'第一夜调查完毕。':'你违反了尚未掌握的规则。';
  $('objective').textContent=objective;
@@ -115,6 +117,7 @@ for(const button of $('card-hand').querySelectorAll('[data-action]')){
   button.style.setProperty('--rotateY','0deg');button.style.setProperty('--rotateX','0deg')
  });
 }
+$('classroom-toggle').addEventListener('click',()=>perform(()=>state.scene==='classroom'?inspect(state,'back'):enterClassroom(state)));
 $('notebook-toggle').addEventListener('click',()=>{
  const open=$('notebook').classList.toggle('open');
  $('notebook-toggle').setAttribute('aria-expanded',String(open));
