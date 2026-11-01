@@ -18,6 +18,8 @@ test('actual phone + desktop material forge, painting, import, exports and scree
       await page.waitForFunction(()=>!!window.__MATERIAL_FORGE__);
       assert.equal(await page.locator('#presets button').count(),12);
       assert.equal(await page.locator('#presets button canvas').count(),12);
+      await page.locator('#styleLora').selectOption('gpt');assert.match(await page.locator('#prompt').textContent(),/@gpt-image-2/);
+      await page.locator('#styleLora').selectOption('none');assert.doesNotMatch(await page.locator('#prompt').textContent(),/@gpt-image-2/);
       await page.screenshot({path:'artifacts/material-forge/'+name+'-initial.png',fullPage:true});
       assert.equal((await page.evaluate(()=>window.__MATERIAL_FORGE__.state())).audit.exactEdgeMatch,true);
       await page.locator('#presets button[data-kind="brick"]').click();

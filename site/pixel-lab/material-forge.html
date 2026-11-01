@@ -65,6 +65,9 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;d
 <p class="small">边界相等是程序验证条件，**不是美术无缝保证**。重点看长直线、明显重复纹理、砖块排列和草簇周期是否自然。</p></div>
 <div class="section">
 <h2>05 / Anima 材质提示词</h2>
+<label for="styleLora">Anima兼容风格LoRA（需在ComfyUI自行加载）</label>
+<select id="styleLora"><option value="none">不加载LoRA / 标准基线</option><option value="gpt">STYLE &gt; gpt-image-2 / Anima-base1</option></select>
+<p class="small">选择 gpt-image-2 后，提示词自动加入其官方触发词 <code>@gpt-image-2</code>。ComfyUI 中要实际加载正确的Anima版本LoRA，初步对比权重0、0.5、0.7；其增强纹理但可能出现重复图案，绝不能当无缝生成保证。</p>
 <div id="prompt" class="prompt" aria-label="Anima完整材质提示词"></div>
 <div class="buttons"><button id="copyPrompt">复制正向提示词</button><button id="copyNegative">复制负向提示词</button></div>
 <p class="small">提示词按 Anima 的安全、主题、材质、视角、光照、限制条件排序；目前没有独立验证通过的专用无缝像素材质 LoRA，因此默认**不加载LoRA**。</p>

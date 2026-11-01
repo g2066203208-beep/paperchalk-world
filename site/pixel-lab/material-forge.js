@@ -32,7 +32,7 @@ function readout(){const a=inspect(tile),detail=(a.exactEdgeMatch?'四边像素�
 $('viewname').textContent=(MATERIALS[tile.kind]?.name||'Anima导入纹理')+' · '+tile.size+'×'+tile.size;
 $('statistics').textContent='原生：'+a.size+'×'+a.size+' · 颜色：'+a.colorsUsed+'/'+tile.palette.length+'\n左右边界不一致格数：'+a.leftRightMismatches+'\n上下边界不一致格数：'+a.topBottomMismatches+'\n'+detail+'\n视觉/艺术质量：待人工验收\n来源：'+tile.source;
 $('undo').disabled=!history.length;$('redo').disabled=!future.length;}
-function updatePrompt(){const details=promptMaterials[kind],s='masterpiece, best quality, safe, no humans, '+details+', pixel art, game texture, orthographic top-down view, flat lighting, edge-to-edge repeating surface, seamless tileable material, no isolated objects, structured clean color clusters, crisp pixel edges, limited matte color palette, square image, uniform texel density';
+function updatePrompt(){const details=promptMaterials[kind],trigger=$('styleLora').value==='gpt'?'@gpt-image-2, ':'',s='masterpiece, best quality, safe, no humans, '+trigger+details+', pixel art, game texture, orthographic top-down view, flat lighting, edge-to-edge repeating surface, seamless tileable material, no isolated objects, structured clean color clusters, crisp pixel edges, limited matte color palette, square image, uniform texel density';
 $('prompt').textContent=s;}
 function render(){showEdit();showRepeat();paletteView();readout();$('presets').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));updatePrompt();}
 function newMaterial(){const n=Number($('size').value),seed=Math.floor(Number($('seed').value)||0);original=null;tile=generateMaterial(kind,n,seed);history=[];future=[];pen=Math.min(3,tile.palette.length-1);render();setStatus('已生成全新 '+n+'×'+n+' 原生格材质（程序化，非 Anima 生成）');}
@@ -59,6 +59,7 @@ $('atlas').addEventListener('click',()=>{const n=tile.size,cols=4,rows=Math.ceil
 $('import').addEventListener('click',()=>{$('image').value='';$('image').click()});
 $('image').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>20*1024*1024)throw Error('图片不得超过20MB');if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw Error('仅支持PNG/JPEG/WebP');const img=await createImageBitmap(file);try{const n=Number($('size').value),c=document.createElement('canvas');c.width=n;c.height=n;const g=c.getContext('2d',{willReadFrequently:true});const crop=Math.min(img.width,img.height),sx=(img.width-crop)/2,sy=(img.height-crop)/2;g.imageSmoothingEnabled=true;g.drawImage(img,sx,sy,crop,crop,0,0,n,n);const result=quantizeImage(g.getImageData(0,0,n,n).data,n,Number($('colors').value));tile={...result,indices:healSeams(result.indices,n,result.palette,4)};original=result;history=[];future=[];pen=0;render();setStatus('Anima图已本地量化为 '+n+'×'+n+'，并修复边界。需要美术精修，非原生绘制证明。');}finally{img.close();}}catch(error){setStatus(error.message,true)}});
 async function copy(s){try{await navigator.clipboard.writeText(s);setStatus('提示词已复制')}catch(e){setStatus('复制失败，请手动选取文本',true)}}
+$('styleLora').addEventListener('change',updatePrompt);
 $('copyPrompt').addEventListener('click',()=>copy($('prompt').textContent));
 $('copyNegative').addEventListener('click',()=>copy(negative));
 render();setStatus('实验台已就绪：可以生成12种结构化原生材质，或导入Anima图片');
