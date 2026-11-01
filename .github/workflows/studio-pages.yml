@@ -33,6 +33,8 @@ jobs:
           node --check site/card-game/engine.mjs
           node --check site/card-game/app.mjs
           node --test tests/card-paradox.test.mjs
+          test -s site/false-memory/index.html
+          test -s site/false-memory/hero.webp
           test -s site/galgame/index.html
           node galgame/check.cjs
           test -s site/pixel-lab/index.html
@@ -47,6 +49,16 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Play real card game, shop and persistence on desktop and phones
         run: node tests/card-paradox-browser.mjs
+      - name: Play original horror prologue on desktop and phone
+        run: node tests/false-memory-browser.mjs
+      - name: Keep original horror scene screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: false-memory-real-scene-screenshots
+          path: artifacts/false-memory/
+          retention-days: 14
+          if-no-files-found: warn
       - name: Keep actual browser screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
