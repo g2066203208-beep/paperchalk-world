@@ -1,0 +1,47 @@
+name: Pixel Game Production - Native Scene and Anima LoRA Preflight
+on:
+  pull_request:
+    paths:
+      - 'site/pixel-lab/game-asset-*'
+      - 'ml/anima-asset-pipeline/**'
+      - 'docs/pixel-game-production-v1.md'
+      - 'tests/game-asset-*'
+      - '.github/workflows/pixel-game-production.yml'
+  push:
+    branches: [main, feat/pixel-game-production-pipeline-v1]
+    paths:
+      - 'site/pixel-lab/game-asset-*'
+      - 'ml/anima-asset-pipeline/**'
+      - 'docs/pixel-game-production-v1.md'
+      - 'tests/game-asset-*'
+      - '.github/workflows/pixel-game-production.yml'
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/game-asset-core.test.mjs
+  chromium:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/game-asset-browser.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixel-game-production-real-phone-desktop-screens
+          path: artifacts/game-production/
+          retention-days: 14
+          if-no-files-found: warn

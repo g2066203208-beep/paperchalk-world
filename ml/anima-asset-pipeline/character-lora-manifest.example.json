@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "characterId": "nightlamp-hostess",
+  "fixedCharacterBible": false,
+  "description": "Study-only manifest. Empty, no training dataset or weights; replace with licensed original native pixel art after visual review.",
+  "baseModel": "Anima Base v1.0",
+  "trainStatus": "BLOCKED_NO_APPROVED_IMAGES",
+  "images": []
+}
