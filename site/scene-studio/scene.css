@@ -56,7 +56,7 @@ h1,h2,p{margin:0}h1{font-size:24px;line-height:1.38;margin:12px 0 14px;letter-sp
 .viewport-tips{text-align:right;color:#c5cac5;font-size:11px;text-shadow:0 1px 5px #0c1117}
 .viewport-tips span{display:block}
 .viewport-tips .scale-mark{font:10px var(--mono);color:#91acaa}
-.peephole-mask{pointer-events:none;z-index:2;position:absolute;inset:0;background:radial-gradient(ellipse circle at 50% 50%,transparent 0%,transparent 26%,#08080be0 43%,#030406 58%)}
+.peephole-mask{pointer-events:none;z-index:2;position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 0%,transparent 26%,#08080be0 43%,#030406 58%)}
 .viewport-error{position:absolute;z-index:6;left:20px;right:20px;top:40%;background:#241d21;border:1px solid #b97870;padding:24px;color:#ffdad4;font-size:13px}
 .under-stage{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(230px,.9fr);gap:1px;background:#334047;flex:1;min-height:320px}
 .floorplan-panel,.room-panel{padding:20px;background:#182128;min-width:0}
