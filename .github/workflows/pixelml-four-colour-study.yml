@@ -1,0 +1,47 @@
+name: PixelML Four Color Artist Study - Tests
+on:
+  pull_request:
+    paths:
+      - 'site/pixel-lab/character-ai/four-colour*'
+      - 'site/pixel-lab/character-ai/style-study-artists.json'
+      - 'tests/four-colour*'
+      - 'docs/tofupxl-four-colour-study.md'
+      - '.github/workflows/pixelml-four-colour-study.yml'
+  push:
+    branches: [main, feat/tofupxl-four-colour-artist-study]
+    paths:
+      - 'site/pixel-lab/character-ai/four-colour*'
+      - 'site/pixel-lab/character-ai/style-study-artists.json'
+      - 'tests/four-colour*'
+      - 'docs/tofupxl-four-colour-study.md'
+      - '.github/workflows/pixelml-four-colour-study.yml'
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/four-colour-core.test.mjs
+  chromium:
+    needs: unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/four-colour-browser.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixelml-four-colour-real-browser-screenshots
+          path: artifacts/four-colour/
+          if-no-files-found: warn
+          retention-days: 14
