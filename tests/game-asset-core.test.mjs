@@ -31,5 +31,5 @@ test('unverified and disallowed datasets cannot claim training success',()=>{
 test('valid synthetic metadata passes readiness schema only, not proof of real training',()=>{
  const poses=['standing','sitting','walking','leaning'],views=['front','side','three-quarter'],expressions=['neutral','smile','sad','angry'];
  const images=Array.from({length:24},(_,i)=>({identity:'fictional-id',approved:true,aiTrainingRights:'granted',source:'original-pixel-art',pose:poses[i%4],view:views[i%3],expression:expressions[i%4]}));
- const r=checkTrainingManifest({schema:1,characterId:'fictional-id',fixedCharacterBible:true,images});assert.equal(r.ready,true);assert.equal(r.loraWeightsCreated,false);
+ const r=checkTrainingManifest({schema:1,characterId:'fictional-id',fixedCharacterBible:true,images});assert.equal(r.metadataReady,true);assert.equal(r.ready,false);assert.equal(r.assetFilesVerified,false);assert.equal(r.loraWeightsCreated,false);
 });

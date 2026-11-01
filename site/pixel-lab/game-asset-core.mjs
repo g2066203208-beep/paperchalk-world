@@ -152,5 +152,5 @@ checks.push({id:'poses',ok:poses.size>=4,text:'至少4种姿势'});
 checks.push({id:'views',ok:views.size>=3,text:'至少3种视角'});
 checks.push({id:'expressions',ok:expressions.size>=4,text:'至少4种表情'});
 checks.push({id:'identity',ok:typeof manifest.characterId==='string'&&manifest.characterId.length>0&&!!manifest.fixedCharacterBible,text:'角色固定母版存在'});
-return {ready:checks.every(x=>x.ok),eligible:eligible.length,total:imgs.length,checks,model:'Anima Base v1.0',loraWeightsCreated:false};
+return {metadataReady:checks.every(x=>x.ok),ready:false,assetFilesVerified:false,eligible:eligible.length,total:imgs.length,checks,model:'Anima Base v1.0',loraWeightsCreated:false};
 }

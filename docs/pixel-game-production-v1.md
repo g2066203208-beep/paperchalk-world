@@ -44,3 +44,6 @@
 - 专用LoRA：https://github.com/kohya-ss/sd-scripts/blob/main/docs/anima_train_network.md
 - 自有材质工作台：`site/pixel-lab/material-forge.html`
 - 人物立绘画师库：`site/pixel-lab/pixel-portrait-references.html`
+
+## 防止伪造JSON冒充训练通过
+前端的训练清单检查只能验证元数据，不接触图片原始字节、完整许可证证明或人工签名。因此新增分离 `metadataReady` 与 `ready`：即使假造24张带approved字段的JSON能通过结构清单，前端也固定显示 `ready=false,assetFilesVerified=false,loraWeightsCreated=false`。仅有人工完成真值验收后、独立离线查验图像及版权证据才进入训练执行步骤。
