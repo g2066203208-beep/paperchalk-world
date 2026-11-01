@@ -45,6 +45,34 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
   pointer-events:none;image-rendering:auto;
   /* independent viewport-space layer: mouse never transforms the fog */
 }
+
+/* Phone controls stay in SCREEN SPACE; neither they nor the fog rotate. */
+#motion-ui{
+  position:fixed;z-index:15;right:max(12px,env(safe-area-inset-right));
+  bottom:max(10px,env(safe-area-inset-bottom));
+  display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;
+  max-width:min(96vw,560px);font:12px/1.3 system-ui,sans-serif;
+}
+#motion-ui button{
+  appearance:none;border:1px solid #a6aeb4;border-radius:8px;
+  background:#171e24e8;color:#fff;padding:10px 13px;min-height:40px;
+  font:600 13px system-ui,sans-serif;touch-action:manipulation;
+}
+#motion-ui button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+#motion-ui button[hidden]{display:none}
+#motion-status{color:#d4dadd;text-shadow:0 1px 4px #000;max-width:180px}
+body.mobile-mode #motion-ui{display:flex}
+#rotate-help{
+  display:none;position:fixed;inset:0;z-index:10;pointer-events:none;
+  place-items:center;background:#000d;color:#fff;text-align:center;
+  font:600 clamp(15px,4vw,22px)/1.7 system-ui,sans-serif;padding:18px;
+}
+body.mobile-mode.portrait-mode #rotate-help{display:grid}
+#rotate-help small{display:block;font-size:12px;font-weight:400;color:#b8c1c6}
+@media (max-height:430px) and (orientation:landscape){
+  #motion-ui{bottom:max(6px,env(safe-area-inset-bottom));right:max(8px,env(safe-area-inset-right))}
+  #motion-ui button{padding:7px 10px;min-height:34px}
+}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
@@ -55,6 +83,15 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
          alt="空教室全景：黑板、课桌、左侧窗户。" draggable="false">
   </figure>
   <canvas id="fog" aria-hidden="true"></canvas>
+
+  <div id="rotate-help" role="note">
+    <div>请将手机横过来游玩<small>点右下角“横屏 · 开启体感”，允许传感器后可用手机倾斜视角</small></div>
+  </div>
+  <div id="motion-ui" aria-label="手机横屏及体感控制">
+    <span id="motion-status" role="status" aria-live="polite">横屏体验更完整</span>
+    <button id="enable-motion" type="button">横屏 · 开启体感</button>
+    <button id="calibrate-motion" type="button" hidden>重置中心</button>
+  </div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -156,6 +193,164 @@ void main(){
       }
     }
   }
+
+  const enableMotion=document.getElementById('enable-motion');
+  const calibrateMotion=document.getElementById('calibrate-motion');
+  const motionStatus=document.getElementById('motion-status');
+  const coarse=matchMedia('(pointer:coarse)');
+  const mobile=coarse.matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  let sensorEnabled=false,sensorSamples=0,sensorCenter=null,sensorAngle=null;
+  let nativeCenter=null,nativeSamples=0,nativeActive=false,touchStart=null;
+  function setMotionStatus(message){motionStatus.textContent=message}
+  function orientationAngle(){
+    return (((screen.orientation&&Number.isFinite(screen.orientation.angle)
+      ?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0))%360)+360)%360;
+  }
+  function updatePhoneLayout(){
+    document.body.classList.toggle('mobile-mode',mobile);
+    document.body.classList.toggle('portrait-mode',mobile&&innerHeight>innerWidth);
+  }
+  function centreSensor(){
+    sensorCenter=null;nativeCenter=null;aimX=0;aimY=0;start();
+    if(sensorEnabled||nativeActive)setMotionStatus('中心已重置，保持自然握持');
+  }
+  function deltaDegrees(a,b){return ((a-b+540)%360)-180}
+  function deadzone(x){return Math.sign(x)*Math.max(0,Math.abs(x)-1.3)}
+  function webOrientation(e){
+    if(!sensorEnabled||nativeActive||!Number.isFinite(e.beta)||!Number.isFinite(e.gamma))return;
+    const a=orientationAngle(),beta=e.beta,gamma=e.gamma;
+    let x=gamma,y=beta;
+    if(a===90){x=beta;y=-gamma}
+    else if(a===270){x=-beta;y=gamma}
+    else if(a===180){x=-gamma;y=-beta}
+    if(!sensorCenter||sensorAngle!==a){
+      sensorAngle=a;sensorCenter={x,y};aimX=0;aimY=0;
+    }else if(!reduced.matches){
+      // Calibrated, bounded motion; same normalized yaw/pitch as desktop mouse.
+      aimX=clamp(deadzone(deltaDegrees(x,sensorCenter.x))/18,-1,1);
+      aimY=clamp(deadzone(deltaDegrees(y,sensorCenter.y))/18,-1,1);
+    }
+    sensorSamples++;
+    if(sensorSamples===2){
+      setMotionStatus('体感已连接 · 轻轻倾斜手机');
+      calibrateMotion.hidden=false;
+    }
+    start();
+  }
+  // Android app's native GAME_ROTATION_VECTOR bridge is used when present;
+  // the public HTTPS website uses the standards-based deviceorientation API.
+  window.__PAPERWORLD_NATIVE_ORIENTATION__=(w,x,y,z)=>{
+    if(!nativeActive||![w,x,y,z].every(Number.isFinite))return;
+    const norm=Math.hypot(w,x,y,z);if(norm<.1)return;
+    w/=norm;x/=norm;y/=norm;z/=norm;
+    if(!nativeCenter){nativeCenter={w,x,y,z};aimX=0;aimY=0}
+    else if(!reduced.matches){
+      const b=nativeCenter;
+      const dx=b.w*x-b.x*w-b.y*z+b.z*y;
+      const dy=b.w*y+b.x*z-b.y*w-b.z*x;
+      const dw=b.w*w+b.x*x+b.y*y+b.z*z;
+      let px=2*Math.atan2(dx,dw)*180/Math.PI;
+      let py=2*Math.atan2(dy,dw)*180/Math.PI;
+      const a=orientationAngle();
+      if(a===90){const t=px;px=py;py=-t}
+      else if(a===270){const t=px;px=-py;py=t}
+      else if(a===180){px=-px;py=-py}
+      aimX=clamp(deadzone(px)/18,-1,1);
+      aimY=clamp(deadzone(py)/18,-1,1);
+    }
+    nativeSamples++;
+    if(nativeSamples===2){
+      setMotionStatus('原生体感已连接');
+      calibrateMotion.hidden=false;enableMotion.hidden=true;
+    }
+    start();
+  };
+  function beginWebSensor(){
+    if(sensorEnabled)return;
+    sensorEnabled=true;
+    window.addEventListener('deviceorientation',webOrientation,{passive:true});
+    setMotionStatus('正在读取手机方向…');
+  }
+  async function tryLandscape(fullscreen){
+    // Web browsers may reject lock() outside fullscreen or without a gesture.
+    // Never fake successful orientation locking on unsupported iOS browsers.
+    if(fullscreen&&view.requestFullscreen&&!document.fullscreenElement){
+      try{await view.requestFullscreen()}catch(_){}
+    }
+    if(screen.orientation&&typeof screen.orientation.lock==='function'){
+      try{await screen.orientation.lock('landscape')}catch(_){}
+    }
+    updatePhoneLayout();
+  }
+  async function enableSensorsAndLandscape(){
+    enableMotion.disabled=true;
+    setMotionStatus('正在请求体感与横屏…');
+    const native=window.PaperworldSensor;
+    if(native&&typeof native.available==='function'&&native.available()){
+      nativeActive=true;nativeCenter=null;
+      native.start();
+      await tryLandscape(true);
+      enableMotion.hidden=true;calibrateMotion.hidden=false;
+      setMotionStatus('正在校准原生体感…');
+      enableMotion.disabled=false;return;
+    }
+    // On iOS, requestPermission MUST be invoked synchronously in this click.
+    let permission=null;
+    try {
+      if(typeof DeviceOrientationEvent!=='undefined'&&
+         typeof DeviceOrientationEvent.requestPermission==='function'){
+        permission=DeviceOrientationEvent.requestPermission();
+      }
+    }catch(_){permission=Promise.resolve('denied')}
+    // Request fullscreen from the same tap, then request landscape lock.
+    const full=(view.requestFullscreen&&!document.fullscreenElement)
+      ?view.requestFullscreen().catch(()=>false):Promise.resolve(false);
+    let granted='granted';
+    try{if(permission)granted=await permission}catch(_){granted='denied'}
+    await full;await tryLandscape(false);
+    if(granted==='granted'&&'DeviceOrientationEvent' in window){
+      beginWebSensor();
+      calibrateMotion.hidden=false;
+      enableMotion.textContent='重试横屏';
+    }else{
+      setMotionStatus('体感不可用，可手动横屏并触摸拖动');
+      enableMotion.textContent='重试横屏';
+    }
+    enableMotion.disabled=false;
+  }
+  enableMotion.addEventListener('click',enableSensorsAndLandscape);
+  calibrateMotion.addEventListener('click',centreSensor);
+  window.addEventListener('orientationchange',()=>{
+    centreSensor();updatePhoneLayout();
+  },{passive:true});
+  // A practical fallback if mobile browser blocks sensors: drag to tilt.
+  view.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='touch'||reduced.matches)return;
+    touchStart={x:e.clientX,y:e.clientY,id:e.pointerId};
+  },{passive:true});
+  view.addEventListener('pointermove',e=>{
+    if(!touchStart||touchStart.id!==e.pointerId||e.pointerType!=='touch'||reduced.matches)return;
+    aimX=clamp((e.clientX-touchStart.x)/(Math.max(innerWidth,1)*.24),-1,1);
+    aimY=clamp((e.clientY-touchStart.y)/(Math.max(innerHeight,1)*.24),-1,1);
+    start();
+  },{passive:true});
+  function finishTouch(){if(touchStart){touchStart=null;aimX=0;aimY=0;start()}}
+  window.addEventListener('pointerup',finishTouch,{passive:true});
+  window.addEventListener('pointercancel',finishTouch,{passive:true});
+  updatePhoneLayout();
+  // Android's own WebView can start the trusted native sensor bridge immediately.
+  try{
+    if(mobile&&window.PaperworldSensor?.available?.()){
+      nativeActive=true;window.PaperworldSensor.start();
+      setMotionStatus('正在读取原生体感…');
+    }else if(mobile&&'DeviceOrientationEvent' in window&&
+      typeof DeviceOrientationEvent.requestPermission!=='function'){
+      beginWebSensor();
+    }
+  }catch(_){}
+  // An automatic lock is allowed in some installed web apps, but not ordinary
+  // browser tabs. Failure is expected and is handled by the visible button.
+  if(mobile)tryLandscape(false);
   function shader(type,text){
     const s=gl.createShader(type);
     gl.shaderSource(s,text);gl.compileShader(s);
@@ -312,7 +507,7 @@ void main(){
   },{passive:true});
   view.addEventListener('pointerleave',()=>{aimX=0;aimY=0;start()});
   window.addEventListener('blur',()=>{aimX=0;aimY=0;start()});
-  window.addEventListener('resize',()=>{resize();start()},{passive:true});
+  window.addEventListener('resize',()=>{resize();updatePhoneLayout();start()},{passive:true});
   document.addEventListener('visibilitychange',()=>{last=0;if(!document.hidden)start()});
   reduced.addEventListener?.('change',()=>{last=0;start()});
   if(!initGPU())initCPU();
