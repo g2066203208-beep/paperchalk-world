@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {VERSION,createGame,loadGame,clock,inspect,choose,useAction,isEscapeReady} from '../site/card-game/point-story-engine.mjs';
+import {VERSION,createGame,loadGame,clock,inspect,choose,useAction,isEscapeReady,enterClassroom} from '../site/card-game/point-story-engine.mjs';
 
 function prepare(){
  const s=createGame();
@@ -64,4 +64,12 @@ test('actions, key loot and save validation',()=>{
  assert.throws(()=>loadGame('{}'));
  assert.throws(()=>loadGame({...s,scene:'unknown'}));
  assert.throws(()=>loadGame({...s,rules:['fake']}));
+});
+
+test('classroom is an explorable separate 2D scene without altering original rule-horror route',()=>{
+ const s=createGame();choose(s,'continue');inspect(s,'living');
+ assert.equal(enterClassroom(s),true);assert.equal(s.scene,'classroom');
+ for(const id of ['girl','board','desks','windows'])assert.equal(inspect(s,id),true);
+ assert.equal(inspect(s,'back'),true);assert.equal(s.scene,'living');
+ assert.equal(s.ending,null);assert.equal(loadGame(JSON.stringify(s)).scene,'living');
 });
