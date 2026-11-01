@@ -59,6 +59,51 @@ body.mobile-mode.virtual-landscape #view{
   /* independent viewport-space layer: mouse never transforms the fog */
 }
 
+
+/* 1803 × 872 approved landscape reference, scaled in LOGICAL GAME viewport.
+   3.1% / 4.0% top controls; 8.3% / 8% dialogue. Container units
+   correctly follow the game in actual Android landscape and rotated browser portrait.
+   No panel, no rectangular frame, no extra gradient, no smoke layers. */
+#novel-ui{
+  position:absolute;inset:0;z-index:5;pointer-events:none;
+  color:#f5f5f1;font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  font-weight:400;letter-spacing:.045em;
+  --ui-ink:#f5f5f1;
+}
+#novel-ui button{
+  appearance:none;border:0!important;border-radius:0!important;box-shadow:none!important;
+  background:none!important;backdrop-filter:none!important;
+  -webkit-tap-highlight-color:transparent;color:inherit;font:inherit;
+  pointer-events:auto;cursor:pointer;touch-action:manipulation;
+  text-shadow:0 1px 5px #000;
+}
+#novel-ui button:focus-visible{outline:1px solid var(--ui-ink);outline-offset:3px}
+#top-menu{position:absolute;top:clamp(7px,3.7cqh,52px);left:clamp(8px,2.7cqw,88px)}
+#top-menu button{font-size:clamp(19px,3.7cqh,42px);font-weight:300;line-height:1;min-width:38px;min-height:38px;text-align:left;padding:2px 4px}
+#top-actions{position:absolute;top:clamp(7px,3.8cqh,54px);right:clamp(9px,3.0cqw,86px);display:flex;align-items:center;gap:clamp(10px,3.2cqw,62px)}
+#top-actions button{font-size:clamp(11px,2.45cqh,28px);min-height:36px;min-width:38px;padding:4px 2px}
+#top-actions button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:6px}
+#dialogue{position:absolute;left:8.3cqw;bottom:clamp(24px,8.4cqh,130px);width:min(76cqw,1450px);pointer-events:auto;text-shadow:0 1px 6px #000}
+#speaker{font-size:clamp(12px,2.75cqh,32px);line-height:1.25;margin:0 0 clamp(7px,1.8cqh,21px)}
+#dialogue-text{font-size:clamp(14px,2.95cqh,34px);line-height:1.46;margin:0;max-width:100%;overflow-wrap:anywhere}
+#advance{position:absolute;right:clamp(15px,8.8cqw,220px);bottom:clamp(16px,6.3cqh,105px)}
+#advance button{font-size:clamp(18px,2.8cqh,33px);line-height:1;min-width:44px;min-height:40px;padding:0;text-align:center}
+#menu-choices{position:absolute;top:clamp(45px,11.5cqh,115px);left:clamp(9px,2.7cqw,88px);display:flex;flex-direction:column;align-items:flex-start;gap:clamp(4px,1.1cqh,16px);pointer-events:auto}
+#menu-choices button{font-size:clamp(12px,2.1cqh,24px);padding:5px 8px;min-height:35px;text-align:left}
+#history{position:absolute;left:8.3cqw;bottom:clamp(24px,8.4cqh,130px);width:76cqw;max-height:54cqh;overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;text-shadow:0 1px 6px #000;scrollbar-width:thin}
+#history p{font-size:clamp(12px,2.15cqh,26px);line-height:1.65;margin:.28em 0}
+#history .log-speaker{color:#eee9}
+#novel-ui [hidden]{display:none!important}
+@container (max-height:445px){
+  #novel-ui{letter-spacing:.015em}
+  #top-menu{top:5px}
+  #top-actions{top:5px}
+  #dialogue{width:78cqw;bottom:max(15px,7.5cqh)}
+  #speaker{font-size:clamp(11px,2.65cqh,15px);margin-bottom:5px}
+  #dialogue-text{font-size:clamp(12px,3.0cqh,17px);line-height:1.38}
+  #advance{right:clamp(10px,8.5cqw,100px);bottom:max(12px,6cqh)}
+}
+
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
@@ -69,7 +114,25 @@ body.mobile-mode.virtual-landscape #view{
          alt="空教室全景：黑板、课桌、左侧窗户。" draggable="false">
   </figure>
   <canvas id="fog" aria-hidden="true"></canvas>
-
+  <div id="novel-ui" aria-label="黑雾极简互动界面">
+    <nav id="top-menu" aria-label="游戏菜单">
+      <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
+    </nav>
+    <div id="top-actions" aria-label="对话控制">
+      <button id="auto-button" type="button" aria-pressed="false">AUTO</button>
+      <button id="log-button" type="button" aria-pressed="false">LOG</button>
+    </div>
+    <div id="menu-choices" hidden aria-label="游戏操作">
+      <button id="restart-button" type="button">重新开始</button>
+      <button id="hide-button" type="button">隐藏文字</button>
+    </div>
+    <section id="dialogue" aria-label="人物对白" aria-live="polite">
+      <p id="speaker">???</p>
+      <p id="dialogue-text">这间教室……和我记忆里的，不太一样。</p>
+    </section>
+    <div id="advance"><button id="next-line" type="button" aria-label="下一句">▸</button></div>
+    <div id="history" hidden role="region" aria-label="对白记录"></div>
+  </div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -301,6 +364,114 @@ void main(){
   // An automatic lock is allowed in some installed web apps, but not ordinary
   // browser tabs. Failure is expected and is handled by the visible button.
   if(mobile)tryLandscape(false);
+
+  // Reference UI layout is expressed in % of the logical landscape canvas,
+  // not the phone's physical portrait axes. No new smoke, shadow layer or panel.
+  const uiRoot=document.getElementById('novel-ui');
+  const speakerLabel=document.getElementById('speaker');
+  const dialogueText=document.getElementById('dialogue-text');
+  const dialogue=document.getElementById('dialogue');
+  const nextLineButton=document.getElementById('next-line');
+  const autoButton=document.getElementById('auto-button');
+  const logButton=document.getElementById('log-button');
+  const menuButton=document.getElementById('menu-toggle');
+  const menuChoices=document.getElementById('menu-choices');
+  const restartButton=document.getElementById('restart-button');
+  const hideButton=document.getElementById('hide-button');
+  const history=document.getElementById('history');
+  const lines=[
+    {speaker:'???',text:'这间教室……和我记忆里的，不太一样。'},
+    {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
+    {speaker:'???',text:'有人……在看着这里吗？'}
+  ];
+  let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false;
+  function cancelAuto(){
+    clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
+    autoButton.setAttribute('aria-pressed','false');
+  }
+  function renderDialogue(){
+    const line=lines[dialogueIndex];
+    speakerLabel.textContent=line.speaker;dialogueText.textContent=line.text;
+    nextLineButton.setAttribute('aria-label',dialogueIndex===lines.length-1?'重新播放':'下一句');
+  }
+  function advanceDialogue(){
+    if(logOpen||textHidden)return;
+    dialogueIndex=(dialogueIndex+1)%lines.length;renderDialogue();
+    if(autoEnabled)scheduleAuto();
+  }
+  function scheduleAuto(){
+    clearTimeout(autoTimer);
+    if(autoEnabled&&!document.hidden&&!logOpen&&!textHidden){
+      const wait=Math.max(2800,Math.min(6600,lines[dialogueIndex].text.length*190));
+      autoTimer=setTimeout(()=>{
+        if(dialogueIndex===lines.length-1){cancelAuto();return}
+        advanceDialogue();
+      },wait);
+    }
+  }
+  function updateHistory(){
+    // All markup comes from fixed app-owned strings; textContent prevents injection.
+    history.replaceChildren();
+    for(let i=0;i<=dialogueIndex;i++){
+      const p=document.createElement('p');
+      const who=document.createElement('span');who.className='log-speaker';
+      who.textContent=lines[i].speaker+'  ';
+      p.append(who,document.createTextNode(lines[i].text));
+      history.appendChild(p);
+    }
+    history.scrollTop=history.scrollHeight;
+  }
+  function toggleLog(){
+    logOpen=!logOpen;
+    if(logOpen){
+      cancelAuto();updateHistory();history.hidden=false;
+      dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
+      menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
+    }else{
+      history.hidden=true;dialogue.hidden=textHidden;
+      nextLineButton.parentElement.hidden=textHidden;
+    }
+    logButton.setAttribute('aria-pressed',String(logOpen));
+  }
+  nextLineButton.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
+  // Clicking text/black fog advances, but sensor and fog calculations are untouched.
+  dialogue.addEventListener('click',e=>{e.stopPropagation();advanceDialogue()});
+  autoButton.addEventListener('click',()=>{
+    if(logOpen)toggleLog();
+    if(textHidden){textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false}
+    autoEnabled=!autoEnabled;autoButton.setAttribute('aria-pressed',String(autoEnabled));
+    if(autoEnabled)scheduleAuto();else clearTimeout(autoTimer);
+  });
+  logButton.addEventListener('click',toggleLog);
+  menuButton.addEventListener('click',()=>{
+    const opening=menuChoices.hidden;
+    menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
+  });
+  restartButton.addEventListener('click',()=>{
+    cancelAuto();dialogueIndex=0;renderDialogue();
+    if(logOpen)toggleLog();
+    textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false;
+    menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
+  });
+  hideButton.addEventListener('click',()=>{
+    cancelAuto();textHidden=!textHidden;
+    dialogue.hidden=textHidden;nextLineButton.parentElement.hidden=textHidden;
+    hideButton.textContent=textHidden?'显示文字':'隐藏文字';
+    menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
+  });
+  window.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){
+      if(logOpen)toggleLog();else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
+    }else if((e.key===' '||e.key==='Enter')&&
+      !['BUTTON','INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
+      e.preventDefault();advanceDialogue();
+    }
+  });
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden)clearTimeout(autoTimer);
+    else if(autoEnabled)scheduleAuto();
+  });
+  renderDialogue();
   function shader(type,text){
     const s=gl.createShader(type);
     gl.shaderSource(s,text);gl.compileShader(s);
