@@ -17,6 +17,15 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 #hero{position:absolute;z-index:5;left:15%;bottom:12%;height:min(82vh,850px);max-width:40vw;image-rendering:auto;object-fit:contain;object-position:bottom center;filter:drop-shadow(17px 18px 13px #0009) drop-shadow(-3px 0px 8px #8b9db64d);transition:opacity .6s,transform .6s;transform-origin:bottom center;pointer-events:none}
 #hero.ghost{opacity:.18;transform:translateX(9px) scaleX(.996);filter:brightness(.7) blur(1px) drop-shadow(15px 0 8px #e5dada90)}
 #hero[src=""]{display:none}
+.boy-portrait{position:absolute;z-index:6;bottom:26%;height:min(67vh,665px);width:auto;max-width:30%;object-fit:contain;opacity:0;pointer-events:none;filter:drop-shadow(10px 10px 9px #070c15c9) drop-shadow(-2px 0 7px #c1d9dd40);transition:opacity .45s,filter .4s}
+#boy-tie{left:27%;transform:translateX(-50%)}#boy-untied{right:20%;transform:translateX(50%)}
+#world.duel #hero{opacity:0;pointer-events:none}
+#world.duel .boy-portrait{opacity:1}
+#world.duel .boy-portrait.attention{filter:drop-shadow(8px 7px 12px #09111d) drop-shadow(0 0 14px #cadcddaa)}
+#world.duel .boy-portrait.dimmed{opacity:.52}
+#boy-caption{position:absolute;z-index:7;top:20%;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;letter-spacing:.15em;font-size:11px;color:#f0d8cf;opacity:0;pointer-events:none;text-shadow:0 2px 8px #000}
+#world.duel #boy-caption{opacity:1}
+
 #fallback{position:absolute;bottom:14%;left:18%;height:54%;width:16%;z-index:4;display:none;align-items:center;justify-content:center;color:#e6dfe6a3;border:1px dashed #9b9fa050;background:#151d25a8;text-align:center;line-height:1.5}
 header{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-items:center;gap:15px;justify-content:space-between;padding:17px clamp(16px,3vw,45px);background:linear-gradient(#080c12c9,#080c1200)}
 .brand{letter-spacing:.28em;font-weight:600;font-size:clamp(17px,2vw,27px)}.brand small{display:block;font-size:10px;letter-spacing:.25em;color:#d3d6d9a6;font-weight:400;margin-top:4px}
@@ -39,7 +48,7 @@ header{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-item
 #status{position:absolute;z-index:9;top:125px;left:clamp(16px,3vw,45px);font-size:12px;letter-spacing:.1em;color:#e3c6c1}
 #flash{position:absolute;inset:0;background:#edeeee;z-index:20;opacity:0;pointer-events:none;transition:opacity .4s}
 #flash.on{opacity:.85;transition:opacity .05s}
-@media(max-width:700px){#world{min-height:650px}#stage-art{width:100%;height:100%;object-fit:cover}#hero{left:8%;height:62vh;max-height:700px;max-width:58vw;bottom:23%;opacity:.92}header{padding-top:calc(9px + env(safe-area-inset-top))}.brand{font-size:18px;letter-spacing:.13em}.brand small{font-size:8px}.toolbar button{font-size:10px;padding:7px}#location{top:76px;font-size:9px}#chapter{top:76px;right:15px}#dialogue{bottom:max(10px,env(safe-area-inset-bottom));padding:14px 16px 15px;min-height:205px}#line{font-size:15px;min-height:72px}#controls{margin-top:7px}#choices button{min-width:120px;padding:9px 10px;font-size:13px}#hint{font-size:9px}#status{top:109px;left:15px}}
+@media(max-width:700px){.boy-portrait{height:min(54vh,485px);max-width:45%;bottom:30%}#boy-tie{left:32%}#boy-untied{right:26%}#boy-caption{top:19%;font-size:9px}#world{min-height:650px}#stage-art{width:100%;height:100%;object-fit:cover}#hero{left:8%;height:62vh;max-height:700px;max-width:58vw;bottom:23%;opacity:.92}header{padding-top:calc(9px + env(safe-area-inset-top))}.brand{font-size:18px;letter-spacing:.13em}.brand small{font-size:8px}.toolbar button{font-size:10px;padding:7px}#location{top:76px;font-size:9px}#chapter{top:76px;right:15px}#dialogue{bottom:max(10px,env(safe-area-inset-bottom));padding:14px 16px 15px;min-height:205px}#line{font-size:15px;min-height:72px}#controls{margin-top:7px}#choices button{min-width:120px;padding:9px 10px;font-size:13px}#hint{font-size:9px}#status{top:109px;left:15px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -149,6 +158,9 @@ header{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-item
 <div id="vignette"></div><div id="texture"></div>
 <img id="hero" src="./hero.webp?v=hd-20261101-1" alt="主角：黑色长发、深色制服的学生全身立绘" onerror="this.style.display='none';document.getElementById('fallback').style.display='flex'">
 <div id="fallback">角色原画<br>素材加载中</div>
+<canvas id="boy-tie" class="boy-portrait" width="333" height="1024" role="img" aria-label="男同学红领带版全身立绘"></canvas>
+<canvas id="boy-untied" class="boy-portrait" width="334" height="1024" role="img" aria-label="同一男同学无领带版全身立绘"></canvas>
+<div id="boy-caption" aria-hidden="true">同一张脸 / 两份记忆</div>
 <div id="flash"></div>
 <header><div class="brand">错位日常<small>THE DAY THAT FORGOT YOU</small></div><nav class="toolbar"><button id="sound" aria-pressed="false">声音 · 关</button><button id="restart">重新开始</button></nav></header>
 <div id="location">旧校舍三层 · 18:47</div>
@@ -165,7 +177,17 @@ header{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-item
 (function(){
 "use strict";
 const $=id=>document.getElementById(id), spots=$("hotspots"),line=$("line"),next=$("next");
-let scene="hall",step=0,found={note:false,door:false,clock:false,desk:false,window:false,stair:false},ending="",sound=false,ctx=null;
+const duoSource=new Image();
+duoSource.onload=()=>{
+ if(duoSource.naturalWidth!==667||duoSource.naturalHeight!==1024){console.error("Invalid character atlas dimensions");return}
+ for(const [id,x,w] of [["boy-tie",0,333],["boy-untied",333,334]]){
+  const cv=$(id),ctx=cv.getContext("2d",{alpha:true});
+  ctx.clearRect(0,0,w,1024);ctx.drawImage(duoSource,x,0,w,1024,0,0,w,1024);cv.dataset.loaded="true";
+ }
+};
+duoSource.onerror=()=>{console.error("Male portraits did not load")};
+duoSource.src="./boys.webp?v=boys02";
+let scene="hall",step=0,found={note:false,door:false,clock:false,desk:false,window:false,stair:false,tie:false,untied:false},ending="",sound=false,ctx=null;
 const narrative=[
 ["我","傍晚的旧校舍只剩我一个人。校务系统却显示，今天有两个人还没离校。"],
 ["我","另一个人的名字，是我的。"],
@@ -177,27 +199,57 @@ clock:["墙上的时钟","时针停在六点四十七。手机显示六点四十
 door:["3-B 教室","门从里面锁着。玻璃后面有人坐在我的座位上，背影跟我一模一样。"],
 desk:["我的座位","课桌里有一本笔记，写满我从未学过的笔迹。最后一页只留下：「如果你读到了这里，就说明我已经成功。」"],
 window:["教室的窗","玻璃映出我的轮廓。奇怪的是，倒影的嘴比我慢了半秒才闭上。"],
+tie:["红领带男生","「我翘课是因为烦，别问。领带？我今天一直系着。」他把红领带往胸前扯了扯。"],
+untied:["无领带男生","「我上周就把领带丢了。你不是亲眼看着我扔掉的吗？」他的声音、发型，甚至语气，都和另一个人一模一样。"],
 stair:["三楼楼梯","楼梯通往一层。指示牌上的箭头指向楼上，却写着「出口」。脚步声从上方传来。"]
 };
 const layouts={
 hall:[{id:"note",x:61,y:44,t:"观察字条"},{id:"clock",x:50.6,y:34,t:"检查时钟"},{id:"door",x:82,y:54,t:"进入 3-B"},{id:"stair",x:95,y:73,t:"前往楼梯"}],
-classroom:[{id:"desk",x:52,y:67,t:"调查课桌"},{id:"window",x:82,y:42,t:"观察玻璃"},{id:"hall",x:9,y:69,t:"返回走廊"}],
+classroom:[{id:"tie",x:28,y:39,t:"询问红领带男生"},{id:"untied",x:72,y:39,t:"询问无领带男生"},{id:"desk",x:52,y:67,t:"调查课桌"},{id:"window",x:88,y:50,t:"观察玻璃"},{id:"hall",x:9,y:69,t:"返回走廊"}],
 stairs:[{id:"stair",x:53,y:55,t:"检查楼梯"},{id:"hall",x:12,y:71,t:"返回走廊"}]
 };
 function tone(f){if(!sound)return;try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=f;gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.055,ctx.currentTime+.02);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.19);osc.connect(gain).connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.2)}catch(e){}}
-function show(s,t){$("speaker").textContent=s;line.textContent=t;$("choices").replaceChildren()}
+function show(s,t){$("speaker").textContent=s;line.textContent=t;$("choices").replaceChildren();next.hidden=false}
 function choices(options){next.hidden=true;const wrap=$("choices");wrap.replaceChildren();options.forEach(o=>{const b=document.createElement("button");b.textContent=o[0];b.onclick=()=>{tone(440);next.hidden=false;wrap.replaceChildren();o[1]()};wrap.appendChild(b)})}
 function drawHotspots(){spots.replaceChildren();layouts[scene].forEach(o=>{const b=document.createElement("button");b.className="hotspot";b.style.left=o.x+"%";b.style.top=o.y+"%";b.dataset.title=o.t;b.textContent=found[o.id]?"✓":"+";b.setAttribute("aria-label",o.t);b.onclick=()=>inspect(o.id);spots.appendChild(b)})}
-function move(to){scene=to;for(const id of ["hall","classroom","stairs"])$(id).classList.toggle("active",id===to);$("location").textContent={hall:"旧校舍三层 · 18:47",classroom:"3-B 教室 · 18:47",stairs:"三楼楼梯 · 18:47"}[to];drawHotspots();tone(185)}
-function inspect(id){if(id==="hall"){move("hall");show("我","走廊里的灯比刚才暗了一些。");return}found[id]=true;drawHotspots();tone(id==="door"?145:300);if(id==="door"){show("我",scripts.door[1]);setTimeout(()=>{$("flash").classList.add("on");setTimeout(()=>$("flash").classList.remove("on"),140)},170);move("classroom");return}
-if(id==="stair"&&scene==="hall"){move("stairs");show(...scripts.stair);return}
-show(...scripts[id]);$("status").textContent="已发现 "+Object.values(found).filter(Boolean).length+" / 6 条线索";
-if(Object.values(found).filter(Boolean).length>=4&&!ending){ending="ready";setTimeout(()=>{show("内心独白","我终于明白：学校不是在复制一个人，而是在不停替换谁才有资格成为「原来的我」。");choices([["保持原样，离开这里",()=>finish("leave")],["去寻找那个自己",()=>finish("meet")]])},850)}
+function move(to){
+ scene=to;for(const id of ["hall","classroom","stairs"])$(id).classList.toggle("active",id===to);
+ $("world").classList.toggle("duel",to==="classroom");
+ $("boy-tie").classList.remove("attention","dimmed");$("boy-untied").classList.remove("attention","dimmed");
+ $("location").textContent={hall:"旧校舍三层 · 18:47",classroom:"3-B 教室 · 18:47",stairs:"三楼楼梯 · 18:47"}[to];
+ drawHotspots();tone(185)
 }
-function finish(route){ending=route;show(route==="leave"?"记录 · 结局一":"记录 · 结局二",route==="leave"?"我走出了校门。第二天早上，课桌上仍放着我昨晚写下的笔记。可是这一次，笔记里的名字不是我的。":"我推开最后一道门。那个人看着我，像看着一段已经被遗忘的过去。她先开口了：「你终于回来替我上课了。」");spots.replaceChildren();$("status").textContent="序章结束 · "+(route==="leave"?"残留":"替代");try{localStorage.setItem("false-memory-ending",route)}catch(e){}}
+function inspect(id){if(id==="hall"){move("hall");show("我","走廊里的灯比刚才暗了一些。");return}found[id]=true;drawHotspots();tone(id==="door"?145:300);if(id==="door"){show("我","门里站着两个男同学。左边系红领带，右边没有。他们的脸、声音和穿着几乎一样，只有这一个细节不同。");setTimeout(()=>{$("flash").classList.add("on");setTimeout(()=>$("flash").classList.remove("on"),140)},170);move("classroom");return}
+if(id==="stair"&&scene==="hall"){move("stairs");show(...scripts.stair);return}
+show(...scripts[id]);
+if(id==="tie"||id==="untied"){
+ const a=$("boy-tie"),b=$("boy-untied"),focus=id==="tie"?a:b,other=id==="tie"?b:a;
+ focus.classList.add("attention");focus.classList.remove("dimmed");
+ other.classList.remove("attention");other.classList.add("dimmed");
+ if(found.tie&&found.untied&&ending!=="tie"&&ending!=="untied"){
+  show("我","两个人都坚持自己是原来的他。但红领带和敞开的领口无法同时成立。我究竟记得哪个版本？");
+  choices([["我记得红领带",()=>finish("tie")],["我记得他没系领带",()=>finish("untied")],["暂时不判断",()=>{show("我","我不回答。他们同时转过头，动作一模一样。");$("boy-tie").classList.remove("dimmed");$("boy-untied").classList.remove("dimmed");}]]);
+ }
+}
+$("status").textContent="已发现 "+Object.values(found).filter(Boolean).length+" / 8 条线索";
+if(Object.values(found).filter(Boolean).length>=4&&!ending&&!found.tie&&!found.untied){ending="ready";setTimeout(()=>{show("内心独白","我终于明白：学校不是在复制一个人，而是在不停替换谁才有资格成为「原来的我」。");choices([["保持原样，离开这里",()=>finish("leave")],["去寻找那个自己",()=>finish("meet")]])},850)}
+}
+function finish(route){
+ ending=route;
+ const outcomes={
+ leave:["记录 · 结局一","我走出了校门。第二天早上，课桌上仍放着我昨晚写下的笔记。可是这一次，笔记里的名字不是我的。","残留"],
+ meet:["记录 · 结局二","我推开最后一道门。那个人看着我，像看着一段已经被遗忘的过去。她先开口了：「你终于回来替我上课了。」","替代"],
+ tie:["记录 · 红色领带","我指向系着领带的人。另一人沉默地解开了一个不存在的结，随后连我自己的领口也空了。","红领带"],
+ untied:["记录 · 空白领口","我指向没有领带的人。左边的男生却从我的衣袋里抽出一条红色领带。那是我从未见过的东西。","无领带"]
+ };
+ show(outcomes[route][0],outcomes[route][1]);spots.replaceChildren();
+ $("status").textContent="序章结束 · "+outcomes[route][2];
+ $("boy-tie").classList.remove("dimmed","attention");$("boy-untied").classList.remove("dimmed","attention");
+ try{localStorage.setItem("false-memory-ending",route)}catch(e){}
+}
 function advance(){tone(510);if(step<narrative.length){show(narrative[step][0],narrative[step][1]);step++;return}if(!ending){show("提示","点击场景里的调查标记，检查教室、时钟、纸条与楼梯。");next.textContent="继续探索 ›"}}
 $("next").onclick=advance;
-$("restart").onclick=()=>{step=0;ending="";found={note:false,door:false,clock:false,desk:false,window:false,stair:false};move("hall");$("hero").classList.remove("ghost");next.hidden=false;next.textContent="继续 ›";$("status").textContent="";show("我","放学后，我收到了一封署名是自己的短信：「今晚别回家。」");};
+$("restart").onclick=()=>{step=0;ending="";found={note:false,door:false,clock:false,desk:false,window:false,stair:false,tie:false,untied:false};move("hall");$("hero").classList.remove("ghost");next.hidden=false;next.textContent="继续 ›";$("status").textContent="";show("我","放学后，我收到了一封署名是自己的短信：「今晚别回家。」");};
 $("sound").onclick=()=>{sound=!sound;$("sound").textContent="声音 · "+(sound?"开":"关");$("sound").setAttribute("aria-pressed",String(sound));tone(660)};
 document.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){if(e.target.tagName==="BUTTON")return;e.preventDefault();if(!next.hidden)advance()}});
 drawHotspots();$("restart").click();

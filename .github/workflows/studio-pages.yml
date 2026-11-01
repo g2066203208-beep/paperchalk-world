@@ -35,6 +35,7 @@ jobs:
           node --test tests/card-paradox.test.mjs
           test -s site/false-memory/index.html
           test -s site/false-memory/hero.webp
+          test -s site/false-memory/boys.webp
           test -s site/galgame/index.html
           node galgame/check.cjs
           test -s site/pixel-lab/index.html
