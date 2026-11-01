@@ -140,21 +140,40 @@ body.mobile-mode.virtual-landscape #view{
 }
 
 
-/* Background, enemy and player are independent visual layers in the
-   already existing tilting scene. Pure black fluid fog is unchanged. */
-#actor-enemy-layer,#actor-player-layer{
-  position:absolute;inset:0;z-index:0;pointer-events:none;
+/* Real depth composition, front to back:
+   camera player (fixed) > original viewport black fog > enemy (parallax)
+   > background (independently tilted). Nothing else is drawn. */
+#scene{z-index:1}
+#enemy-depth-root{
+  position:absolute;left:50%;top:50%;
+  width:min(90vw,calc(88dvh * 16 / 9));
+  width:min(90cqw,calc(88cqh * 16 / 9));
+  max-width:100%;aspect-ratio:16/9;
+  z-index:2;pointer-events:none;
+  transform-origin:center center;
+  transform:translate(-50%,-50%) rotateY(0deg) rotateX(0deg);
+  will-change:transform;backface-visibility:hidden;
 }
-#scene[data-scene="menu"] .cast-layer{display:none}
-#scene #actor-enemy,#scene #actor-player{
-  position:absolute;display:block;width:auto;max-width:none;
-  object-fit:contain;object-position:bottom center;pointer-events:none;
+#enemy-depth-root[hidden],#camera-player-root[hidden]{display:none!important}
+#enemy-depth-root #actor-enemy{
+  position:absolute;display:block;left:61.5%;bottom:18%;height:64%;
+  width:auto;max-width:none;object-fit:contain;object-position:bottom center;
+  user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
-#scene #actor-enemy{left:61.5%;bottom:18%;height:64%}
-#scene #actor-player{left:7%;bottom:0;height:80%}
+#fog{z-index:3}
+#camera-player-root{
+  position:absolute;inset:0;z-index:4;pointer-events:none;
+  /* This node stays attached to the CAMERA, never stage perspective. */
+  transform:none!important;
+}
+#camera-player-root #actor-player{
+  position:absolute;display:block;left:8cqw;bottom:-3cqh;height:82cqh;
+  width:auto;max-width:none;object-fit:contain;object-position:bottom center;
+  user-select:none;-webkit-user-drag:none;pointer-events:none;
+}
 @container (max-height:445px){
-  #scene #actor-enemy{height:62%;left:62%;bottom:18%}
-  #scene #actor-player{height:78%;left:6%;bottom:0}
+  #enemy-depth-root #actor-enemy{height:62%;left:62%;bottom:18%}
+  #camera-player-root #actor-player{height:82cqh;left:8cqw;bottom:-3cqh}
 }
 
 /* BLACK-only scene transition, independent of the original running fluid fog */
@@ -174,12 +193,6 @@ body.mobile-mode.virtual-landscape #view{
   <figure id="scene" data-scene="menu" aria-label="主菜单：一面墙、一扇门和一盏灯">
     <img id="source" src="./assets/menu-wall.webp" width="1024" height="576"
          alt="昏暗的墙壁，一扇闭合的旧门和顶上的灯。" draggable="false">
-    <div id="actor-enemy-layer" class="cast-layer" aria-label="敌人立绘">
-      <img id="actor-enemy" src="./assets/battle/enemy-front.webp" alt="面向玩家的敌人" draggable="false">
-    </div>
-    <div id="actor-player-layer" class="cast-layer" aria-label="主角背面立绘">
-      <img id="actor-player" src="./assets/battle/player-back.webp" alt="背对镜头的主角" draggable="false">
-    </div>
     <div id="scene-menu" aria-label="主菜单场景文字">
       <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
         <button id="menu-start" type="button">开始游戏</button>
@@ -192,7 +205,13 @@ body.mobile-mode.virtual-landscape #view{
       </nav>
     </div>
   </figure>
+  <div id="enemy-depth-root" aria-label="第二景深层：敌人（在黑雾后方）" hidden>
+    <img id="actor-enemy" src="./assets/battle/enemy-front.webp" alt="面向玩家的敌人" draggable="false">
+  </div>
   <canvas id="fog" aria-hidden="true"></canvas>
+  <div id="camera-player-root" aria-label="镜头前景层：玩家（在黑雾前方）" hidden>
+    <img id="actor-player" src="./assets/battle/player-back.webp" alt="背对镜头的主角" draggable="false">
+  </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
     <nav id="top-menu" aria-label="游戏菜单">
       <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
@@ -474,6 +493,8 @@ void main(){
     classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',type:'story'})
   });
   const sourceImage=document.getElementById('source');
+  const enemyDepth=document.getElementById('enemy-depth-root');
+  const cameraPlayer=document.getElementById('camera-player-root');
   const sceneMenu=document.getElementById('scene-menu');
   const mainOptions=document.getElementById('scene-menu-main');
   const settingsOptions=document.getElementById('scene-menu-settings');
@@ -508,6 +529,8 @@ void main(){
     // Swapping only image and scene content NEVER recreates the fluid simulator.
     sourceImage.src=def.image;sourceImage.alt=def.alt;
     stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
+    enemyDepth.hidden=def.type!=='story';
+    cameraPlayer.hidden=def.type!=='story';
     sceneMenu.hidden=def.type!=='menu';
     uiRoot.hidden=def.type!=='story';
     if(def.type==='menu'){
@@ -838,6 +861,14 @@ void main(){
     if(reduced.matches||!tiltEnabled){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    // A closer enemy shifts by a distinct amount relative to the far classroom;
+    // the player is physically a sibling of fog and never receives a transform.
+    const parallaxPx=Math.min(32,sizes.w*.027);
+    enemyDepth.style.transform='translate(-50%,-50%) translate3d('+
+      (currentX*parallaxPx).toFixed(2)+'px,'+
+      (currentY*parallaxPx*.65).toFixed(2)+'px,0) rotateY('+
+      (currentX*8.1).toFixed(3)+'deg) rotateX('+
+      (-currentY*6.2).toFixed(3)+'deg)';
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);

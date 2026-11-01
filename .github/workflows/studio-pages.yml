@@ -62,7 +62,9 @@ jobs:
           assert sorted(p.name for p in files)==['OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','enemy-front.webp','index.html','menu-wall.webp','player-back.webp'],files
           assert 'id="actor-enemy"' in h and 'id="actor-player"' in h
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
-          assert '#scene[data-scene="menu"] .cast-layer{display:none}' in h
+          assert 'id="camera-player-root"' in h and 'id="enemy-depth-root"' in h
+          assert 'enemyDepth.style.transform=' in h
+          assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
           assert "shade.dataset.phase='covered'" in h
           for font in ('--font-menu','--font-name','--font-dialogue','--font-ui'):
@@ -113,6 +115,8 @@ jobs:
                              'continue should be disabled with no save');
                 assert.equal(await page.locator('#actor-player').isVisible(),false,'cast exposed in menu');
                 assert.equal(await page.locator('#actor-enemy').isVisible(),false,'cast exposed in menu');
+                assert.equal(await page.locator('#camera-player-root').isVisible(),false);
+                assert.equal(await page.locator('#enemy-depth-root').isVisible(),false);
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-MAIN-MENU.png'});
                 await page.locator('#menu-settings-button').click();
@@ -143,10 +147,51 @@ jobs:
                     return [el.naturalWidth,el.naturalHeight,el.closest('#scene').dataset.scene];
                   });
                   assert.ok(dimensions[0]>100&&dimensions[1]>300,'missing standalone art: '+id);
-                  assert.equal(dimensions[2],'classroom','character not in tilting stage');
+                  assert.equal(dimensions[2],'classroom','character not shown in classroom');
+                  assert.equal(await art.evaluate(el=>el.closest('#view')!==null),true);
+                  assert.equal(await art.evaluate(el=>el.closest('#scene')===null),true,
+                    'actor is still glued into the background layer');
+                }
+                const layerAudit=await page.evaluate(()=>{
+                  const ids=['scene','enemy-depth-root','fog','camera-player-root'];
+                  const layers=ids.map(id=>document.getElementById(id));
+                  const parents=layers.map(el=>el.parentElement.id);
+                  const z=layers.map(el=>Number(getComputedStyle(el).zIndex));
+                  return {parents,z,player:document.getElementById('camera-player-root').style.transform,
+                    order:layers.map(el=>Array.prototype.indexOf.call(el.parentElement.children,el))};
+                });
+                assert.deepEqual(layerAudit.parents,['view','view','view','view'],
+                  'visual layers must be sibling planes, not all children of the scene');
+                assert.deepEqual(layerAudit.z,[1,2,3,4],
+                  'wrong 3D depth: bg < enemy < black fog < player');
+                assert.ok(layerAudit.order.every((x,i,a)=>i===0||x>a[i-1]),
+                  'painter order is reversed');
+                if(!cfg.mobile){
+                  await page.mouse.move(50,40);
+                  await page.waitForTimeout(440);
+                  const a=await page.evaluate(()=>({
+                    player:document.getElementById('actor-player').getBoundingClientRect().toJSON(),
+                    enemy:document.getElementById('actor-enemy').getBoundingClientRect().toJSON(),
+                    fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
+                    enemyStyle:document.getElementById('enemy-depth-root').style.transform
+                  }));
+                  await page.mouse.move(cfg.width-50,cfg.height-50);
+                  await page.waitForTimeout(580);
+                  const b=await page.evaluate(()=>({
+                    player:document.getElementById('actor-player').getBoundingClientRect().toJSON(),
+                    enemy:document.getElementById('actor-enemy').getBoundingClientRect().toJSON(),
+                    fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
+                    enemyStyle:document.getElementById('enemy-depth-root').style.transform
+                  }));
+                  assert.ok(Math.abs(a.player.x-b.player.x)<1&&Math.abs(a.player.y-b.player.y)<1,
+                    'foreground player moved relative to camera');
+                  assert.ok(Math.abs(a.enemy.x-b.enemy.x)>5||Math.abs(a.enemy.y-b.enemy.y)>5,
+                    'enemy did not visibly parallax across mouse tilt');
+                  assert.notEqual(a.enemyStyle,b.enemyStyle,'enemy plane never tilts');
+                  assert.deepEqual(a.fog,b.fog,'black fog moved with the world');
                 }
                 await page.screenshot({path:'artifacts/classroom/'+
-                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-CHARACTERS-ONLY.png'});
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-CHARACTERS-DEPTH.png'});
 
                 // Reference coordinates (1803x872) map to current LOGICAL
                 // game viewport; physical portrait screens rotate the whole UI.
