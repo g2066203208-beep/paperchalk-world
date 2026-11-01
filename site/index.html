@@ -178,8 +178,8 @@ void main(){
  function frame(t){
    request=0;
    if(document.hidden)return;
-   let dt=Math.min(.05,Math.max(.001,(t-(prev||t-16))/1000));prev=t;
-   const kz=reduce.matches?1:1-Math.exp(-dt*4.8);
+   let dt=Math.min(.40,Math.max(.001,(t-(prev||t-16))/1000));prev=t;
+   const kz=reduce.matches?1:1-Math.exp(-dt*8.0);
    const kl=reduce.matches?1:1-Math.exp(-dt*6.6);
    zoom+=(targetZoom-zoom)*kz;
    lookX+=(targetX-lookX)*kl;
@@ -192,14 +192,14 @@ void main(){
    stage.style.width=sw.toFixed(2)+'px';
    stage.style.height=sh.toFixed(2)+'px';
    stage.style.transform='translate3d(-50%,-50%,0) translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0) rotateY('+yaw.toFixed(3)+'deg) rotateX('+pitch.toFixed(3)+'deg)';
-   if(gl&&(!lastFog||t-lastFog>42)){
+   if(gl&&(!lastFog||t-lastFog>94)){
       gl.useProgram(prog);
       gl.uniform1f(uTime,reduce.matches?0:t*.001);
       gl.uniform1f(uZoom,zoom);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
       lastFog=t;
    }
-   if(!lastAir||t-lastAir>70){mist(reduce.matches?0:t*.001);lastAir=t}
+   if(!lastAir||t-lastAir>125){mist(reduce.matches?0:t*.001);lastAir=t}
    if(!reduce.matches||Math.abs(targetZoom-zoom)+Math.abs(targetX-lookX)+Math.abs(targetY-lookY)>.001){
      request=requestAnimationFrame(frame);
    }
