@@ -4,7 +4,7 @@
 <meta name="theme-color" content="#10141a">
 <meta name="description" content="《失序之夜》2D 点击式规则怪谈剧情生存原型。调查302室、记录规则、逃离异常公寓。">
 <title>失序之夜 · 第一夜｜2D 点击剧情恐怖</title>
-<link rel="stylesheet" href="./point-story.css?v=20261101-01">
+<link rel="stylesheet" href="./point-story.css?v=20261101-02">
 </head>
 <body>
 <div class="shell">
@@ -12,6 +12,7 @@
   <a class="brand" href="../index.html"><span>◈</span> 失序之夜 <small>LOST ORDER / EPISODE 01</small></a>
   <div class="top-actions">
    <span class="saved" id="saved">● 本地存档</span>
+   <button class="minor" id="classroom-toggle" type="button">教室场景</button>
    <button class="minor" id="notebook-toggle" aria-expanded="false">规则笔记</button>
    <button class="minor" id="new-run">重新开始 ↺</button>
   </div>
@@ -46,7 +47,7 @@
      <button data-action="breathe" class="action-card" type="button"><span class="cost">03</span><span class="card-icon">◌</span><strong>屏息等待</strong><small>降低关注程度</small></button>
      <button data-action="wait" class="action-card" type="button"><span class="cost">04</span><span class="card-icon">⌛</span><strong>继续等待</strong><small>观察时间变化</small></button>
     </div>
-    <div class="footer-row"><span>临时美术：固定机位 2D 构图白盒，待 Anima 正式场景替换</span>
+    <div class="footer-row"><span>教室：已接入 Anima 实际测试图；公寓：仍为剧情白盒场景</span>
      <label class="import-label" for="import-art">上传 Anima 背景预览 <input id="import-art" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
     <p id="import-note" class="import-note" hidden>背景替换仅在当前页面有效，刷新后恢复原始示意图。</p>
    </section>
@@ -66,5 +67,5 @@
    <p id="ending-copy"></p><button id="ending-restart">重新开始第一夜 ↻</button></div>
  </div>
 </div>
-<script type="module" src="./point-story-app.mjs?v=20261101-01"></script>
+<script type="module" src="./point-story-app.mjs?v=20261101-02"></script>
 </body></html>
