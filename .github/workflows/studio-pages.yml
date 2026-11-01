@@ -56,7 +56,9 @@ jobs:
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
-          assert len(files)==2,files
+          assert sorted(p.name for p in files)==['classroom.webp','index.html','menu-wall.webp'],files
+          assert 'id="scene-menu"' in h and 'SCENES=Object.freeze' in h
+          assert 'sourceImage.src=def.image' in h and 'stage.dataset.scene=name' in h
           print('PASS: complete image, independent viewport-space fluid fog, per-frame feedback and no zoom')
           PY
           node - <<'JS'
@@ -93,6 +95,22 @@ jobs:
                 const fog=await page.locator('#fog').boundingBox();
                 const actual=await page.locator('#source').evaluate(el=>[el.naturalWidth,el.naturalHeight]);
                 assert.deepEqual(actual,[1024,576]);
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu','must begin in main menu');
+                assert.equal(await page.locator('#novel-ui').isVisible(),false,'story controls shown on menu');
+                const menuCoords=await page.locator('#menu-start').boundingBox();
+                assert.ok(menuCoords.width>0&&menuCoords.height>0,'scene-attached main menu text missing');
+                assert.equal(await page.locator('#menu-continue').isDisabled(),true,
+                             'continue should be disabled with no save');
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-MAIN-MENU.png'});
+                await page.locator('#menu-settings-button').click();
+                assert.ok(await page.locator('#tilt-toggle').isVisible(),'settings text not accessible');
+                await page.locator('#menu-settings-back').click();
+                await page.locator('#menu-start').click();
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom');
+                assert.equal(await page.locator('#novel-ui').isVisible(),true);
+                assert.equal(await page.locator('#scene-menu').isVisible(),false);
+                assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
 
                 // Reference coordinates (1803x872) map to current LOGICAL
                 // game viewport; physical portrait screens rotate the whole UI.
@@ -263,6 +281,12 @@ jobs:
                 assert.equal(await page.locator('#restart-button').isVisible(),true,'menu does not open');
                 await page.locator('#restart-button').click();
                 assert.equal(await page.locator('#dialogue-text').textContent(),'这间教室……和我记忆里的，不太一样。');
+                await page.locator('#menu-toggle').click();
+                await page.locator('#return-main').click();
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu');
+                assert.equal(await page.locator('#menu-continue').isEnabled(),true);
+                await page.locator('#menu-continue').click();
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom');
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ui-tested.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
                 await page.close();
@@ -283,6 +307,7 @@ jobs:
                 });
                 try{
                   await p.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
+                  await p.locator('#menu-start').click();
                   const metrics=await p.evaluate(()=>{
                     const view=document.getElementById('view');
                     const selectors=['#menu-toggle','#auto-button','#log-button','#speaker','#dialogue-text','#next-line'];

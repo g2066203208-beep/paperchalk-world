@@ -104,17 +104,55 @@ body.mobile-mode.virtual-landscape #view{
   #advance{right:clamp(10px,8.5cqw,100px);bottom:max(12px,6cqh)}
 }
 
+
+/* SCENE TEMPLATE: one image, 3D tilt, stage-locked actions, viewport black fog. */
+#scene-menu{
+  position:absolute;inset:0;z-index:2;pointer-events:none;
+  color:#f5f5f1;font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  font-weight:400;letter-spacing:.065em;text-shadow:0 1px 5px #000;
+}
+#scene-menu .scene-menu-options{
+  position:absolute;left:60.5%;top:44%;display:flex;flex-direction:column;
+  align-items:flex-start;gap:clamp(3px,1.0cqh,18px);
+}
+#scene-menu button{
+  appearance:none;display:block;border:0;border-radius:0;background:none;
+  box-shadow:none;color:inherit;font:inherit;font-size:clamp(14px,2.8cqh,38px);
+  line-height:1.35;white-space:nowrap;text-align:left;
+  min-width:44px;min-height:38px;padding:3px 7px;cursor:pointer;
+  pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  opacity:.90;transition:opacity 150ms ease;text-shadow:inherit;
+}
+#scene-menu button:hover,#scene-menu button:focus-visible{opacity:1}
+#scene-menu button:focus-visible{outline:1px solid #ccc;outline-offset:2px}
+#scene-menu button:disabled{opacity:.28;cursor:default}
+#scene-menu [hidden],#scene-menu[hidden],#novel-ui[hidden]{display:none!important}
+@container (max-height:445px){
+  #scene-menu .scene-menu-options{left:60%;top:39%;gap:2px}
+  #scene-menu button{font-size:clamp(12px,2.7cqh,23px);min-height:30px}
+}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
 <body>
-<main id="view" aria-label="中央完整的教室背景，黑雾在屏幕坐标中独立连续流动">
-  <figure id="scene" aria-label="完整教室背景，鼠标移动只让背景轻微倾斜">
-    <img id="source" src="./assets/classroom.webp" width="1024" height="576"
-         alt="空教室全景：黑板、课桌、左侧窗户。" draggable="false">
+<main id="view" aria-label="同一场景模板：背景和菜单随视角倾斜，纯黑流体雾固定在屏幕上">
+  <figure id="scene" data-scene="menu" aria-label="主菜单：一面墙、一扇门和一盏灯">
+    <img id="source" src="./assets/menu-wall.webp" width="1024" height="576"
+         alt="昏暗的墙壁，一扇闭合的旧门和顶上的灯。" draggable="false">
+    <div id="scene-menu" aria-label="主菜单场景文字">
+      <nav id="scene-menu-main" class="scene-menu-options" aria-label="主菜单选项">
+        <button id="menu-start" type="button">开始游戏</button>
+        <button id="menu-continue" type="button" disabled>继续游戏</button>
+        <button id="menu-settings-button" type="button">设置</button>
+      </nav>
+      <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
+        <button id="tilt-toggle" type="button">场景倾斜：开启</button>
+        <button id="menu-settings-back" type="button">返回</button>
+      </nav>
+    </div>
   </figure>
   <canvas id="fog" aria-hidden="true"></canvas>
-  <div id="novel-ui" aria-label="黑雾极简互动界面">
+  <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
     <nav id="top-menu" aria-label="游戏菜单">
       <button id="menu-toggle" type="button" aria-label="打开菜单" aria-expanded="false" aria-controls="menu-choices">☰</button>
     </nav>
@@ -124,6 +162,7 @@ body.mobile-mode.virtual-landscape #view{
     </div>
     <div id="menu-choices" hidden aria-label="游戏操作">
       <button id="restart-button" type="button">重新开始</button>
+      <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
     </div>
     <section id="dialogue" aria-label="人物对白" aria-live="polite">
@@ -387,7 +426,79 @@ void main(){
     {speaker:'???',text:'明明已经放学了，为什么还有声音？'},
     {speaker:'???',text:'有人……在看着这里吗？'}
   ];
+  // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
+  const SCENES=Object.freeze({
+    menu:Object.freeze({image:'./assets/menu-wall.webp',alt:'一面旧墙、一扇门和一盏灯',type:'menu'}),
+    classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',type:'story'})
+  });
+  const sourceImage=document.getElementById('source');
+  const sceneMenu=document.getElementById('scene-menu');
+  const mainOptions=document.getElementById('scene-menu-main');
+  const settingsOptions=document.getElementById('scene-menu-settings');
+  const continueButton=document.getElementById('menu-continue');
+  const tiltButton=document.getElementById('tilt-toggle');
+  const SAVE_KEY='paperchalk-scene-v1';
+  const TILT_KEY='paperchalk-tilt-v1';
+  function loadSetting(){
+    try{return localStorage.getItem(TILT_KEY)!=='off'}catch(_){return true}
+  }
+  let tiltEnabled=loadSetting();
   let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false;
+  const classroomPreload=new Image();
+  classroomPreload.src=SCENES.classroom.image;
+  function readSave(){
+    try{
+      const raw=localStorage.getItem(SAVE_KEY);
+      if(!raw)return null;
+      const save=JSON.parse(raw);
+      return save&&save.scene==='classroom'&&Number.isInteger(save.line)&&
+        save.line>=0&&save.line<lines.length?save:null;
+    }catch(_){return null}
+  }
+  function writeSave(){
+    try{localStorage.setItem(SAVE_KEY,JSON.stringify({scene:'classroom',line:dialogueIndex}))}catch(_){}
+    continueButton.disabled=false;
+  }
+  function openScene(name){
+    const def=SCENES[name];if(!def)throw new Error('Unknown scene: '+name);
+    // Swapping only image and scene content NEVER recreates the fluid simulator.
+    sourceImage.src=def.image;sourceImage.alt=def.alt;
+    stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
+    sceneMenu.hidden=def.type!=='menu';
+    uiRoot.hidden=def.type!=='story';
+    if(def.type==='menu'){
+      cancelAuto();if(logOpen)toggleLog();
+      mainOptions.hidden=false;settingsOptions.hidden=true;
+      continueButton.disabled=!readSave();
+    }else{
+      menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
+      textHidden=false;dialogue.hidden=false;
+      nextLineButton.parentElement.hidden=false;renderDialogue();writeSave();
+    }
+    start(); // continuous, same original fog frame chain
+  }
+  function beginStory(resume){
+    const save=resume?readSave():null;
+    dialogueIndex=save?save.line:0;
+    openScene('classroom');
+  }
+  document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
+  continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
+  document.getElementById('menu-settings-button').addEventListener('click',()=>{
+    mainOptions.hidden=true;settingsOptions.hidden=false;
+  });
+  document.getElementById('menu-settings-back').addEventListener('click',()=>{
+    settingsOptions.hidden=true;mainOptions.hidden=false;
+  });
+  tiltButton.addEventListener('click',()=>{
+    tiltEnabled=!tiltEnabled;
+    tiltButton.textContent=tiltEnabled?'场景倾斜：开启':'场景倾斜：关闭';
+    try{localStorage.setItem(TILT_KEY,tiltEnabled?'on':'off')}catch(_){}
+    if(!tiltEnabled){aimX=0;aimY=0}
+    start();
+  });
+  tiltButton.textContent=tiltEnabled?'场景倾斜：开启':'场景倾斜：关闭';
+  continueButton.disabled=!readSave();
   function cancelAuto(){
     clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
     autoButton.setAttribute('aria-pressed','false');
@@ -399,7 +510,7 @@ void main(){
   }
   function advanceDialogue(){
     if(logOpen||textHidden)return;
-    dialogueIndex=(dialogueIndex+1)%lines.length;renderDialogue();
+    dialogueIndex=(dialogueIndex+1)%lines.length;renderDialogue();writeSave();
     if(autoEnabled)scheduleAuto();
   }
   function scheduleAuto(){
@@ -451,11 +562,12 @@ void main(){
     menuChoices.hidden=!opening;menuButton.setAttribute('aria-expanded',String(opening));
   });
   restartButton.addEventListener('click',()=>{
-    cancelAuto();dialogueIndex=0;renderDialogue();
+    cancelAuto();dialogueIndex=0;renderDialogue();writeSave();
     if(logOpen)toggleLog();
     textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false;
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
   });
+  document.getElementById('return-main').addEventListener('click',()=>openScene('menu'));
   hideButton.addEventListener('click',()=>{
     cancelAuto();textHidden=!textHidden;
     dialogue.hidden=textHidden;nextLineButton.parentElement.hidden=textHidden;
@@ -464,10 +576,12 @@ void main(){
   });
   window.addEventListener('keydown',e=>{
     if(e.key==='Escape'){
-      if(logOpen)toggleLog();else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
+      if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;mainOptions.hidden=false}
+      else if(logOpen)toggleLog();
+      else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
     }else if((e.key===' '||e.key==='Enter')&&
       !['BUTTON','INPUT','TEXTAREA'].includes(document.activeElement.tagName)){
-      e.preventDefault();advanceDialogue();
+      if(stage.dataset.scene==='classroom'){e.preventDefault();advanceDialogue()}
     }
   });
   document.addEventListener('visibilitychange',()=>{
@@ -475,6 +589,7 @@ void main(){
     else if(autoEnabled)scheduleAuto();
   });
   renderDialogue();
+  openScene('menu');
   function shader(type,text){
     const s=gl.createShader(type);
     gl.shaderSource(s,text);gl.compileShader(s);
@@ -612,7 +727,7 @@ void main(){
     raf=0;if(document.hidden)return;
     let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
     const k=1-Math.exp(-dt*7);
-    if(reduced.matches){aimX=0;aimY=0}
+    if(reduced.matches||!tiltEnabled){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
     fluidTime+=reduced.matches?0:dt;
