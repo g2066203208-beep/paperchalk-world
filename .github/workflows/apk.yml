@@ -1,4 +1,4 @@
-name: Card Paradox - live Pages Android APK
+name: Classroom - landscape gyro Android APK
 on:
   push:
     branches: [main]
@@ -48,7 +48,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: card-paradox-debug-apk
+          name: classroom-landscape-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
           if-no-files-found: error
@@ -58,9 +58,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          cp android/app/build/outputs/apk/debug/app-debug.apk card-paradox-latest-debug.apk
-          if ! gh release view apk-latest-debug >/dev/null 2>&1; then
-            gh release create apk-latest-debug --target "$GITHUB_SHA" --title "Card Paradox - Latest Android APK" --prerelease --notes "Original card game loaded live from GitHub Pages on cold app launch. Site-only updates require no reinstall."
+          cp android/app/build/outputs/apk/debug/app-debug.apk classroom-latest-debug.apk
+          if ! gh release view classroom-apk-latest >/dev/null 2>&1; then
+            gh release create classroom-apk-latest --target "$GITHUB_SHA" --title "Classroom - Landscape Gyroscope APK" --prerelease --notes "Landscape Android app loads the latest GitHub Pages classroom and its independent fog; native rotation sensor bridge is available when supported. Web updates load on app launch."
           fi
-          gh release upload apk-latest-debug card-paradox-latest-debug.apk --clobber
-          gh release edit apk-latest-debug --notes "APK source: $GITHUB_SHA. Web changes load automatically on app launch; APK code changes require manual installation."
+          gh release upload classroom-apk-latest classroom-latest-debug.apk --clobber
+          gh release edit classroom-apk-latest --notes "APK source: $GITHUB_SHA. Landscape classroom with native gyroscope bridge. Web changes load on app launch; APK code changes require installing the new APK."
