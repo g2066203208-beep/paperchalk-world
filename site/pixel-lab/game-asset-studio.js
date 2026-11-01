@@ -6,7 +6,7 @@ const status=(s,error=false)=>{$('status').textContent=s;$('status').style.color
 const snapshot=()=>JSON.stringify(scene),copy=s=>JSON.parse(JSON.stringify(s));
 try{const stored=localStorage.getItem(SAVE);if(stored)scene=validateScene(JSON.parse(stored))}catch{}
 function persist(){try{localStorage.setItem(SAVE,snapshot())}catch{status('本地保存不可用，请导出场景JSON',true)}}
-function changed(before){if(before!==snapshot()){undos.push(before);if(undos.length>48)undos.shift();redos=[];persist()}render()}
+function changed(before){if(before!==snapshot()){undos.push(before);if(undos.length>48)undos.shift();redos.length=0;persist()}render()}
 function render(){
 renderScene(ctx,scene,{selected,selection:true});
 const current=scene.objects.find(x=>x.id===selected);
