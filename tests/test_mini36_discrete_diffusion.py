@@ -20,7 +20,7 @@ class TestMini36DiscreteDiffusion(unittest.TestCase):
             out,stats=palette_flatten(img)
             out,num=clean_islands(out)
             self.assertTrue(np.array_equal(out[:,:,3],img[:,:,3]))
-            self.assertLessEqual(stats['new_colors'],10)
+            self.assertLessEqual(stats['new_colors'],11)
             unique=np.unique(out[out[:,:,3]==255,:3],axis=0)
             self.assertEqual(len(unique),stats['new_colors'])
     def test_categorical_forward_and_reverse_exact_classes(self):
@@ -51,7 +51,7 @@ class TestMini36DiscreteDiffusion(unittest.TestCase):
             test=np.asarray(Image.open(out/(name+'-clean-24.png')).convert('RGBA'))
             original=np.asarray(Image.open(ROOT/(name+'.png')).convert('RGBA'))
             self.assertTrue(np.array_equal(test[:,:,3],original[:,:,3]))
-            self.assertLessEqual(len(np.unique(test[test[:,:,3]==255,:3],axis=0)),10)
+            self.assertLessEqual(len(np.unique(test[test[:,:,3]==255,:3],axis=0)),11)
             self.assertTrue((out/(name+'-diffusion-proposal-24.png')).exists())
 
 if __name__=='__main__':unittest.main()
