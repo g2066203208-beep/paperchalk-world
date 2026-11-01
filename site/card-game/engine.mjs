@@ -198,6 +198,14 @@ export function proceed(s){
  if(s.blind>=BLINDS.length-1){s.phase='victory';s.notice='九场试炼全部完成！';return true;}
  s.blind++;s.rerollCost=3;enterBlind(s);return true;
 }
+// Joker order is a strategic input to the deterministic score engine.
+export function moveJoker(s,id,direction){
+ if(!['battle','shop'].includes(s.phase)||![-1,1].includes(direction))return false;
+ const from=s.jokers.indexOf(id),to=from+direction;
+ if(from<0||to<0||to>=s.jokers.length)return false;
+ [s.jokers[from],s.jokers[to]]=[s.jokers[to],s.jokers[from]];
+ return true;
+}
 export function sortHand(s,method='rank'){
  if(method==='suit')s.hand.sort((a,b)=>a.suit-b.suit||b.rank-a.rank);
  else s.hand.sort((a,b)=>(b.rank===1?14:b.rank)-(a.rank===1?14:a.rank)||a.suit-b.suit);

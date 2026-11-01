@@ -1,7 +1,7 @@
-import {VERSION,SUITS,RANKS,HANDS,JOKERS,BLINDS,createGame,loadGame,currentBlind,selection,preview,play,discardSelected,purchase,reroll,levelUp,proceed,sortHand} from './engine.mjs?v=20261101-card01';
+import {VERSION,SUITS,RANKS,HANDS,JOKERS,BLINDS,createGame,loadGame,currentBlind,selection,preview,play,discardSelected,purchase,reroll,levelUp,proceed,sortHand,moveJoker} from './engine.mjs?v=20261101-card01';
 const $=id=>document.getElementById(id),KEY='paperworld-card-paradox-v1';
 const P=['#393657','#F2A5C2','#A9BAE9','#FFF5E6'];
-let s,locked=false,soundOn=false,ac=null,lastFrame=0;
+let s,locked=false,soundOn=false,ac=null,lastFrame=0,selectedJokerId=null;
 try{s=loadGame(localStorage.getItem(KEY));}catch{}
 if(!s)s=createGame(1729);
 try{soundOn=localStorage.getItem('paperworld-card-audio')==='on'}catch{}
@@ -94,7 +94,15 @@ function jokerElement(j,shop=false){
  const outer=document.createElement('div');
  outer.className=shop?'shop-joker':'joker';outer.dataset.color=j.color;
  outer.style.setProperty('--joker-phase',String((JOKERS.findIndex(x=>x.id===j.id)%6)*-.47)+'s');
- if(!shop){outer.dataset.joker=j.id;outer.title=j.name+' · '+j.desc}
+ if(!shop){
+  outer.dataset.joker=j.id;outer.title=j.name+' · '+j.desc+'（点击查看并调整顺序）';
+  outer.setAttribute('role','button');outer.tabIndex=0;
+  outer.setAttribute('aria-label','查看'+j.name+'。'+j.desc+'。点击可调整结算顺序');
+  outer.addEventListener('click',()=>openJokerInspector(j.id));
+  outer.addEventListener('keydown',e=>{
+   if(e.key==='Enter'||e.key===' '){e.preventDefault();openJokerInspector(j.id)}
+  });
+ }
  const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
  paintGlyph(canvas,j.glyph);outer.append(canvas);
  if(!shop){
@@ -104,6 +112,37 @@ function jokerElement(j,shop=false){
  }
  return outer;
 }
+function closeJokerInspector(){
+ selectedJokerId=null;$('joker-inspector').classList.add('hidden');
+ for(const el of $('joker-bar').querySelectorAll('.joker[data-joker]'))el.removeAttribute('data-inspected');
+}
+function refreshJokerInspector(){
+ const index=s.jokers.indexOf(selectedJokerId),j=JOKERS.find(x=>x.id===selectedJokerId);
+ if(!j||index<0){closeJokerInspector();return}
+ $('joker-detail-name').textContent=j.name;
+ $('joker-detail-text').textContent=j.desc;
+ $('joker-detail-position').textContent='触发顺序 '+(index+1)+' / '+s.jokers.length+' · 从左到右结算';
+ $('joker-move-left').disabled=locked||index===0;
+ $('joker-move-right').disabled=locked||index===s.jokers.length-1;
+ for(const el of $('joker-bar').querySelectorAll('.joker[data-joker]')){
+  if(el.dataset.joker===selectedJokerId)el.dataset.inspected='true';
+  else el.removeAttribute('data-inspected');
+ }
+}
+function openJokerInspector(id){
+ if(locked||s.phase!=='battle'||!s.jokers.includes(id))return;
+ selectedJokerId=id;$('joker-inspector').classList.remove('hidden');
+ refreshJokerInspector();tone(510,.07,'triangle',.04);
+}
+function shiftInspectedJoker(direction){
+ if(locked||!selectedJokerId||!moveJoker(s,selectedJokerId,direction))return;
+ tone(direction<0?510:620,.09,'triangle',.045);
+ save();renderJokers();refreshJokerInspector();refreshPreview();
+ $('last-event').textContent='◇ '+JOKERS.find(j=>j.id===selectedJokerId).name+' 顺序已改变';
+}
+$('joker-move-left').addEventListener('click',()=>shiftInspectedJoker(-1));
+$('joker-move-right').addEventListener('click',()=>shiftInspectedJoker(1));
+$('joker-close').addEventListener('click',closeJokerInspector);
 function renderJokers(){
  const el=$('joker-bar');el.replaceChildren();
  if(!s.jokers.length){const p=document.createElement('div');p.className='joker-placeholder';p.textContent='◇　获得特殊卡牌后，它们将依次触发，改变牌型和倍率';el.append(p);return}
@@ -226,7 +265,7 @@ function showPhase(){
   $('end-stats').textContent='通过 '+s.stats.won+' 场 · 出牌 '+s.stats.played+' 次 · 单次最高 '+number(s.stats.highest)+' 分';
  }
 }
-function render(){stats();renderJokers();renderHand();refreshPreview();showPhase()}
+function render(){closeJokerInspector();stats();renderJokers();renderHand();refreshPreview();showPhase()}
 let fxTimeouts=[];
 function wait(ms){return new Promise(r=>{const t=setTimeout(r,ms);fxTimeouts.push(t)})}
 function flash(){
@@ -284,6 +323,7 @@ async function resolve(result,playedIds){
 }
 async function actionPlay(){
  if(locked)return;
+ closeJokerInspector();
  const playedIds=[...s.selected],outcome=play(s);
  if(!outcome.ok){$('battle-notice').textContent=outcome.reason;return}
  locked=true;save();
@@ -349,7 +389,7 @@ if(!matchMedia('(prefers-reduced-motion: reduce)').matches){
  raf=requestAnimationFrame(tick);
 }else{animateBackground(500)}
 window.__PAPERWORLD_CARD_GAME__={
- motionVersion:2,
+ motionVersion:3,
  snapshot(){return {phase:s.phase,blind:s.blind,score:s.score,hand:s.hand.length,deck:s.deck.length,discard:s.discard.length,
   selected:s.selected.length,jokers:s.jokers.length,shop:s.shop.length,money:s.money,hands:s.hands,discards:s.discards,version:s.version}},
  getLastEvents(){return s.lastScore?.events?.map(e=>e.type)||[]},

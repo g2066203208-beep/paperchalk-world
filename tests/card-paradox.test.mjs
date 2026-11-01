@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createGame,loadGame,makeDeck,detectHand,scoreHand,selection,play,discardSelected,proceed,purchase,reroll,levelUp,preview,sortHand,BLINDS,JOKERS} from '../site/card-game/engine.mjs';
+import {createGame,loadGame,makeDeck,detectHand,scoreHand,selection,play,discardSelected,proceed,purchase,reroll,levelUp,preview,sortHand,moveJoker,BLINDS,JOKERS} from '../site/card-game/engine.mjs';
 function cards(ranks,suits=[0,1,2,3,0]){return ranks.map((rank,i)=>({id:'test'+i,rank,suit:suits[i]}))}
 function handName(rs,ss){return detectHand(cards(rs,ss)).id}
 test('53? no: initial physical deck has exactly 52 unique cards and fixed seeded shuffle',()=>{
@@ -114,4 +114,18 @@ test('all original jokers unique and the content is replayable over 9 distinct b
  assert.equal(JOKERS.length,12);assert.equal(new Set(JOKERS.map(j=>j.id)).size,12);
  assert.equal(BLINDS.length,9);assert.equal(BLINDS.filter(b=>b.boss).length,3);
  assert.ok(BLINDS.every((b,i)=>!i||b.target>BLINDS[i-1].target));
+});
+
+test('reorder special cards alters score, respects edges and survives persistence',()=>{
+ const g=createGame(20261101);
+ g.jokers=['lantern','mirror'];
+ const combo=cards([6,6,9,9]);
+ const before=scoreHand(combo,g.jokers).score;
+ assert.equal(moveJoker(g,'mirror',-1),true);
+ assert.deepEqual(g.jokers,['mirror','lantern']);
+ assert.notEqual(scoreHand(combo,g.jokers).score,before);
+ assert.equal(loadGame(JSON.stringify(g)).jokers[0],'mirror');
+ assert.equal(moveJoker(g,'mirror',-1),false);
+ assert.equal(moveJoker(g,'invalid',1),false);
+ assert.equal(moveJoker(g,'mirror',0),false);
 });

@@ -122,6 +122,27 @@ try{
  await reduced.locator('#hand-cards .play-card').first().click();
  assert.equal(await reduced.locator('#selected-count').innerText(),'1 / 5','reduced motion must preserve touch gameplay');
  await reduced.close();
+ // Test the real live joker-order editor on a small touch screen.
+ const orderPage=await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+ orderPage.on('pageerror',e=>errors.push('joker-order: '+e.message));
+ await orderPage.goto(base+'/card-game/',{waitUntil:'load'});
+ await orderPage.evaluate(async()=>{
+  const {createGame}=await import('/card-game/engine.mjs');
+  const g=createGame(31254);g.jokers=['lantern','mirror'];
+  localStorage.setItem('paperworld-card-paradox-v1',JSON.stringify(g));
+ });
+ await orderPage.reload();
+ await orderPage.locator('.joker[data-joker="mirror"]').click({force:true});
+ assert.equal(await orderPage.locator('#joker-inspector').isVisible(),true);
+ assert.match(await orderPage.locator('#joker-detail-position').innerText(),/2 \\/ 2/);
+ await orderPage.locator('#joker-move-left').click();
+ const order=await orderPage.evaluate(()=>JSON.parse(localStorage.getItem('paperworld-card-paradox-v1')).jokers);
+ assert.deepEqual(order,['mirror','lantern'],'joker reorder must persist');
+ assert.match(await orderPage.locator('#joker-detail-position').innerText(),/1 \\/ 2/);
+ await orderPage.screenshot({path:'artifacts/card-paradox/joker-inspector-mobile.png',animations:'disabled'});
+ await orderPage.reload();
+ assert.equal(await orderPage.locator('.joker[data-joker]').first().getAttribute('data-joker'),'mirror');
+ await orderPage.close();
  // Capture a real interactive animation sequence: idle floating, two tactile
  // selections, then actual playing/scoring. Screenshots remain raw Chromium
  // output rather than a separately fabricated motion showcase.

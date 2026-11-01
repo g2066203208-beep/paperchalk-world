@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#191827">
 <meta name="description" content="PAPERWORLD 原创四色像素扑克构筑游戏。九场试炼、十二张特殊小丑牌、连锁计分、弹性牌面与流动背景。">
 <title>PAPERWORLD · CARD PARADOX｜像素扑克构筑</title>
-<link rel="stylesheet" href="./style.css?v=20261101-card03">
-<link rel="stylesheet" href="./motion.css?v=20261101-juice03">
+<link rel="stylesheet" href="./style.css?v=20261101-card04">
+<link rel="stylesheet" href="./motion.css?v=20261101-juice04">
 </head>
 <body>
 <canvas id="abyss" width="192" height="108" aria-hidden="true"></canvas>
@@ -44,6 +44,10 @@
     <div id="table-head"><div><div class="table-kicker">ORIGINAL PIXEL DECKBUILDER</div><h1>纸牌悖论 <span>· 四色幻术</span></h1></div><span class="seed-label" id="seed-label">SEED 1729</span></div>
     <div id="joker-bar" class="joker-bar" role="list" aria-label="当前小丑牌">
       <div class="joker-placeholder">◇ <span>从商店收集最多 5 张特殊卡牌，它们将改变你的牌型和倍率</span></div>
+    </div>
+    <div id="joker-inspector" class="joker-inspector hidden" role="region" aria-label="特殊牌查看与排序">
+      <div class="joker-inspector-copy"><strong id="joker-detail-name"></strong><span id="joker-detail-text"></span><small id="joker-detail-position"></small></div>
+      <div class="joker-inspector-actions"><button id="joker-move-left" aria-label="将特殊牌左移">← 左移</button><button id="joker-move-right" aria-label="将特殊牌右移">右移 →</button><button id="joker-close" aria-label="关闭特殊牌详情">✕</button></div>
     </div>
     <div class="table-center">
       <div class="table-ornament">✦ <span>THE HOUSE REMEMBERS</span> ✦</div>
@@ -83,6 +87,6 @@
  <div id="fx-layer" aria-hidden="true"></div>
  <footer class="footline"><span>原创四色 · 真像素网格 · 实时 WebGL 风格光影</span><span>你的进度仅保存在当前浏览器 / APK 的本地存储</span></footer>
 </div>
-<script type="module" src="./app.mjs?v=20261101-juice02"></script>
+<script type="module" src="./app.mjs?v=20261101-juice04"></script>
 </body>
 </html>
