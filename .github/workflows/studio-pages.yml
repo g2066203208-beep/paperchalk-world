@@ -168,14 +168,14 @@ jobs:
                   await page.evaluate(()=>{
                     for(const gamma of [0,26]){
                       const e=new Event('deviceorientation');
-                      Object.defineProperty(e,'beta',{value:0});
+                      Object.defineProperty(e,'beta',{value:gamma});
                       Object.defineProperty(e,'gamma',{value:gamma});
                       dispatchEvent(e);
                     }
                   });
                   await page.waitForTimeout(400);
                   const transform=await page.locator('#scene').evaluate(el=>el.style.transform);
-                  const yaw=Number(transform.match(/rotateY\\((-?[\\d.]+)deg\\)/)?.[1]);
+                  const yaw=Number(transform.match(/rotateY\((-?[\d.]+)deg\)/)?.[1]);
                   assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
                   assert.equal(await page.locator('#calibrate-motion').isVisible(),true,'mobile sensor calibration missing');
                   await page.locator('#calibrate-motion').click();
