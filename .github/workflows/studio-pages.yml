@@ -60,12 +60,9 @@ jobs:
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
           assert sorted(p.name for p in files)==['OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','enemy-front.webp','index.html','menu-wall.webp','player-back.webp'],files
-          for path in ('site/assets/battle/player-back.webp','site/assets/battle/enemy-front.webp'):
-              data=Path(path).read_bytes()
-              assert data[:4]==b'RIFF' and data[8:12]==b'WEBP',path
-          assert 'id="battle-ui"' in h and 'id="battle-enemy-layer"' in h and 'id="battle-player-layer"' in h
-          assert "openScene('battle');" in h and "beginAmbush();" in h
-          assert 'NIGHT_RULES=Object.freeze({start:18*60,end:6*60' in h
+          assert 'id="actor-enemy"' in h and 'id="actor-player"' in h
+          assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
+          assert '#scene[data-scene="menu"] .cast-layer{display:none}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
           assert "shade.dataset.phase='covered'" in h
           for font in ('--font-menu','--font-name','--font-dialogue','--font-ui'):
@@ -86,148 +83,313 @@ jobs:
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
-      - name: Test opening ambush, layered enemies, battle turns, gyroscope and persistent black fog
+      - name: Verify full background, two independent layers, and continuous frames
         run: |
           mkdir -p artifacts/classroom
           python3 -m http.server 8123 --directory site > /tmp/stage-http.log 2>&1 &
           node - <<'JS'
           const {chromium}=require('playwright');
+          const {PNG}=require('pngjs');
           const assert=require('node:assert/strict');
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
-            try{
-              const configs=[
-                {width:1280,height:720,mobile:false},
-                {width:390,height:844,mobile:true},
-                {width:844,height:390,mobile:true},
-                {width:1024,height:768,mobile:false},
-                {width:2560,height:1080,mobile:false},
-                {width:320,height:568,mobile:true}
-              ];
-              for(const cfg of configs){
-                const page=await browser.newPage({
-                  viewport:{width:cfg.width,height:cfg.height},
-                  isMobile:cfg.mobile,hasTouch:cfg.mobile
-                });
+            try {
+              for(const cfg of [{width:1280,height:720,mobile:false},{width:390,height:844,mobile:true},{width:844,height:390,mobile:true}]){
+                const page=await browser.newPage({viewport:{width:cfg.width,height:cfg.height},isMobile:cfg.mobile,hasTouch:cfg.mobile});
                 const errors=[];
                 page.on('pageerror',e=>errors.push(e.message));
-                try{
-                  await page.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
-                  await page.waitForFunction(()=>document.getElementById('fog').dataset.frames>4);
-                  assert.equal(await page.locator('#scene').getAttribute('data-scene'),'battle',
-                    'game must START directly in combat, not main menu');
-                  assert.equal(await page.locator('#battle-ui').isVisible(),true);
-                  assert.equal(await page.locator('#scene-menu').isVisible(),false);
-                  assert.equal(await page.locator('#novel-ui').isVisible(),false);
-                  assert.equal(await page.locator('#battle-ui').getAttribute('data-time'),'18:04');
-                  assert.equal(await page.evaluate(()=>document.body.dataset.otherworld),'true');
-                  assert.ok((await page.locator('#battle-message').textContent()).includes('袭击'),
-                    'opening scene should be an ambush');
-                  assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
-
-                  // Three real separate stage layers, each independently transparent.
-                  const art=await page.evaluate(async()=>{
-                    const ids=['battle-enemy','battle-player'];
-                    const imgs=await Promise.all(ids.map(async id=>{
-                      const node=document.getElementById(id);
-                      await node.decode();
-                      const a=node.getBoundingClientRect();
-                      return {id,complete:node.complete,w:node.naturalWidth,h:node.naturalHeight,
-                        box:a.toJSON(),visible:getComputedStyle(node.parentElement).display!=='none'};
-                    }));
-                    return {art:imgs,scene:document.getElementById('scene').getBoundingClientRect().toJSON(),
-                      fog:document.getElementById('fog').getBoundingClientRect().toJSON(),
-                      virtual:document.body.classList.contains('virtual-landscape'),
-                      font:getComputedStyle(document.getElementById('battle-actions')).fontSize};
+                await page.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
+                await page.waitForTimeout(900);
+                assert.deepEqual(errors,[],'browser JS error');
+                const scene=await page.locator('#scene').boundingBox();
+                const fog=await page.locator('#fog').boundingBox();
+                const actual=await page.locator('#source').evaluate(el=>[el.naturalWidth,el.naturalHeight]);
+                assert.deepEqual(actual,[1024,576]);
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu','must begin in main menu');
+                assert.equal(await page.locator('#novel-ui').isVisible(),false,'story controls shown on menu');
+                const menuCoords=await page.locator('#menu-start').boundingBox();
+                assert.ok(menuCoords.width>0&&menuCoords.height>0,'scene-attached main menu text missing');
+                assert.equal(await page.locator('#menu-continue').isDisabled(),true,
+                             'continue should be disabled with no save');
+                assert.equal(await page.locator('#actor-player').isVisible(),false,'cast exposed in menu');
+                assert.equal(await page.locator('#actor-enemy').isVisible(),false,'cast exposed in menu');
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-MAIN-MENU.png'});
+                await page.locator('#menu-settings-button').click();
+                assert.ok(await page.locator('#tilt-toggle').isVisible(),'settings text not accessible');
+                await page.locator('#menu-settings-back').click();
+                const originFog=await page.locator('#fog').evaluate(el=>{window.__originalFogNode=el;return Number(el.dataset.frames)});
+                await page.locator('#menu-start').click();
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='out',null,{timeout:5500});
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu',
+                             'background switched before blackout');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='covered',null,{timeout:5500});
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom','background not switched when black');
+                assert.ok(Number(await page.locator('#scene-transition').getAttribute('data-darkness'))>.98,
+                          'transition never becomes black');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle',null,{timeout:5500});
+                assert.equal(await page.evaluate(()=>window.__originalFogNode===document.getElementById('fog')),true,
+                            'fog instance was recreated during scene switch');
+                assert.ok(Number(await page.locator('#fog').getAttribute('data-frames'))>originFog+10,
+                          'fluid simulation stopped during dark scene transition');
+                assert.equal(await page.locator('#novel-ui').isVisible(),true);
+                assert.equal(await page.locator('#scene-menu').isVisible(),false);
+                assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
+                for(const id of ['actor-enemy','actor-player']){
+                  const art=page.locator('#'+id);
+                  assert.equal(await art.isVisible(),true,'character not shown: '+id);
+                  const dimensions=await art.evaluate(async el=>{
+                    await el.decode();
+                    return [el.naturalWidth,el.naturalHeight,el.closest('#scene').dataset.scene];
                   });
-                  assert.equal(art.art.length,2);
-                  assert.ok(art.art.every(x=>x.complete&&x.w>200&&x.h>400&&x.visible),
-                    'missing transparent enemy/player cutouts');
-                  assert.ok(art.art.every(x=>x.box.width>30&&x.box.height>120));
-                  assert.equal(art.virtual,cfg.mobile&&cfg.height>cfg.width);
-                  assert.ok(Math.abs(art.fog.width-cfg.width)<3&&Math.abs(art.fog.height-cfg.height)<3,
-                            'fog must cover the physical viewport independently');
-                  assert.ok(art.scene.width<cfg.width*.95&&art.scene.height<cfg.height*.94);
-                  await page.screenshot({path:'artifacts/classroom/'+cfg.width+'x'+cfg.height+'-battle-opening.png'});
+                  assert.ok(dimensions[0]>100&&dimensions[1]>300,'missing standalone art: '+id);
+                  assert.equal(dimensions[2],'classroom','character not in tilting stage');
+                }
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-CHARACTERS-ONLY.png'});
 
-                  // First attack must actually deduct HP, then unlock player actions.
-                  await page.waitForFunction(()=>document.getElementById('battle-ui').dataset.phase==='ready',null,{timeout:6000});
-                  const initialHP=Number(await page.locator('#battle-ui').getAttribute('data-hp'));
-                  assert.ok(initialHP<100&&initialHP>0,'enemy failed to deal first attack damage');
-                  const beginFrames=Number(await page.locator('#fog').getAttribute('data-frames'));
-                  await page.locator('#fog').evaluate(el=>window.__originalFog=el);
-                  await page.locator('#battle-attack').click();
-                  await page.waitForFunction(()=>document.getElementById('battle-ui').dataset.phase==='ready',null,{timeout:6500});
-                  const hurtEnemy=Number(await page.locator('#battle-ui').getAttribute('data-enemy-hp'));
-                  assert.ok(hurtEnemy<100,'player attack failed to damage enemy');
-                  assert.equal(await page.locator('#battle-ui').getAttribute('data-time'),'18:24',
-                               'battle turn failed to advance the night clock');
-                  await page.locator('#battle-guard').click();
-                  await page.waitForFunction(()=>document.getElementById('battle-ui').dataset.phase==='ready',null,{timeout:6500});
-                  assert.equal(await page.locator('#battle-ui').getAttribute('data-time'),'18:44');
-                  await page.locator('#battle-heal').click();
-                  await page.waitForFunction(()=>document.getElementById('battle-ui').dataset.phase==='ready',null,{timeout:6500});
-                  assert.equal(await page.locator('#battle-ui').getAttribute('data-time'),'19:04');
+                // Reference coordinates (1803x872) map to current LOGICAL
+                // game viewport; physical portrait screens rotate the whole UI.
+                const layout=await page.evaluate(()=>{
+                  const view=document.querySelector('#view');
+                  const items=['#menu-toggle','#auto-button','#log-button','#dialogue','#speaker','#dialogue-text','#next-line'];
+                  const elements=Object.fromEntries(items.map(id=>{
+                    const el=document.querySelector(id),rect=el.getBoundingClientRect();
+                    return [id,{x:rect.left,y:rect.top,right:rect.right,bottom:rect.bottom,w:rect.width,h:rect.height}];
+                  }));
+                  return {view:view.getBoundingClientRect().toJSON(),
+                    ui:getComputedStyle(document.querySelector('#novel-ui')).backgroundColor,
+                    elements,
+                    font:parseFloat(getComputedStyle(document.querySelector('#dialogue-text')).fontSize)};
+                });
+                assert.equal(layout.ui,'rgba(0, 0, 0, 0)','UI must not create a new black panel');
+                for(const [name,r] of Object.entries(layout.elements)){
+                  assert.ok(r.w>0&&r.h>0,'element has no dimensions: '+name);
+                  assert.ok(r.x>=-3&&r.y>=-3&&r.right<=cfg.width+3&&r.bottom<=cfg.height+3,
+                            'UI overflows viewport: '+name+' '+JSON.stringify(r));
+                }
+                assert.ok(layout.font>=12&&layout.font<=74,'dialogue text outside accessible scale');
+                assert.equal(await page.locator('#speaker').textContent(),'???');
+                assert.equal(await page.locator('#dialogue-text').textContent(),'这间教室……和我记忆里的，不太一样。');
+                assert.equal(await page.locator('#motion-ui').count(),0,'sensor status must remain absent');
+                const fonts=await page.evaluate(async()=>{
+                  await document.fonts.load('500 20px PaperSerif','开始游戏');
+                  await document.fonts.load('400 20px PaperSans','这间教室');
+                  return {
+                    menu:getComputedStyle(document.getElementById('menu-start')).fontFamily,
+                    name:getComputedStyle(document.getElementById('speaker')).fontFamily,
+                    dialogue:getComputedStyle(document.getElementById('dialogue-text')).fontFamily,
+                    serif:document.fonts.check('500 20px PaperSerif','开始游戏'),
+                    sans:document.fonts.check('400 20px PaperSans','这间教室')
+                  };
+                });
+                assert.ok(fonts.menu.includes('PaperSerif')&&fonts.name.includes('PaperSerif'),
+                          'narrative serif not applied to menu/speaker');
+                assert.ok(fonts.dialogue.includes('PaperSans'),'readable sans dialogue missing');
+                assert.ok(fonts.serif&&fonts.sans,'self-hosted game fonts unavailable');
 
-                  // Stage-linked enemy and player tilt; original smoke stays still.
-                  if(!cfg.mobile){
-                    const old=await page.locator('#battle-enemy-layer').evaluate(el=>el.style.transform);
-                    await page.mouse.move(cfg.width-1,cfg.height-1);
-                    await page.waitForTimeout(330);
-                    const transforms=await page.evaluate(()=>({
-                      scene:document.querySelector('#scene').style.transform,
-                      enemy:document.querySelector('#battle-enemy-layer').style.transform,
-                      player:document.querySelector('#battle-player-layer').style.transform,
-                      fog:document.querySelector('#fog').getBoundingClientRect().toJSON()
-                    }));
-                    assert.ok(transforms.scene.includes('rotateY('));
-                    assert.notEqual(transforms.enemy,old,'enemy lacks independent parallax on tilt');
-                    assert.ok(transforms.player.includes('translate3d('));
-                    assert.equal(Math.round(transforms.fog.x),0);
-                  }else{
-                    await page.evaluate(()=>{
-                      for(const a of [0,28]){
-                        const ev=new Event('deviceorientation');
-                        Object.defineProperty(ev,'beta',{value:a});
-                        Object.defineProperty(ev,'gamma',{value:a});
-                        dispatchEvent(ev);
-                      }
-                    });
-                    await page.waitForTimeout(350);
-                    assert.ok((await page.locator('#scene').evaluate(el=>el.style.transform)).includes('rotateY('));
+                assert.equal(await page.locator('#motion-ui').count(),0,
+                             'any remaining HUD text or sensor button is forbidden');
+                if(cfg.mobile){
+                  const mode=await page.evaluate(()=>{
+                    const container=document.querySelector('#view');
+                    const canvas=document.querySelector('#fog');
+                    const scene=document.querySelector('#scene');
+                    return {
+                      virtual:document.body.classList.contains('virtual-landscape'),
+                      view:container.getBoundingClientRect().toJSON(),
+                      logicalScene:[scene.offsetWidth,scene.offsetHeight],
+                      buffer:[canvas.width,canvas.height],
+                      transform:getComputedStyle(container).transform,
+                      overlay:document.getElementById('rotate-help')
+                    };
+                  });
+                  assert.equal(mode.virtual,cfg.height>cfg.width,'mobile automatic landscape choice');
+                  assert.equal(mode.overlay,null,'portrait blocking overlay still exists');
+                  assert.ok(Math.abs(mode.view.x)<2&&Math.abs(mode.view.y)<2,'auto-rotated view offset');
+                  assert.ok(Math.abs(mode.view.width-cfg.width)<2&&Math.abs(mode.view.height-cfg.height)<2,
+                            'virtual landscape does not fill phone viewport');
+                  assert.ok(mode.logicalScene[0]>mode.logicalScene[1],'game scene must remain logically landscape');
+                  if(cfg.height>cfg.width){
+                    assert.ok(mode.buffer[0]>mode.buffer[1],'portrait phone did not switch GPU to logical landscape dimensions');
+                    assert.ok(mode.transform!=='none','portrait phone needs automatic 90 degree game rotation');
                   }
-                  assert.equal(await page.evaluate(()=>document.getElementById('fog')===window.__originalFog),true);
-                  assert.ok(Number(await page.locator('#fog').getAttribute('data-frames'))>beginFrames+10,
-                            'fluid fog did not continue while battling');
+                  console.log('PASS: phone automatically opens full-viewport landscape scene without user input');
+                }
+                assert.ok(scene.width<=cfg.width*.92,'scene not fully visible horizontally');
+                assert.ok(scene.height<=cfg.height*.90,'scene not fully visible vertically');
+                assert.ok(Math.abs(scene.x+scene.width/2-cfg.width/2)<3,'scene horizontally off-center');
+                assert.ok(Math.abs(scene.y+scene.height/2-cfg.height/2)<3,'scene vertically off-center');
+                assert.ok(Math.abs(fog.width-cfg.width)<2 && Math.abs(fog.height-cfg.height)<2,'fog must be viewport-fixed');
+                const before=await page.locator('#fog').getAttribute('data-frames');
+                await page.waitForTimeout(450);
+                const after=await page.locator('#fog').getAttribute('data-frames');
+                assert.ok(Number(after)-Number(before)>5,'fluid did not advance continuously');
+                const renderer=await page.locator('#fog').getAttribute('data-renderer');
+                // Every pointer extreme must keep independent, full-screen fog.
+                for(const pt of [
+                  [0,0],[cfg.width-1,0],[0,cfg.height-1],
+                  [cfg.width-1,cfg.height-1],[cfg.width*.5,cfg.height*.5],
+                  [cfg.width-1,cfg.height*.5],[1,cfg.height*.5]
+                ]){
+                  if(cfg.mobile)break;
+                  await page.mouse.move(pt[0],pt[1]);
+                  await page.waitForTimeout(90);
+                  const check=await page.evaluate(()=>({
+                    fog:document.querySelector('#fog').getBoundingClientRect().toJSON(),
+                    transform:document.querySelector('#scene').style.transform
+                  }));
+                  assert.equal(check.fog.x,0,'fog should remain anchored');
+                  assert.equal(check.fog.y,0,'fog should remain anchored');
+                  assert.ok(Math.abs(check.fog.width-cfg.width)<2,'fog width changed');
+                  assert.ok(Math.abs(check.fog.height-cfg.height)<2,'fog height changed');
+                  assert.ok(check.transform.includes('rotateY('));
+                }
+                assert.ok(renderer==='gpu-advected-fluid'||renderer==='cpu-advected-fluid');
+                if(!cfg.mobile){
+                  const beforeFog=await page.locator('#fog').boundingBox();
+                  await page.mouse.move(1200,600);
+                  await page.waitForTimeout(380);
+                  const transform=await page.locator('#scene').evaluate(e=>e.style.transform);
+                  assert.ok(transform.includes('rotateY('));
+                  const afterFog=await page.locator('#fog').boundingBox();
+                  assert.deepEqual(afterFog,beforeFog,'fog moved with image');
+                }
 
-                  // Menu only opens ON DEMAND; 3D and fluid never reinitialize.
-                  await page.locator('#battle-shortcuts').click();
-                  await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
-                    &&document.getElementById('scene').dataset.scene==='menu',null,{timeout:6000});
-                  assert.equal(await page.evaluate(()=>window.__originalFog===document.getElementById('fog')),true);
-                  assert.ok(await page.locator('#menu-continue').isEnabled());
-                  await page.locator('#menu-continue').click();
-                  await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
-                    &&document.getElementById('scene').dataset.scene==='battle',null,{timeout:6000});
-                  assert.equal(await page.locator('#battle-ui').getAttribute('data-time'),'19:04');
-                  assert.deepEqual(errors,[],'browser JavaScript exception');
-                  await page.screenshot({path:'artifacts/classroom/'+cfg.width+'x'+cfg.height+'-battle-resumed.png'});
-                  console.log('PASS battle '+cfg.width+'x'+cfg.height+
-                    ' initial attack, 3 layers, tilted enemy, independent fluid, clock & resume');
-                }finally{await page.close()}
+                // Regression: the actual PHOTO layer, without smoke help, must
+                // be black at all four projected edges at maximal tilts.
+                if(!cfg.mobile){
+                  await page.locator('#fog').evaluate(el=>el.style.visibility='hidden');
+                  await page.locator('#novel-ui').evaluate(el=>el.style.visibility='hidden');
+                  const extremes=[[1,1],[cfg.width-2,1],[1,cfg.height-2],[cfg.width-2,cfg.height-2],[cfg.width/2,cfg.height/2]];
+                  for(let k=0;k<extremes.length;k++){
+                    const [mx,my]=extremes[k];
+                    await page.mouse.move(mx,my);
+                    await page.waitForTimeout(320);
+                    const snapshot=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/mask-pose-'+k+'.png'}));
+                    const geometry=await page.locator('#scene').evaluate(el=>({
+                      w:el.offsetWidth,h:el.offsetHeight,css:el.style.transform
+                    }));
+                    const yaw=Number(geometry.css.match(/rotateY\((-?[\d.]+)deg\)/)?.[1])*Math.PI/180;
+                    const pitch=Number(geometry.css.match(/rotateX\((-?[\d.]+)deg\)/)?.[1])*Math.PI/180;
+                    assert.ok(Number.isFinite(yaw)&&Number.isFinite(pitch),'rotation not numeric');
+                    const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([ux,uy])=>{
+                      const xx=ux*geometry.w*.5,yy=uy*geometry.h*.5;
+                      const y1=yy*Math.cos(pitch),z1=yy*Math.sin(pitch);
+                      const x2=xx*Math.cos(yaw)+z1*Math.sin(yaw);
+                      const z2=-xx*Math.sin(yaw)+z1*Math.cos(yaw);
+                      const m=1500/(1500-z2);
+                      return [cfg.width*.5+x2*m,cfg.height*.5+y1*m];
+                    });
+                    for(let j=0;j<4;j++){
+                      const a=corners[j],b=corners[(j+1)%4];
+                      const x=(a[0]+b[0])*.5,y=(a[1]+b[1])*.5;
+                      const dx=cfg.width*.5-x,dy=cfg.height*.5-y;
+                      const len=Math.hypot(dx,dy);
+                      const sx=Math.round(x+dx/len*7),sy=Math.round(y+dy/len*7);
+                      assert.ok(sx>=0&&sx<snapshot.width&&sy>=0&&sy<snapshot.height,'edge test sample outside screen');
+                      const off=(sy*snapshot.width+sx)*4;
+                      const rgb=[snapshot.data[off],snapshot.data[off+1],snapshot.data[off+2]];
+                      assert.ok(rgb.every(v=>v<=12),'uncovered hard image border, pose '+k+', edge '+j+', RGB '+rgb);
+                    }
+                  }
+                  await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
+                  await page.locator('#novel-ui').evaluate(el=>el.style.visibility='visible');
+                  console.log('PASS: opaque black on all four scene edges at five maximum/mid tilt poses; smoke hidden for mask-only test');
+                }
+                if(cfg.mobile){
+                  // Feed emulated orientation events in both physical landscape
+                  // and auto-rotated portrait; game-space tilt must work in both.
+                  // Feed emulated orientation events and verify that the SAME
+                  // scene transform used on desktop responds to mobile tilt.
+                  await page.evaluate(()=>{
+                    for(const gamma of [0,26]){
+                      const e=new Event('deviceorientation');
+                      Object.defineProperty(e,'beta',{value:gamma});
+                      Object.defineProperty(e,'gamma',{value:gamma});
+                      dispatchEvent(e);
+                    }
+                  });
+                  await page.waitForTimeout(400);
+                  const transform=await page.locator('#scene').evaluate(el=>el.style.transform);
+                  const yaw=Number(transform.match(/rotateY\((-?[\d.]+)deg\)/)?.[1]);
+                  assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
+                  assert.equal(await page.locator('#calibrate-motion').count(),0,'recenter button must be absent');
+                  console.log('PASS: mobile emulated gyroscope rotates classroom in '+(cfg.width>cfg.height?'real':'virtual')+' landscape');
+                }
+                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ui.png'});
+                await page.locator('#next-line').click();
+                assert.equal(await page.locator('#dialogue-text').textContent(),'明明已经放学了，为什么还有声音？');
+                await page.locator('#log-button').click();
+                assert.equal(await page.locator('#history').isVisible(),true,'LOG does not open');
+                await page.locator('#log-button').click();
+                assert.equal(await page.locator('#dialogue').isVisible(),true,'LOG does not close');
+                await page.locator('#auto-button').click();
+                assert.equal(await page.locator('#auto-button').getAttribute('aria-pressed'),'true','AUTO did not start');
+                await page.locator('#auto-button').click();
+                assert.equal(await page.locator('#auto-button').getAttribute('aria-pressed'),'false','AUTO did not stop');
+                await page.locator('#menu-toggle').click();
+                assert.equal(await page.locator('#restart-button').isVisible(),true,'menu does not open');
+                await page.locator('#restart-button').click();
+                assert.equal(await page.locator('#dialogue-text').textContent(),'这间教室……和我记忆里的，不太一样。');
+                await page.locator('#menu-toggle').click();
+                await page.locator('#return-main').click();
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
+                  &&document.getElementById('scene').dataset.scene==='menu',null,{timeout:6500});
+                assert.equal(await page.locator('#menu-continue').isEnabled(),true);
+                await page.locator('#menu-continue').click();
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
+                  &&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6500});
+                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ui-tested.png'});
+                console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
+                await page.close();
               }
-              const sample=await browser.newPage({viewport:{width:1280,height:720}});
-              await sample.goto('http://127.0.0.1:8123/');
-              await sample.waitForFunction(()=>document.getElementById('battle-ui').dataset.phase==='ready');
-              // Deterministic in-game dawn rule, evaluated from running game state.
-              const rule=await sample.evaluate(()=>{
-                const fn=document.querySelector('script:not([id])').textContent;
-                return fn.includes('m>=NIGHT_RULES.start||m<NIGHT_RULES.end')&&
-                  fn.includes("state.phase='dawn'")&&fn.includes("state.phase!=='dawn'");
-              });
-              assert.ok(rule,'18:00—06:00 realm entry/exit rule not installed');
-              await sample.close();
-            }finally{await browser.close()}
+
+              // Extra viewport audit beyond the three full smoke regressions:
+              // ultrawide, 4:3, small portrait phone and large CSS-pixel 4K.
+              for(const vp of [
+                {width:2560,height:1080,mobile:false},
+                {width:1024,height:768,mobile:false},
+                {width:320,height:568,mobile:true},
+                {width:720,height:1280,mobile:true},
+                {width:3840,height:2160,mobile:false}
+              ]){
+                const p=await browser.newPage({
+                  viewport:{width:vp.width,height:vp.height},
+                  isMobile:vp.mobile,hasTouch:vp.mobile
+                });
+                try{
+                  await p.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
+                  await p.locator('#menu-start').click();
+                  await p.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
+                    &&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6500});
+                  const metrics=await p.evaluate(()=>{
+                    const view=document.getElementById('view');
+                    const selectors=['#menu-toggle','#auto-button','#log-button','#speaker','#dialogue-text','#next-line'];
+                    const locations=selectors.map(sel=>{
+                      const rect=document.querySelector(sel).getBoundingClientRect();
+                      return {sel,x:rect.left,y:rect.top,right:rect.right,bottom:rect.bottom};
+                    });
+                    return {locations,font:parseFloat(getComputedStyle(document.getElementById('dialogue-text')).fontSize),
+                      logicalW:view.clientWidth,logicalH:view.clientHeight,
+                      virtual:document.body.classList.contains('virtual-landscape')};
+                  });
+                  assert.equal(metrics.virtual,vp.mobile&&vp.height>vp.width);
+                  for(const rect of metrics.locations){
+                    assert.ok(rect.x>=-3&&rect.y>=-3&&rect.right<=vp.width+3&&rect.bottom<=vp.height+3,
+                      'responsive overflow '+vp.width+'x'+vp.height+' '+JSON.stringify(rect));
+                  }
+                  if(vp.width===3840){
+                    assert.ok(metrics.font>=60,'4K dialogue text does not scale up');
+                  }
+                  if(vp.width===320){
+                    assert.ok(metrics.font>=12,'small-phone text illegibly small');
+                  }
+                  console.log('PASS: responsive '+vp.width+'x'+vp.height+
+                    ' UI text '+metrics.font+'px');
+                } finally{await p.close()}
+              }
+            } finally {await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
           JS
       - name: Store browser screenshots
