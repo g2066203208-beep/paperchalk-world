@@ -1,2 +1,62 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"></head><body></body></html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="极简游戏场景实验：教室背景四周渐隐到黑色。">
+<title>教室 · 黑场舞台</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;background:#000}
+body{overflow:hidden}
+main{
+  width:100%;
+  min-height:100vh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  background:#000;
+  isolation:isolate;
+}
+.scene{
+  position:relative;
+  width:min(76vw,1120px,calc(64dvh * 16 / 9));
+  aspect-ratio:16 / 9;
+  margin:0;
+  overflow:hidden;
+  background:#000;
+  -webkit-mask-image:radial-gradient(ellipse 54% 56% at 50% 50%,
+    #000 0%,#000 55%,rgba(0,0,0,.95) 65%,
+    rgba(0,0,0,.68) 76%,rgba(0,0,0,.23) 90%,transparent 100%);
+  mask-image:radial-gradient(ellipse 54% 56% at 50% 50%,
+    #000 0%,#000 55%,rgba(0,0,0,.95) 65%,
+    rgba(0,0,0,.68) 76%,rgba(0,0,0,.23) 90%,transparent 100%);
+}
+.scene img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  image-rendering:auto;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+@media(max-width:700px){
+  .scene{width:min(96vw,calc(64dvh * 16 / 9))}
+}
+@media(max-height:420px) and (orientation:landscape){
+  .scene{width:min(76vw,calc(90dvh * 16 / 9))}
+}
+</style>
+</head>
+<body>
+<main aria-label="极简游戏场景">
+  <figure class="scene" aria-label="空教室逐渐消失在黑色背景里">
+    <img src="./assets/classroom.webp" width="1024" height="576"
+         alt="空无一人的日本教室，中央黑板，成排课桌，左侧窗户透入日光。" draggable="false">
+  </figure>
+</main>
+</body>
+</html>

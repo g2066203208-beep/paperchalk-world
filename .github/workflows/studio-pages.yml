@@ -1,29 +1,43 @@
-name: Clear GitHub Pages site
+name: Minimal classroom stage - GitHub Pages
 on:
   push:
     branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/studio-pages.yml'
   workflow_dispatch:
 permissions:
   contents: read
   pages: write
   id-token: write
 concurrency:
-  group: cleared-pages
+  group: minimal-stage-pages
   cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment:
       name: github-pages
-      url: ${{ steps.publish.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Verify website has no published content
+      - name: Verify exact classroom background and minimal stage
         run: |
-          set -euo pipefail
-          test -f site/index.html
-          test "$(find site -type f | wc -l)" -eq 1
-          ! grep -Eiq 'PIXEL ATELIER|失序之夜|<main|<nav|<script' site/index.html
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("site/assets/classroom.webp")
+          b=p.read_bytes()
+          assert b[:4]==b'RIFF' and b[8:12]==b'WEBP'
+          assert 15000 < len(b) < 200000
+          html=Path("site/index.html").read_text(encoding="utf-8")
+          assert './assets/classroom.webp' in html
+          assert '-webkit-mask-image:radial-gradient' in html
+          assert 'mask-image:radial-gradient' in html
+          assert '<main' in html and '<figure class="scene"' in html
+          files=[p for p in Path('site').rglob('*') if p.is_file()]
+          assert len(files)==2,files
+          print("PASS: one classroom image; feathered 16:9 stage; no extra site files")
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
