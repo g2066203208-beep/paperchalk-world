@@ -78,20 +78,20 @@ body.mobile-mode.virtual-landscape #view{
   text-shadow:0 1px 5px #000;
 }
 #novel-ui button:focus-visible{outline:1px solid var(--ui-ink);outline-offset:3px}
-#top-menu{position:absolute;top:clamp(7px,3.7cqh,52px);left:clamp(8px,2.7cqw,88px)}
-#top-menu button{font-size:clamp(19px,3.7cqh,42px);font-weight:300;line-height:1;min-width:38px;min-height:38px;text-align:left;padding:2px 4px}
-#top-actions{position:absolute;top:clamp(7px,3.8cqh,54px);right:clamp(9px,3.0cqw,86px);display:flex;align-items:center;gap:clamp(10px,3.2cqw,62px)}
-#top-actions button{font-size:clamp(11px,2.45cqh,28px);min-height:36px;min-width:38px;padding:4px 2px}
+#top-menu{position:absolute;top:max(7px,3.7cqh);left:max(8px,2.7cqw)}
+#top-menu button{font-size:clamp(19px,3.7cqh,88px);font-weight:300;line-height:1;min-width:38px;min-height:38px;text-align:left;padding:2px 4px}
+#top-actions{position:absolute;top:max(7px,3.8cqh);right:max(9px,3.0cqw);display:flex;align-items:center;gap:max(10px,3.2cqw)}
+#top-actions button{font-size:clamp(11px,2.45cqh,60px);min-height:36px;min-width:38px;padding:4px 2px}
 #top-actions button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:6px}
-#dialogue{position:absolute;left:8.3cqw;bottom:clamp(24px,8.4cqh,130px);width:min(76cqw,1450px);pointer-events:auto;text-shadow:0 1px 6px #000}
-#speaker{font-size:clamp(12px,2.75cqh,32px);line-height:1.25;margin:0 0 clamp(7px,1.8cqh,21px)}
-#dialogue-text{font-size:clamp(14px,2.95cqh,34px);line-height:1.46;margin:0;max-width:100%;overflow-wrap:anywhere}
-#advance{position:absolute;right:clamp(15px,8.8cqw,220px);bottom:clamp(16px,6.3cqh,105px)}
-#advance button{font-size:clamp(18px,2.8cqh,33px);line-height:1;min-width:44px;min-height:40px;padding:0;text-align:center}
-#menu-choices{position:absolute;top:clamp(45px,11.5cqh,115px);left:clamp(9px,2.7cqw,88px);display:flex;flex-direction:column;align-items:flex-start;gap:clamp(4px,1.1cqh,16px);pointer-events:auto}
-#menu-choices button{font-size:clamp(12px,2.1cqh,24px);padding:5px 8px;min-height:35px;text-align:left}
-#history{position:absolute;left:8.3cqw;bottom:clamp(24px,8.4cqh,130px);width:76cqw;max-height:54cqh;overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;text-shadow:0 1px 6px #000;scrollbar-width:thin}
-#history p{font-size:clamp(12px,2.15cqh,26px);line-height:1.65;margin:.28em 0}
+#dialogue{position:absolute;left:8.3cqw;bottom:max(24px,8.4cqh);width:76cqw;pointer-events:auto;text-shadow:0 1px 6px #000}
+#speaker{font-size:clamp(12px,2.75cqh,70px);line-height:1.25;margin:0 0 max(7px,1.8cqh)}
+#dialogue-text{font-size:clamp(14px,2.95cqh,74px);line-height:1.46;margin:0;max-width:100%;overflow-wrap:anywhere}
+#advance{position:absolute;right:max(15px,8.8cqw);bottom:max(16px,6.3cqh)}
+#advance button{font-size:clamp(18px,2.8cqh,70px);line-height:1;min-width:44px;min-height:40px;padding:0;text-align:center}
+#menu-choices{position:absolute;top:max(45px,11.5cqh);left:max(9px,2.7cqw);display:flex;flex-direction:column;align-items:flex-start;gap:max(4px,1.1cqh);pointer-events:auto}
+#menu-choices button{font-size:clamp(12px,2.1cqh,52px);padding:5px 8px;min-height:35px;text-align:left}
+#history{position:absolute;left:8.3cqw;bottom:max(24px,8.4cqh);width:76cqw;max-height:54cqh;overflow-y:auto;overscroll-behavior:contain;pointer-events:auto;text-shadow:0 1px 6px #000;scrollbar-width:thin}
+#history p{font-size:clamp(12px,2.15cqh,54px);line-height:1.65;margin:.28em 0}
 #history .log-speaker{color:#eee9}
 #novel-ui [hidden]{display:none!important}
 @container (max-height:445px){

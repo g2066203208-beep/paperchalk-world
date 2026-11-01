@@ -113,7 +113,7 @@ jobs:
                   assert.ok(r.x>=-3&&r.y>=-3&&r.right<=cfg.width+3&&r.bottom<=cfg.height+3,
                             'UI overflows viewport: '+name+' '+JSON.stringify(r));
                 }
-                assert.ok(layout.font>=12&&layout.font<=36,'dialogue text outside accessible scale');
+                assert.ok(layout.font>=12&&layout.font<=74,'dialogue text outside accessible scale');
                 assert.equal(await page.locator('#speaker').textContent(),'???');
                 assert.equal(await page.locator('#dialogue-text').textContent(),'这间教室……和我记忆里的，不太一样。');
                 assert.equal(await page.locator('#motion-ui').count(),0,'sensor status must remain absent');
@@ -265,6 +265,48 @@ jobs:
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ui-tested.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
                 await page.close();
+              }
+
+              // Extra viewport audit beyond the three full smoke regressions:
+              // ultrawide, 4:3, small portrait phone and large CSS-pixel 4K.
+              for(const vp of [
+                {width:2560,height:1080,mobile:false},
+                {width:1024,height:768,mobile:false},
+                {width:320,height:568,mobile:true},
+                {width:720,height:1280,mobile:true},
+                {width:3840,height:2160,mobile:false}
+              ]){
+                const p=await browser.newPage({
+                  viewport:{width:vp.width,height:vp.height},
+                  isMobile:vp.mobile,hasTouch:vp.mobile
+                });
+                try{
+                  await p.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
+                  const metrics=await p.evaluate(()=>{
+                    const view=document.getElementById('view');
+                    const selectors=['#menu-toggle','#auto-button','#log-button','#speaker','#dialogue-text','#next-line'];
+                    const locations=selectors.map(sel=>{
+                      const rect=document.querySelector(sel).getBoundingClientRect();
+                      return {sel,x:rect.left,y:rect.top,right:rect.right,bottom:rect.bottom};
+                    });
+                    return {locations,font:parseFloat(getComputedStyle(document.getElementById('dialogue-text')).fontSize),
+                      logicalW:view.clientWidth,logicalH:view.clientHeight,
+                      virtual:document.body.classList.contains('virtual-landscape')};
+                  });
+                  assert.equal(metrics.virtual,vp.mobile&&vp.height>vp.width);
+                  for(const rect of metrics.locations){
+                    assert.ok(rect.x>=-3&&rect.y>=-3&&rect.right<=vp.width+3&&rect.bottom<=vp.height+3,
+                      'responsive overflow '+vp.width+'x'+vp.height+' '+JSON.stringify(rect));
+                  }
+                  if(vp.width===3840){
+                    assert.ok(metrics.font>=60,'4K dialogue text does not scale up');
+                  }
+                  if(vp.width===320){
+                    assert.ok(metrics.font>=12,'small-phone text illegibly small');
+                  }
+                  console.log('PASS: responsive '+vp.width+'x'+vp.height+
+                    ' UI text '+metrics.font+'px');
+                } finally{await p.close()}
               }
             } finally {await browser.close()}
           })().catch(e=>{console.error(e);process.exit(1)});
