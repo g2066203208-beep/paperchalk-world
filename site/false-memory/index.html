@@ -14,7 +14,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 #sky-glow{animation:flicker 9s infinite} @keyframes flicker{0%,39%,41%,74%,76%,100%{opacity:.8}40%,75%{opacity:.16}}
 #vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 36%,transparent 22%,rgba(2,4,10,.13) 61%,rgba(0,0,4,.76) 100%)}
 #texture{position:absolute;inset:0;pointer-events:none;opacity:.17;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.4' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.23'/%3E%3C/svg%3E");mix-blend-mode:overlay}
-#hero{position:absolute;z-index:5;left:15%;bottom:12%;height:min(82vh,850px);max-width:40vw;object-fit:contain;object-position:bottom center;filter:drop-shadow(17px 18px 13px #0009) drop-shadow(-3px 0px 8px #8b9db64d);transition:opacity .6s,transform .6s;transform-origin:bottom center;pointer-events:none}
+#hero{position:absolute;z-index:5;left:15%;bottom:12%;height:min(82vh,850px);max-width:40vw;image-rendering:auto;object-fit:contain;object-position:bottom center;filter:drop-shadow(17px 18px 13px #0009) drop-shadow(-3px 0px 8px #8b9db64d);transition:opacity .6s,transform .6s;transform-origin:bottom center;pointer-events:none}
 #hero.ghost{opacity:.18;transform:translateX(9px) scaleX(.996);filter:brightness(.7) blur(1px) drop-shadow(15px 0 8px #e5dada90)}
 #hero[src=""]{display:none}
 #fallback{position:absolute;bottom:14%;left:18%;height:54%;width:16%;z-index:4;display:none;align-items:center;justify-content:center;color:#e6dfe6a3;border:1px dashed #9b9fa050;background:#151d25a8;text-align:center;line-height:1.5}
@@ -147,7 +147,7 @@ header{position:absolute;top:0;left:0;right:0;z-index:15;display:flex;align-item
 </g>
 </svg>
 <div id="vignette"></div><div id="texture"></div>
-<img id="hero" src="./hero.webp" alt="主角：黑色长发、深色制服的学生全身立绘" onerror="this.style.display='none';document.getElementById('fallback').style.display='flex'">
+<img id="hero" src="./hero.webp?v=hd-20261101-1" alt="主角：黑色长发、深色制服的学生全身立绘" onerror="this.style.display='none';document.getElementById('fallback').style.display='flex'">
 <div id="fallback">角色原画<br>素材加载中</div>
 <div id="flash"></div>
 <header><div class="brand">错位日常<small>THE DAY THAT FORGOT YOU</small></div><nav class="toolbar"><button id="sound" aria-pressed="false">声音 · 关</button><button id="restart">重新开始</button></nav></header>
