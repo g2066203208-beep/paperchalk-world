@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet"><defs>
+<linearGradient id="wall" x2="1" y2=".1"><stop stop-color="#574f46"/><stop offset=".4" stop-color="#a79a85"/><stop offset="1" stop-color="#61594e"/></linearGradient>
+<linearGradient id="floor" x2=".3" y2="1"><stop stop-color="#6b675f"/><stop offset="1" stop-color="#242429"/></linearGradient>
+<linearGradient id="door" x2="1" y2="0"><stop stop-color="#241f1e"/><stop offset=".25" stop-color="#6c4839"/><stop offset=".72" stop-color="#54382e"/><stop offset="1" stop-color="#251b1d"/></linearGradient>
+<linearGradient id="night" x2=".5" y2="1"><stop stop-color="#3e4a4e"/><stop offset="1" stop-color="#0d1721"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#f6d9a0" stop-opacity=".5"/><stop offset="1" stop-color="#f6d9a0" stop-opacity="0"/></radialGradient>
+<radialGradient id="shade"><stop offset=".28" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#050507" stop-opacity=".72"/></radialGradient>
+<pattern id="tile" width="65" height="65" patternUnits="userSpaceOnUse"><path d="M0 0H65M0 0V65" stroke="#c0bbb0" stroke-opacity=".18" fill="none"/></pattern>
+<clipPath id="hole"><circle cx="800" cy="450" r="340"/></clipPath>
+</defs><rect width="1600" height="900" fill="#303a3e"/>
+<path d="M0 0H1600L1215 170H385Z" fill="#454f50"/><path d="M0 0L385 170V750L0 900Z" fill="#65716c"/>
+<path d="M1600 0L1215 170V750L1600 900Z" fill="#56605c"/><rect x="385" y="170" width="830" height="580" fill="#65716b"/>
+<path d="M0 900L385 750H1215L1600 900Z" fill="#374345"/>
+<path d="M550 775L710 553H890L1050 775Z" fill="#2d393b"/>
+<path d="M555 770H1045L1022 735H578Z" fill="#adb0a6"/><path d="M585 732H1015L993 695H607Z" fill="#818e89"/>
+<path d="M613 692H987L968 659H632Z" fill="#a4aaa0"/><path d="M640 657H960L940 621H660Z" fill="#7e8a84"/>
+<path d="M671 616H929L912 584H688Z" fill="#a4aaa0"/><path d="M700 582H900L884 550H716Z" fill="#89918a"/>
+<path d="M560 770L720 547M1040 770L880 547" stroke="#dacdb4" stroke-width="9"/>
+<rect x="697" y="235" width="206" height="60" fill="#b5c4ae" stroke="#486055" stroke-width="7"/><path d="M745 265H861" stroke="#3a6957" stroke-width="9"/>
+<ellipse cx="800" cy="235" rx="365" ry="255" fill="url(#glow)" opacity=".4"/><rect width="1600" height="900" fill="url(#shade)"/></svg>
