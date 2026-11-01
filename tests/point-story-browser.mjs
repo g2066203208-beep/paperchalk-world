@@ -27,6 +27,14 @@ try{
   assert.equal(initial.scene,'foyer');assert.equal(initial.clock,'18:47');
   assert.equal(await page.locator('#scene-hotspots button').count(),5);
   await page.screenshot({path:'artifacts/point-story/'+label+'-foyer.png',fullPage:true,animations:'disabled'});
+  await page.locator('#classroom-toggle').click();
+  assert.equal((await page.evaluate(()=>window.__POINT_STORY__.snapshot())).scene,'classroom');
+  assert.equal(await page.locator('#scene-hotspots button').count(),5);
+  assert.equal(await page.locator('#scene-image').getAttribute('src'),'./scenes/classroom.webp');
+  await page.locator('[data-spot="girl"]').click();
+  await page.screenshot({path:'artifacts/point-story/'+label+'-classroom.png',fullPage:true,animations:'disabled'});
+  await page.locator('#classroom-toggle').click();
+  assert.equal((await page.evaluate(()=>window.__POINT_STORY__.snapshot())).scene,'foyer');
   await page.locator('[data-spot="notice"]').click();
   assert.equal((await page.evaluate(()=>window.__POINT_STORY__.snapshot())).rules.includes('notice'),true);
   await page.locator('[data-spot="living"]').click();
