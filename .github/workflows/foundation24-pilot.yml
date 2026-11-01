@@ -1,0 +1,50 @@
+name: Foundation24 - real discrete pilot (NOT artist approved)
+on:
+  workflow_dispatch:
+  push:
+    branches: [research/foundation24-v1]
+    paths:
+      - 'ml/foundation24/**'
+      - 'tests/test_foundation24.py'
+      - '.github/workflows/foundation24-pilot.yml'
+permissions:
+  contents: read
+jobs:
+  learned-model-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU dependencies
+        run: |
+          python -m pip install numpy==2.2.6 Pillow==11.3.0
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Native-pixel and real-gradient tests
+        run: python -m unittest discover -s tests -p test_foundation24.py -v
+      - name: Train real masked-token model on quarantined pilot data
+        run: python -m ml.foundation24.experiment --dataset mini36-pilot --allow-unapproved-pilot --mode masked --steps 150 --out artifacts/foundation24/masked
+      - name: Train real structure-conditioned ablation on same pilot
+        run: python -m ml.foundation24.experiment --dataset mini36-pilot --allow-unapproved-pilot --mode structure --steps 150 --out artifacts/foundation24/structure
+      - name: Verify honest reports and saved real weights
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for mode in ('masked','structure'):
+              p=Path(f'artifacts/foundation24/{mode}/{mode}-report.json')
+              obj=json.loads(p.read_text())
+              assert obj['trained_real_neural_weights'] is True
+              assert obj['foundation_model_accepted'] is False
+              assert obj['training_data_artist_approved'] is False
+              assert obj['generated_count']==64
+              assert (p.parent/f'{mode}-checkpoint.pt').is_file()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: foundation24-pilot-checkpoints-64samples-and-reports
+          path: artifacts/foundation24/
+          retention-days: 30
+          if-no-files-found: error
