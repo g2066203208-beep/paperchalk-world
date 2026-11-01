@@ -118,7 +118,7 @@ def eval_holdout(net,indices):
           'alpha_iou_corrupted':round(iou(alpha_gt,alpha_noisy),4),'alpha_iou_reverse':round(iou(alpha_gt,alpha_pred),4)})
     return tests
 
-def palette_flatten(sprite, lab_threshold=25.,max_colors=10):
+def palette_flatten(sprite, lab_threshold=20.,max_colors=11):
     """Merge close palette colors by LAB, foreground mask preserved exactly.
 
     Not an ML output. Never inserts intermediate colors, edits geometry or alpha.
