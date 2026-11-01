@@ -1,0 +1,49 @@
+name: Anima Native Material Forge - Node and Real Browser QA
+on:
+  pull_request:
+    paths:
+      - 'site/pixel-lab/material-forge*'
+      - 'site/pixel-lab/index.html'
+      - 'site/world-builder/materials.html'
+      - 'tests/material-forge*'
+      - 'docs/anima-material-pipeline-v1.md'
+      - '.github/workflows/material-forge.yml'
+  push:
+    branches: [main, feat/anima-native-material-forge]
+    paths:
+      - 'site/pixel-lab/material-forge*'
+      - 'site/pixel-lab/index.html'
+      - 'site/world-builder/materials.html'
+      - 'tests/material-forge*'
+      - 'docs/anima-material-pipeline-v1.md'
+      - '.github/workflows/material-forge.yml'
+permissions:
+  contents: read
+jobs:
+  native-pixel-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/material-forge.test.mjs
+  chromium-browser:
+    needs: native-pixel-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - run: node --test tests/material-forge-browser.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anima-native-material-forge-real-browser-screens
+          path: artifacts/material-forge/
+          retention-days: 14
+          if-no-files-found: warn
