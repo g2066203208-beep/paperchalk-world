@@ -134,11 +134,11 @@ try{
  await orderPage.reload();
  await orderPage.locator('.joker[data-joker="mirror"]').click({force:true});
  assert.equal(await orderPage.locator('#joker-inspector').isVisible(),true);
- assert.match(await orderPage.locator('#joker-detail-position').innerText(),/2 \\/ 2/);
+ assert.ok((await orderPage.locator('#joker-detail-position').innerText()).includes('2 / 2'));
  await orderPage.locator('#joker-move-left').click();
  const order=await orderPage.evaluate(()=>JSON.parse(localStorage.getItem('paperworld-card-paradox-v1')).jokers);
  assert.deepEqual(order,['mirror','lantern'],'joker reorder must persist');
- assert.match(await orderPage.locator('#joker-detail-position').innerText(),/1 \\/ 2/);
+ assert.ok((await orderPage.locator('#joker-detail-position').innerText()).includes('1 / 2'));
  await orderPage.screenshot({path:'artifacts/card-paradox/joker-inspector-mobile.png',animations:'disabled'});
  await orderPage.reload();
  assert.equal(await orderPage.locator('.joker[data-joker]').first().getAttribute('data-joker'),'mirror');
