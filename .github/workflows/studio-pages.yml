@@ -88,6 +88,25 @@ jobs:
                 const after=await page.locator('#fog').getAttribute('data-frames');
                 assert.ok(Number(after)-Number(before)>5,'fluid did not advance continuously');
                 const renderer=await page.locator('#fog').getAttribute('data-renderer');
+                // Every pointer extreme must keep independent, full-screen fog.
+                for(const pt of [
+                  [0,0],[cfg.width-1,0],[0,cfg.height-1],
+                  [cfg.width-1,cfg.height-1],[cfg.width*.5,cfg.height*.5],
+                  [cfg.width-1,cfg.height*.5],[1,cfg.height*.5]
+                ]){
+                  if(cfg.mobile)break;
+                  await page.mouse.move(pt[0],pt[1]);
+                  await page.waitForTimeout(90);
+                  const check=await page.evaluate(()=>({
+                    fog:document.querySelector('#fog').getBoundingClientRect().toJSON(),
+                    transform:document.querySelector('#scene').style.transform
+                  }));
+                  assert.equal(check.fog.x,0,'fog should remain anchored');
+                  assert.equal(check.fog.y,0,'fog should remain anchored');
+                  assert.ok(Math.abs(check.fog.width-cfg.width)<2,'fog width changed');
+                  assert.ok(Math.abs(check.fog.height-cfg.height)<2,'fog height changed');
+                  assert.ok(check.transform.includes('rotateY('));
+                }
                 assert.ok(renderer==='gpu-advected-fluid'||renderer==='cpu-advected-fluid');
                 if(!cfg.mobile){
                   const beforeFog=await page.locator('#fog').boundingBox();

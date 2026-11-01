@@ -79,7 +79,7 @@ void main(){
   float w1=sin(p.x*15.7+p.y*4.2+t*.82+sin(p.y*8.-t*.36)*1.8);
   float w2=sin(p.y*18.4-p.x*6.6-t*.61+sin(p.x*10.+t*.4));
   float envelope=.52+.26*w1+.19*w2;
-  float reach=73.+25.*w1+21.*w2+10.*sin(t*.73+p.x*8.);
+  float reach=122.+34.*w1+27.*w2+14.*sin(t*.73+p.x*8.);
   float inlet=1.-smoothstep(-15.,max(12.,reach),d);
   float injection=inlet*max(.04,envelope)*1.4;
   density=clamp(density*exp(-u_dt*.67)+u_dt*injection,0.,1.);
@@ -87,22 +87,34 @@ void main(){
 }
 </script>
 <script id="display" type="x-shader/x-fragment">
-precision mediump float;
+precision highp float;
 varying vec2 v_uv;
 uniform sampler2D u_density;
 uniform vec2 u_viewSize;
-uniform vec2 u_half;
+uniform vec3 u_edges[4];
+uniform float u_fogWidth;
 uniform float u_time;
+float projectedDistance(vec2 p){
+  float d=1.0e6;
+  for(int i=0;i<4;i++){
+    d=min(d,dot(u_edges[i].xy,p)+u_edges[i].z);
+  }
+  return d;
+}
 void main(){
   vec2 uv=v_uv;
+  // Measured from the CURRENT perspective-transformed image quad.
+  vec2 p=vec2(uv.x*u_viewSize.x,(1.0-uv.y)*u_viewSize.y);
+  float edge=projectedDistance(p);
   float density=texture2D(u_density,uv).r;
-  vec2 e=u_half-abs(uv-.5);
-  float edge=min(e.x*u_viewSize.x,e.y*u_viewSize.y);
-  // The scene-edge distance anchors smoke to a RECTANGLE;
-  // transported density gives the boundary a living, nonrectangular contour.
-  float rattle=sin(uv.x*36.+u_time*.43)*sin(uv.y*23.-u_time*.32);
-  float shiver=1.-smoothstep(-11.,15.+12.*rattle,edge);
-  float alpha=clamp(pow(density,.72)*.91+shiver*.24,0.,.96);
+  float ripple=sin(p.x*.031+u_time*.79+sin(p.y*.023-u_time*.63)*1.9);
+  float curl=sin(p.y*.047-u_time*.51+sin(p.x*.029+u_time*.3)*1.5);
+  float envelope=u_fogWidth*(1.04+.13*ripple+.11*curl);
+  // All actual projected picture borders, even at the extreme tilt,
+  // stay fully black for 14px on the INSIDE of the photo.
+  float opaque=1.0-smoothstep(14.0,max(26.0,envelope),edge);
+  float flowing=pow(clamp(density,0.,1.),.72)*.94;
+  float alpha=clamp(1.0-(1.0-opaque)*(1.0-flowing),0.,1.);
   gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
@@ -120,6 +132,32 @@ void main(){
   let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
   let fallback=null,fallbackState=null;
   let sceneHalf={x:.4,y:.4};
+  let borderEdges=new Float32Array(12);
+  let borderWidth=80;
+  const PERSPECTIVE=1500;
+  function projectedOutline(){
+    const hw=stage.offsetWidth*.5,hh=stage.offsetHeight*.5;
+    const yaw=currentX*6.0*Math.PI/180,pitch=-currentY*4.6*Math.PI/180;
+    const sy=Math.sin(yaw),cy=Math.cos(yaw);
+    const sx=Math.sin(pitch),cx=Math.cos(pitch);
+    const points=[];
+    for(const [x,y] of [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]]){
+      const yy=y*cx,zz=y*sx;
+      const xx=x*cy+zz*sy,z=-x*sy+zz*cy;
+      const scale=PERSPECTIVE/(PERSPECTIVE-z);
+      points.push([sizes.w*.5+xx*scale,sizes.h*.5+yy*scale]);
+    }
+    // TL, TR, BR, BL: signed inward edge-distance half-planes.
+    for(let i=0;i<4;i++){
+      const a=points[i],b=points[(i+1)%4];
+      const dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy)||1;
+      const nx=-dy/len,ny=dx/len;
+      borderEdges[i*3]=nx;
+      borderEdges[i*3+1]=ny;
+      borderEdges[i*3+2]=-(nx*a[0]+ny*a[1]);
+    }
+    borderWidth=Math.max(24,Math.min(stage.offsetWidth,stage.offsetHeight)*.235);
+  }
   function half(){
     const r=stage.getBoundingClientRect();
     // Geometry is calculated from CSS dimensions (untransformed), not the
@@ -211,6 +249,7 @@ void main(){
       fallbackState={sx,sy,a:new Float32Array(sx*sy),b:new Float32Array(sx*sy),image:fallback.createImageData(sx,sy)};
     }
     half();
+    projectedOutline();
   }
   function drawGPU(dt,t){
     gl.activeTexture(gl.TEXTURE0);
@@ -227,6 +266,8 @@ void main(){
     gl.useProgram(composite);
     gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
     gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
+    gl.uniform3fv(gl.getUniformLocation(composite,'u_edges[0]'),borderEdges);
+    gl.uniform1f(gl.getUniformLocation(composite,'u_fogWidth'),borderWidth);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   }
   function sample(arr,fx,fy,w,h){
@@ -250,13 +291,23 @@ void main(){
                               (sceneHalf.y-Math.abs(uvy-.5))*sizes.h);
       const w1=Math.sin(px*15.7+py*4.2+t*.82+Math.sin(py*8-t*.36)*1.8);
       const w2=Math.sin(py*18.4-px*6.6-t*.61+Math.sin(px*10+t*.4));
-      const reach=73+25*w1+21*w2+10*Math.sin(t*.73+px*8);
+      const reach=borderWidth*.78+30*w1+25*w2+13*Math.sin(t*.73+px*8);
       const inlet=1-(clamp((distance+15)/(Math.max(12,reach)+15),0,1))**2;
       const source=inlet*Math.max(.04,.52+.26*w1+.19*w2)*1.4;
       const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.67)+dt*source,0,1);
       const p=(y*sx+x)*4;
-      const shiver=1-clamp((distance+11)/26,0,1);
-      const alpha=clamp(d**.72*.91+shiver*.24,0,.96);
+      let edge=Infinity;
+      const screenX=uvx*sizes.w,screenY=(1-uvy)*sizes.h;
+      for(let e=0;e<4;e++){
+        const q=e*3;
+        edge=Math.min(edge,borderEdges[q]*screenX+borderEdges[q+1]*screenY+borderEdges[q+2]);
+      }
+      const ripple=Math.sin(screenX*.031+t*.79+Math.sin(screenY*.023-t*.63)*1.9);
+      const curl=Math.sin(screenY*.047-t*.51+Math.sin(screenX*.029+t*.3)*1.5);
+      const limit=Math.max(26,borderWidth*(1.04+.13*ripple+.11*curl));
+      const normalized=clamp((edge-14)/(limit-14),0,1);
+      const matte=1-normalized*normalized*(3-2*normalized);
+      const alpha=clamp(1-(1-matte)*(1-d**.72*.94),0,1);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
@@ -268,6 +319,7 @@ void main(){
     if(reduced.matches){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
+    projectedOutline();
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
