@@ -3,7 +3,7 @@
   "focus": "全身人物像素立绘，而非迷你小人或风景",
   "artist_tag_verified_count": 0,
   "images_training_permission_count": 0,
-  "notice": "仅作品链接和公开研究信息；绝不宣称艺术家Anima标签有效或其作品可用于训练",
+  "notice": "外部公开作品，仅作链接欣赏；Sakulibera与PixelBuns明确禁止AI使用/训练，其他作者训练许可未核查，所有Anima @tag均未验证。",
   "items": [
     {
       "id": 1,
@@ -42,7 +42,7 @@
       "remote_preview": null,
       "native_size": "约256×512",
       "anima_artist_tag": "unverified",
-      "training_license": "not_verified"
+      "training_license": "explicit_AI_use_prohibited"
     },
     {
       "id": 4,
@@ -182,6 +182,32 @@
       "level": "comparison",
       "study": "完整人物表情GIF，眨眼和嘴型差分",
       "url": "https://vgen.co/commission/service/ec856b01-87c4-48a8-8c3f-ac194e447983",
+      "remote_preview": null,
+      "native_size": "未公开",
+      "anima_artist_tag": "unverified",
+      "training_license": "not_verified"
+    },
+    {
+      "id": 15,
+      "artist": "PixelBuns",
+      "region": "unknown",
+      "work": "Pixel Art VTuber Full Body",
+      "level": "comparison",
+      "study": "分层高精细像素人物立绘，完整头发、衣服与嘴型、眼睛差分；本人条款明确禁止AI训练。",
+      "url": "https://vgen.co/PixelBuns/service/high-quality-pixel-art-vtuber-model-rigging-/67e51dfe-0503-4078-8881-8b9a4a49322e",
+      "remote_preview": null,
+      "native_size": "未公开",
+      "anima_artist_tag": "unverified",
+      "training_license": "explicit_AI_use_prohibited"
+    },
+    {
+      "id": 16,
+      "artist": "yilinzc",
+      "region": "unknown",
+      "work": "YCH Pixel Art Small Sprite Full-Body",
+      "level": "comparison",
+      "study": "完整角色小型像素立绘，原生100%与400%放大同时交付，可研究逐像素输出完整性。",
+      "url": "https://vgen.co/yilinzc/service/rendered-full-body/75968f1f-452c-4009-b662-4dc9bba2f1bf",
       "remote_preview": null,
       "native_size": "未公开",
       "anima_artist_tag": "unverified",

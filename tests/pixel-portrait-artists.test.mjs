@@ -10,7 +10,7 @@ const index = read('site/pixel-lab/index.html');
 const guide = read('docs/pixel-portrait-prompt-guide-v1.1.md');
 
 test('curated artist index is populated and preserves older references', () => {
-  assert.ok(portraits.items.length >= 12);
+  assert.ok(portraits.items.length >= 16);
   assert.ok(secondary.artists.length >= 15);
   assert.ok(portraits.items.some(x => x.artist === 'Sakulibera'));
   assert.ok(portraits.items.some(x => x.artist === 'hinyari9'));
@@ -24,7 +24,7 @@ test('artist names, verified sources and training-rights protections', () => {
     assert.ok(!ids.has(item.id)); ids.add(item.id);
     assert.ok(item.artist && item.work && item.study && item.url);
     assert.match(item.url,/^https:\/\//);
-    assert.equal(item.training_license,'not_verified');
+    assert.ok(['not_verified','explicit_AI_use_prohibited'].includes(item.training_license));
     assert.equal(item.anima_artist_tag,'unverified');
     assert.ok(['JP','unknown'].includes(item.region));
     assert.ok(['fullbody','secondary','comparison'].includes(item.level));
