@@ -6,7 +6,13 @@
 <meta name="theme-color" content="#000000">
 <title>教室 · 连续流动黑雾</title>
 <style>
-:root{color-scheme:dark}
+@font-face{font-family:"PaperSerif";src:url("./assets/fonts/PaperSerif-Medium.woff2") format("woff2");font-style:normal;font-weight:500;font-display:swap}
+@font-face{font-family:"PaperSans";src:url("./assets/fonts/PaperSans-Regular.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}
+:root{color-scheme:dark;
+ --font-menu:"PaperSerif","Noto Serif CJK SC","Songti SC",serif;
+ --font-name:"PaperSerif","Noto Serif CJK SC","Songti SC",serif;
+ --font-dialogue:"PaperSans","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
+ --font-ui:"PaperSans","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
 #view{
@@ -66,7 +72,7 @@ body.mobile-mode.virtual-landscape #view{
    No panel, no rectangular frame, no extra gradient, no smoke layers. */
 #novel-ui{
   position:absolute;inset:0;z-index:5;pointer-events:none;
-  color:#f5f5f1;font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  color:#f5f5f1;font-family:var(--font-dialogue);
   font-weight:400;letter-spacing:.045em;
   --ui-ink:#f5f5f1;
 }
@@ -79,13 +85,13 @@ body.mobile-mode.virtual-landscape #view{
 }
 #novel-ui button:focus-visible{outline:1px solid var(--ui-ink);outline-offset:3px}
 #top-menu{position:absolute;top:max(7px,3.7cqh);left:max(8px,2.7cqw)}
-#top-menu button{font-size:clamp(19px,3.7cqh,88px);font-weight:300;line-height:1;min-width:38px;min-height:38px;text-align:left;padding:2px 4px}
+#top-menu button{font-family:var(--font-ui);font-size:clamp(19px,3.7cqh,88px);font-weight:300;line-height:1;min-width:38px;min-height:38px;text-align:left;padding:2px 4px}
 #top-actions{position:absolute;top:max(7px,3.8cqh);right:max(9px,3.0cqw);display:flex;align-items:center;gap:max(10px,3.2cqw)}
-#top-actions button{font-size:clamp(11px,2.45cqh,60px);min-height:36px;min-width:38px;padding:4px 2px}
+#top-actions button{font-family:var(--font-ui);font-size:clamp(11px,2.45cqh,60px);min-height:36px;min-width:38px;padding:4px 2px}
 #top-actions button[aria-pressed="true"]{text-decoration:underline;text-underline-offset:6px}
 #dialogue{position:absolute;left:8.3cqw;bottom:max(24px,8.4cqh);width:76cqw;pointer-events:auto;text-shadow:0 1px 6px #000}
-#speaker{font-size:clamp(12px,2.75cqh,70px);line-height:1.25;margin:0 0 max(7px,1.8cqh)}
-#dialogue-text{font-size:clamp(14px,2.95cqh,74px);line-height:1.46;margin:0;max-width:100%;overflow-wrap:anywhere}
+#speaker{font-family:var(--font-name);font-weight:500;font-size:clamp(12px,2.75cqh,70px);line-height:1.25;margin:0 0 max(7px,1.8cqh)}
+#dialogue-text{font-family:var(--font-dialogue);font-weight:400;font-size:clamp(14px,2.95cqh,74px);line-height:1.46;margin:0;max-width:100%;overflow-wrap:anywhere}
 #advance{position:absolute;right:max(15px,8.8cqw);bottom:max(16px,6.3cqh)}
 #advance button{font-size:clamp(18px,2.8cqh,70px);line-height:1;min-width:44px;min-height:40px;padding:0;text-align:center}
 #menu-choices{position:absolute;top:max(45px,11.5cqh);left:max(9px,2.7cqw);display:flex;flex-direction:column;align-items:flex-start;gap:max(4px,1.1cqh);pointer-events:auto}
@@ -108,7 +114,7 @@ body.mobile-mode.virtual-landscape #view{
 /* SCENE TEMPLATE: one image, 3D tilt, stage-locked actions, viewport black fog. */
 #scene-menu{
   position:absolute;inset:0;z-index:2;pointer-events:none;
-  color:#f5f5f1;font-family:"Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  color:#f5f5f1;font-family:var(--font-menu);
   font-weight:400;letter-spacing:.065em;text-shadow:0 1px 5px #000;
 }
 #scene-menu .scene-menu-options{
@@ -116,6 +122,7 @@ body.mobile-mode.virtual-landscape #view{
   align-items:flex-start;gap:clamp(3px,1.0cqh,18px);
 }
 #scene-menu button{
+  font-family:var(--font-menu);
   appearance:none;display:block;border:0;border-radius:0;background:none;
   box-shadow:none;color:inherit;font:inherit;font-size:clamp(14px,2.8cqh,38px);
   line-height:1.35;white-space:nowrap;text-align:left;
@@ -131,6 +138,16 @@ body.mobile-mode.virtual-landscape #view{
   #scene-menu .scene-menu-options{left:60%;top:39%;gap:2px}
   #scene-menu button{font-size:clamp(12px,2.7cqh,23px);min-height:30px}
 }
+
+/* BLACK-only scene transition, independent of the original running fluid fog */
+#scene-transition{position:absolute;inset:0;z-index:20;pointer-events:none;opacity:0;
+ background:radial-gradient(ellipse at 50% 47%,rgba(0,0,0,0) 0%,rgba(0,0,0,.23) 37%,rgba(0,0,0,.68) 69%,#000 100%);
+ --core-black:0}
+#scene-transition::after{content:"";position:absolute;inset:0;background:#000;
+ opacity:var(--core-black);pointer-events:none}
+#scene-transition[data-active="true"]{pointer-events:auto;touch-action:none}
+#scene-menu,#novel-ui{transition:opacity 150ms ease}
+@media(prefers-reduced-motion:reduce){#scene-menu,#novel-ui{transition:none}}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
@@ -172,6 +189,7 @@ body.mobile-mode.virtual-landscape #view{
     <div id="advance"><button id="next-line" type="button" aria-label="下一句">▸</button></div>
     <div id="history" hidden role="region" aria-label="对白记录"></div>
   </div>
+  <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -446,6 +464,8 @@ void main(){
   let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false;
   const classroomPreload=new Image();
   classroomPreload.src=SCENES.classroom.image;
+  const mainMenuPreload=new Image();
+  mainMenuPreload.src=SCENES.menu.image;
   function readSave(){
     try{
       const raw=localStorage.getItem(SAVE_KEY);
@@ -477,10 +497,73 @@ void main(){
     }
     start(); // continuous, same original fog frame chain
   }
+
+  // Reusable transition state: idle -> preload -> out -> covered -> in -> idle.
+  // Same live WebGL/CPU black fog canvas persists behind the black veil.
+  const shade=document.getElementById('scene-transition');
+  let transitioning=false;
+  function easeDark(t){return t*t*(3-2*t)}
+  function setDark(amount){
+    const a=clamp(amount,0,1);
+    shade.style.opacity=String(a);
+    shade.style.setProperty('--core-black',String(clamp((a-.28)/.72,0,1)));
+    shade.dataset.darkness=a.toFixed(3);
+  }
+  function animateDark(from,to,duration,phase){
+    shade.dataset.phase=phase;
+    return new Promise(done=>{
+      const startAt=performance.now();
+      function frame(now){
+        const t=clamp((now-startAt)/duration,0,1);
+        setDark(from+(to-from)*easeDark(t));
+        if(t<1)requestAnimationFrame(frame);else done();
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+  function waitForPaint(){return new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done)))}
+  async function ensureAsset(name){
+    const image=new Image();image.decoding='async';image.src=SCENES[name].image;
+    let timeout;
+    try{
+      await Promise.race([image.decode(),
+        new Promise((_,reject)=>{timeout=setTimeout(()=>reject(new Error('image timeout')),6500)})]);
+      return true;
+    }catch(e){console.error('Scene asset unavailable',name,e);return false}
+    finally{clearTimeout(timeout)}
+  }
+  async function changeScene(name){
+    if(transitioning||!SCENES[name]||stage.dataset.scene===name)return false;
+    transitioning=true;shade.dataset.active='true';shade.dataset.phase='preload';
+    const outgoing=stage.dataset.scene==='menu'?sceneMenu:uiRoot;
+    if(!(await ensureAsset(name))){
+      shade.dataset.phase='idle';shade.dataset.active='false';transitioning=false;
+      return false;
+    }
+    try{
+      outgoing.style.opacity='0';
+      await animateDark(0,1,reduced.matches?145:440,'out');
+      shade.dataset.phase='covered';
+      openScene(name); // replace image ONLY after center is fully black
+      await waitForPaint();
+      await new Promise(done=>setTimeout(done,reduced.matches?35:105));
+      const incoming=name==='menu'?sceneMenu:uiRoot;
+      incoming.style.opacity='0';
+      const textTimer=setTimeout(()=>{incoming.style.opacity='1'},reduced.matches?0:165);
+      await animateDark(1,0,reduced.matches?170:500,'in');
+      clearTimeout(textTimer);
+      incoming.style.opacity='1';
+      return true;
+    }finally{
+      setDark(0);shade.dataset.phase='idle';shade.dataset.active='false';
+      transitioning=false;
+    }
+  }
   function beginStory(resume){
+    if(transitioning)return;
     const save=resume?readSave():null;
     dialogueIndex=save?save.line:0;
-    openScene('classroom');
+    changeScene('classroom');
   }
   document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
   continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
@@ -567,7 +650,7 @@ void main(){
     textHidden=false;dialogue.hidden=false;nextLineButton.parentElement.hidden=false;
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
   });
-  document.getElementById('return-main').addEventListener('click',()=>openScene('menu'));
+  document.getElementById('return-main').addEventListener('click',()=>changeScene('menu'));
   hideButton.addEventListener('click',()=>{
     cancelAuto();textHidden=!textHidden;
     dialogue.hidden=textHidden;nextLineButton.parentElement.hidden=textHidden;
@@ -575,6 +658,7 @@ void main(){
     menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
   });
   window.addEventListener('keydown',e=>{
+    if(transitioning)return;
     if(e.key==='Escape'){
       if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;mainOptions.hidden=false}
       else if(logOpen)toggleLog();

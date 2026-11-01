@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'scripts/fetch-game-fonts.sh'
       - '.github/workflows/studio-pages.yml'
   workflow_dispatch:
 permissions:
@@ -24,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install local licensed game fonts (pinned and hash-verified)
+        run: bash scripts/fetch-game-fonts.sh
       - name: Assert original complete classroom and independent fluid layer
         run: |
           set -euo pipefail
@@ -56,7 +59,11 @@ jobs:
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
-          assert sorted(p.name for p in files)==['classroom.webp','index.html','menu-wall.webp'],files
+          assert sorted(p.name for p in files)==['OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','index.html','menu-wall.webp'],files
+          assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
+          assert "shade.dataset.phase='covered'" in h
+          for font in ('--font-menu','--font-name','--font-dialogue','--font-ui'):
+              assert font in h
           assert 'id="scene-menu"' in h and 'SCENES=Object.freeze' in h
           assert 'sourceImage.src=def.image' in h and 'stage.dataset.scene=name' in h
           print('PASS: complete image, independent viewport-space fluid fog, per-frame feedback and no zoom')
@@ -106,8 +113,20 @@ jobs:
                 await page.locator('#menu-settings-button').click();
                 assert.ok(await page.locator('#tilt-toggle').isVisible(),'settings text not accessible');
                 await page.locator('#menu-settings-back').click();
+                const originFog=await page.locator('#fog').evaluate(el=>{window.__originalFogNode=el;return Number(el.dataset.frames)});
                 await page.locator('#menu-start').click();
-                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='out',null,{timeout:5500});
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu',
+                             'background switched before blackout');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='covered',null,{timeout:5500});
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom','background not switched when black');
+                assert.ok(Number(await page.locator('#scene-transition').getAttribute('data-darkness'))>.98,
+                          'transition never becomes black');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle',null,{timeout:5500});
+                assert.equal(await page.evaluate(()=>window.__originalFogNode===document.getElementById('fog')),true,
+                            'fog instance was recreated during scene switch');
+                assert.ok(Number(await page.locator('#fog').getAttribute('data-frames'))>originFog+10,
+                          'fluid simulation stopped during dark scene transition');
                 assert.equal(await page.locator('#novel-ui').isVisible(),true);
                 assert.equal(await page.locator('#scene-menu').isVisible(),false);
                 assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
@@ -136,6 +155,21 @@ jobs:
                 assert.equal(await page.locator('#speaker').textContent(),'???');
                 assert.equal(await page.locator('#dialogue-text').textContent(),'这间教室……和我记忆里的，不太一样。');
                 assert.equal(await page.locator('#motion-ui').count(),0,'sensor status must remain absent');
+                const fonts=await page.evaluate(async()=>{
+                  await document.fonts.load('500 20px PaperSerif','开始游戏');
+                  await document.fonts.load('400 20px PaperSans','这间教室');
+                  return {
+                    menu:getComputedStyle(document.getElementById('menu-start')).fontFamily,
+                    name:getComputedStyle(document.getElementById('speaker')).fontFamily,
+                    dialogue:getComputedStyle(document.getElementById('dialogue-text')).fontFamily,
+                    serif:document.fonts.check('500 20px PaperSerif','开始游戏'),
+                    sans:document.fonts.check('400 20px PaperSans','这间教室')
+                  };
+                });
+                assert.ok(fonts.menu.includes('PaperSerif')&&fonts.name.includes('PaperSerif'),
+                          'narrative serif not applied to menu/speaker');
+                assert.ok(fonts.dialogue.includes('PaperSans'),'readable sans dialogue missing');
+                assert.ok(fonts.serif&&fonts.sans,'self-hosted game fonts unavailable');
 
                 assert.equal(await page.locator('#motion-ui').count(),0,
                              'any remaining HUD text or sensor button is forbidden');
@@ -283,10 +317,12 @@ jobs:
                 assert.equal(await page.locator('#dialogue-text').textContent(),'这间教室……和我记忆里的，不太一样。');
                 await page.locator('#menu-toggle').click();
                 await page.locator('#return-main').click();
-                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
+                  &&document.getElementById('scene').dataset.scene==='menu',null,{timeout:6500});
                 assert.equal(await page.locator('#menu-continue').isEnabled(),true);
                 await page.locator('#menu-continue').click();
-                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom');
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
+                  &&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6500});
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-ui-tested.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
                 await page.close();
@@ -308,6 +344,8 @@ jobs:
                 try{
                   await p.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
                   await p.locator('#menu-start').click();
+                  await p.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'
+                    &&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6500});
                   const metrics=await p.evaluate(()=>{
                     const view=document.getElementById('view');
                     const selectors=['#menu-toggle','#auto-button','#log-button','#speaker','#dialogue-text','#next-line'];
