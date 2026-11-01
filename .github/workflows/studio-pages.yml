@@ -36,7 +36,7 @@ jobs:
               'left:50%;top:50%', 'translate3d(-50%,-50%,0)',
               'float low=fbm', 'float reach=', 'float d=min(min(uv.x',
               'function mist(t)', 'targetZoom=0', 'toggleView()',
-              "view.addEventListener('wheel'", 'view.addEventListener('dblclick'",
+              "view.addEventListener('wheel'", "view.addEventListener('dblclick'",
               "view.addEventListener('pointerdown'", 'prefers-reduced-motion'
           ):
               assert marker in h, marker
