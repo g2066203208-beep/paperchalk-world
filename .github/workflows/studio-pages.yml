@@ -21,23 +21,35 @@ jobs:
       name: github-pages
     steps:
       - uses: actions/checkout@v4
-      - name: Verify exact classroom background and minimal stage
+      - name: Test original background and look-around stage
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path("site/assets/classroom.webp")
           b=p.read_bytes()
           assert b[:4]==b'RIFF' and b[8:12]==b'WEBP'
-          assert 15000 < len(b) < 200000
-          html=Path("site/index.html").read_text(encoding="utf-8")
-          assert './assets/classroom.webp' in html
-          assert '-webkit-mask-image:radial-gradient' in html
-          assert 'mask-image:radial-gradient' in html
-          assert '<main' in html and '<figure class="scene"' in html
+          h=Path("site/index.html").read_text(encoding="utf-8")
+          assert './assets/classroom.webp' in h
+          assert 'float d=min(min(uv.x' in h
+          assert 'requestAnimationFrame(render)' in h
+          assert "rotateY(" in h
+          assert 'window.innerWidth' in h and 'window.innerHeight' in h
+          assert "pointermove" in h
+          assert 'prefers-reduced-motion' in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
           assert len(files)==2,files
-          print("PASS: one classroom image; feathered 16:9 stage; no extra site files")
+          print("PASS: original 16:9 classroom, GPU rectangular fog, pan, tilt, mobile drag, exactly two published files")
           PY
+      - name: Syntax-check embedded JavaScript
+        run: |
+          node - <<'JS'
+          const fs=require('fs');
+          const html=fs.readFileSync('site/index.html','utf8');
+          const code=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
+          if(!code)throw new Error('Missing main script');
+          new Function(code);
+          console.log('PASS: embedded game JavaScript parses');
+          JS
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
