@@ -14,6 +14,7 @@ test('4-color technique workstation on actual desktop/mobile Chromium with zero 
    await page.goto('http://localhost:8933/pixel-lab/character-ai/four-colour-study.html',{waitUntil:'networkidle'});
    await page.waitForFunction(()=>window.__FOUR_COLOR_STUDY__?.state().report?.colorBudgetPass);
    assert.equal(await page.locator('#works a').count(),5);
+   assert.match(await page.locator('#artist-preview').getAttribute('src'),/^https:\/\/pixeljoint\.com\//);
    assert.match(await page.locator('#artist-summary').textContent(),/TofuPxl/);
    await page.screenshot({path:'artifacts/four-colour/'+device+'-initial.png',fullPage:true});
    await page.locator('#palette').selectOption('marine');

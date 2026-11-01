@@ -32,7 +32,9 @@
             "发束大轮廓和阴影区域的层级分配",
             "四种颜色跨角色共用，而不是每个人各取四种"
           ],
-          "training_permission": "not_verified"
+          "training_permission": "not_verified",
+          "source_evidence_cn": "PixelJoint 标明2021-04-10发布，整幅作品Palette为4色；作者称它是受限调色板人物肖像练习。",
+          "remote_thumbnail_url": "https://pixeljoint.com/files/icons/full/4__r12732241661.png"
         },
         {
           "id": "portrait-two",
@@ -47,7 +49,8 @@
             "头部结构和微表情的精致像素组织",
             "发束亮暗与面部边缘的语义化像素"
           ],
-          "training_permission": "not_verified"
+          "training_permission": "not_verified",
+          "source_evidence_cn": "PixelJoint记录的2023年肖像练习；未核实该作品实际颜色数量。"
         },
         {
           "id": "fallen",
@@ -62,7 +65,8 @@
             "对比4色与32色肖像如何组织脸部体积",
             "检查是否因为颜色增加而引入噪点；不预设高色数更好"
           ],
-          "training_permission": "not_verified"
+          "training_permission": "not_verified",
+          "source_evidence_cn": "PixelJoint明确记载这幅2024年人物作品使用32色，作为四色肖像对照。"
         },
         {
           "id": "field",
@@ -78,7 +82,8 @@
             "背景尺度、自然材料色块分区、地表与景深",
             "场景素材研发，不将UI设计归属误记给Tofu"
           ],
-          "training_permission": "not_verified"
+          "training_permission": "not_verified",
+          "source_evidence_cn": "《Book of Abominations》战斗背景。原作者明确说明此图UI由Alex De La Cour制作。"
         },
         {
           "id": "modular-tileset",
@@ -93,7 +98,8 @@
             "可重复使用的独立地面与建筑模块",
             "图块连接处形状、比例一致性与层级解耦"
           ],
-          "training_permission": "not_verified"
+          "training_permission": "not_verified",
+          "source_evidence_cn": "作者官网游戏作品集列有模块化图块（Modular Tileset）；具体配色数量未确认。"
         }
       ],
       "rights": {

@@ -8,6 +8,8 @@ test('original artist reference facts are preserved and do not claim AI rights',
  assert.ok(a);assert.equal(a.artist.country.startsWith('England'),true);
  assert.equal(a.works.find(x=>x.id==='four-colour-portraits').palette_colors_verified,4);
  assert.equal(a.works.find(x=>x.id==='fallen').palette_colors_verified,32);
+ assert.match(a.works[0].remote_thumbnail_url,/^https:\/\/pixeljoint\.com\/files\/icons\/full\//);
+ assert.match(a.works[0].source_evidence_cn,/4色/);
  assert.equal(a.rights.training_images_approved,0);assert.equal(a.rights.anima_artist_tag,'unverified');
  assert.equal(a.rights.can_auto_download_originals_for_training,false);
  for(const w of a.works){assert.match(w.url,/^https:\/\//);assert.equal(w.training_permission,'not_verified')}

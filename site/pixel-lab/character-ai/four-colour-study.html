@@ -24,7 +24,7 @@ select{width:100%;background:#1b1a2c;color:var(--ink);border:1px solid #766f91;b
 .tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.tools button{flex:1 1 auto}
 .metric{background:#1b1a2c;color:#ead7ec;border:1px solid #554b71;padding:10px;border-radius:8px;white-space:pre-wrap;font:12px/1.65 ui-monospace,monospace;overflow-wrap:anywhere}
 .notice{border-left:3px solid var(--pink);background:#352d44;padding:12px;border-radius:6px;margin:12px 0;color:#f0e3f0}
-.work{border-top:1px solid var(--line);padding:10px 0;margin:0}
+.external-preview{padding:8px;background:#1f1d2d;border:1px solid #5e5977;border-radius:9px;margin:10px 0}.external-preview img{display:block;width:min(180px,100%);height:auto;image-rendering:pixelated;margin:auto}.external-preview p{font-size:11px;margin:8px 0}.work{border-top:1px solid var(--line);padding:10px 0;margin:0}
 .work a{font-weight:750}.work p{margin:5px 0;font-size:12px;color:var(--muted)}
 small.tag{background:#453954;padding:2px 7px;border-radius:5px;color:var(--blue);font-size:11px}
 #file{width:100%;font-size:12px;color:var(--ink)}
@@ -42,6 +42,7 @@ small.tag{background:#453954;padding:2px 7px;border-radius:5px;color:var(--blue)
 <section class="panel">
 <h2>01 · 画师研究卡</h2><p id="artist-summary" class="small">读取画师档案…</p>
 <div class="notice"><strong>已确认：</strong> 《4 4 colour portraits》的整幅像素作品确实仅用<strong>4种颜色</strong>，这是该作品的配色属性，不能推断画师所有作品都只用四色。</div>
+<div class="external-preview" aria-label="画师原作外部缩略图研究"><a href="https://pixeljoint.com/pixelart/138985.htm" target="_blank" rel="noopener noreferrer"><img id="artist-preview" src="https://pixeljoint.com/files/icons/full/4__r12732241661.png" width="180" height="180" loading="lazy" alt="TofuPxl《4 4 colour portraits》原站图片预览；若外站禁止嵌入，请点开原站查看" referrerpolicy="no-referrer"></a><p class="small">原作预览通过外部源站读取，不能作为我们自己的素材下载和训练。<a href="https://pixeljoint.com/pixelart/138985.htm" target="_blank" rel="noopener noreferrer">查看作品原页及准确色数</a></p></div>
 <div id="works" aria-label="来源作品链接"></div>
 <h3>我们要学的技术</h3><div id="technique" class="small"></div>
 <p class="small">训练图许可：<strong>未经授权</strong>。Anima 画师标签：<strong>未验证</strong>。不能把公开链接当成训练许可。</p>

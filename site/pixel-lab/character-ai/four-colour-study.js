@@ -28,7 +28,7 @@ $('export-json').addEventListener('click',()=>{if(!result)return;download(new Bl
 async function research(){try{const response=await fetch('./style-study-artists.json',{cache:'no-cache'});if(!response.ok)throw Error('无法载入画师资料');const json=await response.json(),s=json.artists.find(x=>x.artist.id==='tofupxl');if(!s)throw Error('未登记TofuPxl');
 $('artist-summary').textContent=s.artist.name+' / '+s.artist.country+'；作品链接'+s.works.length+'项。4色约束仅在首个作品被来源证实。';
 const root=$('works');root.replaceChildren();for(const w of s.works){const div=document.createElement('article');div.className='work';const link=document.createElement('a');link.href=w.url;link.textContent=w.title;link.target='_blank';link.rel='noopener noreferrer';
-const tag=document.createElement('small');tag.className='tag';tag.textContent=w.palette_colors_verified?('确认'+w.palette_colors_verified+'色'):'色数未核实';const p=document.createElement('p');p.textContent=w.source_evidence;div.append(link,document.createTextNode(' '),tag,p);root.append(div)}
+const tag=document.createElement('small');tag.className='tag';tag.textContent=w.palette_colors_verified?('确认'+w.palette_colors_verified+'色'):'色数未核实';const p=document.createElement('p');p.textContent=w.source_evidence_cn||w.source_evidence;div.append(link,document.createTextNode(' '),tag,p);root.append(div)}
 const tech=$('technique');tech.replaceChildren();for(const t of s.style_hypotheses){const p=document.createElement('p');p.textContent='• '+t;tech.append(p)}
 }catch(e){$('artist-summary').textContent='读取失败：'+e.message;feedback(e.message,true)}}
 convert();research();
