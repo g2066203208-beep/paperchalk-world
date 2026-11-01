@@ -49,3 +49,7 @@ Chromium浏览器：在手机/桌面加载并操作，导入测试PNG，调整�
 
 ## 使用权限
 Anima模型有非商业限制，游戏商业发布必须先核实模型本身和LoRA的许可证。程序化独立纹理不包含第三方训练图片；用户导入Anima图片的生成许可仍由其自己的模型许可约束。
+
+## 2026-11-01 可核查的 Anima LoRA 补充
+- [STYLE > gpt-image-2 / Anima-base1 v1.0–1.1](https://tensor.art/models/998864747409499914): 模型页面明确 Anima、@gpt-image-2；加强画面光照、纹理细节。**v1.1甚至可能制造不自然的纹理重复**，不能当无缝纹理模型。生成游戏原生像素时先用不加载LoRA对照。
+- [Anima Detailer v1.0](https://tensor.art/models/1022836946310825745): 页面明确 Anima Base LoRA，可减轻背景 stippling 颗粒。它会改变材质颗粒，不能保证砖纹/木纹正确。

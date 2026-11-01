@@ -30,13 +30,13 @@ function showRepeat(){const raw=rawCanvas(tile),n=Number($('repeatN').value),sca
 function paletteView(){const root=$('swatches');root.replaceChildren();tile.palette.forEach((col,i)=>{const b=document.createElement('button');b.style.background=col;b.type='button';b.title='颜色 '+i+' '+col;b.setAttribute('aria-label','选取颜色'+i+' '+col);if(i===pen)b.classList.add('selected');b.addEventListener('click',()=>{pen=i;paletteView()});root.append(b)})}
 function readout(){const a=inspect(tile),detail=(a.exactEdgeMatch?'四边像素颜色严格匹配':'仍存在边缘像素差异');
 $('viewname').textContent=(MATERIALS[tile.kind]?.name||'Anima导入纹理')+' · '+tile.size+'×'+tile.size;
-$('statistics').textContent='原生：'+a.size+'×'+a.size+' · 颜色：'+a.colorsUsed+'/'+tile.palette.length+'\\n左右边界不一致格数：'+a.leftRightMismatches+'\\n上下边界不一致格数：'+a.topBottomMismatches+'\\n'+detail+'\\n视觉/艺术质量：待人工验收\\n来源：'+tile.source;
+$('statistics').textContent='原生：'+a.size+'×'+a.size+' · 颜色：'+a.colorsUsed+'/'+tile.palette.length+'\n左右边界不一致格数：'+a.leftRightMismatches+'\n上下边界不一致格数：'+a.topBottomMismatches+'\n'+detail+'\n视觉/艺术质量：待人工验收\n来源：'+tile.source;
 $('undo').disabled=!history.length;$('redo').disabled=!future.length;}
 function updatePrompt(){const details=promptMaterials[kind],s='masterpiece, best quality, safe, no humans, '+details+', pixel art, game texture, orthographic top-down view, flat lighting, edge-to-edge repeating surface, seamless tileable material, no isolated objects, structured clean color clusters, crisp pixel edges, limited matte color palette, square image, uniform texel density';
 $('prompt').textContent=s;}
 function render(){showEdit();showRepeat();paletteView();readout();$('presets').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.kind===kind)));updatePrompt();}
 function newMaterial(){const n=Number($('size').value),seed=Math.floor(Number($('seed').value)||0);original=null;tile=generateMaterial(kind,n,seed);history=[];future=[];pen=Math.min(3,tile.palette.length-1);render();setStatus('已生成全新 '+n+'×'+n+' 原生格材质（程序化，非 Anima 生成）');}
-for(const [k,info] of Object.entries(MATERIALS)){const b=document.createElement('button');b.type='button';b.dataset.kind=k;b.textContent=info.name.split(' / ')[0];b.title=info.name;b.addEventListener('click',()=>{kind=k;newMaterial()});$('presets').append(b)}
+for(const [k,info] of Object.entries(MATERIALS)){const b=document.createElement('button');b.type='button';b.dataset.kind=k;b.title=info.name;const thumb=rawCanvas(generateMaterial(k,32,42));thumb.setAttribute('aria-hidden','true');b.append(thumb,document.createTextNode(info.name.split(' / ')[0]));b.addEventListener('click',()=>{kind=k;newMaterial()});$('presets').append(b)}
 $('generate').addEventListener('click',newMaterial);$('reset').addEventListener('click',newMaterial);
 $('grid').addEventListener('change',e=>{grid=e.target.checked;showEdit()});
 $('repeatN').addEventListener('change',showRepeat);

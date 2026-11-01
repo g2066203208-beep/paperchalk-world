@@ -23,14 +23,14 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;d
 .toolbar{display:flex;justify-content:space-between;align-items:center;gap:7px;flex-wrap:wrap;margin:7px 0 13px;color:var(--muted);font-size:12px}
 .stat{font:12px/1.5 ui-monospace,monospace;color:#e9c8dd;background:#211f33;padding:10px;border:1px solid #504761;border-radius:8px;margin:12px 0;white-space:pre-wrap}
 .presetlist{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
-.presetlist button{text-align:left;font-size:12px;min-height:41px}.presetlist button[aria-pressed=true]{background:#765572;color:white;border-color:var(--pink)}
+.presetlist button{display:flex;gap:8px;align-items:center;text-align:left;font-size:12px;min-height:41px}.presetlist button canvas{width:32px;height:32px;flex:none;image-rendering:pixelated;border:1px solid #8d8098}.presetlist button[aria-pressed=true]{background:#765572;color:white;border-color:var(--pink)}
 .notice{border-left:3px solid var(--pink);padding:11px;background:#332d41;border-radius:6px;margin:15px 0;color:#e1d6e7}
 .prompt{border:1px solid #675d7d;background:#1b1928;color:#f4dbea;font:12px/1.7 ui-monospace,monospace;padding:12px;white-space:pre-wrap;overflow-wrap:anywhere;border-radius:8px;min-height:94px;margin:10px 0}
 .section{margin-top:18px}.small{font-size:12px;color:var(--muted)}.status{color:#bfebc8;font-size:12px;min-height:21px;margin:5px 0}
 .check{display:flex;align-items:center;gap:5px;font-weight:500;margin:6px 0}.check input{accent-color:var(--pink)}
 .links{display:flex;gap:12px;flex-wrap:wrap}.links a{font-size:12px}.legend{color:var(--muted);font-size:12px}
 @media(max-width:1080px){.work{grid-template-columns:minmax(190px,265px) minmax(270px,1fr)}.right{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:15px}.right>.section{margin-top:0}}
-@media(max-width:660px){.work{grid-template-columns:1fr}.right{grid-column:auto;display:block}.presetlist{grid-template-columns:repeat(3,minmax(0,1fr))}.presetlist button{padding:7px 5px;text-align:center;font-size:11px}main{padding:18px 12px 60px}}
+@media(max-width:660px){.work{grid-template-columns:1fr}.right{grid-column:auto;display:block}.presetlist{grid-template-columns:repeat(3,minmax(0,1fr))}.presetlist button{padding:7px 5px;text-align:center;font-size:11px;gap:5px;flex-direction:column}.presetlist button canvas{width:30px;height:30px}main{padding:18px 12px 60px}}
 </style></head><body>
 <header><strong><span>PIXEL</span> ATELIER / MATERIAL FORGE</strong><nav><a href="./">像素实验室</a> · <a href="../world-builder/materials.html">原16×16四色材质编辑器</a> · <a href="../">工具首页</a></nav></header>
 <main>
@@ -68,6 +68,7 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none;d
 <div id="prompt" class="prompt" aria-label="Anima完整材质提示词"></div>
 <div class="buttons"><button id="copyPrompt">复制正向提示词</button><button id="copyNegative">复制负向提示词</button></div>
 <p class="small">提示词按 Anima 的安全、主题、材质、视角、光照、限制条件排序；目前没有独立验证通过的专用无缝像素材质 LoRA，因此默认**不加载LoRA**。</p>
+<p class="small"><strong>已找到的Anima材质质感LoRA（不是无缝材质LoRA）：</strong> <a href="https://tensor.art/models/1006845894009568164" target="_blank" rel="noopener">STYLE &gt; gpt-image-2（Anima base v1）</a>：额外纹理和细节，可能产生重复花纹；<a href="https://tensor.art/models/1006845894009568164" target="_blank" rel="noopener">仅比较视觉</a>。<a href="https://tensor.art/models/1022836946310825745" target="_blank" rel="noopener">Anima Detailer</a>：倾向减少背景颗粒，不一定适合像素画。模型许可及商业使用需分别核查。</p>
 <div class="links"><a href="https://ostris.com/docs/ai-toolkit/models/anima" target="_blank" rel="noopener">Anima 模型规格</a><a href="https://github.com/sorryhyun/anima_lora/blob/main/docs/guidelines/guidebook.md" target="_blank" rel="noopener">官方架构兼容的 LoRA 训练教程</a><a href="https://github.com/g2066203208-beep/paperchalk-world/blob/main/docs/anima-material-pipeline-v1.md" target="_blank" rel="noopener">材质管线与许可</a></div>
 </div>
 </section>

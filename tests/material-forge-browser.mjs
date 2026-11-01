@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {spawn} from 'node:child_process';
-import {mkdir,readFile} from 'node:fs/promises';
+import {mkdir,readFile,copyFile} from 'node:fs/promises';
 
 test('actual phone + desktop material forge, painting, import, exports and screenshots',async()=>{
   const server=spawn('python3',['-m','http.server','8877','--directory','site'],{stdio:'ignore'});
@@ -17,6 +17,8 @@ test('actual phone + desktop material forge, painting, import, exports and scree
       await page.goto('http://localhost:8877/pixel-lab/material-forge.html',{waitUntil:'networkidle'});
       await page.waitForFunction(()=>!!window.__MATERIAL_FORGE__);
       assert.equal(await page.locator('#presets button').count(),12);
+      assert.equal(await page.locator('#presets button canvas').count(),12);
+      await page.screenshot({path:'artifacts/material-forge/'+name+'-initial.png',fullPage:true});
       assert.equal((await page.evaluate(()=>window.__MATERIAL_FORGE__.state())).audit.exactEdgeMatch,true);
       await page.locator('#presets button[data-kind="brick"]').click();
       await page.locator('#size').selectOption('32');
@@ -37,6 +39,7 @@ test('actual phone + desktop material forge, painting, import, exports and scree
       await page.waitForFunction(()=>window.__MATERIAL_FORGE__.state().source==='anima-image-import-not-native-proof');
       assert.equal((await page.evaluate(()=>window.__MATERIAL_FORGE__.state())).audit.exactEdgeMatch,true);
       await page.screenshot({path:'artifacts/material-forge/'+name+'.png',fullPage:true});
+      if(name==='desktop'){const pending=page.waitForEvent('download');await page.locator('#atlas').click();const atlasDl=await pending;await copyFile(await atlasDl.path(),'artifacts/material-forge/12-material-atlas.png');const atlasBytes=await readFile('artifacts/material-forge/12-material-atlas.png');assert.equal(atlasBytes.readUInt32BE(16),256);assert.equal(atlasBytes.readUInt32BE(20),192);}
       assert.deepEqual(errors,[]);
       await page.close();
     }
