@@ -9,10 +9,23 @@
 :root{color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
-#view{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:#000;perspective:1500px}
+#view{
+  position:fixed;inset:0;display:grid;place-items:center;
+  overflow:hidden;background:#000;perspective:1500px;
+  container-type:size;touch-action:none;
+}
+/* The Android APK uses a real landscape Activity. A normal browser tab
+   cannot force OS rotation, so render its COMPLETE game viewport rotated
+   immediately in portrait. No tap, permission, overlay, or fake lock needed. */
+body.mobile-mode.virtual-landscape #view{
+  inset:auto;top:0;left:100vw;width:100dvh;height:100vw;
+  transform-origin:top left;transform:rotate(90deg);
+}
 #scene{
   position:relative;flex:none;margin:0;
-  width:min(90vw,calc(88dvh * 16 / 9));aspect-ratio:16/9;
+  width:min(90vw,calc(88dvh * 16 / 9));
+  width:min(90cqw,calc(88cqh * 16 / 9));
+  max-width:100%;aspect-ratio:16/9;
   transform-origin:center center;
   transform:rotateX(0deg) rotateY(0deg);
   will-change:transform;backface-visibility:hidden;
@@ -46,12 +59,12 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
   /* independent viewport-space layer: mouse never transforms the fog */
 }
 
-/* Phone controls stay in SCREEN SPACE; neither they nor the fog rotate. */
+/* Controls and fog stay in GAME VIEWPORT coordinates; neither follows scene tilt. */
 #motion-ui{
   position:fixed;z-index:15;right:max(12px,env(safe-area-inset-right));
   bottom:max(10px,env(safe-area-inset-bottom));
   display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;
-  max-width:min(96vw,560px);font:12px/1.3 system-ui,sans-serif;
+  max-width:min(96cqw,560px);font:12px/1.3 system-ui,sans-serif;
 }
 #motion-ui button{
   appearance:none;border:1px solid #a6aeb4;border-radius:8px;
@@ -62,13 +75,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
 #motion-ui button[hidden]{display:none}
 #motion-status{color:#d4dadd;text-shadow:0 1px 4px #000;max-width:180px}
 body.mobile-mode #motion-ui{display:flex}
-#rotate-help{
-  display:none;position:fixed;inset:0;z-index:10;pointer-events:none;
-  place-items:center;background:#000d;color:#fff;text-align:center;
-  font:600 clamp(15px,4vw,22px)/1.7 system-ui,sans-serif;padding:18px;
-}
-body.mobile-mode.portrait-mode #rotate-help{display:grid}
-#rotate-help small{display:block;font-size:12px;font-weight:400;color:#b8c1c6}
+/* The landscape view is visible on first load, even with portrait lock enabled. */
 @media (max-height:430px) and (orientation:landscape){
   #motion-ui{bottom:max(6px,env(safe-area-inset-bottom));right:max(8px,env(safe-area-inset-right))}
   #motion-ui button{padding:7px 10px;min-height:34px}
@@ -84,12 +91,9 @@ body.mobile-mode.portrait-mode #rotate-help{display:grid}
   </figure>
   <canvas id="fog" aria-hidden="true"></canvas>
 
-  <div id="rotate-help" role="note">
-    <div>请将手机横过来游玩<small>点右下角“横屏 · 开启体感”，允许传感器后可用手机倾斜视角</small></div>
-  </div>
   <div id="motion-ui" aria-label="手机横屏及体感控制">
-    <span id="motion-status" role="status" aria-live="polite">横屏体验更完整</span>
-    <button id="enable-motion" type="button">横屏 · 开启体感</button>
+    <span id="motion-status" role="status" aria-live="polite">横屏画面已启用</span>
+    <button id="enable-motion" type="button">开启体感</button>
     <button id="calibrate-motion" type="button" hidden>重置中心</button>
   </div>
 </main>
@@ -181,11 +185,17 @@ void main(){
   let sizes={w:1,h:1,sw:1,sh:1},fluidTime=0;
   let fallback=null,fallbackState=null;
   let sceneHalf={x:.4,y:.4};
+  function logicalSize(){
+    const rotated=document.body.classList.contains('virtual-landscape');
+    return rotated ? {w:innerHeight,h:innerWidth} : {w:innerWidth,h:innerHeight};
+  }
+  function isVirtualLandscape(){return document.body.classList.contains('virtual-landscape')}
   function half(){
     const r=stage.getBoundingClientRect();
     // Geometry is calculated from CSS dimensions (untransformed), not the
     // current tilted bounds. Fog stays centered on screen independently.
-    sceneHalf={x:stage.offsetWidth/(2*innerWidth),y:stage.offsetHeight/(2*innerHeight)};
+    const {w,h}=logicalSize();
+    sceneHalf={x:stage.offsetWidth/(2*w),y:stage.offsetHeight/(2*h)};
     if(gl){
       for(const p of [simulate,composite]){
         gl.useProgram(p);
@@ -203,12 +213,15 @@ void main(){
   let nativeCenter=null,nativeSamples=0,nativeActive=false,touchStart=null;
   function setMotionStatus(message){motionStatus.textContent=message}
   function orientationAngle(){
-    return (((screen.orientation&&Number.isFinite(screen.orientation.angle)
+    const actual=(((screen.orientation&&Number.isFinite(screen.orientation.angle)
       ?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0))%360)+360)%360;
+    // For simulated landscape on a portrait-locked browser, map the sensor
+    // to the same game-space X/Y axes as a physically landscape Android app.
+    return (actual+(isVirtualLandscape()?90:0))%360;
   }
   function updatePhoneLayout(){
     document.body.classList.toggle('mobile-mode',mobile);
-    document.body.classList.toggle('portrait-mode',mobile&&innerHeight>innerWidth);
+    document.body.classList.toggle('virtual-landscape',mobile&&innerHeight>innerWidth);
   }
   function centreSensor(){
     sensorCenter=null;nativeCenter=null;aimX=0;aimY=0;start();
@@ -321,7 +334,7 @@ void main(){
   enableMotion.addEventListener('click',enableSensorsAndLandscape);
   calibrateMotion.addEventListener('click',centreSensor);
   window.addEventListener('orientationchange',()=>{
-    centreSensor();updatePhoneLayout();
+    updatePhoneLayout();centreSensor();resize();
   },{passive:true});
   // A practical fallback if mobile browser blocks sensors: drag to tilt.
   view.addEventListener('pointerdown',e=>{
@@ -330,8 +343,10 @@ void main(){
   },{passive:true});
   view.addEventListener('pointermove',e=>{
     if(!touchStart||touchStart.id!==e.pointerId||e.pointerType!=='touch'||reduced.matches)return;
-    aimX=clamp((e.clientX-touchStart.x)/(Math.max(innerWidth,1)*.24),-1,1);
-    aimY=clamp((e.clientY-touchStart.y)/(Math.max(innerHeight,1)*.24),-1,1);
+    const dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y;
+    const {w,h}=logicalSize();
+    aimX=clamp((isVirtualLandscape()?dy:dx)/(Math.max(w,1)*.24),-1,1);
+    aimY=clamp((isVirtualLandscape()?-dx:dy)/(Math.max(h,1)*.24),-1,1);
     start();
   },{passive:true});
   function finishTouch(){if(touchStart){touchStart=null;aimX=0;aimY=0;start()}}
@@ -401,7 +416,8 @@ void main(){
     fog.dataset.renderer='cpu-advected-fluid';
   }
   function resize(){
-    const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);
+    const logical=logicalSize();
+    const w=Math.max(1,logical.w),h=Math.max(1,logical.h);
     const scale=Math.min(.72,devicePixelRatio||1);
     // The visible fog gets a responsive canvas, while the simulation runs
     // on a smaller persistent density field for per-frame performance.
@@ -507,11 +523,11 @@ void main(){
   },{passive:true});
   view.addEventListener('pointerleave',()=>{aimX=0;aimY=0;start()});
   window.addEventListener('blur',()=>{aimX=0;aimY=0;start()});
-  window.addEventListener('resize',()=>{resize();updatePhoneLayout();start()},{passive:true});
+  window.addEventListener('resize',()=>{updatePhoneLayout();resize();centreSensor();start()},{passive:true});
   document.addEventListener('visibilitychange',()=>{last=0;if(!document.hidden)start()});
   reduced.addEventListener?.('change',()=>{last=0;start()});
   if(!initGPU())initCPU();
-  resize();start();
+  updatePhoneLayout();resize();start();
 })();
 </script>
 </body>
