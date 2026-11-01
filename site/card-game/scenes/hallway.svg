@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet"><defs>
+<linearGradient id="wall" x2="1" y2=".1"><stop stop-color="#574f46"/><stop offset=".4" stop-color="#a79a85"/><stop offset="1" stop-color="#61594e"/></linearGradient>
+<linearGradient id="floor" x2=".3" y2="1"><stop stop-color="#6b675f"/><stop offset="1" stop-color="#242429"/></linearGradient>
+<linearGradient id="door" x2="1" y2="0"><stop stop-color="#241f1e"/><stop offset=".25" stop-color="#6c4839"/><stop offset=".72" stop-color="#54382e"/><stop offset="1" stop-color="#251b1d"/></linearGradient>
+<linearGradient id="night" x2=".5" y2="1"><stop stop-color="#3e4a4e"/><stop offset="1" stop-color="#0d1721"/></linearGradient>
+<radialGradient id="glow"><stop stop-color="#f6d9a0" stop-opacity=".5"/><stop offset="1" stop-color="#f6d9a0" stop-opacity="0"/></radialGradient>
+<radialGradient id="shade"><stop offset=".28" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#050507" stop-opacity=".72"/></radialGradient>
+<pattern id="tile" width="65" height="65" patternUnits="userSpaceOnUse"><path d="M0 0H65M0 0V65" stroke="#c0bbb0" stroke-opacity=".18" fill="none"/></pattern>
+<clipPath id="hole"><circle cx="800" cy="450" r="340"/></clipPath>
+</defs><rect width="1600" height="900" fill="#253038"/>
+<path d="M0 0H1600L1213 215H387Z" fill="#495352"/><path d="M0 0L387 215V656L0 900Z" fill="#5c6964"/>
+<path d="M1600 0L1213 215V656L1600 900Z" fill="#52605e"/><rect x="387" y="215" width="826" height="441" fill="#758078"/>
+<path d="M0 900L387 656H1213L1600 900Z" fill="url(#floor)"/><path d="M0 900L387 656H1213L1600 900Z" fill="url(#tile)"/>
+<rect x="642" y="290" width="318" height="365" fill="#464a45" stroke="#b1b2a4" stroke-width="14"/><rect x="663" y="313" width="276" height="323" fill="url(#door)"/>
+<circle cx="806" cy="424" r="9" fill="#d0c1af"/><rect x="697" y="286" width="208" height="38" fill="#d2c8b4"/><path d="M744 302H857" stroke="#4d5050" stroke-width="11"/>
+<path d="M95 168H338V731H95Z" fill="#303c3c" stroke="#87958c" stroke-width="18"/><path d="M1262 168H1509V731H1262Z" fill="#29363b" stroke="#7c8b89" stroke-width="17"/>
+<rect x="761" y="105" width="80" height="26" fill="#c9d3be"/><ellipse cx="800" cy="145" rx="360" ry="300" fill="url(#glow)"/>
+<rect width="1600" height="900" fill="#172931" opacity=".16"/><rect width="1600" height="900" fill="url(#shade)"/></svg>
