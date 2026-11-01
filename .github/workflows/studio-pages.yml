@@ -144,7 +144,7 @@ jobs:
                   assert.equal(await art.isVisible(),true,'character not shown: '+id);
                   const dimensions=await art.evaluate(async el=>{
                     await el.decode();
-                    return [el.naturalWidth,el.naturalHeight,el.closest('#scene').dataset.scene];
+                    return [el.naturalWidth,el.naturalHeight,document.getElementById('scene').dataset.scene];
                   });
                   assert.ok(dimensions[0]>100&&dimensions[1]>300,'missing standalone art: '+id);
                   assert.equal(dimensions[2],'classroom','character not shown in classroom');
