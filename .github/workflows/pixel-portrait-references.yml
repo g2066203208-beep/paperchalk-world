@@ -1,0 +1,32 @@
+name: Pixel portrait research sources and Anima/MOSS prompt check
+on:
+  pull_request:
+    paths:
+      - 'site/pixel-lab/pixel-portrait-*'
+      - 'site/pixel-lab/jp-pixel-artists.json'
+      - 'site/pixel-lab/index.html'
+      - 'docs/anima-prompt-standard-v1.md'
+      - 'docs/pixel-portrait-prompt-guide-v1.1.md'
+      - 'tests/pixel-portrait-artists.test.mjs'
+      - '.github/workflows/pixel-portrait-references.yml'
+  push:
+    branches: [main, feat/anima-prompt-and-jp-pixel-artist-library]
+    paths:
+      - 'site/pixel-lab/pixel-portrait-*'
+      - 'site/pixel-lab/jp-pixel-artists.json'
+      - 'site/pixel-lab/index.html'
+      - 'docs/anima-prompt-standard-v1.md'
+      - 'docs/pixel-portrait-prompt-guide-v1.1.md'
+      - 'tests/pixel-portrait-artists.test.mjs'
+      - '.github/workflows/pixel-portrait-references.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/pixel-portrait-artists.test.mjs
