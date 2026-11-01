@@ -27,6 +27,13 @@ export const SCENES={
    {id:'elevator',label:'东侧电梯',x:79,y:50,icon:'▣'},
    {id:'door301',label:'301室',x:39,y:55,icon:'⌕'},
    {id:'back302',label:'返回302室',x:50,y:80,icon:'↩'}]},
+ classroom:{name:'校园 · 空教室',subtitle:'教室里只剩下她一个人',desc:'午后的教室无人说话。成排的桌椅延伸到讲台，女孩独自坐在中央。这张画面使用你刚生成的 Anima 原图。',
+  spots:[
+   {id:'girl',label:'独坐的女孩',x:50,y:57,icon:'◉'},
+   {id:'board',label:'黑板',x:56,y:37,icon:'⌕'},
+   {id:'desks',label:'空座位',x:77,y:72,icon:'▤'},
+   {id:'windows',label:'窗户',x:15,y:29,icon:'☼'},
+   {id:'back',label:'返回原场景',x:91,y:85,icon:'↩'}]},
  stairs:{name:'三楼 · 安全楼梯',subtitle:'绿色的出口标牌指向一楼',desc:'往下的楼梯被一盏微弱的应急灯照亮。门外敲击声已完全停止。',
   spots:[
    {id:'exit',label:'沿楼梯下楼',x:50,y:70,icon:'↓'},
@@ -65,12 +72,29 @@ function succeed(s){
  s.ending={type:'survived',title:'第一夜 · 生还',description:'你没有回应门外的第三个人。顺着西侧的安全楼梯离开了三楼。\n但电梯的楼层显示，仍停留在「302」。'};
  talk(s,'无线电记录',s.ending.description);
 }
+export function enterClassroom(s){
+ if(s.ending)return false;
+ if(s.scene==='classroom')return true;
+ s.flags.classroomReturn=s.scene;
+ scene(s,'classroom','你想起那间教室。空荡的桌椅之间，女孩独自坐在讲台前。');
+ return true;
+}
 export function isEscapeReady(s){return s.flags.notice&&s.flags.radio&&s.flags.listened&&s.flags.waited}
 export function inspect(s,id){
  if(s.ending)return false;
  if(s.dialogue.options?.length&&s.dialogue.options[0].id!=='continue')s.dialogue.options=[];
  const f=s.flags;
  switch(s.scene+':'+id){
+  case 'classroom:girl':
+   talk(s,'教室 · 女孩','她垂着头，安静地坐在教室最远处。\n桌椅之间没有第二个人。');return true;
+  case 'classroom:board':
+   talk(s,'调查 · 黑板','黑板上什么也没有。日光从侧面的窗户照进来，擦痕几乎看不清。');return true;
+  case 'classroom:desks':
+   talk(s,'调查 · 座位','一排排空桌椅安静地排列着。你听见一声椅脚摩擦地面的细响。');return true;
+  case 'classroom:windows':
+   talk(s,'调查 · 教室窗户','窗外白光刺眼，窗框在地面投下很长的影子。');return true;
+  case 'classroom:back':
+   scene(s,SCENES[s.flags.classroomReturn]?s.flags.classroomReturn:'foyer','你把注意力从教室移开，回到刚才的地方。');return true;
   case 'foyer:notice':
    discover(s,'notice');talk(s,'物业告示','【第三条】若门外连续传来三声敲门，不要使用猫眼。\n邻居只会敲两次。');return true;
   case 'foyer:cabinet':
@@ -169,7 +193,7 @@ export function useAction(s,id){
  }
  if(id==='observe'){
   time(s,1);
-  const names={foyer:'门锁、猫眼、告示与鞋柜的位置没有改变。',living:'电话、收音机与窗户都可以调查。',peephole:'中央消失点附近有一个不自然的阴影，但现在没有人。',hallway:'西侧楼梯和东侧电梯的位置已经确认。',stairs:'应急灯照着向下的楼梯。'};
+  const names={foyer:'门锁、猫眼、告示与鞋柜的位置没有改变。',living:'电话、收音机与窗户都可以调查。',peephole:'中央消失点附近有一个不自然的阴影，但现在没有人。',hallway:'西侧楼梯和东侧电梯的位置已经确认。',stairs:'应急灯照着向下的楼梯。',classroom:'这间教室空空荡荡，只有中间坐着一个女孩。'};
   talk(s,'行动 · 观察',names[s.scene]||'没有发现新的线索。');return true;
  }
  if(id==='wait'&&s.scene==='foyer')return choose(s,'wait');
