@@ -1,0 +1,79 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#151a26"><title>PIXEL ATELIER | 游戏像素资产工作室</title>
+<style>
+:root{color-scheme:dark;--bg:#151a26;--panel:#252a3a;--line:#526078;--ink:#f3e9d6;--mute:#adb8c6;--gold:#ecc18d;--blue:#9ecdc6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 system-ui,-apple-system,"Noto Sans SC",sans-serif}
+a{color:var(--blue)}button,input,select,textarea{font:inherit}
+button{cursor:pointer;color:var(--ink);border:1px solid var(--line);background:#354153;padding:9px 11px;border-radius:8px;min-height:38px}
+button:hover{border-color:var(--gold)}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:2px}button:disabled{opacity:.4;cursor:default}
+button[aria-pressed=true],button.primary{background:var(--gold);color:#24212d;font-weight:800;border-color:var(--gold)}
+header{border-bottom:1px solid var(--line);padding:13px max(15px,calc((100vw - 1320px)/2));display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+header strong{font-size:17px;letter-spacing:.1em}header strong span{color:var(--gold)}
+main{max-width:1320px;margin:auto;padding:23px 15px 60px}.eyebrow{font-size:11px;letter-spacing:.16em;color:var(--gold);font-weight:900}
+h1{font-size:clamp(26px,4.4vw,43px);line-height:1.2;margin:7px 0}h2{font-size:18px;margin:0 0 11px}h3{font-size:15px;margin:9px 0}
+.desc{max-width:890px;color:var(--mute)}.small{font-size:12px;color:var(--mute)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:13px;margin:19px 0}
+.panel{border:1px solid var(--line);background:var(--panel);padding:16px;border-radius:13px;min-width:0}
+.layout{display:grid;grid-template-columns:230px minmax(360px,1fr) 235px;gap:12px}
+label{display:block;font-size:12px;color:var(--mute);margin:10px 0 4px}input,select,textarea{background:#171f2b;color:var(--ink);border:1px solid #657286;padding:9px;border-radius:7px;max-width:100%}
+input[type=number],input[type=text],select,textarea{width:100%}input[type=file]{width:100%}.buttons{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.buttons>*{flex:1 1 auto}
+#stage{width:100%;height:auto;aspect-ratio:16/9;display:block;image-rendering:pixelated;touch-action:none;background:#121a25;cursor:grab;border:4px solid #6a6260}
+#stage:active{cursor:grabbing}.module-list{display:grid;grid-template-columns:1fr 1fr;gap:7px}.module-list button{font-size:12px;line-height:1.4;min-height:50px;padding:5px}
+.coords{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.coords input{padding:7px;font:13px monospace}
+#objects{display:grid;gap:5px;max-height:300px;overflow:auto}#objects button{text-align:left;font-size:12px;padding:6px;min-height:30px}
+.summary{font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;border:1px solid #556475;background:#1b2633;color:#bcd7db;padding:10px;border-radius:7px;margin:12px 0;overflow-wrap:anywhere}
+.warning{background:#38353b;border-left:3px solid var(--gold);padding:12px;margin:13px 0;border-radius:6px}
+.refs,.twocol{display:grid;grid-template-columns:1fr 1fr;gap:13px}.ref{background:#1b2533;border:1px solid var(--line);padding:12px;border-radius:10px;margin:0}
+.ref img{width:100%;height:350px;object-fit:contain;image-rendering:pixelated;background:#344253}.ref figcaption{color:var(--mute);font-size:12px}
+.checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.checks label{display:flex;gap:8px;align-items:center;background:#30394a;padding:8px;border-radius:7px;margin:0;color:var(--ink)}
+textarea{min-height:170px;resize:vertical;font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap}
+#status{font-size:12px;color:#baefcd;min-height:30px;margin:13px 0}footer{color:var(--mute);font-size:12px;border-top:1px solid var(--line);padding-top:13px}
+[hidden]{display:none!important}
+@media(max-width:1040px){.layout{grid-template-columns:215px minmax(310px,1fr)}.right{grid-column:1/-1}}
+@media(max-width:650px){main{padding:15px 10px 50px}.layout,.twocol{grid-template-columns:1fr}.right{grid-column:auto}.refs,.checks{grid-template-columns:1fr 1fr}.ref img{height:240px}}
+@media(max-width:410px){.refs,.checks{grid-template-columns:1fr}.module-list{grid-template-columns:repeat(3,minmax(0,1fr))}.module-list button{font-size:11px}}
+</style></head><body>
+<header><strong><span>PIXEL</span> ATELIER / PRODUCTION</strong><nav><a href="./">像素工作室</a> · <a href="./material-forge.html">材质工坊</a> · <a href="../galgame/">《夜航灯》</a></nav></header>
+<main><div class="eyebrow">NATIVE GAME PIXEL / SCENE + CHARACTER + ANIMA DATA</div><h1>像素游戏资产生产工作室</h1>
+<p class="desc">用原生384×216网格搭建雨夜吧台：门窗、可见顶面的柜台、杯架、吊灯、道具和NPC分别绘制、拖动和分层。另有角色母版审查、Anima Base LoRA数据准入与分类提示词。不是把AI整张图片冒充游戏资产。</p>
+<div class="tabs" role="tablist">
+<button role="tab" data-tab="scene" aria-selected="true" aria-pressed="true">01 模块场景</button>
+<button role="tab" data-tab="character" aria-selected="false" aria-pressed="false">02 人物稳定</button>
+<button role="tab" data-tab="lora" aria-selected="false" aria-pressed="false">03 Anima LoRA</button>
+</div>
+<section id="tab-scene" role="tabpanel" aria-label="场景搭建">
+<div class="layout">
+<aside class="panel"><h2>可复用游戏模块</h2><div id="module-list" class="module-list"></div><p class="small">单独对象、整数坐标、独立前后层级，不是一张死背景。</p>
+<div class="buttons"><button id="reset">复位</button><button id="undo">撤销</button><button id="redo">重做</button></div></aside>
+<div class="panel"><h2>夜航灯 · 雨夜吧台</h2><canvas id="stage" width="384" height="216" tabindex="0" aria-label="384乘216原生像素酒吧模块化可编辑场景"></canvas>
+<div class="buttons"><button id="save-png" class="primary">导出原生PNG</button><button id="save-json">导出工程JSON</button><button id="load-json">导入工程</button></div><input id="scene-file" type="file" accept=".json,application/json" hidden>
+<div id="scene-status" class="summary"></div></div>
+<aside class="panel right"><h2>模块坐标和层级</h2><p id="selected-name" class="small">点击场景对象选择</p>
+<div class="coords"><label>X<input id="pos-x" type="number"></label><label>Y<input id="pos-y" type="number"></label><label>Z<input id="pos-z" type="number"></label></div>
+<div class="buttons"><button id="front">上移层级</button><button id="back">下移层级</button><button id="duplicate">复制</button><button id="delete">删除</button></div>
+<h3>当前对象</h3><div id="objects"></div></aside>
+</div><div class="warning">此场景已在逻辑网格上绘制，但属于程序化艺术初稿。形体与材质是否达到专业像素美术水平仍需人工审查，NPC目前是占位精灵，不是LoRA生成成品。</div>
+</section>
+<section id="tab-character" role="tabpanel" aria-label="人物稳定" hidden>
+<div class="panel"><h2>人物身份锁定 · 完整全身立绘</h2><p class="desc">先用仓库现有的两张192×256原生像素候选进行审查。这两张图并未证明同一角色在不同动作中的身份稳定，且尚未通过艺术验收。</p>
+<div class="refs">
+<figure class="ref"><img id="candidate-one" src="./assets/hostess-redraw-v1-192x256.png" alt="原生192x256整幅人物候选"><figcaption>原生192×256 · 当前重新绘制候选（未验收）</figcaption><button data-img="candidate-one" class="audit-image">统计真实像素</button></figure>
+<figure class="ref"><img id="candidate-two" src="./assets/hostess-20261030-D-192x256.png" alt="原生192x256四色人物候选"><figcaption>原生192×256 · D四色候选（不冒充同身份）</figcaption><button data-img="candidate-two" class="audit-image">统计真实像素</button></figure></div>
+<h3>角色圣经 · 需人工逐项确认的固定属性</h3><div id="identity-checks" class="checks"></div>
+<div id="character-report" class="summary">人物母版未通过验收，不可自动启动训练。</div>
+<p class="small"><a href="./pixel-portrait-references.html">全身像素人物画师研究</a> · <a href="./pixel-audit.html">逐像素审计</a></p>
+</div></section>
+<section id="tab-lora" role="tabpanel" aria-label="训练就绪" hidden>
+<div class="twocol">
+<div class="panel"><h2>角色 LoRA 训练数据准入</h2><p class="small">仅Anima Base，不能把艺术家欣赏图、未验收的原生候选和另一人物混成角色训练集。没有足够授权图时会阻止“训练已完成”的假结论。</p>
+<label for="manifest">加载本地 JSON 训练清单</label><input id="manifest" type="file" accept=".json,application/json">
+<div class="buttons"><button id="example-manifest">导出空清单模板</button><button id="audit-manifest" class="primary">验证清单</button></div>
+<div id="report" class="summary"></div><p class="small">最小实验门槛：20张授权且人工审核的同一角色原生像素图，至少4种姿势、3种视角、4种表情。满足门槛不代表训练成功。</p></div>
+<div class="panel"><h2>Anima 资产分类提示词</h2><label for="prompt-kind">素材类别</label><select id="prompt-kind"><option value="character">完整人物立绘</option><option value="environment">酒吧/房间场景</option><option value="prop">道具</option><option value="ui">UI面板</option></select>
+<label for="artist-tag">@画师标签（必须确认该ID能被Anima识别）</label><input id="artist-tag" type="text" placeholder="@verified artist">
+<div class="buttons"><button id="make-prompt" class="primary">生成标签提示词</button><button id="copy-prompt">复制</button></div>
+<textarea id="prompt-output" rows="8" spellcheck="false" aria-label="Anima标签提示词"></textarea>
+<div class="warning">官方建议在 <strong>Anima Base</strong> 上训练 LoRA，rank32可从学习率2e-5开始，且不要训练LLM Adapter。这里只做数据准入，不假装已经训练出模型。<a href="https://github.com/kohya-ss/sd-scripts/blob/main/docs/anima_train_network.md">专用训练脚本与说明</a></div>
+</div></div>
+</section><p id="status" role="status" aria-live="polite"></p><footer>PIXEL ATELIER · 本页面无需在线AI即可编辑及导出。正式游戏美术、商业使用许可与模型训练均须分别审查。</footer>
+</main><script type="module" src="./game-asset-studio.js?v=20261101"></script></body></html>
