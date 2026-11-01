@@ -183,11 +183,11 @@ void main(){
   }
   function resize(){
     const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);
-    const scale=Math.min(devicePixelRatio||1,1.4);
+    const scale=Math.min(.72,devicePixelRatio||1);
     // The visible fog gets a responsive canvas, while the simulation runs
     // on a smaller persistent density field for per-frame performance.
     const fw=Math.max(1,Math.round(w*scale)),fh=Math.max(1,Math.round(h*scale));
-    const simulationScale=Math.min(.52,480/Math.max(w,h));
+    const simulationScale=Math.min(.36,360/Math.max(w,h));
     const sw=Math.max(80,Math.round(w*simulationScale));
     const sh=Math.max(80,Math.round(h*simulationScale));
     sizes={w,h,sw,sh};
