@@ -79,6 +79,7 @@ jobs:
               await desk.dblclick('main',{position:{x:640,y:360}});
               await desk.waitForTimeout(1250);
               const fit=await desk.locator('#scene').boundingBox();
+              console.log('Desktop fit bounds:',JSON.stringify(fit));
               assert.ok(fit.width<1200,'full image does not fit horizontally');
               assert.ok(fit.height<670,'full image does not fit vertically');
               assert.ok(Math.abs(fit.x+fit.width/2-640)<3,'fit scene not centered');
@@ -100,6 +101,7 @@ jobs:
               await mobile.tap('main',{position:{x:195,y:400}});
               await mobile.waitForTimeout(1250);
               const m=await mobile.locator('#scene').boundingBox();
+              console.log('Mobile fit bounds:',JSON.stringify(m));
               assert.ok(m.width<390,'mobile double tap did not fit entire image');
               assert.ok(Math.abs(m.x+m.width/2-195)<4,'mobile scene not centered');
               await mobile.screenshot({path:'artifacts/classroom/mobile-full.png'});
