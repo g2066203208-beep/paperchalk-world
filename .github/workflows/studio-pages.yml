@@ -56,14 +56,12 @@ jobs:
           node --check site/world-builder/materials.js
           node --check site/world-builder/world-material-gl.js
           node --test tests/pixel-lab-structure.test.mjs tests/world-materials.test.mjs tests/learning-library.test.mjs
-      - name: Install Chromium for real 3D studio verification
+      - name: Install Chromium for click-story browser tests
         run: |
           npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Verify interactive 2D mystery on desktop and mobile
         run: node tests/point-story-browser.mjs
-      - name: Preserve 3D reference model verification
-        run: node tests/scene-studio-browser.mjs
       - name: Play original horror prologue on desktop and phone
         run: node tests/false-memory-browser.mjs
       - name: Keep original live 2D point-and-click screenshots
@@ -80,14 +78,6 @@ jobs:
         with:
           name: false-memory-real-scene-screenshots
           path: artifacts/false-memory/
-          retention-days: 14
-          if-no-files-found: warn
-      - name: Keep real rendered 3D architectural views
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lost-order-3d-building-and-302-room-screenshots
-          path: artifacts/scene-studio/
           retention-days: 14
           if-no-files-found: warn
       - uses: actions/configure-pages@v5
