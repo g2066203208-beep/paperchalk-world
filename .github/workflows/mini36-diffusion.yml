@@ -1,0 +1,57 @@
+name: Pixel Lab MINI36 V2 - Categorical Diffusion Native Pixels
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ml/mini36/discrete_diffusion.py'
+      - 'tests/test_mini36_discrete_diffusion.py'
+      - '.github/workflows/mini36-diffusion.yml'
+      - 'site/pixel-lab/mini36/mini36-v1.lossless.lzma.b64'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mini36-v2-diffusion
+  cancel-in-progress: true
+jobs:
+  discrete-pixel-experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install CPU categorical diffusion dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install numpy pillow opencv-python-headless
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - name: Reconstruct 36 original pixel-index sources from immutable archive
+        run: python -m ml.mini36.atlas --out artifacts/mini36-source
+      - name: Train genuine 15-class 8-step categorical diffusion on 30 characters
+        run: |
+          python -m ml.mini36.discrete_diffusion --sprites site/pixel-lab/mini36 \
+            --out artifacts/mini36-diffusion --steps 350
+      - name: Verify no half-pixels, no alpha bleeding, 36 source silhouettes preserved
+        run: python -m unittest discover -s tests -p test_mini36_discrete_diffusion.py -v
+      - name: Publish experimental previews, 36 clean PNGs and 36 model proposals
+        run: |
+          mkdir -p site/pixel-lab/mini36/v2
+          cp artifacts/mini36-diffusion/*.png site/pixel-lab/mini36/v2/
+          cp artifacts/mini36-diffusion/report.json site/pixel-lab/mini36/v2/report.json
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name 'github-actions[bot]'
+          git add site/pixel-lab/mini36/v2/
+          if ! git diff --cached --quiet; then
+            git commit -m 'art(pixel-lab): publish 36 discrete-palette clean candidates and separate diffusion proposals'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Archive training weights, all per-pixel candidates and holdout report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini36-v2-categorical-diffusion-pixel-candidates
+          path: artifacts/mini36-diffusion/
+          retention-days: 30
+          if-no-files-found: error
