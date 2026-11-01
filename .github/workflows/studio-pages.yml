@@ -41,19 +41,14 @@ jobs:
                       'sceneHalf.x','fluidTime+=','drawCPU(dt,fluidTime)', 'DeviceOrientationEvent.requestPermission',
                       "screen.orientation.lock('landscape')",
                       'window.__PAPERWORLD_NATIVE_ORIENTATION__',
-                      "view.addEventListener('pointermove'", "enterScene.addEventListener('click'",
-                      "dialogueNext.addEventListener('click'", '#entry-panel', '#dialogue-panel',
+                      "view.addEventListener('pointermove'", 'calibrateMotion.addEventListener',
                       'body.mobile-mode.virtual-landscape #view',
                       'transform:rotate(90deg)', 'const logical=logicalSize()'):
               assert key in h,key
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
-          assert {p.as_posix() for p in files}=={'site/index.html','site/assets/classroom.webp','site/assets/alina.webp','site/assets/mikhail.webp'},files
-          for name in ('alina.webp','mikhail.webp'):
-              data=(Path('site/assets')/name).read_bytes()
-              assert data[:4]==b'RIFF' and data[8:12]==b'WEBP'
-          assert 'calibrate-motion' not in h
+          assert len(files)==2,files
           print('PASS: complete image, independent viewport-space fluid fog, per-frame feedback and no zoom')
           PY
           node - <<'JS'
@@ -90,11 +85,6 @@ jobs:
                 const fog=await page.locator('#fog').boundingBox();
                 const actual=await page.locator('#source').evaluate(el=>[el.naturalWidth,el.naturalHeight]);
                 assert.deepEqual(actual,[1024,576]);
-                assert.equal(await page.locator('#calibrate-motion').count(),0);
-                assert.equal(await page.locator('#entry-panel').isVisible(),true);
-                assert.equal(await page.locator('#dialogue-panel').isVisible(),false);
-                const cast=await page.locator('#cast-layer img').evaluateAll(els=>els.map(e=>[e.complete,e.naturalWidth,e.naturalHeight]));
-                assert.deepEqual(cast,[[true,96,144],[true,96,144]],'local protagonist images missing');
                 if(cfg.mobile){
                   const mode=await page.evaluate(()=>{
                     const container=document.querySelector('#view');
@@ -165,7 +155,6 @@ jobs:
                 // be black at all four projected edges at maximal tilts.
                 if(!cfg.mobile){
                   await page.locator('#fog').evaluate(el=>el.style.visibility='hidden');
-                  await page.locator('#ui-shell').evaluate(el=>el.style.visibility='hidden');
                   const extremes=[[1,1],[cfg.width-2,1],[1,cfg.height-2],[cfg.width-2,cfg.height-2],[cfg.width/2,cfg.height/2]];
                   for(let k=0;k<extremes.length;k++){
                     const [mx,my]=extremes[k];
@@ -199,7 +188,6 @@ jobs:
                     }
                   }
                   await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
-                  await page.locator('#ui-shell').evaluate(el=>el.style.visibility='visible');
                   console.log('PASS: opaque black on all four scene edges at five maximum/mid tilt poses; smoke hidden for mask-only test');
                 }
                 if(cfg.mobile){
@@ -219,18 +207,11 @@ jobs:
                   const transform=await page.locator('#scene').evaluate(el=>el.style.transform);
                   const yaw=Number(transform.match(/rotateY\((-?[\d.]+)deg\)/)?.[1]);
                   assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
-                  assert.equal(await page.locator('#calibrate-motion').count(),0);
+                  assert.equal(await page.locator('#calibrate-motion').isVisible(),true,'mobile sensor calibration missing');
+                  await page.locator('#calibrate-motion').click();
                   console.log('PASS: mobile emulated gyroscope rotates classroom in '+(cfg.width>cfg.height?'real':'virtual')+' landscape');
                 }
-                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-intro.png'});
-                await page.locator('#enter-scene').click();
-                await page.locator('#dialogue-panel').waitFor({state:'visible',timeout:4000});
-                assert.equal(await page.locator('#dialogue-panel').isVisible(),true);
-                assert.equal(await page.locator('#speaker-name').textContent(),'阿丽娜');
-                await page.locator('#dialogue-next').click();
-                assert.equal(await page.locator('#speaker-name').textContent(),'米哈伊尔');
-                assert.ok((await page.locator('.actor.male').getAttribute('class')).includes('speaking'));
-                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-dialogue.png'});
+                await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
                 await page.close();
               }

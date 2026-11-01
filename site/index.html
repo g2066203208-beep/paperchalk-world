@@ -59,50 +59,27 @@ body.mobile-mode.virtual-landscape #view{
   /* independent viewport-space layer: mouse never transforms the fog */
 }
 
-
-/* Quiet visual-novel UI: monochrome gradient, text and hairline borders. */
-#ui-shell{position:absolute;inset:0;z-index:5;pointer-events:none;color:#f1f1ed;font-family:system-ui,"Noto Sans SC",sans-serif;--stroke:#fff5;--dim:#fffa}
-#ui-shell button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
-.ink-frame{border:1px solid var(--stroke);background:linear-gradient(180deg,#000d,#0007);box-shadow:0 15px 35px #0005}
-#cast-layer{position:absolute;inset:0;pointer-events:none}
-.actor{position:absolute;bottom:2cqh;z-index:2;margin:0;height:min(69cqh,470px);display:flex;flex-direction:column;justify-content:flex-end;align-items:center;filter:drop-shadow(0 12px 15px #000b);transition:height .4s,filter .4s}
-.actor.female{left:clamp(4px,8cqw,120px)}.actor.male{right:clamp(4px,8cqw,120px)}
-.actor img{display:block;height:calc(100% - 21px);width:auto;max-width:26cqw;object-fit:contain;image-rendering:pixelated}
-.actor figcaption{font-size:clamp(10px,1.1cqw,13px);letter-spacing:.2em;text-shadow:0 2px 6px #000;margin-top:4px}
-#entry-panel{position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none;transition:opacity .35s,visibility .35s}
-#entry-panel::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 23%,#0005 40%,#0005 60%,transparent 77%);pointer-events:none}
-#entry-card{position:relative;width:min(36cqw,410px);min-width:220px;max-width:60cqw;padding:clamp(13px,3cqh,27px) clamp(14px,2.4cqw,26px);text-align:center;pointer-events:auto}
-#entry-card .kicker{font-size:clamp(9px,1cqw,12px);color:var(--dim);letter-spacing:.25em}
-#entry-card h1{font-weight:500;font-size:clamp(22px,3.6cqw,44px);letter-spacing:.2em;margin:9px 0}
-#entry-card p{color:var(--dim);font-size:clamp(10px,1.13cqw,13px);letter-spacing:.15em;margin:0 0 clamp(12px,2cqh,25px)}
-.ink-button{border:1px solid #fffa;background:linear-gradient(180deg,#000d,#0005);font-size:clamp(12px,1.2cqw,14px)!important;letter-spacing:.15em;min-height:34px;padding:7px 22px}
-.ink-button:hover,.ink-button:focus-visible{background:linear-gradient(180deg,#333d,#0009);border-color:#fff}
-.ink-button:focus-visible{outline:1px solid #fff;outline-offset:3px}
-#entry-card .footnote{font-size:10px;letter-spacing:.1em;color:var(--dim);margin-top:clamp(9px,1.8cqh,16px)}
-#dialogue-panel{position:absolute;z-index:4;left:50%;bottom:max(2cqh,8px);width:min(79cqw,995px);min-height:min(27cqh,178px);padding:clamp(9px,1.7cqh,18px) clamp(14px,2cqw,24px);transform:translate(-50%,10px);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s,transform .35s,visibility .35s}
-#speaker-name{display:inline-block;border:1px solid #fff5;background:linear-gradient(90deg,#000c,#0003);font-size:clamp(11px,1.2cqw,14px);letter-spacing:.13em;padding:3px 11px}
-#dialogue-text{font-size:clamp(12px,1.4cqw,18px);line-height:1.7;margin:clamp(6px,1cqh,12px) 0;min-height:1.7em}
-#dialogue-controls{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#dialogue-count{color:var(--dim);font-size:11px;letter-spacing:.16em;font-variant-numeric:tabular-nums}
-#dialogue-next{min-height:26px;padding:4px 15px}
-#ui-shell.entered #entry-panel{opacity:0;visibility:hidden;pointer-events:none}
-#ui-shell.entered #dialogue-panel{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0)}
-#ui-shell.entered .actor{height:min(56cqh,380px);bottom:7cqh}
-#ui-shell.entered .actor:not(.speaking){filter:brightness(.56) drop-shadow(0 12px 15px #000a)}
-#motion-ui{position:absolute;z-index:8;top:max(8px,1.4cqh);right:max(8px,1.4cqw);display:none;pointer-events:auto}
-body.mobile-mode #motion-ui{display:block}
-#motion-ui [hidden]{display:none!important}
-#motion-ui button{border:1px solid #fff5;background:linear-gradient(180deg,#000d,#0006);min-height:29px;padding:5px 10px;font-size:11px}
-.visually-hidden{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
-@container (max-height:470px){
- .actor{height:min(67cqh,280px)}#ui-shell.entered .actor{height:min(52cqh,235px)}
- #entry-card{padding:12px 15px}#entry-card h1{margin:6px 0}#entry-card p{margin-bottom:12px}
- #entry-card .footnote{margin-top:9px}
- #dialogue-panel{padding:8px 13px;min-height:84px}
- #dialogue-text{font-size:clamp(11px,1.5cqw,14px);margin:4px 0}
+/* Controls and fog stay in GAME VIEWPORT coordinates; neither follows scene tilt. */
+#motion-ui{
+  position:fixed;z-index:15;right:max(12px,env(safe-area-inset-right));
+  bottom:max(10px,env(safe-area-inset-bottom));
+  display:none;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;
+  max-width:min(96cqw,560px);font:12px/1.3 system-ui,sans-serif;
 }
-@media(prefers-reduced-motion:reduce){#ui-shell *{transition:none!important}}
-
+#motion-ui button{
+  appearance:none;border:1px solid #a6aeb4;border-radius:8px;
+  background:#171e24e8;color:#fff;padding:10px 13px;min-height:40px;
+  font:600 13px system-ui,sans-serif;touch-action:manipulation;
+}
+#motion-ui button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+#motion-ui button[hidden]{display:none}
+#motion-status{color:#d4dadd;text-shadow:0 1px 4px #000;max-width:180px}
+body.mobile-mode #motion-ui{display:flex}
+/* The landscape view is visible on first load, even with portrait lock enabled. */
+@media (max-height:430px) and (orientation:landscape){
+  #motion-ui{bottom:max(6px,env(safe-area-inset-bottom));right:max(8px,env(safe-area-inset-right))}
+  #motion-ui button{padding:7px 10px;min-height:34px}
+}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
 </style>
 </head>
@@ -113,29 +90,12 @@ body.mobile-mode #motion-ui{display:block}
          alt="空教室全景：黑板、课桌、左侧窗户。" draggable="false">
   </figure>
   <canvas id="fog" aria-hidden="true"></canvas>
-  <section id="ui-shell" aria-label="错位日常游戏界面">
-    <div id="cast-layer" aria-label="男女主角">
-      <figure class="actor female speaking" data-key="alina"><img src="./assets/alina.webp" width="96" height="144" alt="女主角阿丽娜全身像" draggable="false"><figcaption>阿丽娜</figcaption></figure>
-      <figure class="actor male" data-key="mikhail"><img src="./assets/mikhail.webp" width="96" height="144" alt="男主角米哈伊尔全身像" draggable="false"><figcaption>米哈伊尔</figcaption></figure>
-    </div>
-    <section id="entry-panel" aria-label="开始游戏">
-      <div id="entry-card" class="ink-frame">
-        <div class="kicker">01 / CLASSROOM</div><h1>错位日常</h1>
-        <p>空教室 · 傍晚</p>
-        <button id="enter-scene" class="ink-button" type="button">进入教室</button>
-        <div class="footnote">有些熟悉的事物，正在发生偏差。</div>
-      </div>
-    </section>
-    <section id="dialogue-panel" class="ink-frame" aria-label="人物对话" aria-live="polite">
-      <span id="speaker-name">阿丽娜</span>
-      <p id="dialogue-text">这间教室……和白天不一样。</p>
-      <div id="dialogue-controls"><span id="dialogue-count">01 / 04</span><button id="dialogue-next" class="ink-button" type="button">继续</button></div>
-    </section>
-    <div id="motion-ui" aria-label="体感控制">
-      <span id="motion-status" class="visually-hidden" role="status" aria-live="polite">横屏模式</span>
-      <button id="enable-motion" type="button">开启体感</button>
-    </div>
-  </section>
+
+  <div id="motion-ui" aria-label="手机横屏及体感控制">
+    <span id="motion-status" role="status" aria-live="polite">横屏画面已启用</span>
+    <button id="enable-motion" type="button">开启体感</button>
+    <button id="calibrate-motion" type="button" hidden>重置中心</button>
+  </div>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -245,48 +205,13 @@ void main(){
   }
 
   const enableMotion=document.getElementById('enable-motion');
-  const enterScene=document.getElementById('enter-scene');
-  const uiShell=document.getElementById('ui-shell');
-  const speakerName=document.getElementById('speaker-name');
-  const dialogueText=document.getElementById('dialogue-text');
-  const dialogueCount=document.getElementById('dialogue-count');
-  const dialogueNext=document.getElementById('dialogue-next');
-  const dialoguePanel=document.getElementById('dialogue-panel');
+  const calibrateMotion=document.getElementById('calibrate-motion');
   const motionStatus=document.getElementById('motion-status');
   const coarse=matchMedia('(pointer:coarse)');
   const mobile=coarse.matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   let sensorEnabled=false,sensorSamples=0,sensorCenter=null,sensorAngle=null;
   let nativeCenter=null,nativeSamples=0,nativeActive=false,touchStart=null;
   function setMotionStatus(message){motionStatus.textContent=message}
-
-  const opening=[
-    {name:'阿丽娜',who:'alina',text:'这间教室……和白天不一样。'},
-    {name:'米哈伊尔',who:'mikhail',text:'先别出声。你有没有听见什么？'},
-    {name:'阿丽娜',who:'alina',text:'好像有人在走动。可这里明明没有人。'},
-    {name:'米哈伊尔',who:'mikhail',text:'我们进去看看。别离我太远。'}
-  ];
-  let currentLine=0;
-  function showLine(i){
-    currentLine=i;const line=opening[i];
-    speakerName.textContent=line.name;dialogueText.textContent=line.text;
-    dialogueCount.textContent=String(i+1).padStart(2,'0')+' / 04';
-    dialogueNext.textContent=i===opening.length-1?'重看':'继续';
-    uiShell.querySelectorAll('.actor').forEach(actor=>
-      actor.classList.toggle('speaking',actor.dataset.key===line.who));
-  }
-  enterScene.addEventListener('click',()=>{showLine(0);uiShell.classList.add('entered');start()});
-  function advanceDialogue(){
-    if(!uiShell.classList.contains('entered'))return;
-    showLine((currentLine+1)%opening.length);start();
-  }
-  dialogueNext.addEventListener('click',advanceDialogue);
-  dialoguePanel.addEventListener('click',e=>{if(!e.target.closest('button'))advanceDialogue()});
-  window.addEventListener('keydown',e=>{
-    if((e.key==='Enter'||e.key===' ')&&uiShell.classList.contains('entered')
-       &&e.target!==dialogueNext&&e.target!==enableMotion){
-      e.preventDefault();advanceDialogue();
-    }
-  });
   function orientationAngle(){
     const actual=(((screen.orientation&&Number.isFinite(screen.orientation.angle)
       ?screen.orientation.angle:(typeof window.orientation==='number'?window.orientation:0))%360)+360)%360;
@@ -298,7 +223,10 @@ void main(){
     document.body.classList.toggle('mobile-mode',mobile);
     document.body.classList.toggle('virtual-landscape',mobile&&innerHeight>innerWidth);
   }
-  function centreSensor(){sensorCenter=null;nativeCenter=null;aimX=0;aimY=0;start();}
+  function centreSensor(){
+    sensorCenter=null;nativeCenter=null;aimX=0;aimY=0;start();
+    if(sensorEnabled||nativeActive)setMotionStatus('中心已重置，保持自然握持');
+  }
   function deltaDegrees(a,b){return ((a-b+540)%360)-180}
   function deadzone(x){return Math.sign(x)*Math.max(0,Math.abs(x)-1.3)}
   function webOrientation(e){
@@ -318,6 +246,7 @@ void main(){
     sensorSamples++;
     if(sensorSamples===2){
       setMotionStatus('体感已连接 · 轻轻倾斜手机');
+      calibrateMotion.hidden=false;
     }
     start();
   }
@@ -345,7 +274,7 @@ void main(){
     nativeSamples++;
     if(nativeSamples===2){
       setMotionStatus('原生体感已连接');
-      enableMotion.hidden=true;
+      calibrateMotion.hidden=false;enableMotion.hidden=true;
     }
     start();
   };
@@ -374,7 +303,7 @@ void main(){
       nativeActive=true;nativeCenter=null;
       native.start();
       await tryLandscape(true);
-      enableMotion.hidden=true;
+      enableMotion.hidden=true;calibrateMotion.hidden=false;
       setMotionStatus('正在校准原生体感…');
       enableMotion.disabled=false;return;
     }
@@ -394,14 +323,16 @@ void main(){
     await full;await tryLandscape(false);
     if(granted==='granted'&&'DeviceOrientationEvent' in window){
       beginWebSensor();
-      enableMotion.textContent='重试体感';
+      calibrateMotion.hidden=false;
+      enableMotion.textContent='重试横屏';
     }else{
       setMotionStatus('体感不可用，可手动横屏并触摸拖动');
-      enableMotion.textContent='重试体感';
+      enableMotion.textContent='重试横屏';
     }
     enableMotion.disabled=false;
   }
   enableMotion.addEventListener('click',enableSensorsAndLandscape);
+  calibrateMotion.addEventListener('click',centreSensor);
   window.addEventListener('orientationchange',()=>{
     updatePhoneLayout();centreSensor();resize();
   },{passive:true});
