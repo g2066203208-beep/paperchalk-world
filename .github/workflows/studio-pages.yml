@@ -41,10 +41,11 @@ jobs:
                       'sceneHalf.x','fluidTime+=','drawCPU(dt,fluidTime)', 'DeviceOrientationEvent.requestPermission',
                       "screen.orientation.lock('landscape')",
                       'window.__PAPERWORLD_NATIVE_ORIENTATION__',
-                      "view.addEventListener('pointermove'", 'calibrateMotion.addEventListener',
+                      "view.addEventListener('pointermove'", "window.addEventListener('orientationchange'",
                       'body.mobile-mode.virtual-landscape #view',
                       'transform:rotate(90deg)', 'const logical=logicalSize()'):
               assert key in h,key
+          assert 'calibrate-motion' not in h and '重置中心' not in h
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
@@ -207,8 +208,7 @@ jobs:
                   const transform=await page.locator('#scene').evaluate(el=>el.style.transform);
                   const yaw=Number(transform.match(/rotateY\((-?[\d.]+)deg\)/)?.[1]);
                   assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
-                  assert.equal(await page.locator('#calibrate-motion').isVisible(),true,'mobile sensor calibration missing');
-                  await page.locator('#calibrate-motion').click();
+                  assert.equal(await page.locator('#calibrate-motion').count(),0,'recenter button must be absent');
                   console.log('PASS: mobile emulated gyroscope rotates classroom in '+(cfg.width>cfg.height?'real':'virtual')+' landscape');
                 }
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'.png'});
