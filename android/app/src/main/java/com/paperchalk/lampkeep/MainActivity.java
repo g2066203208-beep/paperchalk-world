@@ -2,17 +2,21 @@ package com.paperchalk.lampkeep;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.webkit.JavascriptInterface;
 import android.content.Intent;
-import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.ValueCallback;
 import android.util.Base64;
@@ -67,6 +71,9 @@ public final class MainActivity extends Activity {
         }
         @JavascriptInterface public boolean available() {
             return rotationSensor != null;
+        }
+        @JavascriptInterface public boolean isNativeApp() {
+            return true;
         }
     }
     private void startSensor() {
@@ -149,11 +156,45 @@ public final class MainActivity extends Activity {
 
     private WebView web;
     private boolean resumedOnce = false;
+
+    // A real Android landscape Activity; no 90-degree CSS rotation is used
+    // inside the APK. Let the game render to all display pixels, including
+    // underneath transient status/navigation bars and around the notch.
+    private void applyImmersiveFullscreen() {
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams attributes = window.getAttributes();
+            attributes.layoutInDisplayCutoutMode =
+                WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            window.setAttributes(attributes);
+        }
+        window.getDecorView().setSystemUiVisibility(
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            | View.SYSTEM_UI_FLAG_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        );
+        if (Build.VERSION.SDK_INT >= 30) {
+            window.setDecorFitsSystemWindows(false);
+            WindowInsetsController controller = window.getInsetsController();
+            if (controller != null) {
+                controller.hide(WindowInsets.Type.statusBars()
+                    | WindowInsets.Type.navigationBars());
+                controller.setSystemBarsBehavior(
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+            }
+        }
+    }
     private boolean legacyWorkerCleanupStarted = false;
 
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        applyImmersiveFullscreen();
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager != null) {
             rotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR);
@@ -164,6 +205,7 @@ public final class MainActivity extends Activity {
         web.addJavascriptInterface(new PixelFileBridge(), "PaperworldFiles");
         web.clearCache(true);
         web.setBackgroundColor(0xFF000000);
+        web.setFitsSystemWindows(false);
 
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -234,20 +276,11 @@ public final class MainActivity extends Activity {
         });
 
         FrameLayout root = new FrameLayout(this);
+        root.setFitsSystemWindows(false);
+        // No insets margins: the black game viewport fills the entire display.
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
-        if (Build.VERSION.SDK_INT >= 30) {
-            root.setOnApplyWindowInsetsListener((view, insets) -> {
-                Insets safe = insets.getInsets(
-                    WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
-                FrameLayout.LayoutParams params =
-                    (FrameLayout.LayoutParams) web.getLayoutParams();
-                params.setMargins(safe.left, safe.top, safe.right, safe.bottom);
-                web.setLayoutParams(params);
-                return insets;
-            });
-        }
         setContentView(root);
-        root.requestApplyInsets();
+        applyImmersiveFullscreen();
         // NEVER restore a stale WebView snapshot: request the live hosted classroom stage.
         openLatestHome();
     }
@@ -266,6 +299,7 @@ public final class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        applyImmersiveFullscreen();
         if (!resumedOnce) {
             resumedOnce = true; // Initial load already started in onCreate().
         } else if (resumeSensorOnForeground) {
@@ -273,6 +307,12 @@ public final class MainActivity extends Activity {
             // Never call loadUrl() merely because the player switched applications.
             startSensor();
         }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) applyImmersiveFullscreen();
     }
 
     @Override

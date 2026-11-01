@@ -43,8 +43,36 @@ jobs:
         with:
           path: ~/.android/debug.keystore
           key: kiosk-debug-signing-v1
+      - name: Assert REAL native fullscreen (not CSS fake landscape)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          manifest=Path('android/app/src/main/AndroidManifest.xml').read_text()
+          source=Path('android/app/src/main/java/com/paperchalk/lampkeep/MainActivity.java').read_text()
+          html=Path('site/index.html').read_text()
+          assert 'android:screenOrientation="landscape"' in manifest
+          for token in ('SCREEN_ORIENTATION_LANDSCAPE','FLAG_FULLSCREEN','SYSTEM_UI_FLAG_IMMERSIVE_STICKY',
+                        'SYSTEM_UI_FLAG_HIDE_NAVIGATION','setDecorFitsSystemWindows(false)',
+                        'WindowInsets.Type.statusBars()','WindowInsets.Type.navigationBars()',
+                        'LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES',
+                        'web.setFitsSystemWindows(false)','root.setFitsSystemWindows(false)'):
+              assert token in source, token
+          assert 'setMargins(safe.left' not in source
+          assert 'isNativeApp()' in source
+          assert "mobile&&!nativeApp&&innerHeight>innerWidth" in html
+          print('PASS: native locked landscape + immersive edge-to-edge WebView, no inset bars')
+          PY
       - name: Build APK
         run: gradle --no-daemon -p android :app:assembleDebug
+      - name: Verify compiled APK contains landscape activity
+        run: |
+          set -euo pipefail
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          AAPT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}/build-tools/35.0.0/aapt"
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > /tmp/classroom-manifest.txt
+          grep -q 'screenOrientation' /tmp/classroom-manifest.txt
+          echo 'PASS: compiled Android manifest includes screenOrientation'
+          "$AAPT" dump badging "$APK" | grep 'launchable-activity'
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:

@@ -242,6 +242,7 @@ void main(){
   }
 
   const coarse=matchMedia('(pointer:coarse)');
+  const nativeApp=window.PaperworldSensor?.isNativeApp?.()===true;
   const mobile=coarse.matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   let sensorEnabled=false,sensorSamples=0,sensorCenter=null,sensorAngle=null;
   let nativeCenter=null,nativeSamples=0,nativeActive=false,touchStart=null;
@@ -254,7 +255,9 @@ void main(){
   }
   function updatePhoneLayout(){
     document.body.classList.toggle('mobile-mode',mobile);
-    document.body.classList.toggle('virtual-landscape',mobile&&innerHeight>innerWidth);
+    // The APK is ALREADY physically landscape at the Android window level.
+    // 90-degree CSS rotation is only a fallback for regular browser portrait.
+    document.body.classList.toggle('virtual-landscape',mobile&&!nativeApp&&innerHeight>innerWidth);
   }
   function centreSensor(){
     sensorCenter=null;nativeCenter=null;aimX=0;aimY=0;start();

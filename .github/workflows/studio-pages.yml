@@ -45,6 +45,7 @@ jobs:
                       "view.addEventListener('pointerdown',enableIOSMotionOnFirstTouch",
                       'body.mobile-mode.virtual-landscape #view',
                       'transform:rotate(90deg)', 'const logical=logicalSize()',
+                      'mobile&&!nativeApp&&innerHeight>innerWidth',
                       'id="novel-ui"', 'id="dialogue-text"', 'id="auto-button"', 'id="log-button"'):
               assert key in h,key
           assert 'calibrate-motion' not in h and '重置中心' not in h
