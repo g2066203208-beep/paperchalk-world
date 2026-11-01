@@ -41,7 +41,9 @@ jobs:
                       'sceneHalf.x','fluidTime+=','drawCPU(dt,fluidTime)', 'DeviceOrientationEvent.requestPermission',
                       "screen.orientation.lock('landscape')",
                       'window.__PAPERWORLD_NATIVE_ORIENTATION__',
-                      "view.addEventListener('pointermove'", 'calibrateMotion.addEventListener'):
+                      "view.addEventListener('pointermove'", 'calibrateMotion.addEventListener',
+                      'body.mobile-mode.virtual-landscape #view',
+                      'transform:rotate(90deg)', 'const logical=logicalSize()'):
               assert key in h,key
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
@@ -83,6 +85,32 @@ jobs:
                 const fog=await page.locator('#fog').boundingBox();
                 const actual=await page.locator('#source').evaluate(el=>[el.naturalWidth,el.naturalHeight]);
                 assert.deepEqual(actual,[1024,576]);
+                if(cfg.mobile){
+                  const mode=await page.evaluate(()=>{
+                    const container=document.querySelector('#view');
+                    const canvas=document.querySelector('#fog');
+                    const scene=document.querySelector('#scene');
+                    return {
+                      virtual:document.body.classList.contains('virtual-landscape'),
+                      view:container.getBoundingClientRect().toJSON(),
+                      logicalScene:[scene.offsetWidth,scene.offsetHeight],
+                      buffer:[canvas.width,canvas.height],
+                      transform:getComputedStyle(container).transform,
+                      overlay:document.getElementById('rotate-help')
+                    };
+                  });
+                  assert.equal(mode.virtual,cfg.height>cfg.width,'mobile automatic landscape choice');
+                  assert.equal(mode.overlay,null,'portrait blocking overlay still exists');
+                  assert.ok(Math.abs(mode.view.x)<2&&Math.abs(mode.view.y)<2,'auto-rotated view offset');
+                  assert.ok(Math.abs(mode.view.width-cfg.width)<2&&Math.abs(mode.view.height-cfg.height)<2,
+                            'virtual landscape does not fill phone viewport');
+                  assert.ok(mode.logicalScene[0]>mode.logicalScene[1],'game scene must remain logically landscape');
+                  if(cfg.height>cfg.width){
+                    assert.ok(mode.buffer[0]>mode.buffer[1],'portrait phone did not switch GPU to logical landscape dimensions');
+                    assert.ok(mode.transform!=='none','portrait phone needs automatic 90 degree game rotation');
+                  }
+                  console.log('PASS: phone automatically opens full-viewport landscape scene without user input');
+                }
                 assert.ok(scene.width<=cfg.width*.92,'scene not fully visible horizontally');
                 assert.ok(scene.height<=cfg.height*.90,'scene not fully visible vertically');
                 assert.ok(Math.abs(scene.x+scene.width/2-cfg.width/2)<3,'scene horizontally off-center');
@@ -162,7 +190,9 @@ jobs:
                   await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
                   console.log('PASS: opaque black on all four scene edges at five maximum/mid tilt poses; smoke hidden for mask-only test');
                 }
-                if(cfg.mobile && cfg.width > cfg.height){
+                if(cfg.mobile){
+                  // Feed emulated orientation events in both physical landscape
+                  // and auto-rotated portrait; game-space tilt must work in both.
                   // Feed emulated orientation events and verify that the SAME
                   // scene transform used on desktop responds to mobile tilt.
                   await page.evaluate(()=>{
@@ -179,7 +209,7 @@ jobs:
                   assert.ok(Math.abs(yaw)>1,'mobile gyro did not rotate the classroom: '+transform);
                   assert.equal(await page.locator('#calibrate-motion').isVisible(),true,'mobile sensor calibration missing');
                   await page.locator('#calibrate-motion').click();
-                  console.log('PASS: mobile landscape emulated gyroscope changed classroom tilt and has calibration');
+                  console.log('PASS: mobile emulated gyroscope rotates classroom in '+(cfg.width>cfg.height?'real':'virtual')+' landscape');
                 }
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
