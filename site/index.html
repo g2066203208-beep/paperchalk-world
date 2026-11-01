@@ -144,7 +144,7 @@ void main(){
      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
-     canvas.width=1024;canvas.height=576;gl.viewport(0,0,canvas.width,canvas.height);
+     canvas.width=innerWidth<700?768:1024;canvas.height=canvas.width*9/16;gl.viewport(0,0,canvas.width,canvas.height);
      gl.uniform1i(gl.getUniformLocation(prog,'u_picture'),0);
      gl.uniform1f(gl.getUniformLocation(prog,'u_ratio'),aspect);
      uTime=gl.getUniformLocation(prog,'u_time');
@@ -237,7 +237,7 @@ void main(){
  view.addEventListener('pointerdown',e=>{
    if(e.pointerType==='mouse')return;
    const now=performance.now();
-   if(now-lastTap<320&&Math.hypot(e.clientX-lastTapX,e.clientY-lastTapY)<32){
+   if(now-lastTap<1350&&Math.hypot(e.clientX-lastTapX,e.clientY-lastTapY)<52){
      toggleView();lastTap=0;
    }else{lastTap=now;lastTapX=e.clientX;lastTapY=e.clientY}
    fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
