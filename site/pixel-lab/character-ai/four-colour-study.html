@@ -1,0 +1,80 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171726"><title>四色肖像技法研究｜PIXEL FULLBODY ATELIER</title>
+<meta name="description" content="TofuPxl经核实四色肖像技法研究，公开作品链接、独立原创四色练习、像素RGBA审计、PNG本地转换和授权阻断。">
+<style>
+:root{color-scheme:dark;--bg:#171726;--panel:#28263b;--ink:#fff3e2;--muted:#d1c8dd;--pink:#f2a5c2;--blue:#a9bae9;--line:#5e5977}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:var(--bg);font:14px/1.6 system-ui,-apple-system,"Noto Sans SC",sans-serif}
+button,input,select{font:inherit}a{color:var(--blue)}button{color:var(--ink);background:#3b3752;border:1px solid var(--line);border-radius:8px;cursor:pointer;padding:9px 12px;min-height:39px}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,canvas:focus-visible{outline:3px solid var(--pink);outline-offset:2px}button:hover{border-color:var(--pink)}
+button.primary{background:var(--pink);color:#27243b;font-weight:850;border-color:var(--pink)}header{border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px max(16px,calc((100vw - 1240px)/2));flex-wrap:wrap}
+header strong{font-size:16px;letter-spacing:.07em}header strong span{color:var(--pink)}header nav{font-size:13px;display:flex;gap:13px;flex-wrap:wrap}
+main{max-width:1240px;margin:auto;padding:25px 16px 70px}.eyebrow{color:var(--pink);font-size:11px;letter-spacing:.13em;font-weight:800}
+h1{font-size:clamp(27px,4.1vw,42px);margin:6px 0 8px;line-height:1.2}h2{font-size:19px;margin:0 0 12px}h3{font-size:15px;margin:13px 0 6px}
+.lead{color:var(--muted);max-width:880px;margin:9px 0 20px}
+.columns{display:grid;grid-template-columns:minmax(230px,290px) minmax(320px,1fr) minmax(250px,315px);gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:15px;min-width:0}
+label{display:block;color:var(--muted);font-size:12px;font-weight:700;margin:12px 0 5px}
+select{width:100%;background:#1b1a2c;color:var(--ink);border:1px solid #766f91;border-radius:8px;padding:9px}
+.swatches{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:10px 0}
+.swatches span{display:block;min-height:46px;border-radius:5px;border:1px solid #ffffff30}
+.swatches small{display:block;text-align:center;color:var(--muted);font:10px monospace;margin:3px 0}
+.preview{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.preview figure{margin:0;min-width:0}.preview figcaption{color:var(--muted);font-size:12px;margin-top:7px}
+.preview canvas{display:block;width:100%;height:auto;aspect-ratio:2/3;image-rendering:pixelated;image-rendering:crisp-edges;border:1px solid #8a7b9c;background:#171521}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.tools button{flex:1 1 auto}
+.metric{background:#1b1a2c;color:#ead7ec;border:1px solid #554b71;padding:10px;border-radius:8px;white-space:pre-wrap;font:12px/1.65 ui-monospace,monospace;overflow-wrap:anywhere}
+.notice{border-left:3px solid var(--pink);background:#352d44;padding:12px;border-radius:6px;margin:12px 0;color:#f0e3f0}
+.external-preview{padding:8px;background:#1f1d2d;border:1px solid #5e5977;border-radius:9px;margin:10px 0}.external-preview img{display:block;width:min(180px,100%);height:auto;image-rendering:pixelated;margin:auto}.external-preview p{font-size:11px;margin:8px 0}.work{border-top:1px solid var(--line);padding:10px 0;margin:0}
+.work a{font-weight:750}.work p{margin:5px 0;font-size:12px;color:var(--muted)}
+small.tag{background:#453954;padding:2px 7px;border-radius:5px;color:var(--blue);font-size:11px}
+#file{width:100%;font-size:12px;color:var(--ink)}
+#source{background:#201e31}#output{cursor:crosshair}
+#feedback{color:#b8eac7;font-size:12px;min-height:26px}footer{color:var(--muted);font-size:12px;border-top:1px solid var(--line);margin-top:24px;padding-top:14px}
+@media(max-width:1060px){.columns{grid-template-columns:minmax(210px,280px) minmax(320px,1fr)}.right{grid-column:1/-1}.preview canvas{max-height:570px}}
+@media(max-width:690px){.columns{grid-template-columns:1fr}.right{grid-column:auto}.preview canvas{max-height:none}main{padding:17px 12px 60px}}
+</style></head><body>
+<header><strong>PIXEL <span>ATELIER</span> / 4-COLOUR STUDY</strong><nav><a href="./">全身立绘机器学习研究</a><a href="../pixel-portrait-references.html">画师资料库</a><a href="../material-forge.html">纹理工坊</a></nav></header>
+<main>
+<div class="eyebrow">ARTIST CASE 001 · TOFUPXL · COPYRIGHT RESPECTING RESEARCH</div>
+<h1>四色人物肖像 · 技法与真像素实验室</h1>
+<p class="lead">对照真实画师的公开作品研究<strong>四色如何塑造人物面容</strong>。左侧是已核实的外部作品与结构分析；中间是我们原创的练习示例或本地上传图片；右侧检查4色限制、透明度与孤立区域。原作照片不会被下载入库或用来训练模型。</p>
+<div class="columns">
+<section class="panel">
+<h2>01 · 画师研究卡</h2><p id="artist-summary" class="small">读取画师档案…</p>
+<div class="notice"><strong>已确认：</strong> 《4 4 colour portraits》的整幅像素作品确实仅用<strong>4种颜色</strong>，这是该作品的配色属性，不能推断画师所有作品都只用四色。</div>
+<div class="external-preview" aria-label="画师原作外部缩略图研究"><a href="https://pixeljoint.com/pixelart/138985.htm" target="_blank" rel="noopener noreferrer"><img id="artist-preview" src="https://pixeljoint.com/files/icons/full/4__r12732241661.png" width="180" height="180" loading="lazy" alt="TofuPxl《4 4 colour portraits》原站图片预览；若外站禁止嵌入，请点开原站查看" referrerpolicy="no-referrer"></a><p class="small">原作预览通过外部源站读取，不能作为我们自己的素材下载和训练。<a href="https://pixeljoint.com/pixelart/138985.htm" target="_blank" rel="noopener noreferrer">查看作品原页及准确色数</a></p></div>
+<div id="works" aria-label="来源作品链接"></div>
+<h3>我们要学的技术</h3><div id="technique" class="small"></div>
+<p class="small">训练图许可：<strong>未经授权</strong>。Anima 画师标签：<strong>未验证</strong>。不能把公开链接当成训练许可。</p>
+</section>
+<section class="panel">
+<h2>02 · 原生四色练习</h2>
+<label for="palette">原创调色板（不是TofuPxl原作品的精确色值）</label>
+<select id="palette"><option value="fogsakura">雾樱玻璃 / 工作室四色</option><option value="soot">夜灯灰阶</option><option value="marine">夜港冷暖</option></select>
+<div class="swatches" id="swatches"></div>
+<label for="image-file">选择你自己的图像（本地处理，不上传）</label><input id="image-file" type="file" accept="image/png,image/webp,image/jpeg">
+<label for="resolution">输出的真正逻辑网格</label><select id="resolution"><option value="64x96">64 × 96</option><option value="96x144" selected>96 × 144</option><option value="128x192">128 × 192</option><option value="192x256">192 × 256</option><option value="256x384">256 × 384</option></select>
+<div class="tools"><button id="example">恢复原创练习图</button><button class="primary" id="convert">限色转换到4色</button></div>
+<div class="preview">
+<figure><canvas id="source" width="64" height="96" aria-label="原始参考图"></canvas><figcaption>原始/练习图 · 不作为画师训练数据</figcaption></figure>
+<figure><canvas id="output" width="96" height="144" tabindex="0" aria-label="真实RGBA四色网格结果"></canvas><figcaption>四色索引输出 · 不使用模糊显示</figcaption></figure>
+</div>
+<div class="tools"><button class="primary" id="export-png">导出PNG</button><button id="export-json">导出像素审计JSON</button></div>
+<p class="small">这里的“真实像素”仅指导出RGBA每个逻辑格有精确色值，<strong>不意味着AI原生绘制、艺术品质优秀或源作品获授权训练</strong>。对五官、发型、手脚仍需人工复查。</p>
+</section>
+<section class="panel right">
+<h2>03 · 像素审计</h2>
+<div id="metrics" class="metric">正在加载...</div><p class="small" id="position">点击右侧四色图查看逻辑像素坐标</p>
+<h3>色彩的语义分工</h3>
+<p class="small">建议先分配：<strong>背景/轮廓、主体中间色、冷阴影、受光面</strong>。这种分工只是我们原创练习的分析方法，不宣称是艺术家本人指定的色彩理论。</p>
+<h3>学习而不是复制</h3>
+<p class="small">阶段1：对照原作，描述四个色块在眉眼、鼻梁、下颌、头发和阴影中的作用。</p>
+<p class="small">阶段2：用工作室自己的四色配色，重新设计全新面孔、发型和服装。</p>
+<p class="small">阶段3：统计单像素和小孤岛，逐格精修，记录为何保留或删除该像素。</p>
+<p class="small">阶段4：如果未来要训练LoRA，另建拥有明确训练授权的原创数据集；当前没有权重或艺术许可。</p>
+<div class="notice">与《夜航灯》主角的联系：先在全身立绘中保留正常人体比例和面相，再尝试四色受限渲染；不要把头像研究误认为已经解决了完整立绘。</div>
+</section>
+</div>
+<p id="feedback" role="status" aria-live="polite"></p>
+<footer>来源：<a href="https://pixeljoint.com/pixelart/138985.htm">TofuPxl 2021 四色肖像</a> · <a href="https://pixeljoint.com/p/224166.htm">PixelJoint官方账户</a> · <a href="https://tofupixel.carrd.co/">作者作品集</a>。仅保存文字、链接和我们原创的程序练习；不保存或训练第三方图片。</footer>
+</main><script type="module" src="./four-colour-study.js?v=20261101a"></script></body></html>
