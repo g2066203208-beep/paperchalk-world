@@ -96,12 +96,16 @@ jobs:
               const mobile=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
               await mobile.goto('http://127.0.0.1:8123/',{waitUntil:'load'});
               await mobile.waitForTimeout(600);
+              await mobile.evaluate(()=>{
+                window.__touchLog=[];
+                ['pointerdown','pointerup','dblclick'].forEach(type=>document.getElementById('view').addEventListener(type,e=>window.__touchLog.push({type,pointer:e.pointerType||'',t:Math.round(performance.now())}),true));
+              });
               await mobile.tap('main',{position:{x:195,y:400}});
               await mobile.waitForTimeout(80);
               await mobile.tap('main',{position:{x:195,y:400}});
               await mobile.waitForTimeout(1250);
               const m=await mobile.locator('#scene').boundingBox();
-              console.log('Mobile fit bounds:',JSON.stringify(m));
+              console.log('Mobile fit bounds:',JSON.stringify(m),'touch events:',JSON.stringify(await mobile.evaluate(()=>window.__touchLog)));
               assert.ok(m.width<390,'mobile double tap did not fit entire image');
               assert.ok(Math.abs(m.x+m.width/2-195)<4,'mobile scene not centered');
               await mobile.screenshot({path:'artifacts/classroom/mobile-full.png'});
