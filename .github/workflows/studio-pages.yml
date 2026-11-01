@@ -33,6 +33,7 @@ jobs:
           assert image[:4]==b'RIFF' and image[8:12]==b'WEBP'
           h=Path('site/index.html').read_text()
           for key in ('id="scene"','id="fog"','object-fit:contain',
+                      '#scene::after','linear-gradient(to right','linear-gradient(to bottom',
                       'pointer-events:none','uniform sampler2D u_previous',
                       'Semi-Lagrangian transport','framebufferTexture2D',
                       'requestAnimationFrame(tick)','fog.dataset.frames',
@@ -55,7 +56,7 @@ jobs:
           JS
       - name: Install Chromium
         run: |
-          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
+          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1 pngjs@7.0.0
           npx playwright install --with-deps chromium
       - name: Verify full background, two independent layers, and continuous frames
         run: |
@@ -63,6 +64,7 @@ jobs:
           python3 -m http.server 8123 --directory site > /tmp/stage-http.log 2>&1 &
           node - <<'JS'
           const {chromium}=require('playwright');
+          const {PNG}=require('pngjs');
           const assert=require('node:assert/strict');
           (async()=>{
             const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader']});
@@ -116,6 +118,46 @@ jobs:
                   assert.ok(transform.includes('rotateY('));
                   const afterFog=await page.locator('#fog').boundingBox();
                   assert.deepEqual(afterFog,beforeFog,'fog moved with image');
+                }
+
+                // Regression: the actual PHOTO layer, without smoke help, must
+                // be black at all four projected edges at maximal tilts.
+                if(!cfg.mobile){
+                  await page.locator('#fog').evaluate(el=>el.style.visibility='hidden');
+                  const extremes=[[1,1],[cfg.width-2,1],[1,cfg.height-2],[cfg.width-2,cfg.height-2],[cfg.width/2,cfg.height/2]];
+                  for(let k=0;k<extremes.length;k++){
+                    const [mx,my]=extremes[k];
+                    await page.mouse.move(mx,my);
+                    await page.waitForTimeout(320);
+                    const snapshot=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/mask-pose-'+k+'.png'}));
+                    const geometry=await page.locator('#scene').evaluate(el=>({
+                      w:el.offsetWidth,h:el.offsetHeight,css:el.style.transform
+                    }));
+                    const yaw=Number(geometry.css.match(/rotateY\((-?[\d.]+)deg\)/)?.[1])*Math.PI/180;
+                    const pitch=Number(geometry.css.match(/rotateX\((-?[\d.]+)deg\)/)?.[1])*Math.PI/180;
+                    assert.ok(Number.isFinite(yaw)&&Number.isFinite(pitch),'rotation not numeric');
+                    const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([ux,uy])=>{
+                      const xx=ux*geometry.w*.5,yy=uy*geometry.h*.5;
+                      const y1=yy*Math.cos(pitch),z1=yy*Math.sin(pitch);
+                      const x2=xx*Math.cos(yaw)+z1*Math.sin(yaw);
+                      const z2=-xx*Math.sin(yaw)+z1*Math.cos(yaw);
+                      const m=1500/(1500-z2);
+                      return [cfg.width*.5+x2*m,cfg.height*.5+y1*m];
+                    });
+                    for(let j=0;j<4;j++){
+                      const a=corners[j],b=corners[(j+1)%4];
+                      const x=(a[0]+b[0])*.5,y=(a[1]+b[1])*.5;
+                      const dx=cfg.width*.5-x,dy=cfg.height*.5-y;
+                      const len=Math.hypot(dx,dy);
+                      const sx=Math.round(x+dx/len*7),sy=Math.round(y+dy/len*7);
+                      assert.ok(sx>=0&&sx<snapshot.width&&sy>=0&&sy<snapshot.height,'edge test sample outside screen');
+                      const off=(sy*snapshot.width+sx)*4;
+                      const rgb=[snapshot.data[off],snapshot.data[off+1],snapshot.data[off+2]];
+                      assert.ok(rgb.every(v=>v<=12),'uncovered hard image border, pose '+k+', edge '+j+', RGB '+rgb);
+                    }
+                  }
+                  await page.locator('#fog').evaluate(el=>el.style.visibility='visible');
+                  console.log('PASS: opaque black on all four scene edges at five maximum/mid tilt poses; smoke hidden for mask-only test');
                 }
                 await page.screenshot({path:'artifacts/classroom/'+(cfg.mobile?'mobile':'desktop')+'.png'});
                 console.log('PASS:',cfg.mobile?'mobile':'desktop',renderer,'fluid frames',Number(after)-Number(before));
