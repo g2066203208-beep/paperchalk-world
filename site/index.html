@@ -4,212 +4,271 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>教室 · 镜头实验</title>
+<title>教室 · 黑雾镜头</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box}
-html,body{width:100%;height:100%;margin:0;background:#000;overflow:hidden}
-main{position:fixed;inset:0;display:grid;place-items:center;overflow:hidden;background:#000;perspective:1450px;perspective-origin:center}
+html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}
+main{position:fixed;inset:0;background:#000;overflow:hidden;perspective:1600px;perspective-origin:50% 50%;touch-action:none}
 .scene{
-  position:relative;flex:none;margin:0;
-  width:max(136vw,calc(136dvh * 16 / 9));aspect-ratio:16 / 9;
-  transform-origin:50% 50%;
-  transform-style:preserve-3d;
-  will-change:transform;backface-visibility:hidden;
-  background:#000;touch-action:none;user-select:none;
+ position:absolute;left:50%;top:50%;width:1024px;height:576px;margin:0;
+ transform-origin:50% 50%;transform-style:preserve-3d;
+ transform:translate3d(-50%,-50%,0);
+ will-change:transform,width,height;backface-visibility:hidden;
+ pointer-events:none;
 }
-.scene canvas,.scene img,.fallback-fog{position:absolute;inset:0;display:block;width:100%;height:100%}
-.scene img{object-fit:fill;-webkit-user-drag:none;pointer-events:none}
+.scene canvas,.scene img,.fallback-fog{display:block;position:absolute;inset:0;width:100%;height:100%}
+.scene img{object-fit:fill;-webkit-user-drag:none;user-select:none}
 .fallback-fog{
-  background:
-    linear-gradient(90deg,#000 0%,transparent 11%,transparent 89%,#000 100%),
-    linear-gradient(180deg,#000 0%,transparent 11%,transparent 89%,#000 100%);
-  pointer-events:none;
-  animation:breathe 18s ease-in-out infinite alternate;
+ pointer-events:none;
+ background:linear-gradient(90deg,#000,transparent 8%,transparent 92%,#000),
+            linear-gradient(0deg,#000,transparent 8%,transparent 92%,#000);
+ opacity:.95;
 }
 .scene.webgl-on .fallback{display:none}
-@keyframes breathe{0%{opacity:.86}100%{opacity:1}}
-@media(prefers-reduced-motion:reduce){.fallback-fog{animation:none}}
+#air{
+ display:block;position:absolute;inset:0;width:100%;height:100%;
+ pointer-events:none;filter:blur(11px);image-rendering:auto;
+}
+@media(prefers-reduced-motion:reduce){.scene{will-change:auto}#air{filter:none}}
 </style>
 </head>
 <body>
-<main aria-label="可随指针轻微转头的教室镜头">
-  <figure id="scene" class="scene" aria-label="放大的空教室；移动鼠标观看四周，触屏可以拖动画面">
-    <canvas id="sceneCanvas" aria-hidden="true"></canvas>
-    <img class="fallback" id="source" src="./assets/classroom.webp" width="1024" height="576"
-         alt="空教室的全景画面：课桌、黑板和左侧窗户。" draggable="false">
-    <div class="fallback fallback-fog" aria-hidden="true"></div>
-  </figure>
+<main id="view" aria-label="教室视角实验。移动鼠标看向四周；滚轮向下拉远；双击切换完整画面；手机拖动，双指缩放。">
+ <figure id="scene" class="scene" aria-label="教室中央的画面始终对齐屏幕中心，可拉近观察或退后查看全景">
+  <canvas id="picture" aria-hidden="true"></canvas>
+  <img id="source" class="fallback" src="./assets/classroom.webp"
+       width="1024" height="576" draggable="false" alt="原始教室背景，左边窗户、中央黑板与前后课桌。">
+  <div class="fallback fallback-fog" aria-hidden="true"></div>
+ </figure>
+ <canvas id="air" aria-hidden="true"></canvas>
 </main>
-<script id="vertex" type="x-shader/x-vertex">
+<script id="v-shader" type="x-shader/x-vertex">
 attribute vec2 a_pos;
 varying vec2 v_uv;
 void main(){
-  v_uv=a_pos*.5+.5;
-  gl_Position=vec4(a_pos,0.0,1.0);
+ v_uv=a_pos*.5+.5;
+ gl_Position=vec4(a_pos,0.0,1.0);
 }
 </script>
-<script id="fragment" type="x-shader/x-fragment">
+<script id="f-shader" type="x-shader/x-fragment">
 precision mediump float;
-uniform sampler2D u_image;
-uniform float u_time;
-uniform float u_aspect;
 varying vec2 v_uv;
-float rnd(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}
-float noise2(vec2 p){
-  vec2 i=floor(p),f=fract(p);
-  f=f*f*(3.0-2.0*f);
-  return mix(mix(rnd(i),rnd(i+vec2(1.,0.)),f.x),
-             mix(rnd(i+vec2(0.,1.)),rnd(i+vec2(1.,1.)),f.x),f.y);
+uniform sampler2D u_picture;
+uniform float u_time;
+uniform float u_ratio;
+uniform float u_zoom;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+ vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
+ return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),
+            mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);
 }
 float fbm(vec2 p){
-  float v=0.0,a=.5;
-  for(int i=0;i<3;i++){v+=a*noise2(p);p=p*2.05+vec2(7.1,4.9);a*=.5;}
-  return v/.875;
+ float a=.5,v=0.;
+ for(int i=0;i<4;i++){v+=a*noise(p);p=p*2.09+vec2(7.3,11.7);a*=.5;}
+ return v/.9375;
 }
 void main(){
-  vec2 uv=v_uv;
-  // Rectangular edge distance in units of the scene HEIGHT.
-  // Every point is measured from the nearest of the four real scene edges.
-  float d=min(min(uv.x,1.0-uv.x)*u_aspect,min(uv.y,1.0-uv.y));
-  vec2 p=vec2(uv.x*u_aspect,uv.y);
-  float t=u_time;
-  float flow=fbm(p*10.0+vec2(t*.026,-t*.017));
-  float wisps=fbm(p*19.0+vec2(-t*.011,t*.022));
-  float breath=sin(t*.49+flow*3.5);
-  float reach=.116+.013*breath+(flow-.50)*.072+(wisps-.5)*.027;
-  float visible=smoothstep(0.0,reach,d);
-  float haze=(1.0-smoothstep(reach*.38,reach*1.9,d))*(.045+.045*wisps);
-  vec3 scene=texture2D(u_image,uv).rgb;
-  gl_FragColor=vec4(scene*visible*(1.0-haze),1.0);
+ vec2 uv=v_uv;
+ vec2 p=vec2(uv.x*u_ratio,uv.y);
+ float t=u_time;
+ // Signed inward distance from the actual rectangular picture edges.
+ // Fractal domain warping makes the fog boundary uneven and non-geometric.
+ float low=fbm(p*7.2+vec2(t*.023,-t*.016));
+ float warp=fbm(p*13.7+vec2(-t*.031,t*.022));
+ float detail=fbm(p*24.0+vec2(t*.009,t*.016));
+ float breath=sin(t*.48+low*3.1);
+ float d=min(min(uv.x,1.-uv.x)*u_ratio,min(uv.y,1.-uv.y));
+ float reach=mix(.036,.076,u_zoom)+(.5-low)*.095+(.5-warp)*.034+(.5-detail)*.012+breath*.009;
+ reach=clamp(reach,.012,.167);
+ float revealed=smoothstep(-.007,reach*1.55,d);
+ float wisp=(1.-smoothstep(reach*.65,reach*2.2,d))*(.037+.055*detail);
+ vec3 col=texture2D(u_picture,uv).rgb;
+ gl_FragColor=vec4(col*revealed*(1.-wisp),1.);
 }
 </script>
 <script>
 (function(){
-  'use strict';
-  var scene=document.getElementById('scene');
-  var canvas=document.getElementById('sceneCanvas');
-  var source=document.getElementById('source');
-  var reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
-  var fine=window.matchMedia('(pointer: fine)');
-  var gl=null,program=null,timeUniform=null,texture=null,aspectUniform=null;
-  var targetX=0,targetY=0,cameraX=0,cameraY=0;
-  var sceneW=0,sceneH=0,panX=0,panY=0;
-  var touchId=null,lastTouchX=0,lastTouchY=0;
-  var lastFrame=0,lastFogFrame=0,frame=0;
-  function clamp(n){return Math.max(-1,Math.min(1,n));}
-  function makeShader(type,id){
-    var shader=gl.createShader(type);
-    gl.shaderSource(shader,document.getElementById(id).textContent);
-    gl.compileShader(shader);
-    if(!gl.getShaderParameter(shader,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(shader));
-    return shader;
-  }
-  function setupGL(){
-    try{
-      gl=canvas.getContext('webgl',{alpha:false,antialias:false,premultipliedAlpha:false,preserveDrawingBuffer:false});
-      if(!gl)return;
-      var vertex=makeShader(gl.VERTEX_SHADER,'vertex');
-      var fragment=makeShader(gl.FRAGMENT_SHADER,'fragment');
-      program=gl.createProgram();
-      gl.attachShader(program,vertex);gl.attachShader(program,fragment);gl.linkProgram(program);
-      if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(program));
-      gl.useProgram(program);
-      var buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
-      gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
-      var pos=gl.getAttribLocation(program,'a_pos');
-      gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
-      texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
-      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
-      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,source);
-      gl.uniform1i(gl.getUniformLocation(program,'u_image'),0);
-      timeUniform=gl.getUniformLocation(program,'u_time');
-      aspectUniform=gl.getUniformLocation(program,'u_aspect');
-      gl.uniform1f(aspectUniform,source.naturalWidth/source.naturalHeight);
-      scene.classList.add('webgl-on');
-    }catch(err){
-      console.warn('WebGL not available; using rectangular CSS fog fallback',err);
-      gl=null;scene.classList.remove('webgl-on');
-    }
-  }
-  function resize(){
-    var w=window.innerWidth,h=window.innerHeight;
-    // The source is intentionally bigger than the viewport in BOTH axes.
-    // The overscan is the exact reachable look-around area.
-    sceneW=Math.ceil(Math.max(w*1.35,h*(16/9)*1.35));
-    sceneH=sceneW*9/16;
-    panX=Math.max(0,(sceneW-w)*.5);
-    panY=Math.max(0,(sceneH-h)*.5);
-    scene.style.width=sceneW+'px';
-    scene.style.height=sceneH+'px';
-    if(gl){
-      var rw=Math.min(1536,Math.max(512,Math.round(sceneW*Math.min(window.devicePixelRatio||1,1.25))));
-      var rh=Math.round(rw*9/16);
-      if(canvas.width!==rw||canvas.height!==rh){
-        canvas.width=rw;canvas.height=rh;gl.viewport(0,0,rw,rh);
-      }
-    }
-  }
-  function render(now){
-    frame=0;
-    var dt=Math.min(.05,Math.max(.001,(now-(lastFrame||now-16))/1000));
-    lastFrame=now;
-    var k=1-Math.exp(-dt*6.2);
-    cameraX+=(targetX-cameraX)*k;
-    cameraY+=(targetY-cameraY)*k;
-    if(reduced.matches){cameraX=targetX;cameraY=targetY;}
-    // Smooth head-turn: bigger than the prior 1.5 degree tilt.
-    var yaw=cameraX*6.6,pitch=-cameraY*4.8;
-    var dx=-cameraX*panX*.96,dy=-cameraY*panY*.96;
-    scene.style.transform='translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0) rotateY('+yaw.toFixed(3)+'deg) rotateX('+pitch.toFixed(3)+'deg)';
-    // Limit expensive fragment-shader updates to 24 FPS. Camera stays smooth at display refresh rate.
-    if(gl&&(now-lastFogFrame>41||!lastFogFrame)){
-      gl.useProgram(program);gl.uniform1f(timeUniform,reduced.matches?0:now*.001);
+ 'use strict';
+ const view=document.getElementById('view');
+ const stage=document.getElementById('scene');
+ const canvas=document.getElementById('picture');
+ const image=document.getElementById('source');
+ const air=document.getElementById('air');
+ const reduce=matchMedia('(prefers-reduced-motion: reduce)');
+ const fine=matchMedia('(pointer:fine)');
+ const aspect=16/9;
+ const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+ const smooth=(a,b,x)=>{let t=clamp((x-a)/(b-a));return t*t*(3-2*t)};
+ let width=innerWidth,height=innerHeight,fitWidth=0,nearWidth=0;
+ let targetZoom=.72,zoom=.72,targetX=0,targetY=0,lookX=0,lookY=0;
+ let prev=0,lastFog=0,lastAir=0,request=0,gl=null,prog=null,uTime=null,uZoom=null;
+ let airCtx=null,airPixels=null,aw=0,ah=0;
+ const fingers=new Map();
+ let pinchDistance=0,lastTap=0,lastTapX=0,lastTapY=0;
+ function dimensions(){
+   width=Math.max(1,innerWidth);height=Math.max(1,innerHeight);
+   fitWidth=Math.min(width*.9,height*aspect*.88);
+   nearWidth=Math.max(width*1.48,height*aspect*1.48);
+   const longer=Math.max(width,height),factor=240/longer;
+   aw=Math.max(60,Math.round(width*factor));
+   ah=Math.max(60,Math.round(height*factor));
+   air.width=aw;air.height=ah;
+   airCtx=air.getContext('2d',{alpha:true});
+   airPixels=airCtx?airCtx.createImageData(aw,ah):null;
+ }
+ function shader(type,id){
+   const s=gl.createShader(type);
+   gl.shaderSource(s,document.getElementById(id).textContent);
+   gl.compileShader(s);
+   if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));
+   return s;
+ }
+ function setupGL(){
+   try{
+     gl=canvas.getContext('webgl',{alpha:false,antialias:false,preserveDrawingBuffer:false});
+     if(!gl)return;
+     const vs=shader(gl.VERTEX_SHADER,'v-shader'),fs=shader(gl.FRAGMENT_SHADER,'f-shader');
+     prog=gl.createProgram();gl.attachShader(prog,vs);gl.attachShader(prog,fs);gl.linkProgram(prog);
+     if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(prog));
+     gl.useProgram(prog);
+     const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+     const pos=gl.getAttribLocation(prog,'a_pos');
+     gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+     const tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+     canvas.width=1024;canvas.height=576;gl.viewport(0,0,canvas.width,canvas.height);
+     gl.uniform1i(gl.getUniformLocation(prog,'u_picture'),0);
+     gl.uniform1f(gl.getUniformLocation(prog,'u_ratio'),aspect);
+     uTime=gl.getUniformLocation(prog,'u_time');
+     uZoom=gl.getUniformLocation(prog,'u_zoom');
+     stage.classList.add('webgl-on');
+   }catch(e){
+     console.warn('Image shader fallback:',e);
+     gl=null;stage.classList.remove('webgl-on');
+   }
+ }
+ function mist(t){
+   if(!airPixels||!airCtx)return;
+   const data=airPixels.data,breath=.85+.15*Math.sin(t*.53);
+   for(let y=0;y<ah;y++){
+     const v=(y+.5)/ah;
+     for(let x=0;x<aw;x++){
+       const u=(x+.5)/aw,i=(y*aw+x)*4;
+       const d=Math.min(u,1-u,v,1-v);
+       // Two moving, incommensurate waves disturb the distance threshold.
+       const low=Math.sin(u*16.3+t*.31+Math.sin(v*9.1-t*.21)*1.35);
+       const high=Math.sin(v*21.2-t*.23+Math.sin(u*13.2+t*.16)*1.4);
+       const small=Math.sin((u+v)*36.1+t*.18);
+       const edge=clamp(.051+.017*low+.015*high+.006*small,.012,.095);
+       const cloud=1-smooth(edge*.11,edge*1.3,d);
+       data[i]=0;data[i+1]=0;data[i+2]=0;
+       data[i+3]=Math.round(255*cloud*(.22+.038*high)*breath);
+     }
+   }
+   airCtx.putImageData(airPixels,0,0);
+ }
+ function frame(t){
+   request=0;
+   if(document.hidden)return;
+   let dt=Math.min(.05,Math.max(.001,(t-(prev||t-16))/1000));prev=t;
+   const kz=reduce.matches?1:1-Math.exp(-dt*4.8);
+   const kl=reduce.matches?1:1-Math.exp(-dt*6.6);
+   zoom+=(targetZoom-zoom)*kz;
+   lookX+=(targetX-lookX)*kl;
+   lookY+=(targetY-lookY)*kl;
+   const sw=fitWidth+(nearWidth-fitWidth)*zoom,sh=sw/aspect;
+   const px=Math.max(0,(sw-width)*.5-14),py=Math.max(0,(sh-height)*.5-14);
+   const yaw=lookX*8.0*smooth(0,.5,zoom),pitch=-lookY*5.9*smooth(0,.5,zoom);
+   const dx=-lookX*px*.88,dy=-lookY*py*.88;
+   // The -50% translations remain the origin; all camera motion is relative.
+   stage.style.width=sw.toFixed(2)+'px';
+   stage.style.height=sh.toFixed(2)+'px';
+   stage.style.transform='translate3d(-50%,-50%,0) translate3d('+dx.toFixed(2)+'px,'+dy.toFixed(2)+'px,0) rotateY('+yaw.toFixed(3)+'deg) rotateX('+pitch.toFixed(3)+'deg)';
+   if(gl&&(!lastFog||t-lastFog>42)){
+      gl.useProgram(prog);
+      gl.uniform1f(uTime,reduce.matches?0:t*.001);
+      gl.uniform1f(uZoom,zoom);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-      lastFogFrame=now;
-    }
-    if(!reduced.matches||Math.abs(targetX-cameraX)+Math.abs(targetY-cameraY)>.001){
-      frame=requestAnimationFrame(render);
-    }
-  }
-  function wake(){if(!frame)frame=requestAnimationFrame(render);}
-  function mouseMove(e){
-    if(!fine.matches||e.pointerType==='touch')return;
-    targetX=clamp(e.clientX/window.innerWidth*2-1);
-    targetY=clamp(e.clientY/window.innerHeight*2-1);
-    wake();
-  }
-  function resetMouse(){
-    if(touchId!==null)return;
-    targetX=0;targetY=0;wake();
-  }
-  window.addEventListener('pointermove',mouseMove,{passive:true});
-  document.addEventListener('pointerleave',resetMouse);
-  window.addEventListener('blur',resetMouse);
-  scene.addEventListener('pointerdown',function(e){
-    if(e.pointerType==='mouse')return;
-    touchId=e.pointerId;lastTouchX=e.clientX;lastTouchY=e.clientY;
-    scene.setPointerCapture(e.pointerId);
-  });
-  scene.addEventListener('pointermove',function(e){
-    if(e.pointerId!==touchId)return;
-    targetX=clamp(targetX-(e.clientX-lastTouchX)/Math.max(panX,1));
-    targetY=clamp(targetY-(e.clientY-lastTouchY)/Math.max(panY,1));
-    lastTouchX=e.clientX;lastTouchY=e.clientY;wake();
-  });
-  function releaseTouch(e){if(e.pointerId===touchId)touchId=null;}
-  scene.addEventListener('pointerup',releaseTouch);
-  scene.addEventListener('pointercancel',releaseTouch);
-  window.addEventListener('resize',function(){resize();wake();},{passive:true});
-  reduced.addEventListener?.('change',wake);
-  if(source.complete&&source.naturalWidth){setupGL();resize();wake();}
-  else source.addEventListener('load',function(){setupGL();resize();wake();},{once:true});
-  source.addEventListener('error',function(){console.error('Missing classroom.webp');},{once:true});
-  resize();wake();
+      lastFog=t;
+   }
+   if(!lastAir||t-lastAir>70){mist(reduce.matches?0:t*.001);lastAir=t}
+   if(!reduce.matches||Math.abs(targetZoom-zoom)+Math.abs(targetX-lookX)+Math.abs(targetY-lookY)>.001){
+     request=requestAnimationFrame(frame);
+   }
+ }
+ function wake(){if(!request)request=requestAnimationFrame(frame)}
+ function fullView(){targetZoom=0;targetX=0;targetY=0;wake()}
+ function closeView(){targetZoom=.72;targetX=0;targetY=0;wake()}
+ function toggleView(){if(targetZoom<.18)closeView();else fullView()}
+ window.addEventListener('pointermove',e=>{
+   if(e.pointerType==='touch'||!fine.matches)return;
+   targetX=clamp(e.clientX/width*2-1,-1,1);
+   targetY=clamp(e.clientY/height*2-1,-1,1);
+   wake();
+ },{passive:true});
+ document.addEventListener('pointerleave',()=>{
+   if(fingers.size===0){targetX=0;targetY=0;wake()}
+ });
+ window.addEventListener('blur',()=>{if(fingers.size===0){targetX=0;targetY=0;wake()}});
+ view.addEventListener('wheel',e=>{
+   e.preventDefault();
+   targetZoom=clamp(targetZoom-e.deltaY*.001);
+   if(targetZoom<.015){targetZoom=0;targetX=0;targetY=0}
+   wake();
+ },{passive:false});
+ view.addEventListener('dblclick',e=>{e.preventDefault();toggleView()});
+ window.addEventListener('keydown',e=>{
+   if(['Escape','Home','KeyF','Digit0'].includes(e.code)){e.preventDefault();fullView()}
+   else if(['Space','Enter'].includes(e.code)){e.preventDefault();toggleView()}
+   else if(e.code==='KeyR'){e.preventDefault();closeView()}
+ });
+ function distance(){
+   const [a,b]=[...fingers.values()];
+   return Math.hypot(a.x-b.x,a.y-b.y);
+ }
+ view.addEventListener('pointerdown',e=>{
+   if(e.pointerType==='mouse')return;
+   const now=performance.now();
+   if(now-lastTap<320&&Math.hypot(e.clientX-lastTapX,e.clientY-lastTapY)<32){
+     toggleView();lastTap=0;
+   }else{lastTap=now;lastTapX=e.clientX;lastTapY=e.clientY}
+   fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+   if(fingers.size===2)pinchDistance=distance();
+   try{view.setPointerCapture(e.pointerId)}catch(_){}
+ });
+ view.addEventListener('pointermove',e=>{
+   const old=fingers.get(e.pointerId);if(!old)return;
+   fingers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+   if(fingers.size>=2){
+     const d=distance();
+     if(pinchDistance>0)targetZoom=clamp(targetZoom+(d-pinchDistance)/Math.min(width,height)*1.7);
+     pinchDistance=d;
+   }else{
+     const sw=fitWidth+(nearWidth-fitWidth)*Math.max(zoom,targetZoom);
+     const px=Math.max(90,(sw-width)*.5),py=Math.max(90,(sw/aspect-height)*.5);
+     targetX=clamp(targetX-(e.clientX-old.x)/px,-1,1);
+     targetY=clamp(targetY-(e.clientY-old.y)/py,-1,1);
+   }
+   wake();
+ });
+ function release(e){fingers.delete(e.pointerId);pinchDistance=0;wake()}
+ view.addEventListener('pointerup',release);
+ view.addEventListener('pointercancel',release);
+ window.addEventListener('resize',()=>{dimensions();wake()},{passive:true});
+ document.addEventListener('visibilitychange',()=>{prev=0;if(!document.hidden)wake()});
+ reduce.addEventListener?.('change',wake);
+ dimensions();wake();
+ if(image.complete&&image.naturalWidth){setupGL();wake()}
+ else image.addEventListener('load',()=>{setupGL();wake()},{once:true});
+ image.addEventListener('error',()=>console.warn('Classroom image missing'),{once:true});
 })();
 </script>
 </body>
