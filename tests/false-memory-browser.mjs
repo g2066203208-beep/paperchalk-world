@@ -26,7 +26,8 @@ try{
   assert.equal(await page.locator("#hotspots button").count(),4);
   const image=await page.locator("#hero").evaluate(e=>({loaded:e.complete&&e.naturalWidth>0,src:e.currentSrc,width:e.naturalWidth,height:e.naturalHeight}));
   assert.equal(image.loaded,true,JSON.stringify(image));
-  assert.equal(image.width,74,"integrated sprite is a single cropped character, not two");
+  assert.equal(image.height,846,"protagonist must retain full 846px source height");
+  assert.equal(image.width,260,"protagonist must retain full 260px source width (not a blurry thumbnail)");
   await page.locator('button[data-title="观察字条"]').click();
   assert.match(await page.locator("#line").innerText(),/明日值日/);
   await page.locator('button[data-title="检查时钟"]').click();
