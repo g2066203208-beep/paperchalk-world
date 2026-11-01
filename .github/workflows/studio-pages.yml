@@ -1,4 +1,4 @@
-name: Lost Order - 2D Rule Horror Pages
+name: Clear GitHub Pages site
 on:
   push:
     branches: [main]
@@ -8,109 +8,25 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: pixel-tools-clean-pages
+  group: cleared-pages
   cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
     environment:
       name: github-pages
       url: ${{ steps.publish.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Assert retired games absent and tools plus Night Lamp intact
+      - name: Verify website has no published content
         run: |
           set -euo pipefail
-          test ! -e site/game
-          test ! -e site/horror-room
-          test -s android/app/src/main/java/com/paperchalk/lampkeep/MainActivity.java
-          test -s site/card-game/index.html
-          test -s site/card-game/app.mjs
-          node --check site/card-game/engine.mjs
-          node --check site/card-game/app.mjs
-          test -s site/scene-studio/index.html
-          test -s site/scene-studio/scene.css
-          test -s site/scene-studio/building-model.mjs
-          node --check site/scene-studio/building-model.mjs
-          node --check site/scene-studio/scene.mjs
-          node --check site/card-game/survival-engine.mjs
-          node --check site/card-game/survival-app.mjs
-          node --test tests/card-paradox.test.mjs
-          node --check site/card-game/point-story-engine.mjs
-          node --check site/card-game/point-story-app.mjs
-          node --test tests/point-story.test.mjs
-          test -s site/card-game/scenes/foyer.svg
-          test -s site/card-game/scenes/peephole.svg
-          test -s site/false-memory/index.html
-          test -s site/false-memory/hero.webp
-          test -s site/false-memory/boys.webp
-          test -s site/galgame/index.html
-          node galgame/check.cjs
-          test -s site/pixel-lab/index.html
-          test -s site/world-builder/materials.html
-          ! grep -q 'game/menu.js' site/index.html
-          node --check site/world-builder/materials.js
-          node --check site/world-builder/world-material-gl.js
-          node --test tests/pixel-lab-structure.test.mjs tests/world-materials.test.mjs tests/learning-library.test.mjs
-      - name: Install Chromium for click-story browser tests
-        run: |
-          npm install --no-audit --no-fund --no-save --no-package-lock playwright@1.56.1
-          npx playwright install --with-deps chromium
-      - name: Verify interactive 2D mystery on desktop and mobile
-        run: node tests/point-story-browser.mjs
-      - name: Play original horror prologue on desktop and phone
-        run: node tests/false-memory-browser.mjs
-      - name: Keep original live 2D point-and-click screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lost-order-2d-story-screenshots
-          path: artifacts/point-story/
-          retention-days: 14
-          if-no-files-found: warn
-      - name: Keep original horror scene screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: false-memory-real-scene-screenshots
-          path: artifacts/false-memory/
-          retention-days: 14
-          if-no-files-found: warn
+          test -f site/index.html
+          test "$(find site -type f | wc -l)" -eq 1
+          ! grep -Eiq 'PIXEL ATELIER|失序之夜|<main|<nav|<script' site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
       - uses: actions/deploy-pages@v4
         id: publish
-      - name: Verify public 3D studio, tools and legacy game routes
-        run: |
-          set -euo pipefail
-          root="https://g2066203208-beep.github.io/paperchalk-world"
-          for i in $(seq 1 15); do
-            page="$(curl -fsSL --max-time 16 -H 'Cache-Control: no-cache' "$root/?clear=$GITHUB_SHA-$i" || true)"
-            horror="$(curl -L -s -o /dev/null -w '%{http_code}' --max-time 16 "$root/horror-room/?check=$GITHUB_SHA-$i" || true)"
-            game="$(curl -L -s -o /dev/null -w '%{http_code}' --max-time 16 "$root/game/menu.js?check=$GITHUB_SHA-$i" || true)"
-            if echo "$page" | grep -q 'PIXEL ATELIER' && [ "$horror" = 404 ] && [ "$game" = 404 ]; then
-              curl -fsSL --max-time 16 "$root/card-game/" -o /tmp/point-story-public.html
-              grep -q '2D 点击剧情恐怖' /tmp/point-story-public.html
-              curl -fsSL --max-time 16 "$root/card-game/point-story-app.mjs" -o /tmp/point-story-app.mjs
-              grep -q '__POINT_STORY__' /tmp/point-story-app.mjs
-              curl -fsSL --max-time 16 "$root/scene-studio/" -o /tmp/scene-studio-public.html
-              grep -q '失序之夜' /tmp/scene-studio-public.html
-              curl -fsSL --max-time 16 "$root/scene-studio/building-model.mjs" -o /tmp/scene-studio-geometry.mjs
-              grep -q 'buildBuilding' /tmp/scene-studio-geometry.mjs
-              curl -fsSL --max-time 16 "$root/pixel-lab/" -o /tmp/pixel-lab-public.html
-              grep -q 'PIXEL LAB' /tmp/pixel-lab-public.html
-              curl -fsSL --max-time 16 "$root/galgame/" -o /tmp/nightlamp-public.html
-              grep -q '夜航灯' /tmp/nightlamp-public.html
-              grep -q 'id="scene"' /tmp/nightlamp-public.html
-              echo "PASS: 3D architecture studio, tools and Night Lamp live; retired URLs 404"
-              exit 0
-            fi
-            sleep 7
-          done
-          exit 1
