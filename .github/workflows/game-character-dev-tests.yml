@@ -75,6 +75,12 @@ jobs:
                   return {w:a.clip?.img?.naturalWidth,h:a.clip?.img?.naturalHeight,mode:a.root.dataset.l2dMode};
                 });
                 assert.deepEqual(clipState,{w:335,h:1013,mode:'v4-clip'});
+                // Main menu intentionally hides the protagonist. Enter the
+                // actual classroom scene before sampling animated pixels.
+                await page.locator('#menu-start').click({force:true});
+                await page.waitForFunction(()=>!document.querySelector('#camera-player-root').hidden,{timeout:12000});
+                await page.waitForTimeout(360);
+
                 const sample=()=>page.evaluate(()=>{
                   const a=window.PaperchalkL2D.get('player').rig.source,
                     pix=a.getContext('2d').getImageData(352,70,332,860).data;
@@ -105,6 +111,8 @@ jobs:
                 assert.equal(await page.locator('#studio-character').count(),1);
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 assert.equal(await page.locator('#l2d-live-canvas').count(),1);
+                await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official'&&window.PaperchalkStudio?.useV4?.(),{timeout:18000});
+
                 assert.equal(await page.locator('#studio-character option').count(),1);
                 // Verify character-specific layer stacks, not a heroine-only static canvas.
                 await page.locator('#add').click({force:true});
