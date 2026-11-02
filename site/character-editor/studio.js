@@ -7,6 +7,8 @@ const list=new Map();
 const args=new URLSearchParams(location.search);
 const slot=args.get('slot')==='enemy'?'enemy':'player';
 let currentId='',side='front',v4=null,frameAt=0,showOriginalV4=true;
+let playing=false,frameIndex=0,playingSince=0,switchNonce=0,activePaintFrame=0;
+let frameFrames={},globalLayer=null,frameLayer=null,correctionTimer=0,decodeBusy=false;
 const okId=v=>/^[\w-]{1,80}$/.test(v);
 const message=s=>$('studio-status').textContent=s;
 function openDB(){return new Promise((ok,no)=>{
@@ -33,7 +35,14 @@ section.innerHTML=[
  '<label class="studio-import">导入新人物<input id="studio-import" type="file" accept="image/png,image/webp,image/jpeg" multiple></label>',
  '<label class="studio-import">导入 V4 动态工程 ZIP<input id="studio-v4zip" type="file" accept=".zip,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
- '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas><span>V4 原版 128 帧动态。默认主预览同步展示官方 V4；若要检查刚补画的图层，请切换至编辑网格视图。</span><button id="studio-v4-mode" type="button">切换到图层实时变形</button></div>'
+ '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas>',
+ '<div class="studio-v4-tools"><strong>V4 原动画 · 主画布直接绘制</strong>',
+ '<p>可在 V4 动画上修补全帧或选定单帧，原始 128 帧不被破坏。原版为逐帧 WebP，并非可反解的 Cubism 骨骼工程。</p>',
+ '<label>绘画范围 <select id="studio-edit-scope"><option value="all">全部帧（通用修补）</option><option value="frame">仅当前帧</option></select></label>',
+ '<label>帧 <output id="studio-frame-label">0 / 127</output><input id="studio-frame" type="range" min="0" max="127" value="0" step="1"></label>',
+ '<div class="studio-row"><button id="studio-play" type="button">播放</button><button id="studio-v4-mode" type="button">查看静态分层</button>',
+ '<button id="studio-patch-export" type="button">导出修补备份</button><label class="studio-import">导入修补备份<input id="studio-patch-import" type="file" accept="application/json,.json"></label></div>',
+ '<small>按人物、正背面、帧分别保存；首次打开默认暂停，方便精修。</small></div></div>'
 ].join('');
 const style=document.createElement('style');
 style.textContent=[
@@ -47,7 +56,9 @@ style.textContent=[
  '#studio-status{flex:1;min-width:190px;color:#abd5fc;font-size:12px}',
  '#studio-v4-wrap{display:flex;gap:12px;align-items:center;margin-top:8px;color:#b9c9de;font-size:12px}',
  '#studio-v4-wrap[hidden]{display:none}',
- '#studio-v4-canvas{width:140px;height:140px;background:#1b2634;border:1px solid #52657e}',
+ '#studio-v4-canvas{width:110px;height:180px;object-fit:contain;flex-shrink:0;background:#1b2634;border:1px solid #52657e}',
+ '.studio-v4-tools{flex:1;min-width:210px;display:grid;gap:5px}.studio-v4-tools p{font-size:11px;color:#b7c9dc;margin:4px 0}.studio-v4-tools label{font-size:12px}.studio-v4-tools input[type=range]{width:100%}',
+ '#studio-frame-label{font-size:11px;color:#96cfff}',
  'body.studio-page .layout{height:calc(100dvh - 170px);min-height:430px}',
  '@media(max-width:710px){.studio-row select{max-width:100%;flex:1}body.studio-page .layout{height:auto}}'
 ].join('\n');
