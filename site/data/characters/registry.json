@@ -6,7 +6,10 @@
     "sameCharacterAcrossAllViews": true,
     "newIdentityRequiresDistinctStoryRole": true,
     "renderAssetChangesRequireExplicitApproval": true,
-    "proposedBiographyIsNotConfirmed": true
+    "proposedBiographyIsNotConfirmed": true,
+    "fictionalAnatomyIsUnverified": true,
+    "draftPhysicalValuesMustNotBeClaimedUserApproved": true,
+    "noAdditionalPortraitScene": true
   },
   "characters": [
     {
@@ -100,7 +103,157 @@
         "No separate portrait-scene entry",
         "Preserve original front/back assets and game layer positions"
       ],
-      "designDocument": "docs/PROTAGONIST_CANON.md"
+      "designDocument": "docs/PROTAGONIST_CANON.md",
+      "productionProfile": {
+        "version": "1.1",
+        "designDocument": "docs/characters/CHAR-001_PROTAGONIST_PROFILE.md",
+        "sourceHierarchy": [
+          "original approved front/back art",
+          "docs/PROTAGONIST_CANON.md",
+          "drafted production profile"
+        ],
+        "provenanceNote": "Only visible visual properties and existing asset ownership are locked. Other character backstory and body numbers are unapproved creative proposals.",
+        "appearance": {
+          "faceShape": {
+            "value": "soft narrow oval, gently narrowing jaw and small chin",
+            "status": "visual_reference"
+          },
+          "eyes": {
+            "value": "slender almond shape; slightly lowered upper lid; muted gray brown irises",
+            "status": "visual_reference"
+          },
+          "brows": {
+            "value": "thin dark, gently level",
+            "status": "visual_reference"
+          },
+          "noseMouth": {
+            "value": "small nose and understated small closed lips",
+            "status": "visual_reference"
+          },
+          "hair": {
+            "value": "straight near-black, cool-brown highlights; segmented fringe and long side locks; back reaches shoulder-blade region",
+            "status": "visual_reference"
+          },
+          "hairClips": {
+            "value": "two thin pale silver diagonal clips at character-left temple (viewer-right in front)",
+            "status": "visual_reference"
+          },
+          "skin": {
+            "value": "light warm skin with minimal blush",
+            "status": "visual_reference"
+          },
+          "build": {
+            "value": "slender and balanced silhouette; no emphasized anatomical curves",
+            "status": "visual_reference"
+          }
+        },
+        "fictionalSizingProposal": {
+          "status": "proposed_not_approved",
+          "heightCm": 162,
+          "weightKg": 49,
+          "heightNote": "No physical measurement was performed; values are fictional art-scale suggestions",
+          "headBodyRatio": {
+            "min": 6.8,
+            "max": 7.2
+          },
+          "shoulderWidthCm": {
+            "min": 35,
+            "max": 37,
+            "status": "proposal_for_costume_proportion"
+          },
+          "overallBuild": "natural and relatively slender, not a heavyset silhouette",
+          "bodyFatPercentage": null,
+          "shoeSize": null,
+          "uniformFit": "natural-tailored small-size fitting reference; NOT a real brand size",
+          "intimatesSizing": null,
+          "intimatesNote": "Not part of this underage schoolgirl concept's visual production specifications",
+          "approvalsNeeded": [
+            "height",
+            "weight",
+            "age",
+            "school year",
+            "clothing sizing"
+          ]
+        },
+        "costumeBlueprint": {
+          "jacket": "very dark navy school blazer, lapels, buttons, pockets; modest natural fit",
+          "inner": "pale gray-white collared shirt",
+          "tie": "muted burgundy thin necktie",
+          "skirt": "mid-gray orderly pleated school skirt",
+          "socks": "dark gray to near-black lower/mid-calf socks",
+          "shoes": "low-heel brown-black round-toe loafers",
+          "invariantAccessories": [
+            "two hair clips at character-left temple"
+          ],
+          "movableItems": "none by default, add by scene event only"
+        },
+        "personalityProposal": {
+          "status": "proposed_not_approved",
+          "temperament": [
+            "reserved",
+            "quiet",
+            "watchful",
+            "self-contained",
+            "subtly empathetic when trust grows"
+          ],
+          "cognition": [
+            "notices minor inconsistencies",
+            "asks factual questions before drawing conclusions",
+            "memory of room arrangements"
+          ],
+          "strengths": [
+            "patient",
+            "attentive",
+            "composed under uncertainty"
+          ],
+          "weaknesses": [
+            "overthinks anomalies",
+            "hesitates to trust",
+            "internalizes worries"
+          ],
+          "goalsProposed": [
+            "understand contradictory ordinary events",
+            "protect relationships without abandoning evidence"
+          ],
+          "conflict": "attachment to ordinary routines versus the pressure to acknowledge unsettling changes",
+          "dialogue": "brief, clear, deliberate pauses; no exaggerated screeching or infantile tics",
+          "voiceProposal": "mid-low soft tone with steady pace and subtle breath-related pauses",
+          "habitsProposed": [
+            "eyes move before head when hearing noise",
+            "subtle shoulder tension and release",
+            "small hand adjustment when unsure"
+          ]
+        },
+        "animationBoundaries": {
+          "bodyBreathing": "subtle coupled upper torso/shoulders, natural clothing rigidity",
+          "secondaryMotion": "hair tips and pleated skirt lag lightly",
+          "constraints": [
+            "no major identity changes in motion",
+            "front and back are distinct references",
+            "do not mirror front as back",
+            "keep face/hair-clips consistent"
+          ],
+          "stages": [
+            "reference comparison",
+            "occlusion repair approval",
+            "rig and motion tests",
+            "3 viewport browser QA"
+          ]
+        },
+        "unresolved": [
+          "full name",
+          "family and sibling details",
+          "confirmed age and height/weight",
+          "school and city",
+          "birthdate",
+          "dominant hand",
+          "medical history",
+          "plot relationships",
+          "supernatural capabilities",
+          "exact shoe fit"
+        ]
+      },
+      "profileDocument": "docs/characters/CHAR-001_PROTAGONIST_PROFILE.md"
     }
   ]
 }
