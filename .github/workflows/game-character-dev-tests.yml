@@ -145,6 +145,15 @@ jobs:
                 await page.locator('#studio-edit-scope').selectOption('frame');
                 await page.locator('#studio-frame').fill('12');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.frame===12,{timeout:18000});
+                await page.evaluate(()=>{
+                  const editor=window.characterEditor,S=editor.S;
+                  const correction=S.layers[S.side].find(x=>x.name==='V4 · 当前帧修补');
+                  if(!correction)throw Error('V4 keyframe correction layer missing');
+                  const g=correction.canvas.getContext('2d');
+                  g.fillStyle='#fe3535';g.fillRect(430,405,16,16);
+                  editor.render();
+                  window.dispatchEvent(new Event('paperchalk:art-dirty'));
+                });
                 await page.locator('#studio-edit-scope').selectOption('all');
                 // Verify character-specific layer stacks, not a heroine-only static canvas.
                 const initialLayers=await page.locator('#layers .layer').count();
@@ -152,6 +161,15 @@ jobs:
                 assert.equal(await page.locator('#layers .layer').count(),initialLayers+1);
                 await page.locator('#studio-save').click({force:true});
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
+                const hasSavedFrame=await page.evaluate(()=>new Promise((ok,no)=>{
+                  const req=indexedDB.open('paperchalk-dev-characters-v1',1);
+                  req.onsuccess=()=>{const db=req.result;
+                    const q=db.transaction('kv','readonly').objectStore('kv').get('frames:protagonist:back');
+                    q.onsuccess=()=>{db.close();ok(typeof q.result?.[12]==='string'&&q.result[12].startsWith('data:image/png;'));};
+                    q.onerror=()=>no(q.error);
+                  };req.onerror=()=>no(req.error);
+                }));
+                assert.equal(hasSavedFrame,true,'V4 painted frame 12 must persist separately from original animation');
                 const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
                 await page.locator('#studio-import').setInputFiles({name:'sample-npc-front.png',mimeType:'image/png',buffer:tiny});
                 await page.waitForFunction(()=>window.PaperchalkStudio?.list.size===4 && window.PaperchalkStudio.current!=='protagonist',{timeout:18000});
@@ -168,6 +186,7 @@ jobs:
                 await page.waitForURL('**/?dev=1',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
+                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.overlayFrameUrls?.has(12)),true,'painted V4 frame must reload in game');
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,4,'Game DEV must see all GitHub profiles and locally imported characters');
                 assert.deepEqual(errors,[],'No browser errors');
