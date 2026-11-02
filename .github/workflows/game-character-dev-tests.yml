@@ -388,7 +388,21 @@ jobs:
                   const rig=window.characterEditor?.l2dRig?.();
                   return rig?.psdParts?.length===16 &&
                     !document.getElementById('l2d-live-canvas').hidden;
-                },null,{timeout:16000});
+                },null,{timeout:10000}).catch(async error=>{
+                  console.error('PSD16 PREVIEW DETAIL',await page.evaluate(()=>({
+                    current:window.PaperchalkStudio?.current,
+                    side:window.characterEditor?.S?.side,
+                    busy:window.characterEditor?.S?.busy,
+                    ready:window.characterEditor?.S?.ready,
+                    count:window.characterEditor?.S?.layers?.front?.filter(p=>p.sourcePart&&p.role==='psd-part').length,
+                    rig:!!window.characterEditor?.l2dRig?.(),
+                    rigPartCount:window.characterEditor?.l2dRig?.()?.psdParts?.length,
+                    canvasHidden:document.getElementById('l2d-live-canvas')?.hidden,
+                    canvasDisplay:document.getElementById('l2d-live-canvas')?.style.display,
+                    status:document.getElementById('status')?.textContent,
+                    studioStatus:document.getElementById('studio-status')?.textContent
+                  })));throw error;
+                });
                 await page.screenshot({path:'artifacts/l2d-studio/'+
                   (phone?'mobile':'desktop')+'-char-002-real-psd16-rig.png',fullPage:true});
                 await page.locator('#studio-back').click();
