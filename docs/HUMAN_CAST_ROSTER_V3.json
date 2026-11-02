@@ -95,11 +95,12 @@
       "schoolProposal": "主角所在的一所普通高中（暂名未锁定）",
       "wardrobeProposal": {
         "status": "secondary_future_costume_ideas",
-        "rules": "当前绘画只允许同校制服正面母版。私服运动服后续换装阶段再设计，不能作为现在的首套主造型。",
-        "school": "现阶段唯一需要绘制：与现有同校主角相同的深蓝制服外套、白衬衫、酒红领带、炭灰校裤、黑鞋；版型与细节以已有认可的校服母图为准。",
+        "rules": "现阶段仍只制作同校校服角色母版，但允许通过穿法表现人物个性。不要把‘统一校服’误解为外套扣法、领带长短、袖子、裤型、站姿也完全相同；正式校服的色系和基础裁剪必须保持一致。",
+        "school": "同校制服穿出个人风格：深蓝校服外套随意搭在单侧肩上（保留衣领两颗深色哑光扣等原有制服细节）、白衬衫双袖自然卷到前臂、酒红色领带打得稍短、深炭灰较宽松直筒校裤、普通略有穿着痕迹的黑色皮鞋。身份还是学生；这是女三正面母版的个性化校服候选，待用户验收图。",
         "casual": "未来备用方向：暗橄榄绿短工装夹克等；当前暂缓，不生成",
         "sports": "未来备用方向：学校统一运动服；当前暂缓，不生成",
-        "sceneSwitch": "换装系统后续阶段再安排；目前只需制作校服单人正面图"
+        "sceneSwitch": "换装系统后续阶段再安排；目前只需制作校服单人正面图",
+        "approvedArtPriority": "CHAR-001、002、003、016 已有的角色图片是实际视觉参考，不得修改其已认可的穿法；本条仅适用于CHAR-004新母版候选"
       }
     },
     {
@@ -897,10 +898,11 @@
     "status": "working_rule_2026-11-02",
     "priority": "All student characters get one consistent same-school-uniform, single-person full-body front-view portrait first; use approved protagonist/other student art for uniform design alignment",
     "scope": "8 students in current V3 planned roster; do not apply uniforms to adult characters",
-    "sharedUniform": "navy school blazer, white collared shirt, burgundy neckwear, charcoal trousers or skirt according to approved school uniform variants, black footwear; exact details taken from approved character masters",
+    "sharedUniform": "同校统一的是校服版型、材料和主色，不是每人扣子、领带、袖口、穿着整洁度、鞋袜磨损和姿态都相同。已批准的CHAR-001～003/016原图不能仅为统一穿法而覆盖；新角色可在同一校服系统内创造辨识度，不违背当前学校的常识性穿着规则。",
     "individuality": "individual face structure, eyes, hair, body build, expression and natural standing pose; no duplicate AI influencer face",
     "portrait": "one character, front view, complete hair to shoes, plain white background, faithful clean high-resolution image ready for eventual manual L2D splitting",
     "notNow": "no casual outfits, sportswear, battle costumes, custom workwear or alternate costume art until all primary student portraits have their approved canonical appearance",
-    "source": "2026-11-02 user decision: now all students drawn in school uniforms, outfit changes later"
+    "source": "2026-11-02 user decision: now all students drawn in school uniforms, outfit changes later",
+    "individualStyling": "男主：既有原图敞开外套与松散领带；男二：已批准外套扣合、领带较整齐；女主/女二保持获批母版穿法；女三CHAR-004试做衬衫卷袖、领带稍短、宽松直筒校裤、深蓝校服外套搭肩的独特剪影。此穿法仅是候选，仍要等用户验收图。不能为了差异随意另造校徽、校服配色或外校衣服。"
   }
 }
