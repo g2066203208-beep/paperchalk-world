@@ -60,7 +60,14 @@ async function assign(target,id,face='front',save=true){
  if(!src)throw Error('人物缺少 '+face+' 方向素材');
  const img=actor.img;assigned[target]={id,side:face};
  img.dataset.characterId=id;img.dataset.characterSide=face;
- if(img.src!==new URL(src,location.href).href)img.src=src;
+ if(img.src!==new URL(src,location.href).href){
+  // A new NPC source image fires an asynchronous 'load' event that calls
+  // runtime.refresh() and invalidates any V4 decoder installed too early.
+  // Wait for the real source image AND its L2D rig before installing the clip.
+  img.src=src;
+  await img.decode();
+  await window.PaperchalkL2D.refresh(target);
+ }
  img.hidden=false;
  const rig=await get('l2d:'+id+':'+face)||{amplitude:.55,period:4.8,softness:1};
  window.PaperchalkL2D.setProfile(target,rig);
