@@ -161,7 +161,7 @@ body.mobile-mode.virtual-landscape #view{
   will-change:transform;
 }
 #camera-player-root #actor-player{
-  position:absolute;display:block;left:8cqw;bottom:-3cqh;height:82cqh;
+  position:absolute;display:block;left:19cqw;bottom:3cqh;height:76cqh;
   width:auto;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
@@ -169,7 +169,7 @@ body.mobile-mode.virtual-landscape #view{
    Do not override the DEV-authored inline x/y/size on environment scenes. */
 @container (max-height:445px){
   #enemy-depth-root #actor-enemy{height:34%;left:46%;bottom:16%}
-  #camera-player-root #actor-player{height:82cqh;left:8cqw;bottom:-3cqh}
+  #camera-player-root #actor-player{height:76cqh;left:19cqw;bottom:3cqh}
 }
 
 /* BLACK-only scene transition, independent of the original running fluid fog */
@@ -1273,9 +1273,10 @@ void main(){
   const devFootprint=document.getElementById('dev-ground-contact');
   const devGroundToggle=document.getElementById('dev-ground-toggle');
   const enemyImage=document.getElementById('actor-enemy');
+  // One uncropped default for all rooms. Saved user DEV positions remain authoritative.
   const editorDefaults=Object.freeze({
     bg:{z:-235},enemy:{x:46,y:16,size:34,z:-190},
-    fog:{z:0},player:{x:8,y:-3,size:82,z:160},
+    fog:{z:0},player:{x:19,y:3,size:76,z:160},
     ground:{y:77,z:-215,visible:1}
   });
   const EDITOR_KEY='paperchalk-layer-editor-v2';
