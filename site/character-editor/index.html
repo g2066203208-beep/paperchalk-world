@@ -185,7 +185,7 @@ async function switchCharacter(target,side='front'){
  S.busy=true;S.history=[];S.redo=[];S.selection=null;
  try{
   for(const face of ['front','back']){
-   const url=String(target[face]||'');
+   const value=String(target[face]||'');const url=value?new URL(value,new URL('../',location.href)).href:'';
    let q;
    if(url){
     const im=await imgFrom(url);
