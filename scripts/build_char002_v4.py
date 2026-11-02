@@ -82,20 +82,27 @@ def create_parts(img,target):
     return len(manifest['layers']['front'])
 
 def render_frame(base,n):
+    """Breath is a local ribcage expansion, not an animated body translation.
+
+    Head, waist, hips, legs and shoes retain their exact source pixels.
+    Runtime adds a finer chest-only mesh; this baked V4 contains a modest
+    upper-torso pulse for browsers that lack WebCodecs.
+    """
     angle=2*math.pi*n/FRAMES
-    inhale,sway=math.sin(angle),math.sin(angle-.55)
+    inhale=math.sin(angle)
     out=Image.new('RGBA',(W,H))
+    def smooth(a,b,t):
+        z=max(0.,min(1.,(t-a)/(b-a)))
+        return z*z*(3-2*z)
     for y in range(0,H,8):
-        height=min(8,H-y);cy=y+height*.5
-        head=max(0,min(1,(600-cy)/480))
-        torso=max(0,min(1,(720-cy)/460))
-        dx=1.9*head*sway+.4*torso*inhale
-        chest=max(0,1-abs(cy-365)/245)
-        scale=1+.004*chest*inhale
+        height=min(8,H-y)
+        cy=y+height*.5
+        chest=smooth(205,278,cy)*(1-smooth(388,520,cy))
+        scale=1+.008*chest*inhale
         inv=1/scale
         strip=base.crop((0,y,W,y+height)).transform(
           (W,height),Image.Transform.AFFINE,
-          (inv,0,(W*.5)*(1-inv)-dx*inv,0,1,0),
+          (inv,0,(W*.5)*(1-inv),0,1,0),
           resample=Image.Resampling.BICUBIC)
         out.paste(strip,(0,y))
     return out
