@@ -121,8 +121,9 @@ jobs:
           assert Path('site/assets/characters/protagonist-front.webp').read_bytes()[:4]==b'RIFF'
           from PIL import Image
           cutout=Image.open('site/assets/characters/protagonist-front.webp').convert('RGBA')
-          assert cutout.getpixel((165,700))[3]<8,'White background left between legs'
-          assert cutout.getpixel((150,400))[3]>240,'Character accidentally removed'
+          cw,ch=cutout.size
+          assert cutout.getpixel((round(cw*.5),round(ch*.69)))[3]<8,'White background left between legs'
+          assert cutout.getpixel((round(cw*.47),round(ch*.39)))[3]>235,'Character accidentally removed'
           assert 'transparent 15%,transparent 85%' in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=191.' in h and 'const reach=191+' in h
