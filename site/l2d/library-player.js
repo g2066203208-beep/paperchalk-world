@@ -36,7 +36,14 @@ async function attach(slot,characterId,face,rigSpec){
   getJSON(rigSpec.url),
   ...Object.values(rigSpec.textures).map(url=>image(url))
  ]);
- if(model?.format!=='paperchalk-part-rig-v1'||model.characterId!==characterId||model.face!==face)
+ // Explicitly authorize ONLY the original heroine using her own
+ // published 25-part rig model. Do not trust arbitrary cross-character aliases.
+ const approvedOriginal=characterId==='protagonist'&&
+   rigSpec.sourceCharacterId==='protagonist-rig-v1'&&
+   model?.characterId==='protagonist-rig-v1'&&
+   rigSpec.url.startsWith('./assets/l2d/library/protagonist-rig-v1/');
+ if(model?.format!=='paperchalk-part-rig-v1'||
+    (model.characterId!==characterId&&!approvedOriginal)||model.face!==face)
   throw Error('L2D 绑定文件与人物 ID/方向不一致');
  const ids=Object.keys(rigSpec.textures);
  if(!ids.length||ids.length!==Object.keys(model.parts||{}).length)
