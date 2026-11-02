@@ -111,37 +111,20 @@ class HeroineBreathRig{
     This is a procedural fallback; imported V4 clips take priority and bypass it.
     The full V4 asset is NOT synthesized here. */
  motionAt(x,y,t){
+  // Procedural fallback: breathe with the upper chest; never translate the
+  // entire skeleton. The head, waist, pelvis, legs and shoes stay planted.
   const sw=this.source.width,sh=this.source.height;
-  const u=x/sw,v=y/sh,top=this.bounds?.top??.015;
-  const TWO=Math.PI*2,p=TWO*t/this.period;
-  const resp=Math.sin(p),slow=Math.sin(p-.42),lag=Math.sin(p-.86),float=Math.sin(p*.66+1.2);
-  const amp=this.amplitude,flex=this.softness;
-  const head=bell(v,.165,.125)*(1-smooth(.29,.41,v));
-  const chest=bell(v,.37,.095)*(1-smooth(.48,.60,v));
-  const arm=smooth(.30,.39,v)*(1-smooth(.55,.69,v));
-  const skirt=smooth(.50,.56,v)*(1-smooth(.64,.72,v));
-  const standing=1-smooth(.70,.82,v);
-  const leftHair=bell(u,.459,.040)*smooth(.16,.30,v)*(1-smooth(.34,.43,v));
-  const rightHair=bell(u,.558,.042)*smooth(.16,.29,v)*(1-smooth(.34,.43,v));
-  const fringe=bell(v,.075,.035)*bell(u,.50,.10);
-  const leftHem=bell(u,.434,.064)*skirt,rightHem=bell(u,.574,.064)*skirt;
-  const leftSleeve=bell(u,.378,.046)*arm,rightSleeve=bell(u,.633,.047)*arm;
-  // Femur/knee motion is microscopic relative to the rooted shoes.
-  const knee=bell(v,.76,.045)*Math.sin(p-.92)*.20*amp;
-  const breathLift=-8.0*resp*chest*amp;
-  const headNod=-2.6*slow*head*amp;
-  const sway=(3.8*float*head+2.1*lag*chest)*amp*standing;
-  const hairTip=(leftHair*(12.5*Math.sin(p-.65)+3.2*Math.sin(p*1.55))
-    +rightHair*(13.4*Math.sin(p-.95)+3.5*Math.sin(p*1.48+.7)))*flex*amp;
-  const hem=(-9*leftHem*Math.sin(p-.95)+8*rightHem*Math.sin(p-.73))*flex*amp;
-  const sleeve=(leftSleeve*-4.8*Math.sin(p-.48)+rightSleeve*4.5*Math.sin(p-.67))*flex*amp;
-  const shiftX=sway+hairTip+hem+sleeve+knee;
-  const shiftY=breathLift+headNod
-    +(1.45*leftHair+1.15*rightHair)*Math.sin(p-.9)*flex*amp
-    +.7*skirt*Math.sin(p-.8)*flex*amp
-    +.25*fringe*Math.sin(p-.25)*flex*amp;
-  const widen=chest*.017*resp*amp;
-  return {x:x+shiftX+(x-sw*.5)*widen,y:y+shiftY};
+  const nx=x*1024/sw,ny=y*1024/sh;
+  const p=this.amplitude,period=this.period,now=t*1000;
+  const local=root.PaperchalkLocalBreath?.point(nx,ny,p,period,now)
+    ||{x:nx,y:ny};
+  const smooth=(a,b,v)=>{const q=clamp((v-a)/(b-a),0,1);return q*q*(3-2*q);};
+  const phase=Math.sin(t*Math.PI*2/period-.65);
+  const hair=Math.exp(-Math.pow((nx-520)/110,2))*smooth(175,310,ny)*
+    (1-smooth(335,475,ny));
+  const skirt=smooth(520,610,ny)*(1-smooth(680,730,ny));
+  const sx=(2.0*hair+1.0*skirt)*this.softness*p*phase;
+  return {x:(local.x+sx)*sw/1024,y:local.y*sh/1024};
  }
  blinkAmount(t){
   // Sparse asymmetric blinks, smooth 100-150 ms closure; idle loop 6.4 s.
@@ -198,63 +181,45 @@ class HeroineBreathRig{
  // Hair and skirt use triangular skinned meshes; face components follow head.
  // The foot artwork is absolutely fixed to the baseline ground position.
  psdTarget(x,y,part,t){
-  const name=part.name.toLowerCase().replace(/[\s_-]/g,'');
-  const s=(v,a,b)=>{let n=clamp((v-a)/(b-a),0,1);return n*n*(3-2*n)};
-  const p=t*2*Math.PI/this.period,a=this.amplitude,soft=this.softness;
-  const slow=Math.sin(p*.71-.42),float=Math.sin(p),lag=Math.sin(p*.71-.75);
+  const name=(part.name||'').toLowerCase().replace(/[\\s_-]/g,'');
+  const s=(v,a,b)=>{let n=clamp((v-a)/(b-a),0,1);return n*n*(3-2*n);};
+  const a=this.amplitude,period=this.period,now=t*1000;
+  const breath=root.PaperchalkLocalBreath?.point(x,y,a,period,now)||{x,y};
+  const theta=t*2*Math.PI/period;
+  const lag=Math.sin(theta-.65);
   let X=x,Y=y;
-  const around=(px,py,angle)=>{
-   const dx=X-px,dy=Y-py;
-   X=px+Math.cos(angle)*dx-Math.sin(angle)*dy;
-   Y=py+Math.sin(angle)*dx+Math.cos(angle)*dy;
-  };
-  const torso=(factor=1)=>{
-   X+=2.7*a*slow*factor;Y-=1.65*a*float*factor;
-   around(518,520,.0075*a*slow*factor);
-  };
-  const head=()=>{torso();around(535,211,.016*a*lag);X+=1.8*a*slow;};
-  if(/footwear|鞋/.test(name))return {x:X,y:Y};
-  if(/legwear|双腿/.test(name)){
-   X+=2.7*a*slow*.45*(1-s(y,690,930));return {x:X,y:Y};
-  }
+  // No body sway. An entirely unchanged anchor for grounded anatomy.
+  if(/footwear|鞋|legwear|双腿|裤|袜/.test(name))return {x,y};
   if(/bottomwear|百褶裙|裙子/.test(name)){
-   torso(.68);around(518,520,.006*a*Math.sin(p*.63-.6));
-   const tip=s(y,498,633),edge=(x-508)/115;
-   X+=soft*a*tip*tip*(6.3*Math.sin(p*.91-.8+edge*.8)+2.5*Math.sin(p*1.56+edge));
-   Y+=soft*a*tip*tip*1.8*Math.sin(p-.5+edge);return {x:X,y:Y};
+   const tip=s(y,520,660);
+   // A tiny cloth response, not a moving pelvis.
+   return {x:x+1.2*a*this.softness*lag*tip,y};
   }
-  if(/topwear|上身|外套|校服/.test(name)){
-   torso(1-s(y,455,620)*.42);const upper=1-s(y,300,540);
-   X+=(x-525)*.0038*a*float*upper;
-   Y-=.8*a*float*upper;return {x:X,y:Y};
-  }
-  if(/handwear|手臂|挥手/.test(name)){
-   const left=s(475-x,0,85);torso(1-s(y,405,615)*.4);
-   if(left>.01){around(452,257,-.023*a*Math.sin(p*.77-1)*left);
-    X+=left*s(275-y,0,150)*1.9*a*Math.sin(p*.77-.5);}
-   else X+=.75*a*Math.sin(p-.9)*s(y,415,580);
-   return {x:X,y:Y};
+  if(/topwear|上身|外套|校服|衬衫|衣服|jacket/.test(name))
+   return breath;
+  if(/handwear|手臂|挥手|袖子|sleeve/.test(name)){
+   // Move sleeve fabric near the clavicles only; the hands stay still.
+   const shoulder=(1-s(y,320,485))*(1-s(Math.abs(x-520),165,260));
+   return {x:x+(breath.x-x)*shoulder*.65,
+           y:y+(breath.y-y)*shoulder*.55};
   }
   if(/backhair|后发|马尾/.test(name)){
-   head();const tip=s(y,140,275),edge=(x-535)/80;
-   X+=soft*a*tip*tip*(8.5*Math.sin(p*.77-1.1)+3.2*Math.sin(p*1.31+edge));
-   Y+=soft*a*tip*tip*1.9*Math.sin(p*.71-.8);return {x:X,y:Y};
+   // The scalp is fixed. Only loose lower hair has delayed inertia.
+   const tip=s(y,165,330)*(1-s(y,475,550));
+   X+=1.8*a*this.softness*lag*tip;return {x:X,y:Y};
   }
-  if(/fronthair|刘海|前发/.test(name)){
-   head();const tip=s(y,80,156);
-   X+=soft*a*tip*tip*2.1*Math.sin(p*.87-1.25+(x-530)/65);
-   return {x:X,y:Y};
+  if(/fronthair|刘海|前发/.test(name))return {x,y};
+  if(/neck|脖颈|衣领|领带|collar|tie/.test(name)){
+   // Neck is practically fixed; cloth at the collar may lift slightly.
+   const collar=s(y,170,240)*(1-s(y,270,340));
+   return {x,y:y+(breath.y-y)*collar*.35};
   }
-  head();
-  if(/mouth|嘴/.test(name)){
-   const q=1+.12*Math.sin(p*1.8);
-   Y=169+(Y-169)*q;
-  }else if(/irides|虹膜|瞳孔/.test(name)){
-   X+=2.4*a*Math.sin(p*.46-.8);Y=133+(Y-133)*(1-.73*this.blinkAmount(t));
-  }else if(/eyewhite|眼白|eyelash|睫毛/.test(name)){
-   Y=133+(Y-133)*(1-.68*this.blinkAmount(t));
-  }else if(/eyebrow|眉/.test(name))Y-=.55*a*Math.sin(p*.41);
-  return {x:X,y:Y};
+  // Face/eyes/eyebrows do not follow the chest. Keep blinking independent.
+  if(/irides|虹膜|瞳孔/.test(name))
+   return {x,y:133+(y-133)*(1-.73*this.blinkAmount(t))};
+  if(/eyewhite|眼白|eyelash|睫毛/.test(name))
+   return {x,y:133+(y-133)*(1-.68*this.blinkAmount(t))};
+  return {x,y};
  }
  renderPSDParts(t){
   const g=this.ctx,W=this.canvas.width,H=this.canvas.height,sx=W/1024,sy=H/1024;
