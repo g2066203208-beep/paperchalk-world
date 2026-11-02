@@ -656,8 +656,8 @@ void main(){
     fog.dataset.opacity=String(fogConfig.opacity);
     fog.dataset.safe=String(fogConfig.safe);
     fog.dataset.offset=String(fogConfig.offset);
-    if(gl)gl.useProgram(composite);
     if(gl){
+      gl.useProgram(composite);
       const m=fogMetrics();
       gl.uniform4f(gl.getUniformLocation(composite,'u_fogSettings'),
         m.width,m.opacity,m.offset,m.safe);
@@ -1236,6 +1236,13 @@ void main(){
   function drawCPU(dt,t){
     const s=fallbackState;if(!s)return;
     const {sx,sy,a,b,image}=s;
+    // Avoid layout reads and callback allocation for every CPU pixel.
+    const m=fogMetrics();
+    const smooth=v=>{const q=clamp(v,0,1);return q*q*(3-2*q)};
+    const safeX=sceneHalf.x*sizes.w*(1-m.safe*.01);
+    const safeY=sceneHalf.y*sizes.h*(1-m.safe*.01);
+    const safeEdgeX=Math.max(0,safeX-6);
+    const safeEdgeY=Math.max(0,safeY-6);
     for(let y=0;y<sy;y++)for(let x=0;x<sx;x++){
       const uvx=(x+.5)/sx,uvy=(y+.5)/sy;
       const px=(uvx-.5)*sizes.w/sizes.h,py=(uvy-.5);
@@ -1253,14 +1260,10 @@ void main(){
       const source=inlet*Math.max(.06,.57+.25*w1+.18*w2)*3.8;
       const d=b[y*sx+x]=clamp(old*Math.exp(-dt*.44)+dt*source,0,1);
       const p=(y*sx+x)*4;
-      const m=fogMetrics();
       const dx=(sceneHalf.x-Math.abs(uvx-.5))*sizes.w;
       const dy=(sceneHalf.y-Math.abs(uvy-.5))*sizes.h;
-      const safeX=sceneHalf.x*sizes.w*(1-m.safe*.01);
-      const safeY=sceneHalf.y*sizes.h*(1-m.safe*.01);
-      const smooth=(v)=>{const q=clamp(v,0,1);return q*q*(3-2*q)};
-      const nearEdges=Math.max(1-smooth((dx-Math.max(0,safeX-6))/Math.max(.001,safeX-Math.max(0,safeX-6))),
-                               1-smooth((dy-Math.max(0,safeY-6))/Math.max(.001,safeY-Math.max(0,safeY-6))));
+      const nearEdges=Math.max(1-smooth((dx-safeEdgeX)/Math.max(.001,safeX-safeEdgeX)),
+                               1-smooth((dy-safeEdgeY)/Math.max(.001,safeY-safeEdgeY)));
       const wave=Math.sin(uvx*23+t*.8+Math.sin(uvy*15))*3+
                  Math.sin(uvy*19-t*.67)*2;
       const distanceToFog=distance-m.offset+wave;
