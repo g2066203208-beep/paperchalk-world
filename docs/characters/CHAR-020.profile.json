@@ -1130,16 +1130,16 @@
     },
     "wardrobe": {
       "outerwear": {
-        "value": "同校深海军蓝两暗扣外套，略宽松，上扣合、下扣开",
+        "value": "同校深蓝单排扣制服外套，尺寸比身体略宽松，前襟自然敞开以露出独特针织背心；不是手拎、肩扛或双手撑开的外套",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "shirt": {
-        "value": "白色翻领衬衫，袖口稍长但手掌露出",
+        "value": "白色翻领长袖衬衫，外穿浅米白V领针织背心，白领与酒红领带从V口露出；衬衫袖口不遮挡手掌手指",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "blouse": {
         "value": null,
@@ -1147,10 +1147,10 @@
         "source": "CHAR-020角色设计草案2026-11-02"
       },
       "neckwear": {
-        "value": "酒红领带、小结轻微偏歪",
+        "value": "同校酒红色小领带，结略微歪斜，前段从浅米白V领针织背心领口露出",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "skirt": {
         "value": null,
@@ -1177,16 +1177,17 @@
       },
       "garmentLayerOrder": {
         "value": [
-          "衬衫",
-          "领带",
-          "深蓝外套",
+          "白衬衫",
+          "酒红领带（V领处可见）",
+          "浅米白V领针织背心",
+          "深蓝校服外套",
           "炭灰长裤",
           "深灰袜",
-          "黑鞋"
+          "圆头黑校鞋"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "paletteHex": {
         "value": {
@@ -1195,17 +1196,19 @@
           "tie": "#783B46",
           "trousers": "#575962",
           "hair": "#957867",
-          "eyes": "#788977"
+          "eyes": "#788977",
+          "knitVest": "#E7DED0",
+          "shoes": "#222329"
         },
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "fabrics": {
-        "value": "校服斜纹混纺、衬衫棉织、长裤普通梭织",
+        "value": "深蓝校服混纺斜纹外套、白色棉衬衫、浅米白薄针织V领背心、酒红织物领带、炭灰长裤",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "sewingDetails": {
         "value": "翻领与门襟清晰，袖口暗扣",
@@ -1250,16 +1253,16 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "permanentAccessories": {
-        "value": "没有眼镜、耳环、饰品",
+        "value": "可选极小的衣襟刺绣或同校徽章；不挂胸前收音设备，不佩戴遮脸帽子或影响手臂动画的物件。全套均为提案",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "temporaryProps": {
-        "value": "首张母图无书包、手机和手持物",
-        "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "value": "首张正面/背面/待机立绘**双手必须空着**；不拿录音机、耳机、书本、书包、外套、手机、武器或其他物体。未来游戏武器由独立装备资源按动作加载，绝不直接烘焙到人物母图",
+        "status": "user_confirmed",
+        "source": "用户在2026-11-02明确要求：人物立绘双手空着，后续需持武器",
+        "notes": "锁定：母版双手空，无手持物；仍可在运行时装备武器"
       }
     },
     "temperament": {
@@ -1633,16 +1636,16 @@
     },
     "behavior": {
       "idlePose": {
-        "value": "全身正面，左腿承重，右臂自然垂下，左手小幅张开，头微偏右",
+        "value": "自然正面全身站姿，双肩放松，重心轻偏左腿，两臂分置身体左右、肘部与躯干保留小空隙，双手完整外露，掌心自然内向、手指微弯，**双手不持物、不插兜、不交叉、不扶衣领**",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "signatureGesture": {
-        "value": "发现线索时右食指轻抬，待机不固定举指",
+        "value": "对话偶尔小幅点头或抬手示意；待机时两手始终空，未来武器动作切换为独立动作与手部装备图层",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "greetingHabit": {
         "value": "先点头再轻轻挥手",
@@ -1905,10 +1908,10 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "equipment": {
-        "value": "默认无装备",
+        "value": "角色基础立绘未装备任何手持物。武器等装备由游戏阶段另行设定与加载，首张原画不得画进手内",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "inventory": {
         "value": "按剧情事件持有物品",
@@ -2107,10 +2110,10 @@
         "notes": "现有证据不足，不伪造信息"
       },
       "poseReference": {
-        "value": "候选常驻自然站姿，需Anima单人全身出图",
+        "value": "单人正面全身演出待机姿势；左右手五指清楚、完全空手，肘部与外套侧缘稍分离，方便以后做持武器动作与拆层",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "expressionReferences": {
         "value": [
@@ -2175,22 +2178,22 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "occlusionRule": {
-        "value": "两手与躯干边界清楚，后续可拆分",
+        "value": "双手五指不得被衣袖、口袋或躯干挡住；两臂与身体之间有可见空隙；不画手持物；衬衫、领带、针织背心、外套分层逻辑明确",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "promptPositive": {
-        "value": "masterpiece, best quality, score_7, safe, 1boy, solo, original male high school student, cute youthful shota-like boy, age-appropriate sixteen-year-old high school student, 158cm petite healthy teenage proportions, natural 6.4 heads tall, distinct short soft oval face, softly rounded cheeks, short slightly squared chin, tender muted grey-green almond-round eyes, gentle short straight brows, natural small nose, tiny closed-mouth cheerful smile, slight dimple when smiling, fluffy short light tea-brown layered hair, irregular airy bangs, one small upward loose forelock, asymmetrical natural hair, same-school deep navy single-breasted blazer with two matte dark buttons, upper button fastened and lower button open, white collared shirt, slightly crooked short burgundy necktie, charcoal straight school trousers, dark socks, black loafers, natural modest uniform fit with slightly long sleeves, full body standing, front view facing viewer, gentle casual idle pose, weight on left leg, relaxed shoulders, right arm hanging beside body, left hand relaxed near waist, both hands visible, sweet boyish charm without female facial features, friendly curious expression, clean readable silhouette for later Live2D layering, plain white background, consistent original anime visual novel line art, restrained cel shading, balanced natural proportions, @akipekostyle<lora:akipekoanima_v1_1:1>",
+        "value": "masterpiece, best quality, score_7, safe, 1boy, solo, original cute youthful male high school student with an age-appropriate sixteen-year-old appearance, petite healthy teenager, natural 6.4-head-tall body, short softly rounded oval face, short softly squared chin, muted grey-green almond-round eyes, gentle short straight brows, little natural nose, slight shy playful closed-mouth smile, fluffy short layered warm light tea-brown hair, airy uneven fringe and a small flipped forelock, same-school deep navy blazer worn open naturally, white collared shirt, light cream V-neck knit sweater vest clearly visible under blazer, small slightly crooked burgundy necktie emerging from the vest V-neck, charcoal straight school trousers, dark socks, black rounded loafers, full body, solo standing, front view, facing viewer, normal visual novel idle pose, weight slightly on left leg, relaxed shoulders, both arms naturally hanging at either side with a little space from torso, BOTH HANDS COMPLETELY EMPTY and visible, five natural fingers on each hand, palms inward and fingers relaxed, no objects held, no hands in pockets, no crossed arms, no touching blazer, clean white background, clear separate garment layers, clean silhouette, suitable for later Live2D arm rigging and independently equipped weapons, restrained anime visual novel cel shading, coherent cast art style, @akipekostyle<lora:akipekoanima_v1_1:1>",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "promptNegative": {
-        "value": "worst quality, low quality, score_1, score_2, score_3, girl, 1girl, female student, grown man, child infant, elementary school boy, baby proportions, chibi, giant head, oversized glassy eyes, V-shaped idol chin, generic AI face, long black hair, grey male lead hair, dark black side-parted hair, chestnut high ponytail, amber eyes, muscular body, overly feminine face, skirt, shorts, unrelated school uniform, gold buttons, school bag, glasses, earrings, accessory, props, holding microphone, multiple people, character sheet, dual views, action pose, jumping, running, hands in pockets, arms crossed, cropped head, cropped shoes, broken hands, extra fingers, duplicate body, text, watermark, background scene, plastic skin",
+        "value": "worst quality, low quality, score_1, score_2, score_3, 1girl, female, adult man, infant, elementary-school child, chibi, oversized head, giant shiny eyes, adult idol V chin, generic AI face, identical face to other male leads, black long hair, black center part, chestnut ponytail, amber eyes, muscular physique, skirt, shorts, unrelated uniform, gold buttons, holding any object, handheld recorder, microphone, headphones in hand, mobile phone, book, paper, bag, backpack, jacket in hands, weapon in hands, sword, gun, staff, hands in pockets, crossed arms, gripping blazer, hands behind back, hands obscured by sleeves, missing hands, hidden fingers, duplicated fingers, bad anatomy, detached wrists, dramatic action pose, jumping, fighting, split-screen, character sheet, two boys, cropped feet, cropped head, text, logo, watermark, glossy plastic skin",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "modelVersion": {
         "value": "Anima，具体权重待出图登记",
@@ -2373,10 +2376,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "poseSilhouetteNotes": {
-        "value": "两手可见、肩放松、普通待机站姿",
+        "value": "双手始终空置、完整可见，肘与躯干留白，左右臂可单独绑定；不抱胸、不插兜、不抓外套、不拿录音机/书/包，适合武器装备动作后续独立制作",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "framingHeadroomRatio": {
         "value": 0.035,
@@ -2415,24 +2418,26 @@
           "右眼",
           "嘴",
           "前刘海",
-          "躯干",
+          "白衬衫",
+          "酒红领带",
+          "V领针织背心",
           "外套后片",
-          "外套左右前片",
-          "领带",
+          "外套前片左",
+          "外套前片右",
           "左上臂",
           "左前臂",
-          "左手",
+          "左手（空）",
           "右上臂",
           "右前臂",
-          "右手",
+          "右手（空）",
           "左腿",
           "右腿",
           "左鞋",
           "右鞋"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "headJoint": {
         "value": "颈根位置待原图确定",
@@ -2459,10 +2464,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "wristJoint": {
-        "value": "左右手腕微动",
+        "value": "左右手掌独立分件，默认五指自然放松且空手；握持类动作另由独立手部贴图/蒙皮和武器层构建，避免待机母版锁死手势",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "hipJoint": {
         "value": "骨盆中点待机重心",
@@ -2546,14 +2551,17 @@
       },
       "actionStates": {
         "value": [
-          "idle",
+          "idle_empty_hands",
+          "small_wave_empty_hands",
+          "look_side",
           "nod",
-          "small_wave",
-          "look_side"
+          "equip_weapon_future",
+          "hold_weapon_future",
+          "unequip_to_empty_hands_future"
         ],
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "runtimePreview": {
         "value": "尚未制作",
@@ -2772,10 +2780,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "inventoryRules": {
-        "value": "只有剧情真正拥有的物品进入道具栏",
+        "value": "物品栏可按剧情拥有物品，但人物待机母图必须双手空；武器装备独立于人物立绘分层，未来按动作/状态动态装备与切换",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       }
     },
     "quality": {
@@ -2810,10 +2818,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "handsCheck": {
-        "value": "检查双手五指及无粘连",
+        "value": "正式原画验收：双手空着、五指可辨、袖口不遮手、左右手和手腕可独立拆层；不能因道具或插兜遮挡",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "feetCheck": {
         "value": "黑色校鞋完整且同一地面线",
@@ -2852,10 +2860,10 @@
         "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
       },
       "poseCheck": {
-        "value": "常驻待机姿势需要真实出图验证",
+        "value": "正式原画验收：自然站姿，两臂外露，双手空置且与躯干有空隙；可无缝切换未来装备动作。尚未出图与测试",
         "status": "proposed",
-        "source": "CHAR-020角色设计草案2026-11-02",
-        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+        "source": "男三差异化校服与战斗待机立绘设计草案 2026-11-02",
+        "notes": "服装样式或技术实现方案为待批准建议，不表示已经出图或实现战斗"
       },
       "screenshotCheck": {
         "value": "游戏主场景、全屏编辑器及手机视图尚未测试",
@@ -2892,7 +2900,8 @@
       "userConfirmedFields": {
         "value": [
           "男三",
-          "小正太类型"
+          "小正太类型",
+          "男三母版必须双手空、不拿无关道具，预留后续武器装备动作"
         ],
         "status": "proposed",
         "source": "CHAR-020角色设计草案2026-11-02",
@@ -2973,12 +2982,13 @@
   "sourceNotes": {
     "confirmedByUser": "男三、小正太类型",
     "notApproved": "名字、年龄、身高、体重、五官、剧情、配色与行为等为提案；没有任何原画。",
-    "numbering": "CHAR-020原为未批准的田径女生规划占位；重新规划为男三候选不覆盖已批准人物。"
+    "numbering": "CHAR-020原为未批准的田径女生规划占位；重新规划为男三候选不覆盖已批准人物。",
+    "userConstraintAdded": "用户要求所有人物母版能用于后续持武器动作，男三基础姿势双手空着，拒绝手持装饰道具。衣物差异化优先用针织背心、领带与校服穿法实现（提案）。"
   },
   "fieldCount": 448,
   "statusSummary": {
-    "user_confirmed": 3,
-    "proposed": 394,
+    "user_confirmed": 4,
+    "proposed": 393,
     "unknown": 41,
     "not_applicable": 10
   }

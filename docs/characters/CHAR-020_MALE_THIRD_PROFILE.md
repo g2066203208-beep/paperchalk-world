@@ -6,7 +6,7 @@
 
 **暂称：林见夏（名字未确认）**。16岁、高一、158cm、46kg、6.4头身均为建议。浅茶棕蓬松短发，一小束翘刘海，灰绿杏圆眼，柔软脸颊和短方圆下巴。清秀可爱却明显是男高中生，初见有点腼腆，熟悉后机灵爱开玩笑。擅长辨听细微声音，可能成为异常事件调查同伴。与已定形象的男主、男二、女三绝不重复五官、发色或演出姿态。
 
-**服装**：同校深蓝两暗扣外套、白衬衫、略歪的酒红领带、炭灰直筒长裤、黑色皮鞋；仅做校服。**默认姿势**：自然直立，左腿承重、双臂放松、双手可见，适合Live2D。
+**服装候选**：同校深蓝校服外套自然敞开，内搭浅米白V领薄针织背心与白衬衫、略歪的小酒红领带、炭灰长裤、圆头黑鞋；服装不脱离统一校服体系。**用户锁定动作约束**：默认母版双手必须空着，肘与躯干稍留空隙，手掌和手指完整露出；不持物、不插兜、不抱胸、不抓外套。武器作为后续独立游戏装备动作实现。
 
 **美术状态**：无正背面已验收原画，未制作PSD、分层、Live2D或游戏角色注册。全部数字和人格细节不是用户已确认事实。
 
@@ -199,17 +199,17 @@
 | 176 | `hair.accessoryPosition` | 待定 | 不适用 |
 | 177 | `hair.backSilhouette` | 圆润后脑＋轻薄碎发后颈 | 候选 |
 | **校服** | **wardrobe** | **20字段** | |
-| 178 | `wardrobe.outerwear` | 同校深海军蓝两暗扣外套，略宽松，上扣合、下扣开 | 候选 |
-| 179 | `wardrobe.shirt` | 白色翻领衬衫，袖口稍长但手掌露出 | 候选 |
+| 178 | `wardrobe.outerwear` | 同校深蓝单排扣制服外套，尺寸比身体略宽松，前襟自然敞开以露出独特针织背心；不是手拎、肩扛或双手撑开的外套 | 候选 |
+| 179 | `wardrobe.shirt` | 白色翻领长袖衬衫，外穿浅米白V领针织背心，白领与酒红领带从V口露出；衬衫袖口不遮挡手掌手指 | 候选 |
 | 180 | `wardrobe.blouse` | 待定 | 不适用 |
-| 181 | `wardrobe.neckwear` | 酒红领带、小结轻微偏歪 | 候选 |
+| 181 | `wardrobe.neckwear` | 同校酒红色小领带，结略微歪斜，前段从浅米白V领针织背心领口露出 | 候选 |
 | 182 | `wardrobe.skirt` | 待定 | 不适用 |
 | 183 | `wardrobe.trousers` | 炭灰色直筒长校裤 | 候选 |
 | 184 | `wardrobe.socks` | 深灰短袜 | 候选 |
 | 185 | `wardrobe.footwear` | 黑色乐福鞋 | 候选 |
-| 186 | `wardrobe.garmentLayerOrder` | ["衬衫","领带","深蓝外套","炭灰长裤","深灰袜","黑鞋"] | 候选 |
-| 187 | `wardrobe.paletteHex` | {"navy":"#25354B","white":"#F2F0E9","tie":"#783B46","trousers":"#575962","hair":"#957867","eyes":"#788977"} | 候选 |
-| 188 | `wardrobe.fabrics` | 校服斜纹混纺、衬衫棉织、长裤普通梭织 | 候选 |
+| 186 | `wardrobe.garmentLayerOrder` | ["白衬衫","酒红领带（V领处可见）","浅米白V领针织背心","深蓝校服外套","炭灰长裤","深灰袜","圆头黑校鞋"] | 候选 |
+| 187 | `wardrobe.paletteHex` | {"navy":"#25354B","white":"#F2F0E9","tie":"#783B46","trousers":"#575962","hair":"#957867","eyes":"#788977","knitVest":"#E7DED0","shoes":"#222329"} | 候选 |
+| 188 | `wardrobe.fabrics` | 深蓝校服混纺斜纹外套、白色棉衬衫、浅米白薄针织V领背心、酒红织物领带、炭灰长裤 | 候选 |
 | 189 | `wardrobe.sewingDetails` | 翻领与门襟清晰，袖口暗扣 | 候选 |
 | 190 | `wardrobe.pleats` | 男裤无裙褶，保留正常裤腰压线 | 候选 |
 | 191 | `wardrobe.buttons` | 两颗哑光深色校服纽扣 | 候选 |
@@ -217,8 +217,8 @@
 | 193 | `wardrobe.wearCondition` | 干净但自然有少量衣褶 | 候选 |
 | 194 | `wardrobe.seasonalVariants` | 未来夏季同校款待定，本轮不画 | 候选 |
 | 195 | `wardrobe.occasionVariants` | 后续剧情换装另定，本轮仅校服 | 候选 |
-| 196 | `wardrobe.permanentAccessories` | 没有眼镜、耳环、饰品 | 候选 |
-| 197 | `wardrobe.temporaryProps` | 首张母图无书包、手机和手持物 | 候选 |
+| 196 | `wardrobe.permanentAccessories` | 可选极小的衣襟刺绣或同校徽章；不挂胸前收音设备，不佩戴遮脸帽子或影响手臂动画的物件。全套均为提案 | 候选 |
+| 197 | `wardrobe.temporaryProps` | 首张正面/背面/待机立绘**双手必须空着**；不拿录音机、耳机、书本、书包、外套、手机、武器或其他物体。未来游戏武器由独立装备资源按动作加载，绝不直接烘焙到人物母图 | 用户方向 |
 | **性格** | **temperament** | **25字段** | |
 | 198 | `temperament.coreConfirmedTraits` | ["小正太型外貌方向，其他性格未获用户确认"] | 用户方向 |
 | 199 | `temperament.proposedTraits` | ["乖巧","亲切","机灵","细心","微微害羞","熟悉后调皮"] | 候选 |
@@ -277,8 +277,8 @@
 | 250 | `dialogue.dialogueExamples` | ["我真的听到了第二声铃响。","别总觉得我年纪小嘛。","嗯……刚才那段脚步声，不像同一个人。"] | 候选 |
 | 251 | `dialogue.forbiddenVoicePatterns` | 幼儿腔、故作甜腻、霸道总裁、连续卖萌 | 候选 |
 | **行为** | **behavior** | **17字段** | |
-| 252 | `behavior.idlePose` | 全身正面，左腿承重，右臂自然垂下，左手小幅张开，头微偏右 | 候选 |
-| 253 | `behavior.signatureGesture` | 发现线索时右食指轻抬，待机不固定举指 | 候选 |
+| 252 | `behavior.idlePose` | 自然正面全身站姿，双肩放松，重心轻偏左腿，两臂分置身体左右、肘部与躯干保留小空隙，双手完整外露，掌心自然内向、手指微弯，**双手不持物、不插兜、不交叉、不扶衣领** | 候选 |
+| 253 | `behavior.signatureGesture` | 对话偶尔小幅点头或抬手示意；待机时两手始终空，未来武器动作切换为独立动作与手部装备图层 | 候选 |
 | 254 | `behavior.greetingHabit` | 先点头再轻轻挥手 | 候选 |
 | 255 | `behavior.gazePattern` | 看人眼睛一瞬，害羞时迅速避开 | 候选 |
 | 256 | `behavior.blinkHabit` | 自然短眨眼，听异常声源时停顿 | 候选 |
@@ -320,7 +320,7 @@
 | 290 | `skills.charisma` | 友善容易沟通，不保证所有人无条件喜欢 | 候选 |
 | 291 | `skills.supernaturalPowers` | 待定 | 未知 |
 | 292 | `skills.powerCosts` | 待定 | 未知 |
-| 293 | `skills.equipment` | 默认无装备 | 候选 |
+| 293 | `skills.equipment` | 角色基础立绘未装备任何手持物。武器等装备由游戏阶段另行设定与加载，首张原画不得画进手内 | 候选 |
 | 294 | `skills.inventory` | 按剧情事件持有物品 | 候选 |
 | 295 | `skills.healthIfStoryApproved` | 待定 | 未知 |
 | **剧情** | **story** | **13字段** | |
@@ -353,7 +353,7 @@
 | 320 | `visualProduction.backReference` | 待定 | 未知 |
 | 321 | `visualProduction.sideReference` | 待定 | 未知 |
 | 322 | `visualProduction.threeQuarterReference` | 待定 | 未知 |
-| 323 | `visualProduction.poseReference` | 候选常驻自然站姿，需Anima单人全身出图 | 候选 |
+| 323 | `visualProduction.poseReference` | 单人正面全身演出待机姿势；左右手五指清楚、完全空手，肘部与外套侧缘稍分离，方便以后做持武器动作与拆层 | 候选 |
 | 324 | `visualProduction.expressionReferences` | ["微笑","害羞","好奇","认真","惊讶","害怕"] | 候选 |
 | 325 | `visualProduction.silhouetteLocked` | false | 候选 |
 | 326 | `visualProduction.colorPalette` | {"hair":"#957867","eyes":"#788977","blazer":"#25354B","shirt":"#F2F0E9","tie":"#783B46","trousers":"#575962"} | 候选 |
@@ -362,9 +362,9 @@
 | 329 | `visualProduction.whiteBackgroundRule` | 纯白背景，无场景物件 | 候选 |
 | 330 | `visualProduction.fullBodyRule` | 头到鞋底完整 | 候选 |
 | 331 | `visualProduction.centeredRule` | 人物正中偏下，地面线稳定 | 候选 |
-| 332 | `visualProduction.occlusionRule` | 两手与躯干边界清楚，后续可拆分 | 候选 |
-| 333 | `visualProduction.promptPositive` | masterpiece, best quality, score_7, safe, 1boy, solo, original male high school student, cute youthful shota-like boy, age-appropriate sixteen-year-old high school student, 158cm petite healthy teenage proportions, natural 6.4 heads tall, distinct short soft oval face, softly rounded cheeks, short slightly squared chin, tender muted grey-green almond-round eyes, gentle short straight brows, natural small nose, tiny closed-mouth cheerful smile, slight dimple when smiling, fluffy short light tea-brown layered hair, irregular airy bangs, one small upward loose forelock, asymmetrical natural hair, same-school deep navy single-breasted blazer with two matte dark buttons, upper button fastened and lower button open, white collared shirt, slightly crooked short burgundy necktie, charcoal straight school trousers, dark socks, black loafers, natural modest uniform fit with slightly long sleeves, full body standing, front view facing viewer, gentle casual idle pose, weight on left leg, relaxed shoulders, right arm hanging beside body, left hand relaxed near waist, both hands visible, sweet boyish charm without female facial features, friendly curious expression, clean readable silhouette for later Live2D layering, plain white background, consistent original anime visual novel line art, restrained cel shading, balanced natural proportions, @akipekostyle&lt;lora:akipekoanima_v1_1:1&gt; | 候选 |
-| 334 | `visualProduction.promptNegative` | worst quality, low quality, score_1, score_2, score_3, girl, 1girl, female student, grown man, child infant, elementary school boy, baby proportions, chibi, giant head, oversized glassy eyes, V-shaped idol chin, generic AI face, long black hair, grey male lead hair, dark black side-parted hair, chestnut high ponytail, amber eyes, muscular body, overly feminine face, skirt, shorts, unrelated school uniform, gold buttons, school bag, glasses, earrings, accessory, props, holding microphone, multiple people, character sheet, dual views, action pose, jumping, running, hands in pockets, arms crossed, cropped head, cropped shoes, broken hands, extra fingers, duplicate body, text, watermark, background scene, plastic skin | 候选 |
+| 332 | `visualProduction.occlusionRule` | 双手五指不得被衣袖、口袋或躯干挡住；两臂与身体之间有可见空隙；不画手持物；衬衫、领带、针织背心、外套分层逻辑明确 | 候选 |
+| 333 | `visualProduction.promptPositive` | masterpiece, best quality, score_7, safe, 1boy, solo, original cute youthful male high school student with an age-appropriate sixteen-year-old appearance, petite healthy teenager, natural 6.4-head-tall body, short softly rounded oval face, short softly squared chin, muted grey-green almond-round eyes, gentle short straight brows, little natural nose, slight shy playful closed-mouth smile, fluffy short layered warm light tea-brown hair, airy uneven fringe and a small flipped forelock, same-school deep navy blazer worn open naturally, white collared shirt, light cream V-neck knit sweater vest clearly visible under blazer, small slightly crooked burgundy necktie emerging from the vest V-neck, charcoal straight school trousers, dark socks, black rounded loafers, full body, solo standing, front view, facing viewer, normal visual novel idle pose, weight slightly on left leg, relaxed shoulders, both arms naturally hanging at either side with a little space from torso, BOTH HANDS COMPLETELY EMPTY and visible, five natural fingers on each hand, palms inward and fingers relaxed, no objects held, no hands in pockets, no crossed arms, no touching blazer, clean white background, clear separate garment layers, clean silhouette, suitable for later Live2D arm rigging and independently equipped weapons, restrained anime visual novel cel shading, coherent cast art style, @akipekostyle&lt;lora:akipekoanima_v1_1:1&gt; | 候选 |
+| 334 | `visualProduction.promptNegative` | worst quality, low quality, score_1, score_2, score_3, 1girl, female, adult man, infant, elementary-school child, chibi, oversized head, giant shiny eyes, adult idol V chin, generic AI face, identical face to other male leads, black long hair, black center part, chestnut ponytail, amber eyes, muscular physique, skirt, shorts, unrelated uniform, gold buttons, holding any object, handheld recorder, microphone, headphones in hand, mobile phone, book, paper, bag, backpack, jacket in hands, weapon in hands, sword, gun, staff, hands in pockets, crossed arms, gripping blazer, hands behind back, hands obscured by sleeves, missing hands, hidden fingers, duplicated fingers, bad anatomy, detached wrists, dramatic action pose, jumping, fighting, split-screen, character sheet, two boys, cropped feet, cropped head, text, logo, watermark, glossy plastic skin | 候选 |
 | 335 | `visualProduction.modelVersion` | Anima，具体权重待出图登记 | 候选 |
 | 336 | `visualProduction.artistTag` | @akipekostyle | 候选 |
 | 337 | `visualProduction.lora` | &lt;lora:akipekoanima_v1_1:1&gt; | 候选 |
@@ -395,18 +395,18 @@
 | 362 | `visualProduction.facialFeatureStylization` | 柔和少年骨相，不能变女脸或另一个男主 | 候选 |
 | 363 | `visualProduction.characterIdentityEmbeddingNotes` | 尚无母图，不可声称已经生成身份embedding | 候选 |
 | 364 | `visualProduction.frontPosePoseCode` | M03_IDLE_A0 | 候选 |
-| 365 | `visualProduction.poseSilhouetteNotes` | 两手可见、肩放松、普通待机站姿 | 候选 |
+| 365 | `visualProduction.poseSilhouetteNotes` | 双手始终空置、完整可见，肘与躯干留白，左右臂可单独绑定；不抱胸、不插兜、不抓外套、不拿录音机/书/包，适合武器装备动作后续独立制作 | 候选 |
 | 366 | `visualProduction.framingHeadroomRatio` | 0.035 | 候选 |
 | 367 | `visualProduction.framingFootroomRatio` | 0.025 | 候选 |
 | 368 | `visualProduction.bodyAlignmentRule` | 统一同校角色地面线，明显矮于男主和男二 | 候选 |
 | **L2D** | **rigging** | **30字段** | |
 | 369 | `rigging.layerSource` | 待定 | 未知 |
-| 370 | `rigging.layerList` | ["后发","颈部","脸","左眉","右眉","左眼","右眼","嘴","前刘海","躯干","外套后片","外套左右前片","领带","左上臂","左前臂","左手","右上臂","右前臂","右手","左腿","右腿","左鞋","右鞋"] | 候选 |
+| 370 | `rigging.layerList` | ["后发","颈部","脸","左眉","右眉","左眼","右眼","嘴","前刘海","白衬衫","酒红领带","V领针织背心","外套后片","外套前片左","外套前片右","左上臂","左前臂","左手（空）","右上臂","右前臂","右手（空）","左腿","右腿","左鞋","右鞋"] | 候选 |
 | 371 | `rigging.headJoint` | 颈根位置待原图确定 | 候选 |
 | 372 | `rigging.neckJoint` | 锁骨至颈根轻转 | 候选 |
 | 373 | `rigging.shoulderJoint` | 两肩独立旋转 | 候选 |
 | 374 | `rigging.elbowJoint` | 小幅自然屈伸 | 候选 |
-| 375 | `rigging.wristJoint` | 左右手腕微动 | 候选 |
+| 375 | `rigging.wristJoint` | 左右手掌独立分件，默认五指自然放松且空手；握持类动作另由独立手部贴图/蒙皮和武器层构建，避免待机母版锁死手势 | 候选 |
 | 376 | `rigging.hipJoint` | 骨盆中点待机重心 | 候选 |
 | 377 | `rigging.kneeJoint` | 膝轻屈 | 候选 |
 | 378 | `rigging.ankleJoint` | 双足贴地 | 候选 |
@@ -418,7 +418,7 @@
 | 384 | `rigging.breathingPhysics` | 肩、胸与领带低幅联动 | 候选 |
 | 385 | `rigging.skinningLimits` | 袖口手指不能橡皮变形 | 候选 |
 | 386 | `rigging.expressionStates` | ["idle","smile","shy","thinking","surprised","scared"] | 候选 |
-| 387 | `rigging.actionStates` | ["idle","nod","small_wave","look_side"] | 候选 |
+| 387 | `rigging.actionStates` | ["idle_empty_hands","small_wave_empty_hands","look_side","nod","equip_weapon_future","hold_weapon_future","unequip_to_empty_hands_future"] | 候选 |
 | 388 | `rigging.runtimePreview` | 尚未制作 | 候选 |
 | 389 | `rigging.occlusionRepair` | 需要补画刘海下的额头与袖内手臂 | 候选 |
 | 390 | `rigging.qaAnimation` | 未测试 | 候选 |
@@ -453,28 +453,28 @@
 | 417 | `gameplay.choiceTriggers` | ["listen_again","accept_evidence","ignore_hint"] | 候选 |
 | 418 | `gameplay.npcBrain` | 候选校园状态机：上课、活动、放学、交谈 | 候选 |
 | 419 | `gameplay.flagsVariables` | {"met":false,"trust":0,"recordingChecked":false} | 候选 |
-| 420 | `gameplay.inventoryRules` | 只有剧情真正拥有的物品进入道具栏 | 候选 |
+| 420 | `gameplay.inventoryRules` | 物品栏可按剧情拥有物品，但人物待机母图必须双手空；武器装备独立于人物立绘分层，未来按动作/状态动态装备与切换 | 候选 |
 | **验收** | **quality** | **16字段** | |
 | 421 | `quality.originalityCheck` | 原创脸型，避免照抄其他作品正太角色 | 候选 |
 | 422 | `quality.similarityCheck` | 重点对比CHAR-003/016男角色及CHAR-004女三的脸与发色 | 候选 |
 | 423 | `quality.faceConsistency` | 暂无正式母图，等待验收 | 候选 |
 | 424 | `quality.hairSideCheck` | 检查偏分与翘发正背统一 | 候选 |
 | 425 | `quality.visualIdentityCheck` | 少年可爱但明显是男高中生 | 候选 |
-| 426 | `quality.handsCheck` | 检查双手五指及无粘连 | 候选 |
+| 426 | `quality.handsCheck` | 正式原画验收：双手空着、五指可辨、袖口不遮手、左右手和手腕可独立拆层；不能因道具或插兜遮挡 | 候选 |
 | 427 | `quality.feetCheck` | 黑色校鞋完整且同一地面线 | 候选 |
 | 428 | `quality.fullBodyCheck` | 头顶到脚底无裁切 | 候选 |
 | 429 | `quality.measurementProvenanceCheck` | 所有数值仅服装制作提案，不代表真实测量 | 候选 |
 | 430 | `quality.outfitCheck` | 同校制服材质、纽扣、领带颜色一致 | 候选 |
 | 431 | `quality.sourceRightsCheck` | Anima和LoRA权重商用许可待核验 | 候选 |
 | 432 | `quality.rigCheck` | 尚未绑定，不能标记通过 | 候选 |
-| 433 | `quality.poseCheck` | 常驻待机姿势需要真实出图验证 | 候选 |
+| 433 | `quality.poseCheck` | 正式原画验收：自然站姿，两臂外露，双手空置且与躯干有空隙；可无缝切换未来装备动作。尚未出图与测试 | 候选 |
 | 434 | `quality.screenshotCheck` | 游戏主场景、全屏编辑器及手机视图尚未测试 | 候选 |
 | 435 | `quality.approvalRecord` | 只确认小正太男三的创作方向 | 候选 |
 | 436 | `quality.rollbackReference` | 不覆盖CHAR-001/002/003/004/016任何已认可原图 | 候选 |
 | **来源** | **provenance** | **12字段** | |
 | 437 | `provenance.createdAt` | 2026-11-02 | 候选 |
 | 438 | `provenance.updatedAt` | 2026-11-02 | 候选 |
-| 439 | `provenance.userConfirmedFields` | ["男三","小正太类型"] | 候选 |
+| 439 | `provenance.userConfirmedFields` | ["男三","小正太类型","男三母版必须双手空、不拿无关道具，预留后续武器装备动作"] | 候选 |
 | 440 | `provenance.sourceCitations` | ["用户2026-11-02指定男三小正太","448字段标准V3"] | 候选 |
 | 441 | `provenance.proposedFields` | 所有已填年龄体型五官性格剧情为候选 | 候选 |
 | 442 | `provenance.unknownFields` | 家庭生日、正式姓名、剧情细节、真实图像和模型参数未定 | 候选 |
@@ -484,9 +484,12 @@
 | 446 | `provenance.approvedBy` | 待定 | 未知 |
 | 447 | `provenance.permissions` | 仅设计文件，严禁未经许可修改其他角色原画 | 候选 |
 | 448 | `provenance.historyNotes` | 未生成图片，不等于PSD或L2D完成 | 候选 |
-
-**核对：448 项，暂定 394 项，用户方向 3 项，未知 41 项，不适用 10 项。**
+**核对：448 项，暂定 393 项，用户方向 4 项，未知 41 项，不适用 10 项。**
 
 ## 后续制作
 
 先让用户确认脸型和发色方向 → 生成单人正面校服全身母图 → 保存实际图与图像哈希 → 背面/分层 → L2D → 游戏内测试。不能凭此草案宣称原画或动画已完成。
+
+## 2026-11-02 补充：两手空置与独立武器装备
+
+用户明确纠正：**不要在立绘里乱拿东西**。男三的基础正面、背面、待机演出必须是自然垂放的两只空手，不能手持录音笔、书本、手机、书包、衣服或预先画好的武器；也不能让两手藏进口袋或被袖口遮住。为了以后战斗换武器与装备动画，手、前臂、上臂拆成独立部件，武器在游戏中由独立装备资源和动作驱动。衣着个性通过浅米白V领针织背心、微歪领带、宽松校服和极少量衣物上的细节建立，不靠手持装饰品。针织背心仍是设计提案，最终以用户认可原画为准。

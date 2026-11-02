@@ -399,7 +399,8 @@
         "face": "柔和短鹅蛋脸、方圆短下巴、灰绿杏圆眼、浅酒窝（候选）",
         "hair": "浅茶棕短层次碎发，一缕微翘额发（候选）",
         "build": "16岁、158cm、46kg、6.4头身（全部候选）",
-        "gesture": "正面全身自然待机：重心偏左腿，手臂放松，两手清晰"
+        "gesture": "自然放松站姿，两臂与躯干稍分离、双手完整外露且空着；不插兜、不抱胸、不拎外套，方便后续装备武器",
+        "wardrobeProposal": "统一深蓝校服＋白衬衫＋浅米白V领薄针织背心＋微歪酒红小领带＋炭灰长裤；仅是候选穿法，不改校服基本体系"
       },
       "personality": "友善乖巧、略害羞、熟悉后机灵爱玩笑（候选）",
       "storyFunction": "通过声音记录发现时间线错位（候选）",
@@ -425,7 +426,8 @@
           },
           "decision": "Unapproved track girl placeholder reassigned to male third. Original only in history; no accepted art or game role was overwritten."
         }
-      ]
+      ],
+      "handPropConstraint": "user_confirmed_empty_hands_for_future_weapon_rig"
     },
     {
       "id": "CHAR-021",
