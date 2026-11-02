@@ -30,7 +30,27 @@ def discover():
         row=entries.setdefault(char_id,{'id':char_id,'label':KNOWN.get(char_id,char_id),'front':'','back':''})
         # Paths must resolve from the main game page.
         row[face]='./assets/characters/'+f.name
-    return {'version':1,'characters':list(entries.values())}
+    # The registry includes character profiles with no approved image too.
+    # Expose them to the unified authoring studio as named empty projects;
+    # never hallucinate art or treat a concept-only profile as an NPC in game.
+    profile_root=ROOT/'docs'/'characters'
+    for doc in sorted(profile_root.glob('CHAR-*.profile.json')):
+        try:
+            data=json.loads(doc.read_text(encoding='utf-8'))
+            identity=data.get('fields',{}).get('identity',{})
+            ident=(identity.get('canonicalId') or {}).get('value') or data.get('canonicalId')
+            title=(identity.get('displayName') or {}).get('value') or ident
+            if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,80}',ident):
+                continue
+            if ident not in entries:
+                entries[ident]={'id':ident,'label':str(title or ident),
+                    'front':'','back':'','draft':True,'state':data.get('recordState','concept_only')}
+        except (ValueError,TypeError,KeyError,OSError) as e:
+            print('Skip invalid character profile',doc.name,str(e))
+    for row in entries.values():
+        if not row.get('front') and not row.get('back'):
+            row['draft']=True
+    return {'version':2,'characters':list(entries.values())}
 
 if __name__=='__main__':
     value=discover()
