@@ -7,6 +7,7 @@ on:
       - 'scripts/fetch-game-fonts.sh'
       - 'scripts/build_scene_catalog.py'
       - 'scripts/build_character_catalog.py'
+      - 'scripts/build_v4_assets.py'
       - 'scripts/matte_character.py'
       - 'scripts/validate_character_alpha.py'
       - 'scripts/validate_character_identity.py'
@@ -18,8 +19,8 @@ permissions:
   id-token: write
 # New changes should queue, not interrupt an active browser QA / Pages publish.
 concurrency:
-  group: minimal-stage-pages
-  cancel-in-progress: false
+  group: paperchalk-world-pages
+  cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -1037,6 +1038,8 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
       - uses: actions/configure-pages@v5
+      - name: Rebuild and verify source-approved V4 clips
+        run: python3 scripts/build_v4_assets.py
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
