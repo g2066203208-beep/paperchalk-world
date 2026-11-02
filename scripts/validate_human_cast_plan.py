@@ -35,6 +35,10 @@ assert [p["id"] for p in people if p["group"]=="student"]==[
     "CHAR-005","CHAR-013","CHAR-016","CHAR-020"
 ]
 assert data["schoolPolicy"]["activeMainCampusOnly"] is True
+male2=next(p for p in people if p["id"]=="CHAR-016")
+assert male2["artStatus"]=="front_art_reference_approved"
+assert male2["frontArt"]=="site/assets/characters/char-016/front.png"
+assert male2["referenceSheet"]=="site/assets/characters/char-016/reference-sheet.png"
 priority=data["designPolicy"]
 assert set(priority["firstFourDesigns"])=={"CHAR-001","CHAR-002","CHAR-003","CHAR-016"}
 assert set(priority["studentCandidatesRemaining"])=={"CHAR-004","CHAR-005","CHAR-013","CHAR-020"}
