@@ -30,10 +30,10 @@ jobs:
         run: bash scripts/fetch-game-fonts.sh
       - name: Generate scene catalog from room images (auto publish)
         run: python3 scripts/build_scene_catalog.py
-      - name: Prove adding one WebP automatically registers a brand-new scene
+      - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
           python3 - <<'PY'
-          import json, pathlib, shutil, subprocess, sys, tempfile
+          import json, pathlib, shutil, subprocess, sys, tempfile, struct, zlib
           with tempfile.TemporaryDirectory() as folder:
               root=pathlib.Path(folder)
               script=root/'scripts'/'build_scene_catalog.py'
@@ -42,12 +42,20 @@ jobs:
               scenes=root/'site'/'assets'/'scenes'
               scenes.mkdir(parents=True)
               shutil.copyfile('site/assets/scenes/bedroom.webp',scenes/'reading-nook.webp')
+              def png_chunk(kind,data):
+                  return struct.pack('!I',len(data))+kind+data+struct.pack('!I',zlib.crc32(kind+data)&0xffffffff)
+              png=b'\x89PNG\r\n\x1a\n'
+              png+=png_chunk(b'IHDR',struct.pack('!2I5B',1,1,8,2,0,0,0))
+              png+=png_chunk(b'IDAT',zlib.compress(b'\x00\x22\x44\x66'))
+              png+=png_chunk(b'IEND',b'')
+              (scenes/'kitchen.png').write_bytes(png)
               subprocess.run([sys.executable,str(script)],check=True)
               generated=(root/'site'/'scene-catalog.generated.js').read_text()
               assert '"id":"reading-nook"' in generated
               assert '"file":"reading-nook.webp"' in generated
               assert '"title":"Reading Nook"' in generated
-              print('PASS: brand-new room auto-registers from image alone')
+              assert '"id":"kitchen"' in generated and '"file":"kitchen.png"' in generated
+              print('PASS: new PNG and WebP each auto-register from a single file')
           PY
       - name: Assert original complete classroom and independent fluid layer
         run: |
@@ -99,6 +107,10 @@ jobs:
           assert 'id="menu-gallery-button"' in h
           assert 'id="scene-switcher-toggle"' in h
           assert 'scene-catalog.generated.js' in h
+          assert '(?:webp|png|jpe?g)' in h
+          assert 'uniform float u_blotches' in h
+          assert 'float inkStains(' in h and 'function inkCPUAmount(' in h
+          assert 'id="ink-toggle"' in h and 'id="ink-toggle-game"' in h
           assert 'transparent 15%,transparent 85%' in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=191.' in h and 'const reach=191+' in h
@@ -347,6 +359,29 @@ jobs:
                 assert.equal(bedroomCheck.originalFog,true);
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-BEDROOM.png'});
+                if(!cfg.mobile){
+                  await page.waitForTimeout(550);
+                  const inkOn=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/bedroom-ink-on.png'}));
+                  await page.locator('#menu-toggle').click();
+                  await page.locator('#ink-toggle-game').click();
+                  await page.locator('#menu-toggle').click();
+                  assert.equal(await page.evaluate(()=>localStorage.getItem('paperchalk-ink-blotches-v1')),'off');
+                  await page.waitForTimeout(250);
+                  const inkOff=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/bedroom-ink-off.png'}));
+                  let distinctInkPixels=0;
+                  for(let y=Math.floor(cfg.height*.24);y<cfg.height*.77;y+=2){
+                    for(let x=Math.floor(cfg.width*.12);x<cfg.width*.87;x+=2){
+                      const index=(y*inkOn.width+x)*4;
+                      if(inkOff.data[index]-inkOn.data[index]>15)distinctInkPixels++;
+                    }
+                  }
+                  assert.ok(distinctInkPixels>150,'moving black blotches are visually imperceptible: '+distinctInkPixels);
+                  await page.locator('#menu-toggle').click();
+                  await page.locator('#ink-toggle-game').click();
+                  await page.locator('#menu-toggle').click();
+                  assert.equal(await page.evaluate(()=>localStorage.getItem('paperchalk-ink-blotches-v1')),'on');
+                  console.log('PASS: in-scene moving ink blotches visible, optional & switchable, '+distinctInkPixels+' distinct pixels');
+                }
                 if(!cfg.mobile){
                   // Compare same fixed camera twice. Any changes in this
                   // undecorated wall region are from LIVE black fog, not image tilt.

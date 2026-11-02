@@ -358,6 +358,7 @@ body.mobile-mode.virtual-landscape #view{
       <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
        <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
+         <button id="ink-toggle" type="button">动态黑斑：开启</button>
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
     </div>
@@ -381,6 +382,7 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
+       <button id="ink-toggle-game" type="button">动态黑斑：开启</button>
        <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
        <div id="scene-switcher" aria-label="已安装场景" hidden></div>
     </div>
@@ -507,6 +509,22 @@ uniform sampler2D u_density;
 uniform vec2 u_viewSize;
 uniform vec2 u_half;
 uniform float u_time;
+uniform float u_blotches;
+// 2D ink wash, organically warped silhouette, no gray particles or textures.
+float inkShape(vec2 uv, vec2 center, vec2 radius, float phase){
+  vec2 q=(uv-center)/radius;
+  float theta=atan(q.y,q.x);
+  float wobble=.13*sin(theta*5.+phase)+.08*sin(theta*9.-phase*.7)
+              +.07*sin(q.x*7.+q.y*5.+phase*.9);
+  return 1.-smoothstep(.66,1.14,length(q)+wobble);
+}
+float inkStains(vec2 uv,float t){
+  float a=inkShape(uv,vec2(.20+.037*sin(t*.38),.39+.041*cos(t*.43)),vec2(.112,.140),t*.91)*.42;
+  float b=inkShape(uv,vec2(.79+.038*cos(t*.33),.57+.045*sin(t*.37)),vec2(.124,.153),t*.77+1.9)*.41;
+  float c=inkShape(uv,vec2(.49+.046*sin(t*.29+2.),.17+.023*cos(t*.31)),vec2(.072,.092),t*1.06+4.7)*.29;
+  float d=inkShape(uv,vec2(.58+.027*cos(t*.36+1.),.82+.028*sin(t*.42)),vec2(.089,.106),t*.82+3.4)*.33;
+  return clamp(a+b+c+d,0.,.57);
+}
 void main(){
  vec2 uv=v_uv;
  float density=texture2D(u_density,uv).r;
@@ -525,7 +543,10 @@ void main(){
  float safetyD=min((u_half.x-.025-abs(uv.x-.5))*u_viewSize.x,
                    (u_half.y-.037-abs(uv.y-.5))*u_viewSize.y);
  float safetyBlack=1.-smoothstep(0.,min(32.,u_viewSize.y*.065),safetyD);
- float alpha=max(clamp((.13+1.02*pow(max(density,0.),.60))*smokeZone,0.,.94),safetyBlack);
+ float fluidAlpha=clamp((.13+1.02*pow(max(density,0.),.60))*smokeZone,0.,.94);
+ float stains=u_blotches*inkStains(uv,u_time);
+ // Layers compose as pure black opacity, no newly allocated canvas.
+ float alpha=max(1.-(1.-fluidAlpha)*(1.-stains),safetyBlack);
  gl_FragColor=vec4(0.,0.,0.,alpha);
 }
 </script>
@@ -712,7 +733,7 @@ void main(){
   // Only add an image to site/assets/scenes; CI auto-registers new scenes.
   const importedScenes=Object.create(null);
   for(const entry of (window.PAPERWORLD_SCENE_CATALOG||[])){
-    if(!entry||!/^[-a-z0-9]+$/.test(entry.id)||!/^[-a-z0-9]+[.]webp$/.test(entry.file))continue;
+    if(!entry||!/^[-a-z0-9]+$/.test(entry.id)||!/^[-a-z0-9]+[.](?:webp|png|jpe?g)$/.test(entry.file))continue;
     if(entry.id==='menu'||entry.id==='classroom')continue;
     importedScenes[entry.id]=Object.freeze({
       image:'./assets/scenes/'+entry.file,
@@ -738,10 +759,13 @@ void main(){
   const tiltButton=document.getElementById('tilt-toggle');
   const SAVE_KEY='paperchalk-scene-v1';
   const TILT_KEY='paperchalk-tilt-v1';
+  const INK_KEY='paperchalk-ink-blotches-v1';
   function loadSetting(){
     try{return localStorage.getItem(TILT_KEY)!=='off'}catch(_){return true}
   }
   let tiltEnabled=loadSetting();
+  let blotchesEnabled=true;
+  try{blotchesEnabled=localStorage.getItem(INK_KEY)!=='off'}catch(_){};
   let dialogueIndex=0,autoEnabled=false,autoTimer=0,logOpen=false,textHidden=false;
   const classroomPreload=new Image();
   classroomPreload.src=SCENES.classroom.image;
@@ -899,6 +923,19 @@ void main(){
     start();
   });
   tiltButton.textContent=tiltEnabled?'场景倾斜：开启':'场景倾斜：关闭';
+  const inkButtons=[document.getElementById('ink-toggle'),document.getElementById('ink-toggle-game')];
+  function refreshInkButtons(){
+    for(const btn of inkButtons){
+      btn.textContent=blotchesEnabled?'动态黑斑：开启':'动态黑斑：关闭';
+      btn.setAttribute('aria-pressed',String(blotchesEnabled));
+    }
+  }
+  for(const btn of inkButtons)btn.addEventListener('click',()=>{
+    blotchesEnabled=!blotchesEnabled;
+    try{localStorage.setItem(INK_KEY,blotchesEnabled?'on':'off')}catch(_){}
+    refreshInkButtons();start();
+  });
+  refreshInkButtons();
   continueButton.disabled=!readSave();
   function cancelAuto(){
     clearTimeout(autoTimer);autoTimer=0;autoEnabled=false;
@@ -1093,6 +1130,7 @@ void main(){
     gl.useProgram(composite);
     gl.bindTexture(gl.TEXTURE_2D,simTargets[simIndex].tex);
     gl.uniform1f(gl.getUniformLocation(composite,'u_time'),t);
+    gl.uniform1f(gl.getUniformLocation(composite,'u_blotches'),blotchesEnabled?1:0);
     gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
   }
   function sample(arr,fx,fy,w,h){
@@ -1101,6 +1139,20 @@ void main(){
     const x1=Math.min(x+1,w-1),y1=Math.min(y+1,h-1);
     return (arr[y*w+x]*(1-u)+arr[y*w+x1]*u)*(1-v)
        +(arr[y1*w+x]*(1-u)+arr[y1*w+x1]*u)*v;
+  }
+  function inkCPU(uvx,uvy,cx,cy,rx,ry,phase){
+    const qx=(uvx-cx)/rx,qy=(uvy-cy)/ry,angle=Math.atan2(qy,qx);
+    const wobble=.13*Math.sin(angle*5+phase)+.08*Math.sin(angle*9-phase*.7)
+      +.07*Math.sin(qx*7+qy*5+phase*.9);
+    const v=clamp((Math.hypot(qx,qy)+wobble-.66)/.48,0,1);
+    return 1-v*v*(3-2*v);
+  }
+  function inkCPUAmount(x,y,t){
+    return Math.min(.57,
+      inkCPU(x,y,.20+.037*Math.sin(t*.38),.39+.041*Math.cos(t*.43),.112,.140,t*.91)*.42+
+      inkCPU(x,y,.79+.038*Math.cos(t*.33),.57+.045*Math.sin(t*.37),.124,.153,t*.77+1.9)*.41+
+      inkCPU(x,y,.49+.046*Math.sin(t*.29+2),.17+.023*Math.cos(t*.31),.072,.092,t*1.06+4.7)*.29+
+      inkCPU(x,y,.58+.027*Math.cos(t*.36+1),.82+.028*Math.sin(t*.42),.089,.106,t*.82+3.4)*.33);
   }
   function drawCPU(dt,t){
     const s=fallbackState;if(!s)return;
@@ -1131,7 +1183,9 @@ void main(){
                              (sceneHalf.y-.037-Math.abs(uvy-.5))*sizes.h);
       const blackT=clamp(safetyD/Math.min(32,sizes.h*.065),0,1);
       const safetyBlack=1-blackT*blackT*(3-2*blackT);
-      const alpha=Math.max(clamp((.13+1.02*d**.60)*smokeZone,0,.94),safetyBlack);
+      const fluidAlpha=clamp((.13+1.02*d**.60)*smokeZone,0,.94);
+      const stains=blotchesEnabled?inkCPUAmount(uvx,uvy,t):0;
+      const alpha=Math.max(1-(1-fluidAlpha)*(1-stains),safetyBlack);
       image.data[p]=0;image.data[p+1]=0;image.data[p+2]=0;image.data[p+3]=Math.round(255*alpha);
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
