@@ -10,7 +10,7 @@ const side=$('dev-character-angle'),picker=$('dev-layer'),status=$('dev-characte
 if(!loaded||!library||!window.PaperchalkL2D)return;
 const catalog=new Map(),assigned={player:{id:'protagonist',side:'back'},enemy:{id:'',side:'front'}};
 const DB='paperchalk-dev-characters-v1';
-let slot='player',ready=false;
+let slot='player',ready=false,heroineRenderer='bones';
 function note(s){status.textContent=s;}
 const valid=id=>/^[A-Za-z0-9_-]{1,80}$/.test(String(id));
 async function storage(mode,key,value){
@@ -87,7 +87,7 @@ async function assign(target,id,face='front',save=true){
  const originalPsdLayers=await get('skeletal:'+id+':'+face);
  const usesPsdRig=Array.isArray(originalPsdLayers)&&originalPsdLayers.length>=12;
  const published=c.l2dModule?.[face];
- const publishedRig=published?.renderer==='part-mesh'?published.rig:null;
+ const publishedRig=published?.renderer==='part-mesh'&&(id!=='protagonist'||heroineRenderer==='bones')?published.rig:null;
  const deployedClip=c.clips?.[face];
  const installedV4=deployedClip?.url||(id==='protagonist'?'./assets/l2d/v4/'+face+'.webp':'');
  const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
@@ -147,6 +147,15 @@ async function assign(target,id,face='front',save=true){
  refreshList();
  note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
    (usesPsdRig?' · 本机独立 PSD':publishedRig?' · 真实部件头发/裙摆/手臂独立摆动（无呼吸）':source?' · V4 逐帧':' · 通用程序网格'));
+}
+async function setHeroineRenderer(mode){
+ if(mode!=='bones'&&mode!=='v4')throw Error('只能选择逐部件骨骼或原版 V4 备份');
+ heroineRenderer=mode;
+ const active=Object.entries(assigned).filter(([,record])=>record?.id==='protagonist');
+ for(const [target,record] of active)await assign(target,'protagonist',record.side,false);
+ const toggle=document.getElementById('dev-heroine-renderer');
+ if(toggle)toggle.textContent=mode==='bones'?'女主：骨骼摆动中 · 切到V4备份':'女主：V4备份中 · 恢复骨骼摆动';
+ return mode;
 }
 async function openStudio(){
  // DEV always navigates to the ONE shared studio, no iframe and no
@@ -211,6 +220,13 @@ async function init(){
 loaded.onchange=()=>selectSlot(loaded.value);
 library.onchange=()=>note('已选择素材 '+(catalog.get(library.value)?.label||library.value)+'。点击切换可替换当前图层角色。');
 $('dev-character-use').onclick=()=>assign(slot,library.value,side.value).catch(e=>note(e.message));
+const rendererToggle=document.createElement('button');
+rendererToggle.id='dev-heroine-renderer';rendererToggle.type='button';
+rendererToggle.textContent='女主：骨骼摆动中 · 切到V4备份';
+rendererToggle.title='只切换女主渲染器；不覆盖原始V4、贴图或本机PSD修改';
+$('dev-character-use').insertAdjacentElement('afterend',rendererToggle);
+rendererToggle.onclick=()=>setHeroineRenderer(heroineRenderer==='bones'?'v4':'bones').catch(e=>note(e.message));
+
 $('dev-character-open').onclick=()=>openStudio().catch(e=>note(e.message));
 $('dev-character-import').onchange=e=>{
  const files=[...e.target.files];e.target.value='';
@@ -222,7 +238,7 @@ window.PaperchalkCharacterDev={
  get characters(){return [...catalog.values()]},
  get assigned(){return assigned},
  get loaded(){return actualActors().map(a=>a.id)},
- assign,chooseLoaded:selectSlot,openEditor:openStudio,
+ assign,chooseLoaded:selectSlot,openEditor:openStudio,setHeroineRenderer,get heroineRenderer(){return heroineRenderer},
  openFileUpload:()=>$('dev-character-import').click()
 };
 init().catch(e=>note('全人物 L2D 资源库初始化失败：'+e.message));
