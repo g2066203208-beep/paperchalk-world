@@ -114,6 +114,16 @@ jobs:
           assert '(?:webp|png|jpe?g)' in h
           assert 'uniform float u_blotches' in h
           assert 'float inkStains(' in h and 'function inkCPUAmount(' in h
+          # Real-time emulsion burns must survive BOTH GPU and CPU rendering,
+          # without the former fixed sine-drifting 4-spot imitation.
+          for marker in ('uniform vec4 u_burns[9]', 'float burnShape(',
+                         'const BURN_COUNT=9;', 'function spawnBurn(',
+                         'function advanceBurns(', 'burnUniformLocation=gl.getUniformLocation',
+                         'gl.uniform4fv(burnUniformLocation,burnUniforms)',
+                         'advanceBurns(reduced.matches?0:dt)',
+                         'fog.dataset.burnGeneration=String(burnGeneration)'):
+              assert marker in h, 'missing film emulsion feature: '+marker
+          assert 'vec2(.20+.037*sin(' not in h, 'obsolete fixed-position blotches survived'
           assert 'id="ink-toggle"' in h and 'id="ink-toggle-game"' in h
           assert 'id="protagonist-front"' in h
           assert "type:'portrait'" in h
@@ -374,6 +384,16 @@ jobs:
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-BEDROOM.png'});
                 if(!cfg.mobile){
                   await page.waitForTimeout(550);
+                  const burnDiagnostic=await page.locator('#fog').evaluate(el=>({
+                    renderer:el.dataset.renderer,active:Number(el.dataset.burnActive),
+                    generation:Number(el.dataset.burnGeneration),frames:Number(el.dataset.frames)
+                  }));
+                  assert.ok(/^(gpu|cpu)-advected-fluid$/.test(burnDiagnostic.renderer),
+                    'burns detached from original persistent fluid renderer');
+                  assert.ok(burnDiagnostic.active>=3&&burnDiagnostic.active<=9,
+                    'film burns not active within first scene: '+JSON.stringify(burnDiagnostic));
+                  assert.ok(burnDiagnostic.generation>=9&&burnDiagnostic.frames>10,
+                    'film burn animation did not initialize');
                   const inkOn=PNG.sync.read(await page.screenshot({path:'artifacts/classroom/bedroom-ink-on.png'}));
                   await page.locator('#menu-toggle').click();
                   await page.locator('#ink-toggle-game').click();
