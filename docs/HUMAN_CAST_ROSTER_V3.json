@@ -280,19 +280,22 @@
       "tier": "important",
       "label": "男二／插班生（设计候选）",
       "visual": {
-        "face": "偏宽的上半脸、颧骨略显、脸颊收窄、短而微方的下巴；眉骨清楚，双眼横向偏长、左眼上睑略重、外眼角轻微下收；鼻梁自然微弯、嘴唇偏薄，右侧嘴角轻微上提。五官不完全对称，既好看又有真实少年辨识度；区别于男主的窄长锐眼脸",
-        "hair": "极深的暖茶黑短发，非标准中分；偏右的自然侧分、额前3束大小不同的碎刘海，人物左侧露耳、右侧耳前有一小束较长碎发，后脑和后颈收得干净",
+        "face": "以已验收原画为准：上脸略宽、面颊自然收窄的柔和椭圆脸，末端偏圆收的下巴；横向偏长、半垂而稍显疲倦的暖茶棕眼，眉眼自然细微不对称，克制闭口表情。旧微方下颌/茶灰眼仅属早期文字候选，不再强制。",
+        "hair": "以已验收原图为准：暖深黑褐短发、前额较长不规则刘海，接近中线但自然非对称分缝，后颈利落",
         "build": "173cm、约64kg候选；肩宽适中，颈肩衔接紧实，不是男主的瘦高长条形，也不画健身壮汉",
-        "gesture": "右手轻放在左手腕附近而不紧抓，左肩比右肩略低，安静直立但不僵硬；默认嘴唇闭合、视线略偏镜头旁"
+        "gesture": "以已验收正面为准：自然直立，双手在小腹前自然交握，表情内敛、眼神略倦"
       },
       "personality": "有礼貌但不讨好；表达克制、自尊心强、遇到不合理的事会追问，偶尔露出一点讽刺意味，而非千篇一律温柔暖男",
       "storyFunction": "外来者对校园空间的第一印象",
       "status": "proposed",
-      "artStatus": "concept_not_approved",
-      "visualIdentity": "较宽上脸＋不完美的略重左眼睑＋微方短下巴＋不规则偏分碎发＋偏右轻抬嘴角；灰阶缩图也可认人",
+      "artStatus": "front_art_reference_approved",
+      "visualIdentity": "以reference-sheet.png右侧脸部大特写为唯一视觉锚点：自然刘海分束、暖茶棕半垂眼、柔和圆收颌线、薄唇平直嘴角、深色扣合校服；避免与男主重复",
       "visualAvoid": "标准对称V脸、完美中分奶油蓬松发、银白染发、夸张美瞳高光、柔光磨皮、统一网红双眼皮、笔直完美高鼻梁、宽肩窄腰模特身材、道具装饰凑人设",
       "designNotes": "旧版高额头+灰褐标准中分+温柔下垂眼方案因用户反馈太像AI网红脸而替换。此版为原创美术方向候选，不代表真人或已批准母图；必须按实际Anima正面图片复审后锁定面相。",
-      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）",
+      "frontArt": "site/assets/characters/char-016/front.png",
+      "referenceSheet": "site/assets/characters/char-016/reference-sheet.png",
+      "artApprovalNotes": "User-supplied 1024px full-body + face closeup received 2026-11-02; accepted as canonical front baseline. Warm tea-brown eye color, rounded tapered chin and low overlapping hands supersede text-only candidate prompt; height/weight are proposals, not image measurements."
     },
     {
       "id": "CHAR-017",
