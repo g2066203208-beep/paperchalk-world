@@ -71,6 +71,11 @@ jobs:
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 await page.locator('#rig-part').selectOption('rear_hair');
                 await page.locator('[data-rig="motion.x"]').fill('35');
+                assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.CHAR002).length),16,
+                  'CHAR-002 has its own documented 16-part rig blueprint, not the heroine texture');
+                assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.BACK).length),8,
+                  'reverse view uses its own eight source-part bindings');
+                await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-independent-rear-hair-mesh.png',fullPage:true});
                 const rigEval=await page.evaluate(()=>{
                   const core=window.PaperchalkPartRigCore;
                   const m=window.PaperchalkPartRigStudio.state.model;
