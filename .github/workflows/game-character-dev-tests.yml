@@ -422,8 +422,18 @@ jobs:
                 });
                 assert.equal(await page.evaluate(()=>!!window.PaperchalkStageMotion?.frame()),true,
                   'when original PSD16 is loaded the CENTRAL viewport must use its real live skeletal rig');
-                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('enemy')?.canvas?.style?.transform||''),'',
-                  'independent PSD bones must not inherit a whole-body oscillation');
+                const psdBreath=await page.evaluate(()=>{
+                  const rig=window.characterEditor?.l2dRig?.();
+                  const top={name:'topwear'};
+                  return {chestA:rig.psdTarget(600,315,top,.5),
+                    chestB:rig.psdTarget(600,315,top,2.8),
+                    footA:rig.psdTarget(500,940,{name:'footwear'},.5),
+                    footB:rig.psdTarget(500,940,{name:'footwear'},2.8)};
+                });
+                assert.notDeepEqual(psdBreath.chestA,psdBreath.chestB,
+                  'PSD torso skin must move at the chest');
+                assert.deepEqual(psdBreath.footA,psdBreath.footB,
+                  'PSD foot layer must remain strictly anchored');
                 assert.equal(await page.evaluate(()=>window.characterEditor?.S?.layers?.front?.filter(x=>x.role==='psd-part').length),16,
                   'source editor retains the 16 independent bitmaps');
                 await page.screenshot({path:'artifacts/l2d-studio/'+
