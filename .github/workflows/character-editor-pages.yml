@@ -6,6 +6,8 @@ on:
       - 'site/character-editor/**'
       - 'site/index.html'
       - 'site/l2d/**'
+      - 'site/assets/l2d/**'
+      - 'scripts/build_v4_assets.py'
       - 'site/dev/**'
       - 'site/characters.catalog.json'
       - 'site/assets/characters/**'
@@ -17,8 +19,8 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: character-editor-pages
-  cancel-in-progress: false
+  group: paperchalk-world-pages
+  cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -33,12 +35,15 @@ jobs:
           bash scripts/fetch-game-fonts.sh
           python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/repair_character_masks.py
+          python3 scripts/build_v4_assets.py
           python3 scripts/build_scene_catalog.py
           python3 scripts/build_character_catalog.py
           test -s site/index.html
           test -s site/character-editor/index.html
           test -s site/assets/characters/protagonist-front.webp
           test -s site/assets/characters/protagonist-back.webp
+          test -s site/assets/l2d/v4/front.webp
+          test -s site/assets/l2d/v4/back.webp
           node - <<'JS'
           const fs=require('fs');
           const s=fs.readFileSync('site/character-editor/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
