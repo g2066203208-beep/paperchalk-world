@@ -96,7 +96,7 @@ jobs:
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
-          required={'OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','enemy-front.webp','index.html','menu-wall.webp','player-back.webp','scene-catalog.generated.js'}
+          required={'OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','protagonist-front.webp','protagonist-back.webp','index.html','menu-wall.webp','scene-catalog.generated.js'}
           assert required.issubset({p.name for p in files}),files
           rooms=list(Path('site/assets/scenes').glob('*.webp'))
           assert rooms and {p.name for p in rooms}>= {'living-room.webp','bedroom.webp','entrance.webp'},rooms
@@ -109,6 +109,7 @@ jobs:
           assert '"id":"entrance"' in catalog and '"title":"玄关"' in catalog
           assert 'PAPERWORLD_SCENE_CATALOG' in catalog
           assert 'id="actor-enemy"' in h and 'id="actor-player"' in h
+          assert '#enemy-depth-root #actor-enemy[hidden]{display:none!important}' in h
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
           assert 'id="camera-player-root"' in h and 'id="enemy-depth-root"' in h
           assert 'enemyDepth.style.transform=' in h
@@ -128,9 +129,15 @@ jobs:
           assert "const hasPlayer=isStory||def.type==='environment'" in h
           assert "view.classList.toggle('environment-scene'" in h
           assert '#view.environment-scene #camera-player-root #actor-player' in h
-          assert 'id="protagonist-front"' in h
-          assert "type:'portrait'" in h
-          assert 'protagonistPreview.hidden=def.type' in h
+          assert 'id="protagonist-preview-root"' not in h
+          assert 'id="protagonist-front"' not in h
+          assert "type:'portrait'" not in h
+          assert "title:'主角立绘'" not in h
+          assert 'assets/battle/player-back.webp' not in h
+          assert 'assets/battle/enemy-front.webp' not in h
+          assert 'protagonist-back.webp' in h
+          assert not Path('site/assets/characters/protagonist-back.webp').exists()
+          assert not Path('site/assets/battle/enemy-front.webp').exists()
           assert Path('site/assets/characters/protagonist-front.webp').read_bytes()[:4]==b'RIFF'
           assert Path('scripts/matte_character.py').is_file()
           assert Path('scripts/validate_character_alpha.py').is_file()
@@ -142,6 +149,11 @@ jobs:
           assert cw>=300 and ch>=950,'Game sprite has been downscaled unexpectedly'
           assert cutout.getpixel((0,0))[3]==0,'Top corner not transparent'
           assert cutout.getpixel((cw-1,ch-1))[3]==0,'Bottom corner not transparent'
+          back=Image.open('site/assets/characters/protagonist-back.webp').convert('RGBA')
+          bw,bh=back.size
+          assert bw>=250 and bh>=900,(bw,bh)
+          assert back.getpixel((0,0))[3]==0 and back.getpixel((bw-1,0))[3]==0
+          assert back.getpixel((bw//2,bh//2))[3]>200,'Back-facing protagonist alpha is missing'
           assert 'transparent 15%,transparent 85%' in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=191.' in h and 'const reach=191+' in h
@@ -236,41 +248,21 @@ jobs:
                 assert.equal(await page.locator('#novel-ui').isVisible(),true);
                 assert.equal(await page.locator('#scene-menu').isVisible(),false);
                 assert.equal(await page.locator('#source').evaluate(el=>el.naturalWidth),1024);
-                const composition=await page.evaluate(()=>{
-                  const stage=document.getElementById('enemy-depth-root');
-                  const art=document.getElementById('actor-enemy');
-                  // Use LOCAL plane coordinates, not projected bounding boxes:
-                  // CSS perspective skews box extents during mouse tilt.
-                  return {
-                    x:parseFloat(art.style.left),
-                    bottom:parseFloat(art.style.bottom),
-                    h:parseFloat(art.style.height),
-                    centerX:(art.offsetLeft+art.offsetWidth/2)/stage.offsetWidth,
-                    footY:(art.offsetTop+art.offsetHeight)/stage.offsetHeight,
-                    heightRatio:art.offsetHeight/stage.offsetHeight
-                  };
+                assert.equal(await page.locator('#actor-enemy').isVisible(),false,
+                  'old enemy art must not render');
+                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.hasAttribute('src')),false,
+                  'old enemy image source must be removed');
+                const art=page.locator('#actor-player');
+                assert.equal(await art.isVisible(),true,'new protagonist back missing in classroom');
+                const dimensions=await art.evaluate(async el=>{
+                  await el.decode();
+                  return [el.naturalWidth,el.naturalHeight,
+                    document.getElementById('scene').dataset.scene];
                 });
-                assert.deepEqual([composition.x,composition.bottom,composition.h],[46,16,34],
-                  'enemy default composition did not update');
-                assert.ok(composition.centerX>.50&&composition.centerX<.55,
-                  'enemy not near middle of classroom aisle');
-                assert.ok(Math.abs(composition.footY-.84)<.02,
-                  'enemy feet not grounded in the lower aisle');
-                assert.ok(Math.abs(composition.heightRatio-.34)<.03,
-                  'enemy still disproportionately large relative to background');
-                for(const id of ['actor-enemy','actor-player']){
-                  const art=page.locator('#'+id);
-                  assert.equal(await art.isVisible(),true,'character not shown: '+id);
-                  const dimensions=await art.evaluate(async el=>{
-                    await el.decode();
-                    return [el.naturalWidth,el.naturalHeight,document.getElementById('scene').dataset.scene];
-                  });
-                  assert.ok(dimensions[0]>100&&dimensions[1]>300,'missing standalone art: '+id);
-                  assert.equal(dimensions[2],'classroom','character not shown in classroom');
-                  assert.equal(await art.evaluate(el=>el.closest('#view')!==null),true);
-                  assert.equal(await art.evaluate(el=>el.closest('#scene')===null),true,
-                    'actor is still glued into the background layer');
-                }
+                assert.ok(dimensions[0]>=250&&dimensions[1]>=900,'new protagonist back not loaded');
+                assert.equal(dimensions[2],'classroom');
+                assert.equal(await art.evaluate(el=>el.closest('#scene')===null),true,
+                  'hero must be on a separate depth plane');
                 const layerAudit=await page.evaluate(()=>{
                   const ids=['scene','enemy-depth-root','fog','camera-player-root'];
                   const layers=ids.map(id=>document.getElementById(id));
@@ -424,7 +416,7 @@ jobs:
                     view:{top:viewport.top,bottom:viewport.bottom}
                   };
                 });
-                assert.ok(roomProtagonist.src.endsWith('/assets/battle/player-back.webp'));
+                assert.ok(roomProtagonist.src.endsWith('/assets/characters/protagonist-back.webp'));
                 assert.ok(roomProtagonist.w>=150&&roomProtagonist.h>=500,
                   'original protagonist back image is missing');
                 if(!cfg.mobile){
@@ -457,33 +449,13 @@ jobs:
                     'black fog invisible/static in inner room edge band: '+animatedPixels);
                   console.log('PASS: independent cinematic fog moves visibly across bedroom, '+animatedPixels+' pixels changed');
                 }
-                await page.locator('#menu-toggle').click();
-                await page.locator('#scene-switcher-toggle').click();
-                await page.locator('#scene-switcher [data-scene-target="protagonist"]').click();
-                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'&&document.getElementById('scene').dataset.scene==='protagonist',null,{timeout:6500});
-                const portrait=await page.evaluate(async()=>{
-                  const img=document.getElementById('protagonist-front');await img.decode();
-                  return {
-                    visible:!document.getElementById('protagonist-preview-root').hidden,
-                    width:img.naturalWidth,height:img.naturalHeight,
-                    enemyHidden:document.getElementById('enemy-depth-root').hidden,
-                    playerHidden:document.getElementById('camera-player-root').hidden,
-                    fogOriginal:window.__originalFogNode===document.getElementById('fog'),
-                    src:img.currentSrc
-                  };
-                });
-                assert.ok(portrait.visible&&portrait.width>=150&&portrait.height>=500);
-                assert.ok(portrait.enemyHidden&&portrait.playerHidden&&portrait.fogOriginal);
-                assert.ok(portrait.src.endsWith('/assets/characters/protagonist-front.webp'));
-                await page.screenshot({path:'artifacts/classroom/'+
-                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-PROTAGONIST-PORTRAIT.png'});
+                // Character art is an asset, NOT a separate selectable location.
+                assert.equal(await page.locator('#scene-switcher [data-scene-target="protagonist"]').count(),0);
+                assert.equal(await page.locator('#protagonist-preview-root').count(),0);
                 await page.locator('#menu-toggle').click();
                 await page.locator('#scene-switcher-toggle').click();
                 await page.locator('#scene-switcher [data-scene-target="classroom"]').click();
                 await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'&&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6000});
-                assert.equal(await page.locator('#protagonist-preview-root').evaluate(el=>el.hidden),true,
-                  'protagonist presentation must not appear over the back-view battle scene');
-
                 // The actual live objects are separated into 3D planes:
                 // free-camera perspective, direct edits, save, exit + restore.
                 const liveFogBefore=await page.locator('#fog').evaluate(el=>{

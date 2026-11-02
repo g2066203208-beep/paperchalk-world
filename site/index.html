@@ -156,26 +156,11 @@ body.mobile-mode.virtual-landscape #view{
   will-change:transform;backface-visibility:hidden;
 }
 #enemy-depth-root[hidden],#camera-player-root[hidden]{display:none!important}
+#enemy-depth-root #actor-enemy[hidden]{display:none!important}
 #enemy-depth-root #actor-enemy{
   position:absolute;display:block;left:46%;bottom:16%;height:34%;
   width:auto;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
-}
-/* Protagonist FRONT reference art is for character presentation only.
-   The 3D battle actor remains back-facing until its matching asset exists. */
-#protagonist-preview-root{
-  position:absolute;left:50%;top:50%;
-  width:min(94vw,calc(94dvh * 16 / 9));
-  width:min(94cqw,calc(94cqh * 16 / 9));
-  max-width:100%;aspect-ratio:16/9;
-  transform:translate(-50%,-50%);z-index:2;pointer-events:none;
-}
-#protagonist-preview-root[hidden]{display:none!important}
-#protagonist-preview-root #protagonist-front{
-  position:absolute;left:63%;bottom:5%;height:81%;
-  width:auto;max-width:none;display:block;object-fit:contain;
-  transform:translateX(-50%);filter:drop-shadow(0 10px 10px #0008);
-  pointer-events:none;user-select:none;
 }
 #fog{z-index:3}
 #camera-player-root{
@@ -386,15 +371,11 @@ body.mobile-mode.virtual-landscape #view{
     </div>
   </figure>
   <div id="enemy-depth-root" aria-label="第二景深层：敌人（在黑雾后方）" hidden>
-    <img id="actor-enemy" src="./assets/battle/enemy-front.webp" alt="面向玩家的敌人" draggable="false">
-  </div>
-  <div id="protagonist-preview-root" aria-label="主角正面静态立绘展示" hidden>
-    <img id="protagonist-front" src="./assets/characters/protagonist-front.webp"
-         alt="主角：黑色长发，深蓝制服外套、灰色百褶裙、酒红色领带" draggable="false">
+    <img id="actor-enemy" alt="预留敌人图层（暂无人物素材）" draggable="false" hidden>
   </div>
   <canvas id="fog" aria-hidden="true"></canvas>
   <div id="camera-player-root" aria-label="镜头前景层：玩家（在黑雾前方）" hidden>
-    <img id="actor-player" src="./assets/battle/player-back.webp" alt="背对镜头的主角" draggable="false">
+    <img id="actor-player" src="./assets/characters/protagonist-back.webp" alt="背对镜头的主角" draggable="false">
   </div>
   <div id="novel-ui" aria-label="黑雾极简互动界面" hidden>
     <nav id="top-menu" aria-label="游戏菜单">
@@ -754,13 +735,11 @@ void main(){
   const SCENES=Object.freeze({
     menu:Object.freeze({image:'./assets/menu-wall.webp',alt:'一面旧墙、一扇门和一盏灯',type:'menu'}),
     classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',title:'教室',type:'story'}),
-    protagonist:Object.freeze({image:'./assets/scenes/bedroom.webp',alt:'主角人物立绘展示',title:'主角立绘',type:'portrait'}),
     ...importedScenes
   });
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
   const cameraPlayer=document.getElementById('camera-player-root');
-  const protagonistPreview=document.getElementById('protagonist-preview-root');
   const sceneMenu=document.getElementById('scene-menu');
   const mainOptions=document.getElementById('scene-menu-main');
   const settingsOptions=document.getElementById('scene-menu-settings');
@@ -807,7 +786,6 @@ void main(){
     const hasPlayer=isStory||def.type==='environment';
     enemyDepth.hidden=!isStory;cameraPlayer.hidden=!hasPlayer;
     view.classList.toggle('environment-scene',def.type==='environment');
-    protagonistPreview.hidden=def.type!=='portrait';
     sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
     if(isMenu){
       cancelAuto();if(logOpen)toggleLog();
