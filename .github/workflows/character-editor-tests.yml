@@ -70,6 +70,13 @@ jobs:
                 assert.ok(await page.locator('#part-rig-panel').isVisible());
                 assert.equal(await page.locator('#rig-part option').count(),17);
                 await page.locator('#rig-part').selectOption('rear_hair');
+                assert.equal(await page.locator('#rig-bone option').count(),6,'hair needs three independently skinned two-joint strands');
+                await page.locator('#rig-bone').selectOption('left-tip');
+                await page.locator('[data-bone="amplitude"]').fill('30');
+                await page.evaluate(()=>{
+                  const m=window.PaperchalkPartRigStudio.state.model;
+                  window.__originalJacketPose=window.PaperchalkPartRigCore.warpPoint(m.parts.jacket,.5,.95,Math.PI/2);
+                });
                 await page.locator('[data-rig="motion.x"]').fill('35');
                 assert.equal(await page.evaluate(()=>Object.keys(window.PaperchalkPartRigCore.CHAR002).length),16,
                   'CHAR-002 has its own documented 16-part rig blueprint, not the heroine texture');
@@ -83,6 +90,7 @@ jobs:
                   return {hair:core.warpPoint(h,.5,.95,Math.PI/2),
                     pivot:core.warpPoint(h,h.pivot.x,h.pivot.y,Math.PI/2),
                     staticJacket:core.warpPoint(j,.5,.95,Math.PI/2),
+                    jacketBefore:window.__originalJacketPose,
                     hx:h.x+.5*h.w,jx:j.x+.5*j.w,jy:j.y+.95*j.h,
                     pivotX:h.x+h.pivot.x*h.w,pivotY:h.y+h.pivot.y*h.h};
                 });
@@ -90,9 +98,28 @@ jobs:
                   'the selected hair part actually bends/warps');
                 assert.ok(Math.abs(rigEval.pivot.x-rigEval.pivotX)<1e-6 &&
                   Math.abs(rigEval.pivot.y-rigEval.pivotY)<1e-6,'local root stays planted');
-                assert.ok(Math.abs(rigEval.staticJacket.x-rigEval.jx)<1e-6 &&
-                  Math.abs(rigEval.staticJacket.y-rigEval.jy)<1e-6,
-                  'independent jacket mesh cannot move with a hair parameter');
+                assert.deepEqual(rigEval.staticJacket,rigEval.jacketBefore,
+                  'jacket moves only on its OWN bones, never because hair was edited');
+                const armIsolation=await page.evaluate(()=>{
+                  const core=window.PaperchalkPartRigCore;
+                  const parts=window.PaperchalkPartRigStudio.state.model.parts;
+                  const arm=parts.sleeves_and_hands;
+                  const beforeLeft=core.warpPoint(arm,.18,.92,1.4);
+                  const beforeRight=core.warpPoint(arm,.82,.92,1.4);
+                  const elbow=arm.bones.find(b=>b.id==='left-elbow');
+                  const old=elbow.amplitude;elbow.amplitude=35;
+                  const afterLeft=core.warpPoint(arm,.18,.92,1.4);
+                  const afterRight=core.warpPoint(arm,.82,.92,1.4);
+                  elbow.amplitude=old;
+                  return {left:Math.hypot(afterLeft.x-beforeLeft.x,afterLeft.y-beforeLeft.y),
+                    right:Math.hypot(afterRight.x-beforeRight.x,afterRight.y-beforeRight.y),
+                    skirt:parts.skirt.bones.length,jacket:parts.jacket.bones.length};
+                });
+                assert.ok(armIsolation.left>1,'left elbow must independently bend source arm pixels');
+                assert.ok(armIsolation.right<armIsolation.left*.15,
+                  'right arm must remain nearly unchanged when only left elbow is edited');
+                assert.equal(armIsolation.skirt,6,'skirt has three separate two-bone pleat chains');
+                assert.equal(armIsolation.jacket,4,'jacket left and right panels have independent chains');
                 await page.locator('#rig-save').click();
                 await page.waitForFunction(async()=>{
                   const saved=await window.PaperchalkStudio.readPartRig('protagonist','front');
