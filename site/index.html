@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<title>教室 · 连续流动黑雾</title>
+<title>Paperchalk World · 场景</title>
 <style>
 @font-face{font-family:"PaperSerif";src:url("./assets/fonts/PaperSerif-Medium.woff2") format("woff2");font-style:normal;font-weight:500;font-display:swap}
 @font-face{font-family:"PaperSans";src:url("./assets/fonts/PaperSans-Regular.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}
@@ -335,7 +335,12 @@ body.mobile-mode.virtual-landscape #view{
   #dev-tools input[type="range"]{margin:1px 0 4px}
   #dev-tools .dev-buttons{margin:4px 0}
 }
+/* Dynamic room selector reuses minimal UI, no new overlay during gameplay */
+#scene-menu-gallery{max-height:52cqh;overflow-y:auto;scrollbar-width:thin}
+#scene-switcher{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-height:45cqh;overflow-y:auto;scrollbar-width:thin}
+#scene-switcher button{min-height:30px}
 </style>
+<script src="./scene-catalog.generated.js"></script>
 </head>
 <body>
 <main id="view" aria-label="同一场景模板：背景和菜单随视角倾斜，纯黑流体雾固定在屏幕上">
@@ -347,8 +352,10 @@ body.mobile-mode.virtual-landscape #view{
         <button id="menu-start" type="button">开始游戏</button>
         <button id="menu-continue" type="button" disabled>继续游戏</button>
         <button id="menu-settings-button" type="button">设置</button>
+         <button id="menu-gallery-button" type="button">场景预览</button>
       </nav>
-      <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
+      <nav id="scene-menu-gallery" class="scene-menu-options" aria-label="场景列表" hidden></nav>
+       <nav id="scene-menu-settings" class="scene-menu-options" aria-label="场景设置" hidden>
         <button id="tilt-toggle" type="button">场景倾斜：开启</button>
         <button id="menu-settings-back" type="button">返回</button>
       </nav>
@@ -373,6 +380,8 @@ body.mobile-mode.virtual-landscape #view{
       <button id="restart-button" type="button">重新开始</button>
       <button id="return-main" type="button">返回主菜单</button>
       <button id="hide-button" type="button">隐藏文字</button>
+       <button id="scene-switcher-toggle" type="button" aria-expanded="false">切换场景</button>
+       <div id="scene-switcher" aria-label="已安装场景" hidden></div>
     </div>
     <section id="dialogue" aria-label="人物对白" aria-live="polite">
       <p id="speaker">???</p>
@@ -698,9 +707,20 @@ void main(){
     {speaker:'???',text:'有人……在看着这里吗？'}
   ];
   // Scene assets/content are data; rendering, 3D tilt and black fog are shared.
+  // Only add an image to site/assets/scenes; CI auto-registers new scenes.
+  const importedScenes=Object.create(null);
+  for(const entry of (window.PAPERWORLD_SCENE_CATALOG||[])){
+    if(!entry||!/^[-a-z0-9]+$/.test(entry.id)||!/^[-a-z0-9]+[.]webp$/.test(entry.file))continue;
+    if(entry.id==='menu'||entry.id==='classroom')continue;
+    importedScenes[entry.id]=Object.freeze({
+      image:'./assets/scenes/'+entry.file,
+      alt:entry.title+'：空室内场景',title:entry.title,type:'environment'
+    });
+  }
   const SCENES=Object.freeze({
     menu:Object.freeze({image:'./assets/menu-wall.webp',alt:'一面旧墙、一扇门和一盏灯',type:'menu'}),
-    classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',type:'story'})
+    classroom:Object.freeze({image:'./assets/classroom.webp',alt:'空教室全景：黑板、课桌、左侧窗户',title:'教室',type:'story'}),
+    ...importedScenes
   });
   const sourceImage=document.getElementById('source');
   const enemyDepth=document.getElementById('enemy-depth-root');
@@ -708,6 +728,10 @@ void main(){
   const sceneMenu=document.getElementById('scene-menu');
   const mainOptions=document.getElementById('scene-menu-main');
   const settingsOptions=document.getElementById('scene-menu-settings');
+  const galleryOptions=document.getElementById('scene-menu-gallery');
+  const sceneSwitcher=document.getElementById('scene-switcher');
+  const sceneSwitcherToggle=document.getElementById('scene-switcher-toggle');
+  const topActions=document.getElementById('top-actions');
   const continueButton=document.getElementById('menu-continue');
   const tiltButton=document.getElementById('tilt-toggle');
   const SAVE_KEY='paperchalk-scene-v1';
@@ -739,18 +763,24 @@ void main(){
     // Swapping only image and scene content NEVER recreates the fluid simulator.
     sourceImage.src=def.image;sourceImage.alt=def.alt;
     stage.dataset.scene=name;stage.setAttribute('aria-label',def.alt);
-    enemyDepth.hidden=def.type!=='story';
-    cameraPlayer.hidden=def.type!=='story';
-    sceneMenu.hidden=def.type!=='menu';
-    uiRoot.hidden=def.type!=='story';
-    if(def.type==='menu'){
+    const isStory=def.type==='story',isMenu=def.type==='menu';
+    enemyDepth.hidden=!isStory;cameraPlayer.hidden=!isStory;
+    sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
+    if(isMenu){
       cancelAuto();if(logOpen)toggleLog();
-      mainOptions.hidden=false;settingsOptions.hidden=true;
+      mainOptions.hidden=false;settingsOptions.hidden=true;galleryOptions.hidden=true;
       continueButton.disabled=!readSave();
     }else{
       menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false');
-      textHidden=false;dialogue.hidden=false;
-      nextLineButton.parentElement.hidden=false;renderDialogue();writeSave();
+      sceneSwitcher.hidden=true;sceneSwitcherToggle.setAttribute('aria-expanded','false');
+      if(isStory){
+        textHidden=false;dialogue.hidden=false;
+        nextLineButton.parentElement.hidden=false;renderDialogue();writeSave();
+      }else{
+        cancelAuto();
+        if(logOpen){logOpen=false;history.hidden=true;logButton.setAttribute('aria-pressed','false')}
+        dialogue.hidden=true;nextLineButton.parentElement.hidden=true;
+      }
     }
     start(); // continuous, same original fog frame chain
   }
@@ -790,7 +820,7 @@ void main(){
     finally{clearTimeout(timeout)}
   }
   async function changeScene(name){
-    if(transitioning||!SCENES[name]||stage.dataset.scene===name)return false;
+    if(transitioning||editorActive||!SCENES[name]||stage.dataset.scene===name)return false;
     transitioning=true;shade.dataset.active='true';shade.dataset.phase='preload';
     const outgoing=stage.dataset.scene==='menu'?sceneMenu:uiRoot;
     if(!(await ensureAsset(name))){
@@ -824,6 +854,32 @@ void main(){
   }
   document.getElementById('menu-start').addEventListener('click',()=>beginStory(false));
   continueButton.addEventListener('click',()=>{if(readSave())beginStory(true)});
+  function sceneButton(id,title,onPick){
+    const button=document.createElement('button');
+    button.type='button';button.textContent=title;
+    button.dataset.sceneTarget=id;button.addEventListener('click',onPick);
+    return button;
+  }
+  const catalogScenes=Object.entries(SCENES).filter(([id,def])=>id!=='menu');
+  function populateSceneLists(){
+    galleryOptions.replaceChildren();sceneSwitcher.replaceChildren();
+    for(const [id,def] of catalogScenes){
+      const label=def.title||id;
+      galleryOptions.appendChild(sceneButton(id,label,()=>changeScene(id)));
+      sceneSwitcher.appendChild(sceneButton(id,label,()=>changeScene(id)));
+    }
+    galleryOptions.appendChild(sceneButton('menu','返回',()=>{
+      galleryOptions.hidden=true;mainOptions.hidden=false;
+    }));
+  }
+  populateSceneLists();
+  document.getElementById('menu-gallery-button').addEventListener('click',()=>{
+    mainOptions.hidden=true;settingsOptions.hidden=true;galleryOptions.hidden=false;
+  });
+  sceneSwitcherToggle.addEventListener('click',()=>{
+    const opening=sceneSwitcher.hidden;
+    sceneSwitcher.hidden=!opening;sceneSwitcherToggle.setAttribute('aria-expanded',String(opening));
+  });
   document.getElementById('menu-settings-button').addEventListener('click',()=>{
     mainOptions.hidden=true;settingsOptions.hidden=false;
   });
@@ -917,7 +973,7 @@ void main(){
   window.addEventListener('keydown',e=>{
     if(transitioning)return;
     if(e.key==='Escape'){
-      if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;mainOptions.hidden=false}
+      if(stage.dataset.scene==='menu'){settingsOptions.hidden=true;galleryOptions.hidden=true;mainOptions.hidden=false}
       else if(logOpen)toggleLog();
       else{menuChoices.hidden=true;menuButton.setAttribute('aria-expanded','false')}
     }else if((e.key===' '||e.key==='Enter')&&
@@ -931,6 +987,11 @@ void main(){
   });
   renderDialogue();
   openScene('menu');
+  // Scene preview deep link, independent of story saves.
+  const requestedScene=new URLSearchParams(location.search).get('scene');
+  if(requestedScene&&SCENES[requestedScene]&&SCENES[requestedScene].type!=='menu'){
+    openScene(requestedScene);
+  }
   function shader(type,text){
     const s=gl.createShader(type);
     gl.shaderSource(s,text);gl.compileShader(s);

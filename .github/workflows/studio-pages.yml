@@ -27,6 +27,8 @@ jobs:
           node-version: '22'
       - name: Install local licensed game fonts (pinned and hash-verified)
         run: bash scripts/fetch-game-fonts.sh
+      - name: Generate scene catalog from room images (auto publish)
+        run: python3 scripts/build_scene_catalog.py
       - name: Assert original complete classroom and independent fluid layer
         run: |
           set -euo pipefail
@@ -59,7 +61,13 @@ jobs:
           assert 'targetZoom' not in h
           assert 't-lastFog' not in h
           files=[p for p in Path('site').rglob('*') if p.is_file()]
-          assert sorted(p.name for p in files)==['OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','enemy-front.webp','index.html','menu-wall.webp','player-back.webp'],files
+          required={'OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','enemy-front.webp','index.html','menu-wall.webp','player-back.webp','scene-catalog.generated.js'}
+          assert required.issubset({p.name for p in files}),files
+          rooms=list(Path('site/assets/scenes').glob('*.webp'))
+          assert rooms and {p.name for p in rooms}>= {'living-room.webp'},rooms
+          catalog=Path('site/scene-catalog.generated.js').read_text()
+          assert '"id":"living-room"' in catalog and '"title":"客厅"' in catalog
+          assert 'PAPERWORLD_SCENE_CATALOG' in catalog
           assert 'id="actor-enemy"' in h and 'id="actor-player"' in h
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
           assert 'id="camera-player-root"' in h and 'id="enemy-depth-root"' in h
@@ -67,6 +75,10 @@ jobs:
           assert 'const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor' in h
           assert 'depthFactor=clamp(' in h
           assert 'id="dev-trigger"' in h and 'id="dev-tools"' in h
+          assert 'id="menu-gallery-button"' in h
+          assert 'id="scene-switcher-toggle"' in h
+          assert 'scene-catalog.generated.js' in h
+          assert "importedScenes=Object.create(null)" in h
           assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
           assert 'id="dev-ground"' in h and 'rotateX(90deg)' in h
           assert 'ground:{y:77,z:-215,visible:1}' in h
@@ -132,6 +144,10 @@ jobs:
                 await page.locator('#menu-settings-button').click();
                 assert.ok(await page.locator('#tilt-toggle').isVisible(),'settings text not accessible');
                 await page.locator('#menu-settings-back').click();
+                // One added image becomes a real menu destination automatically.
+                await page.locator('#menu-gallery-button').click();
+                assert.equal(await page.locator('#scene-menu-gallery [data-scene-target="living-room"]').count(),1);
+                await page.locator('#scene-menu-gallery [data-scene-target="menu"]').click();
                 const originFog=await page.locator('#fog').evaluate(el=>{window.__originalFogNode=el;return Number(el.dataset.frames)});
                 await page.locator('#menu-start').click();
                 await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='out',null,{timeout:5500});
@@ -256,6 +272,33 @@ jobs:
                 }
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-CHARACTERS-DEPTH.png'});
+                // Enter real environment via existing dark transition; never
+                // instantiate a new fog canvas, characters or classroom dialogue.
+                await page.locator('#menu-toggle').click();
+                await page.locator('#scene-switcher-toggle').click();
+                await page.locator('#scene-switcher [data-scene-target="living-room"]').click();
+                await page.waitForFunction(()=>document.getElementById('scene').dataset.scene==='living-room',null,{timeout:6000});
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle',null,{timeout:6000});
+                const room=await page.evaluate(()=>({
+                  src:document.querySelector('#source').getAttribute('src'),
+                  natural:[document.querySelector('#source').naturalWidth,document.querySelector('#source').naturalHeight],
+                  cast:[document.getElementById('actor-enemy').hidden,
+                        document.getElementById('enemy-depth-root').hidden,
+                        document.getElementById('camera-player-root').hidden],
+                  dialogueHidden:document.getElementById('dialogue').hidden,
+                  fog:window.__originalFogNode===document.getElementById('fog')
+                }));
+                assert.ok(room.src.endsWith('/assets/scenes/living-room.webp'));
+                assert.deepEqual(room.natural,[1024,576]);
+                assert.deepEqual(room.cast.slice(1),[true,true]);
+                assert.equal(room.dialogueHidden,true);
+                assert.equal(room.fog,true,'fog recreated on entering home');
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-LIVING-ROOM.png'});
+                await page.locator('#menu-toggle').click();
+                await page.locator('#scene-switcher-toggle').click();
+                await page.locator('#scene-switcher [data-scene-target="classroom"]').click();
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'&&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6000});
 
                 // The actual live objects are separated into 3D planes:
                 // free-camera perspective, direct edits, save, exit + restore.
