@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "recordCode": "CHAR-003",
   "canonicalId": "male-lead-candidate",
-  "recordState": "design_candidate_complete_proposal_not_in_game",
+  "recordState": "design_candidate_front_art_selected_back_and_l2d_pending",
   "readableDocument": "docs/characters/CHAR-003_MALE_LEAD_PROFILE.md",
   "sourcePriority": [
     "user_confirmed",
@@ -1780,9 +1780,9 @@
     },
     "visualProduction": {
       "frontReference": {
-        "value": "尚未绘制或验收；目标为仅一名男生的全身正面白底立绘，不得伪造现成路径",
-        "status": "proposed",
-        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
+        "value": "site/assets/characters/char-003/front.png",
+        "status": "approved_art_reference",
+        "source": "2026-11-02 original user-provided three-figure art sheet; center figure cropped exactly, no redraw, actual PNG uploaded to GitHub; verified using crop coordinates (350,0)-(647,1024)"
       },
       "backReference": {
         "value": "尚未绘制或验收；后续独立生成同一校服与发型的全身背面",
@@ -1899,14 +1899,14 @@
         "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
       },
       "sourceFileHash": {
-        "value": "暂无已验收图像，因此没有可记录的SHA-256；审批时必须填写",
-        "status": "proposed",
-        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
+        "value": "SHA-256 ad832b27c9cbd5c3a33eb54dfa23b02d2511292fee998537e705873a9d9fb71d | source-sheet SHA-256 6d69102663609759438669125cc53ecc7bf76d8d27d5ec5478bc3b9a2f17ae68 | crop (350,0)-(647,1024)",
+        "status": "approved_art_reference",
+        "source": "Exact 2026-11-02 image bytes and pixel crop dimensions verified in editing environment, GitHub blob committed f3cdaa0e9949962a079f81ec742246886f09bf21"
       },
       "assetApproval": {
-        "value": "未审批；不得注册到游戏角色表，也不得拿虚构纹理冒充L2D",
-        "status": "proposed",
-        "source": "CHAR-003 v1.0 design proposal and technical production targets; not approved art or working animation"
+        "value": "用户要求将三人男主图的中间人物原样裁剪并放入 GitHub，作为后续人物拆分的正面参考。该图实际存入仓库；背面、拆层PSD、L2D和正式游戏加载未完成。",
+        "status": "user_confirmed",
+        "source": "User conversation 2026-11-02: select and crop center character; store images in corresponding GitHub profiles."
       },
       "bodyFacingYawDeg": {
         "value": 0,
@@ -2434,9 +2434,9 @@
         "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "approvalRecord": {
-        "value": "等待用户批准男主正面原画与属性；目前仅四百余字段方案，不代表已审批",
-        "status": "proposed",
-        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
+        "value": "用户要求将三人男主图的中间人物原样裁剪并放入 GitHub，作为后续人物拆分的正面参考。该图实际存入仓库；背面、拆层PSD、L2D和正式游戏加载未完成。",
+        "status": "user_confirmed",
+        "source": "User request in conversation 2026-11-02."
       },
       "rollbackReference": {
         "value": "若后续生成不合格，回到 CHAR-003.profile.json v1.0 与用户原始男主提示词；不得覆盖现有女主原画",
@@ -2545,6 +2545,6 @@
   "sourceNotes": [
     "Confirmed appearance, age, clothing and posture directly from user's supplied male Anima prompt on 2026-11-02.",
     "All other details including civil identity, 176cm/62kg body plan, family, plot, facial numerical measurements, game/L2D settings are authorial proposals and not approved canon.",
-    "No approved CHAR-003 artwork, sprites, voice recordings, or rig exists. This draft is not a live game actor."
+    "2026-11-02 actual center crop (350,0)-(647,1024) as site/assets/characters/char-003/front.png, SHA-256 ad832b27c9cbd5c3a33eb54dfa23b02d2511292fee998537e705873a9d9fb71d; only front source currently exists, no fabricated back/PSD/L2D."
   ]
 }
