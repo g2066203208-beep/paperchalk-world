@@ -381,25 +381,6 @@ body.character-editing #dev-stage,body.character-editing #dev-stage *{pointer-ev
 }
 
 
-/* Native in-game L2D workbench is the default editor view. No editor-site
-   navigation/iframe request occurs until the user explicitly selects painting. */
-#dev-l2d-workbench[hidden],#dev-character-frame[hidden]{display:none!important}
-#dev-l2d-workbench{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,325px);flex:1;gap:16px;min-height:0;padding:16px;overflow:auto}
-.dev-l2d-stage{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;overflow:hidden;background:radial-gradient(ellipse at center,#283347,#0a1018 74%);border:1px solid #3c4c60;border-radius:12px}
-#dev-l2d-preview{display:block;max-width:100%;max-height:100%;aspect-ratio:1;width:auto;height:auto;object-fit:contain}
-#dev-l2d-identity{position:absolute;left:12px;bottom:10px;background:#0c1522dd;padding:6px 9px;color:#e5eefb;font:12px var(--font-ui);border:1px solid #485b71;border-radius:5px}
-.dev-l2d-parameters{background:#141d2a;border:1px solid #354558;border-radius:12px;padding:17px;overflow:auto;min-height:0}
-.dev-l2d-parameters h3{font-size:16px;margin:0 0 6px;color:#e4efff}
-.dev-l2d-parameters p{font-size:12px;color:#b6c7db;line-height:1.6}
-.dev-l2d-parameters label{display:flex;justify-content:space-between;font-size:12px;margin-top:15px;color:#cbd9ec}
-.dev-l2d-parameters input[type=range]{width:100%;margin:8px 0;accent-color:#94c3fd}
-.dev-l2d-parameters select{width:100%;padding:8px;color:#ecf4ff;background:#273245;border:1px solid #536780;border-radius:5px}
-.dev-l2d-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}
-.dev-l2d-actions button{flex:1}
-#dev-l2d-status{display:block;margin-top:12px;font-size:12px;color:#a7d9ba;line-height:1.5}
-#dev-character-overlay:not(.editing-layers) #dev-character-export,
-#dev-character-overlay:not(.editing-layers) #dev-character-reset{display:none!important}
-@media(max-width:700px){#dev-l2d-workbench{display:flex;flex-direction:column;gap:8px;padding:8px}.dev-l2d-stage{min-height:38dvh;max-height:46dvh;flex:0 0 auto}.dev-l2d-parameters{overflow:visible;flex:1}#dev-l2d-preview{max-height:42dvh}}
 </style>
 <script src="./scene-catalog.generated.js"></script>
 <script src="./scene-modules.js"></script>
@@ -501,7 +482,7 @@ body.character-editing #dev-stage,body.character-editing #dev-stage *{pointer-ev
       <input id="dev-size" type="range" min="12" max="120" step=".5">
     </div>
     <section id="dev-character-controls" aria-label="游戏已加载人物的统一 L2D 编辑">
-      <p style="color:#c9ddec">全人物 L2D 编辑 · 选择游戏已加载人物，修改分层 / 骨骼 / 呼吸。</p>
+      <p style="color:#c9ddec">统一 L2D：选中当前人物后直接进入全人物工作室，可编辑所有已导入角色。</p>
       <label for="dev-character-list">游戏中已加载的人物</label>
       <select id="dev-character-list" style="width:100%"></select>
       <label for="dev-character-library">替换为已有角色素材</label>
@@ -510,7 +491,7 @@ body.character-editing #dev-stage,body.character-editing #dev-stage *{pointer-ev
       <select id="dev-character-angle" style="width:100%"><option value="front">正面</option><option value="back">背面</option></select>
       <div class="dev-buttons">
         <button id="dev-character-use" type="button">切换所选角色</button>
-        <button id="dev-character-open" type="button">✎ 编辑所选人物 L2D</button>
+        <button id="dev-character-open" type="button">✎ 打开全人物 L2D 编辑工作室</button>
       </div>
       <label for="dev-character-import">导入新的游戏人物（PNG / WebP）</label>
       <input id="dev-character-import" type="file" accept="image/png,image/webp,image/jpeg" multiple style="width:100%;max-width:100%">
@@ -557,45 +538,7 @@ body.character-editing #dev-stage,body.character-editing #dev-stage *{pointer-ev
     <output id="dev-status" class="dev-state" aria-live="polite"></output>
     <p class="dev-hint">保存到本机浏览器。普通视角保留主角贴镜头、敌人轻微视差、黑雾独立。</p>
   </aside>
-  <div id="dev-character-overlay" hidden role="dialog" aria-modal="true" aria-label="游戏人物分层补画编辑器">
-    <div class="dev-character-toolbar">
-      <strong>DEV / 全人物 L2D 分层 / 骨骼编辑</strong>
-      <div>
-        <button id="dev-character-apply" type="button">应用到游戏</button>
-        <button id="dev-character-export" type="button">导出分层 ZIP</button>
-        <button id="dev-character-reset" type="button">恢复选中方向原图</button>
-        <button id="dev-character-close" type="button">返回游戏 DEV</button>
-      </div>
-    </div>
-    <div id="dev-l2d-workbench" aria-label="游戏内人物 L2D 动态工作台">
-      <div class="dev-l2d-stage">
-        <canvas id="dev-l2d-preview" width="1024" height="1024" aria-label="当前游戏人物的实时 L2D 预览"></canvas>
-        <div id="dev-l2d-identity">正在读取已加载人物…</div>
-      </div>
-      <div class="dev-l2d-parameters">
-        <h3>当前人物 · 实时 L2D</h3>
-        <p>不离开游戏网页。先调整当前人物的呼吸、骨骼和软硬运动；需要修补 PSD 图层时，再点下方的分层补画。</p>
-        <label for="dev-l2d-side">正在预览</label>
-        <select id="dev-l2d-side"><option value="front">正面</option><option value="back">背面</option></select>
-        <div class="dev-l2d-actions">
-          <button id="dev-l2d-play" type="button">暂停动画</button>
-          <button id="dev-l2d-bones" type="button">显示骨骼</button>
-        </div>
-        <label for="dev-l2d-amplitude">呼吸幅度 <output id="dev-l2d-amplitude-value">55%</output></label>
-        <input id="dev-l2d-amplitude" type="range" min="0" max="140" step="1" value="55">
-        <label for="dev-l2d-period">呼吸周期 <output id="dev-l2d-period-value">4.8 秒</output></label>
-        <input id="dev-l2d-period" type="range" min="2" max="12" step=".1" value="4.8">
-        <label for="dev-l2d-softness">柔性滞后 <output id="dev-l2d-softness-value">100%</output></label>
-        <input id="dev-l2d-softness" type="range" min="0" max="180" step="1" value="100">
-        <div class="dev-l2d-actions">
-          <button id="dev-l2d-save" type="button">应用并保存动画</button>
-          <button id="dev-l2d-paint" type="button">分层补画 / PSD</button>
-        </div>
-        <output id="dev-l2d-status" aria-live="polite"></output>
-      </div>
-    </div>
-    <iframe id="dev-character-frame" hidden title="游戏内人物 PSD 图层补画工具" loading="lazy" allow="clipboard-write"></iframe>
-  </div>
+
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -1728,6 +1671,6 @@ void main(){
 <script src="./l2d/rig.js"></script>
 <script src="./l2d/runtime.js"></script>
 <script src="./dev/character-bridge.js"></script>
-<script src="./dev/l2d-workbench.js"></script>
+
 </body>
 </html>
