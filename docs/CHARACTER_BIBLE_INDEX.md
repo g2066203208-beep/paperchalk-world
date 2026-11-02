@@ -12,7 +12,8 @@
 | **CHAR-016 正面已入库** | `male-second-transfer-candidate`（暂未注册为可玩演员） | 男二／插班生；自然茶棕眼与深暖黑发 | **[已验收全身正面PNG](../site/assets/characters/char-016/front.png)**，315×1024；[1024×1024原图及脸部特写](../site/assets/characters/char-016/reference-sheet.png)；背面PSD、L2D待制作 | 448项人物档案；**具体脸型眼色和双手姿势以原图优先**，身高173cm/体重64kg等数值仍暂定 | [人物设定、差异校验及提示词](characters/CHAR-016_MALE_SECOND_PROFILE.md) · [448字段机器档案](characters/CHAR-016.profile.json) |
 | **CHAR-004 视觉参考已入库** | 暂未注册正式游戏ID | 女三：可爱假小子、爽朗行动派 | **[第三版选中原图（全身＋脸部特写）](../site/assets/characters/char-004/reference-sheet.png)**，1024×1024；面相、发型、表情及服装参考已确认；不是透明单人图 | **视觉参考通过；演出站姿、单人透明素材、背面、PSD、L2D待制作** | [女三设计与素材档案](characters/CHAR-004_FEMALE_THIRD_PROFILE.md) |
 | **CHAR-020 男三设计档案** | `male-third-youthful-candidate`（尚未游戏注册） | 男三：可爱小正太系男高中生，浅茶棕短发和灰绿眼为候选 | **没有已验收原画**，人物信息、模型参数未获审批 | **22类448项候选已建立** | [机器档案](characters/CHAR-020.profile.json) · [448项逐条可读](characters/CHAR-020_MALE_THIRD_PROFILE.md) |
-| CHAR-005～015、CHAR-017～019、CHAR-021起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
+| **CHAR-005 女四人设** | `female-fourth-capable-tsundere-heiress-candidate`（未正式注册） | **全能能干的傲娇大小姐**；旧纪律委员设定已否决 | **无已验收原画**，具体造型仍为提案 | 22类448字段候选；双手空着、同校制服 | [448字段](characters/CHAR-005.profile.json) · [逐项可读档案](characters/CHAR-005_FEMALE_FOURTH_PROFILE.md) |
+| CHAR-006～015、CHAR-017～019、CHAR-021起 | 尚未分配正式身份 | 其余规划人物 | 尚无已验收原画 | 待设计 | [448字段通用模板](characters/CHARACTER_PROFILE_TEMPLATE.md) |
 
 **重要：** “教室主角”“卧室主角”“正面主角”“背面主角”“L2D 主角”都不是新身份，只能引用 `protagonist`。旧临时恐怖敌人没有独立的正式人物身份，也不得因为历史素材名称而复活。
 
@@ -76,3 +77,7 @@
 ## CHAR-020 男三角色档案（2026-11-02）
 
 男三“小正太”作为用户指定方向已进入设计。候选人设包含16岁、158cm、46kg、约6.4头身、浅茶棕短层次发、灰绿杏圆眼、柔和少年骨相、同校校服、自然GalGame站姿和广播声音线索故事功能，**均未获得最终美术验收**。[448字段设计](characters/CHAR-020.profile.json)与[448项可读版本](characters/CHAR-020_MALE_THIRD_PROFILE.md)已保存。CHAR-020原田径女生仅为未批准的规划占位，其历史资料在V3花名册`reallocationHistory`中保留。游戏角色注册表目前仍没有男三，正反图、PSD和L2D未制作。
+
+## CHAR-005 女四更新（2026-11-03）
+
+核心定位由用户指定为**全能能干的傲娇大小姐**；原“纪律委员”概念明确弃用，不能复活成常规校园干部。必须会实际处理学习、运动、料理、家务、采购预算、团队分工和突发问题，能力来自真实训练。戏剧弱点是完美主义和难以求助，而非无能。校服保持同校色系、默认单人正面全身双手空置，具体发色、面相及穿法要经过用户批准原画。见[完整档案](characters/CHAR-005_FEMALE_FOURTH_PROFILE.md)。

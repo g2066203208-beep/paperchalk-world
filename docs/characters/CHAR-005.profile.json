@@ -1,0 +1,3017 @@
+{
+  "schemaVersion": 3,
+  "recordCode": "CHAR-005",
+  "canonicalId": "female-fourth-capable-tsundere-heiress-candidate",
+  "recordState": "design_candidate_user_confirmed_archetype_no_approved_art",
+  "readableDocument": "docs/characters/CHAR-005_FEMALE_FOURTH_PROFILE.md",
+  "sourcePriority": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
+  "fields": {
+    "identity": {
+      "recordCode": {
+        "value": "CHAR-005",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "canonicalId": {
+        "value": "female-fourth-capable-tsundere-heiress-candidate",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "displayName": {
+        "value": "女四／全能型傲娇大小姐（候选姓名：沈知棠）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "legalName": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "nicknames": {
+        "value": [
+          "沈同学",
+          "知棠（候选）"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "aliases": {
+        "value": [
+          "女四",
+          "全能型傲娇大小姐"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pronouns": {
+        "value": "她",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "genderPresentation": {
+        "value": "女高中生",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ageYears": {
+        "value": 17,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "birthDate": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "birthplace": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "currentResidence": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "era": {
+        "value": "现代架空都市",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "occupation": {
+        "value": "普通高中生",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "schoolYear": {
+        "value": "高二（候选）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "storyRole": {
+        "value": "女四：傲娇、大小姐、全能能干、独立果断",
+        "status": "user_confirmed",
+        "source": "User explicit statements about 女四, 2026-11-03"
+      },
+      "designStatus": {
+        "value": "只确认核心人设方向，姓名年龄外貌剧情与技能细节均为候选，尚无原画",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "family": {
+      "parents": {
+        "value": "家境优渥，父母具体职业与在场安排未确定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "guardians": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "siblings": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "relatives": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "familyStructure": {
+        "value": "候选：重视成果和礼仪，但家中有真实亲情与沟通矛盾",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "childhoodEvents": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "upbringing": {
+        "value": "自幼接受综合教育，家庭要求很高；技能来自持续练习而非用钱开挂",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "householdMembers": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "livingSituation": {
+        "value": "候选：现代城市宽敞住宅，但能自主安排日常",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "socioeconomicBackground": {
+        "value": "富裕家庭出身，但不把金钱当万能钥匙",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "education": {
+      "school": {
+        "value": "主角所读的同一所高中",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "className": {
+        "value": "高二，班级待定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "club": {
+        "value": "无须学生会、纪律委员或校园职位；校外活动比校园头衔重要",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "grades": {
+        "value": "候选：整体优异、强于综合应用与项目实践，不设不合常理的全科满分",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "subjectStrengths": {
+        "value": [
+          "数学与逻辑",
+          "外语沟通",
+          "科学实验",
+          "体育实践",
+          "城市常识"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "subjectWeaknesses": {
+        "value": [
+          "不愿承认自己不知道的问题（性格短板而非智力短板）"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "workplace": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "jobTitle": {
+        "value": "学生",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "salaryRange": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "experience": {
+        "value": "候选：组织过真实的活动预算、应急预案、物资采购和小型项目",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "professionalGoals": {
+        "value": "未来希望凭个人能力负责重要事业，而非只继承他人安排",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "measurements": {
+      "heightCm": {
+        "value": 166,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "weightKg": {
+        "value": 52,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headBodyRatio": {
+        "value": 7.05,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoulderWidthCm": {
+        "value": 37.5,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "chestCircumferenceCm": {
+        "value": 82,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "waistCircumferenceCm": {
+        "value": 65,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hipCircumferenceCm": {
+        "value": 87,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "torsoLengthCm": {
+        "value": 46,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "armSpanCm": {
+        "value": 165,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "inseamCm": {
+        "value": 77,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoeSize": {
+        "value": "CN 39（候选）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bodyBuild": {
+        "value": "体态匀称、挺拔、有日常训练感，既优雅也灵活",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bodyMassDescription": {
+        "value": "健康少女体态，适当运动肌肉，不刻意夸张",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "posture": {
+        "value": "自然挺拔，肩颈放松但站姿有控制力",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "handDominance": {
+        "value": "右手（候选）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "gait": {
+        "value": "步伐稳健利落，节奏均匀",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "upperArmCircumferenceCm": {
+        "value": 24.5,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "forearmCircumferenceCm": {
+        "value": 21,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "wristCircumferenceCm": {
+        "value": 14.7,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "thighCircumferenceCm": {
+        "value": 48,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "calfCircumferenceCm": {
+        "value": 32,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "kneeCircumferenceCm": {
+        "value": 33,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ankleCircumferenceCm": {
+        "value": 20,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "upperArmLengthCm": {
+        "value": 29,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "forearmLengthCm": {
+        "value": 25,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "handLengthCm": {
+        "value": 17.5,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "palmWidthCm": {
+        "value": 7.5,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "upperLegLengthCm": {
+        "value": 42,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lowerLegLengthCm": {
+        "value": 39.5,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "kneeHeightCm": {
+        "value": 47,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hipBreadthCm": {
+        "value": 31,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoulderBreadthCm": {
+        "value": 37.5,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "waistHeightCm": {
+        "value": 101,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ribcageDepthCm": {
+        "value": 19,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hipDepthCm": {
+        "value": 18,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headWidthCm": {
+        "value": 15,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "faceLengthCm": {
+        "value": 20.4,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "faceWidthCm": {
+        "value": 14,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "footLengthCm": {
+        "value": 24.2,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "footWidthCm": {
+        "value": 9.1,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "anatomy": {
+      "headShape": {
+        "value": "柔和但结构明确的修长椭圆头骨",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoulderSlope": {
+        "value": "肩峰自然落下约5°，非僵硬端肩",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "torsoDepth": {
+        "value": "胸背自然厚度与衣物空间",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ribcageContour": {
+        "value": "正常女性高中生胸廓，不做成人夸张曲线",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "waistContour": {
+        "value": "合身制服形成自然轻收腰",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pelvisAndHips": {
+        "value": "正常匀称比例，避免走秀夸张扭胯",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "backContour": {
+        "value": "背部保持挺拔但可自然弯曲",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bustThroughClothing": {
+        "value": "校服常规自然平整轮廓，避免性化强调",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "limbProportions": {
+        "value": "四肢修长灵活而非成年模特过度比例",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "handShape": {
+        "value": "手指修长、关节清晰、动作利落",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "skinUndertone": {
+        "value": "中性偏冷浅肤色，面颊轻微暖意",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "skinTexture": {
+        "value": "干净二维动画皮肤与少量块面阴影",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "scars": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "birthmarks": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "moles": {
+        "value": "暂不使用固定泪痣，避免与女主撞特征",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "freckles": {
+        "value": "无固定雀斑",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "postureAsymmetry": {
+        "value": "重心轻偏右腿，左膝可放松",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mobilityNeeds": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "upperArmShape": {
+        "value": "匀称且略有运动肌肉的上臂",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "forearmShape": {
+        "value": "手腕向肘部自然增厚",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "wristShape": {
+        "value": "柔韧腕部不夸张纤细",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "thighShape": {
+        "value": "日常运动形成的正常大腿体量",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "calfShape": {
+        "value": "小腿轮廓紧实但不专业运动员化",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "kneeShape": {
+        "value": "关节可辨，动作不畸形",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ankleShape": {
+        "value": "踝关节自然，不画极端高跟姿势",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "legAxis": {
+        "value": "健康自然腿轴，双足稳定站立",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "upperLimbTaper": {
+        "value": "手腕、前臂与肩部过渡自然",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lowerLimbTaper": {
+        "value": "裙装及不透明袜体积与腿轴协调",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "legMuscleDistribution": {
+        "value": "适度训练，速度及耐力较好但不是超人",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "armMuscleDistribution": {
+        "value": "能搬运日常物品和操作工具的正常力量",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pelvisTilt": {
+        "value": "中性略旋转，不做夸张S形",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "spinalCurve": {
+        "value": "正常生理弧度，站姿舒展",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "handFingerLengthRatios": {
+        "value": [
+          1,
+          0.96,
+          0.97,
+          0.73,
+          0.67
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bodySilhouetteType": {
+        "value": "挺拔的纤长直身型，不靠超短裙或夸张腰臀识别",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoulderToHipWidthRatio": {
+        "value": 1.12,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "waistToHipWidthRatio": {
+        "value": 0.84,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headToShoulderWidthRatio": {
+        "value": 0.4,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "face": {
+      "faceShape": {
+        "value": "修长偏心形鹅蛋脸，面颊不鼓、下颌利落但不尖V",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "forehead": {
+        "value": "额头饱满、发际线自然",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "cheekbones": {
+        "value": "轻微颧骨平面，表情能见细腻层次",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "jawline": {
+        "value": "清楚的下颌转折，和女主冷峻骨相分开",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "chin": {
+        "value": "短而清秀，微圆不尖锐",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "noseBridge": {
+        "value": "自然纤细直鼻梁",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "noseTip": {
+        "value": "小巧但有明确鼻尖体积",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mouthShape": {
+        "value": "嘴角自然偏一边，笑时带克制的得意",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lips": {
+        "value": "自然薄唇，不上显眼唇妆",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "teeth": {
+        "value": "笑时少量露上齿，闭口常态更优雅",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ears": {
+        "value": "小而清楚，部分被侧发遮盖",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyebrows": {
+        "value": "精细但有力量的拱形眉，不是冷淡平眉",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyelidShape": {
+        "value": "双眼皮轮廓清楚，眼尾略微提升",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeShape": {
+        "value": "清亮略长的蓝灰杏眼，目光直视不怯懦",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeSpacing": {
+        "value": "协调不狭窄",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeCornerAngle": {
+        "value": "轻微上挑，不是刻薄眯眼",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeColor": {
+        "value": "低饱和钢蓝灰（候选）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeHex": {
+        "value": "#697E91",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pupilColor": {
+        "value": "#334454",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeHighlights": {
+        "value": "克制的单主高光和自然副光",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyelashes": {
+        "value": "上眼缘简洁略长，不画厚重妆感",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "defaultExpression": {
+        "value": "微扬下巴的从容自信，小幅不服输的笑意",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "facialLandmarkSystem": {
+        "value": "单位化面部识别草案，须待用户确认原画校准",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "facialLandmarksNormalized": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "faceLengthToWidthRatio": {
+        "value": 1.47,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "foreheadToFaceHeightRatio": {
+        "value": 0.31,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "jawWidthToFaceWidthRatio": {
+        "value": 0.69,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "cheekboneWidthToFaceWidthRatio": {
+        "value": 0.93,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeCenterHeightRatio": {
+        "value": 0.47,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "interocularSpacingRatio": {
+        "value": 0.29,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeWidthToFaceWidthRatio": {
+        "value": 0.22,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyebrowEyeGapRatio": {
+        "value": 0.07,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "noseTopHeightRatio": {
+        "value": 0.55,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "noseTipHeightRatio": {
+        "value": 0.68,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "noseWidthToFaceWidthRatio": {
+        "value": 0.09,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mouthCenterHeightRatio": {
+        "value": 0.78,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mouthWidthToFaceWidthRatio": {
+        "value": 0.32,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "philtrumLengthRatio": {
+        "value": 0.07,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "earTopHeightRatio": {
+        "value": 0.42,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "earBottomHeightRatio": {
+        "value": 0.67,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeTailSlantDeg": {
+        "value": 3,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyelidOpennessBaseline": {
+        "value": 0.78,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lipCornerSlopeDeg": {
+        "value": 1,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "browAngleDeg": {
+        "value": 2,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "expressionLandmarkVariants": {
+        "value": "得意／认真／生气／害羞／不动声色担心的脸部表情差异，真实位置以定稿原画校准",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "noseToMouthDistanceRatio": {
+        "value": 0.1,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "hair": {
+      "hairBaseColor": {
+        "value": "烟茶金／浅灰棕（候选）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairHex": {
+        "value": "#A38D79",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairHighlights": {
+        "value": "#CAB5A0",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairLength": {
+        "value": "过肩至肩胛上缘的中长发，非女主长直黑发",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairTexture": {
+        "value": "柔顺但不光滑成塑料，发尾略内弯",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairDensity": {
+        "value": "中等偏密、蓬度控制得体",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "parting": {
+        "value": "自然偏分7:3",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bangs": {
+        "value": "斜分轻薄刘海，露出额头和眉形",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sidelocks": {
+        "value": "脸侧较长两束，勾勒修长脸型",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ponytailCount": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ponytailPosition": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "ponytailLength": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "hairAccessories": {
+        "value": "可选一枚极细哑光金属发夹，默认以无发饰版为主",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "accessorySide": {
+        "value": "可选头部左侧，具体需母图确认",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "accessoryPosition": {
+        "value": "贴合侧发，不影响眼睛眉毛或L2D头部运动",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "backSilhouette": {
+        "value": "发尾内弯轻触肩胛，后发体积不与女主重合",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "wardrobe": {
+      "outerwear": {
+        "value": "同校深蓝制服西装外套，版型比女三更利落合身，前襟自然平整不手扶",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shirt": {
+        "value": "白色衬衫领口整洁，略露袖口，个人裁剪线条干净",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "blouse": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "neckwear": {
+        "value": "同校酒红色领带，用更窄、更利落的打结方式",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "skirt": {
+        "value": "同校炭灰色正常长度百褶裙，裙线挺而不过短",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "trousers": {
+        "value": "后续换装可穿统一炭灰校裤，本次默认裙装",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "socks": {
+        "value": "深灰不透明连裤袜（候选）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "footwear": {
+        "value": "黑色乐福皮鞋，鞋头圆润但保持正式感",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "garmentLayerOrder": {
+        "value": [
+          "白衬衫",
+          "酒红领带",
+          "深蓝制服外套",
+          "炭灰百褶裙",
+          "深灰袜",
+          "黑色校鞋"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "paletteHex": {
+        "value": {
+          "blazer": "#25354B",
+          "shirt": "#F2F0E9",
+          "tie": "#783B46",
+          "skirt": "#575962",
+          "tights": "#3D4149",
+          "shoes": "#222329",
+          "hair": "#A38D79",
+          "eyes": "#697E91"
+        },
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "fabrics": {
+        "value": "高质量但日常可信的制服混纺、棉衬衫、百褶裙、哑光不透明袜",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sewingDetails": {
+        "value": "外套合身省道、肩线干净，衣服靠裁剪体现精致而不是华丽装饰",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pleats": {
+        "value": "百褶裙褶距均匀，动作时自然摆动",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "buttons": {
+        "value": "深蓝/哑光黑校服原有纽扣，不新造金色滚边或新校徽",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pockets": {
+        "value": "普通校服口袋完整，不插兜做固定姿势",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "wearCondition": {
+        "value": "干净、熨烫整洁但有自然穿着褶皱",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "seasonalVariants": {
+        "value": "夏季可减外套但沿用同校制服，另行审批",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "occasionVariants": {
+        "value": "校外私服可展现剪裁与品质，但正面母图暂只校服",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "permanentAccessories": {
+        "value": "非必需；一枚非常小的低调发夹候选，绝不依靠珠宝堆砌富贵",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "temporaryProps": {
+        "value": "双手始终空置，不拿书包、手机、钱夹、雨伞、外套、武器或任何装饰道具",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "temperament": {
+      "coreConfirmedTraits": {
+        "value": [
+          "傲娇",
+          "大小姐气质",
+          "全能",
+          "能干",
+          "独立",
+          "不是生活无能的废物大小姐"
+        ],
+        "status": "user_confirmed",
+        "source": "User explicit statements about 女四, 2026-11-03"
+      },
+      "proposedTraits": {
+        "value": [
+          "自尊心强",
+          "办事有效率",
+          "有责任感",
+          "情绪表达含蓄",
+          "果断",
+          "坚持原则"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "strengths": {
+        "value": [
+          "执行力强",
+          "适应力好",
+          "知识面广",
+          "生活自理能力极高",
+          "擅长现场组织",
+          "能完成自己做的计划"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "weaknesses": {
+        "value": [
+          "完美主义",
+          "不易向人求助",
+          "太在意承诺",
+          "偶尔替别人做决定而忽略对方感受"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "socialEnergy": {
+        "value": "社交从容，不靠大声压迫别人",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "humorStyle": {
+        "value": "带一点冷幽默与轻微调侃，绝非满口‘哼、笨蛋’",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "conflictStyle": {
+        "value": "讲事实和效率，必要时强硬；事后能反省",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "fears": {
+        "value": "真正让她害怕的是努力仍无法保护重要的人，而不是怕脏怕累",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "angerTriggers": {
+        "value": "贬低别人劳动、把她的能力全归功于财富",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "stressResponse": {
+        "value": "先分轻重缓急，指挥撤离和救援，安全后才显露情绪",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "defenseMechanism": {
+        "value": "用自信和挑剔掩盖不知如何表达感谢与关心",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "moralLimits": {
+        "value": "不践踏弱者、不随便利用家境剥夺别人选择",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "goals": {
+        "value": "证明自己不是只能依靠家庭名号的人",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "contradictions": {
+        "value": "言语上嘴硬，行动中会替别人处理难题并承担结果",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "publicPersona": {
+        "value": "端庄有分寸、思考迅速、控制力强",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "privatePersona": {
+        "value": "会为在意的人操心，也会因情绪失控感到懊恼",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "emotionalBaseline": {
+        "value": "稳定自信、稍带骄傲与防备",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "expressionRange": {
+        "value": [
+          "从容",
+          "骄傲",
+          "得意",
+          "轻微不悦",
+          "认真",
+          "担心",
+          "脸红",
+          "决断"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "defaultMicroExpression": {
+        "value": "嘴角轻抬、眉峰略扬，目光稳定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "signatureMicroExpressions": {
+        "value": [
+          "被夸时眼神短暂避开",
+          "同伴受伤时眉头迅速锁紧",
+          "成功解决问题后嘴角小幅上扬"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyesExpression": {
+        "value": "评估环境时视线快速且稳定，关心同伴时目光柔和",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyebrowsExpression": {
+        "value": "略高眉峰反映自信，紧张时能自然收紧",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mouthExpression": {
+        "value": "说话清楚克制，无法坦诚关怀时嘴角轻抿",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bodyLanguageMood": {
+        "value": "姿态利落但自然，手势准确而小幅",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "composureLevel": {
+        "value": "危机中高度冷静，极端失去控制感时情绪波动明显",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "psychology": {
+      "innerNeed": {
+        "value": "被承认的是她本人，而不是她拥有的社会身份",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "externalGoal": {
+        "value": "凭个人能力保护同伴、处理异常事件并追求独立人生",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "secretGoal": {
+        "value": "希望有人能不被她的完美形象吓退，平等地站在她身边（提案）",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "belief": {
+        "value": "能力是责任，承诺应该被兑现",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "selfImage": {
+        "value": "可靠、能解决问题、不能拖累任何人的人",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "insecurities": {
+        "value": "担心一次失误会让人怀疑她全部努力",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "regrets": {
+        "value": "有时替同伴安排好一切却没先问对方愿不愿意",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "traumaIfStoryApproved": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "attachmentStyle": {
+        "value": "亲近需要时间建立，不等于不能建立情感关系",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "trustPattern": {
+        "value": "看重言行一致、真正有能力也肯承担责任的人",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "breakingPoint": {
+        "value": "只靠自己的努力仍不能扭转关键损失时",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "growthArc": {
+        "value": "从独自扛下所有任务到学会合理分工与尊重他人自主性",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "values": {
+        "value": [
+          "责任",
+          "能力",
+          "诚信",
+          "平等",
+          "尊重",
+          "家人的牵挂"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "dialogue": {
+      "voicePitch": {
+        "value": "中音偏亮的自然少女声，不是夸张尖叫",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "voiceTimbre": {
+        "value": "清晰、干净、成熟适度的高中生声音",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "speechRate": {
+        "value": "略快但条理清楚，生气时反而简短",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "voiceVolume": {
+        "value": "日常稳定，紧急时果断提高音量",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "tone": {
+        "value": "有自尊、带一点挖苦但不恶毒",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "accents": {
+        "value": "普通话，具体地区口音未定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "diction": {
+        "value": "吐字清楚、节奏利落",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sentenceLength": {
+        "value": "优先短而准确的判断，解释方案时有层次",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "vocabulary": {
+        "value": "使用实际技能和生活知识，不装腔作势",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "habitualPhrases": {
+        "value": [
+          "别急，我已经把顺序理好了。",
+          "这有什么难的？先把工具给我——算了，我自己来。",
+          "我不是担心你，只是不想再收拾烂摊子。"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sarcasmLevel": {
+        "value": "轻到中等，调侃不贬低弱者",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "laughStyle": {
+        "value": "控制不住时轻笑，真实放松时能爽朗笑",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "cryingStyle": {
+        "value": "尽量克制，眼泪体现真实代价而非卖惨",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "speechUnderStress": {
+        "value": "短句指令、重复关键安全信息",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "dialogueExamples": {
+        "value": [
+          "你留在这里，我去检查电源。别误会，只是我知道该怎么处理。",
+          "钱当然有用，但我更愿意自己把事情做成。",
+          "谁说我不会？我只是还没开始。"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "forbiddenVoicePatterns": {
+        "value": "全程‘哼/笨蛋’模板、傲慢辱骂、无能娇弱依赖佣人、卖萌幼儿腔",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "behavior": {
+      "idlePose": {
+        "value": "全身正常自然站姿，肩背舒展，重心略偏右腿，双手空着且自然垂落在身体两侧，手肘留小空隙",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "signatureGesture": {
+        "value": "思考时轻抬一侧眉，讨论方案用短促准确的手势，不预设手持道具",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "greetingHabit": {
+        "value": "礼貌但不谄媚地点头问候",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "gazePattern": {
+        "value": "与人平等直视，关心的人受伤时会迅速查看情况",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "blinkHabit": {
+        "value": "自然眨眼，认真判断时略减频率",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyebrowMotion": {
+        "value": "一侧眉峰可轻抬，生气时收紧",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headTilt": {
+        "value": "正常少幅度转头，避免模板傲娇夸张昂头",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "walkCycle": {
+        "value": "稳定适中的步幅，体态挺拔",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "runningCycle": {
+        "value": "具备普通训练者的加速协调，能奔跑和应急撤离",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "nervousTics": {
+        "value": "情绪不安时略微抿唇，而不是抓衣服",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sleepRhythm": {
+        "value": "重视休息计划但会因责任过重而偶尔晚睡",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eatingStyle": {
+        "value": "礼貌自然，也懂得做饭和安排饮食，不是必须别人喂",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "favoriteFoods": {
+        "value": "候选：家常炖菜和清爽水果甜品",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hobbies": {
+        "value": [
+          "料理",
+          "运动",
+          "阅读",
+          "物品维护",
+          "规划城市周末行程"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "dailyRoutine": {
+        "value": "按时上学、课余兼顾训练与家事，拥有自己的城市生活而非只出现在学校",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "timeManagement": {
+        "value": "擅长按优先级规划，但偶尔给自己安排过满",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "transportation": {
+        "value": "会理解公交/地铁路线并独立出行，不制造不懂公共交通的笑料",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "relationships": {
+      "familyRelations": {
+        "value": "与家庭关系复杂但有真实感情，财富本身不代表冷血",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "schoolRelations": {
+        "value": "普通同学身份，不担任纪律委员或学生会负责人",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "friendRelations": {
+        "value": "在能力上会照顾朋友，在情感上不善于坦率承认",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "rivalRelations": {
+        "value": "与同样有能力的人存在良性竞争，拒绝以家境欺负同学",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mentorRelations": {
+        "value": "可能接受过料理、运动、急救和基础设备训练；具体人物待定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "romancesIfStoryApproved": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "relationshipToProtagonist": {
+        "value": "和女主的冷淡毒舌容易摩擦，但互相尊重彼此判断力",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "relationshipToMaleLead": {
+        "value": "对男主的散漫不满意，却认可他在关键时刻行动力",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "trustFlags": {
+        "value": [
+          "认真分担责任提高信任",
+          "擅自决策可引起冲突但能道歉"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "secretsShared": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "conflictHistory": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "relationProgression": {
+        "value": "初识互相不服→共同处理问题→认可价值→学会托付与合作",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "skills": {
+      "talents": {
+        "value": [
+          "学习理解快",
+          "项目协调",
+          "问题拆解",
+          "料理",
+          "实用生活管理",
+          "外语沟通",
+          "体育协调"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "weaknesses": {
+        "value": [
+          "过度独自承担任务",
+          "过高标准导致疲劳",
+          "缺乏对不同能力水平的耐心"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "learnedSkills": {
+        "value": [
+          "常规家常料理与食材保存",
+          "采购预算管理",
+          "基础电器安全检查和小修",
+          "急救基础知识",
+          "地图导航",
+          "活动组织与物资协调"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "academicSkills": {
+        "value": [
+          "数学",
+          "语言",
+          "科学实验",
+          "写作与资料检索"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "workSkills": {
+        "value": [
+          "制定预算",
+          "风险识别",
+          "安排人手与物资",
+          "执行复盘"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "combatAbility": {
+        "value": "有良好体能、反应、环境判断和防护意识；实际战斗需要学习，不能一登场就全武器无敌",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "physicalEndurance": {
+        "value": "优于多数普通同龄人，但长时间连续高压会疲劳",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "agility": {
+        "value": "动作协调利落，应急移动能力良好",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "perception": {
+        "value": "善于同时关注环境、人员和退路，但也可能误判未知异常",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "charisma": {
+        "value": "说服能力强、礼貌得体，也能耐心谈判",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "supernaturalPowers": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "powerCosts": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "equipment": {
+        "value": "基本人物母版空手；未来武器由游戏装备系统另行动态挂载",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "inventory": {
+        "value": "按剧情与玩法管理，默认无手持私人物品",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "healthIfStoryApproved": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      }
+    },
+    "story": {
+      "firstAppearance": {
+        "value": "候选：校外公共空间帮助处理一次临时突发状况，让玩家看到她是真能干而不是只会嘴硬",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "locationEntrances": {
+        "value": [
+          "校园",
+          "街区",
+          "商店",
+          "公共交通设施",
+          "住宅区域"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "originStory": {
+        "value": "高要求家庭培养出的熟练独立个体，逐渐试图自己选择人生方向",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "incitingEvent": {
+        "value": "一次无法用常识与资源顺利解决的异常事件迫使她与主角合作",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "keyScenes": {
+        "value": [
+          "独立处理生活事故",
+          "夜间为队伍规划安全路线",
+          "误判风险后承担责任",
+          "不再独断而倾听同伴"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "storyGoals": {
+        "value": "保护重要人物、建立独立能力与平等关系",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "branchingChoices": {
+        "value": [
+          "允许她单独处置",
+          "合理分工合作",
+          "质疑她的方案并提供证据"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "secrets": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "reveals": {
+        "value": "过于强大的自我要求来自成长经历，但不一定有巨大阴谋",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "relationshipEvents": {
+        "value": "被人认真认可个人劳动、而不是金钱带来的便利",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "questEvents": {
+        "value": "候选：故障中的选择／谁来承担责任",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "alternateEndings": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "chronologicalHistory": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      }
+    },
+    "environment": {
+      "home": {
+        "value": "候选：条件优越且有真实生活气息的城市家庭空间",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "school": {
+        "value": "与主角同一所高中",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "workplace": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "roomOwnership": {
+        "value": "拥有个人房间，但游戏基础场景不预摆随身物件",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "itemOwnership": {
+        "value": "只能使用剧情实有物品，不给她无尽现金/万能钥匙",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "furnitureConditions": {
+        "value": "场景无主角在场状态影响的日用品默认摆放",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "weatherResponse": {
+        "value": "雨天会主动评估雨势、交通和安全路线",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "locationsVisited": {
+        "value": [
+          "校园",
+          "商业街",
+          "公共交通站点",
+          "住宅区"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "npcSchedule": {
+        "value": "与学校日程、家务活动、个人生活和剧情事件共同约束",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "worldEra": {
+        "value": "当代都市与超自然异常事件交织",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "visualProduction": {
+      "frontReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "backReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "sideReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "threeQuarterReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "poseReference": {
+        "value": "白底单人全身正面自然待机动作，双手空置，头至鞋底可见",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "expressionReferences": {
+        "value": [
+          "从容",
+          "骄傲",
+          "轻笑",
+          "轻微不悦",
+          "认真",
+          "担忧",
+          "脸红",
+          "果断"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "silhouetteLocked": {
+        "value": false,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "colorPalette": {
+        "value": {
+          "hair": "#A38D79",
+          "eyes": "#697E91",
+          "blazer": "#25354B",
+          "shirt": "#F2F0E9",
+          "tie": "#783B46",
+          "skirt": "#575962"
+        },
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "artStyle": {
+        "value": "沿用仓库女主、女二、女三以及男主男二原有的高质量二维日系GalGame立绘风格，不新增商业设定集排版",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "imageAspectRatio": {
+        "value": "独立单人竖构图，头脚完整，正式图片实际尺寸待生成",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "whiteBackgroundRule": {
+        "value": "纯白背景，无场景、无文字、无设定页",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "fullBodyRule": {
+        "value": "头到鞋底完整，不裁手、头发、鞋",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "centeredRule": {
+        "value": "单个人物居中，站地基准稳定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "occlusionRule": {
+        "value": "双臂/两手可拆分，头发和裙装隐藏区域预留后续补画",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "promptPositive": {
+        "value": "masterpiece, best quality, 1girl, solo, original elegant teenage high school girl, confident tsundere heiress with genuinely capable independent demeanor, intelligent steady blue-gray almond eyes, expressive refined brows, short oval heart-shaped face with clear natural jaw structure, subtle confident asymmetric smile, medium-long smoky tea-brown layered hair below shoulders with a soft side part and gently inward curled ends, graceful healthy athletic teenage proportions, same school navy fitted blazer with matte dark buttons, neatly tailored white shirt, small burgundy necktie, charcoal gray standard-length pleated skirt, opaque dark gray tights, black school loafers, sophisticated school uniform styling without changing the school's colors, normal full-body front-facing visual novel idle character pose, naturally upright and relaxed shoulders, both arms relaxed at sides, BOTH HANDS COMPLETELY EMPTY, visible five fingers on each hand, no weapons or held objects, subtle proud bearing, approachable face rather than angry villain, clean white background, crisp controlled anime lineart, balanced restrained cel shading, coherent original cast art style, @akipekostyle<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "promptNegative": {
+        "value": "low quality, generic anime idol, duplicate character face, black long straight hair, high chestnut ponytail, short tomboy hair, evil aristocrat villain, discipline committee armband, student council sash, useless spoiled princess, fainting princess, maid-dependent helpless girl, exaggerated smug face, open mouth screaming, angry tsundere shouting, blonde twin tails, oversized jewelry, fantasy costume, gold-trim blazer, new crest, mini skirt, adult model proportions, child proportions, hands in pockets, crossed arms, handbag, recorder, umbrella, phone, book, sword, gun, any held item, invisible hands, hidden fingers, extra fingers, distorted anatomy, multiple characters, split screen, chart, expression sheet, text, watermark, cropped body",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "modelVersion": {
+        "value": "Anima；具体引擎参数待真实生成记录",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "artistTag": {
+        "value": "@akipekostyle",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lora": {
+        "value": "<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "seed": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "sampler": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "resolution": {
+        "value": "待实际生成登记",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sourceFileHash": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "assetApproval": {
+        "value": "未出图、未验收",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bodyFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headPitchDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headRollDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoulderYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pelvisYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "gazeHorizontalDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "gazeVerticalDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "cameraAngle": {
+        "value": "普通平视镜头",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "cameraFocalStyle": {
+        "value": "中长距离全身立绘镜头",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "projectionOrthoPerspective": {
+        "value": "接近正投影的低透视人体构图",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "visualStyleCategory": {
+        "value": "原创日系2D GalGame 人物立绘",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lineWeightStyle": {
+        "value": "外轮廓清晰、五官细节克制，依已验收原画",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "lineColor": {
+        "value": "#26262A",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shadingMethod": {
+        "value": "干净赛璐璐块面阴影",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shadowDensity": {
+        "value": "中低",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "highlightTreatment": {
+        "value": "控制面积的头发和眼睛高光",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "textureComplexity": {
+        "value": "少量真实校服布料细节，不堆装饰",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "anatomicalStylization": {
+        "value": "正常高中少女自然修长比例，不走成年模特路线",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "facialFeatureStylization": {
+        "value": "优雅但可爱，区分已有女主的冷淡骨相",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "characterIdentityEmbeddingNotes": {
+        "value": "无已批准图像，不能虚构身份Embedding",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "frontPosePoseCode": {
+        "value": "F04_EMPTY_HAND_IDLE_A0",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "poseSilhouetteNotes": {
+        "value": "双手空着、两臂与躯干有空隙、不过分扭胯、站姿正常",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "framingHeadroomRatio": {
+        "value": 0.04,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "framingFootroomRatio": {
+        "value": 0.03,
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "bodyAlignmentRule": {
+        "value": "与其他学生共用身高和地面线基准，实际尺寸待出图后校对",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "rigging": {
+      "layerSource": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "layerList": {
+        "value": [
+          "后发",
+          "头脸",
+          "前发",
+          "左眉",
+          "右眉",
+          "左眼",
+          "右眼",
+          "鼻",
+          "嘴",
+          "颈部",
+          "白衬衫",
+          "领带",
+          "外套后片",
+          "外套左前片",
+          "外套右前片",
+          "左上臂",
+          "左前臂",
+          "左手空掌",
+          "右上臂",
+          "右前臂",
+          "右手空掌",
+          "裙装",
+          "左腿",
+          "右腿",
+          "袜子",
+          "左鞋",
+          "右鞋"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "headJoint": {
+        "value": "颈根位置待真实原画",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "neckJoint": {
+        "value": "肩颈自然活动支点",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "shoulderJoint": {
+        "value": "双肩独立轻转",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "elbowJoint": {
+        "value": "双肘独立变形，袖口不脱离",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "wristJoint": {
+        "value": "两腕独立组件，可后续换武器动作手型",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hipJoint": {
+        "value": "骨盆轻微重心切换",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "kneeJoint": {
+        "value": "裙装遮挡下肢但保留膝部独立骨骼",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ankleJoint": {
+        "value": "双脚站地且可轻微活动",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyeTrack": {
+        "value": "眼神水平小幅跟踪",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "blink": {
+        "value": "双眼自然眨眼，不挤压瞳孔形状",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mouthShapes": {
+        "value": [
+          "闭口",
+          "讲话A",
+          "讲话I",
+          "讲话U",
+          "微笑",
+          "轻微不悦"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairPhysics": {
+        "value": "发尾有柔和迟滞，前刘海小幅活动",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "clothPhysics": {
+        "value": "衣摆及裙褶轻微物理摆动，不穿模",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "breathingPhysics": {
+        "value": "肩胸同步低幅呼吸，服装叠层保持稳定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "skinningLimits": {
+        "value": "袖口、领带、裙装、头发不可撕裂或遮挡出错",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "expressionStates": {
+        "value": [
+          "neutral",
+          "proud",
+          "smile",
+          "irritated",
+          "blush",
+          "focused",
+          "worried"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "actionStates": {
+        "value": [
+          "idle_empty_hands",
+          "look_left",
+          "look_right",
+          "nod",
+          "small_gesture_empty_hands",
+          "equip_weapon_future",
+          "unequip_weapon_future"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "runtimePreview": {
+        "value": "尚未制作",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "occlusionRepair": {
+        "value": "制作PSD时补画后发下颈部、外套内衬、袖内手臂、裙后腿部",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "qaAnimation": {
+        "value": "尚未测试，必须做完整L2D动画验收",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "armRotationBoundsDeg": {
+        "value": "日常待机约±10°，实际测试后确定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hipRotationBoundsDeg": {
+        "value": "待机约±3°，实际测试后确定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "kneeFlexBoundsDeg": {
+        "value": "站姿轻弯，实际测试后确定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "eyelidOpennessChannel": {
+        "value": "0–1开合",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "browDeformationChannels": {
+        "value": [
+          "左眉高度",
+          "右眉高度",
+          "眉尾角度"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "mouthCornerChannels": {
+        "value": [
+          "左嘴角",
+          "右嘴角",
+          "开口"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "expressionLandmarkMotion": {
+        "value": "小幅自然表情变化，不改变身份骨相",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "frontSideBackProportionsQa": {
+        "value": "正面获批之后制作背面；不镜像冒充背面",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "audio": {
+      "voiceCasting": {
+        "value": "有少年感的自然女生中音，声线稳定利落；演员未定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "pronunciation": {
+        "value": "普通话清晰流畅",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "multilingualNotes": {
+        "value": "可使用第二语言但实际台词和配音待剧情确认",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "recordedVoices": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "footstepSfx": {
+        "value": "自然黑色校鞋步伐音，与地面材质联动",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "costumeSfx": {
+        "value": "袖口与百褶裙轻微织物声，视动作触发",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "voiceVolume": {
+        "value": "中等有穿透力，不长时间尖叫",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "ambienceRules": {
+        "value": "危机中指挥声音清楚但不盖住环境与伙伴说话",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "gameplay": {
+      "npcSchedule": {
+        "value": "课程、独立活动、家庭生活和剧情事件共同调度；尚未上线",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "dialogueTree": {
+        "value": "初识分歧→合作验证能力→隐瞒关心→互相信任→独立与合作选择",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "affinity": {
+        "value": "关系增加取决于尊重能力与责任分担，不靠送礼刷大小姐好感",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "trust": {
+        "value": "看重承诺兑现和诚实复盘",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "playerControl": {
+        "value": "非默认可操控主角，是否成为队友待系统决定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "interactRange": {
+        "value": "沿用项目统一交互系统",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "characterSelection": {
+        "value": "可作为战斗协作候选，不代表已经开发",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sceneLayers": {
+        "value": "场景背景/人物层/L2D层/对话层，沿用统一模块",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "collisionBounds": {
+        "value": "后续真实全身原画输出后决定",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "saveFlags": {
+        "value": [
+          "met_female4",
+          "female4_trust_stage",
+          "female4_cooperation"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "choiceTriggers": {
+        "value": [
+          "let_her_lead",
+          "propose_teamwork",
+          "offer_evidence"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "npcBrain": {
+        "value": "候选多状态计划器：学校/家中/外出/协助/处理危机",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "flagsVariables": {
+        "value": {
+          "met": false,
+          "trustStage": 0,
+          "helpedWithEmergency": false
+        },
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "inventoryRules": {
+        "value": "基础演出永远空手，装备物品后续依独立游戏道具系统动态呈现",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "quality": {
+      "originalityCheck": {
+        "value": "不得复制任何既有大小姐角色或金发双马尾模板",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "similarityCheck": {
+        "value": "与女主冷淡毒舌、女二活泼马尾、女三短发假小子对比五官与发型",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "faceConsistency": {
+        "value": "未生成原画不得标记已通过",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "hairSideCheck": {
+        "value": "偏分及侧发在正背面保持一致",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "visualIdentityCheck": {
+        "value": "看出高傲又聪明、年轻且真实能干，而非废物公主",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "handsCheck": {
+        "value": "双手可见且空，五指自然，未来可持武器",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "feetCheck": {
+        "value": "鞋完整、双脚落地，不穿高跟鞋",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "fullBodyCheck": {
+        "value": "一人全身、白底、正常站姿、无多视图和文字",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "measurementProvenanceCheck": {
+        "value": "精确尺码为服装制作暂定，尚无原画实测",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "outfitCheck": {
+        "value": "服装基础与其他角色同校，不加入陌生校徽金边",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "sourceRightsCheck": {
+        "value": "后续实际生成素材须核对使用许可",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "rigCheck": {
+        "value": "尚未制作L2D，不得假称完成",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "poseCheck": {
+        "value": "自然演出站姿，非摆拍插画",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "screenshotCheck": {
+        "value": "未来需在游戏、编辑器、手机宽屏测试",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "approvalRecord": {
+        "value": "用户确认：傲娇大小姐、全能能干；否决纪律委员及无能大小姐；具体脸与制服待验收",
+        "status": "user_confirmed",
+        "source": "User explicit statements about 女四, 2026-11-03"
+      },
+      "rollbackReference": {
+        "value": "旧未批准纪律委员草案可在花名册变更记录中追溯",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    },
+    "provenance": {
+      "createdAt": {
+        "value": "2026-11-03",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "updatedAt": {
+        "value": "2026-11-03",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "userConfirmedFields": {
+        "value": [
+          "女四",
+          "傲娇大小姐",
+          "真正全能能干",
+          "不是废物大小姐",
+          "不要纪律委员"
+        ],
+        "status": "user_confirmed",
+        "source": "User explicit statements about 女四, 2026-11-03"
+      },
+      "sourceCitations": {
+        "value": [
+          "2026-11-03用户：傲娇大小姐吧",
+          "2026-11-03用户：而且是全能能干的大小姐不是废物大小姐",
+          "用户要求全员基础双手空着方便未来游戏武器动作"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "proposedFields": {
+        "value": "除了已确认的人物原型之外，年龄、脸型、发色、家境、职业、技能细分、演出动作细节全部为创作提案",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "unknownFields": {
+        "value": "正式姓名、真实年级、生日、家人、收入细节、具体事件与原画等都还未获批",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "rejectedFields": {
+        "value": [
+          "纪律委员",
+          "无能娇弱废物大小姐",
+          "只会说哼/笨蛋的模板傲娇",
+          "以佣人/金钱代替生活技能",
+          "新校徽与华丽改色制服"
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "revisionHistory": {
+        "value": [
+          {
+            "date": "2026-11-03",
+            "version": "0.1.0",
+            "note": "否决旧纪律委员；新女四采用用户确认的全能能干傲娇大小姐方向"
+          }
+        ],
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "authorReviewer": {
+        "value": "用户指定核心类型，AI设计候选执行",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "approvedBy": {
+        "value": null,
+        "status": "unknown",
+        "source": "No confirmed information or approved illustration yet",
+        "notes": "无依据，不能凭空断言"
+      },
+      "permissions": {
+        "value": "仅概念档案；绝不覆盖其他已认定角色原画",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      },
+      "historyNotes": {
+        "value": "还未生成女四原画、PSD、L2D；不在游戏正式演员表",
+        "status": "proposed",
+        "source": "Creative design proposal, not user-approved, 2026-11-03",
+        "notes": "此字段是待批准的人设方案，非已验收事实；尺寸和比例均非图片实测"
+      }
+    }
+  },
+  "recordVersion": "0.1.0",
+  "updatedAt": "2026-11-03",
+  "sourceNotes": {
+    "confirmed": "用户明确确认女四是傲娇大小姐，而且必须真正全能、能干、能独当一面，绝非生活废物大小姐；明确否决纪律委员。",
+    "art": "未生成及审核原画；以下姓名年龄发色家境事件和体型均为设计提案。",
+    "production": "同校校服，基础立绘双手空着，手臂和手独立可装配武器。"
+  },
+  "fieldCount": 448,
+  "statusSummary": {
+    "user_confirmed": 4,
+    "proposed": 405,
+    "unknown": 39,
+    "not_applicable": 0
+  }
+}

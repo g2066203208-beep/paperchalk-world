@@ -137,18 +137,39 @@
       "id": "CHAR-005",
       "group": "student",
       "tier": "important",
-      "label": "纪律委员",
+      "label": "女四／全能能干型傲娇大小姐（类型已确认）",
       "visual": {
-        "face": "额头宽、方形下颌、深棕横长眼",
-        "hair": "黑发中短齐整偏分",
-        "build": "169cm参考、肩正",
-        "gesture": "总是抚平袖口褶皱"
+        "face": "修长偏心形鹅蛋脸，面颊不鼓、下颌利落但不尖V；清亮略长的蓝灰杏眼，目光直视不怯懦（暂定）",
+        "hair": "烟茶金／浅灰棕（候选）；过肩至肩胛上缘的中长发，非女主长直黑发（暂定）",
+        "build": "166cm/52kg/7.05头身（暂定）",
+        "gesture": "自然站立，双手空着，便于后续装备动作",
+        "uniform": "同校深蓝西装+白衬衫+酒红领带+炭灰裙；精致裁剪而非华丽改款（暂定）"
       },
-      "personality": "严守程序、执拗",
-      "storyFunction": "制服与校规秩序线索",
+      "personality": "傲娇大小姐；真正全能能干，能独立生活、办事、运动、协调和应急；完美主义、嘴硬但愿意行动照顾同伴",
+      "storyFunction": "有自理能力和领导执行力的城市生活主角团成员，参与异常事件调查；具体剧情待定",
       "status": "proposed",
-      "artStatus": "concept_not_approved",
-      "schoolProposal": "主角所在的一所普通高中（暂名未锁定）"
+      "artStatus": "448_field_profile_no_approved_image",
+      "schoolProposal": "主角同一所高中；不担任纪律委员",
+      "rejectedConcepts": [
+        {
+          "date": "2026-11-03",
+          "label": "纪律委员",
+          "reason": "用户明确否定校园纪律委员型设定"
+        }
+      ],
+      "previousCandidate": {
+        "label": "纪律委员",
+        "visual": {
+          "face": "额头宽、方形下颌、深棕横长眼",
+          "hair": "黑发中短齐整偏分",
+          "build": "169cm参考、肩正",
+          "gesture": "总是抚平袖口褶皱"
+        },
+        "personality": "严守程序、执拗",
+        "storyFunction": "制服与校规秩序线索"
+      },
+      "designProfile": "docs/characters/CHAR-005.profile.json",
+      "readableProfile": "docs/characters/CHAR-005_FEMALE_FOURTH_PROFILE.md"
     },
     {
       "id": "CHAR-006",
