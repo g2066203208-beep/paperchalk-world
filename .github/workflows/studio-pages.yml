@@ -162,7 +162,9 @@ jobs:
           assert Path('site/scene-modules.js').is_file()
           assert Path('site/scene-catalog.generated.json').is_file()
           assert "view.classList.toggle('environment-scene'" in h
-          assert '#view.environment-scene #camera-player-root #actor-player' in h
+          assert '#view.environment-scene #camera-player-root #actor-player' not in h, 'Rooms must not override the user-saved character placement'
+          assert "applyEditorVisuals();" in h and "const hasPlayer=def.layers.player" in h
+          assert '--font-dialogue:var(--font-menu)' in h and '--font-ui:var(--font-menu)' in h
           assert 'id="protagonist-preview-root"' not in h
           assert 'id="protagonist-front"' not in h
           assert "type:'portrait'" not in h
