@@ -8,6 +8,7 @@ on:
       - 'scripts/build_scene_catalog.py'
       - 'scripts/matte_character.py'
       - 'scripts/validate_character_alpha.py'
+      - 'scripts/validate_character_identity.py'
       - '.github/workflows/studio-pages.yml'
   workflow_dispatch:
 permissions:
