@@ -16,12 +16,15 @@ function animationCanvas(){
  return rig?.source&&rig.canvas.width&&rig.canvas.height?rig.canvas:null;
 }
 function frame(){
- if(!state.enabled||state.editing||S.only||activeV4())return null;
+ // A game V4 character must never be replaced with the simulated mesh,
+ // even when the user temporarily inspects original PSD components.
+ if(!state.enabled||state.editing||S.only||clip()?.isV4)return null;
  return animationCanvas();
 }
 function paintStageStatus(){
  if(!badge)return;
- const mode=activeV4()?'V4 原版逐帧':animationCanvas()?'多层网格动态':'等待动画加载';
+ const mode=clip()?.isV4?(activeV4()?'游戏实际 V4 逐帧':'静态 PSD 分层精修'):
+  animationCanvas()?'其他角色网格预览':'等待动画加载';
  badge.textContent=state.editing?'精修中 · 原始坐标':!state.enabled?'静态精修':(state.playing?'● 实时 · ':'❚❚ 暂停 · ')+mode;
  badge.setAttribute('aria-live','off');
 }
@@ -112,7 +115,7 @@ window.addEventListener('paperchalk:rig-play-changed',e=>{
 let last=0;
 function tick(now){
  // V4 refreshes via its own decoded frame loop; only mesh preview needs this copy.
- if(now-last>=40&&state.enabled&&!state.editing&&state.playing&&!document.hidden&&S.ready&&!S.only&&!activeV4()&&animationCanvas()){
+ if(now-last>=40&&state.enabled&&!state.editing&&state.playing&&!document.hidden&&S.ready&&!S.only&&!clip()?.isV4&&animationCanvas()){
   last=now;ed.render();
  }
  if(now-last>=400){paintStageStatus();}
