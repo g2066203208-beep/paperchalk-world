@@ -144,6 +144,15 @@ async function onMessage(event){
  if(msg.type==='PAPERCHALK_EDITOR_READY'){frameReady=true;sendTarget();return;}
  if(msg.type==='PAPERCHALK_EDITOR_CLOSE'){closeEditor();return;}
  if(msg.type==='PAPERCHALK_EDITOR_LOADED'){note('已载入 '+msg.label+' 分层工程 · L2D 动态预览');return;}
+ if(msg.type==='PAPERCHALK_EDITOR_L2D_PROFILE'){
+  if(!catalog.has(msg.id))return;
+  for(const face of ['front','back']){
+   const profile=msg.profiles?.[face];if(profile)await put('l2d:'+msg.id+':'+face,profile);
+  }
+  for(const [key,item] of Object.entries(assigned))
+   if(item.id===msg.id)window.PaperchalkL2D?.setProfile(key,msg.profiles?.[item.side]||msg.profile||defaultProfile());
+  return;
+ }
  if(msg.id!==activeID)return;
  if(msg.type==='PAPERCHALK_EDITOR_PREVIEW'){
   if(!['front','back'].includes(msg.side)||!/^data:image\/png;base64,/.test(msg.image||''))return;
@@ -166,6 +175,8 @@ async function onMessage(event){
   for(const [key,item] of Object.entries(assigned)){
    if(item.id!==msg.id)continue;
    await assign(key,msg.id,item.side,false);
+   const currentImage=imageNode(key);
+   if(currentImage?.decode)await currentImage.decode().catch(()=>{});
    const project=frame.contentWindow.characterEditor;
    const layers=project?.S?.layers?.[item.side];
    if(Array.isArray(layers)&&layers.length&&window.PaperchalkL2D?.get(key)?.rig)
