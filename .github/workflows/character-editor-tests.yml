@@ -41,6 +41,7 @@ jobs:
                 await page.locator('#add').click();
                 assert.equal(await page.locator('#layers .layer').count(),2);
                 await page.locator('[data-tool="brush"]').click();
+                await page.locator('#view').scrollIntoViewIfNeeded();
                 const rect=await page.locator('#view').boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;
                 await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+9,y+9,{steps:3});await page.mouse.up();
                 const painted=await page.evaluate(()=>{
