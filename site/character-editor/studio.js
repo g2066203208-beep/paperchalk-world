@@ -195,6 +195,7 @@ async function saveToGame(){
  message('✓ 游戏已更新：'+(list.get(currentId)?.label||currentId)+'，原始部件改动已生成 V4 像素修补；原版 128 帧保留。大幅变形需要重新烘焙动画。');
 }
 async function importImages(files){
+ await switchQueue;
  const groups=new Map();
  // When an existing GitHub draft is selected, attach the supplied art
  // to that canonical ID instead of generating a duplicate person.
@@ -356,6 +357,7 @@ async function ensureHostedParts(id){
 }
 async function importComponentArchive(file){
  if(!file)return;
+ await switchQueue; // Do not import into a half-loaded character or direction.
  if(/\.psd$/i.test(file.name)){
   await ed.importPsd(file);
   for(const part of ed.S.layers[side]){
@@ -372,6 +374,7 @@ async function importComponentArchive(file){
 }
 
 async function importV4(file){
+ await switchQueue; // Wait for character changes before installing a V4 clip.
  if(!currentId)throw Error('先选择人物');
  message('读取 V4 原版动画工程…');
  const files=await zipFiles(file);
@@ -647,6 +650,7 @@ $('studio-patch-import').onchange=async e=>{
  const file=e.target.files?.[0];e.target.value='';
  if(!file)return;
  try{
+  await switchQueue;
   const data=JSON.parse(await file.text());
   if(data.format!=='paperchalk-v4-corrections-v1'||data.characterId!==currentId)throw Error('角色或文件格式不一致');
   for(const face of data.sides||[]){
