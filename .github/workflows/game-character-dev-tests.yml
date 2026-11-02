@@ -71,6 +71,7 @@ jobs:
                 const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
                 await page.locator('#dev-character-import').setInputFiles({name:'new-npc-front.png',mimeType:'image/png',buffer:tiny});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.characters.some(c=>c.id.startsWith('local-')),{timeout:15000});
+                await page.waitForFunction(()=>document.querySelector('#dev-character-library')?.options.length>=2,{timeout:15000});
                 assert.ok(await page.locator('#dev-character-library option').count()>=2);
                 assert.equal(await page.locator('#dev-character-list option').count(),1,'list contains loaded actors only');
                 await page.locator('#dev-character-open').click({force:phone});
