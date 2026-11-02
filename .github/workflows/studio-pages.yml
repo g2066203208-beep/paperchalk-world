@@ -111,6 +111,10 @@ jobs:
           assert 'uniform float u_blotches' in h
           assert 'float inkStains(' in h and 'function inkCPUAmount(' in h
           assert 'id="ink-toggle"' in h and 'id="ink-toggle-game"' in h
+          assert 'id="protagonist-front"' in h
+          assert "type:'portrait'" in h
+          assert 'protagonistPreview.hidden=def.type' in h
+          assert Path('site/assets/characters/protagonist-front.webp').read_bytes()[:4]==b'RIFF'
           assert 'transparent 15%,transparent 85%' in h
           assert 'width:min(94cqw,calc(94cqh * 16 / 9))' in h
           assert 'reach=191.' in h and 'const reach=191+' in h
@@ -408,8 +412,40 @@ jobs:
                 }
                 await page.locator('#menu-toggle').click();
                 await page.locator('#scene-switcher-toggle').click();
+                await page.locator('#scene-switcher [data-scene-target="protagonist"]').click();
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'&&document.getElementById('scene').dataset.scene==='protagonist',null,{timeout:6500});
+                const portrait=await page.evaluate(async()=>{
+                  const img=document.getElementById('protagonist-front');await img.decode();
+                  return {
+                    visible:!document.getElementById('protagonist-preview-root').hidden,
+                    width:img.naturalWidth,height:img.naturalHeight,
+                    enemyHidden:document.getElementById('enemy-depth-root').hidden,
+                    playerHidden:document.getElementById('camera-player-root').hidden,
+                    fogOriginal:window.__originalFogNode===document.getElementById('fog'),
+                    src:img.currentSrc
+                  };
+                });
+                assert.ok(portrait.visible&&portrait.width>=150&&portrait.height>=500);
+                assert.ok(portrait.enemyHidden&&portrait.playerHidden&&portrait.fogOriginal);
+                assert.ok(portrait.src.endsWith('/assets/characters/protagonist-front.webp'));
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-PROTAGONIST-INK-ON.png'});
+                if(!cfg.mobile){
+                  await page.locator('#menu-toggle').click();
+                  await page.locator('#ink-toggle-game').click();
+                  await page.locator('#menu-toggle').click();
+                  await page.waitForTimeout(400);
+                  await page.screenshot({path:'artifacts/classroom/desktop-PROTAGONIST-INK-OFF.png'});
+                  await page.locator('#menu-toggle').click();
+                  await page.locator('#ink-toggle-game').click();
+                  await page.locator('#menu-toggle').click();
+                }
+                await page.locator('#menu-toggle').click();
+                await page.locator('#scene-switcher-toggle').click();
                 await page.locator('#scene-switcher [data-scene-target="classroom"]').click();
                 await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'&&document.getElementById('scene').dataset.scene==='classroom',null,{timeout:6000});
+                assert.equal(await page.locator('#protagonist-preview-root').evaluate(el=>el.hidden),true,
+                  'protagonist presentation must not appear over the back-view battle scene');
 
                 // The actual live objects are separated into 3D planes:
                 // free-camera perspective, direct edits, save, exit + restore.
