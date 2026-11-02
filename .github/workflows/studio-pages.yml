@@ -64,9 +64,10 @@ jobs:
           required={'OFL-LICENSE.txt','PaperSans-Regular.woff2','PaperSerif-Medium.woff2','classroom.webp','enemy-front.webp','index.html','menu-wall.webp','player-back.webp','scene-catalog.generated.js'}
           assert required.issubset({p.name for p in files}),files
           rooms=list(Path('site/assets/scenes').glob('*.webp'))
-          assert rooms and {p.name for p in rooms}>= {'living-room.webp'},rooms
+          assert rooms and {p.name for p in rooms}>= {'living-room.webp','bedroom.webp'},rooms
           catalog=Path('site/scene-catalog.generated.js').read_text()
           assert '"id":"living-room"' in catalog and '"title":"客厅"' in catalog
+          assert '"id":"bedroom"' in catalog and '"title":"卧室"' in catalog
           assert 'PAPERWORLD_SCENE_CATALOG' in catalog
           assert 'id="actor-enemy"' in h and 'id="actor-player"' in h
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
@@ -147,6 +148,7 @@ jobs:
                 // One added image becomes a real menu destination automatically.
                 await page.locator('#menu-gallery-button').click();
                 assert.equal(await page.locator('#scene-menu-gallery [data-scene-target="living-room"]').count(),1);
+                assert.equal(await page.locator('#scene-menu-gallery [data-scene-target="bedroom"]').count(),1);
                 await page.locator('#scene-menu-gallery [data-scene-target="menu"]').click();
                 const originFog=await page.locator('#fog').evaluate(el=>{window.__originalFogNode=el;return Number(el.dataset.frames)});
                 await page.locator('#menu-start').click();
@@ -295,6 +297,26 @@ jobs:
                 assert.equal(room.fog,true,'fog recreated on entering home');
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-LIVING-ROOM.png'});
+                // The newly added bedroom WebP must self-register without a
+                // manually changed runtime registry or rewritten scene module.
+                await page.locator('#menu-toggle').click();
+                await page.locator('#scene-switcher-toggle').click();
+                await page.locator('#scene-switcher [data-scene-target="bedroom"]').click();
+                await page.waitForFunction(()=>document.getElementById('scene-transition').dataset.phase==='idle'&&document.getElementById('scene').dataset.scene==='bedroom',null,{timeout:6500});
+                const bedroomCheck=await page.evaluate(()=>({
+                  natural:[document.querySelector('#source').naturalWidth,document.querySelector('#source').naturalHeight],
+                  src:document.querySelector('#source').getAttribute('src'),
+                  enemyHidden:document.getElementById('enemy-depth-root').hidden,
+                  playerHidden:document.getElementById('camera-player-root').hidden,
+                  dialogueHidden:document.getElementById('dialogue').hidden,
+                  originalFog:window.__originalFogNode===document.getElementById('fog')
+                }));
+                assert.deepEqual(bedroomCheck.natural,[1024,576]);
+                assert.ok(bedroomCheck.src.endsWith('/assets/scenes/bedroom.webp'));
+                assert.equal(bedroomCheck.enemyHidden&&bedroomCheck.playerHidden&&bedroomCheck.dialogueHidden,true);
+                assert.equal(bedroomCheck.originalFog,true);
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-BEDROOM.png'});
                 await page.locator('#menu-toggle').click();
                 await page.locator('#scene-switcher-toggle').click();
                 await page.locator('#scene-switcher [data-scene-target="classroom"]').click();
