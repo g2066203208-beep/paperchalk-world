@@ -901,491 +901,658 @@
       "hairBaseColor": {
         "value": "black",
         "status": "user_confirmed",
-        "source": "User's male protagonist Anima prompt, 2026-11-02"
+        "source": "User-supplied male protagonist prompt, 2026-11-02"
       },
       "hairHex": {
-        "value": null,
-        "status": "unknown"
+        "value": "#191B20",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "hairHighlights": {
-        "value": null,
-        "status": "unknown"
+        "value": "深灰蓝色低饱和光泽，集中在发旋与额发表面",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "hairLength": {
-        "value": null,
-        "status": "unknown"
+        "value": "medium-length hair",
+        "status": "user_confirmed",
+        "source": "User-supplied male protagonist prompt, 2026-11-02"
       },
       "hairTexture": {
-        "value": null,
-        "status": "unknown"
+        "value": "自然微蓬、稍凌乱，直发中有少量弯折",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "hairDensity": {
-        "value": null,
-        "status": "unknown"
+        "value": "发量中等偏多，发根蓬松但不可做刺猬头",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "parting": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏左分缝；从人物右侧（画面左侧）发根向额心散落",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "bangs": {
-        "value": null,
-        "status": "unknown"
+        "value": "long messy bangs",
+        "status": "user_confirmed",
+        "source": "User-supplied male protagonist prompt, 2026-11-02"
       },
       "sidelocks": {
-        "value": null,
-        "status": "unknown"
+        "value": "耳前短碎发，人物左侧略长，后面呈不规则轻薄层次",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "ponytailCount": {
-        "value": null,
-        "status": "unknown"
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "ponytailPosition": {
-        "value": null,
-        "status": "unknown"
+        "value": "无马尾；头发自然散落",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "ponytailLength": {
-        "value": null,
-        "status": "unknown"
+        "value": "不适用：男主无马尾",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "hairAccessories": {
-        "value": null,
-        "status": "unknown"
+        "value": "日常不戴发夹、发带或耳饰，避免与女主银发夹混淆",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "accessorySide": {
-        "value": null,
-        "status": "unknown"
+        "value": "无恒定发饰左右侧",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "accessoryPosition": {
-        "value": null,
-        "status": "unknown"
+        "value": "无固定头发饰品",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "backSilhouette": {
-        "value": null,
-        "status": "unknown"
+        "value": "后脑圆而略蓬、颈后短长层次，略向左右散开但不遮校服后领",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "wardrobe": {
       "outerwear": {
-        "value": null,
-        "status": "unknown"
+        "value": "同校深海军蓝单排扣男式西装校服；前片敞开，两颗哑光深色纽扣固定在门襟上但不扣合",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "shirt": {
-        "value": null,
-        "status": "unknown"
+        "value": "白色翻领衬衫，衬衣下摆自然露出裤腰约2-4cm；领口松开一粒扣",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "blouse": {
-        "value": null,
-        "status": "unknown"
+        "value": "不适用：采用男式白衬衫而非女士衬衣",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "neckwear": {
-        "value": null,
-        "status": "unknown"
+        "value": "暗酒红色细长领带，结松散下垂，领带尖落在裤腰上方",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "skirt": {
-        "value": null,
-        "status": "unknown"
+        "value": "不适用：标准男生校服使用长裤，避免误生成百褶裙",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "trousers": {
-        "value": null,
-        "status": "unknown"
+        "value": "深炭灰色中直筒长裤，裤脚有轻微堆叠，不紧身、不破洞",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "socks": {
-        "value": null,
-        "status": "unknown"
+        "value": "两只深炭灰短袜；被裤管遮住但穿鞋动作保持一致",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "footwear": {
-        "value": null,
-        "status": "unknown"
+        "value": "黑色简洁低跟皮鞋／制服便鞋，圆头、少量皮革反光",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "garmentLayerOrder": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "身体",
+          "白色衬衫",
+          "松红领带",
+          "深蓝校服外套",
+          "深炭灰长裤",
+          "深袜",
+          "黑鞋"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "paletteHex": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "blazer": "#202734",
+          "blazerShadow": "#151B25",
+          "shirt": "#F1F1ED",
+          "tie": "#722B39",
+          "trousers": "#343941",
+          "shoes": "#17191D",
+          "buttons": "#20232A"
+        },
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "fabrics": {
-        "value": null,
-        "status": "unknown"
+        "value": "制服外套哑光混纺、衬衫平织棉、裤子哑光斜纹、黑鞋低光泽革面",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "sewingDetails": {
-        "value": null,
-        "status": "unknown"
+        "value": "深色门襟包边、肩缝清楚、袖口与腋下能分层，领带与领片互不糊成一层",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "pleats": {
-        "value": null,
-        "status": "unknown"
+        "value": "外套自然下垂折痕、肘部压褶、裤膝与脚踝堆褶；禁止画裙褶",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "buttons": {
-        "value": null,
-        "status": "unknown"
+        "value": "同校男版两颗哑光深色门襟扣，垂直等距；配套深色袖扣，不得随机改成金扣",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "pockets": {
-        "value": null,
-        "status": "unknown"
+        "value": "双侧外套口袋可见但不装道具；左手插入左裤兜，口袋开口与手臂遮挡必须合理",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "wearCondition": {
-        "value": null,
-        "status": "unknown"
+        "value": "有自然穿着折痕但整洁无破洞；非破烂不良装、非街头皮衣",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "seasonalVariants": {
-        "value": null,
-        "status": "unknown"
+        "value": "冬装可有同色长裤与内层针织衫，春秋默认白衬衫+蓝外套；未生成素材",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "occasionVariants": {
-        "value": null,
-        "status": "unknown"
+        "value": "正式检查时衣服扣好领带整理；日常默认敞开、松领带；仅作为候选换装",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "permanentAccessories": {
-        "value": null,
-        "status": "unknown"
+        "value": "无项链、胸章或耳环；人物识别主要靠发型、眼神、制服穿法",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "temporaryProps": {
-        "value": null,
-        "status": "unknown"
+        "value": "不默认携带书包、课本、烟、武器或手机；仅剧情明确需要时单独提供",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "temperament": {
       "coreConfirmedTraits": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "叛逆",
+          "厌学",
+          "冷淡",
+          "不耐烦"
+        ],
+        "status": "user_confirmed",
+        "source": "User-supplied male protagonist prompt, 2026-11-02"
       },
       "proposedTraits": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "观察力强",
+          "懒散",
+          "不喜欢被命令",
+          "嘴硬",
+          "保护欲不外露"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "strengths": {
-        "value": null,
-        "status": "unknown"
+        "value": "遇到异常保持行动力，擅长在嘈杂环境中分辨不合逻辑的声音",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "weaknesses": {
-        "value": null,
-        "status": "unknown"
+        "value": "习惯逃避正式约定、对教师的善意也常用不耐烦回应",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "socialEnergy": {
-        "value": null,
-        "status": "unknown"
+        "value": "独处补充精力；可以社交但不主动维持表面热闹",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "humorStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "淡淡的干笑和轻微反讽，通常只用一句话",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "conflictStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "先回避、被逼急了会短促顶撞；避免无缘无故暴力",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "fears": {
-        "value": null,
-        "status": "unknown"
+        "value": "并不怕被说坏学生；真正害怕辨不出声音来自哪里",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "angerTriggers": {
-        "value": null,
-        "status": "unknown"
+        "value": "反复说教、颠倒黑白、被迫重复已经说明的事实",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "stressResponse": {
-        "value": null,
-        "status": "unknown"
+        "value": "下颌收紧、眼睑降低、左手插兜握拳、重新寻找出口",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "defenseMechanism": {
-        "value": null,
-        "status": "unknown"
+        "value": "把担心说成无所谓，把在意伪装成嫌麻烦",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "moralLimits": {
-        "value": null,
-        "status": "unknown"
+        "value": "不伤害无辜，不欺负弱者；即使嘴硬也不会故意放任同伴遇险",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "goals": {
-        "value": null,
-        "status": "unknown"
+        "value": "尽快脱离被安排好的无聊生活，弄清夜晚异常响声的来源",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "contradictions": {
-        "value": null,
-        "status": "unknown"
+        "value": "嘴上说讨厌学校，实际比谁都熟悉楼道和门的位置",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "publicPersona": {
-        "value": null,
-        "status": "unknown"
+        "value": "不良学生外表，松散、疏离、懒得配合",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "privatePersona": {
-        "value": null,
-        "status": "unknown"
+        "value": "单独行动时认真记录细节，承担意外责任却不解释",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "emotionalBaseline": {
-        "value": null,
-        "status": "unknown"
+        "value": "低唤醒、轻烦躁、时常觉得周围没意思",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "expressionRange": {
-        "value": null,
-        "status": "unknown"
+        "value": "平静无聊→淡嘲→警觉→压抑怒意→短促惊讶→疲惫松弛",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "defaultMicroExpression": {
-        "value": null,
-        "status": "unknown"
+        "value": "上眼睑略垂，眉峰微抬，嘴角略下，鼻翼放松",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "signatureMicroExpressions": {
-        "value": null,
-        "status": "unknown"
+        "value": "想嘲讽时单侧嘴角轻提；听到异响时一瞬间收起不耐烦表情",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "eyesExpression": {
-        "value": null,
-        "status": "unknown"
+        "value": "不耐烦半睁，观察时瞳孔转得快而头动得少",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "eyebrowsExpression": {
-        "value": null,
-        "status": "unknown"
+        "value": "常一侧眉挑起，问句时眉内侧一高一低",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "mouthExpression": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认薄唇抿成近乎平线；冷笑只动一侧嘴角",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "bodyLanguageMood": {
-        "value": null,
-        "status": "unknown"
+        "value": "单手插兜、肩膀微垮，压力下站姿会不自觉变直",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "composureLevel": {
-        "value": null,
-        "status": "unknown"
+        "value": "普通冲突时高，面对不明声音时会先惊讶再迅速压住情绪",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "psychology": {
       "innerNeed": {
-        "value": null,
-        "status": "unknown"
+        "value": "想得到不依赖成绩和老师评价的价值感与自主选择权",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "externalGoal": {
-        "value": null,
-        "status": "unknown"
+        "value": "学校阶段表面只求别被管束；剧情线希望找到异常的真实规则",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "secretGoal": {
-        "value": null,
-        "status": "unknown"
+        "value": "试图查清记忆中某晚楼道里的脚步声为何与楼层不符",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "belief": {
-        "value": null,
-        "status": "unknown"
+        "value": "规矩大多只是方便管理者的工具；能检验的事实比安慰话重要",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "selfImage": {
-        "value": null,
-        "status": "unknown"
+        "value": "把自己看成懒得较真的局外人",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "insecurities": {
-        "value": null,
-        "status": "unknown"
+        "value": "担心自己认真投入后仍会失败，故常提前装不在意",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "regrets": {
-        "value": null,
-        "status": "unknown"
+        "value": "小时候没敢追上那阵停在空楼层的脚步声，留下不确定的记忆",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "traumaIfStoryApproved": {
-        "value": null,
-        "status": "unknown"
+        "value": "可选：一次漫长停电与走错楼层经历；不是当前已确认的医疗创伤设定",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "attachmentStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "表面疏离，建立信任后愿意安静地承担事务",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "trustPattern": {
-        "value": null,
-        "status": "unknown"
+        "value": "先观察言行是否一致，再用小事件确认可信度；不会因为对方活泼就马上信任",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "breakingPoint": {
-        "value": null,
-        "status": "unknown"
+        "value": "同伴明明危险，旁人却要求他无视事实时可能违抗规则",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "growthArc": {
-        "value": null,
-        "status": "unknown"
+        "value": "逃避责任→独自查证→被迫和他人协作→主动承认自己关心同伴",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "values": {
-        "value": null,
-        "status": "unknown"
+        "value": "独立、真实、有据可查的承诺、保护无辜",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "dialogue": {
       "voicePitch": {
-        "value": null,
-        "status": "unknown"
+        "value": "中低音域，非成熟粗犷大叔声",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "voiceTimbre": {
-        "value": null,
-        "status": "unknown"
+        "value": "微哑、略带鼻音的自然少年男声",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "speechRate": {
-        "value": null,
-        "status": "unknown"
+        "value": "日常偏慢，讨论异常时短促加快",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "voiceVolume": {
-        "value": null,
-        "status": "unknown"
+        "value": "通常中低音量，少有大喊",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "tone": {
-        "value": null,
-        "status": "unknown"
+        "value": "散漫、压着不耐烦的平直语调",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "accents": {
-        "value": null,
-        "status": "unknown"
+        "value": "普通话/通用语，不使用过强地方口音",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "diction": {
-        "value": null,
-        "status": "unknown"
+        "value": "简短日常词语，偶有准确的技术性比喻",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "sentenceLength": {
-        "value": null,
-        "status": "unknown"
+        "value": "多数一句5-15字，重要时突然完整说长句",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "vocabulary": {
-        "value": null,
-        "status": "unknown"
+        "value": "避免刻意文艺腔；熟悉楼道、门锁、线路、声音等技术词",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "habitualPhrases": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "随便。",
+          "你认真的？",
+          "又来？",
+          "……行吧。"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "sarcasmLevel": {
-        "value": null,
-        "status": "unknown"
+        "value": "中等偏低；对熟人较明显，但不模仿女主的尖刻式毒舌",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "laughStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "鼻腔短促哼笑，几乎不放声大笑",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "cryingStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "情绪压到极限时先沉默、呼吸断续，不突然长篇哭诉",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "speechUnderStress": {
-        "value": null,
-        "status": "unknown"
+        "value": "句子缩短，语速更快，直接描述方位与危险，例如‘左边。别开。’",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "dialogueExamples": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "老师：‘又迟到了？’ 他：‘钟又没停。’",
+          "女主：‘你为什么知道那扇门？’ 他：‘因为它昨天还不在那儿。’",
+          "女二：‘要进去看看吗？’ 他：‘你先别碰门把手。’"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "forbiddenVoicePatterns": {
-        "value": null,
-        "status": "unknown"
+        "value": "拒绝夸张黑帮口音、暴力威胁、无意义脏话串、热血喊口号和持续温柔安慰腔",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "behavior": {
       "idlePose": {
-        "value": null,
-        "status": "unknown"
+        "value": "slightly slouched, one hand in pocket, other arm at side",
+        "status": "user_confirmed",
+        "source": "User-supplied male protagonist prompt, 2026-11-02"
       },
       "signatureGesture": {
-        "value": null,
-        "status": "unknown"
+        "value": "听到不合理声音会侧目一下并将下巴抬起约2°",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "greetingHabit": {
-        "value": null,
-        "status": "unknown"
+        "value": "不挥手；轻微抬下巴表示看见对方",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "gazePattern": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认视线略低于对方眼睛；警觉时先眼球偏转再转头",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "blinkHabit": {
-        "value": null,
-        "status": "unknown"
+        "value": "眨眼频率偏低，视线对焦时眨眼暂停1-2秒",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "eyebrowMotion": {
-        "value": null,
-        "status": "unknown"
+        "value": "多用单眉抬起代替整张脸动",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "headTilt": {
-        "value": null,
-        "status": "unknown"
+        "value": "习惯头部微前倾约3°，不歪头卖萌",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "walkCycle": {
-        "value": null,
-        "status": "unknown"
+        "value": "步幅长而松散，脚跟先落，摆臂幅度偏小",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "runningCycle": {
-        "value": null,
-        "status": "unknown"
+        "value": "跑起来身体略前倾，冲刺不夸张甩手",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "nervousTics": {
-        "value": null,
-        "status": "unknown"
+        "value": "左手在口袋里摩擦布料边缘；不主动啃指甲",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "sleepRhythm": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏晚睡，清晨难醒；不代表病理性睡眠问题",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "eatingStyle": {
-        "value": null,
-        "status": "unknown"
+        "value": "吃饭快，不太挑食；不主动拍照分享",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "favoriteFoods": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "简单咖喱饭",
+          "冰凉茶饮",
+          "清淡面食"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "hobbies": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "修旧电子设备",
+          "听不知名电台",
+          "观察旧楼道结构"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "dailyRoutine": {
-        "value": null,
-        "status": "unknown"
+        "value": "平日7:10起床、7:55进校、午休独处、放学沿熟悉街道回家；迟到是偶发而非绝对",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "timeManagement": {
-        "value": null,
-        "status": "unknown"
+        "value": "对不感兴趣的事拖延；对异常线索能投入长时间",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "transportation": {
-        "value": null,
-        "status": "unknown"
+        "value": "步行为主，偶尔乘公交；默认不携带自行车或其他实物",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "relationships": {
       "familyRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "与母亲关系淡但并非敌对；关心家庭却很少主动打电话",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "schoolRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "多数同学觉得他不好接近；部分人找他帮忙修东西",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "friendRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "没有稳定成群结队的不良社团，愿与少数可靠的人共同行动",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "rivalRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "与一名尚未正式建立 NPC 身份的纪律委员有口头摩擦；不注册新角色",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "mentorRelations": {
-        "value": null,
-        "status": "unknown"
+        "value": "可能有位理解他技术天赋的理科教师；是否登场待剧情确认",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "romancesIfStoryApproved": {
-        "value": null,
-        "status": "unknown"
+        "value": "不强制指定恋爱路线；任何感情线需后续剧情明确批准",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "relationshipToProtagonist": {
-        "value": null,
-        "status": "unknown"
+        "value": "女主冷淡毒舌，他散漫厌学；初期彼此不信任，可能因共同发现异常逐渐合作",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "relationshipToMaleLead": {
-        "value": null,
-        "status": "unknown"
+        "value": "本人；此字段自引用，供通用关系查询使用",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "trustFlags": {
-        "value": null,
-        "status": "unknown"
+        "value": {
+          "heroine": 0,
+          "girl2": 0,
+          "disciplineStaff": -1,
+          "scale": "-3不信任至+3高度信任；均为候选数值"
+        },
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "secretsShared": {
-        "value": null,
-        "status": "unknown"
+        "value": "关于楼道异常仅在确认对方也看见后才透露，初期不会主动说完",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "conflictHistory": {
-        "value": null,
-        "status": "unknown"
+        "value": "曾因无故缺席集合被记过；实际理由有待剧情选择",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       },
       "relationProgression": {
-        "value": null,
-        "status": "unknown"
+        "value": "陌生→互相试探→共享证据→愿意协作→在关键决定上可分歧",
+        "status": "proposed",
+        "source": "CHAR-003 original-character creative production proposal v1.0"
       }
     },
     "skills": {
