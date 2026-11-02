@@ -95,6 +95,9 @@ async function assign(target,id,face='front',save=true){
  }else{
   await window.PaperchalkL2D.setCorrections(target,null,{});
  }
+ // The same source artwork edited in DEV is used on the game actor.
+ // No ZIP re-import and no separate heroine-only database.
+ await window.PaperchalkL2D.setComponentPatch(target,await get('parts-patch:'+id+':'+face));
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
  note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面'));
