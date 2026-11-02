@@ -188,7 +188,7 @@ jobs:
                   window.dispatchEvent(new Event('paperchalk:art-dirty'));
                 });
                 await page.locator('#studio-save').click();
-                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
+                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('游戏已更新'),{timeout:18000});
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.countSourceParts()),17,
                   'source component save must preserve all independent source layers');
                 const partPatch=await page.evaluate(()=>new Promise((resolve,reject)=>{
@@ -226,7 +226,7 @@ jobs:
                 await page.locator('#add').click({force:true});
                 assert.equal(await page.locator('#layers .layer').count(),initialLayers+1);
                 await page.locator('#studio-save').click();
-                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
+                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('游戏已更新'),{timeout:18000});
                 const hasSavedFrame=await page.evaluate(paintedSide=>new Promise((ok,no)=>{
                   const req=indexedDB.open('paperchalk-dev-characters-v1',1);
                   req.onsuccess=()=>{const db=req.result;
