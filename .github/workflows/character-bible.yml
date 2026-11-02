@@ -9,6 +9,7 @@ on:
       - 'site/data/characters/**'
       - 'site/assets/characters/**'
       - 'scripts/validate_character_identity.py'
+      - 'scripts/validate_character_profiles.py'
       - '.github/workflows/character-bible.yml'
   pull_request:
     paths:
@@ -18,6 +19,7 @@ on:
       - 'site/data/characters/**'
       - 'site/assets/characters/**'
       - 'scripts/validate_character_identity.py'
+      - 'scripts/validate_character_profiles.py'
       - '.github/workflows/character-bible.yml'
   workflow_dispatch:
 permissions:
@@ -32,6 +34,7 @@ jobs:
       - name: Validate machine character data and character bible
         run: |
           python3 scripts/validate_character_identity.py
+          python3 scripts/validate_character_profiles.py
           python3 - <<'PY'
           import json
           from pathlib import Path
