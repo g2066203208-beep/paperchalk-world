@@ -154,7 +154,7 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 assert.equal(await page.locator('#l2d-live-canvas').count(),1);
                 await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official' &&
-                  window.PaperchalkStudio?.countSourceParts?.()===17,{timeout:30000});
+                  window.PaperchalkStudio?.countSourceParts?.()===17&&window.characterEditor?.S.layers.back.filter(x=>x.sourcePart).length===8,{timeout:30000});
                 assert.equal(await page.evaluate(()=>window.characterEditor.S.layers.back.filter(x=>x.sourcePart).length),8,
                   'authentic front/back PSD parts must load directly from GitHub, without manual upload');
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false,
