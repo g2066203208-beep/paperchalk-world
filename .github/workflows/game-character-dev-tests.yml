@@ -358,12 +358,50 @@ jobs:
                   'CHAR-002 must never display a separate fake mesh preview');
                 await page.screenshot({path:'artifacts/l2d-studio/'+
                   (phone?'mobile':'desktop')+'-char-002-live-v4.png',fullPage:true});
-                // Save the source parts without altering the approved heroine.
+                // Replace fallback 7 zones with SIXTEEN independently textured
+                // PSD-style parts. Synthetic tiny colors exercise the same browser
+                // IndexedDB, composer, bone driver and game assignment path; the
+                // original 16 PSD source is validated separately offline.
+                await page.evaluate(async()=>{
+                  const ed=window.characterEditor,side=ed.S.side;
+                  ed.S.layers[side]=ed.S.layers[side].filter(p=>!p.sourcePart);
+                  const parts=[
+                   ['back hair',467,33],['legwear',435,448],['footwear',488,912],
+                   ['bottomwear',397,413],['neck',521,156],['topwear',411,193],
+                   ['handwear',370,164],['ears',480,120],['face',476,67],
+                   ['nose',528,143],['mouth',526,160],['eyewhite',494,117],
+                   ['eyebrow',485,96],['irides',502,119],['eyelash',491,114],
+                   ['front hair',479,43]];
+                  for(let i=0;i<parts.length;i++){
+                    const [name,x,y]=parts[i],canvas=document.createElement('canvas');
+                    canvas.width=32;canvas.height=32;
+                    const ctx=canvas.getContext('2d');
+                    ctx.fillStyle='hsl('+((i*47)%360)+' 65% 55%)';
+                    ctx.fillRect(2,2,27,27);
+                    const layer=ed.layer(name,canvas,x,y,false);
+                    layer.sourcePart=true;layer.role='psd-part';layer.partId=name;
+                  }
+                  ed.renderList();ed.render();await ed.save();
+                  window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
+                });
+                await page.waitForFunction(()=>{
+                  const rig=window.characterEditor?.l2dRig?.();
+                  return rig?.psdParts?.length===16 &&
+                    !document.getElementById('l2d-live-canvas').hidden;
+                },null,{timeout:16000});
+                await page.screenshot({path:'artifacts/l2d-studio/'+
+                  (phone?'mobile':'desktop')+'-char-002-real-psd16-rig.png',fullPage:true});
                 await page.locator('#studio-back').click();
                 await page.waitForURL('**/?dev=1',{timeout:18000});
-                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready &&
-                  window.PaperchalkL2D.get('enemy')?.clip?.type==='decoder',{timeout:16000});
+                await page.waitForFunction(()=>{
+                  const a=window.PaperchalkL2D?.get('enemy');
+                  return window.PaperchalkCharacterDev?.ready &&
+                    a?.root?.dataset.l2dMode==='psd-layer-skeletal' &&
+                    a?.rig?.psdParts?.length===16;
+                },null,{timeout:22000});
                 assert.equal(await page.evaluate(()=>window.PaperchalkCharacterDev.assigned.enemy.id),'char-002');
+                assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('enemy').clip),null,
+                  'PSD16 must render as independent live parts, never the fallback WebP clip');
                 assert.deepEqual(errors,[],'No browser errors');
                 await page.close();
               }
