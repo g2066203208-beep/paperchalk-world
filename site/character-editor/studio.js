@@ -149,7 +149,7 @@ async function loadList(){
    list.set(c.id,{id:c.id,label:(c.label||c.id)+(c.draft?' · 未导入立绘':''),draft:!!c.draft,
     front:c.front?new URL(c.front,new URL('../',location.href)).href:'',
     back:c.back?new URL(c.back,new URL('../',location.href)).href:'',
-    clips:c.clips||{},animated:c.animated||{}});
+    clips:c.clips||{},animated:c.animated||{},l2dModule:c.l2dModule||{}});
   }
  }catch(e){console.warn('Character catalog offline',e)}
  const imported=await get('imported');
@@ -237,7 +237,17 @@ async function persistSkeleton(face){
 // draft. It MUST NOT replace the user's approved V4 clips or overwrite PNGs.
 async function readPartRig(id=currentId,face=side){
  if(!id||!['front','back'].includes(face))return null;
- return await get('part-rig:'+id+':'+face);
+ const local=await get('part-rig:'+id+':'+face);
+ if(local)return local;
+ const pub=list.get(id)?.l2dModule?.[face]?.rig;
+ if(!pub?.url)return null;
+ const url=new URL(pub.url,new URL('../',location.href));
+ const response=await fetch(url,{cache:'no-store'});
+ if(!response.ok)throw Error('模块绑定文件加载失败：HTTP '+response.status);
+ const model=await response.json();
+ if(model.format!=='paperchalk-part-rig-v1'||model.characterId!==id||model.face!==face)
+  throw Error('当前人物的模块绑定文件格式或方向错误');
+ return model;
 }
 async function storePartRig(rig){
  if(!rig||rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==currentId||
@@ -415,31 +425,75 @@ const hostedPartsURLs={
  'char-002':'../assets/l2d/char-002/front-source-regions.zip'
 };
 const hostedPartsCache=new Map();
-async function hostedParts(id){
- const path=hostedPartsURLs[id];
- if(!path)throw Error('当前人物没有已托管的可编辑区域资源');
- if(!hostedPartsCache.has(id)){
-  const url=new URL(path,location.href);
-  const promise=fetch(url).then(async r=>{
-    if(!r.ok)throw Error('人物编辑区域未部署：HTTP '+r.status);
+const siteURL=path=>new URL(path,new URL('../',location.href)).href;
+async function hostedParts(id,face=side){
+ const view=list.get(id)?.l2dModule?.[face];
+ const packed=view?.sourceParts?.url;
+ if(packed){
+  const url=siteURL(packed),cacheKey='archive:'+url;
+  if(!hostedPartsCache.has(cacheKey)){
+   const promise=fetch(url).then(async r=>{
+    if(!r.ok)throw Error('L2D 素材包未部署：HTTP '+r.status);
     return zipBytes(new Uint8Array(await r.arrayBuffer()));
-  }).catch(e=>{hostedPartsCache.delete(id);throw e});
-  hostedPartsCache.set(id,promise);
+   }).catch(e=>{hostedPartsCache.delete(cacheKey);throw e});
+   hostedPartsCache.set(cacheKey,promise);
+  }
+  return hostedPartsCache.get(cacheKey);
  }
- return hostedPartsCache.get(id);
+ // Approved PartMesh modules may ship independent PNGs instead of a ZIP.
+ // Turn those *same bytes* into the existing importComponentFiles interface
+ // without baking, cropping, recoloring, or fabricating separate pieces.
+ const published=view?.rig;
+ if(published?.url&&published.textures){
+  const cacheKey='rig:'+id+':'+face+':'+published.url;
+  if(!hostedPartsCache.has(cacheKey)){
+   const promise=(async()=>{
+    const response=await fetch(siteURL(published.url));
+    if(!response.ok)throw Error('无法读取 L2D 模块关节文件：HTTP '+response.status);
+    const rig=await response.json();
+    if(rig.format!=='paperchalk-part-rig-v1'||rig.characterId!==id||rig.face!==face)
+     throw Error('当前人物绑定与独立图层不一致');
+    const manifest={canvas:[1024,1024],provenance:'published-part-mesh',layers:{front:[],back:[]}};
+    const files=new Map(),pairs=Object.entries(published.textures);
+    for(const [partId,uri] of pairs){
+     const p=rig.parts?.[partId];if(!p)throw Error('找不到部件 '+partId);
+     const file=face+'/'+partId+'.png';
+     const data=await fetch(siteURL(uri));
+     if(!data.ok)throw Error('无法加载独立 L2D 部件 '+partId);
+     files.set(file,new Uint8Array(await data.arrayBuffer()));
+     manifest.layers[face].push({file,id:partId,name:p.name||partId,
+      x:p.x,y:p.y,visible:true,locked:false,opacity:1,role:'module-mesh-part'});
+    }
+    files.set('layers.json',new TextEncoder().encode(JSON.stringify(manifest)));
+    return files;
+   })().catch(e=>{hostedPartsCache.delete(cacheKey);throw e});
+   hostedPartsCache.set(cacheKey,promise);
+  }
+  return hostedPartsCache.get(cacheKey);
+ }
+ const legacy=hostedPartsURLs[id];
+ if(!legacy)throw Error('当前人物尚未提供真实独立 L2D 图层素材');
+ const url=new URL(legacy,location.href),cacheKey='legacy:'+url.href;
+ if(!hostedPartsCache.has(cacheKey)){
+  const promise=fetch(url).then(async r=>{
+   if(!r.ok)throw Error('人物分层资源未部署：HTTP '+r.status);
+   return zipBytes(new Uint8Array(await r.arrayBuffer()));
+  }).catch(e=>{hostedPartsCache.delete(cacheKey);throw e});
+  hostedPartsCache.set(cacheKey,promise);
+ }
+ return hostedPartsCache.get(cacheKey);
 }
 async function zipBytes(buf){
- // Use the same ZIP importer as user files; no duplicate parsing algorithms.
  return zipFiles(new File([buf],'original-psd-parts.zip',{type:'application/zip'}));
 }
 async function ensureHostedParts(id){
- if(!hostedPartsURLs[id])return;
+ if(!hostedPartsURLs[id]&&!list.get(id)?.l2dModule?.[side]?.sourceParts&&!list.get(id)?.l2dModule?.[side]?.rig)return;
  const front=ed.S.layers.front.some(p=>p.sourcePart);
  const back=ed.S.layers.back.some(p=>p.sourcePart);
  if(front&&(id==='char-002'||back))return;
  message(id==='char-002'?'载入女二号原画分区图层（非PSD）…':'载入女主角正背面PSD部件…');
  try{
-  const source=await hostedParts(id);
+  const source=await hostedParts(id,side);
   if(currentId!==id)return;
   await importComponentFiles(source,{missingOnly:true,quiet:true});
   message(id==='char-002'?
