@@ -52,8 +52,8 @@ def url(file):
     return "./" + file.relative_to(SITE).as_posix()
 
 
-def image(file, *, static=False):
-    if file.suffix.lower() not in IMAGE or file.stat().st_size < 32 or file.stat().st_size > MAX_IMAGE:
+def image(file, *, static=False, limit=MAX_IMAGE):
+    if file.suffix.lower() not in IMAGE or file.stat().st_size < 32 or file.stat().st_size > limit:
         fail(file, "invalid image extension or file size")
     try:
         with Image.open(file) as im:
@@ -90,7 +90,7 @@ def inspect_view(folder, value, face):
         src = within(folder, clip.get("file"))
         if src.suffix.lower() != ".webp" or src.stat().st_size > MAX_CLIP:
             fail(src, "V4 animation must be WebP, max 72 MB")
-        (width, height), frames = image(src)
+        (width, height), frames = image(src, limit=MAX_CLIP)
         if frames < 2:
             fail(src, "V4 requires multiple real decoded frames")
         if int(clip.get("frames", frames)) != frames:
@@ -121,18 +121,29 @@ def inspect_view(folder, value, face):
         if set(textures) != set(model_parts) or len(textures) > 100:
             fail(model_file, "textures must match every rig partId exactly (max 100)")
         paths = {}
-        for ident, filename in textures.items():
+        if model.get('characterId') != folder.name or model.get('canvas') != [1024,1024]:
+            fail(model_file, 'rig character ID or stage dimensions mismatch')
+        for ident in model_parts:
             if not ID.fullmatch(ident):
                 fail(model_file, f"invalid part ID {ident}")
-            img = within(folder, filename)
+            img = within(folder, textures[ident])
             if img.suffix.lower() != ".png":
                 fail(img, "each ArtMesh texture must be a separate RGBA PNG")
             (w,h),count = image(img,static=True)
+            with Image.open(img) as texture:
+                if texture.mode != 'RGBA':
+                    fail(img, 'independent ArtMesh texture must be 8-bit RGBA')
             part = model_parts[ident]
             if not isinstance(part,dict) or part.get("id") != ident:
                 fail(model_file,f"partId mismatch: {ident}")
             if part.get("w") != w or part.get("h") != h:
                 fail(img, f"size does not match rig part {ident}")
+            if not isinstance(part.get("mesh"), dict) or not isinstance(part.get("motion"), dict):
+                fail(model_file,f"missing mesh or animation parameters for {ident}")
+            if not all(isinstance(part["mesh"].get(k), int) and 2 <= part["mesh"][k] <= 64 for k in ("rows","columns")):
+                fail(model_file,f"mesh grid out of limits for {ident}")
+            if not isinstance(part.get("x"), (int,float)) or not isinstance(part.get("y"),(int,float)):
+                fail(model_file,f"missing original coordinate for {ident}")
             if not isinstance(part.get("pivot"),dict) or not isinstance(part.get("tip"),dict):
                 fail(model_file,f"missing pivots / tips for {ident}")
             paths[ident] = url(img)
