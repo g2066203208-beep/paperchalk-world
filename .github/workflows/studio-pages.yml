@@ -530,9 +530,12 @@ jobs:
                     el.id='test-fog-white-backing';
                     Object.assign(el.style,{
                       position:'absolute',inset:'0',background:'#fff',
-                      zIndex:'2',pointerEvents:'none'
+                      zIndex:'6',pointerEvents:'none'
                     });
                     document.getElementById('view').appendChild(el);
+                    // Test-only: fog above white reference, which itself
+                    // covers foreground actors and dialogue. Restore afterward.
+                    document.getElementById('fog').style.zIndex='7';
                     return el.id;
                   });
                   assert.equal(fogBacking,'test-fog-white-backing');
@@ -558,7 +561,10 @@ jobs:
                       if(fogBefore.data[p]<247)centerDarkPixels++;
                     }
                   }
-                  await page.evaluate(()=>document.getElementById('test-fog-white-backing').remove());
+                  await page.evaluate(()=>{
+                    document.getElementById('test-fog-white-backing').remove();
+                    document.getElementById('fog').style.removeProperty('z-index');
+                  });
                   assert.ok(edgeDarkPixels>40,
                     'fog absent from scene edge when contrasted against white: '+edgeDarkPixels);
                   assert.equal(centerDarkPixels,0,
