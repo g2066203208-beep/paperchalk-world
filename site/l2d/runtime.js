@@ -56,7 +56,7 @@ function setProfile(slot,values){
  const a=target(slot);if(!a)return false;
  for(const name of ['amplitude','period','softness']){
   if(values[name]!==undefined&&Number.isFinite(Number(values[name])))
-   a.profile[name]=clamp(Number(values[name]),name==='period'?2:0,name==='period'?12:2);
+   a.profile[name]=clamp(Number(values[name]),name==='period'?2:0,name==='period'?12:name==='amplitude'?4:2.4);
  }
  if(a.rig){
   a.rig.setAmplitude(a.profile.amplitude);
@@ -260,6 +260,27 @@ function sync(t){
   if(a.canvas.style.top!==(a.img.offsetTop+'px'))a.canvas.style.top=a.img.offsetTop+'px';
   if(a.canvas.style.width!==(w+'px'))a.canvas.style.width=w+'px';
   if(a.canvas.style.height!==(h+'px'))a.canvas.style.height=h+'px';
+  // The approved baked V4 keeps all 128 animated frames; user-adjustable
+  // motion adds an inexpensive, smooth idle transform without re-encoding art.
+  // Anchor at the feet; keep static PSD edits and the game's decoder intact.
+  const animated=a.clip?.type==='decoder'||a.clip?.type==='native';
+  const amplitude=clamp(Number(a.profile?.amplitude)||0,0,4);
+  const moving=animated&&amplitude>0.001&&!document.hidden&&!a.root.hidden;
+  const surface=a.clip?.type==='native'?a.clip.img:a.canvas;
+  if(surface){
+   if(moving){
+    const seconds=(t||performance.now())/1000;
+    const theta=seconds*Math.PI*2/clamp(Number(a.profile?.period)||4.8,2,12);
+    const inhalation=Math.sin(theta);
+    const lag=Math.sin(theta-.55);
+    const sx=(1+.018*amplitude*inhalation).toFixed(4);
+    const sy=(1+.011*amplitude*inhalation).toFixed(4);
+    const deg=(.45*amplitude*lag).toFixed(3);
+    const transform='scale('+sx+','+sy+') rotate('+deg+'deg)';
+    if(surface.style.transform!==transform)surface.style.transform=transform;
+    if(surface.style.transformOrigin!=='50% 100%')surface.style.transformOrigin='50% 100%';
+   }else if(surface.style.transform)surface.style.transform='';
+  }
   if(a.rig&&!a.clip)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
   if(a.clip?.type==='decoder')advanceV4(a,t||performance.now());
   if(a.clip?.type==='native')placeClip(a);
