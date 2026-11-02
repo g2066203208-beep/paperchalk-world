@@ -101,15 +101,25 @@ async function changeCore(id,face='front'){
   await ed.save();
  }
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
+ const chosen=list.get(id);
+ if(face==='back'&&!chosen.back&&!chosen.clips?.back)
+  throw Error('角色 '+chosen.label+' 尚无真实背面，禁止用正面冒充');
  currentId=id;side=face==='back'?'back':'front';
  options();direction.value=side;
  const c=list.get(id);
+ direction.querySelector('option[value="back"]').disabled=!c.back&&!c.clips?.back;
  await ed.switchCharacter({id:c.id,label:c.label,front:c.front||'',back:c.back||''},side);
  window.dispatchEvent(new CustomEvent('paperchalk:studio-character-loaded',{detail:{id,side}}));
  try{localStorage.setItem('paperchalk-studio-last',JSON.stringify({id,side}));}catch(e){}
  const override=await get('clip:'+id+':'+side);
- const builtin=id==='protagonist'?{url:new URL('../assets/l2d/v4/'+side+'.webp',location.href).href,
-   crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'}:null;
+ const deployed=c.clips?.[side];
+ const builtin=deployed?{
+   url:new URL(deployed.url,new URL('../',location.href)).href,
+   crop:deployed.crop,edition:'V4-official'
+  }:id==='protagonist'?{
+   url:new URL('../assets/l2d/v4/'+side+'.webp',location.href).href,
+   crop:{x:351,y:9,w:335,h:1013},edition:'V4-official'
+  }:null;
  await showClip(override||builtin);
  await loadCorrectionLayers();
  await ensureHostedParts(id);
@@ -127,7 +137,8 @@ async function loadList(){
    if(!okId(c.id))continue;
    list.set(c.id,{id:c.id,label:(c.label||c.id)+(c.draft?' · 未导入立绘':''),draft:!!c.draft,
     front:c.front?new URL(c.front,new URL('../',location.href)).href:'',
-    back:c.back?new URL(c.back,new URL('../',location.href)).href:''});
+    back:c.back?new URL(c.back,new URL('../',location.href)).href:'',
+    clips:c.clips||{},animated:c.animated||{}});
   }
  }catch(e){console.warn('Character catalog offline',e)}
  const imported=await get('imported');
@@ -343,30 +354,41 @@ async function importComponentFiles(files,options={}){
  if(!options.quiet)message('✓ 已载入 '+count+' 个真实部件，原始像素、原位坐标和图层顺序保留。可直接选任何部件编辑。');
  return count;
 }
-const hostedPartsUrl=new URL('../assets/l2d/v4/protagonist-original-parts.zip',location.href).href;
-let hostedPartsPromise=null;
-async function hostedParts(){
- if(!hostedPartsPromise)hostedPartsPromise=fetch(hostedPartsUrl).then(async r=>{
-  if(!r.ok)throw Error('原始 PSD 全部部件未部署：HTTP '+r.status);
-  return zipBytes(new Uint8Array(await r.arrayBuffer()));
- }).catch(e=>{hostedPartsPromise=null;throw e});
- return hostedPartsPromise;
+const hostedPartsURLs={
+ protagonist:'../assets/l2d/v4/protagonist-original-parts.zip',
+ 'char-002':'../assets/l2d/char-002/front-source-regions.zip'
+};
+const hostedPartsCache=new Map();
+async function hostedParts(id){
+ const path=hostedPartsURLs[id];
+ if(!path)throw Error('当前人物没有已托管的可编辑区域资源');
+ if(!hostedPartsCache.has(id)){
+  const url=new URL(path,location.href);
+  const promise=fetch(url).then(async r=>{
+    if(!r.ok)throw Error('人物编辑区域未部署：HTTP '+r.status);
+    return zipBytes(new Uint8Array(await r.arrayBuffer()));
+  }).catch(e=>{hostedPartsCache.delete(id);throw e});
+  hostedPartsCache.set(id,promise);
+ }
+ return hostedPartsCache.get(id);
 }
 async function zipBytes(buf){
  // Use the same ZIP importer as user files; no duplicate parsing algorithms.
  return zipFiles(new File([buf],'original-psd-parts.zip',{type:'application/zip'}));
 }
 async function ensureHostedParts(id){
- if(id!=='protagonist')return;
+ if(!hostedPartsURLs[id])return;
  const front=ed.S.layers.front.some(p=>p.sourcePart);
  const back=ed.S.layers.back.some(p=>p.sourcePart);
- if(front&&back)return;
- message('首次加载 GitHub 已托管的正背面 25 个原始 PSD 部件…');
+ if(front&&(id==='char-002'||back))return;
+ message(id==='char-002'?'载入女二号原画分区图层（非PSD）…':'载入女主角正背面PSD部件…');
  try{
-  const source=await hostedParts();
+  const source=await hostedParts(id);
   if(currentId!==id)return;
   await importComponentFiles(source,{missingOnly:true,quiet:true});
-  message('已直接载入 GitHub 原位 PSD：正面17层／背面8层。点选任何部件即可改，保存后游戏直接使用修改结果。');
+  message(id==='char-002'?
+    '女二号已载入7个基于原图像素分区的可编辑部件；同一正式正面V4动画，不虚构背面。':
+    '女主角已载入正面17层／背面8层原位PSD。');
  }catch(error){
   console.error('[L2D] hosted source parts failed',error);
   message('原始部件在线加载失败：'+error.message+'；动画帧仍可编辑');
