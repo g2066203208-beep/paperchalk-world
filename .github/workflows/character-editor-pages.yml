@@ -1,0 +1,44 @@
+name: Publish character editor (fast Pages deploy)
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/character-editor/**'
+      - '.github/workflows/character-editor-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: character-editor-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment:
+      name: github-pages
+      url: https://g2066203208-beep.github.io/paperchalk-world/character-editor/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preserve game assets and prepare existing site
+        run: |
+          bash scripts/fetch-game-fonts.sh
+          python3 scripts/build_scene_catalog.py
+          test -s site/index.html
+          test -s site/character-editor/index.html
+          test -s site/assets/characters/protagonist-front.webp
+          test -s site/assets/characters/protagonist-back.webp
+          node - <<'JS'
+          const fs=require('fs');
+          const s=fs.readFileSync('site/character-editor/index.html','utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+          new Function(s);
+          console.log('PASS: editor JS parses; assets retained');
+          JS
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
