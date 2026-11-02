@@ -1,0 +1,2984 @@
+{
+  "schemaVersion": 3,
+  "recordCode": "CHAR-020",
+  "canonicalId": "male-third-youthful-candidate",
+  "recordState": "concept_draft_not_approved_no_art_no_game_actor",
+  "readableDocument": "docs/characters/CHAR-020_MALE_THIRD_PROFILE.md",
+  "sourcePriority": [
+    "user_confirmed",
+    "approved_art_reference",
+    "approved_story_reference",
+    "proposed",
+    "unknown",
+    "not_applicable",
+    "rejected"
+  ],
+  "fields": {
+    "identity": {
+      "recordCode": {
+        "value": "CHAR-020",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "canonicalId": {
+        "value": "male-third-youthful-candidate",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "displayName": {
+        "value": "男三／小正太系少年，暂称林见夏",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "legalName": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "nicknames": {
+        "value": [
+          "小夏",
+          "见夏"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "aliases": {
+        "value": [
+          "男三",
+          "小正太少年"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pronouns": {
+        "value": "他",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "genderPresentation": {
+        "value": "男生，清秀少年感",
+        "status": "user_confirmed",
+        "source": "用户2026-11-02：男三、小正太"
+      },
+      "ageYears": {
+        "value": 16,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "birthDate": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "birthplace": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "currentResidence": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "era": {
+        "value": "当代架空都市",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "occupation": {
+        "value": "高中生",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "schoolYear": {
+        "value": "高一（提案）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "storyRole": {
+        "value": "男三，少年感、可爱亲切，擅长发现声音线索",
+        "status": "user_confirmed",
+        "source": "用户2026-11-02：男三、小正太"
+      },
+      "designStatus": {
+        "value": "仅448项创作候选，不代表原画、背面、PSD、L2D或游戏上线",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "family": {
+      "parents": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "guardians": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "siblings": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "relatives": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "familyStructure": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "childhoodEvents": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "upbringing": {
+        "value": "候选：从小被教导礼貌和认真倾听",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "householdMembers": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "livingSituation": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "socioeconomicBackground": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      }
+    },
+    "education": {
+      "school": {
+        "value": "和女主同校，校名暂不固定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "className": {
+        "value": "高一班级未定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "club": {
+        "value": "校园广播站音效组（候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "grades": {
+        "value": "整体中上，偏重听觉记忆",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "subjectStrengths": {
+        "value": [
+          "语言听辨",
+          "节奏识别",
+          "基础数学"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "subjectWeaknesses": {
+        "value": [
+          "大型体育项目",
+          "即兴当众陈述"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "workplace": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "jobTitle": {
+        "value": "学生",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "salaryRange": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "experience": {
+        "value": "会基础录音和音效剪辑（候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "professionalGoals": {
+        "value": "希望制作自己的声音故事（候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "measurements": {
+      "heightCm": {
+        "value": 158,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "weightKg": {
+        "value": 46,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headBodyRatio": {
+        "value": 6.4,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoulderWidthCm": {
+        "value": 36,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "chestCircumferenceCm": {
+        "value": 77,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "waistCircumferenceCm": {
+        "value": 66,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hipCircumferenceCm": {
+        "value": 80,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "torsoLengthCm": {
+        "value": 44,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "armSpanCm": {
+        "value": 155,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "inseamCm": {
+        "value": 72,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoeSize": {
+        "value": "CN 38–39，未测量",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bodyBuild": {
+        "value": "骨架略小、自然纤细、健康的少年体态",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bodyMassDescription": {
+        "value": "轻度肌肉感，非女童也非肌肉型成年男性",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "posture": {
+        "value": "肩部松弛，左腿自然承重",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "handDominance": {
+        "value": "右手惯用（提案）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "gait": {
+        "value": "步幅小，脚步轻快",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "upperArmCircumferenceCm": {
+        "value": 22,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "forearmCircumferenceCm": {
+        "value": 20,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "wristCircumferenceCm": {
+        "value": 14.4,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "thighCircumferenceCm": {
+        "value": 43,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "calfCircumferenceCm": {
+        "value": 30,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "kneeCircumferenceCm": {
+        "value": 31,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ankleCircumferenceCm": {
+        "value": 19,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "upperArmLengthCm": {
+        "value": 27,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "forearmLengthCm": {
+        "value": 23.5,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "handLengthCm": {
+        "value": 17.2,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "palmWidthCm": {
+        "value": 7.3,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "upperLegLengthCm": {
+        "value": 39.5,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lowerLegLengthCm": {
+        "value": 36.5,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "kneeHeightCm": {
+        "value": 45,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hipBreadthCm": {
+        "value": 30,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoulderBreadthCm": {
+        "value": 36,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "waistHeightCm": {
+        "value": 95,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ribcageDepthCm": {
+        "value": 18,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hipDepthCm": {
+        "value": 18,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headWidthCm": {
+        "value": 14.8,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "faceLengthCm": {
+        "value": 19.4,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "faceWidthCm": {
+        "value": 14.1,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "footLengthCm": {
+        "value": 23.8,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "footWidthCm": {
+        "value": 9.1,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "anatomy": {
+      "headShape": {
+        "value": "短鹅蛋形头骨，略圆不幼儿化",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoulderSlope": {
+        "value": "自然向下约6度",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "torsoDepth": {
+        "value": "上身自然轻薄且有体积",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ribcageContour": {
+        "value": "制服内正常少年胸廓",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "waistContour": {
+        "value": "直线型腰身，外套留松量",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pelvisAndHips": {
+        "value": "自然窄骨盆视觉比例",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "backContour": {
+        "value": "颈背平直，后衣片有轻褶",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bustThroughClothing": {
+        "value": "男生平坦衬衫胸前轮廓",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "limbProportions": {
+        "value": "四肢自然匀称而非儿童四头身",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "handShape": {
+        "value": "小巧但结构完整、指尖略圆",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "skinUndertone": {
+        "value": "温暖偏中性浅肤色",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "skinTexture": {
+        "value": "干净块面，不用塑料皮肤",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "scars": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "birthmarks": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "moles": {
+        "value": "不预设标志性痣",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "freckles": {
+        "value": "不靠随机雀斑强化可爱",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "postureAsymmetry": {
+        "value": "左腿承重、右膝放松、头右倾3度",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mobilityNeeds": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "upperArmShape": {
+        "value": "上臂细但不骨感",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "forearmShape": {
+        "value": "前臂自然向腕部收束",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "wristShape": {
+        "value": "腕骨柔和可辨",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "thighShape": {
+        "value": "大腿匀称，非专业短跑腿型",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "calfShape": {
+        "value": "小腿自然纤细",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "kneeShape": {
+        "value": "膝关节结构清楚",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ankleShape": {
+        "value": "踝部细、鞋袜分界明确",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "legAxis": {
+        "value": "腿轴自然平直，足尖微向外",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "upperLimbTaper": {
+        "value": "肩肘腕顺畅过渡",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lowerLimbTaper": {
+        "value": "直筒裤保留腿部体积",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "legMuscleDistribution": {
+        "value": "普通青少年步行形成的轻度肌肉",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "armMuscleDistribution": {
+        "value": "普通少年手臂，不夸张肌肉",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pelvisTilt": {
+        "value": "中性略倾，便于待机",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "spinalCurve": {
+        "value": "自然生理弧度",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "handFingerLengthRatios": {
+        "value": [
+          1,
+          0.94,
+          0.96,
+          0.74,
+          0.69
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bodySilhouetteType": {
+        "value": "小体型少年直线轮廓，外套略宽松",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoulderToHipWidthRatio": {
+        "value": 1.2,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "waistToHipWidthRatio": {
+        "value": 0.86,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headToShoulderWidthRatio": {
+        "value": 0.411,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "face": {
+      "faceShape": {
+        "value": "圆润短鹅蛋脸，和女二、女三有不同眉眼骨相",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "forehead": {
+        "value": "额头稍高，被轻刘海遮住部分",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "cheekbones": {
+        "value": "颧骨平缓、颊部轻微饱满",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "jawline": {
+        "value": "自然微收，保留少年短方圆下颌",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "chin": {
+        "value": "短而略方圆，不尖V",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "noseBridge": {
+        "value": "小巧细直鼻梁",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "noseTip": {
+        "value": "圆润短鼻尖",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mouthShape": {
+        "value": "小嘴，微笑时一侧形成浅酒窝",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lips": {
+        "value": "薄唇，不涂口红",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "teeth": {
+        "value": "默认闭口；开怀笑可露自然上齿",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ears": {
+        "value": "小耳廓，右耳部分有碎发遮盖",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyebrows": {
+        "value": "较短的自然平眉，外端略柔和下落",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyelidShape": {
+        "value": "上睑温柔的弧形",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeShape": {
+        "value": "灰绿杏圆眼，横向略长而非超大玻璃眼",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeSpacing": {
+        "value": "眼距中等微宽",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeCornerAngle": {
+        "value": "外眼角比内眼角略低",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeColor": {
+        "value": "低饱和灰绿色",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeHex": {
+        "value": "#788977",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pupilColor": {
+        "value": "#35463D",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeHighlights": {
+        "value": "一个中小主高光",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyelashes": {
+        "value": "克制短睫毛",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "defaultExpression": {
+        "value": "温柔又好奇的小幅闭口笑",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "facialLandmarkSystem": {
+        "value": "脸部包围盒坐标[0,1]，仅为未验收的视觉草图",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "facialLandmarksNormalized": {
+        "value": {
+          "leftEye": [
+            0.35,
+            0.45
+          ],
+          "rightEye": [
+            0.65,
+            0.455
+          ],
+          "nose": [
+            0.5,
+            0.655
+          ],
+          "mouth": [
+            0.5,
+            0.765
+          ],
+          "chin": [
+            0.5,
+            0.99
+          ]
+        },
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "faceLengthToWidthRatio": {
+        "value": 1.38,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "foreheadToFaceHeightRatio": {
+        "value": 0.31,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "jawWidthToFaceWidthRatio": {
+        "value": 0.72,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "cheekboneWidthToFaceWidthRatio": {
+        "value": 0.94,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeCenterHeightRatio": {
+        "value": 0.45,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "interocularSpacingRatio": {
+        "value": 0.3,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeWidthToFaceWidthRatio": {
+        "value": 0.22,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyebrowEyeGapRatio": {
+        "value": 0.065,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "noseTopHeightRatio": {
+        "value": 0.53,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "noseTipHeightRatio": {
+        "value": 0.655,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "noseWidthToFaceWidthRatio": {
+        "value": 0.1,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mouthCenterHeightRatio": {
+        "value": 0.765,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mouthWidthToFaceWidthRatio": {
+        "value": 0.3,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "philtrumLengthRatio": {
+        "value": 0.075,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "earTopHeightRatio": {
+        "value": 0.4,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "earBottomHeightRatio": {
+        "value": 0.67,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeTailSlantDeg": {
+        "value": -2,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyelidOpennessBaseline": {
+        "value": 0.68,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lipCornerSlopeDeg": {
+        "value": 2,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "browAngleDeg": {
+        "value": -1,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "expressionLandmarkVariants": {
+        "value": {
+          "smile": "嘴角柔和抬起，浅酒窝",
+          "serious": "下眼睑轻收，嘴角水平",
+          "surprised": "眉稍抬、眼睑睁大",
+          "shy": "目光略避开，嘴角收束"
+        },
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "noseToMouthDistanceRatio": {
+        "value": 0.11,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "hair": {
+      "hairBaseColor": {
+        "value": "低饱和浅茶棕、暖灰栗棕",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairHex": {
+        "value": "#957867",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairHighlights": {
+        "value": "#B09A82",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairLength": {
+        "value": "耳上至耳中的短层次碎发",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairTexture": {
+        "value": "蓬松柔软、有空气感",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairDensity": {
+        "value": "中等密度",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "parting": {
+        "value": "人物左偏7:3自然分发",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bangs": {
+        "value": "4–5束轻刘海，额前一小束不听话地翘起",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sidelocks": {
+        "value": "耳畔碎发不对称，右边一缕稍翘",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ponytailCount": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ponytailPosition": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "ponytailLength": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "hairAccessories": {
+        "value": "无固定发饰",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "accessorySide": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "accessoryPosition": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "backSilhouette": {
+        "value": "圆润后脑＋轻薄碎发后颈",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "wardrobe": {
+      "outerwear": {
+        "value": "同校深海军蓝两暗扣外套，略宽松，上扣合、下扣开",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shirt": {
+        "value": "白色翻领衬衫，袖口稍长但手掌露出",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "blouse": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "neckwear": {
+        "value": "酒红领带、小结轻微偏歪",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "skirt": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "trousers": {
+        "value": "炭灰色直筒长校裤",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "socks": {
+        "value": "深灰短袜",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "footwear": {
+        "value": "黑色乐福鞋",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "garmentLayerOrder": {
+        "value": [
+          "衬衫",
+          "领带",
+          "深蓝外套",
+          "炭灰长裤",
+          "深灰袜",
+          "黑鞋"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "paletteHex": {
+        "value": {
+          "navy": "#25354B",
+          "white": "#F2F0E9",
+          "tie": "#783B46",
+          "trousers": "#575962",
+          "hair": "#957867",
+          "eyes": "#788977"
+        },
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "fabrics": {
+        "value": "校服斜纹混纺、衬衫棉织、长裤普通梭织",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sewingDetails": {
+        "value": "翻领与门襟清晰，袖口暗扣",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pleats": {
+        "value": "男裤无裙褶，保留正常裤腰压线",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "buttons": {
+        "value": "两颗哑光深色校服纽扣",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pockets": {
+        "value": "外套侧袋、长裤斜插袋；默认手不插兜",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "wearCondition": {
+        "value": "干净但自然有少量衣褶",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "seasonalVariants": {
+        "value": "未来夏季同校款待定，本轮不画",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "occasionVariants": {
+        "value": "后续剧情换装另定，本轮仅校服",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "permanentAccessories": {
+        "value": "没有眼镜、耳环、饰品",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "temporaryProps": {
+        "value": "首张母图无书包、手机和手持物",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "temperament": {
+      "coreConfirmedTraits": {
+        "value": [
+          "小正太型外貌方向，其他性格未获用户确认"
+        ],
+        "status": "user_confirmed",
+        "source": "用户2026-11-02：男三、小正太"
+      },
+      "proposedTraits": {
+        "value": [
+          "乖巧",
+          "亲切",
+          "机灵",
+          "细心",
+          "微微害羞",
+          "熟悉后调皮"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "strengths": {
+        "value": [
+          "善于倾听",
+          "记得声音先后",
+          "重视朋友感受"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "weaknesses": {
+        "value": [
+          "害怕冲突",
+          "不喜欢被当小学生",
+          "紧急情况会短暂慌张"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "socialEnergy": {
+        "value": "初见腼腆，熟悉后话变多",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "humorStyle": {
+        "value": "小声说一本正经的玩笑，然后先自己笑",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "conflictStyle": {
+        "value": "先劝和，被误解时能坚持澄清",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "fears": {
+        "value": "完全寂静的走廊（剧情候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "angerTriggers": {
+        "value": "别人漠视朋友的求助",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "stressResponse": {
+        "value": "先停住，随后冷静寻找声源",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "defenseMechanism": {
+        "value": "用笑话缓解压力",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "moralLimits": {
+        "value": "不会为了取乐欺负弱者",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "goals": {
+        "value": "想被当作真正有用的同伴",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "contradictions": {
+        "value": "长相乖巧但并非没有主见",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "publicPersona": {
+        "value": "讲礼貌、软软的可靠学弟",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "privatePersona": {
+        "value": "机灵好奇、有一点倔",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "emotionalBaseline": {
+        "value": "温暖安静中带好奇",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "expressionRange": {
+        "value": [
+          "微笑",
+          "认真",
+          "惊讶",
+          "害羞",
+          "委屈",
+          "害怕"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "defaultMicroExpression": {
+        "value": "眼睛轻亮、嘴角小幅上提",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "signatureMicroExpressions": {
+        "value": [
+          "听到怪声先眨眼",
+          "被夸会忍笑",
+          "思考时抿一下嘴"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyesExpression": {
+        "value": "经常注意人的目光和声音方向",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyebrowsExpression": {
+        "value": "疑惑时单侧眉略高",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mouthExpression": {
+        "value": "常闭口微笑，认真时嘴角收平",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bodyLanguageMood": {
+        "value": "小幅自然手势，兴奋会前倾一点",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "composureLevel": {
+        "value": "日常稳定、遇到真实异常会紧张",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "psychology": {
+      "innerNeed": {
+        "value": "证明自己不是只能被保护的小孩",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "externalGoal": {
+        "value": "通过录音与观察帮同伴找证据",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "secretGoal": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "belief": {
+        "value": "小小的声音差异也能证明事实",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "selfImage": {
+        "value": "努力可靠的学弟",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "insecurities": {
+        "value": "在意别人总拿身高开玩笑",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "regrets": {
+        "value": "一次没敢及时说出的提醒（未定剧情）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "traumaIfStoryApproved": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "attachmentStyle": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "trustPattern": {
+        "value": "喜欢肯听他说话的人，受嘲弄后很难立刻恢复",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "breakingPoint": {
+        "value": "同伴否认他亲耳听到的声音",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "growthArc": {
+        "value": "从不敢提问到敢坚持复核证据",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "values": {
+        "value": [
+          "善良",
+          "细致",
+          "可靠",
+          "勇气"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "dialogue": {
+      "voicePitch": {
+        "value": "自然中高少年男声，非女声或幼儿假声",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "voiceTimbre": {
+        "value": "清澈轻软但有男生声线",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "speechRate": {
+        "value": "熟人面前略快，讲证据时慢",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "voiceVolume": {
+        "value": "中等偏小、兴奋时轻快",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "tone": {
+        "value": "温柔友善有点顽皮",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "accents": {
+        "value": "标准普通话，未决定地域口音",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "diction": {
+        "value": "咬字清晰",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sentenceLength": {
+        "value": "短句为主，先提出小观察",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "vocabulary": {
+        "value": "生活化，偶尔用广播设备术语",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "habitualPhrases": {
+        "value": [
+          "欸？等一下。",
+          "不是啦，我很认真的。",
+          "好像不太对耶。"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sarcasmLevel": {
+        "value": "低",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "laughStyle": {
+        "value": "先忍笑后短促轻笑",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "cryingStyle": {
+        "value": "努力克制哽咽，不尖叫",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "speechUnderStress": {
+        "value": "重复关键时间或声音来确认",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "dialogueExamples": {
+        "value": [
+          "我真的听到了第二声铃响。",
+          "别总觉得我年纪小嘛。",
+          "嗯……刚才那段脚步声，不像同一个人。"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "forbiddenVoicePatterns": {
+        "value": "幼儿腔、故作甜腻、霸道总裁、连续卖萌",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "behavior": {
+      "idlePose": {
+        "value": "全身正面，左腿承重，右臂自然垂下，左手小幅张开，头微偏右",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "signatureGesture": {
+        "value": "发现线索时右食指轻抬，待机不固定举指",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "greetingHabit": {
+        "value": "先点头再轻轻挥手",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "gazePattern": {
+        "value": "看人眼睛一瞬，害羞时迅速避开",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "blinkHabit": {
+        "value": "自然短眨眼，听异常声源时停顿",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyebrowMotion": {
+        "value": "疑惑时单眉稍抬",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headTilt": {
+        "value": "右倾3–5°，不是长期歪头",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "walkCycle": {
+        "value": "较短步幅，轻快落地",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "runningCycle": {
+        "value": "短步频率较快但体力不出众",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "nervousTics": {
+        "value": "拇指轻轻摩擦食指指腹",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sleepRhythm": {
+        "value": "普通高中上学作息，细节待剧情",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eatingStyle": {
+        "value": "小口吃饭，听别人说话时停下来",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "favoriteFoods": {
+        "value": "玉米浓汤和软面包（候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hobbies": {
+        "value": [
+          "剪辑环境声音",
+          "折纸",
+          "听雨声"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "dailyRoutine": {
+        "value": "上课、课间帮广播站、放学回家；时间尚未落地",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "timeManagement": {
+        "value": "通常会早几分钟到",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "transportation": {
+        "value": "步行或公交，取决于待定住处",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "relationships": {
+      "familyRelations": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "schoolRelations": {
+        "value": "广播站前辈愿意教他设备（候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "friendRelations": {
+        "value": "熟人面前亲切爱笑",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "rivalRelations": {
+        "value": "不喜欢欺负小个子同学的人",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mentorRelations": {
+        "value": "广播站指导老师（候选）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "romancesIfStoryApproved": {
+        "value": null,
+        "status": "not_applicable",
+        "source": "CHAR-020角色设计草案2026-11-02"
+      },
+      "relationshipToProtagonist": {
+        "value": "开始怕女主毒舌，后来明白她其实认真",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "relationshipToMaleLead": {
+        "value": "欣赏男主敢说真话但不喜欢旷课态度",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "trustFlags": {
+        "value": [
+          "认真听他讲话增加信任",
+          "否认录音证据会降低信任"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "secretsShared": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "conflictHistory": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "relationProgression": {
+        "value": "初见羞涩→合作记录→主动提出线索→重大事件敢反对",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "skills": {
+      "talents": {
+        "value": [
+          "听辨细小声音差异",
+          "复述节奏",
+          "事件按时间排序"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "weaknesses": {
+        "value": [
+          "力气不大",
+          "不擅长公开争执",
+          "嘈杂时易分心"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "learnedSkills": {
+        "value": [
+          "基础录音",
+          "音频剪辑",
+          "设备线路简单检查"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "academicSkills": {
+        "value": [
+          "语文朗读",
+          "节奏逻辑",
+          "基础数学"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "workSkills": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "combatAbility": {
+        "value": "无专业战斗训练，卡牌体系优先信息支援",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "physicalEndurance": {
+        "value": "日常体力中等略低",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "agility": {
+        "value": "短距离行动灵活",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "perception": {
+        "value": "对频率和声音顺序敏感，必须复核不具超能力",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "charisma": {
+        "value": "友善容易沟通，不保证所有人无条件喜欢",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "supernaturalPowers": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "powerCosts": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "equipment": {
+        "value": "默认无装备",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "inventory": {
+        "value": "按剧情事件持有物品",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "healthIfStoryApproved": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      }
+    },
+    "story": {
+      "firstAppearance": {
+        "value": "候选：校园广播室外首次遇见主角",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "locationEntrances": {
+        "value": [
+          "校内走廊",
+          "广播室",
+          "教室"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "originStory": {
+        "value": "因日常录音习惯注意到不合常理的时间顺序",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "incitingEvent": {
+        "value": "走廊铃声出现两个互斥版本",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "keyScenes": {
+        "value": [
+          "播放两段矛盾录音",
+          "被质疑恶作剧后仍坚持说明",
+          "用回声推断门的方向"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "storyGoals": {
+        "value": "帮助主角验证异常时间与声源",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "branchingChoices": {
+        "value": [
+          "相信他的记录",
+          "要求重听核验",
+          "忽略记录"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "secrets": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "reveals": {
+        "value": "录音线索要有证据链，不是万能解密",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "relationshipEvents": {
+        "value": "认真倾听他的证词使关系加深",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "questEvents": {
+        "value": "消失的第二声铃（候选支线）",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "alternateEndings": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "chronologicalHistory": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      }
+    },
+    "environment": {
+      "home": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "school": {
+        "value": "主角同一所高中",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "workplace": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "roomOwnership": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "itemOwnership": {
+        "value": "校园广播器材属于学校",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "furnitureConditions": {
+        "value": "场景默认不放与人在场状态有关的私人物品",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "weatherResponse": {
+        "value": "雨天会注意雨点和铃声混合的声响",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "locationsVisited": {
+        "value": [
+          "教室",
+          "校内走廊",
+          "广播室"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "npcSchedule": {
+        "value": "校园上课与放学后广播活动，需与日程系统统一",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "worldEra": {
+        "value": "当代架空都市异常事件",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "visualProduction": {
+      "frontReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "backReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "sideReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "threeQuarterReference": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "poseReference": {
+        "value": "候选常驻自然站姿，需Anima单人全身出图",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "expressionReferences": {
+        "value": [
+          "微笑",
+          "害羞",
+          "好奇",
+          "认真",
+          "惊讶",
+          "害怕"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "silhouetteLocked": {
+        "value": false,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "colorPalette": {
+        "value": {
+          "hair": "#957867",
+          "eyes": "#788977",
+          "blazer": "#25354B",
+          "shirt": "#F2F0E9",
+          "tie": "#783B46",
+          "trousers": "#575962"
+        },
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "artStyle": {
+        "value": "沿用项目已认可的日系二维GalGame赛璐璐立绘",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "imageAspectRatio": {
+        "value": "建议1024×1024留完整人像，不拼版",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "whiteBackgroundRule": {
+        "value": "纯白背景，无场景物件",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "fullBodyRule": {
+        "value": "头到鞋底完整",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "centeredRule": {
+        "value": "人物正中偏下，地面线稳定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "occlusionRule": {
+        "value": "两手与躯干边界清楚，后续可拆分",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "promptPositive": {
+        "value": "masterpiece, best quality, score_7, safe, 1boy, solo, original male high school student, cute youthful shota-like boy, age-appropriate sixteen-year-old high school student, 158cm petite healthy teenage proportions, natural 6.4 heads tall, distinct short soft oval face, softly rounded cheeks, short slightly squared chin, tender muted grey-green almond-round eyes, gentle short straight brows, natural small nose, tiny closed-mouth cheerful smile, slight dimple when smiling, fluffy short light tea-brown layered hair, irregular airy bangs, one small upward loose forelock, asymmetrical natural hair, same-school deep navy single-breasted blazer with two matte dark buttons, upper button fastened and lower button open, white collared shirt, slightly crooked short burgundy necktie, charcoal straight school trousers, dark socks, black loafers, natural modest uniform fit with slightly long sleeves, full body standing, front view facing viewer, gentle casual idle pose, weight on left leg, relaxed shoulders, right arm hanging beside body, left hand relaxed near waist, both hands visible, sweet boyish charm without female facial features, friendly curious expression, clean readable silhouette for later Live2D layering, plain white background, consistent original anime visual novel line art, restrained cel shading, balanced natural proportions, @akipekostyle<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "promptNegative": {
+        "value": "worst quality, low quality, score_1, score_2, score_3, girl, 1girl, female student, grown man, child infant, elementary school boy, baby proportions, chibi, giant head, oversized glassy eyes, V-shaped idol chin, generic AI face, long black hair, grey male lead hair, dark black side-parted hair, chestnut high ponytail, amber eyes, muscular body, overly feminine face, skirt, shorts, unrelated school uniform, gold buttons, school bag, glasses, earrings, accessory, props, holding microphone, multiple people, character sheet, dual views, action pose, jumping, running, hands in pockets, arms crossed, cropped head, cropped shoes, broken hands, extra fingers, duplicate body, text, watermark, background scene, plastic skin",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "modelVersion": {
+        "value": "Anima，具体权重待出图登记",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "artistTag": {
+        "value": "@akipekostyle",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lora": {
+        "value": "<lora:akipekoanima_v1_1:1>",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "seed": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "sampler": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "resolution": {
+        "value": "推荐1024×1024，非已出图参数",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sourceFileHash": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "assetApproval": {
+        "value": "未批准原画，不注册游戏角色",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bodyFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headFacingYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headPitchDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headRollDeg": {
+        "value": 3,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoulderYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pelvisYawDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "gazeHorizontalDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "gazeVerticalDeg": {
+        "value": 0,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "cameraAngle": {
+        "value": "眼平视角、正面",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "cameraFocalStyle": {
+        "value": "全身常规人像镜头",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "projectionOrthoPerspective": {
+        "value": "低透视畸变",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "visualStyleCategory": {
+        "value": "2D anime visual novel character portrait",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lineWeightStyle": {
+        "value": "外轮廓较重、五官精细线条",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "lineColor": {
+        "value": "#25262A",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shadingMethod": {
+        "value": "2–3层克制赛璐璐光影",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shadowDensity": {
+        "value": "中低",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "highlightTreatment": {
+        "value": "头发低光泽、眼小高光",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "textureComplexity": {
+        "value": "少量服装材质，不堆AI噪点",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "anatomicalStylization": {
+        "value": "约6.4头身的自然少年比例，非幼童",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "facialFeatureStylization": {
+        "value": "柔和少年骨相，不能变女脸或另一个男主",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "characterIdentityEmbeddingNotes": {
+        "value": "尚无母图，不可声称已经生成身份embedding",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "frontPosePoseCode": {
+        "value": "M03_IDLE_A0",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "poseSilhouetteNotes": {
+        "value": "两手可见、肩放松、普通待机站姿",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "framingHeadroomRatio": {
+        "value": 0.035,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "framingFootroomRatio": {
+        "value": 0.025,
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "bodyAlignmentRule": {
+        "value": "统一同校角色地面线，明显矮于男主和男二",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "rigging": {
+      "layerSource": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "layerList": {
+        "value": [
+          "后发",
+          "颈部",
+          "脸",
+          "左眉",
+          "右眉",
+          "左眼",
+          "右眼",
+          "嘴",
+          "前刘海",
+          "躯干",
+          "外套后片",
+          "外套左右前片",
+          "领带",
+          "左上臂",
+          "左前臂",
+          "左手",
+          "右上臂",
+          "右前臂",
+          "右手",
+          "左腿",
+          "右腿",
+          "左鞋",
+          "右鞋"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "headJoint": {
+        "value": "颈根位置待原图确定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "neckJoint": {
+        "value": "锁骨至颈根轻转",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "shoulderJoint": {
+        "value": "两肩独立旋转",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "elbowJoint": {
+        "value": "小幅自然屈伸",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "wristJoint": {
+        "value": "左右手腕微动",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hipJoint": {
+        "value": "骨盆中点待机重心",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "kneeJoint": {
+        "value": "膝轻屈",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ankleJoint": {
+        "value": "双足贴地",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyeTrack": {
+        "value": "瞳孔小幅水平移动",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "blink": {
+        "value": "上下眼睑自然眨眼",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mouthShapes": {
+        "value": [
+          "闭口",
+          "小开口",
+          "笑",
+          "A",
+          "I",
+          "U"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairPhysics": {
+        "value": "额前小翘发微晃",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "clothPhysics": {
+        "value": "外套下摆和领带轻微滞后",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "breathingPhysics": {
+        "value": "肩、胸与领带低幅联动",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "skinningLimits": {
+        "value": "袖口手指不能橡皮变形",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "expressionStates": {
+        "value": [
+          "idle",
+          "smile",
+          "shy",
+          "thinking",
+          "surprised",
+          "scared"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "actionStates": {
+        "value": [
+          "idle",
+          "nod",
+          "small_wave",
+          "look_side"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "runtimePreview": {
+        "value": "尚未制作",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "occlusionRepair": {
+        "value": "需要补画刘海下的额头与袖内手臂",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "qaAnimation": {
+        "value": "未测试",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "armRotationBoundsDeg": {
+        "value": "肩小幅±12°，更大动作单独绘制",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hipRotationBoundsDeg": {
+        "value": "待机±3°",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "kneeFlexBoundsDeg": {
+        "value": "待机2–4°，均待实际测试",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "eyelidOpennessChannel": {
+        "value": "0–1归一化开眼",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "browDeformationChannels": {
+        "value": [
+          "左眉高度",
+          "右眉高度",
+          "眉中内聚"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "mouthCornerChannels": {
+        "value": [
+          "笑意",
+          "开合",
+          "左右口角微调"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "expressionLandmarkMotion": {
+        "value": "只做小幅自然形变不改脸",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "frontSideBackProportionsQa": {
+        "value": "实际母图批准以后再制作背面，严禁镜像",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "audio": {
+      "voiceCasting": {
+        "value": "自然少年男声候选，演员未定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "pronunciation": {
+        "value": "普通话、咬字清楚",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "multilingualNotes": {
+        "value": "其他语言未设计",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "recordedVoices": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "footstepSfx": {
+        "value": "轻快短步的校鞋足音",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "costumeSfx": {
+        "value": "外套与领带细微布料摩擦",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "voiceVolume": {
+        "value": "中等稍轻",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "ambienceRules": {
+        "value": "雨夜环境声可衬托听辨能力，不遮盖对白",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "gameplay": {
+      "npcSchedule": {
+        "value": "学校日常作息待项目日程系统建立",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "dialogueTree": {
+        "value": "初见→广播异常→证词核验→信任事件",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "affinity": {
+        "value": "关系数值未定，尊重与验证可提升",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "trust": {
+        "value": "被认真倾听则提升，被戏弄则下降",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "playerControl": {
+        "value": "非默认玩家主控角色",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "interactRange": {
+        "value": "沿用场景全局交互范围",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "characterSelection": {
+        "value": "入队资格待剧情确定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sceneLayers": {
+        "value": "人物L2D层+对话层，角色目前未注册",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "collisionBounds": {
+        "value": "按未来真实立绘确定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "saveFlags": {
+        "value": [
+          "met_male3",
+          "recording_checked",
+          "male3_trust_stage"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "choiceTriggers": {
+        "value": [
+          "listen_again",
+          "accept_evidence",
+          "ignore_hint"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "npcBrain": {
+        "value": "候选校园状态机：上课、活动、放学、交谈",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "flagsVariables": {
+        "value": {
+          "met": false,
+          "trust": 0,
+          "recordingChecked": false
+        },
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "inventoryRules": {
+        "value": "只有剧情真正拥有的物品进入道具栏",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "quality": {
+      "originalityCheck": {
+        "value": "原创脸型，避免照抄其他作品正太角色",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "similarityCheck": {
+        "value": "重点对比CHAR-003/016男角色及CHAR-004女三的脸与发色",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "faceConsistency": {
+        "value": "暂无正式母图，等待验收",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "hairSideCheck": {
+        "value": "检查偏分与翘发正背统一",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "visualIdentityCheck": {
+        "value": "少年可爱但明显是男高中生",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "handsCheck": {
+        "value": "检查双手五指及无粘连",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "feetCheck": {
+        "value": "黑色校鞋完整且同一地面线",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "fullBodyCheck": {
+        "value": "头顶到脚底无裁切",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "measurementProvenanceCheck": {
+        "value": "所有数值仅服装制作提案，不代表真实测量",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "outfitCheck": {
+        "value": "同校制服材质、纽扣、领带颜色一致",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sourceRightsCheck": {
+        "value": "Anima和LoRA权重商用许可待核验",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "rigCheck": {
+        "value": "尚未绑定，不能标记通过",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "poseCheck": {
+        "value": "常驻待机姿势需要真实出图验证",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "screenshotCheck": {
+        "value": "游戏主场景、全屏编辑器及手机视图尚未测试",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "approvalRecord": {
+        "value": "只确认小正太男三的创作方向",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "rollbackReference": {
+        "value": "不覆盖CHAR-001/002/003/004/016任何已认可原图",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    },
+    "provenance": {
+      "createdAt": {
+        "value": "2026-11-02",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "updatedAt": {
+        "value": "2026-11-02",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "userConfirmedFields": {
+        "value": [
+          "男三",
+          "小正太类型"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "sourceCitations": {
+        "value": [
+          "用户2026-11-02指定男三小正太",
+          "448字段标准V3"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "proposedFields": {
+        "value": "所有已填年龄体型五官性格剧情为候选",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "unknownFields": {
+        "value": "家庭生日、正式姓名、剧情细节、真实图像和模型参数未定",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "rejectedFields": {
+        "value": [
+          "男主复制脸",
+          "男二复制脸",
+          "高大成熟型",
+          "女性脸或幼儿四头身"
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "revisionHistory": {
+        "value": [
+          {
+            "date": "2026-11-02",
+            "version": "0.1.0",
+            "note": "CHAR-020由未获批准的田径女生规划占位改为男三小正太候选"
+          }
+        ],
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "authorReviewer": {
+        "value": "AI创作提案；待用户审批",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "approvedBy": {
+        "value": null,
+        "status": "unknown",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "现有证据不足，不伪造信息"
+      },
+      "permissions": {
+        "value": "仅设计文件，严禁未经许可修改其他角色原画",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      },
+      "historyNotes": {
+        "value": "未生成图片，不等于PSD或L2D完成",
+        "status": "proposed",
+        "source": "CHAR-020角色设计草案2026-11-02",
+        "notes": "制作提案，未获批准；数字为创作制版参考而非实测"
+      }
+    }
+  },
+  "recordVersion": "0.1.0",
+  "updatedAt": "2026-11-02",
+  "sourceNotes": {
+    "confirmedByUser": "男三、小正太类型",
+    "notApproved": "名字、年龄、身高、体重、五官、剧情、配色与行为等为提案；没有任何原画。",
+    "numbering": "CHAR-020原为未批准的田径女生规划占位；重新规划为男三候选不覆盖已批准人物。"
+  },
+  "fieldCount": 448,
+  "statusSummary": {
+    "user_confirmed": 3,
+    "proposed": 394,
+    "unknown": 41,
+    "not_applicable": 10
+  }
+}
