@@ -520,28 +520,53 @@ jobs:
                   }
                   assert.ok(totalCenterDarkening/Math.max(1,sampledCenter)<5,
                     'fog darkened important central room content: '+(totalCenterDarkening/sampledCenter).toFixed(2));
-                  // Compare same fixed camera twice. Changes near the outer
-                  // wall come from real-time lightweight fog, not camera tilt.
+                  // Measure the actual BLACK fog against a temporary white
+                  // diagnostic backing between scene (z=1) and fog (z=3).
+                  // Comparing dark wall screenshots falsely reports zero when
+                  // the new, deliberately thin smoke is too subtle on dark art.
+                  // Do NOT change the fog rendering just to please this test.
+                  const fogBacking=await page.evaluate(()=>{
+                    const el=document.createElement('div');
+                    el.id='test-fog-white-backing';
+                    Object.assign(el.style,{
+                      position:'absolute',inset:'0',background:'#fff',
+                      zIndex:'2',pointerEvents:'none'
+                    });
+                    document.getElementById('view').appendChild(el);
+                    return el.id;
+                  });
+                  assert.equal(fogBacking,'test-fog-white-backing');
                   await page.mouse.move(cfg.width/2,cfg.height/2);
                   await page.waitForTimeout(1400);
                   const fogBefore=PNG.sync.read(await page.screenshot({
-                    path:'artifacts/classroom/bedroom-smoke-before.png'}));
+                    path:'artifacts/classroom/bedroom-fog-white-before.png'}));
                   await page.waitForTimeout(2300);
                   const fogAfter=PNG.sync.read(await page.screenshot({
-                    path:'artifacts/classroom/bedroom-smoke-after.png'}));
-                  let animatedPixels=0;
+                    path:'artifacts/classroom/bedroom-fog-white-after.png'}));
+                  let animatedPixels=0, edgeDarkPixels=0, centerDarkPixels=0;
                   for(let y=Math.floor(cfg.height*.22);y<cfg.height*.78;y+=2){
-                    for(let x=Math.floor(cfg.width*.935);x<cfg.width*.966;x+=2){
-                      const index=(y*fogBefore.width+x)*4;
-                      const change=Math.abs(fogAfter.data[index]-fogBefore.data[index])+
-                        Math.abs(fogAfter.data[index+1]-fogBefore.data[index+1])+
-                        Math.abs(fogAfter.data[index+2]-fogBefore.data[index+2]);
-                      if(change>8)animatedPixels++;
+                    for(let x=Math.floor(cfg.width*.92);x<cfg.width*.969;x+=2){
+                      const p=(y*fogBefore.width+x)*4;
+                      const change=Math.abs(fogAfter.data[p]-fogBefore.data[p])+
+                        Math.abs(fogAfter.data[p+1]-fogBefore.data[p+1])+
+                        Math.abs(fogAfter.data[p+2]-fogBefore.data[p+2]);
+                      if(change>5)animatedPixels++;
+                      if(fogBefore.data[p]<247)edgeDarkPixels++;
+                    }
+                    for(let x=Math.floor(cfg.width*.38);x<cfg.width*.62;x+=12){
+                      const p=(y*fogBefore.width+x)*4;
+                      if(fogBefore.data[p]<247)centerDarkPixels++;
                     }
                   }
-                  assert.ok(animatedPixels>2,
-                    'black fog invisible/static in inner room edge band: '+animatedPixels);
-                  console.log('PASS: independent cinematic fog moves visibly across bedroom, '+animatedPixels+' pixels changed');
+                  await page.evaluate(()=>document.getElementById('test-fog-white-backing').remove());
+                  assert.ok(edgeDarkPixels>40,
+                    'fog absent from scene edge when contrasted against white: '+edgeDarkPixels);
+                  assert.equal(centerDarkPixels,0,
+                    'fog wrongly extends into protected middle: '+centerDarkPixels);
+                  assert.ok(animatedPixels>5,
+                    'edge-only animated fog should still move: '+animatedPixels);
+                  console.log('PASS: small live edge-only fog on white calibration, '+animatedPixels+
+                    ' changed pixels and zero central contamination');
                 }
                 // Character art is an asset, NOT a separate selectable location.
                 assert.equal(await page.locator('#scene-switcher [data-scene-target="protagonist"]').count(),0);
