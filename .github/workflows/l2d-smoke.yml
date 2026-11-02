@@ -21,6 +21,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Test mounted breathing animation and online UI
         run: |
+          python3 -m pip install --quiet 'Pillow>=10,<12'
           python3 scripts/build_scene_catalog.py
           mkdir -p artifacts/heroine-l2d
           python3 -m http.server 8132 --directory site > /tmp/l2d-server.log 2>&1 &
