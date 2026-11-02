@@ -115,7 +115,8 @@ jobs:
           assert 'enemyDepth.style.transform=' in h
           assert 'const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor' in h
           assert 'depthFactor=clamp(' in h
-          assert 'id="dev-trigger"' in h and 'id="dev-tools"' in h
+          assert 'id="dev-tools"' in h and 'id="dev-layer"' in h
+          assert 'id="dev-trigger"' not in h
           assert 'id="menu-gallery-button"' in h
           assert 'id="scene-switcher-toggle"' in h
           assert 'scene-catalog.generated.js' in h
@@ -166,13 +167,14 @@ jobs:
               'float nearEdges=max(', 'float safetyBlack=',
               "const FOG_KEY='paperchalk-fog-edge-v1'",
               'width:4,opacity:40,offset:-3,safe:88,solid:18,feather:8',
-              'id="menu-fog-debug"', 'id="game-fog-debug"',
+              'id="menu-dev"', 'id="game-dev"',
               'id="dev-fog-tools"',
               'id="fog-safe-guide"', 'id="fog-width"',
               'id="fog-offset"', 'id="fog-safe"',
               'id="fog-opacity"', 'id="fog-solid"', 'id="fog-feather"',
-              "const fogMenuButtons=[", "function applyFogSettings()",
-              "function showFogEditor(open)", "const m=fogMetrics()",
+              "function enterDeveloper(layer='fog')", "function useRig(active)",
+              "function applyFogSettings()", "function refreshFogEditor()",
+              "const m=fogMetrics()",
               'sceneHalf.x*sizes.w*(1-m.safe*.01)',
           ):
               assert marker in h,'missing fog debug feature: '+marker
@@ -186,7 +188,10 @@ jobs:
           assert 'float wave=' in h and 'const wave=' in h
           assert 'aimX=0;aimY=0;currentX=0;currentY=0;' in h
           assert "importedScenes=Object.create(null)" in h
-          assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
+          assert "function enterDeveloper(layer='fog')" in h and 'function exitDeveloper()' in h
+          assert 'id="dev-fog-tools"' in h and 'id="dev-z-control"' in h
+          assert 'id="dev-layer-actions"' in h and 'id="dev-3d-controls"' in h
+          assert 'function showFogEditor(' not in h and 'id="dev-fog-close"' not in h
           assert 'id="dev-ground"' in h and 'rotateX(90deg)' in h
           assert 'ground:{y:77,z:-215,visible:1}' in h
           assert 'enemy:{x:46,y:16,size:34,z:-190}' in h
@@ -250,16 +255,16 @@ jobs:
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-MAIN-MENU.png'});
                 await page.locator('#menu-settings-button').click();
                 assert.ok(await page.locator('#tilt-toggle').isVisible(),'settings text not accessible');
-                // Main settings must expose fog DEV to mouse AND touch users.
-                assert.ok(await page.locator('#menu-fog-debug').isVisible(),
-                  'fog developer entry missing from main settings');
-                await page.locator('#menu-fog-debug').click();
+                // Settings opens the ONE developer panel in current-scene fog mode.
+                assert.ok(await page.locator('#menu-dev').isVisible());
+                await page.locator('#menu-dev').click();
+                assert.equal(await page.locator('#dev-tools').isVisible(),true);
                 assert.equal(await page.locator('#dev-fog-tools').isVisible(),true);
+                assert.equal(await page.locator('#dev-stage').isVisible(),false);
                 assert.equal(await page.locator('#scene').getAttribute('data-scene'),'menu');
-                assert.equal(await page.locator('#menu-fog-debug').getAttribute('aria-expanded'),'true');
-                await page.locator('#dev-fog-close').click();
-                assert.equal(await page.locator('#dev-fog-tools').isVisible(),false);
-                assert.equal(await page.locator('#menu-fog-debug').getAttribute('aria-expanded'),'false');
+                assert.equal(await page.locator('#dev-layer').inputValue(),'fog');
+                await page.locator('#dev-exit').click();
+                assert.equal(await page.locator('#dev-tools').isVisible(),false);
                 await page.locator('#menu-settings-back').click();
                 // One added image becomes a real menu destination automatically.
                 await page.locator('#menu-gallery-button').click();
@@ -461,17 +466,18 @@ jobs:
                   assert.ok(roomProtagonist.rect.bottom<=roomProtagonist.view.bottom+4,
                     'back-facing protagonist feet were cropped');
                 }
-                // Both desktop and mobile can open fog controls via ☰ menu.
+                // The same menu opens fog tuning without changing the room.
                 await page.locator('#menu-toggle').click();
-                assert.ok(await page.locator('#game-fog-debug').isVisible());
-                await page.locator('#game-fog-debug').click();
+                assert.ok(await page.locator('#game-dev').isVisible());
+                await page.locator('#game-dev').click();
+                assert.equal(await page.locator('#dev-tools').isVisible(),true);
                 assert.equal(await page.locator('#dev-fog-tools').isVisible(),true);
+                assert.equal(await page.locator('#dev-3d-controls').isVisible(),false);
                 assert.equal(await page.locator('#scene').getAttribute('data-scene'),'bedroom');
-                assert.equal(await page.locator('#game-fog-debug').getAttribute('aria-expanded'),'true');
                 assert.equal(await page.locator('#fog-safe-guide').isVisible(),true);
                 if(cfg.mobile){
-                  await page.locator('#dev-fog-close').click();
-                  assert.equal(await page.locator('#dev-fog-tools').isVisible(),false);
+                  await page.locator('#dev-exit').click();
+                  assert.equal(await page.locator('#dev-tools').isVisible(),false);
                 }
                 if(!cfg.mobile){
                   // Desktop continues checking every slider on the current room.
@@ -516,9 +522,9 @@ jobs:
                   assert.equal(await page.locator('#fog').getAttribute('data-width'),'4');
                   assert.equal(await page.evaluate(()=>
                     localStorage.getItem('paperchalk-fog-edge-v1')),null);
-                  await page.locator('#dev-fog-close').click();
-                  assert.equal(await page.locator('#dev-fog-tools').isVisible(),false);
-                  assert.equal(await page.locator('#game-fog-debug').getAttribute('aria-expanded'),'false');
+                  await page.locator('#dev-exit').click();
+                  assert.equal(await page.locator('#dev-tools').isVisible(),false);
+                  assert.equal(await page.locator('#fog-safe-guide').isVisible(),false);
                 }
                 if(!cfg.mobile){
                   // Center of the room must remain clear: compare the same
@@ -607,8 +613,13 @@ jobs:
                 const liveFogBefore=await page.locator('#fog').evaluate(el=>{
                   window.__devOriginalFog=el;return Number(el.dataset.frames);
                 });
-                await page.locator('#dev-trigger').click();
+                await page.locator('#menu-toggle').click();
+                await page.locator('#game-dev').click();
                 assert.equal(await page.locator('#dev-tools').isVisible(),true);
+                assert.equal(await page.locator('#scene').getAttribute('data-scene'),'classroom');
+                await page.locator('#dev-layer').selectOption('enemy');
+                assert.equal(await page.locator('#dev-fog-tools').isVisible(),false);
+                assert.equal(await page.locator('#dev-stage').isVisible(),true);
                 const inspection=await page.evaluate(()=>({
                   mode:document.getElementById('view').classList.contains('dev-mode'),
                   parents:['scene','enemy-depth-root','fog','camera-player-root']
@@ -672,7 +683,9 @@ jobs:
                   'fluid simulation stopped while freely viewing the 3D planes');
                 assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'55%',
                   'editing not applied to original gameplay scene');
-                await page.locator('#dev-trigger').click();
+                await page.locator('#menu-toggle').click();
+                await page.locator('#game-dev').click();
+                await page.locator('#dev-layer').selectOption('enemy');
                 await page.locator('#dev-reset').click();
                 await page.locator('#dev-exit').click();
                 assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'46%',
