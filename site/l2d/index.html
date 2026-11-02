@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0e14">
+<title>女主角 · 在线呼吸骨骼预览｜Paperchalk World</title>
+<style>
+:root{color-scheme:dark;--edge:#303844;--text:#e9edf5;--muted:#b6c1ce;--blue:#91baf5}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,"PingFang SC",sans-serif;background:#0b0e14;color:var(--text)}
+header{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;padding:15px clamp(12px,3vw,34px);border-bottom:1px solid var(--edge);background:#10151e}
+h1{font-size:clamp(16px,2.6vw,22px);margin:0}header p{font-size:12px;color:var(--muted);margin:7px 0 0;line-height:1.5}
+a{color:#b9d8ff;text-underline-offset:3px}header a{font-size:13px}
+main{max-width:1310px;margin:auto;display:grid;grid-template-columns:minmax(320px,1fr) 290px;gap:15px;padding:15px}
+.stage{background:radial-gradient(ellipse at 52% 34%,#293040 0%,#161b25 56%,#10141c 100%);border:1px solid #384353;border-radius:14px;min-height:min(82vh,860px);display:flex;justify-content:center;align-items:center;overflow:hidden;position:relative}
+.stage::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 28px #0007;pointer-events:none}
+.stage canvas{display:block;width:min(98%,min(84vh,740px));max-height:84vh;aspect-ratio:1/1;object-fit:contain;image-rendering:auto}
+.readout{position:absolute;left:14px;bottom:12px;padding:8px 10px;font:12px ui-monospace,monospace;background:#0e131cd9;border:1px solid #3d485a;border-radius:7px;z-index:1;color:#cad8ea}
+aside{background:#141b26;border:1px solid var(--edge);border-radius:13px;padding:15px;align-self:start}
+section{border-bottom:1px solid var(--edge);padding-bottom:16px;margin-bottom:15px}section:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+h2{font-size:13px;margin:0 0 10px;color:#d6e6ff}button{cursor:pointer;border-radius:9px;padding:11px 12px;border:1px solid #455061;background:#252e3b;color:var(--text);font:inherit}
+button.active{border-color:var(--blue);background:#244266}button:focus-visible,input:focus-visible{outline:2px solid #b5d6ff;outline-offset:2px}
+.buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.buttons.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+label{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#d9e4f2;margin:13px 0 6px}
+input[type=range]{width:100%;accent-color:#91baf5;cursor:pointer}
+.note{font-size:12px;line-height:1.7;color:#b6c1ce;margin:8px 0}
+.small{font-size:11px;color:#8499ad;line-height:1.6;margin:5px 0}
+#original{display:none}#importImage{width:100%;color:#bfd3ed;font-size:11px;margin-top:8px}
+@media(max-width:840px){main{grid-template-columns:1fr}.stage{min-height:450px;height:60vh;max-height:700px}.stage canvas{width:min(98%,60vh)}aside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}section{margin:0;padding:0 0 10px;border-bottom:0}}
+@media(max-width:550px){main{padding:8px;gap:8px}.stage{min-height:350px;height:49vh}.stage canvas{width:min(100%,49vh)}aside{display:block;padding:13px}section{padding:0 0 14px;margin:0 0 14px;border-bottom:1px solid var(--edge)}.buttons.three button{padding:9px 5px;font-size:12px}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>女主角 · 呼吸与骨骼动态预览</h1><p>Paperchalk World / 在线预览 · 正背面共用同一套原位连续蒙皮</p></div>
+ <nav><a href="../">返回游戏</a> · <a href="../character-editor/">角色分层修图</a></nav>
+</header>
+<main>
+ <div class="stage" id="stage" aria-label="女主角实时动画画布"><canvas id="preview" width="1024" height="1024"></canvas><div class="readout" id="readout" aria-live="polite">正在加载角色素材…</div></div>
+ <aside>
+   <section><h2>角色方向</h2><div class="buttons"><button type="button" id="front" class="active" aria-pressed="true">正面</button><button type="button" id="back" aria-pressed="false">背面</button></div></section>
+   <section><h2>动画</h2><div class="buttons three"><button type="button" id="play">暂停</button><button type="button" id="static">静态原位</button><button type="button" id="bones">显示骨骼</button></div>
+   <label for="strength"><span>呼吸幅度</span><output id="strengthValue">62%</output></label><input id="strength" type="range" min="0" max="160" step="1" value="62">
+   <label for="period"><span>呼吸周期</span><output id="periodValue">4.6 秒</output></label><input id="period" type="range" min="2.5" max="9" step=".1" value="4.6"></section>
+   <section><h2>原位与细节核对</h2><div class="buttons"><button type="button" id="compare">对照原始图</button><button type="button" id="reset">恢复默认</button></div>
+   <p class="note">头脸近似刚性，胸腔横向微扩与上提；衣料、发丝轻微滞后；骨盆以下逐渐锁定，鞋子保持稳定。</p>
+   <p class="small">预览直接使用仓库现有的正背面合成图，不重新拼接 PSD 图层。连续区域蒙皮不是 Cubism .moc3 骨骼文件。你可以切换静态图检查未被重排的原始位置。</p></section>
+   <section><h2>本机对照（不上传）</h2><p class="small">可以选择 PNG / WebP 对照其他合成版本，选择后只在本页本机显示；返回默认图请点“恢复默认”。</p><input id="importImage" aria-label="导入人物合成图" type="file" accept="image/png,image/webp,image/jpeg"></section>
+ </aside>
+</main>
+<img id="original" alt="">
+<script src="./rig.js"></script>
+<script>
+'use strict';
+(function(){
+ const base='../assets/characters/protagonist-',ext='.webp';
+ const $=s=>document.getElementById(s),view=$('preview'),read=$('readout');
+ const original=$('original'); let side='front',rig=null,comp=false,paused=false,staticOn=false,boneOn=false;
+ let importedURL=null,token=0;
+ function sync(){
+  $('front').classList.toggle('active',side==='front');$('back').classList.toggle('active',side==='back');
+  $('front').setAttribute('aria-pressed',String(side==='front'));$('back').setAttribute('aria-pressed',String(side==='back'));
+  $('compare').classList.toggle('active',comp);$('static').classList.toggle('active',staticOn);$('bones').classList.toggle('active',boneOn);
+  $('play').textContent=paused?'播放':'暂停';
+  $('strengthValue').textContent=$('strength').value+'%';$('periodValue').textContent=Number($('period').value).toFixed(1)+' 秒';
+  read.textContent=(side==='front'?'正面':'背面')+(comp?' · 合成参考':staticOn?' · 静态原位':paused?' · 暂停':' · 动态呼吸')+(boneOn?' · 骨骼':'');
+ }
+ async function load(){
+  const version=++token;
+  original.src=importedURL||base+side+ext;
+  try{
+   await new Promise((ok,no)=>{if(original.complete&&original.naturalWidth)return ok();original.onload=ok;original.onerror=()=>no(Error('角色图片未能载入'));});
+   if(version!==token)return;
+   if(rig){rig.stop();rig.destroy();}
+   rig=new HeroineBreathRig(original,view,{amplitude:Number($('strength').value)/100,period:Number($('period').value),playing:!paused,drawBones:boneOn,cleanup:true});
+   await rig.ready;rig.setAmplitude(comp||staticOn?0:Number($('strength').value)/100);rig.start();
+   sync();
+  }catch(e){read.textContent='加载失败：'+e.message;console.error(e);}
+ }
+ function sideTo(s){side=s;if(importedURL){URL.revokeObjectURL(importedURL);importedURL=null; $('importImage').value='';}load();}
+ $('front').onclick=()=>sideTo('front');$('back').onclick=()=>sideTo('back');
+ $('play').onclick=()=>{paused=!paused;rig?.setPaused(paused);sync();};
+ $('static').onclick=()=>{staticOn=!staticOn;if(staticOn)comp=false;rig?.setAmplitude(staticOn?0:Number($('strength').value)/100);sync();};
+ $('compare').onclick=()=>{comp=!comp;if(comp)staticOn=false;rig?.setAmplitude(comp?0:Number($('strength').value)/100);sync();};
+ $('bones').onclick=()=>{boneOn=!boneOn;rig?.setBones(boneOn);sync();};
+ $('strength').oninput=()=>{staticOn=false;comp=false;rig?.setAmplitude(Number($('strength').value)/100);sync();};
+ $('period').oninput=()=>{rig?.setPeriod(Number($('period').value));sync();};
+ $('reset').onclick=()=>{if(importedURL){URL.revokeObjectURL(importedURL);importedURL=null;}$('importImage').value='';$('strength').value=62;$('period').value=4.6;paused=false;staticOn=false;comp=false;boneOn=false;load();};
+ $('importImage').onchange=e=>{const f=e.target.files?.[0];if(!f)return;if(importedURL)URL.revokeObjectURL(importedURL);importedURL=URL.createObjectURL(f);load();};
+ if(matchMedia('(prefers-reduced-motion:reduce)').matches){paused=true;}
+ load();
+ window.addEventListener('pagehide',()=>{if(importedURL)URL.revokeObjectURL(importedURL);rig?.destroy();});
+ window.paperchalkL2D={get rig(){return rig;},get side(){return side;},select:sideTo};
+})();
+</script>
+</body></html>
