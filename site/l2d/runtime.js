@@ -12,7 +12,7 @@ function install(root){
  const canvas=root.querySelector('[data-l2d-canvas]');
  if(!img||!canvas)return;
  const id=root.dataset.l2dActor;
- const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:.55,period:4.8,softness:1}};
+ const obj={id,root,img,canvas,rig:null,clip:null,clipFrame:0,loading:0,hasParts:false,lastSource:'',overlay:null,partPatch:null,overlayFrames:new Map(),overlayFrameUrls:new Map(),overlayPending:new Set(),profile:{amplitude:.55,period:4.8,softness:1}};
  rigs.set(root,obj);
  img.addEventListener('load',()=>refresh(obj));
  img.addEventListener('error',()=>{root.dataset.l2dState='error';});
@@ -174,6 +174,15 @@ function advanceV4(obj,now){
   const sx=canvas.width/1024,sy=canvas.height/1024;
   ctx.drawImage(image,clip.x*sx,clip.y*sy,clip.w*sx,clip.h*sy);
   image.close();
+  // Apply only pixels changed in the original PSD source. The approved
+  // 128-frame V4 remains dynamic everywhere outside the edited region.
+  if(obj.partPatch?.erase&&obj.partPatch.paint){
+   ctx.save();
+   ctx.globalCompositeOperation='destination-out';
+   ctx.drawImage(obj.partPatch.erase,0,0,canvas.width,canvas.height);
+   ctx.restore();
+   ctx.drawImage(obj.partPatch.paint,0,0,canvas.width,canvas.height);
+  }
   if(obj.overlay)ctx.drawImage(obj.overlay,0,0,canvas.width,canvas.height);
   let correction=obj.overlayFrames.get(index);
   const correctionUrl=obj.overlayFrameUrls.get(index);
@@ -215,6 +224,19 @@ async function setCorrections(slot,general,frames={}){
  return true;
 }
 
+async function setComponentPatch(slot,patch){
+ const obj=target(slot);if(!obj)return false;
+ const token=obj.loading;
+ if(!patch?.erase||!patch?.paint){obj.partPatch=null;return true;}
+ const decode=uri=>new Promise((ok,no)=>{
+  const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(Error('部件修补图片损坏'));im.src=uri;
+ });
+ const [erase,paint]=await Promise.all([decode(patch.erase),decode(patch.paint)]);
+ if(token!==obj.loading)return false;
+ obj.partPatch={erase,paint,changes:Number(patch.changes)||0};
+ if(obj.clip?.type==='decoder')obj.clip.frame=-1;
+ return true;
+}
 function markAnimation(slot,enabled){
  const a=target(slot);if(!a)return;
  a.animated=!!enabled;
@@ -252,7 +274,7 @@ requestAnimationFrame(sync);
 window.PaperchalkL2D={
  get:slot=>target(slot),
  getLoaded:()=>entries().filter(a=>!!a.img.getAttribute('src')),
- setProfile,setLayers,markAnimation,setAnimationSource,setCorrections,
+ setProfile,setLayers,markAnimation,setAnimationSource,setCorrections,setComponentPatch,
  refresh:slot=>{const a=target(slot);return a?refresh(a):Promise.resolve(false)}
 };
 })();
