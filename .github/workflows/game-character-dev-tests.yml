@@ -142,6 +142,7 @@ jobs:
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
                 assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),false,'old generic breathing preview hidden for V4');
                 assert.equal(await page.locator('#studio-frame').getAttribute('max'),'127');
+                const paintedSide=await page.locator('#studio-side').inputValue();
                 await page.locator('#studio-edit-scope').selectOption('frame');
                 await page.locator('#studio-frame').fill('12');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.frame===12,{timeout:18000});
@@ -164,12 +165,12 @@ jobs:
                 const hasSavedFrame=await page.evaluate(()=>new Promise((ok,no)=>{
                   const req=indexedDB.open('paperchalk-dev-characters-v1',1);
                   req.onsuccess=()=>{const db=req.result;
-                    const q=db.transaction('kv','readonly').objectStore('kv').get('frames:protagonist:back');
+                    const q=db.transaction('kv','readonly').objectStore('kv').get('frames:protagonist:'+paintedSide);
                     q.onsuccess=()=>{db.close();ok(typeof q.result?.[12]==='string'&&q.result[12].startsWith('data:image/png;'));};
                     q.onerror=()=>no(q.error);
                   };req.onerror=()=>no(req.error);
                 }));
-                assert.equal(hasSavedFrame,true,'V4 painted frame 12 must persist separately from original animation');
+                assert.equal(hasSavedFrame,true,'V4 painted frame 12 must persist separately from original animation; '+JSON.stringify(await page.evaluate(()=>({side:window.PaperchalkStudio?.editSide,active:window.PaperchalkStudio?.activePaintFrame,frames:window.PaperchalkStudio?.correctedFrames,paint:window.PaperchalkStudio?.frameHasPaint}))));
                 const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
                 await page.locator('#studio-import').setInputFiles({name:'sample-npc-front.png',mimeType:'image/png',buffer:tiny});
                 await page.waitForFunction(()=>window.PaperchalkStudio?.list.size===4 && window.PaperchalkStudio.current!=='protagonist',{timeout:18000});
@@ -186,6 +187,7 @@ jobs:
                 await page.waitForURL('**/?dev=1',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
+                assert.equal(await page.evaluate(side=>window.PaperchalkCharacterDev.assigned.player.side===side,paintedSide),true,'game should restore the edited direction');
                 assert.equal(await page.evaluate(()=>window.PaperchalkL2D.get('player')?.overlayFrameUrls?.has(12)),true,'painted V4 frame must reload in game');
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,4,'Game DEV must see all GitHub profiles and locally imported characters');
