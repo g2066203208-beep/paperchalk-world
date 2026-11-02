@@ -41,6 +41,7 @@ class HeroineBreathRig{
   this.hairSwing=clamp(Number(opts.hairSwing??2.5),0,5);
   this.skirtSwing=clamp(Number(opts.skirtSwing??2.2),0,5);
   this.armSwing=clamp(Number(opts.armSwing??1.8),0,5);
+  this.legSwing=clamp(Number(opts.legSwing??0),0,5);
   this.swaySpeed=clamp(Number(opts.swaySpeed??1),.5,2.5);
   this.featurePreset=opts.featurePreset||'generic';this.blinkEnabled=this.featurePreset==='heroine-front';
   this.t0=performance.now();this.frozen=0;this.last=0;this._raf=0;
@@ -73,7 +74,7 @@ class HeroineBreathRig{
  setPeriod(v){this.period=clamp(Number(v)||4.6,2,12);}
  setSoftness(v){this.softness=clamp(Number(v)||0,0,2.4);}
  setDynamics(values={}){
-  for(const key of ['hairSwing','skirtSwing','armSwing']){
+  for(const key of ['hairSwing','skirtSwing','armSwing','legSwing']){
    if(values[key]!==undefined&&Number.isFinite(Number(values[key])))
     this[key]=clamp(Number(values[key]),0,5);
   }
@@ -83,7 +84,7 @@ class HeroineBreathRig{
  }
  motionProfile(){
   return {amplitude:this.amplitude,period:this.period,softness:this.softness,
-    hairSwing:this.hairSwing,skirtSwing:this.skirtSwing,armSwing:this.armSwing,
+    hairSwing:this.hairSwing,skirtSwing:this.skirtSwing,armSwing:this.armSwing,legSwing:this.legSwing,
     swaySpeed:this.swaySpeed};
  }
  async setLayers(parts,canvasSize){
@@ -232,7 +233,7 @@ class HeroineBreathRig{
    // The jacket MUST be a mesh. A corner-only affine transform would
    // evaluate outside the chest envelope and silently show zero breathing.
    const x=part.x,y=part.y,
-    soft=/back.?hair|front.?hair|后发|马尾|刘海|bottomwear|裙|skirt|handwear|手臂|袖|sleeve|hand|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
+    soft=/back.?hair|front.?hair|后发|马尾|刘海|bottomwear|裙|skirt|handwear|手臂|袖|sleeve|hand|legwear|双腿|裤|袜|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
    g.globalAlpha=part.opacity;
    if(!soft){
     const A=this.psdTarget(x,y,part,t),B=this.psdTarget(x+w,y,part,t),C=this.psdTarget(x,y+h,part,t);
