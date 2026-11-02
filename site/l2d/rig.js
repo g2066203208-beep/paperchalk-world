@@ -247,7 +247,9 @@ class HeroineBreathRig{
   for(const part of this.psdParts){
    const src=part.image,w=src.width,h=src.height;
    if(!w||!h)continue;
-   const x=part.x,y=part.y,soft=/back.?hair|front.?hair|后发|刘海|bottomwear|裙|handwear|手臂/i.test(part.name);
+   // The jacket MUST be a mesh. A corner-only affine transform would
+   // evaluate outside the chest envelope and silently show zero breathing.
+   const x=part.x,y=part.y,soft=/back.?hair|front.?hair|后发|刘海|bottomwear|裙|handwear|手臂|topwear|上身|外套|校服|jacket|衬衫|衣领|collar/i.test(part.name);
    g.globalAlpha=part.opacity;
    if(!soft){
     const A=this.psdTarget(x,y,part,t),B=this.psdTarget(x+w,y,part,t),C=this.psdTarget(x,y+h,part,t);
