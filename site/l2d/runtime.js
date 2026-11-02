@@ -88,34 +88,90 @@ async function setLayers(slot,parts,canvasSize){
    1024x1024 crop origin used by the approved V4 render: (351,9). */
 async function setAnimationSource(slot,uri,opts={}){
  const obj=target(slot);if(!obj)return false;
+ // New selection invalidates any pending asynchronous frame from the old actor.
+ const nonce=++obj.loading;
+ if(obj.clip?.decoder)try{obj.clip.decoder.close()}catch(_){}
  if(obj.clip?.img?.parentElement)obj.clip.img.remove();
- if(!uri){obj.clip=null;obj.root.dataset.l2dMode='procedural-multinode';if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}return true;}
+ obj.clip=null;
+ if(!uri){
+  obj.root.dataset.l2dMode='procedural-multinode';
+  if(obj.rig){obj.rig.setAmplitude(obj.profile.amplitude);obj.rig.start()}
+  return true;
+ }
+ const origin={x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w??335),h:Number(opts.h??1013)};
+ // Decode the original V4 128-frame WebP on the game clock. Unlike relying
+ // on an <img> with hidden/low opacity or drawImage(img), this guarantees
+ // independent frames in Chromium, incl. headless browser tests.
+ if(typeof ImageDecoder==='function'){
+  let decoder=null;
+  try{
+   const resp=await fetch(uri);
+   if(!resp.ok)throw Error('V4 WebP HTTP '+resp.status);
+   const bytes=await resp.arrayBuffer();
+   if(nonce!==obj.loading)return false;
+   decoder=new ImageDecoder({data:bytes,type:'image/webp',preferAnimation:true});
+   await decoder.tracks.ready;
+   const count=decoder.tracks.selectedTrack?.frameCount||0;
+   if(count>1){
+    obj.clip={type:'decoder',decoder,count,frame:-1,decoding:false,start:undefined,nonce,...origin};
+    if(obj.rig)obj.rig.stop();
+    obj.canvas.getContext('2d').clearRect(0,0,obj.canvas.width,obj.canvas.height);
+    obj.root.dataset.l2dState='ready';obj.root.dataset.l2dMode='v4-decoder';
+    return true;
+   }
+   decoder.close();decoder=null;
+  }catch(e){
+   if(decoder)try{decoder.close()}catch(_){}
+   console.warn('[L2D] frame decoder unavailable, using visible animated WebP',e);
+  }
+ }
  const img=new Image();
  await new Promise((ok,no)=>{img.onload=ok;img.onerror=no;img.src=uri;});
- // The WebP itself is now the visible actor. Never copy a hidden 1px
- // animation to Canvas: browsers may suspend decoded frames of hidden media.
+ if(nonce!==obj.loading)return false;
  img.setAttribute('data-l2d-v4','');
  img.setAttribute('aria-hidden','true');
  img.style.cssText='position:absolute;display:block;object-fit:fill;opacity:1;visibility:visible;pointer-events:none;user-select:none;image-rendering:auto;max-width:none;max-height:none;z-index:1;';
  obj.root.appendChild(img);
- obj.clip={img,x:Number(opts.x??351),y:Number(opts.y??9),w:Number(opts.w||img.naturalWidth),h:Number(opts.h||img.naturalHeight)};
- obj.clipFrame=0;
+ obj.clip={type:'native',img,...origin};
  if(obj.rig)obj.rig.stop();
  placeClip(obj);
- obj.root.dataset.l2dState='ready';obj.root.dataset.l2dMode='v4-clip';
+ obj.root.dataset.l2dState='ready';obj.root.dataset.l2dMode='v4-native';
  return true;
 }
 function placeClip(obj){
- if(!obj.clip)return;
+ if(obj.clip?.type!=='native')return;
  const {img,x,y,w,h}=obj.clip;
  const W=obj.img.offsetWidth,H=obj.img.offsetHeight;
- // The original composite is exactly 1024x1024. Crop coordinates retain the
- // same origin and follow DEV offsets, player perspective and room scaling.
- const left=obj.img.offsetLeft+x*W/1024;
- const top=obj.img.offsetTop+y*H/1024;
- const css={left:left+'px',top:top+'px',width:w*W/1024+'px',height:h*H/1024+'px'};
+ const css={left:(obj.img.offsetLeft+x*W/1024)+'px',
+   top:(obj.img.offsetTop+y*H/1024)+'px',
+   width:(w*W/1024)+'px',height:(h*H/1024)+'px'};
  for(const [key,value] of Object.entries(css))
   if(img.style[key]!==value)img.style[key]=value;
+}
+function advanceV4(obj,now){
+ const clip=obj.clip;
+ if(!clip||clip.type!=='decoder')return;
+ if(document.hidden||obj.root.hidden||obj.img.hidden){
+  // Freeze the timeline when the actor is not shown. The scene manager
+  // controls actor visibility; no invisible animation overhead.
+  clip.start=undefined;
+  return;
+ }
+ if(clip.start===undefined)clip.start=now;
+ const index=Math.floor((now-clip.start)*20/1000)%clip.count;
+ if(index===clip.frame||clip.decoding)return;
+ clip.decoding=true;
+ clip.decoder.decode({frameIndex:index}).then(({image})=>{
+  if(obj.clip!==clip){image.close();return;}
+  const ctx=obj.canvas.getContext('2d',{alpha:true});
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.clearRect(0,0,obj.canvas.width,obj.canvas.height);
+  ctx.drawImage(image,clip.x,clip.y,clip.w,clip.h);
+  image.close();
+  clip.frame=index;
+  obj.root.dataset.l2dFrame=String(index);
+ }).catch(e=>{console.warn('[L2D] V4 frame decoding error',e)})
+ .finally(()=>{clip.decoding=false;});
 }
 
 function markAnimation(slot,enabled){
@@ -133,7 +189,8 @@ function sync(t){
   if(a.canvas.style.width!==(w+'px'))a.canvas.style.width=w+'px';
   if(a.canvas.style.height!==(h+'px'))a.canvas.style.height=h+'px';
   if(a.rig&&!a.clip)a.rig.setPaused(document.hidden||a.root.hidden||a.img.hidden||!a.img.getAttribute('src'));
-  if(a.clip)placeClip(a);
+  if(a.clip?.type==='decoder')advanceV4(a,t||performance.now());
+  if(a.clip?.type==='native')placeClip(a);
  }
  requestAnimationFrame(sync);
 }
