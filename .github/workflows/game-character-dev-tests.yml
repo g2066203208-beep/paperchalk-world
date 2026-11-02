@@ -380,6 +380,7 @@ jobs:
                     ctx.fillRect(2,2,27,27);
                     const layer=ed.layer(name,canvas,x,y,false);
                     layer.sourcePart=true;layer.role='psd-part';layer.partId=name;
+                    ed.S.layers[side].push(layer);
                   }
                   ed.renderList();ed.render();await ed.save();
                   window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
