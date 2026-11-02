@@ -6,6 +6,8 @@ on:
       - 'site/index.html'
       - 'site/dev/**'
       - 'site/l2d/**'
+      - 'site/assets/l2d/**'
+      - 'scripts/build_v4_assets.py'
       - 'site/character-editor/**'
       - '.github/workflows/game-character-dev-tests.yml'
   workflow_dispatch:
@@ -20,7 +22,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
-      - run: python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
+      - run: python3 scripts/build_v4_assets.py && python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Create small two-frame V4-format animation fixture
@@ -66,12 +68,30 @@ jobs:
                     skirtA:rig.motionAt(466,601,.4),skirtB:rig.motionAt(466,601,1.8),
                     shoeA:rig.motionAt(462,965,.4),shoeB:rig.motionAt(462,965,1.8)};
                 });
-                assert.equal(motion.mode,'procedural-multinode');
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dEdition==='V4-official',{timeout:20000});
+                assert.equal(motion.mode==='v4-clip'||await page.evaluate(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dMode==='v4-clip'),true);
+                const clipState=await page.evaluate(()=>{
+                  const a=window.PaperchalkL2D.get('player');
+                  return {w:a.clip?.img?.naturalWidth,h:a.clip?.img?.naturalHeight,mode:a.root.dataset.l2dMode};
+                });
+                assert.deepEqual(clipState,{w:335,h:1013,mode:'v4-clip'});
+                const sample=()=>page.evaluate(()=>{
+                  const a=window.PaperchalkL2D.get('player').rig.source,
+                    pix=a.getContext('2d').getImageData(352,70,332,860).data;
+                  let h=2166136261;
+                  for(let k=0;k<pix.length;k+=12){h=Math.imul(h^pix[k],16777619)>>>0;}
+                  return h;
+                });
+                const firstFrame=await sample();
+                await page.waitForTimeout(750);
+                const secondFrame=await sample();
+                assert.notEqual(firstFrame,secondFrame,'official V4 must animate actual decoded pixels');
+
                 assert.ok(Math.abs(motion.hairA.x-motion.hairB.x)>1,'hair tip must physically sway');
                 assert.ok(Math.abs(motion.skirtA.x-motion.skirtB.x)>1,'skirt hem must physically sway');
                 assert.ok(Math.abs(motion.shoeA.x-motion.shoeB.x)<.9,'feet must remain anchored');
                 await page.evaluate(()=>window.PaperchalkCharacterDev.assign('player','protagonist','front'));
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.rig?.blinkEnabled===true,{timeout:10000});
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('player')?.root?.dataset.l2dEdition==='V4-official' && window.PaperchalkL2D.get('player')?.rig?.blinkEnabled===true,{timeout:15000});
                 const blink=await page.evaluate(()=>{
                   const rig=window.PaperchalkL2D.get('player').rig;
                   return {closed:rig.blinkAmount(2.21),open:rig.blinkAmount(3.0)};
