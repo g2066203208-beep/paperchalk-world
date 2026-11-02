@@ -87,6 +87,11 @@ if(typeof oldSwitch==='function'){
   const r=await oldSwitch.call(this,target,face);sync();schedule();return r;
  };
 }
+window.addEventListener('paperchalk:studio-character-loaded',event=>{
+ currentId=event.detail?.id||'default';
+ motion=loadMotion();
+ sync();schedule();
+});
 sync();schedule();
 window.characterEditor.motion=()=>structuredClone(motion);
 window.characterEditor.l2dRig=()=>rig;
