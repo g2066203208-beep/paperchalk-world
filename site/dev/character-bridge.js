@@ -41,7 +41,11 @@ function refreshList(){
  if([...loaded.options].some(x=>x.value===previous))slot=loaded.value=previous;
  else if(loaded.options.length)slot=loaded.value=loaded.options[0].value;
  library.replaceChildren();
- for(const c of catalog.values())library.add(new Option(c.label||c.id,c.id));
+ for(const c of catalog.values()){
+  const modes=Object.values(c.l2dModule||{}).map(x=>x.renderer);
+  const kind=modes.includes('part-mesh')?' · 独立网格 L2D':modes.includes('v4-webp')?' · V4 L2D':'';
+  library.add(new Option((c.label||c.id)+kind,c.id));
+ }
  const bind=assigned[slot];
  if(bind){
   library.value=bind.id;side.value=bind.side;
@@ -71,6 +75,8 @@ async function assign(target,id,face='front',save=true){
   await window.PaperchalkL2D.refresh(target);
  }
  img.hidden=false;
+ // Unmount previously installed authored mesh before choosing a new actor.
+ window.PaperchalkL2DLibrary?.detach(target);
  const rig=await get('l2d:'+id+':'+face)||{amplitude:.55,period:4.8,softness:1};
  window.PaperchalkL2D.setProfile(target,rig);
  window.PaperchalkL2D.markAnimation(target,!!c.animated?.[face]);
@@ -80,6 +86,8 @@ async function assign(target,id,face='front',save=true){
  // their own dynamic mesh rig and NEVER display the hidden static source.
  const originalPsdLayers=await get('skeletal:'+id+':'+face);
  const usesPsdRig=Array.isArray(originalPsdLayers)&&originalPsdLayers.length>=12;
+ const published=c.l2dModule?.[face];
+ const publishedRig=published?.renderer==='part-mesh'?published.rig:null;
  const deployedClip=c.clips?.[face];
  const installedV4=deployedClip?.url||(id==='protagonist'?'./assets/l2d/v4/'+face+'.webp':'');
  const source=(clip?.data?.startsWith('data:image/webp;base64,')?clip.data:installedV4);
@@ -92,6 +100,9 @@ async function assign(target,id,face='front',save=true){
   if(!loaded)throw Error('真实 PSD 独立骨骼图层载入中断');
   const obj=window.PaperchalkL2D.get(target);
   if(obj){obj.root.dataset.l2dEdition='psd-layer-skeletal';obj.root.dataset.l2dMode='psd-layer-skeletal';obj.root.dataset.l2dAnimated='true';}
+ }else if(publishedRig){
+  if(!window.PaperchalkL2DLibrary)throw Error('游戏未安装模块化 ArtMesh 播放器');
+  await window.PaperchalkL2DLibrary.attach(target,id,face,publishedRig);
  }else if(source){
   try{
    await window.PaperchalkL2D.setAnimationSource(target,source,shape);
@@ -109,7 +120,7 @@ async function assign(target,id,face='front',save=true){
  }
  // V4 corrections are independent of the approved source animation.
  // Sparse frame overlays are composited on top at the exact frame index.
- if(source&&!usesPsdRig){
+ if(source&&!usesPsdRig&&!publishedRig){
   await window.PaperchalkL2D.setCorrections(target,
    await get('overlay:'+id+':'+face),
    await get('frames:'+id+':'+face)||{});
@@ -118,10 +129,11 @@ async function assign(target,id,face='front',save=true){
  }
  // The same source artwork edited in DEV is used on the game actor.
  // No ZIP re-import and no separate heroine-only database.
- await window.PaperchalkL2D.setComponentPatch(target,usesPsdRig?null:await get('parts-patch:'+id+':'+face));
+ await window.PaperchalkL2D.setComponentPatch(target,usesPsdRig||publishedRig?null:await get('parts-patch:'+id+':'+face));
  if(save)await put('slot:'+target,{id,side:face});
  refreshList();
- note('正在 L2D 渲染 '+c.label+' · '+(face==='back'?'背面':'正面')+(usesPsdRig?' · 真正 PSD 分层骨骼':' · V4 帧动画'));
+ note('正在加载 '+c.label+' · '+(face==='back'?'背面':'正面')+
+   (usesPsdRig?' · 本机独立 PSD':publishedRig?' · 素材库独立 ArtMesh':source?' · V4 逐帧':' · 通用程序网格'));
 }
 async function openStudio(){
  // DEV always navigates to the ONE shared studio, no iframe and no
@@ -163,7 +175,7 @@ async function init(){
  try{
   const response=await fetch('./characters.catalog.json',{cache:'no-store'});
   if(response.ok)for(const p of (await response.json()).characters||[]){
-   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||'',clips:p.clips||{},animated:p.animated||{}});
+   if(valid(p.id))catalog.set(p.id,{id:p.id,label:p.label||p.id,front:p.front||'',back:p.back||'',clips:p.clips||{},animated:p.animated||{},l2dModule:p.l2dModule||{}});
   }
  }catch(e){console.warn('L2D catalog offline',e);}
  const imported=await get('imported');if(Array.isArray(imported))for(const c of imported){
