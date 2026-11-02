@@ -8,6 +8,9 @@ on:
       - 'site/l2d/**'
       - 'site/assets/l2d/**'
       - 'scripts/build_v4_assets.py'
+      - 'scripts/build_char002_v4.py'
+      - 'scripts/build_character_catalog.py'
+      - 'site/assets/characters/char-002/**'
       - 'site/character-editor/**'
       - '.github/workflows/game-character-dev-tests.yml'
   workflow_dispatch:
@@ -22,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
-      - run: python3 scripts/build_v4_assets.py && python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
+      - run: python3 scripts/build_v4_assets.py && python3 scripts/build_char002_v4.py && python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Create small two-frame V4-format animation fixture
@@ -291,6 +294,40 @@ jobs:
                   'the one-click editor save applies 300% breathing amplitude to game V4 immediately');
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,originalCharacterCount+1,'Game DEV must see all profiles and locally imported characters');
+                // CHAR-002 is a genuine separate hosted character, not a
+                // copy of the protagonist. Verify the GAME first.
+                await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('enemy')?.clip?.type==='decoder',{timeout:16000});
+                const girlTwo=await page.evaluate(()=>{
+                  const a=window.PaperchalkL2D.get('enemy');
+                  return {name:a.img.dataset.characterId,side:a.img.dataset.characterSide,
+                    frames:a.clip?.count,size:[a.clip?.w,a.clip?.h],
+                    source:a.clip?.src||a.clip?.url};
+                });
+                assert.equal(girlTwo.name,'char-002');
+                assert.equal(girlTwo.side,'front');
+                assert.equal(girlTwo.frames,128);
+                assert.deepEqual(girlTwo.size,[335,1024]);
+                await page.selectOption('#dev-layer','enemy');
+                await page.locator('#dev-character-open').click({force:true});
+                await page.waitForURL('**/character-editor/**',{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkStudio?.current==='char-002' &&
+                  window.PaperchalkStudio?.isV4 &&
+                  window.PaperchalkStudio?.countSourceParts?.()===7,{timeout:30000});
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true,
+                  'CHAR-002 studio MUST use the same V4 source as the game');
+                assert.equal(await page.locator('#studio-side option[value="back"]').isDisabled(),true,
+                  'No fake CHAR-002 back view until real artwork exists');
+                assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,
+                  'CHAR-002 must never display a separate fake mesh preview');
+                await page.screenshot({path:'artifacts/l2d-studio/'+
+                  (phone?'mobile':'desktop')+'-char-002-live-v4.png',fullPage:true});
+                // Save the source parts without altering the approved heroine.
+                await page.locator('#studio-back').click();
+                await page.waitForURL('**/?dev=1',{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready &&
+                  window.PaperchalkL2D.get('enemy')?.clip?.type==='decoder',{timeout:16000});
+                assert.equal(await page.evaluate(()=>window.PaperchalkCharacterDev.assigned.enemy.id),'char-002');
                 assert.deepEqual(errors,[],'No browser errors');
                 await page.close();
               }
