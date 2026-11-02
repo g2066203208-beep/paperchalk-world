@@ -124,6 +124,12 @@ async function changeCore(id,face='front'){
  await loadCorrectionLayers();
  await ensureHostedParts(id);
  updatePartStatus();
+ // A hosted model and its layers may increase the top library height after
+ // switchCharacter() has fitted the old geometry. Fit again once the final
+ // responsive layout is measured; never clip feet on desktop first open.
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   if(currentId===id&&document.getElementById('fit'))document.getElementById('fit').click();
+ }));
  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
@@ -281,7 +287,8 @@ function countSourceParts(){return ed.S.layers[side].filter(p=>p.sourcePart).len
 function updatePartStatus(){
  const count=countSourceParts(),output=$('studio-parts-status');
  if(output)output.textContent=count?
-  '本方向已有 '+count+' 个真实原位部件，可在左侧逐个选择编辑。':
+  (currentId==='char-002'?'本方向已有 '+count+' 个从女二正式原画划分的可编辑区域（非原生PSD），可逐个选择编辑。':
+   '本方向已有 '+count+' 个原位分层部件，可在左侧逐个选择编辑。'):
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
  const button=$('studio-v4-mode');
  if(button)button.textContent=showOriginalV4?'查看原始分层（静态精修）':'返回游戏实际 V4 动画';
