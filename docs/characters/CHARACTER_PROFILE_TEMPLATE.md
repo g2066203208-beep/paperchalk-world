@@ -1,5 +1,5 @@
-# 《错位日常》角色资料标准模板 V2.0
-> 本模板以 [340 字段机器清单](CHARACTER_FIELD_SCHEMA_V2.json) 为唯一字段来源。所有人物无论主角、男主、女二、路人、NPC 都使用同一架构；可以在不同角色中标记不适用，但不得直接省略关键字段。
+# 《错位日常》角色资料标准模板 V3.0
+> 本模板以 [448 字段机器清单](CHARACTER_FIELD_SCHEMA_V2.json) 为唯一字段来源。所有人物无论主角、男主、女二、路人、NPC 都使用同一架构；可以在不同角色中标记不适用，但不得直接省略关键字段。
 > 此模板是空白制作框架，不意味着模板里每个项目都有一个真实答案。
 
 ## 首要填写纪律
@@ -9,115 +9,137 @@
 外衣胸/腰/臀围以厘米标记，仅用于穿着角色的制版参考；从原画推不出精确人体数据，不适合未成年角色的性化内衣细节不填写。
 **角色分层：** 人物身份数据 ≠ 人物场景数据 ≠ 已存在 L2D 资源。候选角色可以有完整档案，但没有得到批准的正背面素材就不进入正式游戏角色注册表。
 
-## 22 个类别的完整字段目录
+## 22 个类别的完整字段目录（448 字段）
 
 ### 身份与编号 · `identity`（17 项）
-身份、年龄、称谓、角色序号与社会身份；禁止以正面/背面给同一人物建两个身份。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`recordCode` · `canonicalId` · `displayName` · `legalName` · `nicknames` · `aliases` · `pronouns` · `genderPresentation` · `ageYears` · `birthDate` · `birthplace` · `currentResidence` · `era` · `occupation` · `schoolYear` · `storyRole` · `designStatus`
 
 ### 家庭成长 · `family`（10 项）
-家庭、监护、成长经历与居住情况，不通过房间鞋子、雨伞等物件反推家庭成员。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`parents` · `guardians` · `siblings` · `relatives` · `familyStructure` · `childhoodEvents` · `upbringing` · `householdMembers` · `livingSituation` · `socioeconomicBackground`
 
 ### 教育职业 · `education`（11 项）
-学校班级、课程成绩、职业职责和生活经济来源，均可留空。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`school` · `className` · `club` · `grades` · `subjectStrengths` · `subjectWeaknesses` · `workplace` · `jobTitle` · `salaryRange` · `experience` · `professionalGoals`
 
-### 体型尺码 · `measurements`（16 项）
-高度、重量、肩宽、胸/腰/臀围、鞋码、头身比、身材与站姿。厘米为单位，三围是围度不是图片的像素宽。
+### 体型尺码 · `measurements`（40 项）
 
-字段：`heightCm` · `weightKg` · `headBodyRatio` · `shoulderWidthCm` · `chestCircumferenceCm` · `waistCircumferenceCm` · `hipCircumferenceCm` · `torsoLengthCm` · `armSpanCm` · `inseamCm` · `shoeSize` · `bodyBuild` · `bodyMassDescription` · `posture` · `handDominance` · `gait`
+三围与腿围、臂围等都用厘米表示。明确上臂围、前臂围、腕围、大腿围、小腿围、膝围、踝围、臂长、腿长、膝高、肩宽、脸长宽；不要从单张图反算精确数值。
 
-### 骨架体表 · `anatomy`（18 项）
-胸廓、腰胯、肢体、皮肤、痣、胎记、疤痕与左右不对称；遵从已确认的可见外貌。
+字段：`heightCm` · `weightKg` · `headBodyRatio` · `shoulderWidthCm` · `chestCircumferenceCm` · `waistCircumferenceCm` · `hipCircumferenceCm` · `torsoLengthCm` · `armSpanCm` · `inseamCm` · `shoeSize` · `bodyBuild` · `bodyMassDescription` · `posture` · `handDominance` · `gait` · `upperArmCircumferenceCm` · `forearmCircumferenceCm` · `wristCircumferenceCm` · `thighCircumferenceCm` · `calfCircumferenceCm` · `kneeCircumferenceCm` · `ankleCircumferenceCm` · `upperArmLengthCm` · `forearmLengthCm` · `handLengthCm` · `palmWidthCm` · `upperLegLengthCm` · `lowerLegLengthCm` · `kneeHeightCm` · `hipBreadthCm` · `shoulderBreadthCm` · `waistHeightCm` · `ribcageDepthCm` · `hipDepthCm` · `headWidthCm` · `faceLengthCm` · `faceWidthCm` · `footLengthCm` · `footWidthCm`
 
-字段：`headShape` · `shoulderSlope` · `torsoDepth` · `ribcageContour` · `waistContour` · `pelvisAndHips` · `backContour` · `bustThroughClothing` · `limbProportions` · `handShape` · `skinUndertone` · `skinTexture` · `scars` · `birthmarks` · `moles` · `freckles` · `postureAsymmetry` · `mobilityNeeds`
+### 骨架体表 · `anatomy`（37 项）
 
-### 面部五官 · `face`（22 项）
-脸型、五官位置、眉眼形、眼距、眼角、虹膜、瞳孔、眼色 HEX、鼻唇耳与默认神情。
+记录上臂与前臂的轮廓渐变、大腿和小腿粗细、膝关节与脚踝形状、肩腰胯比例和重心。比例是创作设计而不是对现实人体的臆测。
 
-字段：`faceShape` · `forehead` · `cheekbones` · `jawline` · `chin` · `noseBridge` · `noseTip` · `mouthShape` · `lips` · `teeth` · `ears` · `eyebrows` · `eyelidShape` · `eyeShape` · `eyeSpacing` · `eyeCornerAngle` · `eyeColor` · `eyeHex` · `pupilColor` · `eyeHighlights` · `eyelashes` · `defaultExpression`
+字段：`headShape` · `shoulderSlope` · `torsoDepth` · `ribcageContour` · `waistContour` · `pelvisAndHips` · `backContour` · `bustThroughClothing` · `limbProportions` · `handShape` · `skinUndertone` · `skinTexture` · `scars` · `birthmarks` · `moles` · `freckles` · `postureAsymmetry` · `mobilityNeeds` · `upperArmShape` · `forearmShape` · `wristShape` · `thighShape` · `calfShape` · `kneeShape` · `ankleShape` · `legAxis` · `upperLimbTaper` · `lowerLimbTaper` · `legMuscleDistribution` · `armMuscleDistribution` · `pelvisTilt` · `spinalCurve` · `handFingerLengthRatios` · `bodySilhouetteType` · `shoulderToHipWidthRatio` · `waistToHipWidthRatio` · `headToShoulderWidthRatio`
+
+### 面部五官 · `face`（46 项）
+
+重点记录**五官位置与比例**：眼中心高度、两眼间距、眼宽、眉眼距、鼻尖位置、鼻宽、嘴巴高度、口鼻距、耳高、眼尾上挑角度和具体表情。可用0—1归一化坐标，但必须注明参照图像及坐标系。
+
+字段：`faceShape` · `forehead` · `cheekbones` · `jawline` · `chin` · `noseBridge` · `noseTip` · `mouthShape` · `lips` · `teeth` · `ears` · `eyebrows` · `eyelidShape` · `eyeShape` · `eyeSpacing` · `eyeCornerAngle` · `eyeColor` · `eyeHex` · `pupilColor` · `eyeHighlights` · `eyelashes` · `defaultExpression` · `facialLandmarkSystem` · `facialLandmarksNormalized` · `faceLengthToWidthRatio` · `foreheadToFaceHeightRatio` · `jawWidthToFaceWidthRatio` · `cheekboneWidthToFaceWidthRatio` · `eyeCenterHeightRatio` · `interocularSpacingRatio` · `eyeWidthToFaceWidthRatio` · `eyebrowEyeGapRatio` · `noseTopHeightRatio` · `noseTipHeightRatio` · `noseWidthToFaceWidthRatio` · `mouthCenterHeightRatio` · `mouthWidthToFaceWidthRatio` · `philtrumLengthRatio` · `earTopHeightRatio` · `earBottomHeightRatio` · `eyeTailSlantDeg` · `eyelidOpennessBaseline` · `lipCornerSlopeDeg` · `browAngleDeg` · `expressionLandmarkVariants` · `noseToMouthDistanceRatio`
 
 ### 头发识别 · `hair`（16 项）
-发色 HEX、纹理、长度、刘海、发旋、马尾根部、马尾数量、发饰方向、后视剪影。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`hairBaseColor` · `hairHex` · `hairHighlights` · `hairLength` · `hairTexture` · `hairDensity` · `parting` · `bangs` · `sidelocks` · `ponytailCount` · `ponytailPosition` · `ponytailLength` · `hairAccessories` · `accessorySide` · `accessoryPosition` · `backSilhouette`
 
 ### 服装形象 · `wardrobe`（20 项）
-制服、领口、纽扣、褶线、袜鞋、颜色材质、换装、道具归属；动态物件不要画死。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`outerwear` · `shirt` · `blouse` · `neckwear` · `skirt` · `trousers` · `socks` · `footwear` · `garmentLayerOrder` · `paletteHex` · `fabrics` · `sewingDetails` · `pleats` · `buttons` · `pockets` · `wearCondition` · `seasonalVariants` · `occasionVariants` · `permanentAccessories` · `temporaryProps`
 
-### 性格与情绪 · `temperament`（18 项）
-锁定的人格关键词与待定辅助特质必须分开，不能从“冷淡”自动推断恶毒或恐惧。
+### 性格与情绪 · `temperament`（25 项）
 
-字段：`coreConfirmedTraits` · `proposedTraits` · `strengths` · `weaknesses` · `socialEnergy` · `humorStyle` · `conflictStyle` · `fears` · `angerTriggers` · `stressResponse` · `defenseMechanism` · `moralLimits` · `goals` · `contradictions` · `publicPersona` · `privatePersona` · `emotionalBaseline` · `expressionRange`
+除了人格，还要有**神态**：默认眼睑开合、眉毛角度、嘴角状态、面无表情或微笑的类型，以及针对惊讶、愤怒、害怕的微表情。已确认性格不可用猜测覆盖。
+
+字段：`coreConfirmedTraits` · `proposedTraits` · `strengths` · `weaknesses` · `socialEnergy` · `humorStyle` · `conflictStyle` · `fears` · `angerTriggers` · `stressResponse` · `defenseMechanism` · `moralLimits` · `goals` · `contradictions` · `publicPersona` · `privatePersona` · `emotionalBaseline` · `expressionRange` · `defaultMicroExpression` · `signatureMicroExpressions` · `eyesExpression` · `eyebrowsExpression` · `mouthExpression` · `bodyLanguageMood` · `composureLevel`
 
 ### 内心世界 · `psychology`（13 项）
-目标、矛盾、信念、心理秘密、成长弧线与重大转变，未经剧情批准保持空白。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`innerNeed` · `externalGoal` · `secretGoal` · `belief` · `selfImage` · `insecurities` · `regrets` · `traumaIfStoryApproved` · `attachmentStyle` · `trustPattern` · `breakingPoint` · `growthArc` · `values`
 
 ### 台词语音 · `dialogue`（16 项）
-音色语速、停顿、习惯用语、毒舌强度、口音、示例台词、禁用写法。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`voicePitch` · `voiceTimbre` · `speechRate` · `voiceVolume` · `tone` · `accents` · `diction` · `sentenceLength` · `vocabulary` · `habitualPhrases` · `sarcasmLevel` · `laughStyle` · `cryingStyle` · `speechUnderStress` · `dialogueExamples` · `forbiddenVoicePatterns`
 
 ### 习惯与举止 · `behavior`（17 项）
-默认表情、手势、站姿、走路、重心、睡眠、饮食、兴趣、日常时间表。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`idlePose` · `signatureGesture` · `greetingHabit` · `gazePattern` · `blinkHabit` · `eyebrowMotion` · `headTilt` · `walkCycle` · `runningCycle` · `nervousTics` · `sleepRhythm` · `eatingStyle` · `favoriteFoods` · `hobbies` · `dailyRoutine` · `timeManagement` · `transportation`
 
 ### 人际关系 · `relationships`（12 项）
-亲属、朋友、竞争、导师、恋爱、人际关系强度及随剧情变化的标记。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`familyRelations` · `schoolRelations` · `friendRelations` · `rivalRelations` · `mentorRelations` · `romancesIfStoryApproved` · `relationshipToProtagonist` · `relationshipToMaleLead` · `trustFlags` · `secretsShared` · `conflictHistory` · `relationProgression`
 
 ### 技能与状态 · `skills`（15 项）
-能力、知识、特长、弱点、体力与游戏数值，不能单凭制服推断超自然力量。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`talents` · `weaknesses` · `learnedSkills` · `academicSkills` · `workSkills` · `combatAbility` · `physicalEndurance` · `agility` · `perception` · `charisma` · `supernaturalPowers` · `powerCosts` · `equipment` · `inventory` · `healthIfStoryApproved`
 
 ### 剧情时间轴 · `story`（13 项）
-首次出现、事件、秘密、选择分支、结局、多角色时间线，不剧透不存在的定稿。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`firstAppearance` · `locationEntrances` · `originStory` · `incitingEvent` · `keyScenes` · `storyGoals` · `branchingChoices` · `secrets` · `reveals` · `relationshipEvents` · `questEvents` · `alternateEndings` · `chronologicalHistory`
 
 ### 生活环境 · `environment`（10 项）
-住宅、教室、店铺、环境偏好、物品归属及 NPC 出入场景的状态规则。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`home` · `school` · `workplace` · `roomOwnership` · `itemOwnership` · `furnitureConditions` · `weatherResponse` · `locationsVisited` · `npcSchedule` · `worldEra`
 
-### 立绘原画 · `visualProduction`（24 项）
-正侧背原画、视角、剪影、提示词全文、模型 LoRA 版本、seed、分辨率、图片授权与哈希。
+### 立绘原画 · `visualProduction`（50 项）
 
-字段：`frontReference` · `backReference` · `sideReference` · `threeQuarterReference` · `poseReference` · `expressionReferences` · `silhouetteLocked` · `colorPalette` · `artStyle` · `imageAspectRatio` · `whiteBackgroundRule` · `fullBodyRule` · `centeredRule` · `occlusionRule` · `promptPositive` · `promptNegative` · `modelVersion` · `artistTag` · `lora` · `seed` · `sampler` · `resolution` · `sourceFileHash` · `assetApproval`
+重点记录**绘画风格/方向**：正面朝向的头部与身体偏航角、俯仰/侧倾、视线、肩胯朝向、镜头透视、线条粗细、上色方式、脸部夸张程度、阴影强度、纹理和人物母版全身完整性。
 
-### L2D动态分层 · `rigging`（22 项）
-L2D/Spine/PSD 的分层树、关节锚点、物理参数、眨眼/口型、动作范围、碰撞与性能。
+字段：`frontReference` · `backReference` · `sideReference` · `threeQuarterReference` · `poseReference` · `expressionReferences` · `silhouetteLocked` · `colorPalette` · `artStyle` · `imageAspectRatio` · `whiteBackgroundRule` · `fullBodyRule` · `centeredRule` · `occlusionRule` · `promptPositive` · `promptNegative` · `modelVersion` · `artistTag` · `lora` · `seed` · `sampler` · `resolution` · `sourceFileHash` · `assetApproval` · `bodyFacingYawDeg` · `headFacingYawDeg` · `headPitchDeg` · `headRollDeg` · `shoulderYawDeg` · `pelvisYawDeg` · `gazeHorizontalDeg` · `gazeVerticalDeg` · `cameraAngle` · `cameraFocalStyle` · `projectionOrthoPerspective` · `visualStyleCategory` · `lineWeightStyle` · `lineColor` · `shadingMethod` · `shadowDensity` · `highlightTreatment` · `textureComplexity` · `anatomicalStylization` · `facialFeatureStylization` · `characterIdentityEmbeddingNotes` · `frontPosePoseCode` · `poseSilhouetteNotes` · `framingHeadroomRatio` · `framingFootroomRatio` · `bodyAlignmentRule`
 
-字段：`layerSource` · `layerList` · `headJoint` · `neckJoint` · `shoulderJoint` · `elbowJoint` · `wristJoint` · `hipJoint` · `kneeJoint` · `ankleJoint` · `eyeTrack` · `blink` · `mouthShapes` · `hairPhysics` · `clothPhysics` · `breathingPhysics` · `skinningLimits` · `expressionStates` · `actionStates` · `runtimePreview` · `occlusionRepair` · `qaAnimation`
+### L2D动态分层 · `rigging`（30 项）
+
+正侧背的比例需要共用同一骨架基准；关节限制与眨眼、眼部跟随和面部动作都要留字段，不能单凭提示词算已实现 L2D。
+
+字段：`layerSource` · `layerList` · `headJoint` · `neckJoint` · `shoulderJoint` · `elbowJoint` · `wristJoint` · `hipJoint` · `kneeJoint` · `ankleJoint` · `eyeTrack` · `blink` · `mouthShapes` · `hairPhysics` · `clothPhysics` · `breathingPhysics` · `skinningLimits` · `expressionStates` · `actionStates` · `runtimePreview` · `occlusionRepair` · `qaAnimation` · `armRotationBoundsDeg` · `hipRotationBoundsDeg` · `kneeFlexBoundsDeg` · `eyelidOpennessChannel` · `browDeformationChannels` · `mouthCornerChannels` · `expressionLandmarkMotion` · `frontSideBackProportionsQa`
 
 ### 声音表演 · `audio`（8 项）
-配音声线、读音、语种、脚步及衣料音效。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`voiceCasting` · `pronunciation` · `multilingualNotes` · `recordedVoices` · `footstepSfx` · `costumeSfx` · `voiceVolume` · `ambienceRules`
 
 ### 游戏交互 · `gameplay`（14 项）
-行动日程、对话树、关系值、触发事件、存档标记、玩家交互与渲染层。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`npcSchedule` · `dialogueTree` · `affinity` · `trust` · `playerControl` · `interactRange` · `characterSelection` · `sceneLayers` · `collisionBounds` · `saveFlags` · `choiceTriggers` · `npcBrain` · `flagsVariables` · `inventoryRules`
 
 ### 验收测试 · `quality`（16 项）
-头脸一致性、三视角、全身不裁切、五指、脚底、色板、来源一致性和动画 QA。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`originalityCheck` · `similarityCheck` · `faceConsistency` · `hairSideCheck` · `visualIdentityCheck` · `handsCheck` · `feetCheck` · `fullBodyCheck` · `measurementProvenanceCheck` · `outfitCheck` · `sourceRightsCheck` · `rigCheck` · `poseCheck` · `screenshotCheck` · `approvalRecord` · `rollbackReference`
 
 ### 版本与来源 · `provenance`（12 项）
-哪一个字段由用户确认、原画证据、暂定、拒绝、修订记录、日期与审核意见。
+
+信息缺失时明确标注待定、未经批准不能自动补写。
 
 字段：`createdAt` · `updatedAt` · `userConfirmedFields` · `sourceCitations` · `proposedFields` · `unknownFields` · `rejectedFields` · `revisionHistory` · `authorReviewer` · `approvedBy` · `permissions` · `historyNotes`
 
@@ -130,3 +152,13 @@ L2D/Spine/PSD 的分层树、关节锚点、物理参数、眨眼/口型、动�
 - [CHAR-001 女主角资料](CHAR-001_PROTAGONIST_PROFILE.md)：性格「毒舌、冷淡」已确认；具体身材数值仍属于此前方案；最新用户女主 Anima Prompt 的年龄 18 岁、灰紫眼与仓库旧版 17 岁、灰褐眼存在版本差异，须标记冲突而不是静默选一个。
 - [CHAR-002 女二候选资料](CHAR-002_CANDIDATE.md)：单马尾、活泼、略矮为确定方向；155cm、46kg、胸80/腰62/臀86、栗棕发与琥珀眼等为待审的草案。
 - 后续其他角色复制标准模板并分配不重复 ID，严禁再把正背面、同角色换装、场景人物当新角色。
+
+## 精确绘画参数：脸部坐标与身体尺度的采集规范
+
+- **面部标准化坐标**：使用同一张用户批准的正面母图，头顶 y=0、下巴 y=1、左侧 x=0、右侧 x=1，记录双眼中心、眉、鼻根、鼻尖、嘴心、耳顶/耳底等节点。归一化比值必须关联母图的像素坐标和版本；未测得的值保持 null，不凭印象造数字。
+- **四肢粗细的多种表示**：优先存上臂/前臂/腕围、大腿/膝围/小腿/踝围（cm），再补侧面轮廓、肌肉丰满度、肘膝位置。围度与从正面看见的像素宽度不同，必须分开。
+- **不同面向的限制**：`bodyFacingYawDeg=0` 表示正面，头部可以另有 `headFacingYawDeg`；视线方向还需独立 `gazeHorizontalDeg` 与 `gazeVerticalDeg`。保持正面时，左右手动作再丰富也不能莫名变成斜视角。
+- **绘画风格身份**：统一校服属于世界观共性，但脸型、眼距、眉眼高差、下巴、五官上色方式、发型、三围、四肢粗细、站姿与神态必须形成区分。风格要一致、人物要不同。
+- **来源和确认**：每个尺寸、坐标、眼色、痣和发饰都记录 `value/status/source`。只有用户明确确定或美术母图验收通过才锁定；其余是拟定或未知。
+
+[空白结构化模板](CHARACTER_PROFILE_TEMPLATE_V2.json) · [女主完整机器档案](CHAR-001.profile.json) · [女二候选机器档案](CHAR-002.profile.json)
