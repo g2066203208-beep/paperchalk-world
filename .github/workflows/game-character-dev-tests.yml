@@ -157,8 +157,10 @@ jobs:
                   window.PaperchalkStudio?.countSourceParts?.()===17&&window.characterEditor?.S.layers.back.filter(x=>x.sourcePart).length===8,{timeout:30000});
                 assert.equal(await page.evaluate(()=>window.characterEditor.S.layers.back.filter(x=>x.sourcePart).length),8,
                   'authentic front/back PSD parts must load directly from GitHub, without manual upload');
-                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),false,
-                  'editor opens all genuine source parts for direct editing');
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio.useV4()),true,
+                  'the editor must preview the SAME original V4 clip that the running game uses');
+                assert.equal(await page.locator('#l2d-live-canvas').isVisible(),false,
+                  'procedural mesh preview must not impersonate the real V4 heroine');
                 assert.equal(await page.locator('#studio-neck-focus').count(),0,
                   'no neck-only tool may modify source layers automatically');
                 assert.equal(await page.locator('#studio-parts-import').count(),1);
