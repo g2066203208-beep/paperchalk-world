@@ -97,6 +97,7 @@ if(typeof oldSwitch==='function'){
 window.addEventListener('paperchalk:studio-mode-changed',schedule);
 window.addEventListener('paperchalk:studio-ready-to-edit',schedule);
 window.addEventListener('paperchalk:studio-source-parts-loaded',schedule);
+window.addEventListener('paperchalk:art-dirty',schedule);
 window.addEventListener('paperchalk:studio-character-loaded',event=>{
  currentId=event.detail?.id||'default';
  motion=loadMotion();
