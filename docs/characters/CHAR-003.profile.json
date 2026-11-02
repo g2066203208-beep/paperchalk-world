@@ -2244,210 +2244,299 @@
     },
     "audio": {
       "voiceCasting": {
-        "value": null,
-        "status": "unknown"
+        "value": "建议声线：18岁自然中低音男声，略沙哑、干燥；尚未选定或录制配音演员",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "pronunciation": {
-        "value": null,
-        "status": "unknown"
+        "value": "姓名拟‘许渡’读xǔ dù；日常台词语尾收住，不故意拖长装酷",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "multilingualNotes": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认中文普通话；英语外来词只在学习/技术词必要时出现",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "recordedVoices": {
-        "value": null,
-        "status": "unknown"
+        "value": "目前无实录音频；预留idle、irritated、alert、short-laugh、soft-sigh五组样本清单",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "footstepSfx": {
-        "value": null,
-        "status": "unknown"
+        "value": "黑色皮鞋落地音干脆偏轻；学校空楼道带短混响，居室更闷",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "costumeSfx": {
-        "value": null,
-        "status": "unknown"
+        "value": "敞开西装前襟轻摩擦与裤袋衣料短响；领带摆动不应有夸张铃铛声",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "voiceVolume": {
-        "value": null,
-        "status": "unknown"
+        "value": "母版建议-17 LUFS对白目标起点，按项目统一音频基准复测；并非已实际混音",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "ambienceRules": {
-        "value": null,
-        "status": "unknown"
+        "value": "白天台词不自动添加恐怖混响；异常音效由剧情事件单独混音，与声音方向保持一致",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       }
     },
     "gameplay": {
       "npcSchedule": {
-        "value": null,
-        "status": "unknown"
+        "value": "平日按7:55到校、12:30休息、16:45离校；任务事件会覆盖作息",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "dialogueTree": {
-        "value": null,
-        "status": "unknown"
+        "value": "基础节点：嫌烦/拒绝→询问事实→看到证据→选择合作或独行；不是已上线对话树",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "affinity": {
-        "value": null,
-        "status": "unknown"
+        "value": "与主要人物初始中性0，提案范围-3..+3；变化必须由剧情选择触发",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "trust": {
-        "value": null,
-        "status": "unknown"
+        "value": "证据与守信积累信任，草案初始女主0、女二0、纪律方-1",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "playerControl": {
-        "value": null,
-        "status": "unknown"
+        "value": "默认非可操控NPC；如决定男主可切换视角，需要用户批准后独立游戏设计",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "interactRange": {
-        "value": null,
-        "status": "unknown"
+        "value": "对话半径草案2.0游戏单位；具体数值按画面交互系统而非现实厘米计算",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "characterSelection": {
-        "value": null,
-        "status": "unknown"
+        "value": "可在DEV角色列表作为候选数据展示，但无正式资产前不可冒充可选已导入演员",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "sceneLayers": {
-        "value": null,
-        "status": "unknown"
+        "value": "人物L2D层位于场景背景之上，UI前景之下；对雾层遮挡遵从场景模块",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "collisionBounds": {
-        "value": null,
-        "status": "unknown"
+        "value": "候选归一化胶囊碰撞：宽0.26、高0.92（单位为全身立绘比例），尚无实际计算",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "saveFlags": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "male_seen_clue",
+          "male_trust_heroine",
+          "male_trust_girl2",
+          "male_heard_extra_bell",
+          "male_shared_map"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "choiceTriggers": {
-        "value": null,
-        "status": "unknown"
+        "value": "察觉异声、回看地图、提醒同伴、是否共享记录等选项触发情绪和台词差分",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "npcBrain": {
-        "value": null,
-        "status": "unknown"
+        "value": "非自由城市NPC的大世界AI；剧情内采用状态机：idle→notice→approach→investigate→retreat",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "flagsVariables": {
-        "value": null,
-        "status": "unknown"
+        "value": "证据证实度0..3、警戒度0..100、人物关系-3..3、门异常状态枚举；全部为设计提案",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "inventoryRules": {
-        "value": null,
-        "status": "unknown"
+        "value": "日常默认不在立绘上显示固定物品；实际拿到手电/收音机才出现独立手持层，并能撤下",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       }
     },
     "quality": {
       "originalityCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "验收要求：人物外观原创，不能直接照搬任何现成作品人物脸或服装独特符号；当前为文本设计未实测",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "similarityCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "对比CHAR-001灰紫眼黑长直＋女二栗棕马尾：男主需男性窄长脸、冷灰眼和黑中长乱发，禁止仅换性别模板",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "faceConsistency": {
-        "value": null,
-        "status": "unknown"
+        "value": "正背/3/4统一眼距、鼻高、颌线和头围；新图出来后需用带点坐标对齐，不宣称已通过",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "hairSideCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "偏左分缝、双耳侧发和后颈发尾必须在正反面保持镜像方向逻辑；待原图验收",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "visualIdentityCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "独立剪影测试：黑乱发、长腿、未扣男校服、一手插兜；缩至游戏显示尺度仍有识别度，尚未测",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "handsCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "可见右手五指无多指；左手入兜符合遮挡，不从衣料中长出手指；生成后手动检查",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "feetCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "两只黑色制服鞋完整画出并站稳地面，不裁切鞋尖或脚跟",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "fullBodyCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "单人完整全身正面母版、眼平、纯白背景、不带书包书本额外道具；不得生成多人对照表",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "measurementProvenanceCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "176/62、90/72/88及大小臂腿围均为制作建议值，非实测；通过时须记录用户审核或原画制版证据",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "outfitCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "男版同校深蓝外套金扣禁用：两颗哑光深色门襟纽扣、袖扣同材质；敞开衣襟＋白衬衫＋红领带、深裤、黑鞋",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "sourceRightsCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "用户指定Anima模型、artist tag和LoRA；生成作品需另查具体授权条件，本文不等于已获训练或商业权利",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "rigCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "头发、眨眼、领带、衣摆和眼球追视必须在运行时动画测试，不得用静态图呼吸缩放代替",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "poseCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "一手插兜、另一手垂放、轻微驼背是用户提供正面动作；正背姿态一致且不能把人物转成3/4",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "screenshotCheck": {
-        "value": null,
-        "status": "unknown"
+        "value": "需生成并人工对比实际游戏镜头与白底原图，防止图片缩放/锚点导致视角失真；尚未执行",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "approvalRecord": {
-        "value": null,
-        "status": "unknown"
+        "value": "等待用户批准男主正面原画与属性；目前仅四百余字段方案，不代表已审批",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "rollbackReference": {
-        "value": null,
-        "status": "unknown"
+        "value": "若后续生成不合格，回到 CHAR-003.profile.json v1.0 与用户原始男主提示词；不得覆盖现有女主原画",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       }
     },
     "provenance": {
       "createdAt": {
-        "value": null,
-        "status": "unknown"
+        "value": "2026-11-02",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "updatedAt": {
-        "value": null,
-        "status": "unknown"
+        "value": "2026-11-02",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "userConfirmedFields": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "男性",
+          "18岁",
+          "高中新生? 非：按原提示高中男生",
+          "黑色凌乱中长发",
+          "灰色窄眼",
+          "校服深蓝外套敞开",
+          "白衬衫露下摆",
+          "松红领带",
+          "深色长裤",
+          "黑鞋",
+          "厌学叛逆",
+          "略驼背",
+          "一手插兜另一手垂放",
+          "白底正面全身",
+          "原始Anima风格Tag与LoRA"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "sourceCitations": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "2026-11-02用户原始男主Anima正向/负向提示词",
+          "docs/characters/CHARACTER_FIELD_SCHEMA_V2.json版本3",
+          "本次男主扩展写作任务（全部448字段）"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "proposedFields": {
-        "value": null,
-        "status": "unknown"
+        "value": "除此之外约四百项细节为原创创意设计提案：176cm、62kg、胸90/腰72/臀88、肢体围度、脸部比值、家庭、学校名称、剧情路线及L2D规范均待批准",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "unknownFields": {
-        "value": null,
-        "status": "unknown"
+        "value": "技术事实未发生：尚无获批原画、已录配音、实际采样器/seed、计算文件哈希和真实L2D运行数据；字段里写明计划而非伪造",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "rejectedFields": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          "把男主画成黑帮成年暴徒",
+          "把男主画成女主换短发的脸",
+          "默认塞书包课本或武器",
+          "金色校服纽扣",
+          "把男主当已经导入游戏的人物",
+          "把提案数值说成已测量"
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "revisionHistory": {
-        "value": null,
-        "status": "unknown"
+        "value": [
+          {
+            "version": "1.0",
+            "date": "2026-11-02",
+            "change": "从用户男主提示词扩展完整448字段原创人物提案，保留未批准标记；后续更改必须追溯"
+          }
+        ],
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "authorReviewer": {
-        "value": null,
-        "status": "unknown"
+        "value": "草案编写：ChatGPT；人物设计审批：用户；美术验收尚未开展",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "approvedBy": {
-        "value": null,
-        "status": "unknown"
+        "value": "尚未批准（状态明确，不是审批通过）",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "permissions": {
-        "value": null,
-        "status": "unknown"
+        "value": "仅用于用户自己的原创游戏角色制作计划；模型/LoRA授权另行核实，暂不声称获得任何特定版权许可",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       },
       "historyNotes": {
-        "value": null,
-        "status": "unknown"
+        "value": "所有精确身体尺寸与面部坐标为可调整的制版目标；人物行为、NPC事件与世界观属尚未进入正式游戏脚本的提案",
+        "status": "proposed",
+        "source": "CHAR-003 v1.0: production and story proposal, not an implemented or approved asset"
       }
     }
   },
