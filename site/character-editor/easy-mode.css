@@ -108,3 +108,20 @@ body.easy-mode :is(button,summary,select,input):focus-visible{outline:2px solid 
  body.easy-mode #easy-quickbar #easy-edit,
  body.easy-mode #easy-quickbar #easy-animate{font-size:10px}
 }
+
+/* One visible high-impact motion panel, even in the default simple mode. */
+#l2d-secondary-controls{margin:10px 0 4px;padding:10px;border:1px solid #4c7492;border-radius:11px;background:#172c41}
+#l2d-secondary-controls h4{margin:0 0 8px;font-size:12px;color:#c4e5ff;font-weight:750}
+#l2d-secondary-controls .mlabel{margin:8px 0 3px;color:#e2efff;font-weight:550}
+#l2d-secondary-controls output{font-variant-numeric:tabular-nums;font-weight:750;color:#9cddff}
+#l2d-secondary-controls input[type=range]{display:block;width:100%;height:23px;cursor:ew-resize;accent-color:#6fc5ff}
+#l2d-secondary-controls .l2d-motion-presets{display:flex;gap:5px;flex-wrap:nowrap;margin:9px 0 4px}
+#l2d-secondary-controls .l2d-motion-presets button{font-size:11px;padding:8px 4px;flex:1;white-space:nowrap}
+#l2d-secondary-controls .l2d-motion-presets #l2d-expressive{background:#20557e;border-color:#76c2f3}
+#l2d-motion-help{font-size:10px;line-height:1.5;padding:7px;margin:8px 0 0;color:#bbd3e7}
+@media(max-width:710px){
+ #l2d-secondary-controls{padding:10px 12px}
+ #l2d-secondary-controls input[type=range]{height:30px;touch-action:pan-y}
+ #l2d-secondary-controls .mlabel{font-size:13px}
+ #l2d-secondary-controls .l2d-motion-presets button{min-height:41px;font-size:12px}
+}
