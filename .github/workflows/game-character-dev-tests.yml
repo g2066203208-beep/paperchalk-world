@@ -67,8 +67,8 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.characters.some(c=>c.id.startsWith('local-')),{timeout:15000});
                 assert.ok(await page.locator('#dev-character-list option').count()>=2);
                 await page.locator('#dev-character-open').click({force:phone});
-                await child.locator('#status').filter({hasText:'游戏人物'}).waitFor({timeout:15000});
-                assert.equal(await child.locator('#layers .layer').count(),1,'different character has independent layers');
+                await child.locator('#status').filter({hasText:'new-npc'}).waitFor({timeout:15000});
+                assert.equal(await child.locator('#layers .layer').count(),1,'different character has independent layers: '+await child.locator('#status').textContent());
                 await page.locator('#dev-character-close').click({force:phone});
                 assert.deepEqual(errors,[],'uncaught browser exceptions');
                 await page.close();
