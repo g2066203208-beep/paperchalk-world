@@ -29,7 +29,9 @@ const get=key=>storage('readonly',key).catch(()=>null);
 const put=(key,v)=>storage('readwrite',key,v);
 const actualActors=()=>window.PaperchalkL2D.getLoaded().filter(a=>a.root.isConnected&&a.img.getAttribute('src'));
 function refreshList(){
- const previous=loaded.value||slot;loaded.replaceChildren();
+ // The explicitly selected actor wins. The old dropdown value must not
+ // silently reset enemy/NPC selection to the protagonist during refresh.
+ const previous=slot||loaded.value;loaded.replaceChildren();
  for(const a of actualActors()){
   const bind=assigned[a.id]||{id:a.img.dataset.characterId||a.id,side:a.img.dataset.characterSide||'front'};
   assigned[a.id]=bind;
