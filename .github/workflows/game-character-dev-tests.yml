@@ -297,7 +297,19 @@ jobs:
                 // CHAR-002 is a genuine separate hosted character, not a
                 // copy of the protagonist. Verify the GAME first.
                 await page.evaluate(()=>window.PaperchalkCharacterDev.assign('enemy','char-002','front'));
-                await page.waitForFunction(()=>window.PaperchalkL2D.get('enemy')?.clip?.type==='decoder',{timeout:16000});
+                await page.waitForFunction(()=>window.PaperchalkL2D.get('enemy')?.clip?.type==='decoder',{timeout:16000})
+                  .catch(async error=>{
+                    console.error('CHAR002 FIRST GAME DECODE STATUS',await page.evaluate(()=>({
+                      clipType:window.PaperchalkL2D.get('enemy')?.clip?.type,
+                      clipCount:window.PaperchalkL2D.get('enemy')?.clip?.count,
+                      mode:document.getElementById('enemy-depth-root')?.dataset.l2dMode,
+                      edition:document.getElementById('enemy-depth-root')?.dataset.l2dEdition,
+                      character:window.PaperchalkCharacterDev.characters.find(c=>c.id==='char-002'),
+                      status:document.getElementById('dev-character-status')?.textContent,
+                      decoder:typeof ImageDecoder
+                    })));
+                    throw error;
+                  });
                 const girlTwo=await page.evaluate(()=>{
                   const a=window.PaperchalkL2D.get('enemy');
                   return {name:a.img.dataset.characterId,side:a.img.dataset.characterSide,
