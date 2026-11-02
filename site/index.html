@@ -721,8 +721,11 @@ void main(){
   try{
     if(mobile&&window.PaperworldSensor?.available?.()){
       nativeActive=true;window.PaperworldSensor.start();
-    }else if(mobile&&'DeviceOrientationEvent' in window&&
-      typeof DeviceOrientationEvent.requestPermission!=='function'){
+    }else if(mobile&&(
+      typeof DeviceOrientationEvent==='undefined'||
+      typeof DeviceOrientationEvent.requestPermission!=='function')){
+      // Some Android WebViews expose orientation events without exposing
+      // the DeviceOrientationEvent constructor. Listening is still safe.
       beginWebSensor();
     }
   }catch(_){}
