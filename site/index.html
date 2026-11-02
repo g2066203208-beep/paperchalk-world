@@ -28,7 +28,7 @@ body.mobile-mode.virtual-landscape #view{
   transform-origin:top left;transform:rotate(90deg);
 }
 #scene{
-  --rim-solid:10px;--rim-feather:10px;
+  --rim-solid:18px;--rim-feather:8px;
   position:relative;flex:none;margin:0;
   width:min(94vw,calc(94dvh * 16 / 9));
   width:min(94cqw,calc(94cqh * 16 / 9));
@@ -614,7 +614,7 @@ void main(){
   // Live persisted fog controls, intentionally separate from 3D layer editor.
   // Large values remain user-adjustable, but the clear-zone hard-clips smoke.
   const FOG_KEY='paperchalk-fog-edge-v1';
-  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:10,feather:10});
+  const fogDefaults=Object.freeze({width:4,opacity:40,offset:-3,safe:88,solid:18,feather:8});
   const fogBounds=Object.freeze({width:[0,14],opacity:[0,100],offset:[-30,45],
                                  safe:[65,98],solid:[10,24],feather:[0,35]});
   function cleanFog(raw){
