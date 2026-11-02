@@ -31,7 +31,7 @@ section.innerHTML=[
  '<select id="studio-character" aria-label="全部已导入角色"></select>',
  '<label for="studio-side">方向</label><select id="studio-side"><option value="front">正面</option><option value="back">背面</option></select>',
  '<button id="studio-back" type="button">返回游戏 DEV</button></div>',
- '<div class="studio-row"><button id="studio-save" type="button">保存到游戏 · L2D</button>',
+ '<div class="studio-row"><button id="studio-save" type="button" hidden aria-hidden="true">保存到游戏 · L2D</button>',
  '<label class="studio-import">导入新人物<input id="studio-import" type="file" accept="image/png,image/webp,image/jpeg" multiple></label>',
  '<label class="studio-import">导入 V4 动态工程 ZIP<input id="studio-v4zip" type="file" accept=".zip,application/zip"></label>',
  '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
@@ -317,6 +317,7 @@ async function importComponentFiles(files,options={}){
  await loadCorrectionLayers();
  ed.renderList();ed.render();
  await ed.save();updatePartStatus();
+ window.dispatchEvent(new Event('paperchalk:studio-source-parts-loaded'));
  if(!options.quiet)message('✓ 已载入 '+count+' 个真实部件，原始像素、原位坐标和图层顺序保留。可直接选任何部件编辑。');
  return count;
 }
@@ -392,7 +393,7 @@ async function showClip(info){
  $('studio-v4-wrap').hidden=!uri;
  document.body.classList.toggle('v4-authoring',!!uri);
  const legacyRig=document.getElementById('dev-l2d-preview-controls');
- if(legacyRig)legacyRig.hidden=!!uri;
+ if(legacyRig)legacyRig.hidden=false; // Static painting, dynamic preview stays live.
  if(!uri){globalLayer=null;frameLayer=null;ed.l2dRig?.()?.start();ed.render();return;}
  const token=++switchNonce;
  const surface=ed.make(1024,1024),crop=info.crop||{x:351,y:9,w:335,h:1013};
@@ -418,7 +419,7 @@ async function showClip(info){
  $('studio-frame').max=String(Math.max(0,count-1));
  $('studio-frame').value='0';$('studio-frame-label').textContent='0 / '+(count-1);
  $('studio-play').textContent='播放';
- ed.l2dRig?.()?.stop();
+ // The preview rig continues running independently while V4 frames decode.
  await drawFrame(0);
 }
 function drawBackdrop(ctx){
@@ -639,7 +640,7 @@ $('studio-patch-import').onchange=async e=>{
 
 selector.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 direction.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
-$('studio-save').onclick=()=>saveToGame().catch(e=>message('保存失败：'+e.message));
+$('studio-save').onclick=()=>$('btnSave').click();
 $('studio-back').onclick=async()=>{
  const button=$('studio-back');
  button.disabled=true;button.textContent='正在保存并返回游戏…';
