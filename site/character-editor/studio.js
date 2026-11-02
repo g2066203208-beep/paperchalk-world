@@ -85,7 +85,11 @@ function change(id,face='front'){
  return pending;
 }
 async function changeCore(id,face='front'){
- if(currentId){if(v4&&frameLayer)await persistCorrections();await ed.save();}
+ if(currentId){
+  if(v4&&frameLayer)await persistCorrections();
+  for(const f of ['front','back'])await persistEditedComponents(f);
+  await ed.save();
+ }
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
  currentId=id;side=face==='back'?'back':'front';
  options();direction.value=side;
@@ -596,7 +600,12 @@ let suspendAutobackup=false;
 window.addEventListener('paperchalk:art-dirty',()=>{
  if(suspendAutobackup||!v4)return;
  clearTimeout(correctionTimer);
- correctionTimer=setTimeout(()=>persistCorrections().catch(e=>message('自动存档失败：'+e.message)),2100);
+ correctionTimer=setTimeout(async()=>{
+  try{
+   await persistCorrections();
+   if(!playing)await persistEditedComponents(side);
+  }catch(e){message('自动存档失败：'+e.message)}
+ },2100);
 });
 $('studio-patch-export').onclick=async()=>{
  if(!v4)return;
@@ -631,7 +640,17 @@ $('studio-patch-import').onchange=async e=>{
 selector.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 direction.onchange=()=>change(selector.value,direction.value).catch(e=>message(e.message));
 $('studio-save').onclick=()=>saveToGame().catch(e=>message('保存失败：'+e.message));
-$('studio-back').onclick=()=>location.assign(new URL('../?dev=1',location.href).href);
+$('studio-back').onclick=async()=>{
+ const button=$('studio-back');
+ button.disabled=true;button.textContent='正在保存并返回游戏…';
+ try{
+  await saveToGame();
+  location.assign(new URL('../?dev=1',location.href).href);
+ }catch(e){
+  button.disabled=false;button.textContent='返回游戏 DEV';
+  message('保存失败，已留在编辑器保护你的修改：'+e.message);
+ }
+};
 $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='';importImages(files).catch(x=>message('导入失败：'+x.message));};
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
