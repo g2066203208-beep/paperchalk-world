@@ -62,7 +62,15 @@ function options(){
  if(list.has(currentId))selector.value=currentId;
  else if(list.has(old))selector.value=old;
 }
-async function change(id,face='front'){
+let switchQueue=Promise.resolve();
+function change(id,face='front'){
+ // Serialise character changes so two rapid UI selections cannot load
+ // two different IndexedDB projects over the same working layer stack.
+ const pending=switchQueue.then(()=>changeCore(id,face),()=>changeCore(id,face));
+ switchQueue=pending.catch(()=>{});
+ return pending;
+}
+async function changeCore(id,face='front'){
  if(!list.has(id))throw Error('角色不在已导入列表中：'+id);
  currentId=id;side=face==='back'?'back':'front';
  options();direction.value=side;
