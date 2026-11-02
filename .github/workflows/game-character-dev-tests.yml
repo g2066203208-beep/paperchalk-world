@@ -23,6 +23,22 @@ jobs:
       - run: python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
+      - name: Create small two-frame V4-format animation fixture
+        run: |
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw
+          import io, zipfile
+          frames=[]
+          for dx in (0,24):
+              img=Image.new('RGBA',(335,1013),(0,0,0,0))
+              ImageDraw.Draw(img).ellipse((90+dx,200,240+dx,560),fill=(250,120,140,230))
+              frames.append(img)
+          with zipfile.ZipFile('/tmp/paperchalk-v4-smoke.zip','w',zipfile.ZIP_DEFLATED) as archive:
+              for face in ('front','back'):
+                  data=io.BytesIO()
+                  frames[0].save(data,'WEBP',save_all=True,append_images=[frames[1]],duration=250,loop=0,quality=70)
+                  archive.writestr(face+'.webp',data.getvalue())
+          PY
       - name: Verify navigation, all imported actors, motion editor and game return
         run: |
           mkdir -p artifacts/l2d-studio
@@ -64,10 +80,14 @@ jobs:
                 await page.locator('#studio-character').selectOption('protagonist');
                 await page.locator('#studio-side').selectOption('back');
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist' && document.querySelector('#studio-side')?.value==='back' && document.querySelectorAll('#layers .layer').length===2,{timeout:18000});
+                await page.locator('#studio-v4zip').setInputFiles('/tmp/paperchalk-v4-smoke.zip');
+                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),{timeout:16000});
+                assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
                 await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'.png',fullPage:true});
                 await page.locator('#studio-back').click({force:true});
                 await page.waitForURL('**/?dev=1',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
+                await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.img?.complete,{timeout:16000});
                 const count=await page.locator('#dev-character-library option').count();
                 assert.equal(count,2,'Game DEV must see characters imported from studio');
                 assert.deepEqual(errors,[],'No browser errors');
