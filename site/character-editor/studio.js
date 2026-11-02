@@ -104,7 +104,7 @@ async function loadList(){
   const res=await fetch('../characters.catalog.json',{cache:'no-store'});
   if(res.ok)for(const c of (await res.json()).characters||[]){
    if(!okId(c.id))continue;
-   list.set(c.id,{id:c.id,label:c.label||c.id,
+   list.set(c.id,{id:c.id,label:(c.label||c.id)+(c.draft?' · 未导入立绘':''),draft:!!c.draft,
     front:c.front?new URL(c.front,new URL('../',location.href)).href:'',
     back:c.back?new URL(c.back,new URL('../',location.href)).href:''});
   }
@@ -119,18 +119,37 @@ async function loadList(){
 }
 async function saveToGame(){
  if(!currentId)return;
- await ed.applyToGame();
+ clearTimeout(correctionTimer);
+ await ed.save();
+ if(v4)await persistCorrections();
  const motion=ed.motion?.()||{};
  for(const face of ['front','back']){
-  await put('render:'+currentId+':'+face,ed.composite(face).toDataURL('image/png'));
+  // Rendering reference is separate from the V4 animation itself; do NOT
+  // replace the approved 128-frame WebP with a flattened still image.
+  if(!v4||face!==side)await put('render:'+currentId+':'+face,ed.composite(face).toDataURL('image/png'));
   if(motion[face])await put('l2d:'+currentId+':'+face,motion[face]);
  }
  const binding=await get('slot:'+slot);
  if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
- message('✓ 已保存 '+(list.get(currentId)?.label||currentId)+' 到游戏，下次打开游戏继续使用动态 L2D。');
+ message('✓ 已保存 '+(list.get(currentId)?.label||currentId)+'：V4 动画保留原始128帧，修补已关联至游戏。可导出修补备份跨设备使用。');
 }
 async function importImages(files){
  const groups=new Map();
+ // When an existing GitHub draft is selected, attach the supplied art
+ // to that canonical ID instead of generating a duplicate person.
+ const draft=list.get(currentId);
+ if(draft?.draft&&files.length){
+  for(const f of files){
+   if(!/^image\/(png|webp|jpeg)$/.test(f.type))continue;
+   const direction=/\b(back|背面)\b/i.test(f.name)?'back':'front';
+   draft[direction]=await fileURL(f);
+  }
+  draft.draft=false;draft.label=draft.label.replace(' · 未导入立绘','');
+  await put('overrides',[...list.values()].filter(c=>c.draft===false&&!c.id.startsWith('local-')&&(c.front?.startsWith('data:')||c.back?.startsWith('data:'))));
+  await change(currentId,side);
+  message('✓ 已将新素材导入现有人物档案（未创建重复人物）');
+  return;
+ }
  for(const file of files){
   if(!/^image\/(png|webp|jpeg)$/.test(file.type))continue;
   const m=file.name.match(/^(.*?)(?:[-_ ](front|back|正面|背面))?\.(png|webp|jpe?g)$/i);
