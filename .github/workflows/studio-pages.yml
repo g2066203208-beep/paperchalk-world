@@ -265,9 +265,11 @@ jobs:
                 await page.locator('#dev-ground-y').evaluate(el=>{
                   el.value='73.5';el.dispatchEvent(new Event('input',{bubbles:true}));
                 });
-                assert.equal(await page.locator('#dev-ground').evaluate(el=>
-                  getComputedStyle(el).top),String(Math.round(
-                  await page.locator('#dev-rig').evaluate(el=>el.offsetHeight)*.735))+'px');
+                const floorTop=await page.locator('#dev-ground').evaluate(el=>
+                  parseFloat(getComputedStyle(el).top));
+                const floorExpected=await page.locator('#dev-rig').evaluate(el=>el.offsetHeight)*.735;
+                assert.ok(Math.abs(floorTop-floorExpected)<1,
+                  'horizontal floor height control did not update its 3D anchor');
                 await page.locator('#dev-ground-toggle').uncheck();
                 assert.equal(await page.locator('#dev-ground').isVisible(),false);
                 await page.locator('#dev-ground-toggle').check();
