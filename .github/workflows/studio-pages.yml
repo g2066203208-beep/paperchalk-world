@@ -64,8 +64,10 @@ jobs:
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
           assert 'id="camera-player-root"' in h and 'id="enemy-depth-root"' in h
           assert 'enemyDepth.style.transform=' in h
-          assert 'const parallaxPx=Math.min(6,sizes.w*.005)' in h
-          assert '(currentX*6.3)' in h and '(-currentY*4.82)' in h
+          assert 'const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor' in h
+          assert 'depthFactor=clamp(' in h
+          assert 'id="dev-trigger"' in h and 'id="dev-tools"' in h
+          assert 'function enterDeveloper()' in h and 'function exitDeveloper()' in h
           assert '#fog{z-index:3}' in h and '#scene{z-index:1}' in h
           assert 'id="scene-transition"' in h and "async function changeScene(name)" in h
           assert "shade.dataset.phase='covered'" in h
@@ -209,6 +211,55 @@ jobs:
                 }
                 await page.screenshot({path:'artifacts/classroom/'+
                   (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-CHARACTERS-DEPTH.png'});
+
+                // The actual live objects are separated into 3D planes:
+                // free-camera perspective, direct edits, save, exit + restore.
+                const liveFogBefore=await page.locator('#fog').evaluate(el=>{
+                  window.__devOriginalFog=el;return Number(el.dataset.frames);
+                });
+                await page.locator('#dev-trigger').click();
+                assert.equal(await page.locator('#dev-tools').isVisible(),true);
+                const inspection=await page.evaluate(()=>({
+                  mode:document.getElementById('view').classList.contains('dev-mode'),
+                  parents:['scene','enemy-depth-root','fog','camera-player-root']
+                    .map(id=>document.getElementById(id).parentElement.id),
+                  hasFogGuide:!!document.getElementById('dev-fog-guide')
+                }));
+                assert.equal(inspection.mode,true);
+                assert.deepEqual(inspection.parents,['dev-rig','dev-rig','dev-rig','dev-rig'],
+                  'developer camera must display actual live image/fog planes');
+                assert.ok(inspection.hasFogGuide);
+                await page.locator('#dev-side').click();
+                assert.equal(await page.locator('#dev-stage').getAttribute('data-yaw'),'-69');
+                await page.screenshot({path:'artifacts/classroom/'+
+                  (cfg.mobile?(cfg.width>cfg.height?'mobile-landscape':'mobile-portrait'):'desktop')+'-DEV-FREE-CAMERA.png'});
+                await page.locator('#dev-layer').selectOption('enemy');
+                await page.locator('#dev-x').evaluate(el=>{
+                  el.value='55';el.dispatchEvent(new Event('input',{bubbles:true}));
+                });
+                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'55%');
+                await page.locator('#dev-save').click();
+                assert.equal(await page.evaluate(
+                  ()=>JSON.parse(localStorage.getItem('paperchalk-layer-editor-v1')).enemy.x),55);
+                await page.locator('#dev-exit').click();
+                assert.equal(await page.locator('#view').evaluate(el=>el.classList.contains('dev-mode')),false);
+                assert.deepEqual(await page.evaluate(
+                  ()=>['scene','enemy-depth-root','fog','camera-player-root']
+                    .map(id=>document.getElementById(id).parentElement.id)),
+                  ['view','view','view','view']);
+                assert.equal(await page.evaluate(
+                  ()=>window.__devOriginalFog===document.getElementById('fog')),true);
+                assert.ok(Number(await page.locator('#fog').getAttribute('data-frames'))>liveFogBefore,
+                  'fluid simulation stopped while freely viewing the 3D planes');
+                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'55%',
+                  'editing not applied to original gameplay scene');
+                await page.locator('#dev-trigger').click();
+                await page.locator('#dev-reset').click();
+                await page.locator('#dev-exit').click();
+                assert.equal(await page.locator('#actor-enemy').evaluate(el=>el.style.left),'61.5%',
+                  'reset did not restore original placement');
+                assert.equal(await page.evaluate(
+                  ()=>localStorage.getItem('paperchalk-layer-editor-v1')),null);
 
                 // Reference coordinates (1803x872) map to current LOGICAL
                 // game viewport; physical portrait screens rotate the whole UI.

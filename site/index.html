@@ -186,6 +186,98 @@ body.mobile-mode.virtual-landscape #view{
 #scene-menu,#novel-ui{transition:opacity 150ms ease}
 @media(prefers-reduced-motion:reduce){#scene-menu,#novel-ui{transition:none}}
 @media(prefers-reduced-motion:reduce){#scene{transform:none!important;will-change:auto}}
+
+/* OPTIONAL scene-layer development editor: live planes, not a flattened mockup.
+   Outside dev mode the exact approved gameplay transforms remain unchanged. */
+#dev-trigger{
+  position:absolute;z-index:14;top:3.8cqh;left:48%;transform:translateX(-50%);
+  padding:5px 9px;border:0;background:transparent;color:#eee;
+  font:400 clamp(11px,2.0cqh,17px) var(--font-ui);letter-spacing:.09em;
+  opacity:.58;text-shadow:0 1px 5px #000;cursor:pointer;pointer-events:auto;
+}
+#dev-trigger:hover,#dev-trigger:focus-visible{opacity:1}
+#dev-stage{position:absolute;inset:0;z-index:9;overflow:hidden;touch-action:none;perspective:1150px}
+#dev-stage[hidden],#dev-tools[hidden]{display:none!important}
+#dev-rig{position:absolute;inset:0;transform-style:preserve-3d;
+  transform-origin:50% 50%;will-change:transform;pointer-events:none}
+#view.dev-mode{perspective:none}
+#view.dev-mode #dev-trigger,#view.dev-mode #novel-ui,
+#view.dev-mode #scene-transition{display:none!important}
+#view.dev-mode #dev-rig > #scene,
+#view.dev-mode #dev-rig > #enemy-depth-root,
+#view.dev-mode #dev-rig > #fog,
+#view.dev-mode #dev-rig > #camera-player-root{
+  z-index:auto!important;transform-style:preserve-3d;backface-visibility:visible;
+  pointer-events:none!important;
+}
+#view.dev-mode #dev-rig > #scene{
+  position:absolute!important;left:50%;top:50%;margin:0!important;
+  transform:translate(-50%,-50%) translateZ(var(--dev-depth-bg))!important;
+  border:1px solid rgba(111,173,210,.9);
+}
+#view.dev-mode #dev-rig > #enemy-depth-root{
+  transform:translate(-50%,-50%) translateZ(var(--dev-depth-enemy))!important;
+  border:1px solid rgba(241,166,105,.95);
+}
+#view.dev-mode #dev-rig > #fog{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  transform:translateZ(var(--dev-depth-fog))!important;
+}
+#view.dev-mode #dev-rig > #camera-player-root{
+  transform:translateZ(var(--dev-depth-player))!important;
+  border:1px solid rgba(123,230,182,.9);
+}
+#view.dev-mode #dev-rig > #scene::before{
+  content:"01 / 背景";position:absolute;top:4px;left:7px;z-index:8;
+  color:#a6daef;font:12px var(--font-ui);text-shadow:0 1px 4px #000;
+}
+#view.dev-mode #enemy-depth-root::after,
+#view.dev-mode #camera-player-root::after{
+  position:absolute;top:6px;left:8px;font:12px var(--font-ui);
+  color:#ffdaa9;text-shadow:0 1px 4px #000;pointer-events:none;
+}
+#view.dev-mode #enemy-depth-root::after{content:"02 / 敌人"}
+#view.dev-mode #camera-player-root::after{content:"04 / 主角";color:#9eeac4}
+#dev-fog-guide{
+  position:absolute;inset:0;transform:translateZ(var(--dev-depth-fog));
+  border:1px dashed rgba(186,186,203,.75);pointer-events:none;
+}
+#dev-fog-guide::before{content:"03 / 实时黑雾";position:absolute;left:8px;top:6px;
+  color:#c6c6d0;font:12px var(--font-ui);text-shadow:0 1px 5px #000}
+#view.dev-mode #dev-rig #actor-enemy,
+#view.dev-mode #dev-rig #actor-player{pointer-events:auto!important;cursor:grab;touch-action:none}
+#view.dev-mode #dev-rig #actor-enemy:active,
+#view.dev-mode #dev-rig #actor-player:active{cursor:grabbing}
+#dev-tools{
+  position:absolute;z-index:40;right:1.4cqw;top:2.5cqh;
+  width:min(298px,39cqw);max-height:95cqh;overflow:auto;
+  padding:12px 13px 14px;color:#eee;pointer-events:auto;
+  font:13px var(--font-ui);background:rgba(10,14,18,.89);
+  border:1px solid #777b80;border-radius:6px;touch-action:pan-y;
+}
+#dev-tools header{display:flex;justify-content:space-between;align-items:center;gap:8px}
+#dev-tools header strong{font-size:15px;letter-spacing:.04em}
+#dev-tools button,#dev-tools select{
+  cursor:pointer;border:1px solid #777;background:#20252a;color:#f1f1f1;
+  padding:5px 8px;border-radius:3px;font:inherit;min-height:27px;
+}
+#dev-tools button:focus-visible,#dev-tools input:focus-visible,
+#dev-tools select:focus-visible{outline:2px solid #a6d7ff}
+#dev-tools .dev-buttons{display:flex;gap:5px;flex-wrap:wrap;margin:9px 0}
+#dev-tools p{font-size:11px;color:#bbb;line-height:1.5;margin:6px 0 9px}
+#dev-tools label{display:block;margin:7px 0 1px;font-size:12px}
+#dev-tools .dev-value{float:right;font-variant-numeric:tabular-nums;color:#a6ddfa}
+#dev-tools input[type="range"]{display:block;width:100%;margin:4px 0 8px;accent-color:#a3cde4}
+#dev-tools select{width:100%;margin-top:4px}
+#dev-tools .dev-state{color:#9edebd;min-height:1.3em;display:block;font-size:11px}
+#dev-tools .dev-hint{color:#c5c5c5;margin-bottom:0}
+@container (max-height:445px){
+  #dev-tools{font-size:11px;padding:7px 9px;width:min(270px,41cqw)}
+  #dev-tools p{margin:3px 0 5px}
+  #dev-tools label{margin:4px 0 0}
+  #dev-tools input[type="range"]{margin:1px 0 4px}
+  #dev-tools .dev-buttons{margin:4px 0}
+}
 </style>
 </head>
 <body>
@@ -233,6 +325,46 @@ body.mobile-mode.virtual-landscape #view{
     <div id="history" hidden role="region" aria-label="对白记录"></div>
   </div>
   <div id="scene-transition" data-phase="idle" data-active="false" aria-hidden="true"></div>
+
+  <button id="dev-trigger" type="button" aria-label="打开分层开发者模式">分层 DEV</button>
+  <div id="dev-stage" hidden aria-label="三维场景分层检查器">
+    <div id="dev-rig">
+      <div id="dev-fog-guide" aria-hidden="true"></div>
+    </div>
+  </div>
+  <aside id="dev-tools" hidden aria-label="开发者分层编辑面板">
+    <header><strong>分层开发者模式</strong><button id="dev-exit" type="button">完成 / 返回</button></header>
+    <p>拖动空白区域旋转镜头；滚轮缩放；右键拖动平移。拖动人物可直接改位置。</p>
+    <div class="dev-buttons">
+      <button id="dev-front" type="button">正视角</button>
+      <button id="dev-side" type="button">侧视角</button>
+      <button id="dev-camera-reset" type="button">重置镜头</button>
+    </div>
+    <label for="dev-layer">正在编辑图层</label>
+    <select id="dev-layer">
+      <option value="enemy">02 / 敌人</option>
+      <option value="player">04 / 主角</option>
+      <option value="bg">01 / 背景</option>
+      <option value="fog">03 / 黑雾</option>
+    </select>
+    <div id="dev-actor-controls">
+      <label for="dev-x">水平位置 <output id="dev-x-value" class="dev-value"></output></label>
+      <input id="dev-x" type="range" min="-20" max="110" step=".5">
+      <label for="dev-y">底部位置 <output id="dev-y-value" class="dev-value"></output></label>
+      <input id="dev-y" type="range" min="-40" max="85" step=".5">
+      <label for="dev-size">角色大小 <output id="dev-size-value" class="dev-value"></output></label>
+      <input id="dev-size" type="range" min="12" max="120" step=".5">
+    </div>
+    <label for="dev-z">图层深度（Z）<output id="dev-z-value" class="dev-value"></output></label>
+    <input id="dev-z" type="range" min="-420" max="350" step="5">
+    <div class="dev-buttons">
+      <button id="dev-save" type="button">保存位置</button>
+      <button id="dev-reset" type="button">恢复默认</button>
+      <button id="dev-copy" type="button">复制参数</button>
+    </div>
+    <output id="dev-status" class="dev-state" aria-live="polite"></output>
+    <p class="dev-hint">保存到本机浏览器。普通视角保留主角贴镜头、敌人轻微视差、黑雾独立。</p>
+  </aside>
 </main>
 <script id="vertex" type="x-shader/x-vertex">
 attribute vec2 a_position;
@@ -854,21 +986,239 @@ void main(){
     }
     s.a=b;s.b=a;fallback.putImageData(image,0,0);
   }
+
+  // Developer-only 3D inspection. The actual live background, enemy, WebGL/CPU
+  // fog canvas and camera player are reparented, not replaced or screenshotted.
+  const devStage=document.getElementById('dev-stage');
+  const devRig=document.getElementById('dev-rig');
+  const devTools=document.getElementById('dev-tools');
+  const devSelect=document.getElementById('dev-layer');
+  const devActorControls=document.getElementById('dev-actor-controls');
+  const devStatus=document.getElementById('dev-status');
+  const editorDefaults=Object.freeze({
+    bg:{z:-235},enemy:{x:61.5,y:18,size:64,z:-190},
+    fog:{z:0},player:{x:8,y:-3,size:82,z:160}
+  });
+  const EDITOR_KEY='paperchalk-layer-editor-v1';
+  const editorBounds={
+    x:[-20,110],y:[-40,85],size:[12,120],z:[-420,350]
+  };
+  const copyDefaults=()=>JSON.parse(JSON.stringify(editorDefaults));
+  function sanitizeEditor(data){
+    const next=copyDefaults();
+    if(!data||typeof data!=='object')return next;
+    for(const id of ['bg','enemy','fog','player']){
+      const item=data[id];
+      if(!item||typeof item!=='object')continue;
+      for(const key of Object.keys(next[id])){
+        const value=Number(item[key]),bounds=editorBounds[key];
+        if(Number.isFinite(value))next[id][key]=clamp(value,...bounds);
+      }
+    }
+    return next;
+  }
+  function readEditor(){
+    try{return sanitizeEditor(JSON.parse(localStorage.getItem(EDITOR_KEY)))}
+    catch(_){return copyDefaults()}
+  }
+  let editorConfig=readEditor(),editorActive=false;
+  let selectedLayer='enemy';
+  const devCamera={yaw:-36,pitch:-11,zoom:.68,panX:-45,panY:12};
+  const devPlanes=[stage,enemyDepth,fog,cameraPlayer];
+  const layerAnchors=new Map();
+  function applyEditorVisuals(){
+    const enemy=editorConfig.enemy,player=editorConfig.player;
+    document.getElementById('actor-enemy').style.left=enemy.x+'%';
+    document.getElementById('actor-enemy').style.bottom=enemy.y+'%';
+    document.getElementById('actor-enemy').style.height=enemy.size+'%';
+    document.getElementById('actor-player').style.left=player.x+'cqw';
+    document.getElementById('actor-player').style.bottom=player.y+'cqh';
+    document.getElementById('actor-player').style.height=player.size+'cqh';
+    for(const name of ['bg','enemy','fog','player']){
+      devRig.style.setProperty('--dev-depth-'+name,editorConfig[name].z+'px');
+    }
+  }
+  function applyDevCamera(){
+    devRig.style.transform='translate3d('+devCamera.panX.toFixed(1)+'px,'+
+      devCamera.panY.toFixed(1)+'px,0) rotateY('+devCamera.yaw.toFixed(1)+
+      'deg) rotateX('+devCamera.pitch.toFixed(1)+'deg) scale('+devCamera.zoom.toFixed(3)+')';
+    devStage.dataset.yaw=String(devCamera.yaw);
+    devStage.dataset.zoom=String(devCamera.zoom);
+  }
+  function setDevStatus(message){devStatus.textContent=message}
+  function refreshEditorControls(){
+    const config=editorConfig[selectedLayer];
+    devSelect.value=selectedLayer;
+    devActorControls.hidden=!(selectedLayer==='enemy'||selectedLayer==='player');
+    for(const field of ['x','y','size','z']){
+      const input=document.getElementById('dev-'+field);
+      const output=document.getElementById('dev-'+field+'-value');
+      if(config[field]!==undefined){
+        input.value=String(config[field]);
+        output.textContent=String(config[field])+(field==='z'?'px':'%');
+      }
+    }
+  }
+  function selectEditorLayer(name){
+    if(!editorConfig[name])return;
+    selectedLayer=name;refreshEditorControls();
+    devStage.dataset.selected=name;
+  }
+  function enterDeveloper(){
+    if(editorActive||transitioning)return;
+    if(stage.dataset.scene!=='classroom')openScene('classroom');
+    editorActive=true;
+    for(const plane of devPlanes){
+      const mark=document.createComment('original position for '+plane.id);
+      plane.before(mark);layerAnchors.set(plane,mark);devRig.appendChild(plane);
+    }
+    view.classList.add('dev-mode');
+    devStage.hidden=false;devTools.hidden=false;
+    applyEditorVisuals();applyDevCamera();selectEditorLayer(selectedLayer);
+    setDevStatus('正在查看实时图层');
+    start();
+  }
+  function exitDeveloper(){
+    if(!editorActive)return;
+    editorActive=false;view.classList.remove('dev-mode');
+    for(const plane of devPlanes){
+      const mark=layerAnchors.get(plane);
+      if(mark)mark.replaceWith(plane);
+    }
+    layerAnchors.clear();
+    devStage.hidden=true;devTools.hidden=true;
+    start();
+  }
+  document.getElementById('dev-trigger').addEventListener('click',enterDeveloper);
+  document.getElementById('dev-exit').addEventListener('click',exitDeveloper);
+  devSelect.addEventListener('change',()=>selectEditorLayer(devSelect.value));
+  for(const field of ['x','y','size','z']){
+    document.getElementById('dev-'+field).addEventListener('input',event=>{
+      if(editorConfig[selectedLayer][field]===undefined)return;
+      editorConfig[selectedLayer][field]=Number(event.target.value);
+      applyEditorVisuals();refreshEditorControls();
+      setDevStatus('已预览修改；点击保存位置以保留');
+    });
+  }
+  document.getElementById('dev-save').addEventListener('click',()=>{
+    try{
+      localStorage.setItem(EDITOR_KEY,JSON.stringify(editorConfig));
+      setDevStatus('已保存到当前浏览器，退出后仍然生效');
+    }catch(_){setDevStatus('浏览器未允许本地保存')}
+  });
+  document.getElementById('dev-reset').addEventListener('click',()=>{
+    editorConfig=copyDefaults();applyEditorVisuals();refreshEditorControls();
+    try{localStorage.removeItem(EDITOR_KEY)}catch(_){}
+    setDevStatus('已恢复原始位置与层间距');
+  });
+  document.getElementById('dev-copy').addEventListener('click',async()=>{
+    const data=JSON.stringify(editorConfig,null,2);
+    try{
+      await navigator.clipboard.writeText(data);
+      setDevStatus('参数 JSON 已复制');
+    }catch(_){
+      window.prompt('复制分层参数',data);
+    }
+  });
+  function setDevView(yaw,pitch,zoom,panX=0,panY=0){
+    Object.assign(devCamera,{yaw,pitch,zoom,panX,panY});applyDevCamera();
+  }
+  document.getElementById('dev-front').addEventListener('click',
+    ()=>setDevView(0,0,.77,-70,0));
+  document.getElementById('dev-side').addEventListener('click',
+    ()=>setDevView(-69,-8,.65,-85,5));
+  document.getElementById('dev-camera-reset').addEventListener('click',
+    ()=>setDevView(-36,-11,.68,-45,12));
+  devStage.addEventListener('contextmenu',e=>e.preventDefault());
+  let cameraDrag=null;
+  devStage.addEventListener('pointerdown',e=>{
+    if(!editorActive||e.target.id==='actor-enemy'||e.target.id==='actor-player')return;
+    e.preventDefault();
+    cameraDrag={id:e.pointerId,x:e.clientX,y:e.clientY,
+      yaw:devCamera.yaw,pitch:devCamera.pitch,
+      panX:devCamera.panX,panY:devCamera.panY,
+      pan:e.button===2||e.shiftKey};
+    devStage.setPointerCapture(e.pointerId);
+  });
+  devStage.addEventListener('pointermove',e=>{
+    if(!cameraDrag||cameraDrag.id!==e.pointerId)return;
+    let dx=e.clientX-cameraDrag.x,dy=e.clientY-cameraDrag.y;
+    if(isVirtualLandscape()){const tmp=dx;dx=dy;dy=-tmp}
+    if(cameraDrag.pan){
+      devCamera.panX=cameraDrag.panX+dx;
+      devCamera.panY=cameraDrag.panY+dy;
+    }else{
+      devCamera.yaw=clamp(cameraDrag.yaw+dx*.36,-88,88);
+      devCamera.pitch=clamp(cameraDrag.pitch-dy*.32,-70,70);
+    }
+    applyDevCamera();
+  });
+  function stopCameraDrag(e){
+    if(cameraDrag&&cameraDrag.id===e.pointerId)cameraDrag=null;
+  }
+  devStage.addEventListener('pointerup',stopCameraDrag);
+  devStage.addEventListener('pointercancel',stopCameraDrag);
+  devStage.addEventListener('wheel',e=>{
+    if(!editorActive)return;
+    e.preventDefault();
+    devCamera.zoom=clamp(devCamera.zoom*Math.exp(-e.deltaY*.0012),.28,1.7);
+    applyDevCamera();
+  },{passive:false});
+  for(const [imageId,key] of [['actor-enemy','enemy'],['actor-player','player']]){
+    const img=document.getElementById(imageId);
+    let drag=null;
+    img.addEventListener('pointerdown',e=>{
+      if(!editorActive)return;
+      e.stopPropagation();e.preventDefault();
+      selectEditorLayer(key);
+      drag={id:e.pointerId,x:e.clientX,y:e.clientY,
+        startX:editorConfig[key].x,startY:editorConfig[key].y};
+      img.setPointerCapture(e.pointerId);
+    });
+    img.addEventListener('pointermove',e=>{
+      if(!drag||drag.id!==e.pointerId)return;
+      e.stopPropagation();
+      let dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+      if(isVirtualLandscape()){const temp=dx;dx=dy;dy=-temp}
+      const reference=key==='enemy'?enemyDepth:cameraPlayer;
+      const scaleW=reference.offsetWidth*devCamera.zoom||1;
+      const scaleH=reference.offsetHeight*devCamera.zoom||1;
+      editorConfig[key].x=clamp(Math.round((drag.startX+dx/scaleW*100)*2)/2,...editorBounds.x);
+      editorConfig[key].y=clamp(Math.round((drag.startY-dy/scaleH*100)*2)/2,...editorBounds.y);
+      applyEditorVisuals();refreshEditorControls();
+      setDevStatus('拖动位置已预览；点击保存位置确认');
+    });
+    const end=e=>{if(drag&&drag.id===e.pointerId){e.stopPropagation();drag=null}};
+    img.addEventListener('pointerup',end);
+    img.addEventListener('pointercancel',end);
+  }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='F2'){
+      e.preventDefault();editorActive?exitDeveloper():enterDeveloper();
+    }else if(e.key==='Escape'&&editorActive){e.preventDefault();exitDeveloper()}
+  },true);
+  applyEditorVisuals();
+  if(new URLSearchParams(location.search).get('dev')==='1'){
+    enterDeveloper();
+  }
   function tick(now){
     raf=0;if(document.hidden)return;
     let dt=last?clamp((now-last)/1000,.001,.055):1/60;last=now;
     const k=1-Math.exp(-dt*7);
-    if(reduced.matches||!tiltEnabled){aimX=0;aimY=0}
+    if(reduced.matches||!tiltEnabled||editorActive){aimX=0;aimY=0}
     currentX+=(aimX-currentX)*k;currentY+=(aimY-currentY)*k;
     stage.style.transform='rotateY('+(currentX*6.0).toFixed(3)+'deg) rotateX('+(-currentY*4.6).toFixed(3)+'deg)';
     // Enemy is only slightly nearer than the classroom back wall.
     // The player stays camera-pinned; black fog remains screen-space.
-    const parallaxPx=Math.min(6,sizes.w*.005);
+    // Editor Z gap changes the in-game enemy parallax without ever moving
+    // the camera player. Defaults exactly match the approved subtle tilt.
+    const depthFactor=clamp((editorConfig.enemy.z-editorConfig.bg.z)/45,0,3);
+    const parallaxPx=Math.min(6,sizes.w*.005)*depthFactor;
     enemyDepth.style.transform='translate(-50%,-50%) translate3d('+
       (currentX*parallaxPx).toFixed(2)+'px,'+
       (currentY*parallaxPx*.55).toFixed(2)+'px,0) rotateY('+
-      (currentX*6.3).toFixed(3)+'deg) rotateX('+
-      (-currentY*4.82).toFixed(3)+'deg)';
+      (currentX*(6.0+.3*depthFactor)).toFixed(3)+'deg) rotateX('+
+      (-currentY*(4.6+.22*depthFactor)).toFixed(3)+'deg)';
     fluidTime+=reduced.matches?0:dt;
     if(gl)drawGPU(dt,fluidTime);
     else if(fallback)drawCPU(dt,fluidTime);
@@ -879,7 +1229,7 @@ void main(){
   }
   function start(){if(!raf)raf=requestAnimationFrame(tick)}
   window.addEventListener('pointermove',e=>{
-    if(!fine.matches||e.pointerType==='touch'||reduced.matches)return;
+    if(editorActive||!fine.matches||e.pointerType==='touch'||reduced.matches)return;
     aimX=clamp(e.clientX/Math.max(1,innerWidth)*2-1,-1,1);
     aimY=clamp(e.clientY/Math.max(1,innerHeight)*2-1,-1,1);
     start();
