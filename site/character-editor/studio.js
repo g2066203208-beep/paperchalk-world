@@ -49,6 +49,7 @@ section.innerHTML=[
 const style=document.createElement('style');
 style.textContent=[
  '#studio-library{margin:8px;padding:10px;border:1px solid #42556c;border-radius:9px;background:#182234}',
+ 'body.studio-loading .layout{pointer-events:none;opacity:.58;filter:saturate(.6)}',
  '.studio-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0}',
  '.studio-row label{font-size:12px;color:#d6e4f5}',
  '.studio-row select{max-width:270px;padding:7px}',
@@ -85,6 +86,8 @@ function change(id,face='front'){
  return pending;
 }
 async function changeCore(id,face='front'){
+ document.body.classList.add('studio-loading');
+ try{
  if(currentId){
   if(v4&&frameLayer)await persistCorrections();
   for(const f of ['front','back'])await persistEditedComponents(f);
@@ -107,6 +110,7 @@ async function changeCore(id,face='front'){
  window.dispatchEvent(new CustomEvent('paperchalk:studio-ready-to-edit',{detail:{id,side}}));
  message('已选择 '+(c.label||id)+' · '+(side==='back'?'背面':'正面')+'，本人物独立保存图层及骨骼参数');
  history.replaceState(null,'','?character='+encodeURIComponent(id)+'&side='+side+'&slot='+slot+'&from=game');
+ }finally{document.body.classList.remove('studio-loading')}
 }
 async function loadList(){
  list.set('protagonist',{id:'protagonist',label:'女主角',front:'../assets/characters/protagonist-front.webp',back:'../assets/characters/protagonist-back.webp'});
