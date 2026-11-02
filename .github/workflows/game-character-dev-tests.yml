@@ -160,16 +160,16 @@ jobs:
                 const initialLayers=await page.locator('#layers .layer').count();
                 await page.locator('#add').click({force:true});
                 assert.equal(await page.locator('#layers .layer').count(),initialLayers+1);
-                await page.locator('#studio-save').click({force:true});
+                await page.locator('#studio-save').click();
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
-                const hasSavedFrame=await page.evaluate(()=>new Promise((ok,no)=>{
+                const hasSavedFrame=await page.evaluate(paintedSide=>new Promise((ok,no)=>{
                   const req=indexedDB.open('paperchalk-dev-characters-v1',1);
                   req.onsuccess=()=>{const db=req.result;
                     const q=db.transaction('kv','readonly').objectStore('kv').get('frames:protagonist:'+paintedSide);
                     q.onsuccess=()=>{db.close();ok(typeof q.result?.[12]==='string'&&q.result[12].startsWith('data:image/png;'));};
                     q.onerror=()=>no(q.error);
                   };req.onerror=()=>no(req.error);
-                }));
+                }),paintedSide);
                 assert.equal(hasSavedFrame,true,'V4 painted frame 12 must persist separately from original animation; '+JSON.stringify(await page.evaluate(()=>({side:window.PaperchalkStudio?.editSide,active:window.PaperchalkStudio?.activePaintFrame,frames:window.PaperchalkStudio?.correctedFrames,paint:window.PaperchalkStudio?.frameHasPaint}))));
                 const tiny=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+v0kQAAAAASUVORK5CYII=','base64');
                 await page.locator('#studio-import').setInputFiles({name:'sample-npc-front.png',mimeType:'image/png',buffer:tiny});
@@ -183,7 +183,7 @@ jobs:
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('V4 动态方向已导入'),{timeout:16000});
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true,'V4 frames must preview in the L2D studio');
                 await page.screenshot({path:'artifacts/l2d-studio/'+(phone?'mobile':'desktop')+'.png',fullPage:true});
-                await page.locator('#studio-back').click({force:true});
+                await page.locator('#studio-back').click();
                 await page.waitForURL('**/?dev=1',{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkCharacterDev?.ready,{timeout:18000});
                 await page.waitForFunction(()=>window.PaperchalkL2D?.get('player')?.clip?.type==='decoder',{timeout:16000});
