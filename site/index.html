@@ -10,9 +10,9 @@
 @font-face{font-family:"PaperSans";src:url("./assets/fonts/PaperSans-Regular.woff2") format("woff2");font-style:normal;font-weight:400;font-display:swap}
 :root{color-scheme:dark;
  --font-menu:"PaperSerif","Noto Serif CJK SC","Songti SC",serif;
- --font-name:"PaperSerif","Noto Serif CJK SC","Songti SC",serif;
- --font-dialogue:"PaperSans","Noto Sans CJK SC","Microsoft YaHei",sans-serif;
- --font-ui:"PaperSans","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+ --font-name:var(--font-menu);
+ --font-dialogue:var(--font-menu);
+ --font-ui:var(--font-menu)}
 *{box-sizing:border-box}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000}
 #view{
@@ -165,13 +165,8 @@ body.mobile-mode.virtual-landscape #view{
   width:auto;max-width:none;object-fit:contain;object-position:bottom center;
   user-select:none;-webkit-user-drag:none;pointer-events:none;
 }
-/* Room foreground: back-facing protagonist, head and feet fully visible.
-   The original bedroom, living room and future entryway art stays unmodified. */
-#view.environment-scene #camera-player-root #actor-player{
-  /* This must override DEV player styles set inline by applyEditorVisuals(),
-     but only in non-story rooms. Saved classroom player settings are untouched. */
-  left:19cqw!important;bottom:3cqh!important;height:76cqh!important;
-}
+/* The same saved protagonist transform is used in classrooms and all rooms.
+   Do not override the DEV-authored inline x/y/size on environment scenes. */
 @container (max-height:445px){
   #enemy-depth-root #actor-enemy{height:34%;left:46%;bottom:16%}
   #camera-player-root #actor-player{height:82cqh;left:8cqw;bottom:-3cqh}
@@ -882,6 +877,9 @@ void main(){
     enemyDepth.hidden=!def.layers.enemy;cameraPlayer.hidden=!hasPlayer;
     stage.dataset.sceneTitle=def.title;
     stage.dataset.sceneVersion=def.version||'built-in';
+    // Character placement belongs to the actor, not the background image.
+    // Re-apply the one saved player transform whenever a scene changes.
+    applyEditorVisuals();
     view.classList.toggle('environment-scene',def.type==='environment');
     sceneMenu.hidden=!isMenu;uiRoot.hidden=isMenu;topActions.hidden=!isStory;
     if(isMenu){
