@@ -1,0 +1,29 @@
+/* Per-component rig AUTHORING, intentionally separate from old V4 controls. */
+#part-rig-toggle{background:#26435d;border-color:#6d98bd;color:#e6f5ff;white-space:nowrap}
+#part-rig-panel[hidden]{display:none!important}
+#part-rig-panel{position:absolute;z-index:20;top:63px;right:9px;bottom:68px;
+ width:min(304px,calc(100% - 18px));padding:11px;overflow:auto;
+ color:#e5f3ff;background:#142338f5;border:1px solid #648dad;border-radius:11px;
+ box-shadow:0 12px 32px #000a;overscroll-behavior:contain;touch-action:pan-y}
+#part-rig-panel .rig-h{display:flex;align-items:center;justify-content:space-between;gap:8px;position:static;
+ border:0;background:none;padding:0;margin:0 0 8px}
+#part-rig-panel .rig-h strong{font-size:12px}
+#part-rig-panel .rig-h button{font-size:11px;padding:7px;white-space:nowrap}
+#part-rig-panel #rig-source,#part-rig-panel #rig-status{font-size:11px;line-height:1.5;
+ color:#b9d4eb;margin:7px 0 10px}
+#part-rig-panel label{display:block;font-size:12px;color:#d9e9f6;margin:7px 0}
+#part-rig-panel #rig-part{display:block;width:100%;font-size:12px;margin:5px 0 13px}
+#part-rig-panel .rig-field{display:grid;grid-template-columns:minmax(0,1fr) 50px;gap:3px 8px}
+#part-rig-panel .rig-field span{grid-column:1}
+#part-rig-panel .rig-field output{grid-column:2;text-align:right;color:#8cd3ff;white-space:nowrap;
+ font-variant-numeric:tabular-nums}
+#part-rig-panel .rig-field input{grid-column:1/3;width:100%;height:23px;accent-color:#75b9f3;cursor:ew-resize}
+#part-rig-panel .rig-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:14px 0}
+#part-rig-panel .rig-buttons button{font-size:11px;min-height:36px;padding:8px 4px}
+#part-rig-panel #rig-save{grid-column:1/3;background:#1d5548;border-color:#52b59e;color:#e9fff7}
+@media(max-width:710px){
+ #part-rig-panel{top:110px;right:5px;bottom:94px;width:min(290px,calc(100% - 10px));padding:9px}
+ #part-rig-panel .rig-field input{height:30px;touch-action:pan-y}
+ #part-rig-panel #rig-part{min-height:39px}
+ body.easy-mode #part-rig-toggle{font-size:11px;padding:8px 6px}
+}
