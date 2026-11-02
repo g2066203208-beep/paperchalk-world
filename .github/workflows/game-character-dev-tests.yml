@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - run: python3 -m pip install --quiet 'Pillow>=10,<12'
-      - run: python3 scripts/build_v4_assets.py && python3 scripts/build_char002_v4.py && python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
+      - run: python3 scripts/build_v4_assets.py && python3 scripts/build_protagonist_part_rig.py && python3 scripts/build_char002_v4.py && python3 scripts/build_scene_catalog.py && python3 scripts/build_character_catalog.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Create small two-frame V4-format animation fixture
