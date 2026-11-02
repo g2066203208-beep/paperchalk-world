@@ -187,7 +187,7 @@ jobs:
                   editor.render();
                   window.dispatchEvent(new Event('paperchalk:art-dirty'));
                 });
-                await page.locator('#studio-save').click();
+                await page.locator('#btnSave').click();
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('游戏已更新'),{timeout:18000});
                 assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.countSourceParts()),17,
                   'source component save must preserve all independent source layers');
@@ -205,7 +205,10 @@ jobs:
 
                 assert.equal(await page.locator('#studio-character option').count(),3,'whole GitHub character library including concept profiles');
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
-                assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),false,'old generic breathing preview hidden for V4');
+                assert.equal(await page.locator('#dev-l2d-preview-controls').isVisible(),true,'all-part live animation preview remains visible while painting V4');
+                assert.equal(await page.locator('#l2d-strength').getAttribute('max'),'400');
+                await page.locator('#l2d-strength').fill('300');
+                await page.waitForFunction(()=>window.characterEditor?.l2dRig?.()?.amplitude===3,{timeout:20000});
                 assert.equal(await page.locator('#studio-frame').getAttribute('max'),'127');
                 const paintedSide=await page.locator('#studio-side').inputValue();
                 await page.locator('#studio-edit-scope').selectOption('frame');
@@ -225,7 +228,7 @@ jobs:
                 const initialLayers=await page.locator('#layers .layer').count();
                 await page.locator('#add').click({force:true});
                 assert.equal(await page.locator('#layers .layer').count(),initialLayers+1);
-                await page.locator('#studio-save').click();
+                await page.locator('#btnSave').click();
                 await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('游戏已更新'),{timeout:18000});
                 const hasSavedFrame=await page.evaluate(paintedSide=>new Promise((ok,no)=>{
                   const req=indexedDB.open('paperchalk-dev-characters-v1',1);
