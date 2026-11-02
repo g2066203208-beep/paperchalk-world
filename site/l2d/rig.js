@@ -83,8 +83,8 @@ class HeroineBreathRig{
   this.animatedFrames=false;
   await this.setImage(surface);
   // Keep EACH original PSD bitmap for independently articulated rendering.
-  this.psdParts=parts.filter(p=>p.visible!==false&&p.image).map(p=>({
-   image:p.image,x:Number(p.x)||0,y:Number(p.y)||0,name:String(p.name||''),
+  this.psdParts=parts.filter(p=>p.visible!==false&&(p.image||p.canvas)).map(p=>({
+   image:p.canvas||p.image,x:Number(p.x)||0,y:Number(p.y)||0,name:String(p.name||''),
    opacity:clamp(Number(p.opacity??1),0,1)}));
   this.render(performance.now(),true);return this;
  }
