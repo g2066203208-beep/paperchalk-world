@@ -131,7 +131,7 @@ async function saveToGame(){
  }
  const binding=await get('slot:'+slot);
  if(binding?.id===currentId)await put('slot:'+slot,{id:currentId,side});
- message('✓ 已保存 '+(list.get(currentId)?.label||currentId)+'：V4 动画保留原始128帧，修补已关联至游戏。可导出修补备份跨设备使用。');
+ message('✓ 已保存 '+(list.get(currentId)?.label||currentId)+'：V4 原始动画保留；当前方向存有 '+Object.keys(frameFrames).length+' 个修补关键帧。可导出备份。');
 }
 async function importImages(files){
  const groups=new Map();
@@ -442,6 +442,6 @@ $('studio-save').onclick=()=>saveToGame().catch(e=>message('保存失败：'+e.m
 $('studio-back').onclick=()=>location.assign(new URL('../?dev=1',location.href).href);
 $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='';importImages(files).catch(x=>message('导入失败：'+x.message));};
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'}};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
