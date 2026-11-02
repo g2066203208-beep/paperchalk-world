@@ -36,7 +36,9 @@ jobs:
           python3 scripts/validate_character_alpha.py
           python3 -m py_compile scripts/matte_character.py
       - name: Generate scene catalog from room images (auto publish)
-        run: python3 scripts/build_scene_catalog.py
+        run: |
+          python3 scripts/build_scene_catalog.py
+          node tests/scene-modules.test.cjs
       - name: Prove adding PNG or WebP auto-registers new scene IDs
         run: |
           python3 - <<'PY'
@@ -58,6 +60,23 @@ jobs:
               (scenes/'kitchen.png').write_bytes(png)
               subprocess.run([sys.executable,str(script)],check=True)
               generated=(root/'site'/'scene-catalog.generated.js').read_text()
+              catalog=json.loads((root/'site'/'scene-catalog.generated.json').read_text())
+              assert catalog['schema']==2
+              assert len(catalog['scenes'])==2
+              assert {e['id'] for e in catalog['scenes']}=={'reading-nook','kitchen'}
+              for entry in catalog['scenes']:
+                  assert entry['width']>=128 and entry['height']>=128
+                  assert len(entry['version'])==12 and entry['type']=='environment'
+              # Bad images and duplicate scene extensions must reject the
+              # whole build instead of publishing silent broken thumbnails.
+              (scenes/'invalid.webp').write_bytes(b'RIFF' + b'0'*100)
+              bad=subprocess.run([sys.executable,str(script)],capture_output=True,text=True)
+              assert bad.returncode!=0,'corrupt scene was accepted'
+              (scenes/'invalid.webp').unlink()
+              shutil.copyfile(scenes/'reading-nook.webp',scenes/'reading-nook.png')
+              duplicate=subprocess.run([sys.executable,str(script)],capture_output=True,text=True)
+              assert duplicate.returncode!=0,'duplicate scene ID was accepted'
+              (scenes/'reading-nook.png').unlink()
               assert '"id":"reading-nook"' in generated
               assert '"file":"reading-nook.webp"' in generated
               assert '"title":"Reading Nook"' in generated
@@ -108,6 +127,9 @@ jobs:
           assert '"id":"bedroom"' in catalog and '"title":"卧室"' in catalog
           assert '"id":"entrance"' in catalog and '"title":"玄关"' in catalog
           assert 'PAPERWORLD_SCENE_CATALOG' in catalog
+          from json import loads
+          manifest=loads(Path('site/scene-catalog.generated.json').read_text())
+          assert {e['id'] for e in manifest['scenes']} >= {'bedroom','living-room','entrance'}
           assert 'id="actor-enemy"' in h and 'id="actor-player"' in h
           assert '#enemy-depth-root #actor-enemy[hidden]{display:none!important}' in h
           assert 'id="battle-ui"' not in h and 'NIGHT_RULES' not in h
@@ -120,6 +142,8 @@ jobs:
           assert 'id="menu-gallery-button"' in h
           assert 'id="scene-switcher-toggle"' in h
           assert 'scene-catalog.generated.js' in h
+          assert '<script src="./scene-modules.js"></script>' in h
+          assert not any(x in h for x in ("title:'主角立绘'", "type:'portrait'"))
           assert '(?:webp|png|jpe?g)' in h
           # Black blotches were intentionally DELETED, not merely turned off.
           forbidden=('u_blotches','u_burns','burnUniform','blotchesEnabled',
@@ -127,7 +151,11 @@ jobs:
                      'paperchalk-ink-blotches')
           for marker in forbidden:
               assert marker not in h,'old black-blotch logic survived: '+marker
-          assert "const hasPlayer=isStory||def.type==='environment'" in h
+          assert 'const hasPlayer=def.layers.player' in h
+          assert 'enemyDepth.hidden=!def.layers.enemy' in h
+          assert 'window.PAPERWORLD_SCENE_MODULES.buildRegistry' in h
+          assert Path('site/scene-modules.js').is_file()
+          assert Path('site/scene-catalog.generated.json').is_file()
           assert "view.classList.toggle('environment-scene'" in h
           assert '#view.environment-scene #camera-player-root #actor-player' in h
           assert 'id="protagonist-preview-root"' not in h
@@ -277,6 +305,28 @@ jobs:
                 assert.equal(await page.locator('#scene-menu-gallery [data-scene-target="living-room"]').count(),1);
                 assert.equal(await page.locator('#scene-menu-gallery [data-scene-target="bedroom"]').count(),1);
                 assert.equal(await page.locator('#scene-menu-gallery [data-scene-target="entrance"]').count(),1);
+                // Validate EVERY current or future room without hardcoding
+                // new IDs: auto menu registration and genuine image decoding.
+                const autoRooms=await page.evaluate(()=>window.PAPERWORLD_SCENE_CATALOG);
+                const menuIds=await page.locator('#scene-menu-gallery [data-scene-target]')
+                  .evaluateAll(els=>els.map(el=>el.dataset.sceneTarget));
+                for(const entry of autoRooms){
+                  assert.ok(menuIds.includes(entry.id),
+                    'new scene missing from preview UI: '+entry.id);
+                }
+                const decoded=await page.evaluate(async entries=>Promise.all(
+                  entries.map(async entry=>{
+                    const i=new Image();
+                    i.src='./assets/scenes/'+entry.file;
+                    await i.decode();
+                    return {id:entry.id,w:i.naturalWidth,h:i.naturalHeight};
+                  })
+                ),autoRooms);
+                for(let i=0;i<decoded.length;i++){
+                  assert.deepEqual([decoded[i].w,decoded[i].h],
+                    [autoRooms[i].width,autoRooms[i].height],
+                    'scene image dimensions mismatch: '+decoded[i].id);
+                }
                 await page.locator('#scene-menu-gallery [data-scene-target="menu"]').click();
                 const originFog=await page.locator('#fog').evaluate(el=>{window.__originalFogNode=el;return Number(el.dataset.frames)});
                 await page.locator('#menu-start').click();
