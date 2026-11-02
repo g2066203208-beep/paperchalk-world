@@ -47,8 +47,15 @@ assert actual == {"protagonist-front.webp", "protagonist-back.webp"}, f"unregist
 assert "protagonist-back.webp" in (SITE / "index.html").read_text(encoding="utf-8")
 assert "protagonist-" in (SITE / "l2d/index.html").read_text(encoding="utf-8")
 assert (ROOT / hero["designDocument"]).is_file()
-for field in ("ageYears", "heightCm", "weightKg", "occupation", "personality"):
+for field in ("ageYears", "heightCm", "weightKg", "occupation"):
     assert hero["proposedProfile"][field]["status"] == "proposed", f"unapproved {field} should remain a proposal"
+# Canonical personality is user-specified, not an aesthetic inference.
+assert hero["status"]["personality"]=="approved_core_traits", "character personality must remain user confirmed"
+assert hero["personalityCanon"]["status"]=="user_confirmed"
+assert hero["personalityCanon"]["coreTraits"]==["毒舌","冷淡"], "do not regress to old gentle/introverted personality"
+assert hero["proposedProfile"]["personality"]["status"]=="user_confirmed"
+assert hero["proposedProfile"]["personality"]["value"]==["毒舌","冷淡"]
+assert data["policy"]["confirmedCharacterPersonalityIsCanonical"] is True
 assert len(hero["visualCanon"]["hairStyle"]) > 30
 assert len(hero["visualCanon"]["iris"]) > 8
 assert len(hero["visualCanon"]["hairAccessory"]) > 25
