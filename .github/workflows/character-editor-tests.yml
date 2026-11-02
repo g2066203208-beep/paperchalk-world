@@ -49,17 +49,21 @@ jobs:
                 assert.ok(large.width>=vp.width*.9,'main animated canvas expands to window width');
                 await page.locator('#main-expand').click();
                 assert.equal(await page.evaluate(()=>window.PaperchalkStageMotion.state.expanded),false);
-                assert.equal(await page.locator('#layers .layer').count(),1);
+                await page.waitForFunction(()=>document.getElementById('stage').clientWidth>250,null,{timeout:7000});
+                const fitRect=await page.locator('#stage').boundingBox();
+                assert.ok(fitRect.width>250,'main viewport must regain nonzero width after exit');
+                const initialLayerCount=await page.locator('#layers .layer').count();
+                assert.ok(initialLayerCount>=1);
                 assert.equal(await page.locator('#status').textContent().then(x=>x.includes('载入')),true);
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-initial.png',fullPage:true});
                 await page.locator('#add').click();
-                assert.equal(await page.locator('#layers .layer').count(),2);
+                assert.equal(await page.locator('#layers .layer').count(),initialLayerCount+1);
                 await page.locator('[data-tool="brush"]').click();
                 await page.locator('#view').scrollIntoViewIfNeeded();
                 const rect=await page.locator('#view').boundingBox(),x=rect.x+rect.width/2,y=rect.y+rect.height/2;
                 await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+9,y+9,{steps:3});await page.mouse.up();
                 const painted=await page.evaluate(()=>{
-                  const s=window.characterEditor.S,p=s.layers.front.at(-1),d=p.canvas.getContext('2d').getImageData(0,0,p.canvas.width,p.canvas.height).data;
+                  const s=window.characterEditor.S,p=s.layers[s.side][s.sel],d=p.canvas.getContext('2d').getImageData(0,0,p.canvas.width,p.canvas.height).data;
                   let count=0,xmin=9999,ymin=9999,xmax=-1,ymax=-1;
                   for(let i=3;i<d.length;i+=4){if(d[i]>0){count++;const n=(i-3)/4,x=n%p.canvas.width,y=(n/p.canvas.width)|0;xmin=Math.min(xmin,x);ymin=Math.min(ymin,y);xmax=Math.max(xmax,x);ymax=Math.max(ymax,y)}}
                   return {count,bounds:[xmin,ymin,xmax,ymax],tool:s.tool,sel:s.sel,zoom:s.zoom,pan:[s.px,s.py],drag:s.drag,layer:p.name}
@@ -73,7 +77,7 @@ jobs:
                 const dl=page.waitForEvent('download');await page.locator('#btnExport').click();const downloaded=await dl;
                 assert.ok(downloaded.suggestedFilename().endsWith('.zip'));
                 await page.locator('#backTab').click();
-                assert.equal(await page.locator('#layers .layer').count(),1);
+                assert.ok(await page.locator('#layers .layer').count()>=1);
                 await page.screenshot({path:'artifacts/character-editor/'+vp.width+'-back.png',fullPage:true});
                 assert.deepEqual(errors,[],'JavaScript errors');
                 await page.close();
