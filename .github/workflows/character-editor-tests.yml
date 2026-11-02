@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'site/character-editor/**'
+      - 'site/l2d/part-rig.js'
       - '.github/workflows/character-editor-tests.yml'
   workflow_dispatch:
 permissions:
@@ -17,6 +18,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: python3 -m pip install --quiet 'Pillow>=10,<12'
+      - run: python3 scripts/build_v4_assets.py
       - run: npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
       - run: npx playwright install --with-deps chromium
       - name: Check syntax, desktop drawing and phone layout
