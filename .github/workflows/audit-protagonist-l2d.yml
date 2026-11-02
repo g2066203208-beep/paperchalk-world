@@ -37,4 +37,13 @@ jobs:
               assert len(allParts.get('front',[]))==17 and len(allParts.get('back',[]))==8
               print('=== ARCHIVE MEMBER LIST ===',flush=True)
               for n in z.namelist():print('MEMBER '+n,flush=True)
+              girl=Path('site/assets/l2d/char-002/front-source-regions.zip')
+              if girl.exists():
+                  with ZipFile(girl) as z:
+                      print('=== CHAR-002 HOSTED ART STRUCTURE (DO NOT CONFLATE WITH PSD) ===',flush=True)
+                      print('MEMBERS:',json.dumps(z.namelist(),ensure_ascii=False),flush=True)
+                      manifest_name='layers.json' if 'layers.json' in z.namelist() else 'assets.json'
+                      if manifest_name in z.namelist():
+                          data=json.loads(z.read(manifest_name))
+                          print('STRUCTURE',json.dumps(data,ensure_ascii=False)[:12000],flush=True)
           PY
