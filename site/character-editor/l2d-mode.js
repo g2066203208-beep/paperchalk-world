@@ -15,7 +15,7 @@ let motion=loadMotion();
 function saveMotion(){try{localStorage.setItem(key(),JSON.stringify(motion));}catch(e){}}
 const section=document.createElement('section');section.id='dev-l2d-preview-controls';
 section.innerHTML=[
- '<h3>角色动态参数 · 女主角直接使用游戏原版 V4</h3>',
+ '<h3>角色动态参数 · 当前人物直接使用游戏 V4 动画</h3>',
  '<canvas id="l2d-live-canvas" width="1024" height="1024" aria-label="人物动态预览" style="width:100%;aspect-ratio:1;max-height:270px;border:1px solid #3e5065;border-radius:8px;background:#1b2533"></canvas>',
  '<div class="row tight" style="margin-top:7px"><button id="l2d-play" type="button">暂停</button><button id="l2d-bones" type="button">显示骨骼</button></div>',
  '<label class="mlabel">呼吸幅度 <output id="l2d-strength-value"></output></label><input id="l2d-strength" type="range" min="0" max="400" step="5">',
