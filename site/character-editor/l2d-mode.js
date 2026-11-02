@@ -37,7 +37,9 @@ function schedule(){
  // Never show the unrelated procedural rig as the heroine game model.
  // The central editor canvas now plays the real hosted WebP animation.
  $('l2d-live-canvas').hidden=actualV4;
+ $('l2d-live-canvas').style.display=actualV4?'none':'';
  $('l2d-bones').hidden=actualV4;
+ $('l2d-bones').style.display=actualV4?'none':'';
  if(actualV4){rig?.stop();return;}
  if(!S.ready||S.busy||!window.PaperchalkL2DRig)return;
  clearTimeout(timer);timer=setTimeout(async()=>{
