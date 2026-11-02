@@ -9,6 +9,9 @@ const slot=args.get('slot')==='enemy'?'enemy':'player';
 let currentId='',side='front',v4=null,frameAt=0,showOriginalV4=true;
 let playing=false,frameIndex=0,playingSince=0,switchNonce=0,activePaintFrame=0;
 let frameFrames={},globalLayer=null,frameLayer=null,correctionTimer=0,decodeBusy=false;
+// This is the very same baked V4 clip loaded by game/dev/character-bridge.js.
+// Source layers only author pixel patches; they are not a substitute animation.
+let previewPatch=null;
 const okId=v=>/^[\w-]{1,80}$/.test(v);
 const message=s=>$('studio-status').textContent=s;
 function openDB(){return new Promise((ok,no)=>{
@@ -37,14 +40,14 @@ section.innerHTML=[
  '<label class="studio-import">导入全部真实部件（PSD / V4 ZIP）<input id="studio-parts-import" type="file" accept=".zip,.psd,application/zip"></label>',
  '<output id="studio-status" role="status">读取人物资源库…</output></div>',
  '<div id="studio-v4-wrap" hidden><canvas id="studio-v4-canvas" width="1024" height="1024"></canvas>',
- '<div class="studio-v4-tools"><strong>L2D 通用部件编辑器</strong>',
- '<p>真实原位分层：可选择任意部件擦除、补画、移动、独显与调整层级。V4 动画帧另设修补模式；烘焙 WebP 不包含可反解的部件。</p>',
+ '<div class="studio-v4-tools"><strong>游戏实际 V4 动画 · 同一人物、同一帧源</strong>',
+ '<p>中央画布默认播放游戏实际使用的 V4 WebP；选中真实分层并落笔时才暂时展示静态源部件，保存后将像素修补叠回同一 V4 动画。不是另造一套网格动画。</p>',
  '<output id="studio-parts-status" role="status">未导入原始分层时只能做 V4 动画修补。</output>',
  '<label>绘画范围 <select id="studio-edit-scope"><option value="all">全部帧（通用修补）</option><option value="frame">仅当前帧</option></select></label>',
  '<label>帧 <output id="studio-frame-label">0 / 127</output><input id="studio-frame" type="range" min="0" max="127" value="0" step="1"></label>',
  '<div class="studio-row"><button id="studio-play" type="button">播放</button><button id="studio-v4-mode" type="button">编辑原始部件（先导入分层）</button>',
  '<button id="studio-patch-export" type="button">导出修补备份</button><label class="studio-import">导入修补备份<input id="studio-patch-import" type="file" accept="application/json,.json"></label></div>',
- '<small>按人物、正背面、帧分别保存；首次打开默认暂停，方便精修。</small></div></div>'
+ '<small>只修改现有角色的原版动画与对应修补图层；数据在本站 IndexedDB 保存，跨设备需导出修补备份。</small></div></div>'
 ].join('');
 const style=document.createElement('style');
 style.textContent=[
@@ -173,9 +176,13 @@ async function persistEditedComponents(face){
   paintData.data[i]=b[i];paintData.data[i+1]=b[i+1];
   paintData.data[i+2]=b[i+2];paintData.data[i+3]=b[i+3];changes++;
  }
- if(!changes){await put('parts-patch:'+currentId+':'+face,null);return;}
+ if(!changes){
+  if(face===side){previewPatch=null;ed.render();}
+  await put('parts-patch:'+currentId+':'+face,null);return;
+ }
  mask.getContext('2d').putImageData(maskData,0,0);
  paint.getContext('2d').putImageData(paintData,0,0);
+ if(face===side){previewPatch={erase:mask,paint};ed.render();}
  await put('parts-patch:'+currentId+':'+face,{
   erase:mask.toDataURL('image/png'),paint:paint.toDataURL('image/png'),
   changes,updatedAt:Date.now(),mode:'v4-layer-delta'
@@ -262,12 +269,14 @@ function updatePartStatus(){
   '本方向已有 '+count+' 个真实原位部件，可在左侧逐个选择编辑。':
   '该方向没有独立分层。烘焙 V4 WebP 不能直接拆成部件，请导入 PSD 或原始分层 ZIP。';
  const button=$('studio-v4-mode');
- if(button)button.textContent=showOriginalV4?'切换到原始部件编辑':'切换到 V4 动画逐帧修补';
+ if(button)button.textContent=showOriginalV4?'查看原始分层（静态精修）':'返回游戏实际 V4 动画';
 }
 function shouldDrawLayer(part){
  if(!v4)return true;
  if(originalLayer(part))return false;
- return showOriginalV4?!part.sourcePart:!!part.sourcePart;
+ // Real V4 remains visible at rest even when 25 source PSD parts exist.
+ // Source editing deliberately switches only the temporary paint view.
+ return sourceInspect()?!!part.sourcePart:!part.sourcePart;
 }
 async function importComponentFiles(files,options={}){
  const manifestBytes=files.get('assets.json')||files.get('layers.json');
@@ -311,7 +320,7 @@ async function importComponentFiles(files,options={}){
  // Source-mode must switch BEFORE asynchronous baseline DB writes.
  // Otherwise a fully loaded PSD stack can briefly still render the baked
  // static V4 frame, misleading the editor and browser automation.
- showOriginalV4=false;
+ showOriginalV4=true;
  // Replace only the source stack. Keep the two animation-correction
  // tracks separate. Never create neck/collar duplicate objects.
  for(const face of ['front','back']){
@@ -322,7 +331,7 @@ async function importComponentFiles(files,options={}){
   if(!options.missingOnly||!await get('baseline:'+currentId+':'+face))
    await put('baseline:'+currentId+':'+face,pristine[face]);
  }
- showOriginalV4=false;
+ showOriginalV4=true;
  await loadCorrectionLayers();
  ed.renderList();ed.render();
  await ed.save();updatePartStatus();
@@ -368,7 +377,7 @@ async function importComponentArchive(file){
    part.sourcePart=true;
    part.partId=part.name;part.role='psd-part';
   }
-  showOriginalV4=false;
+  showOriginalV4=true;
   await loadCorrectionLayers();
   ed.renderList();ed.render();await ed.save();updatePartStatus();
   return;
@@ -434,20 +443,50 @@ async function showClip(info){
  // The preview rig continues running independently while V4 frames decode.
  await drawFrame(0);
 }
+function sourceInspect(){
+ const selected=ed.S.layers[side]?.[ed.S.sel];
+ const stage=window.PaperchalkStageMotion?.state;
+ return !showOriginalV4 || (!!selected?.sourcePart &&
+   (ed.S.only || stage?.editing || stage?.enabled===false));
+}
 function drawBackdrop(ctx){
- if(!v4||!showOriginalV4)return;
+ if(!v4||sourceInspect())return;
+ // Match the live game compositor: original decoded frame, source-part
+ // erasure/paint, all-frame overlays, then selected frame correction.
  ctx.drawImage(v4.surface,0,0);
- // During playback, paint corrections for the *actual* V4 frame.
- if(playing&&frameFrames[frameIndex]){
-  let cached=frameImageCache.get(frameIndex);
-  if(!cached){
-   cached=new Image();
-   cached.onload=()=>ed.render();
-   cached.src=frameFrames[frameIndex];
-   frameImageCache.set(frameIndex,cached);
-  }
-  if(cached.complete&&cached.naturalWidth)ctx.drawImage(cached,0,0);
+ if(previewPatch?.erase&&previewPatch?.paint){
+  ctx.save();ctx.globalCompositeOperation='destination-out';
+  ctx.drawImage(previewPatch.erase,0,0);ctx.restore();
+  ctx.drawImage(previewPatch.paint,0,0);
  }
+}
+function drawFrameCorrection(ctx){
+ if(!v4||sourceInspect())return;
+ // During a paused single-frame edit, the editable frame layer is drawn
+ // by the painter itself; otherwise show its saved pixels, including paused.
+ if(!playing&&frameLayer?.visible)return;
+ const uri=frameFrames[frameIndex];
+ if(!uri)return;
+ let cached=frameImageCache.get(frameIndex);
+ if(!cached){
+  cached=new Image();cached.onload=()=>ed.render();cached.src=uri;
+  frameImageCache.set(frameIndex,cached);
+ }
+ if(cached.complete&&cached.naturalWidth)ctx.drawImage(cached,0,0);
+}
+function applyGameMotion(ctx){
+ if(!v4||sourceInspect()||!playing)return;
+ // Identical idle transform to site/l2d/runtime.js, anchored at the feet.
+ const profile=ed.motion?.()?.[side]||{amplitude:.55,period:4.8};
+ const amp=Math.max(0,Math.min(4,Number(profile.amplitude)||0));
+ if(amp<.001)return;
+ const period=Math.max(2,Math.min(12,Number(profile.period)||4.8));
+ const t=performance.now()/1000*Math.PI*2/period;
+ const inhale=Math.sin(t),lag=Math.sin(t-.55);
+ const sx=1+.018*amp*inhale,sy=1+.011*amp*inhale;
+ const angle=.45*amp*lag*Math.PI/180;
+ ctx.translate(512,1024);ctx.rotate(angle);ctx.scale(sx,sy);
+ ctx.translate(-512,-1024);
 }
 const frameImageCache=new Map();
 async function drawFrame(index){
@@ -489,7 +528,7 @@ async function loadCorrectionLayers(){
  if(!v4){globalLayer=null;frameLayer=null;frameFrames={};return;}
  const arr=ed.S.layers[side];
  const hasSources=arr.some(p=>p.sourcePart);
- showOriginalV4=!hasSources;
+ showOriginalV4=true;
  for(const part of arr)if(originalLayer(part))part.visible=false;
  globalLayer=arr.find(x=>x.name==='V4 · 全帧修补');
  if(!globalLayer){
@@ -509,6 +548,13 @@ async function loadCorrectionLayers(){
  const selected=hasSources?arr.findLast(p=>p.sourcePart):(scope==='frame'?frameLayer:globalLayer);
  ed.S.sel=Math.max(0,arr.indexOf(selected));
  await loadFrameImage(0);
+ const savedPatch=await get('parts-patch:'+currentId+':'+side);
+ if(savedPatch?.erase&&savedPatch?.paint){
+  try{
+   const [erase,paint]=await Promise.all([ed.imgFrom(savedPatch.erase),ed.imgFrom(savedPatch.paint)]);
+   previewPatch={erase,paint};
+  }catch(e){previewPatch=null;message('原始部件修补读取失败：'+e.message);}
+ }else previewPatch=null;
  ed.renderList();ed.render();
 }
 function hasPaint(canvas){
@@ -685,6 +731,6 @@ $('studio-import').onchange=e=>{const files=[...e.target.files];e.target.value='
 $('studio-v4zip').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importV4(f).catch(x=>message('导入V4失败：'+x.message));};
 $('studio-parts-import').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入真实部件失败：'+x.message));};
 $('zipImport').onchange=e=>{const f=e.target.files?.[0];e.target.value='';if(f)importComponentArchive(f).catch(x=>message('导入原位分层失败：'+x.message));};
-window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
+window.PaperchalkStudio={list,change,saveToGame,drawBackdrop,drawFrameCorrection,applyGameMotion,shouldDrawLayer,importComponentArchive,importComponentFiles,countSourceParts,useV4:()=>!!v4&&showOriginalV4,get isV4(){return !!v4},get frame(){return frameIndex},get editSide(){return side},get correctedFrames(){return Object.keys(frameFrames)},get activePaintFrame(){return activePaintFrame},get frameHasPaint(){return !!frameLayer&&hasPaint(frameLayer.canvas)},get current(){return currentId},get edition(){return v4?.edition||'mesh'},get isPlaying(){return playing},setPlaying};
 requestAnimationFrame(frameLoop);loadList().catch(e=>message('人物列表加载失败：'+e.message));
 })();
