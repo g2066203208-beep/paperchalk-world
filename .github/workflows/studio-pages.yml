@@ -15,9 +15,10 @@ permissions:
   contents: read
   pages: write
   id-token: write
+# New changes should queue, not interrupt an active browser QA / Pages publish.
 concurrency:
   group: minimal-stage-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   deploy:
     runs-on: ubuntu-latest
