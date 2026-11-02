@@ -8,6 +8,8 @@ import json
 import pathlib
 import re
 
+from build_l2d_library import build as build_l2d_library
+
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 ART=ROOT/'site'/'assets'/'characters'
 OUTPUT=ROOT/'site'/'characters.catalog.json'
@@ -74,7 +76,48 @@ def discover():
         if clips:
             row['clips']=clips
             row['animated']={face:True for face in clips}
-    return {'version':2,'characters':list(entries.values())}
+    # Integrate every validated, self-contained L2D bundle into the SAME
+    # catalog used by the game and the all-character editor. Existing slots,
+    # animation clips and source PNGs remain unmodified.
+    modules = build_l2d_library()['modules']
+    for module in modules:
+        ident = module['id']
+        # Explicit guard against replacing the already-approved female leads.
+        if ident in ('protagonist','char-002'):
+            raise ValueError(f'L2D module {ident} is protected; use a new ID and keep the approved 128-frame V4')
+        row = entries.setdefault(ident,{
+            'id':ident,'label':module['label'],'front':'','back':''
+        })
+        row['label'] = module['label']
+        row.pop('draft',None)
+        row['l2dModule']=module['views']
+        row['assetVersion']=module['version']
+        clips=row.setdefault('clips',{})
+        animated=row.setdefault('animated',{})
+        for face, spec in module['views'].items():
+            row[face]=spec['portrait']
+            animated[face]=True
+            if spec.get('clip'):
+                clips[face]=spec['clip']
+            else:
+                # Never leave an outdated baked V4 when publishing a real
+                # independent ArtMesh module of the same actor and view.
+                clips.pop(face,None)
+        if not clips:row.pop('clips',None)
+    # Store source archive metadata for the protected original heroines, too.
+    for ident, path, provenance in [
+        ('protagonist','./assets/l2d/v4/protagonist-original-parts.zip','original-psd'),
+        ('char-002','./assets/l2d/char-002/front-source-regions.zip','derived-region')
+    ]:
+        row=entries.get(ident)
+        if not row:continue
+        if (ROOT/'site'/path.removeprefix('./')).is_file():
+            row['l2dModule']={
+                face:{'renderer':'v4-webp','sourceParts':{'url':path,'provenance':provenance},
+                      **({'clip':row.get('clips',{}).get(face)} if row.get('clips',{}).get(face) else {})}
+                for face in ('front','back') if row.get(face)
+            }
+    return {'version':3,'characters':list(entries.values())}
 
 if __name__=='__main__':
     value=discover()
