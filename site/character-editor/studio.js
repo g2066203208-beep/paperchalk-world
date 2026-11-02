@@ -303,6 +303,10 @@ async function importComponentFiles(files,options={}){
   }
  }
  if(!count)throw Error('分层工程中没有可读取的真实 PNG 部件');
+ // Source-mode must switch BEFORE asynchronous baseline DB writes.
+ // Otherwise a fully loaded PSD stack can briefly still render the baked
+ // static V4 frame, misleading the editor and browser automation.
+ showOriginalV4=false;
  // Replace only the source stack. Keep the two animation-correction
  // tracks separate. Never create neck/collar duplicate objects.
  for(const face of ['front','back']){
