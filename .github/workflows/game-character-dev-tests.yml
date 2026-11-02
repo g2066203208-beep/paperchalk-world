@@ -29,7 +29,7 @@ jobs:
         run: |
           python3 - <<'PY'
           from PIL import Image, ImageDraw
-          import io, zipfile
+          import io, zipfile, json
           frames=[]
           for dx in (0,24):
               img=Image.new('RGBA',(335,1013),(0,0,0,0))
@@ -40,6 +40,23 @@ jobs:
                   data=io.BytesIO()
                   frames[0].save(data,'WEBP',save_all=True,append_images=[frames[1]],duration=250,loop=0,quality=70)
                   archive.writestr(face+'.webp',data.getvalue())
+          # Genuine PSD-like source parts in the same schema as the user V4 archive.
+          manifest={'canvas':[1024,1024],'views':{}}
+          with zipfile.ZipFile('/tmp/paperchalk-l2d-source-smoke.zip','w',zipfile.ZIP_DEFLATED) as archive:
+              for face in ('front','back'):
+                  manifest['views'][face]={}
+                  for idx,(name,x,y,w,h,color) in enumerate([
+                      ('neck',496,160,57,74,(224,176,152,255)),
+                      ('jacket',422,190,200,349,(18,32,58,255))
+                  ],1):
+                      img=Image.new('RGBA',(w,h),color)
+                      data=io.BytesIO()
+                      img.save(data,format='PNG')
+                      filename=f'{face}_{idx:02d}_{name}.png'
+                      archive.writestr('assets/'+filename,data.getvalue())
+                      manifest['views'][face][name]={'name':name,'role':name,'filename':filename,
+                          'x':x,'y':y,'w':w,'h':h,'index':idx}
+              archive.writestr('assets.json',json.dumps(manifest))
           PY
       - name: Verify navigation, all imported actors, motion editor and game return
         run: |
@@ -137,27 +154,41 @@ jobs:
                 await page.waitForFunction(()=>window.PaperchalkStudio?.current==='protagonist',{timeout:18000});
                 assert.equal(await page.locator('#l2d-live-canvas').count(),1);
                 await page.waitForFunction(()=>window.PaperchalkStudio?.edition==='V4-official'&&window.PaperchalkStudio?.useV4?.(),{timeout:18000});
-                await page.waitForFunction(()=>window.PaperchalkNeckCollar?.ready,{timeout:18000});
-                const collarReady=await page.evaluate(()=>{
-                  const ed=window.characterEditor,S=ed.S;
-                  const neck=S.layers.front.find(x=>x.name==='PSD · 原版脖子（锁定）');
-                  const collar=S.layers.front.find(x=>x.name==='PSD · 外套衣领（可擦除）');
-                  if(!neck||!collar)throw Error('Original PSD neck/collar parts not loaded');
-                  const original=neck.canvas.toDataURL();
-                  const ctx=collar.canvas.getContext('2d');
-                  const b=ctx.getImageData(0,0,collar.canvas.width,collar.canvas.height);
-                  return {neck:[neck.x,neck.y,neck.canvas.width,neck.canvas.height,neck.locked],
-                    collar:[collar.x,collar.y,collar.canvas.width,collar.canvas.height,collar.locked],
-                    tool:S.tool,selected:S.layers.front[S.sel]?.name,alpha:b.data.reduce((n,v,i)=>n+(i%4===3&&v>0),0),
-                    untouched:original.length>100};
+                assert.equal(await page.locator('#studio-neck-focus').count(),0,
+                  'no neck-only tool may modify source layers automatically');
+                assert.equal(await page.locator('#studio-parts-import').count(),1);
+                await page.locator('#studio-parts-import').setInputFiles('/tmp/paperchalk-l2d-source-smoke.zip');
+                await page.waitForFunction(()=>window.PaperchalkStudio?.countSourceParts?.()===2,{timeout:20000});
+                const parts=await page.evaluate(()=>{
+                  const arr=window.characterEditor.S.layers.front.filter(p=>p.sourcePart);
+                  return arr.map(p=>({name:p.partId,position:[p.x,p.y,p.canvas.width,p.canvas.height],
+                    editable:!p.locked}));
                 });
-                assert.deepEqual(collarReady.neck,[496,160,57,74,true]);
-                assert.deepEqual(collarReady.collar,[474,190,106,95,false]);
-                assert.equal(collarReady.tool,'eraser');
-                assert.equal(collarReady.selected,'PSD · 外套衣领（可擦除）');
-                assert.ok(collarReady.alpha>100,'original collar has real nontransparent paint');
-                assert.ok(collarReady.untouched);
-
+                assert.deepEqual(parts,[
+                  {name:'neck',position:[496,160,57,74],editable:true},
+                  {name:'jacket',position:[422,190,200,349],editable:true}
+                ],'all authentic PSD parts retain their original position and geometry');
+                await page.evaluate(()=>{
+                  const editor=window.characterEditor,S=editor.S;
+                  const arr=S.layers.front,neck=arr.find(p=>p.partId==='neck'),
+                    jacket=arr.find(p=>p.partId==='jacket');
+                  const neckBefore=neck.canvas.toDataURL();
+                  const g=jacket.canvas.getContext('2d');
+                  g.globalCompositeOperation='destination-out';g.fillRect(80,24,24,24);
+                  g.globalCompositeOperation='source-over';
+                  if(neck.canvas.toDataURL()!==neckBefore)throw Error('erasing jacket changed neck');
+                  if(g.getImageData(82,26,1,1).data[3]!==0)throw Error('jacket eraser did not change original source pixels');
+                  S.sel=arr.indexOf(jacket);
+                  editor.render();
+                  window.dispatchEvent(new Event('paperchalk:art-dirty'));
+                });
+                await page.locator('#studio-save').click();
+                await page.waitForFunction(()=>document.querySelector('#studio-status')?.textContent?.includes('已保存'),{timeout:18000});
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.countSourceParts()),2,
+                  'source component save must preserve separate layers');
+                // Frame corrections remain an independent editing track, not duplicated source parts.
+                await page.locator('#studio-v4-mode').click();
+                assert.equal(await page.evaluate(()=>window.PaperchalkStudio?.useV4?.()),true);
 
                 assert.equal(await page.locator('#studio-character option').count(),3,'whole GitHub character library including concept profiles');
                 assert.equal(await page.locator('#studio-v4-wrap').isVisible(),true);
