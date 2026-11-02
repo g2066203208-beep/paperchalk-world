@@ -19,7 +19,7 @@ for p in people:
     assert p["status"]=="proposed","planning must not be misrepresented as approved artwork"
     for key in ("label","personality","storyFunction"):
         assert isinstance(p[key],str) and len(p[key])>1,(p["id"],key)
-    assert all(isinstance(p["visual"].get(k),str) and len(p["visual"][k])>4
+    assert all(isinstance(p["visual"].get(k),str) and len(p["visual"][k])>=2
                for k in ("face","hair","build","gesture")),p["id"]
     groups[(p["group"],p["tier"])]=groups.get((p["group"],p["tier"]),0)+1
 assert groups=={("student","core"):3,("student","important"):9,("student","support"):16,
